@@ -16,8 +16,9 @@
 package common
 
 import (
+    "testing"
+
 	"github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 // TestWriteToFile test of WriteToFile

@@ -21,6 +21,7 @@ package ascend910b
 
 import (
 	"fmt"
+
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 

@@ -78,7 +78,7 @@ int Mount(const char *src, const char *dst)
     return 0;
 }
 
-int MountFile(const char *rootfs, const char *filepath)
+static int MountFile(const char *rootfs, const char *filepath)
 {
     if (rootfs == NULL || filepath == NULL) {
         Logger("rootfs, filepath pointer is null!", LEVEL_ERROR, SCREEN_YES);

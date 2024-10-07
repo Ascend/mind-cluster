@@ -20,14 +20,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 

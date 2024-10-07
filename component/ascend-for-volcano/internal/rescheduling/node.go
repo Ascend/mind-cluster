@@ -214,7 +214,7 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode, car
 func GetNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, error) {
 	deviceFaultList, ok := node.Annotation[DeviceFaultCmKey]
 	if !ok {
-		return nil, fmt.Errorf("GetNodeDeviceFaultFromDeviceInfo failed")
+		return nil, fmt.Errorf("getNodeDeviceFaultFromDeviceInfo failed")
 	}
 	var deviceFault []FaultDeviceList
 	if unmarshalErr := json.Unmarshal([]byte(deviceFaultList), &deviceFault); unmarshalErr != nil {

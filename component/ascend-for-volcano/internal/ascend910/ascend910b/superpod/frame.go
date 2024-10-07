@@ -55,7 +55,7 @@ func New(name string) *module910SuperPod {
 func (tp *module910SuperPod) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
 	return nil

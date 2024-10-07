@@ -31,7 +31,7 @@
 #define MONTH_OFFSET 1
 #define LOG_LENGTH 1024
 
-int GetCurrentLocalTime(char* buffer, int length)
+static int GetCurrentLocalTime(char* buffer, int length)
 {
     if (buffer == NULL) {
         (void)fprintf(stderr, "buffer pointer is null!\n");
@@ -58,7 +58,7 @@ int GetCurrentLocalTime(char* buffer, int length)
                      (timeinfo->tm_sec));
 }
 
-int CreateLog(const char* filename)
+static int CreateLog(const char* filename)
 {
     if (filename == NULL) {
         return -1;
@@ -92,7 +92,7 @@ static long GetLogSizeProcess(const char* path)
     return length;
 }
 
-long GetLogSize(const char* filename)
+static long GetLogSize(const char* filename)
 {
     if (filename == NULL) {
         (void)fprintf(stderr, "filename pointer is null!\n");
@@ -204,7 +204,7 @@ static void LogFileProcess(const char* filename, const long maxSize, const char*
     WriteLogInfo(path, PATH_MAX + 1, buffer, bufferSize);
 }
 
-void WriteLogFile(const char* filename, long maxSize, const char* buffer, unsigned bufferSize)
+static void WriteLogFile(const char* filename, long maxSize, const char* buffer, unsigned bufferSize)
 {
     if (filename == NULL || buffer == NULL) {
         (void)fprintf(stderr, "filename, buffer pointer is null!\n");
