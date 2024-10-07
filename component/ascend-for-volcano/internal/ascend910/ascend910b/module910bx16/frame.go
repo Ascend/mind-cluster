@@ -86,7 +86,7 @@ func (tp *module910bx16) ValidNPUJob() *api.ValidateResult {
 func (tp *module910bx16) PreStartAction(i interface{}, ssn *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
 	if vErr := tp.PreStartVNPU(ssn); vErr != nil {
@@ -361,20 +361,23 @@ func getCrossHccsArray(leftHccsArray, rightHccsArray []int, isMultNpuReplica boo
 		for i := 0; i < minLen; i++ {
 			crossHccsArray = append(crossHccsArray, leftHccsArray[i], rightHccsArray[i])
 		}
-	} else {
-		for _, leftCardID := range leftHccsArray {
-			for _, rightCardID := range rightHccsArray {
-				if leftCardID+idCutNum == rightCardID {
-					crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
-					break
-				}
-			}
-		}
+		return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
 	}
+    for _, leftCardID := range leftHccsArray {
+        for _, rightCardID := range rightHccsArray {
+            if leftCardID+idCutNum == rightCardID {
+                crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
+                break
+            }
+        }
+    }
+	return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
+}
 
-	// npu num must bigger than hccs's npu number, if task is cross hccs
-	if len(crossHccsArray) <= idCutNum {
-		crossHccsArray = []int{}
+fun getCrossHccsArrayByCutNum(crossHccsArray []int, idCutNum int) []int {
+    // npu num must bigger than hccs's npu number, if task is cross hccs
+    if len(crossHccsArray) <= idCutNum {
+		return []int{}
 	}
 	return crossHccsArray
 }

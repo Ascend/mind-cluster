@@ -17,8 +17,9 @@
 #include <limits.h>
 #include <sys/mount.h>
 #include <unistd.h>
-#include "securec.h"
+
 #include "gtest/gtest.h"
+#include "securec.h"
 #include "mockcpp/mockcpp.hpp"
 
 using namespace std;
