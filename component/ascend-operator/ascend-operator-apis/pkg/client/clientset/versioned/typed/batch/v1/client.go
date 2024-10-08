@@ -97,16 +97,6 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*BatchV1Client, erro
 	return &BatchV1Client{restClient: client}, nil
 }
 
-// NewForConfigOrDie creates a new BatchV1alpha1Client for the given config and
-// panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *BatchV1Client {
-	client, err := NewForConfig(c)
-	if err != nil {
-		panic(err)
-	}
-	return client
-}
-
 // New creates a new BatchV1alpha1Client for the given RESTClient.
 func New(c rest.Interface) *BatchV1Client {
 	return &BatchV1Client{restClient: c}
