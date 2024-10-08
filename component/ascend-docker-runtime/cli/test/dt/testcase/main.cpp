@@ -24,7 +24,7 @@ int main(int argc, char* argv[], char* evn[])
 {
     InitGoogleTest(&argc, argv);
     int ret = RUN_ALL_TESTS();
-    if (1 == ret) {
+    if (ret == 1) {
         printf("有用例错误，请按任意键继续。。。");
     }
 
