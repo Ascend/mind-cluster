@@ -1,0 +1,41 @@
+{
+  "GraceTolerance": {
+    "WaitProcessReadCMTime": 30,
+    "WaitDeviceResetTime": 150,
+    "WaitFaultSelfHealingTime": 15
+  },
+  "FaultFrequency": [
+    {
+      "EventId": [
+        "80C98000","80B78000","80B58000","80A18008","80A38008","80A58008","80B98000","80B98008","80BB8000",
+        "80BB8008","80BD8000","80BD8008","80C78008","80C98008","80CB8008","80CD8008","80CF8008","80D98008",
+        "80DF8008","80DE1801","80E01801","80E18008","80E38008","80E39200","80E3A202","80E3A203","80E78000",
+        "80E78008","80F18000","80F18008","80F38008","80F78008","81318008","81338008","813B8008","81478008",
+        "81578008","815F8008","81938008","81958008","81978008"
+      ],
+      "TimeWindow": 86400,
+      "Times": 2,
+      "FaultHandling": "ManuallySeparateNPU"
+    },
+    {
+      "EventId": ["80E18005"],
+      "TimeWindow": 86400,
+      "Times": 3,
+      "FaultHandling": "ManuallySeparateNPU"
+    }
+  ],
+  "FaultDuration": [
+    {
+      "EventId": ["81078603"],
+      "FaultTimeout": 30,
+      "RecoverTimeout": 60,
+      "FaultHandling": "PreSeparateNPU"
+    },
+    {
+      "EventId": ["81078605"],
+      "FaultTimeout": 30,
+      "RecoverTimeout": 60,
+      "FaultHandling": "SubHealthFault"
+    }
+  ]
+}

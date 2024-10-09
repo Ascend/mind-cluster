@@ -1,0 +1,73 @@
+apiVersion: mindxdl.gitee.com/v1
+kind: AscendJob
+metadata:
+  name: default-test-tensorflow
+  labels:
+    framework: tensorflow
+spec:
+  cleanPodPolicy: None
+  backoffLimit: 30
+  schedulingPolicy:
+    minAvailable: 3
+    queue: default
+  successPolicy: AllWorkers
+  replicaSpecs:
+    Chief:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        spec:
+          nodeSelector:
+            host-arch: huawei-arm
+          containers:
+          - name: ascend # do not modify
+            image: ubuntu:18.04
+            imagePullPolicy: IfNotPresent
+            command:
+              - /bin/bash
+              - -c
+              - while true; do sleep 30; done
+            env:
+              - name: GLOG_V
+                value: "1"
+            resources:
+              limits:
+                huawei.com/Ascend910: 8
+              requests:
+                huawei.com/Ascend910: 8
+            volumeMounts:
+            - name: code
+              mountPath: /job/code
+            - name: data
+              mountPath: /job/data
+            - name: output
+              mountPath: /job/output
+            - name: ascend-driver
+              mountPath: /usr/local/Ascend/driver
+            - name: ascend-add-ons
+              mountPath: /usr/local/Ascend/add-ons
+            - name: localtime
+              mountPath: /etc/localtime
+          volumes:
+          - name: code
+            nfs:
+              server: 127.0.0.1
+              path: "/data/atlas_dls/public/code/"
+          - name: data
+            nfs:
+              server: 127.0.0.1
+              path: "/data/atlas_dls/public/dataset/"
+          - name: output
+            nfs:
+              server: 127.0.0.1
+              path: "/data/atlas_dls/output/"
+          - name: ascend-driver
+            hostPath:
+              path: /usr/local/Ascend/driver
+          - name: ascend-add-ons
+            hostPath:
+              path: /usr/local/Ascend/add-ons
+          - name: localtime
+            hostPath:
+              path: /etc/localtime
+

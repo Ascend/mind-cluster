@@ -1,0 +1,71 @@
+﻿# NPU-Exporter
+-   [免责声明](#免责声明)
+-   [组件介绍](#组件介绍)
+-   [编译NPU-Exporter](#编译NPU-Exporter)
+-   [组件安装](#组件安装)
+-   [说明](#说明)
+-   [更新日志](#更新日志)
+-   [附录](#附录)
+
+# 免责声明
+- 本代码仓库中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布之前，这些分支不应被用于任何生产环境或依赖关键业务的项目中。请务必仅使用我们的正式发行版本，以确保代码的稳定性和安全性。
+  使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
+- 正式版本请参考：[Ascend Npu Exporter正式release版本](https://gitee.com/ascend/ascend-npu-exporter/releases)
+
+# 组件介绍
+
+
+Prometheus（普罗米修斯）是一个开源的系统监控和警报工具包，Exporter就是专门为Prometheus提供数据源的组件。由于Prometheus社区的活跃和大量的使用，已经有很多厂商或者服务提供了Exporter，如Prometheus官方的Node Exporter，MySQL官方出的MySQL Server Exporter和NVIDA的NVIDIA GPU Exporter。这些Exporter负责将特定监控对象的指标，转成Prometheus能够识别的数据格式，供Prometheus集成。NPU-Expoter是华为自研的专门收集华为NPU各种监控信息和指标，并封装成Prometheus专用数据格式的一个服务组件。
+
+# 编译NPU-Exporter
+
+1.  通过git拉取源码，获得ascend-npu-exporter。
+
+    示例：源码放在/home/test/ascend-npu-exporter目录下
+
+2.  执行以下命令，进入构建目录，执行构建脚本，在“output“目录下生成二进制npu-exporter、yaml文件和Dockerfile等文件。
+
+    **cd** _/home/test/_**ascend-npu-exporter/build/**
+
+    **chmod +x build.sh**
+
+    **./build.sh**
+
+3.  执行以下命令，查看**output**生成的软件列表。
+
+    **ll** _/home/test/_**ascend-npu-exporter/output**
+
+    ```
+    drwxr-xr-x  2 root root     4096 Feb 23 07:10 .
+    drwxr-xr-x 10 root root     4096 Feb 23 07:10 ..
+    -r--------  1 root root      623 Feb 23 07:10 Dockerfile
+    -r--------  1 root root      964 Feb 23 07:10 Dockerfile-310P-1usoc
+    -r-x------  1 root root 15861352 Feb 23 07:10 npu-exporter
+    -r--------  1 root root     4089 Feb 23 07:10 npu-exporter-310P-1usoc-v5.0.RC3.yaml
+    -r--------  1 root root     3438 Feb 23 07:10 npu-exporter-v5.0.RC3.yaml
+    -r-x------  1 root root     2554 Feb 23 07:10 run_for_310P_1usoc.sh
+    ```
+
+# 组件安装
+
+1.  请参考《MindX DL用户指南》(https://www.hiascend.com/software/mindx-dl)
+    中的“集群调度用户指南 > 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
+
+# 说明
+
+1. 当前npu-exporter仅支持http启动，如果需要使用https启动，请自行完成代码修改并适配Prometheus
+
+# 更新日志
+
+| 版本       | 发布日期   | 修改说明       |
+| ---------- | ---------- | -------------- |
+| v5.0.0-RC2.1 | 2023-815 | MindX 5.0.RC2补丁版本 |
+| v5.0.0-RC2 | 2023-725 | 配套MindX 5.0.RC2版本 |
+| v5.0.0-RC1.1 | 2023-628 | MindX 5.0.RC1补丁版本 |
+| v5.0.0-RC1 | 2023-330 | 配套MindX 5.0.RC1版本 |
+| v3.0.0 | 2022-1230 | 首次发布 |
+
+
+# 附录
+### metrics标签
+参见[NPU-Exporter Prometheus Metrics接口](https://www.hiascend.com/document/detail/zh/mindx-dl/50rc2/clusterscheduling/clusterscheduling/dlug_guide_03_000138.html)
