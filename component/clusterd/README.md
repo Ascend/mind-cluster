@@ -11,7 +11,7 @@
 <h2 id="免责声明">免责声明</h2>
 - 本代码仓库中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布之前，这些分支不应被用于任何生产环境或依赖关键业务的项目中。请务必仅使用我们的正式发行版本，以确保代码的稳定性和安全性。
   使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
-- 正式版本请参考：[ClusterD正式release版本](https://gitee.com/ascend/mindxdl/clusted/releases)
+- 正式版本请参考：ClusterD正式release版本 <https://gitee.com/ascend/mindxdl/clusted/releases>
 
 <h2 id="支持的产品形态">支持的产品形态</h2>
 
@@ -61,7 +61,7 @@
 
 
 <h2 id="组件安装">组件安装</h2>
-1.  请参考《MindX DL用户指南》(https://www.hiascend.com/software/mindx-dl)
+1.  请参考《MindX DL用户指南》<https://www.hiascend.com/software/mindx-dl>
     中的“集群调度用户指南 > 安装部署指导 > 安装集群调度组件 > 典型安装场景 > 集群调度场景”进行。
 
 <h2 id="说明">说明</h2>
