@@ -22,7 +22,7 @@ GOPATH=$1
 ci_config=$2
 
 mindx_dl=$(ls -l "$CUR_DIR" |awk '/^d/ {print $NF}')
-cd /usr1/mindxdl/component/build
+cd /usr1/mindxdl/build
 
 for component in $mindx_dl
 do
