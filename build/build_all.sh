@@ -23,11 +23,11 @@ ci_config=$2
 
 mindx_dl=$(ls -l "$CUR_DIR" |awk '/^d/ {print $NF}')
 cd /usr1/mindxdl/build
+dos2unix *.sh && chmod +x *
 
 for component in $mindx_dl
 do
-  dos2unix *.sh && chmod +x *
-  { ./build_each.sh $GOPATH $ci_config $mindx_dl
+  { ./build_each.sh $GOPATH $ci_config $component
   }&
 done
 wait
