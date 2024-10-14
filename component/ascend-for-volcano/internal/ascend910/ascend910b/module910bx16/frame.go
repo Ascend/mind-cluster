@@ -363,20 +363,20 @@ func getCrossHccsArray(leftHccsArray, rightHccsArray []int, isMultNpuReplica boo
 		}
 		return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
 	}
-    for _, leftCardID := range leftHccsArray {
-        for _, rightCardID := range rightHccsArray {
-            if leftCardID+idCutNum == rightCardID {
-                crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
-                break
-            }
-        }
-    }
+	for _, leftCardID := range leftHccsArray {
+		for _, rightCardID := range rightHccsArray {
+			if leftCardID+idCutNum == rightCardID {
+				crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
+				break
+			}
+		}
+	}
 	return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
 }
 
-fun getCrossHccsArrayByCutNum(crossHccsArray []int, idCutNum int) []int {
-    // npu num must bigger than hccs's npu number, if task is cross hccs
-    if len(crossHccsArray) <= idCutNum {
+func getCrossHccsArrayByCutNum(crossHccsArray []int, idCutNum int) []int {
+	// npu num must bigger than hccs's npu number, if task is cross hccs
+	if len(crossHccsArray) <= idCutNum {
 		return []int{}
 	}
 	return crossHccsArray
