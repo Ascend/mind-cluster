@@ -7,15 +7,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"syscall"
-	"time"
 
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
@@ -26,10 +21,6 @@ import (
 
 const (
 	defaultLogFile = "/var/log/mindx-dl/clusterd/clusterd.log"
-
-	leaseDuration = 5 * time.Second
-	renewDeadline = 3 * time.Second
-	retryPeriod   = 2 * time.Second
 )
 
 var (
@@ -42,50 +33,14 @@ var (
 	server    *sv.ClusterInfoMgrServer
 )
 
-func leaderElectAndRun() error {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return fmt.Errorf("unable to get hostname: %v", err)
-	}
-	id := hostname + "_" + string(uuid.NewUUID())
-	rl, err := resourcelock.New(resourcelock.ConfigMapsLeasesResourceLock, constant.DLNamespace, constant.ComponentName,
-		kube.GetClientK8s().ClientSet.CoreV1(),
-		kube.GetClientK8s().ClientSet.CoordinationV1(),
-		resourcelock.ResourceLockConfig{
-			Identity: id,
-		})
-	if err != nil {
-		return fmt.Errorf("couldn't create resource lock: %v", err)
-	}
-
-	leaderelection.RunOrDie(context.TODO(), leaderelection.LeaderElectionConfig{
-		Lock:          rl,
-		LeaseDuration: leaseDuration,
-		RenewDeadline: renewDeadline,
-		RetryPeriod:   retryPeriod,
-		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(ctx context.Context) {
-				hwlog.RunLog.Warnf("leader election obtain, start informer")
-				kube.InitCMInformer()
-				kube.InitPodInformer()
-				kube.InitPGInformer(ctx)
-				kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
-				kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
-				kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
-				go resource.Report()
-			},
-			OnStoppedLeading: func() {
-				hwlog.RunLog.Warnf("leader election lost, stop informer")
-				kube.StopInformer()
-				kube.CleanFuncs()
-				resource.StopReport()
-			},
-			OnNewLeader: func(identity string) {
-				hwlog.RunLog.Warnf("new leader is %s", identity)
-			},
-		},
-	})
-	return nil
+func startInformer(ctx context.Context) {
+	kube.InitCMInformer()
+	kube.InitPodInformer()
+	kube.InitPGInformer(ctx)
+	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
+	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
+	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
+	go resource.Report()
 }
 
 func main() {
@@ -118,10 +73,8 @@ func main() {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	if err := leaderElectAndRun(); err != nil {
-		hwlog.RunLog.Errorf("leader election failed,err is %v", err)
-		return
-	}
+	startInformer(ctx)
+
 	signalCatch(cancel)
 }
 
