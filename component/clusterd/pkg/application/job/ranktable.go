@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"

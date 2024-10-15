@@ -111,8 +111,8 @@ func (ms MachineStates) String() string {
 func NewEventId(randLen int) string {
 	timestamp := time.Now().UnixNano()
 	randomNumberHex := ""
-	if randLen > 32 || randLen < 1 {
-		randLen = 32
+	if randLen > RandLength || randLen < 1 {
+		randLen = RandLength
 	}
 	randomNumber := make([]byte, randLen)
 	_, err := io.ReadFull(rand.Reader, randomNumber)

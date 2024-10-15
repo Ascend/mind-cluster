@@ -524,6 +524,11 @@ func (s *FaultRecoverService) PublishSignal(signal *pb.ProcessManageSignal, expe
 			}
 		}
 	}
+	afterCheckOrder(signal, expectStates, controller)
+
+}
+
+func afterCheckOrder(signal *pb.ProcessManageSignal, expectStates common.MachineStates, controller *EventController) {
 	if common.CheckOrder(controller.state, expectStates) {
 		select {
 		case controller.signalChan <- signal:
@@ -539,7 +544,6 @@ func (s *FaultRecoverService) PublishSignal(signal *pb.ProcessManageSignal, expe
 			"state=%s, expectStates=%s, taskId=%s, signalType=%s",
 			common.StateToString(controller.state), expectStates.String(), signal.TaskId, signal.SignalType)
 	}
-
 }
 
 func (s *FaultRecoverService) onSignalSent(signal *pb.ProcessManageSignal) *pb.Status {
@@ -620,36 +624,10 @@ func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *
 	case common.GlobalFaultSignalType:
 		stateMatch = common.CheckOrder(controller.state, []common.MachineState{common.ReceiveStopFinish})
 		if stateMatch {
-			hardRanks := controller.getHardFaultRankIds()
-			softRanks := controller.getSoftwareFaultRankIds()
-			allFaultRanks := util.RemoveSliceDuplicateElement(append(hardRanks, softRanks...))
-
-			isPlatForm, _, err := WaitProcessContinue(controller.taskName+common.MiddleLine+controller.taskId,
-				controller.nameSpace)
-			if isPlatForm {
-				hwlog.RunLog.Info("platFrom mode process recover")
-				if err != nil {
-					hwlog.RunLog.Errorf("platForm err: %v, reset process", err)
-					controller.reset(false)
-					return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
-						Info: fmt.Sprintf("platForm err: %v, reset process", err)}
-				}
-				platFaultResult, err := WaitProcessResultFault(controller.taskName+common.MiddleLine+controller.taskId,
-					controller.nameSpace)
-				if err != nil {
-					controller.reset(false)
-					return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
-						Info: fmt.Sprintf("WaitProcessResultFault err: %v, reset process", err)}
-				}
-				allFaultRanks = platFaultResult
+			status, done := globalFault(signal, controller)
+			if done {
+				return status
 			}
-			if _, err := common.RetryWriteResetCM(controller.taskName, controller.nameSpace,
-				allFaultRanks, "fault"); err != nil {
-				controller.reset(false)
-				return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s write reset info failed"}
-			}
-			signal.FaultRankIds = allFaultRanks
-			hwlog.RunLog.Infof("global fault signal: %v", signal.FaultRankIds)
 		}
 	case common.ChangeStrategySignalType:
 		handlePlatStrategy(controller, signal)
@@ -662,6 +640,40 @@ func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *
 		return &pb.Status{Code: pb.RespCode_ORDER_MIXED, Info: "order mixed, signal queue out ignore"}
 	}
 	return &pb.Status{Code: pb.RespCode_OK, Info: "signal out queue, prepare to send"}
+}
+
+func globalFault(signal *pb.ProcessManageSignal, controller *EventController) (*pb.Status, bool) {
+	hardRanks := controller.getHardFaultRankIds()
+	softRanks := controller.getSoftwareFaultRankIds()
+	allFaultRanks := util.RemoveSliceDuplicateElement(append(hardRanks, softRanks...))
+
+	isPlatForm, _, err := WaitProcessContinue(controller.taskName+common.MiddleLine+controller.taskId,
+		controller.nameSpace)
+	if isPlatForm {
+		hwlog.RunLog.Info("platFrom mode process recover")
+		if err != nil {
+			hwlog.RunLog.Errorf("platForm err: %v, reset process", err)
+			controller.reset(false)
+			return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
+				Info: fmt.Sprintf("platForm err: %v, reset process", err)}, true
+		}
+		platFaultResult, err := WaitProcessResultFault(controller.taskName+common.MiddleLine+controller.taskId,
+			controller.nameSpace)
+		if err != nil {
+			controller.reset(false)
+			return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
+				Info: fmt.Sprintf("WaitProcessResultFault err: %v, reset process", err)}, true
+		}
+		allFaultRanks = platFaultResult
+	}
+	if _, err := common.RetryWriteResetCM(controller.taskName, controller.nameSpace,
+		allFaultRanks, "fault"); err != nil {
+		controller.reset(false)
+		return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s write reset info failed"}, true
+	}
+	signal.FaultRankIds = allFaultRanks
+	hwlog.RunLog.Infof("global fault signal: %v", signal.FaultRankIds)
+	return nil, false
 }
 
 // SubscribeProcessManageSignal subscribe process manage signal from ClusterD

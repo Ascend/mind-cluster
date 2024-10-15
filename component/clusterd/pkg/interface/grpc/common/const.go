@@ -24,6 +24,8 @@ const (
 	DumpRecoverLevel = 1
 	// ExitRecoverLevel exit strategy level
 	ExitRecoverLevel = 2
+	// RandLength random number length
+	RandLength = 32
 )
 
 // MachineState is recover state

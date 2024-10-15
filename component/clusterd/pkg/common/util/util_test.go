@@ -80,7 +80,7 @@ func TestObjToString(t *testing.T) {
 		})
 		convey.Convey("data is string", func() {
 			result := ObjToString(testHashCodeStr)
-			convey.So(result, convey.ShouldEqual, "\""+testHashCodeStr+"\"")
+			convey.So(result, convey.ShouldEqual, `"`+testHashCodeStr+`"`)
 		})
 		convey.Convey("data is map", func() {
 			data := map[int]int{

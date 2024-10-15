@@ -131,11 +131,11 @@ func pullProcessResultFault(name, namespace string) ([]string, []string, error) 
 	resultRanks, ok := pg.Annotations[common.ProcessResultFaultKey]
 	if !ok {
 		hwlog.RunLog.Warnf("can not fiind ProcessResultFaultKey, name:%s", name)
-		return nil, nil, fmt.Errorf("ProcessResultFaultKey not exist, name:%s", name)
+		return nil, nil, fmt.Errorf("processResultFaultKey not exist, name:%s", name)
 	}
 	rankSlice := strings.Split(resultRanks, ",")
 	if len(rankSlice) == 0 {
-		err = errors.New("ProcessResultFault lenth is 0")
+		err = errors.New("processResultFault lenth is 0")
 	}
 	confirmRanks, ok := pg.Annotations[common.ProcessConfirmFaultKey]
 	if !ok {
