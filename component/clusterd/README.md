@@ -61,7 +61,7 @@
 
 
 <h2 id="组件安装">组件安装</h2>
-请参考《MindX DL用户指南》(https://www.hiascend.com/software/mindx-dl)中的“集群调度用户指南 > 安装部署指导 > 安装集群调度组件 > 典型安装场景 > 集群调度场景”进行。
+请参考《MindX DL用户指南》<https://www.hiascend.com/software/mindx-dl>中的“集群调度用户指南 > 安装部署指导 > 安装集群调度组件 > 典型安装场景 > 集群调度场景”进行。
 
 <h2 id="说明">说明</h2>
 
