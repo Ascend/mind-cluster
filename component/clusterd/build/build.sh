@@ -17,11 +17,13 @@ set -e
 CUR_DIR=$(dirname $(readlink -f $0))
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
-VER_FILE="${TOP_DIR}/../../builddesign/build/conf/config.yaml"
+VER_FILE="${TOP_DIR}"/service_config.ini
 build_version="v6.0.RC2"
 output_name="clusterd"
 if [ -f "$VER_FILE" ]; then
-  build_version="v"$(sed "/^  pkgversion:/!d;s/.*: //" "${VER_FILE}")
+  line=$(sed -n '1p' "$VER_FILE" 2>&1)
+  #cut the chars after ':' and add char 'v', the final example is v3.0.0
+  build_version="v"${line#*=}
 fi
 
 arch=$(arch 2>&1)
@@ -66,8 +68,6 @@ function mv_file() {
   cp "$CUR_DIR"/clusterd.yaml "$TOP_DIR"/output/clusterd-"${build_version}".yaml
   sed -i "s#output/clusterd#clusterd#" "$TOP_DIR"/output/Dockerfile
   change_mod
-  zip -j "${TOP_DIR}/${docker_zip_name}" output/*
-  mv "${TOP_DIR}/${docker_zip_name}" "${TOP_DIR}/output/${docker_zip_name}"
 }
 
 function change_mod() {
