@@ -2,3 +2,4 @@
 /usr/local/Ascend/driver/include
 /usr/local/dcmi
 /usr/local/bin/npu-smi
+/var/queue_schedule

@@ -3,3 +3,4 @@
 /usr/local/Ascend/driver/tools
 /etc/hdcBasic.cfg
 /etc/sys_version.conf
+/var/queue_schedule
