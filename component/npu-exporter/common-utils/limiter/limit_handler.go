@@ -113,16 +113,11 @@ func (h *limitHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		hwlog.RunLog.Debugf("token count:%d", len(h.concurrency))
-		cancelCtx, cancelFunc := context.WithCancel(ctx)
 		start := time.Now()
-		go returnToken(cancelCtx, h.concurrency)
 		statusRes := newResponse(w)
 		h.httpHandler.ServeHTTP(statusRes, req)
 		stop := time.Since(start)
-		cancelFunc()
-		if stop < second5*time.Second {
-			h.concurrency <- struct{}{}
-		}
+		h.concurrency <- struct{}{}
 		latency := int(math.Ceil(float64(stop.Nanoseconds()) / kilo / kilo))
 		if h.log {
 			hwlog.RunLog.InfofWithCtx(ctx, "%s %s: %s <%3d> (%dms) |%15s |%s |%d", req.Proto, req.Method, path,
@@ -159,36 +154,6 @@ func initContext(req *http.Request) context.Context {
 		ctx = context.WithValue(ctx, hwlog.UserID, id)
 	}
 	return ctx
-}
-
-func returnToken(ctx context.Context, concurrency chan struct{}) {
-	defer func() {
-		if err := recover(); err != nil {
-			hwlog.RunLog.Errorf("go routine failed with %v", err)
-		}
-	}()
-	timeAfterTrigger := time.After(time.Second * second5)
-	if concurrency == nil || timeAfterTrigger == nil {
-		hwlog.RunLog.Error("return token error")
-		return
-	}
-	for {
-		select {
-		case _, ok := <-timeAfterTrigger:
-			if !ok {
-				return
-			}
-			concurrency <- struct{}{}
-			hwlog.RunLog.Debugf("recover token num：%d", len(concurrency))
-			return
-		case _, ok := <-ctx.Done():
-			err := ctx.Err()
-			if !ok || err != nil {
-				hwlog.RunLog.Debugf("%+v:%+v", err, ok)
-			}
-			return
-		}
-	}
 }
 
 // NewLimitHandler new a bucket-token limiter
