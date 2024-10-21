@@ -66,6 +66,7 @@ func main() {
 	err = kube.InitClientVolcano()
 	if err != nil {
 		hwlog.RunLog.Errorf("new volcano client config err: %v", err)
+		return
 	}
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams)})
