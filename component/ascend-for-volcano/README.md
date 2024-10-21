@@ -1,18 +1,31 @@
 # NPU亲和性调度算法设计说明与开发指导.zh
 - [免责声明](#免责声明)
+- [支持的产品形态](#支持的产品形态)
 - [Ascend-volcano-plugin介绍](#Ascend-volcano-plugin介绍文档)
 - [亲和性策略说明](#亲和性策略说明文档)
 - [调度算法设计说明](#调度算法设计说明文档)
 - [调度算法实现说明](#调度算法实现说明文档)
 - [目录结构](#目录结构文档)
 - [编译说明](#编译说明文档)
-- [版本更新记录](#版本更新记录文档)
+- [版本更新记录](#版本更新记录)
+- [版本配套说明](#版本配套说明)
 
 <h2 id="免责声明">免责声明</h2>
 
 - 本仓库代码中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布前，这些分支不应被应用于任何生产环境或者依赖关键业务的项目中。请务必使用我们的正式发行版本，以确保代码的稳定性和安全性。
-使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献值概不负责。
+  使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献值概不负责。
 - 正式版本请参考ascend-for-volcano正式release版本 <https://gitee.com/ascend/ascend-for-volcano/releases>
+
+<h2 id="支持的产品形态">支持的产品形态</h2>
+
+- 支持以下产品使用资源监测
+    - Atlas 训练系列产品
+    - Atlas A2 训练系列产品
+    - Atlas A3 训练系列产品
+    - 推理服务器（插Atlas 300I 推理卡）
+    - Atlas 推理系列产品（Ascend 310P AI处理器）
+    - Atlas 800I A2 推理服务器
+
 
 <h2 id="Ascend-volcano-plugin介绍文档">Ascend-volcano-plugin介绍</h2>
 
@@ -27,7 +40,7 @@
 **图 1** Ascend 910 AI Processor  interconnection topology<a name="fig997414281914"></a>  
 ![](doc/figures/Ascend-910-AI-Processor-interconnection-topology.png "Ascend-910-AI-Processor-interconnection-topology")
 
->![](doc/figures/icon-note.gif) **说明：** 
+>![](doc/figures/icon-note.gif) **说明：**
 >图中A0\~A7为昇腾910 AI处理器。
 
 ## 亲和性策略说明<a name="section1024522919366"></a>
@@ -94,7 +107,7 @@
 
 根据亲和性策略和业务模型设计梳理出场景如[表1](#table34241172175)所示。
 
->![](doc/figures/icon-note.gif) **说明：** 
+>![](doc/figures/icon-note.gif) **说明：**
 >-   A\~D列4个分组，表示处理器选取时，满足处理器选取的四种HCCS情况。优先级逐次递减，即当A中不满足时，才会选择B，C，D。
 >-   当组内满足HCCS时节点的情况。‘\~’左边为满足要求的HCCS，右边为另一个HCCS的处理器剩余情况。如对于1个处理器申请的A组情况：另一个HCCS可能为0、1、2、3、4五种处理器剩余情况。其代表的节点优先级也依次减小。
 >-   8颗及其以上处理器适用于4颗及其以下的情况。且均放在A组，且需要全部占用。
@@ -205,12 +218,12 @@
 4.  对选出的结果进行保存。
 5.  <a name="li205713218818"></a>对选出的节点进行加权操作。
 
-    >![](doc/figures/icon-note.gif) **说明：** 
+    >![](doc/figures/icon-note.gif) **说明：**
     >[1](#li2081354582012)\~[5](#li205713218818)都是在Volcano提供的注册函数batchNodeOrderFn中实现。
 
 6.  对选出的节点进行资源分配管理。
 
-    >![](doc/figures/icon-note.gif) **说明：** 
+    >![](doc/figures/icon-note.gif) **说明：**
     >该步骤是在Volcano的AddEventHandler函数中实现。该函数包含了节点资源的预分配allocate函数。
 
 7.  完成以上的分配操作后，Volcano框架会将本轮分配结果提交给K8s的kubelet进行确认执行，本次分配结束。
@@ -445,24 +458,24 @@
 
 ## 编译Volcano<a name="section1922947135013"></a>
 
-1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.4.0（或v1.7.0）版本官方开源代码。
+1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0（或v1.7.0）版本官方开源代码。
 
-    **cd** **$GOPATH/src/volcano.sh/**
-    **git clone -b release-1.4 https://github.com/volcano-sh/volcano.git**
+   **cd** **$GOPATH/src/volcano.sh/**
+   **git clone -b release-1.9 https://github.com/volcano-sh/volcano.git**
 
 2. 将代码目录“ascend-for-volcano“重命名为“ascend-volcano-plugin”拷贝至Volcano官方开源代码的插件路径下（“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
-3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.4.0.
+3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.9.0.
 
-    **cd** **$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build**
+   **cd** **$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build**
 
-    **chmod +x build.sh**
+   **chmod +x build.sh**
 
-    **./build.sh v1.4.0** 
+   **./build.sh v1.9.0**
 
-    编译出的二进制文件和动态链接库文件在“ascend-volcano-plugin/output“目录下，文件[表1](#table922124765019)所示。
-  
-    **表 1**  output路径下的文件列表
-    <a name="table922124765019"></a>
+   编译出的二进制文件和动态链接库文件在“ascend-volcano-plugin/output“目录下，文件[表1](#table922124765019)所示。
+
+   **表 1**  output路径下的文件列表
+   <a name="table922124765019"></a>
     <table><thead align="left"><tr id="row92014710505"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p8201347165014"><a name="p8201347165014"></a><a name="p8201347165014"></a>文件名</p>
     </th>
     <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p820347205020"><a name="p820347205020"></a><a name="p820347205020"></a>说明</p>
@@ -502,31 +515,25 @@
     </tbody>
     </table>
 
-    >![](doc/figures/icon-note.gif) **说明：** 
-    >_\{__version__\}_：表示版本号。
+   >![](doc/figures/icon-note.gif) **说明：**
+   >_\{__version__\}_：表示版本号。
 
 ## 安装前准备和安装Volcano<a name="section2739745153910"></a>
 
 请参考《[MindX DL用户指南](https://www.hiascend.com/software/mindx-dl)》中的“集群调度用户指南 \> 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
 
-<h2 id="版本更新记录文档">版本更新记录</h2>
+<h2 id="版本更新记录">版本更新记录</h2>
 
-<a name="table7854542104414"></a>
+| 版本           | 发布日期      | 修改说明              |
+|--------------|-----------|-------------------|
+| v6.0.0-RC2   | 2024-625  | 配套MindX 6.0.RC2版本 |
+| v6.0.0-RC1   | 2024-325  | 配套MindX 6.0.RC1版本 |
+| v5.0.0       | 2023-1207 | 配套MindX 5.0.0版本   |
+| v5.0.0-RC3   | 2023-1011 | 配套MindX 5.0.RC3版本 |
+| v5.0.0-RC2   | 2023-725  | 配套MindX 5.0.RC2版本 |
+| v5.0.0-RC1   | 2023-330  | 配套MindX 5.0.RC1版本 |
+| v3.0.0       | 2022-1230 | 首次发布              |
 
-<table><thead align="left"><tr id="row785512423445"><th class="cellrowborder" valign="top" width="26.662666266626662%" id="mcps1.1.4.1.1"><p id="p19856144274419"><a name="p19856144274419"></a><a name="p19856144274419"></a>版本</p>
-</th>
-<th class="cellrowborder" valign="top" width="29.94299429942994%" id="mcps1.1.4.1.2"><p id="p3856134219446"><a name="p3856134219446"></a><a name="p3856134219446"></a>发布日期</p>
-</th>
-<th class="cellrowborder" valign="top" width="43.394339433943394%" id="mcps1.1.4.1.3"><p id="p585634218445"><a name="p585634218445"></a><a name="p585634218445"></a>修改说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row20475407015"><td class="cellrowborder" valign="top" width="26.662666266626662%" headers="mcps1.1.4.1.1 "><p id="p13476001109"><a name="p13476001109"></a><a name="p13476001109"></a>v3.0.0</p>
-</td>
-<td class="cellrowborder" valign="top" width="29.94299429942994%" headers="mcps1.1.4.1.2 "><p id="p11476901010"><a name="p11476901010"></a><a name="p11476901010"></a>2023-01-18</p>
-</td>
-<td class="cellrowborder" valign="top" width="43.394339433943394%" headers="mcps1.1.4.1.3 "><a name="ul7682144015113"></a><a name="ul7682144015113"></a><ul id="ul7682144015113"><li>开源首次发布。</li><li>具体内容请参考《MindX DL用户指南》</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+<h2 id="版本配套说明">版本配套说明</h2>
+
+版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/commercial)
