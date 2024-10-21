@@ -86,11 +86,11 @@ const (
 var (
 	faultTypeCode FaultTypeCode
 	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
+	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
 	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L2-L3
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
+	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// SeparateFaultCodes contains all fault code that believed to be Separate, in this case is L4-L5
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
+	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// initLogicIDs need init fault code device. add by train or inference
 	initLogicIDs []int32
 	// logicIDLock operate initLogicIDs lock
@@ -188,7 +188,6 @@ type faultFileInfo struct {
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
 type SwitchFaultFileInfo struct {
 	NotHandleFaultCodes []string
-	ReportFaultCodes    []string
 	SubHealthFaultCodes []string
 	ResetFaultCodes     []string
 	SeparateFaultCodes  []string
@@ -322,7 +321,7 @@ func (h *HbmFaultManager) aicFaultEventInQue(faultInfo common.DevFaultInfo) {
 }
 
 func (h *HbmFaultManager) aicFaultEventOutQue(logicId int32) []common.DevFaultInfo {
-	faultInfoList := make([]common.DevFaultInfo, 0)
+	var faultInfoList []common.DevFaultInfo
 	faultEventQue, ok := h.AicFaultEventQue[logicId]
 	if !ok {
 		return faultInfoList
@@ -330,7 +329,7 @@ func (h *HbmFaultManager) aicFaultEventOutQue(logicId int32) []common.DevFaultIn
 	if _, ok := h.HbmOccurTimeCache[logicId]; !ok {
 		h.HbmOccurTimeCache[logicId] = 0
 	}
-	newFaultEventQue := make([]common.DevFaultInfo, 0)
+	var newFaultEventQue []common.DevFaultInfo
 	nowTime := time.Now().Unix()
 	for i := 0; i < len(faultEventQue); i++ {
 		// The fault aic error occurring ten seconds before and after the occurrence of hbm error should be deleted,
@@ -493,40 +492,49 @@ func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 		return fmt.Errorf("failed to unmarsha switch fault code, err: %s", err.Error())
 	}
 
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-
+	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
+	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
+	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
+	invalidFormatInfo := "failed to parse %s faultCode:%v, will ignore it," +
+		" please check if its format, such as: [0x00f1ff09,155914,cpu,na]"
 	for _, code := range switchFileInfo.NotHandleFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse NotHandleFaultCodes faultcode:%v", code)
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "NotHandleFaultCodes", code)
 			continue
 		}
-		NotHandleFaultCodes = append(NotHandleFaultCodes, codeInt64)
+		NotHandleFaultCodes = append(NotHandleFaultCodes, code)
 	}
 
-	switchFileInfo.ReportFaultCodes = append(switchFileInfo.ReportFaultCodes, switchFileInfo.SubHealthFaultCodes...)
-	for _, code := range switchFileInfo.ReportFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse PreSeparateFaultCodes:%v", code)
+	for _, code := range switchFileInfo.SubHealthFaultCodes {
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "SubHealthFaultCodes", code)
 			continue
 		}
-		PreSeparateFaultCodes = append(PreSeparateFaultCodes, codeInt64)
+		PreSeparateFaultCodes = append(PreSeparateFaultCodes, code)
 	}
 
 	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
 	for _, code := range switchFileInfo.SeparateFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse SeparateFaultCodes:%v", code)
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "SeparateFaultCodes", code)
 			continue
 		}
-		SeparateFaultCodes = append(SeparateFaultCodes, codeInt64)
+		SeparateFaultCodes = append(SeparateFaultCodes, code)
 	}
 
 	return nil
+}
+
+// isValidSwitchFaultCode to judge is a fault code is valid format as [0x00f1ff09,155914,cpu,na]
+func isValidSwitchFaultCode(code string) bool {
+	if len(code) > MaxLengthOfFaultCode {
+		return false
+	}
+	if !strings.HasPrefix(code, "[") || !strings.HasSuffix(code, "]") {
+		return false
+	}
+	parts := strings.Split(code, CommaSepDev)
+	return len(parts) == PartNumOfFaultCode
 }
 
 func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
@@ -978,14 +986,26 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 		hwlog.RunLog.Error("param device is nil in SetNewFaultAndCacheOnceRecoverFault")
 		return
 	}
-	newFaultInfos := faultInfos
+
 	if _, ok := faultDurationMap[HbmDoubleBitFaultCodeStr]; ok {
-		newFaultInfos = newFaultInfosForHBMErr(logicID, faultInfos)
+		var newFaultInfos []common.DevFaultInfo
+		// dealing with Hbm and Aic/Aiv associated faults
+		for i := 0; i < len(faultInfos); i++ {
+			if faultInfos[i].EventID == HbmDoubleBitFaultCode && faultInfos[i].Assertion != common.FaultRecover {
+				hbmTool.updateHbmOccurTime(faultInfos[i])
+			}
+			if faultInfos[i].EventID == AicBusFaultCode || faultInfos[i].EventID == AivBusFaultCode {
+				hbmTool.aicFaultEventInQue(faultInfos[i])
+				continue
+			}
+			newFaultInfos = append(newFaultInfos, faultInfos[i])
+		}
+		faultInfos = append(newFaultInfos, hbmTool.aicFaultEventOutQue(logicID)...)
 	}
 
 	// it must deal with two 'for', because the fault may recover one moment, in this case,
 	// the recover message and occur message both in faultInfos, this fault cannot be reports outside.
-	for _, faultInfo := range newFaultInfos {
+	for _, faultInfo := range faultInfos {
 		if NetworkFaultCodes.Has(faultInfo.EventID) {
 			continue
 		}
@@ -1000,7 +1020,7 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 			recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 		}
 	}
-	for _, faultInfo := range newFaultInfos {
+	for _, faultInfo := range faultInfos {
 		if NetworkFaultCodes.Has(faultInfo.EventID) {
 			continue
 		}
@@ -1026,22 +1046,6 @@ func SetNetworkNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []comm
 	networkFaultRecoverAndFaultOnceHandle(logicID, faultInfos, device)
 	networkFaultOccurAndFaultOnceHandle(faultInfos, device)
 	setNetworkAlarmRaisedTime(device)
-}
-
-func newFaultInfosForHBMErr(logicID int32, faultInfos []common.DevFaultInfo) []common.DevFaultInfo {
-	var newFaultInfos []common.DevFaultInfo
-	// dealing with Hbm and Aic/Aiv associated faults
-	for i := 0; i < len(faultInfos); i++ {
-		if faultInfos[i].EventID == HbmDoubleBitFaultCode && faultInfos[i].Assertion != common.FaultRecover {
-			hbmTool.updateHbmOccurTime(faultInfos[i])
-		}
-		if faultInfos[i].EventID == AicBusFaultCode || faultInfos[i].EventID == AivBusFaultCode {
-			hbmTool.aicFaultEventInQue(faultInfos[i])
-			continue
-		}
-		newFaultInfos = append(newFaultInfos, faultInfos[i])
-	}
-	return append(newFaultInfos, hbmTool.aicFaultEventOutQue(logicID)...)
 }
 
 func networkFaultRecoverAndFaultOnceHandle(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
@@ -1273,7 +1277,7 @@ func collectEachFaultEvent(logicId int32, faultInfos []common.DevFaultInfo) {
 		}
 
 		if faultDurationMap[eventIdStr].Duration == nil {
-			faultDurationMap[eventIdStr].Duration = make(map[int32]FaultDurationData, 0)
+			faultDurationMap[eventIdStr].Duration = make(map[int32]FaultDurationData, GeneralMapSize)
 		}
 
 		if _, ok := faultDurationMap[eventIdStr].Duration[logicId]; !ok {
