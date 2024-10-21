@@ -1,27 +1,39 @@
 # Ascend Device Plugin
 -   **[免责声明](#免责声明)**
+-   **[支持的产品形态](#支持的产品形态)**
 -   **[组件介绍](#组件介绍)**
--   **[编译Ascend Device Plugin](#编译Ascend-Device-Plugin)**
+-   **[编译](#编译)**
 -   **[组件安装](#组件安装)**
 -   **[说明](#说明)**
--   **[更新日志](#更新日志)**
+-   **[版本更新记录](#版本更新记录)**
+-   **[版本配套说明](#版本配套说明)**
 
 # 免责声明
 - 本代码仓库中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布之前，这些分支不应被用于任何生产环境或依赖关键业务的项目中。请务必仅使用我们的正式发行版本，以确保代码的稳定性和安全性。
   使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
 - 正式版本请参考：[Ascend Device Plugin正式release版本](https://gitee.com/ascend/ascend-device-plugin/releases)
 
-# 组件介绍
+# 支持的产品形态
 
+- 支持以下产品使用资源监测
+    - Atlas 训练系列产品
+    - Atlas A2 训练系列产品
+    - Atlas A3 训练系列产品
+    - 推理服务器（插Atlas 300I 推理卡）
+    - Atlas 推理系列产品（Ascend 310P AI处理器）
+    - Atlas 800I A2 推理服务器
+
+
+# 组件介绍
 设备管理插件拥有以下功能：
 
 -   设备发现：支持从昇腾设备驱动中发现设备个数，将其发现的设备个数上报到Kubernetes系统中。支持发现拆分物理设备得到的虚拟设备并上报kubernetes系统。
 -   健康检查：支持检测昇腾设备的健康状态，当设备处于不健康状态时，上报到Kubernetes系统中，Kubernetes系统会自动将不健康设备从可用列表中剔除。虚拟设备健康状态由拆分这些虚拟设备的物理设备决定。
 -   设备分配：支持在Kubernetes系统中分配昇腾设备；支持NPU设备重调度功能，设备故障后会自动拉起新容器，挂载健康设备，并重建训练任务。
 
-# 编译Ascend-Device-Plugin
+# 编译
 
-1.  通过git拉取源码，并切换sync-dev分支，获得ascend-device-plugin。
+1.  通过git拉取源码，并切换master分支，获得ascend-device-plugin。
 
     示例：源码放在/home/test/ascend-device-plugin目录下
 
@@ -66,41 +78,30 @@
     1、“ascend-device-plugin/build“目录下的**ascendplugin-910.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-910-v5.0.RC3.yaml**，作用是更新版本号。
     2、边侧场景编译仅生成device-plugin二进制文件
 
-# 组件安装
 
+# 组件安装
 1.  请参考《MindX DL用户指南》(https://www.hiascend.com/software/mindx-dl)
-    中的“集群调度用户指南 > 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
+    中的“开发文档 \> 基础调度 \> 集群调度 \> 安装 \> 组件安装”进行。
 
 # 说明
 
 1. 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount， 该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 
-# 更新日志
+<h2 id="版本更新记录">版本更新记录</h2>
 
-<a name="table7854542104414"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0280467800_row785512423445"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0280467800_p19856144274419"><a name="zh-cn_topic_0280467800_p19856144274419"></a><a name="zh-cn_topic_0280467800_p19856144274419"></a>版本</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0280467800_p585634218445"><a name="zh-cn_topic_0280467800_p585634218445"></a><a name="zh-cn_topic_0280467800_p585634218445"></a>修改说明</p>
-</th>
-</tr>
-</thead>
-<tbody>
-<tr id="row7293189122012"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="p9235101416201"><a name="p9235101416201"></a><a name="p9235101416201"></a>v5.0.RC2</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><a name="ul162558202525"></a><a name="ul162558202525"></a><ul id="ul162558202525"><li>支持断点续训热复位</li></ul>
-</td>
-</tr>
-<tr id="row7293189122012"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="p9235101416201"><a name="p9235101416201"></a><a name="p9235101416201"></a>v5.0.RC1</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><a name="ul162558202525"></a><a name="ul162558202525"></a><ul id="ul162558202525"><li>新硬件适配</li></ul>
-</td>
-</tr>
-<tr id="row7293189122012"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="p9235101416201"><a name="p9235101416201"></a><a name="p9235101416201"></a>v3.0.0</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><a name="ul162558202525"></a><a name="ul162558202525"></a><ul id="ul162558202525"><li>首次发布</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+| 版本         | 发布日期       | 修改说明              |
+|------------|------------|-------------------|
+| v6.0.0-RC2 | 2024-07-16 | 配套MindX 6.0.RC2版本 |
+| v5.0.1     | 2024-04-19 | 配套MindX 5.0.1版本   |
+| v6.0.0-RC1 | 2024-04-12 | 配套MindX 6.0.RC1版本 |
+| v5.0.0     | 2023-12-29 | 配套MindX 5.0.0版本   |
+| v5.0.0-RC3 | 2023-10-14 | 配套MindX 5.0.RC3版本 |
+| v5.0.0-RC2 | 2023-07-27 | 配套MindX 5.0.RC2版本 |
+| v5.0.0-RC1 | 2023-04-10 | 配套MindX 5.0.RC1版本 |
+| v3.0.0     | 2023-02-16 | 首次发布              |
+
+# 版本配套说明
+
+版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/commercial)
 
 

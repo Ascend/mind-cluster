@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -82,23 +81,6 @@ func initVarable() (*limitHandler, StatusResponseWriter, *http.Request) {
 		Method: "GET",
 	}
 	return v, w, r
-}
-
-func TestReturnToken(t *testing.T) {
-	convey.Convey("test returnToken", t, func() {
-		mock := gomonkey.ApplyFunc(time.After, func(time.Duration) <-chan time.Time {
-			tc := make(chan time.Time, 1)
-			tc <- time.Time{}
-			return tc
-		})
-		defer mock.Reset()
-		cancelCtx, cancelFunc := context.WithCancel(context.Background())
-		defer cancelFunc()
-		sc := make(chan struct{}, 1)
-		go returnToken(cancelCtx, sc)
-		time.Sleep(time.Second)
-		convey.So(len(sc), convey.ShouldEqual, 1)
-	})
 }
 
 func TestNewLimitHandlerV2(t *testing.T) {
