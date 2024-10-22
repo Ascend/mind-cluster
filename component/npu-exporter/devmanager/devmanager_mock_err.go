@@ -295,3 +295,8 @@ func (d *DeviceManagerMockErr) GetHccsStatisticInfo(logicID int32) (*common.Hccs
 func (d *DeviceManagerMockErr) GetMainBoardId() uint32 {
 	return 0
 }
+
+// GetHccsBandwidthInfo get hccs statistic info
+func (d *DeviceManagerMockErr) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
+	return nil, errors.New(errorMsg)
+}

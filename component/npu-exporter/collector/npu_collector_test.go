@@ -209,7 +209,7 @@ func mockGetNPUInfo(dmgr devmanager.DeviceInterface) []HuaWeiNPUCard {
 	for devicePhysicID := int32(0); devicePhysicID < npuCount; devicePhysicID++ {
 		chipInfo := &HuaWeiAIChip{
 			HealthStatus:      Healthy,
-			ErrorCode:         0,
+			ErrorCodes:        []int64{},
 			Utilization:       0,
 			Temperature:       0,
 			Power:             0,

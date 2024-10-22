@@ -78,6 +78,7 @@ type DeviceInterface interface {
 	GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInfo, error)
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
+	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
 }
 
 var (
@@ -911,8 +912,28 @@ func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatist
 	}
 	cgoHccsStatusInfo, err := d.DcMgr.DcGetHccsStatisticInfo(cardID, deviceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get hccs statistic info by logicID(%d), error: %v", logicID, err)
+		return nil, fmt.Errorf("failed to get hccs statistic info by cardId(%d) deviceID(%d), error: %v",
+			cardID, deviceID, err)
 	}
 
 	return &cgoHccsStatusInfo, nil
+}
+
+// GetHccsBandwidthInfo get hccs bandwidth info
+func (d *DeviceManager) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return nil, fmt.Errorf("input invalid logicID when get hccs bandwidth info: %d", logicID)
+	}
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
+			"when get hccs bandwidth info, error: %v", logicID, err)
+	}
+	cgoHccsBandwidthInfo, err := d.DcMgr.DcGetHccsBandwidthInfo(cardID, deviceID, common.HccsBWProfilingTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get hccs bandwidth info by cardId(%d) deviceID(%d), error: %v",
+			cardID, deviceID, err)
+	}
+
+	return &cgoHccsBandwidthInfo, nil
 }

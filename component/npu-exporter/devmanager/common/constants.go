@@ -28,6 +28,9 @@ var (
 	// ProfilingTime for getting PCIe bandwidth
 	ProfilingTime int
 
+	// HccsBWProfilingTime for getting hccs bandwidth
+	HccsBWProfilingTime int
+
 	// a900A3SuperPodBoardIds for A900/A9000 A3 Super Pod Board IDs
 	a900A3SuperPodBoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
 		A900A3SuperPodBin3BoardId)
@@ -55,6 +58,8 @@ const (
 	AICoreRatedFreq = 9
 	// VectorCore Ascend310P
 	VectorCore DeviceType = 12
+	// Overall Overall utilization rate of NPU
+	Overall DeviceType = 13
 )
 
 const (

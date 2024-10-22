@@ -20,6 +20,8 @@ import (
 	"math"
 	"regexp"
 	"strings"
+
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 )
 
 var (
@@ -174,6 +176,11 @@ func GetNpuName(chipInfo *ChipInfo) string {
 // SetExternalParams transmit npu-exporter's startup parameters
 func SetExternalParams(profilingTime int) {
 	ProfilingTime = profilingTime
+}
+
+// SetHccsBWProfilingTime set hccs bw profiling time
+func SetHccsBWProfilingTime(hccsbwProfilingTime int) {
+	HccsBWProfilingTime = hccsbwProfilingTime
 }
 
 // Is910BChip current chip is 910B or not
@@ -422,9 +429,46 @@ func DeepCopyHccsStatisticInfo(hccsStatisticInfo *HccsStatisticInfo) *HccsStatis
 	return &HccsStatisticInfo{
 		TxCnt:            hccsStatisticInfo.TxCnt,
 		RxCnt:            hccsStatisticInfo.RxCnt,
-		CrcErrCnt:        hccsStatisticInfo.CrcErrCnt,
-		retryCnt:         hccsStatisticInfo.retryCnt,
-		reservedFieldCnt: hccsStatisticInfo.reservedFieldCnt,
+		CrcErrCnt:        deepCopySlice(hccsStatisticInfo.CrcErrCnt).([]uint32),
+		retryCnt:         deepCopySlice(hccsStatisticInfo.retryCnt).([]uint32),
+		reservedFieldCnt: deepCopySlice(hccsStatisticInfo.reservedFieldCnt).([]uint32),
+	}
+}
+
+// DeepCopyHccsBandwidthInfo copy HccsStatisticInfo deeply
+func DeepCopyHccsBandwidthInfo(hccsBandwidthInfo *HccsBandwidthInfo) *HccsBandwidthInfo {
+	if hccsBandwidthInfo == nil {
+		return nil
+	}
+
+	return &HccsBandwidthInfo{
+		ProfilingTime: hccsBandwidthInfo.ProfilingTime,
+		TotalTxbw:     hccsBandwidthInfo.TotalTxbw,
+		TotalRxbw:     hccsBandwidthInfo.TotalRxbw,
+		TxBandwidth:   deepCopySlice(hccsBandwidthInfo.TxBandwidth).([]float64),
+		RxBandwidth:   deepCopySlice(hccsBandwidthInfo.RxBandwidth).([]float64),
+	}
+}
+
+// DeepCopySlice Deep copy slice
+func deepCopySlice(slice interface{}) interface{} {
+
+	switch v := slice.(type) {
+	case []int:
+		newSlice := make([]int, len(v))
+		copy(newSlice, v)
+		return newSlice
+	case []uint32:
+		newSlice := make([]uint32, len(v))
+		copy(newSlice, v)
+		return newSlice
+	case []float64:
+		newSlice := make([]float64, len(v))
+		copy(newSlice, v)
+		return newSlice
+	default:
+		hwlog.RunLog.Warn("Unsupported slice type")
+		return slice
 	}
 }
 
