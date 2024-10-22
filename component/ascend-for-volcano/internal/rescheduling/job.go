@@ -120,7 +120,8 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo) bool {
 	}
 
 	klog.V(util.LogDebugLev).Infof("<%d/%d> pod of job restarted", restartNum, jobInfo.MinAvailable)
-	if len(jobInfo.PodGroup.Labels) != 0 && jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc &&
+	if len(jobInfo.PodGroup.Labels) != 0 && (jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc ||
+		jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc) &&
 		fJob.PendingSessionNum != pendingTimes {
 		return restartNum >= deleteNum
 	}

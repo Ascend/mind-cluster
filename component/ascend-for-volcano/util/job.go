@@ -78,10 +78,7 @@ type SchedulerJobAttr struct {
 
 // IsJobSinglePodDelete valid job.
 func (sJob SchedulerJobAttr) IsJobSinglePodDelete() bool {
-	if sJob.Label[SinglePodTag] == EnableFunc && sJob.SchedulingTaskNum != len(sJob.Tasks) {
-		return true
-	}
-	return false
+	return sJob.SchedulingTaskNum != len(sJob.Tasks)
 }
 
 // IsSelectorMeetJob check the selectors
