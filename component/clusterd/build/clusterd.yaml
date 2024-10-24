@@ -93,7 +93,7 @@ spec:
                   fieldPath: spec.nodeName
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
-          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/cluster-info.log -logLevel=0" ]
+          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log" -logLevel=0" ]
           securityContext:
             readOnlyRootFilesystem: true
           volumeMounts:
