@@ -782,7 +782,7 @@ func updateResetConfigMapWithGraceExit(client kubernetes.Interface, name, nameSp
 		klog.V(util.LogWarningLev).Infof("get reset cm unmarshal err:%s", err)
 		return
 	}
-	resetCm.GraceExit = exitCode
+	resetCm.GracefulExit = exitCode
 	checkCode := util.MakeDataHash(resetCm)
 	str, err := json.Marshal(resetCm)
 	if err != nil {
