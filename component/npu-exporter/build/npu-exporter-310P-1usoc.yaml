@@ -44,6 +44,7 @@ spec:
       labels:
         app: npu-exporter
     spec:
+      automountServiceAccountToken: false
       nodeSelector:
         workerselector: dls-worker-node
         servertype: soc
