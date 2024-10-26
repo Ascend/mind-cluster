@@ -735,6 +735,20 @@ const (
 	PeerDeviceL2Port = 2
 )
 
+// port level switch fault event types
+const (
+	// PortFaultInvalidPkgEventType Port Fault Invalid Pkg Event Type
+	PortFaultInvalidPkgEventType = 3
+	// PortFaultUnstableEventType Port Fault Unstable Event Type
+	PortFaultUnstableEventType = 4
+	// PortFaultFailEventType Port Fault Fail Event Type
+	PortFaultFailEventType = 5
+	// PortFaultTimeoutLpEventType Port Fault Timeout Lp EventType
+	PortFaultTimeoutLpEventType = 14
+	// PortFaultTimeoutRpEventType Port Fault Timeout Rp EventType
+	PortFaultTimeoutRpEventType = 15
+)
+
 const (
 	// EventTypeOfSwitchPortFault the event type of port down fault
 	EventTypeOfSwitchPortFault = 5

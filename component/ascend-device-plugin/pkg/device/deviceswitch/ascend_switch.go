@@ -337,7 +337,9 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 // if it is whole chip peer deviceType will be "na" while peerdeivce==0
 // else it is for its chip, peer deviceType will be "cpu" while peerdeivce==0
 func isPortLevelFault(eventType int) bool {
-	if eventType == 3 || eventType == 4 || eventType == 5 || eventType == 14 || eventType == 15 {
+	if eventType == common.PortFaultInvalidPkgEventType || eventType == common.PortFaultUnstableEventType ||
+		eventType == common.PortFaultFailEventType || eventType == common.PortFaultTimeoutLpEventType ||
+		eventType == common.PortFaultTimeoutRpEventType {
 		return true
 	}
 	return false
