@@ -111,7 +111,7 @@ const (
 	// StateTimeoutSecond state time out second
 	StateTimeoutSecond = 600
 	// CheckPGRunningRetryTimes check pg change running state retry times
-	CheckPGRunningRetryTimes = 10
+	CheckPGRunningRetryTimes = 54
 	// SleepSecondBeforeCheckPGRunning check pg state interval
 	SleepSecondBeforeCheckPGRunning = 5
 	// WriteResetInfoRetryTimes retry set reset configmap
