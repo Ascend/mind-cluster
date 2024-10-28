@@ -21,6 +21,7 @@ type JobHealthyMgr interface {
 	ListenTaskScheduleResult(taskId string, strategy string)
 	GetJobNameAndNameSpace(taskId string) (string, string)
 	IsJobRunning(taskId string) bool
+	JobExist(taskId string) bool
 }
 
 // Publisher publish signal and handle job schedule result

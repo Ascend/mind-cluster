@@ -10,6 +10,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -38,6 +39,12 @@ var (
 	// PGInformer is pod group informer
 	PGInformer v1beta1.PodGroupInformer
 )
+
+// JobService a interface with DeleteJob method
+type JobService interface {
+	// DeleteJob unregistry job
+	DeleteJob(jobId string)
+}
 
 // StopInformer stop informer when loss-leader
 func StopInformer() {
@@ -291,7 +298,7 @@ func checkVolcanoExist(vcClient *versioned.Clientset) bool {
 }
 
 // InitPGInformer is to init pod group informer
-func InitPGInformer(ctx context.Context) {
+func InitPGInformer(ctx context.Context, jobSrv JobService) {
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
 	PGInformer = factory.Scheduling().V1beta1().PodGroups()
@@ -330,7 +337,23 @@ func InitPGInformer(ctx context.Context) {
 			if err = job.SyncJob(obj, constant.DeleteOperator, cacheIndexer, JobMgr); err != nil {
 				hwlog.RunLog.Errorf("error to syncing EventDelete: %v", err)
 			}
+			deleteJobForJobService(jobSrv, obj)
 		},
 	})
 	factory.Start(wait.NeverStop)
+}
+
+func deleteJobForJobService(jobSrv JobService, obj interface{}) {
+	metaData, err := meta.Accessor(obj)
+	if err != nil {
+		hwlog.RunLog.Errorf("object has no meta: %v", err)
+		return
+	}
+	ownerReferences := metaData.GetOwnerReferences()
+	var jobUid string
+	for _, v := range ownerReferences {
+		jobUid = string(v.UID)
+		break
+	}
+	jobSrv.DeleteJob(jobUid)
 }

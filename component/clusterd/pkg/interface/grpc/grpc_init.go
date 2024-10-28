@@ -49,7 +49,7 @@ func isIPValid(ipStr string) error {
 }
 
 // Start the grpc server
-func (server *ClusterInfoMgrServer) Start() error {
+func (server *ClusterInfoMgrServer) Start(service *service.FaultRecoverService) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (server *ClusterInfoMgrServer) Start() error {
 		return err
 	}
 	server.grpcServer = grpc.NewServer(server.opts...)
-	pb.RegisterRecoverServer(server.grpcServer, service.NewFaultRecoverService())
+	pb.RegisterRecoverServer(server.grpcServer, service)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

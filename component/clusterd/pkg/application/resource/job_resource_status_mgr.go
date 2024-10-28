@@ -203,3 +203,16 @@ func (mgr *JobSourceStatusManager) IsJobRunning(jobId string) bool {
 	}
 	return worker.PGRunning()
 }
+
+func (mgr *JobSourceStatusManager) JobExist(jobId string) bool {
+	if kube.JobMgr == nil {
+		hwlog.RunLog.Error("job mgr is nil")
+	}
+	kube.JobMgr.RwMutex.RLock()
+	defer kube.JobMgr.RwMutex.RUnlock()
+	_, exist := kube.JobMgr.BsWorker[jobId]
+	if !exist {
+		return false
+	}
+	return true
+}

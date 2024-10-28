@@ -47,7 +47,7 @@ func processContinue(name, namespace string) (bool, string, error) {
 		hwlog.RunLog.Errorf("get pg err: %v", err)
 		return false, "", err
 	}
-	value, ok := pg.Annotations[common.ProcessArfStrategy]
+	value, ok := pg.Annotations[common.ProcessRecoverStrategy]
 	if !ok {
 		return false, "", nil
 	}
