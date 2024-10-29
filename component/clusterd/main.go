@@ -41,6 +41,7 @@ var (
 func limitQPS(ctx context.Context, req interface{},
 	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	if !limiter.Allow() {
+		hwlog.RunLog.Errorf("QPS exceeded, method=%s", info.FullMethod)
 		return nil, fmt.Errorf("QPS exceeded, method=%s", info.FullMethod)
 	}
 	return handler(ctx, req)

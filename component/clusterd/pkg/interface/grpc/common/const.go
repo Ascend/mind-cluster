@@ -166,5 +166,5 @@ const (
 	// MaxServeJobs max serve job num for fault recover
 	MaxServeJobs = 1000
 	// QpsLimit max qps for grpc service
-	QpsLimit = 100
+	QpsLimit = 1000
 )
