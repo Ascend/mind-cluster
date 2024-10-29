@@ -389,7 +389,6 @@ Script_Args_Check()
 finish=true
 xterm_loop=
 noprogress=$NOPROGRESS
-nox11=$NOX11
 copy=$COPY
 ownership=$OWNERSHIP
 verbose=n
@@ -498,30 +497,6 @@ fi
 if test x"$NEED_ROOT" = xy -a \`id -u\` -ne 0; then
 	echo "Administrative privileges required for this archive (use su or sudo)" >&2
 	exit 1
-fi
-
-if test x"\$nox11" = xn; then
-    if tty -s; then  # Do we have a terminal on stdout?
-	:
-    else
-        if test x"\$DISPLAY" != x -a x"\$xterm_loop" = x; then  # No, but do we have X?
-            if xset q > /dev/null 2>&1; then # Check for valid DISPLAY variable
-                GUESS_XTERMS="xterm gnome-terminal rxvt dtterm eterm Eterm xfce4-terminal lxterminal kvt konsole aterm terminology"
-                for a in \$GUESS_XTERMS; do
-                    if type \$a >/dev/null 2>&1; then
-                        XTERM=\$a
-                        break
-                    fi
-                done
-                chmod a+x \$0 || echo Please add execution rights on \$0
-                if test \`echo "\$0" | cut -c1\` = "/"; then # Spawn a terminal!
-                    exec \$XTERM -e "\$0 --xwin \$initargs"
-                else
-                    exec \$XTERM -e "./\$0 --xwin \$initargs"
-                fi
-            fi
-        fi
-    fi
 fi
 
 if test x"\$targetdir" = x.; then
