@@ -41,4 +41,6 @@ const (
 
 	// CheckFaultGapSecond check fault gap seconds
 	CheckFaultGapSecond = 10
+	// JobRefKind reference kind is Job
+	JobRefKind = "Job"
 )

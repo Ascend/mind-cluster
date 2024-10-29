@@ -5,6 +5,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -210,7 +211,7 @@ func (ctl *EventController) tryChangeState(mode common.RecoverMode, newState com
 		ctl.taskId, common.ModeToString(ctl.mode), common.ModeToString(mode),
 		common.StateToString(ctl.state), common.StateToString(newState))
 	if force == true {
-		info := fmt.Sprintf("state force changed success, %s", baseInfo)
+		info := fmt.Sprintf("state changed success with force, %s", baseInfo)
 		ctl.state = newState
 		ctl.mode = mode
 		return &pb.Status{Code: pb.RespCode_OK, Info: info}
@@ -223,6 +224,7 @@ func (ctl *EventController) tryChangeState(mode common.RecoverMode, newState com
 		info := fmt.Sprintf("state changed success, %s", baseInfo)
 		ctl.mode = mode
 		ctl.state = newState
+		hwlog.RunLog.Info(info)
 		return &pb.Status{Code: pb.RespCode_OK, Info: info}
 	} else { // event processing
 		if ctl.mode != mode {
@@ -235,6 +237,7 @@ func (ctl *EventController) tryChangeState(mode common.RecoverMode, newState com
 		}
 		info := fmt.Sprintf("state changed success, %s", baseInfo)
 		ctl.state = newState
+		hwlog.RunLog.Info(info)
 		return &pb.Status{Code: pb.RespCode_OK, Info: info}
 	}
 }
@@ -330,8 +333,6 @@ func (s *FaultRecoverService) registry(id string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.regisMap[id] = struct{}{}
-	taskName, nameSpace := s.jobMgr.GetJobNameAndNameSpace(id)
-	s.eventCtl[id] = NewEventController(id, taskName, nameSpace)
 }
 
 func (s *FaultRecoverService) checkRegistered(id string, info string) (bool, string) {
@@ -346,6 +347,22 @@ func (s *FaultRecoverService) checkRegistered(id string, info string) (bool, str
 func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
 	info := fmt.Sprintf("role=%s, taskId=%s, addr=%s:%s", req.Role, req.TaskId, req.Ip, req.Port)
 	hwlog.RunLog.Infof("service receive Register request, %s", info)
+	if !s.jobMgr.JobExist(req.TaskId) {
+		hwlog.RunLog.Errorf("registry failed, jobId=%s not exist", req.TaskId)
+		return &pb.Status{
+			Code: pb.RespCode_COMMON_ERROR,
+			Info: fmt.Sprintf("jobId=%s not exist", req.TaskId),
+		}, nil
+	}
+	if len(s.regisMap) > common.MaxServeJobs {
+		hwlog.RunLog.Errorf("registed jobs > %d, jobId=%s will not be registed",
+			common.MaxServeJobs, req.TaskId)
+		return &pb.Status{
+			Code: pb.RespCode_COMMON_ERROR,
+			Info: fmt.Sprintf("registed jobs > %d, jobId=%s will not be registed",
+				common.MaxServeJobs, req.TaskId),
+		}, nil
+	}
 	s.registry(req.TaskId)
 	hwlog.RunLog.Infof("return message is {Code: %d, info: %s}", pb.RespCode_OK, info)
 	return &pb.Status{
@@ -524,11 +541,11 @@ func (s *FaultRecoverService) PublishSignal(signal *pb.ProcessManageSignal, expe
 			}
 		}
 	}
-	afterCheckOrder(signal, expectStates, controller)
+	doCheckOrder(signal, expectStates, controller)
 
 }
 
-func afterCheckOrder(signal *pb.ProcessManageSignal, expectStates common.MachineStates, controller *EventController) {
+func doCheckOrder(signal *pb.ProcessManageSignal, expectStates common.MachineStates, controller *EventController) {
 	if common.CheckOrder(controller.state, expectStates) {
 		select {
 		case controller.signalChan <- signal:
@@ -676,24 +693,8 @@ func globalFault(signal *pb.ProcessManageSignal, controller *EventController) (*
 	return nil, false
 }
 
-// SubscribeProcessManageSignal subscribe process manage signal from ClusterD
-func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInfo,
-	stream pb.Recover_SubscribeProcessManageSignalServer) error {
-	var controller *EventController
-	var exist bool = false
-	var taskId string = request.TaskId
-	hwlog.RunLog.Infof("receive Subscribe signal request, taskId=%s, rule=%s", request.TaskId, request.Role)
-	s.lock.Lock()
-	if controller, exist = s.eventCtl[request.TaskId]; exist && controller != nil {
-		controller.reset(true)
-	} else {
-		taskName, namespace := s.jobMgr.GetJobNameAndNameSpace(request.TaskId)
-		controller = NewEventController(request.TaskId, taskName, namespace)
-		s.eventCtl[request.TaskId] = controller
-		s.regisMap[request.TaskId] = struct{}{}
-	}
-	sendChan := controller.signalChan
-	s.lock.Unlock()
+func (s *FaultRecoverService) listenSendChannel(jobId string, sendChan chan *pb.ProcessManageSignal,
+	stream pb.Recover_SubscribeProcessManageSignalServer) {
 	for signal := range sendChan {
 		signalInfo := fmt.Sprintf("taskId=%s, eventId=%s, signalType=%s, actions=%v, faultRanks=%v, changeStrategy=%s",
 			signal.TaskId, signal.Uuid, signal.SignalType, signal.Actions, signal.FaultRankIds, signal.ChangeStrategy)
@@ -708,7 +709,7 @@ func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInf
 		}
 		if err := common.SendRetry(stream, signal, retryTimes); err != nil {
 			hwlog.RunLog.Errorf("signal send error: %v, client maybe offline, unregister task", err)
-			s.taskEventFinish(taskId, false)
+			s.taskEventFinish(jobId, false)
 			break
 		}
 		if signal.SignalType == common.StopTrainSignalType {
@@ -717,12 +718,41 @@ func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInf
 		if status := s.onSignalSent(signal); status != nil && status.Code != pb.RespCode_OK {
 			hwlog.RunLog.Errorf("reset event after signal sent, taskId=%s, eventId=%s, code=%s, info=%s",
 				signal.TaskId, signal.Uuid, status.Code.String(), status.Info)
-			s.taskEventFinish(taskId, false)
+			s.taskEventFinish(jobId, false)
 			break
 		}
 		hwlog.RunLog.Infof("signal send success, %s", signalInfo)
 	}
-	hwlog.RunLog.Infof("listen signal break, taskId=%s", taskId)
+	hwlog.RunLog.Infof("listen signal break, taskId=%s", jobId)
+}
+
+// SubscribeProcessManageSignal subscribe process manage signal from ClusterD
+func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInfo,
+	stream pb.Recover_SubscribeProcessManageSignalServer) error {
+	hwlog.RunLog.Infof("receive Subscribe signal request, taskId=%s, rule=%s", request.TaskId, request.Role)
+	requestInfo := fmt.Sprintf("taskId=%s, rule=%s", request.TaskId, request.Role)
+	if ok, returnInfo := s.checkRegistered(request.TaskId, requestInfo); !ok {
+		hwlog.RunLog.Errorf("return message is {Code: %d, info: %s}", pb.RespCode_UNREGISTERED, returnInfo)
+		return errors.New(returnInfo)
+	}
+	var sendChan chan *pb.ProcessManageSignal
+	s.lock.Lock()
+	if controller, exist := s.eventCtl[request.TaskId]; exist && controller != nil {
+		controller.reset(true)
+		sendChan = controller.signalChan
+	} else {
+		if !s.jobMgr.JobExist(request.TaskId) {
+			hwlog.RunLog.Warnf("jobId=%s not exist", request.TaskId)
+			return fmt.Errorf("jobId=%s not exist", request.TaskId)
+		}
+		taskName, namespace := s.jobMgr.GetJobNameAndNameSpace(request.TaskId)
+		controller = NewEventController(request.TaskId, taskName, namespace)
+		s.eventCtl[request.TaskId] = controller
+		s.regisMap[request.TaskId] = struct{}{}
+		sendChan = s.eventCtl[request.TaskId].signalChan
+	}
+	s.lock.Unlock()
+	s.listenSendChannel(request.TaskId, sendChan, stream)
 	return nil
 }
 
@@ -1041,4 +1071,18 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		Code: pb.RespCode_OK,
 		Info: fmt.Sprintf("server receive ReportRecoverStatus, request info = {%s}", requestInfo),
 	}, nil
+}
+
+// DeleteJob clear registed resources
+func (s *FaultRecoverService) DeleteJob(jobId string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	hwlog.RunLog.Infof("current serve jobs=%d, prepare delete jobId=%s", len(s.regisMap), jobId)
+	if s.eventCtl != nil {
+		delete(s.eventCtl, jobId)
+	}
+	if s.regisMap != nil {
+		delete(s.regisMap, jobId)
+	}
+	hwlog.RunLog.Infof("serve jobs=%d after delete jobId=%s", len(s.regisMap), jobId)
 }

@@ -16,6 +16,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
+	"clusterd/pkg/interface/grpc/service"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -33,10 +34,10 @@ var (
 	server    *sv.ClusterInfoMgrServer
 )
 
-func startInformer(ctx context.Context) {
+func startInformer(ctx context.Context, recoverService kube.JobService) {
 	kube.InitCMInformer()
 	kube.InitPodInformer()
-	kube.InitPGInformer(ctx)
+	kube.InitPGInformer(ctx, recoverService)
 	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
 	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
@@ -70,11 +71,12 @@ func main() {
 	}
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams)})
-	if err = server.Start(); err != nil {
+	recoverService := service.NewFaultRecoverService()
+	if err = server.Start(recoverService); err != nil {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	startInformer(ctx)
+	startInformer(ctx, recoverService)
 
 	signalCatch(cancel)
 }

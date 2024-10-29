@@ -163,4 +163,6 @@ const (
 	UpdatePodGroupTimes = 3
 	// MaxChangeStrategyTimes max changeStrategy Times
 	MaxChangeStrategyTimes = 2
+	// MaxServeJobs max serve job num for fault recover
+	MaxServeJobs = 1000
 )
