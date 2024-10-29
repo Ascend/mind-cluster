@@ -12,11 +12,16 @@ spec:
       app: controller-manager
   template:
     metadata:
+      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
       labels:
         app: controller-manager
     spec:
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
+#      securityContext:
+#        seccompProfile:
+#          type: RuntimeDefault
       nodeSelector:
         masterselector: dls-master-node
       serviceAccountName: ascend-operator-manager
