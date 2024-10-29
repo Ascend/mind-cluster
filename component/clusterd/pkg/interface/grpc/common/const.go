@@ -165,4 +165,6 @@ const (
 	MaxChangeStrategyTimes = 2
 	// MaxServeJobs max serve job num for fault recover
 	MaxServeJobs = 1000
+	// QpsLimit max qps for grpc service
+	QpsLimit = 1000
 )
