@@ -21,6 +21,7 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -263,11 +264,17 @@ func checkNonWorkerRplMountChips(ji *jobInfo) bool {
 
 func getNonWorkerPodMountChipStatus(job *mindxdlv1.AscendJob) bool {
 	annotations := job.GetAnnotations()
-	status := false
-	if value, ok := annotations[statusNonWorkerPodMountChip]; ok {
-		status = stringToBool(value, false)
+	if _, ok := annotations[nonWorkerPodMountChipStatus]; !ok {
+		return false
+	}
+	status, err := stringToBool(annotations[nonWorkerPodMountChipStatus])
+	if err != nil {
+		hwlog.RunLog.Errorf("convert annotations[%s]=%s failed: %v", nonWorkerPodMountChipStatus,
+			annotations[nonWorkerPodMountChipStatus], err)
+		return false
 	}
 	return status
+
 }
 
 func boolToString(b bool) string {
@@ -277,13 +284,13 @@ func boolToString(b bool) string {
 	return "false"
 }
 
-func stringToBool(s string, defaultVal bool) bool {
+func stringToBool(s string) (bool, error) {
 	lowered := strings.ToLower(s)
 	if lowered == "true" {
-		return true
+		return true, nil
 	}
 	if lowered == "false" {
-		return false
+		return false, nil
 	}
-	return defaultVal
+	return false, errors.New("convert string to bool failed")
 }

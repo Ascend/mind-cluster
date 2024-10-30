@@ -277,7 +277,7 @@ func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
 func (r *ASJobReconciler) syncReplicas(ji *jobInfo) error {
 	status := checkNonWorkerRplMountChips(ji)
 	annotations := ji.mtObj.GetAnnotations()
-	annotations[statusNonWorkerPodMountChip] = boolToString(status)
+	annotations[nonWorkerPodMountChipStatus] = boolToString(status)
 	ji.mtObj.SetAnnotations(annotations)
 	for rtype, spec := range ji.rpls {
 		if err := r.Controller.ReconcilePods(ji.mtObj, ji.status, ji.pods, rtype, spec, ji.rpls); err != nil {
