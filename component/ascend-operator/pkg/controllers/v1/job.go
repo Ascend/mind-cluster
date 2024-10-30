@@ -277,6 +277,9 @@ func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
 func (r *ASJobReconciler) syncReplicas(ji *jobInfo) error {
 	status := checkNonWorkerRplMountChips(ji)
 	annotations := ji.mtObj.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{nonWorkerPodMountChipStatus: "false"}
+	}
 	annotations[nonWorkerPodMountChipStatus] = boolToString(status)
 	ji.mtObj.SetAnnotations(annotations)
 	for rtype, spec := range ji.rpls {
