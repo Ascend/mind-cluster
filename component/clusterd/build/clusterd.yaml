@@ -104,7 +104,10 @@ spec:
           command: [ "/bin/bash", "-c", "--"]
           args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0" ]
           securityContext:
+            allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: log-clusterd
               mountPath: /var/log/mindx-dl/clusterd
