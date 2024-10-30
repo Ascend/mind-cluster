@@ -60,7 +60,7 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 	if len(metaData.GetNamespace()) > 0 {
 		key = metaData.GetNamespace() + "/" + metaData.GetName() + "/" + eventType
 	}
-	hwlog.RunLog.Infof("SyncJob start, current key is %v", key)
+	hwlog.RunLog.Debugf("SyncJob start, current key is %v", key)
 	_, exists, err := indexer.GetByKey(namespace + "/" + metaData.GetName())
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get obj from indexer: %s", key)
