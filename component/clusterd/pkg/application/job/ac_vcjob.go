@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
@@ -27,7 +28,10 @@ func (job *jobModel) AddEvent(agent *Agent) error {
 		hwlog.RunLog.Errorf(" worker for %s %s is already existed", job.Namespace, job.Name)
 		return nil
 	}
-
+	if n := agent.BsLength(bsKey); n > constant.MaxSupportJobNum {
+		hwlog.RunLog.Errorf("worker length=%d > %d", n, constant.MaxSupportJobNum)
+		return fmt.Errorf("worker length=%d > %d", n, constant.MaxSupportJobNum)
+	}
 	initCM(agent.KubeClientSet, job)
 
 	cm, err := checkCMCreation(job.Namespace, job.Name, agent.KubeClientSet, agent.Config)
