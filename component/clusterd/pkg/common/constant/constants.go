@@ -46,5 +46,5 @@ const (
 	// MaxSupportNodeNum max support node num
 	MaxSupportNodeNum = 5000
 	// MaxSupportJobNum
-	MaxSupportJobNum = 1000
+	MaxSupportJobNum = 10000
 )
