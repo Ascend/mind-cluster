@@ -1679,15 +1679,13 @@ func doUpdateHccsMetric(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, value i
 		finalValue = value.(float64)
 	case uint32:
 		finalValue = float64(value.(uint32))
-	// int type is used for metric collect failed
-	case int:
-		if value.(int) == common.FailedValue {
-			finalValue = common.FailedMetricValue
-		}
 	default:
 		hwlog.RunLog.Warn("Invalid param in function doUpdateHccsMetric")
 	}
 
+	if finalValue == common.FailedValue {
+		finalValue = common.FailedMetricValue
+	}
 	ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp,
 		prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, finalValue, cardLabel...))
 }
@@ -1884,7 +1882,6 @@ func packHccsInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWei
 	hccsStatisticInfo, err := dmgr.GetHccsStatisticInfo(logicID)
 	if err != nil {
 		hwlog.RunLog.Errorf("get hccs statistic info of npu failed: %v", err)
-		hccsStatisticInfo = nil
 	}
 	hwChip.HccsStatisticInfo = hccsStatisticInfo
 }
