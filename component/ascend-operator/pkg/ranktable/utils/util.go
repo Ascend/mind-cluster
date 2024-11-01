@@ -47,7 +47,7 @@ func podUseNpu(pod *corev1.Pod) bool {
 			if !ok {
 				continue
 			}
-			if strings.Contains(string(resName), hwDeviceKey) && resValNum > 0 {
+			if strings.Contains(string(resName), npuPrefix) && resValNum > 0 {
 				npuNeed = true
 			}
 		}
@@ -63,7 +63,8 @@ const (
 
 	rankTableDir = "/user/mindx-dl/ranktable"
 
-	hwDeviceKey = "huawei.com"
+	// prefix of request npu name
+	npuPrefix = "huawei.com/"
 )
 
 // RankTableStatus is rank table status
