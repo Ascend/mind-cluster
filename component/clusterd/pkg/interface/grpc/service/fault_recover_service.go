@@ -119,9 +119,8 @@ func (ctl *EventController) reset(success bool) {
 			ctl.taskName, ctl.nameSpace)
 	}
 	if len(ctl.latestStrategy) > 0 {
-		platStrategy := GetPlatStrategy(ctl.taskName+common.MiddleLine+ctl.taskId,
-			ctl.nameSpace)
-		updateFixResult(ctl.taskName+common.MiddleLine+ctl.taskId, ctl.nameSpace, platStrategy, success)
+		latestStrategy := ctl.latestStrategy[len(ctl.latestStrategy)-1]
+		updateFixResult(ctl.taskName+common.MiddleLine+ctl.taskId, ctl.nameSpace, latestStrategy, success)
 	}
 	if !success {
 		ctl.mode = common.PodRescheduleMode
@@ -520,29 +519,8 @@ func (s *FaultRecoverService) PublishSignal(signal *pb.ProcessManageSignal, expe
 	if signal.SignalType == common.StopTrainSignalType && len(signal.FaultRankIds) > 0 {
 		deviceRankIds := append([]string(nil), signal.FaultRankIds...)
 		controller.saveDeviceFaultRankIds(deviceRankIds)
-
-		isPlatForm, _, err := WaitProcessContinue(controller.taskName+common.MiddleLine+controller.taskId,
-			controller.nameSpace)
-		if isPlatForm {
-			if err != nil {
-				hwlog.RunLog.Errorf("platForm err: %v, reset process", err)
-				s.taskEventFinish(signal.TaskId, false)
-				return
-			}
-			hardRanks := controller.getHardFaultRankIds()
-			softRanks := controller.getSoftwareFaultRankIds()
-			allFaultRanks := util.RemoveSliceDuplicateElement(append(hardRanks, softRanks...))
-			err = UpdateProcessConfirmFault(controller.taskName+common.MiddleLine+controller.taskId,
-				controller.nameSpace, allFaultRanks)
-			if err != nil {
-				hwlog.RunLog.Errorf("update platform ProcessConfirmFault err: %v, reset process", err)
-				s.taskEventFinish(signal.TaskId, false)
-				return
-			}
-		}
 	}
 	doCheckOrder(signal, expectStates, controller)
-
 }
 
 func doCheckOrder(signal *pb.ProcessManageSignal, expectStates common.MachineStates, controller *EventController) {
@@ -626,6 +604,18 @@ func handlePlatStrategy(ctl *EventController, signal *pb.ProcessManageSignal) {
 	}
 }
 
+func waitPlatformAllowSendStopSignal(signal *pb.ProcessManageSignal, controller *EventController) (*pb.Status, bool) {
+	isPlatForm, _, err := WaitProcessContinue(controller.taskName+common.MiddleLine+controller.taskId,
+		controller.nameSpace)
+	if isPlatForm && err != nil {
+		hwlog.RunLog.Errorf("waitPlatformAllowSendStopSignal err: %v, reset process", err)
+		controller.reset(false)
+		return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
+			Info: fmt.Sprintf("waitPlatformAllowSendStopSignal err: %v, reset process", err)}, true
+	}
+	return nil, false
+}
+
 func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *pb.Status {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -638,11 +628,17 @@ func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *
 	switch signal.SignalType {
 	case common.StopTrainSignalType:
 		stateMatch = common.CheckOrder(controller.state, []common.MachineState{common.INIT})
+		if stateMatch {
+			status, exit := waitPlatformAllowSendStopSignal(signal, controller)
+			if exit {
+				return status
+			}
+		}
 	case common.GlobalFaultSignalType:
 		stateMatch = common.CheckOrder(controller.state, []common.MachineState{common.ReceiveStopFinish})
 		if stateMatch {
-			status, done := globalFault(signal, controller)
-			if done {
+			status, exit := setGlobalFault(signal, controller)
+			if exit {
 				return status
 			}
 		}
@@ -659,7 +655,7 @@ func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *
 	return &pb.Status{Code: pb.RespCode_OK, Info: "signal out queue, prepare to send"}
 }
 
-func globalFault(signal *pb.ProcessManageSignal, controller *EventController) (*pb.Status, bool) {
+func setGlobalFault(signal *pb.ProcessManageSignal, controller *EventController) (*pb.Status, bool) {
 	hardRanks := controller.getHardFaultRankIds()
 	softRanks := controller.getSoftwareFaultRankIds()
 	allFaultRanks := util.RemoveSliceDuplicateElement(append(hardRanks, softRanks...))
@@ -674,6 +670,20 @@ func globalFault(signal *pb.ProcessManageSignal, controller *EventController) (*
 			return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
 				Info: fmt.Sprintf("platForm err: %v, reset process", err)}, true
 		}
+
+		// update confirm fault
+		hardRanks := controller.getHardFaultRankIds()
+		softRanks := controller.getSoftwareFaultRankIds()
+		allFaultRanks := util.RemoveSliceDuplicateElement(append(hardRanks, softRanks...))
+		err = UpdateProcessConfirmFault(controller.taskName+common.MiddleLine+controller.taskId,
+			controller.nameSpace, allFaultRanks)
+		if err != nil {
+			hwlog.RunLog.Errorf("UpdateProcessConfirmFault err: %v, reset process", err)
+			controller.reset(false)
+			return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
+				Info: fmt.Sprintf("UpdateProcessConfirmFault err: %v, reset process", err)}, true
+		}
+
 		platFaultResult, err := WaitProcessResultFault(controller.taskName+common.MiddleLine+controller.taskId,
 			controller.nameSpace)
 		if err != nil {

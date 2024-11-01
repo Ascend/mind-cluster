@@ -31,13 +31,11 @@ import (
 const (
 	maxConnection   = 1024
 	maxIPConnection = 512
+
+	largeMaxConnection = 16384
 )
 
-// LimitListener returns a Listener that accepts at most n connections at the same time
-func LimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
-	if totalConnLimit < 0 || totalConnLimit > maxConnection {
-		return nil, errors.New("the parameter totalConnLimit is illegal")
-	}
+func commonLimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
 	if IPConnLimit < 0 || IPConnLimit > maxIPConnection {
 		return nil, errors.New("the parameter IPConnLimit is illegal")
 	}
@@ -51,6 +49,22 @@ func LimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (
 		ll.ipCache = cache.New(cacheSize)
 	}
 	return ll, nil
+}
+
+// LimitListener returns a Listener that accepts at most n connections at the same time
+func LimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
+	if totalConnLimit < 0 || totalConnLimit > maxConnection {
+		return nil, errors.New("the parameter totalConnLimit is illegal")
+	}
+	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
+}
+
+// LargeLimitListener returns a Listener that accepts at most n connections at the same time
+func LargeLimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
+	if totalConnLimit < 0 || totalConnLimit > largeMaxConnection {
+		return nil, errors.New("the parameter of LargeLimitListener totalConnLimit is illegal")
+	}
+	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
 }
 
 type localLimitListener struct {

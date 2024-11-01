@@ -52,9 +52,9 @@ import (
 		return lq_dcmi_init_func();
 	}
 
-	int (*lq_dcmi_get_fault_info_func)(unsigned int list_len, unsigned int *event_list_len, struct LqDcmiEvent *event_list);
-	static int lq_dcmi_get_fault_info(unsigned int list_len, unsigned int *event_list_len, struct LqDcmiEvent *event_list){
-		return lq_dcmi_get_fault_info_func(list_len,event_list_len,event_list);
+	int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
+	static int lq_dcmi_get_fault_info(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList){
+		return lq_dcmi_get_fault_info_func(listLen,eventListLen,eventList);
 	}
 
 	void goFaultEventHandler(struct LqDcmiEvent *fault_event);
@@ -62,7 +62,7 @@ import (
 		goFaultEventHandler(fault_event);
 	}
 
-	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,lq_dcmi_fault_event_callback handler);
+	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
 	static int lq_dcmi_subscribe_fault_event(struct lq_dcmi_event_filter filter){
 		return lq_dcmi_subscribe_fault_event_func(filter,event_handler);
 	}

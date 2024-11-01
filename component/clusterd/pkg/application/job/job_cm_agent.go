@@ -79,7 +79,7 @@ func (agent *Agent) doWork(obj interface{}, eventType string) {
 	agent.RwMutex.RLock()
 	defer agent.RwMutex.RUnlock()
 	podCacheAgent, workerExist := agent.BsWorker[podKeyInfo.jobId]
-	hwlog.RunLog.Infof("worker: %+v", agent.BsWorker)
+	hwlog.RunLog.Debugf("worker: %+v", agent.BsWorker)
 	if !workerExist {
 		if !podExist {
 			hwlog.RunLog.Warnf("syncing '%s' terminated: current obj is no longer exist",
@@ -108,7 +108,7 @@ func (agent *Agent) doWork(obj interface{}, eventType string) {
 		return
 	}
 	// if worker exist && pod exist, need check some special scenarios
-	hwlog.RunLog.Infof("successfully synced '%s'", podKeyInfo)
+	hwlog.RunLog.Debugf("successfully synced '%s'", podKeyInfo)
 	podCacheAgent.doPodWork(pod, podKeyInfo)
 	if podKeyInfo.eventType == EventUpdate {
 		if err = podCacheAgent.UpdateCMWhenJobEnd(podKeyInfo); err != nil {
@@ -125,6 +125,13 @@ func (agent *Agent) BsExist(bsKey string) bool {
 		return true
 	}
 	return false
+}
+
+// BsLength return BsWorker length
+func (agent *Agent) BsLength(bsKey string) int {
+	agent.RwMutex.RLock()
+	defer agent.RwMutex.RUnlock()
+	return len(agent.BsWorker)
 }
 
 // SetBsWorker is set bs worker

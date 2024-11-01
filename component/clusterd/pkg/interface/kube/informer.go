@@ -352,7 +352,7 @@ func deleteJobForJobService(jobSrv JobService, obj interface{}) {
 	ownerReferences := metaData.GetOwnerReferences()
 	var jobUid string
 	for _, v := range ownerReferences {
-		if string(v.Kind) == constant.JobRefKind {
+		if string(v.Kind) == constant.JobRefKind || string(v.Kind) == constant.AscendJobRefKind {
 			jobUid = string(v.UID)
 			break
 		}
