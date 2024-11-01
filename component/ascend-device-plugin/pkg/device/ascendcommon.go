@@ -437,6 +437,9 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 			totalUHDevices.Insert(device.DeviceName)
 			continue
 		}
+		if dev := fmt.Sprintf("%s-%d", runMode, device.PhyID); !totalUHDevices.Has(dev) {
+			totalUHDevices.Insert(dev)
+		}
 	}
 	hwlog.RunLog.Debugf("healthy device %#v", healthDevice)
 	hwlog.RunLog.Debugf("total unhealthy devices %#v", totalUHDevices)
