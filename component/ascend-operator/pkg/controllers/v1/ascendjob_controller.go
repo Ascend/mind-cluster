@@ -52,6 +52,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
@@ -115,10 +117,23 @@ type ASJobReconciler struct {
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// test
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
+
+	// try fetch vcjob
+	vcjob := &v1alpha1.Job{}
+	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
+		fakeAcjob := decorateVcjob(vcjob)
+		ji, _err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
+		if _err == nil {
+			r.genRankTable(ji)
+		} else {
+			hwlog.RunLog.Error("failed to generate ranktable for volcano job<%s>, err: %s", req.NamespacedName, _err)
+		}
+		return ctrl.Result{}, nil
+	}
+
 	ascendjob := &mindxdlv1.AscendJob{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
@@ -178,6 +193,12 @@ type resourceOption struct {
 }
 
 func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
+	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
+		return err
+	}
+
 	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
@@ -213,6 +234,12 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
+		vcjob, ok := e.Object.(*v1alpha1.Job)
+		if ok {
+			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
+			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
+			return true
+		}
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return true
@@ -417,4 +444,21 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 	return rtype == mindxdlv1.MindSporeReplicaTypeScheduler ||
 		rtype == mindxdlv1.PytorchReplicaTypeMaster ||
 		rtype == mindxdlv1.TensorflowReplicaTypeChief
+}
+
+func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
+	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
+	for i, task := range vcjob.Spec.Tasks {
+		repSpecs[commonv1.ReplicaType("Worker"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
+			Template: task.Template,
+			Replicas: &task.Replicas,
+		}
+	}
+	return &mindxdlv1.AscendJob{
+		TypeMeta:   vcjob.TypeMeta,
+		ObjectMeta: vcjob.ObjectMeta,
+		Spec: mindxdlv1.AscendJobSpec{
+			ReplicaSpecs: repSpecs,
+		},
+	}
 }

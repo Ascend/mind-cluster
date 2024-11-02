@@ -112,6 +112,9 @@ rules:
   - apiGroups: [ "mindxdl.gitee.com" ]
     resources: [ "ascendjobs/status" ]
     verbs: [ "get", "patch", "update" ]
+  - apiGroups: [ "batch.volcano.sh" ]
+    resources: [ "jobs" ]
+    verbs: [ "watch", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

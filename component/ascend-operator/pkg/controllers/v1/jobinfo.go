@@ -98,6 +98,31 @@ func (r *ASJobReconciler) newJobInfo(
 	}, nil
 }
 
+func genLabels(jobObj interface{}, jobName string) map[string]string {
+	acjob, ok := jobObj.(*mindxdlv1.AscendJob)
+	if !ok {
+		hwlog.RunLog.Errorf("job not found")
+		return map[string]string{
+			"NoPodShouldAdd": "NoPodShouldAdd",
+		}
+	}
+	switch acjob.Kind {
+	case "AscendJob":
+		return map[string]string{
+			commonv1.JobNameLabel: jobName,
+		}
+	case "Job":
+		return map[string]string{
+			"volcano.sh/job-name": jobName,
+		}
+	default:
+		hwlog.RunLog.Errorf("job kind %s is invalid", acjob.Kind)
+		return map[string]string{
+			"NoPodShouldAdd": "NoPodShouldAdd",
+		}
+	}
+}
+
 func (r *ASJobReconciler) getPodsForJob(jobObject interface{}) ([]*corev1.Pod, error) {
 	job, ok := jobObject.(metav1.Object)
 	if !ok {
@@ -106,7 +131,7 @@ func (r *ASJobReconciler) getPodsForJob(jobObject interface{}) ([]*corev1.Pod, e
 
 	// Create selector.
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: r.GenLabels(job.GetName()),
+		MatchLabels: genLabels(jobObject, job.GetName()),
 	})
 
 	if err != nil {
