@@ -21,34 +21,39 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 const (
-	// SuccessfulDeleteJobReason is added in an ascendjob when it is deleted successful.
-	SuccessfulDeleteJobReason = "SuccessfulDeleteJob"
+	// jobRestartingReason is added in an ascendjob when it is restart.
+	jobRestartingReason = "jobRestarting"
 	// FailedDeleteJobReason is added in an ascendjob when it is deleted failed.
 	FailedDeleteJobReason = "FailedDeleteJob"
-	controllerName        = "ascendjob-controller"
+	// SuccessfulDeleteJobReason is added in an ascendjob when it is deleted successful.
+	SuccessfulDeleteJobReason = "SuccessfulDeleteJob"
+
+	controllerName = "ascendjob-controller"
+
+	// volcanoTaskSpecKey task spec key used in pod annotation when EnableGangScheduling is true
+	volcanoTaskSpecKey = "volcano.sh/task-spec"
+
+	// gang scheduler name.
+	gangSchedulerName = "volcano"
+
 	// exitedWithCodeReason is the normal reason when the pod is exited because of the exit code.
 	exitedWithCodeReason = "ExitedWithCode"
 	// podTemplateRestartPolicyReason is the warning reason when the restart
 	// policy is set in pod template.
 	podTemplateRestartPolicyReason = "SettedPodTemplateRestartPolicy"
-	// jobRestartingReason is added in an ascendjob when it is restart.
-	jobRestartingReason = "jobRestarting"
 	// jobSchedulerNameReason is the warning reason when other scheduler name is set in job with gang-scheduling enabled
 	jobSchedulerNameReason = "SettedJobSchedulerName"
 	// podTemplateSchedulerNameReason is the warning reason when other scheduler name is set
 	// in pod templates with gang-scheduling enabled
 	podTemplateSchedulerNameReason = "SettedPodTemplateSchedulerName"
-	// gang scheduler name.
-	gangSchedulerName = "volcano"
 	// gangSchedulingPodGroupAnnotation is the annotation key used by batch schedulers
 	gangSchedulingPodGroupAnnotation = "scheduling.k8s.io/group-name"
 	// for ascend-volcano-plugin rescheduling
 	rankIndexKey = "hccl/rankIndex"
-	// volcanoTaskSpecKey task spec key used in pod annotation when EnableGangScheduling is true
-	volcanoTaskSpecKey = "volcano.sh/task-spec"
 	// prefix of request npu name
-	npuPrefix              = "huawei.com/"
-	npuCoreName            = "huawei.com/npu-core"
+	npuPrefix   = "huawei.com/"
+	npuCoreName = "huawei.com/npu-core"
+
 	statusPodIPDownwardAPI = "status.podIP"
 	// the status of mount chips for non-worker Pods
 	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
@@ -80,7 +85,7 @@ const (
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
 
-	nonWorkerPodMountChip = "NonWorker_Pod_MountChip"
+	npuPod = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name

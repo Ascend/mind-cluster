@@ -281,6 +281,16 @@ func getNonWorkerPodMountChipStatus(job *mindxdlv1.AscendJob) bool {
 
 }
 
+func checkNpuPod(pi *podInfo) bool {
+	for rtype, spec := range pi.job.Spec.ReplicaSpecs {
+		if rtype != pi.rtype {
+			continue
+		}
+		return checkContainersResourceReq(spec.Template.Spec.Containers)
+	}
+	return false
+}
+
 func boolToString(b bool) string {
 	if b {
 		return "true"
