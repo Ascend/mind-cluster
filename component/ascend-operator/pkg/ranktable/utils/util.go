@@ -48,7 +48,7 @@ func podUseNpu(pod *corev1.Pod) bool {
 				continue
 			}
 			if strings.Contains(string(resName), npuPrefix) && resValNum > 0 {
-				npuNeed = true
+				return true
 			}
 		}
 	}
