@@ -278,6 +278,7 @@ func getNonWorkerPodMountChipStatus(job *mindxdlv1.AscendJob) bool {
 		return false
 	}
 	return status == "true"
+
 }
 
 func boolToString(b bool) string {

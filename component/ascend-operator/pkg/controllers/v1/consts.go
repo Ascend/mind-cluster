@@ -80,6 +80,8 @@ const (
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
 
+	nonWorkerPodMountChip = "NonWorker_Pod_MountChip"
+
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name
 	mindxServiceNamespace    = "mindx-dl"                                     // clusterd grpc service namespace
