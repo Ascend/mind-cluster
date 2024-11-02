@@ -60,8 +60,9 @@ func TestGetJobNameAndNameSpace(t *testing.T) {
 		mgr := mockJobMgr()
 		convey.Convey("case jobMgr is nil", func() {
 			kube.JobMgr = nil
-			name, namespace := mgr.GetJobNameAndNameSpace("test_task_id")
-			convey.So(name, convey.ShouldEqual, "")
+			jobName, pgName, namespace := mgr.GetJobInfo("test_task_id")
+			convey.So(jobName, convey.ShouldEqual, "")
+			convey.So(pgName, convey.ShouldEqual, "")
 			convey.So(namespace, convey.ShouldEqual, "")
 		})
 		convey.Convey("case task id not exist", func() {
@@ -69,8 +70,9 @@ func TestGetJobNameAndNameSpace(t *testing.T) {
 				BsWorker: make(map[string]job.PodWorker),
 			}
 			kube.JobMgr.BsWorker["test_task_id"] = &job.Worker{}
-			name, namespace := mgr.GetJobNameAndNameSpace("test_task_id_not_exist")
-			convey.So(name, convey.ShouldEqual, "")
+			jobName, pgName, namespace := mgr.GetJobInfo("test_task_id_not_exist")
+			convey.So(jobName, convey.ShouldEqual, "")
+			convey.So(pgName, convey.ShouldEqual, "")
 			convey.So(namespace, convey.ShouldEqual, "")
 		})
 		convey.Convey("case task id exist", func() {
@@ -80,12 +82,13 @@ func TestGetJobNameAndNameSpace(t *testing.T) {
 			kube.JobMgr.BsWorker["test_task_id"] = &job.Worker{
 				WorkerInfo: job.WorkerInfo{},
 				Info: job.Info{
-					Name:      "test_name",
+					JobName:   "test_name",
 					Namespace: "test_namespace",
 				},
 			}
-			name, namespace := mgr.GetJobNameAndNameSpace("test_task_id")
-			convey.So(name, convey.ShouldEqual, "test_name")
+			jobName, pgName, namespace := mgr.GetJobInfo("test_task_id")
+			convey.So(jobName, convey.ShouldEqual, "test_name")
+			convey.So(pgName, convey.ShouldEqual, "")
 			convey.So(namespace, convey.ShouldEqual, "test_namespace")
 		})
 
@@ -118,7 +121,7 @@ func TestGetJobDeviceNumPerNode(t *testing.T) {
 					CMData: &job.RankTable{},
 				},
 				Info: job.Info{
-					Name:      "test_name",
+					JobName:   "test_name",
 					Namespace: "test_namespace",
 				},
 			}

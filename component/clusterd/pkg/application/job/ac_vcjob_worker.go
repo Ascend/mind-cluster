@@ -49,7 +49,7 @@ func NewJobWorker(agent *Agent, job Info, ranktable RankTabler, replicasTotal in
 			clientSet:  agent.KubeClientSet,
 			podIndexer: agent.podsIndexer,
 			statSwitch: make(chan struct{}),
-			CMName:     fmt.Sprintf("%s-%s", ConfigmapPrefix, job.Name),
+			CMName:     fmt.Sprintf("%s-%s", ConfigmapPrefix, job.JobName),
 			CMData:     ranktable, statStopped: false,
 			cachedPodNum:      0,
 			jobReplicasTotal:  replicasTotal,
@@ -75,7 +75,7 @@ func (b *Worker) doPodWork(pod *apiCoreV1.Pod, podInfo *podIdentifier) {
 func (b *Worker) doPreCheck(pod *apiCoreV1.Pod, podInfo *podIdentifier) error {
 	// scenario check A: For an identical job, create it immediately after deletion
 	// check basis: job uid + creationTimestamp
-	if !isReferenceJobSameWithWorker(pod, podInfo.jobName, b.Uid) {
+	if !isReferenceJobSameWithWorker(pod, podInfo.jobName, b.JobUid) {
 		if pod.CreationTimestamp.Before(&b.CreationTimestamp) {
 			// old pod + new worker
 			hwlog.RunLog.Errorf("syncing '%s' terminated: corresponding job worker is no "+
@@ -114,12 +114,12 @@ func (b *Worker) Stat(stopTime time.Duration) {
 		default:
 			if b.jobReplicasTotal == b.cachedPodNum {
 				hwlog.RunLog.Infof("rank table build progress for %s/%s is completed",
-					b.Namespace, b.Name)
+					b.Namespace, b.JobName)
 				b.CloseStat()
 				return
 			}
 			hwlog.RunLog.Infof("rank table build progress for %s/%s: pods need to be cached = %d,"+
-				"pods already cached = %d", b.Namespace, b.Name, b.jobReplicasTotal, b.cachedPodNum)
+				"pods already cached = %d", b.Namespace, b.JobName, b.jobReplicasTotal, b.cachedPodNum)
 			time.Sleep(stopTime)
 		}
 	}

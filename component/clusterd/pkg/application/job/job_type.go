@@ -157,10 +157,12 @@ type Worker struct {
 // Info : Job Worker Info
 type Info struct {
 	Namespace         string
-	Name              string
+	JobName           string
+	PGName            string
+	JobUid            string
+	PGUid             string
 	Key               string
 	Version           int32
-	Uid               string
 	JobType           string
 	CreationTimestamp metav1.Time
 }

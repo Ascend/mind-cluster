@@ -27,19 +27,19 @@ func initCM(kubeClientSet kubernetes.Interface, job *jobModel) {
 	label := make(map[string]string, 2)
 
 	data[ConfigmapKey] = DataValue
-	data[JobName] = job.Name
+	data[JobName] = job.JobName
 	data[ConfigmapOperator] = OperatorAdd
 	data[FrameWork] = ModelFramework
-	data[JobId] = job.Uid
+	data[JobId] = job.JobUid
 	data[DeleteTime] = "0"
 	data[cmIndex] = "0"
 	data[JobStatus] = StatusJobPending
 	data[AddTime] = getUnixTime2String()
 	label[Key910] = Val910
 	label[ConfigmapLabel] = "true"
-	putCM := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("%s-%s", ConfigmapPrefix, job.Name),
+	putCM := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("%s-%s", ConfigmapPrefix, job.JobName),
 		Namespace: job.Namespace, Labels: label}, Data: data}
-	if err := util.CreateOrUpdateConfigMap(kubeClientSet, putCM, fmt.Sprintf("%s-%s", ConfigmapPrefix, job.Name),
+	if err := util.CreateOrUpdateConfigMap(kubeClientSet, putCM, fmt.Sprintf("%s-%s", ConfigmapPrefix, job.JobName),
 		job.Namespace); err != nil {
 		hwlog.RunLog.Errorf("initCM CreateOrUpdateConfigMap error: %s", err)
 	}
@@ -52,7 +52,9 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		hwlog.RunLog.Errorf("object has no meta: %v", err)
 		return err
 	}
-	name, uid := getPGJobInfo(metaData)
+	jobName, jobUid := getPGJobInfo(metaData)
+	pgName := metaData.GetName()
+	pgUid := string(metaData.GetUID())
 	namespace := metaData.GetNamespace()
 	modelFramework := metaData.GetLabels()
 	ModelFramework = modelFramework[FrameWork]
@@ -76,15 +78,16 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		return err
 	}
 	model := &jobModel{key: key,
-		Info: Info{Uid: uid, Version: int32(version),
-			CreationTimestamp: pg.CreationTimestamp, Namespace: namespace, Name: name,
+		Info: Info{JobUid: jobUid, Version: int32(version),
+			CreationTimestamp: pg.CreationTimestamp, Namespace: namespace, JobName: jobName,
+			PGName: pgName, PGUid: pgUid,
 			Key:     namespace + "/" + metaData.GetName(),
 			JobType: getPGType(pg)},
 		replicas: pg.Spec.MinMember, devices: pg.Spec.MinResources}
 
 	if !exists {
 		if eventType == EventDelete {
-			model.DeleteWorker(namespace, name, uid, agent)
+			model.DeleteWorker(namespace, jobName, jobUid, agent)
 			hwlog.RunLog.Infof("not exist + delete, eventType is %s, current key is %s", eventType, key)
 			return nil
 		}
@@ -108,7 +111,7 @@ func getPGType(pg *v1beta1.PodGroup) string {
 func HandlePGAddOrUpdateEvent(eventType string, agent *Agent, model *jobModel) error {
 	switch eventType {
 	case EventAdd:
-		hwlog.RunLog.Infof("exist + add, current job is %s/%s", model.Namespace, model.Name)
+		hwlog.RunLog.Infof("exist + add, current job is %s/%s", model.Namespace, model.JobName)
 		return model.AddEvent(agent)
 	case EventUpdate:
 		return model.EventUpdate(agent)

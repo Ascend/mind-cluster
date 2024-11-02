@@ -88,10 +88,10 @@ func TestGetBaseInfo(t *testing.T) {
 		job := mockWorker()
 		info := job.GetBaseInfo()
 		convey.So(info.Namespace, convey.ShouldEqual, mockNamespace)
-		convey.So(info.Name, convey.ShouldEqual, mockJobName)
+		convey.So(info.JobName, convey.ShouldEqual, mockJobName)
 		convey.So(info.Key, convey.ShouldEqual, "")
 		convey.So(info.Version, convey.ShouldEqual, 0)
-		convey.So(info.Uid, convey.ShouldEqual, mockJobUID)
+		convey.So(info.JobUid, convey.ShouldEqual, mockJobUID)
 	})
 }
 
@@ -473,10 +473,10 @@ func mockWorkerInfo() *WorkerInfo {
 func mockJobInfo() Info {
 	return Info{
 		Namespace:         mockNamespace,
-		Name:              mockJobName,
+		JobName:           mockJobName,
 		Key:               "",
 		Version:           0,
-		Uid:               mockJobUID,
+		JobUid:            mockJobUID,
 		CreationTimestamp: metav1.Time{},
 	}
 }

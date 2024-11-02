@@ -48,7 +48,7 @@ func (mgr *JobSourceStatusManager) checkNpuDeviceFault() {
 		}
 		kube.JobMgr.RwMutex.RLock()
 		for _, worker := range kube.JobMgr.BsWorker {
-			taskId := worker.GetBaseInfo().Uid
+			taskId := worker.GetBaseInfo().JobUid
 			_, rankIds := mgr.GetJobHealthy(taskId)
 			if len(rankIds) > 0 {
 				mgr.publisher.PublishSignal(&pb.ProcessManageSignal{
@@ -156,20 +156,20 @@ func (mgr *JobSourceStatusManager) GetJobHealthy(jobId string) (bool, []string) 
 }
 
 // GetJobNameAndNameSpace return job's name and namespace
-func (mgr *JobSourceStatusManager) GetJobNameAndNameSpace(jobId string) (string, string) {
+func (mgr *JobSourceStatusManager) GetJobInfo(jobId string) (string, string, string) {
 	if kube.JobMgr == nil {
 		hwlog.RunLog.Error("job mgr is nil")
-		return "", ""
+		return "", "", ""
 	}
 	kube.JobMgr.RwMutex.RLock()
 	defer kube.JobMgr.RwMutex.RUnlock()
 	worker, exist := kube.JobMgr.BsWorker[jobId]
 	if !exist {
 		hwlog.RunLog.Errorf("taskId=%s not exist", jobId)
-		return "", ""
+		return "", "", ""
 	}
 	baseInfo := worker.GetBaseInfo()
-	return baseInfo.Name, baseInfo.Namespace
+	return baseInfo.JobName, baseInfo.PGName, baseInfo.Namespace
 }
 
 // GetJobDeviceNumPerNode return job's device num per node

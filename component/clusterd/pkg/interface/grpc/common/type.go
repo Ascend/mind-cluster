@@ -15,13 +15,13 @@ type Notifier struct {
 
 // JobHealthyMgr interface for job healthy status management
 type JobHealthyMgr interface {
-	GetJobHealthy(taskId string) (bool, []string)
-	GetJobDeviceNumPerNode(taskId string) int
+	GetJobHealthy(jobId string) (bool, []string)
+	GetJobDeviceNumPerNode(jobId string) int
 	NotifySignalSend(notifier *Notifier)
-	ListenTaskScheduleResult(taskId string, strategy string)
-	GetJobNameAndNameSpace(taskId string) (string, string)
-	IsJobRunning(taskId string) bool
-	JobExist(taskId string) bool
+	ListenTaskScheduleResult(jobId string, strategy string)
+	GetJobInfo(jobId string) (string, string, string)
+	IsJobRunning(jobId string) bool
+	JobExist(jobId string) bool
 }
 
 // Publisher publish signal and handle job schedule result

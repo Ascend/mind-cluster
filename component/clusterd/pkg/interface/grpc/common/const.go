@@ -153,8 +153,6 @@ const (
 )
 
 const (
-	// MiddleLine is the middle line symbol
-	MiddleLine = "-"
 	// UnknownEventId unknown event id
 	UnknownEventId = "unknown_event_id"
 	// GetPodGroupTimes get pod group times
