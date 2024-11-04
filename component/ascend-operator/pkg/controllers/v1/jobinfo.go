@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
@@ -78,6 +79,8 @@ func (r *ASJobReconciler) newJobInfo(
 		return nil, err
 	}
 
+	// wait for adding annotaion to pod
+	time.Sleep(1 * time.Second)
 	pods, err := r.getPodsForJob(job)
 	if err != nil {
 		hwlog.RunLog.Warnf("GetPodsForJob error %v", err)

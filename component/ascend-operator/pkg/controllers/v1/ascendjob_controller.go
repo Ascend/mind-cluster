@@ -59,8 +59,8 @@ import (
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable"
-	rktCommon "ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
+	rktv1 "ascend-operator/pkg/ranktable/v1"
 )
 
 // NewReconciler new reconciler for AscendJob
@@ -470,13 +470,13 @@ const (
 	defaultBurst = 200
 )
 
-func (r *ASJobReconciler) writeToConfigmap(jobname, namespace string, ji *jobInfo) {
+func (r *ASJobReconciler) writeToConfigmap(jobName, namespace string, ji *jobInfo) {
 	kubeClient, _, err := newClientK8s()
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to create kubeClient, err: %s", err)
 		return
 	}
-	configmapName := "rings-config-" + jobname
+	configmapName := "rings-config-" + jobName
 	cm, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configmapName, metav1.GetOptions{})
 	if err != nil {
 		return
@@ -485,7 +485,7 @@ func (r *ASJobReconciler) writeToConfigmap(jobname, namespace string, ji *jobInf
 	if !ok {
 		hwlog.RunLog.Errorf("ranktable generaotor not found for job %s", ji.name)
 	}
-	cm.Data["hccl.json"], err = rtg.(*rktCommon.BaseGenerator).ToString()
+	cm.Data["hccl.json"], err = rtg.(*rktv1.RankTable).ToString()
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get ranktable string, err: %s", err)
 		return
