@@ -24,7 +24,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
@@ -79,8 +78,6 @@ func (r *ASJobReconciler) newJobInfo(
 		return nil, err
 	}
 
-	// wait for adding annotaion to pod
-	time.Sleep(1 * time.Second)
 	pods, err := r.getPodsForJob(job)
 	if err != nil {
 		hwlog.RunLog.Warnf("GetPodsForJob error %v", err)
@@ -101,28 +98,28 @@ func (r *ASJobReconciler) newJobInfo(
 	}, nil
 }
 
-func genLabels(jobObj interface{}, jobName string) map[string]string {
+func genLabels(jobObj interface{}, jobName string) (map[string]string, error) {
 	acjob, ok := jobObj.(*mindxdlv1.AscendJob)
 	if !ok {
-		hwlog.RunLog.Errorf("job not found")
-		return map[string]string{
-			"NoPodShouldAdd": "NoPodShouldAdd",
-		}
+		hwlog.RunLog.Error("job not found")
+		return map[string]string{}, fmt.Errorf("job not found")
 	}
 	switch acjob.Kind {
 	case "AscendJob":
 		return map[string]string{
 			commonv1.JobNameLabel: jobName,
-		}
+		}, nil
 	case "Job":
 		return map[string]string{
 			"volcano.sh/job-name": jobName,
-		}
+		}, nil
+	case "Deployment":
+		return map[string]string{
+			"deploy-name": jobName,
+		}, nil
 	default:
 		hwlog.RunLog.Errorf("job kind %s is invalid", acjob.Kind)
-		return map[string]string{
-			"NoPodShouldAdd": "NoPodShouldAdd",
-		}
+		return map[string]string{}, fmt.Errorf("job type invalid")
 	}
 }
 
@@ -133,8 +130,12 @@ func (r *ASJobReconciler) getPodsForJob(jobObject interface{}) ([]*corev1.Pod, e
 	}
 
 	// Create selector.
+	labels, err := genLabels(jobObject, job.GetName())
+	if err != nil {
+		return nil, err
+	}
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: genLabels(jobObject, job.GetName()),
+		MatchLabels: labels,
 	})
 
 	if err != nil {

@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-	apicorev1 "k8s.io/api/core/v1"
+	appv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -62,7 +62,7 @@ func init() {
 	utilruntime.Must(v1beta1.AddToScheme(runtimeScheme))
 	utilruntime.Must(mindxdlv1.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1alpha1.AddToScheme(runtimeScheme))
-	utilruntime.Must(apicorev1.AddToScheme(runtimeScheme))
+	utilruntime.Must(appv1.AddToScheme(runtimeScheme))
 	// +kubebuilder:scaffold:scheme
 }
 

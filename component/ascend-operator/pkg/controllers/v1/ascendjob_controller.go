@@ -32,6 +32,7 @@ import (
 	"github.com/kubeflow/common/pkg/controller.v1/control"
 	"github.com/kubeflow/common/pkg/util"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -126,13 +127,23 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	vcjob := &v1alpha1.Job{}
 	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
 		fakeAcjob := decorateVcjob(vcjob)
-		ji, _err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
-		if _err == nil {
-			r.genRankTable(ji)
-			r.writeToConfigmap(vcjob.Name, vcjob.Namespace, ji)
-		} else {
-			hwlog.RunLog.Error("failed to generate ranktable for volcano job<%s>, err: %s", req.NamespacedName, _err)
+		ji, err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to generate ranktable for volcano job<%s>, err: %v", req.NamespacedName, err)
 		}
+		r.ranktablePipeline(ji, vcjob.Name, vcjob.Namespace)
+		return ctrl.Result{}, nil
+	}
+
+	// try fetch deployment
+	deploy := &appv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
+		fakeAcjob := decorateDeploy(deploy)
+		ji, err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to generate ranktable for Deployment<%s>, err: %v", req.NamespacedName, err)
+		}
+		r.ranktablePipeline(ji, deploy.Name, deploy.Namespace)
 		return ctrl.Result{}, nil
 	}
 
@@ -171,6 +182,15 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ASJobReconciler) ranktablePipeline(ji *jobInfo, jobName, namespace string) {
+	r.genRankTable(ji)
+	for i := 0; i < 3; i++ {
+		if err := r.writeRanktableToCm(jobName, jobName, ji); err == nil {
+			break
+		}
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -236,12 +256,21 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		vcjob, ok := e.Object.(*v1alpha1.Job)
-		if ok {
+		switch e.Object.(type) {
+		case *v1alpha1.Job:
+			vcjob := e.Object.(*v1alpha1.Job)
 			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
 			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
 			return true
+		case *appv1.Deployment:
+			deploy := e.Object.(*appv1.Deployment)
+			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
+			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
+			return true
+		default:
+			hwlog.RunLog.Info("job type is not volcano job or deployment")
 		}
+
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return true
@@ -465,36 +494,47 @@ func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 	}
 }
 
+func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
+	return &mindxdlv1.AscendJob{
+		TypeMeta:   deploy.TypeMeta,
+		ObjectMeta: deploy.ObjectMeta,
+	}
+}
+
 const (
 	defaultQPS   = 200.0
 	defaultBurst = 200
 )
 
-func (r *ASJobReconciler) writeToConfigmap(jobName, namespace string, ji *jobInfo) {
+func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobInfo) error {
 	kubeClient, _, err := newClientK8s()
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to create kubeClient, err: %s", err)
-		return
+		hwlog.RunLog.Errorf("failed to create kubeClient, err: %v", err)
+		return err
 	}
 	configmapName := "rings-config-" + jobName
 	cm, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configmapName, metav1.GetOptions{})
 	if err != nil {
-		return
+		hwlog.RunLog.Errorf("failed to get configmap, err: %v", err)
+		return err
 	}
 	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
 	if !ok {
-		hwlog.RunLog.Errorf("ranktable generaotor not found for job %s", ji.name)
+		err = fmt.Errorf("ranktable generaotor not found for job %s", ji.name)
+		hwlog.RunLog.Error(err)
+		return err
 	}
 	cm.Data["hccl.json"], err = rtg.(*rktv1.RankTable).ToString()
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get ranktable string, err: %s", err)
-		return
+		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
+		return err
 	}
 	if _, err := kubeClient.CoreV1().ConfigMaps(namespace).Update(context.TODO(), cm,
 		metav1.UpdateOptions{}); err != nil {
-		hwlog.RunLog.Errorf("failed to write configmap, err: %s", err)
-		return
+		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
+		return err
 	}
+	return nil
 }
 
 func newClientK8s() (*kubernetes.Clientset, *versioned.Clientset, error) {
