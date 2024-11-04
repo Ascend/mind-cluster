@@ -517,7 +517,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{
 				NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
-				VNode{}, 0}},
+				VNode{}, false, 0}},
 			wantErr: true,
 		},
 		{
@@ -526,7 +526,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 				NPUJob{Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
 				ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
-				VNode{}, 0}},
+				VNode{}, false, 0}},
 			wantErr: true,
 		},
 		{

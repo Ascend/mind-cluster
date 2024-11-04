@@ -674,7 +674,19 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		}
 		reScheduler.FaultNodes = append(reScheduler.FaultNodes, faultNode)
 	}
-	reScheduler.RealFaultNodes = reScheduler.GetRealFaultNodes()
+	reScheduler.setFaultNodeAttrToNPUNode()
+}
+
+func (reScheduler *ReScheduler) setFaultNodeAttrToNPUNode() {
+	for _, fNode := range reScheduler.FaultNodes {
+		if fNode.NodeHealthState == NodeUnhealthy {
+			node, ok := reScheduler.Nodes[fNode.NodeName]
+			if ok {
+				node.IsUnhealthy = true
+				reScheduler.Nodes[fNode.NodeName] = node
+			}
+		}
+	}
 }
 
 // RestartNeedForceDeleteJobs Restart jobs that need to be force deleted
@@ -979,10 +991,6 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 	fNode, exist := reScheduler.FaultNodeMaps[vcNode.Name]
 	if !exist {
 		return fmt.Errorf("node corresponding not in session")
-	}
-
-	if reScheduler.isNodeUnhealthy(fNode.NodeHealthState) {
-		return fmt.Errorf("task cannot be assigned to %s node", NodeUnhealthy)
 	}
 
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,

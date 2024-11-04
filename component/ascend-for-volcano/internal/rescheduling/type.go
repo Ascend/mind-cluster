@@ -193,7 +193,6 @@ type FaultNodeInfoToCm struct {
 type DealReSchedulerCache struct {
 	*DealReSchedulerConfigmap
 	FaultNodes                 []FaultNode
-	RealFaultNodes             []FaultNode                `json:"-"`
 	FaultNodeMaps              map[string]SimpleFNodeInfo `json:"-"`
 	FaultJobs                  []FaultJob
 	RealFaultJobs              []FaultJob `json:"-"`
