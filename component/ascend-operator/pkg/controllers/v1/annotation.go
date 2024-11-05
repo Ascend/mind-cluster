@@ -34,6 +34,10 @@ func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate
 		return nil
 	}
 
+	annotations := job.GetAnnotations()
+	delete(annotations, nonWorkerPodMountChipStatus)
+	job.SetAnnotations(annotations)
+
 	rank, err := strconv.Atoi(index)
 	if err != nil {
 		return err
