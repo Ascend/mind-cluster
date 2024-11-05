@@ -27,14 +27,12 @@ import (
 const (
 	defaultPerm   = 0644
 	rankTableFile = "hccl.json"
-	vcPodIndexKey = "VC_TASK_INDEX"
 )
 
 // BaseGenerator is the base struct for ranktable generator.
 type BaseGenerator struct {
-	dir       string
-	path      string
-	rankIndex uint32
+	dir  string
+	path string
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -136,7 +134,6 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 		hwlog.RunLog.Errorf("parse pod(%s/%s) rankIndex(%s) failed: %v", pod.Namespace, pod.Name,
 			pod.Annotations[utils.PodRankKey], err)
 		return err
-
 	}
 	hwlog.RunLog.Debugf("instance: %v", instance)
 	server := &Server{
