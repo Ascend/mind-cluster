@@ -42,7 +42,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -126,24 +125,14 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// try fetch vcjob
 	vcjob := &v1alpha1.Job{}
 	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
-		fakeAcjob := decorateVcjob(vcjob)
-		ji, err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to generate ranktable for volcano job<%s>, err: %v", req.NamespacedName, err)
-		}
-		r.ranktablePipeline(ji, vcjob.Name, vcjob.Namespace)
+		r.ranktablePipeline(decorateVcjob(vcjob))
 		return ctrl.Result{}, nil
 	}
 
 	// try fetch deployment
 	deploy := &appv1.Deployment{}
 	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		fakeAcjob := decorateDeploy(deploy)
-		ji, err := r.newJobInfo(fakeAcjob, fakeAcjob.Spec.ReplicaSpecs, &fakeAcjob.Status, &fakeAcjob.Spec.RunPolicy)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to generate ranktable for Deployment<%s>, err: %v", req.NamespacedName, err)
-		}
-		r.ranktablePipeline(ji, deploy.Name, deploy.Namespace)
+		r.ranktablePipeline(decorateDeploy(deploy))
 		return ctrl.Result{}, nil
 	}
 
@@ -184,10 +173,24 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *ASJobReconciler) ranktablePipeline(ji *jobInfo, jobName, namespace string) {
+func (r *ASJobReconciler) _ranktablePipeline(ji *jobInfo, jobName, namespace string) {
 	r.genRankTable(ji)
 	for i := 0; i < 3; i++ {
 		if err := r.writeRanktableToCm(jobName, jobName, ji); err == nil {
+			break
+		}
+	}
+}
+
+func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
+	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
+		return
+	}
+	r.genRankTable(ji)
+	for i := 0; i < 3; i++ {
+		if err := r.writeRanktableToCm(job.Name, job.Namespace, ji); err == nil {
 			break
 		}
 	}
@@ -501,21 +504,13 @@ func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 	}
 }
 
-const (
-	defaultQPS   = 200.0
-	defaultBurst = 200
-)
-
 func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobInfo) error {
-	kubeClient, _, err := newClientK8s()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to create kubeClient, err: %v", err)
-		return err
-	}
 	configmapName := "rings-config-" + jobName
-	cm, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configmapName, metav1.GetOptions{})
+	cm := &corev1.ConfigMap{}
+	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
+	err := r.Get(context.TODO(), namespacedname, cm)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get configmap, err: %v", err)
+		hwlog.RunLog.Errorf("failed to get configmap in namespace %s, err: %v", namespace, err)
 		return err
 	}
 	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
@@ -529,29 +524,9 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobI
 		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
 		return err
 	}
-	if _, err := kubeClient.CoreV1().ConfigMaps(namespace).Update(context.TODO(), cm,
-		metav1.UpdateOptions{}); err != nil {
+	if err := r.Update(context.TODO(), cm); err != nil {
 		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
 		return err
 	}
 	return nil
-}
-
-func newClientK8s() (*kubernetes.Clientset, *versioned.Clientset, error) {
-	cfg, err := clientcmd.BuildConfigFromFlags("", "")
-	if err != nil {
-		hwlog.RunLog.Errorf("build client config err: %#v", err)
-		return nil, nil, err
-	}
-	cfg.QPS = float32(defaultQPS)
-	cfg.Burst = defaultBurst
-	kubeclient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error building kubernetes clientset: %s", err.Error())
-	}
-	jobClient, err := versioned.NewForConfig(cfg)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error building clientset: %s", err.Error())
-	}
-	return kubeclient, jobClient, nil
 }
