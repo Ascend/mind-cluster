@@ -28,4 +28,5 @@ type RankTableGenerator interface {
 	AddPod(*v1.Pod) error
 	DeletePod(*v1.Pod)
 	GatherServerList()
+	ToString() (string, error)
 }
