@@ -504,7 +504,7 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobI
 	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
 	err := r.Get(context.TODO(), namespacedname, cm)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get configmap in namespace %s, err: %v", namespace, err)
+		hwlog.RunLog.Infof("failed to get configmap in namespace %s, err: %v", namespace, err)
 		return err
 	}
 	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
