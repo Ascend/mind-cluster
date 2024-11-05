@@ -172,12 +172,12 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 
-	rankIndex := 0
+	var rankIndex uint64 = 0
 	for _, p := range allocatedPods {
 		if _, rankExist := p.Annotations[rankIndexKey]; rankExist {
 			continue
 		}
-		p.Annotations[rankIndexKey] = strconv.Itoa(rankIndex)
+		p.Annotations[rankIndexKey] = strconv.FormatUint(rankIndex, 10)
 		r.Update(context.TODO(), p)
 		rankIndex++
 	}
