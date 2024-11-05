@@ -55,6 +55,9 @@ const (
 	npuCoreName = "huawei.com/npu-core"
 
 	statusPodIPDownwardAPI = "status.podIP"
+
+	cmRetryTime     = 3
+	configmapPrefix = "rings-config-"
 )
 
 const (

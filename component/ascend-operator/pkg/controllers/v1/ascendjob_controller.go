@@ -179,7 +179,7 @@ func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
 		return
 	}
 	r.genRankTable(ji)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < cmRetryTime; i++ {
 		if err := r.writeRanktableToCm(job.Name, job.Namespace, ji); err == nil {
 			break
 		}
@@ -509,7 +509,7 @@ func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 
 func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobInfo) error {
 
-	configmapName := "rings-config-" + jobName
+	configmapName := configmapPrefix + jobName
 	cm := &corev1.ConfigMap{}
 	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
 	err := r.Get(context.TODO(), namespacedname, cm)
