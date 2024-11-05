@@ -21,6 +21,7 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -171,6 +172,15 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 
+	rankIndex := 0
+	for _, p := range allocatedPods {
+		if _, rankExist := p.Annotations[rankIndexKey]; rankExist {
+			continue
+		}
+		p.Annotations[rankIndexKey] = strconv.Itoa(rankIndex)
+		r.Update(context.TODO(), p)
+		rankIndex++
+	}
 	errs := &sync.Map{}
 	errCount := int32(0)
 	wg := &sync.WaitGroup{}
