@@ -114,7 +114,10 @@ rules:
     verbs: [ "get", "patch", "update" ]
   - apiGroups: [ "batch.volcano.sh" ]
     resources: [ "jobs" ]
-    verbs: [ "watch", "list" ]
+    verbs: [ "get", "watch", "list" ]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments", "replicasets" ]
+    verbs: [ "get", "watch", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
