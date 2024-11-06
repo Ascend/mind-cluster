@@ -503,7 +503,6 @@ func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 }
 
 func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobInfo) error {
-
 	configmapName := configmapPrefix + jobName
 	cm := &corev1.ConfigMap{}
 	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
