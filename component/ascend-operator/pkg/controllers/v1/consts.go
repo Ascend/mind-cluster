@@ -94,6 +94,7 @@ const (
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
 
+	hostNetwork = "HostNetwork"
 	npuPod = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
