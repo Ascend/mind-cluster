@@ -9,6 +9,8 @@ Package utils is using for generating ranktable.
 package utils
 
 import (
+	"strings"
+
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
@@ -25,11 +27,32 @@ func PodHasAllocated(pod *corev1.Pod) bool {
 	if pod.GetDeletionTimestamp() != nil {
 		return false
 	}
+
+	if !podUseNpu(pod) {
+		return true
+	}
+
 	if _, ok := pod.Annotations[PodDeviceKey]; !ok {
 		hwlog.RunLog.Debugf("Pod %s has not allocated device", pod.Name)
 		return false
 	}
 	return true
+}
+
+func podUseNpu(pod *corev1.Pod) bool {
+	npuNeed := false
+	for _, container := range pod.Spec.Containers {
+		for resName, resVal := range container.Resources.Requests {
+			resValNum, ok := resVal.AsInt64()
+			if !ok {
+				continue
+			}
+			if strings.Contains(string(resName), npuPrefix) && resValNum > 0 {
+				return true
+			}
+		}
+	}
+	return npuNeed
 }
 
 const (
@@ -39,6 +62,9 @@ const (
 	PodRankKey = "hccl/rankIndex"
 
 	rankTableDir = "/user/mindx-dl/ranktable"
+
+	// prefix of request npu name
+	npuPrefix = "huawei.com/"
 )
 
 // RankTableStatus is rank table status
