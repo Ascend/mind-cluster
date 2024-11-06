@@ -28,9 +28,8 @@ func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate
 		podTemplate.Annotations = make(map[string]string)
 	}
 
-	_, existMaster := job.Spec.ReplicaSpecs[mindxdlv1.PytorchReplicaTypeMaster]
-	_, existChief := job.Spec.ReplicaSpecs[mindxdlv1.TensorflowReplicaTypeChief]
-	if !existMaster && !existChief {
+	status := getNonWorkerPodMountChipStatus(job)
+	if !status {
 		podTemplate.Annotations[rankIndexKey] = index
 		return nil
 	}

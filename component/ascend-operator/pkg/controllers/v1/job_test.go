@@ -381,7 +381,14 @@ func TestSyncReplicas(t *testing.T) {
 	convey.Convey("syncReplicas", t, func() {
 		rc := newCommonReconciler()
 		ji := &jobInfo{
-			job: newCommonAscendJob(),
+			job:   newCommonAscendJob(),
+			mtObj: &mindxdlv1.AscendJob{},
+			status: &commonv1.JobStatus{
+				Conditions: []commonv1.JobCondition{{
+					Type:   commonv1.JobSucceeded,
+					Status: corev1.ConditionTrue,
+				}},
+			},
 			rpls: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				mindxdlv1.PytorchReplicaTypeMaster: {},
 				mindxdlv1.ReplicaTypeWorker:        {},

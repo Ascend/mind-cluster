@@ -55,6 +55,8 @@ const (
 	npuCoreName = "huawei.com/npu-core"
 
 	statusPodIPDownwardAPI = "status.podIP"
+	// the status of mount chips for non-worker Pods
+	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )
 
 const (
@@ -82,6 +84,8 @@ const (
 	tfLocalWorker = "CM_LOCAL_WORKER"
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
+
+	npuPod = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name

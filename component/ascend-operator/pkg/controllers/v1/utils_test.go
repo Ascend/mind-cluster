@@ -193,43 +193,6 @@ func TestGetNpuReqPerPod(t *testing.T) {
 	})
 }
 
-func TestGetRealRank(t *testing.T) {
-	convey.Convey("getRealRank", t, func() {
-		rtype := "scheduler"
-		index := "xxx"
-		frame := mindxdlv1.MindSporeFrameworkName
-		realRank := 1
-		convey.Convey("01-invalid index, should return err", func() {
-			_, err := getRealRank(rtype, index, frame)
-			convey.ShouldNotBeNil(err)
-		})
-		convey.Convey("02-ms job's index equal rank, should not return err", func() {
-			index = "1"
-			rank, err := getRealRank(rtype, index, frame)
-			convey.ShouldEqual(rank, realRank)
-			convey.ShouldBeNil(err)
-		})
-
-		convey.Convey("03-rtype is master, index equal rank, should not return err", func() {
-			index = "1"
-			rtype = "worker"
-			rank, err := getRealRank(rtype, index, frame)
-			convey.ShouldEqual(rank, realRank)
-			convey.ShouldBeNil(err)
-		})
-
-		convey.Convey("04-frame is not ms and rtype is worker, index equal rank + 1, should not return err", func() {
-			index = "1"
-			rtype = "worker"
-			frame = mindxdlv1.PytorchFrameworkName
-			realRank = 2
-			rank, err := getRealRank(rtype, index, frame)
-			convey.ShouldEqual(rank, realRank)
-			convey.ShouldBeNil(err)
-		})
-	})
-}
-
 func TestLocalRankStr(t *testing.T) {
 	rankRequest := 0
 	convey.Convey("localRankStr", t, func() {

@@ -151,12 +151,7 @@ func validateContainer(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *
 	validReq := func(ct corev1.Container) *validateError {
 		isScheduler := rType == mindxdlv1.MindSporeReplicaTypeScheduler
 		resReq := getContainerResourceReq(ct)
-		if resReq != 0 && isScheduler {
-			return &validateError{
-				reason:  "ContainerError",
-				message: fmt.Sprintf("replicaType<Scheduler> req npu<%d> is invalid, it must be 0", resReq),
-			}
-		} else if resReq == 0 && !isScheduler {
+		if resReq == 0 && !isScheduler {
 			return &validateError{
 				reason:  "ContainerError",
 				message: fmt.Sprintf("replicaType<%s> req npu<%d> is invalid, it can not be 0", rType, resReq),

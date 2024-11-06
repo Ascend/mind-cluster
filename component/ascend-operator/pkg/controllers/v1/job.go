@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
@@ -275,6 +276,13 @@ func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
 }
 
 func (r *ASJobReconciler) syncReplicas(ji *jobInfo) error {
+	status := checkNonWorkerRplMountChips(ji)
+	annotations := ji.mtObj.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[nonWorkerPodMountChipStatus] = strconv.FormatBool(status)
+	ji.mtObj.SetAnnotations(annotations)
 	for rtype, spec := range ji.rpls {
 		if err := r.Controller.ReconcilePods(ji.mtObj, ji.status, ji.pods, rtype, spec, ji.rpls); err != nil {
 			hwlog.RunLog.Errorf("ReconcilePods type<%s> error %v", rtype, err)

@@ -318,9 +318,8 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 	}
 
 	indexStr := strconv.Itoa(pi.index)
-
-	if (pi.frame == mindxdlv1.PytorchFrameworkName || pi.frame == mindxdlv1.TensorflowFrameworkName) &&
-		pi.rtype == mindxdlv1.ReplicaTypeWorker {
+	status := getNonWorkerPodMountChipStatus(pi.job)
+	if status && pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		if pi.index == math.MaxInt {
 			return nil, errors.New("rank is the max int")
 		}
