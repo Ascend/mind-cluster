@@ -116,10 +116,7 @@ func (r *BaseGenerator) ToString() (string, error) {
 
 // AddPod is used to add pod to ranktable.
 func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
-	deviceInfo, ok := pod.Annotations[utils.PodDeviceKey]
-	if !ok {
-		return nil
-	}
+	deviceInfo := pod.Annotations[utils.PodDeviceKey]
 	var instance Instance
 	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
 		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v", pod.Namespace, pod.Name,

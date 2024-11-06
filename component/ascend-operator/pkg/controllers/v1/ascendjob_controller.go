@@ -32,6 +32,7 @@ import (
 	"github.com/kubeflow/common/pkg/controller.v1/control"
 	"github.com/kubeflow/common/pkg/util"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -52,6 +53,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
@@ -118,6 +120,21 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
+
+	// try fetch vcjob
+	vcjob := &v1alpha1.Job{}
+	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
+		r.ranktablePipeline(decorateVcjob(vcjob))
+		return ctrl.Result{}, nil
+	}
+
+	// try fetch deployment
+	deploy := &appv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
+		r.ranktablePipeline(decorateDeploy(deploy))
+		return ctrl.Result{}, nil
+	}
+
 	ascendjob := &mindxdlv1.AscendJob{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
@@ -155,6 +172,15 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
+func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
+	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
+		return
+	}
+	r.genRankTable(ji)
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ASJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if r == nil {
@@ -177,6 +203,16 @@ type resourceOption struct {
 }
 
 func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
+	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
+		return err
+	}
+	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
+		return err
+	}
 	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
@@ -212,6 +248,21 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
+		switch e.Object.(type) {
+		case *v1alpha1.Job:
+			vcjob := e.Object.(*v1alpha1.Job)
+			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
+			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
+			return true
+		case *appv1.Deployment:
+			deploy := e.Object.(*appv1.Deployment)
+			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
+			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
+			return true
+		default:
+			hwlog.RunLog.Info("job type is not volcano job or deployment")
+		}
+
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return true
@@ -231,7 +282,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			hwlog.RunLog.Errorf("failed to get fault-retry-times, error: %v", err)
 			return false
 		}
-		if _, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
+		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil && frame == mindxdlv1.PytorchFrameworkName {
 			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
 			hwlog.RunLog.Infof("create rtGenerator for ascendJob %s", ascendJob.Name)
 		}
@@ -416,4 +467,65 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 	return rtype == mindxdlv1.MindSporeReplicaTypeScheduler ||
 		rtype == mindxdlv1.PytorchReplicaTypeMaster ||
 		rtype == mindxdlv1.TensorflowReplicaTypeChief
+}
+
+func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
+	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
+	for i, task := range vcjob.Spec.Tasks {
+		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
+			Template: task.Template,
+			Replicas: &task.Replicas,
+		}
+	}
+	return &mindxdlv1.AscendJob{
+		TypeMeta:   vcjob.TypeMeta,
+		ObjectMeta: vcjob.ObjectMeta,
+		Spec: mindxdlv1.AscendJobSpec{
+			ReplicaSpecs: repSpecs,
+		},
+	}
+}
+
+func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
+	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
+		"Deploy": &commonv1.ReplicaSpec{
+			Template: deploy.Spec.Template,
+			Replicas: deploy.Spec.Replicas,
+		},
+	}
+	return &mindxdlv1.AscendJob{
+		TypeMeta:   deploy.TypeMeta,
+		ObjectMeta: deploy.ObjectMeta,
+		Spec: mindxdlv1.AscendJobSpec{
+			ReplicaSpecs: repSpec,
+		},
+	}
+}
+
+func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, ji *jobInfo) error {
+	configmapName := configmapPrefix + jobName
+	cm := &corev1.ConfigMap{}
+	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
+	err := r.Get(context.TODO(), namespacedname, cm)
+	if err != nil {
+		hwlog.RunLog.Infof("failed to get configmap in namespace %s, err: %v", namespace, err)
+		return err
+	}
+	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
+	if !ok {
+		err = fmt.Errorf("ranktable generaotor not found for job %s", ji.name)
+		hwlog.RunLog.Error(err)
+		return err
+	}
+	cm.Data[configmapKey], err = rtg.ToString()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
+		return err
+	}
+	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
+	if err := r.Update(context.TODO(), cm); err != nil {
+		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
+		return err
+	}
+	return nil
 }

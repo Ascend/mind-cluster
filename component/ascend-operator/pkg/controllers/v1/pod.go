@@ -21,6 +21,7 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -148,6 +149,22 @@ func (r *ASJobReconciler) reconcilePods(pi *podInfo, pods []*corev1.Pod, jobStat
 	return r.createPods(podToCreate, replicas)
 }
 
+func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
+	for _, p := range allocatedPods {
+		if _, rankExist := p.Annotations[rankIndexKey]; rankExist {
+			hwlog.RunLog.Info("rank index exist")
+			return
+		}
+	}
+	var rankIndex uint64 = 0
+	for _, p := range allocatedPods {
+		p.Annotations[rankIndexKey] = strconv.FormatUint(rankIndex, decimal)
+		r.Update(context.TODO(), p)
+		rankIndex++
+	}
+	hwlog.RunLog.Info("write rank index success")
+}
+
 func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	hwlog.RunLog.Infof("generating rank table for job %s", ji.name)
 	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
@@ -166,11 +183,11 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 			allocatedPods = append(allocatedPods, p)
 		}
 	}
-	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d", len(allocatedPods), ji.totalReplicas)
-	if len(allocatedPods) != int(ji.totalReplicas) {
+	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d", len(allocatedPods), ji.totalReplicas, len(ji.pods))
+	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
 		return
 	}
-
+	r.updateRandIndex(allocatedPods)
 	errs := &sync.Map{}
 	errCount := int32(0)
 	wg := &sync.WaitGroup{}
@@ -195,6 +212,16 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	if err := rtg.WriteToFile(); err != nil {
 		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
 		rtg.SetStatus(utils.InitialRTStatus)
+	}
+	r.tryWriteCm(ji)
+}
+
+func (r *ASJobReconciler) tryWriteCm(ji *jobInfo) {
+	// try to write configmap
+	for i := 0; i < cmRetryTime; i++ {
+		if err := r.writeRanktableToCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji); err == nil {
+			break
+		}
 	}
 }
 

@@ -22,12 +22,14 @@ import (
 	"fmt"
 
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	appv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -59,6 +61,8 @@ func init() {
 	utilruntime.Must(scheme.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1beta1.AddToScheme(runtimeScheme))
 	utilruntime.Must(mindxdlv1.AddToScheme(runtimeScheme))
+	utilruntime.Must(v1alpha1.AddToScheme(runtimeScheme))
+	utilruntime.Must(appv1.AddToScheme(runtimeScheme))
 	// +kubebuilder:scaffold:scheme
 }
 
