@@ -105,17 +105,17 @@ func genLabels(jobObj interface{}, jobName string) (map[string]string, error) {
 		return map[string]string{}, fmt.Errorf("job not found")
 	}
 	switch acjob.Kind {
-	case "AscendJob":
+	case acjobKind:
 		return map[string]string{
 			commonv1.JobNameLabel: jobName,
 		}, nil
-	case "Job":
+	case vcjobKind:
 		return map[string]string{
-			"volcano.sh/job-name": jobName,
+			vcjobLabelKey: jobName,
 		}, nil
-	case "Deployment":
+	case deployKind:
 		return map[string]string{
-			"deploy-name": jobName,
+			deployLabelKey: jobName,
 		}, nil
 	default:
 		hwlog.RunLog.Errorf("job kind %s is invalid", acjob.Kind)

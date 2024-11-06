@@ -58,6 +58,11 @@ const (
 
 	cmRetryTime     = 3
 	configmapPrefix = "rings-config-"
+	acjobKind       = "AscendJob"
+	vcjobKind       = "Job"
+	vcjobLabelKey   = "volcano.sh/job-name"
+	deployKind      = "Deployment"
+	deployLabelKey  = "deploy-name"
 )
 
 const (
