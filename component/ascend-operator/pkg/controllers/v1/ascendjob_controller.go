@@ -477,7 +477,7 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
 	for i, task := range vcjob.Spec.Tasks {
-		repSpecs[commonv1.ReplicaType("Worker"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
+		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
 			Template: task.Template,
 			Replicas: &task.Replicas,
 		}
