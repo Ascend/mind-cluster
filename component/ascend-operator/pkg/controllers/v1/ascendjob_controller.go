@@ -36,7 +36,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -53,7 +52,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -263,88 +261,6 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 		return err
 	}
 	return nil
-}
-
-type DeployRktHandler struct {
-	OwnerType runtime.Object
-
-	IsController bool
-
-	groupKind schema.GroupKind
-
-	mapper meta.RESTMapper
-}
-
-type empty struct{}
-
-func (e *DeployRktHandler) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
-	reqs := map[reconcile.Request]empty{}
-	e.getOwnerReconcileRequest(evt.Object, reqs)
-	for req := range reqs {
-		q.Add(req)
-	}
-}
-
-func (e *DeployRktHandler) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	reqs := map[reconcile.Request]empty{}
-	e.getOwnerReconcileRequest(evt.ObjectOld, reqs)
-	e.getOwnerReconcileRequest(evt.ObjectNew, reqs)
-	for req := range reqs {
-		q.Add(req)
-	}
-}
-
-func (e *DeployRktHandler) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	reqs := map[reconcile.Request]empty{}
-	e.getOwnerReconcileRequest(evt.Object, reqs)
-	for req := range reqs {
-		q.Add(req)
-	}
-}
-
-func (e *DeployRktHandler) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	reqs := map[reconcile.Request]empty{}
-	e.getOwnerReconcileRequest(evt.Object, reqs)
-	for req := range reqs {
-		q.Add(req)
-	}
-}
-
-func (e *DeployRktHandler) parseOwnerTypeGroupKind(scheme *runtime.Scheme) error {
-	kinds, _, err := scheme.ObjectKinds(e.OwnerType)
-	if err != nil {
-		return err
-	}
-	if len(kinds) != 1 {
-		err := fmt.Errorf("expected exactly 1 kind for OwnerType %T, but found %s kinds", e.OwnerType, kinds)
-		return err
-	}
-	e.groupKind = schema.GroupKind{Group: kinds[0].Group, Kind: kinds[0].Kind}
-	return nil
-}
-
-func (e *DeployRktHandler) getOwnerReconcileRequest(object metav1.Object, result map[reconcile.Request]empty) {
-	ref := metav1.GetControllerOf(object)
-	refGV, err := schema.ParseGroupVersion(ref.APIVersion)
-	if err != nil {
-		return
-	}
-
-	if ref.Kind == e.groupKind.Kind && refGV.Group == e.groupKind.Group {
-		request := reconcile.Request{NamespacedName: types.NamespacedName{
-			Name: object.GetLabels()[deployLabelKey],
-		}}
-
-		mapping, err := e.mapper.RESTMapping(e.groupKind, refGV.Version)
-		if err != nil {
-			return
-		}
-		if mapping.Scope.Name() != meta.RESTScopeNameRoot {
-			request.Namespace = object.GetNamespace()
-		}
-
-		result[request] = empty{}
-	}
 }
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
