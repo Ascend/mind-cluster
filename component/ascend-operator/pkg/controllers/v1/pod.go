@@ -210,7 +210,8 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
 	err := rtg.WriteToFile()
-	if err != nil && !r.tryWriteCm(ji) {
+	writeCmSuccess := r.tryWriteCm(ji)
+	if err != nil && !writeCmSuccess {
 		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
