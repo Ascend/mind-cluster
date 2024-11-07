@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -72,6 +73,7 @@ func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconci
 		versions:      make(map[types.UID]int32),
 		backoffLimits: make(map[types.UID]int32),
 		rtGenerators:  make(map[types.UID]generator.RankTableGenerator),
+		hasHcclCtr:    false,
 	}
 
 	cfg := mgr.GetConfig()
@@ -105,6 +107,7 @@ type ASJobReconciler struct {
 	Scheme        *runtime.Scheme
 	recorder      record.EventRecorder
 	apiReader     client.Reader
+	hasHcclCtr    bool
 	versions      map[types.UID]int32
 	backoffLimits map[types.UID]int32
 	rtGenerators  map[types.UID]generator.RankTableGenerator
@@ -120,21 +123,9 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
-
-	// try fetch vcjob
-	vcjob := &v1alpha1.Job{}
-	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
-		r.ranktablePipeline(decorateVcjob(vcjob))
+	if r.isVcjobOrDeploy(ctx, req) {
 		return ctrl.Result{}, nil
 	}
-
-	// try fetch deployment
-	deploy := &appv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		r.ranktablePipeline(decorateDeploy(deploy))
-		return ctrl.Result{}, nil
-	}
-
 	ascendjob := &mindxdlv1.AscendJob{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
@@ -170,6 +161,31 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request) bool {
+	if r.hasHcclCtr {
+		hwlog.RunLog.Info("hccl controller exist, do not handle vcjob and deployment")
+		return false
+	}
+	// try fetch deployment
+	deploy := &appv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
+		if strings.Contains(req.Name, hcclCtrName) {
+			r.hasHcclCtr = true
+			hwlog.RunLog.Info("hccl controller found")
+			return true
+		}
+		r.ranktablePipeline(decorateDeploy(deploy))
+		return true
+	}
+	// try fetch vcjob
+	vcjob := &v1alpha1.Job{}
+	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
+		r.ranktablePipeline(decorateVcjob(vcjob))
+		return true
+	}
+	return false
 }
 
 func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
@@ -330,11 +346,16 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
 func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
+		controllerRef := metav1.GetControllerOf(e.Object)
+		if controllerRef != nil {
+			if rtg, exist := r.rtGenerators[controllerRef.UID]; exist {
+				rtg.DeletePod(e.Object.(*corev1.Pod))
+			}
+		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
 			return false
 		}
-
 		version, ok := e.Object.GetLabels()[podVersionLabel]
 		if !ok || len(version) == 0 {
 			return false
@@ -344,18 +365,13 @@ func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 			hwlog.RunLog.Errorf("failed to convert string to int, err: %v", err)
 			return false
 		}
-
-		if controllerRef := metav1.GetControllerOf(e.Object); controllerRef != nil {
-			hwlog.RunLog.Infof("deleted pod version is: %v", version)
-			currentVersion, ok := r.versions[controllerRef.UID]
-			if ok && int32(versionNumber) == currentVersion {
-				r.versions[controllerRef.UID]++
-			}
-			rtg, exist := r.rtGenerators[controllerRef.UID]
-			if !exist {
-				return true
-			}
-			rtg.DeletePod(e.Object.(*corev1.Pod))
+		hwlog.RunLog.Infof("deleted pod version is: %v", version)
+		if controllerRef == nil {
+			return true
+		}
+		currentVersion, ok := r.versions[controllerRef.UID]
+		if ok && int32(versionNumber) == currentVersion {
+			r.versions[controllerRef.UID]++
 		}
 		return true
 	}

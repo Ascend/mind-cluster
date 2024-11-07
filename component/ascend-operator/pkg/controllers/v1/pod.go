@@ -209,20 +209,21 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	if err := rtg.WriteToFile(); err != nil {
+	err := rtg.WriteToFile()
+	if err != nil && !r.tryWriteCm(ji) {
 		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
-	r.tryWriteCm(ji)
 }
 
-func (r *ASJobReconciler) tryWriteCm(ji *jobInfo) {
+func (r *ASJobReconciler) tryWriteCm(ji *jobInfo) bool {
 	// try to write configmap
 	for i := 0; i < cmRetryTime; i++ {
 		if err := r.writeRanktableToCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji); err == nil {
-			break
+			return true
 		}
 	}
+	return false
 }
 
 func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {
