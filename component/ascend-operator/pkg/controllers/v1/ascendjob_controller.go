@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -74,7 +73,6 @@ func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconci
 		versions:      make(map[types.UID]int32),
 		backoffLimits: make(map[types.UID]int32),
 		rtGenerators:  make(map[types.UID]generator.RankTableGenerator),
-		hasHcclCtr:    false,
 	}
 
 	cfg := mgr.GetConfig()
@@ -108,7 +106,6 @@ type ASJobReconciler struct {
 	Scheme        *runtime.Scheme
 	recorder      record.EventRecorder
 	apiReader     client.Reader
-	hasHcclCtr    bool
 	versions      map[types.UID]int32
 	backoffLimits map[types.UID]int32
 	rtGenerators  map[types.UID]generator.RankTableGenerator
@@ -165,18 +162,9 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request) bool {
-	if r.hasHcclCtr {
-		hwlog.RunLog.Info("hccl controller exist, do not handle vcjob and deployment")
-		return false
-	}
 	// try fetch deployment
 	deploy := &appv1.Deployment{}
 	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		if strings.Contains(req.Name, hcclCtrName) {
-			r.hasHcclCtr = true
-			hwlog.RunLog.Info("hccl controller found")
-			return true
-		}
 		r.ranktablePipeline(decorateDeploy(deploy))
 		return true
 	}
