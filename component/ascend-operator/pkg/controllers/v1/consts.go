@@ -64,6 +64,8 @@ const (
 	deployKind      = "Deployment"
 	deployLabelKey  = "deploy-name"
 	configmapKey    = "hccl.json"
+	hcclCtrName     = "hccl-controller"
+	atlasTaskKey    = "ring-controller.atlas"
 	// the status of mount chips for non-worker Pods
 	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )
@@ -95,7 +97,7 @@ const (
 	tfRank        = "CM_RANK"
 
 	hostNetwork = "HostNetwork"
-	npuPod = "NPU_POD"
+	npuPod      = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name

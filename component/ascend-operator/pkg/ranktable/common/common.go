@@ -162,16 +162,17 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 }
 
 // DeletePod is used to delete pod from ranktable.
-func (r *BaseGenerator) DeletePod(pod *corev1.Pod) {
+func (r *BaseGenerator) DeletePod(pod *corev1.Pod) utils.RankTableStatus {
 	r.servers.Delete(pod.UID)
 	if r.GetStatus() == utils.InitialRTStatus {
-		return
+		return utils.InitialRTStatus
 	}
 	r.SetStatus(utils.InitialRTStatus)
 	if err := r.WriteToFile(); err != nil {
 		hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
 		r.SetStatus(utils.CompletedRTStatus)
 	}
+	return r.GetStatus()
 }
 
 // GatherServerList is used to gather server list.

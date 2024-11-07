@@ -41,6 +41,7 @@ import (
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/utils"
@@ -209,20 +210,23 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	if err := rtg.WriteToFile(); err != nil {
+	err := rtg.WriteToFile()
+	writeCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+	if err != nil && !writeCmSuccess {
 		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
-	r.tryWriteCm(ji)
 }
 
-func (r *ASJobReconciler) tryWriteCm(ji *jobInfo) {
+func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {
 	// try to write configmap
 	for i := 0; i < cmRetryTime; i++ {
-		if err := r.writeRanktableToCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji); err == nil {
-			break
+		if err := r.writeRanktableToCm(jobName, namespace, uid); err == nil {
+			return true
 		}
+		time.Sleep(1 * time.Second)
 	}
+	return false
 }
 
 func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {
