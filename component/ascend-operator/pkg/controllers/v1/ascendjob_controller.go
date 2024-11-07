@@ -332,7 +332,7 @@ func (e *DeployRktHandler) getOwnerReconcileRequest(object metav1.Object, result
 
 	if ref.Kind == e.groupKind.Kind && refGV.Group == e.groupKind.Group {
 		request := reconcile.Request{NamespacedName: types.NamespacedName{
-			Name: ref.Name,
+			Name: object.GetLabels()[deployLabelKey],
 		}}
 
 		mapping, err := e.mapper.RESTMapping(e.groupKind, refGV.Version)
