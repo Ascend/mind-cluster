@@ -222,6 +222,7 @@ func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) b
 	// try to write configmap
 	for i := 0; i < cmRetryTime; i++ {
 		if err := r.writeRanktableToCm(jobName, namespace, uid); err == nil {
+			time.Sleep(1 * time.Second)
 			return true
 		}
 	}

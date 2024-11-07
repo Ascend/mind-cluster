@@ -338,20 +338,26 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 	}
 }
 
+func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace string, pod *corev1.Pod) {
+	rtg, exist := r.rtGenerators[uid]
+	if !exist {
+		return
+	}
+	if curStatus := rtg.DeletePod(pod); curStatus != utils.InitialRTStatus {
+		rtg.SetStatus(utils.InitialRTStatus)
+		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
+			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
+			rtg.SetStatus(utils.CompletedRTStatus)
+		}
+	}
+}
+
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
 func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
 		controllerRef := metav1.GetControllerOf(e.Object)
 		if controllerRef != nil {
-			if rtg, exist := r.rtGenerators[controllerRef.UID]; exist {
-				if curStatus := rtg.DeletePod(e.Object.(*corev1.Pod)); curStatus != utils.InitialRTStatus {
-					rtg.SetStatus(utils.InitialRTStatus)
-					if ok := r.tryWriteCm(controllerRef.Name, e.Object.GetNamespace(), controllerRef.UID); !ok {
-						hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-						rtg.SetStatus(utils.CompletedRTStatus)
-					}
-				}
-			}
+			r.deletePodForCmFile(controllerRef.UID, controllerRef.Name, e.Object.GetNamespace(), e.Object.(*corev1.Pod))
 		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
