@@ -2,10 +2,13 @@ module clusterd
 
 go 1.22.0
 
+toolchain go1.22.9
+
 require (
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/golang/protobuf v1.5.3
 	github.com/smartystreets/goconvey v1.7.2
+	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 	google.golang.org/grpc v1.57.2
 	huawei.com/npu-exporter/v6 v6.0.0-RC3.b001
 	k8s.io/api v0.25.3
@@ -41,7 +44,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect

@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-var faultProcessCenter = FaultProcessCenter{
+var faultProcessCenter = &FaultProcessCenter{
 	deviceFaultProcessor: []faultProcessor{&uceFaultProcessor{
 		JobReportRecoverTimeout:  10,
 		JobReportCompleteTimeout: 30,
