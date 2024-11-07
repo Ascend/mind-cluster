@@ -332,6 +332,12 @@ func (r *ASJobReconciler) setFaultRetryTimesToBackoffLimits(ascendJob *mindxdlv1
 
 func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
+		if rtg, ok := r.rtGenerators[e.Object.GetUID()]; ok {
+			if err := rtg.DeleteFile(); err != nil {
+				hwlog.RunLog.Errorf("failed to delete ranktable, err: %v", err)
+			}
+			delete(r.rtGenerators, e.Object.GetUID())
+		}
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return false
@@ -340,12 +346,6 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 		hwlog.RunLog.Info(msg)
 		delete(r.versions, ascendJob.UID)
 		delete(r.backoffLimits, ascendJob.UID)
-		if rtg, ok := r.rtGenerators[ascendJob.UID]; ok {
-			if err := rtg.DeleteFile(); err != nil {
-				hwlog.RunLog.Errorf("failed to delete ranktable, err: %v", err)
-			}
-			delete(r.rtGenerators, ascendJob.UID)
-		}
 		return true
 	}
 }
