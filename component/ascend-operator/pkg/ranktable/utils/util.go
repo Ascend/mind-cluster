@@ -79,8 +79,6 @@ const (
 type ConfigmapCheck string
 
 const (
-	// Initial initial configmap check
-	Initial ConfigmapCheck = "configmapInitial"
 	// ConfigmapExsit configmap exist
 	ConfigmapExsit ConfigmapCheck = "configmapExist"
 	// ConfigmapNotExist configmap not exist
