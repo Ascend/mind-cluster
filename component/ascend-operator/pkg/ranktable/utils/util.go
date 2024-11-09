@@ -38,7 +38,6 @@ func PodHasAllocated(pod *corev1.Pod) bool {
 }
 
 func podUseNpu(pod *corev1.Pod) bool {
-	npuNeed := false
 	for _, container := range pod.Spec.Containers {
 		for resName, resVal := range container.Resources.Requests {
 			resValNum, ok := resVal.AsInt64()
@@ -50,7 +49,8 @@ func podUseNpu(pod *corev1.Pod) bool {
 			}
 		}
 	}
-	return npuNeed
+	hwlog.RunLog.Infof("pod %v not use npu", pod.Name)
+	return false
 }
 
 const (
