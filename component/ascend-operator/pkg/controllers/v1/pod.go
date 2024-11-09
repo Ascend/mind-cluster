@@ -25,6 +25,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -44,6 +46,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 )
 
@@ -210,12 +213,45 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	err := rtg.WriteToFile()
-	writeCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
-	if err != nil && !writeCmSuccess {
-		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
+	r.saveRanktable(rtg, ji)
+}
+
+func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jobInfo) {
+	saveRanktableSuccess := true
+	if filepathExist(rtg.GetSacvePath()) {
+		saveRanktableSuccess = (rtg.WriteToFile() == nil)
+	}
+	if r.configmapExist(ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
+		saveRanktableSuccess = saveRanktableSuccess && r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+	}
+	if !saveRanktableSuccess {
+		hwlog.RunLog.Errorf("failed to write rank table")
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
+}
+
+// check wether ranktable file path exist and has permission
+func filepathExist(filePath string) bool {
+	dirPath := filepath.Dir(filePath)
+	_, err := os.Stat(dirPath)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	hwlog.RunLog.Errorf("Ranktable file path exists but has no permission : %v", err)
+	return false
+}
+
+func (r *ASJobReconciler) configmapExist(jobName, namespace string) bool {
+	configmapName := configmapPrefix + jobName
+	cm := &corev1.ConfigMap{}
+	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
+	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
+		return false
+	}
+	return true
 }
 
 func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {

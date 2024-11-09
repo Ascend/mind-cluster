@@ -67,6 +67,10 @@ func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
 }
 
+func (r *BaseGenerator) GetSacvePath() string {
+	return r.path
+}
+
 // WriteToFile is used to write ranktable to file.
 func (r *BaseGenerator) WriteToFile() error {
 	hwlog.RunLog.Infof("start write info into file: %s", r.path)
