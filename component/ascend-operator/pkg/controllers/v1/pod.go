@@ -25,8 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -218,11 +216,11 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 
 func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jobInfo) {
 	saveRanktableSuccess := true
-	if filepathExist(rtg.GetSacvePath()) {
+	if filepathExist(rtg.GetPath()) {
 		saveRanktableSuccess = (rtg.WriteToFile() == nil)
 	}
-	if r.configmapExist(ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
-		saveRanktableSuccess = saveRanktableSuccess && r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+	if r.configmapExist(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
+		saveRanktableSuccess = r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID()) && saveRanktableSuccess
 	}
 	if !saveRanktableSuccess {
 		hwlog.RunLog.Errorf("failed to write rank table")
@@ -230,27 +228,22 @@ func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jo
 	}
 }
 
-// check wether ranktable file path exist and has permission
-func filepathExist(filePath string) bool {
-	dirPath := filepath.Dir(filePath)
-	_, err := os.Stat(dirPath)
-	if err == nil {
+func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
+	configmapExist := rtg.GetConfigmapExist()
+	if configmapExist == utils.ConfigmapExsit {
 		return true
 	}
-	if os.IsNotExist(err) {
+	if configmapExist == utils.ConfigmapNotExist {
 		return false
 	}
-	hwlog.RunLog.Errorf("Ranktable file path exists but has no permission : %v", err)
-	return false
-}
-
-func (r *ASJobReconciler) configmapExist(jobName, namespace string) bool {
 	configmapName := configmapPrefix + jobName
 	cm := &corev1.ConfigMap{}
 	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
 	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
+		rtg.SetConfigmapExist(utils.ConfigmapNotExist)
 		return false
 	}
+	rtg.SetConfigmapExist(utils.ConfigmapExsit)
 	return true
 }
 

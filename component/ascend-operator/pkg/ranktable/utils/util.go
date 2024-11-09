@@ -74,3 +74,14 @@ const (
 	// CompletedRTStatus completed rank table status
 	CompletedRTStatus RankTableStatus = "completed"
 )
+
+// check configmap exsit or not
+type ConfigmapCheck string
+
+const (
+	Initial ConfigmapCheck = "configmapInitial"
+
+	ConfigmapExsit ConfigmapCheck = "configmapExist"
+
+	ConfigmapNotExist ConfigmapCheck = "configmapNotExist"
+)
