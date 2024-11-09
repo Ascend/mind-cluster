@@ -553,17 +553,14 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 		return err
 	}
 	cm.Data[configmapKey], err = rtg.ToString()
-	rv := rtg.ResourceVersion()
-	(*rv)++
-	cm.Data[configmapVersion] = strconv.Itoa((*rv))
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
 		return err
 	}
+	cm.Data[configmapVersion] = strconv.FormatUint(uint64(time.Now().Unix()), decimal)
 	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
 	if err := r.Update(context.TODO(), cm); err != nil {
 		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
-		(*rv)--
 		return err
 	}
 	return nil
