@@ -21,6 +21,8 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -288,5 +290,19 @@ func checkNpuPod(pi *podInfo) bool {
 		}
 		return checkContainersResourceReq(spec.Template.Spec.Containers)
 	}
+	return false
+}
+
+// check wether ranktable file path exist and has permission
+func filepathExist(filePath string) bool {
+	dirPath := filepath.Dir(filePath)
+	_, err := os.Stat(dirPath)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	hwlog.RunLog.Errorf("Ranktable file path exists but has no permission : %v", err)
 	return false
 }
