@@ -2,6 +2,7 @@ package fault
 
 import (
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/interface/kube"
 	"fmt"
@@ -41,11 +42,12 @@ func NewDeviceFaultProcessCenter() *DeviceFaultProcessCenter {
 	var processForJobFaultRank = &JobRankFaultInfoProcessor{
 		jobFaultInfos: make(map[string]FaultInfo),
 		deviceCenter:  deviceCenter,
+		mutex:         sync.RWMutex{},
 	}
 
 	deviceCenter.addProcessors([]FaultProcessor{
 		processForJobFaultRank,        // this processor don't need to filter anything, so assign on the first position.
-		processorForUceAccompanyFault, // this processor filter the uce accompany faults.
+		processorForUceAccompanyFault, // this processor filter the uce accompany faults, should before processorForUceFault
 		processorForUceFault,          // this processor filter the uce faults.
 	})
 	return deviceCenter
@@ -57,33 +59,28 @@ func (deviceCenter *DeviceFaultProcessCenter) GetDeviceInfos() map[string]*const
 	return device.DeepCopyInfos(deviceCenter.infos)
 }
 
-func (deviceCenter *DeviceFaultProcessCenter) SetDeviceInfos(infos map[string]*constant.DeviceInfo) {
+func (deviceCenter *DeviceFaultProcessCenter) setDeviceInfos(infos map[string]*constant.DeviceInfo) {
 	deviceCenter.mutex.Lock()
 	defer deviceCenter.mutex.Unlock()
 	deviceCenter.infos = device.DeepCopyInfos(infos)
 }
 
-func (deviceCenter *DeviceFaultProcessCenter) InformerAddCallback(oldInfo, newInfo *constant.DeviceInfo) bool {
+func (deviceCenter *DeviceFaultProcessCenter) InformerAddCallback(oldInfo, newInfo *constant.DeviceInfo) {
 	deviceCenter.mutex.Lock()
 	defer deviceCenter.mutex.Unlock()
 	length := len(deviceCenter.infos)
 	if length > constant.MaxSupportNodeNum {
 		hwlog.RunLog.Errorf("SwitchInfo length=%d > %d, SwitchInfo cm name=%s save failed",
 			length, constant.MaxSupportNodeNum, newInfo.CmName)
-		return false
 	}
-	oldInfo, found := deviceCenter.infos[newInfo.CmName]
+	oldInfo = deviceCenter.infos[newInfo.CmName]
 	deviceCenter.infos[newInfo.CmName] = newInfo
-	return found && device.BusinessDataIsNotEqual(oldInfo, newInfo)
 }
 
-func (deviceCenter *DeviceFaultProcessCenter) InformerDelCallback(oldInfo, newInfo *constant.DeviceInfo) bool {
+func (deviceCenter *DeviceFaultProcessCenter) InformerDelCallback(newInfo *constant.DeviceInfo) {
 	deviceCenter.mutex.Lock()
 	defer deviceCenter.mutex.Unlock()
-	oldInfo, found := deviceCenter.infos[newInfo.CmName]
 	delete(deviceCenter.infos, newInfo.CmName)
-	deviceCenter.infos[newInfo.CmName] = newInfo
-	return found
 }
 
 func (deviceCenter *DeviceFaultProcessCenter) GetUceFaultProcessor() (*UceFaultProcessor, error) {
@@ -113,13 +110,13 @@ func (deviceCenter *DeviceFaultProcessCenter) GetJobFaultRankProcessor() (*JobRa
 	return nil, fmt.Errorf("can not find jobRankFaultInfoProcessor in FaultProcessCenter")
 }
 
-func (deviceCenter *DeviceFaultProcessCenter) CallbackForReportUceInfo(jobUid, rankId string, recoverTime int64) error {
+func (deviceCenter *DeviceFaultProcessCenter) CallbackForReportUceInfo(jobId, rankId string, recoverTime int64) error {
 	processor, err := deviceCenter.GetUceFaultProcessor()
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return err
 	}
-	nodeName, deviceId, err := kube.JobMgr.GetNodeAndDeviceFromJobIdAndRankId(jobUid, rankId)
+	nodeName, deviceId, err := kube.JobMgr.GetNodeAndDeviceFromJobIdAndRankId(jobId, rankId)
 	if err != nil {
 		err = fmt.Errorf("mindIO report info failed, exception: %v", err)
 		hwlog.RunLog.Error(err)
@@ -136,18 +133,20 @@ func (deviceCenter *DeviceFaultProcessCenter) CallbackForReportUceInfo(jobUid, r
 	if reportInfo == nil {
 		reportInfo = make(map[string]map[string]map[string]mindIoReportInfo)
 	}
-	if _, ok := reportInfo[jobUid]; !ok {
-		reportInfo[jobUid] = make(map[string]map[string]mindIoReportInfo)
-		if _, ok := reportInfo[jobUid][nodeName]; !ok {
-			reportInfo[jobUid][nodeName] = make(map[string]mindIoReportInfo)
+	if _, ok := reportInfo[jobId]; !ok {
+		reportInfo[jobId] = make(map[string]map[string]mindIoReportInfo)
+		if _, ok := reportInfo[jobId][nodeName]; !ok {
+			reportInfo[jobId][nodeName] = make(map[string]mindIoReportInfo)
 		}
-		reportInfo[jobUid][nodeName][deviceName] = info
+		reportInfo[jobId][nodeName][deviceName] = info
 	} else {
-		if _, ok := reportInfo[jobUid][nodeName]; !ok {
-			reportInfo[jobUid][nodeName] = make(map[string]mindIoReportInfo)
+		if _, ok := reportInfo[jobId][nodeName]; !ok {
+			reportInfo[jobId][nodeName] = make(map[string]mindIoReportInfo)
 		}
-		reportInfo[jobUid][nodeName][deviceName] = info
+		reportInfo[jobId][nodeName][deviceName] = info
 	}
 	processor.mindIoReportInfo.Infos = reportInfo
+	hwlog.RunLog.Infof("CallbackForReportUceInfo receive mindio info(%s, %s, %d)", jobId, rankId, recoverTime)
+	hwlog.RunLog.Infof("Current mindIoReportInfo is %s", util.ObjToString(processor.mindIoReportInfo.Infos))
 	return nil
 }

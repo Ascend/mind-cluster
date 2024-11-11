@@ -28,31 +28,26 @@ func (nodeCenter *NodeFaultProcessCenter) GetNodeInfos() map[string]*constant.No
 	return node.DeepCopyInfos(nodeCenter.infos)
 }
 
-func (nodeCenter *NodeFaultProcessCenter) SetNodeInfos(infos map[string]*constant.NodeInfo) {
+func (nodeCenter *NodeFaultProcessCenter) setNodeInfos(infos map[string]*constant.NodeInfo) {
 	nodeCenter.mutex.RLock()
 	defer nodeCenter.mutex.RUnlock()
 	nodeCenter.infos = node.DeepCopyInfos(infos)
 }
 
-func (nodeCenter *NodeFaultProcessCenter) InformerAddCallback(oldInfo, newInfo *constant.NodeInfo) bool {
+func (nodeCenter *NodeFaultProcessCenter) InformerAddCallback(oldInfo, newInfo *constant.NodeInfo) {
 	nodeCenter.mutex.Lock()
 	defer nodeCenter.mutex.Unlock()
 	length := len(nodeCenter.infos)
 	if length > constant.MaxSupportNodeNum {
 		hwlog.RunLog.Errorf("SwitchInfo length=%d > %d, SwitchInfo cm name=%s save failed",
 			length, constant.MaxSupportNodeNum, newInfo.CmName)
-		return false
 	}
-	oldInfo, found := nodeCenter.infos[newInfo.CmName]
+	oldInfo = nodeCenter.infos[newInfo.CmName]
 	nodeCenter.infos[newInfo.CmName] = newInfo
-	return found && node.BusinessDataIsNotEqual(oldInfo, newInfo)
 }
 
-func (nodeCenter *NodeFaultProcessCenter) InformerDelCallback(oldInfo, newInfo *constant.NodeInfo) bool {
+func (nodeCenter *NodeFaultProcessCenter) InformerDelCallback(newInfo *constant.NodeInfo) {
 	nodeCenter.mutex.Lock()
 	defer nodeCenter.mutex.Unlock()
-	oldInfo, found := nodeCenter.infos[newInfo.CmName]
 	delete(nodeCenter.infos, newInfo.CmName)
-	nodeCenter.infos[newInfo.CmName] = newInfo
-	return found
 }

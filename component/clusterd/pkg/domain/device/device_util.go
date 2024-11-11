@@ -225,7 +225,7 @@ func FaultMapToArrayToString(faultMap map[string][]constant.DeviceFault) string 
 	for deviceName, faults := range faultMap {
 		mergedFaults, err := mergeDeviceFault(faults)
 		if err != nil {
-			hwlog.RunLog.Errorf("merge device %s faults failed, exception %v", deviceName, err)
+			hwlog.RunLog.Errorf("merge device %s faults failed, exception: %v", deviceName, err)
 			continue
 		}
 		array = append(array, mergedFaults)
@@ -233,7 +233,7 @@ func FaultMapToArrayToString(faultMap map[string][]constant.DeviceFault) string 
 	return util.ObjToString(array)
 }
 
-// TODO key应该是什么
+// TODO FaultListKey应该是什么
 func GetFaultListKey() string {
 	return "huawei.com/Ascend910-Fault"
 }
@@ -250,4 +250,8 @@ func IsUceFault(faultDevice constant.DeviceFault) bool {
 func IsUceAccompanyFault(faultDevice constant.DeviceFault) bool {
 	return strings.Contains(faultDevice.FaultCode, constant.AIC_FAULT_CODE) ||
 		strings.Contains(faultDevice.FaultCode, constant.AIV_FAULT_CODE)
+}
+
+func IsDeviceFaultEqual(one, other constant.DeviceFault) bool {
+	return reflect.DeepEqual(one, other)
 }

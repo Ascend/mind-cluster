@@ -3,6 +3,7 @@ package fault
 import (
 	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/interface/kube"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -110,7 +111,11 @@ func (processor *UceFaultProcessor) Process() {
 	processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
 	processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
 	currentTime := time.Now().UnixMilli()
-	processor.deviceCenter.SetDeviceInfos(processor.processUceFaultInfo(deviceInfos, currentTime))
+	filterDeviceInfos := processor.processUceFaultInfo(deviceInfos, currentTime)
+	hwlog.RunLog.Infof("current deviceInfos %s", util.ObjToString(deviceInfos))
+	hwlog.RunLog.Infof("currentTime: %d", currentTime)
+	hwlog.RunLog.Infof("result deviceInfos %s", util.ObjToString(filterDeviceInfos))
+	processor.deviceCenter.setDeviceInfos(filterDeviceInfos)
 }
 
 func (processor *UceFaultProcessor) processUceFaultInfo(
@@ -133,6 +138,8 @@ func (processor *UceFaultProcessor) processEachNodeUceFaultInfo(
 	for _, uceJob := range processor.uceDevicesOfUceJob {
 		for deviceName, uceDevice := range uceJob.UceNode[nodeName].DeviceInfo {
 			if processor.canFilterUceDeviceFaultInfo(uceDevice, currentTime) {
+				hwlog.RunLog.Warnf("UceFaultProcessor filtered uce device: %s on node %s, currentTime: %d",
+					util.ObjToString(uceDevice), nodeName, currentTime)
 				faultMap = processor.filterUceDeviceFaultInfo(deviceName, faultMap)
 			}
 		}

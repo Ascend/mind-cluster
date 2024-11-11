@@ -6,10 +6,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/interface/kube"
-	"fmt"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -332,7 +329,7 @@ func Test_uceFaultProcessor_CallbackForReportUceInfo(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("Test_uceFaultProcessor_CallbackForReportUceInfo", func(t *testing.T) {
-		_, _, _, jobsPodWorkers, _, testFileErr := readObjectFromBaseTestYaml()
+		_, _, _, jobsPodWorkers, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
@@ -375,157 +372,6 @@ func Test_uceFaultProcessor_CallbackForReportUceInfo(t *testing.T) {
 }
 
 // =============Test scenario===========
-func readObjectFromBaseTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]uceNodeInfo, map[string]job.PodWorker, map[string]uceJobInfo, error) {
-
-	var testDataPath = "../../../../testdata/resource/uce_processor_test.yaml"
-	var maxFileSize = 10000
-	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var uceNodesInfos = make(map[string]uceNodeInfo)
-	var expectUceJobsInfo = make(map[string]uceJobInfo)
-	var err error
-	var fileSize int64
-	var decoder *yaml.YAMLOrJSONDecoder
-	var jobs = make(map[string]map[string]*job.RankTable)
-	var jobsPodWorkers = make(map[string]job.PodWorker)
-	var open *os.File
-
-	fileInfo, err := os.Stat(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("testDataPath invalid")
-		goto ReturnLabel
-	}
-	fileSize = fileInfo.Size()
-	if fileSize > int64(maxFileSize) {
-		err = fmt.Errorf("testData file size too big")
-		goto ReturnLabel
-	}
-
-	open, err = os.Open(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("open testData file failed")
-		goto ReturnLabel
-	}
-
-	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-
-	err = decoder.Decode(&cmDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("cmDeviceInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&expectProcessedDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&uceNodesInfos)
-	if err != nil {
-		err = fmt.Errorf("uceNodesInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&jobs)
-	if err != nil {
-		err = fmt.Errorf("jobs decode failed")
-		goto ReturnLabel
-	}
-
-	for key, value := range jobs {
-		worker := job.Worker{
-			WorkerInfo: job.WorkerInfo{
-				CMData: value["CMData"],
-			},
-		}
-		jobsPodWorkers[key] = &worker
-	}
-
-	err = decoder.Decode(&expectUceJobsInfo)
-	if err != nil {
-		err = fmt.Errorf("expectUceJobsInfo decode failed")
-		goto ReturnLabel
-	}
-
-ReturnLabel:
-	return cmDeviceInfos, expectProcessedDeviceInfos, uceNodesInfos, jobsPodWorkers, expectUceJobsInfo, err
-}
-
-func readObjectFromScenarioTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]job.PodWorker, *mindIoReportInfosForAllJobs, error) {
-
-	var testDataPath = "../../../../testdata/resource/uce_scenario.yaml"
-	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var err error
-	var fileSize int64
-	var decoder *yaml.YAMLOrJSONDecoder
-	var jobs = make(map[string]map[string]*job.RankTable)
-	var jobsPodWorkers = make(map[string]job.PodWorker)
-	var open *os.File
-	var reportInfos mindIoReportInfosForAllJobs
-	maxFileSize := 10000
-
-	fileInfo, err := os.Stat(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("testDataPath invalid")
-		goto RetureLabel
-	}
-	fileSize = fileInfo.Size()
-	if fileSize > int64(maxFileSize) {
-		err = fmt.Errorf("testData file size too big")
-		goto RetureLabel
-	}
-
-	open, err = os.Open(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("open testData file failed")
-		goto RetureLabel
-	}
-
-	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-
-	err = decoder.Decode(&cmDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("cmDeviceInfos decode failed")
-		goto RetureLabel
-	}
-
-	err = decoder.Decode(&expectProcessedDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		goto RetureLabel
-	}
-
-	err = decoder.Decode(&jobs)
-	if err != nil {
-		err = fmt.Errorf("jobs decode failed")
-		goto RetureLabel
-	}
-
-	for key, value := range jobs {
-		worker := job.Worker{
-			WorkerInfo: job.WorkerInfo{
-				CMData: value["CMData"],
-			},
-		}
-		jobsPodWorkers[key] = &worker
-	}
-
-	err = decoder.Decode(&reportInfos)
-	if err != nil {
-		err = fmt.Errorf("reportInfos decode failed")
-		goto RetureLabel
-	}
-
-RetureLabel:
-	return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
-}
-
 func Test_uceFaultProcessor_getUceDeviceOfNodes(t *testing.T) {
 	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
 	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
@@ -533,7 +379,7 @@ func Test_uceFaultProcessor_getUceDeviceOfNodes(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("Test_uceFaultProcessor_getUceDeviceOfNodes", func(t *testing.T) {
-		cmDeviceInfos, _, uceNodesInfos, _, _, testFileErr := readObjectFromBaseTestYaml()
+		cmDeviceInfos, _, uceNodesInfos, _, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
@@ -541,7 +387,7 @@ func Test_uceFaultProcessor_getUceDeviceOfNodes(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceFaultProcessCenter.setDeviceInfos(cmDeviceInfos)
 		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		deviceOfNodes := processor.getUceDeviceOfNodes(deviceInfos)
 		if !reflect.DeepEqual(deviceOfNodes, uceNodesInfos) {
@@ -558,7 +404,7 @@ func Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs", func(t *testing.T) {
-		cmDeviceInfos, _, _, jobsPodWorkers, expectUceJobsInfo, testFileErr := readObjectFromBaseTestYaml()
+		cmDeviceInfos, _, _, jobsPodWorkers, expectUceJobsInfo, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
@@ -567,7 +413,7 @@ func Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceFaultProcessCenter.setDeviceInfos(cmDeviceInfos)
 		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
 		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
@@ -601,7 +447,7 @@ func Test_uceFaultProcessor_processUceFaultInfo(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("Test_uceFaultProcessor_processUceFaultInfo", func(t *testing.T) {
-		cmDeviceInfos, expectProcessedDeviceInfos, _, jobsPodWorkers, _, testFileErr := readObjectFromBaseTestYaml()
+		cmDeviceInfos, expectProcessedDeviceInfos, _, jobsPodWorkers, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
@@ -610,7 +456,7 @@ func Test_uceFaultProcessor_processUceFaultInfo(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceFaultProcessCenter.setDeviceInfos(cmDeviceInfos)
 		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
 		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
@@ -630,7 +476,7 @@ func Test_uceFaultProcessor_Scenario1(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("Test_uceFaultProcessor_Scenario1", func(t *testing.T) {
-		cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, reportInfos, testFileErr := readObjectFromScenarioTestYaml()
+		cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, reportInfos, testFileErr := readObjectFromUceScenarioTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
@@ -639,7 +485,7 @@ func Test_uceFaultProcessor_Scenario1(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceFaultProcessCenter.setDeviceInfos(cmDeviceInfos)
 		processor.mindIoReportInfo = reportInfos
 		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
