@@ -159,6 +159,11 @@ func (agent *Agent) UpdateJobNodeStatus(nodeName string, healthy bool) {
 	}
 }
 
+// TODO 如何判断job是uce容忍的
+func (agent *Agent) JobTolerateUceFault(jobId string) bool {
+	return true
+}
+
 func (agent *Agent) GetNodeAndDeviceFromJobIdAndRankId(jobId, rankId string) (string, string, error) {
 	agent.RwMutex.RLock()
 	defer agent.RwMutex.RUnlock()

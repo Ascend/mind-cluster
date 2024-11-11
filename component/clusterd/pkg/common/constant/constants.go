@@ -61,10 +61,20 @@ const (
 
 // fault processor const
 const (
-	JobNotRecover             = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	JobNotRecoverComplete     = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	DeviceNotFault            = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	DiagnosisAccompanyTimeout = 5 * 1000
-	JobReportRecoverTimeout   = 10 * 1000
-	JobReportCompleteTimeout  = 30 * 1000
+	JobNotRecover               = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	JobNotRecoverComplete       = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DeviceNotFault              = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DiagnosisAccompanyTimeout   = 5 * 1000
+	JobReportRecoverTimeout     = 10 * 1000
+	JobReportCompleteTimeout    = 30 * 1000
+	FaultCenterProcessPeriod    = 3 * 1000
+	MAX_FAULT_CENTER_SUBSCRIBER = 10
+)
+
+// fault center
+const (
+	ALL_FAULT = iota
+	DEVICE_FAULT
+	NODE_FAULT
+	SWITCH_FAULT
 )

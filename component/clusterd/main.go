@@ -91,7 +91,7 @@ func main() {
 	}
 	// election and running process
 	startInformer(ctx, recoverService)
-
+	resource.NewFaultProcessCenter(ctx)
 	signalCatch(cancel)
 }
 
