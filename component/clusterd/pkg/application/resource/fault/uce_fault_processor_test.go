@@ -1,4 +1,4 @@
-package resource
+package fault
 
 import (
 	"clusterd/pkg/application/job"
@@ -6,7 +6,6 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/interface/kube"
-	"context"
 	"fmt"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -29,15 +28,13 @@ func max(x, y int64) int64 {
 // Test current time not exceed (UceFaultTime + JobReportRecoverTimeout), should filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation1(t *testing.T) {
 	want := true
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	for i := 0; i < 10; i++ {
 		t.Run("Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation1-"+string(rune(i)), func(t *testing.T) {
-			processor, err := faultProcessCenter.getUceFaultProcessor()
-			if err != nil {
-				t.Errorf("%v", err)
-			}
 			var currentTime int64
 			if i == 0 {
 				currentTime = UceFaultTime
@@ -64,10 +61,8 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation1(t *testing.T) 
 // but don't receive job recover info, should not filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation2(t *testing.T) {
 	want := false
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
-	processor, err := faultProcessCenter.getUceFaultProcessor()
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -104,14 +99,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation2(t *testing.T) 
 // but not exceed (RecoverTime + JobReportCompleteTimeout)
 // and receive job recover info, should filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation3(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
-	want := true
-	processor, err := faultProcessCenter.getUceFaultProcessor()
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
+	want := true
 	for i := 0; i < 10; i++ {
 		t.Run("Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation3-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := uceDeviceInfo{
@@ -139,11 +132,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation3(t *testing.T) 
 // and exceed (RecoverTime + JobReportCompleteTimeout)
 // and receive job recover info, but don't receive job recover complete info, should not filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation4(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	want := false
-	processor, err := faultProcessCenter.getUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -184,11 +178,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation4(t *testing.T) 
 // and exceed (RecoverTime + JobReportCompleteTimeout)
 // and receive job recover info, and receive job recover complete info, should filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation5(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	want := true
-	processor, err := faultProcessCenter.getUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -219,11 +214,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation5(t *testing.T) 
 // and exceed (RecoverTime + JobReportCompleteTimeout)
 // and receive job recover info, but receive invalid job recover complete info, should not filter uce fault
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation6(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	want := false
-	processor, err := faultProcessCenter.getUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -263,11 +259,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation6(t *testing.T) 
 // and exceed (RecoverTime + JobReportCompleteTimeout)
 // and receive job recover info, and receive job recover complete info, and complete time valid, should filter
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation7(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	want := true
-	processor, err := faultProcessCenter.getUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -298,11 +295,12 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation7(t *testing.T) 
 // and receive job recover info, and receive job recover complete info, and complete time valid,
 // but complete time - recover time exceeds  JobReportCompleteTimeout, should not filter
 func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation8(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	want := false
-	processor, err := faultProcessCenter.getUceFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -328,16 +326,17 @@ func Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation8(t *testing.T) 
 
 // ========= Test mindio callback ===========
 func Test_uceFaultProcessor_CallbackForReportUceInfo(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	t.Run("Test_uceFaultProcessor_CallbackForReportUceInfo", func(t *testing.T) {
 		_, _, _, jobsPodWorkers, _, testFileErr := readObjectFromBaseTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor, err := faultProcessCenter.getUceFaultProcessor()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -361,14 +360,14 @@ func Test_uceFaultProcessor_CallbackForReportUceInfo(t *testing.T) {
 			processor.mindIoReportInfo.Infos = make(map[string]map[string]map[string]mindIoReportInfo)
 		}()
 
-		err = faultProcessCenter.CallbackForReportUceInfo(ts1Success.jobId, ts1Success.rankId, ts1Success.recoverTime)
+		err = deviceFaultProcessCenter.CallbackForReportUceInfo(ts1Success.jobId, ts1Success.rankId, ts1Success.recoverTime)
 		nodeName, deviceId, _ := kube.JobMgr.GetNodeAndDeviceFromJobIdAndRankId(ts1Success.jobId, ts1Success.rankId)
-		deviceName := util.DeviceID2DeviceKey(deviceId)
+		deviceName := deviceID2DeviceKey(deviceId)
 		info, ok := processor.mindIoReportInfo.Infos[ts1Success.jobId][nodeName][deviceName]
 		if err != nil || !ok || info.RecoverTime != ts1Success.recoverTime {
 			t.Errorf("test CallbackForReportUceInfo success failed.")
 		}
-		err = faultProcessCenter.CallbackForReportUceInfo(ts2Fault.jobId, ts2Fault.rankId, ts2Fault.recoverTime)
+		err = deviceFaultProcessCenter.CallbackForReportUceInfo(ts2Fault.jobId, ts2Fault.rankId, ts2Fault.recoverTime)
 		if err == nil {
 			t.Errorf("test CallbackForReportUceInfo fault failed.")
 		}
@@ -380,7 +379,7 @@ func readObjectFromBaseTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
 	map[string]uceNodeInfo, map[string]job.PodWorker, map[string]uceJobInfo, error) {
 
-	var testDataPath = "../../../testdata/resource/uce_processor_test.yaml"
+	var testDataPath = "../../../../testdata/resource/uce_processor_test.yaml"
 	var maxFileSize = 10000
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
@@ -459,7 +458,7 @@ func readObjectFromScenarioTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
 	map[string]job.PodWorker, *mindIoReportInfosForAllJobs, error) {
 
-	var testDataPath = "../../../testdata/resource/uce_scenario.yaml"
+	var testDataPath = "../../../../testdata/resource/uce_scenario.yaml"
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var err error
@@ -528,21 +527,22 @@ RetureLabel:
 }
 
 func Test_uceFaultProcessor_getUceDeviceOfNodes(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	t.Run("Test_uceFaultProcessor_getUceDeviceOfNodes", func(t *testing.T) {
 		cmDeviceInfos, _, uceNodesInfos, _, _, testFileErr := readObjectFromBaseTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
-		processor, err := faultProcessCenter.getUceFaultProcessor()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		faultProcessCenter.deviceCenter.infos = cmDeviceInfos
-		deviceInfos := faultProcessCenter.deviceCenter.getDeviceInfos()
+		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		deviceOfNodes := processor.getUceDeviceOfNodes(deviceInfos)
 		if !reflect.DeepEqual(deviceOfNodes, uceNodesInfos) {
 			t.Errorf("getUceDeviceOfNodes() = %v, want %v",
@@ -552,9 +552,11 @@ func Test_uceFaultProcessor_getUceDeviceOfNodes(t *testing.T) {
 }
 
 func Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	t.Run("Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs", func(t *testing.T) {
 		cmDeviceInfos, _, _, jobsPodWorkers, expectUceJobsInfo, testFileErr := readObjectFromBaseTestYaml()
 		if testFileErr != nil {
@@ -562,14 +564,13 @@ func Test_uceFaultProcessor_getUceDevicesForUceTolerateJobs(t *testing.T) {
 		}
 
 		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor, err := faultProcessCenter.getUceFaultProcessor()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		faultProcessCenter.deviceCenter.infos = cmDeviceInfos
-		deviceInfos := faultProcessCenter.deviceCenter.getDeviceInfos()
+		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
-		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
+		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
 		if !reflect.DeepEqual(processor.uceDevicesOfUceJob, expectUceJobsInfo) {
 			t.Errorf("getUceDevicesForUceTolerateJobs() = %v, want %v",
 				util.ObjToString(processor.uceDevicesOfUceJob), util.ObjToString(expectUceJobsInfo))
@@ -594,9 +595,11 @@ func isEqualFaultInfos(one, other map[string]*constant.DeviceInfo) bool {
 	return true
 }
 func Test_uceFaultProcessor_processUceFaultInfo(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	t.Run("Test_uceFaultProcessor_processUceFaultInfo", func(t *testing.T) {
 		cmDeviceInfos, expectProcessedDeviceInfos, _, jobsPodWorkers, _, testFileErr := readObjectFromBaseTestYaml()
 		if testFileErr != nil {
@@ -604,14 +607,13 @@ func Test_uceFaultProcessor_processUceFaultInfo(t *testing.T) {
 		}
 
 		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor, err := faultProcessCenter.getUceFaultProcessor()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		faultProcessCenter.deviceCenter.infos = cmDeviceInfos
-		deviceInfos := faultProcessCenter.deviceCenter.getDeviceInfos()
+		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
+		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
-		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
+		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
 		currentTime := 109 * time.Second.Milliseconds()
 		processUceFaultInfo := processor.processUceFaultInfo(deviceInfos, currentTime)
 		if !isEqualFaultInfos(processUceFaultInfo, expectProcessedDeviceInfos) {
@@ -622,9 +624,11 @@ func Test_uceFaultProcessor_processUceFaultInfo(t *testing.T) {
 }
 
 func Test_uceFaultProcessor_Scenario1(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
+	processor, err := deviceFaultProcessCenter.GetUceFaultProcessor()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 	t.Run("Test_uceFaultProcessor_Scenario1", func(t *testing.T) {
 		cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, reportInfos, testFileErr := readObjectFromScenarioTestYaml()
 		if testFileErr != nil {
@@ -632,90 +636,19 @@ func Test_uceFaultProcessor_Scenario1(t *testing.T) {
 		}
 
 		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor, err := faultProcessCenter.getUceFaultProcessor()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		faultProcessCenter.deviceCenter.infos = cmDeviceInfos
+		deviceFaultProcessCenter.SetDeviceInfos(cmDeviceInfos)
 		processor.mindIoReportInfo = reportInfos
-		deviceInfos := faultProcessCenter.deviceCenter.getDeviceInfos()
+		deviceInfos := deviceFaultProcessCenter.GetDeviceInfos()
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes(deviceInfos)
-		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
+		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs(deviceInfos)
 		currentTime := 100 * time.Second.Milliseconds()
 		processUceFaultInfo := processor.processUceFaultInfo(deviceInfos, currentTime)
 		if !isEqualFaultInfos(processUceFaultInfo, expectProcessedDeviceInfos) {
 			t.Errorf("processUceFaultInfo() = %v, want %v",
 				util.ObjToString(processUceFaultInfo), util.ObjToString(expectProcessedDeviceInfos))
-		}
-	})
-}
-
-// // ======= Test uceAccompanyFaultProcessor
-func readObjectFromUceAccompanyTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo, error) {
-
-	var testDataPath = "../../../testdata/resource/uce_accompany_processor_test.yaml"
-	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var err error
-	var fileSize int64
-	var decoder *yaml.YAMLOrJSONDecoder
-	var open *os.File
-	maxFileSize := 10000
-
-	fileInfo, err := os.Stat(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("testDataPath invalid")
-		goto RetureLabel
-	}
-	fileSize = fileInfo.Size()
-	if fileSize > int64(maxFileSize) {
-		err = fmt.Errorf("testData file size too big")
-		goto RetureLabel
-	}
-
-	open, err = os.Open(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("open testData file failed")
-		goto RetureLabel
-	}
-
-	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-
-	err = decoder.Decode(&cmDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("cmDeviceInfos decode failed")
-		goto RetureLabel
-	}
-
-	err = decoder.Decode(&expectProcessedDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		goto RetureLabel
-	}
-
-RetureLabel:
-	return cmDeviceInfos, expectProcessedDeviceInfos, err
-}
-func Test_uceAccompanyFaultProcessor_process(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	NewFaultProcessCenter(ctx)
-	t.Run("Test_uceAccompanyFaultProcessor_process", func(t *testing.T) {
-		cmDeviceInfos, expectProcessedDeviceInfos, testFileErr := readObjectFromUceAccompanyTestYaml()
-		if testFileErr != nil {
-			t.Errorf("init data failed. %v", testFileErr)
-		}
-		processor, err := faultProcessCenter.getUceAccompanyFaultProcessor()
-		if err != nil {
-			t.Errorf("%v", err)
-		}
-		processor.uceAccompanyFaultInQue(cmDeviceInfos)
-		currentTime := 95 * time.Second.Milliseconds()
-		filteredFaultInfos := processor.filterFaultInfos(currentTime, cmDeviceInfos)
-		if !isEqualFaultInfos(filteredFaultInfos, expectProcessedDeviceInfos) {
-			t.Errorf("processUceFaultInfo() = %v, want %v",
-				util.ObjToString(faultProcessCenter.deviceCenter.infos), util.ObjToString(expectProcessedDeviceInfos))
 		}
 	})
 }

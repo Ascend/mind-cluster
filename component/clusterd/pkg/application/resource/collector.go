@@ -11,10 +11,10 @@ import (
 func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator string) {
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		saveDeviceInfoCM(newDevInfo)
-		faultProcessCenter.informDeviceInfoAdd(oldDevInfo, newDevInfo)
+		GlobalFaultProcessCenter.informDeviceInfoAdd(oldDevInfo, newDevInfo)
 	} else if operator == constant.DeleteOperator {
 		delDeviceInfoCM(newDevInfo)
-		faultProcessCenter.informDeviceInfoDel(oldDevInfo, newDevInfo)
+		GlobalFaultProcessCenter.informDeviceInfoDel(oldDevInfo, newDevInfo)
 	}
 }
 
@@ -22,10 +22,10 @@ func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator s
 func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, operator string) {
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		saveSwitchInfoCM(newSwitchInfo)
-		faultProcessCenter.informSwitchInfoAdd(oldSwitchInfo, newSwitchInfo)
+		GlobalFaultProcessCenter.informSwitchInfoAdd(oldSwitchInfo, newSwitchInfo)
 	} else if operator == constant.DeleteOperator {
 		delSwitchInfoCM(newSwitchInfo)
-		faultProcessCenter.informSwitchInfoDel(oldSwitchInfo, newSwitchInfo)
+		GlobalFaultProcessCenter.informSwitchInfoDel(oldSwitchInfo, newSwitchInfo)
 	}
 }
 
@@ -33,9 +33,9 @@ func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, oper
 func NodeCollector(oldNodeInfo, newNodeInfo *constant.NodeInfo, operator string) {
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		saveNodeInfoCM(newNodeInfo)
-		faultProcessCenter.informNodeInfoAdd(oldNodeInfo, newNodeInfo)
+		GlobalFaultProcessCenter.informNodeInfoAdd(oldNodeInfo, newNodeInfo)
 	} else if operator == constant.DeleteOperator {
 		deleteNodeConfigMap(newNodeInfo)
-		faultProcessCenter.informNodeInfoDel(oldNodeInfo, newNodeInfo)
+		GlobalFaultProcessCenter.informNodeInfoDel(oldNodeInfo, newNodeInfo)
 	}
 }

@@ -57,9 +57,9 @@ func Report() {
 				// when informer begin, frequent add messages
 				time.Sleep(time.Second)
 			})
-			deviceArr := device.GetSafeData(faultProcessCenter.QueryDeviceInfoToReport())
-			nodeArr := node.GetSafeData(faultProcessCenter.QueryNodeInfoToReport())
-			switchArr := switchinfo.GetSafeData(faultProcessCenter.QuerySwitchInfoToReport())
+			deviceArr := device.GetSafeData(GlobalFaultProcessCenter.QueryDeviceInfoToReport())
+			nodeArr := node.GetSafeData(GlobalFaultProcessCenter.QueryNodeInfoToReport())
+			switchArr := switchinfo.GetSafeData(GlobalFaultProcessCenter.QuerySwitchInfoToReport())
 			updateCmWithEmpty(deviceArr, nodeArr, switchArr)
 			reportTime = time.Now().UnixMilli()
 			processCount++
