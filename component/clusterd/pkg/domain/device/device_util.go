@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -120,6 +121,7 @@ func BusinessDataIsNotEqual(oldDevInfo *constant.DeviceInfo, devInfo *constant.D
 	return false
 }
 
+// deviceName->faults
 func GetFaultMap(devInfo *constant.DeviceInfo) map[string][]constant.DeviceFault {
 	if devInfo == nil {
 		hwlog.RunLog.Error(fmt.Errorf("get fault list for node failed. devInfo is nil"))
@@ -145,12 +147,60 @@ func GetFaultMap(devInfo *constant.DeviceInfo) map[string][]constant.DeviceFault
 			if _, ok := deviceFaultMap[deviceFault.NPUName]; !ok {
 				deviceFaultMap[deviceFault.NPUName] = make([]constant.DeviceFault, 0)
 			}
-			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFault)
+			// device plugin may merge multiple fault codes in one string
+			deviceFaults := splitDeviceFault(deviceFault)
+			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
 		}
 		return deviceFaultMap
 	}
 	hwlog.RunLog.Error(fmt.Errorf("get fault list for node %v failed. fault list does not exist", devInfo.CmName))
 	return make(map[string][]constant.DeviceFault)
+}
+
+// device plugin may merge multiple fault codes in one string
+func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
+	deviceFaults := make([]constant.DeviceFault, 0)
+	codes := strings.Split(faultInfo.FaultCode, ",")
+	for _, code := range codes {
+		newFault := constant.DeviceFault{
+			FaultType:            faultInfo.FaultType,
+			NPUName:              faultInfo.NPUName,
+			LargeModelFaultLevel: faultInfo.LargeModelFaultLevel,
+			FaultLevel:           faultInfo.FaultLevel,
+			FaultHandling:        faultInfo.FaultHandling,
+			FaultCode:            code,
+			FaultTime:            faultInfo.FaultTime,
+		}
+		deviceFaults = append(deviceFaults, newFault)
+	}
+	return deviceFaults
+}
+
+func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault, error) {
+	if len(deviceFaults) == 0 {
+		return constant.DeviceFault{}, fmt.Errorf("deviceFaults has no fault, cannot merge")
+	}
+	deviceName := deviceFaults[0].NPUName
+	mergeFault := constant.DeviceFault{
+		FaultType:            deviceFaults[0].FaultType,
+		NPUName:              deviceName,
+		LargeModelFaultLevel: deviceFaults[0].LargeModelFaultLevel,
+		FaultLevel:           deviceFaults[0].FaultLevel,
+		FaultHandling:        deviceFaults[0].FaultHandling,
+		FaultCode:            "",
+		FaultTime:            deviceFaults[0].FaultTime,
+	}
+	faultCodeList := make([]string, 0)
+	for _, fault := range deviceFaults {
+		if fault.NPUName != deviceName {
+			return constant.DeviceFault{}, fmt.Errorf("deviceFaults cannot merge, "+
+				"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
+		}
+		faultCodeList = append(faultCodeList, fault.FaultCode)
+	}
+	slices.Sort(faultCodeList)
+	mergeFault.FaultCode = strings.Join(faultCodeList, ",")
+	return mergeFault, nil
 }
 
 func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
@@ -172,8 +222,13 @@ func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 
 func FaultMapToArrayToString(faultMap map[string][]constant.DeviceFault) string {
 	array := make([]constant.DeviceFault, 0)
-	for _, faults := range faultMap {
-		array = append(array, faults...)
+	for deviceName, faults := range faultMap {
+		mergedFaults, err := mergeDeviceFault(faults)
+		if err != nil {
+			hwlog.RunLog.Errorf("merge device %s faults failed, exception %v", deviceName, err)
+			continue
+		}
+		array = append(array, mergedFaults)
 	}
 	return util.ObjToString(array)
 }

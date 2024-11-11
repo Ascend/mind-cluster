@@ -44,9 +44,10 @@ func NewDeviceFaultProcessCenter() *DeviceFaultProcessCenter {
 	}
 
 	deviceCenter.addProcessors([]FaultProcessor{
-		processorForUceAccompanyFault,
-		processorForUceFault,
-		processForJobFaultRank})
+		processForJobFaultRank,        // this processor don't need to filter anything, so assign on the first position.
+		processorForUceAccompanyFault, // this processor filter the uce accompany faults.
+		processorForUceFault,          // this processor filter the uce faults.
+	})
 	return deviceCenter
 }
 

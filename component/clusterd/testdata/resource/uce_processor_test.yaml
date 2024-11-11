@@ -8,16 +8,15 @@ mindx-dl-deviceinfo-node1:
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-1", "fault_code": "80E01801", "fault_time": 100000 },
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-2", "fault_code": "80E01801", "fault_time": 100000 },
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-3", "fault_code": "80E01801", "fault_time": 100000 },
-        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "80E01801", "fault_time": 100000 },
-        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "11111111", "fault_time": 100000 }
+        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "80E01801,11111111,22222222", "fault_time": 100000 },
+        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "33333333", "fault_time": 100000 }
       ]
 mindx-dl-deviceinfo-node2:
   CmName: "mindx-dl-deviceinfo-node2"
   DeviceList:
     huawei.com/Ascend910-Fault: |
       [
-        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-0", "fault_code": "80E01801", "fault_time": 100000 },
-        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-0", "fault_code": "22222222", "fault_time": 100000 },
+        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-0", "fault_code": "80E01801,22222222", "fault_time": 100000 },
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-1", "fault_code": "80E01801", "fault_time": 100000 },
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-2", "fault_code": "80E01801", "fault_time": 100000 },
         { "fault_type": "<uce fault type>", "npu_name": "Ascend910-3", "fault_code": "80E01801", "fault_time": 100000 },
@@ -30,7 +29,7 @@ mindx-dl-deviceinfo-node1:
   DeviceList:
     huawei.com/Ascend910-Fault: |
       [
-        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "11111111", "fault_time": 100000 }
+        { "fault_type": "<uce fault type>", "npu_name": "Ascend910-4", "fault_code": "11111111,22222222,33333333", "fault_time": 100000 }
       ]
 mindx-dl-deviceinfo-node2:
   CmName: "mindx-dl-deviceinfo-node2"
