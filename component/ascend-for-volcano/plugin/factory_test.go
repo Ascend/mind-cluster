@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	appv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -690,4 +691,28 @@ func getJobRankIndexes(job *api.JobInfo) map[string]struct{} {
 		indexes[idx] = struct{}{}
 	}
 	return indexes
+}
+
+// TestRefreshJobWithIndex test of refreshJobWithIndex
+func TestRefreshJobWithIndex(t *testing.T) {
+	t.Run("refreshJobWithIndex", func(t *testing.T) {
+		handler := &ScheduleHandler{
+			ScheduleEnv: ScheduleEnv{
+				JobWithIndex: map[api.JobID]struct{}{
+					"job1": {},
+					"job2": {},
+				},
+			},
+		}
+		ssn := &framework.Session{
+			Jobs: map[api.JobID]*api.JobInfo{
+				"job2": {},
+			},
+		}
+		expectedJobWithIndex := map[api.JobID]struct{}{"job2": {}}
+		handler.refreshJobWithIndex(ssn)
+		if !reflect.DeepEqual(expectedJobWithIndex, handler.JobWithIndex) {
+			t.Errorf("refreshJobWithIndex = %v, want %v", handler.JobWithIndex, expectedJobWithIndex)
+		}
+	})
 }

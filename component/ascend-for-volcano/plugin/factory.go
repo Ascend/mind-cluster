@@ -112,7 +112,7 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 		klog.V(util.LogInfoLev).Infof("InitJobsFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
-	sHandle.refreshJobWithIndex()
+	sHandle.refreshJobWithIndex(ssn)
 	oldJobs := sHandle.Jobs
 	sHandle.Jobs = make(map[api.JobID]SchedulerJob, util.MapInitNum)
 	tmpJobServerInfos := make(map[api.JobID]struct{})
@@ -157,10 +157,10 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	return
 }
 
-func (sHandle *ScheduleHandler) refreshJobWithIndex() {
+func (sHandle *ScheduleHandler) refreshJobWithIndex(ssn *framework.Session) {
 	newJobs := make(map[api.JobID]struct{})
 	for id := range sHandle.JobWithIndex {
-		if _, ok := sHandle.Jobs[id]; ok {
+		if _, ok := ssn.Jobs[id]; ok {
 			newJobs[id] = struct{}{}
 		}
 	}
@@ -174,7 +174,7 @@ func (sHandle *ScheduleHandler) initResourceOfDeploy(job *api.JobInfo, ssn *fram
 	obj, exist, err := ssn.InformerFactory().Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(job.PodGroup.
 		Namespace + "/" + owner.Name)
 	if err != nil || !exist {
-		klog.V(util.LogErrorLev).Infof("Get rs from indexer failed err: %s, exist: %v.", util.SafePrint(err), exist)
+		klog.V(util.LogWarningLev).Infof("Get rs from indexer failed err: %s, exist: %v.", util.SafePrint(err), exist)
 		rs, err = ssn.KubeClient().AppsV1().ReplicaSets(job.PodGroup.Namespace).Get(context.TODO(), owner.Name,
 			metav1.GetOptions{})
 		if err != nil {
