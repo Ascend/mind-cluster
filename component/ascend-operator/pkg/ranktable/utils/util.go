@@ -9,6 +9,8 @@ Package utils is using for generating ranktable.
 package utils
 
 import (
+	"strings"
+
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
@@ -25,11 +27,30 @@ func PodHasAllocated(pod *corev1.Pod) bool {
 	if pod.GetDeletionTimestamp() != nil {
 		return false
 	}
+	if !podUseNpu(pod) {
+		return true
+	}
 	if _, ok := pod.Annotations[PodDeviceKey]; !ok {
 		hwlog.RunLog.Debugf("Pod %s has not allocated device", pod.Name)
 		return false
 	}
 	return true
+}
+
+func podUseNpu(pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		for resName, resVal := range container.Resources.Requests {
+			resValNum, ok := resVal.AsInt64()
+			if !ok {
+				continue
+			}
+			if strings.Contains(string(resName), npuPrefix) && resValNum > 0 {
+				return true
+			}
+		}
+	}
+	hwlog.RunLog.Infof("pod %v not use npu", pod.Name)
+	return false
 }
 
 const (
@@ -39,6 +60,9 @@ const (
 	PodRankKey = "hccl/rankIndex"
 
 	rankTableDir = "/user/mindx-dl/ranktable"
+
+	// prefix of request npu name
+	npuPrefix = "huawei.com/"
 )
 
 // RankTableStatus is rank table status
@@ -49,4 +73,14 @@ const (
 	InitialRTStatus RankTableStatus = "initializing"
 	// CompletedRTStatus completed rank table status
 	CompletedRTStatus RankTableStatus = "completed"
+)
+
+// check configmap exsit or not
+type ConfigmapCheck string
+
+const (
+	// ConfigmapExsit configmap exist
+	ConfigmapExsit ConfigmapCheck = "configmapExist"
+	// ConfigmapNotExist configmap not exist
+	ConfigmapNotExist ConfigmapCheck = "configmapNotExist"
 )

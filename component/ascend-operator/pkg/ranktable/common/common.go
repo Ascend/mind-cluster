@@ -31,8 +31,9 @@ const (
 
 // BaseGenerator is the base struct for ranktable generator.
 type BaseGenerator struct {
-	dir  string
-	path string
+	dir            string
+	path           string
+	configmapExist utils.ConfigmapCheck
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -57,6 +58,14 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	}
 }
 
+func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
+	return r.configmapExist
+}
+
+func (r *BaseGenerator) SetConfigmapExist(exist utils.ConfigmapCheck) {
+	r.configmapExist = exist
+}
+
 // SetStatus is used to set the status of ranktable.
 func (r *BaseGenerator) SetStatus(status utils.RankTableStatus) {
 	r.Status = status
@@ -65,6 +74,11 @@ func (r *BaseGenerator) SetStatus(status utils.RankTableStatus) {
 // GetStatus is used to get the status of ranktable.
 func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
+}
+
+// GetPath is used to get ranktable file path
+func (r *BaseGenerator) GetPath() string {
+	return r.path
 }
 
 // WriteToFile is used to write ranktable to file.
@@ -116,7 +130,10 @@ func (r *BaseGenerator) ToString() (string, error) {
 
 // AddPod is used to add pod to ranktable.
 func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
-	deviceInfo := pod.Annotations[utils.PodDeviceKey]
+	deviceInfo, ok := pod.Annotations[utils.PodDeviceKey]
+	if !ok {
+		return nil
+	}
 	var instance Instance
 	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
 		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v", pod.Namespace, pod.Name,

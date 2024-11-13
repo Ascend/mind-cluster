@@ -56,16 +56,17 @@ const (
 
 	statusPodIPDownwardAPI = "status.podIP"
 
-	cmRetryTime     = 3
-	configmapPrefix = "rings-config-"
-	acjobKind       = "AscendJob"
-	vcjobKind       = "Job"
-	vcjobLabelKey   = "volcano.sh/job-name"
-	deployKind      = "Deployment"
-	deployLabelKey  = "deploy-name"
-	configmapKey    = "hccl.json"
-	hcclCtrName     = "hccl-controller"
-	atlasTaskKey    = "ring-controller.atlas"
+	cmRetryTime      = 3
+	configmapPrefix  = "rings-config-"
+	acjobKind        = "AscendJob"
+	vcjobKind        = "Job"
+	vcjobLabelKey    = "volcano.sh/job-name"
+	deployKind       = "Deployment"
+	deployLabelKey   = "deploy-name"
+	configmapKey     = "hccl.json"
+	configmapVersion = "version"
+	hcclCtrName      = "hccl-controller"
+	atlasTaskKey     = "ring-controller.atlas"
 	// the status of mount chips for non-worker Pods
 	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )

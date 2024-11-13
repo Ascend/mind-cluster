@@ -1881,7 +1881,9 @@ func packHccsInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWei
 	}
 	hccsStatisticInfo, err := dmgr.GetHccsStatisticInfo(logicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get hccs statistic info of npu failed: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccs, logicID, "get hccs statistic info of npu failed: %v", err)
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccs, logicID)
 	}
 	hwChip.HccsStatisticInfo = hccsStatisticInfo
 }
@@ -1892,7 +1894,9 @@ func packHccsBandwidthInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChi
 	}
 	hccsBandwidthInfo, err := dmgr.GetHccsBandwidthInfo(logicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get hccs bandwidth info of npu failed: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccsBW, logicID, "get hccs bandwidth info of npu failed: %v ", err)
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccsBW, logicID)
 	}
 	hwChip.HccsBandwidthInfo = hccsBandwidthInfo
 }

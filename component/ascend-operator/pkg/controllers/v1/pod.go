@@ -44,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 )
 
@@ -210,12 +211,40 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	err := rtg.WriteToFile()
-	writeCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
-	if err != nil && !writeCmSuccess {
-		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
+	r.saveRanktable(rtg, ji)
+}
+
+func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jobInfo) {
+	saveRanktableSuccess := true
+	if filepathExist(rtg.GetPath()) {
+		saveRanktableSuccess = (rtg.WriteToFile() == nil)
+	}
+	if r.configmapExist(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
+		saveRanktableSuccess = r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID()) && saveRanktableSuccess
+	}
+	if !saveRanktableSuccess {
+		hwlog.RunLog.Error("failed to write rank table")
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
+}
+
+func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
+	configmapExist := rtg.GetConfigmapExist()
+	if configmapExist == utils.ConfigmapExsit {
+		return true
+	}
+	if configmapExist == utils.ConfigmapNotExist {
+		return false
+	}
+	configmapName := configmapPrefix + jobName
+	cm := &corev1.ConfigMap{}
+	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
+	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
+		rtg.SetConfigmapExist(utils.ConfigmapNotExist)
+		return false
+	}
+	rtg.SetConfigmapExist(utils.ConfigmapExsit)
+	return true
 }
 
 func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {

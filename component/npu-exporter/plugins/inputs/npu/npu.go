@@ -274,7 +274,11 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 	}
 	hccsStatisticInfo, err := npu.devManager.GetHccsStatisticInfo(devID)
 	if err != nil {
-		acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccs, devID); needPrint {
+			acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v %s", err, extraErrLog))
+		}
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccs, devID)
 	}
 	var hccsBeginIndex int
 	if devType == common.Ascend910B || common.IsA900A3SuperPod(npu.devManager.GetMainBoardId()) {
@@ -296,7 +300,11 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 	}
 	hccsBandwidthInfo, err := npu.devManager.GetHccsBandwidthInfo(devID)
 	if err != nil {
-		acc.AddError(fmt.Errorf("get hccs bandwidth info of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccsBW, devID); needPrint {
+			acc.AddError(fmt.Errorf("get hccs bandwidth info of npu failed: %v %s", err, extraErrLog))
+		}
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccsBW, devID)
 	}
 	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_profiling_time", hccsBandwidthInfo.ProfilingTime)
 	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_total_tx", hccsBandwidthInfo.TotalTxbw)

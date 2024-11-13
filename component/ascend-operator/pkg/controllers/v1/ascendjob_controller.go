@@ -355,12 +355,18 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 	if !exist {
 		return
 	}
-	if curStatus := rtg.DeletePod(pod); curStatus != utils.InitialRTStatus {
+	curStatus := rtg.DeletePod(pod)
+	updateFileFail := filepathExist(rtg.GetPath()) && (curStatus == utils.CompletedRTStatus)
+	updateCmFail := false
+	if r.configmapExist(rtg, jobName, namespace) {
 		rtg.SetStatus(utils.InitialRTStatus)
 		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
 			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-			rtg.SetStatus(utils.CompletedRTStatus)
+			updateCmFail = true
 		}
+	}
+	if updateFileFail && updateCmFail {
+		rtg.SetStatus(utils.CompletedRTStatus)
 	}
 }
 
@@ -557,6 +563,7 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
 		return err
 	}
+	cm.Data[configmapVersion] = strconv.FormatUint(uint64(time.Now().Unix()), decimal)
 	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
 	if err := r.Update(context.TODO(), cm); err != nil {
 		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)

@@ -8,7 +8,6 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/common"
@@ -70,11 +69,8 @@ func (mgr *JobSourceStatusManager) ListenTaskScheduleResult(taskId string, strat
 		hwlog.RunLog.Error("job mgr is nil")
 		return
 	}
-	var worker job.PodWorker
-	var exist bool
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	if worker, exist = kube.JobMgr.BsWorker[taskId]; !exist {
+	worker := kube.JobMgr.GetBsWorker(taskId)
+	if worker == nil {
 		hwlog.RunLog.Errorf("taskId=%s not exist", taskId)
 		return
 	}
@@ -140,31 +136,26 @@ func (mgr *JobSourceStatusManager) checkNotifyChan() {
 
 // GetJobHealthy return whether the job's resource health
 func (mgr *JobSourceStatusManager) GetJobHealthy(jobId string) (bool, []string) {
-
 	if kube.JobMgr == nil {
 		hwlog.RunLog.Error("job mgr is nil")
 		return false, nil
 	}
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	if worker, exist := kube.JobMgr.BsWorker[jobId]; !exist {
+	worker := kube.JobMgr.GetBsWorker(jobId)
+	if worker == nil {
 		hwlog.RunLog.Errorf("taskId=%s not exist", jobId)
 		return false, nil
-	} else {
-		return worker.GetJobHealth()
 	}
+	return worker.GetJobHealth()
 }
 
-// GetJobNameAndNameSpace return job's name and namespace
+// GetJobInfo return job's name and namespace
 func (mgr *JobSourceStatusManager) GetJobInfo(jobId string) (string, string, string) {
 	if kube.JobMgr == nil {
 		hwlog.RunLog.Error("job mgr is nil")
 		return "", "", ""
 	}
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	worker, exist := kube.JobMgr.BsWorker[jobId]
-	if !exist {
+	worker := kube.JobMgr.GetBsWorker(jobId)
+	if worker == nil {
 		hwlog.RunLog.Errorf("taskId=%s not exist", jobId)
 		return "", "", ""
 	}
@@ -178,14 +169,12 @@ func (mgr *JobSourceStatusManager) GetJobDeviceNumPerNode(jobId string) int {
 		hwlog.RunLog.Error("job mgr is nil")
 		return -1
 	}
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	if worker, exist := kube.JobMgr.BsWorker[jobId]; !exist {
+	worker := kube.JobMgr.GetBsWorker(jobId)
+	if worker == nil {
 		hwlog.RunLog.Errorf("taskId=%s not exist", jobId)
 		return -1
-	} else {
-		return worker.GetDeviceNumPerNode()
 	}
+	return worker.GetDeviceNumPerNode()
 }
 
 // IsJobRunning return whether job is running
@@ -194,10 +183,8 @@ func (mgr *JobSourceStatusManager) IsJobRunning(jobId string) bool {
 		hwlog.RunLog.Error("job mgr is nil")
 		return false
 	}
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	worker, exist := kube.JobMgr.BsWorker[jobId]
-	if !exist {
+	worker := kube.JobMgr.GetBsWorker(jobId)
+	if worker == nil {
 		hwlog.RunLog.Errorf("taskId=%s not exist", jobId)
 		return false
 	}
@@ -210,8 +197,5 @@ func (mgr *JobSourceStatusManager) JobExist(jobId string) bool {
 		hwlog.RunLog.Error("job mgr is nil")
 		return false
 	}
-	kube.JobMgr.RwMutex.RLock()
-	defer kube.JobMgr.RwMutex.RUnlock()
-	_, exist := kube.JobMgr.BsWorker[jobId]
-	return exist
+	return kube.JobMgr.BsExist(jobId)
 }
