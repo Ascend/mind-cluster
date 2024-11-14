@@ -161,6 +161,7 @@ type Info struct {
 	PGName            string
 	JobUid            string
 	PGUid             string
+	PGLabels          map[string]string
 	Key               string
 	Version           int32
 	JobType           string
@@ -241,5 +242,6 @@ var (
 
 // Job info
 type JobServerInfoMap struct {
-	InfoMap map[string]map[string]ServerHccl
+	InfoMap     map[string]map[string]ServerHccl
+	UceTolerate map[string]bool
 }

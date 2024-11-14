@@ -10,7 +10,6 @@ import (
 	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/interface/kube"
 )
 
 /*
@@ -224,7 +223,7 @@ func (processor *uceFaultProcessor) getUceDevicesForUceTolerateJobs() map[string
 	uceJobs := make(map[string]uceJobInfo)
 	for jobUid, serverList := range processor.jobServerInfoMap.InfoMap {
 		// If job cannot tolerate uce fault, don't Filter device info
-		if !kube.JobMgr.JobTolerateUceFault(jobUid) {
+		if !processor.jobServerInfoMap.UceTolerate[jobUid] {
 			continue
 		}
 		jobInfo := uceJobInfo{

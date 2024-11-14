@@ -81,8 +81,9 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		Info: Info{JobUid: jobUid, Version: int32(version),
 			CreationTimestamp: pg.CreationTimestamp, Namespace: namespace, JobName: jobName,
 			PGName: pgName, PGUid: pgUid,
-			Key:     namespace + "/" + metaData.GetName(),
-			JobType: getPGType(pg)},
+			PGLabels: pg.Labels,
+			Key:      namespace + "/" + metaData.GetName(),
+			JobType:  getPGType(pg)},
 		replicas: pg.Spec.MinMember, devices: pg.Spec.MinResources}
 
 	if !exists {

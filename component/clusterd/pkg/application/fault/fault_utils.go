@@ -139,9 +139,6 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 }
 
 func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault, error) {
-	if len(deviceFaults) == 0 {
-		return constant.DeviceFault{}, fmt.Errorf("deviceFaults has no fault, cannot merge")
-	}
 	deviceName := deviceFaults[0].NPUName
 	mergeFault := constant.DeviceFault{
 		FaultType:            deviceFaults[0].FaultType,
@@ -183,27 +180,25 @@ func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
-func advanceDeviceCmForNodeMapToString(advanceDeviceCm map[string]advanceDeviceCm, deviceCm map[string]*constant.DeviceInfo) {
+func advanceDeviceCmForNodeMapToString(advanceDeviceCm map[string]advanceDeviceCm, orgDeviceCm map[string]*constant.DeviceInfo) {
 	for nodeName, advanceCm := range advanceDeviceCm {
 		advanceCm = mergeCodeAndRemoveUnhealthy(advanceCm)
 		cmName := nodeNameToCmName(nodeName)
-		deviceInfo := deviceCm[cmName]
+		deviceInfo := orgDeviceCm[cmName]
 		faultListKey := getFaultListKey(deviceInfo)
 		if faultListKey != "" {
-			deviceCm[cmName].DeviceList[faultListKey] =
+			orgDeviceCm[cmName].DeviceList[faultListKey] =
 				util.ObjToString(faultMapToFaultList(advanceCm.deviceList))
 		}
 
 		networkUnhealthyKey := getNetworkUnhealthyKey(deviceInfo)
 		if networkUnhealthyKey != "" {
-			deviceCm[cmName].DeviceList[networkUnhealthyKey] =
-				util.ObjToString(advanceCm.carUnHealthy)
+			orgDeviceCm[cmName].DeviceList[networkUnhealthyKey] = strings.Join(advanceCm.networkUnhealthy, ",")
 		}
 
 		cardUnhealthyKey := getCardUnhealthyKey(deviceInfo)
 		if cardUnhealthyKey != "" {
-			deviceCm[cmName].DeviceList[cardUnhealthyKey] =
-				util.ObjToString(advanceCm.networkUnhealthy)
+			orgDeviceCm[cmName].DeviceList[cardUnhealthyKey] = strings.Join(advanceCm.carUnHealthy, ",")
 		}
 	}
 }
@@ -218,15 +213,15 @@ func faultMapToFaultList(deviceFaultMap map[string][]constant.DeviceFault) []con
 
 func mergeCodeAndRemoveUnhealthy(advanceDeviceCm advanceDeviceCm) advanceDeviceCm {
 	for deviceName, faults := range advanceDeviceCm.deviceList {
-		mergedFaults, err := mergeDeviceFault(faults)
-		if err != nil {
-			hwlog.RunLog.Errorf("merge device %s faults failed, exception: %v", deviceName, err)
-			continue
-		}
-		if len(mergedFaults.FaultCode) == 0 {
+		if len(faults) == 0 {
 			advanceDeviceCm.networkUnhealthy = util.DeleteStringSliceItem(advanceDeviceCm.networkUnhealthy, deviceName)
 			advanceDeviceCm.carUnHealthy = util.DeleteStringSliceItem(advanceDeviceCm.carUnHealthy, deviceName)
 			hwlog.RunLog.Errorf("remove device %s from unhealthy", deviceName)
+			continue
+		}
+		mergedFaults, err := mergeDeviceFault(faults)
+		if err != nil {
+			hwlog.RunLog.Errorf("merge device %s faults failed, exception: %v", deviceName, err)
 			continue
 		}
 		advanceDeviceCm.deviceList[deviceName] = []constant.DeviceFault{mergedFaults}
