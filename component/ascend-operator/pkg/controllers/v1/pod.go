@@ -93,7 +93,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	frame string) (*podInfo,
 	error) {
 
-	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame)
+	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +416,8 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 }
 
 func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) error {
-	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 {
+	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 &&
+		pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		return nil
 	}
 	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)
