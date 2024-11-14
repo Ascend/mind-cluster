@@ -469,7 +469,7 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	}
 	sJob.SubHealthyStrategy = subHealthyStrategy
 	spBlock := 0
-	spBlockStr, ok := vcJob.PodGroup.Annotations[util.SuperPodAnnoKey]
+	spBlockStr, ok := sJob.Annotation[util.SuperPodAnnoKey]
 	if ok {
 		if spBlock, err = strconv.Atoi(spBlockStr); err != nil {
 			klog.V(util.LogErrorLev).Infof("get job %s spBlock %s failed %v", vcJob.UID, spBlockStr, err)
