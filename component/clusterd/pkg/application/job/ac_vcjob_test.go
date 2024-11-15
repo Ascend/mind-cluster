@@ -35,7 +35,7 @@ const (
 	cmUID  = "vcjob"
 
 	mockTimeStr   = "1782233"
-	logLineLength = 256
+	logLineLength = 1024
 )
 
 func init() {

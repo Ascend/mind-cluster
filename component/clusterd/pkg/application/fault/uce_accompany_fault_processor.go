@@ -21,7 +21,7 @@ type uceAccompanyFaultProcessor struct {
 	uceAccompanyFaultQue map[string]map[string][]constant.DeviceFault
 	// uceFaultTime
 	uceFaultTime       map[string]map[string]int64
-	deviceCmForNodeMap map[string]advanceDeviceCm
+	deviceCmForNodeMap map[string]AdvanceDeviceCm
 }
 
 func newUceAccompanyFaultProcessor(deviceCenter *deviceFaultProcessCenter) *uceAccompanyFaultProcessor {
@@ -40,14 +40,14 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQue() {
 }
 
 func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
-	nodeName string, deviceInfo advanceDeviceCm) {
+	nodeName string, deviceInfo AdvanceDeviceCm) {
 	if _, ok := processor.uceAccompanyFaultQue[nodeName]; !ok {
 		processor.uceAccompanyFaultQue[nodeName] = make(map[string][]constant.DeviceFault)
 	}
 	if _, ok := processor.uceFaultTime[nodeName]; !ok {
 		processor.uceFaultTime[nodeName] = make(map[string]int64)
 	}
-	for deviceName, deviceFaults := range deviceInfo.deviceList {
+	for deviceName, deviceFaults := range deviceInfo.DeviceList {
 		for _, fault := range deviceFaults {
 			if isUceFault(fault) {
 				hwlog.RunLog.Debugf("find uce fault %s, on node %s", util.ObjToString(fault), nodeName)
@@ -87,9 +87,9 @@ func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64)
 		faultMap := processor.deviceCmForNodeMap[nodeName]
 		for deviceName, deviceFaultQue := range nodeFaults {
 			newQue, newFaultMap :=
-				processor.filterFaultDevice(faultMap.deviceList, currentTime, nodeName, deviceName, deviceFaultQue)
+				processor.filterFaultDevice(faultMap.DeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
 			nodeFaults[deviceName] = newQue
-			faultMap.deviceList = newFaultMap
+			faultMap.DeviceList = newFaultMap
 		}
 		processor.deviceCmForNodeMap[nodeName] = faultMap
 	}
@@ -141,13 +141,17 @@ func (processor *uceAccompanyFaultProcessor) isCurrentExceedDiagnosisTimeout(
 func (processor *uceAccompanyFaultProcessor) process() {
 	deviceInfos := processor.deviceCenter.getInfoMap()
 	processor.deviceCmForNodeMap = getAdvanceDeviceCmForNodeMap(deviceInfos)
+	hwlog.RunLog.Infof("current deviceInfos: %s", util.ObjToString(deviceInfos))
+	hwlog.RunLog.Infof("current deviceCmForNodeMap: %s", util.ObjToString(processor.deviceCmForNodeMap))
 
 	processor.uceAccompanyFaultInQue()
-	currentTime := time.Now().UnixMilli()
 	hwlog.RunLog.Infof("current uceAccompanyFaultQue: %s", util.ObjToString(processor.uceAccompanyFaultQue))
+	currentTime := time.Now().UnixMilli()
 	hwlog.RunLog.Infof("currentTime: %d", currentTime)
+
 	processor.filterFaultInfos(currentTime)
 	advanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, deviceInfos)
+
 	hwlog.RunLog.Infof("uceAccompanyFaultProcessor result: %s", util.ObjToString(deviceInfos))
 	processor.deviceCenter.setInfoMap(deviceInfos)
 }

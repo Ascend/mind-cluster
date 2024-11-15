@@ -31,50 +31,50 @@ func NewFaultProcessCenter(ctx context.Context) {
 		deviceCenter:      newDeviceFaultProcessCenter(),
 		nodeCenter:        newNodeFaultProcessCenter(),
 		switchCenter:      newSwitchFaultProcessCenter(),
-		notifyProcessChan: make(chan int),
+		notifyProcessChan: make(chan int, 1000),
 	}
 	go GlobalFaultProcessCenter.work(ctx)
 }
 
 func (center *FaultProcessCenter) informSwitchInfoAdd(newInfo *constant.SwitchInfo) {
 	center.switchCenter.updateInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process switch fault for add")
-	hwlog.RunLog.Debugf("new switch info %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process switch fault for add")
+	hwlog.RunLog.Infof("new switch info %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SWITCH_FAULT)
 }
 
 func (center *FaultProcessCenter) informSwitchInfoDel(newInfo *constant.SwitchInfo) {
 	center.switchCenter.delInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process switch fault for delete")
-	hwlog.RunLog.Debugf("delete switch info: %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process switch fault for delete")
+	hwlog.RunLog.Infof("delete switch info: %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SWITCH_FAULT)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoAdd(newInfo *constant.DeviceInfo) {
 	center.deviceCenter.updateInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process device fault for add")
-	hwlog.RunLog.Debugf("new device info %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process device fault for add")
+	hwlog.RunLog.Infof("new device info %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DEVICE_FAULT)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoDel(newInfo *constant.DeviceInfo) {
 	center.deviceCenter.delInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process device fault for delete")
-	hwlog.RunLog.Debugf("delete device info: %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process device fault for delete")
+	hwlog.RunLog.Infof("delete device info: %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DEVICE_FAULT)
 }
 
 func (center *FaultProcessCenter) informNodeInfoAdd(newInfo *constant.NodeInfo) {
 	center.nodeCenter.updateInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process node fault for add")
-	hwlog.RunLog.Debugf("new node info %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process node fault for add")
+	hwlog.RunLog.Infof("new node info %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NODE_FAULT)
 }
 
 func (center *FaultProcessCenter) informNodeInfoDel(newInfo *constant.NodeInfo) {
 	center.nodeCenter.delInfoFromCm(newInfo)
-	hwlog.RunLog.Info("notify fault center process node fault for delete")
-	hwlog.RunLog.Debugf("delete node info: %s", util.ObjToString(newInfo))
+	hwlog.RunLog.Infof("notify fault center process node fault for delete")
+	hwlog.RunLog.Infof("delete node info: %s", util.ObjToString(newInfo))
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NODE_FAULT)
 }
 
@@ -100,13 +100,9 @@ func (center *FaultProcessCenter) work(ctx context.Context) {
 				center.nodeCenter.process()
 			case constant.SWITCH_FAULT:
 				center.switchCenter.process()
-			default:
-				continue
 			}
 		case <-centerTicker.C:
 			center.process()
-		default:
-			continue
 		}
 	}
 }

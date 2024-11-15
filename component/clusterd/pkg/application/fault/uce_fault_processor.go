@@ -28,7 +28,7 @@ type uceFaultProcessor struct {
 	// node->DeviceName->uceDeviceInfo
 	uceDeviceOfNode  map[string]uceNodeInfo
 	jobServerInfoMap job.JobServerInfoMap
-	nodeDeviceCmMap  map[string]advanceDeviceCm
+	nodeDeviceCmMap  map[string]AdvanceDeviceCm
 }
 
 // JobId->node->device->report_info
@@ -101,7 +101,7 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 	}
 
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
-		deviceName := processor.nodeDeviceCmMap[nodeName].serverType + "-" + deviceOfJob.DeviceID
+		deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceOfJob.DeviceID
 		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
 			reportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
 			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
@@ -119,13 +119,20 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 func (processor *uceFaultProcessor) process() {
 	processor.jobServerInfoMap = processor.deviceCenter.jobServerInfoMap
 	deviceInfos := processor.deviceCenter.getInfoMap()
-	hwlog.RunLog.Infof("current deviceInfos %s", util.ObjToString(deviceInfos))
 	processor.nodeDeviceCmMap = getAdvanceDeviceCmForNodeMap(deviceInfos)
+	hwlog.RunLog.Infof("current deviceInfos %s", util.ObjToString(deviceInfos))
+	hwlog.RunLog.Infof("current nodeDeviceCmMap %s", util.ObjToString(processor.nodeDeviceCmMap))
+
 	processor.uceDeviceOfNode = processor.getUceDeviceOfNodes()
+	hwlog.RunLog.Infof("current uceDeviceOfNode %s", util.ObjToString(processor.uceDeviceOfNode))
+
 	processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
+	hwlog.RunLog.Infof("current uceDevicesOfUceJob %s", util.ObjToString(processor.uceDevicesOfUceJob))
+
 	currentTime := time.Now().UnixMilli()
 	processor.processUceFaultInfo(currentTime)
 	advanceDeviceCmForNodeMapToString(processor.nodeDeviceCmMap, deviceInfos)
+
 	hwlog.RunLog.Infof("currentTime: %d", currentTime)
 	hwlog.RunLog.Infof("result deviceInfos %s", util.ObjToString(deviceInfos))
 	processor.deviceCenter.setInfoMap(deviceInfos)
@@ -139,13 +146,13 @@ func (processor *uceFaultProcessor) processUceFaultInfo(currentTime int64) {
 }
 
 func (processor *uceFaultProcessor) processEachNodeUceFaultInfo(
-	nodeName string, deviceInfo advanceDeviceCm, currentTime int64) advanceDeviceCm {
+	nodeName string, deviceInfo AdvanceDeviceCm, currentTime int64) AdvanceDeviceCm {
 	for _, uceJob := range processor.uceDevicesOfUceJob {
 		for deviceName, uceDevice := range uceJob.UceNode[nodeName].DeviceInfo {
 			if processor.canFilterUceDeviceFaultInfo(uceDevice, currentTime) {
 				hwlog.RunLog.Warnf("uceFaultProcessor filtered uce device: %s on node %s, currentTime: %d",
 					util.ObjToString(uceDevice), nodeName, currentTime)
-				deviceInfo.deviceList = processor.filterUceDeviceFaultInfo(deviceName, deviceInfo.deviceList)
+				deviceInfo.DeviceList = processor.filterUceDeviceFaultInfo(deviceName, deviceInfo.DeviceList)
 			}
 		}
 	}
@@ -247,12 +254,12 @@ func (processor *uceFaultProcessor) getUceDevicesForUceTolerateJobs() map[string
 	return uceJobs
 }
 
-func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceInfo advanceDeviceCm) uceNodeInfo {
+func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceInfo AdvanceDeviceCm) uceNodeInfo {
 	nodeInfo := uceNodeInfo{
 		NodeName:   nodeName,
 		DeviceInfo: make(map[string]uceDeviceInfo),
 	}
-	for _, deviceFaults := range deviceInfo.deviceList {
+	for _, deviceFaults := range deviceInfo.DeviceList {
 		for _, fault := range deviceFaults {
 			if !isUceFault(fault) {
 				continue
@@ -275,7 +282,7 @@ func (processor *uceFaultProcessor) reportUceInfo(jobId string, rankId string, r
 		hwlog.RunLog.Error(err)
 		return err
 	}
-	deviceName := processor.nodeDeviceCmMap[nodeName].serverType + "-" + deviceId
+	deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceId
 	processor.reportInfo.RwMutex.Lock()
 	defer processor.reportInfo.RwMutex.Unlock()
 	infoMap := processor.reportInfo.InfoMap

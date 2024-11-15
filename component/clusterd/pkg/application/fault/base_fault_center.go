@@ -2,6 +2,7 @@ package fault
 
 import (
 	"clusterd/pkg/application/job"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/kube"
 	"sync"
 	"time"
@@ -14,11 +15,6 @@ import (
 // The faultProcessor process the fault information.
 type faultProcessor interface {
 	process()
-}
-
-type jobServerInfo struct {
-	serverName string
-	deviceList []job.Device
 }
 
 type baseFaultCenter struct {
@@ -41,16 +37,19 @@ func newBaseFaultCenter() baseFaultCenter {
 }
 
 func (baseCenter *baseFaultCenter) isProcessLimited(currentTime int64) bool {
-	return baseCenter.lastProcessTime+baseCenter.processPeriod < currentTime
+	return baseCenter.lastProcessTime+baseCenter.processPeriod > currentTime
 }
 
 func (baseCenter *baseFaultCenter) process() {
 	currentTime := time.Now().UnixMilli()
 	if baseCenter.isProcessLimited(currentTime) {
+		hwlog.RunLog.Infof("process limited, last time %d, current time %d",
+			baseCenter.lastProcessTime, currentTime)
 		return
 	}
 	baseCenter.lastProcessTime = currentTime
 	baseCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+	hwlog.RunLog.Infof("job server info map: %v", util.ObjToString(baseCenter.jobServerInfoMap))
 	for _, processor := range baseCenter.processorList {
 		processor.process()
 	}
