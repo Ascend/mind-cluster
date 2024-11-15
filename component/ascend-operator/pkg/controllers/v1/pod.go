@@ -90,6 +90,10 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	frame string) (*podInfo,
 	error) {
 
+	clusterdSvcIp := r.getClusterDSvcIp()
+	if clusterdSvcIp == "" {
+		return nil, fmt.Errorf("get clusterd svc ip failed")
+	}
 	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame)
 	if err != nil {
 		return nil, err
@@ -115,6 +119,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 		ctReq:           ctReq,
 		npuReplicas:     npuReplicas,
 		rtype:           rtype,
+		clusterdSvcIp:   clusterdSvcIp,
 	}, nil
 }
 
@@ -328,9 +333,6 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 	} else {
 		pi.rank = pi.index
 	}
-	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, mindxServiceNamespace, mindxDefaultServerDomain)
-	hwlog.RunLog.Infof("get ClusterD service ip = %s", clusterdSvcIp)
-	pi.clusterdSvcIp = clusterdSvcIp
 	// Set name for the template.
 	podTemplate.Name = common.GenGeneralName(job.Name, strings.ToLower(string(pi.rtype)), indexStr)
 

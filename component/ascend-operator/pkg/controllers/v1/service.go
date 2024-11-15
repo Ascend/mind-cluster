@@ -85,6 +85,12 @@ func (r *ASJobReconciler) genServiceLabels(job metav1.Object, rtype commonv1.Rep
 	return labelMap
 }
 
+func (r *ASJobReconciler) getClusterDSvcIp() string {
+	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, mindxServiceNamespace, mindxDefaultServerDomain)
+	hwlog.RunLog.Infof("get ClusterD service ip = %s", clusterdSvcIp)
+	return clusterdSvcIp
+}
+
 func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string) (string, string, error) {
 	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 {
 		return "", "", nil
@@ -125,6 +131,9 @@ func (r *ASJobReconciler) getIpFromSvcName(svcName, svcNamespace, defaultDomain 
 }
 
 func getServiceIpAndPort(service *corev1.Service) (string, string) {
+	if service == nil {
+		return "", ""
+	}
 	schedulerPort := ""
 	for _, port := range service.Spec.Ports {
 		if port.Name == mindxdlv1.DefaultPortName {
