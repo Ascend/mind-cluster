@@ -85,8 +85,9 @@ func (r *ASJobReconciler) genServiceLabels(job metav1.Object, rtype commonv1.Rep
 	return labelMap
 }
 
-func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string) (string, string, error) {
-	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 {
+func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string, rtype commonv1.ReplicaType) (string, string, error) {
+	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 &&
+		rtype == mindxdlv1.ReplicaTypeWorker {
 		return "", "", nil
 	}
 

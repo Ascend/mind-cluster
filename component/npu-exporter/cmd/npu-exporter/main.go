@@ -83,6 +83,7 @@ const (
 	maxConcurrency         = 512
 	defaultConnection      = 20
 	maxProfilingTime       = 2000
+	minHccsBWProfilingTime = 1
 	maxHccsBWProfilingTime = 1000
 	defaultShutDownTimeout = 30 * time.Second
 )
@@ -91,8 +92,8 @@ const (
 	prometheusPlatform         = "Prometheus"
 	telegrafPlatform           = "Telegraf"
 	pollIntervalStr            = "poll_interval"
-	maxTelegrafParamLen        = 2
-	minTelegrafParamLen        = 1
+	platformStr                = "platform"
+	hccsBWProfilingTimeStr     = "hccsBWProfilingTime"
 	maxLogLineLength           = 1024
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
@@ -226,7 +227,7 @@ func paramValidInPrometheus() error {
 	if profilingTime < 1 || profilingTime > maxProfilingTime {
 		return errors.New("profilingTime range error")
 	}
-	if hccsBWProfilingTime < 1 || hccsBWProfilingTime > maxHccsBWProfilingTime {
+	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
 		return errors.New("hccsBWProfilingTime range error")
 	}
 	cmdLine := strings.Join(os.Args[1:], "")
@@ -293,7 +294,7 @@ func init() {
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
 	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
 		"config pcie bandwidth profiling time, range is [1, 2000]")
-	flag.IntVar(&hccsBWProfilingTime, "hccsBWProfilingTime", defaultHccsBwProfilingTime,
+	flag.IntVar(&hccsBWProfilingTime, hccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
 		"config hccs bandwidth profiling time, range is [1, 1000]")
 }
 
@@ -383,20 +384,38 @@ func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.
 }
 
 func paramValidInTelegraf() error {
-	// cmdLine here must contain "-platfor=Telegraf", otherwise, it will enter the Prometheus process
+	// cmdLine here must contain "-platform=Telegraf", otherwise, it will enter the Prometheus process
 	cmdLine := os.Args[1:]
-	switch len(cmdLine) {
-	case minTelegrafParamLen:
-		return nil
-	case maxTelegrafParamLen:
-		cmdLineStr := strings.Join(cmdLine, "")
-		if strings.Contains(cmdLineStr, pollIntervalStr) {
-			return nil
-		}
-		return fmt.Errorf("only support %s in Telegraf", pollIntervalStr)
-	default:
+
+	// store the preset parameter names in the map
+	presetParamsMap := map[string]bool{
+		platformStr:            true,
+		pollIntervalStr:        true,
+		hccsBWProfilingTimeStr: true,
+	}
+
+	if len(cmdLine) > len(presetParamsMap) {
 		return errors.New("too many parameters")
 	}
+
+	var paramLen = 2
+	// check every input params
+	for _, param := range cmdLine {
+		param = strings.TrimPrefix(param, "-")
+		split := strings.Split(param, "=")
+		if len(split) != paramLen {
+			return fmt.Errorf("the param [%s] is a wrong format", param)
+		}
+		paramName := split[0]
+		if !presetParamsMap[paramName] {
+			return fmt.Errorf("not support [%s] in Telegraf", paramName)
+		}
+	}
+
+	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
+		return errors.New("hccsBWProfilingTime range error")
+	}
+	return nil
 }
 
 func telegrafProcess() {

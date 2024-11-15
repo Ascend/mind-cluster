@@ -49,7 +49,7 @@ func newCommonReconciler() *ASJobReconciler {
 
 func newCommonPodInfo() *podInfo {
 	return &podInfo{
-		rtype: "worker",
+		rtype: mindxdlv1.ReplicaTypeWorker,
 		ip:    "127.0.0.1",
 		job: &mindxdlv1.AscendJob{
 			ObjectMeta: metav1.ObjectMeta{

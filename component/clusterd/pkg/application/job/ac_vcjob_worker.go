@@ -197,6 +197,23 @@ func (b *WorkerInfo) handlePodAddUpdateEvent(podInfo *podIdentifier, pod *apiCor
 	if podLabelExist {
 		ModelFramework = podLabel
 	}
+	if err := b.setPodInfoToCache(pod, instance); err != nil {
+		hwlog.RunLog.Errorf("set pod info to cache failed, err is %v", err)
+		return err
+	}
+
+	b.modifyStat(1)
+	hwlog.RunLog.Infof("rank table build progress for %s/%s: pods need to be cached = %d, "+
+		"pods already cached = %d", podInfo.namespace, podInfo.jobName, b.jobReplicasTotal, b.cachedPodNum)
+	if err := b.updateWithFinish(podInfo); err != nil {
+		return err
+	}
+	b.setSharedTorIp(pod)
+	return nil
+}
+
+// setPodInfoToCache set pod info to worker cache
+func (b *WorkerInfo) setPodInfoToCache(pod *apiCoreV1.Pod, instance Instance) error {
 	b.CmMutex.Lock()
 	defer b.CmMutex.Unlock()
 	tmpRankIndex := b.rankIndex
@@ -218,13 +235,6 @@ func (b *WorkerInfo) handlePodAddUpdateEvent(podInfo *podIdentifier, pod *apiCor
 	if err != nil {
 		return err
 	}
-	b.modifyStat(1)
-	hwlog.RunLog.Infof("rank table build progress for %s/%s: pods need to be cached = %d, "+
-		"pods already cached = %d", podInfo.namespace, podInfo.jobName, b.jobReplicasTotal, b.cachedPodNum)
-	if err = b.updateWithFinish(podInfo); err != nil {
-		return err
-	}
-	b.setSharedTorIp(pod)
 	return nil
 }
 
@@ -271,7 +281,6 @@ func (b *WorkerInfo) handlePodDelEvent(podInfo *podIdentifier) error {
 	hwlog.RunLog.Infof("current handlePodDelEvent pod is %s", podInfo)
 
 	b.CmMutex.Lock()
-	defer b.CmMutex.Unlock()
 	b.CMData.SetStatus(ConfigmapInitializing)
 	b.deletePodUIDFromList(podInfo)
 
@@ -279,7 +288,7 @@ func (b *WorkerInfo) handlePodDelEvent(podInfo *podIdentifier) error {
 	if err != nil {
 		hwlog.RunLog.Warnf("no device info found, might be a no chip pod: %v", err)
 	}
-
+	b.CmMutex.Unlock()
 	hwlog.RunLog.Infof("start to remove data of pod %s/%s", podInfo.namespace, podInfo.name)
 	err = b.UpdateConfigMap(podInfo, StatusJobDelete)
 	if err != nil {
@@ -293,7 +302,9 @@ func (b *WorkerInfo) handlePodDelEvent(podInfo *podIdentifier) error {
 
 // endConstruction rank table has done
 func (b *WorkerInfo) endConstruction(podInfo *podIdentifier) error {
+	b.CmMutex.Lock()
 	b.CMData.SetStatus(ConfigmapCompleted)
+	b.CmMutex.Unlock()
 	if err := b.UpdateConfigMap(podInfo, StatusJobRunning); err != nil {
 		hwlog.RunLog.Errorf("update configmap failed")
 		return err

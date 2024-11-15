@@ -262,6 +262,30 @@ func NewFaultRecoverService() *FaultRecoverService {
 	return svc
 }
 
+// getEventController return a event controller by job id
+func (s *FaultRecoverService) getEventController(jobId string) *EventController {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	if ctl, exit := s.eventCtl[jobId]; exit {
+		return ctl
+	}
+	return nil
+}
+
+// setEventController set a event controller in fault service
+func (s *FaultRecoverService) setEventController(jobId string, ctl *EventController) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.eventCtl[jobId] = ctl
+}
+
+// getRegisterSize return register map length
+func (s *FaultRecoverService) getRegisterSize() int {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return len(s.regisMap)
+}
+
 func (s *FaultRecoverService) waitRestartAllProcess() {
 	time.Sleep(common.WaitProcessRestart * time.Second)
 }
@@ -302,10 +326,9 @@ func (s *FaultRecoverService) handleTaskScheduleResult(controller *EventControll
 
 // NotifyJobSchedulerResult handle schedule listen result
 func (s *FaultRecoverService) NotifyJobSchedulerResult(scheduleSuccess bool, taskId string, strategy string) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
 	hwlog.RunLog.Infof("get schedule result, taskId=%s, strategy=%s, success=%v", taskId, strategy, scheduleSuccess)
-	if controller, exist := s.eventCtl[taskId]; exist && controller != nil {
+	controller := s.getEventController(taskId)
+	if controller != nil {
 		if strategy == common.ProcessArfStrategy {
 			s.handleTaskScheduleResult(controller, scheduleSuccess, strategy)
 			return
@@ -354,7 +377,8 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 			Info: fmt.Sprintf("jobId=%s not exist", req.TaskId),
 		}, nil
 	}
-	if len(s.regisMap) > common.MaxServeJobs {
+	nowServerJobNum := s.getRegisterSize()
+	if nowServerJobNum > common.MaxServeJobs {
 		hwlog.RunLog.Errorf("registed jobs > %d, jobId=%s will not be registed",
 			common.MaxServeJobs, req.TaskId)
 		return &pb.Status{
@@ -372,11 +396,8 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 }
 
 func (s *FaultRecoverService) onNotifyStepRetry(req *pb.NotifyStepRetryRequest) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	var controller *EventController
-	var exist bool = false
-	if controller, exist = s.eventCtl[req.TaskId]; exist && controller != nil {
+	controller := s.getEventController(req.TaskId)
+	if controller != nil {
 		return controller.tryChangeState(common.HbmFaultStepRetryMode, common.ReceiveStepRetry,
 			[]common.MachineState{common.INIT}, false)
 	}
@@ -426,11 +447,8 @@ func (s *FaultRecoverService) NotifyStepRetry(ctx context.Context,
 }
 
 func (s *FaultRecoverService) onNotifyRetryStatus(req *pb.NotifyRetryStatusRequest) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	var controller *EventController
-	var exist bool = false
-	if controller, exist = s.eventCtl[req.TaskId]; exist && controller != nil {
+	controller := s.getEventController(req.TaskId)
+	if controller != nil {
 		return controller.tryChangeState(common.HbmFaultStepRetryMode, common.ReceiveStepRetryStatus,
 			[]common.MachineState{common.ReceiveStepRetry}, false)
 	}
@@ -470,11 +488,8 @@ func (s *FaultRecoverService) NotifyRetryStatus(ctx context.Context,
 }
 
 func (s *FaultRecoverService) taskEventFinish(taskId string, success bool) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	var controller *EventController
-	var exist bool = false
-	if controller, exist = s.eventCtl[taskId]; exist && controller != nil {
+	controller := s.getEventController(taskId)
+	if controller != nil {
 		if success {
 			hwlog.RunLog.Infof("event finish close, jobId=%s, eventMode=%s, eventId=%s",
 				controller.jobId, common.ModeToString(controller.mode), controller.eventId)
@@ -487,11 +502,8 @@ func (s *FaultRecoverService) taskEventFinish(taskId string, success bool) {
 }
 
 func (s *FaultRecoverService) taskEventOpen(taskId string, eventId string, mode common.RecoverMode) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	var controller *EventController
-	var exist bool = false
-	if controller, exist = s.eventCtl[taskId]; exist && controller != nil {
+	controller := s.getEventController(taskId)
+	if controller != nil {
 		controller.openEvent(eventId, mode)
 		hwlog.RunLog.Infof("event open, taskId=%s, eventMode=%s, eventId=%s",
 			taskId, common.ModeToString(controller.mode), eventId)
@@ -504,10 +516,8 @@ process recover code
 
 // PublishSignal push signal to send chan
 func (s *FaultRecoverService) PublishSignal(signal *pb.ProcessManageSignal, expectStates common.MachineStates) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	controller, exist := s.eventCtl[signal.TaskId]
-	if !exist {
+	controller := s.getEventController(signal.TaskId)
+	if controller == nil {
 		hwlog.RunLog.Errorf("discard signal when publish signal, taskId=%s not registered, signalType=%s",
 			signal.TaskId, signal.SignalType)
 		return
@@ -542,10 +552,8 @@ func doCheckOrder(signal *pb.ProcessManageSignal, expectStates common.MachineSta
 }
 
 func (s *FaultRecoverService) onSignalSent(signal *pb.ProcessManageSignal) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	controller, exist := s.eventCtl[signal.TaskId]
-	if !exist {
+	controller := s.getEventController(signal.TaskId)
+	if controller == nil {
 		return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s not event controller map"}
 	}
 	switch signal.SignalType {
@@ -615,14 +623,11 @@ func waitPlatformAllowSendStopSignal(signal *pb.ProcessManageSignal, controller 
 }
 
 func (s *FaultRecoverService) onSignalOutQueue(signal *pb.ProcessManageSignal) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	stateMatch := false
-
-	controller, exist := s.eventCtl[signal.TaskId]
-	if !exist {
+	controller := s.getEventController(signal.TaskId)
+	if controller == nil {
 		return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s not in event controller map"}
 	}
+	stateMatch := false
 	switch signal.SignalType {
 	case common.StopTrainSignalType:
 		stateMatch = common.CheckOrder(controller.state, []common.MachineState{common.INIT})
@@ -741,8 +746,8 @@ func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInf
 		return errors.New(returnInfo)
 	}
 	var sendChan chan *pb.ProcessManageSignal
-	s.lock.Lock()
-	if controller, exist := s.eventCtl[request.TaskId]; exist && controller != nil {
+	controller := s.getEventController(request.TaskId)
+	if controller != nil {
 		controller.reset(true)
 		sendChan = controller.signalChan
 	} else {
@@ -752,20 +757,17 @@ func (s *FaultRecoverService) SubscribeProcessManageSignal(request *pb.ClientInf
 		}
 		jobName, pgName, namespace := s.jobMgr.GetJobInfo(request.TaskId)
 		controller = NewEventController(request.TaskId, jobName, pgName, namespace)
-		s.eventCtl[request.TaskId] = controller
-		s.regisMap[request.TaskId] = struct{}{}
-		sendChan = s.eventCtl[request.TaskId].signalChan
+		s.setEventController(request.TaskId, controller)
+		s.registry(request.TaskId)
+		sendChan = controller.signalChan
 	}
-	s.lock.Unlock()
 	s.listenSendChannel(request.TaskId, sendChan, stream)
 	return nil
 }
 
 func (s *FaultRecoverService) onReportStopComplete(request *pb.StopCompleteRequest) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	controller, exist := s.eventCtl[request.TaskId]
-	if !exist {
+	controller := s.getEventController(request.TaskId)
+	if controller == nil {
 		return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s not in event controller map"}
 	}
 	status := controller.tryChangeState(common.ProcessFaultRecoverMode, common.ReceiveStopFinish,
@@ -843,10 +845,8 @@ func (s *FaultRecoverService) ReportStopComplete(ctx context.Context,
 
 func (s *FaultRecoverService) onReportRecoverStrategy(request *pb.RecoverStrategyRequest,
 	strategies []string) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	controller, exist := s.eventCtl[request.TaskId]
-	if !exist || controller == nil {
+	controller := s.getEventController(request.TaskId)
+	if controller == nil {
 		return &pb.Status{Code: pb.RespCode_COMMON_ERROR,
 			Info: "taskId=%s not in event controller map, upper to pod reschedule"}
 	}
@@ -994,9 +994,8 @@ func (s *FaultRecoverService) handleRecoverStatus(controller *EventController, s
 }
 
 func (s *FaultRecoverService) onReportRecoverStatus(request *pb.RecoverStatusRequest) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	if controller, exist := s.eventCtl[request.TaskId]; exist && controller != nil {
+	controller := s.getEventController(request.TaskId)
+	if controller != nil {
 		return s.handleRecoverStatus(controller, request.Status.Code)
 	}
 	return &pb.Status{Code: pb.RespCode_COMMON_ERROR, Info: "taskId=%s not in event controller map"}
@@ -1031,9 +1030,8 @@ func (s *FaultRecoverService) ReportRecoverStatus(ctx context.Context,
 }
 
 func (s *FaultRecoverService) onReportProcessFault(request *pb.ProcessFaultRequest) *pb.Status {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	if controller, exist := s.eventCtl[request.TaskId]; exist {
+	controller := s.getEventController(request.TaskId)
+	if controller != nil {
 		controller.saveSoftwareFaultRankIds(
 			common.GetFaultRankIdsInSameNode(request.FaultRankIds, s.jobMgr.GetJobDeviceNumPerNode(request.TaskId)))
 		return &pb.Status{

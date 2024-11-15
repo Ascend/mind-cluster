@@ -28,15 +28,15 @@ func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate
 		podTemplate.Annotations = make(map[string]string)
 	}
 
+	rank, err := strconv.Atoi(index)
+	if err != nil {
+		return err
+	}
+
 	status := getNonWorkerPodMountChipStatus(job)
 	if !status {
 		podTemplate.Annotations[rankIndexKey] = index
 		return nil
-	}
-
-	rank, err := strconv.Atoi(index)
-	if err != nil {
-		return err
 	}
 
 	if rtype == strings.ToLower(string(mindxdlv1.ReplicaTypeWorker)) {

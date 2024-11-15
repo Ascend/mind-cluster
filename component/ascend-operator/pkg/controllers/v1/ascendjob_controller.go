@@ -355,12 +355,18 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 	if !exist {
 		return
 	}
-	if curStatus := rtg.DeletePod(pod); curStatus != utils.InitialRTStatus {
+	curStatus := rtg.DeletePod(pod)
+	updateFileFail := filepathExist(rtg.GetPath()) && (curStatus == utils.CompletedRTStatus)
+	updateCmFail := false
+	if r.configmapExist(rtg, jobName, namespace) {
 		rtg.SetStatus(utils.InitialRTStatus)
 		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
 			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-			rtg.SetStatus(utils.CompletedRTStatus)
+			updateCmFail = true
 		}
+	}
+	if updateFileFail && updateCmFail {
+		rtg.SetStatus(utils.CompletedRTStatus)
 	}
 }
 

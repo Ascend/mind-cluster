@@ -16,6 +16,7 @@
 package hwlog
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -91,6 +92,31 @@ func TestLoggerPrint(t *testing.T) {
 			lg.Errorf("test errorf")
 			lg.Critical("test critical")
 			lg.Criticalf("test criticalf")
+		})
+	})
+}
+func TestLoggerPrintWithLimit(t *testing.T) {
+	convey.Convey("test api", t, func() {
+		convey.Convey("test logger print func with limit", func() {
+			lgConfig := &LogConfig{
+				OnlyToStdout: true,
+				LogLevel:     -1,
+			}
+			lg := new(logger)
+			err := lg.setLogger(lgConfig)
+			convey.So(err, convey.ShouldBeNil)
+			domain := "hccs"
+			logicId := 1
+
+			errFormat := "collect failed ,err:%v"
+			collectErr := fmt.Errorf("detail errs,logicId(%d)", logicId)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
+			ResetErrCnt(domain, logicId)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.ErrorfWithLimit(domain, logicId, errFormat, collectErr)
 		})
 	})
 }

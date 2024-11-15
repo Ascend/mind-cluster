@@ -9,6 +9,8 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"math"
+	"strconv"
 	"testing"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -28,25 +30,30 @@ func TestSetPodAnnotation(t *testing.T) {
 			err := rc.setPodAnnotation(job, podTemplate, "worker", "xxx")
 			convey.ShouldNotBeNil(err)
 		})
-		convey.Convey("02-job has no chief or master, hccl/rankIndex should equal index", func() {
+		convey.Convey("02-job has no chief、 master or scheduler, or job has scheduler without npu, "+
+			"hccl/rankIndex should equal index", func() {
 			err := rc.setPodAnnotation(job, podTemplate, "worker", "0")
 			convey.ShouldBeNil(err)
-			convey.ShouldEqual(podTemplate.Annotations, map[string]string{rankIndexKey: "0"})
+			convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "0")
 		})
-		convey.Convey("03-job has chief or master, and rtype is master, hccl/rankIndex should equal index", func() {
-			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{mindxdlv1.
-				PytorchReplicaTypeMaster: nil}
-			err := rc.setPodAnnotation(job, podTemplate, "worker", "1")
+		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{mindxdlv1.ReplicaTypeWorker: nil}
+		job.SetAnnotations(map[string]string{nonWorkerPodMountChipStatus: "true"})
+		convey.Convey("03-job has chief or master, or job has scheduler with npu,"+
+			" and rtype is master, hccl/rankIndex should equal index", func() {
+			err := rc.setPodAnnotation(job, podTemplate, "master", "1")
 			convey.ShouldBeNil(err)
-			convey.ShouldEqual(podTemplate.Annotations, map[string]string{rankIndexKey: "1"})
+			convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "1")
 		})
-		convey.Convey("04-job has chief or master, and rtype is worker, hccl/rankIndex should equal index + 1",
+		convey.Convey("04-job has chief or master, or job has scheduler with npu, "+
+			"and rtype is worker, hccl/rankIndex should equal index + 1",
 			func() {
-				job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{mindxdlv1.
-					PytorchReplicaTypeMaster: nil}
 				err := rc.setPodAnnotation(job, podTemplate, "worker", "1")
 				convey.ShouldBeNil(err)
-				convey.ShouldEqual(podTemplate.Annotations, map[string]string{rankIndexKey: "2"})
+				convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "2")
 			})
+		convey.Convey("05-index is equal to MaxInt, err is not nil", func() {
+			err := rc.setPodAnnotation(job, podTemplate, "worker", strconv.Itoa(math.MaxInt))
+			convey.ShouldNotBeNil(err)
+		})
 	})
 }

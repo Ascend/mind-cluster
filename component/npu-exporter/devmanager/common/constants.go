@@ -210,6 +210,12 @@ const (
 
 	// A9000A3SuperPodMainBoardId2 board id of A9000 A3 SuperPod MainBoard2
 	A9000A3SuperPodMainBoardId2 = 0x1D
+
+	// DomainForHccs domain for hccs
+	DomainForHccs = "hccs"
+
+	// DomainForHccsBW domain for hccs-bandwidth
+	DomainForHccsBW = "hccs-bw"
 )
 
 // DcmiDeviceType used to represent the dcmi device type
