@@ -56,8 +56,76 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 	}
 }
 
+func (ctl *EventController) getFixRules() []common.TransRule {
+	return []common.TransRule{
+		{Src: common.WaitReportStepRetryStatusState, Event: common.ReceiveReportEvent,
+			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportStepRetryStatusState, Event: common.ReportTimeoutEvent,
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
+
+		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ReceiveReportEvent,
+			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ScheduleTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ReportTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultRetry},
+		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ClearConfigMapFaultFailEvent,
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
+
+		{Src: common.WaitReportDumpStatusState, Event: common.ReceiveReportEvent,
+			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportDumpStatusState, Event: common.ReportTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+
+		{Src: common.CheckRecoverResultState, Event: common.RecoverSuccessEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+		{Src: common.CheckRecoverResultState, Event: common.RecoverFailEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+		{Src: common.CheckRecoverResultState, Event: common.DeviceCleanFailEvent,
+			Dst: common.WaitFaultFlushFinishedState, Handler: ctl.handleWaitFlushFinish},
+		{Src: common.CheckRecoverResultState, Event: common.CheckResultFinishEvent,
+			Dst: common.ListenScheduleResultState, Handler: ctl.handleListenScheduleResult},
+	}
+}
+
+func (ctl *EventController) getAfterRules() []common.TransRule {
+	return []common.TransRule{
+		{Src: common.ListenScheduleResultState, Event: common.ScheduleTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+		{Src: common.ListenScheduleResultState, Event: common.ScheduleSuccessEvent,
+			Dst: common.NotifyRestartAllProcessState, Handler: ctl.handleRestartAllProcess},
+
+		{Src: common.NotifyRestartAllProcessState, Event: common.NotifySuccessEvent,
+			Dst: common.WaitRestartAllProcessState, Handler: ctl.handleWaitRestartAllProcess},
+		{Src: common.NotifyRestartAllProcessState, Event: common.NotifyFailEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+
+		{Src: common.WaitRestartAllProcessState, Event: common.RestartProcessFinishEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+
+		{Src: common.FaultClearState, Event: common.ClearConfigMapFaultSuccessEvent,
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
+		{Src: common.FaultClearState, Event: common.ClearConfigMapFaultFailEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
+
+		{Src: common.FaultRetryState, Event: common.FinishEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+		{Src: common.FaultRetryState, Event: common.ChangeProcessSchedulingModePauseErrorEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
+		{Src: common.FaultRetryState, Event: common.ChangeProcessSchedulingModeEnableErrorEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
+		{Src: common.FaultRetryState, Event: common.ScheduleTimeoutEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
+
+		{Src: common.NotifyKillJobState, Event: common.FinishEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+	}
+}
+
 func (ctl *EventController) getBaseRules() []common.TransRule {
 	var rules []common.TransRule
 	rules = append(rules, ctl.getPreRules()...)
+	rules = append(rules, ctl.getFixRules()...)
+	rules = append(rules, ctl.getAfterRules()...)
 	return rules
 }
