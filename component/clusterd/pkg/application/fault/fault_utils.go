@@ -14,6 +14,18 @@ import (
 	"clusterd/pkg/common/util"
 )
 
+// AdvanceDeviceCm more structure device info
+type AdvanceDeviceCm struct {
+	ServerType       string
+	CmName           string
+	SuperPodID       int32
+	ServerIndex      int32
+	DeviceList       map[string][]constant.DeviceFault
+	CarUnHealthy     []string
+	NetworkUnhealthy []string
+	UpdateTime       int64
+}
+
 func getNodeAndDeviceFromJobIdAndRankId(jobId, rankId string, jobServerInfoMap job.JobServerInfoMap) (string, string, error) {
 	for _, server := range jobServerInfoMap.InfoMap[jobId] {
 		for _, dev := range server.DeviceList {
@@ -228,7 +240,6 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceCm) AdvanceDeviceC
 	return advanceDeviceCm
 }
 
-// TODO FaultListKey应该是什么
 func getFaultListKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Fault") {
@@ -256,7 +267,6 @@ func getCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
-// TODO 如何判断device fault是uce故障
 func isUceFault(faultDevice constant.DeviceFault) bool {
 	if strings.Contains(faultDevice.FaultCode, constant.UCE_FAULT_CODE) {
 		return true
@@ -264,7 +274,6 @@ func isUceFault(faultDevice constant.DeviceFault) bool {
 	return false
 }
 
-// TODO 如何判断device fault是uce伴随故障
 func isUceAccompanyFault(faultDevice constant.DeviceFault) bool {
 	return strings.Contains(faultDevice.FaultCode, constant.AIC_FAULT_CODE) ||
 		strings.Contains(faultDevice.FaultCode, constant.AIV_FAULT_CODE)

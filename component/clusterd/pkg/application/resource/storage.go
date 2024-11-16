@@ -18,7 +18,7 @@ import (
 
 var cmManager ConfigMapManager
 
-// ConfigMapManager use for DeviceInfo and nodeInfo report
+// ConfigMapManager use for deviceInfo and nodeInfo report
 type ConfigMapManager struct {
 	sync.Mutex
 	processCnt      int
@@ -85,7 +85,7 @@ func updateJobDeviceHealth(nodeName string, deviceList map[string]string) {
 	}
 	netUnhealthy, unHealthy := "", ""
 	for k, v := range deviceList {
-		if strings.Contains(k, "networkUnhealthy") {
+		if strings.Contains(k, "NetworkUnhealthy") {
 			netUnhealthy = v
 		} else if strings.Contains(k, "Unhealthy") {
 			unHealthy = v

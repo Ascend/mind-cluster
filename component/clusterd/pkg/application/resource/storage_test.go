@@ -47,7 +47,7 @@ func TestSaveDeviceInfoCM(t *testing.T) {
 func TestUpdateJobDeviceHealth(t *testing.T) {
 	convey.Convey("Test updateJobDeviceHealth", t, func() {
 		nodeName := "node"
-		deviceList := map[string]string{"networkUnhealthy": "value1", "Unhealthy": "value2", "otherKey": "value3"}
+		deviceList := map[string]string{"NetworkUnhealthy": "value1", "Unhealthy": "value2", "otherKey": "value3"}
 		convey.Convey("JobMgr is nil", func() {
 			var jobMgr *job.Agent = nil
 			mockJobMgr := gomonkey.ApplyGlobalVar(&kube.JobMgr, jobMgr)
