@@ -184,6 +184,53 @@ func (agent *Agent) JobRunning(jobId string) bool {
 	return worker.PGRunning()
 }
 
+func (agent *Agent) judgeUceFromPgLabel(pgLabels map[string]string) bool {
+	if pgLabels == nil {
+		return false
+	}
+	if flag, exit := pgLabels["step-retry"]; exit && flag == "true" {
+		return true
+	}
+	return false
+}
+
+// GetJobServerInfoMap could get all job info in once query
+func (agent *Agent) GetJobServerInfoMap() JobServerInfoMap {
+	agent.RwMutex.RLock()
+	defer agent.RwMutex.RUnlock()
+	allJobServerMap := make(map[string]map[string]ServerHccl)
+	allUceJobFlag := make(map[string]bool)
+	for jobUid, worker := range agent.BsWorker {
+		workerInfo := worker.GetWorkerInfo()
+		if workerInfo == nil {
+			hwlog.RunLog.Warnf("job %s has no worker", jobUid)
+			continue
+		}
+		allUceJobFlag[jobUid] = agent.judgeUceFromPgLabel(worker.GetBaseInfo().PGLabels)
+		jobServerMap := make(map[string]ServerHccl)
+		rankTable := workerInfo.CMData
+		for _, server := range rankTable.GetServerList() {
+			copyServerHccl := ServerHccl{
+				DeviceList: make([]*Device, 0),
+				ServerID:   server.ServerID,
+				PodID:      server.PodID,
+				ServerName: server.ServerName,
+			}
+			for _, dev := range server.DeviceList {
+				copyDev := Device{
+					DeviceID: dev.DeviceID,
+					DeviceIP: dev.DeviceIP,
+					RankID:   dev.RankID,
+				}
+				copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, &copyDev)
+			}
+			jobServerMap[server.ServerName] = copyServerHccl
+		}
+		allJobServerMap[jobUid] = jobServerMap
+	}
+	return JobServerInfoMap{allJobServerMap, allUceJobFlag}
+}
+
 func getWorkName(labels map[string]string) string {
 	if label, ok := labels["volcano.sh/job-name"]; ok {
 		return label

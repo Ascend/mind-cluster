@@ -11,6 +11,7 @@ type DeviceFault struct {
 	FaultLevel           string `json:"fault_level"`
 	FaultHandling        string `json:"fault_handling"`
 	FaultCode            string `json:"fault_code"`
+	FaultTime            int64  `json:"fault_time"`
 }
 
 // NodeInfoCM the config map struct of node info

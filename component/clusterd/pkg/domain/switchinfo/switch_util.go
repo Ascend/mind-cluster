@@ -65,6 +65,14 @@ func DeepCopy(info *constant.SwitchInfo) (*constant.SwitchInfo, error) {
 	return newSwitchInfo, nil
 }
 
+func DeepCopyInfos(infos map[string]*constant.SwitchInfo) map[string]*constant.SwitchInfo {
+	res := make(map[string]*constant.SwitchInfo)
+	for key, val := range infos {
+		res[key], _ = DeepCopy(val)
+	}
+	return res
+}
+
 // GetSafeData get data every 2000 SwitchInfo
 func GetSafeData(switchInfos map[string]*constant.SwitchInfo) []string {
 	if len(switchInfos) == 0 {

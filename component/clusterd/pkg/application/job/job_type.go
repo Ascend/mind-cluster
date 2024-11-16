@@ -161,6 +161,7 @@ type Info struct {
 	PGName            string
 	JobUid            string
 	PGUid             string
+	PGLabels          map[string]string
 	Key               string
 	Version           int32
 	JobType           string
@@ -238,3 +239,9 @@ var (
 	// ModelFramework is the framework value
 	ModelFramework string
 )
+
+// Job info
+type JobServerInfoMap struct {
+	InfoMap     map[string]map[string]ServerHccl
+	UceTolerate map[string]bool
+}

@@ -4,6 +4,7 @@
 package constant
 
 import (
+	"math"
 	"time"
 )
 
@@ -49,4 +50,31 @@ const (
 	MaxSupportNodeNum = 5000
 	// MaxSupportJobNum
 	MaxSupportJobNum = 10000
+)
+
+// fault code const
+const (
+	UCE_FAULT_CODE = "80E01801"
+	AIC_FAULT_CODE = "80C98009"
+	AIV_FAULT_CODE = "80CB8009"
+)
+
+// fault processor const
+const (
+	JobNotRecover               = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	JobNotRecoverComplete       = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DeviceNotFault              = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DiagnosisAccompanyTimeout   = 5 * 1000
+	JobReportRecoverTimeout     = 10 * 1000
+	JobReportCompleteTimeout    = 30 * 1000
+	FaultCenterProcessPeriod    = 3 * 1000
+	MAX_FAULT_CENTER_SUBSCRIBER = 10
+)
+
+// fault center
+const (
+	ALL_FAULT = iota
+	DEVICE_FAULT
+	NODE_FAULT
+	SWITCH_FAULT
 )
