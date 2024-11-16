@@ -14,18 +14,6 @@ import (
 	"clusterd/pkg/common/util"
 )
 
-// AdvanceDeviceCm more structure device info
-type AdvanceDeviceCm struct {
-	ServerType       string
-	CmName           string
-	SuperPodID       int32
-	ServerIndex      int32
-	DeviceList       map[string][]constant.DeviceFault
-	CarUnHealthy     []string
-	NetworkUnhealthy []string
-	UpdateTime       int64
-}
-
 func getNodeAndDeviceFromJobIdAndRankId(jobId, rankId string, jobServerInfoMap job.JobServerInfoMap) (string, string, error) {
 	for _, server := range jobServerInfoMap.InfoMap[jobId] {
 		for _, dev := range server.DeviceList {
