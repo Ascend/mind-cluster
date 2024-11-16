@@ -68,10 +68,10 @@ func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error)
 	strategyList := strings.Split(mindXConfig, ",")
 	for _, strategy := range strategyList {
 		if StrategySupported(strategy) {
-			config.mindXConfigStrategies = append(config.mindXConfigStrategies, strategy)
+			config.MindXConfigStrategies = append(config.MindXConfigStrategies, strategy)
 		}
 	}
-	config.mindXConfigStrategies = append(config.mindXConfigStrategies, ProcessExitStrategyName)
+	config.MindXConfigStrategies = append(config.MindXConfigStrategies, ProcessExitStrategyName)
 	value, ok := pg.Labels[ProcessReschedulingLabel]
 	if !ok {
 		hwlog.RunLog.Warn("can not find process rescheduling label")

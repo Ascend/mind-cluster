@@ -4,17 +4,24 @@
 package service
 
 import (
+	"context"
+
 	"clusterd/pkg/interface/grpc/pb"
 )
 
 // FaultRecoverService is a service for fault recover
 type FaultRecoverService struct {
+	keepAliveInterval int
+	serviceCtx        context.Context
 	pb.UnimplementedRecoverServer
 }
 
 // NewFaultRecoverService return a new instance of FaultRecoverService
-func NewFaultRecoverService() *FaultRecoverService {
-	return &FaultRecoverService{}
+func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverService {
+	s := &FaultRecoverService{}
+	s.keepAliveInterval = keepAlive
+	s.serviceCtx = ctx
+	return s
 }
 
 // DeleteJob clear registered resources

@@ -29,14 +29,15 @@ const (
 )
 
 var (
-	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile}
+	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, MaxLineLength: constant.MaxLogLineLength}
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName string
-	version   bool
-	server    *sv.ClusterInfoMgrServer
-	limiter   = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	BuildName         string
+	version           bool
+	server            *sv.ClusterInfoMgrServer
+	limiter           = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	keepAliveInterval = 5
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -89,7 +90,7 @@ func main() {
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService()
+	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
 	if err = server.Start(recoverService); err != nil {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}

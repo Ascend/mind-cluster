@@ -12,6 +12,9 @@ const (
 	// ComponentName is the name of component
 	ComponentName = "clusterd"
 
+	// MaxLogLineLength max log line length
+	MaxLogLineLength = 512
+
 	// RetryTime is the retry time loading configmap
 	RetryTime = 3
 	// RetrySleepTime is the sleep time retry loading configmap
