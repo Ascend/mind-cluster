@@ -1,6 +1,4 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
- */
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
 // Package faultshoot contain fault process
 package faultshoot
@@ -28,8 +26,10 @@ type baseFaultCenter struct {
 // deviceFaultProcessCenter
 type deviceFaultProcessCenter struct {
 	baseFaultCenter
-	mutex   sync.RWMutex
-	infoMap map[string]*constant.DeviceInfo
+	mutex          sync.RWMutex
+	processingCm   map[string]*constant.DeviceInfo
+	processedCm    map[string]*constant.DeviceInfo
+	devicePluginCm map[string]*constant.DeviceInfo
 }
 
 // GlobalFaultProcessCenter is a global instance of FaultProcessCenter used for processing faults.
@@ -77,14 +77,18 @@ type jobRankFaultInfoProcessor struct {
 // nodeFaultProcessCenter
 type nodeFaultProcessCenter struct {
 	baseFaultCenter
-	infoMap map[string]*constant.NodeInfo
-	mutex   sync.RWMutex
+	processingCm   map[string]*constant.NodeInfo
+	processedCm    map[string]*constant.NodeInfo
+	devicePluginCm map[string]*constant.NodeInfo
+	mutex          sync.RWMutex
 }
 
 type switchFaultProcessCenter struct {
 	baseFaultCenter
-	infoMap map[string]*constant.SwitchInfo
-	mutex   sync.RWMutex
+	processingCm   map[string]*constant.SwitchInfo
+	processedCm    map[string]*constant.SwitchInfo
+	devicePluginCm map[string]*constant.SwitchInfo
+	mutex          sync.RWMutex
 }
 
 // uceAccompanyFaultProcessor:
@@ -143,8 +147,8 @@ type uceNodeInfo struct {
 
 type uceJobInfo struct {
 	// UceNode node->nodeInfo
-	JobId   string
 	UceNode map[string]uceNodeInfo
+	JobId   string
 }
 
 type reportInfo struct {

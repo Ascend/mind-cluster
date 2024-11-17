@@ -4,7 +4,6 @@
 package main
 
 import (
-	"clusterd/pkg/application/faultshoot"
 	"context"
 	"flag"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"clusterd/pkg/application/faultshoot"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -96,6 +96,7 @@ func main() {
 	}
 	// election and running process
 	startInformer(ctx, recoverService)
+	faultshoot.NewFaultProcessCenter(ctx)
 	signalCatch(cancel)
 }
 

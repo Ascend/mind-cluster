@@ -8,11 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+
+	"clusterd/pkg/application/faultshoot"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
@@ -57,17 +59,9 @@ func Report() {
 				// when informer begin, frequent add messages
 				time.Sleep(time.Second)
 			})
-			cmManager.deviceInfoMutex.Lock()
-			deviceArr := device.GetSafeData(cmManager.deviceInfoMap)
-			cmManager.deviceInfoMutex.Unlock()
-
-			cmManager.nodeInfoMutex.Lock()
-			nodeArr := node.GetSafeData(cmManager.nodeInfoMap)
-			cmManager.nodeInfoMutex.Unlock()
-
-			cmManager.switchInfoMutex.Lock()
-			switchArr := switchinfo.GetSafeData(cmManager.switchInfoMap)
-			cmManager.switchInfoMutex.Unlock()
+			deviceArr := device.GetSafeData(faultshoot.GlobalFaultProcessCenter.QueryDeviceInfoToReport())
+			nodeArr := node.GetSafeData(faultshoot.GlobalFaultProcessCenter.QueryNodeInfoToReport())
+			switchArr := switchinfo.GetSafeData(faultshoot.GlobalFaultProcessCenter.QuerySwitchInfoToReport())
 			updateCmWithEmpty(deviceArr, nodeArr, switchArr)
 			reportTime = time.Now().UnixMilli()
 			processCount++

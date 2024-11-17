@@ -42,7 +42,7 @@ func getNodesNameFromDeviceInfo(deviceInfos map[string]*constant.DeviceInfo) []s
 
 func cmNameToNodeName(cmName string) string {
 	if !strings.HasPrefix(cmName, constant.DeviceInfoPrefix) {
-		hwlog.RunLog.Errorf("CmName has not prefix %s", constant.DeviceInfoPrefix)
+		hwlog.RunLog.Errorf("CmName %s has not prefix %s", cmName, constant.DeviceInfoPrefix)
 		return cmName
 	}
 	return strings.TrimPrefix(cmName, constant.DeviceInfoPrefix)
@@ -191,7 +191,10 @@ func advanceDeviceCmForNodeMapToString(
 	for nodeName, advanceCm := range advanceDeviceCm {
 		advanceCm = mergeCodeAndRemoveUnhealthy(advanceCm)
 		cmName := nodeNameToCmName(nodeName)
-		deviceInfo := orgDeviceCm[cmName]
+		deviceInfo, found := orgDeviceCm[cmName]
+		if !found {
+			continue
+		}
 		faultListKey := getFaultListKey(deviceInfo)
 		if faultListKey != "" {
 			orgDeviceCm[cmName].DeviceList[faultListKey] =
