@@ -1,17 +1,5 @@
 /*
 Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 package v1
@@ -92,8 +80,8 @@ func setTypeNameToCamelCase(job *AscendJob, typ commonv1.ReplicaType) {
 	}
 }
 
-// SetDefaultsAscendJob sets any unspecified values to defaults.
-func SetDefaultsAscendJob(job *AscendJob) {
+// SetDefaults_AscendJob sets any unspecified values to defaults.
+func SetDefaults_AscendJob(job *AscendJob) {
 	if job == nil {
 		return
 	}
@@ -111,11 +99,13 @@ func SetDefaultsAscendJob(job *AscendJob) {
 	// Update the key of replicaSpecs to camel case.
 	setTypeNamesToCamelCase(job)
 
-	for _, spec := range job.Spec.ReplicaSpecs {
+	for rt, spec := range job.Spec.ReplicaSpecs {
 		// Set default replicas to 1.
 		setDefaultReplicas(spec)
 		// Set default port to ml container.
-		setDefaultPort(&spec.Template.Spec)
+		if rt == MindSporeReplicaTypeScheduler || rt == PytorchReplicaTypeMaster || rt == TensorflowReplicaTypeChief {
+			setDefaultPort(&spec.Template.Spec)
+		}
 	}
 }
 
@@ -126,20 +116,7 @@ func GetJobFramework(job *AscendJob) (string, error) {
 	}
 	frame, ok := job.Labels[FrameworkKey]
 	if !ok {
-		return "", fmt.Errorf("framework label is not set")
-	}
-	frames := DefaultFrames()
-	if _, exist := frames[frame]; !exist {
-		return "", fmt.Errorf("framework label<%s> is not in %v", frame, frames)
+		return "", fmt.Errorf("AscendJob<%s-%s> label framework is not set", job.Namespace, job.Name)
 	}
 	return frame, nil
-}
-
-// DefaultFrames return supported framework names
-func DefaultFrames() map[string]struct{} {
-	return map[string]struct{}{
-		MindSporeFrameworkName:  {},
-		PytorchFrameworkName:    {},
-		TensorflowFrameworkName: {},
-	}
 }

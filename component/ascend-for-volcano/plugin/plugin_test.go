@@ -66,6 +66,10 @@ func (tp *ascendTest) Name() string {
 	return PluginName
 }
 
+func (tp *ascendTest) GetReHandle() interface{} {
+	return nil
+}
+
 func (tp *ascendTest) InitMyJobPlugin(attr util.SchedulerJobAttr, env ScheduleEnv) error {
 	fmt.Printf("enter %s InitMyJobPlugin", util.NPU910CardName)
 	if tp == nil {
@@ -89,10 +93,6 @@ func (tp *ascendTest) ValidNPUJob() *api.ValidateResult {
 			Message: err.Error(),
 		}
 	}
-	return nil
-}
-
-func (tp *ascendTest) GetReHandle() interface{} {
 	return nil
 }
 

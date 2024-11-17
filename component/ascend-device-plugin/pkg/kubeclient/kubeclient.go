@@ -19,18 +19,15 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/workqueue"
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
@@ -42,8 +39,6 @@ type ClientK8s struct {
 	NodeName       string
 	DeviceInfoName string
 	IsApiErr       bool
-	PodInformer    cache.SharedIndexInformer
-	Queue          workqueue.RateLimitingInterface
 }
 
 // NewClientK8s create k8s client
@@ -59,7 +54,7 @@ func NewClientK8s() (*ClientK8s, error) {
 		hwlog.RunLog.Errorf("get client err: %v", err)
 		return nil, err
 	}
-	nodeName, err := GetNodeNameFromEnv()
+	nodeName, err := getNodeNameFromEnv()
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +63,6 @@ func NewClientK8s() (*ClientK8s, error) {
 		Clientset:      client,
 		NodeName:       nodeName,
 		DeviceInfoName: common.DeviceInfoCMNamePrefix + nodeName,
-		Queue:          workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		IsApiErr:       false,
 	}, nil
 }
@@ -193,8 +187,7 @@ func (ki *ClientK8s) CreateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 		return nil, fmt.Errorf("param cm is nil")
 	}
 
-	newCM, err := ki.Clientset.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).
-		Create(context.TODO(), cm, metav1.CreateOptions{})
+	newCM, err := ki.Clientset.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 	if err != nil && strings.Contains(err.Error(), common.ApiServerPort) {
 		ki.IsApiErr = true
 	}
@@ -219,8 +212,7 @@ func (ki *ClientK8s) UpdateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 	if cm == nil {
 		return nil, fmt.Errorf("param cm is nil")
 	}
-	newCM, err := ki.Clientset.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).
-		Update(context.TODO(), cm, metav1.UpdateOptions{})
+	newCM, err := ki.Clientset.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Update(context.TODO(), cm, metav1.UpdateOptions{})
 	if err != nil && strings.Contains(err.Error(), common.ApiServerPort) {
 		ki.IsApiErr = true
 	}
@@ -242,7 +234,7 @@ func (ki *ClientK8s) resetNodeAnnotations(node *v1.Node) {
 // ResetDeviceInfo reset device info
 func (ki *ClientK8s) ResetDeviceInfo() {
 	deviceList := make(map[string]string, 1)
-	if err := ki.WriteDeviceInfoDataIntoCMCache(deviceList, "", common.GetSwitchFaultInfo(), -1, -1); err != nil {
+	if err := ki.WriteDeviceInfoDataIntoCMCache(deviceList, ""); err != nil {
 		hwlog.RunLog.Errorf("write device info failed, error is %v", err)
 	}
 }
@@ -252,23 +244,14 @@ func (ki *ClientK8s) ClearResetInfo(taskName, namespace string) error {
 	taskInfo := &common.TaskResetInfo{
 		RankList: make([]*common.TaskDevInfo, 0),
 	}
-	if _, err := ki.WriteResetInfoDataIntoCM(taskName, namespace, taskInfo, false); err != nil {
+	if _, err := ki.WriteResetInfoDataIntoCM(taskName, namespace, taskInfo); err != nil {
 		hwlog.RunLog.Errorf("failed to clear reset info, err: %v", err)
 		return err
 	}
 	return nil
 }
 
-// CreateEvent create event resource
-func (ki *ClientK8s) CreateEvent(evt *v1.Event) (*v1.Event, error) {
-	if evt == nil {
-		return nil, fmt.Errorf("param event is nil")
-	}
-	return ki.Clientset.CoreV1().Events(evt.ObjectMeta.Namespace).Create(context.TODO(), evt, metav1.CreateOptions{})
-}
-
-// GetNodeNameFromEnv get current node name from env
-func GetNodeNameFromEnv() (string, error) {
+func getNodeNameFromEnv() (string, error) {
 	nodeName := os.Getenv("NODE_NAME")
 	if err := checkNodeName(nodeName); err != nil {
 		return "", fmt.Errorf("check node name failed: %v", err)
@@ -288,50 +271,4 @@ func checkNodeName(nodeName string) error {
 		return fmt.Errorf("node name %s is illegal", nodeName)
 	}
 	return nil
-}
-
-// ResourceEventHandler handle the configmap resource event
-func (ki *ClientK8s) ResourceEventHandler(res ResourceType, filter func(obj interface{}) bool) cache.
-	ResourceEventHandler {
-	enqueue := func(obj interface{}, event EventType) {
-		if res == CMResource && event == EventTypeAdd {
-			return
-		}
-		if res == PodResource && event == EventTypeUpdate {
-			return
-		}
-		key, err := cache.MetaNamespaceKeyFunc(obj)
-		if err != nil {
-			hwlog.RunLog.Warnf("get key from obj failed, %v", err)
-			return
-		}
-		hwlog.RunLog.Infof("%s %s(%s) to work queue", event, res, key)
-		ki.Queue.AddRateLimited(Event{
-			Resource: res,
-			Key:      key,
-			Type:     event,
-		})
-	}
-	return cache.FilteringResourceEventHandler{
-		FilterFunc: filter,
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				enqueue(obj, EventTypeAdd)
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				if reflect.DeepEqual(oldObj, newObj) {
-					return
-				}
-				enqueue(newObj, EventTypeUpdate)
-			},
-			DeleteFunc: func(obj interface{}) {
-				enqueue(obj, EventTypeDelete)
-			},
-		},
-	}
-}
-
-// FlushPodCacheNextQuerying next time querying pod, flush cache
-func (ki *ClientK8s) FlushPodCacheNextQuerying() {
-	ki.IsApiErr = true
 }

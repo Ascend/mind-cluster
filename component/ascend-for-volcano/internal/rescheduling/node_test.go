@@ -21,7 +21,6 @@ package rescheduling
 
 import (
 	"reflect"
-	"strconv"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -55,18 +54,13 @@ func buildFaultGetNodeHeartbeatFromDeviceInfoTests() []FaultNodeGetNodeHeartbeat
 		want:    zero,
 		wantErr: true,
 	}
-	fakeNode := fakeNPUNodeWithDeviceInfo("node0")
-	timeWanted, err := strconv.ParseInt(fakeNode.Annotation[util.NodedHeartbeatTimeKey], util.Base10, util.BitSize64)
-	if err != nil {
-		timeWanted = -1
-	}
 	test2 := FaultNodeGetNodeHeartbeatFromDeviceInfoTests{
 		name:   "01-FaultNodeUpdateFaultNodesFromDeviceInfoTests() succeed",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetNodeHeartbeatFromDeviceInfoArgs{
-			node: fakeNode,
+			node: fakeNPUNodeWithDeviceInfo("node0"),
 		},
-		want:    timeWanted,
+		want:    eight,
 		wantErr: false,
 	}
 	tests := []FaultNodeGetNodeHeartbeatFromDeviceInfoTests{
@@ -84,11 +78,11 @@ func TestFaultNodeGetNodeHeartbeatFromDeviceInfo(t *testing.T) {
 			fNode := tt.fields
 			got, err := fNode.getNodeHeartbeatFromNodeDInfo(tt.args.node)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getNodeHeartbeatFromNodeDInfo() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getNodeHeartbeatFromDeviceInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("getNodeHeartbeatFromNodeDInfo() got = %v, want %v", got, tt.want)
+				t.Errorf("getNodeHeartbeatFromDeviceInfo() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -107,23 +101,20 @@ type FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests struct {
 }
 
 func buildFaultNodeGetNodeHeartbeatIntFromDeviceInfoTests() []FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests {
-	fakeNode := fakeNPUNodeNilDeviceInfo("node0")
 	test1 := FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests{
 		name:   "01-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() nil device info",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoArgs{
-			node: fakeNode,
+			node: fakeNPUNodeNilDeviceInfo("node0"),
 		},
 		want:    nodeUpdateTime,
 		wantErr: true,
 	}
-	fakeNode = fakeNPUNodeWithDeviceInfo("node1")
-	fakeNode.Annotation[util.NodeDNodeHeartbeatIntervalKey] = strconv.Itoa(ten)
 	test2 := FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests{
 		name:   "02-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() succeed",
-		fields: fakeTestFaultNodeNodeHealthy("node1"),
+		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoArgs{
-			node: fakeNode,
+			node: fakeNPUNodeWithDeviceInfo("node0"),
 		},
 		want:    ten,
 		wantErr: false,
@@ -143,13 +134,11 @@ func TestFaultNodeGetNodeHeartbeatIntervalFromDeviceInfo(t *testing.T) {
 			fNode := tt.fields
 			got, err := fNode.getNodeHeartbeatIntervalFromNodeDInfo(tt.args.node)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("node:%s getNodeHeartbeatIntervalFromDeviceInfo() error = %v, wantErr %v",
-					tt.args.node.Name, err, tt.wantErr)
+				t.Errorf("getNodeHeartbeatIntervalFromDeviceInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("node:%s getNodeHeartbeatIntervalFromDeviceInfo() got = %v, want %v",
-					tt.args.node.Name, got, tt.want)
+				t.Errorf("getNodeHeartbeatIntervalFromDeviceInfo() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

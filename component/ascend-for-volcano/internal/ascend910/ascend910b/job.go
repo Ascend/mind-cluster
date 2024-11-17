@@ -21,6 +21,7 @@ package ascend910b
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -32,7 +33,7 @@ import (
 // Valid910bNPUJob check the 910b job req npu num and mode
 func (ab *Base910b) Valid910bNPUJob() *api.ValidateResult {
 	vResult := &api.ValidateResult{}
-	var vErr error = nil
+	var vErr error
 	defer func() {
 		if vErr != nil {
 			vResult.Pass = false
@@ -55,7 +56,13 @@ func (ab *Base910b) Valid910bNPUJob() *api.ValidateResult {
 		return vResult
 	}
 
-	// 3.check job train mode:distribute and single.
+	// 3.check host-arch for A+X not same as A+K
+	if vErr = ab.CheckJobArch(); vErr != nil {
+		klog.V(util.LogErrorLev).Infof("checkJobArch: %s.", vErr)
+		return vResult
+	}
+
+	// 4.check job train mode:distribute and single.
 	if vErr = ab.checkJobTrainMode(); vErr != nil {
 		klog.V(util.LogErrorLev).Infof("checkJobTrainMode: %s.", vErr)
 		return vResult
@@ -78,6 +85,20 @@ func (ab *Base910b) CheckJobForm() error {
 	return nil
 }
 
+// CheckJobArch to check job host-arch for A+X not same as A+K.
+func (ab *Base910b) CheckJobArch() error {
+	// for vcJob and deployment.
+	lValue, ok := ab.Selector[util.ArchSelector]
+	if !ok {
+		return fmt.Errorf("%s not has no selector:%s", ab.Name, util.ArchSelector)
+	}
+
+	if !strings.Contains(ab.GetArch(), lValue) {
+		return fmt.Errorf("%s selector:%s not right %s", ab.Name, util.ArchSelector, lValue)
+	}
+	return nil
+}
+
 // checkJobTrainMode to check job train mode:distribute and single.
 func (ab *Base910b) checkJobTrainMode() error {
 	if ab.NPUTaskNum == 0 {
@@ -92,7 +113,6 @@ func (ab *Base910b) checkJobTrainMode() error {
 	return fmt.Errorf("%s checkJobTrainMode %s req npu is invalid", ab.GetPluginName(), ab.Name)
 }
 
-// GetNPUAllocPriorityArray get priorityArray
 func (ab *Base910b) GetNPUAllocPriorityArray(taskNPUNumber int) ([]int, error) {
 	var priorityArray []int
 	var err error

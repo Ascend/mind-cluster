@@ -26,11 +26,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
+	v12 "k8s.io/kube-scheduler/extender/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -43,29 +43,10 @@ type NodeDeviceInfo struct {
 	UpdateTime int64
 }
 
-// NodeDeviceInfoWithTime is node device info with time
-type NodeDeviceInfoWithTime struct {
-	NodeDeviceInfoWithID
-	HostUpdateTime int64
-}
-
-// NodeDeviceInfoWithID is node the information reported by cm.
-type NodeDeviceInfoWithID struct {
-	NodeDeviceInfo
-	SuperPodID int32
-}
-
 // NodeDNodeInfo is node the information reported by noded
 type NodeDNodeInfo struct {
-	FaultDevList []struct {
-		DeviceType string
-		DeviceId   int
-		FaultCode  []string
-		FaultLevel string
-	}
 	HeartbeatTime     int64
 	HeartbeatInterval int
-	NodeStatus        string
 }
 
 // NodeInfoWithNodeD is node the node information and checkCode reported by noded
@@ -76,39 +57,26 @@ type NodeInfoWithNodeD struct {
 
 // NodeDeviceInfoWithDevPlugin a node has one by cm.
 type NodeDeviceInfoWithDevPlugin struct {
-	DeviceInfo  NodeDeviceInfo
-	CheckCode   string
-	SuperPodID  int32 `json:"SuperPodID,omitempty"`
-	ServerIndex int32 `json:"ServerIndex,omitempty"`
-}
-
-// SwitchFaultInfo Switch Fault Info
-type SwitchFaultInfo struct {
-	FaultCode  []string
-	FaultLevel string
-	UpdateTime int64
-	NodeStatus string
+	DeviceInfo NodeDeviceInfo
+	CheckCode  string
 }
 
 // NPUNode the plugin define node info.
 type NPUNode struct {
 	CommonNode
 	VNode
-	IsUnhealthy       bool
 	devInfoUpdateTime int64
 }
 
 // CommonNode common npu node properties
 type CommonNode struct {
-	Name           string
-	Capability     map[v1.ResourceName]float64
-	Allocate       map[v1.ResourceName]float64
-	Idle           map[v1.ResourceName]float64
-	BaseDeviceInfo string
-	Annotation     map[string]string
-	Label          map[string]string
-	Address        string
-	SuperPodID     int32
+	Name       string
+	Capability map[v1.ResourceName]float64
+	Allocate   map[v1.ResourceName]float64
+	Idle       map[v1.ResourceName]float64
+	Annotation map[string]string
+	Label      map[string]string
+	Address    string
 }
 
 // VNode vnpu node class
@@ -131,8 +99,6 @@ type VNode struct {
 	TotalRes util.VResource
 	// ValidVNode node init success
 	ValidVNode bool
-	// Chip type 910B1/910B2C/910B3/910B4
-	ChipType string
 }
 
 // VChip vnpu chip class
@@ -166,73 +132,27 @@ func checkNodeDeviceInfo(nodeData *NodeDeviceInfoWithDevPlugin) error {
 	if nodeData.CheckCode != util.MakeDataHash(nodeDeviceInfo) {
 		return errors.New("checkCode is not match")
 	}
+
 	return nil
 }
 
-func getDeviceClusterInfoFromCM(cmData *v1.ConfigMap) (map[string]NodeDeviceInfoWithID, error) {
-	deviceInfoMap := map[string]NodeDeviceInfoWithID{}
-	data, ok := cmData.Data[cmData.Name]
-	if !ok {
-		return deviceInfoMap, fmt.Errorf("configmap<%s> has no %s", cmData.Name, cmData.Name)
-	}
-	if unmarshalErr := json.Unmarshal([]byte(data), &deviceInfoMap); unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("convertToReSchedulerJobsMapFromCM Unmarshal: %s.", util.SafePrint(unmarshalErr))
-		return deviceInfoMap, unmarshalErr
-	}
-	return deviceInfoMap, nil
-}
+func getNodeDeviceInfoFromCM(cmData *v1.ConfigMap) (NodeDeviceInfo, error) {
 
-func getNodeDeviceInfoFromCM(cmData *v1.ConfigMap) (*NodeDeviceInfoWithDevPlugin, error) {
 	devInf := &NodeDeviceInfoWithDevPlugin{}
 	data, ok := cmData.Data[util.DevInfoCMKey]
 	if !ok {
-		return nil, fmt.Errorf("configmap<%s> has no %s", cmData.Name, util.DevInfoCMKey)
+		return devInf.DeviceInfo, fmt.Errorf("configmap<%s> has no %s", cmData.Name, util.DevInfoCMKey)
 	}
-	if unmarshalErr := json.Unmarshal([]byte(data), devInf); unmarshalErr != nil {
+	if unmarshalErr := json.Unmarshal([]byte(data), &devInf); unmarshalErr != nil {
 		klog.V(util.LogInfoLev).Infof("convertToReSchedulerJobsMapFromCM Unmarshal: %s.", util.SafePrint(unmarshalErr))
-		return nil, unmarshalErr
+		return devInf.DeviceInfo, unmarshalErr
 	}
 
 	if checkErr := checkNodeDeviceInfo(devInf); checkErr != nil {
 		klog.V(util.LogInfoLev).Infof("checkNodeDeviceInfo failed :%s.", util.SafePrint(checkErr))
-		return nil, checkErr
+		return devInf.DeviceInfo, checkErr
 	}
-	return devInf, nil
-}
-
-// getNodeClusterInfoFromCM try to init NodeInfoWithNodeD with cm information reported by nodeD
-func getNodeClusterInfoFromCM(cmData *v1.ConfigMap) (map[string]NodeDNodeInfo, error) {
-	nodeInfoMap := map[string]NodeDNodeInfo{}
-	if cmData == nil {
-		return nodeInfoMap, errors.New("nil parameters")
-	}
-	data, ok := cmData.Data[cmData.Name]
-	if !ok {
-		return nodeInfoMap, fmt.Errorf("configmap<%s> has no %s", cmData.Name, cmData.Name)
-	}
-	if unmarshalErr := json.Unmarshal([]byte(data), &nodeInfoMap); unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("convertToReSchedulerJobsMapFromCM Unmarshal: %s.",
-			util.SafePrint(unmarshalErr))
-		return nodeInfoMap, unmarshalErr
-	}
-	return nodeInfoMap, nil
-}
-
-func getSwitchClusterInfoFromCM(cmData *v1.ConfigMap) (map[string]SwitchFaultInfo, error) {
-	switchInfoMap := map[string]SwitchFaultInfo{}
-	if cmData == nil {
-		return switchInfoMap, errors.New("nil parameters")
-	}
-	data, ok := cmData.Data[cmData.Name]
-	if !ok {
-		return switchInfoMap, fmt.Errorf("configmap<%s> has no %s", cmData.Name, cmData.Name)
-	}
-	if unmarshalErr := json.Unmarshal([]byte(data), &switchInfoMap); unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("unmarshal switch info failed, err: %s",
-			util.SafePrint(unmarshalErr))
-		return switchInfoMap, unmarshalErr
-	}
-	return switchInfoMap, nil
+	return devInf.DeviceInfo, nil
 }
 
 // getNodeInfoFromCM try to init NodeInfoWithNodeD with cm information reported by nodeD
@@ -247,7 +167,7 @@ func getNodeInfoFromCM(cmData *v1.ConfigMap) (NodeInfoWithNodeD, error) {
 	}
 	unmarshalErr := json.Unmarshal([]byte(data), &nodeInfo)
 	if unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("convertToReSchedulerJobsMapFromCM Unmarshal: %s.", util.SafePrint(unmarshalErr))
+		klog.V(util.LogErrorLev).Infof("convertToReSchedulerJobsMapFromCM Unmarshal: %s.", util.SafePrint(unmarshalErr))
 		return NodeInfoWithNodeD{}, unmarshalErr
 	}
 	// check got information correction with check code from configmap
@@ -258,29 +178,23 @@ func getNodeInfoFromCM(cmData *v1.ConfigMap) (NodeInfoWithNodeD, error) {
 }
 
 // initNPUNodeByNodeInf init NPU node from node info and cm.
-func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfos map[string]NodeDeviceInfoWithID,
-	nodeInfoOfNodeD map[string]NodeDNodeInfo, switchInfos map[string]SwitchFaultInfo,
-	vJobTemplate map[string]map[string]util.VResource) error {
+func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfos map[string]NodeDeviceInfo,
+	nodeInfoOfNodeD map[string]NodeDNodeInfo, vJobTemplate map[string]map[string]util.VResource) error {
 	if n == nil || npuNode == nil {
 		klog.V(util.LogInfoLev).Infof("InitNPUNodeByNodeInf failed: %s.", util.ArgumentError)
 		return errors.New(util.ArgumentError)
 	}
-	n.IsUnhealthy = false
 	data, getErr := deviceInfos[npuNode.Name]
 	if !getErr || data.DeviceList == nil {
 		return fmt.Errorf("getNodeDeviceInfoFromCM %s failed", npuNode.Name)
 	}
 
-	capability := getNPUNodeCapacity(npuNode)
+	capability := npuNode.Capability.ScalarResources
 	if !util.IsMapHasNPUResource(capability, util.HwPreName) {
-		return fmt.Errorf(normalNodeErr)
+		return fmt.Errorf("%s not NPU node", npuNode.Name)
 	}
 	n.Name = npuNode.Name
 	n.Capability = capability
-	if baseDevInfo, ok := npuNode.Node.Annotations[util.BaseDeviceInfoKey]; ok {
-		klog.V(util.LogDebugLev).Infof("base device infos: %s", baseDevInfo)
-		n.BaseDeviceInfo = baseDevInfo
-	}
 
 	n.Allocate = npuNode.Allocatable.ScalarResources
 	n.Idle = npuNode.Idle.ScalarResources
@@ -296,33 +210,14 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfos map[st
 	// sync last session device infos in cache while device infos's updateTime is not update
 	n.syncOldDeviceInfoFromCache()
 
-	n.syncAnnotationFromSsnNode(npuNode, nodeInfoOfNodeD[npuNode.Name], switchInfos[npuNode.Name])
+	n.syncAnnotationFromSsnNode(npuNode, nodeInfoOfNodeD[npuNode.Name])
 
-	if !n.updateNPUNodeDeviceInfos(data) {
+	if err := n.updateNPUNodeDeviceInfos(data); err != nil {
 		return nil
 	}
 
 	if setVNPUErr := n.setNodeVNPUInfo(npuNode, vJobTemplate); setVNPUErr != nil {
 		klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s %s", npuNode.Name, setVNPUErr)
-	}
-	return nil
-}
-
-func getNPUNodeCapacity(npuNode *api.NodeInfo) map[v1.ResourceName]float64 {
-	valueOfP := reflect.ValueOf(*npuNode)
-
-	if valueOfP.Kind() != reflect.Struct {
-		return nil
-	}
-	for i := 0; i < valueOfP.NumField(); i++ {
-		if valueOfP.Type().Field(i).Name != oldCapacity && valueOfP.Type().Field(i).Name != newCapacity {
-			continue
-		}
-		if capacity, ok := valueOfP.Field(i).Interface().(*api.Resource); ok {
-			return capacity.ScalarResources
-		}
-		klog.V(util.LogErrorLev).Info("get capacity failed by not meet the resource type")
-		return nil
 	}
 	return nil
 }
@@ -375,7 +270,7 @@ func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
 	iNum, iOK := n.Idle[v1.ResourceName(k)]
 	nodeA, aOK := n.Annotation[k]
 	if iOK != true || aOK != true {
-		return fmt.Errorf("not has(or not same) %s", k)
+		return fmt.Errorf("%s not has(or not same) %s", n.Name, k)
 	}
 
 	sSlice := strings.Split(nodeA, ",")
@@ -384,14 +279,14 @@ func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
 		length = 0
 	}
 	if length != int(iNum/util.NPUHexKilo) {
-		return fmt.Errorf("%s not statble:device-info is <%d> but k8s is <%d>", k, length, int(iNum/util.NPUHexKilo))
+		return fmt.Errorf("%s's %s not statble:%d=>%d", n.Name, k, length, int(iNum/util.NPUHexKilo))
 	}
 	return nil
 }
 
 // CheckNPUResourceStableReScheduling check resource stabilize.
-func (n NPUNode) CheckNPUResourceStableReScheduling(vcJob util.SchedulerJobAttr) error {
-	k := vcJob.ReqNPUName
+func (n NPUNode) CheckNPUResourceStableReScheduling(vcJob SchedulerJob) error {
+	k := vcJob.handler.GetAnnoName()
 	iNum, iOK := n.Idle[v1.ResourceName(k)]
 	nodeA, aOK := n.Annotation[k]
 	if iOK != true || aOK != true {
@@ -425,76 +320,25 @@ func (n *NPUNode) syncOldDeviceInfoFromCache() {
 	n.Annotation = existAnno
 }
 
-// updateNPUNodeDeviceInfos return true if device info was updated, else return false
-func (n *NPUNode) updateNPUNodeDeviceInfos(data NodeDeviceInfoWithID) bool {
-	if n.devInfoUpdateTime >= data.UpdateTime {
+func (n *NPUNode) updateNPUNodeDeviceInfos(data NodeDeviceInfo) error {
+	if n.devInfoUpdateTime == data.UpdateTime {
 		klog.V(util.LogDebugLev).Infof("device info is not update, skip refresh cache")
-		return false
+		return fmt.Errorf("device info is not update, skip refresh cache")
 	}
-	n.SuperPodID = data.SuperPodID
-
-	n.updateNPUNodeDeviceInfosWithVolcanoCache(data, data.UpdateTime)
-
 	n.devInfoUpdateTime = data.UpdateTime
-	klog.V(util.LogDebugLev).Infof("update device info for node<%s> annotations: %v", n.Name, n.Annotation)
-	return true
-}
-
-func (n *NPUNode) updateNPUNodeDeviceInfosWithVolcanoCache(data NodeDeviceInfoWithID, updateTime int64) {
 	for k, v := range data.DeviceList {
-		// if k does not represent huawei.com/Ascend910/310/310P continue
-		if len(strings.Split(k, "-")) > 1 {
-			n.Annotation[k] = v
-			continue
-		}
-		// if time interval over 10s continue
-		if updateTime-n.devInfoUpdateTime > deviceInfoForceUpdateInterval {
-			n.Annotation[k] = v
-			continue
-		}
-		n.Annotation[k] = n.getRealHealthyDeviceList(k, n.Annotation[k], v)
+		n.Annotation[k] = v
 	}
+	return nil
 }
 
-func (n *NPUNode) getRealHealthyDeviceList(deviceKey, oldList, newList string) string {
-	// if cache card list is empty or device info is empty. update by device info
-	if len(oldList) == 0 || len(newList) == 0 {
-		return newList
-	}
-	newDeviceList := strings.Split(newList, ",")
-	oldDeviceList := strings.Split(oldList, ",")
-
-	// if cache is not equal k8s or device info is equal k8s. update by device info
-	if int(n.Idle[v1.ResourceName(deviceKey)]/util.NPUHexKilo) != len(oldDeviceList) ||
-		int(n.Idle[v1.ResourceName(deviceKey)]/util.NPUHexKilo) == len(newDeviceList) {
-		return newList
-	}
-	oldDevices := make(map[string]struct{})
-	for _, device := range oldDeviceList {
-		oldDevices[device] = struct{}{}
-	}
-	var deviceListCache []string
-	for _, newDevice := range newDeviceList {
-		if _, ok := oldDevices[newDevice]; !ok {
-			continue
-		}
-		deviceListCache = append(deviceListCache, newDevice)
-	}
-	klog.V(util.LogWarningLev).Infof("update device info for node<%s> annotations: %#v", n.Name, deviceListCache)
-	return strings.Join(deviceListCache, ",")
-}
-
-func (n *NPUNode) syncAnnotationFromSsnNode(npuNode *api.NodeInfo, nodeInfoOfNodeD NodeDNodeInfo,
-	switchInfo SwitchFaultInfo) {
+func (n *NPUNode) syncAnnotationFromSsnNode(npuNode *api.NodeInfo, nodeInfoOfNodeD NodeDNodeInfo) {
 	for k, v := range npuNode.Node.Annotations {
 		n.Annotation[k] = v
 	}
 	// adding noded reported info into NPUNode.Annotation including node heartbeat time and healthy status
 	n.Annotation[util.NodedHeartbeatTimeKey] = strconv.FormatInt(nodeInfoOfNodeD.HeartbeatTime, util.Base10)
-	n.Annotation[util.NodedNodeHealtyStatuskey] = nodeInfoOfNodeD.NodeStatus
 	n.Annotation[util.NodeDNodeHeartbeatIntervalKey] = strconv.Itoa(nodeInfoOfNodeD.HeartbeatInterval)
-
-	n.Annotation[util.SwitchNodeHealtyStatuskey] = switchInfo.NodeStatus
 }
 
 // InitNodesFromSsn init all nodes in ssn.
@@ -509,11 +353,9 @@ func (sHandle *ScheduleHandler) InitNodesFromSsn(ssn *framework.Session) {
 	deviceInfos := sHandle.syncDeviceInfosBySsn(ssn)
 	// 3. obtain node infos of noded configmap
 	nodeInfosOfNodeD := sHandle.syncNodeInfosBySsn(ssn)
-	// 4. obtain switch infos of switch configmap
-	switchInfos := sHandle.syncSwitchInfosBySsn(ssn)
 
 	// 4.init NPU Nodes by  ssn.Nodes and deviceInfos
-	sHandle.initNodesFromSsn(ssn, deviceInfos, nodeInfosOfNodeD, switchInfos)
+	sHandle.initNodesFromSsn(ssn, deviceInfos, nodeInfosOfNodeD)
 	return
 }
 
@@ -525,6 +367,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 	}
 	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", nodeInfo.Name)
 	defer klog.V(util.LogDebugLev).Infof("leave node(%s) predicate", nodeInfo.Name)
+
 	vcJob, ok := sHandle.Jobs[taskInfo.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NodePredicate not support job:%s.", util.SafePrint(taskInfo.Job))
@@ -535,34 +378,28 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("NodePredicate vc-job:%#v is not npu job.", vcJob)
 		return nil
 	}
-
 	vcNode, ok := sHandle.Nodes[nodeInfo.Name]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NodePredicate %s not in.", nodeInfo.Name)
 		return nil
 	}
-	if vcNode.IsUnhealthy {
-		return fmt.Errorf("node is unhealthy")
-	}
+
 	if !IsNPUTask(taskInfo) {
 		return nil
 	}
-	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {
+	if err := vcNode.CheckNPUResourceStable(vcJob); err != nil {
+		return err
+	}
+	if err := vcJob.CheckNodeNum(taskInfo, vcNode); err != nil {
 		return err
 	}
 	if err := vcJob.handler.CheckNodeNPUByTask(taskInfo, vcNode); err != nil {
 		// node doesn't have enough npu for the task
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
-		return fmt.Errorf("checkNodeNPUByTask : %s", err)
+		return fmt.Errorf("checkNodeNPUByTask  %s : %s", vcNode.Name, err)
 	}
 	klog.V(util.LogDebugLev).Infof("%s NodePredicate %s select successes.", PluginName, vcNode.Name)
-	if !(vcJob.IsJobSinglePodDelete() && vcJob.IsTorAffinityJob()) {
-		return nil
-	}
-	if sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return vcJob.CheckTorJobSinglePodDeleteV1(sHandle, taskInfo, vcNode)
-	}
-	return vcJob.CheckTorJobSinglePodDeleteV2(sHandle, vcNode)
+	return nil
 }
 
 func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {
@@ -578,42 +415,17 @@ func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {
 	sHandle.Nodes = existNodes
 }
 
-func (sHandle *ScheduleHandler) syncDeviceInfosBySsn(ssn *framework.Session) map[string]NodeDeviceInfoWithID {
-	deviceInfos := make(map[string]NodeDeviceInfoWithID)
+func (sHandle *ScheduleHandler) syncDeviceInfosBySsn(ssn *framework.Session) map[string]NodeDeviceInfo {
+	deviceInfos := make(map[string]NodeDeviceInfo)
 	sHandle.DeviceInfos.Lock()
-	for nodeName, devInfo := range sHandle.DeviceInfos.Devices {
-		if _, exist := ssn.Nodes[nodeName]; exist {
-			continue
-		}
-		if info, ok := sHandle.DevInfoNotInSession[nodeName]; !ok || info.UpdateTime < devInfo.UpdateTime {
-			now := time.Now().Unix()
-			klog.V(util.LogWarningLev).Infof("node<%s> is not in session, add device-info in cache, time: %d",
-				nodeName, now)
-			sHandle.DevInfoNotInSession[nodeName] = NodeDeviceInfoWithTime{
-				NodeDeviceInfoWithID: devInfo,
-				HostUpdateTime:       now,
-			}
-		}
-	}
-
 	for nodeName := range ssn.Nodes {
-		deviceInfos[nodeName] = NodeDeviceInfoWithID{
-			NodeDeviceInfo: NodeDeviceInfo{
-				DeviceList: make(map[string]string),
-				UpdateTime: sHandle.DeviceInfos.Devices[nodeName].UpdateTime,
-			},
-			SuperPodID: sHandle.DeviceInfos.Devices[nodeName].SuperPodID,
-		}
-		for deviceName, deviceID := range sHandle.DeviceInfos.Devices[nodeName].DeviceList {
-			deviceInfos[nodeName].DeviceList[deviceName] = deviceID
-		}
-
+		deviceInfos[nodeName] = sHandle.DeviceInfos.Devices[nodeName]
 	}
 	sHandle.DeviceInfos.Unlock()
 	return deviceInfos
 }
 
-// syncNodeInfosBySsn is to get a copy of nodeInfo which is get from configmap of nodeD
+// syncNodeInfosBySsm is to get a copy of nodeInfo which is get from configmap of nodeD
 func (sHandle *ScheduleHandler) syncNodeInfosBySsn(ssn *framework.Session) map[string]NodeDNodeInfo {
 	nodeInfos := make(map[string]NodeDNodeInfo, util.MapInitNum)
 	sHandle.NodeInfosFromCm.Lock()
@@ -624,27 +436,17 @@ func (sHandle *ScheduleHandler) syncNodeInfosBySsn(ssn *framework.Session) map[s
 	return nodeInfos
 }
 
-// syncSwitchInfosBySsn is to get a copy of switchInfo which is get from configmap of switch info
-func (sHandle *ScheduleHandler) syncSwitchInfosBySsn(ssn *framework.Session) map[string]SwitchFaultInfo {
-	switchInfos := make(map[string]SwitchFaultInfo, util.MapInitNum)
-	sHandle.SwitchInfosFromCm.Lock()
-	for nodeName := range ssn.Nodes {
-		switchInfos[nodeName] = sHandle.SwitchInfosFromCm.Switches[nodeName]
-	}
-	sHandle.SwitchInfosFromCm.Unlock()
-	return switchInfos
-}
-
-func (sHandle *ScheduleHandler) initNodesFromSsn(ssn *framework.Session, deviceInfos map[string]NodeDeviceInfoWithID,
-	nodeInfoOfNodeD map[string]NodeDNodeInfo, switchInfos map[string]SwitchFaultInfo) {
+func (sHandle *ScheduleHandler) initNodesFromSsn(ssn *framework.Session, deviceInfos map[string]NodeDeviceInfo,
+	nodeInfoOfNodeD map[string]NodeDNodeInfo) {
 	newNodes := make(map[string]NPUNode)
 	for nodeName, nodeInf := range ssn.Nodes {
 		// get npu node in map sHandle.Nodes, if exist get old node, if not exist get NPUNode{} for new node init
 		node := sHandle.Nodes[nodeName]
-		if err := node.initNPUNodeByNodeInf(nodeInf, deviceInfos, nodeInfoOfNodeD, switchInfos,
-			sHandle.FrameAttr.VJobTemplate); err != nil {
-			if !strings.Contains(err.Error(), notNPUNodeError) && err.Error() != normalNodeErr {
-				klog.V(util.LogErrorLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", nodeName, err)
+		if err := node.initNPUNodeByNodeInf(nodeInf, deviceInfos,
+			nodeInfoOfNodeD, sHandle.FrameAttr.VJobTemplate); err != nil {
+			klog.V(util.LogErrorLev).Infof("init node(%s) failed, err: %v", nodeName, err)
+			if !strings.Contains(err.Error(), notNPUNodeError) {
+				klog.V(util.LogDebugLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", nodeName, err)
 			}
 			continue
 		}
@@ -653,13 +455,20 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(ssn *framework.Session, deviceI
 	sHandle.Nodes = newNodes
 }
 
-func initScoreMap(nodes []*api.NodeInfo) map[string]float64 {
-	scoreMap := make(map[string]float64, len(nodes))
+func initScoreMap(nodes []*api.NodeInfo, interPodAffinityScore v12.HostPriorityList) map[string]float64 {
 	for _, node := range nodes {
 		if reflect.ValueOf(node).IsNil() {
 			continue
 		}
-		scoreMap[node.Name] = 0.0
+
+		interPodAffinityScore = append(interPodAffinityScore, v12.HostPriority{
+			Host:  node.Name,
+			Score: 0,
+		})
+	}
+	scoreMap := make(map[string]float64, len(interPodAffinityScore))
+	for _, host := range interPodAffinityScore {
+		scoreMap[host.Host] = float64(host.Score)
 	}
 
 	return scoreMap

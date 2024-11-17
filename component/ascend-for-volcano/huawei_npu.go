@@ -20,11 +20,10 @@ Package main is using for HuaWei Ascend pin affinity schedule.
 package main
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -71,13 +70,92 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 		return tp.Scheduler.JobValid(obj)
 	})
 	// if node not meet the task require, the task will be failed. so need to intercept in advance
-	ssn.AddPredicateFn(tp.Name(), tp.addPredicateFn)
+	ssn.AddPredicateFn(tp.Name(), func(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
+		err := tp.Scheduler.NodePredicate(taskInfo, nodeInfo)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("NodePredicate failed for task %s err:%s", taskInfo.Name, err)
+		}
+		return err
+	})
 
-	addBatchNodeOrderFn(ssn, tp)
+	ssn.AddBatchNodeOrderFn(tp.Name(), func(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
+		score, err := tp.Scheduler.BatchNodeOrderFn(task, nodes)
+		if err != nil {
+			if setErr := tp.Scheduler.SetJobPendingReason(ssn.Jobs[task.Job], err.Error()); setErr != nil {
+				klog.V(util.LogDebugLev).Infof("%s setJobFailed err:%s.", PluginName, util.SafePrint(setErr))
+			}
+		}
+		if vcJob, ok := tp.Scheduler.Jobs[task.Job]; ok && vcJob.JobReadyTag == false {
+			if _, exist := tp.Scheduler.DeleteJobInfos[task.Job]; !exist {
+				tp.Scheduler.DeleteJobInfos[task.Job] = ssn.Jobs[task.Job]
+				delete(ssn.Jobs, task.Job)
+			}
+		}
 
-	addJobReadyFn(ssn, tp)
+		return score, nil
+	})
 
-	addJobEnqueueableFn(ssn, tp)
+	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
+		ji, ok := obj.(*api.JobInfo)
+		if !ok {
+			klog.V(util.LogErrorLev).Info("obj assertion failed.")
+			return false
+		}
+		k, ok := ji.PodGroup.Labels[plugin.TorAffinityKey]
+		if !ok || k == plugin.NullTag {
+			return true
+		}
+		if tp.Scheduler.Tors == nil {
+			return false
+		}
+		job, ok := tp.Scheduler.Jobs[ji.UID]
+		if !ok {
+			return true
+		}
+		return job.JobReadyTag
+	})
+
+	ssn.AddJobEnqueueableFn(tp.Name(), func(job interface{}) int {
+		if tp.Scheduler.NPUPlugins == nil {
+			klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn : %s", util.ArgumentError)
+			return util.JobEnqueueSkip
+		}
+		vcjob, ok := job.(*api.JobInfo)
+		if !ok {
+			return util.JobEnqueueSkip
+		}
+		npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
+		if _, ok := tp.Scheduler.NPUPlugins[npuName]; !ok {
+			return util.JobEnqueueSkip
+		}
+		var tNpuNum int
+		for _, node := range ssn.Nodes {
+			vcNode, ok := tp.Scheduler.Nodes[node.Name]
+			if !ok {
+				klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn add node failed,%s is not in cache", node.Name)
+				continue
+			}
+			deviceInfo, ok := vcNode.Annotation[npuName]
+			if !ok {
+				klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn add node failed,"+
+					"%s deviceList is empty", node.Name)
+				continue
+			}
+			deviceList := strings.Split(deviceInfo, ",")
+			klog.V(util.LogInfoLev).Infof("Add enqueue node %s deviceList is: %#v", vcNode.Name, deviceList)
+			npuNum, ok := vcNode.Idle[v1.ResourceName(npuName)]
+			if !ok || len(deviceList) != int(npuNum/util.NPUHexKilo) {
+				continue
+			}
+			tNpuNum += len(deviceList)
+		}
+		if tNpuNum < rNpuNum {
+			klog.V(util.LogWarningLev).Infof("Add enqueue failed, require npu num is %v "+
+				"but cluster npu num is %v", rNpuNum, tNpuNum)
+			return util.JobNotEnqueue
+		}
+		return util.JobEnqueue
+	})
 	// Register event handlers to update task info in PodLister & nodeMap
 	// for support Concurrency
 	ssn.AddEventHandler(&framework.EventHandler{
@@ -98,113 +176,6 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 	})
 }
 
-// addPredicateFn in v1.9.0, this function will be modified, see in build.sh
-func (tp *huaweiNPUPlugin) addPredicateFn(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
-	predicateErr := tp.Scheduler.NodePredicate(taskInfo, nodeInfo)
-	if predicateErr != nil {
-		tp.Scheduler.Jobs[taskInfo.Job].Lock()
-		vcJob := tp.Scheduler.Jobs[taskInfo.Job]
-		vcJob.UpdateJobPendingMessage(predicateErr.Error(), nodeInfo.Name)
-		tp.Scheduler.Jobs[taskInfo.Job].Unlock()
-		klog.V(util.LogDebugLev).Infof("NodePredicate failed for task %s err:%s", taskInfo.Name, predicateErr)
-		predicateErr = fmt.Errorf("node check failed. for details,log by search keywords <%s> in volcano's log",
-			predicateErr.Error())
-	}
-	return predicateErr
-}
-
-func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddBatchNodeOrderFn(tp.Name(), func(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
-		score, err := tp.Scheduler.BatchNodeOrderFn(task, nodes)
-		if err != nil {
-			if setErr := tp.Scheduler.SetJobPendingReason(ssn.Jobs[task.Job], err.Error()); setErr != nil {
-				klog.V(util.LogDebugLev).Infof("%s setJobFailed err:%s.", PluginName, util.SafePrint(setErr))
-			}
-		}
-		if vcJob, ok := tp.Scheduler.Jobs[task.Job]; ok && vcJob.JobReadyTag == false {
-			if _, exist := tp.Scheduler.DeleteJobInfos[task.Job]; !exist {
-				tp.Scheduler.DeleteJobInfos[task.Job] = ssn.Jobs[task.Job]
-				delete(ssn.Jobs, task.Job)
-			}
-		}
-
-		return score, nil
-	})
-}
-
-func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
-		ji, ok := obj.(*api.JobInfo)
-		if !ok {
-			klog.V(util.LogErrorLev).Info("obj assertion failed.")
-			return false
-		}
-		k, ok := ji.PodGroup.Labels[plugin.TorAffinityKey]
-		if !ok || k == plugin.NullTag {
-			return true
-		}
-		if tp.Scheduler.Tors == nil {
-			return false
-		}
-		job, ok := tp.Scheduler.Jobs[ji.UID]
-		if !ok {
-			return true
-		}
-		return job.JobReadyTag
-	})
-}
-
-func addJobEnqueueableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddJobEnqueueableFn(tp.Name(), func(job interface{}) int {
-		if tp.Scheduler.NPUPlugins == nil {
-			klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn : %s", util.ArgumentError)
-			return util.JobEnqueueSkip
-		}
-		vcjob, ok := job.(*api.JobInfo)
-		if !ok {
-			return util.JobEnqueueSkip
-		}
-		npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
-		if _, ok := tp.Scheduler.NPUPlugins[npuName]; !ok {
-			return util.JobEnqueueSkip
-		}
-		tNpuNum := getNpuNum(ssn, tp, npuName)
-		if tNpuNum < rNpuNum {
-			klog.V(util.LogWarningLev).Infof("Add enqueue failed, require npu num is %v "+
-				"but cluster npu num is %v", rNpuNum, tNpuNum)
-			return util.JobNotEnqueue
-		}
-		return util.JobEnqueue
-	})
-}
-
-func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int {
-	var tNpuNum int
-	for _, node := range ssn.Nodes {
-		vcNode, ok := tp.Scheduler.Nodes[node.Name]
-		if !ok {
-			klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn add node failed,%s is not in cache", node.Name)
-			continue
-		}
-		deviceInfo, ok := vcNode.Annotation[npuName]
-		if !ok || len(deviceInfo) == 0 {
-			klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn add node failed,"+
-				"%s deviceList is empty", node.Name)
-			continue
-		}
-		deviceList := strings.Split(deviceInfo, ",")
-		klog.V(util.LogInfoLev).Infof("Add enqueue node %s deviceList is: %#v", vcNode.Name, deviceList)
-		npuNum, ok := vcNode.Idle[v1.ResourceName(npuName)]
-		if !ok || len(deviceList) != int(npuNum/util.NPUHexKilo) {
-			klog.V(util.LogErrorLev).Infof("Add enqueue node %s device info is %v and k8s is %v", vcNode.Name,
-				len(deviceList), int(npuNum/util.NPUHexKilo))
-			continue
-		}
-		tNpuNum += len(deviceList)
-	}
-	return tNpuNum
-}
-
 // OnSessionClose Close session by volcano frame.
 func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 	klog.V(util.LogInfoLev).Infof("enter %s OnSessionClose.", PluginName)
@@ -212,9 +183,6 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 	if tp == nil || ssn == nil {
 		klog.V(util.LogInfoLev).Infof("OnSessionClose failed: %s.", util.ArgumentError)
 		return
-	}
-	if *tp.Scheduler.IsFirstSession {
-		*tp.Scheduler.IsFirstSession = false
 	}
 	if ssn.Jobs == nil && len(tp.Scheduler.DeleteJobInfos) != 0 {
 		ssn.Jobs = make(map[api.JobID]*api.JobInfo)
@@ -238,39 +206,23 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 
 // HandlerStart HuaWei NPU plugin start by frame.
 func HandlerStart() *plugin.ScheduleHandler {
-	isFirstSession := true
 	scheduleHandler := &plugin.ScheduleHandler{
 		NPUPlugins: map[string]plugin.NPUBuilder{},
 		BaseHandle: base.New(base.PluginName),
 		ScheduleEnv: plugin.ScheduleEnv{
-			IsFirstSession:      &isFirstSession,
-			Jobs:                map[api.JobID]plugin.SchedulerJob{},
-			JobSeverInfos:       map[api.JobID]struct{}{},
-			JobDeleteFlag:       map[api.JobID]struct{}{},
-			JobSinglePodFlag:    map[api.JobID]bool{},
-			Nodes:               map[string]plugin.NPUNode{},
-			DeleteJobInfos:      map[api.JobID]*api.JobInfo{},
-			DevInfoNotInSession: map[string]plugin.NodeDeviceInfoWithTime{},
+			Jobs:           map[api.JobID]plugin.SchedulerJob{},
+			JobSeverInfos:  map[api.JobID]struct{}{},
+			Nodes:          map[string]plugin.NPUNode{},
+			DeleteJobInfos: map[api.JobID]*api.JobInfo{},
 			DeviceInfos: &plugin.DeviceInfosWithMutex{
 				Mutex:   sync.Mutex{},
-				Devices: map[string]plugin.NodeDeviceInfoWithID{},
+				Devices: map[string]plugin.NodeDeviceInfo{},
 			},
 			NodeInfosFromCm: &plugin.NodeInfosFromCmWithMutex{
 				Mutex: sync.Mutex{},
 				Nodes: map[string]plugin.NodeDNodeInfo{},
 			},
-			SwitchInfosFromCm: &plugin.SwitchInfosFromCmWithMutex{
-				Mutex:    sync.Mutex{},
-				Switches: map[string]plugin.SwitchFaultInfo{},
-			},
 			FrameAttr: plugin.VolcanoFrame{},
-			NslbAttr:  &plugin.NslbParameters{},
-			SuperPodInfo: &plugin.SuperPodInfo{
-				SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-				SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-				SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-			},
-			JobPendingMessage: map[api.JobID]map[string]map[string]struct{}{},
 		},
 	}
 

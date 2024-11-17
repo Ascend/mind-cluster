@@ -53,6 +53,7 @@ func (tp *module910x8) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
 
 func getNPUAllocPriorityArray(taskNPUNumber int) ([]int, error) {
 	var priorityArray []int
+	var err error
 
 	switch taskNPUNumber {
 	case 0:
@@ -70,11 +71,12 @@ func getNPUAllocPriorityArray(taskNPUNumber int) ([]int, error) {
 		priorityArray = []int{nodeNPUNumber}
 	default:
 		// For normal,can not be here. The pre function validate job has done this.
-		err := fmt.Errorf("illegal request npu number: %d", taskNPUNumber)
-		if err != nil {
-			klog.V(util.LogErrorLev).Infof("%s %s.", SchedulerName, err.Error())
-			return priorityArray, err
-		}
+		err = fmt.Errorf("illegal request npu number: %d", taskNPUNumber)
+	}
+
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("%s %s.", SchedulerName, err.Error())
+		return priorityArray, err
 	}
 
 	return priorityArray, nil

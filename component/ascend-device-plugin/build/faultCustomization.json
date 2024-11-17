@@ -1,8 +1,7 @@
 {
   "GraceTolerance": {
-    "WaitProcessReadCMTime": 30,
-    "WaitDeviceResetTime": 150,
-    "WaitFaultSelfHealingTime": 15
+    "WaitFlushingCMTime": 90,
+    "WaitDeviceResetTime": 120
   },
   "FaultFrequency": [
     {
@@ -30,12 +29,6 @@
       "FaultTimeout": 30,
       "RecoverTimeout": 60,
       "FaultHandling": "PreSeparateNPU"
-    },
-    {
-      "EventId": ["81078605"],
-      "FaultTimeout": 30,
-      "RecoverTimeout": 60,
-      "FaultHandling": "SubHealthFault"
     }
   ]
 }

@@ -17,22 +17,14 @@ package device
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/workqueue"
 
 	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/kubeclient"
 )
 
 // HotResetManager hot reset manager
@@ -47,14 +39,13 @@ type HotResetManager interface {
 	GetDevListInReset() map[int32]struct{}
 	GetDevListByPolicyLevel([]*common.TaskDevInfo, int) (map[int32]struct{}, error)
 	GetNeedResetDevMap([]*common.TaskDevInfo) (map[int32]int32, error)
-	GetGlobalDevFaultInfo(logicID int32) (*common.DevFaultInfo, error)
 	GetTaskResetInfo([]*common.TaskDevInfo, string, string, string) (*common.TaskResetInfo, error)
 	GetTaskFaultRankInfo([]*common.TaskDevInfo) (*common.TaskFaultInfo, error)
 	GetFaultDev2PodMap() (map[int32]v1.Pod, error)
 	GetTaskNameByPod(pod v1.Pod) string
 	GenerateTaskDevFaultInfoList(devIdList []int32, rankIndex string) ([]*common.TaskDevInfo, error)
 	UpdateFaultDev2PodMap([]int32, v1.Pod) error
-	UpdateGlobalDevFaultInfoCache([]*common.NpuDevice, []int32) error
+	UpdateGlobalDevFaultInfoCache([]*common.NpuDevice) error
 	UpdateTaskDevListCache(map[string][]int32) error
 	UpdateTaskDevFaultInfoCache(map[string][]*common.TaskDevInfo) error
 	UpdateTaskPodCache(map[string]v1.Pod) error
@@ -69,8 +60,6 @@ type HotResetManager interface {
 	IsExistFaultyDevInTask(string) bool
 	DeepCopyDevInfo(*common.TaskDevInfo) *common.TaskDevInfo
 	DeepCopyDevFaultInfoList([]*common.TaskDevInfo) []*common.TaskDevInfo
-	SyncResetCM(*kubeclient.ClientK8s)
-	GetCMFromCache(string) (*v1.ConfigMap, error)
 }
 
 // HotResetTools hot reset tool
@@ -84,11 +73,6 @@ type HotResetTools struct {
 	resetTask           map[string]struct{}
 	resetDev            map[int32]struct{}
 	processPolicyTable  map[string]int
-	queue               workqueue.RateLimitingInterface
-	podIndexer          cache.Indexer
-	cmIndexer           cache.Indexer
-	jobs                map[string]string
-	noResetCmPodKeys    map[string]string
 }
 
 // NewHotResetManager create HotResetManager and init data
@@ -98,30 +82,27 @@ func NewHotResetManager(devUsage string) HotResetManager {
 	case common.Ascend910:
 		ringNumber = common.Ascend910RingsNum
 	case common.Ascend910B:
-		if devUsage == common.Infer {
+		switch devUsage {
+		case common.Infer:
 			ringNumber = common.Ascend910BRingsNumInfer
-		}
-		if devUsage == common.Train {
+		case common.Train:
 			ringNumber = common.Ascend910BRingsNumTrain
+		default:
+			return nil
 		}
-	case common.Ascend910A3:
-		ringNumber = common.Ascend910A3RingsNum
 	default:
 		return nil
 	}
 	return &HotResetTools{
-		ringNum:          ringNumber,
-		resetTask:        map[string]struct{}{},
-		resetDev:         map[int32]struct{}{},
-		faultDev2PodMap:  map[int32]v1.Pod{},
-		jobs:             map[string]string{},
-		noResetCmPodKeys: map[string]string{},
+		ringNum:         ringNumber,
+		resetTask:       map[string]struct{}{},
+		resetDev:        map[int32]struct{}{},
+		faultDev2PodMap: map[int32]v1.Pod{},
 		processPolicyTable: map[string]int{
 			common.EmptyError:          common.EmptyErrorLevel,
 			common.IgnoreError:         common.IgnoreErrorLevel,
 			common.RestartRequestError: common.RestartRequestErrorLevel,
 			common.RestartError:        common.RestartErrorLevel,
-			common.FreeResetError:      common.FreeResetErrorLevel,
 			common.ResetError:          common.ResetErrorLevel,
 			common.IsolateError:        common.IsolateErrorLevel,
 		},
@@ -130,268 +111,10 @@ func NewHotResetManager(devUsage string) HotResetManager {
 
 func getChipCountOnRing() int {
 	var ring = map[string]int{
-		common.Ascend910:   common.Ascend910RingsNum,
-		common.Ascend910B:  common.Ascend910BRingsNumTrain,
-		common.Ascend910A3: common.Ascend910A3RingsNum,
+		common.Ascend910:  common.Ascend910RingsNum,
+		common.Ascend910B: common.Ascend910BRingsNumTrain,
 	}
 	return ring[common.ParamOption.RealCardType]
-}
-
-// SyncResetCM sync reset-cm event
-func (hrt *HotResetTools) SyncResetCM(client *kubeclient.ClientK8s) {
-	cmFactory := informers.NewSharedInformerFactoryWithOptions(client.Clientset, 0,
-		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = labels.SelectorFromSet(labels.Set{"reset": "true"}).String()
-		}),
-	)
-	cmInformer := cmFactory.Core().V1().ConfigMaps().Informer()
-	cmInformer.AddEventHandler(client.ResourceEventHandler(kubeclient.CMResource, checkConfigMap))
-	go cmInformer.Run(wait.NeverStop)
-
-	hrt.queue = client.Queue
-	hrt.podIndexer = client.PodInformer.GetIndexer()
-	hrt.cmIndexer = cmInformer.GetIndexer()
-
-	cache.WaitForCacheSync(wait.NeverStop, cmInformer.HasSynced, client.PodInformer.HasSynced)
-
-	go hrt.run()
-}
-
-func (hrt *HotResetTools) run() {
-	hwlog.RunLog.Infof("Starting handle reset-cm event")
-	for hrt.processNextWorkItem() {
-	}
-}
-
-func (hrt *HotResetTools) processNextWorkItem() bool {
-	hwlog.RunLog.Debugf("queue length: %d", hrt.queue.Len())
-	obj, shutdown := hrt.queue.Get()
-	if shutdown {
-		hwlog.RunLog.Errorf("shutdown, stop processing work queue")
-		return false
-	}
-	defer hrt.queue.Done(obj)
-	_, ok := obj.(kubeclient.Event)
-	if !ok {
-		hrt.queue.Forget(obj)
-		return true
-	}
-	hrt.handleEvent(obj)
-	return true
-}
-
-func (hrt *HotResetTools) handleEvent(obj interface{}) {
-	switch obj.(kubeclient.Event).Resource {
-	case kubeclient.PodResource:
-		hrt.handlePodEvent(obj)
-	case kubeclient.CMResource:
-		hrt.handleConfigMapEvent(obj)
-	default:
-		hrt.queue.Forget(obj)
-		hwlog.RunLog.Errorf("Unsupported resource: %s", obj.(kubeclient.Event).Resource)
-	}
-}
-
-func (hrt *HotResetTools) handlePodEvent(obj interface{}) {
-	switch obj.(kubeclient.Event).Type {
-	case kubeclient.EventTypeAdd:
-		hrt.handlePodAddEvent(obj)
-	case kubeclient.EventTypeDelete:
-		hrt.handlePodDeleteEvent(obj)
-	default:
-		hrt.queue.Forget(obj)
-		hwlog.RunLog.Debugf("hotReset scene not watch %s event(%s)", obj.(kubeclient.Event).Resource,
-			obj.(kubeclient.Event).Type)
-	}
-}
-
-func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
-	event, ok := obj.(kubeclient.Event)
-	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event error")
-		return
-	}
-	hwlog.RunLog.Debugf("handle pod(%s) %s event", event.Key, event.Type)
-	pod, err := hrt.getPodFromCache(event.Key)
-	if err != nil {
-		hwlog.RunLog.Warn(err)
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
-	jobName := common.GetJobNameOfPod(pod)
-	if jobName == "" {
-		hwlog.RunLog.Errorf("get job name of pod(%s) failed", event.Key)
-		hrt.queue.Forget(obj)
-		return
-	}
-	hrt.jobs[event.Key] = jobName
-	cmKey := fmt.Sprintf(pod.GetNamespace() + "/" + common.ResetInfoCMNamePrefix + jobName)
-	cm, err := hrt.GetCMFromCache(cmKey)
-	if err != nil {
-		_, ok = hrt.noResetCmPodKeys[event.Key]
-		if !ok {
-			hwlog.RunLog.Warn(err)
-			hrt.noResetCmPodKeys[event.Key] = ""
-		}
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
-	err = hrt.writeCMToFile(cm)
-	if err != nil {
-		hwlog.RunLog.Errorf("Failed to write cm(%s) to file, err: %v", cm.Name, err)
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
-	hrt.queue.Forget(obj)
-}
-
-func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
-	event, ok := obj.(kubeclient.Event)
-	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event error")
-		return
-	}
-	hwlog.RunLog.Debugf("handle pod(%s) delete event", event.Key)
-	if _, ok = hrt.noResetCmPodKeys[event.Key]; ok {
-		delete(hrt.noResetCmPodKeys, event.Key)
-	}
-	jobName, ok := hrt.jobs[event.Key]
-	if !ok {
-		hwlog.RunLog.Errorf("job of pod(%s) not found in cache", event.Key)
-		hrt.queue.Forget(obj)
-		return
-	}
-	keySlice := strings.Split(event.Key, "/")
-	if len(keySlice) != common.KeySliceLength {
-		hwlog.RunLog.Errorf("pod(%s) is invalid", event.Key)
-		hrt.queue.Forget(obj)
-		return
-	}
-	namespace := keySlice[0]
-	rmErr := common.RemoveFileAndDir(namespace, common.ResetInfoCMNamePrefix+jobName)
-	if rmErr != nil {
-		hwlog.RunLog.Errorf("Failed to remove file: %v", rmErr)
-	}
-	delete(hrt.jobs, event.Key)
-	hrt.queue.Forget(obj)
-}
-
-func (hrt *HotResetTools) getPodFromCache(podKey string) (*v1.Pod, error) {
-	item, exist, err := hrt.podIndexer.GetByKey(podKey)
-	if err != nil || !exist {
-		return nil, fmt.Errorf("get pod(%s) failed, err: %v, exist: %v", podKey, err, exist)
-	}
-	pod, ok := item.(*v1.Pod)
-	if !ok {
-		return nil, fmt.Errorf("convert pod(%s) failed", podKey)
-	}
-	return pod, nil
-}
-
-// GetCMFromCache get configmap from indexer cache
-func (hrt *HotResetTools) GetCMFromCache(cmKey string) (*v1.ConfigMap, error) {
-	item, exist, err := hrt.cmIndexer.GetByKey(cmKey)
-	if err != nil || !exist {
-		return nil, fmt.Errorf("get cm(%s) failed, err: %v, exist: %v", cmKey, err, exist)
-	}
-	cm, ok := item.(*v1.ConfigMap)
-	if !ok {
-		return nil, fmt.Errorf("convert pod(%s) failed", cmKey)
-	}
-	return cm, nil
-}
-
-func (hrt *HotResetTools) writeCMToFile(cm *v1.ConfigMap) error {
-	data, ok := cm.Data[common.ResetInfoCMDataKey]
-	if !ok {
-		return fmt.Errorf("cm(%s) data(%s) not exist", cm.Name, common.ResetInfoCMDataKey)
-	}
-	writeErr := common.WriteToFile(data, common.GenResetFileName(cm.Namespace, cm.Name))
-	if writeErr != nil {
-		return fmt.Errorf("failed to write data to file: %v", writeErr)
-	}
-	hwlog.RunLog.Debugf("write cm(%s) data(%s) to file success", cm.Name, data)
-
-	restartType, ok := cm.Data[common.ResetInfoTypeKey]
-	if ok {
-		err := common.WriteToFile(restartType, common.GenResetTypeFileName(cm.Namespace, cm.Name))
-		if err != nil {
-			return fmt.Errorf("failed to write restartType to file: %v", err)
-		}
-		hwlog.RunLog.Debugf("write cm(%s) restartType(%s) to file success", cm.Name, restartType)
-	}
-	return nil
-}
-
-func (hrt *HotResetTools) handleConfigMapEvent(obj interface{}) {
-	switch obj.(kubeclient.Event).Type {
-	case kubeclient.EventTypeUpdate:
-		hrt.handleCMUpdateEvent(obj)
-	case kubeclient.EventTypeDelete:
-		hrt.handleCMDeleteEvent(obj)
-	default:
-		hrt.queue.Forget(obj)
-		hwlog.RunLog.Debugf("hotReset scene not watch %s event(%s)", obj.(kubeclient.Event).Resource,
-			obj.(kubeclient.Event).Type)
-	}
-}
-
-func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
-	event, ok := obj.(kubeclient.Event)
-	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event failed")
-		return
-	}
-	hwlog.RunLog.Infof("handle cm(%s) update event", event.Key)
-	cm, err := hrt.GetCMFromCache(event.Key)
-	if err != nil {
-		hwlog.RunLog.Errorf("get cm(%s) failed, err: %v", event.Key, err)
-		hrt.queue.Forget(obj)
-		return
-	}
-
-	path := common.GenResetFileName(cm.Namespace, cm.Name)
-	if _, checkErr := os.Stat(path); checkErr != nil {
-		hwlog.RunLog.Debugf("check file(%s) failed, err: %s", path, checkErr)
-		hrt.queue.Forget(obj)
-		return
-	}
-
-	if err = hrt.writeCMToFile(cm); err != nil {
-		hwlog.RunLog.Errorf("Failed to write cm(%s) to file, err: %v", cm.Name, err)
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
-	hrt.queue.Forget(obj)
-}
-
-func (hrt *HotResetTools) handleCMDeleteEvent(obj interface{}) {
-	event, ok := obj.(kubeclient.Event)
-	if !ok {
-		hwlog.RunLog.Errorf("get kube-client event failed")
-		return
-	}
-	hwlog.RunLog.Debugf("handle cm(%s) delete event", event.Key)
-	keySlice := strings.Split(event.Key, "/")
-	if len(keySlice) != common.KeySliceLength {
-		hrt.queue.Forget(obj)
-		return
-	}
-	namespace, name := keySlice[0], keySlice[1]
-	rmErr := common.RemoveFileAndDir(namespace, name)
-	if rmErr != nil {
-		hwlog.RunLog.Errorf("Failed to remove file: %v", rmErr)
-	}
-	hrt.queue.Forget(obj)
-}
-
-func checkConfigMap(obj interface{}) bool {
-	cm, ok := obj.(*v1.ConfigMap)
-	if !ok {
-		hwlog.RunLog.Debugf("Cannot convert to ConfigMap:%#v", obj)
-		return false
-	}
-	return strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix)
 }
 
 // GetRingNum get device num in a ring
@@ -430,27 +153,16 @@ func (hrt *HotResetTools) GetDevListInReset() map[int32]struct{} {
 	return hrt.resetDev
 }
 
-// GetGlobalDevFaultInfo return global device fault info from cache using input logic id
-func (hrt *HotResetTools) GetGlobalDevFaultInfo(logicID int32) (*common.DevFaultInfo, error) {
-	globalDevFaultInfo, ok := hrt.globalDevFaultInfo[logicID]
-	if !ok {
-		return nil, fmt.Errorf("device %d is not in global device fault info list cache", logicID)
-	}
-	return globalDevFaultInfo, nil
-}
-
 // GetDevProcessPolicy return the policy of device with fault
 func (hrt *HotResetTools) GetDevProcessPolicy(faultType string) string {
 	switch faultType {
-	case common.NormalNPU, common.NotHandleFault, common.SubHealthFault:
+	case common.NormalNPU, common.NotHandleFault:
 		return common.EmptyError
 	case common.RestartRequest:
 		return common.RestartRequestError
 	case common.RestartBusiness:
 		return common.RestartError
-	case common.FreeRestartNPU:
-		return common.FreeResetError
-	case common.RestartNPU:
+	case common.FreeRestartNPU, common.RestartNPU:
 		return common.ResetError
 	default:
 		return common.IsolateError
@@ -512,7 +224,7 @@ func (hrt *HotResetTools) GetDevListByPolicyLevel(devFaultInfoList []*common.Tas
 	return devList, nil
 }
 
-// GetNeedResetDevMap return device logic id list to be reset
+// GetNeedResetDevList return device logic id list to be reset
 func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
 	needResetDevMap := make(map[int32]int32)
 	for _, devFaultInfo := range devFaultInfoList {
@@ -605,7 +317,16 @@ func (hrt *HotResetTools) GetFaultDev2PodMap() (map[int32]v1.Pod, error) {
 
 // GetTaskNameByPod get task name which written by volcano or operator
 func (hrt *HotResetTools) GetTaskNameByPod(pod v1.Pod) string {
-	return common.GetJobNameOfPod(&pod)
+	taskName, ok := pod.Annotations[common.ResetTaskNameKey]
+	if !ok {
+		taskName, ok = pod.Labels[common.ResetTaskNameKeyInLabel]
+		if !ok {
+			hwlog.RunLog.Error("failed to get task name by task key")
+			return ""
+		}
+	}
+
+	return taskName
 }
 
 // GenerateTaskDevFaultInfoList generate device fault info list in a task by device logic id list and rank index
@@ -670,7 +391,7 @@ func (hrt *HotResetTools) UpdateFaultDev2PodMap(devList []int32, pod v1.Pod) err
 }
 
 // UpdateGlobalDevFaultInfoCache update global device fault info cache
-func (hrt *HotResetTools) UpdateGlobalDevFaultInfoCache(devDeviceList []*common.NpuDevice, isoDevList []int32) error {
+func (hrt *HotResetTools) UpdateGlobalDevFaultInfoCache(devDeviceList []*common.NpuDevice) error {
 	if len(devDeviceList) == 0 {
 		return fmt.Errorf("npu device list is nil")
 	}
@@ -679,12 +400,8 @@ func (hrt *HotResetTools) UpdateGlobalDevFaultInfoCache(devDeviceList []*common.
 		hrt.globalDevFaultInfo[device.LogicID] = &common.DevFaultInfo{}
 		hrt.globalDevFaultInfo[device.LogicID].LogicId = device.LogicID
 		hrt.globalDevFaultInfo[device.LogicID].ErrorCode = device.FaultCodes
-		if common.IntInList(device.LogicID, isoDevList) {
-			hrt.globalDevFaultInfo[device.LogicID].Policy = common.IsolateError
-		} else {
-			hrt.globalDevFaultInfo[device.LogicID].Policy =
-				hrt.GetDevProcessPolicy(common.GetFaultType(device.FaultCodes, device.LogicID))
-		}
+		hrt.globalDevFaultInfo[device.LogicID].Policy =
+			hrt.GetDevProcessPolicy(common.GetFaultType(device.FaultCodes, device.LogicID))
 	}
 	return nil
 }
@@ -721,8 +438,7 @@ func (hrt *HotResetTools) UpdateFreeTask(taskListUsedDevice map[string]struct{},
 	for taskName := range hrt.resetTask {
 		if _, ok := taskListUsedDevice[taskName]; !ok || hrt.isTaskDevListChange(taskName, newTaskDevList) {
 			delete(hrt.resetTask, taskName)
-			hwlog.RunLog.Infof("success to delete task reset cache for %s, is in used list: %v, "+
-				"reset tasks is %v", taskName, ok, hrt.resetTask)
+			hwlog.RunLog.Infof("success to delete task reset cache for %s, is in used list: %v", taskName, ok)
 		}
 	}
 }
@@ -746,7 +462,6 @@ func (hrt *HotResetTools) IsCurNodeTaskInReset(taskName string) bool {
 	return true
 }
 
-// IsExistFaultyDevInTask check if any fault device exist on current task
 func (hrt *HotResetTools) IsExistFaultyDevInTask(taskName string) bool {
 	if _, ok := hrt.allTaskDevList[taskName]; !ok {
 		hwlog.RunLog.Warnf("task: %s is not exist in cache", taskName)
@@ -776,7 +491,6 @@ func (hrt *HotResetTools) SetTaskInReset(taskName string) error {
 		return fmt.Errorf("task %s is resetting", taskName)
 	}
 	hrt.resetTask[taskName] = struct{}{}
-	hwlog.RunLog.Infof("set task %s to reset state, reset tasks is %v", taskName, hrt.resetTask)
 	return nil
 }
 
@@ -824,7 +538,6 @@ func (hrt *HotResetTools) UnSetTaskInReset(taskName string) error {
 		return fmt.Errorf("task %s is not in reset task cache", taskName)
 	}
 	delete(hrt.resetTask, taskName)
-	hwlog.RunLog.Infof("success to delete task reset cache for %s, reset tasks is %v", taskName, hrt.resetTask)
 	return nil
 }
 

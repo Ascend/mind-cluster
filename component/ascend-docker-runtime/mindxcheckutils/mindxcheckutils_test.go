@@ -21,10 +21,6 @@ import (
 	"testing"
 )
 
-const (
-	fileMode0600 os.FileMode = 0600
-)
-
 func TestNormalFileCheckRegularFile(t *testing.T) {
 	tmpDir, filePath, err := createTestFile(t, "test_file.txt")
 	defer removeTmpDir(t, tmpDir)
@@ -159,14 +155,9 @@ func createTestFile(t *testing.T, fileName string) (string, string, error) {
 	if os.MkdirAll(tmpDir+"/__test__", permission) != nil {
 		t.Fatalf("MkdirAll failed %q", tmpDir+"/__test__")
 	}
-	f, err := os.Create(tmpDir + "/__test__" + fileName)
+	_, err := os.Create(tmpDir + "/__test__" + fileName)
 	if err != nil {
 		t.Fatalf("create file failed %q: %s", tmpDir+"/__test__", err)
-	}
-	defer f.Close()
-	err = f.Chmod(fileMode0600)
-	if err != nil {
-		t.Logf("chmod file error: %v", err)
 	}
 	return tmpDir + "/__test__", tmpDir + "/__test__" + fileName, err
 }
@@ -174,26 +165,5 @@ func createTestFile(t *testing.T, fileName string) (string, string, error) {
 func removeTmpDir(t *testing.T, tmpDir string) {
 	if os.RemoveAll(tmpDir) != nil {
 		t.Logf("removeall %v", tmpDir)
-	}
-}
-
-// TestChangeRuntimeLogMode tests the function ChangeRuntimeLogMode
-func TestChangeRuntimeLogMode(t *testing.T) {
-	tests := []struct {
-		name    string
-		runLog  string
-		wantErr bool
-	}{
-		{
-			name:   "case 1",
-			runLog: "",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := ChangeRuntimeLogMode(tt.runLog); (err != nil) != tt.wantErr {
-				t.Errorf("ChangeRuntimeLogMode() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
 	}
 }

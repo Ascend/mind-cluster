@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -32,47 +31,8 @@ var (
 
 // NodeDeviceInfoCache record node NPU device information. Will be solidified into cm.
 type NodeDeviceInfoCache struct {
-	DeviceInfo  NodeDeviceInfo
-	SuperPodID  int32
-	ServerIndex int32
-	CheckCode   string
-}
-
-// SwitchFaultEvent is the struct for switch reported fault
-type SwitchFaultEvent struct {
-	EventType uint
-	// SubType fault subtype used for id a fault
-	SubType uint
-	// FaultType To maintain compatibility with next incoming switch fault codes changes
-	// this filed is reserved for next version
-	// in this version this field is obtained through manually mapping in device-plugin
-	// next version this filed will be reported by switch driver
-	FaultID uint
-	// AssembledFaultCode is to assemble cgo lq.struct_LqDcmiEvent to a device-plugin recognized fault code type
-	// such as : [0x00f103b0,155904,na,na] in config file: SwitchFaultCode
-	AssembledFaultCode string
-	// PeerPortDevice used to tell what kind of device connected to
-	PeerPortDevice uint
-	PeerPortId     uint
-	SwitchChipId   uint
-	SwitchPortId   uint
-	// Severity used to tell how serious is the fault
-	Severity uint
-	// Assertion tell what kind of fault, recover, happen or once
-	Assertion       uint
-	EventSerialNum  int
-	NotifySerialNum int
-	AlarmRaisedTime int64
-	AdditionalParam string
-	AdditionalInfo  string
-}
-
-// SwitchFaultInfo Switch Fault Info
-type SwitchFaultInfo struct {
-	FaultCode  []string
-	FaultLevel string
-	UpdateTime int64
-	NodeStatus string
+	DeviceInfo NodeDeviceInfo
+	CheckCode  string
 }
 
 // NodeDeviceInfo record node NPU device information. Will be solidified into cm.
@@ -97,26 +57,22 @@ type NpuAllInfo struct {
 
 // NpuDevice npu device description
 type NpuDevice struct {
-	FaultCodes             []int64
-	AlarmRaisedTime        int64
-	NetworkFaultCodes      []int64
-	NetworkAlarmRaisedTime int64
-	DevType                string
-	DeviceName             string
-	Health                 string
-	NetworkHealth          string
-	CardDrop               bool
-	IP                     string
-	LogicID                int32
-	PhyID                  int32
-	CardID                 int32
-	SuperDeviceID          uint32
-	Status                 string
+	FaultCodes        []int64
+	AlarmRaisedTime   int64
+	DevType           string
+	DeviceName        string
+	Health            string
+	NetworkRealHealth string
+	NetworkHealth     string
+	CardDrop          bool
+	IP                string
+	LogicID           int32
+	PhyID             int32
+	CardID            int32
 }
 
 // DavinCiDev davinci device
 type DavinCiDev struct {
-	IP      string
 	LogicID int32
 	PhyID   int32
 	CardID  int32
@@ -124,17 +80,15 @@ type DavinCiDev struct {
 
 // Device id for Instcance
 type Device struct { // Device
-	DeviceID      string `json:"device_id"` // device id
-	DeviceIP      string `json:"device_ip"` // device ip
-	SuperDeviceID string `json:"super_device_id,omitempty"`
+	DeviceID string `json:"device_id"` // device id
+	DeviceIP string `json:"device_ip"` // device ip
 }
 
 // Instance is for annotation
 type Instance struct { // Instance
-	PodName    string   `json:"pod_name"`  // pod Name
-	ServerID   string   `json:"server_id"` // serverdId
-	SuperPodId int32    `json:"super_pod_id"`
-	Devices    []Device `json:"devices"` // dev
+	PodName  string   `json:"pod_name"`  // pod Name
+	ServerID string   `json:"server_id"` // serverdId
+	Devices  []Device `json:"devices"`   // dev
 }
 
 // Option option
@@ -145,7 +99,6 @@ type Option struct {
 	AutoStowingDevs    bool     // auto stowing fixes devices or not
 	PresetVDevice      bool     // preset virtual device
 	Use310PMixedInsert bool     // chose 310P mixed insert mode
-	GraceToleranceOn   bool     // check if grace tolerance is on
 	ListAndWatchPeriod int      // set listening device state period
 	HotReset           int      // unhealthy chip hot reset
 	ShareCount         uint     // share device count
@@ -154,8 +107,6 @@ type Option struct {
 	ProductTypes       []string // all product types
 	RealCardType       string   // real card type
 	LinkdownTimeout    int64    // linkdown timeout duration
-	DealWatchHandler   bool     // update pod cache when receiving pod informer watch errors
-	EnableSwitchFault  bool     // if enable switch faul
 	CheckCachedPods    bool     // check cached pods periodically
 }
 
@@ -187,7 +138,6 @@ type DevStatusSet struct {
 	UnHealthyDevice    sets.String
 	NetUnHealthyDevice sets.String
 	HealthDevices      sets.String
-	RecoveringDevices  sets.String
 	FreeHealthyDevice  map[string]sets.String
 	DeviceFault        []DeviceFault
 }
@@ -200,7 +150,6 @@ type DeviceFault struct {
 	FaultLevel           string `json:"fault_level"`
 	FaultHandling        string `json:"fault_handling"`
 	FaultCode            string `json:"fault_code"`
-	FaultTime            int64  `json:"fault_time"`
 }
 
 // TaskResetInfoCache record task reset device information cache
@@ -213,7 +162,6 @@ type TaskResetInfoCache struct {
 type TaskResetInfo struct {
 	RankList   []*TaskDevInfo
 	UpdateTime int64
-	RetryTime  int
 }
 
 // TaskDevInfo is the device info of a task
@@ -244,14 +192,6 @@ type TaskFaultInfo struct {
 	UpdateTime int64
 }
 
-// SuperPodInfo is super pod info
-type SuperPodInfo struct {
-	ScaleType  int32
-	SuperPodId int32
-	ServerId   int32
-	Reserve    []int32
-}
-
 // Get310PProductType get 310P product type
 func Get310PProductType() map[string]string {
 	return map[string]string{
@@ -259,17 +199,4 @@ func Get310PProductType() map[string]string {
 		"Atlas 300V":     Ascend310PV,
 		"Atlas 300I Pro": Ascend310PIPro,
 	}
-}
-
-// PodDeviceInfo define device info of pod, include kubelet allocate and real allocate device
-type PodDeviceInfo struct {
-	Pod        v1.Pod
-	KltDevice  []string
-	RealDevice []string
-}
-
-// NpuBaseInfo is the base info of npu
-type NpuBaseInfo struct {
-	IP            string
-	SuperDeviceID uint32
 }

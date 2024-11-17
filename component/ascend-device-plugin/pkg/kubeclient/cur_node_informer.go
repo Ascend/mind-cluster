@@ -18,52 +18,29 @@ package kubeclient
 import (
 	"reflect"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
-
-	"Ascend-device-plugin/pkg/common"
 )
 
 // InitPodInformer init pod informer
 func (ki *ClientK8s) InitPodInformer() {
-	factory := informers.NewSharedInformerFactoryWithOptions(ki.Clientset, 0,
-		informers.WithTweakListOptions(func(options *v1.ListOptions) {
-			options.FieldSelector = "spec.nodeName=" + ki.NodeName
-		}))
+	factory := informers.NewSharedInformerFactoryWithOptions(ki.Clientset, 0, informers.WithTweakListOptions(func(options *v1.ListOptions) {
+		options.FieldSelector = "spec.nodeName=" + ki.NodeName
+	}))
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			UpdatePodList(nil, obj, EventTypeAdd)
+			UpdatePodList(nil, obj, podAddOperator)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if !reflect.DeepEqual(oldObj, newObj) {
-				UpdatePodList(oldObj, newObj, EventTypeUpdate)
+				UpdatePodList(oldObj, newObj, podUpdateOperator)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			UpdatePodList(nil, obj, EventTypeDelete)
+			UpdatePodList(nil, obj, podDeleteOperator)
 		},
 	})
-	podInformer.AddEventHandler(ki.ResourceEventHandler(PodResource, checkPod))
-	podInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
-		hwlog.RunLog.Errorf("pod informer watch error: %v", err)
-		if common.ParamOption.DealWatchHandler {
-			ki.FlushPodCacheNextQuerying()
-		}
-	})
 	factory.Start(make(chan struct{}))
-
-	ki.PodInformer = podInformer
-}
-
-func checkPod(obj interface{}) bool {
-	pod, ok := obj.(*corev1.Pod)
-	if !ok {
-		return false
-	}
-	_, exist := pod.Annotations[common.HuaweiAscend910]
-	return exist
 }

@@ -29,7 +29,7 @@ function check_log {
 
     check_sub_path ${INSTALL_LOG_DIR}
     if [[ $? != 0 ]]; then
-        echo "[ERROR] ${INSTALL_LOG_DIR} is invalid"
+        echo "[ERROR]: ${INSTALL_LOG_DIR} is invalid"
         exit 1
     fi
 
@@ -60,11 +60,11 @@ function log {
 function check_path {
     local path="$1"
     if [[ ${#path} -gt 1024 ]] || [[ ${#path} -le 0 ]]; then
-        echo "[ERROR] parameter is invalid, length not in 1~1024"
+        echo "[ERROR]: parameter is invalid, length not in 1~1024"
         return 1
     fi
     if [[ -n $(echo "${path}" | grep -Ev '^[a-zA-Z0-9./_-]*$') ]]; then
-        echo "[ERROR] parameter is invalid, char not all in 'a-zA-Z0-9./_-'"
+        echo "[ERROR]: parameter is invalid, char not all in 'a-zA-Z0-9./_-'"
         return 1
     fi
     path=$(realpath -m -s "${path}")
@@ -99,16 +99,16 @@ function check_sub_path {
 function check_path_permission {
     local path="$1"
     if [[ -L "${path}" ]]; then
-        echo "[ERROR] ${path} is soft link"
+        echo "[ERROR]: ${path} is soft link"
         return 1
     fi
     if [[ $(stat -c %u "${path}") != 0 ]] || [[ "$(stat -c %g ${path})" != 0 ]]; then
-        echo "[ERROR] user or group of ${path} is not root"
+        echo "[ERROR]: user or group of ${path} is not root"
         return 1
     fi
     local permission=$(stat -c %A "${path}")
     if [[ $(echo "${permission}" | cut -c6) == w ]] || [[ $(echo "${permission}" | cut -c9) == w ]]; then
-        echo "[ERROR] group or other of ${path} has write permisson"
+        echo "[ERROR]:  group or other of ${path} has write permisson"
         return 1
     fi
 }
@@ -123,25 +123,17 @@ fi
 
 ROOT=$(cd $(dirname $0); pwd)/..
 RESERVEDEFAULT=no
-if [ "$1" == "isula" ] ; then
+if [ "$*" == "isula" ] ; then
   DST='/etc/isulad/daemon.json'
-  echo "[INFO] You will recover iSula's daemon"
+  echo "[INFO]: You will recover iSula's daemon"
   RESERVEDEFAULT=yes
 else
   DST='/etc/docker/daemon.json'
-  echo "[INFO] You will recover Docker's daemon"
+  echo "[INFO]: You will recover Docker's daemon"
 fi
-INSTALL_SCENE=$2
-if [ "${INSTALL_SCENE}" == "containerd" ] ; then
-  DST='/etc/containerd/config.toml'
-elif [ "${INSTALL_SCENE}" == "" ] ; then
-  INSTALL_SCENE=docker
-fi
-CONFIG_FILE_PATH=$3
-if [[ ${CONFIG_FILE_PATH} != "" ]]; then
-  DST=${CONFIG_FILE_PATH}
-fi
+
 SRC="${DST}.${PPID}"
+
 if [ ! -f "${DST}" ]; then
     log "[WARNING]" "uninstall skipping, ${DST} does not exist"
     exit 0
@@ -152,11 +144,11 @@ if [[ $? != 0 ]]; then
     log "[ERROR]" "uninstall failed, ${DST} is invalid"
     exit 1
 fi
-CGROUP_INFO=$(stat -fc %T /sys/fs/cgroup/)
+
 # exit when return code is not 0, if use 'set -e'
-${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} > /dev/null
+${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} > /dev/null
 if [[ $? != 0 ]]; then
-    log "[ERROR]" "uninstall failed, '${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO}' return non-zero"
+    log "[ERROR]" "uninstall failed, '${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT}' return non-zero"
     exit 1
 fi
 
@@ -180,6 +172,6 @@ fi
 if test -d ${INSTALL_ROOT_PATH}
 then
     rm -rf ${INSTALL_ROOT_PATH}
-    echo "[INFO] delete ${INSTALL_ROOT_PATH} successful"
+    echo "[INFO]: delete ${INSTALL_ROOT_PATH} successful"
 fi
 log "[INFO]" "uninstall.sh exec success"

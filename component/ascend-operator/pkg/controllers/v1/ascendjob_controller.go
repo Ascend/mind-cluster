@@ -1,38 +1,28 @@
 /*
 Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 /*
 Package controllers is using for reconcile AscendJob.
 */
 
-package v1
+package controllers
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/common/pkg/controller.v1/control"
-	"github.com/kubeflow/common/pkg/util"
+	"github.com/kubeflow/common/pkg/controller.v1/expectation"
+	commonutil "github.com/kubeflow/common/pkg/util"
+	"github.com/kubeflow/training-operator/pkg/common/util"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -40,10 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
+	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -53,14 +43,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
-	"volcano.sh/apis/pkg/client/clientset/versioned"
+	volcanoclient "volcano.sh/apis/pkg/client/clientset/versioned"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	"ascend-operator/pkg/ranktable"
-	"ascend-operator/pkg/ranktable/generator"
-	"ascend-operator/pkg/ranktable/utils"
 )
 
 // NewReconciler new reconciler for AscendJob
@@ -72,22 +58,20 @@ func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconci
 		recorder:      mgr.GetEventRecorderFor(controllerName),
 		versions:      make(map[types.UID]int32),
 		backoffLimits: make(map[types.UID]int32),
-		rtGenerators:  make(map[types.UID]generator.RankTableGenerator),
 	}
 
 	cfg := mgr.GetConfig()
-	kubeClientSet := kubernetes.NewForConfigOrDie(cfg)
-	volcanoClientSet := versioned.NewForConfigOrDie(cfg)
+	kubeClientSet := kubeclientset.NewForConfigOrDie(cfg)
+	volcanoClientSet := volcanoclient.NewForConfigOrDie(cfg)
 	sharedInformers := informers.NewSharedInformerFactory(kubeClientSet, 0)
 	priorityClassInformer := sharedInformers.Scheduling().V1beta1().PriorityClasses()
 
 	r.JobController = common.JobController{
 		Controller:                  r,
+		Expectations:                expectation.NewControllerExpectations(),
 		Config:                      common.JobControllerConfiguration{EnableGangScheduling: enableGangScheduling},
-		WorkQueue:                   workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		WorkQueue:                   &util.FakeWorkQueue{},
 		Recorder:                    r.recorder,
-		PodLister:                   sharedInformers.Core().V1().Pods().Lister(),
-		ServiceLister:               sharedInformers.Core().V1().Services().Lister(),
 		KubeClientSet:               kubeClientSet,
 		VolcanoClientSet:            volcanoClientSet,
 		PriorityClassLister:         priorityClassInformer.Lister(),
@@ -108,39 +92,53 @@ type ASJobReconciler struct {
 	apiReader     client.Reader
 	versions      map[types.UID]int32
 	backoffLimits map[types.UID]int32
-	rtGenerators  map[types.UID]generator.RankTableGenerator
 }
+
+//+kubebuilder:rbac:groups=mindxdl.gitee.com,resources=msjobs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=mindxdl.gitee.com,resources=msjobs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=mindxdl.gitee.com,resources=msjobs/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// Modify the Reconcile function to compare the state specified by
+// TODO(user): Modify the Reconcile function to compare the state specified by
 // the AscendJob object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
+//
+// For more details, check Reconcile and its Result here:
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
-	if r.isVcjobOrDeploy(ctx, req) {
-		return ctrl.Result{}, nil
-	}
 	ascendjob := &mindxdlv1.AscendJob{}
-	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
-		if k8serr.IsNotFound(err) {
-			hwlog.RunLog.Debugf("unable to fetch AscendJob<%s>, err: %s", req.NamespacedName, err)
-		} else {
-			hwlog.RunLog.Errorf("unable to fetch AscendJob<%s>, err: %s", req.NamespacedName, err)
-		}
+	err := r.Get(ctx, req.NamespacedName, ascendjob)
+	if err != nil {
+		hwlog.RunLog.Warnf("unable to fetch AscendJob<%s>, err: %s", req.NamespacedName.String(), err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := r.validateJob(ascendjob); err != nil {
-		hwlog.RunLog.Errorf("AscendJob<%s> failed validation, err: %v", req.NamespacedName, err)
+	if err = r.validateV1ReplicaSpecs(ascendjob, ascendjob.Spec.ReplicaSpecs); err != nil {
+		hwlog.RunLog.Errorf("AscendJob<%s> failed validation, err: %s", req.NamespacedName.String(), err)
 		return ctrl.Result{}, r.UpdateJobStatusInApiServer(ascendjob, &ascendjob.Status)
 	}
 
-	if ascendjob.GetDeletionTimestamp() != nil {
-		hwlog.RunLog.Infof("reconcile cancelled，job<%s> has been deleted", req.NamespacedName)
+	// Check if reconciliation is needed
+	jobKey, err := common.KeyFunc(ascendjob)
+	if err != nil {
+		hwlog.RunLog.Errorf("couldn't get jobKey for job object %#v: %v", ascendjob, err)
+		utilruntime.HandleError(fmt.Errorf("couldn't get jobKey for job object %#v: %v", ascendjob, err))
+	}
+
+	replicaTypes := util.GetReplicaTypes(ascendjob.Spec.ReplicaSpecs)
+	needReconcile := util.SatisfiedExpectations(r.Expectations, jobKey, replicaTypes)
+
+	if !needReconcile || ascendjob.GetDeletionTimestamp() != nil {
+		hwlog.RunLog.Infof("reconcile cancelled, job<%s> does not need to do reconcile or has been deleted",
+			"need sync: %v, have deleted: %v", req.NamespacedName.String(), needReconcile,
+			ascendjob.GetDeletionTimestamp() != nil)
 		delete(r.versions, ascendjob.UID)
 		delete(r.backoffLimits, ascendjob.UID)
 		return ctrl.Result{}, nil
@@ -150,40 +148,15 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	r.Scheme.Default(ascendjob)
 
 	// Use common to reconcile the job related pod and service
-	err := r.ReconcileJobs(ascendjob, ascendjob.Spec.ReplicaSpecs, ascendjob.Status, &ascendjob.Spec.RunPolicy)
+	err = r.ReconcileJobs(ascendjob, ascendjob.Spec.ReplicaSpecs, ascendjob.Status, &ascendjob.Spec.RunPolicy)
 	if err != nil {
 		if k8serr.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
 		}
-		hwlog.RunLog.Warnf("Reconcile AscendJob<%s> failed err: %s", req.NamespacedName, err)
+		hwlog.RunLog.Warnf("Reconcile AscendJob<%s> failed err: %s", req.NamespacedName.String(), err)
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
-}
-
-func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request) bool {
-	// try fetch deployment
-	deploy := &appv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		r.ranktablePipeline(decorateDeploy(deploy))
-		return true
-	}
-	// try fetch vcjob
-	vcjob := &v1alpha1.Job{}
-	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
-		r.ranktablePipeline(decorateVcjob(vcjob))
-		return true
-	}
-	return false
-}
-
-func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
-	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
-		return
-	}
-	r.genRankTable(ji)
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -195,104 +168,72 @@ func (r *ASJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	c, err := controller.New(r.ControllerName(), mgr, controller.Options{
 		Reconciler: r,
 	})
+
 	if err != nil {
 		return err
 	}
 
-	return r.watchRelatedResource(c, mgr)
-}
-
-type resourceOption struct {
-	kind          *source.Kind
-	predicateFunc predicate.Funcs
-}
-
-func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
+	// using onOwnerCreateFunc is easier to set defaults
+	if err = c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
 
-	resourceOptions := []*resourceOption{
-		{kind: &source.Kind{Type: &corev1.Pod{}}, predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}},
-		{kind: &source.Kind{Type: &corev1.Service{}}},
+	// inject watching for job related pod
+	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mindxdlv1.AscendJob{},
+	}, predicate.Funcs{
+		CreateFunc: util.OnDependentCreateFunc(r.Expectations),
+		UpdateFunc: util.OnDependentUpdateFunc(&r.JobController),
+		DeleteFunc: r.onPodDeleteFunc(r.Expectations),
+	}); err != nil {
+		return err
+	}
+
+	// inject watching for job related service
+	if err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mindxdlv1.AscendJob{},
+	}, predicate.Funcs{
+		CreateFunc: util.OnDependentCreateFunc(r.Expectations),
+		UpdateFunc: util.OnDependentUpdateFunc(&r.JobController),
+		DeleteFunc: util.OnDependentDeleteFunc(r.Expectations),
+	}); err != nil {
+		return err
 	}
 
 	if r.Config.EnableGangScheduling {
-		_, mapErr := mgr.GetRESTMapper().RESTMapping(schema.GroupKind{Group: v1beta1.SchemeGroupVersion.Group,
-			Kind: "PodGroup"},
+		_, err = mgr.GetRESTMapper().RESTMapping(schema.GroupKind{Group: v1beta1.SchemeGroupVersion.Group, Kind: "PodGroup"},
 			v1beta1.SchemeGroupVersion.Version)
-		if mapErr != nil {
-			hwlog.RunLog.Errorf("enableGangScheduling is true, but PodGroup is not in cluster")
-			return mapErr
+		if err != nil {
+			hwlog.RunLog.Infof("enableGangScheduling is true, but PodGroup is not in cluster")
+			return err
 		}
-		resourceOptions = append(resourceOptions, &resourceOption{kind: &source.Kind{Type: &v1beta1.PodGroup{}}})
-	}
-
-	for _, src := range resourceOptions {
-		if err := c.Watch(src.kind, &handler.EnqueueRequestForOwner{
+		if err = c.Watch(&source.Kind{Type: &v1beta1.PodGroup{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
 			OwnerType:    &mindxdlv1.AscendJob{},
-		}, src.predicateFunc); err != nil {
+		}, predicate.Funcs{
+			CreateFunc: util.OnDependentCreateFunc(r.Expectations),
+			UpdateFunc: util.OnDependentUpdateFuncGeneric(&r.JobController),
+			DeleteFunc: util.OnDependentDeleteFunc(r.Expectations),
+		}); err != nil {
 			return err
 		}
 	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Job{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &DeployRktHandler{
-		IsController: true,
-		OwnerType:    &appv1.Deployment{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
-		return err
-	}
+
 	return nil
 }
-
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		switch e.Object.(type) {
-		case *v1alpha1.Job:
-			vcjob := e.Object.(*v1alpha1.Job)
-			if _, ok := vcjob.Labels[atlasTaskKey]; !ok {
-				return false
-			}
-			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
-			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
-			return true
-		case *appv1.Deployment:
-			deploy := e.Object.(*appv1.Deployment)
-			if _, ok := deploy.Labels[atlasTaskKey]; !ok {
-				return false
-			}
-			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
-			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
-			return true
-		default:
-			hwlog.RunLog.Info("job type is not volcano job or deployment")
-		}
-
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return true
 		}
 		msg := fmt.Sprintf("AscendJob %s is create.", e.Object.GetName())
 		hwlog.RunLog.Info(msg)
-		err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "AscendCreated", msg)
+		err := commonutil.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "AscendCreated", msg)
 		if err != nil {
 			log.Log.Error(err, "append job condition error")
 			return false
@@ -305,11 +246,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			hwlog.RunLog.Errorf("failed to get fault-retry-times, error: %v", err)
 			return false
 		}
-		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
-			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
-			hwlog.RunLog.Infof("create rtGenerator for frame %s ascendJob %s", frame, ascendJob.Name)
-		}
-
+		hwlog.RunLog.Debugf("now backoffLimits: %v", r.backoffLimits)
 		return true
 	}
 }
@@ -326,18 +263,13 @@ func (r *ASJobReconciler) setFaultRetryTimesToBackoffLimits(ascendJob *mindxdlv1
 			return err
 		}
 		r.backoffLimits[ascendJob.UID] = int32(faultRetryTimes)
+		hwlog.RunLog.Warnf("assigns the value of fault-retry-times to backoffLimits, fault-retry-times: %v", faultRetryTimes)
 	}
 	return nil
 }
 
 func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		if rtg, ok := r.rtGenerators[e.Object.GetUID()]; ok {
-			if err := rtg.DeleteFile(); err != nil {
-				hwlog.RunLog.Errorf("failed to delete ranktable, err: %v", err)
-			}
-			delete(r.rtGenerators, e.Object.GetUID())
-		}
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return false
@@ -350,79 +282,67 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 	}
 }
 
-func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace string, pod *corev1.Pod) {
-	rtg, exist := r.rtGenerators[uid]
-	if !exist {
-		return
-	}
-	curStatus := rtg.DeletePod(pod)
-	updateFileFail := filepathExist(rtg.GetPath()) && (curStatus == utils.CompletedRTStatus)
-	updateCmFail := false
-	if r.configmapExist(rtg, jobName, namespace) {
-		rtg.SetStatus(utils.InitialRTStatus)
-		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
-			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-			updateCmFail = true
-		}
-	}
-	if updateFileFail && updateCmFail {
-		rtg.SetStatus(utils.CompletedRTStatus)
-	}
-}
-
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
-func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
+func (r *ASJobReconciler) onPodDeleteFunc(
+	exp expectation.ControllerExpectationsInterface) func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		controllerRef := metav1.GetControllerOf(e.Object)
-		if controllerRef != nil {
-			r.deletePodForCmFile(controllerRef.UID, controllerRef.Name, e.Object.GetNamespace(), e.Object.(*corev1.Pod))
-		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
 			return false
 		}
-		version, ok := e.Object.GetLabels()[podVersionLabel]
-		if !ok || len(version) == 0 {
-			return false
-		}
-		versionNumber, err := strconv.Atoi(version)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to convert string to int, err: %v", err)
-			return false
-		}
-		hwlog.RunLog.Infof("deleted pod version is: %v", version)
-		if controllerRef == nil {
-			return true
-		}
-		currentVersion, ok := r.versions[controllerRef.UID]
-		if ok && int32(versionNumber) == currentVersion {
-			r.versions[controllerRef.UID]++
+
+		if controllerRef := metav1.GetControllerOf(e.Object); controllerRef != nil {
+			jobKey := fmt.Sprintf("%s/%s", e.Object.GetNamespace(), controllerRef.Name)
+			var expectKey string
+			if _, ok := e.Object.(*corev1.Pod); ok {
+				expectKey = expectation.GenExpectationPodsKey(jobKey, replicaType)
+			}
+
+			if _, ok := e.Object.(*corev1.Service); ok {
+				expectKey = expectation.GenExpectationServicesKey(jobKey, replicaType)
+			}
+
+			exp.DeletionObserved(expectKey)
+			return r.dealPodVersion(e, controllerRef)
 		}
 		return true
 	}
 }
 
-// ControllerName get controller name
+func (r *ASJobReconciler) dealPodVersion(e event.DeleteEvent, controllerRef *metav1.OwnerReference) bool {
+	version, ok := e.Object.GetLabels()[podVersionLabel]
+	if !ok || len(version) == 0 {
+		return false
+	}
+	versionNumber, err := strconv.Atoi(version)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to convert string to int, err: %v", err)
+		return false
+	}
+	hwlog.RunLog.Infof("deleted pod version is: %v", version)
+	currentVersion, ok := r.versions[controllerRef.UID]
+	if ok && int32(versionNumber) == currentVersion {
+		r.versions[controllerRef.UID]++
+	}
+	return true
+}
+
 func (r *ASJobReconciler) ControllerName() string {
 	return controllerName
 }
 
-// GetAPIGroupVersionKind get api group version kind
 func (r *ASJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
 	return mindxdlv1.GroupVersion.WithKind(mindxdlv1.Kind)
 }
 
-// GetAPIGroupVersion get api group version
 func (r *ASJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
 	return mindxdlv1.GroupVersion
 }
 
-// GetGroupNameLabelValue get group name label value
 func (r *ASJobReconciler) GetGroupNameLabelValue() string {
 	return mindxdlv1.GroupVersion.Group
 }
 
-// GetJobFromInformerCache get job from informer cache
 func (r *ASJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
 	ascendjob := &mindxdlv1.AscendJob{}
 	err := r.Get(context.Background(), types.NamespacedName{
@@ -431,23 +351,21 @@ func (r *ASJobReconciler) GetJobFromInformerCache(namespace, name string) (metav
 	return ascendjob, err
 }
 
-// GetJobFromAPIClient get job from api server
 func (r *ASJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
 	job := &mindxdlv1.AscendJob{}
 
 	err := r.apiReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			hwlog.RunLog.Warnf("AscendJob<%s/%s> not found, err: %s", namespace, name, err)
+			hwlog.RunLog.Errorf("AscendJob<%s-%s> not found, err: %s", namespace, name, err)
 		} else {
-			hwlog.RunLog.Errorf("failed to get AscendJob<%s/%s> from api-server. err: %s", namespace, name, err)
+			hwlog.RunLog.Errorf("failed to get AscendJob from api-server", namespace, name, err)
 		}
 		return nil, err
 	}
 	return job, nil
 }
 
-// DeleteJob deletes the job.
 func (r *ASJobReconciler) DeleteJob(job interface{}) error {
 	ascendjob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
@@ -465,7 +383,150 @@ func (r *ASJobReconciler) DeleteJob(job interface{}) error {
 	return nil
 }
 
-// UpdateJobStatusInApiServer update job status in api-server.
+func (r *ASJobReconciler) UpdateJobStatus(
+	job interface{},
+	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
+	jobStatus *commonv1.JobStatus) error {
+	if r == nil {
+		return errors.New("nil pointer")
+	}
+
+	ascendJob, ok := job.(*mindxdlv1.AscendJob)
+	if !ok {
+		return fmt.Errorf("%v is not a type of AscendJob", ascendJob)
+	}
+
+	jobKey, err := common.KeyFunc(ascendJob)
+	if err != nil {
+		hwlog.RunLog.Errorf("couldn't get key for ascendJob object %#v: %v", ascendJob, err)
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for ascendJob object %#v: %v", ascendJob, err))
+		return err
+	}
+
+	worker0Completed, err := r.IsWorker0Completed(ascendJob, replicas)
+	if err != nil {
+		hwlog.RunLog.Warnf("check if worker 0 completed error %s", err)
+		return err
+	}
+
+	// Set StartTime.
+	if jobStatus.StartTime == nil {
+		now := metav1.Now()
+		jobStatus.StartTime = &now
+		// enqueue a sync to check if job past ActiveDeadlineSeconds
+		if ascendJob.Spec.RunPolicy.ActiveDeadlineSeconds != nil {
+			hwlog.RunLog.Infof("Job with ActiveDeadlineSeconds will sync after %d seconds",
+				*ascendJob.Spec.RunPolicy.ActiveDeadlineSeconds)
+			r.WorkQueue.AddAfter(jobKey, time.Duration(*ascendJob.Spec.RunPolicy.ActiveDeadlineSeconds)*time.Second)
+		}
+	}
+
+	status := commonv1.ReplicaStatus{}
+	for _, st := range jobStatus.ReplicaStatuses {
+		status.Active += st.Active
+		status.Succeeded += st.Succeeded
+		status.Failed += st.Failed
+	}
+
+	var existingRestartingCondition *commonv1.JobCondition
+	for _, condition := range jobStatus.Conditions {
+		if condition.Type == commonv1.JobRestarting {
+			existingRestartingCondition = &commonv1.JobCondition{
+				Reason:  condition.Reason,
+				Message: condition.Message,
+			}
+		}
+	}
+
+	if status.Failed > 0 {
+		if err = r.reconcileWithFailed(ascendJob, jobStatus, existingRestartingCondition); err != nil {
+			return err
+		}
+	} else if status.Succeeded == getTotalTrainReplicas(ascendJob) || (worker0Completed &&
+		*ascendJob.Spec.SuccessPolicy != mindxdlv1.SuccessPolicyAllWorkers) {
+		msg := fmt.Sprintf("AscendJob<%s-%s> successfully completed.",
+			ascendJob.Namespace, ascendJob.Name)
+		r.recorder.Event(ascendJob, corev1.EventTypeNormal, commonutil.JobRunningReason, msg)
+		if jobStatus.CompletionTime == nil {
+			now := metav1.Now()
+			jobStatus.CompletionTime = &now
+		}
+		updateErr := commonutil.UpdateJobConditions(jobStatus,
+			commonv1.JobSucceeded, commonutil.JobRunningReason, msg)
+		if updateErr != nil {
+			hwlog.RunLog.Errorf("Append ascendJob<%s-%s> condition err: %v",
+				ascendJob.Namespace, ascendJob.Name, updateErr)
+			return updateErr
+		}
+	} else {
+		msg := fmt.Sprintf("AscendJob %s/%s is running.", ascendJob.Namespace, ascendJob.Name)
+		updateErr := commonutil.UpdateJobConditions(jobStatus, commonv1.JobRunning,
+			commonutil.JobRunningReason, msg)
+		if updateErr != nil {
+			hwlog.RunLog.Errorf("Append ascendJob<%s-%s> condition err: %v",
+				ascendJob.Namespace, ascendJob.Name, err)
+			return updateErr
+		}
+	}
+
+	// we assign the jobStatus to the msJob.Status for testing purpose
+	// it won't effect the main reconcile logic
+	// because we already use oldStatus := jobStatus.DeepCopy() to record the oldStatus
+	// and use !reflect.DeepEqual(*oldStatus, jobStatus) to decide whether to update the msJob or not
+	ascendJob.Status = *jobStatus.DeepCopy()
+
+	return nil
+}
+
+func (r *ASJobReconciler) reconcileWithFailed(ascendJob *mindxdlv1.AscendJob,
+	jobStatus *commonv1.JobStatus, restartCondition *commonv1.JobCondition) error {
+	if restartCondition != nil {
+		err := commonutil.UpdateJobConditions(jobStatus, commonv1.JobRestarting,
+			restartCondition.Reason, restartCondition.Message)
+		if err != nil {
+			hwlog.RunLog.Errorf("Append ascendJob condition failed error: %v",
+				ascendJob.Namespace, ascendJob.Name, err)
+			return err
+		}
+		return nil
+	}
+
+	if !r.isUnconditionalRetryJob(ascendJob) {
+		msg := fmt.Sprintf("AscendJob <%s/%s> has failed because has pod failed.", ascendJob.Namespace,
+			ascendJob.Name)
+		return r.setJobFailedCondition(ascendJob, jobStatus, msg)
+	}
+
+	rt, err := r.getJobRemainRetryTimes(ascendJob)
+	if err != nil {
+		hwlog.RunLog.Warnf("getJobRemainRetryTimes failed, err %s", err)
+		return nil
+	}
+
+	if rt == 0 {
+		msg := fmt.Sprintf("AscendJob <%s/%s> has failed because pod failed and remain retry times is 0.",
+			ascendJob.Namespace, ascendJob.Name)
+		return r.setJobFailedCondition(ascendJob, jobStatus, msg)
+	}
+	return nil
+}
+
+func (r *ASJobReconciler) setJobFailedCondition(ascendJob *mindxdlv1.AscendJob, jobStatus *commonv1.JobStatus,
+	msg string) error {
+	r.recorder.Event(ascendJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
+	if jobStatus.CompletionTime == nil {
+		now := metav1.Now()
+		jobStatus.CompletionTime = &now
+	}
+	err := commonutil.UpdateJobConditions(jobStatus,
+		commonv1.JobFailed, commonutil.JobFailedReason, msg)
+	if err != nil {
+		hwlog.RunLog.Errorf("Append ascendjob<%s/%s> condition error: %v", ascendJob.Namespace, ascendJob.Name, err)
+		return err
+	}
+	return nil
+}
+
 func (r *ASJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *commonv1.JobStatus) error {
 	if jobStatus.ReplicaStatuses == nil {
 		jobStatus.ReplicaStatuses = map[commonv1.ReplicaType]*commonv1.ReplicaStatus{}
@@ -487,87 +548,83 @@ func (r *ASJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus 
 }
 
 // SetClusterSpec Set Envs for AscendJob
-func (r *ASJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec,
-	rtype, index string) error {
-	return nil
+func (r *ASJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+	if r == nil {
+		return errors.New("nil pointer")
+	}
+
+	ascendjob, ok := job.(*mindxdlv1.AscendJob)
+	if !ok {
+		return fmt.Errorf("%v is not a type of AscendJob", ascendjob)
+	}
+
+	if ascendjob == nil || ascendjob.Spec.ReplicaSpecs == nil {
+		return fmt.Errorf("job or job specs is nil")
+	}
+
+	if err := r.setPodEnvironment(ascendjob, podTemplate, rtype, index); err != nil {
+		return err
+	}
+	return r.setPodAnnotation(ascendjob, podTemplate, rtype, index)
 }
 
-// GetDefaultContainerName Get default container name
 func (r *ASJobReconciler) GetDefaultContainerName() string {
 	return mindxdlv1.DefaultContainerName
 }
 
-// GetDefaultContainerPortName get default container port name
 func (r *ASJobReconciler) GetDefaultContainerPortName() string {
 	return mindxdlv1.DefaultPortName
 }
 
-// IsMasterRole check whether the role is master
-func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
-	rtype commonv1.ReplicaType, _ int) bool {
-	return rtype == mindxdlv1.MindSporeReplicaTypeScheduler ||
-		rtype == mindxdlv1.PytorchReplicaTypeMaster ||
-		rtype == mindxdlv1.TensorflowReplicaTypeChief
+func (r *ASJobReconciler) IsMasterRole(replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
+	rtype commonv1.ReplicaType, index int) bool {
+	if ContainsChiefOrMasterSpec(replicas) {
+		return rtype == mindxdlv1.TensorflowReplicaTypeChief || rtype == mindxdlv1.PytorchReplicaTypeMaster
+	}
+	return rtype == mindxdlv1.ReplicaTypeWorker && index == 0
 }
 
-func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
-	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
-	for i, task := range vcjob.Spec.Tasks {
-		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
-			Template: task.Template,
-			Replicas: &task.Replicas,
+// IsWorker0Completed returns true if pod of worker0 succeeded and exited with 0
+func (r *ASJobReconciler) IsWorker0Completed(ascendJob *mindxdlv1.AscendJob, replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) (bool, error) {
+	if r == nil {
+		return false, errors.New("nil pointer")
+	}
+	worker0Completed := false
+	_, ok := replicas[mindxdlv1.ReplicaTypeWorker]
+	if !ok {
+		return true, nil
+	}
+	podSlices, err := r.getPodSlices(ascendJob, replicas[mindxdlv1.ReplicaTypeWorker].Replicas)
+	if err != nil {
+		return false, err
+	}
+	for index, podSlice := range podSlices {
+		if len(podSlice) == 1 {
+			pod := podSlice[0]
+			exitCode := getContainerExitCode(pod)
+			if index == 0 && exitCode == 0 && pod.Status.Phase == v1.PodSucceeded {
+				worker0Completed = true
+			}
 		}
 	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   vcjob.TypeMeta,
-		ObjectMeta: vcjob.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpecs,
-		},
-	}
+	return worker0Completed, nil
 }
 
-func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
-	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"Deploy": &commonv1.ReplicaSpec{
-			Template: deploy.Spec.Template,
-			Replicas: deploy.Spec.Replicas,
-		},
+// getPodSlices returns a slice, which element is the slice of pod.
+// It gives enough information to caller to make decision to up/down scale resources.
+func (r *ASJobReconciler) getPodSlices(job *mindxdlv1.AscendJob, replicasNum *int32) ([][]*v1.Pod, error) {
+	pods, err := r.GetPodsForJob(job)
+	if err != nil {
+		hwlog.RunLog.Errorf("get job<%s-%s> pods failed error %v", job.Namespace, job.Name, err)
+		return nil, err
 	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   deploy.TypeMeta,
-		ObjectMeta: deploy.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpec,
-		},
-	}
-}
 
-func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid types.UID) error {
-	configmapName := configmapPrefix + jobName
-	cm := &corev1.ConfigMap{}
-	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
-	err := r.Get(context.TODO(), namespacedname, cm)
+	// Get all pods for the type rt.
+	pods, err = r.JobController.FilterPodsForReplicaType(pods, strings.ToLower(string(mindxdlv1.ReplicaTypeWorker)))
 	if err != nil {
-		hwlog.RunLog.Infof("failed to get configmap in namespace %s, err: %v", namespace, err)
-		return err
+		return nil, err
 	}
-	rtg, ok := r.rtGenerators[uid]
-	if !ok {
-		err = fmt.Errorf("ranktable generaotor not found for job %s", jobName)
-		hwlog.RunLog.Error(err)
-		return err
-	}
-	cm.Data[configmapKey], err = rtg.ToString()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
-		return err
-	}
-	cm.Data[configmapVersion] = strconv.FormatUint(uint64(time.Now().Unix()), decimal)
-	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
-	if err := r.Update(context.TODO(), cm); err != nil {
-		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
-		return err
-	}
-	return nil
+
+	podSlices := r.GetPodSlices(pods, int(*replicasNum))
+	return podSlices, nil
 }

@@ -16,43 +16,13 @@
 package common
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
-)
-
-const (
-	// NotHandleFaultLevel NotHandle Fault Level
-	NotHandleFaultLevel = 0
-	// PreSeparateFaultLevel PreSeparate Fault Level
-	PreSeparateFaultLevel = 1
-	// SeparateFaultLevel Separate Fault Level
-	SeparateFaultLevel = 2
-	// NotHandleFaultLevelStr NotHandle Fault Level Str
-	NotHandleFaultLevelStr = "NotHandle"
-	// PreSeparateFaultLevelStr PreSeparate Fault Level Str
-	PreSeparateFaultLevelStr = "PreSeparate"
-	// SeparateFaultLevelStr Separate Fault Level Str
-	SeparateFaultLevelStr = "Separate"
-)
-
-var (
-	// SwitchFaultLevelMapLock Lock SwitchFaultLevelMap to avoid concurrence write and read
-	SwitchFaultLevelMapLock sync.Mutex
-	// SwitchFaultLevelMap record every switch fault code and it's level
-	SwitchFaultLevelMap = make(map[string]int, GeneralMapSize)
-	// SwitchFaultLock is used for CurrentSwitchFault which may be used concurrence
-	SwitchFaultLock sync.Mutex
-	// CurrentSwitchFault store all switch fault which will be reported to device-info configmap
-	currentSwitchFault = make([]SwitchFaultEvent, 0, GeneralMapSize)
 )
 
 // GetDeviceID get device physical id and virtual by device name
@@ -87,105 +57,6 @@ func GetDeviceID(deviceName string, ascendRuntimeOptions string) (int, int, erro
 		return 0, 0, fmt.Errorf("convert physical id %s failed, erros is %v", phyIDStr, err)
 	}
 	return phyID, virID, nil
-}
-
-// GetSwitchFaultInfo GetSwitch Fault Info by CurrentSwitchFault and fault config of switch
-func GetSwitchFaultInfo() SwitchFaultInfo {
-	if ParamOption.RealCardType != common.Ascend910A3 || !ParamOption.EnableSwitchFault {
-		return SwitchFaultInfo{}
-	}
-
-	SwitchFaultLock.Lock()
-	defer SwitchFaultLock.Unlock()
-	SwitchFaultLevelMapLock.Lock()
-
-	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
-
-	reportFaultCodes := make([]string, 0)
-	for _, faultInfo := range GetSwitchFaultCode() {
-		if _, ok := SwitchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
-			hwlog.RunLog.Warnf("received unregisterd faultCode:%s, will not report", faultInfo.AssembledFaultCode)
-			continue
-		}
-		faultStr, err := getSimpleSwitchFaultStr(faultInfo)
-		if err != nil {
-			continue
-		}
-		reportFaultCodes = append(reportFaultCodes, faultStr)
-	}
-	return SwitchFaultInfo{
-		FaultCode:  reportFaultCodes,
-		FaultLevel: faultLevel,
-		UpdateTime: time.Now().Unix(),
-		NodeStatus: NodeStatus,
-	}
-}
-
-func getSwitchFaultLevelAndNodeStatus() (string, string) {
-	maxFaultLevel := 0
-	for _, code := range currentSwitchFault {
-		level := SwitchFaultLevelMap[code.AssembledFaultCode]
-		if level > maxFaultLevel {
-			maxFaultLevel = level
-		}
-	}
-	SwitchFaultLevelMapLock.Unlock()
-	faultLevel, NodeStatus := NotHandleFaultLevelStr, "Healthy"
-	switch maxFaultLevel {
-	case NotHandleFaultLevel:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
-	case PreSeparateFaultLevel:
-		faultLevel, NodeStatus = PreSeparateFaultLevelStr, "SubHealthy"
-	case SeparateFaultLevel:
-		faultLevel, NodeStatus = SeparateFaultLevelStr, "UnHealthy"
-	default:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
-	}
-	return faultLevel, NodeStatus
-}
-
-// getSimpleSwitchFaultStr convert fault info to string to display in switch fault info configmap
-func getSimpleSwitchFaultStr(faultInfo SwitchFaultEvent) (string, error) {
-	type simpleSwitchFaultInfo struct {
-		EventType          uint
-		AssembledFaultCode string
-		PeerPortDevice     uint
-		PeerPortId         uint
-		SwitchChipId       uint
-		SwitchPortId       uint
-		Severity           uint
-		Assertion          uint
-		AlarmRaisedTime    int64
-	}
-
-	bytes, err := json.Marshal(simpleSwitchFaultInfo{
-		EventType:          faultInfo.EventType,
-		AssembledFaultCode: faultInfo.AssembledFaultCode,
-		PeerPortDevice:     faultInfo.PeerPortDevice,
-		PeerPortId:         faultInfo.PeerPortId,
-		SwitchChipId:       faultInfo.SwitchChipId,
-		SwitchPortId:       faultInfo.SwitchPortId,
-		Severity:           faultInfo.Severity,
-		Assertion:          faultInfo.Assertion,
-		AlarmRaisedTime:    faultInfo.AlarmRaisedTime,
-	})
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to convert fault:%#v, err: %v", faultInfo, err)
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// SetSwitchFaultCode set switch fault code
-func SetSwitchFaultCode(newFaults []SwitchFaultEvent) {
-	SwitchFaultLock.Lock()
-	defer SwitchFaultLock.Unlock()
-	currentSwitchFault = newFaults
-}
-
-// GetSwitchFaultCode get switch fault code
-func GetSwitchFaultCode() []SwitchFaultEvent {
-	return currentSwitchFault
 }
 
 // GetDeviceListID get device id by input device name

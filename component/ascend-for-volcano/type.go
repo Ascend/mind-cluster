@@ -26,7 +26,7 @@ import (
 )
 
 // PluginName use in frame build.
-var PluginName = "volcano-npu_v6.0.RC1"
+var PluginName = "volcano-npu_v5.0.RC1"
 
 type huaweiNPUPlugin struct {
 	// Scheduler for plugin args and its handler.

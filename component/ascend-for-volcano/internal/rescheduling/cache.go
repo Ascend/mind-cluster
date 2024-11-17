@@ -23,8 +23,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -74,16 +74,6 @@ func (reCache DealReSchedulerCache) getRetryTimesFromCM(buffer string) (map[api.
 		return nil, fmt.Errorf("remain times convert from CM error: %s", util.SafePrint(unmarshalErr))
 	}
 	return rTimes, nil
-}
-
-func (reCache DealReSchedulerCache) getRecentReschedulingRecordsFromCm(buffer string) (
-	map[api.JobID]*RescheduleReason, error) {
-	rescheduleRecords := make(map[api.JobID]*RescheduleReason)
-	if unmarshalErr := json.Unmarshal([]byte(buffer), &rescheduleRecords); unmarshalErr != nil {
-		klog.V(util.LogDebugLev).Info("Unmarshal reschedule records from cache failed")
-		return nil, fmt.Errorf("reschedule records convert from CM error: %s", util.SafePrint(unmarshalErr))
-	}
-	return rescheduleRecords, nil
 }
 
 func (reCache DealReSchedulerCache) getNodeHeartbeatFromCM(buffer string) ([]NodeHeartbeat, error) {
@@ -193,37 +183,6 @@ func (reCache *DealReSchedulerCache) SetRetryTimesFromCM() error {
 	return nil
 }
 
-// SetJobRecentRescheduleRecords get already recorded rescheduling records from cm, and cache it
-func (reCache *DealReSchedulerCache) SetJobRecentRescheduleRecords(firstStartup *bool,
-	client kubernetes.Interface) error {
-	if reCache == nil || reCache.CMData == nil {
-		klog.V(util.LogErrorLev).Infof("SetJobRecentRescheduleRecords failed: %s", util.ArgumentError)
-		return errors.New(util.ArgumentError)
-	}
-	if firstStartup != nil && *firstStartup {
-		cm, err := util.GetConfigMap(client, RescheduleReasonCmNamespace, RescheduleReasonCmName)
-		if err != nil {
-			return fmt.Errorf("failed to get reschedule reason configmap, err: %s", err.Error())
-		}
-		reCache.CMData[ReschedulingReasonKey] = cm.Data[CmJobRescheduleReasonsKey]
-	}
-
-	data, ok := reCache.CMData[ReschedulingReasonKey]
-	if !ok {
-		// if not initialise now, will give this key an empty content
-		return fmt.Errorf("reading %s data from reScheduler configmap failed", CmJobRescheduleReasonsKey)
-	}
-	if data == "" {
-		return nil
-	}
-	recordedRecords, err := reCache.getRecentReschedulingRecordsFromCm(data)
-	if err != nil {
-		return fmt.Errorf("getRecentReschedulingRecordsFromCm %s", util.SafePrint(err))
-	}
-	reCache.JobRecentRescheduleRecords = recordedRecords
-	return nil
-}
-
 // SetNodeRankOccurrenceMapFromCM unmarshal NodeRankOccurrenceMap from string into struct and set the value
 func (reCache *DealReSchedulerCache) SetNodeRankOccurrenceMapFromCM() error {
 	if reCache == nil {
@@ -254,13 +213,9 @@ func (reCache *DealReSchedulerCache) marshalCacheDataToString(data interface{}) 
 	return string(dataBuffer), nil
 }
 
-func (reCache *DealReSchedulerCache) setRealFaultJobs(faultJobs []FaultJob) {
-	reCache.RealFaultJobs = faultJobs
-}
-
 // getRealFaultJobs only return FaultJobs whose IsFaultJob is true
 func (reCache DealReSchedulerCache) getRealFaultJobs() ([]FaultJob, error) {
-	realFaultJobs := make([]FaultJob, 0)
+	var realFaultJobs []FaultJob
 	for _, fJob := range reCache.FaultJobs {
 		if (!fJob.IsFaultJob && !fJob.IsJobHasPreSeparateNPUKey()) || fJob.ReScheduleKey == JobOffRescheduleLabelValue {
 			continue // only save real-fault and reschedule-enabled jobs
@@ -268,7 +223,7 @@ func (reCache DealReSchedulerCache) getRealFaultJobs() ([]FaultJob, error) {
 
 		faultReason := PodFailed
 		for _, faultType := range fJob.FaultTypes {
-			if faultType == NodeUnhealthy || faultType == NodeCardUnhealthy || faultType == SubHealthFault {
+			if faultType == NodeUnhealthy || faultType == NodeCardUnhealthy {
 				faultReason = faultType
 				break
 			}
@@ -283,6 +238,20 @@ func (reCache DealReSchedulerCache) getRealFaultJobs() ([]FaultJob, error) {
 	return realFaultJobs, nil
 }
 
+// IsJobInRealFaultJobs only return true when Job is in FaultJobs
+func (reCache DealReSchedulerCache) IsJobInRealFaultJobs(job api.JobID) bool {
+	fJobs, err := reCache.getRealFaultJobs()
+	if err != nil {
+		return false
+	}
+	for _, fJob := range fJobs {
+		if fJob.JobUID == job {
+			return true
+		}
+	}
+	return false
+}
+
 // GetRealFaultNodes get the nodes whose isFaultNode property takes true value
 func (reCache DealReSchedulerCache) GetRealFaultNodes() []FaultNode {
 	var realFaultNodes []FaultNode
@@ -295,43 +264,16 @@ func (reCache DealReSchedulerCache) GetRealFaultNodes() []FaultNode {
 	return realFaultNodes
 }
 
-func (reCache *DealReSchedulerCache) writeFaultNodesToCMString() (string, string, error) {
+func (reCache *DealReSchedulerCache) writeFaultNodesToCMString() (string, error) {
 	realFaultNode := reCache.GetRealFaultNodes()
 	if len(realFaultNode) == 0 {
-		return "", "", nil
+		return "", nil
 	}
 	nodeData, err := reCache.marshalCacheDataToString(realFaultNode)
 	if err != nil {
-		return "", "", fmt.Errorf("writeFaultNodesToCM: %s", util.SafePrint(err))
+		return "", fmt.Errorf("writeFaultNodesToCM: %s", util.SafePrint(err))
 	}
-	nodeDataToCm, marshalErr := reCache.marshalCacheDataToString(getFaultNodeToCm(realFaultNode))
-	if marshalErr != nil {
-		return "", "", fmt.Errorf("writeFaultNodesToCM: nodeDataToCm failed %s", util.SafePrint(marshalErr))
-	}
-	return nodeData, nodeDataToCm, nil
-}
-
-func getFaultNodeToCm(realFaultNode []FaultNode) []FaultNodeInfoToCm {
-	faultNodeToCm := make([]FaultNodeInfoToCm, len(realFaultNode))
-	for i, fNode := range realFaultNode {
-		faultNodeToCm[i] = initFaultNodeToCmByFaultNode(fNode)
-	}
-	return faultNodeToCm
-}
-
-func initFaultNodeToCmByFaultNode(fNode FaultNode) FaultNodeInfoToCm {
-	return FaultNodeInfoToCm{
-		FaultDeviceList:     fNode.FaultDeviceList,
-		NodeName:            fNode.NodeName,
-		UnhealthyNPU:        fNode.UnhealthyNPU,
-		NetworkUnhealthyNPU: fNode.NetworkUnhealthyNPU,
-		NodeDEnable:         fNode.NodeDEnable,
-		NodeHealthState:     fNode.NodeHealthState,
-		UpdateTime:          fNode.UpdateTime,
-		OldHeartbeatTime:    fNode.OldHeartbeatTime,
-		NewHeartbeatTime:    fNode.NewHeartbeatTime,
-		UpdateHeartbeatTime: fNode.UpdateHeartbeatTime,
-	}
+	return nodeData, nil
 }
 
 func (reCache *DealReSchedulerCache) writeFaultJobsToCMString() (string, error) {
@@ -379,45 +321,6 @@ func (reCache *DealReSchedulerCache) writeRemainTimesToCMString() (string, error
 	return nodeHBsData, nil
 }
 
-func (reCache *DealReSchedulerCache) writeRescheduleReasonsToCMString() (string, error) {
-	if len(reCache.JobRecentRescheduleRecords) == 0 {
-		return "", nil
-	}
-	rescheduleReasonStr, err := reCache.marshalCacheDataToString(reCache.JobRecentRescheduleRecords)
-	if err != nil {
-		return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-	}
-	if len(rescheduleReasonStr) > MaxKbOfRescheduleRecords {
-		klog.V(util.LogWarningLev).Infof("reason of reschedule into configmap is more than %d Kb, "+
-			"will reduce it", MaxKbOfRescheduleRecords)
-	}
-	// only keep every job newest server record, each time will cut the oldest record of each job
-	// to make sure the returned reschedule reason str len is under MaxKbOfRescheduleRecords Kb,
-	// each time will reduce the length by 1/10
-	// by the way, to avoid dead loop, there is a loop limit
-	for i := 0; len(rescheduleReasonStr) > MaxKbOfRescheduleRecords && i < MaxRescheduleRecordsNum; i++ {
-		for jobId, reason := range reCache.JobRecentRescheduleRecords {
-			// must keep the newest rescheduling record
-			if len(reason.RescheduleRecords) <= 1 {
-				continue
-			}
-			lastRecord := reason.RescheduleRecords[len(reason.RescheduleRecords)-1]
-			reason.RescheduleRecords = reason.RescheduleRecords[:len(reason.RescheduleRecords)-1]
-			klog.V(util.LogWarningLev).Infof("cut job %v reschedule reason of timestamp %d from cm, "+
-				"to reduce records length", jobId, lastRecord.RescheduleTimeStamp)
-		}
-		// to avoid frequently marshal a 950 Kb json, time-consuming
-		rescheduleReasonStr, err = reCache.marshalCacheDataToString(reCache.JobRecentRescheduleRecords)
-		if err != nil {
-			return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-		}
-		if len(rescheduleReasonStr) <= MaxKbOfRescheduleRecords {
-			break
-		}
-	}
-	return rescheduleReasonStr, nil
-}
-
 func (reCache *DealReSchedulerCache) writeNodeRankOccurrenceMapToCMString() (string, error) {
 	if len(reCache.AllocNodeRankOccurrenceMap) == 0 {
 		return "", nil
@@ -429,6 +332,19 @@ func (reCache *DealReSchedulerCache) writeNodeRankOccurrenceMapToCMString() (str
 	return nodeRankOccMapData, nil
 }
 
+func (reCache *DealReSchedulerCache) writeJobRankIndexToCMString(fJob *FaultJob) (*FaultRankIdsJobCMData, string,
+	error) {
+	faultRankIds := &FaultRankIdsJobCMData{
+		FaultRankIds: fJob.JobRankIds,
+		CreatTime:    time.Now().Unix(),
+	}
+	faultRankIdsData, err := reCache.marshalCacheDataToString(faultRankIds)
+	if err != nil {
+		return nil, "", fmt.Errorf("%s writeJobRankIndexToCMString: %s", fJob.JobName, util.SafePrint(err))
+	}
+	return faultRankIds, faultRankIdsData, nil
+}
+
 // WriteReSchedulerCacheToEnvCache write the modifications on cache data to env to update re-scheduling configmap
 func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin.ScheduleEnv, jobType string) error {
 	if reCache == nil || env == nil {
@@ -436,7 +352,7 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	}
 	env.Cache.Names[RePropertyName] = CmName
 	env.Cache.Namespaces[RePropertyName] = CmNameSpace
-	fNodeString, fNodeToCMString, err := reCache.writeFaultNodesToCMString()
+	fNodeString, err := reCache.writeFaultNodesToCMString()
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
 	}
@@ -458,43 +374,53 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
 	}
-	// update the reschedule reason cache
-	jobRescheduleReasons, err := reCache.setRescheduleReasonToCache(env)
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("setRescheduleReasonToCache: %s", util.SafePrint(err))
-	}
-
 	cmData, ok := env.Cache.Data[RePropertyName]
 	if !ok {
 		cmData = make(map[string]string, util.MapInitNum)
 		env.Cache.Data[RePropertyName] = cmData
 	}
-
+	cmData[CmFaultNodeKind] = fNodeString
+	cmData[jobType] = fJobString
+	cmData[CmNodeHeartbeatKind] = nodeHBString
+	cmData[CmNodeRankTimeMapKind] = nodeRankOccurrenceMapString
 	cmData[CmJobRemainRetryTimes] = jobRemainRetryTimes
-	cmDataForCache := util.DeepCopyCmData(cmData)
-	cmData[CmFaultNodeKind] = fNodeToCMString
-	cmDataForCache[jobType] = fJobString
-	cmDataForCache[CmFaultNodeKind] = fNodeString
-	cmDataForCache[CmNodeHeartbeatKind] = nodeHBString
-	cmDataForCache[CmNodeRankTimeMapKind] = nodeRankOccurrenceMapString
-	cmDataForCache[ReschedulingReasonKey] = jobRescheduleReasons
-	reSchedulerConfigmap.updateReSchedulerCMCache(cmDataForCache)
+	if jobType != CmFaultJob910x8Kind && jobType != CmFaultJob910x4Kind && jobType != CmFaultJob910bx8Kind &&
+		jobType != CmFaultJob910bx16Kind {
+		return nil
+	}
+	if err := reCache.writeRecoveryCacheToEnv(env); err != nil {
+		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
+	}
 	return nil
 }
 
-func (reCache *DealReSchedulerCache) setRescheduleReasonToCache(env *plugin.ScheduleEnv) (string, error) {
-	env.Cache.Names[ReschedulingReasonKey] = RescheduleReasonCmName
-	env.Cache.Namespaces[ReschedulingReasonKey] = RescheduleReasonCmNamespace
-	jobRescheduleReasons, err := reCache.writeRescheduleReasonsToCMString()
+func (reCache *DealReSchedulerCache) writeRecoveryCacheToEnv(env *plugin.ScheduleEnv) error {
+	realFaultJob, err := reCache.getRealFaultJobs()
 	if err != nil {
-		klog.V(util.LogDebugLev).Infof("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-		return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
+		return err
 	}
-	reasonCmData, ok := env.Cache.Data[ReschedulingReasonKey]
-	if !ok {
-		reasonCmData = make(map[string]string, util.MapInitNum)
-		env.Cache.Data[ReschedulingReasonKey] = reasonCmData
+	for _, fJob := range realFaultJob { // configmap for recovery
+		if fJob.IsFaultJob {
+			jobRankIndex, jobRankIndexString, err := reCache.writeJobRankIndexToCMString(&fJob)
+			if err != nil {
+				klog.V(util.LogErrorLev).Infof(err.Error())
+				continue
+			}
+
+			faultCm, ok := env.Cache.FaultConfigMaps[fJob.JobUID]
+			if !ok {
+				faultCm = &plugin.FaultRankIdData{
+					Name:      JobFaultRankIDCMPre + fJob.ReferenceName,
+					Namespace: fJob.JobNamespace,
+				}
+			}
+
+			faultCm.Data = map[string]string{
+				JobFaultRankIDCMDataKey: jobRankIndexString,
+				CmCheckCode:             util.MakeDataHash(jobRankIndex),
+			}
+			env.Cache.FaultConfigMaps[fJob.JobUID] = faultCm
+		}
 	}
-	reasonCmData[CmJobRescheduleReasonsKey] = jobRescheduleReasons
-	return jobRescheduleReasons, nil
+	return nil
 }

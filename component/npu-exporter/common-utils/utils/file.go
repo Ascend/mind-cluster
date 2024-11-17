@@ -85,7 +85,14 @@ func closeFile(file *os.File) {
 
 // CopyFile copy file
 func CopyFile(src, dst string) error {
-	src, err := CheckPath(src)
+	var (
+		err     error
+		srcFile *os.File
+		dstFile *os.File
+		srcInfo os.FileInfo
+	)
+
+	src, err = CheckPath(src)
 	if err != nil {
 		return err
 	}
@@ -95,24 +102,17 @@ func CopyFile(src, dst string) error {
 			return err
 		}
 	}
-
-	srcFile, err := os.Open(src)
-	if err != nil {
+	if srcFile, err = os.Open(src); err != nil {
 		return err
 	}
 	defer closeFile(srcFile)
-
-	srcInfo, err := os.Stat(src)
-	if err != nil {
+	if srcInfo, err = os.Stat(src); err != nil {
 		return err
 	}
-
-	dstFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
-	if err != nil {
+	if dstFile, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode()); err != nil {
 		return err
 	}
 	defer closeFile(dstFile)
-
 	if _, err = io.Copy(dstFile, srcFile); err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func CopyFile(src, dst string) error {
 func CopyDir(src string, dst string) error {
 	var (
 		err     error
-		fds     []os.FileInfo = nil
+		fds     []os.FileInfo
 		dstInfo os.FileInfo
 	)
 

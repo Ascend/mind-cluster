@@ -17,8 +17,6 @@ limitations under the License.
 // Package util is using for the total variable.
 package util
 
-import "time"
-
 const (
 	// LogErrorLev for log error.
 	LogErrorLev = 1
@@ -48,8 +46,6 @@ const (
 	NPUIndex6 = 6
 	// NPUIndex1 the 1 index.
 	NPUIndex1 = 1
-	// NPUIndex0 the 0 index.
-	NPUIndex0 = 0
 	// NPUIndex9 the 9 index.
 	NPUIndex9 = 9
 	// NPUIndex10 the 10 index.
@@ -66,28 +62,10 @@ const (
 	NPUIndex15 = 15
 	// CoreNum32 32 core 910
 	CoreNum32 = 32
-	// CoreNum3 3 core 910
-	CoreNum3 = 3
-	// CoreNum5 5 core 910
-	CoreNum5 = 5
-	// CoreNum10 10 core 910
-	CoreNum10 = 10
-	// CoreNum6 6 core 910
-	CoreNum6 = 6
-	// CoreNum12 12 core 910
-	CoreNum12 = 12
 	// CoreNum30 30 core 910
 	CoreNum30 = 30
-	// CoreNum20 20 core 910
-	CoreNum20 = 20
-	// CoreNum25 25 core 910
-	CoreNum25 = 25
-	// CoreNum24 24 core 910
-	CoreNum24 = 24
 	// CpuNum14 14 cpu 910
 	CpuNum14 = 14
-	// CpuNum6 6 cpu 910
-	CpuNum6 = 6
 	// MapInitNum for map init length.
 	MapInitNum = 3
 	// Base10 for const 10.
@@ -102,6 +80,8 @@ const (
 	HwPreName = "huawei.com/"
 	// NPUCardPreName for NPU card pre-Name.
 	NPUCardPreName = "huawei.com/Ascend"
+	// ArchSelector MindX-dl arch selector.
+	ArchSelector = "host-arch"
 	// HuaweiArchArm for arm.
 	HuaweiArchArm = "huawei-arm"
 	// HuaweiArchX86 for x86.
@@ -109,6 +89,10 @@ const (
 
 	// Accelerator for custom tag.
 	Accelerator = "accelerator"
+	// Accelerator910Value Ascend910 tag.
+	Accelerator910Value = "huawei-Ascend910"
+	// Accelerator310Value Ascend310 tag.
+	Accelerator310Value = "huawei-Ascend310"
 
 	// CMSelectorKey selector key in scheduler configmap.
 	CMSelectorKey = "selector"
@@ -159,17 +143,6 @@ const (
 	// SegmentEnable for VNPU segment enable flag. Default is "false".
 	SegmentEnable = "presetVirtualDevice"
 
-	// UseClusterInfoManager for use cluster info manager , default is true
-	UseClusterInfoManager = "useClusterInfoManager"
-
-	// SubHealthyStrategyLabel sub-healthy handle strategy. default is grace exit
-	SubHealthyStrategyLabel = "subHealthyStrategy"
-	// SubHealthyIgnore ignore sub-healthy
-	SubHealthyIgnore = "ignore"
-	// SubHealthyGraceExit don't use sub-healthy node and grace exit
-	SubHealthyGraceExit = "graceExit"
-	// SubHealthyForceExit don't use sub-healthy node and force exit
-	SubHealthyForceExit = "forceExit"
 	// DevInfoNameSpace device-plugin install Namespace
 	DevInfoNameSpace = "kube-system"
 	// MindXDlNameSpace mindx dl Namespace
@@ -178,44 +151,15 @@ const (
 	DevInfoPreName = "mindx-dl-deviceinfo-"
 	// NodeDCmInfoNamePrefix is for noded to report node healthy state
 	NodeDCmInfoNamePrefix = "mindx-dl-nodeinfo-"
-	// SwitchCmInfoNamePrefix is the prefix for switch fault configmap
-	SwitchCmInfoNamePrefix = "mindx-dl-switchinfo-"
 	// NodedHeartbeatTimeKey is the key of heartbeat time from configmap data of noded
 	NodedHeartbeatTimeKey = "nodedHeartbeatTime"
-	// NodedNodeHealtyStatuskey  is the key of node healthy status from configmap data of noded
-	NodedNodeHealtyStatuskey = "nodedNodeHealtyStatus"
 	// NodeDNodeHeartbeatIntervalKey is key of node heartbeat interval from configmap data of noded
 	NodeDNodeHeartbeatIntervalKey = "NodeDNodeHeartbeatInterval"
-	// NodeSubHealthy means there is some fault on the node which is reported by nodeD, but will not immediately
-	// make node unhealthy, this status will prevent new task schduled on this node and reschedule will not consider
-	// this node
-	NodeSubHealthy = "SubHealthy"
-	// NodeUnHealthyByNodeD is the node unhealthy status reported by nodeD configmap,
-	// in this case pod will be rescheduling
-	NodeUnHealthyByNodeD = "UnHealthy"
-	// NodeHealthyByNodeD is the node healthy status reported by nodeD configmap
-	NodeHealthyByNodeD = "Healthy"
-	// NodeDEnableKey indicates if the label has been set
-	NodeDEnableKey = "nodeDEnable"
-	// NodeDEnableOnValue the value of NodeDEnableKey, which means nodeD has been enabled
-	NodeDEnableOnValue = "on"
-	// NodeDEnableOffValue the value of NodeDEnableKey, which means nodeD has not been enabled
-	NodeDEnableOffValue = "off"
-
-	// PreSeparateFaultCode  PreSeparate fault Code
-	PreSeparateFaultCode = "PreSeparate"
-
-	// SwitchNodeHealtyStatuskey same with noded there will be healthy subhealthy unhealthy status report by switch info
-	SwitchNodeHealtyStatuskey = "NodeStatus"
-	// NpuSubHealthyKey annotation of npu sub-healthy status. true is sub-healthy
-	NpuSubHealthyKey = "subHealthy"
 
 	// DevInfoCMKey mindx-dl-deviceinfo configmap key
 	DevInfoCMKey = "DeviceInfoCfg"
 	// NodeInfoCMKey node info configmap key
 	NodeInfoCMKey = "NodeInfo"
-	// SwitchInfoCmKey is the key of switch info configmap
-	SwitchInfoCmKey = "SwitchInfoCfg"
 	// RePropertyCacheName rescheduling keyword in init env.cache
 	RePropertyCacheName = "re-scheduling"
 	// CmCheckCode Check code key
@@ -232,21 +176,6 @@ const (
 	// UpdateOperator informer update operator
 	UpdateOperator = "update"
 
-	// CmConsumer who uses these configmap
-	CmConsumer = "mx-consumer-volcano"
-	// CmConsumerValue the value only for true
-	CmConsumerValue = "true"
-	// ClusterDeviceInfo the name of cluster device info configmap
-	ClusterDeviceInfo = "cluster-info-device-"
-	// ClusterNodeInfo the name of cluster node info configmap
-	ClusterNodeInfo = "cluster-info-node-"
-	// ClusterSwitchInfo the name of cluster switch info configmap
-	ClusterSwitchInfo = "cluster-info-switch-"
-	// ClusterD the name of ClusterD deployment
-	ClusterD = "clusterd"
-
-	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
-	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// PodPredicateTime set pod PodPredicateTime for using by device-plugin.
 	PodPredicateTime = "predicate-time"
 	// NodeNotMeetTopologyWarning node not satisfy the schedulable topology warning.
@@ -269,16 +198,6 @@ const (
 	DistributedJobValue = "true"
 	// StandaloneJobValue indicate standalone job
 	StandaloneJobValue = "false"
-
-	// SuperPodAnnoKey annotation key of super pod
-	SuperPodAnnoKey = "sp-block"
-	reserveNodesKey = "reserve-nodes"
-	// sizeOfSuperPodKey for super pod size
-	sizeOfSuperPodKey = "super-pod-size"
-	// DistributedInferKey distributed infer
-	DistributedInferKey = "distributed"
-	// DistributedInferLabel true or false
-	DistributedInferLabel = "true"
 )
 
 const (
@@ -319,27 +238,6 @@ const (
 	PodGroupUnknown = "Unknown"
 	// PodGroupUnschedulableType the pg Unschedulable Condition
 	PodGroupUnschedulableType = "Unschedulable"
-	retryTime                 = 3
-	retrySleepTime            = 50 * time.Millisecond
-	torNodeCacheTime          = 60
-	torShareCacheTime         = 60 * 60 * 24
-	// PodDeleteTimes the tag of single pod has been deleted
-	PodDeleteTimes = "pod-delete-times"
-	// EnableFunc enable the function
-	EnableFunc = "on"
-	// SinglePodTag the tag of single pod rescheduling
-	SinglePodTag = "pod-rescheduling"
-	// ProcessReschedulingTag the tag of process rescheduling
-	ProcessReschedulingTag = "process-rescheduling"
-	// BaseDeviceInfoKey base device info key
-	BaseDeviceInfoKey = "baseDeviceInfos"
-)
-
-const (
-	// TagOfPodPending the limitation on pod pending times
-	TagOfPodPending = "ready"
-	// DefaultPodDeleteTimes default time of pod deleted
-	DefaultPodDeleteTimes = "0"
 )
 
 // VTemplate for vNode resource
@@ -356,25 +254,4 @@ type VResource struct {
 	Aicore int
 	Aicpu  int
 	DVPP   string
-}
-
-// Instance is for annotation
-type Instance struct { // Instance
-	PodName    string   `json:"pod_name"`  // pod Name
-	ServerID   string   `json:"server_id"` // serverdId
-	SuperPodId int32    `json:"super_pod_id"`
-	Devices    []Device `json:"devices"` // dev
-}
-
-// Device id for Instcance
-type Device struct { // Device
-	DeviceID      string `json:"device_id"` // device id
-	DeviceIP      string `json:"device_ip"` // device ip
-	SuperDeviceID string `json:"super_device_id,omitempty"`
-}
-
-// NpuBaseInfo npu base info
-type NpuBaseInfo struct {
-	IP            string
-	SuperDeviceID uint32
 }

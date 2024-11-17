@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BASIC_H
-#define BASIC_H
+#ifndef _BASIC_H
+#define _BASIC_H
 
 #include <sys/types.h>
+#include <stdint.h>
 #include <limits.h>
 #include <stdbool.h>
 
@@ -39,15 +40,15 @@
 #define SCREEN_NO      0
 #define SCREEN_YES     1
 
-#define LOG_ERROR(fmt, ...)                                         \
-    do {                                                            \
-        char content[BUF_SIZE] = {0};                             \
-        int ret = sprintf_s(content, BUF_SIZE, fmt, ##__VA_ARGS__); \
-        if (ret < 0) {                                              \
-            (void)fprintf(stderr, "cannot assemble log content");   \
-        } else {                                                    \
-            (void)fprintf(stderr, "%s", (const char *)content);     \
-        }                                                           \
+#define LOG_ERROR(fmt, ...)                                           \
+    do {                                                              \
+        char _content[BUF_SIZE] = {0};                                \
+        int _ret = sprintf_s(_content, BUF_SIZE, fmt, ##__VA_ARGS__); \
+        if (_ret < 0) {                                               \
+            (void)fprintf(stderr, "cannot assemble log content");           \
+        } else {                                                      \
+            (void)fprintf(stderr, "%s", (const char *)_content);            \
+        }                                                             \
     } while (0)
 
 #define ROOT_GAP 4
@@ -73,7 +74,7 @@ struct ParsedConfig {
     char rootfs[BUF_SIZE];
     char containerNsPath[BUF_SIZE];
     char cgroupPath[BUF_SIZE];
-    int originNsFd;
+    int  originNsFd;
     const struct MountList *files;
     const struct MountList *dirs;
 };

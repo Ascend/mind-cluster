@@ -27,13 +27,16 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
 // ChangeTopToIntArray Change npu card ids from string to int array.
 func ChangeTopToIntArray(topStr string, npuCardPreName string) []int {
-	topInt := make([]int, 0)
+	var topInt []int
+	var cardInt int
 	var cardStr string
+	var err error
 	var topStrArray []string
 
 	if topStr == "" {
@@ -44,7 +47,7 @@ func ChangeTopToIntArray(topStr string, npuCardPreName string) []int {
 	for _, cardStr = range topStrArray {
 		// cannot use strings 's Trim
 		v := strings.TrimPrefix(cardStr, npuCardPreName)
-		cardInt, err := strconv.Atoi(v)
+		cardInt, err = strconv.Atoi(v)
 		if err != nil {
 			klog.V(LogErrorLev).Infof("ChangeTopToIntArray conv failed %v.", err)
 			return nil
@@ -177,7 +180,7 @@ func RemoveSliceDuplicateElement(languages []string) []string {
 
 // RemoveCommonElement remove common element from s1
 func RemoveCommonElement(s1, s2 []int) []int {
-	res := make([]int, 0)
+	var res []int
 	for _, e1 := range s1 {
 		existFlag := false
 		for _, e2 := range s2 {
@@ -251,55 +254,4 @@ func GetNpuNameFromJobRequire(npuName string) string {
 		return NPU310PCardName
 	}
 	return npuName
-}
-
-// GetSizeOfSuperPod get size of super pod
-func GetSizeOfSuperPod(configurations []config.Configuration) (int, error) {
-	return getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
-}
-
-// GetReserveNodes get reserve nodes
-func GetReserveNodes(configurations []config.Configuration) (int, error) {
-	return getSuperPodInfoFromConfig(reserveNodesKey, configurations)
-}
-
-func getSuperPodInfoFromConfig(key string, configurations []config.Configuration) (int, error) {
-	configuration, err := GetConfigFromSchedulerConfigMap(CMInitParamKey, configurations)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get %s configuration, err: %v", CMInitParamKey, err)
-	}
-	// get segmentEnable by user configuration
-	value, ok := configuration.Arguments[key]
-	if !ok {
-		klog.V(LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
-		return 0, fmt.Errorf("%s configuration not exist", key)
-	}
-
-	res, err := strconv.Atoi(value)
-	if err != nil {
-		return 0, fmt.Errorf("cannot convert %s configuration, err: %v", key, err)
-	}
-	if res < 0 {
-		return 0, fmt.Errorf(" %s configuration should not be negative number", key)
-	}
-	return res, nil
-}
-
-// CheckStrInSlice return whether str in string slice
-func CheckStrInSlice(str string, slice []string) bool {
-	for _, item := range slice {
-		if item == str {
-			return true
-		}
-	}
-	return false
-}
-
-// DeepCopyCmData return a replica of the cmDate
-func DeepCopyCmData(cmData map[string]string) map[string]string {
-	newCmData := make(map[string]string, len(cmData))
-	for k, v := range cmData {
-		newCmData[k] = v
-	}
-	return newCmData
 }

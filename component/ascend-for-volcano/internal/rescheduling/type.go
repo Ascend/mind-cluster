@@ -27,21 +27,13 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-var reSchedulerConfigmap *DealReSchedulerConfigmap
-
 const (
 	// RePropertyName name specifying re-scheduler cm
 	RePropertyName = "re-scheduling"
-	// ReschedulingReasonKey is used to record the reason of rescheduling
-	ReschedulingReasonKey = "rescheduling-reason"
 	// CmName Name of ReSchedulerConfigmap
 	CmName = "vcjob-fault-npu-cm"
 	// CmNameSpace Namespace of ReSchedulerConfigmap
 	CmNameSpace = "volcano-system"
-	// RescheduleReasonCmName Name of RescheduleReasonConfigmap
-	RescheduleReasonCmName = "job-reschedule-reason"
-	// RescheduleReasonCmNamespace Namespace of RescheduleReasonConfigmap
-	RescheduleReasonCmNamespace = "mindx-dl"
 
 	// JobRescheduleLabelKey key word of re-scheduling configuration
 	JobRescheduleLabelKey = "fault-scheduling"
@@ -93,15 +85,6 @@ const (
 	CmNodeHeartbeatKind = "node-heartbeat"
 	// CmJobRemainRetryTimes judging node fault needs heartbeat info from former session, so should be recorded
 	CmJobRemainRetryTimes = "remain-retry-times"
-	// MaxRescheduleRecordsNum the upper limit of the cm kept reschedule records, oldest record will be deleted
-	// if record more than MaxRescheduleRecordsNum records
-	MaxRescheduleRecordsNum = 10
-	// MaxKbOfRescheduleRecords the upper limit words of the cm kept reschedule records
-	MaxKbOfRescheduleRecords = 950 * 1024
-	// ReduceRetryTimeLimit is the time limit of reduce loop
-	ReduceRetryTimeLimit = 20
-	// CmJobRescheduleReasonsKey keeping recent MaxRescheduleRecordsNum records of rescheduling
-	CmJobRescheduleReasonsKey = "recent-reschedule-records"
 	// CmNodeRankTimeMapKind record map jobUID rankIndex node and times of occurrence
 	CmNodeRankTimeMapKind = "node-rankIndex-Occurrence"
 	// CmCheckCode Check code key
@@ -162,95 +145,34 @@ const (
 	AcJobTag = "group-name"
 	// AcJobVersion the api version of AcJob
 	AcJobVersion = "mindxdl.gitee.com"
-	// SubHealthFault subHealth code
-	SubHealthFault = "SubHealthFault"
 )
 
 const (
-	getNoneJobsErr      = "get none jobs"
-	pendingTimes        = 12
-	defaultPendingTimes = 0
-	taskUnhealthy       = "taskUnhealthy"
-	spPendingTimes      = 6
-	// SuperPodAnnoKey annotation key of super pod
-	SuperPodAnnoKey          = "sp-block"
-	singleThreadDeletePodNum = 200
-	deviceInfoTimeout        = 60
+	getNoneJobsErr = "get none jobs"
 )
 
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
-	GraceDeleteTime        int64
-	Level                  string
-	Jobs                   map[api.JobID]plugin.SchedulerJob
-	Nodes                  map[string]plugin.NPUNode
-	DeviceInfoNotInSession map[string]plugin.NodeDeviceInfoWithTime `json:"-"`
-	IsFirstSession         *bool
-	kubeClient             kubernetes.Interface
-}
-
-// FaultNodeInfoToCm fault node info to cm
-type FaultNodeInfoToCm struct {
-	FaultDeviceList     []FaultDeviceList
-	NodeName            string
-	UnhealthyNPU        []string
-	NetworkUnhealthyNPU []string
-	NodeDEnable         bool
-	NodeHealthState     string
-	UpdateTime          int64
-	OldHeartbeatTime    int64
-	NewHeartbeatTime    int64
-	UpdateHeartbeatTime int64
+	GraceDeleteTime int64
+	Level           string
+	Jobs            map[api.JobID]plugin.SchedulerJob
+	Nodes           map[string]plugin.NPUNode
+	kubeClient      kubernetes.Interface
 }
 
 // DealReSchedulerCache object with method for re-scheduler cache
 type DealReSchedulerCache struct {
 	*DealReSchedulerConfigmap
 	FaultNodes                 []FaultNode
+	RealFaultNodes             []FaultNode                `json:"-"`
 	FaultNodeMaps              map[string]SimpleFNodeInfo `json:"-"`
 	FaultJobs                  []FaultJob
-	RealFaultJobs              []FaultJob `json:"-"`
 	NodeHeartbeats             []NodeHeartbeat
 	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 	JobRemainRetryTimes        map[api.JobID]*RemainRetryTimes
-	JobRecentRescheduleRecords map[api.JobID]*RescheduleReason
 }
 
-// RescheduleReason shows the reason of this job rescheduling
-type RescheduleReason struct {
-	// JobID the job id of this record
-	JobID api.JobID
-	// TotalRescheduleTimes to show how many times reschedule has happened since job created
-	TotalRescheduleTimes int
-	// RescheduleRecords keep recent MaxRescheduleRecordsNum records of rescheduling
-	RescheduleRecords []RescheduleRecord
-	// AdditionalInfo is used to provide additional information, such as for length concern reduce some records
-	AdditionalInfo string `json:",omitempty"`
-}
-
-// RescheduleRecord will records job rescheduling records
-type RescheduleRecord struct {
-	// LogFileFormatTime is the formated time, to make it convenient to read and locate log
-	LogFileFormatTime string
-	// RescheduleTimeStamp time.now.unix() indicates when the rescheduling happened
-	RescheduleTimeStamp int64
-	// ReasonOfTask record the reason of this rescheduling of task
-	ReasonOfTask []RescheduleTaskReason
-}
-
-type RescheduleTaskReason struct {
-	// RescheduleReason the fault type of this rescheduling
-	RescheduleReason string
-	// PodName the fault task caused this rescheduling
-	PodName string
-	// NodeName the fault node caused this rescheduling
-	NodeName string
-	// NodeRankIndex the rank index of the fault task
-	NodeRankIndex string
-}
-
-// RemainRetryTimes remained retry times
 type RemainRetryTimes struct {
 	UUID  types.UID
 	Times int
@@ -265,9 +187,10 @@ type DealReSchedulerConfigmap struct {
 
 // AllocNodeRankOccurrence object recording node rankIndex and whether index re-allocated to new node
 type AllocNodeRankOccurrence struct {
-	NodeName  string
-	RankIndex string
-	IsFault   bool
+	NodeName   string
+	RankIndex  string
+	IsFault    bool
+	Occurrence int
 }
 
 // FaultCard card object for re-scheduling
@@ -280,33 +203,27 @@ type FaultCard struct {
 
 // FaultNode node object for re-scheduling
 type FaultNode struct {
-	SuperPodID              int32
-	NodeName                string
-	NPUName                 string
-	FaultDeviceList         []FaultDeviceList
-	UpdateTime              int64
-	UnhealthyNPU            []string
-	NetworkUnhealthyNPU     []string
-	IsFaultNode             bool
-	NodeDEnable             bool
-	NodeHealthState         string
-	AllCards                []string
-	FaultCards              []FaultCard
-	HeartbeatInterval       int
-	OldHeartbeatTime        int64
-	NewHeartbeatTime        int64
-	UpdateHeartbeatTime     int64
-	HasSwitchSubHealthFault bool
-	HasCardSubHealthFault   bool
+	NodeName            string
+	NPUName             string
+	FaultDeviceList     []FaultDeviceList
+	UpdateTime          int64
+	UnhealthyNPU        []string
+	NetworkUnhealthyNPU []string
+	IsFaultNode         bool
+	NodeDEnable         bool
+	NodeHealthState     string
+	AllCards            []string
+	FaultCards          []FaultCard
+	HeartbeatInterval   int
+	OldHeartbeatTime    int64
+	NewHeartbeatTime    int64
+	UpdateHeartbeatTime int64
 }
 
 // SimpleFNodeInfo simple fault node info
 type SimpleFNodeInfo struct {
-	NodeName                string
-	IsFaultNode             bool
-	HasCardSubHealthFault   bool
-	HasSwitchSubHealthFault bool
-	NodeHealthState         string
+	NodeName    string
+	IsFaultNode bool
 }
 
 // FaultDeviceList is the fault reason of card
@@ -321,20 +238,18 @@ type FaultDeviceList struct {
 
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
-	Reason             []FaultReasonList
-	IsFaultTask        bool
-	IsFaultRetryEnable bool
-	HasSubHealthFault  bool
-	TaskUID            api.TaskID
-	TaskName           string
-	TaskNamespace      string
-	NodeName           string
-	JobName            string
-	NodeRankIndex      string
-	UseCardName        []string
-	PodCreateTime      int64
-	PodUID             types.UID
-	faultType          string
+	Reason        []FaultReasonList
+	IsFaultTask   bool
+	TaskUID       api.TaskID
+	TaskName      string
+	TaskNamespace string
+	NodeName      string
+	JobName       string
+	NodeRankIndex string
+	UseCardName   []string
+	PodCreateTime int64
+	PodUID        types.UID
+	faultType     string
 }
 
 // miniFaultTask struct for print fTask important infos to logs
@@ -354,7 +269,6 @@ type miniFaultJob struct {
 	FaultRetryTimes int
 }
 
-// FaultReasonList node Fault Device List
 type FaultReasonList struct {
 	NodeName string `json:"node_name"`
 	FaultDeviceList
@@ -363,9 +277,6 @@ type FaultReasonList struct {
 // FaultJob job object for re-scheduling
 type FaultJob struct {
 	ReScheduleKey       string // values taken off/grace/force
-	SubHealthyStrategy  string
-	IsSubHealthFault    bool
-	PendingSessionNum   int
 	IsFaultJob          bool
 	IsInSession         bool
 	JobName             string
@@ -373,7 +284,6 @@ type FaultJob struct {
 	JobNamespace        string
 	JobRankIds          []string // useCardIndex + 8*NodeRankIndex
 	NodeNames           []string
-	SuperPods           map[string][]plugin.SuperNode
 	NodeNameMaps        map[string]struct{}
 	FaultTasks          []FaultTask
 	UpdateTime          int64
@@ -384,6 +294,7 @@ type FaultJob struct {
 	ReferenceName       string
 	FaultRetryTimes     int
 	faultReason         string
+	isUnstable          bool
 	UUID                types.UID
 }
 
@@ -398,11 +309,4 @@ type NodeHeartbeat struct {
 type FaultRankIdsJobCMData struct {
 	FaultRankIds []string
 	CreatTime    int64
-}
-
-type deletePodInfo struct {
-	isMasterFault bool
-	superPod      bool
-	ids           []string
-	reason        string
 }

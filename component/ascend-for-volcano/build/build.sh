@@ -17,7 +17,7 @@
 
 set -e
 
-# BASE_VER only support v1.7.0 or v1.9.0
+# BASE_VER only support v1.4.0 or v1.7.0
 if [ ! -n "$1" ]; then
     BASE_VER=v1.7.0
 else
@@ -26,7 +26,7 @@ fi
 
 echo "Build Version is ${BASE_VER}"
 
-DEFAULT_VER='v6.0.RC3'
+DEFAULT_VER='v5.0.RC2'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
 BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
@@ -63,15 +63,6 @@ function copy_yaml() {
     cp "${BASE_PATH}"/build/volcano-"${BASE_VER}".yaml "${BASE_PATH}"/output/
 }
 
-# fix the unconditional retry. All pod errors cause the podgroup to be deleted and cannot be rescheduled
-function replace_code() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
-    SEARCH_STRING="Ignore"
-    if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
-      sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
-      fi
-}
-
 function build() {
     echo "Build Architecture is" "${REL_ARCH}"
 
@@ -83,23 +74,21 @@ function build() {
 
     cd "${BASE_PATH}"/output/
 
-    export CGO_CFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-    export CGO_CPPFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-    export CC=/usr/local/musl/bin/musl-gcc
-    export CGO_ENABLED=0
-
-    go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+    for name in controller-manager scheduler; do\
+      CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv" \
+      CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv" \
+      CC=/usr/local/musl/bin/musl-gcc CGO_ENABLED=1 \
+      go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
       -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
-      -o vc-controller-manager "${CMD_PATH}"/controller-manager
+      -o vc-$name "${CMD_PATH}"/$name
+    done
 
-    export CGO_ENABLED=1
-    go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
-      -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
-      -o vc-scheduler "${CMD_PATH}"/scheduler
-
+    CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv" \
+    CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv" \
+    CC=/usr/local/musl/bin/musl-gcc CGO_ENABLED=1 \
     go build -mod=mod -buildmode=plugin -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
-      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN}" \
-      -o "${REL_NPU_PLUGIN}".so "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
+    -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN}" \
+    -o "${REL_NPU_PLUGIN}".so "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 
     if [ ! -f "${BASE_PATH}/output/${REL_NPU_PLUGIN}.so" ]
     then
@@ -115,22 +104,9 @@ function build() {
     chmod 400 "${BASE_PATH}"/output/volcano-*.yaml
 }
 
-function replace_node_predicate() {
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-      return
-    fi
-    cd $BASE_PATH
-    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/huawei_npu.go"
-    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-    sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
-}
-
 function main() {
   clean
   copy_yaml
-  replace_code
-  replace_node_predicate
   build
 }
 

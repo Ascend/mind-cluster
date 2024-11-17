@@ -32,19 +32,11 @@ type HbmInfo struct {
 	BandWidthUtilRate uint32 `json:"hbm_bandwidth_util"` // HBM bandwidth utilization
 }
 
-// HbmAggregateInfo more comprehensive hbm information with ecc information
-type HbmAggregateInfo struct {
-	*HbmInfo
-	ECCInfo *ECCInfo `json:"hbm_ecc_info"` // HBM ECC information
-}
-
 // ChipInfo chip info
 type ChipInfo struct {
-	Type      string `json:"chip_type"`
-	Name      string `json:"chip_name"`
-	Version   string `json:"chip_version"`
-	NpuName   string `json:"npu_name"`
-	AICoreCnt int    `json:"aicore_cnt"`
+	Type    string `json:"chip_type"`
+	Name    string `json:"chip_name"`
+	Version string `json:"chip_version"`
 }
 
 // CgoCreateVDevOut create virtual device output info
@@ -158,15 +150,6 @@ type CgoSocTotalResource struct {
 	Media     CgoMediaResource
 }
 
-// CgoSuperPodInfo super pod info
-type CgoSuperPodInfo struct {
-	SdId       uint32
-	ScaleType  uint32
-	SuperPodId uint32
-	ServerId   uint32
-	Reserve    []uint32
-}
-
 // VirtualDevInfo virtual device infos
 type VirtualDevInfo struct {
 	TotalResource    CgoSocTotalResource
@@ -215,175 +198,8 @@ type VDevActivityInfo struct {
 	IsVirtualDev   bool
 }
 
-// PCIEBwStat contains pcie bandwidth
-type PCIEBwStat struct {
-	PcieRxPBw   PcieStatValue
-	PcieRxNPBw  PcieStatValue
-	PcieRxCPLBw PcieStatValue
-	PcieTxPBw   PcieStatValue
-	PcieTxNPBw  PcieStatValue
-	PcieTxCPLBw PcieStatValue
-}
-
-// PcieStatValue pcie stat three value, like [min_bw,max_bw,avg_bw]
-type PcieStatValue struct {
-	PcieMinBw int32
-	PcieMaxBw int32
-	PcieAvgBw int32
-}
-
 // DeviceNetworkHealth dcmi_get_device_network_health api return value
 type DeviceNetworkHealth struct {
 	HealthCode uint32
 	RetCode    int32
-}
-
-// ECCInfo dcmi_get_device_ecc_info api return value
-type ECCInfo struct {
-	EnableFlag                int32
-	SingleBitErrorCnt         int64
-	DoubleBitErrorCnt         int64
-	TotalSingleBitErrorCnt    int64
-	TotalDoubleBitErrorCnt    int64
-	SingleBitIsolatedPagesCnt int64
-	DoubleBitIsolatedPagesCnt int64
-}
-
-// NpuNetInfo network info of npu
-type NpuNetInfo struct {
-	// The optical info
-	OpticalInfo *OpticalInfo
-	// The transfer rate of network port
-	LinkSpeedInfo *LinkSpeedInfo
-	// Historical link statistics of network ports
-	LinkStatInfo *LinkStatInfo
-	// Statistics about packets
-	StatInfo *StatInfo
-	// Network port real-time bandwidth
-	BandwidthInfo *BandwidthInfo
-	// LinkStatusInfo refers to the link state
-	LinkStatusInfo *LinkStatusInfo
-}
-
-// BandwidthInfo contains network port real-time bandwidth
-type BandwidthInfo struct {
-	// TxValue transform speed
-	TxValue float64 `json:"tx_value"`
-	// RxValue receive speed
-	RxValue float64 `json:"rx_value"`
-}
-
-// HccsStatisticInfo contains hccs statistic info
-type HccsStatisticInfo struct {
-	TxCnt            []uint32
-	RxCnt            []uint32
-	CrcErrCnt        []uint32
-	retryCnt         []uint32
-	reservedFieldCnt []uint32
-}
-
-// HccsBandwidthInfo contains hccs bandwidth info
-type HccsBandwidthInfo struct {
-	ProfilingTime uint32
-	TotalTxbw     float64
-	TotalRxbw     float64
-	TxBandwidth   []float64
-	RxBandwidth   []float64
-}
-
-// SioCrcErrStatisticInfo contains sio crc error statistic info
-type SioCrcErrStatisticInfo struct {
-	TxErrCnt int64
-	RxErrCnt int64
-	Reserved []uint32
-}
-
-// StatInfo the statistics about packets
-type StatInfo struct {
-	// Total number of pause frames received by the MAC
-	MacRxPauseNum float64
-	// Total number of pause frames sent by MAC
-	MacTxPauseNum float64
-	// Total number of PFC frames received by MAC
-	MacRxPfcPktNum float64
-	// Total number of PFC frames sent by MAC
-	MacTxPfcPktNum float64
-	// Total number of bad packets received by MAC
-	MacRxBadPktNum float64
-	// Total number of bad packets sent by MAC
-	MacTxBadPktNum float64
-	// The total number of packets received by the RoCE network card
-	RoceRxAllPktNum float64
-	// The total number of packets sent by the RoCE network card
-	RoceTxAllPktNum float64
-	// The number of bad packets received by the RoCE network card
-	RoceRxErrPktNum float64
-	// The number of bad packets sent by the RoCE network card
-	RoceTxErrPktNum float64
-	// The number of CNP type packets received by the RoCE network card
-	RoceRxCnpPktNum float64
-	// The number of CNP type packets sent by the RoCE network card
-	RoceTxCnpPktNum float64
-	// Number of RoCE network card retry messages
-	RoceNewPktRtyNum float64
-	// Total number of bytes of bad packets sent by MAC
-	MacTxBadOctNum float64
-	// Total number of bytes of bad packets received by MAC
-	MacRxBadOctNum float64
-	// The number of unexpected ACK messages received by the RoCE network card
-	RoceUnexpectedAckNum float64
-	// The number of out-of-order packets received by the RoCE network card
-	RoceOutOfOrderNum float64
-	// The number of packets with domain segment verification errors received by the RoCE network card
-	RoceVerificationErrNum float64
-	// The number of messages generated by abnormal QP connection status received by the RoCE network card
-	RoceQpStatusErrNum float64
-	// The number of ecn
-	RoceEcnDBNum float64
-	// The number of err info
-	MacRXFcsErrPktNum float64
-}
-
-// LinkStatInfo refers to the historical link statistics, including the times of link-up
-type LinkStatInfo struct {
-	// The times of link-up
-	LinkUPNum float64
-}
-
-// LinkStatusInfo refers to the link state
-type LinkStatusInfo struct {
-	// The state of link
-	LinkState string
-}
-
-// LinkSpeedInfo the transfer rate of network port
-type LinkSpeedInfo struct {
-	// The rate of network port
-	Speed float64
-}
-
-// OpticalInfo indicates the optical module information
-type OpticalInfo struct {
-	// Optical module status, indicating whether it is in place (present)
-	OpticalState float64
-	// Power sent by No.0 optical module
-	OpticalTxPower0 float64
-	// Power sent by No.1 optical module
-	OpticalTxPower1 float64
-	// Power sent by No.2 optical module
-	OpticalTxPower2 float64
-	// Power sent by No.3 optical module
-	OpticalTxPower3 float64
-	// Reception power of No.0 optical module
-	OpticalRxPower0 float64
-	// Reception power of No.1 optical module
-	OpticalRxPower1 float64
-	// Reception power of No.2 optical module
-	OpticalRxPower2 float64
-	// Reception power of No.3 optical module
-	OpticalRxPower3 float64
-	// Optical module voltage
-	OpticalVcc float64
-	// Optical module temperature
-	OpticalTemp float64
 }

@@ -20,23 +20,13 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 
 package plugin
 
-type torType int
-
 const (
 	// TorNodeCMName the Name of tor info configmap
 	TorNodeCMName = "basic-tor-node-cm"
-	// TorShareCMName the Name of tor share info configmap
-	TorShareCMName = "tor-share-cm"
 	// TorInfoCMKey the key of tor info in configmap
 	TorInfoCMKey = "tor_info"
-	// TorLevelCMKey the key of tor level in configmap
-	TorLevelCMKey = "tor_level"
-	// SingleLayer the single layer switch value of tor level in configmap
-	SingleLayer = "single_layer"
 	// TorAffinityKey the key of tor affinity
 	TorAffinityKey = "tor-affinity"
-	// GlobalTorInfoKey the key of tor share info in configmap
-	GlobalTorInfoKey = "global-tor-info"
 	// LargeModelTag the value of large model
 	LargeModelTag = "large-model-schema"
 	// NormalSchema the value of normal tor affinity
@@ -46,97 +36,9 @@ const (
 	// JobDeleteFlag the flag mark job is deleted
 	JobDeleteFlag = "fault-job-delete"
 	// JobDelete the value of mark job is deleted
-	JobDelete            = "deleted"
-	fillJobMaxNPUTaskNum = 4
-	keyOfSharedTorNum    = "shared-tor-num"
-	shareTorNum1         = 1
-	shareTorNum2         = 2
-	keyOfNSLBVersion     = "nslb-version"
-	defaultNSLBVersion   = "1.0"
-	// NSLB2Version nslb 2.0 version
-	NSLB2Version  = "2.0"
-	descOrder     = "desc"
-	ascOrder      = "asc"
-	isHealthy     = "isHealthy"
-	isSharedTor   = "isSharedTor"
-	vcTaskIndex   = "VC_TASK_INDEX"
-	noneSharedTor = 0
-	cmNameSpace   = "volcano-system"
-
-	defaultSuperPodSize = 48
-	defaultReserveNodes = 2
-	// SharedTorIp shared tor Ip
-	SharedTorIp = "sharedTorIp"
-	// PodRankIndexKey rank index key
-	PodRankIndexKey = "hccl/rankIndex"
+	JobDelete = "deleted"
 )
 
 const (
-	// the define of tor attr
-	sharedTor    = 1
-	exclusiveTor = 2
-	freeTor      = 0
-	allTor       = -1
-	freeTorAnno  = "0"
-)
-
-const (
-	// the define of tor is healthy
-	healthyTor   = 0
-	unhealthyTor = 1
-)
-
-const (
-	scoreWeight                   = 100
-	defaultSchedulingTaskNum      = -1
-	deviceInfoForceUpdateInterval = 10
-)
-
-const (
-	chipTypeKey = "node.kubernetes.io/npu.chip.name"
-	// ChipTypeB1 chip type 910B1
-	ChipTypeB1 = "910B1"
-	// ChipTypeB2C chip type 910B2C
-	ChipTypeB2C = "910B2C"
-	// ChipTypeB3 chip type 910B3
-	ChipTypeB3 = "910B3"
-	// ChipTypeB4 chip type 910B4
-	ChipTypeB4 = "910B4"
-)
-
-// the temp of 910B1/910B2C
-const (
-	// VNPUTempVir06 vir06_1c_16g
-	VNPUTempVir06 = "vir06_1c_16g"
-	// VNPUTempVir03 vir03_1c_8g
-	VNPUTempVir03 = "vir03_1c_8g"
-	// VNPUTempVir12 vir12_3c_32g
-	VNPUTempVir12 = "vir12_3c_32g"
-)
-
-// the temp of 910B3
-const (
-	// VNPUTempVir05 vir05_1c_16g
-	VNPUTempVir05 = "vir05_1c_16g"
-	// VNPUTempVir10 vir10_3c_32g
-	VNPUTempVir10 = "vir10_3c_32g"
-)
-
-// the temp of 910B4
-const (
-	// VNPUB4TempVir05 vir05_1c_8g
-	VNPUB4TempVir05 = "vir05_1c_8g"
-	// VNPUB4TempVir10C3NM vir10_3c_16g_nm
-	VNPUB4TempVir10C3NM = "vir10_3c_16g_nm"
-	// VNPUB4TempVir10C4M vir10_4c_16g_m
-	VNPUB4TempVir10C4M = "vir10_4c_16g_m"
-	// VNPUB4TempVir10 vir10_3c_16g
-	VNPUB4TempVir10 = "vir10_3c_16g"
-)
-
-const (
-	// GraceExitValue grace exit value
-	GraceExitValue = 1
-	// DefaultExitValue default exit value
-	DefaultExitValue = 0
+	scoreWeight = 100
 )

@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1 is used to define AscendJob object and its initialization.
 package v1
 
 import (
@@ -46,7 +45,7 @@ type AscendJobSpec struct {
 	// RunPolicy encapsulates various runtime policies of the distributed training
 	// job, for example how to clean up resources and how long the job can stay
 	// active.
-	// +kubebuilder:validation:Optional
+	//+kubebuilder:validation:Optional
 	RunPolicy commonv1.RunPolicy `json:"runPolicy"`
 
 	// SuccessPolicy defines the policy to mark the AscendJob as succeeded.
@@ -77,8 +76,6 @@ type AscendJobList struct {
 type SuccessPolicy string
 
 const (
-	// SuccessPolicyDefault is the default policy of success
-	SuccessPolicyDefault SuccessPolicy = ""
-	// SuccessPolicyAllWorkers is the 'ALLWorkers' policy of success
+	SuccessPolicyDefault    SuccessPolicy = ""
 	SuccessPolicyAllWorkers SuccessPolicy = "AllWorkers"
 )

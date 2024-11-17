@@ -25,11 +25,12 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -414,190 +415,38 @@ func TestUnRegisterNPUScheduler(t *testing.T) {
 	}
 }
 
-type initVolcanoFrameFromSsnTestCase struct {
-	name    string
-	configs []conf.Configuration
-	want    VolcanoFrame
+type frameFields struct {
+	UID        types.UID
+	Conf       []config.Configuration
+	KubeClient kubernetes.Interface
 }
 
-func buildInitVolcanoFrameFromSsnTestCases() []initVolcanoFrameFromSsnTestCase {
-	superPodSizeKey := "super-pod-size"
-	reserveNodesKey := "reserve-nodes"
-	var testCases []initVolcanoFrameFromSsnTestCase
-	testCases = append(testCases,
-		getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey, reserveNodesKey)...)
-	testCases = append(testCases,
-		getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey, reserveNodesKey)...)
-	testCases = append(testCases,
-		getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey, reserveNodesKey)...)
-	testCases = append(testCases,
-		getDefaultVolcanoFrameCasesOfReserveNodesValueMoreError(superPodSizeKey, reserveNodesKey)...)
-	return testCases
+type AddDefaultSchedulerSelectorConfigTest struct {
+	name   string
+	fields frameFields
 }
 
-func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
-	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
-	return []initVolcanoFrameFromSsnTestCase{
+func buildAddDefaultSchedulerSelectorConfigTest() []AddDefaultSchedulerSelectorConfigTest {
+	tests := []AddDefaultSchedulerSelectorConfigTest{
 		{
-			name: "05-GetReserveNodes failed, set default reserve-nodes: 2",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "40",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   40,
-				ReservePodSize: 2,
-			},
-		},
-		{
-			name: "06-GetReserveNodes failed, set default reserve-nodes: 2",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "40",
-						reserveNodesKey: "-1",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   40,
-				ReservePodSize: 2,
-			},
+			name:   "01-AddDefaultSchedulerSelectorConfig ok test.",
+			fields: frameFields{Conf: nil},
 		},
 	}
+	return tests
 }
 
-func getDefaultVolcanoFrameCasesOfReserveNodesValueMoreError(superPodSizeKey,
-	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
-	return []initVolcanoFrameFromSsnTestCase{
-		{
-			name: "07-reserve-nodes is bigger than super-pod-size, set default reserve-nodes: 2",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "8",
-						reserveNodesKey: "10",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   8,
-				ReservePodSize: 2,
-			},
-		},
-		{
-			name: "08-reserve-nodes is bigger than super-pod-size, set default reserve-nodes: 1",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "2",
-						reserveNodesKey: "90",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   2,
-				ReservePodSize: 0,
-			},
-		},
-	}
-}
+func TestVolcanoFrameAddDefaultSchedulerSelectorConfig(t *testing.T) {
 
-func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
-	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
-	return []initVolcanoFrameFromSsnTestCase{
-		{
-			name: "01-GetSizeOfSuperPod and GetReserveNodes failed, set default super-pod-size: 48, " +
-				"default reserve-nodes: 2",
-			configs: []conf.Configuration{
-				{
-					Name:      util.CMInitParamKey,
-					Arguments: map[string]interface{}{},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: defaultReserveNodes,
-			},
-		},
-		{
-			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 48",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "****",
-						reserveNodesKey: "2",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: defaultReserveNodes,
-			},
-		},
-	}
-}
-
-func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
-	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
-	return []initVolcanoFrameFromSsnTestCase{
-		{
-			name: "03-GetSizeOfSuperPod failed, set default super-pod-size: 48",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "-1",
-						reserveNodesKey: "3",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: 3,
-			},
-		},
-		{
-			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 48",
-			configs: []conf.Configuration{
-				{
-					Name: util.CMInitParamKey,
-					Arguments: map[string]interface{}{
-						superPodSizeKey: "0",
-						reserveNodesKey: "4",
-					},
-				},
-			},
-			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: 4,
-			},
-		},
-	}
-}
-
-func TestInitVolcanoFrameFromSsn(t *testing.T) {
-	ssn := &framework.Session{}
-	sHandle := &ScheduleHandler{}
-	for _, tt := range buildInitVolcanoFrameFromSsnTestCases() {
+	tests := buildAddDefaultSchedulerSelectorConfigTest()
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ssn.Configurations = tt.configs
-			sHandle.InitVolcanoFrameFromSsn(ssn)
-			if !reflect.DeepEqual(sHandle.FrameAttr.SuperPodSize, tt.want.SuperPodSize) {
-				t.Errorf("InitVolcanoFrameFromSsn() = %v, want %v", sHandle.FrameAttr.SuperPodSize, tt.want.SuperPodSize)
+			vf := &VolcanoFrame{
+				UID:        tt.fields.UID,
+				Confs:      tt.fields.Conf,
+				KubeClient: tt.fields.KubeClient,
 			}
-			if !reflect.DeepEqual(sHandle.FrameAttr.ReservePodSize, tt.want.ReservePodSize) {
-				t.Errorf("InitVolcanoFrameFromSsn() = %v, want %v", sHandle.FrameAttr.ReservePodSize, tt.want.ReservePodSize)
-			}
+			vf.AddDefaultSchedulerSelectorConfig()
 		})
 	}
-
 }

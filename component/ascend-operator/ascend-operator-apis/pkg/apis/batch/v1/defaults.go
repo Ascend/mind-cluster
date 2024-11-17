@@ -92,8 +92,8 @@ func setTypeNameToCamelCase(job *AscendJob, typ commonv1.ReplicaType) {
 	}
 }
 
-// SetDefaultsAscendJob sets any unspecified values to defaults.
-func SetDefaultsAscendJob(job *AscendJob) {
+// SetDefaults_AscendJob sets any unspecified values to defaults.
+func SetDefaults_AscendJob(job *AscendJob) {
 	// Set default cleanpod policy to Running.
 	if job == nil {
 		return
@@ -129,7 +129,7 @@ func GetJobFramework(job *AscendJob) (string, error) {
 	}
 	frame, ok := job.Labels[FrameworkKey]
 	if !ok {
-		return "", fmt.Errorf("ascendJob<%s-%s> label framework is not set", job.Namespace, job.Name)
+		return "", fmt.Errorf("AscendJob<%s-%s> label framework is not set", job.Namespace, job.Name)
 	}
 	return frame, nil
 }

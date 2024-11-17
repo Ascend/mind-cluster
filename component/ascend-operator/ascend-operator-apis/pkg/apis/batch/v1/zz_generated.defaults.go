@@ -39,7 +39,7 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 }
 
 func SetObjectDefaults_AscendJob(in *AscendJob) {
-	SetDefaultsAscendJob(in)
+	SetDefaults_AscendJob(in)
 }
 
 func SetObjectDefaults_AscendJobList(in *AscendJobList) {

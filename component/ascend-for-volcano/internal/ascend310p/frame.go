@@ -27,9 +27,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310p/card310px2"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310p/chip310px2"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -43,45 +40,7 @@ func New(npuName string) plugin.ISchedulerPlugin {
 	npuPlugin.SetDefaultJobSchedulerConfig(nil)
 	npuPlugin.SetMaxNodeNPUNum(maxNodeNPUNum)
 	npuPlugin.InitVNPU()
-
-	npuPlugin.Kind = map[string]base.AscendHandler{}
-	npuPlugin.Kind[chip310px2.SchedulerName] = chip310px2.New(chip310px2.SchedulerName)
-	npuPlugin.Kind[card310px2.SchedulerName] = card310px2.New(card310px2.SchedulerName)
-
 	return npuPlugin
-}
-
-// InitMyJobPlugin for 300I duo job init
-func (tp *ascend310P) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) error {
-	if tp == nil {
-		mgs := fmt.Errorf("nil plugin %s", PluginName)
-		klog.V(util.LogInfoLev).Infof("InitMyJobPlugin %v.", mgs)
-		return mgs
-	}
-	tp.SetSchedulerAttr(attr)
-	tp.SetSchedulerEnv(env)
-	klog.V(util.LogDebugLev).Infof("InitMyJobPlugin attr label %#v.", attr.Label)
-	duo, ok := attr.Label[DuoKeyLabel]
-	if !ok {
-		klog.V(util.LogInfoLev).Info("not 300I duo")
-		return nil
-	}
-	v, ok := attr.Label[Accelerator310Key]
-	if !ok {
-		v = Chip310AcceleratorValue
-	}
-	if duo == TrueStr {
-		duo = DuoKeyLabel
-	}
-	value, ok := tp.Kind[attr.ReqNPUName+duo+v]
-	if !ok {
-		return fmt.Errorf("not support %s", attr.ReqNPUName+duo+v)
-	}
-	if err := value.InitMyJobPlugin(attr, env); err != nil {
-		return err
-	}
-	tp.handle = value
-	return nil
 }
 
 // PreStartAction pre-processing actions for rescheduling
@@ -92,17 +51,17 @@ func (tp *ascend310P) PreStartAction(i interface{}, ssn *framework.Session) erro
 		return fmt.Errorf("%s handler not enabled or ssn is nil: %s", util.NPU310PCardName, util.ArgumentError)
 	}
 
-	reErr := tp.preStartRescheduling(i)
 	vErr := tp.preStartVNPU(ssn)
+	reErr := tp.preStartRescheduling(i)
 	if reErr == nil && vErr == nil {
 		return nil
 	}
-
 	return fmt.Errorf("%s %s", util.SafePrint(reErr), util.SafePrint(vErr))
 }
 
 // ValidNPUJob check job req npu num and mode
 func (tp *ascend310P) ValidNPUJob() *api.ValidateResult {
+	var err error
 	if tp == nil {
 		err := errors.New(util.ArgumentError)
 		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
@@ -112,16 +71,9 @@ func (tp *ascend310P) ValidNPUJob() *api.ValidateResult {
 		// this is the old whole card.
 		return tp.NPUHandler.ValidNPUJob()
 	}
-	var err error = nil
 	switch tp.Type {
 	case util.JobTypeWhole:
-		if tp.SchedulerJobAttr.Label[DuoKeyLabel] == TrueStr {
-			return tp.handle.ValidNPUJob()
-		}
-		if validErr := tp.NPUHandler.ValidNPUJob(); validErr != nil {
-			return validErr
-		}
-		return tp.reHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+		return tp.NPUHandler.ValidNPUJob()
 	case util.JobTypeStCut:
 		return tp.validStVNPUJob()
 	case util.JobTypeDyCut:
@@ -161,29 +113,10 @@ func (tp *ascend310P) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask %s.", tp.GetPluginName(), err)
 		return err
 	}
-	err = tp.checkByJobType(task, node, tpTask, err)
-	if err != nil {
-		return err
-	}
-
-	if reErr := tp.reHandle.CheckNodeNPUByTask(task, node, tp.ReqNPUName); reErr != nil {
-		return fmt.Errorf("rescheduling CheckNodeNPUByTask %s", reErr.Error())
-	}
-	return nil
-}
-
-func (tp *ascend310P) checkByJobType(task *api.TaskInfo, node plugin.NPUNode,
-	tpTask util.NPUTask, err error) error {
 	switch tpTask.VTask.Type {
 	case util.JobTypeWhole:
-		if tp.SchedulerJobAttr.Label[DuoKeyLabel] == TrueStr {
-			if err := tp.handle.CheckNodeNPUByTask(task, node); err != nil {
-				return err
-			}
-		} else {
-			if err = tp.NPUHandler.CheckNodeNPUByTask(task, node); err != nil {
-				return err
-			}
+		if err = tp.NPUHandler.CheckNodeNPUByTask(task, node); err != nil {
+			return err
 		}
 	case util.JobTypeStCut:
 		if err = tp.vHandle.StaticVNPU.CheckNodeNPUByTask(task, node, util.VResource{}); err != nil {
@@ -202,6 +135,10 @@ func (tp *ascend310P) checkByJobType(task *api.TaskInfo, node plugin.NPUNode,
 		klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask %s %s.", tp.GetPluginName(), tp.Name, err)
 		return err
 	}
+
+	if reErr := tp.reHandle.CheckNodeNPUByTask(task, node, tp.ReqNPUName); reErr != nil {
+		return fmt.Errorf("rescheduling CheckNodeNPUByTask %s", reErr.Error())
+	}
 	return nil
 }
 
@@ -216,8 +153,22 @@ func (tp *ascend310P) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 		return nil
 	}
 
-	err, done := tp.scoreByJobType(task, nodes, scoreMap)
-	if done {
+	switch tp.Type {
+	case util.JobTypeWhole:
+		if err := tp.NPUHandler.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
+			return err
+		}
+	case util.JobTypeStCut:
+		if err := tp.vHandle.StaticVNPU.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
+			return err
+		}
+	case util.JobTypeDyCut:
+		if err := tp.vHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
+			return err
+		}
+	default:
+		err := fmt.Errorf("%s no type %d", tp.Name, tp.Type)
+		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes %s %s.", tp.GetPluginName(), tp.Name, err)
 		return err
 	}
 
@@ -230,39 +181,10 @@ func (tp *ascend310P) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 	return nil
 }
 
-func (tp *ascend310P) scoreByJobType(task *api.TaskInfo, nodes []*api.NodeInfo,
-	scoreMap map[string]float64) (error, bool) {
-	switch tp.Type {
-	case util.JobTypeWhole:
-		if tp.SchedulerJobAttr.Label[DuoKeyLabel] == TrueStr {
-			if err := tp.handle.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
-				return err, true
-			}
-		} else {
-			if err := tp.NPUHandler.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
-				return err, true
-			}
-		}
-	case util.JobTypeStCut:
-		if err := tp.vHandle.StaticVNPU.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
-			return err, true
-		}
-	case util.JobTypeDyCut:
-		if err := tp.vHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, scoreMap); err != nil {
-			return err, true
-		}
-	default:
-		err := fmt.Errorf("%s no type %d", tp.Name, tp.Type)
-		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes %s %s.", tp.GetPluginName(), tp.Name, err)
-		return err, true
-	}
-	return nil, false
-}
-
 // UseAnnotation select npu for task from node
 func (tp *ascend310P) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation job(%s).", tp.GetPluginName(), tp.Name)
-
+	var err error
 	if tp.VJob == nil {
 		// this is the old whole card.
 		return tp.NPUHandler.UseAnnotation(task, node)
@@ -279,9 +201,6 @@ func (tp *ascend310P) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	}
 	switch tpTask.VTask.Type {
 	case util.JobTypeWhole:
-		if tp.SchedulerJobAttr.Label[DuoKeyLabel] == TrueStr {
-			return tp.handle.UseAnnotation(task, node)
-		}
 		return tp.NPUHandler.UseAnnotation(task, node)
 	case util.JobTypeStCut:
 		return tp.vHandle.StaticVNPU.UseAnnotation(task, node, util.VResource{}, tp.vHandle.VT)
@@ -294,7 +213,7 @@ func (tp *ascend310P) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 		}
 		return tp.vHandle.DynamicVNPU.UseAnnotation(task, node, taskRes, tp.vHandle.VT)
 	default:
-		err := fmt.Errorf("%s no type %d", tp.Name, tp.Type)
+		err = fmt.Errorf("%s no type %d", tp.Name, tp.Type)
 		klog.V(util.LogDebugLev).Infof("%s UseAnnotation %s %s.", tp.GetPluginName(), tp.Name, err)
 	}
 

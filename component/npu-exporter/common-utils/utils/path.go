@@ -326,8 +326,7 @@ func getLibFromLdCmd(libraryName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var absLibPath string
-	if absLibPath, err = checkAbsPath(libraryAbsName); err == nil {
+	if absLibPath, err := checkAbsPath(libraryAbsName); err == nil {
 		return absLibPath, nil
 	}
 	return "", fmt.Errorf("driver lib is not exist or it's permission is invalid, %v", err)

@@ -14,31 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1 is used to define some client- and job-related interfaces, initialization operations,
-// and method implementations.
 package v1
 
 import (
 	"net/http"
 
+	"ascend-operator-apis/pkg/client/clientset/versioned/scheme"
 	"k8s.io/client-go/rest"
 
-	"ascend-operator-apis/pkg/apis/batch/v1"
-	"ascend-operator-apis/pkg/client/clientset/versioned/scheme"
+	ascendv1 "ascend-operator-apis/pkg/apis/batch/v1"
 )
 
-// BatchV1Interface is a batch client interface.
 type BatchV1Interface interface {
 	RESTClient() rest.Interface
 	JobsGetter
 }
 
-// BatchV1Client is a client structure.
 type BatchV1Client struct {
 	restClient rest.Interface
 }
 
-// Jobs returns a JobInterface object instance.
 func (c *BatchV1Client) Jobs(namespace string) JobInterface {
 	if c == nil {
 		return nil
@@ -71,7 +66,7 @@ func NewForConfig(c *rest.Config) (*BatchV1Client, error) {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1.SchemeGroupVersion
+	gv := ascendv1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
@@ -94,10 +89,20 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*BatchV1Client, erro
 	if err != nil {
 		return nil, err
 	}
-	return &BatchV1Client{restClient: client}, nil
+	return &BatchV1Client{client}, nil
+}
+
+// NewForConfigOrDie creates a new BatchV1alpha1Client for the given config and
+// panics if there is an error in the config.
+func NewForConfigOrDie(c *rest.Config) *BatchV1Client {
+	client, err := NewForConfig(c)
+	if err != nil {
+		panic(err)
+	}
+	return client
 }
 
 // New creates a new BatchV1alpha1Client for the given RESTClient.
 func New(c rest.Interface) *BatchV1Client {
-	return &BatchV1Client{restClient: c}
+	return &BatchV1Client{c}
 }

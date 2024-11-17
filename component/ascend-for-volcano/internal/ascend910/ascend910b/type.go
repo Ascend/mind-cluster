@@ -19,10 +19,7 @@ Package ascend910b is using for HuaWei Ascend pin affinity schedule.
 */
 package ascend910b
 
-import (
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/vnpu"
-)
+import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
 
 // SelectNodeInf for node hccs.
 type SelectNodeInf struct {
@@ -35,7 +32,6 @@ type SelectNodeInf struct {
 // Base910b for Ascend 910B base.
 type Base910b struct {
 	base.NPUHandler
-	VHandle          *vnpu.VirtualNPU
 	AffScoreList     [][]int
 	NpuNumInvalidMap map[int]struct{}
 	acceleratorValue string

@@ -103,7 +103,7 @@ func (tp *asend310) ValidNPUJob() *api.ValidateResult {
 func (tp *asend310) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", PluginName)
+		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", PluginName)
 	}
 	tp.reHandle = k
 	return nil

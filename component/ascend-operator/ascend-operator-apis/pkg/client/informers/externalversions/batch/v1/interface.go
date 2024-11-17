@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1 is used to implement job informer-related methods.
 package v1
 
 import "ascend-operator-apis/pkg/client/informers/externalversions/internalinterfaces"
@@ -32,8 +31,7 @@ type version struct {
 }
 
 // New returns a new Interface.
-func New(f internalinterfaces.SharedInformerFactory, namespace string,
-	tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
+func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 

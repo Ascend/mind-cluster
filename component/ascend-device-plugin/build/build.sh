@@ -104,7 +104,6 @@ function modify_version() {
 
     cp "$CUR_DIR"/faultCode.json "$TOP_DIR"/output/faultCode.json
     cp "$CUR_DIR"/faultCustomization.json "$TOP_DIR"/output/faultCustomization.json
-    cp "$CUR_DIR"/SwitchFaultCode.json "$TOP_DIR"/output/SwitchFaultCode.json
 
     sed -i "s#output/device-plugin#device-plugin#" "$TOP_DIR"/output/Dockerfile
 }

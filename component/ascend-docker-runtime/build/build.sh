@@ -89,7 +89,7 @@ function build_bin()
     echo "make installhelper"
     cd ${INSTALLHELPERSRCDIR}
     [ -d "${BUILD}/build/helper/build" ] && rm -rf ${BUILD}/build/helper/build
-    export CGO_ENABLED=0
+    export CGO_ENABLED=1
     export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_LDFLAGS="-Wl,-z,now -Wl,-s,--build-id=none -pie"
@@ -107,7 +107,6 @@ function build_bin()
     cd ${RUNTIMEDIR}
     [ -d "${RUNTIMESRCDIR}/build" ] && rm -rf ${RUNTIMESRCDIR}/build
     mkdir ${RUNTIMESRCDIR}/build&&cd ${RUNTIMESRCDIR}/build
-    export CGO_ENABLED=1
     go build -buildmode=pie  -ldflags='-linkmode=external -buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath  -o ascend-docker-runtime ../${RUNTIMESRCNAME}
 }
 
@@ -140,7 +139,6 @@ function copy_file_output()
     RUN_PKG_NAME="${PACKAGENAME}_${VERSION}_linux-${CPUARCH}.run"
     DATE=$(date -u "+%Y-%m-%d")
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
-    /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
     bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
     --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ascend-docker-runtime ./run_main.sh
     mv ${RUN_PKG_NAME} ${OUTPUT}

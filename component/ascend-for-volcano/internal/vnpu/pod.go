@@ -41,19 +41,20 @@ func GetSegmentFailureTaskIDs(ssn *framework.Session, namespace string) []api.Ta
 		return nil
 	}
 
+	var faultTIDs []api.TaskID
 	events, err := getNamespaceEvents(ssn, namespace)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("GetSegmentFailureTaskIDs get error :%s.", err)
 		return nil
 	}
-	var faultTIDs []api.TaskID
+
 	for _, event := range events.Items {
 		if !isEventSegmentFailurePod(event) {
 			continue
 		}
 
 		faultPod := getPodFromKubernetes(ssn, event.InvolvedObject.Name, namespace)
-		if faultPod == nil || faultPod.UID != event.InvolvedObject.UID {
+		if faultPod == nil {
 			continue
 		}
 		faultTIDs = append(faultTIDs, api.TaskID(faultPod.UID))

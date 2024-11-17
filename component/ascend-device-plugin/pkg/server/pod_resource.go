@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
 	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
@@ -101,9 +101,6 @@ func (pr *PodResource) getDeviceFromPod(podResources *v1alpha1.PodResources) (st
 		if err != nil {
 			return "", nil, err
 		}
-		if containerResourceName == "" {
-			continue
-		}
 		if resourceName != "" && containerResourceName != resourceName {
 			return "", nil, fmt.Errorf("only support one device type in a pod")
 		}
@@ -163,7 +160,6 @@ func (pr *PodResource) assemblePodResource() (map[string]PodDevice, error) {
 		}
 		resourceName, podDevice, err := pr.getDeviceFromPod(pod)
 		if err != nil || resourceName == "" || len(podDevice) == 0 {
-			hwlog.RunLog.Debugf("get device from pod maybe err: %v", err)
 			continue
 		}
 		device[pod.Namespace+common.UnderLine+pod.Name] = PodDevice{
@@ -191,25 +187,24 @@ func (pr *PodResource) stop() {
 
 // IsPodMoveComplete is UnHealthy Pod remove complete
 func (pr *PodResource) IsPodMoveComplete(deviceName string, podList []v1.Pod, ps *PluginServer) bool {
-	hwlog.RunLog.Debugf("check is pod real use chip %s move complete or not", deviceName)
+	hwlog.RunLog.Infof("check is pod real use chip %s move complete or not", deviceName)
 	podResourceList, err := pr.getValidPodResources(podList)
 	if err != nil {
 		return false
 	}
 	k8sDev := pr.getKltDev(ps, deviceName)
-	hwlog.RunLog.Debugf("check is pod klt use chip %s move complete or not", k8sDev)
+	hwlog.RunLog.Infof("check is pod klt use chip %s move complete or not", k8sDev)
 	for _, podResource := range podResourceList {
 		if len(podResource.DeviceIds) == 0 {
 			continue
 		}
 		for _, devID := range podResource.DeviceIds {
 			if devID == k8sDev {
-				hwlog.RunLog.Debugf("device %s is free now", devID)
 				return false
 			}
 		}
 	}
-	hwlog.RunLog.Debug("UnHealthy pod remove complete")
+	hwlog.RunLog.Info("UnHealthy pod remove complete")
 	return true
 }
 

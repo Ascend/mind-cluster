@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"os"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/devmanager"
 
 	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/server"
 )
 
@@ -74,14 +73,11 @@ var (
 		"computing power splitting function, only support Ascend910 and Ascend310P")
 	use310PMixedInsert = flag.Bool("use310PMixedInsert", false, "Whether to use mixed insert "+
 		"ascend310P-V, ascend310P-VPro, ascend310P-IPro card mode")
-	hotReset = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, "+
-		"1-train-online, 2-train-offline")
+	hotReset      = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, 1-train")
 	shareDevCount = flag.Uint("shareDevCount", 1, "share device function, enable the func by setting "+
 		"a value greater than 1, range is [1, 100], only support 310B")
 	linkdownTimeout = flag.Int64("linkdownTimeout", defaultLinkdownTimeout, "linkdown timeout duration, "+
 		", range [1, 30]")
-	dealWatchHandler = flag.Bool("dealWatchHandler", false,
-		"update pod cache when receiving pod informer watch errors")
 	checkCachedPods = flag.Bool("checkCachedPods", true, "check pods in cache periodically, default true")
 )
 
@@ -143,7 +139,7 @@ func checkParam() bool {
 		return false
 	}
 	switch *hotReset {
-	case common.HotResetClose, common.HotResetInfer, common.HotResetTrainOnLine, common.HotResetTrainOffLine:
+	case common.HotResetClose, common.HotResetInfer, common.HotResetTrain:
 	default:
 		hwlog.RunLog.Error("hot reset mode param invalid")
 		return false
@@ -207,18 +203,6 @@ func InitFunction() (*server.HwDevManager, error) {
 		return nil, fmt.Errorf("init device manager failed")
 	}
 	hwlog.RunLog.Info("init device manager success")
-	common.ParamOption.EnableSwitchFault = true
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		switchDevMgr := deviceswitch.NewSwitchDevManager()
-		if err := switchDevMgr.InitSwitchDev(); err != nil {
-			hwlog.RunLog.Warnf("failed to init switch switch device manager, will not deal with switch fault, "+
-				"err: %s", err.Error())
-			common.ParamOption.EnableSwitchFault = false
-			// will not return err, to ensure dp keep running while switch is not reachable
-			return hdm, nil
-		}
-		hdm.SwitchDevManager = switchDevMgr
-	}
 	return hdm, nil
 }
 
@@ -235,7 +219,6 @@ func setParameters() {
 		BuildScene:         BuildScene,
 		ShareCount:         *shareDevCount,
 		LinkdownTimeout:    *linkdownTimeout,
-		DealWatchHandler:   *dealWatchHandler,
 		CheckCachedPods:    *checkCachedPods,
 	}
 }

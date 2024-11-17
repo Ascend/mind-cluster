@@ -52,7 +52,7 @@ func New(name string) base.AscendHandler {
 // ValidNPUJob check job req npu num and mode
 func (tp *card910x2) ValidNPUJob() *api.ValidateResult {
 	vResult := &api.ValidateResult{}
-	var vErr error = nil
+	var vErr error
 	defer func() {
 		if vErr != nil {
 			vResult.Pass = false
@@ -82,7 +82,7 @@ func (tp *card910x2) ValidNPUJob() *api.ValidateResult {
 func (tp *card910x2) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
 	return nil

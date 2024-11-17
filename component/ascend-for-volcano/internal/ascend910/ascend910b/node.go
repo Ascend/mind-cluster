@@ -49,7 +49,6 @@ func (ab *Base910b) UpdateNodeInfo(node plugin.NPUNode, usedTop []int) *plugin.N
 	return &node
 }
 
-// GetNodeHccsArray get node hccs array
 func (ab *Base910b) GetNodeHccsArray(nodeTop []int) ([]int, []int) {
 	var leftHccsArray []int
 	var rightHccsArray []int

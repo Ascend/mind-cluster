@@ -223,12 +223,7 @@ func file_isulad_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_isulad_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*InspectContainerRequest)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*InspectContainerRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -240,12 +235,7 @@ func file_isulad_proto_init() {
 			}
 		}
 		file_isulad_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*InspectContainerResponse)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*InspectContainerResponse); i {
 			case 0:
 				return &v.state
 			case 1:

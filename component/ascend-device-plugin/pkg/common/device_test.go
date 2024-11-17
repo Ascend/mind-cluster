@@ -22,14 +22,7 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
-)
-
-const (
-	cardNum          = 2
-	generalFaultCode = "[0x00f103b0,155649,na,NoneExist]"
-	firstFaultIdx    = 0
 )
 
 // TestToString for test ToString
@@ -76,7 +69,7 @@ func TestConvertDevListToSets(t *testing.T) {
 			convey.So(ret.Len(), convey.ShouldEqual, 0)
 			testDevices := "Ascend910-0,Ascend910-1"
 			res := ConvertDevListToSets(testDevices, CommaSepDev)
-			convey.So(res.Len(), convey.ShouldEqual, cardNum)
+			convey.So(res.Len(), convey.ShouldEqual, 2)
 		})
 		convey.Convey("not match Ascend910", func() {
 			devices := "0.1.2"
@@ -197,35 +190,6 @@ func TestCheckCardUsageMode(t *testing.T) {
 	convey.Convey("test CheckCardUsageMode", t, func() {
 		convey.Convey("do not get product type", func() {
 			convey.So(CheckCardUsageMode(true, []string{}), convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetSwitchFaultInfo test for convert fault code into struct
-func TestGetSwitchFaultInfo(t *testing.T) {
-	convey.Convey("test GetSwitchFaultInfo", t, func() {
-		ParamOption.RealCardType = common.Ascend910A3
-		ParamOption.EnableSwitchFault = true
-		currentSwitchFault = []SwitchFaultEvent{}
-		SwitchFaultLevelMap = map[string]int{}
-		convey.Convey("test empty SwitchFaultLevelMap", func() {
-			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
-			fault := GetSwitchFaultInfo()
-			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
-		})
-		convey.Convey("test actually level", func() {
-			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
-			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
-			fault := GetSwitchFaultInfo()
-			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
-
-			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
-			fault = GetSwitchFaultInfo()
-			convey.So(fault.FaultLevel == PreSeparateFaultLevelStr, convey.ShouldBeTrue)
-
-			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
-			fault = GetSwitchFaultInfo()
-			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
 		})
 	})
 }

@@ -16,11 +16,18 @@ fi
 
 arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
+if [ "${arch:0:5}" = 'aarch' ]; then
+  arch=arm64
+else
+  arch=amd64
+fi
 
 OUTPUT_NAME="ascend-operator"
 sed -i "s/ascend-operator:.*/ascend-operator:${build_version}/" "${TOP_DIR}"/build/${OUTPUT_NAME}.yaml
 
 DOCKER_FILE_NAME="Dockerfile"
+docker_zip_name="ascend-operator-${build_version}-${arch}.tar.gz"
+docker_images_name="ascend-operator:${build_version}"
 
 function clear_env() {
   rm -rf "${TOP_DIR}"/output/*
@@ -29,11 +36,11 @@ function clear_env() {
 
 function build() {
   cd "${TOP_DIR}"
-  export CGO_ENABLED=0
+
   CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
   CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
   go build -mod=mod -buildmode=pie  -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now  -X main.BuildName=${OUTPUT_NAME} \
-            -X main.BuildVersion=${build_version}_linux-${arch}" \
+            -X main.BuildVersion=${build_version}" \
             -o ${OUTPUT_NAME}
   ls ${OUTPUT_NAME}
   if [ $? -ne 0 ]; then

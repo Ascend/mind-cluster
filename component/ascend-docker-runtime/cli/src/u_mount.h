@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MOUNT_H
-#define MOUNT_H
+#ifndef _MOUNT_H
+#define _MOUNT_H
 
 #include <stdbool.h>
 #include "basic.h"

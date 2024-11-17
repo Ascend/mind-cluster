@@ -5,7 +5,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 package v1
 
 import (
-	"github.com/kubeflow/common/pkg/apis/common/v1"
+	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 )
 
 const (
@@ -29,21 +29,21 @@ const (
 	// MindSporeFrameworkName is the name of ML Framework
 	MindSporeFrameworkName = "mindspore"
 	// MindSporeReplicaTypeScheduler is the type for Scheduler of distribute ML
-	MindSporeReplicaTypeScheduler v1.ReplicaType = "Scheduler"
+	MindSporeReplicaTypeScheduler commonv1.ReplicaType = "Scheduler"
 
 	// PytorchFrameworkName is the name of ML Framework
 	PytorchFrameworkName = "pytorch"
 	// PytorchReplicaTypeMaster is the type for Scheduler of distribute ML
-	PytorchReplicaTypeMaster v1.ReplicaType = "Master"
+	PytorchReplicaTypeMaster commonv1.ReplicaType = "Master"
 
 	// TensorflowFrameworkName is the name of ML Framework
 	TensorflowFrameworkName = "tensorflow"
 	// TensorflowReplicaTypeChief is the type for Scheduler of distribute ML
-	TensorflowReplicaTypeChief v1.ReplicaType = "Chief"
+	TensorflowReplicaTypeChief commonv1.ReplicaType = "Chief"
 
 	// ReplicaTypeWorker this is also used for non-distributed AscendJob
-	ReplicaTypeWorker v1.ReplicaType = "Worker"
+	ReplicaTypeWorker commonv1.ReplicaType = "Worker"
 
 	// DefaultRestartPolicy is default RestartPolicy for MSReplicaSpec.
-	DefaultRestartPolicy = v1.RestartPolicyNever
+	DefaultRestartPolicy = commonv1.RestartPolicyNever
 )

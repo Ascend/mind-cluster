@@ -1,17 +1,5 @@
 /*
 Copyright(C)2020-2022. Huawei Technologies Co.,Ltd. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 /*
@@ -36,7 +24,7 @@ import (
 // GetTemplateByResReq get template by resource request.
 func (tp *DynamicVNPU) GetTemplateByResReq(taskResReq util.VResource, vt VTemplate) (string, error) {
 	if tp == nil {
-		return "", fmt.Errorf("getTemplateByResReq failed:%s", util.ArgumentError)
+		return "", fmt.Errorf("GetTemplateByResReq failed:%s", util.ArgumentError)
 	}
 	name := ""
 	for tName, value := range vt.Data {
@@ -65,8 +53,8 @@ func (tp *VirtualNPU) IsNodeHasDifferentUnFinishedTask(taskInfo *api.TaskInfo, n
 		return errors.New(util.ArgumentError)
 	}
 	klog.V(util.LogDebugLev).Infof("%s IsNodeHasDifferentUnFinishedTask cache :%v", taskInfo.Name, tp.ConCache)
-	nodeTempMap := tp.ConCache[nodeInf.Name]
-	if len(nodeTempMap) == 0 {
+	nodeTempMap, ok := tp.ConCache[nodeInf.Name]
+	if !ok {
 		klog.V(util.LogDebugLev).Infof("%s IsNodeHasDifferentUnFinishedTask cache no node %s, ok.",
 			taskInfo.Name, nodeInf.Name)
 		return nil
@@ -99,9 +87,9 @@ func (tp *VirtualNPU) CheckNodeNPUByDyTask(task *api.TaskInfo, node plugin.NPUNo
 		klog.V(util.LogInfoLev).Infof("dynamic vNPU node<%s> not valid vNode", node.Name)
 		return errors.New("checkNodeNPUByDyTask invalid VNode")
 	}
-	if node.IsNodeNotMeetRes(taskResReq) {
+	if node.IsNodeMeetRes(taskResReq) {
 		// if node resource not enough, reduce task aiCPU
-		if node.ChipKind == plugin.Ascend310P && tp.taskAICPUCanBeDowngrade(taskResReq) {
+		if tp.taskAICPUCanBeDowngrade(taskResReq) {
 			klog.V(util.LogInfoLev).Infof("dynamic vnpu task<%s> resource not enough, downgrade cpu", task.Name)
 			tp.DowngradeCache[task.Name] = append(tp.DowngradeCache[task.Name], node.Name)
 			return tp.CheckNodeNPUByDyTask(task, node, tp.downgradeTaskAICPU(taskResReq))
@@ -144,6 +132,7 @@ func (tp *DynamicVNPU) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeIn
 		scoreMap[nodesSorted[0].Name] += util.NPUIndex8
 		return nil
 	}
+
 	// 3. if downgrade nodes exists, skip, util find none-downgraded nodes and add score
 	for _, node := range nodesSorted {
 		downgradeFlag := false

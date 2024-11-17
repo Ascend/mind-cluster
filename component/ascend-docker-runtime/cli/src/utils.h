@@ -12,11 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H
+#define _UTILS_H
 
 #include <stdbool.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <libgen.h>
+#include <ctype.h>
 #include "basic.h"
 
 char *FormatLogMessage(char *format, ...);

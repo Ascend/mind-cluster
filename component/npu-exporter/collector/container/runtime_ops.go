@@ -27,10 +27,10 @@ import (
 	"google.golang.org/grpc/metadata"
 	"k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
-	"huawei.com/npu-exporter/v6/collector/container/isula"
-	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
+	"huawei.com/npu-exporter/v5/collector/container/isula"
+	"huawei.com/npu-exporter/v5/collector/container/v1"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/utils"
 )
 
 const (
@@ -52,9 +52,7 @@ const (
 	grpcHeader           = "containerd-namespace"
 	unixPre              = "unix://"
 
-	// IsulaContainer represents isula container type
-	IsulaContainer = "isula"
-	// DefaultContainer represents default container type
+	IsulaContainer   = "isula"
 	DefaultContainer = "docker-containerd"
 )
 
@@ -236,7 +234,6 @@ func (operator *RuntimeOperatorTool) GetContainerInfoByID(ctx context.Context, i
 	return s, errors.New("unexpected containerd client")
 }
 
-// GetIsulaContainerInfoByID return isula container info
 func (operator *RuntimeOperatorTool) GetIsulaContainerInfoByID(ctx context.Context,
 	id string) (isula.ContainerJson, error) {
 	containerJsonInfo := isula.ContainerJson{}
@@ -262,7 +259,6 @@ func (operator *RuntimeOperatorTool) GetIsulaContainerInfoByID(ctx context.Conte
 	return containerJsonInfo, errors.New("unexpected isula client")
 }
 
-// GetContainerType return container type
 func (operator *RuntimeOperatorTool) GetContainerType() string {
 	if operator.OciEndpoint == DefaultIsuladAddr {
 		return IsulaContainer

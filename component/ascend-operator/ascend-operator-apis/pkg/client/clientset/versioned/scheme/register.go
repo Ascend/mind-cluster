@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package scheme is used to add runtime.Scheme
 package scheme
 
 import (
@@ -22,18 +21,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
-	"ascend-operator-apis/pkg/apis/batch/v1"
+	batchv1 "ascend-operator-apis/pkg/apis/batch/v1"
 )
 
-// RuntimeScheme is a Scheme object instance.
-var RuntimeScheme = runtime.NewScheme()
+var Scheme = runtime.NewScheme()
 
-// Codecs is a CodecFactory object instance.
-var Codecs = serializer.NewCodecFactory(RuntimeScheme)
-
-// ParameterCodec is a parameterCodec object instance.
-var ParameterCodec = runtime.NewParameterCodec(RuntimeScheme)
+var Codecs = serializer.NewCodecFactory(Scheme)
+var ParameterCodec = runtime.NewParameterCodec(Scheme)
 
 func init() {
-	utilruntime.Must(v1.AddToScheme(RuntimeScheme))
+	utilruntime.Must(batchv1.AddToScheme(Scheme))
 }

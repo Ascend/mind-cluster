@@ -29,15 +29,15 @@
 #include "logger.h"
 #include "utils.h"
 
-#define DCMI_INIT "dcmi_init"
-#define DCMI_SET_DESTROY_VDEVICE "dcmi_set_destroy_vdevice"
-#define ROOT_UID 0
-#define DECIMAL 10
+#define DCMI_INIT                  "dcmi_init"
+#define DCMI_SET_DESTROY_VDEVICE   "dcmi_set_destroy_vdevice"
+#define ROOT_UID           0
+#define DECIMAL            10
 #define DESTROY_PARAMS_NUM 4
-#define PARAMS_SECOND 1
-#define PARAMS_THIRD 2
-#define PARAMS_FOURTH 3
-#define ID_MAX 65535
+#define PARAMS_SECOND      1
+#define PARAMS_THIRD       2
+#define PARAMS_FOURTH      3
+#define ID_MAX             65535
 
 static bool ShowExceptionInfo(const char* exceptionInfo)
 {
@@ -164,7 +164,7 @@ static bool DeclareDcmiApiAndCheck(void **handle)
         Logger("dlinfo sofile failed.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-
+    
     return true;
 }
 
@@ -185,9 +185,9 @@ static void DcmiDlclose(void **handle)
     }
 }
 
-static bool CheckLimitId(const int idValue)
+static bool CheckLimitId(const int IdValue)
 {
-    if (idValue < 0 || idValue > ID_MAX) {
+    if (IdValue < 0 || IdValue > ID_MAX) {
         return false;
     }
     return true;
@@ -217,15 +217,15 @@ static bool DcmiInitProcess(void *handle)
     if (handle == NULL) {
         return false;
     }
-    int (*dcmiInit)(void) = NULL;
-    dcmiInit = dlsym(handle, DCMI_INIT);
-    if (dcmiInit == NULL) {
+    int (*dcmi_init)(void) = NULL;
+    dcmi_init = dlsym(handle, DCMI_INIT);
+    if (dcmi_init == NULL) {
         DcmiDlAbnormalExit(&handle, "DeclareDlApi failed");
         return false;
     }
-    int ret = dcmiInit();
+    int ret = dcmi_init();
     if (ret != 0) {
-        Logger("dcmiInit failed.", LEVEL_ERROR, SCREEN_YES);
+        Logger("dcmi_init faile.", LEVEL_ERROR, SCREEN_YES);
         DcmiDlclose(&handle);
         return false;
     }
@@ -238,15 +238,15 @@ static bool DcmiDestroyProcess(void *handle, const int cardId,
     if (handle == NULL) {
         return false;
     }
-    int (*dcmiSetDestroyVdevice)(int, int, int) = NULL;
-    dcmiSetDestroyVdevice = dlsym(handle, DCMI_SET_DESTROY_VDEVICE);
-    if (dcmiSetDestroyVdevice == NULL) {
+    int (*dcmi_set_destroy_vdevice)(int, int, int) = NULL;
+    dcmi_set_destroy_vdevice = dlsym(handle, DCMI_SET_DESTROY_VDEVICE);
+    if (dcmi_set_destroy_vdevice == NULL) {
         DcmiDlAbnormalExit(&handle, "DeclareDlApi failed");
         return false;
     }
-    int ret = dcmiSetDestroyVdevice(cardId, deviceId, vDeviceId);
+    int ret = dcmi_set_destroy_vdevice(cardId, deviceId, vDeviceId);
     if (ret != 0) {
-        Logger("dcmiSetDestroyVdevice failed.", LEVEL_ERROR, SCREEN_YES);
+        Logger("dcmi_set_destroy_vdevice failed.", LEVEL_ERROR, SCREEN_YES);
         DcmiDlclose(&handle);
         return false;
     }

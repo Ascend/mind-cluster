@@ -273,7 +273,7 @@ func initDyCutConCacheByJobInfo(nodes map[string]map[string]map[api.TaskID]struc
 			}
 			template, getErr := util.GetVTaskUseTemplate(taskInfo)
 			if getErr != nil {
-				klog.V(util.LogDebugLev).Infof("GetVTaskUseTemplate %s %s.", vT.Name, getErr)
+				klog.V(util.LogErrorLev).Infof("GetVTaskUseTemplate %s %s.", vT.Name, getErr)
 				continue
 			}
 			initConcacheByTemplate(nodes, vT, template, taskID)

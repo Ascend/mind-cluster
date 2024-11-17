@@ -33,16 +33,16 @@
 #include "utils.h"
 #include "logger.h"
 
-#define DECIMAL 10
-#define MAX_ARGC 1024
+#define DECIMAL     10
+#define MAX_ARGC    1024
 #define MAX_ARG_LEN 1024
 
 bool g_allowLink = false;
 
 struct CmdArgs {
-    char rootfs[BUF_SIZE];
-    long pid;
-    char options[BUF_SIZE];
+    char     rootfs[BUF_SIZE];
+    long      pid;
+    char     options[BUF_SIZE];
     struct MountList files;
     struct MountList dirs;
 };
@@ -87,8 +87,8 @@ static bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
     (void)fclose(pFile);
-    if ((strlen(buff) > 0) && (buff[strlen(buff) - 1] == '\n')) {
-        buff[strlen(buff) - 1] = '\0';
+    if ((strlen(buff) > 0) && (buff[strlen(buff) -1] == '\n')) {
+        buff[strlen(buff) -1] = '\0';
     }
     for (size_t iLoop = 0; iLoop < strlen(buff); iLoop++) {
         if (isdigit(buff[iLoop]) == 0) {
@@ -195,8 +195,7 @@ static bool CheckWhiteList(const char* fileName)
         {"/usr/lib64/libaicpu_processer.so"}, {"/usr/lib64/libaicpu_prof.so"}, {"/usr/lib64/libaicpu_sharder.so"},
         {"/usr/lib64/libadump.so"}, {"/usr/lib64/libtsd_eventclient.so"},
         {"/usr/lib64/aicpu_kernels"}, {"/usr/lib64/libyaml-0.so.2"},
-        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"},
-        {"/var/queue_schedule"}
+        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"}
         };
 
     for (size_t iLoop = 0; iLoop < WHITE_LIST_NUM; iLoop++) {
@@ -262,7 +261,7 @@ static bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
     }
 
     char *dst = &args->dirs.list[args->dirs.count++][0];
-    errno_t err = strcpy_s(dst, PATH_MAX, arg);
+    errno_t  err = strcpy_s(dst, PATH_MAX, arg);
     if (err != EOK) {
         char* str = FormatLogMessage("error: failed to copy mount directory path: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
@@ -293,7 +292,7 @@ static bool LinkCheckCmdArgParser(const char *argv)
         g_allowLink = false;
         return true;
     }
-
+    
     Logger("invalid link check value!", LEVEL_ERROR, SCREEN_YES);
     return false;
 }
@@ -332,7 +331,7 @@ static int ParseOneCmdArg(struct CmdArgs *args, char indicator, const char *valu
     } else {
         isOK = g_cmdArgParsers[i].parser(args, value);
     }
-
+    
     if (!isOK) {
         char* str = FormatLogMessage("failed while parsing cmd arg, indicate char: %c, value: %s.", indicator, value);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
@@ -391,7 +390,7 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
     }
 
     config->files = (const struct MountList *)&args->files;
-    config->dirs = (const struct MountList *)&args->dirs;
+    config->dirs  = (const struct MountList *)&args->dirs;
 
     return 0;
 }

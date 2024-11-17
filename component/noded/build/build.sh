@@ -20,7 +20,7 @@ CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE=on
 version_file="${TOP_DIR}"/service_config.ini
-build_version="v6.0.RC1"
+build_version="v5.0.0"
 if  [ -f "$version_file" ]; then
   line=$(sed -n '1p' "$version_file" 2>&1)
   #cut the chars after ':' and add char 'v', the final example is v3.0.0
@@ -34,7 +34,6 @@ sed -i "s/noded:.*/noded:${build_version}/" "${TOP_DIR}"/build/noded.yaml
 
 OUTPUT_NAME="noded"
 DOCKER_FILE_NAME="Dockerfile"
-NODE_CONFIG_FILE_NAME="NodeDConfiguration.json"
 function clean() {
     rm -rf "${TOP_DIR}"/output/
     mkdir -p "${TOP_DIR}"/output
@@ -61,7 +60,6 @@ function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/noded.yaml "${TOP_DIR}"/output/noded-"${build_version}".yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/${NODE_CONFIG_FILE_NAME} "${TOP_DIR}"/output
   chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
 }

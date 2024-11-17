@@ -35,7 +35,7 @@
 
 2.  修改组件版本配置文件service_config.ini中mindxdlversion字段值为所需编译版本，默认值如下，
 
-        mindxdlversion=6.0.RC3
+        mindxdlversion=5.0.0
 
 3.  执行以下命令，进入/usr1/mindxdl/build目录，选择构建脚本执行
 
@@ -61,20 +61,6 @@
 1. 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount， 该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 2. 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
 
-# 更新日志
-该仓库融合DL不同组件内容。6.0.0之前的版本见各组件仓库：
-| 组件         | 链接                                     |  说明   |
-|------------|----------------------------------| -|
-| NodeD       |  https://gitee.com/ascend/ascend-noded   | -|
-| HCCL-Controller |  https://gitee.com/ascend/ascend-hccl-controller   |此组件功能已被Ascend-Operator收编，不建议使用|
-| Ascend-Device-Plugin |  https://gitee.com/ascend/ascend-device-plugin   |-|
-| NPU-Exporter |  https://gitee.com/ascend/ascend-npu-exporter   |-|
-| Ascend-for-Volcano |  https://gitee.com/ascend/ascend-for-volcano   |-|
-| Ascend-Docker-Runtime |  https://gitee.com/ascend/ascend-docker-runtime  |-|
 
-6.0.0及之后版本发布如下：
-| 版本         | 发布日期      | 修改说明         |
-|------------|-----------|----------------------|
-| v6.0.0     | 2024-12-15 | 配套MindX 6.0.0版本   |
 # 版本配套说明
 版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/commercial)

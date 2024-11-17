@@ -35,7 +35,7 @@ import (
 // createFaultCardHandlers initialise FaultCard struct == getInoperableNPUCards
 func (fNode *FaultNode) createFaultCardHandlers(node *plugin.NPUNode) ([]FaultCard, error) {
 	klog.V(util.LogInfoLev).Infof("create new fault card handlers for node %s", node.Name)
-	faultCards := make([]FaultCard, 0)
+	var faultCards []FaultCard
 	for _, card := range fNode.AllCards {
 		faultCard := FaultCard{
 			IsFaultCard: false,
@@ -78,8 +78,8 @@ func (fNode *FaultNode) getNodeNPUsByKey(node *plugin.NPUNode, deviceKey string)
 func (fNode *FaultNode) getNodeHeartbeatByKey(node *plugin.NPUNode, hbKey string) (string, error) {
 	intervalStr, ok := node.Annotation[hbKey]
 	if !ok || len(intervalStr) == 0 {
-		klog.V(util.LogDebugLev).Infof("isNodeHealth %s no [%s].", node.Name, hbKey)
-		return "", fmt.Errorf("getFaultNodeState %s failed", node.Name)
+		klog.V(util.LogDebugLev).Infof("isNodeHealth %s no [%s].", node.Name, nodeHeartbeat)
+		return "", fmt.Errorf("getFaultNodeState %s nil", node.Name)
 	}
 	return intervalStr, nil
 }
@@ -111,10 +111,9 @@ func (fNode *FaultNode) getNetworkUnhealthyCardsFromDeviceInfo(
 	return fNode.getNodeNPUsByKey(node, networkUnhealthyCardName)
 }
 
-// getNodeHeartbeatIntervalFromNodeDInfo get nodeHeartbeatInterval from nodeD reported info
+// getNodeHeartbeatIntervalFromDeviceInfo get nodeHeartbeatInterval from device info
 func (fNode *FaultNode) getNodeHeartbeatIntervalFromNodeDInfo(node *plugin.NPUNode) (int, error) {
 	var heartbeatInterval = nodeUpdateTime
-	// get node heartbeat interval from annotation which is written in plugin.NPUNode with info of nodeD reported
 	heartbeatIntervalStr, getErr := fNode.getNodeHeartbeatByKey(node, util.NodeDNodeHeartbeatIntervalKey)
 	if getErr != nil {
 		return heartbeatInterval, getErr
@@ -136,9 +135,8 @@ func (fNode *FaultNode) getNodeHeartbeatIntervalFromNodeDInfo(node *plugin.NPUNo
 	return heartbeatInterval, nil
 }
 
-// getNodeHeartbeatFromNodeDInfo get nodeHeartbeat from noded reported info
+// getNodeHeartbeatFromDeviceInfo get nodeHeartbeat from device info
 func (fNode *FaultNode) getNodeHeartbeatFromNodeDInfo(node *plugin.NPUNode) (int64, error) {
-	// get node heartbeat from annotation which is written in plugin.NPUNode with info of nodeD reported
 	heartbeatTimeStr, getErr := fNode.getNodeHeartbeatByKey(node, util.NodedHeartbeatTimeKey)
 	if getErr != nil {
 		return 0, getErr
@@ -207,14 +205,13 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode, car
 		klog.V(util.LogDebugLev).Infof("GetNodeDeviceFaultFromDeviceInfo: %s", util.SafePrint(err))
 	}
 	fNode.setFaultDeviceList(DeviceFaultReason)
-	fNode.setNodeHasCardSubHealthFault()
+
 }
 
-// GetNodeDeviceFaultFromDeviceInfo get device fault from device info
 func GetNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, error) {
 	deviceFaultList, ok := node.Annotation[DeviceFaultCmKey]
 	if !ok {
-		return nil, fmt.Errorf("getNodeDeviceFaultFromDeviceInfo failed")
+		return nil, fmt.Errorf("GetNodeDeviceFaultFromDeviceInfo failed")
 	}
 	var deviceFault []FaultDeviceList
 	if unmarshalErr := json.Unmarshal([]byte(deviceFaultList), &deviceFault); unmarshalErr != nil {
@@ -240,15 +237,11 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) error {
 
 	// 2. judge if node is unhealthy by NodeD
 	fNode.setNodeHealthyByNodeD(node)
-	// 3. judge if node is unhealthy by switch info
-	fNode.setNodeHealthyBySwitch(node)
-
 	if fNode.NodeHealthState == NodeUnhealthy {
 		return nil
 	}
 
-	fNode.setHasSwitchSubHealthFault(node.Annotation[util.SwitchNodeHealtyStatuskey] == util.NodeSubHealthy)
-	// 4. set node health state by card unhealthy
+	// 3. set node health state by card unhealthy
 	fNode.setNodeHealthyByCardHealth(node)
 	return nil
 }
@@ -266,32 +259,6 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 		fNode.setNodeHealthStateValue(NodeUnhealthy)
 		klog.V(util.LogInfoLev).Infof("Node %s health state set %s for wrong heartbeat", node.Name, NodeUnhealthy)
 	}
-	// 2. to judge if noded has reported node unhealthy
-	healthyStatus, ok := node.Annotation[util.NodedNodeHealtyStatuskey]
-	if !ok {
-		// if haven't got the healthy status reported by noded, will not set node status to unhealthy
-		klog.V(util.LogInfoLev).Infof("failed to obtain node[%s] healthy status from noded configmap", node.Name)
-		return
-	}
-	if healthyStatus == util.NodeUnHealthyByNodeD {
-		fNode.setIsFaultNodeValue(true)
-		fNode.setNodeHealthStateValue(NodeUnhealthy)
-		klog.V(util.LogInfoLev).Infof("Node[%s] has received unhealthy status from noded", node.Name)
-	}
-}
-
-func (fNode *FaultNode) setNodeHealthyBySwitch(node *plugin.NPUNode) {
-	// 1. to judge if switch has reported node unhealthy
-	healthyStatus, ok := node.Annotation[util.SwitchNodeHealtyStatuskey]
-	if !ok || healthyStatus != util.NodeUnHealthyByNodeD {
-		// if haven't got the healthy status reported by switch, will not set node status to unhealthy
-		return
-	}
-	if !fNode.IsFaultNode {
-		klog.V(util.LogInfoLev).Infof("Node[%s] has received unhealthy status from switch", node.Name)
-	}
-	fNode.setIsFaultNodeValue(true)
-	fNode.setNodeHealthStateValue(NodeUnhealthy)
 }
 
 func (fNode *FaultNode) setNodeHealthyByCardHealth(node *plugin.NPUNode) {
@@ -372,10 +339,6 @@ func (fNode *FaultNode) setIsFaultNodeValue(value bool) {
 	fNode.IsFaultNode = value
 }
 
-func (fNode *FaultNode) setHasSwitchSubHealthFault(isSubHealthy bool) {
-	fNode.HasSwitchSubHealthFault = isSubHealthy
-}
-
 func (fNode *FaultNode) setNodeHealthStateValue(nodeHealthState string) {
 	fNode.NodeHealthState = nodeHealthState
 }
@@ -424,15 +387,6 @@ func (fNode *FaultNode) setFaultDeviceList(value []FaultDeviceList) {
 	fNode.FaultDeviceList = value
 }
 
-func (fNode *FaultNode) setNodeHasCardSubHealthFault() {
-	for _, faultCode := range fNode.FaultDeviceList {
-		if faultCode.FaultHandling == SubHealthFault {
-			fNode.HasCardSubHealthFault = true
-			return
-		}
-	}
-}
-
 func newFaultNodeDefault(nodeName string, updateTime int64) FaultNode {
 	faultNode := FaultNode{
 		NodeName:            nodeName,
@@ -459,10 +413,7 @@ func isNodeInSessionByNodeName(NodeName string, nodes map[string]plugin.NPUNode)
 
 func initSimpleFNodeInfoByFNode(node *FaultNode) SimpleFNodeInfo {
 	return SimpleFNodeInfo{
-		NodeName:                node.NodeName,
-		IsFaultNode:             node.IsFaultNode,
-		HasCardSubHealthFault:   node.HasCardSubHealthFault,
-		HasSwitchSubHealthFault: node.HasSwitchSubHealthFault,
-		NodeHealthState:         node.NodeHealthState,
+		NodeName:    node.NodeName,
+		IsFaultNode: node.IsFaultNode,
 	}
 }

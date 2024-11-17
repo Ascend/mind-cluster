@@ -729,12 +729,7 @@ func file_isula_api_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_isula_api_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ImageSpec)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ImageSpec); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -746,12 +741,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ContainerMetadata)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ContainerMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -763,12 +753,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ContainerStateValue)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ContainerStateValue); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -780,12 +765,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ContainerFilter)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ContainerFilter); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -797,12 +777,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ListContainersRequest)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ListContainersRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -814,12 +789,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*Container)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*Container); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -831,12 +801,7 @@ func file_isula_api_proto_init() {
 			}
 		}
 		file_isula_api_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			value, ok := v.(*ListContainersResponse)
-			if !ok {
-				return nil
-			}
-
-			switch v := value; i {
+			switch v := v.(*ListContainersResponse); i {
 			case 0:
 				return &v.state
 			case 1:

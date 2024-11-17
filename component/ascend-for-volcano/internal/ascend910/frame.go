@@ -32,7 +32,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/card910bx2infer"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/module910bx16"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/module910bx8"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/card910x2"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/half910x4"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/module910x8"
@@ -62,7 +61,6 @@ func New(npuName string) plugin.ISchedulerPlugin {
 	npuPlugin.Kind[module910bx8.SchedulerName] = module910bx8.New(module910bx8.SchedulerName)
 	npuPlugin.Kind[card910bx2.SchedulerName] = card910bx2.New(card910bx2.SchedulerName)
 	npuPlugin.Kind[card910bx2infer.SchedulerName] = card910bx2infer.New(card910bx2infer.SchedulerName)
-	npuPlugin.Kind[superpod.SchedulerName] = superpod.New(superpod.SchedulerName)
 	return npuPlugin
 }
 
@@ -75,28 +73,15 @@ func (tp *ascend910) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.Sche
 	}
 	tp.SetSchedulerAttr(attr)
 	tp.SetSchedulerEnv(env)
-
-	var handlerName string
-
-	_, ok := attr.Annotation[superpod.SuperPodAnnoKey]
-	if ok {
-		handlerName = superpod.SchedulerName
-	} else {
-		v, ok := attr.Selector[util.AcceleratorType]
-		if !ok {
-			v = util.ModuleAcceleratorType
-		}
-		cardNameSplit := strings.Split(attr.ReqNPUName, "-")
-		cardName := cardNameSplit[0]
-		if attr.ReqNPUName == util.AscendNPUCore {
-			cardName = util.NPU910CardName
-		}
-		handlerName = cardName + v
-	}
-
-	value, ok := tp.Kind[handlerName]
+	v, ok := attr.Selector[util.AcceleratorType]
 	if !ok {
-		err := fmt.Errorf("not support %s", handlerName)
+		v = util.ModuleAcceleratorType
+	}
+	cardNameSplit := strings.Split(attr.ReqNPUName, "-")
+	cardName := cardNameSplit[0]
+	value, ok := tp.Kind[cardName+v]
+	if !ok {
+		err := fmt.Errorf("not support %s", attr.ReqNPUName+v)
 		klog.V(util.LogErrorLev).Infof("%s InitMyJobPlugin err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
@@ -135,7 +120,7 @@ func (tp *ascend910) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode)
 		klog.V(util.LogErrorLev).Infof("CheckNodeNPUByTask err: %s", err.Error())
 		return err
 	}
-	if tp.Type != util.JobTypeWhole && tp.Type != util.JobTypeDyCut {
+	if tp.Type != util.JobTypeWhole {
 		klog.V(util.LogDebugLev).Infof("%s %s CheckNodeNPUByTask is %d, skip it.", tp.GetPluginName(), task.Name,
 			tp.Type)
 		return nil

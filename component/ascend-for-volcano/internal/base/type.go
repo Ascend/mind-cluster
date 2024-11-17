@@ -44,5 +44,4 @@ type NPUHandler struct {
 	MaxCardNPUNum int
 }
 
-// PluginName plugin name
 const PluginName = "base"

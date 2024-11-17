@@ -1,5 +1,5 @@
 /*
-Copyright The Kubernetes Authors.
+Copyright 2023 Huawei Technologies Co., Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 
-	"ascend-operator-apis/pkg/apis/batch/v1"
+	v1 "ascend-operator-apis/pkg/apis/batch/v1"
 )
 
 // JobLister helps list Jobs.
@@ -48,12 +48,11 @@ func NewJobLister(indexer cache.Indexer) JobLister {
 }
 
 // List lists all Jobs in the indexer.
-func (s *jobLister) List(selector labels.Selector) ([]*v1.AscendJob, error) {
+func (s *jobLister) List(selector labels.Selector) (ret []*v1.AscendJob, err error) {
 	if s == nil {
 		return nil, errors.New("nil pointer")
 	}
-	var ret []*v1.AscendJob
-	err := cache.ListAll(s.indexer, selector, func(m interface{}) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1.AscendJob))
 	})
 	return ret, err
@@ -87,9 +86,8 @@ type jobNamespaceLister struct {
 }
 
 // List lists all Jobs in the indexer for a given namespace.
-func (s jobNamespaceLister) List(selector labels.Selector) ([]*v1.AscendJob, error) {
-	var ret []*v1.AscendJob
-	err := cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
+func (s jobNamespaceLister) List(selector labels.Selector) (ret []*v1.AscendJob, err error) {
+	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1.AscendJob))
 	})
 	return ret, err

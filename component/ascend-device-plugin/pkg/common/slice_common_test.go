@@ -24,7 +24,6 @@ import (
 var (
 	testInt64Source = []int64{1}
 	stringSource    = []string{"1"}
-	testResult      = 2
 )
 
 // TestContains for test Contains
@@ -126,19 +125,5 @@ func TestInt64ToolIndex(t *testing.T) {
 		existVal, unExistVal := int64(1), int64(2)
 		convey.So(tool.Index(testVal, existVal), convey.ShouldEqual, 0)
 		convey.So(tool.Index(testVal, unExistVal), convey.ShouldEqual, -1)
-	})
-}
-
-// TestInt64ToolAbs for test int64Tool.Abs
-func TestInt64ToolAbs(t *testing.T) {
-	convey.Convey("test int64Tool.Abs case positive number", t, func() {
-		tool := int64Tool{}
-		testVal1, testVal2 := int64(1), int64(2)
-		convey.So(tool.Abs(testVal1, testVal2), convey.ShouldEqual, 1)
-	})
-	convey.Convey("test int64Tool.Abs case negative number", t, func() {
-		tool := int64Tool{}
-		testVal1, testVal2 := int64(1), int64(-1)
-		convey.So(tool.Abs(testVal1, testVal2), convey.ShouldEqual, testResult)
 	})
 }

@@ -16,8 +16,8 @@
 package devmanager
 
 import (
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
+	"huawei.com/npu-exporter/v5/devmanager/common"
+	"huawei.com/npu-exporter/v5/devmanager/dcmi"
 )
 
 // DeviceManagerMock common device manager mock for Ascend910/310P/310
@@ -220,7 +220,7 @@ func (d *DeviceManagerMock) SetFaultEventCallFunc(businessFunc func(common.DevFa
 }
 
 // GetDieID get die id success
-func (d *DeviceManagerMock) GetDieID(logicID int32, dcmiDieType dcmi.DieType) (string, error) {
+func (d *DeviceManagerMock) GetDieID(logicID int32, dcmiDieType dcmi.DcmiDieType) (string, error) {
 	return "ABCDEFGHIGKLMNOPQRSTUVWXYZ01234567890123", nil
 }
 
@@ -229,12 +229,10 @@ func (d *DeviceManagerMock) GetDevProcessInfo(logicID int32) (*common.DevProcess
 	return &common.DevProcessInfo{}, nil
 }
 
-// GetPCIeBusInfo get pcie bus info
 func (d *DeviceManagerMock) GetPCIeBusInfo(logicID int32) (string, error) {
 	return "0000:61:00.0", nil
 }
 
-// GetBoardInfo Get board info
 func (d *DeviceManagerMock) GetBoardInfo(logicID int32) (common.BoardInfo, error) {
 	return common.BoardInfo{}, nil
 }
@@ -244,61 +242,10 @@ func (d *DeviceManagerMock) GetProductTypeArray() []string {
 	return []string{common.Atlas200ISoc}
 }
 
-// GetPCIEBandwidth get pcie bandwidth
-func (d *DeviceManagerMock) GetPCIEBandwidth(logicID int32, _ int) (common.PCIEBwStat, error) {
-	return common.PCIEBwStat{}, nil
-}
-
-// SetIsTrainingCard set IsTrainingCard
 func (d *DeviceManagerMock) SetIsTrainingCard() error {
 	return nil
 }
 
-// IsTrainingCard get IsTrainingCard
 func (d *DeviceManagerMock) IsTrainingCard() bool {
 	return true
-}
-
-// GetDcmiVersion get dcmi version
-func (d *DeviceManagerMock) GetDcmiVersion() string {
-	return "v1"
-}
-
-// GetValidChipInfo get valid chip info from all npu
-func (d *DeviceManagerMock) GetValidChipInfo() (common.ChipInfo, error) {
-	return common.ChipInfo{}, nil
-}
-
-// GetDeviceEccInfo get device ECC info
-func (d *DeviceManagerMock) GetDeviceEccInfo(logicID int32,
-	dcmiDeviceType common.DcmiDeviceType) (*common.ECCInfo, error) {
-	return &common.ECCInfo{EnableFlag: 1}, nil
-}
-
-// GetSuperPodInfo get super pod info
-func (d *DeviceManagerMock) GetSuperPodInfo(logicID int32) (common.CgoSuperPodInfo, error) {
-	return common.CgoSuperPodInfo{}, nil
-}
-
-// GetSioInfo get sio info
-func (d *DeviceManagerMock) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInfo, error) {
-	return &common.SioCrcErrStatisticInfo{
-		TxErrCnt: 0,
-		RxErrCnt: 0,
-	}, nil
-}
-
-// GetHccsStatisticInfo get hccs statistic info
-func (d *DeviceManagerMock) GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error) {
-	return &common.HccsStatisticInfo{}, nil
-}
-
-// GetMainBoardId get main board id
-func (d *DeviceManagerMock) GetMainBoardId() uint32 {
-	return 0
-}
-
-// GetHccsBandwidthInfo get hccs statistic info
-func (d *DeviceManagerMock) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
-	return &common.HccsBandwidthInfo{}, nil
 }

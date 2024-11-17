@@ -53,13 +53,6 @@ func (fTask *FaultTask) getNodeRankIndex(task *api.TaskInfo) (string, error) {
 	return rankIndex, nil
 }
 
-func (fTask *FaultTask) getTaskHealthStateBySubHealth(subHealthyStrategy string) (bool, string) {
-	if subHealthyStrategy == util.SubHealthyIgnore || !fTask.HasSubHealthFault {
-		return false, PodHealthy
-	}
-	return true, SubHealthFault
-}
-
 func (fTask *FaultTask) getUseCardName(task *api.TaskInfo, cardName string) ([]string, error) {
 	strNpu, ok := task.Pod.Annotations[util.AscendNPUPodRealUse]
 	if !ok {
@@ -122,21 +115,17 @@ func (fTask *FaultTask) setNodeRankIndex(value string) {
 	fTask.NodeRankIndex = value
 }
 
-func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.ScheduleEnv) FaultTask {
+func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo) FaultTask {
 	faultTask := FaultTask{
-		Reason:             []FaultReasonList{},
-		IsFaultRetryEnable: faultRetryTimeOfJob(job) != 0,
-		TaskName:           task.Name,
-		TaskUID:            task.UID,
-		TaskNamespace:      task.Namespace,
-		NodeName:           task.NodeName,
-		JobName:            job.Name,
-		PodCreateTime:      task.Pod.CreationTimestamp.Unix(),
-		PodUID:             task.Pod.UID,
-		faultType:          NodeHealthy,
-	}
-	if faultTask.NodeName == "" {
-		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.UID][task.Name]
+		Reason:        []FaultReasonList{},
+		TaskName:      task.Name,
+		TaskUID:       task.UID,
+		TaskNamespace: task.Namespace,
+		NodeName:      task.NodeName,
+		JobName:       job.Name,
+		PodCreateTime: task.Pod.CreationTimestamp.Unix(),
+		PodUID:        task.Pod.UID,
+		faultType:     NodeHealthy,
 	}
 	return faultTask
 }

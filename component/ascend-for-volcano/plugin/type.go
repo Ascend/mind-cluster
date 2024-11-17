@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -79,53 +80,24 @@ const (
 	// Ascend310P 310P template name
 	Ascend310P = "Ascend310P"
 	// Ascend910 910 template name
-	Ascend910                  = "Ascend910"
-	maxTorAffinityNodeScore    = float64(200)
-	halfTorAffinityNodeScore   = float64(100)
-	sharedTorAffinityNodeScore = float64(99)
-	cardHealthySuffix          = ""
-	unhealthyCardSuffix        = "-Unhealthy"
-	notNPUNodeError            = "getNodeDeviceInfoFromCM"
-	notNPUJobError             = "nil npu"
-	basePlugin                 = "base"
-	oneTor                     = 1
-	twoTor                     = 2
-	defaultResyncTime          = 30
-	// ResetInfoCMNamePrefix for reset configmap name prefix
-	ResetInfoCMNamePrefix = "reset-config-"
-	// ResetInfoCMDataKey for reset configmap data key
-	ResetInfoCMDataKey = "reset.json"
-	// ResetInfoTypeKey for reset configmap type key
-	ResetInfoTypeKey = "restartType"
-	// PodRescheduleRestartType for hot reset restart type
-	PodRescheduleRestartType = "podReschedule"
-	normalNodeErr            = "not NPU node"
-	oldCapacity              = "Capability"
-	newCapacity              = "Capacity"
+	Ascend910               = "Ascend910"
+	maxTorAffinityNodeScore = float64(200)
+	cardHealthySuffix       = ""
+	unhealthyCardSuffix     = "-Unhealthy"
+	notNPUNodeError         = "getNodeDeviceInfoFromCM"
+	notNPUJobError          = "nil npu"
+	basePlugin              = "base"
+
+	convertFailedErrorPattern = "Cannot convert to ConfigMap:%#v"
 )
 
 // SchedulerJob the plugin define job info
 type SchedulerJob struct {
 	util.SchedulerJobAttr
 	RankIndexInfo
-	UnschedulableReason
-	handler      ISchedulerPlugin
-	ServerList   []*Tor
-	TorBlackMaps map[string]struct{}
-	JobReadyTag  bool
-	SuperPods    map[string][]SuperNode
-}
-
-// UnschedulableReason the message of pod pending
-type UnschedulableReason struct {
-	Reason map[string]map[string]struct{}
-	*sync.Mutex
-}
-
-// SuperNode node with SuperPodID
-type SuperNode struct {
-	Name       string
-	SuperPodID int32
+	handler     ISchedulerPlugin
+	ServerList  []*Tor
+	JobReadyTag bool
 }
 
 // RankIndexInfo the info of job used rank
@@ -136,18 +108,10 @@ type RankIndexInfo struct {
 
 // VolcanoFrame passed in by the volcano frame.
 type VolcanoFrame struct {
-	UID            types.UID
-	Confs          []config.Configuration
-	KubeClient     kubernetes.Interface
-	VJobTemplate   map[string]map[string]util.VResource
-	SuperPodSize   int
-	ReservePodSize int
-}
-
-// NslbParameters the Parameters os nslb
-type NslbParameters struct {
-	nslbVersion  string
-	sharedTorNum int
+	UID          types.UID
+	Confs        []config.Configuration
+	KubeClient   kubernetes.Interface
+	VJobTemplate map[string]map[string]util.VResource
 }
 
 // ScheduleCache the plugin defined caches saving cm data
@@ -158,7 +122,6 @@ type ScheduleCache struct {
 	FaultConfigMaps   map[api.JobID]*FaultRankIdData
 }
 
-// FaultRankIdData fault rank id data
 type FaultRankIdData struct {
 	Name, Namespace string
 	Data            map[string]string
@@ -166,48 +129,27 @@ type FaultRankIdData struct {
 
 // ScheduleEnv for job scheduler context.
 type ScheduleEnv struct {
-	IsFirstSession      *bool // scheduler first session message is unreliable
-	Jobs                map[api.JobID]SchedulerJob
-	Nodes               map[string]NPUNode
-	JobSinglePodFlag    map[api.JobID]bool
-	JobSeverInfos       map[api.JobID]struct{}
-	JobDeleteFlag       map[api.JobID]struct{}
-	DevInfoNotInSession map[string]NodeDeviceInfoWithTime
-	DeviceInfos         *DeviceInfosWithMutex
-	DeleteJobInfos      map[api.JobID]*api.JobInfo
-	NodeInfosFromCm     *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
-	SwitchInfosFromCm   *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
-	FrameAttr           VolcanoFrame
-	Cache               ScheduleCache
-	Tors                *TorList
-	NslbAttr            *NslbParameters
-	SuperPodInfo        *SuperPodInfo
-	JobPendingMessage   map[api.JobID]map[string]map[string]struct{}
-}
-
-// SuperPodInfo cache super pod info for pod rescheduling
-type SuperPodInfo struct {
-	SuperPodReschdInfo        map[api.JobID]map[string][]SuperNode // cache super pod re-schd info
-	SuperPodFaultTaskNodes    map[api.JobID][]string               // cache fault task nodes info
-	SuperPodMapFaultTaskNodes map[api.JobID]map[string]string      // cache task and nodes for stage2
+	Jobs            map[api.JobID]SchedulerJob
+	Nodes           map[string]NPUNode
+	JobSeverInfos   map[api.JobID]struct{}
+	DeviceInfos     *DeviceInfosWithMutex
+	DeleteJobInfos  map[api.JobID]*api.JobInfo
+	NodeInfosFromCm *NodeInfosFromCmWithMutex
+	FrameAttr       VolcanoFrame
+	Cache           ScheduleCache
+	Tors            *TorList
 }
 
 // DeviceInfosWithMutex information for the current plugin
 type DeviceInfosWithMutex struct {
 	sync.Mutex
-	Devices map[string]NodeDeviceInfoWithID
+	Devices map[string]NodeDeviceInfo
 }
 
 // NodeInfosFromCmWithMutex node info with mutex
 type NodeInfosFromCmWithMutex struct {
 	sync.Mutex
 	Nodes map[string]NodeDNodeInfo
-}
-
-// SwitchInfosFromCmWithMutex SwitchInfos From Cm WithMutex
-type SwitchInfosFromCmWithMutex struct {
-	sync.Mutex
-	Switches map[string]SwitchFaultInfo
 }
 
 // ScheduleHandler information for the current plugin
@@ -224,51 +166,4 @@ type AllocNodeRankOccurrence struct {
 	RankIndex  string
 	IsFault    bool
 	Occurrence int
-}
-
-type jobUsedNodeInfos struct {
-	NodeInfos string
-	JobName   string
-}
-
-type jobServerInfos struct {
-	IsSharedTor bool
-	Nodes       []jobUsedNodeInfos
-}
-
-type jobTorInfos struct {
-	usedHealthyTor []*Tor
-	otherTor       []*Tor
-	torNums        map[string]int
-	usedAllTorNum  int
-}
-
-type usedTorInfos struct {
-	sharedTorNum   int
-	isSingleTorJob bool
-	usedTors       map[string]*Tor
-}
-
-// TaskResetInfo record task reset device information
-type TaskResetInfo struct {
-	RankList     []*TaskDevInfo
-	UpdateTime   int64
-	RetryTime    int
-	GracefulExit int
-}
-
-// TaskDevInfo is the device info of a task
-type TaskDevInfo struct {
-	RankId int
-	DevFaultInfo
-}
-
-// DevFaultInfo is the fault info of device
-type DevFaultInfo struct {
-	LogicId       int32
-	Status        string
-	Policy        string
-	InitialPolicy string
-	ErrorCode     []int64
-	ErrorCodeHex  string
 }

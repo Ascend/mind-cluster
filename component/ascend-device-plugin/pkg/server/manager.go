@@ -27,31 +27,28 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/devmanager"
+	npuCommon "huawei.com/npu-exporter/v5/devmanager/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
-	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
 )
 
 var lastStatus = common.NewAtomicBool(false)
-var resourceVersion = ""
 
 // HwDevManager manages huawei device devices.
 type HwDevManager struct {
-	SwitchDevManager *deviceswitch.SwitchDevManager
-	groupDevice      map[string][]*common.NpuDevice
-	ServerMap        map[string]InterfaceServer
-	allInfo          common.NpuAllInfo
-	manager          device.DevManager
-	RunMode          string
-	WorkMode         string
+	groupDevice map[string][]*common.NpuDevice
+	ServerMap   map[string]InterfaceServer
+	allInfo     common.NpuAllInfo
+	manager     device.DevManager
+	RunMode     string
+	WorkMode    string
 }
 
 // NewHwDevManager function is used to new a dev manager.
@@ -69,8 +66,7 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		hwlog.RunLog.Errorf("check supported product type failed, err: %v", err)
 		return nil
 	}
-	hdm.setSuperPodInfo()
-	if err := hdm.UpdateNode(); err != nil {
+	if err := hdm.UpdateNodeLabel(); err != nil {
 		hwlog.RunLog.Errorf("update node label failed, err: %v", err)
 		return nil
 	}
@@ -83,14 +79,14 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 
 func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error {
 	devType := dmgr.GetDevType()
-	if !common.ParamOption.PresetVDevice && devType != common.Ascend310P && devType != common.Ascend910B {
-		return fmt.Errorf("only 310p and 910b support to set presetVirtualDevice false")
+	if !common.ParamOption.PresetVDevice && devType != common.Ascend310P {
+		return fmt.Errorf("only 310p support to set presetVirtualDevice false")
 	}
 	switch devType {
 	case common.Ascend310, common.Ascend310B:
 		hdm.RunMode = common.Ascend310
 		hdm.manager = device.NewHwAscend310Manager()
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
+	case common.Ascend910, common.Ascend910B:
 		hdm.RunMode = common.Ascend910
 		hdm.manager = device.NewHwAscend910Manager()
 		hdm.WorkMode = dmgr.GetNpuWorkMode()
@@ -123,107 +119,66 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	return nil
 }
 
-// UpdateNode update server type, like Ascend910-32, and label of 910b infer card
+// UpdateNodeLabel update server type, like Ascend910-32, and label of 910b infer card
 // other common label will be updated in the future
-func (hdm *HwDevManager) UpdateNode() error {
+func (hdm *HwDevManager) UpdateNodeLabel() error {
 	if common.ParamOption.BuildScene == common.EdgeScene {
 		return nil
 	}
-	hdm.manager.GetKubeClient().InitPodInformer()
-	hwlog.RunLog.Info("init kube client success")
-
-	return hdm.updateNode()
-}
-
-func (hdm *HwDevManager) updateNode() error {
-	oldNode, err := hdm.manager.GetKubeClient().GetNode()
-	if err != nil || oldNode == nil {
-		hwlog.RunLog.Errorf("failed to get node, err: %v, node is nil: %v", err, oldNode == nil)
-		return err
-	}
-	newLabelMap, err := hdm.getNewNodeLabel(oldNode)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get new node label, err: %v", err)
-		return err
-	}
-	if len(newLabelMap) == 0 {
-		return nil
-	}
-	newNode := oldNode.DeepCopy()
-	for key, value := range newLabelMap {
-		newNode.Labels[key] = value
-	}
-	mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
-		return err
-	}
-	newNode.Annotations[common.BaseDeviceInfoKey] = string(mashaledNpuInfo)
-	for i := 0; i < common.RetryUpdateCount; i++ {
-		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
-			hwlog.RunLog.Infof("update node label success")
-			return nil
-		}
-		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)
-		time.Sleep(time.Second)
-	}
-	return fmt.Errorf("update node label failed")
-}
-
-func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, error) {
-	newLabelMap, err := hdm.updateChipNameToNode()
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := node.Labels[common.ServerTypeLabelKey]; !ok {
-		newLabelMap[common.ServerTypeLabelKey] = common.ParamOption.RealCardType +
-			common.MiddelLine + strconv.Itoa(int(common.ParamOption.AiCoreCount))
-	}
-	boardInfo, err := hdm.manager.GetDmgr().GetBoardInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get node board info, err: %s", err.Error())
-	}
-	if common.ParamOption.RealCardType == common.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
-		// only auto label 300IA2 with910B card
-		if boardInfo.BoardId == common.A300IA2BoardId {
-			newLabelMap[common.AcceleratorTypeKey] = common.A300IA2Label
-		}
-	}
-	if common.IsContainAll300IDuo() {
-		newLabelMap[common.InferCardKey] = common.A300IDuoLabel
-	}
-	return newLabelMap, nil
-}
-
-func (hdm *HwDevManager) getNpuBaseInfo() map[string]*common.NpuBaseInfo {
-	ipMap := make(map[string]*common.NpuBaseInfo, len(hdm.allInfo.AllDevs))
-	for _, dev := range hdm.allInfo.AllDevs {
-		ipMap[dev.DeviceName] = &common.NpuBaseInfo{
-			IP:            dev.IP,
-			SuperDeviceID: dev.SuperDeviceID,
-		}
-	}
-	return ipMap
-}
-
-func (hdm *HwDevManager) updateChipNameToNode() (map[string]string, error) {
-	newLabelMap := make(map[string]string, 1)
-	chipInfo, err := hdm.manager.GetDmgr().GetValidChipInfo()
-	if err != nil {
-		return nil, err
-	}
-	newLabelMap[common.ChipNameLabel] = chipInfo.Name
-	return newLabelMap, nil
-}
-
-func (hdm *HwDevManager) setAllDeviceAndType() error {
 	kubeClient, err := kubeclient.NewClientK8s()
 	if err != nil {
 		hwlog.RunLog.Errorf("init k8s client failed err: %v", err.Error())
 		return err
 	}
 	hdm.manager.SetKubeClient(kubeClient)
+	hdm.manager.GetKubeClient().InitPodInformer()
+	hwlog.RunLog.Info("init kube client success")
 
+	return hdm.updateNodeLabels(common.ParamOption.AiCoreCount)
+}
+
+func (hdm *HwDevManager) updateNodeLabels(aiCoreCount int32) error {
+	oldNode, err := hdm.manager.GetKubeClient().GetNode()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get node, err: %v", err)
+		return err
+	}
+	if oldNode == nil {
+		hwlog.RunLog.Error("invalid node")
+		return fmt.Errorf("invalid node")
+	}
+	newLabelMap := make(map[string]string)
+	if _, ok := oldNode.Labels[common.ServerTypeLabelKey]; !ok {
+		newLabelMap[common.ServerTypeLabelKey] = common.ParamOption.RealCardType +
+			common.MiddelLine + strconv.Itoa(int(aiCoreCount))
+	}
+
+	if common.ParamOption.RealCardType == common.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
+		newLabelMap[common.AcceleratorTypeKey] = common.A300IA2Label
+	}
+
+	if len(newLabelMap) == 0 {
+		return nil
+	}
+
+	newNode := oldNode.DeepCopy()
+	for key, value := range newLabelMap {
+		newNode.Labels[key] = value
+	}
+
+	for i := 0; i < common.RetryUpdateCount; i++ {
+		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
+			hwlog.RunLog.Infof("update node label success")
+			return nil
+		}
+		hwlog.RunLog.Warnf("failed to patch new label to node, retry count:%d", i+1)
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("update node label failed")
+}
+
+func (hdm *HwDevManager) setAllDeviceAndType() error {
+	var err error
 	if hdm.allInfo, err = hdm.manager.GetNPUs(); err != nil {
 		return err
 	}
@@ -233,52 +188,13 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 	if err = hdm.manager.SetDeviceUsage(hdm.allInfo.AllDevs[0].LogicID); err != nil {
 		return err
 	}
-	hdm.groupDevice = device.ClassifyDevices(hdm.allInfo.AllDevs, hdm.allInfo.AllDevTypes)
+
 	return nil
-}
-
-func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
-	result := common.SuperPodInfo{
-		ScaleType:  common.ScaleTypeAbnormal,
-		SuperPodId: common.SuperPodIdAbnormal,
-		ServerId:   common.ServerIdAbnormal,
-		Reserve:    make([]int32, 0),
-	}
-	for _, npuDevices := range hdm.groupDevice {
-		for _, npuDevice := range npuDevices {
-			superPodInfo, err := hdm.manager.GetDmgr().GetSuperPodInfo(npuDevice.LogicID)
-			if err != nil {
-				hwlog.RunLog.Warnf("failed to get super pod info, error: %v", err)
-				continue
-			}
-			hwlog.RunLog.Infof("get super pod info: %v", superPodInfo)
-			npuDevice.SuperDeviceID = superPodInfo.SdId
-			if result.ScaleType != common.ScaleTypeAbnormal {
-				continue
-			}
-			result = common.SuperPodInfo{
-				ScaleType:  int32(superPodInfo.ScaleType),
-				SuperPodId: int32(superPodInfo.SuperPodId),
-				ServerId:   int32(superPodInfo.ServerId),
-			}
-			for i := 0; i < len(superPodInfo.Reserve); i++ {
-				result.Reserve = append(result.Reserve, int32(superPodInfo.Reserve[i]))
-			}
-		}
-	}
-
-	return result
-}
-
-func (hdm *HwDevManager) setSuperPodInfo() {
-	superPodInfo := hdm.getSuperPodInfo()
-	hwlog.RunLog.Infof("get super pod id: %d, server index: %d", superPodInfo.SuperPodId, superPodInfo.ServerId)
-	hdm.manager.SetSuperPodID(superPodInfo.SuperPodId)
-	hdm.manager.SetServerIndex(superPodInfo.ServerId)
 }
 
 func (hdm *HwDevManager) initPluginServer() error {
 	hdm.ServerMap = make(map[string]InterfaceServer, len(hdm.allInfo.AllDevTypes))
+	hdm.groupDevice = device.ClassifyDevices(hdm.allInfo.AllDevs, hdm.allInfo.AllDevTypes)
 	defaultDevices, err := common.GetDefaultDevices(common.ParamOption.GetFdFlag)
 	if err != nil {
 		hwlog.RunLog.Error("get default device error")
@@ -315,8 +231,6 @@ func (hdm *HwDevManager) updateDeviceHealth(curAllDevs []common.NpuDevice) {
 			curAllDevs[i].NetworkHealth = hdm.allInfo.AllDevs[index].NetworkHealth
 			curAllDevs[i].FaultCodes = hdm.allInfo.AllDevs[index].FaultCodes
 			curAllDevs[i].AlarmRaisedTime = hdm.allInfo.AllDevs[index].AlarmRaisedTime
-			curAllDevs[i].NetworkFaultCodes = hdm.allInfo.AllDevs[index].NetworkFaultCodes
-			curAllDevs[i].NetworkAlarmRaisedTime = hdm.allInfo.AllDevs[index].NetworkAlarmRaisedTime
 		}
 	}
 }
@@ -369,10 +283,6 @@ func (hdm *HwDevManager) separateNPUIDFromDeviceInfoIntoCache() {
 func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	hwlog.RunLog.Info("starting the listen device")
 	hdm.subscribeFaultEvent()
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		// will set a goroutine to query all switch faults every 5 min
-		go hdm.SwitchDevManager.GetSwitchFaultCodeByInterval(ctx, time.Second*common.GetSwitchFaultCodeInterval)
-	}
 	// when device-plugin is started, the value of ManuallySeparateNPU in device info configmap needs to be written into
 	// cache to prevent manually separate npu IDs in cache from been lost
 	hdm.separateNPUIDFromDeviceInfoIntoCache()
@@ -399,7 +309,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 				continue
 			}
 			// complete the fault codes that cannot be reported by the event subscribe interface
-			hdm.mendSubscribeFaultEvents()
+			hdm.mendSubscribeFaultEvent()
 
 			hdm.notifyToK8s(&initTime)
 			hdm.useVolcanoNotify()
@@ -418,18 +328,16 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 		newNpuDevices := make([]*common.NpuDevice, 0, len(npuDevices))
 		for _, npuDevice := range npuDevices {
 			newNpuDevice := &common.NpuDevice{
-				FaultCodes:             npuDevice.FaultCodes,
-				AlarmRaisedTime:        npuDevice.AlarmRaisedTime,
-				NetworkFaultCodes:      npuDevice.NetworkFaultCodes,
-				NetworkAlarmRaisedTime: npuDevice.NetworkAlarmRaisedTime,
-				DevType:                npuDevice.DevType,
-				DeviceName:             npuDevice.DeviceName,
-				Health:                 npuDevice.Health,
-				NetworkHealth:          npuDevice.NetworkHealth,
-				IP:                     npuDevice.IP,
-				LogicID:                npuDevice.LogicID,
-				PhyID:                  npuDevice.PhyID,
-				CardID:                 npuDevice.CardID,
+				FaultCodes:      npuDevice.FaultCodes,
+				AlarmRaisedTime: npuDevice.AlarmRaisedTime,
+				DevType:         npuDevice.DevType,
+				DeviceName:      npuDevice.DeviceName,
+				Health:          npuDevice.Health,
+				NetworkHealth:   npuDevice.NetworkHealth,
+				IP:              npuDevice.IP,
+				LogicID:         npuDevice.LogicID,
+				PhyID:           npuDevice.PhyID,
+				CardID:          npuDevice.CardID,
 			}
 			newNpuDevices = append(newNpuDevices, newNpuDevice)
 		}
@@ -455,7 +363,6 @@ func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType s
 }
 
 func (hdm *HwDevManager) notifyToK8s(initTime *time.Time) {
-	hdm.isSupportGraceTolerance()
 	oldGroupDevice := deepCopyGroupDevice(hdm.groupDevice)
 	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
 
@@ -477,7 +384,9 @@ func (hdm *HwDevManager) notifyToK8s(initTime *time.Time) {
 }
 
 func (hdm *HwDevManager) chipHotReset() {
-	// both 910B[A800IA2] and 310 will be used as infer device
+	if hdm.RunMode == common.Ascend910 {
+		return
+	}
 	if common.ParamOption.HotReset != common.HotResetInfer {
 		hwlog.RunLog.Debugf("infer device hot reset mode error: %d", common.ParamOption.HotReset)
 		return
@@ -496,28 +405,6 @@ func (hdm *HwDevManager) chipHotReset() {
 }
 
 func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.NpuDevice, prClient *PodResource) {
-	if hdm == nil || len(hdm.allInfo.AllDevs) == 0 {
-		hwlog.RunLog.Error("invalid params")
-		return
-	}
-
-	usage, boardId, err := hdm.getServerUsageAndBoardId()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return
-	}
-
-	// A800IA2 server, node labeled with server-usage=infer
-	if usage == common.Infer {
-		// server without hccs is 0x33 or 0x3c
-		if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld {
-			hdm.ResetWithoutHccsServer(devType, devices, prClient)
-			return
-		}
-		hdm.ResetHccsServer(devType, devices, prClient)
-		return
-	}
-
 	for _, device := range devices {
 		if device.Health == v1beta1.Healthy {
 			continue
@@ -526,79 +413,6 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 			continue
 		}
 		hdm.hotReset(device)
-	}
-}
-
-func (hdm *HwDevManager) getServerUsageAndBoardId() (string, uint32, error) {
-	boardId, err := hdm.manager.GetServerBoardId(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get node board info, err: %s", err.Error())
-		return "", common.EmptyBoardId, err
-	}
-
-	client := hdm.manager.GetKubeClient()
-	if client == nil {
-		return "", common.EmptyBoardId, fmt.Errorf("k8s client is nil")
-	}
-	// try to get server-usage label
-	usage, err := client.GetServerUsageLabelCache()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get server usage")
-		return "", common.EmptyBoardId, err
-	}
-	return usage, boardId, nil
-}
-
-// ResetWithoutHccsServer reset server without hccs, which can reset one card at one time
-func (hdm *HwDevManager) ResetWithoutHccsServer(devType string, devices []*common.NpuDevice, prClient *PodResource) {
-	for _, device := range devices {
-		inReset := hdm.manager.GetIfCardsInResetting(device.LogicID)
-		resetFailedTimes := hdm.manager.GetResetFailedTimes(device.LogicID)
-		if device.Health != v1beta1.Healthy && !inReset && resetFailedTimes < common.MaxResetTimes &&
-			hdm.isPodRemove(devType, device, prClient) {
-			hdm.manager.SetCardsInResetting(device.LogicID, true)
-			// to avoid blocking for minutes
-			go hdm.hotReset(device)
-		}
-	}
-}
-
-// ResetHccsServer try to reset server with hccs, which need to reset all cards at once
-func (hdm *HwDevManager) ResetHccsServer(devType string, devices []*common.NpuDevice, prClient *PodResource) {
-	//  if all cards are healthy will do no more action, to log less
-	allHealthy := true
-	for _, npu := range devices {
-		allHealthy = allHealthy && (npu.Health == v1beta1.Healthy)
-	}
-	if hdm.manager.GetResetFailedTimes(common.FirstDevice) > common.MaxResetTimes {
-		hwlog.RunLog.Warnf("reset failed more than %d times without success, hot reset will be disabled "+
-			"util device-plugin restarted", common.MaxResetTimes)
-		return
-	}
-	if allHealthy || hdm.manager.GetIfCardsInResetting(common.FirstDevice) {
-		return
-	}
-
-	freeDeviceNum := 0
-	needReset := false
-	for _, device := range devices {
-		if device.Health != v1beta1.Healthy {
-			needReset = true
-		}
-		if !hdm.isPodRemove(devType, device, prClient) {
-			break
-		}
-		freeDeviceNum++
-	}
-
-	if needReset && freeDeviceNum == common.Ascend910BRingsNumTrain {
-		hdm.manager.SetCardsInResetting(common.FirstDevice, true)
-		if common.FirstDevice >= len(devices) {
-			hwlog.RunLog.Errorf("index out of range: giving devices index %d, "+
-				"real length %d", common.FirstDevice, len(devices))
-			return
-		}
-		hdm.hotReset(devices[common.FirstDevice])
 	}
 }
 
@@ -672,7 +486,6 @@ func (hdm *HwDevManager) SignCatch(cancel context.CancelFunc) {
 		cancel()
 		hdm.stopAllSever()
 		hdm.manager.GetDmgr().ShutDown()
-		hdm.SwitchDevManager.ShutDownSwitch()
 	}
 }
 
@@ -856,8 +669,9 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 	}
 	for _, deviceInfo := range podDeviceInfo {
 		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
+		_, existDeviceKey := deviceInfo.Pod.Annotations[common.Pod910DeviceKey]
 		_, existRealAlloc := deviceInfo.Pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
-		if existRealAlloc {
+		if existDeviceKey || existRealAlloc {
 			continue
 		}
 		if len(deviceInfo.KltDevice) == 0 || len(deviceInfo.RealDevice) == 0 {
@@ -866,14 +680,15 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 			continue
 		}
 		hwlog.RunLog.Debugf("%s, %d, %v", deviceInfo.Pod.Name, len(deviceInfo.KltDevice), deviceInfo.RealDevice)
-		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, serverID, hdm.allInfo.AllDevs); err != nil {
+		if err := hdm.manager.AddPodAnnotation(&deviceInfo.Pod, deviceInfo.KltDevice, deviceInfo.RealDevice,
+			deviceType, serverID); err != nil {
 			hwlog.RunLog.Errorf("update pod %s_%s annotation failed, %v", deviceInfo.Pod.Namespace,
 				deviceInfo.Pod.Name, err)
 		} else {
 			hwlog.RunLog.Infof("update pod %s_%s annotation success", deviceInfo.Pod.Namespace, deviceInfo.Pod.Name)
 		}
 
-		if common.ParamOption.HotReset != common.HotResetTrainOnLine {
+		if common.ParamOption.HotReset != common.HotResetTrain {
 			continue
 		}
 
@@ -886,7 +701,6 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 }
 
 func (hdm *HwDevManager) hotReset(device *common.NpuDevice) {
-	hwlog.RunLog.Infof("will start to reset device %s", device.DeviceName)
 	var isResetExec = false
 	if err := wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		if err := hdm.execResetChip(device.LogicID, &isResetExec); err != nil {
@@ -906,12 +720,8 @@ func (hdm *HwDevManager) hotReset(device *common.NpuDevice) {
 		return true, nil
 	}); err != nil {
 		hwlog.RunLog.Warnf("hot reset failed, timeout or err: %v", err)
-		hdm.manager.SetCardsInResetting(device.LogicID, false)
-		hdm.manager.SetResetFailedTimes(device.LogicID, hdm.manager.GetResetFailedTimes(device.LogicID)+1)
 		return
 	}
-	hdm.manager.SetResetFailedTimes(device.LogicID, 0)
-	hdm.manager.SetCardsInResetting(device.LogicID, false)
 	hwlog.RunLog.Info("hot reset success")
 }
 
@@ -957,27 +767,6 @@ func (hdm *HwDevManager) execResetChip(logicID int32, isResetExec *bool) error {
 }
 
 func (hdm *HwDevManager) subscribeFaultEvent() {
-	hdm.subscribeNpuFaultEvent()
-	hdm.subscribeSwitchFaultEvent()
-}
-
-func (hdm *HwDevManager) subscribeSwitchFaultEvent() {
-	if common.ParamOption.RealCardType != common.Ascend910A3 || !common.ParamOption.EnableSwitchFault {
-		return
-	}
-	for i := 0; i < common.GeneralSubscribeTime; i++ {
-		if err := hdm.SwitchDevManager.SubscribeSwitchFaults(); err != nil {
-			time.Sleep(time.Second)
-			continue
-		}
-		return
-	}
-	common.SwitchSubscribeFailed = true
-	hwlog.RunLog.Error("request Subscribe Switch FaultEvent failed, the subscribe way is closed")
-}
-
-// subscribeNpuFaultEvent subscribe fault happend on npus
-func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 	if err := common.LoadFaultCodeFromFile(); err != nil {
 		common.SubscribeFailed = true
 		hwlog.RunLog.Errorf("load faultCode.json failed, the subscribe way is closed, err: %v", err)
@@ -1006,29 +795,32 @@ func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 
 // graceTolerance start fault tolerance for training tasks
 func (hdm *HwDevManager) graceTolerance(groupDevice map[string][]*common.NpuDevice) {
-	hdm.manager.GraceTolerance(groupDevice)
-	return
-}
-
-func (hdm *HwDevManager) isSupportGraceTolerance() {
-	if common.ParamOption.HotReset != common.HotResetTrainOnLine &&
-		common.ParamOption.HotReset != common.HotResetTrainOffLine {
-		hwlog.RunLog.Debugf("train device hot reset mode error: %d", common.ParamOption.HotReset)
-		return
-	}
-
 	if hdm.RunMode != common.Ascend910 {
 		hwlog.RunLog.Debugf("grace tolerance only support training chip")
 		return
 	}
-	if common.ParamOption.RealCardType == common.Ascend910 && hdm.WorkMode != common.SMPMode {
-		hwlog.RunLog.Debug("grace tolerance only support SMP chip mode for 910")
+	if common.ParamOption.HotReset != common.HotResetTrain {
+		hwlog.RunLog.Debugf("train device hot reset mode error: %d", common.ParamOption.HotReset)
 		return
 	}
-	common.ParamOption.GraceToleranceOn = true
+	if hdm.isSupportGraceTolerance() {
+		hdm.manager.GraceTolerance(groupDevice)
+	}
+}
+
+func (hdm *HwDevManager) isSupportGraceTolerance() bool {
+	if common.ParamOption.RealCardType == common.Ascend910B {
+		return true
+	}
+	if hdm.WorkMode != common.SMPMode {
+		hwlog.RunLog.Debug("grace tolerance only support SMP chip mode for 910")
+		return false
+	}
+	return true
 }
 
 func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
+	var resourceVersion = ""
 	var interval = common.PollFaultCodeCMInterval
 	for {
 		select {
@@ -1044,45 +836,25 @@ func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
 				common.FaultCodeCMNameSpace)
 			if err != nil {
 				hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
-				initFaultInfoFromFile()
-				time.Sleep(time.Duration(interval) * time.Second)
+				if err = common.LoadFaultCodeFromFile(); err != nil {
+					hwlog.RunLog.Errorf("load fault code from file failed, err: %v", err)
+				}
+				if err = common.LoadFaultCustomizationFromFile(); err != nil {
+					hwlog.RunLog.Errorf("load fault customization from file failed, err: %v", err)
+				}
+				time.Sleep(time.Duration(common.PollFaultCodeCMInterval) * time.Second)
 				continue
 			}
-			interval = getFaultCodeCMPollInterval(configMap)
-			updateFaultConfigFromCm(configMap)
+			if resourceVersion != configMap.ResourceVersion {
+				hwlog.RunLog.Infof("detect '%s' configmap changed", common.FaultCodeCMName)
+				interval = getFaultCodeCMPollInterval(configMap)
+				resourceVersion = configMap.ResourceVersion
+				loadFaultCode(configMap)
+				loadFaultCustomization(configMap)
+				hwlog.RunLog.Infof("handling '%s' configmap change complete", common.FaultCodeCMName)
+			}
 			time.Sleep(time.Duration(interval) * time.Second)
 		}
-	}
-}
-
-func updateFaultConfigFromCm(configMap *v1.ConfigMap) {
-	if resourceVersion == configMap.ResourceVersion {
-		return
-	}
-	hwlog.RunLog.Infof("detect '%s' configmap changed", common.FaultCodeCMName)
-	resourceVersion = configMap.ResourceVersion
-	loadFaultCode(configMap)
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		loadSwitchFaultCode(configMap)
-		deviceswitch.UpdateSwitchFaultLevel()
-	}
-	loadFaultCustomization(configMap)
-	hwlog.RunLog.Infof("handling '%s' configmap change complete", common.FaultCodeCMName)
-}
-
-func initFaultInfoFromFile() {
-	if err := common.LoadFaultCodeFromFile(); err != nil {
-		hwlog.RunLog.Errorf("load fault code from file failed, err: %v", err)
-	}
-	if err := common.LoadFaultCustomizationFromFile(); err != nil {
-		hwlog.RunLog.Errorf("load fault customization from file failed, err: %v", err)
-	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		if err := common.LoadSwitchFaultCodeFromFile(); err != nil {
-			hwlog.RunLog.Errorf("load switch fault code from file failed, err: %v", err)
-			return
-		}
-		deviceswitch.UpdateSwitchFaultLevel()
 	}
 }
 
@@ -1109,36 +881,12 @@ func loadFaultCode(configMap *v1.ConfigMap) {
 	hwlog.RunLog.Infof("load fault code from configmap success")
 }
 
-func loadSwitchFaultCode(configMap *v1.ConfigMap) {
-	switchFaultCode, ok := configMap.Data[common.SwitchFaultCodeKey]
-	if !ok {
-		hwlog.RunLog.Errorf("cannot find key '%s' in CM, try to load SwitchFaultCode.json", common.SwitchFaultCodeKey)
-		if err := common.LoadSwitchFaultCodeFromFile(); err != nil {
-			hwlog.RunLog.Errorf("load switch fault code from SwitchFaultCode.json failed, err: %v", err)
-			return
-		}
-		hwlog.RunLog.Info("load switch fault code from file success")
-		return
-	}
-	if err := common.LoadSwitchFaultCode([]byte(switchFaultCode)); err != nil {
-		hwlog.RunLog.Errorf("failed to load switch fault code from configmap, err: %s, "+
-			"will try to load from file", err.Error())
-		if err := common.LoadSwitchFaultCodeFromFile(); err != nil {
-			hwlog.RunLog.Errorf("load switch fault code from SwitchFaultCode.json failed, err: %v", err)
-			return
-		}
-		hwlog.RunLog.Info("load switch fault code from file success")
-		return
-	}
-	hwlog.RunLog.Info("load switch fault code from configmap success")
-}
-
 func loadFaultCustomization(configMap *v1.ConfigMap) {
 	faultCustomization, ok := configMap.Data[common.FaultCustomizationKey]
 	if !ok {
 		hwlog.RunLog.Warnf("did not find key(%s) in configmap, "+
 			"reset fault customization", common.FaultCustomizationKey)
-		common.ResetFaultCustomizationCache()
+		common.ResetFaultCustomization()
 		if err := common.LoadFaultCustomizationFromFile(); err != nil {
 			hwlog.RunLog.Errorf("load fault customization from faultCustomization.json failed, err: %v", err)
 			return
@@ -1148,7 +896,6 @@ func loadFaultCustomization(configMap *v1.ConfigMap) {
 	}
 	if err := common.LoadFaultCustomization([]byte(faultCustomization)); err != nil {
 		hwlog.RunLog.Errorf("load fault customization from cm failed, err: %v", err)
-		common.ResetFaultCustomizationCache()
 		if err = common.LoadFaultCustomizationFromFile(); err != nil {
 			hwlog.RunLog.Errorf("load fault customization from faultCustomization.json failed, err: %v", err)
 			return
@@ -1180,19 +927,51 @@ func getFaultCodeCMPollInterval(configMap *v1.ConfigMap) int {
 	return interval
 }
 
-func (hdm *HwDevManager) mendSubscribeFaultEvents() {
-	initLogicIDs := common.GetAndCleanLogicID()
+func (hdm *HwDevManager) mendSubscribeFaultEvent() {
+	hdm.handleDropCardFault()
+}
+
+func (hdm *HwDevManager) handleDropCardFault() {
+	if common.SubscribeFailed {
+		return
+	}
+
 	for _, npuDevices := range hdm.groupDevice {
 		for _, npuDevice := range npuDevices {
-			if common.SubscribeFailed {
-				hdm.manager.LogFaultModeChange(npuDevice, initLogicIDs, common.Polling)
-			} else {
-				hdm.manager.LogFaultModeChange(npuDevice, initLogicIDs, common.Subscribe)
-			}
-
-			hdm.manager.HandleDropCardFaultEvents(npuDevice)
-			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
-			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
+			hdm.generateCardDropFaultEvent(npuDevice)
 		}
 	}
+}
+
+func (hdm *HwDevManager) generateCardDropFaultEvent(npuDevice *common.NpuDevice) {
+	if !npuDevice.CardDrop && hdm.checkCardDropFault(npuDevice.LogicID) {
+		faultInfo := npuCommon.DevFaultInfo{
+			EventID:   common.CardDropFaultCode,
+			LogicID:   npuDevice.LogicID,
+			Assertion: npuCommon.FaultOccur,
+		}
+		npuDevice.CardDrop = true
+		common.SaveDevFaultInfo(faultInfo)
+	}
+
+	if npuDevice.CardDrop && !hdm.checkCardDropFault(npuDevice.LogicID) {
+		faultInfo := npuCommon.DevFaultInfo{
+			EventID:   common.CardDropFaultCode,
+			LogicID:   npuDevice.LogicID,
+			Assertion: npuCommon.FaultRecover,
+		}
+		npuDevice.CardDrop = false
+		common.SaveDevFaultInfo(faultInfo)
+	}
+}
+
+func (hdm *HwDevManager) checkCardDropFault(logicID int32) bool {
+	_, err := hdm.manager.GetDmgr().GetDeviceHealth(logicID)
+	if common.CheckErrorMessage(err, npuCommon.DeviceNotReadyErrCodeStr) {
+		hwlog.RunLog.Errorf("logic id %d, error message contains %s, device does not ready, "+
+			"the card may be dropped", logicID, npuCommon.DeviceNotReadyErrCodeStr)
+		return true
+	}
+
+	return false
 }

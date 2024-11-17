@@ -21,21 +21,12 @@ package rescheduling
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
-	"time"
 
-	"k8s.io/apimachinery/pkg/util/uuid"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
-)
-
-const (
-	validLengthOfInfo = 2000
-	maxGenRecordLoop  = 100
-	perLoopJobNum     = 50
 )
 
 func fakeInvalidReSchedulerCMData() *DealReSchedulerConfigmap {
@@ -211,98 +202,5 @@ func TestDealReSchedulerCacheWriteReSchedulerCacheToEnvCache(t *testing.T) {
 				t.Errorf("WriteReSchedulerCacheToEnvCache() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
-	}
-}
-
-func buildTestCaseForMaxLengthOfRescheduleReason() ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests {
-	test1 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
-		name: "01-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-max reschedule reason to write",
-		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			DealReSchedulerConfigmap: nil,
-			FaultNodes:               []FaultNode{},
-			FaultJobs:                []FaultJob{},
-			NodeHeartbeats:           []NodeHeartbeat{},
-		},
-		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
-			env: &plugin.ScheduleEnv{
-				Cache: plugin.ScheduleCache{
-					Names:           map[string]string{ReschedulingReasonKey: RescheduleReasonCmName},
-					Namespaces:      map[string]string{ReschedulingReasonKey: RescheduleReasonCmNamespace},
-					FaultConfigMaps: map[api.JobID]*plugin.FaultRankIdData{},
-					Data: map[string]map[string]string{ReschedulingReasonKey: make(map[string]string,
-						util.MapInitNum)},
-				},
-			},
-			jobType: CmFaultJob910x8Kind,
-		},
-		wantErr: false,
-	}
-	return test1
-}
-
-func gen950KbRecords() map[api.JobID]*RescheduleReason {
-	records := make(map[api.JobID]*RescheduleReason, util.MapInitNum)
-	singleRecord := RescheduleRecord{
-		LogFileFormatTime:   time.Now().Format("I0102 15:04:05"),
-		RescheduleTimeStamp: time.Now().Unix(),
-		ReasonOfTask: []RescheduleTaskReason{{
-			RescheduleReason: "pod-failed",
-			PodName:          "scheduler-0",
-			NodeName:         "node0",
-			NodeRankIndex:    "0",
-		}},
-	}
-
-	length, maxLoop := 0, maxGenRecordLoop
-	for i := 0; length < MaxKbOfRescheduleRecords && i < maxLoop; i++ {
-		// every 50 job, marshal once to judge length
-		for j := 0; j < perLoopJobNum; j++ {
-			id := uuid.NewUUID()
-			jobId := api.JobID(id)
-			singleJobWith10Record := RescheduleReason{
-				JobID:                jobId,
-				TotalRescheduleTimes: 0,
-				RescheduleRecords: []RescheduleRecord{
-					singleRecord, singleRecord, singleRecord, singleRecord, singleRecord,
-					singleRecord, singleRecord, singleRecord, singleRecord, singleRecord,
-				},
-				AdditionalInfo: "",
-			}
-			records[jobId] = &singleJobWith10Record
-		}
-		bytes, err := json.Marshal(records)
-		if err != nil {
-			fmt.Printf("failed to marshal, err: %s", err.Error())
-			continue
-		}
-		length = len(bytes)
-	}
-	return records
-}
-
-func TestMaxLengthOfRescheduleReason(t *testing.T) {
-	test := buildTestCaseForMaxLengthOfRescheduleReason()
-	records := gen950KbRecords()
-	reCache := &DealReSchedulerCache{
-		DealReSchedulerConfigmap:   test.fields.DealReSchedulerConfigmap,
-		FaultNodes:                 test.fields.FaultNodes,
-		FaultJobs:                  test.fields.FaultJobs,
-		NodeHeartbeats:             test.fields.NodeHeartbeats,
-		AllocNodeRankOccurrenceMap: test.fields.AllocNodeRankOccurrenceMap,
-		JobRecentRescheduleRecords: records,
-	}
-	if len(records) == 0 {
-		t.Error("failed to generate records")
-	}
-	result, err := reCache.writeRescheduleReasonsToCMString()
-	if (err != nil) != test.wantErr {
-		t.Errorf("writeRescheduleReasonsToCMString() error = %v, wantErr %v", err, test.wantErr)
-	}
-	if len(result) > MaxKbOfRescheduleRecords {
-		t.Error("failed to reduce rescheduling reason length")
-	}
-	// directly show the result contain additional info
-	if len(result) > validLengthOfInfo {
-		fmt.Printf("%s", result[:validLengthOfInfo])
 	}
 }

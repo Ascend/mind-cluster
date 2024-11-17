@@ -59,9 +59,23 @@ func (tp *card910bx2) ValidNPUJob() *api.ValidateResult {
 func (tp *card910bx2) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
+	return nil
+}
+
+// PreStopAction post-processing actions for re-scheduling
+func (tp *card910bx2) PreStopAction(env *plugin.ScheduleEnv) error {
+	moduleFullName := util.NPU910CardName + util.Card910bx2AcceleratorType
+	klog.V(util.LogInfoLev).Infof("enter PreStopAction %s...", moduleFullName)
+	if tp == nil || tp.reHandle == nil || env == nil || tp.FrameAttr.KubeClient == nil {
+		return fmt.Errorf("%s reSchedule not enabled or nil env: %s", moduleFullName, util.ArgumentError)
+	}
+	if err := tp.reHandle.WriteReSchedulerCacheToEnvCache(env, rescheduling.CmFaultJob910bx2Kind); err != nil {
+		return err
+	}
+	klog.V(util.LogInfoLev).Infof("leave PreStopAction %s...", moduleFullName)
 	return nil
 }
 

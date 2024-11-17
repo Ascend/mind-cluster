@@ -171,7 +171,7 @@ func (tp *card310x4) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plu
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",
 		tp.GetPluginName(), task.Name, selectedNPU)
 
-	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
+	tp.SetNPUTopologyToPodFn(task, selectedNPU)
 	return tp.UpdateNodeInfo(node, selectedNPU)
 }
 

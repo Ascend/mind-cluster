@@ -39,17 +39,11 @@ spec:
       app: npu-exporter
   template:
     metadata:
-      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
       labels:
         app: npu-exporter
     spec:
-      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#      securityContext:
-#        seccompProfile:
-#          type: RuntimeDefault
-      automountServiceAccountToken: false
       nodeSelector:
         workerselector: dls-worker-node
         servertype: soc

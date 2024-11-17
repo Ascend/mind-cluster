@@ -38,15 +38,11 @@ const (
 	// PodEventTypeAllocateFailed dp pod segment failed type
 	PodEventTypeAllocateFailed = "Warning"
 	podObjectType              = "Pod"
-	coreNumErr                 = "wrong number %d"
-	// Ascend310PCard test name of Ascend310P
-	Ascend310PCard = "Ascend310P-8"
 )
 
 // VTemplate vNPU template
 type VTemplate struct {
 	Data map[string]util.VResource
-	Temp string
 }
 
 // VirtualNPU vnpu struct

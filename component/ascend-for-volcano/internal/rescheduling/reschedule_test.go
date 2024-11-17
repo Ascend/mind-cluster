@@ -22,11 +22,11 @@ package rescheduling
 import (
 	"errors"
 	"reflect"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -121,7 +121,10 @@ func fakeTestFaultNodeNodeUnhealthy(nodeName string) *FaultNode {
 		NodeHealthState:     NodeUnhealthy,
 		AllCards: []string{"Ascend910-0", "Ascend910-1", "Ascend910-2", "Ascend910-3", "Ascend910-4",
 			"Ascend910-5", "Ascend910-6", "Ascend910-7"},
-		FaultCards: faultCards,
+		FaultCards:          faultCards,
+		HeartbeatInterval:   heartbeatInterval,
+		OldHeartbeatTime:    int64(createTime),
+		UpdateHeartbeatTime: int64(createTime),
 	}
 }
 
@@ -138,7 +141,10 @@ func fakeTestFaultNodeNodeHealthy(nodeName string) *FaultNode {
 		NodeHealthState:     NodeHealthy,
 		AllCards: []string{"Ascend910-0", "Ascend910-1", "Ascend910-2", "Ascend910-3", "Ascend910-4",
 			"Ascend910-5", "Ascend910-6", "Ascend910-7"},
-		FaultCards: faultCards,
+		FaultCards:          faultCards,
+		HeartbeatInterval:   heartbeatInterval,
+		OldHeartbeatTime:    int64(heartbeatTime),
+		UpdateHeartbeatTime: int64(heartbeatTime),
 	}
 }
 
@@ -251,8 +257,8 @@ func fakeNPUNodeNilDeviceInfo(name string) *plugin.NPUNode {
 
 func fakeNPUNodeWithDeviceInfo(name string) *plugin.NPUNode {
 	anno := map[string]string{
-		util.NodedHeartbeatTimeKey:                       strconv.FormatInt(time.Now().Unix(), util.Base10),
-		util.NodeDNodeHeartbeatIntervalKey:               strconv.Itoa(heartbeatInterval),
+		util.NodeDNodeHeartbeatIntervalKey:               "10",
+		util.NodedHeartbeatTimeKey:                       "8",
 		util.NPU910CardName:                              "Ascend910-0,Ascend910-1,Ascend910-2",
 		util.NPU910CardName + "-" + CardUnhealthy:        "Ascend910-1",
 		util.NPU910CardName + "-" + CardNetworkUnhealthy: "Ascend910-2",
@@ -585,17 +591,11 @@ func buildReSchedulerAddFaultJobWithSession() []ReSchedulerAddFaultJobWithSessio
 
 // TestReSchedulerAddFaultJobWithSession test for add fault job
 func TestReSchedulerAddFaultJobWithSession(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
 	tests := buildReSchedulerAddFaultJobWithSession()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reScheduler := tt.fields
-			if err := reScheduler.AddFaultJobWithSession(tt.args.jobs, env); (err != nil) != tt.wantErr {
+			if err := reScheduler.AddFaultJobWithSession(tt.args.jobs); (err != nil) != tt.wantErr {
 				t.Errorf("AddFaultJobWithSession() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1023,6 +1023,123 @@ func TestReSchedulerCheckNodeCurNodeIsFault(t *testing.T) {
 			reScheduler := fakeTestTTReScheduler(tt.fields)
 			if err := reScheduler.checkNodeCurNodeIsFault(tt.args.vcNode, tt.args.task); (err != nil) != tt.wantErr {
 				t.Errorf("checkNodeCurNodeIsFault() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type ReSchedulerUseAnnotationArgs struct {
+	task *api.TaskInfo
+	node *plugin.NPUNode
+}
+
+type ReSchedulerUseAnnotationTests struct {
+	name    string
+	fields  TestReScheduler
+	args    ReSchedulerUseAnnotationArgs
+	wantErr bool
+}
+
+func buildReSchedulerUseAnnotationTestArgs(nodeName string) ReSchedulerUseAnnotationArgs {
+	args := ReSchedulerUseAnnotationArgs{
+		task: &api.TaskInfo{
+			Job:       "vcjob/job0",
+			Name:      "pod1",
+			Namespace: "vcjob",
+			Pod: &v1.Pod{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: make(map[string]string, util.MapInitNum),
+				},
+			},
+		},
+		node: &plugin.NPUNode{
+			CommonNode: plugin.CommonNode{
+				Name: nodeName,
+			},
+		},
+	}
+	return args
+}
+
+func buildReSchedulerUseAnnotationTestFields(faultNode *FaultNode, faultJob0 *FaultJob,
+	allocNodeRankTimeMap map[api.JobID][]*AllocNodeRankOccurrence) TestReScheduler {
+	reScheduler := TestReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{
+			DealReSchedulerConfigmap:   nil,
+			FaultNodes:                 []FaultNode{*faultNode},
+			FaultJobs:                  []FaultJob{*faultJob0},
+			NodeHeartbeats:             nil,
+			AllocNodeRankOccurrenceMap: allocNodeRankTimeMap,
+		},
+		Jobs:       nil,
+		Nodes:      nil,
+		kubeClient: nil,
+	}
+	return reScheduler
+}
+
+func buildReSchedulerUseAnnotationRankIndexMap(nodeName string, rankIndex string, occ int) *AllocNodeRankOccurrence {
+	mapData := &AllocNodeRankOccurrence{
+		NodeName:   nodeName,
+		RankIndex:  rankIndex,
+		Occurrence: occ,
+	}
+	return mapData
+}
+
+func buildReSchedulerUseAnnotationTests() []ReSchedulerUseAnnotationTests {
+	faultTask00 := fakeTestFaultTaskFault("pod0", "vcjob", "node0", "0", "pppp")
+	faultTask01 := fakeTestFaultTaskHealth("pod1", "vcjob", "node1", "1", "oooo")
+	faultJob0 := fakeTestFaultJob([]string{"node0", "node1"}, []string{"0", "1"}, []FaultTask{*faultTask00,
+		*faultTask01}, "job0", "vcjob")
+	faultNode := fakeTestFaultNodeNodeUnhealthy("node0")
+	allocNodeRankTimeMap := map[api.JobID][]*AllocNodeRankOccurrence{
+		api.JobID("vcjob/job0"): {
+			buildReSchedulerUseAnnotationRankIndexMap("node0", "0", 0),
+			buildReSchedulerUseAnnotationRankIndexMap("node1", "1", 0),
+		},
+	}
+	test1 := ReSchedulerUseAnnotationTests{
+		name:    "01-UseAnnotation()-old node use old rankIndex",
+		fields:  buildReSchedulerUseAnnotationTestFields(faultNode, faultJob0, allocNodeRankTimeMap),
+		args:    buildReSchedulerUseAnnotationTestArgs("node1"),
+		wantErr: false,
+	}
+	test2 := ReSchedulerUseAnnotationTests{
+		name:    "02-UseAnnotation()-new node use old fault node rankIndex",
+		fields:  buildReSchedulerUseAnnotationTestFields(faultNode, faultJob0, allocNodeRankTimeMap),
+		args:    buildReSchedulerUseAnnotationTestArgs("node2"),
+		wantErr: false,
+	}
+	allocNodeRankTimeMap3 := map[api.JobID][]*AllocNodeRankOccurrence{
+		api.JobID("vcjob/job0"): {
+			buildReSchedulerUseAnnotationRankIndexMap("node0", "0", 1),
+			buildReSchedulerUseAnnotationRankIndexMap("node1", "1", 0),
+		},
+	}
+	test3 := ReSchedulerUseAnnotationTests{
+		name:    "03-UseAnnotation()-fault node rankIndex occupied",
+		fields:  buildReSchedulerUseAnnotationTestFields(faultNode, faultJob0, allocNodeRankTimeMap3),
+		args:    buildReSchedulerUseAnnotationTestArgs("node2"),
+		wantErr: false,
+	}
+	tests := []ReSchedulerUseAnnotationTests{
+		test1,
+		test2,
+		test3,
+	}
+	return tests
+}
+
+// TestReSchedulerUseAnnotation test for use annotation
+func TestReSchedulerUseAnnotation(t *testing.T) {
+	tests := buildReSchedulerUseAnnotationTests()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reScheduler := fakeTestTTReScheduler(tt.fields)
+			if err := reScheduler.UseAnnotation(tt.args.task, tt.args.node); (err != nil) != tt.wantErr {
+				t.Errorf("UseAnnotation() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

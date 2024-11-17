@@ -12,24 +12,17 @@ spec:
       app: controller-manager
   template:
     metadata:
-      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
       labels:
         app: controller-manager
     spec:
-      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#      securityContext:
-#        seccompProfile:
-#          type: RuntimeDefault
       nodeSelector:
         masterselector: dls-master-node
       serviceAccountName: ascend-operator-manager
       containers:
         - command: [ "/bin/bash", "-c", "--"]
           args: [ "ascend-operator
-                   --kubeApiQps=800
-                   --kubeApiBurst=800
                    --enableGangScheduling=true
                    --logFile=/var/log/mindx-dl/ascend-operator/ascend-operator.log
                    --logLevel=0" ]
@@ -37,10 +30,10 @@ spec:
           name: manager
           resources:
             limits:
-              cpu: 2000m
+              cpu: 500m
               memory: 3Gi
             requests:
-              cpu: 2000m
+              cpu: 500m
               memory: 3Gi
           securityContext:
             allowPrivilegeEscalation: false
@@ -52,8 +45,6 @@ spec:
           volumeMounts:
             - name: ascend-operator-log
               mountPath: /var/log/mindx-dl/ascend-operator
-            - name: ranktable-dir
-              mountPath: /user/mindx-dl/ranktable
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
@@ -62,10 +53,6 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/ascend-operator
             type: Directory
-        - name: ranktable-dir
-          hostPath:
-            path: /user/mindx-dl/ranktable
-            type: DirectoryOrCreate
         - name: localtime
           hostPath:
             path: /etc/localtime
@@ -99,7 +86,7 @@ rules:
     verbs: [ "create", "list", "watch", "delete", "get", "update" ]
   - apiGroups: [ "scheduling.volcano.sh" ]
     resources: [ "queues", "queue/status" ]
-    verbs: [ "get", "list", "watch"]
+    verbs: [ "get"]
   - apiGroups: [ "scheduling.volcano.sh" ]
     resources: [ "priorityclasses" ]
     verbs: [ "list", "watch"]
@@ -112,12 +99,6 @@ rules:
   - apiGroups: [ "mindxdl.gitee.com" ]
     resources: [ "ascendjobs/status" ]
     verbs: [ "get", "patch", "update" ]
-  - apiGroups: [ "batch.volcano.sh" ]
-    resources: [ "jobs" ]
-    verbs: [ "get", "watch", "list" ]
-  - apiGroups: [ "apps" ]
-    resources: [ "deployments", "replicasets" ]
-    verbs: [ "get", "watch", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

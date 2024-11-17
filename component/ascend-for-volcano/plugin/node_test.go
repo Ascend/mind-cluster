@@ -116,12 +116,12 @@ type nodePredicateTest struct {
 
 func buildNodePredicateTest() []nodePredicateTest {
 	tTasks := test.FakeNormalTestTasks(1)
-	tNode := test.FakeNormalTestNode("haha")
+	tNode := test.FakeNormalTestNode("testNode")
 	tests := []nodePredicateTest{
 		{
 			name:    "01-NodePredicate nil test.",
 			fields:  fields{},
-			args:    nodePredicateArgs{taskInfo: &api.TaskInfo{}, nodeInfo: nil},
+			args:    nodePredicateArgs{taskInfo: nil, nodeInfo: nil},
 			wantErr: true,
 		},
 		{
@@ -134,52 +134,26 @@ func buildNodePredicateTest() []nodePredicateTest {
 		{
 			name: "03-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"lala": {}}}},
+				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {}},
+				Nodes: map[string]NPUNode{"haha": {}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: false,
 		},
 		{
 			name: "04-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {}},
 				Nodes: map[string]NPUNode{"haha": {}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "05-NodePredicate ok test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {}},
 				Nodes: map[string]NPUNode{"haha": {}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
-			wantErr: true,
-		},
-		{
-			name: "06-NodePredicate SubHealthy Node test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {
-					CommonNode: CommonNode{
-						Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-						Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeSubHealthy},
-					},
-				}}}},
-			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
-			wantErr: true,
-		},
-		{
-			name: "07-NodePredicate UnHealthy Node test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {
-					CommonNode: CommonNode{
-						Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-						Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeUnHealthyByNodeD},
-					},
-				}}}},
-			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	return tests
@@ -193,15 +167,6 @@ func TestSNodePredicate(t *testing.T) {
 				NPUPlugins:  tt.fields.NPUPlugins,
 				ScheduleEnv: tt.fields.ScheduleEnv,
 			}
-			tmpJob := sHandle.ScheduleEnv.Jobs["vcjob/pg0"]
-			tmpJob.NPUJob = &util.NPUJob{}
-			tmpJob.ReqNPUName = util.NPU910CardName
-			if len(sHandle.ScheduleEnv.Jobs) != 0 {
-				sHandle.ScheduleEnv.Jobs["vcjob/pg0"] = tmpJob
-			}
-			tt.args.taskInfo.Resreq = &api.Resource{}
-			tt.args.taskInfo.Resreq.ScalarResources = make(map[v1.ResourceName]float64)
-			tt.args.taskInfo.Resreq.ScalarResources[util.Ascend910bName] = util.NPUIndex10
 			if err := sHandle.NodePredicate(tt.args.taskInfo, tt.args.nodeInfo); (err != nil) != tt.wantErr {
 				t.Errorf("NodePredicate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -283,7 +248,6 @@ type checkNPUResourceStableReSchedulingTest struct {
 
 func buildCheckNPUResourceStableReSchedulingTest() []checkNPUResourceStableReSchedulingTest {
 	tJob := SchedulerJob{handler: New(testPluginName)}
-	tJob.NPUJob = &util.NPUJob{ReqNPUName: testCardName}
 	tests := []checkNPUResourceStableReSchedulingTest{
 		{
 			name:    "01-CheckNPUResourceStableReScheduling nil test.",
@@ -324,7 +288,7 @@ func TestCheckNPUResourceStableReScheduling(t *testing.T) {
 					Label:      tt.fields.Label,
 				},
 			}
-			if err := n.CheckNPUResourceStableReScheduling(tt.args.vcJob.SchedulerJobAttr); (err != nil) != tt.wantErr {
+			if err := n.CheckNPUResourceStableReScheduling(tt.args.vcJob); (err != nil) != tt.wantErr {
 				t.Errorf("CheckNPUResourceStableReScheduling() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

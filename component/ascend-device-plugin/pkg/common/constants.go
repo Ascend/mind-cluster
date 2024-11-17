@@ -55,8 +55,6 @@ const (
 	CMDataMaxLength = 1024 * 1024
 	// PodAnnotationMaxLength pod annotation max data length 1MB
 	PodAnnotationMaxLength = 1024 * 1024
-	// UpdatePodWaitTime default try update pod wait time 200 millisecond
-	UpdatePodWaitTime = 200
 
 	// DeviceInfoCMNameSpace namespace of device info configmap
 	DeviceInfoCMNameSpace = "kube-system"
@@ -64,17 +62,8 @@ const (
 	DeviceInfoCMNamePrefix = "mindx-dl-deviceinfo-"
 	// DeviceInfoCMDataKey device info configmap data key
 	DeviceInfoCMDataKey = "DeviceInfoCfg"
-	// SwitchInfoCMDataKey the key of switch info in device-info configmap
-	SwitchInfoCMDataKey = "SwitchInfoCfg"
 	// DeviceInfoCMManuallySeparateNPUKey for deviceinfo configmap ManuallySeparateNPU key
 	DeviceInfoCMManuallySeparateNPUKey = "ManuallySeparateNPU"
-	// SlowNodeNoticeCMName the name for slow node notice configmap
-	SlowNodeNoticeCMName = "steptime-dtpgroup"
-
-	// CmConsumer who uses these configmap
-	CmConsumer = "mx-consumer-cim"
-	// CmConsumerValue the value only for true
-	CmConsumerValue = "true"
 
 	runtimeEnvNum = 3
 	// AscendVisibleDevicesEnv visible devices env
@@ -91,21 +80,10 @@ const (
 	PodRealAlloc = "AscendReal"
 	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
 	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
-	// BaseDeviceInfoKey base device info key
-	BaseDeviceInfoKey = "baseDeviceInfos"
-	// ChipNameLabel update chip name to node label
-	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// MetaDataAnnotation downward api which map annotation from volcano to container's env
 	MetaDataAnnotation = "metadata.annotations"
 	// MetaData is meta data of pod
 	MetaData = "metadata"
-
-	// SlowNodeStepTimeEnvNum is the number of environment value for step time cm
-	SlowNodeStepTimeEnvNum = 2
-	// PerfDumpPathEnv is an environment variable for slow node step time configmap
-	PerfDumpPathEnv = "PERF_DUMP_PATH"
-	// PerfDumpConfigEnv is an environment variable for slow node step time configmap
-	PerfDumpConfigEnv = "PERF_DUMP_CONFIG"
 
 	// PodResourceSeverKey for pod resource key
 	PodResourceSeverKey = "podResource"
@@ -161,16 +139,14 @@ const (
 
 	// GeneralMapSize general map size
 	GeneralMapSize = 8
-	// MapSizeTwo map size two
-	MapSizeTwo = 2
 	// GeneralSubscribeTime general subscribe try time
 	GeneralSubscribeTime = 3
 	// Hex hexadecimal
 	Hex = 16
+	// LinkupRecoverTime is the linkup duration for restoring NPU network health
+	LinkupRecoverTime = 60
 	// SecondMagnification is second-level unit magnification
 	SecondMagnification = 1000
-	// SecondMagnificationFloat is second-level unit magnification float
-	SecondMagnificationFloat = 1000.0
 )
 
 const (
@@ -247,18 +223,13 @@ const (
 	// AscendfdPrefix use in fd
 	AscendfdPrefix = "davinci-mini"
 
-	// Ascend910B ascend 910B chip
+	// Ascend910B ascend 1980B(910B) chip
 	Ascend910B = "Ascend910B"
-
-	// Ascend910A3 ascend 910A3 chip
-	Ascend910A3 = "Ascend910A3"
 
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
 	HuaweiNetworkUnHealthAscend910 = ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
 	// HuaweiUnHealthAscend910 unhealthy
 	HuaweiUnHealthAscend910 = ResourceNamePrefix + Ascend910 + "-Unhealthy"
-	// HuaweiRecoveringAscend910 recovering
-	HuaweiRecoveringAscend910 = ResourceNamePrefix + Ascend910 + "-Recovering"
 	// HuaweiUnHealthAscend310P 310p unhealthy
 	HuaweiUnHealthAscend310P = ResourceNamePrefix + Ascend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
@@ -386,13 +357,6 @@ const (
 	AcceleratorTypeKey = "accelerator-type"
 	// A300IA2Label the value of the A300I A2 node label
 	A300IA2Label = "card-910b-infer"
-	// ServerUsageLabelKey is to indicate the usage of server
-	// is infer or training, currently only related to A800IA2 infer server
-	ServerUsageLabelKey = "server-usage"
-	// InferCardKey the node label key of infer card
-	InferCardKey = "infer-card-type"
-	// A300IDuoLabel the value of the A300I Duo node label
-	A300IDuoLabel = "card-300i-duo"
 )
 
 const (
@@ -461,9 +425,6 @@ const (
 	// RootGID is root group id
 	RootGID = 0
 
-	// KeySliceLength is the length of key slice check
-	KeySliceLength = 2
-
 	// DotSepDev if the separator between devices on labels
 	DotSepDev = "."
 
@@ -484,14 +445,6 @@ const (
 	EdgeScene = "edge"
 	// A300IA2BoardId board id of A300I A2
 	A300IA2BoardId = 0x28
-	// A800IA2NoneHccsBoardIdOld is the boardid of a800i a2 device,0x33 is server without hccs
-	A800IA2NoneHccsBoardIdOld = 0x33
-	// A800IA2NoneHccsBoardId 0x33 changed to 0x3c , and compatible with the old boardId ,since 2024.9.4
-	A800IA2NoneHccsBoardId = 0x3c
-	// EmptyBoardId is the boardid of device before initialized
-	EmptyBoardId = 0x00
-	// FirstDevice the first device id
-	FirstDevice = 0
 	// Infer means device for inference
 	Infer = "infer"
 	// Train means device for training
@@ -512,10 +465,8 @@ const (
 	HotResetClose = -1
 	// HotResetInfer using infer chip hot reset
 	HotResetInfer = 0
-	// HotResetTrainOnLine using train chip hot reset online
-	HotResetTrainOnLine = 1
-	// HotResetTrainOffLine using train chip hot reset offline
-	HotResetTrainOffLine = 2
+	// HotResetTrain using train chip hot reset
+	HotResetTrain = 1
 	// BootStartFinish chip hot reset finish
 	BootStartFinish = 16
 )
@@ -527,8 +478,6 @@ const (
 	Ascend910BRingsNumTrain = 8
 	// Ascend910BRingsNumInfer indicates the number of devices in a ring
 	Ascend910BRingsNumInfer = 1
-	// Ascend910A3RingsNum indicates the number of devices in a ring
-	Ascend910A3RingsNum = 2
 	// RingSum indicates the max number of ring
 	RingSum = 2
 	// RankIndexKey for obtain the rank index in the pod
@@ -540,26 +489,20 @@ const (
 	// WaitRetryTime for wait five seconds to reset device again
 	WaitRetryTime = 5
 	// ResetRetryTimes for max retry times when reset failed
-	ResetRetryTimes = 4
+	ResetRetryTimes = 3
 )
 
 const (
-	// ResetInfoDir dir for reset info
-	ResetInfoDir = "/user/restore/reset/"
 	// ResetInfoCMNamePrefix for reset configmap name prefix
 	ResetInfoCMNamePrefix = "reset-config-"
 	// ResetInfoCMDataKey for reset configmap data key
 	ResetInfoCMDataKey = "reset.json"
 	// ResetInfoCMCheckCodeKey for reset configmap checkcode key
 	ResetInfoCMCheckCodeKey = "checkCode"
-	// ResetInfoTypeKey for reset configmap type key
-	ResetInfoTypeKey = "restartType"
-	// HotResetRestartType for hot reset restart type
-	HotResetRestartType = "hotReset"
 	// ResetTaskNameKey for obtain the reset task name
 	ResetTaskNameKey = "volcano.sh/job-name"
 	// ResetTaskNameKeyInLabel for obtain the reset task name when using operator
-	ResetTaskNameKeyInLabel = "training.kubeflow.org/job-name"
+	ResetTaskNameKeyInLabel = "job-name"
 )
 
 const (
@@ -580,8 +523,6 @@ const (
 	RestartRequestError = "restart_request"
 	// RestartError indicates that the training needs to be re-executed for the current fault
 	RestartError = "restart"
-	// FreeResetError indicates the fault level of the device to be reset whenever there is no task on NPU
-	FreeResetError = "free_reset"
 	// ResetError indicates that the current fault requires resetting the chip and re-executing the training
 	ResetError = "reset"
 	// IsolateError indicates that the device needs to be isolated due to the current fault
@@ -597,8 +538,6 @@ const (
 	RestartRequestErrorLevel
 	// RestartErrorLevel indicates the level of the fault that needs to be re-executed
 	RestartErrorLevel
-	// FreeResetErrorLevel indicates the fault level of the device to be reset whenever there is no task on NPU
-	FreeResetErrorLevel
 	// ResetErrorLevel indicates the fault level of the device to be reset
 	ResetErrorLevel
 	// IsolateErrorLevel indicates the fault level of the device to be isolated
@@ -619,21 +558,6 @@ const (
 	MaxResetWaitRecoverTime = 150
 )
 
-const (
-	// AssertionRecovery the name of assertion 0
-	AssertionRecovery = "Recovery"
-	// AssertionOccur the name of assertion 1
-	AssertionOccur = "Occur"
-	// AssertionNotice the name of assertion 2
-	AssertionNotice = "Notice"
-
-	// TimeFormat the format for time
-	TimeFormat = "2006-01-02 15:04:05"
-
-	// ResourceKindPod the kind pod of resource
-	ResourceKindPod = "pod"
-)
-
 // Fault customization const
 const (
 	// PollFaultCodeCMInterval is the default interval(second) of polling fault code CM
@@ -642,42 +566,26 @@ const (
 	PollFaultCodeCMMaxInterval = 3600
 	// PollFaultCodeCMMinInterval is the min interval(second) of polling fault code CM
 	PollFaultCodeCMMinInterval = 30
-	// GetSwitchFaultCodeInterval is the interval(second) of get all fault code by get interface
-	GetSwitchFaultCodeInterval = 300
-	// MaxLengthOfFaultCode [0x00f103b0,155904,na,na] must contain at most 50 characters
-	MaxLengthOfFaultCode = 50
-	// PartNumOfFaultCode [0x00f103b0,155904,na,na] must have 4 parts
-	PartNumOfFaultCode = 4
 	// FaultCodeCMName is the name of the configmap that is used to save fault code
 	FaultCodeCMName = "mindx-dl-fault-config"
 	// FaultCodeCMNameSpace is the namespace of the fault code configmap
 	FaultCodeCMNameSpace = "kube-system"
 	// FaultCodeKey is the key to find fault code in cm
 	FaultCodeKey = "faultCode.json"
-	// SwitchFaultCodeKey is the key of the switch fault code
-	SwitchFaultCodeKey = "SwitchFaultCode.json"
 	// FaultCustomizationKey is the key to find fault customization in cm
 	FaultCustomizationKey = "faultCustomization.json"
 	// PollIntervalKey is the key to find poll interval in cm
 	PollIntervalKey = "PollInterval"
-	// DefaultProcessReadCMTime is the default time for process read configmap
-	DefaultProcessReadCMTime = 30
-	// DefaultWaitFaultSelfHealingTime for waiting for fault self-healing
-	DefaultWaitFaultSelfHealingTime = 15
-	// MinWaitFaultSelfHealingTime for min time of waiting for fault self-healing
-	MinWaitFaultSelfHealingTime = 1
-	// MaxWaitFaultSelfHealingTime for max time of waiting for fault self-healing
-	MaxWaitFaultSelfHealingTime = 30
-	// DefaultPollingInterval  represents the time between polls of the dcmi interface
-	DefaultPollingInterval = 1
-	// MaxWaitProcessReadCMTime for max time waiting for process to read cm
-	MaxWaitProcessReadCMTime = 90
-	// MinWaitProcessReadCMTime for min time waiting for process to read cm
-	MinWaitProcessReadCMTime = 5
+	// DefaultWaitFlushCMTime for wait for cm info to flush in container
+	DefaultWaitFlushCMTime = 90
+	// MaxWaitFlushCMTime for max time waiting for cm info to flush in container
+	MaxWaitFlushCMTime = 300
+	// MinWaitFlushCMTime for min time waiting for cm info to flush in container
+	MinWaitFlushCMTime = 90
 	// DefaultWaitDeviceResetTime is the default time used in waiting device reset
-	DefaultWaitDeviceResetTime = 150
+	DefaultWaitDeviceResetTime = 120
 	// MaxWaitDeviceResetTime is the max time used in waiting device reset
-	MaxWaitDeviceResetTime = 180
+	MaxWaitDeviceResetTime = 120
 	// MinWaitDeviceResetTime is the min time used in waiting device reset
 	MinWaitDeviceResetTime = 60
 	// MaxFaultFrequencyTimeWindow is the max time for the time window of fault frequency
@@ -698,23 +606,6 @@ const (
 	MinLinkDownTimeout = 1
 	// MaxLinkDownTimeout is the max time for the linkdown event
 	MaxLinkDownTimeout = 30
-	// MaxFaultTimeout is the max time(s) for the fault duration time of fault duration
-	MaxFaultTimeout = 600
-	// MinFaultTimeout is the min time(s) for the fault duration time of fault duration
-	MinFaultTimeout = 0
-	// MaxRecoverTimeout is the max time(s) for the fault recover duration time of fault duration
-	MaxRecoverTimeout = 600
-	// MinRecoverTimeout is the min time(s) for the fault recover duration time of fault duration
-	MinRecoverTimeout = 0
-	// DefaultSubscribeToPollingTime is the default time from subscribe to polling
-	DefaultSubscribeToPollingTime = 5
-	// MaxLogicID is the maximum logic ID
-	MaxLogicID = 15
-	// MinLogicID is the minimum logic ID
-	MinLogicID = 0
-	// MaxResetTimes the max reset times of a device while error happened,
-	// setting to 30 to avoid manually reset on host machine
-	MaxResetTimes = 30
 )
 
 // the severity level of fault
@@ -723,45 +614,6 @@ const (
 	FaultSeverityMinor
 	FaultSeverityMajor
 	FaultSeverityCritical
-)
-
-// peer device type of switch
-const (
-	// PeerDeviceChipOrCpuPort if peer device is whole chip or cpu the given value should be 0
-	PeerDeviceChipOrCpuPort = 0
-	// PeerDeviceNpuPort 1 means switch contact peer device is npu
-	PeerDeviceNpuPort = 1
-	// PeerDeviceL2Port 1 means switch contact peer device is L2
-	PeerDeviceL2Port = 2
-)
-
-// port level switch fault event types
-const (
-	// PortFaultInvalidPkgEventType Port Fault Invalid Pkg Event Type
-	PortFaultInvalidPkgEventType = 3
-	// PortFaultUnstableEventType Port Fault Unstable Event Type
-	PortFaultUnstableEventType = 4
-	// PortFaultFailEventType Port Fault Fail Event Type
-	PortFaultFailEventType = 5
-	// PortFaultTimeoutLpEventType Port Fault Timeout Lp EventType
-	PortFaultTimeoutLpEventType = 14
-	// PortFaultTimeoutRpEventType Port Fault Timeout Rp EventType
-	PortFaultTimeoutRpEventType = 15
-)
-
-const (
-	// EventTypeOfSwitchPortFault the event type of port down fault
-	EventTypeOfSwitchPortFault = 5
-	// SubTypeOfPortDown the subtype of port down fault
-	SubTypeOfPortDown = 8
-	// SubTypeOfPortLaneReduceHalf the subtype of lane reduce to half
-	SubTypeOfPortLaneReduceHalf = 449
-	// SubTypeOfPortLaneReduceQuarter the subtype of lane reduce to quarter
-	SubTypeOfPortLaneReduceQuarter = 448
-	// FaultIdOfPortLaneReduceHalf  the fault id of lane reduce to half
-	FaultIdOfPortLaneReduceHalf = 132332
-	// FaultIdOfPortLaneReduceQuarter  the fault id of lane reduce to quarter
-	FaultIdOfPortLaneReduceQuarter = 132333
 )
 
 // LogicID list for reset, get id list of ring
@@ -773,68 +625,3 @@ const (
 
 // ApiServerPort is port of API server
 const ApiServerPort = "443"
-
-const (
-	// InitialProcNum represents the initial value of the number of remaining processes
-	InitialProcNum = 1
-)
-
-const (
-	// SdIdAbnormal represents super pod sdid abnormal value
-	SdIdAbnormal = -2
-	// ScaleTypeAbnormal represents super pod scaleType abnormal value
-	ScaleTypeAbnormal = -2
-	// SuperPodIdAbnormal represents super pod superPodId abnormal value
-	SuperPodIdAbnormal = -2
-	// ServerIdAbnormal represents super pod serverId abnormal value
-	ServerIdAbnormal = -2
-)
-
-const (
-	// TimeoutProcess represents fault timeout process
-	TimeoutProcess = "fault timeout"
-	// TimeoutRecoverProcess represents fault timeout recover process
-	TimeoutRecoverProcess = "fault timeout recover"
-)
-
-const (
-	// ChipFaultMode represents chip fault mode
-	ChipFaultMode = "chip fault mode"
-	// NetworkFaultMode represents network fault mode
-	NetworkFaultMode = "network fault mode"
-)
-
-const (
-	// Polling represents subscribe mode invalid and polling is used scenario
-	Polling = "polling"
-	// Subscribe represents subscribe mode
-	Subscribe = "subscribe"
-)
-
-const (
-	// NPUNormalStatus represents normal status
-	NPUNormalStatus = "normal"
-	// NPUResettingStatus represents resetting status
-	NPUResettingStatus = "resetting"
-	// UpdateAnnotationRetryTimes update annotation retry times
-	UpdateAnnotationRetryTimes = 3
-	// SubHealthyAnnotationKey sub-healthy annotation key on node
-	SubHealthyAnnotationKey = "subHealthy"
-	// FirstUpdateMaxSleepMilliSecond max sleep time before first update node annotation
-	FirstUpdateMaxSleepMilliSecond = 3000
-)
-
-const (
-	// HbmDoubleBitFaultCode indicate 0x80E01801
-	HbmDoubleBitFaultCode = 2162169857
-	// HbmDoubleBitFaultCodeStr indicate 80e01801
-	HbmDoubleBitFaultCodeStr = "80e01801"
-	// AivBusFaultCode indicate 0x80CB8009
-	AivBusFaultCode = 2160820233
-	// AicBusFaultCode indicate 0x80C98009
-	AicBusFaultCode = 2160689161
-	// AssociatedFaultDiagnosisTime associated fault diagnosis
-	AssociatedFaultDiagnosisTime = 5
-	// TimeMilliseconds indicate how many milliseconds are there in a second
-	TimeMilliseconds = 1000
-)

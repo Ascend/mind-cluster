@@ -130,11 +130,10 @@ func (tp *NPUHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",
 		tp.GetPluginName(), task.Name, selectedNPU)
 
-	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
+	tp.SetNPUTopologyToPodFn(task, selectedNPU)
 	return tp.UpdateNodeInfo(node, selectedNPU)
 }
 
-// PreStartAction do something before schedule
 // PreStartAction pre-processing actions for rescheduling
 func (tp *NPUHandler) PreStartAction(_ interface{}, ssn *framework.Session) error {
 	klog.V(util.LogInfoLev).Infof("Entering PreStartAction of %s...", PluginName)
@@ -142,7 +141,6 @@ func (tp *NPUHandler) PreStartAction(_ interface{}, ssn *framework.Session) erro
 	if tp == nil || ssn == nil || tp.FrameAttr.KubeClient == nil {
 		return fmt.Errorf("%s handler not enabled or ssn is nil: %s", PluginName, util.ArgumentError)
 	}
-	// initialise cache info from configmap
 	tp.ReHandle = rescheduling.New(&tp.ScheduleEnv, rescheduling.CmFaultJob)
 	if tp.ReHandle == nil {
 		klog.V(util.LogErrorLev).Infof("create new fault handler failed.")
@@ -154,11 +152,9 @@ func (tp *NPUHandler) PreStartAction(_ interface{}, ssn *framework.Session) erro
 	tp.ReHandle.InitFaultNodeMap()
 	tp.ReHandle.SynCacheFaultJobWithSession(ssn)
 	tp.ReHandle.SyncJobRemainRetryTimes(ssn)
-	tp.ReHandle.SyncJobRecentRescheduleReason(ssn)
 	tp.ReHandle.SynCacheNodeRankOccMapWithSession(ssn)
 	// 1. restart Fault Jobs that are recorded in cache
-	if restartErr := tp.ReHandle.RestartNeedForceDeleteJobs(ssn, tp.ScheduleEnv); restartErr != nil &&
-		restartErr.Error() != util.ArgumentError {
+	if restartErr := tp.ReHandle.RestartNeedForceDeleteJobs(ssn); restartErr != nil {
 		klog.V(util.LogErrorLev).Infof("%s RestartNeedForceDeleteJobs: %s", PluginName, restartErr.Error())
 	}
 	// 2. get all the new 910x8 jobs in session
@@ -167,11 +163,11 @@ func (tp *NPUHandler) PreStartAction(_ interface{}, ssn *framework.Session) erro
 		klog.V(util.LogDebugLev).Infof("%s GetRunningJobs: %s", PluginName, getRunErr.Error())
 	}
 	// 3. get nodes of session and fault jobs
-	if err := tp.ReHandle.AddFaultJobWithSession(runningJobs, tp.ScheduleEnv); err != nil {
+	if err := tp.ReHandle.AddFaultJobWithSession(runningJobs); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s AddFaultJobWithSession %s", PluginName, err)
 	}
 	// 4. restart the fault jobs
-	if restartErr := tp.ReHandle.RestartFaultJobs(ssn, tp.ScheduleEnv); restartErr != nil {
+	if restartErr := tp.ReHandle.RestartFaultJobs(ssn); restartErr != nil {
 		klog.V(util.LogErrorLev).Infof("%s RestartFaultJobs: %s", PluginName, restartErr.Error())
 		return restartErr
 	}
@@ -278,7 +274,6 @@ func (tp *NPUHandler) PreStopAction(env *plugin.ScheduleEnv) error {
 	return nil
 }
 
-// ReleaseAnnotation release annotation
 func (tp *NPUHandler) ReleaseAnnotation(_ *api.TaskInfo, _ plugin.NPUNode) *plugin.NPUNode {
 	return &plugin.NPUNode{}
 }

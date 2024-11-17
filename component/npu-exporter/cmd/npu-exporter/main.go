@@ -34,32 +34,29 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"huawei.com/npu-exporter/v6/collector"
-	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/limiter"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
-	"huawei.com/npu-exporter/v6/versions"
+	"huawei.com/npu-exporter/v5/collector"
+	"huawei.com/npu-exporter/v5/collector/container"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/limiter"
+	_ "huawei.com/npu-exporter/v5/plugins/inputs/npu"
+	"huawei.com/npu-exporter/v5/versions"
 )
 
 var (
-	port                int
-	updateTime          int
-	ip                  string
-	version             bool
-	concurrency         int
-	containerMode       string
-	containerd          string
-	endpoint            string
-	limitIPReq          string
-	platform            string
-	limitIPConn         int
-	limitTotalConn      int
-	cacheSize           int
-	profilingTime       int
-	hccsBWProfilingTime int
-	pollInterval        time.Duration
+	port           int
+	updateTime     int
+	ip             string
+	version        bool
+	concurrency    int
+	containerMode  string
+	containerd     string
+	endpoint       string
+	limitIPReq     string
+	platform       string
+	limitIPConn    int
+	limitTotalConn int
+	cacheSize      int
+	pollInterval   time.Duration
 )
 
 const (
@@ -82,21 +79,16 @@ const (
 	maxIPConnLimit         = 128
 	maxConcurrency         = 512
 	defaultConnection      = 20
-	maxProfilingTime       = 2000
-	minHccsBWProfilingTime = 1
-	maxHccsBWProfilingTime = 1000
 	defaultShutDownTimeout = 30 * time.Second
 )
 
 const (
-	prometheusPlatform         = "Prometheus"
-	telegrafPlatform           = "Telegraf"
-	pollIntervalStr            = "poll_interval"
-	platformStr                = "platform"
-	hccsBWProfilingTimeStr     = "hccsBWProfilingTime"
-	maxLogLineLength           = 1024
-	defaultProfilingTime       = 200
-	defaultHccsBwProfilingTime = 200
+	prometheusPlatform  = "Prometheus"
+	telegrafPlatform    = "Telegraf"
+	pollIntervalStr     = "poll_interval"
+	maxTelegrafParamLen = 2
+	minTelegrafParamLen = 1
+	maxLogLineLength    = 1024
 )
 
 var hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, ExpiredTime: hwlog.DefaultExpiredTime,
@@ -109,7 +101,6 @@ func main() {
 		return
 	}
 
-	common.SetHccsBWProfilingTime(hccsBWProfilingTime)
 	switch platform {
 	case prometheusPlatform:
 		prometheusProcess()
@@ -117,7 +108,7 @@ func main() {
 		telegrafProcess()
 	default:
 		fmt.Fprintf(os.Stderr, "err platform input")
-		return
+		os.Exit(1)
 	}
 }
 
@@ -224,12 +215,6 @@ func paramValidInPrometheus() error {
 	if concurrency < 1 || concurrency > maxConcurrency {
 		return errors.New("concurrency is invalid")
 	}
-	if profilingTime < 1 || profilingTime > maxProfilingTime {
-		return errors.New("profilingTime range error")
-	}
-	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
-		return errors.New("hccsBWProfilingTime range error")
-	}
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
 		return fmt.Errorf("%s is not support this scene", pollIntervalStr)
@@ -292,10 +277,6 @@ func init() {
 	flag.DurationVar(&pollInterval, pollIntervalStr, 1*time.Second,
 		"how often to send metrics when use Telegraf plugin, "+
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
-	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
-		"config pcie bandwidth profiling time, range is [1, 2000]")
-	flag.IntVar(&hccsBWProfilingTime, hccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
-		"config hccs bandwidth profiling time, range is [1, 1000]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -326,44 +307,36 @@ func prometheusProcess() {
 	if err := initHwLogger(); err != nil {
 		return
 	}
-	hwlog.RunLog.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
 	if err := paramValidInPrometheus(); err != nil {
 		hwlog.RunLog.Error(err)
 		return
 	}
-	common.SetExternalParams(profilingTime)
+
 	deviceParser := container.MakeDevicesParser(readCntMonitoringFlags())
 	c := collector.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second,
 		deviceParser)
+
+	hwlog.RunLog.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(c)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		collector.Start(ctx, cancel, c)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		startServe(ctx, cancel, reg)
-	}()
-	wg.Wait()
-}
-
-func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
 	http.Handle("/", http.HandlerFunc(indexHandler))
 	conf := initConfig()
 	s, limitLs := newServerAndListener(conf)
 	if s == nil || limitLs == nil {
-		cancel()
 		return
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
+		defer wg.Done()
+		collector.Start(ctx, cancel, c)
+	}()
+	go func() {
+		defer wg.Done()
 		hwlog.RunLog.Warn("enable unsafe http server")
 		if err := s.Serve(limitLs); err != nil {
 			hwlog.RunLog.Errorf("Http server error: %v and stopped", err)
@@ -381,47 +354,31 @@ func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.
 	if shutErr != nil {
 		hwlog.RunLog.Errorf("shutdown http server error: %v", shutErr)
 	}
+
+	wg.Wait()
 }
 
 func paramValidInTelegraf() error {
-	// cmdLine here must contain "-platform=Telegraf", otherwise, it will enter the Prometheus process
+	// cmdLine here must contain "-platfor=Telegraf", otherwise, it will enter the Prometheus process
 	cmdLine := os.Args[1:]
-
-	// store the preset parameter names in the map
-	presetParamsMap := map[string]bool{
-		platformStr:            true,
-		pollIntervalStr:        true,
-		hccsBWProfilingTimeStr: true,
-	}
-
-	if len(cmdLine) > len(presetParamsMap) {
+	switch len(cmdLine) {
+	case minTelegrafParamLen:
+		return nil
+	case maxTelegrafParamLen:
+		cmdLineStr := strings.Join(cmdLine, "")
+		if strings.Contains(cmdLineStr, pollIntervalStr) {
+			return nil
+		}
+		return fmt.Errorf("only support %s in Telegraf", pollIntervalStr)
+	default:
 		return errors.New("too many parameters")
 	}
-
-	var paramLen = 2
-	// check every input params
-	for _, param := range cmdLine {
-		param = strings.TrimPrefix(param, "-")
-		split := strings.Split(param, "=")
-		if len(split) != paramLen {
-			return fmt.Errorf("the param [%s] is a wrong format", param)
-		}
-		paramName := split[0]
-		if !presetParamsMap[paramName] {
-			return fmt.Errorf("not support [%s] in Telegraf", paramName)
-		}
-	}
-
-	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
-		return errors.New("hccsBWProfilingTime range error")
-	}
-	return nil
 }
 
 func telegrafProcess() {
 	if err := paramValidInTelegraf(); err != nil {
 		fmt.Fprintf(os.Stderr, "Err param: %s\n", err)
-		return
+		os.Exit(1)
 	}
 	// create the shim. This is what will run your plugins.
 	shim := shim.New()
@@ -434,12 +391,12 @@ func telegrafProcess() {
 	err := shim.LoadConfig(&configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Err loading input: %s\n", err)
-		return
+		os.Exit(1)
 	}
 
 	// run the input plugin(s) until stdin closes, or we receive a termination signal
 	if err := shim.Run(pollInterval); err != nil {
 		fmt.Fprintf(os.Stderr, "Err: %s\n", err)
-		return
+		os.Exit(1)
 	}
 }
