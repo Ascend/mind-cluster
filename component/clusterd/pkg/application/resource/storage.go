@@ -21,49 +21,37 @@ var cmManager ConfigMapManager
 // ConfigMapManager use for deviceInfo and nodeInfo report
 type ConfigMapManager struct {
 	sync.Mutex
-	processCnt      int
-	nodeInfoMap     map[string]*constant.NodeInfo
-	nodeInfoMutex   sync.Mutex
-	deviceInfoMap   map[string]*constant.DeviceInfo
-	deviceInfoMutex sync.Mutex
-	switchInfoMap   map[string]*constant.SwitchInfo
-	switchInfoMutex sync.Mutex
+	processCnt    int
+	nodeInfoMap   map[string]*constant.NodeInfo
+	deviceInfoMap map[string]*constant.DeviceInfo
+	switchInfoMap map[string]*constant.SwitchInfo
 }
 
 func init() {
 	cmManager.nodeInfoMap = map[string]*constant.NodeInfo{}
-	cmManager.nodeInfoMutex = sync.Mutex{}
 	cmManager.deviceInfoMap = map[string]*constant.DeviceInfo{}
-	cmManager.deviceInfoMutex = sync.Mutex{}
 	cmManager.switchInfoMap = map[string]*constant.SwitchInfo{}
-	cmManager.switchInfoMutex = sync.Mutex{}
 }
 
 func delDeviceInfoCM(devInfo *constant.DeviceInfo) {
-	cmManager.deviceInfoMutex.Lock()
+	cmManager.Lock()
 	delete(cmManager.deviceInfoMap, devInfo.CmName)
-	cmManager.deviceInfoMutex.Unlock()
+	cmManager.Unlock()
 	AddNewMessageTotal()
 }
 
 func delSwitchInfoCM(switchInfo *constant.SwitchInfo) {
-	cmManager.switchInfoMutex.Lock()
+	cmManager.Lock()
 	delete(cmManager.switchInfoMap, switchInfo.CmName)
-	cmManager.switchInfoMutex.Unlock()
+	cmManager.Unlock()
 	AddNewMessageTotal()
 }
 
 func saveDeviceInfoCM(devInfo *constant.DeviceInfo) {
-	cmManager.deviceInfoMutex.Lock()
-	if len(cmManager.deviceInfoMap) > constant.MaxSupportNodeNum {
-		hwlog.RunLog.Errorf("deviceInfoMap length=%d > %d, deviceInfo cm name=%s save failed",
-			len(cmManager.deviceInfoMap), constant.MaxSupportNodeNum, devInfo.CmName)
-		cmManager.deviceInfoMutex.Unlock()
-		return
-	}
+	cmManager.Lock()
 	oldDevInfo := cmManager.deviceInfoMap[devInfo.CmName]
 	cmManager.deviceInfoMap[devInfo.CmName] = devInfo
-	cmManager.deviceInfoMutex.Unlock()
+	cmManager.Unlock()
 	// update business data will report message.if only update time，will report message with every atLeastReportCycle
 	if device.BusinessDataIsNotEqual(oldDevInfo, devInfo) {
 		if kube.JobMgr != nil {
@@ -97,16 +85,10 @@ func updateJobDeviceHealth(nodeName string, deviceList map[string]string) {
 }
 
 func saveSwitchInfoCM(newSwitchInfo *constant.SwitchInfo) {
-	cmManager.switchInfoMutex.Lock()
-	if len(cmManager.switchInfoMap) > constant.MaxSupportNodeNum {
-		hwlog.RunLog.Errorf("switchInfoMap length=%d > %d, switchInfo cm name=%s save failed",
-			len(cmManager.switchInfoMap), constant.MaxSupportNodeNum, newSwitchInfo.CmName)
-		cmManager.switchInfoMutex.Unlock()
-		return
-	}
+	cmManager.Lock()
 	oldSwitchInfo := cmManager.switchInfoMap[newSwitchInfo.CmName]
 	cmManager.switchInfoMap[newSwitchInfo.CmName] = newSwitchInfo
-	cmManager.switchInfoMutex.Unlock()
+	cmManager.Unlock()
 	if switchinfo.BusinessDataIsNotEqual(oldSwitchInfo, newSwitchInfo) {
 		if kube.JobMgr != nil {
 			nodeName := strings.TrimPrefix(newSwitchInfo.CmName, constant.SwitchInfoPrefix)
@@ -118,23 +100,17 @@ func saveSwitchInfoCM(newSwitchInfo *constant.SwitchInfo) {
 
 // DeleteNodeConfigMap add CM to cache
 func deleteNodeConfigMap(newDevInfo *constant.NodeInfo) {
-	cmManager.nodeInfoMutex.Lock()
+	cmManager.Lock()
 	delete(cmManager.nodeInfoMap, newDevInfo.CmName)
-	cmManager.nodeInfoMutex.Unlock()
+	cmManager.Unlock()
 	AddNewMessageTotal()
 }
 
 func saveNodeInfoCM(newNodeInfo *constant.NodeInfo) {
-	cmManager.nodeInfoMutex.Lock()
-	if len(cmManager.nodeInfoMap) > constant.MaxSupportNodeNum {
-		hwlog.RunLog.Errorf("nodeInfoMap length=%d > %d, nodeInfo cm name=%s save failed",
-			len(cmManager.nodeInfoMap), constant.MaxSupportNodeNum, newNodeInfo.CmName)
-		cmManager.nodeInfoMutex.Unlock()
-		return
-	}
+	cmManager.Lock()
 	oldNodeInfo := cmManager.nodeInfoMap[newNodeInfo.CmName]
 	cmManager.nodeInfoMap[newNodeInfo.CmName] = newNodeInfo
-	cmManager.nodeInfoMutex.Unlock()
+	cmManager.Unlock()
 	// update business data will report message.if only update time, will report message with every 1atLeastReportCycle
 	if node.BusinessDataIsNotEqual(oldNodeInfo, newNodeInfo) {
 		if kube.JobMgr != nil {

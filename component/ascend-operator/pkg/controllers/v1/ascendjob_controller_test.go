@@ -10,8 +10,6 @@ package v1
 
 import (
 	"context"
-
-	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"
@@ -49,17 +47,12 @@ func newCommonReconciler() *ASJobReconciler {
 
 func newCommonPodInfo() *podInfo {
 	return &podInfo{
-		rtype: mindxdlv1.ReplicaTypeWorker,
+		rtype: "worker",
 		ip:    "127.0.0.1",
 		job: &mindxdlv1.AscendJob{
 			ObjectMeta: metav1.ObjectMeta{
 				UID: "123456",
 			},
-		},
-		spec: &commonv1.ReplicaSpec{
-			Replicas:      defaultReplicas(),
-			Template:      corev1.PodTemplateSpec{},
-			RestartPolicy: "",
 		},
 		port:        "2222",
 		ctReq:       2,

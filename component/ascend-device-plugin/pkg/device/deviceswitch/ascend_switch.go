@@ -52,9 +52,9 @@ import (
 		return lq_dcmi_init_func();
 	}
 
-	int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
-	static int lq_dcmi_get_fault_info(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList){
-		return lq_dcmi_get_fault_info_func(listLen,eventListLen,eventList);
+	int (*lq_dcmi_get_fault_info_func)(unsigned int list_len, unsigned int *event_list_len, struct LqDcmiEvent *event_list);
+	static int lq_dcmi_get_fault_info(unsigned int list_len, unsigned int *event_list_len, struct LqDcmiEvent *event_list){
+		return lq_dcmi_get_fault_info_func(list_len,event_list_len,event_list);
 	}
 
 	void goFaultEventHandler(struct LqDcmiEvent *fault_event);
@@ -62,7 +62,7 @@ import (
 		goFaultEventHandler(fault_event);
 	}
 
-	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
+	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,lq_dcmi_fault_event_callback handler);
 	static int lq_dcmi_subscribe_fault_event(struct lq_dcmi_event_filter filter){
 		return lq_dcmi_subscribe_fault_event_func(filter,event_handler);
 	}
@@ -105,11 +105,11 @@ type SwitchDevManager struct {
 
 var (
 	switchInitOnce sync.Once
-	// eventTypeToFaultIDMapper 5/449 5/448 need to calculate in code
-	eventTypeToFaultIDMapper = map[uint]uint{13: 155907, 12: 155649, 11: 155904, 10: 132134, 8: 155910, 9: 155911,
+	// EventTypeToFaultIDMapper 5/449 5/448 need to calculate in code
+	EventTypeToFaultIDMapper = map[uint]uint{13: 155907, 12: 155649, 11: 155904, 10: 132134, 8: 155910, 9: 155911,
 		7: 155908, 6: 155909, 5: 155912, 4: 155913, 3: 155914}
-	// faultIdToAlarmIdMapper  5/8  need alarmID
-	faultIdToAlarmIdMapper = map[uint]string{
+	// FaultIdToAlarmIdMapper  5/8  need alarmID
+	FaultIdToAlarmIdMapper = map[uint]string{
 		155907: "0x00f103b0", 155649: "0x00f103b0", 155904: "0x00f103b0",
 		132134: "0x00f1ff06", 155910: "0x00f1ff06", 155911: "0x00f1ff06",
 		155908: "0x00f103b6", 155909: "0x00f103b6",
@@ -285,22 +285,20 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 		switch event.SubType {
 		case common.SubTypeOfPortDown:
 			faultID = uint(0)
-			alarmID = "0x08520003"
+			alarmID, ok = "0x08520003", true
 		case common.SubTypeOfPortLaneReduceQuarter:
 			faultID = uint(common.FaultIdOfPortLaneReduceQuarter)
 		case common.SubTypeOfPortLaneReduceHalf:
 			faultID = uint(common.FaultIdOfPortLaneReduceHalf)
-		default:
-			faultID = uint(0)
 		}
 	} else {
-		faultID, ok = eventTypeToFaultIDMapper[event.EventType]
+		faultID, ok = EventTypeToFaultIDMapper[event.EventType]
 		if !ok {
 			hwlog.RunLog.Warnf("failed to find faultID for eventType: %d", event.EventType)
 		}
 	}
 	if alarmID == "" {
-		alarmID, ok = faultIdToAlarmIdMapper[faultID]
+		alarmID, ok = FaultIdToAlarmIdMapper[faultID]
 	}
 	if !ok {
 		hwlog.RunLog.Warnf("failed to find alarm id for eventType: %d", event.EventType)
@@ -314,8 +312,6 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 			PeerDeviceName = "npu"
 		case common.PeerDeviceL2Port:
 			PeerDeviceName = "L2"
-		default:
-			PeerDeviceName = "na"
 		}
 	} else {
 		PeerDeviceName = "na"
@@ -337,9 +333,7 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 // if it is whole chip peer deviceType will be "na" while peerdeivce==0
 // else it is for its chip, peer deviceType will be "cpu" while peerdeivce==0
 func isPortLevelFault(eventType int) bool {
-	if eventType == common.PortFaultInvalidPkgEventType || eventType == common.PortFaultUnstableEventType ||
-		eventType == common.PortFaultFailEventType || eventType == common.PortFaultTimeoutLpEventType ||
-		eventType == common.PortFaultTimeoutRpEventType {
+	if eventType == 3 || eventType == 4 || eventType == 5 || eventType == 14 || eventType == 15 {
 		return true
 	}
 	return false

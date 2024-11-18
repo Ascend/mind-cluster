@@ -61,25 +61,25 @@ unsigned int aicoreCnt;
 
 // dcmi
 int (*g_dcmiInitFunc)(void);
-static int DcmiInit(void)
+int DcmiInit(void)
 {
     CALL_FUNC(g_dcmiInitFunc);
 }
 
 int (*g_dcmiGetCardNumListFunc)(int *cardNum, int *cardList, int listLength);
-static int DcmiGetCardNumList(int *cardNum, int *cardList, int listLength)
+int DcmiGetCardNumList(int *cardNum, int *cardList, int listLength)
 {
     CALL_FUNC(g_dcmiGetCardNumListFunc, cardNum, cardList, listLength);
 }
 
 int (*g_dcmiGetDeviceNumInCardFunc)(int cardId, int *deviceNum);
-static int DcmiGetDeviceNumInCard(int cardId, int *deviceNum)
+int DcmiGetDeviceNumInCard(int cardId, int *deviceNum)
 {
     CALL_FUNC(g_dcmiGetDeviceNumInCardFunc, cardId, deviceNum);
 }
 
 int (*g_dcmiGetDeviceLogicIdFunc)(int *deviceLogicId, int cardId, int deviceId);
-static int DcmiGetDeviceLogicId(int *deviceLogicId, int cardId, int deviceId)
+int DcmiGetDeviceLogicId(int *deviceLogicId, int cardId, int deviceId)
 {
     CALL_FUNC(g_dcmiGetDeviceLogicIdFunc, deviceLogicId, cardId, deviceId);
 }
@@ -87,7 +87,7 @@ static int DcmiGetDeviceLogicId(int *deviceLogicId, int cardId, int deviceId)
 int (*g_dcmiCreateVdeviceFunc)(int cardId, int deviceId,
                                struct DcmiCreateVdevResStru *vdev,
                                struct DcmiCreateVdevOut *out);
-static int DcmiCreateVdevice(int cardId, int deviceId,
+int DcmiCreateVdevice(int cardId, int deviceId,
                       struct DcmiCreateVdevResStru *vdev,
                       struct DcmiCreateVdevOut *out)
 {
@@ -95,31 +95,31 @@ static int DcmiCreateVdevice(int cardId, int deviceId,
 }
 
 int (*g_dcmiSetDestroyVdeviceFunc)(int cardId, int deviceId, unsigned int vDevid);
-static int DcmiSetDestroyVdevice(int cardId, int deviceId, unsigned int vDevid)
+int DcmiSetDestroyVdevice(int cardId, int deviceId, unsigned int vDevid)
 {
     CALL_FUNC(g_dcmiSetDestroyVdeviceFunc, cardId, deviceId, vDevid);
 }
 
 int (*g_dcmiGetDeviceLogicidFromPhyidFunc)(unsigned int phyid, unsigned int *logicid);
-static int DcmiGetDeviceLogicidFromPhyid(unsigned int phyid, unsigned int *logicid)
+int DcmiGetDeviceLogicidFromPhyid(unsigned int phyid, unsigned int *logicid)
 {
     CALL_FUNC(g_dcmiGetDeviceLogicidFromPhyidFunc, phyid, logicid);
 }
 
 int (*g_dcmiGetProductTypeFunc)(int cardId, int deviceId, char *productTypeStr, int bufSize);
-static int DcmiGetProductType(int cardId, int deviceId, char *productTypeStr, int bufSize)
+int DcmiGetProductType(int cardId, int deviceId, char *productTypeStr, int bufSize)
 {
     CALL_FUNC(g_dcmiGetProductTypeFunc, cardId, deviceId, productTypeStr, bufSize);
 }
 
 int (*g_dcmiGetDeviceChipInfoFunc)(int cardId, int deviceId, struct DcmiChipInfo *chipInfo);
-static int DcmiGetDeviceChipInfo(int cardId, int deviceId, struct DcmiChipInfo *chipInfo)
+int DcmiGetDeviceChipInfo(int cardId, int deviceId, struct DcmiChipInfo *chipInfo)
 {
     CALL_FUNC(g_dcmiGetDeviceChipInfoFunc, cardId, deviceId, chipInfo);
 }
 
 // load .so files and functions
-static int DcmiInitDl(char *dlPath)
+int DcmiInitDl(char *dlPath)
 {
     g_dcmiHandle = dlopen("libdcmi.so", RTLD_LAZY | RTLD_GLOBAL);
     if (g_dcmiHandle == NULL) {
@@ -159,7 +159,7 @@ static int DcmiInitDl(char *dlPath)
     return SUCCESS;
 }
 
-static int DcmiShutDown(void)
+int DcmiShutDown(void)
 {
     if (g_dcmiHandle == NULL) {
         return SUCCESS;

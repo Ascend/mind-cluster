@@ -62,12 +62,10 @@ type HuaWeiAIChip struct {
 	VDevInfos *common.VirtualDevInfo `json:"v_dev_infos"`
 	// the healthy status of the  AI chip
 	HealthStatus string `json:"health_status"`
-	// the all error codes of the chip
-	ErrorCodes []int64 `json:"error_codes"`
+	// the error code of the chip
+	ErrorCode int64 `json:"error_code"`
 	// the utilization of the chip
 	Utilization int `json:"utilization"`
-	// the overall utilization of the chip
-	OverallUtilization int `json:"overall_utilization"`
 	// the vector utilization of the chip
 	VectorUtilization int `json:"vector_utilization"`
 	// the temperature of the chip
@@ -102,8 +100,6 @@ type HuaWeiAIChip struct {
 	HccsStatisticInfo *common.HccsStatisticInfo
 	// MainBoardId main board id , used to distinguish between A900A3SuperPod and A9000A3SuperPod
 	MainBoardId uint32
-	// HccsBandwidthInfo hccs bandwidth info of npu chip
-	HccsBandwidthInfo *common.HccsBandwidthInfo
 }
 
 // HuaWeiNPUCard device

@@ -389,13 +389,6 @@ struct dcmi_hccs_statistic_info {
     unsigned int retry_cnt[HCCS_MAX_PCS_NUM];
     unsigned int reserved_field_cnt[HCCS_RES_PCS_NUM];
 };
-struct dcmi_hccs_bandwidth_info {
-    int profiling_time;
-    double total_txbw;
-    double total_rxbw;
-    double tx_bandwidth[HCCS_MAX_PCS_NUM];
-    double rx_bandwidth[HCCS_MAX_PCS_NUM];
-};
 
 struct dcmi_sio_crc_err_statistic_info {
     unsigned short tx_error_count;
@@ -496,8 +489,6 @@ DCMIDLLEXPORT int dcmi_get_pcie_link_bandwidth_info(int card_id, int device_id,
 DCMIDLLEXPORT int dcmi_get_dcmi_version (char *dcmi_ver, int buf_size);
 
 DCMIDLLEXPORT int dcmi_get_mainboard_id (int card_id, int device_id, unsigned int *mainboard_id);
-
-DCMIDLLEXPORT int dcmi_get_hccs_link_bandwidth_info (int card_id, int device_id, struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info);
 
 
 #endif

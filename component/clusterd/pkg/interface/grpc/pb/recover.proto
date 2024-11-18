@@ -2,56 +2,84 @@ syntax = "proto3";
 
 option go_package = ".;pb";
 
+enum RespCode {
+  OK = 0; //success
+
+  COMMON_ERROR = 400; // common error code
+  UNREGISTERED = 401; // task id not exist
+  MODEL_MIXED = 402; // model mixed
+  ORDER_MIXED = 403; // recover machine state disorder
+  DO_NOT_STEP_RECALCULATE = 404; // don't try hbm fault fault step retry
+}
 message Status {
-  int32 code = 1;
+  RespCode code = 1;
   string info = 2;
+}
+
 message ClientInfo{
-  string jobId = 1;
-  string role = 2;
+  string ip = 1;
+  string port = 2;
+  string taskId = 3;
+  string role = 4;
+}
+// hbm step recover
+message NotifyStepRetryRequest {
+  string taskId = 1;
+  string step = 2;
 }
 
-message FaultRank {
-  string rankId = 1;
-  string faultType = 2;
+message NotifyRetryStatusRequest {
+  string taskId = 1;
+  string step = 2;
+  Status status = 3;
 }
 
+// process recover
 message ProcessManageSignal {
   string uuid=1;
-  string jobId = 2;
+  string taskId = 2;
   string signalType = 3;
   repeated string actions = 4;
-  repeated FaultRank faultRankIds = 5;
+  repeated string faultRankIds = 5;
   string changeStrategy = 6;
 }
 
 message StopCompleteRequest {
-  string jobId = 1;
+  string taskId = 1;
   Status status = 2;
-  repeated FaultRank faultRankIds = 3;
+  repeated string faultRankIds = 3;
 }
 
 message RecoverStrategyRequest{
-  string jobId = 1;
-  repeated FaultRank faultRankIds = 2;
+  string taskId = 1;
+  repeated string faultRankIds = 2;
   repeated string strategies = 3;
 }
 
+message RecoverStrategyResponse{
+  Status status = 1;
+  string strategy = 2;
+}
+
 message RecoverStatusRequest{
-  string jobId = 1;
+  string taskId = 1;
   Status status = 2;
-  string strategy = 3;
 }
 
 message ProcessFaultRequest{
-  string jobId = 1;
-  repeated FaultRank faultRankIds = 2;
+  string taskId = 1;
+  repeated string faultRankIds = 2;
 }
 
 service Recover {
   rpc Register(ClientInfo) returns (Status) {}
+  // hbm fault recover interface
+  rpc NotifyStepRetry (NotifyStepRetryRequest) returns (Status) {}
+  rpc NotifyRetryStatus (NotifyRetryStatusRequest) returns (Status){}
+  // process recover interface
   rpc SubscribeProcessManageSignal(ClientInfo) returns (stream ProcessManageSignal){}
   rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
-  rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (Status) {}
+  rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (RecoverStrategyResponse) {}
   rpc ReportRecoverStatus(RecoverStatusRequest) returns(Status) {}
   rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
 }

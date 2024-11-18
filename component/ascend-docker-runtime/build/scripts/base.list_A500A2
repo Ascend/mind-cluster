@@ -18,4 +18,3 @@
 /usr/lib64/libadump.so
 /usr/lib64/libtsd_eventclient.so
 /usr/lib64/aicpu_kernels
-/var/queue_schedule

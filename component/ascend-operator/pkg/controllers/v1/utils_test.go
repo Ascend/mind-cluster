@@ -193,6 +193,43 @@ func TestGetNpuReqPerPod(t *testing.T) {
 	})
 }
 
+func TestGetRealRank(t *testing.T) {
+	convey.Convey("getRealRank", t, func() {
+		rtype := "scheduler"
+		index := "xxx"
+		frame := mindxdlv1.MindSporeFrameworkName
+		realRank := 1
+		convey.Convey("01-invalid index, should return err", func() {
+			_, err := getRealRank(rtype, index, frame)
+			convey.ShouldNotBeNil(err)
+		})
+		convey.Convey("02-ms job's index equal rank, should not return err", func() {
+			index = "1"
+			rank, err := getRealRank(rtype, index, frame)
+			convey.ShouldEqual(rank, realRank)
+			convey.ShouldBeNil(err)
+		})
+
+		convey.Convey("03-rtype is master, index equal rank, should not return err", func() {
+			index = "1"
+			rtype = "worker"
+			rank, err := getRealRank(rtype, index, frame)
+			convey.ShouldEqual(rank, realRank)
+			convey.ShouldBeNil(err)
+		})
+
+		convey.Convey("04-frame is not ms and rtype is worker, index equal rank + 1, should not return err", func() {
+			index = "1"
+			rtype = "worker"
+			frame = mindxdlv1.PytorchFrameworkName
+			realRank = 2
+			rank, err := getRealRank(rtype, index, frame)
+			convey.ShouldEqual(rank, realRank)
+			convey.ShouldBeNil(err)
+		})
+	})
+}
+
 func TestLocalRankStr(t *testing.T) {
 	rankRequest := 0
 	convey.Convey("localRankStr", t, func() {
@@ -259,80 +296,6 @@ func TestGetRestartCondition(t *testing.T) {
 				Reason:  "fake reason",
 				Message: "fake message",
 			})
-		})
-	})
-}
-
-func mockRplsWithNPU() map[commonv1.ReplicaType]*commonv1.ReplicaSpec {
-	replicas := int32(1)
-	quantityMap := map[corev1.ResourceName]resource.Quantity{"huawei.com/Ascend910": resource.MustParse("8")}
-	return map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		mindxdlv1.MindSporeReplicaTypeScheduler: {
-			Replicas: &replicas,
-			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{
-				Name: mindxdlv1.DefaultContainerName,
-				Resources: corev1.ResourceRequirements{
-					Limits:   quantityMap,
-					Requests: quantityMap,
-				},
-			}}}},
-		},
-		mindxdlv1.ReplicaTypeWorker: {
-			Replicas: &replicas,
-			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{
-				Name: mindxdlv1.DefaultContainerName,
-				Resources: corev1.ResourceRequirements{
-					Limits:   quantityMap,
-					Requests: quantityMap,
-				},
-			}}}},
-		}}
-}
-
-func TestCheckNonWorkerRplMountChips(t *testing.T) {
-	convey.Convey("checkNonWorkerRplMountChips", t, func() {
-		convey.Convey("01-conditions with non-worker replicaSpec not mount npu condition will return false", func() {
-			ji := &jobInfo{rpls: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-				mindxdlv1.MindSporeFrameworkName: {},
-				mindxdlv1.ReplicaTypeWorker:      {},
-			}}
-			res := checkNonWorkerRplMountChips(ji)
-			convey.So(res, convey.ShouldBeFalse)
-		})
-		convey.Convey("02-conditions with non-worker replicaSpec mount npu condition will return true", func() {
-			ji := &jobInfo{rpls: mockRplsWithNPU()}
-			res := checkNonWorkerRplMountChips(ji)
-			convey.So(res, convey.ShouldBeTrue)
-		})
-	})
-}
-
-func TestGetNonWorkerPodMountChipStatus(t *testing.T) {
-	convey.Convey("getNonWorkerPodMountChipStatus", t, func() {
-		job := newCommonAscendJob()
-		convey.Convey("01-annotation not found target key will return false", func() {
-			res := getNonWorkerPodMountChipStatus(job)
-			convey.So(res, convey.ShouldBeFalse)
-		})
-		convey.Convey("02-annotation found target key will return real value", func() {
-			job.SetAnnotations(map[string]string{nonWorkerPodMountChipStatus: "true"})
-			res := getNonWorkerPodMountChipStatus(job)
-			convey.So(res, convey.ShouldBeTrue)
-		})
-	})
-}
-
-func TestCheckNpuPod(t *testing.T) {
-	convey.Convey("checkNpuPod", t, func() {
-		pi := newCommonPodInfo()
-		convey.Convey("01-pod with no npu will return false", func() {
-			res := checkNpuPod(pi)
-			convey.So(res, convey.ShouldBeFalse)
-		})
-		convey.Convey("02-pod with npu should return true", func() {
-			pi.job.Spec.ReplicaSpecs = mockRplsWithNPU()
-			res := checkNpuPod(pi)
-			convey.So(res, convey.ShouldBeTrue)
 		})
 	})
 }

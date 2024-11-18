@@ -36,7 +36,7 @@ import (
 // GetTemplateByResReq get template by resource request.
 func (tp *DynamicVNPU) GetTemplateByResReq(taskResReq util.VResource, vt VTemplate) (string, error) {
 	if tp == nil {
-		return "", fmt.Errorf("getTemplateByResReq failed:%s", util.ArgumentError)
+		return "", fmt.Errorf("GetTemplateByResReq failed:%s", util.ArgumentError)
 	}
 	name := ""
 	for tName, value := range vt.Data {

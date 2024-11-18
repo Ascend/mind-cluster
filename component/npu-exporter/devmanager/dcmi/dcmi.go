@@ -66,13 +66,6 @@ package dcmi
    	CALL_FUNC(dcmi_get_device_info,card_id,device_id,main_cmd,sub_cmd,buf,size)
    }
 
-   int (*dcmi_get_hccs_link_bandwidth_info_func)(int card_id, int device_id,
-struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info);
-   int dcmi_get_hccs_link_bandwidth_info(int card_id, int device_id,
-struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
-   	CALL_FUNC(dcmi_get_hccs_link_bandwidth_info,card_id,device_id,hccs_bandwidth_info)
-   }
-
    int (*dcmi_set_destroy_vdevice_func)(int card_id,int device_id, unsigned int VDevid);
    int dcmi_set_destroy_vdevice(int card_id,int device_id, unsigned int VDevid){
    	CALL_FUNC(dcmi_set_destroy_vdevice,card_id,device_id,VDevid)
@@ -370,9 +363,6 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
 
     dcmi_get_mainboard_id_func = dlsym(dcmiHandle, "dcmi_get_mainboard_id");
 
-   	dcmi_get_hccs_link_bandwidth_info_func = dlsym(dcmiHandle,"dcmi_get_hccs_link_bandwidth_info");
-
-
    	return SUCCESS;
    }
 
@@ -461,7 +451,6 @@ type DcDriverInterface interface {
 	DcGetSioInfo(int32, int32) (common.SioCrcErrStatisticInfo, error)
 	DcGetHccsStatisticInfo(int32, int32) (common.HccsStatisticInfo, error)
 	DcGetDeviceMainBoardInfo(int32, int32) (uint32, error)
-	DcGetHccsBandwidthInfo(int32, int32, int) (common.HccsBandwidthInfo, error)
 }
 
 const (
@@ -1736,33 +1725,6 @@ func convertHccsStatisticInfoStruct(hccsStatisticInfo C.struct_dcmi_hccs_statist
 		cgoHccsStatisticInfo.RxCnt = append(cgoHccsStatisticInfo.RxCnt, uint32(hccsStatisticInfo.rx_cnt[i]))
 	}
 	return cgoHccsStatisticInfo
-}
-
-// DcGetHccsBandwidthInfo get HCCS bandwidth info
-func (d *DcManager) DcGetHccsBandwidthInfo(cardID int32, deviceID int32,
-	profilingTime int) (common.HccsBandwidthInfo, error) {
-	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
-		return common.HccsBandwidthInfo{}, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
-	}
-	var hccsBandwidthInfo C.struct_dcmi_hccs_bandwidth_info
-	hccsBandwidthInfo.profiling_time = C.int(profilingTime)
-	if retCode := C.dcmi_get_hccs_link_bandwidth_info(C.int(cardID), C.int(deviceID),
-		&hccsBandwidthInfo); int32(retCode) != common.Success {
-		return common.HccsBandwidthInfo{}, fmt.Errorf("get device info failed, error is: %d", int32(retCode))
-	}
-	return convertHccsBandwidthInfoStruct(hccsBandwidthInfo), nil
-}
-
-func convertHccsBandwidthInfoStruct(hccsBandwidthInfo C.struct_dcmi_hccs_bandwidth_info) common.HccsBandwidthInfo {
-	cgoHccsBWInfo := common.HccsBandwidthInfo{}
-	cgoHccsBWInfo.ProfilingTime = uint32(hccsBandwidthInfo.profiling_time)
-	cgoHccsBWInfo.TotalTxbw = float64(hccsBandwidthInfo.total_txbw)
-	cgoHccsBWInfo.TotalRxbw = float64(hccsBandwidthInfo.total_rxbw)
-	for i := uint32(0); i < dcmiHccsMaxPcsNum; i++ {
-		cgoHccsBWInfo.TxBandwidth = append(cgoHccsBWInfo.TxBandwidth, float64(hccsBandwidthInfo.tx_bandwidth[i]))
-		cgoHccsBWInfo.RxBandwidth = append(cgoHccsBWInfo.RxBandwidth, float64(hccsBandwidthInfo.rx_bandwidth[i]))
-	}
-	return cgoHccsBWInfo
 }
 
 // DcGetSioInfo get SIO info

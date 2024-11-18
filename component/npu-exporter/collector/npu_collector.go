@@ -108,8 +108,6 @@ var (
 			cntrName}, nil)
 	npuChipInfoDescUtil = prometheus.NewDesc("npu_chip_info_utilization",
 		"the ai core utilization", cardLabel, nil)
-	npuChipInfoDescOverUtil = prometheus.NewDesc("npu_chip_info_overall_utilization",
-		"the overall utilization of npu", cardLabel, nil)
 	npuChipInfoDescVectorUtil = prometheus.NewDesc("npu_chip_info_vector_utilization",
 		"the vector ai core utilization", cardLabel, nil)
 	npuChipInfoDescTemp = prometheus.NewDesc("npu_chip_info_temperature",
@@ -129,25 +127,7 @@ var (
 	npuChipInfoDescHbmTotalMemory = prometheus.NewDesc("npu_chip_info_hbm_total_memory",
 		"the npu hbm total memory", cardLabel, nil)
 	npuChipInfoDescErrorCode = prometheus.NewDesc("npu_chip_info_error_code",
-		"the First npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode1 = prometheus.NewDesc("npu_chip_info_error_code_1",
-		"the Second npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode2 = prometheus.NewDesc("npu_chip_info_error_code_2",
-		"the Third npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode3 = prometheus.NewDesc("npu_chip_info_error_code_3",
-		"the Fourth npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode4 = prometheus.NewDesc("npu_chip_info_error_code_4",
-		"the Fifth npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode5 = prometheus.NewDesc("npu_chip_info_error_code_5",
-		"the Sixth npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode6 = prometheus.NewDesc("npu_chip_info_error_code_6",
-		"the Seventh npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode7 = prometheus.NewDesc("npu_chip_info_error_code_7",
-		"the Eighth npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode8 = prometheus.NewDesc("npu_chip_info_error_code_8",
-		"the Ninth npu error code", cardLabel, nil)
-	npuChipInfoDescErrorCode9 = prometheus.NewDesc("npu_chip_info_error_code_9",
-		"the Tenth npu error code", cardLabel, nil)
+		"the npu error code", cardLabel, nil)
 	npuChipInfoDescLinkStatus = prometheus.NewDesc("npu_chip_info_link_status",
 		"the npu link status", cardLabel, nil)
 	npuChipInfoDescNetworkStatus = prometheus.NewDesc("npu_chip_info_network_status",
@@ -327,44 +307,6 @@ var (
 		"crc error count for hccs 6", cardLabel, nil)
 	npuChipInfoCrcErrCnt7 = prometheus.NewDesc("npu_chip_info_hccs_statistic_info_crc_err_cnt_7",
 		"crc error count for hccs 7", cardLabel, nil)
-	npuChipInfoHccsBWProfilingTime = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_profiling_time",
-		"Sampling interval for hccs bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTotalTx = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_total_tx",
-		"total sent data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTotalRx = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_total_rx",
-		"total received data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx0 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_0",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx1 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_1",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx2 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_2",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx3 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_3",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx4 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_4",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx5 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_5",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx6 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_6",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWTx7 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_tx_7",
-		"single-link transmission data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx0 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_0",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx1 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_1",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx2 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_2",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx3 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_3",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx4 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_4",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx5 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_5",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx6 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_6",
-		"single-link receive data bandwidth", cardLabel, nil)
-	npuChipInfoHccsBWRx7 = prometheus.NewDesc("npu_chip_info_hccs_bandwidth_info_rx_7",
-		"single-link receive data bandwidth", cardLabel, nil)
 
 	npuContainerInfoInit sync.Once
 	npuChipInfoInit      sync.Once
@@ -733,7 +675,6 @@ func describeBaseChipInfo(ch chan<- *prometheus.Desc) {
 	ch <- versionInfoDesc
 	ch <- machineInfoNPUDesc
 	ch <- npuChipInfoDescUtil
-	ch <- npuChipInfoDescOverUtil
 	ch <- npuChipInfoDescVectorUtil
 	ch <- npuChipInfoDescTemp
 	ch <- npuChipInfoDescPower
@@ -743,21 +684,8 @@ func describeBaseChipInfo(ch chan<- *prometheus.Desc) {
 	ch <- npuChipInfoDescHbmTotalMemory
 	ch <- npuChipInfoDescUsedMemory
 	ch <- npuChipInfoDescTotalMemory
-	ch <- npuChipInfoDescNpuName
-	describeChipErrCodesInfo(ch)
-}
-
-func describeChipErrCodesInfo(ch chan<- *prometheus.Desc) {
 	ch <- npuChipInfoDescErrorCode
-	ch <- npuChipInfoDescErrorCode1
-	ch <- npuChipInfoDescErrorCode2
-	ch <- npuChipInfoDescErrorCode3
-	ch <- npuChipInfoDescErrorCode4
-	ch <- npuChipInfoDescErrorCode5
-	ch <- npuChipInfoDescErrorCode6
-	ch <- npuChipInfoDescErrorCode7
-	ch <- npuChipInfoDescErrorCode8
-	ch <- npuChipInfoDescErrorCode9
+	ch <- npuChipInfoDescNpuName
 }
 
 func describeHBMEccInfo(ch chan<- *prometheus.Desc) {
@@ -1334,7 +1262,6 @@ func updateNPUNetworkInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip 
 				float64(getHealthCode(chip.NetHealthStatus)), collectCardLabelValue(chip, namespaceValue, podNameValue,
 					containerName)...))
 	}
-
 	updateStatInfoOfMac(ch, npu, chip, cNameArray)
 	updateStatInfoOfRoCE(ch, npu, chip, cNameArray)
 	updateOpticalInfo(ch, npu, chip, cNameArray)
@@ -1368,13 +1295,13 @@ func updateLinkSpeedInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *
 func updateLinkStatInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip,
 	devInfo container.DevicesInfo) {
 	if chip.NetInfo == nil {
-		hwlog.RunLog.Error("NetInfo is nil in function updateLinkStatusInfo")
+		hwlog.RunLog.Error("NetInfo is nil in function updateLinkStatInfo")
 		return
 	}
 	// use deep copy to prevent the pointer structure from being assigned nil by other goroutine
 	linkStatInfo := common.DeepCopyLinkStatInfo(chip.NetInfo.LinkStatInfo)
 	if !validate(ch, npu, chip, linkStatInfo) {
-		hwlog.RunLog.Warnf("Invalid param in function updateLinkStatusInfo")
+		hwlog.RunLog.Warnf("Invalid param in function updateLinkStatInfo")
 		return
 	}
 	cNameArray := getContainerNameArray(devInfo)
@@ -1389,13 +1316,13 @@ func updateLinkStatInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *H
 func updateLinkStatusInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip,
 	devInfo container.DevicesInfo) {
 	if chip.NetInfo == nil {
-		hwlog.RunLog.Error("NetInfo is nil in function updateLinkStatInfo")
+		hwlog.RunLog.Error("NetInfo is nil in function updateLinkStatusInfo")
 		return
 	}
 	// use deep copy to prevent the pointer structure from being assigned nil by other goroutine
 	linkStatusInfo := common.DeepCopyLinkStatusInfo(chip.NetInfo.LinkStatusInfo)
 	if !validate(ch, npu, chip, linkStatusInfo) {
-		hwlog.RunLog.Warn("Invalid param in function updateLinkStatInfo")
+		hwlog.RunLog.Warnf("Invalid param in function updateLinkStatusInfo")
 		return
 	}
 	cNameArray := getContainerNameArray(devInfo)
@@ -1533,30 +1460,30 @@ func updateNPUCommonInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *
 func updateChipBaseInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip,
 	devInfo container.DevicesInfo) {
 	containerName, namespaceValue, podNameValue := getContainerInfoWithDefault(getContainerNameArray(devInfo))
-	labelValue := collectCardLabelValue(chip, namespaceValue, podNameValue, containerName)
 	if validateNum(float64(chip.Utilization)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescUtil,
-			prometheus.GaugeValue, float64(chip.Utilization), labelValue...))
-	}
-	if validateNum(float64(chip.OverallUtilization)) {
-		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescOverUtil,
-			prometheus.GaugeValue, float64(chip.OverallUtilization), labelValue...))
+			prometheus.GaugeValue, float64(chip.Utilization), collectCardLabelValue(chip, namespaceValue, podNameValue,
+				containerName)...))
 	}
 	if validateNum(float64(chip.VectorUtilization)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescVectorUtil,
-			prometheus.GaugeValue, float64(chip.VectorUtilization), labelValue...))
+			prometheus.GaugeValue, float64(chip.VectorUtilization), collectCardLabelValue(chip, namespaceValue,
+				podNameValue, containerName)...))
 	}
 	if validateNum(float64(chip.Temperature)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescTemp,
-			prometheus.GaugeValue, float64(chip.Temperature), labelValue...))
+			prometheus.GaugeValue, float64(chip.Temperature), collectCardLabelValue(chip, namespaceValue, podNameValue,
+				containerName)...))
 	}
 	if validateNum(float64(chip.Power)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescPower,
-			prometheus.GaugeValue, float64(chip.Power), labelValue...))
+			prometheus.GaugeValue, float64(chip.Power), collectCardLabelValue(chip, namespaceValue, podNameValue,
+				containerName)...))
 	}
 	if validateNum(float64(chip.Voltage)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescVoltage,
-			prometheus.GaugeValue, float64(chip.Voltage), labelValue...))
+			prometheus.GaugeValue, float64(chip.Voltage), collectCardLabelValue(chip, namespaceValue, podNameValue,
+				containerName)...))
 	}
 	if validateNum(float64(getHealthCode(chip.HealthStatus))) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp,
@@ -1565,32 +1492,15 @@ func updateChipBaseInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *H
 					common.GetNpuName(chip.ChipIfo), chip.VDieID, chip.PCIeBusInfo, namespaceValue, podNameValue,
 					containerName}...))
 	}
+	if validateNum(float64(chip.ErrorCode)) {
+		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescErrorCode,
+			prometheus.GaugeValue, float64(chip.ErrorCode), collectCardLabelValue(chip, namespaceValue, podNameValue,
+				containerName)...))
+	}
 	if validateNum(float64(chip.AICoreCurrentFreq)) {
 		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(npuChipInfoDescAICoreFreqInfo,
-			prometheus.GaugeValue, float64(chip.AICoreCurrentFreq), labelValue...))
-	}
-	updateErrorCodesInfo(ch, npu, chip, labelValue)
-}
-
-// updateErrorCodesInfo update error code info, max 10
-func updateErrorCodesInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip, labelValue []string) {
-	errCodesDesc := []*prometheus.Desc{
-		npuChipInfoDescErrorCode,
-		npuChipInfoDescErrorCode1, npuChipInfoDescErrorCode2, npuChipInfoDescErrorCode3, npuChipInfoDescErrorCode4,
-		npuChipInfoDescErrorCode5, npuChipInfoDescErrorCode6, npuChipInfoDescErrorCode7, npuChipInfoDescErrorCode8,
-		npuChipInfoDescErrorCode9,
-	}
-	if len(chip.ErrorCodes) > common.MaxErrorCodeLen {
-		hwlog.RunLog.Warnf("Error code number is larger than %v, only the first %v will be reported, "+
-			"all errorCode is: %v", common.MaxErrorCodeLen, common.MaxErrorCodeLen, chip.ErrorCodes)
-	}
-	for i := 0; i < len(chip.ErrorCodes) && i < len(errCodesDesc); i++ {
-		value := float64(chip.ErrorCodes[i])
-		if !validateNum(value) {
-			continue
-		}
-		ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp, prometheus.MustNewConstMetric(errCodesDesc[i],
-			prometheus.GaugeValue, value, labelValue...))
+			prometheus.GaugeValue, float64(chip.AICoreCurrentFreq), collectCardLabelValue(chip, namespaceValue,
+				podNameValue, containerName)...))
 	}
 }
 
@@ -1667,27 +1577,12 @@ func updateHccsInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWe
 		hccsBeginIndex = 2
 	}
 	updateHccsStatisticInfo(ch, npu, chip, devInfo, hccsBeginIndex)
-	updateHccsBandwidthInfo(ch, npu, chip, devInfo, hccsBeginIndex)
 }
 
-func doUpdateHccsMetric(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, value interface{},
+func doUpdateHccsMetric(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, value uint32,
 	cardLabel []string, desc *prometheus.Desc) {
-	var finalValue float64
-
-	switch value.(type) {
-	case float64:
-		finalValue = value.(float64)
-	case uint32:
-		finalValue = float64(value.(uint32))
-	default:
-		hwlog.RunLog.Warn("Invalid param in function doUpdateHccsMetric")
-	}
-
-	if finalValue == common.FailedValue {
-		finalValue = common.FailedMetricValue
-	}
 	ch <- prometheus.NewMetricWithTimestamp(npu.Timestamp,
-		prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, finalValue, cardLabel...))
+		prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, float64(value), cardLabel...))
 }
 
 func updateHccsStatisticInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip,
@@ -1719,36 +1614,6 @@ func updateHccsStatisticInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, ch
 		doUpdateHccsMetric(ch, npu, hccsStatisticInfo.TxCnt[i], cardLabel, hccsStatisticTxInfo[i])
 		doUpdateHccsMetric(ch, npu, hccsStatisticInfo.RxCnt[i], cardLabel, hccsStatisticRxInfo[i])
 		doUpdateHccsMetric(ch, npu, hccsStatisticInfo.CrcErrCnt[i], cardLabel, hccsStatisticErrCntInfo[i])
-	}
-}
-func updateHccsBandwidthInfo(ch chan<- prometheus.Metric, npu *HuaWeiNPUCard, chip *HuaWeiAIChip,
-	devInfo container.DevicesInfo, hccsBeginIndex int) {
-	hccsBandwidthInfo := common.DeepCopyHccsBandwidthInfo(chip.HccsBandwidthInfo)
-	if !validate(ch, npu, chip, hccsBandwidthInfo) {
-		hwlog.RunLog.Warn("Invalid param in function updateHccsStatisticInfo")
-		return
-	}
-	containerName, namespaceValue, podNameValue := getContainerInfoWithDefault(getContainerNameArray(devInfo))
-	cardLabel := collectCardLabelValue(chip, namespaceValue, podNameValue, containerName)
-	hccsBWTxDescs := []*prometheus.Desc{
-		npuChipInfoHccsBWTx0, npuChipInfoHccsBWTx1, npuChipInfoHccsBWTx2, npuChipInfoHccsBWTx3,
-		npuChipInfoHccsBWTx4, npuChipInfoHccsBWTx5, npuChipInfoHccsBWTx6, npuChipInfoHccsBWTx7,
-	}
-	hccsBWRxDescs := []*prometheus.Desc{
-		npuChipInfoHccsBWRx0, npuChipInfoHccsBWRx1, npuChipInfoHccsBWRx2, npuChipInfoHccsBWRx3,
-		npuChipInfoHccsBWRx4, npuChipInfoHccsBWRx5, npuChipInfoHccsBWRx6, npuChipInfoHccsBWRx7,
-	}
-	if hccsBeginIndex < 0 {
-		hccsBeginIndex = 0
-	}
-	doUpdateHccsMetric(ch, npu, hccsBandwidthInfo.ProfilingTime, cardLabel, npuChipInfoHccsBWProfilingTime)
-	doUpdateHccsMetric(ch, npu, hccsBandwidthInfo.TotalTxbw, cardLabel, npuChipInfoHccsBWTotalTx)
-	doUpdateHccsMetric(ch, npu, hccsBandwidthInfo.TotalRxbw, cardLabel, npuChipInfoHccsBWTotalRx)
-
-	for i := hccsBeginIndex; i < dcmiHccsMaxCounts && i < len(hccsBWTxDescs) &&
-		i < len(hccsBWRxDescs); i++ {
-		doUpdateHccsMetric(ch, npu, hccsBandwidthInfo.TxBandwidth[i], cardLabel, hccsBWTxDescs[i])
-		doUpdateHccsMetric(ch, npu, hccsBandwidthInfo.RxBandwidth[i], cardLabel, hccsBWRxDescs[i])
 	}
 }
 
@@ -1857,7 +1722,6 @@ func packChipInfoPart1(logicID int32, dmgr devmanager.DeviceInterface, hwChip *H
 	hwChip.HbmInfo = hbmInfo
 	hwChip.SioInfo = sioInfo
 	packHccsInfo(logicID, dmgr, hwChip)
-	packHccsBandwidthInfo(logicID, dmgr, hwChip)
 
 	// There is no PCIe link between 910A3 host and device.
 	// Therefore, PCIe link bandwidth information cannot be queried.
@@ -1881,24 +1745,10 @@ func packHccsInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWei
 	}
 	hccsStatisticInfo, err := dmgr.GetHccsStatisticInfo(logicID)
 	if err != nil {
-		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccs, logicID, "get hccs statistic info of npu failed: %v", err)
-	} else {
-		hwlog.ResetErrCnt(common.DomainForHccs, logicID)
+		hwlog.RunLog.Errorf("get hccs statistic info of npu failed: %v", err)
+		hccsStatisticInfo = nil
 	}
 	hwChip.HccsStatisticInfo = hccsStatisticInfo
-}
-
-func packHccsBandwidthInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWeiAIChip) {
-	if dmgr.GetDevType() != common.Ascend910B && dmgr.GetDevType() != common.Ascend910A3 {
-		return
-	}
-	hccsBandwidthInfo, err := dmgr.GetHccsBandwidthInfo(logicID)
-	if err != nil {
-		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccsBW, logicID, "get hccs bandwidth info of npu failed: %v ", err)
-	} else {
-		hwlog.ResetErrCnt(common.DomainForHccsBW, logicID)
-	}
-	hwChip.HccsBandwidthInfo = hccsBandwidthInfo
 }
 
 func getAllHBMEccInfo(logicID int32, dmgr devmanager.DeviceInterface) (*common.HbmAggregateInfo, error) {
@@ -1923,15 +1773,10 @@ func packChipInfoPart2(logicID int32, dmgr devmanager.DeviceInterface, hwChip *H
 		hwlog.RunLog.Errorf("get device AI core utilization rate failed, err is: %v", err)
 		util = common.UnRetError // valid data range 0-100
 	}
-	overAllUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.Overall)
-	if err != nil {
-		hwlog.RunLog.Errorf("get device overall utilization rate of npu failed, err is: %v", err)
-		overAllUtil = common.UnRetError // valid data range 0-100
-	}
 
-	_, errCodes, err := dmgr.GetDeviceAllErrorCode(logicID)
+	_, errCode, err := dmgr.GetDeviceErrorCode(logicID)
 	if err != nil {
-		errCodes = make([]int64, 0)
+		errCode = common.RetError // valid data range 0-128
 	}
 	vdieID, err := dmgr.GetDieID(logicID, dcmi.VDIE)
 	if err != nil {
@@ -1940,9 +1785,8 @@ func packChipInfoPart2(logicID int32, dmgr devmanager.DeviceInterface, hwChip *H
 	setNetHealthStatus(logicID, dmgr, hwChip)
 	setProcessInfo(logicID, dmgr, hwChip)
 	setPCIeBusInfo(logicID, dmgr, hwChip)
-	hwChip.ErrorCodes = errCodes
+	hwChip.ErrorCode = errCode
 	hwChip.Utilization = int(util)
-	hwChip.OverallUtilization = int(overAllUtil)
 	hwChip.VDieID = vdieID
 	vecUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.VectorCore)
 	if err != nil {
@@ -2050,7 +1894,6 @@ func getMainStatInfo(statInfo map[string]int) *common.StatInfo {
 
 func networkPackInfo(phyID int32) common.NpuNetInfo {
 	newNetInfo := common.NpuNetInfo{}
-
 	newNetInfo.LinkStatusInfo = &common.LinkStatusInfo{}
 	if linkState, err := hccn.GetNPULinkStatus(phyID); err == nil {
 		newNetInfo.LinkStatusInfo.LinkState = linkState

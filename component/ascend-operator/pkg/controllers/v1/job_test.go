@@ -10,6 +10,7 @@ package v1
 
 import (
 	"errors"
+	"k8s.io/apimachinery/pkg/types"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -20,7 +21,6 @@ import (
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -381,14 +381,7 @@ func TestSyncReplicas(t *testing.T) {
 	convey.Convey("syncReplicas", t, func() {
 		rc := newCommonReconciler()
 		ji := &jobInfo{
-			job:   newCommonAscendJob(),
-			mtObj: &mindxdlv1.AscendJob{},
-			status: &commonv1.JobStatus{
-				Conditions: []commonv1.JobCondition{{
-					Type:   commonv1.JobSucceeded,
-					Status: corev1.ConditionTrue,
-				}},
-			},
+			job: newCommonAscendJob(),
 			rpls: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				mindxdlv1.PytorchReplicaTypeMaster: {},
 				mindxdlv1.ReplicaTypeWorker:        {},

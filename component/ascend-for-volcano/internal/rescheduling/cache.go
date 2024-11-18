@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -74,16 +73,6 @@ func (reCache DealReSchedulerCache) getRetryTimesFromCM(buffer string) (map[api.
 		return nil, fmt.Errorf("remain times convert from CM error: %s", util.SafePrint(unmarshalErr))
 	}
 	return rTimes, nil
-}
-
-func (reCache DealReSchedulerCache) getRecentReschedulingRecordsFromCm(buffer string) (
-	map[api.JobID]*RescheduleReason, error) {
-	rescheduleRecords := make(map[api.JobID]*RescheduleReason)
-	if unmarshalErr := json.Unmarshal([]byte(buffer), &rescheduleRecords); unmarshalErr != nil {
-		klog.V(util.LogDebugLev).Info("Unmarshal reschedule records from cache failed")
-		return nil, fmt.Errorf("reschedule records convert from CM error: %s", util.SafePrint(unmarshalErr))
-	}
-	return rescheduleRecords, nil
 }
 
 func (reCache DealReSchedulerCache) getNodeHeartbeatFromCM(buffer string) ([]NodeHeartbeat, error) {
@@ -190,37 +179,6 @@ func (reCache *DealReSchedulerCache) SetRetryTimesFromCM() error {
 		return fmt.Errorf("getFaultNodesFromCM %s", util.SafePrint(err))
 	}
 	reCache.JobRemainRetryTimes = remain
-	return nil
-}
-
-// SetJobRecentRescheduleRecords get already recorded rescheduling records from cm, and cache it
-func (reCache *DealReSchedulerCache) SetJobRecentRescheduleRecords(firstStartup *bool,
-	client kubernetes.Interface) error {
-	if reCache == nil || reCache.CMData == nil {
-		klog.V(util.LogErrorLev).Infof("SetJobRecentRescheduleRecords failed: %s", util.ArgumentError)
-		return errors.New(util.ArgumentError)
-	}
-	if firstStartup != nil && *firstStartup {
-		cm, err := util.GetConfigMap(client, RescheduleReasonCmNamespace, RescheduleReasonCmName)
-		if err != nil {
-			return fmt.Errorf("failed to get reschedule reason configmap, err: %s", err.Error())
-		}
-		reCache.CMData[ReschedulingReasonKey] = cm.Data[CmJobRescheduleReasonsKey]
-	}
-
-	data, ok := reCache.CMData[ReschedulingReasonKey]
-	if !ok {
-		// if not initialise now, will give this key an empty content
-		return fmt.Errorf("reading %s data from reScheduler configmap failed", CmJobRescheduleReasonsKey)
-	}
-	if data == "" {
-		return nil
-	}
-	recordedRecords, err := reCache.getRecentReschedulingRecordsFromCm(data)
-	if err != nil {
-		return fmt.Errorf("getRecentReschedulingRecordsFromCm %s", util.SafePrint(err))
-	}
-	reCache.JobRecentRescheduleRecords = recordedRecords
 	return nil
 }
 
@@ -379,45 +337,6 @@ func (reCache *DealReSchedulerCache) writeRemainTimesToCMString() (string, error
 	return nodeHBsData, nil
 }
 
-func (reCache *DealReSchedulerCache) writeRescheduleReasonsToCMString() (string, error) {
-	if len(reCache.JobRecentRescheduleRecords) == 0 {
-		return "", nil
-	}
-	rescheduleReasonStr, err := reCache.marshalCacheDataToString(reCache.JobRecentRescheduleRecords)
-	if err != nil {
-		return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-	}
-	if len(rescheduleReasonStr) > MaxKbOfRescheduleRecords {
-		klog.V(util.LogWarningLev).Infof("reason of reschedule into configmap is more than %d Kb, "+
-			"will reduce it", MaxKbOfRescheduleRecords)
-	}
-	// only keep every job newest server record, each time will cut the oldest record of each job
-	// to make sure the returned reschedule reason str len is under MaxKbOfRescheduleRecords Kb,
-	// each time will reduce the length by 1/10
-	// by the way, to avoid dead loop, there is a loop limit
-	for i := 0; len(rescheduleReasonStr) > MaxKbOfRescheduleRecords && i < MaxRescheduleRecordsNum; i++ {
-		for jobId, reason := range reCache.JobRecentRescheduleRecords {
-			// must keep the newest rescheduling record
-			if len(reason.RescheduleRecords) <= 1 {
-				continue
-			}
-			lastRecord := reason.RescheduleRecords[len(reason.RescheduleRecords)-1]
-			reason.RescheduleRecords = reason.RescheduleRecords[:len(reason.RescheduleRecords)-1]
-			klog.V(util.LogWarningLev).Infof("cut job %v reschedule reason of timestamp %d from cm, "+
-				"to reduce records length", jobId, lastRecord.RescheduleTimeStamp)
-		}
-		// to avoid frequently marshal a 950 Kb json, time-consuming
-		rescheduleReasonStr, err = reCache.marshalCacheDataToString(reCache.JobRecentRescheduleRecords)
-		if err != nil {
-			return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-		}
-		if len(rescheduleReasonStr) <= MaxKbOfRescheduleRecords {
-			break
-		}
-	}
-	return rescheduleReasonStr, nil
-}
-
 func (reCache *DealReSchedulerCache) writeNodeRankOccurrenceMapToCMString() (string, error) {
 	if len(reCache.AllocNodeRankOccurrenceMap) == 0 {
 		return "", nil
@@ -458,18 +377,11 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
 	}
-	// update the reschedule reason cache
-	jobRescheduleReasons, err := reCache.setRescheduleReasonToCache(env)
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("setRescheduleReasonToCache: %s", util.SafePrint(err))
-	}
-
 	cmData, ok := env.Cache.Data[RePropertyName]
 	if !ok {
 		cmData = make(map[string]string, util.MapInitNum)
 		env.Cache.Data[RePropertyName] = cmData
 	}
-
 	cmData[CmJobRemainRetryTimes] = jobRemainRetryTimes
 	cmDataForCache := util.DeepCopyCmData(cmData)
 	cmData[CmFaultNodeKind] = fNodeToCMString
@@ -477,24 +389,6 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	cmDataForCache[CmFaultNodeKind] = fNodeString
 	cmDataForCache[CmNodeHeartbeatKind] = nodeHBString
 	cmDataForCache[CmNodeRankTimeMapKind] = nodeRankOccurrenceMapString
-	cmDataForCache[ReschedulingReasonKey] = jobRescheduleReasons
 	reSchedulerConfigmap.updateReSchedulerCMCache(cmDataForCache)
 	return nil
-}
-
-func (reCache *DealReSchedulerCache) setRescheduleReasonToCache(env *plugin.ScheduleEnv) (string, error) {
-	env.Cache.Names[ReschedulingReasonKey] = RescheduleReasonCmName
-	env.Cache.Namespaces[ReschedulingReasonKey] = RescheduleReasonCmNamespace
-	jobRescheduleReasons, err := reCache.writeRescheduleReasonsToCMString()
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-		return "", fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
-	}
-	reasonCmData, ok := env.Cache.Data[ReschedulingReasonKey]
-	if !ok {
-		reasonCmData = make(map[string]string, util.MapInitNum)
-		env.Cache.Data[ReschedulingReasonKey] = reasonCmData
-	}
-	reasonCmData[CmJobRescheduleReasonsKey] = jobRescheduleReasons
-	return jobRescheduleReasons, nil
 }

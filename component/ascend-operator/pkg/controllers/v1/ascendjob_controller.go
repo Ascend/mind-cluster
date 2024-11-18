@@ -32,7 +32,6 @@ import (
 	"github.com/kubeflow/common/pkg/controller.v1/control"
 	"github.com/kubeflow/common/pkg/util"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -53,14 +52,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable"
 	"ascend-operator/pkg/ranktable/generator"
-	"ascend-operator/pkg/ranktable/utils"
 )
 
 // NewReconciler new reconciler for AscendJob
@@ -121,9 +118,6 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
-	if r.isVcjobOrDeploy(ctx, req) {
-		return ctrl.Result{}, nil
-	}
 	ascendjob := &mindxdlv1.AscendJob{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
@@ -161,31 +155,6 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request) bool {
-	// try fetch deployment
-	deploy := &appv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		r.ranktablePipeline(decorateDeploy(deploy))
-		return true
-	}
-	// try fetch vcjob
-	vcjob := &v1alpha1.Job{}
-	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
-		r.ranktablePipeline(decorateVcjob(vcjob))
-		return true
-	}
-	return false
-}
-
-func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
-	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
-		return
-	}
-	r.genRankTable(ji)
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *ASJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if r == nil {
@@ -208,16 +177,6 @@ type resourceOption struct {
 }
 
 func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
-		return err
-	}
 	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
@@ -248,44 +207,11 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 			return err
 		}
 	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Job{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &DeployRktHandler{
-		IsController: true,
-		OwnerType:    &appv1.Deployment{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
-		return err
-	}
 	return nil
 }
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		switch e.Object.(type) {
-		case *v1alpha1.Job:
-			vcjob := e.Object.(*v1alpha1.Job)
-			if _, ok := vcjob.Labels[atlasTaskKey]; !ok {
-				return false
-			}
-			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
-			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
-			return true
-		case *appv1.Deployment:
-			deploy := e.Object.(*appv1.Deployment)
-			if _, ok := deploy.Labels[atlasTaskKey]; !ok {
-				return false
-			}
-			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
-			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
-			return true
-		default:
-			hwlog.RunLog.Info("job type is not volcano job or deployment")
-		}
-
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return true
@@ -305,9 +231,9 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			hwlog.RunLog.Errorf("failed to get fault-retry-times, error: %v", err)
 			return false
 		}
-		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
+		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil && frame == mindxdlv1.PytorchFrameworkName {
 			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
-			hwlog.RunLog.Infof("create rtGenerator for frame %s ascendJob %s", frame, ascendJob.Name)
+			hwlog.RunLog.Infof("create rtGenerator for ascendJob %s", ascendJob.Name)
 		}
 
 		return true
@@ -332,12 +258,6 @@ func (r *ASJobReconciler) setFaultRetryTimesToBackoffLimits(ascendJob *mindxdlv1
 
 func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		if rtg, ok := r.rtGenerators[e.Object.GetUID()]; ok {
-			if err := rtg.DeleteFile(); err != nil {
-				hwlog.RunLog.Errorf("failed to delete ranktable, err: %v", err)
-			}
-			delete(r.rtGenerators, e.Object.GetUID())
-		}
 		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
 		if !ok {
 			return false
@@ -346,41 +266,24 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 		hwlog.RunLog.Info(msg)
 		delete(r.versions, ascendJob.UID)
 		delete(r.backoffLimits, ascendJob.UID)
-		return true
-	}
-}
-
-func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace string, pod *corev1.Pod) {
-	rtg, exist := r.rtGenerators[uid]
-	if !exist {
-		return
-	}
-	curStatus := rtg.DeletePod(pod)
-	updateFileFail := filepathExist(rtg.GetPath()) && (curStatus == utils.CompletedRTStatus)
-	updateCmFail := false
-	if r.configmapExist(rtg, jobName, namespace) {
-		rtg.SetStatus(utils.InitialRTStatus)
-		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
-			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-			updateCmFail = true
+		if rtg, ok := r.rtGenerators[ascendJob.UID]; ok {
+			if err := rtg.DeleteFile(); err != nil {
+				hwlog.RunLog.Errorf("failed to delete ranktable, err: %v", err)
+			}
+			delete(r.rtGenerators, ascendJob.UID)
 		}
-	}
-	if updateFileFail && updateCmFail {
-		rtg.SetStatus(utils.CompletedRTStatus)
+		return true
 	}
 }
 
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
 func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		controllerRef := metav1.GetControllerOf(e.Object)
-		if controllerRef != nil {
-			r.deletePodForCmFile(controllerRef.UID, controllerRef.Name, e.Object.GetNamespace(), e.Object.(*corev1.Pod))
-		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
 			return false
 		}
+
 		version, ok := e.Object.GetLabels()[podVersionLabel]
 		if !ok || len(version) == 0 {
 			return false
@@ -390,13 +293,18 @@ func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 			hwlog.RunLog.Errorf("failed to convert string to int, err: %v", err)
 			return false
 		}
-		hwlog.RunLog.Infof("deleted pod version is: %v", version)
-		if controllerRef == nil {
-			return true
-		}
-		currentVersion, ok := r.versions[controllerRef.UID]
-		if ok && int32(versionNumber) == currentVersion {
-			r.versions[controllerRef.UID]++
+
+		if controllerRef := metav1.GetControllerOf(e.Object); controllerRef != nil {
+			hwlog.RunLog.Infof("deleted pod version is: %v", version)
+			currentVersion, ok := r.versions[controllerRef.UID]
+			if ok && int32(versionNumber) == currentVersion {
+				r.versions[controllerRef.UID]++
+			}
+			rtg, exist := r.rtGenerators[controllerRef.UID]
+			if !exist {
+				return true
+			}
+			rtg.DeletePod(e.Object.(*corev1.Pod))
 		}
 		return true
 	}
@@ -508,66 +416,4 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 	return rtype == mindxdlv1.MindSporeReplicaTypeScheduler ||
 		rtype == mindxdlv1.PytorchReplicaTypeMaster ||
 		rtype == mindxdlv1.TensorflowReplicaTypeChief
-}
-
-func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
-	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
-	for i, task := range vcjob.Spec.Tasks {
-		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
-			Template: task.Template,
-			Replicas: &task.Replicas,
-		}
-	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   vcjob.TypeMeta,
-		ObjectMeta: vcjob.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpecs,
-		},
-	}
-}
-
-func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
-	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"Deploy": &commonv1.ReplicaSpec{
-			Template: deploy.Spec.Template,
-			Replicas: deploy.Spec.Replicas,
-		},
-	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   deploy.TypeMeta,
-		ObjectMeta: deploy.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpec,
-		},
-	}
-}
-
-func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid types.UID) error {
-	configmapName := configmapPrefix + jobName
-	cm := &corev1.ConfigMap{}
-	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
-	err := r.Get(context.TODO(), namespacedname, cm)
-	if err != nil {
-		hwlog.RunLog.Infof("failed to get configmap in namespace %s, err: %v", namespace, err)
-		return err
-	}
-	rtg, ok := r.rtGenerators[uid]
-	if !ok {
-		err = fmt.Errorf("ranktable generaotor not found for job %s", jobName)
-		hwlog.RunLog.Error(err)
-		return err
-	}
-	cm.Data[configmapKey], err = rtg.ToString()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
-		return err
-	}
-	cm.Data[configmapVersion] = strconv.FormatUint(uint64(time.Now().Unix()), decimal)
-	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
-	if err := r.Update(context.TODO(), cm); err != nil {
-		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
-		return err
-	}
-	return nil
 }

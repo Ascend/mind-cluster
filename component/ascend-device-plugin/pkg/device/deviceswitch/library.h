@@ -1,14 +1,13 @@
-/*
-* Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
-* Description: switch fault interface header file
-*
-* Author: HUAWEI
-*/
+#ifndef LINGQU_LIBRARY_H
+#define LINGQU_LIBRARY_H
 
-#ifndef LINGQU_DCMI_H
-#define LINGQU_DCMI_H
-
+#define MAX_EVENT_RESV_LENGTH 32
 #define DCMIDLLEXPORT static
+
+#define LQ_DCMI_EVENT_FILTER_FLAG_EVENT_TYPE_ID (1UL << 0)
+#define LQ_DCMI_EVENT_FILTER_FLAG_EVENT_ID (1UL << 1)
+#define LQ_DCMI_EVENT_FILTER_FLAG_SERVERITY (1UL << 2)
+#define LQ_DCMI_EVENT_FILTER_FLAG_CHIP_ID (1UL << 3)
 
 typedef enum {
     HAL_REPORT_FAULT_BLOCK = 0,
@@ -34,7 +33,7 @@ typedef enum {
     HAL_REPORT_FAULT_MAX
 } HalReportFaultType;
 
-typedef struct LqDcmiEvent {
+typedef struct LqDcmiEvent{
     HalReportFaultType eventType;
     unsigned int subType;
     unsigned short peerportDevice;
@@ -55,10 +54,10 @@ typedef struct LqDcmiEvent {
 }LqDcmiEvent;
 
 typedef enum {
-    EVENT_TYPE_ID = 1UL << 0,
-    EVENT_ID = 1UL << 1,
-    SEVERITY = 1UL << 2,
-    CHIP_ID = 1UL << 3,
+    EventTypeId = 1UL << 0,
+    EventId = 1UL << 1,
+    Severity = 1 << 2,
+    ChipId = 1 << 3
 } LqDcmiEventFilterFlag;
 
 typedef struct lq_dcmi_event_filter {
@@ -70,11 +69,10 @@ typedef struct lq_dcmi_event_filter {
 } LqDcmiEventFilter;
 
 
-typedef void (*LqDcmiFaultEventCallback)(struct LqDcmiEvent *event);
+typedef void (*lq_dcmi_fault_event_callback)(struct LqDcmiEvent *event);
 
 DCMIDLLEXPORT int lq_dcmi_init();
 DCMIDLLEXPORT int lq_dcmi_subscribe_fault_event(struct lq_dcmi_event_filter filter);
-DCMIDLLEXPORT int lq_dcmi_get_fault_info(unsigned int listLen, unsigned int *eventListLen,
-    struct LqDcmiEvent *eventList);
+DCMIDLLEXPORT int lq_dcmi_get_fault_info(unsigned int list_len, unsigned int *event_list_len, struct LqDcmiEvent *event_list);
 
-#endif // LINGQU_DCMI_H
+#endif// LINGQU_LIBRARY_H

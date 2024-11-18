@@ -55,20 +55,6 @@ const (
 	npuCoreName = "huawei.com/npu-core"
 
 	statusPodIPDownwardAPI = "status.podIP"
-
-	cmRetryTime      = 3
-	configmapPrefix  = "rings-config-"
-	acjobKind        = "AscendJob"
-	vcjobKind        = "Job"
-	vcjobLabelKey    = "volcano.sh/job-name"
-	deployKind       = "Deployment"
-	deployLabelKey   = "deploy-name"
-	configmapKey     = "hccl.json"
-	configmapVersion = "version"
-	hcclCtrName      = "hccl-controller"
-	atlasTaskKey     = "ring-controller.atlas"
-	// the status of mount chips for non-worker Pods
-	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )
 
 const (
@@ -96,9 +82,6 @@ const (
 	tfLocalWorker = "CM_LOCAL_WORKER"
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
-
-	hostNetwork = "HostNetwork"
-	npuPod      = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name

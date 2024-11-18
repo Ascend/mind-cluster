@@ -27,7 +27,7 @@ import (
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"huawei.com/npu-exporter/v6/devmanager"
 	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -437,9 +437,6 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 			totalUHDevices.Insert(device.DeviceName)
 			continue
 		}
-		if dev := fmt.Sprintf("%s-%d", runMode, device.PhyID); !totalUHDevices.Has(dev) {
-			totalUHDevices.Insert(dev)
-		}
 	}
 	hwlog.RunLog.Debugf("healthy device %#v", healthDevice)
 	hwlog.RunLog.Debugf("total unhealthy devices %#v", totalUHDevices)
@@ -463,13 +460,9 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			common.GetTimeoutFaultCodes(common.NetworkFaultMode)...))
 		faultType := common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType:            common.CardNetworkUnhealthy,
-			NPUName:              device.DeviceName,
-			LargeModelFaultLevel: faultType,
-			FaultLevel:           faultType,
-			FaultHandling:        faultType,
-			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTime:            device.AlarmRaisedTime,
+			FaultType: common.CardNetworkUnhealthy, NPUName: device.DeviceName,
+			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
+			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
 		})
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
@@ -477,13 +470,9 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			common.GetTimeoutFaultCodes(common.ChipFaultMode)...))
 		faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType:            common.CardUnhealthy,
-			NPUName:              device.DeviceName,
-			LargeModelFaultLevel: faultType,
-			FaultLevel:           faultType,
-			FaultHandling:        faultType,
-			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTime:            device.AlarmRaisedTime,
+			FaultType: common.CardUnhealthy, NPUName: device.DeviceName,
+			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
+			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
 		})
 	}
 	return deviceFaults

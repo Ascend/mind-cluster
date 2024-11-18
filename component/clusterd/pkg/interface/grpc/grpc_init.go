@@ -4,9 +4,7 @@
 package grpc
 
 import (
-	"errors"
 	"net"
-	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -31,31 +29,9 @@ func NewClusterInfoMgrServer(opts []grpc.ServerOption) *ClusterInfoMgrServer {
 	return server
 }
 
-func isIPValid(ipStr string) error {
-	parsedIp := net.ParseIP(ipStr)
-	if parsedIp == nil {
-		return errors.New("parse to ip failed")
-	}
-	if parsedIp.To4() == nil {
-		return errors.New("not a valid ipv4 ip")
-	}
-	if parsedIp.Equal(net.IPv4bcast) {
-		return errors.New("cannot be broadcast ip")
-	}
-	if parsedIp.IsUnspecified() {
-		return errors.New("is all zeros ip")
-	}
-	return nil
-}
-
 // Start the grpc server
-func (server *ClusterInfoMgrServer) Start(service *service.FaultRecoverService) error {
-	ipStr := os.Getenv("POD_IP")
-	if err := isIPValid(ipStr); err != nil {
-		return err
-	}
-	listenAddress := ipStr + constant.GrpcPort
-	listen, err := net.Listen("tcp", listenAddress)
+func (server *ClusterInfoMgrServer) Start() error {
+	listen, err := net.Listen("tcp", constant.GrpcPort)
 	if err != nil {
 		hwlog.RunLog.Errorf("cluster info server listen failed, err: %#v", err)
 		return err
@@ -67,7 +43,7 @@ func (server *ClusterInfoMgrServer) Start(service *service.FaultRecoverService) 
 		return err
 	}
 	server.grpcServer = grpc.NewServer(server.opts...)
-	pb.RegisterRecoverServer(server.grpcServer, service)
+	pb.RegisterRecoverServer(server.grpcServer, service.NewFaultRecoverService())
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

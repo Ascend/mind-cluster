@@ -28,9 +28,6 @@ var (
 	// ProfilingTime for getting PCIe bandwidth
 	ProfilingTime int
 
-	// HccsBWProfilingTime for getting hccs bandwidth
-	HccsBWProfilingTime int
-
 	// a900A3SuperPodBoardIds for A900/A9000 A3 Super Pod Board IDs
 	a900A3SuperPodBoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
 		A900A3SuperPodBin3BoardId)
@@ -58,8 +55,6 @@ const (
 	AICoreRatedFreq = 9
 	// VectorCore Ascend310P
 	VectorCore DeviceType = 12
-	// Overall Overall utilization rate of NPU
-	Overall DeviceType = 13
 )
 
 const (
@@ -136,15 +131,6 @@ const (
 
 	// InvalidID invalid ID
 	InvalidID = 0xffffffff
-
-	// FailedMetricValue for failed metric value
-	FailedMetricValue = -1
-
-	// FailedValue for failed value
-	FailedValue = 0xffffffff
-
-	// MaxErrorCodeLen max length of error code for Prometheus
-	MaxErrorCodeLen = 10
 )
 
 const (
@@ -210,12 +196,6 @@ const (
 
 	// A9000A3SuperPodMainBoardId2 board id of A9000 A3 SuperPod MainBoard2
 	A9000A3SuperPodMainBoardId2 = 0x1D
-
-	// DomainForHccs domain for hccs
-	DomainForHccs = "hccs"
-
-	// DomainForHccsBW domain for hccs-bandwidth
-	DomainForHccsBW = "hccs-bw"
 )
 
 // DcmiDeviceType used to represent the dcmi device type

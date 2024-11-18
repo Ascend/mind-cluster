@@ -282,15 +282,6 @@ type HccsStatisticInfo struct {
 	reservedFieldCnt []uint32
 }
 
-// HccsBandwidthInfo contains hccs bandwidth info
-type HccsBandwidthInfo struct {
-	ProfilingTime uint32
-	TotalTxbw     float64
-	TotalRxbw     float64
-	TxBandwidth   []float64
-	RxBandwidth   []float64
-}
-
 // SioCrcErrStatisticInfo contains sio crc error statistic info
 type SioCrcErrStatisticInfo struct {
 	TxErrCnt int64

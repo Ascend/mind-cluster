@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
-
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -381,17 +380,11 @@ func New(env *plugin.ScheduleEnv, jobType string) *ReScheduler {
 	if setHBErr := reSchedulerCache.SetNodeHeartbeatFromCM(); setHBErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetNodeHeartbeatFromCM: %s", util.SafePrint(setHBErr))
 	}
-	// 2.4 Initialise ReScheduler.DealReSchedulerCache.JobRemainRetryTimes
+
 	if setRTErr := reSchedulerCache.SetRetryTimesFromCM(); setRTErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetRetryTimesFromCM: %s", util.SafePrint(setRTErr))
 	}
-	// 2.5 Initialise ReScheduler.DealReSchedulerCache.JobRecentRescheduleRecords
-	if recordErr := reSchedulerCache.SetJobRecentRescheduleRecords(env.IsFirstSession,
-		env.FrameAttr.KubeClient); recordErr != nil {
-		klog.V(util.LogErrorLev).Infof("SetJobRecentRescheduleRecords: %s", util.SafePrint(recordErr))
-	}
-
-	// 2.6 Initialise ReScheduler.DealReSchedulerCache.AllocNodeRankOccurrenceMap by unmarshal data read from cm
+	// 2.4 Initialise ReScheduler.DealReSchedulerCache.AllocNodeRankOccurrenceMap by unmarshal data read from cm
 	if setNROErr := reSchedulerCache.SetNodeRankOccurrenceMapFromCM(); setNROErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetNodeRankOccurrenceMapFromCM: %s", util.SafePrint(setNROErr))
 	}
@@ -540,9 +533,6 @@ func (reScheduler *ReScheduler) initTorJobDeletedFlag(jobInfo *api.JobInfo, fJob
 func (reScheduler *ReScheduler) setTorSingleJobDeletedFlag(jobInfo *api.JobInfo, fJob *FaultJob) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc {
 		fJob.setFaultTaskUseNode(jobInfo)
-		if jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc {
-			return
-		}
 
 		fJob.PendingSessionNum++
 
@@ -560,8 +550,8 @@ func (reScheduler *ReScheduler) setTorSingleJobDeletedFlag(jobInfo *api.JobInfo,
 
 // SyncJobRemainRetryTimes Synchronise job remain retry times in cache by updating the information using current session
 func (reScheduler *ReScheduler) SyncJobRemainRetryTimes(ssn *framework.Session) {
-	klog.V(util.LogInfoLev).Info("enter SynJobRemainRetryTimes...")
-	defer klog.V(util.LogInfoLev).Info("leave SynJobRemainRetryTimes...")
+	klog.V(util.LogInfoLev).Infof("enter SynJobRemainRetryTimes...")
+	defer klog.V(util.LogInfoLev).Infof("leave SynJobRemainRetryTimes...")
 	if reScheduler == nil {
 		klog.V(util.LogErrorLev).Infof("SynCacheFaultJobWithSession: %s, nil reScheduler", util.ArgumentError)
 		return
@@ -592,34 +582,10 @@ func (reScheduler *ReScheduler) SyncJobRemainRetryTimes(ssn *framework.Session) 
 	reScheduler.JobRemainRetryTimes = newInfo
 }
 
-// SyncJobRecentRescheduleReason sync recent reschedule records with ssn, to ensure cache is new and sync
-func (reScheduler *ReScheduler) SyncJobRecentRescheduleReason(ssn *framework.Session) {
-	klog.V(util.LogInfoLev).Info("enter SyncJobRecentRescheduleReason...")
-	defer klog.V(util.LogInfoLev).Info("leave SyncJobRecentRescheduleReason...")
-	if reScheduler == nil {
-		klog.V(util.LogErrorLev).Infof("SyncJobRecentRescheduleReason: %s, nil reScheduler", util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("job reschedule records, sync before: %v", reScheduler.JobRecentRescheduleRecords)
-	defer klog.V(util.LogDebugLev).Infof("job reschedule records, sync after: %v",
-		reScheduler.JobRecentRescheduleRecords)
-	newInfo := make(map[api.JobID]*RescheduleReason)
-	for jobID, rescheduleRecord := range reScheduler.JobRecentRescheduleRecords {
-		if _, ok := ssn.Jobs[jobID]; !ok {
-			// job is no longer in ssn cache, will delete it from cache
-			klog.V(util.LogWarningLev).Infof("job<%s> is not session, job reschedule records will delete it", jobID)
-			continue
-
-		}
-		newInfo[jobID] = rescheduleRecord
-	}
-	reScheduler.JobRecentRescheduleRecords = newInfo
-}
-
 // SynCacheNodeRankOccMapWithSession Synchronise FaultJobs in cache by updating the information using current session
 func (reScheduler *ReScheduler) SynCacheNodeRankOccMapWithSession(ssn *framework.Session) {
-	klog.V(util.LogInfoLev).Info("enter SynCacheNodeRankOccMapWithSession ...")
-	defer klog.V(util.LogInfoLev).Info("leave SynCacheNodeRankOccMapWithSession ...")
+	klog.V(util.LogInfoLev).Infof("enter SynCacheNodeRankOccMapWithSession ...")
+	defer klog.V(util.LogInfoLev).Infof("leave SynCacheNodeRankOccMapWithSession ...")
 	if reScheduler == nil {
 		klog.V(util.LogErrorLev).Infof("SynCacheNodeRankOccMapWithSession: %s, nil reScheduler",
 			util.ArgumentError)
@@ -705,19 +671,7 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		}
 		reScheduler.FaultNodes = append(reScheduler.FaultNodes, faultNode)
 	}
-	reScheduler.setFaultNodeAttrToNPUNode()
-}
-
-func (reScheduler *ReScheduler) setFaultNodeAttrToNPUNode() {
-	for _, fNode := range reScheduler.FaultNodes {
-		if fNode.NodeHealthState == NodeUnhealthy {
-			node, ok := reScheduler.Nodes[fNode.NodeName]
-			if ok {
-				node.IsUnhealthy = true
-				reScheduler.Nodes[fNode.NodeName] = node
-			}
-		}
-	}
+	reScheduler.RealFaultNodes = reScheduler.GetRealFaultNodes()
 }
 
 // RestartNeedForceDeleteJobs Restart jobs that need to be force deleted
@@ -798,9 +752,6 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		klog.V(util.LogErrorLev).Infof("RestartJob %s, err: %s.", schedulerJob.Name, util.SafePrint(restartErr))
 	} else {
 		restartFaultJob.recordFaultJobsToLogs()
-		// update rescheduling reason
-		reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
-			updateRescheduleReason(reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID], restartFaultJob)
 		restartFaultJob.DeleteExecutedFlag = true
 		if restartFaultJob.faultReason == PodFailed {
 			reScheduler.JobRemainRetryTimes[restartFaultJob.JobUID].Times -= 1
@@ -809,65 +760,6 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		klog.V(util.LogWarningLev).Infof("delete %s pod execution success, set flag true", schedulerJob.Name)
 	}
 	return
-}
-
-func updateRescheduleReason(Reasons *RescheduleReason, fJob *FaultJob) *RescheduleReason {
-	if Reasons == nil {
-		Reasons = &RescheduleReason{
-			JobID: fJob.JobUID,
-		}
-	}
-	if fJob == nil {
-		klog.V(util.LogErrorLev).Infof("cannot updateRescheduleReason cause nil FaultJob, err:%s", util.ArgumentError)
-		return nil
-	}
-	var rescheduleRecord RescheduleRecord
-
-	rescheduleInfo := convertFaultTaskToRecords(fJob)
-	now := time.Now()
-	rescheduleRecord.ReasonOfTask = rescheduleInfo
-	rescheduleRecord.RescheduleTimeStamp = now.Unix()
-	// the time layout is the same with klog reschedule "Add Fault"
-	rescheduleRecord.LogFileFormatTime = now.Format("I0102 15:04:05")
-
-	// sort records by timestamp, make the newest records at index 0
-	Reasons.RescheduleRecords = append([]RescheduleRecord{rescheduleRecord}, Reasons.RescheduleRecords...)
-	Reasons.TotalRescheduleTimes += 1
-
-	if len(Reasons.RescheduleRecords) > MaxRescheduleRecordsNum {
-		Reasons.RescheduleRecords = Reasons.RescheduleRecords[:MaxRescheduleRecordsNum]
-	}
-	return Reasons
-}
-
-// convertFaultTaskToRecords convert []FaultTask into []RescheduleTaskReason
-func convertFaultTaskToRecords(fJob *FaultJob) []RescheduleTaskReason {
-	rescheduleInfo := make([]RescheduleTaskReason, 0)
-	if fJob == nil {
-		klog.V(util.LogErrorLev).Infof("cannot convertFaultTaskToRecords cause nil FaultJob, "+
-			"err:%s", util.ArgumentError)
-		return rescheduleInfo
-	}
-	for _, fTask := range fJob.FaultTasks {
-		if !fTask.IsFaultTask {
-			continue
-		}
-		reasonInfo := RescheduleTaskReason{
-			RescheduleReason: fTask.faultType,
-			PodName:          fTask.TaskName,
-			NodeName:         fTask.NodeName,
-			NodeRankIndex:    fTask.NodeRankIndex,
-		}
-		if len(rescheduleInfo) >= MaxRescheduleRecordsNum {
-			klog.V(util.LogWarningLev).Infof(
-				"there were more than %d task is fault task, will not record them "+
-					"into configmap", MaxRescheduleRecordsNum)
-			break
-		}
-		// to avoid too many fault task in one job, fulfill the configmap more than 1Mi
-		rescheduleInfo = append(rescheduleInfo, reasonInfo)
-	}
-	return rescheduleInfo
 }
 
 func updateResetConfigMapWithGraceExit(client kubernetes.Interface, name, nameSpace string, exitCode int) {
@@ -969,8 +861,8 @@ func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, 
 
 // GenerateNodeRankIndexTaskMap get the nodeName, rankIndex, and Occurrence of nodes in a job
 func (reScheduler *ReScheduler) GenerateNodeRankIndexTaskMap() {
-	klog.V(util.LogInfoLev).Info("enter GenerateNodeRankIndexTaskMap ...")
-	defer klog.V(util.LogInfoLev).Info("leave GenerateNodeRankIndexTaskMap ...")
+	klog.V(util.LogInfoLev).Infof("enter GenerateNodeRankIndexTaskMap ...")
+	defer klog.V(util.LogInfoLev).Infof("leave GenerateNodeRankIndexTaskMap ...")
 	if reScheduler == nil {
 		klog.V(util.LogErrorLev).Infof("GenerateNodeRankIndexTaskMap failed: %s, nil reScheduler",
 			util.ArgumentError)
@@ -1084,6 +976,10 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 	fNode, exist := reScheduler.FaultNodeMaps[vcNode.Name]
 	if !exist {
 		return fmt.Errorf("node corresponding not in session")
+	}
+
+	if reScheduler.isNodeUnhealthy(fNode.NodeHealthState) {
+		return fmt.Errorf("task cannot be assigned to %s node", NodeUnhealthy)
 	}
 
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,

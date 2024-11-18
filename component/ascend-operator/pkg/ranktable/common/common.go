@@ -31,9 +31,8 @@ const (
 
 // BaseGenerator is the base struct for ranktable generator.
 type BaseGenerator struct {
-	dir            string
-	path           string
-	configmapExist utils.ConfigmapCheck
+	dir  string
+	path string
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -58,14 +57,6 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	}
 }
 
-func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
-	return r.configmapExist
-}
-
-func (r *BaseGenerator) SetConfigmapExist(exist utils.ConfigmapCheck) {
-	r.configmapExist = exist
-}
-
 // SetStatus is used to set the status of ranktable.
 func (r *BaseGenerator) SetStatus(status utils.RankTableStatus) {
 	r.Status = status
@@ -74,11 +65,6 @@ func (r *BaseGenerator) SetStatus(status utils.RankTableStatus) {
 // GetStatus is used to get the status of ranktable.
 func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
-}
-
-// GetPath is used to get ranktable file path
-func (r *BaseGenerator) GetPath() string {
-	return r.path
 }
 
 // WriteToFile is used to write ranktable to file.
@@ -130,10 +116,7 @@ func (r *BaseGenerator) ToString() (string, error) {
 
 // AddPod is used to add pod to ranktable.
 func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
-	deviceInfo, ok := pod.Annotations[utils.PodDeviceKey]
-	if !ok {
-		return nil
-	}
+	deviceInfo := pod.Annotations[utils.PodDeviceKey]
 	var instance Instance
 	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
 		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v", pod.Namespace, pod.Name,
@@ -179,17 +162,16 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 }
 
 // DeletePod is used to delete pod from ranktable.
-func (r *BaseGenerator) DeletePod(pod *corev1.Pod) utils.RankTableStatus {
+func (r *BaseGenerator) DeletePod(pod *corev1.Pod) {
 	r.servers.Delete(pod.UID)
 	if r.GetStatus() == utils.InitialRTStatus {
-		return utils.InitialRTStatus
+		return
 	}
 	r.SetStatus(utils.InitialRTStatus)
 	if err := r.WriteToFile(); err != nil {
 		hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
 		r.SetStatus(utils.CompletedRTStatus)
 	}
-	return r.GetStatus()
 }
 
 // GatherServerList is used to gather server list.

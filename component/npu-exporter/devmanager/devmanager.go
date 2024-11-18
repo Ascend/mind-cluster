@@ -78,7 +78,6 @@ type DeviceInterface interface {
 	GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInfo, error)
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
-	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
 }
 
 var (
@@ -561,7 +560,7 @@ func (d *DeviceManager) GetDeviceIPAddress(logicID, ipType int32) (string, error
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManager) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	if !common.IsValidTemplateName(d.DevType, vDevInfo.TemplateName) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid template name: %s", vDevInfo.TemplateName)
 	}
@@ -903,69 +902,17 @@ func (d *DeviceManager) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInf
 // GetHccsStatisticInfo get HCCS statistic info
 func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return buildFailedHccsInfo(), fmt.Errorf("input invalid logicID when get hccs statistic info: %d", logicID)
+		return nil, fmt.Errorf("input invalid logicID when get hccs statistic info: %d", logicID)
 	}
 	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
 	if err != nil {
-		return buildFailedHccsInfo(), fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
+		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
 			"when get hccs statistic info, error: %v", logicID, err)
 	}
 	cgoHccsStatusInfo, err := d.DcMgr.DcGetHccsStatisticInfo(cardID, deviceID)
 	if err != nil {
-		return buildFailedHccsInfo(), fmt.Errorf("failed to get hccs statistic info by cardId(%d) deviceID(%d), error: %v",
-			cardID, deviceID, err)
+		return nil, fmt.Errorf("failed to get hccs statistic info by logicID(%d), error: %v", logicID, err)
 	}
 
 	return &cgoHccsStatusInfo, nil
-}
-
-// GetHccsBandwidthInfo get hccs bandwidth info
-func (d *DeviceManager) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
-
-	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return buildFailedHccsBWInfo(), fmt.Errorf("input invalid logicID when get hccs bandwidth info: %d", logicID)
-	}
-	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
-	if err != nil {
-		return buildFailedHccsBWInfo(), fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
-			"when get hccs bandwidth info, error: %v", logicID, err)
-	}
-	cgoHccsBandwidthInfo, err := d.DcMgr.DcGetHccsBandwidthInfo(cardID, deviceID, common.HccsBWProfilingTime)
-	if err != nil {
-		return buildFailedHccsBWInfo(), fmt.Errorf("failed to get hccs bandwidth info by cardId(%d) deviceID(%d), error: %v",
-			cardID, deviceID, err)
-	}
-
-	return &cgoHccsBandwidthInfo, nil
-}
-
-// buildFailedHccsInfo build failed hccs info
-func buildFailedHccsInfo() *common.HccsStatisticInfo {
-	errorResult := &common.HccsStatisticInfo{
-		TxCnt:     make([]uint32, 8),
-		RxCnt:     make([]uint32, 8),
-		CrcErrCnt: make([]uint32, 8),
-	}
-	for i := 0; i < 8; i++ {
-		errorResult.TxCnt[i] = common.FailedValue
-		errorResult.RxCnt[i] = common.FailedValue
-		errorResult.CrcErrCnt[i] = common.FailedValue
-	}
-	return errorResult
-}
-
-// buildFailedHccsBWInfo build failed hccs bandwidth info
-func buildFailedHccsBWInfo() *common.HccsBandwidthInfo {
-	errorResult := &common.HccsBandwidthInfo{
-		ProfilingTime: uint32(common.HccsBWProfilingTime),
-		TotalTxbw:     common.FailedValue,
-		TotalRxbw:     common.FailedValue,
-		TxBandwidth:   make([]float64, 8),
-		RxBandwidth:   make([]float64, 8),
-	}
-	for i := 0; i < 8; i++ {
-		errorResult.TxBandwidth[i] = common.FailedValue
-		errorResult.RxBandwidth[i] = common.FailedValue
-	}
-	return errorResult
 }

@@ -62,14 +62,6 @@ func DeepCopy(info *constant.DeviceInfo) *constant.DeviceInfo {
 	return newDeviceInfo
 }
 
-func DeepCopyInfos(infos map[string]*constant.DeviceInfo) map[string]*constant.DeviceInfo {
-	res := make(map[string]*constant.DeviceInfo)
-	for key, val := range infos {
-		res[key] = DeepCopy(val)
-	}
-	return res
-}
-
 // GetSafeData get data every 1000 DeviceInfo
 func GetSafeData(deviceInfos map[string]*constant.DeviceInfo) []string {
 	if len(deviceInfos) == 0 {

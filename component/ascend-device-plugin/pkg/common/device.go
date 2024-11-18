@@ -121,7 +121,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	}
 }
 
-func getSwitchFaultLevelAndNodeStatus() (string, string) {
+func getSwitchFaultLevelAndNodeStatus() (faultLevel string, NodeStatus string) {
 	maxFaultLevel := 0
 	for _, code := range currentSwitchFault {
 		level := SwitchFaultLevelMap[code.AssembledFaultCode]
@@ -130,7 +130,7 @@ func getSwitchFaultLevelAndNodeStatus() (string, string) {
 		}
 	}
 	SwitchFaultLevelMapLock.Unlock()
-	faultLevel, NodeStatus := NotHandleFaultLevelStr, "Healthy"
+	faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
 	switch maxFaultLevel {
 	case NotHandleFaultLevel:
 		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"

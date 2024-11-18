@@ -330,7 +330,7 @@ func (h *HbmFaultManager) aicFaultEventOutQue(logicId int32) []common.DevFaultIn
 		h.HbmOccurTimeCache[logicId] = 0
 	}
 	newFaultEventQue := make([]common.DevFaultInfo, 0)
-	nowTime := time.Now().UnixMilli()
+	nowTime := time.Now().Unix()
 	for i := 0; i < len(faultEventQue); i++ {
 		// The fault aic error occurring ten seconds before and after the occurrence of hbm error should be deleted,
 		if Int64Tool.Abs(h.HbmOccurTimeCache[logicId], faultEventQue[i].AlarmRaisedTime) <

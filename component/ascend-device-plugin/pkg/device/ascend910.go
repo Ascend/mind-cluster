@@ -46,7 +46,6 @@ var (
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
-	isL3FaultExistMap             map[int32]bool = make(map[int32]bool, common.MaxDevicesNum)
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
@@ -176,32 +175,9 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 				hwlog.RunLog.Errorf("failed to start up hot reset, err: %#v", err)
 				continue
 			}
-			continue
-		}
-		if l3RestartFlag := hnm.handleL2L3FaultRestart(tempFaultInfo); l3RestartFlag {
-			hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
-				"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
-			if err = hnm.startUpHotReset(classifyDevs, tempFaultInfo, dev); err != nil {
-				hwlog.RunLog.Errorf("failed to start up hot reset, err: %#v", err)
-			}
 		}
 	}
 	return err
-}
-
-// handleL2L3FaultRestart restarts when l2l3 faults handling failed
-func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFualtInfo *common.DevFaultInfo) bool {
-	if devFualtInfo.Policy == common.RestartError || devFualtInfo.Policy == common.RestartRequestError {
-		existFlag, ok := isL3FaultExistMap[devFualtInfo.LogicId]
-		if existFlag && ok {
-			isL3FaultExistMap[devFualtInfo.LogicId] = false
-			return true
-		}
-		isL3FaultExistMap[devFualtInfo.LogicId] = true
-	} else {
-		isL3FaultExistMap[devFualtInfo.LogicId] = false
-	}
-	return false
 }
 
 // startUpHotReset starts hot reset goroutine when chips are free

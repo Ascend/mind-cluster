@@ -33,12 +33,6 @@ const (
 	// DefaultExpiredTime indicates the default log cache expired time
 	DefaultExpiredTime = 1
 	cutPreLen          = 46
-	// ProblemOccurMaxNumbers indicates the maximum number of times that the same problem can occur
-	ProblemOccurMaxNumbers = 3
-)
-
-var (
-	errorMap sync.Map
 )
 
 // LogLimiter encapsulates Logs and provides the log traffic limiting capability
@@ -119,44 +113,4 @@ func (l *LogLimiter) validateLimiterConf() {
 	if l.ExpiredTime < 0 || l.ExpiredTime > MaxExpiredTime {
 		l.ExpiredTime = DefaultExpiredTime
 	}
-}
-
-func getKey(domain string, id interface{}) string {
-	return fmt.Sprintf("%d_%s", id, domain)
-}
-
-// IsNeedPrint check whether print the error message,if the error message (domain_id as a unique identifier)
-// has been printed for problemOccurMaxNumbers times, return false
-func IsNeedPrint(domain string, id interface{}) (bool, string) {
-	return IsNeedPrintWithSpecifiedCounts(domain, id, ProblemOccurMaxNumbers)
-}
-
-// IsNeedPrintWithSpecifiedCounts check whether print the error message,
-// if the error message (domain_id as a unique identifier) has been printed
-// for problemOccurMaxNumbers times, return false
-func IsNeedPrintWithSpecifiedCounts(domain string, id interface{}, problemOccurMaxNumbers int) (bool, string) {
-	key := getKey(domain, id)
-	cnt, _ := errorMap.LoadOrStore(key, 0)
-	intCnt, ok := cnt.(int)
-	extraErrLog := ""
-	if !ok {
-		// the counter type is abnormal, print by default
-		return true, extraErrLog
-	}
-	if intCnt >= problemOccurMaxNumbers {
-		return false, extraErrLog
-	}
-	intCnt += 1
-	errorMap.Store(key, intCnt)
-	if intCnt == problemOccurMaxNumbers {
-		extraErrLog = fmt.Sprintf(".The error log has been printed for %v times "+
-			"and will not be printed any more", problemOccurMaxNumbers)
-	}
-	return true, extraErrLog
-
-}
-
-// ResetErrCnt reset the error count
-func ResetErrCnt(domain string, id interface{}) {
-	errorMap.Delete(getKey(domain, id))
 }

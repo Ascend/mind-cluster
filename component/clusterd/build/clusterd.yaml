@@ -70,14 +70,9 @@ spec:
     metadata:
       labels:
         app: clusterd
-      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
-      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#      securityContext:
-#        seccompProfile:
-#          type: RuntimeDefault
       nodeSelector:
         masterselector: dls-master-node
       serviceAccountName: clusterd
@@ -96,18 +91,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
-          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0" ]
+          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/cluster-info.log -logLevel=0" ]
           securityContext:
-            allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            capabilities:
-              drop: ["ALL"]
           volumeMounts:
             - name: log-clusterd
               mountPath: /var/log/mindx-dl/clusterd

@@ -23,62 +23,54 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
-// GetJobInfo return job's name, podGroup name and namespace
-func GetJobInfo(jobId string) (jobName, pgName, namespace string) {
-	if kube.JobMgr == nil {
-		hwlog.RunLog.Error("job mgr is nil")
-		return "", "", ""
-	}
-	worker := kube.JobMgr.GetBsWorker(jobId)
-	if worker == nil {
-		hwlog.RunLog.Errorf("jobId=%s not exist", jobId)
-		return "", "", ""
-	}
-	info := worker.GetBaseInfo()
-	return info.JobName, info.PGName, info.Namespace
+var state2String map[MachineState]string = map[MachineState]string{
+	INIT: "INIT",
+
+	SentStopTrain:          "SentStopTrain",
+	ReceiveStopFinish:      "ReceiveStopFinish",
+	SentGlobalFault:        "SentGlobalFault",
+	ReceiveSupportStrategy: "ReceiveSupportStrategy",
+	ReceiveRecoverStatus:   "ReceiveRecoverStatus",
+
+	ReceiveStepRetry:       "ReceiveStepRetry",
+	ReceiveStepRetryStatus: "ReceiveStepRetryStatus",
+
+	StartPodReschedule: "StartPodReschedule",
 }
 
-// Faults2String return string of faults
-func Faults2String(faults []*pb.FaultRank) string {
-	if len(faults) == 0 {
-		return ""
-	}
-	faultInfo := make([]string, 0, len(faults))
-	for _, item := range faults {
-		faultInfo = append(faultInfo, item.RankId+":"+item.FaultType)
-	}
-	return strings.Join(faultInfo, ",")
+var mode2String map[RecoverMode]string = map[RecoverMode]string{
+	InitMode:                "InitMode",
+	HbmFaultStepRetryMode:   "HbmFaultStepRetryMode",
+	ProcessFaultRecoverMode: "ProcessFaultRecoverMode",
+	PodRescheduleMode:       "PodReschedule",
 }
 
-// StrategySupported check strategy supported
-func StrategySupported(strategy string) bool {
-	return strategy == ProcessRetryStrategyName || strategy == ProcessRecoverStrategyName ||
-		strategy == ProcessDumpStrategyName || strategy == ProcessExitStrategyName
+var level2string map[int]string = map[int]string{
+	ArfRecoverLevel:  ProcessArfStrategy,
+	DumpRecoverLevel: ProcessDumpStrategy,
+	ExitRecoverLevel: ProcessExitStrategy,
 }
 
-// GetRecoverBaseInfo get recover config
-func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error) {
-	config := RecoverConfig{}
-	pg, err := kube.RetryGetPodGroup(name, namespace, GetPodGroupTimes)
-	if err != nil {
-		return config, OperatePodGroupError, err
+var string2level map[string]int = map[string]int{
+	ProcessArfStrategy:  ArfRecoverLevel,
+	ProcessDumpStrategy: DumpRecoverLevel,
+	ProcessExitStrategy: ExitRecoverLevel,
+}
+
+// LevelToString translate process recover level to recover name
+func LevelToString(level int) string {
+	if str, ok := level2string[level]; ok {
+		return str
 	}
-	_, config.PlatFormMode = pg.Annotations[ProcessRecoverStrategy]
-	mindXConfig, ok := pg.Annotations[MindXRecoverStrategies]
-	strategyList := strings.Split(mindXConfig, ",")
-	for _, strategy := range strategyList {
-		if StrategySupported(strategy) {
-			config.MindXConfigStrategies = append(config.MindXConfigStrategies, strategy)
-		}
+	return "unknown_strategy"
+}
+
+// StringToLevel translate process recover name to recover level
+func StringToLevel(name string) int {
+	if level, ok := string2level[name]; ok {
+		return level
 	}
-	config.MindXConfigStrategies = append(config.MindXConfigStrategies, ProcessExitStrategyName)
-	value, ok := pg.Labels[ProcessReschedulingLabel]
-	if !ok {
-		hwlog.RunLog.Warn("can not find process rescheduling label")
-		config.ProcessRescheduleOn = false
-	}
-	config.ProcessRescheduleOn = value == ProcessReschedulingEnable
-	return config, OK, nil
+	return -1
 }
 
 // SendRetry send signal util send success or retry times upper retryTimes
@@ -94,12 +86,33 @@ func SendRetry(sender SignalRetrySender, signal *pb.ProcessManageSignal, retryTi
 	return err
 }
 
+// ModeToString return string of RecoverMode
+func ModeToString(mode RecoverMode) string {
+	str, _ := mode2String[mode]
+	return str
+}
+
+// StateToString return string of MachineState
+func StateToString(state MachineState) string {
+	str, _ := state2String[state]
+	return str
+}
+
+// String join MachineState slice string
+func (ms MachineStates) String() string {
+	var stateStrs []string
+	for _, state := range ms {
+		stateStrs = append(stateStrs, StateToString(state))
+	}
+	return strings.Join(stateStrs, ",")
+}
+
 // NewEventId return uuid according randLen
 func NewEventId(randLen int) string {
 	timestamp := time.Now().UnixNano()
 	randomNumberHex := ""
-	if randLen > MaxUuidRandomLength || randLen <= 0 {
-		randLen = MaxUuidRandomLength
+	if randLen > RandLength || randLen < 1 {
+		randLen = RandLength
 	}
 	randomNumber := make([]byte, randLen)
 	_, err := io.ReadFull(rand.Reader, randomNumber)
@@ -107,6 +120,16 @@ func NewEventId(randLen int) string {
 		randomNumberHex = hex.EncodeToString(randomNumber)
 	}
 	return fmt.Sprintf("%X-%s", timestamp, randomNumberHex)
+}
+
+// CheckOrder return whether try change state order mixed
+func CheckOrder(state MachineState, expectPreStates []MachineState) bool {
+	for _, oldState := range expectPreStates {
+		if state == oldState {
+			return true
+		}
+	}
+	return false
 }
 
 // ChangeProcessSchedulingMode change process scheduling mode
@@ -184,7 +207,7 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	newTaskInfo.RankList = []*TaskDevInfo{}
 	newTaskInfo.UpdateTime = time.Now().Unix()
 	newTaskInfo.RetryTime = oldTaskResetInfo.RetryTime
-	if operation == RestartAllProcessOperation {
+	if operation == RestartAllProcess {
 		newTaskInfo.RetryTime += 1
 	}
 	if operation != FaultRankStatus {

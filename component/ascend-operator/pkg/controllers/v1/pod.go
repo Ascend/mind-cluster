@@ -21,7 +21,6 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -41,10 +40,8 @@ import (
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 )
 
@@ -93,7 +90,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	frame string) (*podInfo,
 	error) {
 
-	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
+	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame)
 	if err != nil {
 		return nil, err
 	}
@@ -151,22 +148,6 @@ func (r *ASJobReconciler) reconcilePods(pi *podInfo, pods []*corev1.Pod, jobStat
 	return r.createPods(podToCreate, replicas)
 }
 
-func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
-	for _, p := range allocatedPods {
-		if _, rankExist := p.Annotations[rankIndexKey]; rankExist {
-			hwlog.RunLog.Info("rank index exist")
-			return
-		}
-	}
-	var rankIndex uint64 = 0
-	for _, p := range allocatedPods {
-		p.Annotations[rankIndexKey] = strconv.FormatUint(rankIndex, decimal)
-		r.Update(context.TODO(), p)
-		rankIndex++
-	}
-	hwlog.RunLog.Info("write rank index success")
-}
-
 func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	hwlog.RunLog.Infof("generating rank table for job %s", ji.name)
 	rtg, ok := r.rtGenerators[ji.mtObj.GetUID()]
@@ -185,11 +166,11 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 			allocatedPods = append(allocatedPods, p)
 		}
 	}
-	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d", len(allocatedPods), ji.totalReplicas, len(ji.pods))
-	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
+	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d", len(allocatedPods), ji.totalReplicas)
+	if len(allocatedPods) != int(ji.totalReplicas) {
 		return
 	}
-	r.updateRandIndex(allocatedPods)
+
 	errs := &sync.Map{}
 	errCount := int32(0)
 	wg := &sync.WaitGroup{}
@@ -211,51 +192,10 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	r.saveRanktable(rtg, ji)
-}
-
-func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jobInfo) {
-	saveRanktableSuccess := true
-	if filepathExist(rtg.GetPath()) {
-		saveRanktableSuccess = (rtg.WriteToFile() == nil)
-	}
-	if r.configmapExist(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
-		saveRanktableSuccess = r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID()) && saveRanktableSuccess
-	}
-	if !saveRanktableSuccess {
-		hwlog.RunLog.Error("failed to write rank table")
+	if err := rtg.WriteToFile(); err != nil {
+		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
 		rtg.SetStatus(utils.InitialRTStatus)
 	}
-}
-
-func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
-	configmapExist := rtg.GetConfigmapExist()
-	if configmapExist == utils.ConfigmapExsit {
-		return true
-	}
-	if configmapExist == utils.ConfigmapNotExist {
-		return false
-	}
-	configmapName := configmapPrefix + jobName
-	cm := &corev1.ConfigMap{}
-	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
-	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
-		rtg.SetConfigmapExist(utils.ConfigmapNotExist)
-		return false
-	}
-	rtg.SetConfigmapExist(utils.ConfigmapExsit)
-	return true
-}
-
-func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {
-	// try to write configmap
-	for i := 0; i < cmRetryTime; i++ {
-		if err := r.writeRanktableToCm(jobName, namespace, uid); err == nil {
-			return true
-		}
-		time.Sleep(1 * time.Second)
-	}
-	return false
 }
 
 func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {
@@ -378,8 +318,9 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 	}
 
 	indexStr := strconv.Itoa(pi.index)
-	status := getNonWorkerPodMountChipStatus(pi.job)
-	if status && pi.rtype == mindxdlv1.ReplicaTypeWorker {
+
+	if (pi.frame == mindxdlv1.PytorchFrameworkName || pi.frame == mindxdlv1.TensorflowFrameworkName) &&
+		pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		if pi.index == math.MaxInt {
 			return nil, errors.New("rank is the max int")
 		}
@@ -416,8 +357,7 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 }
 
 func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) error {
-	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 &&
-		pi.rtype == mindxdlv1.ReplicaTypeWorker {
+	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 {
 		return nil
 	}
 	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)

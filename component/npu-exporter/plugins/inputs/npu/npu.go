@@ -34,9 +34,8 @@ import (
 const (
 	defaultLogPath = "/var/log/mindx-dl/npu-exporter/npu-plugin.log"
 
-	aiCore  = common.DeviceType(2)
-	hbm     = common.DeviceType(6)
-	overall = common.DeviceType(13)
+	aiCore = common.DeviceType(2)
+	hbm    = common.DeviceType(6)
 
 	mega                = 1024 * 1024
 	maxLogBackups       = 2
@@ -173,15 +172,12 @@ func (npu *WatchNPU) packDcmiInfo(devID int32, fields map[string]interface{}, ac
 		fields["npu_chip_info_hbm_used_memory"] = hbmInfo.Usage * mega
 	}
 	if power, err := npu.devManager.GetDevicePowerInfo(devID); err != nil {
-		acc.AddError(fmt.Errorf("get power of npu failed: %v", err))
+		acc.AddError(fmt.Errorf("get hbm rate of npu failed: %v", err))
 	} else {
 		fields["npu_chip_info_power"] = power
 	}
 	npu.collectSioInfo(devID, fields, acc)
 	npu.collectHccsInfo(devID, fields, acc)
-	npu.collectVoltageInfo(devID, fields, acc)
-	npu.collectNpuFreqInfo(devID, fields, acc)
-	npu.collectNpuProcessInfo(devID, fields, acc)
 	codeNum, errCodes, err := npu.devManager.GetDeviceAllErrorCode(devID)
 	if err != nil {
 		acc.AddError(fmt.Errorf("get err code failed: %v", err))
@@ -199,10 +195,9 @@ func (npu *WatchNPU) packDcmiInfo(devID int32, fields map[string]interface{}, ac
 
 func (npu *WatchNPU) collectSioInfo(devID int32, fields map[string]interface{}, acc telegraf.Accumulator) {
 	if fields == nil {
-		acc.AddError(fmt.Errorf(receivedFieldsNil))
+		acc.AddError(fmt.Errorf("received fields is nil"))
 		return
 	}
-
 	if npu.devManager.GetDevType() == common.Ascend910A3 {
 		if sioInfo, err := npu.devManager.GetSioInfo(devID); err != nil {
 			acc.AddError(fmt.Errorf("get sio info of npu failed: %v", err))
@@ -210,59 +205,6 @@ func (npu *WatchNPU) collectSioInfo(devID int32, fields map[string]interface{}, 
 			fields["npu_chip_info_sio_crc_tx_err_cnt"] = sioInfo.TxErrCnt
 			fields["npu_chip_info_sio_crc_rx_err_cnt"] = sioInfo.RxErrCnt
 		}
-	}
-}
-
-// collectVoltageInfo collect voltage of npu
-func (npu *WatchNPU) collectVoltageInfo(devID int32, fields map[string]interface{}, acc telegraf.Accumulator) {
-	if fields == nil {
-		acc.AddError(fmt.Errorf(receivedFieldsNil))
-		return
-	}
-
-	vol, err := npu.devManager.GetDeviceVoltage(devID)
-	if err != nil {
-		acc.AddError(fmt.Errorf("get voltage of npu failed: %v", err))
-		return
-	}
-	fields["npu_chip_info_voltage"] = vol
-}
-
-// collectNpuFreqInfo collect current freq of npu
-func (npu *WatchNPU) collectNpuFreqInfo(devID int32, fields map[string]interface{}, acc telegraf.Accumulator) {
-	if fields == nil {
-		acc.AddError(fmt.Errorf(receivedFieldsNil))
-		return
-	}
-
-	freq, err := npu.devManager.GetDeviceFrequency(devID, common.AICoreCurrentFreq)
-	if err != nil {
-		acc.AddError(fmt.Errorf("get current freq of npu failed: %v", err))
-		return
-	}
-	fields["npu_chip_info_aicore_current_freq"] = freq
-
-}
-
-// collectNpuProcessInfo collect current process memeory of npu
-func (npu *WatchNPU) collectNpuProcessInfo(devID int32, fields map[string]interface{}, acc telegraf.Accumulator) {
-	if fields == nil {
-		acc.AddError(fmt.Errorf(receivedFieldsNil))
-		return
-	}
-
-	devProcessInfo, err := npu.devManager.GetDevProcessInfo(devID)
-	if err != nil {
-		acc.AddError(fmt.Errorf("get current process info of npu failed: %v", err))
-		return
-	}
-	if devProcessInfo.ProcNum == 0 {
-		fields["npu_chip_info_process_info"] = 0
-		return
-	}
-	for i := int32(0); i < devProcessInfo.ProcNum; i++ {
-		procInfo := devProcessInfo.DevProcArray[i]
-		fields["npu_chip_info_process_info_"+strconv.Itoa(int(procInfo.Pid))] = procInfo.MemUsage
 	}
 }
 
@@ -274,11 +216,8 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 	}
 	hccsStatisticInfo, err := npu.devManager.GetHccsStatisticInfo(devID)
 	if err != nil {
-		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccs, devID); needPrint {
-			acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v %s", err, extraErrLog))
-		}
-	} else {
-		hwlog.ResetErrCnt(common.DomainForHccs, devID)
+		acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v", err))
+		return
 	}
 	var hccsBeginIndex int
 	if devType == common.Ascend910B || common.IsA900A3SuperPod(npu.devManager.GetMainBoardId()) {
@@ -288,6 +227,7 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 		// A9000A3SuperPod begin at 2nd bit
 		hccsBeginIndex = 2
 	}
+
 	for i := hccsBeginIndex; i < dcmiHccsMaxCounts; i++ {
 		doUpdateFields(acc, fields, "npu_chip_info_hccs_statistic_info_tx_cnt_"+fmt.Sprintf("%d", i),
 			hccsStatisticInfo.TxCnt[i])
@@ -295,49 +235,18 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 			hccsStatisticInfo.RxCnt[i])
 		doUpdateFields(acc, fields, "npu_chip_info_hccs_statistic_info_crc_err_cnt_"+fmt.Sprintf("%d", i),
 			hccsStatisticInfo.CrcErrCnt[i])
-		doUpdateFields(acc, fields, "npu_chip_info_hccs_statistic_info_crc_err_cnt_"+fmt.Sprintf("%d", i),
-			hccsStatisticInfo.CrcErrCnt[i])
 	}
-	hccsBandwidthInfo, err := npu.devManager.GetHccsBandwidthInfo(devID)
-	if err != nil {
-		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccsBW, devID); needPrint {
-			acc.AddError(fmt.Errorf("get hccs bandwidth info of npu failed: %v %s", err, extraErrLog))
-		}
-	} else {
-		hwlog.ResetErrCnt(common.DomainForHccsBW, devID)
-	}
-	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_profiling_time", hccsBandwidthInfo.ProfilingTime)
-	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_total_tx", hccsBandwidthInfo.TotalTxbw)
-	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_total_rx", hccsBandwidthInfo.TotalTxbw)
-	for i := hccsBeginIndex; i < dcmiHccsMaxCounts; i++ {
-		doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_tx_"+fmt.Sprintf("%d", i),
-			hccsBandwidthInfo.TxBandwidth[i])
-		doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_rx_"+fmt.Sprintf("%d", i),
-			hccsBandwidthInfo.RxBandwidth[i])
-	}
+
 }
 
 // doUpdateFields update fields
-func doUpdateFields(acc telegraf.Accumulator, fields map[string]interface{}, key string, value interface{}) {
+func doUpdateFields(acc telegraf.Accumulator, fields map[string]interface{}, key string, value uint32) {
+	// if filter is true , update when value is not zero
 	if fields == nil {
-		acc.AddError(fmt.Errorf(receivedFieldsNil))
+		acc.AddError(fmt.Errorf("received fields is nil"))
 		return
 	}
-	var finalValue float64
-
-	switch value.(type) {
-	case float64:
-		finalValue = value.(float64)
-	case uint32:
-		finalValue = float64(value.(uint32))
-	default:
-		hwlog.RunLog.Warn("Invalid param in function doUpdateHccsMetric")
-	}
-
-	if finalValue == common.FailedValue {
-		finalValue = common.FailedMetricValue
-	}
-	fields[key] = finalValue
+	fields[key] = value
 }
 
 func (npu *WatchNPU) collectUtilizationRate(devID int32, fields map[string]interface{}, acc telegraf.Accumulator) {
@@ -356,11 +265,6 @@ func (npu *WatchNPU) collectUtilizationRate(devID int32, fields map[string]inter
 		acc.AddError(fmt.Errorf("get hbm rate of npu failed: %v", err))
 	} else {
 		fields["npu_chip_info_hbm_utilization"] = float64(hbmUtil)
-	}
-	if overallUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, overall); err != nil {
-		acc.AddError(fmt.Errorf("get device overall utilization rate of npu failed: %v", err))
-	} else {
-		fields["npu_chip_info_overall_utilization"] = float64(overallUtil)
 	}
 }
 
@@ -388,7 +292,6 @@ func (npu *WatchNPU) packHccnInfo(devID int32, fields map[string]interface{}, ac
 		acc.AddError(fmt.Errorf(receivedFieldsNil))
 		return nil
 	}
-
 	phyID, err := npu.devManager.GetPhysicIDFromLogicID(devID)
 	if err != nil {
 		acc.AddError(fmt.Errorf("get devID of npu failed: %v", err))

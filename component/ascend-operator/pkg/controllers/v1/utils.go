@@ -21,8 +21,8 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
-	"os"
-	"path/filepath"
+	"errors"
+	"math"
 	"strconv"
 	"strings"
 
@@ -130,16 +130,34 @@ func getNpuReqInfoPerPod(job *mindxdlv1.AscendJob) (string, int) {
 	return "", 0
 }
 
+func getRealRank(rtype, index, frame string) (int, error) {
+	rank, err := strconv.Atoi(index)
+	if err != nil {
+		return 0, err
+	}
+
+	if frame == mindxdlv1.MindSporeFrameworkName || rtype != strings.ToLower(string(mindxdlv1.ReplicaTypeWorker)) {
+		return rank, nil
+	}
+
+	if rank == math.MaxInt {
+		return 0, errors.New("rank is the max int")
+	}
+	return rank + 1, nil
+}
+
 func getNpuWorkerSpec(job *mindxdlv1.AscendJob) *commonv1.ReplicaSpec {
-	status := getNonWorkerPodMountChipStatus(job)
-	for rtype, spec := range job.Spec.ReplicaSpecs {
-		if status {
-			return spec
-		}
-		if rtype == mindxdlv1.ReplicaTypeWorker {
+	workerSpec, ok := job.Spec.ReplicaSpecs[mindxdlv1.ReplicaTypeWorker]
+	if ok {
+		return workerSpec
+	}
+
+	for rt, spec := range job.Spec.ReplicaSpecs {
+		if rt != mindxdlv1.MindSporeReplicaTypeScheduler {
 			return spec
 		}
 	}
+
 	return nil
 }
 
@@ -154,9 +172,8 @@ func localRankStr(req int) string {
 
 func getTotalNpuReplicas(job *mindxdlv1.AscendJob) int {
 	jobReplicas := int32(0)
-	status := getNonWorkerPodMountChipStatus(job)
 	for rtype, spec := range job.Spec.ReplicaSpecs {
-		if !status && rtype != mindxdlv1.ReplicaTypeWorker {
+		if rtype == mindxdlv1.MindSporeReplicaTypeScheduler {
 			continue
 		}
 		jobReplicas += *spec.Replicas
@@ -247,62 +264,4 @@ func filterPodsByReplicaType(pods []*corev1.Pod, rt string) []*corev1.Pod {
 		}
 	}
 	return filtered
-}
-
-func checkNonWorkerRplMountChips(ji *jobInfo) bool {
-	for rtype, spec := range ji.rpls {
-		if rtype == mindxdlv1.ReplicaTypeWorker {
-			continue
-		}
-		if checkContainersResourceReq(spec.Template.Spec.Containers) {
-			return true
-		}
-	}
-	return false
-}
-
-func checkContainersResourceReq(containers []corev1.Container) bool {
-	for _, container := range containers {
-		if container.Name == mindxdlv1.DefaultContainerName {
-			rNum := getContainerResourceReq(container)
-			if rNum > 0 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func getNonWorkerPodMountChipStatus(job *mindxdlv1.AscendJob) bool {
-	annotations := job.GetAnnotations()
-	status, ok := annotations[nonWorkerPodMountChipStatus]
-	if !ok {
-		return false
-	}
-	return status == "true"
-
-}
-
-func checkNpuPod(pi *podInfo) bool {
-	for rtype, spec := range pi.job.Spec.ReplicaSpecs {
-		if rtype != pi.rtype {
-			continue
-		}
-		return checkContainersResourceReq(spec.Template.Spec.Containers)
-	}
-	return false
-}
-
-// check wether ranktable file path exist and has permission
-func filepathExist(filePath string) bool {
-	dirPath := filepath.Dir(filePath)
-	_, err := os.Stat(dirPath)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	hwlog.RunLog.Errorf("Ranktable file path exists but has no permission : %v", err)
-	return false
 }

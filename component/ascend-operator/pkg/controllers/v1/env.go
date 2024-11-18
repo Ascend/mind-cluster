@@ -62,9 +62,6 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 			addEnvValue(podTemplate, msSchedPort, pi.port, i)
 			addEnvValue(podTemplate, msServerNum, "0", i)
 			addEnvValue(podTemplate, msRole, msRoleMap[pi.rtype], i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
-
-			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -87,7 +84,6 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 			addEnvValue(podTemplate, ptRank, strconv.Itoa(pi.rank), i)
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -120,7 +116,6 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, tfChiefDevice, "0", i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
 				Name: tfWorkerIP,
 				ValueFrom: &corev1.EnvVarSource{

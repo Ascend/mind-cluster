@@ -32,16 +32,10 @@ var reSchedulerConfigmap *DealReSchedulerConfigmap
 const (
 	// RePropertyName name specifying re-scheduler cm
 	RePropertyName = "re-scheduling"
-	// ReschedulingReasonKey is used to record the reason of rescheduling
-	ReschedulingReasonKey = "rescheduling-reason"
 	// CmName Name of ReSchedulerConfigmap
 	CmName = "vcjob-fault-npu-cm"
 	// CmNameSpace Namespace of ReSchedulerConfigmap
 	CmNameSpace = "volcano-system"
-	// RescheduleReasonCmName Name of RescheduleReasonConfigmap
-	RescheduleReasonCmName = "job-reschedule-reason"
-	// RescheduleReasonCmNamespace Namespace of RescheduleReasonConfigmap
-	RescheduleReasonCmNamespace = "mindx-dl"
 
 	// JobRescheduleLabelKey key word of re-scheduling configuration
 	JobRescheduleLabelKey = "fault-scheduling"
@@ -93,15 +87,6 @@ const (
 	CmNodeHeartbeatKind = "node-heartbeat"
 	// CmJobRemainRetryTimes judging node fault needs heartbeat info from former session, so should be recorded
 	CmJobRemainRetryTimes = "remain-retry-times"
-	// MaxRescheduleRecordsNum the upper limit of the cm kept reschedule records, oldest record will be deleted
-	// if record more than MaxRescheduleRecordsNum records
-	MaxRescheduleRecordsNum = 10
-	// MaxKbOfRescheduleRecords the upper limit words of the cm kept reschedule records
-	MaxKbOfRescheduleRecords = 950 * 1024
-	// ReduceRetryTimeLimit is the time limit of reduce loop
-	ReduceRetryTimeLimit = 20
-	// CmJobRescheduleReasonsKey keeping recent MaxRescheduleRecordsNum records of rescheduling
-	CmJobRescheduleReasonsKey = "recent-reschedule-records"
 	// CmNodeRankTimeMapKind record map jobUID rankIndex node and times of occurrence
 	CmNodeRankTimeMapKind = "node-rankIndex-Occurrence"
 	// CmCheckCode Check code key
@@ -208,46 +193,13 @@ type FaultNodeInfoToCm struct {
 type DealReSchedulerCache struct {
 	*DealReSchedulerConfigmap
 	FaultNodes                 []FaultNode
+	RealFaultNodes             []FaultNode                `json:"-"`
 	FaultNodeMaps              map[string]SimpleFNodeInfo `json:"-"`
 	FaultJobs                  []FaultJob
 	RealFaultJobs              []FaultJob `json:"-"`
 	NodeHeartbeats             []NodeHeartbeat
 	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 	JobRemainRetryTimes        map[api.JobID]*RemainRetryTimes
-	JobRecentRescheduleRecords map[api.JobID]*RescheduleReason
-}
-
-// RescheduleReason shows the reason of this job rescheduling
-type RescheduleReason struct {
-	// JobID the job id of this record
-	JobID api.JobID
-	// TotalRescheduleTimes to show how many times reschedule has happened since job created
-	TotalRescheduleTimes int
-	// RescheduleRecords keep recent MaxRescheduleRecordsNum records of rescheduling
-	RescheduleRecords []RescheduleRecord
-	// AdditionalInfo is used to provide additional information, such as for length concern reduce some records
-	AdditionalInfo string `json:",omitempty"`
-}
-
-// RescheduleRecord will records job rescheduling records
-type RescheduleRecord struct {
-	// LogFileFormatTime is the formated time, to make it convenient to read and locate log
-	LogFileFormatTime string
-	// RescheduleTimeStamp time.now.unix() indicates when the rescheduling happened
-	RescheduleTimeStamp int64
-	// ReasonOfTask record the reason of this rescheduling of task
-	ReasonOfTask []RescheduleTaskReason
-}
-
-type RescheduleTaskReason struct {
-	// RescheduleReason the fault type of this rescheduling
-	RescheduleReason string
-	// PodName the fault task caused this rescheduling
-	PodName string
-	// NodeName the fault node caused this rescheduling
-	NodeName string
-	// NodeRankIndex the rank index of the fault task
-	NodeRankIndex string
 }
 
 // RemainRetryTimes remained retry times

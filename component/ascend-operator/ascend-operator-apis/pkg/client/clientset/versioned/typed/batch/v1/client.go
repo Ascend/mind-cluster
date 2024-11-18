@@ -21,10 +21,10 @@ package v1
 import (
 	"net/http"
 
+	"ascend-operator-apis/pkg/client/clientset/versioned/scheme"
 	"k8s.io/client-go/rest"
 
 	"ascend-operator-apis/pkg/apis/batch/v1"
-	"ascend-operator-apis/pkg/client/clientset/versioned/scheme"
 )
 
 // BatchV1Interface is a batch client interface.
@@ -95,6 +95,16 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*BatchV1Client, erro
 		return nil, err
 	}
 	return &BatchV1Client{restClient: client}, nil
+}
+
+// NewForConfigOrDie creates a new BatchV1alpha1Client for the given config and
+// panics if there is an error in the config.
+func NewForConfigOrDie(c *rest.Config) *BatchV1Client {
+	client, err := NewForConfig(c)
+	if err != nil {
+		panic(err)
+	}
+	return client
 }
 
 // New creates a new BatchV1alpha1Client for the given RESTClient.

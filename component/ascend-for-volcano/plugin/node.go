@@ -94,7 +94,6 @@ type SwitchFaultInfo struct {
 type NPUNode struct {
 	CommonNode
 	VNode
-	IsUnhealthy       bool
 	devInfoUpdateTime int64
 }
 
@@ -265,7 +264,6 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfos map[st
 		klog.V(util.LogInfoLev).Infof("InitNPUNodeByNodeInf failed: %s.", util.ArgumentError)
 		return errors.New(util.ArgumentError)
 	}
-	n.IsUnhealthy = false
 	data, getErr := deviceInfos[npuNode.Name]
 	if !getErr || data.DeviceList == nil {
 		return fmt.Errorf("getNodeDeviceInfoFromCM %s failed", npuNode.Name)
@@ -535,16 +533,12 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("NodePredicate vc-job:%#v is not npu job.", vcJob)
 		return nil
 	}
-
+	if !IsNPUTask(taskInfo) {
+		return nil
+	}
 	vcNode, ok := sHandle.Nodes[nodeInfo.Name]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NodePredicate %s not in.", nodeInfo.Name)
-		return nil
-	}
-	if vcNode.IsUnhealthy {
-		return fmt.Errorf("node is unhealthy")
-	}
-	if !IsNPUTask(taskInfo) {
 		return nil
 	}
 	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {

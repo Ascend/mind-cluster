@@ -167,37 +167,6 @@ func TestGetNPUInfo(t *testing.T) {
 	}
 }
 
-// TestGetNPUInfoFor910A3 test method of getNPUInfo for 910A3
-func TestGetNPUInfoFor910A3(t *testing.T) {
-	tests := []struct {
-		name string
-		args devmanager.DeviceInterface
-		want []HuaWeiNPUCard
-	}{
-		{
-			name: "should return at lease one NPUInfo",
-			args: &devmanager.DeviceManager910A3Mock{},
-			want: []HuaWeiNPUCard{{
-				DeviceList: nil,
-				Timestamp:  time.Time{},
-				CardID:     0,
-			}},
-		},
-		{
-			name: "should return zero NPU",
-			args: &devmanager.DeviceManager910A3MockErr{},
-			want: []HuaWeiNPUCard{},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getNPUInfo(tt.args); len(got) != len(tt.want) {
-				t.Errorf("getNPUInfo() = %#v,want %#v", got, tt.want)
-			}
-		})
-	}
-}
-
 type newNpuCollectorTestCase struct {
 	cacheTime    time.Duration
 	updateTime   time.Duration
@@ -240,7 +209,7 @@ func mockGetNPUInfo(dmgr devmanager.DeviceInterface) []HuaWeiNPUCard {
 	for devicePhysicID := int32(0); devicePhysicID < npuCount; devicePhysicID++ {
 		chipInfo := &HuaWeiAIChip{
 			HealthStatus:      Healthy,
-			ErrorCodes:        []int64{},
+			ErrorCode:         0,
 			Utilization:       0,
 			Temperature:       0,
 			Power:             0,

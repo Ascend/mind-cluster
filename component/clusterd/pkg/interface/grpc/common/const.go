@@ -3,32 +3,78 @@
 // Package common is grpc common types and functions
 package common
 
-// process signal type
 const (
-	// KillMasterSignalType kill master agent
-	KillMasterSignalType = "killMaster"
 	// StopTrainSignalType stop train signal type
 	StopTrainSignalType = "stopTrain"
 	// GlobalFaultSignalType global fault ranks signal type
 	GlobalFaultSignalType = "globalFault"
 	// ChangeStrategySignalType change strategy signal type
 	ChangeStrategySignalType = "changeStrategy"
-	// KeepAliveSignalType keep alive signal type
-	KeepAliveSignalType = "keep-alive"
+
+	// ProcessArfStrategy online process recover strategy
+	ProcessArfStrategy = "arf"
+	// ProcessDumpStrategy save checkpoint and grace restart process recover strategy
+	ProcessDumpStrategy = "dump"
+	// ProcessExitStrategy directly restart process recover strategy
+	ProcessExitStrategy = "exit"
+
+	// ArfRecoverLevel arf strategy level
+	ArfRecoverLevel = 0
+	// DumpRecoverLevel dump strategy level
+	DumpRecoverLevel = 1
+	// ExitRecoverLevel exit strategy level
+	ExitRecoverLevel = 2
+	// RandLength random number length
+	RandLength = 32
 )
 
-// recover strategy name
+// MachineState is recover state
+type MachineState int
+
 const (
-	// MindXRecoverStrategies config in pod group label for supported strategy
-	MindXRecoverStrategies = "mindx-recover-strategy"
-	// ProcessRetryStrategyName strategy name of HBM fault step retry
-	ProcessRetryStrategyName = "retry"
-	// ProcessRecoverStrategyName strategy name of process online recover
-	ProcessRecoverStrategyName = "recover"
-	// ProcessDumpStrategyName strategy name of save check point
-	ProcessDumpStrategyName = "dump"
-	// ProcessExitStrategyName strategy name of directly exit
-	ProcessExitStrategyName = "exit"
+	// INIT init state
+	INIT MachineState = iota
+
+	// SentStopTrain sent stop train
+	SentStopTrain
+	// ReceiveStopFinish receive stop finish
+	ReceiveStopFinish
+	// SentGlobalFault sent global fault ranks
+	SentGlobalFault
+	// ReceiveSupportStrategy sent decide strategy
+	ReceiveSupportStrategy
+	// StartListenSchedule start listen schedule result
+	StartListenSchedule
+	// GetJobScheduleResult already get job schedule result
+	GetJobScheduleResult
+	// ListenCheckPointSave listen checkpoint save result
+	ListenCheckPointSave
+	// ListenOnlineRecoverStatus listen online recover status
+	ListenOnlineRecoverStatus
+	// ReceiveRecoverStatus receive process recover status
+	ReceiveRecoverStatus
+
+	// ReceiveStepRetry receive step retry request
+	ReceiveStepRetry
+	// ReceiveStepRetryStatus receive step retry status
+	ReceiveStepRetryStatus
+
+	// StartPodReschedule start pod reschedule
+	StartPodReschedule
+)
+
+// RecoverMode recover mode.
+type RecoverMode int
+
+const (
+	// InitMode init mode
+	InitMode RecoverMode = iota
+	// HbmFaultStepRetryMode hbm step retry mode
+	HbmFaultStepRetryMode
+	// ProcessFaultRecoverMode process recover mode
+	ProcessFaultRecoverMode
+	// PodRescheduleMode pod reschedule mode
+	PodRescheduleMode
 )
 
 const (
@@ -49,6 +95,10 @@ const (
 const (
 	// FaultRankStatus rank status is fault
 	FaultRankStatus = "fault"
+	// RestartAllProcess flush reset.json and restart all process
+	RestartAllProcess = "restartAllProcess"
+	// PodReschedulingLabel the pod rescheduling label of pg
+	PodReschedulingLabel = "pod-rescheduling"
 	// ProcessReschedulingLabel the process rescheduling label of pg
 	ProcessReschedulingLabel = "process-rescheduling"
 	// ProcessReschedulingEnable open process rescheduling
@@ -57,25 +107,11 @@ const (
 	ProcessReschedulingPause = "pause"
 )
 
-// write reset configmap operation
 const (
-	// RestartAllProcessOperation add reset.json retryTimes which trigger agent restart all process
-	RestartAllProcessOperation = "restartAllProcess"
-	// ClearOperation reset resetConfigMap
-	ClearOperation = "clear"
-	// NotifyFaultListOperation write fault list to reset.json
-	NotifyFaultListOperation = "fault"
-	// NotifyFaultFlushingOperation notify agent fault occur and wait fault flush finished
-	NotifyFaultFlushingOperation = "notifyFaultFlushing"
-)
-
-const (
-	// MaxUuidRandomLength max uuid random length
-	MaxUuidRandomLength = 32
 	// StateTimeoutSecond state time out second
 	StateTimeoutSecond = 600
 	// CheckPGRunningRetryTimes check pg change running state retry times
-	CheckPGRunningRetryTimes = 54
+	CheckPGRunningRetryTimes = 10
 	// SleepSecondBeforeCheckPGRunning check pg state interval
 	SleepSecondBeforeCheckPGRunning = 5
 	// WriteResetInfoRetryTimes retry set reset configmap
@@ -96,6 +132,14 @@ const (
 	CheckPeriod = 3
 	// ProcessControlTimeout wait process annotation until timeout
 	ProcessControlTimeout = 300
+
+	// PlatFormArfStrategyName plat arf strategy name
+	PlatFormArfStrategyName = "recover"
+	// PlatFormDumpStrategyName plat dump strategy name
+	PlatFormDumpStrategyName = "dump"
+	// PlatFormExitStrategyName plat exit strategy name
+	PlatFormExitStrategyName = "none"
+
 	// RecoverSuccess process recover success
 	RecoverSuccess = "recover-success"
 	// RecoverFailed process recover failed
@@ -109,12 +153,14 @@ const (
 )
 
 const (
+	// MiddleLine is the middle line symbol
+	MiddleLine = "-"
+	// UnknownEventId unknown event id
+	UnknownEventId = "unknown_event_id"
 	// GetPodGroupTimes get pod group times
 	GetPodGroupTimes = 3
 	// UpdatePodGroupTimes get pod group times
 	UpdatePodGroupTimes = 3
-	// MaxServeJobs max serve job num for fault recover
-	MaxServeJobs = 10000
-	// QpsLimit max qps for grpc service
-	QpsLimit = 1000
+	// MaxChangeStrategyTimes max changeStrategy Times
+	MaxChangeStrategyTimes = 2
 )

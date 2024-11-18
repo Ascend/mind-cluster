@@ -89,7 +89,7 @@ function build_bin()
     echo "make installhelper"
     cd ${INSTALLHELPERSRCDIR}
     [ -d "${BUILD}/build/helper/build" ] && rm -rf ${BUILD}/build/helper/build
-    export CGO_ENABLED=0
+    export CGO_ENABLED=1
     export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_LDFLAGS="-Wl,-z,now -Wl,-s,--build-id=none -pie"
@@ -107,7 +107,6 @@ function build_bin()
     cd ${RUNTIMEDIR}
     [ -d "${RUNTIMESRCDIR}/build" ] && rm -rf ${RUNTIMESRCDIR}/build
     mkdir ${RUNTIMESRCDIR}/build&&cd ${RUNTIMESRCDIR}/build
-    export CGO_ENABLED=1
     go build -buildmode=pie  -ldflags='-linkmode=external -buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath  -o ascend-docker-runtime ../${RUNTIMESRCNAME}
 }
 

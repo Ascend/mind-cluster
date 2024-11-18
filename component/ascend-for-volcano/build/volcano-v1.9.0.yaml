@@ -3843,7 +3843,6 @@ spec:
     metadata:
       labels:
         app: volcano-controller
-      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
@@ -3852,9 +3851,6 @@ spec:
       serviceAccount: volcano-controllers
       securityContext:
         fsGroup: 9000
-        ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#        seccompProfile:
-#          type: RuntimeDefault
       containers:
         - name: volcano-controllers
           image: volcanosh/vc-controller-manager:v1.9.0
@@ -4067,7 +4063,6 @@ spec:
     metadata:
       labels:
         app: volcano-scheduler
-      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
@@ -4076,9 +4071,6 @@ spec:
       serviceAccount: volcano-scheduler
       securityContext:
         fsGroup: 9000
-        ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#        seccompProfile:
-#          type: RuntimeDefault
       containers:
         - name: volcano-scheduler
           image: volcanosh/vc-scheduler:v1.9.0

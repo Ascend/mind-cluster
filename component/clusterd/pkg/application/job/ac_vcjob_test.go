@@ -55,10 +55,10 @@ func TestAddEvent(t *testing.T) {
 		agent := mockAgentEmpty()
 		job := mockJobEmpty()
 		job.Namespace = mockNamespace
-		job.JobName = mockJobName
-		job.JobUid = mockJobUID
+		job.Name = mockJobName
+		job.Uid = mockJobUID
 		convey.Convey("worker already exist, error should be nil", func() {
-			agent.BsWorker[job.JobUid] = NewJobWorker(agent, job.Info, nil, 1)
+			agent.BsWorker[job.Uid] = NewJobWorker(agent, job.Info, nil, 1)
 			err := job.AddEvent(agent)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -100,8 +100,8 @@ func TestEventUpdate(t *testing.T) {
 		agent := mockAgentEmpty()
 		job := mockJobEmpty()
 		job.Namespace = mockNamespace
-		job.JobName = mockJobName
-		job.JobUid = mockJobUID
+		job.Name = mockJobName
+		job.Uid = mockJobUID
 		convey.Convey("job key does not exist, error should not be nil", func() {
 			mockAddEvent := gomonkey.ApplyMethod(reflect.TypeOf(new(jobModel)), "AddEvent",
 				func(_ *jobModel, _ *Agent) error {
@@ -112,7 +112,7 @@ func TestEventUpdate(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("job key already exist, error should be nil", func() {
-			agent.BsWorker[job.JobUid] = NewJobWorker(agent, job.Info, nil, 1)
+			agent.BsWorker[job.Uid] = NewJobWorker(agent, job.Info, nil, 1)
 			err := job.EventUpdate(agent)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -125,9 +125,9 @@ func TestDeleteWorker(t *testing.T) {
 		agent := mockAgentEmpty()
 		job := mockJobEmpty()
 		job.Namespace = mockNamespace
-		job.JobName = mockJobName
-		job.JobUid = mockJobUID
-		identifier := job.JobUid
+		job.Name = mockJobName
+		job.Uid = mockJobUID
+		identifier := job.Uid
 		agent.BsWorker[identifier] = NewJobWorker(agent, job.Info, nil, 1)
 		mockUpdateCMOnDelete := gomonkey.ApplyPrivateMethod(reflect.TypeOf(job), "updateCMOnDeleteEvent",
 			func(_ *jobModel, kubeClientSet kubernetes.Interface) error {
@@ -225,10 +225,10 @@ func mockJobEmpty() *jobModel {
 		key: "",
 		Info: Info{
 			Namespace:         "",
-			JobName:           "",
+			Name:              "",
 			Key:               "",
 			Version:           0,
-			JobUid:            "",
+			Uid:               "",
 			CreationTimestamp: v1.Time{},
 		},
 		replicas: 0,

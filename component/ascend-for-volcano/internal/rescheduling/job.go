@@ -120,8 +120,7 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo) bool {
 	}
 
 	klog.V(util.LogDebugLev).Infof("<%d/%d> pod of job restarted", restartNum, jobInfo.MinAvailable)
-	if len(jobInfo.PodGroup.Labels) != 0 && (jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc) &&
+	if len(jobInfo.PodGroup.Labels) != 0 && jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc &&
 		fJob.PendingSessionNum != pendingTimes {
 		return restartNum >= deleteNum
 	}
@@ -252,47 +251,27 @@ func (fJob *FaultJob) forceDeletePods(ssn *framework.Session, schedulerJob *plug
 	env plugin.ScheduleEnv, dpi *deletePodInfo) {
 	var waitDeleteTask = make([]FaultTask, 0)
 	for _, fTask := range fJob.FaultTasks {
-		if !fJob.isNormalTaskCanBeDelete(fTask, schedulerJob, env, dpi) {
-			continue
+		klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
+			"not fault task is %v",
+			!dpi.isMasterFault, fJob.IsJobSingleRescheduling(schedulerJob), !fTask.IsFaultTask)
+		// when master pod fault or not pod rescheduling or fault pod, delete pod
+		if !dpi.isMasterFault && fJob.IsJobSingleRescheduling(schedulerJob) && !fTask.IsFaultTask {
+			if !dpi.superPod {
+				continue
+			}
+			// single pod rescheduling stage, delete no pod
+			// virtual super pod rescheduling stage, delete all virtual super pod where fault task in
+			if fJob.PendingSessionNum < spPendingTimes {
+				continue
+			} else if !fJob.isContainTask(dpi.ids, fTask.NodeName, env) {
+				continue
+			}
 		}
 		fJob.updateSuperPodMapInfo(env, fTask.TaskName, fTask.NodeName)
 		waitDeleteTask = append(waitDeleteTask, fTask)
 		klog.V(util.LogInfoLev).Infof("superpod delete pods:%s", fTask.TaskName)
 	}
 	fJob.deletingTasksConcurrently(waitDeleteTask, ssn)
-}
-
-func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plugin.SchedulerJob,
-	env plugin.ScheduleEnv, dpi *deletePodInfo) bool {
-	klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
-		"not fault task is %v",
-		!dpi.isMasterFault, fJob.IsJobSingleRescheduling(schedulerJob), !fTask.IsFaultTask)
-	if dpi.isMasterFault {
-		return true
-	}
-	// when pod rescheduling, master fault try job rescheduling
-	// tor affinity job, first delete fault task, when first task pending 12 session, try job rescheduling
-	// super pod, first delete fault task, when first task pending 6 session, try super pod rescheduling
-	// super pod, when pod pending 12 session, try job rescheduling
-	if fJob.IsJobSingleRescheduling(schedulerJob) && !fTask.IsFaultTask {
-		if !dpi.superPod {
-			return false
-		}
-		// single pod rescheduling stage, delete no pod
-		// virtual super pod rescheduling stage, delete all virtual super pod where fault task in
-		if fJob.PendingSessionNum < spPendingTimes {
-			return false
-		} else if !fJob.isContainTask(dpi.ids, fTask.NodeName, env) {
-			return false
-		}
-	}
-	// when master pod fault try job rescheduling
-	// when job is process rescheduling and not in pod rescheduling label, only delete fault task.
-	// when  process rescheduling is failed, process-rescheduling change to pause, try job rescheduling
-	if fJob.IsProcessReschedulingJob(schedulerJob) && !fTask.IsFaultTask {
-		return false
-	}
-	return true
 }
 
 func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, ssn *framework.Session) {
@@ -383,14 +362,6 @@ func (fJob *FaultJob) IsJobSingleRescheduling(sJob *plugin.SchedulerJob) bool {
 	return false
 }
 
-// IsProcessReschedulingJob valid job.
-func (fJob *FaultJob) IsProcessReschedulingJob(sJob *plugin.SchedulerJob) bool {
-	if sJob.Label[util.ProcessReschedulingTag] == util.EnableFunc {
-		return true
-	}
-	return false
-}
-
 func (fJob *FaultJob) updateTaskPodUid(jobInfo *api.JobInfo) {
 	for i := 0; i < len(fJob.FaultTasks); i++ {
 		if !fJob.FaultTasks[i].IsFaultTask {
@@ -418,8 +389,7 @@ func (fJob *FaultJob) setFaultTaskUseNode(jobInfo *api.JobInfo) {
 }
 
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
-	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] != util.EnableFunc {
+	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
 	newFailedTask := make(map[api.TaskID]struct{})
@@ -509,8 +479,17 @@ func (fJob *FaultJob) graceDeletePods(ssn *framework.Session, npuJob *plugin.Sch
 				"GraceDeleteJob: npuTask %s has been deleted in session.", fTask.TaskName)
 			return fmt.Errorf("npuTask %s not in session", fTask.TaskName)
 		}
-		if !fJob.isNormalTaskCanBeDelete(fTask, npuJob, env, dpi) {
-			continue
+		if !dpi.isMasterFault && fJob.IsJobSingleRescheduling(npuJob) && !fTask.IsFaultTask {
+			if !dpi.superPod {
+				continue
+			}
+			// single pod rescheduling stage, delete no pod
+			// virtual super pod rescheduling stage, delete all virtual super pod where fault task in
+			if fJob.PendingSessionNum < spPendingTimes {
+				continue
+			} else if !fJob.isContainTask(dpi.ids, fTask.NodeName, env) {
+				continue
+			}
 		}
 		fJob.updateSuperPodMapInfo(env, fTask.TaskName, fTask.NodeName)
 		if delErr := npuTask.ForceDeletePodByTaskInf(ssn, dpi.reason, fTask.NodeName); delErr != nil {

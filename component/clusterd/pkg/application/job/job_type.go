@@ -157,13 +157,10 @@ type Worker struct {
 // Info : Job Worker Info
 type Info struct {
 	Namespace         string
-	JobName           string
-	PGName            string
-	JobUid            string
-	PGUid             string
-	PGLabels          map[string]string
+	Name              string
 	Key               string
 	Version           int32
+	Uid               string
 	JobType           string
 	CreationTimestamp metav1.Time
 }
@@ -239,9 +236,3 @@ var (
 	// ModelFramework is the framework value
 	ModelFramework string
 )
-
-// Job info
-type JobServerInfoMap struct {
-	InfoMap     map[string]map[string]ServerHccl
-	UceTolerate map[string]bool
-}

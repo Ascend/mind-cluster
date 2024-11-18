@@ -8,19 +8,14 @@ import (
 	"flag"
 	"fmt"
 	"syscall"
-	"time"
 
-	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/faultshoot"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
-	"clusterd/pkg/interface/grpc/common"
-	"clusterd/pkg/interface/grpc/service"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -29,33 +24,19 @@ const (
 )
 
 var (
-	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, MaxLineLength: constant.MaxLogLineLength}
+	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile}
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName         string
-	version           bool
-	server            *sv.ClusterInfoMgrServer
-	limiter           = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
-	keepAliveInterval = 5
+	BuildName string
+	version   bool
+	server    *sv.ClusterInfoMgrServer
 )
 
-func limitQPS(ctx context.Context, req interface{},
-	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	if !limiter.Allow() {
-		hwlog.RunLog.Errorf("qps exceeded, method=%s", info.FullMethod)
-		return nil, fmt.Errorf("qps exceeded, method=%s", info.FullMethod)
-	}
-	return handler(ctx, req)
-}
-
-func startInformer(ctx context.Context, recoverService kube.JobService) {
+func startInformer(ctx context.Context) {
 	kube.InitCMInformer()
 	kube.InitPodInformer()
-	kube.InitPGInformer(ctx, recoverService)
-	kube.AddCmSwitchFunc(constant.Resource, faultshoot.SwitchInfoCollector)
-	kube.AddCmNodeFunc(constant.Resource, faultshoot.NodeCollector)
-	kube.AddCmDeviceFunc(constant.Resource, faultshoot.DeviceInfoCollector)
+	kube.InitPGInformer(ctx)
 	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
 	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
@@ -85,18 +66,15 @@ func main() {
 	err = kube.InitClientVolcano()
 	if err != nil {
 		hwlog.RunLog.Errorf("new volcano client config err: %v", err)
-		return
 	}
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
-		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
-		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
-	if err = server.Start(recoverService); err != nil {
+		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams)})
+	if err = server.Start(); err != nil {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	startInformer(ctx, recoverService)
-	faultshoot.NewFaultProcessCenter(ctx)
+	startInformer(ctx)
+
 	signalCatch(cancel)
 }
 

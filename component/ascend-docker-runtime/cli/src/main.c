@@ -195,8 +195,7 @@ static bool CheckWhiteList(const char* fileName)
         {"/usr/lib64/libaicpu_processer.so"}, {"/usr/lib64/libaicpu_prof.so"}, {"/usr/lib64/libaicpu_sharder.so"},
         {"/usr/lib64/libadump.so"}, {"/usr/lib64/libtsd_eventclient.so"},
         {"/usr/lib64/aicpu_kernels"}, {"/usr/lib64/libyaml-0.so.2"},
-        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"},
-        {"/var/queue_schedule"}
+        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"}
         };
 
     for (size_t iLoop = 0; iLoop < WHITE_LIST_NUM; iLoop++) {
