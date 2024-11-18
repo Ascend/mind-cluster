@@ -25,7 +25,9 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -599,5 +601,35 @@ func TestInitVolcanoFrameFromSsn(t *testing.T) {
 			}
 		})
 	}
+}
 
+// TestGetPodGroupOwnerRef test of getPodGroupOwnerRef
+func TestGetPodGroupOwnerRef(t *testing.T) {
+	t.Run("pg without ownerRef", func(t *testing.T) {
+		pg := scheduling.PodGroup{}
+		expectedOwner := metav1.OwnerReference{}
+		owner := getPodGroupOwnerRef(pg)
+		if !reflect.DeepEqual(expectedOwner, owner) {
+			t.Errorf("getPodGroupOwnerRef = %v, want %v", owner, expectedOwner)
+		}
+	})
+	t.Run("pg with ownerRef", func(t *testing.T) {
+		controller := true
+		pg := scheduling.PodGroup{
+			ObjectMeta: metav1.ObjectMeta{
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						Controller: &controller,
+					},
+				},
+			},
+		}
+		expectedOwner := metav1.OwnerReference{
+			Controller: &controller,
+		}
+		owner := getPodGroupOwnerRef(pg)
+		if !reflect.DeepEqual(expectedOwner, owner) {
+			t.Errorf("getPodGroupOwnerRef = %v, want %v", owner, expectedOwner)
+		}
+	})
 }

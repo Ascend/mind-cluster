@@ -456,6 +456,10 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 		Label:         GetJobLabelFromVcJob(vcJob),
 		Annotation:    vcJob.PodGroup.Annotations,
 	}
+	if sJob.Owner.Kind == ReplicaSetType {
+		num *= int(*sJob.Owner.Replicas)
+		sJob.SchedulerJobAttr.ComJob.Annotation = sJob.Owner.Annotations
+	}
 	subHealthyStrategy, exist := sJob.Label[util.SubHealthyStrategyLabel]
 	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
 		[]string{util.SubHealthyIgnore, util.SubHealthyGraceExit, util.SubHealthyForceExit}) {
@@ -465,7 +469,7 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	}
 	sJob.SubHealthyStrategy = subHealthyStrategy
 	spBlock := 0
-	spBlockStr, ok := vcJob.PodGroup.Annotations[util.SuperPodAnnoKey]
+	spBlockStr, ok := sJob.Annotation[util.SuperPodAnnoKey]
 	if ok {
 		if spBlock, err = strconv.Atoi(spBlockStr); err != nil {
 			klog.V(util.LogErrorLev).Infof("get job %s spBlock %s failed %v", vcJob.UID, spBlockStr, err)
@@ -500,6 +504,23 @@ func (sJob SchedulerJob) IsNPUJob() bool {
 
 // ValidJobFn valid job.
 func (sJob SchedulerJob) ValidJobFn() *api.ValidateResult {
+	if sJob.Owner.Kind == ReplicaSetType {
+		if len(sJob.Tasks) < int(*sJob.Owner.Replicas) {
+			return &api.ValidateResult{
+				Message: fmt.Sprintf("job %s task num %d less than replicas %d", sJob.Name, len(sJob.Tasks), *sJob.Owner.Replicas),
+				Reason:  "job is not ready",
+				Pass:    false,
+			}
+		}
+		i := 0
+		for id := range sJob.Tasks {
+			task := sJob.Tasks[id]
+			task.Index = i
+			sJob.Tasks[id] = task
+			i++
+		}
+	}
+
 	if result := sJob.handler.ValidNPUJob(); result != nil {
 		klog.V(util.LogErrorLev).Infof("%s validNPUJob failed:%s.", PluginName, result.Message)
 		return result

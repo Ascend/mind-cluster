@@ -105,4 +105,18 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	}
 
 	task.Pod.Annotations[util.Pod910DeviceKey] = string(marshedInst)
+	tp.setDeployRankIndex(task)
+}
+
+func (tp *NPUHandler) setDeployRankIndex(task *api.TaskInfo) {
+	job, ok := tp.Jobs[task.Job]
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("get job of task %s failed", task.Name)
+		return
+	}
+	if job.Owner.Kind == plugin.ReplicaSetType {
+		task.Pod.Annotations[plugin.PodRankIndexKey] = strconv.Itoa(job.Tasks[task.UID].Index)
+		klog.V(util.LogInfoLev).Infof("set deploy pod %s rank index to %s", task.Name,
+			task.Pod.Annotations[plugin.PodRankIndexKey])
+	}
 }
