@@ -82,10 +82,10 @@ func (center *FaultProcessCenter) work(ctx context.Context) {
 			case constant.SWITCH_FAULT:
 				center.switchCenter.process()
 			default:
+				hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
 			}
 		case <-centerTicker.C:
 			center.process()
-		default:
 		}
 	}
 }
