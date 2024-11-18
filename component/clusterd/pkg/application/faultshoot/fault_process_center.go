@@ -140,15 +140,15 @@ func (center *FaultProcessCenter) QueryJobsFaultInfo() map[string]JobFaultInfo {
 
 // QueryDeviceInfoToReport query device info to report
 func (center *FaultProcessCenter) QueryDeviceInfoToReport() map[string]*constant.DeviceInfo {
-	return center.deviceCenter.getProcessingCm()
+	return center.deviceCenter.getProcessedCm()
 }
 
 // QuerySwitchInfoToReport query switch info to report
 func (center *FaultProcessCenter) QuerySwitchInfoToReport() map[string]*constant.SwitchInfo {
-	return center.switchCenter.getProcessingCm()
+	return center.switchCenter.getProcessedCm()
 }
 
 // QueryNodeInfoToReport query node info to report
 func (center *FaultProcessCenter) QueryNodeInfoToReport() map[string]*constant.NodeInfo {
-	return center.nodeCenter.getProcessingCm()
+	return center.nodeCenter.getProcessedCm()
 }
