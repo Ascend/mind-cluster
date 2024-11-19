@@ -72,5 +72,5 @@ func (switchCenter *switchFaultProcessCenter) process() {
 	switchCenter.lastProcessTime = currentTime
 	switchCenter.setProcessingCm(switchCenter.devicePluginCm)
 	switchCenter.baseFaultCenter.process()
-	switchCenter.setProcessedCm(switchCenter.processedCm)
+	switchCenter.setProcessedCm(switchCenter.processingCm)
 }

@@ -72,5 +72,5 @@ func (nodeCenter *nodeFaultProcessCenter) process() {
 	nodeCenter.lastProcessTime = currentTime
 	nodeCenter.setProcessingCm(nodeCenter.devicePluginCm)
 	nodeCenter.baseFaultCenter.process()
-	nodeCenter.setProcessedCm(nodeCenter.processedCm)
+	nodeCenter.setProcessedCm(nodeCenter.processingCm)
 }
