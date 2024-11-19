@@ -72,9 +72,6 @@
 | Ascend-for-Volcano |  https://gitee.com/ascend/ascend-for-volcano   |-|
 | Ascend-Docker-Runtime |  https://gitee.com/ascend/ascend-docker-runtime  |-|
 
-6.0.0及之后版本发布如下：
-| 版本         | 发布日期      | 修改说明         |
-|------------|-----------|----------------------|
-| v6.0.0     | 2024-12-15 | 配套MindX 6.0.0版本   |
+
 # 版本配套说明
 版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/commercial)
