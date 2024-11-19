@@ -47,6 +47,7 @@ var (
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
 	isL3FaultExistMap             map[int32]bool = make(map[int32]bool, common.MaxDevicesNum)
+	resetGoroutine                               = &sync.Map{}
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
@@ -114,7 +115,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 // GraceTolerance process training task with device fault gracefully
 func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
-		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage())
+		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs))
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
 			return
@@ -1486,10 +1487,14 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 		hwlog.RunLog.Errorf("failed to get need reset device list, err: %v", err)
 		return err
 	}
+	processId := time.Now().UnixMilli()
+	resetGoroutine.Store(processId, struct{}{})
 	if err := hnm.execResetDevice(resetFaultInfoMap); err != nil {
 		hwlog.RunLog.Errorf("failed to exec reset device list, err: %v", err)
+		resetGoroutine.Delete(processId)
 		return err
 	}
+	resetGoroutine.Delete(processId)
 	for _, devInfo := range devFaultInfoList {
 		common.SetDeviceInit(devInfo.LogicId)
 	}

@@ -46,6 +46,8 @@ type RankTabler interface {
 	GetHccLJsonSlice() []string
 	// GetFirstServerIp get the vcJob master addr
 	GetFirstServerIp() string
+	// GetServerList get servers in rank table
+	GetServerList() []*ServerHccl
 }
 
 // SetStatus Set status of RankTableStatus
@@ -299,4 +301,9 @@ func (r *RankTable) setNodeDeviceHealthy(serverIndex int, networkUnhealthyCards,
 			delete(r.UnHealthyDevice, dev.RankID)
 		}
 	}
+}
+
+// GetServerList get servers in rank table
+func (r *RankTable) GetServerList() []*ServerHccl {
+	return r.ServerList
 }

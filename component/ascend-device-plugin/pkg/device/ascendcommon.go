@@ -241,7 +241,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 			}
 		}
 		switchFaultInfo := common.GetSwitchFaultInfo()
-
+		if common.GetSyncMapLen(resetGoroutine) != 0 {
+			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
+		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
@@ -463,9 +465,13 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			common.GetTimeoutFaultCodes(common.NetworkFaultMode)...))
 		faultType := common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType: common.CardNetworkUnhealthy, NPUName: device.DeviceName,
-			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
-			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultType:            common.CardNetworkUnhealthy,
+			NPUName:              device.DeviceName,
+			LargeModelFaultLevel: faultType,
+			FaultLevel:           faultType,
+			FaultHandling:        faultType,
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultTime:            device.AlarmRaisedTime,
 		})
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
@@ -473,9 +479,13 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			common.GetTimeoutFaultCodes(common.ChipFaultMode)...))
 		faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType: common.CardUnhealthy, NPUName: device.DeviceName,
-			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
-			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultType:            common.CardUnhealthy,
+			NPUName:              device.DeviceName,
+			LargeModelFaultLevel: faultType,
+			FaultLevel:           faultType,
+			FaultHandling:        faultType,
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultTime:            device.AlarmRaisedTime,
 		})
 	}
 	return deviceFaults

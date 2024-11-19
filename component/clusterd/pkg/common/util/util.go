@@ -7,11 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"os"
 	"os/signal"
 	"strconv"
-
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"time"
 )
 
 // NewSignalWatcher create a new signal watcher
@@ -98,4 +98,27 @@ func StringSliceToIntSlice(strSlice []string) []int {
 		result = append(result, i)
 	}
 	return result
+}
+
+func Abs[T int64 | int](x T) T {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func DeleteStringSliceItem(slice []string, item string) []string {
+	newSlice := make([]string, 0)
+	for _, val := range slice {
+		if val == item {
+			continue
+		}
+		newSlice = append(newSlice, val)
+	}
+	return newSlice
+}
+
+// ReadableMsTime return more readable time from msec
+func ReadableMsTime(msTime int64) string {
+	return time.UnixMilli(msTime).Format("2006-01-02 15:04:05")
 }

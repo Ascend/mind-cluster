@@ -39,6 +39,15 @@ type DevFaultInfo struct {
 // RecoverConfig is config for recover service
 type RecoverConfig struct {
 	ProcessRescheduleOn   bool
-	mindXConfigStrategies []string
+	MindXConfigStrategies []string
 	PlatFormMode          bool
+}
+
+// JobBaseInfo job base info
+type JobBaseInfo struct {
+	JobId     string
+	JobName   string
+	PgName    string
+	Namespace string
+	RecoverConfig
 }

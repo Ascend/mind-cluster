@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"clusterd/pkg/application/faultshoot"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -28,14 +29,15 @@ const (
 )
 
 var (
-	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile}
+	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, MaxLineLength: constant.MaxLogLineLength}
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName string
-	version   bool
-	server    *sv.ClusterInfoMgrServer
-	limiter   = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	BuildName         string
+	version           bool
+	server            *sv.ClusterInfoMgrServer
+	limiter           = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	keepAliveInterval = 5
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -51,6 +53,9 @@ func startInformer(ctx context.Context, recoverService kube.JobService) {
 	kube.InitCMInformer()
 	kube.InitPodInformer()
 	kube.InitPGInformer(ctx, recoverService)
+	kube.AddCmSwitchFunc(constant.Resource, faultshoot.SwitchInfoCollector)
+	kube.AddCmNodeFunc(constant.Resource, faultshoot.NodeCollector)
+	kube.AddCmDeviceFunc(constant.Resource, faultshoot.DeviceInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
 	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
@@ -85,13 +90,13 @@ func main() {
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService()
+	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
 	if err = server.Start(recoverService); err != nil {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
 	startInformer(ctx, recoverService)
-
+	faultshoot.NewFaultProcessCenter(ctx)
 	signalCatch(cancel)
 }
 

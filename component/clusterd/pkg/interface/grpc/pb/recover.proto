@@ -5,8 +5,6 @@ option go_package = ".;pb";
 message Status {
   int32 code = 1;
   string info = 2;
-}
-
 message ClientInfo{
   string jobId = 1;
   string role = 2;

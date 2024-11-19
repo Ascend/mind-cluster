@@ -14,31 +14,41 @@ import (
 
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/common"
+	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
 
-func processContinue(name, namespace string) (bool, string, error) {
+func platFormStrategy(name, namespace string) ([]string, error) {
 	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("get pg err: %v", err)
-		return false, "", err
+		return nil, err
 	}
 	value, ok := pg.Annotations[common.ProcessRecoverStrategy]
 	if !ok {
-		return false, "", nil
+		return nil, fmt.Errorf("plat strategy key not exist, job=%s, key=%s",
+			name, common.ProcessRecoverStrategy)
 	}
 	if value == common.ProcessRetryStrategyName || value == common.ProcessRecoverStrategyName ||
 		value == common.ProcessDumpStrategyName {
-		return true, value, nil
+		strategySlice := strings.Split(value, ",")
+		var res []string
+		for _, strategy := range strategySlice {
+			if common.StrategySupported(strategy) {
+				res = append(res, strategy)
+			}
+		}
+		res = append(res, common.ProcessExitStrategyName)
+		return util.RemoveSliceDuplicateElement(res), nil
 	}
-	return true, value, errors.New("wait ProcessArfStrategy=recover/dump")
+	return nil, fmt.Errorf("wait plat strategy = retry/recover/dump for job=%s", name)
 }
 
-// WaitProcessContinue block process until processContinue return true
-func WaitProcessContinue(name, namespace string) (bool, string, error) {
+// WaitPlatFormStrategyReady block process until processContinue return true
+func WaitPlatFormStrategyReady(name, namespace string) ([]string, error) {
 	startTime := time.Now().Unix()
-	platForm, strategy, err := processContinue(name, namespace)
-	for platForm && err != nil {
+	strategy, err := platFormStrategy(name, namespace)
+	for err != nil {
 		time.Sleep(common.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
 		if timeUse > common.ProcessControlTimeout {
@@ -46,13 +56,13 @@ func WaitProcessContinue(name, namespace string) (bool, string, error) {
 				name, timeUse, common.ProcessControlTimeout, err)
 			break
 		}
-		platForm, strategy, err = processContinue(name, namespace)
+		strategy, err = platFormStrategy(name, namespace)
 	}
-	return platForm, strategy, err
+	return strategy, err
 }
 
 // UpdateProcessConfirmFault update UpdateProcessConfirmFault which store fault ranks
-func UpdateProcessConfirmFault(name, namespace string, cacheRanks []string) error {
+func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRank) error {
 	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when update UpdateProcessConfirmFault, err:%v, name:%s", err, name)
@@ -61,14 +71,12 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []string) erro
 	if pg.Annotations == nil {
 		pg.Annotations = make(map[string]string)
 	}
-	rankStr, ok := pg.Annotations[common.ProcessConfirmFaultKey]
-	if !ok {
-		rankStr = ""
-		hwlog.RunLog.Warnf("can not find ProcessConfirmFaultKey, name:%s", name)
+	rankStr, _ := pg.Annotations[common.ProcessConfirmFaultKey]
+	if len(rankStr) > 0 {
+		return fmt.Errorf("plat not clear pre confirm fault, jobName=%s", name)
 	}
-	rankList := strings.Split(rankStr, ",")
-	allFaultRanks := util.RemoveSliceDuplicateElement(append(rankList, cacheRanks...))
-	pg.Annotations[common.ProcessConfirmFaultKey] = strings.Join(allFaultRanks, ",")
+	allFaultRanks := common.RemoveSliceDuplicateFaults(cacheRanks)
+	pg.Annotations[common.ProcessConfirmFaultKey] = common.Faults2String(allFaultRanks)
 	_, err = kube.RetryUpdatePodGroup(pg, common.UpdatePodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to update pg when UpdateProcessConfirmFault, err:%v, name:%s", err, name)
@@ -95,7 +103,7 @@ func UpdateRecoverStatus(name, namespace, value string) {
 	hwlog.RunLog.Infof("update name=%s recover status=%s, success", name, value)
 }
 
-func pullProcessResultFault(name, namespace string) ([]string, []string, error) {
+func pullProcessResultFault(name, namespace string) ([]*pb.FaultRank, []*pb.FaultRank, error) {
 	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when pullProcessResultFault, err:%v, name:%s", err, name)
@@ -118,11 +126,11 @@ func pullProcessResultFault(name, namespace string) ([]string, []string, error) 
 	if !ok {
 		confirmRanks = ""
 	}
-	return strings.Split(resultRanks, ","), strings.Split(confirmRanks, ","), err
+	return common.String2Faults(resultRanks), common.String2Faults(confirmRanks), err
 }
 
 // WaitProcessResultFault block process until ProcessResultFaultKey's ranks not empty
-func WaitProcessResultFault(name, namespace string) ([]string, error) {
+func WaitProcessResultFault(name, namespace string) ([]*pb.FaultRank, error) {
 	startTime := time.Now().Unix()
 	resultRanks, confirmRanks, err := pullProcessResultFault(name, namespace)
 	for len(resultRanks) == 0 {
@@ -135,7 +143,7 @@ func WaitProcessResultFault(name, namespace string) ([]string, error) {
 		}
 		resultRanks, confirmRanks, err = pullProcessResultFault(name, namespace)
 	}
-	return util.RemoveSliceDuplicateElement(append(resultRanks, confirmRanks...)), err
+	return common.RemoveSliceDuplicateFaults(append(resultRanks, confirmRanks...)), err
 }
 
 func rankTableReady(name, namespace string) bool {

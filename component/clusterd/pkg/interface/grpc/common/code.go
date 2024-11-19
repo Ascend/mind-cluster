@@ -20,6 +20,10 @@ const (
 	JobNotExist RespCode = 402
 	// ProcessRescheduleOff not open the switch of process-rescheduling
 	ProcessRescheduleOff RespCode = 403
+	// StopDeviceError stop device error
+	StopDeviceError RespCode = 405
+	// CleanDeviceError clean device error
+	CleanDeviceError RespCode = 406
 	// ClientError common client error
 	ClientError RespCode = 499
 
@@ -42,8 +46,10 @@ const (
 	ControllerEventCancel RespCode = 506
 	// WaitReportTimeout wait client report timeout
 	WaitReportTimeout RespCode = 507
-	// ReportStatusError report recover fail
-	ReportStatusError RespCode = 508
+	// WaitPlatStrategyTimeout wait plat strategy error
+	WaitPlatStrategyTimeout RespCode = 508
+	// WriteConfirmFaultOrWaitPlatResultFault write confirm fault and wait result fault
+	WriteConfirmFaultOrWaitPlatResultFault RespCode = 509
 	// ServerInnerError server common error
 	ServerInnerError RespCode = 599
 )

@@ -74,6 +74,7 @@ type NPUTask struct {
 	Label      map[string]string
 	NodeName   string
 	PodStatus  v1.PodPhase
+	Index      int
 	*VTask
 }
 

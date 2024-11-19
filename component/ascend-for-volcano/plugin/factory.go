@@ -20,18 +20,22 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v2"
+	appsv1 "k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
+
+	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -115,7 +119,14 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	tmpJobSinglePodFlag := make(map[api.JobID]bool)
 	tmpJobPendingMessage := make(map[api.JobID]map[string]map[string]struct{})
 	for jobID, jobInfo := range ssn.Jobs {
-		sJob := SchedulerJob{}
+		ownerInfo, err := getOwnerInfo(jobInfo, ssn)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("%s getOwnerInfo failed: %s.", jobInfo.Name, util.SafePrint(err))
+			continue
+		}
+		sJob := SchedulerJob{
+			Owner: ownerInfo,
+		}
 		if err := sJob.Init(jobInfo, sHandle); err != nil {
 			klog.V(util.LogDebugLev).Infof("%s InitJobsFromSsn failed: %s.", jobInfo.Name, util.SafePrint(err))
 			continue
@@ -143,6 +154,53 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	sHandle.JobSinglePodFlag = tmpJobSinglePodFlag
 	sHandle.JobPendingMessage = tmpJobPendingMessage
 	return
+}
+
+func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, error) {
+	owner := getPodGroupOwnerRef(jobInfo.PodGroup.PodGroup)
+	if owner.Kind != ReplicaSetType {
+		return OwnerInfo{
+			OwnerReference: owner,
+		}, nil
+	}
+	rs, err := getReplicaSet(ssn, jobInfo.Namespace, owner.Name)
+	if err != nil {
+		return OwnerInfo{}, err
+	}
+	return OwnerInfo{
+		OwnerReference: owner,
+		Annotations:    rs.Annotations,
+		Replicas:       rs.Spec.Replicas,
+	}, nil
+}
+
+func getReplicaSet(ssn *framework.Session, namespace, name string) (*appsv1.ReplicaSet, error) {
+	var rs *appsv1.ReplicaSet
+	var ok bool
+	obj, exist, err := ssn.InformerFactory().Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(namespace + "/" + name)
+	if err != nil || !exist {
+		klog.V(util.LogWarningLev).Infof("Get rs from indexer failed err: %s, exist: %v.", util.SafePrint(err), exist)
+		rs, err = ssn.KubeClient().AppsV1().ReplicaSets(namespace).Get(context.TODO(), name,
+			metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		rs, ok = obj.(*appsv1.ReplicaSet)
+		if !ok {
+			return nil, errors.New("the object is not a replicaset")
+		}
+	}
+	return rs, nil
+}
+
+func getPodGroupOwnerRef(pg scheduling.PodGroup) metav1.OwnerReference {
+	for _, ref := range pg.OwnerReferences {
+		if *ref.Controller == true {
+			return ref
+		}
+	}
+	return metav1.OwnerReference{}
 }
 
 // CheckVNPUSegmentEnableByConfig Check VNPU segmentEnable by init plugin parameters, return true if static

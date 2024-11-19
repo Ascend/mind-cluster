@@ -39,6 +39,8 @@ type PodWorker interface {
 	PGRunning() bool
 	GetBaseInfo() Info
 	GetDeviceNumPerNode() int
+	GetWorkerInfo() *WorkerInfo
+	GetPodByRankIndex(string) *apiCoreV1.Pod
 }
 
 // NewJobWorker Generates a PodWorker that handles the Job
@@ -52,6 +54,7 @@ func NewJobWorker(agent *Agent, job Info, ranktable RankTabler, replicasTotal in
 			CMName:     fmt.Sprintf("%s-%s", ConfigmapPrefix, job.JobName),
 			CMData:     ranktable, statStopped: false,
 			cachedPodNum:      0,
+			cachePodMap:       make(map[string]*apiCoreV1.Pod),
 			jobReplicasTotal:  replicasTotal,
 			succeedPodNum:     0,
 			podSchedulerCache: []string{},
@@ -228,6 +231,7 @@ func (b *WorkerInfo) setPodInfoToCache(pod *apiCoreV1.Pod, instance Instance) er
 		}
 		b.rankIndex = int(rank)
 	}
+	b.cachePodMap[rankIndexStr] = pod
 	err := b.CMData.CachePodInfo(pod, instance, &b.rankIndex)
 	if rankExist {
 		b.rankIndex = tmpRankIndex
@@ -518,9 +522,24 @@ func (b *Worker) GetBaseInfo() Info {
 	return b.Info
 }
 
+// GetWorkerInfo return worker info
+func (b *Worker) GetWorkerInfo() *WorkerInfo {
+	return &b.WorkerInfo
+}
+
 // GetDeviceNumPerNode get job use device num per node
 func (b *Worker) GetDeviceNumPerNode() int {
 	return b.CMData.GetJobDeviceNumPerNode()
+}
+
+// GetPodByRankIndex get pod by rank index
+func (b *Worker) GetPodByRankIndex(rankIndex string) *apiCoreV1.Pod {
+	pod, ok := b.cachePodMap[rankIndex]
+	if !ok {
+		hwlog.RunLog.Errorf("get pod failed by rank index %s", rankIndex)
+		return nil
+	}
+	return pod
 }
 
 func isReferenceJobSameWithWorker(pod *apiCoreV1.Pod, jobName string, workerUID string) bool {

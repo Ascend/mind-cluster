@@ -161,6 +161,7 @@ type Info struct {
 	PGName            string
 	JobUid            string
 	PGUid             string
+	PGLabels          map[string]string
 	Key               string
 	Version           int32
 	JobType           string
@@ -181,6 +182,7 @@ type WorkerInfo struct {
 	statStopped       bool
 	rankIndex         int
 	cachedPodNum      int32
+	cachePodMap       map[string]*v1.Pod
 	jobReplicasTotal  int32
 	succeedPodNum     int32
 	podSchedulerCache []string
@@ -238,3 +240,9 @@ var (
 	// ModelFramework is the framework value
 	ModelFramework string
 )
+
+// Job info
+type JobServerInfoMap struct {
+	InfoMap     map[string]map[string]ServerHccl
+	UceTolerate map[string]bool
+}
