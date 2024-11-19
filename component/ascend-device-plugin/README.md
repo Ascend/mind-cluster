@@ -5,10 +5,8 @@
 - 支持以下产品使用资源监测
     - Atlas 训练系列产品
     - Atlas A2 训练系列产品
-    - Atlas A3 训练系列产品
     - 推理服务器（插Atlas 300I 推理卡）
     - Atlas 推理系列产品（Ascend 310P AI处理器）
-    - Atlas 800I A2 推理服务器
 
 
 # 组件介绍
