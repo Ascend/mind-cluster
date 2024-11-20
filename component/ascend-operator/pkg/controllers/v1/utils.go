@@ -307,3 +307,13 @@ func filepathExist(filePath string) bool {
 	hwlog.RunLog.Errorf("Ranktable file path exists but has no permission : %v", err)
 	return false
 }
+
+func getJobRequiredNpu(job *mindxdlv1.AscendJob) int {
+	requiredNpu := 0
+	for _, spec := range job.Spec.ReplicaSpecs {
+		for _, container := range spec.Template.Spec.Containers {
+			requiredNpu += getContainerResourceReq(container)
+		}
+	}
+	return requiredNpu
+}

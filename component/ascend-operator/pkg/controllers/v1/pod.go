@@ -162,6 +162,9 @@ func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
 	}
 	var rankIndex uint64 = 0
 	for _, p := range allocatedPods {
+		if p.Annotations == nil {
+			p.Annotations = make(map[string]string, 1)
+		}
 		p.Annotations[rankIndexKey] = strconv.FormatUint(rankIndex, decimal)
 		r.Update(context.TODO(), p)
 		rankIndex++

@@ -178,6 +178,10 @@ func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request)
 }
 
 func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
+	if getJobRequiredNpu(job) == 0 {
+		hwlog.RunLog.Debugf("job <%s> does not require NPU, skip ranktable generation", job.Name)
+		return
+	}
 	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
