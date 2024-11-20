@@ -47,7 +47,7 @@ type BaseGenerator struct {
 // NewBaseGenerator is the constructor for BaseGenerator.
 func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.RankTableGenerator) *BaseGenerator {
 	rankTableDir := utils.GenRankTableDir(job)
-	return &BaseGenerator{
+	baseGenerator := BaseGenerator{
 		dir:        rankTableDir,
 		path:       rankTableDir + "/" + rankTableFile,
 		servers:    &sync.Map{},
@@ -56,6 +56,8 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 		ServerList: []*Server{},
 		Version:    version,
 	}
+	baseGenerator.checkDirPath()
+	return &baseGenerator
 }
 
 func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
