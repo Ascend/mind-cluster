@@ -56,18 +56,17 @@ const (
 
 	statusPodIPDownwardAPI = "status.podIP"
 
-	cmRetryTime          = 3
-	configmapPrefix      = "rings-config-"
-	acjobKind            = "AscendJob"
-	vcjobKind            = "Job"
-	vcjobLabelKey        = "volcano.sh/job-name"
-	deployKind           = "Deployment"
-	deployLabelKey       = "deploy-name"
-	configmapKey         = "hccl.json"
-	configmapVersion     = "version"
-	hcclCtrName          = "hccl-controller"
-	atlasTaskKey         = "ring-controller.atlas"
-	processRescheduleKey = "process-rescheduling"
+	cmRetryTime      = 3
+	configmapPrefix  = "rings-config-"
+	acjobKind        = "AscendJob"
+	vcjobKind        = "Job"
+	vcjobLabelKey    = "volcano.sh/job-name"
+	deployKind       = "Deployment"
+	deployLabelKey   = "deploy-name"
+	configmapKey     = "hccl.json"
+	configmapVersion = "version"
+	hcclCtrName      = "hccl-controller"
+	atlasTaskKey     = "ring-controller.atlas"
 	// the status of mount chips for non-worker Pods
 	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )
@@ -105,8 +104,6 @@ const (
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name
 	mindxServiceNamespace    = "mindx-dl"                                     // clusterd grpc service namespace
 	mindxDefaultServerDomain = "clusterd-grpc-svc.mindx-dl.svc.cluster.local" // clusterd grpc service domain
-
-	processRevoce = "MindX_PROCESS_RECOVER"
 )
 
 const (

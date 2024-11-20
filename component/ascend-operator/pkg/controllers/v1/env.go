@@ -65,7 +65,6 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 
 			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
-			addRescheduleEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -89,7 +88,6 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
-			addRescheduleEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -123,7 +121,6 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, tfChiefDevice, "0", i)
 			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
-			addRescheduleEnv(pi, podTemplate, i)
 			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
 				Name: tfWorkerIP,
 				ValueFrom: &corev1.EnvVarSource{
@@ -135,16 +132,4 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
-}
-
-func addRescheduleEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec, index int) {
-	reschedLabel, ok := pi.job.Labels[processRescheduleKey]
-	if !ok {
-		return
-	}
-	if reschedLabel != "on" {
-		return
-	}
-	hwlog.RunLog.Info("add process reschedule environment")
-	addEnvValue(podTemplate, processRevoce, "true", index)
 }

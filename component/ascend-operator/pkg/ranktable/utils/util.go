@@ -20,20 +20,16 @@ import (
 
 // GenRankTableDir generate rank table dir
 func GenRankTableDir(job *mindxdlv1.AscendJob) string {
-	ranktableDir := ""
 	for _, replSpec := range job.Spec.ReplicaSpecs {
 		for _, volume := range replSpec.Template.Spec.Volumes {
 			if volume.Name != rankTableName || volume.VolumeSource.HostPath == nil {
 				continue
 			}
-			ranktableDir = volume.VolumeSource.HostPath.Path
-			break
-		}
-		if ranktableDir != "" {
-			break
+			return volume.VolumeSource.HostPath.Path
 		}
 	}
-	return ranktableDir
+	hwlog.RunLog.Info("ranktable file path is not set")
+	return ""
 }
 
 // PodHasAllocated check if pod has allocated device
@@ -78,7 +74,7 @@ func CheckDirPath(dirPath string) error {
 	}
 	if os.IsNotExist(err) {
 		if s.IsDir() {
-			hwlog.RunLog.Infof("try to mkdir %s", dirPath)
+			hwlog.RunLog.Info("try to mkdir")
 			return os.MkdirAll(dirPath, os.ModePerm)
 		}
 		return err
