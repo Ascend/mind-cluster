@@ -24,7 +24,7 @@ package dcmi
 
    #include "dcmi_interface_api.h"
 
-   void *dcmiHandle;
+   static void *dcmiHandle;
    #define SO_NOT_FOUND  -99999
    #define FUNCTION_NOT_FOUND  -99998
    #define SUCCESS  0
@@ -32,182 +32,185 @@ package dcmi
    #define	CALL_FUNC(name,...) if(name##_func==NULL){return FUNCTION_NOT_FOUND;}return name##_func(__VA_ARGS__);
 
    // dcmi
-   int (*dcmi_init_func)();
+   static int (*dcmi_init_func)();
    static int dcmi_init_new(){
    	CALL_FUNC(dcmi_init)
    }
 
-   int (*dcmi_get_card_num_list_func)(int *card_num,int *card_list,int list_length);
+   static int (*dcmi_get_card_num_list_func)(int *card_num,int *card_list,int list_length);
    static int dcmi_get_card_num_list_new(int *card_num,int *card_list,int list_length){
    	CALL_FUNC(dcmi_get_card_num_list,card_num,card_list,list_length)
    }
 
-   int (*dcmi_get_device_num_in_card_func)(int card_id,int *device_num);
+   static int (*dcmi_get_device_num_in_card_func)(int card_id,int *device_num);
    static int dcmi_get_device_num_in_card_new(int card_id,int *device_num){
    	CALL_FUNC(dcmi_get_device_num_in_card,card_id,device_num)
    }
 
-   int (*dcmi_get_device_logic_id_func)(int *device_logic_id,int card_id,int device_id);
+   static int (*dcmi_get_device_logic_id_func)(int *device_logic_id,int card_id,int device_id);
    static int dcmi_get_device_logic_id_new(int *device_logic_id,int card_id,int device_id){
    	CALL_FUNC(dcmi_get_device_logic_id,device_logic_id,card_id,device_id)
    }
 
-   int (*dcmi_create_vdevice_func)(int card_id, int device_id, struct dcmi_create_vdev_res_stru *vdev,
+   static int (*dcmi_create_vdevice_func)(int card_id, int device_id, struct dcmi_create_vdev_res_stru *vdev,
    	struct dcmi_create_vdev_out *out);
    int dcmi_create_vdevice(int card_id, int device_id, struct dcmi_create_vdev_res_stru *vdev,
    	struct dcmi_create_vdev_out *out){
    	CALL_FUNC(dcmi_create_vdevice,card_id,device_id,vdev,out)
    }
 
-   int (*dcmi_get_device_info_func)(int card_id, int device_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd,
-   	void *buf, unsigned int *size);
+   static int (*dcmi_get_device_info_func)(int card_id, int device_id, enum dcmi_main_cmd main_cmd,
+	unsigned int sub_cmd,void *buf, unsigned int *size);
    int dcmi_get_device_info(int card_id, int device_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf,
    	unsigned int *size){
    	CALL_FUNC(dcmi_get_device_info,card_id,device_id,main_cmd,sub_cmd,buf,size)
    }
 
-   int (*dcmi_get_hccs_link_bandwidth_info_func)(int card_id, int device_id,
+   static int (*dcmi_get_hccs_link_bandwidth_info_func)(int card_id, int device_id,
 struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info);
    int dcmi_get_hccs_link_bandwidth_info(int card_id, int device_id,
 struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
    	CALL_FUNC(dcmi_get_hccs_link_bandwidth_info,card_id,device_id,hccs_bandwidth_info)
    }
 
-   int (*dcmi_set_destroy_vdevice_func)(int card_id,int device_id, unsigned int VDevid);
+   static int (*dcmi_set_destroy_vdevice_func)(int card_id,int device_id, unsigned int VDevid);
    int dcmi_set_destroy_vdevice(int card_id,int device_id, unsigned int VDevid){
    	CALL_FUNC(dcmi_set_destroy_vdevice,card_id,device_id,VDevid)
    }
 
-   int (*dcmi_get_device_type_func)(int card_id,int device_id,enum dcmi_unit_type *device_type);
+   static int (*dcmi_get_device_type_func)(int card_id,int device_id,enum dcmi_unit_type *device_type);
    int dcmi_get_device_type(int card_id,int device_id,enum dcmi_unit_type *device_type){
    	CALL_FUNC(dcmi_get_device_type,card_id,device_id,device_type)
    }
 
-   int (*dcmi_get_device_health_func)(int card_id, int device_id, unsigned int *health);
+   static int (*dcmi_get_device_health_func)(int card_id, int device_id, unsigned int *health);
    int dcmi_get_device_health(int card_id, int device_id, unsigned int *health){
    	CALL_FUNC(dcmi_get_device_health,card_id,device_id,health)
    }
 
-   int (*dcmi_get_device_utilization_rate_func)(int card_id, int device_id, int input_type,
+   static int (*dcmi_get_device_utilization_rate_func)(int card_id, int device_id, int input_type,
     unsigned int *utilization_rate);
    int dcmi_get_device_utilization_rate(int card_id, int device_id, int input_type, unsigned int *utilization_rate){
    	CALL_FUNC(dcmi_get_device_utilization_rate,card_id,device_id,input_type,utilization_rate)
    }
 
-   int (*dcmi_get_device_temperature_func)(int card_id, int device_id, int *temperature);
+   static int (*dcmi_get_device_temperature_func)(int card_id, int device_id, int *temperature);
    int dcmi_get_device_temperature(int card_id, int device_id, int *temperature){
     CALL_FUNC(dcmi_get_device_temperature,card_id,device_id,temperature)
    }
 
-   int (*dcmi_get_device_voltage_func)(int card_id, int device_id, unsigned int *voltage);
+   static int (*dcmi_get_device_voltage_func)(int card_id, int device_id, unsigned int *voltage);
    int dcmi_get_device_voltage(int card_id, int device_id, unsigned int *voltage){
     CALL_FUNC(dcmi_get_device_voltage,card_id,device_id,voltage)
    }
 
-   int (*dcmi_get_device_power_info_func)(int card_id, int device_id, int *power);
+   static int (*dcmi_get_device_power_info_func)(int card_id, int device_id, int *power);
    int dcmi_get_device_power_info(int card_id, int device_id, int *power){
     CALL_FUNC(dcmi_get_device_power_info,card_id,device_id,power)
    }
 
-   int (*dcmi_get_device_frequency_func)(int card_id, int device_id, enum dcmi_freq_type input_type,
+   static int (*dcmi_get_device_frequency_func)(int card_id, int device_id, enum dcmi_freq_type input_type,
     unsigned int *frequency);
    int dcmi_get_device_frequency(int card_id, int device_id, enum dcmi_freq_type input_type, unsigned int *frequency){
     CALL_FUNC(dcmi_get_device_frequency,card_id,device_id,input_type,frequency)
    }
 
-   int (*dcmi_get_device_memory_info_v3_func)(int card_id, int device_id,
+   static int (*dcmi_get_device_memory_info_v3_func)(int card_id, int device_id,
     struct dcmi_get_memory_info_stru *memory_info);
    int dcmi_get_device_memory_info_v3(int card_id, int device_id, struct dcmi_get_memory_info_stru *memory_info){
     CALL_FUNC(dcmi_get_device_memory_info_v3,card_id,device_id,memory_info)
    }
 
-   int (*dcmi_get_device_hbm_info_func)(int card_id, int device_id, struct dcmi_hbm_info *hbm_info);
+   static int (*dcmi_get_device_hbm_info_func)(int card_id, int device_id, struct dcmi_hbm_info *hbm_info);
    int dcmi_get_device_hbm_info(int card_id, int device_id, struct dcmi_hbm_info *hbm_info){
     CALL_FUNC(dcmi_get_device_hbm_info,card_id,device_id,hbm_info)
    }
 
-   int (*dcmi_get_device_errorcode_v2_func)(int card_id, int device_id, int *error_count, unsigned int *error_code_list,
-    unsigned int list_len);
+   static int (*dcmi_get_device_errorcode_v2_func)(int card_id, int device_id, int *error_count,
+	unsigned int *error_code_list, unsigned int list_len);
    int dcmi_get_device_errorcode_v2(int card_id, int device_id, int *error_count,
     unsigned int *error_code_list, unsigned int list_len){
     CALL_FUNC(dcmi_get_device_errorcode_v2,card_id,device_id,error_count,error_code_list,list_len)
    }
 
-   int (*dcmi_get_device_chip_info_func)(int card_id, int device_id, struct dcmi_chip_info *chip_info);
+   static int (*dcmi_get_device_chip_info_func)(int card_id, int device_id, struct dcmi_chip_info *chip_info);
    int dcmi_get_device_chip_info(int card_id, int device_id, struct dcmi_chip_info *chip_info){
     CALL_FUNC(dcmi_get_device_chip_info,card_id,device_id,chip_info)
    }
 
-   int (*dcmi_get_device_chip_info_v2_func)(int card_id, int device_id, struct dcmi_chip_info_v2 *chip_info);
+   static int (*dcmi_get_device_chip_info_v2_func)(int card_id, int device_id, struct dcmi_chip_info_v2 *chip_info);
    int dcmi_get_device_chip_info_v2(int card_id, int device_id, struct dcmi_chip_info_v2 *chip_info){
     CALL_FUNC(dcmi_get_device_chip_info_v2,card_id,device_id,chip_info)
    }
 
-   int (*dcmi_get_device_phyid_from_logicid_func)(unsigned int logicid, unsigned int *phyid);
+   static int (*dcmi_get_device_phyid_from_logicid_func)(unsigned int logicid, unsigned int *phyid);
    int dcmi_get_device_phyid_from_logicid(unsigned int logicid, unsigned int *phyid){
     CALL_FUNC(dcmi_get_device_phyid_from_logicid,logicid,phyid)
    }
 
-   int (*dcmi_get_device_logicid_from_phyid_func)(unsigned int phyid, unsigned int *logicid);
+   static int (*dcmi_get_device_logicid_from_phyid_func)(unsigned int phyid, unsigned int *logicid);
    int dcmi_get_device_logicid_from_phyid(unsigned int phyid, unsigned int *logicid){
     CALL_FUNC(dcmi_get_device_logicid_from_phyid,phyid,logicid)
    }
 
-   int (*dcmi_get_device_ip_func)(int card_id, int device_id, enum dcmi_port_type input_type, int port_id,
+   static int (*dcmi_get_device_ip_func)(int card_id, int device_id, enum dcmi_port_type input_type, int port_id,
     struct dcmi_ip_addr *ip, struct dcmi_ip_addr *mask);
    int dcmi_get_device_ip(int card_id, int device_id, enum dcmi_port_type input_type, int port_id,
     struct dcmi_ip_addr *ip, struct dcmi_ip_addr *mask){
     CALL_FUNC(dcmi_get_device_ip,card_id,device_id,input_type,port_id,ip,mask)
    }
 
-   int (*dcmi_get_device_network_health_func)(int card_id, int device_id, enum dcmi_rdfx_detect_result *result);
+   static int (*dcmi_get_device_network_health_func)(int card_id, int device_id,
+	enum dcmi_rdfx_detect_result *result);
    int dcmi_get_device_network_health(int card_id, int device_id, enum dcmi_rdfx_detect_result *result){
     CALL_FUNC(dcmi_get_device_network_health,card_id,device_id,result)
    }
 
-   int (*dcmi_get_card_list_func)(int *card_num, int *card_list, int list_len);
+   static int (*dcmi_get_card_list_func)(int *card_num, int *card_list, int list_len);
    int dcmi_get_card_list(int *card_num, int *card_list, int list_len){
     CALL_FUNC(dcmi_get_card_list,card_num,card_list,list_len)
    }
 
-   int (*dcmi_get_device_id_in_card_func)(int card_id, int *device_id_max, int *mcu_id, int *cpu_id);
+   static int (*dcmi_get_device_id_in_card_func)(int card_id, int *device_id_max, int *mcu_id, int *cpu_id);
    int dcmi_get_device_id_in_card(int card_id, int *device_id_max, int *mcu_id, int *cpu_id){
     CALL_FUNC(dcmi_get_device_id_in_card,card_id,device_id_max,mcu_id,cpu_id)
    }
 
-   int (*dcmi_get_memory_info_func)(int card_id, int device_id, struct dcmi_memory_info_stru *device_memory_info);
+   static int (*dcmi_get_memory_info_func)(int card_id, int device_id,
+	struct dcmi_memory_info_stru *device_memory_info);
    int dcmi_get_memory_info(int card_id, int device_id, struct dcmi_memory_info_stru *device_memory_info){
     CALL_FUNC(dcmi_get_memory_info,card_id,device_id,device_memory_info)
    }
 
-   int (*dcmi_get_device_errorcode_func)(int card_id, int device_id, int *error_count, unsigned int *error_code,
+   static int (*dcmi_get_device_errorcode_func)(int card_id, int device_id, int *error_count, unsigned int *error_code,
    int *error_width);
    int dcmi_get_device_errorcode(int card_id, int device_id, int *error_count, unsigned int *error_code,
    int *error_width){
     CALL_FUNC(dcmi_get_device_errorcode,card_id,device_id,error_count,error_code,error_width)
    }
 
-   int (*dcmi_get_card_id_device_id_from_logicid_func)(int *card_id, int *device_id, unsigned int device_logic_id);
+   static int (*dcmi_get_card_id_device_id_from_logicid_func)(int *card_id, int *device_id,
+	unsigned int device_logic_id);
    int dcmi_get_card_id_device_id_from_logicid(int *card_id, int *device_id, unsigned int device_logic_id){
     CALL_FUNC(dcmi_get_card_id_device_id_from_logicid,card_id,device_id,device_logic_id)
    }
 
-   int (*dcmi_mcu_get_power_info_func)(int card_id, int *power);
+   static int (*dcmi_mcu_get_power_info_func)(int card_id, int *power);
    static int dcmi_mcu_get_power_info_new(int card_id, int *power){
     CALL_FUNC(dcmi_mcu_get_power_info,card_id,power)
    }
 
-   int (*dcmi_get_product_type_func)(int card_id, int device_id, char *product_type_str, int buf_size);
+   static int (*dcmi_get_product_type_func)(int card_id, int device_id, char *product_type_str, int buf_size);
    int dcmi_get_product_type(int card_id, int device_id, char *product_type_str, int buf_size){
     CALL_FUNC(dcmi_get_product_type,card_id,device_id,product_type_str,buf_size)
    }
 
-   int (*dcmi_set_device_reset_func)(int card_id, int device_id, enum dcmi_reset_channel channel_type);
+   static int (*dcmi_set_device_reset_func)(int card_id, int device_id, enum dcmi_reset_channel channel_type);
    int dcmi_set_device_reset(int card_id, int device_id, enum dcmi_reset_channel channel_type){
     CALL_FUNC(dcmi_set_device_reset,card_id,device_id,channel_type)
    }
 
-   int (*dcmi_get_device_boot_status_func)(int card_id, int device_id, enum dcmi_boot_status *boot_status);
+   static int (*dcmi_get_device_boot_status_func)(int card_id, int device_id, enum dcmi_boot_status *boot_status);
    int dcmi_get_device_boot_status(int card_id, int device_id, enum dcmi_boot_status *boot_status){
     CALL_FUNC(dcmi_get_device_boot_status,card_id,device_id,boot_status)
    }
@@ -217,59 +220,59 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
         goEventFaultCallBack(fault_event->event_t.dms_event);
     }
 
-    int (*dcmi_subscribe_fault_event_func)(int card_id, int device_id, struct dcmi_event_filter filter,
+    static int (*dcmi_subscribe_fault_event_func)(int card_id, int device_id, struct dcmi_event_filter filter,
         void (*f_name)(struct dcmi_event *fault_event));
        int dcmi_subscribe_fault_event(int card_id, int device_id, struct dcmi_event_filter filter){
         CALL_FUNC(dcmi_subscribe_fault_event,card_id,device_id,filter,event_handler)
        }
 
-    int (*dcmi_get_npu_work_mode_func)(int card_id, unsigned char *work_mode);
+    static int (*dcmi_get_npu_work_mode_func)(int card_id, unsigned char *work_mode);
     int dcmi_get_npu_work_mode(int card_id, unsigned char *work_mode){
         CALL_FUNC(dcmi_get_npu_work_mode,card_id,work_mode)
     }
 
-    int (*dcmi_get_device_die_v2_func)(int card_id, int device_id, enum dcmi_die_type input_type,
+    static int (*dcmi_get_device_die_v2_func)(int card_id, int device_id, enum dcmi_die_type input_type,
     struct dcmi_die_id *die_id);
     int dcmi_get_device_die_v2(int card_id, int device_id, enum dcmi_die_type input_type, struct dcmi_die_id *die_id){
         CALL_FUNC(dcmi_get_device_die_v2,card_id,device_id,input_type,die_id)
     }
 
-    int (*dcmi_get_device_resource_info_func)(int card_id, int device_id, struct dcmi_proc_mem_info *proc_info,
+    static int (*dcmi_get_device_resource_info_func)(int card_id, int device_id, struct dcmi_proc_mem_info *proc_info,
     int *proc_num);
     int dcmi_get_device_resource_info(int card_id, int device_id, struct dcmi_proc_mem_info *proc_info, int *proc_num){
         CALL_FUNC(dcmi_get_device_resource_info,card_id,device_id,proc_info,proc_num)
     }
 
-    int (*dcmi_get_device_pcie_info_v2_func)(int card_id, int device_id, struct dcmi_pcie_info_all *pcie_info);
+    static int (*dcmi_get_device_pcie_info_v2_func)(int card_id, int device_id, struct dcmi_pcie_info_all *pcie_info);
     int dcmi_get_device_pcie_info_v2(int card_id, int device_id, struct dcmi_pcie_info_all *pcie_info){
         CALL_FUNC(dcmi_get_device_pcie_info_v2,card_id,device_id,pcie_info)
     }
 
-    int (*dcmi_get_device_board_info_func)(int card_id, int device_id, struct dcmi_board_info *board_info);
+    static int (*dcmi_get_device_board_info_func)(int card_id, int device_id, struct dcmi_board_info *board_info);
     int dcmi_get_device_board_info(int card_id, int device_id, struct dcmi_board_info *board_info){
         CALL_FUNC(dcmi_get_device_board_info,card_id,device_id,board_info)
     }
 
-    int (*dcmi_get_pcie_link_bandwidth_info_func)(int card_id, int device_id,
+    static int (*dcmi_get_pcie_link_bandwidth_info_func)(int card_id, int device_id,
     struct dcmi_pcie_link_bandwidth_info *pcie_link_bandwidth_info);
     int dcmi_get_pcie_link_bandwidth_info(int card_id, int device_id,
     struct dcmi_pcie_link_bandwidth_info *pcie_link_bandwidth_info){
         CALL_FUNC(dcmi_get_pcie_link_bandwidth_info,card_id,device_id,pcie_link_bandwidth_info)
     }
 
-   int (*dcmi_get_dcmi_version_func)(char *dcmi_ver, int buf_size);
+   static int (*dcmi_get_dcmi_version_func)(char *dcmi_ver, int buf_size);
    int dcmi_get_dcmi_version(char *dcmi_ver, int buf_size){
     CALL_FUNC(dcmi_get_dcmi_version,dcmi_ver,buf_size)
    }
 
-   int (*dcmi_get_device_ecc_info_func)(int card_id, int device_id, enum dcmi_device_type input_type,
+   static int (*dcmi_get_device_ecc_info_func)(int card_id, int device_id, enum dcmi_device_type input_type,
     struct dcmi_ecc_info *device_ecc_info);
    int dcmi_get_device_ecc_info(int card_id, int device_id, enum dcmi_device_type input_type,
     struct dcmi_ecc_info *device_ecc_info){
     CALL_FUNC(dcmi_get_device_ecc_info,card_id,device_id,input_type,device_ecc_info)
    }
 
-    int (*dcmi_get_mainboard_id_func)(int card_id, int device_id, unsigned int *mainboard_id);
+    static int (*dcmi_get_mainboard_id_func)(int card_id, int device_id, unsigned int *mainboard_id);
     int dcmi_get_mainboard_id(int card_id, int device_id, unsigned int *mainboard_id){
         CALL_FUNC(dcmi_get_mainboard_id,card_id,device_id,mainboard_id)
     }
