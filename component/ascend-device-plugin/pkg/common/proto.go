@@ -38,6 +38,35 @@ type NodeDeviceInfoCache struct {
 	CheckCode   string
 }
 
+// SwitchFaultEvent is the struct for switch reported fault
+type SwitchFaultEvent struct {
+	EventType uint
+	// SubType fault subtype used for id a fault
+	SubType uint
+	// FaultType To maintain compatibility with next incoming switch fault codes changes
+	// this filed is reserved for next version
+	// in this version this field is obtained through manually mapping in device-plugin
+	// next version this filed will be reported by switch driver
+	FaultID uint
+	// AssembledFaultCode is to assemble cgo lq.struct_LqDcmiEvent to a device-plugin recognized fault code type
+	// such as : [0x00f103b0,155904,na,na] in config file: SwitchFaultCode
+	AssembledFaultCode string
+	// PeerPortDevice used to tell what kind of device connected to
+	PeerPortDevice uint
+	PeerPortId     uint
+	SwitchChipId   uint
+	SwitchPortId   uint
+	// Severity used to tell how serious is the fault
+	Severity uint
+	// Assertion tell what kind of fault, recover, happen or once
+	Assertion       uint
+	EventSerialNum  int
+	NotifySerialNum int
+	AlarmRaisedTime int64
+	AdditionalParam string
+	AdditionalInfo  string
+}
+
 // SwitchFaultInfo Switch Fault Info
 type SwitchFaultInfo struct {
 	FaultCode  []string

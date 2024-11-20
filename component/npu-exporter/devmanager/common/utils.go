@@ -344,6 +344,17 @@ func DeepCopyLinkStatInfo(linkStatInfo *LinkStatInfo) *LinkStatInfo {
 	}
 }
 
+// DeepCopyLinkStatusInfo copy LinkStatusInfo deeply
+func DeepCopyLinkStatusInfo(linkStatusInfo *LinkStatusInfo) *LinkStatusInfo {
+	if linkStatusInfo == nil {
+		return nil
+	}
+
+	return &LinkStatusInfo{
+		LinkState: linkStatusInfo.LinkState,
+	}
+}
+
 // DeepCopyBandwidthInfo copy BandwidthInfo deeply
 func DeepCopyBandwidthInfo(bandwidthInfo *BandwidthInfo) *BandwidthInfo {
 	if bandwidthInfo == nil {

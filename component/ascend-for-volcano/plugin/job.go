@@ -330,9 +330,6 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 	if _, found := sHandle.JobDeleteFlag[sJob.Name]; found {
 		return
 	}
-	if k, ok := sJob.Label[util.ProcessReschedulingTag]; ok && k == util.EnableFunc {
-		return
-	}
 	cm, err := util.GetConfigMapWithRetry(sHandle.FrameAttr.KubeClient, sJob.NameSpace,
 		ResetInfoCMNamePrefix+sJob.ReferenceName)
 	if err != nil {
@@ -873,21 +870,20 @@ func (sJob SchedulerJob) GetPhyTosList(sHandler *ScheduleHandler, logicList [][]
 func (sJob *SchedulerJob) SetFillJobServerListV2(Tors []*Tor, taskNum int) error {
 	var count int
 	for i := 0; i < len(Tors); i++ {
-		if Tors[i].FreeServerCount < taskNum {
-			continue
-		}
-		tmpTor := &Tor{}
-		for _, k := range Tors[i].Servers {
-			if k.CurrentJob != nil && *k.CurrentJob == sJob.Name {
-				count++
-				tmpTor.Servers = append(tmpTor.Servers, k)
+		if Tors[i].FreeServerCount >= taskNum {
+			tmpTor := &Tor{}
+			for _, k := range Tors[i].Servers {
+				if k.CurrentJob != nil && *k.CurrentJob == sJob.Name {
+					count++
+					tmpTor.Servers = append(tmpTor.Servers, k)
+				}
+				if count == taskNum {
+					break
+				}
 			}
-			if count == taskNum {
-				break
-			}
+			sJob.ServerList = append(sJob.ServerList, tmpTor)
+			return nil
 		}
-		sJob.ServerList = append(sJob.ServerList, tmpTor)
-		return nil
 	}
 	return fmt.Errorf("tor check failed not enough resource for fill job")
 }
@@ -896,22 +892,21 @@ func (sJob *SchedulerJob) SetFillJobServerListV2(Tors []*Tor, taskNum int) error
 func (sJob SchedulerJob) SetFillJobServerList(sHandler *ScheduleHandler, Tors []*Tor, taskNum int) error {
 	var count int
 	for i := len(Tors) - 1; i >= 0; i-- {
-		if Tors[i].FreeServerCount < taskNum {
-			continue
-		}
-		tmpTor := &Tor{}
-		for _, k := range Tors[i].Servers {
-			if k.CurrentJob != nil && *k.CurrentJob == sJob.Name {
-				count++
-				tmpTor.Servers = append(tmpTor.Servers, k)
+		if Tors[i].FreeServerCount >= taskNum {
+			tmpTor := &Tor{}
+			for _, k := range Tors[i].Servers {
+				if k.CurrentJob != nil && *k.CurrentJob == sJob.Name {
+					count++
+					tmpTor.Servers = append(tmpTor.Servers, k)
+				}
+				if count == taskNum {
+					break
+				}
 			}
-			if count == taskNum {
-				break
-			}
+			sJob.ServerList = append(sJob.ServerList, tmpTor)
+			sHandler.Jobs[sJob.Name] = sJob
+			return nil
 		}
-		sJob.ServerList = append(sJob.ServerList, tmpTor)
-		sHandler.Jobs[sJob.Name] = sJob
-		return nil
 	}
 	return fmt.Errorf("tor check failed not enough resource for job")
 }
@@ -962,14 +957,13 @@ func (sJob *SchedulerJob) SetNormalJobServerList(sHandler *ScheduleHandler) {
 				tmpTor.Servers = append(tmpTor.Servers, server)
 				count++
 			}
-			if count != taskNum-len(sJob.HealthTorRankIndex) {
-				continue
+			if count == taskNum-len(sJob.HealthTorRankIndex) {
+				sJob.ServerList = append(sJob.ServerList, tmpTor)
+				if len(sJob.ServerList) > 1 {
+					sJob.MarkMulJobServerList()
+				}
+				return
 			}
-			sJob.ServerList = append(sJob.ServerList, tmpTor)
-			if len(sJob.ServerList) > 1 {
-				sJob.MarkMulJobServerList()
-			}
-			return
 		}
 		sJob.ServerList = append(sJob.ServerList, tmpTor)
 	}
@@ -1007,16 +1001,14 @@ func (sJob SchedulerJob) GetLogicTorList(sHandler *ScheduleHandler, netSliceNum 
 	logicTorList := make([][]*Server, netSliceNum)
 	for _, tor := range sHandler.Tors.Tors {
 		for i, server := range tor.Servers {
-			if server.CurrentJob == nil || *server.CurrentJob != sJob.Name {
-				continue
+			if server.CurrentJob != nil && *server.CurrentJob == sJob.Name {
+				if i >= len(logicTorList) {
+					klog.V(util.LogDebugLev).Infof("invalid i: %d, logicTorList length: %d", i, len(logicTorList))
+				}
+				logicTorList[i] = append(logicTorList[i], server)
 			}
-			if i >= len(logicTorList) {
-				klog.V(util.LogDebugLev).Infof("invalid i: %d, logicTorList length: %d", i, len(logicTorList))
-			}
-			logicTorList[i] = append(logicTorList[i], server)
 		}
 	}
-
 	return logicTorList
 
 }

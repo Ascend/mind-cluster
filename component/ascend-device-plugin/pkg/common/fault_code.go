@@ -86,11 +86,11 @@ const (
 var (
 	faultTypeCode FaultTypeCode
 	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
+	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
 	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L2-L3
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
+	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// SeparateFaultCodes contains all fault code that believed to be Separate, in this case is L4-L5
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
+	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// initLogicIDs need init fault code device. add by train or inference
 	initLogicIDs []int32
 	// logicIDLock operate initLogicIDs lock
@@ -188,7 +188,6 @@ type faultFileInfo struct {
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
 type SwitchFaultFileInfo struct {
 	NotHandleFaultCodes []string
-	ReportFaultCodes    []string
 	SubHealthFaultCodes []string
 	ResetFaultCodes     []string
 	SeparateFaultCodes  []string
@@ -493,40 +492,49 @@ func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 		return fmt.Errorf("failed to unmarsha switch fault code, err: %s", err.Error())
 	}
 
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-
+	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
+	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
+	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
+	invalidFormatInfo := "failed to parse %s faultCode:%v, will ignore it," +
+		" please check if its format, such as: [0x00f1ff09,155914,cpu,na]"
 	for _, code := range switchFileInfo.NotHandleFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse NotHandleFaultCodes faultcode:%v", code)
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "NotHandleFaultCodes", code)
 			continue
 		}
-		NotHandleFaultCodes = append(NotHandleFaultCodes, codeInt64)
+		NotHandleFaultCodes = append(NotHandleFaultCodes, code)
 	}
 
-	switchFileInfo.ReportFaultCodes = append(switchFileInfo.ReportFaultCodes, switchFileInfo.SubHealthFaultCodes...)
-	for _, code := range switchFileInfo.ReportFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse PreSeparateFaultCodes:%v", code)
+	for _, code := range switchFileInfo.SubHealthFaultCodes {
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "SubHealthFaultCodes", code)
 			continue
 		}
-		PreSeparateFaultCodes = append(PreSeparateFaultCodes, codeInt64)
+		PreSeparateFaultCodes = append(PreSeparateFaultCodes, code)
 	}
 
 	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
 	for _, code := range switchFileInfo.SeparateFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse SeparateFaultCodes:%v", code)
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf(invalidFormatInfo, "SeparateFaultCodes", code)
 			continue
 		}
-		SeparateFaultCodes = append(SeparateFaultCodes, codeInt64)
+		SeparateFaultCodes = append(SeparateFaultCodes, code)
 	}
 
 	return nil
+}
+
+// isValidSwitchFaultCode to judge is a fault code is valid format as [0x00f1ff09,155914,cpu,na]
+func isValidSwitchFaultCode(code string) bool {
+	if len(code) > MaxLengthOfFaultCode {
+		return false
+	}
+	if !strings.HasPrefix(code, "[") || !strings.HasSuffix(code, "]") {
+		return false
+	}
+	parts := strings.Split(code, CommaSepDev)
+	return len(parts) == PartNumOfFaultCode
 }
 
 func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
@@ -1273,7 +1281,7 @@ func collectEachFaultEvent(logicId int32, faultInfos []common.DevFaultInfo) {
 		}
 
 		if faultDurationMap[eventIdStr].Duration == nil {
-			faultDurationMap[eventIdStr].Duration = make(map[int32]FaultDurationData, 0)
+			faultDurationMap[eventIdStr].Duration = make(map[int32]FaultDurationData, GeneralMapSize)
 		}
 
 		if _, ok := faultDurationMap[eventIdStr].Duration[logicId]; !ok {

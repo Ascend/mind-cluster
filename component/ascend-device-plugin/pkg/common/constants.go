@@ -644,6 +644,10 @@ const (
 	PollFaultCodeCMMinInterval = 30
 	// GetSwitchFaultCodeInterval is the interval(second) of get all fault code by get interface
 	GetSwitchFaultCodeInterval = 300
+	// MaxLengthOfFaultCode [0x00f103b0,155904,na,na] must contain at most 50 characters
+	MaxLengthOfFaultCode = 50
+	// PartNumOfFaultCode [0x00f103b0,155904,na,na] must have 4 parts
+	PartNumOfFaultCode = 4
 	// FaultCodeCMName is the name of the configmap that is used to save fault code
 	FaultCodeCMName = "mindx-dl-fault-config"
 	// FaultCodeCMNameSpace is the namespace of the fault code configmap
@@ -719,6 +723,31 @@ const (
 	FaultSeverityMinor
 	FaultSeverityMajor
 	FaultSeverityCritical
+)
+
+// peer device type of switch
+const (
+	// PeerDeviceChipOrCpuPort if peer device is whole chip or cpu the given value should be 0
+	PeerDeviceChipOrCpuPort = 0
+	// PeerDeviceNpuPort 1 means switch contact peer device is npu
+	PeerDeviceNpuPort = 1
+	// PeerDeviceL2Port 1 means switch contact peer device is L2
+	PeerDeviceL2Port = 2
+)
+
+const (
+	// EventTypeOfSwitchPortFault the event type of port down fault
+	EventTypeOfSwitchPortFault = 5
+	// SubTypeOfPortDown the subtype of port down fault
+	SubTypeOfPortDown = 8
+	// SubTypeOfPortLaneReduceHalf the subtype of lane reduce to half
+	SubTypeOfPortLaneReduceHalf = 449
+	// SubTypeOfPortLaneReduceQuarter the subtype of lane reduce to quarter
+	SubTypeOfPortLaneReduceQuarter = 448
+	// FaultIdOfPortLaneReduceHalf  the fault id of lane reduce to half
+	FaultIdOfPortLaneReduceHalf = 132332
+	// FaultIdOfPortLaneReduceQuarter  the fault id of lane reduce to quarter
+	FaultIdOfPortLaneReduceQuarter = 132333
 )
 
 // LogicID list for reset, get id list of ring

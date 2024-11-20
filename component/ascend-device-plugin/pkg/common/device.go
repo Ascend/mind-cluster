@@ -16,6 +16,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,12 +47,12 @@ const (
 var (
 	// SwitchFaultLevelMapLock Lock SwitchFaultLevelMap to avoid concurrence write and read
 	SwitchFaultLevelMapLock sync.Mutex
-	// SwitchFaultLevelMap record every fault code and it's level
-	SwitchFaultLevelMap = make(map[int64]int, GeneralMapSize)
+	// SwitchFaultLevelMap record every switch fault code and it's level
+	SwitchFaultLevelMap = make(map[string]int, GeneralMapSize)
 	// SwitchFaultLock is used for CurrentSwitchFault which may be used concurrence
 	SwitchFaultLock sync.Mutex
 	// CurrentSwitchFault store all switch fault which will be reported to device-info configmap
-	currentSwitchFault = make([]int64, 0, GeneralMapSize)
+	currentSwitchFault = make([]SwitchFaultEvent, 0, GeneralMapSize)
 )
 
 // GetDeviceID get device physical id and virtual by device name
@@ -93,18 +94,43 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	if ParamOption.RealCardType != common.Ascend910A3 || !ParamOption.EnableSwitchFault {
 		return SwitchFaultInfo{}
 	}
-	maxFaultLevel := 0
+
 	SwitchFaultLock.Lock()
 	defer SwitchFaultLock.Unlock()
 	SwitchFaultLevelMapLock.Lock()
+
+	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
+
+	reportFaultCodes := make([]string, 0)
+	for _, faultInfo := range GetSwitchFaultCode() {
+		if _, ok := SwitchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
+			hwlog.RunLog.Warnf("received unregisterd faultCode:%s, will not report", faultInfo.AssembledFaultCode)
+			continue
+		}
+		faultStr, err := getSimpleSwitchFaultStr(faultInfo)
+		if err != nil {
+			continue
+		}
+		reportFaultCodes = append(reportFaultCodes, faultStr)
+	}
+	return SwitchFaultInfo{
+		FaultCode:  reportFaultCodes,
+		FaultLevel: faultLevel,
+		UpdateTime: time.Now().Unix(),
+		NodeStatus: NodeStatus,
+	}
+}
+
+func getSwitchFaultLevelAndNodeStatus() (faultLevel string, NodeStatus string) {
+	maxFaultLevel := 0
 	for _, code := range currentSwitchFault {
-		level := SwitchFaultLevelMap[code]
+		level := SwitchFaultLevelMap[code.AssembledFaultCode]
 		if level > maxFaultLevel {
 			maxFaultLevel = level
 		}
 	}
 	SwitchFaultLevelMapLock.Unlock()
-	faultLevel, NodeStatus := NotHandleFaultLevelStr, "Healthy"
+	faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
 	switch maxFaultLevel {
 	case NotHandleFaultLevel:
 		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
@@ -115,31 +141,50 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	default:
 		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
 	}
-	// keep those none zero codes
-	reportFaultCodes := make([]string, 0)
-	for _, code := range currentSwitchFault {
-		if code != 0 {
-			reportFaultCodes = append(reportFaultCodes, fmt.Sprintf("%08x", code))
-		}
+	return faultLevel, NodeStatus
+}
+
+// getSimpleSwitchFaultStr convert fault info to string to display in switch fault info configmap
+func getSimpleSwitchFaultStr(faultInfo SwitchFaultEvent) (string, error) {
+	type simpleSwitchFaultInfo struct {
+		EventType          uint
+		AssembledFaultCode string
+		PeerPortDevice     uint
+		PeerPortId         uint
+		SwitchChipId       uint
+		SwitchPortId       uint
+		Severity           uint
+		Assertion          uint
+		AlarmRaisedTime    int64
 	}
 
-	return SwitchFaultInfo{
-		FaultCode:  reportFaultCodes,
-		FaultLevel: faultLevel,
-		UpdateTime: time.Now().Unix(),
-		NodeStatus: NodeStatus,
+	bytes, err := json.Marshal(simpleSwitchFaultInfo{
+		EventType:          faultInfo.EventType,
+		AssembledFaultCode: faultInfo.AssembledFaultCode,
+		PeerPortDevice:     faultInfo.PeerPortDevice,
+		PeerPortId:         faultInfo.PeerPortId,
+		SwitchChipId:       faultInfo.SwitchChipId,
+		SwitchPortId:       faultInfo.SwitchPortId,
+		Severity:           faultInfo.Severity,
+		Assertion:          faultInfo.Assertion,
+		AlarmRaisedTime:    faultInfo.AlarmRaisedTime,
+	})
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to convert fault:%#v, err: %v", faultInfo, err)
+		return "", err
 	}
+	return string(bytes), nil
 }
 
 // SetSwitchFaultCode set switch fault code
-func SetSwitchFaultCode(newFaults []int64) {
+func SetSwitchFaultCode(newFaults []SwitchFaultEvent) {
 	SwitchFaultLock.Lock()
 	defer SwitchFaultLock.Unlock()
 	currentSwitchFault = newFaults
 }
 
 // GetSwitchFaultCode get switch fault code
-func GetSwitchFaultCode() []int64 {
+func GetSwitchFaultCode() []SwitchFaultEvent {
 	return currentSwitchFault
 }
 

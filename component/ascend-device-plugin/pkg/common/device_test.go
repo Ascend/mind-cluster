@@ -28,7 +28,7 @@ import (
 
 const (
 	cardNum          = 2
-	generalFaultCode = 100
+	generalFaultCode = "[0x00f103b0,155649,na,NoneExist]"
 	firstFaultIdx    = 0
 )
 
@@ -206,24 +206,24 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 	convey.Convey("test GetSwitchFaultInfo", t, func() {
 		ParamOption.RealCardType = common.Ascend910A3
 		ParamOption.EnableSwitchFault = true
-		currentSwitchFault = []int64{}
-		SwitchFaultLevelMap = map[int64]int{}
+		currentSwitchFault = []SwitchFaultEvent{}
+		SwitchFaultLevelMap = map[string]int{}
 		convey.Convey("test empty SwitchFaultLevelMap", func() {
-			currentSwitchFault = append(currentSwitchFault, generalFaultCode)
+			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
 			fault := GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 		})
 		convey.Convey("test actually level", func() {
-			currentSwitchFault = append(currentSwitchFault, generalFaultCode)
-			SwitchFaultLevelMap = map[int64]int{generalFaultCode: NotHandleFaultLevel}
+			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
+			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			fault := GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 
-			SwitchFaultLevelMap = map[int64]int{generalFaultCode: PreSeparateFaultLevel}
+			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == PreSeparateFaultLevelStr, convey.ShouldBeTrue)
 
-			SwitchFaultLevelMap = map[int64]int{generalFaultCode: SeparateFaultLevel}
+			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
 		})

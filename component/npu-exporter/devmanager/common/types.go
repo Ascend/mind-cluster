@@ -261,6 +261,8 @@ type NpuNetInfo struct {
 	StatInfo *StatInfo
 	// Network port real-time bandwidth
 	BandwidthInfo *BandwidthInfo
+	// LinkStatusInfo refers to the link state
+	LinkStatusInfo *LinkStatusInfo
 }
 
 // BandwidthInfo contains network port real-time bandwidth
@@ -337,6 +339,12 @@ type StatInfo struct {
 type LinkStatInfo struct {
 	// The times of link-up
 	LinkUPNum float64
+}
+
+// LinkStatusInfo refers to the link state
+type LinkStatusInfo struct {
+	// The state of link
+	LinkState string
 }
 
 // LinkSpeedInfo the transfer rate of network port

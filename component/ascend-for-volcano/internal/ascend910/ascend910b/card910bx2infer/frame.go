@@ -49,7 +49,7 @@ func New(name string) base.AscendHandler {
 func (tp *card910bx2infer) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
 	return nil

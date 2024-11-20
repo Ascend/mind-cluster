@@ -133,13 +133,6 @@ func (sHandle ScheduleHandler) setNslbV2PodAnnotation(task *api.TaskInfo, vcJob 
 }
 
 func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob SchedulerJob, vcNode NPUNode) {
-	rankIndex, ok := task.Pod.Annotations[podRankIndex]
-	klog.V(util.LogInfoLev).Infof("task %s node %s rankIndex annotation: %s", task.Name, vcNode.Name, rankIndex)
-	if ok { // if pod rankIndex has been written, delete it
-		klog.V(util.LogInfoLev).Infof("node %s bind failed, release rankIndex annotation: %s",
-			vcNode.Name, rankIndex)
-		delete(task.Pod.Annotations, podRankIndex)
-	}
 	vcTask, ok := vcJob.Tasks[task.UID]
 	if !ok {
 		klog.V(util.LogInfoLev).Infof("task %s not in vcjob %s", vcTask.Name, vcJob.Name)

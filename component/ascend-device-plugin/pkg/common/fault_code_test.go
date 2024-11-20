@@ -18,7 +18,6 @@ package common
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -1563,7 +1562,7 @@ func TestGetTimeoutFaultCodes(t *testing.T) {
 func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
-			NotHandleFaultCodes: []string{fmt.Sprintf("%08x", generalFaultCode)},
+			NotHandleFaultCodes: []string{generalFaultCode},
 		}
 		bytes, err := json.Marshal(switchFileInfo)
 		convey.So(err, convey.ShouldBeNil)

@@ -123,11 +123,11 @@ func (n *NPUNode) setChipPropertiesFromNPUNode() error {
 func (n NPUNode) GetChipKindFromNpuNode() (string, error) {
 	tempVal, ok := n.Label[util.Accelerator]
 	if !ok {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s absent", util.Accelerator)
+		return "", fmt.Errorf("GetChipKindFromNpuNode label %s absent", util.Accelerator)
 	}
 	chipKind := strings.Split(tempVal, "-")
 	if len(chipKind) < util.NPUIndex2 {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s value %s %s", util.Accelerator,
+		return "", fmt.Errorf("GetChipKindFromNpuNode label %s value %s %s", util.Accelerator,
 			chipKind, FormatIncorrectError)
 	}
 	return chipKind[1], nil

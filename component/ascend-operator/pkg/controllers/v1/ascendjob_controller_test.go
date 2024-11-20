@@ -10,7 +10,6 @@ package v1
 
 import (
 	"context"
-
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"

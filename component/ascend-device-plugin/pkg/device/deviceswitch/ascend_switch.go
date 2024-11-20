@@ -97,29 +97,7 @@ import "C"
 
 const (
 	maxFaultNum = 128
-	subTypeBase = 1000
 )
-
-// SwitchFaultEvent is the struct for switch reported fault
-type SwitchFaultEvent struct {
-	EventType uint
-	// SubType fault subtype used for id a fault
-	SubType uint
-	// PeerPortDevice used to tell what kind of device connected to
-	PeerPortDevice uint
-	PeerPortId     uint
-	SwitchChipId   uint
-	SwitchPortId   uint
-	// Severity used to tell how serious is the fault
-	Severity uint
-	// Assertion tell what kind of fault, recover, happen or once
-	Assertion       uint
-	EventSerialNum  int
-	NotifySerialNum int
-	AlarmRaisedTime int64
-	AdditionalParam string
-	AdditionalInfo  string
-}
 
 // SwitchDevManager is the manager for switch
 type SwitchDevManager struct {
@@ -127,16 +105,24 @@ type SwitchDevManager struct {
 
 var (
 	switchInitOnce sync.Once
-	// fault code with subtype like 8,has 3 different kind, with different connect device:NPU CPU Switch,
-	// this kind of fault code will be faultcode * 1000 + PeerPortDevice
-	duplicateSubEventMap = map[int]bool{8: true, 10: true, 11: true, 21: true, 22: true, 23: true, 25: true}
+	// EventTypeToFaultIDMapper 5/449 5/448 need to calculate in code
+	EventTypeToFaultIDMapper = map[uint]uint{13: 155907, 12: 155649, 11: 155904, 10: 132134, 8: 155910, 9: 155911,
+		7: 155908, 6: 155909, 5: 155912, 4: 155913, 3: 155914}
+	// FaultIdToAlarmIdMapper  5/8  need alarmID
+	FaultIdToAlarmIdMapper = map[uint]string{
+		155907: "0x00f103b0", 155649: "0x00f103b0", 155904: "0x00f103b0",
+		132134: "0x00f1ff06", 155910: "0x00f1ff06", 155911: "0x00f1ff06",
+		155908: "0x00f103b6", 155909: "0x00f103b6",
+		155912: "0x00f1ff09", 155913: "0x00f1ff09", 155914: "0x00f1ff09",
+		132332: "0x00f10509", 132333: "0x00f10509",
+	}
 )
 
 // UpdateSwitchFaultLevel update the map recording fault code and it's level, as long as deviceinfo changed
 func UpdateSwitchFaultLevel() {
 	common.SwitchFaultLevelMapLock.Lock()
 	defer common.SwitchFaultLevelMapLock.Unlock()
-	common.SwitchFaultLevelMap = make(map[int64]int, common.GeneralMapSize)
+	common.SwitchFaultLevelMap = make(map[string]int, common.GeneralMapSize)
 	for _, code := range common.NotHandleFaultCodes {
 		common.SwitchFaultLevelMap[code] = common.NotHandleFaultLevel
 	}
@@ -185,23 +171,23 @@ func (sdm *SwitchDevManager) ShutDownSwitch() {
 
 //export goFaultEventHandler
 func goFaultEventHandler(event *C.struct_LqDcmiEvent) {
-	// faultEventHandler callback function for subscribe mod, witch will receive fault code when fault happens
+	// faultEventHandler callback function for subscribe mod, which will receive fault code when fault happens
 	faultEvent := convertFaultEvent(event)
-	hwlog.RunLog.Warnf("switch subscribe got fault:%#v, hex:%v", faultEvent,
-		fmt.Sprintf("%08x", faultEvent.SubType))
+	hwlog.RunLog.Warnf("switch subscribe got fault:%#v, faultCode:%v", faultEvent, faultEvent.AssembledFaultCode)
 	// for recovered fault, delete them from current fault codes
 	if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
-		newFaultCodes := make([]int64, 0)
-		for _, code := range common.GetSwitchFaultCode() {
-			if code != int64(faultEvent.SubType) {
-				newFaultCodes = append(newFaultCodes, code)
+		newFaultCodes := make([]common.SwitchFaultEvent, 0)
+		for _, errInfo := range common.GetSwitchFaultCode() {
+			// only in faultEvent and recoverEvent major info is the same it will be thought as recover
+			if !isFaultRecoveredEvent(errInfo, faultEvent) {
+				newFaultCodes = append(newFaultCodes, errInfo)
 			}
 		}
 		common.SetSwitchFaultCode(newFaultCodes)
 		return
 	}
 	currentFault := common.GetSwitchFaultCode()
-	common.SetSwitchFaultCode(append(currentFault, int64(faultEvent.SubType)))
+	common.SetSwitchFaultCode(append(currentFault, faultEvent))
 }
 
 // GetSwitchFaultCodeByInterval start a none stop loop to query and update switch fault code
@@ -223,9 +209,7 @@ func (sdm *SwitchDevManager) GetSwitchFaultCodeByInterval(ctx context.Context, i
 				time.Sleep(interval)
 				continue
 			}
-
 			common.SetSwitchFaultCode(errCodes)
-
 			time.Sleep(interval)
 		}
 	}
@@ -244,35 +228,37 @@ func (sdm *SwitchDevManager) SubscribeSwitchFaults() error {
 }
 
 // GetSwitchFaults will try to get all fault
-func GetSwitchFaults() ([]int64, error) {
+func GetSwitchFaults() ([]common.SwitchFaultEvent, error) {
 	var errCount C.uint
 	var errInfoArray [maxFaultNum]C.struct_LqDcmiEvent
 	if retCode := C.lq_dcmi_get_fault_info(C.uint(maxFaultNum), &errCount,
 		&errInfoArray[0]); int32(retCode) != devmanagercommon.Success {
-		return []int64{}, fmt.Errorf("failed to get switch device errorcodes, errCode:%v", retCode)
+		return []common.SwitchFaultEvent{}, fmt.Errorf("failed to get switch device errorcodes, "+
+			"errCode:%v", retCode)
 	}
 	if int32(errCount) < 0 || int32(errCount) > maxFaultNum {
-		return []int64{}, fmt.Errorf("failed to get switch device errcodes, cause errcodes nums %d is illegal", errCount)
+		return []common.SwitchFaultEvent{}, fmt.Errorf("failed to get switch device errcodes, "+
+			"cause errcodes nums %v is illegal", errCount)
 	}
 
-	retErrores := make([]int64, 0)
-	for i := 0; i < len(errInfoArray); i++ {
+	errorCodes := make([]string, 0)
+	retErrorInfo := make([]common.SwitchFaultEvent, 0)
+	for i := 0; i < int(errCount); i++ {
 		faultEvent := convertFaultEvent(&errInfoArray[i])
-		if faultEvent.SubType == 0 {
-			continue
-		}
 		if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
 			continue
 		}
-		retErrores = append(retErrores, int64(faultEvent.SubType))
+		errorCodes = append(errorCodes, faultEvent.AssembledFaultCode)
+		retErrorInfo = append(retErrorInfo, faultEvent)
 	}
-	hwlog.RunLog.Warnf("get fault:%#v", retErrores)
-	return retErrores, nil
+	// DO NOT edit this log, if necessary DO inform fault dialog
+	hwlog.RunLog.Warnf("switch of 910A3 get fault codes: %#v", errorCodes)
+	return retErrorInfo, nil
 }
 
 // convertFaultEvent convert event getting from driver to go struct
-func convertFaultEvent(event *C.struct_LqDcmiEvent) SwitchFaultEvent {
-	fault := SwitchFaultEvent{
+func convertFaultEvent(event *C.struct_LqDcmiEvent) common.SwitchFaultEvent {
+	fault := common.SwitchFaultEvent{
 		EventType:       uint(event.eventType),
 		SubType:         uint(event.subType),
 		PeerPortDevice:  uint(event.peerportDevice),
@@ -285,13 +271,86 @@ func convertFaultEvent(event *C.struct_LqDcmiEvent) SwitchFaultEvent {
 		NotifySerialNum: int(event.notifySerialNum),
 		AlarmRaisedTime: int64(event.alarmRaisedTime),
 	}
-	fault.SubType = getEventType(fault)
+	if err := setExtraFaultInfo(&fault); err != nil {
+		hwlog.RunLog.Error(err)
+	}
 	return fault
 }
 
-func getEventType(event SwitchFaultEvent) uint {
-	if duplicate, ok := duplicateSubEventMap[int(event.SubType)]; ok && duplicate {
-		return event.SubType*subTypeBase + event.PeerPortDevice
+// setExtraFaultInfo to convert fault event struct to a standard fault code as [0x00f1ff09,155912,cpu,na]
+func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
+	faultID, ok, alarmID := uint(0), false, ""
+	// while eventType is 5, it depends on subtype to tell its faultID
+	if event.EventType == common.EventTypeOfSwitchPortFault {
+		switch event.SubType {
+		case common.SubTypeOfPortDown:
+			faultID = uint(0)
+			alarmID, ok = "0x08520003", true
+		case common.SubTypeOfPortLaneReduceQuarter:
+			faultID = uint(common.FaultIdOfPortLaneReduceQuarter)
+		case common.SubTypeOfPortLaneReduceHalf:
+			faultID = uint(common.FaultIdOfPortLaneReduceHalf)
+		}
+	} else {
+		faultID, ok = EventTypeToFaultIDMapper[event.EventType]
+		if !ok {
+			hwlog.RunLog.Warnf("failed to find faultID for eventType: %d", event.EventType)
+		}
 	}
-	return event.SubType
+	if alarmID == "" {
+		alarmID, ok = FaultIdToAlarmIdMapper[faultID]
+	}
+	if !ok {
+		hwlog.RunLog.Warnf("failed to find alarm id for eventType: %d", event.EventType)
+	}
+	PeerDeviceType, PeerDeviceName := int(event.PeerPortDevice), ""
+	if isPortLevelFault(int(event.EventType)) {
+		switch PeerDeviceType {
+		case common.PeerDeviceChipOrCpuPort:
+			PeerDeviceName = "cpu"
+		case common.PeerDeviceNpuPort:
+			PeerDeviceName = "npu"
+		case common.PeerDeviceL2Port:
+			PeerDeviceName = "L2"
+		}
+	} else {
+		PeerDeviceName = "na"
+	}
+	// currently the last part means ports, remain na for now
+	if faultID == uint(0) {
+		event.AssembledFaultCode = fmt.Sprintf("[%s,,%s,na]", alarmID, PeerDeviceName)
+	} else {
+		event.AssembledFaultCode = fmt.Sprintf("[%s,%d,%s,na]", alarmID, faultID, PeerDeviceName)
+	}
+	event.FaultID = faultID
+	if event.AlarmRaisedTime == int64(0) {
+		event.AlarmRaisedTime = time.Now().Unix()
+	}
+	return nil
+}
+
+// isPortLevelFault to judge if a fault is related to whole chip or any of its ports
+// if it is whole chip peer deviceType will be "na" while peerdeivce==0
+// else it is for its chip, peer deviceType will be "cpu" while peerdeivce==0
+func isPortLevelFault(eventType int) bool {
+	if eventType == 3 || eventType == 4 || eventType == 5 || eventType == 14 || eventType == 15 {
+		return true
+	}
+	return false
+}
+
+// isFaultRecoveredEvent to judge if recoverEvent is the recover event for faultEvent
+func isFaultRecoveredEvent(faultEvent, recoverEvent common.SwitchFaultEvent) bool {
+	if int8(recoverEvent.Assertion) != devmanagercommon.FaultRecover || recoverEvent.Assertion == faultEvent.Assertion {
+		return false
+	}
+	faultEventInfo := fmt.Sprintf("EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,"+
+		"PeerPortDevice:%v,PeerPortId:%v,SwitchChipId:%v,SwitchPortId:%v", faultEvent.EventType, faultEvent.SubType,
+		faultEvent.FaultID, faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice, faultEvent.PeerPortId,
+		faultEvent.SwitchChipId, faultEvent.SwitchPortId)
+	recoveredEventInfo := fmt.Sprintf("EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,"+
+		"PeerPortDevice:%v,PeerPortId:%v,SwitchChipId:%v,SwitchPortId:%v", recoverEvent.EventType, recoverEvent.SubType,
+		recoverEvent.FaultID, recoverEvent.AssembledFaultCode, recoverEvent.PeerPortDevice, recoverEvent.PeerPortId,
+		recoverEvent.SwitchChipId, recoverEvent.SwitchPortId)
+	return faultEventInfo == recoveredEventInfo
 }

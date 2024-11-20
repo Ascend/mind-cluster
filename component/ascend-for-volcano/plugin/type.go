@@ -251,10 +251,10 @@ type usedTorInfos struct {
 
 // TaskResetInfo record task reset device information
 type TaskResetInfo struct {
-	RankList   []*TaskDevInfo
-	UpdateTime int64
-	RetryTime  int
-	GraceExit  int
+	RankList     []*TaskDevInfo
+	UpdateTime   int64
+	RetryTime    int
+	GracefulExit int
 }
 
 // TaskDevInfo is the device info of a task
