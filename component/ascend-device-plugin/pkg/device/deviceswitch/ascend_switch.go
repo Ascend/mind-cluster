@@ -41,18 +41,18 @@ import (
 
     #include "library.h"
 
-    void *dcmiHandle;
+    static void *dcmiHandle;
     #define SO_NOT_FOUND  -99999
     #define FUNCTION_NOT_FOUND  -99998
     #define SUCCESS  0
     #define ERROR_UNKNOWN  -99997
     // dcmi
-    int (*lq_dcmi_init_func)();
+    static int (*lq_dcmi_init_func)();
     static int dcmi_init_lq(){
 		return lq_dcmi_init_func();
 	}
 
-	int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
+	static int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
 	static int lq_dcmi_get_fault_info(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList){
 		return lq_dcmi_get_fault_info_func(listLen,eventListLen,eventList);
 	}
@@ -62,7 +62,7 @@ import (
 		goFaultEventHandler(fault_event);
 	}
 
-	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
+	static int (*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
 	static int lq_dcmi_subscribe_fault_event(struct lq_dcmi_event_filter filter){
 		return lq_dcmi_subscribe_fault_event_func(filter,event_handler);
 	}
