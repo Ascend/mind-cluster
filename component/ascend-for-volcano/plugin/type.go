@@ -20,9 +20,11 @@ package plugin
 import (
 	"sync"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -114,6 +116,14 @@ type SchedulerJob struct {
 	TorBlackMaps map[string]struct{}
 	JobReadyTag  bool
 	SuperPods    map[string][]SuperNode
+	Owner        OwnerInfo
+}
+
+// OwnerInfo the owner info of job
+type OwnerInfo struct {
+	v1.OwnerReference
+	Annotations map[string]string
+	Replicas    *int32
 }
 
 // UnschedulableReason the message of pod pending
@@ -168,6 +178,7 @@ type FaultRankIdData struct {
 type ScheduleEnv struct {
 	IsFirstSession      *bool // scheduler first session message is unreliable
 	Jobs                map[api.JobID]SchedulerJob
+	JobReplicas         map[api.JobID]int32
 	Nodes               map[string]NPUNode
 	JobSinglePodFlag    map[api.JobID]bool
 	JobSeverInfos       map[api.JobID]struct{}

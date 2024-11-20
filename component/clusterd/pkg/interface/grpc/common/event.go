@@ -38,4 +38,8 @@ const (
 	ChangeProcessSchedulingModeEnableErrorEvent = "changeSwitchEnableError"
 
 	FinishEvent = "finish"
+
+	WaitPlatStrategyTimeoutEvent                   = "waitPlatStrategyTimeout"
+	WriteConfirmFaultOrWaitResultFaultTimeoutEvent = "writeConfirmFaultOrWaitResultFaultTimeout"
+	WaitRankTableReadyTimeoutEvent                 = "waitRankTableTimeout"
 )

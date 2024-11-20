@@ -15,7 +15,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -465,6 +465,7 @@ func mockWorkerInfo() *WorkerInfo {
 		statStopped:       false,
 		rankIndex:         0,
 		cachedPodNum:      0,
+		cachePodMap:       make(map[string]*v1.Pod),
 		jobReplicasTotal:  0,
 		podSchedulerCache: make([]string, 0),
 	}

@@ -5,10 +5,14 @@ package kube
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 
-	"k8s.io/api/core/v1"
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // CreateConfigMap create configMap here
@@ -34,4 +38,28 @@ func UpdateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 func GetConfigMap(cmName, cmNamespace string) (*v1.ConfigMap, error) {
 	return k8sClient.ClientSet.CoreV1().ConfigMaps(cmNamespace).Get(context.TODO(),
 		cmName, metav1.GetOptions{})
+}
+
+// RetryPatchPodLabels retry patch pod labels
+func RetryPatchPodLabels(pod *v1.Pod, retryTimes int, labels map[string]string) (*v1.Pod, error) {
+	pod, err := PatchPodLabel(pod.Name, pod.Namespace, labels)
+	retry := 0
+	for err != nil && retry < retryTimes {
+		retry++
+		time.Sleep(time.Second * time.Duration(retry))
+		pod, err = PatchPodLabel(pod.Name, pod.Namespace, labels)
+	}
+	return pod, err
+}
+
+// PatchPodLabel path pod label
+func PatchPodLabel(podName, podNamespace string, labels map[string]string) (*v1.Pod, error) {
+	labelStr, err := json.Marshal(labels)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
+		return nil, err
+	}
+	patchBody := fmt.Sprintf(labelsFormat, labelStr)
+	return k8sClient.ClientSet.CoreV1().Pods(podNamespace).Patch(context.TODO(),
+		podName, types.MergePatchType, []byte(patchBody), metav1.PatchOptions{})
 }

@@ -182,6 +182,7 @@ type WorkerInfo struct {
 	statStopped       bool
 	rankIndex         int
 	cachedPodNum      int32
+	cachePodMap       map[string]*v1.Pod
 	jobReplicasTotal  int32
 	succeedPodNum     int32
 	podSchedulerCache []string

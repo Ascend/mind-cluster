@@ -13,7 +13,7 @@ const (
 	ComponentName = "clusterd"
 
 	// MaxLogLineLength max log line length
-	MaxLogLineLength = 512
+	MaxLogLineLength = 1023
 
 	// RetryTime is the retry time loading configmap
 	RetryTime = 3

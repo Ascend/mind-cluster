@@ -18,10 +18,13 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
+
+var faultSplitLength = 2
 
 // GetJobInfo return job's name, podGroup name and namespace
 func GetJobInfo(jobId string) (jobName, pgName, namespace string) {
@@ -48,6 +51,25 @@ func Faults2String(faults []*pb.FaultRank) string {
 		faultInfo = append(faultInfo, item.RankId+":"+item.FaultType)
 	}
 	return strings.Join(faultInfo, ",")
+}
+
+// String2Faults return faults split from string
+func String2Faults(faultStr string) []*pb.FaultRank {
+	faultStrSlice := strings.Split(faultStr, ",")
+	var res []*pb.FaultRank
+	for _, fault := range faultStrSlice {
+		fs := strings.Split(fault, ":")
+		n := len(fs)
+		if n == faultSplitLength {
+			res = append(res, &pb.FaultRank{
+				RankId:    fs[0],
+				FaultType: fs[n-1],
+			})
+		} else {
+			hwlog.RunLog.Warnf("bad format, fault=%s, faultStr=%s", fault, faultStr)
+		}
+	}
+	return res
 }
 
 // StrategySupported check strategy supported
@@ -225,6 +247,7 @@ func GetFaultRankIdsInSameNode(faultRankIds []string, deviceNumPerNode int) []st
 			faultRankIdsResult = append(faultRankIdsResult, strconv.Itoa(i))
 		}
 	}
+
 	return faultRankIdsResult
 }
 
@@ -241,4 +264,68 @@ func CheckProcessRecoverOpen(name, nameSpace string) bool {
 		return false
 	}
 	return pg.Labels[ProcessReschedulingLabel] == ProcessReschedulingEnable
+}
+
+// RemoveSliceDuplicateFaults remote duplicate fault
+func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
+	var res []*pb.FaultRank
+	exitMap := make(map[string]string)
+	for _, fault := range faults {
+		if typ, ok := exitMap[fault.RankId]; !ok {
+			exitMap[fault.RankId] = fault.FaultType
+		} else {
+			if typ == "0" { // uce fault
+				exitMap[fault.RankId] = fault.FaultType
+			}
+		}
+	}
+	for id, typ := range exitMap {
+		res = append(res, &pb.FaultRank{
+			RankId:    id,
+			FaultType: typ,
+		})
+	}
+	return res
+}
+
+// LabelSoftWareFaultPod label fault for software fault
+func LabelSoftWareFaultPod(jobId string, rankList []string) error {
+	worker := kube.JobMgr.GetBsWorker(jobId)
+	if worker == nil {
+		return fmt.Errorf("jobId=%s not exist", jobId)
+	}
+	var faultPodRankList []string
+	devicePerNode := worker.GetDeviceNumPerNode()
+	for _, rank := range rankList {
+		faultRank, err := strconv.Atoi(rank)
+		if err != nil {
+			hwlog.RunLog.Errorf("parse pod rank failed, err is %v", err)
+			return err
+		}
+		faultPodRank := faultRank / devicePerNode
+		faultPodRankList = append(faultPodRankList, strconv.Itoa(faultPodRank))
+	}
+	faultPodRankList = util.RemoveSliceDuplicateElement(faultPodRankList)
+	if err := labelPodFault(worker, faultPodRankList); err != nil {
+		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
+		return err
+	}
+	return nil
+}
+
+func labelPodFault(worker job.PodWorker, faultPodRankList []string) error {
+	labelCache := make(map[string]struct{})
+	faultLabel := map[string]string{"fault-type": "software"}
+	for _, podRank := range faultPodRankList {
+		pod := worker.GetPodByRankIndex(podRank)
+		key := pod.GetNamespace() + "/" + pod.GetName()
+		_, labeled := labelCache[key]
+		if pod != nil && !labeled {
+			if _, err := kube.RetryPatchPodLabels(pod, UpdatePodGroupTimes, faultLabel); err != nil {
+				return err
+			}
+			labelCache[key] = struct{}{}
+		}
+	}
+	return nil
 }

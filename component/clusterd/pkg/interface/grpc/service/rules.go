@@ -5,13 +5,6 @@ package service
 
 import "clusterd/pkg/interface/grpc/common"
 
-/*
-getBaseRules return machine state change rules for retry/recover/dump/exit strategy
-src: origin state.
-event: event. occur on origin state
-dst: destination state. when even happen on src state, state will change to dst state, and take handle function
-*/
-
 func (ctl *EventController) getPreRules() []common.TransRule {
 	return []common.TransRule{
 		{Src: common.InitState, Event: common.FaultOccurEvent,
@@ -19,6 +12,8 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 
 		{Src: common.NotifyWaitFaultFlushingState, Event: common.NotifyFinishEvent,
 			Dst: common.NotifyStopTrainState, Handler: ctl.handleNotifyStopTrain},
+		{Src: common.NotifyWaitFaultFlushingState, Event: common.WaitPlatStrategyTimeoutEvent,
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
 
 		{Src: common.NotifyStopTrainState, Event: common.NotifySuccessEvent,
 			Dst: common.WaitReportStopCompleteState, Handler: ctl.handleWaitReportStopComplete},
@@ -37,12 +32,16 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 			Dst: common.WaitReportRecoverStrategyState, Handler: ctl.handleWaitReportRecoverStrategy},
 		{Src: common.NotifyGlobalFaultState, Event: common.NotifyFailEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+		{Src: common.NotifyGlobalFaultState, Event: common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
 
 		{Src: common.WaitReportRecoverStrategyState, Event: common.ReceiveReportEvent,
 			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
 		{Src: common.WaitReportRecoverStrategyState, Event: common.ReportTimeoutEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 
+		{Src: common.NotifyDecidedStrategyState, Event: common.WaitRankTableReadyTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 		{Src: common.NotifyDecidedStrategyState, Event: common.NotifyFailEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 		{Src: common.NotifyDecidedStrategyState, Event: common.NotifyRetrySuccessEvent,
@@ -68,9 +67,9 @@ func (ctl *EventController) getFixRules() []common.TransRule {
 		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ScheduleTimeoutEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ReportTimeoutEvent,
-			Dst: common.FaultClearState, Handler: ctl.handleFaultRetry},
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 		{Src: common.WaitReportProcessRecoverStatusState, Event: common.ClearConfigMapFaultFailEvent,
-			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
+			Dst: common.FaultRetryState, Handler: ctl.handleFaultClear},
 
 		{Src: common.WaitReportDumpStatusState, Event: common.ReceiveReportEvent,
 			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},

@@ -227,6 +227,7 @@ func (pi *podInfo) DeepCopy() *podInfo {
 		port:            pi.port,
 		ctReq:           pi.ctReq,
 		npuReplicas:     pi.npuReplicas,
+		clusterdSvcIp:   pi.clusterdSvcIp,
 	}
 }
 

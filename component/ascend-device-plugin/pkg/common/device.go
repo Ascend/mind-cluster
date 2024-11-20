@@ -44,6 +44,12 @@ const (
 	SeparateFaultLevelStr = "Separate"
 )
 
+const (
+	nodeHealthy    = "Healthy"
+	nodeSubHealthy = "SubHealthy"
+	nodeUnHealthy  = "UnHealthy"
+)
+
 var (
 	// SwitchFaultLevelMapLock Lock SwitchFaultLevelMap to avoid concurrence write and read
 	SwitchFaultLevelMapLock sync.Mutex
@@ -52,7 +58,8 @@ var (
 	// SwitchFaultLock is used for CurrentSwitchFault which may be used concurrence
 	SwitchFaultLock sync.Mutex
 	// CurrentSwitchFault store all switch fault which will be reported to device-info configmap
-	currentSwitchFault = make([]SwitchFaultEvent, 0, GeneralMapSize)
+	currentSwitchFault       = make([]SwitchFaultEvent, 0, GeneralMapSize)
+	switchFaultCodeLevelToCm = map[string]int{}
 )
 
 // GetDeviceID get device physical id and virtual by device name
@@ -102,6 +109,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
 
 	reportFaultCodes := make([]string, 0)
+	tmpFaultCodeLevelMap := make(map[string]int)
 	for _, faultInfo := range GetSwitchFaultCode() {
 		if _, ok := SwitchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
 			hwlog.RunLog.Warnf("received unregisterd faultCode:%s, will not report", faultInfo.AssembledFaultCode)
@@ -111,8 +119,13 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 		if err != nil {
 			continue
 		}
+		tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = SwitchFaultLevelMap[faultInfo.AssembledFaultCode]
+		if _, ok := switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]; ok {
+			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]
+		}
 		reportFaultCodes = append(reportFaultCodes, faultStr)
 	}
+	switchFaultCodeLevelToCm = tmpFaultCodeLevelMap
 	return SwitchFaultInfo{
 		FaultCode:  reportFaultCodes,
 		FaultLevel: faultLevel,
@@ -121,25 +134,41 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	}
 }
 
+// UpdateSwitchFaultInfoAndFaultLevel update switch fault info and fault code level when care in resetting
+func UpdateSwitchFaultInfoAndFaultLevel(si *SwitchFaultInfo) {
+	si.NodeStatus = nodeHealthy
+	tmpSwitchFaultCodeLevelToCm := make(map[string]int)
+	for fCode := range switchFaultCodeLevelToCm {
+		tmpSwitchFaultCodeLevelToCm[fCode] = NotHandleFaultLevel
+	}
+	switchFaultCodeLevelToCm = tmpSwitchFaultCodeLevelToCm
+}
+
 func getSwitchFaultLevelAndNodeStatus() (string, string) {
 	maxFaultLevel := 0
 	for _, code := range currentSwitchFault {
+		if lastLevel, ok := switchFaultCodeLevelToCm[code.AssembledFaultCode]; ok {
+			if lastLevel > maxFaultLevel {
+				maxFaultLevel = lastLevel
+			}
+			continue
+		}
 		level := SwitchFaultLevelMap[code.AssembledFaultCode]
 		if level > maxFaultLevel {
 			maxFaultLevel = level
 		}
 	}
 	SwitchFaultLevelMapLock.Unlock()
-	faultLevel, NodeStatus := NotHandleFaultLevelStr, "Healthy"
+	faultLevel, NodeStatus := NotHandleFaultLevelStr, nodeHealthy
 	switch maxFaultLevel {
 	case NotHandleFaultLevel:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
+		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
 	case PreSeparateFaultLevel:
-		faultLevel, NodeStatus = PreSeparateFaultLevelStr, "SubHealthy"
+		faultLevel, NodeStatus = PreSeparateFaultLevelStr, nodeHealthy
 	case SeparateFaultLevel:
-		faultLevel, NodeStatus = SeparateFaultLevelStr, "UnHealthy"
+		faultLevel, NodeStatus = SeparateFaultLevelStr, nodeUnHealthy
 	default:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, "Healthy"
+		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
 	}
 	return faultLevel, NodeStatus
 }

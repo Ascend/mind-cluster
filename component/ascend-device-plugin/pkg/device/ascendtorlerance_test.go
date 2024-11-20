@@ -141,7 +141,7 @@ func mockProcessPolicyTable() map[string]int {
 // newTestHotResetManager new a hot reset manager example
 func newTestHotResetManager(deviceType string, model string) HotResetManager {
 	common.ParamOption.RealCardType = deviceType
-	return NewHotResetManager(model)
+	return NewHotResetManager(model, 16)
 }
 
 // TestGetChipCountOnRing for test the default count of ring ond different device

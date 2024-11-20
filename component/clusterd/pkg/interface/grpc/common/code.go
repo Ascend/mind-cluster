@@ -46,6 +46,10 @@ const (
 	ControllerEventCancel RespCode = 506
 	// WaitReportTimeout wait client report timeout
 	WaitReportTimeout RespCode = 507
+	// WaitPlatStrategyTimeout wait plat strategy error
+	WaitPlatStrategyTimeout RespCode = 508
+	// WriteConfirmFaultOrWaitPlatResultFault write confirm fault and wait result fault
+	WriteConfirmFaultOrWaitPlatResultFault RespCode = 509
 	// ServerInnerError server common error
 	ServerInnerError RespCode = 599
 )

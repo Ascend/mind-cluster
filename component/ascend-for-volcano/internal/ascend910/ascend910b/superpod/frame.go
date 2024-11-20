@@ -312,19 +312,26 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 
 func (tp *module910SuperPod) scoreNodeForReadyJob(task *api.TaskInfo, job plugin.SchedulerJob,
 	sMap map[string]float64) {
+	var rank int
+	var err error
 	rankIndex, ok := task.Pod.Annotations[plugin.PodRankIndexKey]
-	if !ok {
+	if ok {
+		rank, err = strconv.Atoi(rankIndex)
+		if err != nil {
+			klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s: rankIndex is not int",
+				tp.GetPluginName(), task.Name, task.Name)
+			return
+		}
+	} else {
 		klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s: rankIndex is not exist",
 			tp.GetPluginName(), task.Name, task.Name)
-		return
+		nTask, ok := job.Tasks[task.UID]
+		if !ok {
+			klog.V(util.LogErrorLev).Infof("%s scoreNodeForReadyJob %s: task is not exist", tp.GetPluginName(), task.Name)
+			return
+		}
+		rank = nTask.Index
 	}
-	rank, err := strconv.Atoi(rankIndex)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s: rankIndex is not int",
-			tp.GetPluginName(), task.Name, task.Name)
-		return
-	}
-
 	superPodRank := rank / tp.spBlock
 	localRank := rank % tp.spBlock
 	klog.V(util.LogInfoLev).Infof("superPodRank: %d, localRank: %d", superPodRank, localRank)

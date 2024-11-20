@@ -13,20 +13,22 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"clusterd/pkg/application/job"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
 
 var (
-	retryTimes               = 3
-	randomLen                = 16
-	reportStopTimeoutMinutes = 5
-	faultFlushSeconds        = 10
-	eventChanLength          = 10
-	stopTrainActions         = []string{"stop_train"}
-	globalFaultActions       = []string{"on_global_rank"}
-	changeStrategyActions    = []string{"change_strategy"}
+	retryTimes            = 3
+	randomLen             = 16
+	reportTimeoutMinutes  = 15
+	faultFlushSeconds     = 10
+	eventChanLength       = 10
+	stopTrainActions      = []string{"stop_train"}
+	globalFaultActions    = []string{"on_global_rank"}
+	changeStrategyActions = []string{"change_strategy"}
 )
 
 // EventController is recover event controller
@@ -39,8 +41,10 @@ type EventController struct {
 	latestStrategy            []string
 	latestRecoverResult       []*pb.RecoverStatusRequest
 	agentReportStrategies     []string
+	platStrategies            []string
 	signalChan                chan *pb.ProcessManageSignal
-	cacheFault                []*pb.FaultRank
+	cacheNormalFault          []*pb.FaultRank
+	cacheUceFault             []*pb.FaultRank
 	controllerContext         context.Context
 	ctxCancelFunc             context.CancelFunc
 	serviceContext            context.Context
@@ -67,12 +71,14 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		latestStrategy:            []string{},
 		latestRecoverResult:       []*pb.RecoverStatusRequest{},
 		agentReportStrategies:     []string{},
+		platStrategies:            []string{},
 		signalChan:                make(chan *pb.ProcessManageSignal, 1),
 		reportStopCompleteChan:    make(chan *pb.StopCompleteRequest, 1),
 		reportRecoverStrategyChan: make(chan *pb.RecoverStrategyRequest, 1),
 		reportStatusChan:          make(chan *pb.RecoverStatusRequest, 1),
 		scheduleResultChan:        make(chan bool, 1),
-		cacheFault:                []*pb.FaultRank{},
+		cacheNormalFault:          []*pb.FaultRank{},
+		cacheUceFault:             []*pb.FaultRank{},
 		serviceContext:            serviceCtx,
 		lock:                      sync.RWMutex{},
 	}
@@ -83,9 +89,14 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 }
 
 func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
-	ctl.lock.Lock()
-	defer ctl.lock.Unlock()
-	ctl.cacheFault = append(ctl.cacheFault, faults...)
+	mergedFaults := common.RemoveSliceDuplicateFaults(faults)
+	for _, fault := range mergedFaults {
+		if fault.FaultType == "1" {
+			ctl.cacheNormalFault = append(ctl.cacheNormalFault, fault)
+		} else {
+			ctl.cacheUceFault = append(ctl.cacheUceFault, fault)
+		}
+	}
 }
 
 func (ctl *EventController) reset(useLock bool) {
@@ -113,9 +124,11 @@ func (ctl *EventController) reset(useLock bool) {
 	ctl.scheduleResultChan = make(chan bool, 1)
 	ctl.scheduleResult = false
 	ctl.haveGetScheduleResult = false
-	ctl.cacheFault = ctl.cacheFault[:0]
+	ctl.cacheUceFault = ctl.cacheUceFault[:0]
+	ctl.cacheNormalFault = ctl.cacheNormalFault[:0]
 	ctl.latestRecoverResult = ctl.latestRecoverResult[:0]
 	ctl.agentReportStrategies = ctl.agentReportStrategies[:0]
+	ctl.platStrategies = ctl.platStrategies[:0]
 	ctl.state.Reset()
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	go ctl.listenEvent()
@@ -157,7 +170,17 @@ func (ctl *EventController) keepAlive() {
 }
 
 func (ctl *EventController) supportRetryStrategy() bool {
+	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
+		if strategy == common.ProcessRetryStrategyName {
+			mindXConfiged = true
+			break
+		}
+	}
+	if !mindXConfiged || !ctl.jobInfo.PlatFormMode {
+		return mindXConfiged
+	}
+	for _, strategy := range ctl.platStrategies {
 		if strategy == common.ProcessRetryStrategyName {
 			return true
 		}
@@ -176,7 +199,17 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 	if !mindXConfiged {
 		return false
 	}
+	agentSupport := false
 	for _, strategy := range ctl.agentReportStrategies {
+		if strategy == common.ProcessRecoverStrategyName {
+			agentSupport = true
+			break
+		}
+	}
+	if !agentSupport || !ctl.jobInfo.PlatFormMode {
+		return agentSupport
+	}
+	for _, strategy := range ctl.platStrategies {
 		if strategy == common.ProcessRecoverStrategyName {
 			return true
 		}
@@ -195,8 +228,18 @@ func (ctl *EventController) supportDumpStrategy() bool {
 	if !mindXConfiged {
 		return false
 	}
+	agentSupport := false
 	for _, strategy := range ctl.agentReportStrategies {
 		if strategy == common.ProcessDumpStrategyName {
+			agentSupport = true
+			break
+		}
+	}
+	if !ctl.jobInfo.PlatFormMode || !agentSupport {
+		return agentSupport
+	}
+	for _, strategy := range ctl.platStrategies {
+		if strategy == common.ProcessRecoverStrategyName {
 			return true
 		}
 	}
@@ -204,11 +247,11 @@ func (ctl *EventController) supportDumpStrategy() bool {
 }
 
 func (ctl *EventController) addEvent(event string) {
-	if ctl.state.RuleCheck(ctl.state.GetState(), event) {
+	if !ctl.state.RuleCheck(ctl.state.GetState(), event) {
 		hwlog.RunLog.Errorf("event add fail, order mix, jobId=%s, uuid=%s, event=%s",
 			ctl.jobInfo.JobId, ctl.uuid, event)
+		return
 	}
-	hwlog.RunLog.Infof("jobId=%s start listen a new event channel", ctl.jobInfo.JobId)
 	select {
 	case <-ctl.controllerContext.Done():
 		hwlog.RunLog.Warnf("event add fail, controller context canceled, jobId=%s, uuid=%s, event=%s",
@@ -365,6 +408,13 @@ func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.RespCode, error) {
+	if ctl.jobInfo.PlatFormMode {
+		strategies, err := WaitPlatFormStrategyReady(ctl.jobInfo.JobName, ctl.jobInfo.Namespace)
+		if err != nil {
+			return common.WaitPlatStrategyTimeoutEvent, common.WaitPlatStrategyTimeout, nil
+		}
+		ctl.platStrategies = strategies
+	}
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
 		common.NotifyFaultFlushingOperation)
 	if err != nil {
@@ -394,7 +444,6 @@ func (ctl *EventController) handleNotifyStopTrain() (string, common.RespCode, er
 		Actions:        stopTrainActions,
 		ChangeStrategy: "",
 	}
-	signal.FaultRankIds = ctl.cacheFault
 	return ctl.signalEnqueue(signal)
 }
 
@@ -407,7 +456,7 @@ func (ctl *EventController) handleWaitReportStopComplete() (string, common.RespC
 	case _ = <-ctl.reportStopCompleteChan:
 		hwlog.RunLog.Infof("jobId=%s, outside triger event receiveReport", ctl.jobInfo.JobId)
 		return common.ReceiveReportEvent, common.OK, nil
-	case <-time.After(time.Duration(reportStopTimeoutMinutes) * time.Minute):
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
 		hwlog.RunLog.Errorf("wait report stop complete timeout, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
 	}
@@ -424,27 +473,41 @@ func (ctl *EventController) handleWaitFlushFinish() (string, common.RespCode, er
 	return "", common.OK, nil
 }
 
-func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, error) {
-	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, common.NotifyFaultListOperation)
-	if err != nil {
-		hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
-		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+func (ctl *EventController) normalFaultAssociateSameNodeRank(worker job.PodWorker) ([]*pb.FaultRank, []string) {
+	var faultRankIds []string
+	for _, fault := range ctl.cacheNormalFault {
+		faultRankIds = append(faultRankIds, fault.RankId)
 	}
-	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
-
-	signal := &pb.ProcessManageSignal{
-		Uuid:           ctl.uuid,
-		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.GlobalFaultSignalType,
-		Actions:        globalFaultActions,
-		ChangeStrategy: "",
+	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, worker.GetDeviceNumPerNode())
+	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
+	var res []*pb.FaultRank
+	for _, rank := range removeSameRankIds {
+		res = append(res, &pb.FaultRank{
+			RankId:    rank,
+			FaultType: "1",
+		})
 	}
-	signal.FaultRankIds = append(signal.FaultRankIds, ctl.cacheFault...)
-	return ctl.signalEnqueue(signal)
+	return res, removeSameRankIds
 }
 
-func (ctl *EventController) isUceFault() bool {
-	for _, fault := range ctl.cacheFault {
+func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+	allFaultRanks := common.RemoveSliceDuplicateFaults(faults)
+	err := UpdateProcessConfirmFault(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+		return nil, fmt.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+	}
+	platFaultResult, err := WaitProcessResultFault(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+	if err != nil {
+		hwlog.RunLog.Errorf("wait process result fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+		return nil, fmt.Errorf("wait process result fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+	}
+	allFaultRanks = common.RemoveSliceDuplicateFaults(append(allFaultRanks, platFaultResult...))
+	return allFaultRanks, nil
+}
+
+func isUceFault(faults []*pb.FaultRank) bool {
+	for _, fault := range faults {
 		if fault.FaultType == "1" {
 			return false
 		}
@@ -452,8 +515,117 @@ func (ctl *EventController) isUceFault() bool {
 	return true
 }
 
+func (ctl *EventController) takeUceFault2NormalFault() {
+	n := len(ctl.latestRecoverResult)
+	if n > 0 && ctl.latestRecoverResult[n-1].Strategy == common.ProcessRetryStrategyName {
+		ctl.cacheNormalFault = append(ctl.cacheNormalFault, ctl.cacheUceFault...)
+		ctl.cacheUceFault = ctl.cacheUceFault[:0]
+	}
+	if len(ctl.cacheNormalFault) > 0 {
+		ctl.cacheNormalFault = append(ctl.cacheNormalFault, ctl.cacheUceFault...)
+		ctl.cacheUceFault = ctl.cacheUceFault[:0]
+	}
+	if !ctl.supportRetryStrategy() {
+		ctl.cacheNormalFault = append(ctl.cacheNormalFault, ctl.cacheUceFault...)
+		ctl.cacheUceFault = ctl.cacheUceFault[:0]
+	}
+}
+
+func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker) (string, common.RespCode, error) {
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     common.GlobalFaultSignalType,
+		Actions:        globalFaultActions,
+		ChangeStrategy: "",
+	}
+	if ctl.jobInfo.PlatFormMode {
+		allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(ctl.cacheUceFault)
+		if err != nil {
+			hwlog.RunLog.Errorf("write confirm fault or wait plat result fault timeout, err=%v", err)
+			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
+				common.WriteConfirmFaultOrWaitPlatResultFault, nil
+		}
+		if !isUceFault(allFaults) {
+			ctl.cacheUceFault = ctl.cacheUceFault[:0]
+			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
+			ctl.cacheNormalFault = allFaults
+			// label fault pod
+			err := common.LabelSoftWareFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+			if err != nil {
+				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+			}
+			cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+				allFaultRanks, common.NotifyFaultListOperation)
+			if err != nil {
+				hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+				return common.NotifyFailEvent, common.OperateConfigMapError, nil
+			}
+			signal.FaultRankIds = ctl.cacheNormalFault
+			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
+		} else {
+			signal.FaultRankIds = ctl.cacheUceFault
+		}
+	} else {
+		signal.FaultRankIds = ctl.cacheUceFault
+	}
+
+	signal.FaultRankIds = append(signal.FaultRankIds, ctl.cacheUceFault...)
+	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) notifyFaultForNormalFaultCase(worker job.PodWorker) (string, common.RespCode, error) {
+	if ctl.jobInfo.PlatFormMode {
+		allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(ctl.cacheNormalFault)
+		if err != nil {
+			hwlog.RunLog.Errorf("write confirm fault or wait plat result fault timeout, err=%v", err)
+			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
+				common.WriteConfirmFaultOrWaitPlatResultFault, nil
+		}
+		ctl.cacheNormalFault = allFaults
+	}
+	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
+	ctl.cacheNormalFault = allFaults
+	// label fault pod
+	err := common.LabelSoftWareFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+	}
+	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+		allFaultRanks, common.NotifyFaultListOperation)
+	if err != nil {
+		hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	}
+	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     common.GlobalFaultSignalType,
+		Actions:        globalFaultActions,
+		ChangeStrategy: "",
+	}
+	signal.FaultRankIds = append(signal.FaultRankIds, ctl.cacheNormalFault...)
+	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, error) {
+	ctl.takeUceFault2NormalFault()
+	worker := kube.JobMgr.GetBsWorker(ctl.jobInfo.JobId)
+	if worker == nil {
+		return "", common.JobNotExist, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
+	}
+	// if len(ctl.cacheUceFault) still bigger than 0 after takeUceFault2NormalFault
+	// that means job support retry strategy, and it's first time choose strategy case only have uce fault
+	if len(ctl.cacheUceFault) > 0 {
+		return ctl.notifyFaultForUceFaultCase(worker)
+	}
+	return ctl.notifyFaultForNormalFaultCase(worker)
+}
+
 func (ctl *EventController) firstChooseStrategy() string {
-	if ctl.supportRetryStrategy() && ctl.isUceFault() {
+	hwlog.RunLog.Infof("first choose strategy, jobId=%s", ctl.jobInfo.JobId)
+	if ctl.supportRetryStrategy() && len(ctl.cacheNormalFault) <= 0 {
 		return common.ProcessRetryStrategyName
 	}
 	if ctl.supportRecoverStrategy() {
@@ -498,13 +670,18 @@ func (ctl *EventController) chooseStrategy() string {
 
 func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCode, error) {
 	signal := &pb.ProcessManageSignal{
-		Uuid:           ctl.uuid,
-		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.ChangeStrategySignalType,
-		Actions:        changeStrategyActions,
-		ChangeStrategy: ctl.chooseStrategy(),
+		Uuid:       ctl.uuid,
+		JobId:      ctl.jobInfo.JobId,
+		SignalType: common.ChangeStrategySignalType,
+		Actions:    changeStrategyActions,
 	}
-	signal.FaultRankIds = append(signal.FaultRankIds, ctl.cacheFault...)
+	signal.ChangeStrategy = ctl.chooseStrategy()
+	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == common.ProcessRecoverStrategyName {
+		err := WaitRankTableReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+		if err != nil {
+			return common.WaitRankTableReadyTimeoutEvent, common.ServerInnerError, nil
+		}
+	}
 	return ctl.signalEnqueue(signal)
 }
 
@@ -569,7 +746,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 	}
 	hwlog.RunLog.Infof("change process rescheduling label %s success,"+
 		" jobId=%s, uuid=%s", common.ProcessReschedulingEnable, ctl.jobInfo.JobId, ctl.uuid)
-	return "Finish", common.OK, nil
+	return common.FinishEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleKillJob() (string, common.RespCode, error) {
@@ -605,7 +782,7 @@ func (ctl *EventController) handleWaitReportRecoverStrategy() (string, common.Re
 	case <-ctl.controllerContext.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportStopTimeoutMinutes) * time.Minute):
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
 		hwlog.RunLog.Errorf("wait report recover strategy timeout, jobId=%s", ctl.jobInfo.JobId)
 		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
 	}
@@ -620,13 +797,12 @@ func (ctl *EventController) listenScheduleResult() {
 	pgRunning := false
 	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
+		hwlog.RunLog.Infof("check pg running %d times", i)
 		if worker.PGRunning() {
 			pgRunning = true
 			break
 		}
 	}
-	ctl.lock.Lock()
-	defer ctl.lock.Unlock()
 	select {
 	case ctl.scheduleResultChan <- pgRunning:
 		hwlog.RunLog.Infof("schedule result enqueue success, jobId=%s, value=%s",
@@ -648,7 +824,7 @@ func (ctl *EventController) handleDecideRetryStrategy() (string, common.RespCode
 	case <-ctl.controllerContext.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportStopTimeoutMinutes) * time.Minute):
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
 		hwlog.RunLog.Errorf("wait report recover status timeout, jobId=%s", ctl.jobInfo.JobId)
 		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
 	}
@@ -656,7 +832,7 @@ func (ctl *EventController) handleDecideRetryStrategy() (string, common.RespCode
 
 func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCode, error) {
 	ctl.latestStrategy = append(ctl.latestStrategy, common.ProcessRecoverStrategy)
-	timer := time.NewTimer(time.Duration(reportStopTimeoutMinutes) * time.Minute)
+	timer := time.NewTimer(time.Duration(reportTimeoutMinutes) * time.Minute)
 	defer timer.Stop()
 	for {
 		select {
@@ -695,7 +871,7 @@ func (ctl *EventController) handleDecideDumpStrategy() (string, common.RespCode,
 	case <-ctl.controllerContext.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportStopTimeoutMinutes) * time.Minute):
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
 		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
 		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
 	}
@@ -703,18 +879,7 @@ func (ctl *EventController) handleDecideDumpStrategy() (string, common.RespCode,
 
 func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode, error) {
 	ctl.latestStrategy = append(ctl.latestStrategy, common.ProcessExitStrategyName)
-	select {
-	case req := <-ctl.reportStatusChan:
-		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
-		ctl.latestRecoverResult = append(ctl.latestRecoverResult, req)
-		return common.ReceiveReportEvent, common.OK, nil
-	case <-ctl.controllerContext.Done():
-		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportStopTimeoutMinutes) * time.Minute):
-		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
-		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
-	}
+	return common.CheckResultFinishEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
@@ -724,21 +889,18 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 		}
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, fmt.Errorf("jobId=%s schedule timeout", ctl.jobInfo.JobId)
 	}
-	select {
-	case scheduleSuccess := <-ctl.scheduleResultChan:
-		if scheduleSuccess {
-			return common.ScheduleSuccessEvent, common.OK, nil
+	scheduleSuccess := false
+	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
+		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
+		if kube.JobMgr.JobRunning(ctl.jobInfo.JobId) {
+			scheduleSuccess = true
+			break
 		}
-		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, fmt.Errorf("jobId=%s schedule timeout", ctl.jobInfo.JobId)
-	case <-ctl.controllerContext.Done():
-		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Minute):
-		info := fmt.Sprintf("jobId=%s, schedule result enqueue error, this case will never happen in theory, very bad case",
-			ctl.jobInfo.JobId)
-		hwlog.RunLog.Error(info)
-		return "", common.ServerInnerError, errors.New(info)
 	}
+	if scheduleSuccess {
+		return common.ScheduleSuccessEvent, common.OK, nil
+	}
+	return common.ScheduleTimeoutEvent, common.ScheduleTimeout, fmt.Errorf("jobId=%s schedule timeout", ctl.jobInfo.JobId)
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
