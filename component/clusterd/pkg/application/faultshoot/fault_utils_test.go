@@ -1,10 +1,10 @@
 package faultshoot
 
 import (
-	"clusterd/pkg/common/constant"
-	"fmt"
 	"reflect"
 	"testing"
+
+	"clusterd/pkg/common/constant"
 )
 
 func Test_splitDeviceFault(t *testing.T) {
@@ -31,7 +31,6 @@ func Test_splitDeviceFault(t *testing.T) {
 				FaultLevel:           "xx",
 				FaultHandling:        "xx",
 				FaultCode:            "0x1",
-				FaultTime:            1,
 				FaultTimeMap: map[string]int64{
 					"0x1": 1,
 					"0x2": 2,
@@ -44,7 +43,6 @@ func Test_splitDeviceFault(t *testing.T) {
 				FaultLevel:           "xx",
 				FaultHandling:        "xx",
 				FaultCode:            "0x2",
-				FaultTime:            2,
 				FaultTimeMap: map[string]int64{
 					"0x1": 1,
 					"0x2": 2,
@@ -68,7 +66,10 @@ func Test_mergeDeviceFault(t *testing.T) {
 				FaultLevel:           "xx",
 				FaultHandling:        "xx",
 				FaultCode:            "0x1",
-				FaultTime:            1,
+				FaultTimeMap: map[string]int64{
+					"0x1": 1,
+					"0x2": 2,
+				},
 			},
 			{
 				FaultType:            "xx",
@@ -77,7 +78,10 @@ func Test_mergeDeviceFault(t *testing.T) {
 				FaultLevel:           "xx",
 				FaultHandling:        "xx",
 				FaultCode:            "0x2",
-				FaultTime:            2,
+				FaultTimeMap: map[string]int64{
+					"0x1": 1,
+					"0x2": 2,
+				},
 			},
 		}
 		want := constant.DeviceFault{
@@ -91,7 +95,6 @@ func Test_mergeDeviceFault(t *testing.T) {
 				"0x1": 1,
 				"0x2": 2,
 			},
-			FaultTime: 0,
 		}
 		got, err := mergeDeviceFault(split)
 		if err != nil {
@@ -107,7 +110,8 @@ func Test_getAdvanceDeviceCm(t *testing.T) {
 	info := &constant.DeviceInfo{
 		DeviceInfoNoName: constant.DeviceInfoNoName{
 			DeviceList: map[string]string{
-				"huawei.com/Ascend910-Fault": "[{\"fault_time_map\":{\"1801\": 1234, \"1809\":5678}}]",
+				"huawei.com/Ascend910-Fault": "[{\"fault_time_map\":{\"1801\": 1234, \"1809\":5678}," +
+					" \"npu_name\": \"xxx\"}]",
 			},
 			UpdateTime: 0,
 		},
@@ -116,5 +120,12 @@ func Test_getAdvanceDeviceCm(t *testing.T) {
 		ServerIndex: 0,
 	}
 	advanceDeviceCm := getAdvanceDeviceCm(info)
-	fmt.Println(advanceDeviceCm)
+	tim, ok := advanceDeviceCm.DeviceList["xxx"][0].FaultTimeMap["1801"]
+	if !ok {
+		t.Errorf("Test_getAdvanceDeviceCm failed")
+		return
+	}
+	if tim != 1234 {
+		t.Errorf("Test_getAdvanceDeviceCm failed")
+	}
 }

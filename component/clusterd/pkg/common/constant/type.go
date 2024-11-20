@@ -3,8 +3,6 @@
 // Package constant a series of para
 package constant
 
-import "encoding/json"
-
 // DeviceFault device or network fault info
 type DeviceFault struct {
 	FaultType            string           `json:"fault_type"`
@@ -13,26 +11,7 @@ type DeviceFault struct {
 	FaultLevel           string           `json:"fault_level"`
 	FaultHandling        string           `json:"fault_handling"`
 	FaultCode            string           `json:"fault_code"`
-	FaultTime            int64            `json:"-"`
 	FaultTimeMap         map[string]int64 `json:"fault_time_map"`
-}
-
-func (fault *DeviceFault) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		FaultType            string `json:"fault_type"`
-		NPUName              string `json:"npu_name"`
-		LargeModelFaultLevel string `json:"large_model_fault_level"`
-		FaultLevel           string `json:"fault_level"`
-		FaultHandling        string `json:"fault_handling"`
-		FaultCode            string `json:"fault_code"`
-	}{
-		FaultType:            fault.FaultType,
-		NPUName:              fault.NPUName,
-		LargeModelFaultLevel: fault.LargeModelFaultLevel,
-		FaultLevel:           fault.FaultLevel,
-		FaultHandling:        fault.FaultHandling,
-		FaultCode:            fault.FaultCode,
-	})
 }
 
 // NodeInfoCM the config map struct of node info
