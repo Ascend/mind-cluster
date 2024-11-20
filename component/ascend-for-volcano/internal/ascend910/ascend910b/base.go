@@ -218,7 +218,7 @@ func (ab *Base910b) Use910bAnnotation(task *api.TaskInfo, node plugin.NPUNode) *
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation %s select %v.", ab.GetPluginName(), task.Name, selectedNPU)
 
-	ab.SetNPUTopologyToPodFn(task, selectedNPU, node)
+	ab.SetNPUTopologyToPodFn(task, selectedNPU)
 	newNode := ab.UpdateNodeInfo(node, selectedNPU)
 	return newNode
 }

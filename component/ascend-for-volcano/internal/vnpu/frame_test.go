@@ -90,8 +90,7 @@ func buildGetTaskResourceTestCase02() getTaskResourceTest {
 func buildGetTaskResourceTestCase03() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex8)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex8}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex8}}}
 	return getTaskResourceTest{
 		name:    "03-task whole card test.",
 		fields:  virtualNPUTestFields{},
@@ -105,8 +104,7 @@ func buildGetTaskResourceTestCase04() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex4)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, "haha")
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex8}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex8}}}
 	return getTaskResourceTest{
 		name:    "04-illegal task dvpp test.",
 		fields:  virtualNPUTestFields{},
@@ -120,8 +118,7 @@ func buildGetTaskResourceTestCase05() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", 1)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledNull)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "05-task coreNum 01 test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -135,8 +132,7 @@ func buildGetTaskResourceTestCase06() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex2)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledNull)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "06-task coreNum 02 test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -150,8 +146,7 @@ func buildGetTaskResourceTestCase07() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex3)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledNull)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "07-task coreNum 03 test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -165,8 +160,7 @@ func buildGetTaskResourceTestCase08() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex4)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledOn)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "08-task coreNum 04,dvpp on test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -180,8 +174,7 @@ func buildGetTaskResourceTestCase09() getTaskResourceTest {
 	tempTask := test.FakeVNPUTestTask("pod1", "node1", "vcjob", util.NPUIndex4)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledOff)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "09-task coreNum 04,dvpp off test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -196,8 +189,7 @@ func buildGetTaskResourceTestCase10() getTaskResourceTest {
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledOn)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPULevel, plugin.AscendVNPULevelHigh)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "10-task coreNum 04,level high, dvpp on test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -212,8 +204,7 @@ func buildGetTaskResourceTestCase11() getTaskResourceTest {
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledNull)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPULevel, plugin.AscendVNPULevelHigh)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "11-task coreNum 04,level high, dvpp null test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
@@ -228,8 +219,7 @@ func buildGetTaskResourceTestCase12() getTaskResourceTest {
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPUDVPP, plugin.AscendDVPPEnabledNull)
 	test.AddTestTaskLabel(tempTask, plugin.AscendVNPULevel, plugin.AscendVNPULevelLow)
 	tempNode := plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "testNode2"},
-		VNode: plugin.VNode{ChipKind: plugin.Ascend310P, ServerType: Ascend310PCard,
-			TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
+		VNode: plugin.VNode{ServerType: "Ascend310P-8", TotalRes: util.VResource{Aicore: util.NPUIndex16}}}
 	return getTaskResourceTest{
 		name:    "12-task coreNum 04,level low, dvpp null test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},

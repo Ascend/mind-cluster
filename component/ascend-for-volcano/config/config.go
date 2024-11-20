@@ -17,9 +17,9 @@ limitations under the License.
 /*
 Package config is using for HuaWei Ascend schedule configuration.
 */
+
 package config
 
-// Configuration include name, arguments
 type Configuration struct {
 	// Name is name of Configuration
 	Name string `yaml:"name"`

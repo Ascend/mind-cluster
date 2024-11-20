@@ -14,16 +14,13 @@ rules:
     verbs: ["get", "list", "update", "watch", "patch"]
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "patch"]
+    verbs: ["get"]
   - apiGroups: [""]
     resources: ["nodes/status"]
-    verbs: ["get", "patch", "update"]
+    verbs: ["get", "patch"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "create", "update", "list", "watch"]
-  - apiGroups: [ "" ]
-    resources: [ "events" ]
-    verbs: [ "create" ]
+    verbs: ["get", "create", "update"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -82,7 +79,7 @@ spec:
             memory: 500Mi
             cpu: 500m
         command: [ "/bin/bash", "-c", "--"]
-        args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
+        args: [ "device-plugin  -useAscendDocker=true -volcanoType=true
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
         securityContext:
           privileged: true
@@ -91,10 +88,6 @@ spec:
         volumeMounts:
           - name: device-plugin
             mountPath: /var/lib/kubelet/device-plugins
-          - name: vnpucfg
-            mountPath: /etc/vnpu.cfg
-          - name: vnpu-cut
-            mountPath: /run/vnpu_cfg_lock
           - name: pod-resource
             mountPath: /var/lib/kubelet/pod-resources
           - name: hiai-driver
@@ -104,11 +97,6 @@ spec:
             mountPath: /var/log/mindx-dl/devicePlugin
           - name: tmp
             mountPath: /tmp
-          - name: reset-config-dir
-            mountPath: /user/restore/reset
-          - name: lingqu-log
-            mountPath: /var/log/lingqu
-
         env:
           - name: NODE_NAME
             valueFrom:
@@ -128,22 +116,6 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/devicePlugin
             type: Directory
-        - name : reset-config-dir
-          hostPath:
-            path: /user/restore/reset
-            type: DirectoryOrCreate
-        - name: vnpu-cut
-          hostPath:
-            path: /run/vnpu_cfg_lock
-            type: DirectoryOrCreate
         - name: tmp
           hostPath:
             path: /tmp
-        - name: vnpucfg
-          hostPath:
-            path: /etc/vnpu.cfg
-            type: File
-        - name: lingqu-log
-          hostPath:
-            path: /var/log/lingqu
-            type: DirectoryOrCreate

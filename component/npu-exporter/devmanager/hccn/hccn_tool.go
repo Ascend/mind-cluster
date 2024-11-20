@@ -17,15 +17,13 @@ package hccn
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/utils"
+	"huawei.com/npu-exporter/v5/devmanager/common"
 )
 
 const (
@@ -37,6 +35,8 @@ const (
 	LinkUp string = "UP"
 	// LinkDown npu interface down
 	LinkDown string = "DOWN"
+	// LinkUnknown npu interface unknown
+	LinkUnknown string = "UNKNOWN"
 
 	opticalPartLen = 2
 	secondIndex    = 2
@@ -47,30 +47,16 @@ const (
 
 	normalCode   = 1
 	abnormalCode = 0
-
-	problemOccurMaxNumbers = 3
-	naValue                = "NA"
-	notSupport             = "not supported"
-	unknownStr             = "Unknown!"
-	generalMaxCardNum      = 16
+	unknownCode  = -1
 )
 
-var (
-	getNPULinkSpeedFromHccnToolErrorMap   = make(map[int32]int, generalMaxCardNum)
-	getNPULinkStatusFromHccnToolErrorMap  = make(map[int32]int, generalMaxCardNum)
-	getLinkSpeedFromHccnToolErrorMapLock  = &sync.Mutex{}
-	getLinkStatusFromHccnToolErrorMapLock = &sync.Mutex{}
-	errorLogNotPrintStr                   = fmt.Sprintf("The error log has been printed for %v times "+
-		"and will not be printed any more.", problemOccurMaxNumbers)
-)
-
-func getInfoFromHccnTool(args ...string) (string, error) {
-	const hccnTool = "/usr/local/Ascend/driver/tools/hccn_tool"
-	if _, err := utils.CheckPath(hccnTool); err != nil {
+func hccnToolGetInfo(args ...string) (string, error) {
+	const hccn_tool = "/usr/local/Ascend/driver/tools/hccn_tool"
+	if _, err := utils.CheckPath(hccn_tool); err != nil {
 		return "", err
 	}
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command(hccnTool, args...)
+	cmd := exec.Command(hccn_tool, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
@@ -82,100 +68,61 @@ func getInfoFromHccnTool(args ...string) (string, error) {
 }
 
 // GetNPULinkStatus exec "hccn_tool -i * -link -g" to get link status
-func GetNPULinkStatus(phyID int32) (string, error) {
+func GetNPULinkStatus(phyID int32) string {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-link", "-g"}
 	// command example: hccn_tool -i 0 -link -g
 	// success result example is: link status: DOWN
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
-	getLinkStatusFromHccnToolErrorMapLock.Lock()
-	defer getLinkStatusFromHccnToolErrorMapLock.Unlock()
 	if err != nil {
-		extraErrLog := ""
-		if occurNum, ok := getNPULinkStatusFromHccnToolErrorMap[phyID]; ok && occurNum >= problemOccurMaxNumbers {
-			return common.Abnormal, err
-		} else {
-			newOccurNum := occurNum + 1
-			getNPULinkStatusFromHccnToolErrorMap[phyID] = newOccurNum
-			if newOccurNum == problemOccurMaxNumbers {
-				extraErrLog = errorLogNotPrintStr
-			}
-		}
-		hwlog.RunLog.Errorf("get npu(%v) link status failed, %s. %s", phyID, err, extraErrLog)
-		return common.Abnormal, err
+		hwlog.RunLog.Errorf("get npu link status failed, %s", err)
+		return LinkUnknown
 	}
-	getNPULinkStatusFromHccnToolErrorMap[phyID] = 0
 	replacedStr := strings.ReplaceAll(outStr, newLine, "")
 	outArr := strings.Split(replacedStr, space)
 	if len(outArr) != linkStatusPart {
-		hwlog.RunLog.Errorf("get npu link status failed, length of output %v is not equal "+
-			"to %v", outArr, linkStatusPart)
-		return common.Abnormal, fmt.Errorf("get npu link status failed, length of output %v is not equal to %v",
-			outArr, linkStatusPart)
+		return LinkUnknown
 	}
 
 	status := outArr[secondIndex]
-	hwlog.RunLog.Debugf("hccn_tool get npu link status: %s", status)
-	return status, nil
+	hwlog.RunLog.Debugf("hccn_tool get npu(%d) link status: %s", phyID, status)
+	return status
 }
 
 // GetNPULinkSpeed exec "hccn_tool -i * -speed -g" to get link speed
-func GetNPULinkSpeed(phyID int32) (int, error) {
+func GetNPULinkSpeed(phyID int32) int {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-speed", "-g"}
 	// command example: hccn_tool -i 0 -speed -g
 	// success result example is: Speed: 100000 Mb/s
-	getLinkSpeedFromHccnToolErrorMapLock.Lock()
-	defer getLinkSpeedFromHccnToolErrorMapLock.Unlock()
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	if err != nil {
-		extraErrLog := ""
-		if occurNum, ok := getNPULinkSpeedFromHccnToolErrorMap[phyID]; ok && occurNum >= problemOccurMaxNumbers {
-			return common.RetError, err
-		} else {
-			newOccurNum := occurNum + 1
-			getNPULinkSpeedFromHccnToolErrorMap[phyID] = newOccurNum
-			if newOccurNum == problemOccurMaxNumbers {
-				extraErrLog = errorLogNotPrintStr
-			}
-		}
-		hwlog.RunLog.Errorf("get npu(%v) link speed failed, %s. %s", phyID, err, extraErrLog)
-		return common.RetError, err
-	}
-	getNPULinkSpeedFromHccnToolErrorMap[phyID] = 0
-	return getSpeedFromOutStr(outStr, phyID)
-}
-
-func getSpeedFromOutStr(outStr string, phyID int32) (int, error) {
-	if strings.Contains(outStr, unknownStr) {
-		return common.RetError, fmt.Errorf("npu link speed is unknown")
+		hwlog.RunLog.Errorf("get npu link speed failed, %s", err)
+		return abnormalCode
 	}
 	replacedStr := strings.ReplaceAll(outStr, newLine, "")
 	outArr := strings.Split(replacedStr, space)
 	if len(outArr) != linkStatusPart {
-		hwlog.RunLog.Errorf("get npu(%v) link speed failed, length of output %v is not equal "+
-			"to %v.", phyID, outArr, linkStatusPart)
-		return common.RetError, fmt.Errorf("get npu link speed failed, length of output %v is not equal to %v",
-			outArr, linkStatusPart)
+		return abnormalCode
 	}
 	const midIndex = 1
 	speed, err := strconv.Atoi(outArr[midIndex])
 	if err != nil {
 		hwlog.RunLog.Errorf("covert speed from string failed: %s", err)
-		return common.RetError, err
+		return abnormalCode
 	}
 
-	return speed, nil
+	return speed
 }
 
 // GetNPULinkUpNum exec "hccn_tool -i * -link_stat -g" to get link up count
-func GetNPULinkUpNum(phyID int32) (int, error) {
+func GetNPULinkUpNum(phyID int32) int {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-link_stat", "-g"}
 	// command example: hccn_tool -i 0 -link_stat -g
 	// success result include: [device x]link up count : y
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	if err != nil {
 		hwlog.RunLog.Errorf("get npu link stat failed, %s", err)
-		return common.RetError, err
+		return 0
 	}
 
 	const (
@@ -191,19 +138,16 @@ func GetNPULinkUpNum(phyID int32) (int, error) {
 
 		linkUpArr := strings.Fields(line)
 		if len(linkUpArr) != linkUpArrLen {
-			hwlog.RunLog.Errorf("get link up num failed, length of output %v is not equal to %v",
-				linkUpArr, linkUpArrLen)
-			return common.RetError, fmt.Errorf("get link up num failed, length of output %v is not "+
-				"equal to %v", linkUpArr, linkUpArrLen)
+			return abnormalCode
 		}
 		if linkUPCount, err = strconv.Atoi(linkUpArr[linkUpArrLen-1]); err != nil {
 			hwlog.RunLog.Errorf("covert link up num from string failed: %s", err)
-			return common.RetError, err
+			return abnormalCode
 		}
-		return linkUPCount, nil
+		return linkUPCount
 	}
 
-	return common.RetError, fmt.Errorf("get link up num failed, did not find link up count")
+	return abnormalCode
 }
 
 // GetNPUStatInfo exec "hccn_tool -i * -stat -g" to get stat info
@@ -211,7 +155,7 @@ func GetNPUStatInfo(phyID int32) (map[string]int, error) {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-stat", "-g"}
 	// command example: hccn_tool -i 0 -stat -g
 	// success result include: [device x]link up count : y
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	if err != nil {
 		hwlog.RunLog.Errorf("get npu stat inf failed, %s", err)
 		return nil, err
@@ -240,7 +184,7 @@ func GetNPUOpticalInfo(phyID int32) (map[string]string, error) {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-optical", "-g"}
 	// command example: hccn_tool -i 0 -optical -g
 	// success result include: [device x]link up count : y
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	if err != nil {
 		hwlog.RunLog.Errorf("get npu stat inf failed, %s", err)
 		return nil, err
@@ -263,7 +207,7 @@ func GetNPUOpticalInfo(phyID int32) (map[string]string, error) {
 // GetNPUInterfaceTraffic exec "hccn_tool -i * -bandwidth -g" to get bandwidth info
 func GetNPUInterfaceTraffic(phyID int32) (float64, float64, error) {
 	const (
-		noTraffic      = common.RetError
+		noTraffic      = 0.00
 		trafficPartLen = 4
 		txStr          = "TX:"
 		rxStr          = "RX:"
@@ -274,7 +218,7 @@ func GetNPUInterfaceTraffic(phyID int32) (float64, float64, error) {
 	// success result has two lines:
 	// Bandwidth TX: 0.00 MB/sec
 	// Bandwidth RX: 0.00 MB/sec
-	outStr, err := getInfoFromHccnTool(args...)
+	outStr, err := hccnToolGetInfo(args...)
 	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
 	if err != nil {
 		hwlog.RunLog.Errorf("get npu interface traffic failed, %s", err)
@@ -282,8 +226,8 @@ func GetNPUInterfaceTraffic(phyID int32) (float64, float64, error) {
 	}
 
 	var (
-		tx = float64(noTraffic)
-		rx = float64(noTraffic)
+		tx = 0.00
+		rx = 0.00
 	)
 
 	lines := strings.Split(outStr, newLine)
@@ -318,58 +262,73 @@ func GetNPUInterfaceTraffic(phyID int32) (float64, float64, error) {
 }
 
 // GetFloatDataFromStr get float data from string with space
-func GetFloatDataFromStr(str, dataType string) float64 {
-	if str == "" || strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
-		return common.RetError
-	}
+func GetFloatDataFromStr(str string) float64 {
 	dataParts := strings.Split(str, space)
 	if len(dataParts) != opticalPartLen {
-		errMsg := fmt.Sprintf("convert %v optical data type failed, "+
-			"the length of optical data %v is %v not equal to %d. ", dataType, dataParts, len(dataParts), opticalPartLen)
-		hwlog.RunLog.Error(errMsg)
-		return common.RetError
+		return abnormalCode
 	}
+
 	floatData, err := strconv.ParseFloat(dataParts[0], base64)
 	if err != nil {
-		hwlog.RunLog.Errorf("convert %v optical data type to a floating-point number failed, "+
-			"get float data from string %v failed, err: %v", dataType, dataParts[0], err)
-		return common.RetError
+		hwlog.RunLog.Errorf("get float data from string err: %s", err)
+		return abnormalCode
 	}
 	return floatData
 }
 
 // GetHealthCode return union healthy code
 func GetHealthCode(healthCode uint32) int {
-	if healthCode == common.UnRetError {
-		return common.RetError
-	}
-
 	if healthCode == cardHealthy {
 		return normalCode
 	}
 	return abnormalCode
 }
 
+// GetHealthCodeV2 return union healthy code
+func GetHealthCodeV2(healthCode uint32) int {
+	if healthCode == cardHealthy {
+		return normalCode
+	}
+	if healthCode == common.UnRetError {
+		return unknownCode
+	}
+	return abnormalCode
+}
+
 // GetLinkStatusCode return union link status code
 func GetLinkStatusCode(status string) int {
-	if status == common.Abnormal {
-		return common.RetError
-	}
-
 	if status == LinkUp {
 		return normalCode
 	}
 	return abnormalCode
 }
 
+// GetLinkStatusCodeV2 return union link status code
+func GetLinkStatusCodeV2(status string) int {
+	if status == LinkUp {
+		return normalCode
+	}
+	if status == LinkUnknown {
+		return unknownCode
+	}
+	return abnormalCode
+}
+
 // GetNetworkHealthy return union network healthy code
 func GetNetworkHealthy(netCode uint32) int {
-	if netCode == common.UnRetError {
-		return common.RetError
-	}
-
 	if netCode == common.NetworkInit || netCode == common.NetworkSuccess {
 		return normalCode
+	}
+	return abnormalCode
+}
+
+// GetNetworkHealthyV2 return union network healthy code
+func GetNetworkHealthyV2(netCode uint32) int {
+	if netCode == common.NetworkInit || netCode == common.NetworkSuccess {
+		return normalCode
+	}
+	if netCode == common.UnRetError {
+		return unknownCode
 	}
 	return abnormalCode
 }

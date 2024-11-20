@@ -20,12 +20,13 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 package plugin
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 
 	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
-
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -316,27 +317,35 @@ func buildJobValidTest() []jobValidTest {
 	test.SetFakeNPUJobStatusPending(tJob2)
 	tJob3 := test.FakeNormalTestJob("testJob", 1)
 	test.AddTestJobLabel(tJob3, "haha", "who")
-	isFirstSession := false
 	tests := []jobValidTest{
 		{
 			name:   "01-JobValid not job test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{IsFirstSession: &isFirstSession}},
+			fields: fields{},
 			args:   jobValidArgs{obj: "haha"},
 			want: &api.ValidateResult{Pass: false, Reason: "job convert failed",
 				Message: `validJobFn ["haha"] failed:job convert failed`},
 		},
 		{
 			name:   "02-JobValid job not initial test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{IsFirstSession: &isFirstSession}},
+			fields: fields{},
 			args:   jobValidArgs{obj: tJob2},
 			want:   nil,
 		},
 		{
 			name: "03-JobValid job not in jobs test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{}, IsFirstSession: &isFirstSession}},
+				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{}}},
 			args: jobValidArgs{obj: tJob},
 			want: nil,
+		},
+		{
+			name: "04-JobValid job no selector test.",
+			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{tJob.
+					UID: {SchedulerJobAttr: util.SchedulerJobAttr{ComJob: util.ComJob{Name: tJob.UID}}}}}},
+			args: jobValidArgs{obj: tJob},
+			want: &api.ValidateResult{Pass: false, Reason: "Job selector error",
+				Message: fmt.Errorf("%s or vcFrame's selectors nil", tJob.UID).Error()},
 		},
 	}
 	return tests
@@ -610,108 +619,58 @@ func TestSchedulerJobInit(t *testing.T) {
 	}
 }
 
-func TestSchedulerJobIsJobSinglePodDelete(t *testing.T) {
-	tests := []struct {
-		name  string
-		label map[string]string
-		want  bool
-	}{
+type validJobSelectorArgs struct {
+	vcFrame VolcanoFrame
+}
+
+type validJobSelectorTest struct {
+	name    string
+	fields  schedulerJobFields
+	args    validJobSelectorArgs
+	wantErr bool
+}
+
+func buildValidJobSelectorTest() []validJobSelectorTest {
+	tests := []validJobSelectorTest{
 		{
-			name: "01-will return false when pod-rescheduling is not exist",
-			want: false,
+			name:    "01-ValidJobSelector nil test.",
+			fields:  schedulerJobFields{},
+			args:    validJobSelectorArgs{},
+			wantErr: true,
 		},
 		{
-			name:  "02-will return true when anno is meet require",
-			label: map[string]string{util.SinglePodTag: util.EnableFunc},
-			want:  false,
+			name: "02-ValidJobSelector selector not meet test.",
+			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{ComJob: util.ComJob{
+				Name: "haha", Selector: map[string]string{"heihei": "what?"},
+			}}},
+			args: validJobSelectorArgs{vcFrame: VolcanoFrame{Confs: []config.
+				Configuration{{Arguments: map[string]string{"heihei": "why?"}}}}},
+			wantErr: true,
+		},
+		{
+			name: "03-ValidJobSelector ok test.",
+			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{ComJob: util.ComJob{
+				Name: "haha", Selector: map[string]string{"heihei": "oh"},
+			}}},
+			args: validJobSelectorArgs{vcFrame: VolcanoFrame{Confs: []config.
+				Configuration{{Arguments: map[string]string{"heihei": "oh"}}}}},
+			wantErr: false,
 		},
 	}
+	return tests
+}
+
+func TestValidJobSelector(t *testing.T) {
+	tests := buildValidJobSelectorTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sJob := SchedulerJob{}
-			sJob.NPUJob = &util.NPUJob{}
-			sJob.Label = tt.label
-			if got := sJob.IsJobSinglePodDelete(); got != tt.want {
-				t.Errorf("IsJobSinglePodDelete() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSchedulerJobIsJobSinglePodRunAsNormal(t *testing.T) {
-	tests := []struct {
-		name string
-		anno map[string]string
-		want bool
-	}{
-		{
-			name: "01-will return false when pod-rescheduling is not exist",
-			anno: map[string]string{util.PodDeleteTimes: util.DefaultPodDeleteTimes},
-			want: true,
-		},
-		{
-			name: "02-will return true when anno is meet require",
-			anno: map[string]string{util.PodDeleteTimes: util.TagOfPodPending},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := SchedulerJob{}
-			sJob.NPUJob = &util.NPUJob{}
-			sJob.Annotation = tt.anno
-			if got := sJob.isJobSinglePodRunAsNormal(); got != tt.want {
-				t.Errorf("IsJobSinglePodDelete() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-type fieldsResetConfigMap struct {
-	SchedulerJobAttr util.SchedulerJobAttr
-	RankIndexInfo    RankIndexInfo
-	handler          ISchedulerPlugin
-	ServerList       []*Tor
-	TorBlackMaps     map[string]struct{}
-	JobReadyTag      bool
-}
-
-type argsResetConfigMap struct {
-	sHandle *ScheduleHandler
-}
-
-type updateResetConfigMapTestCase struct {
-	name   string
-	fields fieldsResetConfigMap
-	args   argsResetConfigMap
-	wantCm *v1.ConfigMap
-}
-
-func buildUpdateResetConfigMapTestCase01() updateResetConfigMapTestCase {
-	tmpTest := updateResetConfigMapTestCase{}
-	tmpTest.name = "01-will return nil when client is nil"
-	return tmpTest
-}
-
-func buildUpdateResetConfigMapTestCases() []updateResetConfigMapTestCase {
-	return []updateResetConfigMapTestCase{
-		buildUpdateResetConfigMapTestCase01(),
-	}
-}
-
-func TestSchedulerJobUpdateResetConfigMap(t *testing.T) {
-	tests := buildUpdateResetConfigMapTestCases()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := &SchedulerJob{
+			sJob := SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
-				RankIndexInfo:    tt.fields.RankIndexInfo,
 				handler:          tt.fields.handler,
-				ServerList:       tt.fields.ServerList,
-				TorBlackMaps:     tt.fields.TorBlackMaps,
-				JobReadyTag:      tt.fields.JobReadyTag,
 			}
-			sJob.updateResetConfigMap(tt.args.sHandle)
+			if err := sJob.ValidJobSelector(tt.args.vcFrame); (err != nil) != tt.wantErr {
+				t.Errorf("ValidJobSelector() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

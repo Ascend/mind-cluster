@@ -17,18 +17,17 @@
 #include <limits.h>
 #include <sys/mount.h>
 #include <unistd.h>
-
-#include "gtest/gtest.h"
 #include "securec.h"
+#include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 
 using namespace std;
 using namespace testing;
 
 #ifndef GOOGLE_TEST
-#define STATIC static
+# define STATIC static
 #else
-#define STATIC
+# define STATIC
 #endif
 
 #define BUF_SIZE 1024
@@ -37,7 +36,7 @@ using namespace testing;
 typedef char *(*ParseFileLine)(char *, const char *);
 extern "C" int IsStrEqual(const char *s1, const char *s2);
 extern "C" int GetNsPath(const int pid, const char *nsType, char *buf, size_t bufSize);
-extern "C" int snprintf_s(char *strDest, size_t destMax, size_t count, const char *format, ...);
+extern "C"  int snprintf_s(char *strDest, size_t destMax, size_t count, const char *format, ...);
 extern "C" int open(const char *path, int flags);
 extern "C" int close(int fd);
 extern "C" int stat(const char *file_name, struct stat *buf);
@@ -65,32 +64,29 @@ extern "C" int ParseRuntimeOptions(const char *options);
 extern "C" bool IsOptionNoDrvSet();
 extern "C" bool IsVirtual();
 extern "C" int MakeMountPoints(const char *path, mode_t mode);
-extern "C" int LogLoop(const char *filename);
+extern "C" int LogLoop(const char* filename);
 extern "C" bool TakeNthWord(char **pLine, unsigned int n, char **word);
 extern "C" bool CheckRootDir(char **pLine);
 
-struct MountList
-{
+struct MountList {
     unsigned int count;
     char list[MAX_MOUNT_NR][PATH_MAX];
 };
 
-struct CmdArgs
-{
-    char rootfs[BUF_SIZE];
-    int pid;
-    char options[BUF_SIZE];
+struct CmdArgs {
+    char     rootfs[BUF_SIZE];
+    int      pid;
+    char     options[BUF_SIZE];
     struct MountList files;
     struct MountList dirs;
 };
 
-struct ParsedConfig
-{
+struct ParsedConfig {
     char rootfs[BUF_SIZE];
     size_t devicesNr;
     char containerNsPath[BUF_SIZE];
     char cgroupPath[BUF_SIZE];
-    int originNsFd;
+    int  originNsFd;
     const struct MountList *files;
     const struct MountList *dirs;
 };
@@ -322,7 +318,7 @@ int Stub_DoPrepare_Success(const struct CmdArgs *args, struct ParsedConfig *conf
     return 0;
 }
 
-int Stub_ParseFileByLine_Success(char *buffer, int bufferSize, ParseFileLine fn, const char *filepath)
+int Stub_ParseFileByLine_Success(char* buffer, int bufferSize, ParseFileLine fn, const char* filepath)
 {
     return 0;
 }
@@ -342,8 +338,7 @@ bool Stub_IsOptionNoDrvSet_False()
     return false;
 }
 
-class Test_Fhho : public Test
-{
+class Test_Fhho : public Test {
 protected:
     static void SetUpTestCase()
     {
@@ -353,7 +348,7 @@ protected:
     {
         cout << "TestSuite测试套事件：在最后一个testcase之后执行" << endl;
     }
-    // 如果想在相同的测试套中设置两种事件，那么可以写在一起，运行就看到效果了
+    //如果想在相同的测试套中设置两种事件，那么可以写在一起，运行就看到效果了
     virtual void SetUp()
     {
         cout << "TestSuite测试用例事件：在每个testcase之前执行" << endl;
@@ -367,7 +362,7 @@ protected:
 TEST_F(Test_Fhho, ClassEQ)
 {
     int pid = 1;
-    const char *nsType = "mnt";
+    const char* nsType = "mnt";
     char buf[100] = {0x0};
     int bufSize = 100;
     int ret = GetNsPath(pid, nsType, buf, 100);
@@ -423,7 +418,7 @@ TEST_F(Test_Fhho, GetNsPathAndGetSelfNsPath)
     EXPECT_LE(0, GetSelfNsPath("mnt", nsPath, BUF_SIZE));
 }
 
-TEST_F(Test_Fhho, StatusOneDoDirectoryMounting)
+TEST_F(Test_Fhho,  StatusOneDoDirectoryMounting)
 {
     MOCKER(MountDir).stubs().will(invoke(Stub_MountDir_Failed));
     struct MountList list = {0};
@@ -453,6 +448,7 @@ TEST_F(Test_Fhho, StatusOneCheckDirExists)
     int ret = CheckDirExists(dir, len);
     EXPECT_EQ(0, ret);
 }
+
 
 TEST_F(Test_Fhho, StatusTwoCheckDirExists)
 {
@@ -502,7 +498,7 @@ TEST_F(Test_Fhho, MakeMountPoints1)
 TEST_F(Test_Fhho, LogLoopSuccess)
 {
     // The test create directory contains the parent directory
-    char *filename = "/home/var/log/sys.log";
+    char* filename = "/home/var/log/sys.log";
     int ret = LogLoop(filename);
     EXPECT_EQ(-1, ret);
 }
@@ -611,10 +607,9 @@ TEST_F(Test_Fhho, StatusOneProcess)
 TEST_F(Test_Fhho, StatusTwoProcess)
 {
     // Test the correct options
-    const int argc = 7;
-    const char *argvData[argc] = {"ascend-docker-cli", "--allow-link", "True", "--pid", "123", "--rootfs", "/home"};
-    MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
-    int ret = Process(argc, const_cast<char **>(argvData));
+    const int argc = 5;
+    const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs", "/home"};
+    int ret = Process(argc,const_cast<char **>(argvData));
     EXPECT_EQ(0, ret);
 }
 
@@ -632,7 +627,7 @@ TEST_F(Test_Fhho, StatusFourProcess)
     const int argc = 7;
     const char *argvData[argc] = {"ascend-docker-cli", "--evices", "1,2", "--idd", "123", "--ootfs", "/home"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
-    int ret = Process(argc, const_cast<char **>(argvData));
+    int ret = Process(argc,const_cast<char **>(argvData));
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -641,9 +636,9 @@ TEST_F(Test_Fhho, StatusFiveProcess)
 {
     const int argc = 11;
     const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs",
-                                  "/home", "--options", "base", "--mount-file", "a.list", "--mount-dir", "/home/code"};
+    "/home", "--options", "base", "--mount-file", "a.list", "--mount-dir", "/home/code"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
-    int ret = Process(argc, const_cast<char **>(argvData));
+    int ret = Process(argc,const_cast<char **>(argvData));
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -652,9 +647,9 @@ TEST_F(Test_Fhho, StatusSixProcess)
 {
     const int argc = 11;
     const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs",
-                                  "/home", "--opt", "base", "--mount-f", "a.list", "--mount-dir", "/root/sxv"};
+    "/home", "--opt", "base", "--mount-f", "a.list", "--mount-dir", "/root/sxv"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
-    int ret = Process(argc, const_cast<char **>(argvData));
+    int ret = Process(argc,const_cast<char **>(argvData));
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -663,9 +658,9 @@ TEST_F(Test_Fhho, StatusSevenProcess)
 {
     const int argc = 11;
     const char *argvData[argc] = {"ascend-docker-cli", "--ops", "--pid", "123",
-                                  "--rootfs", "/home", "base", "--mounle", "a.list", "--mount-dir", "/home/code"};
+    "--rootfs", "/home", "base", "--mounle", "a.list", "--mount-dir", "/home/code"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
-    int ret = Process(argc, const_cast<char **>(argvData));
+    int ret = Process(argc,const_cast<char **>(argvData));
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }

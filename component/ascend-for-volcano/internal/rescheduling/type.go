@@ -27,8 +27,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-var reSchedulerConfigmap *DealReSchedulerConfigmap
-
 const (
 	// RePropertyName name specifying re-scheduler cm
 	RePropertyName = "re-scheduling"
@@ -147,46 +145,20 @@ const (
 	AcJobTag = "group-name"
 	// AcJobVersion the api version of AcJob
 	AcJobVersion = "mindxdl.gitee.com"
-	// SubHealthFault subHealth code
-	SubHealthFault = "SubHealthFault"
 )
 
 const (
-	getNoneJobsErr      = "get none jobs"
-	pendingTimes        = 12
-	defaultPendingTimes = 0
-	taskUnhealthy       = "taskUnhealthy"
-	spPendingTimes      = 6
-	// SuperPodAnnoKey annotation key of super pod
-	SuperPodAnnoKey          = "sp-block"
-	singleThreadDeletePodNum = 200
-	deviceInfoTimeout        = 60
+	getNoneJobsErr = "get none jobs"
 )
 
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
-	GraceDeleteTime        int64
-	Level                  string
-	Jobs                   map[api.JobID]plugin.SchedulerJob
-	Nodes                  map[string]plugin.NPUNode
-	DeviceInfoNotInSession map[string]plugin.NodeDeviceInfoWithTime `json:"-"`
-	IsFirstSession         *bool
-	kubeClient             kubernetes.Interface
-}
-
-// FaultNodeInfoToCm fault node info to cm
-type FaultNodeInfoToCm struct {
-	FaultDeviceList     []FaultDeviceList
-	NodeName            string
-	UnhealthyNPU        []string
-	NetworkUnhealthyNPU []string
-	NodeDEnable         bool
-	NodeHealthState     string
-	UpdateTime          int64
-	OldHeartbeatTime    int64
-	NewHeartbeatTime    int64
-	UpdateHeartbeatTime int64
+	GraceDeleteTime int64
+	Level           string
+	Jobs            map[api.JobID]plugin.SchedulerJob
+	Nodes           map[string]plugin.NPUNode
+	kubeClient      kubernetes.Interface
 }
 
 // DealReSchedulerCache object with method for re-scheduler cache
@@ -196,13 +168,11 @@ type DealReSchedulerCache struct {
 	RealFaultNodes             []FaultNode                `json:"-"`
 	FaultNodeMaps              map[string]SimpleFNodeInfo `json:"-"`
 	FaultJobs                  []FaultJob
-	RealFaultJobs              []FaultJob `json:"-"`
 	NodeHeartbeats             []NodeHeartbeat
 	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 	JobRemainRetryTimes        map[api.JobID]*RemainRetryTimes
 }
 
-// RemainRetryTimes remained retry times
 type RemainRetryTimes struct {
 	UUID  types.UID
 	Times int
@@ -217,9 +187,10 @@ type DealReSchedulerConfigmap struct {
 
 // AllocNodeRankOccurrence object recording node rankIndex and whether index re-allocated to new node
 type AllocNodeRankOccurrence struct {
-	NodeName  string
-	RankIndex string
-	IsFault   bool
+	NodeName   string
+	RankIndex  string
+	IsFault    bool
+	Occurrence int
 }
 
 // FaultCard card object for re-scheduling
@@ -232,33 +203,27 @@ type FaultCard struct {
 
 // FaultNode node object for re-scheduling
 type FaultNode struct {
-	SuperPodID              int32
-	NodeName                string
-	NPUName                 string
-	FaultDeviceList         []FaultDeviceList
-	UpdateTime              int64
-	UnhealthyNPU            []string
-	NetworkUnhealthyNPU     []string
-	IsFaultNode             bool
-	NodeDEnable             bool
-	NodeHealthState         string
-	AllCards                []string
-	FaultCards              []FaultCard
-	HeartbeatInterval       int
-	OldHeartbeatTime        int64
-	NewHeartbeatTime        int64
-	UpdateHeartbeatTime     int64
-	HasSwitchSubHealthFault bool
-	HasCardSubHealthFault   bool
+	NodeName            string
+	NPUName             string
+	FaultDeviceList     []FaultDeviceList
+	UpdateTime          int64
+	UnhealthyNPU        []string
+	NetworkUnhealthyNPU []string
+	IsFaultNode         bool
+	NodeDEnable         bool
+	NodeHealthState     string
+	AllCards            []string
+	FaultCards          []FaultCard
+	HeartbeatInterval   int
+	OldHeartbeatTime    int64
+	NewHeartbeatTime    int64
+	UpdateHeartbeatTime int64
 }
 
 // SimpleFNodeInfo simple fault node info
 type SimpleFNodeInfo struct {
-	NodeName                string
-	IsFaultNode             bool
-	HasCardSubHealthFault   bool
-	HasSwitchSubHealthFault bool
-	NodeHealthState         string
+	NodeName    string
+	IsFaultNode bool
 }
 
 // FaultDeviceList is the fault reason of card
@@ -273,20 +238,18 @@ type FaultDeviceList struct {
 
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
-	Reason             []FaultReasonList
-	IsFaultTask        bool
-	IsFaultRetryEnable bool
-	HasSubHealthFault  bool
-	TaskUID            api.TaskID
-	TaskName           string
-	TaskNamespace      string
-	NodeName           string
-	JobName            string
-	NodeRankIndex      string
-	UseCardName        []string
-	PodCreateTime      int64
-	PodUID             types.UID
-	faultType          string
+	Reason        []FaultReasonList
+	IsFaultTask   bool
+	TaskUID       api.TaskID
+	TaskName      string
+	TaskNamespace string
+	NodeName      string
+	JobName       string
+	NodeRankIndex string
+	UseCardName   []string
+	PodCreateTime int64
+	PodUID        types.UID
+	faultType     string
 }
 
 // miniFaultTask struct for print fTask important infos to logs
@@ -306,7 +269,6 @@ type miniFaultJob struct {
 	FaultRetryTimes int
 }
 
-// FaultReasonList node Fault Device List
 type FaultReasonList struct {
 	NodeName string `json:"node_name"`
 	FaultDeviceList
@@ -315,9 +277,6 @@ type FaultReasonList struct {
 // FaultJob job object for re-scheduling
 type FaultJob struct {
 	ReScheduleKey       string // values taken off/grace/force
-	SubHealthyStrategy  string
-	IsSubHealthFault    bool
-	PendingSessionNum   int
 	IsFaultJob          bool
 	IsInSession         bool
 	JobName             string
@@ -325,7 +284,6 @@ type FaultJob struct {
 	JobNamespace        string
 	JobRankIds          []string // useCardIndex + 8*NodeRankIndex
 	NodeNames           []string
-	SuperPods           map[string][]plugin.SuperNode
 	NodeNameMaps        map[string]struct{}
 	FaultTasks          []FaultTask
 	UpdateTime          int64
@@ -336,6 +294,7 @@ type FaultJob struct {
 	ReferenceName       string
 	FaultRetryTimes     int
 	faultReason         string
+	isUnstable          bool
 	UUID                types.UID
 }
 
@@ -350,11 +309,4 @@ type NodeHeartbeat struct {
 type FaultRankIdsJobCMData struct {
 	FaultRankIds []string
 	CreatTime    int64
-}
-
-type deletePodInfo struct {
-	isMasterFault bool
-	superPod      bool
-	ids           []string
-	reason        string
 }

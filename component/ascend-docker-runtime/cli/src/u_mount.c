@@ -26,7 +26,7 @@
 #include "options.h"
 #include "logger.h"
 
-static bool CheckSrcFile(const char *src)
+static bool checkSrcFile(const char *src)
 {
     struct stat fileStat;
     if (lstat(src, &fileStat) != 0) {
@@ -58,18 +58,18 @@ int Mount(const char *src, const char *dst)
         return -1;
     }
 
-    static const unsigned long MOUNT_FLAGS = MS_BIND;
-    static const unsigned long REMOUNT_FLAGS = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID;
-    if (!CheckSrcFile(src)) {
+    static const unsigned long mountFlags = MS_BIND;
+    static const unsigned long remountFlags = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID;
+    if (!checkSrcFile(src)) {
         return -1;
     }
-    int ret = mount(src, dst, NULL, MOUNT_FLAGS, NULL);
+    int ret = mount(src, dst, NULL, mountFlags, NULL);
     if (ret < 0) {
         Logger("failed to mount src.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
-    ret = mount(NULL, dst, NULL, REMOUNT_FLAGS, NULL);
+    ret = mount(NULL, dst, NULL, remountFlags, NULL);
     if (ret < 0) {
         Logger("failed to re-mount. dst.", LEVEL_ERROR, SCREEN_YES);
         return -1;
@@ -78,7 +78,7 @@ int Mount(const char *src, const char *dst)
     return 0;
 }
 
-static int MountFile(const char *rootfs, const char *filepath)
+int MountFile(const char *rootfs, const char *filepath)
 {
     if (rootfs == NULL || filepath == NULL) {
         Logger("rootfs, filepath pointer is null!", LEVEL_ERROR, SCREEN_YES);

@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -41,26 +40,20 @@ func GetConfigMapWithRetry(client kubernetes.Interface, namespace, cmName string
 	var cm *v1.ConfigMap
 	var err error
 
-	for i := 0; i < retryTime; i++ {
-		// There can be no delay or blocking operations in a session.
-		if cm, err = client.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{}); err != nil {
-			time.Sleep(retrySleepTime)
-			continue
-		}
-		return cm, nil
-	}
-	return nil, err
-}
-
-// GetConfigMap  Get config map from k8s.
-func GetConfigMap(client kubernetes.Interface, namespace, cmName string) (*v1.ConfigMap, error) {
-	var cm *v1.ConfigMap
-	var err error
 	// There can be no delay or blocking operations in a session.
 	if cm, err = client.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{}); err != nil {
 		return nil, err
 	}
+
 	return cm, nil
+}
+
+func DelConfigMapWithRetry(client kubernetes.Interface, namespace, cmName string) error {
+	var err error
+	if err = client.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), cmName, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // IsConfigMapChanged judge the cm wither is same. true is no change.
@@ -108,8 +101,10 @@ func UpdateConfigmapIncrementally(kubeClient kubernetes.Interface, ns, name stri
 	oldCM, err := GetConfigMapWithRetry(kubeClient, ns, name)
 	if err != nil || oldCM == nil {
 		upCmErr := fmt.Errorf("get old configmap from kubernetes failed err:%s", SafePrint(err))
-		return newData, upCmErr
-
+		if name != CmName {
+			return newData, upCmErr
+		}
+		return updateFaultCMCheckCode(newData), upCmErr
 	}
 	oldCMData := oldCM.Data
 	if oldCMData != nil {
@@ -121,10 +116,12 @@ func UpdateConfigmapIncrementally(kubeClient kubernetes.Interface, ns, name stri
 			}
 		}
 	}
-	return newData, nil
+	if name != CmName {
+		return newData, nil
+	}
+	return updateFaultCMCheckCode(newData), nil
 }
 
-// InformerConfigmapFilter is used to filter out cm need to be listened for ascend plugin
 func InformerConfigmapFilter(obj interface{}) bool {
 	cm, ok := obj.(*v1.ConfigMap)
 	if !ok {
@@ -166,4 +163,14 @@ func marshalData(data interface{}) []byte {
 		return nil
 	}
 	return dataBuffer
+}
+
+func updateFaultCMCheckCode(newData map[string]string) map[string]string {
+	_, ok := newData[CmCheckCode]
+	if ok {
+		delete(newData, CmCheckCode) // if check code exists, delete and create new
+	}
+	checkCode := MakeDataHash(newData)
+	newData[CmCheckCode] = checkCode
+	return newData
 }

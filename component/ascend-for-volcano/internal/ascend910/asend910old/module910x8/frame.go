@@ -56,7 +56,7 @@ func New(name string) base.AscendHandler {
 // ValidNPUJob check job req npu num and mode
 func (tp *module910x8) ValidNPUJob() *api.ValidateResult {
 	vResult := &api.ValidateResult{}
-	var vErr error = nil
+	var vErr error
 	defer func() {
 		if vErr != nil {
 			vResult.Pass = false
@@ -79,14 +79,14 @@ func (tp *module910x8) ValidNPUJob() *api.ValidateResult {
 		return vResult
 	}
 
-	return tp.reHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+	return nil
 }
 
 // PreStartAction pre-processing actions for rescheduling
 func (tp *module910x8) PreStartAction(i interface{}, _ *framework.Session) error {
 	k, ok := i.(*rescheduling.ReScheduler)
 	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
+		return fmt.Errorf("PreStartAction failed %s, interface is not ReScheduler", SchedulerName)
 	}
 	tp.reHandle = k
 	return nil
@@ -202,8 +202,14 @@ func (tp *module910x8) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *p
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",
 		tp.GetPluginName(), task.Name, selectedNPU)
 
-	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
+	tp.SetNPUTopologyToPodFn(task, selectedNPU)
 	newNode := tp.UpdateNodeInfo(node, selectedNPU)
+	if tp.reHandle != nil {
+		if reErr := tp.reHandle.UseAnnotation(task, newNode); reErr != nil {
+			klog.V(util.LogErrorLev).Infof("%s rescheduling UseAnnotation: %s", SchedulerName, reErr.Error())
+			return nil
+		}
+	}
 	return newNode
 }
 

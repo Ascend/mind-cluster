@@ -15,29 +15,10 @@
 // Package common define common variable
 package common
 
-import (
-	"math"
-
-	"k8s.io/apimachinery/pkg/util/sets"
-)
+import "math"
 
 // DeviceType device type enum
 type DeviceType int32
-
-var (
-	// ProfilingTime for getting PCIe bandwidth
-	ProfilingTime int
-
-	// a900A3SuperPodBoardIds for A900/A9000 A3 Super Pod Board IDs
-	a900A3SuperPodBoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
-		A900A3SuperPodBin3BoardId)
-
-	// a900A3SuperPodMainBoardIds for A900 A3 Super Pod Main Board IDs
-	a900A3SuperPodMainBoardIds = sets.NewInt32(A900A3SuperPodMainBoardId1, A900A3SuperPodMainBoardId2)
-
-	// a9000A3SuperPodMainBoardIds for A9000 A3 Super Pod Main Board IDs
-	a9000A3SuperPodMainBoardIds = sets.NewInt32(A9000A3SuperPodMainBoardId1, A9000A3SuperPodMainBoardId2)
-)
 
 const (
 	// AICore Ascend310 & Ascend910
@@ -76,8 +57,6 @@ const (
 	MaxErrorCodeCount = 128
 	// UnRetError return unsigned int error
 	UnRetError = math.MaxUint32
-	// Abnormal status of Abnormal
-	Abnormal = "Abnormal"
 
 	// DeviceIPLength length of device ip address
 	DeviceIPLength = 4
@@ -109,10 +88,8 @@ const (
 	Ascend310P = "Ascend310P"
 	// Ascend910 ascend 910 chip
 	Ascend910 = "Ascend910"
-	// Ascend910B ascend 910B chip
+	// Ascend910B ascend 1980B(910B) chip
 	Ascend910B = "Ascend910B"
-	// Ascend910A3 ascend Ascend910A3 chip
-	Ascend910A3 = "Ascend910A3"
 	// Atlas200ISoc 200 soc env
 	Atlas200ISoc = "Atlas 200I SoC A1"
 
@@ -128,21 +105,18 @@ const (
 	MinVDevID = 100
 	// MaxVDevID max value of virtual device id
 	MaxVDevID = 1124
-
-	// InvalidID invalid ID
-	InvalidID = 0xffffffff
 )
 
 const (
 	// BootStartFinish chip hot reset finish
-	BootStartFinish = 16
+	BootStartFinish = 3
 )
 
 const (
-	// Pattern910A regular expression for 910A
-	Pattern910A = `^910`
-	// Pattern910B regular expression for 910B
-	Pattern910B = `^910B\d{1}`
+	// Pattern1980B regular expression for 1980B
+	Pattern1980B = `^910B\d{1}`
+	// Pattern1980 regular expression for 1980
+	Pattern1980 = `^910B?`
 )
 
 const (
@@ -175,48 +149,4 @@ const (
 
 	// A300IA2BoardId board id of A300I A2 and 910proB
 	A300IA2BoardId = 0x28
-
-	// A900A3SuperPodBin1BoardId board id of A900/A9000 A3 SuperPod Bin1
-	A900A3SuperPodBin1BoardId = 0xb0
-
-	// A900A3SuperPodBin2BoardId board id of A900/A9000 A3 SuperPod Bin2
-	A900A3SuperPodBin2BoardId = 0xb1
-
-	// A900A3SuperPodBin3BoardId board id of A900/A9000 A3 SuperPod Bin3
-	A900A3SuperPodBin3BoardId = 0xb2
-
-	// A900A3SuperPodMainBoardId1 board id of A900 A3 SuperPod MainBoard1
-	A900A3SuperPodMainBoardId1 = 0x18
-
-	// A900A3SuperPodMainBoardId2 board id of A900 A3 SuperPod MainBoard2
-	A900A3SuperPodMainBoardId2 = 0x19
-
-	// A9000A3SuperPodMainBoardId1 board id of A9000 A3 SuperPod MainBoard1
-	A9000A3SuperPodMainBoardId1 = 0x1C
-
-	// A9000A3SuperPodMainBoardId2 board id of A9000 A3 SuperPod MainBoard2
-	A9000A3SuperPodMainBoardId2 = 0x1D
-)
-
-// DcmiDeviceType used to represent the dcmi device type
-type DcmiDeviceType int32
-
-const (
-	// DcmiDeviceTypeDDR represents the component type DCMI_DEVICE_TYPE_DDR
-	DcmiDeviceTypeDDR DcmiDeviceType = 0
-	// DcmiDeviceTypeSRAM represents the component type DCMI_DEVICE_TYPE_SRAM
-	DcmiDeviceTypeSRAM DcmiDeviceType = 1
-	// DcmiDeviceTypeHBM represents the component type DCMI_DEVICE_TYPE_HBM
-	DcmiDeviceTypeHBM DcmiDeviceType = 2
-	// DcmiDeviceTypeNPU represents the component type DCMI_DEVICE_TYPE_NPU
-	DcmiDeviceTypeNPU DcmiDeviceType = 3
-	// DcmiDeviceTypeNONE represents the component type DCMI_DEVICE_TYPE_NONE
-	DcmiDeviceTypeNONE DcmiDeviceType = 0xff
-)
-
-const (
-	// ErrMsgInitCardListFailed is used where initialization of the card list fails
-	ErrMsgInitCardListFailed = "get card list failed for init"
-	// ErrMsgGetBoardInfoFailed is used where there is a failure in getting board info
-	ErrMsgGetBoardInfoFailed = "get board info failed, no card found"
 )

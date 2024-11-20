@@ -11,6 +11,11 @@ import (
 	"testing"
 )
 
+const (
+	nodeTotalCoreNum56 = 56
+	nodeTotalCpuNum49  = 49
+)
+
 type IsPodWholeCardArgs struct {
 	realCardName string
 }

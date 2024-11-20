@@ -23,7 +23,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager"
+	"huawei.com/npu-exporter/v5/devmanager"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
@@ -55,6 +55,7 @@ func TestDoWithVolcanoListAndWatch310p(t *testing.T) {
 		allInfo, err := manager.GetNPUs()
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
+
 		mockGetPodsUsedNpu := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
 				return nil
@@ -72,8 +73,7 @@ func TestDoWithVolcanoListAndWatch310p(t *testing.T) {
 			})
 		mockCreateConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
-				deviceInfo map[string]string, manuallySeparateNPU string, _ common.SwitchFaultInfo, superPodID,
-				serverIndex int32) (*common.NodeDeviceInfoCache, error) {
+				deviceInfo map[string]string, manuallySeparateNPU string) (*common.NodeDeviceInfoCache, error) {
 				return &common.NodeDeviceInfoCache{}, nil
 			})
 		defer func() {

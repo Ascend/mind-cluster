@@ -105,12 +105,6 @@ func buildFaultJobForceDeleteJobTests() []FaultJobForceDeleteJobTests {
 
 // TestFaultJobForceDeleteJob test for force delete function
 func TestFaultJobForceDeleteJob(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
 	tests := buildFaultJobForceDeleteJobTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -131,111 +125,10 @@ func TestFaultJobForceDeleteJob(t *testing.T) {
 				DeleteExecutedFlag:  tt.fields.DeleteExecutedFlag,
 				ElasticScheduling:   tt.fields.ElasticScheduling,
 			}
-			if err := fJob.ForceDeleteJob(tt.args.ssn, tt.args.schedulerJob, env); (err != nil) != tt.wantErr {
+			if err := fJob.ForceDeleteJob(tt.args.ssn, tt.args.schedulerJob); (err != nil) != tt.wantErr {
 				t.Errorf("ForceDeleteJob() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			tt.args.cacheFuncAfter()
 		})
 	}
-}
-
-// TestGetVirSupPodId test getVirSupPodId
-func TestGetVirSupPodId(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
-	fJob := &FaultJob{
-		JobUID: "test",
-	}
-	t.Run("getVirSupPodId", func(t *testing.T) {
-		if result := fJob.getVirSupPodId("node", env); result != "" {
-			t.Errorf("return empty when SuperPodReschdInfo "+
-				"doesn't have job test result = %v, want %v", result, "")
-		}
-		env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
-			"0": {
-				plugin.SuperNode{
-					SuperPodID: 1,
-					Name:       "node1",
-				},
-			},
-		}
-		if result := fJob.getVirSupPodId("node", env); result != "" {
-			t.Errorf("return empty when name != node1 result = %v, want %v", result, "")
-		}
-		if result := fJob.getVirSupPodId("node1", env); result != "0" {
-			t.Errorf("return 0 when name == node1 result = %v, want %v", result, "0")
-		}
-	})
-}
-
-// TestIsContainTask test isContainTask
-func TestIsContainTask(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
-	fJob := &FaultJob{
-		JobUID: "test",
-	}
-	t.Run("isContainTask", func(t *testing.T) {
-		if result := fJob.isContainTask([]string{"0"}, "node", env); result != false {
-			t.Errorf("return false when SuperPodReschdInfo doesn't have job test "+
-				"result = %v, want %v", result, false)
-		}
-		env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
-			"0": {
-				plugin.SuperNode{
-					SuperPodID: 1,
-					Name:       "node1",
-				},
-			},
-		}
-		if result := fJob.isContainTask([]string{"0"}, "node", env); result != false {
-			t.Errorf("return false when name != node1 result = %v, want %v", result, false)
-		}
-		if result := fJob.isContainTask([]string{"0"}, "node1", env); result != true {
-			t.Errorf("return true when name == node1 result = %v, want %v", result, true)
-		}
-	})
-}
-
-// TestGetIds test getIds
-func TestGetIds(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
-	fJob := &FaultJob{
-		JobUID: "test",
-	}
-	t.Run("getIds", func(t *testing.T) {
-		if result := fJob.getIds(env); result != nil {
-			t.Errorf("return [] when SuperPodFaultTaskNodes doesn't have job test "+
-				"result = %v, want %v", result, nil)
-		}
-		env.SuperPodInfo.SuperPodFaultTaskNodes["test"] = []string{"node"}
-		env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
-			"0": {
-				plugin.SuperNode{
-					SuperPodID: 1,
-					Name:       "node1",
-				},
-			},
-		}
-		if result := fJob.getIds(env); result != nil {
-			t.Errorf("return [] when name != node1 result = %v, want %v", result, nil)
-		}
-		env.SuperPodInfo.SuperPodFaultTaskNodes["test"] = []string{"node1"}
-		if result := fJob.getIds(env); !reflect.DeepEqual(result, []string{"0"}) {
-			t.Errorf("return [0] when name == node1 result = %v, want %v", result, true)
-		}
-	})
 }

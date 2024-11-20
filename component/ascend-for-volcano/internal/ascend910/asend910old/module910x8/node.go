@@ -29,7 +29,7 @@ import (
 )
 
 func (tp *module910x8) getUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([]int, error) {
-	resTop := make([]int, 0)
+	var resTop []int
 	topStr, ok := node.Annotation[tp.GetAnnoName()]
 	if !ok {
 		err := fmt.Errorf("node<%s> don't have npu<%s>", node.Name, tp.GetAnnoName())
@@ -64,7 +64,7 @@ func (tp *module910x8) getUsableTopFromNode(node plugin.NPUNode, disFlag bool) (
 	if len(networkUnhealthyTop) == 0 {
 		return resTop, nil
 	}
-	newTop := make([]int, 0)
+	var newTop []int
 	for _, rId := range resTop {
 		existFlag := false
 		for _, nId := range networkUnhealthyTop {

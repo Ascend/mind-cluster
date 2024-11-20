@@ -22,8 +22,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager"
-	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/devmanager"
+	npuCommon "huawei.com/npu-exporter/v5/devmanager/common"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -39,10 +39,6 @@ const (
 	aiCoreNum   = 4
 	aiCoreCount = 8
 	vDevChipID  = 100
-	FaultOnce   = 1
-	NoneFault   = 0
-
-	atlas300VPro = "Atlas 300V Pro"
 )
 
 func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string][]*common.NpuDevice {
@@ -51,18 +47,16 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 		newNpuDevices := make([]*common.NpuDevice, 0, len(npuDevices))
 		for _, npuDevice := range npuDevices {
 			newNpuDevice := &common.NpuDevice{
-				FaultCodes:             npuDevice.FaultCodes,
-				AlarmRaisedTime:        npuDevice.AlarmRaisedTime,
-				NetworkFaultCodes:      npuDevice.NetworkFaultCodes,
-				NetworkAlarmRaisedTime: npuDevice.NetworkAlarmRaisedTime,
-				DevType:                npuDevice.DevType,
-				DeviceName:             npuDevice.DeviceName,
-				Health:                 npuDevice.Health,
-				NetworkHealth:          npuDevice.NetworkHealth,
-				IP:                     npuDevice.IP,
-				LogicID:                npuDevice.LogicID,
-				PhyID:                  npuDevice.PhyID,
-				CardID:                 npuDevice.CardID,
+				FaultCodes:      npuDevice.FaultCodes,
+				AlarmRaisedTime: npuDevice.AlarmRaisedTime,
+				DevType:         npuDevice.DevType,
+				DeviceName:      npuDevice.DeviceName,
+				Health:          npuDevice.Health,
+				NetworkHealth:   npuDevice.NetworkHealth,
+				IP:              npuDevice.IP,
+				LogicID:         npuDevice.LogicID,
+				PhyID:           npuDevice.PhyID,
+				CardID:          npuDevice.CardID,
 			}
 			newNpuDevices = append(newNpuDevices, newNpuDevice)
 		}
@@ -134,11 +128,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 		dmgr: &devmanager.DeviceManagerMock{}}
 	convey.Convey("test AddPodAnnotation 1", t, func() {
 		convey.Convey("GetDeviceListID failed", func() {
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910},
-			}, common.Ascend910c2, "", nil)
+			err := tool.AddPodAnnotation(nil, nil, []string{common.Ascend910}, common.Ascend910c2, "")
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
@@ -149,20 +139,27 @@ func TestAddPodAnnotation1(t *testing.T) {
 		defer mockTryUpdatePodAnnotation.Reset()
 		convey.Convey("physical device 310P", func() {
 			tool.name = common.Ascend310P
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend310P + "-0"},
-			}, common.Ascend310P, "", nil)
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend310P + "-0"}, common.Ascend310P, "")
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("virtual device", func() {
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend310Pc2 + "-100-0"},
-			}, common.Ascend310Pc2, "", nil)
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend310Pc2 + "-100-0"}, common.Ascend310Pc2,
+				"")
 			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("ParseInt failed", func() {
+			tool.name = common.Ascend910
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend910 + "-a"}, common.Ascend910, "")
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("GetLogicIDFromPhysicID failed", func() {
+			mockGetLogicIDFromPhysicID := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetLogicIDFromPhysicID", func(_ *devmanager.DeviceManagerMock, physicID int32) (int32, error) {
+					return 0, fmt.Errorf("error")
+				})
+			defer mockGetLogicIDFromPhysicID.Reset()
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend910 + "-0"}, common.Ascend910, "")
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -190,11 +187,7 @@ func TestAddPodAnnotation2(t *testing.T) {
 					return "", fmt.Errorf("error")
 				})
 			defer mockGetDeviceIPAddress.Reset()
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend910 + "-0"}, common.Ascend910, "")
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("GetDeviceIPAddress ok", func() {
@@ -204,48 +197,8 @@ func TestAddPodAnnotation2(t *testing.T) {
 					return "", nil
 				})
 			defer mockGetDeviceIPAddress.Reset()
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+			err := tool.AddPodAnnotation(&v1.Pod{}, nil, []string{common.Ascend910 + "-0"}, common.Ascend910, "")
 			convey.So(err, convey.ShouldBeNil)
-		})
-	})
-}
-
-// TestAddPodAnnotation3 for test the interface AddPodAnnotation, part 3
-func TestAddPodAnnotation3(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
-	convey.Convey("test AddPodAnnotation 3", t, func() {
-		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
-				annotation map[string]string) error {
-				return nil
-			})
-		defer mockTryUpdatePodAnnotation.Reset()
-		convey.Convey("GetLogicIDFromPhysicID failed", func() {
-			mockGetLogicIDFromPhysicID := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetLogicIDFromPhysicID", func(_ *devmanager.DeviceManagerMock, physicID int32) (int32, error) {
-					return 0, fmt.Errorf("error")
-				})
-			defer mockGetLogicIDFromPhysicID.Reset()
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("ParseInt failed", func() {
-			tool.name = common.Ascend910
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-a"},
-			}, common.Ascend910, "", nil)
-			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -424,61 +377,19 @@ func TestAssemble310PMixedPhyDevices(t *testing.T) {
 		mockProductType := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
 			"GetProductType",
 			func(_ *devmanager.DeviceManagerMock, cardID int32, deviceID int32) (string, error) {
-				return atlas300VPro, nil
+				return "Atlas 300V Pro", nil
 			})
 		defer mockProductType.Reset()
 		productTypeMap := common.Get310PProductType()
 		tool.assemble310PMixedPhyDevices(davinCiDev, &device, &deivceType)
 		testRes := common.NpuDevice{
-			DevType:       productTypeMap[atlas300VPro],
-			DeviceName:    fmt.Sprintf("%s-%d", productTypeMap[atlas300VPro], phyIDNum),
+			DevType:       productTypeMap["Atlas 300V Pro"],
+			DeviceName:    fmt.Sprintf("%s-%d", productTypeMap["Atlas 300V Pro"], phyIDNum),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
 			LogicID:       logicIDNum,
 			PhyID:         phyIDNum,
 		}
 		convey.So(device, convey.ShouldContain, testRes)
-	})
-}
-
-// TestIfCardsInResetting test if card in reset
-func TestIfCardsInResetting(t *testing.T) {
-	convey.Convey("test if card in reset func", t, func() {
-		tool := NewHwAscend910Manager()
-		tool.SetCardsInResetting(common.FirstDevice, true)
-		convey.So(tool.GetIfCardsInResetting(common.FirstDevice), convey.ShouldEqual, true)
-		convey.So(tool.GetIfCardsInResetting(logicIDNum), convey.ShouldBeFalse)
-		tool.SetCardsInResetting(common.FirstDevice, false)
-		convey.So(tool.GetIfCardsInResetting(common.FirstDevice), convey.ShouldBeFalse)
-	})
-}
-
-// TestGetResetFailedTimes test get reset failed times
-func TestGetResetFailedTimes(t *testing.T) {
-	convey.Convey("test set reset failed times", t, func() {
-		tool := NewHwAscend910Manager()
-		tool.SetResetFailedTimes(common.FirstDevice, FaultOnce)
-		convey.So(tool.GetResetFailedTimes(common.FirstDevice), convey.ShouldEqual, FaultOnce)
-		convey.So(tool.GetResetFailedTimes(logicIDNum), convey.ShouldEqual, NoneFault)
-	})
-}
-
-func TestRemoveDuplicateErr(t *testing.T) {
-	convey.Convey("test remove duplicate errors", t, func() {
-		code98008 := int64(0x80C98008)
-		codeB8008 := int64(0x80CB8008)
-		code98002 := int64(0x80C98002)
-		code98003 := int64(0x80C98003)
-		code98009 := int64(0x80C98009)
-		codeB8002 := int64(0x80CB8002)
-		codeB8009 := int64(0x80CB8009)
-		oldErrors := []int64{code98008, code98002, code98003, code98009, codeB8002, codeB8008, codeB8009}
-		tool := NewHwAscend910Manager()
-		newErrors := tool.removeDuplicateErr(oldErrors)
-		convey.So(len(oldErrors), convey.ShouldEqual, len(newErrors))
-		baseErrors := []int64{code98008, codeB8008}
-		oldErrors = []int64{code98008, code98008, code98008, code98008, code98008, code98008, codeB8008, codeB8008}
-		newErrors = tool.removeDuplicateErr(oldErrors)
-		convey.So(len(baseErrors), convey.ShouldEqual, len(newErrors))
 	})
 }

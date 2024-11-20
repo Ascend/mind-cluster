@@ -23,8 +23,6 @@ spec:
       containers:
         - command: [ "/bin/bash", "-c", "--"]
           args: [ "ascend-operator
-                   --kubeApiQps=800
-                   --kubeApiBurst=800
                    --enableGangScheduling=true
                    --logFile=/var/log/mindx-dl/ascend-operator/ascend-operator.log
                    --logLevel=0" ]
@@ -32,10 +30,10 @@ spec:
           name: manager
           resources:
             limits:
-              cpu: 2000m
+              cpu: 500m
               memory: 3Gi
             requests:
-              cpu: 2000m
+              cpu: 500m
               memory: 3Gi
           securityContext:
             allowPrivilegeEscalation: false
@@ -47,8 +45,6 @@ spec:
           volumeMounts:
             - name: ascend-operator-log
               mountPath: /var/log/mindx-dl/ascend-operator
-            - name: ranktable-dir
-              mountPath: /user/mindx-dl/ranktable
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
@@ -57,10 +53,6 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/ascend-operator
             type: Directory
-        - name: ranktable-dir
-          hostPath:
-            path: /user/mindx-dl/ranktable
-            type: DirectoryOrCreate
         - name: localtime
           hostPath:
             path: /etc/localtime
@@ -94,7 +86,7 @@ rules:
     verbs: [ "create", "list", "watch", "delete", "get", "update" ]
   - apiGroups: [ "scheduling.volcano.sh" ]
     resources: [ "queues", "queue/status" ]
-    verbs: [ "get", "list", "watch"]
+    verbs: [ "get"]
   - apiGroups: [ "scheduling.volcano.sh" ]
     resources: [ "priorityclasses" ]
     verbs: [ "list", "watch"]

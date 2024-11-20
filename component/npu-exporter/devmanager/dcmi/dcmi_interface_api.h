@@ -1,4 +1,4 @@
-/* Copyright(C) 2021-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+﻿/* Copyright(C) 2021-2023. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -26,7 +26,6 @@ extern "C" {
 #define MAX_CHIP_NAME_LEN 32  // Maximum length of chip name
 #define TEMPLATE_NAME_LEN 32
 #define DIE_ID_COUNT 5  // Number of die ID characters
-#define AGENTDRV_PROF_DATA_NUM 3
 
 /*----------------------------------------------*
  * Structure description                        *
@@ -36,14 +35,6 @@ struct dcmi_chip_info {
     unsigned char chip_name[MAX_CHIP_NAME_LEN];
     unsigned char chip_ver[MAX_CHIP_NAME_LEN];
     unsigned int aicore_cnt;
-};
-
-struct dcmi_chip_info_v2 {
-    unsigned char chip_type[MAX_CHIP_NAME_LEN];
-    unsigned char chip_name[MAX_CHIP_NAME_LEN];
-    unsigned char chip_ver[MAX_CHIP_NAME_LEN];
-    unsigned int aicore_cnt;
-    unsigned char npu_name[MAX_CHIP_NAME_LEN];
 };
 
 struct dcmi_pcie_info_all {
@@ -60,16 +51,6 @@ struct dcmi_pcie_info_all {
 
 struct dcmi_die_id {
     unsigned int soc_die[DIE_ID_COUNT];
-};
-
-struct dcmi_ecc_info {
-    int enable_flag;
-    unsigned int single_bit_error_cnt;
-    unsigned int double_bit_error_cnt;
-    unsigned int total_single_bit_error_cnt;
-    unsigned int total_double_bit_error_cnt;
-    unsigned int single_bit_isolated_pages_cnt;
-    unsigned int double_bit_isolated_pages_cnt;
 };
 
 struct dcmi_hbm_info {
@@ -137,12 +118,10 @@ enum dcmi_main_cmd {
     DCMI_MAIN_CMD_TS_GROUP_NUM,
     DCMI_MAIN_CMD_CAN,
     DCMI_MAIN_CMD_UART,
-    DCMI_MAIN_CMD_UPGRADE = 5,
-    DCMI_MAIN_CMD_HCCS = 16,
+    DCMI_MAIN_CMD_UPGRADE,
     DCMI_MAIN_CMD_TEMP = 50,
     DCMI_MAIN_CMD_SVM = 51,
     DCMI_MAIN_CMD_VDEV_MNG,
-    DCMI_MAIN_CMD_SIO = 56,
     DCMI_MAIN_CMD_DEVICE_SHARE = 0x8001,
     DCMI_MAIN_CMD_MAX
 };
@@ -168,14 +147,6 @@ enum dcmi_boot_status {
     DCMI_BOOT_STATUS_FINISH // started
 };
 
-enum dcmi_device_type {
-    DCMI_DEVICE_TYPE_DDR,
-    DCMI_DEVICE_TYPE_SRAM,
-    DCMI_DEVICE_TYPE_HBM,
-    DCMI_DEVICE_TYPE_NPU,
-    DCMI_DEVICE_TYPE_NONE = 0xff
-};
-
 enum dcmi_event_type {
     DCMI_DMS_FAULT_EVENT = 0,
 };
@@ -195,8 +166,6 @@ enum dcmi_die_type {
 #define DCMI_EVENT_FILTER_FLAG_SERVERITY (1UL << 1)
 #define DCMI_EVENT_FILTER_FLAG_NODE_TYPE (1UL << 2)
 #define DCMI_MAX_EVENT_RESV_LENGTH 32
-#define HCCS_MAX_PCS_NUM 16
-#define HCCS_RES_PCS_NUM 64
 
 struct dcmi_base_resource {
     unsigned long long token;
@@ -308,14 +277,6 @@ struct dcmi_soc_total_resource {
     struct dcmi_media_resource media;
 };
 
-struct dcmi_spod_info {
-    unsigned int sdid;
-    unsigned int scale_type;
-    unsigned int super_pod_id;
-    unsigned int server_id;
-    unsigned int reserve[8];
-};
-
 struct dcmi_dms_fault_event {
     unsigned int event_id; /* Event ID */
     unsigned short deviceid; /* Device ID */
@@ -371,31 +332,6 @@ struct dcmi_board_info {
     unsigned int slot_id; // slot_id indicates pcie slot ID of the chip
 };
 
-struct dcmi_pcie_link_bandwidth_info {
-    int profiling_time;
-    unsigned int tx_p_bw[AGENTDRV_PROF_DATA_NUM];
-    unsigned int tx_np_bw[AGENTDRV_PROF_DATA_NUM];
-    unsigned int tx_cpl_bw[AGENTDRV_PROF_DATA_NUM];
-    unsigned int tx_np_lantency[AGENTDRV_PROF_DATA_NUM];
-    unsigned int rx_p_bw[AGENTDRV_PROF_DATA_NUM];
-    unsigned int rx_np_bw[AGENTDRV_PROF_DATA_NUM];
-    unsigned int rx_cpl_bw[AGENTDRV_PROF_DATA_NUM];
-};
-
-struct dcmi_hccs_statistic_info {
-    unsigned int tx_cnt[HCCS_MAX_PCS_NUM];
-    unsigned int rx_cnt[HCCS_MAX_PCS_NUM];
-    unsigned int crc_err_cnt[HCCS_MAX_PCS_NUM];
-    unsigned int retry_cnt[HCCS_MAX_PCS_NUM];
-    unsigned int reserved_field_cnt[HCCS_RES_PCS_NUM];
-};
-
-struct dcmi_sio_crc_err_statistic_info {
-    unsigned short tx_error_count;
-    unsigned short rx_error_count;
-    unsigned char reserved[8];
-};
-
 #define DCMI_VERSION_1
 #define DCMI_VERSION_2
 
@@ -415,8 +351,6 @@ DCMIDLLEXPORT int dcmi_get_device_pcie_info_v2(int card_id, int device_id, struc
 
 DCMIDLLEXPORT int dcmi_get_device_chip_info(int card_id, int device_id, struct dcmi_chip_info *chip_info);
 
-DCMIDLLEXPORT int dcmi_get_device_chip_info_v2(int card_id, int device_id, struct dcmi_chip_info_v2 *chip_info);
-
 DCMIDLLEXPORT int dcmi_get_device_power_info(int card_id, int device_id, int *power);
 
 DCMIDLLEXPORT int dcmi_get_device_health(int card_id, int device_id, unsigned int *health);
@@ -427,9 +361,6 @@ DCMIDLLEXPORT int dcmi_get_device_errorcode_v2(
 DCMIDLLEXPORT int dcmi_get_device_temperature(int card_id, int device_id, int *temperature);
 
 DCMIDLLEXPORT int dcmi_get_device_voltage(int card_id, int device_id, unsigned int *voltage);
-
-DCMIDLLEXPORT int dcmi_get_device_ecc_info(int card_id, int device_id, enum dcmi_device_type input_type,
-    struct dcmi_ecc_info *device_ecc_info);
 
 DCMIDLLEXPORT int dcmi_get_device_frequency(
     int card_id, int device_id, enum dcmi_freq_type input_type, unsigned int *frequency);
@@ -482,13 +413,6 @@ DCMIDLLEXPORT int dcmi_get_device_resource_info (int card_id, int device_id, str
     int *proc_num);
 
 DCMIDLLEXPORT int dcmi_get_device_board_info (int card_id, int device_id, struct dcmi_board_info *board_info);
-
-DCMIDLLEXPORT int dcmi_get_pcie_link_bandwidth_info(int card_id, int device_id,
-    struct dcmi_pcie_link_bandwidth_info *pcie_link_bandwidth_info);
-
-DCMIDLLEXPORT int dcmi_get_dcmi_version (char *dcmi_ver, int buf_size);
-
-DCMIDLLEXPORT int dcmi_get_mainboard_id (int card_id, int device_id, unsigned int *mainboard_id);
 
 
 #endif

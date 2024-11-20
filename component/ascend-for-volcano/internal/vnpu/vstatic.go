@@ -9,10 +9,8 @@ package vnpu
 
 import (
 	"errors"
-
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
-
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )

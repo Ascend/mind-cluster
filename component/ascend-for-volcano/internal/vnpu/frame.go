@@ -63,11 +63,7 @@ func (tp *VirtualNPU) GetTaskResource(task *api.TaskInfo, node plugin.NPUNode) (
 
 	cpuLevel := tp.getVTaskLevel(task)
 
-	virTemplate := getResTemplateFromTaskSettingAndChipType(coreNum, dvpp, node.ChipType)
-	if node.ChipKind == plugin.Ascend310P {
-		virTemplate = getResTemplateFromTaskSetting(coreNum, cpuLevel, dvpp)
-	}
-
+	virTemplate := getResTemplateFromTaskSetting(coreNum, cpuLevel, dvpp)
 	klog.V(util.LogDebugLev).Infof("vnpu template string for cur task:<%s>", virTemplate)
 	taskReqRes := tp.VT.Data[virTemplate]
 	return taskReqRes, nil
@@ -128,102 +124,20 @@ func getResTemplateFromTaskSetting(coreNum int, cpuLevel, dvpp string) string {
 			virTemplate = virTemplate + "_1c"
 		}
 	case util.NPUIndex4:
-		virTemplate = getVirTemplate(dvpp, virTemplate, cpuLevel)
-	default:
-		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
-		return ""
-	}
-	return virTemplate
-}
-
-// getResTemplateFromTaskSetting get like vir04_3c_ndvpp
-func getResTemplateFromTaskSettingAndChipType(coreNum int, dvpp, chipType string) string {
-	switch chipType {
-	case plugin.ChipTypeB1:
-		return getResTemplateFromTaskSettingForB1AndB2C(coreNum)
-	case plugin.ChipTypeB2C:
-		return getResTemplateFromTaskSettingForB1AndB2C(coreNum)
-	case plugin.ChipTypeB3:
-		return getResTemplateFromTaskSettingForB3(coreNum)
-	case plugin.ChipTypeB4:
-		return getResTemplateFromTaskSettingForB4(coreNum, dvpp)
-	default:
-		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
-		return ""
-	}
-}
-
-// getResTemplateFromTaskSettingForB1AndB2C get like vir04_3c_ndvpp
-func getResTemplateFromTaskSettingForB1AndB2C(coreNum int) string {
-	var virTemplate string
-	switch coreNum {
-	case util.NPUIndex3:
-		virTemplate = plugin.VNPUTempVir03
-	case util.NPUIndex6:
-		virTemplate = plugin.VNPUTempVir06
-	case util.NPUIndex12:
-		virTemplate = plugin.VNPUTempVir12
-	default:
-		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
-		return ""
-	}
-	return virTemplate
-}
-
-// getResTemplateFromTaskSetting get like vir04_3c_ndvpp
-func getResTemplateFromTaskSettingForB3(coreNum int) string {
-	var virTemplate string
-	switch coreNum {
-	case util.NPUIndex5:
-		virTemplate = plugin.VNPUTempVir05
-	case util.NPUIndex10:
-		virTemplate = plugin.VNPUTempVir10
-	default:
-		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
-		return ""
-	}
-	return virTemplate
-}
-
-// getResTemplateFromTaskSetting get like vir04_3c_ndvpp
-func getResTemplateFromTaskSettingForB4(coreNum int, dvpp string) string {
-	var virTemplate string
-	switch coreNum {
-	case util.NPUIndex5:
-		virTemplate = plugin.VNPUB4TempVir05
-	case util.NPUIndex10:
-		return getB4TempFromTaskLabel(dvpp)
-	default:
-		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
-		return ""
-	}
-	return virTemplate
-}
-
-func getB4TempFromTaskLabel(dvpp string) string {
-	var virTemplate string
-	switch dvpp {
-	case plugin.AscendDVPPEnabledOn:
-		virTemplate = plugin.VNPUB4TempVir10C4M
-	case plugin.AscendDVPPEnabledOff:
-		virTemplate = plugin.VNPUB4TempVir10C3NM
-	default:
-		virTemplate = plugin.VNPUB4TempVir10
-	}
-	return virTemplate
-}
-
-func getVirTemplate(dvpp string, virTemplate string, cpuLevel string) string {
-	switch dvpp {
-	case plugin.AscendDVPPEnabledOn:
-		virTemplate = plugin.VNPUTempVir04C4cDVPP
-	case plugin.AscendDVPPEnabledOff:
-		virTemplate = plugin.VNPUTempVir04C3NDVPP
-	default:
-		virTemplate = plugin.VNPUTempVir04
-		if cpuLevel == plugin.AscendVNPULevelLow {
-			virTemplate = virTemplate + "_3c"
+		switch dvpp {
+		case plugin.AscendDVPPEnabledOn:
+			virTemplate = plugin.VNPUTempVir04C4cDVPP
+		case plugin.AscendDVPPEnabledOff:
+			virTemplate = plugin.VNPUTempVir04C3NDVPP
+		default:
+			virTemplate = plugin.VNPUTempVir04
+			if cpuLevel == plugin.AscendVNPULevelLow {
+				virTemplate = virTemplate + "_3c"
+			}
 		}
+	default:
+		klog.V(util.LogErrorLev).Infof("wrong number %d", coreNum)
+		return ""
 	}
 	return virTemplate
 }

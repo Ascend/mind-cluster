@@ -19,6 +19,7 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -62,11 +63,9 @@ type PodResource struct {
 	client v1alpha1.PodResourcesListerClient
 }
 
-type stepTimeCM struct {
-	Data stepTimeData `json:"data"`
-}
-
-type stepTimeData struct {
-	PerfDumpPath   string `json:"PerfDumpPath"`
-	PerfDumpConfig string `json:"PerfDumpConfig"`
+// PodDeviceInfo define device info of pod, include kubelet allocate and real allocate device
+type PodDeviceInfo struct {
+	Pod        v1.Pod
+	KltDevice  []string
+	RealDevice []string
 }

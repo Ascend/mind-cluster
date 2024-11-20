@@ -1,17 +1,16 @@
-/*
- *  Copyright (c) Huawei Technologies Co., Ltd. 2021-2024. All rights reserved.
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+/* Copyright(C) 2021-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 
 // Package collector for Prometheus
 package collector
@@ -25,13 +24,13 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/stretchr/testify/assert"
 
-	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/collector/container/isula"
-	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/collector/container"
+	"huawei.com/npu-exporter/v5/collector/container/isula"
+	"huawei.com/npu-exporter/v5/collector/container/v1"
+	"huawei.com/npu-exporter/v5/common-utils/cache"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/devmanager"
+	"huawei.com/npu-exporter/v5/devmanager/common"
 )
 
 const (
@@ -101,7 +100,7 @@ func TestGetChipInfo(t *testing.T) {
 			t.Logf("%#v", chipInfo)
 			assert.NotNil(t, chipInfo)
 			if tt.wantErr {
-				assert.Nil(t, chipInfo.ChipIfo)
+				assert.Equal(t, "", chipInfo.ChipIfo.Name)
 			} else {
 				assert.NotNil(t, chipInfo.ChipIfo)
 			}
@@ -167,27 +166,6 @@ func TestGetNPUInfo(t *testing.T) {
 	}
 }
 
-type newNpuCollectorTestCase struct {
-	cacheTime    time.Duration
-	updateTime   time.Duration
-	deviceParser *container.DevicesParser
-}
-
-// TestNewNpuCollector test method of NewNpuCollector
-func TestNewNpuCollector(t *testing.T) {
-	const defaultUpdateTime = 5 * time.Second
-	tc := newNpuCollectorTestCase{
-		cacheTime:    cacheTime,
-		updateTime:   defaultUpdateTime,
-		deviceParser: &container.DevicesParser{},
-	}
-
-	c := NewNpuCollector(tc.cacheTime, tc.updateTime, tc.deviceParser)
-	assert.Equal(t, defaultUpdateTime, c.updateTime)
-	assert.Equal(t, cacheTime, c.cacheTime)
-	assert.Equal(t, tc.deviceParser, c.devicesParser)
-}
-
 type testCase struct {
 	name        string
 	wantErr     bool
@@ -205,7 +183,7 @@ func newTestCase(name string, wantErr bool, mockPart interface{}) testCase {
 }
 
 func mockGetNPUInfo(dmgr devmanager.DeviceInterface) []HuaWeiNPUCard {
-	npuList := make([]HuaWeiNPUCard, 0)
+	var npuList []HuaWeiNPUCard
 	for devicePhysicID := int32(0); devicePhysicID < npuCount; devicePhysicID++ {
 		chipInfo := &HuaWeiAIChip{
 			HealthStatus:      Healthy,
@@ -225,14 +203,12 @@ func mockGetNPUInfo(dmgr devmanager.DeviceInterface) []HuaWeiNPUCard {
 				Name:    "910Awn",
 				Version: "V1",
 			},
-			HbmInfo: &common.HbmAggregateInfo{
-				HbmInfo: &common.HbmInfo{
-					MemorySize:        0,
-					Frequency:         0,
-					Usage:             0,
-					Temp:              0,
-					BandWidthUtilRate: 0,
-				},
+			HbmInfo: &common.HbmInfo{
+				MemorySize:        0,
+				Frequency:         0,
+				Usage:             0,
+				Temp:              0,
+				BandWidthUtilRate: 0,
 			},
 			DevProcessInfo:  &common.DevProcessInfo{},
 			LinkStatus:      LinkDown,
@@ -268,10 +244,6 @@ func TestStart(t *testing.T) {
 	}
 	mk := gomonkey.ApplyFunc(getNPUInfo, mockGetNPUInfo)
 	defer mk.Reset()
-	patch := gomonkey.ApplyFunc(devmanager.AutoInit, func(_ string) (*devmanager.DeviceManager, error) {
-		return &devmanager.DeviceManager{DcMgr: &devmanager.A910Manager{}}, nil
-	})
-	defer patch.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
@@ -279,8 +251,8 @@ func TestStart(t *testing.T) {
 			go Start(ctx, cancel, tt.collector)
 			time.Sleep(waitTime)
 			objm, err := tt.collector.cache.Get(npuListCacheKey)
-			assert.NotNil(t, objm)
-			assert.Nil(t, err)
+			assert.Nil(t, objm)
+			assert.NotNil(t, err)
 			go func() {
 				ch <- os.Interrupt
 				close(ch)

@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2024. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2022. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
+	"reflect"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -32,6 +31,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
+	"k8s.io/kube-scheduler/extender/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -108,41 +108,71 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 		klog.V(util.LogInfoLev).Infof("InitJobsFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
-	oldJobs := sHandle.Jobs
 	sHandle.Jobs = make(map[api.JobID]SchedulerJob, util.MapInitNum)
 	tmpJobServerInfos := make(map[api.JobID]struct{})
-	tmpJobDeleteFlags := make(map[api.JobID]struct{})
-	tmpJobSinglePodFlag := make(map[api.JobID]bool)
-	tmpJobPendingMessage := make(map[api.JobID]map[string]map[string]struct{})
 	for jobID, jobInfo := range ssn.Jobs {
-		sJob := SchedulerJob{}
-		if err := sJob.Init(jobInfo, sHandle); err != nil {
-			klog.V(util.LogDebugLev).Infof("%s InitJobsFromSsn failed: %s.", jobInfo.Name, util.SafePrint(err))
-			continue
-		}
-		if oldJob, ok := oldJobs[jobID]; ok {
-			sJob.SuperPods = oldJob.SuperPods
-		}
-		sHandle.Jobs[jobID] = sJob
 		// mark the job which server list has been recorded in logs
-		if _, ok := sHandle.JobSeverInfos[jobID]; ok && sJob.Status == util.PodGroupRunning {
+		if _, ok := sHandle.JobSeverInfos[jobID]; ok {
 			tmpJobServerInfos[jobID] = struct{}{}
 		}
-		// mark the job which reset configmap has been set
-		if _, ok := sHandle.JobDeleteFlag[jobID]; ok && sJob.SchedulingTaskNum == 0 {
-			tmpJobDeleteFlags[jobID] = struct{}{}
+
+		sJob := SchedulerJob{}
+		if err := sJob.Init(jobInfo, sHandle); err != nil {
+			if err.Error() != notNPUJobError {
+				klog.V(util.LogErrorLev).Infof("%s InitJobsFromSsn failed: %s.", jobInfo.Name, util.SafePrint(err))
+			}
+			continue
 		}
-		tmpJobSinglePodFlag[jobID] = sHandle.JobSinglePodFlag[jobID]
-		if sJob.isPodScheduling() {
-			tmpJobSinglePodFlag[jobID] = sJob.SchedulingTaskNum != len(sJob.Tasks)
-		}
-		tmpJobPendingMessage[jobID] = sHandle.JobPendingMessage[jobID]
+		sHandle.Jobs[jobID] = sJob
 	}
 	sHandle.JobSeverInfos = tmpJobServerInfos
-	sHandle.JobDeleteFlag = tmpJobDeleteFlags
-	sHandle.JobSinglePodFlag = tmpJobSinglePodFlag
-	sHandle.JobPendingMessage = tmpJobPendingMessage
 	return
+}
+
+// AddDefaultSchedulerSelectorConfig Merge default and customer custom tags.
+func (vf *VolcanoFrame) AddDefaultSchedulerSelectorConfig() {
+	if vf == nil {
+		klog.V(util.LogInfoLev).Infof("AddDefaultSchedulerSelectorConfig failed: %s.", util.ArgumentError)
+		return
+	}
+	defaultSchedulerConfig := make(map[string]string, util.MapInitNum)
+	defaultSchedulerConfig[util.ArchSelector] = util.HuaweiArchArm + "|" + util.HuaweiArchX86
+	defaultSchedulerConfig[util.Accelerator] = util.Accelerator910Value + "|" + util.Accelerator310Value
+	defaultSchedulerConfig[util.AcceleratorType] = util.CardAcceleratorType + "|" + util.ModuleAcceleratorType +
+		"|" + util.ChipAcceleratorType + "|" + util.Card910bx2AcceleratorType + "|" + util.Card910bx2InferAcceleratorType +
+		"|" + util.Module910bx16AcceleratorType + "|" + util.Module910bx8AcceleratorType
+
+	defaultCfg := config.Configuration{Name: util.CMSelectorKey, Arguments: defaultSchedulerConfig}
+
+	if len(vf.Confs) == 0 {
+		vf.Confs = []config.Configuration{defaultCfg}
+		return
+	}
+
+	var selectorConf config.Configuration
+	var index int
+	for idx, selectors := range vf.Confs {
+		if selectors.Name == util.CMSelectorKey {
+			selectorConf = selectors
+			index = idx
+			break
+		}
+	}
+
+	if len(selectorConf.Arguments) == 0 {
+		vf.Confs[index] = defaultCfg
+		return
+	}
+
+	for k, v := range defaultSchedulerConfig {
+		confs, ok := selectorConf.Arguments[k]
+		if ok {
+			selectorConf.Arguments[k] = addConf(confs, v)
+			continue
+		}
+		selectorConf.Arguments[k] = v
+	}
+	vf.Confs[index] = selectorConf
 }
 
 // CheckVNPUSegmentEnableByConfig Check VNPU segmentEnable by init plugin parameters, return true if static
@@ -168,6 +198,15 @@ func (vf *VolcanoFrame) CheckVNPUSegmentEnableByConfig() bool {
 	return false
 }
 
+func addConf(configs, value string) string {
+	for _, cfg := range strings.Split(value, "|") {
+		if !isSelectorContains(configs, cfg) {
+			configs += "|" + cfg
+		}
+	}
+	return configs
+}
+
 // GetJobTemplate get template of all possible segmentation jobs
 func (sHandle *ScheduleHandler) GetJobTemplate() map[string]map[string]util.VResource {
 	jobTemplate := map[string]map[string]util.VResource{
@@ -186,26 +225,6 @@ func (sHandle *ScheduleHandler) GetJobTemplate() map[string]map[string]util.VRes
 			VNPUTempVir08: {Aicore: util.NPUIndex8, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
 			VNPUTempVir16: {Aicore: util.NPUIndex16, Aicpu: util.NPUIndex7, DVPP: AscendDVPPEnabledNull},
 		},
-		ChipTypeB1: {
-			VNPUTempVir06: {Aicore: util.NPUIndex6, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUTempVir03: {Aicore: util.NPUIndex3, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUTempVir12: {Aicore: util.NPUIndex12, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
-		},
-		ChipTypeB2C: {
-			VNPUTempVir06: {Aicore: util.NPUIndex6, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUTempVir03: {Aicore: util.NPUIndex3, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUTempVir12: {Aicore: util.NPUIndex12, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
-		},
-		ChipTypeB3: {
-			VNPUTempVir05: {Aicore: util.NPUIndex5, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUTempVir10: {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
-		},
-		ChipTypeB4: {
-			VNPUB4TempVir05:     {Aicore: util.NPUIndex5, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
-			VNPUB4TempVir10C3NM: {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledOff},
-			VNPUB4TempVir10C4M:  {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex4, DVPP: AscendDVPPEnabledOn},
-			VNPUB4TempVir10:     {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
-		},
 	}
 	return jobTemplate
 }
@@ -216,45 +235,14 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		klog.V(util.LogErrorLev).Infof("InitVolcanoFrameFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
-
-	configs := initConfsFromSsn(ssn.Configurations)
-	superPodSize, err := util.GetSizeOfSuperPod(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetSizeOfSuperPod failed: %s, set default super-pod-size: %d", err,
-			defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
-	}
-
-	if superPodSize == 0 {
-		klog.V(util.LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
-			"set default super-pod-size: %d", defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
-	}
-
-	reserve, err := util.GetReserveNodes(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetReserveNodes failed: %s, set default reserve-nodes: %d", err,
-			defaultReserveNodes)
-		reserve = defaultReserveNodes
-	}
-	if reserve >= superPodSize {
-		validRes := 0
-		if superPodSize > defaultReserveNodes {
-			validRes = defaultReserveNodes
-		}
-		klog.V(util.LogWarningLev).Infof("reserve-nodes(%d) is larger than super-pod-size(%d), set reserve-nodes: %d",
-			reserve, superPodSize, validRes)
-		reserve = validRes
-	}
-
 	sHandle.FrameAttr = VolcanoFrame{
-		UID:            ssn.UID,
-		Confs:          configs,
-		KubeClient:     ssn.KubeClient(),
-		VJobTemplate:   sHandle.GetJobTemplate(),
-		SuperPodSize:   superPodSize,
-		ReservePodSize: reserve,
+		UID:          ssn.UID,
+		Confs:        initConfsFromSsn(ssn.Configurations),
+		KubeClient:   ssn.KubeClient(),
+		VJobTemplate: sHandle.GetJobTemplate(),
 	}
+
+	sHandle.FrameAttr.AddDefaultSchedulerSelectorConfig()
 }
 
 func initConfsFromSsn(confs []conf.Configuration) []config.Configuration {
@@ -387,9 +375,8 @@ func (sHandle *ScheduleHandler) BeforeCloseHandler() {
 		return
 	}
 	for _, job := range sHandle.Jobs {
-		if job.SchedulingTaskNum == 0 {
-			job.recordTorJobServerList(sHandle)
-			job.updateResetConfigMap(sHandle)
+		if job.Status == util.PodGroupRunning {
+			job.recordTorAffinityJobServerList(sHandle)
 		}
 	}
 	if sHandle.BaseHandle != nil {
@@ -397,15 +384,7 @@ func (sHandle *ScheduleHandler) BeforeCloseHandler() {
 			klog.V(util.LogErrorLev).Infof("PreStopPlugin  %s.", util.SafePrint(err))
 		}
 	}
-
 	sHandle.saveCacheToCm()
-	if sHandle.Tors == nil || sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return
-	}
-	err := sHandle.CacheToShareCM()
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("CacheToShareCM error: %v", err)
-	}
 }
 
 // InitNPUSession init npu plugin and nodes.
@@ -435,176 +414,31 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	if sHandle.BaseHandle != nil {
 		sHandle.PreStartPlugin(ssn)
 	}
-
-	if sHandle.Tors == nil || sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return nil
-	}
-	klog.V(util.LogInfoLev).Infof("InitNSLB2.0")
-	sHandle.InitNSLB2(ssn)
 	return nil
 }
 
-// initCmInformer init cm informer, support cluster info manager and device plugin
 func (sHandle *ScheduleHandler) initCmInformer(ssn *framework.Session) {
 	sHandle.Do(func() {
-		if sHandle.FrameAttr.CheckUseCIMByConfig() {
-			sHandle.initClusterCmInformer(ssn)
-			if !util.ClusterDDeploymentIsExist(ssn.KubeClient()) {
-				klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
-			}
-			return
-		}
-		sHandle.initDeviceAndNodeDCmInformer(ssn)
+		informerFactory := informers.NewSharedInformerFactory(ssn.KubeClient(), 0)
+		cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
+		cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: util.InformerConfigmapFilter,
+			Handler: cache.ResourceEventHandlerFuncs{
+				AddFunc: func(obj interface{}) {
+					sHandle.UpdateConfigMap(obj, util.AddOperator)
+				},
+				UpdateFunc: func(oldObj, newObj interface{}) {
+					sHandle.UpdateConfigMap(newObj, util.UpdateOperator)
+				},
+				DeleteFunc: func(obj interface{}) {
+					sHandle.UpdateConfigMap(obj, util.DeleteOperator)
+				},
+			},
+		})
+		informerFactory.Start(wait.NeverStop)
 	})
 }
 
-func (sHandle *ScheduleHandler) initClusterCmInformer(ssn *framework.Session) {
-	informerFactory := informers.NewSharedInformerFactoryWithOptions(ssn.KubeClient(), 0,
-		informers.WithNamespace(util.MindXDlNameSpace),
-		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = util.CmConsumer + "=" + util.CmConsumerValue
-		}))
-	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
-	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			sHandle.updateConfigMapCluster(obj, util.AddOperator)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			sHandle.updateConfigMapCluster(newObj, util.UpdateOperator)
-		},
-		DeleteFunc: func(obj interface{}) {
-			sHandle.updateConfigMapCluster(obj, util.DeleteOperator)
-		},
-	})
-	informerFactory.Start(wait.NeverStop)
-	informerFactory.WaitForCacheSync(wait.NeverStop)
-}
-
-func (sHandle *ScheduleHandler) initDeviceAndNodeDCmInformer(ssn *framework.Session) {
-	informerFactory := informers.NewSharedInformerFactory(ssn.KubeClient(), 0)
-	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
-	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: util.InformerConfigmapFilter,
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				sHandle.UpdateConfigMap(obj, util.AddOperator)
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				sHandle.UpdateConfigMap(newObj, util.UpdateOperator)
-			},
-			DeleteFunc: func(obj interface{}) {
-				sHandle.UpdateConfigMap(obj, util.DeleteOperator)
-			},
-		},
-	})
-	informerFactory.Start(wait.NeverStop)
-	informerFactory.WaitForCacheSync(wait.NeverStop)
-}
-
-func (sHandle *ScheduleHandler) updateConfigMapCluster(obj interface{}, operator string) {
-	if sHandle == nil {
-		klog.V(util.LogDebugLev).Infof("updateConfigMapCluster failed: %s.", util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("update cluster configMap to cache")
-
-	cm, ok := obj.(*v12.ConfigMap)
-	if !ok {
-		klog.V(util.LogErrorLev).Infof("cannot convert to ConfigMap: %#v", obj)
-		return
-	}
-	sHandle.dealClusterDeviceInfo(cm, operator)
-	sHandle.dealClusterNodeInfo(cm, operator)
-	sHandle.dealClusterSwitchInfo(cm, operator)
-}
-
-func (sHandle *ScheduleHandler) dealClusterDeviceInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterDeviceInfo) {
-		return
-	}
-	deviceInfoMap, err := getDeviceClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get device info failed :%#v", err)
-		return
-	}
-	sHandle.DeviceInfos.Lock()
-	for deviceCmName, deviceInfo := range deviceInfoMap {
-		nodeName := strings.TrimPrefix(deviceCmName, util.DevInfoPreName)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.DeviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
-				NodeDeviceInfo: deviceInfo.NodeDeviceInfo,
-				SuperPodID:     deviceInfo.SuperPodID,
-			}
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.DeviceInfos.Devices, nodeName)
-		}
-	}
-	sHandle.DeviceInfos.Unlock()
-}
-
-func (sHandle *ScheduleHandler) dealClusterNodeInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterNodeInfo) {
-		return
-	}
-	nodeInfoMap, err := getNodeClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get node info failed :%#v", err)
-		return
-	}
-	sHandle.NodeInfosFromCm.Lock()
-	for nodeCmName, nodeInfo := range nodeInfoMap {
-		nodeName := strings.TrimPrefix(nodeCmName, util.NodeDCmInfoNamePrefix)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.NodeInfosFromCm.Nodes[nodeName] = nodeInfo
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.NodeInfosFromCm.Nodes, nodeName)
-		}
-	}
-	sHandle.NodeInfosFromCm.Unlock()
-}
-
-func (sHandle *ScheduleHandler) dealClusterSwitchInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterSwitchInfo) {
-		return
-	}
-	switchInfoMap, err := getSwitchClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get switch info failed :%v", err)
-		return
-	}
-	sHandle.SwitchInfosFromCm.Lock()
-	for switchCmName, switchInfo := range switchInfoMap {
-		nodeName := strings.TrimPrefix(switchCmName, util.SwitchCmInfoNamePrefix)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.SwitchInfosFromCm.Switches[nodeName] = switchInfo
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.SwitchInfosFromCm.Switches, nodeName)
-		}
-	}
-	sHandle.SwitchInfosFromCm.Unlock()
-}
-
-// CheckUseCIMByConfig check use cluster info manager by config, default true
-func (vf *VolcanoFrame) CheckUseCIMByConfig() bool {
-	if vf == nil {
-		klog.V(util.LogDebugLev).Infof("CheckUseCIMByConfig failed: %s. use default true", util.ArgumentError)
-		return true
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, vf.Confs)
-	if err != nil {
-		klog.V(util.LogDebugLev).Info("cannot get configuration, segmentEnable.")
-		return true
-	}
-	// get segmentEnable by user configuration
-	useClusterInfoManager, ok := configuration.Arguments[util.UseClusterInfoManager]
-	if !ok {
-		klog.V(util.LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
-		return true
-	}
-	return useClusterInfoManager == "true"
-}
-
-// InitReschedulerFromSsn initialize re-scheduler
 func (sHandle *ScheduleHandler) InitReschedulerFromSsn(ssn *framework.Session) {
 	var i interface{}
 	if sHandle.BaseHandle == nil {
@@ -620,80 +454,17 @@ func (sHandle *ScheduleHandler) InitReschedulerFromSsn(ssn *framework.Session) {
 	}
 }
 
-// InitNSLB2 Init NSLB 2.0
-func (sHandle *ScheduleHandler) InitNSLB2(ssn *framework.Session) {
-	tmpJobMaps := make(map[api.JobID]SchedulerJob)
-	for _, vcJob := range sHandle.Jobs {
-		if vcJob.SchedulingTaskNum == len(vcJob.Tasks) || !vcJob.IsTorAffinityJob() {
-			tmpJobMaps[vcJob.Name] = vcJob
-			continue
-		}
-		vcJob.initJobBlackTorMaps(sHandle.Tors.torMaps, vcJob.getUsedTorInfos(sHandle))
-		vcJob.Annotation = ssn.Jobs[vcJob.Name].PodGroup.Annotations
-		tmpJobMaps[vcJob.Name] = vcJob
+// AddConfigMap add deviceInfo to cache
+func (sHandle *ScheduleHandler) AddConfigMap(obj interface{}) {
+	if sHandle == nil {
+		klog.V(util.LogDebugLev).Infof("AddConfigMap failed: %s.", util.ArgumentError)
+		return
 	}
-	sHandle.Jobs = tmpJobMaps
+	klog.V(util.LogDebugLev).Infof("Add DeviceInfo to cache")
+	sHandle.createOrUpdateDeviceInfo(obj)
+
 }
 
-// CacheToShareCM cache tors info to configmap
-func (sHandle *ScheduleHandler) CacheToShareCM() error {
-	data := make(map[string]string, 1)
-	toShareMap := sHandleTorsToTorShareMap(sHandle)
-	dataByte, err := json.Marshal(toShareMap)
-	if err != nil {
-		return fmt.Errorf("marshal tor configmap data error %v", err)
-	}
-	data[GlobalTorInfoKey] = string(dataByte[:])
-	putCM := &v12.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: TorShareCMName,
-		Namespace: cmNameSpace}, Data: data}
-	if err := util.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, putCM, TorShareCMName,
-		cmNameSpace); err != nil {
-		klog.V(util.LogInfoLev).Infof("CacheToShareCM CreateOrUpdateConfigMap error: %s", util.SafePrint(err))
-	}
-	return nil
-}
-
-func sHandleTorsToTorShareMap(sHandle *ScheduleHandler) map[string]TorShare {
-	torShareMap := make(map[string]TorShare)
-	if sHandle.Tors == nil || sHandle.Tors.Tors == nil {
-		return torShareMap
-	}
-	var nodeJobs []NodeJobInfo
-	var jobList []string
-	var nodeJob NodeJobInfo
-	for _, tor := range sHandle.Tors.Tors {
-		nodeJobs = []NodeJobInfo{}
-		for _, server := range tor.Servers {
-			jobList = []string{}
-			for _, job := range server.Jobs {
-				jobList = append(jobList, job.ReferenceName)
-			}
-			nodeJob = NodeJobInfo{
-				NodeIp:   server.IP,
-				NodeName: server.Name,
-				JobName:  jobList,
-			}
-			nodeJobs = append(nodeJobs, nodeJob)
-		}
-		torShareMap[tor.IP] = TorShare{
-			IsHealthy:   tor.IsHealthy,
-			IsSharedTor: tor.IsSharedTor,
-			NodeJobs:    nodeJobs,
-		}
-	}
-	return torShareMap
-}
-
-func isContain(target string, strArray []string) bool {
-	for _, each := range strArray {
-		if each == target {
-			return true
-		}
-	}
-	return false
-}
-
-// UpdateConfigMap update deviceInfo in cache
 func (sHandle *ScheduleHandler) UpdateConfigMap(obj interface{}, operator string) {
 	if sHandle == nil {
 		klog.V(util.LogDebugLev).Infof("UpdateConfigMap failed: %s.", util.ArgumentError)
@@ -703,51 +474,66 @@ func (sHandle *ScheduleHandler) UpdateConfigMap(obj interface{}, operator string
 
 	cm, ok := obj.(*v12.ConfigMap)
 	if !ok {
-		klog.V(util.LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
+		klog.V(util.LogErrorLev).Infof(convertFailedErrorPattern, obj)
 		return
 	}
 	if util.CheckConfigMapIsDeviceInfo(cm) {
 		if operator == util.AddOperator || operator == util.UpdateOperator {
 			sHandle.createOrUpdateDeviceInfo(cm)
-			sHandle.createOrUpdateSwitchInfo(cm)
 		} else if operator == util.DeleteOperator {
-			klog.V(util.LogDebugLev).Infof("Del DeviceInfo from cache")
+			klog.V(util.LogDebugLev).Infof("Del DeviceInfo to cache")
 			nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
 			sHandle.DeviceInfos.Lock()
 			delete(sHandle.DeviceInfos.Devices, nodeName)
 			sHandle.DeviceInfos.Unlock()
-
-			sHandle.SwitchInfosFromCm.Lock()
-			delete(sHandle.SwitchInfosFromCm.Switches, nodeName)
-			sHandle.SwitchInfosFromCm.Unlock()
 		}
 	}
 	if util.CheckConfigMapIsNodeInfo(cm) {
 		if operator == util.AddOperator || operator == util.UpdateOperator {
 			sHandle.createOrUpdateNodeInfo(cm)
 		} else if operator == util.DeleteOperator {
-			klog.V(util.LogDebugLev).Infof("Del NodeInfo from cache")
+			klog.V(util.LogDebugLev).Infof("Del NodeInfo to cache")
 			nodeName := strings.TrimPrefix(cm.Name, util.NodeDCmInfoNamePrefix)
 			sHandle.NodeInfosFromCm.Lock()
 			delete(sHandle.NodeInfosFromCm.Nodes, nodeName)
 			sHandle.NodeInfosFromCm.Unlock()
 		}
+
 	}
 }
 
-func (sHandle *ScheduleHandler) createOrUpdateDeviceInfo(cm *v12.ConfigMap) {
-	devInfo, err := getNodeDeviceInfoFromCM(cm)
+// DeleteConfigMap del deviceInfo in cache
+func (sHandle *ScheduleHandler) DeleteConfigMap(obj interface{}) {
+	if sHandle == nil {
+		klog.V(util.LogDebugLev).Infof("DeleteConfigMap failed: %s.", util.ArgumentError)
+		return
+	}
+	klog.V(util.LogDebugLev).Infof("Del DeviceInfo to cache")
+	cm, ok := obj.(*v12.ConfigMap)
+	if !ok {
+		klog.V(util.LogErrorLev).Infof(convertFailedErrorPattern, obj)
+		return
+	}
+	nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
+	sHandle.DeviceInfos.Lock()
+	delete(sHandle.DeviceInfos.Devices, nodeName)
+	sHandle.DeviceInfos.Unlock()
+}
+
+func (sHandle *ScheduleHandler) createOrUpdateDeviceInfo(obj interface{}) {
+	cm, ok := obj.(*v12.ConfigMap)
+	if !ok {
+		klog.V(util.LogErrorLev).Infof(convertFailedErrorPattern, obj)
+		return
+	}
+	deviceInfo, err := getNodeDeviceInfoFromCM(cm)
 	if err != nil {
 		klog.V(util.LogWarningLev).Infof("get device info failed:%s", err)
 		return
 	}
-
 	nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
 	sHandle.DeviceInfos.Lock()
-	sHandle.DeviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
-		NodeDeviceInfo: devInfo.DeviceInfo,
-		SuperPodID:     devInfo.SuperPodID,
-	}
+	sHandle.DeviceInfos.Devices[nodeName] = deviceInfo
 	sHandle.DeviceInfos.Unlock()
 }
 
@@ -761,26 +547,6 @@ func (sHandler *ScheduleHandler) createOrUpdateNodeInfo(cm *v12.ConfigMap) {
 	sHandler.NodeInfosFromCm.Lock()
 	sHandler.NodeInfosFromCm.Nodes[nodeName] = nodeInfo.NodeInfo
 	sHandler.NodeInfosFromCm.Unlock()
-}
-
-func (sHandler *ScheduleHandler) createOrUpdateSwitchInfo(cm *v12.ConfigMap) {
-	if cm == nil {
-		return
-	}
-	switchInfo := SwitchFaultInfo{}
-	data, ok := cm.Data[util.SwitchInfoCmKey]
-	if !ok {
-		return
-	}
-	unmarshalErr := json.Unmarshal([]byte(data), &switchInfo)
-	if unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("unmarshal switchInfo info failed, err: %s.", util.SafePrint(unmarshalErr))
-		return
-	}
-	nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
-	sHandler.SwitchInfosFromCm.Lock()
-	sHandler.SwitchInfosFromCm.Switches[nodeName] = switchInfo
-	sHandler.SwitchInfosFromCm.Unlock()
 }
 
 // GetNPUScheduler get the NPU scheduler by name
@@ -798,8 +564,7 @@ func (sHandle *ScheduleHandler) GetNPUScheduler(name string) (ISchedulerPlugin, 
 }
 
 // BatchNodeOrderFn Score the selected nodes.
-func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
-	nodes []*api.NodeInfo) (map[string]float64, error) {
+func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
 	if sHandle == nil || task == nil || len(nodes) == 0 {
 		klog.V(util.LogDebugLev).Infof("BatchNodeOrderFn failed: %s.", util.ArgumentError)
 		return nil, errors.New(util.ArgumentError)
@@ -815,25 +580,18 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 		return nil, nil
 	}
 	// init score-map
-	scoreMap := initScoreMap(nodes)
+	var interPodAffinityScore v1.HostPriorityList
+	scoreMap := initScoreMap(nodes, interPodAffinityScore)
 	vcJob, ok := sHandle.Jobs[task.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("BatchNodeOrderFn %s not req npu.", task.Name)
 		return scoreMap, nil
 	}
 
-	if vcJob.IsTorAffinityJob() {
-		nodeMaps := util.ChangeNodesToNodeMaps(nodes)
+	k, ok := vcJob.Label[TorAffinityKey]
+	if ok && (k == LargeModelTag || k == NormalSchema) {
 		klog.V(util.LogDebugLev).Infof("validNPUJob job is now use tor affinity")
-		if sHandle.Tors.torLevel == SingleLayer {
-			return sHandle.SetSingleLayerTorAffinityJobNodesScore(task, nodeMaps, vcJob, scoreMap)
-		}
-		if sHandle.getNSLBVsersion() == defaultNSLBVersion && vcJob.isJobSinglePodRunAsNormal() {
-			return sHandle.SetTorAffinityJobNodesScore(task, nodeMaps, vcJob, vcJob.Label[TorAffinityKey], scoreMap)
-		}
-		if sHandle.getNSLBVsersion() == NSLB2Version {
-			return sHandle.SetTorAffinityJobNodesScoreV2(task, nodeMaps, vcJob, scoreMap)
-		}
+		return sHandle.SetTorAffinityJobNodesScore(task, nodes, vcJob, k, scoreMap)
 	}
 
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
@@ -843,48 +601,23 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	}
 	if errGet != nil {
 		// get suitable node failed
-		klog.V(util.LogErrorLev).Infof("batchNodeOrderFn task[%s] failed by err:[%s].", task.Name, util.SafePrint(errGet))
+		klog.V(util.LogErrorLev).Infof("batchNodeOrderFn task[%s] failed[%s].", task.Name, util.SafePrint(errGet))
 		return scoreMap, nil
 	}
-	klog.V(util.LogInfoLev).Infof("batchNodeOrderFn Get task:%s for NPU %+v.", task.Name, scoreMap)
+	klog.V(util.LogInfoLev).Infof("batchNodeOrderFn Get %s for NPU %+v.", task.Name, scoreMap)
 
 	return scoreMap, nil
 }
 
-// SetSingleLayerTorAffinityJobNodesScore single layer switch networking rule
-func (sHandle *ScheduleHandler) SetSingleLayerTorAffinityJobNodesScore(task *api.TaskInfo,
-	nodeMaps map[string]*api.NodeInfo, vcJob SchedulerJob, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes %s.", err)
-		return scoreMap, nil
-	}
-	result := SetJobServerList(vcJob, sHandle, nodeMaps)
-	vcJob = sHandle.Jobs[task.Job]
-	if result != nil {
-		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s,"+
-			"used servers is %s", vcJob.Name, result, vcJob.SelectServers)
-		vcJob.JobReadyTag = false
-		sHandle.Jobs[task.Job] = vcJob
-	}
-	if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
-	}
-	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
-	return scoreMap, result
-}
-
-// SetTorAffinityJobNodesScore nslb 1.0 rule
-func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScore(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
+func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScore(task *api.TaskInfo, nodes []*api.NodeInfo,
 	vcJob SchedulerJob, label string, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
+	if sHandle == nil || task == nil || len(nodes) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes %s.", err)
 		return scoreMap, nil
 	}
 
-	result := CheckNetSliceIsMeetJobRequire(vcJob, sHandle, nodeMaps)
+	result := CheckNetSliceIsMeetJobRequire(vcJob, sHandle, nodes)
 	vcJob = sHandle.Jobs[task.Job]
 	if result != nil {
 		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s,"+
@@ -899,119 +632,56 @@ func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScore(task *api.TaskInfo, 
 		}
 		sHandle.Jobs[task.Job] = vcJob
 	}
-	if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
+	if errGet := sHandle.ScoreBestNPUNodes(task, nodes, scoreMap); errGet != nil {
 		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
+		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] failed[%s].", task.Name, util.SafePrint(errGet))
 	}
-	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
-	return scoreMap, result
-}
-
-// SetTorAffinityJobNodesScoreV2 nslb 2.0 rule
-func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScoreV2(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	vcJob SchedulerJob, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes err: %s.", err)
-		return scoreMap, nil
-	}
-	defer func() {
-		if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-			// get suitable node failed
-			klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] failed[%s].", task.Name, util.SafePrint(errGet))
-		}
-	}()
-	if vcJob.ServerList != nil {
-		return scoreMap, nil
-	}
-	vcJob.MarkTorListByJob(nodeMaps, sHandle)
-	if ri := vcJob.getJobsRestartedInfo(); ri != nil {
-		if err := vcJob.setJobNodesAfterRestarted(sHandle, ri, vcJob.SchedulingTaskNum); err == nil {
-			vcJob.initJobNodeRankByFaultRank(ri, nodeMaps)
-			sHandle.Jobs[task.Job] = vcJob
-			return scoreMap, nil
-		}
-		if vcJob.IsJobSinglePodDelete() {
-			vcJob.JobReadyTag = false
-			sHandle.Jobs[task.Job] = vcJob
-			return scoreMap, nil
-		}
-		klog.V(util.LogWarningLev).Infof("the job is not meet the rescheduling logic and will be scheduled normally")
-	}
-
-	tmpTors := deepCopyTorList(sHandle.Tors.Tors)
-	result := setJobAvailableNodes(&vcJob, sHandle, nodeMaps)
-	if result != nil {
-		// recovery the Tors in global
-		sHandle.recoveryGlobalTor(tmpTors)
-		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s", vcJob.Name, result)
-		vcJob.JobReadyTag = false
-	}
-	sHandle.Jobs[task.Job] = vcJob
-
 	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn Get %s for NPU %+v.", task.Name, scoreMap)
 	return scoreMap, result
 }
 
-func (sHandle *ScheduleHandler) recoveryGlobalTor(tors []*Tor) {
-	sHandle.Tors.Tors = tors
-	sHandle.Tors.initTorMaps()
-}
-
-func (sHandle *ScheduleHandler) scoreBestNPUNodes(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	sMap map[string]float64) error {
-
+func (sHandle *ScheduleHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
+	if sHandle == nil || task == nil || len(nodes) == 0 || len(sMap) == 0 {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes %s.", err)
+		return err
+	}
 	vcjob, ok := sHandle.ScheduleEnv.Jobs[task.Job]
 	if !ok {
 		return errors.New(util.ArgumentError)
 	}
-
-	if vcjob.setBestNodeFromRankIndex(task, sMap) {
-		return nil
+	vcjob.ServerList = vcjob.SortJobServerListBySliceId()
+	for nodeName, index := range vcjob.HealthTorRankIndex {
+		if index == task.Pod.Annotations[podRankIndex] {
+			sMap[nodeName] = maxTorAffinityNodeScore
+			return nil
+		}
 	}
 
-	vcjob.setJobFaultRankIndex()
+	if len(vcjob.FaultRankIndex) == 0 {
+		vcjob.SetJobRankIndex()
+	} else {
+		vcjob.SetFaultJobRankIndex()
+	}
 
 	for _, sl := range vcjob.ServerList {
+		if reflect.ValueOf(sl).IsNil() {
+			continue
+		}
 		for _, server := range sl.Servers {
-			if vcjob.HealthTorRankIndex[server.Name] != "" {
+			if reflect.ValueOf(server).IsNil() {
 				continue
 			}
-			setNodeScoreByTorAttr(sMap, server.Name, sl)
-			if _, exist := nodeMaps[server.Name]; exist && server.NodeRank == task.Pod.Annotations[podRankIndex] {
+			for _, node := range nodes {
+				if server.Name != node.Name || server.NodeRank != task.Pod.Annotations[podRankIndex] {
+					continue
+				}
 				sMap[server.Name] = maxTorAffinityNodeScore
-				return nil
+				break
 			}
 		}
 	}
+
 	klog.V(util.LogInfoLev).Infof("ScoreBestNPUNodes task<%s> sMap<%v>", task.Name, sMap)
 	return nil
-}
-
-func (sHandle *ScheduleHandler) getSharedTorNum() int {
-	if sHandle == nil || sHandle.Tors == nil {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("getSharedTorNum %s.", err)
-		return util.ErrorInt
-	}
-	return sHandle.Tors.sharedTorNum
-}
-
-func (sHandle *ScheduleHandler) getNSLBVsersion() string {
-	if sHandle == nil || sHandle.Tors == nil {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("getNSLBVsersion %s.", err)
-		return ""
-	}
-	return sHandle.Tors.nslbVersion
-}
-
-func setNodeScoreByTorAttr(sMap map[string]float64, nodeName string, sl *Tor) {
-	if sMap == nil {
-		return
-	}
-	sMap[nodeName] = halfTorAffinityNodeScore
-	if sl.IsSharedTor == sharedTor {
-		sMap[nodeName] = sharedTorAffinityNodeScore
-	}
 }

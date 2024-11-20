@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef _OPTIONS_H
+#define _OPTIONS_H
 
 #include <stdbool.h>
 
 void ParseRuntimeOptions(const char *options);
-bool IsOptionNoDrvSet(void);
-bool IsVirtual(void);
+bool IsOptionNoDrvSet();
+bool IsVirtual();
 
 #endif

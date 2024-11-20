@@ -49,25 +49,22 @@ type VJob struct {
 // NPUJob only npu vcJob have.
 type NPUJob struct {
 	// the mapKey is taskID, not Name.
-	Tasks             map[api.TaskID]NPUTask
-	SelectServers     string
-	NPUTaskNum        int
-	SchedulingTaskNum int
-	ReqNPUName        string
-	ReqNPUNum         int
-	SpBlockNPUNum     int
+	Tasks         map[api.TaskID]NPUTask
+	SelectServers string
+	NPUTaskNum    int
+	ReqNPUName    string
+	ReqNPUNum     int
 	*VJob
 }
 
 // ComJob all vcJob has.
 type ComJob struct {
-	Name               api.JobID
-	ReferenceName      string
-	NameSpace          string
-	SubHealthyStrategy string
-	Annotation         map[string]string
-	Selector           map[string]string
-	Label              map[string]string
+	Name          api.JobID
+	ReferenceName string
+	NameSpace     string
+	Annotation    map[string]string
+	Selector      map[string]string
+	Label         map[string]string
 }
 
 // SchedulerJobAttr vcJob's attribute.
@@ -76,24 +73,16 @@ type SchedulerJobAttr struct {
 	*NPUJob
 }
 
-// IsJobSinglePodDelete valid job.
-func (sJob SchedulerJobAttr) IsJobSinglePodDelete() bool {
-	if sJob.Label[SinglePodTag] == EnableFunc && sJob.SchedulingTaskNum != len(sJob.Tasks) {
-		return true
-	}
-	return false
-}
-
 // IsSelectorMeetJob check the selectors
 func IsSelectorMeetJob(jobSelectors, conf map[string]string) bool {
 	for jobKey, jobValue := range jobSelectors {
 		confValue, confOk := conf[jobKey]
 		if !confOk {
-			klog.V(LogInfoLev).Infof("conf has no job selector key:%s.", jobKey)
+			klog.V(LogErrorLev).Infof("conf has no job selector key:%s.", jobKey)
 			return false
 		}
 		if !strings.Contains(confValue, jobValue) {
-			klog.V(LogInfoLev).Infof("conf has no job selector value:%s.", jobValue)
+			klog.V(LogErrorLev).Infof("conf has no job selector value:%s.", jobValue)
 			return false
 		}
 	}
@@ -132,21 +121,6 @@ func (nJob *NPUJob) GetNPUTaskNumInJob() int {
 	}
 
 	return taskNum
-}
-
-// GetSchedulingTaskNum get the num of scheduling task
-func (nJob *NPUJob) GetSchedulingTaskNum() int {
-	if nJob == nil || !nJob.IsNPUJob() {
-		return 0
-	}
-	schedulingTaskNum := 0
-	for _, task := range nJob.Tasks {
-		if task.NodeName == "" {
-			schedulingTaskNum++
-		}
-	}
-
-	return schedulingTaskNum
 }
 
 // GetVTaskNumInVJob get the NPU task number in one job. for some task has no NPU.
@@ -200,7 +174,6 @@ func (nJob *NPUJob) SetJobStatusByInf(vcJob *api.JobInfo) {
 	nJob.VJob.Status = string(vcJob.PodGroup.Status.Phase)
 }
 
-// ReferenceNameOfJob get name of job
 func ReferenceNameOfJob(job *api.JobInfo) string {
 	if job != nil && job.PodGroup != nil && len(job.PodGroup.OwnerReferences) > 0 {
 		return job.PodGroup.OwnerReferences[0].Name
@@ -208,7 +181,6 @@ func ReferenceNameOfJob(job *api.JobInfo) string {
 	return ""
 }
 
-// UuidOfJob get uid of job
 func UuidOfJob(job *api.JobInfo) types.UID {
 	if job != nil && job.PodGroup != nil && len(job.PodGroup.OwnerReferences) > 0 {
 		return job.PodGroup.OwnerReferences[0].UID

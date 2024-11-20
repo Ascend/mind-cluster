@@ -41,7 +41,7 @@ func InitRunLogger(config *LogConfig, ctx context.Context) error {
 		return errors.New("run logger config is nil")
 	}
 	if RunLog != nil && RunLog.isInit() {
-		RunLog.Warn("run logger is been initialized")
+		RunLog.Warn("run logger is been initialized.")
 		return nil
 	}
 	RunLog = new(logger)
@@ -63,7 +63,7 @@ func InitOperateLogger(config *LogConfig, ctx context.Context) error {
 		return errors.New("operate logger config is nil")
 	}
 	if OpLog != nil && OpLog.isInit() {
-		OpLog.Warn("operate logger is been initialized")
+		OpLog.Warn("operate logger is been initialized.")
 		return nil
 	}
 	OpLog = new(logger)
@@ -85,7 +85,7 @@ func InitSecurityLogger(config *LogConfig, ctx context.Context) error {
 		return errors.New("security logger config is nil")
 	}
 	if SecLog != nil && SecLog.isInit() {
-		SecLog.Warn("security logger is been initialized")
+		SecLog.Warn("security logger is been initialized.")
 		return nil
 	}
 	SecLog = new(logger)
@@ -107,7 +107,7 @@ func InitUserLogger(config *LogConfig, ctx context.Context) error {
 		return errors.New("user logger config is nil")
 	}
 	if UserLog != nil && UserLog.isInit() {
-		UserLog.Warn("user logger is been initialized")
+		UserLog.Warn("user logger is been initialized.")
 		return nil
 	}
 	UserLog = new(logger)
@@ -129,7 +129,7 @@ func InitDebugLogger(config *LogConfig, ctx context.Context) error {
 		return errors.New("debug logger config is nil")
 	}
 	if DebugLog != nil && DebugLog.isInit() {
-		DebugLog.Warn("debug logger is been initialized")
+		DebugLog.Warn("debug logger is been initialized.")
 		return nil
 	}
 	DebugLog = new(logger)

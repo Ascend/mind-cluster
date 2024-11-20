@@ -1,4 +1,4 @@
-/* Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,11 +12,11 @@
    limitations under the License.
 */
 
+// Package kubeclient a series of k8s function
 package kubeclient
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -29,53 +29,6 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 )
-
-// TestGetServerUsageLabelCache test case for get server usage
-func TestGetServerUsageLabelCache(t *testing.T) {
-	patch := gomonkey.ApplyFuncReturn(NewClientK8s, &ClientK8s{
-		Clientset:      &kubernetes.Clientset{},
-		NodeName:       "node",
-		DeviceInfoName: common.DeviceInfoCMNamePrefix + "node",
-		IsApiErr:       false,
-	}, nil).
-		ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}},
-		}, nil)
-	defer patch.Reset()
-	convey.Convey("test no usage label", t, func() {
-		client, _ := NewClientK8s()
-		usage, err := client.GetServerUsageLabelCache()
-		convey.So(usage == "unknown", convey.ShouldBeTrue)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
-// TestGetA800IA2Label test case for get a800 ia2 label
-func TestGetA800IA2Label(t *testing.T) {
-	node := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: make(map[string]string),
-			Name:   "node",
-		},
-	}
-	node.Labels[common.ServerUsageLabelKey] = common.Infer
-	patch := gomonkey.
-		ApplyFuncReturn(NewClientK8s, &ClientK8s{
-			Clientset:      &kubernetes.Clientset{},
-			NodeName:       "node",
-			DeviceInfoName: common.DeviceInfoCMNamePrefix + "node",
-			IsApiErr:       false,
-		}, nil).ApplyMethodReturn(&ClientK8s{}, "GetNode", node, nil)
-	defer patch.Reset()
-	convey.Convey("test usage label with infer", t, func() {
-		serverUsageLabel = ""
-		client, _ := NewClientK8s()
-		usage, err := client.GetServerUsageLabelCache()
-		fmt.Printf("usage: %s\n", usage)
-		convey.So(usage == common.Infer, convey.ShouldBeTrue)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
 
 // TestGetServerUsageLabelCache01 test case for get pod has timeout
 func TestCheckPodInCache01(t *testing.T) {
@@ -106,9 +59,7 @@ func TestCheckPodInCache01(t *testing.T) {
 		expectNewPodCache := map[types.UID]*podInfo{}
 		podCache = map[types.UID]*podInfo{
 			"xxxxxxxxx1": {
-				Pod: &v1.Pod{
-					Spec: v1.PodSpec{},
-				},
+				Pod:        &v1.Pod{},
 				updateTime: pod1UpdateTime,
 			},
 		}

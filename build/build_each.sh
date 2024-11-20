@@ -15,11 +15,11 @@
 
 
 GOPATH=$1
-ci_config=$2
+config=$2
 servicename=$3
 
 function build_volcano() {
-  cp -rf "$GOPATH/$ci_config" $GOPATH/src/volcano.sh/volcano/
+  cp -rf "$GOPATH/$config" $GOPATH/src/volcano.sh/volcano/
   ls -la $GOPATH/src/volcano.sh/volcano/
   echo "********$1*********"
   cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
@@ -28,7 +28,7 @@ function build_volcano() {
 }
 
 function build_other() {
-  cp -rf "$GOPATH/$ci_config" $GOPATH/${1}/
+  cp -rf "$GOPATH/$config" $GOPATH/${1}/
   ls -la $GOPATH/
   cd $GOPATH/${1}/build
   dos2unix *.sh && chmod +x *
@@ -39,26 +39,26 @@ echo "Build mindx dl component is " "$servicename"
 case "$servicename" in
   ascend-for-volcano)
     echo "***************start complie volcano 1.9***********************"
-    mkdir -p ${WORKSPACE}/src/volcano.sh && cp -rf /opt/buildtools/volcano_opensource/volcano_1.9/volcano ${WORKSPACE}/src/volcano.sh/
-    ls -la ./ &&  cp -rf ${WORKSPACE}/${servicename} ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-    cd ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
+    mkdir -p ${GOPATH}/src/volcano.sh && cp -rf /opt/buildtools/volcano_opensource/volcano_1.9/volcano ${GOPATH}/src/volcano.sh/
+    ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+    cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
     build_volcano v1.9.0
-    mkdir -p ${WORKSPACE}/output/volcano-v1.9.0 && cp -rf ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${WORKSPACE}/output/volcano-v1.9.0/
-    ls -la ${WORKSPACE}/output/volcano-v1.9.0/
-    rm -rf ${WORKSPACE}/src/volcano.sh/volcano
+    mkdir -p ${GOPATH}/output/volcano-v1.9.0 && cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${GOPATH}/output/volcano-v1.9.0/
+    ls -la ${GOPATH}/output/volcano-v1.9.0/
+    rm -rf ${GOPATH}/src/volcano.sh/volcano
     echo "***************start complie volcano 1.7***********************"
-    cp -rf /opt/buildtools/volcano_opensource/volcano_1.7/volcano ${WORKSPACE}/src/volcano.sh/
-    ls -la ./ &&  cp -rf ${WORKSPACE}/${servicename} ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-    cd ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
+    cp -rf /opt/buildtools/volcano_opensource/volcano_1.7/volcano ${GOPATH}/src/volcano.sh/
+    ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+    cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
     build_volcano v1.7.0
-    mkdir -p ${WORKSPACE}/output/volcano-v1.7.0 && cp -rf ${WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${WORKSPACE}/output/volcano-v1.7.0/
-    rm -rf ${WORKSPACE}/output/Dockerfile*
-    cp -rf ${WORKSPACE}/output ${WORKSPACE}/${servicename}/
-    cd ${WORKSPACE}/${servicename}/output && chmod 550 volcano-v1.7.0 && chmod 550 volcano-v1.9.0
+    mkdir -p ${GOPATH}/output/volcano-v1.7.0 && cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${GOPATH}/output/volcano-v1.7.0/
+    ls -la ${GOPATH}/output/volcano-v1.7.0/
+    rm -rf ${GOPATH}/src/volcano.sh/volcano
+
 
   ;;
   ascend-docker-runtime)
-    cd ${WORKSPACE}/${servicename}/opensource && tar -zxvf makeself/makeself-2.4.2.tar.gz
+    cd ${GOPATH}/${servicename}/opensource && tar -zxvf makeself/makeself-2.4.2.tar.gz
     build_other ${servicename}
 
   ;;
@@ -71,7 +71,6 @@ case "$servicename" in
 
 esac
 
-cd ${WORKSPACE}/ci/mindxdl/script/ && dos2unix *.sh && chmod +x * && bash -x build_package.sh ${servicename}
 
 
 

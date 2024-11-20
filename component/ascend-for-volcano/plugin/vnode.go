@@ -22,8 +22,8 @@ import (
 )
 
 func initTemplate() []util.VTemplate {
-	nodeTemplate := make([]util.VTemplate, util.NPUIndex5)
-	if len(nodeTemplate) < util.NPUIndex5 {
+	nodeTemplate := make([]util.VTemplate, util.NPUIndex3)
+	if len(nodeTemplate) < util.NPUIndex3 {
 		return nodeTemplate
 	}
 	nodeTemplate[0] = util.VTemplate{
@@ -32,24 +32,14 @@ func initTemplate() []util.VTemplate {
 		AICPU:    util.NPUIndex7,
 	}
 	nodeTemplate[util.NPUIndex1] = util.VTemplate{
-		ChipKind: ChipTypeB1,
-		AICore:   util.CoreNum25,
-		AICPU:    util.CpuNum6,
+		ChipKind: Ascend910,
+		AICore:   util.CoreNum32,
+		AICPU:    util.CpuNum14,
 	}
 	nodeTemplate[util.NPUIndex2] = util.VTemplate{
-		ChipKind: ChipTypeB2C,
-		AICore:   util.CoreNum24,
-		AICPU:    util.CpuNum6,
-	}
-	nodeTemplate[util.NPUIndex3] = util.VTemplate{
-		ChipKind: ChipTypeB3,
-		AICore:   util.CoreNum20,
-		AICPU:    util.CpuNum6,
-	}
-	nodeTemplate[util.NPUIndex4] = util.VTemplate{
-		ChipKind: ChipTypeB4,
-		AICore:   util.CoreNum20,
-		AICPU:    util.CpuNum6,
+		ChipKind: Ascend910,
+		AICore:   util.CoreNum30,
+		AICPU:    util.CpuNum14,
 	}
 	return nodeTemplate
 }
@@ -102,17 +92,10 @@ func (n *NPUNode) setChipPropertiesFromNPUNode() error {
 	}
 	n.VNode.ServerType = chipLabel
 
-	chipType, ok := n.Label[chipTypeKey]
-	if !ok {
-		return fmt.Errorf("setNodeVNPUInfo node %s no node label <%s>", n.Name, chipTypeKey)
-	}
-	n.VNode.ChipType = chipType
-
 	nodeFreeChips, ok := n.Annotation[util.HwPreName+n.VNode.ChipKind] // 3. set free chip num from device-info
 	if !ok {
 		return errors.New("getFreeChipNum failed")
 	}
-
 	nodeFreeChipsSplit := strings.Split(nodeFreeChips, ",")
 	n.VNode.FreeChipNum = len(nodeFreeChipsSplit)
 
@@ -123,11 +106,11 @@ func (n *NPUNode) setChipPropertiesFromNPUNode() error {
 func (n NPUNode) GetChipKindFromNpuNode() (string, error) {
 	tempVal, ok := n.Label[util.Accelerator]
 	if !ok {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s absent", util.Accelerator)
+		return "", fmt.Errorf("GetChipKindFromNpuNode label %s absent", util.Accelerator)
 	}
 	chipKind := strings.Split(tempVal, "-")
 	if len(chipKind) < util.NPUIndex2 {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s value %s %s", util.Accelerator,
+		return "", fmt.Errorf("GetChipKindFromNpuNode label %s value %s %s", util.Accelerator,
 			chipKind, FormatIncorrectError)
 	}
 	return chipKind[1], nil
@@ -171,8 +154,7 @@ func (n *NPUNode) setTotalResAndChipNumByTemplates() error {
 func (n NPUNode) getCpuNumPerChip(templates []util.VTemplate) int {
 	cpuPerChip := util.ErrorInt
 	for _, temp := range templates {
-		if (temp.ChipKind != n.VNode.ChipKind && temp.ChipKind != n.VNode.ChipType) ||
-			temp.AICore*n.TotalChipNum != n.VNode.TotalRes.Aicore {
+		if temp.ChipKind != n.VNode.ChipKind || temp.AICore*n.TotalChipNum != n.VNode.TotalRes.Aicore {
 			continue
 		}
 		cpuPerChip = temp.AICPU
@@ -230,7 +212,7 @@ func (n *NPUNode) getCardIDsFromNodeAndDeviceInfo(cardHealthTypeSuffix string) (
 		return nil, fmt.Errorf("no key: %s", util.HwPreName+n.VNode.ChipKind)
 	}
 
-	CardIDs := make([]int, 0)
+	var CardIDs []int
 	Chips := strings.Split(ChipsStr, ",")
 	for _, chip := range Chips {
 		if chip == "" {
@@ -339,10 +321,7 @@ func (vNode *VNode) getPodUsedRes(pod *v1.Pod, taskTemplate map[string]map[strin
 		klog.V(util.LogErrorLev).Infof("getPodUsedRes get pod<%s> %s format error", pod.Name, realStr)
 		return nil
 	}
-	if vNode.ChipKind == Ascend310P {
-		return GetResourceFromTemplate(vNode.ChipKind, ascendRealSplit[1], taskTemplate)
-	}
-	return GetResourceFromTemplate(vNode.ChipType, ascendRealSplit[1], taskTemplate)
+	return GetResourceFromTemplate(vNode.ChipKind, ascendRealSplit[1], taskTemplate)
 }
 
 // addNPUResourceWholeCard Ascend910-0,Ascend910-1
@@ -457,8 +436,8 @@ func (vChip *VChip) UpdateDVPP(podResDVPP string) {
 	}
 }
 
-// IsNodeNotMeetRes judge the node meet resource or not.
-func (n NPUNode) IsNodeNotMeetRes(taskResReq util.VResource) bool {
+// IsNodeMeetRes judge the node meet resource or not.
+func (n NPUNode) IsNodeMeetRes(taskResReq util.VResource) bool {
 	return !n.IsNodeTotalResEnough(taskResReq) || !n.IsNodeChipResEnough(taskResReq)
 }
 
@@ -492,24 +471,12 @@ func (n NPUNode) IsNodeChipResEnough(vRes util.VResource) bool {
 func (vNode VNode) isNodeChipResEnoughWholeCard(vRes util.VResource) bool {
 	freeWholeCard := 0
 	for _, vChip := range vNode.Chips {
-		if vChip.SegmentFlag || vChip.FreeRes.Aicore == 0 {
+		if vChip.SegmentFlag {
 			continue
 		}
 		freeWholeCard += 1
 	}
 	return vRes.Aicore/vNode.AiCorePerChip <= freeWholeCard
-}
-
-// GetNodeTopForWholeCard get node top for whole card
-func (vNode VNode) GetNodeTopForWholeCard() []int {
-	var nodeTop []int
-	for chipId, vChip := range vNode.Chips {
-		if vChip.SegmentFlag || vChip.FreeRes.Aicore == 0 {
-			continue
-		}
-		nodeTop = append(nodeTop, chipId)
-	}
-	return nodeTop
 }
 
 // IsChipMeetResReq check chip resource can be allocated as the task requires
@@ -567,7 +534,7 @@ func (vChip *VChip) isChipVGroupValid(vRes util.VResource) bool {
 
 // realChip like:Ascend310P-2c.1cpu-105-0_3.
 func (vChip *VChip) getVGroups() []int {
-	vGroups := make([]int, 0)
+	var vGroups []int
 	for _, realChip := range vChip.ID {
 		realChipSplit := strings.Split(realChip, "_")
 		if len(realChipSplit) < util.NPUIndex2 {
@@ -630,7 +597,6 @@ func (vNode *VNode) SelectChipFromNode(vRes util.VResource) (string, error) {
 }
 
 func (vNode *VNode) selectChipFromNodeSegment(vChip []*VChip, vRes util.VResource) (string, error) {
-	sort.Sort(vChipsList(vChip))
 	for _, chip := range vChip {
 		if !chip.IsChipMeetResReq(vRes) || chip.Unstable {
 			klog.V(util.LogDebugLev).Infof("chip %s does not meet resource requirements", chip.Name)
@@ -660,7 +626,7 @@ func (vNode *VNode) selectChipFromNodeWhole(vChips []*VChip, vRes util.VResource
 		Aicpu:  vRes.Aicpu / reqCardNum,
 		DVPP:   AscendDVPPEnabledNull,
 	}
-	cardNames := make([]string, 0)
+	var cardNames []string
 	for _, chip := range vChips {
 		if !chip.IsChipMeetResReq(vResChip) || chip.SegmentFlag {
 			klog.V(util.LogDebugLev).Infof("chip %s does not meet whole card resource requirements", chip.Name)

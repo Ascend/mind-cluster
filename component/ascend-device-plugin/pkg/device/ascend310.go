@@ -18,7 +18,7 @@ package device
 import (
 	"fmt"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 
 	"Ascend-device-plugin/pkg/common"
 )
@@ -36,11 +36,9 @@ func NewHwAscend310Manager() *HwAscend310Manager {
 	}
 	return &HwAscend310Manager{
 		AscendTools: AscendTools{
-			name:                name,
-			unHealthyKey:        common.HuaweiUnHealthAscend310,
-			devCount:            common.MaxCardNum * common.MaxDevNumInCard,
-			cardInResetMap:      make(map[int32]bool, common.GeneralMapSize),
-			resetFailedTimesMap: make(map[int32]int, common.GeneralMapSize),
+			name:         name,
+			unHealthyKey: common.HuaweiUnHealthAscend310,
+			devCount:     common.MaxCardNum * common.MaxDevNumInCard,
 		},
 	}
 }

@@ -20,10 +20,10 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/tools/cache"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	cache "k8s.io/client-go/tools/cache"
 
-	"ascend-operator-apis/pkg/apis/batch/v1"
+	batchv1 "ascend-operator-apis/pkg/apis/batch/v1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -55,15 +55,15 @@ func (f *genericInformer) Lister() cache.GenericLister {
 }
 
 // ForResource gives generic access to a shared informer of the matching type
-// extend this to unknown resources with a client pool
+// TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	if f == nil {
 		return nil, errors.New("nil pointer")
 	}
 	switch resource {
-	case v1.SchemeGroupVersion.WithResource("ascendjobs"):
+	// Group=batch.volcano.sh, Version=v1alpha1
+	case batchv1.SchemeGroupVersion.WithResource("ascendjobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Batch().V1().Jobs().Informer()}, nil
-	default:
 	}
 
 	return nil, fmt.Errorf("no informer found for %v", resource)

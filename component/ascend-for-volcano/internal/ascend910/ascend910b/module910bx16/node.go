@@ -21,7 +21,6 @@ package module910bx16
 
 import (
 	"fmt"
-	"strconv"
 
 	"k8s.io/klog"
 
@@ -57,12 +56,4 @@ func (tp *module910bx16) getUsableTopFromNode(node plugin.NPUNode, disFlag bool)
 	}
 	res := util.RemoveCommonElement(nodeTop, networkUnhealthyTop)
 	return res, nil
-}
-
-func changeIntSliceToString(npuTop []int) []string {
-	s := make([]string, len(npuTop))
-	for i, chipId := range npuTop {
-		s[i] = strconv.Itoa(chipId)
-	}
-	return s
 }

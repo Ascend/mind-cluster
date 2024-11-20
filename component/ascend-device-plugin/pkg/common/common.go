@@ -16,12 +16,10 @@
 package common
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -34,8 +32,8 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/devmanager/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
@@ -43,8 +41,8 @@ import (
 var (
 	dpRegexp = map[string]*regexp.Regexp{
 		"nodeName":    regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
-		"namespace":   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
-		"fullPodName": regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+		"podName":     regexp.MustCompile("^[a-z0-9]+[a-z0-9\\-]*[a-z0-9]+$"),
+		"fullPodName": regexp.MustCompile("^[a-z0-9]+([a-z0-9\\-.]*)[a-z0-9]+$"),
 		"vir910":      regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c"),
 		"vir310p":     regexp.MustCompile("Ascend310P-(1|2|4)c"),
 		"ascend910":   regexp.MustCompile(`^Ascend910-\d+`),
@@ -52,24 +50,6 @@ var (
 		"ascend310P":  regexp.MustCompile(`^Ascend310P-\d+`),
 	}
 )
-
-// the env key of pt ms tf framework while pod is dynamic cut job
-const (
-	ptWorldSizeEnv      = "WORLD_SIZE"
-	ptLocalWorldSizeEnv = "LOCAL_WORLD_SIZE"
-	tfWorkerSizeEnv     = "CM_WORKER_SIZE"
-	tfLocalWorker       = "CM_LOCAL_WORKER"
-	msWorkerNumEnv      = "MS_WORKER_NUM"
-	msLocalWorker       = "MS_LOCAL_WORKER"
-	ptLocalRank         = "LOCAL_RANK"
-)
-
-// ServerInfo used for pass parameters
-type ServerInfo struct {
-	ServerID   string
-	DeviceType string
-	SuperPodID int32
-}
 
 // GetPattern return pattern map
 func GetPattern() map[string]*regexp.Regexp {
@@ -91,13 +71,14 @@ func UnlockAllDeviceInfo() {
 }
 
 // SetAscendRuntimeEnv is to set ascend runtime environment
-func SetAscendRuntimeEnv(devices []int, ascendRuntimeOptions string, resp *v1beta1.ContainerAllocateResponse) {
+func SetAscendRuntimeEnv(devices []int, ascendRuntimeOptions string,
+	resp *v1beta1.ContainerAllocateResponse) {
 	if resp == nil {
 		hwlog.RunLog.Error("resp is nil")
 		return
 	}
 	if len((*resp).Envs) == 0 {
-		(*resp).Envs = make(map[string]string, runtimeEnvNum+SlowNodeStepTimeEnvNum)
+		(*resp).Envs = make(map[string]string, runtimeEnvNum)
 	}
 	var deviceStr []string
 	for _, id := range devices {
@@ -108,26 +89,8 @@ func SetAscendRuntimeEnv(devices []int, ascendRuntimeOptions string, resp *v1bet
 	if ParamOption.RealCardType == Ascend310B {
 		(*resp).Envs[ascendAllowLinkEnv] = "True"
 	}
-	// npu dynamic cut, dp write the env which job use npu num to container instead of ascend-operator
-	if !ParamOption.PresetVDevice {
-		(*resp).Envs[msLocalWorker] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[msWorkerNumEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptWorldSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptLocalWorldSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptLocalRank] = localRankStr(len(deviceStr))
-		(*resp).Envs[tfWorkerSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[tfLocalWorker] = strconv.Itoa(len(deviceStr))
-	}
-	hwlog.RunLog.Infof("allocate resp env: %s; %s", (*resp).Envs[AscendVisibleDevicesEnv], ascendRuntimeOptions)
-}
 
-func localRankStr(req int) string {
-	rankStr := ""
-	for i := 0; i < req-1; i++ {
-		rankStr += strconv.Itoa(i) + ","
-	}
-	rankStr += strconv.Itoa(req - 1)
-	return rankStr
+	hwlog.RunLog.Infof("allocate resp env: %s; %s", (*resp).Envs[AscendVisibleDevicesEnv], ascendRuntimeOptions)
 }
 
 // MakeDataHash Make Data Hash
@@ -430,7 +393,7 @@ func CheckPodNameAndSpace(podPara string, maxLength int) error {
 		return fmt.Errorf("para length %d is bigger than %d", len(podPara), maxLength)
 	}
 	patternMap := GetPattern()
-	pattern := patternMap["namespace"]
+	pattern := patternMap["podName"]
 	if maxLength == PodNameMaxLength {
 		pattern = patternMap["fullPodName"]
 	}
@@ -488,21 +451,19 @@ func NewSignWatcher(osSigns ...os.Signal) chan os.Signal {
 }
 
 // GetPodConfiguration get annotation configuration of pod
-func GetPodConfiguration(phyDevMapVirtualDev map[int]int, devices map[int]string, podName string,
-	info ServerInfo, allDevices []NpuDevice) string {
+func GetPodConfiguration(phyDevMapVirtualDev map[int]int, devices map[int]string, podName,
+	serverID string, deviceType string) string {
 	var sortDevicesKey []int
 	for deviceID := range devices {
 		sortDevicesKey = append(sortDevicesKey, deviceID)
 	}
-
 	sort.Ints(sortDevicesKey)
-	instance := Instance{PodName: podName, ServerID: info.ServerID, SuperPodId: info.SuperPodID}
+	instance := Instance{PodName: podName, ServerID: serverID}
 	for _, deviceID := range sortDevicesKey {
-		if !IsVirtualDev(info.DeviceType) {
+		if !IsVirtualDev(deviceType) {
 			instance.Devices = append(instance.Devices, Device{
-				DeviceID:      fmt.Sprintf("%d", deviceID),
-				DeviceIP:      devices[deviceID],
-				SuperDeviceID: strconv.Itoa(getSuperDeviceID(deviceID, allDevices)),
+				DeviceID: fmt.Sprintf("%d", deviceID),
+				DeviceIP: devices[deviceID],
 			})
 			continue
 		}
@@ -522,15 +483,6 @@ func GetPodConfiguration(phyDevMapVirtualDev map[int]int, devices map[int]string
 		return ""
 	}
 	return string(instanceByte)
-}
-
-func getSuperDeviceID(deviceID int, allDevices []NpuDevice) int {
-	for _, npuDevice := range allDevices {
-		if deviceID == int(npuDevice.PhyID) {
-			return int(npuDevice.SuperDeviceID)
-		}
-	}
-	return SdIdAbnormal
 }
 
 // CheckFileUserSameWithProcess to check whether the owner of the log file is the same as the uid
@@ -570,20 +522,6 @@ func IsContainAtlas300IDuo() bool {
 	return false
 }
 
-// IsContainAll300IDuo in ProductTypes list, is full Atlas 300I Duo card
-func IsContainAll300IDuo() bool {
-	if len(ParamOption.ProductTypes) == 0 {
-		return false
-	}
-	for _, product := range ParamOption.ProductTypes {
-		hwlog.RunLog.Infof("ProductTypes, %s\n", product)
-		if product != Atlas300IDuo {
-			return false
-		}
-	}
-	return true
-}
-
 // RecordFaultInfoList record the fault info
 func RecordFaultInfoList(devFaultInfoList []*TaskDevInfo) {
 	for _, devFaultInfo := range devFaultInfoList {
@@ -602,15 +540,6 @@ func Int32Join(data []int32, sep string) string {
 	return strings.Join(strData, sep)
 }
 
-// GetPodNameFromEnv get current pod name from env
-func GetPodNameFromEnv() (string, error) {
-	podName := os.Getenv("HOSTNAME")
-	if err := CheckPodNameAndSpace(podName, PodNameMaxLength); err != nil {
-		return "", fmt.Errorf("check pod name failed: %w", err)
-	}
-	return podName, nil
-}
-
 // GetDeviceRunMode get current env device run mode
 func GetDeviceRunMode() (string, error) {
 	devType := ParamOption.RealCardType
@@ -618,7 +547,7 @@ func GetDeviceRunMode() (string, error) {
 	switch devType {
 	case common.Ascend310, common.Ascend310B:
 		return common.Ascend310, nil
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
+	case common.Ascend910, common.Ascend910B:
 		return common.Ascend910, nil
 	case common.Ascend310P:
 		return common.Ascend310P, nil
@@ -626,45 +555,4 @@ func GetDeviceRunMode() (string, error) {
 		hwlog.RunLog.Errorf("found an unsupported device type %s", devType)
 		return "", fmt.Errorf("%v is a unsupported device type", devType)
 	}
-}
-
-// IntInList check if int in list
-func IntInList(num int32, list []int32) bool {
-	for _, val := range list {
-		if val == num {
-			return true
-		}
-	}
-	return false
-}
-
-// GetJobNameOfPod get job name of pod from annotations or labels
-func GetJobNameOfPod(pod *v1.Pod) string {
-	taskName, ok := pod.Labels[ResetTaskNameKey]
-	if !ok {
-		taskName, ok = pod.Labels[ResetTaskNameKeyInLabel]
-		if !ok {
-			return ""
-		}
-	}
-	return taskName
-}
-
-// RandomInt64 return a random int64 number
-func RandomInt64(min, max int64) int64 {
-	randomBytes := make([]byte, 16)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		return 0
-	}
-	randomNum := new(big.Int).SetBytes(randomBytes)
-
-	bigMax := big.NewInt(max)
-	bigMin := big.NewInt(min)
-	diff := new(big.Int).Sub(bigMax, bigMin)
-
-	randomNum.Mod(randomNum, diff)
-	randomNum.Add(randomNum, bigMin)
-
-	return randomNum.Int64()
 }

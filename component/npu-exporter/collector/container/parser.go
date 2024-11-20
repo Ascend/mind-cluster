@@ -29,10 +29,10 @@ import (
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/collector/container/isula"
-	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
+	"huawei.com/npu-exporter/v5/collector/container/isula"
+	"huawei.com/npu-exporter/v5/collector/container/v1"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/utils"
 )
 
 const (
@@ -44,11 +44,10 @@ const (
 	charDevice        = "c"
 	devicePathPattern = `^/dev/davinci\d+$`
 
-	minus                            = "-"
-	comma                            = ","
-	ascend                           = "Ascend"
-	maxEnvLength                     = 1024
-	parsingNpuDefaultTimeoutDuration = 3
+	minus        = "-"
+	comma        = ","
+	ascend       = "Ascend"
+	maxEnvLength = 1024
 )
 
 const (
@@ -56,7 +55,6 @@ const (
 	EndpointTypeContainerd = iota
 	// EndpointTypeDockerd Docker with or without K8S
 	EndpointTypeDockerd
-	// EndpointTypeIsula K8S + isula
 	EndpointTypeIsula = 2
 )
 
@@ -66,7 +64,7 @@ var (
 
 	npuMajorID               []string
 	npuMajorFetchCtrl        sync.Once
-	parsingNpuDefaultTimeout = parsingNpuDefaultTimeoutDuration * time.Second
+	parsingNpuDefaultTimeout = 3 * time.Second
 )
 
 var (
@@ -175,8 +173,7 @@ func (dp *DevicesParser) parseDevices(ctx context.Context, c *CommonContainer, r
 	return dp.parseDevicesInContainerd(ctx, c, rs)
 }
 
-func (dp *DevicesParser) parseDevicesInContainerd(ctx context.Context, c *CommonContainer,
-	rs chan<- DevicesInfo) error {
+func (dp *DevicesParser) parseDevicesInContainerd(ctx context.Context, c *CommonContainer, rs chan<- DevicesInfo) error {
 	if rs == nil {
 		return errors.New("empty result channel")
 	}
@@ -291,7 +288,7 @@ func (dp *DevicesParser) getDeviceIDsByAscendStyle(devices, containerID string) 
 		deviceName := strings.Split(subDevice, minus)
 		if len(deviceName) != ascendEnvPart {
 			hwlog.RunLog.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, nil))
-			continue
+			return deviceIDs
 		}
 		id, err := strconv.Atoi(deviceName[1])
 		if err != nil {
@@ -304,7 +301,7 @@ func (dp *DevicesParser) getDeviceIDsByAscendStyle(devices, containerID string) 
 }
 
 func (dp *DevicesParser) getDeviceIDsByMinusStyle(devices, containerID string) []int {
-	deviceIDs := make([]int, 0)
+	var deviceIDs []int
 	devIDRange := strings.Split(devices, minus)
 	if len(devIDRange) != ascendEnvPart {
 		hwlog.RunLog.Errorf(envErrDescribe(containerID, "range", ascendDeviceInfo, nil))

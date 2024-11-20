@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef _LOGGER_H
+#define _LOGGER_H
 
 void Logger(const char *msg, int level, int screen);
 

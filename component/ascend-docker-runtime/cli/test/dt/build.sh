@@ -48,6 +48,8 @@ makepre()
       cp -rf ${CUR_DIR}/../../../mockcpp/* ${CUR_DIR}/Depend/mockcpp/
       cd ${CUR_DIR}/Depend/mockcpp
       sed -i '16s/SET(MOCKCPP_SRC_ROOT ${CMAKE_SOURCE_DIR})/SET(MOCKCPP_SRC_ROOT ${CMAKE_SOURCE_DIR}\/mockcpp)/' ./src/CMakeLists.txt
+      cmake .
+      make
       cd ${CUR_DIR}
     fi
 

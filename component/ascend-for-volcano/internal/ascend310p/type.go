@@ -31,24 +31,10 @@ type ascend310P struct {
 	base.NPUHandler
 	reHandle *rescheduling.ReScheduler
 	vHandle  *vnpu.VirtualNPU
-	// 300I duo support scheduler kinds.
-	Kind map[string]base.AscendHandler
-	// specific job use.
-	handle base.AscendHandler
 }
 
 const (
 	// PluginName ascend31P plugin name
 	PluginName    = util.NPU310PCardName
 	maxNodeNPUNum = 64
-	// Accelerator310Key accelerator key of 310
-	Accelerator310Key = "npu-310-strategy"
-	// Card310AcceleratorValue card value
-	Card310AcceleratorValue = "card"
-	// Chip310AcceleratorValue chip value
-	Chip310AcceleratorValue = "chip"
-	// DuoKeyLabel key and label for 300i duo
-	DuoKeyLabel = "duo"
-	// TrueStr true or false
-	TrueStr = "true"
 )

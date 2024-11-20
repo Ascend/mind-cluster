@@ -8,8 +8,6 @@ package v1
 type SuccessPolicy string
 
 const (
-	// SuccessPolicyDefault is the default policy of success
-	SuccessPolicyDefault SuccessPolicy = ""
-	// SuccessPolicyAllWorkers is the 'ALLWorkers' policy of success
+	SuccessPolicyDefault    SuccessPolicy = ""
 	SuccessPolicyAllWorkers SuccessPolicy = "AllWorkers"
 )

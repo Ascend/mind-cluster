@@ -139,7 +139,6 @@ function copy_file_output()
     RUN_PKG_NAME="${PACKAGENAME}_${VERSION}_linux-${CPUARCH}.run"
     DATE=$(date -u "+%Y-%m-%d")
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
-    /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
     bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
     --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ascend-docker-runtime ./run_main.sh
     mv ${RUN_PKG_NAME} ${OUTPUT}

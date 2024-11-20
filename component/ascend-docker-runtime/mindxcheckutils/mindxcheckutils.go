@@ -21,8 +21,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 )
 
 const (
@@ -42,7 +40,6 @@ const (
 	backupLogFileMode os.FileMode = 0400
 	runLogFileMode    os.FileMode = 0750
 	maxFileNum                    = 32
-	getStatErr                    = "failed to get file stat, error: %v"
 )
 
 var logPrefix = ""
@@ -54,22 +51,18 @@ func RealFileChecker(path string, checkParent, allowLink bool, size int) (string
 	}
 	_, err := FileChecker(path, false, checkParent, allowLink, 0)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to check files, error: %v", err)
 		return notValidPath, err
 	}
 	realPath, err := filepath.Abs(path)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get absolute path, error: %v", err)
 		return notValidPath, err
 	}
 	realPath, err = filepath.EvalSymlinks(realPath)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get real path, error: %v", err)
 		return notValidPath, err
 	}
 	fileInfo, err := os.Stat(realPath)
 	if err != nil {
-		hwlog.RunLog.Errorf(getStatErr, err)
 		return notValidPath, err
 	}
 	if !fileInfo.Mode().IsRegular() {
@@ -91,22 +84,18 @@ func RealDirChecker(path string, checkParent, allowLink bool) (string, error) {
 	}
 	_, err := FileChecker(path, true, checkParent, allowLink, 0)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to check files, error: %v", err)
 		return notValidPath, err
 	}
 	realPath, err := filepath.Abs(path)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get absolute path, error: %v", err)
 		return notValidPath, err
 	}
 	realPath, err = filepath.EvalSymlinks(realPath)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get real path, error: %v", err)
 		return notValidPath, err
 	}
 	fileInfo, err := os.Stat(realPath)
 	if err != nil {
-		hwlog.RunLog.Errorf(getStatErr, err)
 		return notValidPath, err
 	}
 	if !fileInfo.IsDir() {
@@ -169,7 +158,6 @@ func normalFileCheck(filePath string, allowDir bool, allowLink bool) (os.FileInf
 	}
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		hwlog.RunLog.Errorf(getStatErr, err)
 		return nil, false, fmt.Errorf("get file stat failed %v", err)
 	}
 	if allowDir {
@@ -237,6 +225,7 @@ func StringChecker(text string, minLength, maxLength int, whiteList string) bool
 // ChangeRuntimeLogMode change log mode
 func ChangeRuntimeLogMode(runLog string) error {
 	runLogDirLen := len(runLogDir)
+	var logMode os.FileMode
 	counter := 0
 	err := filepath.Walk(runLogDir, func(fileOrPath string, fileInfo os.FileInfo, err error) error {
 		counter += 1
@@ -244,24 +233,23 @@ func ChangeRuntimeLogMode(runLog string) error {
 			return fmt.Errorf("the counter file is over maxFileNum")
 		}
 		if err != nil {
-			hwlog.RunLog.Errorf("prevent panic by handling failure accessing a path %q: %v", fileOrPath, err)
+			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", fileOrPath, err)
 			return err
 		}
 		hasLogPrefix := strings.HasPrefix(fileOrPath[runLogDirLen:], runLog)
 		if !hasLogPrefix {
 			return nil
 		}
+		logMode = backupLogFileMode
 		if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 			return fmt.Errorf("the file or path is symlink")
 		}
-		if errChmod := os.Chmod(fileOrPath, backupLogFileMode); errChmod != nil {
-			hwlog.RunLog.Errorf("set file mode %s failed, error: %v", fileOrPath, err)
+		if errChmod := os.Chmod(fileOrPath, logMode); errChmod != nil {
 			return fmt.Errorf("set file mode %s failed", fileOrPath)
 		}
 		return nil
 	})
 	if err != nil {
-		hwlog.RunLog.Warnf("change runtime log mode failed, error: %v", err)
 		return nil
 	}
 	return nil

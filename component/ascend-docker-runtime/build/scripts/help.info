@@ -8,10 +8,3 @@
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
   --version                     Query Ascend-docker-runtime version
-  --install-scene=<scene>       Installation scenario, only docker or containerd
-                                (eg: --install-scene=docker, default: docker)
-  --config-file-path            Specifies the path of the Docker or containerd configuration file
-                                (eg: --config-file-path=/etc/containerd/config.toml).
-                                If this parameter is not specified, the default configuration file path
-                                of docker or containerd is used. For docker, the path is /etc/docker/daemon.json.
-                                For containerd, the path is /etc/containerd/config.toml.

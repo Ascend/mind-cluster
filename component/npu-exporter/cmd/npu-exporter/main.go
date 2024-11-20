@@ -34,13 +34,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"huawei.com/npu-exporter/v6/collector"
-	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/limiter"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
-	"huawei.com/npu-exporter/v6/versions"
+	"huawei.com/npu-exporter/v5/collector"
+	"huawei.com/npu-exporter/v5/collector/container"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/limiter"
+	_ "huawei.com/npu-exporter/v5/plugins/inputs/npu"
+	"huawei.com/npu-exporter/v5/versions"
 )
 
 var (
@@ -57,7 +56,6 @@ var (
 	limitIPConn    int
 	limitTotalConn int
 	cacheSize      int
-	profilingTime  int
 	pollInterval   time.Duration
 )
 
@@ -81,18 +79,16 @@ const (
 	maxIPConnLimit         = 128
 	maxConcurrency         = 512
 	defaultConnection      = 20
-	maxProfilingTime       = 2000
 	defaultShutDownTimeout = 30 * time.Second
 )
 
 const (
-	prometheusPlatform   = "Prometheus"
-	telegrafPlatform     = "Telegraf"
-	pollIntervalStr      = "poll_interval"
-	maxTelegrafParamLen  = 2
-	minTelegrafParamLen  = 1
-	maxLogLineLength     = 1024
-	defaultProfilingTime = 200
+	prometheusPlatform  = "Prometheus"
+	telegrafPlatform    = "Telegraf"
+	pollIntervalStr     = "poll_interval"
+	maxTelegrafParamLen = 2
+	minTelegrafParamLen = 1
+	maxLogLineLength    = 1024
 )
 
 var hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, ExpiredTime: hwlog.DefaultExpiredTime,
@@ -112,7 +108,7 @@ func main() {
 		telegrafProcess()
 	default:
 		fmt.Fprintf(os.Stderr, "err platform input")
-		return
+		os.Exit(1)
 	}
 }
 
@@ -219,9 +215,6 @@ func paramValidInPrometheus() error {
 	if concurrency < 1 || concurrency > maxConcurrency {
 		return errors.New("concurrency is invalid")
 	}
-	if profilingTime < 1 || profilingTime > maxProfilingTime {
-		return errors.New("profilingTime range error")
-	}
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
 		return fmt.Errorf("%s is not support this scene", pollIntervalStr)
@@ -284,8 +277,6 @@ func init() {
 	flag.DurationVar(&pollInterval, pollIntervalStr, 1*time.Second,
 		"how often to send metrics when use Telegraf plugin, "+
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
-	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
-		"config pcie bandwidth profiling time, range is [1, 2000]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -316,44 +307,36 @@ func prometheusProcess() {
 	if err := initHwLogger(); err != nil {
 		return
 	}
-	hwlog.RunLog.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
 	if err := paramValidInPrometheus(); err != nil {
 		hwlog.RunLog.Error(err)
 		return
 	}
-	common.SetExternalParams(profilingTime)
+
 	deviceParser := container.MakeDevicesParser(readCntMonitoringFlags())
 	c := collector.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second,
 		deviceParser)
+
+	hwlog.RunLog.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(c)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		collector.Start(ctx, cancel, c)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		startServe(ctx, cancel, reg)
-	}()
-	wg.Wait()
-}
-
-func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
 	http.Handle("/", http.HandlerFunc(indexHandler))
 	conf := initConfig()
 	s, limitLs := newServerAndListener(conf)
 	if s == nil || limitLs == nil {
-		cancel()
 		return
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
+		defer wg.Done()
+		collector.Start(ctx, cancel, c)
+	}()
+	go func() {
+		defer wg.Done()
 		hwlog.RunLog.Warn("enable unsafe http server")
 		if err := s.Serve(limitLs); err != nil {
 			hwlog.RunLog.Errorf("Http server error: %v and stopped", err)
@@ -371,6 +354,8 @@ func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.
 	if shutErr != nil {
 		hwlog.RunLog.Errorf("shutdown http server error: %v", shutErr)
 	}
+
+	wg.Wait()
 }
 
 func paramValidInTelegraf() error {
@@ -393,7 +378,7 @@ func paramValidInTelegraf() error {
 func telegrafProcess() {
 	if err := paramValidInTelegraf(); err != nil {
 		fmt.Fprintf(os.Stderr, "Err param: %s\n", err)
-		return
+		os.Exit(1)
 	}
 	// create the shim. This is what will run your plugins.
 	shim := shim.New()
@@ -406,12 +391,12 @@ func telegrafProcess() {
 	err := shim.LoadConfig(&configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Err loading input: %s\n", err)
-		return
+		os.Exit(1)
 	}
 
 	// run the input plugin(s) until stdin closes, or we receive a termination signal
 	if err := shim.Run(pollInterval); err != nil {
 		fmt.Fprintf(os.Stderr, "Err: %s\n", err)
-		return
+		os.Exit(1)
 	}
 }

@@ -17,13 +17,14 @@ package kubeclient
 
 import (
 	"context"
+	"errors"
 	"hash/fnv"
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -35,7 +36,6 @@ var (
 	podCache            = map[types.UID]*podInfo{}
 	lock                = sync.Mutex{}
 	nodeServerIp        string
-	serverUsageLabel    string
 	nodeDeviceInfoCache *common.NodeDeviceInfoCache
 )
 
@@ -43,6 +43,10 @@ type podInfo struct {
 	*v1.Pod
 	updateTime time.Time
 }
+
+const podDeleteOperator = "delete"
+const podAddOperator = "add"
+const podUpdateOperator = "update"
 
 const (
 	timeIntervalForCheckPod = 10 * time.Minute
@@ -52,6 +56,9 @@ const (
 
 // PodInformerInspector check pod in cache
 func (ki *ClientK8s) PodInformerInspector(ctx context.Context) {
+	if ki == nil {
+		return
+	}
 	hashVal := fnv.New32()
 	if _, err := hashVal.Write([]byte(ki.NodeName)); err != nil {
 		hwlog.RunLog.Errorf("failed to write nodeName to hash, err: %v", err)
@@ -77,7 +84,7 @@ func (ki *ClientK8s) checkPodInCache(ctx context.Context) {
 		}
 		pod, err := ki.getPod(ctx, pi.Namespace, pi.Name)
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if k8serr.IsNotFound(err) {
 				hwlog.RunLog.Infof("delete pod(%s/%s) from cache", pi.Namespace, pi.Name)
 				needDelete = append(needDelete, uid)
 				continue
@@ -105,7 +112,7 @@ func (ki *ClientK8s) getPod(ctx context.Context, namespace, name string) (*v1.Po
 }
 
 // UpdatePodList update pod list by informer
-func UpdatePodList(oldObj, newObj interface{}, operator EventType) {
+func UpdatePodList(oldObj, newObj interface{}, operator string) {
 	newPod, ok := newObj.(*v1.Pod)
 	if !ok {
 		return
@@ -113,13 +120,13 @@ func UpdatePodList(oldObj, newObj interface{}, operator EventType) {
 	lock.Lock()
 	defer lock.Unlock()
 	switch operator {
-	case EventTypeAdd, EventTypeUpdate:
+	case podAddOperator, podUpdateOperator:
 		hwlog.RunLog.Infof("pod(%s/%s) is %s to cache", newPod.Namespace, newPod.Name, operator)
 		podCache[newPod.UID] = &podInfo{
 			Pod:        newPod,
 			updateTime: time.Now(),
 		}
-	case EventTypeDelete:
+	case podDeleteOperator:
 		hwlog.RunLog.Infof("pod(%s/%s) is deleted from cache", newPod.Namespace, newPod.Name)
 		delete(podCache, newPod.UID)
 	default:
@@ -149,13 +156,16 @@ func (ki *ClientK8s) refreshPodList() {
 
 // GetAllPodListCache get pod list by field selector with cache,
 func (ki *ClientK8s) GetAllPodListCache() []v1.Pod {
+	if ki == nil {
+		return []v1.Pod{}
+	}
 	if ki.IsApiErr {
 		ki.refreshPodList()
 	}
-	pods := make([]v1.Pod, 0, len(podCache))
+
 	lock.Lock()
 	defer lock.Unlock()
-
+	pods := make([]v1.Pod, 0, len(podCache))
 	for _, pi := range podCache {
 		pods = append(pods, *pi.Pod)
 	}
@@ -164,12 +174,16 @@ func (ki *ClientK8s) GetAllPodListCache() []v1.Pod {
 
 // GetActivePodListCache is to get active pod list with cache
 func (ki *ClientK8s) GetActivePodListCache() []v1.Pod {
+	if ki == nil {
+		return []v1.Pod{}
+	}
 	if ki.IsApiErr {
 		ki.refreshPodList()
 	}
-	newPodList := make([]v1.Pod, 0, common.GeneralMapSize)
+
 	lock.Lock()
 	defer lock.Unlock()
+	newPodList := make([]v1.Pod, 0, common.GeneralMapSize)
 	for _, pi := range podCache {
 		if err := common.CheckPodNameAndSpace(pi.GetName(), common.PodNameMaxLength); err != nil {
 			hwlog.RunLog.Warnf("pod name syntax illegal, err: %v", err)
@@ -184,12 +198,29 @@ func (ki *ClientK8s) GetActivePodListCache() []v1.Pod {
 		}
 		newPodList = append(newPodList, *pi.Pod)
 	}
-
 	return newPodList
+}
+
+// GetPodCache get pod by namespace and name with cache
+func (ki *ClientK8s) GetPodCache(namespace, name string) v1.Pod {
+	if ki == nil {
+		return v1.Pod{}
+	}
+	lock.Lock()
+	defer lock.Unlock()
+	for _, p := range podCache {
+		if p.Namespace == namespace && p.Name == name {
+			return *p.Pod
+		}
+	}
+	return v1.Pod{}
 }
 
 // GetNodeServerIDCache Get Node Server ID with cache
 func (ki *ClientK8s) GetNodeServerIDCache() (string, error) {
+	if ki == nil {
+		return "", errors.New("client is nil")
+	}
 	if nodeServerIp != "" {
 		return nodeServerIp, nil
 	}
@@ -201,48 +232,31 @@ func (ki *ClientK8s) GetNodeServerIDCache() (string, error) {
 	return serverID, nil
 }
 
-// GetServerUsageLabelCache get node label:server-usage, and cache it in memory, if label updated, restart is required
-// if server-usage label is set return the value of label
-// if server-usage label is not set return 'unknown'
-func (ki *ClientK8s) GetServerUsageLabelCache() (string, error) {
-	if serverUsageLabel != "" {
-		hwlog.RunLog.Debugf("get node server usage label from cache,label:%s", serverUsageLabel)
-		return serverUsageLabel, nil
-	}
-	node, err := ki.GetNode()
-	if err != nil {
-		return "", err
-	}
-	label, ok := node.Labels[common.ServerUsageLabelKey]
-	if !ok {
-		serverUsageLabel = "unknown"
-		hwlog.RunLog.Errorf("failed to get server-usage label")
-		return "unknown", nil
-	}
-	serverUsageLabel = label
-	hwlog.RunLog.Debugf("update node server usage label ,label:%s", serverUsageLabel)
-	return serverUsageLabel, nil
-}
-
 // GetDeviceInfoCMCache get device info configMap with cache
 func (ki *ClientK8s) GetDeviceInfoCMCache() *common.NodeDeviceInfoCache {
+	if ki == nil {
+		return nil
+	}
 	return nodeDeviceInfoCache
 }
 
 // WriteDeviceInfoDataIntoCMCache write deviceinfo into config map with cache
-func (ki *ClientK8s) WriteDeviceInfoDataIntoCMCache(deviceInfo map[string]string, manuallySeparateNPU string,
-	switchInfo common.SwitchFaultInfo, superPodID, serverIndex int32) error {
-	newNodeDeviceInfoCache, err := ki.WriteDeviceInfoDataIntoCM(deviceInfo, manuallySeparateNPU, switchInfo,
-		superPodID, serverIndex)
+func (ki *ClientK8s) WriteDeviceInfoDataIntoCMCache(deviceInfo map[string]string, manuallySeparateNPU string) error {
+	if ki == nil {
+		return nil
+	}
+	newNodeDeviceInfoCache, err := ki.WriteDeviceInfoDataIntoCM(deviceInfo, manuallySeparateNPU)
 	if err != nil {
 		return err
 	}
-
 	nodeDeviceInfoCache = newNodeDeviceInfoCache
 	return nil
 }
 
 // SetNodeDeviceInfoCache set device info cache
 func (ki *ClientK8s) SetNodeDeviceInfoCache(deviceInfoCache *common.NodeDeviceInfoCache) {
+	if ki == nil {
+		return
+	}
 	nodeDeviceInfoCache = deviceInfoCache
 }

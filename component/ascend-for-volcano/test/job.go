@@ -122,12 +122,10 @@ func SetFakeJobResRequest(fJob *api.JobInfo, name v1.ResourceName, need string) 
 	if fJob.Tasks == nil || len(fJob.Tasks) == 0 {
 		return
 	}
-	total := resource.Quantity{}
 	for _, task := range fJob.Tasks {
 		task.Resreq = api.NewResource(resources)
-		total.Add(resource.MustParse(need))
+		fJob.PodGroup.Spec.MinResources = &v1.ResourceList{name: resource.MustParse(need)}
 	}
-	fJob.PodGroup.Spec.MinResources = &v1.ResourceList{name: total}
 }
 
 // SetFakeNPUJobStatusPending set job and it's tasks to pending status.

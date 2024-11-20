@@ -24,7 +24,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -56,12 +56,6 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
 			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910c2: "Ascend910-2c-180-3"}}},
 	}
-)
-
-const (
-	mockPerfDumpPath       = "/root/a"
-	mockPerfDumpConfig     = "step:true,time=4"
-	slowNodeStepTimeEnvNum = 2
 )
 
 func init() {
@@ -205,8 +199,6 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request physical device exist", func() {
-			mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
-			defer mockSlowNodeFunc.Reset()
 			ps.deepCopyDevice(devices)
 			deviceID := "1"
 			requests.ContainerRequests = []*v1beta1.
@@ -242,8 +234,6 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device exist", func() {
-			mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
-			defer mockSlowNodeFunc.Reset()
 			deviceID := "100"
 			ps := NewPluginServer(common.Ascend910c2, devices, nil, nil)
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2,
@@ -357,8 +347,6 @@ func TestAllocateWithVolcano3(t *testing.T) {
 				return nil
 			})
 		defer mockTryUpdatePodAnnotation.Reset()
-		mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
-		defer mockSlowNodeFunc.Reset()
 		convey.Convey("with volcano GetDeviceListID failed", func() {
 			mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
 				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
@@ -388,21 +376,6 @@ func TestAllocateWithVolcano3(t *testing.T) {
 			convey.So(len(realAllocate), convey.ShouldEqual, 1)
 			convey.So(realAllocate[0], convey.ShouldEqual, "Ascend910-1")
 		})
-	})
-}
-
-// TestSetSlowNodeNoticeEnv
-func TestSetSlowNodeNoticeEnv(t *testing.T) {
-	ps := NewPluginServer(common.Ascend910, devices, []string{common.HiAIManagerDevice},
-		device.NewHwAscend910Manager())
-	convey.Convey("test environment variable", t, func() {
-		mockGetCM := mockGetCM()
-		defer mockGetCM.Reset()
-		resp := v1beta1.ContainerAllocateResponse{}
-		resp.Envs = make(map[string]string, slowNodeStepTimeEnvNum)
-		ps.SetSlowNodeNoticeEnv(&resp)
-		convey.So(resp.Envs[common.PerfDumpPathEnv], convey.ShouldEqual, mockPerfDumpPath)
-		convey.So(resp.Envs[common.PerfDumpConfigEnv], convey.ShouldEqual, mockPerfDumpConfig)
 	})
 }
 
@@ -438,8 +411,8 @@ func TestDestroyNotUsedVNPU(t *testing.T) {
 			return nil
 		})
 	mockAllocateDev := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "GetKltAndRealAllocateDev",
-		func(_ *PluginServer, _ []v1.Pod) ([]*common.PodDeviceInfo, error) {
-			return []*common.PodDeviceInfo{}, nil
+		func(_ *PluginServer, _ []v1.Pod) ([]PodDeviceInfo, error) {
+			return []PodDeviceInfo{}, nil
 		})
 	mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodListCache",
 		func(_ *kubeclient.ClientK8s) []v1.Pod {
@@ -498,27 +471,4 @@ func getMockPodList() []v1.Pod {
 	return []v1.Pod{
 		getMockPod(),
 	}
-}
-
-func mockGetCM() *gomonkey.Patches {
-	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-		"GetConfigMap", func(_ *kubeclient.ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
-			nodeCMData := stepTimeCM{
-				Data: stepTimeData{
-					PerfDumpPath:   mockPerfDumpPath,
-					PerfDumpConfig: mockPerfDumpConfig,
-				},
-			}
-			return &v1.ConfigMap{Data: map[string]string{
-				common.SlowNodeNoticeCMName: string(common.MarshalData(nodeCMData)),
-			},
-			}, nil
-		})
-}
-
-func mockSetSlowNodeNoticeEnv() *gomonkey.Patches {
-	return gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)),
-		"SetSlowNodeNoticeEnv", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse) {
-			return
-		})
 }

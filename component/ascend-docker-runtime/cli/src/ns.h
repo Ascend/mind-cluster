@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_H
-#define NS_H
+#ifndef _NS_H
+#define _NS_H
 
 #include <sys/types.h>
 

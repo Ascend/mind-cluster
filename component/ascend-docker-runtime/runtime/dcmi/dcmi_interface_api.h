@@ -28,143 +28,143 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-void *g_dcmiHandle;
+void *dcmiHandle;
 #define SO_NOT_FOUND  (-99999)
 #define FUNCTION_NOT_FOUND  (-99998)
 #define SUCCESS  (0)
 #define ERROR_UNKNOWN  (-99997)
 #define SO_NOT_CORRECT  (-99996)
-#define CALL_FUNC(name, ...) if (name == NULL) {return FUNCTION_NOT_FOUND;}return name(__VA_ARGS__)
+#define CALL_FUNC(name, ...) if (name##_func == NULL) {return FUNCTION_NOT_FOUND;}return name##_func(__VA_ARGS__)
 #define DCMI_VDEV_FOR_RESERVE (32)
 #define MAX_CHIP_NAME_LEN (32)
-struct DcmiCreateVdevOut {
-    unsigned int vdevId;
-    unsigned int pcieBus;
-    unsigned int pcieDevice;
-    unsigned int pcieFunc;
-    unsigned int vfgId;
+struct dcmi_create_vdev_out {
+    unsigned int vdev_id;
+    unsigned int pcie_bus;
+    unsigned int pcie_device;
+    unsigned int pcie_func;
+    unsigned int vfg_id;
     unsigned char reserved[DCMI_VDEV_FOR_RESERVE];
 };
-struct DcmiCreateVdevResStru {
-    unsigned int vdevId;
-    unsigned int vfgId;
-    char templateName[32];
+struct dcmi_create_vdev_res_stru {
+    unsigned int vdev_id;
+    unsigned int vfg_id;
+    char template_name[32];
     unsigned char reserved[64];
 };
 
-struct DcmiChipInfo {
-unsigned char chipType[MAX_CHIP_NAME_LEN];
-unsigned char chipName[MAX_CHIP_NAME_LEN];
-unsigned char chipVer[MAX_CHIP_NAME_LEN];
-unsigned int aicoreCnt;
+struct dcmi_chip_info {
+unsigned char chip_type[MAX_CHIP_NAME_LEN];
+unsigned char chip_name[MAX_CHIP_NAME_LEN];
+unsigned char chip_ver[MAX_CHIP_NAME_LEN];
+unsigned int aicore_cnt;
 };
 
 // dcmi
-int (*g_dcmiInitFunc)(void);
-static int DcmiInit(void)
+int (*dcmi_init_func)();
+int dcmi_init()
 {
-    CALL_FUNC(g_dcmiInitFunc);
+    CALL_FUNC(dcmi_init);
 }
 
-int (*g_dcmiGetCardNumListFunc)(int *cardNum, int *cardList, int listLength);
-static int DcmiGetCardNumList(int *cardNum, int *cardList, int listLength)
+int (*dcmi_get_card_num_list_func)(int *card_num, int *card_list, int list_length);
+int dcmi_get_card_num_list(int *card_num, int *card_list, int list_length)
 {
-    CALL_FUNC(g_dcmiGetCardNumListFunc, cardNum, cardList, listLength);
+    CALL_FUNC(dcmi_get_card_num_list, card_num, card_list, list_length);
 }
 
-int (*g_dcmiGetDeviceNumInCardFunc)(int cardId, int *deviceNum);
-static int DcmiGetDeviceNumInCard(int cardId, int *deviceNum)
+int (*dcmi_get_device_num_in_card_func)(int card_id, int *device_num);
+int dcmi_get_device_num_in_card(int card_id, int *device_num)
 {
-    CALL_FUNC(g_dcmiGetDeviceNumInCardFunc, cardId, deviceNum);
+    CALL_FUNC(dcmi_get_device_num_in_card, card_id, device_num);
 }
 
-int (*g_dcmiGetDeviceLogicIdFunc)(int *deviceLogicId, int cardId, int deviceId);
-static int DcmiGetDeviceLogicId(int *deviceLogicId, int cardId, int deviceId)
+int (*dcmi_get_device_logic_id_func)(int *device_logic_id, int card_id, int device_id);
+int dcmi_get_device_logic_id(int *device_logic_id, int card_id, int device_id)
 {
-    CALL_FUNC(g_dcmiGetDeviceLogicIdFunc, deviceLogicId, cardId, deviceId);
+    CALL_FUNC(dcmi_get_device_logic_id, device_logic_id, card_id, device_id);
 }
 
-int (*g_dcmiCreateVdeviceFunc)(int cardId, int deviceId,
-                               struct DcmiCreateVdevResStru *vdev,
-                               struct DcmiCreateVdevOut *out);
-static int DcmiCreateVdevice(int cardId, int deviceId,
-                      struct DcmiCreateVdevResStru *vdev,
-                      struct DcmiCreateVdevOut *out)
+int (*dcmi_create_vdevice_func)(int card_id, int device_id,
+                                struct dcmi_create_vdev_res_stru *vdev,
+                                struct dcmi_create_vdev_out *out);
+int dcmi_create_vdevice(int card_id, int device_id,
+                        struct dcmi_create_vdev_res_stru *vdev,
+                        struct dcmi_create_vdev_out *out)
 {
-    CALL_FUNC(g_dcmiCreateVdeviceFunc, cardId, deviceId, vdev, out);
+    CALL_FUNC(dcmi_create_vdevice, card_id, device_id, vdev, out);
 }
 
-int (*g_dcmiSetDestroyVdeviceFunc)(int cardId, int deviceId, unsigned int vDevid);
-static int DcmiSetDestroyVdevice(int cardId, int deviceId, unsigned int vDevid)
+int (*dcmi_set_destroy_vdevice_func)(int card_id, int device_id, unsigned int VDevid);
+int dcmi_set_destroy_vdevice(int card_id, int device_id, unsigned int VDevid)
 {
-    CALL_FUNC(g_dcmiSetDestroyVdeviceFunc, cardId, deviceId, vDevid);
+    CALL_FUNC(dcmi_set_destroy_vdevice, card_id, device_id, VDevid);
 }
 
-int (*g_dcmiGetDeviceLogicidFromPhyidFunc)(unsigned int phyid, unsigned int *logicid);
-static int DcmiGetDeviceLogicidFromPhyid(unsigned int phyid, unsigned int *logicid)
+int (*dcmi_get_device_logicid_from_phyid_func)(unsigned int phyid, unsigned int *logicid);
+int dcmi_get_device_logicid_from_phyid(unsigned int phyid, unsigned int *logicid)
 {
-    CALL_FUNC(g_dcmiGetDeviceLogicidFromPhyidFunc, phyid, logicid);
+    CALL_FUNC(dcmi_get_device_logicid_from_phyid, phyid, logicid);
 }
 
-int (*g_dcmiGetProductTypeFunc)(int cardId, int deviceId, char *productTypeStr, int bufSize);
-static int DcmiGetProductType(int cardId, int deviceId, char *productTypeStr, int bufSize)
+int (*dcmi_get_product_type_func)(int card_id, int device_id, char *product_type_str, int buf_size);
+int dcmi_get_product_type(int card_id, int device_id, char *product_type_str, int buf_size)
 {
-    CALL_FUNC(g_dcmiGetProductTypeFunc, cardId, deviceId, productTypeStr, bufSize);
+    CALL_FUNC(dcmi_get_product_type, card_id, device_id, product_type_str, buf_size);
 }
 
-int (*g_dcmiGetDeviceChipInfoFunc)(int cardId, int deviceId, struct DcmiChipInfo *chipInfo);
-static int DcmiGetDeviceChipInfo(int cardId, int deviceId, struct DcmiChipInfo *chipInfo)
+int (*dcmi_get_device_chip_info_func)(int card_id, int device_id, struct dcmi_chip_info *chip_info);
+int dcmi_get_device_chip_info(int card_id, int device_id, struct dcmi_chip_info *chip_info)
 {
-    CALL_FUNC(g_dcmiGetDeviceChipInfoFunc, cardId, deviceId, chipInfo);
+    CALL_FUNC(dcmi_get_device_chip_info, card_id, device_id, chip_info);
 }
 
 // load .so files and functions
-static int DcmiInitDl(char *dlPath)
+int dcmiInit_dl(char *dl_path)
 {
-    g_dcmiHandle = dlopen("libdcmi.so", RTLD_LAZY | RTLD_GLOBAL);
-    if (g_dcmiHandle == NULL) {
-        fprintf(stderr, "%s\n", dlerror());
+    dcmiHandle = dlopen("libdcmi.so", RTLD_LAZY | RTLD_GLOBAL);
+    if (dcmiHandle == NULL) {
+        fprintf (stderr, "%s\n", dlerror());
         return SO_NOT_FOUND;
     }
     struct link_map *pLinkMap;
-    int ret = dlinfo(g_dcmiHandle, RTLD_DI_LINKMAP, &pLinkMap);
+    int ret = dlinfo(dcmiHandle, RTLD_DI_LINKMAP, &pLinkMap);
     if (ret != 0) {
         fprintf(stderr, "dlinfo sofile failed :%s\n", dlerror());
         return SO_NOT_CORRECT;
     }
 
-    size_t pathSize = strlen(pLinkMap->l_name);
-    for (int i = 0; i < pathSize && i < PATH_MAX; i++) {
-        dlPath[i] = pLinkMap->l_name[i];
+    size_t path_size = strlen(pLinkMap->l_name);
+    for (int i = 0; i < path_size && i < PATH_MAX; i++) {
+        dl_path[i] = pLinkMap->l_name[i];
     }
 
-    g_dcmiInitFunc = dlsym(g_dcmiHandle, "dcmi_init");
+    dcmi_init_func = dlsym(dcmiHandle, "dcmi_init");
 
-    g_dcmiGetCardNumListFunc = dlsym(g_dcmiHandle, "dcmi_get_card_num_list");
+    dcmi_get_card_num_list_func = dlsym(dcmiHandle, "dcmi_get_card_num_list");
 
-    g_dcmiGetDeviceNumInCardFunc = dlsym(g_dcmiHandle, "dcmi_get_device_num_in_card");
+    dcmi_get_device_num_in_card_func = dlsym(dcmiHandle, "dcmi_get_device_num_in_card");
 
-    g_dcmiGetDeviceLogicIdFunc = dlsym(g_dcmiHandle, "dcmi_get_device_logic_id");
+    dcmi_get_device_logic_id_func = dlsym(dcmiHandle, "dcmi_get_device_logic_id");
 
-    g_dcmiCreateVdeviceFunc = dlsym(g_dcmiHandle, "dcmi_create_vdevice");
+    dcmi_create_vdevice_func = dlsym(dcmiHandle, "dcmi_create_vdevice");
 
-    g_dcmiSetDestroyVdeviceFunc = dlsym(g_dcmiHandle, "dcmi_set_destroy_vdevice");
+    dcmi_set_destroy_vdevice_func = dlsym(dcmiHandle, "dcmi_set_destroy_vdevice");
 
-    g_dcmiGetDeviceLogicidFromPhyidFunc = dlsym(g_dcmiHandle, "dcmi_get_device_logicid_from_phyid");
+    dcmi_get_device_logicid_from_phyid_func = dlsym(dcmiHandle, "dcmi_get_device_logicid_from_phyid");
 
-    g_dcmiGetProductTypeFunc = dlsym(g_dcmiHandle, "dcmi_get_product_type");
+    dcmi_get_product_type_func = dlsym(dcmiHandle, "dcmi_get_product_type");
 
-    g_dcmiGetDeviceChipInfoFunc = dlsym(g_dcmiHandle, "dcmi_get_device_chip_info");
+    dcmi_get_device_chip_info_func = dlsym(dcmiHandle, "dcmi_get_device_chip_info");
 
     return SUCCESS;
 }
 
-static int DcmiShutDown(void)
+int dcmiShutDown(void)
 {
-    if (g_dcmiHandle == NULL) {
+    if (dcmiHandle == NULL) {
         return SUCCESS;
     }
-    return ((dlclose(g_dcmiHandle) != SUCCESS) ? ERROR_UNKNOWN : SUCCESS);
+    return (dlclose(dcmiHandle) ? ERROR_UNKNOWN : SUCCESS);
 }
 
 #ifdef __cplusplus

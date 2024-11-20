@@ -26,7 +26,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -156,8 +156,7 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 				return nil, fmt.Errorf("test function errors")
 			})
 		defer mockGetCM.Reset()
-		_, err := utKubeClient.WriteDeviceInfoDataIntoCM(getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0),
-			"", common.SwitchFaultInfo{}, -1, -1)
+		_, err := utKubeClient.WriteDeviceInfoDataIntoCM(getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0), "")
 		convey.So(err, convey.ShouldEqual, nil)
 	})
 	convey.Convey("get write device info (cm) when get cm success", t, func() {
@@ -166,8 +165,7 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 				return updateCM, nil
 			})
 		defer mockGetCM.Reset()
-		_, err := utKubeClient.WriteDeviceInfoDataIntoCM(getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0),
-			"", common.SwitchFaultInfo{}, -1, -1)
+		_, err := utKubeClient.WriteDeviceInfoDataIntoCM(getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0), "")
 		convey.So(err, convey.ShouldEqual, nil)
 	})
 }
@@ -179,19 +177,23 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 		t.Fatal("TestTryUpdatePodAnnotation init kubernetes failed")
 	}
 	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
-	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
-		func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
+	mockUpdatePod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "UpdatePod",
+		func(_ *ClientK8s, _ *v1.Pod) (*v1.Pod, error) {
 			return nil, fmt.Errorf("test function errors")
 		})
-	defer mockPatchPod.Reset()
+	defer mockUpdatePod.Reset()
 	convey.Convey("try update pod annotation when get pod is nil", t, func() {
+		mockGetPod := mockGetPodOpr(v1.Pod{})
+		defer mockGetPod.Reset()
 		err := utKubeClient.TryUpdatePodAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
-		convey.So(err.Error(), convey.ShouldEqual, "patch pod annotation failed, exceeded max number of retries")
+		convey.So(err.Error(), convey.ShouldEqual, "update pod annotation failed")
 	})
 	convey.Convey("try update pod annotation when get pod is not nil", t, func() {
+		mockGetPod := mockGetPodOpr(*testPod)
+		defer mockGetPod.Reset()
 		err := utKubeClient.TryUpdatePodAnnotation(testPod,
 			getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
-		convey.So(err.Error(), convey.ShouldEqual, "patch pod annotation failed, exceeded max number of retries")
+		convey.So(err.Error(), convey.ShouldEqual, "update pod annotation failed")
 	})
 }
 
@@ -353,6 +355,14 @@ func mockCMOpr(updateCM *v1.ConfigMap) (*gomonkey.Patches, *gomonkey.Patches) {
 	return mockCreateCM, mockUpdateCM
 }
 
+func mockGetPodOpr(mockPod v1.Pod) *gomonkey.Patches {
+	mockGetPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetPodCache",
+		func(_ *ClientK8s, _, _ string) v1.Pod {
+			return mockPod
+		})
+	return mockGetPod
+}
+
 func resetMock(resetMockList ...*gomonkey.Patches) {
 	for _, resetMock := range resetMockList {
 		resetMock.Reset()
@@ -362,8 +372,7 @@ func resetMock(resetMockList ...*gomonkey.Patches) {
 func annotationResetMock(devErr, stateErr, nodeErr error) (*gomonkey.Patches, *gomonkey.Patches, *gomonkey.Patches) {
 	node := getMockNode(common.HuaweiAscend910, npuChip910PhyID0)
 	mockWrite := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "WriteDeviceInfoDataIntoCM",
-		func(_ *ClientK8s, _ map[string]string, _ string, _ common.SwitchFaultInfo, _, _ int32) (
-			*common.NodeDeviceInfoCache, error) {
+		func(_ *ClientK8s, _ map[string]string, _ string) (*common.NodeDeviceInfoCache, error) {
 			return nil, devErr
 		})
 	mockPatchNode := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchNodeState",

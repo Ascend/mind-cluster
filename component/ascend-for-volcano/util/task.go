@@ -69,11 +69,9 @@ type NPUTask struct {
 	ReqNPUName string
 	ReqNPUNum  int
 	// Selector the same as job.
-	Selector   map[string]string
-	Annotation map[string]string
-	Label      map[string]string
-	NodeName   string
-	PodStatus  v1.PodPhase
+	Selector map[string]string
+	Label    map[string]string
+	NodeName string
 	*VTask
 }
 
@@ -296,7 +294,7 @@ func (vt *VTask) setVTaskUseCardIDs() {
 		klog.V(LogErrorLev).Infof("%#v nil PhysicsName.", vt.Allocated)
 		return
 	}
-	ids := make([]int, 0)
+	var ids []int
 	for _, value := range vt.Allocated.PhysicsName {
 		// value like Ascend310P-2c-100-1_1
 		tmps := strings.Split(value, "-")
@@ -383,7 +381,6 @@ func (asTask *NPUTask) IsNPUTask() bool {
 	return strings.Contains(asTask.ReqNPUName, HwPreName)
 }
 
-// ReferenceNameOfTask get pod OwnerReferences name
 func ReferenceNameOfTask(task *api.TaskInfo) string {
 	if task != nil && task.Pod != nil && len(task.Pod.OwnerReferences) > 0 {
 		return task.Pod.OwnerReferences[0].Name

@@ -17,7 +17,7 @@
 
 set -e
 
-# BASE_VER only support v1.7.0 or v1.9.0
+# BASE_VER only support v1.4.0 or v1.7.0
 if [ ! -n "$1" ]; then
     BASE_VER=v1.7.0
 else
@@ -26,7 +26,7 @@ fi
 
 echo "Build Version is ${BASE_VER}"
 
-DEFAULT_VER='v6.0.RC3'
+DEFAULT_VER='v5.0.RC2'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
 BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
@@ -61,15 +61,6 @@ function clean() {
 
 function copy_yaml() {
     cp "${BASE_PATH}"/build/volcano-"${BASE_VER}".yaml "${BASE_PATH}"/output/
-}
-
-# fix the unconditional retry. All pod errors cause the podgroup to be deleted and cannot be rescheduled
-function replace_code() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
-    SEARCH_STRING="Ignore"
-    if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
-      sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
-      fi
 }
 
 function build() {
@@ -113,22 +104,9 @@ function build() {
     chmod 400 "${BASE_PATH}"/output/volcano-*.yaml
 }
 
-function replace_node_predicate() {
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-      return
-    fi
-    cd $BASE_PATH
-    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/huawei_npu.go"
-    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-    sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
-}
-
 function main() {
   clean
   copy_yaml
-  replace_code
-  replace_node_predicate
   build
 }
 

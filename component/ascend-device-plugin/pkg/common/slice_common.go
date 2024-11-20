@@ -18,7 +18,7 @@ package common
 import (
 	"strconv"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 )
 
 type int32Tool struct {
@@ -94,14 +94,6 @@ func (i int64Tool) ToHexString(sources []int64) string {
 		target = target + "," + strconv.FormatInt(source, Hex)
 	}
 	return target
-}
-
-// Abs return a absolute value between two int 64 value
-func (i int64Tool) Abs(var1, var2 int64) int64 {
-	if var1 > var2 {
-		return var1 - var2
-	}
-	return var2 - var1
 }
 
 // Index slice for string search the index with target

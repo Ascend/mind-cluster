@@ -2,8 +2,11 @@
 Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
-// Package v1 is using for reconcile AscendJob.
-package v1
+/*
+Package controllers is using for reconcile AscendJob.
+*/
+
+package controllers
 
 import (
 	"errors"
@@ -11,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -24,10 +26,6 @@ func (r *ASJobReconciler) setPodAnnotation(job *mindxdlv1.AscendJob, podTemplate
 
 func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate *corev1.PodTemplateSpec, rtype,
 	index string) error {
-	if podTemplate.Annotations == nil {
-		podTemplate.Annotations = make(map[string]string)
-	}
-
 	_, existMaster := job.Spec.ReplicaSpecs[mindxdlv1.PytorchReplicaTypeMaster]
 	_, existChief := job.Spec.ReplicaSpecs[mindxdlv1.TensorflowReplicaTypeChief]
 	if !existMaster && !existChief {
@@ -48,6 +46,5 @@ func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate
 	}
 
 	podTemplate.Annotations[rankIndexKey] = strconv.Itoa(rank)
-	hwlog.RunLog.Debugf("set rank index<%d> to pod<%s>", rank, podTemplate.Name)
 	return nil
 }

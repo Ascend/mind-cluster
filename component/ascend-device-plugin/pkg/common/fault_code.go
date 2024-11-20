@@ -1,4 +1,4 @@
-/* Copyright(C) 2023-2024. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -24,10 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/utils"
+	"huawei.com/npu-exporter/v5/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 const (
@@ -57,58 +58,37 @@ const (
 	CardNetworkUnhealthy = "CardNetworkUnhealthy"
 	// LinkDownFaultCode linkdown fault code
 	LinkDownFaultCode = 0x81078603
-	// ResetFinishFaultCode reset finish fault code
-	ResetFinishFaultCode = 0x8C2FA009
+	// LinkDownFaultCodeStr linkdown fault code string
+	LinkDownFaultCodeStr = "81078603"
+
 	// CardDropFaultCode card drop fault code
 	CardDropFaultCode = 0x40F84E00
 	// faultCodeFilePath load the path for fault code
 	faultCodeFilePath = "/usr/local/faultCode.json"
 	// faultCustomizationFilePath load the path for fault customization
 	faultCustomizationFilePath = "/usr/local/faultCustomization.json"
-	// switchFaultCodeFilePath is the path for switch fault code file
-	switchFaultCodeFilePath = "/usr/local/SwitchFaultCode.json"
-	// halfDivisor is the number of 2
-	halfDivisor = 2
-	// WaitNpuReadyTime is the time used in waiting for npu ready
-	WaitNpuReadyTime time.Duration = 30
-	// WaitErrorCodeCleanTime is the time used in waiting for clean error code
-	WaitErrorCodeCleanTime time.Duration = 30
-	// WaitProcessesToZeroTime is the time used in waiting for process to zero
-	WaitProcessesToZeroTime time.Duration = 60
-	// ResetInterVal is the interval time used in waiting for reset
-	ResetInterVal time.Duration = 5
-	// PollingInterval is used to poll the dcmi interface interval time
-	PollingInterval time.Duration = DefaultPollingInterval
-	// SubHealthFault subHealth code
-	SubHealthFault = "SubHealthFault"
 )
 
 var (
 	faultTypeCode FaultTypeCode
-	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
-	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L2-L3
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-	// SeparateFaultCodes contains all fault code that believed to be Separate, in this case is L4-L5
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
 	// initLogicIDs need init fault code device. add by train or inference
 	initLogicIDs []int32
 	// logicIDLock operate initLogicIDs lock
 	logicIDLock sync.Mutex
-	// recoverFaultMap recover fault event info cache
-	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
-	// recoverNetworkFaultMap network recover fault event info cache
-	recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+	// UseGetDeviceNetWorkHealthApi for indicating whether to use dcmi_get_device_network_health api
+	UseGetDeviceNetWorkHealthApi = true
+	// timeoutFaultInfoMap timeout event info cache
+	timeoutFaultInfoMap = make(map[int32][]common.DevFaultInfo, GeneralMapSize)
 	// recoverFaultFrequencyMap frequency fault info cache
 	recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+	// recoverFaultMap fault event info cache
+	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
 	// devFaultInfoMap save the subscribe interface return fault
 	devFaultInfoMap = make(map[int32][]common.DevFaultInfo, GeneralMapSize)
 	// devFaultInfoMapLock operate devFaultInfoMap lock
 	devFaultInfoMapLock sync.Mutex
 	// SubscribeFailed subscribe failed flag
 	SubscribeFailed bool
-	// SwitchSubscribeFailed indicate switch fault subscribe failed result, true is subscribe failed
-	SwitchSubscribeFailed bool
 	// Synchronize used for synchronizing the fault cache between the main process and the grace tolerance coroutines
 	Synchronize bool
 	// manuallySeparateNpuMapLock operate manuallySeparateNpuMap lock
@@ -117,35 +97,25 @@ var (
 	manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
 	// FaultTypeSet is a set that contains all the fault level
 	FaultTypeSet = sets.NewString(NotHandleFault, RestartRequest, RestartBusiness, FreeRestartNPU,
-		RestartNPU, PreSeparateNPU, SeparateNPU, ManuallySeparateNPU, SubHealthFault)
-	// FaultDurationTypeSet is a set that contains all the fault Duration level
-	FaultDurationTypeSet = sets.NewString(NotHandleFault, RestartRequest, RestartBusiness, FreeRestartNPU,
-		RestartNPU, PreSeparateNPU, SeparateNPU, SubHealthFault)
-	// NetworkFaultCodes is a set that contains all the network fault codes
-	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
+		RestartNPU, PreSeparateNPU, SeparateNPU, ManuallySeparateNPU)
 )
 
 // fault customization
 var (
-	// WaitProcessReadCMTime is the time used in waiting for process read cm
-	WaitProcessReadCMTime time.Duration = DefaultProcessReadCMTime
-	// WaitFaultSelfHealingTime for waiting for fault self-healing
-	WaitFaultSelfHealingTime time.Duration = DefaultWaitFaultSelfHealingTime
+	// WaitFlushingCMTime is the time used in waiting flushing reset info CM
+	WaitFlushingCMTime time.Duration = DefaultWaitFlushCMTime
 	// WaitDeviceResetTime is the time used in waiting device reset
 	WaitDeviceResetTime time.Duration = DefaultWaitDeviceResetTime
-	// faultFrequencyMap is the cache saving to occur frequency of a fault, key is event id
+	// faultFrequencyMap is the cache saving the occur frequency of a fault, key is event id
 	faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
 	// faultFrequencyMapLock is the lock of faultFrequencyMap
 	faultFrequencyMapLock sync.Mutex
-	// faultDurationMap is the cache saving to occur duration of a fault, key is event id
-	faultDurationMap = make(map[string]*FaultDurationCache, common.MaxErrorCodeCount)
-	// faultDurationMapLock is the lock of faultDurationMap
-	faultDurationMapLock           sync.Mutex
-	faultSeverityMap               = make(map[int64]int8, common.MaxErrorCodeCount)
-	parseHexFailedMsg              = "parse hex int failed and skip it, string: %s"
-	networkFaultConfigureFailedMsg = "%x is a network fault and cannot be configured to %s now, " +
-		"fault handling policy is set to NotHandleFault"
-	hbmTool = NewHbmFaultManager()
+	// LinkDownTimeoutCustomization is the customized timeout for link down event
+	LinkDownTimeoutCustomization = ParamOption.LinkdownTimeout
+	// LinkUpTimeoutCustomization is the customized timeout for link up event
+	LinkUpTimeoutCustomization = int64(DefaultLinkUpTimeout)
+
+	faultSeverityMap = make(map[int64]int8, common.MaxErrorCodeCount)
 )
 
 // ManuallyFaultInfo save the info of ManuallySeparateNPU
@@ -164,10 +134,9 @@ type FaultTypeCode struct {
 	FreeRestartNPUCodes        []int64
 	PreSeparateNPUCodes        []int64
 	SeparateNPUCodes           []int64
-	NotHandleFaultNetworkCodes []int64
-	PreSeparateNPUNetworkCodes []int64
-	SeparateNPUNetworkCodes    []int64
-	SubHealthFaultCodes        []int64
+	NotHandleFaultNetworkCodes []string
+	PreSeparateNPUNetworkCodes []string
+	SeparateNPUNetworkCodes    []string
 }
 
 // faultFileInfo fault code file data
@@ -182,16 +151,6 @@ type faultFileInfo struct {
 	NotHandleFaultNetworkCodes []string
 	PreSeparateNPUNetworkCodes []string
 	SeparateNPUNetworkCodes    []string
-	SubHealthFaultCodes        []string
-}
-
-// SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
-type SwitchFaultFileInfo struct {
-	NotHandleFaultCodes []string
-	ReportFaultCodes    []string
-	SubHealthFaultCodes []string
-	ResetFaultCodes     []string
-	SeparateFaultCodes  []string
 }
 
 // FaultCustomization is the customization info of fault
@@ -203,9 +162,8 @@ type FaultCustomization struct {
 
 // GraceToleranceCustomization is the customization info of grace tolerance
 type GraceToleranceCustomization struct {
-	WaitProcessReadCMTime    int64
-	WaitDeviceResetTime      int64
-	WaitFaultSelfHealingTime int64
+	WaitFlushingCMTime  int64
+	WaitDeviceResetTime int64
 }
 
 // FaultFrequencyCustomization is the customization info of fault frequency
@@ -234,21 +192,6 @@ type FaultDurationCustomization struct {
 	FaultDuration
 }
 
-// FaultDurationCache is the cache saving the FaultDuration
-type FaultDurationCache struct {
-	// key: logicID, value: fault duration data
-	Duration map[int32]FaultDurationData
-	FaultDuration
-}
-
-// FaultDurationData saved data during fault duration statistics
-type FaultDurationData struct {
-	TimeoutStatus            bool
-	FaultEventQueue          []common.DevFaultInfo
-	FaultDurationTime        int64
-	FaultRecoverDurationTime int64
-}
-
 // FaultDuration is the base info of fault duration
 type FaultDuration struct {
 	FaultTimeout   int64
@@ -256,102 +199,19 @@ type FaultDuration struct {
 	FaultHandling  string
 }
 
-type handleDurationInputPara struct {
-	logicID       int32
-	eventId       string
-	index         int
-	timeoutStatus bool
-	duration      int64
-}
-
 // DevFaultInfoBasedTimeAscend sort fault queue based on alarmRaisedTime in ascending order
 type DevFaultInfoBasedTimeAscend []common.DevFaultInfo
 
-// Len is a fixed usage to find the length of type
 func (devFault DevFaultInfoBasedTimeAscend) Len() int {
 	return len(devFault)
 }
 
-// Swap is a fixed usage to switch the index of type
 func (devFault DevFaultInfoBasedTimeAscend) Swap(i, j int) {
-	if i >= len(devFault) || j >= len(devFault) {
-		hwlog.RunLog.Errorf("index out of range, i: %d, j: %d, length: %d", i, j, len(devFault))
-		return
-	}
 	devFault[i], devFault[j] = devFault[j], devFault[i]
 }
 
-// Less is fixed usage to check if one is less than the other one of type
 func (devFault DevFaultInfoBasedTimeAscend) Less(i, j int) bool {
-	if i >= len(devFault) || j >= len(devFault) {
-		hwlog.RunLog.Errorf("index out of range, i: %d, j: %d, length: %d", i, j, len(devFault))
-		return false
-	}
 	return devFault[i].AlarmRaisedTime < devFault[j].AlarmRaisedTime
-}
-
-// HbmFaultManager manage the accompanying faults of aic error and hbm error
-type HbmFaultManager struct {
-	HbmOccurTimeCache map[int32]int64
-	AicFaultEventQue  map[int32][]common.DevFaultInfo
-}
-
-// NewHbmFaultManager return a hbm fault manager
-func NewHbmFaultManager() *HbmFaultManager {
-	return &HbmFaultManager{
-		HbmOccurTimeCache: make(map[int32]int64, GeneralMapSize),
-		AicFaultEventQue:  make(map[int32][]common.DevFaultInfo, GeneralMapSize),
-	}
-}
-
-func (h *HbmFaultManager) updateHbmOccurTime(faultInfo common.DevFaultInfo) {
-	h.HbmOccurTimeCache[faultInfo.LogicID] = faultInfo.AlarmRaisedTime
-	hwlog.RunLog.Debugf("hbm fault occur, device %d update occur time: %d",
-		faultInfo.LogicID, h.HbmOccurTimeCache[faultInfo.LogicID])
-}
-
-func (h *HbmFaultManager) aicFaultEventInQue(faultInfo common.DevFaultInfo) {
-	_, ok := h.AicFaultEventQue[faultInfo.LogicID]
-	if !ok {
-		h.AicFaultEventQue[faultInfo.LogicID] = []common.DevFaultInfo{}
-	}
-	h.AicFaultEventQue[faultInfo.LogicID] = append(h.AicFaultEventQue[faultInfo.LogicID], faultInfo)
-	sort.Sort(DevFaultInfoBasedTimeAscend(h.AicFaultEventQue[faultInfo.LogicID]))
-	hwlog.RunLog.Debugf("aic/aiv fault event %d in que, device %d new event que:%#v",
-		faultInfo.EventID, faultInfo.LogicID, h.AicFaultEventQue[faultInfo.LogicID])
-}
-
-func (h *HbmFaultManager) aicFaultEventOutQue(logicId int32) []common.DevFaultInfo {
-	faultInfoList := make([]common.DevFaultInfo, 0)
-	faultEventQue, ok := h.AicFaultEventQue[logicId]
-	if !ok {
-		return faultInfoList
-	}
-	if _, ok := h.HbmOccurTimeCache[logicId]; !ok {
-		h.HbmOccurTimeCache[logicId] = 0
-	}
-	newFaultEventQue := make([]common.DevFaultInfo, 0)
-	nowTime := time.Now().Unix()
-	for i := 0; i < len(faultEventQue); i++ {
-		// The fault aic error occurring ten seconds before and after the occurrence of hbm error should be deleted,
-		if Int64Tool.Abs(h.HbmOccurTimeCache[logicId], faultEventQue[i].AlarmRaisedTime) <
-			AssociatedFaultDiagnosisTime*TimeMilliseconds {
-			hwlog.RunLog.Infof("device %d delete event in fault event que, aic event time %d hbm event time %d",
-				logicId, faultEventQue[i].AlarmRaisedTime, h.HbmOccurTimeCache[logicId])
-			continue
-		}
-		// aic error should report if hbm error does not occur within ten seconds,
-		// and the event in this outbound queue should also be deleted
-		if nowTime-faultEventQue[i].AlarmRaisedTime > AssociatedFaultDiagnosisTime*TimeMilliseconds {
-			hwlog.RunLog.Infof("device % delete event in fault event que, aic event time %d now time %d",
-				logicId, faultEventQue[i].AlarmRaisedTime, nowTime)
-			faultInfoList = append(faultInfoList, faultEventQue[i])
-			continue
-		}
-		newFaultEventQue = append(newFaultEventQue, faultEventQue[i])
-	}
-	h.AicFaultEventQue[logicId] = newFaultEventQue
-	return faultInfoList
 }
 
 // LoadFaultCodeFromFile load fault code and fault type from faultCode.json
@@ -363,13 +223,32 @@ func LoadFaultCodeFromFile() error {
 	return LoadFaultCode(faultCodeBytes)
 }
 
-// LoadSwitchFaultCodeFromFile load fault code from SwitchFaultCode.json
-func LoadSwitchFaultCodeFromFile() error {
-	switchFaultsBytes, err := utils.LoadFile(switchFaultCodeFilePath)
-	if err != nil {
-		return fmt.Errorf("load switch fault code failed: %v", err)
+func LoadFaultCode(faultCodeBytes []byte) error {
+	var fileInfo faultFileInfo
+	if err := json.Unmarshal(faultCodeBytes, &fileInfo); err != nil {
+		return fmt.Errorf("unmarshal fault code byte failed: %v", err)
 	}
-	return LoadSwitchFaultCode(switchFaultsBytes)
+	faultTypeCode = FaultTypeCode{
+		NotHandleFaultCodes:        StringTool.HexStringToInt(fileInfo.NotHandleFaultCodes),
+		RestartRequestCodes:        StringTool.HexStringToInt(fileInfo.RestartRequestCodes),
+		RestartBusinessCodes:       StringTool.HexStringToInt(fileInfo.RestartBusinessCodes),
+		RestartNPUCodes:            StringTool.HexStringToInt(fileInfo.RestartNPUCodes),
+		FreeRestartNPUCodes:        StringTool.HexStringToInt(fileInfo.FreeRestartNPUCodes),
+		PreSeparateNPUCodes:        StringTool.HexStringToInt(fileInfo.PreSeparateNPUCodes),
+		SeparateNPUCodes:           StringTool.HexStringToInt(fileInfo.SeparateNPUCodes),
+		NotHandleFaultNetworkCodes: []string{},
+		PreSeparateNPUNetworkCodes: []string{LinkDownFaultCodeStr},
+		SeparateNPUNetworkCodes:    []string{},
+	}
+	return nil
+}
+
+// ResetFaultCustomization clears the cache
+func ResetFaultCustomization() {
+	hwlog.RunLog.Debug("reset fault customization, will clear cache")
+	faultFrequencyMapLock.Lock()
+	faultFrequencyMap = make(map[string]*FaultFrequencyCache, GeneralMapSize)
+	faultFrequencyMapLock.Unlock()
 }
 
 // LoadFaultCustomizationFromFile load fault customization from faultCustomization.json
@@ -384,96 +263,6 @@ func LoadFaultCustomizationFromFile() error {
 	return nil
 }
 
-// ResetFaultCustomizationCache reset fault customization cache
-func ResetFaultCustomizationCache() {
-	hwlog.RunLog.Debug("reset fault customization, fault customization cache will be cleared")
-	faultFrequencyMapLock.Lock()
-	faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
-	faultFrequencyMapLock.Unlock()
-	faultDurationMapLock.Lock()
-	faultDurationMap = make(map[string]*FaultDurationCache, common.MaxErrorCodeCount)
-	faultDurationMapLock.Unlock()
-}
-
-// LoadFaultCode loads the fault codes
-func LoadFaultCode(faultCodeBytes []byte) error {
-	var fileInfo faultFileInfo
-	if err := json.Unmarshal(faultCodeBytes, &fileInfo); err != nil {
-		return fmt.Errorf("unmarshal fault code byte failed: %v", err)
-	}
-	faultTypeCode = FaultTypeCode{
-		NotHandleFaultCodes:        StringTool.HexStringToInt(fileInfo.NotHandleFaultCodes),
-		RestartRequestCodes:        StringTool.HexStringToInt(fileInfo.RestartRequestCodes),
-		RestartBusinessCodes:       StringTool.HexStringToInt(fileInfo.RestartBusinessCodes),
-		RestartNPUCodes:            StringTool.HexStringToInt(fileInfo.RestartNPUCodes),
-		FreeRestartNPUCodes:        StringTool.HexStringToInt(fileInfo.FreeRestartNPUCodes),
-		PreSeparateNPUCodes:        StringTool.HexStringToInt(fileInfo.PreSeparateNPUCodes),
-		SeparateNPUCodes:           StringTool.HexStringToInt(fileInfo.SeparateNPUCodes),
-		NotHandleFaultNetworkCodes: StringTool.HexStringToInt(fileInfo.NotHandleFaultNetworkCodes),
-		PreSeparateNPUNetworkCodes: StringTool.HexStringToInt(fileInfo.PreSeparateNPUNetworkCodes),
-		SeparateNPUNetworkCodes:    StringTool.HexStringToInt(fileInfo.SeparateNPUNetworkCodes),
-		SubHealthFaultCodes:        StringTool.HexStringToInt(fileInfo.SubHealthFaultCodes),
-	}
-
-	// It is not clear whether the current network fault is separated from the chip fault. The network fault configured
-	// in chip fault is temporarily mapped to network processing policy for processing.
-	mappingChipFaultToNetworkFaultCodesSupport()
-	mappingChipFaultToNetworkFaultCodesNotSupport()
-
-	return nil
-}
-
-func mappingChipFaultToNetworkFaultCodesSupport() {
-	for _, faultCode := range faultTypeCode.NotHandleFaultCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			faultTypeCode.NotHandleFaultNetworkCodes = append(faultTypeCode.NotHandleFaultNetworkCodes, faultCode)
-		}
-	}
-
-	for _, faultCode := range faultTypeCode.PreSeparateNPUCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			faultTypeCode.PreSeparateNPUNetworkCodes = append(faultTypeCode.PreSeparateNPUNetworkCodes, faultCode)
-		}
-	}
-
-	for _, faultCode := range faultTypeCode.SeparateNPUCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			faultTypeCode.SeparateNPUNetworkCodes = append(faultTypeCode.SeparateNPUNetworkCodes, faultCode)
-		}
-	}
-}
-
-func mappingChipFaultToNetworkFaultCodesNotSupport() {
-	for _, faultCode := range faultTypeCode.RestartRequestCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			hwlog.RunLog.Warnf(networkFaultConfigureFailedMsg, faultCode, RestartRequest)
-			faultTypeCode.NotHandleFaultNetworkCodes = append(faultTypeCode.NotHandleFaultNetworkCodes, faultCode)
-		}
-	}
-
-	for _, faultCode := range faultTypeCode.RestartBusinessCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			hwlog.RunLog.Warnf(networkFaultConfigureFailedMsg, faultCode, RestartBusiness)
-			faultTypeCode.NotHandleFaultNetworkCodes = append(faultTypeCode.NotHandleFaultNetworkCodes, faultCode)
-		}
-	}
-
-	for _, faultCode := range faultTypeCode.RestartNPUCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			hwlog.RunLog.Warnf(networkFaultConfigureFailedMsg, faultCode, RestartNPU)
-			faultTypeCode.NotHandleFaultNetworkCodes = append(faultTypeCode.NotHandleFaultNetworkCodes, faultCode)
-		}
-	}
-
-	for _, faultCode := range faultTypeCode.FreeRestartNPUCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			hwlog.RunLog.Warnf(networkFaultConfigureFailedMsg, faultCode, FreeRestartNPU)
-			faultTypeCode.NotHandleFaultNetworkCodes = append(faultTypeCode.NotHandleFaultNetworkCodes, faultCode)
-		}
-	}
-}
-
-// LoadFaultCustomization loads fault customization
 func LoadFaultCustomization(faultCustomizationByte []byte) error {
 	var faultCustomization FaultCustomization
 	if err := json.Unmarshal(faultCustomizationByte, &faultCustomization); err != nil {
@@ -486,128 +275,55 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 	return nil
 }
 
-// LoadSwitchFaultCode Load SwitchFault Code from bytes of config file or configmap
-func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
-	var switchFileInfo SwitchFaultFileInfo
-	if err := json.Unmarshal(switchFaultCodeByte, &switchFileInfo); err != nil {
-		return fmt.Errorf("failed to unmarsha switch fault code, err: %s", err.Error())
-	}
-
-	NotHandleFaultCodes = make([]int64, 0, GeneralMapSize)
-	PreSeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-	SeparateFaultCodes = make([]int64, 0, GeneralMapSize)
-
-	for _, code := range switchFileInfo.NotHandleFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse NotHandleFaultCodes faultcode:%v", code)
-			continue
-		}
-		NotHandleFaultCodes = append(NotHandleFaultCodes, codeInt64)
-	}
-
-	switchFileInfo.ReportFaultCodes = append(switchFileInfo.ReportFaultCodes, switchFileInfo.SubHealthFaultCodes...)
-	for _, code := range switchFileInfo.ReportFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse PreSeparateFaultCodes:%v", code)
-			continue
-		}
-		PreSeparateFaultCodes = append(PreSeparateFaultCodes, codeInt64)
-	}
-
-	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
-	for _, code := range switchFileInfo.SeparateFaultCodes {
-		codeInt64, err := strconv.ParseInt(code, Hex, BitSize)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to parse SeparateFaultCodes:%v", code)
-			continue
-		}
-		SeparateFaultCodes = append(SeparateFaultCodes, codeInt64)
-	}
-
-	return nil
-}
-
 func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
-	handledEventId := make(sets.String, common.MaxErrorCodeCount)
 	for _, cus := range customization {
-		if !validateFaultDurationCustomization(cus) {
-			continue
-		}
 		for _, id := range cus.EventId {
-			id = strings.ToLower(id)
-			if handledEventId.Has(id) {
-				hwlog.RunLog.Warnf("duplicated event id detected when handling FaultDuration, skip, "+
-					"event id: %s", id)
+			if id != LinkDownFaultCodeStr {
+				hwlog.RunLog.Warnf("FaultDuration only support network fault(%s) now, skip event id %s",
+					LinkDownFaultCodeStr, id)
 				continue
 			}
-			handledEventId.Insert(id)
-			if cache, ok := faultDurationMap[id]; ok {
-				cache.FaultTimeout = cus.FaultTimeout
-				cache.RecoverTimeout = cus.RecoverTimeout
-				cache.FaultHandling = cus.FaultHandling
-				hwlog.RunLog.Debugf("update FaultDuration for event id %s success, FaultTimeout: %d, "+
-					"RecoverTimeout: %d, FaultHandling: %s", id, cus.FaultTimeout, cus.RecoverTimeout,
-					cus.FaultHandling)
+			if cus.FaultTimeout < MinLinkDownTimeout || cus.FaultTimeout > MaxLinkDownTimeout {
+				LinkDownTimeoutCustomization = ParamOption.LinkdownTimeout
+				hwlog.RunLog.Errorf("LinkDownTimeout exceed limit(%d-%d), use default(%d)",
+					MinLinkDownTimeout, MaxLinkDownTimeout, ParamOption.LinkdownTimeout)
 			} else {
-				faultDurationMap[id] = &FaultDurationCache{
-					Duration: make(map[int32]FaultDurationData, GeneralMapSize),
-					FaultDuration: FaultDuration{
-						FaultTimeout:   cus.FaultTimeout,
-						RecoverTimeout: cus.RecoverTimeout,
-						FaultHandling:  cus.FaultHandling,
-					},
-				}
-				hwlog.RunLog.Debugf("insert FaultDuration for event id %s success, FaultTimeout: %d, "+
-					"RecoverTimeout: %d, FaultHandling: %s", id, cus.FaultTimeout, cus.RecoverTimeout,
-					cus.FaultHandling)
+				LinkDownTimeoutCustomization = cus.FaultTimeout
+				hwlog.RunLog.Debugf("modify LinkDownTimeout success: %d", cus.FaultTimeout)
 			}
+			if cus.RecoverTimeout < MinLinkUpTimeout || cus.RecoverTimeout > MaxLinkUpTimeout {
+				LinkUpTimeoutCustomization = DefaultLinkUpTimeout
+				hwlog.RunLog.Errorf("LinkUpTimeout exceed limit(%d-%d), use default(%d)",
+					MinLinkUpTimeout, MaxLinkUpTimeout, DefaultLinkUpTimeout)
+			} else {
+				LinkUpTimeoutCustomization = cus.RecoverTimeout
+				hwlog.RunLog.Debugf("modify LinkUpTimeout success: %d", cus.RecoverTimeout)
+			}
+			return
 		}
 	}
-	// delete event id those in cache but not in CM
-	cachedEventIds := make([]string, 0, len(faultDurationMap))
-	for k := range faultDurationMap {
-		cachedEventIds = append(cachedEventIds, k)
-	}
-	for _, cachedId := range cachedEventIds {
-		if !handledEventId.Has(cachedId) && len(cachedId) != 0 {
-			delete(faultDurationMap, cachedId)
-			hwlog.RunLog.Infof("delete FaultDuration for event id %s", cachedId)
-		}
-	}
+	LinkUpTimeoutCustomization = DefaultLinkUpTimeout
+	LinkDownTimeoutCustomization = ParamOption.LinkdownTimeout
+	hwlog.RunLog.Infof("did not find network fault timeout customization, use default LinkDownTimeout: %d, "+
+		"LinkupTimeout: %d", ParamOption.LinkdownTimeout, DefaultLinkUpTimeout)
 }
 
 func loadGraceToleranceCustomization(customization GraceToleranceCustomization) {
-	if customization.WaitDeviceResetTime < MinWaitDeviceResetTime ||
-		customization.WaitDeviceResetTime > MaxWaitDeviceResetTime {
-		hwlog.RunLog.Errorf("WaitDeviceResetTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitDeviceResetTime, MinWaitDeviceResetTime,
-			MaxWaitDeviceResetTime, DefaultWaitDeviceResetTime)
+	if customization.WaitDeviceResetTime < MinWaitDeviceResetTime || customization.WaitDeviceResetTime > MaxWaitDeviceResetTime {
+		hwlog.RunLog.Errorf("WaitDeviceResetTime exceed limits(%d~%d), use default(%d)",
+			MinWaitDeviceResetTime, MaxWaitDeviceResetTime, DefaultWaitDeviceResetTime)
 		WaitDeviceResetTime = DefaultWaitDeviceResetTime
 	} else {
 		hwlog.RunLog.Debugf("modify WaitDeviceResetTime(%d) success", customization.WaitDeviceResetTime)
 		WaitDeviceResetTime = time.Duration(customization.WaitDeviceResetTime)
 	}
-	if customization.WaitProcessReadCMTime < MinWaitProcessReadCMTime || customization.
-		WaitProcessReadCMTime > MaxWaitProcessReadCMTime {
-		hwlog.RunLog.Errorf("WaitProcessReadCMTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitProcessReadCMTime, MinWaitProcessReadCMTime,
-			MaxWaitProcessReadCMTime, DefaultProcessReadCMTime)
-		WaitProcessReadCMTime = DefaultProcessReadCMTime
+	if customization.WaitFlushingCMTime < MinWaitFlushCMTime || customization.WaitFlushingCMTime > MaxWaitFlushCMTime {
+		hwlog.RunLog.Errorf("WaitProcessReadCMTime exceed limit(%d~%d), use default(%d)",
+			MinWaitFlushCMTime, MaxWaitFlushCMTime, DefaultWaitFlushCMTime)
+		WaitFlushingCMTime = DefaultWaitFlushCMTime
 	} else {
-		hwlog.RunLog.Debugf("modify WaitProcessReadCMTime(%d) success", customization.WaitProcessReadCMTime)
-		WaitProcessReadCMTime = time.Duration(customization.WaitProcessReadCMTime)
-	}
-	if customization.WaitFaultSelfHealingTime < MinWaitFaultSelfHealingTime ||
-		time.Duration(customization.WaitFaultSelfHealingTime) > MaxWaitFaultSelfHealingTime {
-		hwlog.RunLog.Errorf("WaitFaultSelfHealingTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitFaultSelfHealingTime,
-			MinWaitFaultSelfHealingTime, WaitProcessReadCMTime, DefaultWaitFaultSelfHealingTime)
-		WaitFaultSelfHealingTime = DefaultWaitFaultSelfHealingTime
-	} else {
-		hwlog.RunLog.Debugf("modify WaitFaultSelfHealingTime(%d) success", customization.WaitFaultSelfHealingTime)
-		WaitFaultSelfHealingTime = time.Duration(customization.WaitFaultSelfHealingTime)
+		hwlog.RunLog.Debugf("modify WaitProcessReadCMTime(%d) success", customization.WaitFlushingCMTime)
+		WaitFlushingCMTime = time.Duration(customization.WaitFlushingCMTime)
 	}
 }
 
@@ -622,8 +338,7 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 		for _, id := range cus.EventId {
 			id = strings.ToLower(id)
 			if handledEventId.Has(id) {
-				hwlog.RunLog.Warnf("duplicated event id detected when handling FaultFrequency, "+
-					"skip, event id: %s", id)
+				hwlog.RunLog.Warnf("duplicated event id detected when handling FaultFrequency, skip, id: %s", id)
 				continue
 			}
 			handledEventId.Insert(id)
@@ -683,58 +398,26 @@ func validateFaultFrequencyCustomization(customization FaultFrequencyCustomizati
 		hwlog.RunLog.Warnf("empty event id in this FaultFrequency, skip")
 		return false
 	}
-	invalidMsg := "FaultFrequency configuration of this part will be invalid"
 	if customization.TimeWindow > MaxFaultFrequencyTimeWindow || customization.TimeWindow < MinFaultFrequencyTimeWindow {
-		hwlog.RunLog.Warnf("EventIDs: %v, TimeWindow(%d) in this FaultFrequency exceeds limit(%d~%d). %s",
-			customization.EventId, customization.TimeWindow, MinFaultFrequencyTimeWindow, MaxFaultFrequencyTimeWindow,
-			invalidMsg)
+		hwlog.RunLog.Warnf("TimeWindow(%d) in this FaultFrequency exceeds limit(%d~%d), skip",
+			customization.TimeWindow, MinFaultFrequencyTimeWindow, MaxFaultFrequencyTimeWindow)
 		return false
 	}
 	if customization.Times > MaxFaultFrequencyTimes || customization.Times < MinFaultFrequencyTimes {
-		hwlog.RunLog.Warnf("EventIDs: %v, Times(%d) in this FaultFrequency exceeds limit(%d~%d). %s",
-			customization.EventId, customization.Times, MinFaultFrequencyTimes, MaxFaultFrequencyTimes, invalidMsg)
+		hwlog.RunLog.Warnf("Times(%d) in this FaultFrequency exceeds limit(%d~%d), skip",
+			customization.Times, MinFaultFrequencyTimes, MaxFaultFrequencyTimes)
 		return false
 	}
 	if !FaultTypeSet.Has(customization.FaultHandling) {
-		hwlog.RunLog.Warnf("EventIDs: %v, FaultHandling(%s) in this FaultFrequency is unrecognized. "+
-			"The supported range of FaultHandling in this FaultFrequency is %v. %s",
-			customization.EventId, customization.FaultHandling, FaultTypeSet.List(), invalidMsg)
-		return false
-	}
-	return true
-}
-
-func validateFaultDurationCustomization(faultDurationCustomization FaultDurationCustomization) bool {
-	if len(faultDurationCustomization.EventId) == 0 {
-		hwlog.RunLog.Warnf("empty event id in this FaultDuration, skip")
-		return false
-	}
-	invalidMsg := "FaultDuration configuration of this part will be invalid"
-	if faultDurationCustomization.FaultTimeout > MaxFaultTimeout ||
-		faultDurationCustomization.FaultTimeout < MinFaultTimeout {
-		hwlog.RunLog.Warnf("EventIDs: %v, FaultTimeout(%d) in this FaultDuration exceeds limit(%d~%d). %s",
-			faultDurationCustomization.EventId, faultDurationCustomization.FaultTimeout,
-			MinFaultTimeout, MaxFaultTimeout, invalidMsg)
-		return false
-	}
-	if faultDurationCustomization.RecoverTimeout > MaxRecoverTimeout ||
-		faultDurationCustomization.RecoverTimeout < MinRecoverTimeout {
-		hwlog.RunLog.Warnf("EventIDs: %v, RecoverTimeout(%d) in this FaultDuration exceeds limit(%d~%d). %s",
-			faultDurationCustomization.EventId, faultDurationCustomization.RecoverTimeout,
-			MinRecoverTimeout, MaxRecoverTimeout, invalidMsg)
-		return false
-	}
-	if !FaultDurationTypeSet.Has(faultDurationCustomization.FaultHandling) {
-		hwlog.RunLog.Warnf("EventIDs: %v, FaultHandling(%s) in this FaultDuration is unrecognized. "+
-			"The supported range of FaultHandling in this FaultDuration is %v. %s", faultDurationCustomization.EventId,
-			faultDurationCustomization.FaultHandling, FaultDurationTypeSet.List(), invalidMsg)
+		hwlog.RunLog.Warnf("FaultHandling(%s) in this FaultFrequency is unrecognized, skip",
+			customization.FaultHandling)
 		return false
 	}
 	return true
 }
 
 // GetNetworkFaultTypeByCode get network fault type by fault code. if code not record, default PreSeparateNPU
-func GetNetworkFaultTypeByCode(faultCodes []int64) string {
+func GetNetworkFaultTypeByCode(faultCodes []string) string {
 	if len(faultCodes) == 0 {
 		return NormalNetwork
 	}
@@ -744,11 +427,11 @@ func GetNetworkFaultTypeByCode(faultCodes []int64) string {
 		}
 	}
 	switch {
-	case Int64Tool.SameElement(faultTypeCode.SeparateNPUNetworkCodes, faultCodes):
+	case StringTool.SameElement(faultTypeCode.SeparateNPUNetworkCodes, faultCodes):
 		return SeparateNPU
-	case Int64Tool.SameElement(faultTypeCode.PreSeparateNPUNetworkCodes, faultCodes):
+	case StringTool.SameElement(faultTypeCode.PreSeparateNPUNetworkCodes, faultCodes):
 		return PreSeparateNPU
-	case Int64Tool.SameElement(faultTypeCode.NotHandleFaultNetworkCodes, faultCodes):
+	case StringTool.SameElement(faultTypeCode.NotHandleFaultNetworkCodes, faultCodes):
 		return NotHandleFault
 	default:
 		hwlog.RunLog.Debugf("not record fault code : %v, use default type PreSeparateNPU", faultCodes)
@@ -756,38 +439,14 @@ func GetNetworkFaultTypeByCode(faultCodes []int64) string {
 	}
 }
 
-// GetFaultType will return the fault type from fault codes,
-// fault frequency, fault duration and ManuallySeparateNPU cache
+// GetFaultType will return the fault type from fault codes, fault frequency and ManuallySeparateNPU cache
 func GetFaultType(faultCodes []int64, logicId int32) string {
-	newFaultCodes := make([]int64, 0)
-	for _, faultCode := range faultCodes {
-		if !NetworkFaultCodes.Has(faultCode) {
-			newFaultCodes = append(newFaultCodes, faultCode)
-		}
-	}
-
 	faultTypes := make([]string, 0, len(FaultTypeSet))
-	faultTypes = append(faultTypes, GetFaultTypeByCode(newFaultCodes))
+	faultTypes = append(faultTypes, GetFaultTypeByCode(faultCodes))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId))
-	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, ChipFaultMode))
 	if QueryManuallyFaultInfoByLogicID(logicId) {
 		faultTypes = append(faultTypes, ManuallySeparateNPU)
 	}
-	return getMostSeriousFaultType(faultTypes)
-}
-
-// GetNetworkFaultType will return the fault type from network fault codes, fault duration
-func GetNetworkFaultType(faultCodes []int64, logicId int32) string {
-	newNetworkFaultCodes := make([]int64, 0)
-	for _, faultCode := range faultCodes {
-		if NetworkFaultCodes.Has(faultCode) {
-			newNetworkFaultCodes = append(newNetworkFaultCodes, faultCode)
-		}
-	}
-
-	faultTypes := make([]string, 0, len(FaultTypeSet))
-	faultTypes = append(faultTypes, GetNetworkFaultTypeByCode(newNetworkFaultCodes))
-	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, NetworkFaultMode))
 	return getMostSeriousFaultType(faultTypes)
 }
 
@@ -811,8 +470,6 @@ func GetFaultTypeByCode(faultCodes []int64) string {
 		return RestartRequest
 	case Int64Tool.SameElement(faultTypeCode.NotHandleFaultCodes, faultCodes):
 		return NotHandleFault
-	case Int64Tool.SameElement(faultTypeCode.SubHealthFaultCodes, faultCodes):
-		return SubHealthFault
 	default:
 		faultType := getFaultTypeBySeverity(faultCodes)
 		hwlog.RunLog.Debugf("not record fault code: %v, get fault type by severity: %s", faultCodes, faultType)
@@ -859,44 +516,6 @@ func GetFaultTypeFromFaultFrequency(logicId int32) string {
 	return getMostSeriousFaultType(faultTypes)
 }
 
-// GetFaultTypeFromFaultDuration get fault type from fault duration cache
-func GetFaultTypeFromFaultDuration(logicId int32, mode string) string {
-	if mode != ChipFaultMode && mode != NetworkFaultMode {
-		return NormalNPU
-	}
-	faultDurationMapLock.Lock()
-	defer faultDurationMapLock.Unlock()
-
-	faultTypes := make([]string, 0, len(faultDurationMap))
-	for eventId, faultDurationCache := range faultDurationMap {
-		num, err := strconv.ParseInt(eventId, Hex, 0)
-		if err != nil {
-			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
-			continue
-		}
-
-		if (mode == ChipFaultMode && NetworkFaultCodes.Has(num)) ||
-			(mode == NetworkFaultMode && !NetworkFaultCodes.Has(num)) {
-			continue
-		}
-
-		faultDurationData, ok := faultDurationCache.Duration[logicId]
-		if !ok {
-			continue
-		}
-
-		if faultDurationData.TimeoutStatus {
-			hwlog.RunLog.Debugf("FaultDuration detected, event id: %s, logic id: %d, "+
-				"fault duration time: %.2f seconds, "+
-				"fault level: %s", eventId, logicId,
-				float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
-				faultDurationCache.FaultHandling)
-			faultTypes = append(faultTypes, faultDurationCache.FaultHandling)
-		}
-	}
-	return getMostSeriousFaultType(faultTypes)
-}
-
 func getFaultTypeBySeverity(faultCodes []int64) string {
 	for _, code := range faultCodes {
 		severity, ok := faultSeverityMap[code]
@@ -927,8 +546,6 @@ func getMostSeriousFaultType(fautTypes []string) string {
 		return RestartBusiness
 	} else if faultTypeSet.Has(RestartRequest) {
 		return RestartRequest
-	} else if faultTypeSet.Has(SubHealthFault) {
-		return SubHealthFault
 	} else if faultTypeSet.Has(NotHandleFault) {
 		return NotHandleFault
 	}
@@ -954,6 +571,24 @@ func GetAndCleanLogicID() []int32 {
 	return oldInitLogicIDs
 }
 
+// SetFaultCodes set fault codes, all fault code write operate should package into this file for safe
+func SetFaultCodes(device *NpuDevice, faultCodes []int64) {
+	if device == nil {
+		hwlog.RunLog.Error("param device is nil")
+		return
+	}
+	newFaultCodes := make([]int64, 0, common.MaxErrorCodeCount)
+	for _, faultCode := range faultCodes {
+		if faultCode == LinkDownFaultCode {
+			continue
+		}
+		newFaultCodes = append(newFaultCodes, faultCode)
+		insertFaultFrequency(device.LogicID, faultCode)
+	}
+	device.FaultCodes = newFaultCodes
+	setAlarmRaisedTime(device)
+}
+
 // setAlarmRaisedTime set `AlarmRaisedTime` by device fault code length
 func setAlarmRaisedTime(device *NpuDevice) {
 	if len(device.FaultCodes) == 0 {
@@ -963,30 +598,16 @@ func setAlarmRaisedTime(device *NpuDevice) {
 	}
 }
 
-// setNetworkAlarmRaisedTime set `NetworkAlarmRaisedTime` by device network fault code length
-func setNetworkAlarmRaisedTime(device *NpuDevice) {
-	if len(device.NetworkFaultCodes) == 0 {
-		device.NetworkAlarmRaisedTime = 0
-	} else if device.NetworkAlarmRaisedTime == 0 {
-		device.NetworkAlarmRaisedTime = time.Now().UnixMilli()
-	}
-}
-
 // SetNewFaultAndCacheOnceRecoverFault set new fault code and cache once recover fault
 func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
 	if device == nil {
-		hwlog.RunLog.Error("param device is nil in SetNewFaultAndCacheOnceRecoverFault")
+		hwlog.RunLog.Error("param device is nil")
 		return
 	}
-	newFaultInfos := faultInfos
-	if _, ok := faultDurationMap[HbmDoubleBitFaultCodeStr]; ok {
-		newFaultInfos = newFaultInfosForHBMErr(logicID, faultInfos)
-	}
-
 	// it must deal with two 'for', because the fault may recover one moment, in this case,
 	// the recover message and occur message both in faultInfos, this fault cannot be reports outside.
-	for _, faultInfo := range newFaultInfos {
-		if NetworkFaultCodes.Has(faultInfo.EventID) {
+	for _, faultInfo := range faultInfos {
+		if faultInfo.EventID == LinkDownFaultCode {
 			continue
 		}
 		if faultInfo.Assertion == common.FaultRecover {
@@ -1000,84 +621,19 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 			recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 		}
 	}
-	for _, faultInfo := range newFaultInfos {
-		if NetworkFaultCodes.Has(faultInfo.EventID) {
+	for _, faultInfo := range faultInfos {
+		if faultInfo.EventID == LinkDownFaultCode {
 			continue
 		}
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
-			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
-			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFaultFrequency(device.LogicID, faultInfo.EventID)
-			}
+			insertFaultFrequency(device.LogicID, faultInfo.EventID)
 		}
 	}
 	setAlarmRaisedTime(device)
 }
 
-// SetNetworkNewFaultAndCacheOnceRecoverFault set new network fault code and cache once recover network fault
-func SetNetworkNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
-	if device == nil {
-		hwlog.RunLog.Error("param device is nil in SetNetworkNewFaultAndCacheOnceRecoverFault")
-		return
-	}
-	// it must deal with two 'for', because the fault may recover one moment, in this case,
-	// the recover message and occur message both in faultInfos, this fault cannot be reports outside.
-	networkFaultRecoverAndFaultOnceHandle(logicID, faultInfos, device)
-	networkFaultOccurAndFaultOnceHandle(faultInfos, device)
-	setNetworkAlarmRaisedTime(device)
-}
-
-func newFaultInfosForHBMErr(logicID int32, faultInfos []common.DevFaultInfo) []common.DevFaultInfo {
-	var newFaultInfos []common.DevFaultInfo
-	// dealing with Hbm and Aic/Aiv associated faults
-	for i := 0; i < len(faultInfos); i++ {
-		if faultInfos[i].EventID == HbmDoubleBitFaultCode && faultInfos[i].Assertion != common.FaultRecover {
-			hbmTool.updateHbmOccurTime(faultInfos[i])
-		}
-		if faultInfos[i].EventID == AicBusFaultCode || faultInfos[i].EventID == AivBusFaultCode {
-			hbmTool.aicFaultEventInQue(faultInfos[i])
-			continue
-		}
-		newFaultInfos = append(newFaultInfos, faultInfos[i])
-	}
-	return append(newFaultInfos, hbmTool.aicFaultEventOutQue(logicID)...)
-}
-
-func networkFaultRecoverAndFaultOnceHandle(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
-	for _, faultInfo := range faultInfos {
-		if !NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
-		}
-		if faultInfo.Assertion == common.FaultRecover {
-			if Int64Tool.Index(device.NetworkFaultCodes, faultInfo.EventID) == -1 {
-				recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
-			} else {
-				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, faultInfo.EventID)
-			}
-		}
-		if faultInfo.Assertion == common.FaultOnce {
-			recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
-		}
-	}
-}
-
-func networkFaultOccurAndFaultOnceHandle(faultInfos []common.DevFaultInfo, device *NpuDevice) {
-	for _, faultInfo := range faultInfos {
-		if !NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
-		}
-		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
-			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
-			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFaultFrequency(device.LogicID, faultInfo.EventID)
-			}
-		}
-	}
-}
-
-// DelOnceRecoverFault delete func 'cacheAfterDelFaultCode' record fault code and network fault code in the end of cycle
+// DelOnceRecoverFault delete func 'cacheAfterDelFaultCode' record fault code in the end of cycle
 func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 	for _, devices := range groupDevice {
 		for _, device := range devices {
@@ -1086,16 +642,22 @@ func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, recoverFault)
 			}
 			setAlarmRaisedTime(device)
-
-			recoverNetworkFaults := recoverNetworkFaultMap[device.LogicID]
-			for _, recoverNetworkFault := range recoverNetworkFaults {
-				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, recoverNetworkFault)
-			}
-			setNetworkAlarmRaisedTime(device)
 		}
 	}
 	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
-	recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+}
+
+// SaveDevFaultInfo save device fault info , subscribe interface call back function
+func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
+	hwlog.RunLog.Infof("receive devFaultInfo: %v, hex code: %v", devFaultInfo,
+		strconv.FormatInt(devFaultInfo.EventID, Hex))
+	if devFaultInfo.EventID == 0 {
+		return
+	}
+	faultSeverityMap[devFaultInfo.EventID] = devFaultInfo.Severity
+	devFaultInfoMapLock.Lock()
+	devFaultInfoMap[devFaultInfo.LogicID] = append(devFaultInfoMap[devFaultInfo.LogicID], devFaultInfo)
+	devFaultInfoMapLock.Unlock()
 }
 
 // DelOnceFrequencyFault clear all the fault occurrence time in cache when frequency
@@ -1113,23 +675,6 @@ func DelOnceFrequencyFault() {
 	recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
 }
 
-// SaveDevFaultInfo save device fault info , subscribe interface call back function
-func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
-	hwlog.RunLog.Infof("receive devFaultInfo: %v, hex code: %v", devFaultInfo,
-		strconv.FormatInt(devFaultInfo.EventID, Hex))
-	if devFaultInfo.EventID == 0 {
-		return
-	}
-	if devFaultInfo.EventID == ResetFinishFaultCode {
-		SetDeviceInit(devFaultInfo.LogicID)
-		return
-	}
-	faultSeverityMap[devFaultInfo.EventID] = devFaultInfo.Severity
-	devFaultInfoMapLock.Lock()
-	devFaultInfoMap[devFaultInfo.LogicID] = append(devFaultInfoMap[devFaultInfo.LogicID], devFaultInfo)
-	devFaultInfoMapLock.Unlock()
-}
-
 // GetAndCleanFaultInfo get device fault info and clean cache
 func GetAndCleanFaultInfo() map[int32][]common.DevFaultInfo {
 	if len(devFaultInfoMap) == 0 {
@@ -1144,7 +689,7 @@ func GetAndCleanFaultInfo() map[int32][]common.DevFaultInfo {
 
 // SaveManuallyFaultInfo save manually fault info into manuallySeparateNpuMap
 func SaveManuallyFaultInfo(logicID int32) {
-	if logicID < MinLogicID || logicID > MaxLogicID {
+	if logicID < 0 || logicID > 15 {
 		hwlog.RunLog.Warnf("logic id %d is not valid, logic id must be in [0, 15]", logicID)
 		return
 	}
@@ -1156,13 +701,15 @@ func SaveManuallyFaultInfo(logicID int32) {
 	manuallySeparateNpuMapLock.Lock()
 	defer manuallySeparateNpuMapLock.Unlock()
 	manuallySeparateNpuMap[logicID] = manFaultInfo
-	hwlog.RunLog.Debugf("received manually fault info, manually separate npu logic id: %d, first handle: %v, "+
-		"manually separate device cache is: %v", manFaultInfo.LogicID, manFaultInfo.FirstHandle, manuallySeparateNpuMap)
+	displayTime := time.Unix(0, manFaultInfo.RecordTime*int64(time.Millisecond))
+	hwlog.RunLog.Infof("receive manually fault info: %v, manually separate device logic id: %v, record time: %v, "+
+		"manually separate device cache: %v",
+		manFaultInfo, manFaultInfo.LogicID, displayTime.Format("2006-01-02 15:04:05.000"), manuallySeparateNpuMap)
 }
 
 // QueryManuallyFaultInfoByLogicID query manually fault info based on logic id from manuallySeparateNpuMap
 func QueryManuallyFaultInfoByLogicID(logicID int32) bool {
-	if logicID < MinLogicID || logicID > MaxLogicID {
+	if logicID < 0 || logicID > 15 {
 		hwlog.RunLog.Warnf("logic id %d is invalid, logic id must be in [0, 15]", logicID)
 		return false
 	}
@@ -1173,8 +720,7 @@ func QueryManuallyFaultInfoByLogicID(logicID int32) bool {
 	return ok
 }
 
-// QueryManuallyFaultNPULogicIDsByHandleStatus query manually fault npu logic ids
-// based on handle status from manuallySeparateNpuMap
+// QueryManuallyFaultNPULogicIDsByHandleStatus query manually fault npu logic ids based on handle status from manuallySeparateNpuMap
 func QueryManuallyFaultNPULogicIDsByHandleStatus(handleStatus string) []int32 {
 	logicIDs := make([]int32, 0, GeneralMapSize)
 	if handleStatus != ManuallySeparateNpuFirstHandle && handleStatus != ManuallySeparateNpuHandled &&
@@ -1224,7 +770,7 @@ func SetManuallyFaultNPUHandled() {
 
 // DeleteManuallyFaultInfo delete manually fault info from manuallySeparateNpuMap
 func DeleteManuallyFaultInfo(logicID int32) {
-	if logicID < MinLogicID || logicID > MaxLogicID {
+	if logicID < 0 || logicID > 15 {
 		hwlog.RunLog.Warnf("logic id %d not valid, must be in [0, 15]", logicID)
 		return
 	}
@@ -1241,341 +787,233 @@ func DeleteManuallyFaultInfo(logicID int32) {
 	}
 }
 
-// CountFaultDuration used to calculate each fault duration
-func CountFaultDuration(device *NpuDevice, devFaultInfoMap map[int32][]common.DevFaultInfo) {
-	// Collect fault events from fault event queue cache to form the fault queue for duration statistics
-	collectEachFaultEvent(device.LogicID, devFaultInfoMap[device.LogicID])
-	faultDurationMapLock.Lock()
-	defer faultDurationMapLock.Unlock()
-
-	for eventId, _ := range faultDurationMap {
-		// Sort fault events in the fault queue in ascending order based on fault event AlarmRaisedTime
-		sortFaultEventsInAscendingOrder(device.LogicID, eventId)
-
-		// Merge consecutive fault events by fault event assertion in the fault queue
-		// and clear first event according to the fault status of the current fault code
-		cleanFaultQueue(device.LogicID, eventId)
-
-		// update the fault code timeout status, fault duration time, fault recover duration time
-		// and clear fault queue cache through timeout judgment and recovery judgment algorithm
-		handleFaultQueue(device.LogicID, eventId)
-	}
-}
-
-func collectEachFaultEvent(logicId int32, faultInfos []common.DevFaultInfo) {
-	faultDurationMapLock.Lock()
-	defer faultDurationMapLock.Unlock()
-
+// GetLinkdownLinkupFaultEvents get linkdown/linkup events from event subscription interface
+func GetLinkdownLinkupFaultEvents(logicID int32, faultInfos []common.DevFaultInfo) {
 	for _, faultInfo := range faultInfos {
-		eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
-		if _, ok := faultDurationMap[eventIdStr]; !ok {
-			continue
-		}
-
-		if faultDurationMap[eventIdStr].Duration == nil {
-			faultDurationMap[eventIdStr].Duration = make(map[int32]FaultDurationData, 0)
-		}
-
-		if _, ok := faultDurationMap[eventIdStr].Duration[logicId]; !ok {
-			faultDurationMap[eventIdStr].Duration[logicId] = FaultDurationData{
-				FaultEventQueue: []common.DevFaultInfo{}, // Initializing the slice
+		if faultInfo.EventID == LinkDownFaultCode {
+			if UseGetDeviceNetWorkHealthApi {
+				UseGetDeviceNetWorkHealthApi = false
+				hwlog.RunLog.Info("linkdown event exists in event subscription interface, " +
+					"dcmi_get_device_network_health api will not be used")
 			}
+			timeoutFaultInfoMap[logicID] = append(timeoutFaultInfoMap[logicID], faultInfo)
 		}
-		faultDurationData := faultDurationMap[eventIdStr].Duration[logicId]
-		faultDurationData.FaultEventQueue = append(faultDurationData.FaultEventQueue, faultInfo)
-		faultDurationMap[eventIdStr].Duration[logicId] = faultDurationData
 	}
 }
 
-func sortFaultEventsInAscendingOrder(logicID int32, eventId string) {
-	if _, ok := faultDurationMap[eventId]; !ok {
-		return
-	}
-	if _, ok := faultDurationMap[eventId].Duration[logicID]; !ok {
-		return
-	}
-
-	faultQueue := faultDurationMap[eventId].Duration[logicID].FaultEventQueue
-	sort.Sort(DevFaultInfoBasedTimeAscend(faultQueue))
-}
-
-func cleanFaultQueue(logicID int32, eventId string) {
-	if _, ok := faultDurationMap[eventId]; !ok {
-		return
-	}
-	if _, ok := faultDurationMap[eventId].Duration[logicID]; !ok {
-		return
+// GetCurrentDeviceNetWorkHealth Query the NPU network status at the current time
+func GetCurrentDeviceNetWorkHealth(logicID int32, deviceNetWorkHealth string) {
+	// If the NPU network is healthy, the network status is regarded as linkup
+	// If the NPU network is unhealthy, the network status is regarded as linkdown
+	var assertion int8
+	if deviceNetWorkHealth == v1beta1.Unhealthy {
+		assertion = common.FaultOccur
+	} else {
+		assertion = common.FaultRecover
 	}
 
-	faultDurationData := faultDurationMap[eventId].Duration[logicID]
-	mergeContinuousElementBasedAssertion(&faultDurationData.FaultEventQueue)
-	clearFirstEventBasedOnFaultStatus(&faultDurationData)
-	faultDurationMap[eventId].Duration[logicID] = faultDurationData
-	hwlog.RunLog.Debugf("NPU logic id: %d, %s fault timeout status: %v, fault queue after sort and merge: %v",
-		logicID, eventId, faultDurationMap[eventId].Duration[logicID].TimeoutStatus,
-		faultDurationMap[eventId].Duration[logicID].FaultEventQueue)
+	devFaultInfo := common.DevFaultInfo{
+		EventID:         LinkDownFaultCode,
+		LogicID:         logicID,
+		Assertion:       assertion,
+		AlarmRaisedTime: time.Now().UnixMilli(),
+	}
+	timeoutFaultInfoMap[logicID] = append(timeoutFaultInfoMap[logicID], devFaultInfo)
 }
 
 // mergeContinuousElementBasedAssertion merge continuous element based on assertion
 func mergeContinuousElementBasedAssertion(devFaultInfo *[]common.DevFaultInfo) {
-	if devFaultInfo == nil || len(*devFaultInfo) == 0 {
-		return
-	}
-
-	previousEvent := (*devFaultInfo)[0]
-	newDevFaultInfo := []common.DevFaultInfo{previousEvent}
 	for i := 1; i < len(*devFaultInfo); i++ {
 		currentEvent := (*devFaultInfo)[i]
+		previousEvent := (*devFaultInfo)[i-1]
+
 		if currentEvent.Assertion == previousEvent.Assertion {
-			continue
+			*devFaultInfo = append((*devFaultInfo)[:i], (*devFaultInfo)[i+1:]...)
+			i--
 		}
-		previousEvent = currentEvent
-		newDevFaultInfo = append(newDevFaultInfo, currentEvent)
-	}
-	*devFaultInfo = newDevFaultInfo
-}
-
-func clearFirstEventBasedOnFaultStatus(faultDurationData *FaultDurationData) {
-	// If the first fault event assertion is fault recover in fault queue when the fault status is healthy,
-	// clear the first fault event
-	if !faultDurationData.TimeoutStatus && len(faultDurationData.FaultEventQueue) > 0 &&
-		faultDurationData.FaultEventQueue[0].Assertion == common.FaultRecover {
-		faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[1:]
-	}
-
-	// If the first fault event assertion is fault occur in fault queue when the fault status is unhealthy,
-	// clear the first fault event
-	if faultDurationData.TimeoutStatus && len(faultDurationData.FaultEventQueue) > 0 &&
-		faultDurationData.FaultEventQueue[0].Assertion == common.FaultOccur {
-		faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[1:]
 	}
 }
 
-func handleFaultQueue(logicID int32, eventId string) {
-	if _, ok := faultDurationMap[eventId]; !ok {
+// SortMergeFaultQueue sort fault queue based on alarmRaisedTime and merge continuous element based on assertion
+func SortMergeFaultQueue(device *NpuDevice) {
+	if device == nil {
+		hwlog.RunLog.Error("param device is nil")
 		return
 	}
-	if _, ok := faultDurationMap[eventId].Duration[logicID]; !ok {
-		return
-	}
-	faultDurationData := faultDurationMap[eventId].Duration[logicID]
-	if len(faultDurationData.FaultEventQueue) == 0 {
-		hwlog.RunLog.Debugf("NPU logic id: %v, %v fault queue is empty, no need to handle fault queue",
-			logicID, eventId)
-		return
+	faultInfos := timeoutFaultInfoMap[device.LogicID]
+
+	sort.Sort(DevFaultInfoBasedTimeAscend(faultInfos))
+	mergeContinuousElementBasedAssertion(&faultInfos)
+	timeoutFaultInfoMap[device.LogicID] = faultInfos
+
+	// If the first element is linkup in fault queue when the NPU network is healthy, clear the first element
+	if device.NetworkRealHealth == v1beta1.Healthy && len(timeoutFaultInfoMap[device.LogicID]) > 0 &&
+		timeoutFaultInfoMap[device.LogicID][0].Assertion == common.FaultRecover {
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][1:]
 	}
 
-	initTimeoutStatus := faultDurationData.TimeoutStatus
-	exitTag := false
-	for !exitTag {
-		faultDurationData = faultDurationMap[eventId].Duration[logicID]
-		exitTag = timeoutOrRecoveryAlgorithm(logicID, eventId, !faultDurationData.TimeoutStatus)
-	}
-	faultDurationData = faultDurationMap[eventId].Duration[logicID]
-	hwlog.RunLog.Debugf("NPU logic id: %v, after timeout or recovery algorithm handling, %v fault timeout "+
-		"status is %v, fault duration time is %.2f seconds, fault recover duration time is %.2f seconds, "+
-		"fault queue is %v", logicID, eventId, faultDurationData.TimeoutStatus,
-		float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
-		float64(faultDurationData.FaultRecoverDurationTime)/SecondMagnificationFloat,
-		faultDurationData.FaultEventQueue)
-
-	if initTimeoutStatus == false && faultDurationData.TimeoutStatus == true {
-		num, err := strconv.ParseInt(eventId, Hex, 0)
-		if err != nil {
-			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
-			return
-		}
-		insertFaultFrequency(logicID, num)
+	// If the first element is linkdown in fault queue when the NPU network is unhealthy, clear the first element
+	if device.NetworkRealHealth == v1beta1.Unhealthy && len(timeoutFaultInfoMap[device.LogicID]) > 0 &&
+		timeoutFaultInfoMap[device.LogicID][0].Assertion == common.FaultOccur {
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][1:]
 	}
 
-	var duration int64
-	if faultDurationData.TimeoutStatus {
-		duration = faultDurationData.FaultDurationTime
-	} else {
-		duration = faultDurationData.FaultRecoverDurationTime
-	}
-	if initTimeoutStatus != faultDurationData.TimeoutStatus {
-		hwlog.RunLog.Infof("NPU logic id: %v, after timeout or recovery algorithm handling, %v fault timeout "+
-			"status change, now fault timeout status set %v, duration time is %.2f seconds",
-			logicID, eventId, faultDurationData.TimeoutStatus, float64(duration)/SecondMagnificationFloat)
-	}
+	hwlog.RunLog.Debugf("NPU logic id: %v, network health status: %v, fault queue after sort and merge: %v",
+		device.LogicID, device.NetworkHealth, timeoutFaultInfoMap[device.LogicID])
 }
 
-func timeoutOrRecoveryAlgorithm(logicID int32, eventId string, timeoutStatus bool) bool {
-	process := getProcessInFaultDuration(timeoutStatus)
-	faultQueueLen := len(faultDurationMap[eventId].Duration[logicID].FaultEventQueue)
+func checkLinkdownTimeoutWhenNetworkHealth(device *NpuDevice, exitTag *bool) {
+	faultQueueLen := len(timeoutFaultInfoMap[device.LogicID])
 	if faultQueueLen == 0 {
-		hwlog.RunLog.Debugf("NPU logic id: %v, %v fault queue is empty, no need to do %v judgment", logicID,
-			eventId, process)
-		return true
+		hwlog.RunLog.Debugf("NPU logic id: %v, fault queue is empty, "+
+			"no need to check whether NPU linkdown timeout when NPU network is healthy", device.LogicID)
+		*exitTag = true
+		return
 	}
+
 	var i int
-	var duration int64
-	timeoutThreshold := getTimeoutThreshold(eventId, timeoutStatus)
-	faultTimeoutMsg := "NPU logic id: %v, in %v judgment, %v duration is %.2f seconds > %v seconds, %v fault " +
-		"timeout status set %v"
-	faultNotTimeoutMsg := "NPU logic id: %v, in %v judgment, %v duration is %.2f seconds <= %v seconds, %v " +
-		"fault timeout status %v doesn't need to change, continue to perform %v judgment"
-	for i = 0; i < faultQueueLen/halfDivisor; i++ {
-		faultDurationData := faultDurationMap[eventId].Duration[logicID]
-		duration = faultDurationData.FaultEventQueue[i*halfDivisor+1].AlarmRaisedTime -
-			faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
-		if duration <= timeoutThreshold*SecondMagnification {
+	for i = 0; i < faultQueueLen/2; i++ {
+		if timeoutFaultInfoMap[device.LogicID][i*2+1].AlarmRaisedTime-timeoutFaultInfoMap[device.LogicID][i*2].
+			AlarmRaisedTime <= LinkDownTimeoutCustomization*SecondMagnification {
 			continue
 		}
-		hwlog.RunLog.Debugf(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
-			timeoutThreshold, eventId, timeoutStatus)
-		return handleTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-			timeoutStatus: timeoutStatus, duration: duration})
+		device.NetworkRealHealth = v1beta1.Unhealthy
+		hwlog.RunLog.Debugf("in linkdown timeout checking, %v(linkup) - %v(linkdown) > %v, NPU %v "+
+			"network health set %v, fault queue: %v", timeoutFaultInfoMap[device.LogicID][i*2+1],
+			timeoutFaultInfoMap[device.LogicID][i*2], LinkDownTimeoutCustomization*SecondMagnification,
+			device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i+1:]
+		*exitTag = false
+		return
 	}
-	if i*halfDivisor+1 == faultQueueLen {
-		faultDurationData := faultDurationMap[eventId].Duration[logicID]
+
+	if i*2+1 == faultQueueLen {
 		currentHostTime := time.Now().UnixMilli()
-		duration = currentHostTime - faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
-		if duration <= timeoutThreshold*SecondMagnification {
-			hwlog.RunLog.Debugf(faultNotTimeoutMsg, logicID, process, process, float64(duration)/
-				SecondMagnificationFloat, timeoutThreshold, eventId, faultDurationData.TimeoutStatus, process)
-			return handleNotTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-				timeoutStatus: timeoutStatus, duration: duration})
+		if currentHostTime-timeoutFaultInfoMap[device.LogicID][i*2].AlarmRaisedTime <=
+			LinkDownTimeoutCustomization*SecondMagnification {
+			hwlog.RunLog.Debugf("in linkdown timeout checking, %v(current host time) - %v(linkdown) <= %v, NPU %v "+
+				"network health set %v, fault queue: %v", currentHostTime, timeoutFaultInfoMap[device.LogicID][i*2],
+				LinkDownTimeoutCustomization*SecondMagnification,
+				device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+			timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i:]
+		} else {
+			device.NetworkRealHealth = v1beta1.Unhealthy
+			hwlog.RunLog.Debugf("in linkdown timeout checking, %v(current host time) - %v(linkdown) > %v, NPU %v "+
+				"network health set %v, fault queue: %v", currentHostTime, timeoutFaultInfoMap[device.LogicID][i*2],
+				LinkDownTimeoutCustomization*SecondMagnification,
+				device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+			timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i+1:]
 		}
-		hwlog.RunLog.Debugf(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
-			timeoutThreshold, eventId, timeoutStatus)
-		return handleTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-			timeoutStatus: timeoutStatus, duration: duration})
-	}
-	if halfDivisor*i == faultQueueLen {
-		hwlog.RunLog.Debugf(faultNotTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
-			timeoutThreshold, eventId, faultDurationMap[eventId].Duration[logicID].TimeoutStatus, process)
-		return handleNotTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-			timeoutStatus: timeoutStatus, duration: duration})
-	}
-	return true
-}
-
-func getProcessInFaultDuration(timeoutStatus bool) string {
-	if timeoutStatus {
-		return TimeoutProcess
-	}
-	return TimeoutRecoverProcess
-}
-
-func getTimeoutThreshold(eventId string, timeoutStatus bool) int64 {
-	if _, ok := faultDurationMap[eventId]; !ok {
-		return MinFaultTimeout
+		*exitTag = true
 	}
 
-	if timeoutStatus {
-		return faultDurationMap[eventId].FaultDuration.FaultTimeout
-	}
-	return faultDurationMap[eventId].FaultDuration.RecoverTimeout
-}
-
-func handleTimeoutCondition(inputPara handleDurationInputPara) bool {
-	faultDurationData := faultDurationMap[inputPara.eventId].Duration[inputPara.logicID]
-	faultDurationData.TimeoutStatus = inputPara.timeoutStatus
-	faultQueueMsg := "NPU logic id: %v, %v fault queue: %v"
-	if inputPara.timeoutStatus {
-		faultDurationData.FaultDurationTime = inputPara.duration
-		faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-		hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
-		return true
-	}
-	faultDurationData.FaultRecoverDurationTime = inputPara.duration
-	faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[halfDivisor*inputPara.index+1:]
-	faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-	hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
-	return false
-}
-
-func handleNotTimeoutCondition(inputPara handleDurationInputPara) bool {
-	faultDurationData := faultDurationMap[inputPara.eventId].Duration[inputPara.logicID]
-	if inputPara.timeoutStatus {
-		faultDurationData.FaultDurationTime = inputPara.duration
-	} else {
-		faultDurationData.FaultRecoverDurationTime = inputPara.duration
-	}
-
-	faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[halfDivisor*inputPara.index:]
-	faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-	hwlog.RunLog.Debugf("NPU logic id: %v, %v fault queue: %v", inputPara.logicID, inputPara.eventId,
-		faultDurationData.FaultEventQueue)
-	return true
-}
-
-// GetFaultAssertionName get assertion name of fault code
-func GetFaultAssertionName(assertion int8) string {
-	switch assertion {
-	case common.FaultRecover:
-		return AssertionRecovery
-	case common.FaultOccur:
-		return AssertionOccur
-	case common.FaultOnce:
-		return AssertionNotice
-	default:
-		return ""
+	if 2*i == faultQueueLen {
+		hwlog.RunLog.Debugf("in linkdown timeout checking, %v(linkup) - %v(linkdown) <= %v, NPU %v "+
+			"network health set %v, fault queue: %v", timeoutFaultInfoMap[device.LogicID][i*2-1],
+			timeoutFaultInfoMap[device.LogicID][i*2-2], LinkDownTimeoutCustomization*SecondMagnification,
+			device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i:]
+		*exitTag = true
 	}
 }
 
-// GetChangedDevFaultInfo get device changed fault info
-func GetChangedDevFaultInfo(device *NpuDevice, oldErrCodes []int64, newErrCodes []int64) []common.DevFaultInfo {
-	devFaultInfo := make([]common.DevFaultInfo, 0, len(newErrCodes))
-	for _, newCode := range newErrCodes {
-		if Int64Tool.Index(oldErrCodes, newCode) == -1 {
-			faultInfo := common.DevFaultInfo{
-				EventID:         newCode,
-				LogicID:         device.LogicID,
-				Assertion:       common.FaultOccur,
-				AlarmRaisedTime: time.Now().UnixMilli(),
-			}
-			devFaultInfo = append(devFaultInfo, faultInfo)
+func checkLinkupRecoverWhenNetworkUnhealth(device *NpuDevice, exitTag *bool) {
+	faultQueueLen := len(timeoutFaultInfoMap[device.LogicID])
+	if faultQueueLen == 0 {
+		hwlog.RunLog.Debugf("NPU logic id: %v, fault queue is empty, "+
+			"no need to check whether NPU linkup recover when NPU network is unhealthy", device.LogicID)
+		*exitTag = true
+		return
+	}
+
+	var i int
+	for i = 0; i < faultQueueLen/2; i++ {
+		if timeoutFaultInfoMap[device.LogicID][i*2+1].AlarmRaisedTime-timeoutFaultInfoMap[device.LogicID][i*2].
+			AlarmRaisedTime <= LinkUpTimeoutCustomization*SecondMagnification {
+			continue
 		}
+		device.NetworkRealHealth = v1beta1.Healthy
+		hwlog.RunLog.Debugf("in linkup recover checking, %v(linkdown) - %v(linkup) > %v, NPU %v "+
+			"network health set %v, fault queue: %v", timeoutFaultInfoMap[device.LogicID][i*2+1],
+			timeoutFaultInfoMap[device.LogicID][i*2], LinkUpTimeoutCustomization*SecondMagnification,
+			device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i+1:]
+		*exitTag = false
+		return
 	}
-	for _, oldCode := range oldErrCodes {
-		if Int64Tool.Index(newErrCodes, oldCode) == -1 {
-			faultInfo := common.DevFaultInfo{
-				EventID:         oldCode,
-				LogicID:         device.LogicID,
-				Assertion:       common.FaultRecover,
-				AlarmRaisedTime: time.Now().UnixMilli(),
-			}
-			devFaultInfo = append(devFaultInfo, faultInfo)
+
+	if i*2+1 == faultQueueLen {
+		currentHostTime := time.Now().UnixMilli()
+		if currentHostTime-timeoutFaultInfoMap[device.LogicID][i*2].AlarmRaisedTime <=
+			LinkUpTimeoutCustomization*SecondMagnification {
+			hwlog.RunLog.Debugf("in linkup recover checking, %v(current host time) - %v(linkup) <= %v, NPU %v "+
+				"network health set %v, fault queue: %v", currentHostTime, timeoutFaultInfoMap[device.LogicID][i*2],
+				LinkUpTimeoutCustomization*SecondMagnification, device.LogicID, device.NetworkRealHealth,
+				timeoutFaultInfoMap[device.LogicID])
+			timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i:]
+		} else {
+			device.NetworkRealHealth = v1beta1.Healthy
+			hwlog.RunLog.Debugf("in linkup recover checking, %v(current host time) - %v(linkup) > %v, NPU %v "+
+				"network health set %v, fault queue: %v", currentHostTime, timeoutFaultInfoMap[device.LogicID][i*2],
+				LinkUpTimeoutCustomization*SecondMagnification, device.LogicID, device.NetworkRealHealth,
+				timeoutFaultInfoMap[device.LogicID])
+			timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i+1:]
+		}
+		*exitTag = true
+	}
+
+	if 2*i == faultQueueLen {
+		hwlog.RunLog.Debugf("in linkup recover checking, %v(linkdown) - %v(linkup) <= %v, NPU %v "+
+			"network health set %v, fault queue: %v", timeoutFaultInfoMap[device.LogicID][i*2-1],
+			timeoutFaultInfoMap[device.LogicID][i*2-2], LinkUpTimeoutCustomization*SecondMagnification,
+			device.LogicID, device.NetworkRealHealth, timeoutFaultInfoMap[device.LogicID])
+		timeoutFaultInfoMap[device.LogicID] = timeoutFaultInfoMap[device.LogicID][2*i:]
+		*exitTag = true
+	}
+}
+
+// LinkDownTimeoutCheck check whether the NPU linkdown timeout happened and NPU network recovered
+func LinkDownTimeoutCheck(device *NpuDevice) {
+	if device == nil {
+		hwlog.RunLog.Error("param device is nil")
+		return
+	}
+	// check whether the NPU linkdown timeout happened based on the fault queue
+	// check whether the NPU network needs to be restored based on the fault queue
+	timeoutFaultInfoMapLen := len(timeoutFaultInfoMap[device.LogicID])
+
+	if timeoutFaultInfoMapLen == 0 && device.NetworkHealth == device.NetworkRealHealth {
+		hwlog.RunLog.Debugf("NPU logic id: %v, fault queue is empty and NPU network health status not change, "+
+			"no need to check whether NPU linkdown timeout, or whether need to recover NPU network health", device.LogicID)
+		return
+	}
+
+	exitTag := false
+
+	for !exitTag {
+		if device.NetworkRealHealth == v1beta1.Healthy {
+			checkLinkdownTimeoutWhenNetworkHealth(device, &exitTag)
+		} else {
+			checkLinkupRecoverWhenNetworkUnhealth(device, &exitTag)
 		}
 	}
-	return devFaultInfo
+	if device.NetworkRealHealth == v1beta1.Unhealthy && device.NetworkHealth == v1beta1.Healthy {
+		hwlog.RunLog.Debugf("insert network fault into FaultFrequency, logic id: %d", device.LogicID)
+		insertFaultFrequency(device.LogicID, LinkDownFaultCode)
+	}
+
+	hwlog.RunLog.Debugf("NPU logic id: %v, network health status: %v, fault queue after linkDown timeout "+
+		"check and recover: %v", device.LogicID, device.NetworkHealth, timeoutFaultInfoMap[device.LogicID])
+
+	if device.NetworkHealth != device.NetworkRealHealth {
+		hwlog.RunLog.Infof("NPU logic id: %v, after handling, network health status change, now network health set %v",
+			device.LogicID, device.NetworkRealHealth)
+	}
+
+	device.NetworkHealth = device.NetworkRealHealth
 }
 
 // CheckErrorMessage check whether the error message contains a specific string
 func CheckErrorMessage(err error, target string) bool {
 	return err != nil && strings.Contains(err.Error(), target)
-}
-
-// GetTimeoutFaultCodes get timeout fault codes
-func GetTimeoutFaultCodes(mode string) []int64 {
-	faultCodes := make([]int64, 0)
-	if mode != ChipFaultMode && mode != NetworkFaultMode {
-		return faultCodes
-	}
-
-	faultDurationMapLock.Lock()
-	defer faultDurationMapLock.Unlock()
-
-	for eventId, faultDurationCache := range faultDurationMap {
-		num, err := strconv.ParseInt(eventId, Hex, 0)
-		if err != nil {
-			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
-			continue
-		}
-		if (mode == ChipFaultMode && NetworkFaultCodes.Has(num)) ||
-			(mode == NetworkFaultMode && !NetworkFaultCodes.Has(num)) {
-			continue
-		}
-
-		for _, faultDurationData := range faultDurationCache.Duration {
-			if faultDurationData.TimeoutStatus {
-				faultCodes = append(faultCodes, num)
-			}
-		}
-	}
-
-	return faultCodes
 }

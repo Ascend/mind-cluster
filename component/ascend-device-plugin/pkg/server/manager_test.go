@@ -17,18 +17,16 @@ package server
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager"
+	"huawei.com/npu-exporter/v5/devmanager"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
@@ -40,44 +38,15 @@ const (
 	rqtTaskNum = 4
 )
 
-func setPatch() *gomonkey.Patches {
-	patch := gomonkey.ApplyFuncReturn(kubeclient.NewClientK8s, &kubeclient.ClientK8s{
-		Clientset:      &kubernetes.Clientset{},
-		NodeName:       "node",
-		DeviceInfoName: common.DeviceInfoCMNamePrefix + "node",
-		IsApiErr:       false,
-	}, nil).
-		ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Nodes(), "Get", &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}},
-		}, nil)
-	return patch
-}
-
-func createFile(filePath string) error {
-	f, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return f.Chmod(common.SocketChmod)
-}
-
 // TestTestNewHwDevManager for testTestNewHwDevManager
 func TestNewHwDevManager(t *testing.T) {
-	patch := setPatch()
-	defer patch.Reset()
 	convey.Convey("test NewHwDevManager", t, func() {
-		if _, err := os.Stat(common.HiAIManagerDevice); err != nil {
-			if err = createFile(common.HiAIManagerDevice); err != nil {
-				t.Fatal("TestGetDefaultDevices Run Failed")
-			}
-		}
 		mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 			func(_ *device.AscendTools) (int32, error) {
-				return common.DeviceNotSupport, nil
+				return 8255, nil
 			})
 		defer mockGetChipAiCoreCount.Reset()
-		mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNode",
+		mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNodeLabel",
 			func(_ *HwDevManager) error {
 				return nil
 			})
@@ -108,17 +77,15 @@ func TestNewHwDevManager(t *testing.T) {
 func TestStartAllServer(t *testing.T) {
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 		func(_ *device.AscendTools) (int32, error) {
-			return common.DeviceNotSupport, nil
+			return 8255, nil
 		})
 	defer mockGetChipAiCoreCount.Reset()
-	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNode",
+	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNodeLabel",
 		func(_ *HwDevManager) error {
 			return nil
 		})
 	defer mockUpdateNodeLabel.Reset()
 	convey.Convey("test startAllServer", t, func() {
-		patch := setPatch()
-		defer patch.Reset()
 		mockStart := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "Start",
 			func(_ *PluginServer, socketWatcher *common.FileWatch) error {
 				return fmt.Errorf("error")
@@ -134,13 +101,24 @@ func TestStartAllServer(t *testing.T) {
 // TestUpdatePodAnnotation for testUpdatePodAnnotation
 func TestUpdatePodAnnotation(t *testing.T) {
 	node := getMockNode(common.Ascend310P)
-	podDeviceInfo := getMockDeviceInfo()
+	podDeviceInfo := []PodDeviceInfo{
+		{
+			Pod:        getMockPod(),
+			KltDevice:  []string{},
+			RealDevice: []string{},
+		},
+		{
+			Pod:        getMockPod(),
+			KltDevice:  []string{""},
+			RealDevice: []string{""},
+		},
+	}
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 		func(_ *device.AscendTools) (int32, error) {
-			return common.DeviceNotSupport, nil
+			return 8255, nil
 		})
 	defer mockGetChipAiCoreCount.Reset()
-	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNode",
+	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNodeLabel",
 		func(_ *HwDevManager) error {
 			return nil
 		})
@@ -152,11 +130,11 @@ func TestUpdatePodAnnotation(t *testing.T) {
 					return node, nil
 				})
 			mockPodDeviceInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "GetKltAndRealAllocateDev",
-				func(_ *PluginServer, _ []v1.Pod) ([]*common.PodDeviceInfo, error) {
+				func(_ *PluginServer, _ []v1.Pod) ([]PodDeviceInfo, error) {
 					return podDeviceInfo, nil
 				})
 			mockManager := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "AddPodAnnotation",
-				func(_ *device.AscendTools, _ *common.PodDeviceInfo, _ string, _ string, _ []common.NpuDevice) error {
+				func(_ *device.AscendTools, _ *v1.Pod, _ []string, _ []string, _ string, _ string) error {
 					return nil
 				})
 			mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodListCache",
@@ -167,8 +145,6 @@ func TestUpdatePodAnnotation(t *testing.T) {
 				func(_ *HwDevManager, _ v1.Pod) error {
 					return nil
 				})
-			patch := setPatch()
-			defer patch.Reset()
 			defer mockPodList.Reset()
 			defer mockManager.Reset()
 			defer mockNode.Reset()
@@ -176,7 +152,7 @@ func TestUpdatePodAnnotation(t *testing.T) {
 			defer mockClearCM.Reset()
 			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
 			err := hdm.updatePodAnnotation()
-			convey.So(err, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -185,10 +161,10 @@ func TestUpdatePodAnnotation(t *testing.T) {
 func TestUpdateDevice(t *testing.T) {
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 		func(_ *device.AscendTools) (int32, error) {
-			return common.DeviceNotSupport, nil
+			return 8255, nil
 		})
 	defer mockGetChipAiCoreCount.Reset()
-	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNode",
+	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNodeLabel",
 		func(_ *HwDevManager) error {
 			return nil
 		})
@@ -204,8 +180,6 @@ func TestUpdateDevice(t *testing.T) {
 				func(_ *PluginServer) error {
 					return nil
 				})
-			patch := setPatch()
-			defer patch.Reset()
 			defer mockDestroy.Reset()
 			defer mockCheckLabel.Reset()
 			common.ParamOption.PresetVDevice = true
@@ -221,10 +195,10 @@ func TestUpdateDevice(t *testing.T) {
 func TestNotifyToK8s(t *testing.T) {
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 		func(_ *device.AscendTools) (int32, error) {
-			return common.DeviceNotSupport, nil
+			return 8255, nil
 		})
 	defer mockGetChipAiCoreCount.Reset()
-	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNode",
+	mockUpdateNodeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "UpdateNodeLabel",
 		func(_ *HwDevManager) error {
 			return nil
 		})
@@ -243,8 +217,6 @@ func TestNotifyToK8s(t *testing.T) {
 				func(_ *device.AscendTools, _ map[string][]*common.NpuDevice, _ map[string][]*common.NpuDevice) map[string]bool {
 					return map[string]bool{common.Ascend310P: true, common.Ascend310: false}
 				})
-			patch := setPatch()
-			defer patch.Reset()
 			defer mockUpdateHealth.Reset()
 			defer mockGrace.Reset()
 			defer mockChange.Reset()
@@ -305,21 +277,6 @@ func getAddresses() []v1.NodeAddress {
 		{
 			Type:    v1.NodeHostName,
 			Address: common.DefaultDeviceIP,
-		},
-	}
-}
-
-func getMockDeviceInfo() []*common.PodDeviceInfo {
-	return []*common.PodDeviceInfo{
-		{
-			Pod:        getMockPod(),
-			KltDevice:  []string{},
-			RealDevice: []string{},
-		},
-		{
-			Pod:        getMockPod(),
-			KltDevice:  []string{""},
-			RealDevice: []string{""},
 		},
 	}
 }

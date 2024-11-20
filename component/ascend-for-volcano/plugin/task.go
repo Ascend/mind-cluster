@@ -21,7 +21,6 @@ package plugin
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"k8s.io/api/core/v1"
@@ -85,6 +84,7 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	}
 	if vcJob.NPUTaskNum > 1 {
 		task.Pod.Annotations[util.DistributedJobKey] = util.DistributedJobValue
+
 	} else {
 		task.Pod.Annotations[util.DistributedJobKey] = util.StandaloneJobValue
 	}
@@ -93,43 +93,7 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		// update node.
 		sHandle.Nodes[nodeName] = *vcNode
 	}
-	if vcJob.IsTorAffinityJob() && sHandle.getNSLBVsersion() == NSLB2Version {
-		sHandle.setNslbV2PodAnnotation(task, vcJob, nodeName)
-	}
 	klog.V(util.LogDebugLev).Infof("%s %s useAnnotation node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
-}
-
-func (sHandle ScheduleHandler) setNslbV2PodAnnotation(task *api.TaskInfo, vcJob SchedulerJob, nodeName string) {
-	task.Pod.Annotations[isSharedTor] = strconv.Itoa(freeTor)
-	task.Pod.Annotations[isHealthy] = strconv.Itoa(healthyTor)
-	torIp := sHandle.Tors.torIpMap[nodeName]
-	tor, getTor := sHandle.Tors.torMaps[torIp]
-	if getTor && len(vcJob.ServerList) > 1 {
-		task.Pod.Annotations[isSharedTor] = strconv.Itoa(tor.IsSharedTor)
-		task.Pod.Annotations[isHealthy] = strconv.Itoa(tor.IsHealthy)
-	}
-	defer func() {
-		if task.Pod.Annotations[isSharedTor] == strconv.Itoa(sharedTor) {
-			task.Pod.Annotations[SharedTorIp] = tor.IP
-		}
-	}()
-	if vcJob.SchedulingTaskNum == len(vcJob.Tasks) {
-		return
-	}
-	usedTorInfo := vcJob.getUsedTorInfos(&sHandle)
-	if usedTorInfo.isSingleTorJob {
-		return
-	}
-	if tor.IsSharedTor != freeTor {
-		task.Pod.Annotations[isSharedTor] = strconv.Itoa(tor.IsSharedTor)
-		task.Pod.Annotations[isHealthy] = strconv.Itoa(tor.IsHealthy)
-		return
-	}
-	if usedTorInfo.sharedTorNum <= 0 {
-		task.Pod.Annotations[isSharedTor] = strconv.Itoa(exclusiveTor)
-		tor.IsSharedTor = exclusiveTor
-		task.Pod.Annotations[isHealthy] = strconv.Itoa(healthyTor)
-	}
 }
 
 func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob SchedulerJob, vcNode NPUNode) {
@@ -198,8 +162,7 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 		return
 	}
 	sHandle.releaseAnnotation(task, vcJob, node)
-	klog.V(util.LogDebugLev).Infof("%s %s NPUDeallocateFunc node [%s]'s top.",
-		PluginName, util.SafePrint(task.Name), nodeName)
+	klog.V(util.LogDebugLev).Infof("%s %s NPUDeallocateFunc node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
 }
 
 func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {

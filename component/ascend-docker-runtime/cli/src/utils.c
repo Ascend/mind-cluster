@@ -340,7 +340,7 @@ bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
     DIR *dir = NULL;
     struct dirent *ptr = NULL;
     char base[PATH_MAX] = {0};
-
+ 
     if ((dir = opendir(basePath)) == NULL) {
         return ShowExceptionInfo("Open dir error!");
     }
@@ -350,33 +350,24 @@ bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
         }
         memset_s(base, PATH_MAX, 0, PATH_MAX);
         if (strcpy_s(base, PATH_MAX, basePath) != 0) {
-            closedir(dir);
             return ShowExceptionInfo("Strcpy failed!");
         }
-        if (strcat_sp(base, PATH_MAX, "/") != 0) {
-                closedir(dir);
-                return ShowExceptionInfo("Strcat failed!");
-        }
-        if (strcat_sp(base, PATH_MAX, ptr->d_name) != 0) {
-            closedir(dir);
+        if (strcat_sp(base, PATH_MAX, "/") != 0 ||
+            strcat_sp(base, PATH_MAX, ptr->d_name) != 0) {
             return ShowExceptionInfo("Strcat failed!");
         }
         if (ptr->d_type == DT_REG) { // 文件
             const size_t maxFileSzieMb = 150; // max 150 MB
             if (!CheckFileSubset(base, strlen(base), maxFileSzieMb)) {
-                closedir(dir);
                 return false;
             }
         } else if (!g_allowLink && ptr->d_type == DT_LNK) { // 软链接
-            closedir(dir);
             return ShowExceptionInfo("FilePath has a soft link!");
         } else if (ptr->d_type == DT_DIR) { // 目录
             if (!GetFileSubsetAndCheck(base, strlen(base))) {
-                closedir(dir);
                 return false;
             }
         }
     }
-    closedir(dir);
     return true;
 }

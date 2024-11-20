@@ -43,7 +43,7 @@ void ParseRuntimeOptions(const char *options)
     g_runtimeOptions.noDrv = false;
     g_runtimeOptions.isVirtual = false;
 
-    static const char *SEPERATOR = ",";
+    static const char *seperator = ",";
     char *runtimeOptions = strdup(options);
     if (runtimeOptions == NULL) {
         (void)fprintf(stderr, "strdup failed!\n");
@@ -52,9 +52,9 @@ void ParseRuntimeOptions(const char *options)
     char *context = NULL;
     char *token = NULL;
 
-    for (token = strtok_s(runtimeOptions, SEPERATOR, &context);
+    for (token = strtok_s(runtimeOptions, seperator, &context);
     token != NULL;
-    token = strtok_s(NULL, SEPERATOR, &context)) {
+    token = strtok_s(NULL, seperator, &context)) {
         for (int i = 0; g_optionNameFlagTable[i].name != NULL; i++) {
             if (strcmp((const char *)token, g_optionNameFlagTable[i].name) == 0) {
                 *g_optionNameFlagTable[i].flag = true;
@@ -65,12 +65,12 @@ void ParseRuntimeOptions(const char *options)
     free(runtimeOptions);
 }
 
-bool IsOptionNoDrvSet(void)
+bool IsOptionNoDrvSet()
 {
     return g_runtimeOptions.noDrv;
 }
 
-bool IsVirtual(void)
+bool IsVirtual()
 {
     return g_runtimeOptions.isVirtual;
 }

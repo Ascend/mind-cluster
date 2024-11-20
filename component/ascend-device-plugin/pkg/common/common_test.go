@@ -30,8 +30,8 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/fsnotify/fsnotify"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/devmanager/common"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -448,26 +448,14 @@ func TestGetPodConfiguration(t *testing.T) {
 			devices := map[int]string{100: DefaultDeviceIP}
 			phyDevMapVirtualDev := map[int]int{100: 0}
 			deviceType := "Ascend910-2c"
-			superPodID := int32(1)
-			info := ServerInfo{
-				ServerID:   DefaultDeviceIP,
-				DeviceType: deviceType,
-				SuperPodID: superPodID,
-			}
-			ret := GetPodConfiguration(phyDevMapVirtualDev, devices, "pod-name", info, nil)
+			ret := GetPodConfiguration(phyDevMapVirtualDev, devices, "pod-name", DefaultDeviceIP, deviceType)
 			convey.So(ret, convey.ShouldBeEmpty)
 		})
 		convey.Convey("Marshal ok", func() {
 			devices := map[int]string{100: DefaultDeviceIP}
 			phyDevMapVirtualDev := map[int]int{100: 0}
 			deviceType := "Ascend910-2c"
-			superPodID := int32(1)
-			info := ServerInfo{
-				ServerID:   DefaultDeviceIP,
-				DeviceType: deviceType,
-				SuperPodID: superPodID,
-			}
-			ret := GetPodConfiguration(phyDevMapVirtualDev, devices, "pod-name", info, nil)
+			ret := GetPodConfiguration(phyDevMapVirtualDev, devices, "pod-name", DefaultDeviceIP, deviceType)
 			convey.So(ret, convey.ShouldNotBeEmpty)
 		})
 	})
@@ -533,20 +521,8 @@ func TestGetDeviceRunMode(t *testing.T) {
 			convey.So(ret, convey.ShouldEqual, common.Ascend310)
 			convey.So(err, convey.ShouldBeNil)
 		})
-		convey.Convey("device mode is Ascend910, when card real type is Ascend910", func() {
+		convey.Convey("device mode is Ascend910", func() {
 			ParamOption.RealCardType = common.Ascend910
-			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend910)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("device mode is Ascend910, when card real type is Ascend910B", func() {
-			ParamOption.RealCardType = common.Ascend910B
-			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend910)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("device mode is Ascend910, when card real type is Atlas A3", func() {
-			ParamOption.RealCardType = common.Ascend910A3
 			ret, err := GetDeviceRunMode()
 			convey.So(ret, convey.ShouldEqual, common.Ascend910)
 			convey.So(err, convey.ShouldBeNil)
@@ -573,44 +549,6 @@ func TestCheckDeviceName(t *testing.T) {
 		})
 		convey.Convey("device name is invalid", func() {
 			convey.So(CheckDeviceName("", common.Ascend910), convey.ShouldBeFalse)
-		})
-	})
-}
-
-// TestGetJobNameOfPod
-func TestGetJobNameOfPod(t *testing.T) {
-	convey.Convey("test GetJobNameOfPod", t, func() {
-		const fakeJobName = "job1"
-		convey.Convey("pod has vcjob name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						ResetTaskNameKey: fakeJobName,
-					},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, fakeJobName)
-		})
-		convey.Convey("pod has acjob name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						ResetTaskNameKeyInLabel: fakeJobName,
-					},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, fakeJobName)
-		})
-		convey.Convey("pod has no name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, "")
 		})
 	})
 }

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,44 +34,66 @@ import (
 
 // Similar to the K8s metadata structure
 type metaData struct {
-	Annotation map[string]string `json:"annotations"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 type podMetaData map[string]metaData
 
-var tryUpdatePodWaitTime = common.UpdatePodWaitTime * time.Millisecond
+var tryUpdatePodWaitTime = 200 * time.Millisecond
 
-// TryUpdatePodAnnotation is to try updating pod annotation
-func (ki *ClientK8s) TryUpdatePodAnnotation(pod *v1.Pod, annotation map[string]string) error {
+// PatchPodAnnotation update pod annotation by patch
+func (ki *ClientK8s) PatchPodAnnotation(pod *v1.Pod, annotation map[string]string) error {
 	if pod == nil {
-		return fmt.Errorf("param pod is nil")
+		return fmt.Errorf("pod is nil")
 	}
-	if annotation == nil {
-		return fmt.Errorf("invalid annotation")
-	}
-
-	newPodMetaData := podMetaData{common.MetaData: metaData{Annotation: annotation}}
+	newPodMetaData := podMetaData{common.MetaData: metaData{Annotations: annotation}}
 	podUpdateMetaData, err := json.Marshal(newPodMetaData)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to marshal the node status data, error is %v", err)
 		return err
 	}
-
-	for i := 0; i < common.RetryUpdateCount; i++ {
-		if _, err = ki.PatchPod(pod, podUpdateMetaData); err == nil {
-			return nil
-		}
-
-		// There is no need to retry if the pod does not exist
-		if errors.IsNotFound(err) {
-			return err
-		}
-
-		hwlog.RunLog.Warnf("patch pod annotation failed: %v, try again", err)
-		time.Sleep(tryUpdatePodWaitTime)
+	if _, err = ki.PatchPod(pod, podUpdateMetaData); err != nil {
+		return err
 	}
 
-	return fmt.Errorf("patch pod annotation failed, exceeded max number of retries")
+	return nil
+}
+
+// TryUpdatePodAnnotation is to try updating pod annotation
+func (ki *ClientK8s) TryUpdatePodAnnotation(pod *v1.Pod, annotation map[string]string) error {
+	if annotation == nil {
+		return fmt.Errorf("invalid annotation")
+	}
+	if pod.Annotations == nil {
+		pod.Annotations = make(map[string]string, len(annotation))
+	}
+
+	var err error
+	for i := 0; i < common.RetryUpdateCount; i++ {
+		if pod.Name != "" {
+			for k, v := range annotation {
+				pod.Annotations[k] = v
+			}
+			_, err = ki.UpdatePod(pod)
+			if err == nil {
+				return nil
+			}
+			hwlog.RunLog.Warnf("update pod annotation by updating method failed, times: %d, error is %v", i+1, err)
+			if errors.IsConflict(err) {
+				hwlog.RunLog.Info("try to patch annotation")
+				err = ki.PatchPodAnnotation(pod, annotation)
+				if err == nil {
+					return nil
+				}
+				hwlog.RunLog.Errorf("patch annotation failed: %v", err)
+			}
+		}
+		time.Sleep(tryUpdatePodWaitTime)
+		podNew := ki.GetPodCache(pod.Namespace, pod.Name)
+		pod = &podNew
+	}
+
+	return fmt.Errorf("update pod annotation failed")
 }
 
 // TryUpdatePodCacheAnnotation is to try updating pod annotation in both api server and cache
@@ -169,42 +191,27 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
 func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
-	manuallySeparateNPU string, switchInfo common.SwitchFaultInfo, superPodID,
-	serverIndex int32) (*common.NodeDeviceInfoCache, error) {
+	manuallySeparateNPU string) (*common.NodeDeviceInfoCache, error) {
 
 	var nodeDeviceData = common.NodeDeviceInfoCache{
 		DeviceInfo: common.NodeDeviceInfo{
 			DeviceList: deviceInfo,
 			UpdateTime: time.Now().Unix(),
 		},
-		SuperPodID:  superPodID,
-		ServerIndex: serverIndex,
 	}
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 
-	var data, switchData []byte
+	var data []byte
 	if data = common.MarshalData(nodeDeviceData); len(data) == 0 {
 		return nil, fmt.Errorf("marshal nodeDeviceData failed")
-	}
-	if switchData = common.MarshalData(switchInfo); len(switchData) == 0 {
-		return nil, fmt.Errorf("marshal switchDeviceData failed")
 	}
 	deviceInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ki.DeviceInfoName,
 			Namespace: common.DeviceInfoCMNameSpace,
-			Labels:    map[string]string{common.CmConsumer: common.CmConsumerValue},
 		},
-	}
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
-		deviceInfoCM.Data = map[string]string{
-			common.DeviceInfoCMDataKey:                string(data),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
-	} else {
-		deviceInfoCM.Data = map[string]string{
-			common.DeviceInfoCMDataKey:                string(data),
-			common.SwitchInfoCMDataKey:                string(switchData),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
+		Data: map[string]string{common.DeviceInfoCMDataKey: string(data),
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU},
 	}
 
 	hwlog.RunLog.Debugf("write device info cache into cm: %s/%s.", deviceInfoCM.Namespace, deviceInfoCM.Name)
@@ -216,12 +223,13 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 
 // WriteResetInfoDataIntoCM write reset info into config map
 func (ki *ClientK8s) WriteResetInfoDataIntoCM(taskName string, namespace string,
-	taskInfo *common.TaskResetInfo, needAddRetry bool) (*v1.ConfigMap, error) {
+	taskInfo *common.TaskResetInfo) (*v1.ConfigMap, error) {
 	oldCM, err := ki.GetConfigMap(common.ResetInfoCMNamePrefix+taskName, namespace)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get reset cm of task %s, err: %v", taskName, err)
 		return nil, err
 	}
+
 	oldResetInfoData, ok := oldCM.Data[common.ResetInfoCMDataKey]
 	if !ok {
 		return nil, fmt.Errorf("invalid reset info data")
@@ -229,19 +237,9 @@ func (ki *ClientK8s) WriteResetInfoDataIntoCM(taskName string, namespace string,
 	if strings.Contains(oldResetInfoData, common.IsolateError) && len(taskInfo.RankList) != 0 {
 		return nil, fmt.Errorf("task should be rescheduled")
 	}
-	var oldTaskInfo common.TaskResetInfo
-	err = json.Unmarshal([]byte(oldResetInfoData), &oldTaskInfo)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to unmarshal reset info data, err: %v", err)
-		return nil, fmt.Errorf("failed to unmarshal reset info data, err: %v", err)
-	}
-	retryTime := oldTaskInfo.RetryTime
-	if needAddRetry {
-		retryTime = retryTime + 1
-	}
+
 	newTaskInfo := setNewTaskInfoWithHexString(taskInfo)
 	newTaskInfo.UpdateTime = time.Now().Unix()
-	newTaskInfo.RetryTime = retryTime
 	checkCode := common.MakeDataHash(newTaskInfo)
 	var data []byte
 	if data = common.MarshalData(newTaskInfo); len(data) == 0 {
@@ -255,13 +253,6 @@ func (ki *ClientK8s) WriteResetInfoDataIntoCM(taskName string, namespace string,
 			common.ResetInfoCMCheckCodeKey: checkCode,
 		},
 	}
-	oldRestartType, ok := oldCM.Data[common.ResetInfoTypeKey]
-	if ok {
-		resetInfoCM.Data[common.ResetInfoTypeKey] = oldRestartType
-	}
-	if needAddRetry {
-		resetInfoCM.Data[common.ResetInfoTypeKey] = common.HotResetRestartType
-	}
 
 	hwlog.RunLog.Debugf("write reset info cache into cm: %s/%s.", resetInfoCM.Namespace, resetInfoCM.Name)
 	return ki.UpdateConfigMap(resetInfoCM)
@@ -274,9 +265,6 @@ func setNewTaskInfoWithHexString(taskInfo *common.TaskResetInfo) *common.TaskRes
 		newDeviceInfo.ErrorCodeHex = strings.ToUpper(common.Int64Tool.ToHexString(newDeviceInfo.ErrorCode))
 		newDeviceInfo.ErrorCode = []int64{}
 		newTaskInfo.RankList = append(newTaskInfo.RankList, &newDeviceInfo)
-	}
-	if newTaskInfo.RankList == nil {
-		newTaskInfo.RankList = make([]*common.TaskDevInfo, 0)
 	}
 	return &newTaskInfo
 }

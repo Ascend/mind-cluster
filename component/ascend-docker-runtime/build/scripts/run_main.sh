@@ -22,9 +22,6 @@ start_script=${start_arg#*--}
 
 ASCEND_RUNTIME_CONFIG_DIR=/etc/ascend-docker-runtime.d
 DOCKER_CONFIG_DIR=/etc/docker
-CONTAINERD_CONFIG_DIR=/etc/containerd
-CONFIG_FILE_PATH=""
-INSTALL_SCENE=docker
 INSTALL_PATH=/usr/local/Ascend/Ascend-Docker-Runtime
 readonly INSTALL_LOG_DIR=/var/log/ascend-docker-runtime
 readonly INSTALL_LOG_PATH=${INSTALL_LOG_DIR}/installer.log
@@ -41,7 +38,7 @@ function check_log {
 
     check_sub_path ${INSTALL_LOG_DIR}
     if [[ $? != 0 ]]; then
-        echo "[ERROR] ${INSTALL_LOG_DIR} is invalid"
+        echo "[ERROR]: ${INSTALL_LOG_DIR} is invalid"
         exit 1
     fi
 
@@ -72,11 +69,11 @@ function log {
 function check_path {
     local path="$1"
     if [[ ${#path} -gt 1024 ]] || [[ ${#path} -le 0 ]]; then
-        echo "[ERROR] parameter is invalid, length not in 1~1024"
+        echo "[ERROR]: parameter is invalid, length not in 1~1024"
         return 1
     fi
     if [[ -n $(echo "${path}" | grep -Ev '^[a-zA-Z0-9./_-]*$') ]]; then
-        echo "[ERROR] parameter is invalid, char not all in 'a-zA-Z0-9./_-'"
+        echo "[ERROR]: parameter is invalid, char not all in 'a-zA-Z0-9./_-'"
         return 1
     fi
     path=$(realpath -m -s "${path}")
@@ -111,16 +108,16 @@ function check_sub_path {
 function check_path_permission {
     local path="$1"
     if [[ -L "${path}" ]]; then
-        echo "[ERROR] ${path} is soft link"
+        echo "[ERROR]: ${path} is soft link"
         return 1
     fi
     if [[ $(stat -c %u "${path}") != 0 ]] || [[ "$(stat -c %g ${path})" != 0 ]]; then
-        echo "[ERROR] user or group of ${path} is not root"
+        echo "[ERROR]: user or group of ${path} is not root"
         return 1
     fi
     local permission=$(stat -c %A "${path}")
     if [[ $(echo "${permission}" | cut -c6) == w ]] || [[ $(echo "${permission}" | cut -c9) == w ]]; then
-        echo "[ERROR] group or other of ${path} has write permisson"
+        echo "[ERROR]:  group or other of ${path} has write permisson"
         return 1
     fi
 }
@@ -148,22 +145,16 @@ Options:
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
   --version                     Query Ascend-docker-runtime version
-  --install-scene=<scene>       Installation scenario, only docker or containerd(eg: --install-scene=docker, default: docker)
-  --config-file-path            Specifies the path of the Docker or containerd configuration file
-                                (eg: --config-file-path=/etc/containerd/config.toml).
-                                If this parameter is not specified, the default configuration file path
-                                of docker or containerd is used. For docker, the path is /etc/docker/daemon.json.
-                                For containerd, the path is /etc/containerd/config.toml.
 "
 }
 
 function check_platform {
   plat="$(uname -m)"
   if [[ $start_script =~ $plat ]]; then
-    echo "[INFO] platform($plat) matched!"
+    echo "[INFO]: platform($plat) matched!"
     return 0
   else
-    echo "[ERROR] platform($plat) mismatch for $start_script, please check it"
+    echo "[ERROR]: platform($plat) mismatch for $start_script, please check it"
     return 1
   fi
 }
@@ -180,8 +171,6 @@ function save_install_args() {
       echo -e "a200=${a200}"
       echo -e "a200isoc=${a200isoc}"
       echo -e "a200ia2=${a200ia2}"
-      echo -e "install-scene=${INSTALL_SCENE}"
-      echo -e "config-file-path=${CONFIG_FILE_PATH}"
     } > "${INSTALL_PATH}"/ascend_docker_runtime_install.info
     chmod 640 ${INSTALL_PATH}/ascend_docker_runtime_install.info
 }
@@ -189,26 +178,26 @@ function save_install_args() {
 function add_so() {
     check_path "/etc/os-release"
     if [[ $? != 0 ]]; then
-        echo "[ERROR] /etc/os-release is invalid"
+        echo "[ERROR]: /etc/os-release is invalid"
         return 1
     fi
     if grep -qi "ubuntu" "/etc/os-release"; then
-      echo "[info] os is Ubuntu"
+      echo "[info]: os is Ubuntu"
       echo -e "\n/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1" >> ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
       echo "/usr/lib/aarch64-linux-gnu/libyaml-0.so.2" >> ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
     elif grep -qi "euler" "/etc/os-release"; then
-      echo "[info] os is Euler/OpenEuler"
+      echo "[info]: os is Euler/OpenEuler"
       echo -e "\n/usr/lib64/libcrypto.so.1.1" >> ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
       echo "/usr/lib64/libyaml-0.so.2" >> ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
     else
-      echo "[ERROR] not support this os"
+      echo "[ERROR]: not support this os"
       return 1
     fi
 }
 
 function install()
 {
-    echo "[INFO] installing ascend docker runtime"
+    echo "[INFO]: installing ascend docker runtime"
     check_platform
     if [[ $? != 0 ]]; then
         log "[ERROR]" "install failed, run package and os not matched in arch"
@@ -282,66 +271,38 @@ function install()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
-    echo "[INFO] install executable files success"
+    echo "[INFO]: install executable files success"
 
-    if [[ ${CONFIG_FILE_PATH} == "" ]]; then
-        if [[ "${INSTALL_SCENE}" == "docker" ]]; then
-                echo "[INFO] install scene is 'docker'."
-                check_path ${DOCKER_CONFIG_DIR}/daemon.json
-                if [[ $? != 0 ]]; then
-                    log "[ERROR]" "install failed, ${DOCKER_CONFIG_DIR}/daemon.json is invalid"
-                    exit 1
-                fi
-                [[ ! -d ${DOCKER_CONFIG_DIR} ]] && mkdir -p -m 750 ${DOCKER_CONFIG_DIR}
-
-                SRC="${DOCKER_CONFIG_DIR}/daemon.json.${PPID}"
-                DST="${DOCKER_CONFIG_DIR}/daemon.json"
-            elif [[ "${INSTALL_SCENE}" == "containerd" ]]; then
-                echo "[INFO] install scene is 'containerd'."
-                check_path ${CONTAINERD_CONFIG_DIR}/config.toml
-                if [[ $? != 0 ]]; then
-                    log "[ERROR]" "install failed, ${CONTAINERD_CONFIG_DIR}/config.toml is invalid"
-                    exit 1
-                fi
-                [[ ! -d ${CONTAINERD_CONFIG_DIR} ]] && mkdir -p -m 750 ${CONTAINERD_CONFIG_DIR}
-
-                SRC="${CONTAINERD_CONFIG_DIR}/config.toml.${PPID}"
-                DST="${CONTAINERD_CONFIG_DIR}/config.toml"
-                if [ ! -e ${DST} ]; then
-                  echo "[INFO] containerd config file does not exist, default ${DST} will be created"
-                  containerd config default > ${DST}
-                fi
-            else
-                log "[ERROR]" "install failed, invalid value '${INSTALL_SCENE}' of 'install-scene' "
-                exit 1
-            fi
-    else
-        SRC="${CONFIG_FILE_PATH}.${PPID}"
-        DST="${CONFIG_FILE_PATH}"
-    fi
-
-
-    CGROUP_INFO=$(stat -fc %T /sys/fs/cgroup/)
-    # exit when return code is not 0, if use 'set -e'
-    ./ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} > /dev/null
+    check_path ${DOCKER_CONFIG_DIR}/daemon.json
     if [[ $? != 0 ]]; then
-        log "[ERROR]" "install failed, './ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO}' return non-zero"
+        log "[ERROR]" "install failed, ${DOCKER_CONFIG_DIR}/daemon.json is invalid"
         exit 1
     fi
+    [[ ! -d ${DOCKER_CONFIG_DIR} ]] && mkdir -p -m 750 ${DOCKER_CONFIG_DIR}
+
+    SRC="${DOCKER_CONFIG_DIR}/daemon.json.${PPID}"
+    DST="${DOCKER_CONFIG_DIR}/daemon.json"
+    # exit when return code is not 0, if use 'set -e'
+    ./ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} > /dev/null
+    if [[ $? != 0 ]]; then
+        log "[ERROR]" "install failed, './ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT}' return non-zero"
+        exit 1
+    fi
+
     mv -f ${SRC} ${DST}
     log "[INFO]" "${DST} modify success"
     chmod 600 ${DST}
 
     save_install_args
-    echo "[INFO] Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
-    echo "[INFO] The version of Ascend Docker Runtime is: ${PACKAGE_VERSION}"
-    echo '[INFO] please reboot daemon and container engine to take effect'
+    echo "[INFO]: Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
+    echo "[INFO]: The version of Ascend Docker Runtime is: ${PACKAGE_VERSION}"
+    echo '[INFO]: please reboot daemon and container engine to take effect'
     log "[INFO]" "Ascend Docker Runtime install success"
 }
 
 function uninstall()
 {
-    echo "[INFO] uninstalling ascend docker runtime ${PACKAGE_VERSION}"
+    echo "[INFO]: Uninstalling ascend docker runtime ${PACKAGE_VERSION}"
 
     if [ ! -d "${INSTALL_PATH}" ]; then
         log "[WARNING]" "uninstall skipping, the specified install path does not exist"
@@ -354,9 +315,9 @@ function uninstall()
         exit 1
     fi
 
-    "${INSTALL_PATH}"/script/uninstall.sh ${ISULA} ${INSTALL_SCENE} ${CONFIG_FILE_PATH}
+    "${INSTALL_PATH}"/script/uninstall.sh ${ISULA}
     if [[ $? != 0 ]]; then
-        log "[ERROR]" "uninstall failed, '${INSTALL_PATH}/script/uninstall.sh ${ISULA} ${INSTALL_SCENE} ${CONFIG_FILE_PATH}' return non-zero"
+        log "[ERROR]" "uninstall failed, '${INSTALL_PATH}/script/uninstall.sh ${ISULA}' return non-zero"
         exit 1
     fi
 
@@ -365,7 +326,7 @@ function uninstall()
 
 function upgrade()
 {
-    echo "[INFO] upgrading ascend docker runtime"
+    echo "[INFO]: upgrading ascend docker runtime"
     check_platform
     if [[ $? != 0 ]]; then
         log "[ERROR]" "upgrade failed, run package and os not matched in arch"
@@ -440,13 +401,12 @@ function upgrade()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
-    echo "[INFO] Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
-    echo '[INFO] upgrade ascend docker runtime success'
-    echo "[INFO] The version of Ascend Docker Runtime is: v${PACKAGE_VERSION}"
+    echo "[INFO]: Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
+    echo '[INFO]: upgrade ascend docker runtime success'
+    echo "[INFO]: The version of Ascend Docker Runtime is: v${PACKAGE_VERSION}"
     log "[INFO]" "Ascend Docker Runtime upgrade success"
 }
-INSTALL_SCENE_FLAG=n
-CONFIG_FILE_PATH_FLAG=n
+
 INSTALL_FLAG=n
 INSTALL_PATH_FLAG=n
 UNINSTALL_FLAG=n
@@ -471,37 +431,6 @@ fi
 while true
 do
     case "$3" in
-        --install-scene=*)
-            if [ "${INSTALL_SCENE_FLAG}" == "y" ]; then
-                log "[ERROR]" "failed, '--install-scene' Repeat parameter!"
-                exit 1
-            fi
-            need_help=n
-            INSTALL_SCENE_FLAG=y
-            if [ "$3" == "--install-scene=docker" ]; then
-                INSTALL_SCENE=docker
-            elif [ "$3" == "--install-scene=containerd" ]; then
-                INSTALL_SCENE=containerd
-            else
-                log "[ERROR]" "failed, please check the parameter of --install-scene=<scene>"
-                exit 1
-            fi
-            shift
-            ;;
-        --config-file-path=*)
-            if [ "${CONFIG_FILE_PATH_FLAG}" == "y" ]; then
-                log "[ERROR]" "failed, '--config-file-path' Repeat parameter!"
-                exit 1
-            fi
-            need_help=n
-            CONFIG_FILE_PATH_FLAG=y
-            CONFIG_FILE_PATH=$(echo $3 | cut -d"=" -f2)
-            if [[ ! -e "$CONFIG_FILE_PATH" ]]; then
-                log "[ERROR]" "failed, file '$CONFIG_FILE_PATH' does not exist."
-                exit 1
-            fi
-            shift
-            ;;
         --install)
             if [ "${INSTALL_FLAG}" == "y" ]; then
                 log "[ERROR]" "install failed, '--install' Repeat parameter!"
@@ -551,7 +480,7 @@ do
                 ISULA=isula
                 RESERVEDEFAULT=yes
             else
-                log "[ERROR]" "failed, please check the parameter of --ce=<ce>"
+                log "[ERROR]" "failed, Please check the parameter of --ce=<ce>"
                 exit 1
             fi
             shift
@@ -575,7 +504,7 @@ do
             elif [ "$3" == "--install-type=A200IA2" ]; then
                 a200ia2=y
             else
-                log "[ERROR]" "failed, please check the parameter of --install-type=<type>"
+                log "[ERROR]" "failed, Please check the parameter of --install-type=<type>"
                 exit 1
             fi
             shift
@@ -588,7 +517,7 @@ do
             ;;
         *)
             if [ "x$3" != "x" ]; then
-                log "[ERROR]" "failed, unsupported parameters: $3"
+                log "[ERROR]" "failed, Unsupported parameters: $3"
                 print_help
                 exit 1
             fi

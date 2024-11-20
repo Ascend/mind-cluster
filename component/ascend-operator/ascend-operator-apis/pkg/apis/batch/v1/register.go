@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -43,10 +43,11 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&AscendJobList{},
 	)
 
-	v1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
 }
 
 func init() {
+	//SchemeBuilder.Register(&AscendJob{}, &AscendJobList{})
 	SchemeBuilder.Register(addDefaultingFuncs)
 }

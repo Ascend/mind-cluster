@@ -17,15 +17,13 @@ package server
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -475,7 +473,7 @@ func (ps *PluginServer) GetRealAllocateDevicesFromEnv(pod v1.Pod) []string {
 }
 
 // GetKltAndRealAllocateDev get kubelet and real allocate device of pod
-func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]*common.PodDeviceInfo, error) {
+func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]PodDeviceInfo, error) {
 	if ps == nil {
 		return nil, fmt.Errorf("invalid interface receiver")
 	}
@@ -485,7 +483,7 @@ func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]*common.Po
 	if err != nil {
 		return nil, fmt.Errorf("get pod resource failed, %v", err)
 	}
-	var podDeviceInfo = make([]*common.PodDeviceInfo, 0)
+	var podDeviceInfo []PodDeviceInfo
 	for _, pod := range podList {
 		podKey := pod.Namespace + common.UnderLine + pod.Name
 		podResource, exist := podDevice[podKey]
@@ -498,16 +496,22 @@ func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]*common.Po
 			continue
 		}
 		if common.ParamOption.PresetVDevice && common.IsVirtualDev(ps.deviceType) {
-			hwlog.RunLog.Debugf("append pod(%s) %v", podKey, podResource.DeviceIds)
-			podDeviceInfo = append(podDeviceInfo, &common.PodDeviceInfo{Pod: pod, KltDevice: podResource.DeviceIds,
+			podDeviceInfo = append(podDeviceInfo, PodDeviceInfo{Pod: pod, KltDevice: podResource.DeviceIds,
 				RealDevice: podResource.DeviceIds})
 			continue
 		}
 
-		realDeviceList, err := ps.GetRealAllocateDevices(pod, podResource.DeviceIds)
+		realDeviceList, err := ps.GetRealAllocateDevicesFromMap(podResource.DeviceIds)
 		if err != nil {
-			hwlog.RunLog.Warnf("%s %s", podKey, err)
-			continue
+			hwlog.RunLog.Warnf("get real allocate devices err: %v", err)
+			realDevice, exist := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
+			if exist {
+				realDeviceList = strings.Split(realDevice, common.CommaSepDev)
+				ps.updateAllocMap(realDeviceList, podResource.DeviceIds)
+			} else {
+				hwlog.RunLog.Warnf("%s not found real allocate device", podKey)
+				continue
+			}
 		}
 
 		volAllocatedDevices := ps.GetRealAllocateDevicesFromEnv(pod)
@@ -516,27 +520,11 @@ func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]*common.Po
 			ps.updateAllocMap(realDeviceList, podResource.DeviceIds)
 			hwlog.RunLog.Debugf("get real devices:%v from env successfully", realDeviceList)
 		}
-		hwlog.RunLog.Debugf("append pod(%s) %v", podKey, realDeviceList)
-		podDeviceInfo = append(podDeviceInfo, &common.PodDeviceInfo{Pod: pod, KltDevice: podResource.DeviceIds,
+
+		podDeviceInfo = append(podDeviceInfo, PodDeviceInfo{Pod: pod, KltDevice: podResource.DeviceIds,
 			RealDevice: realDeviceList})
 	}
 	return podDeviceInfo, nil
-}
-
-// GetRealAllocateDevices get real allocate devices from klt allocate devices
-func (ps *PluginServer) GetRealAllocateDevices(pod v1.Pod, kltAllocate []string) ([]string, error) {
-	realDeviceList, err := ps.GetRealAllocateDevicesFromMap(kltAllocate)
-	if err == nil {
-		return realDeviceList, nil
-	}
-	hwlog.RunLog.Warnf("get real allocate devices err: %v", err)
-	realDevice, exist := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
-	if exist {
-		realDeviceList = strings.Split(realDevice, common.CommaSepDev)
-		ps.updateAllocMap(realDeviceList, kltAllocate)
-		return realDeviceList, nil
-	}
-	return nil, errors.New("not found real allocate device")
 }
 
 // DestroyNotUsedVNPU destroy not used virtual device
@@ -570,7 +558,7 @@ func (ps *PluginServer) DestroyNotUsedVNPU() error {
 	return nil
 }
 
-func (ps *PluginServer) removeVGroup(podDeviceInfo []*common.PodDeviceInfo) sets.String {
+func (ps *PluginServer) removeVGroup(podDeviceInfo []PodDeviceInfo) sets.String {
 	usedDevice := sets.String{}
 	for _, deviceInfo := range podDeviceInfo {
 		usedDevice.Insert(deviceInfo.RealDevice...)
@@ -816,36 +804,9 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 			common.SetAscendRuntimeEnv(ascendVisibleDevices, ps.ascendRuntimeOptions, resp)
 			hwlog.RunLog.Info("device-plugin will use ascend-docker to mount")
 		}
-		ps.SetSlowNodeNoticeEnv(resp)
 		resps.ContainerResponses = append(resps.ContainerResponses, resp)
 	}
 	return resps, nil
-}
-
-// SetSlowNodeNoticeEnv is to set the environment variable using slow node step time configmap
-func (ps *PluginServer) SetSlowNodeNoticeEnv(resp *v1beta1.ContainerAllocateResponse) {
-	if resp == nil {
-		hwlog.RunLog.Error("resp is nil")
-		return
-	}
-	if len((*resp).Envs) == 0 {
-		(*resp).Envs = make(map[string]string, common.SlowNodeStepTimeEnvNum)
-	}
-	configMap, err := ps.manager.GetKubeClient().GetConfigMap(common.SlowNodeNoticeCMName, common.DeviceInfoCMNameSpace)
-	if err != nil {
-		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.SlowNodeNoticeCMName, err)
-		return
-	}
-	var stepTimeInfo stepTimeCM
-	for _, val := range configMap.Data {
-		if err = json.Unmarshal([]byte(val), &stepTimeInfo); err != nil {
-			hwlog.RunLog.Errorf("step time configmap unmarshal error: %v", err)
-			return
-		}
-	}
-	(*resp).Envs[common.PerfDumpPathEnv] = stepTimeInfo.Data.PerfDumpPath
-	(*resp).Envs[common.PerfDumpConfigEnv] = stepTimeInfo.Data.PerfDumpConfig
-	hwlog.RunLog.Info("allocate step time env succeed")
 }
 
 // GetPreferredAllocation implement the kubelet device plugin interface

@@ -28,8 +28,8 @@ int GetNsPath(const long pid, const char *nsType, char *buf, const size_t bufSiz
     if ((nsType == NULL) || (buf == NULL)) {
         return -1;
     }
-    static const char *FMT_STR = "/proc/%d/ns/%s";
-    return sprintf_s(buf, bufSize, FMT_STR, pid, nsType);
+    static const char *fmtStr = "/proc/%d/ns/%s";
+    return sprintf_s(buf, bufSize, fmtStr, pid, nsType);
 }
 
 int GetSelfNsPath(const char *nsType, char *buf, const size_t bufSize)
@@ -37,8 +37,8 @@ int GetSelfNsPath(const char *nsType, char *buf, const size_t bufSize)
     if ((nsType == NULL) || (buf == NULL)) {
         return -1;
     }
-    static const char *FMT_STR = "/proc/self/ns/%s";
-    return sprintf_s(buf, bufSize, FMT_STR, nsType);
+    static const char *fmtStr = "/proc/self/ns/%s";
+    return sprintf_s(buf, bufSize, fmtStr, nsType);
 }
 
 int EnterNsByFd(int fd, int nsType)

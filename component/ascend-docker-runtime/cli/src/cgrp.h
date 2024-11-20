@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CGRP_H
-#define CGRP_H
+#ifndef _CGRP_H
+#define _CGRP_H
 
 #include "basic.h"
 
