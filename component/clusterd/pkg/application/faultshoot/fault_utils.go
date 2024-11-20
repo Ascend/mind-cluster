@@ -133,7 +133,7 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 	for _, code := range codes {
 		faultTime, found := faultInfo.FaultTimeMap[code]
 		if !found {
-			hwlog.RunLog.Warnf("cannot find fault time of %s", code)
+			hwlog.RunLog.Debugf("cannot find fault time of %s", code)
 			faultTime = time.Now().UnixMilli()
 		}
 		newFault := constant.DeviceFault{

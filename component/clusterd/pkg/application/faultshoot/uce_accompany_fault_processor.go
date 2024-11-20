@@ -89,14 +89,16 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 		accompanyFaultTime := fault.FaultTime
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
-			hwlog.RunLog.Infof("filter uce accompany fault %s", util.ObjToString(fault))
+			hwlog.RunLog.Warnf("filter uce accompany fault %s, fault time: %s",
+				util.ObjToString(fault), util.ReadableMsTime(accompanyFaultTime))
 			faultMap = deleteFaultFromFaultMap(faultMap, fault)
 			continue
 		}
 		// if current is not exceed diagnosis time,
 		// then cannot decide fault is accompany or not, filter, and in que to decide in next turn.
 		if !processor.isCurrentExceedDiagnosisTimeout(currentTime, accompanyFaultTime) {
-			hwlog.RunLog.Infof("filter uce accompany like fault %s", util.ObjToString(fault))
+			hwlog.RunLog.Warnf("filter uce accompany like fault %s, fault time: %s",
+				util.ObjToString(fault), util.ReadableMsTime(accompanyFaultTime))
 			faultMap = deleteFaultFromFaultMap(faultMap, fault)
 			newDeviceFaultQue = append(newDeviceFaultQue, fault)
 		}
