@@ -30,15 +30,15 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
+	"ascend-common/devmanager/common"
 	"github.com/influxdata/telegraf/plugins/common/shim"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"huawei.com/npu-exporter/v6/collector"
 	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/limiter"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
 	"huawei.com/npu-exporter/v6/versions"
 )

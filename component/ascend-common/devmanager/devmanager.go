@@ -21,9 +21,9 @@ import (
 	"strings"
 	"sync"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/dcmi"
 )
 
 // DeviceInterface for common device interface
@@ -561,7 +561,7 @@ func (d *DeviceManager) GetDeviceIPAddress(logicID, ipType int32) (string, error
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManager) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	if !common.IsValidTemplateName(d.DevType, vDevInfo.TemplateName) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid template name: %s", vDevInfo.TemplateName)
 	}

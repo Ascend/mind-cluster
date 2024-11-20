@@ -1,4 +1,4 @@
-/* Copyright(C) 2021. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,20 +12,19 @@
    limitations under the License.
 */
 
-// Package devmanager this Ascend910 device manager
+// Package devmanager this for device driver manager mock
 package devmanager
 
 import (
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
+	"ascend-common/devmanager/common"
 )
 
-// A910Manager Ascend910 device manager
-type A910Manager struct {
-	dcmi.DcManager
+// DeviceManager910A3Mock common device manager mock for Ascend910A3
+type DeviceManager910A3Mock struct {
+	DeviceManagerMock
 }
 
-// DcGetHbmInfo get HBM information, only for Ascend910
-func (d *A910Manager) DcGetHbmInfo(cardID, deviceID int32) (*common.HbmInfo, error) {
-	return dcmi.FuncDcmiGetDeviceHbmInfo(cardID, deviceID)
+// GetDevType return mock type
+func (d *DeviceManager910A3Mock) GetDevType() string {
+	return common.Ascend910A3
 }

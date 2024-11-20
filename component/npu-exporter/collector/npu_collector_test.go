@@ -22,16 +22,16 @@ import (
 	"testing"
 	"time"
 
+	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/stretchr/testify/assert"
 
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 )
 
 const (

@@ -18,8 +18,8 @@ package devmanager
 import (
 	"errors"
 
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
+	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/dcmi"
 )
 
 var errorMsg = "mock error"

@@ -18,7 +18,7 @@ package devmanager
 import (
 	"errors"
 
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"ascend-common/devmanager/common"
 )
 
 // DeviceManager910A3MockErr common device manager mock error for Ascend910A3

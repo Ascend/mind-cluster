@@ -18,7 +18,7 @@ package collector
 import (
 	"time"
 
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"ascend-common/devmanager/common"
 )
 
 const (

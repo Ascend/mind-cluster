@@ -394,9 +394,9 @@ import (
 	"time"
 	"unsafe"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/common"
 )
 
 // CDcmiMemoryInfoV3 the c struct of memoryInfo for v3

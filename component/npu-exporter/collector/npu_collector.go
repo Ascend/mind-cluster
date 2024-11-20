@@ -24,15 +24,15 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/dcmi"
+	"ascend-common/devmanager/hccn"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
-	"huawei.com/npu-exporter/v6/devmanager/hccn"
 	"huawei.com/npu-exporter/v6/versions"
 )
 

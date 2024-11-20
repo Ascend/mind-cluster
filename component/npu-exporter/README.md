@@ -8,11 +8,16 @@ Prometheus（普罗米修斯）是一个开源的系统监控和警报工具包�
 
 # 编译NPU-Exporter
 
-1.  通过git拉取源码，获得ascend-npu-exporter。
+1. 通过git拉取源码，获得ascend-npu-exporter和ascend-common。
 
-    示例：源码放在/home/test/ascend-npu-exporter目录下
+   注意：Npu-Exporter依赖AscendCommon，编译时要与ascend-common放在同一目录下。
 
-2.  执行以下命令，进入构建目录，执行构建脚本，在“output“目录下生成二进制npu-exporter、yaml文件和Dockerfile等文件。
+   示例：
+
+   Npu-Exporter源码放在/home/test/ascend-npu-exporter目录下。
+
+   ascend-common源码放在/home/test/ascend-common目录下。
+2.  执行以下命令，进入Npu-Exporter构建目录，执行构建脚本，在“output“目录下生成二进制npu-exporter、yaml文件和Dockerfile等文件。
 
     **cd** _/home/test/_**ascend-npu-exporter/build/**
 
@@ -37,4 +42,5 @@ Prometheus（普罗米修斯）是一个开源的系统监控和警报工具包�
 
 # 说明
 
-1. 当前npu-exporter仅支持http启动，如果需要使用https启动，请自行完成代码修改并适配Prometheus
+1. 当前Npu-Exporter仅支持http启动，如果需要使用https启动，请自行完成代码修改并适配Prometheus
+2. Npu-exporter依赖AscendCommon，编译时要与ascend-common放在同一目录下

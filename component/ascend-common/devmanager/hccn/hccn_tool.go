@@ -23,9 +23,9 @@ import (
 	"strings"
 	"sync"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/common"
 )
 
 const (

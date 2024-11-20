@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 var (

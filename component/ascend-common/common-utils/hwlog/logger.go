@@ -23,7 +23,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"huawei.com/npu-exporter/v6/common-utils/utils"
+	"ascend-common/common-utils/utils"
 )
 
 const (

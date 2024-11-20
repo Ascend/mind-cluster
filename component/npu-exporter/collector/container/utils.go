@@ -25,10 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"google.golang.org/grpc"
-
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
 )
 
 const (

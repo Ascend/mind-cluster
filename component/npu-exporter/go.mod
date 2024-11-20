@@ -3,12 +3,11 @@ module huawei.com/npu-exporter/v6
 go 1.18
 
 require (
+	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
-	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/influxdata/telegraf v1.26.3
 	github.com/prometheus/client_golang v1.15.0
-	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/grpc v1.57.2
 	google.golang.org/protobuf v1.30.0
@@ -28,13 +27,12 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/gosnmp/gosnmp v1.35.0 // indirect
 	github.com/influxdata/toml v0.0.0-20190415235208-270119a8ce65 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -47,7 +45,6 @@ require (
 	github.com/prometheus/prometheus v0.42.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sleepinggenius2/gosmi v0.4.4 // indirect
-	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
@@ -55,4 +52,7 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/apimachinery v0.26.2 // indirect
 )
+
+replace ascend-common => ../ascend-common

@@ -27,9 +27,9 @@ import (
 	"syscall"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
+	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 )
 
 const (
