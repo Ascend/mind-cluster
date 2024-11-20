@@ -171,6 +171,9 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 
 func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	delFault constant.DeviceFault) map[string][]constant.DeviceFault {
+	if faultMap == nil {
+		return make(map[string][]constant.DeviceFault)
+	}
 	deviceFaults, ok := faultMap[delFault.NPUName]
 	if !ok {
 		return faultMap
