@@ -165,3 +165,72 @@ func compareStringSliceIsSame(slice1, slice2 []string) {
 		convey.So(slice1[i], convey.ShouldEqual, slice2[i])
 	}
 }
+
+func TestDeepCopyForObejct(t *testing.T) {
+	type args struct {
+		Data map[string][]int
+		Map  map[string]map[string]string
+	}
+
+	t.Run("TestDeepCopy for object", func(t *testing.T) {
+		a := args{Data: make(map[string][]int)}
+		a.Data["111"] = []int{1, 2, 3, 4}
+		a.Data["222"] = []int{5, 6, 7, 8}
+		b := new(args)
+		if err := DeepCopy(b, a); err != nil {
+			t.Errorf("DeepCopy() error = %v", err)
+		}
+		a.Data["111"] = append(a.Data["111"], 5, 6, 7, 8)
+		b.Data["222"] = append(b.Data["222"], 1, 2, 3, 4)
+
+		if len(a.Data["111"]) == len(b.Data["111"]) || len(a.Data["222"]) == len(b.Data["222"]) {
+			t.Errorf("DeepCopy() failed")
+		}
+
+		a.Map = make(map[string]map[string]string)
+		a.Map["111"] = make(map[string]string)
+		a.Map["111"]["111"] = "111"
+		DeepCopy(b, a)
+		b.Map["222"] = make(map[string]string)
+		if _, ok := a.Map["222"]; ok {
+			t.Errorf("DeepCopy() failed")
+		}
+	})
+}
+
+func TestDeepCopyForMap(t *testing.T) {
+	type args struct {
+		Data map[string][]int
+		Map  map[string]map[string]string
+	}
+
+	t.Run("TestDeepCopy for map", func(t *testing.T) {
+		a := make(map[string]string)
+		a["111"] = "111"
+		b := new(map[string]string)
+		if err := DeepCopy(b, a); err != nil {
+			t.Errorf("DeepCopy() error = %v", err)
+		}
+		(*b)["222"] = "222"
+		if _, ok := a["222"]; ok {
+			t.Errorf("DeepCopy() failed")
+		}
+	})
+
+	t.Run("TestDeepCopy for map with pointer value", func(t *testing.T) {
+		a := make(map[string]*args)
+		a["111"] = &args{
+			Data: make(map[string][]int),
+			Map:  make(map[string]map[string]string),
+		}
+		b := new(map[string]*args)
+		if err := DeepCopy(b, a); err != nil {
+			t.Errorf("DeepCopy() error = %v", err)
+		}
+		c := *b
+		c["111"].Data["111"] = []int{1, 2, 3, 4}
+		if len(a["111"].Data["111"]) > 0 {
+			t.Errorf("DeepCopy() failed")
+		}
+	})
+}

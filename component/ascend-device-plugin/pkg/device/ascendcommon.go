@@ -471,7 +471,7 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			FaultLevel:           faultType,
 			FaultHandling:        faultType,
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTime:            device.AlarmRaisedTime,
+			FaultTimeMap:         device.FaultTimeMap,
 		})
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
@@ -485,7 +485,7 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			FaultLevel:           faultType,
 			FaultHandling:        faultType,
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTime:            device.AlarmRaisedTime,
+			FaultTimeMap:         device.FaultTimeMap,
 		})
 	}
 	return deviceFaults

@@ -1619,3 +1619,36 @@ func TestHbmFaultManager(t *testing.T) {
 		convey.So(faultInfoList[0].EventID, convey.ShouldEqual, AicBusFaultCode)
 	})
 }
+
+func Test_updateDeviceFaultTimeMap(t *testing.T) {
+	t.Run("Test_updateDeviceFaultTimeMap", func(t *testing.T) {
+		npuDevice := &NpuDevice{
+			FaultTimeMap: make(map[string]int64),
+		}
+
+		faultInfo := common.DevFaultInfo{
+			EventID:         4326743278,
+			AlarmRaisedTime: time.Now().UnixMilli(),
+		}
+		isAdd := true
+		updateDeviceFaultTimeMap(npuDevice, faultInfo, isAdd)
+		eventIdHex := strconv.FormatInt(faultInfo.EventID, Hex)
+		faultTime, found := npuDevice.FaultTimeMap[strings.ToUpper(eventIdHex)]
+		if !found {
+			t.Errorf("cannot found fault time")
+			return
+		}
+		if faultTime != faultInfo.AlarmRaisedTime {
+			t.Errorf("cannot found fault error")
+			return
+		}
+
+		isAdd = false
+		updateDeviceFaultTimeMap(npuDevice, faultInfo, isAdd)
+		_, found = npuDevice.FaultTimeMap[strings.ToUpper(eventIdHex)]
+		if found {
+			t.Errorf("found fault time")
+			return
+		}
+	})
+}

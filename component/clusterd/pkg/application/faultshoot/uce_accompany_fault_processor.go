@@ -38,7 +38,13 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 	for deviceName, deviceFaults := range deviceInfo.DeviceList {
 		for _, fault := range deviceFaults {
 			if isUceFault(fault) {
-				processor.uceFaultTime[nodeName][deviceName] = fault.FaultTime
+				faultTime, ok := fault.FaultTimeMap[fault.FaultCode]
+				if !ok {
+					hwlog.RunLog.Errorf("cannot find uce fault time for device %s of node %s",
+						deviceName, nodeName)
+					faultTime = constant.DeviceNotFault
+				}
+				processor.uceFaultTime[nodeName][deviceName] = faultTime
 				continue
 			}
 			if !isUceAccompanyFault(fault) {
@@ -86,17 +92,24 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 	newDeviceFaultQue := make([]constant.DeviceFault, 0)
 	for _, fault := range deviceFaultQue {
 		uceFaultTime := processor.getDeviceUceFaultTime(nodeName, deviceName)
-		accompanyFaultTime := fault.FaultTime
+		accompanyFaultTime, ok := fault.FaultTimeMap[fault.FaultCode]
+		if !ok {
+			hwlog.RunLog.Errorf("cannot find uce fault time for device %s of node %s",
+				deviceName, nodeName)
+			accompanyFaultTime = constant.DeviceNotFault
+		}
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
-			hwlog.RunLog.Infof("filter uce accompany fault %s", util.ObjToString(fault))
+			hwlog.RunLog.Warnf("filter uce accompany fault %s, fault time: %s",
+				util.ObjToString(fault), util.ReadableMsTime(accompanyFaultTime))
 			faultMap = deleteFaultFromFaultMap(faultMap, fault)
 			continue
 		}
 		// if current is not exceed diagnosis time,
 		// then cannot decide fault is accompany or not, filter, and in que to decide in next turn.
 		if !processor.isCurrentExceedDiagnosisTimeout(currentTime, accompanyFaultTime) {
-			hwlog.RunLog.Infof("filter uce accompany like fault %s", util.ObjToString(fault))
+			hwlog.RunLog.Warnf("filter uce accompany like fault %s, fault time: %s",
+				util.ObjToString(fault), util.ReadableMsTime(accompanyFaultTime))
 			faultMap = deleteFaultFromFaultMap(faultMap, fault)
 			newDeviceFaultQue = append(newDeviceFaultQue, fault)
 		}

@@ -1002,6 +1002,7 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 				recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 			} else {
 				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, faultInfo.EventID)
+				updateDeviceFaultTimeMap(device, faultInfo, false)
 			}
 		}
 		if faultInfo.Assertion == common.FaultOnce {
@@ -1014,6 +1015,7 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 		}
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
+			updateDeviceFaultTimeMap(device, faultInfo, true)
 			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
 				insertFaultFrequency(device.LogicID, faultInfo.EventID)
@@ -1021,6 +1023,26 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 		}
 	}
 	setAlarmRaisedTime(device)
+}
+
+func updateDeviceFaultTimeMap(device *NpuDevice, faultInfo common.DevFaultInfo, isAdd bool) {
+	if device.FaultTimeMap == nil {
+		device.FaultTimeMap = make(map[string]int64)
+	}
+	hexFaultCode := strings.ToUpper(strconv.FormatInt(faultInfo.EventID, Hex))
+	if isAdd {
+		faultTime := faultInfo.AlarmRaisedTime
+		if faultTime == 0 {
+			faultTime = time.Now().UnixMilli()
+		}
+		existingFaultTime, found := device.FaultTimeMap[hexFaultCode]
+		if !found || existingFaultTime > faultTime {
+			device.FaultTimeMap[hexFaultCode] = faultTime
+		}
+		hwlog.RunLog.Debugf("%s fault time: %d", hexFaultCode, device.FaultTimeMap[hexFaultCode])
+	} else {
+		delete(device.FaultTimeMap, hexFaultCode)
+	}
 }
 
 // SetNetworkNewFaultAndCacheOnceRecoverFault set new network fault code and cache once recover network fault
@@ -1062,6 +1084,7 @@ func networkFaultRecoverAndFaultOnceHandle(logicID int32, faultInfos []common.De
 				recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
 			} else {
 				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, faultInfo.EventID)
+				updateDeviceFaultTimeMap(device, faultInfo, false)
 			}
 		}
 		if faultInfo.Assertion == common.FaultOnce {
@@ -1077,6 +1100,7 @@ func networkFaultOccurAndFaultOnceHandle(faultInfos []common.DevFaultInfo, devic
 		}
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
+			updateDeviceFaultTimeMap(device, faultInfo, true)
 			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
 				insertFaultFrequency(device.LogicID, faultInfo.EventID)
@@ -1092,18 +1116,25 @@ func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 			recoverFaults := recoverFaultMap[device.LogicID]
 			for _, recoverFault := range recoverFaults {
 				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, recoverFault)
+				delOnceRecoverFaultTime(device, recoverFault)
 			}
 			setAlarmRaisedTime(device)
 
 			recoverNetworkFaults := recoverNetworkFaultMap[device.LogicID]
 			for _, recoverNetworkFault := range recoverNetworkFaults {
 				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, recoverNetworkFault)
+				delOnceRecoverFaultTime(device, recoverNetworkFault)
 			}
 			setNetworkAlarmRaisedTime(device)
 		}
 	}
 	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
 	recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+}
+
+func delOnceRecoverFaultTime(device *NpuDevice, eventId int64) {
+	hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, Hex))
+	delete(device.FaultTimeMap, hexFaultCode)
 }
 
 // DelOnceFrequencyFault clear all the fault occurrence time in cache when frequency

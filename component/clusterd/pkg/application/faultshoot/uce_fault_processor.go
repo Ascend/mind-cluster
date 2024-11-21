@@ -220,9 +220,15 @@ func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceIn
 			if !isUceFault(fault) {
 				continue
 			}
+			faultTime, ok := fault.FaultTimeMap[fault.FaultCode]
+			if !ok {
+				hwlog.RunLog.Errorf("cannot find uce fault time for device %s of node %s",
+					deviceInfo.CmName, nodeName)
+				faultTime = constant.DeviceNotFault
+			}
 			nodeInfo.DeviceInfo[fault.NPUName] = uceDeviceInfo{
 				DeviceName:   fault.NPUName,
-				FaultTime:    fault.FaultTime,
+				FaultTime:    faultTime,
 				RecoverTime:  constant.JobNotRecover,
 				CompleteTime: constant.JobNotRecoverComplete,
 			}

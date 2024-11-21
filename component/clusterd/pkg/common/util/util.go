@@ -4,14 +4,17 @@
 package util
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"os"
 	"os/signal"
 	"strconv"
 	"time"
+
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 )
 
 // NewSignalWatcher create a new signal watcher
@@ -121,4 +124,13 @@ func DeleteStringSliceItem(slice []string, item string) []string {
 // ReadableMsTime return more readable time from msec
 func ReadableMsTime(msTime int64) string {
 	return time.UnixMilli(msTime).Format("2006-01-02 15:04:05")
+}
+
+// DeepCopy for object using gob
+func DeepCopy(dst, src interface{}) error {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }

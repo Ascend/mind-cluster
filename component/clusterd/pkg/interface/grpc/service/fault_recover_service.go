@@ -84,7 +84,7 @@ func (s *FaultRecoverService) checkFault() {
 	if faultshoot.GlobalFaultProcessCenter == nil {
 		hwlog.RunLog.Warnf("global center is nil, try it after %d second", gloabalFaultBeaconSecond)
 	}
-	allJobfaultInfo := faultshoot.GlobalFaultProcessCenter.QueryJobsFaultInfo()
+	allJobfaultInfo := faultshoot.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultshoot.NotHandleFault)
 	var registeredJobInfo []faultshoot.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobfaultInfo {
 		if !s.registered(jobId) {

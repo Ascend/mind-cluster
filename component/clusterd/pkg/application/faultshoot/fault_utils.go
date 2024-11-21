@@ -90,6 +90,8 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceCm {
 			if _, ok := deviceFaultMap[deviceFault.NPUName]; !ok {
 				deviceFaultMap[deviceFault.NPUName] = make([]constant.DeviceFault, 0)
 			}
+			hwlog.RunLog.Debugf("device fault: %s of cm %s, time: %s",
+				util.ObjToString(deviceFault), devInfo.CmName, util.ReadableMsTime(devInfo.UpdateTime))
 			// device plugin may merge multiple fault codes in one string
 			deviceFaults := splitDeviceFault(deviceFault)
 			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
@@ -114,15 +116,18 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceCm {
 
 func getServerType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, "Ascend910") {
-			return "Ascend910"
+		if strings.Contains(key, Ascend910Server) {
+			return Ascend910Server
 		}
-		if strings.Contains(key, "Ascend310") {
-			return "Ascend310"
+		if strings.Contains(key, Ascend310PServer) {
+			return Ascend310PServer
+		}
+		if strings.Contains(key, Ascend310Server) {
+			return Ascend310Server
 		}
 	}
-	hwlog.RunLog.Errorf("cannot decide server type")
-	return "Ascend910"
+	hwlog.RunLog.Warn("cannot decide server type")
+	return Ascend910Server
 }
 
 // device plugin may merge multiple fault codes in one string
@@ -137,7 +142,7 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 			FaultLevel:           faultInfo.FaultLevel,
 			FaultHandling:        faultInfo.FaultHandling,
 			FaultCode:            code,
-			FaultTime:            faultInfo.FaultTime,
+			FaultTimeMap:         faultInfo.FaultTimeMap,
 		}
 		deviceFaults = append(deviceFaults, newFault)
 	}
@@ -152,7 +157,7 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 		LargeModelFaultLevel: deviceFaults[0].LargeModelFaultLevel,
 		FaultLevel:           deviceFaults[0].FaultLevel,
 		FaultHandling:        deviceFaults[0].FaultHandling,
-		FaultTime:            deviceFaults[0].FaultTime,
+		FaultTimeMap:         deviceFaults[0].FaultTimeMap,
 	}
 	faultCodeList := make([]string, 0)
 	for _, fault := range deviceFaults {
@@ -280,4 +285,23 @@ func isUceAccompanyFault(faultDevice constant.DeviceFault) bool {
 
 func isDeviceFaultEqual(one, other constant.DeviceFault) bool {
 	return reflect.DeepEqual(one, other)
+}
+
+func getFaultLevel(faultLevel string) int {
+	switch faultLevel {
+	case NotHandleFaultDesc:
+		return NotHandleFault
+	case RestartRequestDesc:
+		return RestartRequest
+	case RestartBusinessDesc:
+		return RestartBusiness
+	case FreeRestartNPUDesc:
+		return FreeRestartNPU
+	case RestartNPUDesc:
+		return RestartNPU
+	case SeparateNPUDesc:
+		return SeparateNPU
+	default:
+		return NotFaultLevel
+	}
 }

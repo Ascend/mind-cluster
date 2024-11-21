@@ -5,13 +5,13 @@ package constant
 
 // DeviceFault device or network fault info
 type DeviceFault struct {
-	FaultType            string `json:"fault_type"`
-	NPUName              string `json:"npu_name"`
-	LargeModelFaultLevel string `json:"large_model_fault_level"`
-	FaultLevel           string `json:"fault_level"`
-	FaultHandling        string `json:"fault_handling"`
-	FaultCode            string `json:"fault_code"`
-	FaultTime            int64  `json:"fault_time"`
+	FaultType            string           `json:"fault_type"`
+	NPUName              string           `json:"npu_name"`
+	LargeModelFaultLevel string           `json:"large_model_fault_level"`
+	FaultLevel           string           `json:"fault_level"`
+	FaultHandling        string           `json:"fault_handling"`
+	FaultCode            string           `json:"fault_code"`
+	FaultTimeMap         map[string]int64 `json:"fault_time_map"`
 }
 
 // NodeInfoCM the config map struct of node info

@@ -58,8 +58,9 @@ type AdvanceDeviceCm struct {
 // FaultRank defines the structure for storing fault rank information.
 // It includes the rank ID and fault code.
 type FaultRank struct {
-	RankId    string
-	FaultCode string
+	RankId     string
+	FaultCode  string
+	FaultLevel string
 }
 
 // JobFaultInfo job fault rank info
@@ -155,3 +156,31 @@ type reportInfo struct {
 	RecoverTime  int64
 	CompleteTime int64
 }
+
+// FaultLevel int value
+const (
+	NotFaultLevel = iota
+	NotHandleFault
+	RestartRequest
+	RestartBusiness
+	FreeRestartNPU
+	RestartNPU
+	SeparateNPU
+)
+
+// FaultLevel string describe
+const (
+	NotHandleFaultDesc  = "NotHandleFault"
+	RestartRequestDesc  = "RestartRequest"
+	RestartBusinessDesc = "RestartBusiness"
+	FreeRestartNPUDesc  = "FreeRestartNPU"
+	RestartNPUDesc      = "RestartNPU"
+	SeparateNPUDesc     = "SeparateNPU"
+)
+
+// cluster support server
+const (
+	Ascend910Server  = "Ascend910"
+	Ascend310PServer = "Ascend310P"
+	Ascend310Server  = "Ascend310"
+)

@@ -6,7 +6,10 @@ package faultshoot
 import (
 	"sync"
 
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+
 	"clusterd/pkg/application/job"
+	"clusterd/pkg/common/util"
 )
 
 func newJobRankFaultInfoProcessor(deviceCenter *deviceFaultProcessCenter) *jobRankFaultInfoProcessor {
@@ -18,7 +21,31 @@ func newJobRankFaultInfoProcessor(deviceCenter *deviceFaultProcessCenter) *jobRa
 }
 
 func (processor *jobRankFaultInfoProcessor) getJobFaultRankInfos() map[string]JobFaultInfo {
-	return processor.jobFaultInfoMap
+	result := new(map[string]JobFaultInfo)
+	err := util.DeepCopy(result, processor.jobFaultInfoMap)
+	if err != nil {
+		hwlog.RunLog.Errorf("get job fault rank failed, err: %v", err)
+		return nil
+	}
+	return *result
+}
+
+func (processor *jobRankFaultInfoProcessor) getJobFaultRankInfosFilterLevel(faultLevel int) map[string]JobFaultInfo {
+	jobFaultRankInfos := processor.getJobFaultRankInfos()
+	if jobFaultRankInfos == nil {
+		return nil
+	}
+	for jobId, jobFaultInfo := range jobFaultRankInfos {
+		faultList := make([]FaultRank, 0)
+		for _, fault := range jobFaultInfo.FaultList {
+			if getFaultLevel(fault.FaultLevel) > faultLevel {
+				faultList = append(faultList, fault)
+			}
+		}
+		jobFaultInfo.FaultList = faultList
+		jobFaultRankInfos[jobId] = jobFaultInfo
+	}
+	return jobFaultRankInfos
 }
 
 func (processor *jobRankFaultInfoProcessor) setJobFaultRankInfos(faultInfos map[string]JobFaultInfo) {
@@ -63,8 +90,9 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		}
 		for _, fault := range faultList {
 			faultRankList = append(faultRankList, FaultRank{
-				RankId:    deviceInfo.RankID,
-				FaultCode: fault.FaultCode,
+				RankId:     deviceInfo.RankID,
+				FaultCode:  fault.FaultCode,
+				FaultLevel: fault.FaultLevel,
 			})
 		}
 	}
