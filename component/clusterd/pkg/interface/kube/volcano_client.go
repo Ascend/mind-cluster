@@ -91,6 +91,7 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 	return nil, fmt.Errorf("vcK8sClient is nil")
 }
 
+// RetryUpdatePodGroup call UpdatePod
 func RetryUpdatePodGroup(pg *v1beta1.PodGroup, retryTimes int) (*v1beta1.PodGroup, error) {
 	pg, err := UpdatePodGroup(pg)
 	retry := 0

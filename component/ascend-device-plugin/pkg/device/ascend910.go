@@ -45,9 +45,9 @@ var (
 	hotResetManagerInitOnce       sync.Once
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
-	isolateDevList                []int32
-	isL3FaultExistMap             map[int32]bool = make(map[int32]bool, common.MaxDevicesNum)
-	resetGoroutine                               = &sync.Map{}
+	isolateDevList    []int32
+	isL3FaultExistMap = make(map[int32]bool, common.MaxDevicesNum)
+	resetGoroutine    = &sync.Map{}
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
@@ -633,7 +633,7 @@ func (hnm *HwAscend910Manager) updateUpgradeErrorInfo(classifyDevs map[string][]
 	}
 	for _, dev := range deviceList {
 		index := -1
-		for i, _ := range isolateDevList {
+		for i := range isolateDevList {
 			if isolateDevList[i] != dev.LogicID {
 				continue
 			}

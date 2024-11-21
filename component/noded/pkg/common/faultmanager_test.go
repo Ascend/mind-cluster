@@ -44,12 +44,12 @@ func TestSetFaultDevInfo(t *testing.T) {
 		convey.Convey("fault manager set fault dev info", func() {
 			faultManager := NewFaultManager()
 			faultDevInfo := &FaultDevInfo{
-				FaultDevList: []*FaultDev{&FaultDev{
+				FaultDevList: []*FaultDev{{
 					DeviceType: "CPU",
 					DeviceId:   0,
 					FaultCode:  []string{"01010001"},
 					FaultLevel: NotHandleFault,
-				}},
+								}},
 				HeartbeatTime:     194646444,
 				HeartbeatInterval: 5,
 				NodeStatus:        NodeHealthy,
@@ -60,12 +60,12 @@ func TestSetFaultDevInfo(t *testing.T) {
 		convey.Convey("wrong fault manager set fault dev info", func() {
 			faultManager := mockWrongFaultManager()
 			faultDevInfo := &FaultDevInfo{
-				FaultDevList: []*FaultDev{&FaultDev{
+				FaultDevList: []*FaultDev{{
 					DeviceType: "CPU",
 					DeviceId:   0,
 					FaultCode:  []string{"01010001"},
 					FaultLevel: NotHandleFault,
-				}},
+								}},
 				HeartbeatTime:     194646444,
 				HeartbeatInterval: 5,
 				NodeStatus:        NodeHealthy,
@@ -84,24 +84,24 @@ func TestSetFaultDevList(t *testing.T) {
 	convey.Convey("test set fault dev list", t, func() {
 		convey.Convey("fault manager set fault dev list", func() {
 			faultManager := NewFaultManager()
-			faultDevList := []*FaultDev{&FaultDev{
+			faultDevList := []*FaultDev{{
 				DeviceType: "CPU",
 				DeviceId:   0,
 				FaultCode:  []string{"01010001"},
 				FaultLevel: NotHandleFault,
-			},
+						},
 			}
 			faultManager.SetFaultDevList(faultDevList)
 			FaultDevListEqual(faultManager.GetFaultDevList(), faultDevList)
 		})
 		convey.Convey("wrong fault manager set fault dev List", func() {
 			faultManager := mockWrongFaultManager()
-			faultDevList := []*FaultDev{&FaultDev{
+			faultDevList := []*FaultDev{{
 				DeviceType: "CPU",
 				DeviceId:   0,
 				FaultCode:  []string{"01010001"},
 				FaultLevel: NotHandleFault,
-			},
+						},
 			}
 			faultManager.SetFaultDevList(faultDevList)
 			convey.So(faultManager.GetFaultDevList(), convey.ShouldBeNil)

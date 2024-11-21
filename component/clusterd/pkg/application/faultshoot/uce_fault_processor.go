@@ -182,7 +182,7 @@ func (processor *uceFaultProcessor) getUceDeviceOfNodes() map[string]uceNodeInfo
 
 func (processor *uceFaultProcessor) getUceDevicesForUceTolerateJobs() map[string]uceJobInfo {
 	nodeNameList := make([]string, 0)
-	for key, _ := range processor.nodeDeviceCmMap {
+	for key := range processor.nodeDeviceCmMap {
 		nodeNameList = append(nodeNameList, key)
 	}
 	uceJobs := make(map[string]uceJobInfo)

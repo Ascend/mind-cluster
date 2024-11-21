@@ -33,7 +33,7 @@ func getNodeAndDeviceFromJobIdAndRankId(
 
 func getNodesNameFromDeviceInfo(deviceInfos map[string]*constant.DeviceInfo) []string {
 	nodesName := make([]string, 0)
-	for cmName, _ := range deviceInfos {
+	for cmName := range deviceInfos {
 		nodeName := cmNameToNodeName(cmName)
 		nodesName = append(nodesName, nodeName)
 	}
@@ -113,7 +113,7 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceCm {
 }
 
 func getServerType(devInfo *constant.DeviceInfo) string {
-	for key, _ := range devInfo.DeviceList {
+	for key := range devInfo.DeviceList {
 		if strings.Contains(key, "Ascend910") {
 			return "Ascend910"
 		}
@@ -171,6 +171,9 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 
 func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	delFault constant.DeviceFault) map[string][]constant.DeviceFault {
+	if faultMap == nil {
+		return make(map[string][]constant.DeviceFault)
+	}
 	deviceFaults, ok := faultMap[delFault.NPUName]
 	if !ok {
 		return faultMap
@@ -240,7 +243,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceCm) AdvanceDeviceC
 }
 
 func getFaultListKey(devInfo *constant.DeviceInfo) string {
-	for key, _ := range devInfo.DeviceList {
+	for key := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Fault") {
 			return key
 		}
@@ -249,7 +252,7 @@ func getFaultListKey(devInfo *constant.DeviceInfo) string {
 }
 
 func getNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
-	for key, _ := range devInfo.DeviceList {
+	for key := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-NetworkUnhealthy") {
 			return key
 		}
@@ -258,7 +261,7 @@ func getNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 }
 
 func getCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
-	for key, _ := range devInfo.DeviceList {
+	for key := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Unhealthy") {
 			return key
 		}
@@ -267,15 +270,15 @@ func getCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 }
 
 func isUceFault(faultDevice constant.DeviceFault) bool {
-	if strings.Contains(faultDevice.FaultCode, constant.UCE_FAULT_CODE) {
+	if strings.Contains(faultDevice.FaultCode, constant.UceFaultCode) {
 		return true
 	}
 	return false
 }
 
 func isUceAccompanyFault(faultDevice constant.DeviceFault) bool {
-	return strings.Contains(faultDevice.FaultCode, constant.AIC_FAULT_CODE) ||
-		strings.Contains(faultDevice.FaultCode, constant.AIV_FAULT_CODE)
+	return strings.Contains(faultDevice.FaultCode, constant.AicFaultCode) ||
+		strings.Contains(faultDevice.FaultCode, constant.AivFaultCode)
 }
 
 func isDeviceFaultEqual(one, other constant.DeviceFault) bool {

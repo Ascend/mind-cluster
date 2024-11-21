@@ -5,7 +5,6 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package utils is using for generating ranktable.
 */
-
 package utils
 
 import (
@@ -75,7 +74,7 @@ const (
 	CompletedRTStatus RankTableStatus = "completed"
 )
 
-// check configmap exsit or not
+// ConfigmapCheck check configmap exsit or not
 type ConfigmapCheck string
 
 const (

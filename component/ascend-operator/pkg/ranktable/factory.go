@@ -3,9 +3,8 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package ranktable is using for reconcile AscendJob.
 */
-
 package ranktable
 
 import (

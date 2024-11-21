@@ -55,10 +55,10 @@ var (
 		LogFileName:   defaultLogFile,
 		MaxLineLength: maxLineLength,
 	}
-	controller     *control.NodeController
-	configManager  *config.FaultConfigurator
-	monitorManager *monitoring.MonitorManager
-	reportManager  *reporter.ReportManager
+	controller     = &control.NodeController{}
+	configManager  = &config.FaultConfigurator{}
+	monitorManager = &monitoring.MonitorManager{}
+	reportManager  = &reporter.ReportManager{}
 	version        bool
 	// BuildVersion build version
 	BuildVersion string

@@ -171,12 +171,12 @@ func TestSetJobNodeHealthy(t *testing.T) {
 			DeviceIP: "device_ip_1",
 			RankID:   "rank_id_1",
 		}
-		rankTable.ServerList = []*ServerHccl{&ServerHccl{
+		rankTable.ServerList = []*ServerHccl{{
 			DeviceList: []*Device{device1, device2},
 			ServerID:   "",
 			PodID:      "",
 			ServerName: "node0",
-		}}
+				}}
 		convey.Convey("set node status case node not exist", func() {
 			rankTable.SetJobNodeHealthy("node1", true)
 			convey.So(len(rankTable.UnHealthyNode), convey.ShouldEqual, 0)
@@ -197,8 +197,8 @@ func TestSetJobDeviceHealthy(t *testing.T) {
 	convey.Convey("test SetJobDeviceHealthy", t, func() {
 		rankTable := mockRankTableInit()
 		rankTable.UnHealthyDevice = make(map[string]string)
-		rankTable.ServerList = []*ServerHccl{&ServerHccl{
-			DeviceList: []*Device{&Device{
+		rankTable.ServerList = []*ServerHccl{{
+			DeviceList: []*Device{{
 				DeviceID: "0",
 				DeviceIP: "",
 				RankID:   "",
@@ -206,7 +206,7 @@ func TestSetJobDeviceHealthy(t *testing.T) {
 			ServerID:   "",
 			PodID:      "",
 			ServerName: "node0",
-		}}
+				}}
 		convey.Convey("set device status case node not exist", func() {
 			rankTable.SetJobDeviceHealthy("node1", constant.AscendDevPrefix+"0", "")
 			convey.So(len(rankTable.UnHealthyDevice), convey.ShouldEqual, 0)
@@ -336,8 +336,8 @@ func TestRankTableGetHccLJsonSlice(t *testing.T) {
 func TestGetPodNum(t *testing.T) {
 	convey.Convey("Testing GetPodNum", t, func() {
 		rankTable := mockRankTableInit()
-		rankTable.ServerList = []*ServerHccl{&ServerHccl{
-			DeviceList: []*Device{&Device{
+		rankTable.ServerList = []*ServerHccl{{
+			DeviceList: []*Device{{
 				DeviceID: "0",
 				DeviceIP: "",
 				RankID:   "",
@@ -345,7 +345,7 @@ func TestGetPodNum(t *testing.T) {
 			ServerID:   "",
 			PodID:      "",
 			ServerName: "node0",
-		}}
+				}}
 		convey.Convey("Get pod num successfully", func() {
 			result := rankTable.GetPodNum()
 			convey.Convey("It should return the ServerList num", func() {

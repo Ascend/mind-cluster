@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -177,7 +176,8 @@ func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, erro
 func getReplicaSet(ssn *framework.Session, namespace, name string) (*appsv1.ReplicaSet, error) {
 	var rs *appsv1.ReplicaSet
 	var ok bool
-	obj, exist, err := ssn.InformerFactory().Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(namespace + "/" + name)
+	key := namespace + "/" + name
+	obj, exist, err := ssn.InformerFactory().Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(key)
 	if err != nil || !exist {
 		klog.V(util.LogWarningLev).Infof("Get rs from indexer failed err: %s, exist: %v.", util.SafePrint(err), exist)
 		rs, err = ssn.KubeClient().AppsV1().ReplicaSets(namespace).Get(context.TODO(), name,

@@ -261,7 +261,7 @@ func TestPluginServerStartPart5(t *testing.T) {
 		defer grpcStub.Reset()
 		grpcStub2 := gomonkey.ApplyMethod(reflect.TypeOf(server),
 			"GetServiceInfo", func(_ *grpc.Server) map[string]grpc.ServiceInfo {
-				return map[string]grpc.ServiceInfo{"1": grpc.ServiceInfo{}}
+				return map[string]grpc.ServiceInfo{"1": {}}
 			})
 		defer grpcStub2.Reset()
 

@@ -3,18 +3,20 @@
 // Package common is grpc common types and functions
 package common
 
-// response code for grpc fault service
+// RespCode response code for grpc fault service
 type RespCode int32
 
 const (
+	// OK is success
 	OK RespCode = 0
 
 	/*
 		4xx is client error which is not retryable
 	*/
+
 	// UnRegistry jobId unregistered
 	UnRegistry RespCode = 400
-	// UnRegistry state machine rules not support
+	// OrderMix state machine rules not support
 	OrderMix RespCode = 401
 	// JobNotExist jobId not exist
 	JobNotExist RespCode = 402
@@ -30,6 +32,7 @@ const (
 	/*
 		5xx is server inner error which is retryable
 	*/
+
 	// OutOfMaxServeJobs out of max serve jobs number
 	OutOfMaxServeJobs RespCode = 500
 	// OperateConfigMapError operate config map error

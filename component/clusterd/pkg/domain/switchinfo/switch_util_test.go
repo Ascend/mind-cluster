@@ -77,7 +77,7 @@ func TestGetSafeData(t *testing.T) {
 		switchInfos := map[string]*constant.SwitchInfo{}
 		res := GetSafeData(switchInfos)
 		convey.So(len(res) == 0, convey.ShouldBeTrue)
-		switchInfos = map[string]*constant.SwitchInfo{"nodeName1": &constant.SwitchInfo{}}
+		switchInfos = map[string]*constant.SwitchInfo{"nodeName1": {}}
 		res = GetSafeData(switchInfos)
 		convey.So(len(res) == len(switchInfos), convey.ShouldBeTrue)
 		switchInfos = map[string]*constant.SwitchInfo{}

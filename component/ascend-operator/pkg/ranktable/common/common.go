@@ -5,7 +5,6 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package common is common function or object of ranktable.
 */
-
 package common
 
 import (
@@ -58,10 +57,12 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	}
 }
 
+// GetConfigmapExist is used to get the configmap exist status.
 func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
 	return r.configmapExist
 }
 
+// SetConfigmapExist is used to set the configmap exist status.
 func (r *BaseGenerator) SetConfigmapExist(exist utils.ConfigmapCheck) {
 	r.configmapExist = exist
 }
@@ -201,6 +202,10 @@ func (r *BaseGenerator) GatherServerList() {
 	})
 
 	sort.Slice(r.ServerList, func(i, j int) bool {
+		// for clear code
+		if i >= len(r.ServerList) || j >= len(r.ServerList) {
+			return false
+		}
 		iRankID, iErr := strconv.Atoi(r.ServerList[i].DeviceList[0].RankID)
 		jRankID, jErr := strconv.Atoi(r.ServerList[j].DeviceList[0].RankID)
 		if iErr != nil || jErr != nil {

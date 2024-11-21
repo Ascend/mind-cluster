@@ -130,7 +130,7 @@ func compareIntSliceIsSame(slice1, slice2 []int) {
 	if len(slice1) != len(slice2) {
 		return
 	}
-	for i, _ := range slice1 {
+	for i := range slice1 {
 		convey.So(slice1[i], convey.ShouldEqual, slice2[i])
 	}
 }
@@ -161,7 +161,7 @@ func compareStringSliceIsSame(slice1, slice2 []string) {
 	if len(slice1) != len(slice2) {
 		return
 	}
-	for i, _ := range slice1 {
+	for i := range slice1 {
 		convey.So(slice1[i], convey.ShouldEqual, slice2[i])
 	}
 }

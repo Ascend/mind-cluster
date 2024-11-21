@@ -184,7 +184,8 @@ func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
 	}
 	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v",
+			job.Name, job.Namespace, err)
 		return
 	}
 	r.genRankTable(ji)
@@ -533,7 +534,7 @@ func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 
 func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"Deploy": &commonv1.ReplicaSpec{
+		"Deploy": {
 			Template: deploy.Spec.Template,
 			Replicas: deploy.Spec.Replicas,
 		},

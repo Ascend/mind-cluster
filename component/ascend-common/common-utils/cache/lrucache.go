@@ -25,14 +25,14 @@ import (
 )
 
 const (
-	segmentCount               = 16
-	int64One     int64         = 1
-	int64Zero    int64         = 0
-	negInt64One  int64         = -1
-	intTwo                     = 2
-	hashInit     uint32        = 2166136261
-	prime32      uint32        = 16777619
-	twentyYears  time.Duration = 20 * 365 * 24 * time.Hour
+	segmentCount        = 16
+	int64One     int64  = 1
+	int64Zero    int64  = 0
+	negInt64One  int64  = -1
+	intTwo              = 2
+	hashInit     uint32 = 2166136261
+	prime32      uint32 = 16777619
+	twentyYears         = 20 * 365 * 24 * time.Hour
 )
 
 var (
@@ -62,9 +62,10 @@ type ConcurrencyLRUCache struct {
 }
 
 // Set create or update an element using key
-//      key:    The identity of an element
-//      value:  new value of the element
-//      expireTime:    expire time, positive int64 or -1 which means never overdue
+//
+//	key:    The identity of an element
+//	value:  new value of the element
+//	expireTime:    expire time, positive int64 or -1 which means never overdue
 func (cl *ConcurrencyLRUCache) Set(key string, value interface{}, expireTime time.Duration) error {
 	if cl == nil || cl.cacheBuket[0] == nil {
 		return notInitErr
@@ -80,10 +81,11 @@ func (cl *ConcurrencyLRUCache) Set(key string, value interface{}, expireTime tim
 }
 
 // Get get the value of a cached element by key. If key do not exist, this function will return nil and an error msg
-//      key:    The identity of an element
-//      return:
-//          value:  the cached value, nil if key do not exist
-//          err:    error info, nil if value is not nil
+//
+//	key:    The identity of an element
+//	return:
+//	    value:  the cached value, nil if key do not exist
+//	    err:    error info, nil if value is not nil
 func (cl *ConcurrencyLRUCache) Get(key string) (interface{}, error) {
 	if cl == nil || cl.cacheBuket[0] == nil {
 		return nil, notInitErr

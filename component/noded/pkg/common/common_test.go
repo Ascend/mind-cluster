@@ -79,12 +79,12 @@ func TestCopyStringSlice(t *testing.T) {
 func TestMakeDataHash(t *testing.T) {
 	convey.Convey("test make data hash", t, func() {
 		convey.Convey("hash success", func() {
-			NodeInfo := FaultDevInfo{FaultDevList: []*FaultDev{&FaultDev{
+			NodeInfo := FaultDevInfo{FaultDevList: []*FaultDev{{
 				DeviceType: "PSU",
 				DeviceId:   0,
 				FaultCode:  []string{"00000001"},
 				FaultLevel: NotHandleFault,
-			}}}
+						}}}
 			result := MakeDataHash(NodeInfo)
 			convey.So(result, convey.ShouldNotBeEmpty)
 		})
@@ -93,12 +93,12 @@ func TestMakeDataHash(t *testing.T) {
 				return nil, fmt.Errorf("marshal failed")
 			})
 			defer mockMarshal.Reset()
-			NodeInfo := FaultDevInfo{FaultDevList: []*FaultDev{&FaultDev{
+			NodeInfo := FaultDevInfo{FaultDevList: []*FaultDev{{
 				DeviceType: "PSU",
 				DeviceId:   0,
 				FaultCode:  []string{"00000001"},
 				FaultLevel: NotHandleFault,
-			}}}
+						}}}
 			result := MakeDataHash(NodeInfo)
 			convey.So(result, convey.ShouldBeEmpty)
 		})

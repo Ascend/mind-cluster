@@ -28,6 +28,7 @@ import (
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.conditions[-1:].type`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+
 // AscendJob is the Schema for the AscendJob API
 type AscendJob struct {
 	// Standard Kubernetes type metadata.
@@ -63,18 +64,20 @@ type AscendJobSpec struct {
 	// SchedulerName defines the job scheduler with gang-scheduling enabled
 	SchedulerName string `json:"schedulerName,omitempty"`
 
-	// A map of ReplicaType (type) to ReplicaSpec (value). Specifies the ML cluster configuration.
-	// For example,
-	//   {
-	//     "Scheduler": ReplacaSpec,
-	//     "Worker": ReplicaSpec,
-	//   }
+	/*	 A map of ReplicaType (type) to ReplicaSpec (value). Specifies the ML cluster configuration.
+		 For example,
+		   {
+		     "Scheduler": ReplacaSpec,
+		     "Worker": ReplicaSpec,
+		   }
+	*/
 	ReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"replicaSpecs"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=ascendjobs
 // +kubebuilder:object:root=true
+
 // AscendJobList contains a list of AscendJob
 type AscendJobList struct {
 	metav1.TypeMeta `json:",inline"`

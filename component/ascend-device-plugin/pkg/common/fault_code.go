@@ -1256,7 +1256,7 @@ func CountFaultDuration(device *NpuDevice, devFaultInfoMap map[int32][]common.De
 	faultDurationMapLock.Lock()
 	defer faultDurationMapLock.Unlock()
 
-	for eventId, _ := range faultDurationMap {
+	for eventId := range faultDurationMap {
 		// Sort fault events in the fault queue in ascending order based on fault event AlarmRaisedTime
 		sortFaultEventsInAscendingOrder(device.LogicID, eventId)
 

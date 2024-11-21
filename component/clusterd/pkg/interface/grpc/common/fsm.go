@@ -72,7 +72,7 @@ func (m *StateMachine) ruleMatching(src, event string) (bool, *TransRule) {
 	return false, nil
 }
 
-// RuleMatching return rule for event when origin state is src
+// RuleCheck return rule for event when origin state is src
 func (m *StateMachine) RuleCheck(src, event string) bool {
 	for _, v := range m.rules {
 		if v.Src == src && v.Event == event {

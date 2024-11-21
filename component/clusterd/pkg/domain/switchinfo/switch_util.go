@@ -65,6 +65,7 @@ func DeepCopy(info *constant.SwitchInfo) (*constant.SwitchInfo, error) {
 	return newSwitchInfo, nil
 }
 
+// DeepCopyInfos deep copy NodeInfo
 func DeepCopyInfos(infos map[string]*constant.SwitchInfo) map[string]*constant.SwitchInfo {
 	res := make(map[string]*constant.SwitchInfo)
 	for key, val := range infos {
