@@ -9,17 +9,50 @@ Package utils is using for generating ranktable.
 package utils
 
 import (
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"huawei.com/npu-exporter/v5/common-utils/utils"
 	corev1 "k8s.io/api/core/v1"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
+const (
+	defaultPerm = 0644
+)
+
 // GenRankTableDir generate rank table dir
 func GenRankTableDir(job *mindxdlv1.AscendJob) string {
+	ranktableDir := readRankTableDir(job)
+	if ranktableDir == "" {
+		return ranktableDir
+	}
+	if utils.IsExist(ranktableDir) {
+		isSym, err := IsSymbolicLink(ranktableDir)
+		if err != nil {
+			hwlog.RunLog.Errorf("check rank table directory fail, err: %v", err)
+			return ""
+		}
+		if isSym {
+			hwlog.RunLog.Error("rank table directory is symbolic link")
+			return ""
+		}
+		return ranktableDir
+	} else {
+		err := MakeDir(ranktableDir, defaultPerm)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to create rank table directory, err: %v", err)
+			return ""
+		}
+		return ranktableDir
+	}
+}
+
+func readRankTableDir(job *mindxdlv1.AscendJob) string {
 	for _, replSpec := range job.Spec.ReplicaSpecs {
 		for _, volume := range replSpec.Template.Spec.Volumes {
 			if volume.Name != rankTableName || volume.VolumeSource.HostPath == nil {
@@ -64,20 +97,21 @@ func podUseNpu(pod *corev1.Pod) bool {
 }
 
 // check exsitence and permission of ranktable directory, if not exist, try to create the directory
-func CheckDirPath(dirPath string) error {
-	if dirPath == "" {
-		return nil
+func MakeDir(dirPath string, mode fs.FileMode) error {
+	realPath, err := filepath.Abs(dirPath)
+	if err != nil {
+		return err
 	}
-	_, err := os.Stat(dirPath)
-	if err == nil {
-		return nil
+	return os.MkdirAll(realPath, mode)
+}
+
+// check file or directory is symbolic link or not
+func IsSymbolicLink(targetPath string) (bool, error) {
+	s, err := os.Lstat(targetPath)
+	if err != nil {
+		return false, err
 	}
-	if os.IsNotExist(err) {
-		hwlog.RunLog.Info("try to mkdir")
-		return os.MkdirAll(dirPath, os.ModePerm)
-	}
-	hwlog.RunLog.Errorf("directory path exists but has no permission : %v", err)
-	return err
+	return s.Mode()&os.ModeSymlink != 0, nil
 }
 
 const (
