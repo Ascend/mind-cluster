@@ -174,3 +174,7 @@ const L3_RestartBusiness = "RestartBusiness"
 const L4_FreeRestartNPU = "FreeRestartNPU"
 const L5_RestartNPU = "RestartNPU"
 const L6_SeparateNPU = "SeparateNPU"
+
+const Ascend910_Server = "Ascend910"
+const Ascend310P_Server = "Ascend310P"
+const Ascend310_Server = "Ascend310"

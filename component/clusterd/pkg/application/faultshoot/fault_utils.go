@@ -116,18 +116,18 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceCm {
 
 func getServerType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, "Ascend910") {
-			return "Ascend910"
+		if strings.Contains(key, Ascend910_Server) {
+			return Ascend910_Server
 		}
-		if strings.Contains(key, "Ascend310P") {
-			return "Ascend310P"
+		if strings.Contains(key, Ascend310P_Server) {
+			return Ascend310P_Server
 		}
-		if strings.Contains(key, "Ascend310") {
-			return "Ascend310"
+		if strings.Contains(key, Ascend310_Server) {
+			return Ascend310_Server
 		}
 	}
 	hwlog.RunLog.Errorf("cannot decide server type")
-	return "Ascend910"
+	return Ascend910_Server
 }
 
 // device plugin may merge multiple fault codes in one string

@@ -126,6 +126,7 @@ func ReadableMsTime(msTime int64) string {
 	return time.UnixMilli(msTime).Format("2006-01-02 15:04:05")
 }
 
+// DeepCopy for object using gob
 func DeepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
