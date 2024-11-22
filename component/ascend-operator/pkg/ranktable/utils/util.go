@@ -30,7 +30,7 @@ func GenRankTableDir(job *mindxdlv1.AscendJob) string {
 	if ranktableDir == "" {
 		return ranktableDir
 	}
-	checkedPath, err := utils.PathStringChecker(ranktableDir, true, false)
+	checkedPath, err := utils.PathStringChecker(ranktableDir)
 	if err != nil {
 		hwlog.RunLog.Errorf("rank table directory is invalid, err: %v", err)
 		return ""
