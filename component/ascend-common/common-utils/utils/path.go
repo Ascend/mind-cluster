@@ -78,6 +78,7 @@ func IsSoftlink(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer file.Close()
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return false, err
