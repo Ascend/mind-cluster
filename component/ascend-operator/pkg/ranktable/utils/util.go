@@ -30,18 +30,22 @@ func GenRankTableDir(job *mindxdlv1.AscendJob) string {
 	if ranktableDir == "" {
 		return ranktableDir
 	}
+	checkedPath, err := utils.PathStringChecker(ranktableDir, true, false)
+	if err != nil {
+		hwlog.RunLog.Errorf("rank table directory is invalid, err: %v", err)
+		return ""
+	}
 	if utils.IsExist(ranktableDir) {
-		validPath, err := utils.RealDirChecker(ranktableDir, true, false)
+		isSoftlink, err := utils.IsSoftlink(checkedPath)
 		if err != nil {
 			hwlog.RunLog.Errorf("rank table directory existed but is invalid, err: %v", err)
 			return ""
 		}
-		return validPath
-	}
-	checkedPath, err := utils.PathStringChecker(ranktableDir, true, false)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to create rank table directory, err: %v", err)
-		return ""
+		if isSoftlink {
+			hwlog.RunLog.Error("rank table directory existed but is softlink")
+			return ""
+		}
+		return checkedPath
 	}
 	if err := os.MkdirAll(checkedPath, defaultDirPerm); err != nil {
 		hwlog.RunLog.Errorf("failed to create directory, err: %v", err)
