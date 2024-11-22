@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	lastTimeNetworkRecoverDevices sets.String
+	lastTimeNetworkRecoverDevices = sets.String{}
 	hotResetManagerInitOnce       sync.Once
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1

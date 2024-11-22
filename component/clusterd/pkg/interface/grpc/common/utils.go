@@ -268,7 +268,7 @@ func CheckProcessRecoverOpen(name, nameSpace string) bool {
 
 // RemoveSliceDuplicateFaults remote duplicate fault
 func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
-	var res []*pb.FaultRank
+	var res = make([]*pb.FaultRank, 0)
 	exitMap := make(map[string]string)
 	for _, fault := range faults {
 		if typ, ok := exitMap[fault.RankId]; !ok {

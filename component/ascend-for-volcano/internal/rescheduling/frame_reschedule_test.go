@@ -143,10 +143,10 @@ func buildModule910x8PreStartActionTest1() module910x8PreStartActionTests {
 	ssn1 := test.FakeSSNReSchedule()
 	env := fakeEnvEmpty()
 	fakeEnvAddJobsAndNodesToEnv(&env)
-	var tmpPatche1 *gomonkey.Patches
-	var tmpPatche2 *gomonkey.Patches
-	var tmpPatche3 *gomonkey.Patches
-	var tmpPatche4 *gomonkey.Patches
+	var tmpPatche1 = &gomonkey.Patches{}
+	var tmpPatche2 = &gomonkey.Patches{}
+	var tmpPatche3 = &gomonkey.Patches{}
+	var tmpPatche4 = &gomonkey.Patches{}
 	myArgs := buildModule910x8PreStartActionTestCacheArgs(tmpPatche1, tmpPatche2, tmpPatche3, tmpPatche4, nil)
 	myArgs.ssn = ssn1
 	test1 := module910x8PreStartActionTests{
