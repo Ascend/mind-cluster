@@ -62,7 +62,7 @@ type FaultJobForceDeleteJobTests struct {
 }
 
 func buildFaultJobForceDeleteJobTests() []FaultJobForceDeleteJobTests {
-	var tmpPatch = &gomonkey.Patches{}
+	var tmpPatch *gomonkey.Patches = nil
 	faultTask1 := fakeReSchedulerFaultTask(true, []string{"pod0", "vcjob", "node0", "job0", "0"}, 0,
 		"ppppppppppppp")
 	faultTask2 := fakeReSchedulerFaultTask(false, []string{"pod1", "vcjob", "node1", "job0", "1"}, 0,

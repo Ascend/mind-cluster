@@ -299,15 +299,11 @@ func (r *ASJobReconciler) newPodGroupSpec(ji *jobInfo) v1beta1.PodGroupSpec {
 	minMember := k8sutil.GetTotalReplicas(ji.rpls)
 	queue := ""
 	priorityClass := ""
-	var minResources *corev1.ResourceList
+	var minResources *corev1.ResourceList = nil
 
 	runPolicy := ji.runPolicy
 
 	if runPolicy.SchedulingPolicy != nil {
-		if runPolicy.SchedulingPolicy.MinResources != nil {
-			minResources = runPolicy.SchedulingPolicy.MinResources
-		}
-
 		if runPolicy.SchedulingPolicy.MinAvailable != nil {
 			minMember = *runPolicy.SchedulingPolicy.MinAvailable
 		}
@@ -320,6 +316,9 @@ func (r *ASJobReconciler) newPodGroupSpec(ji *jobInfo) v1beta1.PodGroupSpec {
 			priorityClass = runPolicy.SchedulingPolicy.PriorityClass
 		}
 
+		if runPolicy.SchedulingPolicy.MinResources != nil {
+			minResources = runPolicy.SchedulingPolicy.MinResources
+		}
 	}
 
 	if minResources == nil {

@@ -53,7 +53,7 @@ type DealReSchedulerConfigmapCreateEmptyReCMTests struct {
 }
 
 func buildTestDealReSchedulerConfigmapCreateEmptyReCMTests() []DealReSchedulerConfigmapCreateEmptyReCMTests {
-	var tmpPatche = &gomonkey.Patches{}
+	var tmpPatche *gomonkey.Patches = nil
 	resultMap := map[string]string{
 		CmCheckCode:           emptyCheckCode,
 		CmFaultNodeKind:       "",
