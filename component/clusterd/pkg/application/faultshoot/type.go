@@ -157,25 +157,33 @@ type reportInfo struct {
 	CompleteTime int64
 }
 
-// FaultLevel int value
-const (
-	NotFaultLevel = iota
-	NotHandleFault
-	RestartRequest
-	RestartBusiness
-	FreeRestartNPU
-	RestartNPU
-	SeparateNPU
-)
-
 // FaultLevel string describe
 const (
-	NotHandleFaultDesc  = "NotHandleFault"
-	RestartRequestDesc  = "RestartRequest"
-	RestartBusinessDesc = "RestartBusiness"
-	FreeRestartNPUDesc  = "FreeRestartNPU"
-	RestartNPUDesc      = "RestartNPU"
-	SeparateNPUDesc     = "SeparateNPU"
+	// NotHandleFault not handle fault
+	NotHandleFault = "NotHandleFault"
+	// RestartRequest restart request
+	RestartRequest = "RestartRequest"
+	// RestartBusiness restart business
+	RestartBusiness = "RestartBusiness"
+	// RestartNPU restart NPU
+	RestartNPU = "RestartNPU"
+	// FreeRestartNPU wait free and restart NPU
+	FreeRestartNPU = "FreeRestartNPU"
+	// SeparateNPU separate NPU
+	SeparateNPU = "SeparateNPU"
+	// NormalNPU normal NPU
+	NormalNPU = "NormalNPU"
+	// NormalNetwork normal network
+	NormalNetwork = "NormalNetwork"
+	// PreSeparateNPU pre separate NPU
+	PreSeparateNPU = "PreSeparateNPU"
+	// ManuallySeparateNPU Manually Separate NPU
+	ManuallySeparateNPU = "ManuallySeparateNPU"
+	// CardUnhealthy fault is caused by card unhealthy
+	CardUnhealthy = "CardUnhealthy"
+	// CardNetworkUnhealthy  fault is caused by card network unhealthy
+	CardNetworkUnhealthy = "CardNetworkUnhealthy"
+	SubHealthFault       = "SubHealthFault"
 )
 
 // cluster support server

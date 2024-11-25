@@ -1027,21 +1027,21 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 
 func updateDeviceFaultTimeMap(device *NpuDevice, faultInfo common.DevFaultInfo, isAdd bool) {
 	if device.FaultTimeMap == nil {
-		device.FaultTimeMap = make(map[string]int64)
+		device.FaultTimeMap = make(map[int64]int64)
 	}
-	hexFaultCode := strings.ToUpper(strconv.FormatInt(faultInfo.EventID, Hex))
 	if isAdd {
 		faultTime := faultInfo.AlarmRaisedTime
 		if faultTime == 0 {
 			faultTime = time.Now().UnixMilli()
 		}
-		existingFaultTime, found := device.FaultTimeMap[hexFaultCode]
+		existingFaultTime, found := device.FaultTimeMap[faultInfo.EventID]
 		if !found || existingFaultTime > faultTime {
-			device.FaultTimeMap[hexFaultCode] = faultTime
+			device.FaultTimeMap[faultInfo.EventID] = faultTime
 		}
-		hwlog.RunLog.Debugf("%s fault time: %d", hexFaultCode, device.FaultTimeMap[hexFaultCode])
+		hexFaultCode := strings.ToUpper(strconv.FormatInt(faultInfo.EventID, Hex))
+		hwlog.RunLog.Debugf("%s fault time: %d", hexFaultCode, device.FaultTimeMap[faultInfo.EventID])
 	} else {
-		delete(device.FaultTimeMap, hexFaultCode)
+		delete(device.FaultTimeMap, faultInfo.EventID)
 	}
 }
 
@@ -1134,7 +1134,8 @@ func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 
 func delOnceRecoverFaultTime(device *NpuDevice, eventId int64) {
 	hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, Hex))
-	delete(device.FaultTimeMap, hexFaultCode)
+	hwlog.RunLog.Debugf("delete fault %s with time: %d", hexFaultCode, device.FaultTimeMap[eventId])
+	delete(device.FaultTimeMap, eventId)
 }
 
 // DelOnceFrequencyFault clear all the fault occurrence time in cache when frequency

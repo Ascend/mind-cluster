@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
@@ -135,29 +136,37 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 	deviceFaults := make([]constant.DeviceFault, 0)
 	codes := strings.Split(faultInfo.FaultCode, ",")
 	for _, code := range codes {
+		faultTimeAndLevel, found := faultInfo.FaultTimeAndLevelMap[code]
+		var faultLevel string
+		if !found {
+			faultLevel = NormalNPU
+		} else {
+			faultLevel = faultTimeAndLevel.FaultLevel
+		}
 		newFault := constant.DeviceFault{
 			FaultType:            faultInfo.FaultType,
 			NPUName:              faultInfo.NPUName,
-			LargeModelFaultLevel: faultInfo.LargeModelFaultLevel,
-			FaultLevel:           faultInfo.FaultLevel,
-			FaultHandling:        faultInfo.FaultHandling,
+			LargeModelFaultLevel: faultLevel,
+			FaultLevel:           faultLevel,
+			FaultHandling:        faultLevel,
 			FaultCode:            code,
-			FaultTimeMap:         faultInfo.FaultTimeMap,
+			FaultTimeAndLevelMap: faultInfo.FaultTimeAndLevelMap,
 		}
 		deviceFaults = append(deviceFaults, newFault)
 	}
+	sort.SliceStable(deviceFaults, func(i, j int) bool {
+		return deviceFaults[i].FaultCode < deviceFaults[j].FaultCode
+	})
 	return deviceFaults
 }
 
 func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault, error) {
 	deviceName := deviceFaults[0].NPUName
+	fautLevels := make([]string, 0)
 	mergeFault := constant.DeviceFault{
 		FaultType:            deviceFaults[0].FaultType,
 		NPUName:              deviceName,
-		LargeModelFaultLevel: deviceFaults[0].LargeModelFaultLevel,
-		FaultLevel:           deviceFaults[0].FaultLevel,
-		FaultHandling:        deviceFaults[0].FaultHandling,
-		FaultTimeMap:         deviceFaults[0].FaultTimeMap,
+		FaultTimeAndLevelMap: deviceFaults[0].FaultTimeAndLevelMap,
 	}
 	faultCodeList := make([]string, 0)
 	for _, fault := range deviceFaults {
@@ -166,10 +175,15 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 				"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
 		}
 		faultCodeList = append(faultCodeList, fault.FaultCode)
+		fautLevels = append(fautLevels, fault.FaultLevel)
 	}
 	sort.SliceStable(faultCodeList, func(i, j int) bool {
 		return faultCodeList[i] < faultCodeList[j]
 	})
+	faultLevel := getMostSeriousFaultLevel(fautLevels)
+	mergeFault.FaultLevel = faultLevel
+	mergeFault.LargeModelFaultLevel = faultLevel
+	mergeFault.FaultHandling = faultLevel
 	mergeFault.FaultCode = strings.Join(faultCodeList, ",")
 	return mergeFault, nil
 }
@@ -290,21 +304,38 @@ func isDeviceFaultEqual(one, other constant.DeviceFault) bool {
 	return reflect.DeepEqual(one, other)
 }
 
-func getFaultLevel(faultLevel string) int {
-	switch faultLevel {
-	case NotHandleFaultDesc:
-		return NotHandleFault
-	case RestartRequestDesc:
-		return RestartRequest
-	case RestartBusinessDesc:
-		return RestartBusiness
-	case FreeRestartNPUDesc:
-		return FreeRestartNPU
-	case RestartNPUDesc:
-		return RestartNPU
-	case SeparateNPUDesc:
+func getMostSeriousFaultLevel(fautLevels []string) string {
+	faultTypeSet := sets.NewString(fautLevels...)
+	if faultTypeSet.Has(ManuallySeparateNPU) {
+		return ManuallySeparateNPU
+	} else if faultTypeSet.Has(SeparateNPU) {
 		return SeparateNPU
-	default:
-		return NotFaultLevel
+	} else if faultTypeSet.Has(PreSeparateNPU) {
+		return PreSeparateNPU
+	} else if faultTypeSet.Has(RestartNPU) {
+		return RestartNPU
+	} else if faultTypeSet.Has(FreeRestartNPU) {
+		return FreeRestartNPU
+	} else if faultTypeSet.Has(RestartBusiness) {
+		return RestartBusiness
+	} else if faultTypeSet.Has(RestartRequest) {
+		return RestartRequest
+	} else if faultTypeSet.Has(SubHealthFault) {
+		return SubHealthFault
+	} else if faultTypeSet.Has(NotHandleFault) {
+		return NotHandleFault
 	}
+	return NormalNPU
+}
+
+func getFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
+	faultTimeAndLevel, ok := fault.FaultTimeAndLevelMap[fault.FaultCode]
+	var faultTime int64
+	if !ok {
+		hwlog.RunLog.Error(errorMsg)
+		faultTime = constant.DeviceNotFault
+	} else {
+		faultTime = faultTimeAndLevel.FaultTime
+	}
+	return faultTime
 }

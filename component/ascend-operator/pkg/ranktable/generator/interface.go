@@ -28,7 +28,6 @@ type RankTableGenerator interface {
 	DeletePod(*v1.Pod) utils.RankTableStatus
 	GatherServerList()
 	ToString() (string, error)
-	GetPath() string
 	GetConfigmapExist() utils.ConfigmapCheck
 	SetConfigmapExist(utils.ConfigmapCheck)
 }

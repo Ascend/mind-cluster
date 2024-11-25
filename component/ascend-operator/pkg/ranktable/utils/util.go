@@ -8,17 +8,63 @@ Package utils is using for generating ranktable.
 package utils
 
 import (
+	"io/fs"
+	"os"
 	"strings"
 
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/common-utils/utils"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+)
+
+const (
+	defaultDirPerm fs.FileMode = 0744
 )
 
 // GenRankTableDir generate rank table dir
 func GenRankTableDir(job *mindxdlv1.AscendJob) string {
-	return rankTableDir + "/" + job.Namespace + "." + job.Name
+	ranktableDir := readRankTableDir(job)
+	if ranktableDir == "" {
+		return ranktableDir
+	}
+	checkedPath, err := utils.PathStringChecker(ranktableDir)
+	if err != nil {
+		hwlog.RunLog.Errorf("rank table directory is invalid, err: %v", err)
+		return ""
+	}
+	if utils.IsExist(ranktableDir) {
+		isSoftlink, err := utils.IsSoftlink(checkedPath)
+		if err != nil {
+			hwlog.RunLog.Errorf("rank table directory existed but is invalid, err: %v", err)
+			return ""
+		}
+		if isSoftlink {
+			hwlog.RunLog.Error("rank table directory existed but is softlink")
+			return ""
+		}
+		return checkedPath
+	}
+	if err := os.MkdirAll(checkedPath, defaultDirPerm); err != nil {
+		hwlog.RunLog.Errorf("failed to create directory, err: %v", err)
+		return ""
+	}
+	hwlog.RunLog.Infof("create rank table directory success, set mode to %v", defaultDirPerm)
+	return checkedPath
+}
+
+func readRankTableDir(job *mindxdlv1.AscendJob) string {
+	for _, replSpec := range job.Spec.ReplicaSpecs {
+		for _, volume := range replSpec.Template.Spec.Volumes {
+			if volume.Name != rankTableName || volume.VolumeSource.HostPath == nil {
+				continue
+			}
+			return volume.VolumeSource.HostPath.Path
+		}
+	}
+	hwlog.RunLog.Info("ranktable file path is not set")
+	return ""
 }
 
 // PodHasAllocated check if pod has allocated device
@@ -62,6 +108,9 @@ const (
 
 	// prefix of request npu name
 	npuPrefix = "huawei.com/"
+
+	// rank table volume name
+	rankTableName = "ranktable"
 )
 
 // RankTableStatus is rank table status

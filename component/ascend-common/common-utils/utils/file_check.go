@@ -69,6 +69,24 @@ func RealDirChecker(path string, checkParent, allowLink bool) (string, error) {
 	return realPath, nil
 }
 
+// PathStringChecker Check whether the directory string is valid
+func PathStringChecker(path string) (string, error) {
+	realPath, err := filepath.Abs(path)
+	if err != nil {
+		return notValidPath, err
+	}
+	if len(realPath) > DefaultPathLength {
+		return notValidPath, fmt.Errorf("path over max path length")
+	}
+	if !stringChecker(realPath, 0, DefaultPathLength) {
+		return notValidPath, fmt.Errorf("invalid path")
+	}
+	if err = pathDepthChecker(realPath, 0); err != nil {
+		return notValidPath, err
+	}
+	return realPath, nil
+}
+
 // VerifyFile verify the file after it is opened.
 func VerifyFile(file *os.File, size int64) error {
 	fileInfo, err := file.Stat()
@@ -141,6 +159,17 @@ func fileChecker(path string, allowDir, checkParent, allowLink bool, deep int) e
 	}
 	if path != "/" && checkParent {
 		return fileChecker(filepath.Dir(path), true, true, allowLink, deep+1)
+	}
+	return nil
+}
+
+func pathDepthChecker(path string, deep int) error {
+	const maxDepth int = 99
+	if deep > maxDepth {
+		return fmt.Errorf("over maxDepth %d", maxDepth)
+	}
+	if path != "/" {
+		return pathDepthChecker(filepath.Dir(path), deep+1)
 	}
 	return nil
 }

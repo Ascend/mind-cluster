@@ -789,6 +789,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 			ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
 			return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 		}
+		ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
 		ctl.removeAgentStrategy(common.ProcessDumpStrategyName)
 		return common.RecoverFailEvent, common.ClientError, nil
 	case common.ProcessRecoverStrategyName:

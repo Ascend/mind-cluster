@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -69,6 +70,23 @@ func IsFile(path string) bool {
 		return false
 	}
 	return !IsDir(path)
+}
+
+// IsSoftlink check whether the path is softlink
+func IsSoftlink(path string) (bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return false, err
+	}
+	if (fileInfo.Mode() & fs.ModeSymlink) != 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 // IsExist check whether the path exists, If the file is a symbolic link, the returned the final FileInfo

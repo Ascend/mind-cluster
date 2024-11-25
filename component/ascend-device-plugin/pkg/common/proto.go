@@ -101,7 +101,7 @@ type NpuDevice struct {
 	AlarmRaisedTime        int64
 	NetworkFaultCodes      []int64
 	NetworkAlarmRaisedTime int64
-	FaultTimeMap           map[string]int64
+	FaultTimeMap           map[int64]int64
 	DevType                string
 	DeviceName             string
 	Health                 string
@@ -193,15 +193,21 @@ type DevStatusSet struct {
 	DeviceFault        []DeviceFault
 }
 
+// FaultTimeAndLevel of each fault code
+type FaultTimeAndLevel struct {
+	FaultTime  int64  `json:"fault_time"`
+	FaultLevel string `json:"fault_level"`
+}
+
 // DeviceFault  npu or network fault info
 type DeviceFault struct {
-	FaultType            string           `json:"fault_type"`
-	NPUName              string           `json:"npu_name"`
-	LargeModelFaultLevel string           `json:"large_model_fault_level"`
-	FaultLevel           string           `json:"fault_level"`
-	FaultHandling        string           `json:"fault_handling"`
-	FaultCode            string           `json:"fault_code"`
-	FaultTimeMap         map[string]int64 `json:"fault_time_map"`
+	FaultType            string                       `json:"fault_type"`
+	NPUName              string                       `json:"npu_name"`
+	LargeModelFaultLevel string                       `json:"large_model_fault_level"`
+	FaultLevel           string                       `json:"fault_level"`
+	FaultHandling        string                       `json:"fault_handling"`
+	FaultCode            string                       `json:"fault_code"`
+	FaultTimeAndLevelMap map[string]FaultTimeAndLevel `json:"fault_time_and_level_map"`
 }
 
 // TaskResetInfoCache record task reset device information cache

@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	pathlib "path"
 	"sort"
 	"strconv"
 	"sync"
@@ -48,7 +49,7 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
 		dir:        rankTableDir,
-		path:       rankTableDir + "/" + rankTableFile,
+		path:       pathlib.Join(rankTableDir, rankTableFile),
 		servers:    &sync.Map{},
 		rankTabler: r,
 		Status:     utils.InitialRTStatus,
@@ -77,13 +78,11 @@ func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
 }
 
-// GetPath is used to get ranktable file path
-func (r *BaseGenerator) GetPath() string {
-	return r.path
-}
-
 // WriteToFile is used to write ranktable to file.
 func (r *BaseGenerator) WriteToFile() error {
+	if r.dir == "" {
+		return nil
+	}
 	hwlog.RunLog.Infof("start write info into file: %s", r.path)
 	if err := func() error {
 		f, err := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, defaultPerm)
