@@ -288,7 +288,11 @@ func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.SwitchInfoPrefix)
 }
 
-func checkVolcanoExist(vcClient *versioned.Clientset) bool {
+func CheckVolcanoExist(vcClient *versioned.Clientset) bool {
+	if vcClient == nil {
+		hwlog.RunLog.Error("vcK8sClient.ClientSet is nil")
+		return false
+	}
 	_, err := vcClient.SchedulingV1beta1().PodGroups(constant.DefaultNamespace).Get(context.Background(),
 		constant.TestName, metav1.GetOptions{})
 	if err != nil && strings.Contains(err.Error(), constant.NoResourceOnServer) {
@@ -302,11 +306,6 @@ func InitPGInformer(ctx context.Context, jobSrv JobService) {
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
 	PGInformer = factory.Scheduling().V1beta1().PodGroups()
-
-	if !checkVolcanoExist(vcClient) {
-		hwlog.RunLog.Warn("Volcano not exist, please deploy Volcano and restart ClusterD.")
-		return
-	}
 
 	cacheIndexer := PGInformer.Informer().GetIndexer()
 	var err error
