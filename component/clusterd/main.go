@@ -95,8 +95,8 @@ func main() {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	startInformer(ctx, recoverService)
 	faultshoot.NewFaultProcessCenter(ctx)
+	startInformer(ctx, recoverService)
 	signalCatch(cancel)
 }
 
