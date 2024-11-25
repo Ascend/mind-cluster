@@ -109,7 +109,10 @@ func getAiCoreNumFromTask(task *api.TaskInfo) (int, error) {
 	for _, container := range task.Pod.Spec.Containers {
 		coreNum, ok := container.Resources.Requests[util.AscendNPUCore]
 		if !ok {
-			return 0, errors.New("getAiCoreNumFromTask get resource requests failed")
+			continue
+		}
+		if coreNum.Value() == 0 {
+			continue
 		}
 		return int(coreNum.Value()), nil
 	}
