@@ -46,7 +46,7 @@ func (baseCenter *baseFaultCenter) register(ch chan struct{}) error {
 		baseCenter.subscribeChannelList = make([]chan struct{}, 0)
 	}
 	length := len(baseCenter.subscribeChannelList)
-	if length > constant.MAX_FAULT_CENTER_SUBSCRIBER {
+	if length > constant.MaxFaultCenterSubscriber {
 		return fmt.Errorf("the number of registrants is %d, cannot add any more", length)
 	}
 	baseCenter.subscribeChannelList = append(baseCenter.subscribeChannelList, ch)

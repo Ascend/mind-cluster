@@ -20,9 +20,6 @@ import (
 	"os"
 	"testing"
 
-	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/kubeclient"
-
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -30,6 +27,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/kubeclient"
 )
 
 const (
@@ -141,7 +141,8 @@ func mockProcessPolicyTable() map[string]int {
 // newTestHotResetManager new a hot reset manager example
 func newTestHotResetManager(deviceType string, model string) HotResetManager {
 	common.ParamOption.RealCardType = deviceType
-	return NewHotResetManager(model, 16)
+	deviceNum := 16
+	return NewHotResetManager(model, deviceNum)
 }
 
 // TestGetChipCountOnRing for test the default count of ring ond different device

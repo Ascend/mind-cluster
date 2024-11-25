@@ -60,7 +60,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultshoot.JobFaul
 			RankId: info.RankId,
 		}
 		fault.FaultType = common.NormalFaultType
-		if strings.Contains(info.FaultCode, constant.UCE_FAULT_CODE) {
+		if strings.Contains(info.FaultCode, constant.UceFaultCode) {
 			fault.FaultType = common.UceFaultType
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)

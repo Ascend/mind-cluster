@@ -91,7 +91,8 @@ func (r *ASJobReconciler) getClusterDSvcIp() string {
 	return clusterdSvcIp
 }
 
-func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string, rtype commonv1.ReplicaType) (string, string, error) {
+func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string,
+	rtype commonv1.ReplicaType) (string, string, error) {
 	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 &&
 		rtype == mindxdlv1.ReplicaTypeWorker {
 		return "", "", nil

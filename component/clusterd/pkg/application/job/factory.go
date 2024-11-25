@@ -52,9 +52,6 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		hwlog.RunLog.Errorf("object has no meta: %v", err)
 		return err
 	}
-	jobName, jobUid := getPGJobInfo(metaData)
-	pgName := metaData.GetName()
-	pgUid := string(metaData.GetUID())
 	namespace := metaData.GetNamespace()
 	modelFramework := metaData.GetLabels()
 	ModelFramework = modelFramework[FrameWork]
@@ -68,27 +65,13 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		hwlog.RunLog.Errorf("failed to get obj from indexer: %s", key)
 		return err
 	}
-	pg, isPg := obj.(*v1beta1.PodGroup)
-	if !isPg {
-		return fmt.Errorf("create job model by obj is not pg, %s ", key)
+	model, err2 := buildModel(obj, key, metaData)
+	if err2 != nil {
+		return err2
 	}
-	version, err := strconv.Atoi(pg.ResourceVersion)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get ResourceVersion: %s", pg.ResourceVersion)
-		return err
-	}
-	model := &jobModel{key: key,
-		Info: Info{JobUid: jobUid, Version: int32(version),
-			CreationTimestamp: pg.CreationTimestamp, Namespace: namespace, JobName: jobName,
-			PGName: pgName, PGUid: pgUid,
-			PGLabels: pg.Labels,
-			Key:      namespace + "/" + metaData.GetName(),
-			JobType:  getPGType(pg)},
-		replicas: pg.Spec.MinMember, devices: pg.Spec.MinResources}
-
 	if !exists {
 		if eventType == EventDelete {
-			model.DeleteWorker(namespace, jobName, jobUid, agent)
+			model.DeleteWorker(namespace, model.Info.JobName, model.Info.JobUid, agent)
 			hwlog.RunLog.Infof("not exist + delete, eventType is %s, current key is %s", eventType, key)
 			return nil
 		}
@@ -99,6 +82,32 @@ func SyncJob(obj interface{}, eventType string, indexer cache.Indexer, agent *Ag
 		return err
 	}
 	return nil
+}
+
+func buildModel(obj interface{}, key string, metaData metav1.Object) (*jobModel, error) {
+	jobName, jobUid := getPGJobInfo(metaData)
+	pgName := metaData.GetName()
+	pgUid := string(metaData.GetUID())
+	namespace := metaData.GetNamespace()
+
+	pg, isPg := obj.(*v1beta1.PodGroup)
+	if !isPg {
+		return nil, fmt.Errorf("create job model by obj is not pg, %s ", key)
+	}
+	version, err := strconv.Atoi(pg.ResourceVersion)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get ResourceVersion: %s", pg.ResourceVersion)
+		return nil, err
+	}
+	model := &jobModel{key: key,
+		Info: Info{JobUid: jobUid, Version: int32(version),
+			CreationTimestamp: pg.CreationTimestamp, Namespace: namespace, JobName: jobName,
+			PGName: pgName, PGUid: pgUid,
+			PGLabels: pg.Labels,
+			Key:      namespace + "/" + metaData.GetName(),
+			JobType:  getPGType(pg)},
+		replicas: pg.Spec.MinMember, devices: pg.Spec.MinResources}
+	return model, nil
 }
 
 func getPGType(pg *v1beta1.PodGroup) string {

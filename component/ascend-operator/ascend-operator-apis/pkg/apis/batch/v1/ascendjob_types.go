@@ -57,12 +57,13 @@ type AscendJobSpec struct {
 	// SchedulerName defines the job scheduler with gang-scheduling enabled
 	SchedulerName string `json:"schedulerName,omitempty"`
 
-	// A map of ReplicaType (type) to ReplicaSpec (value). Specifies the ML cluster configuration.
-	// For example,
-	//   {
-	//     "Scheduler": ReplacaSpec,
-	//     "Worker": ReplicaSpec,
-	//   }
+	/*	 A map of ReplicaType (type) to ReplicaSpec (value). Specifies the ML cluster configuration.
+		 For example,
+		   {
+		     "Scheduler": ReplacaSpec,
+		     "Worker": ReplicaSpec,
+		   }
+	*/
 	ReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"replicaSpecs"`
 }
 

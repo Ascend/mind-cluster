@@ -31,32 +31,32 @@ func NewFaultProcessCenter(ctx context.Context) {
 
 func (center *FaultProcessCenter) informSwitchInfoAdd(newInfo *constant.SwitchInfo) {
 	center.switchCenter.updateDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SWITCH_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SwitchFaultType)
 }
 
 func (center *FaultProcessCenter) informSwitchInfoDel(newInfo *constant.SwitchInfo) {
 	center.switchCenter.delDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SWITCH_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SwitchFaultType)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoAdd(newInfo *constant.DeviceInfo) {
 	center.deviceCenter.updateDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DEVICE_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceFaultType)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoDel(newInfo *constant.DeviceInfo) {
 	center.deviceCenter.delDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DEVICE_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceFaultType)
 }
 
 func (center *FaultProcessCenter) informNodeInfoAdd(newInfo *constant.NodeInfo) {
 	center.nodeCenter.updateDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NODE_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NodeFaultType)
 }
 
 func (center *FaultProcessCenter) informNodeInfoDel(newInfo *constant.NodeInfo) {
 	center.nodeCenter.delDevicePluginCm(newInfo)
-	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NODE_FAULT)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NodeFaultType)
 }
 
 func (center *FaultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
@@ -73,13 +73,13 @@ func (center *FaultProcessCenter) work(ctx context.Context) {
 			return
 		case whichToProcess := <-center.notifyProcessChan:
 			switch whichToProcess {
-			case constant.ALL_FAULT:
+			case constant.AllFaultType:
 				center.process()
-			case constant.DEVICE_FAULT:
+			case constant.DeviceFaultType:
 				center.deviceCenter.process()
-			case constant.NODE_FAULT:
+			case constant.NodeFaultType:
 				center.nodeCenter.process()
-			case constant.SWITCH_FAULT:
+			case constant.SwitchFaultType:
 				center.switchCenter.process()
 			default:
 				hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
@@ -106,20 +106,20 @@ func (center *FaultProcessCenter) CallbackForReportUceInfo(infos []ReportRecover
 	for _, info := range infos {
 		center.deviceCenter.callbackForReportUceInfo(info.JobId, info.Rank, info.RecoverTime)
 	}
-	center.notifyFaultCenterProcess(constant.DEVICE_FAULT)
+	center.notifyFaultCenterProcess(constant.DeviceFaultType)
 	return nil
 }
 
 // Register to notify fault occurrence
 func (center *FaultProcessCenter) Register(ch chan struct{}, whichToRegister int) {
 	switch whichToRegister {
-	case constant.SWITCH_FAULT:
+	case constant.SwitchFaultType:
 		center.switchCenter.register(ch)
-	case constant.NODE_FAULT:
+	case constant.NodeFaultType:
 		center.nodeCenter.register(ch)
-	case constant.DEVICE_FAULT:
+	case constant.DeviceFaultType:
 		center.deviceCenter.register(ch)
-	case constant.ALL_FAULT:
+	case constant.AllFaultType:
 		center.switchCenter.register(ch)
 		center.nodeCenter.register(ch)
 		center.deviceCenter.register(ch)

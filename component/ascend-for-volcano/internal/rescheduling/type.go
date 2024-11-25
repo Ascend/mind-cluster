@@ -239,6 +239,7 @@ type RescheduleRecord struct {
 	ReasonOfTask []RescheduleTaskReason
 }
 
+// RescheduleTaskReason record the reason of this rescheduling of task
 type RescheduleTaskReason struct {
 	// RescheduleReason the fault type of this rescheduling
 	RescheduleReason string

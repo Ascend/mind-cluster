@@ -84,7 +84,7 @@ const (
 )
 
 var (
-	faultTypeCode FaultTypeCode
+	faultTypeCode = FaultTypeCode{}
 	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
 	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L2-L3

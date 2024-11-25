@@ -228,7 +228,7 @@ func (agent *Agent) GetJobServerInfoMap() JobServerInfoMap {
 		}
 		allJobServerMap[jobUid] = jobServerMap
 	}
-	return JobServerInfoMap{allJobServerMap, allUceJobFlag}
+	return JobServerInfoMap{InfoMap: allJobServerMap, UceTolerate: allUceJobFlag}
 }
 
 func getWorkName(labels map[string]string) string {
