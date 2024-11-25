@@ -3,10 +3,11 @@ module ascend-operator
 go 1.18
 
 require (
-    ascend-common v0.0.0
+	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/kubeflow/common v0.4.3
 	github.com/kubeflow/training-operator v1.5.0
+	github.com/looplab/fsm v1.0.2
 	github.com/smartystreets/goconvey v1.6.4
 	huawei.com/npu-exporter/v5 v5.0.0
 	k8s.io/api v0.25.13

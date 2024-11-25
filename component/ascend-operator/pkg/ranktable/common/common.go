@@ -9,6 +9,7 @@ Package common is common function or object of ranktable.
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/looplab/fsm"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
@@ -35,6 +37,8 @@ type BaseGenerator struct {
 	dir            string
 	path           string
 	configmapExist utils.ConfigmapCheck
+	cmStatus       *fsm.FSM
+	fileStatus     *fsm.FSM
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -209,3 +213,28 @@ func (r *BaseGenerator) GatherServerList() {
 	})
 	r.ServerCount = strconv.Itoa(len(r.ServerList))
 }
+
+func newRankTableFsm() *fsm.FSM {
+	return fsm.NewFSM(
+		RankTableInit,
+		fsm.Events{
+			{Name: SaveJobSuccess, Src: []string{RankTableInit}, Dst: RankTableSaved},
+			{Name: DeletePodSuccess, Src: []string{RankTableSaved}, Dst: RankTableInit},
+			{Name: DeletePodSuccess, Src: []string{RankTableReset}, Dst: RankTableInit},
+			{Name: DeletePodFailed, Src: []string{RankTableSaved}, Dst: RankTableReset},
+		},
+		fsm.Callbacks{
+			"enter_state": func(_ context.Context, e *fsm.Event) { fmt.Println("hello!") },
+		},
+	)
+}
+
+const (
+	RankTableInit  = "InitializingOrResetted"
+	RankTableSaved = "Saved"
+	RankTableReset = "Resetting"
+
+	SaveJobSuccess   = "SaveSuccess"
+	DeletePodSuccess = "DeletePodSuccess"
+	DeletePodFailed  = "DeletePodFailed"
+)
