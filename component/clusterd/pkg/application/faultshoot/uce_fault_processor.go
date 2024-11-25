@@ -97,7 +97,7 @@ func (processor *uceFaultProcessor) processUceFaultInfo(currentTime int64) {
 }
 
 func (processor *uceFaultProcessor) processEachNodeUceFaultInfo(
-	nodeName string, deviceInfo AdvanceDeviceCm, currentTime int64) AdvanceDeviceCm {
+	nodeName string, deviceInfo AdvanceDeviceFaultCm, currentTime int64) AdvanceDeviceFaultCm {
 	for _, uceJob := range processor.uceDevicesOfUceJob {
 		for deviceName, uceDevice := range uceJob.UceNode[nodeName].DeviceInfo {
 			log := fmt.Sprintf("filter uce device: %s on node %s, "+
@@ -108,7 +108,7 @@ func (processor *uceFaultProcessor) processEachNodeUceFaultInfo(
 				util.ReadableMsTime(uceDevice.RecoverTime))
 			if processor.canFilterUceDeviceFaultInfo(uceDevice, currentTime) {
 				hwlog.RunLog.Warn("uceFaultProcessor " + log)
-				deviceInfo.DeviceList = processor.filterUceDeviceFaultInfo(deviceName, deviceInfo.DeviceList)
+				deviceInfo.FaultDeviceList = processor.filterUceDeviceFaultInfo(deviceName, deviceInfo.FaultDeviceList)
 			} else {
 				hwlog.RunLog.Warn("uceFaultProcessor cannot " + log)
 			}
@@ -210,12 +210,12 @@ func (processor *uceFaultProcessor) getUceDevicesForUceTolerateJobs() map[string
 	return uceJobs
 }
 
-func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceInfo AdvanceDeviceCm) uceNodeInfo {
+func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceInfo AdvanceDeviceFaultCm) uceNodeInfo {
 	nodeInfo := uceNodeInfo{
 		NodeName:   nodeName,
 		DeviceInfo: make(map[string]uceDeviceInfo),
 	}
-	for _, deviceFaults := range deviceInfo.DeviceList {
+	for _, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
 			if !isUceFault(fault) {
 				continue

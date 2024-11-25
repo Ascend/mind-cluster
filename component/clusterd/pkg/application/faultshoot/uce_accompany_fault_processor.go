@@ -29,14 +29,14 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQue() {
 }
 
 func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
-	nodeName string, deviceInfo AdvanceDeviceCm) {
+	nodeName string, deviceInfo AdvanceDeviceFaultCm) {
 	if _, ok := processor.uceAccompanyFaultQue[nodeName]; !ok {
 		processor.uceAccompanyFaultQue[nodeName] = make(map[string][]constant.DeviceFault)
 	}
 	if _, ok := processor.uceFaultTime[nodeName]; !ok {
 		processor.uceFaultTime[nodeName] = make(map[string]int64)
 	}
-	for deviceName, deviceFaults := range deviceInfo.DeviceList {
+	for deviceName, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
 			if isUceFault(fault) {
 				errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s", deviceName, nodeName)
@@ -74,9 +74,9 @@ func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64)
 		faultMap := processor.deviceCmForNodeMap[nodeName]
 		for deviceName, deviceFaultQue := range nodeFaults {
 			newQue, newFaultMap :=
-				processor.filterFaultDevice(faultMap.DeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
+				processor.filterFaultDevice(faultMap.FaultDeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
 			nodeFaults[deviceName] = newQue
-			faultMap.DeviceList = newFaultMap
+			faultMap.FaultDeviceList = newFaultMap
 		}
 		processor.deviceCmForNodeMap[nodeName] = faultMap
 	}

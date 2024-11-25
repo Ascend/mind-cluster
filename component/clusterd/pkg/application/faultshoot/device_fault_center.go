@@ -27,10 +27,12 @@ func newDeviceFaultProcessCenter() *deviceFaultProcessCenter {
 	var processorForUceAccompanyFault = newUceAccompanyFaultProcessor(deviceCenter)
 	var processorForUceFault = newUceFaultProcessor(deviceCenter)
 	var processForJobFaultRank = newJobRankFaultInfoProcessor(deviceCenter)
+	var processLinkDownCqeFault = newLinkDownCqeFaultProcessor(deviceCenter)
 
 	deviceCenter.addProcessors([]faultProcessor{
 		processorForUceAccompanyFault, // this processor filter the uce accompany faults, before processorForUceFault
 		processorForUceFault,          // this processor filter the uce faults.
+		processLinkDownCqeFault,       // this processor filter the cqe, link down faults.
 		processForJobFaultRank,        // this processor need to get filtered faults
 	})
 	return deviceCenter
@@ -70,6 +72,7 @@ func (deviceCenter *deviceFaultProcessCenter) updateDevicePluginCm(newInfo *cons
 		return
 	}
 	deviceCenter.devicePluginCm[newInfo.CmName] = newInfo
+	hwlog.RunLog.Debugf("add DeviceInfo: %s", util.ObjToString(newInfo))
 }
 
 func (deviceCenter *deviceFaultProcessCenter) delDevicePluginCm(newInfo *constant.DeviceInfo) {

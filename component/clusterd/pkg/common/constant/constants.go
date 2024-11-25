@@ -57,9 +57,12 @@ const (
 
 // fault code const
 const (
-	UceFaultCode = "80E01801"
-	AicFaultCode = "80C98009"
-	AivFaultCode = "80CB8009"
+	UceFaultCode      = "80E01801"
+	AicFaultCode      = "80C98009"
+	AivFaultCode      = "80CB8009"
+	LinkDownFaultCode = "81078603"
+	DevCqeFaultCode   = "8C1F8608"
+	HostCqeFaultCode  = "4C1F8608"
 )
 
 // fault processor const

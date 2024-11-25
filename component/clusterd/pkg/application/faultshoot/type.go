@@ -43,14 +43,14 @@ type FaultProcessCenter struct {
 	notifyProcessChan chan int
 }
 
-// AdvanceDeviceCm more structure device info
-type AdvanceDeviceCm struct {
+// AdvanceDeviceFaultCm more structure device info
+type AdvanceDeviceFaultCm struct {
 	ServerType       string
 	CmName           string
 	SuperPodID       int32
 	ServerIndex      int32
-	DeviceList       map[string][]constant.DeviceFault
-	CarUnHealthy     []string
+	FaultDeviceList  map[string][]constant.DeviceFault
+	CardUnHealthy    []string
 	NetworkUnhealthy []string
 	UpdateTime       int64
 }
@@ -67,6 +67,20 @@ type FaultRank struct {
 type JobFaultInfo struct {
 	JobId     string
 	FaultList []FaultRank
+}
+
+type linkDownCqeFaultProcessCenter struct {
+	deviceCenter        *deviceFaultProcessCenter
+	linkDownCqeFaults   map[string]map[string]map[string]cqeLinkDownFaultRank // job, node, device faultInfo
+	nodeDeviceFaultInfo map[string]AdvanceDeviceFaultCm
+	cqeFaultTimeList    map[string][]int64
+}
+
+type cqeLinkDownFaultRank struct {
+	LinkDownFaultTime int64
+	DeviceName        string
+	IsLinkDown        bool
+	IsCqe             bool
 }
 
 type jobRankFaultInfoProcessor struct {
@@ -104,7 +118,7 @@ type uceAccompanyFaultProcessor struct {
 	uceAccompanyFaultQue map[string]map[string][]constant.DeviceFault
 	// uceFaultTime
 	uceFaultTime       map[string]map[string]int64
-	deviceCmForNodeMap map[string]AdvanceDeviceCm
+	deviceCmForNodeMap map[string]AdvanceDeviceFaultCm
 }
 
 /*
@@ -123,7 +137,7 @@ type uceFaultProcessor struct {
 	// node->DeviceName->uceDeviceInfo
 	uceDeviceOfNode  map[string]uceNodeInfo
 	jobServerInfoMap job.JobServerInfoMap
-	nodeDeviceCmMap  map[string]AdvanceDeviceCm
+	nodeDeviceCmMap  map[string]AdvanceDeviceFaultCm
 }
 
 // JobId->node->device->report_info

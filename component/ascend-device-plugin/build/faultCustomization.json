@@ -27,7 +27,7 @@
   "FaultDuration": [
     {
       "EventId": ["81078603"],
-      "FaultTimeout": 30,
+      "FaultTimeout": 20,
       "RecoverTimeout": 60,
       "FaultHandling": "PreSeparateNPU"
     },

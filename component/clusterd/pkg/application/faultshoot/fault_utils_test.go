@@ -120,7 +120,7 @@ func TestGetAdvanceDeviceCm(t *testing.T) {
 		ServerIndex: 0,
 	}
 	advanceDeviceCm := getAdvanceDeviceCm(info)
-	faultTimeAndLevel, ok := advanceDeviceCm.DeviceList["xxx"][0].FaultTimeAndLevelMap["1801"]
+	faultTimeAndLevel, ok := advanceDeviceCm.FaultDeviceList["xxx"][0].FaultTimeAndLevelMap["1801"]
 	if !ok {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
