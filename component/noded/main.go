@@ -22,8 +22,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/config"
 	"nodeD/pkg/control"
