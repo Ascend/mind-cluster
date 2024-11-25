@@ -77,16 +77,12 @@ func main() {
 	if !checkParameters() {
 		return
 	}
-	err := kube.InitClientK8s()
+	err := initK8sServer()
 	if err != nil {
-		hwlog.RunLog.Errorf("new client config err: %v", err)
+		hwlog.RunLog.Errorf("init k8s servers failed, error: %v", err)
 		return
 	}
-	err = kube.InitClientVolcano()
-	if err != nil {
-		hwlog.RunLog.Errorf("new volcano client config err: %v", err)
-		return
-	}
+
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS)})
@@ -98,6 +94,21 @@ func main() {
 	startInformer(ctx, recoverService)
 	faultshoot.NewFaultProcessCenter(ctx)
 	signalCatch(cancel)
+}
+
+func initK8sServer() error {
+	err := kube.InitClientK8s()
+	if err != nil {
+		return fmt.Errorf("new client config err: %v", err)
+	}
+	vcK8sClient, err := kube.InitClientVolcano()
+	if err != nil {
+		return fmt.Errorf("new volcano client config err: %v", err)
+	}
+	if !kube.CheckVolcanoExist(vcK8sClient.ClientSet) {
+		return fmt.Errorf("volcano not exist, please deploy volcano")
+	}
+	return nil
 }
 
 func init() {
