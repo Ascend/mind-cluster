@@ -54,7 +54,7 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test4", Namespace: "test4", Annotations: map[string]string{common.
 			PodPredicateTime: "4", common.HuaweiAscend910: "Ascend910-2"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
-			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910c2: "Ascend910-2c-180-3"}}},
+			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
 	}
 )
 
@@ -224,18 +224,18 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 // TestAllocateRequestVirtualDevice for test the Allocate request virtual device
 func TestAllocateRequestVirtualDevice(t *testing.T) {
 	common.ParamOption.UseVolcanoType = false
-	ps := NewPluginServer(common.Ascend910c2, devices, nil, nil)
+	ps := NewPluginServer(common.Ascend910vir2, devices, nil, nil)
 	var requests v1beta1.AllocateRequest
 	convey.Convey("invalid request", t, func() {
 		convey.Convey("request more than 1 virtual device", func() {
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2, DeviceName: "Ascend910-2c-100-0"}}
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device not exist", func() {
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2, DeviceName: "Ascend910-2c-100-0"}}
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
@@ -245,8 +245,8 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
 			defer mockSlowNodeFunc.Reset()
 			deviceID := "100"
-			ps := NewPluginServer(common.Ascend910c2, devices, nil, nil)
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2,
+			ps := NewPluginServer(common.Ascend910vir2, devices, nil, nil)
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
 				DeviceName: "Ascend910-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-" + deviceID + "-0"}}}
@@ -332,7 +332,7 @@ func TestAllocateWithVolcano2(t *testing.T) {
 				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
 				return []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 					Annotations: map[string]string{common.PodPredicateTime: "5",
-						common.ResourceNamePrefix + common.Ascend910c2: "Ascend910-2c-180-3"}}}}
+						common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}}}
 			})
 			defer mockFilter.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)

@@ -308,7 +308,7 @@ func InitPGInformer(ctx context.Context, jobSrv JobService) {
 	PGInformer = factory.Scheduling().V1beta1().PodGroups()
 
 	cacheIndexer := PGInformer.Informer().GetIndexer()
-	var err error
+	var err error = nil
 	JobMgr, err = job.NewAgent(k8sClient.ClientSet, job.NewConfig(), vcClient)
 	if err != nil {
 		hwlog.RunLog.Errorf("create agent err: %v", err)

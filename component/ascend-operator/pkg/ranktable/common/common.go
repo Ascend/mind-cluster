@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	pathlib "path"
+	"path"
 	"sort"
 	"strconv"
 	"sync"
@@ -49,7 +49,7 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
 		dir:        rankTableDir,
-		path:       pathlib.Join(rankTableDir, rankTableFile),
+		path:       path.Join(rankTableDir, rankTableFile),
 		servers:    &sync.Map{},
 		rankTabler: r,
 		Status:     utils.InitialRTStatus,

@@ -113,10 +113,12 @@ func (r *ASJobReconciler) UpdateJobStatus(
 		return err
 	}
 
-	// we assign the jobStatus to the msJob.Status for testing purpose
-	// it won't effect the main reconcile logic
-	// because we already use oldStatus := jobStatus.DeepCopy() to record the oldStatus
-	// and use !reflect.DeepEqual(*oldStatus, jobStatus) to decide whether to update the msJob or not
+	/*
+		we assign the jobStatus to the msJob.Status for testing purpose
+		it won't effect the main reconcile logic
+		because we already use oldStatus := jobStatus.DeepCopy() to record the oldStatus
+		and use !reflect.DeepEqual(*oldStatus, jobStatus) to decide whether to update the msJob or not
+	*/
 	ascendJob.Status = *jobStatus.DeepCopy()
 
 	return nil
@@ -297,7 +299,7 @@ func (r *ASJobReconciler) newPodGroupSpec(ji *jobInfo) v1beta1.PodGroupSpec {
 	minMember := k8sutil.GetTotalReplicas(ji.rpls)
 	queue := ""
 	priorityClass := ""
-	var minResources *corev1.ResourceList
+	var minResources *corev1.ResourceList = nil
 
 	runPolicy := ji.runPolicy
 

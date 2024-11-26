@@ -241,7 +241,7 @@ var (
 	ModelFramework string
 )
 
-// Job info
+// JobServerInfoMap to store job server info
 type JobServerInfoMap struct {
 	InfoMap     map[string]map[string]ServerHccl
 	UceTolerate map[string]bool
