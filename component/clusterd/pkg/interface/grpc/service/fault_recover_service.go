@@ -12,7 +12,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/faultshoot"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
@@ -47,7 +47,7 @@ func (s *FaultRecoverService) getController(jobId string) (*EventController, boo
 	return ctl, exist
 }
 
-func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultshoot.JobFaultInfo) {
+func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultmanager.JobFaultInfo) {
 	controller, exist := s.getController(faultInfo.JobId)
 	if !exist || controller == nil {
 		hwlog.RunLog.Errorf("jobId=%s not exist", faultInfo.JobId)
@@ -71,7 +71,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultshoot.JobFaul
 	controller.addEvent(common.FaultOccurEvent)
 }
 
-func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []faultshoot.JobFaultInfo) {
+func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []faultmanager.JobFaultInfo) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(jobFaultInfoList))
 	for _, jobFaultInfo := range jobFaultInfoList {
@@ -85,11 +85,11 @@ func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []faultshoot
 }
 
 func (s *FaultRecoverService) checkFault() {
-	if faultshoot.GlobalFaultProcessCenter == nil {
+	if faultmanager.GlobalFaultProcessCenter == nil {
 		hwlog.RunLog.Warnf("global center is nil, try it after %d second", globalFaultBeaconSecond)
 	}
-	allJobFaultInfo := faultshoot.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultshoot.NotHandleFault)
-	var registeredJobInfo []faultshoot.JobFaultInfo
+	allJobFaultInfo := faultmanager.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultmanager.NotHandleFault)
+	var registeredJobInfo []faultmanager.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		if !s.registered(jobId) {
 			continue
@@ -259,15 +259,15 @@ func (s *FaultRecoverService) ReportRecoverStatus(ctx context.Context,
 
 func giveSoftFault2FaultCenter(jobId string, faults []*pb.FaultRank) {
 	t := time.Now().UnixMilli()
-	var infos []faultshoot.ReportRecoverInfo
+	var infos []faultmanager.ReportRecoverInfo
 	for _, fault := range faults {
-		infos = append(infos, faultshoot.ReportRecoverInfo{
+		infos = append(infos, faultmanager.ReportRecoverInfo{
 			JobId:       jobId,
 			Rank:        fault.RankId,
 			RecoverTime: t,
 		})
 	}
-	faultshoot.GlobalFaultProcessCenter.CallbackForReportUceInfo(infos)
+	faultmanager.GlobalFaultProcessCenter.CallbackForReportUceInfo(infos)
 }
 
 // ReportProcessFault report soft fault ranks to ClusterD
@@ -284,7 +284,7 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 			Info: fmt.Sprintf("jobId=%s not registed", request.JobId),
 		}, nil
 	}
-	if faultshoot.GlobalFaultProcessCenter != nil {
+	if faultmanager.GlobalFaultProcessCenter != nil {
 		giveSoftFault2FaultCenter(request.JobId, request.FaultRankIds)
 	} else {
 		hwlog.RunLog.Warnf("global fault center is nil")

@@ -14,7 +14,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/faultshoot"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
@@ -59,9 +59,9 @@ func Report() {
 				// when informer begin, frequent add messages
 				time.Sleep(time.Second)
 			})
-			deviceArr := device.GetSafeData(faultshoot.GlobalFaultProcessCenter.QueryDeviceInfoToReport())
-			nodeArr := node.GetSafeData(faultshoot.GlobalFaultProcessCenter.QueryNodeInfoToReport())
-			switchArr := switchinfo.GetSafeData(faultshoot.GlobalFaultProcessCenter.QuerySwitchInfoToReport())
+			deviceArr := device.GetSafeData(faultmanager.GlobalFaultProcessCenter.QueryDeviceInfoToReport())
+			nodeArr := node.GetSafeData(faultmanager.GlobalFaultProcessCenter.QueryNodeInfoToReport())
+			switchArr := switchinfo.GetSafeData(faultmanager.GlobalFaultProcessCenter.QuerySwitchInfoToReport())
 			updateCmWithEmpty(deviceArr, nodeArr, switchArr)
 			reportTime = time.Now().UnixMilli()
 			processCount++

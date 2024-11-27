@@ -1,10 +1,9 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
-	"sort"
 	"sync"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -71,15 +70,6 @@ func (processor *jobRankFaultInfoProcessor) process() {
 			faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList)
 			jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, faultRankList...)
 		}
-		sort.Slice(jobFaultInfo.FaultList, func(i, j int) bool {
-			if jobFaultInfo.FaultList[i].RankId < jobFaultInfo.FaultList[j].RankId {
-				return true
-			}
-			if jobFaultInfo.FaultList[i].RankId > jobFaultInfo.FaultList[j].RankId {
-				return false
-			}
-			return jobFaultInfo.FaultList[i].FaultCode < jobFaultInfo.FaultList[j].FaultCode
-		})
 		jobFaultInfos[jobId] = jobFaultInfo
 	}
 	processor.setJobFaultRankInfos(jobFaultInfos)
