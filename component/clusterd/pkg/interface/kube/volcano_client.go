@@ -23,13 +23,12 @@ type VcK8sClient struct {
 }
 
 // InitClientVolcano init volcano client
-func InitClientVolcano() error {
+func InitClientVolcano() (*VcK8sClient, error) {
+	var err error
 	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
-		var err error
 		vcK8sClient, err = newVCClientK8s()
-		return err
 	}
-	return nil
+	return vcK8sClient, err
 }
 
 // GetClientVolcano get client volcano
@@ -91,6 +90,7 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 	return nil, fmt.Errorf("vcK8sClient is nil")
 }
 
+// RetryUpdatePodGroup call UpdatePod
 func RetryUpdatePodGroup(pg *v1beta1.PodGroup, retryTimes int) (*v1beta1.PodGroup, error) {
 	pg, err := UpdatePodGroup(pg)
 	retry := 0

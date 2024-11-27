@@ -345,7 +345,7 @@ func (ki *ClientK8s) AnnotationReset() error {
 // GetPodsUsedNpu get npu by status
 func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 	podList := ki.GetActivePodListCache()
-	var useNpu []string
+	var useNpu = make([]string, 0)
 	for _, pod := range podList {
 		tmpNpu, ok := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {

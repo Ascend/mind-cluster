@@ -46,14 +46,14 @@ import (
 var (
 	port                int
 	updateTime          int
-	ip                  string
+	ip                  = ""
 	version             bool
 	concurrency         int
-	containerMode       string
-	containerd          string
-	endpoint            string
-	limitIPReq          string
-	platform            string
+	containerMode       = ""
+	containerd          = ""
+	endpoint            = ""
+	limitIPReq          = ""
+	platform            = ""
 	limitIPConn         int
 	limitTotalConn      int
 	cacheSize           int

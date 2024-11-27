@@ -110,6 +110,15 @@ func (ctl *EventController) reset() {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
 	hwlog.RunLog.Infof("jobId=%s's action path = {%s}", ctl.jobInfo.JobId, ctl.state.GetPathGraph())
+	if len(ctl.cacheNormalFault)+len(ctl.cacheUceFault) > 0 {
+		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+			nil, common.ClearOperation)
+		if err != nil {
+			hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
+		} else {
+			hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[common.ResetInfoCMDataKey])
+		}
+	}
 	if ctl.ctxCancelFunc != nil {
 		ctl.ctxCancelFunc()
 	}
@@ -569,6 +578,7 @@ func (ctl *EventController) setCacheFault(uceFaults, normalFaults []*pb.FaultRan
 
 func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 	uceFaults, normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("jobId=%s enter notifyFaultForUceFaultCase function", ctl.jobInfo.JobId)
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
@@ -583,6 +593,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
 				common.WriteConfirmFaultOrWaitPlatResultFault, nil
 		}
+		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
 		if !isUceFault(allFaults) {
 			uceFaults = uceFaults[:0]
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
@@ -603,9 +614,11 @@ func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 			signal.FaultRankIds = normalFaults
 			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
 		} else {
+			hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
 			signal.FaultRankIds = uceFaults
 		}
 	} else {
+		hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
 		signal.FaultRankIds = uceFaults
 	}
 	return ctl.signalEnqueue(signal)
@@ -613,13 +626,16 @@ func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 
 func (ctl *EventController) notifyFaultForNormalFaultCase(worker job.PodWorker,
 	uceFaults, normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("jobId=%s enter notifyFaultForNormalFaultCase function", ctl.jobInfo.JobId)
 	if ctl.jobInfo.PlatFormMode {
+		hwlog.RunLog.Infof("jobId=%s enter notifyFaultForNormalFaultCase function", ctl.jobInfo.JobId)
 		allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(normalFaults)
 		if err != nil {
 			hwlog.RunLog.Errorf("write confirm fault or wait plat result fault timeout, err=%v", err)
 			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
 				common.WriteConfirmFaultOrWaitPlatResultFault, nil
 		}
+		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
 		ctl.setCacheFault(nil, allFaults)
 		normalFaults = allFaults
 	}
@@ -789,6 +805,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 			ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
 			return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 		}
+		ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
 		ctl.removeAgentStrategy(common.ProcessDumpStrategyName)
 		return common.RecoverFailEvent, common.ClientError, nil
 	case common.ProcessRecoverStrategyName:

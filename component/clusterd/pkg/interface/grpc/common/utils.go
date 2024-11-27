@@ -206,10 +206,16 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	newTaskInfo.RankList = []*TaskDevInfo{}
 	newTaskInfo.UpdateTime = time.Now().Unix()
 	newTaskInfo.RetryTime = oldTaskResetInfo.RetryTime
+	if operation != NotifyFaultFlushingOperation {
+		newTaskInfo.FaultFlushing = false
+	} else {
+		newTaskInfo.FaultFlushing = true
+	}
 	if operation == RestartAllProcessOperation {
 		newTaskInfo.RetryTime += 1
+		return newTaskInfo, nil
 	}
-	if operation != FaultRankStatus {
+	if operation != NotifyFaultListOperation {
 		return newTaskInfo, nil
 	}
 	for _, rank := range faultRankList {
@@ -268,7 +274,7 @@ func CheckProcessRecoverOpen(name, nameSpace string) bool {
 
 // RemoveSliceDuplicateFaults remote duplicate fault
 func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
-	var res []*pb.FaultRank
+	var res = make([]*pb.FaultRank, 0)
 	exitMap := make(map[string]string)
 	for _, fault := range faults {
 		if typ, ok := exitMap[fault.RankId]; !ok {

@@ -23,18 +23,6 @@ import (
 // RunLog run logger
 var RunLog *logger
 
-// OpLog operate logger
-var OpLog *logger
-
-// SecLog security logger
-var SecLog *logger
-
-// UserLog user logger
-var UserLog *logger
-
-// DebugLog debug logger
-var DebugLog *logger
-
 // InitRunLogger initialize run logger
 func InitRunLogger(config *LogConfig, ctx context.Context) error {
 	if config == nil {
@@ -56,6 +44,9 @@ func InitRunLogger(config *LogConfig, ctx context.Context) error {
 	}
 	return nil
 }
+
+// OpLog operate logger
+var OpLog *logger
 
 // InitOperateLogger initialize operate logger
 func InitOperateLogger(config *LogConfig, ctx context.Context) error {
@@ -79,6 +70,9 @@ func InitOperateLogger(config *LogConfig, ctx context.Context) error {
 	return nil
 }
 
+// SecLog security logger
+var SecLog *logger
+
 // InitSecurityLogger initialize security logger
 func InitSecurityLogger(config *LogConfig, ctx context.Context) error {
 	if config == nil {
@@ -101,6 +95,9 @@ func InitSecurityLogger(config *LogConfig, ctx context.Context) error {
 	return nil
 }
 
+// UserLog user logger
+var UserLog *logger
+
 // InitUserLogger initialize user logger
 func InitUserLogger(config *LogConfig, ctx context.Context) error {
 	if config == nil {
@@ -122,6 +119,9 @@ func InitUserLogger(config *LogConfig, ctx context.Context) error {
 	}
 	return nil
 }
+
+// DebugLog debug logger
+var DebugLog *logger
 
 // InitDebugLogger initialize debug logger
 func InitDebugLogger(config *LogConfig, ctx context.Context) error {

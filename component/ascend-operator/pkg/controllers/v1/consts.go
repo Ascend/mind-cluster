@@ -15,9 +15,8 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package v1 is using for reconcile AscendJob.
 */
-
 package v1
 
 const (

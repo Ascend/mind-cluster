@@ -457,6 +457,30 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 	}
 }
 
+func (tool *AscendTools) getFaultTimeAndLevelMap(
+	device *common.NpuDevice, isNetworkFault bool) map[string]common.FaultTimeAndLevel {
+	result := make(map[string]common.FaultTimeAndLevel)
+	var events []int64
+	var getFaultLevelFunc func(events []int64, logicId int32) string
+	if isNetworkFault {
+		events = device.NetworkFaultCodes
+		getFaultLevelFunc = common.GetNetworkFaultType
+	} else {
+		events = device.FaultCodes
+		getFaultLevelFunc = common.GetFaultType
+	}
+	for _, eventId := range events {
+		faultLevel := getFaultLevelFunc([]int64{eventId}, device.LogicID)
+		faultTimeAndLevel := common.FaultTimeAndLevel{
+			FaultTime:  device.FaultTimeMap[eventId],
+			FaultLevel: faultLevel,
+		}
+		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
+		result[hexFaultCode] = faultTimeAndLevel
+	}
+	return result
+}
+
 // getDeviceFaults get device fault list
 func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.DeviceFault {
 	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
@@ -471,7 +495,7 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			FaultLevel:           faultType,
 			FaultHandling:        faultType,
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTimeMap:         device.FaultTimeMap,
+			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, true),
 		})
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
@@ -485,7 +509,7 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 			FaultLevel:           faultType,
 			FaultHandling:        faultType,
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTimeMap:         device.FaultTimeMap,
+			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, false),
 		})
 	}
 	return deviceFaults

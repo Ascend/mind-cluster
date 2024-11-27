@@ -187,7 +187,8 @@ func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
 	}
 	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v",
+			job.Name, job.Namespace, err)
 		return
 	}
 	r.genRankTable(ji)

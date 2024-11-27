@@ -4,6 +4,7 @@
 package faultshoot
 
 import (
+	"fmt"
 	"time"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -28,23 +29,18 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQue() {
 }
 
 func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
-	nodeName string, deviceInfo AdvanceDeviceCm) {
+	nodeName string, deviceInfo AdvanceDeviceFaultCm) {
 	if _, ok := processor.uceAccompanyFaultQue[nodeName]; !ok {
 		processor.uceAccompanyFaultQue[nodeName] = make(map[string][]constant.DeviceFault)
 	}
 	if _, ok := processor.uceFaultTime[nodeName]; !ok {
 		processor.uceFaultTime[nodeName] = make(map[string]int64)
 	}
-	for deviceName, deviceFaults := range deviceInfo.DeviceList {
+	for deviceName, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
 			if isUceFault(fault) {
-				faultTime, ok := fault.FaultTimeMap[fault.FaultCode]
-				if !ok {
-					hwlog.RunLog.Errorf("cannot find uce fault time for device %s of node %s",
-						deviceName, nodeName)
-					faultTime = constant.DeviceNotFault
-				}
-				processor.uceFaultTime[nodeName][deviceName] = faultTime
+				errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s", deviceName, nodeName)
+				processor.uceFaultTime[nodeName][deviceName] = getFaultTime(fault, errorMsg)
 				continue
 			}
 			if !isUceAccompanyFault(fault) {
@@ -78,9 +74,9 @@ func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64)
 		faultMap := processor.deviceCmForNodeMap[nodeName]
 		for deviceName, deviceFaultQue := range nodeFaults {
 			newQue, newFaultMap :=
-				processor.filterFaultDevice(faultMap.DeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
+				processor.filterFaultDevice(faultMap.FaultDeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
 			nodeFaults[deviceName] = newQue
-			faultMap.DeviceList = newFaultMap
+			faultMap.FaultDeviceList = newFaultMap
 		}
 		processor.deviceCmForNodeMap[nodeName] = faultMap
 	}
@@ -92,12 +88,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 	newDeviceFaultQue := make([]constant.DeviceFault, 0)
 	for _, fault := range deviceFaultQue {
 		uceFaultTime := processor.getDeviceUceFaultTime(nodeName, deviceName)
-		accompanyFaultTime, ok := fault.FaultTimeMap[fault.FaultCode]
-		if !ok {
-			hwlog.RunLog.Errorf("cannot find uce fault time for device %s of node %s",
-				deviceName, nodeName)
-			accompanyFaultTime = constant.DeviceNotFault
-		}
+		errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s", deviceName, nodeName)
+		accompanyFaultTime := getFaultTime(fault, errorMsg)
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
 			hwlog.RunLog.Warnf("filter uce accompany fault %s, fault time: %s",

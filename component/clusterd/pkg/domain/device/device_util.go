@@ -62,6 +62,7 @@ func DeepCopy(info *constant.DeviceInfo) *constant.DeviceInfo {
 	return newDeviceInfo
 }
 
+// DeepCopyInfos deep copy deviceInfos
 func DeepCopyInfos(infos map[string]*constant.DeviceInfo) map[string]*constant.DeviceInfo {
 	res := make(map[string]*constant.DeviceInfo)
 	for key, val := range infos {
