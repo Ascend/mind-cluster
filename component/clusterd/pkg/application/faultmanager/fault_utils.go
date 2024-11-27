@@ -1,15 +1,12 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
- */
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -151,9 +148,6 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 		}
 		deviceFaults = append(deviceFaults, newFault)
 	}
-	sort.SliceStable(deviceFaults, func(i, j int) bool {
-		return deviceFaults[i].FaultCode < deviceFaults[j].FaultCode
-	})
 	return deviceFaults
 }
 
@@ -174,9 +168,6 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 		faultCodeList = append(faultCodeList, fault.FaultCode)
 		fautLevels = append(fautLevels, fault.FaultLevel)
 	}
-	sort.SliceStable(faultCodeList, func(i, j int) bool {
-		return faultCodeList[i] < faultCodeList[j]
-	})
 	faultLevel := getMostSeriousFaultLevel(fautLevels)
 	mergeFault.FaultLevel = faultLevel
 	mergeFault.LargeModelFaultLevel = faultLevel

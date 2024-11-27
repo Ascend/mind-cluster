@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/faultshoot"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -53,9 +53,9 @@ func startInformer(ctx context.Context, recoverService kube.JobService) {
 	kube.InitCMInformer()
 	kube.InitPodInformer()
 	kube.InitPGInformer(ctx, recoverService)
-	kube.AddCmSwitchFunc(constant.Resource, faultshoot.SwitchInfoCollector)
-	kube.AddCmNodeFunc(constant.Resource, faultshoot.NodeCollector)
-	kube.AddCmDeviceFunc(constant.Resource, faultshoot.DeviceInfoCollector)
+	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
+	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
+	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
 	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
@@ -91,7 +91,7 @@ func main() {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	faultshoot.NewFaultProcessCenter(ctx)
+	faultmanager.NewFaultProcessCenter(ctx)
 	startInformer(ctx, recoverService)
 	signalCatch(cancel)
 }

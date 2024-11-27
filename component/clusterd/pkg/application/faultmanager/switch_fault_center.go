@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
 	"sync"
@@ -17,7 +17,7 @@ func newSwitchFaultProcessCenter() *switchFaultProcessCenter {
 	return &switchFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(),
 		processingCm:    make(map[string]*constant.SwitchInfo),
-		devicePluginCm:  make(map[string]*constant.SwitchInfo),
+		originalCm:      make(map[string]*constant.SwitchInfo),
 		mutex:           sync.RWMutex{},
 	}
 }
@@ -46,22 +46,22 @@ func (switchCenter *switchFaultProcessCenter) setProcessedCm(infos map[string]*c
 	switchCenter.processedCm = switchinfo.DeepCopyInfos(infos)
 }
 
-func (switchCenter *switchFaultProcessCenter) updateDevicePluginCm(newInfo *constant.SwitchInfo) {
+func (switchCenter *switchFaultProcessCenter) updateOriginalCm(newInfo *constant.SwitchInfo) {
 	switchCenter.mutex.Lock()
 	defer switchCenter.mutex.Unlock()
-	length := len(switchCenter.devicePluginCm)
+	length := len(switchCenter.originalCm)
 	if length > constant.MaxSupportNodeNum {
 		hwlog.RunLog.Errorf("SwitchInfo length=%d > %d, SwitchInfo cm name=%s save failed",
 			length, constant.MaxSupportNodeNum, newInfo.CmName)
 		return
 	}
-	switchCenter.devicePluginCm[newInfo.CmName] = newInfo
+	switchCenter.originalCm[newInfo.CmName] = newInfo
 }
 
-func (switchCenter *switchFaultProcessCenter) delDevicePluginCm(newInfo *constant.SwitchInfo) {
+func (switchCenter *switchFaultProcessCenter) delOriginalCm(newInfo *constant.SwitchInfo) {
 	switchCenter.mutex.Lock()
 	defer switchCenter.mutex.Unlock()
-	delete(switchCenter.devicePluginCm, newInfo.CmName)
+	delete(switchCenter.originalCm, newInfo.CmName)
 }
 
 func (switchCenter *switchFaultProcessCenter) process() {
@@ -70,7 +70,7 @@ func (switchCenter *switchFaultProcessCenter) process() {
 		return
 	}
 	switchCenter.lastProcessTime = currentTime
-	switchCenter.setProcessingCm(switchCenter.devicePluginCm)
+	switchCenter.setProcessingCm(switchCenter.originalCm)
 	switchCenter.baseFaultCenter.process()
 	switchCenter.setProcessedCm(switchCenter.processingCm)
 }

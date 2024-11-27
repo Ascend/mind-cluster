@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
 	"context"
@@ -30,32 +30,32 @@ func NewFaultProcessCenter(ctx context.Context) {
 }
 
 func (center *FaultProcessCenter) informSwitchInfoAdd(newInfo *constant.SwitchInfo) {
-	center.switchCenter.updateDevicePluginCm(newInfo)
+	center.switchCenter.updateOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SwitchFaultType)
 }
 
 func (center *FaultProcessCenter) informSwitchInfoDel(newInfo *constant.SwitchInfo) {
-	center.switchCenter.delDevicePluginCm(newInfo)
+	center.switchCenter.delOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.SwitchFaultType)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoAdd(newInfo *constant.DeviceInfo) {
-	center.deviceCenter.updateDevicePluginCm(newInfo)
+	center.deviceCenter.updateOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceFaultType)
 }
 
 func (center *FaultProcessCenter) informDeviceInfoDel(newInfo *constant.DeviceInfo) {
-	center.deviceCenter.delDevicePluginCm(newInfo)
+	center.deviceCenter.delOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceFaultType)
 }
 
 func (center *FaultProcessCenter) informNodeInfoAdd(newInfo *constant.NodeInfo) {
-	center.nodeCenter.updateDevicePluginCm(newInfo)
+	center.nodeCenter.updateOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NodeFaultType)
 }
 
 func (center *FaultProcessCenter) informNodeInfoDel(newInfo *constant.NodeInfo) {
-	center.nodeCenter.delDevicePluginCm(newInfo)
+	center.nodeCenter.delOriginalCm(newInfo)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.NodeFaultType)
 }
 

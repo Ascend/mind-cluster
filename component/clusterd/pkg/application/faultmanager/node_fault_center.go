@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
 	"sync"
@@ -17,7 +17,7 @@ func newNodeFaultProcessCenter() *nodeFaultProcessCenter {
 	return &nodeFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(),
 		processingCm:    make(map[string]*constant.NodeInfo),
-		devicePluginCm:  make(map[string]*constant.NodeInfo),
+		originalCm:      make(map[string]*constant.NodeInfo),
 		mutex:           sync.RWMutex{},
 	}
 }
@@ -46,22 +46,22 @@ func (nodeCenter *nodeFaultProcessCenter) setProcessedCm(infos map[string]*const
 	nodeCenter.processedCm = node.DeepCopyInfos(infos)
 }
 
-func (nodeCenter *nodeFaultProcessCenter) updateDevicePluginCm(newInfo *constant.NodeInfo) {
+func (nodeCenter *nodeFaultProcessCenter) updateOriginalCm(newInfo *constant.NodeInfo) {
 	nodeCenter.mutex.Lock()
 	defer nodeCenter.mutex.Unlock()
-	length := len(nodeCenter.devicePluginCm)
+	length := len(nodeCenter.originalCm)
 	if length > constant.MaxSupportNodeNum {
 		hwlog.RunLog.Errorf("SwitchInfo length=%d > %d, SwitchInfo cm name=%s save failed",
 			length, constant.MaxSupportNodeNum, newInfo.CmName)
 		return
 	}
-	nodeCenter.devicePluginCm[newInfo.CmName] = newInfo
+	nodeCenter.originalCm[newInfo.CmName] = newInfo
 }
 
-func (nodeCenter *nodeFaultProcessCenter) delDevicePluginCm(newInfo *constant.NodeInfo) {
+func (nodeCenter *nodeFaultProcessCenter) delOriginalCm(newInfo *constant.NodeInfo) {
 	nodeCenter.mutex.Lock()
 	defer nodeCenter.mutex.Unlock()
-	delete(nodeCenter.devicePluginCm, newInfo.CmName)
+	delete(nodeCenter.originalCm, newInfo.CmName)
 }
 
 func (nodeCenter *nodeFaultProcessCenter) process() {
@@ -70,7 +70,7 @@ func (nodeCenter *nodeFaultProcessCenter) process() {
 		return
 	}
 	nodeCenter.lastProcessTime = currentTime
-	nodeCenter.setProcessingCm(nodeCenter.devicePluginCm)
+	nodeCenter.setProcessingCm(nodeCenter.originalCm)
 	nodeCenter.baseFaultCenter.process()
 	nodeCenter.setProcessedCm(nodeCenter.processingCm)
 }

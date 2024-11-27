@@ -1,6 +1,10 @@
-package faultshoot
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
@@ -49,7 +53,19 @@ func TestJobRankFaultInfoProcessor_GetJobFaultRankInfos(t *testing.T) {
 		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
 		processor.deviceCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
 		processor.process()
-		if !isFaultRankMapEqual(processor.getJobFaultRankInfos(), expectFaultRanks) {
+		jobFaultRankInfos := processor.getJobFaultRankInfos()
+		for _, faultRankInfo := range jobFaultRankInfos {
+			sort.Slice(faultRankInfo.FaultList, func(i, j int) bool {
+				if faultRankInfo.FaultList[i].RankId < faultRankInfo.FaultList[j].RankId {
+					return true
+				}
+				if faultRankInfo.FaultList[i].RankId > faultRankInfo.FaultList[j].RankId {
+					return false
+				}
+				return faultRankInfo.FaultList[i].FaultCode < faultRankInfo.FaultList[j].FaultCode
+			})
+		}
+		if !isFaultRankMapEqual(jobFaultRankInfos, expectFaultRanks) {
 			t.Errorf("processor.jobFaultInfos = %s, expectFaultRanks = %s",
 				util.ObjToString(processor.jobFaultInfoMap), util.ObjToString(expectFaultRanks))
 		}

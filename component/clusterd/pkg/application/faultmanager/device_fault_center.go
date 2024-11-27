@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package faultshoot contain fault process
-package faultshoot
+// Package faultmanager contain fault process
+package faultmanager
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func newDeviceFaultProcessCenter() *deviceFaultProcessCenter {
 	deviceCenter := &deviceFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(),
 		mutex:           sync.RWMutex{},
-		devicePluginCm:  make(map[string]*constant.DeviceInfo),
+		originalCm:      make(map[string]*constant.DeviceInfo),
 		processingCm:    make(map[string]*constant.DeviceInfo),
 	}
 
@@ -62,23 +62,23 @@ func (deviceCenter *deviceFaultProcessCenter) setProcessedCm(infos map[string]*c
 	deviceCenter.processedCm = device.DeepCopyInfos(infos)
 }
 
-func (deviceCenter *deviceFaultProcessCenter) updateDevicePluginCm(newInfo *constant.DeviceInfo) {
+func (deviceCenter *deviceFaultProcessCenter) updateOriginalCm(newInfo *constant.DeviceInfo) {
 	deviceCenter.mutex.Lock()
 	defer deviceCenter.mutex.Unlock()
-	length := len(deviceCenter.devicePluginCm)
+	length := len(deviceCenter.originalCm)
 	if length > constant.MaxSupportNodeNum {
 		hwlog.RunLog.Errorf("DeviceInfo length=%d > %d, SwitchInfo cm name=%s save failed",
 			length, constant.MaxSupportNodeNum, newInfo.CmName)
 		return
 	}
-	deviceCenter.devicePluginCm[newInfo.CmName] = newInfo
+	deviceCenter.originalCm[newInfo.CmName] = newInfo
 	hwlog.RunLog.Debugf("add DeviceInfo: %s", util.ObjToString(newInfo))
 }
 
-func (deviceCenter *deviceFaultProcessCenter) delDevicePluginCm(newInfo *constant.DeviceInfo) {
+func (deviceCenter *deviceFaultProcessCenter) delOriginalCm(newInfo *constant.DeviceInfo) {
 	deviceCenter.mutex.Lock()
 	defer deviceCenter.mutex.Unlock()
-	delete(deviceCenter.devicePluginCm, newInfo.CmName)
+	delete(deviceCenter.originalCm, newInfo.CmName)
 }
 
 func (deviceCenter *deviceFaultProcessCenter) getUceFaultProcessor() (*uceFaultProcessor, error) {
@@ -123,7 +123,7 @@ func (deviceCenter *deviceFaultProcessCenter) process() {
 		return
 	}
 	deviceCenter.lastProcessTime = currentTime
-	deviceCenter.setProcessingCm(deviceCenter.devicePluginCm)
+	deviceCenter.setProcessingCm(deviceCenter.originalCm)
 	deviceCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
 	hwlog.RunLog.Debugf("job server info map: %v", util.ObjToString(deviceCenter.jobServerInfoMap))
 	deviceCenter.baseFaultCenter.process()
