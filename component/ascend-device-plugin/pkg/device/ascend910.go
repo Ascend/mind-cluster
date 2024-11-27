@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	lastTimeNetworkRecoverDevices sets.String
+	lastTimeNetworkRecoverDevices = sets.String{}
 	hotResetManagerInitOnce       sync.Once
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
@@ -86,7 +86,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 	}
 	var allDevices []common.NpuDevice
 	var aiCoreDevices []*common.NpuDevice
-	var allDeviceTypes []string
+	var allDeviceTypes = make([]string, 0)
 	for i := int32(0); i < devNum; i++ {
 		davinCiDev, err := hnm.getDavinCiDev(devList[i])
 		if err != nil {
@@ -388,7 +388,7 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 
 // getBusyChipListFromPod is to get all busy chip from current pod list
 func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []string {
-	var devList []string
+	var devList = make([]string, 0)
 	for _, pod := range podList.Items {
 		if pod.Status.Phase == v1.PodSucceeded {
 			continue
@@ -552,7 +552,7 @@ func (hnm *HwAscend910Manager) getPatchLabel(chips sets.String) string {
 		return ""
 	}
 
-	var ascendLabel []string
+	var ascendLabel = make([]string, 0)
 	for devName := range chips {
 		devTypeAndID := strings.Split(devName, common.MiddelLine)
 		if len(devTypeAndID) != common.LabelDeviceLen {

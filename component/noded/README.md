@@ -6,13 +6,13 @@
 
 # 编译NodeD
 
-1.  通过git拉取源码，获得ascend-noded。
+1.  通过git拉取源码，获得noded。
 
-    示例：源码放在/home/test/ascend-noded目录下
+    示例：源码放在/home/mindxdl/component/noded目录下
 
-2.  执行以下命令，进入构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件。
+2.  执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件。
 
-    **cd** _/home/test/_**ascend-noded/build/**
+    **cd** _/home/mindxdl/component/_**noded/build/**
 
     **chmod +x build.sh**
 
@@ -20,7 +20,7 @@
 
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ll** _/home/test/_**ascend-noded/output**
+    **ll** _/home/mindxdl/component/_**noded/output**
 
     ```
     drwxr-xr-x  2 root root     4096 Nov 14 07:10 .

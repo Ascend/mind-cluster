@@ -20,7 +20,8 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const HeartbeatTime = 5

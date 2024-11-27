@@ -117,8 +117,8 @@ func TestAssembleVirtualDevices(t *testing.T) {
 		}
 		tool.assembleVirtualDevices(davinCiDev, vDevInfos, &device, &deivceType)
 		testRes := common.NpuDevice{
-			DevType:       common.Ascend910c16,
-			DeviceName:    fmt.Sprintf("%s-%d-%d", common.Ascend910c16, vDevIDNum, phyIDNum),
+			DevType:       common.Ascend910vir16,
+			DeviceName:    fmt.Sprintf("%s-%d-%d", common.Ascend910vir16, vDevIDNum, phyIDNum),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
 			LogicID:       logicIDNum,
@@ -138,7 +138,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
 				RealDevice: []string{common.Ascend910},
-			}, common.Ascend910c2, "", nil)
+			}, common.Ascend910vir2, "", nil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),

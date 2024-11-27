@@ -82,7 +82,7 @@ type DeviceInterface interface {
 }
 
 var (
-	devManager     *DeviceManager
+	devManager     *DeviceManager = nil
 	devManagerOnce sync.Once
 )
 

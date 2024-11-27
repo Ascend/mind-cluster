@@ -66,10 +66,12 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	}
 }
 
+// GetConfigmapExist is used to get the configmap exist status.
 func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
 	return r.configmapExist
 }
 
+// SetConfigmapExist is used to set the configmap exist status.
 func (r *BaseGenerator) SetConfigmapExist(exist utils.ConfigmapCheck) {
 	r.configmapExist = exist
 }

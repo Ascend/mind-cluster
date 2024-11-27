@@ -374,7 +374,7 @@ func isShouldDeletePod(pod *v1.Pod) bool {
 
 // FilterPods get pods which meet the conditions
 func FilterPods(pods []v1.Pod, deviceType string, conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-	var res []v1.Pod
+	var res = make([]v1.Pod, 0)
 	for _, pod := range pods {
 		hwlog.RunLog.Debugf("pod: %s, %s", pod.Name, pod.Status.Phase)
 		if getNPUResourceNumOfPod(&pod, deviceType) == 0 || !isAscendAssignedPod(&pod,

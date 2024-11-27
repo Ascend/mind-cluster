@@ -60,7 +60,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultshoot.JobFaul
 			RankId: info.RankId,
 		}
 		fault.FaultType = common.NormalFaultType
-		if strings.Contains(info.FaultCode, constant.UCE_FAULT_CODE) {
+		if strings.Contains(info.FaultCode, constant.UceFaultCode) {
 			fault.FaultType = common.UceFaultType
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
@@ -87,6 +87,7 @@ func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []faultshoot
 func (s *FaultRecoverService) checkFault() {
 	if faultshoot.GlobalFaultProcessCenter == nil {
 		hwlog.RunLog.Warnf("global center is nil, try it after %d second", globalFaultBeaconSecond)
+		return
 	}
 	allJobFaultInfo := faultshoot.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultshoot.NotHandleFault)
 	var registeredJobInfo []faultshoot.JobFaultInfo

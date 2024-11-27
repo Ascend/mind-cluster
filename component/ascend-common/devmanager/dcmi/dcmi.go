@@ -472,7 +472,7 @@ const (
 	templateNameLen = 32
 )
 
-var faultEventCallFunc func(common.DevFaultInfo)
+var faultEventCallFunc func(common.DevFaultInfo) = nil
 
 // DcManager for manager dcmi interface
 type DcManager struct{}

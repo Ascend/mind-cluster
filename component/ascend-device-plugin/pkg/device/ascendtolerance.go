@@ -538,7 +538,7 @@ func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevI
 func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInfo, policy, initPolicy,
 	status string) (*common.TaskResetInfo, error) {
 	faultRing := make(map[int]struct{}, common.RingSum)
-	var rankList []*common.TaskDevInfo
+	var rankList = make([]*common.TaskDevInfo, 0)
 	for _, devFaultInfo := range devFaultInfoList {
 		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
 		if !ok {

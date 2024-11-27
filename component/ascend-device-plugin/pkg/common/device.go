@@ -104,7 +104,6 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 
 	SwitchFaultLock.Lock()
 	defer SwitchFaultLock.Unlock()
-	SwitchFaultLevelMapLock.Lock()
 
 	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
 
@@ -145,6 +144,7 @@ func UpdateSwitchFaultInfoAndFaultLevel(si *SwitchFaultInfo) {
 }
 
 func getSwitchFaultLevelAndNodeStatus() (string, string) {
+	SwitchFaultLevelMapLock.Lock()
 	maxFaultLevel := 0
 	for _, code := range currentSwitchFault {
 		if lastLevel, ok := switchFaultCodeLevelToCm[code.AssembledFaultCode]; ok {

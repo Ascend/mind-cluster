@@ -186,8 +186,8 @@ func (tp *module910bx8) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 
 func (tp *module910bx8) getBestScoreAndHealthyNPUNum(task *api.TaskInfo,
 	node *api.NodeInfo, taskNPUNum int) (int, float64, bool) {
-	var bestScore int
-	var healthyNPUNum float64
+	var bestScore int = 0
+	var healthyNPUNum float64 = 0
 	nNode, ok := tp.Nodes[node.Name]
 	if !ok {
 		klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s is not npu node",

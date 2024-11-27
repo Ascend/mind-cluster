@@ -22,8 +22,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/config"
 	"nodeD/pkg/control"
@@ -55,10 +54,10 @@ var (
 		LogFileName:   defaultLogFile,
 		MaxLineLength: maxLineLength,
 	}
-	controller     *control.NodeController
-	configManager  *config.FaultConfigurator
-	monitorManager *monitoring.MonitorManager
-	reportManager  *reporter.ReportManager
+	controller     = &control.NodeController{}
+	configManager  = &config.FaultConfigurator{}
+	monitorManager = &monitoring.MonitorManager{}
+	reportManager  = &reporter.ReportManager{}
 	version        bool
 	// BuildVersion build version
 	BuildVersion string

@@ -51,33 +51,36 @@ const (
 	AscendJobRefKind = "AscendJob"
 	// MaxSupportNodeNum max support node num
 	MaxSupportNodeNum = 5000
-	// MaxSupportJobNum
+	// MaxSupportJobNum max support job num
 	MaxSupportJobNum = 10000
 )
 
 // fault code const
 const (
-	UCE_FAULT_CODE = "80E01801"
-	AIC_FAULT_CODE = "80C98009"
-	AIV_FAULT_CODE = "80CB8009"
+	UceFaultCode      = "80E01801"
+	AicFaultCode      = "80C98009"
+	AivFaultCode      = "80CB8009"
+	LinkDownFaultCode = "81078603"
+	DevCqeFaultCode   = "8C1F8608"
+	HostCqeFaultCode  = "4C1F8608"
 )
 
 // fault processor const
 const (
-	JobNotRecover               = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	JobNotRecoverComplete       = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	DeviceNotFault              = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
-	DiagnosisAccompanyTimeout   = 5 * 1000
-	JobReportRecoverTimeout     = 10 * 1000
-	JobReportCompleteTimeout    = 30 * 1000
-	FaultCenterProcessPeriod    = 3 * 1000
-	MAX_FAULT_CENTER_SUBSCRIBER = 10
+	JobNotRecover             = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	JobNotRecoverComplete     = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DeviceNotFault            = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DiagnosisAccompanyTimeout = 5 * 1000
+	JobReportRecoverTimeout   = 10 * 1000
+	JobReportCompleteTimeout  = 30 * 1000
+	FaultCenterProcessPeriod  = 3 * 1000
+	MaxFaultCenterSubscriber  = 10
 )
 
 // fault center
 const (
-	ALL_FAULT = iota
-	DEVICE_FAULT
-	NODE_FAULT
-	SWITCH_FAULT
+	AllFaultType = iota
+	DeviceFaultType
+	NodeFaultType
+	SwitchFaultType
 )

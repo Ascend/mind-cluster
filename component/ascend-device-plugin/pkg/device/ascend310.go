@@ -54,7 +54,7 @@ func (hnm *HwAscend310Manager) GetNPUs() (common.NpuAllInfo, error) {
 	if devNum > hnm.devCount {
 		return common.NpuAllInfo{}, fmt.Errorf("invalid device num: %d", devNum)
 	}
-	var allDevices []common.NpuDevice
+	var allDevices = make([]common.NpuDevice, 0)
 	for logicIDIdx := 0; logicIDIdx < len(devList); logicIDIdx++ {
 		davinCiDev, err := hnm.getDavinCiDev(devList[logicIDIdx])
 		if err != nil {

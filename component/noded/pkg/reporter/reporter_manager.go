@@ -16,8 +16,7 @@
 package reporter
 
 import (
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/reporter/cmreporter"

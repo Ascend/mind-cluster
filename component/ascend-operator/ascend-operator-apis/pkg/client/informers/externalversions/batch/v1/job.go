@@ -26,9 +26,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	batchv1 "ascend-operator-apis/pkg/apis/batch/v1"
+	"ascend-operator-apis/pkg/client/clientset/versioned"
 	"ascend-operator-apis/pkg/client/informers/externalversions/internalinterfaces"
 	batchlister "ascend-operator-apis/pkg/client/listers/batch/v1"
-    "ascend-operator-apis/pkg/client/clientset/versioned"
 )
 
 // JobInformer provides access to a shared informer and lister for
