@@ -191,15 +191,8 @@ func (r *BaseGenerator) DeletePod(pod *corev1.Pod) utils.RankTableStatus {
 		return utils.InitialRTStatus
 	}
 	fileFsm := r.GetFsm(FileFsmName)
-	if fileFsm != nil && (fileFsm.Current() == RankTableReset || fileFsm.Current() == RankTableSaved) {
-		r.SetStatus(utils.InitialRTStatus)
-		if err := r.WriteToFile(); err != nil {
-			hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
-			r.SetStatus(utils.CompletedRTStatus)
-			fileFsm.Event(context.Background(), DeletePodFailed)
-		} else {
-			fileFsm.Event(context.Background(), DeletePodSuccess)
-		}
+	if fileFsm != nil && (fileFsm.Current() == StateRankTableReset || fileFsm.Current() == StateRankTableSaved) {
+		r.writeFileOnPodDelete(fileFsm)
 	}
 	return r.GetStatus()
 }
@@ -232,36 +225,52 @@ func (r *BaseGenerator) GetFsm(name string) *fsm.FSM {
 	return rtFsm
 }
 
+func (r *BaseGenerator) writeFileOnPodDelete(fileFsm *fsm.FSM) {
+	r.SetStatus(utils.InitialRTStatus)
+	if err := r.WriteToFile(); err != nil {
+		hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
+		r.SetStatus(utils.CompletedRTStatus)
+		if err := fileFsm.Event(context.Background(), EventDeletePodFailed); err != nil {
+			hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
+		}
+	} else {
+		if err := fileFsm.Event(context.Background(), EventDeletePodSuccess); err != nil {
+			hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
+		}
+	}
+}
+
 func newRankTableFsm() *fsm.FSM {
 	return fsm.NewFSM(
-		RankTableInit,
+		StateRankTableInit,
 		fsm.Events{
-			{Name: SaveJobSuccess, Src: []string{RankTableInit}, Dst: RankTableSaved},
-			{Name: DeletePodSuccess, Src: []string{RankTableSaved}, Dst: RankTableInit},
-			{Name: DeletePodSuccess, Src: []string{RankTableReset}, Dst: RankTableInit},
-			{Name: DeletePodFailed, Src: []string{RankTableSaved}, Dst: RankTableReset},
+			{Name: EventSaveJobSuccess, Src: []string{StateRankTableInit}, Dst: StateRankTableSaved},
+			{Name: EventDeletePodSuccess, Src: []string{StateRankTableSaved}, Dst: StateRankTableInit},
+			{Name: EventDeletePodSuccess, Src: []string{StateRankTableReset}, Dst: StateRankTableInit},
+			{Name: EventDeletePodFailed, Src: []string{StateRankTableSaved}, Dst: StateRankTableReset},
 		},
 		fsm.Callbacks{},
 	)
 }
 
 const (
-	// RankTableInit state: rank table is initializing os reset
-	RankTableInit = "InitializingOrReset"
-	// RankTableSaved state: rank table is saved
-	RankTableSaved = "Saved"
-	// RankTableReset state: rank table is resetting
-	RankTableReset = "Resetting"
+	// StateRankTableInit state thar rank table is initializing os reset
+	StateRankTableInit = "InitializingOrReset"
+	// StateRankTableSaved state that rank table is saved
+	StateRankTableSaved = "Saved"
+	// StateRankTableReset state that rank table is resetting
+	StateRankTableReset = "Resetting"
 
-	// SaveJobSuccess event: save rank table for job successfully
-	SaveJobSuccess = "SaveSuccess"
-	// DeletePodSuccess event: successfully update rank table when pod deleted
-	DeletePodSuccess = "DeletePodSuccess"
-	// DeletePodFailed event: failed to update rank table when pod deleted
-	DeletePodFailed = "DeletePodFailed"
+	// EventSaveJobSuccess event that save rank table for job successfully
+	EventSaveJobSuccess = "SaveSuccess"
+	// EventDeletePodSuccess event that successfully update rank table when pod deleted
+	EventDeletePodSuccess = "EventDeletePodSuccess"
+	// EventDeletePodFailed event that failed to update rank table when pod deleted
+	EventDeletePodFailed = "EventDeletePodFailed"
 
-	// FileFsmName name of state machine that manage saving rank table to file
+	// FileFsmName name of state machi
+	//ne that manage saving rank table to file
 	FileFsmName = "FileStateMachine"
-	// ComfigmapFsmName name of state machine that manage saving rank table to config map
+	// ConfigmapFsmName name of state machine that manage saving rank table to config map
 	ConfigmapFsmName = "ConfigMapStateMachine"
 )

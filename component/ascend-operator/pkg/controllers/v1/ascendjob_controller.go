@@ -368,16 +368,22 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 	updateFileFail := curStatus == utils.CompletedRTStatus
 	updateCmFail := false
 	cmFsm := rtg.GetFsm(rktcommon.ConfigmapFsmName)
-	if cmFsm != nil && (cmFsm.Current() == rktcommon.RankTableSaved || cmFsm.Current() == rktcommon.RankTableReset) {
-		if r.configmapExist(rtg, jobName, namespace) {
-			rtg.SetStatus(utils.InitialRTStatus)
-			if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
-				hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-				updateCmFail = true
-				cmFsm.Event(context.Background(), rktcommon.DeletePodFailed)
-			} else {
-				cmFsm.Event(context.Background(), rktcommon.DeletePodSuccess)
-			}
+	if cmFsm == nil || (cmFsm.Current() != rktcommon.StateRankTableSaved && cmFsm.Current() != rktcommon.StateRankTableReset) {
+		return
+	}
+	if !r.configmapExist(rtg, jobName, namespace) {
+		return
+	}
+	rtg.SetStatus(utils.InitialRTStatus)
+	if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
+		hwlog.RunLog.Error("failed to write ranktable to file and configmap")
+		updateCmFail = true
+		if err := cmFsm.Event(context.Background(), rktcommon.EventDeletePodFailed); err != nil {
+			hwlog.RunLog.Errorf("configmap rank table state machine upadte fail, err: %v", err)
+		}
+	} else {
+		if err := cmFsm.Event(context.Background(), rktcommon.EventDeletePodSuccess); err != nil {
+			hwlog.RunLog.Errorf("configmap rank table state machine upadte fail, err: %v", err)
 		}
 	}
 	if updateFileFail && updateCmFail {

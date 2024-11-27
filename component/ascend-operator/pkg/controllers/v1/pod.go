@@ -223,21 +223,25 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 func (r *ASJobReconciler) saveRanktable(rtg generator.RankTableGenerator, ji *jobInfo) {
 	saveRanktableSuccess := true
 	fileFsm := rtg.GetFsm(rktcommon.FileFsmName)
-	if fileFsm != nil && fileFsm.Current() == rktcommon.RankTableInit {
+	if fileFsm != nil && fileFsm.Current() != rktcommon.StateRankTableSaved {
 		if err := rtg.WriteToFile(); err != nil {
 			saveRanktableSuccess = false
 			hwlog.RunLog.Errorf("failed to write rank table to file, err: %v", err)
 		} else {
-			fileFsm.Event(context.Background(), rktcommon.SaveJobSuccess)
+			if err := fileFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
+				hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
+			}
 		}
 	}
 
 	cmFsm := rtg.GetFsm(rktcommon.ConfigmapFsmName)
-	if cmFsm != nil && cmFsm.Current() == rktcommon.RankTableInit {
+	if cmFsm != nil && cmFsm.Current() != rktcommon.StateRankTableSaved {
 		if r.configmapExist(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
 			saveCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
 			if saveCmSuccess {
-				cmFsm.Event(context.Background(), rktcommon.SaveJobSuccess)
+				if err := cmFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
+					hwlog.RunLog.Errorf("configmap rank table state machine update faile, err: %v", err)
+				}
 			}
 			saveRanktableSuccess = saveCmSuccess && saveRanktableSuccess
 		}
