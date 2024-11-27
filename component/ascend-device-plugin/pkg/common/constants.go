@@ -762,6 +762,8 @@ const (
 	FaultIdOfPortLaneReduceHalf = 132332
 	// FaultIdOfPortLaneReduceQuarter  the fault id of lane reduce to quarter
 	FaultIdOfPortLaneReduceQuarter = 132333
+	// FaultIdOfPortFailOnForwardingChip  the fault id of port failure on the forwarding chip
+	FaultIdOfPortFailOnForwardingChip = 155912
 )
 
 // LogicID list for reset, get id list of ring
