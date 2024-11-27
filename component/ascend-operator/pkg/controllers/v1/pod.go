@@ -254,10 +254,11 @@ func saveRanTableFile(rtg generator.RankTableGenerator, fileFsm *fsm.FSM) bool {
 
 func (r *ASJobReconciler) saveRankTableConfigmap(ji *jobInfo, cmFsm *fsm.FSM) bool {
 	saveCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
-	if saveCmSuccess {
-		if err := cmFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
-			hwlog.RunLog.Errorf("configmap rank table state machine update faile, err: %v", err)
-		}
+	if !saveCmSuccess {
+		return saveCmSuccess
+	}
+	if err := cmFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
+		hwlog.RunLog.Errorf("configmap rank table state machine update faile, err: %v", err)
 	}
 	return saveCmSuccess
 }

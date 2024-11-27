@@ -5,7 +5,6 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package common is common function or object of ranktable.
 */
-
 package common
 
 import (
