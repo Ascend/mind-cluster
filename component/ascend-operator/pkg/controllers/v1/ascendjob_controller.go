@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -110,6 +111,7 @@ type ASJobReconciler struct {
 	versions      map[types.UID]int32
 	backoffLimits map[types.UID]int32
 	rtGenerators  map[types.UID]generator.RankTableGenerator
+	rankTableMu   sync.Mutex
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -360,6 +362,8 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 	if !exist {
 		return
 	}
+	r.rankTableMu.Lock()
+	defer r.rankTableMu.Unlock()
 	curStatus := rtg.DeletePod(pod)
 	updateFileFail := curStatus == utils.CompletedRTStatus
 	updateCmFail := false
@@ -376,7 +380,6 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 			}
 		}
 	}
-
 	if updateFileFail && updateCmFail {
 		rtg.SetStatus(utils.CompletedRTStatus)
 	}
