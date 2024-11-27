@@ -64,7 +64,7 @@ func (processor *linkDownCqeFaultProcessCenter) addLinkDownDevice(
 func (processor *linkDownCqeFaultProcessCenter) deleteCqeDevice(
 	nodeName string, deviceName string, deviceList *[]string) {
 	deviceIdx := getContainedElementIdx(deviceName, *deviceList)
-	if deviceIdx > 0 {
+	if deviceIdx >= 0 {
 		hwlog.RunLog.Infof("delete node: %s cqe device: %s", nodeName, deviceName)
 		*deviceList = append((*deviceList)[:deviceIdx], (*deviceList)[deviceIdx+1:]...)
 	}
