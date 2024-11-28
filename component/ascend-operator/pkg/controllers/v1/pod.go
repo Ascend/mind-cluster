@@ -24,7 +24,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/looplab/fsm"
 	"math"
 	"strconv"
 	"strings"
@@ -45,7 +44,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	rktcommon "ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 )
@@ -219,48 +217,45 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	r.saveRankTable(rtg, ji)
+	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
 }
 
-func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator, ji *jobInfo) {
-	saveRankTableSuccess := true
-	fileFsm := rtg.GetFsm(rktcommon.FileFsmName)
-	if fileFsm != nil && fileFsm.Current() != rktcommon.StateRankTableSaved {
-		saveRankTableSuccess = saveRanTableFile(rtg, fileFsm)
-	}
-
-	cmFsm := rtg.GetFsm(rktcommon.ConfigmapFsmName)
-	if cmFsm != nil && cmFsm.Current() != rktcommon.StateRankTableSaved &&
-		r.configmapExist(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace()) {
-		saveRankTableSuccess = r.saveRankTableConfigmap(ji, cmFsm) && saveRankTableSuccess
-	}
-
-	if !saveRankTableSuccess {
-		hwlog.RunLog.Error("failed to save rank table")
-		rtg.SetStatus(utils.InitialRTStatus)
-	}
+func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator,
+	jobName, namespace string, uid types.UID) {
+	r.saveRanTableFile(rtg)
+	r.saveRankTableConfigmap(rtg, jobName, namespace, uid)
 }
 
-func saveRanTableFile(rtg generator.RankTableGenerator, fileFsm *fsm.FSM) bool {
+func (r *ASJobReconciler) saveRanTableFile(rtg generator.RankTableGenerator) {
+	rtg.Lock()
+	defer rtg.Unlock()
+	if rtg.GetFileStatus() == rtg.GetStatus() {
+		return
+	}
 	if err := rtg.WriteToFile(); err != nil {
 		hwlog.RunLog.Errorf("failed to write rank table to file, err: %v", err)
-		return false
+		rtg.SetFileStatus(utils.UnknownStatus)
+		return
 	}
-	if err := fileFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
-		hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
-	}
-	return true
+	rtg.SetFileStatus(rtg.GetStatus())
 }
 
-func (r *ASJobReconciler) saveRankTableConfigmap(ji *jobInfo, cmFsm *fsm.FSM) bool {
-	saveCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
-	if !saveCmSuccess {
-		return saveCmSuccess
+func (r *ASJobReconciler) saveRankTableConfigmap(rtg generator.RankTableGenerator,
+	jobName, namespace string, uid types.UID) {
+	rtg.Lock()
+	defer rtg.Unlock()
+	if !r.configmapExist(rtg, jobName, namespace) {
+		return
 	}
-	if err := cmFsm.Event(context.Background(), rktcommon.EventSaveJobSuccess); err != nil {
-		hwlog.RunLog.Errorf("configmap rank table state machine update faile, err: %v", err)
+	if rtg.GetConfigmapStatus() == rtg.GetStatus() {
+		return
 	}
-	return saveCmSuccess
+	if err := r.tryWriteCm(jobName, namespace, uid); err != nil {
+		hwlog.RunLog.Errorf("failed to write rank table to configmap, err: %v", err)
+		rtg.SetConfigmapStatus(utils.UnknownStatus)
+		return
+	}
+	rtg.SetConfigmapStatus(rtg.GetStatus())
 }
 
 func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
@@ -282,17 +277,17 @@ func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobNa
 	return true
 }
 
-func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {
-	// try to write configmap
+func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) error {
 	hwlog.RunLog.Infof("start write rank table to configmap<%s> in namespace<%s>", configmapPrefix+jobName, namespace)
+	var err error
 	for i := 0; i < cmRetryTime; i++ {
-		if err := r.writeRanktableToCm(jobName, namespace, uid); err == nil {
+		if err = r.writeRanktableToCm(jobName, namespace, uid); err == nil {
 			hwlog.RunLog.Info("write rank table to configmap success")
-			return true
+			return nil
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return false
+	return err
 }
 
 func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {

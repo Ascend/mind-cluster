@@ -121,6 +121,8 @@ const (
 	InitialRTStatus RankTableStatus = "initializing"
 	// CompletedRTStatus completed rank table status
 	CompletedRTStatus RankTableStatus = "completed"
+	// UnknownStatus unknown rank table status
+	UnknownStatus = "unknown"
 )
 
 // ConfigmapCheck check configmap exsit or not

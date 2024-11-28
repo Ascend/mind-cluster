@@ -8,7 +8,6 @@ Package common is common function or object of ranktable.
 package common
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/looplab/fsm"
 	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
@@ -36,7 +34,9 @@ type BaseGenerator struct {
 	dir            string
 	path           string
 	configmapExist utils.ConfigmapCheck
-	fsmMap         map[string]*fsm.FSM
+	cmStatus       utils.RankTableStatus
+	fileStatus     utils.RankTableStatus
+	rtMu           sync.Mutex
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -51,18 +51,26 @@ type BaseGenerator struct {
 func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.RankTableGenerator) *BaseGenerator {
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
-		dir:  rankTableDir,
-		path: pathlib.Join(rankTableDir, rankTableFile),
-		fsmMap: map[string]*fsm.FSM{
-			FileFsmName:      newRankTableFsm(),
-			ConfigmapFsmName: newRankTableFsm(),
-		},
+		dir:        rankTableDir,
+		path:       pathlib.Join(rankTableDir, rankTableFile),
+		cmStatus:   utils.InitialRTStatus,
+		fileStatus: utils.InitialRTStatus,
 		servers:    &sync.Map{},
 		rankTabler: r,
 		Status:     utils.InitialRTStatus,
 		ServerList: []*Server{},
 		Version:    version,
 	}
+}
+
+// Lock is used to access the permission of rank table operations
+func (r *BaseGenerator) Lock() {
+	r.rtMu.Lock()
+}
+
+// Unlock is used to release the permission of rank table operations
+func (r *BaseGenerator) Unlock() {
+	r.rtMu.Unlock()
 }
 
 // GetConfigmapExist is used to get the configmap exist status.
@@ -83,6 +91,26 @@ func (r *BaseGenerator) SetStatus(status utils.RankTableStatus) {
 // GetStatus is used to get the status of ranktable.
 func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
+}
+
+// SetFileStatus is used to set the status of ranktable in file.
+func (r *BaseGenerator) SetFileStatus(status utils.RankTableStatus) {
+	r.fileStatus = status
+}
+
+// GetFileStatus is used to get the status of ranktable in file.
+func (r *BaseGenerator) GetFileStatus() utils.RankTableStatus {
+	return r.fileStatus
+}
+
+// SetConfigmapStatus is used to set the status of ranktable in configmap.
+func (r *BaseGenerator) SetConfigmapStatus(status utils.RankTableStatus) {
+	r.cmStatus = status
+}
+
+// GetConfigmapStatus is used to get the status of ranktable in configmap.
+func (r *BaseGenerator) GetConfigmapStatus() utils.RankTableStatus {
+	return r.cmStatus
 }
 
 // WriteToFile is used to write ranktable to file.
@@ -186,16 +214,8 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 }
 
 // DeletePod is used to delete pod from ranktable.
-func (r *BaseGenerator) DeletePod(pod *corev1.Pod) utils.RankTableStatus {
+func (r *BaseGenerator) DeletePod(pod *corev1.Pod) {
 	r.servers.Delete(pod.UID)
-	if r.GetStatus() == utils.InitialRTStatus {
-		return utils.InitialRTStatus
-	}
-	fileFsm := r.GetFsm(FileFsmName)
-	if fileFsm != nil && (fileFsm.Current() == StateRankTableReset || fileFsm.Current() == StateRankTableSaved) {
-		r.writeFileOnPodDelete(fileFsm)
-	}
-	return r.GetStatus()
 }
 
 // GatherServerList is used to gather server list.
@@ -216,62 +236,3 @@ func (r *BaseGenerator) GatherServerList() {
 	})
 	r.ServerCount = strconv.Itoa(len(r.ServerList))
 }
-
-// GetFsm get state machine by name
-func (r *BaseGenerator) GetFsm(name string) *fsm.FSM {
-	rtFsm, ok := r.fsmMap[name]
-	if !ok {
-		return nil
-	}
-	return rtFsm
-}
-
-func (r *BaseGenerator) writeFileOnPodDelete(fileFsm *fsm.FSM) {
-	r.SetStatus(utils.InitialRTStatus)
-	if err := r.WriteToFile(); err != nil {
-		hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
-		r.SetStatus(utils.CompletedRTStatus)
-		if err := fileFsm.Event(context.Background(), EventDeletePodFailed); err != nil {
-			hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
-		}
-	} else {
-		if err := fileFsm.Event(context.Background(), EventDeletePodSuccess); err != nil {
-			hwlog.RunLog.Errorf("shared file rank table state machine update fail, err: %v", err)
-		}
-	}
-}
-
-func newRankTableFsm() *fsm.FSM {
-	return fsm.NewFSM(
-		StateRankTableInit,
-		fsm.Events{
-			{Name: EventSaveJobSuccess, Src: []string{StateRankTableInit}, Dst: StateRankTableSaved},
-			{Name: EventDeletePodSuccess, Src: []string{StateRankTableSaved}, Dst: StateRankTableInit},
-			{Name: EventDeletePodSuccess, Src: []string{StateRankTableReset}, Dst: StateRankTableInit},
-			{Name: EventDeletePodFailed, Src: []string{StateRankTableSaved}, Dst: StateRankTableReset},
-		},
-		fsm.Callbacks{},
-	)
-}
-
-const (
-	// StateRankTableInit state thar rank table is initializing os reset
-	StateRankTableInit = "InitializingOrReset"
-	// StateRankTableSaved state that rank table is saved
-	StateRankTableSaved = "Saved"
-	// StateRankTableReset state that rank table is resetting
-	StateRankTableReset = "Resetting"
-
-	// EventSaveJobSuccess event that save rank table for job successfully
-	EventSaveJobSuccess = "SaveSuccess"
-	// EventDeletePodSuccess event that successfully update rank table when pod deleted
-	EventDeletePodSuccess = "EventDeletePodSuccess"
-	// EventDeletePodFailed event that failed to update rank table when pod deleted
-	EventDeletePodFailed = "EventDeletePodFailed"
-
-	// FileFsmName name of state machi
-	//ne that manage saving rank table to file
-	FileFsmName = "FileStateMachine"
-	// ConfigmapFsmName name of state machine that manage saving rank table to config map
-	ConfigmapFsmName = "ConfigMapStateMachine"
-)
