@@ -91,7 +91,7 @@ func TestDoWithVolcanoListAndWatch910(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
 		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
-		mockGetConfigMap := mockGetDeviceInfoCMCache()
+		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{common.Ascend910: ascend910LogicID1})
 		mockPatchNodeState := mockPatchNodeState()
 		mockCreateConfigMap := mockWriteDeviceInfoDataIntoCM()
 		mockNodeBack := mockGetNode()
@@ -108,52 +108,47 @@ func TestDoWithVolcanoListAndWatch910(t *testing.T) {
 }
 
 func mockGetNode() *gomonkey.Patches {
-	mockNodeBack := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetNode",
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetNode",
 		func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
 			curNode := &v1.Node{}
 			curNode.Labels = make(map[string]string, 1)
 			return curNode, nil
 		})
-	return mockNodeBack
 }
 
 func mockWriteDeviceInfoDataIntoCM() *gomonkey.Patches {
-	mockCreateConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
 			deviceInfo map[string]string, manuallySeparateNPU string, _ common.SwitchFaultInfo, superPodID,
 			serverIndex int32) (*common.NodeDeviceInfoCache, error) {
 			return &common.NodeDeviceInfoCache{}, nil
 		})
-	return mockCreateConfigMap
 }
 
 func mockPatchNodeState() *gomonkey.Patches {
-	mockPatchNodeState := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"PatchNodeState", func(_ *kubeclient.ClientK8s, curNode,
 			newNode *v1.Node) (*v1.Node, []byte, error) {
 			return &v1.Node{}, nil, nil
 		})
-	return mockPatchNodeState
 }
 
-func mockGetDeviceInfoCMCache() *gomonkey.Patches {
-	mockGetConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+func mockGetDeviceInfoCMCache(deviceList map[string]string) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"GetDeviceInfoCMCache", func(_ *kubeclient.ClientK8s) *common.NodeDeviceInfoCache {
 			nodeDeviceData := common.NodeDeviceInfoCache{DeviceInfo: common.NodeDeviceInfo{
-				DeviceList: map[string]string{common.Ascend910: ascend910LogicID1},
+				DeviceList: deviceList,
 				UpdateTime: time.Now().Unix()}}
 			nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 			return &nodeDeviceData
 		})
-	return mockGetConfigMap
 }
 
 func mockGetPodsUsedNpu() *gomonkey.Patches {
-	mockGetPodsUsedNpu := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
 			return nil
 		})
-	return mockGetPodsUsedNpu
 }
 
 func TestToStandardDeviceFmt(t *testing.T) {

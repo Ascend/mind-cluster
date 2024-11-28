@@ -18,15 +18,11 @@ package device
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
-	"time"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"huawei.com/npu-exporter/v6/devmanager"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
@@ -79,28 +75,9 @@ func TestDoWithVolcanoListAndWatch310(t *testing.T) {
 		allInfo, err := manager.GetNPUs()
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
-		mockGetPodsUsedNpu := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
-				return nil
-			})
-		mockGetConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetDeviceInfoCMCache", func(_ *kubeclient.ClientK8s) *common.NodeDeviceInfoCache {
-				nodeDeviceData := common.NodeDeviceInfoCache{
-					DeviceInfo: common.NodeDeviceInfo{
-						DeviceList: map[string]string{common.Ascend310: "Ascend310-1"},
-						UpdateTime: time.Now().Unix(),
-					},
-				}
-				nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
-
-				return &nodeDeviceData
-			})
-		mockCreateConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
-				deviceInfo map[string]string, manuallySeparateNPU string, _ common.SwitchFaultInfo, superPodID,
-				serverIndex int32) (*common.NodeDeviceInfoCache, error) {
-				return &common.NodeDeviceInfoCache{}, nil
-			})
+		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{common.Ascend310: "Ascend310-1"})
+		mockCreateConfigMap := mockWriteDeviceInfoDataIntoCM()
 		defer func() {
 			mockGetPodsUsedNpu.Reset()
 			mockGetConfigMap.Reset()

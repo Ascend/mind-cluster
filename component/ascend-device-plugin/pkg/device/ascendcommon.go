@@ -390,6 +390,36 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	return usedDevice
 }
 
+func (tool *AscendTools) getUsedChips() sets.String {
+	if !common.ParamOption.PresetVDevice {
+		return sets.String{}
+	}
+	_, logicIDs, err := tool.dmgr.GetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Warnf("get device list failed, err: %v", err)
+		return sets.String{}
+	}
+	if len(logicIDs) < 1 {
+		hwlog.RunLog.Warn("get device list failed, logicID is empty")
+		return sets.String{}
+	}
+	usedChips := make([]string, 0, len(logicIDs))
+	for _, logicID := range logicIDs {
+		chipInfo, err := tool.dmgr.GetDevProcessInfo(logicID)
+		if err != nil {
+			// use vnpu will report an 8255 error
+			hwlog.RunLog.Debugf("get device list failed, err: %v", err)
+			continue
+		}
+
+		if chipInfo.ProcNum != 0 {
+			chipName := fmt.Sprintf("%s-%d", common.ParamOption.RealCardType, logicID)
+			usedChips = append(usedChips, chipName)
+		}
+	}
+	return sets.NewString(usedChips...)
+}
+
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
 	totalUHDevices, totalNetUHDevices, allTypeUsedDevice, totalRCDevices :=
@@ -400,7 +430,9 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 	}
 	for devType, classifyDev := range classifyDevs {
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
-		usedDevices := tool.client.GetPodsUsedNpu()
+		usedNpu := tool.client.GetPodsUsedNpu()
+		usedChips := tool.getUsedChips()
+		usedDevices := usedNpu.Union(usedChips)
 		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(usedDevices)
 		if !common.ParamOption.PresetVDevice {
 			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(allTypeUsedDevice)

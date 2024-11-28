@@ -103,7 +103,7 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 		klog.V(util.LogErrorLev).Infof("SetNPUTopologyToPodFn marshal err: %s", err.Error())
 		return
 	}
-
+	task.Pod.Annotations[util.AscendNPUPodRealUse] = topologyStr
 	task.Pod.Annotations[util.Pod910DeviceKey] = string(marshedInst)
 	tp.setDeployRankIndex(task)
 }

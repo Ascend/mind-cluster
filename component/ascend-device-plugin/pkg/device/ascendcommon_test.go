@@ -26,6 +26,7 @@ import (
 	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -73,8 +74,7 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 
 // TestIsDeviceStatusChange testIsDeviceStatusChange
 func TestIsDeviceStatusChange(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test IsDeviceStatusChange true", t, func() {
 		devices := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
 		aiCoreDevice := []*common.NpuDevice{{Health: v1beta1.Healthy}}
@@ -130,8 +130,7 @@ func TestAssembleVirtualDevices(t *testing.T) {
 
 // TestAddPodAnnotation1 for test the interface AddPodAnnotation, part 1
 func TestAddPodAnnotation1(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 1", t, func() {
 		convey.Convey("GetDeviceListID failed", func() {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
@@ -169,8 +168,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 
 // TestAddPodAnnotation2 for test the interface AddPodAnnotation, part 2
 func TestAddPodAnnotation2(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 2", t, func() {
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
@@ -216,8 +214,7 @@ func TestAddPodAnnotation2(t *testing.T) {
 
 // TestAddPodAnnotation3 for test the interface AddPodAnnotation, part 3
 func TestAddPodAnnotation3(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 3", t, func() {
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
@@ -481,4 +478,35 @@ func TestRemoveDuplicateErr(t *testing.T) {
 		newErrors = tool.removeDuplicateErr(oldErrors)
 		convey.So(len(baseErrors), convey.ShouldEqual, len(newErrors))
 	})
+}
+
+func TestGetDevStatesDevSet(t *testing.T) {
+	convey.Convey("test getDevStatesDevSet", t, func() {
+		tool := mockAscendTools()
+		mockGetRealUsedDevices := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getRealUsedDevices",
+			func(_ *AscendTools) sets.String { return sets.String{} })
+		mockGroupDevsByStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "groupDevsByStatus",
+			func(_ *AscendTools, subClassDevices []*common.NpuDevice, runMode string) common.DevStatusSet {
+				return common.DevStatusSet{HealthDevices: sets.String{"Ascend910-0": sets.Empty{}}}
+			})
+		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		defer func() {
+			mockGetRealUsedDevices.Reset()
+			mockGroupDevsByStatus.Reset()
+			mockGetPodsUsedNpu.Reset()
+		}()
+		mockClassifyDevs := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		common.ParamOption.PresetVDevice = true
+		res := tool.getDevStatesDevSet(mockClassifyDevs)
+		convey.So(len(res.FreeHealthyDevice), convey.ShouldEqual, 1)
+		convey.So(len(res.UnHealthyDevice), convey.ShouldEqual, 0)
+		convey.So(len(res.NetUnHealthyDevice), convey.ShouldEqual, 0)
+		convey.So(len(res.RecoveringDevices), convey.ShouldEqual, 0)
+		convey.So(len(res.DeviceFault), convey.ShouldEqual, 0)
+	})
+}
+
+func mockAscendTools() AscendTools {
+	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
+		dmgr: &devmanager.DeviceManagerMock{}}
 }

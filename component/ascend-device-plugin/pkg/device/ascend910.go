@@ -345,8 +345,9 @@ func (hnm *HwAscend910Manager) execHotReset(devInfo *common.DevFaultInfo) error 
 // isChipActive check if there is job on chip
 func (hnm *HwAscend910Manager) isChipActive(logicID int32, busyChipList []string) (bool, error) {
 	chipInfo, err := hnm.AscendTools.GetDmgr().GetDevProcessInfo(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to find device chip info: %v", err)
+	if err != nil || chipInfo == nil {
+		hwlog.RunLog.Errorf("failed to get device process, logicId: %d, err: %v, devProcessInfo: %v",
+			logicID, err, chipInfo)
 		return false, err
 	}
 	logicIDForCompare := fmt.Sprintf("Ascend910-%d", logicID)
