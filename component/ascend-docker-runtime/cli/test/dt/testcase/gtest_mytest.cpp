@@ -609,7 +609,8 @@ TEST_F(Test_Fhho, StatusTwoProcess)
     // Test the correct options
     const int argc = 5;
     const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs", "/home"};
-    int ret = Process(argc,const_cast<char **>(argvData));
+    MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
+    int ret = Process(argc, const_cast<char **>(argvData));
     EXPECT_EQ(0, ret);
 }
 

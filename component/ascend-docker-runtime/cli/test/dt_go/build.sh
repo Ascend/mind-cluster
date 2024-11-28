@@ -18,19 +18,14 @@ set -e
 umask 077
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/../../..)
-RUNTIME_DIR=${TOP_DIR}/CODE/mindxcheckutils
-export GOPATH="${TOP_DIR}/CODE/opensource"
+RUNTIME_DIR=${TOP_DIR}/mindxcheckutils
 export PATH="${GOPATH}/bin/;$PATH"
 export GO111MODULE=on
 export GONOSUMDB="*"
 
 function execute_test() {
   cd ${RUNTIME_DIR}
-  go mod tidy
-  go install github.com/axw/gocov/gocov@v1.0.0
-  go install github.com/matm/gocov-html@latest
-  go install gotest.tools/gotestsum@latest
-  if ! (go test  -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out ${RUNTIME_DIR} >./$file_input); then
+  if ! (go test  -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out ${RUNTIME_DIR}/... >./$file_input); then
     echo '****** go test cases error! ******'
     exit 1
   else
