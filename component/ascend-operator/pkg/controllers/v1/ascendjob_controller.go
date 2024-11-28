@@ -389,7 +389,9 @@ func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace s
 	}
 	if updateFileFail && updateCmFail {
 		rtg.SetStatus(utils.CompletedRTStatus)
+		return
 	}
+	hwlog.RunLog.Info("update rank table success on pod delete")
 }
 
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
