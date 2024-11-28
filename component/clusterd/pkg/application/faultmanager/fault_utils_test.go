@@ -53,10 +53,12 @@ func TestSplitDeviceFault(t *testing.T) {
 	})
 }
 
-func TestMergeDeviceFault(t *testing.T) {
+// TestMergeDeviceFault should be merged, when fault type is same
+func TestMergeSameTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
 		split := []constant.DeviceFault{
 			{
+				FaultType:  CardUnhealthy,
 				NPUName:    "Ascend910-0",
 				FaultCode:  "0x1",
 				FaultLevel: NotHandleFault,
@@ -66,6 +68,7 @@ func TestMergeDeviceFault(t *testing.T) {
 				},
 			},
 			{
+				FaultType:  CardUnhealthy,
 				NPUName:    "Ascend910-0",
 				FaultCode:  "0x2",
 				FaultLevel: SubHealthFault,
@@ -75,15 +78,18 @@ func TestMergeDeviceFault(t *testing.T) {
 				},
 			},
 		}
-		want := constant.DeviceFault{
-			NPUName:              "Ascend910-0",
-			FaultCode:            "0x1,0x2",
-			FaultLevel:           SubHealthFault,
-			LargeModelFaultLevel: SubHealthFault,
-			FaultHandling:        SubHealthFault,
-			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
-				"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
-				"0x2": {FaultLevel: SubHealthFault, FaultTime: 1},
+		want := []constant.DeviceFault{
+			{
+				FaultType:            CardUnhealthy,
+				NPUName:              "Ascend910-0",
+				FaultCode:            "0x1,0x2",
+				FaultLevel:           SubHealthFault,
+				LargeModelFaultLevel: SubHealthFault,
+				FaultHandling:        SubHealthFault,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
+					"0x2": {FaultLevel: SubHealthFault, FaultTime: 1},
+				},
 			},
 		}
 		got, err := mergeDeviceFault(split)
@@ -92,6 +98,43 @@ func TestMergeDeviceFault(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("mergeDeviceFault() got = %v, want %v", util.ObjToString(got), util.ObjToString(want))
+		}
+	})
+}
+
+// TestMergeDeviceFault should not be merged, when fault type is same
+func TestMergeDifferentTypeDeviceFault(t *testing.T) {
+	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
+		split := []constant.DeviceFault{
+			{
+				FaultType:            CardUnhealthy,
+				NPUName:              "Ascend910-0",
+				FaultCode:            "0x1",
+				FaultLevel:           NotHandleFault,
+				LargeModelFaultLevel: NotHandleFault,
+				FaultHandling:        NotHandleFault,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
+				},
+			},
+			{
+				FaultType:            CardNetworkUnhealthy,
+				NPUName:              "Ascend910-0",
+				FaultCode:            "0x2",
+				FaultLevel:           SubHealthFault,
+				LargeModelFaultLevel: SubHealthFault,
+				FaultHandling:        SubHealthFault,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"0x2": {FaultLevel: SubHealthFault, FaultTime: 1},
+				},
+			},
+		}
+		got, err := mergeDeviceFault(split)
+		if err != nil {
+			t.Errorf("mergeDeviceFault() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, split) {
+			t.Errorf("mergeDeviceFault() got = %v, want %v", util.ObjToString(got), util.ObjToString(split))
 		}
 	})
 }

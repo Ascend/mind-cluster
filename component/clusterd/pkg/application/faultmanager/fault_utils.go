@@ -151,32 +151,37 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 	return deviceFaults
 }
 
-func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault, error) {
-	deviceName := deviceFaults[0].NPUName
-	fautLevels := make([]string, 0)
-	oldTimeAndLevelMap := deviceFaults[0].FaultTimeAndLevelMap
-	newTimeAndLevelMap := make(map[string]constant.FaultTimeAndLevel, len(oldTimeAndLevelMap))
-	faultCodeList := make([]string, 0)
-	for _, fault := range deviceFaults {
-		if fault.NPUName != deviceName {
-			return constant.DeviceFault{}, fmt.Errorf("deviceFaults cannot merge, "+
-				"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
+func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.DeviceFault, error) {
+	faultsGroupByType := faultsGroupByType(notGroupDeviceFaults)
+	result := make([]constant.DeviceFault, 0)
+	for _, faultsGroup := range faultsGroupByType {
+		deviceName := faultsGroup[0].NPUName
+		fautLevels := make([]string, 0)
+		oldTimeAndLevelMap := faultsGroup[0].FaultTimeAndLevelMap
+		newTimeAndLevelMap := make(map[string]constant.FaultTimeAndLevel, len(oldTimeAndLevelMap))
+		faultCodeList := make([]string, 0)
+		for _, fault := range faultsGroup {
+			if fault.NPUName != deviceName {
+				return []constant.DeviceFault{}, fmt.Errorf("deviceFaults cannot merge, "+
+					"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
+			}
+			faultCodeList = append(faultCodeList, fault.FaultCode)
+			fautLevels = append(fautLevels, fault.FaultLevel)
+			newTimeAndLevelMap[fault.FaultCode] = oldTimeAndLevelMap[fault.FaultCode]
 		}
-		faultCodeList = append(faultCodeList, fault.FaultCode)
-		fautLevels = append(fautLevels, fault.FaultLevel)
-		newTimeAndLevelMap[fault.FaultCode] = oldTimeAndLevelMap[fault.FaultCode]
+		faultLevel := getMostSeriousFaultLevel(fautLevels)
+		mergeFault := constant.DeviceFault{
+			FaultType:            faultsGroup[0].FaultType,
+			NPUName:              deviceName,
+			FaultTimeAndLevelMap: newTimeAndLevelMap,
+		}
+		mergeFault.FaultLevel = faultLevel
+		mergeFault.LargeModelFaultLevel = faultLevel
+		mergeFault.FaultHandling = faultLevel
+		mergeFault.FaultCode = strings.Join(faultCodeList, ",")
+		result = append(result, mergeFault)
 	}
-	faultLevel := getMostSeriousFaultLevel(fautLevels)
-	mergeFault := constant.DeviceFault{
-		FaultType:            deviceFaults[0].FaultType,
-		NPUName:              deviceName,
-		FaultTimeAndLevelMap: newTimeAndLevelMap,
-	}
-	mergeFault.FaultLevel = faultLevel
-	mergeFault.LargeModelFaultLevel = faultLevel
-	mergeFault.FaultHandling = faultLevel
-	mergeFault.FaultCode = strings.Join(faultCodeList, ",")
-	return mergeFault, nil
+	return result, nil
 }
 
 func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
@@ -234,6 +239,18 @@ func faultMapToFaultList(deviceFaultMap map[string][]constant.DeviceFault) []con
 	return deviceFaultList
 }
 
+func faultsGroupByType(faults []constant.DeviceFault) map[string][]constant.DeviceFault {
+	result := make(map[string][]constant.DeviceFault)
+	for _, fault := range faults {
+		_, found := result[fault.FaultType]
+		if !found {
+			result[fault.FaultType] = make([]constant.DeviceFault, 0)
+		}
+		result[fault.FaultType] = append(result[fault.FaultType], fault)
+	}
+	return result
+}
+
 func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceFaultCm) AdvanceDeviceFaultCm {
 	for deviceName, faults := range advanceDeviceCm.FaultDeviceList {
 		if len(faults) == 0 {
@@ -247,7 +264,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceFaultCm) AdvanceDe
 			hwlog.RunLog.Errorf("merge device %s faults failed, exception: %v", deviceName, err)
 			continue
 		}
-		advanceDeviceCm.FaultDeviceList[deviceName] = []constant.DeviceFault{mergedFaults}
+		advanceDeviceCm.FaultDeviceList[deviceName] = mergedFaults
 	}
 	return advanceDeviceCm
 }
