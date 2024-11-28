@@ -35,7 +35,7 @@ func readObjectFromUceProcessorTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
 	map[string]uceNodeInfo, map[string]job.PodWorker, map[string]uceJobInfo, error) {
 
-	var testDataPath = "../../../testdata/resource/uce_processor_test.yaml"
+	var testDataPath = "../../../testdata/resource/uce_fault_processor_test.yaml"
 	var maxFileSize = 10000
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
@@ -124,7 +124,7 @@ func readObjectFromUceScenarioTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
 	map[string]job.PodWorker, *reportInfosForAllJobs, error) {
 
-	var testDataPath = "../../../testdata/resource/uce_scenario.yaml"
+	var testDataPath = "../../../testdata/resource/uce_scenario_test.yaml"
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var expectDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var err error

@@ -154,11 +154,8 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault, error) {
 	deviceName := deviceFaults[0].NPUName
 	fautLevels := make([]string, 0)
-	mergeFault := constant.DeviceFault{
-		FaultType:            deviceFaults[0].FaultType,
-		NPUName:              deviceName,
-		FaultTimeAndLevelMap: deviceFaults[0].FaultTimeAndLevelMap,
-	}
+	oldTimeAndLevelMap := deviceFaults[0].FaultTimeAndLevelMap
+	newTimeAndLevelMap := make(map[string]constant.FaultTimeAndLevel, len(oldTimeAndLevelMap))
 	faultCodeList := make([]string, 0)
 	for _, fault := range deviceFaults {
 		if fault.NPUName != deviceName {
@@ -167,8 +164,14 @@ func mergeDeviceFault(deviceFaults []constant.DeviceFault) (constant.DeviceFault
 		}
 		faultCodeList = append(faultCodeList, fault.FaultCode)
 		fautLevels = append(fautLevels, fault.FaultLevel)
+		newTimeAndLevelMap[fault.FaultCode] = oldTimeAndLevelMap[fault.FaultCode]
 	}
 	faultLevel := getMostSeriousFaultLevel(fautLevels)
+	mergeFault := constant.DeviceFault{
+		FaultType:            deviceFaults[0].FaultType,
+		NPUName:              deviceName,
+		FaultTimeAndLevelMap: newTimeAndLevelMap,
+	}
 	mergeFault.FaultLevel = faultLevel
 	mergeFault.LargeModelFaultLevel = faultLevel
 	mergeFault.FaultHandling = faultLevel
