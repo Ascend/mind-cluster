@@ -24,6 +24,8 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 			Dst: common.WaitFaultFlushFinishedState, Handler: ctl.handleWaitFlushFinish},
 		{Src: common.WaitReportStopCompleteState, Event: common.ReportTimeoutEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+		{Src: common.WaitReportStopCompleteState, Event: common.ProcessNotReadyEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
 
 		{Src: common.WaitFaultFlushFinishedState, Event: common.FaultFlushFinishedEvent,
 			Dst: common.NotifyGlobalFaultState, Handler: ctl.handleNotifyGlobalFault},

@@ -22,8 +22,8 @@ const (
 	JobNotExist RespCode = 402
 	// ProcessRescheduleOff not open the switch of process-rescheduling
 	ProcessRescheduleOff RespCode = 403
-	// DumpFailError save checkpoint error
-	DumpFailError = 404
+	// ProcessNotReady process not ready
+	ProcessNotReady = 404
 	// RecoverableRetryError error can up to recover strategy
 	RecoverableRetryError = 405
 	// UnRecoverableRetryError error can not up to recover strategy

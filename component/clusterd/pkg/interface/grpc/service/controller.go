@@ -53,8 +53,6 @@ type EventController struct {
 	reportRecoverStrategyChan chan *pb.RecoverStrategyRequest
 	reportStatusChan          chan *pb.RecoverStatusRequest
 	scheduleResultChan        chan bool
-	scheduleResult            bool
-	haveGetScheduleResult     bool
 	lock                      sync.RWMutex
 }
 
@@ -63,8 +61,6 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 	ctl := &EventController{
 		jobInfo:                   jobInfo,
 		faultFlushing:             false,
-		scheduleResult:            false,
-		haveGetScheduleResult:     false,
 		keepAliveSecond:           keepAlive,
 		uuid:                      "",
 		events:                    make(chan string, eventChanLength),
@@ -137,8 +133,6 @@ func (ctl *EventController) reset() {
 	ctl.reportRecoverStrategyChan = make(chan *pb.RecoverStrategyRequest, 1)
 	ctl.reportStatusChan = make(chan *pb.RecoverStatusRequest, 1)
 	ctl.scheduleResultChan = make(chan bool, 1)
-	ctl.scheduleResult = false
-	ctl.haveGetScheduleResult = false
 	ctl.cacheUceFault = ctl.cacheUceFault[:0]
 	ctl.cacheNormalFault = ctl.cacheNormalFault[:0]
 	ctl.latestRecoverResult = ctl.latestRecoverResult[:0]
@@ -489,8 +483,10 @@ func (ctl *EventController) handleWaitReportStopComplete() (string, common.RespC
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s",
 			ctl.jobInfo.JobId, ctl.uuid)
 		return "", common.ControllerEventCancel, nil
-	case <-reportChan:
-		hwlog.RunLog.Infof("jobId=%s, outside triger event receiveReport", ctl.jobInfo.JobId)
+	case req := <-reportChan:
+		if req.Status.Code == common.ProcessNotReady {
+			return common.ProcessNotReadyEvent, common.ClientError, nil
+		}
 		return common.ReceiveReportEvent, common.OK, nil
 	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
 		hwlog.RunLog.Errorf("wait report stop complete timeout, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
@@ -801,13 +797,12 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		}
 		if result.Code == common.RecoverableRetryError {
 			return common.RecoverableRetryErrorEvent, common.RecoverableRetryError, nil
-		} else if result.Code == common.UnRecoverableRetryError {
-			ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
-			return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 		}
 		ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
-		ctl.removeAgentStrategy(common.ProcessDumpStrategyName)
-		return common.RecoverFailEvent, common.ClientError, nil
+		if result.Code == common.ClientError {
+			ctl.removeAgentStrategy(common.ProcessDumpStrategyName)
+		}
+		return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 	case common.ProcessRecoverStrategyName:
 		if result.RecoverSuccess {
 			return common.RecoverSuccessEvent, common.OK, nil
@@ -1039,8 +1034,6 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 				hwlog.RunLog.Warnf("scheduleCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 				return "", common.OK, nil
 			}
-			ctl.haveGetScheduleResult = true
-			ctl.scheduleResult = scheduleSuccess
 			if !scheduleSuccess {
 				return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 			}
@@ -1094,12 +1087,6 @@ func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode,
 }
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
-	if ctl.haveGetScheduleResult {
-		if ctl.scheduleResult {
-			return common.ScheduleSuccessEvent, common.OK, nil
-		}
-		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, fmt.Errorf("jobId=%s schedule timeout", ctl.jobInfo.JobId)
-	}
 	scheduleSuccess := false
 	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
