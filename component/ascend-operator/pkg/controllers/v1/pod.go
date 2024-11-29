@@ -222,14 +222,15 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 
 func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator,
 	jobName, namespace string, uid types.UID) {
-	r.saveRanTableFile(rtg)
+	r.saveRankTableFile(rtg)
 	r.saveRankTableConfigmap(rtg, jobName, namespace, uid)
 }
 
-func (r *ASJobReconciler) saveRanTableFile(rtg generator.RankTableGenerator) {
+func (r *ASJobReconciler) saveRankTableFile(rtg generator.RankTableGenerator) {
 	rtg.Lock()
 	defer rtg.Unlock()
-	if rtg.GetFileStatus() == rtg.GetStatus() {
+	curStatus := rtg.GetStatus()
+	if rtg.GetFileStatus() == curStatus {
 		return
 	}
 	if err := rtg.WriteToFile(); err != nil {
@@ -237,7 +238,7 @@ func (r *ASJobReconciler) saveRanTableFile(rtg generator.RankTableGenerator) {
 		rtg.SetFileStatus(utils.UnknownStatus)
 		return
 	}
-	rtg.SetFileStatus(rtg.GetStatus())
+	rtg.SetFileStatus(curStatus)
 }
 
 func (r *ASJobReconciler) saveRankTableConfigmap(rtg generator.RankTableGenerator,
@@ -247,7 +248,8 @@ func (r *ASJobReconciler) saveRankTableConfigmap(rtg generator.RankTableGenerato
 	if !r.configmapExist(rtg, jobName, namespace) {
 		return
 	}
-	if rtg.GetConfigmapStatus() == rtg.GetStatus() {
+	curStatus := rtg.GetStatus()
+	if rtg.GetConfigmapStatus() == curStatus {
 		return
 	}
 	if err := r.tryWriteCm(jobName, namespace, uid); err != nil {
@@ -255,7 +257,7 @@ func (r *ASJobReconciler) saveRankTableConfigmap(rtg generator.RankTableGenerato
 		rtg.SetConfigmapStatus(utils.UnknownStatus)
 		return
 	}
-	rtg.SetConfigmapStatus(rtg.GetStatus())
+	rtg.SetConfigmapStatus(curStatus)
 }
 
 func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
