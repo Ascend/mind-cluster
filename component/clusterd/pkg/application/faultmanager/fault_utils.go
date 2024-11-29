@@ -83,7 +83,7 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceFaultCm {
 			hwlog.RunLog.Debugf("device fault: %s of cm %s, time: %s",
 				util.ObjToString(deviceFault), devInfo.CmName, util.ReadableMsTime(devInfo.UpdateTime))
 			// device plugin may merge multiple fault codes in one string
-			deviceFaults := splitDeviceFault(deviceFault)
+			deviceFaults := splitDeviceFault(deviceFault, cmNameToNodeName(devInfo.CmName))
 			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
 		}
 		advanceDeviceCm.FaultDeviceList = deviceFaultMap
@@ -126,15 +126,15 @@ func getServerType(devInfo *constant.DeviceInfo) string {
 }
 
 // device plugin may merge multiple fault codes in one string
-func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
+func splitDeviceFault(faultInfo constant.DeviceFault, nodeName string) []constant.DeviceFault {
 	deviceFaults := make([]constant.DeviceFault, 0)
 	codes := strings.Split(faultInfo.FaultCode, ",")
 	for _, code := range codes {
 		faultTimeAndLevel, found := faultInfo.FaultTimeAndLevelMap[code]
 		var faultLevel string
 		if !found {
-			hwlog.RunLog.Warnf("cannot find fault level of code %s. map is %s.",
-				code, util.ObjToString(faultTimeAndLevel))
+			hwlog.RunLog.Warnf("cannot find fault level of code %s in device %s of node %s. map is %s.",
+				code, util.ObjToString(faultTimeAndLevel), faultInfo.NPUName, nodeName)
 			faultLevel = NormalNPU
 		} else {
 			faultLevel = faultTimeAndLevel.FaultLevel
