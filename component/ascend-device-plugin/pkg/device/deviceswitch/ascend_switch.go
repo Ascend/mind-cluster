@@ -274,7 +274,8 @@ func convertFaultEvent(event *C.struct_LqDcmiEvent) common.SwitchFaultEvent {
 	if err := setExtraFaultInfo(&fault); err != nil {
 		hwlog.RunLog.Error(err)
 	}
-	hwlog.RunLog.Debugf("convert switch fault finish, EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,PeerPortDevice:%v,AlarmRaisedTime:%v",
+	hwlog.RunLog.Debugf("convert switch fault finish, EventType:%v,SubType:%v,FaultID:%v,"+
+		"AssembledFaultCode:%v,PeerPortDevice:%v,AlarmRaisedTime:%v",
 		fault.EventType, fault.SubType, fault.FaultID, fault.AssembledFaultCode, fault.PeerPortDevice, fault.AlarmRaisedTime)
 	return fault
 }

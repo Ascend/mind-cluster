@@ -288,6 +288,7 @@ func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.SwitchInfoPrefix)
 }
 
+// CheckVolcanoExist check volcano exist or not
 func CheckVolcanoExist(vcClient *versioned.Clientset) bool {
 	if vcClient == nil {
 		hwlog.RunLog.Error("vcK8sClient.ClientSet is nil")

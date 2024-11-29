@@ -1620,7 +1620,7 @@ func TestHbmFaultManager(t *testing.T) {
 	})
 }
 
-func Test_updateDeviceFaultTimeMap(t *testing.T) {
+func TestUpdateDeviceFaultTimeMap(t *testing.T) {
 	t.Run("Test_updateDeviceFaultTimeMap", func(t *testing.T) {
 		npuDevice := &NpuDevice{
 			FaultTimeMap: make(map[int64]int64),
