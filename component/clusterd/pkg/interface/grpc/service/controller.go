@@ -1088,6 +1088,7 @@ func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode,
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
 	scheduleSuccess := false
+	time.Sleep(time.Minute)
 	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
 		if kube.JobMgr.JobRunning(ctl.jobInfo.JobId) {
