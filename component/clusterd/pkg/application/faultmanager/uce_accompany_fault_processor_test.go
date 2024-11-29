@@ -13,7 +13,7 @@ import (
 
 // ======= Test uceAccompanyFaultProcessor
 
-func Test_uceAccompanyFaultProcessor_process(t *testing.T) {
+func TestUceAccompanyFaultProcessor_process(t *testing.T) {
 	deviceFaultProcessCenter := newDeviceFaultProcessCenter()
 	processor, err := deviceFaultProcessCenter.getUceAccompanyFaultProcessor()
 	if err != nil {
@@ -32,7 +32,8 @@ func Test_uceAccompanyFaultProcessor_process(t *testing.T) {
 		currentTime := 95 * time.Second.Milliseconds()
 		processor.filterFaultInfos(currentTime)
 		advanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, cmDeviceInfos)
-		if !reflect.DeepEqual(getAdvanceDeviceCmForNodeMap(cmDeviceInfos), getAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
+		if !reflect.DeepEqual(getAdvanceDeviceCmForNodeMap(cmDeviceInfos),
+			getAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
 			t.Errorf("result = %v, want %v",
 				util.ObjToString(cmDeviceInfos), util.ObjToString(expectProcessedDeviceInfos))
 		}

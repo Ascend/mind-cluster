@@ -53,7 +53,7 @@ func TestSplitDeviceFault(t *testing.T) {
 	})
 }
 
-// TestMergeDeviceFault should be merged, when fault type is same
+// TestMergeSameTypeDeviceFault should be merged, when fault type is same
 func TestMergeSameTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
 		split := []constant.DeviceFault{
@@ -102,7 +102,7 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 	})
 }
 
-// TestMergeDeviceFault should not be merged, when fault type is same
+// TestMergeDifferentTypeDeviceFault should not be merged, when fault type is same
 func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
 		split := []constant.DeviceFault{

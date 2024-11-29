@@ -514,7 +514,7 @@ func mockAscendTools() AscendTools {
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
-func TestAscendTools_getDeviceFaults(t *testing.T) {
+func TestAscendToolsGetDeviceFaults(t *testing.T) {
 	t.Run("getDeviceFaults", func(t *testing.T) {
 		tool := &AscendTools{}
 		device := &common.NpuDevice{
