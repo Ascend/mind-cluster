@@ -22,7 +22,7 @@ func TestSplitDeviceFault(t *testing.T) {
 			},
 		}
 
-		got := splitDeviceFault(faultInfo)
+		got := splitDeviceFault(faultInfo, "node1")
 		want := []constant.DeviceFault{
 			{
 				NPUName:              "Ascend910-0",
