@@ -133,6 +133,8 @@ func splitDeviceFault(faultInfo constant.DeviceFault) []constant.DeviceFault {
 		faultTimeAndLevel, found := faultInfo.FaultTimeAndLevelMap[code]
 		var faultLevel string
 		if !found {
+			hwlog.RunLog.Warnf("cannot find fault level of code %s. map is %s.",
+				code, util.ObjToString(faultTimeAndLevel))
 			faultLevel = NormalNPU
 		} else {
 			faultLevel = faultTimeAndLevel.FaultLevel
@@ -349,7 +351,8 @@ func getFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
 	faultTimeAndLevel, ok := fault.FaultTimeAndLevelMap[fault.FaultCode]
 	var faultTime int64
 	if !ok {
-		hwlog.RunLog.Error(errorMsg)
+		hwlog.RunLog.Errorf("cannot find fault time of %s. bussiness info: %s",
+			util.ObjToString(fault), errorMsg)
 		faultTime = constant.DeviceNotFault
 	} else {
 		faultTime = faultTimeAndLevel.FaultTime

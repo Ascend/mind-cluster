@@ -27,6 +27,8 @@ const (
 	ReceiveReportEvent = "receiveReport"
 	// ReportTimeoutEvent receive timeout
 	ReportTimeoutEvent = "receiveTimeout"
+	// ProcessNotReadyEvent process not ready
+	ProcessNotReadyEvent = "processNotReadyEvent"
 
 	// FaultFlushFinishedEvent fault flush finish event
 	FaultFlushFinishedEvent = "flushFinished"

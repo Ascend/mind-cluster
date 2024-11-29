@@ -35,6 +35,16 @@ import (
 	"Ascend-device-plugin/pkg/kubeclient"
 )
 
+var processPolicyTable = map[string]int{
+	common.EmptyError:          common.EmptyErrorLevel,
+	common.IgnoreError:         common.IgnoreErrorLevel,
+	common.RestartRequestError: common.RestartRequestErrorLevel,
+	common.RestartError:        common.RestartErrorLevel,
+	common.FreeResetError:      common.FreeResetErrorLevel,
+	common.ResetError:          common.ResetErrorLevel,
+	common.IsolateError:        common.IsolateErrorLevel,
+}
+
 // HotResetManager hot reset manager
 type HotResetManager interface {
 	GetRingNum() int
@@ -83,12 +93,11 @@ type HotResetTools struct {
 	faultDev2PodMap     map[int32]v1.Pod
 	resetTask           map[string]struct{}
 	resetDev            map[int32]struct{}
-	processPolicyTable  map[string]int
 	queue               workqueue.RateLimitingInterface
 	podIndexer          cache.Indexer
 	cmIndexer           cache.Indexer
 	jobs                map[string]string
-	noResetCmPodKeys    map[string]string
+	noResetCmPodKeys    map[string]struct{}
 }
 
 // NewHotResetManager create HotResetManager and init data
@@ -115,16 +124,7 @@ func NewHotResetManager(devUsage string, deviceNum int) HotResetManager {
 		resetDev:         map[int32]struct{}{},
 		faultDev2PodMap:  map[int32]v1.Pod{},
 		jobs:             map[string]string{},
-		noResetCmPodKeys: map[string]string{},
-		processPolicyTable: map[string]int{
-			common.EmptyError:          common.EmptyErrorLevel,
-			common.IgnoreError:         common.IgnoreErrorLevel,
-			common.RestartRequestError: common.RestartRequestErrorLevel,
-			common.RestartError:        common.RestartErrorLevel,
-			common.FreeResetError:      common.FreeResetErrorLevel,
-			common.ResetError:          common.ResetErrorLevel,
-			common.IsolateError:        common.IsolateErrorLevel,
-		},
+		noResetCmPodKeys: map[string]struct{}{},
 	}
 }
 
@@ -158,7 +158,7 @@ func (hrt *HotResetTools) SyncResetCM(client *kubeclient.ClientK8s) {
 }
 
 func (hrt *HotResetTools) run() {
-	hwlog.RunLog.Infof("Starting handle reset-cm event")
+	hwlog.RunLog.Info("starting handle reset-cm event")
 	for hrt.processNextWorkItem() {
 	}
 }
@@ -167,7 +167,7 @@ func (hrt *HotResetTools) processNextWorkItem() bool {
 	hwlog.RunLog.Debugf("queue length: %d", hrt.queue.Len())
 	obj, shutdown := hrt.queue.Get()
 	if shutdown {
-		hwlog.RunLog.Errorf("shutdown, stop processing work queue")
+		hwlog.RunLog.Error("shutdown, stop processing work queue")
 		return false
 	}
 	defer hrt.queue.Done(obj)
@@ -188,7 +188,7 @@ func (hrt *HotResetTools) handleEvent(obj interface{}) {
 		hrt.handleConfigMapEvent(obj)
 	default:
 		hrt.queue.Forget(obj)
-		hwlog.RunLog.Errorf("Unsupported resource: %s", obj.(kubeclient.Event).Resource)
+		hwlog.RunLog.Errorf("unsupported resource: %s", obj.(kubeclient.Event).Resource)
 	}
 }
 
@@ -208,7 +208,7 @@ func (hrt *HotResetTools) handlePodEvent(obj interface{}) {
 func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 	event, ok := obj.(kubeclient.Event)
 	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event error")
+		hwlog.RunLog.Error("get kubeclient event error")
 		return
 	}
 	hwlog.RunLog.Debugf("handle pod(%s) %s event", event.Key, event.Type)
@@ -231,14 +231,14 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 		_, ok = hrt.noResetCmPodKeys[event.Key]
 		if !ok {
 			hwlog.RunLog.Warn(err)
-			hrt.noResetCmPodKeys[event.Key] = ""
+			hrt.noResetCmPodKeys[event.Key] = struct{}{}
 		}
 		hrt.queue.AddRateLimited(obj)
 		return
 	}
 	err = hrt.writeCMToFile(cm)
 	if err != nil {
-		hwlog.RunLog.Errorf("Failed to write cm(%s) to file, err: %v", cm.Name, err)
+		hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", cm.Name, err)
 		hrt.queue.AddRateLimited(obj)
 		return
 	}
@@ -248,7 +248,7 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 	event, ok := obj.(kubeclient.Event)
 	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event error")
+		hwlog.RunLog.Error("get kubeclient event error")
 		return
 	}
 	hwlog.RunLog.Debugf("handle pod(%s) delete event", event.Key)
@@ -270,7 +270,7 @@ func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 	namespace := keySlice[0]
 	rmErr := common.RemoveFileAndDir(namespace, common.ResetInfoCMNamePrefix+jobName)
 	if rmErr != nil {
-		hwlog.RunLog.Errorf("Failed to remove file: %v", rmErr)
+		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
 	}
 	delete(hrt.jobs, event.Key)
 	hrt.queue.Forget(obj)
@@ -339,7 +339,7 @@ func (hrt *HotResetTools) handleConfigMapEvent(obj interface{}) {
 func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 	event, ok := obj.(kubeclient.Event)
 	if !ok {
-		hwlog.RunLog.Errorf("get kubeclient event failed")
+		hwlog.RunLog.Error("get kubeclient event failed")
 		return
 	}
 	hwlog.RunLog.Infof("handle cm(%s) update event", event.Key)
@@ -352,13 +352,13 @@ func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 
 	path := common.GenResetFileName(cm.Namespace, cm.Name)
 	if _, checkErr := os.Stat(path); checkErr != nil {
-		hwlog.RunLog.Debugf("check file(%s) failed, err: %s", path, checkErr)
+		hwlog.RunLog.Debugf("check file(%s) failed, err: %v", path, checkErr)
 		hrt.queue.Forget(obj)
 		return
 	}
 
 	if err = hrt.writeCMToFile(cm); err != nil {
-		hwlog.RunLog.Errorf("Failed to write cm(%s) to file, err: %v", cm.Name, err)
+		hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", cm.Name, err)
 		hrt.queue.AddRateLimited(obj)
 		return
 	}
@@ -380,7 +380,7 @@ func (hrt *HotResetTools) handleCMDeleteEvent(obj interface{}) {
 	namespace, name := keySlice[0], keySlice[1]
 	rmErr := common.RemoveFileAndDir(namespace, name)
 	if rmErr != nil {
-		hwlog.RunLog.Errorf("Failed to remove file: %v", rmErr)
+		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
 	}
 	hrt.queue.Forget(obj)
 }
@@ -466,7 +466,7 @@ func (hrt *HotResetTools) GetTaskProcessPolicy(taskName string) (string, int, er
 	var processPolicy string
 	var processPolicyLevel int
 	for _, devFaultInfo := range devFaultInfoList {
-		devPolicyLevel, ok := hrt.processPolicyTable[devFaultInfo.Policy]
+		devPolicyLevel, ok := processPolicyTable[devFaultInfo.Policy]
 		if !ok {
 			return "", -1, fmt.Errorf("invalid policy of device fault info in task %s", taskName)
 		}
@@ -497,7 +497,7 @@ func (hrt *HotResetTools) GetDevListByPolicyLevel(devFaultInfoList []*common.Tas
 	policyLevel int) (map[int32]struct{}, error) {
 	devList := make(map[int32]struct{})
 	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
+		policyType, ok := processPolicyTable[devFaultInfo.Policy]
 		if !ok {
 			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
 			hwlog.RunLog.Error(err)
@@ -516,10 +516,9 @@ func (hrt *HotResetTools) GetDevListByPolicyLevel(devFaultInfoList []*common.Tas
 func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
 	needResetDevMap := make(map[int32]int32)
 	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
+		policyType, ok := processPolicyTable[devFaultInfo.Policy]
 		if !ok {
-			err := fmt.Errorf("invalid policy str of device %d",
-				devFaultInfo.LogicId)
+			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
 			hwlog.RunLog.Error(err)
 			return nil, err
 		}
@@ -540,10 +539,9 @@ func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInf
 	faultRing := make(map[int]struct{}, common.RingSum)
 	var rankList = make([]*common.TaskDevInfo, 0)
 	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
+		policyType, ok := processPolicyTable[devFaultInfo.Policy]
 		if !ok {
-			err := fmt.Errorf("invalid policy str of device %d",
-				devFaultInfo.LogicId)
+			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
 			hwlog.RunLog.Error(err)
 			return nil, err
 		}
@@ -577,7 +575,7 @@ func (hrt *HotResetTools) GetTaskFaultRankInfo(devFaultInfoList []*common.TaskDe
 	}
 	faultRing := make(map[int]struct{}, common.RingSum)
 	for _, devFaultInfo := range devFaultInfoList {
-		policy := hrt.processPolicyTable[devFaultInfo.Policy]
+		policy := processPolicyTable[devFaultInfo.Policy]
 		if policy != common.RestartErrorLevel && policy != common.ResetErrorLevel &&
 			policy != common.RestartRequestErrorLevel {
 			continue
@@ -665,7 +663,6 @@ func (hrt *HotResetTools) UpdateFaultDev2PodMap(devList []int32, pod v1.Pod) err
 			delete(hrt.faultDev2PodMap, device)
 		}
 	}
-
 	return nil
 }
 

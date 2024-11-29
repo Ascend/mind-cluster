@@ -678,3 +678,12 @@ func GetSyncMapLen(m *sync.Map) int {
 	})
 	return count
 }
+
+// ObjToString obj to string
+func ObjToString(data interface{}) string {
+	var dataBuffer []byte
+	if dataBuffer = MarshalData(data); len(dataBuffer) == 0 {
+		return ""
+	}
+	return string(dataBuffer)
+}

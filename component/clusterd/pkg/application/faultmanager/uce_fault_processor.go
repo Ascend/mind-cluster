@@ -220,7 +220,7 @@ func (processor *uceFaultProcessor) getUceFaultDevices(nodeName string, deviceIn
 			if !isUceFault(fault) {
 				continue
 			}
-			errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s",
+			errorMsg := fmt.Sprintf("getUceFaultDevices cannot find uce fault time for device %s of node %s",
 				deviceInfo.CmName, nodeName)
 			faultTime := getFaultTime(fault, errorMsg)
 			nodeInfo.DeviceInfo[fault.NPUName] = uceDeviceInfo{

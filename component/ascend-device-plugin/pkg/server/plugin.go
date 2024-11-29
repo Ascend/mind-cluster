@@ -785,6 +785,11 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		hwlog.RunLog.Error(err)
 		return nil, err
 	}
+	allNPUInfo, err := ps.manager.GetNPUs()
+	if err != nil {
+		hwlog.RunLog.Errorf("get all npus info failed: %v", err)
+		return nil, err
+	}
 	resps := new(v1beta1.AllocateResponse)
 	for _, rqt := range requests.ContainerRequests {
 		var err error
@@ -794,7 +799,9 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		} else {
 			hwlog.RunLog.Infof("request: %#v", rqt.DevicesIDs)
 		}
-		if common.ParamOption.UseVolcanoType {
+		hwlog.RunLog.Debugf("len(allocateDevices)=%d, len(allNPUInfo.AllDevs)=%d",
+			len(allocateDevices), len(allNPUInfo.AllDevs))
+		if len(allocateDevices) != len(allNPUInfo.AllDevs) && common.ParamOption.UseVolcanoType {
 			allocateDevices, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
 				hwlog.RunLog.Error(err)

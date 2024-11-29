@@ -390,6 +390,36 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	return usedDevice
 }
 
+func (tool *AscendTools) getUsedChips() sets.String {
+	if !common.ParamOption.PresetVDevice {
+		return sets.String{}
+	}
+	_, logicIDs, err := tool.dmgr.GetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Warnf("get device list failed, err: %v", err)
+		return sets.String{}
+	}
+	if len(logicIDs) < 1 {
+		hwlog.RunLog.Warn("get device list failed, logicID is empty")
+		return sets.String{}
+	}
+	usedChips := make([]string, 0, len(logicIDs))
+	for _, logicID := range logicIDs {
+		chipInfo, err := tool.dmgr.GetDevProcessInfo(logicID)
+		if err != nil {
+			// use vnpu will report an 8255 error
+			hwlog.RunLog.Debugf("get device list failed, err: %v", err)
+			continue
+		}
+
+		if chipInfo.ProcNum != 0 {
+			chipName := fmt.Sprintf("%s-%d", common.ParamOption.RealCardType, logicID)
+			usedChips = append(usedChips, chipName)
+		}
+	}
+	return sets.NewString(usedChips...)
+}
+
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
 	totalUHDevices, totalNetUHDevices, allTypeUsedDevice, totalRCDevices :=
@@ -400,7 +430,9 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 	}
 	for devType, classifyDev := range classifyDevs {
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
-		usedDevices := tool.client.GetPodsUsedNpu()
+		usedNpu := tool.client.GetPodsUsedNpu()
+		usedChips := tool.getUsedChips()
+		usedDevices := usedNpu.Union(usedChips)
 		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(usedDevices)
 		if !common.ParamOption.PresetVDevice {
 			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(allTypeUsedDevice)
@@ -471,8 +503,13 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 	}
 	for _, eventId := range events {
 		faultLevel := getFaultLevelFunc([]int64{eventId}, device.LogicID)
+		faultTime, found := device.FaultTimeMap[eventId]
+		if !found {
+			hwlog.RunLog.Warnf("fault time map is inconsistance with faults, map: %s, codes: %s",
+				common.ObjToString(device.FaultTimeMap), common.ObjToString(events))
+		}
 		faultTimeAndLevel := common.FaultTimeAndLevel{
-			FaultTime:  device.FaultTimeMap[eventId],
+			FaultTime:  faultTime,
 			FaultLevel: faultLevel,
 		}
 		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
@@ -799,19 +836,6 @@ func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 		}
 	}
 	return false
-}
-
-// UnhealthyState state unhealthy info
-func (tool *AscendTools) unhealthyState(healthyState uint32, logicID int32) error {
-	phyID, err := tool.dmgr.GetPhysicIDFromLogicID(logicID)
-	if err != nil {
-		return fmt.Errorf("get phyID failed %v", err)
-	}
-	if _, _, err := tool.dmgr.GetDeviceErrorCode(logicID); err != nil {
-		return fmt.Errorf("get device error code failed %v", err)
-	}
-	hwlog.RunLog.Errorf("device logicID: %d, phyID: %d, state is %d", logicID, phyID, healthyState)
-	return nil
 }
 
 func (tool *AscendTools) getVGroupID(device string) (uint32, error) {
@@ -1187,7 +1211,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 		event.Type = v1.EventTypeNormal
 	}
 	if _, err := tool.client.CreateEvent(event); err != nil {
-		return fmt.Errorf("failed to create event, %w", err)
+		return fmt.Errorf("failed to create event, %v", err)
 	}
 	return nil
 }

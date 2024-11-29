@@ -614,3 +614,13 @@ func TestGetJobNameOfPod(t *testing.T) {
 		})
 	})
 }
+
+func TestObjToString(t *testing.T) {
+	t.Run("TestObjToString", func(t *testing.T) {
+		mp := map[string]string{"hello": "world"}
+		want := `{"hello":"world"}`
+		if got := ObjToString(mp); got != want {
+			t.Errorf("ObjToString failed")
+		}
+	})
+}

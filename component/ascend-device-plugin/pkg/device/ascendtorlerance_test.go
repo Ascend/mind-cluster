@@ -126,18 +126,6 @@ func mockWrongTaskDevInfoList() []*common.TaskDevInfo {
 	}
 }
 
-// mockProcessPolicyTable create a fake process policy table for test
-func mockProcessPolicyTable() map[string]int {
-	return map[string]int{
-		common.EmptyError:          common.EmptyErrorLevel,
-		common.IgnoreError:         common.IgnoreErrorLevel,
-		common.RestartRequestError: common.RestartRequestErrorLevel,
-		common.RestartError:        common.RestartErrorLevel,
-		common.ResetError:          common.ResetErrorLevel,
-		common.IsolateError:        common.IsolateErrorLevel,
-	}
-}
-
 // newTestHotResetManager new a hot reset manager example
 func newTestHotResetManager(deviceType string, model string) HotResetManager {
 	common.ParamOption.RealCardType = deviceType
@@ -273,7 +261,6 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 		convey.Convey("test GetTaskProcessPolicy success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, common.ResetError)
@@ -281,9 +268,7 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test GetTaskDevFaultInfoList failed  when task dev info not exist", func() {
-			tool := &HotResetTools{
-				processPolicyTable: mockProcessPolicyTable(),
-			}
+			tool := &HotResetTools{}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, "")
 			convey.So(processPolicyLevel, convey.ShouldEqual, -1)
@@ -292,7 +277,6 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 		convey.Convey("test GetTaskDevFaultInfoList failed when invalid policy", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, "")
@@ -326,7 +310,6 @@ func TestDevListByPolicyLevel(t *testing.T) {
 		convey.Convey("test GetDevListByPolicyLevel success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
 			convey.So(devList[0], convey.ShouldNotBeNil)
@@ -338,7 +321,6 @@ func TestDevListByPolicyLevel(t *testing.T) {
 		convey.Convey("test GetDevListByPolicyLevel failed", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
 			convey.So(devList, convey.ShouldBeNil)
@@ -353,7 +335,6 @@ func TestGetNeedResetDevList(t *testing.T) {
 		convey.Convey("test GetNeedResetDevMap success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -368,7 +349,6 @@ func TestGetNeedResetDevList(t *testing.T) {
 		convey.Convey("test GetNeedResetDevMap failed", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -386,7 +366,6 @@ func TestGetTaskResetInfo(t *testing.T) {
 			tool := &HotResetTools{
 				ringNum:             common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -402,7 +381,6 @@ func TestGetTaskResetInfo(t *testing.T) {
 			tool := &HotResetTools{
 				ringNum:             common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -421,7 +399,6 @@ func TestGetTaskFaultRankInfo(t *testing.T) {
 			tool := &HotResetTools{
 				ringNum:             common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -433,7 +410,6 @@ func TestGetTaskFaultRankInfo(t *testing.T) {
 			tool := &HotResetTools{
 				ringNum:             common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -1218,18 +1194,9 @@ func newHotResetTools() *HotResetTools {
 		resetDev:         map[int32]struct{}{},
 		faultDev2PodMap:  map[int32]v1.Pod{},
 		jobs:             map[string]string{},
-		noResetCmPodKeys: map[string]string{},
-		processPolicyTable: map[string]int{
-			common.EmptyError:          common.EmptyErrorLevel,
-			common.IgnoreError:         common.IgnoreErrorLevel,
-			common.RestartRequestError: common.RestartRequestErrorLevel,
-			common.RestartError:        common.RestartErrorLevel,
-			common.FreeResetError:      common.FreeResetErrorLevel,
-			common.ResetError:          common.ResetErrorLevel,
-			common.IsolateError:        common.IsolateErrorLevel,
-		},
-		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
-		cmIndexer:  cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
-		podIndexer: cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
+		noResetCmPodKeys: map[string]struct{}{},
+		queue:            workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		cmIndexer:        cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
+		podIndexer:       cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
 	}
 }

@@ -39,7 +39,8 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 	for deviceName, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
 			if isUceFault(fault) {
-				errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s", deviceName, nodeName)
+				errorMsg := fmt.Sprintf("uceAccompany cannot find uce fault time of device %s of node %s",
+					deviceName, nodeName)
 				processor.uceFaultTime[nodeName][deviceName] = getFaultTime(fault, errorMsg)
 				continue
 			}
@@ -88,7 +89,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 	newDeviceFaultQue := make([]constant.DeviceFault, 0)
 	for _, fault := range deviceFaultQue {
 		uceFaultTime := processor.getDeviceUceFaultTime(nodeName, deviceName)
-		errorMsg := fmt.Sprintf("cannot find uce fault time for device %s of node %s", deviceName, nodeName)
+		errorMsg := fmt.Sprintf("filterFaultDevice cannot find uce fault time for device %s of node %s",
+			deviceName, nodeName)
 		accompanyFaultTime := getFaultTime(fault, errorMsg)
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
@@ -105,6 +107,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 			faultMap = deleteFaultFromFaultMap(faultMap, fault)
 			newDeviceFaultQue = append(newDeviceFaultQue, fault)
 		}
+		hwlog.RunLog.Warnf("cannot filter uce accompany like fault %s, uce fault time: %s",
+			util.ObjToString(fault), util.ReadableMsTime(uceFaultTime))
 	}
 	return newDeviceFaultQue, faultMap
 }
