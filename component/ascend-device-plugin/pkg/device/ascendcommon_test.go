@@ -18,6 +18,8 @@ package device
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -555,6 +557,56 @@ func TestGetUseChips(t *testing.T) {
 func mockAscendTools() AscendTools {
 	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
+}
+
+// A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
+func TestAscendToolsGetDeviceFaults(t *testing.T) {
+	t.Run("getDeviceFaults", func(t *testing.T) {
+		tool := &AscendTools{}
+		device := &common.NpuDevice{
+			FaultCodes:             []int64{int64(0x80C98008), int64(0x80CB8008)},
+			AlarmRaisedTime:        100000,
+			NetworkFaultCodes:      []int64{int64(common.LinkDownFaultCode)},
+			NetworkAlarmRaisedTime: 110000,
+			FaultTimeMap: map[int64]int64{
+				int64(0x80C98008):               100000,
+				int64(0x80CB8008):               110000,
+				int64(common.LinkDownFaultCode): 120000,
+			},
+			DeviceName: "Ascend910-0",
+		}
+		got := tool.getDeviceFaults(device)
+		want := []common.DeviceFault{{
+			FaultType:            common.CardNetworkUnhealthy,
+			NPUName:              "Ascend910-0",
+			LargeModelFaultLevel: common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultLevel:           common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultHandling:        common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.NetworkFaultCodes)),
+			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
+				strings.ToUpper(strconv.FormatInt(common.LinkDownFaultCode, 16)): {120000,
+					common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)},
+			},
+		}, {
+			FaultType:            common.CardUnhealthy,
+			NPUName:              "Ascend910-0",
+			LargeModelFaultLevel: common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultLevel:           common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultHandling:        common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.FaultCodes)),
+			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
+				strings.ToUpper(strconv.FormatInt(int64(0x80C98008), 16)): {100000,
+					common.GetFaultType([]int64{0x80C98008}, device.LogicID),
+				},
+				strings.ToUpper(strconv.FormatInt(int64(0x80CB8008), 16)): {110000,
+					common.GetFaultType([]int64{0x80CB8008}, device.LogicID)},
+			},
+		},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("getDeviceFaults() = %v, want %v", got, want)
+		}
+	})
 }
 
 func mockGetDeviceList(num int32, logicIDs []int32, err error) *gomonkey.Patches {

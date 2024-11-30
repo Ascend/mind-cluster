@@ -1,0 +1,141 @@
+# set current time = 100
+# job1: Test current time not exceed (UceFaultTime + JobReportRecoverTimeout), should filter uce fault
+# job2: Test current time exceed (UceFaultTime + JobReportRecoverTimeout),
+#   but don't receive job recover info, should not filter uce fault
+# job3: Test current time exceed (UceFaultTime + JobReportRecoverTimeout),
+#   but not exceed (RecoverTime + JobReportCompleteTimeout)
+#   and receive job recover info, should filter uce fault
+# job4: Test current time exceed (UceFaultTime + JobReportRecoverTimeout),
+#   and exceed (RecoverTime + JobReportCompleteTimeout)
+#   and receive job recover info, but don't receive job recover complete info, should not filter uce fault
+
+# device info in cm manager
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 90000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 89000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-2", "fault_code": "80E01801",
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 89000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 50000, "fault_level": "RestartBusiness" } } }
+      ]
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 70000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-2", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 84000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-3", "fault_code": "80E01801",
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 40000, "fault_level": "RestartBusiness" } } }
+      ]
+---
+# the result after uce processor process
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 89000, "fault_level": "RestartBusiness" } } }
+      ]
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 70000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-2", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 84000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 40000, "fault_level": "RestartBusiness" } } }
+      ]
+---
+# job info in JobMgr
+job1:
+  CMData:
+    server_list:
+      - device:
+          - device_id: 0
+        server_name: node1
+      - device:
+          - device_id: 0
+        server_name: node2
+job2:
+  CMData:
+    server_list:
+      - device:
+          - device_id: 1
+        server_name: node1
+      - device:
+          - device_id: 1
+        server_name: node2
+job3:
+  CMData:
+    server_list:
+      - device:
+          - device_id: 2
+        server_name: node1
+      - device:
+          - device_id: 2
+        server_name: node2
+job4:
+  CMData:
+    server_list:
+      - device:
+          - device_id: 3
+        server_name: node1
+      - device:
+          - device_id: 3
+        server_name: node2
+---
+job1:
+  PGLabels:
+    step-retry: true
+job2:
+  PGLabels:
+    step-retry: true
+job3:
+  PGLabels:
+    step-retry: true
+job4:
+  PGLabels:
+    step-retry: true
+job5:
+  PGLabels:
+    step-retry: true
+---
+# mindio report info
+InfoMap:
+  job3:
+    node1:
+      Ascend910-2:
+        RecoverTime: 95000
+    node2:
+      Ascend910-2:
+        RecoverTime: 95000
+  job4:
+    node1:
+      Ascend910-3:
+        RecoverTime: 60000
+        CompleteTime: 90000
+      Ascend910-1: # Not belong to job4, no effect
+        RecoverTime: 101000
+        CompleteTime: 102000
+    node2:
+      Ascend910-3:
+        RecoverTime: 60000
+        CompleteTime: 90000
+      Ascend910-1: # Not belong to job4, no effect
+        RecoverTime: 101000
+        CompleteTime: 102000
