@@ -30,6 +30,8 @@ type RankTableGenerator interface {
 	ToString() (string, error)
 	GetConfigmapExist() utils.ConfigmapCheck
 	SetConfigmapExist(utils.ConfigmapCheck)
+	GetTimeStamp() uint64
+	SetTimeStamp(uint64)
 	GetConfigmapStatus() utils.RankTableStatus
 	SetConfigmapStatus(utils.RankTableStatus)
 	GetFileStatus() utils.RankTableStatus

@@ -34,6 +34,7 @@ type BaseGenerator struct {
 	dir            string
 	path           string
 	configmapExist utils.ConfigmapCheck
+	timestamp      uint64
 	cmStatus       utils.RankTableStatus
 	fileStatus     utils.RankTableStatus
 	rtMu           sync.Mutex
@@ -61,6 +62,16 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 		ServerList: []*Server{},
 		Version:    version,
 	}
+}
+
+// GetTimeStamp is used to get the timestamp of the last update
+func (r *BaseGenerator) GetTimeStamp() uint64 {
+	return r.timestamp
+}
+
+// SetTimeStamp is used to set the timestamp of the last update
+func (r *BaseGenerator) SetTimeStamp(timestamp uint64) {
+	r.timestamp = timestamp
 }
 
 // Lock is used to access the permission of rank table operations

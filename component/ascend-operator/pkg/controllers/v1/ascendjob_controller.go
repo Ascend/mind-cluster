@@ -551,9 +551,13 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 	if err != nil {
 		return err
 	}
-	cm.Data[configmapVersion] = strconv.FormatUint(uint64(time.Now().Unix()), decimal)
+	// The timestamp is initialized to 0 when ascend operator startup, rather than current time.
+	// The purpose is to prevent timestamp continuously increasing when ascend operator restarts multiple times,
+	// which could lead to tasks mistakenly believing that rank table has been updated.
+	cm.Data[configmapVersion] = strconv.FormatUint(rtg.GetTimeStamp(), decimal)
 	if err := r.Update(context.TODO(), cm); err != nil {
 		return err
 	}
+	rtg.SetTimeStamp(uint64(time.Now().Unix()))
 	return nil
 }
