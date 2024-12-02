@@ -1589,11 +1589,11 @@ func CheckErrorMessage(err error, target string) bool {
 	return err != nil && strings.Contains(err.Error(), target)
 }
 
-// GetTimeoutFaultCodes get timeout fault codes
-func GetTimeoutFaultCodes(mode string) []int64 {
-	faultCodes := make([]int64, 0)
+// GetTimeoutFaultLevelAndCodes get timeout fault codes with level and set fault time equal current time.
+func GetTimeoutFaultLevelAndCodes(mode string) map[int64]FaultTimeAndLevel {
+	result := make(map[int64]FaultTimeAndLevel)
 	if mode != ChipFaultMode && mode != NetworkFaultMode {
-		return faultCodes
+		return result
 	}
 
 	faultDurationMapLock.Lock()
@@ -1612,10 +1612,13 @@ func GetTimeoutFaultCodes(mode string) []int64 {
 
 		for _, faultDurationData := range faultDurationCache.Duration {
 			if faultDurationData.TimeoutStatus {
-				faultCodes = append(faultCodes, num)
+				result[num] = FaultTimeAndLevel{
+					// timeout fault use current time as `FaultTime`
+					FaultTime:  time.Now().UnixMilli(),
+					FaultLevel: faultDurationCache.FaultHandling,
+				}
 			}
 		}
 	}
-
-	return faultCodes
+	return result
 }
