@@ -4,11 +4,12 @@
 package faultmanager
 
 import (
-	"clusterd/pkg/common/util"
 	"reflect"
+	"sort"
 	"testing"
 
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 )
 
 func TestSplitDeviceFault(t *testing.T) {
@@ -102,7 +103,7 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 	})
 }
 
-// TestMergeDifferentTypeDeviceFault should not be merged, when fault type is same
+// TestMergeDifferentTypeDeviceFault should not be merged, when fault type isn't same
 func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
 		split := []constant.DeviceFault{
@@ -133,6 +134,9 @@ func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 		if err != nil {
 			t.Errorf("mergeDeviceFault() error = %v", err)
 		}
+		sort.Slice(got, func(i, j int) bool {
+			return got[i].FaultType > got[j].FaultType
+		})
 		if !reflect.DeepEqual(got, split) {
 			t.Errorf("mergeDeviceFault() got = %v, want %v", util.ObjToString(got), util.ObjToString(split))
 		}
