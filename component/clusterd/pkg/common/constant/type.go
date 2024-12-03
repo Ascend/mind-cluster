@@ -4,6 +4,8 @@
 package constant
 
 // FaultTimeAndLevel of each fault code
+// some fault may not have accurate fault time and level,
+// for example: duration fault use current time as `FaultTime`
 type FaultTimeAndLevel struct {
 	FaultTime  int64  `json:"fault_time"`
 	FaultLevel string `json:"fault_level"`

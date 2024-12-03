@@ -687,3 +687,11 @@ func ObjToString(data interface{}) string {
 	}
 	return string(dataBuffer)
 }
+
+func Keys[T comparable, U any](mp map[T]U) []T {
+	result := make([]T, 0, len(mp))
+	for key := range mp {
+		result = append(result, key)
+	}
+	return result
+}

@@ -1517,7 +1517,7 @@ func TestGetChangedDevFaultInfo(t *testing.T) {
 	})
 }
 
-// TestGetTimeoutFaultCodes for test GetTimeoutFaultCodes
+// TestGetTimeoutFaultCodes for test GetTimeoutFaultLevelAndCodes
 func TestGetTimeoutFaultCodes(t *testing.T) {
 	convey.Convey("test GetTimeoutFaultCodes success", t, func() {
 		logicID := int32(0)
@@ -1552,9 +1552,9 @@ func TestGetTimeoutFaultCodes(t *testing.T) {
 			},
 		}
 		expectedChipFaultCodesLen := 2
-		expectedNetworkFaultCodes := make([]int64, 0)
-		convey.So(len(GetTimeoutFaultCodes(ChipFaultMode)), convey.ShouldResemble, expectedChipFaultCodesLen)
-		convey.So(GetTimeoutFaultCodes(NetworkFaultMode), convey.ShouldResemble, expectedNetworkFaultCodes)
+		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
+		convey.So(len(GetTimeoutFaultLevelAndCodes(ChipFaultMode)), convey.ShouldResemble, expectedChipFaultCodesLen)
+		convey.So(GetTimeoutFaultLevelAndCodes(NetworkFaultMode), convey.ShouldResemble, expectedNetworkFaultCodes)
 	})
 }
 
