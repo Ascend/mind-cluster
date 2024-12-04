@@ -6,7 +6,6 @@ package faultmanager
 import (
 	"sync"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 )
 
@@ -20,7 +19,7 @@ type baseFaultCenter[T constant.ConfigMapInterface] struct {
 	subscribeChannelList []chan struct{}
 	mutex                sync.Mutex
 	processPeriod        int64
-	jobServerInfoMap     job.JobServerInfoMap
+	jobServerInfoMap     constant.JobServerInfoMap
 	cmManager            *faultCenterCmManager[T]
 }
 
@@ -125,7 +124,7 @@ type uceFaultProcessor struct {
 	uceDevicesOfUceJob map[string]uceJobInfo
 	// node->DeviceName->uceDeviceInfo
 	uceDeviceOfNode  map[string]uceNodeInfo
-	jobServerInfoMap job.JobServerInfoMap
+	jobServerInfoMap constant.JobServerInfoMap
 	nodeDeviceCmMap  map[string]AdvanceDeviceFaultCm
 }
 

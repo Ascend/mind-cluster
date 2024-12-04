@@ -13,11 +13,12 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podGroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
-	"clusterd/pkg/interface/kube"
 )
 
 var (
@@ -507,12 +508,12 @@ func (ctl *EventController) handleWaitFlushFinish() (string, common.RespCode, er
 	}
 }
 
-func (ctl *EventController) normalFaultAssociateSameNodeRank(worker job.PodWorker) ([]*pb.FaultRank, []string) {
+func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank, []string) {
 	var faultRankIds []string
 	for _, fault := range ctl.cacheNormalFault {
 		faultRankIds = append(faultRankIds, fault.RankId)
 	}
-	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, worker.GetDeviceNumPerNode())
+	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId))
 	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
 	var res []*pb.FaultRank
 	for _, rank := range removeSameRankIds {
@@ -575,8 +576,8 @@ func (ctl *EventController) setCacheFault(uceFaults, normalFaults []*pb.FaultRan
 	ctl.cacheNormalFault = normalFaults
 }
 
-func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
-	uceFaults, normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
+func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
+	normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
 	hwlog.RunLog.Infof("jobId=%s enter notifyFaultForUceFaultCase function", ctl.jobInfo.JobId)
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
@@ -595,7 +596,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
 		if !isUceFault(allFaults) {
 			uceFaults = uceFaults[:0]
-			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
+			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			normalFaults = allFaults
 			ctl.setCacheFault(uceFaults, normalFaults)
 
@@ -623,8 +624,8 @@ func (ctl *EventController) notifyFaultForUceFaultCase(worker job.PodWorker,
 	return ctl.signalEnqueue(signal)
 }
 
-func (ctl *EventController) notifyFaultForNormalFaultCase(worker job.PodWorker,
-	uceFaults, normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
+func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFaults []*pb.FaultRank) (
+	string, common.RespCode, error) {
 	hwlog.RunLog.Infof("jobId=%s enter notifyFaultForNormalFaultCase function", ctl.jobInfo.JobId)
 	if ctl.jobInfo.PlatFormMode {
 		hwlog.RunLog.Infof("jobId=%s enter notifyFaultForNormalFaultCase function", ctl.jobInfo.JobId)
@@ -638,7 +639,7 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(worker job.PodWorker,
 		ctl.setCacheFault(nil, allFaults)
 		normalFaults = allFaults
 	}
-	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
+	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 
 	// label fault pod
@@ -667,17 +668,16 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(worker job.PodWorker,
 }
 
 func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, error) {
-	uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
-	worker := kube.JobMgr.GetBsWorker(ctl.jobInfo.JobId)
-	if worker == nil {
+	if !job.GetJobIsExists(ctl.jobInfo.JobId) {
 		return "", common.JobNotExist, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
 	}
+	uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
 	// if len(ctl.cacheUceFault) still bigger than 0 after takeUceFault2NormalFault
 	// that means job support retry strategy, and it's first time choose strategy case only have uce fault
 	if len(uceFaults) > 0 {
-		return ctl.notifyFaultForUceFaultCase(worker, uceFaults, normalFaults)
+		return ctl.notifyFaultForUceFaultCase(uceFaults, normalFaults)
 	}
-	return ctl.notifyFaultForNormalFaultCase(worker, uceFaults, normalFaults)
+	return ctl.notifyFaultForNormalFaultCase(uceFaults, normalFaults)
 }
 
 func (ctl *EventController) firstChooseStrategy() string {
@@ -822,13 +822,11 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 }
 
 func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
-	worker := kube.JobMgr.GetBsWorker(ctl.jobInfo.JobId)
-	if worker == nil {
-		hwlog.RunLog.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
+	if !job.GetJobIsExists(ctl.jobInfo.JobId) {
 		return "", common.JobNotExist, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
 	}
 	ctl.takeUceFault2NormalFault()
-	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank(worker)
+	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 	var err error
 	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
@@ -847,8 +845,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) {
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.PgName, ctl.jobInfo.Namespace,
-		common.ProcessReschedulingPause); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, common.ProcessReschedulingPause); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label pause %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			common.ProcessReschedulingPause, ctl.jobInfo.PgName)
@@ -860,7 +857,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 	scheduleSuccess := false
 	for i := 1; i <= common.CheckPGRunningRetryTimes/2; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
-		if kube.JobMgr.JobRunning(ctl.jobInfo.JobId) {
+		if job.GetJobIsRunning(ctl.jobInfo.JobId) {
 			scheduleSuccess = true
 			break
 		}
@@ -872,8 +869,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 	}
 
-	if _, err := common.ChangeProcessSchedulingMode(
-		ctl.jobInfo.PgName, ctl.jobInfo.Namespace, common.ProcessReschedulingEnable); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, common.ProcessReschedulingEnable); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label on %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			common.ProcessReschedulingEnable, ctl.jobInfo.PgName)
@@ -968,17 +964,10 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 
 func (ctl *EventController) listenScheduleResult() {
 	pgRunning := false
-	worker := kube.JobMgr.GetBsWorker(ctl.jobInfo.JobId)
-	if worker == nil {
-		hwlog.RunLog.Warnf("jobId=%s not exist", ctl.jobInfo.JobId)
-		ctl.pgStatusEnqueue(false)
-		return
-	}
-
 	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Infof("check pg running %d times", i)
-		if worker.PGRunning() {
+		if podGroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 			pgRunning = true
 			break
 		}
@@ -1101,7 +1090,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 	scheduleSuccess := false
 	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
-		if kube.JobMgr.JobRunning(ctl.jobInfo.JobId) &&
+		if job.GetJobIsRunning(ctl.jobInfo.JobId) &&
 			common.FaultPodAllRescheduled(ctl.jobInfo.JobId, ctl.faultPod) {
 			scheduleSuccess = true
 			break

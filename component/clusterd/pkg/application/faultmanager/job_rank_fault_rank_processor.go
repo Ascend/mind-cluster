@@ -8,7 +8,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/job"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
@@ -75,8 +75,8 @@ func (processor *jobRankFaultInfoProcessor) process() {
 	processor.setJobFaultRankInfos(jobFaultInfos)
 }
 
-func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
-	nodeDeviceInfoMap map[string]AdvanceDeviceFaultCm, nodeName string, serverList map[string]job.ServerHccl) []FaultRank {
+func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(nodeDeviceInfoMap map[string]AdvanceDeviceFaultCm,
+	nodeName string, serverList map[string]constant.ServerHccl) []FaultRank {
 	advanceDeviceInfo := nodeDeviceInfoMap[nodeName]
 	devicesOfJobOnNode, ok := serverList[nodeName]
 	faultRankList := make([]FaultRank, 0)

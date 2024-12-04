@@ -12,13 +12,12 @@ import (
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
 func getNodeAndDeviceFromJobIdAndRankId(
-	jobId, rankId string, jobServerInfoMap job.JobServerInfoMap) (string, string, error) {
+	jobId, rankId string, jobServerInfoMap constant.JobServerInfoMap) (string, string, error) {
 	for _, server := range jobServerInfoMap.InfoMap[jobId] {
 		for _, dev := range server.DeviceList {
 			if dev.RankID == rankId {

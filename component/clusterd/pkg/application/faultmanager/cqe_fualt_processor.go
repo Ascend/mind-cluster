@@ -8,7 +8,6 @@ import (
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -71,7 +70,7 @@ func (processor *linkDownCqeFaultProcessCenter) deleteCqeDevice(
 }
 
 func (processor *linkDownCqeFaultProcessCenter) handleLinkDownCqeFault(
-	jobServerInfoMap job.JobServerInfoMap, deviceInfoCms map[string]*constant.DeviceInfo) {
+	jobServerInfoMap constant.JobServerInfoMap, deviceInfoCms map[string]*constant.DeviceInfo) {
 	// delete the expired jobID
 	for jobID, _ := range processor.linkDownCqeFaults {
 		if _, ok := jobServerInfoMap.InfoMap[jobID]; !ok {
@@ -104,7 +103,7 @@ func (processor *linkDownCqeFaultProcessCenter) handleLinkDownCqeFault(
 }
 
 func (processor *linkDownCqeFaultProcessCenter) getNodeFaultRank(deviceFaultInfo AdvanceDeviceFaultCm,
-	devices job.ServerHccl) (map[string]cqeLinkDownFaultRank, bool, bool) {
+	devices constant.ServerHccl) (map[string]cqeLinkDownFaultRank, bool, bool) {
 	linkDownCqeFaultList := make(map[string]cqeLinkDownFaultRank)
 	hasCqe, hasLinkDown := false, false
 	if len(devices.DeviceList) == 0 {

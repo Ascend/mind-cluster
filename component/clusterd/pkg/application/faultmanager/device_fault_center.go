@@ -12,7 +12,7 @@ import (
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/interface/kube"
+	"clusterd/pkg/domain/job"
 )
 
 func newDeviceFaultProcessCenter() *deviceFaultProcessCenter {
@@ -83,7 +83,7 @@ func (deviceCenter *deviceFaultProcessCenter) process() {
 	}
 	deviceCenter.lastProcessTime = currentTime
 	deviceCenter.setProcessingCm(deviceCenter.getOriginalCm())
-	deviceCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+	deviceCenter.jobServerInfoMap = job.GetJobServerInfoMap()
 	hwlog.RunLog.Debugf("job server info map: %v", util.ObjToString(deviceCenter.jobServerInfoMap))
 	deviceCenter.baseFaultCenter.process()
 	deviceCenter.setProcessedCm(deviceCenter.getProcessingCm())

@@ -18,8 +18,10 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podGroup"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
@@ -28,17 +30,9 @@ var faultSplitLength = 2
 
 // GetJobInfo return job's name, podGroup name and namespace
 func GetJobInfo(jobId string) (jobName, pgName, namespace string) {
-	if kube.JobMgr == nil {
-		hwlog.RunLog.Error("job mgr is nil")
-		return "", "", ""
-	}
-	worker := kube.JobMgr.GetBsWorker(jobId)
-	if worker == nil {
-		hwlog.RunLog.Errorf("jobId=%s not exist", jobId)
-		return "", "", ""
-	}
-	info := worker.GetBaseInfo()
-	return info.JobName, info.PGName, info.Namespace
+	jobInfo, _ := job.GetJobCache(jobId)
+	pg := podGroup.GetPodGroup(jobId)
+	return jobInfo.Name, pg.GetName(), jobInfo.NameSpace
 }
 
 // Faults2String return string of faults
@@ -132,11 +126,11 @@ func NewEventId(randLen int) string {
 }
 
 // ChangeProcessSchedulingMode change process scheduling mode
-func ChangeProcessSchedulingMode(taskName, namespace, mode string) (*v1beta1.PodGroup, error) {
-	pg, err := kube.GetPodGroup(taskName, namespace)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get pg when change process scheduling, err: %v", err)
-		return nil, err
+func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) {
+	pg := podGroup.GetPodGroup(jobId)
+	if pg.GetName() == "" {
+		hwlog.RunLog.Errorf("failed to get podGroup when change process scheduling")
+		return nil, fmt.Errorf("can not find podGroup")
 	}
 	_, ok := pg.Labels[ProcessReschedulingLabel]
 	if !ok {
@@ -144,7 +138,7 @@ func ChangeProcessSchedulingMode(taskName, namespace, mode string) (*v1beta1.Pod
 		return nil, fmt.Errorf("can not find process rescheduling label when change")
 	}
 	pg.Labels[ProcessReschedulingLabel] = mode
-	return kube.UpdatePodGroup(pg)
+	return kube.UpdatePodGroup(&pg)
 }
 
 // RetryWriteResetCM retry write the reset info configMap
@@ -296,12 +290,8 @@ func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
 
 // LabelFaultPod label fault for software fault
 func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
-	worker := kube.JobMgr.GetBsWorker(jobId)
-	if worker == nil {
-		return nil, fmt.Errorf("jobId=%s not exist", jobId)
-	}
 	var faultPodRankList []string
-	devicePerNode := worker.GetDeviceNumPerNode()
+	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
 	for _, rank := range rankList {
 		faultRank, err := strconv.Atoi(rank)
 		if err != nil {
@@ -312,7 +302,7 @@ func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
 		faultPodRankList = append(faultPodRankList, strconv.Itoa(faultPodRank))
 	}
 	faultPodRankList = util.RemoveSliceDuplicateElement(faultPodRankList)
-	podMap, err := labelPodFault(worker, faultPodRankList)
+	podMap, err := labelPodFault(jobId, faultPodRankList)
 	if err != nil {
 		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
 		return nil, fmt.Errorf("label fault pod failed, err is %v", err)
@@ -320,7 +310,7 @@ func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
 	return podMap, nil
 }
 
-func labelPodFault(worker job.PodWorker, faultPodRankList []string) (map[string]string, error) {
+func labelPodFault(jobId string, faultPodRankList []string) (map[string]string, error) {
 	labelCache := make(map[string]string)
 	faultLabel := map[string]string{"fault-type": "software"}
 	for _, podRank := range faultPodRankList {
@@ -328,12 +318,12 @@ func labelPodFault(worker job.PodWorker, faultPodRankList []string) (map[string]
 		if labeled {
 			continue
 		}
-		pod := worker.GetPodByRankIndex(podRank)
-		if pod == nil {
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
 			hwlog.RunLog.Infof("discard nil pod")
 			continue
 		}
-		if _, err := kube.RetryPatchPodLabels(pod, UpdatePodGroupTimes, faultLabel); err != nil {
+		if _, err := kube.RetryPatchPodLabels(&pod, UpdatePodGroupTimes, faultLabel); err != nil {
 			return nil, err
 		}
 		labelCache[podRank] = string(pod.UID)
@@ -343,14 +333,9 @@ func labelPodFault(worker job.PodWorker, faultPodRankList []string) (map[string]
 
 // FaultPodAllRescheduled check if all fault pod rescheduled
 func FaultPodAllRescheduled(jobId string, oldPodMap map[string]string) bool {
-	worker := kube.JobMgr.GetBsWorker(jobId)
-	if worker == nil {
-		hwlog.RunLog.Errorf("jobId=%s not exist", jobId)
-		return false
-	}
 	for podRank, oldPodId := range oldPodMap {
-		pod := worker.GetPodByRankIndex(podRank)
-		if pod == nil {
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
 			return false
 		}
 		if oldPodId == string(pod.UID) {
