@@ -8,7 +8,7 @@ Package generator is interface of Ranktable generator.
 package generator
 
 import (
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 
 	"ascend-operator/pkg/ranktable/utils"
 )
