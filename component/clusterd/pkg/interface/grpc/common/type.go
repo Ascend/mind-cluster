@@ -18,6 +18,7 @@ type TaskResetInfo struct {
 	UpdateTime    int64
 	RetryTime     int
 	FaultFlushing bool
+	GracefulExit  int
 }
 
 // TaskDevInfo is the device info of a task
