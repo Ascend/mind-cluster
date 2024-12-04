@@ -8,9 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/interface/kube"
 )
 
 func isContainsAny(str string, subStrs ...string) bool {
@@ -30,13 +28,12 @@ func TestJobRankFaultInfoProcessor_GetJobFaultRankInfos(t *testing.T) {
 	}
 
 	t.Run("TestJobRankFaultInfoProcessor_getJobFaultRankInfos", func(t *testing.T) {
-		cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err := readObjectFromJobFaultRankTestYaml()
+		cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err := readObjectFromJobFaultRankTestYaml()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 		deviceFaultProcessCenter.setProcessingCm(cmDeviceInfos)
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor.deviceCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.deviceCenter.jobServerInfoMap = jobServerInfoMap
 		processor.process()
 		if !isFaultRankMapEqual(processor.getJobFaultRankInfos(), expectFaultRanks) {
 			t.Errorf("processor.jobFaultInfos = %s, expectFaultRanks = %s",
@@ -45,13 +42,12 @@ func TestJobRankFaultInfoProcessor_GetJobFaultRankInfos(t *testing.T) {
 	})
 
 	t.Run("TestJobRankFaultInfoProcessor_getJobFaultRankInfosFilterLevel", func(t *testing.T) {
-		cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err := readObjectFromJobFaultRankTestYaml()
+		cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err := readObjectFromJobFaultRankTestYaml()
 		if err != nil {
 			t.Errorf("%v", err)
 		}
 		deviceFaultProcessCenter.setProcessingCm(cmDeviceInfos)
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor.deviceCenter.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.deviceCenter.jobServerInfoMap = jobServerInfoMap
 		processor.process()
 		jobFaultRankInfos := processor.getJobFaultRankInfos()
 		for _, faultRankInfo := range jobFaultRankInfos {

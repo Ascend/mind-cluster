@@ -14,9 +14,9 @@ import (
 
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
-	"clusterd/pkg/interface/kube"
 )
 
 var globalFaultBeaconSecond = 5
@@ -111,7 +111,7 @@ func (s *FaultRecoverService) checkFaultFromFaultCenter() {
 		case <-s.serviceCtx.Done():
 			return
 		case <-ticker.C:
-			hwlog.RunLog.Infof("ticker check npu fault from global center")
+			hwlog.RunLog.Debug("ticker check npu fault from global center")
 			s.checkFault()
 		}
 	}
@@ -124,7 +124,7 @@ func (s *FaultRecoverService) serveJobNum() int {
 }
 
 func (s *FaultRecoverService) preRegistry(req *pb.ClientInfo) (common.RespCode, error) {
-	if !kube.JobMgr.BsExist(req.JobId) {
+	if _, ok := job.GetJobCache(req.JobId); !ok {
 		return common.JobNotExist, fmt.Errorf("jobId=%s not exist, reuse registry", req.JobId)
 	}
 	if s.serveJobNum() >= common.MaxServeJobs {

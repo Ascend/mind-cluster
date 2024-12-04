@@ -9,11 +9,9 @@ import (
 	"reflect"
 	"testing"
 
+	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 )
 
@@ -33,7 +31,7 @@ func TestMain(m *testing.M) {
 
 func readObjectFromUceProcessorTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]uceNodeInfo, map[string]job.PodWorker, map[string]uceJobInfo, error) {
+	map[string]uceNodeInfo, constant.JobServerInfoMap, map[string]uceJobInfo, error) {
 
 	var testDataPath = "../../../testdata/resource/uce_fault_processor_test.yaml"
 	var maxFileSize = 10000
@@ -44,9 +42,9 @@ func readObjectFromUceProcessorTestYaml() (
 	var err error
 	var fileSize int64
 	var decoder *yaml.YAMLOrJSONDecoder
-	var jobs = make(map[string]map[string]*job.RankTable)
-	var jobIsUce = make(map[string]map[string]map[string]string)
-	var jobsPodWorkers = make(map[string]job.PodWorker)
+	var jobDevices = make(map[string]map[string]constant.ServerHccl)
+	var jobIsUce = make(map[string]bool)
+	var jobServerInfo constant.JobServerInfoMap
 	var open *os.File
 
 	fileInfo, err := os.Stat(testDataPath)
@@ -86,29 +84,19 @@ func readObjectFromUceProcessorTestYaml() (
 		goto ReturnLabel
 	}
 
-	err = decoder.Decode(&jobs)
+	err = decoder.Decode(&jobDevices)
 	if err != nil {
 		err = fmt.Errorf("jobs decode failed")
 		goto ReturnLabel
 	}
+	jobServerInfo.InfoMap = jobDevices
 
 	err = decoder.Decode(&jobIsUce)
 	if err != nil {
 		err = fmt.Errorf("jobIsUce decode failed")
 		goto ReturnLabel
 	}
-
-	for key, value := range jobs {
-		worker := job.Worker{
-			WorkerInfo: job.WorkerInfo{
-				CMData: value["CMData"],
-			},
-			Info: job.Info{
-				PGLabels: jobIsUce[key]["PGLabels"],
-			},
-		}
-		jobsPodWorkers[key] = &worker
-	}
+	jobServerInfo.UceTolerate = jobIsUce
 
 	err = decoder.Decode(&expectUceJobsInfo)
 	if err != nil {
@@ -117,12 +105,12 @@ func readObjectFromUceProcessorTestYaml() (
 	}
 
 ReturnLabel:
-	return cmDeviceInfos, expectProcessedDeviceInfos, uceNodesInfos, jobsPodWorkers, expectUceJobsInfo, err
+	return cmDeviceInfos, expectProcessedDeviceInfos, uceNodesInfos, jobServerInfo, expectUceJobsInfo, err
 }
 
 func readObjectFromUceScenarioTestYaml() (
 	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]job.PodWorker, *reportInfosForAllJobs, error) {
+	constant.JobServerInfoMap, *reportInfosForAllJobs, error) {
 
 	var testDataPath = "../../../testdata/resource/uce_scenario_test.yaml"
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
@@ -130,9 +118,7 @@ func readObjectFromUceScenarioTestYaml() (
 	var err error
 	var fileSize int64
 	var decoder *yaml.YAMLOrJSONDecoder
-	var jobs = make(map[string]map[string]*job.RankTable)
-	var josIsUce = make(map[string]map[string]map[string]string)
-	var jobsPodWorkers = make(map[string]job.PodWorker)
+	var jobServerInfo constant.JobServerInfoMap
 	var open *os.File
 	var reportInfos reportInfosForAllJobs
 	maxFileSize := 10000
@@ -140,66 +126,58 @@ func readObjectFromUceScenarioTestYaml() (
 	fileInfo, err := os.Stat(testDataPath)
 	if err != nil {
 		err = fmt.Errorf("testDataPath invalid")
-		return cmDeviceInfos, expectDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
 	}
 	fileSize = fileInfo.Size()
 	if fileSize > int64(maxFileSize) {
 		err = fmt.Errorf("testData file size too big")
-		return cmDeviceInfos, expectDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
 	}
 	open, err = os.Open(testDataPath)
 	if err != nil {
 		err = fmt.Errorf("open testData file failed")
-		return cmDeviceInfos, expectDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
 	}
 	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-	return extractContent(decoder, cmDeviceInfos, expectDeviceInfos, jobsPodWorkers, reportInfos, jobs, josIsUce)
+	return extractContent(decoder, cmDeviceInfos, expectDeviceInfos, jobServerInfo, reportInfos)
 }
 
 func extractContent(decoder *yaml.YAMLOrJSONDecoder, cmDeviceInfos map[string]*constant.DeviceInfo,
-	expectProcessedDeviceInfos map[string]*constant.DeviceInfo, jobsPodWorkers map[string]job.PodWorker,
-	reportInfos reportInfosForAllJobs, jobs map[string]map[string]*job.RankTable,
-	josIsUce map[string]map[string]map[string]string) (map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]job.PodWorker, *reportInfosForAllJobs, error) {
+	expectProcessedDeviceInfos map[string]*constant.DeviceInfo, jobServerInfo constant.JobServerInfoMap,
+	reportInfos reportInfosForAllJobs) (map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
+	constant.JobServerInfoMap, *reportInfosForAllJobs, error) {
 	err := decoder.Decode(&cmDeviceInfos)
 	if err != nil {
 		err = fmt.Errorf("cmDeviceInfos decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 	}
 
 	err = decoder.Decode(&expectProcessedDeviceInfos)
 	if err != nil {
 		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 	}
 
-	err = decoder.Decode(&jobs)
+	var jobDevices = make(map[string]map[string]constant.ServerHccl)
+	err = decoder.Decode(&jobDevices)
 	if err != nil {
 		err = fmt.Errorf("jobs decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 	}
-
-	err = decoder.Decode(&josIsUce)
+	var jobIsUce = make(map[string]bool)
+	err = decoder.Decode(&jobIsUce)
 	if err != nil {
 		err = fmt.Errorf("josIsUce decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
+		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 	}
-
-	for key, value := range jobs {
-		worker := job.Worker{
-			WorkerInfo: job.WorkerInfo{
-				CMData: value["CMData"],
-			},
-			Info: job.Info{PGLabels: josIsUce[key]["PGLabels"]},
-		}
-		jobsPodWorkers[key] = &worker
-	}
+	jobServerInfo.InfoMap = jobDevices
+	jobServerInfo.UceTolerate = jobIsUce
 
 	err = decoder.Decode(&reportInfos)
 	if err != nil {
 		err = fmt.Errorf("reportInfos decode failed")
 	}
-	return cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, &reportInfos, err
+	return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 }
 
 func readObjectFromUceAccompanyProcessorTestYaml() (
@@ -250,15 +228,15 @@ RetureLabel:
 }
 
 func readObjectFromJobFaultRankTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]job.PodWorker, map[string]JobFaultInfo, error) {
+	map[string]*constant.DeviceInfo, constant.JobServerInfoMap, map[string]JobFaultInfo, error) {
 
 	var testDataPath = "../../../testdata/resource/job_fault_rank_test.yaml"
 	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
 	var err error
 	var fileSize int64
 	var decoder *yaml.YAMLOrJSONDecoder
-	var jobs = make(map[string]map[string]*job.RankTable)
-	var jobsPodWorkers = make(map[string]job.PodWorker)
+	var jobDevices = make(map[string]map[string]constant.ServerHccl)
+	var jobServerInfoMap = constant.JobServerInfoMap{}
 	var expectFaultRanks = make(map[string]JobFaultInfo)
 	var open *os.File
 	maxFileSize := 10000
@@ -266,55 +244,47 @@ func readObjectFromJobFaultRankTestYaml() (
 	fileInfo, err := os.Stat(testDataPath)
 	if err != nil {
 		err = fmt.Errorf("testDataPath invalid")
-		return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+		return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 	}
 	fileSize = fileInfo.Size()
 	if fileSize > int64(maxFileSize) {
 		err = fmt.Errorf("testData file size too big")
-		return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+		return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 	}
 
 	open, err = os.Open(testDataPath)
 	if err != nil {
 		err = fmt.Errorf("open testData file failed")
-		return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+		return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 	}
 
 	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
 
-	return extractContentForJob(decoder, cmDeviceInfos, jobsPodWorkers, expectFaultRanks, jobs)
+	return extractContentForJob(decoder, cmDeviceInfos, jobServerInfoMap, expectFaultRanks, jobDevices)
 }
 
 func extractContentForJob(decoder *yaml.YAMLOrJSONDecoder, cmDeviceInfos map[string]*constant.DeviceInfo,
-	jobsPodWorkers map[string]job.PodWorker, expectFaultRanks map[string]JobFaultInfo,
-	jobs map[string]map[string]*job.RankTable) (map[string]*constant.DeviceInfo,
-	map[string]job.PodWorker, map[string]JobFaultInfo, error) {
+	jobServerInfoMap constant.JobServerInfoMap, expectFaultRanks map[string]JobFaultInfo,
+	jobDevices map[string]map[string]constant.ServerHccl) (map[string]*constant.DeviceInfo,
+	constant.JobServerInfoMap, map[string]JobFaultInfo, error) {
 	err := decoder.Decode(&cmDeviceInfos)
 	if err != nil {
 		err = fmt.Errorf("cmDeviceInfos decode failed")
-		return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+		return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 	}
 
-	err = decoder.Decode(&jobs)
+	err = decoder.Decode(&jobDevices)
 	if err != nil {
 		err = fmt.Errorf("jobs decode failed")
-		return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+		return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 	}
-
-	for key, value := range jobs {
-		worker := job.Worker{
-			WorkerInfo: job.WorkerInfo{
-				CMData: value["CMData"],
-			},
-		}
-		jobsPodWorkers[key] = &worker
-	}
+	jobServerInfoMap.InfoMap = jobDevices
 
 	err = decoder.Decode(&expectFaultRanks)
 	if err != nil {
 		err = fmt.Errorf("expectFaultRanks decode failed")
 	}
-	return cmDeviceInfos, jobsPodWorkers, expectFaultRanks, err
+	return cmDeviceInfos, jobServerInfoMap, expectFaultRanks, err
 }
 
 func isSlicesEqual[T comparable](s1, s2 []T) bool {

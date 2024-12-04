@@ -10,10 +10,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	"clusterd/pkg/application/job"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/interface/kube"
 )
 
 const UceFaultTime = int64(100 * time.Second)
@@ -333,11 +331,10 @@ func TestUceFaultProcessorCallbackForReportUceInfo(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("TestUceFaultProcessorCallbackForReportUceInfo", func(t *testing.T) {
-		cmDeviceInfos, _, _, jobsPodWorkers, _, testFileErr := readObjectFromUceProcessorTestYaml()
+		cmDeviceInfos, _, _, jobServerInfoMap, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -360,7 +357,7 @@ func TestUceFaultProcessorCallbackForReportUceInfo(t *testing.T) {
 		defer func() {
 			processor.reportInfo.InfoMap = make(map[string]map[string]map[string]reportInfo)
 		}()
-		processor.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.jobServerInfoMap = jobServerInfoMap
 		processor.nodeDeviceCmMap = getAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		err = deviceFaultProcessCenter.callbackForReportUceInfo(ts1Success.jobId, ts1Success.rankId, ts1Success.recoverTime)
 		nodeName, deviceId, _ := getNodeAndDeviceFromJobIdAndRankId(ts1Success.jobId, ts1Success.rankId, processor.jobServerInfoMap)
@@ -405,13 +402,12 @@ func TestUceFaultProcessorGetUceDevicesForUceTolerateJobs(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("TestUceFaultProcessorGetUceDevicesForUceTolerateJobs", func(t *testing.T) {
-		cmDeviceInfos, _, _, jobsPodWorkers, expectUceJobsInfo, testFileErr := readObjectFromUceProcessorTestYaml()
+		cmDeviceInfos, _, _, jobServerInfoMap, expectUceJobsInfo, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.jobServerInfoMap = jobServerInfoMap
 		processor.nodeDeviceCmMap = getAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes()
 		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
@@ -429,13 +425,12 @@ func TestUceFaultProcessorProcessUceFaultInfo(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("TestUceFaultProcessorProcessUceFaultInfo", func(t *testing.T) {
-		cmDeviceInfos, expectProcessedDeviceInfos, _, jobsPodWorkers, _, testFileErr := readObjectFromUceProcessorTestYaml()
+		cmDeviceInfos, expectProcessedDeviceInfos, _, jobServerInfoMap, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
-		processor.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.jobServerInfoMap = jobServerInfoMap
 		processor.nodeDeviceCmMap = getAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes()
 		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
@@ -458,15 +453,14 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	t.Run("TestUceFaultProcessorScenario1", func(t *testing.T) {
-		cmDeviceInfos, expectProcessedDeviceInfos, jobsPodWorkers, reportInfos, testFileErr :=
+		cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfoMap, reportInfos, testFileErr :=
 			readObjectFromUceScenarioTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
-		kube.JobMgr = &job.Agent{BsWorker: jobsPodWorkers}
 		processor.reportInfo = reportInfos
-		processor.jobServerInfoMap = kube.JobMgr.GetJobServerInfoMap()
+		processor.jobServerInfoMap = jobServerInfoMap
 		processor.nodeDeviceCmMap = getAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		processor.uceDeviceOfNode = processor.getUceDeviceOfNodes()
 		processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()

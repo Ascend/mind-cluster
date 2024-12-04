@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
@@ -14,6 +15,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"volcano.sh/apis/pkg/client/clientset/versioned"
+
+	"clusterd/pkg/common/constant"
 )
 
 // CreateConfigMap create configMap here
@@ -118,4 +122,18 @@ func PatchPodLabel(podName, podNamespace string, labels map[string]string) (*v1.
 	patchBody := fmt.Sprintf(labelsFormat, labelStr)
 	return k8sClient.ClientSet.CoreV1().Pods(podNamespace).Patch(context.TODO(),
 		podName, types.MergePatchType, []byte(patchBody), metav1.PatchOptions{})
+}
+
+// CheckVolcanoExist check volcano is existed
+func CheckVolcanoExist(vcClient *versioned.Clientset) bool {
+	if vcClient == nil {
+		hwlog.RunLog.Error("vcK8sClient.ClientSet is nil")
+		return false
+	}
+	_, err := vcClient.SchedulingV1beta1().PodGroups(constant.DefaultNamespace).Get(context.Background(),
+		constant.TestName, metav1.GetOptions{})
+	if err != nil && strings.Contains(err.Error(), constant.NoResourceOnServer) {
+		return false
+	}
+	return true
 }
