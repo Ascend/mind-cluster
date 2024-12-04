@@ -182,6 +182,15 @@ func (ctl *EventController) keepAlive() {
 	}
 }
 
+func (ctl *EventController) annotationWithRetryStrategy() bool {
+	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
+		if strategy == common.ProcessRetryStrategyName {
+			return true
+		}
+	}
+	return false
+}
+
 func (ctl *EventController) supportRetryStrategy() bool {
 	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
@@ -500,6 +509,12 @@ func (ctl *EventController) handleWaitReportStopComplete() (string, common.RespC
 
 func (ctl *EventController) handleWaitFlushFinish() (string, common.RespCode, error) {
 	ctx, _ := ctl.getCtxAndEventChan()
+	uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
+	if len(uceFaults) > 0 && len(normalFaults) == 0 && ctl.annotationWithRetryStrategy() {
+		hwlog.RunLog.Infof("jobId=%s occur uce error, will not sleep for fault flushing",
+			ctl.jobInfo.JobId)
+		return common.FaultFlushFinishedEvent, common.OK, nil
+	}
 	select {
 	case <-time.After(time.Duration(faultFlushSeconds) * time.Second):
 		return common.FaultFlushFinishedEvent, common.OK, nil
