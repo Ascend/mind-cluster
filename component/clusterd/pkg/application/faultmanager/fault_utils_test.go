@@ -33,7 +33,6 @@ func TestSplitDeviceFault(t *testing.T) {
 				FaultHandling:        NotHandleFault,
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
 					"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
-					"0x2": {FaultLevel: SubHealthFault, FaultTime: 1},
 				},
 			}, {
 				NPUName:              "Ascend910-0",
@@ -42,7 +41,6 @@ func TestSplitDeviceFault(t *testing.T) {
 				LargeModelFaultLevel: SubHealthFault,
 				FaultHandling:        SubHealthFault,
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
-					"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
 					"0x2": {FaultLevel: SubHealthFault, FaultTime: 1},
 				},
 			},
@@ -150,6 +148,7 @@ func TestGetAdvanceDeviceCm(t *testing.T) {
 				"huawei.com/Ascend910-Fault": `
 [
   {
+	"fault_code": "1801   ,  1809  ",
     "fault_time_and_level_map":
       {
         "1801": {"fault_time":1234, "fault_level": "RestartBusiness"}, 
@@ -158,23 +157,16 @@ func TestGetAdvanceDeviceCm(t *testing.T) {
   }
 ]`,
 			},
-			UpdateTime: 0,
 		},
-		CmName:      "",
-		SuperPodID:  0,
-		ServerIndex: 0,
 	}
 	advanceDeviceCm := getAdvanceDeviceCm(info)
+	if len(advanceDeviceCm.FaultDeviceList["xxx"]) != 2 {
+		t.Errorf("TestGetAdvanceDeviceCm failed")
+		return
+	}
 	faultTimeAndLevel, ok := advanceDeviceCm.FaultDeviceList["xxx"][0].FaultTimeAndLevelMap["1801"]
-	if !ok {
+	if !ok || faultTimeAndLevel.FaultTime != 1234 || faultTimeAndLevel.FaultLevel != "RestartBusiness" {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
-	}
-	if faultTimeAndLevel.FaultTime != 1234 {
-		t.Errorf("TestGetAdvanceDeviceCm failed")
-		return
-	}
-	if faultTimeAndLevel.FaultLevel != "RestartBusiness" {
-		t.Errorf("TestGetAdvanceDeviceCm failed")
 	}
 }
