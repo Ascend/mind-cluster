@@ -801,7 +801,8 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		}
 		hwlog.RunLog.Debugf("len(allocateDevices)=%d, len(allNPUInfo.AllDevs)=%d",
 			len(allocateDevices), len(allNPUInfo.AllDevs))
-		if len(allocateDevices) != len(allNPUInfo.AllDevs) && common.ParamOption.UseVolcanoType {
+		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice) &&
+			common.ParamOption.UseVolcanoType {
 			allocateDevices, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
 				hwlog.RunLog.Error(err)
