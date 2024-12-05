@@ -137,7 +137,7 @@ func getNodeRank(pod v1.Pod) int {
 
 // GetPodDeviceNumByJobId get pod device num by job Key
 func GetPodDeviceNumByJobId(jobKey string) int {
-	podManager.podMapMutex.RLocker()
+	podManager.podMapMutex.RLock()
 	defer podManager.podMapMutex.RUnlock()
 	podJobMap := podManager.podJobMap[jobKey]
 	for _, pod := range podJobMap {
