@@ -367,13 +367,6 @@ func getResetInfoData(resetInfo *v1.ConfigMap) ([]*common.TaskDevInfo, error) {
 		hwlog.RunLog.Debugf("reset configmap is initializing")
 		return nil, nil
 	}
-	checkCode, ok := resetInfo.Data[common.ResetInfoCMCheckCodeKey]
-	if !ok {
-		return nil, fmt.Errorf("%s not exist", common.ResetInfoCMCheckCodeKey)
-	}
-	if checkCode != common.MakeDataHash(taskResetInfo) {
-		return nil, fmt.Errorf("configmap check hash code error")
-	}
 	return taskResetInfo.RankList, nil
 }
 
