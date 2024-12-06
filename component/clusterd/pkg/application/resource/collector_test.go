@@ -6,10 +6,12 @@
 package resource
 
 import (
+	"context"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
 
@@ -17,6 +19,11 @@ const (
 	testCmName = "test-node-name"
 )
 
+func init() {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
+
+//go:noinline
 func TestDeviceInfoCollector(t *testing.T) {
 	convey.Convey("test DeviceInfoCollector", t, func() {
 		convey.Convey("add new device info", func() {
@@ -48,6 +55,7 @@ func TestDeviceInfoCollector(t *testing.T) {
 	})
 }
 
+//go:noinline
 func TestNodeCollector(t *testing.T) {
 	convey.Convey("TestNodeCollector", t, func() {
 		convey.Convey("add new node info", func() {

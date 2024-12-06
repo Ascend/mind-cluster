@@ -15,9 +15,8 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package v1 is using for reconcile AscendJob.
 */
-
 package v1
 
 import (
@@ -33,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// DeployRktHandler is used to reconcile AscendJob.
 type DeployRktHandler struct {
 	OwnerType runtime.Object
 
@@ -45,6 +45,7 @@ type DeployRktHandler struct {
 
 type empty struct{}
 
+// Create is called when an object is created.
 func (e *DeployRktHandler) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -53,6 +54,7 @@ func (e *DeployRktHandler) Create(evt event.CreateEvent, q workqueue.RateLimitin
 	}
 }
 
+// Update is called when an object is updated.
 func (e *DeployRktHandler) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.ObjectOld, reqs)
@@ -62,6 +64,7 @@ func (e *DeployRktHandler) Update(evt event.UpdateEvent, q workqueue.RateLimitin
 	}
 }
 
+// Delete is called when an object is deleted.
 func (e *DeployRktHandler) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -70,6 +73,7 @@ func (e *DeployRktHandler) Delete(evt event.DeleteEvent, q workqueue.RateLimitin
 	}
 }
 
+// Generic is called for events of all types to reconcile the object.
 func (e *DeployRktHandler) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -92,6 +96,9 @@ func (e *DeployRktHandler) parseOwnerTypeGroupKind(scheme *runtime.Scheme) error
 }
 
 func (e *DeployRktHandler) getOwnerReconcileRequest(object v1.Object, result map[reconcile.Request]empty) {
+	if result == nil {
+		return
+	}
 	result[reconcile.Request{NamespacedName: types.NamespacedName{
 		Name: object.GetLabels()[deployLabelKey], Namespace: object.GetNamespace(),
 	}}] = empty{}

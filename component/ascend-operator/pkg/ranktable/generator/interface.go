@@ -5,7 +5,6 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package generator is interface of Ranktable generator.
 */
-
 package generator
 
 import (
@@ -26,7 +25,17 @@ type RankTableGenerator interface {
 	SetStatus(utils.RankTableStatus)
 	GetStatus() utils.RankTableStatus
 	AddPod(*v1.Pod) error
-	DeletePod(*v1.Pod) utils.RankTableStatus
+	DeletePod()
 	GatherServerList()
 	ToString() (string, error)
+	GetConfigmapExist() utils.ConfigmapCheck
+	SetConfigmapExist(utils.ConfigmapCheck)
+	GetTimeStamp() uint64
+	SetTimeStamp(uint64)
+	GetConfigmapStatus() utils.RankTableStatus
+	SetConfigmapStatus(utils.RankTableStatus)
+	GetFileStatus() utils.RankTableStatus
+	SetFileStatus(utils.RankTableStatus)
+	Lock()
+	Unlock()
 }

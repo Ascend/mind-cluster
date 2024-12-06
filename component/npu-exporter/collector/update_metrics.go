@@ -17,9 +17,9 @@
 package collector
 
 import (
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
 	"github.com/prometheus/client_golang/prometheus"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 )
 
 var (

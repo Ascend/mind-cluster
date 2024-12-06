@@ -422,6 +422,7 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				AlarmRaisedTime:        npuDevice.AlarmRaisedTime,
 				NetworkFaultCodes:      npuDevice.NetworkFaultCodes,
 				NetworkAlarmRaisedTime: npuDevice.NetworkAlarmRaisedTime,
+				FaultTimeMap:           npuDevice.FaultTimeMap,
 				DevType:                npuDevice.DevType,
 				DeviceName:             npuDevice.DeviceName,
 				Health:                 npuDevice.Health,

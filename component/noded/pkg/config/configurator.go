@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -29,6 +27,8 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 )

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 // FaultManager manage fault device info

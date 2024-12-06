@@ -7,42 +7,18 @@ import (
 	"clusterd/pkg/interface/grpc/pb"
 )
 
-// Notifier notify job manager publish signal
-type Notifier struct {
-	CreateTimeStamp int64
-	pb.ProcessManageSignal
-}
-
-// JobHealthyMgr interface for job healthy status management
-type JobHealthyMgr interface {
-	GetJobHealthy(jobId string) (bool, []string)
-	GetJobDeviceNumPerNode(jobId string) int
-	NotifySignalSend(notifier *Notifier)
-	ListenTaskScheduleResult(jobId string, strategy string)
-	GetJobInfo(jobId string) (string, string, string)
-	IsJobRunning(jobId string) bool
-	JobExist(jobId string) bool
-}
-
-// Publisher publish signal and handle job schedule result
-type Publisher interface {
-	PublishSignal(signal *pb.ProcessManageSignal, expectStates MachineStates)
-	NotifyJobSchedulerResult(success bool, taskId string, strategy string)
-}
-
 // SignalRetrySender have a method send
 type SignalRetrySender interface {
 	Send(signal *pb.ProcessManageSignal) error
 }
 
-// MachineStates a slice type of MachineState
-type MachineStates []MachineState
-
 // TaskResetInfo record task reset device information
 type TaskResetInfo struct {
-	RankList   []*TaskDevInfo
-	UpdateTime int64
-	RetryTime  int
+	RankList      []*TaskDevInfo
+	UpdateTime    int64
+	RetryTime     int
+	FaultFlushing bool
+	GracefulExit  int
 }
 
 // TaskDevInfo is the device info of a task
@@ -59,4 +35,27 @@ type DevFaultInfo struct {
 	InitialPolicy string
 	ErrorCode     []int64
 	ErrorCodeHex  string
+}
+
+// RecoverConfig is config for recover service
+type RecoverConfig struct {
+	ProcessRescheduleOn   bool
+	MindXConfigStrategies []string
+	PlatFormMode          bool
+}
+
+// JobBaseInfo job base info
+type JobBaseInfo struct {
+	JobId     string
+	JobName   string
+	PgName    string
+	Namespace string
+	RecoverConfig
+}
+
+// RecoverResult recover result
+type RecoverResult struct {
+	Strategy       string
+	Code           RespCode
+	RecoverSuccess bool
 }

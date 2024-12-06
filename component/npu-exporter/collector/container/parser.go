@@ -29,10 +29,11 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
 )
 
 const (

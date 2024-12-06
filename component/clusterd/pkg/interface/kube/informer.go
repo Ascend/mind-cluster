@@ -4,22 +4,17 @@
 package kube
 
 import (
-	"context"
 	"reflect"
-	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
-	"volcano.sh/apis/pkg/client/clientset/versioned"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/informers/externalversions"
-	"volcano.sh/apis/pkg/client/informers/externalversions/scheduling/v1beta1"
 
-	"clusterd/pkg/application/job"
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
@@ -28,16 +23,12 @@ import (
 )
 
 var (
-	podSyncFuncs  []func(*v1.Pod, *v1.Pod, string)
-	podFuncs      []func(*v1.Pod, *v1.Pod, string)
 	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs   = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
+	podFuncs      = map[string][]func(*v1.Pod, *v1.Pod, string){}
 	informerCh    = make(chan struct{})
-	// JobMgr is a mgr of job
-	JobMgr *job.Agent
-	// PGInformer is pod group informer
-	PGInformer v1beta1.PodGroupInformer
 )
 
 // JobService a interface with DeleteJob method
@@ -59,6 +50,27 @@ func StopInformer() {
 func CleanFuncs() {
 	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
+	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
+	podFuncs = map[string][]func(*v1.Pod, *v1.Pod, string){}
+}
+
+// AddPodGroupFunc add podGroup func
+func AddPodGroupFunc(business string, func1 ...func(*v1beta1.PodGroup, *v1beta1.PodGroup, string)) {
+	if _, ok := podGroupFuncs[business]; !ok {
+		podGroupFuncs[business] = []func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
+	}
+
+	podGroupFuncs[business] = append(podGroupFuncs[business], func1...)
+}
+
+// AddPodFunc add pod func
+func AddPodFunc(business string, func1 ...func(*v1.Pod, *v1.Pod, string)) {
+	if _, ok := podFuncs[business]; !ok {
+		podFuncs[business] = []func(*v1.Pod, *v1.Pod, string){}
+	}
+
+	podFuncs[business] = append(podFuncs[business], func1...)
 }
 
 // AddCmDeviceFunc add device func, map by business
@@ -120,11 +132,19 @@ func podHandler(oldObj interface{}, newObj interface{}, operator string) {
 			return
 		}
 	}
+	index := 0
 	for _, podFunc := range podFuncs {
-		go podFunc(newPod, oldPod, operator)
-	}
-	for _, podFunc := range podSyncFuncs {
-		podFunc(newPod, oldPod, operator)
+		// different businesses use different data sources
+		oldPodForBusiness := oldPod
+		newPodForBusiness := newPod
+		if oldPod != nil && newPod != nil && index > 0 {
+			oldPodForBusiness = oldPod.DeepCopy()
+			newPodForBusiness = newPod.DeepCopy()
+		}
+		for _, pfunc := range podFunc {
+			pfunc(oldPodForBusiness, newPodForBusiness, operator)
+		}
+		index++
 	}
 }
 
@@ -192,12 +212,14 @@ func cmDeviceHandler(oldObj interface{}, newObj interface{}, operator string) {
 	index := 0
 	for _, cmFuncs := range cmDeviceFuncs {
 		// different businesses use different data sources
+		oldDevInfoForBusiness := oldDevInfo
+		newDevInfoForBusiness := newDevInfo
 		if index > 0 {
-			oldDevInfo = device.DeepCopy(oldDevInfo)
-			newDevInfo = device.DeepCopy(newDevInfo)
+			oldDevInfoForBusiness = device.DeepCopy(oldDevInfo)
+			newDevInfoForBusiness = device.DeepCopy(newDevInfo)
 		}
 		for _, cmFunc := range cmFuncs {
-			cmFunc(oldDevInfo, newDevInfo, operator)
+			cmFunc(oldDevInfoForBusiness, newDevInfoForBusiness, operator)
 		}
 		index++
 	}
@@ -227,12 +249,14 @@ func cmNodeHandler(oldObj interface{}, newObj interface{}, operator string) {
 	index := 0
 	for _, cmFuncs := range cmNodeFuncs {
 		// different businesses use different data sources
+		oldNodeInfoForBusiness := oldNodeInfo
+		newNodeInfoForBusiness := newNodeInfo
 		if index > 0 {
-			oldNodeInfo = node.DeepCopy(oldNodeInfo)
-			newNodeInfo = node.DeepCopy(newNodeInfo)
+			oldNodeInfoForBusiness = node.DeepCopy(oldNodeInfo)
+			newNodeInfoForBusiness = node.DeepCopy(newNodeInfo)
 		}
 		for _, cmFunc := range cmFuncs {
-			cmFunc(oldNodeInfo, newNodeInfo, operator)
+			cmFunc(oldNodeInfoForBusiness, newNodeInfoForBusiness, operator)
 		}
 		index++
 	}
@@ -257,18 +281,20 @@ func cmSwitchHandler(oldObj interface{}, newObj interface{}, operator string) {
 	index := 0
 	for _, cmFuncs := range cmSwitchFuncs {
 		// different businesses use different data sources
+		oldSwitchInfoForBusiness := oldSwitchInfo
+		newSwitchInfoForBusiness := newSwitchInfo
 		if index > 0 {
-			oldSwitchInfo, err = switchinfo.DeepCopy(oldSwitchInfo)
+			oldSwitchInfoForBusiness, err = switchinfo.DeepCopy(oldSwitchInfo)
 			if err != nil {
 				return
 			}
-			newSwitchInfo, err = switchinfo.DeepCopy(newSwitchInfo)
+			newSwitchInfoForBusiness, err = switchinfo.DeepCopy(newSwitchInfo)
 			if err != nil {
 				return
 			}
 		}
 		for _, cmFunc := range cmFuncs {
-			cmFunc(oldSwitchInfo, newSwitchInfo, operator)
+			cmFunc(oldSwitchInfoForBusiness, newSwitchInfoForBusiness, operator)
 		}
 		index++
 	}
@@ -288,74 +314,55 @@ func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.SwitchInfoPrefix)
 }
 
-func checkVolcanoExist(vcClient *versioned.Clientset) bool {
-	_, err := vcClient.SchedulingV1beta1().PodGroups(constant.DefaultNamespace).Get(context.Background(),
-		constant.TestName, metav1.GetOptions{})
-	if err != nil && strings.Contains(err.Error(), constant.NoResourceOnServer) {
-		return false
-	}
-	return true
-}
-
-// InitPGInformer is to init pod group informer
-func InitPGInformer(ctx context.Context, jobSrv JobService) {
+// InitPodGroupInformer is to init pod group informer
+func InitPodGroupInformer() {
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
-	PGInformer = factory.Scheduling().V1beta1().PodGroups()
+	PodGroupInformer := factory.Scheduling().V1beta1().PodGroups()
 
-	if !checkVolcanoExist(vcClient) {
-		hwlog.RunLog.Warn("Volcano not exist, please deploy Volcano and restart ClusterD.")
-		return
-	}
-
-	cacheIndexer := PGInformer.Informer().GetIndexer()
-	var err error
-	JobMgr, err = job.NewAgent(k8sClient.ClientSet, job.NewConfig(), vcClient)
-	if err != nil {
-		hwlog.RunLog.Errorf("create agent err: %v", err)
-		return
-	}
-	go job.HandleDeleteJobSummaryCM(ctx, k8sClient.ClientSet, vcClient)
-	PGInformer.Informer().SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+	PodGroupInformer.Informer().SetWatchErrorHandler(func(r *cache.Reflector, err error) {
 		hwlog.RunLog.Warnf("pg informer watcher err: %s", err.Error())
 	})
-	PGInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	PodGroupInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			if err = job.SyncJob(obj, constant.AddOperator, cacheIndexer, JobMgr); err != nil {
-				hwlog.RunLog.Errorf("error to syncing EventAdd: %v", err)
-			}
+			podGroupHandler(nil, obj, constant.AddOperator)
 		},
-		UpdateFunc: func(old, new interface{}) {
-			if reflect.DeepEqual(old, new) {
-				return
-			}
-			if err = job.SyncJob(new, constant.UpdateOperator, cacheIndexer, JobMgr); err != nil {
-				hwlog.RunLog.Errorf("error to syncing EventUpdate: %v", err)
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			if !reflect.DeepEqual(oldObj, newObj) {
+				podGroupHandler(oldObj, newObj, constant.UpdateOperator)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			if err = job.SyncJob(obj, constant.DeleteOperator, cacheIndexer, JobMgr); err != nil {
-				hwlog.RunLog.Errorf("error to syncing EventDelete: %v", err)
-			}
-			deleteJobForJobService(jobSrv, obj)
+			podGroupHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
 	factory.Start(wait.NeverStop)
 }
 
-func deleteJobForJobService(jobSrv JobService, obj interface{}) {
-	metaData, err := meta.Accessor(obj)
-	if err != nil {
-		hwlog.RunLog.Errorf("object has no meta: %v", err)
+func podGroupHandler(oldObj interface{}, newObj interface{}, operator string) {
+	newPodGroup, ok := newObj.(*v1beta1.PodGroup)
+	if !ok {
 		return
 	}
-	ownerReferences := metaData.GetOwnerReferences()
-	var jobUid string
-	for _, v := range ownerReferences {
-		if string(v.Kind) == constant.JobRefKind || string(v.Kind) == constant.AscendJobRefKind {
-			jobUid = string(v.UID)
-			break
+	var oldPodGroup *v1beta1.PodGroup
+	if oldObj != nil {
+		oldPodGroup, ok = oldObj.(*v1beta1.PodGroup)
+		if !ok {
+			return
 		}
 	}
-	jobSrv.DeleteJob(jobUid)
+	index := 0
+	for _, podGroupFunc := range podGroupFuncs {
+		// different businesses use different data sources
+		oldPodGroupForBusiness := oldPodGroup
+		newPodGroupForBusiness := newPodGroup
+		if oldPodGroup != nil && newPodGroup != nil && index > 0 {
+			oldPodGroup = oldPodGroup.DeepCopy()
+			newPodGroup = newPodGroup.DeepCopy()
+		}
+		for _, pgFunc := range podGroupFunc {
+			pgFunc(oldPodGroupForBusiness, newPodGroupForBusiness, operator)
+		}
+		index++
+	}
 }

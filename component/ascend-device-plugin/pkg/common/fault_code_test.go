@@ -1517,7 +1517,7 @@ func TestGetChangedDevFaultInfo(t *testing.T) {
 	})
 }
 
-// TestGetTimeoutFaultCodes for test GetTimeoutFaultCodes
+// TestGetTimeoutFaultCodes for test GetTimeoutFaultLevelAndCodes
 func TestGetTimeoutFaultCodes(t *testing.T) {
 	convey.Convey("test GetTimeoutFaultCodes success", t, func() {
 		logicID := int32(0)
@@ -1552,9 +1552,9 @@ func TestGetTimeoutFaultCodes(t *testing.T) {
 			},
 		}
 		expectedChipFaultCodesLen := 2
-		expectedNetworkFaultCodes := make([]int64, 0)
-		convey.So(len(GetTimeoutFaultCodes(ChipFaultMode)), convey.ShouldResemble, expectedChipFaultCodesLen)
-		convey.So(GetTimeoutFaultCodes(NetworkFaultMode), convey.ShouldResemble, expectedNetworkFaultCodes)
+		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
+		convey.So(len(GetTimeoutFaultLevelAndCodes(ChipFaultMode)), convey.ShouldResemble, expectedChipFaultCodesLen)
+		convey.So(GetTimeoutFaultLevelAndCodes(NetworkFaultMode), convey.ShouldResemble, expectedNetworkFaultCodes)
 	})
 }
 
@@ -1617,5 +1617,37 @@ func TestHbmFaultManager(t *testing.T) {
 		convey.So(len(faultInfoList), convey.ShouldEqual, 1)
 		convey.So(faultInfoList[0].AlarmRaisedTime, convey.ShouldEqual, 100000000)
 		convey.So(faultInfoList[0].EventID, convey.ShouldEqual, AicBusFaultCode)
+	})
+}
+
+func TestUpdateDeviceFaultTimeMap(t *testing.T) {
+	t.Run("Test_updateDeviceFaultTimeMap", func(t *testing.T) {
+		npuDevice := &NpuDevice{
+			FaultTimeMap: make(map[int64]int64),
+		}
+		eventId := int64(4326743278)
+		faultInfo := common.DevFaultInfo{
+			EventID:         eventId,
+			AlarmRaisedTime: time.Now().UnixMilli(),
+		}
+		isAdd := true
+		updateDeviceFaultTimeMap(npuDevice, faultInfo, isAdd)
+		faultTime, found := npuDevice.FaultTimeMap[eventId]
+		if !found {
+			t.Errorf("cannot found fault time")
+			return
+		}
+		if faultTime != faultInfo.AlarmRaisedTime {
+			t.Errorf("cannot found fault error")
+			return
+		}
+
+		isAdd = false
+		updateDeviceFaultTimeMap(npuDevice, faultInfo, isAdd)
+		_, found = npuDevice.FaultTimeMap[eventId]
+		if found {
+			t.Errorf("found fault time")
+			return
+		}
 	})
 }

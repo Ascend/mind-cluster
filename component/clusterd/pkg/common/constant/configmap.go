@@ -36,3 +36,19 @@ const (
 	// CmConsumerValue the value only for true
 	CmConsumerValue = "true"
 )
+
+type ConfigMapInterface interface {
+	GetCmName() string
+}
+
+func (cm *DeviceInfo) GetCmName() string {
+	return cm.CmName
+}
+
+func (cm *SwitchInfo) GetCmName() string {
+	return cm.CmName
+}
+
+func (cm *NodeInfo) GetCmName() string {
+	return cm.CmName
+}

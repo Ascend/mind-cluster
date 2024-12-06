@@ -22,16 +22,16 @@ import (
 	"testing"
 	"time"
 
+	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/stretchr/testify/assert"
 
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 )
 
 const (
@@ -155,6 +155,37 @@ func TestGetNPUInfo(t *testing.T) {
 		{
 			name: "should return zero NPU",
 			args: &devmanager.DeviceManagerMockErr{},
+			want: []HuaWeiNPUCard{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getNPUInfo(tt.args); len(got) != len(tt.want) {
+				t.Errorf("getNPUInfo() = %#v,want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestGetNPUInfoFor910A3 test method of getNPUInfo for 910A3
+func TestGetNPUInfoFor910A3(t *testing.T) {
+	tests := []struct {
+		name string
+		args devmanager.DeviceInterface
+		want []HuaWeiNPUCard
+	}{
+		{
+			name: "should return at lease one NPUInfo",
+			args: &devmanager.DeviceManager910A3Mock{},
+			want: []HuaWeiNPUCard{{
+				DeviceList: nil,
+				Timestamp:  time.Time{},
+				CardID:     0,
+			}},
+		},
+		{
+			name: "should return zero NPU",
+			args: &devmanager.DeviceManager910A3MockErr{},
 			want: []HuaWeiNPUCard{},
 		},
 	}

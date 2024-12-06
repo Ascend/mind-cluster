@@ -16,7 +16,7 @@
 package common
 
 import (
-    "testing"
+	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 )

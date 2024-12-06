@@ -7,9 +7,10 @@ import (
 	"context"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const backOffTime = 2 * time.Second

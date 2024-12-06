@@ -225,6 +225,7 @@ func (pi *podInfo) DeepCopy() *podInfo {
 		port:            pi.port,
 		ctReq:           pi.ctReq,
 		npuReplicas:     pi.npuReplicas,
+		clusterdSvcIp:   pi.clusterdSvcIp,
 	}
 }
 
@@ -289,4 +290,14 @@ func checkNpuPod(pi *podInfo) bool {
 		return checkContainersResourceReq(spec.Template.Spec.Containers)
 	}
 	return false
+}
+
+func getJobRequiredNpu(job *mindxdlv1.AscendJob) int {
+	requiredNpu := 0
+	for _, spec := range job.Spec.ReplicaSpecs {
+		for _, container := range spec.Template.Spec.Containers {
+			requiredNpu += getContainerResourceReq(container)
+		}
+	}
+	return requiredNpu
 }

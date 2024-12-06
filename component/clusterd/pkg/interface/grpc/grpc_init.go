@@ -9,10 +9,10 @@ import (
 	"os"
 	"time"
 
+	"ascend-common/common-utils/limiter"
 	"google.golang.org/grpc"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/limiter"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/grpc/service"

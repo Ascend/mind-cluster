@@ -172,7 +172,7 @@ func checkPodList(podList *v1.PodList) ([]v1.Pod, error) {
 	if len(podList.Items) >= common.MaxPodLimit {
 		return nil, fmt.Errorf("the number of pods exceeds the upper limit")
 	}
-	var pods []v1.Pod
+	var pods = make([]v1.Pod, 0)
 	for _, pod := range podList.Items {
 		if err := common.CheckPodNameAndSpace(pod.Name, common.PodNameMaxLength); err != nil {
 			hwlog.RunLog.Warnf("pod name syntax illegal, err: %v", err)

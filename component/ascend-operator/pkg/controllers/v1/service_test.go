@@ -113,35 +113,38 @@ func TestGetMngSvcIpAndPortWithError(t *testing.T) {
 					return nil, errors.New("not found")
 				})
 			defer patch.Reset()
-			_, _, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName)
+			_, _, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName, "")
 			convey.ShouldEqual(err, errors.New("not found"))
 		})
 		convey.Convey("02-job has no manager svc, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
 				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
-					return &corev1.Service{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: make(map[string]string),
-						},
-					}, nil
+					return &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+						Labels: make(map[string]string),
+					}}, nil
 				})
 			defer patch.Reset()
-			_, _, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName)
+			_, _, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName, "")
 			convey.ShouldEqual(err, fmt.Errorf("get job<%s/%s> chief service failed", job.Namespace, job.Name))
 		})
 		convey.Convey("03-service with manager label has no ip should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
 				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
-					return &corev1.Service{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: make(map[string]string),
-						},
-					}, nil
+					return &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+						Labels: make(map[string]string),
+					}}, nil
 				})
 			defer patch.Reset()
-			ip, port, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName)
+			ip, port, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName, "")
 			convey.ShouldEqual(err, fmt.Errorf("job<%s/%s> chief service Ip<%s> or port<%s> is empty", job.Namespace, job.Name,
 				ip, port))
+		})
+		convey.Convey("04-mindspore single npu task should return empty", func() {
+			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{mindxdlv1.ReplicaTypeWorker: {}}
+			ip, port, err := rc.getMngSvcIpAndPort(job, mindxdlv1.MindSporeFrameworkName, mindxdlv1.ReplicaTypeWorker)
+			convey.So(ip, convey.ShouldEqual, "")
+			convey.So(port, convey.ShouldEqual, "")
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }
@@ -166,7 +169,7 @@ func TestGetMngSvcIpAndPortNormal(t *testing.T) {
 					}, nil
 				})
 			defer patch.Reset()
-			ip, port, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName)
+			ip, port, err := rc.getMngSvcIpAndPort(job, mindxdlv1.PytorchFrameworkName, "")
 			convey.ShouldBeNil(err)
 			convey.ShouldEqual(ip, "127.0.0.1")
 			convey.ShouldEqual(port, "2222")

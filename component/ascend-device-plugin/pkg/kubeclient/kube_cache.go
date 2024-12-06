@@ -135,10 +135,13 @@ func (ki *ClientK8s) refreshPodList() {
 	}
 	newPodCache := map[types.UID]*podInfo{}
 	for _, pod := range newV1PodList.Items {
-		newPodCache[pod.UID] = &podInfo{
-			Pod:        &pod,
-			updateTime: time.Now(),
-		}
+		// attention: using 'for range' for value slice, the pointer addr of the slice element is the same
+		func(pod v1.Pod) {
+			newPodCache[pod.UID] = &podInfo{
+				Pod:        &pod,
+				updateTime: time.Now(),
+			}
+		}(pod)
 	}
 	lock.Lock()
 	podCache = newPodCache

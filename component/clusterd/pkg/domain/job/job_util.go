@@ -2,3 +2,220 @@
 
 // Package job a series of job function
 package job
+
+import (
+	"encoding/json"
+	"time"
+
+	"k8s.io/api/core/v1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podGroup"
+)
+
+const (
+	cmDataInitLength = 16
+	safeDeviceSize   = 1000
+)
+
+const (
+	// StatusJobRunning is the running job status
+	StatusJobRunning = "running"
+	// StatusJobPending is the pending job status
+	StatusJobPending = "pending"
+	// StatusJobFail is the failed job status
+	StatusJobFail = "failed"
+	// StatusJobCompleted is the complete job status
+	StatusJobCompleted = "complete"
+)
+
+const (
+	// StatusRankTableInit is the init rankTable status
+	StatusRankTableInit = "initializing"
+	// StatusRankTableComplete is the complete rankTable status
+	StatusRankTableComplete = "complete"
+)
+
+// PreDeleteCmAndCache set job status
+func PreDeleteCmAndCache(podJobMap map[string]v1.Pod, jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	jobInfo.IsPreDelete = true
+	jobInfo.JobRankTable = constant.RankTable{}
+	// when a job is deleted, if it is not in a successful state, it must be in a failed state
+	if jobInfo.Status != StatusJobCompleted {
+		jobInfo.Status = StatusJobFail
+	}
+	jobInfo.DeleteTime = time.Now().Unix()
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	if preDeleteCM(jobInfo, podJobMap) {
+		SaveJobCache(jobKey, jobInfo)
+	}
+}
+
+// DeleteCmAndCache delete job cm and cache info
+func DeleteCmAndCache(jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	if deleteCm(jobInfo) {
+		DeleteJobCache(jobKey)
+	}
+}
+
+// InitCmAndCache init cm and cache
+func InitCmAndCache(podGroup v1beta1.PodGroup) {
+	if len(podGroup.Name) == 0 || len(podGroup.GetOwnerReferences()) == 0 {
+		hwlog.RunLog.Error("podGroup is nil, init configmap failed")
+		return
+	}
+	// 1.init job basic info
+	jobInfo := getJobBasicInfoByPodGroup(podGroup)
+	// 2.set job status info
+	jobInfo.Status = StatusJobPending
+	jobInfo.IsPreDelete = false
+	jobInfo.JobRankTable = constant.RankTable{}
+	jobInfo.AddTime = time.Now().Unix()
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	if initCM(jobInfo) {
+		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+// GetJobBasicInfoByPodGroup get job basic info by podGroup
+func getJobBasicInfoByPodGroup(pgInfo v1beta1.PodGroup) constant.JobInfo {
+	var jobInfo constant.JobInfo
+	key, name := podGroup.GetJobKeyAndNameByPG(&pgInfo)
+	jobInfo.Key = key
+	jobInfo.Name = name
+	jobInfo.Replicas = int(pgInfo.Spec.MinMember)
+	jobInfo.TotalCmNum = (jobInfo.Replicas-1)/safeDeviceSize + 1
+	jobInfo.JobType = podGroup.GetJobTypeByPG(&pgInfo)
+	jobInfo.NameSpace = pgInfo.Namespace
+	jobInfo.Framework = podGroup.GetModelFramework(&pgInfo)
+	return jobInfo
+}
+
+// UpdateCmAndCache update cm and cache
+func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.PodGroup,
+	podJobMap map[string]v1.Pod) {
+	if jobInfo.Name == "" {
+		jobInfo = getJobBasicInfoByPodGroup(podGroup)
+	}
+	jobInfo.Status = status
+	jobInfo.IsPreDelete = false
+	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
+	jobInfo.JobRankTable = pod.InitRankTableByPod(podJobMap, jobInfo.Replicas)
+	if jobInfo.Framework == "" {
+		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
+		jobInfo.Framework = pod.GetModelFramework(podJobMap)
+	}
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	if len(jobInfo.JobRankTable.ServerList) == jobInfo.Replicas {
+		jobInfo.JobRankTable.Status = StatusRankTableComplete
+	} else {
+		jobInfo.JobRankTable.Status = StatusRankTableInit
+	}
+	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
+	hccls := getHcclSlice(jobInfo.JobRankTable)
+	result := true
+	for i := 0; i < jobInfo.TotalCmNum; i++ {
+		hccl := ""
+		if i < len(hccls) {
+			hccl = hccls[i]
+		}
+		result = updateCM(jobInfo, i, hccl) && result
+	}
+	if result {
+		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+func getHcclSlice(table constant.RankTable) []string {
+	if len(table.ServerList) == 0 {
+		return nil
+	}
+	hcclJsons := make([]string, 0, table.Total)
+	serverHcclSlice := make([][]*constant.ServerHccl, 0, table.Total)
+	for i := 0; i < len(table.ServerList); i += safeDeviceSize {
+		if i+safeDeviceSize > len(table.ServerList) {
+			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:])
+		} else {
+			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:i+safeDeviceSize])
+		}
+	}
+	for i, serverHccl := range serverHcclSlice {
+		table.ServerList = serverHccl
+		str, err := json.Marshal(table)
+		if err != nil {
+			hwlog.RunLog.Errorf("Marshal hccl json part %v error, error is %v", i, err)
+			continue
+		}
+		hcclJsons = append(hcclJsons, string(str))
+	}
+	return hcclJsons
+}
+
+// GetJobServerInfoMap could get all job info in once query
+func GetJobServerInfoMap() constant.JobServerInfoMap {
+	allJobServerMap := make(map[string]map[string]constant.ServerHccl)
+	allUceJobFlag := make(map[string]bool)
+	for jobKey, jobInfo := range GetAllJobCache() {
+		jobServerMap := make(map[string]constant.ServerHccl)
+		for _, server := range jobInfo.JobRankTable.ServerList {
+			if server == nil {
+				continue
+			}
+			copyServerHccl := constant.ServerHccl{
+				DeviceList: make([]*constant.Device, 0),
+				ServerID:   server.ServerID,
+				PodID:      server.PodID,
+				ServerName: server.ServerName,
+			}
+			for _, dev := range server.DeviceList {
+				if dev == nil {
+					continue
+				}
+				copyDev := constant.Device{
+					DeviceID: dev.DeviceID,
+					DeviceIP: dev.DeviceIP,
+					RankID:   dev.RankID,
+				}
+				copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, &copyDev)
+			}
+			jobServerMap[server.ServerName] = copyServerHccl
+		}
+		allJobServerMap[jobKey] = jobServerMap
+		allUceJobFlag[jobKey] = podGroup.JudgeUceByJobKey(jobKey)
+	}
+
+	return constant.JobServerInfoMap{InfoMap: allJobServerMap, UceTolerate: allUceJobFlag}
+}
+
+// GetJobIsRunning get job is running
+func GetJobIsRunning(jobKey string) bool {
+	jobCache, _ := GetJobCache(jobKey)
+	return jobCache.Status == StatusJobRunning
+}
+
+// GetJobIsExists get job is exists
+func GetJobIsExists(jobKey string) bool {
+	_, ok := GetJobCache(jobKey)
+	return ok
+}
+
+// FlushLastUpdateTime flush lastUpdateTime
+func FlushLastUpdateTime(jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	SaveJobCache(jobKey, jobInfo)
+}

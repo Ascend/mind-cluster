@@ -48,7 +48,11 @@ dos2unix *.sh && chmod +x *
 
 for component in $mindx_dl
 do
-  { ./build_each.sh $GOPATH service_config.ini $component
+  {
+    if [[ $component = "ascend-common" ]]; then
+      continue
+    fi
+    ./build_each.sh $GOPATH service_config.ini $component
   }
 done
 wait

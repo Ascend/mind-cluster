@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 var vcK8sClient *VcK8sClient
@@ -23,13 +24,12 @@ type VcK8sClient struct {
 }
 
 // InitClientVolcano init volcano client
-func InitClientVolcano() error {
+func InitClientVolcano() (*VcK8sClient, error) {
+	var err error
 	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
-		var err error
 		vcK8sClient, err = newVCClientK8s()
-		return err
 	}
-	return nil
+	return vcK8sClient, err
 }
 
 // GetClientVolcano get client volcano
@@ -68,22 +68,6 @@ func RetryGetPodGroup(name, namespace string, retryTimes int) (*v1beta1.PodGroup
 
 // GetPodGroup return pod group according pod group name
 func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
-	if PGInformer != nil {
-		for _, obj := range PGInformer.Informer().GetStore().List() {
-			podGroup, ok := obj.(*v1beta1.PodGroup)
-			if !ok {
-				hwlog.RunLog.Error("convert pod group err")
-				continue
-			}
-			if podGroup.Name == name && podGroup.Namespace == namespace {
-				return podGroup, nil
-			}
-		}
-	}
-	if PGInformer == nil {
-		hwlog.RunLog.Warnf("PGInformer is nil")
-	}
-	hwlog.RunLog.Warnf("get podGroup from informer fail, name=%s, namespace=%s", name, namespace)
 	if vcK8sClient != nil {
 		return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(namespace).Get(context.TODO(),
 			name, v1.GetOptions{})
@@ -91,6 +75,7 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 	return nil, fmt.Errorf("vcK8sClient is nil")
 }
 
+// RetryUpdatePodGroup call UpdatePod
 func RetryUpdatePodGroup(pg *v1beta1.PodGroup, retryTimes int) (*v1beta1.PodGroup, error) {
 	pg, err := UpdatePodGroup(pg)
 	retry := 0

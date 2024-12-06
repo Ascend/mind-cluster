@@ -41,12 +41,13 @@ const (
 )
 
 var (
-	lastTimeNetworkRecoverDevices sets.String
+	lastTimeNetworkRecoverDevices = sets.String{}
 	hotResetManagerInitOnce       sync.Once
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
 	isL3FaultExistMap             map[int32]bool = make(map[int32]bool, common.MaxDevicesNum)
+	resetGoroutine                               = &sync.Map{}
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
@@ -85,7 +86,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 	}
 	var allDevices []common.NpuDevice
 	var aiCoreDevices []*common.NpuDevice
-	var allDeviceTypes []string
+	var allDeviceTypes = make([]string, 0)
 	for i := int32(0); i < devNum; i++ {
 		davinCiDev, err := hnm.getDavinCiDev(devList[i])
 		if err != nil {
@@ -93,7 +94,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 		}
 		vDevInfos, err := hnm.getVirtualDevice(devList[i])
 		if err != nil {
-			hwlog.RunLog.Warnf("The virtual device is considered not exist, please check the error: %#v", err)
+			hwlog.RunLog.Warnf("The virtual device is considered not exist, please check the error: %v", err)
 		}
 		if vDevInfos.TotalResource.VDevNum > common.MaxVirtualDeviceNum {
 			return common.NpuAllInfo{}, fmt.Errorf("invalid virtual device count")
@@ -114,7 +115,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 // GraceTolerance process training task with device fault gracefully
 func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
-		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage())
+		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]))
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
 			return
@@ -127,23 +128,23 @@ func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.
 
 	// obtain the current device status and update the cache of hot reset manager
 	if err := hnm.updateHotResetCache(classifyDevs); err != nil {
-		hwlog.RunLog.Errorf("failed to update hot reset cache, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to update hot reset cache, err: %v", err)
 		return
 	}
 	// online recover will process fault by task but offline recover will not
 	if common.ParamOption.HotReset == common.HotResetTrainOnLine {
 		// performs graceful fault tolerance for tasks to be processed based on the device information in the cache
 		if err := hnm.processAllTask(classifyDevs); err != nil {
-			hwlog.RunLog.Errorf("failed to process task, err: %#v", err)
+			hwlog.RunLog.Errorf("failed to process task, err: %v", err)
 		}
 	}
 	// handling hot reset without task
 	if err := hnm.hotResetHandler(classifyDevs); err != nil {
-		hwlog.RunLog.Errorf("failed to process hot reset watcher, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to process hot reset watcher, err: %v", err)
 	}
 	// filter the faulty device in the reset state in the device info cm to avoid rescheduling
 	if err := hnm.filterDevStatus(classifyDevs); err != nil {
-		hwlog.RunLog.Errorf("failed to filter device status,err: %#v", err)
+		hwlog.RunLog.Errorf("failed to filter device status,err: %v", err)
 	}
 	// when hot reset is on, we update device info cm so that task could not be dispatched on resetting device
 	if err := hnm.setAllDevUnhealthyOnRing(classifyDevs); err != nil {
@@ -162,7 +163,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	for _, dev := range deviceList {
 		tempFaultInfo, tempErr := hnm.hotResetManager.GetGlobalDevFaultInfo(dev.LogicID)
 		if tempErr != nil {
-			hwlog.RunLog.Errorf("failed to get global device fault info from cache, err: %#v", err)
+			hwlog.RunLog.Errorf("failed to get global device fault info from cache, err: %v", err)
 			err = tempErr
 			continue
 		}
@@ -173,7 +174,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 				"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
 			if err = hnm.startUpHotReset(classifyDevs, tempFaultInfo, dev); err != nil {
-				hwlog.RunLog.Errorf("failed to start up hot reset, err: %#v", err)
+				hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
 				continue
 			}
 			continue
@@ -182,7 +183,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 				"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
 			if err = hnm.startUpHotReset(classifyDevs, tempFaultInfo, dev); err != nil {
-				hwlog.RunLog.Errorf("failed to start up hot reset, err: %#v", err)
+				hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
 			}
 		}
 	}
@@ -190,16 +191,16 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 }
 
 // handleL2L3FaultRestart restarts when l2l3 faults handling failed
-func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFualtInfo *common.DevFaultInfo) bool {
-	if devFualtInfo.Policy == common.RestartError || devFualtInfo.Policy == common.RestartRequestError {
-		existFlag, ok := isL3FaultExistMap[devFualtInfo.LogicId]
+func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFaultInfo *common.DevFaultInfo) bool {
+	if devFaultInfo.Policy == common.RestartError || devFaultInfo.Policy == common.RestartRequestError {
+		existFlag, ok := isL3FaultExistMap[devFaultInfo.LogicId]
 		if existFlag && ok {
-			isL3FaultExistMap[devFualtInfo.LogicId] = false
+			isL3FaultExistMap[devFaultInfo.LogicId] = false
 			return true
 		}
-		isL3FaultExistMap[devFualtInfo.LogicId] = true
+		isL3FaultExistMap[devFaultInfo.LogicId] = true
 	} else {
-		isL3FaultExistMap[devFualtInfo.LogicId] = false
+		isL3FaultExistMap[devFaultInfo.LogicId] = false
 	}
 	return false
 }
@@ -209,7 +210,7 @@ func (hnm *HwAscend910Manager) startUpHotReset(classifyDevs map[string][]*common
 	tempFaultInfo *common.DevFaultInfo, dev *common.NpuDevice) error {
 	canReset, err := hnm.canBeReset(tempFaultInfo)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to find if device is active, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to find if device is active, err: %v", err)
 		return err
 	}
 	if !canReset {
@@ -237,10 +238,14 @@ func (hnm *HwAscend910Manager) setAllDevUnhealthyOnRing(classifyDevs map[string]
 		hwlog.RunLog.Debug("should not set device to unhealthy")
 		return nil
 	}
-	ringNum := hnm.hotResetManager.GetRingNum()
-	ringIndex := int(inResetDev) / ringNum
-	startDevIndex := ringIndex * ringNum
-	endDevIndex := startDevIndex + ringNum
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
+	ringIndex := int(inResetDev) / resetDevNumOnce
+	startDevIndex := ringIndex * resetDevNumOnce
+	endDevIndex := startDevIndex + resetDevNumOnce
 	for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 		devStatusList[devIndex].NetworkHealth = v1beta1.Unhealthy
 		devStatusList[devIndex].Health = v1beta1.Unhealthy
@@ -288,14 +293,18 @@ func (hnm *HwAscend910Manager) upgradeHotResetError(classifyDevs map[string][]*c
 		hwlog.RunLog.Error("no ascend 910 device, upgrade hot reset error fail")
 		return
 	}
-	ringNum := hnm.hotResetManager.GetRingNum()
-	ringIndex := int(npuDev.LogicID) / ringNum
-	startDevIndex := ringIndex * ringNum
-	endDevIndex := startDevIndex + ringNum
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return
+	}
+	ringIndex := int(npuDev.LogicID) / resetDevNumOnce
+	startDevIndex := ringIndex * resetDevNumOnce
+	endDevIndex := startDevIndex + resetDevNumOnce
 	for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 		tempFaultInfo, err := hnm.hotResetManager.GetGlobalDevFaultInfo(int32(devIndex))
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to get global device fault info from cache device-%d, err: %#v", devIndex, err)
+			hwlog.RunLog.Errorf("failed to get global device fault info from cache device-%d, err: %v", devIndex, err)
 			continue
 		}
 		if tempFaultInfo.Policy != common.EmptyError && tempFaultInfo.Policy != common.IgnoreError {
@@ -344,8 +353,9 @@ func (hnm *HwAscend910Manager) execHotReset(devInfo *common.DevFaultInfo) error 
 // isChipActive check if there is job on chip
 func (hnm *HwAscend910Manager) isChipActive(logicID int32, busyChipList []string) (bool, error) {
 	chipInfo, err := hnm.AscendTools.GetDmgr().GetDevProcessInfo(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to find device chip info: %v", err)
+	if err != nil || chipInfo == nil {
+		hwlog.RunLog.Errorf("failed to get device process, logicId: %d, err: %v, devProcessInfo: %v",
+			logicID, err, chipInfo)
 		return false, err
 	}
 	logicIDForCompare := fmt.Sprintf("Ascend910-%d", logicID)
@@ -371,8 +381,13 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 		return false, err
 	}
 	busyChipList := hnm.getBusyChipListFromPod(podList)
-	resetStartLogicID := oriLogicID / int32(getChipCountOnRing()) * int32(getChipCountOnRing())
-	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(getChipCountOnRing()); logicID++ {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false, err
+	}
+	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
+	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
 		chipActivity, err := hnm.isChipActive(logicID, busyChipList)
 		if err != nil {
 			return false, err
@@ -387,7 +402,7 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 
 // getBusyChipListFromPod is to get all busy chip from current pod list
 func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []string {
-	var devList []string
+	var devList = make([]string, 0)
 	for _, pod := range podList.Items {
 		if pod.Status.Phase == v1.PodSucceeded {
 			continue
@@ -407,7 +422,7 @@ func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []str
 func (hnm *HwAscend910Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice) {
 	devStatusSet := hnm.getDevStatesDevSet(classifyDevs)
 	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.updateDeviceInfo); err != nil {
-		hwlog.RunLog.Errorf("update device info failed, err: %#v", err)
+		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
 	}
 }
 
@@ -466,7 +481,7 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 		return err
 	}
 	if err := hnm.update910NodeLabel(curNode, newDevRecoverLabel, hnm.getPatchLabel(newNetRecoverSets)); err != nil {
-		hwlog.RunLog.Errorf("update node label failed, err: %#v", err)
+		hwlog.RunLog.Errorf("update node label failed, err: %v", err)
 		return err
 	}
 	lastTimeNetworkRecoverDevices = newNetRecoverSets
@@ -551,7 +566,7 @@ func (hnm *HwAscend910Manager) getPatchLabel(chips sets.String) string {
 		return ""
 	}
 
-	var ascendLabel []string
+	var ascendLabel = make([]string, 0)
 	for devName := range chips {
 		devTypeAndID := strings.Split(devName, common.MiddelLine)
 		if len(devTypeAndID) != common.LabelDeviceLen {
@@ -608,14 +623,14 @@ func (hnm *HwAscend910Manager) updateHotResetCache(classifyDevs map[string][]*co
 		return fmt.Errorf("ascend 910 device list not found")
 	}
 	if err := hnm.updateUpgradeErrorInfo(classifyDevs); err != nil {
-		hwlog.RunLog.Errorf("fail to update upgrade error npu info, err: %#v", err)
+		hwlog.RunLog.Errorf("fail to update upgrade error npu info, err: %v", err)
 	}
 	if err := hnm.hotResetManager.UpdateGlobalDevFaultInfoCache(deviceList, isolateDevList); err != nil {
-		hwlog.RunLog.Errorf("failed to update global device fault info cache, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to update global device fault info cache, err: %v", err)
 		return err
 	}
 	if err := hnm.setTaskDevInfoCache(); err != nil {
-		hwlog.RunLog.Errorf("failed to set task device info cache, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to set task device info cache, err: %v", err)
 		return err
 	}
 	return nil
@@ -677,7 +692,7 @@ func (hnm *HwAscend910Manager) setTaskDevInfoCache() error {
 			rankIndex = common.InferRankIndex
 		} else {
 			if !ok {
-				hwlog.RunLog.Warnf("failed to get rank index by rank index key")
+				hwlog.RunLog.Warn("failed to get rank index by rank index key")
 				continue
 			}
 		}
@@ -685,18 +700,17 @@ func (hnm *HwAscend910Manager) setTaskDevInfoCache() error {
 		newTaskDevListCache[taskName] = devIdList
 		taskDevFaultInfoList, err := hnm.hotResetManager.GenerateTaskDevFaultInfoList(devIdList, rankIndex)
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to get task device fault info list, err: %#v", err)
+			hwlog.RunLog.Errorf("failed to get task device fault info list, err: %v", err)
 			return err
 		}
 		// podAntiAffinity make sure that there won't be multi pod in single node of one task
 		newTaskDevFaultInfoCache[taskName] = taskDevFaultInfoList
 		newTaskPodCache[taskName] = pod
 		if err = hnm.hotResetManager.UpdateFaultDev2PodMap(devIdList, pod); err != nil {
-			hwlog.RunLog.Errorf("update faultDev2PodMap error: %#v", err)
+			hwlog.RunLog.Errorf("update faultDev2PodMap error: %v", err)
 		}
 	}
-	err := hnm.handleUpdateCaches(taskListUsedDevice, newTaskDevListCache, newTaskDevFaultInfoCache, newTaskPodCache)
-	return err
+	return hnm.handleUpdateCaches(taskListUsedDevice, newTaskDevListCache, newTaskDevFaultInfoCache, newTaskPodCache)
 }
 
 func (hnm *HwAscend910Manager) handleUpdateCaches(taskListUsedDevice map[string]struct{},
@@ -749,7 +763,13 @@ func (hnm *HwAscend910Manager) convertLogicIdToPhysicId(logicIds []int32) ([]int
 }
 
 func (hnm *HwAscend910Manager) isReSchedulingScene(npuCount int) bool {
-	if hnm.GetDeviceUsage() == common.Train && npuCount < hnm.hotResetManager.GetRingNum() {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false
+	}
+
+	if hnm.GetDeviceUsage() == common.Train && npuCount < resetDevNumOnce {
 		return true
 	}
 
@@ -759,7 +779,7 @@ func (hnm *HwAscend910Manager) isReSchedulingScene(npuCount int) bool {
 func (hnm *HwAscend910Manager) isTaskInReset(taskName string) (bool, error) {
 	pod, err := hnm.hotResetManager.GetTaskPod(taskName)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get task pod, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to get task pod, err: %v", err)
 		return false, err
 	}
 	if hnm.hotResetManager.IsCurNodeTaskInReset(taskName) {
@@ -773,7 +793,7 @@ func (hnm *HwAscend910Manager) isTaskInReset(taskName string) (bool, error) {
 	}
 	resetInfoData, err := getResetInfoData(resetCM)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get reset info data, err: %#v", err)
+		hwlog.RunLog.Errorf("failed to get reset info data, err: %v", err)
 		return false, err
 	}
 	if len(resetInfoData) == 0 {
@@ -803,17 +823,21 @@ func (hnm *HwAscend910Manager) filterDevStatus(classifyDevs map[string][]*common
 	}
 	devInReset := hnm.hotResetManager.GetDevListInReset()
 	filteredRingIndex := -1
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
 	for _, devStatus := range devStatusList {
 		if _, ok := devInReset[devStatus.LogicID]; !ok || devStatus.Health == v1beta1.Healthy ||
 			hnm.isDevShouldBeIsolate(devStatus.LogicID) {
 			continue
 		}
 		devStatus.Health = v1beta1.Healthy
-		ringNum := hnm.hotResetManager.GetRingNum()
-		ringIndex := int(devStatus.LogicID) / ringNum
+		ringIndex := int(devStatus.LogicID) / resetDevNumOnce
 		if ringIndex != filteredRingIndex {
-			startDevIndex := ringIndex * ringNum
-			endDevIndex := startDevIndex + ringNum
+			startDevIndex := ringIndex * resetDevNumOnce
+			endDevIndex := startDevIndex + resetDevNumOnce
 			for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 				devStatusList[devIndex].NetworkHealth = v1beta1.Healthy
 			}
@@ -823,46 +847,12 @@ func (hnm *HwAscend910Manager) filterDevStatus(classifyDevs map[string][]*common
 	return nil
 }
 
-// refreshNormalPodAnnotation do not add new annotation to pod, actually.
-// It just refreshes annotation to trigger pod syncing
-func (hnm *HwAscend910Manager) refreshNormalPodAnnotation(taskName string) {
-	resetFlag, err := hnm.isTaskInReset(taskName)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to find in reset task %s, err: %#v", taskName, err)
-		return
-	}
-	if !resetFlag {
-		hwlog.RunLog.Debugf("find reset flag false, task name %s", taskName)
-		return
-	}
-
-	pod, err := hnm.hotResetManager.GetTaskPod(taskName)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get task pod, err: %#v", err)
-		return
-	}
-
-	annotation := map[string]string{podDevStatusAnnotation: "normal"}
-	if err = hnm.GetKubeClient().TryUpdatePodAnnotation(&pod, annotation); err != nil {
-		hwlog.RunLog.Errorf("update add annotation %v to pod %s failed, err: %v", annotation, pod.Name, err)
-		return
-	}
-
-	annotation[podDevStatusAnnotation] = ""
-	if err = hnm.GetKubeClient().TryUpdatePodAnnotation(&pod, annotation); err != nil {
-		hwlog.RunLog.Errorf("update add annotation %#v to pod %s failed, err: %#v", annotation, pod.Name, err)
-		return
-	}
-
-	hwlog.RunLog.Info("normal pod refresh annotation success")
-}
-
 func (hnm *HwAscend910Manager) processAllTask(classifyDevs map[string][]*common.NpuDevice) error {
 	taskDevFaultInfoList := hnm.hotResetManager.GetAllTaskDevFaultInfoList()
 	for taskName := range taskDevFaultInfoList {
 		policy, policyLevel, err := hnm.hotResetManager.GetTaskProcessPolicy(taskName)
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to get task %s process policy, err: %#v", taskName, err)
+			hwlog.RunLog.Errorf("failed to get task %s process policy, err: %v", taskName, err)
 			continue
 		}
 		if policyLevelHandle(policy, taskName, policyLevel) {
@@ -896,7 +886,6 @@ func policyLevelHandle(handlePolicy, handleTaskName string, handlePolicyLevel in
 	default:
 		return true
 	}
-
 	return false
 }
 
@@ -963,7 +952,6 @@ func (hnm *HwAscend910Manager) restartRequestProcess(taskName string, resetInfo 
 		return
 	}
 	hnm.handleSucceedRestartRequest(taskName, currentPolicy, devFaultInfoList, devFaultInfoListInReset)
-
 }
 
 func (hnm *HwAscend910Manager) handleSucceedRestartRequest(taskName, currentPolicy string,
@@ -1328,9 +1316,13 @@ func (hnm *HwAscend910Manager) getNeedResetDeviceLogicIdMap(devFaultInfoList []*
 		return nil, err
 	}
 	faultDeviceLogicIdMap := make(map[int32]int32, len(resetFaultInfoMap))
-	chipCountOnRing := getChipCountOnRing()
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
+	}
 	for resetStartLogicId := range resetFaultInfoMap {
-		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(chipCountOnRing), faultDeviceLogicIdMap); err != nil {
+		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(resetDevNumOnce), faultDeviceLogicIdMap); err != nil {
 			hwlog.RunLog.Errorf("failed to add logic_ids to faultDeviceLogicIdMap in the same SMP system, err: %v", err)
 			return nil, err
 		}
@@ -1486,10 +1478,14 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 		hwlog.RunLog.Errorf("failed to get need reset device list, err: %v", err)
 		return err
 	}
+	processId := time.Now().UnixMilli()
+	resetGoroutine.Store(processId, struct{}{})
 	if err := hnm.execResetDevice(resetFaultInfoMap); err != nil {
 		hwlog.RunLog.Errorf("failed to exec reset device list, err: %v", err)
+		resetGoroutine.Delete(processId)
 		return err
 	}
+	resetGoroutine.Delete(processId)
 	for _, devInfo := range devFaultInfoList {
 		common.SetDeviceInit(devInfo.LogicId)
 	}
@@ -1600,8 +1596,13 @@ func (hnm *HwAscend910Manager) isShouldCheckNet(logicID int32) bool {
 
 func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheckNet bool) error {
 	var totalTime int
-	resetStartLogicID := oriLogicID / int32(getChipCountOnRing()) * int32(getChipCountOnRing())
-	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(getChipCountOnRing()); logicID++ {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
+	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
+	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
 		if err := hnm.waitDeviceResetComplete(logicID, &totalTime, shouldCheckNet); err != nil {
 			return err
 		}
@@ -1650,7 +1651,7 @@ func (hnm *HwAscend910Manager) tryWriteIsolationInfo(taskName string) {
 func (hnm *HwAscend910Manager) isDevShouldBeIsolate(faultyDevLogicId int32) bool {
 	faultDev2Pod, err := hnm.hotResetManager.GetFaultDev2PodMap()
 	if err != nil {
-		hwlog.RunLog.Warnf("get faultDev2Pod info err: %#v", err)
+		hwlog.RunLog.Warnf("get faultDev2Pod info err: %v", err)
 		return false
 	}
 	pod, ok := faultDev2Pod[faultyDevLogicId]
@@ -1669,12 +1670,12 @@ func (hnm *HwAscend910Manager) isDevShouldBeIsolate(faultyDevLogicId int32) bool
 	}
 	resetCM, err := hnm.hotResetManager.GetCMFromCache(pod.Namespace + "/" + common.ResetInfoCMNamePrefix + taskName)
 	if err != nil {
-		hwlog.RunLog.Warnf("get reset cm error: %#v", err)
+		hwlog.RunLog.Warnf("get reset cm error: %v", err)
 		return true
 	}
 	resetInfoData, err := getResetInfoData(resetCM)
 	if err != nil {
-		hwlog.RunLog.Warnf("get reset info data error: %#v", err)
+		hwlog.RunLog.Warnf("get reset info data error: %v", err)
 		return true
 	}
 	if len(resetInfoData) == 0 {

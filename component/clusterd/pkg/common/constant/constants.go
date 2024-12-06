@@ -4,12 +4,16 @@
 package constant
 
 import (
+	"math"
 	"time"
 )
 
 const (
 	// ComponentName is the name of component
 	ComponentName = "clusterd"
+
+	// MaxLogLineLength max log line length
+	MaxLogLineLength = 1023
 
 	// RetryTime is the retry time loading configmap
 	RetryTime = 3
@@ -47,6 +51,36 @@ const (
 	AscendJobRefKind = "AscendJob"
 	// MaxSupportNodeNum max support node num
 	MaxSupportNodeNum = 5000
-	// MaxSupportJobNum
+	// MaxSupportJobNum max support job num
 	MaxSupportJobNum = 10000
+)
+
+// fault code const
+const (
+	UceFaultCode      = "80E01801"
+	AicFaultCode      = "80C98009"
+	AivFaultCode      = "80CB8009"
+	LinkDownFaultCode = "81078603"
+	DevCqeFaultCode   = "8C1F8608"
+	HostCqeFaultCode  = "4C1F8608"
+)
+
+// fault processor const
+const (
+	JobNotRecover             = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	JobNotRecoverComplete     = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DeviceNotFault            = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	DiagnosisAccompanyTimeout = 5 * 1000
+	JobReportRecoverTimeout   = 10 * 1000
+	JobReportCompleteTimeout  = 30 * 1000
+	FaultCenterProcessPeriod  = 3 * 1000
+	MaxFaultCenterSubscriber  = 10
+)
+
+// fault center
+const (
+	AllFaultType = iota
+	DeviceFaultType
+	NodeFaultType
+	SwitchFaultType
 )

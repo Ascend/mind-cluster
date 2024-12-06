@@ -44,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 )
 
@@ -92,7 +93,8 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	frame string) (*podInfo,
 	error) {
 
-	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame)
+	clusterdSvcIp := r.getClusterDSvcIp()
+	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +119,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 		ctReq:           ctReq,
 		npuReplicas:     npuReplicas,
 		rtype:           rtype,
+		clusterdSvcIp:   clusterdSvcIp,
 	}, nil
 }
 
@@ -159,6 +162,9 @@ func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
 	}
 	var rankIndex uint64 = 0
 	for _, p := range allocatedPods {
+		if p.Annotations == nil {
+			p.Annotations = make(map[string]string, 1)
+		}
 		p.Annotations[rankIndexKey] = strconv.FormatUint(rankIndex, decimal)
 		r.Update(context.TODO(), p)
 		rankIndex++
@@ -175,6 +181,7 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	if rtg.GetStatus() == utils.CompletedRTStatus {
 		hwlog.RunLog.Debugf("rank table already generated for job %s", ji.name)
+		r.checkPodDelete(rtg, ji)
 		return
 	}
 
@@ -184,7 +191,8 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 			allocatedPods = append(allocatedPods, p)
 		}
 	}
-	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d", len(allocatedPods), ji.totalReplicas, len(ji.pods))
+	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d",
+		len(allocatedPods), ji.totalReplicas, len(ji.pods))
 	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
 		return
 	}
@@ -210,23 +218,92 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
-	err := rtg.WriteToFile()
-	writeCmSuccess := r.tryWriteCm(ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
-	if err != nil && !writeCmSuccess {
-		hwlog.RunLog.Errorf("failed to write rank table: %v", err)
-		rtg.SetStatus(utils.InitialRTStatus)
-	}
+	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
 }
 
-func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) bool {
-	// try to write configmap
+func (r *ASJobReconciler) checkPodDelete(rtg generator.RankTableGenerator, ji *jobInfo) {
+	if len(ji.pods) >= int(ji.totalReplicas) {
+		return
+	}
+	r.deletePodForCmFile(rtg, ji.mtObj.GetUID(), ji.mtObj.GetName(), ji.mtObj.GetNamespace())
+}
+
+func (r *ASJobReconciler) deletePodForCmFile(rtg generator.RankTableGenerator,
+	uid types.UID, jobName, namespace string) {
+	rtg.DeletePod()
+	r.saveRankTable(rtg, jobName, namespace, uid)
+}
+
+func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator,
+	jobName, namespace string, uid types.UID) {
+	r.saveRankTableFile(rtg)
+	r.saveRankTableConfigmap(rtg, jobName, namespace, uid)
+}
+
+func (r *ASJobReconciler) saveRankTableFile(rtg generator.RankTableGenerator) {
+	rtg.Lock()
+	defer rtg.Unlock()
+	curStatus := rtg.GetStatus()
+	if rtg.GetFileStatus() == curStatus {
+		return
+	}
+	if err := rtg.WriteToFile(); err != nil {
+		hwlog.RunLog.Errorf("failed to write rank table to file, err: %v", err)
+		rtg.SetFileStatus(utils.UnknownStatus)
+		return
+	}
+	rtg.SetFileStatus(curStatus)
+}
+
+func (r *ASJobReconciler) saveRankTableConfigmap(rtg generator.RankTableGenerator,
+	jobName, namespace string, uid types.UID) {
+	rtg.Lock()
+	defer rtg.Unlock()
+	if !r.configmapExist(rtg, jobName, namespace) {
+		return
+	}
+	curStatus := rtg.GetStatus()
+	if rtg.GetConfigmapStatus() == curStatus {
+		return
+	}
+	if err := r.tryWriteCm(jobName, namespace, uid); err != nil {
+		hwlog.RunLog.Errorf("failed to write rank table to configmap, err: %v", err)
+		rtg.SetConfigmapStatus(utils.UnknownStatus)
+		return
+	}
+	rtg.SetConfigmapStatus(curStatus)
+}
+
+func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobName, namespace string) bool {
+	configmapExist := rtg.GetConfigmapExist()
+	if configmapExist == utils.ConfigmapExsit {
+		return true
+	}
+	if configmapExist == utils.ConfigmapNotExist {
+		return false
+	}
+	configmapName := configmapPrefix + jobName
+	cm := &corev1.ConfigMap{}
+	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
+	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
+		rtg.SetConfigmapExist(utils.ConfigmapNotExist)
+		return false
+	}
+	rtg.SetConfigmapExist(utils.ConfigmapExsit)
+	return true
+}
+
+func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) error {
+	hwlog.RunLog.Infof("start write rank table to configmap<%s> in namespace<%s>", configmapPrefix+jobName, namespace)
+	var err error
 	for i := 0; i < cmRetryTime; i++ {
-		if err := r.writeRanktableToCm(jobName, namespace, uid); err == nil {
-			return true
+		if err = r.writeRanktableToCm(jobName, namespace, uid); err == nil {
+			hwlog.RunLog.Info("write rank table to configmap success")
+			return nil
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return false
+	return err
 }
 
 func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {
@@ -358,9 +435,6 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 	} else {
 		pi.rank = pi.index
 	}
-	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, mindxServiceNamespace, mindxDefaultServerDomain)
-	hwlog.RunLog.Infof("get ClusterD service ip = %s", clusterdSvcIp)
-	pi.clusterdSvcIp = clusterdSvcIp
 	// Set name for the template.
 	podTemplate.Name = common.GenGeneralName(job.Name, strings.ToLower(string(pi.rtype)), indexStr)
 
@@ -387,7 +461,8 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 }
 
 func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) error {
-	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 {
+	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 &&
+		pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		return nil
 	}
 	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)

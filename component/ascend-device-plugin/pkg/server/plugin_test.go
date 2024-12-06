@@ -54,7 +54,7 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test4", Namespace: "test4", Annotations: map[string]string{common.
 			PodPredicateTime: "4", common.HuaweiAscend910: "Ascend910-2"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
-			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910c2: "Ascend910-2c-180-3"}}},
+			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
 	}
 )
 
@@ -179,10 +179,12 @@ func TestResponseToKubelet(t *testing.T) {
 
 // TestAllocateRequestPhysicalDevice for test the Allocate request physical device
 func TestAllocateRequestPhysicalDevice(t *testing.T) {
-	ps := NewPluginServer(common.Ascend910, devices, nil, nil)
+	ps := NewPluginServer(common.Ascend910, devices, nil, device.NewHwAscend910Manager())
 	common.ParamOption.UseVolcanoType = false
 	var requests v1beta1.AllocateRequest
 	convey.Convey("invalid request", t, func() {
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
 		convey.Convey("input nil", func() {
 			_, err := ps.Allocate(context.Background(), nil)
 			convey.So(err, convey.ShouldNotBeNil)
@@ -224,18 +226,20 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 // TestAllocateRequestVirtualDevice for test the Allocate request virtual device
 func TestAllocateRequestVirtualDevice(t *testing.T) {
 	common.ParamOption.UseVolcanoType = false
-	ps := NewPluginServer(common.Ascend910c2, devices, nil, nil)
+	ps := NewPluginServer(common.Ascend910vir2, devices, nil, device.NewHwAscend910Manager())
 	var requests v1beta1.AllocateRequest
 	convey.Convey("invalid request", t, func() {
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
 		convey.Convey("request more than 1 virtual device", func() {
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2, DeviceName: "Ascend910-2c-100-0"}}
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device not exist", func() {
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2, DeviceName: "Ascend910-2c-100-0"}}
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
@@ -245,8 +249,8 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
 			defer mockSlowNodeFunc.Reset()
 			deviceID := "100"
-			ps := NewPluginServer(common.Ascend910c2, devices, nil, nil)
-			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910c2,
+			ps := NewPluginServer(common.Ascend910vir2, devices, nil, device.NewHwAscend910Manager())
+			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
 				DeviceName: "Ascend910-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
 				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-" + deviceID + "-0"}}}
@@ -267,27 +271,22 @@ func TestAllocateWithVolcano1(t *testing.T) {
 	var requests v1beta1.AllocateRequest
 	requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-0"}}}
 	convey.Convey("with volcano", t, func() {
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
 		convey.Convey("GetPodList failed", func() {
-			mock := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodListCache",
-				func(_ *kubeclient.ClientK8s) []v1.Pod { return nil })
-			defer mock.Reset()
-			mockActivePod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodList",
-				func(_ *kubeclient.ClientK8s) ([]v1.Pod, error) { return nil, nil })
+			mockActivePodList := mockGetActivePodListCache(nil)
+			defer mockActivePodList.Reset()
+			mockActivePod := mockGetActivePodList(nil, nil)
 			defer mockActivePod.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("oldestPod is nil", func() {
-			mockGetPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"GetActivePodListCache", func(_ *kubeclient.ClientK8s) []v1.Pod { return mockPods })
-			defer mockGetPodList.Reset()
-			mockActivePod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodList",
-				func(_ *kubeclient.ClientK8s) ([]v1.Pod, error) { return mockPods, nil })
+			mockActivePodList := mockGetActivePodListCache(mockPods)
+			defer mockActivePodList.Reset()
+			mockActivePod := mockGetActivePodList(mockPods, nil)
 			defer mockActivePod.Reset()
-			mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
-				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-				return nil
-			})
+			mockFilter := mockFilterPods(nil)
 			defer mockFilter.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
@@ -303,38 +302,29 @@ func TestAllocateWithVolcano2(t *testing.T) {
 	var requests v1beta1.AllocateRequest
 	requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-0"}}}
 	convey.Convey("test AllocateWithVolcano", t, func() {
-		mockGetPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetActivePodListCache", func(_ *kubeclient.ClientK8s) []v1.Pod { return mockPods })
-		defer mockGetPodList.Reset()
-		mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
-			conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-			return []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
+		mockActivePodList := mockGetActivePodListCache(mockPods)
+		defer mockActivePodList.Reset()
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
+		convey.Convey("TryUpdatePodAnnotation failed", func() {
+			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 				Annotations: map[string]string{common.PodPredicateTime: "5",
 					common.HuaweiAscend910: "Ascend910-0"}}}}
-		})
-		defer mockFilter.Reset()
-		convey.Convey("TryUpdatePodAnnotation failed", func() {
-			mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, _ *v1.Pod, _ map[string]string) error {
-					return fmt.Errorf("err")
-				})
-			defer mockTryUpdatePodAnnotation.Reset()
+			mockFilter := mockFilterPods(mockPodSlice)
+			defer mockFilter.Reset()
+			mockUpdatePod := mockTryUpdatePodAnnotation(fmt.Errorf("err"))
+			defer mockUpdatePod.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("common.GetDeviceFromPodAnnotation failed", func() {
-			mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, _ *v1.Pod, _ map[string]string) error {
-					return nil
-				})
-			defer mockTryUpdatePodAnnotation.Reset()
-			mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
-				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-				return []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
-					Annotations: map[string]string{common.PodPredicateTime: "5",
-						common.ResourceNamePrefix + common.Ascend910c2: "Ascend910-2c-180-3"}}}}
-			})
+			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
+				Annotations: map[string]string{common.PodPredicateTime: "5",
+					common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}}}
+			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
+			mockUpdatePod := mockTryUpdatePodAnnotation(nil)
+			defer mockUpdatePod.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -349,32 +339,25 @@ func TestAllocateWithVolcano3(t *testing.T) {
 	var requests v1beta1.AllocateRequest
 	requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-0"}}}
 	convey.Convey("test AllocateWithVolcano", t, func() {
-		mockGetPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetActivePodListCache", func(_ *kubeclient.ClientK8s) []v1.Pod { return mockPods })
-		defer mockGetPodList.Reset()
-		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, _ *v1.Pod, _ map[string]string) error {
-				return nil
-			})
-		defer mockTryUpdatePodAnnotation.Reset()
+		mockActivePodList := mockGetActivePodListCache(mockPods)
+		defer mockActivePodList.Reset()
+		mockUpdatePod := mockTryUpdatePodAnnotation(nil)
+		defer mockUpdatePod.Reset()
 		mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
 		defer mockSlowNodeFunc.Reset()
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
 		convey.Convey("with volcano GetDeviceListID failed", func() {
-			mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
-				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-				return []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
-					Annotations: map[string]string{common.PodPredicateTime: "5",
-						common.HuaweiAscend910: "Ascend910"}}}}
-			})
+			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
+				Annotations: map[string]string{common.PodPredicateTime: "5",
+					common.HuaweiAscend910: "Ascend910"}}}}
+			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("with volcano run ok", func() {
-			mockFilter := gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
-				conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-				return mockPods
-			})
+			mockFilter := mockFilterPods(mockPods)
 			defer mockFilter.Reset()
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
@@ -400,6 +383,7 @@ func TestSetSlowNodeNoticeEnv(t *testing.T) {
 		defer mockGetCM.Reset()
 		resp := v1beta1.ContainerAllocateResponse{}
 		resp.Envs = make(map[string]string, slowNodeStepTimeEnvNum)
+		common.ParamOption.EnableSetSlowNode = true
 		ps.SetSlowNodeNoticeEnv(&resp)
 		convey.So(resp.Envs[common.PerfDumpPathEnv], convey.ShouldEqual, mockPerfDumpPath)
 		convey.So(resp.Envs[common.PerfDumpConfigEnv], convey.ShouldEqual, mockPerfDumpConfig)
@@ -429,10 +413,7 @@ func TestDestroyNotUsedVNPU(t *testing.T) {
 		device.NewHwAscend910Manager())
 	ps.klt2RealDevMap["Ascend910-0"] = "Ascend910-0"
 	common.ParamOption.AiCoreCount = common.MinAICoreNum
-	mockGetNPUs := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend910Manager)), "GetNPUs",
-		func(_ *device.HwAscend910Manager) (common.NpuAllInfo, error) {
-			return common.NpuAllInfo{}, nil
-		})
+	mockGetNPUsFunc := mockGetNPUs()
 	mockDestroy := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "DestroyVirtualDevice",
 		func(_ *device.AscendTools, _ string) error {
 			return nil
@@ -448,7 +429,7 @@ func TestDestroyNotUsedVNPU(t *testing.T) {
 	defer mockPodList.Reset()
 	defer mockDestroy.Reset()
 	defer mockAllocateDev.Reset()
-	defer mockGetNPUs.Reset()
+	defer mockGetNPUsFunc.Reset()
 	convey.Convey("test DestroyNotUsedVNPU", t, func() {
 		convey.Convey("DestroyNotUsedVNPU success", func() {
 			err := ps.DestroyNotUsedVNPU()
@@ -464,21 +445,14 @@ func TestDoWithVolcanoSchedule(t *testing.T) {
 	devicesIDs := []string{""}
 	podList := getMockPodList()
 	common.ParamOption.PresetVDevice = false
-	mockActivePodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-		"GetActivePodListCache", func(_ *kubeclient.ClientK8s) []v1.Pod {
-			return podList
-		})
-	mockUpdatePod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-		"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
-			annotation map[string]string) error {
-			return nil
-		})
+	mockActivePodList := mockGetActivePodListCache(podList)
+	mockUpdatePod := mockTryUpdatePodAnnotation(nil)
 	mockDestroy := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "DestroyNotUsedVNPU",
 		func(_ *PluginServer) error {
 			return nil
 		})
-	mockCreate := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)),
-		"CreateVirtualDevice", func(_ *device.AscendTools, phyID int32, templateName string) (string, error) {
+	mockCreate := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "CreateVirtualDevice",
+		func(_ *device.AscendTools, phyID int32, templateName string) (string, error) {
 			return "Ascend910-2c-100-0", nil
 		})
 	defer mockCreate.Reset()
@@ -521,4 +495,33 @@ func mockSetSlowNodeNoticeEnv() *gomonkey.Patches {
 		"SetSlowNodeNoticeEnv", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse) {
 			return
 		})
+}
+
+func mockGetNPUs() *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend910Manager)), "GetNPUs",
+		func(_ *device.HwAscend910Manager) (common.NpuAllInfo, error) {
+			return common.NpuAllInfo{}, nil
+		})
+}
+
+func mockGetActivePodListCache(mockPods []v1.Pod) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodListCache",
+		func(_ *kubeclient.ClientK8s) []v1.Pod { return mockPods })
+}
+
+func mockTryUpdatePodAnnotation(err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "TryUpdatePodAnnotation",
+		func(_ *kubeclient.ClientK8s, _ *v1.Pod, _ map[string]string) error { return err })
+}
+
+func mockGetActivePodList(mockPods []v1.Pod, err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodList",
+		func(_ *kubeclient.ClientK8s) ([]v1.Pod, error) { return mockPods, err })
+}
+
+func mockFilterPods(mockPods []v1.Pod) *gomonkey.Patches {
+	return gomonkey.ApplyFunc(common.FilterPods, func(pods []v1.Pod, deviceType string,
+		conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
+		return mockPods
+	})
 }

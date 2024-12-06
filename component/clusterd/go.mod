@@ -3,12 +3,12 @@ module clusterd
 go 1.20
 
 require (
+	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/golang/protobuf v1.5.3
 	github.com/smartystreets/goconvey v1.7.2
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.57.2
-	huawei.com/npu-exporter/v6 v6.0.0-RC3.b001
 	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.3
@@ -62,7 +62,7 @@ require (
 )
 
 replace (
-	huawei.com/npu-exporter/v6 => gitee.com/ascend/ascend-npu-exporter/v6 v6.0.0-RC3.b001
+	ascend-common => ../ascend-common
 	k8s.io/api => k8s.io/api v0.25.3
 	k8s.io/apimachinery => k8s.io/apimachinery v0.25.3
 	k8s.io/client-go => k8s.io/client-go v0.25.3

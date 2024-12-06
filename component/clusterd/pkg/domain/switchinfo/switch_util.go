@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -63,6 +63,20 @@ func DeepCopy(info *constant.SwitchInfo) (*constant.SwitchInfo, error) {
 		return nil, err
 	}
 	return newSwitchInfo, nil
+}
+
+// DeepCopyInfos deep copy NodeInfo
+func DeepCopyInfos(infos map[string]*constant.SwitchInfo) map[string]*constant.SwitchInfo {
+	res := make(map[string]*constant.SwitchInfo)
+	for key, val := range infos {
+		copyVal, err := DeepCopy(val)
+		if err != nil {
+			hwlog.RunLog.Errorf("deep copy switchinfo failed , err is %v", err)
+			continue
+		}
+		res[key] = copyVal
+	}
+	return res
 }
 
 // GetSafeData get data every 2000 SwitchInfo

@@ -1,0 +1,121 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+
+// Package jobv2 a series of message processing function
+package jobv2
+
+import (
+	"k8s.io/api/core/v1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podGroup"
+)
+
+func addJob(jobKey string) {
+	podGroupCache := podGroup.GetPodGroup(jobKey)
+	oldJobInfo := job.GetJobByNameSpaceAndName(podGroup.GetJobNameByPG(&podGroupCache), podGroupCache.Namespace)
+	if oldJobInfo.Name != "" && oldJobInfo.IsPreDelete && oldJobInfo.Key != jobKey {
+		// if old job is pre delete, and new job is add, delete old job cache
+		job.DeleteJobCache(oldJobInfo.Key)
+	}
+	jobInfo, ok := job.GetJobCache(jobKey)
+	if !ok {
+		job.InitCmAndCache(podGroupCache)
+		return
+	}
+	if jobInfo.Status == job.StatusJobPending {
+		return
+	}
+	// if cache exists, add update-message to queue
+	uniqueQueue.Store(jobKey, queueOperatorUpdate)
+}
+
+func updateJob(jobKey string) {
+	pg := podGroup.GetPodGroup(jobKey)
+	// jobInfo status is empty if jobInfo is not exists
+	jobInfo, ok := job.GetJobCache(jobKey)
+	if !ok && pg.Name == "" {
+		hwlog.RunLog.Debugf("job cache is empty and podGroup is empty, skip %s message", jobKey)
+		return
+	}
+	podJobMap := pod.GetPodByJobId(jobKey)
+	isPreDelete, status := getStatusByCache(pg, podJobMap)
+	if ok && jobInfo.Status == status && jobInfo.IsPreDelete == isPreDelete {
+		hwlog.RunLog.Debugf("the job %s cache is consistent with pod and podGroup cache", jobInfo.Name)
+		return
+	}
+	if isPreDelete {
+		// updateJob to preDelete
+		if !jobInfo.IsPreDelete {
+			hwlog.RunLog.Debugf("job %s updateJob to preDeleteJob", jobInfo.Name)
+			job.PreDeleteCmAndCache(podJobMap, jobKey)
+		}
+		return
+	}
+	// updateJob to addJob
+	if status == job.StatusJobPending && jobInfo.Status != job.StatusJobPending {
+		hwlog.RunLog.Debugf("job %s updateJob to addJob", jobInfo.Name)
+		job.InitCmAndCache(pg)
+		return
+	}
+	// update job to running or completed or failed
+	if jobInfo.Status != status {
+		job.UpdateCmAndCache(status, jobInfo, pg, podJobMap)
+		return
+	}
+	hwlog.RunLog.Warnf("this logic branch is unreachable, there must have been some issues with the code."+
+		"isPreDelete: %v, status: %s, job name: %s, job.isPreDelete: %v, job.status: %s",
+		isPreDelete, status, jobInfo.Name, jobInfo.IsPreDelete, jobInfo.Status)
+}
+
+func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod) (bool, string) {
+	if podGroup.Name == "" && len(podJobMap) == 0 {
+		return true, ""
+	}
+	isFailed := false
+	isSuccess := true
+	isRunning := true
+	for _, p := range podJobMap {
+		if p.Status.Phase == v1.PodFailed {
+			isFailed = true
+			isSuccess = false
+			isRunning = false
+			break
+		}
+		if p.Status.Phase != v1.PodSucceeded {
+			isSuccess = false
+		}
+		// pod is running and device is allocated, then rank table can be completed
+		if p.Status.Phase != v1.PodRunning || !pod.DeviceAllocateIsCompleted(p) {
+			isRunning = false
+		}
+	}
+	if isFailed {
+		return false, job.StatusJobFail
+	}
+	if isSuccess {
+		return false, job.StatusJobCompleted
+	}
+	if isRunning && len(podJobMap) >= int(podGroup.Spec.MinMember) {
+		return false, job.StatusJobRunning
+	}
+	return false, job.StatusJobPending
+}
+
+func preDeleteJob(jobKey string) {
+	jobInfo, ok := job.GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	if jobInfo.IsPreDelete {
+		return
+	}
+	podJobMap := pod.GetPodByJobId(jobKey)
+	job.PreDeleteCmAndCache(podJobMap, jobKey)
+}
+
+func deleteJob(joKey string) {
+	job.DeleteCmAndCache(joKey)
+}

@@ -4,15 +4,17 @@
 package resource
 
 import (
+	"context"
 	"strconv"
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
@@ -41,7 +43,7 @@ func AddNewMessageTotal() {
 }
 
 // Report new message report to configmaps, the number of configmap is determined by the number of messages
-func Report() {
+func Report(ctx context.Context) {
 	initTime = time.Now().UnixMilli()
 	reportTime = time.Now().UnixMilli()
 	timeSleepInitOnce := sync.Once{}
@@ -57,15 +59,16 @@ func Report() {
 				// when informer begin, frequent add messages
 				time.Sleep(time.Second)
 			})
-			cmManager.Lock()
-			deviceArr := device.GetSafeData(cmManager.deviceInfoMap)
-			nodeArr := node.GetSafeData(cmManager.nodeInfoMap)
-			switchArr := switchinfo.GetSafeData(cmManager.switchInfoMap)
-			cmManager.Unlock()
+			deviceArr := device.GetSafeData(faultmanager.GlobalFaultProcessCenter.QueryDeviceInfoToReport())
+			nodeArr := node.GetSafeData(faultmanager.GlobalFaultProcessCenter.QueryNodeInfoToReport())
+			switchArr := switchinfo.GetSafeData(faultmanager.GlobalFaultProcessCenter.QuerySwitchInfoToReport())
 			updateCmWithEmpty(deviceArr, nodeArr, switchArr)
 			reportTime = time.Now().UnixMilli()
 			processCount++
 			limitRate()
+		case <-ctx.Done():
+			hwlog.RunLog.Info("FaultProcessCenter stop work")
+			return
 		}
 	}
 }

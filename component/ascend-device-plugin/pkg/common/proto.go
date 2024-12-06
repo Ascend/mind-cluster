@@ -101,6 +101,7 @@ type NpuDevice struct {
 	AlarmRaisedTime        int64
 	NetworkFaultCodes      []int64
 	NetworkAlarmRaisedTime int64
+	FaultTimeMap           map[int64]int64
 	DevType                string
 	DeviceName             string
 	Health                 string
@@ -157,19 +158,20 @@ type Option struct {
 	DealWatchHandler   bool     // update pod cache when receiving pod informer watch errors
 	EnableSwitchFault  bool     // if enable switch faul
 	CheckCachedPods    bool     // check cached pods periodically
+	EnableSetSlowNode  bool     // switch of set slow node notice environment
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List
 func GetAllDeviceInfoTypeList() map[string]struct{} {
 	return map[string]struct{}{HuaweiUnHealthAscend910: {}, HuaweiNetworkUnHealthAscend910: {},
-		ResourceNamePrefix + Ascend910: {}, ResourceNamePrefix + Ascend910c2: {},
-		ResourceNamePrefix + Ascend910c4: {}, ResourceNamePrefix + Ascend910c8: {},
-		ResourceNamePrefix + Ascend910c16: {}, ResourceNamePrefix + Ascend910c5Cpu1Gb8: {},
-		ResourceNamePrefix + Ascend910c5Cpu1Gb16: {}, ResourceNamePrefix + Ascend910c6Cpu1Gb16: {},
-		ResourceNamePrefix + Ascend910c10Cpu3Gb16: {}, ResourceNamePrefix + Ascend910c3Cpu1Gb8: {},
-		ResourceNamePrefix + Ascend910c10Cpu3Gb16Ndvpp: {}, ResourceNamePrefix + Ascend910c10Cpu3Gb32: {},
-		ResourceNamePrefix + Ascend910c10Cpu4Gb16Dvpp: {},
-		ResourceNamePrefix + Ascend910c12Cpu3Gb32:     {}, ResourceNamePrefix + Ascend310: {},
+		ResourceNamePrefix + Ascend910: {}, ResourceNamePrefix + Ascend910vir2: {},
+		ResourceNamePrefix + Ascend910vir4: {}, ResourceNamePrefix + Ascend910vir8: {},
+		ResourceNamePrefix + Ascend910vir16: {}, ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},
+		ResourceNamePrefix + Ascend910vir5Cpu1Gb16: {}, ResourceNamePrefix + Ascend910vir6Cpu1Gb16: {},
+		ResourceNamePrefix + Ascend910vir10Cpu3Gb16: {}, ResourceNamePrefix + Ascend910vir3Cpu1Gb8: {},
+		ResourceNamePrefix + Ascend910vir10Cpu3Gb16Ndvpp: {}, ResourceNamePrefix + Ascend910vir10Cpu3Gb32: {},
+		ResourceNamePrefix + Ascend910vir10Cpu4Gb16Dvpp: {},
+		ResourceNamePrefix + Ascend910vir12Cpu3Gb32:     {}, ResourceNamePrefix + Ascend310: {},
 		ResourceNamePrefix + Ascend310P: {}, ResourceNamePrefix + Ascend310Pc1: {},
 		ResourceNamePrefix + Ascend310Pc2: {}, ResourceNamePrefix + Ascend310Pc4: {},
 		ResourceNamePrefix + Ascend310Pc2Cpu1: {}, ResourceNamePrefix + Ascend310Pc4Cpu3: {},
@@ -192,14 +194,21 @@ type DevStatusSet struct {
 	DeviceFault        []DeviceFault
 }
 
+// FaultTimeAndLevel of each fault code
+type FaultTimeAndLevel struct {
+	FaultTime  int64  `json:"fault_time"`
+	FaultLevel string `json:"fault_level"`
+}
+
 // DeviceFault  npu or network fault info
 type DeviceFault struct {
-	FaultType            string `json:"fault_type"`
-	NPUName              string `json:"npu_name"`
-	LargeModelFaultLevel string `json:"large_model_fault_level"`
-	FaultLevel           string `json:"fault_level"`
-	FaultHandling        string `json:"fault_handling"`
-	FaultCode            string `json:"fault_code"`
+	FaultType            string                       `json:"fault_type"`
+	NPUName              string                       `json:"npu_name"`
+	LargeModelFaultLevel string                       `json:"large_model_fault_level"`
+	FaultLevel           string                       `json:"fault_level"`
+	FaultHandling        string                       `json:"fault_handling"`
+	FaultCode            string                       `json:"fault_code"`
+	FaultTimeAndLevelMap map[string]FaultTimeAndLevel `json:"fault_time_and_level_map"`
 }
 
 // TaskResetInfoCache record task reset device information cache
@@ -210,9 +219,11 @@ type TaskResetInfoCache struct {
 
 // TaskResetInfo record task reset device information
 type TaskResetInfo struct {
-	RankList   []*TaskDevInfo
-	UpdateTime int64
-	RetryTime  int
+	RankList      []*TaskDevInfo
+	UpdateTime    int64
+	RetryTime     int
+	FaultFlushing bool
+	GracefulExit  int
 }
 
 // TaskDevInfo is the device info of a task

@@ -82,7 +82,8 @@ var (
 		", range [1, 30]")
 	dealWatchHandler = flag.Bool("dealWatchHandler", false,
 		"update pod cache when receiving pod informer watch errors")
-	checkCachedPods = flag.Bool("checkCachedPods", true, "check pods in cache periodically, default true")
+	checkCachedPods   = flag.Bool("checkCachedPods", true, "check pods in cache periodically, default true")
+	enableSetSlowNode = flag.Bool("enableSetSlowNode", false, "switch of set slow node notice environment,default false")
 )
 
 var (
@@ -237,6 +238,7 @@ func setParameters() {
 		LinkdownTimeout:    *linkdownTimeout,
 		DealWatchHandler:   *dealWatchHandler,
 		CheckCachedPods:    *checkCachedPods,
+		EnableSetSlowNode:  *enableSetSlowNode,
 	}
 }
 

@@ -52,7 +52,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 	}
 	var allDevices []common.NpuDevice
 	var aiCoreDevices []*common.NpuDevice
-	var allDeviceTypes []string
+	var allDeviceTypes = make([]string, 0)
 	for i := int32(0); i < devNum; i++ {
 		davinCiDev, err := hnm.getDavinCiDev(devList[i])
 		if err != nil {

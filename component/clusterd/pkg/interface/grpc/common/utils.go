@@ -14,63 +14,87 @@ import (
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podGroup"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
 
-var state2String map[MachineState]string = map[MachineState]string{
-	INIT: "INIT",
+var faultSplitLength = 2
 
-	SentStopTrain:          "SentStopTrain",
-	ReceiveStopFinish:      "ReceiveStopFinish",
-	SentGlobalFault:        "SentGlobalFault",
-	ReceiveSupportStrategy: "ReceiveSupportStrategy",
-	ReceiveRecoverStatus:   "ReceiveRecoverStatus",
-
-	ReceiveStepRetry:       "ReceiveStepRetry",
-	ReceiveStepRetryStatus: "ReceiveStepRetryStatus",
-
-	StartPodReschedule: "StartPodReschedule",
+// GetJobInfo return job's name, podGroup name and namespace
+func GetJobInfo(jobId string) (jobName, pgName, namespace string) {
+	jobInfo, _ := job.GetJobCache(jobId)
+	pg := podGroup.GetPodGroup(jobId)
+	return jobInfo.Name, pg.GetName(), jobInfo.NameSpace
 }
 
-var mode2String map[RecoverMode]string = map[RecoverMode]string{
-	InitMode:                "InitMode",
-	HbmFaultStepRetryMode:   "HbmFaultStepRetryMode",
-	ProcessFaultRecoverMode: "ProcessFaultRecoverMode",
-	PodRescheduleMode:       "PodReschedule",
-}
-
-var level2string map[int]string = map[int]string{
-	ArfRecoverLevel:  ProcessArfStrategy,
-	DumpRecoverLevel: ProcessDumpStrategy,
-	ExitRecoverLevel: ProcessExitStrategy,
-}
-
-var string2level map[string]int = map[string]int{
-	ProcessArfStrategy:  ArfRecoverLevel,
-	ProcessDumpStrategy: DumpRecoverLevel,
-	ProcessExitStrategy: ExitRecoverLevel,
-}
-
-// LevelToString translate process recover level to recover name
-func LevelToString(level int) string {
-	if str, ok := level2string[level]; ok {
-		return str
+// Faults2String return string of faults
+func Faults2String(faults []*pb.FaultRank) string {
+	if len(faults) == 0 {
+		return ""
 	}
-	return "unknown_strategy"
+	faultInfo := make([]string, 0, len(faults))
+	for _, item := range faults {
+		faultInfo = append(faultInfo, item.RankId+":"+item.FaultType)
+	}
+	return strings.Join(faultInfo, ",")
 }
 
-// StringToLevel translate process recover name to recover level
-func StringToLevel(name string) int {
-	if level, ok := string2level[name]; ok {
-		return level
+// String2Faults return faults split from string
+func String2Faults(faultStr string) []*pb.FaultRank {
+	faultStrSlice := strings.Split(faultStr, ",")
+	var res []*pb.FaultRank
+	for _, fault := range faultStrSlice {
+		fs := strings.Split(fault, ":")
+		n := len(fs)
+		if n == faultSplitLength {
+			res = append(res, &pb.FaultRank{
+				RankId:    fs[0],
+				FaultType: fs[n-1],
+			})
+		} else {
+			hwlog.RunLog.Warnf("bad format, fault=%s, faultStr=%s", fault, faultStr)
+		}
 	}
-	return -1
+	return res
+}
+
+// StrategySupported check strategy supported
+func StrategySupported(strategy string) bool {
+	return strategy == ProcessRetryStrategyName || strategy == ProcessRecoverStrategyName ||
+		strategy == ProcessDumpStrategyName || strategy == ProcessExitStrategyName
+}
+
+// GetRecoverBaseInfo get recover config
+func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error) {
+	config := RecoverConfig{}
+	pg, err := kube.RetryGetPodGroup(name, namespace, GetPodGroupTimes)
+	if err != nil {
+		return config, OperatePodGroupError, err
+	}
+	_, config.PlatFormMode = pg.Annotations[ProcessRecoverStrategy]
+	mindXConfig, ok := pg.Annotations[MindXRecoverStrategies]
+	strategyList := strings.Split(mindXConfig, ",")
+	for _, strategy := range strategyList {
+		if StrategySupported(strategy) {
+			config.MindXConfigStrategies = append(config.MindXConfigStrategies, strategy)
+		}
+	}
+	config.MindXConfigStrategies = append(config.MindXConfigStrategies, ProcessExitStrategyName)
+	value, ok := pg.Labels[ProcessReschedulingLabel]
+	if !ok {
+		hwlog.RunLog.Warn("can not find process rescheduling label")
+		config.ProcessRescheduleOn = false
+	}
+	config.ProcessRescheduleOn = value == ProcessReschedulingEnable
+	return config, OK, nil
 }
 
 // SendRetry send signal util send success or retry times upper retryTimes
@@ -86,33 +110,12 @@ func SendRetry(sender SignalRetrySender, signal *pb.ProcessManageSignal, retryTi
 	return err
 }
 
-// ModeToString return string of RecoverMode
-func ModeToString(mode RecoverMode) string {
-	str, _ := mode2String[mode]
-	return str
-}
-
-// StateToString return string of MachineState
-func StateToString(state MachineState) string {
-	str, _ := state2String[state]
-	return str
-}
-
-// String join MachineState slice string
-func (ms MachineStates) String() string {
-	var stateStrs []string
-	for _, state := range ms {
-		stateStrs = append(stateStrs, StateToString(state))
-	}
-	return strings.Join(stateStrs, ",")
-}
-
 // NewEventId return uuid according randLen
 func NewEventId(randLen int) string {
 	timestamp := time.Now().UnixNano()
 	randomNumberHex := ""
-	if randLen > RandLength || randLen < 1 {
-		randLen = RandLength
+	if randLen > MaxUuidRandomLength || randLen <= 0 {
+		randLen = MaxUuidRandomLength
 	}
 	randomNumber := make([]byte, randLen)
 	_, err := io.ReadFull(rand.Reader, randomNumber)
@@ -122,22 +125,12 @@ func NewEventId(randLen int) string {
 	return fmt.Sprintf("%X-%s", timestamp, randomNumberHex)
 }
 
-// CheckOrder return whether try change state order mixed
-func CheckOrder(state MachineState, expectPreStates []MachineState) bool {
-	for _, oldState := range expectPreStates {
-		if state == oldState {
-			return true
-		}
-	}
-	return false
-}
-
 // ChangeProcessSchedulingMode change process scheduling mode
-func ChangeProcessSchedulingMode(taskName, namespace, mode string) (*v1beta1.PodGroup, error) {
-	pg, err := kube.GetPodGroup(taskName, namespace)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get pg when change process scheduling, err: %v", err)
-		return nil, err
+func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) {
+	pg := podGroup.GetPodGroup(jobId)
+	if pg.GetName() == "" {
+		hwlog.RunLog.Errorf("failed to get podGroup when change process scheduling")
+		return nil, fmt.Errorf("can not find podGroup")
 	}
 	_, ok := pg.Labels[ProcessReschedulingLabel]
 	if !ok {
@@ -145,7 +138,7 @@ func ChangeProcessSchedulingMode(taskName, namespace, mode string) (*v1beta1.Pod
 		return nil, fmt.Errorf("can not find process rescheduling label when change")
 	}
 	pg.Labels[ProcessReschedulingLabel] = mode
-	return kube.UpdatePodGroup(pg)
+	return kube.UpdatePodGroup(&pg)
 }
 
 // RetryWriteResetCM retry write the reset info configMap
@@ -207,10 +200,16 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	newTaskInfo.RankList = []*TaskDevInfo{}
 	newTaskInfo.UpdateTime = time.Now().Unix()
 	newTaskInfo.RetryTime = oldTaskResetInfo.RetryTime
-	if operation == RestartAllProcess {
-		newTaskInfo.RetryTime += 1
+	if operation != NotifyFaultFlushingOperation {
+		newTaskInfo.FaultFlushing = false
+	} else {
+		newTaskInfo.FaultFlushing = true
 	}
-	if operation != FaultRankStatus {
+	if operation == RestartAllProcessOperation {
+		newTaskInfo.RetryTime += 1
+		return newTaskInfo, nil
+	}
+	if operation != NotifyFaultListOperation {
 		return newTaskInfo, nil
 	}
 	for _, rank := range faultRankList {
@@ -248,6 +247,7 @@ func GetFaultRankIdsInSameNode(faultRankIds []string, deviceNumPerNode int) []st
 			faultRankIdsResult = append(faultRankIdsResult, strconv.Itoa(i))
 		}
 	}
+
 	return faultRankIdsResult
 }
 
@@ -264,4 +264,83 @@ func CheckProcessRecoverOpen(name, nameSpace string) bool {
 		return false
 	}
 	return pg.Labels[ProcessReschedulingLabel] == ProcessReschedulingEnable
+}
+
+// RemoveSliceDuplicateFaults remote duplicate fault
+func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
+	var res = make([]*pb.FaultRank, 0)
+	exitMap := make(map[string]string)
+	for _, fault := range faults {
+		if typ, ok := exitMap[fault.RankId]; !ok {
+			exitMap[fault.RankId] = fault.FaultType
+		} else {
+			if typ == UceFaultType {
+				exitMap[fault.RankId] = fault.FaultType
+			}
+		}
+	}
+	for id, typ := range exitMap {
+		res = append(res, &pb.FaultRank{
+			RankId:    id,
+			FaultType: typ,
+		})
+	}
+	return res
+}
+
+// LabelFaultPod label fault for software fault
+func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
+	var faultPodRankList []string
+	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
+	for _, rank := range rankList {
+		faultRank, err := strconv.Atoi(rank)
+		if err != nil {
+			hwlog.RunLog.Errorf("parse pod rank failed, err is %v", err)
+			return nil, err
+		}
+		faultPodRank := faultRank / devicePerNode
+		faultPodRankList = append(faultPodRankList, strconv.Itoa(faultPodRank))
+	}
+	faultPodRankList = util.RemoveSliceDuplicateElement(faultPodRankList)
+	podMap, err := labelPodFault(jobId, faultPodRankList)
+	if err != nil {
+		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
+		return nil, fmt.Errorf("label fault pod failed, err is %v", err)
+	}
+	return podMap, nil
+}
+
+func labelPodFault(jobId string, faultPodRankList []string) (map[string]string, error) {
+	labelCache := make(map[string]string)
+	faultLabel := map[string]string{"fault-type": "software"}
+	for _, podRank := range faultPodRankList {
+		_, labeled := labelCache[podRank]
+		if labeled {
+			continue
+		}
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
+			hwlog.RunLog.Infof("discard nil pod")
+			continue
+		}
+		if _, err := kube.RetryPatchPodLabels(&pod, UpdatePodGroupTimes, faultLabel); err != nil {
+			return nil, err
+		}
+		labelCache[podRank] = string(pod.UID)
+	}
+	return labelCache, nil
+}
+
+// FaultPodAllRescheduled check if all fault pod rescheduled
+func FaultPodAllRescheduled(jobId string, oldPodMap map[string]string) bool {
+	for podRank, oldPodId := range oldPodMap {
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
+			return false
+		}
+		if oldPodId == string(pod.UID) {
+			return false
+		}
+	}
+	return true
 }
