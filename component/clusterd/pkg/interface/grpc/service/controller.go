@@ -1113,7 +1113,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 	if scheduleSuccess {
 		return common.ScheduleSuccessEvent, common.OK, nil
 	}
-	return common.ScheduleTimeoutEvent, common.ScheduleTimeout, fmt.Errorf("jobId=%s schedule timeout", ctl.jobInfo.JobId)
+	return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
