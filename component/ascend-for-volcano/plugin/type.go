@@ -20,6 +20,7 @@ package plugin
 import (
 	"sync"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -180,6 +181,7 @@ type ScheduleEnv struct {
 	Jobs                map[api.JobID]SchedulerJob
 	JobReplicas         map[api.JobID]int32
 	Nodes               map[string]NPUNode
+	NodesNotInSsn       map[string]*corev1.Node
 	JobSinglePodFlag    map[api.JobID]bool
 	JobSeverInfos       map[api.JobID]struct{}
 	JobDeleteFlag       map[api.JobID]struct{}

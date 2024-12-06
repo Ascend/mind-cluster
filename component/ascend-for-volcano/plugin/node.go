@@ -567,15 +567,31 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 
 func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {
 	existNodes := make(map[string]NPUNode)
+	// not in node informer and notready node
+	nodesNotInSsn := make(map[string]*v1.Node)
+	indexer := ssn.InformerFactory().Core().V1().Nodes().Informer().GetIndexer()
 	for nodeName, nNode := range sHandle.Nodes {
-		if _, exist := ssn.Nodes[nodeName]; !exist {
-			klog.V(util.LogWarningLev).Infof("node init <%s> is not in session,"+
-				"maybe node is deleted or not ready", nodeName)
+		if _, exist := ssn.Nodes[nodeName]; exist {
+			existNodes[nodeName] = nNode
 			continue
 		}
-		existNodes[nodeName] = nNode
+		klog.V(util.LogWarningLev).Infof("node <%s> is not in session when initializing,"+
+			"maybe node is deleted or not ready", nodeName)
+		obj, exist, err := indexer.GetByKey(nodeName)
+		if err != nil || !exist {
+			klog.V(util.LogWarningLev).Infof("node <%s> is not in informer indexer, maybe is deleted", nodeName)
+			continue
+		}
+		// nNode: type is NPUNode; vNode: type is *v1.Node
+		vNode, ok := obj.(*v1.Node)
+		if !ok || !util.IsNodeReady(vNode) {
+			klog.V(util.LogWarningLev).Infof("node <%s> is real notready", nodeName)
+			continue
+		}
+		nodesNotInSsn[nodeName] = vNode
 	}
 	sHandle.Nodes = existNodes
+	sHandle.NodesNotInSsn = nodesNotInSsn
 }
 
 func (sHandle *ScheduleHandler) syncDeviceInfosBySsn(ssn *framework.Session) map[string]NodeDeviceInfoWithID {
@@ -596,7 +612,14 @@ func (sHandle *ScheduleHandler) syncDeviceInfosBySsn(ssn *framework.Session) map
 		}
 	}
 
+	var needDealNodes []string
 	for nodeName := range ssn.Nodes {
+		needDealNodes = append(needDealNodes, nodeName)
+	}
+	for nodeName := range sHandle.NodesNotInSsn {
+		needDealNodes = append(needDealNodes, nodeName)
+	}
+	for _, nodeName := range needDealNodes {
 		deviceInfos[nodeName] = NodeDeviceInfoWithID{
 			NodeDeviceInfo: NodeDeviceInfo{
 				DeviceList: make(map[string]string),
@@ -620,6 +643,9 @@ func (sHandle *ScheduleHandler) syncNodeInfosBySsn(ssn *framework.Session) map[s
 	for nodeName := range ssn.Nodes {
 		nodeInfos[nodeName] = sHandle.NodeInfosFromCm.Nodes[nodeName]
 	}
+	for nodeName := range sHandle.NodesNotInSsn {
+		nodeInfos[nodeName] = sHandle.NodeInfosFromCm.Nodes[nodeName]
+	}
 	sHandle.NodeInfosFromCm.Unlock()
 	return nodeInfos
 }
@@ -631,6 +657,9 @@ func (sHandle *ScheduleHandler) syncSwitchInfosBySsn(ssn *framework.Session) map
 	for nodeName := range ssn.Nodes {
 		switchInfos[nodeName] = sHandle.SwitchInfosFromCm.Switches[nodeName]
 	}
+	for nodeName := range sHandle.NodesNotInSsn {
+		switchInfos[nodeName] = sHandle.SwitchInfosFromCm.Switches[nodeName]
+	}
 	sHandle.SwitchInfosFromCm.Unlock()
 	return switchInfos
 }
@@ -638,10 +667,11 @@ func (sHandle *ScheduleHandler) syncSwitchInfosBySsn(ssn *framework.Session) map
 func (sHandle *ScheduleHandler) initNodesFromSsn(ssn *framework.Session, deviceInfos map[string]NodeDeviceInfoWithID,
 	nodeInfoOfNodeD map[string]NodeDNodeInfo, switchInfos map[string]SwitchFaultInfo) {
 	newNodes := make(map[string]NPUNode)
-	for nodeName, nodeInf := range ssn.Nodes {
+	// apiNode: type is *api.NodeInfo
+	for nodeName, apiNode := range ssn.Nodes {
 		// get npu node in map sHandle.Nodes, if exist get old node, if not exist get NPUNode{} for new node init
 		node := sHandle.Nodes[nodeName]
-		if err := node.initNPUNodeByNodeInf(nodeInf, deviceInfos, nodeInfoOfNodeD, switchInfos,
+		if err := node.initNPUNodeByNodeInf(apiNode, deviceInfos, nodeInfoOfNodeD, switchInfos,
 			sHandle.FrameAttr.VJobTemplate); err != nil {
 			if !strings.Contains(err.Error(), notNPUNodeError) && err.Error() != normalNodeErr {
 				klog.V(util.LogErrorLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", nodeName, err)
@@ -649,6 +679,25 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(ssn *framework.Session, deviceI
 			continue
 		}
 		newNodes[nodeName] = node
+	}
+
+	// init deviceInfos for node in NodesNotInSsn
+	for nodeName, notInSsnNode := range sHandle.NodesNotInSsn {
+		if _, ok := newNodes[nodeName]; ok {
+			continue
+		}
+		nNode, ok := sHandle.Nodes[nodeName]
+		if ok {
+			continue
+		}
+		if err := nNode.initNPUNodeByNodeInf(api.NewNodeInfo(notInSsnNode), deviceInfos, nodeInfoOfNodeD, switchInfos,
+			sHandle.FrameAttr.VJobTemplate); err != nil {
+			if !strings.Contains(err.Error(), notNPUNodeError) && err.Error() != normalNodeErr {
+				klog.V(util.LogErrorLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", nodeName, err)
+			}
+			continue
+		}
+		newNodes[nodeName] = nNode
 	}
 	sHandle.Nodes = newNodes
 }
