@@ -241,7 +241,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 			}
 		}
 		switchFaultInfo := common.GetSwitchFaultInfo()
-
+		if common.GetSyncMapLen(resetGoroutine) != 0 {
+			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
+		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)

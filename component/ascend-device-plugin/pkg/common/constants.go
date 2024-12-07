@@ -528,7 +528,7 @@ const (
 	// Ascend910BRingsNumInfer indicates the number of devices in a ring
 	Ascend910BRingsNumInfer = 1
 	// Ascend910A3RingsNum indicates the number of devices in a ring
-	Ascend910A3RingsNum = 2
+	Ascend910A3RingsNum = 16
 	// RingSum indicates the max number of ring
 	RingSum = 2
 	// RankIndexKey for obtain the rank index in the pod

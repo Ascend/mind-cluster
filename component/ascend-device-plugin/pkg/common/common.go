@@ -668,3 +668,13 @@ func RandomInt64(min, max int64) int64 {
 
 	return randomNum.Int64()
 }
+
+// GetSyncMapLen get sync map length
+func GetSyncMapLen(m *sync.Map) int {
+	count := 0
+	m.Range(func(k, v interface{}) bool {
+		count++
+		return true
+	})
+	return count
+}

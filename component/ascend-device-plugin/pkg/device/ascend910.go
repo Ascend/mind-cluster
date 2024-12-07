@@ -46,6 +46,7 @@ var (
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
+	resetGoroutine                               = &sync.Map{}
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
@@ -113,7 +114,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 // GraceTolerance process training task with device fault gracefully
 func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
-		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage())
+		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]))
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
 			return
@@ -213,10 +214,14 @@ func (hnm *HwAscend910Manager) setAllDevUnhealthyOnRing(classifyDevs map[string]
 		hwlog.RunLog.Debug("should not set device to unhealthy")
 		return nil
 	}
-	ringNum := hnm.hotResetManager.GetRingNum()
-	ringIndex := int(inResetDev) / ringNum
-	startDevIndex := ringIndex * ringNum
-	endDevIndex := startDevIndex + ringNum
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
+	ringIndex := int(inResetDev) / resetDevNumOnce
+	startDevIndex := ringIndex * resetDevNumOnce
+	endDevIndex := startDevIndex + resetDevNumOnce
 	for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 		devStatusList[devIndex].NetworkHealth = v1beta1.Unhealthy
 		devStatusList[devIndex].Health = v1beta1.Unhealthy
@@ -264,10 +269,14 @@ func (hnm *HwAscend910Manager) upgradeHotResetError(classifyDevs map[string][]*c
 		hwlog.RunLog.Error("no ascend 910 device, upgrade hot reset error fail")
 		return
 	}
-	ringNum := hnm.hotResetManager.GetRingNum()
-	ringIndex := int(npuDev.LogicID) / ringNum
-	startDevIndex := ringIndex * ringNum
-	endDevIndex := startDevIndex + ringNum
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return
+	}
+	ringIndex := int(npuDev.LogicID) / resetDevNumOnce
+	startDevIndex := ringIndex * resetDevNumOnce
+	endDevIndex := startDevIndex + resetDevNumOnce
 	for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 		tempFaultInfo, err := hnm.hotResetManager.GetGlobalDevFaultInfo(int32(devIndex))
 		if err != nil {
@@ -347,8 +356,13 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 		return false, err
 	}
 	busyChipList := hnm.getBusyChipListFromPod(podList)
-	resetStartLogicID := oriLogicID / int32(getChipCountOnRing()) * int32(getChipCountOnRing())
-	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(getChipCountOnRing()); logicID++ {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false, err
+	}
+	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
+	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
 		chipActivity, err := hnm.isChipActive(logicID, busyChipList)
 		if err != nil {
 			return false, err
@@ -725,7 +739,13 @@ func (hnm *HwAscend910Manager) convertLogicIdToPhysicId(logicIds []int32) ([]int
 }
 
 func (hnm *HwAscend910Manager) isReSchedulingScene(npuCount int) bool {
-	if hnm.GetDeviceUsage() == common.Train && npuCount < hnm.hotResetManager.GetRingNum() {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false
+	}
+
+	if hnm.GetDeviceUsage() == common.Train && npuCount < resetDevNumOnce {
 		return true
 	}
 
@@ -779,17 +799,21 @@ func (hnm *HwAscend910Manager) filterDevStatus(classifyDevs map[string][]*common
 	}
 	devInReset := hnm.hotResetManager.GetDevListInReset()
 	filteredRingIndex := -1
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
 	for _, devStatus := range devStatusList {
 		if _, ok := devInReset[devStatus.LogicID]; !ok || devStatus.Health == v1beta1.Healthy ||
 			hnm.isDevShouldBeIsolate(devStatus.LogicID) {
 			continue
 		}
 		devStatus.Health = v1beta1.Healthy
-		ringNum := hnm.hotResetManager.GetRingNum()
-		ringIndex := int(devStatus.LogicID) / ringNum
+		ringIndex := int(devStatus.LogicID) / resetDevNumOnce
 		if ringIndex != filteredRingIndex {
-			startDevIndex := ringIndex * ringNum
-			endDevIndex := startDevIndex + ringNum
+			startDevIndex := ringIndex * resetDevNumOnce
+			endDevIndex := startDevIndex + resetDevNumOnce
 			for devIndex := startDevIndex; devIndex < endDevIndex; devIndex++ {
 				devStatusList[devIndex].NetworkHealth = v1beta1.Healthy
 			}
@@ -1304,9 +1328,13 @@ func (hnm *HwAscend910Manager) getNeedResetDeviceLogicIdMap(devFaultInfoList []*
 		return nil, err
 	}
 	faultDeviceLogicIdMap := make(map[int32]int32, len(resetFaultInfoMap))
-	chipCountOnRing := getChipCountOnRing()
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
+	}
 	for resetStartLogicId := range resetFaultInfoMap {
-		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(chipCountOnRing), faultDeviceLogicIdMap); err != nil {
+		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(resetDevNumOnce), faultDeviceLogicIdMap); err != nil {
 			hwlog.RunLog.Errorf("failed to add logic_ids to faultDeviceLogicIdMap in the same SMP system, err: %v", err)
 			return nil, err
 		}
@@ -1462,10 +1490,14 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 		hwlog.RunLog.Errorf("failed to get need reset device list, err: %v", err)
 		return err
 	}
+	processId := time.Now().UnixMilli()
+	resetGoroutine.Store(processId, struct{}{})
 	if err := hnm.execResetDevice(resetFaultInfoMap); err != nil {
 		hwlog.RunLog.Errorf("failed to exec reset device list, err: %v", err)
+		resetGoroutine.Delete(processId)
 		return err
 	}
+	resetGoroutine.Delete(processId)
 	for _, devInfo := range devFaultInfoList {
 		common.SetDeviceInit(devInfo.LogicId)
 	}
@@ -1576,8 +1608,13 @@ func (hnm *HwAscend910Manager) isShouldCheckNet(logicID int32) bool {
 
 func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheckNet bool) error {
 	var totalTime int
-	resetStartLogicID := oriLogicID / int32(getChipCountOnRing()) * int32(getChipCountOnRing())
-	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(getChipCountOnRing()); logicID++ {
+	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
+	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
+	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
 		if err := hnm.waitDeviceResetComplete(logicID, &totalTime, shouldCheckNet); err != nil {
 			return err
 		}
