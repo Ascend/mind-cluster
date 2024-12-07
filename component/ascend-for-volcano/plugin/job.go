@@ -330,7 +330,7 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 	if _, found := sHandle.JobDeleteFlag[sJob.Name]; found {
 		return
 	}
-	if k, ok := sJob.Label[util.ProcessReschedulingTag]; ok && k == util.EnableFunc {
+	if k, ok := sJob.Label[util.ProcessRecoverEnable]; ok && k == util.EnableFunc {
 		return
 	}
 	cm, err := util.GetConfigMapWithRetry(sHandle.FrameAttr.KubeClient, sJob.NameSpace,

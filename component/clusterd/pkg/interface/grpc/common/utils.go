@@ -18,6 +18,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
@@ -68,32 +69,32 @@ func String2Faults(faultStr string) []*pb.FaultRank {
 
 // StrategySupported check strategy supported
 func StrategySupported(strategy string) bool {
-	return strategy == ProcessRetryStrategyName || strategy == ProcessRecoverStrategyName ||
-		strategy == ProcessDumpStrategyName || strategy == ProcessExitStrategyName
+	return strategy == constant.ProcessRetryStrategyName || strategy == constant.ProcessRecoverStrategyName ||
+		strategy == constant.ProcessDumpStrategyName || strategy == constant.ProcessExitStrategyName
 }
 
 // GetRecoverBaseInfo get recover config
 func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error) {
 	config := RecoverConfig{}
-	pg, err := kube.RetryGetPodGroup(name, namespace, GetPodGroupTimes)
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		return config, OperatePodGroupError, err
 	}
-	_, config.PlatFormMode = pg.Annotations[ProcessRecoverStrategy]
-	mindXConfig, ok := pg.Annotations[MindXRecoverStrategies]
+	_, config.PlatFormMode = pg.Annotations[constant.ProcessRecoverStrategy]
+	mindXConfig, ok := pg.Annotations[constant.RecoverStrategies]
 	strategyList := strings.Split(mindXConfig, ",")
 	for _, strategy := range strategyList {
 		if StrategySupported(strategy) {
 			config.MindXConfigStrategies = append(config.MindXConfigStrategies, strategy)
 		}
 	}
-	config.MindXConfigStrategies = append(config.MindXConfigStrategies, ProcessExitStrategyName)
-	value, ok := pg.Labels[ProcessReschedulingLabel]
+	config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.ProcessExitStrategyName)
+	value, ok := pg.Labels[constant.ProcessRecoverEnableLabel]
 	if !ok {
 		hwlog.RunLog.Warn("can not find process rescheduling label")
 		config.ProcessRescheduleOn = false
 	}
-	config.ProcessRescheduleOn = value == ProcessReschedulingEnable
+	config.ProcessRescheduleOn = value == constant.ProcessRecoverEnable
 	return config, OK, nil
 }
 
@@ -114,8 +115,8 @@ func SendRetry(sender SignalRetrySender, signal *pb.ProcessManageSignal, retryTi
 func NewEventId(randLen int) string {
 	timestamp := time.Now().UnixNano()
 	randomNumberHex := ""
-	if randLen > MaxUuidRandomLength || randLen <= 0 {
-		randLen = MaxUuidRandomLength
+	if randLen > constant.MaxUuidRandomLength || randLen <= 0 {
+		randLen = constant.MaxUuidRandomLength
 	}
 	randomNumber := make([]byte, randLen)
 	_, err := io.ReadFull(rand.Reader, randomNumber)
@@ -132,12 +133,12 @@ func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) 
 		hwlog.RunLog.Errorf("failed to get podGroup when change process scheduling")
 		return nil, fmt.Errorf("can not find podGroup")
 	}
-	_, ok := pg.Labels[ProcessReschedulingLabel]
+	_, ok := pg.Labels[constant.ProcessRecoverEnableLabel]
 	if !ok {
 		hwlog.RunLog.Error("can not find process rescheduling label when change")
 		return nil, fmt.Errorf("can not find process rescheduling label when change")
 	}
-	pg.Labels[ProcessReschedulingLabel] = mode
+	pg.Labels[constant.ProcessRecoverEnableLabel] = mode
 	return kube.UpdatePodGroup(&pg)
 }
 
@@ -145,7 +146,7 @@ func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) 
 func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, operator string) (*v1.ConfigMap, error) {
 	var err error
 	var configMap *v1.ConfigMap
-	for i := 0; i < WriteResetInfoRetryTimes; i++ {
+	for i := 0; i < constant.WriteResetInfoRetryTimes; i++ {
 		time.Sleep(time.Duration(i) * time.Second) // first i==0, sleep zero second
 		configMap, err = WriteResetInfoToCM(taskName, nameSpace, faultRankList, operator)
 		if err == nil {
@@ -158,13 +159,13 @@ func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, opera
 // WriteResetInfoToCM write the reset info configMap
 func WriteResetInfoToCM(taskName, namespace string,
 	faultRankList []string, operation string) (*v1.ConfigMap, error) {
-	oldCM, err := kube.GetConfigMap(ResetInfoCMNamePrefix+taskName, namespace)
+	oldCM, err := kube.GetConfigMap(constant.ResetInfoCMNamePrefix+taskName, namespace)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get reset cm of task %s, err is : %v", taskName, err)
 		return nil, err
 	}
 
-	oldResetInfoData, ok := oldCM.Data[ResetInfoCMDataKey]
+	oldResetInfoData, ok := oldCM.Data[constant.ResetInfoCMDataKey]
 	if !ok {
 		return nil, fmt.Errorf("invalid old reset info data")
 	}
@@ -187,8 +188,8 @@ func WriteResetInfoToCM(taskName, namespace string,
 		TypeMeta:   oldCM.TypeMeta,
 		ObjectMeta: oldCM.ObjectMeta,
 		Data: map[string]string{
-			ResetInfoCMDataKey:      string(data),
-			ResetInfoCMCheckCodeKey: checkCode,
+			constant.ResetInfoCMDataKey:      string(data),
+			constant.ResetInfoCMCheckCodeKey: checkCode,
 		},
 	}
 	return kube.UpdateConfigMap(newCm)
@@ -200,16 +201,16 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	newTaskInfo.RankList = []*TaskDevInfo{}
 	newTaskInfo.UpdateTime = time.Now().Unix()
 	newTaskInfo.RetryTime = oldTaskResetInfo.RetryTime
-	if operation != NotifyFaultFlushingOperation {
+	if operation != constant.NotifyFaultFlushingOperation {
 		newTaskInfo.FaultFlushing = false
 	} else {
 		newTaskInfo.FaultFlushing = true
 	}
-	if operation == RestartAllProcessOperation {
+	if operation == constant.RestartAllProcessOperation {
 		newTaskInfo.RetryTime += 1
 		return newTaskInfo, nil
 	}
-	if operation != NotifyFaultListOperation {
+	if operation != constant.NotifyFaultListOperation {
 		return newTaskInfo, nil
 	}
 	for _, rank := range faultRankList {
@@ -221,7 +222,7 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 		newTaskInfo.RankList = append(newTaskInfo.RankList, &TaskDevInfo{
 			RankId: rankId,
 			DevFaultInfo: DevFaultInfo{
-				Status: FaultRankStatus,
+				Status: constant.FaultRankStatus,
 			},
 		})
 	}
@@ -258,12 +259,12 @@ func CheckProcessRecoverOpen(name, nameSpace string) bool {
 		hwlog.RunLog.Errorf("get pg err: %v", err)
 		return false
 	}
-	_, ok := pg.Labels[ProcessReschedulingLabel]
+	_, ok := pg.Labels[constant.ProcessRecoverEnableLabel]
 	if !ok {
 		hwlog.RunLog.Warn("can not find process rescheduling label")
 		return false
 	}
-	return pg.Labels[ProcessReschedulingLabel] == ProcessReschedulingEnable
+	return pg.Labels[constant.ProcessRecoverEnableLabel] == constant.ProcessRecoverEnable
 }
 
 // RemoveSliceDuplicateFaults remote duplicate fault
@@ -274,7 +275,7 @@ func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
 		if typ, ok := exitMap[fault.RankId]; !ok {
 			exitMap[fault.RankId] = fault.FaultType
 		} else {
-			if typ == UceFaultType {
+			if typ == constant.UceFaultType {
 				exitMap[fault.RankId] = fault.FaultType
 			}
 		}
@@ -323,7 +324,7 @@ func labelPodFault(jobId string, faultPodRankList []string) (map[string]string, 
 			hwlog.RunLog.Infof("discard nil pod")
 			continue
 		}
-		if _, err := kube.RetryPatchPodLabels(&pod, UpdatePodGroupTimes, faultLabel); err != nil {
+		if _, err := kube.RetryPatchPodLabels(&pod, constant.UpdatePodGroupTimes, faultLabel); err != nil {
 			return nil, err
 		}
 		labelCache[podRank] = string(pod.UID)

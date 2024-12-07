@@ -540,7 +540,7 @@ func (reScheduler *ReScheduler) initTorJobDeletedFlag(jobInfo *api.JobInfo, fJob
 func (reScheduler *ReScheduler) setTorSingleJobDeletedFlag(jobInfo *api.JobInfo, fJob *FaultJob) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc {
 		fJob.setFaultTaskUseNode(jobInfo)
-		if jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc {
+		if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
 			return
 		}
 

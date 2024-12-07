@@ -329,8 +329,8 @@ const (
 	EnableFunc = "on"
 	// SinglePodTag the tag of single pod rescheduling
 	SinglePodTag = "pod-rescheduling"
-	// ProcessReschedulingTag the tag of process rescheduling
-	ProcessReschedulingTag = "process-rescheduling"
+	// ProcessRecoverEnable the tag of process rescheduling
+	ProcessRecoverEnable = "process-recover-enable"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
 )

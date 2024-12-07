@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
 // Package common is grpc common types and functions
-package common
+package constant
 
 // process signal type
 const (
@@ -19,8 +19,8 @@ const (
 
 // recover strategy name
 const (
-	// MindXRecoverStrategies config in pod group label for supported strategy
-	MindXRecoverStrategies = "mindx-recover-strategy"
+	// RecoverStrategies config in pod group label for supported strategy
+	RecoverStrategies = "recover-strategy"
 	// ProcessRetryStrategyName strategy name of HBM fault step retry
 	ProcessRetryStrategyName = "retry"
 	// ProcessRecoverStrategyName strategy name of process online recover
@@ -49,12 +49,12 @@ const (
 const (
 	// FaultRankStatus rank status is fault
 	FaultRankStatus = "fault"
-	// ProcessReschedulingLabel the process rescheduling label of pg
-	ProcessReschedulingLabel = "process-rescheduling"
-	// ProcessReschedulingEnable open process rescheduling
-	ProcessReschedulingEnable = "on"
-	// ProcessReschedulingPause close process rescheduling temporarily
-	ProcessReschedulingPause = "pause"
+	// ProcessRecoverEnableLabel the process recover label of pg
+	ProcessRecoverEnableLabel = "process-recover-enable"
+	// ProcessRecoverEnable open process recover
+	ProcessRecoverEnable = "on"
+	// ProcessRecoverPause close process recover temporarily
+	ProcessRecoverPause = "pause"
 )
 
 // write reset configmap operation
