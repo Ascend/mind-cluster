@@ -1222,8 +1222,19 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 		reasonList = append(reasonList, tmpReason...)
 		break
 	}
+	if fTask.IsSoftwareFault {
+		reasonList = append(reasonList, getTaskSoftwareFaultReason(fTask))
+	}
 	fTask.Reason = reasonList
 	return nil
+}
+
+func getTaskSoftwareFaultReason(fTask *FaultTask) FaultReasonList {
+	return FaultReasonList{
+		NodeName:      fTask.NodeName,
+		TaskName:      fTask.TaskName,
+		FaultRankList: fTask.initFaultRankIndex(),
+	}
 }
 
 func setTaskFaultReasonByFaultNode(fTask *FaultTask, fNode FaultNode) []FaultReasonList {
@@ -1238,6 +1249,8 @@ func setTaskFaultReasonByFaultNode(fTask *FaultTask, fNode FaultNode) []FaultRea
 			}
 			var reason FaultReasonList
 			reason.NodeName = fNode.NodeName
+			reason.TaskName = fTask.TaskName
+			reason.FaultRankList = fTask.initFaultRankIndex()
 			reason.FaultDeviceList = fCard
 			reasonList = append(reasonList, reason)
 		}
