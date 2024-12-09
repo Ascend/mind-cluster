@@ -165,7 +165,7 @@ func getSwitchFaultLevelAndNodeStatus() (string, string) {
 	case NotHandleFaultLevel:
 		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
 	case PreSeparateFaultLevel:
-		faultLevel, NodeStatus = PreSeparateFaultLevelStr, nodeHealthy
+		faultLevel, NodeStatus = PreSeparateFaultLevelStr, nodeSubHealthy
 	case SeparateFaultLevel:
 		faultLevel, NodeStatus = SeparateFaultLevelStr, nodeUnHealthy
 	default:
