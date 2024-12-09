@@ -27,9 +27,6 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -38,6 +35,9 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 var lastStatus = common.NewAtomicBool(false)

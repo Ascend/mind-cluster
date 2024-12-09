@@ -24,7 +24,6 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +32,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/devmanager"
 )
 
 const (

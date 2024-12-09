@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (

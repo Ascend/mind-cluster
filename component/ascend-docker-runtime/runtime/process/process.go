@@ -32,8 +32,8 @@ import (
 
 	"github.com/containerd/containerd/oci"
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/dcmi"
 )

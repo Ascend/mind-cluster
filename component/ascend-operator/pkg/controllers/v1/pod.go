@@ -38,11 +38,11 @@ import (
 	"github.com/kubeflow/common/pkg/util/labels"
 	"github.com/kubeflow/common/pkg/util/train"
 	"github.com/kubeflow/training-operator/pkg/common/util"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
+	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"

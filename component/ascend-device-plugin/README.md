@@ -22,11 +22,11 @@
 
 1.  通过git拉取源码，并切换master分支，获得ascend-device-plugin。
 
-    示例：源码放在/home/test/ascend-device-plugin目录下
+    示例：源码放在/home/mindxdl/component/ascend-device-plugin目录下
 
 2.  执行以下命令，进入构建目录，根据设备插件应用场景，选择其中一个构建脚本执行，在“output“目录下生成二进制device-plugin、yaml文件和Dockerfile等文件。
 
-    **cd** _/home/test/_**ascend-device-plugin/build/**
+    **cd** _/home/mindxdl/component/_**ascend-device-plugin/build/**
 
      2.1 中心侧场景编译device-plugin（构建镜像，容器启动设备插件场景）
         
@@ -42,7 +42,7 @@
 
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ll** _/home/test/_**ascend-device-plugin/output**
+    **ll** _/home/mindxdl/component/_**ascend-device-plugin/output**
 
     ```
     drwxr-xr-x  2 root root     4096 Jan 18 17:04 ./

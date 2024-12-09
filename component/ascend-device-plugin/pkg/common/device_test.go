@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/devmanager/common"
 )
 
 const (

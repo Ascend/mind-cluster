@@ -24,10 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/common"
 )
 
 const (

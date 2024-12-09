@@ -18,13 +18,13 @@ package kubeclient
 import (
 	"reflect"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // InitPodInformer init pod informer

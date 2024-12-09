@@ -22,7 +22,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const mockDeviceID = 100
