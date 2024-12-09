@@ -6,7 +6,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -60,7 +59,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultmanager.JobFa
 			RankId: info.RankId,
 		}
 		fault.FaultType = constant.NormalFaultType
-		if strings.Contains(info.FaultCode, constant.UceFaultCode) {
+		if info.DoStepRetry {
 			fault.FaultType = constant.UceFaultType
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
@@ -291,7 +290,9 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		hwlog.RunLog.Warnf("global fault center is nil")
 	}
 	controller.saveCacheFault(request.FaultRankIds)
-	controller.addEvent(common.FaultOccurEvent)
+	if !common.IsUceFault(request.FaultRankIds) {
+		controller.addEvent(common.FaultOccurEvent)
+	}
 	return &pb.Status{
 		Code: int32(common.OK),
 		Info: "receive ReportProcessFault",
