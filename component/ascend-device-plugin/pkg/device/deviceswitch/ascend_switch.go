@@ -23,11 +23,10 @@ import (
 	"time"
 	"unsafe"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	devmanagercommon "huawei.com/npu-exporter/v6/devmanager/common"
-
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	devmanagercommon "ascend-common/devmanager/common"
 )
 
 /*
