@@ -26,21 +26,24 @@ func newUceFaultProcessor(deviceCenter *deviceFaultProcessCenter) *uceFaultProce
 }
 
 func (reportInfos *reportInfosForAllJobs) getInfo(jobId, nodeName, deviceName string) reportInfo {
+	noReport := reportInfo{
+		RecoverTime:  constant.JobNotRecover,
+		CompleteTime: constant.JobNotRecoverComplete,
+	}
 	if reportInfos == nil {
-		return reportInfo{
-			RecoverTime:  constant.JobNotRecover,
-			CompleteTime: constant.JobNotRecoverComplete,
-		}
+		return noReport
 	}
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
 	if info, ok := reportInfos.InfoMap[jobId][nodeName][deviceName]; ok {
+		// expired report info should not use
+		if expiredReportInfo(&info) {
+			delete(reportInfos.InfoMap[jobId][nodeName], deviceName)
+			return noReport
+		}
 		return info
 	}
-	return reportInfo{
-		RecoverTime:  constant.JobNotRecover,
-		CompleteTime: constant.JobNotRecoverComplete,
-	}
+	return noReport
 }
 
 func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId string, nodeName string) uceNodeInfo {
@@ -53,13 +56,20 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
 		deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceOfJob.DeviceID
+		uceReportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
 		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
-			reportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
 			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
 				DeviceName:   deviceName,
 				FaultTime:    uceDevice.FaultTime,
-				RecoverTime:  reportInfo.RecoverTime,
-				CompleteTime: reportInfo.CompleteTime,
+				RecoverTime:  uceReportInfo.RecoverTime,
+				CompleteTime: uceReportInfo.CompleteTime,
+			}
+		} else if uceReportInfo.RecoverTime != constant.JobNotRecover {
+			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
+				DeviceName:   deviceName,
+				FaultTime:    constant.DeviceNotFault,
+				RecoverTime:  uceReportInfo.RecoverTime,
+				CompleteTime: uceReportInfo.CompleteTime,
 			}
 		}
 	}

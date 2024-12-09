@@ -4,7 +4,9 @@
 package faultmanager
 
 import (
+	"strings"
 	"sync"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -66,7 +68,7 @@ func (processor *jobRankFaultInfoProcessor) process() {
 		}
 
 		for _, nodeName := range nodesName {
-			faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList)
+			faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId)
 			jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, faultRankList...)
 		}
 		jobFaultInfos[jobId] = jobFaultInfo
@@ -75,26 +77,89 @@ func (processor *jobRankFaultInfoProcessor) process() {
 }
 
 func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(nodeDeviceInfoMap map[string]AdvanceDeviceFaultCm,
-	nodeName string, serverList map[string]constant.ServerHccl) []FaultRank {
+	nodeName string, serverList map[string]constant.ServerHccl, jobId string) []FaultRank {
 	advanceDeviceInfo := nodeDeviceInfoMap[nodeName]
 	devicesOfJobOnNode, ok := serverList[nodeName]
 	faultRankList := make([]FaultRank, 0)
 	if !ok || len(devicesOfJobOnNode.DeviceList) == 0 {
 		return faultRankList
 	}
+
 	for _, deviceInfo := range devicesOfJobOnNode.DeviceList {
 		deviceName := advanceDeviceInfo.ServerType + "-" + deviceInfo.DeviceID
-		faultList, ok := advanceDeviceInfo.FaultDeviceList[deviceName]
-		if !ok {
+		faultList, found := advanceDeviceInfo.FaultDeviceList[deviceName]
+		uceInManagementPlane := false
+		if found {
+			// scan management plane fault info
+			for _, fault := range faultList {
+				faultRank := FaultRank{
+					RankId:      deviceInfo.RankID,
+					FaultCode:   fault.FaultCode,
+					FaultLevel:  fault.FaultLevel,
+					DoStepRetry: false,
+				}
+				if strings.Contains(fault.FaultCode, constant.UceFaultCode) {
+					// management plane find uce fault
+					uceInManagementPlane = true
+					faultRank.DoStepRetry = processor.canDoStepRetry(jobId, nodeName, deviceName)
+				}
+				faultRankList = append(faultRankList, faultRank)
+			}
+		}
+		if uceInManagementPlane {
 			continue
 		}
-		for _, fault := range faultList {
+		// // business plane find uce fault
+		if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
 			faultRankList = append(faultRankList, FaultRank{
-				RankId:     deviceInfo.RankID,
-				FaultCode:  fault.FaultCode,
-				FaultLevel: fault.FaultLevel,
+				RankId:      deviceInfo.RankID,
+				FaultCode:   constant.UceFaultCode,
+				FaultLevel:  RestartBusiness,
+				DoStepRetry: processor.canDoStepRetry(jobId, nodeName, deviceName),
 			})
 		}
 	}
 	return faultRankList
+}
+
+func (processor *jobRankFaultInfoProcessor) canDoStepRetry(jobId, nodeName, deviceName string) bool {
+	uceProcessor, err := processor.deviceCenter.getUceFaultProcessor()
+	if err != nil {
+		hwlog.RunLog.Errorf("getUceFaultProcessor exception: %v", err)
+		return false
+	}
+	jobInfo, found := uceProcessor.uceDevicesOfUceJob[jobId]
+	if !found {
+		hwlog.RunLog.Debugf("job %s has no uce fault", jobId)
+		return false
+	}
+	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	if !found {
+		hwlog.RunLog.Debugf("job %s's uce fault is not on node %s device %s", jobId, nodeName, deviceName)
+		return false
+	}
+	doStepRetry := canDoStepRetry(&uceDevice)
+	hwlog.RunLog.Debugf("uceDevice %s stepretry %v", util.ObjToString(uceDevice), doStepRetry)
+	return doStepRetry
+}
+
+func (processor *jobRankFaultInfoProcessor) uceInBusinessPlane(jobId, nodeName, deviceName string) bool {
+	uceProcessor, err := processor.deviceCenter.getUceFaultProcessor()
+	if err != nil {
+		hwlog.RunLog.Errorf("getUceFaultProcessor exception: %v", err)
+		return false
+	}
+	jobInfo := uceProcessor.uceDevicesOfUceJob[jobId]
+	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	// business plane didn't find uce fault
+	if !found || uceDevice.RecoverTime == constant.JobNotRecover {
+		hwlog.RunLog.Debugf("business plane didn't find uce fault. uceDevice: %s", util.ObjToString(uceDevice))
+		return false
+	}
+	// business plane found expired uce fault
+	if time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout > uceDevice.RecoverTime {
+		hwlog.RunLog.Debugf("business plane found expired uce fault. uceDevice: %s", util.ObjToString(uceDevice))
+		return false
+	}
+	return true
 }
