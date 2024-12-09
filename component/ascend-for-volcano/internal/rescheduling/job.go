@@ -121,7 +121,7 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo) bool {
 
 	klog.V(util.LogDebugLev).Infof("<%d/%d> pod of job restarted", restartNum, jobInfo.MinAvailable)
 	if len(jobInfo.PodGroup.Labels) != 0 && (jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc) &&
+		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc) &&
 		fJob.PendingSessionNum != pendingTimes {
 		return restartNum >= deleteNum
 	}
@@ -385,7 +385,7 @@ func (fJob *FaultJob) IsJobSingleRescheduling(sJob *plugin.SchedulerJob) bool {
 
 // IsProcessReschedulingJob valid job.
 func (fJob *FaultJob) IsProcessReschedulingJob(sJob *plugin.SchedulerJob) bool {
-	if sJob.Label[util.ProcessReschedulingTag] == util.EnableFunc {
+	if sJob.Label[util.ProcessRecoverEnable] == util.EnableFunc {
 		return true
 	}
 	return false
@@ -419,7 +419,7 @@ func (fJob *FaultJob) setFaultTaskUseNode(jobInfo *api.JobInfo) {
 
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] != util.EnableFunc {
+		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
 		return
 	}
 	newFailedTask := make(map[api.TaskID]struct{})
