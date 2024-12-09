@@ -58,9 +58,9 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultmanager.JobFa
 		fault := &pb.FaultRank{
 			RankId: info.RankId,
 		}
-		fault.FaultType = common.NormalFaultType
+		fault.FaultType = constant.NormalFaultType
 		if strings.Contains(info.FaultCode, constant.UceFaultCode) {
-			fault.FaultType = common.UceFaultType
+			fault.FaultType = constant.UceFaultType
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
 	}
@@ -126,7 +126,7 @@ func (s *FaultRecoverService) preRegistry(req *pb.ClientInfo) (common.RespCode, 
 	if _, ok := job.GetJobCache(req.JobId); !ok {
 		return common.JobNotExist, fmt.Errorf("jobId=%s not exist, reuse registry", req.JobId)
 	}
-	if s.serveJobNum() >= common.MaxServeJobs {
+	if s.serveJobNum() >= constant.MaxServeJobs {
 		return common.OutOfMaxServeJobs,
 			fmt.Errorf("out of max serve jobs, reuse registry for jobId=%s", req.JobId)
 	}

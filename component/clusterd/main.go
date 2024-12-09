@@ -20,7 +20,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
-	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/service"
 	"clusterd/pkg/interface/kube"
 )
@@ -37,7 +36,7 @@ var (
 	BuildName         string
 	version           bool
 	server            *sv.ClusterInfoMgrServer
-	limiter           = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	limiter           = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
 	keepAliveInterval = 5
 )
 

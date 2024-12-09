@@ -4,8 +4,13 @@
 package podGroup
 
 import (
-	"ascend-common/common-utils/hwlog"
+	"strings"
+
+	"k8s.io/utils/strings/slices"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 )
 
 // GetJobKeyByPG get job unique key by podGroup
@@ -62,12 +67,22 @@ func GetModelFramework(info *v1beta1.PodGroup) string {
 // JudgeUceByJobKey judge uce label by jobKey
 func JudgeUceByJobKey(jobKey string) bool {
 	podGroup := GetPodGroup(jobKey)
-	if len(podGroup.Labels) == 0 {
+	flag, exit := podGroup.Labels[constant.ProcessRecoverEnableLabel]
+	if !exit || flag != constant.ProcessRecoverEnable {
+		hwlog.RunLog.Debugf("label isn't contains %s", constant.ProcessRecoverEnableLabel)
 		return false
 	}
-	if flag, exit := podGroup.Labels[stepRetryKey]; exit && flag == onStepRetry {
+	mindXConfig, exit := podGroup.Annotations[constant.RecoverStrategies]
+	if !exit {
+		hwlog.RunLog.Debugf("annotation isn't contains %s", constant.RecoverStrategies)
+		return false
+	}
+	mindXConfig = strings.Replace(mindXConfig, " ", "", -1)
+	strategyList := strings.Split(mindXConfig, ",")
+	if slices.Contains(strategyList, constant.ProcessRetryStrategyName) {
 		return true
 	}
+	hwlog.RunLog.Debugf("strategyList isn't contains %s", constant.ProcessRetryStrategyName)
 	return false
 }
 
