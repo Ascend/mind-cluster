@@ -93,5 +93,5 @@ func (baseCenter *baseFaultCenter[T]) getProcessedCm() map[string]T {
 }
 
 func (baseCenter *baseFaultCenter[T]) updateOriginalCm(newInfo T, isAdd bool) {
-	baseCenter.cmManager.originalCm.updateCmInfo(newInfo, isAdd)
+	baseCenter.cmManager.updateOriginalCm(newInfo, isAdd)
 }
