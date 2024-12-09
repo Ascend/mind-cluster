@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"os"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/server"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
 )
 
 const (

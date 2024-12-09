@@ -21,11 +21,11 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
 )
 
 func init() {

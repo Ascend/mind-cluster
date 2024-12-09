@@ -18,7 +18,7 @@ package common
 import (
 	"strconv"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 type int32Tool struct {

@@ -7,18 +7,18 @@
 # 编译Ascend Operator
 1.  通过git拉取源码，获得ascend-operator。
 
-    示例：源码放在/home/test/ascend-operator目录下
+    示例：源码放在/home/mindxdl/component/ascend-operator目录下
 
 2.  执行以下命令，进入构建目录，执行构建脚本，在“output“目录下生成二进制ascend-operator、yaml文件和Dockerfile。
 
-    **cd** _/home/test/_**ascend-operator/build/**
+    **cd** _/home/mindxdl/component/_**ascend-operator/build/**
 
     **chmod +x build.sh**
 
     **./build.sh**
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ll** _/home/test/_**ascend-operator/output**
+    **ll** _/home/mindxdl/component/_**ascend-operator/output**
 
     ```
     drwxr-xr-x 2 root root     4096 Jan 29 19:12 ./

@@ -3,13 +3,13 @@ module ascend-docker-runtime
 go 1.18
 
 require (
+	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/containerd/containerd v1.6.24
 	github.com/opencontainers/runtime-spec v1.0.3-0.20220718201635-a8106e99982b
 	github.com/pelletier/go-toml v1.9.5
 	github.com/prashantv/gostub v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.2
-	huawei.com/npu-exporter/v5 v5.0.0
 )
 
 require (
@@ -45,5 +45,5 @@ require (
 
 replace (
 	github.com/prashantv/gostub => github.com/prashantv/gostub v1.0.1-0.20191007164320-bbe3712b9c4a
-	huawei.com/npu-exporter/v5 => gitee.com/ascend/ascend-npu-exporter/v5 v5.0.0
+	ascend-common => ../ascend-common
 )

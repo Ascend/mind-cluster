@@ -34,10 +34,11 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
 )
 
 var (

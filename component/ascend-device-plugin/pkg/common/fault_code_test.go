@@ -25,9 +25,10 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/common"
 )
 
 // TestLoadFaultCodeFromFile for test LoadFaultCodeFromFile

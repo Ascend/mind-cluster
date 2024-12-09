@@ -22,7 +22,7 @@ import (
 	"strings"
 	"syscall"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (

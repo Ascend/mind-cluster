@@ -8,8 +8,7 @@ Package ranktable is using for reconcile AscendJob.
 package ranktable
 
 import (
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	ranktablev1 "ascend-operator/pkg/ranktable/v1"
