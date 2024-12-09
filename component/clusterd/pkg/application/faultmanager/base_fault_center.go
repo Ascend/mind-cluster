@@ -6,18 +6,21 @@ package faultmanager
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
 
-func newBaseFaultCenter[T constant.ConfigMapInterface](cmManager *faultCenterCmManager[T]) baseFaultCenter[T] {
+func newBaseFaultCenter[T constant.ConfigMapInterface](cmManager *faultCenterCmManager[T], centerType int) baseFaultCenter[T] {
 	return baseFaultCenter[T]{
 		processorList:        make([]faultProcessor, 0),
 		lastProcessTime:      0,
-		subscribeChannelList: make([]chan struct{}, 0),
+		subscribeChannelList: make([]chan int, 0),
 		mutex:                sync.Mutex{},
 		processPeriod:        constant.FaultCenterProcessPeriod,
 		cmManager:            cmManager,
+		centerType:           centerType,
 	}
 }
 
@@ -26,12 +29,27 @@ func (baseCenter *baseFaultCenter[T]) isProcessLimited(currentTime int64) bool {
 }
 
 func (baseCenter *baseFaultCenter[T]) process() {
+	currentTime := time.Now().UnixMilli()
+	if baseCenter.isProcessLimited(currentTime) {
+		return
+	}
+	baseCenter.lastProcessTime = currentTime
+	baseCenter.setProcessingCm(baseCenter.getOriginalCm())
 	for _, processor := range baseCenter.processorList {
 		processor.process()
 	}
+	baseCenter.setProcessedCm(baseCenter.getProcessingCm())
+	baseCenter.notifySubscriber()
+}
+
+func (baseCenter *baseFaultCenter[T]) notifySubscriber() {
 	for _, ch := range baseCenter.subscribeChannelList {
 		if ch != nil {
-			ch <- struct{}{}
+			select {
+			case ch <- baseCenter.centerType:
+			default:
+				hwlog.RunLog.Warnf("send %d notify failed.", baseCenter.centerType)
+			}
 		}
 	}
 }
@@ -40,11 +58,11 @@ func (baseCenter *baseFaultCenter[T]) addProcessors(processors []faultProcessor)
 	baseCenter.processorList = append(baseCenter.processorList, processors...)
 }
 
-func (baseCenter *baseFaultCenter[T]) register(ch chan struct{}) error {
+func (baseCenter *baseFaultCenter[T]) register(ch chan int) error {
 	baseCenter.mutex.Lock()
 	defer baseCenter.mutex.Unlock()
 	if baseCenter.subscribeChannelList == nil {
-		baseCenter.subscribeChannelList = make([]chan struct{}, 0)
+		baseCenter.subscribeChannelList = make([]chan int, 0)
 	}
 	length := len(baseCenter.subscribeChannelList)
 	if length > constant.MaxFaultCenterSubscriber {

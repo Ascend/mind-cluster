@@ -16,11 +16,12 @@ type faultProcessor interface {
 type baseFaultCenter[T constant.ConfigMapInterface] struct {
 	processorList        []faultProcessor
 	lastProcessTime      int64
-	subscribeChannelList []chan struct{}
+	subscribeChannelList []chan int
 	mutex                sync.Mutex
 	processPeriod        int64
 	jobServerInfoMap     constant.JobServerInfoMap
 	cmManager            *faultCenterCmManager[T]
+	centerType           int
 }
 
 // deviceFaultProcessCenter

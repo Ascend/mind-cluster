@@ -40,14 +40,14 @@ func delDeviceInfoCM(devInfo *constant.DeviceInfo) {
 	cmManager.deviceInfoMutex.Lock()
 	delete(cmManager.deviceInfoMap, devInfo.CmName)
 	cmManager.deviceInfoMutex.Unlock()
-	AddNewMessageTotal()
+	//AddNewMessageTotal()
 }
 
 func delSwitchInfoCM(switchInfo *constant.SwitchInfo) {
 	cmManager.switchInfoMutex.Lock()
 	delete(cmManager.switchInfoMap, switchInfo.CmName)
 	cmManager.switchInfoMutex.Unlock()
-	AddNewMessageTotal()
+	//AddNewMessageTotal()
 }
 
 func saveDeviceInfoCM(devInfo *constant.DeviceInfo) {
@@ -63,7 +63,7 @@ func saveDeviceInfoCM(devInfo *constant.DeviceInfo) {
 	cmManager.deviceInfoMutex.Unlock()
 	// update business data will report message.if only update time，will report message with every atLeastReportCycle
 	if device.BusinessDataIsNotEqual(oldDevInfo, devInfo) {
-		AddNewMessageTotal()
+		//AddNewMessageTotal()
 	}
 }
 
@@ -79,7 +79,7 @@ func saveSwitchInfoCM(newSwitchInfo *constant.SwitchInfo) {
 	cmManager.switchInfoMap[newSwitchInfo.CmName] = newSwitchInfo
 	cmManager.switchInfoMutex.Unlock()
 	if switchinfo.BusinessDataIsNotEqual(oldSwitchInfo, newSwitchInfo) {
-		AddNewMessageTotal()
+		//AddNewMessageTotal()
 	}
 }
 
@@ -88,7 +88,7 @@ func deleteNodeConfigMap(newDevInfo *constant.NodeInfo) {
 	cmManager.nodeInfoMutex.Lock()
 	delete(cmManager.nodeInfoMap, newDevInfo.CmName)
 	cmManager.nodeInfoMutex.Unlock()
-	AddNewMessageTotal()
+	//AddNewMessageTotal()
 }
 
 func saveNodeInfoCM(newNodeInfo *constant.NodeInfo) {
@@ -104,6 +104,6 @@ func saveNodeInfoCM(newNodeInfo *constant.NodeInfo) {
 	cmManager.nodeInfoMutex.Unlock()
 	// update business data will report message.if only update time, will report message with every 1atLeastReportCycle
 	if node.BusinessDataIsNotEqual(oldNodeInfo, newNodeInfo) {
-		AddNewMessageTotal()
+		//AddNewMessageTotal()
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
@@ -91,7 +92,7 @@ func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
 	hwlog.RunLog.Infof("jobId=%s, before append new Fault, normalFaults=%s, uceFaults=%s",
 		ctl.jobInfo.JobId, common.Faults2String(ctl.cacheNormalFault), common.Faults2String((ctl.cacheUceFault)))
 	for _, fault := range mergedFaults {
-		if fault.FaultType == common.NormalFaultType {
+		if fault.FaultType == constant.NormalFaultType {
 			ctl.cacheNormalFault = append(ctl.cacheNormalFault, fault)
 		} else {
 			ctl.cacheUceFault = append(ctl.cacheUceFault, fault)
@@ -110,11 +111,11 @@ func (ctl *EventController) reset() {
 	hwlog.RunLog.Infof("jobId=%s's action path = {%s}", ctl.jobInfo.JobId, ctl.state.GetPathGraph())
 	if len(ctl.cacheNormalFault)+len(ctl.cacheUceFault) > 0 {
 		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-			nil, common.ClearOperation)
+			nil, constant.ClearOperation)
 		if err != nil {
 			hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
 		} else {
-			hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[common.ResetInfoCMDataKey])
+			hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[constant.ResetInfoCMDataKey])
 		}
 	}
 	if ctl.ctxCancelFunc != nil {
@@ -158,7 +159,7 @@ func (ctl *EventController) selectKeepAlive(ctx context.Context, sendChan chan *
 		signal := &pb.ProcessManageSignal{
 			Uuid:       ctl.uuid,
 			JobId:      ctl.jobInfo.JobId,
-			SignalType: common.KeepAliveSignalType,
+			SignalType: constant.KeepAliveSignalType,
 		}
 		select {
 		case sendChan <- signal:
@@ -183,7 +184,7 @@ func (ctl *EventController) keepAlive() {
 
 func (ctl *EventController) annotationWithRetryStrategy() bool {
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == common.ProcessRetryStrategyName {
+		if strategy == constant.ProcessRetryStrategyName {
 			return true
 		}
 	}
@@ -193,7 +194,7 @@ func (ctl *EventController) annotationWithRetryStrategy() bool {
 func (ctl *EventController) supportRetryStrategy() bool {
 	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == common.ProcessRetryStrategyName {
+		if strategy == constant.ProcessRetryStrategyName {
 			mindXConfiged = true
 			break
 		}
@@ -202,7 +203,7 @@ func (ctl *EventController) supportRetryStrategy() bool {
 		return mindXConfiged
 	}
 	for _, strategy := range ctl.platStrategies {
-		if strategy == common.ProcessRetryStrategyName {
+		if strategy == constant.ProcessRetryStrategyName {
 			return true
 		}
 	}
@@ -212,7 +213,7 @@ func (ctl *EventController) supportRetryStrategy() bool {
 func (ctl *EventController) supportRecoverStrategy() bool {
 	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == common.ProcessRecoverStrategyName {
+		if strategy == constant.ProcessRecoverStrategyName {
 			mindXConfiged = true
 			break
 		}
@@ -222,7 +223,7 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 	}
 	agentSupport := false
 	for _, strategy := range ctl.agentReportStrategies {
-		if strategy == common.ProcessRecoverStrategyName {
+		if strategy == constant.ProcessRecoverStrategyName {
 			agentSupport = true
 			break
 		}
@@ -231,7 +232,7 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 		return agentSupport
 	}
 	for _, strategy := range ctl.platStrategies {
-		if strategy == common.ProcessRecoverStrategyName {
+		if strategy == constant.ProcessRecoverStrategyName {
 			return true
 		}
 	}
@@ -241,7 +242,7 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 func (ctl *EventController) supportDumpStrategy() bool {
 	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == common.ProcessDumpStrategyName {
+		if strategy == constant.ProcessDumpStrategyName {
 			mindXConfiged = true
 			break
 		}
@@ -251,7 +252,7 @@ func (ctl *EventController) supportDumpStrategy() bool {
 	}
 	agentSupport := false
 	for _, strategy := range ctl.agentReportStrategies {
-		if strategy == common.ProcessDumpStrategyName {
+		if strategy == constant.ProcessDumpStrategyName {
 			agentSupport = true
 			break
 		}
@@ -260,7 +261,7 @@ func (ctl *EventController) supportDumpStrategy() bool {
 		return agentSupport
 	}
 	for _, strategy := range ctl.platStrategies {
-		if strategy == common.ProcessRecoverStrategyName {
+		if strategy == constant.ProcessRecoverStrategyName {
 			return true
 		}
 	}
@@ -344,7 +345,7 @@ func (ctl *EventController) getCtxAndSignalChan() (context.Context, chan *pb.Pro
 }
 
 func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err error) {
-	if signal.SignalType == common.KillMasterSignalType {
+	if signal.SignalType == constant.KillMasterSignalType {
 		ctl.addEvent(common.FinishEvent)
 		return
 	}
@@ -352,17 +353,17 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 		ctl.addEvent(common.NotifyFailEvent)
 		return
 	}
-	if signal.SignalType != common.ChangeStrategySignalType {
+	if signal.SignalType != constant.ChangeStrategySignalType {
 		ctl.addEvent(common.NotifySuccessEvent)
 		return
 	}
-	if signal.ChangeStrategy == common.ProcessRetryStrategyName {
+	if signal.ChangeStrategy == constant.ProcessRetryStrategyName {
 		ctl.addEvent(common.NotifyRetrySuccessEvent)
-	} else if signal.ChangeStrategy == common.ProcessRecoverStrategyName {
+	} else if signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
 		ctl.addEvent(common.NotifyRecoverSuccessEvent)
-	} else if signal.ChangeStrategy == common.ProcessDumpStrategyName {
+	} else if signal.ChangeStrategy == constant.ProcessDumpStrategyName {
 		ctl.addEvent(common.NotifyDumpSuccessEvent)
-	} else if signal.ChangeStrategy == common.ProcessExitStrategyName {
+	} else if signal.ChangeStrategy == constant.ProcessExitStrategyName {
 		ctl.addEvent(common.NotifyExitSuccessEvent)
 	} else {
 		hwlog.RunLog.Errorf("unsupported strategy=%s, jobId=%s",
@@ -382,7 +383,7 @@ func (ctl *EventController) selectSendChannel(ctx context.Context, sendChan chan
 	case signal, ok := <-sendChan:
 		if ok {
 			err := common.SendRetry(stream, signal, retryTimes)
-			if signal.SignalType != common.KeepAliveSignalType {
+			if signal.SignalType != constant.KeepAliveSignalType {
 				ctl.handleSendResult(signal, err)
 			}
 			return false
@@ -447,22 +448,22 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 		ctl.platStrategies = strategies
 	}
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
-		common.NotifyFaultFlushingOperation)
+		constant.NotifyFaultFlushingOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
 		return common.NotifyFinishEvent, common.OperateConfigMapError, nil
 	}
-	hwlog.RunLog.Infof("write configmap FaultFlushing success, %s", cm.Data[common.ResetInfoCMDataKey])
+	hwlog.RunLog.Infof("write configmap FaultFlushing success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.NotifyFinishEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleFaultClear() (string, common.RespCode, error) {
-	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, common.ClearOperation)
+	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.ClearOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
 		return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil
 	}
-	hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[common.ResetInfoCMDataKey])
+	hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.ClearConfigMapFaultSuccessEvent, common.OK, nil
 }
 
@@ -471,7 +472,7 @@ func (ctl *EventController) handleNotifyStopTrain() (string, common.RespCode, er
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.StopTrainSignalType,
+		SignalType:     constant.StopTrainSignalType,
 		Actions:        stopTrainActions,
 		ChangeStrategy: "",
 	}
@@ -533,7 +534,7 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 	for _, rank := range removeSameRankIds {
 		res = append(res, &pb.FaultRank{
 			RankId:    rank,
-			FaultType: common.NormalFaultType,
+			FaultType: constant.NormalFaultType,
 		})
 	}
 	return res, removeSameRankIds
@@ -557,7 +558,7 @@ func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb
 
 func isUceFault(faults []*pb.FaultRank) bool {
 	for _, fault := range faults {
-		if fault.FaultType == common.NormalFaultType {
+		if fault.FaultType == constant.NormalFaultType {
 			return false
 		}
 	}
@@ -568,7 +569,7 @@ func (ctl *EventController) takeUceFault2NormalFault() ([]*pb.FaultRank, []*pb.F
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
 	n := len(ctl.latestRecoverResult)
-	if n > 0 && ctl.latestRecoverResult[n-1].Strategy == common.ProcessRetryStrategyName {
+	if n > 0 && ctl.latestRecoverResult[n-1].Strategy == constant.ProcessRetryStrategyName {
 		ctl.cacheNormalFault = append(ctl.cacheNormalFault, ctl.cacheUceFault...)
 		ctl.cacheUceFault = ctl.cacheUceFault[:0]
 	}
@@ -596,7 +597,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.GlobalFaultSignalType,
+		SignalType:     constant.GlobalFaultSignalType,
 		Actions:        globalFaultActions,
 		ChangeStrategy: "",
 	}
@@ -620,13 +621,13 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
 			cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-				allFaultRanks, common.NotifyFaultListOperation)
+				allFaultRanks, constant.NotifyFaultListOperation)
 			if err != nil {
 				hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
 				return common.NotifyFailEvent, common.OperateConfigMapError, nil
 			}
 			signal.FaultRankIds = normalFaults
-			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
+			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 		} else {
 			hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
 			signal.FaultRankIds = uceFaults
@@ -664,16 +665,16 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 	}
 	hwlog.RunLog.Infof("jobId=%s, label pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-		allFaultRanks, common.NotifyFaultListOperation)
+		allFaultRanks, constant.NotifyFaultListOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
 		return common.NotifyFailEvent, common.OperateConfigMapError, nil
 	}
-	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
+	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.GlobalFaultSignalType,
+		SignalType:     constant.GlobalFaultSignalType,
 		Actions:        globalFaultActions,
 		ChangeStrategy: "",
 	}
@@ -697,32 +698,32 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 func (ctl *EventController) firstChooseStrategy() string {
 	hwlog.RunLog.Infof("first choose strategy, jobId=%s", ctl.jobInfo.JobId)
 	if ctl.supportRetryStrategy() && len(ctl.cacheNormalFault) <= 0 {
-		return common.ProcessRetryStrategyName
+		return constant.ProcessRetryStrategyName
 	}
 	if ctl.supportRecoverStrategy() {
-		return common.ProcessRecoverStrategyName
+		return constant.ProcessRecoverStrategyName
 	}
 	if ctl.supportDumpStrategy() {
-		return common.ProcessDumpStrategyName
+		return constant.ProcessDumpStrategyName
 	}
-	return common.ProcessExitStrategyName
+	return constant.ProcessExitStrategyName
 }
 
 func (ctl *EventController) chooseForRetryFail() string {
 	if ctl.supportRecoverStrategy() {
-		return common.ProcessRecoverStrategyName
+		return constant.ProcessRecoverStrategyName
 	}
 	if ctl.supportDumpStrategy() {
-		return common.ProcessDumpStrategyName
+		return constant.ProcessDumpStrategyName
 	}
-	return common.ProcessExitStrategyName
+	return constant.ProcessExitStrategyName
 }
 
 func (ctl *EventController) chooseForRecoverFail() string {
 	if ctl.supportDumpStrategy() {
-		return common.ProcessDumpStrategyName
+		return constant.ProcessDumpStrategyName
 	}
-	return common.ProcessExitStrategyName
+	return constant.ProcessExitStrategyName
 }
 
 func (ctl *EventController) chooseStrategy() string {
@@ -733,23 +734,23 @@ func (ctl *EventController) chooseStrategy() string {
 		return ctl.firstChooseStrategy()
 	}
 	res := ctl.latestRecoverResult[n-1]
-	if res.Strategy == common.ProcessRetryStrategyName {
+	if res.Strategy == constant.ProcessRetryStrategyName {
 		return ctl.chooseForRetryFail()
-	} else if res.Strategy == common.ProcessRecoverStrategyName {
+	} else if res.Strategy == constant.ProcessRecoverStrategyName {
 		return ctl.chooseForRecoverFail()
 	}
-	return common.ProcessExitStrategyName
+	return constant.ProcessExitStrategyName
 }
 
 func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCode, error) {
 	signal := &pb.ProcessManageSignal{
 		Uuid:       ctl.uuid,
 		JobId:      ctl.jobInfo.JobId,
-		SignalType: common.ChangeStrategySignalType,
+		SignalType: constant.ChangeStrategySignalType,
 		Actions:    changeStrategyActions,
 	}
 	signal.ChangeStrategy = ctl.chooseStrategy()
-	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == common.ProcessRecoverStrategyName {
+	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
 		err := WaitRankTableReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
 		if err != nil {
 			return common.WaitRankTableReadyTimeoutEvent, common.ServerInnerError, nil
@@ -775,9 +776,9 @@ func (ctl *EventController) extractRecoverResult() (common.RecoverResult, error)
 			RecoverSuccess: false,
 		}, fmt.Errorf("unexpected case, jobId=%s, have not decide strategy", ctl.jobInfo.JobId)
 	}
-	if latestStrategy[n-1] == common.ProcessExitStrategyName {
+	if latestStrategy[n-1] == constant.ProcessExitStrategyName {
 		return common.RecoverResult{
-			Strategy:       common.ProcessExitStrategyName,
+			Strategy:       constant.ProcessExitStrategyName,
 			Code:           common.OK,
 			RecoverSuccess: true,
 		}, nil
@@ -810,24 +811,24 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		return "", result.Code, err
 	}
 	switch result.Strategy {
-	case common.ProcessRetryStrategyName:
+	case constant.ProcessRetryStrategyName:
 		if result.RecoverSuccess {
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
 		if result.Code == common.RecoverableRetryError {
 			return common.RecoverableRetryErrorEvent, common.RecoverableRetryError, nil
 		}
-		ctl.removeAgentStrategy(common.ProcessRecoverStrategyName)
+		ctl.removeAgentStrategy(constant.ProcessRecoverStrategyName)
 		if result.Code == common.ClientError {
-			ctl.removeAgentStrategy(common.ProcessDumpStrategyName)
+			ctl.removeAgentStrategy(constant.ProcessDumpStrategyName)
 		}
 		return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
-	case common.ProcessRecoverStrategyName:
+	case constant.ProcessRecoverStrategyName:
 		if result.RecoverSuccess {
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
 		return common.RecoverFailEvent, common.ClientError, nil
-	case common.ProcessDumpStrategyName, common.ProcessExitStrategyName:
+	case constant.ProcessDumpStrategyName, constant.ProcessExitStrategyName:
 		return common.CheckResultFinishEvent, common.OK, nil
 	default:
 		return "", common.ServerInnerError, fmt.Errorf("unexpected case, strategy=%s "+
@@ -849,28 +850,28 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	}
 	hwlog.RunLog.Infof("jobId=%s, label pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-		allFaultRanks, common.NotifyFaultListOperation)
+		allFaultRanks, constant.NotifyFaultListOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify kill pod fail, err=%v", err)
 		return "", common.OperateConfigMapError, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
 	}
-	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[common.ResetInfoCMDataKey])
+	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.FinishKillPodEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) {
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, common.ProcessReschedulingPause); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverPause); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label pause %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
-			common.ProcessReschedulingPause, ctl.jobInfo.PgName)
+			constant.ProcessRecoverPause, ctl.jobInfo.PgName)
 		return common.ChangeProcessSchedulingModePauseErrorEvent, common.OperatePodGroupError, nil
 	}
 	hwlog.RunLog.Infof("change process rescheduling label %s success,"+
-		" pgName=%s, uuid=%s", common.ProcessReschedulingPause, ctl.jobInfo.PgName, ctl.uuid)
+		" pgName=%s, uuid=%s", constant.ProcessRecoverPause, ctl.jobInfo.PgName, ctl.uuid)
 
 	scheduleSuccess := false
-	for i := 1; i <= common.CheckPGRunningRetryTimes/2; i++ {
-		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
+	for i := 1; i <= constant.CheckPGRunningRetryTimes/2; i++ {
+		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if job.GetJobIsRunning(ctl.jobInfo.JobId) {
 			scheduleSuccess = true
 			break
@@ -883,14 +884,14 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 	}
 
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, common.ProcessReschedulingEnable); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverEnable); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label on %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
-			common.ProcessReschedulingEnable, ctl.jobInfo.PgName)
+			constant.ProcessRecoverEnable, ctl.jobInfo.PgName)
 		return common.ChangeProcessSchedulingModeEnableErrorEvent, common.OperatePodGroupError, nil
 	}
 	hwlog.RunLog.Infof("change process rescheduling label %s success,"+
-		" jobId=%s, uuid=%s", common.ProcessReschedulingEnable, ctl.jobInfo.JobId, ctl.uuid)
+		" jobId=%s, uuid=%s", constant.ProcessRecoverEnable, ctl.jobInfo.JobId, ctl.uuid)
 	return common.FinishEvent, common.OK, nil
 }
 
@@ -903,7 +904,7 @@ func (ctl *EventController) handleKillJob() (string, common.RespCode, error) {
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
-		SignalType:     common.KillMasterSignalType,
+		SignalType:     constant.KillMasterSignalType,
 		Actions:        nil,
 		FaultRankIds:   nil,
 		ChangeStrategy: "",
@@ -978,8 +979,8 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 
 func (ctl *EventController) listenScheduleResult() {
 	pgRunning := false
-	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
-		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
+	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
+		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Infof("check pg running %d times", i)
 		if podGroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 			pgRunning = true
@@ -1008,7 +1009,7 @@ func (ctl *EventController) getCtxAndResultChan() (context.Context, chan *pb.Rec
 }
 
 func (ctl *EventController) handleDecideRetryStrategy() (string, common.RespCode, error) {
-	ctl.appendStrategy(common.ProcessRetryStrategyName)
+	ctl.appendStrategy(constant.ProcessRetryStrategyName)
 	ctx, ch := ctl.getCtxAndResultChan()
 	if ch == nil {
 		return "", common.OK, fmt.Errorf("jobId=%s, result chan is nil", ctl.jobInfo.JobId)
@@ -1032,7 +1033,7 @@ func (ctl *EventController) handleDecideRetryStrategy() (string, common.RespCode
 }
 
 func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCode, error) {
-	ctl.appendStrategy(common.ProcessRecoverStrategyName)
+	ctl.appendStrategy(constant.ProcessRecoverStrategyName)
 	ctx, resultCh := ctl.getCtxAndResultChan()
 	_, scheduleCh := ctl.getCtxAndScheduleResultChan()
 	if resultCh == nil || scheduleCh == nil {
@@ -1051,7 +1052,7 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 			if !scheduleSuccess {
 				return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 			}
-			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, common.ClearOperation)
+			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.ClearOperation)
 			if err != nil {
 				hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s", err, ctl.jobInfo.JobId, ctl.uuid)
 				return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil
@@ -1071,7 +1072,7 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 }
 
 func (ctl *EventController) handleDecideDumpStrategy() (string, common.RespCode, error) {
-	ctl.appendStrategy(common.ProcessDumpStrategyName)
+	ctl.appendStrategy(constant.ProcessDumpStrategyName)
 	ctx, resultCh := ctl.getCtxAndResultChan()
 	if resultCh == nil {
 		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
@@ -1096,14 +1097,14 @@ func (ctl *EventController) handleDecideDumpStrategy() (string, common.RespCode,
 }
 
 func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode, error) {
-	ctl.appendStrategy(common.ProcessExitStrategyName)
+	ctl.appendStrategy(constant.ProcessExitStrategyName)
 	return common.CheckResultFinishEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
 	scheduleSuccess := false
-	for i := 1; i <= common.CheckPGRunningRetryTimes; i++ {
-		time.Sleep(time.Second * common.SleepSecondBeforeCheckPGRunning)
+	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
+		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if job.GetJobIsRunning(ctl.jobInfo.JobId) &&
 			common.FaultPodAllRescheduled(ctl.jobInfo.JobId, ctl.faultPod) {
 			scheduleSuccess = true
@@ -1117,7 +1118,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
-	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, common.RestartAllProcessOperation)
+	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.RestartAllProcessOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",
 			err, ctl.jobInfo.JobId, ctl.uuid)

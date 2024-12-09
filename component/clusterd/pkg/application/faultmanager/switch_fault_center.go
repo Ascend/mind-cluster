@@ -5,7 +5,6 @@ package faultmanager
 
 import (
 	"sync"
-	"time"
 
 	"clusterd/pkg/common/constant"
 )
@@ -18,17 +17,6 @@ func newSwitchFaultProcessCenter() *switchFaultProcessCenter {
 		processedCm:  configMap[*constant.SwitchInfo]{configmap: make(map[string]*constant.SwitchInfo)},
 	}
 	return &switchFaultProcessCenter{
-		baseFaultCenter: newBaseFaultCenter(&manager),
+		baseFaultCenter: newBaseFaultCenter(&manager, constant.SwitchProcessType),
 	}
-}
-
-func (switchCenter *switchFaultProcessCenter) process() {
-	currentTime := time.Now().UnixMilli()
-	if switchCenter.isProcessLimited(currentTime) {
-		return
-	}
-	switchCenter.lastProcessTime = currentTime
-	switchCenter.setProcessingCm(switchCenter.getOriginalCm())
-	switchCenter.baseFaultCenter.process()
-	switchCenter.setProcessedCm(switchCenter.getProcessingCm())
 }

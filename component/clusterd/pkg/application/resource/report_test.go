@@ -41,6 +41,7 @@ func TestStopReport(t *testing.T) {
 	convey.Convey("test stop report", t, func() {
 		cycleTicker = time.NewTicker(1 * time.Second)
 		convey.So(StopReport, convey.ShouldNotPanic)
+		updateChan = make(chan int, 1)
 	})
 }
 
@@ -53,7 +54,7 @@ func TestUpdateCmWithEmpty(t *testing.T) {
 				clientSet.CoreV1().ConfigMaps(cm.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 			})
 			defer mockUpdateConfig.Reset()
-			updateCmWithEmpty([]string{"device"}, []string{"node"}, []string{"switch"})
+			updateAllCm([]string{"device"}, []string{"node"}, []string{"switch"})
 			cm, err := clientSet.CoreV1().ConfigMaps("vcjob").Get(context.TODO(),
 				"test-cm", metav1.GetOptions{})
 			convey.So(err, convey.ShouldBeNil)
