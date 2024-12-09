@@ -22,7 +22,7 @@ func newDeviceFaultProcessCenter() *deviceFaultProcessCenter {
 		processedCm:  configMap[*constant.DeviceInfo]{configmap: make(map[string]*constant.DeviceInfo)},
 	}
 	deviceCenter := &deviceFaultProcessCenter{
-		baseFaultCenter: newBaseFaultCenter(&manager),
+		baseFaultCenter: newBaseFaultCenter(&manager, constant.DeviceProcessType),
 	}
 
 	var processorForUceAccompanyFault = newUceAccompanyFaultProcessor(deviceCenter)
@@ -76,14 +76,10 @@ func (deviceCenter *deviceFaultProcessCenter) callbackForReportUceInfo(jobId, ra
 }
 
 func (deviceCenter *deviceFaultProcessCenter) process() {
-	currentTime := time.Now().UnixMilli()
-	if deviceCenter.isProcessLimited(currentTime) {
+	if deviceCenter.isProcessLimited(time.Now().UnixMilli()) {
 		return
 	}
-	deviceCenter.lastProcessTime = currentTime
-	deviceCenter.setProcessingCm(deviceCenter.getOriginalCm())
 	deviceCenter.jobServerInfoMap = job.GetJobServerInfoMap()
 	hwlog.RunLog.Debugf("job server info map: %v", util.ObjToString(deviceCenter.jobServerInfoMap))
 	deviceCenter.baseFaultCenter.process()
-	deviceCenter.setProcessedCm(deviceCenter.getProcessingCm())
 }

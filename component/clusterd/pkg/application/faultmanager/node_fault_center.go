@@ -5,7 +5,6 @@ package faultmanager
 
 import (
 	"sync"
-	"time"
 
 	"clusterd/pkg/common/constant"
 )
@@ -18,17 +17,6 @@ func newNodeFaultProcessCenter() *nodeFaultProcessCenter {
 		processedCm:  configMap[*constant.NodeInfo]{configmap: make(map[string]*constant.NodeInfo)},
 	}
 	return &nodeFaultProcessCenter{
-		baseFaultCenter: newBaseFaultCenter(&manager),
+		baseFaultCenter: newBaseFaultCenter(&manager, constant.NodeProcessType),
 	}
-}
-
-func (nodeCenter *nodeFaultProcessCenter) process() {
-	currentTime := time.Now().UnixMilli()
-	if nodeCenter.isProcessLimited(currentTime) {
-		return
-	}
-	nodeCenter.lastProcessTime = currentTime
-	nodeCenter.setProcessingCm(nodeCenter.getOriginalCm())
-	nodeCenter.baseFaultCenter.process()
-	nodeCenter.setProcessedCm(nodeCenter.getProcessingCm())
 }

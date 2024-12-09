@@ -42,13 +42,13 @@ func (center *FaultProcessCenter) work(ctx context.Context) {
 			return
 		case whichToProcess := <-center.notifyProcessChan:
 			switch whichToProcess {
-			case constant.AllFaultType:
+			case constant.AllProcessType:
 				center.process()
-			case constant.DeviceFaultType:
+			case constant.DeviceProcessType:
 				center.deviceCenter.process()
-			case constant.NodeFaultType:
+			case constant.NodeProcessType:
 				center.nodeCenter.process()
-			case constant.SwitchFaultType:
+			case constant.SwitchProcessType:
 				center.switchCenter.process()
 			default:
 				hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
@@ -75,20 +75,20 @@ func (center *FaultProcessCenter) CallbackForReportUceInfo(infos []ReportRecover
 	for _, info := range infos {
 		center.deviceCenter.callbackForReportUceInfo(info.JobId, info.Rank, info.RecoverTime)
 	}
-	center.notifyFaultCenterProcess(constant.DeviceFaultType)
+	center.notifyFaultCenterProcess(constant.DeviceProcessType)
 	return nil
 }
 
 // Register to notify fault occurrence
-func (center *FaultProcessCenter) Register(ch chan struct{}, whichToRegister int) {
+func (center *FaultProcessCenter) Register(ch chan int, whichToRegister int) {
 	switch whichToRegister {
-	case constant.SwitchFaultType:
+	case constant.SwitchProcessType:
 		center.switchCenter.register(ch)
-	case constant.NodeFaultType:
+	case constant.NodeProcessType:
 		center.nodeCenter.register(ch)
-	case constant.DeviceFaultType:
+	case constant.DeviceProcessType:
 		center.deviceCenter.register(ch)
-	case constant.AllFaultType:
+	case constant.AllProcessType:
 		center.switchCenter.register(ch)
 		center.nodeCenter.register(ch)
 		center.deviceCenter.register(ch)

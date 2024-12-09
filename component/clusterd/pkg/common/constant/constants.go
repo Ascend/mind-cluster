@@ -79,8 +79,8 @@ const (
 
 // fault center
 const (
-	AllFaultType = iota
-	DeviceFaultType
-	NodeFaultType
-	SwitchFaultType
+	AllProcessType = iota
+	DeviceProcessType
+	NodeProcessType
+	SwitchProcessType
 )
