@@ -90,7 +90,7 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(nodeDeviceInfoMa
 		faultList, found := advanceDeviceInfo.FaultDeviceList[deviceName]
 		uceInManagementPlane := false
 		if found {
-			// scan management plane fault info
+			// scan management plane fault info. management plane may filter uce fault in uceProcessor
 			for _, fault := range faultList {
 				faultRank := FaultRank{
 					RankId:      deviceInfo.RankID,

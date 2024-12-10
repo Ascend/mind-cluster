@@ -410,9 +410,9 @@ func canDoStepRetry(uceDevice *uceDeviceInfo) bool {
 	return false
 }
 
-func expiredReportInfo(info *reportInfo) bool {
+func validBusinessReport(info *reportInfo) bool {
 	if info.RecoverTime != constant.JobNotRecover &&
-		time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout > info.RecoverTime {
+		time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout <= info.RecoverTime {
 		return true
 	}
 	return false

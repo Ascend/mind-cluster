@@ -36,11 +36,6 @@ func (reportInfos *reportInfosForAllJobs) getInfo(jobId, nodeName, deviceName st
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
 	if info, ok := reportInfos.InfoMap[jobId][nodeName][deviceName]; ok {
-		// expired report info should not use
-		if expiredReportInfo(&info) {
-			delete(reportInfos.InfoMap[jobId][nodeName], deviceName)
-			return noReport
-		}
 		return info
 	}
 	return noReport
@@ -57,20 +52,18 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
 		deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceOfJob.DeviceID
 		uceReportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
+		jobUceDevice := uceDeviceInfo{
+			DeviceName:   deviceName,
+			FaultTime:    constant.DeviceNotFault,
+			RecoverTime:  uceReportInfo.RecoverTime,
+			CompleteTime: uceReportInfo.CompleteTime,
+		}
+		// management plane found uce fault
 		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
-			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
-				DeviceName:   deviceName,
-				FaultTime:    uceDevice.FaultTime,
-				RecoverTime:  uceReportInfo.RecoverTime,
-				CompleteTime: uceReportInfo.CompleteTime,
-			}
-		} else if uceReportInfo.RecoverTime != constant.JobNotRecover {
-			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
-				DeviceName:   deviceName,
-				FaultTime:    constant.DeviceNotFault,
-				RecoverTime:  uceReportInfo.RecoverTime,
-				CompleteTime: uceReportInfo.CompleteTime,
-			}
+			jobUceDevice.FaultTime = uceDevice.FaultTime
+			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
+		} else if validBusinessReport(&uceReportInfo) { // business plane found uce fault
+			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
 		}
 	}
 

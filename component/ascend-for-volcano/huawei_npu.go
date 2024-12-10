@@ -278,6 +278,6 @@ func HandlerStart() *plugin.ScheduleHandler {
 	scheduleHandler.RegisterNPUScheduler(ascend310.PluginName, ascend310.New)
 	scheduleHandler.RegisterNPUScheduler(ascend310p.PluginName, ascend310p.New)
 	scheduleHandler.RegisterNPUScheduler(ascend910.PluginName, ascend910.New)
-	klog.V(util.LogInfoLev).Infof("-HandlerStart %#v.", scheduleHandler.NPUPlugins)
+	klog.V(util.LogInfoLev).Infof("HandlerStart %#v.", scheduleHandler.NPUPlugins)
 	return scheduleHandler
 }
