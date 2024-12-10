@@ -126,6 +126,7 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 	faultTask := FaultTask{
 		Reason:             []FaultReasonList{},
 		IsFaultRetryEnable: faultRetryTimeOfJob(job) != 0,
+		IsSoftwareFault:    getTaskIsSoftwareFault(task),
 		TaskName:           task.Name,
 		TaskUID:            task.UID,
 		TaskNamespace:      task.Namespace,
@@ -139,4 +140,26 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.UID][task.Name]
 	}
 	return faultTask
+}
+
+func (fTask *FaultTask) initFaultRankIndex() []string {
+	taskRank, err := strconv.Atoi(fTask.NodeRankIndex)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("string convert failed by:%s", err)
+		return []string{}
+	}
+
+	faultRank := make([]string, 0)
+	npuNum := len(fTask.UseCardName)
+	for i := taskRank * npuNum; i < (taskRank+1)*npuNum; i++ {
+		faultRank = append(faultRank, strconv.Itoa(i))
+	}
+	return faultRank
+}
+
+func getTaskIsSoftwareFault(task *api.TaskInfo) bool {
+	if len(task.Pod.Labels) == 0 {
+		return false
+	}
+	return task.Pod.Labels[taskFaultKey] == softwareKey
 }
