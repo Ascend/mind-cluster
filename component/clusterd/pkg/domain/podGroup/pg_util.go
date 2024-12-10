@@ -11,6 +11,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/pod"
 )
 
 // GetJobKeyByPG get job unique key by podGroup
@@ -90,4 +91,29 @@ func JudgeUceByJobKey(jobKey string) bool {
 func JudgeIsRunningByJobKey(jobKey string) bool {
 	podGroup := GetPodGroup(jobKey)
 	return podGroup.Status.Phase == v1beta1.PodGroupRunning
+}
+
+// GetPGByPod get PodGroup by pod info
+func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
+	podJobMap := pod.GetPodByJobId(jobKey)
+	for _, po := range podJobMap {
+		jobName, pgName, namespace = pod.GetPGInfo(&po)
+		if jobName != "" && pgName != "" && namespace != "" {
+			return jobName, pgName, namespace
+		}
+	}
+
+	return
+}
+
+// GetPGFromCacheOrPod return job's name, podGroup name and namespace
+func GetPGFromCacheOrPod(jobKey string) (jobName, pgName, namespace string) {
+	pg := GetPodGroup(jobKey)
+	if pg.Name == "" {
+		hwlog.RunLog.Info("get from pod")
+		return GetPGByPod(jobKey)
+	} else {
+		hwlog.RunLog.Info("get from cache")
+	}
+	return GetJobNameByPG(&pg), pg.GetName(), pg.Namespace
 }

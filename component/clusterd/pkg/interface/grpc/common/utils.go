@@ -20,7 +20,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podGroup"
 	"clusterd/pkg/interface/grpc/pb"
@@ -28,13 +27,6 @@ import (
 )
 
 var faultSplitLength = 2
-
-// GetJobInfo return job's name, podGroup name and namespace
-func GetJobInfo(jobId string) (jobName, pgName, namespace string) {
-	jobInfo, _ := job.GetJobCache(jobId)
-	pg := podGroup.GetPodGroup(jobId)
-	return jobInfo.Name, pg.GetName(), jobInfo.NameSpace
-}
 
 // Faults2String return string of faults
 func Faults2String(faults []*pb.FaultRank) string {
