@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -391,4 +392,32 @@ func getContainedElementIdx(element string, stringList []string) int {
 		}
 	}
 	return -1
+}
+
+func canDoStepRetry(uceDevice *uceDeviceInfo) bool {
+	if uceDevice.RecoverTime == constant.JobNotRecover {
+		return false
+	}
+	if time.Now().UnixMilli()-constant.JobReportRecoverTimeout <= uceDevice.RecoverTime {
+		return true
+	}
+	if uceDevice.FaultTime == constant.DeviceNotFault {
+		return false
+	}
+	if uceDevice.FaultTime+constant.JobReportRecoverTimeout >= uceDevice.RecoverTime {
+		return true
+	}
+	return false
+}
+
+func validBusinessRecoverTime(recoverTime int64) bool {
+	if recoverTime != constant.JobNotRecover &&
+		time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout <= recoverTime {
+		return true
+	}
+	return false
+}
+
+func validBusinessUceReportInfo(info *reportInfo) bool {
+	return validBusinessRecoverTime(info.RecoverTime)
 }
