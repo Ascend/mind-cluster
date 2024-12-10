@@ -6,7 +6,6 @@ package faultmanager
 import (
 	"strings"
 	"sync"
-	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -109,7 +108,7 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(nodeDeviceInfoMa
 		if uceInManagementPlane {
 			continue
 		}
-		// // business plane find uce fault
+		// business plane find uce fault
 		if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
 			faultRankList = append(faultRankList, FaultRank{
 				RankId:      deviceInfo.RankID,
@@ -128,12 +127,7 @@ func (processor *jobRankFaultInfoProcessor) canDoStepRetry(jobId, nodeName, devi
 		hwlog.RunLog.Errorf("getUceFaultProcessor exception: %v", err)
 		return false
 	}
-	jobInfo, found := uceProcessor.uceDevicesOfUceJob[jobId]
-	if !found {
-		hwlog.RunLog.Debugf("job %s has no uce fault", jobId)
-		return false
-	}
-	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	uceDevice, found := uceProcessor.getUceDeviceFromJob(jobId, nodeName, deviceName)
 	if !found {
 		hwlog.RunLog.Debugf("job %s's uce fault is not on node %s device %s", jobId, nodeName, deviceName)
 		return false
@@ -149,17 +143,12 @@ func (processor *jobRankFaultInfoProcessor) uceInBusinessPlane(jobId, nodeName, 
 		hwlog.RunLog.Errorf("getUceFaultProcessor exception: %v", err)
 		return false
 	}
-	jobInfo := uceProcessor.uceDevicesOfUceJob[jobId]
-	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	uceDevice, found := uceProcessor.getUceDeviceFromJob(jobId, nodeName, deviceName)
 	// business plane didn't find uce fault
-	if !found || uceDevice.RecoverTime == constant.JobNotRecover {
-		hwlog.RunLog.Debugf("business plane didn't find uce fault. uceDevice: %s", util.ObjToString(uceDevice))
+	if !found {
+		hwlog.RunLog.Debugf("business plane didn't find uce fault")
 		return false
 	}
-	// business plane found expired uce fault
-	if time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout > uceDevice.RecoverTime {
-		hwlog.RunLog.Debugf("business plane found expired uce fault. uceDevice: %s", util.ObjToString(uceDevice))
-		return false
-	}
-	return true
+	// business plane found uce fault
+	return validBusinessRecoverTime(uceDevice.RecoverTime)
 }

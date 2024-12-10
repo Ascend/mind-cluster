@@ -62,7 +62,7 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
 			jobUceDevice.FaultTime = uceDevice.FaultTime
 			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
-		} else if validBusinessReport(&uceReportInfo) { // business plane found uce fault
+		} else if validBusinessUceReportInfo(&uceReportInfo) { // business plane found uce fault
 			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
 		}
 	}
@@ -270,4 +270,18 @@ func (processor *uceFaultProcessor) reportUceInfo(jobId string, rankId string, r
 	hwlog.RunLog.Infof("callbackForReportUceInfo receive report info(%s, %s, %d)", jobId, rankId, recoverTime)
 	hwlog.RunLog.Debugf("Current reportInfo is %s", util.ObjToString(processor.reportInfo.InfoMap))
 	return nil
+}
+
+func (processor *uceFaultProcessor) getUceDeviceFromJob(jobId, nodeName, deviceName string) (uceDeviceInfo, bool) {
+	jobInfo, found := processor.uceDevicesOfUceJob[jobId]
+	if !found {
+		hwlog.RunLog.Debugf("job %s has no uce fault", jobId)
+		return uceDeviceInfo{}, false
+	}
+	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	if !found {
+		hwlog.RunLog.Debugf("job %s's uce fault is not on node %s device %s", jobId, nodeName, deviceName)
+		return uceDeviceInfo{}, false
+	}
+	return uceDevice, true
 }
