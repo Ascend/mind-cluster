@@ -23,8 +23,7 @@ import (
 	"os"
 	"strings"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/install/process"
 	"ascend-docker-runtime/mindxcheckutils"
 )

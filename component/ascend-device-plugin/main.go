@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"os"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/server"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
 )
 
 const (
@@ -82,8 +81,10 @@ var (
 		", range [1, 30]")
 	dealWatchHandler = flag.Bool("dealWatchHandler", false,
 		"update pod cache when receiving pod informer watch errors")
-	checkCachedPods      = flag.Bool("checkCachedPods", true, "check pods in cache periodically, default true")
-	enableSlowNodeSwitch = flag.Bool("enableSlowNodeSwitch", false, "switch of set slow node notice environment,default false")
+	checkCachedPods = flag.Bool("checkCachedPods", true,
+		"check pods in cache periodically, default true")
+	enableSlowNode = flag.Bool("enableSlowNode", false,
+		"switch of set slow node notice environment,default false")
 )
 
 var (
@@ -225,20 +226,20 @@ func InitFunction() (*server.HwDevManager, error) {
 
 func setParameters() {
 	common.ParamOption = common.Option{
-		GetFdFlag:            *fdFlag,
-		UseAscendDocker:      *useAscendDocker,
-		UseVolcanoType:       *volcanoType,
-		AutoStowingDevs:      *autoStowing,
-		ListAndWatchPeriod:   *listWatchPeriod,
-		PresetVDevice:        *presetVirtualDevice,
-		Use310PMixedInsert:   *use310PMixedInsert,
-		HotReset:             *hotReset,
-		BuildScene:           BuildScene,
-		ShareCount:           *shareDevCount,
-		LinkdownTimeout:      *linkdownTimeout,
-		DealWatchHandler:     *dealWatchHandler,
-		CheckCachedPods:      *checkCachedPods,
-		EnableSlowNodeSwitch: *enableSlowNodeSwitch,
+		GetFdFlag:          *fdFlag,
+		UseAscendDocker:    *useAscendDocker,
+		UseVolcanoType:     *volcanoType,
+		AutoStowingDevs:    *autoStowing,
+		ListAndWatchPeriod: *listWatchPeriod,
+		PresetVDevice:      *presetVirtualDevice,
+		Use310PMixedInsert: *use310PMixedInsert,
+		HotReset:           *hotReset,
+		BuildScene:         BuildScene,
+		ShareCount:         *shareDevCount,
+		LinkdownTimeout:    *linkdownTimeout,
+		DealWatchHandler:   *dealWatchHandler,
+		CheckCachedPods:    *checkCachedPods,
+		EnableSlowNode:     *enableSlowNode,
 	}
 }
 

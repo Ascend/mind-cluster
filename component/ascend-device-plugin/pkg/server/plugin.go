@@ -25,13 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"ascend-common/common-utils/hwlog"
 )
 
 func (ps *PluginServer) stopListAndWatch() {
@@ -832,7 +832,7 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 
 // SetSlowNodeNoticeEnv is to set the environment variable using slow node step time configmap
 func (ps *PluginServer) SetSlowNodeNoticeEnv(resp *v1beta1.ContainerAllocateResponse) {
-	if !common.ParamOption.EnableSlowNodeSwitch {
+	if !common.ParamOption.EnableSlowNode {
 		return
 	}
 	if resp == nil {

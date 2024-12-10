@@ -24,11 +24,11 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/limiter"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
 )
 
 const waitKubectlSockCreateTime = 5 * 60

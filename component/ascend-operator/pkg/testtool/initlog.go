@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 // this is for llt

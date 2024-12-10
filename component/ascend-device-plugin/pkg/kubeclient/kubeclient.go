@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // ClientK8s include ClientK8sSet & nodeName & configmap name

@@ -18,9 +18,8 @@ package device
 import (
 	"fmt"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // HwAscend310PManager manages huawei Ascend310P devices.

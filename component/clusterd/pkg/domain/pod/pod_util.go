@@ -20,6 +20,9 @@ var (
 	torIpTag           = "sharedTorIp"
 	podLabelKey        = "app"
 	resourceNamePrefix = "huawei.com/"
+	podGroupKey        = "scheduling.k8s.io/group-name"
+	acJobNameKey       = "job-name"
+	vcJobNameKey       = "volcano.sh/job-name"
 )
 
 // GetJobKeyByPod get job unique key by pod
@@ -44,6 +47,37 @@ func GetPodKey(info *v1.Pod) string {
 		return ""
 	}
 	return string(info.UID)
+}
+
+// GetPGInfo get podGroup name and namespace and job name by pod info
+func GetPGInfo(info *v1.Pod) (jobName, pgName, namespace string) {
+	if info == nil {
+		hwlog.RunLog.Error("serious error, get podgroup name and namespace failed, pod is nil")
+		return "", "", ""
+	}
+
+	// get pg name
+	annotations := info.GetAnnotations()
+	pgName, ok := annotations[podGroupKey]
+	if !ok {
+		hwlog.RunLog.Errorf("serious error, get podgroup name failed, "+
+			"pod(ns=%s, name=%s) doesn`t exist %s annotation", info.Namespace, info.Name, podGroupKey)
+		return "", "", ""
+	}
+
+	// get jobName
+	labels := info.GetLabels()
+	jobName, ok = labels[vcJobNameKey]
+	if !ok {
+		jobName, ok = labels[acJobNameKey]
+		if !ok {
+			hwlog.RunLog.Errorf("serious error, get job name failed, pod(ns=%s, name=%s) "+
+				"doesn`t exist %s or %s label", info.Namespace, info.Name, acJobNameKey, vcJobNameKey)
+			return "", "", ""
+		}
+	}
+
+	return jobName, pgName, info.Namespace
 }
 
 // GetSharedTorIpByPod get shared tor ip by pod
