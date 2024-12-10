@@ -17,6 +17,7 @@ package cmreporter
 
 import (
 	"encoding/json"
+	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,10 +27,15 @@ import (
 	"nodeD/pkg/kubeclient"
 )
 
+const (
+	guaranteeReportInterval = 1 * time.Minute
+)
+
 // ConfigMapReporter report fault device info by config map
 type ConfigMapReporter struct {
 	client        *kubeclient.ClientK8s
 	nodeInfoCache common.NodeInfoCM
+	reportTime    time.Time
 }
 
 // NewConfigMapReporter create a config map reporter
@@ -37,15 +43,22 @@ func NewConfigMapReporter(client *kubeclient.ClientK8s) *ConfigMapReporter {
 	return &ConfigMapReporter{
 		client:        client,
 		nodeInfoCache: common.NodeInfoCM{},
+		reportTime:    time.Now(),
 	}
 }
 
 // Report send fault device info by config map
 func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
-	c.nodeInfoCache = common.NodeInfoCM{
-		NodeInfo: *faultDevInfo,
+	if common.DeepEqualFaultDevInfo(faultDevInfo, &c.nodeInfoCache.NodeInfo) &&
+		time.Since(c.reportTime) < guaranteeReportInterval {
+		hwlog.RunLog.Infof("node fault device info is not changed and report time is not reached, no need to report")
+		return
 	}
-	c.nodeInfoCache.CheckCode = common.MakeDataHash(c.nodeInfoCache.NodeInfo)
+	checkCode := common.MakeDataHash(faultDevInfo)
+	c.nodeInfoCache = common.NodeInfoCM{
+		NodeInfo:  *faultDevInfo,
+		CheckCode: checkCode,
+	}
 
 	data, err := json.Marshal(c.nodeInfoCache)
 	if err != nil {
@@ -60,12 +73,16 @@ func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
 		},
 		Data: map[string]string{
 			common.NodeInfoCMDataKey: string(data),
+			"updateTime":             time.Now().Format(time.RFC3339),
 		},
 	}
 	if err := c.client.CreateOrUpdateConfigMap(nodeInfoCM); err != nil {
 		hwlog.RunLog.Errorf("report node fault device info to k8s by configmap failed, err is %v", err)
 		return
 	}
+	c.reportTime = time.Now()
+	hwlog.RunLog.Infof("report node fault device info to k8s by configmap success, time is %s",
+		c.reportTime.Format(time.RFC3339))
 	return
 }
 

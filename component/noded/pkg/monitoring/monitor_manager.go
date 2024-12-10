@@ -77,9 +77,8 @@ func (m *MonitorManager) Run(ctx context.Context) {
 			return
 		default:
 			m.Execute(m.faultManager.GetFaultDevInfo())
-			hwlog.RunLog.Infof("send heartbeat: %d, heartbeat interval: %d",
-				m.faultManager.GetHeartbeatTime(), m.faultManager.GetHeartbeatInterval())
-			time.Sleep(time.Duration(common.ParamOption.HeartbeatInterval) * time.Second)
+			hwlog.RunLog.Infof("report interval: %d", common.ParamOption.ReportInterval)
+			time.Sleep(time.Duration(common.ParamOption.ReportInterval) * time.Second)
 		}
 	}
 }
@@ -91,10 +90,8 @@ func (m *MonitorManager) Stop() {
 	}
 }
 
-// Execute update node heartbeat and send message to next fault processor
+// Execute update node status and send message to next fault processor
 func (m *MonitorManager) Execute(faultDevInfo *common.FaultDevInfo) {
-	m.faultManager.SetHeartbeatTime(time.Now().Unix())
-	m.faultManager.SetHeartbeatInterval(common.ParamOption.HeartbeatInterval)
 	m.nextFaultProcessor.Execute(faultDevInfo)
 }
 

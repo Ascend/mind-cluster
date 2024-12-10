@@ -101,10 +101,8 @@ func (nc *NodeController) updateFaultDevInfo() {
 func (nc *NodeController) filterNotSupportFaultDev() {
 	faultDevInfo := nc.faultManager.GetFaultDevInfo()
 	newFaultDevInfo := &common.FaultDevInfo{
-		FaultDevList:      make([]*common.FaultDev, 0),
-		HeartbeatTime:     faultDevInfo.HeartbeatTime,
-		HeartbeatInterval: faultDevInfo.HeartbeatInterval,
-		NodeStatus:        faultDevInfo.NodeStatus,
+		FaultDevList: make([]*common.FaultDev, 0),
+		NodeStatus:   faultDevInfo.NodeStatus,
 	}
 	for _, faultDev := range faultDevInfo.FaultDevList {
 		tmpFaultDev := &common.FaultDev{
