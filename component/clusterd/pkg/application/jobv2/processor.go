@@ -15,6 +15,11 @@ import (
 
 func addJob(jobKey string) {
 	podGroupCache := podGroup.GetPodGroup(jobKey)
+	// if both pod and podGroup exist, skip to update flow
+	if podGroupCache.Name != "" && len(pod.GetPodByJobId(jobKey)) > 0 {
+		uniqueQueue.Store(jobKey, queueOperatorUpdate)
+		return
+	}
 	oldJobInfo := job.GetJobByNameSpaceAndName(podGroup.GetJobNameByPG(&podGroupCache), podGroupCache.Namespace)
 	if oldJobInfo.Name != "" && oldJobInfo.IsPreDelete && oldJobInfo.Key != jobKey {
 		// if old job is pre delete, and new job is add, delete old job cache
