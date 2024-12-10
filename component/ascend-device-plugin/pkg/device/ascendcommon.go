@@ -484,7 +484,7 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 }
 
 func (tool *AscendTools) getFaultTimeAndLevelMap(
-	device *common.NpuDevice, timeoutFaults map[int64]common.FaultTimeAndLevel,
+	device *common.NpuDevice, allFaults map[int64]common.FaultTimeAndLevel,
 	isNetworkFault bool) map[string]common.FaultTimeAndLevel {
 	result := make(map[string]common.FaultTimeAndLevel)
 	var events []int64
@@ -510,7 +510,7 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
 		result[hexFaultCode] = faultTimeAndLevel
 	}
-	for eventId, timeAndLevel := range timeoutFaults {
+	for eventId, timeAndLevel := range allFaults {
 		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
 		result[hexFaultCode] = timeAndLevel
 	}
@@ -522,8 +522,10 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
 	if len(device.NetworkFaultCodes) != 0 || device.NetworkHealth == v1beta1.Unhealthy {
 		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.NetworkFaultMode, device.LogicID)
-
-		newCode := tool.removeDuplicateErr(append(device.NetworkFaultCodes, common.Keys(timeoutFaultLevelAndTime)...))
+		frequencyFaultLevelAndTime := common.GetFrequencyFaultLevelAndCodes(common.NetworkFaultMode, device.LogicID)
+		allFaultCodes := append(device.FaultCodes,
+			append(common.Keys(timeoutFaultLevelAndTime), common.Keys(frequencyFaultLevelAndTime)...)...)
+		newCode := tool.removeDuplicateErr(allFaultCodes)
 		faultType := common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
 			FaultType:            common.CardNetworkUnhealthy,
@@ -537,8 +539,10 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
 		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.ChipFaultMode, device.LogicID)
-
-		newCode := tool.removeDuplicateErr(append(device.FaultCodes, common.Keys(timeoutFaultLevelAndTime)...))
+		frequencyFaultLevelAndTime := common.GetFrequencyFaultLevelAndCodes(common.ChipFaultMode, device.LogicID)
+		allFaultCodes := append(device.FaultCodes,
+			append(common.Keys(timeoutFaultLevelAndTime), common.Keys(frequencyFaultLevelAndTime)...)...)
+		newCode := tool.removeDuplicateErr(allFaultCodes)
 		faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
 			FaultType:            common.CardUnhealthy,

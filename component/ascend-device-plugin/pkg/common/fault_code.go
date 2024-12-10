@@ -1622,7 +1622,7 @@ func GetTimeoutFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultTim
 	return result
 }
 
-// GetFrequencyFaultLevelAndCodes get frequency fault codes with level and set fault time equal current time.
+// GetFrequencyFaultLevelAndCodes get frequency fault codes with level and set fault occurrence time (unix time).
 func GetFrequencyFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultTimeAndLevel {
 	result := make(map[int64]FaultTimeAndLevel)
 	if mode != ChipFaultMode && mode != NetworkFaultMode {
@@ -1645,7 +1645,7 @@ func GetFrequencyFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultT
 
 		for _, faultTime := range faultFrequencyCache.Frequency[logicId] {
 			result[num] = FaultTimeAndLevel{
-				// timeout fault use current time as `FaultTime`
+				// frequency fault use unix time as `FaultTime`
 				FaultTime:  faultTime,
 				FaultLevel: faultFrequencyCache.FaultHandling,
 			}
