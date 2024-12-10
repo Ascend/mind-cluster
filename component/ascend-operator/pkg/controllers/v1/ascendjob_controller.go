@@ -546,6 +546,5 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 	if err := r.Update(context.TODO(), cm); err != nil {
 		return err
 	}
-	rtg.SetTimeStamp(uint64(time.Now().Unix()))
 	return nil
 }
