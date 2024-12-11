@@ -120,7 +120,7 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) constant.Rank
 		hwlog.RunLog.Error("illegal param replicas")
 		return rankTable
 	}
-	rankTable.ServerList = make([]*constant.ServerHccl, replicas)
+	rankTable.ServerList = make([]constant.ServerHccl, replicas)
 	for _, pod := range podJobMap {
 		nodeRank := getNodeRank(pod)
 		if nodeRank == -1 || nodeRank >= replicas {
@@ -139,9 +139,9 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) constant.Rank
 			serverDevice.DeviceID = device.DeviceID
 			serverDevice.DeviceIP = device.DeviceIP
 			serverDevice.RankID = strconv.Itoa(nodeRank*podDeviceNum + index)
-			server.DeviceList = append(server.DeviceList, &serverDevice)
+			server.DeviceList = append(server.DeviceList, serverDevice)
 		}
-		rankTable.ServerList[nodeRank] = &server
+		rankTable.ServerList[nodeRank] = server
 	}
 	rankTable.ServerCount = strconv.Itoa(len(rankTable.ServerList))
 	return rankTable
