@@ -16,6 +16,7 @@
 package device
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -37,7 +38,7 @@ import (
 
 // HotResetManager hot reset manager
 type HotResetManager interface {
-	GetRingNum() int
+	GetResetDevNumOnce() (int, error)
 	GetDevIdList(string) []int32
 	GetTaskDevFaultInfoList(string) ([]*common.TaskDevInfo, error)
 	GetTaskPod(string) (v1.Pod, error)
@@ -75,7 +76,7 @@ type HotResetManager interface {
 
 // HotResetTools hot reset tool
 type HotResetTools struct {
-	ringNum             int
+	resetDevNumOnce     int
 	allTaskDevList      map[string][]int32
 	allTaskDevFaultInfo map[string][]*common.TaskDevInfo
 	globalDevFaultInfo  map[int32]*common.DevFaultInfo
@@ -92,25 +93,13 @@ type HotResetTools struct {
 }
 
 // NewHotResetManager create HotResetManager and init data
-func NewHotResetManager(devUsage string) HotResetManager {
-	var ringNumber int
-	switch common.ParamOption.RealCardType {
-	case common.Ascend910:
-		ringNumber = common.Ascend910RingsNum
-	case common.Ascend910B:
-		if devUsage == common.Infer {
-			ringNumber = common.Ascend910BRingsNumInfer
-		}
-		if devUsage == common.Train {
-			ringNumber = common.Ascend910BRingsNumTrain
-		}
-	case common.Ascend910A3:
-		ringNumber = common.Ascend910A3RingsNum
-	default:
+func NewHotResetManager(devUsage string, deviceNum int) HotResetManager {
+	resetDevNumOnce := getResetDevNumOnce(devUsage, deviceNum)
+	if resetDevNumOnce == 0 {
 		return nil
 	}
 	return &HotResetTools{
-		ringNum:          ringNumber,
+		resetDevNumOnce:  resetDevNumOnce,
 		resetTask:        map[string]struct{}{},
 		resetDev:         map[int32]struct{}{},
 		faultDev2PodMap:  map[int32]v1.Pod{},
@@ -128,13 +117,27 @@ func NewHotResetManager(devUsage string) HotResetManager {
 	}
 }
 
-func getChipCountOnRing() int {
-	var ring = map[string]int{
-		common.Ascend910:   common.Ascend910RingsNum,
-		common.Ascend910B:  common.Ascend910BRingsNumTrain,
-		common.Ascend910A3: common.Ascend910A3RingsNum,
+// getResetDevNumOnce get reset device num at a time.
+// 910 and 910A2 device reset by ring, 910A3 reset all devices on the node
+func getResetDevNumOnce(devUsage string, deviceNum int) int {
+	var resetDevNumOnce int
+	switch common.ParamOption.RealCardType {
+	case common.Ascend910:
+		resetDevNumOnce = common.Ascend910RingsNum
+	case common.Ascend910B:
+		if devUsage == common.Infer {
+			resetDevNumOnce = common.Ascend910BRingsNumInfer
+		}
+		if devUsage == common.Train {
+			resetDevNumOnce = common.Ascend910BRingsNumTrain
+		}
+	case common.Ascend910A3:
+		// 900A3 device, deviceNum is 16; 9000A3 device, deviceNum is 8
+		resetDevNumOnce = deviceNum
+	default:
+		hwlog.RunLog.Error("only 910 device support grace tolerance")
 	}
-	return ring[common.ParamOption.RealCardType]
+	return resetDevNumOnce
 }
 
 // SyncResetCM sync reset-cm event
@@ -394,12 +397,13 @@ func checkConfigMap(obj interface{}) bool {
 	return strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix)
 }
 
-// GetRingNum get device num in a ring
-func (hrt *HotResetTools) GetRingNum() int {
-	if hrt.ringNum == 0 {
-		return getChipCountOnRing()
+// GetResetDevNumOnce get reset device num at a time
+func (hrt *HotResetTools) GetResetDevNumOnce() (int, error) {
+	// not initialized or not 910 device, the value will be zero
+	if hrt.resetDevNumOnce == 0 {
+		return 0, errors.New("reset device num at a time is zero")
 	}
-	return hrt.ringNum
+	return hrt.resetDevNumOnce, nil
 }
 
 // GetTaskDevFaultInfoList return task device fault info list
@@ -515,6 +519,11 @@ func (hrt *HotResetTools) GetDevListByPolicyLevel(devFaultInfoList []*common.Tas
 // GetNeedResetDevMap return device logic id list to be reset
 func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
 	needResetDevMap := make(map[int32]int32)
+	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
+	}
 	for _, devFaultInfo := range devFaultInfoList {
 		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
 		if !ok {
@@ -525,9 +534,9 @@ func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevI
 		}
 		if policyType == common.RestartErrorLevel || policyType == common.ResetErrorLevel ||
 			policyType == common.RestartRequestErrorLevel {
-			resetIndex := devFaultInfo.LogicId / int32(hrt.GetRingNum())
+			resetIndex := devFaultInfo.LogicId / int32(resetDevNumOnce)
 			if _, ok := needResetDevMap[devFaultInfo.LogicId]; !ok {
-				needResetDevMap[resetIndex*int32(hrt.GetRingNum())] = devFaultInfo.LogicId
+				needResetDevMap[resetIndex*int32(resetDevNumOnce)] = devFaultInfo.LogicId
 			}
 		}
 	}
@@ -539,6 +548,11 @@ func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInf
 	status string) (*common.TaskResetInfo, error) {
 	faultRing := make(map[int]struct{}, common.RingSum)
 	var rankList []*common.TaskDevInfo
+	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
+	}
 	for _, devFaultInfo := range devFaultInfoList {
 		policyType, ok := hrt.processPolicyTable[devFaultInfo.Policy]
 		if !ok {
@@ -551,11 +565,11 @@ func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInf
 			policyType != common.RestartRequestErrorLevel {
 			continue
 		}
-		ringStartIndex := int(devFaultInfo.LogicId) / hrt.GetRingNum()
+		ringStartIndex := int(devFaultInfo.LogicId) / resetDevNumOnce
 		faultRing[ringStartIndex] = struct{}{}
 	}
 	for _, devInfo := range devFaultInfoList {
-		ringIndex := int(devInfo.LogicId) / hrt.GetRingNum()
+		ringIndex := int(devInfo.LogicId) / resetDevNumOnce
 		if _, ok := faultRing[ringIndex]; !ok {
 			continue
 		}
@@ -576,17 +590,22 @@ func (hrt *HotResetTools) GetTaskFaultRankInfo(devFaultInfoList []*common.TaskDe
 		FaultRank: make([]int, 0),
 	}
 	faultRing := make(map[int]struct{}, common.RingSum)
+	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
+	}
 	for _, devFaultInfo := range devFaultInfoList {
 		policy := hrt.processPolicyTable[devFaultInfo.Policy]
 		if policy != common.RestartErrorLevel && policy != common.ResetErrorLevel &&
 			policy != common.RestartRequestErrorLevel {
 			continue
 		}
-		ringStartIndex := int(devFaultInfo.LogicId) / hrt.GetRingNum()
+		ringStartIndex := int(devFaultInfo.LogicId) / resetDevNumOnce
 		faultRing[ringStartIndex] = struct{}{}
 	}
 	for _, devInfo := range devFaultInfoList {
-		ringIndex := int(devInfo.LogicId) / hrt.GetRingNum()
+		ringIndex := int(devInfo.LogicId) / resetDevNumOnce
 		if _, ok := faultRing[ringIndex]; !ok {
 			continue
 		}

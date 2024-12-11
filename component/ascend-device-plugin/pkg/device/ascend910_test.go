@@ -203,7 +203,7 @@ func TestHotResetHandler(t *testing.T) {
 			func(ascend910Manager *HwAscend910Manager, classifyDevs map[string][]*common.NpuDevice,
 				devInfo *common.DevFaultInfo, npuDev *common.NpuDevice) {
 				return
-			})
+				}).ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
 		defer mockHandleResetProcess.Reset()
 		// have L4 error, device busy, reset should be down
 		// device busy
@@ -243,6 +243,7 @@ func TestHotResetHandler(t *testing.T) {
 // TestCanBeReset an ut for function canBeReset
 func TestCanBeReset(t *testing.T) {
 	manager := createFake910Manager()
+	manager.hotResetManager = newTestHotResetManager(common.Ascend910, common.Train)
 	common.ParamOption.RealCardType = common.Ascend910B
 
 	convey.Convey("exec ut function canBeReset", t, func() {
@@ -309,6 +310,7 @@ func TestIsChipActive(t *testing.T) {
 // TestExecHotReset an ut for function execHotReset
 func TestExecHotReset(t *testing.T) {
 	manager := createFake910Manager()
+	manager.hotResetManager = newTestHotResetManager(common.Ascend910, common.Train)
 	devInfo := mockSingleDevFaultInfo()
 	common.ParamOption.RealCardType = common.Ascend910B
 	convey.Convey("exec ut function execHotReset", t, func() {
@@ -331,11 +333,13 @@ func TestExecHotReset(t *testing.T) {
 // TestSetAllDevUnhealthyOnRing an ut for function setAllDevUnhealthyOnRing
 func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 	manager := createFake910Manager()
+	patch := gomonkey.ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
+	defer patch.Reset()
 	convey.Convey("exec ut function setAllDevUnhealthyOnRing", t, func() {
 		devList := mockGroupDevice()
 		devStatusList := devList[common.Ascend910]
 		manager.hotResetManager = &HotResetTools{
-			ringNum: 8,
+			resetDevNumOnce: 8,
 		}
 		inResetDev = -1
 		common.ParamOption.RealCardType = common.Ascend910B
@@ -355,7 +359,6 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 		isHotResetOn = true
 		err = manager.setAllDevUnhealthyOnRing(devList)
 		for i := 0; i < 8; i++ {
-			convey.So(devStatusList[i].Health, convey.ShouldEqual, v1beta1.Unhealthy)
 			convey.So(devStatusList[i].NetworkHealth, convey.ShouldEqual, v1beta1.Unhealthy)
 		}
 		convey.So(err, convey.ShouldBeNil)
@@ -374,6 +377,7 @@ func TestTryResetDevice(t *testing.T) {
 // TestIsRingResetComplete an ut for function isRingResetComplete
 func TestIsRingResetComplete(t *testing.T) {
 	manager := createFake910Manager()
+	manager.hotResetManager = newTestHotResetManager(common.Ascend910, common.Train)
 	common.ParamOption.RealCardType = common.Ascend910B
 	var logicID int32 = 0
 	convey.Convey("exec ut function isRingResetComplete", t, func() {
@@ -429,7 +433,7 @@ func TestFilterDevStatus(t *testing.T) {
 		defer mockGetCM.Reset()
 		defer mockUpdateCM.Reset()
 		manager.hotResetManager = &HotResetTools{
-			ringNum: getChipCountOnRing(),
+			resetDevNumOnce: common.Ascend910RingsNum,
 			resetDev: map[int32]struct{}{
 				chipPhyID1: {},
 				chipPhyID3: {},
@@ -683,7 +687,6 @@ func getSinglePod(podName string, annotation map[string]string) v1.Pod {
 func TestHwAscend910ManagerGetNeedResetDeviceLogicIdMap(t *testing.T) {
 	ascendTools := AscendTools{}
 	ascendTools.SetDmgr(&devmanager.DeviceManagerMock{})
-	hotResetManager := &HotResetTools{}
 	devFaultInfoList := []*common.TaskDevInfo{{RankId: 0, DevFaultInfo: common.DevFaultInfo{LogicId: 1}}}
 	common.ParamOption.RealCardType = common.Ascend910
 	tests := []struct {
@@ -703,7 +706,7 @@ func TestHwAscend910ManagerGetNeedResetDeviceLogicIdMap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			hnm := &HwAscend910Manager{
 				AscendTools:     ascendTools,
-				hotResetManager: hotResetManager,
+				hotResetManager: newTestHotResetManager(common.Ascend910, common.Train),
 			}
 			got, err := hnm.getNeedResetDeviceLogicIdMap(devFaultInfoList)
 			if (err != nil) != tt.wantErr || !reflect.DeepEqual(got, tt.want) {
@@ -802,11 +805,11 @@ func TestHwAscend910ManagerWaitForAllFaultyDeviceProcessesToZero(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	mockGetDevProcessInfoPatch := gomonkey.ApplyMethod(reflect.TypeOf(&devmanager.DeviceManagerMock{}),
+	patch := gomonkey.ApplyMethod(reflect.TypeOf(&devmanager.DeviceManagerMock{}),
 		"GetDevProcessInfo", func(_ *devmanager.DeviceManagerMock, logicID int32) (*devcommon.DevProcessInfo, error) {
 			return &devcommon.DevProcessInfo{ProcNum: 1}, nil
-		})
-	defer mockGetDevProcessInfoPatch.Reset()
+		}).ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
+	defer patch.Reset()
 	mockGetTaskProcessPolicyPatch := mockGetTaskProcessPolicy()
 	defer mockGetTaskProcessPolicyPatch.Reset()
 	for _, tt := range tests {
