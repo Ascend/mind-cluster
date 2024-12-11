@@ -563,15 +563,19 @@ func mockAscendTools() AscendTools {
 func TestAscendToolsGetDeviceFaults(t *testing.T) {
 	t.Run("getDeviceFaults", func(t *testing.T) {
 		tool := &AscendTools{}
+		base16 := 16
+		var faultTime1 int64 = 100000
+		var faultTime2 int64 = 110000
+		var faultTime3 int64 = 120000
 		device := &common.NpuDevice{
 			FaultCodes:             []int64{int64(0x80C98008), int64(0x80CB8008)},
 			AlarmRaisedTime:        100000,
 			NetworkFaultCodes:      []int64{int64(common.LinkDownFaultCode)},
 			NetworkAlarmRaisedTime: 110000,
 			FaultTimeMap: map[int64]int64{
-				int64(0x80C98008):               100000,
-				int64(0x80CB8008):               110000,
-				int64(common.LinkDownFaultCode): 120000,
+				int64(0x80C98008):               faultTime1,
+				int64(0x80CB8008):               faultTime2,
+				int64(common.LinkDownFaultCode): faultTime3,
 			},
 			DeviceName: "Ascend910-0",
 		}
@@ -584,7 +588,7 @@ func TestAscendToolsGetDeviceFaults(t *testing.T) {
 			FaultHandling:        common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.NetworkFaultCodes)),
 			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
-				strings.ToUpper(strconv.FormatInt(common.LinkDownFaultCode, 16)): {120000,
+				strings.ToUpper(strconv.FormatInt(common.LinkDownFaultCode, base16)): {faultTime3,
 					common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)},
 			},
 		}, {
@@ -595,10 +599,10 @@ func TestAscendToolsGetDeviceFaults(t *testing.T) {
 			FaultHandling:        common.GetFaultType(device.FaultCodes, device.LogicID),
 			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.FaultCodes)),
 			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
-				strings.ToUpper(strconv.FormatInt(int64(0x80C98008), 16)): {100000,
+				strings.ToUpper(strconv.FormatInt(int64(0x80C98008), base16)): {faultTime1,
 					common.GetFaultType([]int64{0x80C98008}, device.LogicID),
 				},
-				strings.ToUpper(strconv.FormatInt(int64(0x80CB8008), 16)): {110000,
+				strings.ToUpper(strconv.FormatInt(int64(0x80CB8008), base16)): {faultTime2,
 					common.GetFaultType([]int64{0x80CB8008}, device.LogicID)},
 			},
 		},

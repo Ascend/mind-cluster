@@ -10,16 +10,16 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 )
 
 // PodGroupCollector collector podGroup info
 func PodGroupCollector(oldPGInfo, newPGInfo *v1beta1.PodGroup, operator string) {
 	switch operator {
 	case constant.AddOperator, constant.UpdateOperator:
-		podGroup.SavePodGroup(newPGInfo)
+		podgroup.SavePodGroup(newPGInfo)
 	case constant.DeleteOperator:
-		podGroup.DeletePodGroup(newPGInfo)
+		podgroup.DeletePodGroup(newPGInfo)
 	default:
 		hwlog.RunLog.Debugf("error operator: %s", operator)
 		return

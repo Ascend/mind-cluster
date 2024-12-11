@@ -13,7 +13,7 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 )
@@ -158,7 +158,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	if err != nil {
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
-	jobName, pgName, namespace := podGroup.GetPGFromCacheOrPod(req.JobId)
+	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
 	config, code, err :=
 		common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {

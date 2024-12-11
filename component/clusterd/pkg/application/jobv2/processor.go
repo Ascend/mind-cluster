@@ -10,17 +10,17 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 )
 
 func addJob(jobKey string) {
-	podGroupCache := podGroup.GetPodGroup(jobKey)
+	podGroupCache := podgroup.GetPodGroup(jobKey)
 	// if both pod and podGroup exist, skip to update flow
 	if podGroupCache.Name != "" && len(pod.GetPodByJobId(jobKey)) > 0 {
 		uniqueQueue.Store(jobKey, queueOperatorUpdate)
 		return
 	}
-	oldJobInfo := job.GetJobByNameSpaceAndName(podGroup.GetJobNameByPG(&podGroupCache), podGroupCache.Namespace)
+	oldJobInfo := job.GetJobByNameSpaceAndName(podgroup.GetJobNameByPG(&podGroupCache), podGroupCache.Namespace)
 	if oldJobInfo.Name != "" && oldJobInfo.IsPreDelete && oldJobInfo.Key != jobKey {
 		// if old job is pre delete, and new job is add, delete old job cache
 		job.DeleteJobCache(oldJobInfo.Key)
@@ -38,7 +38,7 @@ func addJob(jobKey string) {
 }
 
 func updateJob(jobKey string) {
-	pg := podGroup.GetPodGroup(jobKey)
+	pg := podgroup.GetPodGroup(jobKey)
 	// jobInfo status is empty if jobInfo is not exists
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok && pg.Name == "" {

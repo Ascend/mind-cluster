@@ -21,7 +21,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
@@ -120,7 +120,7 @@ func NewEventId(randLen int) string {
 
 // ChangeProcessSchedulingMode change process scheduling mode
 func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) {
-	pg := podGroup.GetPodGroup(jobId)
+	pg := podgroup.GetPodGroup(jobId)
 	if pg.GetName() == "" {
 		hwlog.RunLog.Errorf("failed to get podGroup when change process scheduling")
 		return nil, fmt.Errorf("can not find podGroup")
@@ -338,6 +338,7 @@ func FaultPodAllRescheduled(jobId string, oldPodMap map[string]string) bool {
 	return true
 }
 
+// IsUceFault check whether fault type is uce fault
 func IsUceFault(faults []*pb.FaultRank) bool {
 	for _, fault := range faults {
 		if fault.FaultType == constant.NormalFaultType {
