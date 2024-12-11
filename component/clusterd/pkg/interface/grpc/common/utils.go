@@ -21,7 +21,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
@@ -119,19 +118,9 @@ func NewEventId(randLen int) string {
 }
 
 // ChangeProcessSchedulingMode change process scheduling mode
-func ChangeProcessSchedulingMode(jobId, mode string) (*v1beta1.PodGroup, error) {
-	pg := podGroup.GetPodGroup(jobId)
-	if pg.GetName() == "" {
-		hwlog.RunLog.Errorf("failed to get podGroup when change process scheduling")
-		return nil, fmt.Errorf("can not find podGroup")
-	}
-	_, ok := pg.Labels[constant.ProcessRecoverEnableLabel]
-	if !ok {
-		hwlog.RunLog.Error("can not find process rescheduling label when change")
-		return nil, fmt.Errorf("can not find process rescheduling label when change")
-	}
+func ChangeProcessSchedulingMode(jobInfo JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
 	label := map[string]string{constant.ProcessRecoverEnableLabel: mode}
-	return kube.RetryPatchPodGroupLabel(&pg, constant.RetryTime, label)
+	return kube.RetryPatchPodGroupLabel(jobInfo.PgName, jobInfo.Namespace, constant.RetryTime, label)
 }
 
 // RetryWriteResetCM retry write the reset info configMap

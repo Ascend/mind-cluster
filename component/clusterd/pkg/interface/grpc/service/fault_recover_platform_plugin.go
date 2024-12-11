@@ -79,7 +79,7 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRan
 	newConfirm := map[string]string{
 		constant.ProcessConfirmFaultKey: strings.Trim(common.Faults2String(allFaultRanks), ","),
 	}
-	_, err = kube.RetryPatchPodGroupAnnotations(pg, constant.UpdatePodGroupTimes, newConfirm)
+	_, err = kube.RetryPatchPodGroupAnnotations(name, namespace, constant.UpdatePodGroupTimes, newConfirm)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to update pg when UpdateProcessConfirmFault, err:%v, name:%s", err, name)
 		return err

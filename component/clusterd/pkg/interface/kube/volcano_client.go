@@ -99,9 +99,9 @@ func UpdatePodGroup(pg *v1beta1.PodGroup) (*v1beta1.PodGroup, error) {
 }
 
 // RetryPatchPodGroupAnnotations retry patch pod group annotations
-func RetryPatchPodGroupAnnotations(pg *v1beta1.PodGroup, retryTimes int,
+func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
 	annotations map[string]string) (*v1beta1.PodGroup, error) {
-	pg, err := patchPodGroupAnnotation(pg.Name, pg.Namespace, annotations)
+	pg, err := patchPodGroupAnnotation(pgName, pgNamespace, annotations)
 	retry := 0
 	for err != nil && retry < retryTimes {
 		retry++
@@ -122,24 +122,25 @@ func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]
 		return nil, err
 	}
 	patchBody := fmt.Sprintf(annotationsFormat, annotationStr)
+	hwlog.RunLog.Infof("prepare patch pg annotation, pgName=%s, pgNamespace=%s", pgName, pgNamespace)
 	return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(pgNamespace).Patch(context.TODO(),
 		pgName, types.MergePatchType, []byte(patchBody), v1.PatchOptions{})
 }
 
 // RetryPatchPodGroupLabel retry patch pod group label
-func RetryPatchPodGroupLabel(pg *v1beta1.PodGroup, retryTimes int,
+func RetryPatchPodGroupLabel(pgName, nameSpace string, retryTimes int,
 	labels map[string]string) (*v1beta1.PodGroup, error) {
-	pg, err := patchPodLabel(pg.Name, pg.Namespace, labels)
+	pg, err := patchPodGroupLabel(pgName, nameSpace, labels)
 	retry := 0
 	for err != nil && retry < retryTimes {
 		retry++
 		time.Sleep(time.Second * time.Duration(retry))
-		pg, err = patchPodLabel(pg.Name, pg.Namespace, labels)
+		pg, err = patchPodGroupLabel(pg.Name, pg.Namespace, labels)
 	}
 	return pg, err
 }
 
-func patchPodLabel(pgName, pgNamespace string, labels map[string]string) (*v1beta1.PodGroup, error) {
+func patchPodGroupLabel(pgName, pgNamespace string, labels map[string]string) (*v1beta1.PodGroup, error) {
 	if vcK8sClient.ClientSet == nil {
 		hwlog.RunLog.Errorf("client set is nil")
 		return nil, fmt.Errorf("client set is nil")
@@ -150,6 +151,7 @@ func patchPodLabel(pgName, pgNamespace string, labels map[string]string) (*v1bet
 		return nil, err
 	}
 	patchBody := fmt.Sprintf(labelsFormat, labelStr)
+	hwlog.RunLog.Infof("prepare patch pg label, pgName=%s, pgNamespace=%s", pgName, pgNamespace)
 	return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(pgNamespace).Patch(context.TODO(),
 		pgName, types.MergePatchType, []byte(patchBody), v1.PatchOptions{})
 }

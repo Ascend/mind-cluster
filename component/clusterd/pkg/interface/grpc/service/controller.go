@@ -807,25 +807,17 @@ func (ctl *EventController) removeAgentStrategy(strategy string) {
 }
 
 func (ctl *EventController) updateFixResult(strategy, value string) {
-	pg, err := kube.RetryGetPodGroup(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, retryTimes)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get pg when update fix result, err:%v, pgName=%s",
-			err, ctl.jobInfo.PgName)
-		return
-	}
-	if pg.Annotations == nil {
-		pg.Annotations = make(map[string]string)
-	}
 	newRecoverStatusAnnotation := map[string]string{
 		constant.ProcessRecoverStatusKey: value,
 	}
-	_, err = kube.RetryPatchPodGroupAnnotations(pg, retryTimes, newRecoverStatusAnnotation)
+	_, err := kube.RetryPatchPodGroupAnnotations(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, retryTimes, newRecoverStatusAnnotation)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to path pg when update fix result, err:%v, pgName=%s",
 			err, ctl.jobInfo.PgName)
 		return
 	}
-	hwlog.RunLog.Infof("fix result annatate success, %s=%s", constant.ProcessRecoverStatusKey, value)
+	hwlog.RunLog.Infof("fix result annatate success, %s=%s, pgName=%s",
+		constant.ProcessRecoverStatusKey, value, ctl.jobInfo.PgName)
 }
 
 func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode, error) {
@@ -896,7 +888,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) {
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverPause); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverPause); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label pause %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverPause, ctl.jobInfo.PgName)
@@ -920,7 +912,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 	}
 
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverEnable); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverEnable); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label on %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverEnable, ctl.jobInfo.PgName)
