@@ -116,6 +116,10 @@ func GetSharedTorIpByPod(pods map[string]v1.Pod) string {
 // InitRankTableByPod init rank table by pod
 func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) constant.RankTable {
 	var rankTable constant.RankTable
+	if replicas <= 0 {
+		hwlog.RunLog.Error("illegal param replicas")
+		return rankTable
+	}
 	rankTable.ServerList = make([]*constant.ServerHccl, replicas)
 	for _, pod := range podJobMap {
 		nodeRank := getNodeRank(pod)

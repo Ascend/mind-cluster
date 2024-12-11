@@ -16,7 +16,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 )
@@ -973,7 +973,7 @@ func (ctl *EventController) listenScheduleResult() {
 	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Infof("check pg running %d times", i)
-		if podGroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
+		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 			pgRunning = true
 			break
 		}
@@ -1109,7 +1109,8 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
-	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.RestartAllProcessOperation)
+	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
+		constant.RestartAllProcessOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",
 			err, ctl.jobInfo.JobId, ctl.uuid)
