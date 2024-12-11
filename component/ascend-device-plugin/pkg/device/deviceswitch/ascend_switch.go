@@ -274,6 +274,8 @@ func convertFaultEvent(event *C.struct_LqDcmiEvent) common.SwitchFaultEvent {
 	if err := setExtraFaultInfo(&fault); err != nil {
 		hwlog.RunLog.Error(err)
 	}
+	hwlog.RunLog.Debugf("convert switch fault finish, EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,PeerPortDevice:%v,AlarmRaisedTime:%v",
+		fault.EventType, fault.SubType, fault.FaultID, fault.AssembledFaultCode, fault.PeerPortDevice, fault.AlarmRaisedTime)
 	return fault
 }
 
@@ -290,18 +292,20 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 			faultID = uint(common.FaultIdOfPortLaneReduceQuarter)
 		case common.SubTypeOfPortLaneReduceHalf:
 			faultID = uint(common.FaultIdOfPortLaneReduceHalf)
+		default:
+			faultID = uint(common.FaultIdOfPortFailOnForwardingChip)
 		}
 	} else {
 		faultID, ok = EventTypeToFaultIDMapper[event.EventType]
 		if !ok {
-			hwlog.RunLog.Warnf("failed to find faultID for eventType: %d", event.EventType)
+			hwlog.RunLog.Warnf("failed to find faultID for switch fault event: %v", event)
 		}
 	}
 	if alarmID == "" {
 		alarmID, ok = FaultIdToAlarmIdMapper[faultID]
-	}
-	if !ok {
-		hwlog.RunLog.Warnf("failed to find alarm id for eventType: %d", event.EventType)
+		if !ok {
+			hwlog.RunLog.Warnf("failed to find alarm id for switch fault event: %v", event)
+		}
 	}
 	PeerDeviceType, PeerDeviceName := int(event.PeerPortDevice), ""
 	if isPortLevelFault(int(event.EventType)) {
