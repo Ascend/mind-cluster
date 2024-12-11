@@ -82,7 +82,7 @@ func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	return true
 }
 
-func preDeleteCM(jobInfo constant.JobInfo, podJobMap map[string]v1.Pod) bool {
+func preDeleteCM(jobInfo constant.JobInfo, podJobMap map[string]v1.Pod, hccls []string) bool {
 	data := make(map[string]string, cmDataInitLength)
 	if jobInfo.Framework == ptFramework {
 		data[torIpTag] = pod.GetSharedTorIpByPod(podJobMap)
@@ -104,6 +104,9 @@ func preDeleteCM(jobInfo constant.JobInfo, podJobMap map[string]v1.Pod) bool {
 			cmName = fmt.Sprintf("%s-%s-%d", configmapPrefix, jobInfo.Name, i)
 		}
 		data[cmIndex] = fmt.Sprintf("%d", i)
+		if i < len(hccls) {
+			data[hcclJson] = hccls[i]
+		}
 		err := kube.CreateOrUpdateConfigMap(cmName, jobInfo.NameSpace, data, getDefaultLabel())
 		if err != nil {
 			hwlog.RunLog.Errorf("delete configmap failed, err: %v", err)
