@@ -159,6 +159,12 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
 	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
+	if jobName == "" || pgName == "" || namespace == "" {
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+		}, nil
+	}
 	config, code, err :=
 		common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {
