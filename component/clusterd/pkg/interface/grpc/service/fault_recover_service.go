@@ -18,7 +18,7 @@ import (
 	"clusterd/pkg/interface/grpc/pb"
 )
 
-var globalFaultBeaconSecond = 5
+var globalFaultBeaconSecond = 2
 
 // FaultRecoverService is a service for fault recover
 type FaultRecoverService struct {
