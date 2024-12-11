@@ -46,14 +46,15 @@ func PreDeleteCmAndCache(podJobMap map[string]v1.Pod, jobKey string) {
 		return
 	}
 	jobInfo.IsPreDelete = true
-	jobInfo.JobRankTable = constant.RankTable{}
 	// when a job is deleted, if it is not in a successful state, it must be in a failed state
 	if jobInfo.Status != StatusJobCompleted {
 		jobInfo.Status = StatusJobFail
 	}
 	jobInfo.DeleteTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
-	if preDeleteCM(jobInfo, podJobMap) {
+	hccls := getHcclSlice(jobInfo.JobRankTable)
+	if preDeleteCM(jobInfo, podJobMap, hccls) {
+		hwlog.RunLog.Debugf("pre delete job:%s success", jobInfo.Name)
 		SaveJobCache(jobKey, jobInfo)
 	}
 }
@@ -65,6 +66,7 @@ func DeleteCmAndCache(jobKey string) {
 		return
 	}
 	if deleteCm(jobInfo) {
+		hwlog.RunLog.Debugf("delete job:%s success", jobInfo.Name)
 		DeleteJobCache(jobKey)
 	}
 }
@@ -84,6 +86,7 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	jobInfo.AddTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	if initCM(jobInfo) {
+		hwlog.RunLog.Debugf("init job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
 	}
 }
@@ -133,6 +136,7 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 		result = updateCM(jobInfo, i, hccl) && result
 	}
 	if result {
+		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
 	}
 }
@@ -142,7 +146,7 @@ func getHcclSlice(table constant.RankTable) []string {
 		return nil
 	}
 	hcclJsons := make([]string, 0, table.Total)
-	serverHcclSlice := make([][]*constant.ServerHccl, 0, table.Total)
+	serverHcclSlice := make([][]constant.ServerHccl, 0, table.Total)
 	for i := 0; i < len(table.ServerList); i += safeDeviceSize {
 		if i+safeDeviceSize > len(table.ServerList) {
 			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:])
@@ -178,25 +182,19 @@ func GetJobServerInfoMap() constant.JobServerInfoMap {
 func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerHccl {
 	jobServerMap := make(map[string]constant.ServerHccl)
 	for _, server := range jobInfo.JobRankTable.ServerList {
-		if server == nil {
-			continue
-		}
 		copyServerHccl := constant.ServerHccl{
-			DeviceList: make([]*constant.Device, 0),
+			DeviceList: make([]constant.Device, 0),
 			ServerID:   server.ServerID,
 			PodID:      server.PodID,
 			ServerName: server.ServerName,
 		}
 		for _, dev := range server.DeviceList {
-			if dev == nil {
-				continue
-			}
 			copyDev := constant.Device{
 				DeviceID: dev.DeviceID,
 				DeviceIP: dev.DeviceIP,
 				RankID:   dev.RankID,
 			}
-			copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, &copyDev)
+			copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, copyDev)
 		}
 		jobServerMap[server.ServerName] = copyServerHccl
 	}

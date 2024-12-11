@@ -8,6 +8,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
@@ -46,7 +47,7 @@ func updateJob(jobKey string) {
 		return
 	}
 	podJobMap := pod.GetPodByJobId(jobKey)
-	isPreDelete, status := getStatusByCache(pg, podJobMap)
+	isPreDelete, status := getStatusByCache(pg, podJobMap, jobInfo)
 	if ok && jobInfo.Status == status && jobInfo.IsPreDelete == isPreDelete {
 		hwlog.RunLog.Debugf("the job %s cache is consistent with pod and podGroup cache", jobInfo.Name)
 		return
@@ -75,9 +76,12 @@ func updateJob(jobKey string) {
 		isPreDelete, status, jobInfo.Name, jobInfo.IsPreDelete, jobInfo.Status)
 }
 
-func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod) (bool, string) {
+func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {
 	if podGroup.Name == "" && len(podJobMap) == 0 {
-		return true, ""
+		return true, getStatusByOldStatus(jobInfo)
+	}
+	if len(podJobMap) == 0 {
+		return false, getStatusByOldStatus(jobInfo)
 	}
 	isFailed := false
 	isSuccess := true
@@ -100,13 +104,26 @@ func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod) (b
 	if isFailed {
 		return false, job.StatusJobFail
 	}
-	if isSuccess {
+	if isSuccess && len(podJobMap) >= int(podGroup.Spec.MinMember) {
 		return false, job.StatusJobCompleted
 	}
 	if isRunning && len(podJobMap) >= int(podGroup.Spec.MinMember) {
 		return false, job.StatusJobRunning
 	}
-	return false, job.StatusJobPending
+	return false, getStatusByOldStatus(jobInfo)
+}
+
+func getStatusByOldStatus(jobInfo constant.JobInfo) string {
+	switch jobInfo.Status {
+	case job.StatusJobRunning:
+		return job.StatusJobFail
+	case job.StatusJobCompleted:
+		return job.StatusJobCompleted
+	case job.StatusJobFail:
+		return job.StatusJobFail
+	default:
+		return job.StatusJobPending
+	}
 }
 
 func preDeleteJob(jobKey string) {
@@ -118,6 +135,10 @@ func preDeleteJob(jobKey string) {
 		return
 	}
 	podJobMap := pod.GetPodByJobId(jobKey)
+	if len(podJobMap) > 0 {
+		uniqueQueue.Store(jobKey, queueOperatorUpdate)
+		return
+	}
 	job.PreDeleteCmAndCache(podJobMap, jobKey)
 }
 
