@@ -112,6 +112,10 @@ func RetryPatchPodGroupAnnotations(pg *v1beta1.PodGroup, retryTimes int,
 }
 
 func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]string) (*v1beta1.PodGroup, error) {
+	if vcK8sClient.ClientSet == nil {
+		hwlog.RunLog.Errorf("client set is nil")
+		return nil, fmt.Errorf("client set is nil")
+	}
 	annotationStr, err := json.Marshal(annotations)
 	if err != nil {
 		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
@@ -136,6 +140,10 @@ func RetryPatchPodGroupLabel(pg *v1beta1.PodGroup, retryTimes int,
 }
 
 func patchPodLabel(pgName, pgNamespace string, labels map[string]string) (*v1beta1.PodGroup, error) {
+	if vcK8sClient.ClientSet == nil {
+		hwlog.RunLog.Errorf("client set is nil")
+		return nil, fmt.Errorf("client set is nil")
+	}
 	labelStr, err := json.Marshal(labels)
 	if err != nil {
 		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
