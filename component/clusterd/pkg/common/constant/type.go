@@ -105,18 +105,18 @@ type JobInfo struct {
 
 // RankTable rank table info
 type RankTable struct {
-	Status      string        `json:"status"`
-	ServerList  []*ServerHccl `json:"server_list"`
-	ServerCount string        `json:"server_count"`
-	Total       int           `json:"total"`
+	Status      string       `json:"status"`
+	ServerList  []ServerHccl `json:"server_list"`
+	ServerCount string       `json:"server_count"`
+	Total       int          `json:"total"`
 }
 
 // ServerHccl to hccl
 type ServerHccl struct {
-	DeviceList []*Device `json:"device"`
-	ServerID   string    `json:"server_id"`
-	PodID      string    `json:"-"`
-	ServerName string    `json:"server_name"`
+	DeviceList []Device `json:"device"`
+	ServerID   string   `json:"server_id"`
+	PodID      string   `json:"-"`
+	ServerName string   `json:"server_name"`
 }
 
 // Device to hccl with rankId
