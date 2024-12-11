@@ -69,9 +69,6 @@ func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
-	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
-	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
-	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
 }
 
 func main() {
