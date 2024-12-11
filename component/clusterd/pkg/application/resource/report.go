@@ -30,15 +30,17 @@ var (
 	currentClusterNodeCmNum   = 0
 	currentClusterSwitchCmNum = 0
 	initTime                  int64
-	updateChan                = make(chan int, 1)
+	updateChan                = make(chan int, 5)
 	reportTime                int64
 	cycleTicker               *time.Ticker
 )
 
 // AddNewMessageTotal when receive new device info or receive new node info or event 5s,add message to chan
 func AddNewMessageTotal() {
-	if len(updateChan) == 0 {
-		updateChan <- constant.AllProcessType
+	select {
+	case updateChan <- constant.AllProcessType:
+	default:
+		hwlog.RunLog.Warnf("AddNewMessageTotal failed")
 	}
 }
 
