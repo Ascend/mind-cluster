@@ -103,6 +103,7 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 		}
 	}
 
+	hwlog.RunLog.Errorf("job(uid=%s) relative pods is empty, get pgName, jobName failed", jobKey)
 	return
 }
 
