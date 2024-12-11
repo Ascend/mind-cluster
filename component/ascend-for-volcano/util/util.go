@@ -303,3 +303,13 @@ func DeepCopyCmData(cmData map[string]string) map[string]string {
 	}
 	return newCmData
 }
+
+// IsNodeReady returns the node ready status
+func IsNodeReady(node *v1.Node) bool {
+	for _, cond := range node.Status.Conditions {
+		if cond.Type == v1.NodeReady {
+			return cond.Status == v1.ConditionTrue
+		}
+	}
+	return false
+}

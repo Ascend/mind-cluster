@@ -20,6 +20,7 @@ package plugin
 import (
 	"sync"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -169,6 +170,7 @@ type ScheduleEnv struct {
 	IsFirstSession      *bool // scheduler first session message is unreliable
 	Jobs                map[api.JobID]SchedulerJob
 	Nodes               map[string]NPUNode
+	NodesNotInSsn       map[string]*corev1.Node
 	JobSinglePodFlag    map[api.JobID]bool
 	JobSeverInfos       map[api.JobID]struct{}
 	JobDeleteFlag       map[api.JobID]struct{}
