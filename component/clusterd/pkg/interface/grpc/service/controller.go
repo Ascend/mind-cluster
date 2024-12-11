@@ -556,15 +556,6 @@ func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb
 	return allFaultRanks, nil
 }
 
-func isUceFault(faults []*pb.FaultRank) bool {
-	for _, fault := range faults {
-		if fault.FaultType == constant.NormalFaultType {
-			return false
-		}
-	}
-	return true
-}
-
 func (ctl *EventController) takeUceFault2NormalFault() ([]*pb.FaultRank, []*pb.FaultRank) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
@@ -609,7 +600,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 				common.WriteConfirmFaultOrWaitPlatResultFault, nil
 		}
 		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
-		if !isUceFault(allFaults) {
+		if !common.IsUceFault(allFaults) {
 			uceFaults = uceFaults[:0]
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			normalFaults = allFaults
