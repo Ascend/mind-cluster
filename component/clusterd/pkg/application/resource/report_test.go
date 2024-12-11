@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func TestAddNewMessageTotal(t *testing.T) {
 		if updateChan != nil {
 			num, _ = <-updateChan
 		}
-		convey.So(num, convey.ShouldEqual, 0)
+		convey.So(num, convey.ShouldEqual, constant.AllProcessType)
 	})
 }
 
