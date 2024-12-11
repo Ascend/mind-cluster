@@ -71,12 +71,15 @@ func (fJob *FaultJob) GetJobElasticSchedulingLabel(job *plugin.SchedulerJob) str
 	return value
 }
 
-// IsJobHasPreSeparateNPUKey is Job has the key of PreSeparateNPU
-func (fJob *FaultJob) IsJobHasPreSeparateNPUKey() bool {
+// IsNormalJobNeedRestart is Job has the key of PreSeparateNPU os Job has software fault
+func (fJob *FaultJob) IsNormalJobNeedRestart() bool {
 	if fJob == nil {
 		return false
 	}
 	for _, fTask := range fJob.FaultTasks {
+		if fTask.IsSoftwareFault {
+			return true
+		}
 		for _, reason := range fTask.Reason {
 			if reason.FaultHandling == PreSeparateNPU {
 				return true

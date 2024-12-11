@@ -14,10 +14,6 @@ import (
 	"clusterd/pkg/domain/pod"
 )
 
-const (
-	getPGFromApiRetryTime = 3
-)
-
 // GetJobKeyByPG get job unique key by podGroup
 func GetJobKeyByPG(info *v1beta1.PodGroup) string {
 	key, _ := GetJobKeyAndNameByPG(info)
@@ -102,8 +98,8 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 	podJobMap := pod.GetPodByJobId(jobKey)
 	for _, po := range podJobMap {
 		jobName, pgName, namespace = pod.GetPGInfo(&po)
-		if pgName != "" && namespace != "" && jobName != "" {
-			return pgName, namespace, jobName
+		if jobName != "" && pgName != "" && namespace != "" {
+			return jobName, pgName, namespace
 		}
 	}
 

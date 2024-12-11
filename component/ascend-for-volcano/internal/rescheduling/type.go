@@ -178,6 +178,11 @@ const (
 	deviceInfoTimeout        = 60
 )
 
+const (
+	taskFaultKey = "fault-type"
+	softwareKey  = "software"
+)
+
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
@@ -326,6 +331,7 @@ type FaultTask struct {
 	IsFaultTask        bool
 	IsFaultRetryEnable bool
 	HasSubHealthFault  bool
+	IsSoftwareFault    bool
 	TaskUID            api.TaskID
 	TaskName           string
 	TaskNamespace      string
@@ -357,7 +363,9 @@ type miniFaultJob struct {
 
 // FaultReasonList node Fault Device List
 type FaultReasonList struct {
-	NodeName string `json:"node_name"`
+	NodeName      string `json:"node_name"`
+	TaskName      string `json:"task_name"`
+	FaultRankList []string
 	FaultDeviceList
 }
 

@@ -238,6 +238,7 @@ func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator,
 	jobName, namespace string, uid types.UID) {
 	r.saveRankTableFile(rtg)
 	r.saveRankTableConfigmap(rtg, jobName, namespace, uid)
+	rtg.SetTimeStamp(uint64(time.Now().Unix()))
 }
 
 func (r *ASJobReconciler) saveRankTableFile(rtg generator.RankTableGenerator) {
