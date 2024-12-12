@@ -112,7 +112,7 @@ func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
 }
 
 func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]string) (*v1beta1.PodGroup, error) {
-	if vcK8sClient.ClientSet == nil {
+	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
 		hwlog.RunLog.Errorf("client set is nil")
 		return nil, fmt.Errorf("client set is nil")
 	}
@@ -141,7 +141,7 @@ func RetryPatchPodGroupLabel(pgName, nameSpace string, retryTimes int,
 }
 
 func patchPodGroupLabel(pgName, pgNamespace string, labels map[string]string) (*v1beta1.PodGroup, error) {
-	if vcK8sClient.ClientSet == nil {
+	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
 		hwlog.RunLog.Errorf("client set is nil")
 		return nil, fmt.Errorf("client set is nil")
 	}
