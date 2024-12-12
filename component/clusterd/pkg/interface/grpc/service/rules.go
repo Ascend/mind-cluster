@@ -33,7 +33,7 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 		{Src: common.NotifyGlobalFaultState, Event: common.NotifySuccessEvent,
 			Dst: common.WaitReportRecoverStrategyState, Handler: ctl.handleWaitReportRecoverStrategy},
 		{Src: common.NotifyGlobalFaultState, Event: common.NotifyFailEvent,
-			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
 		{Src: common.NotifyGlobalFaultState, Event: common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
 			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
 

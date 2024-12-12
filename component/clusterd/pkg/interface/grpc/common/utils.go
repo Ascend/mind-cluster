@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -189,6 +190,11 @@ func WriteResetInfoToCM(taskName, namespace string,
 
 func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	faultRankList []string, operation string) (TaskResetInfo, error) {
+	for _, rank := range oldTaskResetInfo.RankList {
+		if rank.Policy == constant.HotResetPolicy {
+			return TaskResetInfo{}, errors.New("hotReset=1 is not compatible with process-recover")
+		}
+	}
 	var newTaskInfo TaskResetInfo
 	newTaskInfo.RankList = []*TaskDevInfo{}
 	newTaskInfo.UpdateTime = time.Now().Unix()
