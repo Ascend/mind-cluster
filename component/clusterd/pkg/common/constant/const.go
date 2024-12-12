@@ -124,4 +124,6 @@ const (
 	UceFaultType = "0"
 	// NormalFaultType other uce type
 	NormalFaultType = "1"
+	// HotResetPolicy hot reset policy
+	HotResetPolicy = "reset"
 )
