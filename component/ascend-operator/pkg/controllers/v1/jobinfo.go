@@ -181,7 +181,7 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 		svc, createErr := r.KubeClientSet.CoreV1().Services(job.GetNamespace()).Create(context.TODO(), newSvc,
 			metav1.CreateOptions{})
 		if createErr != nil {
-			return nil, err
+			return nil, createErr
 		}
 		return svc, nil
 	}

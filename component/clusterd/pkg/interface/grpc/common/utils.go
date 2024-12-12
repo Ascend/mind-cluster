@@ -326,3 +326,13 @@ func FaultPodAllRescheduled(jobId string, oldPodMap map[string]string) bool {
 	}
 	return true
 }
+
+// IsUceFault check whether fault type is uce fault
+func IsUceFault(faults []*pb.FaultRank) bool {
+	for _, fault := range faults {
+		if fault.FaultType == constant.NormalFaultType {
+			return false
+		}
+	}
+	return true
+}

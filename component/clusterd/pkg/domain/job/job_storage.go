@@ -80,7 +80,7 @@ func GetJobByNameSpaceAndName(name, nameSpace string) constant.JobInfo {
 
 // GetShouldDeleteJobKey get should delete job key
 func GetShouldDeleteJobKey() []string {
-	var allJob []string
+	var allJob = make([]string, 0)
 	nowTime := time.Now().Unix()
 	jobSummaryMap.Range(func(key, value any) bool {
 		jobKey, ok := key.(string)
@@ -101,7 +101,7 @@ func GetShouldDeleteJobKey() []string {
 
 // GetShouldUpdateJobKey  get should update job key
 func GetShouldUpdateJobKey() []string {
-	allJobKey := []string{}
+	allJobKey := make([]string, 0)
 	nowTime := time.Now().Unix()
 	jobSummaryMap.Range(func(key, value any) bool {
 		jobKey, ok := key.(string)

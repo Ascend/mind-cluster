@@ -37,18 +37,22 @@ const (
 	CmConsumerValue = "true"
 )
 
+// ConfigMapInterface configmap interface
 type ConfigMapInterface interface {
 	GetCmName() string
 }
 
+// GetCmName get configmap name of device info
 func (cm *DeviceInfo) GetCmName() string {
 	return cm.CmName
 }
 
+// GetCmName get configmap name of switch info
 func (cm *SwitchInfo) GetCmName() string {
 	return cm.CmName
 }
 
+// GetCmName get configmap name of node info
 func (cm *NodeInfo) GetCmName() string {
 	return cm.CmName
 }

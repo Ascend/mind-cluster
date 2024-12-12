@@ -16,7 +16,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
@@ -557,15 +557,6 @@ func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb
 	return allFaultRanks, nil
 }
 
-func isUceFault(faults []*pb.FaultRank) bool {
-	for _, fault := range faults {
-		if fault.FaultType == constant.NormalFaultType {
-			return false
-		}
-	}
-	return true
-}
-
 func (ctl *EventController) takeUceFault2NormalFault() ([]*pb.FaultRank, []*pb.FaultRank) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
@@ -610,7 +601,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 				common.WriteConfirmFaultOrWaitPlatResultFault, nil
 		}
 		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
-		if !isUceFault(allFaults) {
+		if !common.IsUceFault(allFaults) {
 			uceFaults = uceFaults[:0]
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			normalFaults = allFaults
@@ -1010,7 +1001,7 @@ func (ctl *EventController) listenScheduleResult() {
 	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Infof("check pg running %d times", i)
-		if podGroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
+		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 			pgRunning = true
 			break
 		}
@@ -1146,7 +1137,8 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
-	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.RestartAllProcessOperation)
+	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
+		constant.RestartAllProcessOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",
 			err, ctl.jobInfo.JobId, ctl.uuid)

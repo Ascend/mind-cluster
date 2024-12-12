@@ -6,7 +6,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -14,12 +13,12 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 )
 
-var globalFaultBeaconSecond = 5
+var globalFaultBeaconSecond = 2
 
 // FaultRecoverService is a service for fault recover
 type FaultRecoverService struct {
@@ -60,7 +59,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultmanager.JobFa
 			RankId: info.RankId,
 		}
 		fault.FaultType = constant.NormalFaultType
-		if strings.Contains(info.FaultCode, constant.UceFaultCode) {
+		if info.DoStepRetry {
 			fault.FaultType = constant.UceFaultType
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
@@ -159,7 +158,13 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	if err != nil {
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
-	jobName, pgName, namespace := podGroup.GetPGFromCacheOrPod(req.JobId)
+	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
+	if jobName == "" || pgName == "" || namespace == "" {
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+		}, nil
+	}
 	config, code, err :=
 		common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {
@@ -291,7 +296,9 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		hwlog.RunLog.Warnf("global fault center is nil")
 	}
 	controller.saveCacheFault(request.FaultRankIds)
-	controller.addEvent(common.FaultOccurEvent)
+	if !common.IsUceFault(request.FaultRankIds) {
+		controller.addEvent(common.FaultOccurEvent)
+	}
 	return &pb.Status{
 		Code: int32(common.OK),
 		Info: "receive ReportProcessFault",

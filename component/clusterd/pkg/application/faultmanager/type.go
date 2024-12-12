@@ -55,9 +55,10 @@ type AdvanceDeviceFaultCm struct {
 // FaultRank defines the structure for storing fault rank information.
 // It includes the rank ID and fault code.
 type FaultRank struct {
-	RankId     string
-	FaultCode  string
-	FaultLevel string
+	RankId      string
+	FaultCode   string
+	FaultLevel  string
+	DoStepRetry bool
 }
 
 // JobFaultInfo job fault rank info

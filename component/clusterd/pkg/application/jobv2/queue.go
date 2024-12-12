@@ -16,7 +16,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podGroup"
+	"clusterd/pkg/domain/podgroup"
 )
 
 const (
@@ -149,11 +149,11 @@ func Handler(ctx context.Context) {
 func podGroupMessage(newPGInfo *v1beta1.PodGroup, operator string) {
 	switch operator {
 	case constant.AddOperator:
-		uniqueQueue.Store(podGroup.GetJobKeyByPG(newPGInfo), queueOperatorAdd)
+		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorAdd)
 	case constant.DeleteOperator:
-		uniqueQueue.Store(podGroup.GetJobKeyByPG(newPGInfo), queueOperatorPreDelete)
+		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorPreDelete)
 	case constant.UpdateOperator:
-		uniqueQueue.Store(podGroup.GetJobKeyByPG(newPGInfo), queueOperatorUpdate)
+		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorUpdate)
 	default:
 		hwlog.RunLog.Errorf("abnormal informer operator: %s", operator)
 	}

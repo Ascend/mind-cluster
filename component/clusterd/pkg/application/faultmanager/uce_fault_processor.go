@@ -26,21 +26,19 @@ func newUceFaultProcessor(deviceCenter *deviceFaultProcessCenter) *uceFaultProce
 }
 
 func (reportInfos *reportInfosForAllJobs) getInfo(jobId, nodeName, deviceName string) reportInfo {
+	noReport := reportInfo{
+		RecoverTime:  constant.JobNotRecover,
+		CompleteTime: constant.JobNotRecoverComplete,
+	}
 	if reportInfos == nil {
-		return reportInfo{
-			RecoverTime:  constant.JobNotRecover,
-			CompleteTime: constant.JobNotRecoverComplete,
-		}
+		return noReport
 	}
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
 	if info, ok := reportInfos.InfoMap[jobId][nodeName][deviceName]; ok {
 		return info
 	}
-	return reportInfo{
-		RecoverTime:  constant.JobNotRecover,
-		CompleteTime: constant.JobNotRecoverComplete,
-	}
+	return noReport
 }
 
 func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId string, nodeName string) uceNodeInfo {
@@ -53,14 +51,19 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
 		deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceOfJob.DeviceID
+		uceReportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
+		jobUceDevice := uceDeviceInfo{
+			DeviceName:   deviceName,
+			FaultTime:    constant.DeviceNotFault,
+			RecoverTime:  uceReportInfo.RecoverTime,
+			CompleteTime: uceReportInfo.CompleteTime,
+		}
+		// management plane found uce fault
 		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
-			reportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
-			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = uceDeviceInfo{
-				DeviceName:   deviceName,
-				FaultTime:    uceDevice.FaultTime,
-				RecoverTime:  reportInfo.RecoverTime,
-				CompleteTime: reportInfo.CompleteTime,
-			}
+			jobUceDevice.FaultTime = uceDevice.FaultTime
+			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
+		} else if validBusinessUceReportInfo(&uceReportInfo) { // business plane found uce fault
+			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
 		}
 	}
 
@@ -267,4 +270,18 @@ func (processor *uceFaultProcessor) reportUceInfo(jobId string, rankId string, r
 	hwlog.RunLog.Infof("callbackForReportUceInfo receive report info(%s, %s, %d)", jobId, rankId, recoverTime)
 	hwlog.RunLog.Debugf("Current reportInfo is %s", util.ObjToString(processor.reportInfo.InfoMap))
 	return nil
+}
+
+func (processor *uceFaultProcessor) getUceDeviceFromJob(jobId, nodeName, deviceName string) (uceDeviceInfo, bool) {
+	jobInfo, found := processor.uceDevicesOfUceJob[jobId]
+	if !found {
+		hwlog.RunLog.Debugf("job %s has no uce fault", jobId)
+		return uceDeviceInfo{}, false
+	}
+	uceDevice, found := jobInfo.UceNode[nodeName].DeviceInfo[deviceName]
+	if !found {
+		hwlog.RunLog.Debugf("job %s's uce fault is not on node %s device %s", jobId, nodeName, deviceName)
+		return uceDeviceInfo{}, false
+	}
+	return uceDevice, true
 }

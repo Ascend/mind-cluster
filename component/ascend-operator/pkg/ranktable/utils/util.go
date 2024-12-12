@@ -57,14 +57,26 @@ func GenRankTableDir(job *mindxdlv1.AscendJob) string {
 func readRankTableDir(job *mindxdlv1.AscendJob) string {
 	for _, replSpec := range job.Spec.ReplicaSpecs {
 		for _, volume := range replSpec.Template.Spec.Volumes {
-			if volume.Name != rankTableName || volume.VolumeSource.HostPath == nil {
+			if volume.Name != rankTableName {
 				continue
 			}
-			return volume.VolumeSource.HostPath.Path
+			return getVolumePath(volume)
 		}
 	}
 	hwlog.RunLog.Info("ranktable file path is not set")
 	return ""
+}
+
+func getVolumePath(volume corev1.Volume) string {
+	switch {
+	case volume.VolumeSource.HostPath != nil:
+		return volume.VolumeSource.HostPath.Path
+	case volume.VolumeSource.NFS != nil:
+		return volume.VolumeSource.NFS.Path
+	default:
+		hwlog.RunLog.Error("please mount rank table by nfs or hostPath")
+		return ""
+	}
 }
 
 // PodHasAllocated check if pod has allocated device
