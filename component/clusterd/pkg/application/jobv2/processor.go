@@ -97,7 +97,8 @@ func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod, jo
 			isSuccess = false
 		}
 		// pod is running and device is allocated, then rank table can be completed
-		if p.Status.Phase != v1.PodRunning || !pod.DeviceAllocateIsCompleted(p) {
+		if (p.Status.Phase != v1.PodRunning && p.Status.Phase != v1.PodSucceeded) ||
+			!pod.DeviceAllocateIsCompleted(p) {
 			isRunning = false
 		}
 	}
