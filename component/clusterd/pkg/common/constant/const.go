@@ -96,6 +96,10 @@ const (
 	CheckPeriod = 3
 	// ProcessControlTimeout wait process annotation until timeout
 	ProcessControlTimeout = 300
+	// RetrySuccess retry success
+	RetrySuccess = "retry-success"
+	// RetryFailed retry failed
+	RetryFailed = "retry-failed"
 	// RecoverSuccess process recover success
 	RecoverSuccess = "recover-success"
 	// RecoverFailed process recover failed

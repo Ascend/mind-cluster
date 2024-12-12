@@ -52,7 +52,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo faultmanager.JobFa
 		hwlog.RunLog.Errorf("jobId=%s not exist", faultInfo.JobId)
 		return
 	}
-	hwlog.RunLog.Infof("get fault info from fault center = %v", faultInfo)
+	hwlog.RunLog.Infof("get fault info from fault center=%v", faultInfo)
 	var grpcFormatFaults []*pb.FaultRank
 	for _, info := range faultInfo.FaultList {
 		fault := &pb.FaultRank{

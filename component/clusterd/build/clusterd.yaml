@@ -32,7 +32,7 @@ rules:
     verbs: ["get", "list", "watch", "update", "delete"]
   - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
     resources: ["podgroups"]
-    verbs: ["list", "watch", "update", "get"]
+    verbs: ["list", "watch", "update", "get", "patch"]
   - apiGroups: ["batch"]
     resources: ["jobs"]
     verbs: ["get"]

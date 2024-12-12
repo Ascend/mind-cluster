@@ -19,6 +19,7 @@ import (
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
+	"clusterd/pkg/interface/kube"
 )
 
 var (
@@ -796,6 +797,20 @@ func (ctl *EventController) removeAgentStrategy(strategy string) {
 	ctl.agentReportStrategies = res
 }
 
+func (ctl *EventController) updateFixResult(strategy, value string) {
+	newRecoverStatusAnnotation := map[string]string{
+		constant.ProcessRecoverStatusKey: value,
+	}
+	_, err := kube.RetryPatchPodGroupAnnotations(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, retryTimes, newRecoverStatusAnnotation)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to patch pg when update fix result, err:%v, pgName=%s",
+			err, ctl.jobInfo.PgName)
+		return
+	}
+	hwlog.RunLog.Infof("fix result annatate success, %s=%s, pgName=%s",
+		constant.ProcessRecoverStatusKey, value, ctl.jobInfo.PgName)
+}
+
 func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode, error) {
 	result, err := ctl.extractRecoverResult()
 	if err != nil {
@@ -804,8 +819,10 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 	switch result.Strategy {
 	case constant.ProcessRetryStrategyName:
 		if result.RecoverSuccess {
+			ctl.updateFixResult(result.Strategy, constant.RetrySuccess)
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
+		ctl.updateFixResult(result.Strategy, constant.RetryFailed)
 		if result.Code == common.RecoverableRetryError {
 			return common.RecoverableRetryErrorEvent, common.RecoverableRetryError, nil
 		}
@@ -816,10 +833,21 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 	case constant.ProcessRecoverStrategyName:
 		if result.RecoverSuccess {
+			ctl.updateFixResult(result.Strategy, constant.RecoverSuccess)
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
+		ctl.updateFixResult(result.Strategy, constant.RecoverFailed)
 		return common.RecoverFailEvent, common.ClientError, nil
 	case constant.ProcessDumpStrategyName, constant.ProcessExitStrategyName:
+		if result.Strategy == constant.ProcessExitStrategyName {
+			ctl.updateFixResult(result.Strategy, constant.ExitCompleted)
+			return common.CheckResultFinishEvent, common.OK, nil
+		}
+		if result.RecoverSuccess {
+			ctl.updateFixResult(result.Strategy, constant.DumpSuccess)
+		} else {
+			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
+		}
 		return common.CheckResultFinishEvent, common.OK, nil
 	default:
 		return "", common.ServerInnerError, fmt.Errorf("unexpected case, strategy=%s "+
@@ -851,7 +879,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) {
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverPause); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverPause); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label pause %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverPause, ctl.jobInfo.PgName)
@@ -875,7 +903,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 	}
 
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo.JobId, constant.ProcessRecoverEnable); err != nil {
+	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverEnable); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label on %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverEnable, ctl.jobInfo.PgName)
