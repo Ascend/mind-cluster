@@ -25,6 +25,7 @@ type FaultRecoverService struct {
 	keepAliveInterval int
 	serviceCtx        context.Context
 	eventCtl          map[string]*EventController
+	initJob           map[string]common.JobBaseInfo
 	lock              sync.RWMutex
 	pb.UnimplementedRecoverServer
 }
@@ -35,6 +36,7 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.keepAliveInterval = keepAlive
 	s.serviceCtx = ctx
 	s.eventCtl = make(map[string]*EventController)
+	s.initJob = make(map[string]common.JobBaseInfo)
 	go s.checkFaultFromFaultCenter()
 	return s
 }
@@ -116,6 +118,71 @@ func (s *FaultRecoverService) checkFaultFromFaultCenter() {
 	}
 }
 
+func (s *FaultRecoverService) recordInit(jobInfo common.JobBaseInfo) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.initJob[jobInfo.JobId] = jobInfo
+}
+
+func (s *FaultRecoverService) Inited(jobId string) (common.JobBaseInfo, bool) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	info, ok := s.initJob[jobId]
+	return info, ok
+}
+
+func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
+	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
+	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	if _, ok := s.Inited(req.JobId); ok {
+		return &pb.Status{
+			Code: int32(common.OK),
+			Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
+		}, nil
+	}
+	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
+	if jobName == "" || pgName == "" || namespace == "" {
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+		}, nil
+	}
+	config, code, err := common.GetRecoverBaseInfo(pgName, namespace)
+	if err != nil {
+		return &pb.Status{
+			Code: int32(code),
+			Info: fmt.Sprintf("get job(uid=%s) base info err:%v", req.JobId, err),
+		}, nil
+	}
+	if config.ProcessRecoverEnable == false {
+		return &pb.Status{
+			Code: int32(common.ProcessRecoverEnableOff),
+			Info: fmt.Sprintf("job(uid=%s) process-recover-enable not open:%v", req.JobId, err),
+		}, nil
+	}
+	baseInfo := common.JobBaseInfo{
+		JobId:         req.JobId,
+		JobName:       jobName,
+		PgName:        pgName,
+		Namespace:     namespace,
+		RecoverConfig: config,
+	}
+	_, err = common.ChangeProcessRecoverEnableMode(baseInfo, constant.ProcessRecoverInit)
+	if err != nil {
+		hwlog.RunLog.Errorf("change process-recover-enable=init err:%v, jobId=%s", err, req.JobId)
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) process-recover-enable init err:%v", req.JobId, err),
+		}, nil
+	}
+	hwlog.RunLog.Infof("job(uid=%s) init success", req.JobId)
+	s.recordInit(baseInfo)
+	return &pb.Status{
+		Code: int32(common.OK),
+		Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
+	}, nil
+}
+
 func (s *FaultRecoverService) serveJobNum() int {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -154,36 +221,28 @@ func (s *FaultRecoverService) registered(jobId string) bool {
 func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
 	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
 	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	if s.registered(req.JobId) {
+		return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
+	}
+	jobInfo, ok := s.Inited(req.JobId)
+	if !ok {
+		return &pb.Status{
+			Code: int32(common.UnInit),
+			Info: fmt.Sprintf("jobId=%s not inited", req.JobId),
+		}, nil
+	}
 	code, err := s.preRegistry(req)
 	if err != nil {
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
-	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
-	if jobName == "" || pgName == "" || namespace == "" {
+	_, err = common.ChangeProcessRecoverEnableMode(jobInfo, constant.ProcessRecoverEnable)
+	if err != nil {
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
-			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+			Info: fmt.Sprintf("jobId=%s register err:%v", req.JobId, err),
 		}, nil
 	}
-	config, code, err :=
-		common.GetRecoverBaseInfo(pgName, namespace)
-	if err != nil {
-		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
-	}
-	if !config.ProcessRescheduleOn {
-		code = common.ProcessRescheduleOff
-		return &pb.Status{
-			Code: int32(code),
-			Info: fmt.Sprintf("process rescheduling off, jobId=%s, jobName=%s", req.JobId, jobName),
-		}, nil
-	}
-	s.registry(common.JobBaseInfo{
-		JobId:         req.JobId,
-		JobName:       jobName,
-		PgName:        pgName,
-		Namespace:     namespace,
-		RecoverConfig: config,
-	})
+	s.registry(jobInfo)
 	return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
@@ -280,7 +339,7 @@ func giveSoftFault2FaultCenter(jobId string, faults []*pb.FaultRank) {
 func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	request *pb.ProcessFaultRequest) (*pb.Status, error) {
 	requestInfo := fmt.Sprintf("jobId=%s, faultRanks={%s}",
-		request.JobId, common.Faults2String(request.FaultRankIds))
+		request.JobId, common.Faults2String(request.FaultRanks))
 	hwlog.RunLog.Infof("receive ReportProcessFault, info={%s}", requestInfo)
 	controller, exist := s.getController(request.JobId)
 	if !exist {
@@ -291,12 +350,12 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		}, nil
 	}
 	if faultmanager.GlobalFaultProcessCenter != nil {
-		giveSoftFault2FaultCenter(request.JobId, request.FaultRankIds)
+		giveSoftFault2FaultCenter(request.JobId, request.FaultRanks)
 	} else {
 		hwlog.RunLog.Warnf("global fault center is nil")
 	}
-	controller.saveCacheFault(request.FaultRankIds)
-	if !common.IsUceFault(request.FaultRankIds) {
+	controller.saveCacheFault(request.FaultRanks)
+	if !common.IsUceFault(request.FaultRanks) {
 		controller.addEvent(common.FaultOccurEvent)
 	}
 	return &pb.Status{
@@ -322,4 +381,7 @@ func (s *FaultRecoverService) DeleteJob(jobId string) {
 	}
 	controller.reset()
 	delete(s.eventCtl, jobId)
+	if s.initJob != nil {
+		delete(s.initJob, jobId)
+	}
 }

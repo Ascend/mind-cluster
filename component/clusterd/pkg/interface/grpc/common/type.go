@@ -39,7 +39,7 @@ type DevFaultInfo struct {
 
 // RecoverConfig is config for recover service
 type RecoverConfig struct {
-	ProcessRescheduleOn   bool
+	ProcessRecoverEnable  bool
 	MindXConfigStrategies []string
 	PlatFormMode          bool
 }
