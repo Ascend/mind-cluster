@@ -735,7 +735,7 @@ func (ctl *EventController) chooseStrategy() string {
 		strategy := ctl.firstChooseStrategy()
 		if strategy == constant.ProcessRetryStrategyName &&
 			!ctl.agentSupportStrategy(constant.ProcessRetryStrategyName) {
-			hwlog.RunLog.Warnf("jobId=%s not enable hbm fault repair", ctl.jobInfo.JobId)
+			hwlog.RunLog.Warnf("jobId=%s does not have HBM fault repair enabled", ctl.jobInfo.JobId)
 			ctl.takeUceFault2NormalFault()
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			ctl.setCacheFault(nil, allFaults)
