@@ -6,6 +6,7 @@ package node
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"k8s.io/api/core/v1"
 
@@ -42,6 +43,9 @@ func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
 	node.HeartbeatInterval = nodeInfoCM.NodeInfo.HeartbeatInterval
 	node.HeartbeatTime = nodeInfoCM.NodeInfo.HeartbeatTime
 	node.CmName = nodeCm.Name
+	node.UpdateTime = time.Now()
+	hwlog.RunLog.Debugf("parse node info configmap %s success, time: %v", nodeCm.Name,
+		node.UpdateTime.Format(time.RFC3339))
 	return &node, nil
 }
 

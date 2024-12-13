@@ -9,12 +9,15 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/job"
 )
 
 func (center *FaultProcessCenter) process() {
+	center.jobServerInfoMap = job.GetJobServerInfoMap()
 	center.deviceCenter.process()
 	center.nodeCenter.process()
 	center.switchCenter.process()
+	center.faultJobProcessor.process()
 }
 
 // NewFaultProcessCenter create deviceCenter,nodeCenter,switchCenter and work goroutine
@@ -24,6 +27,10 @@ func NewFaultProcessCenter(ctx context.Context) {
 		nodeCenter:        newNodeFaultProcessCenter(),
 		switchCenter:      newSwitchFaultProcessCenter(),
 		notifyProcessChan: make(chan int, 1000),
+	}
+	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
+		jobRankFaultInfoProcessor: newJobRankFaultInfoProcessor(GlobalFaultProcessCenter.deviceCenter),
+		center:                    GlobalFaultProcessCenter,
 	}
 	go GlobalFaultProcessCenter.work(ctx)
 }
