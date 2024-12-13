@@ -4,6 +4,7 @@
 package faultmanager
 
 import (
+	"clusterd/pkg/domain/job"
 	"context"
 	"time"
 
@@ -12,9 +13,11 @@ import (
 )
 
 func (center *FaultProcessCenter) process() {
+	center.jobServerInfoMap = job.GetJobServerInfoMap()
 	center.deviceCenter.process()
 	center.nodeCenter.process()
 	center.switchCenter.process()
+	center.faultJobProcessor.process()
 }
 
 // NewFaultProcessCenter create deviceCenter,nodeCenter,switchCenter and work goroutine
@@ -24,6 +27,9 @@ func NewFaultProcessCenter(ctx context.Context) {
 		nodeCenter:        newNodeFaultProcessCenter(),
 		switchCenter:      newSwitchFaultProcessCenter(),
 		notifyProcessChan: make(chan int, 1000),
+	}
+	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
+		jobRankFaultInfoProcessor: newJobRankFaultInfoProcessor(GlobalFaultProcessCenter.deviceCenter),
 	}
 	go GlobalFaultProcessCenter.work(ctx)
 }
