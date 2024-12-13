@@ -5,6 +5,7 @@ package pod
 
 import (
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -120,15 +121,21 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) constant.Rank
 		hwlog.RunLog.Error("illegal param replicas")
 		return rankTable
 	}
-	rankTable.ServerList = make([]constant.ServerHccl, replicas)
+	rankTable.ServerList = make([]constant.ServerHccl, 0, replicas)
+	hwlog.RunLog.Debugf("len of podJobMap: %d", len(podJobMap))
 	for _, pod := range podJobMap {
 		nodeRank := getNodeRank(pod)
 		if nodeRank == -1 || nodeRank >= replicas {
 			hwlog.RunLog.Warnf("illegal job information, replicas is %d, but nodeRank is %d", replicas, nodeRank)
 			continue
 		}
+		hwlog.RunLog.Debugf("pod %s nodeRank: %d", pod.Name, nodeRank)
 		var server constant.ServerHccl
 		podDevice := getPodDevice(pod)
+		hwlog.RunLog.Debugf("pod %s podDevice: %v", pod.Name, podDevice)
+		if len(podDevice.Devices) == 0 {
+			continue
+		}
 		server.ServerID = podDevice.ServerID
 		server.PodID = podDevice.PodName
 		server.ServerName = pod.Spec.NodeName
@@ -141,8 +148,16 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) constant.Rank
 			serverDevice.RankID = strconv.Itoa(nodeRank*podDeviceNum + index)
 			server.DeviceList = append(server.DeviceList, serverDevice)
 		}
-		rankTable.ServerList[nodeRank] = server
+		rankTable.ServerList = append(rankTable.ServerList, server)
 	}
+	sort.Slice(rankTable.ServerList, func(i, j int) bool {
+		iRankID, iErr := strconv.Atoi(rankTable.ServerList[i].DeviceList[0].RankID)
+		jRankID, jErr := strconv.Atoi(rankTable.ServerList[j].DeviceList[0].RankID)
+		if iErr != nil || jErr != nil {
+			return false
+		}
+		return iRankID < jRankID
+	})
 	rankTable.ServerCount = strconv.Itoa(len(rankTable.ServerList))
 	return rankTable
 }
