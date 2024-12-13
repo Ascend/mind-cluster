@@ -72,7 +72,7 @@ func DeleteCmAndCache(jobKey string) {
 }
 
 // InitCmAndCache init cm and cache
-func InitCmAndCache(podGroup v1beta1.PodGroup) {
+func InitCmAndCache(podGroup v1beta1.PodGroup, preServers []constant.ServerHccl) {
 	if len(podGroup.Name) == 0 || len(podGroup.GetOwnerReferences()) == 0 {
 		hwlog.RunLog.Error("podGroup is nil, init configmap failed")
 		return
@@ -85,6 +85,10 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	jobInfo.JobRankTable = constant.RankTable{}
 	jobInfo.AddTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	hwlog.RunLog.Errorf("InitCmAndCache, preServers: %v", preServers)
+	if len(preServers) > 0 {
+		jobInfo.PreServerList = preServers
+	}
 	if initCM(jobInfo) {
 		hwlog.RunLog.Debugf("init job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
@@ -113,7 +117,6 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	}
 	jobInfo.Status = status
 	jobInfo.IsPreDelete = false
-	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
 	jobInfo.JobRankTable = pod.InitRankTableByPod(podJobMap, jobInfo.Replicas)
 	if jobInfo.Framework == "" {
 		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
@@ -126,6 +129,10 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 		jobInfo.JobRankTable.Status = StatusRankTableInit
 	}
 	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
+	if jobInfo.JobRankTable.Status == StatusRankTableComplete {
+		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
+	}
+	hwlog.RunLog.Debugf("UpdateCmAndCache, JobRankTable: %v", jobInfo.JobRankTable)
 	hccls := getHcclSlice(jobInfo.JobRankTable)
 	result := true
 	for i := 0; i < jobInfo.TotalCmNum; i++ {
@@ -181,7 +188,7 @@ func GetJobServerInfoMap() constant.JobServerInfoMap {
 
 func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerHccl {
 	jobServerMap := make(map[string]constant.ServerHccl)
-	for _, server := range jobInfo.JobRankTable.ServerList {
+	for _, server := range jobInfo.PreServerList {
 		copyServerHccl := constant.ServerHccl{
 			DeviceList:   make([]constant.Device, 0),
 			ServerID:     server.ServerID,

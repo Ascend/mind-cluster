@@ -39,6 +39,8 @@ type FaultProcessCenter struct {
 	nodeCenter        *nodeFaultProcessCenter
 	switchCenter      *switchFaultProcessCenter
 	faultJobCenter    *faultJobProcessCenter
+	faultJobProcessor *faultProcessorImpl
+	jobServerInfoMap  constant.JobServerInfoMap
 	notifyProcessChan chan int
 }
 
