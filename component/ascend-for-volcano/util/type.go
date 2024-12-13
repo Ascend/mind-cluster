@@ -343,9 +343,12 @@ const (
 )
 
 const (
-	SeparateFaultStrategy  = "Separate"
+	// SeparateFaultStrategy Separate task
+	SeparateFaultStrategy = "Separate"
+	// SubHealthFaultStrategy SubHealth task
 	SubHealthFaultStrategy = "SubHealth"
-	RelationFault          = "RelationFaultSeparate"
+	// RelationFault fault type of relation fault
+	RelationFault = "RelationFaultSeparate"
 )
 
 // VTemplate for vNode resource
