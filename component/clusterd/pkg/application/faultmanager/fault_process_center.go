@@ -32,7 +32,6 @@ func NewFaultProcessCenter(ctx context.Context) {
 	}
 	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
 		jobRankFaultInfoProcessor: newJobRankFaultInfoProcessor(GlobalFaultProcessCenter.deviceCenter),
-		center:                    GlobalFaultProcessCenter,
 	}
 	go GlobalFaultProcessCenter.work(ctx)
 }

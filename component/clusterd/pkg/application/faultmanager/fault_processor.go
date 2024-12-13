@@ -12,20 +12,19 @@ import (
 
 type faultProcessorImpl struct {
 	*jobRankFaultInfoProcessor
-	center *FaultProcessCenter
 }
 
 func (fpi *faultProcessorImpl) process() {
-	deviceInfos := fpi.center.deviceCenter.getProcessingCm()
+	deviceInfos := GlobalFaultProcessCenter.deviceCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("deviceInfos: %#v", deviceInfos)
 	deviceCmForNodeMap := getAdvanceDeviceCmForNodeMap(deviceInfos)
-	nodeInfos := fpi.center.nodeCenter.getProcessingCm()
+	nodeInfos := GlobalFaultProcessCenter.nodeCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("nodeInfos: %#v", nodeInfos)
-	switchInfos := fpi.center.switchCenter.getProcessingCm()
+	switchInfos := GlobalFaultProcessCenter.switchCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("switchInfos: %#v", switchInfos)
 
 	jobFaultInfos := make(map[string]JobFaultInfo)
-	jobServerInfoMap := fpi.center.jobServerInfoMap
+	jobServerInfoMap := GlobalFaultProcessCenter.jobServerInfoMap
 	for jobId, serverList := range jobServerInfoMap.InfoMap {
 		jobFaultInfo := JobFaultInfo{
 			JobId:     jobId,
