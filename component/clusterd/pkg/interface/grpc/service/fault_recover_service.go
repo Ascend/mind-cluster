@@ -142,6 +142,8 @@ func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb
 	}
 	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
 	if jobName == "" || pgName == "" || namespace == "" {
+		hwlog.RunLog.Errorf("get pg from cache error, jobName=%s, pgName=%s, namespace=%s",
+			jobName, pgName, namespace)
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
 			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
@@ -149,12 +151,15 @@ func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb
 	}
 	config, code, err := common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {
+		hwlog.RunLog.Errorf("get recover base info err: %v, pgName=%s, nameSpace=%s",
+			err, pgName, namespace)
 		return &pb.Status{
 			Code: int32(code),
 			Info: fmt.Sprintf("get job(uid=%s) base info err:%v", req.JobId, err),
 		}, nil
 	}
 	if config.ProcessRecoverEnable == false {
+		hwlog.RunLog.Errorf("process recover enable does not open, jobId=%s", req.JobId)
 		return &pb.Status{
 			Code: int32(common.ProcessRecoverEnableOff),
 			Info: fmt.Sprintf("job(uid=%s) process-recover-enable not open:%v", req.JobId, err),
@@ -226,6 +231,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	}
 	jobInfo, ok := s.Inited(req.JobId)
 	if !ok {
+		hwlog.RunLog.Errorf("jobId=%s not Inited", req.JobId)
 		return &pb.Status{
 			Code: int32(common.UnInit),
 			Info: fmt.Sprintf("jobId=%s not inited", req.JobId),
@@ -233,16 +239,20 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	}
 	code, err := s.preRegistry(req)
 	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, preCheck err:%v", req.JobId, err)
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
 	_, err = common.ChangeProcessRecoverEnableMode(jobInfo, constant.ProcessRecoverEnable)
 	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, change process recover enable to init state err: %v",
+			req.JobId, err)
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
 			Info: fmt.Sprintf("jobId=%s register err:%v", req.JobId, err),
 		}, nil
 	}
 	s.registry(jobInfo)
+	hwlog.RunLog.Infof("jobId=%s init success", req.JobId)
 	return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
