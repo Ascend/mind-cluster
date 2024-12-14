@@ -89,6 +89,7 @@ func (s *FaultRecoverService) checkFault() {
 		return
 	}
 	allJobFaultInfo := faultmanager.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultmanager.NotHandleFault)
+	hwlog.RunLog.Infof("query all job fault info from global center=%v", allJobFaultInfo)
 	var registeredJobInfo []faultmanager.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		if !s.registered(jobId) {
