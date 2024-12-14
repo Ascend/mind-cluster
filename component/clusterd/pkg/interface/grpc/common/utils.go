@@ -84,9 +84,9 @@ func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error)
 	value, ok := pg.Labels[constant.ProcessRecoverEnableLabel]
 	if !ok {
 		hwlog.RunLog.Warn("can not find process rescheduling label")
-		config.ProcessRescheduleOn = false
+		config.ProcessRecoverEnable = false
 	}
-	config.ProcessRescheduleOn = value == constant.ProcessRecoverEnable
+	config.ProcessRecoverEnable = value == constant.ProcessRecoverEnable
 	return config, OK, nil
 }
 
@@ -118,8 +118,8 @@ func NewEventId(randLen int) string {
 	return fmt.Sprintf("%X-%s", timestamp, randomNumberHex)
 }
 
-// ChangeProcessSchedulingMode change process scheduling mode
-func ChangeProcessSchedulingMode(jobInfo JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
+// ChangeProcessRecoverEnableMode change process scheduling mode
+func ChangeProcessRecoverEnableMode(jobInfo JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
 	label := map[string]string{constant.ProcessRecoverEnableLabel: mode}
 	return kube.RetryPatchPodGroupLabel(jobInfo.PgName, jobInfo.Namespace, constant.RetryTime, label)
 }
