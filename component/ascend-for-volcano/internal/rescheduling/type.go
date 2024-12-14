@@ -328,6 +328,7 @@ type FaultDeviceList struct {
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
 	Reason             []FaultReasonList
+	RelationFault      string
 	IsFaultTask        bool
 	IsFaultRetryEnable bool
 	HasSubHealthFault  bool

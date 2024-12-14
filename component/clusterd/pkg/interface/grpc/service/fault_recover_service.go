@@ -25,6 +25,7 @@ type FaultRecoverService struct {
 	keepAliveInterval int
 	serviceCtx        context.Context
 	eventCtl          map[string]*EventController
+	initJob           map[string]common.JobBaseInfo
 	lock              sync.RWMutex
 	pb.UnimplementedRecoverServer
 }
@@ -35,6 +36,7 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.keepAliveInterval = keepAlive
 	s.serviceCtx = ctx
 	s.eventCtl = make(map[string]*EventController)
+	s.initJob = make(map[string]common.JobBaseInfo)
 	go s.checkFaultFromFaultCenter()
 	return s
 }
@@ -89,7 +91,6 @@ func (s *FaultRecoverService) checkFault() {
 		return
 	}
 	allJobFaultInfo := faultmanager.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultmanager.NotHandleFault)
-	hwlog.RunLog.Debugf("query all job fault info from global center=%v", allJobFaultInfo)
 	var registeredJobInfo []faultmanager.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		if !s.registered(jobId) {
@@ -115,6 +116,77 @@ func (s *FaultRecoverService) checkFaultFromFaultCenter() {
 			s.checkFault()
 		}
 	}
+}
+
+func (s *FaultRecoverService) recordInit(jobInfo common.JobBaseInfo) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.initJob[jobInfo.JobId] = jobInfo
+}
+
+func (s *FaultRecoverService) Inited(jobId string) (common.JobBaseInfo, bool) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	info, ok := s.initJob[jobId]
+	return info, ok
+}
+
+// Init put process recover enable switch to init state
+func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
+	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
+	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	if _, ok := s.Inited(req.JobId); ok {
+		return &pb.Status{
+			Code: int32(common.OK),
+			Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
+		}, nil
+	}
+	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
+	if jobName == "" || pgName == "" || namespace == "" {
+		hwlog.RunLog.Errorf("get pg from cache error, jobName=%s, pgName=%s, namespace=%s",
+			jobName, pgName, namespace)
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+		}, nil
+	}
+	config, code, err := common.GetRecoverBaseInfo(pgName, namespace)
+	if err != nil {
+		hwlog.RunLog.Errorf("get recover base info err: %v, pgName=%s, nameSpace=%s",
+			err, pgName, namespace)
+		return &pb.Status{
+			Code: int32(code),
+			Info: fmt.Sprintf("get job(uid=%s) base info err:%v", req.JobId, err),
+		}, nil
+	}
+	if config.ProcessRecoverEnable == false {
+		hwlog.RunLog.Errorf("process recover enable does not open, jobId=%s", req.JobId)
+		return &pb.Status{
+			Code: int32(common.ProcessRecoverEnableOff),
+			Info: fmt.Sprintf("job(uid=%s) process-recover-enable not open:%v", req.JobId, err),
+		}, nil
+	}
+	baseInfo := common.JobBaseInfo{
+		JobId:         req.JobId,
+		JobName:       jobName,
+		PgName:        pgName,
+		Namespace:     namespace,
+		RecoverConfig: config,
+	}
+	_, err = common.ChangeProcessRecoverEnableMode(baseInfo, constant.ProcessRecoverInit)
+	if err != nil {
+		hwlog.RunLog.Errorf("change process-recover-enable=init err:%v, jobId=%s", err, req.JobId)
+		return &pb.Status{
+			Code: int32(common.OperatePodGroupError),
+			Info: fmt.Sprintf("job(uid=%s) process-recover-enable init err:%v", req.JobId, err),
+		}, nil
+	}
+	hwlog.RunLog.Infof("job(uid=%s) init success", req.JobId)
+	s.recordInit(baseInfo)
+	return &pb.Status{
+		Code: int32(common.OK),
+		Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
+	}, nil
 }
 
 func (s *FaultRecoverService) serveJobNum() int {
@@ -155,40 +227,33 @@ func (s *FaultRecoverService) registered(jobId string) bool {
 func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
 	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
 	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	if s.registered(req.JobId) {
+		return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
+	}
+	jobInfo, ok := s.Inited(req.JobId)
+	if !ok {
+		hwlog.RunLog.Errorf("jobId=%s not Inited", req.JobId)
+		return &pb.Status{
+			Code: int32(common.UnInit),
+			Info: fmt.Sprintf("jobId=%s not inited", req.JobId),
+		}, nil
+	}
 	code, err := s.preRegistry(req)
 	if err != nil {
-		hwlog.RunLog.Errorf("pre registry failed, %s, code=%d, err=%v", reqInfo, code, err)
+		hwlog.RunLog.Errorf("jobId=%s, preCheck err:%v", req.JobId, err)
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
-	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
-	if jobName == "" || pgName == "" || namespace == "" {
-		hwlog.RunLog.Errorf("jobId=%s, jobName=%s, pgName=%s, namespace=%s is empty", req.JobId, jobName, pgName, namespace)
+	_, err = common.ChangeProcessRecoverEnableMode(jobInfo, constant.ProcessRecoverEnable)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, change process recover enable to init state err: %v",
+			req.JobId, err)
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
-			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
+			Info: fmt.Sprintf("jobId=%s register err:%v", req.JobId, err),
 		}, nil
 	}
-	config, code, err :=
-		common.GetRecoverBaseInfo(pgName, namespace)
-	if err != nil {
-		hwlog.RunLog.Errorf("get recover config failed, %s, code=%d, err=%v", reqInfo, code, err)
-		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
-	}
-	if !config.ProcessRescheduleOn {
-		code = common.ProcessRescheduleOff
-		hwlog.RunLog.Errorf("process rescheduling off, %s, code=%d, err=%v", reqInfo, code, err)
-		return &pb.Status{
-			Code: int32(code),
-			Info: fmt.Sprintf("process rescheduling off, jobId=%s, jobName=%s", req.JobId, jobName),
-		}, nil
-	}
-	s.registry(common.JobBaseInfo{
-		JobId:         req.JobId,
-		JobName:       jobName,
-		PgName:        pgName,
-		Namespace:     namespace,
-		RecoverConfig: config,
-	})
+	s.registry(jobInfo)
+	hwlog.RunLog.Infof("jobId=%s init success", req.JobId)
 	return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
@@ -285,7 +350,7 @@ func giveSoftFault2FaultCenter(jobId string, faults []*pb.FaultRank) {
 func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	request *pb.ProcessFaultRequest) (*pb.Status, error) {
 	requestInfo := fmt.Sprintf("jobId=%s, faultRanks={%s}",
-		request.JobId, common.Faults2String(request.FaultRankIds))
+		request.JobId, common.Faults2String(request.FaultRanks))
 	hwlog.RunLog.Infof("receive ReportProcessFault, info={%s}", requestInfo)
 	controller, exist := s.getController(request.JobId)
 	if !exist {
@@ -296,12 +361,12 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		}, nil
 	}
 	if faultmanager.GlobalFaultProcessCenter != nil {
-		giveSoftFault2FaultCenter(request.JobId, request.FaultRankIds)
+		giveSoftFault2FaultCenter(request.JobId, request.FaultRanks)
 	} else {
 		hwlog.RunLog.Warnf("global fault center is nil")
 	}
-	controller.saveCacheFault(request.FaultRankIds)
-	if !common.IsUceFault(request.FaultRankIds) {
+	controller.saveCacheFault(request.FaultRanks)
+	if !common.IsUceFault(request.FaultRanks) {
 		controller.addEvent(common.FaultOccurEvent)
 	}
 	return &pb.Status{

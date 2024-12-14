@@ -723,7 +723,7 @@ func newFaultJobDefault(job *api.JobInfo, updateTime int64) FaultJob {
 	subHealthyStrategy, exist := job.PodGroup.Labels[util.SubHealthyStrategyLabel]
 	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
 		[]string{util.SubHealthyIgnore, util.SubHealthyGraceExit, util.SubHealthyForceExit}) {
-		subHealthyStrategy = util.SubHealthyGraceExit
+		subHealthyStrategy = util.SubHealthyIgnore
 	}
 	faultJob.SubHealthyStrategy = subHealthyStrategy
 	return faultJob
