@@ -29,7 +29,7 @@ func (processor *jobRankFaultInfoProcessor) getJobFaultRankInfos() map[string]Jo
 		hwlog.RunLog.Errorf("get job fault rank failed, err: %v", err)
 		return nil
 	}
-	hwlog.RunLog.Debugf("get job fault rank failed, result: %v", util.ObjToString(*result))
+	hwlog.RunLog.Debugf("get job fault rank: %v", util.ObjToString(*result))
 	return *result
 }
 

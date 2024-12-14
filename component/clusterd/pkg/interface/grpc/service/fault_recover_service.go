@@ -392,4 +392,7 @@ func (s *FaultRecoverService) DeleteJob(jobId string) {
 	}
 	controller.reset()
 	delete(s.eventCtl, jobId)
+	if s.initJob != nil {
+		delete(s.initJob, jobId)
+	}
 }
