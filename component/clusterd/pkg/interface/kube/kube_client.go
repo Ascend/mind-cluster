@@ -101,15 +101,15 @@ func DeleteConfigMap(cmName, cmNamespace string) error {
 }
 
 // RetryPatchPodLabels retry patch pod labels
-func RetryPatchPodLabels(pod *v1.Pod, retryTimes int, labels map[string]string) (*v1.Pod, error) {
-	pod, err := PatchPodLabel(pod.Name, pod.Namespace, labels)
+func RetryPatchPodLabels(podName, podNamespace string, retryTimes int, labels map[string]string) error {
+	_, err := PatchPodLabel(podName, podNamespace, labels)
 	retry := 0
 	for err != nil && retry < retryTimes {
 		retry++
 		time.Sleep(time.Second * time.Duration(retry))
-		pod, err = PatchPodLabel(pod.Name, pod.Namespace, labels)
+		_, err = PatchPodLabel(podName, podNamespace, labels)
 	}
-	return pod, err
+	return err
 }
 
 // PatchPodLabel path pod label

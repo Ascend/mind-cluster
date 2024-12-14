@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Recover_Init_FullMethodName                         = "/Recover/Init"
 	Recover_Register_FullMethodName                     = "/Recover/Register"
 	Recover_SubscribeProcessManageSignal_FullMethodName = "/Recover/SubscribeProcessManageSignal"
 	Recover_ReportStopComplete_FullMethodName           = "/Recover/ReportStopComplete"
@@ -31,6 +32,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RecoverClient interface {
+	Init(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error)
 	Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error)
 	SubscribeProcessManageSignal(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Recover_SubscribeProcessManageSignalClient, error)
 	ReportStopComplete(ctx context.Context, in *StopCompleteRequest, opts ...grpc.CallOption) (*Status, error)
@@ -45,6 +47,15 @@ type recoverClient struct {
 
 func NewRecoverClient(cc grpc.ClientConnInterface) RecoverClient {
 	return &recoverClient{cc}
+}
+
+func (c *recoverClient) Init(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, Recover_Init_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *recoverClient) Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error) {
@@ -128,6 +139,7 @@ func (c *recoverClient) ReportProcessFault(ctx context.Context, in *ProcessFault
 // All implementations must embed UnimplementedRecoverServer
 // for forward compatibility
 type RecoverServer interface {
+	Init(context.Context, *ClientInfo) (*Status, error)
 	Register(context.Context, *ClientInfo) (*Status, error)
 	SubscribeProcessManageSignal(*ClientInfo, Recover_SubscribeProcessManageSignalServer) error
 	ReportStopComplete(context.Context, *StopCompleteRequest) (*Status, error)
@@ -141,6 +153,9 @@ type RecoverServer interface {
 type UnimplementedRecoverServer struct {
 }
 
+func (UnimplementedRecoverServer) Init(context.Context, *ClientInfo) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Init not implemented")
+}
 func (UnimplementedRecoverServer) Register(context.Context, *ClientInfo) (*Status, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
@@ -170,6 +185,24 @@ type UnsafeRecoverServer interface {
 
 func RegisterRecoverServer(s grpc.ServiceRegistrar, srv RecoverServer) {
 	s.RegisterService(&Recover_ServiceDesc, srv)
+}
+
+func _Recover_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecoverServer).Init(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Recover_Init_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecoverServer).Init(ctx, req.(*ClientInfo))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Recover_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -290,6 +323,10 @@ var Recover_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Recover",
 	HandlerType: (*RecoverServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Init",
+			Handler:    _Recover_Init_Handler,
+		},
 		{
 			MethodName: "Register",
 			Handler:    _Recover_Register_Handler,

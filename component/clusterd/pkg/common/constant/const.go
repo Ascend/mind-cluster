@@ -55,6 +55,8 @@ const (
 	ProcessRecoverEnable = "on"
 	// ProcessRecoverPause close process recover temporarily
 	ProcessRecoverPause = "pause"
+	// ProcessRecoverInit init state before real open process-recover-enable
+	ProcessRecoverInit = ""
 )
 
 // write reset configmap operation

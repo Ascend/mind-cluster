@@ -418,7 +418,7 @@ func (ctl *EventController) signalEnqueue(signal *pb.ProcessManageSignal) (strin
 	select {
 	case sendChan <- signal:
 		hwlog.RunLog.Infof("signal enqueue, jobId=%s, uuid=%s, signalType=%s, strategy=%s, faults=%s",
-			signal.JobId, signal.Uuid, signal.SignalType, signal.ChangeStrategy, common.Faults2String(signal.FaultRankIds))
+			signal.JobId, signal.Uuid, signal.SignalType, signal.ChangeStrategy, common.Faults2String(signal.FaultRanks))
 		return "", common.OK, nil
 	case <-ctx.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
@@ -618,15 +618,15 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 				hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
 				return common.NotifyFailEvent, common.OperateConfigMapError, nil
 			}
-			signal.FaultRankIds = normalFaults
+			signal.FaultRanks = normalFaults
 			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 		} else {
 			hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
-			signal.FaultRankIds = uceFaults
+			signal.FaultRanks = uceFaults
 		}
 	} else {
 		hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
-		signal.FaultRankIds = uceFaults
+		signal.FaultRanks = uceFaults
 	}
 	return ctl.signalEnqueue(signal)
 }
@@ -670,7 +670,7 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 		Actions:        globalFaultActions,
 		ChangeStrategy: "",
 	}
-	signal.FaultRankIds = append(signal.FaultRankIds, allFaults...)
+	signal.FaultRanks = append(signal.FaultRanks, allFaults...)
 	return ctl.signalEnqueue(signal)
 }
 
@@ -718,12 +718,35 @@ func (ctl *EventController) chooseForRecoverFail() string {
 	return constant.ProcessExitStrategyName
 }
 
+func (ctl *EventController) agentSupportStrategy(strategy string) bool {
+	for _, strategySupport := range ctl.agentReportStrategies {
+		if strategySupport == strategy {
+			return true
+		}
+	}
+	return false
+}
+
 func (ctl *EventController) chooseStrategy() string {
 	ctl.lock.RLock()
 	defer ctl.lock.RUnlock()
 	n := len(ctl.latestRecoverResult)
 	if n == 0 {
-		return ctl.firstChooseStrategy()
+		strategy := ctl.firstChooseStrategy()
+		if strategy == constant.ProcessRetryStrategyName &&
+			!ctl.agentSupportStrategy(constant.ProcessRetryStrategyName) {
+			hwlog.RunLog.Warnf("uce repair not enabled by controller, jobId=%s", ctl.jobInfo.JobId)
+			ctl.takeUceFault2NormalFault()
+			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
+			ctl.setCacheFault(nil, allFaults)
+			var err error
+			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+			if err != nil {
+				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
+			}
+			return ctl.chooseForRecoverFail() // dump or exit
+		}
+		return strategy
 	}
 	res := ctl.latestRecoverResult[n-1]
 	if res.Strategy == constant.ProcessRetryStrategyName {
@@ -872,14 +895,15 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 		allFaultRanks, constant.NotifyFaultListOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify kill pod fail, err=%v", err)
-		return "", common.OperateConfigMapError, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
+		return "", common.OperateConfigMapError, fmt.Errorf("jobId=%s write cm err:%v",
+			ctl.jobInfo.JobId, err)
 	}
 	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.FinishKillPodEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) {
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverPause); err != nil {
+	if _, err := common.ChangeProcessRecoverEnableMode(ctl.jobInfo, constant.ProcessRecoverPause); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label pause %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverPause, ctl.jobInfo.PgName)
@@ -903,7 +927,7 @@ func (ctl *EventController) handleFaultRetry() (string, common.RespCode, error) 
 		return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 	}
 
-	if _, err := common.ChangeProcessSchedulingMode(ctl.jobInfo, constant.ProcessRecoverEnable); err != nil {
+	if _, err := common.ChangeProcessRecoverEnableMode(ctl.jobInfo, constant.ProcessRecoverEnable); err != nil {
 		hwlog.RunLog.Errorf("failed to change the process rescheduling label on %s of pg %s, "+
 			"prepare notify agent kill master through grpc channel",
 			constant.ProcessRecoverEnable, ctl.jobInfo.PgName)
@@ -925,7 +949,7 @@ func (ctl *EventController) handleKillJob() (string, common.RespCode, error) {
 		JobId:          ctl.jobInfo.JobId,
 		SignalType:     constant.KillMasterSignalType,
 		Actions:        nil,
-		FaultRankIds:   nil,
+		FaultRanks:     nil,
 		ChangeStrategy: "",
 	}
 	select {

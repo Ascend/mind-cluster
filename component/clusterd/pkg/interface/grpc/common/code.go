@@ -20,14 +20,18 @@ const (
 	OrderMix RespCode = 401
 	// JobNotExist jobId not exist
 	JobNotExist RespCode = 402
-	// ProcessRescheduleOff not open the switch of process-rescheduling
-	ProcessRescheduleOff RespCode = 403
+	// ProcessRecoverEnableOff not open the switch of process-recover-enable
+	ProcessRecoverEnableOff RespCode = 403
 	// ProcessNotReady process not ready
 	ProcessNotReady = 404
 	// RecoverableRetryError error can up to recover strategy
 	RecoverableRetryError = 405
 	// UnRecoverableRetryError error can not up to recover strategy
 	UnRecoverableRetryError = 406
+	// DumpError dump error
+	DumpError = 407
+	// UnInit not init
+	UnInit = 408
 	// ClientError common client error
 	ClientError RespCode = 499
 
