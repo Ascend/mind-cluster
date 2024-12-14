@@ -157,10 +157,12 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
 	code, err := s.preRegistry(req)
 	if err != nil {
+		hwlog.RunLog.Errorf("pre registry failed, %s, code=%d, err=%v", reqInfo, code, err)
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
 	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
 	if jobName == "" || pgName == "" || namespace == "" {
+		hwlog.RunLog.Errorf("jobId=%s, jobName=%s, pgName=%s, namespace=%s is empty", req.JobId, jobName, pgName, namespace)
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
 			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
@@ -169,10 +171,12 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	config, code, err :=
 		common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {
+		hwlog.RunLog.Errorf("get recover config failed, %s, code=%d, err=%v", reqInfo, code, err)
 		return &pb.Status{Code: int32(code), Info: err.Error()}, nil
 	}
 	if !config.ProcessRescheduleOn {
 		code = common.ProcessRescheduleOff
+		hwlog.RunLog.Errorf("process rescheduling off, %s, code=%d, err=%v", reqInfo, code, err)
 		return &pb.Status{
 			Code: int32(code),
 			Info: fmt.Sprintf("process rescheduling off, jobId=%s, jobName=%s", req.JobId, jobName),
