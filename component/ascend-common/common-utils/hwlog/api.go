@@ -220,7 +220,10 @@ func (lg *logger) Errorf(format string, args ...interface{}) {
 // ErrorfWithLimit record error for default times (default 3),domain is for logType of msg,
 // id is a unique identifier of this logType, you can reset the counter by call ResetErrCnt
 func (lg *logger) ErrorfWithLimit(domain string, id interface{}, format string, args ...interface{}) {
-	lg.ErrorfWithSpecifiedCounts(domain, id, ProblemOccurMaxNumbers, format, args)
+	if needPrint, extraErrLog := IsNeedPrintWithSpecifiedCounts(domain, id, ProblemOccurMaxNumbers); needPrint {
+		format = fmt.Sprintf("%s %s", format, extraErrLog)
+		lg.ErrorfWithCtx(nil, format, args...)
+	}
 }
 
 // ErrorfWithSpecifiedCounts record error for specified times,domain is for logType of msg,
@@ -230,7 +233,7 @@ func (lg *logger) ErrorfWithSpecifiedCounts(domain string, id interface{}, maxCo
 	format string, args ...interface{}) {
 	if needPrint, extraErrLog := IsNeedPrintWithSpecifiedCounts(domain, id, maxCounts); needPrint {
 		format = fmt.Sprintf("%s %s", format, extraErrLog)
-		lg.Errorf(format, args)
+		lg.ErrorfWithCtx(nil, format, args...)
 	}
 }
 

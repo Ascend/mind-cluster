@@ -1177,8 +1177,8 @@ func (d *DcManager) DcGetDeviceUtilizationRate(cardID, deviceID int32, devType c
 	var rate C.uint
 	if retCode := C.dcmi_get_device_utilization_rate(C.int(cardID), C.int(deviceID), C.int(devType),
 		&rate); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("get device (cardID: %d, deviceID: %d) utilization rate: %d failed, "+
-			"error code: %d", cardID, deviceID, uint32(rate), int32(retCode))
+		return common.RetError, fmt.Errorf("get device (cardID: %d, deviceID: %d) utilization(type %d) rate: %d failed, "+
+			"error code: %d", cardID, deviceID, devType, uint32(rate), int32(retCode))
 	}
 	if !common.IsValidUtilizationRate(uint32(rate)) {
 		return common.RetError, fmt.Errorf("get wrong device (cardID: %d, deviceID: %d) utilization rate: %d",

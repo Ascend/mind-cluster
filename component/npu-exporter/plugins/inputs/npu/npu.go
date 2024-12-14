@@ -346,19 +346,30 @@ func (npu *WatchNPU) collectUtilizationRate(devID int32, fields map[string]inter
 	}
 
 	if aiCoreUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, aiCore); err != nil {
-		acc.AddError(fmt.Errorf("get ai core rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForAICoreUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get ai core rate for device(logicID:%d): %v %s", devID, err, extraErrLog))
+		}
 	} else {
 		fields["npu_chip_info_utilization"] = float64(aiCoreUtil)
+		hwlog.ResetErrCnt(common.DomainForAICoreUtilization, devID)
 	}
 
 	if hbmUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, hbm); err != nil {
-		acc.AddError(fmt.Errorf("get hbm rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHbmUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get HBM(High Bandwidth Memory) utilization for device(logicID:%d): %v %s",
+				devID, err, extraErrLog))
+		}
 	} else {
+		hwlog.ResetErrCnt(common.DomainForHbmUtilization, devID)
 		fields["npu_chip_info_hbm_utilization"] = float64(hbmUtil)
 	}
 	if overallUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, overall); err != nil {
-		acc.AddError(fmt.Errorf("get device overall utilization rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForOverallUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get overall utilization rate for device(logicID:%d): %v %s",
+				devID, err, extraErrLog))
+		}
 	} else {
+		hwlog.ResetErrCnt(common.DomainForOverallUtilization, devID)
 		fields["npu_chip_info_overall_utilization"] = float64(overallUtil)
 	}
 }
