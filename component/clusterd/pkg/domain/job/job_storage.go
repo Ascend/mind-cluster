@@ -44,7 +44,7 @@ func GetAllJobCache() map[string]constant.JobInfo {
 		return true
 	})
 	newJob := new(map[string]constant.JobInfo)
-	hwlog.RunLog.Infof("get all job cache, allJob: %v", allJob)
+	hwlog.RunLog.Debugf("get all job cache, allJob: %v", allJob)
 	err := util.DeepCopy(newJob, allJob)
 	if err != nil {
 		hwlog.RunLog.Errorf("copy job failed, err: %v", err)

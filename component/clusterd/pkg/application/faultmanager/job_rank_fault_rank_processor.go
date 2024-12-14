@@ -21,12 +21,15 @@ func newJobRankFaultInfoProcessor(deviceCenter *deviceFaultProcessCenter) *jobRa
 }
 
 func (processor *jobRankFaultInfoProcessor) getJobFaultRankInfos() map[string]JobFaultInfo {
+	processor.mutex.RLock()
+	defer processor.mutex.RUnlock()
 	result := new(map[string]JobFaultInfo)
 	err := util.DeepCopy(result, processor.jobFaultInfoMap)
 	if err != nil {
 		hwlog.RunLog.Errorf("get job fault rank failed, err: %v", err)
 		return nil
 	}
+	hwlog.RunLog.Debugf("get job fault rank: %v", util.ObjToString(*result))
 	return *result
 }
 
@@ -50,6 +53,8 @@ func (processor *jobRankFaultInfoProcessor) getJobFaultRankInfosFilterLevel(
 }
 
 func (processor *jobRankFaultInfoProcessor) setJobFaultRankInfos(faultInfos map[string]JobFaultInfo) {
+	processor.mutex.Lock()
+	defer processor.mutex.Unlock()
 	processor.jobFaultInfoMap = faultInfos
 }
 

@@ -30,8 +30,15 @@ func NewFaultProcessCenter(ctx context.Context) {
 		faultJobCenter:    newFaultJobProcessCenter(),
 		notifyProcessChan: make(chan int, 1000),
 	}
+
+	processor, err := GlobalFaultProcessCenter.deviceCenter.getJobFaultRankProcessor()
+	if err != nil {
+		hwlog.RunLog.Errorf("get device fault rank processor failed, err: %v", err)
+		return
+	}
+
 	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
-		jobRankFaultInfoProcessor: newJobRankFaultInfoProcessor(GlobalFaultProcessCenter.deviceCenter),
+		jobRankFaultInfoProcessor: processor,
 	}
 	go GlobalFaultProcessCenter.work(ctx)
 }
