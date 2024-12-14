@@ -55,7 +55,7 @@ func (fpi *faultProcessorImpl) process() {
 		}
 		jobFaultInfos[jobId] = jobFaultInfo
 	}
-	fpi.jobRankFaultInfoProcessor.jobFaultInfoMap = jobFaultInfos
+	fpi.jobRankFaultInfoProcessor.setJobFaultRankInfos(jobFaultInfos)
 }
 
 func serverHcclToFaultRank(server constant.ServerHccl) []FaultRank {
