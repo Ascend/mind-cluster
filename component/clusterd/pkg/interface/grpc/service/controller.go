@@ -824,7 +824,8 @@ func (ctl *EventController) updateFixResult(strategy, value string) {
 	newRecoverStatusAnnotation := map[string]string{
 		constant.ProcessRecoverStatusKey: value,
 	}
-	_, err := kube.RetryPatchPodGroupAnnotations(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, retryTimes, newRecoverStatusAnnotation)
+	_, err := kube.RetryPatchPodGroupAnnotations(ctl.jobInfo.PgName, ctl.jobInfo.Namespace,
+		retryTimes, newRecoverStatusAnnotation)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to patch pg when update fix result, err:%v, pgName=%s",
 			err, ctl.jobInfo.PgName)
