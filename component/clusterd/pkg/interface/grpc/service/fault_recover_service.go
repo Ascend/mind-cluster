@@ -163,7 +163,7 @@ func getJobBaseInfo(jobId string) (common.JobBaseInfo, common.RespCode, error) {
 // Init put process recover enable switch to init state
 func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
 	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
-	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	hwlog.RunLog.Infof("service receive Init request, %s", reqInfo)
 	if _, ok := s.inited(req.JobId); ok {
 		return &pb.Status{
 			Code: int32(common.OK),
@@ -236,7 +236,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	}
 	jobInfo, ok := s.inited(req.JobId)
 	if !ok {
-		hwlog.RunLog.Errorf("jobId=%s not Inited", req.JobId)
+		hwlog.RunLog.Errorf("jobId=%s not inited", req.JobId)
 		return &pb.Status{
 			Code: int32(common.UnInit),
 			Info: fmt.Sprintf("jobId=%s not inited", req.JobId),
@@ -249,7 +249,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	}
 	_, err = common.ChangeProcessRecoverEnableMode(jobInfo, constant.ProcessRecoverEnable)
 	if err != nil {
-		hwlog.RunLog.Errorf("jobId=%s, change process recover enable to init state err: %v",
+		hwlog.RunLog.Errorf("jobId=%s, change process recover enable to on state err: %v",
 			req.JobId, err)
 		return &pb.Status{
 			Code: int32(common.OperatePodGroupError),
@@ -257,7 +257,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 		}, nil
 	}
 	s.registry(jobInfo)
-	hwlog.RunLog.Infof("jobId=%s init success", req.JobId)
+	hwlog.RunLog.Infof("jobId=%s register success", req.JobId)
 	return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
