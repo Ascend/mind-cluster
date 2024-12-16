@@ -400,6 +400,7 @@ func TestSetSlowNodeNoticeEnv(t *testing.T) {
 		defer mockGetCM.Reset()
 		resp := v1beta1.ContainerAllocateResponse{}
 		resp.Envs = make(map[string]string, slowNodeStepTimeEnvNum)
+		common.ParamOption.EnableSlowNode = true
 		ps.SetSlowNodeNoticeEnv(&resp)
 		convey.So(resp.Envs[common.PerfDumpPathEnv], convey.ShouldEqual, mockPerfDumpPath)
 		convey.So(resp.Envs[common.PerfDumpConfigEnv], convey.ShouldEqual, mockPerfDumpConfig)

@@ -140,7 +140,7 @@ type Instance struct { // Instance
 // Option option
 type Option struct {
 	GetFdFlag          bool     // to describe FdFlag
-	UseAscendDocker    bool     // UseAscendDocker to chose docker type
+	UseAscendDocker    bool     // UseAscendDocker to choose docker type
 	UseVolcanoType     bool     // use volcano mode
 	AutoStowingDevs    bool     // auto stowing fixes devices or not
 	PresetVDevice      bool     // preset virtual device
@@ -155,8 +155,9 @@ type Option struct {
 	RealCardType       string   // real card type
 	LinkdownTimeout    int64    // linkdown timeout duration
 	DealWatchHandler   bool     // update pod cache when receiving pod informer watch errors
-	EnableSwitchFault  bool     // if enable switch faul
+	EnableSwitchFault  bool     // if enable switch fault
 	CheckCachedPods    bool     // check cached pods periodically
+	EnableSlowNode     bool     // switch of set slow node notice environment
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List
