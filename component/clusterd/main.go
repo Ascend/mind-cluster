@@ -101,9 +101,6 @@ func signalCatch(cancel context.CancelFunc) {
 			return
 		}
 		hwlog.RunLog.Infof("receive system signal: %s, ClusterD shutting down", sig.String())
-		if server != nil {
-			server.Stop(false)
-		}
 		cancel()
 	}
 }
