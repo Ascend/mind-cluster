@@ -65,6 +65,8 @@ function mv_file() {
   cd "${TOP_DIR}"
   sed -i "s/clusterd:.*/clusterd:${build_version}/" "$CUR_DIR"/clusterd.yaml
   cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
+  cp "$CUR_DIR"/faultDuration.json "$TOP_DIR"/output/
+  cp "$CUR_DIR"/relationFaultCustomization.json "$TOP_DIR"/output/
   cp "$CUR_DIR"/clusterd.yaml "$TOP_DIR"/output/clusterd-"${build_version}".yaml
   sed -i "s#output/clusterd#clusterd#" "$TOP_DIR"/output/Dockerfile
   change_mod

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -41,6 +42,10 @@ func startInformer(ctx context.Context) {
 	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
 	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
 	go resource.Report()
+}
+
+func startFaultManager(ctx context.Context) {
+	go faultmanager.Process(ctx)
 }
 
 func main() {
@@ -74,7 +79,7 @@ func main() {
 	}
 	// election and running process
 	startInformer(ctx)
-
+	startFaultManager(ctx)
 	signalCatch(cancel)
 }
 
