@@ -91,7 +91,6 @@ func (s *FaultRecoverService) checkFault() {
 		return
 	}
 	allJobFaultInfo := faultmanager.GlobalFaultProcessCenter.QueryJobsFaultInfo(faultmanager.NotHandleFault)
-	hwlog.RunLog.Debugf("query all job fault info from global center=%v", allJobFaultInfo)
 	var registeredJobInfo []faultmanager.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		if !s.registered(jobId) {
@@ -125,54 +124,58 @@ func (s *FaultRecoverService) recordInit(jobInfo common.JobBaseInfo) {
 	s.initJob[jobInfo.JobId] = jobInfo
 }
 
-func (s *FaultRecoverService) Inited(jobId string) (common.JobBaseInfo, bool) {
+func (s *FaultRecoverService) inited(jobId string) (common.JobBaseInfo, bool) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	info, ok := s.initJob[jobId]
 	return info, ok
 }
 
-// Init put process recover enable switch to init state
-func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
-	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
-	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
-	if _, ok := s.Inited(req.JobId); ok {
-		return &pb.Status{
-			Code: int32(common.OK),
-			Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
-		}, nil
-	}
-	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(req.JobId)
+func getJobBaseInfo(jobId string) (common.JobBaseInfo, common.RespCode, error) {
+	jobName, pgName, namespace := podgroup.GetPGFromCacheOrPod(jobId)
 	if jobName == "" || pgName == "" || namespace == "" {
 		hwlog.RunLog.Errorf("get pg from cache error, jobName=%s, pgName=%s, namespace=%s",
 			jobName, pgName, namespace)
-		return &pb.Status{
-			Code: int32(common.OperatePodGroupError),
-			Info: fmt.Sprintf("job(uid=%s) one of jobName, pgName, ns is empty", req.JobId),
-		}, nil
+		return common.JobBaseInfo{}, common.OperatePodGroupError,
+			fmt.Errorf("job(uid=%s) one of jobName, pgName, ns is empty", jobId)
 	}
 	config, code, err := common.GetRecoverBaseInfo(pgName, namespace)
 	if err != nil {
 		hwlog.RunLog.Errorf("get recover base info err: %v, pgName=%s, nameSpace=%s",
 			err, pgName, namespace)
-		return &pb.Status{
-			Code: int32(code),
-			Info: fmt.Sprintf("get job(uid=%s) base info err:%v", req.JobId, err),
-		}, nil
+		return common.JobBaseInfo{}, code,
+			fmt.Errorf("get job(uid=%s) base info err:%v", jobId, err)
 	}
 	if config.ProcessRecoverEnable == false {
-		hwlog.RunLog.Errorf("process recover enable does not open, jobId=%s", req.JobId)
-		return &pb.Status{
-			Code: int32(common.ProcessRecoverEnableOff),
-			Info: fmt.Sprintf("job(uid=%s) process-recover-enable not open:%v", req.JobId, err),
-		}, nil
+		hwlog.RunLog.Errorf("process recover enable does not open, jobId=%s", jobId)
+		return common.JobBaseInfo{}, common.ProcessRecoverEnableOff,
+			fmt.Errorf("job(uid=%s) process-recover-enable not open:%v", jobId, err)
 	}
-	baseInfo := common.JobBaseInfo{
-		JobId:         req.JobId,
+	return common.JobBaseInfo{
+		JobId:         jobId,
 		JobName:       jobName,
 		PgName:        pgName,
 		Namespace:     namespace,
 		RecoverConfig: config,
+	}, common.OK, nil
+}
+
+// Init put process recover enable switch to init state
+func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb.Status, error) {
+	reqInfo := fmt.Sprintf("role=%s, jobId=%s", req.Role, req.JobId)
+	hwlog.RunLog.Infof("service receive Register request, %s", reqInfo)
+	if _, ok := s.inited(req.JobId); ok {
+		return &pb.Status{
+			Code: int32(common.OK),
+			Info: fmt.Sprintf("job(uid=%s) init success", req.JobId),
+		}, nil
+	}
+	baseInfo, code, err := getJobBaseInfo(req.JobId)
+	if err != nil {
+		return &pb.Status{
+			Code: int32(code),
+			Info: err.Error(),
+		}, nil
 	}
 	_, err = common.ChangeProcessRecoverEnableMode(baseInfo, constant.ProcessRecoverInit)
 	if err != nil {
@@ -231,7 +234,7 @@ func (s *FaultRecoverService) Register(ctx context.Context, req *pb.ClientInfo) 
 	if s.registered(req.JobId) {
 		return &pb.Status{Code: int32(common.OK), Info: "register success"}, nil
 	}
-	jobInfo, ok := s.Inited(req.JobId)
+	jobInfo, ok := s.inited(req.JobId)
 	if !ok {
 		hwlog.RunLog.Errorf("jobId=%s not Inited", req.JobId)
 		return &pb.Status{
