@@ -51,7 +51,7 @@ func (fJobCenter *faultJobProcessCenter) InitFaultJobs() {
 		tmpFaultJob.AllFaultCode = sets.String{}
 		tmpFaultJob.initFaultJobAttr()
 		for nodeName, serverList := range serverLists {
-			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID != invalidSuperPodIndex
+			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID >= 0
 			tmpFaultJob.PodNames[serverList.ServerName] = serverList.PodID
 			tmpFaultJob.NameSpace = serverList.PodNameSpace
 			tmpFaultJob.initFaultJobBySwitchFault(fJobCenter.switchInfoCm[constant.SwitchInfoPrefix+nodeName], serverList)
