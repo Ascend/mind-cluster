@@ -21,37 +21,43 @@ var cmManager ConfigMapManager
 // ConfigMapManager use for deviceInfo and nodeInfo report
 type ConfigMapManager struct {
 	sync.Mutex
-	processCnt    int
-	nodeInfoMap   map[string]*constant.NodeInfo
-	deviceInfoMap map[string]*constant.DeviceInfo
-	switchInfoMap map[string]*constant.SwitchInfo
+	processCnt      int
+	nodeInfoMap     map[string]*constant.NodeInfo
+	nodeInfoMutex   sync.Mutex
+	deviceInfoMap   map[string]*constant.DeviceInfo
+	deviceInfoMutex sync.Mutex
+	switchInfoMap   map[string]*constant.SwitchInfo
+	switchInfoMutex sync.Mutex
 }
 
 func init() {
 	cmManager.nodeInfoMap = map[string]*constant.NodeInfo{}
+	cmManager.nodeInfoMutex = sync.Mutex{}
 	cmManager.deviceInfoMap = map[string]*constant.DeviceInfo{}
+	cmManager.deviceInfoMutex = sync.Mutex{}
 	cmManager.switchInfoMap = map[string]*constant.SwitchInfo{}
+	cmManager.switchInfoMutex = sync.Mutex{}
 }
 
 func delDeviceInfoCM(devInfo *constant.DeviceInfo) {
-	cmManager.Lock()
+	cmManager.deviceInfoMutex.Lock()
 	delete(cmManager.deviceInfoMap, devInfo.CmName)
-	cmManager.Unlock()
+	cmManager.deviceInfoMutex.Unlock()
 	AddNewMessageTotal()
 }
 
 func delSwitchInfoCM(switchInfo *constant.SwitchInfo) {
-	cmManager.Lock()
+	cmManager.switchInfoMutex.Lock()
 	delete(cmManager.switchInfoMap, switchInfo.CmName)
-	cmManager.Unlock()
+	cmManager.switchInfoMutex.Unlock()
 	AddNewMessageTotal()
 }
 
 func saveDeviceInfoCM(devInfo *constant.DeviceInfo) {
-	cmManager.Lock()
+	cmManager.deviceInfoMutex.Lock()
 	oldDevInfo := cmManager.deviceInfoMap[devInfo.CmName]
 	cmManager.deviceInfoMap[devInfo.CmName] = devInfo
-	cmManager.Unlock()
+	cmManager.deviceInfoMutex.Unlock()
 	// update business data will report message.if only update time，will report message with every atLeastReportCycle
 	if device.BusinessDataIsNotEqual(oldDevInfo, devInfo) {
 		if kube.JobMgr != nil {
@@ -85,10 +91,10 @@ func updateJobDeviceHealth(nodeName string, deviceList map[string]string) {
 }
 
 func saveSwitchInfoCM(newSwitchInfo *constant.SwitchInfo) {
-	cmManager.Lock()
+	cmManager.switchInfoMutex.Lock()
 	oldSwitchInfo := cmManager.switchInfoMap[newSwitchInfo.CmName]
 	cmManager.switchInfoMap[newSwitchInfo.CmName] = newSwitchInfo
-	cmManager.Unlock()
+	cmManager.switchInfoMutex.Unlock()
 	if switchinfo.BusinessDataIsNotEqual(oldSwitchInfo, newSwitchInfo) {
 		if kube.JobMgr != nil {
 			nodeName := strings.TrimPrefix(newSwitchInfo.CmName, constant.SwitchInfoPrefix)
@@ -100,17 +106,17 @@ func saveSwitchInfoCM(newSwitchInfo *constant.SwitchInfo) {
 
 // DeleteNodeConfigMap add CM to cache
 func deleteNodeConfigMap(newDevInfo *constant.NodeInfo) {
-	cmManager.Lock()
+	cmManager.nodeInfoMutex.Lock()
 	delete(cmManager.nodeInfoMap, newDevInfo.CmName)
-	cmManager.Unlock()
+	cmManager.nodeInfoMutex.Unlock()
 	AddNewMessageTotal()
 }
 
 func saveNodeInfoCM(newNodeInfo *constant.NodeInfo) {
-	cmManager.Lock()
+	cmManager.nodeInfoMutex.Lock()
 	oldNodeInfo := cmManager.nodeInfoMap[newNodeInfo.CmName]
 	cmManager.nodeInfoMap[newNodeInfo.CmName] = newNodeInfo
-	cmManager.Unlock()
+	cmManager.nodeInfoMutex.Unlock()
 	// update business data will report message.if only update time, will report message with every 1atLeastReportCycle
 	if node.BusinessDataIsNotEqual(oldNodeInfo, newNodeInfo) {
 		if kube.JobMgr != nil {
