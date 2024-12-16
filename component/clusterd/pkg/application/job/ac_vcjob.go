@@ -106,11 +106,9 @@ func checkCMCreation(namespace, name string, kubeClientSet kubernetes.Interface,
 
 // DeleteWorker is to delete current worker
 func (job *jobModel) DeleteWorker(namespace string, name string, uid string, agent *Agent) {
-	agent.RwMutex.Lock()
-	defer agent.RwMutex.Unlock()
 	hwlog.RunLog.Infof("not exist + delete, current job is %s/%s/%s", namespace, name, uid)
-	worker, exist := agent.BsWorker[uid]
-	if !exist {
+	worker := agent.GetBsWorker(uid)
+	if worker == nil {
 		hwlog.RunLog.Errorf("failed to delete worker for %s/%s, it's not exist", namespace, name)
 		return
 	}
@@ -118,7 +116,7 @@ func (job *jobModel) DeleteWorker(namespace string, name string, uid string, age
 	if agent.Config.DisplayStatistic {
 		worker.CloseStat()
 	}
-	delete(agent.BsWorker, uid)
+	agent.DeleteBsWorker(uid)
 	hwlog.RunLog.Infof("worker for %s is deleted", uid)
 	// delete configmap
 	err := job.updateCMOnDeleteEvent(agent.KubeClientSet)
