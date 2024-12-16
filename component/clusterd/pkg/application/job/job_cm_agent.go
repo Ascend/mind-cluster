@@ -135,13 +135,6 @@ func (agent *Agent) BsExist(bsKey string) bool {
 	return false
 }
 
-// BsLength return BsWorker length
-func (agent *Agent) BsLength(bsKey string) int {
-	agent.RwMutex.RLock()
-	defer agent.RwMutex.RUnlock()
-	return len(agent.BsWorker)
-}
-
 // SetBsWorker is set bs worker
 func (agent *Agent) SetBsWorker(bsKey string, worker PodWorker) {
 	agent.RwMutex.Lock()
