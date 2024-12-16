@@ -21,14 +21,11 @@ package rescheduling
 
 import (
 	"errors"
-	"reflect"
-	"strconv"
-	"testing"
-	"time"
-
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"reflect"
+	"testing"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 
@@ -39,16 +36,14 @@ import (
 )
 
 const (
-	heartbeatInterval = 5
-	fakeTime          = 123455
-	fakeTime2         = 11111
-	createTime        = 10000
-	heartbeatTime     = 11110
-	graceDeleteTime   = 900
-	zero              = 0
-	one               = 1
-	two               = 2
-	three             = 3
+	fakeTime        = 123455
+	fakeTime2       = 11111
+	createTime      = 10000
+	graceDeleteTime = 900
+	zero            = 0
+	one             = 1
+	two             = 2
+	three           = 3
 )
 
 func fakeTestFaultCardUnhealthy(name string, nodeName string, faultType string) *FaultCard {
@@ -102,9 +97,6 @@ func fakeTestFaultNodeCardUnhealthy(nodeName string, allCard []string) *FaultNod
 		NodeHealthState:     NodeCardUnhealthy,
 		AllCards:            allCard,
 		FaultCards:          faultCards,
-		HeartbeatInterval:   heartbeatInterval,
-		OldHeartbeatTime:    int64(heartbeatTime),
-		UpdateHeartbeatTime: int64(heartbeatTime),
 	}
 }
 
@@ -155,9 +147,6 @@ func fakeTestFaultNodeNodeHealthyOneCard(nodeName string) *FaultNode {
 		NodeHealthState:     NodeHealthy,
 		AllCards:            []string{"Ascend910-0"},
 		FaultCards:          faultCards,
-		HeartbeatInterval:   heartbeatInterval,
-		OldHeartbeatTime:    int64(heartbeatTime),
-		UpdateHeartbeatTime: int64(heartbeatTime),
 	}
 }
 
@@ -251,8 +240,6 @@ func fakeNPUNodeNilDeviceInfo(name string) *plugin.NPUNode {
 
 func fakeNPUNodeWithDeviceInfo(name string) *plugin.NPUNode {
 	anno := map[string]string{
-		util.NodedHeartbeatTimeKey:                       strconv.FormatInt(time.Now().Unix(), util.Base10),
-		util.NodeDNodeHeartbeatIntervalKey:               strconv.Itoa(heartbeatInterval),
 		util.NPU910CardName:                              "Ascend910-0,Ascend910-1,Ascend910-2",
 		util.NPU910CardName + "-" + CardUnhealthy:        "Ascend910-1",
 		util.NPU910CardName + "-" + CardNetworkUnhealthy: "Ascend910-2",
@@ -409,9 +396,6 @@ func fakeCacheNoneFJobReSchedulerAddFaultJobWithSession() *DealReSchedulerCache 
 					*fakeTestFaultCardHealthy("Ascend910-6", "node0"),
 					*fakeTestFaultCardHealthy("Ascend910-7", "node0"),
 				},
-				HeartbeatInterval:   heartbeatInterval,
-				OldHeartbeatTime:    zero,
-				UpdateHeartbeatTime: zero,
 			},
 		},
 		FaultJobs:                nil,
@@ -618,7 +602,7 @@ type FaultNodeGetUnhealthyCardsFromDeviceInfoTests struct {
 func buildFaultNodeGetUnhealthyCardsFromDeviceInfoTests() []FaultNodeGetUnhealthyCardsFromDeviceInfoTests {
 	node2 := fakeNPUNodeWithDeviceInfo("node0")
 	test1 := FaultNodeGetUnhealthyCardsFromDeviceInfoTests{
-		name:   "01-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() nil device info",
+		name:   "01-FaultNodeGetUnhealthyCardsFromDeviceInfoTests() nil device info",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetUnhealthyCardsFromDeviceInfoArgs{
 			node:     fakeNPUNodeNilDeviceInfo("node0"),
@@ -628,7 +612,7 @@ func buildFaultNodeGetUnhealthyCardsFromDeviceInfoTests() []FaultNodeGetUnhealth
 		wantErr: true,
 	}
 	test2 := FaultNodeGetUnhealthyCardsFromDeviceInfoTests{
-		name:   "02-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() succeed",
+		name:   "02-FaultNodeGetUnhealthyCardsFromDeviceInfoTests() succeed",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetUnhealthyCardsFromDeviceInfoArgs{
 			node:     node2,
@@ -678,7 +662,7 @@ type GetNetworkUnhealthyCardsFromDeviceInfoTests struct {
 func buildFaultNodeGetNetworkUnhealthyCardsFromDeviceInfoTests() []GetNetworkUnhealthyCardsFromDeviceInfoTests {
 	node2 := fakeNPUNodeWithDeviceInfo("node0")
 	test1 := GetNetworkUnhealthyCardsFromDeviceInfoTests{
-		name:   "01-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() nil device info",
+		name:   "01-FaultNodeGetNetworkUnhealthyCardsFromDeviceInfoTests() nil device info",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetNetworkUnhealthyCardsFromDeviceInfoArgs{
 			node:     fakeNPUNodeNilDeviceInfo("node0"),
@@ -688,7 +672,7 @@ func buildFaultNodeGetNetworkUnhealthyCardsFromDeviceInfoTests() []GetNetworkUnh
 		wantErr: true,
 	}
 	test2 := GetNetworkUnhealthyCardsFromDeviceInfoTests{
-		name:   "02-FaultNodeGetNodeHeartbeatIntervalFromDeviceInfoTests() succeed",
+		name:   "02-FaultNodeGetNetworkUnhealthyCardsFromDeviceInfoTests() succeed",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetNetworkUnhealthyCardsFromDeviceInfoArgs{
 			node:     node2,
@@ -735,9 +719,6 @@ func fakeTestFaultNodeCardNetworkUnhealthyOneCard(nodeName string) *FaultNode {
 		NodeHealthState:     NodeCardNetworkUnhealthy,
 		AllCards:            []string{"Ascend910-0"},
 		FaultCards:          faultCards,
-		HeartbeatInterval:   test.NPUIndex5,
-		OldHeartbeatTime:    test.FakeUpdateTime,
-		UpdateHeartbeatTime: test.FakeUpdateTime,
 	}
 }
 
@@ -924,7 +905,6 @@ func buildReSchedulerCheckNodeNPUByTaskTests() []ReSchedulerCheckNodeNPUByTaskTe
 			DealReSchedulerConfigmap:   nil,
 			FaultNodes:                 []FaultNode{*faultNode},
 			FaultJobs:                  []FaultJob{*faultJob0},
-			NodeHeartbeats:             nil,
 			AllocNodeRankOccurrenceMap: nil,
 		},
 		GraceDeleteTime: 0,

@@ -127,7 +127,6 @@ type ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields struct {
 	DealReSchedulerConfigmap   *DealReSchedulerConfigmap
 	FaultNodes                 []FaultNode
 	FaultJobs                  []FaultJob
-	NodeHeartbeats             []NodeHeartbeat
 	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 }
 
@@ -150,7 +149,6 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 			DealReSchedulerConfigmap:   nil,
 			FaultNodes:                 []FaultNode{},
 			FaultJobs:                  []FaultJob{},
-			NodeHeartbeats:             []NodeHeartbeat{},
 			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
@@ -173,7 +171,6 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 			DealReSchedulerConfigmap:   nil,
 			FaultNodes:                 []FaultNode{},
 			FaultJobs:                  []FaultJob{*faultJob},
-			NodeHeartbeats:             []NodeHeartbeat{},
 			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
@@ -203,7 +200,6 @@ func TestDealReSchedulerCacheWriteReSchedulerCacheToEnvCache(t *testing.T) {
 				DealReSchedulerConfigmap:   tt.fields.DealReSchedulerConfigmap,
 				FaultNodes:                 tt.fields.FaultNodes,
 				FaultJobs:                  tt.fields.FaultJobs,
-				NodeHeartbeats:             tt.fields.NodeHeartbeats,
 				AllocNodeRankOccurrenceMap: tt.fields.AllocNodeRankOccurrenceMap,
 			}
 			if err := reCache.WriteReSchedulerCacheToEnvCache(
@@ -221,7 +217,6 @@ func buildTestCaseForMaxLengthOfRescheduleReason() ReSchedulerCacheWriteReSchedu
 			DealReSchedulerConfigmap: nil,
 			FaultNodes:               []FaultNode{},
 			FaultJobs:                []FaultJob{},
-			NodeHeartbeats:           []NodeHeartbeat{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -287,7 +282,6 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 		DealReSchedulerConfigmap:   test.fields.DealReSchedulerConfigmap,
 		FaultNodes:                 test.fields.FaultNodes,
 		FaultJobs:                  test.fields.FaultJobs,
-		NodeHeartbeats:             test.fields.NodeHeartbeats,
 		AllocNodeRankOccurrenceMap: test.fields.AllocNodeRankOccurrenceMap,
 		JobRecentRescheduleRecords: records,
 	}

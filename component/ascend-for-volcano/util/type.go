@@ -180,12 +180,8 @@ const (
 	NodeDCmInfoNamePrefix = "mindx-dl-nodeinfo-"
 	// SwitchCmInfoNamePrefix is the prefix for switch fault configmap
 	SwitchCmInfoNamePrefix = "mindx-dl-switchinfo-"
-	// NodedHeartbeatTimeKey is the key of heartbeat time from configmap data of noded
-	NodedHeartbeatTimeKey = "nodedHeartbeatTime"
 	// NodedNodeHealtyStatuskey  is the key of node healthy status from configmap data of noded
 	NodedNodeHealtyStatuskey = "nodedNodeHealtyStatus"
-	// NodeDNodeHeartbeatIntervalKey is key of node heartbeat interval from configmap data of noded
-	NodeDNodeHeartbeatIntervalKey = "NodeDNodeHeartbeatInterval"
 	// NodeSubHealthy means there is some fault on the node which is reported by nodeD, but will not immediately
 	// make node unhealthy, this status will prevent new task schduled on this node and reschedule will not consider
 	// this node

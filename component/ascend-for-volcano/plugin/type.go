@@ -177,25 +177,24 @@ type FaultRankIdData struct {
 
 // ScheduleEnv for job scheduler context.
 type ScheduleEnv struct {
-	IsFirstSession      *bool // scheduler first session message is unreliable
-	Jobs                map[api.JobID]SchedulerJob
-	JobReplicas         map[api.JobID]int32
-	Nodes               map[string]NPUNode
-	NodesNotInSsn       map[string]*corev1.Node
-	JobSinglePodFlag    map[api.JobID]bool
-	JobSeverInfos       map[api.JobID]struct{}
-	JobDeleteFlag       map[api.JobID]struct{}
-	DevInfoNotInSession map[string]NodeDeviceInfoWithTime
-	DeviceInfos         *DeviceInfosWithMutex
-	DeleteJobInfos      map[api.JobID]*api.JobInfo
-	NodeInfosFromCm     *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
-	SwitchInfosFromCm   *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
-	FrameAttr           VolcanoFrame
-	Cache               ScheduleCache
-	Tors                *TorList
-	NslbAttr            *NslbParameters
-	SuperPodInfo        *SuperPodInfo
-	JobPendingMessage   map[api.JobID]map[string]map[string]struct{}
+	IsFirstSession    *bool // scheduler first session message is unreliable
+	Jobs              map[api.JobID]SchedulerJob
+	JobReplicas       map[api.JobID]int32
+	Nodes             map[string]NPUNode
+	NodesNotInSsn     map[string]*corev1.Node
+	JobSinglePodFlag  map[api.JobID]bool
+	JobSeverInfos     map[api.JobID]struct{}
+	JobDeleteFlag     map[api.JobID]struct{}
+	DeviceInfos       *DeviceInfosWithMutex
+	DeleteJobInfos    map[api.JobID]*api.JobInfo
+	NodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
+	SwitchInfosFromCm *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
+	FrameAttr         VolcanoFrame
+	Cache             ScheduleCache
+	Tors              *TorList
+	NslbAttr          *NslbParameters
+	SuperPodInfo      *SuperPodInfo
+	JobPendingMessage map[api.JobID]map[string]map[string]struct{}
 }
 
 // SuperPodInfo cache super pod info for pod rescheduling

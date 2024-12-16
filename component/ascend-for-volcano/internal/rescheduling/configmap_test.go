@@ -58,7 +58,6 @@ func buildTestDealReSchedulerConfigmapCreateEmptyReCMTests() []DealReSchedulerCo
 		CmCheckCode:           emptyCheckCode,
 		CmFaultNodeKind:       "",
 		CmFaultJob:            "",
-		CmNodeHeartbeatKind:   "",
 		CmNodeRankTimeMapKind: "",
 		CmJobRemainRetryTimes: "",
 	}

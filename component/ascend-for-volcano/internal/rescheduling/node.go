@@ -22,11 +22,8 @@ package rescheduling
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
-
 	"k8s.io/klog"
+	"strings"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
@@ -75,15 +72,6 @@ func (fNode *FaultNode) getNodeNPUsByKey(node *plugin.NPUNode, deviceKey string)
 	return npus, nil
 }
 
-func (fNode *FaultNode) getNodeHeartbeatByKey(node *plugin.NPUNode, hbKey string) (string, error) {
-	intervalStr, ok := node.Annotation[hbKey]
-	if !ok || len(intervalStr) == 0 {
-		klog.V(util.LogDebugLev).Infof("isNodeHealth %s no [%s].", node.Name, hbKey)
-		return "", fmt.Errorf("getFaultNodeState %s failed", node.Name)
-	}
-	return intervalStr, nil
-}
-
 // getAllNPUCardsFromDeviceInfo get un-allocated healthy card from device info
 func (fNode *FaultNode) getAllNPUCardsFromDeviceInfo(node *plugin.NPUNode, cardName string) ([]string, error) {
 	var allCard []string
@@ -111,47 +99,6 @@ func (fNode *FaultNode) getNetworkUnhealthyCardsFromDeviceInfo(
 	return fNode.getNodeNPUsByKey(node, networkUnhealthyCardName)
 }
 
-// getNodeHeartbeatIntervalFromNodeDInfo get nodeHeartbeatInterval from nodeD reported info
-func (fNode *FaultNode) getNodeHeartbeatIntervalFromNodeDInfo(node *plugin.NPUNode) (int, error) {
-	var heartbeatInterval = nodeUpdateTime
-	// get node heartbeat interval from annotation which is written in plugin.NPUNode with info of nodeD reported
-	heartbeatIntervalStr, getErr := fNode.getNodeHeartbeatByKey(node, util.NodeDNodeHeartbeatIntervalKey)
-	if getErr != nil {
-		return heartbeatInterval, getErr
-	}
-	var err error
-	heartbeatInterval, err = strconv.Atoi(heartbeatIntervalStr)
-	if err != nil {
-		klog.V(util.LogInfoLev).Infof("%s convert %s to int64 failed [%s].",
-			node.Name, heartbeatIntervalStr, util.SafePrint(err))
-		return nodeUpdateTime, err
-	}
-
-	if heartbeatInterval > maxIntervalTime || heartbeatInterval < 1 {
-		klog.V(util.LogInfoLev).Infof("%s's HeartbeatInterval %d over limit, will use %d.",
-			node.Name, heartbeatInterval, nodeUpdateTime)
-		return nodeUpdateTime, nil
-	}
-	klog.V(util.LogInfoLev).Infof("%s heartbeatTimeInterval: %d", node.Name, heartbeatInterval)
-	return heartbeatInterval, nil
-}
-
-// getNodeHeartbeatFromNodeDInfo get nodeHeartbeat from noded reported info
-func (fNode *FaultNode) getNodeHeartbeatFromNodeDInfo(node *plugin.NPUNode) (int64, error) {
-	// get node heartbeat from annotation which is written in plugin.NPUNode with info of nodeD reported
-	heartbeatTimeStr, getErr := fNode.getNodeHeartbeatByKey(node, util.NodedHeartbeatTimeKey)
-	if getErr != nil {
-		return 0, getErr
-	}
-	heartbeatTime, err := strconv.ParseInt(heartbeatTimeStr, util.Base10, util.BitSize64)
-	if err != nil {
-		klog.V(util.LogInfoLev).Infof("%s cover %s to int64 failed [%s].", node.Name, heartbeatTimeStr, util.SafePrint(err))
-		return 0, err
-	}
-	klog.V(util.LogInfoLev).Infof("%s heartbeatTime: %d", node.Name, heartbeatTime)
-	return heartbeatTime, nil
-}
-
 func (fCard *FaultCard) isCardUnhealthy(unHealthyList []string) bool {
 	return util.IsSliceContain(fCard.NPUName, unHealthyList)
 }
@@ -162,26 +109,6 @@ func (fCard *FaultCard) isCardNetworkUnhealthy(networkUnhealthyList []string) bo
 
 func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode, cardName string) {
 	klog.V(util.LogInfoLev).Infof("update information from device info for node %s", node.Name)
-
-	tmpHBTime, err := fNode.getNodeHeartbeatFromNodeDInfo(node)
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("getNodeHeartbeatFromDeviceInfo: %s", util.SafePrint(err))
-	}
-
-	klog.V(util.LogDebugLev).Infof(
-		"getNodeHeartbeatFromDeviceInfo: former heartbeat time %d, new heartbeat time %d",
-		fNode.OldHeartbeatTime, tmpHBTime)
-	if fNode.OldHeartbeatTime != tmpHBTime {
-		fNode.UpdateHeartbeatTime = time.Now().Unix()
-	}
-	fNode.setNewNodeHeartbeatTime(tmpHBTime)
-
-	tmpHBIntervalTime, err := fNode.getNodeHeartbeatIntervalFromNodeDInfo(node)
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("getNodeHeartbeatIntervalFromDeviceInfo: %s", util.SafePrint(err))
-	}
-	fNode.setNodeHeartbeatInterval(tmpHBIntervalTime)
-
 	tmpUnhealthyNPUs, err := fNode.getUnhealthyCardsFromDeviceInfo(node, cardName)
 	if err != nil {
 		klog.V(util.LogInfoLev).Infof("getUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
@@ -260,12 +187,6 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 		return
 	}
 	fNode.setNodeDValue(true)
-	// 1. last node heartbeat update time until now being greater than maxInterval indicates unhealthy
-	if !fNode.isNodeHealthyByHeartbeat() {
-		fNode.setIsFaultNodeValue(true)
-		fNode.setNodeHealthStateValue(NodeUnhealthy)
-		klog.V(util.LogInfoLev).Infof("Node %s health state set %s for wrong heartbeat", node.Name, NodeUnhealthy)
-	}
 	// 2. to judge if noded has reported node unhealthy
 	healthyStatus, ok := node.Annotation[util.NodedNodeHealtyStatuskey]
 	if !ok {
@@ -330,25 +251,6 @@ func (fNode *FaultNode) isNodeDEnabled(node *plugin.NPUNode) bool {
 	}
 }
 
-func (fNode *FaultNode) isNodeHealthyByHeartbeat() bool {
-	maxInterval := int64(fNode.HeartbeatInterval) * util.MapInitNum
-	nowTime := time.Now().Unix()
-	latestInterval := nowTime - fNode.UpdateHeartbeatTime
-
-	klog.V(util.LogDebugLev).Infof(
-		"node %s latestInterval: %d, nowTime: %d", fNode.NodeName, latestInterval, nowTime)
-	if latestInterval < 0 {
-		klog.V(util.LogErrorLev).Infof(" isNodeHealth %s cache Time is newer[%d-%d], confused, skip.",
-			fNode.NodeName, nowTime, fNode.UpdateHeartbeatTime)
-	}
-	if latestInterval > maxInterval {
-		klog.V(util.LogErrorLev).Infof(" %s Time over %d [%d-%d],not health,last heartbeat is %d.",
-			fNode.NodeName, maxInterval, nowTime, fNode.UpdateHeartbeatTime, fNode.OldHeartbeatTime)
-		return false
-	}
-	return true
-}
-
 func (fNode *FaultNode) getFaultCardIds(cardName string) ([]int, error) {
 	if fNode.UnhealthyNPU == nil && fNode.NetworkUnhealthyNPU == nil {
 		return nil, fmt.Errorf("no fault card on node")
@@ -400,24 +302,12 @@ func (fNode *FaultNode) setFaultCards(value []FaultCard) {
 	fNode.FaultCards = value
 }
 
-func (fNode *FaultNode) setOldNodeHeartbeatTime(value int64) {
-	fNode.OldHeartbeatTime = value
-}
-
-func (fNode *FaultNode) setNewNodeHeartbeatTime(value int64) {
-	fNode.NewHeartbeatTime = value
-}
-
 func (fCard *FaultCard) setFaultType(value string) {
 	fCard.FaultType = value
 }
 
 func (fCard *FaultCard) setIsFaultCard(value bool) {
 	fCard.IsFaultCard = value
-}
-
-func (fNode *FaultNode) setNodeHeartbeatInterval(value int) {
-	fNode.HeartbeatInterval = value
 }
 
 func (fNode *FaultNode) setFaultDeviceList(value []FaultDeviceList) {
@@ -444,9 +334,6 @@ func newFaultNodeDefault(nodeName string, updateTime int64) FaultNode {
 		NodeHealthState:     NodeHealthy,
 		AllCards:            nil,
 		FaultCards:          nil,
-		HeartbeatInterval:   0,
-		OldHeartbeatTime:    0,
-		UpdateHeartbeatTime: 0,
 		FaultDeviceList:     []FaultDeviceList{},
 	}
 	return faultNode

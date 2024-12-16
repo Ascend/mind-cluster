@@ -40,10 +40,6 @@ func (reCache *DealReSchedulerCache) setFaultJobs(faultJobs []FaultJob) {
 	reCache.FaultJobs = faultJobs
 }
 
-func (reCache *DealReSchedulerCache) setNodeHeartbeat(nodeHeartbeat []NodeHeartbeat) {
-	reCache.NodeHeartbeats = nodeHeartbeat
-}
-
 func (reCache *DealReSchedulerCache) setNodeRankOccurrenceMap(
 	nodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence) {
 	reCache.AllocNodeRankOccurrenceMap = nodeRankOccurrenceMap
@@ -84,15 +80,6 @@ func (reCache DealReSchedulerCache) getRecentReschedulingRecordsFromCm(buffer st
 		return nil, fmt.Errorf("reschedule records convert from CM error: %s", util.SafePrint(unmarshalErr))
 	}
 	return rescheduleRecords, nil
-}
-
-func (reCache DealReSchedulerCache) getNodeHeartbeatFromCM(buffer string) ([]NodeHeartbeat, error) {
-	var nodeHBs []NodeHeartbeat
-	if unmarshalErr := json.Unmarshal([]byte(buffer), &nodeHBs); unmarshalErr != nil {
-		klog.V(util.LogDebugLev).Infof("Unmarshal NodeHeartbeat from cache failed")
-		return nil, fmt.Errorf("faultNodes convert from CM error: %s", util.SafePrint(unmarshalErr))
-	}
-	return nodeHBs, nil
 }
 
 func (reCache DealReSchedulerCache) getNodeRankOccurrenceMapFromCM(
@@ -151,28 +138,7 @@ func (reCache *DealReSchedulerCache) SetFaultJobsFromCM(jobType string) error {
 	return nil
 }
 
-// SetNodeHeartbeatFromCM unmarshal NodeHeartbeat from string into struct and set the value
-func (reCache *DealReSchedulerCache) SetNodeHeartbeatFromCM() error {
-	if reCache == nil {
-		klog.V(util.LogErrorLev).Infof("SetFaultNodesFromCM failed: %s, reCache is none", util.ArgumentError)
-		return errors.New(util.ArgumentError)
-	}
-	nodeHBsData, ok := reCache.CMData[CmNodeHeartbeatKind]
-	if !ok {
-		return fmt.Errorf("reading %s data from reScheduler configmap failed", CmNodeHeartbeatKind)
-	}
-	if nodeHBsData == "" {
-		return nil
-	}
-	nodeHBs, err := reCache.getNodeHeartbeatFromCM(nodeHBsData)
-	if err != nil {
-		return fmt.Errorf("getFaultNodesFromCM %s", util.SafePrint(err))
-	}
-	reCache.setNodeHeartbeat(nodeHBs)
-	return nil
-}
-
-// SetRetryTimesFromCM unmarshal NodeHeartbeat from string into struct and set the value
+// SetRetryTimesFromCM unmarshal RetryTimes from string into struct and set the value
 func (reCache *DealReSchedulerCache) SetRetryTimesFromCM() error {
 	if reCache == nil {
 		klog.V(util.LogErrorLev).Infof("SetFaultNodesFromCM failed: %s, reCache is none", util.ArgumentError)
@@ -180,7 +146,7 @@ func (reCache *DealReSchedulerCache) SetRetryTimesFromCM() error {
 	}
 	data, ok := reCache.CMData[CmJobRemainRetryTimes]
 	if !ok {
-		return fmt.Errorf("reading %s data from reScheduler configmap failed", CmNodeHeartbeatKind)
+		return fmt.Errorf("reading %s data from reScheduler configmap failed", CmJobRemainRetryTimes)
 	}
 	if data == "" {
 		return nil
@@ -329,9 +295,6 @@ func initFaultNodeToCmByFaultNode(fNode FaultNode) FaultNodeInfoToCm {
 		NodeDEnable:         fNode.NodeDEnable,
 		NodeHealthState:     fNode.NodeHealthState,
 		UpdateTime:          fNode.UpdateTime,
-		OldHeartbeatTime:    fNode.OldHeartbeatTime,
-		NewHeartbeatTime:    fNode.NewHeartbeatTime,
-		UpdateHeartbeatTime: fNode.UpdateHeartbeatTime,
 	}
 }
 
@@ -349,24 +312,6 @@ func (reCache *DealReSchedulerCache) writeFaultJobsToCMString() (string, error) 
 		return "", fmt.Errorf("writeFaultJobsToCM: %s", util.SafePrint(err))
 	}
 	return jobData, nil
-}
-
-func (reCache *DealReSchedulerCache) writeNodeHeartbeatToCMString() (string, error) {
-	var nodeHB NodeHeartbeat
-	var nodeHBs []NodeHeartbeat
-	for _, fNode := range reCache.FaultNodes {
-		nodeHB = NodeHeartbeat{
-			NodeName:      fNode.NodeName,
-			HeartbeatTime: fNode.NewHeartbeatTime,
-			UpdateTime:    fNode.UpdateHeartbeatTime,
-		}
-		nodeHBs = append(nodeHBs, nodeHB)
-	}
-	nodeHBsData, err := reCache.marshalCacheDataToString(nodeHBs)
-	if err != nil {
-		return "", fmt.Errorf("writeNodeHeartbeatToCM: %s", util.SafePrint(err))
-	}
-	return nodeHBsData, nil
 }
 
 func (reCache *DealReSchedulerCache) writeRemainTimesToCMString() (string, error) {
@@ -445,10 +390,6 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
 	}
-	nodeHBString, err := reCache.writeNodeHeartbeatToCMString()
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache:%s", util.SafePrint(err))
-	}
 
 	jobRemainRetryTimes, err := reCache.writeRemainTimesToCMString()
 	if err != nil {
@@ -476,7 +417,6 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	cmData[CmFaultNodeKind] = fNodeToCMString
 	cmDataForCache[jobType] = fJobString
 	cmDataForCache[CmFaultNodeKind] = fNodeString
-	cmDataForCache[CmNodeHeartbeatKind] = nodeHBString
 	cmDataForCache[CmNodeRankTimeMapKind] = nodeRankOccurrenceMapString
 	cmDataForCache[ReschedulingReasonKey] = jobRescheduleReasons
 	reSchedulerConfigmap.updateReSchedulerCMCache(cmDataForCache)

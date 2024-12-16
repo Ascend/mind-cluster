@@ -60,9 +60,6 @@ const (
 	// JobOffElasticScheduling job not enabled with elastic scheduling
 	JobOffElasticScheduling = "off"
 
-	nodeHeartbeat         = "noded/heartbeat"
-	nodeHeartbeatInterval = "noded/heartbeat-interval"
-
 	nodeDEnableKey      = "nodeDEnable"
 	nodeDEnableOnValue  = "on"
 	nodeDEnableOffValue = "off"
@@ -89,9 +86,7 @@ const (
 	CmFaultJob310x4Kind = "fault-job-310x4"
 	// CmFaultJob310PKind key in configmap which saves the 310P FaultJob cache
 	CmFaultJob310PKind = "fault-job-310P"
-	// CmNodeHeartbeatKind judging node fault needs heartbeat info from former session, so should be recorded
-	CmNodeHeartbeatKind = "node-heartbeat"
-	// CmJobRemainRetryTimes judging node fault needs heartbeat info from former session, so should be recorded
+	// CmJobRemainRetryTimes key in configmap which saves remain retry times of job
 	CmJobRemainRetryTimes = "remain-retry-times"
 	// MaxRescheduleRecordsNum the upper limit of the cm kept reschedule records, oldest record will be deleted
 	// if record more than MaxRescheduleRecordsNum records
@@ -126,7 +121,7 @@ const (
 	CardNetworkUnhealthy = "NetworkUnhealthy"
 	// NodeHealthy represents node is available for scheduling
 	NodeHealthy = "Healthy"
-	// NodeUnhealthy represents node is unhealthy by judging heartbeat
+	// NodeUnhealthy represents node is unhealthy
 	NodeUnhealthy = "NodeUnhealthy"
 	// NodeCardUnhealthy represents node is unhealthy because of the card is unhealthy
 	NodeCardUnhealthy = "CardUnhealthy"
@@ -186,13 +181,12 @@ const (
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
-	GraceDeleteTime        int64
-	Level                  string
-	Jobs                   map[api.JobID]plugin.SchedulerJob
-	Nodes                  map[string]plugin.NPUNode
-	DeviceInfoNotInSession map[string]plugin.NodeDeviceInfoWithTime `json:"-"`
-	IsFirstSession         *bool
-	kubeClient             kubernetes.Interface
+	GraceDeleteTime int64
+	Level           string
+	Jobs            map[api.JobID]plugin.SchedulerJob
+	Nodes           map[string]plugin.NPUNode
+	IsFirstSession  *bool
+	kubeClient      kubernetes.Interface
 }
 
 // FaultNodeInfoToCm fault node info to cm
@@ -204,9 +198,6 @@ type FaultNodeInfoToCm struct {
 	NodeDEnable         bool
 	NodeHealthState     string
 	UpdateTime          int64
-	OldHeartbeatTime    int64
-	NewHeartbeatTime    int64
-	UpdateHeartbeatTime int64
 }
 
 // DealReSchedulerCache object with method for re-scheduler cache
@@ -216,7 +207,6 @@ type DealReSchedulerCache struct {
 	FaultNodeMaps              map[string]SimpleFNodeInfo `json:"-"`
 	FaultJobs                  []FaultJob
 	RealFaultJobs              []FaultJob `json:"-"`
-	NodeHeartbeats             []NodeHeartbeat
 	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 	JobRemainRetryTimes        map[api.JobID]*RemainRetryTimes
 	JobRecentRescheduleRecords map[api.JobID]*RescheduleReason
@@ -298,10 +288,6 @@ type FaultNode struct {
 	NodeHealthState         string
 	AllCards                []string
 	FaultCards              []FaultCard
-	HeartbeatInterval       int
-	OldHeartbeatTime        int64
-	NewHeartbeatTime        int64
-	UpdateHeartbeatTime     int64
 	HasSwitchSubHealthFault bool
 	HasCardSubHealthFault   bool
 }
@@ -395,13 +381,6 @@ type FaultJob struct {
 	FaultRetryTimes     int
 	faultReason         string
 	UUID                types.UID
-}
-
-// NodeHeartbeat object recording nodes and their heartbeats
-type NodeHeartbeat struct {
-	NodeName      string
-	HeartbeatTime int64
-	UpdateTime    int64
 }
 
 // FaultRankIdsJobCMData used by RestoreManager for every job.
