@@ -560,7 +560,7 @@ func (d *DeviceManager) GetDeviceIPAddress(logicID, ipType int32) (string, error
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManager) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	if !common.IsValidTemplateName(d.DevType, vDevInfo.TemplateName) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid template name: %s", vDevInfo.TemplateName)
 	}
