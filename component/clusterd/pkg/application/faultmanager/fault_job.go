@@ -51,6 +51,7 @@ func (fJob *FaultJob) initFaultJobAttr() {
 
 func (fJob *FaultJob) process() {
 	fJob.preStartProcess()
+	fJob.processNetworkFault()
 	fJob.preStopProcess()
 }
 
