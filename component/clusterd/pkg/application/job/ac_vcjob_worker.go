@@ -143,7 +143,7 @@ func (b *WorkerInfo) handler(pod *apiCoreV1.Pod, podInfo *podIdentifier) error {
 
 	// dryRun is for empty running and will not be committed
 	if b.dryRun {
-		hwlog.RunLog.Infof("dryRun handling: %s", podInfo)
+		hwlog.RunLog.Infof("I am handling %s", podInfo)
 		return nil
 	}
 
