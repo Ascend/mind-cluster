@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"syscall"
 
-	"google.golang.org/grpc"
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	sv "clusterd/pkg/interface/grpc"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -30,7 +28,6 @@ var (
 	// BuildName build name
 	BuildName string
 	version   bool
-	server    *sv.ClusterInfoMgrServer
 )
 
 func startInformer(ctx context.Context) {
@@ -66,11 +63,6 @@ func main() {
 	err = kube.InitClientVolcano()
 	if err != nil {
 		hwlog.RunLog.Errorf("new volcano client config err: %v", err)
-	}
-	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
-		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams)})
-	if err = server.Start(); err != nil {
-		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
 	startInformer(ctx)
