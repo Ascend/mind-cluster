@@ -240,8 +240,8 @@ func DeviceAllocateIsCompleted(p v1.Pod) bool {
 		if len(resourceLimits) == 0 {
 			continue
 		}
-		for resourceName, resourceLimit := range resourceLimits {
-			if resourceLimit.Value() > 0 && strings.Contains(resourceName.String(), resourceNamePrefix) {
+		for resourceName := range resourceLimits {
+			if strings.Contains(resourceName.String(), resourceNamePrefix) {
 				shouldAllocated = true
 				break
 			}
