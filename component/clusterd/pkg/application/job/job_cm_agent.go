@@ -106,7 +106,7 @@ func (agent *Agent) doWork(obj interface{}, eventType string) {
 		return
 	}
 	// if worker exist && pod exist, need check some special scenarios
-	hwlog.RunLog.Debugf("successfully synced '%s'", podKeyInfo)
+	hwlog.RunLog.Infof("successfully synced '%s'", podKeyInfo)
 	podCacheAgent.doPodWork(pod, podKeyInfo)
 	if podKeyInfo.eventType == EventUpdate {
 		if err = podCacheAgent.UpdateCMWhenJobEnd(podKeyInfo); err != nil {
