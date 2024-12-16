@@ -456,7 +456,7 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	subHealthyStrategy, exist := sJob.Label[util.SubHealthyStrategyLabel]
 	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
 		[]string{util.SubHealthyIgnore, util.SubHealthyGraceExit, util.SubHealthyForceExit}) {
-		subHealthyStrategy = util.SubHealthyGraceExit
+		subHealthyStrategy = util.SubHealthyIgnore
 		klog.V(util.LogDebugLev).Infof("job=%s get label error, use default strategy=%s",
 			sJob.Name, subHealthyStrategy)
 	}

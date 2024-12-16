@@ -342,6 +342,15 @@ const (
 	DefaultPodDeleteTimes = "0"
 )
 
+const (
+	// SeparateFaultStrategy Separate task
+	SeparateFaultStrategy = "Separate"
+	// SubHealthFaultStrategy SubHealth task
+	SubHealthFaultStrategy = "SubHealth"
+	// RelationFault fault type of relation fault
+	RelationFault = "RelationFaultSeparate"
+)
+
 // VTemplate for vNode resource
 type VTemplate struct {
 	// ChipKind Ascend910/Ascend310P

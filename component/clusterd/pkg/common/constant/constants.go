@@ -51,3 +51,11 @@ const (
 	// SwitchFault switch fault strategy
 	SwitchFault = "switchFault"
 )
+
+// fault code const
+const (
+	// DevCqeFaultCode cqe fault code in device
+	DevCqeFaultCode = "8C1F8608"
+	// HostCqeFaultCode cqe fault code in host
+	HostCqeFaultCode = "4C1F8608"
+)

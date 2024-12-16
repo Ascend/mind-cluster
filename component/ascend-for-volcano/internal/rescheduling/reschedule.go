@@ -1113,7 +1113,7 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 			reason.LargeModelFaultLevel = PreSeparateNPU
 			reasonList = append(reasonList, reason)
 		}
-		fTask.HasSubHealthFault = fNode.HasSwitchSubHealthFault
+		fTask.HasSubHealthFault = fNode.HasSwitchSubHealthFault || fTask.RelationFault == util.SubHealthFaultStrategy
 		tmpReason := setTaskFaultReasonByFaultNode(fTask, fNode)
 		reasonList = append(reasonList, tmpReason...)
 		break
@@ -1178,6 +1178,10 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 
 	if isFault, state := reScheduler.getTaskHealthStateByPod(task); isFault && fTask.IsFaultRetryEnable {
 		return isFault, state
+	}
+
+	if fTask.RelationFault == util.SeparateFaultStrategy {
+		return true, util.RelationFault
 	}
 
 	return fTask.getTaskHealthStateBySubHealth(subHealthyStrategy)

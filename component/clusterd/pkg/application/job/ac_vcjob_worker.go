@@ -39,6 +39,12 @@ type PodWorker interface {
 	PGRunning() bool
 	GetBaseInfo() Info
 	GetDeviceNumPerNode() int
+	GetWorkerInfo() *WorkerInfo
+}
+
+// GetWorkerInfo return worker info
+func (b *Worker) GetWorkerInfo() *WorkerInfo {
+	return &b.WorkerInfo
 }
 
 // NewJobWorker Generates a PodWorker that handles the Job

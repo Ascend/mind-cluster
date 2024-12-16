@@ -1,0 +1,12 @@
+[
+  {
+    "FaultCode": "81078603",
+    "FaultType": "faultDevice",
+    "TimeOutInterval": 60
+  },
+  {
+    "FaultCode": "[0x08520003,,L2,na]",
+    "FaultType": "faultSwitch",
+    "TimeOutInterval": 60
+  }
+]

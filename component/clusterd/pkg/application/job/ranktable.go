@@ -46,6 +46,13 @@ type RankTabler interface {
 	GetHccLJsonSlice() []string
 	// GetFirstServerIp get the vcJob master addr
 	GetFirstServerIp() string
+	// GetServerList get servers in rank table
+	GetServerList() []*ServerHccl
+}
+
+// GetServerList get servers in rank table
+func (r *RankTable) GetServerList() []*ServerHccl {
+	return r.ServerList
 }
 
 // SetStatus Set status of RankTableStatus
@@ -108,6 +115,7 @@ func (r *RankTable) CachePodInfo(pod *v1.Pod, instance Instance, rankIndex *int)
 	// Build new server-level struct from device info
 	server.ServerID = instance.ServerID
 	server.PodID = instance.PodName
+	server.PodNameSpace = pod.Namespace
 	server.ServerName = pod.Spec.NodeName
 	rankFactor := len(instance.Devices)
 	if rankFactor > A800MaxChipNum {

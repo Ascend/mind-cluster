@@ -161,6 +161,7 @@ const (
 	SuperPodAnnoKey          = "sp-block"
 	singleThreadDeletePodNum = 200
 	deviceInfoTimeout        = 60
+	taskFaultKey             = "fault-type"
 )
 
 // ReScheduler object for re-scheduling
@@ -274,6 +275,7 @@ type FaultDeviceList struct {
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
 	Reason             []FaultReasonList
+	RelationFault      string
 	IsFaultTask        bool
 	IsFaultRetryEnable bool
 	HasSubHealthFault  bool
