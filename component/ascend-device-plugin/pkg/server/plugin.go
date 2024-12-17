@@ -824,6 +824,9 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 
 // SetSlowNodeNoticeEnv is to set the environment variable using slow node step time configmap
 func (ps *PluginServer) SetSlowNodeNoticeEnv(resp *v1beta1.ContainerAllocateResponse) {
+	if !common.ParamOption.EnableSlowNode {
+		return
+	}
 	if resp == nil {
 		hwlog.RunLog.Error("resp is nil")
 		return
