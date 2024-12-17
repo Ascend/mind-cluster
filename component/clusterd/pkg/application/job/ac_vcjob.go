@@ -191,3 +191,39 @@ func getPGJobInfo(metaData metav1.Object) (string, string) {
 	}
 	return jobName, uid
 }
+
+// GetJobServerInfoMap could get all job info in once query
+func (agent *Agent) GetJobServerInfoMap() ServerInfoMap {
+	agent.RwMutex.RLock()
+	defer agent.RwMutex.RUnlock()
+	allJobServerMap := make(map[string]map[string]ServerHccl)
+	for jobUid, worker := range agent.BsWorker {
+		workerInfo := worker.GetWorkerInfo()
+		if workerInfo == nil {
+			hwlog.RunLog.Warnf("job %s has no worker", jobUid)
+			continue
+		}
+		jobServerMap := make(map[string]ServerHccl)
+		rankTable := workerInfo.CMData
+		for _, server := range rankTable.GetServerList() {
+			copyServerHccl := ServerHccl{
+				DeviceList:   make([]*Device, 0),
+				ServerID:     server.ServerID,
+				PodID:        server.PodID,
+				PodNameSpace: server.PodNameSpace,
+				ServerName:   server.ServerName,
+			}
+			for _, dev := range server.DeviceList {
+				copyDev := Device{
+					DeviceID: dev.DeviceID,
+					DeviceIP: dev.DeviceIP,
+					RankID:   dev.RankID,
+				}
+				copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, &copyDev)
+			}
+			jobServerMap[server.ServerName] = copyServerHccl
+		}
+		allJobServerMap[jobUid] = jobServerMap
+	}
+	return ServerInfoMap{allJobServerMap}
+}

@@ -4,6 +4,8 @@
 package resource
 
 import (
+	"bytes"
+	"encoding/gob"
 	"strings"
 	"sync"
 
@@ -27,10 +29,43 @@ type ConfigMapManager struct {
 	switchInfoMap map[string]*constant.SwitchInfo
 }
 
+// GetDeviceInfoMap get device info map
+func GetDeviceInfoMap() map[string]*constant.DeviceInfo {
+	tempDeviceInfoMap := new(map[string]*constant.DeviceInfo)
+	cmManager.Lock()
+	defer cmManager.Unlock()
+	if err := DeepCopy(tempDeviceInfoMap, cmManager.deviceInfoMap); err != nil {
+		hwlog.RunLog.Errorf("deep copy cmManager failed: %s", err)
+		return *tempDeviceInfoMap
+	}
+	return *tempDeviceInfoMap
+}
+
+// GetSwitchInfoMap get switch info map
+func GetSwitchInfoMap() map[string]*constant.SwitchInfo {
+	tempSwitchInfoMap := new(map[string]*constant.SwitchInfo)
+	cmManager.Lock()
+	defer cmManager.Unlock()
+	if err := DeepCopy(tempSwitchInfoMap, cmManager.switchInfoMap); err != nil {
+		hwlog.RunLog.Errorf("deep copy cmManager failed: %s", err)
+		return *tempSwitchInfoMap
+	}
+	return *tempSwitchInfoMap
+}
+
 func init() {
 	cmManager.nodeInfoMap = map[string]*constant.NodeInfo{}
 	cmManager.deviceInfoMap = map[string]*constant.DeviceInfo{}
 	cmManager.switchInfoMap = map[string]*constant.SwitchInfo{}
+}
+
+// DeepCopy for object using gob
+func DeepCopy(dst, src interface{}) error {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
 
 func delDeviceInfoCM(devInfo *constant.DeviceInfo) {

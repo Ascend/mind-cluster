@@ -125,6 +125,7 @@ func (fTask *FaultTask) setNodeRankIndex(value string) {
 func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.ScheduleEnv) FaultTask {
 	faultTask := FaultTask{
 		Reason:             []FaultReasonList{},
+		RelationFault:      getRelationFault(task),
 		IsFaultRetryEnable: faultRetryTimeOfJob(job) != 0,
 		TaskName:           task.Name,
 		TaskUID:            task.UID,
@@ -139,4 +140,11 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.UID][task.Name]
 	}
 	return faultTask
+}
+
+func getRelationFault(task *api.TaskInfo) string {
+	if len(task.Pod.Labels) == 0 {
+		return ""
+	}
+	return task.Pod.Labels[taskFaultKey]
 }

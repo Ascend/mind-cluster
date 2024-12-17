@@ -9,7 +9,9 @@ import (
 	"encoding/json"
 	"os"
 	"os/signal"
+	"reflect"
 	"strconv"
+	"time"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 )
@@ -98,4 +100,28 @@ func StringSliceToIntSlice(strSlice []string) []int {
 		result = append(result, i)
 	}
 	return result
+}
+
+// ReadableMsTime return more readable time from msec
+func ReadableMsTime(msTime int64) string {
+	return time.UnixMilli(msTime).Format("2006-01-02 15:04:05")
+}
+
+// IsSliceContain judges whether keyword in tasgetSlice
+func IsSliceContain(keyword interface{}, targetSlice interface{}) bool {
+	if targetSlice == nil {
+		return false
+	}
+	kind := reflect.TypeOf(targetSlice).Kind()
+	if kind != reflect.Slice && kind != reflect.Array {
+		return false
+	}
+
+	v := reflect.ValueOf(targetSlice)
+	for j := 0; j < v.Len(); j++ {
+		if v.Index(j).Interface() == keyword {
+			return true
+		}
+	}
+	return false
 }
