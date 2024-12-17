@@ -84,8 +84,8 @@ var (
 		"update pod cache when receiving pod informer watch errors")
 	checkCachedPods = flag.Bool("checkCachedPods", true,
 		"check pods in cache periodically, default true")
-	enableSlowNode = flag.Bool("enableSlowNode", false,
-		"switch of set slow node notice environment,default false")
+	enableSlowNode = flag.Bool("enableSlowNode", true,
+		"switch of set slow node notice environment,default true")
 )
 
 var (
