@@ -3,8 +3,6 @@
 // Package constant a series of para
 package constant
 
-import "time"
-
 // FaultTimeAndLevel of each fault code
 // some fault may not have accurate fault time and level,
 // for example: duration fault use current time as `FaultTime`
@@ -32,17 +30,14 @@ type NodeInfoCM struct {
 
 // NodeInfoNoName node info without cm name
 type NodeInfoNoName struct {
-	FaultDevList      []*FaultDev
-	HeartbeatTime     int64
-	HeartbeatInterval int
-	NodeStatus        string
+	FaultDevList []*FaultDev
+	NodeStatus   string
 }
 
 // NodeInfo node info
 type NodeInfo struct {
 	NodeInfoNoName
-	CmName     string
-	UpdateTime time.Time
+	CmName string
 }
 
 // FaultDev fault device struct

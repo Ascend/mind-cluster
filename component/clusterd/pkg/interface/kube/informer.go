@@ -100,9 +100,26 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
 }
 
-// InitPodInformer init pod informer
-func InitPodInformer() {
+var nodeInformer cache.SharedIndexInformer
+
+func GetNodeFromIndexer(name string) *v1.Node {
+	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
+	if err != nil || !exist {
+		hwlog.RunLog.Warnf("get node %s from informer failed, err: %v, exist: %v", name, err, exist)
+		return nil
+	}
+	n, ok := item.(*v1.Node)
+	if !ok {
+		hwlog.RunLog.Warnf("get node %s from informer failed, item: %v", name, item)
+		return nil
+	}
+	return n
+}
+
+// InitPodAndNodeInformer init pod informer
+func InitPodAndNodeInformer() {
 	factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
+	nodeInformer = factory.Core().V1().Nodes().Informer()
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -118,6 +135,7 @@ func InitPodInformer() {
 		},
 	})
 	factory.Start(informerCh)
+	factory.WaitForCacheSync(wait.NeverStop)
 }
 
 func podHandler(oldObj interface{}, newObj interface{}, operator string) {

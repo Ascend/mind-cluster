@@ -4,10 +4,9 @@
 package faultmanager
 
 import (
-	"time"
-
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/interface/kube"
 )
 
 type faultProcessorImpl struct {
@@ -34,9 +33,14 @@ func (fpi *faultProcessorImpl) process() {
 		for nodeName, server := range serverList {
 			hwlog.RunLog.Debugf("nodeName: %s, server: %#v", nodeName, server)
 			ni, ok := nodeInfos[constant.NodeInfoPrefix+nodeName]
-			if ok && (ni.NodeStatus == "UnHealthy" || time.Since(ni.UpdateTime) > time.Second*time.Duration(ni.HeartbeatInterval*3)) {
-				hwlog.RunLog.Infof("node %s is unhealthy or update time is too long(%f)", nodeName,
-					time.Since(ni.UpdateTime).Seconds())
+			if ok && ni.NodeStatus == "UnHealthy" {
+				hwlog.RunLog.Infof("node %s is unhealthy", nodeName)
+				jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, serverHcclToFaultRank(server)...)
+				continue
+			}
+			node := kube.GetNodeFromIndexer(nodeName)
+			if node == nil || !isNodeReady(node) {
+				hwlog.RunLog.Infof("node %s is not ready", nodeName)
 				jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, serverHcclToFaultRank(server)...)
 				continue
 			}
