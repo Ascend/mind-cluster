@@ -72,7 +72,7 @@ func DeleteCmAndCache(jobKey string) {
 }
 
 // InitCmAndCache init cm and cache
-func InitCmAndCache(podGroup v1beta1.PodGroup, preServers []constant.ServerHccl) {
+func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	if len(podGroup.Name) == 0 || len(podGroup.GetOwnerReferences()) == 0 {
 		hwlog.RunLog.Error("podGroup is nil, init configmap failed")
 		return
@@ -85,10 +85,6 @@ func InitCmAndCache(podGroup v1beta1.PodGroup, preServers []constant.ServerHccl)
 	jobInfo.JobRankTable = constant.RankTable{}
 	jobInfo.AddTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
-	hwlog.RunLog.Errorf("InitCmAndCache, preServers: %v", preServers)
-	if len(preServers) > 0 {
-		jobInfo.PreServerList = preServers
-	}
 	if initCM(jobInfo) {
 		hwlog.RunLog.Debugf("init job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
@@ -117,22 +113,20 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	}
 	jobInfo.Status = status
 	jobInfo.IsPreDelete = false
-	jobInfo.JobRankTable = pod.InitRankTableByPod(podJobMap, jobInfo.Replicas)
+	var completedPodNum int
+	jobInfo.JobRankTable, completedPodNum = pod.InitRankTableByPod(podJobMap, jobInfo.Replicas)
 	if jobInfo.Framework == "" {
 		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
 		jobInfo.Framework = pod.GetModelFramework(podJobMap)
 	}
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
-	if len(jobInfo.JobRankTable.ServerList) == jobInfo.Replicas {
+	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
+		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
 	}
 	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
-	if jobInfo.JobRankTable.Status == StatusRankTableComplete {
-		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
-	}
-	hwlog.RunLog.Debugf("UpdateCmAndCache, JobRankTable: %v", jobInfo.JobRankTable)
 	hccls := getHcclSlice(jobInfo.JobRankTable)
 	result := true
 	for i := 0; i < jobInfo.TotalCmNum; i++ {
