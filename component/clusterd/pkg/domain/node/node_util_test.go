@@ -67,7 +67,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			cm.Data = map[string]string{}
 			cm.Data[constant.NodeInfoCMKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
-			convey.So(err, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

@@ -11,6 +11,7 @@ const (
 	nodeUnHealthy  = "UnHealthy"
 	mockDeviceType = "cpu"
 	mockDeviceID   = 0
+	mockFaultCode  = "0000001D"
 )
 
 func TestDeepEqualFaultDevInfo(t *testing.T) {
@@ -83,7 +84,7 @@ func TestDeepEqualFaultDevInfo(t *testing.T) {
 			res := DeepEqualFaultDevInfo(faultDevInfo1, faultDevInfo2)
 			convey.So(res, convey.ShouldEqual, false)
 		})
-		convey.Convey("two FaultDevInfo with different fault level should not be deep equal", func() {
+		convey.Convey("two FaultDevInfo with different fault code should not be deep equal", func() {
 			faultDevInfo1 := &FaultDevInfo{
 				NodeStatus: nodeUnHealthy,
 				FaultDevList: []*FaultDev{
@@ -91,7 +92,7 @@ func TestDeepEqualFaultDevInfo(t *testing.T) {
 						DeviceType: mockDeviceType,
 						DeviceId:   mockDeviceID,
 						FaultLevel: PreSeparateFault,
-						FaultCode:  []string{"0000001D"},
+						FaultCode:  []string{mockFaultCode},
 					},
 				},
 			}
@@ -118,7 +119,7 @@ func TestDeepEqualFaultDevInfo(t *testing.T) {
 						DeviceType: mockDeviceType,
 						DeviceId:   0,
 						FaultLevel: PreSeparateFault,
-						FaultCode:  []string{"0000001D"},
+						FaultCode:  []string{mockFaultCode},
 					},
 				},
 			}
@@ -129,7 +130,7 @@ func TestDeepEqualFaultDevInfo(t *testing.T) {
 						DeviceType: mockDeviceType,
 						DeviceId:   0,
 						FaultLevel: PreSeparateFault,
-						FaultCode:  []string{"0000001D"},
+						FaultCode:  []string{mockFaultCode},
 					},
 				},
 			}
