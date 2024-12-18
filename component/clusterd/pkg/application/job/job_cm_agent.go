@@ -76,11 +76,9 @@ func (agent *Agent) doWork(obj interface{}, eventType string) {
 		hwlog.RunLog.Errorf("syncing '%s' failed: failed to get obj from indexer", podKeyInfo)
 		return
 	}
-	agent.RwMutex.RLock()
-	defer agent.RwMutex.RUnlock()
-	podCacheAgent, workerExist := agent.BsWorker[podKeyInfo.jobId]
-	hwlog.RunLog.Infof("worker: %+v", agent.BsWorker)
-	if !workerExist {
+	podCacheAgent := agent.GetBsWorker(podKeyInfo.jobId)
+	hwlog.RunLog.Debugf("worker: %+v", podCacheAgent)
+	if podCacheAgent == nil {
 		if !podExist {
 			hwlog.RunLog.Warnf("syncing '%s' terminated: current obj is no longer exist",
 				podKeyInfo.podInfo2String())
@@ -117,6 +115,16 @@ func (agent *Agent) doWork(obj interface{}, eventType string) {
 	}
 }
 
+// GetBsWorker return a bs Worker
+func (agent *Agent) GetBsWorker(bsKey string) PodWorker {
+	agent.RwMutex.RLock()
+	defer agent.RwMutex.RUnlock()
+	if worker, exist := agent.BsWorker[bsKey]; exist {
+		return worker
+	}
+	return nil
+}
+
 // BsExist is to check whether bsKey exist
 func (agent *Agent) BsExist(bsKey string) bool {
 	agent.RwMutex.RLock()
@@ -132,6 +140,13 @@ func (agent *Agent) SetBsWorker(bsKey string, worker PodWorker) {
 	agent.RwMutex.Lock()
 	defer agent.RwMutex.Unlock()
 	agent.BsWorker[bsKey] = worker
+}
+
+// DeleteBsWorker delete bs worker by key
+func (agent *Agent) DeleteBsWorker(bsKey string) {
+	agent.RwMutex.Lock()
+	defer agent.RwMutex.Unlock()
+	delete(agent.BsWorker, bsKey)
 }
 
 // UpdateJobDeviceStatus update node's device healthy status
