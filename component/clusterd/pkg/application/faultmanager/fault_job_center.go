@@ -25,7 +25,7 @@ func Process(ctx context.Context) {
 			return
 		default:
 			fJobCenter.process()
-			time.Sleep(5 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 }
