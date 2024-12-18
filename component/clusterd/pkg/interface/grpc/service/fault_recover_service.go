@@ -364,14 +364,20 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 			Info: fmt.Sprintf("jobId=%s not registed", request.JobId),
 		}, nil
 	}
-	if faultmanager.GlobalFaultProcessCenter != nil {
-		giveSoftFault2FaultCenter(request.JobId, request.FaultRanks)
-	} else {
-		hwlog.RunLog.Warnf("global fault center is nil")
-	}
 	controller.saveCacheFault(request.FaultRanks)
 	if !common.IsUceFault(request.FaultRanks) {
+		_, err := common.LabelFaultPod(request.JobId, common.Faults2Ranks(request.FaultRanks))
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
+				err, request.JobId)
+		}
 		controller.addEvent(common.FaultOccurEvent)
+	} else {
+		if faultmanager.GlobalFaultProcessCenter != nil {
+			giveSoftFault2FaultCenter(request.JobId, request.FaultRanks)
+		} else {
+			hwlog.RunLog.Warnf("global fault center is nil")
+		}
 	}
 	return &pb.Status{
 		Code: int32(common.OK),
