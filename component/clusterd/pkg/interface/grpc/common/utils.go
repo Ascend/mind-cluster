@@ -40,6 +40,18 @@ func Faults2String(faults []*pb.FaultRank) string {
 	return strings.Join(faultInfo, ",")
 }
 
+// Faults2Ranks return rank slice of faults
+func Faults2Ranks(faults []*pb.FaultRank) []string {
+	if len(faults) == 0 {
+		return nil
+	}
+	ranks := make([]string, 0, len(faults))
+	for _, item := range faults {
+		ranks = append(ranks, item.RankId)
+	}
+	return ranks
+}
+
 // String2Faults return faults split from string
 func String2Faults(faultStr string) []*pb.FaultRank {
 	faultStrSlice := strings.Split(faultStr, ",")
