@@ -1329,7 +1329,7 @@ func (d *DcManager) DcGetDeviceNetWorkHealth(cardID, deviceID int32) (uint32, er
 		return common.UnRetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
 
-	result := make(chan common.DeviceNetworkHealth)
+	result := make(chan common.DeviceNetworkHealth, 1)
 	go callDcmiGetDeviceNetworkHealth(cardID, deviceID, result)
 	select {
 	case res := <-result:
