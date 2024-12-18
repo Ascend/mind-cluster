@@ -57,11 +57,17 @@ func Report() {
 				// when informer begin, frequent add messages
 				time.Sleep(time.Second)
 			})
-			cmManager.Lock()
+			cmManager.deviceInfoMutex.Lock()
 			deviceArr := device.GetSafeData(cmManager.deviceInfoMap)
+			cmManager.deviceInfoMutex.Unlock()
+
+			cmManager.nodeInfoMutex.Lock()
 			nodeArr := node.GetSafeData(cmManager.nodeInfoMap)
+			cmManager.nodeInfoMutex.Unlock()
+
+			cmManager.switchInfoMutex.Lock()
 			switchArr := switchinfo.GetSafeData(cmManager.switchInfoMap)
-			cmManager.Unlock()
+			cmManager.switchInfoMutex.Unlock()
 			updateCmWithEmpty(deviceArr, nodeArr, switchArr)
 			reportTime = time.Now().UnixMilli()
 			processCount++
