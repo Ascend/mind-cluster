@@ -33,14 +33,14 @@ import (
 
 const (
 	defaultLogFile = "/var/log/mindx-dl/noded/noded.log"
-	// defaultHeatBeatInterval is the default heartbeat send interval
-	defaultHeatBeatInterval = 5
+	// defaultHeatBeatInterval is the default report interval
+	defaultReportInterval = 5
 	// defaultMonitorPeriod is the default plugin monitor period
 	defaultMonitorPeriod = 60
-	// maxHeartbeatInterval is the max heartbeat send interval
-	maxHeartbeatInterval = 300
-	// minHeartbeatInterval is the min heartbeat send interval
-	minHeartbeatInterval = 0
+	// maxReportInterval is the max report interval
+	maxReportInterval = 300
+	// minReportInterval is the min report interval
+	minReportInterval = 0
 	// maxMonitorPeriod is the max plugin monitor period
 	maxMonitorPeriod = 600
 	// minMonitorPeriod is the min plugin monitor period
@@ -63,8 +63,8 @@ var (
 	BuildVersion string
 	// BuildName build name
 	BuildName string
-	// heartbeatInterval send Heartbeat Interval
-	heartbeatInterval int
+	// reportInterval report Interval
+	reportInterval int
 	// monitorPeriod monitoring period
 	monitorPeriod int
 )
@@ -102,12 +102,10 @@ func main() {
 
 func init() {
 	flag.BoolVar(&version, "version", false, "the version of the program")
-
-	flag.IntVar(&heartbeatInterval, "heartbeatInterval", defaultHeatBeatInterval,
-		"Interval of sending heartbeat")
-	flag.IntVar(&monitorPeriod, "monitorPeriod", defaultMonitorPeriod, "monitoring period of monitor ,"+
+	flag.IntVar(&reportInterval, "reportInterval", defaultReportInterval,
+		"Min interval of report node status")
+	flag.IntVar(&monitorPeriod, "monitorPeriod", defaultMonitorPeriod, "Monitoring period of monitor ,"+
 		"range [60,600] seconds")
-
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
@@ -120,8 +118,8 @@ func init() {
 }
 
 func checkParameters() bool {
-	if heartbeatInterval <= minHeartbeatInterval || heartbeatInterval > maxHeartbeatInterval {
-		hwlog.RunLog.Errorf("heartbeat interval %d out of range (0,300]", heartbeatInterval)
+	if reportInterval <= minReportInterval || reportInterval > maxReportInterval {
+		hwlog.RunLog.Errorf("report interval %d out of range (0,300]", reportInterval)
 		return false
 	}
 	if monitorPeriod < minMonitorPeriod || monitorPeriod > maxMonitorPeriod {
@@ -133,8 +131,8 @@ func checkParameters() bool {
 
 func setParameters() {
 	common.ParamOption = common.Option{
-		HeartbeatInterval: heartbeatInterval,
-		MonitorPeriod:     monitorPeriod,
+		ReportInterval: reportInterval,
+		MonitorPeriod:  monitorPeriod,
 	}
 }
 
