@@ -103,6 +103,7 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 
 var nodeInformer cache.SharedIndexInformer
 
+// GetNodeFromIndexer get node from informer indexer
 func GetNodeFromIndexer(name string) (*v1.Node, error) {
 	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
 	if err != nil || !exist {

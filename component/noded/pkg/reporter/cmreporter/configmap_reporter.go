@@ -50,7 +50,7 @@ func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
 	guaranteeReportInterval := time.Duration(common.ParamOption.ReportInterval) * time.Second * multipleOfReportInterval
 	if common.DeepEqualFaultDevInfo(faultDevInfo, &c.nodeInfoCache.NodeInfo) &&
 		time.Since(c.reportTime) < guaranteeReportInterval {
-		hwlog.RunLog.Infof("node fault device info is not changed and report time is not reached, no need to report")
+		hwlog.RunLog.Debugf("node fault device info is not changed and report time is not reached, no need to report")
 		return
 	}
 	checkCode := common.MakeDataHash(faultDevInfo)
