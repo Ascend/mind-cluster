@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"fmt"
 	"reflect"
 
 	v1 "k8s.io/api/core/v1"
@@ -100,8 +101,23 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
 }
 
-// InitPodInformer init pod informer
-func InitPodInformer() {
+var nodeInformer cache.SharedIndexInformer
+
+// GetNodeFromIndexer get node from informer indexer
+func GetNodeFromIndexer(name string) (*v1.Node, error) {
+	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
+	if err != nil || !exist {
+		return nil, fmt.Errorf("get node %s from informer failed, err: %v, exist: %v", name, err, exist)
+	}
+	n, ok := item.(*v1.Node)
+	if !ok {
+		return nil, fmt.Errorf("get node %s from informer failed, item: %v", name, item)
+	}
+	return n, nil
+}
+
+// InitPodAndNodeInformer init pod informer
+func InitPodAndNodeInformer() {
 	factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{

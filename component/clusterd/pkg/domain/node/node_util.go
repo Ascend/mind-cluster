@@ -6,8 +6,6 @@ package node
 import (
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
@@ -40,12 +38,7 @@ func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
 	var node constant.NodeInfo
 	node.NodeStatus = nodeInfoCM.NodeInfo.NodeStatus
 	node.FaultDevList = nodeInfoCM.NodeInfo.FaultDevList
-	node.HeartbeatInterval = nodeInfoCM.NodeInfo.HeartbeatInterval
-	node.HeartbeatTime = nodeInfoCM.NodeInfo.HeartbeatTime
 	node.CmName = nodeCm.Name
-	node.UpdateTime = time.Now()
-	hwlog.RunLog.Debugf("parse node info configmap %s success, time: %v", nodeCm.Name,
-		node.UpdateTime.Format(time.RFC3339))
 	return &node, nil
 }
 
@@ -109,8 +102,7 @@ func BusinessDataIsNotEqual(oldNodeInfo *constant.NodeInfo, newNodeInfo *constan
 		hwlog.RunLog.Debug("one of oldNodeInfo and newNodeInfo is not empty, and the other is empty")
 		return true
 	}
-	if oldNodeInfo.HeartbeatInterval != newNodeInfo.HeartbeatInterval ||
-		oldNodeInfo.NodeStatus != newNodeInfo.NodeStatus ||
+	if oldNodeInfo.NodeStatus != newNodeInfo.NodeStatus ||
 		len(oldNodeInfo.FaultDevList) != len(newNodeInfo.FaultDevList) {
 		hwlog.RunLog.Debug("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo")
 		return true

@@ -53,8 +53,6 @@ func TestParseNodeInfoCM(t *testing.T) {
 			nodeInfoCM := constant.NodeInfoCM{}
 			nodeInfoCM.CheckCode = ""
 			nodeInfoCM.NodeInfo = constant.NodeInfoNoName{}
-			nodeInfoCM.NodeInfo.HeartbeatInterval = 1
-			nodeInfoCM.NodeInfo.HeartbeatTime = 0
 			cm.Data = map[string]string{}
 			cm.Data[constant.NodeInfoCMKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
@@ -66,12 +64,10 @@ func TestParseNodeInfoCM(t *testing.T) {
 			nodeInfoCM := constant.NodeInfoCM{}
 			nodeInfoCM.CheckCode = testNodeCheckCode
 			nodeInfoCM.NodeInfo = constant.NodeInfoNoName{}
-			nodeInfoCM.NodeInfo.HeartbeatInterval = 1
-			nodeInfoCM.NodeInfo.HeartbeatTime = 0
 			cm.Data = map[string]string{}
 			cm.Data[constant.NodeInfoCMKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
-			convey.So(err, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -123,32 +119,31 @@ func TestBusinessDataIsNotEqual(t *testing.T) {
 			convey.So(result, convey.ShouldEqual, false)
 		})
 		convey.Convey("oldNodeInfo is nil,newNodeInfo is not nil", func() {
-			newData := getTestNodeInfo(0)
+			newData := getTestNodeInfo("", nil)
 			result := BusinessDataIsNotEqual(nil, newData)
 
 			convey.So(result, convey.ShouldEqual, true)
 		})
 		convey.Convey("oldNodeInfo and newNodeInfo are not equal", func() {
-			newData := getTestNodeInfo(0)
-			oldData := getTestNodeInfo(1)
+			newData := getTestNodeInfo("unhealthy", nil)
+			oldData := getTestNodeInfo("healthy", nil)
 			result := BusinessDataIsNotEqual(newData, oldData)
 			convey.So(result, convey.ShouldEqual, true)
 		})
 		convey.Convey("oldNodeInfo and newNodeInfo are equal", func() {
-			newData := getTestNodeInfo(0)
-			oldData := getTestNodeInfo(0)
+			newData := getTestNodeInfo("unhealthy", nil)
+			oldData := getTestNodeInfo("unhealthy", nil)
 			result := BusinessDataIsNotEqual(newData, oldData)
 			convey.So(result, convey.ShouldEqual, false)
 		})
 	})
 }
 
-func getTestNodeInfo(heartbeatInterval int) *constant.NodeInfo {
+func getTestNodeInfo(status string, faultList []*constant.FaultDev) *constant.NodeInfo {
 	return &constant.NodeInfo{
 		NodeInfoNoName: constant.NodeInfoNoName{
-			HeartbeatTime:     0,
-			HeartbeatInterval: heartbeatInterval,
-			NodeStatus:        "",
+			NodeStatus:   "",
+			FaultDevList: faultList,
 		},
 	}
 }
