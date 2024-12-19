@@ -960,9 +960,13 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, scoreMap map[string]float64) {
 	faultNodeNames := reScheduler.getFaultNodeNameByFaultJob(faultJob)
 	for _, faultNodeName := range faultNodeNames {
-		if _, ok := scoreMap[faultNodeName]; ok {
+		if score, ok := scoreMap[faultNodeName]; ok {
 			klog.V(util.LogDebugLev).Infof("fault node<%s> previous used score is reduce", faultNodeName)
-			scoreMap[faultNodeName] -= util.AffScore8 * util.AffScore8
+			score -= util.AffScore8 * util.AffScore8
+			if score < 0 {
+				score = 0
+			}
+			scoreMap[faultNodeName] = score
 		}
 	}
 }
