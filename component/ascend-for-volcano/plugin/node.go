@@ -26,7 +26,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -63,9 +62,7 @@ type NodeDNodeInfo struct {
 		FaultCode  []string
 		FaultLevel string
 	}
-	HeartbeatTime     int64
-	HeartbeatInterval int
-	NodeStatus        string
+	NodeStatus string
 }
 
 // NodeInfoWithNodeD is node the node information and checkCode reported by noded
@@ -489,10 +486,8 @@ func (n *NPUNode) syncAnnotationFromSsnNode(npuNode *api.NodeInfo, nodeInfoOfNod
 	for k, v := range npuNode.Node.Annotations {
 		n.Annotation[k] = v
 	}
-	// adding noded reported info into NPUNode.Annotation including node heartbeat time and healthy status
-	n.Annotation[util.NodedHeartbeatTimeKey] = strconv.FormatInt(nodeInfoOfNodeD.HeartbeatTime, util.Base10)
+	// adding noded reported info into NPUNode.Annotation including node healthy status
 	n.Annotation[util.NodedNodeHealtyStatuskey] = nodeInfoOfNodeD.NodeStatus
-	n.Annotation[util.NodeDNodeHeartbeatIntervalKey] = strconv.Itoa(nodeInfoOfNodeD.HeartbeatInterval)
 
 	n.Annotation[util.SwitchNodeHealtyStatuskey] = switchInfo.NodeStatus
 }
@@ -597,21 +592,6 @@ func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {
 func (sHandle *ScheduleHandler) syncDeviceInfosBySsn(ssn *framework.Session) map[string]NodeDeviceInfoWithID {
 	deviceInfos := make(map[string]NodeDeviceInfoWithID)
 	sHandle.DeviceInfos.Lock()
-	for nodeName, devInfo := range sHandle.DeviceInfos.Devices {
-		if _, exist := ssn.Nodes[nodeName]; exist {
-			continue
-		}
-		if info, ok := sHandle.DevInfoNotInSession[nodeName]; !ok || info.UpdateTime < devInfo.UpdateTime {
-			now := time.Now().Unix()
-			klog.V(util.LogWarningLev).Infof("node<%s> is not in session, add device-info in cache, time: %d",
-				nodeName, now)
-			sHandle.DevInfoNotInSession[nodeName] = NodeDeviceInfoWithTime{
-				NodeDeviceInfoWithID: devInfo,
-				HostUpdateTime:       now,
-			}
-		}
-	}
-
 	var needDealNodes []string
 	for nodeName := range ssn.Nodes {
 		needDealNodes = append(needDealNodes, nodeName)
