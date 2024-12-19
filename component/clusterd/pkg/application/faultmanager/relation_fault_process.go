@@ -16,7 +16,7 @@ func (fJob *FaultJob) handleJobFault(relationFault []*faultInfo,
 	nodeLvList := make(map[string]string)
 	deviceLvList := make(map[string][]DeviceStrategy)
 
-	if len(relationFault) <= 0 || len(triggerFault) <= 0 && len(strategyList) <= 0 {
+	if len(relationFault) <= 0 || len(triggerFault) <= 0 || len(strategyList) <= 0 {
 		return nodeLvList, deviceLvList
 	}
 	hwlog.RunLog.Infof("----relationFault: %s, triggerFault: %s, strategyList: %s----",
