@@ -119,6 +119,7 @@ func GetNodeFromIndexer(name string) (*v1.Node, error) {
 // InitPodAndNodeInformer init pod informer
 func InitPodAndNodeInformer() {
 	factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
+	nodeInformer = factory.Core().V1().Nodes().Informer()
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -134,6 +135,7 @@ func InitPodAndNodeInformer() {
 		},
 	})
 	factory.Start(informerCh)
+	factory.WaitForCacheSync(wait.NeverStop)
 }
 
 func podHandler(oldObj interface{}, newObj interface{}, operator string) {

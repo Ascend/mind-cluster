@@ -1294,14 +1294,9 @@ func (reScheduler *ReScheduler) getTaskHealthStateByNode(fTask *FaultTask) (bool
 		return true, NodeCardUnhealthy
 	}
 	if _, ok := reScheduler.Nodes[fTask.NodeName]; !ok && !*reScheduler.IsFirstSession {
-		now := time.Now().Unix()
-		if dev, ok := reScheduler.DeviceInfoNotInSession[fTask.NodeName]; !ok ||
-			now-dev.HostUpdateTime > deviceInfoTimeout {
-			klog.V(util.LogErrorLev).Infof("task %s use node(%s) which not in session and device-info is "+
-				"over time 60s [%d-%d] thus task sets %s", fTask.TaskName, fTask.NodeName, now, dev.HostUpdateTime,
-				NodeUnhealthy)
-			return true, NodeUnhealthy
-		}
+		klog.V(util.LogErrorLev).Infof("task %s use node(%s) which is not ready thus task sets %s", fTask.TaskName,
+			fTask.NodeName, NodeUnhealthy)
+		return true, NodeUnhealthy
 	}
 	klog.V(util.LogInfoLev).Infof("task %s all nodes healthy, thus task sets %s", fTask.TaskName, NodeHealthy)
 	return false, NodeHealthy
