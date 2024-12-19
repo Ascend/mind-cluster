@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"fmt"
 	"reflect"
 
 	v1 "k8s.io/api/core/v1"
@@ -102,18 +103,16 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 
 var nodeInformer cache.SharedIndexInformer
 
-func GetNodeFromIndexer(name string) *v1.Node {
+func GetNodeFromIndexer(name string) (*v1.Node, error) {
 	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
 	if err != nil || !exist {
-		hwlog.RunLog.Warnf("get node %s from informer failed, err: %v, exist: %v", name, err, exist)
-		return nil
+		return nil, fmt.Errorf("get node %s from informer failed, err: %v, exist: %v", name, err, exist)
 	}
 	n, ok := item.(*v1.Node)
 	if !ok {
-		hwlog.RunLog.Warnf("get node %s from informer failed, item: %v", name, item)
-		return nil
+		return nil, fmt.Errorf("get node %s from informer failed, item: %v", name, item)
 	}
-	return n
+	return n, nil
 }
 
 // InitPodAndNodeInformer init pod informer

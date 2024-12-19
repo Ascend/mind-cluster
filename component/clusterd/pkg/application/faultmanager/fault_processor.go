@@ -38,7 +38,7 @@ func (fpi *faultProcessorImpl) process() {
 				jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, serverHcclToFaultRank(server)...)
 				continue
 			}
-			node := kube.GetNodeFromIndexer(nodeName)
+			node := kube.GetNode(nodeName)
 			if node == nil || !isNodeReady(node) {
 				hwlog.RunLog.Infof("node %s is not ready", nodeName)
 				jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, serverHcclToFaultRank(server)...)

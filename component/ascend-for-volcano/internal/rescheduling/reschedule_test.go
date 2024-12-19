@@ -21,11 +21,12 @@ package rescheduling
 
 import (
 	"errors"
+	"reflect"
+	"testing"
+
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"reflect"
-	"testing"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 

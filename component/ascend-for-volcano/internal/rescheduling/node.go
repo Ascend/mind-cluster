@@ -22,8 +22,9 @@ package rescheduling
 import (
 	"encoding/json"
 	"fmt"
-	"k8s.io/klog"
 	"strings"
+
+	"k8s.io/klog"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
