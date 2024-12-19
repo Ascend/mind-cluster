@@ -6,6 +6,7 @@ package node
 import (
 	"encoding/json"
 	"fmt"
+
 	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
