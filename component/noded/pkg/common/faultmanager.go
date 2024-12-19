@@ -26,13 +26,9 @@ import (
 type FaultManager interface {
 	GetFaultDevInfo() *FaultDevInfo
 	GetFaultDevList() []*FaultDev
-	GetHeartbeatTime() int64
-	GetHeartbeatInterval() int
 	GetNodeStatus() string
 	SetFaultDevInfo(*FaultDevInfo)
 	SetFaultDevList([]*FaultDev)
-	SetHeartbeatTime(int64)
-	SetHeartbeatInterval(int)
 	SetNodeStatus(string)
 }
 
@@ -68,24 +64,6 @@ func (f *FaultTools) GetFaultDevList() []*FaultDev {
 	return f.faultDevInfo.FaultDevList
 }
 
-// GetHeartbeatTime return heartbeat time
-func (f *FaultTools) GetHeartbeatTime() int64 {
-	if f.faultDevInfo == nil {
-		hwlog.RunLog.Error("fault dev info is nil when get heartbeat time")
-		return -1
-	}
-	return f.faultDevInfo.HeartbeatTime
-}
-
-// GetHeartbeatInterval return heartbeat interval
-func (f *FaultTools) GetHeartbeatInterval() int {
-	if f.faultDevInfo == nil {
-		hwlog.RunLog.Error("fault dev info is nil when get heartbeat interval")
-		return -1
-	}
-	return f.faultDevInfo.HeartbeatInterval
-}
-
 // GetNodeStatus return node status
 func (f *FaultTools) GetNodeStatus() string {
 	if f.faultDevInfo == nil {
@@ -102,8 +80,6 @@ func (f *FaultTools) SetFaultDevInfo(faultDevInfo *FaultDevInfo) {
 		return
 	}
 	f.SetFaultDevList(faultDevInfo.FaultDevList)
-	f.SetHeartbeatTime(faultDevInfo.HeartbeatTime)
-	f.SetHeartbeatInterval(faultDevInfo.HeartbeatInterval)
 	f.SetNodeStatus(faultDevInfo.NodeStatus)
 }
 
@@ -119,24 +95,6 @@ func (f *FaultTools) SetFaultDevList(faultDevList []*FaultDev) {
 		f.DeepCopyFaultDev(faultDevTmp, faultDev)
 		f.faultDevInfo.FaultDevList[i] = faultDevTmp
 	}
-}
-
-// SetHeartbeatTime set heartbeat time
-func (f *FaultTools) SetHeartbeatTime(heartbeatTime int64) {
-	if f.faultDevInfo == nil {
-		hwlog.RunLog.Error("fault dev info is nil when set heartbeat time")
-		return
-	}
-	f.faultDevInfo.HeartbeatTime = heartbeatTime
-}
-
-// SetHeartbeatInterval set heartbeat interval
-func (f *FaultTools) SetHeartbeatInterval(heartbeatInterval int) {
-	if f.faultDevInfo == nil {
-		hwlog.RunLog.Error("fault dev info is nil when set heartbeat interval")
-		return
-	}
-	f.faultDevInfo.HeartbeatInterval = heartbeatInterval
 }
 
 // SetNodeStatus set node status

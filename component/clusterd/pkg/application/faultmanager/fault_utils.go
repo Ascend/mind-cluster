@@ -10,12 +10,23 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
+
+// isNodeReady returns the node ready status
+func isNodeReady(node *v1.Node) bool {
+	for _, cond := range node.Status.Conditions {
+		if cond.Type == v1.NodeReady {
+			return cond.Status == v1.ConditionTrue
+		}
+	}
+	return false
+}
 
 func getNodeAndDeviceFromJobIdAndRankId(
 	jobId, rankId string, jobServerInfoMap constant.JobServerInfoMap) (string, string, error) {

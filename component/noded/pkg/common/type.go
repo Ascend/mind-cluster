@@ -22,8 +22,8 @@ var (
 
 // Option struct definition
 type Option struct {
-	HeartbeatInterval int
-	MonitorPeriod     int
+	ReportInterval int
+	MonitorPeriod  int
 }
 
 // FaultProcessor fault processor responsibility chain interface
@@ -40,10 +40,8 @@ type ConfigProcessor interface {
 
 // FaultDevInfo fault device info
 type FaultDevInfo struct {
-	FaultDevList      []*FaultDev
-	HeartbeatTime     int64
-	HeartbeatInterval int
-	NodeStatus        string
+	FaultDevList []*FaultDev
+	NodeStatus   string
 }
 
 // FaultDev fault device struct
