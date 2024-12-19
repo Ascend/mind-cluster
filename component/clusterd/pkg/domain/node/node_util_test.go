@@ -142,7 +142,7 @@ func TestBusinessDataIsNotEqual(t *testing.T) {
 func getTestNodeInfo(status string, faultList []*constant.FaultDev) *constant.NodeInfo {
 	return &constant.NodeInfo{
 		NodeInfoNoName: constant.NodeInfoNoName{
-			NodeStatus:   "",
+			NodeStatus:   status,
 			FaultDevList: faultList,
 		},
 	}
