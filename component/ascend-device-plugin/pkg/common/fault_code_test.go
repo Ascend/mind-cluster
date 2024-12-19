@@ -1269,7 +1269,7 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 				},
 			},
 		}
-		convey.So(GetFaultTypeFromFaultFrequency(logicId), convey.ShouldEqual, NormalNPU)
+		convey.So(GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode), convey.ShouldEqual, NormalNPU)
 	})
 
 	convey.Convey("test GetFaultTypeFromFaultFrequency success case2", t, func() {
@@ -1291,7 +1291,7 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 		}
 		manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
 		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
-		convey.So(GetFaultTypeFromFaultFrequency(logicId), convey.ShouldEqual, ManuallySeparateNPU)
+		convey.So(GetFaultTypeFromFaultFrequency(logicId, NetworkFaultMode), convey.ShouldEqual, ManuallySeparateNPU)
 		convey.So(manuallySeparateNpuMap[logicId].FirstHandle, convey.ShouldEqual, true)
 		convey.So(recoverFaultFrequencyMap[logicId], convey.ShouldEqual, strings.ToLower("80E18005"))
 	})
