@@ -1269,7 +1269,7 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 				},
 			},
 		}
-		convey.So(GetFaultTypeFromFaultFrequency(logicId), convey.ShouldEqual, NormalNPU)
+		convey.So(GetFaultTypeFromFaultFrequency(logicId, NetworkFaultMode), convey.ShouldEqual, NormalNPU)
 	})
 
 	convey.Convey("test GetFaultTypeFromFaultFrequency success case2", t, func() {
@@ -1291,7 +1291,7 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 		}
 		manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
 		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
-		convey.So(GetFaultTypeFromFaultFrequency(logicId), convey.ShouldEqual, ManuallySeparateNPU)
+		convey.So(GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode), convey.ShouldEqual, ManuallySeparateNPU)
 		convey.So(manuallySeparateNpuMap[logicId].FirstHandle, convey.ShouldEqual, true)
 		convey.So(recoverFaultFrequencyMap[logicId], convey.ShouldEqual, strings.ToLower("80E18005"))
 	})
@@ -1554,8 +1554,57 @@ func TestGetTimeoutFaultCodes(t *testing.T) {
 		}
 		expectedChipFaultCodesLen := 2
 		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
-		convey.So(len(GetTimeoutFaultLevelAndCodes(ChipFaultMode)), convey.ShouldResemble, expectedChipFaultCodesLen)
-		convey.So(GetTimeoutFaultLevelAndCodes(NetworkFaultMode), convey.ShouldResemble, expectedNetworkFaultCodes)
+		convey.So(len(GetTimeoutFaultLevelAndCodes(ChipFaultMode, logicID)), convey.ShouldResemble, expectedChipFaultCodesLen)
+		convey.So(GetTimeoutFaultLevelAndCodes(NetworkFaultMode, logicID), convey.ShouldResemble, expectedNetworkFaultCodes)
+	})
+}
+
+// TestGetFrequencyFaultCodes for test GetFrequencyFaultLevelAndCodes
+func TestGetFrequencyFaultCodes(t *testing.T) {
+	convey.Convey("test GetTimeoutFaultCodes success", t, func() {
+		logicID := int32(0)
+		faultCode1 := "80C98000"
+		faultCode2 := "80C98008"
+		faultCode3 := "80E18005"
+		firstTime, secondTime, thirdTime := int64(10), int64(8), int64(2)
+		NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode1): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         2,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+			strings.ToLower(faultCode2): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime, time.Now().Unix() - secondTime,
+						time.Now().Unix() - thirdTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         2,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+			strings.ToLower(faultCode3): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         0,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+		}
+		expectedChipFaultCodesLen := 2
+		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
+		convey.So(len(GetFrequencyFaultLevelAndCodes(ChipFaultMode, logicID)), convey.ShouldResemble, expectedChipFaultCodesLen)
+		convey.So(GetFrequencyFaultLevelAndCodes(NetworkFaultMode, logicID), convey.ShouldResemble, expectedNetworkFaultCodes)
 	})
 }
 

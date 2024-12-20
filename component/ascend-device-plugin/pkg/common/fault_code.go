@@ -777,7 +777,7 @@ func GetFaultType(faultCodes []int64, logicId int32) string {
 
 	faultTypes := make([]string, 0, len(FaultTypeSet))
 	faultTypes = append(faultTypes, GetFaultTypeByCode(newFaultCodes))
-	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId))
+	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, ChipFaultMode))
 	if QueryManuallyFaultInfoByLogicID(logicId) {
 		faultTypes = append(faultTypes, ManuallySeparateNPU)
@@ -796,6 +796,7 @@ func GetNetworkFaultType(faultCodes []int64, logicId int32) string {
 
 	faultTypes := make([]string, 0, len(FaultTypeSet))
 	faultTypes = append(faultTypes, GetNetworkFaultTypeByCode(newNetworkFaultCodes))
+	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId, NetworkFaultMode))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, NetworkFaultMode))
 	return getMostSeriousFaultType(faultTypes)
 }
@@ -831,11 +832,25 @@ func GetFaultTypeByCode(faultCodes []int64) string {
 
 // GetFaultTypeFromFaultFrequency refreshes the cache of FaultFrequency, delete the faults those not in time window,
 // and return the fault level if the occurrence times of fault >= the set value
-func GetFaultTypeFromFaultFrequency(logicId int32) string {
+func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
+	if mode != ChipFaultMode && mode != NetworkFaultMode {
+		return NormalNPU
+	}
 	faultTypes := make([]string, 0, len(faultFrequencyMap))
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
 	for eventId, frequencyCache := range faultFrequencyMap {
+		num, err := strconv.ParseInt(eventId, Hex, 0)
+		if err != nil {
+			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
+			continue
+		}
+
+		if (mode == ChipFaultMode && NetworkFaultCodes.Has(num)) ||
+			(mode == NetworkFaultMode && !NetworkFaultCodes.Has(num)) {
+			continue
+		}
+
 		_, ok := frequencyCache.Frequency[logicId]
 		if !ok {
 			continue
@@ -1591,7 +1606,7 @@ func CheckErrorMessage(err error, target string) bool {
 }
 
 // GetTimeoutFaultLevelAndCodes get timeout fault codes with level and set fault time equal current time.
-func GetTimeoutFaultLevelAndCodes(mode string) map[int64]FaultTimeAndLevel {
+func GetTimeoutFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultTimeAndLevel {
 	result := make(map[int64]FaultTimeAndLevel)
 	if mode != ChipFaultMode && mode != NetworkFaultMode {
 		return result
@@ -1611,13 +1626,43 @@ func GetTimeoutFaultLevelAndCodes(mode string) map[int64]FaultTimeAndLevel {
 			continue
 		}
 
-		for _, faultDurationData := range faultDurationCache.Duration {
-			if faultDurationData.TimeoutStatus {
-				result[num] = FaultTimeAndLevel{
-					// timeout fault use current time as `FaultTime`
-					FaultTime:  time.Now().UnixMilli(),
-					FaultLevel: faultDurationCache.FaultHandling,
-				}
+		if faultDurationCache.Duration[logicId].TimeoutStatus {
+			result[num] = FaultTimeAndLevel{
+				// timeout fault use current time as `FaultTime`
+				FaultTime:  time.Now().UnixMilli(),
+				FaultLevel: faultDurationCache.FaultHandling,
+			}
+		}
+	}
+	return result
+}
+
+// GetFrequencyFaultLevelAndCodes get frequency fault codes with level and set fault occurrence time (unix time).
+func GetFrequencyFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultTimeAndLevel {
+	result := make(map[int64]FaultTimeAndLevel)
+	if mode != ChipFaultMode && mode != NetworkFaultMode {
+		return result
+	}
+
+	faultFrequencyMapLock.Lock()
+	defer faultFrequencyMapLock.Unlock()
+
+	for eventId, faultFrequencyCache := range faultFrequencyMap {
+		num, err := strconv.ParseInt(eventId, Hex, 0)
+		if err != nil {
+			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
+			continue
+		}
+		if (mode == ChipFaultMode && NetworkFaultCodes.Has(num)) ||
+			(mode == NetworkFaultMode && !NetworkFaultCodes.Has(num)) {
+			continue
+		}
+
+		if int64(len(faultFrequencyCache.Frequency[logicId])) >= faultFrequencyCache.Times {
+			result[num] = FaultTimeAndLevel{
+				// frequency fault use timeWindowStart time as `FaultTime`
+				FaultTime:  time.Now().Unix() - faultFrequencyCache.TimeWindow,
+				FaultLevel: faultFrequencyCache.FaultHandling,
 			}
 		}
 	}
