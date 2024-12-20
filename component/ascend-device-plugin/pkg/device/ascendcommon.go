@@ -551,11 +551,14 @@ func (tool *AscendTools) getDeviceFaultsWithMode(device *common.NpuDevice, fault
 	allFaultCodes := append(faultCodes, common.Keys(allFaultLevelAndTime)...)
 	newCode := tool.removeDuplicateErr(allFaultCodes)
 	var faultType = ""
+	var isNetworkFault bool
 	if mode == common.NetworkFaultMode {
 		faultType = common.GetNetworkFaultType(faultCodes, device.LogicID)
+		isNetworkFault = true
 	}
 	if mode == common.ChipFaultMode {
 		faultType = common.GetFaultType(faultCodes, device.LogicID)
+		isNetworkFault = false
 	}
 	deviceFaults = append(deviceFaults, common.DeviceFault{
 		FaultType:            unhealthyType,
@@ -564,7 +567,7 @@ func (tool *AscendTools) getDeviceFaultsWithMode(device *common.NpuDevice, fault
 		FaultLevel:           faultType,
 		FaultHandling:        faultType,
 		FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-		FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, allFaultLevelAndTime, false),
+		FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, allFaultLevelAndTime, isNetworkFault),
 	})
 	return deviceFaults
 }
