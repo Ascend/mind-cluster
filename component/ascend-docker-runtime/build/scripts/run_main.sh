@@ -147,9 +147,10 @@ Options:
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
-  --version                     Query Ascend-docker-runtime version
+                                Do not use with --install-scene
                                 [Deprecated] This parameter will be removed in future versions.
                                 Please use --install-scene=isula instead
+  --version                     Query Ascend-docker-runtime version
   --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
@@ -478,6 +479,10 @@ do
                 log "[ERROR]" "failed, '--install-scene' Repeat parameter!"
                 exit 1
             fi
+            if [ "${ISULA}" == "isula" ]; then
+                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
+                exit 1
+            fi
             need_help=n
             INSTALL_SCENE_FLAG=y
             if [ "$3" == "--install-scene=docker" ]; then
@@ -549,6 +554,10 @@ do
         --ce=*)
             if [ "${ISULA}" == "isula" ]; then
                 log "[ERROR]" "failed, '--ce' Repeat parameter!"
+                exit 1
+            fi
+            if [ "${INSTALL_SCENE_FLAG}" == "y" ]; then
+                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
                 exit 1
             fi
             need_help=n
