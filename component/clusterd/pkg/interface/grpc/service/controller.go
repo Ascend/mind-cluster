@@ -442,7 +442,7 @@ func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
 
 func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.RespCode, error) {
 	if ctl.jobInfo.PlatFormMode {
-		strategies, err := WaitPlatFormStrategyReady(ctl.jobInfo.JobName, ctl.jobInfo.Namespace)
+		strategies, err := WaitPlatFormStrategyReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
 		if err != nil {
 			return common.WaitPlatStrategyTimeoutEvent, common.WaitPlatStrategyTimeout, nil
 		}
@@ -543,7 +543,7 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 
 func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
 	allFaultRanks := common.RemoveSliceDuplicateFaults(faults)
-	err := UpdateProcessConfirmFault(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, allFaultRanks)
+	err := UpdateProcessConfirmFault(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, allFaultRanks)
 	if err != nil {
 		hwlog.RunLog.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 		return nil, fmt.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)

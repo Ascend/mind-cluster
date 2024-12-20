@@ -73,7 +73,7 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRan
 	}
 	rankStr, _ := pg.Annotations[constant.ProcessConfirmFaultKey]
 	if len(rankStr) > 0 {
-		return fmt.Errorf("plat not clear pre confirm fault, jobName=%s", name)
+		return fmt.Errorf("plat not clear pre confirm fault, pgName=%s", name)
 	}
 	allFaultRanks := common.RemoveSliceDuplicateFaults(cacheRanks)
 	newConfirm := map[string]string{
