@@ -1559,6 +1559,54 @@ func TestGetTimeoutFaultCodes(t *testing.T) {
 	})
 }
 
+// TestGetFrequencyFaultCodes for test GetFrequencyFaultLevelAndCodes
+func TestGetFrequencyFaultCodes(t *testing.T) {
+	convey.Convey("test GetTimeoutFaultCodes success", t, func() {
+		logicID := int32(0)
+		faultCode1 := "80C98000"
+		faultCode2 := "80E18005"
+		firstTime, secondTime, thirdTime := int64(10), int64(8), int64(2)
+		NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode1): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         2,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+			strings.ToLower(faultCode2): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime, time.Now().Unix() - secondTime,
+						time.Now().Unix() - thirdTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         3,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+			strings.ToLower(faultCode2): {
+				Frequency: map[int32][]int64{
+					logicID: {time.Now().Unix() - firstTime},
+				},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         0,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+		}
+		expectedChipFaultCodesLen := 2
+		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
+		convey.So(len(GetFrequencyFaultLevelAndCodes(ChipFaultMode, logicID)), convey.ShouldResemble, expectedChipFaultCodesLen)
+		convey.So(GetFrequencyFaultLevelAndCodes(NetworkFaultMode, logicID), convey.ShouldResemble, expectedNetworkFaultCodes)
+	})
+}
+
 // TestLoadSwitchFaultCode  Test LoadSwitchFaultCode
 func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
