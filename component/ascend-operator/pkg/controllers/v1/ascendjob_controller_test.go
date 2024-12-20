@@ -10,7 +10,9 @@ package v1
 
 import (
 	"context"
+	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/training-operator/pkg/common/util"
@@ -22,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -199,4 +202,33 @@ func newCommonAscendJob() *mindxdlv1.AscendJob {
 func defaultReplicas() *int32 {
 	x := int32(1)
 	return &x
+}
+
+func TestIsVcjobOrDeploy(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		req controllerruntime.Request
+	}
+	vcjobReq := controllerruntime.Request{NamespacedName: types.NamespacedName{Namespace: "vcjob", Name: "vcjob"}}
+	deployReq := controllerruntime.Request{NamespacedName: types.NamespacedName{Namespace: "deploy", Name: "deploy"}}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "test vcjob", args: args{ctx: context.TODO(), req: vcjobReq}, want: true},
+		{name: "test deploy", args: args{ctx: context.TODO(), req: deployReq}, want: true},
+	}
+	r := newCommonReconciler()
+
+	// stub ranktablePipeline
+	patches := gomonkey.ApplyPrivateMethod(r, "ranktablePipeline", func(job *mindxdlv1.AscendJob) { return })
+	defer patches.Reset()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := r.isVcjobOrDeploy(tt.args.ctx, tt.args.req); got != tt.want {
+				t.Errorf("isVcjobOrDeploy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
