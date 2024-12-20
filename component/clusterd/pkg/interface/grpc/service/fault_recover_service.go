@@ -366,7 +366,9 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	}
 	controller.saveCacheFault(request.FaultRanks)
 	if !common.IsUceFault(request.FaultRanks) {
-		_, err := common.LabelFaultPod(request.JobId, common.Faults2Ranks(request.FaultRanks))
+		var err error
+		controller.faultPod, err = common.LabelFaultPod(request.JobId,
+			common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod())
 		if err != nil {
 			hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
 				err, request.JobId)

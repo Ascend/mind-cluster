@@ -88,6 +88,17 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 	return ctl
 }
 
+// GetFaultPod get fault pod
+func (ctl *EventController) GetFaultPod() map[string]string {
+	ctl.lock.RLock()
+	ctl.lock.RUnlock()
+	faultMap := make(map[string]string, len(ctl.faultPod))
+	for k, v := range ctl.faultPod {
+		faultMap[k] = v
+	}
+	return faultMap
+}
+
 func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
 	mergedFaults := common.RemoveSliceDuplicateFaults(faults)
 	hwlog.RunLog.Infof("jobId=%s, before append new Fault, normalFaults=%s, uceFaults=%s",
@@ -608,7 +619,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 			ctl.setCacheFault(uceFaults, normalFaults)
 
 			// label fault pod
-			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -651,7 +662,7 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 
 	// label fault pod
 	var err error
-	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
@@ -728,6 +739,7 @@ func (ctl *EventController) agentSupportStrategy(strategy string) bool {
 }
 
 func (ctl *EventController) chooseStrategy() string {
+	faultMap := ctl.GetFaultPod()
 	ctl.lock.RLock()
 	defer ctl.lock.RUnlock()
 	n := len(ctl.latestRecoverResult)
@@ -740,7 +752,7 @@ func (ctl *EventController) chooseStrategy() string {
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			ctl.setCacheFault(nil, allFaults)
 			var err error
-			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, faultMap)
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -887,7 +899,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 	var err error
-	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks)
+	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
