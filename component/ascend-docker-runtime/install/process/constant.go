@@ -36,6 +36,7 @@ const noDefaultTemplate = `{
 }`
 
 const (
+	reserveIndexFromEnd                = 3
 	actionPosition                     = 0
 	srcFilePosition                    = 1
 	destFilePosition                   = 2
@@ -54,7 +55,9 @@ const (
 	// InstallSceneDocker is a 'docker' string of scene
 	InstallSceneDocker = "docker"
 	// InstallSceneContainerd is a 'containerd' string of scene
-	InstallSceneContainerd        = "containerd"
+	InstallSceneContainerd = "containerd"
+	// InstallSceneIsula is a 'isula' string of scene
+	InstallSceneIsula             = "isula"
 	v1NeedChangeKeyRuntime        = "runtime"
 	v1NeedChangeKeyRuntimeType    = "runtime_type"
 	v1RuntimeType                 = "io.containerd.runtime.v1.linux"

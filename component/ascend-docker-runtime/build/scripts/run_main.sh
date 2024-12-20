@@ -148,7 +148,9 @@ Options:
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
   --version                     Query Ascend-docker-runtime version
-  --install-scene=<scene>       Installation scenario, only docker or containerd(eg: --install-scene=docker, default: docker)
+                                [Deprecated] This parameter will be removed in future versions.
+                                Please use --install-scene=isula instead
+  --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path
@@ -285,7 +287,7 @@ function install()
     echo "[INFO] install executable files success"
 
     if [[ ${CONFIG_FILE_PATH} == "" ]]; then
-        if [[ "${INSTALL_SCENE}" == "docker" ]]; then
+        if [[ "${INSTALL_SCENE}" == "docker"]] || [[ "${INSTALL_SCENE}" == "isula" ]]; then
                 echo "[INFO] install scene is 'docker'."
                 check_path ${DOCKER_CONFIG_DIR}/daemon.json
                 if [[ $? != 0 ]]; then
@@ -482,6 +484,10 @@ do
                 INSTALL_SCENE=docker
             elif [ "$3" == "--install-scene=containerd" ]; then
                 INSTALL_SCENE=containerd
+            elif [ "$3" == "--install-scene=isula" ]; then
+                INSTALL_SCENE=isula
+                DOCKER_CONFIG_DIR="/etc/isulad"
+                RESERVEDEFAULT=yes
             else
                 log "[ERROR]" "failed, please check the parameter of --install-scene=<scene>"
                 exit 1
