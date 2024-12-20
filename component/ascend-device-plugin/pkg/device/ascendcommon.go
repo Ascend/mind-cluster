@@ -518,12 +518,12 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 }
 
 func (tool *AscendTools) combineFaultTimeMaps(
-	map1, map2 map[int64]common.FaultTimeAndLevel) map[int64]common.FaultTimeAndLevel {
+	timeoutFaultLevelAndTime, frequencyFaultLevelAndTime map[int64]common.FaultTimeAndLevel) map[int64]common.FaultTimeAndLevel {
 	combineMap := make(map[int64]common.FaultTimeAndLevel)
-	for key, value := range map1 {
+	for key, value := range timeoutFaultLevelAndTime {
 		combineMap[key] = value
 	}
-	for key, value := range map2 {
+	for key, value := range frequencyFaultLevelAndTime {
 		combineMap[key] = value
 	}
 	return combineMap
@@ -533,39 +533,39 @@ func (tool *AscendTools) combineFaultTimeMaps(
 func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.DeviceFault {
 	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
 	if len(device.NetworkFaultCodes) != 0 || device.NetworkHealth == v1beta1.Unhealthy {
-		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.NetworkFaultMode, device.LogicID)
-		frequencyFaultLevelAndTime := common.GetFrequencyFaultLevelAndCodes(common.NetworkFaultMode, device.LogicID)
-		allFaultLevelAndTime := tool.combineFaultTimeMaps(timeoutFaultLevelAndTime, frequencyFaultLevelAndTime)
-		allFaultCodes := append(device.NetworkFaultCodes, common.Keys(allFaultLevelAndTime)...)
-		newCode := tool.removeDuplicateErr(allFaultCodes)
-		faultType := common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
-		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType:            common.CardNetworkUnhealthy,
-			NPUName:              device.DeviceName,
-			LargeModelFaultLevel: faultType,
-			FaultLevel:           faultType,
-			FaultHandling:        faultType,
-			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, allFaultLevelAndTime, true),
-		})
+		deviceFaults = tool.getDeviceFaultsByMode(device, device.NetworkFaultCodes, deviceFaults,
+			common.NetworkFaultMode, common.CardNetworkUnhealthy)
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
-		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.ChipFaultMode, device.LogicID)
-		frequencyFaultLevelAndTime := common.GetFrequencyFaultLevelAndCodes(common.ChipFaultMode, device.LogicID)
-		allFaultLevelAndTime := tool.combineFaultTimeMaps(timeoutFaultLevelAndTime, frequencyFaultLevelAndTime)
-		allFaultCodes := append(device.FaultCodes, common.Keys(allFaultLevelAndTime)...)
-		newCode := tool.removeDuplicateErr(allFaultCodes)
-		faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
-		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType:            common.CardUnhealthy,
-			NPUName:              device.DeviceName,
-			LargeModelFaultLevel: faultType,
-			FaultLevel:           faultType,
-			FaultHandling:        faultType,
-			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
-			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, allFaultLevelAndTime, false),
-		})
+		deviceFaults = tool.getDeviceFaultsByMode(device, device.FaultCodes, deviceFaults,
+			common.ChipFaultMode, common.CardUnhealthy)
 	}
+	return deviceFaults
+}
+
+func (tool *AscendTools) getDeviceFaultsByMode(device *common.NpuDevice, faultCodes []int64,
+	deviceFaults []common.DeviceFault, mode string, unhealthyType string) []common.DeviceFault {
+	timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(mode, device.LogicID)
+	frequencyFaultLevelAndTime := common.GetFrequencyFaultLevelAndCodes(mode, device.LogicID)
+	allFaultLevelAndTime := tool.combineFaultTimeMaps(timeoutFaultLevelAndTime, frequencyFaultLevelAndTime)
+	allFaultCodes := append(faultCodes, common.Keys(allFaultLevelAndTime)...)
+	newCode := tool.removeDuplicateErr(allFaultCodes)
+	var faultType = ""
+	if mode == common.NetworkFaultMode {
+		faultType = common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
+	}
+	if mode == common.ChipFaultMode {
+		faultType = common.GetFaultType(faultCodes, device.LogicID)
+	}
+	deviceFaults = append(deviceFaults, common.DeviceFault{
+		FaultType:            unhealthyType,
+		NPUName:              device.DeviceName,
+		LargeModelFaultLevel: faultType,
+		FaultLevel:           faultType,
+		FaultHandling:        faultType,
+		FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+		FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, allFaultLevelAndTime, false),
+	})
 	return deviceFaults
 }
 
