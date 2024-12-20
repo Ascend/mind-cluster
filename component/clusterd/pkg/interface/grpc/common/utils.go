@@ -289,7 +289,7 @@ func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
 }
 
 // LabelFaultPod label fault for software fault
-func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
+func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string) (map[string]string, error) {
 	var faultPodRankList []string
 	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
 	for _, rank := range rankList {
@@ -302,7 +302,7 @@ func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
 		faultPodRankList = append(faultPodRankList, strconv.Itoa(faultPodRank))
 	}
 	faultPodRankList = util.RemoveSliceDuplicateElement(faultPodRankList)
-	podMap, err := labelPodFault(jobId, faultPodRankList)
+	podMap, err := labelPodFault(jobId, faultPodRankList, labeledMap)
 	if err != nil {
 		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
 		return nil, fmt.Errorf("label fault pod failed, err is %v", err)
@@ -310,11 +310,13 @@ func LabelFaultPod(jobId string, rankList []string) (map[string]string, error) {
 	return podMap, nil
 }
 
-func labelPodFault(jobId string, faultPodRankList []string) (map[string]string, error) {
-	labelCache := make(map[string]string)
+func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string) (map[string]string, error) {
+	if labeledMap == nil {
+		labeledMap = make(map[string]string)
+	}
 	faultLabel := map[string]string{"fault-type": "software"}
 	for _, podRank := range faultPodRankList {
-		_, labeled := labelCache[podRank]
+		_, labeled := labeledMap[podRank]
 		if labeled {
 			continue
 		}
@@ -326,9 +328,9 @@ func labelPodFault(jobId string, faultPodRankList []string) (map[string]string, 
 		if err := kube.RetryPatchPodLabels(pod.Name, pod.Namespace, constant.UpdatePodGroupTimes, faultLabel); err != nil {
 			return nil, err
 		}
-		labelCache[podRank] = string(pod.UID)
+		labeledMap[podRank] = string(pod.UID)
 	}
-	return labelCache, nil
+	return labeledMap, nil
 }
 
 // FaultPodAllRescheduled check if all fault pod rescheduled
