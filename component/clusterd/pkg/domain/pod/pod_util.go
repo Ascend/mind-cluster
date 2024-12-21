@@ -114,6 +114,20 @@ func GetSharedTorIpByPod(pods map[string]v1.Pod) string {
 	return string(shardTorIpBytes)
 }
 
+// GetEnvByPod get pod env
+func GetEnvByPod(pods map[string]v1.Pod, envName string) string {
+	for _, po := range pods {
+		for _, container := range po.Spec.Containers {
+			for _, env := range container.Env {
+				if env.Name == envName {
+					return env.Value
+				}
+			}
+		}
+	}
+	return ""
+}
+
 // InitRankTableByPod init rank table by pod
 func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) (constant.RankTable, int) {
 	var rankTable constant.RankTable

@@ -19,6 +19,8 @@ import (
 const (
 	cmDataInitLength = 16
 	safeDeviceSize   = 1000
+	vcJobKind        = "Job"
+	masterAddr       = "MASTER_ADDR"
 )
 
 const (
@@ -40,7 +42,7 @@ const (
 )
 
 // PreDeleteCmAndCache set job status
-func PreDeleteCmAndCache(podJobMap map[string]v1.Pod, jobKey string) {
+func PreDeleteCmAndCache(jobKey string) {
 	jobInfo, ok := GetJobCache(jobKey)
 	if !ok {
 		return
@@ -53,7 +55,7 @@ func PreDeleteCmAndCache(podJobMap map[string]v1.Pod, jobKey string) {
 	jobInfo.DeleteTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	hccls := getHcclSlice(jobInfo.JobRankTable)
-	if preDeleteCM(jobInfo, podJobMap, hccls) {
+	if preDeleteCM(jobInfo, hccls) {
 		hwlog.RunLog.Debugf("pre delete job:%s success", jobInfo.Name)
 		SaveJobCache(jobKey, jobInfo)
 	}
@@ -123,6 +125,7 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
+		initJobShareTorInfo(jobInfo, podJobMap)
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
 	}
@@ -140,6 +143,24 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
 	}
+}
+
+func initJobShareTorInfo(jobInfo constant.JobInfo, podJobMap map[string]v1.Pod) {
+	if jobInfo.Framework != ptFramework {
+		return
+	}
+	if jobInfo.MasterAddr != "" || jobInfo.SharedTorIp != "" {
+		return
+	}
+	jobInfo.SharedTorIp = pod.GetSharedTorIpByPod(podJobMap)
+	if jobInfo.JobType == vcJobKind {
+		if len(jobInfo.JobRankTable.ServerList) > 0 {
+			jobInfo.MasterAddr = jobInfo.JobRankTable.ServerList[0].ServerID
+		}
+	} else {
+		jobInfo.MasterAddr = pod.GetEnvByPod(podJobMap, masterAddr)
+	}
+
 }
 
 func getHcclSlice(table constant.RankTable) []string {

@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -36,6 +34,7 @@ const (
 	val910            = "ascend-910"
 	ptFramework       = "pytorch"
 	torIpTag          = "sharedTorIp"
+	masterAddrKey     = "masterAddr"
 )
 
 func initCM(jobInfo constant.JobInfo) bool {
@@ -59,6 +58,10 @@ func initCM(jobInfo constant.JobInfo) bool {
 
 func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	data := make(map[string]string, cmDataInitLength)
+	if jobInfo.Framework == ptFramework {
+		data[torIpTag] = jobInfo.SharedTorIp
+		data[masterAddrKey] = jobInfo.MasterAddr
+	}
 	data[jobName] = jobInfo.Name
 	data[frameWorkKey] = jobInfo.Framework
 	data[jobId] = jobInfo.Key
@@ -82,10 +85,11 @@ func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	return true
 }
 
-func preDeleteCM(jobInfo constant.JobInfo, podJobMap map[string]v1.Pod, hccls []string) bool {
+func preDeleteCM(jobInfo constant.JobInfo, hccls []string) bool {
 	data := make(map[string]string, cmDataInitLength)
 	if jobInfo.Framework == ptFramework {
-		data[torIpTag] = pod.GetSharedTorIpByPod(podJobMap)
+		data[torIpTag] = jobInfo.SharedTorIp
+		data[masterAddrKey] = jobInfo.MasterAddr
 	}
 	data[jobName] = jobInfo.Name
 	data[frameWorkKey] = jobInfo.Framework

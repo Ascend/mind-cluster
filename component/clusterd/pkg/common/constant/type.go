@@ -100,6 +100,8 @@ type JobInfo struct {
 	TotalCmNum        int
 	LastUpdatedCmTime int64
 	PreServerList     []ServerHccl
+	SharedTorIp       string
+	MasterAddr        string
 }
 
 // RankTable rank table info
