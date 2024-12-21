@@ -56,7 +56,7 @@ func updateJob(jobKey string) {
 		// updateJob to preDelete
 		if !jobInfo.IsPreDelete {
 			hwlog.RunLog.Debugf("job %s updateJob to preDeleteJob", jobInfo.Name)
-			job.PreDeleteCmAndCache(podJobMap, jobKey)
+			job.PreDeleteCmAndCache(jobKey)
 		}
 		return
 	}
@@ -140,7 +140,7 @@ func preDeleteJob(jobKey string) {
 		uniqueQueue.Store(jobKey, queueOperatorUpdate)
 		return
 	}
-	job.PreDeleteCmAndCache(podJobMap, jobKey)
+	job.PreDeleteCmAndCache(jobKey)
 }
 
 func deleteJob(joKey string) {
