@@ -38,9 +38,6 @@ func (fJob *FaultJob) initFaultJobAttr() {
 	if fJob.PodNames == nil {
 		fJob.PodNames = make(map[string]string)
 	}
-	if fJob.SeparateNodes == nil {
-		fJob.SeparateNodes = make(sets.String)
-	}
 	if fJob.ProcessingFaultCode == nil {
 		fJob.ProcessingFaultCode = make(sets.String)
 	}
@@ -62,10 +59,11 @@ func (fJob *FaultJob) preStartProcess() {
 			networkFaultInfo = append(networkFaultInfo, fault)
 			continue
 		}
+		hwlog.RunLog.Infof("fault code is not exist %v, delete it in ProcessingFaultCode", fault.FaultUid)
 		fJob.ProcessingFaultCode.Delete(fault.FaultUid)
 	}
 	fJob.RelationFaults = networkFaultInfo
-	hwlog.RunLog.Debugf("after perstart precess, relation faults is %#v", fJob.RelationFaults)
+	hwlog.RunLog.Debugf("after perstart precess, relation faults is %v", util.ObjToString(fJob.RelationFaults))
 }
 
 func (fJob *FaultJob) preStopProcess() {
@@ -98,7 +96,7 @@ func (fJob *FaultJob) processFaultStrategies() {
 		hwlog.RunLog.Errorf("deep copy map failed: %v", err)
 		return
 	}
-	hwlog.RunLog.Debugf("process strategies is %#v ", newStrategiesMaps)
+	hwlog.RunLog.Debugf("process strategies is %v ", newStrategiesMaps)
 	for podName, strategy := range *newStrategiesMaps {
 		if strategy == "" {
 			continue
@@ -130,7 +128,7 @@ func (fJob *FaultJob) clearProcessedAndTimeOutFault() {
 			continue
 		}
 		if preStopTime-fault.FaultTime >= fault.DealMaxTime*kilo {
-			hwlog.RunLog.Infof("fault code %s is time out, process as separate fault", fault.FaultUid)
+			hwlog.RunLog.Infof("fault code %s is time out, process as default strategy", fault.FaultUid)
 			fJob.addFaultStrategyForTimeOutCode(fault)
 			continue
 		}
@@ -145,10 +143,6 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *faultInfo) {
 	}
 	if fault.FaultType == switchFaultType {
 		fJob.FaultStrategy.NodeLvList[fault.NodeName] = constant.SubHealthFaultStrategy
-	}
-	if fault.FaultType == deviceFaultType {
-		fJob.FaultStrategy.DeviceLvList[fault.NodeName] = append(fJob.FaultStrategy.DeviceLvList[fault.NodeName],
-			DeviceStrategy{NPUName: fault.NPUName, Strategy: constant.SeparateFaultStrategy})
 	}
 }
 
@@ -189,8 +183,11 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(faultList []constant.DeviceFaul
 func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *faultInfo) {
 	if relationFaultTypeMap.Has(faultInfo.FaultCode) {
 		if fJob.ProcessingFaultCode.Has(faultInfo.FaultUid) {
+			hwlog.RunLog.Debugf("addFaultInfoByCodeType failed by code %s "+
+				"is existed in ProcessingFaultCode", faultInfo.FaultUid)
 			return
 		}
+		hwlog.RunLog.Infof("addFaultInfoByCodeType  code %s in ProcessingFaultCode", faultInfo.FaultUid)
 		fJob.ProcessingFaultCode.Insert(faultInfo.FaultUid)
 		fJob.RelationFaults = append(fJob.RelationFaults, faultInfo)
 	}

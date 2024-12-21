@@ -9,6 +9,7 @@ import (
 
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -54,12 +55,17 @@ func (fJobCenter *faultJobProcessCenter) InitFaultJobs() {
 	deviceCmForNodeMap := getAdvanceDeviceCmForNodeMap(fJobCenter.deviceInfoCm)
 	faultJobs := make(map[string]*FaultJob)
 	for jobId, serverLists := range fJobCenter.jobServerInfoMap.InfoMap {
+		if len(serverLists) == 0 {
+			hwlog.RunLog.Warnf("job %s serverList is empty", jobId)
+			continue
+		}
 		tmpFaultJob, ok := fJobCenter.FaultJobs[jobId]
 		if !ok {
 			tmpFaultJob = &FaultJob{}
 		}
 		tmpFaultJob.TriggerFault = nil
-		tmpFaultJob.AllFaultCode = sets.String{}
+		tmpFaultJob.AllFaultCode = make(sets.String)
+		tmpFaultJob.SeparateNodes = make(sets.String)
 		tmpFaultJob.initFaultJobAttr()
 		for nodeName, serverList := range serverLists {
 			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID >= 0
@@ -69,7 +75,7 @@ func (fJobCenter *faultJobProcessCenter) InitFaultJobs() {
 			tmpFaultJob.initFaultJobByDeviceFault(deviceCmForNodeMap[nodeName], serverList)
 		}
 		faultJobs[jobId] = tmpFaultJob
-		hwlog.RunLog.Debugf("init fault job %#v", faultJobs)
+		hwlog.RunLog.Debugf("init fault job %v", util.ObjToString(faultJobs))
 	}
 	fJobCenter.FaultJobs = faultJobs
 }

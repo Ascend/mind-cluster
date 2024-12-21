@@ -19,11 +19,12 @@ import (
 )
 
 const (
-	defaultLogFile = "/var/log/mindx-dl/clusterd/clusterd.log"
+	defaultLogFile   = "/var/log/mindx-dl/clusterd/clusterd.log"
+	maxLogLineLength = 1023
 )
 
 var (
-	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile}
+	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, MaxLineLength: maxLogLineLength}
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name

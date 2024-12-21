@@ -42,6 +42,7 @@ const (
 	mockHccLJsonSliceLen   = 2
 	mockPositiveModifyStat = 1
 	mockNegativeModifyStat = -1
+	mockNodeName           = "test-node"
 )
 
 // TestNewJobWorker test NewJobWorker
@@ -306,6 +307,7 @@ func TestHandlePodAddUpdateEvent(t *testing.T) {
 			err := b.handlePodAddUpdateEvent(podInfo, pod)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+		pod.Spec.NodeName = mockNodeName
 		pod.Annotations[PodDeviceKey] = mockPodAnnotation
 		pod.Annotations[PodRankIndexKey] = mockPodRankIndex
 		pod.Labels = map[string]string{PodLabelKey: mockJobLabelKey}

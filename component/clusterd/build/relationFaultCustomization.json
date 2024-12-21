@@ -25,7 +25,7 @@
     "RelationFaults": [
       "[0x08520003,,L2,na]"
     ],
-    "FaultStrategy": "Separate"
+    "FaultStrategy": "SubHealth"
   },
   {
     "TriggerFault": "8C1F8608",

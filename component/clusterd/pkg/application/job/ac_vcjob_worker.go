@@ -196,6 +196,10 @@ func (b *WorkerInfo) handlePodAddUpdateEvent(podInfo *podIdentifier, pod *apiCor
 	if !exist {
 		return fmt.Errorf("the key of " + PodDeviceKey + " does not exist ")
 	}
+	if pod.Spec.NodeName == "" {
+		return fmt.Errorf("pod %s has no node name", pod.Name)
+	}
+
 	var instance Instance
 	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
 		return fmt.Errorf("parse annotation of pod %s/%s error: %#v", pod.Namespace, pod.Name, err)
