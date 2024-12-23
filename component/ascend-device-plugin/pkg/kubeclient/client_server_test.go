@@ -221,6 +221,22 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 	})
 }
 
+// TestGetManuallySeparateNPUIDFromDeviceInfo returns the ManuallySeparateNPU from device info
+func TestGetManuallySeparateNPUIDFromDeviceInfo(t *testing.T) {
+	utKubeClient, err := NewClientK8s()
+	if err != nil {
+		t.Fatal("TestGetManuallySeparateNPUIDFromDeviceInfo init kubernetes failed")
+	}
+	convey.Convey("return the ManuallySeparateNPU failed when deviceInfoCMName is none", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo("", common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldEqual, make([]int32, 0))
+	})
+	convey.Convey("return the ManuallySeparateNPU success", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName, common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldEqual, make([]int32, 0))
+	})
+}
+
 func getMockCreateCM(ascendType, ascendValue string) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		Data: map[string]string{
