@@ -117,15 +117,31 @@ func GetSharedTorIpByPod(pods map[string]v1.Pod) string {
 // GetEnvByPod get pod env
 func GetEnvByPod(pods map[string]v1.Pod, envName string) string {
 	for _, po := range pods {
-		for _, container := range po.Spec.Containers {
-			for _, env := range container.Env {
-				if env.Name == envName {
-					return env.Value
-				}
-			}
+		find, env := getEnvFromPod(po, envName)
+		if find {
+			return env
 		}
 	}
 	return ""
+}
+
+func getEnvFromPod(pod v1.Pod, envName string) (bool, string) {
+	for _, container := range pod.Spec.Containers {
+		find, env := getEnvFromContainer(container, envName)
+		if find {
+			return find, env
+		}
+	}
+	return false, ""
+}
+
+func getEnvFromContainer(container v1.Container, envName string) (bool, string) {
+	for _, env := range container.Env {
+		if env.Name == envName {
+			return true, env.Value
+		}
+	}
+	return false, ""
 }
 
 // InitRankTableByPod init rank table by pod

@@ -101,8 +101,6 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
 }
 
-var nodeInformer cache.SharedIndexInformer
-
 // GetNodeFromIndexer get node from informer indexer
 func GetNodeFromIndexer(name string) (*v1.Node, error) {
 	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
@@ -115,6 +113,8 @@ func GetNodeFromIndexer(name string) (*v1.Node, error) {
 	}
 	return n, nil
 }
+
+var nodeInformer cache.SharedIndexInformer
 
 // InitPodAndNodeInformer init pod informer
 func InitPodAndNodeInformer() {

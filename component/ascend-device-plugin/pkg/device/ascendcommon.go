@@ -517,8 +517,8 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 	return result
 }
 
-func (tool *AscendTools) combineFaultTimeMaps(
-	timeoutFaultLevelAndTime, frequencyFaultLevelAndTime map[int64]common.FaultTimeAndLevel) map[int64]common.FaultTimeAndLevel {
+func (tool *AscendTools) combineFaultTimeMaps(timeoutFaultLevelAndTime,
+	frequencyFaultLevelAndTime map[int64]common.FaultTimeAndLevel) map[int64]common.FaultTimeAndLevel {
 	combineMap := make(map[int64]common.FaultTimeAndLevel)
 	for key, value := range timeoutFaultLevelAndTime {
 		combineMap[key] = value
