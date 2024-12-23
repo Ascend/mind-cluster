@@ -141,7 +141,7 @@ elif [ "${INSTALL_SCENE}" == "isula" ] ; then
 elif [ "${INSTALL_SCENE}" == "" ] ; then
   INSTALL_SCENE=docker
 fi
-ehco ${MSG}
+echo ${MSG}
 CONFIG_FILE_PATH=$3
 if [[ ${CONFIG_FILE_PATH} != "" ]]; then
   DST=${CONFIG_FILE_PATH}
