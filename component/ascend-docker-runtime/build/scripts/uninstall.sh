@@ -134,7 +134,7 @@ fi
 INSTALL_SCENE=$2
 if [ "${INSTALL_SCENE}" == "containerd" ] ; then
   DST='/etc/containerd/config.toml'
-if [ "${INSTALL_SCENE}" == "isula" ] ; then
+elif [ "${INSTALL_SCENE}" == "isula" ] ; then
   DST='/etc/isulad/daemon.json'
   MSG="[INFO] You will recover iSula's daemon"
   RESERVEDEFAULT=yes
