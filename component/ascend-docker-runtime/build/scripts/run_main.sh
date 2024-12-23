@@ -288,7 +288,7 @@ function install()
     echo "[INFO] install executable files success"
 
     if [[ ${CONFIG_FILE_PATH} == "" ]]; then
-        if [[ "${INSTALL_SCENE}" == "docker"]] || [[ "${INSTALL_SCENE}" == "isula" ]]; then
+        if [ "${INSTALL_SCENE}" == "docker" ] || [ "${INSTALL_SCENE}" == "isula" ]; then
                 echo "[INFO] install scene is 'docker'."
                 check_path ${DOCKER_CONFIG_DIR}/daemon.json
                 if [[ $? != 0 ]]; then
