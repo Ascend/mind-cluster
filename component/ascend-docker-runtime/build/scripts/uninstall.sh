@@ -123,11 +123,11 @@ fi
 
 ROOT=$(cd $(dirname $0); pwd)/..
 RESERVEDEFAULT=no
-DST='/etc/docker/daemon.json'
-msg="[INFO] You will recover Docker's daemon"
+DST="/etc/docker/daemon.json"
+MSG="[INFO] You will recover Docker's daemon"
 if [ "$1" == "isula" ] ; then
-  DST='/etc/isulad/daemon.json'
-  msg="[INFO] You will recover iSula's daemon"
+  DST="/etc/isulad/daemon.json"
+  MSG="[INFO] You will recover iSula's daemon"
   RESERVEDEFAULT=yes
 fi
 
@@ -136,12 +136,12 @@ if [ "${INSTALL_SCENE}" == "containerd" ] ; then
   DST='/etc/containerd/config.toml'
 if [ "${INSTALL_SCENE}" == "isula" ] ; then
   DST='/etc/isulad/daemon.json'
-  msg="[INFO] You will recover iSula's daemon"
+  MSG="[INFO] You will recover iSula's daemon"
   RESERVEDEFAULT=yes
 elif [ "${INSTALL_SCENE}" == "" ] ; then
   INSTALL_SCENE=docker
 fi
-ehco ${msg}
+ehco ${MSG}
 CONFIG_FILE_PATH=$3
 if [[ ${CONFIG_FILE_PATH} != "" ]]; then
   DST=${CONFIG_FILE_PATH}
