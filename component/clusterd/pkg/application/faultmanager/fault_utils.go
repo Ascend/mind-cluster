@@ -178,7 +178,7 @@ func initFaultDuration(fileBytes []byte) {
 		return
 	}
 	for _, faultConfig := range tmpFaultDurationStrategies {
-		if validateFaultDurationConfig(faultConfig) {
+		if !validateFaultDurationConfig(faultConfig) {
 			continue
 		}
 		faultDurationStrategies = append(faultDurationStrategies, faultConfig)
