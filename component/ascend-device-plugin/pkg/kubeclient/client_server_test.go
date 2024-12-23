@@ -198,6 +198,46 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 	})
 }
 
+// TestTryUpdatePodCacheAnnotation try update pod annotation in both api server and cache
+func TestTryUpdatePodCacheAnnotation(t *testing.T) {
+	utKubeClient, err := initK8S()
+	if err != nil {
+		t.Fatal("TestTryUpdatePodCacheAnnotation init kubernetes failed")
+	}
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
+		func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
+			return nil, fmt.Errorf("test function errors")
+		})
+	defer mockPatchPod.Reset()
+	convey.Convey("try update pod annotation when get pod is nil", t, func() {
+		err := utKubeClient.TryUpdatePodCacheAnnotation(nil, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
+	})
+	convey.Convey("try update pod annotation when get pod is not nil", t, func() {
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod,
+			getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		convey.So(err.Error(), convey.ShouldEqual, nil)
+	})
+}
+
+// TestGetManuallySeparateNPUIDFromDeviceInfo returns the ManuallySeparateNPU from device info
+func TestGetManuallySeparateNPUIDFromDeviceInfo(t *testing.T) {
+	utKubeClient, err := initK8S()
+	if err != nil {
+		t.Fatal("TestGetManuallySeparateNPUIDFromDeviceInfo init kubernetes failed")
+	}
+	deviceInfoCMName := common.DeviceInfoCMNamePrefix + "node"
+	convey.Convey("return the ManuallySeparateNPU failed when deviceInfoCMName is none", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo("", common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldEqual, make([]int32, 0))
+	})
+	convey.Convey("return the ManuallySeparateNPU success", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldEqual, make([]int32, 0))
+	})
+}
+
 func getMockCreateCM(ascendType, ascendValue string) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		Data: map[string]string{
