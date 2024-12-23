@@ -44,7 +44,7 @@ type EventController struct {
 	latestStrategy            []string
 	latestRecoverResult       []*pb.RecoverStatusRequest
 	agentReportStrategies     []string
-	platStrategies            []string
+	platStrategy              string
 	signalChan                chan *pb.ProcessManageSignal
 	cacheNormalFault          []*pb.FaultRank
 	cacheUceFault             []*pb.FaultRank
@@ -71,7 +71,7 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		latestStrategy:            []string{},
 		latestRecoverResult:       []*pb.RecoverStatusRequest{},
 		agentReportStrategies:     []string{},
-		platStrategies:            []string{},
+		platStrategy:              "",
 		signalChan:                make(chan *pb.ProcessManageSignal, 1),
 		reportStopCompleteChan:    make(chan *pb.StopCompleteRequest, 1),
 		reportRecoverStrategyChan: make(chan *pb.RecoverStrategyRequest, 1),
@@ -97,6 +97,18 @@ func (ctl *EventController) GetFaultPod() map[string]string {
 		faultMap[k] = v
 	}
 	return faultMap
+}
+
+// MergeFaultPod get fault pod
+func (ctl *EventController) MergeFaultPod(faultPod map[string]string) {
+	ctl.lock.Lock()
+	defer ctl.lock.Unlock()
+	for podRank, podId := range faultPod {
+		if _, ok := ctl.faultPod[podRank]; !ok {
+			ctl.faultPod[podRank] = podId
+		}
+	}
+	ctl.faultPod = faultPod
 }
 
 func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
@@ -153,7 +165,7 @@ func (ctl *EventController) reset() {
 	ctl.cacheNormalFault = ctl.cacheNormalFault[:0]
 	ctl.latestRecoverResult = ctl.latestRecoverResult[:0]
 	ctl.agentReportStrategies = ctl.agentReportStrategies[:0]
-	ctl.platStrategies = ctl.platStrategies[:0]
+	ctl.platStrategy = ""
 	ctl.state.Reset()
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	go ctl.listenEvent()
@@ -214,10 +226,8 @@ func (ctl *EventController) supportRetryStrategy() bool {
 	if !mindXConfiged || !ctl.jobInfo.PlatFormMode {
 		return mindXConfiged
 	}
-	for _, strategy := range ctl.platStrategies {
-		if strategy == constant.ProcessRetryStrategyName {
-			return true
-		}
+	if ctl.platStrategy == constant.ProcessRetryStrategyName {
+		return true
 	}
 	return false
 }
@@ -243,10 +253,8 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 	if !agentSupport || !ctl.jobInfo.PlatFormMode {
 		return agentSupport
 	}
-	for _, strategy := range ctl.platStrategies {
-		if strategy == constant.ProcessRecoverStrategyName {
-			return true
-		}
+	if ctl.platStrategy == constant.ProcessRecoverStrategyName {
+		return true
 	}
 	return false
 }
@@ -272,10 +280,8 @@ func (ctl *EventController) supportDumpStrategy() bool {
 	if !ctl.jobInfo.PlatFormMode || !agentSupport {
 		return agentSupport
 	}
-	for _, strategy := range ctl.platStrategies {
-		if strategy == constant.ProcessRecoverStrategyName {
-			return true
-		}
+	if ctl.platStrategy == constant.ProcessDumpStrategyName {
+		return true
 	}
 	return false
 }
@@ -453,11 +459,15 @@ func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
 
 func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.RespCode, error) {
 	if ctl.jobInfo.PlatFormMode {
-		strategies, err := WaitPlatFormStrategyReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+		hwlog.RunLog.Infof("start wait plat strategy ready, jobId=%s, pgName=%s",
+			ctl.jobInfo.JobId, ctl.jobInfo.PgName)
+		strategy, err := WaitPlatFormStrategyReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+		hwlog.RunLog.Infof("finish wait plat strategy, jobId=%s, pgName=%s, strategy=%s, err=%v",
+			ctl.jobInfo.JobId, ctl.jobInfo.PgName, strategy, err)
 		if err != nil {
 			return common.WaitPlatStrategyTimeoutEvent, common.WaitPlatStrategyTimeout, nil
 		}
-		ctl.platStrategies = strategies
+		ctl.platStrategy = strategy
 	}
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
 		constant.NotifyFaultFlushingOperation)
@@ -559,12 +569,21 @@ func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb
 		hwlog.RunLog.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 		return nil, fmt.Errorf("update process confirm fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
+	hwlog.RunLog.Infof("start wait plat result fault, jobId=%s, pgName=%s",
+		ctl.jobInfo.JobId, ctl.jobInfo.PgName)
 	platFaultResult, err := WaitProcessResultFault(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+	hwlog.RunLog.Infof("finish wait plat result fault, jobId=%s, faults=%s, err=%v",
+		ctl.jobInfo.JobId, common.Faults2String(platFaultResult), err)
 	if err != nil {
 		hwlog.RunLog.Errorf("wait process result fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 		return nil, fmt.Errorf("wait process result fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
 	allFaultRanks = common.RemoveSliceDuplicateFaults(append(allFaultRanks, platFaultResult...))
+	ctl.platStrategy, err = confirmPlatStrategy(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+	hwlog.RunLog.Infof("plat confirm strategy=%s, jobId=%s, err=%v", ctl.platStrategy, ctl.jobInfo.JobId, err)
+	if err != nil {
+		return nil, fmt.Errorf("confirm plat strategy err:%v", err)
+	}
 	return allFaultRanks, nil
 }
 
@@ -607,7 +626,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 	if ctl.jobInfo.PlatFormMode {
 		allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(uceFaults)
 		if err != nil {
-			hwlog.RunLog.Errorf("write confirm fault or wait plat result fault timeout, err=%v", err)
+			hwlog.RunLog.Errorf("interacte with plat error, err=%v", err)
 			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
 				common.WriteConfirmFaultOrWaitPlatResultFault, nil
 		}
@@ -619,7 +638,8 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 			ctl.setCacheFault(uceFaults, normalFaults)
 
 			// label fault pod
-			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+			ctl.MergeFaultPod(faultPod)
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -662,7 +682,8 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 
 	// label fault pod
 	var err error
-	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	ctl.MergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
@@ -752,7 +773,8 @@ func (ctl *EventController) chooseStrategy() string {
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			ctl.setCacheFault(nil, allFaults)
 			var err error
-			ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, faultMap)
+			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, faultMap)
+			ctl.MergeFaultPod(faultPod)
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -778,7 +800,11 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 	}
 	signal.ChangeStrategy = ctl.chooseStrategy()
 	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
+		hwlog.RunLog.Infof("start wait plat rankTable ready, jobId=%s, pgName=%s",
+			ctl.jobInfo.JobId, ctl.jobInfo.PgName)
 		err := WaitRankTableReady(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+		hwlog.RunLog.Infof("finish wait plat rankTable ready, jobId=%s, pgName=%s, err=%v",
+			ctl.jobInfo.JobId, ctl.jobInfo.PgName, err)
 		if err != nil {
 			return common.WaitRankTableReadyTimeoutEvent, common.ServerInnerError, nil
 		}
@@ -899,7 +925,8 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 	var err error
-	ctl.faultPod, err = common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	ctl.MergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
@@ -1158,6 +1185,9 @@ func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode,
 }
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
+	if ctl.jobInfo.PlatFormMode {
+		return common.ScheduleSuccessEvent, common.OK, nil
+	}
 	scheduleSuccess := false
 	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
@@ -1185,6 +1215,9 @@ func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, 
 }
 
 func (ctl *EventController) handleWaitRestartAllProcess() (string, common.RespCode, error) {
+	if ctl.jobInfo.PlatFormMode {
+		return common.RestartProcessFinishEvent, common.OK, nil
+	}
 	ctx, _ := ctl.getCtxAndScheduleResultChan()
 	select {
 	case <-time.After(time.Minute):
