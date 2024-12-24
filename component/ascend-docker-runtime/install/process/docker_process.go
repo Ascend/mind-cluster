@@ -205,7 +205,7 @@ func loadOriginJson(srcFilePath string) (map[string]interface{}, error) {
 }
 
 func setReserveDefaultRuntime(command []string) {
-	reserveCmdPostion := len(command) - 1
+	reserveCmdPostion := len(command) - reserveIndexFromEnd
 	if command[reserveCmdPostion] == "yes" {
 		reserveDefaultRuntime = true
 	}
