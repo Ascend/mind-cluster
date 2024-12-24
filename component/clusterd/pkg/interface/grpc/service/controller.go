@@ -99,8 +99,7 @@ func (ctl *EventController) GetFaultPod() map[string]string {
 	return faultMap
 }
 
-// MergeFaultPod get fault pod
-func (ctl *EventController) MergeFaultPod(faultPod map[string]string) {
+func (ctl *EventController) mergeFaultPod(faultPod map[string]string) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
 	for podRank, podId := range faultPod {
@@ -108,7 +107,6 @@ func (ctl *EventController) MergeFaultPod(faultPod map[string]string) {
 			ctl.faultPod[podRank] = podId
 		}
 	}
-	ctl.faultPod = faultPod
 }
 
 func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
@@ -579,7 +577,7 @@ func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb
 		return nil, fmt.Errorf("wait process result fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
 	allFaultRanks = common.RemoveSliceDuplicateFaults(append(allFaultRanks, platFaultResult...))
-	ctl.platStrategy, err = confirmPlatStrategy(ctl.jobInfo.PgName, ctl.jobInfo.Namespace)
+	ctl.platStrategy, err = platFormStrategy(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, true)
 	hwlog.RunLog.Infof("plat confirm strategy=%s, jobId=%s, err=%v", ctl.platStrategy, ctl.jobInfo.JobId, err)
 	if err != nil {
 		return nil, fmt.Errorf("confirm plat strategy err:%v", err)
@@ -639,7 +637,7 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 
 			// label fault pod
 			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
-			ctl.MergeFaultPod(faultPod)
+			ctl.mergeFaultPod(faultPod)
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -683,7 +681,7 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 	// label fault pod
 	var err error
 	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
-	ctl.MergeFaultPod(faultPod)
+	ctl.mergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
@@ -774,7 +772,7 @@ func (ctl *EventController) chooseStrategy() string {
 			ctl.setCacheFault(nil, allFaults)
 			var err error
 			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, faultMap)
-			ctl.MergeFaultPod(faultPod)
+			ctl.mergeFaultPod(faultPod)
 			if err != nil {
 				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 			}
@@ -926,7 +924,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	ctl.setCacheFault(nil, allFaults)
 	var err error
 	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
-	ctl.MergeFaultPod(faultPod)
+	ctl.mergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
 	}
@@ -1186,6 +1184,7 @@ func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode,
 
 func (ctl *EventController) handleListenScheduleResult() (string, common.RespCode, error) {
 	if ctl.jobInfo.PlatFormMode {
+		// for plat not support pod rescheduling
 		return common.ScheduleSuccessEvent, common.OK, nil
 	}
 	scheduleSuccess := false
@@ -1216,6 +1215,7 @@ func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, 
 
 func (ctl *EventController) handleWaitRestartAllProcess() (string, common.RespCode, error) {
 	if ctl.jobInfo.PlatFormMode {
+		// for plat not support pod rescheduling
 		return common.RestartProcessFinishEvent, common.OK, nil
 	}
 	ctx, _ := ctl.getCtxAndScheduleResultChan()

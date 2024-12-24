@@ -368,7 +368,7 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	var err error
 	faultPod, err := common.LabelFaultPod(request.JobId,
 		common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod())
-	controller.MergeFaultPod(faultPod)
+	controller.mergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
 			err, request.JobId)
