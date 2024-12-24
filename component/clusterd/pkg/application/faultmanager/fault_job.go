@@ -35,6 +35,10 @@ func init() {
 }
 
 func (fJob *FaultJob) initFaultJobAttr() {
+	fJob.FaultStrategy = FaultStrategy{}
+	fJob.TriggerFault = nil
+	fJob.AllFaultCode = make(sets.String)
+	fJob.SeparateNodes = make(sets.String)
 	if fJob.PodNames == nil {
 		fJob.PodNames = make(map[string]string)
 	}
@@ -108,7 +112,6 @@ func (fJob *FaultJob) processFaultStrategies() {
 		// if last strategy is SeparateFaultStrategy, skip patch pod label
 		if fJob.PodStrategiesMaps[podName] == constant.SeparateFaultStrategy {
 			podStrategiesMaps[podName] = constant.SeparateFaultStrategy
-			continue
 		}
 		if err := kube.RetryPatchPodLabels(podName, fJob.NameSpace, patchPodTimes,
 			map[string]string{taskFaultKey: strategy}); err != nil {

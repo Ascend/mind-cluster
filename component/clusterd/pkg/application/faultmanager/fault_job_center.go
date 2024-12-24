@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
@@ -63,9 +62,6 @@ func (fJobCenter *faultJobProcessCenter) InitFaultJobs() {
 		if !ok {
 			tmpFaultJob = &FaultJob{}
 		}
-		tmpFaultJob.TriggerFault = nil
-		tmpFaultJob.AllFaultCode = make(sets.String)
-		tmpFaultJob.SeparateNodes = make(sets.String)
 		tmpFaultJob.initFaultJobAttr()
 		for nodeName, serverList := range serverLists {
 			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID >= 0
