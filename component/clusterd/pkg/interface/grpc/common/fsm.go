@@ -115,7 +115,11 @@ func (m *StateMachine) appendPath(match bool, event, dst string) {
 // Trigger state change by event
 func (m *StateMachine) Trigger(event string, args ...interface{}) (string, RespCode, error) {
 	matching, rule := m.ruleMatching(m.state, event)
-	m.appendPath(matching, event, rule.Dst)
+	dstState := ""
+	if matching {
+		dstState = rule.Dst
+	}
+	m.appendPath(matching, event, dstState)
 	if !matching {
 		return "", OrderMix, errors.New("rule match error, change order may mixed")
 	}

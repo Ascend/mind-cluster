@@ -107,7 +107,7 @@ func (ctl *EventController) getAfterRules() []common.TransRule {
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 
 		{Src: common.WaitRestartAllProcessState, Event: common.RestartProcessFinishEvent,
-			Dst: common.InitState, Handler: ctl.handleFinish},
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 
 		{Src: common.FaultClearState, Event: common.ClearConfigMapFaultSuccessEvent,
 			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},

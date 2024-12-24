@@ -11,42 +11,38 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
 
-func platFormStrategy(name, namespace string) ([]string, error) {
+func platFormStrategy(name, namespace string, confirmState bool) (string, error) {
 	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("get pg err: %v", err)
-		return nil, err
+		return "", err
 	}
 	value, ok := pg.Annotations[constant.ProcessRecoverStrategy]
 	if !ok {
-		return nil, fmt.Errorf("plat strategy key not exist, job=%s, key=%s",
+		return "", fmt.Errorf("plat strategy key not exist, job=%s, key=%s",
 			name, constant.ProcessRecoverStrategy)
 	}
+	value = strings.TrimSpace(value)
+	value = strings.Trim(value, ",")
 	if value == constant.ProcessRetryStrategyName || value == constant.ProcessRecoverStrategyName ||
 		value == constant.ProcessDumpStrategyName {
-		strategySlice := strings.Split(value, ",")
-		var res []string
-		for _, strategy := range strategySlice {
-			if common.StrategySupported(strategy) {
-				res = append(res, strategy)
-			}
-		}
-		res = append(res, constant.ProcessExitStrategyName)
-		return util.RemoveSliceDuplicateElement(res), nil
+		return value, nil
 	}
-	return nil, fmt.Errorf("wait plat strategy = retry/recover/dump for job=%s", name)
+	if confirmState && value == constant.ProcessExitStrategyName {
+		return value, nil
+	}
+	return "", fmt.Errorf("wait plat strategy = retry/recover/dump for job=%s", name)
 }
 
 // WaitPlatFormStrategyReady block process until processContinue return true
-func WaitPlatFormStrategyReady(name, namespace string) ([]string, error) {
+func WaitPlatFormStrategyReady(name, namespace string) (string, error) {
 	startTime := time.Now().Unix()
-	strategy, err := platFormStrategy(name, namespace)
+	strategy, err := platFormStrategy(name, namespace, false)
 	for err != nil {
 		time.Sleep(constant.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
@@ -55,7 +51,7 @@ func WaitPlatFormStrategyReady(name, namespace string) ([]string, error) {
 				name, timeUse, constant.ProcessControlTimeout, err)
 			break
 		}
-		strategy, err = platFormStrategy(name, namespace)
+		strategy, err = platFormStrategy(name, namespace, false)
 	}
 	return strategy, err
 }
@@ -130,7 +126,7 @@ func pullProcessResultFault(name, namespace string) ([]*pb.FaultRank, []*pb.Faul
 func WaitProcessResultFault(name, namespace string) ([]*pb.FaultRank, error) {
 	startTime := time.Now().Unix()
 	resultRanks, confirmRanks, err := pullProcessResultFault(name, namespace)
-	for len(resultRanks) == 0 {
+	for err != nil {
 		time.Sleep(constant.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
 		if timeUse > constant.ProcessControlTimeout {
