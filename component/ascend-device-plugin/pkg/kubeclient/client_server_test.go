@@ -17,12 +17,15 @@ package kubeclient
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -73,6 +76,15 @@ func TestAnnotationReset(t *testing.T) {
 		defer resetMock(mockWrite, mockPatchNode, mockNode)
 		err := utKubeClient.AnnotationReset()
 		convey.So(err, convey.ShouldEqual, nil)
+	})
+	convey.Convey("annotation reset with no error", t, func() {
+		mockNode := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetNode",
+			func(_ *ClientK8s) (*v1.Node, error) {
+				return nil, nil
+			})
+		defer mockNode.Reset()
+		err := utKubeClient.AnnotationReset()
+		convey.So(err.Error(), convey.ShouldEqual, "invalid node")
 	})
 	convey.Convey("annotation reset with error", t, func() {
 		mockWrite, mockPatchNode, mockNode := annotationResetMock(fmt.Errorf("can not found device info cm"),
@@ -175,6 +187,94 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 	})
 }
 
+// TestWriteResetInfoDataIntoCM get cm write reset info
+func TestWriteResetInfoDataIntoCM(t *testing.T) {
+	utKubeClient, err := initK8S()
+	if err != nil {
+		t.Fatal("TestWriteResetInfoDataIntoCM init kubernetes failed")
+	}
+	oldCM := getMockCreateCM(common.ResetInfoCMDataKey, common.ResetInfoCMNamePrefix+"node")
+	defer oldCM.Reset()
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	defer testPod.Reset()
+	testTaskResetInfo := getTaskResetInfo()
+	mockGetCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
+		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
+			return oldCM, nil
+		})
+	defer mockGetCM.Reset()
+	convey.Convey("write reset info when invalid reset info data", t, func() {
+		_, err := utKubeClient.WriteResetInfoDataIntoCM("taskName", testPod.Namespace, testTaskResetInfo, true)
+		convey.So(err.Error(), convey.ShouldEqual,
+			"failed to unmarshal reset info data, err: invalid character 'r' looking for beginning of value")
+	})
+	mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, nil)
+	defer mockUnmarshal.Reset()
+	convey.Convey("write reset info when marshal task reset data failed", t, func() {
+		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, nil)
+		defer mockMarshalData.Reset()
+		_, err := utKubeClient.WriteResetInfoDataIntoCM("taskName", testPod.Namespace, testTaskResetInfo, true)
+		convey.So(err.Error(), convey.ShouldEqual, "marshal task reset data failed")
+	})
+	convey.Convey("write reset info when update cm", t, func() {
+		mockUpdateCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "UpdateConfigMap",
+			func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) {
+				return oldCM, nil
+			})
+		defer mockUpdateCM.Reset()
+		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, []byte{1})
+		defer mockMarshalData.Reset()
+		_, err := utKubeClient.WriteResetInfoDataIntoCM("taskName", testPod.Namespace, testTaskResetInfo, true)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+// TestWriteFaultInfoDataIntoCM get cm write fault info
+func TestWriteFaultInfoDataIntoCM(t *testing.T) {
+	utKubeClient, err := initK8S()
+	if err != nil {
+		t.Fatal("TestWriteFaultInfoDataIntoCM init kubernetes failed")
+	}
+	oldCM := getMockCreateCM(common.ResetInfoCMDataKey, common.ResetInfoCMNamePrefix+"node")
+	defer oldCM.Reset()
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	defer testPod.Reset()
+	testTaskFaultInfo := getTaskFaultInfo()
+	mockGetCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
+		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
+			return nil, fmt.Errorf("failed to get fault cm")
+		})
+	defer mockGetCM.Reset()
+	convey.Convey("write fault info when failed to get fault cm", t, func() {
+		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
+		convey.So(err.Error(), convey.ShouldEqual, "failed to get fault cm")
+	})
+	mockGetCM = gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
+		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
+			return oldCM, nil
+		})
+	defer mockGetCM.Reset()
+	mockMakeDataHash := gomonkey.ApplyFuncReturn(common.MakeDataHash, "testCheckCode")
+	defer mockMakeDataHash.Reset()
+	convey.Convey("write fault info when marshal task reset data failed", t, func() {
+		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, nil)
+		defer mockMarshalData.Reset()
+		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
+		convey.So(err.Error(), convey.ShouldEqual, "marshal task reset data failed")
+	})
+	convey.Convey("write fault info when update cm", t, func() {
+		mockUpdateCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "UpdateConfigMap",
+			func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) {
+				return oldCM, nil
+			})
+		defer mockUpdateCM.Reset()
+		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, []byte{1})
+		defer mockMarshalData.Reset()
+		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
 // TestTryUpdatePodAnnotation try update pod annotation
 func TestTryUpdatePodAnnotation(t *testing.T) {
 	utKubeClient, err := initK8S()
@@ -182,6 +282,7 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 		t.Fatal("TestTryUpdatePodAnnotation init kubernetes failed")
 	}
 	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	defer testPod.Reset()
 	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
 		func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
 			return nil, fmt.Errorf("test function errors")
@@ -222,12 +323,55 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "patch pod annotation failed, exceeded max number of retries")
 	})
-	convey.Convey("try update pod annotation when no pod found in cache", t, func() {
-		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "TryUpdatePodAnnotation",
-			func(_ *ClientK8s, _ *v1.Pod, _ map[string]string) error { return nil })
-		defer mockTryUpdatePodAnnotation.Reset()
+	mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "TryUpdatePodAnnotation",
+		func(_ *ClientK8s, _ *v1.Pod, _ map[string]string) error { return nil })
+	defer mockTryUpdatePodAnnotation.Reset()
+	convey.Convey("try update pod annotation when update annotation in pod cache success", t, func() {
+		podCache = map[types.UID]*podInfo{
+			"xxxxxxxxx1": {
+				Pod:        testPod,
+				updateTime: time.Now(),
+			},
+		}
 		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err, convey.ShouldBeNil)
+		podCache = make(map[types.UID]*podInfo)
+	})
+	convey.Convey("try update pod annotation when no pod found in cache", t, func() {
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+// TestGetDeviceInfoManuallySeparateNPUData returns the ManuallySeparateNPU from device info
+func TestGetDeviceInfoManuallySeparateNPUData(t *testing.T) {
+	utKubeClient, err := initK8S()
+	if err != nil {
+		t.Fatal("TestGetDeviceInfoManuallySeparateNPUData init kubernetes failed")
+	}
+	mockCreateCM := getMockCreateCM(common.DeviceInfoCMManuallySeparateNPUKey, common.DeviceInfoCMNamePrefix+"node")
+	defer mockCreateCM.Reset()
+	mockGetConfigMap := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
+		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) { return mockCreateCM, nil })
+	defer mockGetConfigMap.Reset()
+	convey.Convey("failed to get device run mode", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
+			common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
+	})
+	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, common.Ascend910, nil)
+	defer mockGetDeviceRunMode.Reset()
+	convey.Convey("manuallySeparateNPU will be ignored", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
+			common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
+	})
+	mockCheckDeviceName := gomonkey.ApplyFuncReturn(common.CheckDeviceName, true)
+	defer mockCheckDeviceName.Reset()
+	convey.Convey("failed to convert string phyIDStr type to int type", t, func() {
+		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
+			common.DeviceInfoCMNameSpace)
+		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
 }
 
@@ -377,6 +521,52 @@ func getContainers(devType string) []v1.Container {
 	}
 }
 
+func getTaskFaultInfo() *common.TaskFaultInfo {
+	return &common.TaskFaultInfo{
+		FaultRank:  []int{0},
+		UpdateTime: time.Now().Unix(),
+	}
+}
+
+func getTaskResetInfo() *common.TaskResetInfo {
+	rankList := []*common.TaskDevInfo{
+		{
+			RankId:       0,
+			DevFaultInfo: mockResetErrDevFaultInfo(0),
+		},
+		{
+			RankId:       1,
+			DevFaultInfo: mockEmptyErrDevFaultInfo(1),
+		},
+	}
+	return &common.TaskResetInfo{
+		RankList: rankList,
+	}
+}
+
+// mockResetErrDevFaultInfo create a fake dev fault info with reset error
+func mockResetErrDevFaultInfo(logicId int32) common.DevFaultInfo {
+	return common.DevFaultInfo{
+		LogicId:       logicId,
+		Status:        common.UnrecoveredStatus,
+		Policy:        common.ResetError,
+		InitialPolicy: common.ResetError,
+		ErrorCode:     []int64{2350927360},
+		ErrorCodeHex:  "0x8C204E00",
+	}
+}
+
+// mockEmptyErrDevFaultInfo create a fake dev fault info with empty error
+func mockEmptyErrDevFaultInfo(logicId int32) common.DevFaultInfo {
+	return common.DevFaultInfo{
+		LogicId:       logicId,
+		Status:        common.UnrecoveredStatus,
+		Policy:        common.EmptyError,
+		InitialPolicy: common.EmptyError,
+		ErrorCode:     []int64{},
+		ErrorCodeHex:  "",
+	}
+}
 func mockCMOpr(updateCM *v1.ConfigMap) (*gomonkey.Patches, *gomonkey.Patches) {
 	mockCreateCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "CreateConfigMap",
 		func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) {
