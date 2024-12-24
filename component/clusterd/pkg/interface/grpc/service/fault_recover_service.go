@@ -365,14 +365,15 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		}, nil
 	}
 	controller.saveCacheFault(request.FaultRanks)
+	var err error
+	faultPod, err := common.LabelFaultPod(request.JobId,
+		common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod())
+	controller.mergeFaultPod(faultPod)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
+			err, request.JobId)
+	}
 	if !common.IsUceFault(request.FaultRanks) {
-		var err error
-		controller.faultPod, err = common.LabelFaultPod(request.JobId,
-			common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod())
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
-				err, request.JobId)
-		}
 		controller.addEvent(common.FaultOccurEvent)
 	} else {
 		if faultmanager.GlobalFaultProcessCenter != nil {

@@ -54,6 +54,11 @@ func Faults2Ranks(faults []*pb.FaultRank) []string {
 
 // String2Faults return faults split from string
 func String2Faults(faultStr string) []*pb.FaultRank {
+	faultStr = strings.TrimSpace(faultStr)
+	faultStr = strings.Trim(faultStr, ",")
+	if faultStr == "" {
+		return nil
+	}
 	faultStrSlice := strings.Split(faultStr, ",")
 	var res []*pb.FaultRank
 	for _, fault := range faultStrSlice {
@@ -305,7 +310,7 @@ func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string
 	podMap, err := labelPodFault(jobId, faultPodRankList, labeledMap)
 	if err != nil {
 		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
-		return nil, fmt.Errorf("label fault pod failed, err is %v", err)
+		return podMap, fmt.Errorf("label fault pod failed, err is %v", err)
 	}
 	return podMap, nil
 }
@@ -315,6 +320,7 @@ func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[strin
 		labeledMap = make(map[string]string)
 	}
 	faultLabel := map[string]string{"fault-type": "software"}
+	var err error
 	for _, podRank := range faultPodRankList {
 		_, labeled := labeledMap[podRank]
 		if labeled {
@@ -322,15 +328,17 @@ func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[strin
 		}
 		pod := pod.GetPodByRankIndex(jobId, podRank)
 		if pod.Name == "" {
-			hwlog.RunLog.Infof("discard nil pod")
+			hwlog.RunLog.Infof("discard nil pod, jobId=%s", jobId)
 			continue
 		}
-		if err := kube.RetryPatchPodLabels(pod.Name, pod.Namespace, constant.UpdatePodGroupTimes, faultLabel); err != nil {
-			return nil, err
+		if patchErr := kube.RetryPatchPodLabels(pod.Name, pod.Namespace,
+			constant.UpdatePodGroupTimes, faultLabel); patchErr != nil {
+			hwlog.RunLog.Infof("patch pod label error, jobId=%s, err=%v", jobId, patchErr)
+			err = patchErr
 		}
 		labeledMap[podRank] = string(pod.UID)
 	}
-	return labeledMap, nil
+	return labeledMap, err
 }
 
 // FaultPodAllRescheduled check if all fault pod rescheduled
