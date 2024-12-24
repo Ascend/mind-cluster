@@ -191,6 +191,10 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 		err := utKubeClient.TryUpdatePodAnnotation(nil, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
 	})
+	convey.Convey("try update pod annotation when get invalid annotation", t, func() {
+		err := utKubeClient.TryUpdatePodAnnotation(testPod, nil)
+		convey.So(err.Error(), convey.ShouldEqual, "invalid annotation")
+	})
 	convey.Convey("try update pod annotation when get pod is not nil", t, func() {
 		err := utKubeClient.TryUpdatePodAnnotation(testPod,
 			getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
@@ -214,10 +218,16 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 		err := utKubeClient.TryUpdatePodCacheAnnotation(nil, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
 	})
-	convey.Convey("try update pod annotation when get pod is not nil", t, func() {
-		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod,
-			getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+	convey.Convey("try update pod annotation when update pod annotation in api server failed", t, func() {
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "patch pod annotation failed, exceeded max number of retries")
+	})
+	convey.Convey("try update pod annotation when no pod found in cache", t, func() {
+		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "TryUpdatePodAnnotation",
+			func(_ *ClientK8s, _ *v1.Pod, _ map[string]string) error { return nil })
+		defer mockTryUpdatePodAnnotation.Reset()
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
