@@ -17,7 +17,12 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/device"
+	"clusterd/pkg/domain/node"
+	"clusterd/pkg/domain/switchinfo"
+	"clusterd/pkg/interface/kube"
 )
 
 func init() {
@@ -72,4 +77,42 @@ func initFakeCMByDataMap(name, namespace string, m map[string]string) *v1.Config
 		},
 		Data: m,
 	}
+}
+
+func TestReport(t *testing.T) {
+	convey.Convey("test stop report", t, func() {
+		gomonkey.ApplyFunc(kube.UpdateConfigMap, func(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+			return nil, nil
+		})
+		ctx, cancel := context.WithCancel(context.Background())
+		faultmanager.NewFaultProcessCenter(ctx)
+		updateChan = make(chan int, 5)
+		updateChan <- constant.AllProcessType
+		updateChan <- constant.DeviceProcessType
+		updateChan <- constant.NodeProcessType
+		updateChan <- constant.SwitchProcessType
+
+		go Report(ctx)
+		time.Sleep(2 * time.Second)
+		cancel()
+		convey.So(len(updateChan), convey.ShouldEqual, 0)
+	})
+}
+
+func TestUpdateAllCm(t *testing.T) {
+	convey.Convey("TestUpdateAllCm", t, func() {
+		deviceArr := device.GetSafeData(map[string]*constant.DeviceInfo{
+			"test": {},
+		})
+		nodeArr := node.GetSafeData(map[string]*constant.NodeInfo{
+			"test": {},
+		})
+		switchArr := switchinfo.GetSafeData(map[string]*constant.SwitchInfo{
+			"test": {},
+		})
+		gomonkey.ApplyFunc(kube.UpdateConfigMap, func(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+			return nil, nil
+		})
+		updateAllCm(deviceArr, nodeArr, switchArr)
+	})
 }

@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"ascend-common/common-utils/hwlog"
@@ -24,8 +25,10 @@ func TestMain(m *testing.M) {
 		fmt.Printf("hwlog init failed, error is %v\n", err)
 		return
 	}
-
+	ctx, cancel := context.WithCancel(context.Background())
+	NewFaultProcessCenter(ctx)
 	code := m.Run()
+	cancel()
 	os.Exit(code)
 }
 

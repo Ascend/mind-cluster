@@ -4,14 +4,47 @@
 package faultmanager
 
 import (
-	"strings"
+	"testing"
+
+	"github.com/agiledragon/gomonkey/v2"
 )
 
-func isContainsAny(str string, subStrs ...string) bool {
-	for _, subStr := range subStrs {
-		if strings.Contains(str, subStr) {
-			return true
+func TestJobRankFaultInfoProcessorCanDoStepRetry(t *testing.T) {
+	t.Run("TestJobRankFaultInfoProcessorCanDoStepRetry", func(t *testing.T) {
+		jobFaultRankProcessor, _ := GlobalFaultProcessCenter.getJobFaultRankProcessor()
+		uceProcessor, _ := GlobalFaultProcessCenter.deviceCenter.getUceFaultProcessor()
+		gomonkey.ApplyPrivateMethod(uceProcessor, "getUceDeviceFromJob",
+			func(jobId, nodeName, deviceName string) (uceDeviceInfo, bool) {
+				return uceDeviceInfo{
+					DeviceName:   "test",
+					FaultTime:    0,
+					RecoverTime:  0,
+					CompleteTime: 0,
+				}, true
+			})
+		retry := jobFaultRankProcessor.canDoStepRetry("jobId", "nodeName", "deviceName")
+		if !retry {
+			t.Error("TestJobRankFaultInfoProcessorCanDoStepRetry")
 		}
-	}
-	return false
+	})
+}
+
+func TestUceInBusinessPlane(t *testing.T) {
+	t.Run("TestUceInBusinessPlane", func(t *testing.T) {
+		jobFaultRankProcessor, _ := GlobalFaultProcessCenter.getJobFaultRankProcessor()
+		uceProcessor, _ := GlobalFaultProcessCenter.deviceCenter.getUceFaultProcessor()
+		gomonkey.ApplyPrivateMethod(uceProcessor, "getUceDeviceFromJob",
+			func(jobId, nodeName, deviceName string) (uceDeviceInfo, bool) {
+				return uceDeviceInfo{
+					DeviceName:   "test",
+					FaultTime:    0,
+					RecoverTime:  0,
+					CompleteTime: 0,
+				}, true
+			})
+		isUceInBusinessPlane := jobFaultRankProcessor.uceInBusinessPlane("jobId", "nodeName", "deviceName")
+		if isUceInBusinessPlane {
+			t.Error("TestUceInBusinessPlane")
+		}
+	})
 }
