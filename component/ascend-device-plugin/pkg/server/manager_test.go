@@ -181,8 +181,11 @@ func TestUpdateNode(t *testing.T) {
 		*v1.Node, error) {
 		return &v1.Node{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: make(map[string]string),
-				Name:   "node",
+				Annotations: make(map[string]string),
+				Name:        "node",
+			},
+			Status: v1.NodeStatus{
+				Addresses: getAddresses(),
 			},
 		}, nil
 	})
