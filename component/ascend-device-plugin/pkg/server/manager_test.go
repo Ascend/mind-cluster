@@ -148,15 +148,26 @@ func TestSetAscendManager(t *testing.T) {
 func TestUpdateNode(t *testing.T) {
 	var hdm HwDevManager
 	convey.Convey("test update node when scene is edge", t, func() {
+		tmpBuildScene := common.ParamOption.BuildScene
 		common.ParamOption.BuildScene = common.EdgeScene
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
+		common.ParamOption.BuildScene = tmpBuildScene
 	})
 	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(
 		_ *kubeclient.ClientK8s) {
 		return
 	})
 	defer mockInitPodInformer.Reset()
+	convey.Convey("test update node when get node error", t, func() {
+		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
+			*v1.Node, error) {
+			return &v1.Node{}, fmt.Errorf("GetNode error")
+		})
+		defer mockGetNode.Reset()
+		err := hdm.UpdateNode()
+		convey.So(err.Error(), convey.ShouldEqual, "GetNode error")
+	})
 	testLabel := make(map[string]string)
 	testLabel[common.ServerTypeLabelKey] = common.ParamOption.RealCardType +
 		common.MiddelLine + strconv.Itoa(int(common.ParamOption.AiCoreCount))
