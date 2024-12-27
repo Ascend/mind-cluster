@@ -154,6 +154,11 @@ func TestUpdateNode(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		common.ParamOption.BuildScene = tmpBuildScene
 	})
+	mockKubeClient := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetKubeClient", func(
+		_ *device.AscendTools) *kubeclient.ClientK8s {
+		return &kubeclient.ClientK8s{}
+	})
+	defer mockKubeClient.Reset()
 	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(
 		_ *kubeclient.ClientK8s) {
 		return
