@@ -205,35 +205,35 @@ const (
 
 	// Ascend910 910
 	Ascend910 = "Ascend910"
-	// Ascend910c2  Ascend910 2core
-	Ascend910c2 = Ascend910 + "-" + Core2
-	// Ascend910c4 Ascend910 4core
-	Ascend910c4 = Ascend910 + "-" + Core4
-	// Ascend910c8 Ascend910 8core
-	Ascend910c8 = Ascend910 + "-" + Core8
-	// Ascend910c16 Ascend910 16core
-	Ascend910c16 = Ascend910 + "-" + Core16
-	// Ascend910c5Cpu1Gb8 Ascend910 5core 1cpu 8 Gb memory
-	Ascend910c5Cpu1Gb8 = Ascend910 + "-" + Core5Cpu1Gb8
-	// Ascend910c5Cpu1Gb16 Ascend910 5core 1cpu 16Gb memory
-	Ascend910c5Cpu1Gb16 = Ascend910 + "-" + Core5Cpu1Gb16
-	// Ascend910c6Cpu1Gb16 Ascend910 6core 1cpu 16Gb memory
-	Ascend910c6Cpu1Gb16 = Ascend910 + "-" + Core6Cpu1Gb16
-	// Ascend910c10Cpu3Gb16 Ascend910 10core 3cpu 16Gb memory
-	Ascend910c10Cpu3Gb16 = Ascend910 + "-" + Core10Cpu3Gb16
+	// Ascend910vir2  Ascend910 2core
+	Ascend910vir2 = Ascend910 + "-" + Core2
+	// Ascend910vir4 Ascend910 4core
+	Ascend910vir4 = Ascend910 + "-" + Core4
+	// Ascend910vir8 Ascend910 8core
+	Ascend910vir8 = Ascend910 + "-" + Core8
+	// Ascend910vir16 Ascend910 16core
+	Ascend910vir16 = Ascend910 + "-" + Core16
+	// Ascend910vir5Cpu1Gb8 Ascend910 5core 1cpu 8 Gb memory
+	Ascend910vir5Cpu1Gb8 = Ascend910 + "-" + Core5Cpu1Gb8
+	// Ascend910vir5Cpu1Gb16 Ascend910 5core 1cpu 16Gb memory
+	Ascend910vir5Cpu1Gb16 = Ascend910 + "-" + Core5Cpu1Gb16
+	// Ascend910vir6Cpu1Gb16 Ascend910 6core 1cpu 16Gb memory
+	Ascend910vir6Cpu1Gb16 = Ascend910 + "-" + Core6Cpu1Gb16
+	// Ascend910vir10Cpu3Gb16 Ascend910 10core 3cpu 16Gb memory
+	Ascend910vir10Cpu3Gb16 = Ascend910 + "-" + Core10Cpu3Gb16
 
-	// Ascend910c10Cpu3Gb16Ndvpp Ascend910 10core 3cpu 16Gb memory ndvpp
-	Ascend910c10Cpu3Gb16Ndvpp = Ascend910 + "-" + Core10Cpu3Gb16Ndvpp
-	// Ascend910c10Cpu3Gb32 Ascend910 10core 3cpu 32Gb memory
-	Ascend910c10Cpu3Gb32 = Ascend910 + "-" + Core10Cpu3Gb32
-	// Ascend910c10Cpu4Gb16Dvpp Ascend910 10core 4cpu 16Gb memory dvpp
-	Ascend910c10Cpu4Gb16Dvpp = Ascend910 + "-" + Core10Cpu4Gb16Dvpp
+	// Ascend910vir10Cpu3Gb16Ndvpp Ascend910 10core 3cpu 16Gb memory ndvpp
+	Ascend910vir10Cpu3Gb16Ndvpp = Ascend910 + "-" + Core10Cpu3Gb16Ndvpp
+	// Ascend910vir10Cpu3Gb32 Ascend910 10core 3cpu 32Gb memory
+	Ascend910vir10Cpu3Gb32 = Ascend910 + "-" + Core10Cpu3Gb32
+	// Ascend910vir10Cpu4Gb16Dvpp Ascend910 10core 4cpu 16Gb memory dvpp
+	Ascend910vir10Cpu4Gb16Dvpp = Ascend910 + "-" + Core10Cpu4Gb16Dvpp
 
-	// Ascend910c12Cpu3Gb32 Ascend910 12core 3cpu 32Gb memory
-	Ascend910c12Cpu3Gb32 = Ascend910 + "-" + Core12Cpu3Gb32
+	// Ascend910vir12Cpu3Gb32 Ascend910 12core 3cpu 32Gb memory
+	Ascend910vir12Cpu3Gb32 = Ascend910 + "-" + Core12Cpu3Gb32
 
-	// Ascend910c3Cpu1Gb8 Ascend910 3core 1cpu 8Gb memory
-	Ascend910c3Cpu1Gb8 = Ascend910 + "-" + Core3Cpu1Gb8
+	// Ascend910vir3Cpu1Gb8 Ascend910 3core 1cpu 8Gb memory
+	Ascend910vir3Cpu1Gb8 = Ascend910 + "-" + Core3Cpu1Gb8
 
 	// HuaweiAscend910 with prefix
 	HuaweiAscend910 = ResourceNamePrefix + Ascend910
@@ -528,7 +528,7 @@ const (
 	// Ascend910BRingsNumInfer indicates the number of devices in a ring
 	Ascend910BRingsNumInfer = 1
 	// Ascend910A3RingsNum indicates the number of devices in a ring
-	Ascend910A3RingsNum = 2
+	Ascend910A3RingsNum = 16
 	// RingSum indicates the max number of ring
 	RingSum = 2
 	// RankIndexKey for obtain the rank index in the pod
@@ -762,6 +762,8 @@ const (
 	FaultIdOfPortLaneReduceHalf = 132332
 	// FaultIdOfPortLaneReduceQuarter  the fault id of lane reduce to quarter
 	FaultIdOfPortLaneReduceQuarter = 132333
+	// FaultIdOfPortFailOnForwardingChip  the fault id of port failure on the forwarding chip
+	FaultIdOfPortFailOnForwardingChip = 155912
 )
 
 // LogicID list for reset, get id list of ring

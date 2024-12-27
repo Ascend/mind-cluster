@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
 	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -59,7 +59,7 @@ func (pr *PodResource) getContainerResource(containerResource *v1alpha1.Containe
 		return "", nil, fmt.Errorf("the number of container device type %d exceeds the upper limit",
 			len(containerResource.Devices))
 	}
-	var deviceIds []string
+	var deviceIds = make([]string, 0)
 	resourceName := ""
 	for _, containerDevice := range containerResource.Devices {
 		if containerDevice == nil {
@@ -93,8 +93,8 @@ func (pr *PodResource) getDeviceFromPod(podResources *v1alpha1.PodResources) (st
 	if len(podResources.Containers) > common.MaxContainerLimit {
 		return "", nil, fmt.Errorf("the number of containers %d exceeds the upper limit", len(podResources.Containers))
 	}
-	var podDevice []string
-	var resourceName string
+	var podDevice = make([]string, 0)
+	var resourceName = ""
 	total := 0
 	for _, containerResource := range podResources.Containers {
 		containerResourceName, containerDevices, err := pr.getContainerResource(containerResource)

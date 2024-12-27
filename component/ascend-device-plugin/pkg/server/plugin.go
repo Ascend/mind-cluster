@@ -25,13 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"ascend-common/common-utils/hwlog"
 )
 
 func (ps *PluginServer) stopListAndWatch() {
@@ -135,7 +135,7 @@ func (ps *PluginServer) GetRealUsedAICore() (map[string]string, error) {
 
 func (ps *PluginServer) generateAllDeviceMap() map[string]string {
 	vol2kltMap := make(map[string]string, 1)
-	var notInVolDev []string
+	var notInVolDev = make([]string, 0)
 	allDev := sets.String{}
 	klDev := sets.String{}
 	ps.allocMapLock.RLock()
@@ -690,8 +690,8 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	conditionFunc := func(pod *v1.Pod) bool {
 		return checkAnnotationAllocateValid(requestDevices, ps.deviceType, pod, ps.manager.GetChipAICore())
 	}
-	var filteredPods []v1.Pod
-	var allPods []v1.Pod
+	var filteredPods = make([]v1.Pod, 0)
+	var allPods = make([]v1.Pod, 0)
 	for i := 0; i < common.GetPodFromInformerTime; i++ {
 		if i == common.GetPodFromInformerTime-1 {
 			// in the last time of retry, get the pod from api server instead of cache
@@ -785,6 +785,11 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		hwlog.RunLog.Error(err)
 		return nil, err
 	}
+	allNPUInfo, err := ps.manager.GetNPUs()
+	if err != nil {
+		hwlog.RunLog.Errorf("get all npus info failed: %v", err)
+		return nil, err
+	}
 	resps := new(v1beta1.AllocateResponse)
 	for _, rqt := range requests.ContainerRequests {
 		var err error
@@ -794,7 +799,10 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		} else {
 			hwlog.RunLog.Infof("request: %#v", rqt.DevicesIDs)
 		}
-		if common.ParamOption.UseVolcanoType {
+		hwlog.RunLog.Debugf("len(allocateDevices)=%d, len(allNPUInfo.AllDevs)=%d",
+			len(allocateDevices), len(allNPUInfo.AllDevs))
+		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice) &&
+			common.ParamOption.UseVolcanoType {
 			allocateDevices, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
 				hwlog.RunLog.Error(err)
@@ -824,6 +832,9 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 
 // SetSlowNodeNoticeEnv is to set the environment variable using slow node step time configmap
 func (ps *PluginServer) SetSlowNodeNoticeEnv(resp *v1beta1.ContainerAllocateResponse) {
+	if !common.ParamOption.EnableSlowNode {
+		return
+	}
 	if resp == nil {
 		hwlog.RunLog.Error("resp is nil")
 		return

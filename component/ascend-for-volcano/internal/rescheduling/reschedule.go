@@ -377,10 +377,7 @@ func New(env *plugin.ScheduleEnv, jobType string) *ReScheduler {
 	if setNodeErr := reSchedulerCache.SetFaultNodesFromCM(); setNodeErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetFaultNodesFromCM: %s", util.SafePrint(setNodeErr))
 	}
-	// 2.3 Initialise ReScheduler.DealReSchedulerCache.NodeHeartbeats by unmarshal data read from cm
-	if setHBErr := reSchedulerCache.SetNodeHeartbeatFromCM(); setHBErr != nil {
-		klog.V(util.LogErrorLev).Infof("SetNodeHeartbeatFromCM: %s", util.SafePrint(setHBErr))
-	}
+
 	// 2.4 Initialise ReScheduler.DealReSchedulerCache.JobRemainRetryTimes
 	if setRTErr := reSchedulerCache.SetRetryTimesFromCM(); setRTErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetRetryTimesFromCM: %s", util.SafePrint(setRTErr))
@@ -398,7 +395,6 @@ func New(env *plugin.ScheduleEnv, jobType string) *ReScheduler {
 	faultReScheduler.DealReSchedulerCache = &reSchedulerCache // 2.4 set DealReSchedulerCache
 	faultReScheduler.Jobs = env.Jobs                          // 3 Initialise session Jobs Nodes copying data from env
 	faultReScheduler.Nodes = env.Nodes
-	faultReScheduler.DeviceInfoNotInSession = env.DevInfoNotInSession
 	faultReScheduler.IsFirstSession = env.IsFirstSession
 	faultReScheduler.kubeClient = env.FrameAttr.KubeClient // 4 Initialise kubeClient copying data from env
 	return &faultReScheduler
@@ -453,8 +449,6 @@ func (reScheduler *ReScheduler) SynCacheFaultNodeWithSession() {
 		}
 		// 2. update attributes of cached FaultNodes utilising new information read from current session
 		npuNode, _ := reScheduler.Nodes[faultNode.NodeName]
-		// 2.1 read oldNodeHeartbeat value from cached nodeHeartbeat objects
-		faultNode.setOldNodeHeartbeatTime(reScheduler.getLastNodeHeartbeatByNodeNameFromCache(npuNode.Name))
 		// 2.2 update information sent by session NPUNodes
 		faultNode.updateFaultNodesFromDeviceInfo(&npuNode, faultNode.NPUName)
 		if err := faultNode.updateFaultNodesAttr(&npuNode); err != nil {
@@ -540,7 +534,7 @@ func (reScheduler *ReScheduler) initTorJobDeletedFlag(jobInfo *api.JobInfo, fJob
 func (reScheduler *ReScheduler) setTorSingleJobDeletedFlag(jobInfo *api.JobInfo, fJob *FaultJob) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc {
 		fJob.setFaultTaskUseNode(jobInfo)
-		if jobInfo.PodGroup.Labels[util.ProcessReschedulingTag] == util.EnableFunc {
+		if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
 			return
 		}
 
@@ -697,8 +691,6 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		faultNode := newFaultNodeDefault(npuNode.Name, nowTime)
 		faultNode.NPUName = npuName
 		faultNode.SuperPodID = npuNode.SuperPodID
-		faultNode.OldHeartbeatTime = reScheduler.getLastNodeHeartbeatByNodeNameFromCache(npuNode.Name)
-		faultNode.UpdateHeartbeatTime = reScheduler.getLastNodeHeartUpdateTimeByNodeNameFromCache(npuNode.Name)
 		faultNode.updateFaultNodesFromDeviceInfo(&npuNode, npuName)
 		if err := faultNode.updateFaultNodesAttr(&npuNode); err != nil {
 			klog.V(util.LogInfoLev).Infof("node %s updateFaultNodesAttr err: %s", npuNode.Name, util.SafePrint(err))
@@ -960,9 +952,13 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, scoreMap map[string]float64) {
 	faultNodeNames := reScheduler.getFaultNodeNameByFaultJob(faultJob)
 	for _, faultNodeName := range faultNodeNames {
-		if _, ok := scoreMap[faultNodeName]; ok {
+		if score, ok := scoreMap[faultNodeName]; ok {
 			klog.V(util.LogDebugLev).Infof("fault node<%s> previous used score is reduce", faultNodeName)
-			scoreMap[faultNodeName] -= util.AffScore8 * util.AffScore8
+			score -= util.AffScore8 * util.AffScore8
+			if score < 0 {
+				score = 0
+			}
+			scoreMap[faultNodeName] = score
 		}
 	}
 }
@@ -1185,17 +1181,6 @@ func (reScheduler ReScheduler) getFaultNodeNameByFaultJob(faultJob *FaultJob) []
 	return faultNodeNames
 }
 
-func (reScheduler ReScheduler) getLastNodeHeartbeatByNodeNameFromCache(nodeName string) int64 {
-	for _, nodeHB := range reScheduler.NodeHeartbeats {
-		if nodeHB.NodeName == nodeName {
-			klog.V(util.LogDebugLev).Infof("getLastNodeHeartbeatByNodeNameFromCache: %s, %d",
-				nodeName, nodeHB.HeartbeatTime)
-			return nodeHB.HeartbeatTime
-		}
-	}
-	return 0
-}
-
 func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 	klog.V(util.LogDebugLev).Infof("task %s setTaskCardHealthCode", fTask.TaskName)
 	reasonList := make([]FaultReasonList, 0)
@@ -1222,8 +1207,19 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 		reasonList = append(reasonList, tmpReason...)
 		break
 	}
+	if fTask.IsSoftwareFault {
+		reasonList = append(reasonList, getTaskSoftwareFaultReason(fTask))
+	}
 	fTask.Reason = reasonList
 	return nil
+}
+
+func getTaskSoftwareFaultReason(fTask *FaultTask) FaultReasonList {
+	return FaultReasonList{
+		NodeName:      fTask.NodeName,
+		TaskName:      fTask.TaskName,
+		FaultRankList: fTask.initFaultRankIndex(),
+	}
 }
 
 func setTaskFaultReasonByFaultNode(fTask *FaultTask, fNode FaultNode) []FaultReasonList {
@@ -1238,6 +1234,8 @@ func setTaskFaultReasonByFaultNode(fTask *FaultTask, fNode FaultNode) []FaultRea
 			}
 			var reason FaultReasonList
 			reason.NodeName = fNode.NodeName
+			reason.TaskName = fTask.TaskName
+			reason.FaultRankList = fTask.initFaultRankIndex()
 			reason.FaultDeviceList = fCard
 			reasonList = append(reasonList, reason)
 		}
@@ -1254,17 +1252,6 @@ func (reScheduler ReScheduler) updateJobHealthCode(fJob *FaultJob) {
 			klog.V(util.LogInfoLev).Infof("setTaskCardHealthCode err:%s", err)
 		}
 	}
-}
-
-func (reScheduler ReScheduler) getLastNodeHeartUpdateTimeByNodeNameFromCache(nodeName string) int64 {
-	for _, nodeHB := range reScheduler.NodeHeartbeats {
-		if nodeHB.NodeName == nodeName {
-			klog.V(util.LogDebugLev).Infof("getLastNodeHeartbeatByNodeNameFromCache: %s, %d",
-				nodeName, nodeHB.HeartbeatTime)
-			return nodeHB.UpdateTime
-		}
-	}
-	return 0
 }
 
 // getTaskHealthState return true when unhealthy
@@ -1311,14 +1298,9 @@ func (reScheduler *ReScheduler) getTaskHealthStateByNode(fTask *FaultTask) (bool
 		return true, NodeCardUnhealthy
 	}
 	if _, ok := reScheduler.Nodes[fTask.NodeName]; !ok && !*reScheduler.IsFirstSession {
-		now := time.Now().Unix()
-		if dev, ok := reScheduler.DeviceInfoNotInSession[fTask.NodeName]; !ok ||
-			now-dev.HostUpdateTime > deviceInfoTimeout {
-			klog.V(util.LogErrorLev).Infof("task %s use node(%s) which not in session and device-info is "+
-				"over time 60s [%d-%d] thus task sets %s", fTask.TaskName, fTask.NodeName, now, dev.HostUpdateTime,
-				NodeUnhealthy)
-			return true, NodeUnhealthy
-		}
+		klog.V(util.LogErrorLev).Infof("task %s use node(%s) which is not ready thus task sets %s", fTask.TaskName,
+			fTask.NodeName, NodeUnhealthy)
+		return true, NodeUnhealthy
 	}
 	klog.V(util.LogInfoLev).Infof("task %s all nodes healthy, thus task sets %s", fTask.TaskName, NodeHealthy)
 	return false, NodeHealthy

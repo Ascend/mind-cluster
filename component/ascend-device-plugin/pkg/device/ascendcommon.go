@@ -24,9 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -37,6 +34,9 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 // isFirstFlushFault for device fault init
@@ -241,7 +241,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 			}
 		}
 		switchFaultInfo := common.GetSwitchFaultInfo()
-
+		if common.GetSyncMapLen(resetGoroutine) != 0 {
+			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
+		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
@@ -365,13 +367,6 @@ func getResetInfoData(resetInfo *v1.ConfigMap) ([]*common.TaskDevInfo, error) {
 		hwlog.RunLog.Debugf("reset configmap is initializing")
 		return nil, nil
 	}
-	checkCode, ok := resetInfo.Data[common.ResetInfoCMCheckCodeKey]
-	if !ok {
-		return nil, fmt.Errorf("%s not exist", common.ResetInfoCMCheckCodeKey)
-	}
-	if checkCode != common.MakeDataHash(taskResetInfo) {
-		return nil, fmt.Errorf("configmap check hash code error")
-	}
 	return taskResetInfo.RankList, nil
 }
 
@@ -388,6 +383,37 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	return usedDevice
 }
 
+func (tool *AscendTools) getUsedChips() sets.String {
+	if !common.ParamOption.PresetVDevice {
+		return sets.String{}
+	}
+	_, logicIDs, err := tool.dmgr.GetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Warnf("get device list failed, err: %v", err)
+		return sets.String{}
+	}
+	if len(logicIDs) < 1 {
+		hwlog.RunLog.Warn("get device list failed, logicID is empty")
+		return sets.String{}
+	}
+	usedChips := make([]string, 0, len(logicIDs))
+	for _, logicID := range logicIDs {
+		chipInfo, err := tool.dmgr.GetDevProcessInfo(logicID)
+		if err != nil {
+			// use vnpu will report an 8255 error
+			hwlog.RunLog.Debugf("get device process info failed, err: %v", err)
+			continue
+		}
+		if chipInfo.ProcNum != 0 {
+			hwlog.RunLog.Debugf("the card logicID:[%d] is used, chipInfo: %#v", logicID, chipInfo)
+			chipName := fmt.Sprintf("%s-%d", common.ParamOption.RealCardType, logicID)
+			usedChips = append(usedChips, chipName)
+		}
+	}
+	hwlog.RunLog.Debugf("get used chips: %#v", usedChips)
+	return sets.NewString(usedChips...)
+}
+
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
 	totalUHDevices, totalNetUHDevices, allTypeUsedDevice, totalRCDevices :=
@@ -398,7 +424,9 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 	}
 	for devType, classifyDev := range classifyDevs {
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
-		usedDevices := tool.client.GetPodsUsedNpu()
+		usedNpu := tool.client.GetPodsUsedNpu()
+		usedChips := tool.getUsedChips()
+		usedDevices := usedNpu.Union(usedChips)
 		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(usedDevices)
 		if !common.ParamOption.PresetVDevice {
 			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(allTypeUsedDevice)
@@ -455,27 +483,69 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 	}
 }
 
+func (tool *AscendTools) getFaultTimeAndLevelMap(
+	device *common.NpuDevice, timeoutFaults map[int64]common.FaultTimeAndLevel,
+	isNetworkFault bool) map[string]common.FaultTimeAndLevel {
+	result := make(map[string]common.FaultTimeAndLevel)
+	var events []int64
+	var getFaultLevelFunc func(events []int64, logicId int32) string
+	if isNetworkFault {
+		events = device.NetworkFaultCodes
+		getFaultLevelFunc = common.GetNetworkFaultType
+	} else {
+		events = device.FaultCodes
+		getFaultLevelFunc = common.GetFaultType
+	}
+	for _, eventId := range events {
+		faultLevel := getFaultLevelFunc([]int64{eventId}, device.LogicID)
+		faultTime, found := device.FaultTimeMap[eventId]
+		if !found {
+			hwlog.RunLog.Warnf("fault time map is inconsistance with faults, map: %s, codes: %s",
+				common.ObjToString(device.FaultTimeMap), common.ObjToString(events))
+		}
+		faultTimeAndLevel := common.FaultTimeAndLevel{
+			FaultTime:  faultTime,
+			FaultLevel: faultLevel,
+		}
+		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
+		result[hexFaultCode] = faultTimeAndLevel
+	}
+	for eventId, timeAndLevel := range timeoutFaults {
+		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
+		result[hexFaultCode] = timeAndLevel
+	}
+	return result
+}
+
 // getDeviceFaults get device fault list
 func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.DeviceFault {
 	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
 	if len(device.NetworkFaultCodes) != 0 || device.NetworkHealth == v1beta1.Unhealthy {
-		newCode := tool.removeDuplicateErr(append(device.NetworkFaultCodes,
-			common.GetTimeoutFaultCodes(common.NetworkFaultMode)...))
+		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.NetworkFaultMode)
+		newCode := tool.removeDuplicateErr(append(device.NetworkFaultCodes, common.Keys(timeoutFaultLevelAndTime)...))
 		faultType := common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType: common.CardNetworkUnhealthy, NPUName: device.DeviceName,
-			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
-			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultType:            common.CardNetworkUnhealthy,
+			NPUName:              device.DeviceName,
+			LargeModelFaultLevel: faultType,
+			FaultLevel:           faultType,
+			FaultHandling:        faultType,
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, timeoutFaultLevelAndTime, true),
 		})
 	}
 	if len(device.FaultCodes) != 0 || device.Health == v1beta1.Unhealthy {
-		newCode := tool.removeDuplicateErr(append(device.FaultCodes,
-			common.GetTimeoutFaultCodes(common.ChipFaultMode)...))
+		timeoutFaultLevelAndTime := common.GetTimeoutFaultLevelAndCodes(common.ChipFaultMode)
+		newCode := tool.removeDuplicateErr(append(device.FaultCodes, common.Keys(timeoutFaultLevelAndTime)...))
 		faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
 		deviceFaults = append(deviceFaults, common.DeviceFault{
-			FaultType: common.CardUnhealthy, NPUName: device.DeviceName,
-			LargeModelFaultLevel: faultType, FaultLevel: faultType, FaultHandling: faultType,
-			FaultCode: strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultType:            common.CardUnhealthy,
+			NPUName:              device.DeviceName,
+			LargeModelFaultLevel: faultType,
+			FaultLevel:           faultType,
+			FaultHandling:        faultType,
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(newCode)),
+			FaultTimeAndLevelMap: tool.getFaultTimeAndLevelMap(device, timeoutFaultLevelAndTime, false),
 		})
 	}
 	return deviceFaults
@@ -765,19 +835,6 @@ func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 		}
 	}
 	return false
-}
-
-// UnhealthyState state unhealthy info
-func (tool *AscendTools) unhealthyState(healthyState uint32, logicID int32) error {
-	phyID, err := tool.dmgr.GetPhysicIDFromLogicID(logicID)
-	if err != nil {
-		return fmt.Errorf("get phyID failed %v", err)
-	}
-	if _, _, err := tool.dmgr.GetDeviceErrorCode(logicID); err != nil {
-		return fmt.Errorf("get device error code failed %v", err)
-	}
-	hwlog.RunLog.Errorf("device logicID: %d, phyID: %d, state is %d", logicID, phyID, healthyState)
-	return nil
 }
 
 func (tool *AscendTools) getVGroupID(device string) (uint32, error) {
@@ -1153,7 +1210,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 		event.Type = v1.EventTypeNormal
 	}
 	if _, err := tool.client.CreateEvent(event); err != nil {
-		return fmt.Errorf("failed to create event, %w", err)
+		return fmt.Errorf("failed to create event, %v", err)
 	}
 	return nil
 }

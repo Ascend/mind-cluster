@@ -3,11 +3,11 @@ module ascend-operator
 go 1.18
 
 require (
+	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/kubeflow/common v0.4.3
 	github.com/kubeflow/training-operator v1.5.0
 	github.com/smartystreets/goconvey v1.6.4
-	huawei.com/npu-exporter/v5 v5.0.0
 	k8s.io/api v0.25.13
 	k8s.io/apimachinery v0.25.13
 	k8s.io/client-go v0.25.13
@@ -87,4 +87,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace huawei.com/npu-exporter/v5 => gitee.com/ascend/ascend-npu-exporter/v5 v5.0.0
+replace ascend-common => ../ascend-common

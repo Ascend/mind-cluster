@@ -20,45 +20,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type RespCode int32
-
-const (
-	RespCode_OK                      RespCode = 0
-	RespCode_COMMON_ERROR            RespCode = 400
-	RespCode_UNREGISTERED            RespCode = 401
-	RespCode_MODEL_MIXED             RespCode = 402
-	RespCode_ORDER_MIXED             RespCode = 403
-	RespCode_DO_NOT_STEP_RECALCULATE RespCode = 404
-)
-
-var RespCode_name = map[int32]string{
-	0:   "OK",
-	400: "COMMON_ERROR",
-	401: "UNREGISTERED",
-	402: "MODEL_MIXED",
-	403: "ORDER_MIXED",
-	404: "DO_NOT_STEP_RECALCULATE",
-}
-
-var RespCode_value = map[string]int32{
-	"OK":                      0,
-	"COMMON_ERROR":            400,
-	"UNREGISTERED":            401,
-	"MODEL_MIXED":             402,
-	"ORDER_MIXED":             403,
-	"DO_NOT_STEP_RECALCULATE": 404,
-}
-
-func (x RespCode) String() string {
-	return proto.EnumName(RespCode_name, int32(x))
-}
-
-func (RespCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{0}
-}
-
 type Status struct {
-	Code                 RespCode `protobuf:"varint,1,opt,name=code,proto3,enum=RespCode" json:"code,omitempty"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Info                 string   `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -90,11 +53,11 @@ func (m *Status) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Status proto.InternalMessageInfo
 
-func (m *Status) GetCode() RespCode {
+func (m *Status) GetCode() int32 {
 	if m != nil {
 		return m.Code
 	}
-	return RespCode_OK
+	return 0
 }
 
 func (m *Status) GetInfo() string {
@@ -105,10 +68,8 @@ func (m *Status) GetInfo() string {
 }
 
 type ClientInfo struct {
-	Ip                   string   `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
-	Port                 string   `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
-	TaskId               string   `protobuf:"bytes,3,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	Role                 string   `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	JobId                string   `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	Role                 string   `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -139,23 +100,9 @@ func (m *ClientInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ClientInfo proto.InternalMessageInfo
 
-func (m *ClientInfo) GetIp() string {
+func (m *ClientInfo) GetJobId() string {
 	if m != nil {
-		return m.Ip
-	}
-	return ""
-}
-
-func (m *ClientInfo) GetPort() string {
-	if m != nil {
-		return m.Port
-	}
-	return ""
-}
-
-func (m *ClientInfo) GetTaskId() string {
-	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
@@ -167,127 +114,70 @@ func (m *ClientInfo) GetRole() string {
 	return ""
 }
 
-// hbm step recover
-type NotifyStepRetryRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	Step                 string   `protobuf:"bytes,2,opt,name=step,proto3" json:"step,omitempty"`
+type FaultRank struct {
+	RankId               string   `protobuf:"bytes,1,opt,name=rankId,proto3" json:"rankId,omitempty"`
+	FaultType            string   `protobuf:"bytes,2,opt,name=faultType,proto3" json:"faultType,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NotifyStepRetryRequest) Reset()         { *m = NotifyStepRetryRequest{} }
-func (m *NotifyStepRetryRequest) String() string { return proto.CompactTextString(m) }
-func (*NotifyStepRetryRequest) ProtoMessage()    {}
-func (*NotifyStepRetryRequest) Descriptor() ([]byte, []int) {
+func (m *FaultRank) Reset()         { *m = FaultRank{} }
+func (m *FaultRank) String() string { return proto.CompactTextString(m) }
+func (*FaultRank) ProtoMessage()    {}
+func (*FaultRank) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f0beebb6a1a69646, []int{2}
 }
 
-func (m *NotifyStepRetryRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NotifyStepRetryRequest.Unmarshal(m, b)
+func (m *FaultRank) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FaultRank.Unmarshal(m, b)
 }
-func (m *NotifyStepRetryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NotifyStepRetryRequest.Marshal(b, m, deterministic)
+func (m *FaultRank) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FaultRank.Marshal(b, m, deterministic)
 }
-func (m *NotifyStepRetryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NotifyStepRetryRequest.Merge(m, src)
+func (m *FaultRank) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FaultRank.Merge(m, src)
 }
-func (m *NotifyStepRetryRequest) XXX_Size() int {
-	return xxx_messageInfo_NotifyStepRetryRequest.Size(m)
+func (m *FaultRank) XXX_Size() int {
+	return xxx_messageInfo_FaultRank.Size(m)
 }
-func (m *NotifyStepRetryRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_NotifyStepRetryRequest.DiscardUnknown(m)
+func (m *FaultRank) XXX_DiscardUnknown() {
+	xxx_messageInfo_FaultRank.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NotifyStepRetryRequest proto.InternalMessageInfo
+var xxx_messageInfo_FaultRank proto.InternalMessageInfo
 
-func (m *NotifyStepRetryRequest) GetTaskId() string {
+func (m *FaultRank) GetRankId() string {
 	if m != nil {
-		return m.TaskId
+		return m.RankId
 	}
 	return ""
 }
 
-func (m *NotifyStepRetryRequest) GetStep() string {
+func (m *FaultRank) GetFaultType() string {
 	if m != nil {
-		return m.Step
+		return m.FaultType
 	}
 	return ""
 }
 
-type NotifyRetryStatusRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	Step                 string   `protobuf:"bytes,2,opt,name=step,proto3" json:"step,omitempty"`
-	Status               *Status  `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *NotifyRetryStatusRequest) Reset()         { *m = NotifyRetryStatusRequest{} }
-func (m *NotifyRetryStatusRequest) String() string { return proto.CompactTextString(m) }
-func (*NotifyRetryStatusRequest) ProtoMessage()    {}
-func (*NotifyRetryStatusRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{3}
-}
-
-func (m *NotifyRetryStatusRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NotifyRetryStatusRequest.Unmarshal(m, b)
-}
-func (m *NotifyRetryStatusRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NotifyRetryStatusRequest.Marshal(b, m, deterministic)
-}
-func (m *NotifyRetryStatusRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NotifyRetryStatusRequest.Merge(m, src)
-}
-func (m *NotifyRetryStatusRequest) XXX_Size() int {
-	return xxx_messageInfo_NotifyRetryStatusRequest.Size(m)
-}
-func (m *NotifyRetryStatusRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_NotifyRetryStatusRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_NotifyRetryStatusRequest proto.InternalMessageInfo
-
-func (m *NotifyRetryStatusRequest) GetTaskId() string {
-	if m != nil {
-		return m.TaskId
-	}
-	return ""
-}
-
-func (m *NotifyRetryStatusRequest) GetStep() string {
-	if m != nil {
-		return m.Step
-	}
-	return ""
-}
-
-func (m *NotifyRetryStatusRequest) GetStatus() *Status {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-// process recover
 type ProcessManageSignal struct {
-	Uuid                 string   `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	TaskId               string   `protobuf:"bytes,2,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	SignalType           string   `protobuf:"bytes,3,opt,name=signalType,proto3" json:"signalType,omitempty"`
-	Actions              []string `protobuf:"bytes,4,rep,name=actions,proto3" json:"actions,omitempty"`
-	FaultRankIds         []string `protobuf:"bytes,5,rep,name=faultRankIds,proto3" json:"faultRankIds,omitempty"`
-	ChangeStrategy       string   `protobuf:"bytes,6,opt,name=changeStrategy,proto3" json:"changeStrategy,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Uuid                 string       `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	JobId                string       `protobuf:"bytes,2,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	SignalType           string       `protobuf:"bytes,3,opt,name=signalType,proto3" json:"signalType,omitempty"`
+	Actions              []string     `protobuf:"bytes,4,rep,name=actions,proto3" json:"actions,omitempty"`
+	FaultRanks           []*FaultRank `protobuf:"bytes,5,rep,name=faultRanks,proto3" json:"faultRanks,omitempty"`
+	ChangeStrategy       string       `protobuf:"bytes,6,opt,name=changeStrategy,proto3" json:"changeStrategy,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *ProcessManageSignal) Reset()         { *m = ProcessManageSignal{} }
 func (m *ProcessManageSignal) String() string { return proto.CompactTextString(m) }
 func (*ProcessManageSignal) ProtoMessage()    {}
 func (*ProcessManageSignal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{4}
+	return fileDescriptor_f0beebb6a1a69646, []int{3}
 }
 
 func (m *ProcessManageSignal) XXX_Unmarshal(b []byte) error {
@@ -315,9 +205,9 @@ func (m *ProcessManageSignal) GetUuid() string {
 	return ""
 }
 
-func (m *ProcessManageSignal) GetTaskId() string {
+func (m *ProcessManageSignal) GetJobId() string {
 	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
@@ -336,9 +226,9 @@ func (m *ProcessManageSignal) GetActions() []string {
 	return nil
 }
 
-func (m *ProcessManageSignal) GetFaultRankIds() []string {
+func (m *ProcessManageSignal) GetFaultRanks() []*FaultRank {
 	if m != nil {
-		return m.FaultRankIds
+		return m.FaultRanks
 	}
 	return nil
 }
@@ -351,19 +241,19 @@ func (m *ProcessManageSignal) GetChangeStrategy() string {
 }
 
 type StopCompleteRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	Status               *Status  `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	FaultRankIds         []string `protobuf:"bytes,3,rep,name=faultRankIds,proto3" json:"faultRankIds,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	JobId                string       `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	Status               *Status      `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	FaultRanks           []*FaultRank `protobuf:"bytes,3,rep,name=faultRanks,proto3" json:"faultRanks,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *StopCompleteRequest) Reset()         { *m = StopCompleteRequest{} }
 func (m *StopCompleteRequest) String() string { return proto.CompactTextString(m) }
 func (*StopCompleteRequest) ProtoMessage()    {}
 func (*StopCompleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{5}
+	return fileDescriptor_f0beebb6a1a69646, []int{4}
 }
 
 func (m *StopCompleteRequest) XXX_Unmarshal(b []byte) error {
@@ -384,9 +274,9 @@ func (m *StopCompleteRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StopCompleteRequest proto.InternalMessageInfo
 
-func (m *StopCompleteRequest) GetTaskId() string {
+func (m *StopCompleteRequest) GetJobId() string {
 	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
@@ -398,27 +288,27 @@ func (m *StopCompleteRequest) GetStatus() *Status {
 	return nil
 }
 
-func (m *StopCompleteRequest) GetFaultRankIds() []string {
+func (m *StopCompleteRequest) GetFaultRanks() []*FaultRank {
 	if m != nil {
-		return m.FaultRankIds
+		return m.FaultRanks
 	}
 	return nil
 }
 
 type RecoverStrategyRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	FaultRankIds         []string `protobuf:"bytes,2,rep,name=faultRankIds,proto3" json:"faultRankIds,omitempty"`
-	Strategies           []string `protobuf:"bytes,3,rep,name=strategies,proto3" json:"strategies,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	JobId                string       `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	FaultRanks           []*FaultRank `protobuf:"bytes,2,rep,name=faultRanks,proto3" json:"faultRanks,omitempty"`
+	Strategies           []string     `protobuf:"bytes,3,rep,name=strategies,proto3" json:"strategies,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *RecoverStrategyRequest) Reset()         { *m = RecoverStrategyRequest{} }
 func (m *RecoverStrategyRequest) String() string { return proto.CompactTextString(m) }
 func (*RecoverStrategyRequest) ProtoMessage()    {}
 func (*RecoverStrategyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{6}
+	return fileDescriptor_f0beebb6a1a69646, []int{5}
 }
 
 func (m *RecoverStrategyRequest) XXX_Unmarshal(b []byte) error {
@@ -439,16 +329,16 @@ func (m *RecoverStrategyRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RecoverStrategyRequest proto.InternalMessageInfo
 
-func (m *RecoverStrategyRequest) GetTaskId() string {
+func (m *RecoverStrategyRequest) GetJobId() string {
 	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
 
-func (m *RecoverStrategyRequest) GetFaultRankIds() []string {
+func (m *RecoverStrategyRequest) GetFaultRanks() []*FaultRank {
 	if m != nil {
-		return m.FaultRankIds
+		return m.FaultRanks
 	}
 	return nil
 }
@@ -460,56 +350,10 @@ func (m *RecoverStrategyRequest) GetStrategies() []string {
 	return nil
 }
 
-type RecoverStrategyResponse struct {
-	Status               *Status  `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Strategy             string   `protobuf:"bytes,2,opt,name=strategy,proto3" json:"strategy,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *RecoverStrategyResponse) Reset()         { *m = RecoverStrategyResponse{} }
-func (m *RecoverStrategyResponse) String() string { return proto.CompactTextString(m) }
-func (*RecoverStrategyResponse) ProtoMessage()    {}
-func (*RecoverStrategyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{7}
-}
-
-func (m *RecoverStrategyResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_RecoverStrategyResponse.Unmarshal(m, b)
-}
-func (m *RecoverStrategyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_RecoverStrategyResponse.Marshal(b, m, deterministic)
-}
-func (m *RecoverStrategyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RecoverStrategyResponse.Merge(m, src)
-}
-func (m *RecoverStrategyResponse) XXX_Size() int {
-	return xxx_messageInfo_RecoverStrategyResponse.Size(m)
-}
-func (m *RecoverStrategyResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_RecoverStrategyResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RecoverStrategyResponse proto.InternalMessageInfo
-
-func (m *RecoverStrategyResponse) GetStatus() *Status {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-func (m *RecoverStrategyResponse) GetStrategy() string {
-	if m != nil {
-		return m.Strategy
-	}
-	return ""
-}
-
 type RecoverStatusRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
+	JobId                string   `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
 	Status               *Status  `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Strategy             string   `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -519,7 +363,7 @@ func (m *RecoverStatusRequest) Reset()         { *m = RecoverStatusRequest{} }
 func (m *RecoverStatusRequest) String() string { return proto.CompactTextString(m) }
 func (*RecoverStatusRequest) ProtoMessage()    {}
 func (*RecoverStatusRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{8}
+	return fileDescriptor_f0beebb6a1a69646, []int{6}
 }
 
 func (m *RecoverStatusRequest) XXX_Unmarshal(b []byte) error {
@@ -540,9 +384,9 @@ func (m *RecoverStatusRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RecoverStatusRequest proto.InternalMessageInfo
 
-func (m *RecoverStatusRequest) GetTaskId() string {
+func (m *RecoverStatusRequest) GetJobId() string {
 	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
@@ -554,19 +398,26 @@ func (m *RecoverStatusRequest) GetStatus() *Status {
 	return nil
 }
 
+func (m *RecoverStatusRequest) GetStrategy() string {
+	if m != nil {
+		return m.Strategy
+	}
+	return ""
+}
+
 type ProcessFaultRequest struct {
-	TaskId               string   `protobuf:"bytes,1,opt,name=taskId,proto3" json:"taskId,omitempty"`
-	FaultRankIds         []string `protobuf:"bytes,2,rep,name=faultRankIds,proto3" json:"faultRankIds,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	JobId                string       `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	FaultRanks           []*FaultRank `protobuf:"bytes,2,rep,name=faultRanks,proto3" json:"faultRanks,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *ProcessFaultRequest) Reset()         { *m = ProcessFaultRequest{} }
 func (m *ProcessFaultRequest) String() string { return proto.CompactTextString(m) }
 func (*ProcessFaultRequest) ProtoMessage()    {}
 func (*ProcessFaultRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0beebb6a1a69646, []int{9}
+	return fileDescriptor_f0beebb6a1a69646, []int{7}
 }
 
 func (m *ProcessFaultRequest) XXX_Unmarshal(b []byte) error {
@@ -587,30 +438,27 @@ func (m *ProcessFaultRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ProcessFaultRequest proto.InternalMessageInfo
 
-func (m *ProcessFaultRequest) GetTaskId() string {
+func (m *ProcessFaultRequest) GetJobId() string {
 	if m != nil {
-		return m.TaskId
+		return m.JobId
 	}
 	return ""
 }
 
-func (m *ProcessFaultRequest) GetFaultRankIds() []string {
+func (m *ProcessFaultRequest) GetFaultRanks() []*FaultRank {
 	if m != nil {
-		return m.FaultRankIds
+		return m.FaultRanks
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterEnum("RespCode", RespCode_name, RespCode_value)
 	proto.RegisterType((*Status)(nil), "Status")
 	proto.RegisterType((*ClientInfo)(nil), "ClientInfo")
-	proto.RegisterType((*NotifyStepRetryRequest)(nil), "NotifyStepRetryRequest")
-	proto.RegisterType((*NotifyRetryStatusRequest)(nil), "NotifyRetryStatusRequest")
+	proto.RegisterType((*FaultRank)(nil), "FaultRank")
 	proto.RegisterType((*ProcessManageSignal)(nil), "ProcessManageSignal")
 	proto.RegisterType((*StopCompleteRequest)(nil), "StopCompleteRequest")
 	proto.RegisterType((*RecoverStrategyRequest)(nil), "RecoverStrategyRequest")
-	proto.RegisterType((*RecoverStrategyResponse)(nil), "RecoverStrategyResponse")
 	proto.RegisterType((*RecoverStatusRequest)(nil), "RecoverStatusRequest")
 	proto.RegisterType((*ProcessFaultRequest)(nil), "ProcessFaultRequest")
 }
@@ -620,47 +468,36 @@ func init() {
 }
 
 var fileDescriptor_f0beebb6a1a69646 = []byte{
-	// 672 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xdb, 0x6e, 0xd3, 0x40,
-	0x10, 0x8d, 0xed, 0xe0, 0x36, 0xd3, 0xaa, 0xb8, 0xdb, 0x4b, 0x4c, 0x55, 0xa0, 0xda, 0x07, 0x54,
-	0xf1, 0x60, 0x50, 0x51, 0x85, 0x50, 0x9f, 0x4a, 0x62, 0x50, 0x44, 0x12, 0x97, 0x75, 0x8a, 0x10,
-	0x42, 0x8a, 0x9c, 0x64, 0x13, 0xac, 0x06, 0xaf, 0xf1, 0x6e, 0x90, 0xc2, 0x57, 0x70, 0xfb, 0x27,
-	0x3e, 0x82, 0x9f, 0x41, 0x5e, 0xdb, 0xa9, 0x93, 0xb8, 0x0a, 0x82, 0xb7, 0xdd, 0x93, 0x9d, 0x73,
-	0x66, 0x4e, 0x66, 0xc6, 0x60, 0x84, 0xbd, 0x47, 0x11, 0xed, 0xb3, 0xcf, 0x34, 0xb2, 0xc2, 0x88,
-	0x09, 0x86, 0xcf, 0x40, 0x77, 0x85, 0x27, 0x26, 0x1c, 0xdd, 0x85, 0x72, 0x9f, 0x0d, 0xa8, 0xa9,
-	0x1c, 0x29, 0xc7, 0x5b, 0x27, 0x15, 0x8b, 0x50, 0x1e, 0xd6, 0xd8, 0x80, 0x12, 0x09, 0x23, 0x04,
-	0x65, 0x3f, 0x18, 0x32, 0x53, 0x3d, 0x52, 0x8e, 0x2b, 0x44, 0x9e, 0xf1, 0x7b, 0x80, 0xda, 0xd8,
-	0xa7, 0x81, 0x68, 0x04, 0x43, 0x86, 0xb6, 0x40, 0xf5, 0x43, 0x19, 0x5e, 0x21, 0xaa, 0x1f, 0xc6,
-	0x11, 0x21, 0x8b, 0x44, 0x16, 0x11, 0x9f, 0xd1, 0x3e, 0xe8, 0xc2, 0xe3, 0x57, 0x8d, 0x81, 0xa9,
-	0x49, 0x34, 0xbd, 0xc5, 0x6f, 0x23, 0x36, 0xa6, 0x66, 0x39, 0x79, 0x1b, 0x9f, 0x71, 0x1d, 0xf6,
-	0xdb, 0x4c, 0xf8, 0xc3, 0xa9, 0x2b, 0x68, 0x48, 0xa8, 0x88, 0xa6, 0x84, 0x7e, 0x9a, 0x50, 0x9e,
-	0x67, 0x51, 0x16, 0x59, 0xb8, 0xa0, 0x61, 0xa6, 0x18, 0x9f, 0xf1, 0x08, 0xcc, 0x84, 0x45, 0x32,
-	0x24, 0xb5, 0xfe, 0x03, 0x0f, 0xba, 0x0f, 0x3a, 0x97, 0xc1, 0x32, 0xf3, 0x8d, 0x93, 0x35, 0x2b,
-	0xe5, 0x4a, 0x61, 0xfc, 0x4b, 0x81, 0x9d, 0x8b, 0x88, 0xf5, 0x29, 0xe7, 0x2d, 0x2f, 0xf0, 0x46,
-	0xd4, 0xf5, 0x47, 0x81, 0x37, 0x8e, 0xc9, 0x26, 0x13, 0x3f, 0x93, 0x90, 0xe7, 0x9c, 0xb0, 0x3a,
-	0x27, 0x7c, 0x0f, 0x80, 0xcb, 0xa8, 0xce, 0x34, 0xa4, 0xa9, 0x45, 0x39, 0x04, 0x99, 0xb0, 0xe6,
-	0xf5, 0x85, 0xcf, 0x02, 0x6e, 0x96, 0x8f, 0xb4, 0xe3, 0x0a, 0xc9, 0xae, 0x08, 0xc3, 0xe6, 0xd0,
-	0x9b, 0x8c, 0x05, 0xf1, 0x82, 0xab, 0xc6, 0x80, 0x9b, 0xb7, 0xe4, 0xcf, 0x73, 0x18, 0x7a, 0x00,
-	0x5b, 0xfd, 0x0f, 0x5e, 0x30, 0xa2, 0xae, 0x88, 0x3c, 0x41, 0x47, 0x53, 0x53, 0x97, 0x0a, 0x0b,
-	0x28, 0x8e, 0x60, 0xc7, 0x15, 0x2c, 0xac, 0xb1, 0x8f, 0xe1, 0x98, 0x0a, 0xba, 0xca, 0xad, 0x6b,
-	0x67, 0xd4, 0x42, 0x67, 0x96, 0x72, 0xd3, 0x96, 0x73, 0xc3, 0x02, 0xf6, 0x49, 0xd2, 0x98, 0x59,
-	0x1a, 0xab, 0x64, 0x17, 0x59, 0xd5, 0x82, 0x8a, 0x63, 0x3f, 0x13, 0x3a, 0x9f, 0x66, 0xba, 0x39,
-	0x04, 0xbf, 0x81, 0xea, 0x92, 0x2a, 0x0f, 0x59, 0xc0, 0x69, 0xae, 0x2a, 0xa5, 0xb8, 0xaa, 0x03,
-	0x58, 0xe7, 0x99, 0x8f, 0xc9, 0xbf, 0x38, 0xbb, 0x63, 0x07, 0x76, 0x67, 0xbc, 0x7f, 0xd3, 0x70,
-	0xab, 0x2c, 0xc4, 0xaf, 0x67, 0xbd, 0xf5, 0x42, 0xd6, 0xf7, 0xff, 0xde, 0x3c, 0xfc, 0x02, 0xeb,
-	0xd9, 0x88, 0x23, 0x1d, 0x54, 0xe7, 0x95, 0x51, 0x42, 0xdb, 0xb0, 0x59, 0x73, 0x5a, 0x2d, 0xa7,
-	0xdd, 0xb5, 0x09, 0x71, 0x88, 0xf1, 0x55, 0x8b, 0xa1, 0xcb, 0x36, 0xb1, 0x5f, 0x36, 0xdc, 0x8e,
-	0x4d, 0xec, 0xba, 0xf1, 0x4d, 0x43, 0x06, 0x6c, 0xb4, 0x9c, 0xba, 0xdd, 0xec, 0xb6, 0x1a, 0x6f,
-	0xed, 0xba, 0xf1, 0x5d, 0x22, 0x0e, 0xa9, 0xdb, 0x24, 0x45, 0x7e, 0x68, 0xe8, 0x10, 0xaa, 0x75,
-	0xa7, 0xdb, 0x76, 0x3a, 0x5d, 0xb7, 0x63, 0x5f, 0x74, 0x89, 0x5d, 0x3b, 0x6f, 0xd6, 0x2e, 0x9b,
-	0xe7, 0x1d, 0xdb, 0xf8, 0xa9, 0x9d, 0xfc, 0xd6, 0x60, 0x2d, 0x35, 0x08, 0xe1, 0x38, 0x8f, 0x91,
-	0xcf, 0x05, 0x8d, 0xd0, 0x86, 0x75, 0xbd, 0x4f, 0x0e, 0x32, 0x13, 0x70, 0x09, 0x9d, 0xc2, 0xed,
-	0x85, 0x55, 0x80, 0xaa, 0x56, 0xf1, 0x72, 0xc8, 0x87, 0x3d, 0x83, 0xed, 0xa5, 0xd9, 0x47, 0x77,
-	0xac, 0x9b, 0xf6, 0x41, 0x3e, 0xd4, 0x86, 0x43, 0x77, 0xd2, 0xe3, 0xfd, 0xc8, 0xef, 0xd1, 0xa2,
-	0xa9, 0x9e, 0xcb, 0x74, 0xd7, 0x2a, 0x78, 0x82, 0x4b, 0x8f, 0x15, 0x74, 0x0a, 0x88, 0xd0, 0x78,
-	0xf3, 0xe5, 0x07, 0x0a, 0xed, 0x5a, 0x05, 0xf3, 0x95, 0x57, 0x6f, 0xc2, 0x5e, 0x12, 0xb6, 0xd0,
-	0x9d, 0xa8, 0x6a, 0x15, 0x4f, 0xc9, 0x81, 0x69, 0xdd, 0xd0, 0xc8, 0xb8, 0x84, 0x9e, 0xc2, 0xce,
-	0x02, 0x9b, 0x34, 0x62, 0xcf, 0x2a, 0xea, 0xd1, 0x79, 0xdb, 0xd3, 0xec, 0xf3, 0xbd, 0x87, 0x66,
-	0xd5, 0xe6, 0x5b, 0x31, 0x17, 0xf6, 0x5c, 0x7f, 0x57, 0xb6, 0xce, 0xc2, 0x5e, 0x4f, 0x97, 0x9f,
-	0x98, 0x27, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xda, 0x0c, 0x1f, 0xd3, 0x76, 0x06, 0x00, 0x00,
+	// 493 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0x5e, 0xda, 0x2e, 0x5d, 0x5e, 0x25, 0x84, 0xdc, 0x6e, 0x44, 0xd3, 0x34, 0x2a, 0x1f, 0x50,
+	0xc5, 0xc1, 0x4c, 0x45, 0xc0, 0x61, 0x27, 0x98, 0x40, 0xea, 0x01, 0x09, 0x39, 0x48, 0x48, 0xdc,
+	0x9c, 0xcc, 0x0d, 0x66, 0xc1, 0x0e, 0xb6, 0x83, 0x18, 0xff, 0x91, 0xff, 0xc3, 0x11, 0xc5, 0x69,
+	0x52, 0xaf, 0xca, 0x7a, 0x81, 0xdb, 0x7b, 0xcf, 0xfe, 0xfc, 0xbe, 0xef, 0xbd, 0x2f, 0x81, 0x87,
+	0x65, 0xfa, 0x4c, 0xf3, 0x4c, 0xfd, 0xe0, 0x9a, 0x94, 0x5a, 0x59, 0x85, 0x2f, 0x20, 0x4c, 0x2c,
+	0xb3, 0x95, 0x41, 0x08, 0x46, 0x99, 0xba, 0xe6, 0x71, 0x30, 0x0f, 0x16, 0x87, 0xd4, 0xc5, 0x75,
+	0x4d, 0xc8, 0xb5, 0x8a, 0x07, 0xf3, 0x60, 0x11, 0x51, 0x17, 0xe3, 0x97, 0x00, 0x57, 0x85, 0xe0,
+	0xd2, 0xae, 0xe4, 0x5a, 0xa1, 0x19, 0x1c, 0x7e, 0x55, 0xe9, 0xea, 0xda, 0xc1, 0x22, 0xda, 0x24,
+	0x35, 0x4e, 0xab, 0x82, 0xb7, 0xb8, 0x3a, 0xc6, 0xaf, 0x21, 0x7a, 0xc7, 0xaa, 0xc2, 0x52, 0x26,
+	0x6f, 0xd0, 0x09, 0x84, 0x9a, 0xc9, 0x9b, 0x0e, 0xb7, 0xc9, 0xd0, 0x19, 0x44, 0xeb, 0xfa, 0xd2,
+	0xc7, 0xdb, 0xb2, 0x45, 0x6f, 0x0b, 0xf8, 0x77, 0x00, 0xd3, 0x0f, 0x5a, 0x65, 0xdc, 0x98, 0xf7,
+	0x4c, 0xb2, 0x9c, 0x27, 0x22, 0x97, 0xac, 0xa8, 0xdb, 0x55, 0x95, 0x68, 0xdf, 0x72, 0xf1, 0x96,
+	0xd8, 0xc0, 0x27, 0x76, 0x0e, 0x60, 0x1c, 0xc6, 0x35, 0x18, 0xba, 0x23, 0xaf, 0x82, 0x62, 0x18,
+	0xb3, 0xcc, 0x0a, 0x25, 0x4d, 0x3c, 0x9a, 0x0f, 0x17, 0x11, 0x6d, 0x53, 0xf4, 0x14, 0x60, 0xdd,
+	0xd2, 0x37, 0xf1, 0xe1, 0x7c, 0xb8, 0x98, 0x2c, 0x81, 0x74, 0x8a, 0xa8, 0x77, 0x8a, 0x9e, 0xc0,
+	0x83, 0xec, 0x0b, 0x93, 0x39, 0x4f, 0xac, 0x66, 0x96, 0xe7, 0xb7, 0x71, 0xe8, 0x3a, 0xed, 0x54,
+	0xf1, 0x4f, 0x98, 0x26, 0x56, 0x95, 0x57, 0xea, 0x5b, 0x59, 0x70, 0xcb, 0x29, 0xff, 0x5e, 0x71,
+	0x63, 0xef, 0x99, 0xe9, 0x63, 0x08, 0x8d, 0xdb, 0x94, 0x53, 0x34, 0x59, 0x8e, 0x49, 0xb3, 0x38,
+	0xba, 0x29, 0xef, 0x30, 0x1c, 0xee, 0x63, 0x88, 0x7f, 0xc1, 0x09, 0x6d, 0x7c, 0xd0, 0x92, 0xd9,
+	0xdf, 0xfc, 0xee, 0xdb, 0x83, 0xbd, 0xea, 0xeb, 0x19, 0x37, 0x8f, 0x0a, 0xde, 0xf0, 0xa8, 0x67,
+	0xdc, 0x55, 0xb0, 0x80, 0x59, 0xd7, 0xdb, 0x09, 0xf8, 0x37, 0xd9, 0xa7, 0x70, 0x64, 0xda, 0x31,
+	0x37, 0x0b, 0xed, 0x72, 0xfc, 0xa9, 0xf3, 0x4b, 0x43, 0xf5, 0x7f, 0x69, 0x5c, 0xfe, 0x19, 0xc0,
+	0x78, 0x23, 0x02, 0x9d, 0xc3, 0x68, 0x25, 0x85, 0x45, 0x13, 0xb2, 0xfd, 0x2e, 0x4e, 0x5b, 0x9a,
+	0xf8, 0x00, 0x61, 0x38, 0xa2, 0x3c, 0x17, 0xc6, 0x72, 0x7d, 0xef, 0x9d, 0xb7, 0x70, 0x96, 0x54,
+	0xa9, 0xc9, 0xb4, 0x48, 0x79, 0x9f, 0xc3, 0xef, 0xe0, 0x66, 0xa4, 0xe7, 0x0a, 0x3e, 0xb8, 0x08,
+	0xd0, 0x0b, 0x40, 0x94, 0x97, 0x4a, 0x5b, 0xdf, 0x56, 0x68, 0x46, 0x7a, 0x5c, 0xe6, 0x77, 0xbf,
+	0x84, 0xe3, 0x06, 0xb6, 0xe3, 0x09, 0xf4, 0x88, 0xf4, 0xbb, 0xc4, 0x07, 0xbf, 0x82, 0xe9, 0x0e,
+	0xd8, 0xad, 0xe5, 0x98, 0xf4, 0x2d, 0xd9, 0x07, 0x76, 0x64, 0xfd, 0x15, 0xa1, 0x4e, 0x9c, 0xbf,
+	0x31, 0x0f, 0xf6, 0x26, 0xfc, 0x3c, 0x22, 0x97, 0x65, 0x9a, 0x86, 0xee, 0x07, 0xf6, 0xfc, 0x6f,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x94, 0x18, 0xdd, 0xb7, 0xd4, 0x04, 0x00, 0x00,
 }

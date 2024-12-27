@@ -147,8 +147,11 @@ Options:
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
+                                Do not use with --install-scene
+                                [Deprecated] This parameter will be removed in future versions.
+                                Please use --install-scene=isula instead
   --version                     Query Ascend-docker-runtime version
-  --install-scene=<scene>       Installation scenario, only docker or containerd(eg: --install-scene=docker, default: docker)
+  --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path
@@ -285,7 +288,7 @@ function install()
     echo "[INFO] install executable files success"
 
     if [[ ${CONFIG_FILE_PATH} == "" ]]; then
-        if [[ "${INSTALL_SCENE}" == "docker" ]]; then
+        if [ "${INSTALL_SCENE}" == "docker" ] || [ "${INSTALL_SCENE}" == "isula" ]; then
                 echo "[INFO] install scene is 'docker'."
                 check_path ${DOCKER_CONFIG_DIR}/daemon.json
                 if [[ $? != 0 ]]; then
@@ -476,12 +479,20 @@ do
                 log "[ERROR]" "failed, '--install-scene' Repeat parameter!"
                 exit 1
             fi
+            if [ "${ISULA}" == "isula" ]; then
+                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
+                exit 1
+            fi
             need_help=n
             INSTALL_SCENE_FLAG=y
             if [ "$3" == "--install-scene=docker" ]; then
                 INSTALL_SCENE=docker
             elif [ "$3" == "--install-scene=containerd" ]; then
                 INSTALL_SCENE=containerd
+            elif [ "$3" == "--install-scene=isula" ]; then
+                INSTALL_SCENE=isula
+                DOCKER_CONFIG_DIR="/etc/isulad"
+                RESERVEDEFAULT=yes
             else
                 log "[ERROR]" "failed, please check the parameter of --install-scene=<scene>"
                 exit 1
@@ -543,6 +554,10 @@ do
         --ce=*)
             if [ "${ISULA}" == "isula" ]; then
                 log "[ERROR]" "failed, '--ce' Repeat parameter!"
+                exit 1
+            fi
+            if [ "${INSTALL_SCENE_FLAG}" == "y" ]; then
+                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
                 exit 1
             fi
             need_help=n

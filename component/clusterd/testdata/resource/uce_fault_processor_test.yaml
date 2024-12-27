@@ -1,0 +1,280 @@
+# device info in cm manager
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-2", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-4", "fault_code": "80E01801,11111111,22222222,33333333", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "11111111": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "22222222": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "33333333": { "fault_time": 100000, "fault_level": "RestartBusiness" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801,22222222", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "22222222": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-2", "fault_code": "80E01801",    
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-4", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 100000, "fault_level": "RestartBusiness" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4
+---
+# the result after uce processor process
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-4", "fault_code": "11111111,22222222,33333333", 
+          "large_model_fault_level":"RestartBusiness","fault_level":"RestartBusiness","fault_handling":"RestartBusiness",
+          "fault_time_and_level_map": { "11111111": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "22222222": { "fault_time": 100000, "fault_level": "RestartBusiness" },
+                                        "33333333": { "fault_time": 100000, "fault_level": "RestartBusiness" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-4
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "22222222", 
+          "large_model_fault_level":"RestartBusiness","fault_level":"RestartBusiness","fault_handling":"RestartBusiness",
+          "fault_time_and_level_map": { "22222222": { "fault_time": 100000, "fault_level": "RestartBusiness" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-0
+---
+# the output of processor.getUceDeviceOfNodes()
+node1:
+  NodeName: "node1"
+  DeviceInfo:
+    Ascend910-0:
+      DeviceName: "Ascend910-0"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-1:
+      DeviceName: "Ascend910-1"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-2:
+      DeviceName: "Ascend910-2"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-3:
+      DeviceName: "Ascend910-3"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-4:
+      DeviceName: "Ascend910-4"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+node2:
+  NodeName: "node2"
+  DeviceInfo:
+    Ascend910-0:
+      DeviceName: "Ascend910-0"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-1:
+      DeviceName: "Ascend910-1"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-2:
+      DeviceName: "Ascend910-2"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-3:
+      DeviceName: "Ascend910-3"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+    Ascend910-4:
+      DeviceName: "Ascend910-4"
+      FaultTime: 100000
+      RecoverTime: 9223372036854775807
+      CompleteTime: 9223372036854775807
+---
+job1:
+  node1:
+    device:
+      - device_id: 0
+        rank_id: 0
+    server_name: node1
+  node2:
+    device:
+      - device_id: 0
+        rank_id: 1
+    server_name: node2
+job2:
+  node1:
+    device:
+      - device_id: 1
+        rank_id: 2
+    server_name: node1
+  node2:
+    device:
+      - device_id: 1
+        rank_id: 3
+    server_name: node2
+job3:
+  node1:
+    device:
+      - device_id: 2
+        rank_id: 4
+    server_name: node1
+  node2:
+    device:
+      - device_id: 2
+        rank_id: 5
+    server_name: node2
+job4:
+  node1:
+    device:
+        - device_id: 3
+          rank_id: 6
+    server_name: node1
+  node2:
+    device:
+      - device_id: 3
+        rank_id: 7
+    server_name: node2
+job5:
+  node1:
+    device:
+      - device_id: 4
+        rank_id: 8
+    server_name: node1
+  node2:
+    device:
+      - device_id: 4
+        rank_id: 9
+    server_name: node2
+---
+job1: true
+job2: true
+job3: true
+job4: true
+job5: true
+---
+# the output of processor.getUceDevicesForUceTolerateJobs()
+job1:
+  JobId: job1
+  UceNode:
+    node1:
+      NodeName: node1
+      DeviceInfo:
+        Ascend910-0:
+          DeviceName: "Ascend910-0"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+    node2:
+      NodeName: node2
+      DeviceInfo:
+        Ascend910-0:
+          DeviceName: "Ascend910-0"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+job2:
+  JobId: job2
+  UceNode:
+    node1:
+      NodeName: node1
+      DeviceInfo:
+        Ascend910-1:
+          DeviceName: "Ascend910-1"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+    node2:
+      NodeName: node2
+      DeviceInfo:
+        Ascend910-1:
+          DeviceName: "Ascend910-1"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+job3:
+  JobId: job3
+  UceNode:
+    node1:
+      NodeName: node1
+      DeviceInfo:
+        Ascend910-2:
+          DeviceName: "Ascend910-2"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+    node2:
+      NodeName: node2
+      DeviceInfo:
+        Ascend910-2:
+          DeviceName: "Ascend910-2"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+job4:
+  JobId: job4
+  UceNode:
+    node1:
+      NodeName: node1
+      DeviceInfo:
+        Ascend910-3:
+          DeviceName: "Ascend910-3"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+    node2:
+      NodeName: node2
+      DeviceInfo:
+        Ascend910-3:
+          DeviceName: "Ascend910-3"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+job5:
+  JobId: job5
+  UceNode:
+    node1:
+      NodeName: node1
+      DeviceInfo:
+        Ascend910-4:
+          DeviceName: "Ascend910-4"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807
+    node2:
+      NodeName: node2
+      DeviceInfo:
+        Ascend910-4:
+          DeviceName: "Ascend910-4"
+          FaultTime: 100000
+          RecoverTime: 9223372036854775807
+          CompleteTime: 9223372036854775807

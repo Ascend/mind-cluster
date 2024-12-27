@@ -18,9 +18,8 @@ package device
 import (
 	"fmt"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // HwAscend310PManager manages huawei Ascend310P devices.
@@ -52,7 +51,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 	}
 	var allDevices []common.NpuDevice
 	var aiCoreDevices []*common.NpuDevice
-	var allDeviceTypes []string
+	var allDeviceTypes = make([]string, 0)
 	for i := int32(0); i < devNum; i++ {
 		davinCiDev, err := hnm.getDavinCiDev(devList[i])
 		if err != nil {

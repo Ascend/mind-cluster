@@ -4,9 +4,10 @@
 package kube
 
 import (
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 var k8sClient *K8sClient

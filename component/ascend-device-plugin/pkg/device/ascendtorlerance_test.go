@@ -20,16 +20,16 @@ import (
 	"os"
 	"testing"
 
-	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/kubeclient"
-
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -126,22 +126,11 @@ func mockWrongTaskDevInfoList() []*common.TaskDevInfo {
 	}
 }
 
-// mockProcessPolicyTable create a fake process policy table for test
-func mockProcessPolicyTable() map[string]int {
-	return map[string]int{
-		common.EmptyError:          common.EmptyErrorLevel,
-		common.IgnoreError:         common.IgnoreErrorLevel,
-		common.RestartRequestError: common.RestartRequestErrorLevel,
-		common.RestartError:        common.RestartErrorLevel,
-		common.ResetError:          common.ResetErrorLevel,
-		common.IsolateError:        common.IsolateErrorLevel,
-	}
-}
-
 // newTestHotResetManager new a hot reset manager example
 func newTestHotResetManager(deviceType string, model string) HotResetManager {
 	common.ParamOption.RealCardType = deviceType
-	return NewHotResetManager(model)
+	deviceNum := 16
+	return NewHotResetManager(model, deviceNum)
 }
 
 // TestGetChipCountOnRing for test the default count of ring ond different device
@@ -150,26 +139,30 @@ func TestGetChipCountOnRing(t *testing.T) {
 		convey.Convey("test 910 chip count on ring success", func() {
 			ascend910HotResetManager := newTestHotResetManager(common.Ascend910, common.Train)
 			convey.So(ascend910HotResetManager, convey.ShouldNotBeNil)
-			chipCountOnRing := ascend910HotResetManager.GetRingNum()
-			convey.So(chipCountOnRing, convey.ShouldEqual, common.Ascend910RingsNum)
+			resetDevNumOnce, err := ascend910HotResetManager.GetResetDevNumOnce()
+			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910RingsNum)
+			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910B train chip count on ring success", func() {
 			ascend910BTrainHotResetManager := newTestHotResetManager(common.Ascend910B, common.Train)
 			convey.So(ascend910BTrainHotResetManager, convey.ShouldNotBeNil)
-			chipCountOnRing := ascend910BTrainHotResetManager.GetRingNum()
-			convey.So(chipCountOnRing, convey.ShouldEqual, common.Ascend910BRingsNumTrain)
+			resetDevNumOnce, err := ascend910BTrainHotResetManager.GetResetDevNumOnce()
+			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumTrain)
+			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910B Infer chip count on ring success", func() {
 			ascend910BInferHotResetManager := newTestHotResetManager(common.Ascend910B, common.Infer)
 			convey.So(ascend910BInferHotResetManager, convey.ShouldNotBeNil)
-			chipCountOnRing := ascend910BInferHotResetManager.GetRingNum()
-			convey.So(chipCountOnRing, convey.ShouldEqual, common.Ascend910BRingsNumInfer)
+			resetDevNumOnce, err := ascend910BInferHotResetManager.GetResetDevNumOnce()
+			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumInfer)
+			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910A3 chip count on ring success", func() {
 			ascend910A3HotResetManager := newTestHotResetManager(common.Ascend910A3, common.Train)
 			convey.So(ascend910A3HotResetManager, convey.ShouldNotBeNil)
-			chipCountOnRing := ascend910A3HotResetManager.GetRingNum()
-			convey.So(chipCountOnRing, convey.ShouldEqual, common.Ascend910A3RingsNum)
+			resetDevNumOnce, err := ascend910A3HotResetManager.GetResetDevNumOnce()
+			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910A3RingsNum)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }
@@ -272,7 +265,6 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 		convey.Convey("test GetTaskProcessPolicy success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, common.ResetError)
@@ -280,9 +272,7 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test GetTaskDevFaultInfoList failed  when task dev info not exist", func() {
-			tool := &HotResetTools{
-				processPolicyTable: mockProcessPolicyTable(),
-			}
+			tool := &HotResetTools{}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, "")
 			convey.So(processPolicyLevel, convey.ShouldEqual, -1)
@@ -291,7 +281,6 @@ func TestGetTaskProcessPolicy(t *testing.T) {
 		convey.Convey("test GetTaskDevFaultInfoList failed when invalid policy", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
 			convey.So(processPolicy, convey.ShouldEqual, "")
@@ -325,7 +314,6 @@ func TestDevListByPolicyLevel(t *testing.T) {
 		convey.Convey("test GetDevListByPolicyLevel success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
 			convey.So(devList[0], convey.ShouldNotBeNil)
@@ -337,7 +325,6 @@ func TestDevListByPolicyLevel(t *testing.T) {
 		convey.Convey("test GetDevListByPolicyLevel failed", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
 			convey.So(devList, convey.ShouldBeNil)
@@ -348,11 +335,12 @@ func TestDevListByPolicyLevel(t *testing.T) {
 
 // TestGetNeedResetDevList for test get the needed be reseted device list
 func TestGetNeedResetDevList(t *testing.T) {
+	patch := gomonkey.ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
+	defer patch.Reset()
 	convey.Convey("test GetNeedResetDevMap", t, func() {
 		convey.Convey("test GetNeedResetDevMap success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -367,7 +355,6 @@ func TestGetNeedResetDevList(t *testing.T) {
 		convey.Convey("test GetNeedResetDevMap failed", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -383,9 +370,8 @@ func TestGetTaskResetInfo(t *testing.T) {
 	convey.Convey("test GetTaskResetInfo", t, func() {
 		convey.Convey("test GetTaskResetInfo success", func() {
 			tool := &HotResetTools{
-				ringNum:             common.Ascend910BRingsNumTrain,
+				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -399,9 +385,8 @@ func TestGetTaskResetInfo(t *testing.T) {
 		})
 		convey.Convey("test GetTaskResetInfo failed", func() {
 			tool := &HotResetTools{
-				ringNum:             common.Ascend910BRingsNumTrain,
+				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -418,9 +403,8 @@ func TestGetTaskFaultRankInfo(t *testing.T) {
 	convey.Convey("test GetTaskFaultRankInfo", t, func() {
 		convey.Convey("test GetTaskFaultRankInfo success", func() {
 			tool := &HotResetTools{
-				ringNum:             common.Ascend910BRingsNumTrain,
+				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -430,9 +414,8 @@ func TestGetTaskFaultRankInfo(t *testing.T) {
 		})
 		convey.Convey("test GetTaskFaultRankInfo failed", func() {
 			tool := &HotResetTools{
-				ringNum:             common.Ascend910BRingsNumTrain,
+				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				processPolicyTable:  mockProcessPolicyTable(),
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -1212,23 +1195,14 @@ func TestHandleCMDeleteEvent(t *testing.T) {
 
 func newHotResetTools() *HotResetTools {
 	return &HotResetTools{
-		ringNum:          common.Ascend910RingsNum,
+		resetDevNumOnce:  common.Ascend910RingsNum,
 		resetTask:        map[string]struct{}{},
 		resetDev:         map[int32]struct{}{},
 		faultDev2PodMap:  map[int32]v1.Pod{},
 		jobs:             map[string]string{},
-		noResetCmPodKeys: map[string]string{},
-		processPolicyTable: map[string]int{
-			common.EmptyError:          common.EmptyErrorLevel,
-			common.IgnoreError:         common.IgnoreErrorLevel,
-			common.RestartRequestError: common.RestartRequestErrorLevel,
-			common.RestartError:        common.RestartErrorLevel,
-			common.FreeResetError:      common.FreeResetErrorLevel,
-			common.ResetError:          common.ResetErrorLevel,
-			common.IsolateError:        common.IsolateErrorLevel,
-		},
-		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
-		cmIndexer:  cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
-		podIndexer: cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
+		noResetCmPodKeys: map[string]struct{}{},
+		queue:            workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		cmIndexer:        cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
+		podIndexer:       cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
 	}
 }

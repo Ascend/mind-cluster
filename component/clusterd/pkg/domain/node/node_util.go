@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -39,8 +39,6 @@ func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
 	var node constant.NodeInfo
 	node.NodeStatus = nodeInfoCM.NodeInfo.NodeStatus
 	node.FaultDevList = nodeInfoCM.NodeInfo.FaultDevList
-	node.HeartbeatInterval = nodeInfoCM.NodeInfo.HeartbeatInterval
-	node.HeartbeatTime = nodeInfoCM.NodeInfo.HeartbeatTime
 	node.CmName = nodeCm.Name
 	return &node, nil
 }
@@ -61,6 +59,15 @@ func DeepCopy(info *constant.NodeInfo) *constant.NodeInfo {
 		return nil
 	}
 	return newNodeInfo
+}
+
+// DeepCopyInfos deep copy NodeInfos
+func DeepCopyInfos(infos map[string]*constant.NodeInfo) map[string]*constant.NodeInfo {
+	res := make(map[string]*constant.NodeInfo)
+	for key, val := range infos {
+		res[key] = DeepCopy(val)
+	}
+	return res
 }
 
 // GetSafeData get data every 2000 NodeInfo
@@ -96,12 +103,11 @@ func BusinessDataIsNotEqual(oldNodeInfo *constant.NodeInfo, newNodeInfo *constan
 		hwlog.RunLog.Debug("one of oldNodeInfo and newNodeInfo is not empty, and the other is empty")
 		return true
 	}
-	if oldNodeInfo.HeartbeatInterval != newNodeInfo.HeartbeatInterval ||
-		oldNodeInfo.NodeStatus != newNodeInfo.NodeStatus ||
+	if oldNodeInfo.NodeStatus != newNodeInfo.NodeStatus ||
 		len(oldNodeInfo.FaultDevList) != len(newNodeInfo.FaultDevList) {
 		hwlog.RunLog.Debug("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo")
 		return true
 	}
-	hwlog.RunLog.Debug("oldNodeInfo is equal to newNodeInfo.")
+	hwlog.RunLog.Debug("oldNodeInfo is equal to newNodeInfo")
 	return false
 }

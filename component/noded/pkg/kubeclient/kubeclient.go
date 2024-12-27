@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"os"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 )
 

@@ -23,14 +23,14 @@ import (
 	"strings"
 	"syscall"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
 )
 
 const (

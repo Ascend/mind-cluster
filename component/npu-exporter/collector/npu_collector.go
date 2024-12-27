@@ -24,15 +24,15 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/dcmi"
+	"ascend-common/devmanager/hccn"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/common-utils/cache"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/dcmi"
-	"huawei.com/npu-exporter/v6/devmanager/hccn"
 	"huawei.com/npu-exporter/v6/versions"
 )
 
@@ -1881,7 +1881,9 @@ func packHccsInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWei
 	}
 	hccsStatisticInfo, err := dmgr.GetHccsStatisticInfo(logicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get hccs statistic info of npu failed: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccs, logicID, "get hccs statistic info of npu failed: %v", err)
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccs, logicID)
 	}
 	hwChip.HccsStatisticInfo = hccsStatisticInfo
 }
@@ -1892,7 +1894,9 @@ func packHccsBandwidthInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChi
 	}
 	hccsBandwidthInfo, err := dmgr.GetHccsBandwidthInfo(logicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get hccs bandwidth info of npu failed: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForHccsBW, logicID, "get hccs bandwidth info of npu failed: %v ", err)
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccsBW, logicID)
 	}
 	hwChip.HccsBandwidthInfo = hccsBandwidthInfo
 }
@@ -1916,13 +1920,19 @@ func getAllHBMEccInfo(logicID int32, dmgr devmanager.DeviceInterface) (*common.H
 func packChipInfoPart2(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaWeiAIChip) {
 	util, err := dmgr.GetDeviceUtilizationRate(logicID, common.AICore)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device AI core utilization rate failed, err is: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForAICoreUtilization, logicID,
+			"get device(logicID:%d) AI core utilization rate failed, err is: %v", logicID, err)
 		util = common.UnRetError // valid data range 0-100
+	} else {
+		hwlog.ResetErrCnt(common.DomainForAICoreUtilization, logicID)
 	}
 	overAllUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.Overall)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device overall utilization rate of npu failed, err is: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForOverallUtilization, logicID,
+			"get device(logicID:%d) overall utilization rate of npu failed, err is: %v", logicID, err)
 		overAllUtil = common.UnRetError // valid data range 0-100
+	} else {
+		hwlog.ResetErrCnt(common.DomainForOverallUtilization, logicID)
 	}
 
 	_, errCodes, err := dmgr.GetDeviceAllErrorCode(logicID)
@@ -1941,9 +1951,13 @@ func packChipInfoPart2(logicID int32, dmgr devmanager.DeviceInterface, hwChip *H
 	hwChip.OverallUtilization = int(overAllUtil)
 	hwChip.VDieID = vdieID
 	vecUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.VectorCore)
+
 	if err != nil {
-		hwlog.RunLog.Errorf("get device vector core utilization rate failed, err is: %v", err)
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForVectorCoreUtilization, logicID,
+			"get device(logicID:%d) vector core utilization rate failed, err is: %v", logicID, err)
 		vecUtil = common.UnRetError // valid data range 0-100
+	} else {
+		hwlog.ResetErrCnt(common.DomainForVectorCoreUtilization, logicID)
 	}
 	hwChip.VectorUtilization = int(vecUtil)
 }

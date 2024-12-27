@@ -18,18 +18,21 @@ package device
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager"
-	npuCommon "huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/devmanager"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 const (
@@ -73,8 +76,7 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 
 // TestIsDeviceStatusChange testIsDeviceStatusChange
 func TestIsDeviceStatusChange(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test IsDeviceStatusChange true", t, func() {
 		devices := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
 		aiCoreDevice := []*common.NpuDevice{{Health: v1beta1.Healthy}}
@@ -117,8 +119,8 @@ func TestAssembleVirtualDevices(t *testing.T) {
 		}
 		tool.assembleVirtualDevices(davinCiDev, vDevInfos, &device, &deivceType)
 		testRes := common.NpuDevice{
-			DevType:       common.Ascend910c16,
-			DeviceName:    fmt.Sprintf("%s-%d-%d", common.Ascend910c16, vDevIDNum, phyIDNum),
+			DevType:       common.Ascend910vir16,
+			DeviceName:    fmt.Sprintf("%s-%d-%d", common.Ascend910vir16, vDevIDNum, phyIDNum),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
 			LogicID:       logicIDNum,
@@ -130,15 +132,14 @@ func TestAssembleVirtualDevices(t *testing.T) {
 
 // TestAddPodAnnotation1 for test the interface AddPodAnnotation, part 1
 func TestAddPodAnnotation1(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 1", t, func() {
 		convey.Convey("GetDeviceListID failed", func() {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
 				RealDevice: []string{common.Ascend910},
-			}, common.Ascend910c2, "", nil)
+			}, common.Ascend910vir2, "", nil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
@@ -169,8 +170,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 
 // TestAddPodAnnotation2 for test the interface AddPodAnnotation, part 2
 func TestAddPodAnnotation2(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 2", t, func() {
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
@@ -216,8 +216,7 @@ func TestAddPodAnnotation2(t *testing.T) {
 
 // TestAddPodAnnotation3 for test the interface AddPodAnnotation, part 3
 func TestAddPodAnnotation3(t *testing.T) {
-	tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 3", t, func() {
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
@@ -481,4 +480,149 @@ func TestRemoveDuplicateErr(t *testing.T) {
 		newErrors = tool.removeDuplicateErr(oldErrors)
 		convey.So(len(baseErrors), convey.ShouldEqual, len(newErrors))
 	})
+}
+
+func TestGetDevStatesDevSet(t *testing.T) {
+	convey.Convey("test getDevStatesDevSet", t, func() {
+		tool := mockAscendTools()
+		mockGetRealUsedDevices := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getRealUsedDevices",
+			func(_ *AscendTools) sets.String { return sets.String{} })
+		mockGroupDevsByStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "groupDevsByStatus",
+			func(_ *AscendTools, subClassDevices []*common.NpuDevice, runMode string) common.DevStatusSet {
+				return common.DevStatusSet{HealthDevices: sets.String{"Ascend910-0": sets.Empty{}}}
+			})
+		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		defer func() {
+			mockGetRealUsedDevices.Reset()
+			mockGroupDevsByStatus.Reset()
+			mockGetPodsUsedNpu.Reset()
+		}()
+		mockClassifyDevs := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		common.ParamOption.PresetVDevice = true
+		res := tool.getDevStatesDevSet(mockClassifyDevs)
+		convey.So(len(res.FreeHealthyDevice), convey.ShouldEqual, 1)
+		convey.So(len(res.UnHealthyDevice), convey.ShouldEqual, 0)
+		convey.So(len(res.NetUnHealthyDevice), convey.ShouldEqual, 0)
+		convey.So(len(res.RecoveringDevices), convey.ShouldEqual, 0)
+		convey.So(len(res.DeviceFault), convey.ShouldEqual, 0)
+	})
+}
+
+func TestGetUseChips(t *testing.T) {
+	convey.Convey("test getUseChips", t, func() {
+		tool := mockAscendTools()
+		convey.Convey("when presetVDevice is false, used chips should be empty", func() {
+			common.ParamOption.PresetVDevice = false
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 0)
+		})
+		common.ParamOption.PresetVDevice = true
+		convey.Convey("when get device list failed, used chips should be empty", func() {
+			err := fmt.Errorf("failed to get device list")
+			mockDeviceList := mockGetDeviceList(0, nil, err)
+			defer mockDeviceList.Reset()
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when device list is empty, used chips should be empty", func() {
+			mockDeviceList := mockGetDeviceList(0, []int32{}, nil)
+			defer mockDeviceList.Reset()
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 0)
+		})
+		mockDeviceList := mockGetDeviceList(1, []int32{0}, nil)
+		defer mockDeviceList.Reset()
+		convey.Convey("when get process info failed, used chips should be empty", func() {
+			err := fmt.Errorf("failed to get device process info")
+			mockDevProcessInfo := mockGetDevProcessInfo(nil, err)
+			defer mockDevProcessInfo.Reset()
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when device process num is 0, used chips should be empty", func() {
+			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 0}, nil)
+			defer mockDevProcessInfo.Reset()
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when device process num is not 0, used chips should not be empty", func() {
+			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 1}, nil)
+			defer mockDevProcessInfo.Reset()
+			res := tool.getUsedChips()
+			convey.So(len(res), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func mockAscendTools() AscendTools {
+	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
+		dmgr: &devmanager.DeviceManagerMock{}}
+}
+
+// A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
+func TestAscendToolsGetDeviceFaults(t *testing.T) {
+	t.Run("getDeviceFaults", func(t *testing.T) {
+		tool := &AscendTools{}
+		base16 := 16
+		var faultTime1 int64 = 100000
+		var faultTime2 int64 = 110000
+		var faultTime3 int64 = 120000
+		device := &common.NpuDevice{
+			FaultCodes:             []int64{int64(0x80C98008), int64(0x80CB8008)},
+			AlarmRaisedTime:        100000,
+			NetworkFaultCodes:      []int64{int64(common.LinkDownFaultCode)},
+			NetworkAlarmRaisedTime: 110000,
+			FaultTimeMap: map[int64]int64{
+				int64(0x80C98008):               faultTime1,
+				int64(0x80CB8008):               faultTime2,
+				int64(common.LinkDownFaultCode): faultTime3,
+			},
+			DeviceName: "Ascend910-0",
+		}
+		got := tool.getDeviceFaults(device)
+		want := []common.DeviceFault{{
+			FaultType:            common.CardNetworkUnhealthy,
+			NPUName:              "Ascend910-0",
+			LargeModelFaultLevel: common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultLevel:           common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultHandling:        common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID),
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.NetworkFaultCodes)),
+			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
+				strings.ToUpper(strconv.FormatInt(common.LinkDownFaultCode, base16)): {faultTime3,
+					common.GetNetworkFaultType(device.NetworkFaultCodes, device.LogicID)},
+			},
+		}, {
+			FaultType:            common.CardUnhealthy,
+			NPUName:              "Ascend910-0",
+			LargeModelFaultLevel: common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultLevel:           common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultHandling:        common.GetFaultType(device.FaultCodes, device.LogicID),
+			FaultCode:            strings.ToUpper(common.Int64Tool.ToHexString(device.FaultCodes)),
+			FaultTimeAndLevelMap: map[string]common.FaultTimeAndLevel{
+				strings.ToUpper(strconv.FormatInt(int64(0x80C98008), base16)): {faultTime1,
+					common.GetFaultType([]int64{0x80C98008}, device.LogicID),
+				},
+				strings.ToUpper(strconv.FormatInt(int64(0x80CB8008), base16)): {faultTime2,
+					common.GetFaultType([]int64{0x80CB8008}, device.LogicID)},
+			},
+		},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("getDeviceFaults() = %v, want %v", got, want)
+		}
+	})
+}
+
+func mockGetDeviceList(num int32, logicIDs []int32, err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetDeviceList",
+		func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
+			return num, logicIDs, err
+		})
+}
+
+func mockGetDevProcessInfo(devProcessInfo *npuCommon.DevProcessInfo, err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetDevProcessInfo",
+		func(_ *devmanager.DeviceManagerMock, _ int32) (*npuCommon.DevProcessInfo, error) {
+			return devProcessInfo, err
+		})
 }

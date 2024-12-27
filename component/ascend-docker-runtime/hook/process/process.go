@@ -29,8 +29,8 @@ import (
 	"syscall"
 
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 

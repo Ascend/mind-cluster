@@ -5,14 +5,17 @@ package kube
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 var vcK8sClient *VcK8sClient
@@ -23,13 +26,12 @@ type VcK8sClient struct {
 }
 
 // InitClientVolcano init volcano client
-func InitClientVolcano() error {
+func InitClientVolcano() (*VcK8sClient, error) {
+	var err error
 	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
-		var err error
 		vcK8sClient, err = newVCClientK8s()
-		return err
 	}
-	return nil
+	return vcK8sClient, err
 }
 
 // GetClientVolcano get client volcano
@@ -68,22 +70,6 @@ func RetryGetPodGroup(name, namespace string, retryTimes int) (*v1beta1.PodGroup
 
 // GetPodGroup return pod group according pod group name
 func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
-	if PGInformer != nil {
-		for _, obj := range PGInformer.Informer().GetStore().List() {
-			podGroup, ok := obj.(*v1beta1.PodGroup)
-			if !ok {
-				hwlog.RunLog.Error("convert pod group err")
-				continue
-			}
-			if podGroup.Name == name && podGroup.Namespace == namespace {
-				return podGroup, nil
-			}
-		}
-	}
-	if PGInformer == nil {
-		hwlog.RunLog.Warnf("PGInformer is nil")
-	}
-	hwlog.RunLog.Warnf("get podGroup from informer fail, name=%s, namespace=%s", name, namespace)
 	if vcK8sClient != nil {
 		return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(namespace).Get(context.TODO(),
 			name, v1.GetOptions{})
@@ -91,6 +77,7 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 	return nil, fmt.Errorf("vcK8sClient is nil")
 }
 
+// RetryUpdatePodGroup call UpdatePod
 func RetryUpdatePodGroup(pg *v1beta1.PodGroup, retryTimes int) (*v1beta1.PodGroup, error) {
 	pg, err := UpdatePodGroup(pg)
 	retry := 0
@@ -109,4 +96,62 @@ func UpdatePodGroup(pg *v1beta1.PodGroup) (*v1beta1.PodGroup, error) {
 			pg, v1.UpdateOptions{})
 	}
 	return nil, fmt.Errorf("vcK8sClient is nil")
+}
+
+// RetryPatchPodGroupAnnotations retry patch pod group annotations
+func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
+	annotations map[string]string) (*v1beta1.PodGroup, error) {
+	pg, err := patchPodGroupAnnotation(pgName, pgNamespace, annotations)
+	retry := 0
+	for err != nil && retry < retryTimes {
+		retry++
+		time.Sleep(time.Second * time.Duration(retry))
+		pg, err = patchPodGroupAnnotation(pgName, pgNamespace, annotations)
+	}
+	return pg, err
+}
+
+func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]string) (*v1beta1.PodGroup, error) {
+	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
+		hwlog.RunLog.Errorf("client set is nil")
+		return nil, fmt.Errorf("client set is nil")
+	}
+	annotationStr, err := json.Marshal(annotations)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
+		return nil, err
+	}
+	patchBody := fmt.Sprintf(annotationsFormat, annotationStr)
+	hwlog.RunLog.Infof("prepare patch pg annotation, pgName=%s, pgNamespace=%s", pgName, pgNamespace)
+	return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(pgNamespace).Patch(context.TODO(),
+		pgName, types.MergePatchType, []byte(patchBody), v1.PatchOptions{})
+}
+
+// RetryPatchPodGroupLabel retry patch pod group label
+func RetryPatchPodGroupLabel(pgName, nameSpace string, retryTimes int,
+	labels map[string]string) (*v1beta1.PodGroup, error) {
+	pg, err := patchPodGroupLabel(pgName, nameSpace, labels)
+	retry := 0
+	for err != nil && retry < retryTimes {
+		retry++
+		time.Sleep(time.Second * time.Duration(retry))
+		pg, err = patchPodGroupLabel(pgName, nameSpace, labels)
+	}
+	return pg, err
+}
+
+func patchPodGroupLabel(pgName, pgNamespace string, labels map[string]string) (*v1beta1.PodGroup, error) {
+	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
+		hwlog.RunLog.Errorf("client set is nil")
+		return nil, fmt.Errorf("client set is nil")
+	}
+	labelStr, err := json.Marshal(labels)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
+		return nil, err
+	}
+	patchBody := fmt.Sprintf(labelsFormat, labelStr)
+	hwlog.RunLog.Infof("prepare patch pg label, pgName=%s, pgNamespace=%s", pgName, pgNamespace)
+	return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(pgNamespace).Patch(context.TODO(),
+		pgName, types.MergePatchType, []byte(patchBody), v1.PatchOptions{})
 }

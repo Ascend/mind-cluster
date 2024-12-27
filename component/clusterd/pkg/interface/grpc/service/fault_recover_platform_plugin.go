@@ -4,79 +4,61 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-
-	"clusterd/pkg/common/util"
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/common"
+	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )
 
-// GetPlatStrategy get plat strategy
-func GetPlatStrategy(name, namespace string) string {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
-	if err != nil {
-		return ""
-	}
-	value, ok := pg.Annotations[common.ProcessRecoverStrategy]
-	if !ok {
-		return ""
-	}
-	if value == common.PlatFormArfStrategyName {
-		return common.ProcessArfStrategy
-	}
-	if value == common.PlatFormDumpStrategyName {
-		return common.ProcessDumpStrategy
-	}
-	if value == common.PlatFormExitStrategyName {
-		return common.ProcessExitStrategy
-	}
-	hwlog.RunLog.Warnf("ProcessRecoverStrategy value=%s not supported, use exit strategy, name=%s",
-		value, name)
-	return common.ProcessExitStrategy
-}
-
-func processContinue(name, namespace string) (bool, string, error) {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
+func platFormStrategy(name, namespace string, confirmState bool) (string, error) {
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("get pg err: %v", err)
-		return false, "", err
+		return "", err
 	}
-	value, ok := pg.Annotations[common.ProcessRecoverStrategy]
+	value, ok := pg.Annotations[constant.ProcessRecoverStrategy]
 	if !ok {
-		return false, "", nil
+		return "", fmt.Errorf("plat strategy key not exist, job=%s, key=%s",
+			name, constant.ProcessRecoverStrategy)
 	}
-	if value == common.PlatFormArfStrategyName || value == common.PlatFormDumpStrategyName {
-		return true, value, nil
+	value = strings.TrimSpace(value)
+	value = strings.Trim(value, ",")
+	if value == constant.ProcessRetryStrategyName || value == constant.ProcessRecoverStrategyName ||
+		value == constant.ProcessDumpStrategyName {
+		return value, nil
 	}
-	return true, value, errors.New("wait ProcessArfStrategy=recover/dump")
+	if confirmState && value == constant.ProcessExitStrategyName {
+		return value, nil
+	}
+	return "", fmt.Errorf("wait plat strategy = retry/recover/dump for job=%s", name)
 }
 
-// WaitProcessContinue block process until processContinue return true
-func WaitProcessContinue(name, namespace string) (bool, string, error) {
+// WaitPlatFormStrategyReady block process until processContinue return true
+func WaitPlatFormStrategyReady(name, namespace string) (string, error) {
 	startTime := time.Now().Unix()
-	platForm, strategy, err := processContinue(name, namespace)
-	for platForm && err != nil {
-		time.Sleep(common.CheckPeriod * time.Second)
+	strategy, err := platFormStrategy(name, namespace, false)
+	for err != nil {
+		time.Sleep(constant.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
-		if timeUse > common.ProcessControlTimeout {
+		if timeUse > constant.ProcessControlTimeout {
 			hwlog.RunLog.Warnf("check %s process continue timeout, timeUse=%d > %d second, err=%v",
-				name, timeUse, common.ProcessControlTimeout, err)
+				name, timeUse, constant.ProcessControlTimeout, err)
 			break
 		}
-		platForm, strategy, err = processContinue(name, namespace)
+		strategy, err = platFormStrategy(name, namespace, false)
 	}
-	return platForm, strategy, err
+	return strategy, err
 }
 
 // UpdateProcessConfirmFault update UpdateProcessConfirmFault which store fault ranks
-func UpdateProcessConfirmFault(name, namespace string, cacheRanks []string) error {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
+func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRank) error {
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when update UpdateProcessConfirmFault, err:%v, name:%s", err, name)
 		return err
@@ -84,15 +66,15 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []string) erro
 	if pg.Annotations == nil {
 		pg.Annotations = make(map[string]string)
 	}
-	rankStr, ok := pg.Annotations[common.ProcessConfirmFaultKey]
-	if !ok {
-		rankStr = ""
-		hwlog.RunLog.Warnf("can not find ProcessConfirmFaultKey, name:%s", name)
+	rankStr, _ := pg.Annotations[constant.ProcessConfirmFaultKey]
+	if len(rankStr) > 0 {
+		return fmt.Errorf("plat not clear pre confirm fault, pgName=%s", name)
 	}
-	rankList := strings.Split(rankStr, ",")
-	allFaultRanks := util.RemoveSliceDuplicateElement(append(rankList, cacheRanks...))
-	pg.Annotations[common.ProcessConfirmFaultKey] = strings.Join(allFaultRanks, ",")
-	_, err = kube.RetryUpdatePodGroup(pg, common.UpdatePodGroupTimes)
+	allFaultRanks := common.RemoveSliceDuplicateFaults(cacheRanks)
+	newConfirm := map[string]string{
+		constant.ProcessConfirmFaultKey: strings.Trim(common.Faults2String(allFaultRanks), ","),
+	}
+	_, err = kube.RetryPatchPodGroupAnnotations(name, namespace, constant.UpdatePodGroupTimes, newConfirm)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to update pg when UpdateProcessConfirmFault, err:%v, name:%s", err, name)
 		return err
@@ -102,7 +84,7 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []string) erro
 
 // UpdateRecoverStatus update recover status
 func UpdateRecoverStatus(name, namespace, value string) {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when update UpdateRecoverStatus, err:%v, name:%s", err, name)
 		return
@@ -110,16 +92,16 @@ func UpdateRecoverStatus(name, namespace, value string) {
 	if pg.Annotations == nil {
 		pg.Annotations = make(map[string]string)
 	}
-	pg.Annotations[common.ProcessRecoverStatusKey] = value
-	_, err = kube.RetryUpdatePodGroup(pg, common.UpdatePodGroupTimes)
+	pg.Annotations[constant.ProcessRecoverStatusKey] = value
+	_, err = kube.RetryUpdatePodGroup(pg, constant.UpdatePodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to update pg when UpdateRecoverStatus, err:%v, name:%s", err, name)
 	}
 	hwlog.RunLog.Infof("update name=%s recover status=%s, success", name, value)
 }
 
-func pullProcessResultFault(name, namespace string) ([]string, []string, error) {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
+func pullProcessResultFault(name, namespace string) ([]*pb.FaultRank, []*pb.FaultRank, error) {
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when pullProcessResultFault, err:%v, name:%s", err, name)
 		return nil, nil, err
@@ -128,41 +110,37 @@ func pullProcessResultFault(name, namespace string) ([]string, []string, error) 
 		hwlog.RunLog.Warnf("pod annotation is nil, name:%s", name)
 		return nil, nil, fmt.Errorf("pod annotation is nil, name:%s", name)
 	}
-	resultRanks, ok := pg.Annotations[common.ProcessResultFaultKey]
+	resultRanks, ok := pg.Annotations[constant.ProcessResultFaultKey]
 	if !ok {
 		hwlog.RunLog.Warnf("can not fiind ProcessResultFaultKey, name:%s", name)
 		return nil, nil, fmt.Errorf("processResultFaultKey not exist, name:%s", name)
 	}
-	rankSlice := strings.Split(resultRanks, ",")
-	if len(rankSlice) == 0 {
-		err = errors.New("processResultFault lenth is 0")
-	}
-	confirmRanks, ok := pg.Annotations[common.ProcessConfirmFaultKey]
+	confirmRanks, ok := pg.Annotations[constant.ProcessConfirmFaultKey]
 	if !ok {
 		confirmRanks = ""
 	}
-	return strings.Split(resultRanks, ","), strings.Split(confirmRanks, ","), err
+	return common.String2Faults(resultRanks), common.String2Faults(confirmRanks), nil
 }
 
 // WaitProcessResultFault block process until ProcessResultFaultKey's ranks not empty
-func WaitProcessResultFault(name, namespace string) ([]string, error) {
+func WaitProcessResultFault(name, namespace string) ([]*pb.FaultRank, error) {
 	startTime := time.Now().Unix()
 	resultRanks, confirmRanks, err := pullProcessResultFault(name, namespace)
-	for len(resultRanks) == 0 {
-		time.Sleep(common.CheckPeriod * time.Second)
+	for err != nil {
+		time.Sleep(constant.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
-		if timeUse > common.ProcessControlTimeout {
+		if timeUse > constant.ProcessControlTimeout {
 			hwlog.RunLog.Warnf("check %s ProcessResultFault timeout, timeUse=%d > %d second",
-				name, timeUse, common.ProcessControlTimeout)
+				name, timeUse, constant.ProcessControlTimeout)
 			break
 		}
 		resultRanks, confirmRanks, err = pullProcessResultFault(name, namespace)
 	}
-	return util.RemoveSliceDuplicateElement(append(resultRanks, confirmRanks...)), err
+	return common.RemoveSliceDuplicateFaults(append(resultRanks, confirmRanks...)), err
 }
 
 func rankTableReady(name, namespace string) bool {
-	pg, err := kube.RetryGetPodGroup(name, namespace, common.GetPodGroupTimes)
+	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get pg when check rankTableReady, err:%s,name:%s", err, name)
 		return false
@@ -170,7 +148,7 @@ func rankTableReady(name, namespace string) bool {
 	if pg.Annotations == nil {
 		pg.Annotations = make(map[string]string)
 	}
-	ready, ok := pg.Annotations[common.RankTableReadyKey]
+	ready, ok := pg.Annotations[constant.RankTableReadyKey]
 	if !ok {
 		return false
 	}
@@ -182,13 +160,13 @@ func WaitRankTableReady(name, namespace string) error {
 	startTime := time.Now().Unix()
 	ready := rankTableReady(name, namespace)
 	for !ready {
-		time.Sleep(common.CheckPeriod * time.Second)
+		time.Sleep(constant.CheckPeriod * time.Second)
 		timeUse := time.Now().Unix() - startTime
-		if timeUse > common.ProcessControlTimeout {
+		if timeUse > constant.ProcessControlTimeout {
 			hwlog.RunLog.Warnf("check %s RankTableReady timeout, timeUse=%d > %d second",
-				name, startTime, common.ProcessControlTimeout)
+				name, startTime, constant.ProcessControlTimeout)
 			return fmt.Errorf("check %s RankTableReady timeout, timeUse=%d > %d second",
-				name, startTime, common.ProcessControlTimeout)
+				name, startTime, constant.ProcessControlTimeout)
 		}
 		ready = rankTableReady(name, namespace)
 	}

@@ -20,9 +20,12 @@ package plugin
 import (
 	"sync"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
@@ -114,6 +117,14 @@ type SchedulerJob struct {
 	TorBlackMaps map[string]struct{}
 	JobReadyTag  bool
 	SuperPods    map[string][]SuperNode
+	Owner        OwnerInfo
+}
+
+// OwnerInfo the owner info of job
+type OwnerInfo struct {
+	v1.OwnerReference
+	Annotations map[string]string
+	Replicas    *int32
 }
 
 // UnschedulableReason the message of pod pending
@@ -166,23 +177,24 @@ type FaultRankIdData struct {
 
 // ScheduleEnv for job scheduler context.
 type ScheduleEnv struct {
-	IsFirstSession      *bool // scheduler first session message is unreliable
-	Jobs                map[api.JobID]SchedulerJob
-	Nodes               map[string]NPUNode
-	JobSinglePodFlag    map[api.JobID]bool
-	JobSeverInfos       map[api.JobID]struct{}
-	JobDeleteFlag       map[api.JobID]struct{}
-	DevInfoNotInSession map[string]NodeDeviceInfoWithTime
-	DeviceInfos         *DeviceInfosWithMutex
-	DeleteJobInfos      map[api.JobID]*api.JobInfo
-	NodeInfosFromCm     *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
-	SwitchInfosFromCm   *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
-	FrameAttr           VolcanoFrame
-	Cache               ScheduleCache
-	Tors                *TorList
-	NslbAttr            *NslbParameters
-	SuperPodInfo        *SuperPodInfo
-	JobPendingMessage   map[api.JobID]map[string]map[string]struct{}
+	IsFirstSession    *bool // scheduler first session message is unreliable
+	Jobs              map[api.JobID]SchedulerJob
+	JobReplicas       map[api.JobID]int32
+	Nodes             map[string]NPUNode
+	NodesNotInSsn     map[string]*corev1.Node
+	JobSinglePodFlag  map[api.JobID]bool
+	JobSeverInfos     map[api.JobID]struct{}
+	JobDeleteFlag     map[api.JobID]struct{}
+	DeviceInfos       *DeviceInfosWithMutex
+	DeleteJobInfos    map[api.JobID]*api.JobInfo
+	NodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
+	SwitchInfosFromCm *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
+	FrameAttr         VolcanoFrame
+	Cache             ScheduleCache
+	Tors              *TorList
+	NslbAttr          *NslbParameters
+	SuperPodInfo      *SuperPodInfo
+	JobPendingMessage map[api.JobID]map[string]map[string]struct{}
 }
 
 // SuperPodInfo cache super pod info for pod rescheduling
@@ -251,10 +263,11 @@ type usedTorInfos struct {
 
 // TaskResetInfo record task reset device information
 type TaskResetInfo struct {
-	RankList     []*TaskDevInfo
-	UpdateTime   int64
-	RetryTime    int
-	GracefulExit int
+	RankList      []*TaskDevInfo
+	UpdateTime    int64
+	RetryTime     int
+	FaultFlushing bool
+	GracefulExit  int
 }
 
 // TaskDevInfo is the device info of a task

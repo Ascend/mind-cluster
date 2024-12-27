@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"strings"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // ClientK8s include ClientK8sSet & nodeName & configmap name
@@ -172,7 +172,7 @@ func checkPodList(podList *v1.PodList) ([]v1.Pod, error) {
 	if len(podList.Items) >= common.MaxPodLimit {
 		return nil, fmt.Errorf("the number of pods exceeds the upper limit")
 	}
-	var pods []v1.Pod
+	var pods = make([]v1.Pod, 0)
 	for _, pod := range podList.Items {
 		if err := common.CheckPodNameAndSpace(pod.Name, common.PodNameMaxLength); err != nil {
 			hwlog.RunLog.Warnf("pod name syntax illegal, err: %v", err)

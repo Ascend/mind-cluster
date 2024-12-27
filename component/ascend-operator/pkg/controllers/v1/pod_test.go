@@ -147,3 +147,48 @@ func TestReconcilePodNotNeedCreateOrDelete(t *testing.T) {
 		})
 	})
 }
+
+func TestGenRankTable(t *testing.T) {
+	convey.Convey("genRankTable", t, func() {
+		rc := newCommonReconciler()
+		jobStatus := &commonv1.JobStatus{}
+		si := &podInfo{
+			job: newCommonAscendJob(),
+			spec: &commonv1.ReplicaSpec{
+				Replicas:      defaultReplicas(),
+				Template:      corev1.PodTemplateSpec{},
+				RestartPolicy: "",
+			},
+			status: &commonv1.ReplicaStatus{},
+		}
+		replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
+		pods := []*corev1.Pod{{}}
+		convey.Convey("01-need create pod, but failed, should return err", func() {
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "createNewPod", func(_ *ASJobReconciler,
+				_ *mindxdlv1.AscendJob, _ podInfo, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+				return errors.New("create pod failed")
+			})
+			defer patch.Reset()
+			err := rc.reconcilePods(si, pods, jobStatus, replicas)
+			convey.ShouldBeNil(err, errors.New("create pod failed"))
+		})
+		convey.Convey("02-need delete pod, but failed, should return err", func() {
+			patch1 := gomonkey.ApplyMethod(new(ASJobReconciler), "GetPodSlices", func(_ *ASJobReconciler,
+				_ []*corev1.Pod, _ int) [][]*corev1.Pod {
+				return [][]*corev1.Pod{{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{commonv1.ReplicaIndexLabel: "1"},
+					},
+				}}}
+			})
+			defer patch1.Reset()
+			patch2 := gomonkey.ApplyPrivateMethod(new(fakePodController), "DeletePod", func(_ *ASJobReconciler,
+				_ string, _ string, _ runtime.Object) error {
+				return errors.New("delete pod failed")
+			})
+			defer patch2.Reset()
+			err := rc.reconcilePods(si, pods, jobStatus, replicas)
+			convey.ShouldBeNil(err, errors.New("delete pod failed"))
+		})
+	})
+}

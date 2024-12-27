@@ -31,7 +31,6 @@ import (
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/common/pkg/controller.v1/control"
 	"github.com/kubeflow/common/pkg/util"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -57,10 +56,10 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
+	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable"
 	"ascend-operator/pkg/ranktable/generator"
-	"ascend-operator/pkg/ranktable/utils"
 )
 
 // NewReconciler new reconciler for AscendJob
@@ -178,9 +177,14 @@ func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request)
 }
 
 func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
+	if getJobRequiredNpu(job) == 0 {
+		hwlog.RunLog.Debugf("job <%s> does not require NPU, skip ranktable generation", job.Name)
+		return
+	}
 	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v", job.Name, job.Namespace, err)
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v",
+			job.Name, job.Namespace, err)
 		return
 	}
 	r.genRankTable(ji)
@@ -309,7 +313,6 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
 			hwlog.RunLog.Infof("create rtGenerator for frame %s ascendJob %s", frame, ascendJob.Name)
 		}
-
 		return true
 	}
 }
@@ -350,27 +353,10 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 	}
 }
 
-func (r *ASJobReconciler) deletePodForCmFile(uid types.UID, jobName, namespace string, pod *corev1.Pod) {
-	rtg, exist := r.rtGenerators[uid]
-	if !exist {
-		return
-	}
-	if curStatus := rtg.DeletePod(pod); curStatus != utils.InitialRTStatus {
-		rtg.SetStatus(utils.InitialRTStatus)
-		if ok := r.tryWriteCm(jobName, namespace, uid); !ok {
-			hwlog.RunLog.Error("failed to write ranktable to file and configmap")
-			rtg.SetStatus(utils.CompletedRTStatus)
-		}
-	}
-}
-
 // onPodDeleteFunc does some necessary processing logic when a pod is deleted.
 func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
 		controllerRef := metav1.GetControllerOf(e.Object)
-		if controllerRef != nil {
-			r.deletePodForCmFile(controllerRef.UID, controllerRef.Name, e.Object.GetNamespace(), e.Object.(*corev1.Pod))
-		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
 			return false
@@ -543,23 +529,21 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
 	err := r.Get(context.TODO(), namespacedname, cm)
 	if err != nil {
-		hwlog.RunLog.Infof("failed to get configmap in namespace %s, err: %v", namespace, err)
 		return err
 	}
 	rtg, ok := r.rtGenerators[uid]
 	if !ok {
-		err = fmt.Errorf("ranktable generaotor not found for job %s", jobName)
-		hwlog.RunLog.Error(err)
-		return err
+		return fmt.Errorf("ranktable generaotor not found for job %s", jobName)
 	}
 	cm.Data[configmapKey], err = rtg.ToString()
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get ranktable string, err: %v", err)
 		return err
 	}
-	hwlog.RunLog.Infof("start write info to configmap<%s> in namespace<%s>", configmapName, namespace)
+	// The timestamp is initialized to 0 when ascend operator startup, rather than current time.
+	// The purpose is to prevent timestamp continuously increasing when ascend operator restarts multiple times,
+	// which could lead to tasks mistakenly believing that rank table has been updated.
+	cm.Data[configmapVersion] = strconv.FormatUint(rtg.GetTimeStamp(), decimal)
 	if err := r.Update(context.TODO(), cm); err != nil {
-		hwlog.RunLog.Errorf("failed to write configmap, err: %v", err)
 		return err
 	}
 	return nil

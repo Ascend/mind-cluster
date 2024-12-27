@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/u-root/u-root/pkg/ipmi"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 )
 

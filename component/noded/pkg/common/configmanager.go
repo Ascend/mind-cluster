@@ -18,7 +18,7 @@ package common
 import (
 	"sync"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
+	"ascend-common/common-utils/hwlog"
 )
 
 // ConfigManager manage fault config

@@ -29,10 +29,10 @@ import (
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/common/pkg/util/labels"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
@@ -85,8 +85,16 @@ func (r *ASJobReconciler) genServiceLabels(job metav1.Object, rtype commonv1.Rep
 	return labelMap
 }
 
-func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string) (string, string, error) {
-	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 {
+func (r *ASJobReconciler) getClusterDSvcIp() string {
+	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, mindxServiceNamespace, mindxDefaultServerDomain)
+	hwlog.RunLog.Infof("get ClusterD service ip = %s", clusterdSvcIp)
+	return clusterdSvcIp
+}
+
+func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string,
+	rtype commonv1.ReplicaType) (string, string, error) {
+	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 &&
+		rtype == mindxdlv1.ReplicaTypeWorker {
 		return "", "", nil
 	}
 
@@ -125,6 +133,9 @@ func (r *ASJobReconciler) getIpFromSvcName(svcName, svcNamespace, defaultDomain 
 }
 
 func getServiceIpAndPort(service *corev1.Service) (string, string) {
+	if service == nil {
+		return "", ""
+	}
 	schedulerPort := ""
 	for _, port := range service.Spec.Ports {
 		if port.Name == mindxdlv1.DefaultPortName {

@@ -34,10 +34,11 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
 )
 
 var (
@@ -374,7 +375,7 @@ func isShouldDeletePod(pod *v1.Pod) bool {
 
 // FilterPods get pods which meet the conditions
 func FilterPods(pods []v1.Pod, deviceType string, conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
-	var res []v1.Pod
+	var res = make([]v1.Pod, 0)
 	for _, pod := range pods {
 		hwlog.RunLog.Debugf("pod: %s, %s", pod.Name, pod.Status.Phase)
 		if getNPUResourceNumOfPod(&pod, deviceType) == 0 || !isAscendAssignedPod(&pod,
@@ -667,4 +668,31 @@ func RandomInt64(min, max int64) int64 {
 	randomNum.Add(randomNum, bigMin)
 
 	return randomNum.Int64()
+}
+
+// GetSyncMapLen get sync map length
+func GetSyncMapLen(m *sync.Map) int {
+	count := 0
+	m.Range(func(k, v interface{}) bool {
+		count++
+		return true
+	})
+	return count
+}
+
+// ObjToString obj to string
+func ObjToString(data interface{}) string {
+	var dataBuffer []byte
+	if dataBuffer = MarshalData(data); len(dataBuffer) == 0 {
+		return ""
+	}
+	return string(dataBuffer)
+}
+
+func Keys[T comparable, U any](mp map[T]U) []T {
+	result := make([]T, 0, len(mp))
+	for key := range mp {
+		result = append(result, key)
+	}
+	return result
 }

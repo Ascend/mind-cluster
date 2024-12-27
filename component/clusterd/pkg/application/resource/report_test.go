@@ -15,7 +15,14 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 )
+
+func init() {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
 
 func TestAddNewMessageTotal(t *testing.T) {
 	convey.Convey("test updateChan message", t, func() {
@@ -27,7 +34,7 @@ func TestAddNewMessageTotal(t *testing.T) {
 		if updateChan != nil {
 			num, _ = <-updateChan
 		}
-		convey.So(num, convey.ShouldEqual, 0)
+		convey.So(num, convey.ShouldEqual, constant.AllProcessType)
 	})
 }
 
@@ -35,6 +42,7 @@ func TestStopReport(t *testing.T) {
 	convey.Convey("test stop report", t, func() {
 		cycleTicker = time.NewTicker(1 * time.Second)
 		convey.So(StopReport, convey.ShouldNotPanic)
+		updateChan = make(chan int, 1)
 	})
 }
 
@@ -47,7 +55,7 @@ func TestUpdateCmWithEmpty(t *testing.T) {
 				clientSet.CoreV1().ConfigMaps(cm.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 			})
 			defer mockUpdateConfig.Reset()
-			updateCmWithEmpty([]string{"device"}, []string{"node"}, []string{"switch"})
+			updateAllCm([]string{"device"}, []string{"node"}, []string{"switch"})
 			cm, err := clientSet.CoreV1().ConfigMaps("vcjob").Get(context.TODO(),
 				"test-cm", metav1.GetOptions{})
 			convey.So(err, convey.ShouldBeNil)

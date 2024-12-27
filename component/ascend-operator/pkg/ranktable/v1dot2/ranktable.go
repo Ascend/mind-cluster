@@ -5,7 +5,6 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package v1dot2 is using for v1.2 Ranktable.
 */
-
 package v1dot2
 
 import (

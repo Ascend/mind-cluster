@@ -23,8 +23,7 @@ import (
 	"os"
 	"strings"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
-
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/install/process"
 	"ascend-docker-runtime/mindxcheckutils"
 )
@@ -90,7 +89,7 @@ func main() {
 	var behavior string
 	hwlog.RunLog.Infof("command: %v", command)
 	installScene := command[len(command)-installSceneIndexFromEnd]
-	if installScene == process.InstallSceneDocker {
+	if installScene == process.InstallSceneDocker || installScene == process.InstallSceneIsula {
 		behavior, err = process.DockerProcess(command)
 	} else if installScene == process.InstallSceneContainerd {
 		behavior, err = process.ContainerdProcess(command)

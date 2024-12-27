@@ -30,12 +30,13 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/fsnotify/fsnotify"
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
 )
 
 func init() {
@@ -241,15 +242,15 @@ func TestFilterPods1(t *testing.T) {
 		convey.Convey("annotationTag exist, device is virtual", func() {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910c2: *limits}}}}}}}
-			res := FilterPods(pods, Ascend910c2, nil)
+				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(len(res), convey.ShouldEqual, 1)
 		})
 		convey.Convey("limitsDevNum exceeds the upper limit", func() {
 			limits := resource.NewQuantity(MaxDevicesNum*MaxAICoreNum+1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910c2: *limits}}}}}}}
-			res := FilterPods(pods, Ascend910c2, nil)
+				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("no assigned flag", func() {
@@ -612,5 +613,15 @@ func TestGetJobNameOfPod(t *testing.T) {
 			jobName := GetJobNameOfPod(pod)
 			convey.ShouldEqual(jobName, "")
 		})
+	})
+}
+
+func TestObjToString(t *testing.T) {
+	t.Run("TestObjToString", func(t *testing.T) {
+		mp := map[string]string{"hello": "world"}
+		want := `{"hello":"world"}`
+		if got := ObjToString(mp); got != want {
+			t.Errorf("ObjToString failed")
+		}
 	})
 }

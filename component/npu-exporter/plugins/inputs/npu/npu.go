@@ -22,13 +22,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/hccn"
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
-
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/devmanager"
-	"huawei.com/npu-exporter/v6/devmanager/common"
-	"huawei.com/npu-exporter/v6/devmanager/hccn"
 )
 
 const (
@@ -274,7 +273,11 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 	}
 	hccsStatisticInfo, err := npu.devManager.GetHccsStatisticInfo(devID)
 	if err != nil {
-		acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccs, devID); needPrint {
+			acc.AddError(fmt.Errorf("get hccs statistic info of npu failed: %v %s", err, extraErrLog))
+		}
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccs, devID)
 	}
 	var hccsBeginIndex int
 	if devType == common.Ascend910B || common.IsA900A3SuperPod(npu.devManager.GetMainBoardId()) {
@@ -296,7 +299,11 @@ func (npu *WatchNPU) collectHccsInfo(devID int32, fields map[string]interface{},
 	}
 	hccsBandwidthInfo, err := npu.devManager.GetHccsBandwidthInfo(devID)
 	if err != nil {
-		acc.AddError(fmt.Errorf("get hccs bandwidth info of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHccsBW, devID); needPrint {
+			acc.AddError(fmt.Errorf("get hccs bandwidth info of npu failed: %v %s", err, extraErrLog))
+		}
+	} else {
+		hwlog.ResetErrCnt(common.DomainForHccsBW, devID)
 	}
 	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_profiling_time", hccsBandwidthInfo.ProfilingTime)
 	doUpdateFields(acc, fields, "npu_chip_info_hccs_bandwidth_info_total_tx", hccsBandwidthInfo.TotalTxbw)
@@ -339,19 +346,30 @@ func (npu *WatchNPU) collectUtilizationRate(devID int32, fields map[string]inter
 	}
 
 	if aiCoreUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, aiCore); err != nil {
-		acc.AddError(fmt.Errorf("get ai core rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForAICoreUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get ai core rate for device(logicID:%d): %v %s", devID, err, extraErrLog))
+		}
 	} else {
 		fields["npu_chip_info_utilization"] = float64(aiCoreUtil)
+		hwlog.ResetErrCnt(common.DomainForAICoreUtilization, devID)
 	}
 
 	if hbmUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, hbm); err != nil {
-		acc.AddError(fmt.Errorf("get hbm rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForHbmUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get HBM(High Bandwidth Memory) utilization for device(logicID:%d): %v %s",
+				devID, err, extraErrLog))
+		}
 	} else {
+		hwlog.ResetErrCnt(common.DomainForHbmUtilization, devID)
 		fields["npu_chip_info_hbm_utilization"] = float64(hbmUtil)
 	}
 	if overallUtil, err := npu.devManager.GetDeviceUtilizationRate(devID, overall); err != nil {
-		acc.AddError(fmt.Errorf("get device overall utilization rate of npu failed: %v", err))
+		if needPrint, extraErrLog := hwlog.IsNeedPrint(common.DomainForOverallUtilization, devID); needPrint {
+			acc.AddError(fmt.Errorf("failed to get overall utilization rate for device(logicID:%d): %v %s",
+				devID, err, extraErrLog))
+		}
 	} else {
+		hwlog.ResetErrCnt(common.DomainForOverallUtilization, devID)
 		fields["npu_chip_info_overall_utilization"] = float64(overallUtil)
 	}
 }

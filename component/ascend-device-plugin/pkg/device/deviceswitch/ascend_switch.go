@@ -23,11 +23,10 @@ import (
 	"time"
 	"unsafe"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
-	"huawei.com/npu-exporter/v6/common-utils/utils"
-	devmanagercommon "huawei.com/npu-exporter/v6/devmanager/common"
-
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	devmanagercommon "ascend-common/devmanager/common"
 )
 
 /*
@@ -41,18 +40,18 @@ import (
 
     #include "library.h"
 
-    void *dcmiHandle;
+    static void *dcmiHandle;
     #define SO_NOT_FOUND  -99999
     #define FUNCTION_NOT_FOUND  -99998
     #define SUCCESS  0
     #define ERROR_UNKNOWN  -99997
     // dcmi
-    int (*lq_dcmi_init_func)();
+    static int (*lq_dcmi_init_func)();
     static int dcmi_init_lq(){
 		return lq_dcmi_init_func();
 	}
 
-	int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
+	static int (*lq_dcmi_get_fault_info_func)(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList);
 	static int lq_dcmi_get_fault_info(unsigned int listLen, unsigned int *eventListLen, struct LqDcmiEvent *eventList){
 		return lq_dcmi_get_fault_info_func(listLen,eventListLen,eventList);
 	}
@@ -62,7 +61,7 @@ import (
 		goFaultEventHandler(fault_event);
 	}
 
-	int(*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
+	static int (*lq_dcmi_subscribe_fault_event_func)(struct lq_dcmi_event_filter filter,LqDcmiFaultEventCallback handler);
 	static int lq_dcmi_subscribe_fault_event(struct lq_dcmi_event_filter filter){
 		return lq_dcmi_subscribe_fault_event_func(filter,event_handler);
 	}
@@ -274,6 +273,9 @@ func convertFaultEvent(event *C.struct_LqDcmiEvent) common.SwitchFaultEvent {
 	if err := setExtraFaultInfo(&fault); err != nil {
 		hwlog.RunLog.Error(err)
 	}
+	hwlog.RunLog.Debugf("convert switch fault finish, EventType:%v,SubType:%v,FaultID:%v,"+
+		"AssembledFaultCode:%v,PeerPortDevice:%v,AlarmRaisedTime:%v",
+		fault.EventType, fault.SubType, fault.FaultID, fault.AssembledFaultCode, fault.PeerPortDevice, fault.AlarmRaisedTime)
 	return fault
 }
 
@@ -291,19 +293,19 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
 		case common.SubTypeOfPortLaneReduceHalf:
 			faultID = uint(common.FaultIdOfPortLaneReduceHalf)
 		default:
-			faultID = uint(0)
+			faultID = uint(common.FaultIdOfPortFailOnForwardingChip)
 		}
 	} else {
 		faultID, ok = eventTypeToFaultIDMapper[event.EventType]
 		if !ok {
-			hwlog.RunLog.Warnf("failed to find faultID for eventType: %d", event.EventType)
+			hwlog.RunLog.Warnf("failed to find faultID for switch fault event: %v", event)
 		}
 	}
 	if alarmID == "" {
 		alarmID, ok = faultIdToAlarmIdMapper[faultID]
-	}
-	if !ok {
-		hwlog.RunLog.Warnf("failed to find alarm id for eventType: %d", event.EventType)
+		if !ok {
+			hwlog.RunLog.Warnf("failed to find alarm id for switch fault event: %v", event)
+		}
 	}
 	PeerDeviceType, PeerDeviceName := int(event.PeerPortDevice), ""
 	if isPortLevelFault(int(event.EventType)) {

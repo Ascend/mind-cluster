@@ -5,20 +5,20 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 /*
 Package common is common function or object of ranktable.
 */
-
 package common
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"sync"
 
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
@@ -27,12 +27,19 @@ import (
 const (
 	defaultPerm   = 0644
 	rankTableFile = "hccl.json"
+	versionFile   = "version"
+	decimal       = 10
 )
 
 // BaseGenerator is the base struct for ranktable generator.
 type BaseGenerator struct {
-	dir  string
-	path string
+	dir            string
+	path           string
+	configmapExist utils.ConfigmapCheck
+	timestamp      uint64
+	cmStatus       utils.RankTableStatus
+	fileStatus     utils.RankTableStatus
+	rtMu           sync.Mutex
 
 	servers    *sync.Map
 	rankTabler generator.RankTableGenerator
@@ -48,13 +55,45 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
 		dir:        rankTableDir,
-		path:       rankTableDir + "/" + rankTableFile,
+		path:       path.Join(rankTableDir, rankTableFile),
+		cmStatus:   utils.InitialRTStatus,
+		fileStatus: utils.InitialRTStatus,
 		servers:    &sync.Map{},
 		rankTabler: r,
 		Status:     utils.InitialRTStatus,
 		ServerList: []*Server{},
 		Version:    version,
 	}
+}
+
+// GetTimeStamp is used to get the timestamp of the last update
+func (r *BaseGenerator) GetTimeStamp() uint64 {
+	return r.timestamp
+}
+
+// SetTimeStamp is used to set the timestamp of the last update
+func (r *BaseGenerator) SetTimeStamp(timestamp uint64) {
+	r.timestamp = timestamp
+}
+
+// Lock is used to access the permission of rank table operations
+func (r *BaseGenerator) Lock() {
+	r.rtMu.Lock()
+}
+
+// Unlock is used to release the permission of rank table operations
+func (r *BaseGenerator) Unlock() {
+	r.rtMu.Unlock()
+}
+
+// GetConfigmapExist is used to get the configmap exist status.
+func (r *BaseGenerator) GetConfigmapExist() utils.ConfigmapCheck {
+	return r.configmapExist
+}
+
+// SetConfigmapExist is used to set the configmap exist status.
+func (r *BaseGenerator) SetConfigmapExist(exist utils.ConfigmapCheck) {
+	r.configmapExist = exist
 }
 
 // SetStatus is used to set the status of ranktable.
@@ -67,8 +106,31 @@ func (r *BaseGenerator) GetStatus() utils.RankTableStatus {
 	return r.Status
 }
 
+// SetFileStatus is used to set the status of ranktable in file.
+func (r *BaseGenerator) SetFileStatus(status utils.RankTableStatus) {
+	r.fileStatus = status
+}
+
+// GetFileStatus is used to get the status of ranktable in file.
+func (r *BaseGenerator) GetFileStatus() utils.RankTableStatus {
+	return r.fileStatus
+}
+
+// SetConfigmapStatus is used to set the status of ranktable in configmap.
+func (r *BaseGenerator) SetConfigmapStatus(status utils.RankTableStatus) {
+	r.cmStatus = status
+}
+
+// GetConfigmapStatus is used to get the status of ranktable in configmap.
+func (r *BaseGenerator) GetConfigmapStatus() utils.RankTableStatus {
+	return r.cmStatus
+}
+
 // WriteToFile is used to write ranktable to file.
 func (r *BaseGenerator) WriteToFile() error {
+	if r.dir == "" {
+		return nil
+	}
 	hwlog.RunLog.Infof("start write info into file: %s", r.path)
 	if err := func() error {
 		f, err := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, defaultPerm)
@@ -92,6 +154,33 @@ func (r *BaseGenerator) WriteToFile() error {
 		return err
 	}
 	hwlog.RunLog.Infof("write info into file: %s, and change mod to 666 success", r.path)
+	if err := r.writeVersion(); err != nil {
+		hwlog.RunLog.Errorf("failed to write version to file, err: %v", err)
+		return err
+	}
+	return nil
+}
+
+func (r *BaseGenerator) writeVersion() error {
+	versionPath := path.Join(r.dir, versionFile)
+	if err := func() error {
+		f, err := os.OpenFile(versionPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, defaultPerm)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		versionStr := strconv.FormatUint(r.GetTimeStamp(), decimal)
+		if _, err = f.WriteString(versionStr); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return err
+	}
+	if err := os.Chmod(versionPath, defaultPerm); err != nil {
+		return err
+	}
+	hwlog.RunLog.Infof("write version into file: %s, and change mod to 644 success", versionPath)
 	return nil
 }
 
@@ -116,7 +205,10 @@ func (r *BaseGenerator) ToString() (string, error) {
 
 // AddPod is used to add pod to ranktable.
 func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
-	deviceInfo := pod.Annotations[utils.PodDeviceKey]
+	deviceInfo, ok := pod.Annotations[utils.PodDeviceKey]
+	if !ok {
+		return nil
+	}
 	var instance Instance
 	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
 		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v", pod.Namespace, pod.Name,
@@ -162,17 +254,9 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 }
 
 // DeletePod is used to delete pod from ranktable.
-func (r *BaseGenerator) DeletePod(pod *corev1.Pod) utils.RankTableStatus {
-	r.servers.Delete(pod.UID)
-	if r.GetStatus() == utils.InitialRTStatus {
-		return utils.InitialRTStatus
-	}
+func (r *BaseGenerator) DeletePod() {
+	r.servers = &sync.Map{}
 	r.SetStatus(utils.InitialRTStatus)
-	if err := r.WriteToFile(); err != nil {
-		hwlog.RunLog.Errorf("failed to write ranktable to file, err: %v", err)
-		r.SetStatus(utils.CompletedRTStatus)
-	}
-	return r.GetStatus()
 }
 
 // GatherServerList is used to gather server list.

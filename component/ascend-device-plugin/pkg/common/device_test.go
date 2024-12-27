@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"huawei.com/npu-exporter/v6/devmanager/common"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/devmanager/common"
 )
 
 const (
@@ -216,13 +217,16 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 		convey.Convey("test actually level", func() {
 			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
+			switchFaultCodeLevelToCm = map[string]int{}
 			fault := GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
+			switchFaultCodeLevelToCm = map[string]int{}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == PreSeparateFaultLevelStr, convey.ShouldBeTrue)
 
+			switchFaultCodeLevelToCm = map[string]int{}
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)

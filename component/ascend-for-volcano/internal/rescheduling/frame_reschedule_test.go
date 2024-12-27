@@ -143,10 +143,10 @@ func buildModule910x8PreStartActionTest1() module910x8PreStartActionTests {
 	ssn1 := test.FakeSSNReSchedule()
 	env := fakeEnvEmpty()
 	fakeEnvAddJobsAndNodesToEnv(&env)
-	var tmpPatche1 *gomonkey.Patches
-	var tmpPatche2 *gomonkey.Patches
-	var tmpPatche3 *gomonkey.Patches
-	var tmpPatche4 *gomonkey.Patches
+	var tmpPatche1 *gomonkey.Patches = nil
+	var tmpPatche2 *gomonkey.Patches = nil
+	var tmpPatche3 *gomonkey.Patches = nil
+	var tmpPatche4 *gomonkey.Patches = nil
 	myArgs := buildModule910x8PreStartActionTestCacheArgs(tmpPatche1, tmpPatche2, tmpPatche3, tmpPatche4, nil)
 	myArgs.ssn = ssn1
 	test1 := module910x8PreStartActionTests{
@@ -448,8 +448,6 @@ func fakeReSchedulerFaultNodeEmptyCard(nodeName string, unhealthyNPU []string, n
 		return FaultNode{}
 	}
 	updateTime := updateTimes[sliceIndexZero]
-	oldHBTime := updateTimes[sliceIndexOne]
-	updateHBTime := updateTimes[sliceIndexTwo]
 	hState := NodeHealthy
 	if len(netUnhealthyNPU) > 0 {
 		isFault = true
@@ -470,10 +468,7 @@ func fakeReSchedulerFaultNodeEmptyCard(nodeName string, unhealthyNPU []string, n
 		NodeHealthState:     hState,
 		AllCards: []string{"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5," +
 			"Ascend910-6,Ascend910-7"},
-		FaultCards:          make([]FaultCard, util.MapInitNum),
-		HeartbeatInterval:   HBinterval,
-		OldHeartbeatTime:    oldHBTime,
-		UpdateHeartbeatTime: updateHBTime,
+		FaultCards: make([]FaultCard, util.MapInitNum),
 	}
 	return faultNode
 }
@@ -639,7 +634,6 @@ func fakeFaultCM(env plugin.ScheduleEnv) *DealReSchedulerConfigmap {
 	cmData[CmFaultNodeKind] = env.Cache.Data[RePropertyName][CmFaultNodeKind]
 	cmData[CmFaultJob] =
 		env.Cache.Data[RePropertyName][CmFaultJob]
-	cmData[CmNodeHeartbeatKind] = ""
 	cmData[CmNodeRankTimeMapKind] = ""
 	cmData[CmCheckCode] = util.MakeDataHash(cmData)
 	return &DealReSchedulerConfigmap{

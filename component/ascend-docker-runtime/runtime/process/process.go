@@ -32,8 +32,8 @@ import (
 
 	"github.com/containerd/containerd/oci"
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"huawei.com/npu-exporter/v5/common-utils/hwlog"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/dcmi"
 )
@@ -557,6 +557,7 @@ func addDevice(spec *specs.Spec, deviceIdList []int) error {
 	}
 
 	if err := addManagerDevice(spec); err != nil {
+		hwlog.RunLog.Errorf("failed to add manager device, error: %v", err)
 		return fmt.Errorf("failed to add Manager device to spec: %v", err)
 	}
 
@@ -642,6 +643,7 @@ func modifySpecFile(path string) error {
 			return fmt.Errorf("failed to inject hook, err: %v", err)
 		}
 		if err = addDevice(&spec, devices); err != nil {
+			hwlog.RunLog.Errorf("failed to add device to env, err: %v", err)
 			return fmt.Errorf("failed to add device to env: %v", err)
 		}
 	}

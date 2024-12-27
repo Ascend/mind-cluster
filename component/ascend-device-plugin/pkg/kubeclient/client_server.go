@@ -23,13 +23,13 @@ import (
 	"strings"
 	"time"
 
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
 )
 
 // Similar to the K8s metadata structure
@@ -345,7 +345,7 @@ func (ki *ClientK8s) AnnotationReset() error {
 // GetPodsUsedNpu get npu by status
 func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 	podList := ki.GetActivePodListCache()
-	var useNpu []string
+	var useNpu = make([]string, 0)
 	for _, pod := range podList {
 		tmpNpu, ok := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {

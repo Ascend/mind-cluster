@@ -79,7 +79,6 @@ func newEmptyCacheData() map[string]string {
 	cacheData := make(map[string]string, util.MapInitNum)
 	cacheData[CmFaultNodeKind] = ""
 	cacheData[CmFaultJob] = ""
-	cacheData[CmNodeHeartbeatKind] = ""
 	cacheData[CmNodeRankTimeMapKind] = ""
 	cacheData[CmJobRemainRetryTimes] = ""
 	checkCode := util.MakeDataHash(cacheData)

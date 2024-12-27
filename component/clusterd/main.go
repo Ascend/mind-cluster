@@ -12,13 +12,14 @@ import (
 
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
-	"huawei.com/npu-exporter/v6/common-utils/hwlog"
 
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
+	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
-	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/service"
 	"clusterd/pkg/interface/kube"
 )
@@ -28,14 +29,15 @@ const (
 )
 
 var (
-	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile}
+	hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, MaxLineLength: constant.MaxLogLineLength}
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName string
-	version   bool
-	server    *sv.ClusterInfoMgrServer
-	limiter   = rate.NewLimiter(rate.Every(time.Second), common.QpsLimit)
+	BuildName         string
+	version           bool
+	server            *sv.ClusterInfoMgrServer
+	limiter           = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	keepAliveInterval = 5
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -47,14 +49,26 @@ func limitQPS(ctx context.Context, req interface{},
 	return handler(ctx, req)
 }
 
-func startInformer(ctx context.Context, recoverService kube.JobService) {
+func startInformer(ctx context.Context) {
 	kube.InitCMInformer()
-	kube.InitPodInformer()
-	kube.InitPGInformer(ctx, recoverService)
-	kube.AddCmNodeFunc(constant.Resource, resource.NodeCollector)
-	kube.AddCmDeviceFunc(constant.Resource, resource.DeviceInfoCollector)
-	kube.AddCmSwitchFunc(constant.Resource, resource.SwitchInfoCollector)
-	go resource.Report()
+	kube.InitPodAndNodeInformer()
+	kube.InitPodGroupInformer()
+	addResourceFunc()
+	addJobFunc(ctx)
+	go resource.Report(ctx)
+}
+
+func addJobFunc(ctx context.Context) {
+	go jobv2.Handler(ctx)
+	go jobv2.Checker(ctx)
+	kube.AddPodGroupFunc(constant.Job, jobv2.PodGroupCollector)
+	kube.AddPodFunc(constant.Job, jobv2.PodCollector)
+}
+
+func addResourceFunc() {
+	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
+	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
+	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
 }
 
 func main() {
@@ -72,27 +86,38 @@ func main() {
 	if !checkParameters() {
 		return
 	}
-	err := kube.InitClientK8s()
+	err := initK8sServer()
 	if err != nil {
-		hwlog.RunLog.Errorf("new client config err: %v", err)
+		hwlog.RunLog.Errorf("init k8s servers failed, error: %v", err)
 		return
 	}
-	err = kube.InitClientVolcano()
-	if err != nil {
-		hwlog.RunLog.Errorf("new volcano client config err: %v", err)
-		return
-	}
+
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService()
+	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
 	if err = server.Start(recoverService); err != nil {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	startInformer(ctx, recoverService)
-
+	faultmanager.NewFaultProcessCenter(ctx)
+	startInformer(ctx)
 	signalCatch(cancel)
+}
+
+func initK8sServer() error {
+	err := kube.InitClientK8s()
+	if err != nil {
+		return fmt.Errorf("new client config err: %v", err)
+	}
+	vcK8sClient, err := kube.InitClientVolcano()
+	if err != nil {
+		return fmt.Errorf("new volcano client config err: %v", err)
+	}
+	if !kube.CheckVolcanoExist(vcK8sClient.ClientSet) {
+		return fmt.Errorf("volcano not exist, please deploy volcano")
+	}
+	return nil
 }
 
 func init() {
