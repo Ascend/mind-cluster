@@ -142,6 +142,36 @@ func TestSetAscendManager(t *testing.T) {
 	})
 }
 
+// TestUpdateNode for test update node
+func TestUpdateNode(t *testing.T) {
+	var hdm HwDevManager
+	convey.Convey("test update node when scene is edge", t, func() {
+		common.ParamOption.BuildScene = common.EdgeScene
+		err := hdm.UpdateNode()
+		convey.So(err, convey.ShouldBeNil)
+	})
+	mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s,
+		_ *v1.Node, _, _ string) (*v1.Node, error) {
+		return &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: make(map[string]string),
+				Name:   "node",
+			},
+		}, nil
+	})
+	defer mockGetNode.Reset()
+	convey.Convey("test update node when get node error", t, func() {
+		mockGetNode = gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s,
+			_ *v1.Node, _, _ string) (*v1.Node, error) {
+			return nil, fmt.Errorf("GetNode error")
+		})
+		defer mockGetNode.Reset()
+		err := hdm.UpdateNode()
+		convey.So(err.Error(), convey.ShouldEqual, "GetNode error")
+	})
+
+}
+
 // TestStartAllServer for testStartAllServer
 func TestStartAllServer(t *testing.T) {
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
