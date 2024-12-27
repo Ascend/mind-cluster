@@ -10,11 +10,11 @@ Prometheus（普罗米修斯）是一个开源的系统监控和警报工具包�
 
 1. 通过git拉取源码，获得npu-exporter。
 
-   示例：Npu-Exporter源码放在/home/mindxdl/component/npu-exporter目录下
+   示例：Npu-Exporter源码放在/home/mind-cluster/component/npu-exporter目录下
 
 2.  执行以下命令，进入Npu-Exporter构建目录，执行构建脚本，在“output“目录下生成二进制npu-exporter、yaml文件和Dockerfile等文件。
 
-    **cd** _/home/mindxdl/component/_**npu-exporter/build/**
+    **cd** _/home/mind-cluster/component/_**npu-exporter/build/**
 
     **chmod +x build.sh**
 
@@ -22,7 +22,7 @@ Prometheus（普罗米修斯）是一个开源的系统监控和警报工具包�
 
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ll** _/home/mindxdl/component/_**npu-exporter/output**
+    **ll** _/home/mind-cluster/component/_**npu-exporter/output**
 
     ```
     drwxr-xr-x  2 root root     4096 Feb 23 07:10 .

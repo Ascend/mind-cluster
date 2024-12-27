@@ -8,11 +8,11 @@
 
 1.  通过git拉取源码，获得noded。
 
-    示例：源码放在/home/mindxdl/component/noded目录下
+    示例：源码放在/home/mind-cluster/component/noded目录下
 
 2.  执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件。
 
-    **cd** _/home/mindxdl/component/_**noded/build/**
+    **cd** _/home/mind-cluster/component/_**noded/build/**
 
     **chmod +x build.sh**
 
@@ -20,7 +20,7 @@
 
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ll** _/home/mindxdl/component/_**noded/output**
+    **ll** _/home/mind-cluster/component/_**noded/output**
 
     ```
     drwxr-xr-x  2 root root     4096 Nov 14 07:10 .
