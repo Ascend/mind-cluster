@@ -152,7 +152,7 @@ func TestUpdateNode(t *testing.T) {
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
 	})
-	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "mockInitPodInformer", func(
+	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(
 		_ *kubeclient.ClientK8s) {
 		return
 	})
