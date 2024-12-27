@@ -132,7 +132,7 @@ func TestSetAscendManager(t *testing.T) {
 			})
 		defer mockGetChipAiCoreCount.Reset()
 		err := hdm.setAscendManager(devM)
-		convey.So(err, convey.ShouldEqual, "GetChipAiCoreCount error")
+		convey.So(err.Error(), convey.ShouldEqual, "GetChipAiCoreCount error")
 	})
 }
 
