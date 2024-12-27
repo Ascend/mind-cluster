@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -150,8 +151,8 @@ func TestUpdateNode(t *testing.T) {
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
 	})
-	mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s,
-		_ *v1.Node, _, _ string) (*v1.Node, error) {
+	mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
+		*v1.Node, error) {
 		return &v1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: make(map[string]string),
@@ -161,15 +162,26 @@ func TestUpdateNode(t *testing.T) {
 	})
 	defer mockGetNode.Reset()
 	convey.Convey("test update node when get node error", t, func() {
-		mockGetNode = gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s,
-			_ *v1.Node, _, _ string) (*v1.Node, error) {
+		mockGetNode = gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
+			*v1.Node, error) {
 			return nil, fmt.Errorf("GetNode error")
 		})
 		defer mockGetNode.Reset()
 		err := hdm.UpdateNode()
 		convey.So(err.Error(), convey.ShouldEqual, "GetNode error")
 	})
-
+	mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
+		func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) {
+			testLabel := make(map[string]string)
+			testLabel[common.ServerTypeLabelKey] = common.ParamOption.RealCardType +
+				common.MiddelLine + strconv.Itoa(int(common.ParamOption.AiCoreCount))
+			return testLabel, nil
+		})
+	defer mockGetNewNodeLabel.Reset()
+	convey.Convey("test update node when get node error", t, func() {
+		err := hdm.UpdateNode()
+		convey.So(err.Error(), convey.ShouldEqual, "update node label failed")
+	})
 }
 
 // TestStartAllServer for testStartAllServer
