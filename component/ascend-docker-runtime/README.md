@@ -28,11 +28,11 @@ Ascend Docker在prestart-hook这个钩子函数中，对容器做了以下配置
 
  1、下载master分支下的源码包，获得ascend-docker-runtime
  
-示例：源码放在/home/mindxdl/component/ascend-docker-runtime目录下
+示例：源码放在/home/mind-cluster/component/ascend-docker-runtime目录下
 
  2、下载tag为v1.1.10的安全函数库
 ````shell
-cd /home/mindxdl/component/ascend-docker-runtime/platform
+cd /home/mind-cluster/component/ascend-docker-runtime/platform
 git clone -b v1.1.10 https://gitee.com/openeuler/libboundscheck.git
 ````
 
@@ -49,7 +49,7 @@ bash build.sh
 ```
 编译完成后，会在output文件夹看到相应的二进制run包
 ```shell
-root@#:/home/mindxdl/component/ascend-docker-runtime/output# ll
+root@#:/home/mind-cluster/component/ascend-docker-runtime/output# ll
 ...
 -rwxr-xr-x  ... Ascend-docker-runtime_x.x.x_linux-x86_64.run*
 ```

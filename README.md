@@ -12,7 +12,7 @@
 
 - 本仓库代码中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布前，这些分支不应被应用于任何生产环境或者依赖关键业务的项目中。请务必使用我们的正式发行版本，以确保代码的稳定性和安全性。
   使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献值概不负责。
-- 正式版本请参考release版本 <https://gitee.com/ascend/mindxdl/releases>
+- 正式版本请参考release版本 <https://gitee.com/ascend/mind-cluster/releases>
 
 
 # 介绍
