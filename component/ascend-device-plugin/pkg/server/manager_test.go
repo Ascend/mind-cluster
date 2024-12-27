@@ -154,10 +154,7 @@ func TestUpdateNode(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		common.ParamOption.BuildScene = tmpBuildScene
 	})
-	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(
-		_ *kubeclient.ClientK8s) {
-		return
-	})
+	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(_ *kubeclient.ClientK8s) {})
 	defer mockInitPodInformer.Reset()
 	convey.Convey("test update node when get node error", t, func() {
 		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
@@ -174,21 +171,24 @@ func TestUpdateNode(t *testing.T) {
 	defer mockGetNewNodeLabel.Reset()
 	mockMarshal := gomonkey.ApplyFuncReturn(json.Marshal, []byte{0}, nil)
 	defer mockMarshal.Reset()
-	mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
-		*v1.Node, error) {
-		return &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: make(map[string]string),
-				Labels:      make(map[string]string),
-				Name:        "node",
-			},
-			Status: v1.NodeStatus{
-				Addresses: getAddresses(),
-			},
-		}, nil
-	})
-	defer mockGetNode.Reset()
 	convey.Convey("test update node when update node label success", t, func() {
+		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
+			*v1.Node, error) {
+			return &v1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: make(map[string]string),
+					Labels:      make(map[string]string),
+					Name:        "node",
+				},
+				Status: v1.NodeStatus{Addresses: getAddresses()},
+			}, nil
+		})
+		defer mockGetNode.Reset()
+		mockPatchNodeState := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "PatchNodeState", func(
+			_ *kubeclient.ClientK8s, _, _ *v1.Node) (*v1.Node, []byte, error) {
+			return &v1.Node{}, []byte{}, nil
+		})
+		defer mockPatchNodeState.Reset()
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
 	})
