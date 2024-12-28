@@ -213,7 +213,7 @@ func TestGetNewNodeLabel(t *testing.T) {
 				return common.Infer
 			})
 		defer mockGetDeviceUsage.Reset()
-		mockUpdateChipNameToNode := gomonkey.ApplyMethod(reflect.TypeOf(new(HwDevManager)), "updateChipNameToNode",
+		mockUpdateChipNameToNode := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "updateChipNameToNode",
 			func(_ *HwDevManager) (map[string]string, error) {
 				return map[string]string{common.ChipNameLabel: "testName"}, nil
 			})
