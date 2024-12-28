@@ -34,6 +34,7 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/devmanager"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 const (
@@ -213,11 +214,11 @@ func TestGetNewNodeLabel(t *testing.T) {
 				return common.Infer
 			})
 		defer mockGetDeviceUsage.Reset()
-		mockUpdateChipNameToNode := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "updateChipNameToNode",
-			func(_ *HwDevManager) (map[string]string, error) {
-				return map[string]string{common.ChipNameLabel: "testName"}, nil
+		mockGetValidChipInfo := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+			"GetValidChipInfo", func(_ *devmanager.DeviceManagerMock) (npuCommon.ChipInfo, error) {
+				return npuCommon.ChipInfo{Name: "testName"}, nil
 			})
-		defer mockUpdateChipNameToNode.Reset()
+		defer mockGetValidChipInfo.Reset()
 		mockIsContainAll300IDuo := gomonkey.ApplyFuncReturn(common.IsContainAll300IDuo, true)
 		defer mockIsContainAll300IDuo.Reset()
 		labelMap, err := hdm.getNewNodeLabel(testNode)
