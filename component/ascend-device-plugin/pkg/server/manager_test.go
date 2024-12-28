@@ -240,7 +240,7 @@ func TestGetNewNodeLabel(t *testing.T) {
 		mockIsContainAll300IDuo := gomonkey.ApplyFuncReturn(common.IsContainAll300IDuo, true)
 		defer mockIsContainAll300IDuo.Reset()
 		labelMap, err := hdm.getNewNodeLabel(testNode)
-		convey.So(labelMap, convey.ShouldEqual, map[string]string{common.InferCardKey: common.A300IDuoLabel,
+		convey.So(labelMap, convey.ShouldResemble, map[string]string{common.InferCardKey: common.A300IDuoLabel,
 			common.ChipNameLabel: "testName"})
 		convey.So(err, convey.ShouldBeNil)
 	})
