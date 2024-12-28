@@ -91,7 +91,7 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 // GetFaultPod get fault pod
 func (ctl *EventController) GetFaultPod() map[string]string {
 	ctl.lock.RLock()
-	ctl.lock.RUnlock()
+	defer ctl.lock.RUnlock()
 	faultMap := make(map[string]string, len(ctl.faultPod))
 	for k, v := range ctl.faultPod {
 		faultMap[k] = v
@@ -635,12 +635,8 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 			normalFaults = allFaults
 			ctl.setCacheFault(uceFaults, normalFaults)
 
-			// label fault pod
-			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+			faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 			ctl.mergeFaultPod(faultPod)
-			if err != nil {
-				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
-			}
 			cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 				allFaultRanks, constant.NotifyFaultListOperation)
 			if err != nil {
@@ -678,14 +674,10 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 
-	// label fault pod
 	var err error
-	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 	ctl.mergeFaultPod(faultPod)
-	if err != nil {
-		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
-	}
-	hwlog.RunLog.Infof("jobId=%s, label pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
+	hwlog.RunLog.Infof("jobId=%s, fault pod = %v", ctl.jobInfo.JobId, ctl.GetFaultPod())
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 		allFaultRanks, constant.NotifyFaultListOperation)
 	if err != nil {
@@ -758,10 +750,9 @@ func (ctl *EventController) agentSupportStrategy(strategy string) bool {
 }
 
 func (ctl *EventController) chooseStrategy() string {
-	faultMap := ctl.GetFaultPod()
 	ctl.lock.RLock()
-	defer ctl.lock.RUnlock()
 	n := len(ctl.latestRecoverResult)
+	ctl.lock.RUnlock()
 	if n == 0 {
 		strategy := ctl.firstChooseStrategy()
 		if strategy == constant.ProcessRetryStrategyName &&
@@ -770,12 +761,8 @@ func (ctl *EventController) chooseStrategy() string {
 			ctl.takeUceFault2NormalFault()
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			ctl.setCacheFault(nil, allFaults)
-			var err error
-			faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, faultMap)
+			faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 			ctl.mergeFaultPod(faultPod)
-			if err != nil {
-				hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
-			}
 			return ctl.chooseForRecoverFail() // dump or exit
 		}
 		return strategy
@@ -923,12 +910,9 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 	var err error
-	faultPod, err := common.LabelFaultPod(ctl.jobInfo.JobId, allFaultRanks, ctl.GetFaultPod())
+	faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 	ctl.mergeFaultPod(faultPod)
-	if err != nil {
-		hwlog.RunLog.Errorf("label pod fault err: %v, jobId=%s", err, ctl.jobInfo.JobId)
-	}
-	hwlog.RunLog.Infof("jobId=%s, label pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
+	hwlog.RunLog.Infof("jobId=%s, fault pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 		allFaultRanks, constant.NotifyFaultListOperation)
 	if err != nil {
