@@ -112,7 +112,7 @@ func pullProcessResultFault(name, namespace string) ([]*pb.FaultRank, []*pb.Faul
 	}
 	resultRanks, ok := pg.Annotations[constant.ProcessResultFaultKey]
 	if !ok {
-		hwlog.RunLog.Warnf("can not fiind ProcessResultFaultKey, name:%s", name)
+		hwlog.RunLog.Warnf("can not find ProcessResultFaultKey, name:%s", name)
 		return nil, nil, fmt.Errorf("processResultFaultKey not exist, name:%s", name)
 	}
 	confirmRanks, ok := pg.Annotations[constant.ProcessConfirmFaultKey]
@@ -166,7 +166,7 @@ func WaitRankTableReady(name, namespace string) error {
 			hwlog.RunLog.Warnf("check %s RankTableReady timeout, timeUse=%d > %d second",
 				name, startTime, constant.ProcessControlTimeout)
 			return fmt.Errorf("check %s RankTableReady timeout, timeUse=%d > %d second",
-				name, startTime, constant.ProcessControlTimeout)
+				name, timeUse, constant.ProcessControlTimeout)
 		}
 		ready = rankTableReady(name, namespace)
 	}

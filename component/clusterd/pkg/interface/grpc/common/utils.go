@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
@@ -313,6 +313,32 @@ func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string
 		return podMap, fmt.Errorf("label fault pod failed, err is %v", err)
 	}
 	return podMap, nil
+}
+
+// GetPodMap return a dict, key is fault pod rank, value is pod id
+func GetPodMap(jobId string, rankList []string) map[string]string {
+	podMap := make(map[string]string)
+	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
+	for _, rank := range rankList {
+		faultRank, err := strconv.Atoi(rank)
+		if err != nil {
+			hwlog.RunLog.Warnf("parse pod rank failed, err is %v", err)
+			continue
+		}
+		faultPodRank := faultRank / devicePerNode
+		podRank := strconv.Itoa(faultPodRank)
+		_, ok := podMap[podRank]
+		if ok {
+			continue
+		}
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
+			hwlog.RunLog.Warnf("discard nil pod, jobId=%s", jobId)
+			continue
+		}
+		podMap[podRank] = string(pod.UID)
+	}
+	return podMap
 }
 
 func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string) (map[string]string, error) {
