@@ -208,7 +208,7 @@ func TestGetNewNodeLabel(t *testing.T) {
 			Name:   "node",
 		}}
 	convey.Convey("test getNewNodeLabel success", t, func() {
-		mockGetDeviceUsage := gomonkey.ApplyMethod(&HwDevManager{}, "GetDeviceUsage", func(_ *HwDevManager) string {
+		mockGetDeviceUsage := gomonkey.ApplyMethod(&device.AscendTools{}, "GetDeviceUsage", func(_ *device.AscendTools) string {
 			return common.Infer
 		})
 		defer mockGetDeviceUsage.Reset()
