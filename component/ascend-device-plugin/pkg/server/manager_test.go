@@ -165,13 +165,13 @@ func TestUpdateNode(t *testing.T) {
 		err := hdm.UpdateNode()
 		convey.So(err.Error(), convey.ShouldEqual, "GetNode error")
 	})
-	testLabel := map[string]string{"testKey": "testValue"}
-	mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
-		func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) { return testLabel, nil })
-	defer mockGetNewNodeLabel.Reset()
 	mockMarshal := gomonkey.ApplyFuncReturn(json.Marshal, []byte{0}, nil)
 	defer mockMarshal.Reset()
 	convey.Convey("test update node when update node label success", t, func() {
+		testLabel := map[string]string{"testKey": "testValue"}
+		mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
+			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) { return testLabel, nil })
+		defer mockGetNewNodeLabel.Reset()
 		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
 			*v1.Node, error) {
 			return &v1.Node{
