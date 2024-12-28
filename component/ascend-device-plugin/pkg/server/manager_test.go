@@ -208,6 +208,16 @@ func TestGetNewNodeLabel(t *testing.T) {
 			Labels: map[string]string{common.ServerTypeLabelKey: "test server type"},
 			Name:   "node",
 		}}
+	convey.Convey("test getNewNodeLabel when chip info error", t, func() {
+		mockGetValidChipInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+			"GetValidChipInfo", func(_ *devmanager.DeviceManagerMock) (npuCommon.ChipInfo, error) {
+				return npuCommon.ChipInfo{}, fmt.Errorf("chip info error")
+			})
+		defer mockGetValidChipInfo.Reset()
+		labelMap, err := hdm.getNewNodeLabel(testNode)
+		convey.So(labelMap, convey.ShouldBeNil)
+		convey.So(err, convey.ShouldEqual, "chip info error")
+	})
 	convey.Convey("test getNewNodeLabel success", t, func() {
 		mockGetDeviceUsage := gomonkey.ApplyMethod(&device.AscendTools{}, "GetDeviceUsage",
 			func(_ *device.AscendTools) string {
