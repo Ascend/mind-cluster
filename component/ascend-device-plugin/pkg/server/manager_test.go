@@ -194,6 +194,26 @@ func TestUpdateNode(t *testing.T) {
 	})
 }
 
+// TestGetNewNodeLabel for test getNewNodeLabel
+func TestGetNewNodeLabel(t *testing.T) {
+	hdm := &HwDevManager{
+		manager: device.NewHwAscend310Manager(),
+		allInfo: common.NpuAllInfo{
+			AllDevs: []common.NpuDevice{{LogicID: 0}},
+		},
+	}
+	testNode := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: map[string]string{common.ServerTypeLabelKey: "test server type"},
+			Name:   "node",
+		}}
+	convey.Convey("test getNewNodeLabel success", t, func() {
+		labelMap, err := hdm.getNewNodeLabel(testNode)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(labelMap, convey.ShouldResemble, make(map[string]string))
+	})
+}
+
 // TestStartAllServer for testStartAllServer
 func TestStartAllServer(t *testing.T) {
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
