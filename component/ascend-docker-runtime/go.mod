@@ -9,6 +9,7 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.3-0.20220718201635-a8106e99982b
 	github.com/pelletier/go-toml v1.9.5
 	github.com/prashantv/gostub v0.0.0-00010101000000-000000000000
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.8.2
 )
 
@@ -25,7 +26,9 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.11.13 // indirect
 	github.com/moby/sys/mountinfo v0.6.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -34,6 +37,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect

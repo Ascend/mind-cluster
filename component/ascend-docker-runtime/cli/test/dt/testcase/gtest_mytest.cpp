@@ -68,6 +68,15 @@ extern "C" int MakeMountPoints(const char *path, mode_t mode);
 extern "C" int LogLoop(const char *filename);
 extern "C" bool TakeNthWord(char **pLine, unsigned int n, char **word);
 extern "C" bool CheckRootDir(char **pLine);
+extern "C" bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen);
+extern "C" bool CheckExistsFile(const char* filePath, const size_t filePathLen,
+               const size_t maxFileSzieMb, const bool checkWgroup);
+extern "C" int VerifyPathInfo(const struct PathInfo* pathInfo);
+extern "C" bool CheckExternalFile(const char* filePath, const size_t filePathLen,
+               const size_t maxFileSzieMb, const bool checkOwner);
+extern "C" int LogLoop(const char* filename);
+extern "C" void Logger(const char *msg, int level, int screen);
+extern "C" int EnterNsByPath(const char *path, int nsType);
 
 struct MountList
 {
@@ -340,6 +349,11 @@ bool Stub_IsOptionNoDrvSet_True()
 bool Stub_IsOptionNoDrvSet_False()
 {
     return false;
+}
+
+bool Stub_CheckExistsFile_Success()
+{
+    return true;
 }
 
 class Test_Fhho : public Test
@@ -679,6 +693,12 @@ TEST_F(Test_Fhho, StatusOneParseRuntimeOptions)
     EXPECT_EQ(0, ret);
 }
 
+TEST_F(Test_Fhho, StatusTwoParseRuntimeOptions)
+{
+    int ret = ParseRuntimeOptions(NULL);
+    EXPECT_EQ(0, ret);
+}
+
 TEST_F(Test_Fhho, StatusThreeDoPrepare)
 {
     MOCKER(GetNsPath).stubs().will(invoke(Stub_GetNsPath_Failed));
@@ -690,4 +710,89 @@ TEST_F(Test_Fhho, StatusThreeDoPrepare)
     int ret = DoPrepare(&args, &config);
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, GetFileSubsetAndCheckOne)
+{
+    bool ret = GetFileSubsetAndCheck("", 10);
+    EXPECT_EQ(false, ret);
+}
+
+TEST_F(Test_Fhho, GetFileSubsetAndCheckTwo)
+{
+    bool ret = GetFileSubsetAndCheck("./", 10);
+    EXPECT_EQ(true, ret);
+}
+
+TEST_F(Test_Fhho, CheckExistsFileOne)
+{
+    bool ret = CheckExistsFile("", -1, 1, false);
+    EXPECT_EQ(true, ret);
+}
+
+TEST_F(Test_Fhho, CheckExistsFileTwo)
+{
+    bool ret = CheckExistsFile("./gtest_mytest.cpp", strlen("./gtest_mytest.cpp"), 1, false);
+    EXPECT_EQ(true, ret);
+}
+
+TEST_F(Test_Fhho, VerifyPathInfoOne)
+{
+    int ret = VerifyPathInfo(NULL);
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, GetParentPathStrOne)
+{
+    int ret = GetParentPathStr(NULL, NULL, 0);
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, GetParentPathStrTwo)
+{
+    int ret = GetParentPathStr(".", "../", 0);
+    EXPECT_EQ(0, ret);
+}
+
+TEST_F(Test_Fhho, CheckExternalFileOne)
+{
+    int ret = CheckExternalFile("./main.cpp", strlen("./main.cpp"), 10, false);
+    EXPECT_EQ(0, ret);
+}
+
+TEST_F(Test_Fhho, LogLoopOne)
+{
+    int ret = LogLoop(NULL);
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, LogLoopTwo)
+{
+    int ret = LogLoop("../test_log_not_exist.log");
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, LogLoopThree)
+{
+    const int LEVEL_DEBUG = 3;
+    const int SCREEN_NO = 0;
+    Logger("develop test", LEVEL_DEBUG, SCREEN_NO);
+    int ret = LogLoop("test_log.log");
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, IsOptionNoDrvSetOne)
+{
+    const char options[BUF_SIZE] = "1,2";
+    ParseRuntimeOptions(options);
+    bool ret = IsOptionNoDrvSet();
+    EXPECT_EQ(false, ret);
+}
+
+TEST_F(Test_Fhho, IsVirtualOne)
+{
+    const char options[BUF_SIZE] = "1,2";
+    ParseRuntimeOptions(options);
+    bool ret = IsVirtual();
+    EXPECT_EQ(false, ret);
 }
