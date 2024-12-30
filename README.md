@@ -53,7 +53,7 @@
 
 1.  请参考昇腾社区《MindCluster用户指南》
     
-        入口地址：https://www.hiascend.com/software/mind-cluster
+        入口地址：https://www.hiascend.com/software/mindx-dl
     
 
 # 说明
