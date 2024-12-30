@@ -22,13 +22,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
+
 	"ascend-common/common-utils/cache"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
-	"github.com/agiledragon/gomonkey/v2"
-	"github.com/stretchr/testify/assert"
-
+	"ascend-common/devmanager/hccn"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
@@ -107,6 +109,78 @@ func TestGetChipInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestStartToGetNetInfo test  method startToGetNetInfo
+func TestStartToGetNetInfo(t *testing.T) {
+	tests := []testCase{
+		newTestCase("should return chip info successfully when dsmi works normally", false,
+			&devmanager.DeviceManagerMock{}),
+	}
+	mk := gomonkey.ApplyFunc(hccn.GetNPULinkStatus, func(_ int32) (string, error) {
+		return "UP", nil
+	}).ApplyFunc(hccn.GetNPUInterfaceTraffic, func(_ int32) (float64, float64, error) {
+		return 1, 1, nil
+	}).ApplyFunc(hccn.GetNPULinkUpNum, func(_ int32) (int, error) {
+		return 100, nil
+	}).ApplyFunc(hccn.GetNPULinkSpeed, func(_ int32) (int, error) {
+		return 100, nil
+	})
+	mk.ApplyFunc(hccn.GetNPUOpticalInfo, mockGetNPUOpticalInfo)
+	mk.ApplyFunc(hccn.GetNPUStatInfo, mockGetNPUStatInfo)
+	defer mk.Reset()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			startToGetNetInfo(ctx, tt.mockPart.(devmanager.DeviceInterface), 1*time.Second)
+			<-time.After(1 * time.Second)
+			cancelFunc()
+		})
+	}
+}
+
+func mockGetNPUOpticalInfo(_ int32) (map[string]string, error) {
+	return map[string]string{
+		"Tx_Power0":   "1 mW",
+		"Tx_Power1":   "1 mW",
+		"Tx_Power2":   "1 mW",
+		"Tx_Power3":   "1 mW",
+		"Rx_Power0":   "1 mW",
+		"Rx_Power1":   "1 mW",
+		"Rx_Power2":   "1 mW",
+		"Rx_Power3":   "1 mW",
+		"Vcc":         "1 mV",
+		"temperature": "50 C",
+		"present":     "1.0",
+	}, nil
+}
+
+func mockGetNPUStatInfo(_ int32) (map[string]int, error) {
+
+	res := make(map[string]int)
+	res["mac_rx_mac_pause_num"] = 0
+	res["mac_tx_mac_pause_num"] = 0
+	res["mac_rx_pfc_pkt_num"] = 0
+	res["mac_tx_pfc_pkt_num"] = 0
+	res["mac_rx_bad_pkt_num"] = 0
+	res["mac_tx_bad_pkt_num"] = 0
+	res["roce_rx_all_pkt_num"] = 0
+	res["roce_tx_all_pkt_num"] = 0
+	res["roce_rx_err_pkt_num"] = 0
+	res["roce_tx_err_pkt_num"] = 0
+	res["roce_rx_cnp_pkt_num"] = 0
+	res["roce_tx_cnp_pkt_num"] = 0
+	res["mac_rx_bad_oct_num"] = 0
+	res["mac_tx_bad_oct_num"] = 0
+	res["roce_unexpected_ack_num"] = 0
+	res["roce_out_of_order_num"] = 0
+	res["roce_verification_err_num"] = 0
+	res["roce_qp_status_err_num"] = 0
+	res["roce_new_pkt_rty_num"] = 0
+	res["roce_ecn_db_num"] = 0
+	res["mac_rx_fcs_err_pkt_num"] = 0
+	return res, nil
 }
 
 // TestGetHealthCode test getHealthCode
@@ -292,7 +366,7 @@ func TestStart(t *testing.T) {
 			collector: &npuCollector{
 				cache:         cache.New(cacheSize),
 				cacheTime:     cacheTime,
-				updateTime:    time.Second,
+				updateTime:    5 * time.Second,
 				devicesParser: makeMockDevicesParser(),
 			},
 		},
@@ -312,6 +386,17 @@ func TestStart(t *testing.T) {
 			objm, err := tt.collector.cache.Get(npuListCacheKey)
 			assert.NotNil(t, objm)
 			assert.Nil(t, err)
+
+			ch1 := make(chan *prometheus.Desc, 1000)
+			tt.collector.Describe(ch1)
+			t.Logf("Describe len(ch):%v", len(ch1))
+			assert.NotEmpty(t, ch1, "Expected ch1 to be not empty")
+
+			ch2 := make(chan prometheus.Metric, 1000)
+			tt.collector.Collect(ch2)
+			t.Logf("Collect len(ch):%v", len(ch2))
+			assert.NotEmpty(t, ch1, "Expected ch1 to be not empty")
+
 			go func() {
 				ch <- os.Interrupt
 				close(ch)
