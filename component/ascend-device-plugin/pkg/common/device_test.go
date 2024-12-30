@@ -17,6 +17,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/agiledragon/gomonkey/v2"
 	"strconv"
 	"strings"
 	"testing"
@@ -231,5 +232,20 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
 		})
+	})
+}
+
+// TestUpdateSwitchFaultInfoAndFaultLevel for test UpdateSwitchFaultInfoAndFaultLevel
+func TestUpdateSwitchFaultInfoAndFaultLevel(t *testing.T) {
+	convey.Convey("test UpdateSwitchFaultInfoAndFaultLevel", t, func() {
+		// 01-update switch fault success, switchFaultCodeLevelToCm and switchFault should be updated
+		switchFault := SwitchFaultInfo{
+			NodeStatus: nodeSubHealthy,
+		}
+		mockMap := gomonkey.ApplyGlobalVar(&switchFaultCodeLevelToCm, map[string]int{generalFaultCode: SeparateFaultLevel})
+		defer mockMap.Reset()
+		UpdateSwitchFaultInfoAndFaultLevel(&switchFault)
+		convey.So(switchFault.NodeStatus == nodeHealthy, convey.ShouldBeTrue)
+		convey.So(switchFaultCodeLevelToCm[generalFaultCode], convey.ShouldEqual, NotHandleFaultLevel)
 	})
 }

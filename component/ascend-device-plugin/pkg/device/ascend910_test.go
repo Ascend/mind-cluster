@@ -16,6 +16,7 @@
 package device
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -27,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -969,4 +971,167 @@ func mockGetServerUsageLabelCache() *gomonkey.Patches {
 	return gomonkey.
 		ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetServerUsageLabelCache",
 			common.Infer, nil)
+}
+
+// TestPostProcess for test postProcess
+func TestPostProcess(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test postProcess", t, func() {
+
+		nodeDeviceData := common.TaskResetInfo{
+			RankList: mockTaskDevInfoList(),
+		}
+		convey.Convey("01-unset all dev in reset fail, should return error ", func() {
+			manager.hotResetManager = &HotResetTools{
+				resetDev: map[int32]struct{}{0: {}},
+			}
+			convey.So(manager.postProcess("fake-task", &nodeDeviceData), convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-unset all dev in reset success, should return nil", func() {
+			manager.hotResetManager = &HotResetTools{
+				resetDev: map[int32]struct{}{0: {}, 1: {}},
+			}
+			convey.So(manager.postProcess("fake-task", &nodeDeviceData), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestExecResetDevice for test execResetDevice
+func TestExecResetDevice(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test execResetDevice", t, func() {
+		convey.Convey("01-hot reset success, should return nil", func() {
+			manager.hotResetManager = &HotResetTools{
+				faultDev2PodMap: map[int32]v1.Pod{},
+				resetDevNumOnce: 1,
+			}
+			devMap := map[int32]int32{chipPhyID0: chipPhyID0}
+			convey.So(manager.execResetDevice(devMap), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestIsNetResetCompleted for test isNetResetCompleted
+func TestIsNetResetCompleted(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test isNetResetCompleted", t, func() {
+		convey.So(manager.isNetResetCompleted(2), convey.ShouldBeTrue)
+		convey.Convey("01-get network health failed, should return false", func() {
+			mockHealth := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceNetWorkHealth",
+				uint32(0), errors.New("get network health failed"))
+			defer mockHealth.Reset()
+			convey.So(manager.isNetResetCompleted(2), convey.ShouldBeFalse)
+		})
+		convey.Convey("02-network status is unhealthy, should return false", func() {
+			mockHealth := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceNetWorkHealth",
+				uint32(1), nil)
+			defer mockHealth.Reset()
+			convey.So(manager.isNetResetCompleted(2), convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestWaitDeviceResetComplete for test waitDeviceResetComplete
+func TestWaitDeviceResetComplete(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test WaitDeviceResetComplete", t, func() {
+		convey.Convey("01-wait device reset recover timeout, should return error", func() {
+			totalTime := common.MaxResetWaitRecoverTime + 1
+			err := manager.waitDeviceResetComplete(2, &totalTime, false)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-boot start device success, should return nil", func() {
+			totalTime := 0
+			err := manager.waitDeviceResetComplete(2, &totalTime, false)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestIsRunningDistributed for test isRunningDistributed
+func TestIsRunningDistributed(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test isRunningDistributed", t, func() {
+		manager.hotResetManager = &HotResetTools{}
+		// 01-faultDev2PodMap is nil, should return false
+		convey.So(manager.isRunningDistributed(3), convey.ShouldBeFalse)
+		manager.hotResetManager = &HotResetTools{
+			faultDev2PodMap: map[int32]v1.Pod{
+				chipPhyID3: getSinglePod("pod1", map[string]string{
+					common.DistributedJob: "true",
+				}),
+			},
+		}
+		// 02-cant find logic id in faultDev2PodMap, should return false
+		convey.So(manager.isRunningDistributed(2), convey.ShouldBeFalse)
+		// 03-is distributed job, should return true
+		convey.So(manager.isRunningDistributed(3), convey.ShouldBeTrue)
+	})
+}
+
+// TestTryWriteIsolationInfo for test tryWriteIsolationInfo
+func TestTryWriteIsolationInfo(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test tryWriteIsolationInfo", t, func() {
+		allTaskDevFaultInfo := []*common.TaskDevInfo{
+			{
+				DevFaultInfo: common.DevFaultInfo{
+					LogicId: chipPhyID1,
+					Policy:  common.IsolateError,
+				},
+			},
+		}
+		manager.hotResetManager = &HotResetTools{
+			allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{
+				"task1": allTaskDevFaultInfo,
+			},
+		}
+		manager.tryWriteIsolationInfo("task2")
+		manager.tryWriteIsolationInfo("task1")
+	})
+}
+
+// TestIsDevShouldBeIsolate for test isDevShouldBeIsolate
+func TestIsDevShouldBeIsolate(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test isDevShouldBeIsolate", t, func() {
+		// 01-faultDev2PodMap is nil, should return false
+		manager.hotResetManager = &HotResetTools{}
+		convey.So(manager.isDevShouldBeIsolate(chipPhyID3), convey.ShouldBeFalse)
+		manager.hotResetManager = &HotResetTools{
+			faultDev2PodMap: map[int32]v1.Pod{
+				chipPhyID3: getSinglePod("pod1", map[string]string{}),
+			},
+		}
+		// 02-faultDev2PodMap is not nil, but target dev is not in map, should return false
+		convey.So(manager.isDevShouldBeIsolate(chipPhyID4), convey.ShouldBeFalse)
+		// 03-faultDev2PodMap is not nil and target dev is not in map, should return true
+		convey.So(manager.isDevShouldBeIsolate(chipPhyID3), convey.ShouldBeTrue)
+		manager.hotResetManager = &HotResetTools{
+			faultDev2PodMap: map[int32]v1.Pod{
+				chipPhyID3: getSinglePod("pod1", map[string]string{
+					common.ResetTaskNameKey: "mock-task",
+				}),
+			},
+			cmIndexer: cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
+		}
+		// 04-get cm from cache failed, should return true
+		convey.So(manager.isDevShouldBeIsolate(chipPhyID3), convey.ShouldBeTrue)
+		// 05-stub GetCMFromCache,  should return false
+		mockGetCMFromCacheMethod := mockGetCMFromCache()
+		defer mockGetCMFromCacheMethod.Reset()
+		convey.So(manager.isDevShouldBeIsolate(chipPhyID3), convey.ShouldBeFalse)
+	})
+}
+
+func mockGetCMFromCache() *gomonkey.Patches {
+	nodeDeviceData := common.TaskResetInfo{
+		UpdateTime: 11111111,
+		RankList:   mockTaskDevInfoList(),
+	}
+	cm := &v1.ConfigMap{
+		Data: map[string]string{common.ResetInfoCMDataKey: string(common.MarshalData(nodeDeviceData))},
+	}
+	mockFunc := gomonkey.ApplyMethodReturn(&HotResetTools{}, "GetCMFromCache", cm, nil)
+	return mockFunc
 }

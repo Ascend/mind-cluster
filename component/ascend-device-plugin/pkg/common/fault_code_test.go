@@ -46,6 +46,125 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 			defer mockUnmarshal.Reset()
 			convey.So(LoadFaultCodeFromFile(), convey.ShouldNotBeNil)
 		})
+		convey.Convey("utils.LoadFile success", func() {
+			fileInfo := faultFileInfo{
+				NotHandleFaultCodes: []string{"80E21007"},
+				SeparateNPUCodes:    []string{"80E3A201"},
+				PreSeparateNPUCodes: []string{"81078603"},
+			}
+			codeBytes, err := json.Marshal(fileInfo)
+			convey.So(err, convey.ShouldBeNil)
+			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, codeBytes, nil)
+			defer mockLoadFile.Reset()
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
+			defer mockFaultTypeCode.Reset()
+			convey.So(LoadFaultCodeFromFile(), convey.ShouldBeNil)
+			convey.So(faultTypeCode.NotHandleFaultCodes, convey.ShouldResemble, []int64{2162298887})
+			convey.So(faultTypeCode.SeparateNPUCodes, convey.ShouldResemble, []int64{2162401793})
+			convey.So(faultTypeCode.PreSeparateNPUCodes, convey.ShouldResemble, []int64{2164753923})
+			convey.So(len(faultTypeCode.RestartBusinessCodes), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+// TestMappingChipFaultToNetworkFaultCodesNotSupport for test mappingChipFaultToNetworkFaultCodesNotSupport
+func TestMappingChipFaultToNetworkFaultCodesNotSupport(t *testing.T) {
+	convey.Convey("TestMappingChipFaultToNetworkFaultCodesNotSupport", t, func() {
+		convey.Convey("01-RestartRequestCodes has networkFaultCodes, NotHandleFaultNetworkCodes should be updated", func() {
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
+				RestartRequestCodes: []int64{2164753923},
+			})
+			defer mockFaultTypeCode.Reset()
+			mappingChipFaultToNetworkFaultCodesNotSupport()
+			convey.So(faultTypeCode.NotHandleFaultNetworkCodes, convey.ShouldResemble, []int64{2164753923})
+		})
+		convey.Convey("02-RestartBusinessCodes has networkFaultCodes, NotHandleFaultNetworkCodes should be updated", func() {
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
+				RestartBusinessCodes: []int64{2164753923},
+			})
+			defer mockFaultTypeCode.Reset()
+			mappingChipFaultToNetworkFaultCodesNotSupport()
+			convey.So(faultTypeCode.NotHandleFaultNetworkCodes, convey.ShouldResemble, []int64{2164753923})
+		})
+		convey.Convey("RestartNPUCodes has networkFaultCodes, NotHandleFaultNetworkCodes should be updated", func() {
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
+				RestartNPUCodes: []int64{2164753923},
+			})
+			defer mockFaultTypeCode.Reset()
+			mappingChipFaultToNetworkFaultCodesNotSupport()
+			convey.So(faultTypeCode.NotHandleFaultNetworkCodes, convey.ShouldResemble, []int64{2164753923})
+		})
+		convey.Convey("FreeRestartNPUCodes has networkFaultCodes, NotHandleFaultNetworkCodes should be updated", func() {
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
+				FreeRestartNPUCodes: []int64{2164753923},
+			})
+			defer mockFaultTypeCode.Reset()
+			mappingChipFaultToNetworkFaultCodesNotSupport()
+			convey.So(faultTypeCode.NotHandleFaultNetworkCodes, convey.ShouldResemble, []int64{2164753923})
+		})
+	})
+}
+
+// TestLoadSwitchFaultCodeFromFile for test LoadSwitchFaultCodeFromFile
+func TestLoadSwitchFaultCodeFromFile(t *testing.T) {
+	convey.Convey("TestLoadSwitchFaultCodeFromFile", t, func() {
+		convey.Convey("01-utils.LoadFile err, should return error", func() {
+			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, errors.New("failed"))
+			defer mockLoadFile.Reset()
+			convey.So(LoadSwitchFaultCodeFromFile(), convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-utils.LoadFile success, should return error", func() {
+			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, nil)
+			defer mockLoadFile.Reset()
+			mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("failed"))
+			defer mockUnmarshal.Reset()
+			convey.So(LoadSwitchFaultCodeFromFile(), convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestLoadFaultCustomizationFromFile for test LoadFaultCustomizationFromFile
+func TestLoadFaultCustomizationFromFile(t *testing.T) {
+	convey.Convey("TestLoadFaultCustomizationFromFile", t, func() {
+		convey.Convey("01-utils.LoadFile err, should return error", func() {
+			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, errors.New("failed"))
+			defer mockLoadFile.Reset()
+			convey.So(LoadFaultCustomizationFromFile(), convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-utils.LoadFile success, should return error", func() {
+			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, nil)
+			defer mockLoadFile.Reset()
+			mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("failed"))
+			defer mockUnmarshal.Reset()
+			convey.So(LoadFaultCustomizationFromFile(), convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestLoadFaultCustomization for test LoadFaultCustomization
+func TestLoadFaultCustomization(t *testing.T) {
+	convey.Convey("TestLoadFaultCustomization", t, func() {
+		// 01-stub function, load fault customization success, should return nil
+		mockRestTime := gomonkey.ApplyGlobalVar(&WaitDeviceResetTime, time.Duration(0))
+		defer mockRestTime.Reset()
+		mockReadCMTime := gomonkey.ApplyGlobalVar(&WaitProcessReadCMTime, time.Duration(0))
+		defer mockReadCMTime.Reset()
+		mockHealTime := gomonkey.ApplyGlobalVar(&WaitFaultSelfHealingTime, time.Duration(0))
+		defer mockHealTime.Reset()
+		faultCustomization := FaultCustomization{
+			GraceTolerance: GraceToleranceCustomization{
+				WaitProcessReadCMTime:    30,
+				WaitDeviceResetTime:      150,
+				WaitFaultSelfHealingTime: 15,
+			},
+		}
+		codeBytes, err := json.Marshal(faultCustomization)
+		convey.So(err, convey.ShouldBeNil)
+		err = LoadFaultCustomization(codeBytes)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(WaitDeviceResetTime, convey.ShouldEqual, time.Duration(150))
+		convey.So(WaitProcessReadCMTime, convey.ShouldEqual, time.Duration(30))
+		convey.So(WaitFaultSelfHealingTime, convey.ShouldEqual, time.Duration(15))
 	})
 }
 
@@ -885,15 +1004,30 @@ func TestSaveManuallyFaultInfo(t *testing.T) {
 func TestDeleteManuallyFaultInfo(t *testing.T) {
 	convey.Convey("test DeleteManuallyFaultInfo", t, func() {
 		convey.Convey("test valid logicID", func() {
-			manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
-			logicID, expectVal := int32(10), 1
-			SaveManuallyFaultInfo(logicID)
+			mockMap := gomonkey.ApplyGlobalVar(&manuallySeparateNpuMap, map[int32]ManuallyFaultInfo{
+				int32(10): {},
+			})
+			defer mockMap.Reset()
+			logicID, expectVal := int32(10), 0
+			DeleteManuallyFaultInfo(logicID)
 			convey.So(len(manuallySeparateNpuMap), convey.ShouldEqual, expectVal)
 		})
 		convey.Convey("test invalid logicID", func() {
-			manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
-			logicID, expectVal := int32(20), 0
-			SaveManuallyFaultInfo(logicID)
+			mockMap := gomonkey.ApplyGlobalVar(&manuallySeparateNpuMap, map[int32]ManuallyFaultInfo{
+				int32(10): {},
+			})
+			defer mockMap.Reset()
+			logicID, expectVal := int32(20), 1
+			DeleteManuallyFaultInfo(logicID)
+			convey.So(len(manuallySeparateNpuMap), convey.ShouldEqual, expectVal)
+		})
+		convey.Convey("test not exist logicID", func() {
+			mockMap := gomonkey.ApplyGlobalVar(&manuallySeparateNpuMap, map[int32]ManuallyFaultInfo{
+				int32(10): {},
+			})
+			defer mockMap.Reset()
+			logicID, expectVal := int32(11), 1
+			DeleteManuallyFaultInfo(logicID)
 			convey.So(len(manuallySeparateNpuMap), convey.ShouldEqual, expectVal)
 		})
 	})
@@ -1619,6 +1753,17 @@ func TestHbmFaultManager(t *testing.T) {
 		convey.So(faultInfoList[0].AlarmRaisedTime, convey.ShouldEqual, 100000000)
 		convey.So(faultInfoList[0].EventID, convey.ShouldEqual, AicBusFaultCode)
 	})
+	convey.Convey("test fault event in que ", t, func() {
+		hbmFaultManager := NewHbmFaultManager()
+		faultInfo := common.DevFaultInfo{
+			LogicID:         1,
+			EventID:         AicBusFaultCode,
+			AlarmRaisedTime: 300,
+		}
+		hbmFaultManager.aicFaultEventInQue(faultInfo)
+		faultInfoList := hbmFaultManager.aicFaultEventOutQue(1)
+		convey.So(len(faultInfoList), convey.ShouldEqual, 0)
+	})
 }
 
 func TestUpdateDeviceFaultTimeMap(t *testing.T) {
@@ -1650,5 +1795,72 @@ func TestUpdateDeviceFaultTimeMap(t *testing.T) {
 			t.Errorf("found fault time")
 			return
 		}
+	})
+}
+
+// TestNewFaultInfosForHBMErr for test newFaultInfosForHBMErr
+func TestNewFaultInfosForHBMErr(t *testing.T) {
+	convey.Convey("test newFaultInfosForHBMErr", t, func() {
+		// 01-The occurrence time interval between HbmDoubleBitFaultCode and AicBusFaultCode fault is less than threshold, should delete aic fault
+		faultInfo := []common.DevFaultInfo{
+			{
+				LogicID:         1,
+				EventID:         AicBusFaultCode,
+				AlarmRaisedTime: 3000,
+			},
+			{
+				LogicID:         1,
+				EventID:         HbmDoubleBitFaultCode,
+				AlarmRaisedTime: 3400,
+				Assertion:       common.FaultOccur,
+			},
+		}
+		newFaultInfos := newFaultInfosForHBMErr(1, faultInfo)
+		convey.So(len(newFaultInfos), convey.ShouldEqual, 1)
+		convey.So(newFaultInfos[0], convey.ShouldResemble, faultInfo[1])
+	})
+}
+
+// TestQueryManuallyFaultNPULogicIDsByHandleStatus for test QueryManuallyFaultNPULogicIDsByHandleStatus
+func TestQueryManuallyFaultNPULogicIDsByHandleStatus(t *testing.T) {
+	convey.Convey("test queryManuallyFaultNPULogicIDsByHandleStatus", t, func() {
+		convey.Convey("01-handleStatus is FirstHandle and FirstHandle is true in map, should contain logic id", func() {
+			manuallySeparateNpuMap = map[int32]ManuallyFaultInfo{1: {LogicID: 1, FirstHandle: true}}
+			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus(ManuallySeparateNpuFirstHandle), convey.ShouldResemble, []int32{1})
+		})
+		convey.Convey("02-handleStatus is handled and FirstHandle is false, should contain logic id", func() {
+			manuallySeparateNpuMap = map[int32]ManuallyFaultInfo{1: {LogicID: 1, FirstHandle: false}}
+			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus(ManuallySeparateNpuHandled), convey.ShouldResemble, []int32{1})
+		})
+		convey.Convey("03-handleStatus is all, should contain logic id", func() {
+			manuallySeparateNpuMap = map[int32]ManuallyFaultInfo{1: {LogicID: 1}}
+			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus(ManuallySeparateNpuAll), convey.ShouldResemble, []int32{1})
+		})
+		convey.Convey("04-handleStatus is other value, should return empty list", func() {
+			manuallySeparateNpuMap = map[int32]ManuallyFaultInfo{1: {LogicID: 1}}
+			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus(""), convey.ShouldResemble, []int32{})
+		})
+	})
+}
+
+// TestGetFaultAssertionName for test GetFaultAssertionName
+func TestGetFaultAssertionName(t *testing.T) {
+	convey.Convey("test getFaultAssertionName", t, func() {
+		// 01-assertion is valid, should return valid string
+		convey.So(GetFaultAssertionName(common.FaultRecover), convey.ShouldEqual, AssertionRecovery)
+		convey.So(GetFaultAssertionName(common.FaultOccur), convey.ShouldEqual, AssertionOccur)
+		convey.So(GetFaultAssertionName(common.FaultOnce), convey.ShouldEqual, AssertionNotice)
+		// 02-assertion is invalid, should return empty string
+		convey.So(GetFaultAssertionName(3), convey.ShouldEqual, "")
+	})
+}
+
+// TestCheckErrorMessage for test CheckErrorMessage
+func TestCheckErrorMessage(t *testing.T) {
+	convey.Convey("test checkErrorMessage", t, func() {
+		// 01-error msg contain target string, should return true
+		convey.So(CheckErrorMessage(errors.New("contain error code: 8102"), "8102"), convey.ShouldBeTrue)
+		// 02-error msg do not contain target string, should return false
+		convey.So(CheckErrorMessage(errors.New("contain error code: 8102"), "8103"), convey.ShouldBeFalse)
 	})
 }

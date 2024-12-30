@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -616,6 +617,19 @@ func TestGetJobNameOfPod(t *testing.T) {
 	})
 }
 
+// TestCheckDeviceName for test GetSyncMapLen
+func TestGetSyncMapLen(t *testing.T) {
+	t.Run("TestGetSyncMapLen", func(t *testing.T) {
+		m := &sync.Map{}
+		m.Store("key1", "value1")
+		m.Store("key2", "value2")
+		if got := GetSyncMapLen(m); got != 2 {
+			t.Errorf("GetSyncMapLen() = %v, want %v", got, 2)
+		}
+	})
+}
+
+// TestObjToString for test ObjToString
 func TestObjToString(t *testing.T) {
 	t.Run("TestObjToString", func(t *testing.T) {
 		mp := map[string]string{"hello": "world"}
@@ -623,5 +637,87 @@ func TestObjToString(t *testing.T) {
 		if got := ObjToString(mp); got != want {
 			t.Errorf("ObjToString failed")
 		}
+	})
+}
+
+// TestKeys for test Keys
+func TestKeys(t *testing.T) {
+	t.Run("TestKeys", func(t *testing.T) {
+		mp := map[string]string{"key": "value"}
+		want := "key"
+		if got := Keys(mp); got[0] != want {
+			t.Errorf("Keys() = %v, want %v", got[0], want)
+		}
+	})
+}
+
+// TestSetDeviceByPathWhen200RC for test setDeviceByPathWhen200RC
+func TestSetDeviceByPathWhen200RC(t *testing.T) {
+	convey.Convey("test setDeviceByPathWhen200RC", t, func() {
+		// 01-stub os.Stat, set device success, devices should be updated
+		mockStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+			return nil, nil
+		})
+		defer mockStat.Reset()
+		devices := []string{}
+		setDeviceByPathWhen200RC(&devices)
+		convey.So(len(devices), convey.ShouldEqual, 7)
+		convey.So(devices[0], convey.ShouldEqual, HiAi200RCEventSched)
+		if len(devices) >= 7 {
+			convey.So(devices[6], convey.ShouldEqual, HiAi200RCUpgrade)
+		}
+	})
+}
+
+// TestGetPodNameFromEnv for test GetPodNameFromEnv
+func TestGetPodNameFromEnv(t *testing.T) {
+	convey.Convey("test getPodNameFromEnv", t, func() {
+		convey.Convey("01-check pod name and space failed, should return error", func() {
+			mockGetEnv := gomonkey.ApplyFuncReturn(os.Getenv, "master-1")
+			defer mockGetEnv.Reset()
+			mockCheck := gomonkey.ApplyFuncReturn(CheckPodNameAndSpace, errors.New("failed"))
+			defer mockCheck.Reset()
+			_, err := GetPodNameFromEnv()
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-check pod name and space success, should return nil", func() {
+			mockGetEnv := gomonkey.ApplyFuncReturn(os.Getenv, "master-1")
+			defer mockGetEnv.Reset()
+			podName, err := GetPodNameFromEnv()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(podName == "master-1", convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestIsContainAll300IDuo for test IsContainAll300IDuo
+func TestIsContainAll300IDuo(t *testing.T) {
+	convey.Convey("test IsContainAll300IDuo", t, func() {
+		convey.Convey("01-productType length is zero, should return false", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&ParamOption, Option{})
+			defer mockParam.Reset()
+			convey.So(IsContainAll300IDuo(), convey.ShouldBeFalse)
+		})
+		convey.Convey("02-productType has Atlas300IDuo, should return true", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&ParamOption, Option{ProductTypes: []string{Atlas300IDuo}})
+			defer mockParam.Reset()
+			convey.So(IsContainAll300IDuo(), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-productType has other type, should return false", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&ParamOption, Option{ProductTypes: []string{Atlas300IDuo, "other type"}})
+			defer mockParam.Reset()
+			convey.So(IsContainAll300IDuo(), convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestIntInList for test IntInList
+func TestIntInList(t *testing.T) {
+	convey.Convey("test intInList", t, func() {
+		list := []int32{1, 2, 3}
+		// 01-list has target number, should return true
+		convey.So(IntInList(2, list), convey.ShouldBeTrue)
+		// 01-list has not target number, should return false
+		convey.So(IntInList(4, list), convey.ShouldBeFalse)
 	})
 }

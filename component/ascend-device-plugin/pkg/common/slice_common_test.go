@@ -93,6 +93,20 @@ func TestToHexString(t *testing.T) {
 	})
 }
 
+// TestStrIndex for test  string Index
+func TestStrIndex(t *testing.T) {
+	convey.Convey("test string Index", t, func() {
+		convey.Convey("Index target string", func() {
+			tool := stringTool{}
+			existVal, unExistVal := "1", "2"
+			// 01-source list contain target string, should return index
+			convey.So(tool.Index(stringSource, existVal), convey.ShouldEqual, 0)
+			// 02-source list do not contain target string, should return -1
+			convey.So(tool.Index(stringSource, unExistVal), convey.ShouldEqual, -1)
+		})
+	})
+}
+
 // TestStringSameElement for test string SameElement
 func TestStringSameElement(t *testing.T) {
 	convey.Convey("test string SameElement", t, func() {

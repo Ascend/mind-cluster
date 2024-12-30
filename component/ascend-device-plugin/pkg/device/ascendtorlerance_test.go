@@ -341,6 +341,7 @@ func TestGetNeedResetDevList(t *testing.T) {
 		convey.Convey("test GetNeedResetDevMap success", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
+				resetDevNumOnce:     1,
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -355,6 +356,7 @@ func TestGetNeedResetDevList(t *testing.T) {
 		convey.Convey("test GetNeedResetDevMap failed", func() {
 			tool := &HotResetTools{
 				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
+				resetDevNumOnce:     1,
 			}
 			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
 			convey.So(ok, convey.ShouldBeTrue)
@@ -550,19 +552,19 @@ func TestUpdateTaskDevListCache(t *testing.T) {
 // TestUpdateTaskDevFaultInfoCache for test update the task fault info cache
 func TestUpdateTaskDevFaultInfoCache(t *testing.T) {
 	convey.Convey("test UpdateTaskDevFaultInfoCache", t, func() {
-		convey.Convey("test UpdateTaskDevFaultInfoCache success", func() {
+		convey.Convey("01-taskDevFaultInfo is not nil, should return nil", func() {
 			tool := &HotResetTools{}
-			convey.So(tool.allTaskDevList, convey.ShouldBeNil)
-			taskDevList := map[string][]int32{"test": {0}}
-			err := tool.UpdateTaskDevListCache(taskDevList)
+			convey.So(tool.allTaskDevFaultInfo, convey.ShouldBeNil)
+			taskDevList := map[string][]*common.TaskDevInfo{"test": {}}
+			err := tool.UpdateTaskDevFaultInfoCache(taskDevList)
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(tool.allTaskDevList, convey.ShouldNotBeNil)
+			convey.So(tool.allTaskDevFaultInfo, convey.ShouldNotBeNil)
 		})
-		convey.Convey("test UpdateTaskDevFaultInfoCache failed", func() {
+		convey.Convey("02-taskDevFaultInfo is nil, should return error", func() {
 			tool := &HotResetTools{}
-			convey.So(tool.allTaskDevList, convey.ShouldBeNil)
-			var taskDevList map[string][]int32
-			err := tool.UpdateTaskDevListCache(taskDevList)
+			convey.So(tool.allTaskDevFaultInfo, convey.ShouldBeNil)
+			var taskDevList map[string][]*common.TaskDevInfo
+			err := tool.UpdateTaskDevFaultInfoCache(taskDevList)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -894,6 +896,56 @@ func TestCheckConfigMap(t *testing.T) {
 	})
 }
 
+// TestHandlePodAddEvent for test handlePodAddEvent
+func TestHandlePodAddEvent(t *testing.T) {
+	ascend910HotResetManager := newHotResetTools()
+	convey.Convey("test handlePodAddEvent", t, func() {
+		patch := gomonkey.ApplyPrivateMethod(new(HotResetTools), "getPodFromCache", func(_ *HotResetTools,
+			_ string) (*v1.Pod, error) {
+			return nil, errors.New("pod not found")
+		})
+		mokeEvent := kubeclient.Event{
+			Resource: kubeclient.PodResource,
+			Key:      fakePod,
+		}
+		defer patch.Reset()
+		convey.Convey("01-add pod event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeAdd
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+		convey.Convey("02-delete pod event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeDelete
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-default pod event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeUpdate
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-update cm event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeUpdate
+			mokeEvent.Resource = kubeclient.CMResource
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-delete cm event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeDelete
+			mokeEvent.Resource = kubeclient.CMResource
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+		convey.Convey("06-default cm event, should return true", func() {
+			mokeEvent.Type = kubeclient.EventTypeAdd
+			mokeEvent.Resource = kubeclient.CMResource
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			convey.So(ascend910HotResetManager.processNextWorkItem(), convey.ShouldBeTrue)
+		})
+
+	})
+}
+
 // TestHandlePodAddEventJobNameFailed test handle pod add event
 func TestHandlePodAddEventJobNameFailed(t *testing.T) {
 	ascend910HotResetManager := newHotResetTools()
@@ -1037,6 +1089,11 @@ func TestHandlePodDeleteEvent(t *testing.T) {
 			_, ok := ascend910HotResetManager.jobs[event.Key]
 			convey.ShouldEqual(ok, false)
 		})
+		convey.Convey("invalid key slice length", func() {
+			event.Key = "default/fake-pod/pod1"
+			ascend910HotResetManager.jobs[event.Key] = "fake-job"
+			ascend910HotResetManager.handlePodDeleteEvent(event)
+		})
 	})
 }
 
@@ -1118,7 +1175,7 @@ func TestWriteCMToFile(t *testing.T) {
 					Name:      "default",
 					Namespace: "reset-config-test2",
 				},
-				Data: map[string]string{common.ResetInfoCMDataKey: "yyy"},
+				Data: map[string]string{common.ResetInfoCMDataKey: "yyy", common.ResetInfoTypeKey: "zzz"},
 			}
 			err := os.MkdirAll(common.ResetInfoDir, os.ModePerm)
 			if err != nil {
@@ -1126,6 +1183,17 @@ func TestWriteCMToFile(t *testing.T) {
 			}
 			err = ascend910HotResetManager.writeCMToFile(cm)
 			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestHandleConfigMapEvent for test handleConfigMapEvent
+func TestHandleConfigMapEvent(t *testing.T) {
+	ascend910HotResetManager := newHotResetTools()
+	convey.Convey("test handleConfigMapEvent", t, func() {
+		convey.Convey("01-default event type, forget event", func() {
+			mokeEvent := kubeclient.Event{Type: kubeclient.EventTypeAdd}
+			ascend910HotResetManager.handleConfigMapEvent(mokeEvent)
 		})
 	})
 }
@@ -1148,30 +1216,37 @@ func TestHandleCMAddEvent(t *testing.T) {
 			defer patch.Reset()
 			ascend910HotResetManager.handleCMUpdateEvent(mokeEvent)
 		})
-		convey.Convey("cm obj will return false", func() {
-			mokeEvent := kubeclient.Event{
-				Resource: kubeclient.CMResource,
-				Key:      "default/reset-config-test",
-				Type:     kubeclient.EventTypeAdd,
-			}
-			ascend910HotResetManager.queue.Add(mokeEvent)
-			patch1 := gomonkey.ApplyMethod(new(HotResetTools), "GetCMFromCache", func(_ *HotResetTools,
-				_ string) (*v1.ConfigMap, error) {
-				return &v1.ConfigMap{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "default",
-						Namespace: "reset-config-test",
-					},
-					Data: map[string]string{common.ResetInfoCMDataKey: "YYY"},
-				}, nil
-			})
-			defer patch1.Reset()
+		mokeEvent := kubeclient.Event{
+			Resource: kubeclient.CMResource,
+			Key:      "default/reset-config-test",
+			Type:     kubeclient.EventTypeAdd,
+		}
+		ascend910HotResetManager.queue.Add(mokeEvent)
+		patch1 := gomonkey.ApplyMethod(new(HotResetTools), "GetCMFromCache", func(_ *HotResetTools,
+			_ string) (*v1.ConfigMap, error) {
+			return &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "default",
+					Namespace: "reset-config-test",
+				},
+				Data: map[string]string{common.ResetInfoCMDataKey: "YYY"},
+			}, nil
+		})
+		defer patch1.Reset()
 
-			patch2 := gomonkey.ApplyPrivateMethod(new(HotResetTools), "writeCMToFile", func(_ *HotResetTools,
-				_ *v1.ConfigMap) error {
-				return nil
-			})
-			defer patch2.Reset()
+		patch2 := gomonkey.ApplyPrivateMethod(new(HotResetTools), "writeCMToFile", func(_ *HotResetTools,
+			_ *v1.ConfigMap) error {
+			return nil
+		})
+		defer patch2.Reset()
+
+		convey.Convey("os stat return error", func() {
+			ascend910HotResetManager.handleCMUpdateEvent(mokeEvent)
+		})
+		convey.Convey("cm obj will return false", func() {
+			patch3 := gomonkey.ApplyFuncReturn(os.Stat, nil, nil)
+			defer patch3.Reset()
+
 			ascend910HotResetManager.handleCMUpdateEvent(mokeEvent)
 		})
 	})
@@ -1205,4 +1280,35 @@ func newHotResetTools() *HotResetTools {
 		cmIndexer:        cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
 		podIndexer:       cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{}),
 	}
+}
+
+// TestIsTaskDevListChange for test isTaskDevListChange
+func TestIsTaskDevListChange(t *testing.T) {
+	convey.Convey("test isTaskDevListChange", t, func() {
+		tool := &HotResetTools{}
+		tool.allTaskDevList = map[string][]int32{"fake task": {1, 2, 3}}
+		// 01-task is not in allTaskDevList, should return false
+		convey.So(tool.isTaskDevListChange("true task", nil), convey.ShouldBeFalse)
+		// 02-task is in allTaskDevList, new task dev list is empty, should return false
+		convey.So(tool.isTaskDevListChange("fake task", nil), convey.ShouldBeFalse)
+		// 03-task is in allTaskDevList, new task dev list is not empty, should return true
+		newTaskDevList := map[string][]int32{"fake task": {1, 2}}
+		convey.So(tool.isTaskDevListChange("fake task", newTaskDevList), convey.ShouldBeTrue)
+	})
+}
+
+func TestGetTaskNameByPod(t *testing.T) {
+	convey.Convey("test GetTaskNameByPod", t, func() {
+		// 01-get task name by pod success, should return target task name
+		pod := v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				Labels: map[string]string{
+					common.ResetTaskNameKey: "task-name",
+				},
+			},
+		}
+		tool := &HotResetTools{}
+		convey.So(tool.GetTaskNameByPod(pod), convey.ShouldEqual, "task-name")
+	})
 }
