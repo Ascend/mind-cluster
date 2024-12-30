@@ -25,9 +25,12 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/workqueue"
 	"k8s.io/component-helpers/node/util"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -191,6 +194,29 @@ func TestCheckPodList(t *testing.T) {
 	})
 }
 
+// TestClearResetInfo test clear reset info
+func TestClearResetInfo(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestClearResetInfo init kubernetes failed")
+	}
+	testCM := getMockCreateCM(common.ResetInfoCMDataKey, common.ResetInfoCMNamePrefix+"node")
+	defer testCM.Reset()
+	convey.Convey("test clear reset info when write reset info data into cm error", t, func() {
+		mockWriteResetInfoDataIntoCM := gomonkey.ApplyMethodReturn(&ClientK8s{},
+			"WriteResetInfoDataIntoCM", testCM, fmt.Errorf("write reset info data into cm error"))
+		defer mockWriteResetInfoDataIntoCM.Reset()
+		err := client.ClearResetInfo("taskName", "testNamespace")
+		convey.So(err.Error(), convey.ShouldEqual, "write reset info data into cm error")
+	})
+	convey.Convey("test clear reset info success", t, func() {
+		mockWriteResetInfoDataIntoCM := gomonkey.ApplyMethodReturn(&ClientK8s{}, "WriteResetInfoDataIntoCM", testCM, nil)
+		defer mockWriteResetInfoDataIntoCM.Reset()
+		err := client.ClearResetInfo("taskName", "testNamespace")
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
 // TestGetNodeNameFromEnv test get current node name from env
 func TestGetNodeNameFromEnv(t *testing.T) {
 	convey.Convey("test get current node name from env when check node name error", t, func() {
@@ -213,5 +239,48 @@ func TestCheckNodeName(t *testing.T) {
 		nodeName := "testName"
 		err := checkNodeName(nodeName)
 		convey.So(err.Error(), convey.ShouldEqual, "node name testName is illegal")
+	})
+}
+
+// TestResourceEventHandler test handle the configmap resource event
+func TestResourceEventHandler(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestResourceEventHandler init kubernetes failed")
+	}
+	convey.Convey("test handle the configmap resource event", t, func() {
+		testObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "test"}}}
+		testOldObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "testOld"}}}
+		client.Queue = workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+		mockMetaNamespaceKeyFunc := gomonkey.ApplyFuncReturn(cache.MetaNamespaceKeyFunc, "testKey", nil)
+		defer mockMetaNamespaceKeyFunc.Reset()
+		mockDeepEqual := gomonkey.ApplyFuncReturn(reflect.DeepEqual, false)
+		defer mockDeepEqual.Reset()
+		handler := client.ResourceEventHandler(PodResource, checkPod)
+		expectHandler := cache.FilteringResourceEventHandler{
+			FilterFunc: checkPod,
+			Handler: cache.ResourceEventHandlerFuncs{
+				AddFunc:    handler.OnAdd,
+				UpdateFunc: handler.OnUpdate,
+				DeleteFunc: handler.OnDelete,
+			},
+		}
+		handler.OnAdd(testObj)
+		handler.OnUpdate(testOldObj, testObj)
+		handler.OnDelete(testObj)
+		convey.So(handler, convey.ShouldHaveSameTypeAs, expectHandler)
+		convey.So(handler, convey.ShouldNotResemble, expectHandler)
+	})
+}
+
+// TestFlushPodCacheNextQuerying test flush cache
+func TestFlushPodCacheNextQuerying(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestFlushPodCacheNextQuerying init kubernetes failed")
+	}
+	convey.Convey("test flush pod cache success", t, func() {
+		client.FlushPodCacheNextQuerying()
+		convey.So(client.IsApiErr, convey.ShouldBeTrue)
 	})
 }
