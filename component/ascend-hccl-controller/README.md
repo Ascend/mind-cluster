@@ -76,7 +76,7 @@ HCCL-Controller是专门用于生成训练作业所有Pod的hccl.json文件的�
 
 # 组件安装
 
-1.  请参考《MindX DL用户指南》(https://www.hiascend.com/software/mindx-dl)
+1.  请参考《MindCluster用户指南》(https://www.hiascend.com/software/mindx-dl)
     中的“集群调度用户指南 > 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
 
 # 说明
