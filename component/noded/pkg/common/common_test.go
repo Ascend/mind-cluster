@@ -28,6 +28,12 @@ import (
 const ValidDiveType = 0x03
 const WrongDiveType = 0xFF
 
+var testFaultTypeCode = &FaultTypeCode{
+	NotHandleFaultCodes:   []string{"00000001"},
+	PreSeparateFaultCodes: []string{"00000002"},
+	SeparateFaultCodes:    []string{"00000003"},
+}
+
 // TestGetDeviceType get device type
 func TestGetDeviceType(t *testing.T) {
 	convey.Convey("test get device type", t, func() {
@@ -109,11 +115,7 @@ func TestMakeDataHash(t *testing.T) {
 func TestDeepCopyFaultConfig(t *testing.T) {
 	convey.Convey("test deep copy fault config", t, func() {
 		convey.Convey("deep copy fault config", func() {
-			oldFaultConfig := &FaultConfig{FaultTypeCode: &FaultTypeCode{
-				NotHandleFaultCodes:   []string{"00000001"},
-				PreSeparateFaultCodes: []string{"00000002"},
-				SeparateFaultCodes:    []string{"00000003"},
-			}}
+			oldFaultConfig := &FaultConfig{FaultTypeCode: testFaultTypeCode}
 			newFaultConfig := &FaultConfig{FaultTypeCode: &FaultTypeCode{}}
 			DeepCopyFaultConfig(oldFaultConfig, newFaultConfig)
 			FaultConfigEqual(oldFaultConfig, newFaultConfig)
@@ -180,6 +182,32 @@ func TestNewSignalWatcher(t *testing.T) {
 	convey.Convey("create new signal watcher", t, func() {
 		signWatcher := NewSignalWatcher(syscall.SIGKILL)
 		convey.So(signWatcher, convey.ShouldNotBeNil)
+	})
+}
+
+func TestFilterDuplicateFaultCodes(t *testing.T) {
+	convey.Convey("test func FilterDuplicateFaultCodes", t, func() {
+		FilterDuplicateFaultCodes(testFaultTypeCode)
+	})
+}
+
+func TestToUpperFaultCodesStr(t *testing.T) {
+	convey.Convey("test func ToUpperFaultCodesStr", t, func() {
+		ToUpperFaultCodesStr(testFaultTypeCode)
+	})
+}
+
+func TestCheckFaultCodes(t *testing.T) {
+	convey.Convey("test func CheckFaultCodes", t, func() {
+		convey.Convey("check success", func() {
+			faultCodes := []string{"00000001", "00000001", "00000002", "00000003"}
+			convey.So(CheckFaultCodes(faultCodes), convey.ShouldBeNil)
+		})
+		convey.Convey("check failed", func() {
+			faultCodes := []string{"Wrong fault codes"}
+			err := CheckFaultCodes(faultCodes)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "contains illegal character")
+		})
 	})
 }
 
