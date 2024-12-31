@@ -6,6 +6,7 @@ package job
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -71,6 +72,10 @@ func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	data[cmIndex] = strconv.Itoa(index)
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
 	data[hcclJson] = hccl
+	// for CCAE, when job status change to fail or completed, they need to use deleteTime
+	if jobInfo.Status == StatusJobFail || jobInfo.Status == StatusJobCompleted {
+		data[deleteTime] = strconv.Itoa(int(time.Now().Unix()))
+	}
 	var cmName string
 	if index == 0 {
 		cmName = fmt.Sprintf("%s-%s", configmapPrefix, jobInfo.Name)
