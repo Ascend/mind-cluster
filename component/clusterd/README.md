@@ -7,11 +7,11 @@
 
 1.  通过git拉取源码，并切换master分支，获得ClusterD。
 
-    示例：源码放在/home/mindx/component/clusterd目录下
+    示例：源码放在/home/mind-cluster/component/clusterd目录下
 
 2.  执行以下命令，进入构建目录，选择构建脚本执行，在“output“目录下生成二进制clusterd、yaml文件和Dockerfile等文件。
 
-    **cd** _/home/mindx/component/_**clusterd/build/**
+    **cd** _/home/mind-cluster/component/_**clusterd/build/**
 
         chmod +x build.sh
         
@@ -19,7 +19,7 @@
 
 3.  执行以下命令，查看**output**生成的软件列表。
 
-    **ls** _/home/mindx/component/_**clusterd/output**
+    **ls** _/home/mind-cluster/component/_**clusterd/output**
 
     ```
     Ascend-mindxdl-clusterd_xx_linux-xx.zip
