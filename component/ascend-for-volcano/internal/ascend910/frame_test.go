@@ -27,7 +27,6 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	itest "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
@@ -50,8 +49,16 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func buildInitMyJobPluginTestCases() []itest.InitMyJobPluginTestCase {
-	return []itest.InitMyJobPluginTestCase{
+// initMyJobPluginTestCase test case
+type initMyJobPluginTestCase struct {
+	Name    string
+	Attr    util.SchedulerJobAttr
+	Env     plugin.ScheduleEnv
+	WantErr error
+}
+
+func buildInitMyJobPluginTestCases() []initMyJobPluginTestCase {
+	return []initMyJobPluginTestCase{
 		{
 			Name: "01-InitMyJobPlugin return nil when define accelerator the handler will be define as card",
 			Attr: util.SchedulerJobAttr{
@@ -96,8 +103,17 @@ func TestInitMyJobPlugin(t *testing.T) {
 	}
 }
 
-func buildCheckNodeNPUByTaskTestCases() []itest.CheckNodeNPUByTaskTestCase {
-	return []itest.CheckNodeNPUByTaskTestCase{
+// checkNodeNPUByTaskTestCase CheckNodeNPUByTask test case
+type checkNodeNPUByTaskTestCase struct {
+	Task    *api.TaskInfo
+	Name    string
+	Attr    util.SchedulerJobAttr
+	Node    plugin.NPUNode
+	WantErr error
+}
+
+func buildCheckNodeNPUByTaskTestCases() []checkNodeNPUByTaskTestCase {
+	return []checkNodeNPUByTaskTestCase{
 		{
 			Name: "01-CheckNodeNPUByTask return err when task is nil",
 			Task: nil,
@@ -136,8 +152,18 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 	}
 }
 
-func buildScoreBestNPUNodesTestCases() []itest.ScoreBestNPUNodesTestCase {
-	return []itest.ScoreBestNPUNodesTestCase{
+type scoreBestNPUNodesTestCase struct {
+	Task     *api.TaskInfo
+	Nodes    []*api.NodeInfo
+	ScoreMap map[string]float64
+	WantSMap map[string]float64
+	Name     string
+	WantErr  error
+	Attr     util.SchedulerJobAttr
+}
+
+func buildScoreBestNPUNodesTestCases() []scoreBestNPUNodesTestCase {
+	return []scoreBestNPUNodesTestCase{
 		{
 			Name:     "01-ScoreBestNPUNodes return err when task is nil",
 			Task:     nil,
@@ -178,8 +204,18 @@ func TestScoreBestNPUNodes(t *testing.T) {
 	}
 }
 
-func buildUseAnnotationTestCases() []itest.UseAnnotationTestCase {
-	return []itest.UseAnnotationTestCase{
+// UseAnnotationTestCase useAnnotation test case
+type useAnnotationTestCase struct {
+	Task     *api.TaskInfo
+	WantNode *plugin.NPUNode
+	Name     string
+	Node     plugin.NPUNode
+	PodAnno  string
+	Attr     util.SchedulerJobAttr
+}
+
+func buildUseAnnotationTestCases() []useAnnotationTestCase {
+	return []useAnnotationTestCase{
 		{
 			Name: "01-ScoreBestNPUNodes return nil when task is nil",
 			Task: nil,

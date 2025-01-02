@@ -50,7 +50,14 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func buildValidNPUJobTestCase01() []itest.ValidNPUJobTestCase {
+// validNPUJobTestCase validNPUJob test case
+type validNPUJobTestCase struct {
+	WantErr *api.ValidateResult
+	Name    string
+	Attr    util.SchedulerJobAttr
+}
+
+func buildValidNPUJobTestCase01() []validNPUJobTestCase {
 	job01 := test.FakeNormalTestJob("job01", 1)
 	test.SetFakeJobResRequest(job01, util.NPU910CardName, "1")
 	attr1 := itest.FakeSchedulerJobAttrByJob(job01)
@@ -61,7 +68,7 @@ func buildValidNPUJobTestCase01() []itest.ValidNPUJobTestCase {
 	test.SetFakeJobResRequest(job03, util.NPU910CardName, "2")
 	attr3 := itest.FakeSchedulerJobAttrByJob(job03)
 	errMsg2 := "huawei.com/Ascend910module checkSingleTrainMode vcjob/job02 req npu not in [1,2,4,8]"
-	return []itest.ValidNPUJobTestCase{
+	return []validNPUJobTestCase{
 		{
 			Name:    "01-ValidNPUJob should return nil when job request 1 npu",
 			Attr:    attr1,
@@ -84,7 +91,7 @@ func buildValidNPUJobTestCase01() []itest.ValidNPUJobTestCase {
 	}
 }
 
-func buildValidNPUJobTestCase02() []itest.ValidNPUJobTestCase {
+func buildValidNPUJobTestCase02() []validNPUJobTestCase {
 	job04 := test.FakeNormalTestJob("job04", util.NPUIndex2)
 	test.SetFakeJobResRequest(job04, util.NPU910CardName, "1")
 	attr4 := itest.FakeSchedulerJobAttrByJob(job04)
@@ -96,7 +103,7 @@ func buildValidNPUJobTestCase02() []itest.ValidNPUJobTestCase {
 	job06 := test.FakeNormalTestJob("job06", util.NPUIndex2)
 	test.SetFakeJobResRequest(job06, util.NPU910CardName, "8")
 	attr6 := itest.FakeSchedulerJobAttrByJob(job06)
-	return []itest.ValidNPUJobTestCase{
+	return []validNPUJobTestCase{
 		{
 			Name:    "04-ValidNPUJob should return error when task request no npu",
 			Attr:    attr4,
@@ -130,8 +137,17 @@ func TestValidNPUJob(t *testing.T) {
 	}
 }
 
-func buildCheckNodeNPUByTaskTestCases01() []itest.CheckNodeNPUByTaskTestCase {
-	return []itest.CheckNodeNPUByTaskTestCase{
+// checkNodeNPUByTaskTestCase CheckNodeNPUByTask test case
+type checkNodeNPUByTaskTestCase struct {
+	Task    *api.TaskInfo
+	Name    string
+	Attr    util.SchedulerJobAttr
+	Node    plugin.NPUNode
+	WantErr error
+}
+
+func buildCheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
+	return []checkNodeNPUByTaskTestCase{
 		{
 			Name: "01-CheckNodeNPUByTask return nil when node npu meet task req",
 			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex4),
@@ -171,8 +187,8 @@ func buildCheckNodeNPUByTaskTestCases01() []itest.CheckNodeNPUByTaskTestCase {
 
 }
 
-func buildCheckNodeNPUByTaskTestCases02() []itest.CheckNodeNPUByTaskTestCase {
-	return []itest.CheckNodeNPUByTaskTestCase{
+func buildCheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
+	return []checkNodeNPUByTaskTestCase{
 		{
 			Name: "04-CheckNodeNPUByTask return err when node has no req npu",
 			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex4),
@@ -214,8 +230,8 @@ func buildCheckNodeNPUByTaskTestCases02() []itest.CheckNodeNPUByTaskTestCase {
 	}
 }
 
-func buildCheckNodeNPUByTaskTestCases03() []itest.CheckNodeNPUByTaskTestCase {
-	return []itest.CheckNodeNPUByTaskTestCase{
+func buildCheckNodeNPUByTaskTestCases03() []checkNodeNPUByTaskTestCase {
+	return []checkNodeNPUByTaskTestCase{
 		{
 			Name: "01-CheckNodeNPUByTask return err when task is nil",
 			Task: nil,
@@ -266,8 +282,18 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 	}
 }
 
-func buildScoreBestNPUNodesTestCases01() []itest.ScoreBestNPUNodesTestCase {
-	return []itest.ScoreBestNPUNodesTestCase{
+type scoreBestNPUNodesTestCase struct {
+	Task     *api.TaskInfo
+	Nodes    []*api.NodeInfo
+	ScoreMap map[string]float64
+	WantSMap map[string]float64
+	Name     string
+	WantErr  error
+	Attr     util.SchedulerJobAttr
+}
+
+func buildScoreBestNPUNodesTestCases01() []scoreBestNPUNodesTestCase {
+	return []scoreBestNPUNodesTestCase{
 		{
 			Name:     "01-ScoreBestNPUNodes return err when task is not this job npu task ",
 			Task:     test.FakeTaskWithResReq("pod1", util.NPU910CardName, 1),
@@ -295,14 +321,14 @@ func buildScoreBestNPUNodesTestCases01() []itest.ScoreBestNPUNodesTestCase {
 	}
 }
 
-func buildScoreBestNPUNodesTestCases02() []itest.ScoreBestNPUNodesTestCase {
+func buildScoreBestNPUNodesTestCases02() []scoreBestNPUNodesTestCase {
 	const (
 		score263 = 263
 		score246 = 246
 		score236 = 236
 		score253 = 253
 	)
-	return []itest.ScoreBestNPUNodesTestCase{
+	return []scoreBestNPUNodesTestCase{
 		{
 			Name:     "04-ScoreBestNPUNodes scoreMap no refresh when node has no npu",
 			Task:     test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
@@ -380,8 +406,17 @@ func TestScoreBestNPUNodes(t *testing.T) {
 	}
 }
 
-func buildUseAnnotationTestCases01() []itest.UseAnnotationTestCase {
-	return []itest.UseAnnotationTestCase{
+type useAnnotationTestCase struct {
+	Task     *api.TaskInfo
+	WantNode *plugin.NPUNode
+	Name     string
+	Node     plugin.NPUNode
+	PodAnno  string
+	Attr     util.SchedulerJobAttr
+}
+
+func buildUseAnnotationTestCases01() []useAnnotationTestCase {
+	return []useAnnotationTestCase{
 		{
 			Name: "01-UseAnnotation task will select the npu which is the only one on the ring",
 			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
@@ -418,8 +453,8 @@ func buildUseAnnotationTestCases01() []itest.UseAnnotationTestCase {
 	}
 }
 
-func buildUseAnnotationTestCases02() []itest.UseAnnotationTestCase {
-	return []itest.UseAnnotationTestCase{
+func buildUseAnnotationTestCases02() []useAnnotationTestCase {
+	return []useAnnotationTestCase{
 		{
 			Name: "03-UseAnnotation task will select the npu which is on the card that has 3 npu other than 2",
 			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
