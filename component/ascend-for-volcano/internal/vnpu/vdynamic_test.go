@@ -22,111 +22,187 @@ package vnpu
 import (
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
-type checkNodeNPUByDyTaskFields struct {
+const (
+	Ascend910Card = "Ascend910-8"
+)
+
+type vNPUTaskFields struct {
 	StaticByConf bool
 	VT           VTemplate
 	StaticVNPU   StaticVNPU
 	DynamicVNPU  DynamicVNPU
 }
 
-type checkNodeNPUByDyTaskArgs struct {
+type vNPUTaskArgs struct {
 	task       *api.TaskInfo
 	node       plugin.NPUNode
+	nodes      []*api.NodeInfo
+	scoreMap   map[string]float64
 	taskResReq util.VResource
+	vt         VTemplate
 }
 
-type checkNodeNPUByDyTaskTestCase struct {
+type vNPUTestCase struct {
 	name    string
-	fields  checkNodeNPUByDyTaskFields
-	args    checkNodeNPUByDyTaskArgs
+	fields  vNPUTaskFields
+	args    vNPUTaskArgs
+	wantRes bool
 	wantErr bool
 }
 
-func buildCheckNodeNPUByDyTaskTestCase01() checkNodeNPUByDyTaskTestCase {
-	return checkNodeNPUByDyTaskTestCase{
+func mockCommonNode() plugin.CommonNode {
+	return plugin.CommonNode{
+		Name:           "node1",
+		Capability:     map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
+		Allocate:       map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
+		Idle:           map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
+		BaseDeviceInfo: "",
+		Annotation:     map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1"},
+		Label:          map[string]string{util.Accelerator: "huawei-Ascend910"},
+		Address:        "",
+		SuperPodID:     0,
+	}
+}
+
+func mockVNode() plugin.VNode {
+	return plugin.VNode{
+		Chips: map[int]*plugin.VChip{
+			0: {TotalRes: util.VResource{Aicore: 5}},
+		},
+		ChipKind:         plugin.Ascend910,
+		UnhealthyChipIds: map[int]struct{}{},
+		ServerType:       Ascend910Card,
+		TotalChipNum:     1,
+		AiCorePerChip:    1,
+		FreeChipNum:      1,
+		TotalRes:         util.VResource{Aicore: 1},
+		ValidVNode:       true,
+		ChipType:         plugin.ChipTypeB1,
+	}
+}
+
+func mockNode() plugin.NPUNode {
+	return plugin.NPUNode{
+		CommonNode:  mockCommonNode(),
+		VNode:       mockVNode(),
+		IsUnhealthy: false,
+	}
+}
+
+func mockVNPUTaskFields() vNPUTaskFields {
+	return vNPUTaskFields{
+		StaticByConf: false,
+		DynamicVNPU: DynamicVNPU{
+			DowngradeCache: make(map[string][]string),
+			ConCache:       make(map[string]map[string]map[api.TaskID]struct{})},
+	}
+}
+
+func mockVirtualNPU(fields vNPUTaskFields) *VirtualNPU {
+	return &VirtualNPU{
+		StaticByConf: fields.StaticByConf,
+		VT:           fields.VT,
+		StaticVNPU:   fields.StaticVNPU,
+		DynamicVNPU:  fields.DynamicVNPU,
+	}
+}
+
+func mockDynamicVNPU(fields dynamicVNPUFields) *DynamicVNPU {
+	return &DynamicVNPU{
+		vnpuHandler:    fields.vnpuHandler,
+		DowngradeCache: fields.DowngradeCache,
+		ConCache:       fields.ConCache,
+	}
+}
+
+func nilTaskTestCase() vNPUTestCase {
+	return vNPUTestCase{
 		name:    "01 will return error when tp is nil or task is nil",
-		fields:  checkNodeNPUByDyTaskFields{},
-		args:    checkNodeNPUByDyTaskArgs{},
+		fields:  vNPUTaskFields{},
+		args:    vNPUTaskArgs{},
 		wantErr: true,
+		wantRes: true,
 	}
 }
 
-func buildCheckNodeNPUByDyTaskTestCase02() checkNodeNPUByDyTaskTestCase {
-	node := plugin.NPUNode{}
-	node.ValidVNode = false
-	return checkNodeNPUByDyTaskTestCase{
-		name:    "02 will return error when node is not vNode",
-		fields:  checkNodeNPUByDyTaskFields{StaticByConf: false},
-		args:    checkNodeNPUByDyTaskArgs{task: &api.TaskInfo{}, node: node},
-		wantErr: true,
-	}
-}
-
-func buildCheckNodeNPUByDyTaskTestCase03() checkNodeNPUByDyTaskTestCase {
-	arg := checkNodeNPUByDyTaskArgs{}
-	arg.taskResReq = util.VResource{Aicore: 6, Aicpu: 4}
-	arg.node.Chips = make(map[int]*plugin.VChip)
-	arg.node.ValidVNode = true
-	arg.node.Chips[0] = &plugin.VChip{TotalRes: util.VResource{Aicore: 5}}
-	return checkNodeNPUByDyTaskTestCase{
-		name:   "03 will return error when node res is not meet job require",
-		fields: checkNodeNPUByDyTaskFields{StaticByConf: false},
-		args: checkNodeNPUByDyTaskArgs{task: &api.TaskInfo{}, node: arg.node,
-			taskResReq: arg.taskResReq},
-		wantErr: true,
-	}
-}
-
-func buildCheckNodeNPUByDyTaskTestCase04() checkNodeNPUByDyTaskTestCase {
-	tp := checkNodeNPUByDyTaskFields{}
-	tp.StaticByConf = false
-	tp.DynamicVNPU.DowngradeCache = make(map[string][]string)
-	arg := checkNodeNPUByDyTaskArgs{}
-	arg.taskResReq = util.VResource{Aicore: 2, Aicpu: 2}
-	arg.node.Chips = make(map[int]*plugin.VChip)
-	arg.node.ValidVNode = true
-	arg.node.Chips[0] = &plugin.VChip{TotalRes: util.VResource{Aicore: 1}}
-	return checkNodeNPUByDyTaskTestCase{
-		name:   "04 will return error when task can be down grade and node res is not meet job require",
-		fields: tp,
-		args: checkNodeNPUByDyTaskArgs{task: &api.TaskInfo{}, node: arg.node,
-			taskResReq: arg.taskResReq},
-		wantErr: true,
-	}
-}
-
-func buildCheckNodeNPUByDyTaskTestCase05() checkNodeNPUByDyTaskTestCase {
-	tp := checkNodeNPUByDyTaskFields{}
-	tp.StaticByConf = false
-	tp.DynamicVNPU.DowngradeCache = make(map[string][]string)
-	arg := checkNodeNPUByDyTaskArgs{}
-	arg.taskResReq = util.VResource{Aicore: 2, Aicpu: 2}
-	arg.node.Chips = make(map[int]*plugin.VChip)
-	arg.node.ValidVNode = true
-	tmpRes := util.VResource{Aicore: 2, Aicpu: 2}
-	arg.node.Chips[0] = &plugin.VChip{FreeRes: tmpRes, TotalRes: tmpRes}
-	return checkNodeNPUByDyTaskTestCase{
+func buildCheckNodeNPUByDyTaskTestCase05() vNPUTestCase {
+	node := mockNode()
+	node.Chips[0] = &plugin.VChip{FreeRes: util.VResource{Aicore: 2, Aicpu: 2},
+		TotalRes: util.VResource{Aicore: 2, Aicpu: 2}}
+	return vNPUTestCase{
 		name:   "05 will return nil when  node res is  meet job require",
-		fields: tp,
-		args: checkNodeNPUByDyTaskArgs{task: &api.TaskInfo{}, node: arg.node,
-			taskResReq: arg.taskResReq},
+		fields: mockVNPUTaskFields(),
+		args: vNPUTaskArgs{task: &api.TaskInfo{}, node: node,
+			taskResReq: util.VResource{Aicore: 2, Aicpu: 2}},
 		wantErr: false,
 	}
 }
 
-func buildCheckNodeNPUByDyTaskTestCase() []checkNodeNPUByDyTaskTestCase {
-	return []checkNodeNPUByDyTaskTestCase{
-		buildCheckNodeNPUByDyTaskTestCase01(),
-		buildCheckNodeNPUByDyTaskTestCase02(),
-		buildCheckNodeNPUByDyTaskTestCase03(),
-		buildCheckNodeNPUByDyTaskTestCase04(),
+func buildCheckNodeNPUByDyTaskTestCase06() vNPUTestCase {
+	node := mockNode()
+	node.ChipKind = plugin.Ascend310P
+	return vNPUTestCase{
+		name:   "06 will return error when node.ChipKind is plugin.Ascend310P",
+		fields: mockVNPUTaskFields(),
+		args: vNPUTaskArgs{task: &api.TaskInfo{}, node: node,
+			taskResReq: util.VResource{Aicore: 2, Aicpu: 2}},
+		wantErr: true,
+	}
+}
+
+func buildCheckNodeNPUByDyTaskTestCase07() vNPUTestCase {
+	tp := mockVNPUTaskFields()
+	tp.DynamicVNPU.ConCache = map[string]map[string]map[api.TaskID]struct{}{
+		"node1": {plugin.VNPUTempVir02: {"taskID1": struct{}{}}}}
+	node := mockNode()
+	return vNPUTestCase{
+		name:   "07 will return error when get template failed",
+		fields: tp,
+		args: vNPUTaskArgs{task: &api.TaskInfo{}, node: node,
+			taskResReq: util.VResource{Aicore: 0, Aicpu: 0}},
+		wantErr: true,
+	}
+}
+
+func buildCheckNodeNPUByDyTaskTestCase() []vNPUTestCase {
+	return []vNPUTestCase{
+		nilTaskTestCase(),
+		{
+			name:   "02 will return error when node is not vNode",
+			fields: vNPUTaskFields{StaticByConf: false},
+			args: vNPUTaskArgs{
+				task: &api.TaskInfo{},
+				node: plugin.NPUNode{VNode: plugin.VNode{ValidVNode: false}}},
+			wantErr: true,
+		},
+		{
+			name:   "03 will return error when node res is not meet job require",
+			fields: vNPUTaskFields{StaticByConf: false},
+			args: vNPUTaskArgs{
+				task:       &api.TaskInfo{},
+				node:       mockNode(),
+				taskResReq: util.VResource{Aicore: 6, Aicpu: 4},
+			},
+			wantErr: true,
+		},
+		{
+			name:   "04 will return error when task can be down grade and node res is not meet job require",
+			fields: mockVNPUTaskFields(),
+			args: vNPUTaskArgs{task: &api.TaskInfo{}, node: mockNode(),
+				taskResReq: util.VResource{Aicore: 2, Aicpu: 2}},
+			wantErr: true,
+		},
 		buildCheckNodeNPUByDyTaskTestCase05(),
+		buildCheckNodeNPUByDyTaskTestCase06(),
+		buildCheckNodeNPUByDyTaskTestCase07(),
 	}
 }
 
@@ -134,82 +210,63 @@ func TestVirtualNPUCheckNodeNPUByDyTask(t *testing.T) {
 	tests := buildCheckNodeNPUByDyTaskTestCase()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tp := &VirtualNPU{
-				StaticByConf: tt.fields.StaticByConf,
-				VT:           tt.fields.VT,
-				StaticVNPU:   tt.fields.StaticVNPU,
-				DynamicVNPU:  tt.fields.DynamicVNPU,
-			}
-			if err := tp.CheckNodeNPUByDyTask(tt.args.task, tt.args.node, tt.args.taskResReq); (err != nil) != tt.wantErr {
+			tp := mockVirtualNPU(tt.fields)
+			err := tp.CheckNodeNPUByDyTask(tt.args.task, tt.args.node, tt.args.taskResReq)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckNodeNPUByDyTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-type scoreBestNPUNodesFields struct {
+type dynamicVNPUFields struct {
 	vnpuHandler    vnpuHandler
 	DowngradeCache map[string][]string
 	ConCache       map[string]map[string]map[api.TaskID]struct{}
 }
 
-type scoreBestNPUNodesArgs struct {
-	task     *api.TaskInfo
-	nodes    []*api.NodeInfo
-	scoreMap map[string]float64
-}
-
 type scoreBestNPUNodesTest struct {
 	name    string
-	fields  scoreBestNPUNodesFields
-	args    scoreBestNPUNodesArgs
+	fields  dynamicVNPUFields
+	args    vNPUTaskArgs
 	wantErr bool
-}
-
-func buildScoreBestNPUNodesTestCase01() scoreBestNPUNodesTest {
-	return scoreBestNPUNodesTest{
-		name:    "01 will return err when tp is nil",
-		fields:  scoreBestNPUNodesFields{},
-		args:    scoreBestNPUNodesArgs{},
-		wantErr: true,
-	}
-}
-
-func buildScoreBestNPUNodesTestCase02() scoreBestNPUNodesTest {
-	return scoreBestNPUNodesTest{
-		name:    "02 will return err when scoreMap is nil",
-		fields:  scoreBestNPUNodesFields{DowngradeCache: map[string][]string{}},
-		args:    scoreBestNPUNodesArgs{task: &api.TaskInfo{}, nodes: []*api.NodeInfo{{}}},
-		wantErr: true,
-	}
-}
-
-func buildScoreBestNPUNodesTestCase03() scoreBestNPUNodesTest {
-	return scoreBestNPUNodesTest{
-		name:   "03 will return nil when node is not in down grade map ",
-		fields: scoreBestNPUNodesFields{DowngradeCache: map[string][]string{}},
-		args: scoreBestNPUNodesArgs{task: &api.TaskInfo{}, nodes: []*api.NodeInfo{{}},
-			scoreMap: map[string]float64{"node1": 200}},
-		wantErr: false,
-	}
-}
-
-func buildScoreBestNPUNodesTestCase04() scoreBestNPUNodesTest {
-	return scoreBestNPUNodesTest{
-		name:   "04 will return nil when node is in down grade map ",
-		fields: scoreBestNPUNodesFields{DowngradeCache: map[string][]string{"task01": {"node1"}}},
-		args: scoreBestNPUNodesArgs{task: &api.TaskInfo{Name: "task01"}, nodes: []*api.NodeInfo{{Name: "node1"}},
-			scoreMap: map[string]float64{"node1": 200}},
-		wantErr: false,
-	}
 }
 
 func buildScoreBestNPUNodesTestCase() []scoreBestNPUNodesTest {
 	return []scoreBestNPUNodesTest{
-		buildScoreBestNPUNodesTestCase01(),
-		buildScoreBestNPUNodesTestCase02(),
-		buildScoreBestNPUNodesTestCase03(),
-		buildScoreBestNPUNodesTestCase04(),
+		{
+			name:    "01 will return err when tp is nil",
+			fields:  dynamicVNPUFields{},
+			args:    vNPUTaskArgs{},
+			wantErr: true,
+		},
+		{
+			name:    "02 will return err when scoreMap is nil",
+			fields:  dynamicVNPUFields{DowngradeCache: map[string][]string{}},
+			args:    vNPUTaskArgs{task: &api.TaskInfo{}, nodes: []*api.NodeInfo{{}}},
+			wantErr: true,
+		},
+		{
+			name:   "03 will return nil when node is not in down grade map ",
+			fields: dynamicVNPUFields{DowngradeCache: map[string][]string{}},
+			args: vNPUTaskArgs{task: &api.TaskInfo{}, nodes: []*api.NodeInfo{{}},
+				scoreMap: map[string]float64{"node1": 200}},
+			wantErr: false,
+		},
+		{
+			name:   "04 will return nil when node is in down grade map ",
+			fields: dynamicVNPUFields{DowngradeCache: map[string][]string{"task01": {"node1"}}},
+			args: vNPUTaskArgs{task: &api.TaskInfo{Name: "task01"}, nodes: []*api.NodeInfo{{Name: "node1"}},
+				scoreMap: map[string]float64{"node1": 200}},
+			wantErr: false,
+		},
+		{
+			name:   "05 will return nil when node is not in down grade map ",
+			fields: dynamicVNPUFields{DowngradeCache: map[string][]string{"task01": {"node1"}}},
+			args: vNPUTaskArgs{task: &api.TaskInfo{Name: "task01"}, nodes: []*api.NodeInfo{{Name: ""}},
+				scoreMap: map[string]float64{"node1": 200}},
+			wantErr: false,
+		},
 	}
 }
 
@@ -217,13 +274,292 @@ func TestDynamicVNPUScoreBestNPUNodes(t *testing.T) {
 	tests := buildScoreBestNPUNodesTestCase()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tp := &DynamicVNPU{
-				vnpuHandler:    tt.fields.vnpuHandler,
-				DowngradeCache: tt.fields.DowngradeCache,
-				ConCache:       tt.fields.ConCache,
-			}
-			if err := tp.ScoreBestNPUNodes(tt.args.task, tt.args.nodes, tt.args.scoreMap); (err != nil) != tt.wantErr {
+			tp := mockDynamicVNPU(tt.fields)
+			err := tp.ScoreBestNPUNodes(tt.args.task, tt.args.nodes, tt.args.scoreMap)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func buildIsNodeHasDifferentUnFinishedTaskTestCases() []vNPUTestCase {
+	fields := vNPUTaskFields{
+		VT:          VTemplate{Data: testVT},
+		DynamicVNPU: DynamicVNPU{ConCache: conCache}}
+	return []vNPUTestCase{
+		nilTaskTestCase(),
+		{
+			name:    "02 will return error when get template failed",
+			fields:  fields,
+			args:    vNPUTaskArgs{task: &api.TaskInfo{}, node: mockNode()},
+			wantErr: true,
+		},
+		{
+			name:   "03 will return error when nodeTempMap not find template",
+			fields: fields,
+			args: vNPUTaskArgs{task: &api.TaskInfo{}, node: mockNode(),
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex2, Aicpu: util.NPUIndex2, DVPP: plugin.AscendDVPPEnabledNull,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:   "04 will return nil when cache no template",
+			fields: fields,
+			args: vNPUTaskArgs{task: &api.TaskInfo{}, node: mockNode(),
+				taskResReq: util.VResource{Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull},
+			},
+			wantErr: false,
+		},
+	}
+}
+
+func TestIsNodeHasDifferentUnFinishedTask(t *testing.T) {
+	tests := buildIsNodeHasDifferentUnFinishedTaskTestCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := mockVirtualNPU(tt.fields)
+			err := tp.IsNodeHasDifferentUnFinishedTask(tt.args.task, tt.args.node, tt.args.taskResReq)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckNodeNPUByDyTask() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func buildGetTemplateByResReqTestCases() []vNPUTestCase {
+	return []vNPUTestCase{
+		{
+			name:    "01 will return error when tp is nil",
+			args:    vNPUTaskArgs{},
+			wantErr: true,
+		},
+		{
+			name:   "02 will return nil when tp is not nil and task is not nil",
+			fields: vNPUTaskFields{},
+			args: vNPUTaskArgs{
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledOff},
+				vt: VTemplate{Data: testVT},
+			},
+			wantErr: true,
+		},
+		{
+			name:   "03 will return nil when tp is not nil and task is not nil",
+			fields: vNPUTaskFields{},
+			args: vNPUTaskArgs{
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex2, Aicpu: util.NPUIndex2, DVPP: plugin.AscendDVPPEnabledNull},
+				vt: VTemplate{Data: testVT},
+			},
+			wantErr: false,
+		},
+	}
+}
+
+func TestGetTemplateByResReq(t *testing.T) {
+	tests := buildGetTemplateByResReqTestCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := mockVirtualNPU(tt.fields)
+			_, err := tp.GetTemplateByResReq(tt.args.taskResReq, tt.args.vt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTemplateByResReq() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func mockTask() *api.TaskInfo {
+	return &api.TaskInfo{
+		UID:        "taskID1",
+		Job:        "jobID1",
+		Name:       "task1",
+		Namespace:  "ns1",
+		Resreq:     &api.Resource{},
+		InitResreq: &api.Resource{},
+		Pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: make(map[string]string),
+			}},
+	}
+}
+
+func buildReleaseTaskInConCacheTestCase01() []vNPUTestCase {
+	mockTask1 := mockTask()
+	mockTask1.Pod.Annotations = map[string]string{util.AscendNPUCore: "0-vir00"}
+	mockTask2 := mockTask()
+	mockTask2.Pod.Annotations = map[string]string{util.AscendNPUCore: "1-vir01"}
+	mockTask2.UID = "taskID2"
+	return []vNPUTestCase{
+		{
+			name:    "01 will return error when GetVTaskUseTemplate failed",
+			fields:  vNPUTaskFields{},
+			args:    vNPUTaskArgs{task: mockTask(), node: mockNode()},
+			wantErr: true,
+		},
+		{
+			name:    "02 will return error when ConCache not found node name",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args:    vNPUTaskArgs{task: mockTask1, node: plugin.NPUNode{}},
+			wantErr: true,
+		},
+		{
+			name:    "03 will return error when ConCache not found template",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args:    vNPUTaskArgs{task: mockTask1, node: mockNode()},
+			wantErr: true,
+		},
+		{
+			name:    "04 will return error when ConCache not found task.UID",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args:    vNPUTaskArgs{task: mockTask2, node: mockNode()},
+			wantErr: true,
+		},
+	}
+}
+
+func buildReleaseTaskInConCacheTestCase02() []vNPUTestCase {
+	mockTask1 := mockTask()
+	mockTask1.Pod.Annotations = map[string]string{util.AscendNPUCore: "1-vir01"}
+	mockConCache1 := map[string]map[string]map[api.TaskID]struct{}{
+		"node1": {plugin.VNPUTempVir01: {"taskID1": struct{}{}, "taskID2": struct{}{}}},
+	}
+	mockConCache2 := map[string]map[string]map[api.TaskID]struct{}{
+		"node1": {
+			plugin.VNPUTempVir01: {"taskID1": struct{}{}},
+			plugin.VNPUTempVir02: {"taskID1": struct{}{}},
+		},
+	}
+	return []vNPUTestCase{
+		{
+			name:    "05 will return nil when ConCache found task.UID",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args:    vNPUTaskArgs{task: mockTask1, node: mockNode()},
+			wantErr: false,
+		},
+		{
+			name:    "06 will return nil when len(tIDs) not equal 0 after delete by uid",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: mockConCache1}},
+			args:    vNPUTaskArgs{task: mockTask1, node: mockNode()},
+			wantErr: false,
+		},
+		{
+			name:    "07 will return nil when len(temp) not equal 0 after delete by template",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: mockConCache2}},
+			args:    vNPUTaskArgs{task: mockTask1, node: mockNode()},
+			wantErr: false,
+		},
+	}
+}
+
+func TestReleaseTaskInConCache(t *testing.T) {
+	tests := buildReleaseTaskInConCacheTestCase01()
+	tests = append(tests, buildReleaseTaskInConCacheTestCase02()...)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := mockVirtualNPU(tt.fields)
+			err := tp.releaseTaskInConCache(tt.args.task, tt.args.node)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTemplateByResReq() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func buildReleaseAnnotationTestCase() []vNPUTestCase {
+	mockTask1 := mockTask()
+	mockTask1.Pod.Annotations = map[string]string{util.AscendNPUCore: "1-vir01"}
+	return []vNPUTestCase{
+		nilTaskTestCase(),
+		{
+			name:    "02 will return not nil when tp and task both not nil",
+			fields:  vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args:    vNPUTaskArgs{task: mockTask1, node: mockNode()},
+			wantRes: true,
+		},
+	}
+}
+
+func TestReleaseAnnotation(t *testing.T) {
+	tests := buildReleaseAnnotationTestCase()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := mockVirtualNPU(tt.fields)
+			res := tp.ReleaseAnnotation(tt.args.task, tt.args.node)
+			if (res != nil) != tt.wantRes {
+				t.Errorf("ReleaseAnnotation() res = %v, wantRes %v", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func buildAddTaskInConCacheTestCase() []vNPUTestCase {
+	mockTask1 := mockTask()
+	mockTask1.Pod.Annotations = map[string]string{util.AscendNPUCore: "1-vir01"}
+	return []vNPUTestCase{
+		{
+			name:   "01 will return nil when node is nil",
+			fields: vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args: vNPUTaskArgs{task: mockTask1, vt: VTemplate{Data: testVT},
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "02 will return nil when node is not nil",
+			fields: vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args: vNPUTaskArgs{task: mockTask1, node: mockNode(), vt: VTemplate{Data: testVT},
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull,
+				},
+			},
+			wantErr: false,
+		},
+	}
+}
+
+func TestAddTaskInConCache(t *testing.T) {
+	tests := buildAddTaskInConCacheTestCase()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := mockVirtualNPU(tt.fields)
+			res := tp.addTaskInConCache(tt.args.task, tt.args.node, tt.args.taskResReq, tt.args.vt)
+			if (res != nil) != tt.wantErr {
+				t.Errorf("addTaskInConCache() res = %v, wantRes %v", res, tt.wantErr)
+			}
+		})
+	}
+}
+
+func buildUseAnnotationTestCase() []vNPUTestCase {
+	mockTask1 := mockTask()
+	mockTask1.Pod.Annotations = map[string]string{util.AscendNPUCore: "1-vir01"}
+	return []vNPUTestCase{
+		nilTaskTestCase(),
+		{
+			name:   "02 will return not nil when tp and task are not nil",
+			fields: vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args: vNPUTaskArgs{task: mockTask1, node: mockNode(), vt: VTemplate{Data: testVT},
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull},
+			},
+			wantRes: true,
+		},
+	}
+}
+
+func TestUseAnnotation(t *testing.T) {
+	tests := buildUseAnnotationTestCase()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := tt.fields.DynamicVNPU.UseAnnotation(tt.args.task, tt.args.node, tt.args.taskResReq, tt.args.vt)
+			if (res != nil) != tt.wantRes {
+				t.Errorf("UseAnnotation() res = %v, wantRes %v", res, tt.wantRes)
 			}
 		})
 	}
