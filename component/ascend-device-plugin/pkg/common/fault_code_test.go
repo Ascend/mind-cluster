@@ -1540,30 +1540,28 @@ func TestGetNetworkFaultType(t *testing.T) {
 		faultCode := "81078603"
 		faultCodes := []int64{0x81078603}
 		faultDurationTime := int64(31)
-		mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
-		defer mockFaultTypeCode.Reset()
-		mockFaultDurationMap := gomonkey.ApplyGlobalVar(&faultDurationMap, map[string]*FaultDurationCache{
-			strings.ToLower(faultCode): {
-				Duration: map[int32]FaultDurationData{
-					logicId: {
-						TimeoutStatus:            true,
-						FaultEventQueue:          []common.DevFaultInfo{},
-						FaultDurationTime:        faultDurationTime * SecondMagnification,
-						FaultRecoverDurationTime: 0,
+		mockFaultVar := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{}).
+			ApplyGlobalVar(&faultDurationMap, map[string]*FaultDurationCache{
+				strings.ToLower(faultCode): {
+					Duration: map[int32]FaultDurationData{
+						logicId: {
+							TimeoutStatus:            true,
+							FaultEventQueue:          []common.DevFaultInfo{},
+							FaultDurationTime:        faultDurationTime * SecondMagnification,
+							FaultRecoverDurationTime: 0,
+						},
+					},
+					FaultDuration: FaultDuration{
+						FaultTimeout:   30,
+						RecoverTimeout: 60,
+						FaultHandling:  PreSeparateNPU,
 					},
 				},
-				FaultDuration: FaultDuration{
-					FaultTimeout:   30,
-					RecoverTimeout: 60,
-					FaultHandling:  PreSeparateNPU,
-				},
-			},
-		})
-		defer mockFaultDurationMap.Reset()
-		mockFaultFrequencyMap := gomonkey.ApplyGlobalVar(&faultFrequencyMap, map[string]*FaultFrequencyCache{})
-		defer mockFaultFrequencyMap.Reset()
-		mockRecoverFaultFrequencyMap := gomonkey.ApplyGlobalVar(&recoverFaultFrequencyMap, map[int32]string{})
-		defer mockRecoverFaultFrequencyMap.Reset()
+			}).
+			ApplyGlobalVar(&faultFrequencyMap, map[string]*FaultFrequencyCache{}).
+			ApplyGlobalVar(&recoverFaultFrequencyMap, map[int32]string{})
+
+		defer mockFaultVar.Reset()
 		convey.So(GetNetworkFaultType(faultCodes, logicId), convey.ShouldEqual, PreSeparateNPU)
 	})
 }
