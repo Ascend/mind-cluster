@@ -117,13 +117,13 @@ func TestGetActivePodList(t *testing.T) {
 	})
 	convey.Convey("test get active pod list when the number of pods exceeds the upper limit", t, func() {
 		mockPodListByCondition := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "getPodListByCondition", func(
-			_ *ClientK8s) ([]v1.Pod, error) {
-			return []v1.Pod{}, nil
+			_ *ClientK8s) (*v1.PodList, error) {
+			return &v1.PodList{}, nil
 		})
 		defer mockPodListByCondition.Reset()
 		pods, err := client.GetActivePodList()
-		convey.So(pods, convey.ShouldBeNil)
-		convey.So(err.Error(), convey.ShouldEqual, "the number of pods exceeds the upper limit")
+		convey.So(pods, convey.ShouldResemble, []v1.Pod{})
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
@@ -144,16 +144,6 @@ func TestGetAllPodList(t *testing.T) {
 		podList, err := client.GetAllPodList()
 		convey.So(podList, convey.ShouldBeNil)
 		convey.So(err.Error(), convey.ShouldEqual, "getPodListByCondition error")
-	})
-	convey.Convey("test get pod list by field selector when the number of pods exceeds the upper limit", t, func() {
-		mockPodListByCondition := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "getPodListByCondition", func(
-			_ *ClientK8s) ([]v1.Pod, error) {
-			return []v1.Pod{}, nil
-		})
-		defer mockPodListByCondition.Reset()
-		podList, err := client.GetAllPodList()
-		convey.So(podList, convey.ShouldBeNil)
-		convey.So(err.Error(), convey.ShouldEqual, "pod list count invalid")
 	})
 	convey.Convey("test get pod list by field selector success", t, func() {
 		mockPodListByCondition := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "getPodListByCondition", func(

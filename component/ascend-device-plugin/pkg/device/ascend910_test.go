@@ -1015,18 +1015,19 @@ func TestExecResetDevice(t *testing.T) {
 func TestIsNetResetCompleted(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test isNetResetCompleted", t, func() {
-		convey.So(manager.isNetResetCompleted(2), convey.ShouldBeTrue)
+		logicID := int32(2)
+		convey.So(manager.isNetResetCompleted(logicID), convey.ShouldBeTrue)
 		convey.Convey("01-get network health failed, should return false", func() {
 			mockHealth := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceNetWorkHealth",
 				uint32(0), errors.New("get network health failed"))
 			defer mockHealth.Reset()
-			convey.So(manager.isNetResetCompleted(2), convey.ShouldBeFalse)
+			convey.So(manager.isNetResetCompleted(logicID), convey.ShouldBeFalse)
 		})
 		convey.Convey("02-network status is unhealthy, should return false", func() {
 			mockHealth := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceNetWorkHealth",
 				uint32(1), nil)
 			defer mockHealth.Reset()
-			convey.So(manager.isNetResetCompleted(2), convey.ShouldBeFalse)
+			convey.So(manager.isNetResetCompleted(logicID), convey.ShouldBeFalse)
 		})
 	})
 }
@@ -1036,13 +1037,15 @@ func TestWaitDeviceResetComplete(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test WaitDeviceResetComplete", t, func() {
 		convey.Convey("01-wait device reset recover timeout, should return error", func() {
+			logicID := int32(2)
 			totalTime := common.MaxResetWaitRecoverTime + 1
-			err := manager.waitDeviceResetComplete(2, &totalTime, false)
+			err := manager.waitDeviceResetComplete(logicID, &totalTime, false)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-boot start device success, should return nil", func() {
 			totalTime := 0
-			err := manager.waitDeviceResetComplete(2, &totalTime, false)
+			logicID := int32(2)
+			err := manager.waitDeviceResetComplete(logicID, &totalTime, false)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -1054,7 +1057,8 @@ func TestIsRunningDistributed(t *testing.T) {
 	convey.Convey("test isRunningDistributed", t, func() {
 		manager.hotResetManager = &HotResetTools{}
 		// 01-faultDev2PodMap is nil, should return false
-		convey.So(manager.isRunningDistributed(3), convey.ShouldBeFalse)
+		logicId := int32(3)
+		convey.So(manager.isRunningDistributed(logicId), convey.ShouldBeFalse)
 		manager.hotResetManager = &HotResetTools{
 			faultDev2PodMap: map[int32]v1.Pod{
 				chipPhyID3: getSinglePod("pod1", map[string]string{
@@ -1063,9 +1067,11 @@ func TestIsRunningDistributed(t *testing.T) {
 			},
 		}
 		// 02-cant find logic id in faultDev2PodMap, should return false
-		convey.So(manager.isRunningDistributed(2), convey.ShouldBeFalse)
+		logicId = int32(2)
+		convey.So(manager.isRunningDistributed(logicId), convey.ShouldBeFalse)
 		// 03-is distributed job, should return true
-		convey.So(manager.isRunningDistributed(3), convey.ShouldBeTrue)
+		logicId = int32(3)
+		convey.So(manager.isRunningDistributed(logicId), convey.ShouldBeTrue)
 	})
 }
 

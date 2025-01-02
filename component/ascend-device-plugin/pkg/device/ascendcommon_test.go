@@ -329,8 +329,9 @@ func TestGetNPUsByShareMode(t *testing.T) {
 		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ShareCount: 2})
 		defer mockOption.Reset()
 		davinCiDev := common.DavinCiDev{LogicID: 1, PhyID: 1, CardID: 1, IP: "127.0.0.1"}
+		numNum := 2
 		devs := tool.getNPUsByShareMode(davinCiDev)
-		convey.So(len(devs) == 2, convey.ShouldBeTrue)
+		convey.So(len(devs) == numNum, convey.ShouldBeTrue)
 		convey.So(devs[0].IP == "127.0.0.1", convey.ShouldBeTrue)
 		convey.So(devs[0].DeviceName == "Ascend910-1-0", convey.ShouldBeTrue)
 	})
@@ -357,13 +358,14 @@ func TestAssembleShareModeDevices(t *testing.T) {
 func TestSetDeviceUsage(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test SetDeviceUsage", t, func() {
+		devLoginID := int32(2)
 		convey.Convey("01-node info is nil, should return error", func() {
 			mockGetNodeMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 				"GetNode", func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
 					return nil, errors.New("node is nil")
 				})
 			defer mockGetNodeMethod.Reset()
-			convey.So(tool.SetDeviceUsage(2), convey.ShouldNotBeNil)
+			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-Nodes are used for inference, should return nil", func() {
 			node := getMockNode()
@@ -371,7 +373,7 @@ func TestSetDeviceUsage(t *testing.T) {
 			mockGetNodeMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 				"GetNode", func(_ *kubeclient.ClientK8s) (*v1.Node, error) { return node, nil })
 			defer mockGetNodeMethod.Reset()
-			convey.So(tool.SetDeviceUsage(2), convey.ShouldBeNil)
+			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
 		})
 		node := getMockNode()
 		node.Labels[common.ServerUsageLabelKey] = common.Train
@@ -384,15 +386,14 @@ func TestSetDeviceUsage(t *testing.T) {
 					return 0, errors.New("get board error")
 				})
 			defer mockGetServerBoardIdMethod.Reset()
-			convey.So(tool.SetDeviceUsage(2), convey.ShouldNotBeNil)
+			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldNotBeNil)
 		})
 		convey.Convey("04-get board success, should return nil", func() {
+			boardID := uint32(0x3c)
 			mockGetServerBoardIdMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)),
-				"GetServerBoardId", func(_ *AscendTools, devLogicID int32) (uint32, error) {
-					return 0x3c, nil
-				})
+				"GetServerBoardId", func(_ *AscendTools, devLogicID int32) (uint32, error) { return boardID, nil })
 			defer mockGetServerBoardIdMethod.Reset()
-			convey.So(tool.SetDeviceUsage(2), convey.ShouldBeNil)
+			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
 		})
 	})
 }
@@ -401,14 +402,15 @@ func TestSetDeviceUsage(t *testing.T) {
 func TestGetServerBoardId(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test GetServerBoardId", t, func() {
+		devLogicID := int32(2)
 		convey.Convey("01-board id is not empty, should return nil", func() {
 			tool.boardId = common.A800IA2NoneHccsBoardId
-			_, err := tool.GetServerBoardId(2)
+			_, err := tool.GetServerBoardId(devLogicID)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("02-board id is empty, should return nil", func() {
 			tool.boardId = common.EmptyBoardId
-			boardId, err := tool.GetServerBoardId(2)
+			boardId, err := tool.GetServerBoardId(devLogicID)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(boardId == 0, convey.ShouldBeTrue)
 		})
@@ -971,12 +973,13 @@ func TestGetResetInfoData(t *testing.T) {
 		})
 		convey.Convey("03-unmarshal success, should return nil", func() {
 			taskResetInfo := common.TaskResetInfo{RankList: []*common.TaskDevInfo{{RankId: 0}, {RankId: 1}}, UpdateTime: 20}
+			devNumsFromRestJson := 2
 			resetByte, err := json.Marshal(taskResetInfo)
 			convey.So(err, convey.ShouldBeNil)
 			resetInfo.Data = map[string]string{common.ResetInfoCMDataKey: string(resetByte)}
 			devInfo, err := getResetInfoData(resetInfo)
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(devInfo) == 2, convey.ShouldBeTrue)
+			convey.So(len(devInfo) == devNumsFromRestJson, convey.ShouldBeTrue)
 		})
 
 	})

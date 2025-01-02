@@ -379,30 +379,32 @@ func TestGetNetworkFaultTypeByCode(t *testing.T) {
 			convey.So(GetNetworkFaultTypeByCode(nil), convey.ShouldEqual, NormalNetwork)
 		})
 		convey.Convey("fault type NotHandleFault", func() {
-			faultTypeCode = FaultTypeCode{
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
 				NotHandleFaultNetworkCodes: faultCodes,
 				NotHandleFaultCodes:        []int64{testFaultCode},
-			}
+			})
+			defer mockFaultTypeCode.Reset()
 			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, NotHandleFault)
 		})
 		convey.Convey("fault type SeparateNPU", func() {
-			faultTypeCode = FaultTypeCode{
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
 				SeparateNPUNetworkCodes: faultCodes,
 				NotHandleFaultCodes:     []int64{testFaultCode},
-			}
+			})
+			defer mockFaultTypeCode.Reset()
 			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, SeparateNPU)
 		})
 		convey.Convey("fault type PreSeparateNPU", func() {
-			faultTypeCode = FaultTypeCode{
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
 				PreSeparateNPUNetworkCodes: faultCodes,
 				NotHandleFaultCodes:        []int64{testFaultCode},
-			}
-			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, PreSeparateNPU)
-			faultTypeCode = FaultTypeCode{}
+			})
+			defer mockFaultTypeCode.Reset()
 			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, PreSeparateNPU)
 		})
 		convey.Convey("read json failed", func() {
-			faultTypeCode = FaultTypeCode{}
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
+			defer mockFaultTypeCode.Reset()
 			mockLoadFile := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, errors.New("failed"))
 			defer mockLoadFile.Reset()
 			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, PreSeparateNPU)
@@ -1538,7 +1540,9 @@ func TestGetNetworkFaultType(t *testing.T) {
 		faultCode := "81078603"
 		faultCodes := []int64{0x81078603}
 		faultDurationTime := int64(31)
-		faultDurationMap = map[string]*FaultDurationCache{
+		mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
+		defer mockFaultTypeCode.Reset()
+		mockFaultDurationMap := gomonkey.ApplyGlobalVar(&faultDurationMap, map[string]*FaultDurationCache{
 			strings.ToLower(faultCode): {
 				Duration: map[int32]FaultDurationData{
 					logicId: {
@@ -1554,7 +1558,12 @@ func TestGetNetworkFaultType(t *testing.T) {
 					FaultHandling:  PreSeparateNPU,
 				},
 			},
-		}
+		})
+		defer mockFaultDurationMap.Reset()
+		mockFaultFrequencyMap := gomonkey.ApplyGlobalVar(&faultFrequencyMap, map[string]*FaultFrequencyCache{})
+		defer mockFaultFrequencyMap.Reset()
+		mockRecoverFaultFrequencyMap := gomonkey.ApplyGlobalVar(&recoverFaultFrequencyMap, map[int32]string{})
+		defer mockRecoverFaultFrequencyMap.Reset()
 		convey.So(GetNetworkFaultType(faultCodes, logicId), convey.ShouldEqual, PreSeparateNPU)
 	})
 }
