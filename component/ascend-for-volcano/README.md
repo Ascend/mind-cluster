@@ -500,7 +500,7 @@
 
 ## 安装前准备和安装Volcano<a name="section2739745153910"></a>
 
-请参考《[MindX DL用户指南](https://www.hiascend.com/software/mindx-dl)》中的“集群调度用户指南 \> 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
+请参考《[MindCluster用户指南](https://www.hiascend.com/software/mindx-dl)》中的“集群调度用户指南 \> 安装部署指导 \> 安装集群调度组件 \> 典型安装场景 \> 集群调度场景”进行。
 
 <h2 id="版本更新记录文档">版本更新记录</h2>
 
@@ -518,7 +518,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="29.94299429942994%" headers="mcps1.1.4.1.2 "><p id="p11476901010"><a name="p11476901010"></a><a name="p11476901010"></a>2023-01-18</p>
 </td>
-<td class="cellrowborder" valign="top" width="43.394339433943394%" headers="mcps1.1.4.1.3 "><a name="ul7682144015113"></a><a name="ul7682144015113"></a><ul id="ul7682144015113"><li>开源首次发布。</li><li>具体内容请参考《MindX DL用户指南》</li></ul>
+<td class="cellrowborder" valign="top" width="43.394339433943394%" headers="mcps1.1.4.1.3 "><a name="ul7682144015113"></a><a name="ul7682144015113"></a><ul id="ul7682144015113"><li>开源首次发布。</li><li>具体内容请参考《MindCluster用户指南》</li></ul>
 </td>
 </tr>
 </tbody>
