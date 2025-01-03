@@ -20,6 +20,9 @@ Package test is using for HuaWei Ascend pin scheduling test.
 package test
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -50,7 +53,7 @@ func AddConfigIntoFakeSSN(ssn *framework.Session, configs []conf.Configuration) 
 }
 
 // FakeNormalSSN fake normal test ssn.
-func FakeNormalSSN() *framework.Session {
+func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 	binder := &util.FakeBinder{
 		Binds:   map[string]string{},
 		Channel: make(chan string),
@@ -66,15 +69,23 @@ func FakeNormalSSN() *framework.Session {
 		Recorder: record.NewFakeRecorder(npuIndex3),
 	}
 
-	nodes := FakeNormalTestNodes(npuIndex3)
+	nodes := FakeNormalTestNodes(fakeNodeNum)
 	for _, node := range nodes {
+		node.Node.Labels[acceleratorKey] = acceleratorValue
+		node.Node.Labels[serverTypeKey] = fake910ServerType
+		node.Node.Labels[chipTypeKey] = fakeChipName + fakeChipType
 		schedulerCache.AddNode(node.Node)
 	}
-	jobInf := FakeNormalTestJob("pg1", npuIndex3)
+
+	jobInf := FakeNormalTestJob("pg0", npuIndex3)
+	var minRes = make(v1.ResourceList, npuIndex3)
 	for _, task := range jobInf.Tasks {
+		for k, v := range task.Resreq.ScalarResources {
+			minRes[k] = resource.MustParse(fmt.Sprintf("%f", v))
+		}
 		schedulerCache.AddPod(task.Pod)
 	}
-	AddTestJobPodGroup(jobInf)
+	jobInf.PodGroup.Spec.MinResources = &minRes
 	snapshot := schedulerCache.Snapshot()
 	ssn := &framework.Session{
 		UID:            uuid.NewUUID(),
@@ -83,13 +94,55 @@ func FakeNormalSSN() *framework.Session {
 		RevocableNodes: snapshot.RevocableNodes,
 		Queues:         snapshot.Queues,
 		NamespaceInfo:  snapshot.NamespaceInfo,
+		Configurations: confs,
+		NodeList:       nodes,
 	}
 	return ssn
+}
+
+// FakeConfigurations fake volcano frame config
+func FakeConfigurations() []conf.Configuration {
+	return []conf.Configuration{
+		{
+			Name: "init-params",
+			Arguments: map[string]interface{}{
+				overTimeKey:              OverTimeValue,
+				nslbVersionKey:           nslbVersionValue,
+				sharedTorNumKey:          SharedTorNumValue,
+				superPodSizeKey:          superPodSizeValue,
+				reserveNodesKey:          reserveNodesValue,
+				presetVirtualDeviceKey:   presetVirtualDeviceValue,
+				useClusterInfoManagerKey: useClusterInfoManagerValue,
+			},
+		},
+	}
 }
 
 // PatchReset go monkey patch reset
 func PatchReset(patch *gomonkey.Patches) {
 	if patch != nil {
 		patch.Reset()
+	}
+}
+
+// FakeConfigmap fake config map
+func FakeConfigmap(name, nameSpace string, data map[string]string) *v1.ConfigMap {
+	fakeCm := &v1.ConfigMap{}
+	fakeCm.Name = name
+	fakeCm.Namespace = nameSpace
+	fakeCm.Data = data
+	return fakeCm
+}
+
+// FakeTorNodeData Fake tor node date for
+func FakeTorNodeData() map[string]string {
+	torNodeDataPath := "../testdata/tor/tor-node.json"
+	torInfoCMKey := "tor_info"
+	data, err := os.ReadFile(torNodeDataPath)
+	if err != nil {
+		return nil
+	}
+	return map[string]string{
+		torInfoCMKey: string(data),
 	}
 }

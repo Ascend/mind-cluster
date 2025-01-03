@@ -147,7 +147,7 @@ type onSessionCloseTest struct {
 }
 
 func buildOnSessionCloseTestCases() []onSessionCloseTest {
-	testSsn := test.FakeNormalSSN()
+	testSsn := test.FakeNormalSSN(nil)
 	tests := []onSessionCloseTest{
 		{
 			name:   "OnSessionCloseTestCases test ok",

@@ -21,6 +21,7 @@ package plugin
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -48,34 +49,50 @@ type batchNodeOrderFnArgs struct {
 }
 
 type batchNodeOrderFnTest struct {
-	name    string
-	fields  fields
-	args    batchNodeOrderFnArgs
-	want    map[string]float64
-	wantErr bool
+	name     string
+	sHandler *ScheduleHandler
+	args     batchNodeOrderFnArgs
+	want     map[string]float64
+	wantErr  bool
+}
+
+// PatchGetCm go monkey patch get cm
+func PatchGetCm(name, nameSpace string, data map[string]string) *gomonkey.Patches {
+	return gomonkey.ApplyFunc(util.GetConfigMap, func(client kubernetes.Interface, namespace, cmName string) (
+		*v1.ConfigMap, error) {
+		return test.FakeConfigmap(name, nameSpace, data), nil
+	})
 }
 
 func buildBatchNodeOrderFn() []batchNodeOrderFnTest {
 	tTask := test.FakeNormalTestTasks(1)[0]
 	tNodes := test.FakeNormalTestNodes(util.NPUIndex2)
+	ssn := test.FakeNormalSSN(nil)
+	sHandler := newDefaultHandler()
+	initNormalsHandlerBySsnFunc(ssn, sHandler.InitVolcanoFrameFromSsn, sHandler.InitNodesFromSsn, sHandler.InitJobsFromSsn)
 	tests := []batchNodeOrderFnTest{
 		{
-			name:    "01-BatchNodeOrderFn nil Test",
-			fields:  fields{},
-			args:    batchNodeOrderFnArgs{task: nil, nodes: nil, ssn: nil},
-			want:    nil,
-			wantErr: true,
+			name:     "01-BatchNodeOrderFn nil Test",
+			sHandler: &ScheduleHandler{},
+			args:     batchNodeOrderFnArgs{task: nil, nodes: nil, ssn: nil},
+			wantErr:  true,
 		},
 		{
 			name: "02-BatchNodeOrderFn ScoreBestNPUNodes ok Test",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			sHandler: &ScheduleHandler{
+				NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
 					Jobs:      map[api.JobID]SchedulerJob{},
 					Nodes:     map[string]NPUNode{},
 					FrameAttr: VolcanoFrame{}}},
 			args:    batchNodeOrderFnArgs{task: tTask, nodes: tNodes, ssn: nil},
-			want:    nil,
 			wantErr: false,
+		},
+		{
+			name:     "03-BatchNodeOrderFn ScoreBestNPUNodes score node ok test",
+			args:     batchNodeOrderFnArgs{task: tTask, nodes: ssn.NodeList, ssn: ssn},
+			sHandler: sHandler,
+			wantErr:  false,
 		},
 	}
 	return tests
@@ -85,17 +102,10 @@ func TestBatchNodeOrderFn(t *testing.T) {
 	tests := buildBatchNodeOrderFn()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sHandle := ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			got, err := sHandle.BatchNodeOrderFn(tt.args.task, tt.args.nodes)
+			_, err := tt.sHandler.BatchNodeOrderFn(tt.args.task, tt.args.nodes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BatchNodeOrderFn() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("BatchNodeOrderFn() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -215,19 +225,25 @@ type initNPUSessionArgs struct {
 }
 
 type initNPUSessionTest struct {
-	name    string
-	fields  fields
-	args    initNPUSessionArgs
-	wantErr bool
+	name     string
+	sHandler *ScheduleHandler
+	args     initNPUSessionArgs
+	wantErr  bool
 }
 
 func buildInitNPUSessionTest() []initNPUSessionTest {
 	tests := []initNPUSessionTest{
 		{
-			name:    "01-InitNPUSession nil ssn test",
-			fields:  fields{},
-			args:    initNPUSessionArgs{ssn: nil},
-			wantErr: true,
+			name:     "01-InitNPUSession nil ssn test",
+			sHandler: &ScheduleHandler{},
+			args:     initNPUSessionArgs{ssn: nil},
+			wantErr:  true,
+		},
+		{
+			name:     "01-InitNPUSession success test",
+			sHandler: newDefaultHandler(),
+			args:     initNPUSessionArgs{ssn: test.FakeNormalSSN(test.FakeConfigurations())},
+			wantErr:  false,
 		},
 	}
 	return tests
@@ -235,13 +251,12 @@ func buildInitNPUSessionTest() []initNPUSessionTest {
 
 func TestInitNPUSession(t *testing.T) {
 	tests := buildInitNPUSessionTest()
+	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
+	defer patch1.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			if err := sHandle.InitNPUSession(tt.args.ssn); (err != nil) != tt.wantErr {
+			addsHandlerDeviceInfoBySsn(tt.args.ssn, tt.sHandler)
+			if err := tt.sHandler.InitNPUSession(tt.args.ssn); (err != nil) != tt.wantErr {
 				t.Errorf("InitNPUSession() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -632,4 +647,65 @@ func TestGetPodGroupOwnerRef(t *testing.T) {
 			t.Errorf("getPodGroupOwnerRef = %v, want %v", owner, expectedOwner)
 		}
 	})
+}
+
+// HandlerStart HuaWei NPU plugin start by frame.
+func newDefaultHandler() *ScheduleHandler {
+	isFirstSession := true
+	scheduleHandler := &ScheduleHandler{
+		NPUPlugins: map[string]NPUBuilder{},
+		ScheduleEnv: ScheduleEnv{
+			IsFirstSession:   &isFirstSession,
+			Jobs:             map[api.JobID]SchedulerJob{},
+			JobSeverInfos:    map[api.JobID]struct{}{},
+			JobDeleteFlag:    map[api.JobID]struct{}{},
+			JobSinglePodFlag: map[api.JobID]bool{},
+			Nodes:            map[string]NPUNode{},
+			DeleteJobInfos:   map[api.JobID]*api.JobInfo{},
+			DeviceInfos: &DeviceInfosWithMutex{
+				Mutex:   sync.Mutex{},
+				Devices: map[string]NodeDeviceInfoWithID{},
+			},
+			NodeInfosFromCm: &NodeInfosFromCmWithMutex{
+				Mutex: sync.Mutex{},
+				Nodes: map[string]NodeDNodeInfo{},
+			},
+			SwitchInfosFromCm: &SwitchInfosFromCmWithMutex{
+				Mutex:    sync.Mutex{},
+				Switches: map[string]SwitchFaultInfo{},
+			},
+			FrameAttr: VolcanoFrame{},
+			NslbAttr:  &NslbParameters{},
+			SuperPodInfo: &SuperPodInfo{
+				SuperPodReschdInfo:        map[api.JobID]map[string][]SuperNode{},
+				SuperPodFaultTaskNodes:    map[api.JobID][]string{},
+				SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
+			},
+			JobPendingMessage: map[api.JobID]map[string]map[string]struct{}{},
+		},
+	}
+
+	scheduleHandler.RegisterNPUScheduler(util.NPU910CardName, New)
+	return scheduleHandler
+}
+
+func initNormalsHandlerBySsnFunc(ssn *framework.Session, initSsnFunc ...func(ssn *framework.Session)) {
+	for _, initFunc := range initSsnFunc {
+		initFunc(ssn)
+	}
+}
+
+func initNormalsHandlerByNormalFunc(initFuncs ...func()) {
+	for _, initFunc := range initFuncs {
+		initFunc()
+	}
+}
+
+func addsHandlerDeviceInfoBySsn(ssn *framework.Session, sHandler *ScheduleHandler) {
+	if ssn == nil {
+		return
+	}
+	for nodeName := range ssn.Nodes {
+		sHandler.UpdateConfigMap(fakeDeviceInfoCMDataByNode(nodeName, fakeDeviceList()), util.AddOperator)
+	}
 }

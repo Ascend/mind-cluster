@@ -21,6 +21,7 @@ package test
 
 import (
 	"strconv"
+	"strings"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,6 +39,9 @@ func BuildNPUNode(node NPUNode) *v1.Node {
 		Status: v1.NodeStatus{
 			Capacity:    node.Capacity,
 			Allocatable: node.Allocatable,
+			Addresses: []v1.NodeAddress{
+				{Type: v1.NodeInternalIP, Address: fakeIpPrefix + strings.TrimLeft(node.Name, "node")},
+			},
 		},
 	}
 }
@@ -46,14 +50,17 @@ func BuildNPUNode(node NPUNode) *v1.Node {
 func FakeNormalTestNode(name string) *api.NodeInfo {
 	node := NPUNode{
 		Name:        name,
-		Capacity:    make(v1.ResourceList, npuIndex3),
-		Allocatable: make(v1.ResourceList, npuIndex3),
+		Capacity:    fakeNodeResourceList(),
+		Allocatable: fakeNodeResourceList(),
 		Labels:      make(map[string]string, npuIndex3),
 		Selector:    make(map[string]string, npuIndex3),
 		Annotation:  make(map[string]string, npuIndex3),
 		Other:       make(map[string]interface{}, npuIndex3),
 	}
 	nodeInfo := api.NewNodeInfo(BuildNPUNode(node))
+	SetFakeDefaultNodeSource(nodeInfo)
+	addFakeNodeSource(nodeInfo, NPU910CardName, NPUIndex8)
+	addFakeNodeSource(nodeInfo, npuCoreName, npuCodex200)
 	return nodeInfo
 }
 
@@ -70,13 +77,30 @@ func FakeNormalTestNodes(num int) []*api.NodeInfo {
 	return nodes
 }
 
-// SetFakeNodeSource Set fake node the idle, Capability, Allocatable source.
-func SetFakeNodeSource(nodeInf *api.NodeInfo, name string, value int) {
-	idle := api.Resource{ScalarResources: map[v1.ResourceName]float64{
-		v1.ResourceName(name): float64(value) * NPUHexKilo}}
-	nodeInf.Idle = &idle
-	Capability := api.Resource{ScalarResources: map[v1.ResourceName]float64{
-		v1.ResourceName(name): float64(value) * NPUHexKilo}}
-	nodeInf.Capability = &Capability
-	nodeInf.Allocatable = &Capability
+// SetFakeDefaultNodeSource Set fake node the idle, Capability, Allocatable source.
+func SetFakeDefaultNodeSource(nodeInf *api.NodeInfo) {
+	tmpResource := api.Resource{
+		Memory:          NPUIndex8 * NPUHexKilo,
+		MilliCPU:        NPUIndex8 * NPUHexKilo,
+		ScalarResources: map[v1.ResourceName]float64{},
+	}
+	nodeInf.Idle = &tmpResource
+	nodeInf.Capability = &tmpResource
+	nodeInf.Allocatable = &tmpResource
+}
+
+// addFakeNodeSource add fake node the idle, Capability, Allocatable source.
+func addFakeNodeSource(nodeInf *api.NodeInfo, name string, value int) {
+	nodeInf.Idle.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
+	nodeInf.Capability.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
+	nodeInf.Allocatable.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
+}
+
+func fakeNodeResourceList() v1.ResourceList {
+	fakeResourceList := v1.ResourceList{}
+	AddResource(fakeResourceList, v1.ResourceCPU, fakeResourceNum)
+	AddResource(fakeResourceList, v1.ResourceMemory, fakeResourceNum)
+	AddResource(fakeResourceList, NPU910CardName, fakeNPUNum)
+	AddResource(fakeResourceList, npuCoreName, fakeNpuCodeNum)
+	return fakeResourceList
 }

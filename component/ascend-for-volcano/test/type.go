@@ -33,8 +33,10 @@ const (
 	// NPUIndex8 for re-scheduler tests
 	NPUIndex8 = 8
 	// NPUHexKilo for const 1000,volcano frame used.
-	NPUHexKilo   = 1000
-	podRankIndex = "hccl/rankIndex"
+	NPUHexKilo     = 1000
+	npuCodex200    = 160
+	fakeNpuCodeNum = "160"
+	podRankIndex   = "hccl/rankIndex"
 	// NPU910CardName 910 card name
 	NPU910CardName = "huawei.com/Ascend910"
 	// AscendNPUPodRealUse for NPU pod real use cards.
@@ -48,6 +50,39 @@ const (
 	// FakeTaskName1 fake task name
 	FakeTaskName1              = "vcjob-pod1"
 	kubeGroupNameAnnotationKey = "scheduling.k8s.io/group-name"
+	fakeNodeNum                = 16
+	fakeIpPrefix               = "1.1.0."
+)
+
+const (
+	overTimeKey                = "grace-over-time"
+	OverTimeValue              = "900"
+	presetVirtualDeviceKey     = "presetVirtualDevice"
+	presetVirtualDeviceValue   = "true"
+	nslbVersionKey             = "nslb-version"
+	nslbVersionValue           = "2.0"
+	sharedTorNumKey            = "shared-tor-num"
+	SharedTorNumValue          = "2"
+	useClusterInfoManagerKey   = "useClusterInfoManager"
+	useClusterInfoManagerValue = "true"
+	superPodSizeKey            = "super-pod-size"
+	superPodSizeValue          = "48"
+	reserveNodesKey            = "reserve-nodes"
+	reserveNodesValue          = "2"
+	fakeResourceNum            = "8000"
+	fakeNPUNum                 = "8"
+	acceleratorKey             = "accelerator"
+	acceleratorValue           = "huawei-Ascend910"
+	npuCoreName                = "huawei.com/npu-core"
+	fakeNpuCodeStr             = "0-vir05_1c_16g"
+	serverTypeKey              = "servertype"
+	fake910ServerType          = "Ascend910B-20"
+)
+
+const (
+	chipTypeKey  = "node.kubernetes.io/npu.chip.name"
+	fakeChipType = "B3"
+	fakeChipName = "910"
 )
 
 // NPUPod test NPU pod struct

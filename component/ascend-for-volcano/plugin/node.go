@@ -494,7 +494,7 @@ func (n *NPUNode) syncAnnotationFromSsnNode(npuNode *api.NodeInfo, nodeInfoOfNod
 
 // InitNodesFromSsn init all nodes in ssn.
 func (sHandle *ScheduleHandler) InitNodesFromSsn(ssn *framework.Session) {
-	if sHandle == nil || sHandle.FrameAttr.KubeClient == nil {
+	if sHandle == nil {
 		return
 	}
 	// 1.nodes not in session cannot keep in npu node cache
@@ -561,6 +561,10 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 }
 
 func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {
+	if ssn.InformerFactory() == nil {
+		klog.V(util.LogWarningLev).Infof("informer factory in session is nil")
+		return
+	}
 	existNodes := make(map[string]NPUNode)
 	// not in node informer and notready node
 	nodesNotInSsn := make(map[string]*v1.Node)

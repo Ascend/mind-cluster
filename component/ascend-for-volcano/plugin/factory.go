@@ -506,6 +506,10 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 
 // initCmInformer init cm informer, support cluster info manager and device plugin
 func (sHandle *ScheduleHandler) initCmInformer(ssn *framework.Session) {
+	if ssn.KubeClient() == nil {
+		klog.V(util.LogErrorLev).Info("kube client in session is nil")
+		return
+	}
 	sHandle.Do(func() {
 		if sHandle.FrameAttr.CheckUseCIMByConfig() {
 			sHandle.initClusterCmInformer(ssn)

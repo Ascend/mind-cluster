@@ -146,21 +146,6 @@ func (nJob *NPUJob) GetSchedulingTaskNum() int {
 	return schedulingTaskNum
 }
 
-// GetVTaskNumInVJob get the NPU task number in one job. for some task has no NPU.
-func (nJob *NPUJob) GetVTaskNumInVJob() int {
-	if nJob == nil || !nJob.IsVJob() {
-		return 0
-	}
-	taskNum := 0
-	for _, task := range nJob.Tasks {
-		if task.IsVNPUTask() {
-			taskNum++
-		}
-	}
-
-	return taskNum
-}
-
 func (nJob *NPUJob) setJobType() {
 	tmpTypes := make(map[int]struct{}, MapInitNum)
 	for _, nTask := range nJob.Tasks {

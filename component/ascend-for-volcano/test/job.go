@@ -55,6 +55,7 @@ func AddTestJobPodGroup(job *api.JobInfo) {
 	pg := &api.PodGroup{
 		Version: api.PodGroupVersionV1Beta1,
 	}
+	pg.Spec.MinResources = &minRes
 	job.SetPodGroup(pg)
 }
 
@@ -83,7 +84,6 @@ func FakeNormalTestJobByCreatTime(jobName string, taskNum int, creatTime int64) 
 	for _, vTask := range tasks {
 		AddFakeTaskResReq(vTask, NPU910CardName, NPUIndex8)
 	}
-
 	job := api.NewJobInfo(api.JobID("vcjob/"+jobName), tasks...)
 	job.Name = jobName
 	for _, task := range tasks {

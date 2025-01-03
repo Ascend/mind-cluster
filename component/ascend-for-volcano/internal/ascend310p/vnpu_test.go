@@ -742,7 +742,7 @@ func buildInitConCacheTestCase01() InitConCacheTest {
 func buildInitConCacheTestCase02() InitConCacheTest {
 	test02 := InitConCacheTest{
 		Name:    "02-InitConCache will return nil when jobOk is false",
-		ssn:     test.FakeNormalSSN(),
+		ssn:     test.FakeNormalSSN(nil),
 		NPU:     &ascend310P{vHandle: &vnpu.VirtualNPU{}},
 		WantErr: nil,
 	}
@@ -755,15 +755,15 @@ func buildInitConCacheTestCase02() InitConCacheTest {
 func buildInitConCacheTestCase03() InitConCacheTest {
 	test03 := InitConCacheTest{
 		Name:    "03-InitConCache will return nil when jobOk is true",
-		ssn:     test.FakeNormalSSN(),
+		ssn:     test.FakeNormalSSN(nil),
 		NPU:     &ascend310P{vHandle: &vnpu.VirtualNPU{}},
 		WantErr: nil,
 	}
 	test03.NPU.Jobs = map[api.JobID]plugin.SchedulerJob{
-		"Job03": {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
+		"vcjob/pg0": {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
 	}
 	test03.ssn.Jobs = map[api.JobID]*api.JobInfo{
-		"Job03": {Name: PluginName},
+		"vcjob/pg0": {Name: PluginName},
 	}
 	return test03
 }

@@ -61,7 +61,7 @@ func buildGetSegmentFailureTaskIDsTestCases() []commonTestCase {
 				name:      "test",
 				namespace: "test",
 				event:     v1.Event{},
-				ssn:       test.FakeNormalSSN(),
+				ssn:       test.FakeNormalSSN(nil),
 			},
 			wantRes: false,
 		},

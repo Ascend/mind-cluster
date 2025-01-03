@@ -50,6 +50,7 @@ func BuildNPUPod(pod NPUPod) *v1.Pod {
 			Labels:    pod.Labels,
 			Annotations: map[string]string{
 				kubeGroupNameAnnotationKey: pod.GroupName,
+				npuCoreName:                fakeNpuCodeStr,
 			},
 		},
 		Status: v1.PodStatus{

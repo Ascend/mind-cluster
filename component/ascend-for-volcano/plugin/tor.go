@@ -334,20 +334,6 @@ func (t *Tor) GetNodeByNodeName(name string) *Server {
 	return nil
 }
 
-// GetNodeByNodeIP get node by node IP
-func (t *Tor) GetNodeByNodeIP(ip string) *Server {
-	if t == nil {
-		klog.V(util.LogInfoLev).Infof("GetNodeByNodeIP failed: %s", util.ArgumentError)
-		return nil
-	}
-	for _, tNode := range t.Servers {
-		if tNode.IP == ip {
-			return tNode
-		}
-	}
-	return nil
-}
-
 // HasAcrossJob whether has across job
 func (t *Tor) HasAcrossJob(isNSLBv2 bool, jobName api.JobID) bool {
 	if t == nil {

@@ -23,8 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
-
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -38,7 +36,10 @@ const (
 	// testCardName test card
 	testCardName = "huawei.com/AscendTest"
 	// testCardNamePre for getting test card number.
-	testCardNamePre = "AscendTest-"
+	testCardNamePre     = "AscendTest-"
+	annoCards           = "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
+	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
+	unhealthyNPU        = "huawei.com/Ascend910-Unhealthy"
 )
 
 type ascendTest struct {
@@ -131,14 +132,15 @@ func (tp *ascendTest) PreStopAction(env *ScheduleEnv) error {
 	return nil
 }
 
-func fakeDeviceInfoCMDataByNode(testNode *api.NodeInfo, cmName string) *v1.ConfigMap {
+func fakeDeviceInfoCMDataByNode(nodeName string, deviceList map[string]string) *v1.ConfigMap {
+	cmName := util.DevInfoPreName + nodeName
 	const testTime = 1657527526
 	cmData := NodeDeviceInfoWithDevPlugin{
 		DeviceInfo: NodeDeviceInfo{
-			DeviceList: testNode.Node.Annotations,
+			DeviceList: deviceList,
 			UpdateTime: testTime,
 		},
-		CheckCode: "964c4c25b14a59cccf88df7ea62797acba0c8ff608f31c8989ac01f5d2e75c6c",
+		CheckCode: "6b8de396fd9945be231d24720ca66ed950baf0a5972717f335aad7571cb6457a",
 	}
 	var data = make(map[string]string, 1)
 	cmDataStr, err := json.Marshal(cmData)
@@ -156,30 +158,10 @@ func fakeDeviceInfoCMDataByNode(testNode *api.NodeInfo, cmName string) *v1.Confi
 	return faultNPUConfigMap
 }
 
-func fakeDeviceInfoCMDataByMap(testNodeMap map[string]*api.NodeInfo, cmName string) *v1.ConfigMap {
-	nodeName := strings.TrimPrefix(cmName, util.DevInfoPreName)
-	testNode, ok := testNodeMap[nodeName]
-	if !ok {
-		fmt.Printf("%s no %s in nodeMap\n", util.SafePrint(cmName), util.SafePrint(nodeName))
-		return nil
+func fakeDeviceList() map[string]string {
+	return map[string]string{
+		util.NPU910CardName: annoCards,
+		networkUnhealthyNPU: "",
+		unhealthyNPU:        "",
 	}
-	return fakeDeviceInfoCMDataByNode(testNode, cmName)
-}
-
-// FakeDeviceInfoCM fake the DeviceInfo from device-plugin configMap.
-func FakeDeviceInfoCM(testNode interface{}, cmName string) (*v1.ConfigMap, error) {
-	var deviceInfoConfigMap *v1.ConfigMap
-	switch value := testNode.(type) {
-	case *api.NodeInfo:
-		deviceInfoConfigMap = fakeDeviceInfoCMDataByNode(value, cmName)
-	case map[string]*api.NodeInfo:
-		deviceInfoConfigMap = fakeDeviceInfoCMDataByMap(value, cmName)
-	default:
-		fmt.Printf("not support: %#v", value)
-	}
-
-	if deviceInfoConfigMap == nil {
-		return nil, fmt.Errorf("no deviceInfoConfigMap")
-	}
-	return deviceInfoConfigMap, nil
 }
