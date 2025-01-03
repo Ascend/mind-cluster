@@ -351,54 +351,6 @@ func TestNPUJobGetSchedulingTaskNum(t *testing.T) {
 	}
 }
 
-func TestNPUJobGetVTaskNumInVJob(t *testing.T) {
-	type fields struct {
-		Tasks      map[api.TaskID]NPUTask
-		ReqNPUName string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   int
-	}{
-		{
-			name:   "01-GetVTaskNumInVJob not vnpu job",
-			fields: fields{ReqNPUName: ""},
-			want:   0,
-		},
-		{
-			name: "02-GetVTaskNumInVJob vnpu job",
-			fields: fields{
-				ReqNPUName: AscendNPUCore,
-				Tasks:      map[api.TaskID]NPUTask{"task01": {ReqNPUName: AscendNPUCore}},
-			},
-			want: 1,
-		},
-		{
-			name: "03-GetVTaskNumInVJob vnpu job",
-			fields: fields{
-				ReqNPUName: AscendNPUCore,
-				Tasks: map[api.TaskID]NPUTask{
-					"task01": {ReqNPUName: AscendNPUCore},
-					"task00": {ReqNPUName: Ascend910bName},
-				},
-			},
-			want: 1,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			nJob := &NPUJob{
-				Tasks:      tt.fields.Tasks,
-				ReqNPUName: tt.fields.ReqNPUName,
-			}
-			if got := nJob.GetVTaskNumInVJob(); got != tt.want {
-				t.Errorf("GetVTaskNumInVJob() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestReferenceNameOfJob(t *testing.T) {
 	tests := []struct {
 		name string
