@@ -13,8 +13,6 @@ import (
 const (
 	maxJobNum    = 100000
 	initJobNum   = 100
-	stepRetryKey = "step-retry"
-	onStepRetry  = "true"
 	frameWorkKey = "framework"
 )
 
