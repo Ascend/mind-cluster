@@ -20,6 +20,7 @@ set -e
 # execute go test and echo result to report files
 function execute_test() {
   if ! (go test -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out "${TOP_DIR}"/... >./$file_input); then
+    cat ./$file_input
     echo '****** go test cases error! ******'
     exit 1
   else
