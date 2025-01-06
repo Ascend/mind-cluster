@@ -370,7 +370,7 @@ func TestIsJobGraceDeleteSuccess(t *testing.T) {
 	jobInfo := test.FakeNormalTestJob(mockJobName, util.NPUIndex2)
 	t.Run("01-isJobGraceDeleteSuccess return true when jobInfo.Tasks is nil", func(t *testing.T) {
 		if res := fJob.isJobGraceDeleteSuccess(jobInfo); res != true {
-			t.Errorf("isJobGraceDeleteSuccess() returned %v, want true", res)
+			t.Errorf("isJobGraceDeleteSuccess() res = %v, want true", res)
 		}
 	})
 	t.Run("02-isJobGraceDeleteSuccess return true when jobInfo.PodGroup.Labels is not nil",
@@ -383,7 +383,7 @@ func TestIsJobGraceDeleteSuccess(t *testing.T) {
 				util.SinglePodTag: util.EnableFunc,
 			}
 			if res := fJob.isJobGraceDeleteSuccess(jobInfo); res != true {
-				t.Errorf("isJobGraceDeleteSuccess() returned %v, want true", res)
+				t.Errorf("isJobGraceDeleteSuccess() res = %v, want true", res)
 			}
 		})
 }
