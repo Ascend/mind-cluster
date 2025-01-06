@@ -15,7 +15,7 @@ import (
 	"clusterd/pkg/common/constant"
 )
 
-var (
+const (
 	podDeviceKey       = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	podRankIndexKey    = "hccl/rankIndex"
 	torIpTag           = "sharedTorIp"
