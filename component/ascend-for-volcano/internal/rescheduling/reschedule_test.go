@@ -20,15 +20,21 @@ Package rescheduling is using for HuaWei Ascend pin fault rescheduling.
 package rescheduling
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
+	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -1018,4 +1024,166 @@ func fakeTestTTReScheduler(fields TestReScheduler) *ReScheduler {
 		Nodes:                fields.Nodes,
 		kubeClient:           fields.kubeClient,
 	}
+}
+
+func TestCheckGraceDeleteTimeValid(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	t.Run("01-checkGraceDeleteTimeValid() return true when overTime in [2,3600]", func(t *testing.T) {
+		res := reScheduler.checkGraceDeleteTimeValid(maxGraceOverTime)
+		if !res {
+			t.Errorf("checkGraceDeleteTimeValid() res = %v, wantRes is true", res)
+		}
+	})
+	t.Run("02-checkGraceDeleteTimeValid() return false when overTime not in [2,3600]", func(t *testing.T) {
+		res := reScheduler.checkGraceDeleteTimeValid(0)
+		if res {
+			t.Errorf("checkGraceDeleteTimeValid() res = %v, wantRes is false", res)
+		}
+	})
+}
+
+func mockJobInfo(jobName string, taskNum int) *api.JobInfo {
+	jobInfo := test.FakeNormalTestJob(jobName, taskNum)
+	var minRes = make(v1.ResourceList, taskNum)
+	for _, task := range jobInfo.Tasks {
+		for k, v := range task.Resreq.ScalarResources {
+			minRes[k] = resource.MustParse(fmt.Sprintf("%f", v))
+		}
+	}
+	jobInfo.PodGroup.Spec.MinResources = &minRes
+	return jobInfo
+}
+
+const (
+	mockJobName1 = "jobName1"
+	mockJobName2 = "jobName2"
+)
+
+func TestGetRunningJobs(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	ssn := test.FakeNormalSSN(nil)
+	jobInfo1 := mockJobInfo(mockJobName1, test.NPUIndex4)
+	jobInfo1.PodGroup.Status.Phase = util.PodGroupPending
+	ssn.Jobs[jobInfo1.UID] = jobInfo1
+	jobInfo2 := mockJobInfo(mockJobName2, test.NPUIndex4)
+	ssn.Jobs[jobInfo2.UID] = jobInfo2
+	reScheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+		jobInfo2.UID: {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
+	}
+	t.Run("01-GetRunningJobs() return error when running jobs is nil", func(t *testing.T) {
+		if _, err := reScheduler.GetRunningJobs(ssn); err == nil {
+			t.Errorf("GetRunningJobs() error = %v， wantErr is not nil", err)
+		}
+	})
+}
+
+func TestGetTaskRestartReason(t *testing.T) {
+	t.Run("01-GetTaskRestartReason() return non-empty string when json marshal success",
+		func(t *testing.T) {
+			if res := GetTaskRestartReason([]FaultReasonList{}); res == "" {
+				t.Errorf("GetTaskRestartReason() res = %v, wantRes is non-empty string", res)
+			}
+		})
+	t.Run("02-GetTaskRestartReason() return empty string when json marshal failed",
+		func(t *testing.T) {
+			patch := gomonkey.ApplyFunc(json.Marshal, func(_ interface{}) ([]byte, error) {
+				return nil, errors.New("json marshal failed")
+			})
+			defer patch.Reset()
+			if res := GetTaskRestartReason(nil); res != "" {
+				t.Errorf("GetTaskRestartReason() res = %v, wantRes is empty string", res)
+			}
+		})
+}
+
+func TestGetGraceDeleteFaultJobs(t *testing.T) {
+	t.Run("01-getGraceDeleteFaultJobs() return not nil when fault jobs with grace label",
+		func(t *testing.T) {
+			reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+			reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+			reScheduler.DealReSchedulerCache.FaultJobs = append(reScheduler.DealReSchedulerCache.FaultJobs,
+				[]FaultJob{{}}...)
+			if res := reScheduler.getGraceDeleteFaultJobs(); res == nil {
+				t.Errorf("getGraceDeleteFaultJobs() res = %v, wantRes is not nil", res)
+			}
+		})
+}
+
+func TestGetNeedForceDeleteDelayingNPUJobs(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	t.Run("01-GetNeedForceDeleteDelayingNPUJobs() return error when schedulerJobs or ssn is nil",
+		func(t *testing.T) {
+			_, err := reScheduler.GetNeedForceDeleteDelayingNPUJobs(nil, nil)
+			if err == nil {
+				t.Errorf("GetNeedForceDeleteDelayingNPUJobs() err = %v, wantErr is not nil", err)
+			}
+		})
+	t.Run("02-GetNeedForceDeleteDelayingNPUJobs() return error when get none jobs", func(t *testing.T) {
+		reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+		ssn := test.FakeNormalSSN(nil)
+		jobInfo := mockJobInfo("job0", test.NPUIndex4)
+		ssn.Jobs[jobInfo.UID] = jobInfo
+		schedulerJobs := map[api.JobID]plugin.SchedulerJob{
+			jobInfo.UID: {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
+		}
+		_, err := reScheduler.GetNeedForceDeleteDelayingNPUJobs(schedulerJobs, ssn)
+		if err == nil {
+			t.Errorf("GetNeedForceDeleteDelayingNPUJobs() err = %v, wantErr is not nil", err)
+		}
+	})
+}
+
+func TestIsDelayingJobTimeout(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	reScheduler.GraceDeleteTime = graceDeleteTime
+	t.Run("01-isDelayingJobTimeout() return true when job is timeout", func(t *testing.T) {
+		fJob := &FaultJob{JobRankIdCreateTime: test.FakeUpdateTime}
+		if res := reScheduler.isDelayingJobTimeout(fJob); !res {
+			t.Errorf("isDelayingJobTimeout() res = %v, wantRes is true", res)
+		}
+	})
+	t.Run("02-isDelayingJobTimeout() return true when job is not timeout", func(t *testing.T) {
+		fJob := &FaultJob{JobRankIdCreateTime: time.Now().Unix()}
+		if res := reScheduler.isDelayingJobTimeout(fJob); res {
+			t.Errorf("isDelayingJobTimeout() res = %v, wantRes is false", res)
+		}
+	})
+}
+
+func TestRestartNeedForceDeleteJobs(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	ssn := test.FakeNormalSSN(nil)
+	t.Run("01-RestartNeedForceDeleteJobs() return error when ssn is nil",
+		func(t *testing.T) {
+			err := reScheduler.RestartNeedForceDeleteJobs(nil, plugin.ScheduleEnv{})
+			if err == nil {
+				t.Errorf("RestartNeedForceDeleteJobs() err = %v, wantErr is not nil", err)
+			}
+		})
+	t.Run("02-RestartNeedForceDeleteJobs() return error when get none jobs", func(t *testing.T) {
+		err := reScheduler.RestartNeedForceDeleteJobs(ssn, plugin.ScheduleEnv{})
+		if err == nil {
+			t.Errorf("RestartNeedForceDeleteJobs() err = %v, wantErr is not nil", err)
+		}
+	})
+	t.Run("03-RestartNeedForceDeleteJobs() return nil when jobs restart success", func(t *testing.T) {
+		patch1 := gomonkey.ApplyMethod(reflect.TypeOf(reScheduler), "GetNeedForceDeleteDelayingNPUJobs",
+			func(_ *ReScheduler, _ map[api.JobID]plugin.SchedulerJob,
+				_ *framework.Session) ([]plugin.SchedulerJob, error) {
+				jobs := reCreateSchedulerJob910("vcjob", "vcjob/job0")
+				return []plugin.SchedulerJob{jobs}, nil
+			})
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethod(reflect.TypeOf(&FaultJob{}), "ForceDeleteJob",
+			func(_ *FaultJob, _ *framework.Session, _ *plugin.SchedulerJob, _ plugin.ScheduleEnv) error {
+				return errors.New("ForceDeleteJob error")
+			})
+		defer patch2.Reset()
+		reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+		reScheduler.FaultJobs = append(reScheduler.FaultJobs, FaultJob{FaultTasks: []FaultTask{{}}})
+		err := reScheduler.RestartNeedForceDeleteJobs(ssn, plugin.ScheduleEnv{})
+		if err != nil {
+			t.Errorf("RestartNeedForceDeleteJobs() err = %v, wantErr is not nil", err)
+		}
+	})
 }
