@@ -222,7 +222,7 @@ func TestGetNodeNameFromEnv(t *testing.T) {
 
 // TestCheckNodeName test check node name
 func TestCheckNodeName(t *testing.T) {
-	convey.Convey("test check node name when node name is \"\"", t, func() {
+	convey.Convey(`test check node name when node name is ""`, t, func() {
 		nodeName := ""
 		err := checkNodeName(nodeName)
 		convey.So(err.Error(), convey.ShouldEqual, "the env variable whose key is NODE_NAME must be set")
@@ -242,7 +242,8 @@ func TestResourceEventHandler(t *testing.T) {
 	}
 	convey.Convey("test handle the configmap resource event", t, func() {
 		testObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "test"}}}
-		testOldObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "testOld"}}}
+		testOldObj := &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "testOld"}}}
 		client.Queue = workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 		mockMetaNamespaceKeyFunc := gomonkey.ApplyFuncReturn(cache.MetaNamespaceKeyFunc, "testKey", nil)
 		defer mockMetaNamespaceKeyFunc.Reset()

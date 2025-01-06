@@ -41,6 +41,7 @@ const (
 	timestamp = 1606402
 	waitTime  = 2 * time.Second
 	npuCount  = 8
+	time5s    = 5 * time.Second
 )
 
 type mockContainerRuntimeOperator struct{}
@@ -122,9 +123,9 @@ func TestStartToGetNetInfo(t *testing.T) {
 	}).ApplyFunc(hccn.GetNPUInterfaceTraffic, func(_ int32) (float64, float64, error) {
 		return 1, 1, nil
 	}).ApplyFunc(hccn.GetNPULinkUpNum, func(_ int32) (int, error) {
-		return 100, nil
+		return 1, nil
 	}).ApplyFunc(hccn.GetNPULinkSpeed, func(_ int32) (int, error) {
-		return 100, nil
+		return 1, nil
 	})
 	mk.ApplyFunc(hccn.GetNPUOpticalInfo, mockGetNPUOpticalInfo)
 	mk.ApplyFunc(hccn.GetNPUStatInfo, mockGetNPUStatInfo)
@@ -366,7 +367,7 @@ func TestStart(t *testing.T) {
 			collector: &npuCollector{
 				cache:         cache.New(cacheSize),
 				cacheTime:     cacheTime,
-				updateTime:    5 * time.Second,
+				updateTime:    time5s,
 				devicesParser: makeMockDevicesParser(),
 			},
 		},

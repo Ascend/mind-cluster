@@ -134,7 +134,8 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 		})
 		mockStatus := gomonkey.ApplyFuncReturn(common.QueryManuallyFaultNPULogicIDsByHandleStatus, []int32{3})
 		defer mockStatus.Reset()
-		mockMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetManuallySeparateNPUIDFromDeviceInfo",
+		mockMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+			"GetManuallySeparateNPUIDFromDeviceInfo",
 			func(_ *kubeclient.ClientK8s, deviceInfoCMName, deviceInfoCMNamespace string) []int32 {
 				return []int32{1}
 			})
@@ -197,17 +198,20 @@ func TestSetHealthyIfDuoCard(t *testing.T) {
 			setHealthyIfDuoCard(map[string][]*common.NpuDevice{})
 		})
 		convey.Convey("02-HotReset is false, should not update groupDevice", func() {
-			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetTrainOnLine})
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption,
+				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetTrainOnLine})
 			defer mockOption.Reset()
 			setHealthyIfDuoCard(map[string][]*common.NpuDevice{})
 		})
 		convey.Convey("03-not found devices, should not update groupDevice", func() {
-			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer})
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption,
+				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer})
 			defer mockOption.Reset()
 			setHealthyIfDuoCard(map[string][]*common.NpuDevice{})
 		})
 		convey.Convey("04-update unhealthy card status, should update groupDevice", func() {
-			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer})
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption,
+				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer})
 			defer mockOption.Reset()
 			groupDevices := map[string][]*common.NpuDevice{
 				common.Ascend310P: {{CardID: 0, Health: v1beta1.Healthy}, {CardID: 0, Health: v1beta1.Unhealthy}},

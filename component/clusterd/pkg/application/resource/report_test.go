@@ -25,6 +25,8 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+const time2s = 2 * time.Second
+
 func init() {
 	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
 }
@@ -93,7 +95,7 @@ func TestReport(t *testing.T) {
 		updateChan <- constant.SwitchProcessType
 
 		go Report(ctx)
-		time.Sleep(2 * time.Second)
+		time.Sleep(time2s)
 		cancel()
 		convey.So(len(updateChan), convey.ShouldEqual, 0)
 	})

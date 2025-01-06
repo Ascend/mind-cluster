@@ -25,6 +25,12 @@ func init() {
 	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
 }
 
+const (
+	time50ms = 50 * time.Millisecond
+	key1001  = 1001
+	value1001    = 1001
+)
+
 func TestPreDeleteToDelete(t *testing.T) {
 	uniqueQueue = sync.Map{}
 	convey.Convey("test preDeleteToDelete", t, func() {
@@ -93,7 +99,7 @@ func TestCheckQueueBlock(t *testing.T) {
 			convey.So(isTooLarge, convey.ShouldEqual, false)
 		})
 		convey.Convey("test queue len is more than 1000", func() {
-			uniqueQueue.Store(1001, 1001)
+			uniqueQueue.Store(key1001, value1001)
 			isTooLarge := checkQueueBlock()
 			convey.So(isTooLarge, convey.ShouldEqual, true)
 		})
@@ -122,7 +128,7 @@ func TestHandlerQueueIsNotNil(t *testing.T) {
 			})
 			defer mockDeleteJob.Reset()
 			go Handler(context.TODO())
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(time50ms)
 			_, ok := uniqueQueue.Load(jobUid1)
 			convey.So(ok, convey.ShouldEqual, false)
 		})
@@ -138,7 +144,7 @@ func TestHandlerLimiterIsError(t *testing.T) {
 				return errors.New("test error")
 			})
 		go Handler(context.TODO())
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(time50ms)
 		_, ok := uniqueQueue.Load(jobUid1)
 		convey.So(ok, convey.ShouldEqual, true)
 		mockLimiter.Reset()

@@ -1,3 +1,18 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package deviceswitch functions of getting switch faults code
 package deviceswitch
 
 import (
@@ -48,23 +63,27 @@ func TestSetExtraFaultInfo(t *testing.T) {
 			SubType:        common.SubTypeOfPortDown,
 			PeerPortDevice: common.PeerDeviceChipOrCpuPort,
 		}
-		convey.Convey("01-EventType is SwitchPortFault, SubType is PortDown, AssembledFaultCode should be [0x08520003,,cpu,na]", func() {
+		convey.Convey("01-EventType is SwitchPortFault, SubType is PortDown, " +
+			"AssembledFaultCode should be [0x08520003,,cpu,na]", func() {
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x08520003,,cpu,na]")
 		})
-		convey.Convey("02-EventType is SwitchPortFault, SubType is PortLaneReduceQuarter, AssembledFaultCode should be [0x00f10509,132333,npu,na]", func() {
+		convey.Convey("02-EventType is SwitchPortFault, SubType is PortLaneReduceQuarter, " +
+			"AssembledFaultCode should be [0x00f10509,132333,npu,na]", func() {
 			event.SubType = common.SubTypeOfPortLaneReduceQuarter
 			event.PeerPortDevice = common.PeerDeviceNpuPort
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132333,npu,na]")
 		})
-		convey.Convey("03-EventType is SwitchPortFault,SubType is PortLaneReduceHalf, AssembledFaultCode should be [0x00f10509,132332,L2,na]", func() {
+		convey.Convey("03-EventType is SwitchPortFault,SubType is PortLaneReduceHalf, " +
+			"AssembledFaultCode should be [0x00f10509,132332,L2,na]", func() {
 			event.SubType = common.SubTypeOfPortLaneReduceHalf
 			event.PeerPortDevice = common.PeerDeviceL2Port
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132332,L2,na]")
 		})
-		convey.Convey("04-EventType is SwitchPortFault,SubType is other type, AssembledFaultCode should be [0x00f1ff09,155912,na,na]", func() {
+		convey.Convey("04-EventType is SwitchPortFault,SubType is other type, " +
+			"AssembledFaultCode should be [0x00f1ff09,155912,na,na]", func() {
 			event.SubType = 0
 			event.PeerPortDevice = 999999
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)

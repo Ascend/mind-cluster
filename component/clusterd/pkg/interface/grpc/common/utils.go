@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
@@ -346,7 +346,7 @@ func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[strin
 		labeledMap = make(map[string]string)
 	}
 	faultLabel := map[string]string{"fault-type": "software"}
-	var err error
+	var err error = nil
 	for _, podRank := range faultPodRankList {
 		_, labeled := labeledMap[podRank]
 		if labeled {

@@ -106,7 +106,7 @@ func FakeConfigurations() []conf.Configuration {
 		{
 			Name: "init-params",
 			Arguments: map[string]interface{}{
-				overTimeKey:              OverTimeValue,
+				overTimeKey:              overTimeValue,
 				nslbVersionKey:           nslbVersionValue,
 				sharedTorNumKey:          SharedTorNumValue,
 				superPodSizeKey:          superPodSizeValue,

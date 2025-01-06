@@ -56,7 +56,7 @@ const (
 
 const (
 	overTimeKey                = "grace-over-time"
-	OverTimeValue              = "900"
+	overTimeValue              = "900"
 	presetVirtualDeviceKey     = "presetVirtualDevice"
 	presetVirtualDeviceValue   = "true"
 	nslbVersionKey             = "nslb-version"

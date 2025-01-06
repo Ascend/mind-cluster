@@ -136,11 +136,11 @@ func TestSetAscendManager(t *testing.T) {
 	convey.Convey("test GetChipAiCoreCount return error", t, func() {
 		mockGetChipAiCoreCount = gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 			func(_ *device.AscendTools) (int32, error) {
-				return 0, fmt.Errorf("GetChipAiCoreCount error")
+				return 0, fmt.Errorf("getChipAiCoreCount error")
 			})
 		defer mockGetChipAiCoreCount.Reset()
 		err := hdm.setAscendManager(devM)
-		convey.So(err.Error(), convey.ShouldEqual, "GetChipAiCoreCount error")
+		convey.So(err.Error(), convey.ShouldEqual, "getChipAiCoreCount error")
 	})
 }
 
@@ -155,16 +155,17 @@ func TestUpdateNode(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		common.ParamOption.BuildScene = tmpBuildScene
 	})
-	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer", func(_ *kubeclient.ClientK8s) {})
+	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer",
+		func(_ *kubeclient.ClientK8s) {})
 	defer mockInitPodInformer.Reset()
 	convey.Convey("test update node when get node error", t, func() {
 		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
 			*v1.Node, error) {
-			return &v1.Node{}, fmt.Errorf("GetNode error")
+			return &v1.Node{}, fmt.Errorf("getNode error")
 		})
 		defer mockGetNode.Reset()
 		err := hdm.UpdateNode()
-		convey.So(err.Error(), convey.ShouldEqual, "GetNode error")
+		convey.So(err.Error(), convey.ShouldEqual, "getNode error")
 	})
 	mockMarshal := gomonkey.ApplyFuncReturn(json.Marshal, []byte{0}, nil)
 	defer mockMarshal.Reset()

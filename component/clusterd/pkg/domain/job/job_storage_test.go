@@ -21,6 +21,7 @@ const (
 	jobNameSpace = "default"
 	jobUid1      = "123"
 	jobUid2      = "456"
+	two = 2
 )
 
 func getDemoJob(jobName1 string, jobNameSpace string, jobUid1 string) constant.JobInfo {
@@ -70,7 +71,7 @@ func TestGetAllJobCache(t *testing.T) {
 			SaveJobCache(jobUid2, jobInfo2)
 			defer DeleteJobCache(jobUid2)
 			jobInfoMap = GetAllJobCache()
-			convey.So(len(jobInfoMap), convey.ShouldEqual, 2)
+			convey.So(len(jobInfoMap), convey.ShouldEqual, two)
 		})
 	})
 }
@@ -114,7 +115,7 @@ func TestSaveJobCache(t *testing.T) {
 			SaveJobCache(jobUid2, jobInfo2)
 			defer DeleteJobCache(jobUid2)
 			jobInfoMap = GetAllJobCache()
-			convey.So(len(jobInfoMap), convey.ShouldEqual, 2)
+			convey.So(len(jobInfoMap), convey.ShouldEqual, two)
 		})
 	})
 }
