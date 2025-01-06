@@ -82,6 +82,21 @@ func TestNewClientK8s(t *testing.T) {
 	})
 }
 
+// TestGetNode test get node
+func TestGetNode(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetNode init kubernetes failed")
+	}
+	convey.Convey("test get node success", t, func() {
+		mockGetNode := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Nodes(), "Get", &v1.Node{}, nil)
+		defer mockGetNode.Reset()
+		node, err := client.GetNode()
+		convey.So(node, convey.ShouldResemble, &v1.Node{})
+		convey.So(err, convey.ShouldEqual, nil)
+	})
+}
+
 // TestPatchNodeState test patch node state
 func TestPatchNodeState(t *testing.T) {
 	client, err := newTestClientK8s()
@@ -95,6 +110,62 @@ func TestPatchNodeState(t *testing.T) {
 		node, patchBytes, err := client.PatchNodeState(&v1.Node{}, &v1.Node{})
 		convey.So(node, convey.ShouldResemble, &v1.Node{})
 		convey.So(patchBytes, convey.ShouldResemble, []byte{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
+// TestGetPod test get pod by namespace and name
+func TestGetPod(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetPod init kubernetes failed")
+	}
+	convey.Convey("test get pod failed when param pod is nil", t, func() {
+		pod, err := client.GetPod(nil)
+		convey.So(pod, convey.ShouldBeNil)
+		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
+	})
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	convey.Convey("test get pod success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Get",
+			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		pod, err := client.GetPod(testPod)
+		convey.So(pod, convey.ShouldResemble, &v1.Pod{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
+// TestUpdatePod test update pod by namespace and name
+func TestUpdatePod(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestUpdatePod init kubernetes failed")
+	}
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	convey.Convey("test update pod success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Update",
+			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		pod, err := client.UpdatePod(testPod)
+		convey.So(pod, convey.ShouldResemble, &v1.Pod{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
+// TestPatchPod test patch pod information
+func TestPatchPod(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestPatchPod init kubernetes failed")
+	}
+	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	convey.Convey("test patch pod information success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Patch",
+			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		pod, err := client.PatchPod(testPod, []byte{})
+		convey.So(pod, convey.ShouldResemble, &v1.Pod{})
 		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
 	})
 }
@@ -176,6 +247,23 @@ func TestGetAllPodList(t *testing.T) {
 	})
 }
 
+// TestGetPodListByCondition test get pod list by field selector
+func TestGetPodListByCondition(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetPodListByCondition init kubernetes failed")
+	}
+	selector := fields.SelectorFromSet(fields.Set{"spec.nodeName": "NodeName"})
+	convey.Convey("test get pod list success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "List",
+			&v1.PodList{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		podList, err := client.getPodListByCondition(selector)
+		convey.So(podList, convey.ShouldResemble, &v1.PodList{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
 // TestCheckPodList test check each pod and return podList
 func TestCheckPodList(t *testing.T) {
 	testPod := v1.Pod{
@@ -222,6 +310,67 @@ func TestCheckPodList(t *testing.T) {
 	})
 }
 
+// TestCreateConfigMap test create device info which is cm
+func TestCreateConfigMap(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestCreateConfigMap init kubernetes failed")
+	}
+	mockCM := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "name", Namespace: "namespace"}}
+	convey.Convey("test create config map failed when param cm is nil", t, func() {
+		cm, err := client.CreateConfigMap(nil)
+		convey.So(cm, convey.ShouldEqual, nil)
+		convey.So(err.Error(), convey.ShouldEqual, "param cm is nil")
+	})
+	convey.Convey("test create config map success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().ConfigMaps(v1.NamespaceAll), "Create",
+			&v1.ConfigMap{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		cm, err := client.CreateConfigMap(mockCM)
+		convey.So(cm, convey.ShouldResemble, &v1.ConfigMap{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
+// TestGetConfigMap test get config map by name and namespace
+func TestGetConfigMap(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetConfigMap init kubernetes failed")
+	}
+	mockCM := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "name", Namespace: "namespace"}}
+	convey.Convey("test get config map success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().ConfigMaps(v1.NamespaceAll), "Get",
+			&v1.ConfigMap{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		cm, err := client.GetConfigMap(mockCM.Name, mockCM.Namespace)
+		convey.So(cm, convey.ShouldResemble, &v1.ConfigMap{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
+// TestUpdateConfigMap test update device info which is cm
+func TestUpdateConfigMap(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestUpdateConfigMap init kubernetes failed")
+	}
+	mockCM := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "name", Namespace: "namespace"}}
+	convey.Convey("test update device info failed when param cm is nil", t, func() {
+		cm, err := client.UpdateConfigMap(nil)
+		convey.So(cm, convey.ShouldEqual, nil)
+		convey.So(err.Error(), convey.ShouldEqual, "param cm is nil")
+	})
+	convey.Convey("test update device info which is cm success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().ConfigMaps(v1.NamespaceAll), "Update",
+			&v1.ConfigMap{}, fmt.Errorf(common.ApiServerPort))
+		defer mockGetPod.Reset()
+		cm, err := client.UpdateConfigMap(mockCM)
+		convey.So(cm, convey.ShouldResemble, &v1.ConfigMap{})
+		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
+	})
+}
+
 // TestClearResetInfo test clear reset info
 func TestClearResetInfo(t *testing.T) {
 	client, err := newTestClientK8s()
@@ -242,6 +391,28 @@ func TestClearResetInfo(t *testing.T) {
 		defer mockWriteResetInfoDataIntoCM.Reset()
 		err := client.ClearResetInfo("taskName", "testNamespace")
 		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+// TestCreateEvent test create event resource
+func TestCreateEvent(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestCreateEvent init kubernetes failed")
+	}
+	mockEvent := &v1.Event{ObjectMeta: metav1.ObjectMeta{Name: "name", Namespace: "namespace"}}
+	convey.Convey("test create event resource failed when param event is nil", t, func() {
+		cm, err := client.CreateEvent(nil)
+		convey.So(cm, convey.ShouldEqual, nil)
+		convey.So(err.Error(), convey.ShouldEqual, "param event is nil")
+	})
+	convey.Convey("test update device info which is cm success", t, func() {
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Events(v1.NamespaceAll), "Create",
+			&v1.Event{}, nil)
+		defer mockGetPod.Reset()
+		event, err := client.CreateEvent(mockEvent)
+		convey.So(event, convey.ShouldResemble, &v1.Event{})
+		convey.So(err, convey.ShouldEqual, nil)
 	})
 }
 
