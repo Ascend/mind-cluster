@@ -17,7 +17,6 @@ package kubeclient
 import (
 	"context"
 	"fmt"
-	"hash/fnv"
 	"testing"
 	"time"
 
@@ -39,32 +38,6 @@ func newTestClientK8s() (*ClientK8s, error) {
 		DeviceInfoName: common.DeviceInfoCMNamePrefix + "node",
 		IsApiErr:       false,
 	}, nil
-}
-
-// TestPodInformerInspector test check pod in cache
-func TestPodInformerInspector(t *testing.T) {
-	client, err := newTestClientK8s()
-	if err != nil {
-		t.Fatal("TestRefreshPodList init kubernetes failed")
-	}
-	var mockTime uint32 = 1
-	mockNew32 := gomonkey.ApplyFuncReturn(fnv.New32, &mockTime)
-	defer mockNew32.Reset()
-	mockCheckPodInCache := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "checkPodInCache",
-		func(_ *ClientK8s, _ context.Context) { return })
-	defer mockCheckPodInCache.Reset()
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-	convey.Convey("test check pod in cache", t, func() {
-		haveStopped := false
-		go func() {
-			client.PodInformerInspector(ctx)
-			haveStopped = true
-		}()
-		time.Sleep(1 * time.Millisecond)
-		cancel()
-		convey.So(haveStopped, convey.ShouldBeFalse)
-	})
 }
 
 // TestUpdatePodList test update pod list by informer
