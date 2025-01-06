@@ -51,6 +51,8 @@ const (
 	one             = 1
 	two             = 2
 	three           = 3
+	mockJobName1    = "jobName1"
+	mockJobName2    = "jobName2"
 )
 
 func fakeTestFaultCardUnhealthy(name string, nodeName string, faultType string) *FaultCard {
@@ -1054,11 +1056,6 @@ func mockJobInfo(jobName string, taskNum int) *api.JobInfo {
 	return jobInfo
 }
 
-const (
-	mockJobName1 = "jobName1"
-	mockJobName2 = "jobName2"
-)
-
 func TestGetRunningJobs(t *testing.T) {
 	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
 	ssn := test.FakeNormalSSN(nil)
@@ -1170,7 +1167,7 @@ func TestRestartNeedForceDeleteJobs(t *testing.T) {
 		patch1 := gomonkey.ApplyMethod(reflect.TypeOf(reScheduler), "GetNeedForceDeleteDelayingNPUJobs",
 			func(_ *ReScheduler, _ map[api.JobID]plugin.SchedulerJob,
 				_ *framework.Session) ([]plugin.SchedulerJob, error) {
-				jobs := reCreateSchedulerJob910("vcjob", "vcjob/job0")
+				jobs := reCreateSchedulerJob910("", mockJobUID)
 				return []plugin.SchedulerJob{jobs}, nil
 			})
 		defer patch1.Reset()
