@@ -50,7 +50,7 @@ func BuildNPUPod(pod NPUPod) *v1.Pod {
 			Labels:    pod.Labels,
 			Annotations: map[string]string{
 				kubeGroupNameAnnotationKey: pod.GroupName,
-				npuCoreName:                fakeNpuCodeStr,
+				npuCoreName:                fakeNpuCoreStr,
 			},
 		},
 		Status: v1.PodStatus{
@@ -113,6 +113,9 @@ func FakeVNPUTestTask(name string, nodename string, groupname string, num int) *
 
 // FakeNormalTestTasks fake normal test tasks.
 func FakeNormalTestTasks(num int) []*api.TaskInfo {
+	if num == 0 {
+		return nil
+	}
 	var tasks []*api.TaskInfo
 
 	for i := 0; i < num; i++ {
@@ -120,7 +123,7 @@ func FakeNormalTestTasks(num int) []*api.TaskInfo {
 		task := FakeNormalTestTask("pod"+strNum, "node"+strNum, "pg"+strNum)
 		tasks = append(tasks, task)
 	}
-
+	tasks[0].Pod.Annotations[npuCoreName] = fakeWholeCardStr
 	return tasks
 }
 

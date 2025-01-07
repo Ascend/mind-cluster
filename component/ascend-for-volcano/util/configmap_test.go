@@ -20,6 +20,7 @@ Package util is using for the total variable.
 package util
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -29,12 +30,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
 type IsConfigMapChangedArgs struct {
 	k8s       kubernetes.Interface
 	cm        *v1.ConfigMap
+	mockCM    *v1.ConfigMap
 	cmName    string
 	nameSpace string
 }
@@ -48,8 +51,23 @@ type IsConfigMapChangedTest struct {
 func buildIsConfigMapChangedTestCase() []IsConfigMapChangedTest {
 	tests := []IsConfigMapChangedTest{
 		{
-			name: "01-GetConfigMapWithRetry will return true when cm is not in a session",
-			args: IsConfigMapChangedArgs{k8s: nil, nameSpace: "vcjob", cmName: "cm01"},
+			name: "01-IsConfigMapChanged will return true when cm is not in a session",
+			args: IsConfigMapChangedArgs{k8s: fake.NewSimpleClientset(), nameSpace: testNamespace, cmName: testName},
+			want: true,
+		},
+		{
+			name: "02-IsConfigMapChanged will return false when cm unchanged",
+			args: IsConfigMapChangedArgs{k8s: fake.NewSimpleClientset(), nameSpace: testNamespace, cmName: testName,
+				cm:     &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
+				mockCM: &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}}},
+			want: false,
+		},
+		{
+			name: "03-IsConfigMapChanged will return true when cm changed",
+			args: IsConfigMapChangedArgs{k8s: fake.NewSimpleClientset(), nameSpace: testNamespace, cmName: testName,
+				cm: &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
+				mockCM: &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace,
+					Annotations: map[string]string{"test": "test"}}}},
 			want: true,
 		},
 	}
@@ -57,15 +75,13 @@ func buildIsConfigMapChangedTestCase() []IsConfigMapChangedTest {
 }
 
 func TestIsConfigMapChanged(t *testing.T) {
-	config := &rest.Config{}
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return
-	}
 	tests := buildIsConfigMapChangedTestCase()
 	for _, tt := range tests {
-		tt.args.k8s = client
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.mockCM != nil {
+				tt.args.k8s.CoreV1().ConfigMaps(tt.args.nameSpace).Create(context.TODO(),
+					tt.args.mockCM, metav1.CreateOptions{})
+			}
 			if got := IsConfigMapChanged(tt.args.k8s, tt.args.cm, tt.args.cmName, tt.args.nameSpace); got != tt.want {
 				t.Errorf("IsConfigMapChanged() = %v, want %v", got, tt.want)
 			}
@@ -90,14 +106,14 @@ type CreateOrUpdateConfigMapTest struct {
 func buildCreateOrUpdateConfigMapTestCase() []CreateOrUpdateConfigMapTest {
 	tests := []CreateOrUpdateConfigMapTest{
 		{
-			name:    "01-GetConfigMapWithRetry will return true when cm is not in a session",
-			args:    CreateOrUpdateConfigMapArgs{k8s: nil, nameSpace: "vcjob", cmName: "cm01", cm: &v1.ConfigMap{}},
+			name:    "01-CreateOrUpdateConfigMap will return true when cm is not in a session",
+			args:    CreateOrUpdateConfigMapArgs{k8s: nil, nameSpace: testNamespace, cmName: testName, cm: &v1.ConfigMap{}},
 			err:     "AlreadyExists",
 			wantErr: true,
 		},
 		{
-			name:    "02-GetConfigMapWithRetry will return true when cm is not in a session",
-			args:    CreateOrUpdateConfigMapArgs{k8s: nil, nameSpace: "vcjob", cmName: "cm01", cm: &v1.ConfigMap{}},
+			name:    "02-CreateOrUpdateConfigMap will return true when cm is not in a session",
+			args:    CreateOrUpdateConfigMapArgs{k8s: nil, nameSpace: testNamespace, cmName: testName, cm: &v1.ConfigMap{}},
 			err:     "",
 			wantErr: true,
 		},
@@ -281,6 +297,53 @@ func TestMakeDataHash(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := MakeDataHash(tt.args.data); got != tt.want {
 				t.Errorf("MakeDataHash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetConfigMap(t *testing.T) {
+	tests := []struct {
+		name      string
+		client    kubernetes.Interface
+		namespace string
+		cmName    string
+		mockCm    *v1.ConfigMap
+		want      *v1.ConfigMap
+		wantErr   bool
+	}{
+		{
+			name:      "01-GetConfigMap will return error when cm not exist",
+			client:    fake.NewSimpleClientset(),
+			namespace: testNamespace,
+			cmName:    testName,
+			wantErr:   true,
+		},
+		{
+			name:      "02-GetConfigMap will return cm when cm exist",
+			client:    fake.NewSimpleClientset(),
+			namespace: testNamespace,
+			cmName:    testName,
+			mockCm: &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
+			want: &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mockCm != nil {
+				tt.client.CoreV1().ConfigMaps(tt.namespace).Create(
+					context.TODO(), tt.mockCm, metav1.CreateOptions{})
+			}
+			got, err := GetConfigMap(tt.client, tt.namespace, tt.cmName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetConfigMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetConfigMap() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

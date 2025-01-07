@@ -204,8 +204,8 @@ func buildConfigFromSchedulerConfigMapTest() []configFromSchedulerConfigMapTest 
 				configKey:      CMSelectorKey,
 				configurations: []config.Configuration{{Name: configKey + "0"}, {Name: configKey + "1"}},
 			},
-			want:    &config.Configuration{Name: configKey + "0"},
-			wantErr: false,
+			want:    nil,
+			wantErr: true,
 		},
 	}
 }
@@ -721,6 +721,185 @@ func TestRemoveCommonElement(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := RemoveCommonElement(tt.args.s1, tt.args.s2); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("RemoveCommonElement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestVResourceAdd(t *testing.T) {
+	tests := []struct {
+		name string
+		res  VResource
+		add  VResource
+		want VResource
+	}{
+		{
+			name: "01-Add return aicore=1 and aicpu=1",
+			res:  VResource{Aicore: 0, Aicpu: 0},
+			add:  VResource{Aicore: 1, Aicpu: 1},
+			want: VResource{Aicore: 1, Aicpu: 1},
+		},
+		{
+			name: "02-Add return aicore=2 and aicpu=2",
+			res:  VResource{Aicore: 1, Aicpu: 1},
+			add:  VResource{Aicore: 1, Aicpu: 1},
+			want: VResource{Aicore: two, Aicpu: two},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.res.Add(tt.add)
+			if !reflect.DeepEqual(tt.res, tt.want) {
+				t.Errorf("VResource_Add() = %v, want %v", tt.res, tt.want)
+			}
+		})
+	}
+}
+
+func TestVResourceSub(t *testing.T) {
+	tests := []struct {
+		name string
+		res  VResource
+		sub  VResource
+		want VResource
+	}{
+		{
+			name: "01-Sub return aicore=1 and aicpu=1",
+			res:  VResource{Aicore: 1, Aicpu: 1},
+			sub:  VResource{Aicore: 1, Aicpu: 1},
+			want: VResource{Aicore: 0, Aicpu: 0},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.res.Sub(tt.sub)
+			if !reflect.DeepEqual(tt.res, tt.want) {
+				t.Errorf("VResource_Sub() = %v, want %v", tt.res, tt.want)
+			}
+		})
+	}
+}
+
+func TestVResourceBeGreater(t *testing.T) {
+	tests := []struct {
+		name string
+		res  VResource
+		vr   VResource
+		want bool
+	}{
+		{
+			name: "01-BeGreater return true when res less than vr",
+			res:  VResource{Aicore: 0, Aicpu: 0},
+			vr:   VResource{Aicore: 1, Aicpu: 1},
+			want: false,
+		},
+		{
+			name: "02-BeGreater return false when res greater than vr",
+			res:  VResource{Aicore: 1, Aicpu: 1},
+			vr:   VResource{Aicore: 0, Aicpu: 0},
+			want: true,
+		},
+		{
+			name: "03-BeGreater return true when res equal to vr",
+			res:  VResource{Aicore: 1, Aicpu: 1},
+			vr:   VResource{Aicore: 1, Aicpu: 1},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.res.BeGreater(tt.vr); got != tt.want {
+				t.Errorf("BeGreater() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetSizeOfSuperPod(t *testing.T) {
+	tests := []struct {
+		name    string
+		conf    []config.Configuration
+		want    int
+		wantErr bool
+	}{
+		{
+			name:    "01-GetSizeOfSuperPod return error when conf is empty",
+			conf:    []config.Configuration{},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "02-GetSizeOfSuperPod return error when conf is nil",
+			conf:    nil,
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "03-GetSizeOfSuperPod return error when conf not exist init-params",
+			conf:    []config.Configuration{{Name: "test"}},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "04-GetSizeOfSuperPod return 1 when conf exist init-params",
+			conf: []config.Configuration{{Name: CMInitParamKey, Arguments: map[string]string{sizeOfSuperPodKey: "1"}}},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetSizeOfSuperPod(tt.conf)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSizeOfSuperPod() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetSizeOfSuperPod() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetReserveNodes(t *testing.T) {
+	tests := []struct {
+		name    string
+		conf    []config.Configuration
+		want    int
+		wantErr bool
+	}{
+		{
+			name:    "01-GetReserveNodes return error when conf is empty",
+			conf:    []config.Configuration{},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "02-GetReserveNodes return error when conf is nil",
+			conf:    nil,
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "03-GetReserveNodes return error when conf not exist init-params",
+			conf:    []config.Configuration{{Name: "test"}},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "04-GetReserveNodes return 1 when conf exist init-params",
+			conf: []config.Configuration{{Name: CMInitParamKey, Arguments: map[string]string{reserveNodesKey: "1"}}},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetReserveNodes(tt.conf)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetReserveNodes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetReserveNodes() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

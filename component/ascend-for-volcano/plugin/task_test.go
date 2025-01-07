@@ -80,15 +80,7 @@ func buildNPUAllocateFuncTest() []npuAllocateFuncTest {
 		{
 			name: "04-NPUAllocateFunc UseAnnotation failed test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{
-					Jobs: map[api.JobID]SchedulerJob{task.Job: {SchedulerJobAttr: util.SchedulerJobAttr{
-						NPUJob: &util.NPUJob{
-							Tasks: map[api.TaskID]util.NPUTask{task.UID: npuTask},
-						},
-					},
-						handler: New(testPluginName)}},
-					Nodes:     map[string]NPUNode{task.NodeName: {}},
-					FrameAttr: VolcanoFrame{}}},
+				ScheduleEnv: newDefaultsHandlerByFakeSsn().ScheduleEnv},
 			args: npuAllocateFuncArgs{task: task},
 			want: "",
 		},

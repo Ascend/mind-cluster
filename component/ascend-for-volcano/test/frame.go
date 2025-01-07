@@ -100,13 +100,51 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 	return ssn
 }
 
+// AddJobInfoIntoSsn add job to ssn jobInfos
+func AddJobInfoIntoSsn(ssn *framework.Session, job *api.JobInfo) {
+	if ssn.Jobs == nil {
+		ssn.Jobs = make(map[api.JobID]*api.JobInfo)
+	}
+	ssn.Jobs[job.UID] = job
+}
+
+// FakeJobInfoByName fake job info by job name
+func FakeJobInfoByName(jobName string, taskNum int) *api.JobInfo {
+	jobInfo := FakeNormalTestJob(jobName, taskNum)
+	var minRes = make(v1.ResourceList, taskNum)
+	for _, task := range jobInfo.Tasks {
+		for k, v := range task.Resreq.ScalarResources {
+			minRes[k] = resource.MustParse(fmt.Sprintf("%f", v))
+		}
+	}
+	jobInfo.MinAvailable = int32(taskNum)
+	jobInfo.PodGroup.Spec.MinResources = &minRes
+	return jobInfo
+}
+
+// AddJobInfoLabel add job info label
+func AddJobInfoLabel(job *api.JobInfo, key, value string) {
+	if job.PodGroup.Labels == nil {
+		job.PodGroup.Labels = map[string]string{}
+	}
+	job.PodGroup.Labels[key] = value
+}
+
+// AddJobInfoAnnotations add job info annotations
+func AddJobInfoAnnotations(job *api.JobInfo, key, value string) {
+	if job.PodGroup.Annotations == nil {
+		job.PodGroup.Annotations = map[string]string{}
+	}
+	job.PodGroup.Annotations[key] = value
+}
+
 // FakeConfigurations fake volcano frame config
 func FakeConfigurations() []conf.Configuration {
 	return []conf.Configuration{
 		{
 			Name: "init-params",
 			Arguments: map[string]interface{}{
-				overTimeKey:              OverTimeValue,
+				overTimeKey:              overTimeValue,
 				nslbVersionKey:           nslbVersionValue,
 				sharedTorNumKey:          SharedTorNumValue,
 				superPodSizeKey:          superPodSizeValue,

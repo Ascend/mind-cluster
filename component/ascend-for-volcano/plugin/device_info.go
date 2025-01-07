@@ -25,7 +25,7 @@ func GetResourceFromTemplate(nodeType string, templateString string,
 	if !ok {
 		return nil
 	}
-	taskResource := taskNodeTemplate[templateString]
+	taskResource, ok := taskNodeTemplate[templateString]
 	if !ok {
 		return nil
 	}
@@ -89,6 +89,9 @@ func GetWholeCardIDFromAscendReal(cardNameStr string) (int, error) {
 // GetCardPhysicsIDFromAscendCore get card physics id from 0,1/0-vir04
 func GetCardPhysicsIDFromAscendCore(pod *v1.Pod, isWholeCard bool) ([]int, error) {
 	physicsIDs := make([]int, 0)
+	if pod == nil {
+		return physicsIDs, fmt.Errorf("pod is nil")
+	}
 	coreNameStr, ok := pod.Annotations[util.AscendNPUCore]
 	if !ok {
 		return physicsIDs, fmt.Errorf("getCardPhysicsIDFromAscendCore vnpu device <%s> get %s value failed",

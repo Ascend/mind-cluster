@@ -372,10 +372,9 @@ func (sHandle *ScheduleHandler) InitCache() {
 	data[util.RePropertyCacheName] = make(map[string]string, util.MapInitNum)
 	data[util.JobRecovery] = make(map[string]string, util.MapInitNum)
 	sHandle.Cache = ScheduleCache{
-		Names:           make(map[string]string, util.MapInitNum),
-		Namespaces:      make(map[string]string, util.MapInitNum),
-		FaultConfigMaps: map[api.JobID]*FaultRankIdData{},
-		Data:            data}
+		Names:      make(map[string]string, util.MapInitNum),
+		Namespaces: make(map[string]string, util.MapInitNum),
+		Data:       data}
 }
 
 // PreStartPlugin preStart plugin action.
@@ -415,26 +414,6 @@ func (sHandle *ScheduleHandler) saveCacheToCm() {
 			Data: data,
 		}
 		if err := util.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, tmpCM, cmName, nameSpace); err != nil {
-			klog.V(util.LogErrorLev).Infof("CreateOrUpdateConfigMap : %s.", util.SafePrint(err))
-		}
-	}
-
-	for _, faultConfig := range sHandle.ScheduleEnv.Cache.FaultConfigMaps {
-		data, err := util.UpdateConfigmapIncrementally(sHandle.FrameAttr.KubeClient, faultConfig.Namespace,
-			faultConfig.Name, faultConfig.Data)
-		if err != nil {
-			klog.V(util.LogInfoLev).Infof("get old %s configmap failed: %v", faultConfig.Name, err)
-			continue
-		}
-		var tmpCM = &v12.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      faultConfig.Name,
-				Namespace: faultConfig.Namespace,
-			},
-			Data: data,
-		}
-		if err = util.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, tmpCM, faultConfig.Name,
-			faultConfig.Namespace); err != nil {
 			klog.V(util.LogErrorLev).Infof("CreateOrUpdateConfigMap : %s.", util.SafePrint(err))
 		}
 	}
@@ -483,7 +462,7 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	}
 
 	sHandle.InitVolcanoFrameFromSsn(ssn)
-	sHandle.initCmInformer(ssn)
+	sHandle.initCmInformer()
 	sHandle.InitDeleteJobInfos()
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
@@ -505,25 +484,25 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 }
 
 // initCmInformer init cm informer, support cluster info manager and device plugin
-func (sHandle *ScheduleHandler) initCmInformer(ssn *framework.Session) {
-	if ssn.KubeClient() == nil {
+func (sHandle *ScheduleHandler) initCmInformer() {
+	if sHandle.FrameAttr.KubeClient == nil {
 		klog.V(util.LogErrorLev).Info("kube client in session is nil")
 		return
 	}
 	sHandle.Do(func() {
 		if sHandle.FrameAttr.CheckUseCIMByConfig() {
-			sHandle.initClusterCmInformer(ssn)
-			if !util.ClusterDDeploymentIsExist(ssn.KubeClient()) {
+			sHandle.initClusterCmInformer()
+			if !util.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
 				klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
 			}
 			return
 		}
-		sHandle.initDeviceAndNodeDCmInformer(ssn)
+		sHandle.initDeviceAndNodeDCmInformer()
 	})
 }
 
-func (sHandle *ScheduleHandler) initClusterCmInformer(ssn *framework.Session) {
-	informerFactory := informers.NewSharedInformerFactoryWithOptions(ssn.KubeClient(), 0,
+func (sHandle *ScheduleHandler) initClusterCmInformer() {
+	informerFactory := informers.NewSharedInformerFactoryWithOptions(sHandle.FrameAttr.KubeClient, 0,
 		informers.WithNamespace(util.MindXDlNameSpace),
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = util.CmConsumer + "=" + util.CmConsumerValue
@@ -544,8 +523,8 @@ func (sHandle *ScheduleHandler) initClusterCmInformer(ssn *framework.Session) {
 	informerFactory.WaitForCacheSync(wait.NeverStop)
 }
 
-func (sHandle *ScheduleHandler) initDeviceAndNodeDCmInformer(ssn *framework.Session) {
-	informerFactory := informers.NewSharedInformerFactory(ssn.KubeClient(), 0)
+func (sHandle *ScheduleHandler) initDeviceAndNodeDCmInformer() {
+	informerFactory := informers.NewSharedInformerFactory(sHandle.FrameAttr.KubeClient, 0)
 	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
 	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: util.InformerConfigmapFilter,

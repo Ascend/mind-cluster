@@ -358,14 +358,6 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 	sHandle.JobDeleteFlag[sJob.Name] = struct{}{}
 }
 
-func getJobName(server Server) string {
-	var str string
-	for jobName := range server.Jobs {
-		str += string(jobName) + " "
-	}
-	return strings.TrimSpace(str)
-}
-
 func updateResetCm(sJob *SchedulerJob, k8sClient kubernetes.Interface, resetCm TaskResetInfo, isSinglePod bool) error {
 	resetCm.RankList = []*TaskDevInfo{}
 	resetCm.UpdateTime = time.Now().Unix()

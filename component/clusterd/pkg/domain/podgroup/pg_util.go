@@ -56,6 +56,9 @@ func GetJobTypeByPG(podGroup *v1beta1.PodGroup) string {
 
 // GetModelFramework get model framework
 func GetModelFramework(info *v1beta1.PodGroup) string {
+	if info == nil {
+		return ""
+	}
 	modelFramework := info.GetLabels()
 	framework, ok := modelFramework[frameWorkKey]
 	if ok {

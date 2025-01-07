@@ -56,9 +56,9 @@ const (
 
 const (
 	overTimeKey                = "grace-over-time"
-	OverTimeValue              = "900"
+	overTimeValue              = "900"
 	presetVirtualDeviceKey     = "presetVirtualDevice"
-	presetVirtualDeviceValue   = "true"
+	presetVirtualDeviceValue   = "false"
 	nslbVersionKey             = "nslb-version"
 	nslbVersionValue           = "2.0"
 	sharedTorNumKey            = "shared-tor-num"
@@ -74,15 +74,18 @@ const (
 	acceleratorKey             = "accelerator"
 	acceleratorValue           = "huawei-Ascend910"
 	npuCoreName                = "huawei.com/npu-core"
-	fakeNpuCodeStr             = "0-vir05_1c_16g"
+	fakeNpuCoreStr             = "0-vir05_1c_16g"
+	fakeWholeCardStr           = "0,1,2,3"
 	serverTypeKey              = "servertype"
 	fake910ServerType          = "Ascend910B-20"
 )
 
 const (
-	chipTypeKey  = "node.kubernetes.io/npu.chip.name"
-	fakeChipType = "B3"
-	fakeChipName = "910"
+	chipTypeKey    = "node.kubernetes.io/npu.chip.name"
+	fakeChipType   = "B3"
+	fakeChipName   = "910"
+	torAffinityKey = "tor-affinity"
+	normalJob      = "normal"
 )
 
 // NPUPod test NPU pod struct

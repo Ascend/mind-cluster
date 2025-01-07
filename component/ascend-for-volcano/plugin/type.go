@@ -166,13 +166,6 @@ type ScheduleCache struct {
 	// special, name, value
 	Names, Namespaces map[string]string
 	Data              map[string]map[string]string
-	FaultConfigMaps   map[api.JobID]*FaultRankIdData
-}
-
-// FaultRankIdData fault rank id data
-type FaultRankIdData struct {
-	Name, Namespace string
-	Data            map[string]string
 }
 
 // ScheduleEnv for job scheduler context.

@@ -32,6 +32,7 @@ import (
 
 const (
 	Ascend910Card = "Ascend910-8"
+	num4          = 4
 )
 
 type vNPUTaskFields struct {
@@ -61,9 +62,9 @@ type vNPUTestCase struct {
 func mockCommonNode() plugin.CommonNode {
 	return plugin.CommonNode{
 		Name:           "node1",
-		Capability:     map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
-		Allocate:       map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
-		Idle:           map[v1.ResourceName]float64{util.NPU910CardName: 4 * util.NPUHexKilo},
+		Capability:     map[v1.ResourceName]float64{util.NPU910CardName: num4 * util.NPUHexKilo},
+		Allocate:       map[v1.ResourceName]float64{util.NPU910CardName: num4 * util.NPUHexKilo},
+		Idle:           map[v1.ResourceName]float64{util.NPU910CardName: num4 * util.NPUHexKilo},
 		BaseDeviceInfo: "",
 		Annotation:     map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1"},
 		Label:          map[string]string{util.Accelerator: "huawei-Ascend910"},

@@ -89,8 +89,10 @@ func FakeNormalTestJobByCreatTime(jobName string, taskNum int, creatTime int64) 
 	for _, task := range tasks {
 		task.Job = job.UID
 	}
+	job.MinAvailable = int32(taskNum)
 	job.PodGroup = new(api.PodGroup)
 	job.PodGroup.Status.Phase = util.PodGroupRunning
+
 	job.CreationTimestamp = metav1.Time{Time: time.Unix(time.Now().Unix()+creatTime, 0)}
 	return job
 }

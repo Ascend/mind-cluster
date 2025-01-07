@@ -43,8 +43,8 @@ type torNodeWithOneMinuteDelayTest struct {
 
 const (
 	oneMinuteAgo      = 61
-	namespace         = "default"
-	cmName            = "cm01"
+	testNamespace     = "test"
+	testName          = "test"
 	getConfigMapError = "getConfigMapError"
 	configmap         = "configmap"
 )
@@ -53,29 +53,29 @@ func buildTorNodeWithOneMinuteDelayTestCase() []torNodeWithOneMinuteDelayTest {
 	tests := []torNodeWithOneMinuteDelayTest{
 		{
 			name:      "01-GetConfigMapWithRetry will return cm correctly",
-			namespace: namespace,
-			cmName:    cmName,
-			want:      &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: cmName, Namespace: namespace}},
+			namespace: testNamespace,
+			cmName:    testName,
+			want:      &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
 			wantErr:   false,
 		},
 		{
 			name:              "02-GetConfigMapWithRetry will return cm correctly with set torNodeUpdateTime",
-			namespace:         namespace,
-			cmName:            cmName,
-			want:              &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: cmName, Namespace: namespace}},
+			namespace:         testNamespace,
+			cmName:            testName,
+			want:              &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
 			wantErr:           false,
 			torNodeUpdateTime: time.Now().Unix() - oneMinuteAgo,
 		},
 		{
 			name:      "03-GetConfigMapWithRetry will return error",
-			namespace: namespace,
+			namespace: testNamespace,
 			cmName:    getConfigMapError,
 			want:      nil,
 			wantErr:   true,
 		},
 		{
 			name:              "04-GetConfigMapWithRetry will return NewNotFound error",
-			namespace:         namespace,
+			namespace:         testNamespace,
 			cmName:            getConfigMapError,
 			want:              nil,
 			wantErr:           true,

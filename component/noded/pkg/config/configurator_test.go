@@ -37,6 +37,8 @@ import (
 
 var configManager *FaultConfigurator
 
+const time100s = 100 * time.Second
+
 func TestFaultConfigurator(t *testing.T) {
 	configManager = NewFaultConfigurator(testK8sClient)
 	configManager.SetNextConfigProcessor(control.NewNodeController(testK8sClient))
@@ -65,7 +67,7 @@ func testFaultCfgRun() {
 		haveStopped = true
 	}()
 	cancel()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(time100s)
 	convey.So(haveStopped, convey.ShouldBeTrue)
 }
 

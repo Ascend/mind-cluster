@@ -148,6 +148,7 @@ func fakeDeviceInfoCMDataByNode(nodeName string, deviceList map[string]string) *
 		return nil
 	}
 	data["DeviceInfoCfg"] = string(cmDataStr)
+	data[util.SwitchInfoCmKey] = fakeSwitchInfos()
 	var faultNPUConfigMap = &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cmName,
@@ -163,5 +164,45 @@ func fakeDeviceList() map[string]string {
 		util.NPU910CardName: annoCards,
 		networkUnhealthyNPU: "",
 		unhealthyNPU:        "",
+	}
+}
+
+func fakeSwitchInfos() string {
+	tmpSwitchInfo := SwitchFaultInfo{
+		NodeStatus: util.NodeHealthyByNodeD,
+	}
+	if bytes, err := json.Marshal(tmpSwitchInfo); err == nil {
+		return string(bytes)
+	}
+	return ""
+}
+
+func fakeNodeInfos() map[string]string {
+	nodeInfos := NodeDNodeInfo{
+		NodeStatus: util.NodeHealthyByNodeD,
+	}
+	tmpData := NodeInfoWithNodeD{
+		NodeInfo:  nodeInfos,
+		CheckCode: util.MakeDataHash(nodeInfos),
+	}
+
+	nodeInfoBytes, err := json.Marshal(tmpData)
+	if err != nil {
+		return nil
+	}
+	return map[string]string{
+		util.NodeInfoCMKey: string(nodeInfoBytes),
+	}
+}
+
+func fakeResetCmInfos() map[string]string {
+	resetInfos := TaskResetInfo{}
+
+	resetInfosBytes, err := json.Marshal(resetInfos)
+	if err != nil {
+		return nil
+	}
+	return map[string]string{
+		ResetInfoCMDataKey: string(resetInfosBytes),
 	}
 }

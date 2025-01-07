@@ -68,6 +68,9 @@ func initLog() error {
 
 func generateRandomString(length int) string {
 	const letters = "abcdefg"
+	if length < 0 {
+		return ""
+	}
 	bytes := make([]byte, length)
 	for i := range bytes {
 		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
@@ -115,9 +118,10 @@ func testNewClientErrNewCfg() {
 }
 
 func testNewClientErrGetNodeName() {
+	const errNodeNameLen = 250
 	output := []gomonkey.OutputCell{
 		{Values: gomonkey.Params{""}},
-		{Values: gomonkey.Params{generateRandomString(250)}},
+		{Values: gomonkey.Params{generateRandomString(errNodeNameLen)}},
 		{Values: gomonkey.Params{"wrong node name"}},
 	}
 	var p3 = gomonkey.ApplyFuncSeq(os.Getenv, output)
@@ -129,7 +133,6 @@ func testNewClientErrGetNodeName() {
 	convey.So(k8sClient, convey.ShouldBeNil)
 	convey.So(err, convey.ShouldResemble, expErr)
 
-	const errNodeNameLen = 250
 	innerErr = fmt.Errorf("node name length %d is bigger than k8s env max length %d",
 		errNodeNameLen, common.KubeEnvMaxLength)
 	expErr = fmt.Errorf("check node name failed, err is %v", innerErr)

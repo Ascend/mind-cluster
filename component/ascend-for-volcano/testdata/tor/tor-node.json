@@ -4,6 +4,7 @@
   "server_list": [
     {
       "tor_id": 0,
+      "IsSharedTor": 1,
       "tor_ip": "1.0.0.0",
       "server": [
         {
@@ -57,6 +58,7 @@
     {
       "tor_id": 2,
       "tor_ip": "1.0.0.2",
+      "IsSharedTor": 1,
       "server": [
         {
           "server_ip": "1.1.0.8",
@@ -95,12 +97,12 @@
           "slice_id": 1
         },
         {
-          "server_ip": "1.1.0.14",
+          "server_ip": "1.1.0.114",
           "npu_count": 8,
           "slice_id": 2
         },
         {
-          "server_ip": "1.1.0.15",
+          "server_ip": "1.1.0.111",
           "npu_count": 8,
           "slice_id": 3
         }

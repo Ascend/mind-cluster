@@ -62,6 +62,14 @@ func buildGetRealPodByTaskTestCase01() []GetRealPodByTaskTest {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name:    "04-GetRealPodByTask will return err when ssn job not exist npu job",
+			npuTask: &NPUTask{Name: testName},
+			ssn: &framework.Session{Jobs: map[api.JobID]*api.JobInfo{"0": {Tasks: map[api.TaskID]*api.TaskInfo{
+				"1": {Name: "task0", Namespace: testName}}}}},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	return tests
 }

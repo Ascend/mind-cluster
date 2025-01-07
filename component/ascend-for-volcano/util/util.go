@@ -96,12 +96,6 @@ func GetConfigFromSchedulerConfigMap(configKey string, configurations []config.C
 		return cfg, nil
 	}
 
-	// compatible with old versions, because of the name field is not configured in the old versions.
-	if configKey == CMSelectorKey {
-		// if user removes configuration name and changes the order, will make mistakes.
-		return getConfigurationOldVersion(configurations), nil
-	}
-
 	return nil, fmt.Errorf("cannot get configurations by name [%s], name not in configurations", configKey)
 }
 
@@ -114,13 +108,6 @@ func getConfigurationByKey(configKey string, configurations []config.Configurati
 	}
 
 	return nil
-}
-
-// getConfigurationOldVersion called by GetConfigFromSchedulerConfigMap
-func getConfigurationOldVersion(configurations []config.Configuration) *config.Configuration {
-	// if user removes configuration name and changes the order, will make mistakes.
-	klog.V(LogDebugLev).Info("compatible with old versions, get the selector configuration successful.")
-	return &configurations[0]
 }
 
 // Max return the bigger one

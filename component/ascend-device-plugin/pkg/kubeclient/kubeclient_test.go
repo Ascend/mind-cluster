@@ -429,7 +429,7 @@ func TestGetNodeNameFromEnv(t *testing.T) {
 
 // TestCheckNodeName test check node name
 func TestCheckNodeName(t *testing.T) {
-	convey.Convey("test check node name failed when node name is \"\"", t, func() {
+	convey.Convey(`test check node name failed when node name is ""`, t, func() {
 		nodeName := ""
 		err := checkNodeName(nodeName)
 		convey.So(err.Error(), convey.ShouldEqual, "the env variable whose key is NODE_NAME must be set")

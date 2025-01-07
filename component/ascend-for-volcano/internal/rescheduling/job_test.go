@@ -25,6 +25,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -333,6 +334,15 @@ func TestIsNormalJobNeedRestart(t *testing.T) {
 	}
 }
 
+const (
+	mockJobName   = "job0"
+	mockTaskUID   = "task01"
+	mockCardName1 = "npu1"
+	mockCardName2 = "npu2"
+	mockJobUID    = "vcjob/job0"
+	mockNumFive   = 5
+)
+
 func TestGetJobFaultNPUTaskNum(t *testing.T) {
 	t.Run("01-GetJobFaultNPUTaskNum return 0 when fJob.FaultTasks is empty slice",
 		func(t *testing.T) {
@@ -344,7 +354,7 @@ func TestGetJobFaultNPUTaskNum(t *testing.T) {
 	t.Run("02-GetJobFaultNPUTaskNum return greater than 0 when fJob.FaultTasks is not empty slice",
 		func(t *testing.T) {
 			fJob := &FaultJob{FaultTasks: []FaultTask{{
-				UseCardName: []string{"npu1", "npu2"},
+				UseCardName: []string{mockCardName1, mockCardName2},
 			}}}
 			if res := fJob.GetJobFaultNPUTaskNum(); res <= 0 {
 				t.Errorf("GetJobFaultNPUTaskNum() res = %v, wantRes > 0", res)
@@ -355,24 +365,468 @@ func TestGetJobFaultNPUTaskNum(t *testing.T) {
 func TestIsJobGraceDeleteSuccess(t *testing.T) {
 	fJob := &FaultJob{FaultTasks: []FaultTask{{
 		IsFaultTask: true,
-		TaskUID:     "task01",
-		UseCardName: []string{"npu1", "npu2"},
+		TaskUID:     mockTaskUID,
+		UseCardName: []string{mockCardName1, mockCardName2},
 	}}}
-	jobInfo := test.FakeNormalTestJob("job0", util.NPUIndex2)
-	jobInfo.Tasks = map[api.TaskID]*api.TaskInfo{"task01": {Pod: &v1.Pod{}}}
-	t.Run("01-isJobGraceDeleteSuccess return true when jobInfo.Tasks is not nil", func(t *testing.T) {
+	jobInfo := test.FakeNormalTestJob(mockJobName, util.NPUIndex2)
+	t.Run("01-isJobGraceDeleteSuccess return true when jobInfo.Tasks is nil", func(t *testing.T) {
 		if res := fJob.isJobGraceDeleteSuccess(jobInfo); res != true {
-			t.Errorf("isJobGraceDeleteSuccess() res = %v, wantRes is false", res)
+			t.Errorf("isJobGraceDeleteSuccess() res = %v, want true", res)
 		}
 	})
 	t.Run("02-isJobGraceDeleteSuccess return true when jobInfo.PodGroup.Labels is not nil",
 		func(t *testing.T) {
 			fJob.PendingSessionNum = spPendingTimes
+			jobInfo.Tasks = map[api.TaskID]*api.TaskInfo{
+				mockTaskUID: {Pod: &v1.Pod{}},
+			}
 			jobInfo.PodGroup.Labels = map[string]string{
 				util.SinglePodTag: util.EnableFunc,
 			}
 			if res := fJob.isJobGraceDeleteSuccess(jobInfo); res != true {
-				t.Errorf("isJobGraceDeleteSuccess() res = %v, wantRes is false", res)
+				t.Errorf("isJobGraceDeleteSuccess() res = %v, want true", res)
 			}
 		})
+}
+
+func TestCheckJobExistsInKubernetes(t *testing.T) {
+	t.Run("01-CheckJobExistsInKubernetes return false when fJob.FaultTasks is nil", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID}
+		if res := fJob.CheckJobExistsInKubernetes(nil); res != false {
+			t.Errorf("CheckJobExistsInKubernetes() res = %v, wantRes is false", res)
+		}
+	})
+}
+
+func TestDeleteJobWithLabels(t *testing.T) {
+	ssn := test.FakeNormalSSN(nil)
+	t.Run("01-deleteJobWithLabels return error when isFaultJobCanRestarted failed", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID}
+		err := fJob.deleteJobWithLabels(ssn, &ReScheduler{}, &plugin.SchedulerJob{}, plugin.ScheduleEnv{})
+		if err == nil {
+			t.Errorf("deleteJobWithLabels() err = %v, wantErr is nil", err)
+		}
+	})
+	t.Run("02-deleteJobWithLabels return error when deleteJobWithSubHealthyLabels success", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, SubHealthyStrategy: util.SubHealthyForceExit, IsSubHealthFault: true,
+			IsFaultJob: true, faultReason: PodHealthy}
+		env := plugin.ScheduleEnv{
+			FrameAttr: plugin.VolcanoFrame{
+				KubeClient: fake.NewSimpleClientset(),
+			},
+			SuperPodInfo: &plugin.SuperPodInfo{
+				SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+			},
+		}
+		if err := fJob.deleteJobWithLabels(ssn, &ReScheduler{}, &plugin.SchedulerJob{}, env); err != nil {
+			t.Errorf("deleteJobWithLabels() err = %v, wantErr is nil", err)
+		}
+	})
+}
+
+type isFaultJobCanRestartedTestCase struct {
+	name       string
+	fJob       *FaultJob
+	reschedule *ReScheduler
+	wantRes    bool
+}
+
+func buildIsFaultJobCanRestartedTestCases() []isFaultJobCanRestartedTestCase {
+	return []isFaultJobCanRestartedTestCase{
+		{
+			name:       "01-isFaultJobCanRestarted returns false when fJob.IsFaultJob is false",
+			fJob:       &FaultJob{JobUID: mockJobUID},
+			reschedule: &ReScheduler{},
+			wantRes:    false,
+		},
+		{
+			name:       "02-isFaultJobCanRestarted returns true when fJob.faultReason is PodHealthy",
+			fJob:       &FaultJob{JobUID: mockJobUID, IsFaultJob: true, faultReason: PodHealthy},
+			reschedule: &ReScheduler{},
+			wantRes:    true,
+		},
+		{
+			name:       "03-isFaultJobCanRestarted returns false when fJob.faultReason is PodFailed",
+			fJob:       &FaultJob{JobUID: mockJobUID, IsFaultJob: true, faultReason: PodFailed},
+			reschedule: &ReScheduler{},
+			wantRes:    false,
+		},
+		{
+			name: "04-isFaultJobCanRestarted returns false when JobRemainRetryTimes not found key",
+			fJob: &FaultJob{JobUID: mockJobUID, IsFaultJob: true, faultReason: PodFailed, FaultRetryTimes: 1},
+			reschedule: &ReScheduler{
+				DealReSchedulerCache: &DealReSchedulerCache{
+					JobRemainRetryTimes: map[api.JobID]*RemainRetryTimes{mockJobUID: nil},
+				},
+			},
+			wantRes: false,
+		},
+		{
+			name: "05-isFaultJobCanRestarted returns false when remain.Times is 0",
+			fJob: &FaultJob{JobUID: mockJobUID, IsFaultJob: true, faultReason: PodFailed, FaultRetryTimes: 1},
+			reschedule: &ReScheduler{
+				DealReSchedulerCache: &DealReSchedulerCache{
+					JobRemainRetryTimes: map[api.JobID]*RemainRetryTimes{
+						mockJobUID: {UUID: mockJobUID, Times: 0},
+					},
+				},
+			},
+			wantRes: false,
+		},
+	}
+}
+
+func TestIsFaultJobCanRestarted(t *testing.T) {
+	testCases := buildIsFaultJobCanRestartedTestCases()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.fJob.isFaultJobCanRestarted(tc.reschedule)
+			if res != tc.wantRes {
+				t.Errorf("isFaultJobCanRestarted() res = %v, wantRes %v", res, tc.wantRes)
+			}
+		})
+	}
+}
+
+func TestDeleteJobWithSubHealthyLabels(t *testing.T) {
+	fJob := &FaultJob{JobUID: mockJobUID}
+	t.Run("01-deleteJobWithSubHealthyLabels return nil when fJob.IsFaultJob is false", func(t *testing.T) {
+		ssn := test.FakeNormalSSN(nil)
+		env := plugin.ScheduleEnv{
+			FrameAttr: plugin.VolcanoFrame{
+				KubeClient: fake.NewSimpleClientset(),
+			},
+			SuperPodInfo: &plugin.SuperPodInfo{
+				SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+			},
+		}
+		err := fJob.deleteJobWithSubHealthyLabels(ssn, &ReScheduler{}, &plugin.SchedulerJob{}, env)
+		if err != nil {
+			t.Errorf("deleteJobWithSubHealthyLabels() err = %v, wantErr is nil", err)
+		}
+	})
+	t.Run("02-deleteJobWithSubHealthyLabels return error when ssn is nil", func(t *testing.T) {
+		fJob.SubHealthyStrategy = util.SubHealthyForceExit
+		err := fJob.deleteJobWithSubHealthyLabels(nil, nil, nil, plugin.ScheduleEnv{})
+		if err == nil {
+			t.Errorf("deleteJobWithSubHealthyLabels() err = %v, wantErr is not nil", err)
+		}
+	})
+}
+
+func TestDeleteJobWithFaultLabels(t *testing.T) {
+	t.Run("01-deleteJobWithFaultLabels return error when ssn is nil", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, SubHealthyStrategy: util.SubHealthyForceExit}
+		err := fJob.deleteJobWithFaultLabels(nil, nil, nil, plugin.ScheduleEnv{})
+		if err == nil {
+			t.Errorf("deleteJobWithFaultLabels() err = %v, wantErr is not nil", err)
+		}
+	})
+	t.Run("02-deleteJobWithFaultLabels return error when ssn is nil", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, ReScheduleKey: JobForceRescheduleLabelValue}
+		err := fJob.deleteJobWithFaultLabels(nil, nil, nil, plugin.ScheduleEnv{})
+		if err == nil {
+			t.Errorf("deleteJobWithFaultLabels() err = %v, wantErr is not nil", err)
+		}
+	})
+}
+
+func TestIsJobSingleRescheduling(t *testing.T) {
+	t.Run("01-IsJobSingleRescheduling return true when pod-rescheduling label is on", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, SubHealthyStrategy: util.SubHealthyForceExit}
+		sJob := &plugin.SchedulerJob{}
+		sJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+		if res := fJob.IsJobSingleRescheduling(sJob); !res {
+			t.Errorf("IsJobSingleRescheduling() res = %v, wantRes is true", res)
+		}
+	})
+}
+
+func TestIsProcessReschedulingJob(t *testing.T) {
+	t.Run("01-IsProcessReschedulingJob return true when process-recover-enable label is on", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, SubHealthyStrategy: util.SubHealthyForceExit}
+		sJob := &plugin.SchedulerJob{}
+		sJob.Label = map[string]string{util.ProcessRecoverEnable: util.EnableFunc}
+		if res := fJob.IsProcessReschedulingJob(sJob); !res {
+			t.Errorf("IsProcessReschedulingJob() res = %v, wantRes is true", res)
+		}
+	})
+	t.Run("02-IsProcessReschedulingJob return false when rocess-recover-enable label is not on", func(t *testing.T) {
+		fJob := &FaultJob{JobUID: mockJobUID, SubHealthyStrategy: util.SubHealthyForceExit}
+		sJob := &plugin.SchedulerJob{}
+		sJob.Label = map[string]string{util.ProcessRecoverEnable: ""}
+		if res := fJob.IsProcessReschedulingJob(sJob); res {
+			t.Errorf("IsProcessReschedulingJob() res = %v, wantRes is false", res)
+		}
+	})
+}
+
+func initIsNormalTaskCanBeDeleteArgs() (*FaultJob, *deletePodInfo, *plugin.SchedulerJob, plugin.ScheduleEnv) {
+	fJob := &FaultJob{
+		JobUID:             mockJobUID,
+		SubHealthyStrategy: util.SubHealthyForceExit,
+		PendingSessionNum:  spPendingTimes,
+	}
+	dpi := &deletePodInfo{
+		isMasterFault: false,
+		superPod:      false,
+		ids:           nil,
+		reason:        "",
+	}
+	schedulerJob := &plugin.SchedulerJob{}
+	schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+	env := plugin.ScheduleEnv{
+		SuperPodInfo: &plugin.SuperPodInfo{
+			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
+			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
+			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
+		},
+	}
+	return fJob, dpi, schedulerJob, env
+}
+func TestIsNormalTaskCanBeDelete(t *testing.T) {
+	fJob, dpi, schedulerJob, env := initIsNormalTaskCanBeDeleteArgs()
+	t.Run("01-isNormalTaskCanBeDelete return false when fTask.IsFaultTask and dpi.superPod are false",
+		func(t *testing.T) {
+			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, plugin.ScheduleEnv{}, dpi)
+			if res {
+				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
+			}
+		})
+	dpi.superPod = true
+	t.Run("02-isNormalTaskCanBeDelete return false when fJob.PendingSessionNum less than 6",
+		func(t *testing.T) {
+			fJob.PendingSessionNum = mockNumFive
+			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, plugin.ScheduleEnv{}, dpi)
+			if res {
+				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
+			}
+		})
+	env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
+		"0": {plugin.SuperNode{SuperPodID: 1, Name: "node1"}},
+	}
+	t.Run("03-isNormalTaskCanBeDelete return false when isContainTask function return false",
+		func(t *testing.T) {
+			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			if res {
+				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
+			}
+		})
+
+	t.Run("04-isNormalTaskCanBeDelete return false when IsProcessReschedulingJob function return true "+
+		"and fTask.IsFaultTask is false",
+		func(t *testing.T) {
+			schedulerJob.Label = map[string]string{util.ProcessRecoverEnable: util.EnableFunc}
+			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			if res {
+				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
+			}
+		})
+
+	t.Run("05-isNormalTaskCanBeDelete return true when IsProcessReschedulingJob function return false ",
+		func(t *testing.T) {
+			schedulerJob.Label = map[string]string{}
+			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			if !res {
+				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is true", res)
+			}
+		})
+}
+
+func TestGetTaskPodUidByTaskName(t *testing.T) {
+	jobInfo := test.FakeNormalTestJob(mockJobName, util.NPUIndex2)
+	t.Run("01-getTaskPodUidByTaskName return empty string when taskName is empty", func(t *testing.T) {
+		if res := getTaskPodUidByTaskName("", jobInfo); res != "" {
+			t.Errorf("getTaskPodUidByTaskName() res = %v, wantRes is empty string", res)
+		}
+	})
+	t.Run("02-getTaskPodUidByTaskName return non-empty string when taskName is not empty", func(t *testing.T) {
+		if res := getTaskPodUidByTaskName("pod0", jobInfo); res == "" {
+			t.Errorf("getTaskPodUidByTaskName() res = %v, wantRes is non-empty string", res)
+		}
+	})
+}
+
+func TestGraceDeleteJob(t *testing.T) {
+	fJob := &FaultJob{JobUID: mockJobUID}
+	env := plugin.ScheduleEnv{
+		SuperPodInfo: &plugin.SuperPodInfo{
+			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
+			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
+			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
+		},
+	}
+	npuJob := &plugin.SchedulerJob{}
+	t.Run("01-GraceDeleteJob return error when ssn is nil", func(t *testing.T) {
+		err := fJob.GraceDeleteJob(nil, &plugin.SchedulerJob{}, env)
+		if err == nil {
+			t.Errorf("GraceDeleteJob() err = %v, wantErr is not nil", err)
+		}
+	})
+	t.Run("02-GraceDeleteJob return error when npuJob is nil", func(t *testing.T) {
+		err := fJob.GraceDeleteJob(&framework.Session{}, nil, env)
+		if err == nil {
+			t.Errorf("GraceDeleteJob() err = %v, wantErr is not nil", err)
+		}
+	})
+	t.Run("03-GraceDeleteJob return nil when ssn and npuJob are not nil", func(t *testing.T) {
+		npuJob.Annotation = map[string]string{SuperPodAnnoKey: ""}
+		err := fJob.GraceDeleteJob(&framework.Session{}, npuJob, env)
+		if err != nil {
+			t.Errorf("GraceDeleteJob() err = %v, wantErr is nil", err)
+		}
+	})
+}
+
+func mockFaultJobWithTasks() *FaultJob {
+	return &FaultJob{
+		JobUID: mockJobUID,
+		FaultTasks: []FaultTask{
+			{
+				IsFaultTask: true,
+				TaskUID:     mockTaskUID,
+				UseCardName: []string{mockCardName1, mockCardName2},
+			},
+		}}
+}
+
+func TestGraceDeletePods(t *testing.T) {
+	fJob := mockFaultJobWithTasks()
+	ssn := test.FakeNormalSSN(nil)
+	npuJob := &plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			NPUJob: &util.NPUJob{
+				Tasks: map[api.TaskID]util.NPUTask{},
+			},
+		},
+	}
+	env := plugin.ScheduleEnv{
+		SuperPodInfo: &plugin.SuperPodInfo{
+			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
+			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
+			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
+		},
+	}
+	t.Run("01-graceDeletePods return error when npuTask not in session", func(t *testing.T) {
+		if err := fJob.graceDeletePods(ssn, npuJob, env, &deletePodInfo{}); err == nil {
+			t.Errorf("graceDeletePods() err = %v, wantErr is not nil", err)
+		}
+	})
+	t.Run("02-graceDeletePods return nil when npuTask in session", func(t *testing.T) {
+		npuJob.Label = map[string]string{}
+		npuJob.Tasks = map[api.TaskID]util.NPUTask{mockTaskUID: {
+			VTask: &util.VTask{Allocated: util.TaskAllocated{}}}}
+		if err := fJob.graceDeletePods(ssn, npuJob, env, &deletePodInfo{}); err != nil {
+			t.Errorf("graceDeletePods() err = %v, wantErr is nil", err)
+		}
+	})
+}
+
+func TestRestartSingleFaultJob(t *testing.T) {
+	fJob := &FaultJob{JobUID: mockJobUID}
+	t.Run("01-restartSingleFaultJob return error when fJob.ReScheduleKey is off",
+		func(t *testing.T) {
+			fJob.ReScheduleKey = JobOffRescheduleLabelValue
+			err := fJob.restartSingleFaultJob(nil, nil, nil, plugin.ScheduleEnv{})
+			if err == nil {
+				t.Errorf("restartSingleFaultJob() err = %v, wantErr is not nil", err)
+			}
+		})
+	t.Run("02-restartSingleFaultJob return error when fJob.ReScheduleKey is fault-scheduling",
+		func(t *testing.T) {
+			fJob.ReScheduleKey = JobRescheduleLabelKey
+			err := fJob.restartSingleFaultJob(nil, nil, nil, plugin.ScheduleEnv{})
+			if err == nil {
+				t.Errorf("restartSingleFaultJob() err = %v, wantErr is not nil", err)
+			}
+		})
+}
+
+func TestJobInfoInSession(t *testing.T) {
+	fJob := &FaultJob{JobUID: mockJobUID, ElasticScheduling: JobOnElasticScheduling}
+	jobs := map[api.JobID]*api.JobInfo{
+		mockJobUID: {
+			UID: mockJobUID,
+		},
+	}
+	t.Run("01-jobInfoInSession return nil when fJob.ElasticScheduling is on and jobs is nil",
+		func(t *testing.T) {
+			if res := fJob.jobInfoInSession(nil); res != nil {
+				t.Errorf("jobInfoInSession() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("02-jobInfoInSession return nil when fJob.ElasticScheduling is on and jobs is not nil",
+		func(t *testing.T) {
+			if res := fJob.jobInfoInSession(jobs); res == nil {
+				t.Errorf("jobInfoInSession() res = %v, wantRes is not nil", res)
+			}
+		})
+	fJob.ElasticScheduling = JobOffElasticScheduling
+	t.Run("03-jobInfoInSession return nil when fJob.ElasticScheduling is off and jobs is nil",
+		func(t *testing.T) {
+
+			if res := fJob.jobInfoInSession(nil); res != nil {
+				t.Errorf("jobInfoInSession() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("04-jobInfoInSession return nil when fJob.ElasticScheduling is off and jobs is not nil",
+		func(t *testing.T) {
+			if res := fJob.jobInfoInSession(jobs); res == nil {
+				t.Errorf("jobInfoInSession() res = %v, wantRes is not nil", res)
+			}
+		})
+}
+
+func TestInitJobFaultRank(t *testing.T) {
+	fJob := mockFaultJobWithTasks()
+	t.Run("01-initJobFaultRank return nil when fJob.FaultTasks is empty", func(t *testing.T) {
+		if res := fJob.initJobFaultRank(); res == nil {
+			t.Errorf("initJobFaultRank() res = %v, wantRes is not nil", res)
+		}
+	})
+}
+
+func TestCheckJobNodeRankIndexValid(t *testing.T) {
+	fJob := mockFaultJobWithTasks()
+	t.Run("01-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is empty string",
+		func(t *testing.T) {
+			if res := fJob.checkJobNodeRankIndexValid(); res {
+				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is false", res)
+			}
+		})
+	t.Run("02-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is non-empty string",
+		func(t *testing.T) {
+			fJob.FaultTasks = []FaultTask{
+				{
+					IsFaultTask:   true,
+					TaskUID:       mockTaskUID,
+					NodeRankIndex: "1",
+					UseCardName:   []string{mockCardName1, mockCardName2},
+				},
+			}
+			if res := fJob.checkJobNodeRankIndexValid(); !res {
+				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is true", res)
+			}
+		})
+}
+
+func TestFaultRetryTimeOfJob(t *testing.T) {
+	job := test.FakeNormalTestJob("test", 1)
+	t.Run("01-faultRetryTimeOfJob return 0 when label is nil", func(t *testing.T) {
+		if res := faultRetryTimeOfJob(job); res != 0 {
+			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 0", res)
+		}
+	})
+	t.Run("02-faultRetryTimeOfJob return 0 when string convert to int failed", func(t *testing.T) {
+		job.PodGroup.Labels = map[string]string{FaultRetryTimesKey: ""}
+		if res := faultRetryTimeOfJob(job); res != 0 {
+			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 0", res)
+		}
+	})
+	t.Run("03-faultRetryTimeOfJob return 1 when string convert to int success", func(t *testing.T) {
+		job.PodGroup.Labels = map[string]string{FaultRetryTimesKey: "1"}
+		if res := faultRetryTimeOfJob(job); res == 0 {
+			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 1", res)
+		}
+	})
 }
