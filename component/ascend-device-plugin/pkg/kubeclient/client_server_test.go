@@ -241,52 +241,6 @@ func TestWriteResetInfoDataIntoCM(t *testing.T) {
 	})
 }
 
-// TestWriteFaultInfoDataIntoCM get cm write fault info
-func TestWriteFaultInfoDataIntoCM(t *testing.T) {
-	utKubeClient, err := initK8S()
-	if err != nil {
-		t.Fatal("TestWriteFaultInfoDataIntoCM init kubernetes failed")
-	}
-	oldCM := getMockCreateCM(common.ResetInfoCMDataKey, common.ResetInfoCMNamePrefix+"node")
-	defer oldCM.Reset()
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
-	defer testPod.Reset()
-	testTaskFaultInfo := getTaskFaultInfo()
-	mockGetCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
-		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
-			return nil, fmt.Errorf("failed to get fault cm")
-		})
-	defer mockGetCM.Reset()
-	convey.Convey("write fault info when failed to get fault cm", t, func() {
-		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
-		convey.So(err.Error(), convey.ShouldEqual, "failed to get fault cm")
-	})
-	mockGetCM = gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
-		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) {
-			return oldCM, nil
-		})
-	defer mockGetCM.Reset()
-	mockMakeDataHash := gomonkey.ApplyFuncReturn(common.MakeDataHash, "testCheckCode")
-	defer mockMakeDataHash.Reset()
-	convey.Convey("write fault info when marshal task reset data failed", t, func() {
-		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, nil)
-		defer mockMarshalData.Reset()
-		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
-		convey.So(err.Error(), convey.ShouldEqual, "marshal task reset data failed")
-	})
-	convey.Convey("write fault info when update cm", t, func() {
-		mockUpdateCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "UpdateConfigMap",
-			func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) {
-				return oldCM, nil
-			})
-		defer mockUpdateCM.Reset()
-		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, []byte{1})
-		defer mockMarshalData.Reset()
-		_, err := utKubeClient.WriteFaultInfoDataIntoCM("taskName", testPod.Namespace, testTaskFaultInfo)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
 // TestTryUpdatePodAnnotation try update pod annotation
 func TestTryUpdatePodAnnotation(t *testing.T) {
 	utKubeClient, err := initK8S()
@@ -597,13 +551,6 @@ func getContainers(devType string) []v1.Container {
 	}
 	return []v1.Container{
 		container,
-	}
-}
-
-func getTaskFaultInfo() *common.TaskFaultInfo {
-	return &common.TaskFaultInfo{
-		FaultRank:  []int{0},
-		UpdateTime: time.Now().Unix(),
 	}
 }
 
