@@ -22,8 +22,8 @@ import (
 )
 
 func initTemplate() []util.VTemplate {
-	nodeTemplate := make([]util.VTemplate, util.NPUIndex5)
-	if len(nodeTemplate) < util.NPUIndex5 {
+	nodeTemplate := make([]util.VTemplate, util.NPUIndex6)
+	if len(nodeTemplate) < util.NPUIndex6 {
 		return nodeTemplate
 	}
 	nodeTemplate[0] = util.VTemplate{
@@ -49,6 +49,11 @@ func initTemplate() []util.VTemplate {
 	nodeTemplate[util.NPUIndex4] = util.VTemplate{
 		ChipKind: ChipTypeB4,
 		AICore:   util.CoreNum20,
+		AICPU:    util.CpuNum6,
+	}
+	nodeTemplate[util.NPUIndex5] = util.VTemplate{
+		ChipKind: ChipTypeB2,
+		AICore:   util.CoreNum24,
 		AICPU:    util.CpuNum6,
 	}
 	return nodeTemplate

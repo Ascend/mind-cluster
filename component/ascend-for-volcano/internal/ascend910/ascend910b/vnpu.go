@@ -126,8 +126,8 @@ func (tp *Base910b) checkDyVJobReqByTemp(vT util.NPUTask) bool {
 	switch tp.VHandle.VT.Temp {
 	case plugin.ChipTypeB1:
 		return checkB1DyJobRequire(vT)
-	case plugin.ChipTypeB2C:
-		return checkB2CDyJobRequire(vT)
+	case plugin.ChipTypeB2C, plugin.ChipTypeB2:
+		return checkB2AndB2CDyJobRequire(vT)
 	case plugin.ChipTypeB3:
 		return checkB3DyJobRequire(vT)
 	case plugin.ChipTypeB4:
@@ -141,7 +141,7 @@ func checkB1DyJobRequire(vT util.NPUTask) bool {
 	return vT.ReqNPUNum == util.CoreNum6 || vT.ReqNPUNum == util.CoreNum12 || vT.ReqNPUNum%util.CoreNum25 == 0
 }
 
-func checkB2CDyJobRequire(vT util.NPUTask) bool {
+func checkB2AndB2CDyJobRequire(vT util.NPUTask) bool {
 	return vT.ReqNPUNum == util.CoreNum6 || vT.ReqNPUNum == util.CoreNum12 || vT.ReqNPUNum%util.CoreNum24 == 0
 }
 

@@ -139,9 +139,7 @@ func getResTemplateFromTaskSetting(coreNum int, cpuLevel, dvpp string) string {
 // getResTemplateFromTaskSetting get like vir04_3c_ndvpp
 func getResTemplateFromTaskSettingAndChipType(coreNum int, dvpp, chipType string) string {
 	switch chipType {
-	case plugin.ChipTypeB1:
-		return getResTemplateFromTaskSettingForB1AndB2C(coreNum)
-	case plugin.ChipTypeB2C:
+	case plugin.ChipTypeB1, plugin.ChipTypeB2C, plugin.ChipTypeB2:
 		return getResTemplateFromTaskSettingForB1AndB2C(coreNum)
 	case plugin.ChipTypeB3:
 		return getResTemplateFromTaskSettingForB3(coreNum)

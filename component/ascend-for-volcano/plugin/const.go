@@ -95,15 +95,18 @@ const (
 )
 
 const (
+	chipKind    = "910"
 	chipTypeKey = "node.kubernetes.io/npu.chip.name"
 	// ChipTypeB1 chip type 910B1
-	ChipTypeB1 = "910B1"
+	ChipTypeB1 = chipKind + "B1"
 	// ChipTypeB2C chip type 910B2C
-	ChipTypeB2C = "910B2C"
+	ChipTypeB2C = chipKind + "B2C"
+	// ChipTypeB2 chip type 910 B2
+	ChipTypeB2 = chipKind + "B2"
 	// ChipTypeB3 chip type 910B3
-	ChipTypeB3 = "910B3"
+	ChipTypeB3 = chipKind + "B3"
 	// ChipTypeB4 chip type 910B4
-	ChipTypeB4 = "910B4"
+	ChipTypeB4 = chipKind + "B4"
 )
 
 // the temp of 910B1/910B2C
