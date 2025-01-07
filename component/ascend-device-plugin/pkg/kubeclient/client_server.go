@@ -281,40 +281,6 @@ func setNewTaskInfoWithHexString(taskInfo *common.TaskResetInfo) *common.TaskRes
 	return &newTaskInfo
 }
 
-// WriteFaultInfoDataIntoCM write fault info into config map
-func (ki *ClientK8s) WriteFaultInfoDataIntoCM(taskName string, namespace string,
-	faultInfo *common.TaskFaultInfo) (*v1.ConfigMap, error) {
-	oldCM, err := ki.GetConfigMap(common.FaultInfoCMNamePrefix+taskName, namespace)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			hwlog.RunLog.Infof("fault config map in task %s is not found", taskName)
-			return nil, nil
-		}
-		hwlog.RunLog.Errorf("failed to get fault cm of task %s, err: %v", taskName, err)
-		return nil, err
-	}
-	taskFaultInfo := &common.TaskFaultInfoCache{
-		FaultInfo: faultInfo,
-	}
-	taskFaultInfo.FaultInfo.UpdateTime = time.Now().Unix()
-	checkCode := common.MakeDataHash(taskFaultInfo.FaultInfo)
-	var data []byte
-	if data = common.MarshalData(taskFaultInfo.FaultInfo); len(data) == 0 {
-		return nil, fmt.Errorf("marshal task reset data failed")
-	}
-	faultInfoCM := &v1.ConfigMap{
-		TypeMeta:   oldCM.TypeMeta,
-		ObjectMeta: oldCM.ObjectMeta,
-		Data: map[string]string{
-			common.FaultInfoCMDataKey:      string(data),
-			common.FaultInfoCMCheckCodeKey: checkCode,
-		},
-	}
-
-	hwlog.RunLog.Debugf("write fault info cache into cm: %s/%s.", faultInfoCM.Namespace, faultInfoCM.Name)
-	return ki.UpdateConfigMap(faultInfoCM)
-}
-
 // AnnotationReset reset annotation and device info
 func (ki *ClientK8s) AnnotationReset() error {
 	curNode, err := ki.GetNode()

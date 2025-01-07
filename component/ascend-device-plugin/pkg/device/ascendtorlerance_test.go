@@ -400,34 +400,6 @@ func TestGetTaskResetInfo(t *testing.T) {
 	})
 }
 
-// TestGetTaskFaultRankInfo for test get the fault rank info of task
-func TestGetTaskFaultRankInfo(t *testing.T) {
-	convey.Convey("test GetTaskFaultRankInfo", t, func() {
-		convey.Convey("test GetTaskFaultRankInfo success", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			faultRankInfo, err := tool.GetTaskFaultRankInfo(devFaultInfoList)
-			convey.So(err, convey.ShouldBeNil)
-			sliceIntEqual(faultRankInfo.FaultRank, []int{0, 1})
-		})
-		convey.Convey("test GetTaskFaultRankInfo failed", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			faultRankInfo, err := tool.GetTaskFaultRankInfo(devFaultInfoList)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(faultRankInfo.FaultRank), convey.ShouldEqual, 0)
-		})
-	})
-}
-
 // TestGetFaultDev2PodMap for test get the fault dev with pod map
 func TestGetFaultDev2PodMap(t *testing.T) {
 	convey.Convey("test GetFaultDev2PodMap", t, func() {

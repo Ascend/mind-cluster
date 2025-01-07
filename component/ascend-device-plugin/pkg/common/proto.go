@@ -242,18 +242,6 @@ type DevFaultInfo struct {
 	ErrorCodeHex  string
 }
 
-// TaskFaultInfoCache record task fault rank information cache
-type TaskFaultInfoCache struct {
-	FaultInfo *TaskFaultInfo
-	CheckCode string
-}
-
-// TaskFaultInfo record task fault rank information
-type TaskFaultInfo struct {
-	FaultRank  []int
-	UpdateTime int64
-}
-
 // SuperPodInfo is super pod info
 type SuperPodInfo struct {
 	ScaleType  int32

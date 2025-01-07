@@ -60,7 +60,6 @@ type HotResetManager interface {
 	GetNeedResetDevMap([]*common.TaskDevInfo) (map[int32]int32, error)
 	GetGlobalDevFaultInfo(logicID int32) (*common.DevFaultInfo, error)
 	GetTaskResetInfo([]*common.TaskDevInfo, string, string, string) (*common.TaskResetInfo, error)
-	GetTaskFaultRankInfo([]*common.TaskDevInfo) (*common.TaskFaultInfo, error)
 	GetFaultDev2PodMap() (map[int32]v1.Pod, error)
 	GetTaskNameByPod(pod v1.Pod) string
 	GenerateTaskDevFaultInfoList(devIdList []int32, rankIndex string) ([]*common.TaskDevInfo, error)
@@ -580,36 +579,6 @@ func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInf
 	return &common.TaskResetInfo{
 		RankList: rankList,
 	}, nil
-}
-
-// GetTaskFaultRankInfo return the fault rank info of task to update fault cm
-func (hrt *HotResetTools) GetTaskFaultRankInfo(devFaultInfoList []*common.TaskDevInfo) (*common.TaskFaultInfo, error) {
-	taskFaultInfo := &common.TaskFaultInfo{
-		FaultRank: make([]int, 0),
-	}
-	faultRing := make(map[int]struct{}, common.RingSum)
-	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return nil, err
-	}
-	for _, devFaultInfo := range devFaultInfoList {
-		policy := processPolicyTable[devFaultInfo.Policy]
-		if policy != common.RestartErrorLevel && policy != common.ResetErrorLevel &&
-			policy != common.RestartRequestErrorLevel {
-			continue
-		}
-		ringStartIndex := int(devFaultInfo.LogicId) / resetDevNumOnce
-		faultRing[ringStartIndex] = struct{}{}
-	}
-	for _, devInfo := range devFaultInfoList {
-		ringIndex := int(devInfo.LogicId) / resetDevNumOnce
-		if _, ok := faultRing[ringIndex]; !ok {
-			continue
-		}
-		taskFaultInfo.FaultRank = append(taskFaultInfo.FaultRank, devInfo.RankId)
-	}
-	return taskFaultInfo, nil
 }
 
 // GetFaultDev2PodMap return map which contains fault device and pod
