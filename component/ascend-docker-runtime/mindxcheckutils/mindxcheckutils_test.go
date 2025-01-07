@@ -16,14 +16,35 @@
 package mindxcheckutils
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
 	fileMode0600 os.FileMode = 0600
 )
+
+var testError = errors.New("test")
+
+func init() {
+	ctx, _ := context.WithCancel(context.Background())
+	logConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	if err := hwlog.InitRunLogger(&logConfig, ctx); err != nil {
+		fmt.Printf("hwlog init failed, error is %v", err)
+	}
+}
 
 func TestNormalFileCheckRegularFile(t *testing.T) {
 	tmpDir, filePath, err := createTestFile(t, "test_file.txt")
@@ -92,6 +113,7 @@ func TestGetLogPrefix(t *testing.T) {
 	}
 }
 
+// TestRealFileChecker test the function RealFileChecker
 func TestRealFileChecker(t *testing.T) {
 	tmpDir, filePath, err := createTestFile(t, "test_file.txt")
 	if err != nil {
@@ -111,6 +133,74 @@ func TestRealFileChecker(t *testing.T) {
 	}
 }
 
+// TestRealFileChecker1 test the function RealFileChecker patch1
+func TestRealFileChecker1(t *testing.T) {
+	convey.Convey("test RealFileChecker patch1", t, func() {
+		convey.Convey("01-string check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, false)
+			defer patches.Reset()
+			ret, err := RealFileChecker("", false, false, 0)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-file check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, testError)
+			defer patches.Reset()
+			ret, err := RealFileChecker("", false, false, 0)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-get file absolute path fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, true, nil).
+				ApplyFuncReturn(filepath.Abs, "", testError)
+			defer patches.Reset()
+			ret, err := RealFileChecker("", false, false, 0)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("04-fail to get real path, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, true, nil).
+				ApplyFuncReturn(filepath.Abs, "", nil).
+				ApplyFuncReturn(filepath.EvalSymlinks, "", testError)
+			defer patches.Reset()
+			ret, err := RealFileChecker("", false, false, 0)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// MockFileInfo mock os.FileInfo
+type MockFileInfo struct {
+	os.FileInfo
+}
+
+// IsDir mock the method IsDir, return false
+func (MockFileInfo) IsDir() bool {
+	return false
+}
+
+// TestRealFileChecker2 test the function RealFileChecker patch2
+func TestRealFileChecker2(t *testing.T) {
+	convey.Convey("test RealFileChecker patch2", t, func() {
+		convey.Convey("05-fail to stat, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, true, nil).
+				ApplyFuncReturn(filepath.Abs, "", nil).
+				ApplyFuncReturn(filepath.EvalSymlinks, "", nil).
+				ApplyFuncReturn(os.Stat, MockFileInfo{}, testError)
+			defer patches.Reset()
+			ret, err := RealFileChecker("", false, false, 0)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestRealDirChecker test the function RealDirChecker
 func TestRealDirChecker(t *testing.T) {
 	tmpDir, filePath, err := createTestFile(t, "test_file.txt")
 	if err != nil {
@@ -123,6 +213,74 @@ func TestRealDirChecker(t *testing.T) {
 	if _, err = RealDirChecker(tmpDir, false, true); err != nil {
 		t.Fatalf("should be dir 1 %q: %s", filePath, err)
 	}
+}
+
+// TestRealDirChecker1 test the function RealDirChecker patch1
+func TestRealDirChecker1(t *testing.T) {
+	convey.Convey("test RealDirChecker patch1", t, func() {
+		convey.Convey("01-string check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, false)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-file check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, testError)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-get file abs path fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, nil).
+				ApplyFuncReturn(filepath.Abs, "", testError)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("04-get real file path fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, nil).
+				ApplyFuncReturn(filepath.Abs, "", nil).
+				ApplyFuncReturn(filepath.EvalSymlinks, "", testError)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestRealDirChecker2 test the function RealDirChecker patch2
+func TestRealDirChecker2(t *testing.T) {
+	convey.Convey("test RealDirChecker patch2", t, func() {
+		convey.Convey("05-stat error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, nil).
+				ApplyFuncReturn(filepath.Abs, "", nil).
+				ApplyFuncReturn(filepath.EvalSymlinks, "", nil).
+				ApplyFuncReturn(os.Stat, MockFileInfo{}, testError)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("06-not dir, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(FileChecker, false, nil).
+				ApplyFuncReturn(filepath.Abs, "", nil).
+				ApplyFuncReturn(filepath.EvalSymlinks, "", nil).
+				ApplyFuncReturn(os.Stat, MockFileInfo{}, nil)
+			defer patches.Reset()
+			ret, err := RealDirChecker("", false, false)
+			convey.So(ret, convey.ShouldEqual, notValidPath)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }
 
 func TestStringChecker(t *testing.T) {

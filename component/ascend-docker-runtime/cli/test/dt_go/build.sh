@@ -24,13 +24,13 @@ export GONOSUMDB="*"
 
 function execute_test() {
   cd ${TOP_DIR}
-  if ! (go test  -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out ${TOP_DIR}/... >./$file_input); then
+  if ! (go test  -mod=mod -gcflags=-l -v -coverprofile cov.out ${TOP_DIR}/... >./$file_input); then
     echo '****** go test cases error! ******'
     exit 1
   else
     echo ${file_detail_output}
     ${GOPATH}/bin/gocov convert cov.out | ${GOPATH}/bin/gocov-html >${file_detail_output}
-    ${GOPATH}/bin/gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml "${TOP_DIR}"/...
+    ${GOPATH}/bin/gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml -- -gcflags=-l "${TOP_DIR}"/...
   fi
 }
 

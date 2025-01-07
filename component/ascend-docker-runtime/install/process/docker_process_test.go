@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-docker-runtime/mindxcheckutils"
 )
@@ -160,6 +161,86 @@ func TestCreateJsonStrinRm(t *testing.T) {
 	}
 }
 
+// TestCreateJsonString1 tests the function createJsonString patch1
+func TestCreateJsonString1(t *testing.T) {
+	convey.Convey("test createJsonString patch1", t, func() {
+		convey.Convey("01-modifyDaemon error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, nil).
+				ApplyFuncReturn(modifyDaemon, nil, testError)
+			defer patches.Reset()
+			data, err := createJsonString(oldJson, "", "rm")
+			convey.So(data, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+	convey.Convey("test createJsonString patch1", t, func() {
+		convey.Convey("02-MarshalIndent error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, nil).
+				ApplyFuncReturn(modifyDaemon, nil, nil).
+				ApplyFuncReturn(json.MarshalIndent, []byte{}, testError)
+			defer patches.Reset()
+			data, err := createJsonString(oldJson, "", "rm")
+			convey.So(data, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestCreateJsonString2 tests the function createJsonString patch2
+func TestCreateJsonString2(t *testing.T) {
+	convey.Convey("test createJsonString patch2", t, func() {
+		convey.Convey("03-modifyDaemon error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, os.ErrNotExist)
+			defer patches.Reset()
+			reserveDefaultRuntime = true
+			data, err := createJsonString(oldJson, "", "rm")
+			convey.So(string(data), convey.ShouldEqual, fmt.Sprintf(noDefaultTemplate, ""))
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("04-stat error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, testError)
+			defer patches.Reset()
+			reserveDefaultRuntime = true
+			data, err := createJsonString(oldJson, "", "rm")
+			convey.So(data, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestWriteJson tests the function writeJson
+func TestWriteJson(t *testing.T) {
+	convey.Convey("test writeJson", t, func() {
+		convey.Convey("01-write file error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, os.ErrNotExist).
+				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
+				ApplyMethodReturn(&os.File{}, "Write", 0, testError).
+				ApplyMethodReturn(&os.File{}, "Close", nil)
+			defer patches.Reset()
+			err := writeJson("", []byte{})
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-write file success, close fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, os.ErrNotExist).
+				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
+				ApplyMethodReturn(&os.File{}, "Write", 0, nil).
+				ApplyMethodReturn(&os.File{}, "Close", testError)
+			defer patches.Reset()
+			err := writeJson("", []byte{})
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-write file success, close success, should return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, os.ErrNotExist).
+				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
+				ApplyMethodReturn(&os.File{}, "Write", 0, nil).
+				ApplyMethodReturn(&os.File{}, "Close", nil)
+			defer patches.Reset()
+			err := writeJson("", []byte{})
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
 type testProcessArg struct {
 	Name       string
 	Command    []string
@@ -217,6 +298,54 @@ func TestDockerProcess(t *testing.T) {
 	}
 }
 
+// TestDockerProcess1 tests the function DockerProcess patch1
+func TestDockerProcess1(t *testing.T) {
+	emptyStr := ""
+	destFileTest := "aaa.txt.pid"
+	cmds := []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr}
+	convey.Convey("test DockerProcess patch1", t, func() {
+		convey.Convey("01-stat error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, testError).
+				ApplyFuncReturn(mindxcheckutils.RealDirChecker, "", testError)
+			defer patches.Reset()
+			_, err := DockerProcess(cmds)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-stat ok, file check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, nil).
+				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", testError)
+			defer patches.Reset()
+			_, err := DockerProcess(cmds)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-file check pass, dir check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, nil).
+				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+				ApplyFuncReturn(mindxcheckutils.RealDirChecker, "", testError)
+			defer patches.Reset()
+			_, err := DockerProcess(cmds)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestDockerProcess2 tests the function DockerProcess patch2
+func TestDockerProcess2(t *testing.T) {
+	emptyStr := ""
+	destFileTest := "aaa.txt.pid"
+	cmds := []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr}
+	convey.Convey("test DockerProcess patch1", t, func() {
+		convey.Convey("04-createJsonString fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, nil).
+				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+				ApplyFuncReturn(createJsonString, []byte{}, testError)
+			defer patches.Reset()
+			_, err := DockerProcess(cmds)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
 func getTestDockerProcessCases() []testProcessArg {
 	emptyStr := ""
 	addBehavior := "install"
@@ -257,4 +386,82 @@ func getTestDockerProcessCases() []testProcessArg {
 // FileInfoMock is used to test
 type FileInfoMock struct {
 	os.FileInfo
+}
+
+// Size for FileInfoMock is used to test
+func (f FileInfoMock) Size() int64 {
+	return maxFileSize + 1
+}
+
+// FileInfoMockV2 is used to test
+type FileInfoMockV2 struct {
+	os.FileInfo
+}
+
+// Size for FileInfoMockV2 is used to test
+func (f FileInfoMockV2) Size() int64 {
+	return maxFileSize - 1
+}
+
+// Mode for FileInfoMockV2 is used to test
+func (f FileInfoMockV2) Mode() os.FileMode {
+	return os.ModePerm
+}
+
+// TestLoadOriginJson tests the function loadOriginJson
+func TestLoadOriginJson(t *testing.T) {
+	convey.Convey("test loadOriginJson", t, func() {
+		convey.Convey("01-stat error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, nil, testError)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-stat error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMock{}, nil)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-open error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, nil).
+				ApplyFuncReturn(os.Open, nil, testError)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("04-ReadAll error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, nil).
+				ApplyFuncReturn(os.Open, &os.File{}, nil).
+				ApplyFuncReturn(ioutil.ReadAll, nil, testError)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestLoadOriginJson1 tests the function loadOriginJson patch1
+func TestLoadOriginJson1(t *testing.T) {
+	convey.Convey("test loadOriginJson patch1", t, func() {
+		convey.Convey("05-Close error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, nil).
+				ApplyFuncReturn(os.Open, &os.File{}, nil).
+				ApplyFuncReturn(ioutil.ReadAll, nil, nil).
+				ApplyMethodReturn(&os.File{}, "Close", testError)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("06-Unmarshal error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, FileInfoMockV2{}, nil).
+				ApplyFuncReturn(os.Open, &os.File{}, nil).
+				ApplyFuncReturn(ioutil.ReadAll, nil, nil).
+				ApplyMethodReturn(&os.File{}, "Close", nil).
+				ApplyFuncReturn(json.Unmarshal, testError)
+			defer patches.Reset()
+			_, err := loadOriginJson("")
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }
