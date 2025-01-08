@@ -1407,6 +1407,15 @@ func (hnm *HwAscend910Manager) preProcess(taskName, policy string) (*common.Task
 		hwlog.RunLog.Errorf("failed to write reset info to cm, err: %v", err)
 		return nil, err
 	}
+	faultInfo, err := hnm.hotResetManager.GetTaskFaultRankInfo(devFaultInfoList)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get task fault rank info, err: %v", err)
+		return nil, err
+	}
+	// This CM is used for elastic-agent to generate recover strategy, which is optional for chip reset
+	if _, err := hnm.client.WriteFaultInfoDataIntoCM(taskName, pod.Namespace, faultInfo); err != nil {
+		hwlog.RunLog.Warnf("failed to write fault rank info to cm, err %v", err)
+	}
 	if err := hnm.hotResetManager.SetTaskInReset(taskName); err != nil {
 		hwlog.RunLog.Errorf("failed to set task %s in reset", taskName)
 		return nil, err

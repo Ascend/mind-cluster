@@ -563,6 +563,15 @@ const (
 )
 
 const (
+	// FaultInfoCMNamePrefix for fault configmap name prefix
+	FaultInfoCMNamePrefix = "fault-config-"
+	// FaultInfoCMDataKey for fault configmap data key
+	FaultInfoCMDataKey = "fault-npus"
+	// FaultInfoCMCheckCodeKey for fault configmap checkcode key
+	FaultInfoCMCheckCodeKey = "checkCode"
+)
+
+const (
 	// EmptyError indicates that there is no fault
 	EmptyError = "empty"
 	// IgnoreError indicates that the current fault can be ignored
