@@ -59,7 +59,7 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 func (processor *uceAccompanyFaultProcessor) isBusinessUceFault(nodeName, deviceName string) (bool, reportInfo) {
 	uceProcessor, err := processor.deviceCenter.getUceFaultProcessor()
 	if err != nil {
-		hwlog.RunLog.Errorf("%v", err)
+		hwlog.RunLog.Error(err)
 		return false, reportInfo{}
 	}
 	info := uceProcessor.reportInfo.getInfoWithoutJobId(nodeName, deviceName)

@@ -42,7 +42,7 @@ func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 
 		if len(processor.uceAccompanyFaultQue["node1"]["Ascend910-1"]) != 1 &&
 			processor.uceAccompanyFaultQue["node1"]["Ascend910-1"][0].FaultCode == "80C98009" {
-			t.Errorf("processor.uceAccompanyFaultQue() is wrong")
+			t.Error("processor.uceAccompanyFaultQue() is wrong")
 		}
 	})
 }
@@ -77,12 +77,12 @@ func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
 		processor.deviceCmForNodeMap = make(map[string]AdvanceDeviceFaultCm)
 		processor.filterFaultInfos(currentTime)
 		if len(processor.deviceCmForNodeMap[nodeName].FaultDeviceList[deviceName]) != 1 {
-			t.Errorf("TestUceAccompanyFaultProcessorProcessForAddFault fail")
+			t.Error("TestUceAccompanyFaultProcessorProcessForAddFault fail")
 			return
 		}
 		fault := processor.deviceCmForNodeMap[nodeName].FaultDeviceList[deviceName][0]
 		if fault.FaultCode != constant.AicFaultCode {
-			t.Errorf("TestUceAccompanyFaultProcessorProcessForAddFault fail")
+			t.Error("TestUceAccompanyFaultProcessorProcessForAddFault fail")
 			return
 		}
 	})
@@ -106,7 +106,7 @@ func TestUceAccompanyFaultProcessorIsBusinessUceFault(t *testing.T) {
 		flag, info := uceAcompanyProcessor.isBusinessUceFault("nodeName", "deviceName")
 
 		if !flag || info.RecoverTime != reportTime {
-			t.Errorf("TestUceAccompanyFaultProcessorIsBusinessUceFault failed.")
+			t.Error("TestUceAccompanyFaultProcessorIsBusinessUceFault failed.")
 		}
 	})
 }

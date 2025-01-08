@@ -497,7 +497,7 @@ func TestReportInfosForAllJobsGetInfoWithoutJobId(t *testing.T) {
 		}
 		got := reportInfos.getInfoWithoutJobId(nodeName, deviceName)
 		if got.RecoverTime != recoverTime {
-			t.Errorf("TestReportInfosForAllJobsGetInfoWithoutJobId failed.")
+			t.Error("TestReportInfosForAllJobsGetInfoWithoutJobId failed.")
 		}
 	})
 }
