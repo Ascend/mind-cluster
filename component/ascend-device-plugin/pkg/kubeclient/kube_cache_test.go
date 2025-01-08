@@ -22,7 +22,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -50,7 +51,7 @@ func TestUpdatePodList(t *testing.T) {
 	}
 	podCache = make(map[types.UID]*podInfo)
 	convey.Convey("test update pod list when operator is EventTypeAdd", t, func() {
-		UpdatePodList(nil, testPod, EventTypeAdd)
+		UpdatePodList(testPod, EventTypeAdd)
 		expectPodCache := map[types.UID]*podInfo{
 			testPod.UID: {
 				Pod:        testPod,
@@ -62,7 +63,7 @@ func TestUpdatePodList(t *testing.T) {
 	testPod.Namespace = "testPod1"
 	testPod.Namespace = "testNamespace1"
 	convey.Convey("test update pod list when operator is EventTypeUpdate", t, func() {
-		UpdatePodList(nil, testPod, EventTypeUpdate)
+		UpdatePodList(testPod, EventTypeUpdate)
 		expectPodCache := map[types.UID]*podInfo{
 			testPod.UID: {
 				Pod:        testPod,
@@ -72,11 +73,15 @@ func TestUpdatePodList(t *testing.T) {
 		convey.So(podCache, convey.ShouldResemble, expectPodCache)
 	})
 	convey.Convey("test update pod list when operator is EventTypeDelete", t, func() {
-		UpdatePodList(nil, testPod, EventTypeDelete)
+		UpdatePodList(testPod, EventTypeDelete)
 		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
 	})
 	convey.Convey("test update pod list when operator is default", t, func() {
-		UpdatePodList(nil, testPod, "default")
+		UpdatePodList(testPod, "default")
+		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
+	})
+	convey.Convey("test update pod list failed when newPod is not ok", t, func() {
+		UpdatePodList(nil, "default")
 		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
 	})
 }
@@ -128,25 +133,22 @@ func TestGetAllPodListCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetAllPodListCache init kubernetes failed")
 	}
-	expectPodCache := []v1.Pod{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test1",
-				Namespace: "default",
-			},
-		},
-	}
+	expectPodCache := []v1.Pod{{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test1",
+			Namespace: "default",
+		}}}
 	convey.Convey("test get pod list by field selector with cache", t, func() {
+		client.IsApiErr = true
+		mockRefreshPodList := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "refreshPodList", func(_ *ClientK8s) { return })
+		defer mockRefreshPodList.Reset()
 		podCache = map[types.UID]*podInfo{
 			"testPod": {
 				Pod: &v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test1",
 						Namespace: "default",
-					},
-				},
-			},
-		}
+					}}}}
 		testPodList := client.GetAllPodListCache()
 		convey.So(testPodList, convey.ShouldResemble, expectPodCache)
 	})
@@ -158,14 +160,14 @@ func TestGetActivePodListCache01(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetActivePodListCache01 init kubernetes failed")
 	}
-	expectPodCache := []v1.Pod{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test1",
-				Namespace: "default",
-			},
-		},
-	}
+	expectPodCache := []v1.Pod{{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test1",
+			Namespace: "default",
+		}}}
+	client.IsApiErr = true
+	mockRefreshPodList := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "refreshPodList", func(_ *ClientK8s) { return })
+	defer mockRefreshPodList.Reset()
 	convey.Convey("test get active pod list when pod name err", t, func() {
 		podCache = map[types.UID]*podInfo{
 			"testPod": {
@@ -173,10 +175,7 @@ func TestGetActivePodListCache01(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "errorName",
 						Namespace: "default",
-					},
-				},
-			},
-		}
+					}}}}
 		testPodList := client.GetActivePodListCache()
 		convey.So(testPodList, convey.ShouldResemble, make([]v1.Pod, 0, common.GeneralMapSize))
 	})
@@ -187,10 +186,7 @@ func TestGetActivePodListCache01(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test1",
 						Namespace: "default",
-					},
-				},
-			},
-		}
+					}}}}
 		testPodList := client.GetActivePodListCache()
 		convey.So(testPodList, convey.ShouldResemble, expectPodCache)
 	})
@@ -209,10 +205,20 @@ func TestGetActivePodListCache02(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test1",
 						Namespace: "errorNamespace",
+					}}}}
+		testPodList := client.GetActivePodListCache()
+		convey.So(testPodList, convey.ShouldResemble, make([]v1.Pod, 0, common.GeneralMapSize))
+	})
+	convey.Convey("test get active pod list when pod status is failed or succeeded", t, func() {
+		podCache = map[types.UID]*podInfo{
+			"testPod": {
+				Pod: &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test1",
+						Namespace: "default",
 					},
-				},
-			},
-		}
+					Status: v1.PodStatus{Phase: v1.PodFailed},
+				}}}
 		testPodList := client.GetActivePodListCache()
 		convey.So(testPodList, convey.ShouldResemble, make([]v1.Pod, 0, common.GeneralMapSize))
 	})
@@ -224,6 +230,14 @@ func TestGetNodeServerIDCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetNodeServerIDCache init kubernetes failed")
 	}
+	convey.Convey("test get server id failed", t, func() {
+		patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
+			Status: v1.NodeStatus{Addresses: make([]v1.NodeAddress, common.MaxPodLimit+1)}}, nil)
+		defer patch.Reset()
+		id, err := client.GetNodeServerIDCache()
+		convey.So(id, convey.ShouldEqual, "")
+		convey.So(err.Error(), convey.ShouldEqual, "the number of node status in exceeds the upper limit")
+	})
 	patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}},
 	}, nil)
@@ -248,6 +262,13 @@ func TestGetServerUsageLabelCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetServerUsageLabelCache init kubernetes failed")
 	}
+	convey.Convey("test get node failed", t, func() {
+		patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{}, fmt.Errorf("get node error"))
+		defer patch.Reset()
+		usage, err := client.GetServerUsageLabelCache()
+		convey.So(usage, convey.ShouldEqual, "")
+		convey.So(err.Error(), convey.ShouldEqual, "get node error")
+	})
 	patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}},
 	}, nil)
@@ -296,29 +317,45 @@ func TestCheckPodInCache01(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestCheckPodInCache01 init kubernetes failed")
 	}
-	pod1 := &v1.Pod{
+	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			UID:       "xxxxxxxxx1",
+			UID:       "uid",
 			Namespace: "default",
-			Name:      "pod1",
-		},
-	}
-	patch1 := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "getPod", func(_ *ClientK8s,
-		_ context.Context, _, _ string) (*v1.PodList, error) {
-		return &v1.PodList{Items: []v1.Pod{*pod1}}, nil
-	})
-	defer patch1.Reset()
+			Name:      "pod",
+		}}
+	podUpdateTime := time.Now().Add(-time.Hour).Add(-time.Minute)
+	expectNewPodCache := map[types.UID]*podInfo{}
 	convey.Convey("test check pod in cache", t, func() {
-		pod1UpdateTime := time.Now().Add(-time.Hour).Add(-time.Minute)
-		expectNewPodCache := map[types.UID]*podInfo{}
+		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Get", pod, nil)
+		defer mockGetPod.Reset()
 		podCache = map[types.UID]*podInfo{
-			"xxxxxxxxx1": {
-				Pod: &v1.Pod{
-					Spec: v1.PodSpec{},
-				},
-				updateTime: pod1UpdateTime,
-			},
-		}
+			pod.UID: {
+				Pod:        &v1.Pod{Spec: v1.PodSpec{}},
+				updateTime: podUpdateTime,
+			}}
+		client.checkPodInCache(context.TODO())
+		convey.So(podCache, convey.ShouldResemble, expectNewPodCache)
+	})
+	mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll),
+		"Get", pod, fmt.Errorf(common.ApiServerPort))
+	defer mockGetPod.Reset()
+	convey.Convey("test check pod in cache when get pod error", t, func() {
+		podCache = map[types.UID]*podInfo{
+			pod.UID: {
+				Pod:        &v1.Pod{Spec: v1.PodSpec{}},
+				updateTime: podUpdateTime,
+			}}
+		client.checkPodInCache(context.TODO())
+		convey.ShouldEqual(podCache, expectNewPodCache)
+	})
+	convey.Convey("test check pod in cache when get pod error is not found", t, func() {
+		mockIsNotFound := gomonkey.ApplyFuncReturn(errors.IsNotFound, true)
+		defer mockIsNotFound.Reset()
+		podCache = map[types.UID]*podInfo{
+			pod.UID: {
+				Pod:        &v1.Pod{Spec: v1.PodSpec{}},
+				updateTime: podUpdateTime,
+			}}
 		client.checkPodInCache(context.TODO())
 		convey.ShouldEqual(podCache, expectNewPodCache)
 	})
@@ -330,33 +367,70 @@ func TestCheckPodInCache02(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestCheckPodInCache02 init kubernetes failed")
 	}
-	pod2 := &v1.Pod{
+	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			UID:       "xxxxxxxxx2",
+			UID:       "uid",
 			Namespace: "default",
-			Name:      "pod2",
+			Name:      "pod",
 		},
-	}
-	patch1 := gomonkey.ApplyPrivateMethod(&ClientK8s{}, "getPod", func(_ *ClientK8s,
-		_ context.Context, _, _ string) (*v1.PodList, error) {
-		return &v1.PodList{Items: []v1.Pod{*pod2}}, nil
-	})
-	defer patch1.Reset()
-	convey.Convey("test check pod in cache", t, func() {
-		pod2UpdateTime := time.Now().Add(-time.Minute)
+		Spec: v1.PodSpec{NodeName: "node"}}
+	mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Get", pod, nil)
+	defer mockGetPod.Reset()
+	convey.Convey("test check pod in cache when update time lower than pod cache timeout", t, func() {
+		podUpdateTime := time.Now().Add(-time.Minute)
 		expectNewPodCache := map[types.UID]*podInfo{
-			"xxxxxxxxx2": {
+			pod.UID: {
 				Pod:        &v1.Pod{},
-				updateTime: pod2UpdateTime,
-			},
-		}
+				updateTime: podUpdateTime,
+			}}
 		podCache = map[types.UID]*podInfo{
-			"xxxxxxxxx2": {
+			pod.UID: {
 				Pod:        &v1.Pod{},
-				updateTime: pod2UpdateTime,
-			},
-		}
+				updateTime: podUpdateTime,
+			}}
 		client.checkPodInCache(context.TODO())
-		convey.ShouldEqual(podCache, expectNewPodCache)
+		convey.So(podCache, convey.ShouldResemble, expectNewPodCache)
+	})
+	convey.Convey("test check pod in cache when need refresh", t, func() {
+		podUpdateTime := time.Now().Add(-time.Hour).Add(-time.Minute)
+		podCache = map[types.UID]*podInfo{
+			pod.UID: {
+				Pod:        &v1.Pod{},
+				updateTime: podUpdateTime,
+			}}
+		client.checkPodInCache(context.TODO())
+		expectNewPodCache := map[types.UID]*podInfo{
+			pod.UID: {
+				Pod:        &v1.Pod{},
+				updateTime: podCache[pod.UID].updateTime,
+			}}
+		convey.So(podCache, convey.ShouldResemble, expectNewPodCache)
+	})
+}
+
+// TestGetDeviceInfoCMCache test get device info configMap with cache
+func TestGetDeviceInfoCMCache(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetDeviceInfoCMCache init kubernetes failed")
+	}
+	convey.Convey("test get device info configMap with cache success", t, func() {
+		var mockCache *common.NodeDeviceInfoCache
+		cache := client.GetDeviceInfoCMCache()
+		convey.So(cache, convey.ShouldResemble, mockCache)
+	})
+}
+
+// TestSetNodeDeviceInfoCache test set device info cache
+func TestSetNodeDeviceInfoCache(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestSetNodeDeviceInfoCache init kubernetes failed")
+	}
+	convey.Convey("test set device info cache success", t, func() {
+		mockNodeDeviceInfoCache := nodeDeviceInfoCache
+		client.SetNodeDeviceInfoCache(&common.NodeDeviceInfoCache{})
+		convey.So(nodeDeviceInfoCache, convey.ShouldResemble, &common.NodeDeviceInfoCache{})
+		nodeDeviceInfoCache = mockNodeDeviceInfoCache
 	})
 }

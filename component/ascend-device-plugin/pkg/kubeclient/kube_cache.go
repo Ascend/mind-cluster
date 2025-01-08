@@ -105,7 +105,7 @@ func (ki *ClientK8s) getPod(ctx context.Context, namespace, name string) (*v1.Po
 }
 
 // UpdatePodList update pod list by informer
-func UpdatePodList(oldObj, newObj interface{}, operator EventType) {
+func UpdatePodList(newObj interface{}, operator EventType) {
 	newPod, ok := newObj.(*v1.Pod)
 	if !ok {
 		return
