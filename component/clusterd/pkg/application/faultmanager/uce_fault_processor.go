@@ -41,6 +41,27 @@ func (reportInfos *reportInfosForAllJobs) getInfo(jobId, nodeName, deviceName st
 	return noReport
 }
 
+func (reportInfos *reportInfosForAllJobs) getInfoWithoutJobId(nodeName, deviceName string) reportInfo {
+	noReport := reportInfo{
+		RecoverTime:  constant.JobNotRecover,
+		CompleteTime: constant.JobNotRecoverComplete,
+	}
+	if reportInfos == nil {
+		return noReport
+	}
+	reportInfos.RwMutex.RLock()
+	defer reportInfos.RwMutex.RUnlock()
+	for _, infoMapValue := range reportInfos.InfoMap {
+		if infoMapValue == nil {
+			continue
+		}
+		if info, ok := infoMapValue[nodeName][deviceName]; ok {
+			return info
+		}
+	}
+	return noReport
+}
+
 func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId string, nodeName string) uceNodeInfo {
 	uceNode := processor.uceDeviceOfNode[nodeName]
 	devicesOfJobOnNode := processor.jobServerInfoMap.InfoMap[jobId][nodeName]

@@ -37,11 +37,16 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 	}
 	for deviceName, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
+			// find uce fault in control plane
 			if isUceFault(fault.FaultCode) {
 				errorMsg := fmt.Sprintf("uceAccompany cannot find uce fault time of device %s of node %s",
 					deviceName, nodeName)
 				processor.uceFaultTime[nodeName][deviceName] = getFaultTime(fault, errorMsg)
 				continue
+			}
+			// find uce fault in business plane
+			if found, info := processor.isBusinessUceFault(nodeName, fault.NPUName); found {
+				processor.uceFaultTime[nodeName][deviceName] = info.RecoverTime
 			}
 			if !isUceAccompanyFault(fault.FaultCode) {
 				continue
@@ -49,6 +54,19 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 			processor.inQue(nodeName, deviceName, fault)
 		}
 	}
+}
+
+func (processor *uceAccompanyFaultProcessor) isBusinessUceFault(nodeName, deviceName string) (bool, reportInfo) {
+	uceProcessor, err := processor.deviceCenter.getUceFaultProcessor()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false, reportInfo{}
+	}
+	info := uceProcessor.reportInfo.getInfoWithoutJobId(nodeName, deviceName)
+	if info.RecoverTime != constant.JobNotRecover {
+		return true, info
+	}
+	return false, reportInfo{}
 }
 
 func (processor *uceAccompanyFaultProcessor) inQue(nodeName, deviceName string, fault constant.DeviceFault) {
