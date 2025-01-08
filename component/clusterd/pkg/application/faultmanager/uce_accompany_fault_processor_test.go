@@ -95,12 +95,14 @@ func TestUceAccompanyFaultProcessorIsBusinessUceFault(t *testing.T) {
 		uceProcessor, _ := deviceProcessCenter.getUceFaultProcessor()
 		infosForAllJobs := uceProcessor.reportInfo
 		reportTime := int64(1000)
-		gomonkey.ApplyPrivateMethod(infosForAllJobs, "getInfoWithoutJobId",
+		patches := gomonkey.ApplyPrivateMethod(infosForAllJobs, "getInfoWithoutJobId",
 			func(nodeName, deviceName string) reportInfo {
 				return reportInfo{
 					RecoverTime: reportTime,
 				}
 			})
+
+		defer patches.Reset()
 		flag, info := uceAcompanyProcessor.isBusinessUceFault("nodeName", "deviceName")
 
 		if !flag || info.RecoverTime != reportTime {

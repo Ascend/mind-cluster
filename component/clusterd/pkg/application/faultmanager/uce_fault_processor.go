@@ -53,7 +53,6 @@ func (reportInfos *reportInfosForAllJobs) getInfoWithoutJobId(nodeName, deviceNa
 	defer reportInfos.RwMutex.RUnlock()
 	for _, infoMapValue := range reportInfos.InfoMap {
 		if infoMapValue == nil {
-			hwlog.RunLog.Warnf("why nil")
 			continue
 		}
 		if info, ok := infoMapValue[nodeName][deviceName]; ok {
