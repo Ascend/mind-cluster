@@ -429,26 +429,28 @@ func fakeFaultTask2P(ns string, name string, node string, job string, index stri
 	return fTask
 }
 
+func fakeFaultJob() FaultJob {
+	return FaultJob{
+		ReScheduleKey: "grace",
+		IsFaultJob:    true,
+		IsInSession:   true,
+		JobName:       "job0",
+		JobUID:        "vcjob/job0",
+		JobNamespace:  "test",
+		JobRankIds:    []string{"0", "1", "8", "9"},
+		NodeNames:     []string{"node0", "node1"},
+		FaultTasks: []FaultTask{
+			fakeFaultTask2P("vcjob", "pod0", "node0", "job0", "0"),
+			fakeFaultTask2P("vcjob", "pod1", "node1", "job0", "1"),
+		},
+		UpdateTime:          test.FakeUpdateTime + 1,
+		JobRankIdCreateTime: test.FakeUpdateTime,
+	}
+}
+
 func fakeCacheWithFJobReSchedulerAddFaultJobWithSession() *DealReSchedulerCache {
 	reCache := fakeCacheNoneFJobReSchedulerAddFaultJobWithSession()
-	reCache.FaultJobs = []FaultJob{
-		{
-			ReScheduleKey: "grace",
-			IsFaultJob:    true,
-			IsInSession:   true,
-			JobName:       "job0",
-			JobUID:        "vcjob/job0",
-			JobNamespace:  "test",
-			JobRankIds:    []string{"0", "1", "8", "9"},
-			NodeNames:     []string{"node0", "node1"},
-			FaultTasks: []FaultTask{
-				fakeFaultTask2P("vcjob", "pod0", "node0", "job0", "0"),
-				fakeFaultTask2P("vcjob", "pod1", "node1", "job0", "1"),
-			},
-			UpdateTime:          test.FakeUpdateTime + 1,
-			JobRankIdCreateTime: test.FakeUpdateTime,
-		},
-	}
+	reCache.FaultJobs = []FaultJob{fakeFaultJob()}
 	return reCache
 }
 
@@ -1183,4 +1185,281 @@ func TestRestartNeedForceDeleteJobs(t *testing.T) {
 			t.Errorf("RestartNeedForceDeleteJobs() err = %v, wantErr is not nil", err)
 		}
 	})
+}
+
+func TestRestartFaultJobs(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	ssn := test.FakeNormalSSN(nil)
+	t.Run("01-RestartFaultJobs() return error when ssn is nil",
+		func(t *testing.T) {
+			err := reScheduler.RestartFaultJobs(nil, plugin.ScheduleEnv{})
+			if err == nil {
+				t.Errorf("RestartFaultJobs() err = %v, wantErr is not nil", err)
+			}
+		})
+	t.Run("02-RestartFaultJobs() return nil when ssn is not nil and fault jobs restart success",
+		func(t *testing.T) {
+			reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+			err := reScheduler.RestartFaultJobs(ssn, plugin.ScheduleEnv{})
+			if err != nil {
+				t.Errorf("RestartFaultJobs() err = %v, wantErr is nil", err)
+			}
+		})
+}
+
+func TestUpdateRescheduleReason(t *testing.T) {
+	t.Run("01-updateRescheduleReason() return nil when fJob is nil",
+		func(t *testing.T) {
+			res := updateRescheduleReason(nil, nil)
+			if res != nil {
+				t.Errorf("updateRescheduleReason() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("02-updateRescheduleReason() return not nil when fJob is not nil",
+		func(t *testing.T) {
+			fJob := &FaultJob{JobRankIdCreateTime: test.FakeUpdateTime}
+			res := updateRescheduleReason(nil, fJob)
+			if res == nil {
+				t.Errorf("updateRescheduleReason() res = %v, wantRes is not nil", res)
+			}
+		})
+}
+
+func createFaultTasks(count int) []FaultTask {
+	faultTasks := make([]FaultTask, count)
+	for i := range faultTasks {
+		faultTasks[i].IsFaultTask = true
+	}
+	return faultTasks
+}
+
+func TestConvertFaultTaskToRecords(t *testing.T) {
+	t.Run("01-convertFaultTaskToRecords() return empty slice when fJob is nil",
+		func(t *testing.T) {
+			res := convertFaultTaskToRecords(nil)
+			if len(res) != 0 {
+				t.Errorf("convertFaultTaskToRecords() res = %v, wantRes is empty slice", res)
+			}
+		})
+	t.Run("02-convertFaultTaskToRecords() return slice when fJob is not nil",
+		func(t *testing.T) {
+			fJob := fakeFaultJob()
+			fJob.FaultTasks = append(fJob.FaultTasks, FaultTask{})
+			fJob.FaultTasks = append(fJob.FaultTasks, createFaultTasks(10)...)
+			res := convertFaultTaskToRecords(&fJob)
+			if len(res) == 0 {
+				t.Errorf("convertFaultTaskToRecords() res = %v, wantRes is non-empty slice", res)
+			}
+		})
+}
+
+func TestGetNewCacheJobs(t *testing.T) {
+	t.Run("01-getNewCacheJobs() return slice when reScheduler.DealReSchedulerCache is not nil",
+		func(t *testing.T) {
+			reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+			reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+			if res := reScheduler.getNewCacheJobs([]FaultJob{}); res == nil {
+				t.Errorf("getNewCacheJobs() res = %v, wantRes is non-empty slice", res)
+			}
+		})
+}
+
+func TestScoreBestNPUNodes(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+	taskInfo := &api.TaskInfo{}
+	scoreMap := map[string]float64{"test": 1}
+	t.Run("01-ScoreBestNPUNodes() return error when task is nil",
+		func(t *testing.T) {
+			err := reScheduler.ScoreBestNPUNodes(nil, scoreMap)
+			if err == nil {
+				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is not nil", err)
+			}
+		})
+	t.Run("02-ScoreBestNPUNodes() return nil when fJob is nil",
+		func(t *testing.T) {
+			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if err != nil {
+				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is nil", err)
+			}
+		})
+	taskInfo.Job = mockJobUID
+	t.Run("03-ScoreBestNPUNodes() return nil when add scores on scoreMap success",
+		func(t *testing.T) {
+			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if err != nil {
+				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is nil", err)
+			}
+
+		})
+	t.Run("04-ScoreBestNPUNodes() return error when fJob.IsFaultJob is false",
+		func(t *testing.T) {
+			reScheduler.DealReSchedulerCache.FaultJobs = []FaultJob{
+				{JobUID: mockJobUID, IsFaultJob: false},
+			}
+			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if err == nil {
+				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is not nil", err)
+			}
+		})
+}
+
+func fakeSchedulerJobAttrByJob(job *api.JobInfo) util.SchedulerJobAttr {
+	attr := util.SchedulerJobAttr{
+		ComJob: util.ComJob{
+			Name:      job.UID,
+			NameSpace: job.Namespace,
+			Selector:  nil,
+			Label:     nil,
+		},
+	}
+	name, num, err := plugin.GetVCJobReqNPUTypeFromJobInfo(job)
+	if err != nil {
+		return attr
+	}
+	NPUJob := &util.NPUJob{
+		ReqNPUName: name,
+		ReqNPUNum:  num,
+		Tasks:      plugin.GetJobNPUTasks(job),
+	}
+	NPUJob.NPUTaskNum = NPUJob.GetNPUTaskNumInJob()
+	attr.NPUJob = NPUJob
+	return attr
+}
+
+func TestValidJobByReschedule(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+	jobInfo1 := mockJobInfo(mockJobName1, test.NPUIndex4)
+	curSchedulerJob := fakeSchedulerJobAttrByJob(jobInfo1)
+	t.Run("01-ValidJobByReschedule() return nil when IsJobSinglePodDelete return true",
+		func(t *testing.T) {
+			res := reScheduler.ValidJobByReschedule(curSchedulerJob)
+			if res != nil {
+				t.Errorf("ValidJobByReschedule() res = %v, wantRes is nil", res)
+			}
+		})
+	curSchedulerJob.SchedulingTaskNum = test.NPUIndex4
+	t.Run("02-ValidJobByReschedule() return nil when fJob.IsFaultJob is false",
+		func(t *testing.T) {
+			res := reScheduler.ValidJobByReschedule(curSchedulerJob)
+			if res != nil {
+				t.Errorf("ValidJobByReschedule() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("03-ValidJobByReschedule() return nil when checkFJobUsedNormNodeRelease success",
+		func(t *testing.T) {
+			reScheduler.DealReSchedulerCache.FaultJobs = []FaultJob{{IsFaultJob: true}}
+			res := reScheduler.ValidJobByReschedule(curSchedulerJob)
+			if res != nil {
+				t.Errorf("ValidJobByReschedule() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("04-ValidJobByReschedule() return not nil when checkFJobUsedNormNodeRelease failed",
+		func(t *testing.T) {
+			fJob := fakeFaultJob()
+			fJob.JobNamespace = ""
+			reScheduler.DealReSchedulerCache.FaultJobs = []FaultJob{fJob}
+			reScheduler.DealReSchedulerCache.FaultNodeMaps = map[string]SimpleFNodeInfo{
+				"node1": {NodeName: "node1"},
+			}
+			res := reScheduler.ValidJobByReschedule(curSchedulerJob)
+			if res == nil {
+				t.Errorf("ValidJobByReschedule() res = %v, wantRes is nil", res)
+			}
+		})
+}
+
+func TestCheckFJobUsedNormNodeRelease(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+	reScheduler.DealReSchedulerCache.FaultNodeMaps = map[string]SimpleFNodeInfo{
+		"node1": {NodeName: "node1"},
+	}
+	curFJob := fakeFaultJob()
+	jobInfo1 := mockJobInfo(mockJobName1, test.NPUIndex4)
+	curSchedulerJob := fakeSchedulerJobAttrByJob(jobInfo1)
+	t.Run("01-checkFJobUsedNormNodeRelease() return error when node in faultJob hasn't been released",
+		func(t *testing.T) {
+			err := reScheduler.checkFJobUsedNormNodeRelease(curFJob, curSchedulerJob)
+			if err == nil {
+				t.Errorf("checkFJobUsedNormNodeRelease() res = %v, wantErr is not nil", err)
+			}
+		})
+	reScheduler.Nodes = map[string]plugin.NPUNode{
+		"node1": {
+			CommonNode: plugin.CommonNode{
+				Name:       "node1",
+				Annotation: nil,
+			}},
+	}
+	t.Run("02-checkFJobUsedNormNodeRelease() return error when check resource stabilize failed",
+		func(t *testing.T) {
+			err := reScheduler.checkFJobUsedNormNodeRelease(curFJob, curSchedulerJob)
+			if err == nil {
+				t.Errorf("checkFJobUsedNormNodeRelease() res = %v, wantErr is not nil", err)
+			}
+		})
+}
+
+func TestGetFNodeByNodeName(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
+	t.Run("01-getFNodeByNodeName() return nil when reScheduler.FaultNodeMaps is empty",
+		func(t *testing.T) {
+			res := reScheduler.getFNodeByNodeName("")
+			if res != nil {
+				t.Errorf("getFNodeByNodeName() res = %v, wantRes is nil", res)
+			}
+		})
+	reScheduler.DealReSchedulerCache.FaultNodeMaps = map[string]SimpleFNodeInfo{
+		"node1": {NodeName: "node1"},
+	}
+	t.Run("02-getFNodeByNodeName() return nil when get node failed",
+		func(t *testing.T) {
+			res := reScheduler.getFNodeByNodeName("")
+			if res != nil {
+				t.Errorf("getFNodeByNodeName() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("03-getFNodeByNodeName() return not nil when get node success",
+		func(t *testing.T) {
+			res := reScheduler.getFNodeByNodeName("node1")
+			if res == nil {
+				t.Errorf("getFNodeByNodeName() res = %v, wantRes is not nil", res)
+			}
+		})
+}
+
+func TestGetNPUNodeOfGiveNodeNameFromReScheduler(t *testing.T) {
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	t.Run("01-getNPUNodeOfGiveNodeNameFromReScheduler() return nil when reScheduler.Nodes is empty",
+		func(t *testing.T) {
+			res := reScheduler.getNPUNodeOfGiveNodeNameFromReScheduler("")
+			if res != nil {
+				t.Errorf("getNPUNodeOfGiveNodeNameFromReScheduler() res = %v, wantRes is nil", res)
+			}
+		})
+
+	reScheduler.Nodes = map[string]plugin.NPUNode{
+		"node1": {
+			CommonNode: plugin.CommonNode{
+				Name:       "node1",
+				Annotation: nil,
+			}},
+	}
+	t.Run("02-getNPUNodeOfGiveNodeNameFromReScheduler() return nil when get node failed",
+		func(t *testing.T) {
+			res := reScheduler.getNPUNodeOfGiveNodeNameFromReScheduler("")
+			if res != nil {
+				t.Errorf("getNPUNodeOfGiveNodeNameFromReScheduler() res = %v, wantRes is nil", res)
+			}
+		})
+	t.Run("03-getNPUNodeOfGiveNodeNameFromReScheduler() return not nil  when get node success",
+		func(t *testing.T) {
+			res := reScheduler.getNPUNodeOfGiveNodeNameFromReScheduler("node1")
+			if res == nil {
+				t.Errorf("getNPUNodeOfGiveNodeNameFromReScheduler() res = %v, wantRes is not nil", res)
+			}
+		})
 }

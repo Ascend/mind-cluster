@@ -804,14 +804,14 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 }
 
 func updateRescheduleReason(Reasons *RescheduleReason, fJob *FaultJob) *RescheduleReason {
+	if fJob == nil {
+		klog.V(util.LogErrorLev).Infof("cannot updateRescheduleReason cause nil FaultJob, err:%s", util.ArgumentError)
+		return nil
+	}
 	if Reasons == nil {
 		Reasons = &RescheduleReason{
 			JobID: fJob.JobUID,
 		}
-	}
-	if fJob == nil {
-		klog.V(util.LogErrorLev).Infof("cannot updateRescheduleReason cause nil FaultJob, err:%s", util.ArgumentError)
-		return nil
 	}
 	var rescheduleRecord RescheduleRecord
 
