@@ -63,16 +63,16 @@ func (reportInfos *reportInfosForAllJobs) getInfoWithoutJobId(nodeName, deviceNa
 }
 
 func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId string, nodeName string) uceNodeInfo {
-	uceNode := processor.uceDeviceOfNode[nodeName]
+	managerPlaneUceNode := processor.uceDeviceOfNode[nodeName]
 	devicesOfJobOnNode := processor.jobServerInfoMap.InfoMap[jobId][nodeName]
 	jobUceNodeInfo := uceNodeInfo{
-		NodeName:   uceNode.NodeName,
+		NodeName:   nodeName,
 		DeviceInfo: make(map[string]uceDeviceInfo),
 	}
 
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
 		deviceName := processor.nodeDeviceCmMap[nodeName].ServerType + "-" + deviceOfJob.DeviceID
-		uceReportInfo := processor.reportInfo.getInfo(jobId, uceNode.NodeName, deviceName)
+		uceReportInfo := processor.reportInfo.getInfo(jobId, nodeName, deviceName)
 		jobUceDevice := uceDeviceInfo{
 			DeviceName:   deviceName,
 			FaultTime:    constant.DeviceNotFault,
@@ -80,11 +80,11 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 			CompleteTime: uceReportInfo.CompleteTime,
 		}
 		// management plane found uce fault
-		if uceDevice, ok := uceNode.DeviceInfo[deviceName]; ok {
+		if uceDevice, ok := managerPlaneUceNode.DeviceInfo[deviceName]; ok {
 			jobUceDevice.FaultTime = uceDevice.FaultTime
-			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
+			jobUceNodeInfo.DeviceInfo[deviceName] = jobUceDevice
 		} else if validBusinessUceReportInfo(&uceReportInfo) { // business plane found uce fault
-			jobUceNodeInfo.DeviceInfo[uceDevice.DeviceName] = jobUceDevice
+			jobUceNodeInfo.DeviceInfo[deviceName] = jobUceDevice
 		}
 	}
 
