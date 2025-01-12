@@ -312,7 +312,6 @@ func TestScoreBestNPUNodes(t *testing.T) {
 				Allocate: map[v1.ResourceName]float64{util.NPU910CardName: npuNum2 * util.NPUHexKilo}}},
 		},
 	}
-	//npu.SetSchedulerEnv(env)
 	testCases := buildScoreBestNPUNodesTestCases01()
 	testCases = append(testCases, buildScoreBestNPUNodesTestCases02()...)
 	for _, tt := range testCases {

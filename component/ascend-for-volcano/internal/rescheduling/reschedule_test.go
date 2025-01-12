@@ -30,6 +30,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -53,6 +54,8 @@ const (
 	three           = 3
 	mockJobName1    = "jobName1"
 	mockJobName2    = "jobName2"
+	minTestSliceLen = 0
+	maxTestSliceLen = 1000
 )
 
 func fakeTestFaultCardUnhealthy(name string, nodeName string, faultType string) *FaultCard {
@@ -1048,6 +1051,9 @@ func TestCheckGraceDeleteTimeValid(t *testing.T) {
 
 func mockJobInfo(jobName string, taskNum int) *api.JobInfo {
 	jobInfo := test.FakeNormalTestJob(jobName, taskNum)
+	if taskNum < minTestSliceLen || taskNum > maxTestSliceLen {
+		return jobInfo
+	}
 	var minRes = make(v1.ResourceList, taskNum)
 	for _, task := range jobInfo.Tasks {
 		for k, v := range task.Resreq.ScalarResources {
@@ -1175,7 +1181,7 @@ func TestRestartNeedForceDeleteJobs(t *testing.T) {
 		defer patch1.Reset()
 		patch2 := gomonkey.ApplyMethod(reflect.TypeOf(&FaultJob{}), "ForceDeleteJob",
 			func(_ *FaultJob, _ *framework.Session, _ *plugin.SchedulerJob, _ plugin.ScheduleEnv) error {
-				return errors.New("ForceDeleteJob error")
+				return errors.New("force delete job failed")
 			})
 		defer patch2.Reset()
 		reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
@@ -1226,6 +1232,9 @@ func TestUpdateRescheduleReason(t *testing.T) {
 }
 
 func createFaultTasks(count int) []FaultTask {
+	if count < minTestSliceLen || count > maxTestSliceLen {
+		return []FaultTask{}
+	}
 	faultTasks := make([]FaultTask, count)
 	for i := range faultTasks {
 		faultTasks[i].IsFaultTask = true
@@ -1234,6 +1243,7 @@ func createFaultTasks(count int) []FaultTask {
 }
 
 func TestConvertFaultTaskToRecords(t *testing.T) {
+	const numberOfFaultTasks = 10
 	t.Run("01-convertFaultTaskToRecords() return empty slice when fJob is nil",
 		func(t *testing.T) {
 			res := convertFaultTaskToRecords(nil)
@@ -1245,7 +1255,7 @@ func TestConvertFaultTaskToRecords(t *testing.T) {
 		func(t *testing.T) {
 			fJob := fakeFaultJob()
 			fJob.FaultTasks = append(fJob.FaultTasks, FaultTask{})
-			fJob.FaultTasks = append(fJob.FaultTasks, createFaultTasks(10)...)
+			fJob.FaultTasks = append(fJob.FaultTasks, createFaultTasks(numberOfFaultTasks)...)
 			res := convertFaultTaskToRecords(&fJob)
 			if len(res) == 0 {
 				t.Errorf("convertFaultTaskToRecords() res = %v, wantRes is non-empty slice", res)
@@ -1462,4 +1472,258 @@ func TestGetNPUNodeOfGiveNodeNameFromReScheduler(t *testing.T) {
 				t.Errorf("getNPUNodeOfGiveNodeNameFromReScheduler() res = %v, wantRes is not nil", res)
 			}
 		})
+}
+
+func TestIsJobCanAssignToSubHealthNode(t *testing.T) {
+	type args struct {
+		nodeSubHealth        bool
+		jobSubHealthStrategy string
+	}
+	testCases := []struct {
+		name       string
+		args       args
+		wantResult bool
+	}{
+		{"01-isJobCanAssignToSubHealthNode return false when nodeSubHealth is true and" +
+			" jobSubHealthStrategy is not ignore",
+			args{true, util.SubHealthyGraceExit}, false},
+		{"02-isJobCanAssignToSubHealthNode return true when nodeSubHealth is true and " +
+			"jobSubHealthStrategy is ignore",
+			args{true, util.SubHealthyIgnore}, true},
+		{"03-isJobCanAssignToSubHealthNode return true when nodeSubHealth is false",
+			args{false, ""}, true},
+	}
+	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := reScheduler.isJobCanAssignToSubHealthNode(testCase.args.jobSubHealthStrategy, testCase.args.nodeSubHealth)
+			if result != testCase.wantResult {
+				t.Errorf("isJobCanAssignToSubHealthNode() result = %v, want %v", result, testCase.wantResult)
+			}
+		})
+	}
+}
+
+func mockFaultJob(index string, isFaultJob bool) FaultJob {
+	return FaultJob{
+		IsFaultJob:    isFaultJob,
+		JobUID:        api.JobID("jobUID" + index),
+		JobNamespace:  "jobNamespace" + index,
+		ReferenceName: "referenceName" + index,
+		NodeNameMaps: map[string]struct{}{
+			"nodeName" + index: {},
+		},
+	}
+}
+
+func mockVcNode(name string) plugin.NPUNode {
+	return plugin.NPUNode{
+		CommonNode:  plugin.CommonNode{Name: name},
+		VNode:       plugin.VNode{},
+		IsUnhealthy: false,
+	}
+}
+
+func mockTaskInfo(index string) *api.TaskInfo {
+	return &api.TaskInfo{
+		UID:       api.TaskID("taskUID" + index),
+		Job:       api.JobID("jobUID" + index),
+		Name:      "taskName" + index,
+		Namespace: "jobNamespace" + index,
+		Pod: &v1.Pod{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{
+				{Name: "referenceName" + index},
+			}},
+			Spec:   v1.PodSpec{},
+			Status: v1.PodStatus{},
+		},
+	}
+}
+
+type checkNodeNewJobUseFJobNormNodeTestCase struct {
+	name        string
+	reScheduler *ReScheduler
+	vcNode      plugin.NPUNode
+	task        *api.TaskInfo
+	wantError   bool
+}
+
+func buildCheckNodeNewJobUseFJobNormNodeTestCases() []checkNodeNewJobUseFJobNormNodeTestCase {
+	return []checkNodeNewJobUseFJobNormNodeTestCase{
+		{
+			name:        "01-checkNodeNewJobUseFJobNormNode return error when reScheduler is nil",
+			reScheduler: nil,
+			vcNode:      plugin.NPUNode{},
+			task:        nil,
+			wantError:   true},
+		{
+			name: "02-checkNodeNewJobUseFJobNormNode return nil when all node not used by fault job",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				RealFaultJobs: []FaultJob{mockFaultJob("0", false)}}},
+			vcNode:    mockVcNode(""),
+			task:      mockTaskInfo("0"),
+			wantError: false},
+		{
+			name: "03-checkNodeNewJobUseFJobNormNode return nil when node used by fault job " +
+				"and task is not fault job",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				RealFaultJobs: []FaultJob{mockFaultJob("0", true)}}},
+			vcNode:    mockVcNode("nodeName0"),
+			task:      mockTaskInfo("0"),
+			wantError: false},
+		{
+			name: "04-checkNodeNewJobUseFJobNormNode return error when node used by fault job " +
+				"and task is fault job",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				RealFaultJobs: []FaultJob{mockFaultJob("0", true)}}},
+			vcNode:    mockVcNode("nodeName0"),
+			task:      mockTaskInfo("1"),
+			wantError: true},
+	}
+}
+
+func TestCheckNodeNewJobUseFJobNormNode(t *testing.T) {
+	testCases := buildCheckNodeNewJobUseFJobNormNodeTestCases()
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := testCase.reScheduler.checkNodeNewJobUseFJobNormNode(testCase.vcNode, testCase.task)
+			if (err != nil) != testCase.wantError {
+				t.Errorf("checkNodeNewJobUseFJobNormNode() err = %v, wantError is not nil", err)
+			}
+		})
+	}
+}
+
+func TestGetFaultJobOfGivenTaskInfoFromCache(t *testing.T) {
+	task := mockTaskInfo("0")
+	task.Job = ""
+	testCases := []struct {
+		name        string
+		reScheduler *ReScheduler
+		task        *api.TaskInfo
+		wantResult  bool
+	}{
+		{
+			name: "01-GetFaultJobOfGivenTaskInfoFromCache return not nil when get fault job from task JobID",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				FaultJobs: []FaultJob{mockFaultJob("0", true)}}},
+			task:       mockTaskInfo("0"),
+			wantResult: true,
+		},
+		{
+			name: "02-GetFaultJobOfGivenTaskInfoFromCache return not nil when get fault job from task JobNamespace " +
+				"and ReferenceName",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				FaultJobs: []FaultJob{mockFaultJob("0", true)}}},
+			task:       task,
+			wantResult: true,
+		},
+		{
+			name: "03-GetFaultJobOfGivenTaskInfoFromCache return nil when fault job is empty",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				FaultJobs: []FaultJob{}}},
+			task:       mockTaskInfo("0"),
+			wantResult: false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := testCase.reScheduler.GetFaultJobOfGivenTaskInfoFromCache(testCase.task)
+			if (result != nil) != testCase.wantResult {
+				t.Errorf("GetFaultJobOfGivenTaskInfoFromCache() result = %v, want is nil", result)
+			}
+		})
+	}
+}
+
+func mockFaultDeviceList(index string, faultHandling string) FaultDeviceList {
+	return FaultDeviceList{
+		NPUName:       "npuName" + index,
+		FaultHandling: faultHandling,
+	}
+}
+
+func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
+	ftask := &FaultTask{UseCardName: []string{"npuName0"}}
+	testCases := []struct {
+		name       string
+		fTask      *FaultTask
+		fNode      FaultNode
+		wantResult bool
+	}{
+		{
+			name: "01-setTaskFaultReasonByFaultNode return non-empty slice " +
+				"when card name match and faulthandling is not NotHandleFault",
+			fTask: ftask,
+			fNode: FaultNode{
+				FaultDeviceList: []FaultDeviceList{
+					mockFaultDeviceList("0", SubHealthFault),
+				}},
+			wantResult: true,
+		},
+		{
+			name: "02-setTaskFaultReasonByFaultNode return empty slice " +
+				"when card name not match or faulthandling is NotHandleFault",
+			fTask: ftask,
+			fNode: FaultNode{
+				FaultDeviceList: []FaultDeviceList{
+					mockFaultDeviceList("0", NotHandleFault),
+				}},
+			wantResult: false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := setTaskFaultReasonByFaultNode(testCase.fTask, testCase.fNode)
+			if (len(result) != 0) != testCase.wantResult {
+				t.Errorf("setTaskFaultReasonByFaultNode() result = %v, want is empty slice", result)
+			}
+		})
+	}
+}
+
+func TestSetTaskCardHealthCode(t *testing.T) {
+	testCases := []struct {
+		name        string
+		reScheduler *ReScheduler
+		fTask       *FaultTask
+		wantError   bool
+	}{
+		{
+			name:        "01-setTaskCardHealthCode return error when task used node is nil",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{}},
+			fTask: &FaultTask{
+				IsSoftwareFault: true,
+				NodeName:        "",
+			},
+			wantError: true,
+		},
+		{
+			name: "02-setTaskCardHealthCode return nil when get match node and node is unhealthy",
+			reScheduler: &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: []FaultNode{
+					{
+						NodeName:        "nodeName0",
+						NodeHealthState: NodeUnhealthy,
+						FaultDeviceList: []FaultDeviceList{
+							mockFaultDeviceList("0", NotHandleFault),
+						}},
+				},
+			}},
+			fTask: &FaultTask{
+				IsSoftwareFault: true,
+				NodeName:        "nodeName0",
+			},
+			wantError: false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := testCase.reScheduler.setTaskCardHealthCode(testCase.fTask)
+			if (err != nil) != testCase.wantError {
+				t.Errorf("setTaskCardHealthCode() err = %v, want is nil", err)
+			}
+		})
+	}
 }

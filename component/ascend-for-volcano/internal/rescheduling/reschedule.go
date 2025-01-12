@@ -1092,10 +1092,6 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 	return nil
 }
 
-func (reScheduler *ReScheduler) isNodeUnhealthy(nodeHealthState string) bool {
-	return nodeHealthState == NodeUnhealthy
-}
-
 func (reScheduler *ReScheduler) isJobCanAssignToSubHealthNode(jobSubHealthStrategy string, nodeSubHealth bool) bool {
 	if nodeSubHealth && jobSubHealthStrategy != util.SubHealthyIgnore {
 		return false
@@ -1130,20 +1126,6 @@ func (reScheduler *ReScheduler) checkNodeNewJobUseFJobNormNode(vcNode plugin.NPU
 	return fmt.Errorf("task cannot use node occupied by faultJob")
 }
 
-func (reScheduler ReScheduler) getFaultTaskOfGivenTaskNameFromCache(namespace, name string) *FaultTask {
-	for _, fJob := range reScheduler.FaultJobs {
-		if fJob.JobNamespace != namespace {
-			continue
-		}
-		for _, fTask := range fJob.FaultTasks {
-			if fTask.TaskName == name {
-				return &fTask
-			}
-		}
-	}
-	return nil
-}
-
 func (reScheduler *ReScheduler) getNPUNodeOfGiveNodeNameFromReScheduler(nodeName string) *plugin.NPUNode {
 	if len(reScheduler.Nodes) == 0 {
 		return nil
@@ -1152,10 +1134,6 @@ func (reScheduler *ReScheduler) getNPUNodeOfGiveNodeNameFromReScheduler(nodeName
 		return &node
 	}
 	return nil
-}
-
-func (reScheduler ReScheduler) getSchedulerJobOfGivenUIDFromReScheduler(jobUID api.JobID) plugin.SchedulerJob {
-	return reScheduler.Jobs[jobUID]
 }
 
 // GetFaultJobOfGivenTaskInfoFromCache get fault job from task info

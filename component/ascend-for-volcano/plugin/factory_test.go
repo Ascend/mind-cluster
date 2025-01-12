@@ -971,7 +971,7 @@ func addsHandlerCmInfosBySsn(ssn *framework.Session, sHandler *ScheduleHandler) 
 
 // fakeUsedNodeInfosByNodeNum fake used node infos by node num, first node is fault
 func fakeUsedNodeInfosByNodeNum(nodeNum int) string {
-	var a []AllocNodeRankOccurrence
+	allocNodeRankOccurrences := make([]AllocNodeRankOccurrence, 0)
 	for i := 0; i < nodeNum; i++ {
 		tmpBool := false
 		if i == 0 {
@@ -983,9 +983,9 @@ func fakeUsedNodeInfosByNodeNum(nodeNum int) string {
 			IsFault:    tmpBool,
 			Occurrence: 0,
 		}
-		a = append(a, tmp)
+		allocNodeRankOccurrences = append(allocNodeRankOccurrences, tmp)
 	}
-	if bytes, err := json.Marshal(a); err == nil {
+	if bytes, err := json.Marshal(allocNodeRankOccurrences); err == nil {
 		return string(bytes)
 	}
 	return ""

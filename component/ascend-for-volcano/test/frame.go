@@ -146,7 +146,7 @@ func FakeConfigurations() []conf.Configuration {
 			Arguments: map[string]interface{}{
 				overTimeKey:              overTimeValue,
 				nslbVersionKey:           nslbVersionValue,
-				sharedTorNumKey:          SharedTorNumValue,
+				sharedTorNumKey:          sharedTorNumValue,
 				superPodSizeKey:          superPodSizeValue,
 				reserveNodesKey:          reserveNodesValue,
 				presetVirtualDeviceKey:   presetVirtualDeviceValue,

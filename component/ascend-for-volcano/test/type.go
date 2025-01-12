@@ -62,7 +62,7 @@ const (
 	nslbVersionKey             = "nslb-version"
 	nslbVersionValue           = "2.0"
 	sharedTorNumKey            = "shared-tor-num"
-	SharedTorNumValue          = "2"
+	sharedTorNumValue          = "2"
 	useClusterInfoManagerKey   = "useClusterInfoManager"
 	useClusterInfoManagerValue = "true"
 	superPodSizeKey            = "super-pod-size"

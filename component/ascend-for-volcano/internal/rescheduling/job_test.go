@@ -561,7 +561,14 @@ func TestIsProcessReschedulingJob(t *testing.T) {
 	})
 }
 
-func initIsNormalTaskCanBeDeleteArgs() (*FaultJob, *deletePodInfo, *plugin.SchedulerJob, plugin.ScheduleEnv) {
+type isNormalTaskCanBeDeleteArgs struct {
+	faultJob      *FaultJob
+	deletePodInfo *deletePodInfo
+	schedulerJob  *plugin.SchedulerJob
+	env           plugin.ScheduleEnv
+}
+
+func initIsNormalTaskCanBeDeleteArgs() isNormalTaskCanBeDeleteArgs {
 	fJob := &FaultJob{
 		JobUID:             mockJobUID,
 		SubHealthyStrategy: util.SubHealthyForceExit,
@@ -582,32 +589,34 @@ func initIsNormalTaskCanBeDeleteArgs() (*FaultJob, *deletePodInfo, *plugin.Sched
 			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
 		},
 	}
-	return fJob, dpi, schedulerJob, env
+	return isNormalTaskCanBeDeleteArgs{fJob, dpi, schedulerJob, env}
 }
 func TestIsNormalTaskCanBeDelete(t *testing.T) {
-	fJob, dpi, schedulerJob, env := initIsNormalTaskCanBeDeleteArgs()
+	args := initIsNormalTaskCanBeDeleteArgs()
 	t.Run("01-isNormalTaskCanBeDelete return false when fTask.IsFaultTask and dpi.superPod are false",
 		func(t *testing.T) {
-			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, plugin.ScheduleEnv{}, dpi)
+			res := args.faultJob.isNormalTaskCanBeDelete(FaultTask{}, args.schedulerJob,
+				plugin.ScheduleEnv{}, args.deletePodInfo)
 			if res {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
 			}
 		})
-	dpi.superPod = true
+	args.deletePodInfo.superPod = true
 	t.Run("02-isNormalTaskCanBeDelete return false when fJob.PendingSessionNum less than 6",
 		func(t *testing.T) {
-			fJob.PendingSessionNum = mockNumFive
-			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, plugin.ScheduleEnv{}, dpi)
+			args.faultJob.PendingSessionNum = mockNumFive
+			res := args.faultJob.isNormalTaskCanBeDelete(FaultTask{}, args.schedulerJob,
+				plugin.ScheduleEnv{}, args.deletePodInfo)
 			if res {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
 			}
 		})
-	env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
+	args.env.SuperPodInfo.SuperPodReschdInfo["test"] = map[string][]plugin.SuperNode{
 		"0": {plugin.SuperNode{SuperPodID: 1, Name: "node1"}},
 	}
 	t.Run("03-isNormalTaskCanBeDelete return false when isContainTask function return false",
 		func(t *testing.T) {
-			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			res := args.faultJob.isNormalTaskCanBeDelete(FaultTask{}, args.schedulerJob, args.env, args.deletePodInfo)
 			if res {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
 			}
@@ -616,8 +625,8 @@ func TestIsNormalTaskCanBeDelete(t *testing.T) {
 	t.Run("04-isNormalTaskCanBeDelete return false when IsProcessReschedulingJob function return true "+
 		"and fTask.IsFaultTask is false",
 		func(t *testing.T) {
-			schedulerJob.Label = map[string]string{util.ProcessRecoverEnable: util.EnableFunc}
-			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			args.schedulerJob.Label = map[string]string{util.ProcessRecoverEnable: util.EnableFunc}
+			res := args.faultJob.isNormalTaskCanBeDelete(FaultTask{}, args.schedulerJob, args.env, args.deletePodInfo)
 			if res {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
 			}
@@ -625,8 +634,8 @@ func TestIsNormalTaskCanBeDelete(t *testing.T) {
 
 	t.Run("05-isNormalTaskCanBeDelete return true when IsProcessReschedulingJob function return false ",
 		func(t *testing.T) {
-			schedulerJob.Label = map[string]string{}
-			res := fJob.isNormalTaskCanBeDelete(FaultTask{}, schedulerJob, env, dpi)
+			args.schedulerJob.Label = map[string]string{}
+			res := args.faultJob.isNormalTaskCanBeDelete(FaultTask{}, args.schedulerJob, args.env, args.deletePodInfo)
 			if !res {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is true", res)
 			}
