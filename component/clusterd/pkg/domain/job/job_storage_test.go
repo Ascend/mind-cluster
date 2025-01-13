@@ -21,7 +21,7 @@ const (
 	jobNameSpace = "default"
 	jobUid1      = "123"
 	jobUid2      = "456"
-	two = 2
+	two          = 2
 )
 
 func getDemoJob(jobName1 string, jobNameSpace string, jobUid1 string) constant.JobInfo {

@@ -63,26 +63,26 @@ func TestSetExtraFaultInfo(t *testing.T) {
 			SubType:        common.SubTypeOfPortDown,
 			PeerPortDevice: common.PeerDeviceChipOrCpuPort,
 		}
-		convey.Convey("01-EventType is SwitchPortFault, SubType is PortDown, " +
+		convey.Convey("01-EventType is SwitchPortFault, SubType is PortDown, "+
 			"AssembledFaultCode should be [0x08520003,,cpu,na]", func() {
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x08520003,,cpu,na]")
 		})
-		convey.Convey("02-EventType is SwitchPortFault, SubType is PortLaneReduceQuarter, " +
+		convey.Convey("02-EventType is SwitchPortFault, SubType is PortLaneReduceQuarter, "+
 			"AssembledFaultCode should be [0x00f10509,132333,npu,na]", func() {
 			event.SubType = common.SubTypeOfPortLaneReduceQuarter
 			event.PeerPortDevice = common.PeerDeviceNpuPort
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132333,npu,na]")
 		})
-		convey.Convey("03-EventType is SwitchPortFault,SubType is PortLaneReduceHalf, " +
+		convey.Convey("03-EventType is SwitchPortFault,SubType is PortLaneReduceHalf, "+
 			"AssembledFaultCode should be [0x00f10509,132332,L2,na]", func() {
 			event.SubType = common.SubTypeOfPortLaneReduceHalf
 			event.PeerPortDevice = common.PeerDeviceL2Port
 			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132332,L2,na]")
 		})
-		convey.Convey("04-EventType is SwitchPortFault,SubType is other type, " +
+		convey.Convey("04-EventType is SwitchPortFault,SubType is other type, "+
 			"AssembledFaultCode should be [0x00f1ff09,155912,na,na]", func() {
 			event.SubType = 0
 			event.PeerPortDevice = 999999

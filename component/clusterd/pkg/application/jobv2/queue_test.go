@@ -26,9 +26,9 @@ func init() {
 }
 
 const (
-	time50ms = 50 * time.Millisecond
-	key1001  = 1001
-	value1001    = 1001
+	time50ms  = 50 * time.Millisecond
+	key1001   = 1001
+	value1001 = 1001
 )
 
 func TestPreDeleteToDelete(t *testing.T) {
