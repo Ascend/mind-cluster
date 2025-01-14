@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
+
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -82,6 +84,27 @@ func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
 		if fault.FaultCode != constant.AicFaultCode {
 			t.Errorf("TestUceAccompanyFaultProcessorProcessForAddFault fail")
 			return
+		}
+	})
+}
+
+func TestUceAccompanyFaultProcessorIsBusinessUceFault(t *testing.T) {
+	t.Run("TestUceAccompanyFaultProcessorIsBusinessUceFault", func(t *testing.T) {
+		deviceProcessCenter := newDeviceFaultProcessCenter()
+		uceAcompanyProcessor, _ := deviceProcessCenter.getUceAccompanyFaultProcessor()
+		uceProcessor, _ := deviceProcessCenter.getUceFaultProcessor()
+		infosForAllJobs := uceProcessor.reportInfo
+		reportTime := int64(1000)
+		patches := gomonkey.ApplyPrivateMethod(infosForAllJobs, "getInfoWithoutJobId",
+			func(nodeName, deviceName string) reportInfo {
+				return reportInfo{
+					RecoverTime: reportTime,
+				}
+			})
+		flag, info := uceAcompanyProcessor.isBusinessUceFault("nodeName", "deviceName")
+		patches.Reset()
+		if !flag || info.RecoverTime != reportTime {
+			t.Errorf("TestUceAccompanyFaultProcessorIsBusinessUceFault failed.")
 		}
 	})
 }

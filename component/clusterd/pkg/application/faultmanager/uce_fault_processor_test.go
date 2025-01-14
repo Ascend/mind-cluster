@@ -5,6 +5,7 @@ package faultmanager
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -472,6 +473,31 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 		if !reflect.DeepEqual(result, want) {
 			t.Errorf("processUceFaultInfo() = %v, want %v",
 				util.ObjToString(result), util.ObjToString(want))
+		}
+	})
+}
+
+func TestReportInfosForAllJobsGetInfoWithoutJobId(t *testing.T) {
+	t.Run("TestReportInfosForAllJobsGetInfoWithoutJobId", func(t *testing.T) {
+		recoverTime := int64(1000)
+		jobId := "_"
+		nodeName := "nodeName"
+		deviceName := "deviceName"
+		reportInfos := &reportInfosForAllJobs{
+			InfoMap: map[string]map[string]map[string]reportInfo{
+				jobId: {
+					nodeName: {
+						deviceName: reportInfo{
+							RecoverTime: recoverTime,
+						},
+					},
+				},
+			},
+			RwMutex: sync.RWMutex{},
+		}
+		got := reportInfos.getInfoWithoutJobId(nodeName, deviceName)
+		if got.RecoverTime != recoverTime {
+			t.Errorf("TestReportInfosForAllJobsGetInfoWithoutJobId failed.")
 		}
 	})
 }
