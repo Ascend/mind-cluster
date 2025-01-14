@@ -160,8 +160,8 @@ func splitDeviceFault(faultInfo constant.DeviceFault, nodeName string) []constan
 		}
 		var faultLevel string
 		if !found {
-			hwlog.RunLog.Warnf("cannot find fault level of code %s in device %s of node %s. DeviceFault is %s.",
-				code, faultInfo.NPUName, nodeName, util.ObjToString(faultInfo))
+			hwlog.RunLog.Warnf("cannot find faultTimeAndLevel of code %s in faultInfo %s of node %s.",
+				code, util.ObjToString(faultInfo), nodeName)
 			faultLevel = faultInfo.FaultLevel
 		} else {
 			faultLevel = faultTimeAndLevel.FaultLevel
@@ -195,9 +195,11 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 				return []constant.DeviceFault{}, fmt.Errorf("deviceFaults cannot merge, "+
 					"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
 			}
-			faultCodeList = append(faultCodeList, fault.FaultCode)
 			fautLevels = append(fautLevels, fault.FaultLevel)
-			newTimeAndLevelMap[fault.FaultCode] = fault.FaultTimeAndLevelMap[fault.FaultCode]
+			if fault.FaultCode != ManuallySeparateNPU {
+				faultCodeList = append(faultCodeList, fault.FaultCode)
+				newTimeAndLevelMap[fault.FaultCode] = fault.FaultTimeAndLevelMap[fault.FaultCode]
+			}
 		}
 		faultLevel := getMostSeriousFaultLevel(fautLevels)
 		mergeFault := constant.DeviceFault{
@@ -209,10 +211,6 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 		mergeFault.LargeModelFaultLevel = faultLevel
 		mergeFault.FaultHandling = faultLevel
 		mergeFault.FaultCode = strings.Join(faultCodeList, ",")
-		if mergeFault.FaultLevel == ManuallySeparateNPU {
-			mergeFault.FaultTimeAndLevelMap = make(map[string]constant.FaultTimeAndLevel)
-			mergeFault.FaultCode = ""
-		}
 		result = append(result, mergeFault)
 	}
 	return result, nil

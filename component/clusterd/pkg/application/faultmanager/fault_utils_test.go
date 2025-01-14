@@ -14,8 +14,9 @@ import (
 
 func TestSplitDeviceFault(t *testing.T) {
 	t.Run("TestSplitDeviceFault", func(t *testing.T) {
+		npuName := "Ascend910-0"
 		var faultInfo = constant.DeviceFault{
-			NPUName:   "Ascend910-0",
+			NPUName:   npuName,
 			FaultCode: "0x1,0x2",
 			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
 				"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
@@ -26,7 +27,7 @@ func TestSplitDeviceFault(t *testing.T) {
 		got := splitDeviceFault(faultInfo, "node1")
 		want := []constant.DeviceFault{
 			{
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            "0x1",
 				FaultLevel:           NotHandleFault,
 				LargeModelFaultLevel: NotHandleFault,
@@ -35,7 +36,7 @@ func TestSplitDeviceFault(t *testing.T) {
 					"0x1": {FaultLevel: NotHandleFault, FaultTime: 1},
 				},
 			}, {
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            "0x2",
 				FaultLevel:           SubHealthFault,
 				LargeModelFaultLevel: SubHealthFault,
@@ -52,10 +53,13 @@ func TestSplitDeviceFault(t *testing.T) {
 	})
 }
 
+// TestSplitDeviceFaultWithManuallySeparateFaultLevel should split out a DeviceFault as middle data,
+// when dp report ManuallySeparateNPU
 func TestSplitDeviceFaultWithManuallySeparateFaultLevel(t *testing.T) {
 	t.Run("TestSplitDeviceFaultWithManuallySeparateFaultLevel", func(t *testing.T) {
+		npuName := "Ascend910-0"
 		var faultInfo = constant.DeviceFault{
-			NPUName:              "Ascend910-0",
+			NPUName:              npuName,
 			FaultCode:            "",
 			FaultLevel:           ManuallySeparateNPU,
 			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{},
@@ -64,7 +68,7 @@ func TestSplitDeviceFaultWithManuallySeparateFaultLevel(t *testing.T) {
 		got := splitDeviceFault(faultInfo, "node1")
 		want := []constant.DeviceFault{
 			{
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            ManuallySeparateNPU,
 				FaultLevel:           ManuallySeparateNPU,
 				LargeModelFaultLevel: ManuallySeparateNPU,
@@ -87,10 +91,11 @@ func TestSplitDeviceFaultWithManuallySeparateFaultLevel(t *testing.T) {
 // TestMergeSameTypeDeviceFault should be merged, when fault type is same
 func TestMergeSameTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
+		npuName := "Ascend910-0"
 		split := []constant.DeviceFault{
 			{
 				FaultType:  CardUnhealthy,
-				NPUName:    "Ascend910-0",
+				NPUName:    npuName,
 				FaultCode:  "0x1",
 				FaultLevel: NotHandleFault,
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
@@ -100,7 +105,7 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 			},
 			{
 				FaultType:  CardUnhealthy,
-				NPUName:    "Ascend910-0",
+				NPUName:    npuName,
 				FaultCode:  "0x2",
 				FaultLevel: SubHealthFault,
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
@@ -112,7 +117,7 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 		want := []constant.DeviceFault{
 			{
 				FaultType:            CardUnhealthy,
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            "0x1,0x2",
 				FaultLevel:           SubHealthFault,
 				LargeModelFaultLevel: SubHealthFault,
@@ -136,10 +141,11 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 // TestMergeDifferentTypeDeviceFault should not be merged, when fault type isn't same
 func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
+		npuName := "Ascend910-0"
 		split := []constant.DeviceFault{
 			{
 				FaultType:            CardUnhealthy,
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            "0x1",
 				FaultLevel:           NotHandleFault,
 				LargeModelFaultLevel: NotHandleFault,
@@ -150,7 +156,7 @@ func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 			},
 			{
 				FaultType:            CardNetworkUnhealthy,
-				NPUName:              "Ascend910-0",
+				NPUName:              npuName,
 				FaultCode:            "0x2",
 				FaultLevel:           SubHealthFault,
 				LargeModelFaultLevel: SubHealthFault,
@@ -173,18 +179,29 @@ func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	})
 }
 
-// TestMergeManuallySeparateNpuTypeDeviceFault should not be merged, when fault type isn't same
+// TestMergeManuallySeparateNpuTypeDeviceFault should combine other fault info and ManuallySeparateNPU.
 func TestMergeManuallySeparateNpuTypeDeviceFault(t *testing.T) {
 	t.Run("TestMergeManuallySeparateNpuTypeDeviceFault", func(t *testing.T) {
+		npuName := "Ascend910-0"
 		split := []constant.DeviceFault{
 			{
-				FaultType:            CardNetworkUnhealthy,
-				NPUName:              "Ascend910-0",
-				FaultCode:            "ManuallySeparateNPU",
+				FaultType:            CardUnhealthy,
+				NPUName:              npuName,
+				FaultCode:            ManuallySeparateNPU,
 				FaultLevel:           ManuallySeparateNPU,
-				LargeModelFaultLevel: ManuallySeparateNPU,
-				FaultHandling:        ManuallySeparateNPU,
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{},
+			},
+			{
+				FaultType:  CardUnhealthy,
+				NPUName:    npuName,
+				FaultCode:  constant.UceFaultCode,
+				FaultLevel: RestartBusiness,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					constant.UceFaultCode: {
+						FaultTime:  constant.UnknownFaultTime,
+						FaultLevel: RestartBusiness,
+					},
+				},
 			},
 		}
 		got, err := mergeDeviceFault(split)
@@ -193,13 +210,18 @@ func TestMergeManuallySeparateNpuTypeDeviceFault(t *testing.T) {
 		}
 		want := []constant.DeviceFault{
 			{
-				FaultType:            CardNetworkUnhealthy,
-				NPUName:              "Ascend910-0",
-				FaultCode:            "",
+				FaultType:            CardUnhealthy,
+				NPUName:              npuName,
+				FaultCode:            constant.UceFaultCode,
 				FaultLevel:           ManuallySeparateNPU,
 				LargeModelFaultLevel: ManuallySeparateNPU,
 				FaultHandling:        ManuallySeparateNPU,
-				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{},
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					constant.UceFaultCode: {
+						FaultTime:  constant.UnknownFaultTime,
+						FaultLevel: RestartBusiness,
+					},
+				},
 			},
 		}
 		if !reflect.DeepEqual(got, want) {
