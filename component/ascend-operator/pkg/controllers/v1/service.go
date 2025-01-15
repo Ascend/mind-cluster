@@ -122,9 +122,12 @@ func (r *ASJobReconciler) getMangerSvc(services []*corev1.Service) *corev1.Servi
 	return nil
 }
 
+func (r *ASJobReconciler) getSvcFromApiserver(svcName, svcNamespace string) (*corev1.Service, error) {
+	return r.KubeClientSet.CoreV1().Services(svcNamespace).Get(context.Background(), svcName, metav1.GetOptions{})
+}
+
 func (r *ASJobReconciler) getIpFromSvcName(svcName, svcNamespace, defaultDomain string) string {
-	svcClient := r.KubeClientSet.CoreV1().Services(svcNamespace)
-	service, err := svcClient.Get(context.Background(), svcName, metav1.GetOptions{})
+	service, err := r.getSvcFromApiserver(svcName, svcNamespace)
 	if err != nil {
 		hwlog.RunLog.Warnf("get service cluster ip error: %v, use default service domain: %s", err, defaultDomain)
 		return defaultDomain

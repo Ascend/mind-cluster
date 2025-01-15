@@ -40,6 +40,7 @@ import (
 	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"ascend-common/common-utils/hwlog"
@@ -90,10 +91,7 @@ func (r *ASJobReconciler) ReconcilePods(
 }
 
 func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.ReplicaType, spec *commonv1.ReplicaSpec,
-	frame string) (*podInfo,
-	error) {
-
-	clusterdSvcIp := r.getClusterDSvcIp()
+	frame string) (*podInfo, error) {
 	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
 	if err != nil {
 		return nil, err
@@ -119,7 +117,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 		ctReq:           ctReq,
 		npuReplicas:     npuReplicas,
 		rtype:           rtype,
-		clusterdSvcIp:   clusterdSvcIp,
+		clusterdSvcIp:   r.getClusterDSvcIp(),
 	}, nil
 }
 
@@ -284,14 +282,16 @@ func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobNa
 		return false
 	}
 	configmapName := configmapPrefix + jobName
-	cm := &corev1.ConfigMap{}
-	namespacedname := types.NamespacedName{Namespace: namespace, Name: configmapName}
-	if err := r.Get(context.TODO(), namespacedname, cm); err != nil {
+	if _, err := r.getConfigmapFromApiserver(namespace, configmapName); err != nil {
 		rtg.SetConfigmapExist(utils.ConfigmapNotExist)
 		return false
 	}
 	rtg.SetConfigmapExist(utils.ConfigmapExsit)
 	return true
+}
+
+func (r *ASJobReconciler) getConfigmapFromApiserver(namespace, name string) (*corev1.ConfigMap, error) {
+	return r.KubeClientSet.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) error {

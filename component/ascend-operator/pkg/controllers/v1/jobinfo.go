@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"ascend-common/common-utils/hwlog"
@@ -58,17 +57,17 @@ func (r *ASJobReconciler) newJobInfo(
 	runPolicy *commonv1.RunPolicy) (*jobInfo, error) {
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
-		return nil, fmt.Errorf("job is not of type metav1.Object")
+		return nil, fmt.Errorf("job<%v> is not of type metav1.Object", job)
 	}
 
 	runtimeObject, ok := job.(runtime.Object)
 	if !ok {
-		return nil, fmt.Errorf("job is not of type runtime.Object")
+		return nil, fmt.Errorf("job<%v> is not of type runtime.Object", job)
 	}
 
 	ascendJob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return nil, fmt.Errorf("job is not of type AscendJob")
+		return nil, fmt.Errorf("job<%v> is not of type AscendJob", job)
 	}
 
 	jobKey, err := common.KeyFunc(job)
@@ -126,7 +125,7 @@ func genLabels(jobObj interface{}, jobName string) (map[string]string, error) {
 func (r *ASJobReconciler) getPodsForJob(jobObject interface{}) ([]*corev1.Pod, error) {
 	job, ok := jobObject.(metav1.Object)
 	if !ok {
-		return nil, fmt.Errorf("job is not of type metav1.Object")
+		return nil, fmt.Errorf("job<%v> is not of type metav1.Object", job)
 	}
 
 	// Create selector.
@@ -167,8 +166,7 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 	}
 
 	name := common.GenGeneralName(job.GetName(), strings.ToLower(string(rtype)), "0")
-	svc := &corev1.Service{}
-	err := r.Get(context.TODO(), types.NamespacedName{Namespace: job.GetNamespace(), Name: name}, svc)
+	svc, err := r.getSvcFromApiserver(name, job.GetNamespace())
 	if err == nil {
 		return svc, nil
 	}
@@ -178,12 +176,11 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 		if gerr != nil {
 			return nil, gerr
 		}
-		svc, createErr := r.KubeClientSet.CoreV1().Services(job.GetNamespace()).Create(context.TODO(), newSvc,
-			metav1.CreateOptions{})
-		if createErr != nil {
-			return nil, createErr
-		}
-		return svc, nil
+		return r.createService(job.GetNamespace(), newSvc)
 	}
 	return nil, err
+}
+
+func (r *ASJobReconciler) createService(namespace string, svc *corev1.Service) (*corev1.Service, error) {
+	return r.KubeClientSet.CoreV1().Services(namespace).Create(context.TODO(), svc, metav1.CreateOptions{})
 }

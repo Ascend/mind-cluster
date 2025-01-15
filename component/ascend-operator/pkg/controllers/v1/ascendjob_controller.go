@@ -51,6 +51,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -212,22 +213,21 @@ type resourceOption struct {
 }
 
 func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
+	if err := r.watchAscendJobRelatedResource(c, mgr); err != nil {
 		return err
 	}
-	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
-		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
-	); err != nil {
+	if err := r.watchVolcanoJobRelatedResource(c, mgr); err != nil {
 		return err
 	}
+	return r.watchDeploymentRelatedResource(c, mgr)
+}
+
+func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
 	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
-
 	resourceOptions := []*resourceOption{
 		{kind: &source.Kind{Type: &corev1.Pod{}}, predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}},
 		{kind: &source.Kind{Type: &corev1.Service{}}},
@@ -252,19 +252,47 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 			return err
 		}
 	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	return nil
+}
+
+func (r *ASJobReconciler) watchVolcanoJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
+	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
+		return err
+	}
+	return c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Job{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
+	})
+}
+
+func (r *ASJobReconciler) watchDeploymentRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
+	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
 		return err
 	}
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}}, &DeployRktHandler{
-		IsController: true,
-		OwnerType:    &appv1.Deployment{},
-	}, predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}); err != nil {
-		return err
-	}
-	return nil
+	return c.Watch(&source.Kind{Type: &corev1.Pod{}},
+		handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+			deployPod := false
+			for _, owner := range object.GetOwnerReferences() {
+				if *owner.Controller && owner.Kind == "ReplicaSet" {
+					deployPod = true
+					break
+				}
+			}
+			if !deployPod {
+				return nil
+			}
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      object.GetLabels()[deployLabelKey],
+					Namespace: object.GetNamespace(),
+				}},
+			}
+		}),
+	)
 }
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
