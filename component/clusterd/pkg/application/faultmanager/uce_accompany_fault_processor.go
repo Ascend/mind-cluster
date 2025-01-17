@@ -148,11 +148,15 @@ func (processor *uceAccompanyFaultProcessor) isCurrentExceedDiagnosisTimeout(
 }
 
 func (processor *uceAccompanyFaultProcessor) Process(info any) any {
-	deviceInfos, ok := info.(map[string]*constant.DeviceInfo)
+	processContent, ok := info.(constant.CenterProcessContent[*constant.DeviceInfo])
 	if !ok {
 		hwlog.RunLog.Errorf("%v cannot convert to DeviceInfo", info)
 		return info
 	}
+	if len(processContent.UpdateConfigmap) == 0 && len(processor.uceAccompanyFaultQue) == 0 {
+		return info
+	}
+	deviceInfos := processContent.AllConfigmap
 	processor.deviceCmForNodeMap = faultdomain.GetAdvanceDeviceCmForNodeMap(deviceInfos)
 	hwlog.RunLog.Debugf("current deviceInfos: %s", util.ObjToString(deviceInfos))
 	hwlog.RunLog.Debugf("current deviceCmForNodeMap: %s", util.ObjToString(processor.deviceCmForNodeMap))
@@ -165,5 +169,6 @@ func (processor *uceAccompanyFaultProcessor) Process(info any) any {
 	faultdomain.AdvanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, deviceInfos)
 
 	hwlog.RunLog.Debugf("uceAccompanyFaultProcessor result: %s", util.ObjToString(deviceInfos))
-	return deviceInfos
+	processContent.AllConfigmap = deviceInfos
+	return processContent
 }

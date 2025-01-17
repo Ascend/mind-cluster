@@ -34,12 +34,15 @@ func (baseCenter *baseFaultCenter[T]) Process() {
 		return
 	}
 	baseCenter.lastProcessTime = currentTime
-	if baseCenter.updateOriginalCm() == 0 {
-		return
-	}
+	updateOriginalCm := baseCenter.updateOriginalCm()
 	baseCenter.setProcessingCm(baseCenter.getOriginalCm())
 	for _, processor := range baseCenter.processorList {
-		processingCm := processor.Process(baseCenter.getProcessingCm()).(map[string]T)
+		processingCm := baseCenter.getProcessingCm()
+		info := constant.CenterProcessContent[T]{
+			AllConfigmap:    processingCm,
+			UpdateConfigmap: updateOriginalCm,
+		}
+		processingCm = processor.Process(info).(constant.CenterProcessContent[T]).AllConfigmap
 		baseCenter.setProcessingCm(processingCm)
 	}
 	baseCenter.setProcessedCm(baseCenter.getProcessingCm())
@@ -96,6 +99,6 @@ func (baseCenter *baseFaultCenter[T]) getProcessedCm() map[string]T {
 	return baseCenter.cmManager.getProcessedCm().configmap
 }
 
-func (baseCenter *baseFaultCenter[T]) updateOriginalCm() int {
+func (baseCenter *baseFaultCenter[T]) updateOriginalCm() []constant.InformerCmItem[T] {
 	return baseCenter.cmManager.updateBatchOriginalCm()
 }

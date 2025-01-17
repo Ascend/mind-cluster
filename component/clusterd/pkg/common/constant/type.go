@@ -193,6 +193,11 @@ type InformerCmItem[T ConfigMapInterface] struct {
 	Data  T
 }
 
+type CenterProcessContent[T ConfigMapInterface] struct {
+	AllConfigmap    map[string]T
+	UpdateConfigmap []InformerCmItem[T]
+}
+
 // ConfigMapInterface configmap interface
 type ConfigMapInterface interface {
 	GetCmName() string

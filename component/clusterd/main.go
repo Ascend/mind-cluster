@@ -67,7 +67,6 @@ func addJobFunc(ctx context.Context) {
 }
 
 func addResourceFunc() {
-	collector.InitCmCollectBuffer()
 	kube.AddCmSwitchFunc(constant.Resource, collector.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, collector.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, collector.DeviceInfoCollector)
@@ -102,6 +101,8 @@ func main() {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
+	collector.InitCmCollectBuffer()
+	collector.InitReportInfoCollector()
 	faultmanager.NewFaultProcessCenter().Work(ctx)
 	startInformer(ctx)
 	signalCatch(cancel)

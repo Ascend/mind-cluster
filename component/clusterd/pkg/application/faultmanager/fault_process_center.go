@@ -41,7 +41,6 @@ func NewFaultProcessCenter() *FaultProcessCenter {
 	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
 		jobRankFaultInfoProcessor: processor,
 	}
-	collector.InitReportInfoCollector()
 	return GlobalFaultProcessCenter
 }
 
@@ -50,30 +49,32 @@ func (center *FaultProcessCenter) NotifyFaultCenterProcess(whichToProcess int) {
 }
 
 func (center *FaultProcessCenter) Work(ctx context.Context) {
-	hwlog.RunLog.Info("FaultProcessCenter start work")
-	centerTicker := time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ctx.Done():
-			hwlog.RunLog.Info("FaultProcessCenter stop work")
-			return
-		case whichToProcess := <-center.NotifyProcessChan:
-			switch whichToProcess {
-			case constant.AllProcessType:
+	go func() {
+		hwlog.RunLog.Info("FaultProcessCenter start work")
+		centerTicker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-ctx.Done():
+				hwlog.RunLog.Info("FaultProcessCenter stop work")
+				return
+			case whichToProcess := <-center.NotifyProcessChan:
+				switch whichToProcess {
+				case constant.AllProcessType:
+					center.Process()
+				case constant.DeviceProcessType:
+					center.DeviceCenter.Process()
+				case constant.NodeProcessType:
+					center.NodeCenter.Process()
+				case constant.SwitchProcessType:
+					center.SwitchCenter.Process()
+				default:
+					hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
+				}
+			case <-centerTicker.C:
 				center.Process()
-			case constant.DeviceProcessType:
-				center.DeviceCenter.Process()
-			case constant.NodeProcessType:
-				center.NodeCenter.Process()
-			case constant.SwitchProcessType:
-				center.SwitchCenter.Process()
-			default:
-				hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
 			}
-		case <-centerTicker.C:
-			center.Process()
 		}
-	}
+	}()
 }
 
 func (center *FaultProcessCenter) getJobFaultRankProcessor() (*jobRankFaultInfoProcessor, error) {

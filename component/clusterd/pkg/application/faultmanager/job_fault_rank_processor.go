@@ -60,7 +60,7 @@ func (processor *jobRankFaultInfoProcessor) setJobFaultRankInfos(faultInfos map[
 	processor.jobFaultInfoMap = faultInfos
 }
 
-func (processor *jobRankFaultInfoProcessor) Process(info any) any { return nil }
+func (processor *jobRankFaultInfoProcessor) Process(info any) any { return info }
 
 func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(nodeDeviceInfoMap map[string]constant.AdvanceDeviceFaultCm,
 	nodeName string, serverList map[string]constant.ServerHccl, jobId string) []FaultRank {
