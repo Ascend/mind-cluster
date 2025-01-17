@@ -4,7 +4,6 @@
 package faultdomain
 
 import (
-	"clusterd/pkg/common/util"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -16,6 +15,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 )
 
 // IsNodeReady returns the node ready status

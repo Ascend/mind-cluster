@@ -4,9 +4,9 @@
 package faultmanager
 
 import (
-	"clusterd/pkg/application/faultmanager/uce"
 	"testing"
 
+	"clusterd/pkg/application/faultmanager/uce"
 	"clusterd/pkg/common/constant"
 	"github.com/agiledragon/gomonkey/v2"
 )

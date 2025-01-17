@@ -72,8 +72,13 @@ func (processor *UceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 }
 
 func (processor *UceFaultProcessor) Process(info any) any {
+	deviceInfos, ok := info.(map[string]*constant.DeviceInfo)
+	if !ok {
+		hwlog.RunLog.Errorf("%v cannot convert to DeviceInfo", info)
+		return info
+	}
+
 	processor.jobServerInfoMap = job.GetJobServerInfoMap()
-	deviceInfos := info.(map[string]*constant.DeviceInfo)
 	processor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(deviceInfos)
 	hwlog.RunLog.Debugf("current deviceInfos %s", util.ObjToString(deviceInfos))
 	hwlog.RunLog.Debugf("current nodeDeviceCmMap %s", util.ObjToString(processor.nodeDeviceCmMap))

@@ -4,11 +4,11 @@
 package job
 
 import (
-	"clusterd/pkg/common/constant"
 	"sync"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 

@@ -6,7 +6,6 @@
 package job
 
 import (
-	"clusterd/pkg/common/constant"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -16,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
 )
 

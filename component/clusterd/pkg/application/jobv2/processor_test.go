@@ -6,7 +6,6 @@
 package jobv2
 
 import (
-	"clusterd/pkg/common/constant"
 	"context"
 	"sync"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"

@@ -4,7 +4,6 @@
 package pod
 
 import (
-	"clusterd/pkg/common/constant"
 	"encoding/json"
 	"sort"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 )
 
 const (

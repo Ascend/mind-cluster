@@ -6,12 +6,13 @@
 package job
 
 import (
-	"clusterd/pkg/common/constant"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
+
+	"clusterd/pkg/common/constant"
 )
 
 const (

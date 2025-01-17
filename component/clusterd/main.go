@@ -4,7 +4,6 @@
 package main
 
 import (
-	"clusterd/pkg/application/faultmanager/collector"
 	"context"
 	"flag"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"

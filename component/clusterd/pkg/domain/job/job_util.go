@@ -4,7 +4,6 @@
 package job
 
 import (
-	"clusterd/pkg/common/constant"
 	"encoding/json"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 )
