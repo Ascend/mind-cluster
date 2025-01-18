@@ -28,70 +28,73 @@ func TestIsUnconditionalRetryJob(t *testing.T) {
 		job := &mindxdlv1.AscendJob{}
 		convey.Convey("01-gang scheduling config is false, should return false", func() {
 			res := rc.isUnconditionalRetryJob(job)
+			convey.So(res, convey.ShouldEqual, false)
 			convey.ShouldEqual(res, false)
 		})
 		convey.Convey("gang scheduling config is true", func() {
 			rc.Config.EnableGangScheduling = true
 			convey.Convey("02-job label is nil, should return false", func() {
 				res := rc.isUnconditionalRetryJob(job)
-				convey.ShouldEqual(res, false)
+				convey.So(res, convey.ShouldEqual, false)
 			})
 			job.Labels = make(map[string]string)
 			convey.Convey("03-job label contains unconditionalRetryLabel Key, but value is invalid, "+
 				"should return false", func() {
 				job.Labels[unconditionalRetryLabelKey] = "xxx"
 				res := rc.isUnconditionalRetryJob(job)
-				convey.ShouldEqual(res, false)
+				convey.So(res, convey.ShouldEqual, false)
 			})
 			convey.Convey("04-job label contains unconditionalRetryLabel Key, but value is not num, "+
 				"should return false", func() {
 				job.Labels[unconditionalRetryLabelKey] = "xxx"
 				res := rc.isUnconditionalRetryJob(job)
-				convey.ShouldEqual(res, false)
+				convey.So(res, convey.ShouldEqual, false)
 			})
 			convey.Convey("05-job label contains unconditionalRetryLabel Key, but value is 0, "+
 				"should return false", func() {
 				job.Labels[unconditionalRetryLabelKey] = "0"
 				res := rc.isUnconditionalRetryJob(job)
-				convey.ShouldEqual(res, false)
+				convey.So(res, convey.ShouldEqual, false)
 			})
 			convey.Convey("06-job label contains unconditionalRetryLabel Key, and value is 1, "+
 				"should return true", func() {
 				job.Labels[unconditionalRetryLabelKey] = "1"
 				res := rc.isUnconditionalRetryJob(job)
-				convey.ShouldEqual(res, true)
+				convey.So(res, convey.ShouldEqual, true)
 			})
 		})
 	})
 }
+
+const invalidRetryTimes = -1
 
 func TestGetJobRemainRetryTimesAboutFaultConfigMap(t *testing.T) {
 	convey.Convey("getJobRemainRetryTimes", t, func() {
 		rc := &ASJobReconciler{}
 		job := &mindxdlv1.AscendJob{}
 		convey.Convey("01-get fault configmap failed, should return err", func() {
-			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmap",
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*corev1.ConfigMap, error) {
 					return nil, errors.New("not found")
 				})
 			defer patch.Reset()
 			res, err := rc.getJobRemainRetryTimes(job)
-			convey.ShouldEqual(res, -1)
-			convey.ShouldEqual(err, errors.New("not found"))
+			convey.So(res, convey.ShouldEqual, invalidRetryTimes)
+			convey.So(err, convey.ShouldResemble, errors.New("not found"))
 
 		})
 		convey.Convey("02-no cache of remain-retry-times in fault configmap, should return err", func() {
 			cm := &corev1.ConfigMap{
 				Data: nil,
 			}
-			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmap",
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*corev1.ConfigMap, error) {
 					return cm, nil
 				})
 			defer patch.Reset()
 			res, err := rc.getJobRemainRetryTimes(job)
-			convey.ShouldEqual(res, -1)
-			convey.ShouldEqual(err, fmt.Errorf("volcaco reschedule confimap has no remain-retry-times key"))
+			convey.So(res, convey.ShouldEqual, invalidRetryTimes)
+			convey.So(err, convey.ShouldResemble, fmt.Errorf("volcaco reschedule confimap has no remain-retry-times key"))
 		})
 	})
 }
@@ -104,14 +107,14 @@ func TestGetJobRemainRetryTimesAboutCache(t *testing.T) {
 			cm := &corev1.ConfigMap{
 				Data: map[string]string{cmJobRemainRetryTimes: "3"},
 			}
-			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmap",
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*corev1.ConfigMap, error) {
 					return cm, nil
 				})
 			defer patch.Reset()
 			res, err := rc.getJobRemainRetryTimes(job)
-			convey.ShouldEqual(res, -1)
-			convey.ShouldNotBeNil(err)
+			convey.So(res, convey.ShouldEqual, invalidRetryTimes)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-data in cache has no current job info, should return err", func() {
 			cm := &corev1.ConfigMap{
@@ -125,7 +128,7 @@ func TestGetJobRemainRetryTimesAboutCache(t *testing.T) {
 			job.Namespace = "fake-namespace"
 			job.Name = "fake-name"
 			job.UID = "fake-uid"
-			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmap",
+			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*corev1.ConfigMap, error) {
 					return cm, nil
 				})
@@ -136,8 +139,8 @@ func TestGetJobRemainRetryTimesAboutCache(t *testing.T) {
 			})
 			defer patch2.Reset()
 			res, err := rc.getJobRemainRetryTimes(job)
-			convey.ShouldEqual(res, -1)
-			convey.ShouldNotBeNil(err)
+			convey.So(res, convey.ShouldEqual, invalidRetryTimes)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

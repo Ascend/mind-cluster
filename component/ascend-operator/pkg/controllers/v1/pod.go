@@ -40,7 +40,6 @@ import (
 	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"ascend-common/common-utils/hwlog"
@@ -288,10 +287,6 @@ func (r *ASJobReconciler) configmapExist(rtg generator.RankTableGenerator, jobNa
 	}
 	rtg.SetConfigmapExist(utils.ConfigmapExsit)
 	return true
-}
-
-func (r *ASJobReconciler) getConfigmapFromApiserver(namespace, name string) (*corev1.ConfigMap, error) {
-	return r.KubeClientSet.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) error {

@@ -21,6 +21,7 @@ import (
 	_ "ascend-operator/pkg/testtool"
 )
 
+// TestSetPodAnnotation is test for setPodAnnotation
 func TestSetPodAnnotation(t *testing.T) {
 	convey.Convey("set pod Annotation", t, func() {
 		rc := newCommonReconciler()
@@ -28,12 +29,12 @@ func TestSetPodAnnotation(t *testing.T) {
 		podTemplate := &corev1.PodTemplateSpec{}
 		convey.Convey("01-index is invalid, err is not nil", func() {
 			err := rc.setPodAnnotation(job, podTemplate, "worker", "xxx")
-			convey.ShouldNotBeNil(err)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-job has no chief、 master or scheduler, or job has scheduler without npu, "+
 			"hccl/rankIndex should equal index", func() {
 			err := rc.setPodAnnotation(job, podTemplate, "worker", "0")
-			convey.ShouldBeNil(err)
+			convey.So(err, convey.ShouldBeNil)
 			convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "0")
 		})
 		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{mindxdlv1.ReplicaTypeWorker: nil}
@@ -41,19 +42,19 @@ func TestSetPodAnnotation(t *testing.T) {
 		convey.Convey("03-job has chief or master, or job has scheduler with npu,"+
 			" and rtype is master, hccl/rankIndex should equal index", func() {
 			err := rc.setPodAnnotation(job, podTemplate, "master", "1")
-			convey.ShouldBeNil(err)
+			convey.So(err, convey.ShouldBeNil)
 			convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "1")
 		})
 		convey.Convey("04-job has chief or master, or job has scheduler with npu, "+
 			"and rtype is worker, hccl/rankIndex should equal index + 1",
 			func() {
 				err := rc.setPodAnnotation(job, podTemplate, "worker", "1")
-				convey.ShouldBeNil(err)
+				convey.So(err, convey.ShouldBeNil)
 				convey.So(podTemplate.Annotations[rankIndexKey], convey.ShouldEqual, "2")
 			})
 		convey.Convey("05-index is equal to MaxInt, err is not nil", func() {
 			err := rc.setPodAnnotation(job, podTemplate, "worker", strconv.Itoa(math.MaxInt))
-			convey.ShouldNotBeNil(err)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

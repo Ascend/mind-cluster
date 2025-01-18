@@ -12,17 +12,13 @@ import (
 	"context"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *ASJobReconciler) getConfigmap(namespace, name string) (*v1.ConfigMap, error) {
-	cm := v1.ConfigMap{}
-	if err := r.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: name}, &cm); err != nil {
-		return nil, err
-	}
-	return &cm, nil
+func (r *ASJobReconciler) getConfigmapFromApiserver(namespace, name string) (*v1.ConfigMap, error) {
+	return r.KubeClientSet.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 func (r *ASJobReconciler) getVcRescheduleCM() (*v1.ConfigMap, error) {
-	return r.getConfigmap(vcNamespace, vcRescheduleCMName)
+	return r.getConfigmapFromApiserver(vcNamespace, vcRescheduleCMName)
 }

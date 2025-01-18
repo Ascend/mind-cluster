@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/scheduling/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,7 +61,7 @@ func newCommonPodInfo() *podInfo {
 			},
 		},
 		spec: &commonv1.ReplicaSpec{
-			Replicas:      defaultReplicas(),
+			Replicas:      newReplicas(1),
 			Template:      corev1.PodTemplateSpec{},
 			RestartPolicy: "",
 		},
@@ -136,8 +137,18 @@ func (c *fakeClient) DeleteAllOf(_ context.Context, _ client.Object, _ ...client
 	return nil
 }
 
+type fakeStatusWriter struct{}
+
+func (f *fakeStatusWriter) Update(_ context.Context, _ client.Object, _ ...client.UpdateOption) error {
+	return nil
+}
+
+func (f *fakeStatusWriter) Patch(_ context.Context, _ client.Object, _ client.Patch, _ ...client.PatchOption) error {
+	return nil
+}
+
 // Status This function is part of the fakeClient struct and returns a status based on the given parameters.
-func (c *fakeClient) Status() client.StatusWriter { return nil }
+func (c *fakeClient) Status() client.StatusWriter { return &fakeStatusWriter{} }
 
 // Scheme This function is part of the fakeClient struct and returns a scheme based on the given parameters.
 func (c *fakeClient) Scheme() *runtime.Scheme { return nil }
@@ -189,21 +200,48 @@ func (s *fakePodLister) Pods(namespace string) corelisters.PodNamespaceLister {
 	return nil
 }
 
+const fakeResourceName = "huawei.com/Ascend910"
+
+func newCommonContainer() corev1.Container {
+	return corev1.Container{
+		Name: "test",
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          mindxdlv1.DefaultPortName,
+				ContainerPort: fakePort,
+			},
+		},
+		Resources: corev1.ResourceRequirements{
+			Limits: map[corev1.ResourceName]resource.Quantity{
+				fakeResourceName: resource.MustParse("1"),
+			},
+			Requests: map[corev1.ResourceName]resource.Quantity{
+				fakeResourceName: resource.MustParse("1"),
+			},
+		},
+	}
+}
+
 func newCommonAscendJob() *mindxdlv1.AscendJob {
 	return &mindxdlv1.AscendJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "AscendJob",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "ascendjob-test",
-			UID:  "1111",
+			Name:        "ascendjob-test",
+			UID:         "1111",
+			Annotations: map[string]string{},
 		},
 		Spec: mindxdlv1.AscendJobSpec{},
 	}
 }
 
-func defaultReplicas() *int32 {
-	x := int32(1)
+func newReplicas(i int) *int32 {
+	x := int32(i)
 	return &x
 }
 
+// TestIsVcjobOrDeploy This function is a test function for the isVcjobOrDeploy method of the AscendJobReconciler struct.
 func TestIsVcjobOrDeploy(t *testing.T) {
 	type args struct {
 		ctx context.Context

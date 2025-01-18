@@ -124,45 +124,6 @@ func (r *ASJobReconciler) UpdateJobStatus(
 	return nil
 }
 
-func (r *ASJobReconciler) checkMasterStatus(si specInfo) *conditionInfo {
-	if si.status.Active > 0 {
-		return &conditionInfo{
-			condType: commonv1.JobRunning,
-			reason:   util.JobRunningReason,
-			message:  fmt.Sprintf("AscendJob %s/%s is running.", si.job.Namespace, si.job.Name),
-		}
-	}
-	if *(si.spec.Replicas) == si.status.Succeeded {
-		return &conditionInfo{
-			condType: commonv1.JobSucceeded,
-			reason:   util.JobRunningReason,
-			message:  fmt.Sprintf("AscendJob<%s-%s> successfully completed.", si.job.Namespace, si.job.Name),
-		}
-	}
-
-	return nil
-}
-
-func (r *ASJobReconciler) checkWorkerStatus(si specInfo) *conditionInfo {
-	job := si.job
-
-	if *(si.spec.Replicas) == si.status.Succeeded {
-		return &conditionInfo{
-			condType: commonv1.JobSucceeded,
-			reason:   util.JobSucceededReason,
-			message:  fmt.Sprintf("AscendJob <%s/%s> successfully completed.", job.Namespace, job.Name),
-		}
-	}
-	if si.status.Active > 0 {
-		return &conditionInfo{
-			condType: commonv1.JobRunning,
-			reason:   util.JobRunningReason,
-			message:  fmt.Sprintf("AscendJob <%s/%s> is running.", job.Namespace, job.Name),
-		}
-	}
-	return nil
-}
-
 func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatus *commonv1.JobStatus) *conditionInfo {
 	restartCondition := getRestartCondition(jobStatus.Conditions)
 
@@ -199,12 +160,6 @@ func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatu
 				job.Namespace, job.Name, rt),
 		}
 	}
-}
-
-func (r *ASJobReconciler) isLeaderRole(rType commonv1.ReplicaType) bool {
-	return rType == mindxdlv1.MindSporeReplicaTypeScheduler ||
-		rType == mindxdlv1.PytorchReplicaTypeMaster ||
-		rType == mindxdlv1.TensorflowReplicaTypeChief
 }
 
 func (r *ASJobReconciler) updateSpecStatus(ascendJob *mindxdlv1.AscendJob,

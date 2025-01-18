@@ -22,6 +22,7 @@ import (
 	_ "ascend-operator/pkg/testtool"
 )
 
+// TestSetPodLabels test setPodLabels
 func TestSetPodLabels(t *testing.T) {
 	convey.Convey("setPodLabels", t, func() {
 		job := newCommonAscendJob()
@@ -38,11 +39,16 @@ func TestSetPodLabels(t *testing.T) {
 				func(_ *ASJobReconciler, _ string) map[string]string { return map[string]string{} })
 			defer patch.Reset()
 			rc.setPodLabels(job, podTemp, rt, index)
-			convey.ShouldEqual(podTemp.Labels, map[string]string{
+			convey.So(podTemp.Labels, convey.ShouldResemble, map[string]string{
+				commonv1.OperatorNameLabel:           "ascendjob-controller",
+				commonv1.GroupNameLabelDeprecated:    "mindxdl.gitee.com",
+				commonv1.JobNameLabel:                "ascendjob-test",
+				commonv1.JobNameLabelDeprecated:      "ascendjob-test",
 				commonv1.ReplicaTypeLabel:            rtype,
 				commonv1.ReplicaTypeLabelDeprecated:  rtype,
 				commonv1.ReplicaIndexLabel:           index,
 				commonv1.ReplicaIndexLabelDeprecated: index,
+				"version":                            "0",
 			})
 		})
 	})

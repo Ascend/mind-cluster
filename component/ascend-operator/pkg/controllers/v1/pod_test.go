@@ -37,7 +37,7 @@ func TestReconcilePods(t *testing.T) {
 		var pods []*corev1.Pod
 		rtype := mindxdlv1.ReplicaTypeWorker
 		spec := &commonv1.ReplicaSpec{
-			Replicas: defaultReplicas(),
+			Replicas: newReplicas(1),
 			Template: corev1.PodTemplateSpec{},
 		}
 		replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
@@ -73,7 +73,7 @@ func TestReconcilePodNeedCreateOrDelete(t *testing.T) {
 		si := &podInfo{
 			job: newCommonAscendJob(),
 			spec: &commonv1.ReplicaSpec{
-				Replicas:      defaultReplicas(),
+				Replicas:      newReplicas(1),
 				Template:      corev1.PodTemplateSpec{},
 				RestartPolicy: "",
 			},
@@ -118,7 +118,7 @@ func TestReconcilePodNotNeedCreateOrDelete(t *testing.T) {
 		si := &podInfo{
 			job: newCommonAscendJob(),
 			spec: &commonv1.ReplicaSpec{
-				Replicas:      defaultReplicas(),
+				Replicas:      newReplicas(1),
 				Template:      corev1.PodTemplateSpec{},
 				RestartPolicy: "",
 			},

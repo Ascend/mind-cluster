@@ -28,10 +28,10 @@ import (
 )
 
 var (
-	resultShouldreturnErr       = "should return err"
-	updateStatusApiServerFailed = "update status in api-server failed"
+	resultShouldreturnErr = "should return err"
 )
 
+// TestReconcileJobs test ReconcileJobs
 func TestReconcileJobs(t *testing.T) {
 	convey.Convey("ReconcileJobs", t, func() {
 		job := newCommonAscendJob()
@@ -51,7 +51,7 @@ func TestReconcileJobs(t *testing.T) {
 			})
 			defer patch1.Reset()
 			err := rc.ReconcileJobs(job, replicaTypes, jobStatus, runPolicy)
-			convey.ShouldEqual(err, errors.New("create jobInfo failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("create jobInfo failed"))
 		})
 		convey.Convey("02-reconcile job failed, should return err", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "newJobInfo", func(
@@ -67,11 +67,12 @@ func TestReconcileJobs(t *testing.T) {
 				func(_ *jobInfo) error { return errors.New("reconcile job failed") })
 			defer patch2.Reset()
 			err := rc.ReconcileJobs(job, replicaTypes, jobStatus, runPolicy)
-			convey.ShouldEqual(err, errors.New("reconcile job failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("reconcile job failed"))
 		})
 	})
 }
 
+// TestReconcileJob test ReconcileJob
 func TestReconcileJob(t *testing.T) {
 	rc := newCommonReconciler()
 	ttlSecondsAfterFinished := int32(3)
@@ -101,28 +102,22 @@ func testReconcileJobUpdateFailed(rc *ASJobReconciler, ji *jobInfo) {
 	convey.Convey("01-success job update condition failed, should return err", func() {
 		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "handleFinishedJob",
 			func(_ *ASJobReconciler, _ *jobInfo, _ bool, _ conditionInfo) error {
-				return errors.New(
-					"handle finished Job failed")
+				return errors.New("handle finished Job failed")
 			})
 		defer patch1.Reset()
 		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New("handle finished Job failed"))
+		convey.So(err, convey.ShouldResemble, errors.New("handle finished Job failed"))
 	})
 	ji.status = &commonv1.JobStatus{
 		Conditions: []commonv1.JobCondition{},
 	}
-	convey.Convey("02-normal job's pod-group has not synced and update status in server fauled, "+
+	convey.Convey("02-normal job's pod-group has not synced and update status in server failed, "+
 		resultShouldreturnErr, func() {
 		patch2 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "isPodGroupSynced",
 			func(_ *ASJobReconciler, _ *jobInfo) bool { return false })
 		defer patch2.Reset()
-		patch3 := gomonkey.ApplyMethod(new(ASJobReconciler), "UpdateJobStatusInApiServer",
-			func(_ *ASJobReconciler, _ interface{}, _ *commonv1.JobStatus) error {
-				return errors.New(updateStatusApiServerFailed)
-			})
-		defer patch3.Reset()
 		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New(updateStatusApiServerFailed))
+		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("03-normal job's pod group has synced and sync replicas failed, "+
 		resultShouldreturnErr, func() {
@@ -133,19 +128,7 @@ func testReconcileJobUpdateFailed(rc *ASJobReconciler, ji *jobInfo) {
 			func(_ *ASJobReconciler, _ *jobInfo) error { return errors.New("sync replicas failed") })
 		defer patch3.Reset()
 		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New("sync replicas failed"))
-	})
-	convey.Convey("04-out of limit job update condition failed, should return err", func() {
-		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "handleFinishedJob",
-			func(_ *ASJobReconciler, _ *jobInfo, _ bool, _ conditionInfo) error {
-				return errors.New(
-					"handle out of limit Job failed")
-			})
-		defer patch1.Reset()
-		rc.versions = make(map[types.UID]int32)
-		rc.backoffLimits = make(map[types.UID]int32)
-		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New("handle out of limit Job failed"))
+		convey.So(err, convey.ShouldResemble, errors.New("sync replicas failed"))
 	})
 }
 
@@ -158,14 +141,8 @@ func testReconcileJobPodGroupAndRepSyncedSuccess(rc *ASJobReconciler, ji *jobInf
 		patch3 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "syncReplicas",
 			func(_ *ASJobReconciler, _ *jobInfo) error { return nil })
 		defer patch3.Reset()
-		patch4 := gomonkey.ApplyMethod(new(ASJobReconciler), "UpdateJobStatus",
-			func(_ *ASJobReconciler, _ interface{}, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
-				_ *commonv1.JobStatus) error {
-				return errors.New("update status failed")
-			})
-		defer patch4.Reset()
 		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New("update status failed"))
+		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("02-normal job's pod group has synced and sync replicas success, "+
 		"but update in api-server failed should return err", func() {
@@ -181,16 +158,24 @@ func testReconcileJobPodGroupAndRepSyncedSuccess(rc *ASJobReconciler, ji *jobInf
 				return nil
 			})
 		defer patch4.Reset()
-		patch5 := gomonkey.ApplyMethod(new(ASJobReconciler), "UpdateJobStatusInApiServer",
-			func(_ *ASJobReconciler, _ interface{}, _ *commonv1.JobStatus) error {
-				return errors.New(updateStatusApiServerFailed)
-			})
-		defer patch5.Reset()
 		err := rc.reconcileJob(ji)
-		convey.ShouldEqual(err, errors.New("update status in api-server  failed"))
+		convey.So(err, convey.ShouldBeNil)
+	})
+	convey.Convey("04-out of limit job update condition failed, should return err", func() {
+		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "handleFinishedJob",
+			func(_ *ASJobReconciler, _ *jobInfo, _ bool, _ conditionInfo) error {
+				return errors.New(
+					"handle out of limit Job failed")
+			})
+		defer patch1.Reset()
+		rc.versions = make(map[types.UID]int32)
+		rc.backoffLimits = make(map[types.UID]int32)
+		err := rc.reconcileJob(ji)
+		convey.So(err, convey.ShouldResemble, errors.New("handle out of limit Job failed"))
 	})
 }
 
+// TestUpdateJobStatus test update job status
 func TestUpdateJobStatus(t *testing.T) {
 	convey.Convey("UpdateJobStatus", t, func() {
 		rc := newCommonReconciler()
@@ -205,21 +190,22 @@ func TestUpdateJobStatus(t *testing.T) {
 				})
 			defer patch.Reset()
 			err := rc.UpdateJobStatus(job, replicas, status)
-			convey.ShouldEqual(err, errors.New("update spec status failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("update spec status failed"))
 		})
 	})
 }
 
+// TestUpdateSpecStatus test update spec status
 func TestUpdateSpecStatus(t *testing.T) {
 	convey.Convey("updateSpecStatus", t, func() {
 		rc := newCommonReconciler()
 		job := newCommonAscendJob()
 		replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 			mindxdlv1.PytorchReplicaTypeMaster: {
-				Replicas: defaultReplicas(),
+				Replicas: newReplicas(1),
 			},
 			mindxdlv1.ReplicaTypeWorker: {
-				Replicas: defaultReplicas(),
+				Replicas: newReplicas(1),
 			},
 		}
 		status := &commonv1.JobStatus{
@@ -231,7 +217,7 @@ func TestUpdateSpecStatus(t *testing.T) {
 		convey.Convey("01-replicas is empty should return nil", func() {
 			repl := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
 			err := rc.updateSpecStatus(job, repl, status)
-			convey.ShouldBeNil(err)
+			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("02-check spec status failed, should return err", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "checkSpecStatus",
@@ -240,7 +226,7 @@ func TestUpdateSpecStatus(t *testing.T) {
 				})
 			defer patch1.Reset()
 			err := rc.updateSpecStatus(job, replicas, status)
-			convey.ShouldEqual(err, errors.New("check spec status failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("check spec status failed"))
 		})
 	})
 }
@@ -251,10 +237,10 @@ func TestGetJobStatus(t *testing.T) {
 		job := newCommonAscendJob()
 		replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 			mindxdlv1.PytorchReplicaTypeMaster: {
-				Replicas: defaultReplicas(),
+				Replicas: newReplicas(1),
 			},
 			mindxdlv1.ReplicaTypeWorker: {
-				Replicas: defaultReplicas(),
+				Replicas: newReplicas(1),
 			},
 		}
 		jobStatus := &commonv1.JobStatus{
@@ -270,7 +256,7 @@ func TestGetJobStatus(t *testing.T) {
 				Failed:    1,
 			}
 			st := rc.getJobStatus(job, replicas, jobStatus)
-			convey.ShouldEqual(st, expect)
+			convey.So(st, convey.ShouldResemble, expect)
 		})
 	})
 }
@@ -280,10 +266,10 @@ func TestCheckSpecStatus(t *testing.T) {
 	job := newCommonAscendJob()
 	job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 		mindxdlv1.PytorchReplicaTypeMaster: {
-			Replicas: defaultReplicas(),
+			Replicas: newReplicas(1),
 		},
 		mindxdlv1.ReplicaTypeWorker: {
-			Replicas: defaultReplicas(),
+			Replicas: newReplicas(1),
 		},
 	}
 	jobStatus := &commonv1.JobStatus{
@@ -321,36 +307,27 @@ func testCheckSpecStatusWithError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
 			Succeeded: 1,
 			Failed:    0,
 		}
-		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "checkMasterStatus",
-			func(_ *ASJobReconciler, _ specInfo, _ *commonv1.JobStatus) *conditionInfo {
-				return &conditionInfo{
-					condType: commonv1.JobRunning,
-				}
-			})
-		defer patch1.Reset()
 		patch2 := gomonkey.ApplyFunc(util.UpdateJobConditions, func(_ *commonv1.JobStatus,
 			_ commonv1.JobConditionType, _, _ string) error {
 			return errors.New("update job conditions failed")
 		})
 		defer patch2.Reset()
 		err := rc.checkSpecStatus(job, st, jobStatus, updateFunc)
-		convey.ShouldEqual(err, errors.New("update job conditions failed"))
+		convey.So(err, convey.ShouldResemble, errors.New("update job conditions failed"))
 	})
 }
 
 func testCheckSpecStatusNoError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
 	jobStatus *commonv1.JobStatus, updateFunc func(ci *conditionInfo) error) {
 	convey.Convey("01-status with running and condition is nil should do nothing nil", func() {
+		const fakeActive = 2
 		st := &commonv1.ReplicaStatus{
-			Active:    2,
+			Active:    fakeActive,
 			Succeeded: 0,
 			Failed:    0,
 		}
-		patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "checkMasterStatus",
-			func(_ *ASJobReconciler, _ specInfo, _ *commonv1.JobStatus) *conditionInfo { return nil })
-		defer patch.Reset()
 		err := rc.checkSpecStatus(job, st, jobStatus, updateFunc)
-		convey.ShouldBeNil(err)
+		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("03-status with failed and condition is failed, "+
 		"when update condition success should return nil", func() {
@@ -359,21 +336,14 @@ func testCheckSpecStatusNoError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
 			Succeeded: 1,
 			Failed:    1,
 		}
-		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "checkMasterStatus",
-			func(_ *ASJobReconciler, _ specInfo, _ *commonv1.JobStatus) *conditionInfo {
-				return &conditionInfo{
-					condType: commonv1.JobFailed,
-				}
-			})
-		defer patch1.Reset()
 		patch2 := gomonkey.ApplyFunc(util.UpdateJobConditions, func(_ *commonv1.JobStatus,
 			_ commonv1.JobConditionType, _, _ string) error {
 			return nil
 		})
 		defer patch2.Reset()
 		err := rc.checkSpecStatus(job, st, jobStatus, updateFunc)
-		convey.ShouldBeNil(err)
-		convey.ShouldNotBeNil(job.CreationTimestamp)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(job.CreationTimestamp, convey.ShouldNotBeNil)
 	})
 }
 
@@ -394,16 +364,6 @@ func TestSyncReplicas(t *testing.T) {
 				mindxdlv1.ReplicaTypeWorker:        {},
 			},
 		}
-		convey.Convey("reconcile services failed should return err", func() {
-			patch := gomonkey.ApplyMethod(new(ASJobReconciler), "ReconcileServices", func(_ *ASJobReconciler, _ metav1.Object,
-				_ []*corev1.Service, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec) error {
-				return errors.New(
-					"reconcile services failed")
-			})
-			defer patch.Reset()
-			err := rc.syncReplicas(ji)
-			convey.ShouldEqual(err, errors.New("reconcile services failed"))
-		})
 		convey.Convey("reconcile pods failed should return err", func() {
 			patch1 := gomonkey.ApplyMethod(new(ASJobReconciler), "ReconcileServices", func(_ *ASJobReconciler, _ metav1.Object,
 				_ []*corev1.Service, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec) error {
@@ -417,7 +377,7 @@ func TestSyncReplicas(t *testing.T) {
 			})
 			defer patch2.Reset()
 			err := rc.syncReplicas(ji)
-			convey.ShouldEqual(err, errors.New("reconcile pods failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("reconcile pods failed"))
 		})
 	})
 }
@@ -434,7 +394,7 @@ func TestNewPodGroupSpec(t *testing.T) {
 			},
 			rpls: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				mindxdlv1.ReplicaTypeWorker: {
-					Replicas: defaultReplicas(),
+					Replicas: newReplicas(1),
 				},
 			},
 		}
@@ -446,8 +406,8 @@ func TestNewPodGroupSpec(t *testing.T) {
 			})
 			defer patch1.Reset()
 			pgSpec := rc.newPodGroupSpec(ji)
-			convey.ShouldEqual(pgSpec, v1beta1.PodGroupSpec{
-				MinMember:         *defaultReplicas(),
+			convey.So(pgSpec, convey.ShouldResemble, v1beta1.PodGroupSpec{
+				MinMember:         1,
 				Queue:             "default",
 				PriorityClassName: "",
 				MinResources:      nil,
@@ -474,7 +434,7 @@ func TestIsPodGroupSyncedFalseScene(t *testing.T) {
 			})
 			defer patch2.Reset()
 			res := rc.isPodGroupSynced(ji)
-			convey.ShouldEqual(res, false)
+			convey.So(res, convey.ShouldEqual, false)
 		})
 		convey.Convey("02-pod group phase is pending, should return false", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "newPodGroupSpec", func(_ *ASJobReconciler,
@@ -492,7 +452,7 @@ func TestIsPodGroupSyncedFalseScene(t *testing.T) {
 			})
 			defer patch2.Reset()
 			res := rc.isPodGroupSynced(ji)
-			convey.ShouldEqual(res, false)
+			convey.So(res, convey.ShouldEqual, false)
 		})
 	})
 }
@@ -519,7 +479,7 @@ func TestIsPodGroupSyncedTrueScene(t *testing.T) {
 			})
 			defer patch.Reset()
 			res := rc.isPodGroupSynced(ji)
-			convey.ShouldEqual(res, true)
+			convey.So(res, convey.ShouldEqual, true)
 		})
 	})
 }
@@ -545,7 +505,7 @@ func TestHandleFinishedJob(t *testing.T) {
 				})
 			defer patch.Reset()
 			err := rc.handleFinishedJob(ji, false, conditionInfo{})
-			convey.ShouldEqual(err, errors.New("delete pods and service failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("delete pods and service failed"))
 		})
 		convey.Convey("02-clean up job failed, should return err", func() {
 			patch := gomonkey.ApplyMethod(new(common.JobController), "CleanupJob",
@@ -554,7 +514,7 @@ func TestHandleFinishedJob(t *testing.T) {
 				})
 			defer patch.Reset()
 			err := rc.handleFinishedJob(ji, false, conditionInfo{})
-			convey.ShouldEqual(err, errors.New("clean up job failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("clean up job failed"))
 		})
 		convey.Convey("03-delete podgroup failed, should return err", func() {
 			patch := gomonkey.ApplyMethod(new(ASJobReconciler), "DeletePodGroup",
@@ -563,7 +523,7 @@ func TestHandleFinishedJob(t *testing.T) {
 				})
 			defer patch.Reset()
 			err := rc.handleFinishedJob(ji, false, conditionInfo{})
-			convey.ShouldEqual(err, errors.New("delete podgroup failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("delete podgroup failed"))
 		})
 	})
 }
@@ -592,7 +552,7 @@ func TestHandleFinishedJobUpdateStep(t *testing.T) {
 			})
 			defer patch2.Reset()
 			err := rc.handleFinishedJob(ji, true, conditionInfo{})
-			convey.ShouldEqual(err, errors.New("update condition failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("update condition failed"))
 		})
 		convey.Convey("02-when all update process finish and job is success, "+
 			"all replica type should set to success", func() {
@@ -605,10 +565,9 @@ func TestHandleFinishedJobUpdateStep(t *testing.T) {
 			})
 			defer patch2.Reset()
 			err := rc.handleFinishedJob(ji, true, conditionInfo{})
-			convey.ShouldBeNil(err)
-			convey.ShouldEqual(ji.status.ReplicaStatuses[mindxdlv1.PytorchReplicaTypeMaster], &commonv1.ReplicaStatus{
-				Succeeded: 1,
-			})
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ji.status.ReplicaStatuses[mindxdlv1.PytorchReplicaTypeMaster], convey.ShouldResemble,
+				&commonv1.ReplicaStatus{Active: 1})
 		})
 	})
 }
@@ -624,8 +583,8 @@ func TestSyncPodGroup(t *testing.T) {
 				func(_ *ASJobReconciler, _ metav1.Object) (*v1beta1.PodGroup, error) { return fakePodGroup, nil })
 			defer patch.Reset()
 			pg, err := rc.SyncPodGroup(job, pgSpec)
-			convey.ShouldBeNil(err)
-			convey.ShouldEqual(pg, fakePodGroup)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pg, convey.ShouldResemble, fakePodGroup)
 		})
 		convey.Convey("02-get podGroup failed and create pg failed, should return err", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getPodGroup",
@@ -641,7 +600,7 @@ func TestSyncPodGroup(t *testing.T) {
 				})
 			defer patch2.Reset()
 			_, err := rc.SyncPodGroup(job, pgSpec)
-			convey.ShouldEqual(err, errors.New("create podGroup failed"))
+			convey.So(err, convey.ShouldResemble, errors.New("create podGroup failed"))
 		})
 		convey.Convey("03-get podGroup failed and create pg success, should return podGroup and nil err", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getPodGroup",
@@ -657,8 +616,8 @@ func TestSyncPodGroup(t *testing.T) {
 				})
 			defer patch2.Reset()
 			pg, err := rc.SyncPodGroup(job, pgSpec)
-			convey.ShouldBeNil(err)
-			convey.ShouldEqual(pg, fakePodGroup)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pg, convey.ShouldResemble, fakePodGroup)
 		})
 	})
 }

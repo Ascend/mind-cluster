@@ -100,20 +100,6 @@ func getContainerNPUResourceNameAndReq(ct corev1.Container) (string, int) {
 	return "", 0
 }
 
-func getNpuReqPerPod(job *mindxdlv1.AscendJob) int {
-	npuWorker := getNpuWorkerSpec(job)
-	if npuWorker == nil {
-		return 0
-	}
-
-	for _, ct := range npuWorker.Template.Spec.Containers {
-		if ct.Name == mindxdlv1.DefaultContainerName {
-			return getContainerResourceReq(ct)
-		}
-	}
-	return 0
-}
-
 func getNpuReqInfoPerPod(job *mindxdlv1.AscendJob) (string, int) {
 	npuWorker := getNpuWorkerSpec(job)
 	if npuWorker == nil {
@@ -142,6 +128,9 @@ func getNpuWorkerSpec(job *mindxdlv1.AscendJob) *commonv1.ReplicaSpec {
 }
 
 func localRankStr(req int) string {
+	if req == 0 {
+		return ""
+	}
 	rankStr := ""
 	for i := 0; i < req-1; i++ {
 		rankStr += strconv.Itoa(i) + ","

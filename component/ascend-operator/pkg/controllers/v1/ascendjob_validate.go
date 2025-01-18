@@ -14,7 +14,7 @@ import (
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
@@ -63,8 +63,7 @@ func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateE
 
 	if r.Config.EnableGangScheduling && job.Spec.RunPolicy.SchedulingPolicy != nil {
 		queueName := job.Spec.RunPolicy.SchedulingPolicy.Queue
-		queue := v1beta1.Queue{}
-		if err := r.Get(context.TODO(), types.NamespacedName{Name: queueName}, &queue); err != nil {
+		if _, err := r.getQueueFromApiserver(queueName); err != nil {
 			return &validateError{
 				reason:  "QueueGetFailed",
 				message: err.Error(),
@@ -73,6 +72,10 @@ func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateE
 	}
 
 	return nil
+}
+
+func (r *ASJobReconciler) getQueueFromApiserver(queueName string) (*v1beta1.Queue, error) {
+	return r.VolcanoClientSet.SchedulingV1beta1().Queues().Get(context.TODO(), queueName, metav1.GetOptions{})
 }
 
 func (r *ASJobReconciler) validateSpec(job *mindxdlv1.AscendJob,

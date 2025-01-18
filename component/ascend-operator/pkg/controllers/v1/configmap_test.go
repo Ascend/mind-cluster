@@ -18,19 +18,19 @@ import (
 	_ "ascend-operator/pkg/testtool"
 )
 
+// TestGetVcRescheduleCM test getVcRescheduleCM
 func TestGetVcRescheduleCM(t *testing.T) {
 	convey.Convey("getVcRescheduleCM", t, func() {
 		rc := &ASJobReconciler{}
 		convey.Convey("01-get configmap with nil patch should return right result", func() {
 			cm := &v1.ConfigMap{}
-			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmap",
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*v1.ConfigMap, error) {
 					return cm, nil
 				})
 			defer patch.Reset()
 			cm, err := rc.getVcRescheduleCM()
-			convey.ShouldBeNil(err)
-			convey.ShouldNotBeNil(cm)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }

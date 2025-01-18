@@ -43,17 +43,17 @@ func (r *ASJobReconciler) genService(job metav1.Object, rtype commonv1.ReplicaTy
 		return nil, err
 	}
 
-	labels := r.genServiceLabels(job, rtype, "0")
+	label := r.genServiceLabels(job, rtype, "0")
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   common.GenGeneralName(job.GetName(), strings.ToLower(string(rtype)), "0"),
-			Labels: labels,
+			Labels: label,
 			OwnerReferences: []metav1.OwnerReference{
 				*r.GenOwnerReference(job),
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: labels,
+			Selector: label,
 			Ports:    servicePorts,
 		},
 	}
@@ -145,6 +145,9 @@ func getServiceIpAndPort(service *corev1.Service) (string, string) {
 			schedulerPort = strconv.Itoa(int(port.Port))
 			break
 		}
+	}
+	if schedulerPort == "" {
+		return "", ""
 	}
 	return service.Spec.ClusterIP, schedulerPort
 }
