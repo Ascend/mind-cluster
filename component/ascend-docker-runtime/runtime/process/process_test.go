@@ -21,8 +21,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -50,6 +54,7 @@ const (
 	execStubLog                          = "execute stub"
 	configPath                           = "./test/config.json"
 	chipName                             = "910"
+	testStr                              = "test"
 )
 
 var (
@@ -165,6 +170,32 @@ func TestArgsIsCreateCase4(t *testing.T) {
 
 	err = DoProcess()
 	assert.Nil(t, err)
+}
+
+// TestDoProcess test the function DoProcess
+func TestDoProcess(t *testing.T) {
+	convey.Convey("test DoProcess", t, func() {
+		testArgs := args{
+			cmd:           "create",
+			bundleDirPath: "",
+		}
+		patches := gomonkey.ApplyFuncReturn(getArgs, &testArgs, nil)
+		defer patches.Reset()
+		convey.Convey("01-Getwd error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Getwd, testStr, testError)
+			defer patch.Reset()
+			err := DoProcess()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(os.Getwd, testStr, nil)
+		convey.Convey("02-success, should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(modifySpecFile, nil).
+				ApplyFuncReturn(execRunc, nil)
+			defer patch.Reset()
+			err := DoProcess()
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }
 
 // TestModifySpecFile tests the function modifySpecFile
@@ -347,6 +378,25 @@ func TestModifySpecFilePatch3(t *testing.T) {
 	})
 }
 
+// TestModifySpecFilePatch4 tests the function modifySpecFile
+func TestModifySpecFilePatch4(t *testing.T) {
+	convey.Convey("test modifySpecFile patch3", t, func() {
+		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
+			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
+			ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+			ApplyMethodReturn(&os.File{}, "Truncate", nil).
+			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil)
+		defer patches.Reset()
+		convey.Convey("11-unmarshal error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(json.Unmarshal, testError)
+			defer patch.Reset()
+			err := modifySpecFile("")
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
 func TestAddHookCase1(t *testing.T) {
 	var specArgs = &specs.Spec{}
 	stub := gomonkey.ApplyGlobalVar(&hookCliPath, ".")
@@ -391,6 +441,44 @@ func TestExecRunc(t *testing.T) {
 
 	err := execRunc()
 	assert.NotNil(t, err)
+}
+
+// TestExecRuncPatch1 tests the function execRunc
+func TestExecRuncPatch1(t *testing.T) {
+	convey.Convey("test execRunc patch1", t, func() {
+		patches := gomonkey.ApplyFuncReturn(exec.LookPath, testStr, nil)
+		defer patches.Reset()
+		convey.Convey("01-EvalSymlinks error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.EvalSymlinks, testStr, testError)
+			defer patch.Reset()
+			err := execRunc()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(filepath.EvalSymlinks, testStr, nil)
+		convey.Convey("02-RealFileChecker error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, testError)
+			defer patch.Reset()
+			err := execRunc()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
+		convey.Convey("03-ChangeRuntimeLogMode error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, testError)
+			defer patch.Reset()
+			convey.So(execRunc(), convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, nil)
+		convey.Convey("04-syscall Exec error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(syscall.Exec, testError)
+			defer patch.Reset()
+			convey.So(execRunc(), convey.ShouldBeError)
+		})
+		convey.Convey("05-success, should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(syscall.Exec, nil)
+			defer patch.Reset()
+			convey.So(execRunc(), convey.ShouldBeNil)
+		})
+	})
 }
 
 // TestParseDevicesCase1 tests the function parseDevices
@@ -482,6 +570,15 @@ func TestAddEnvToDevicePlugin1(t *testing.T) {
 
 	addAscendDockerEnv(&spec)
 	assert.Contains(t, spec.Process.Env, useAscendDocker)
+}
+
+// TestAddEnvToDevicePlugin2 tests the function addAscendDockerEnv
+func TestAddEnvToDevicePlugin2(t *testing.T) {
+	convey.Convey("01-spec empty, should return immediately", t, func() {
+		spec := &specs.Spec{}
+		addAscendDockerEnv(spec)
+		convey.So(spec.Process, convey.ShouldBeNil)
+	})
 }
 
 // TestGetDeviceTypeByChipName0 tests the function GetDeviceTypeByChipName
@@ -579,6 +676,17 @@ func TestUpdateEnvAndPostHook(t *testing.T) {
 	assert.Contains(t, spec.Hooks.Poststop[0].Path, destroyHookCli)
 }
 
+// TestUpdateEnvAndPostHookPatch1 tests the function updateEnvAndPostHook
+func TestUpdateEnvAndPostHookPatch1(t *testing.T) {
+	convey.Convey("test updateEnvAndPostHook patch1", t, func() {
+		convey.Convey("01-deviceIdList is nil, should return error", func() {
+			spec := &specs.Spec{}
+			updateEnvAndPostHook(spec, dcmi.VDeviceInfo{}, nil)
+			convey.So(spec.Process, convey.ShouldBeNil)
+		})
+	})
+}
+
 // TestAddDeviceToSpec0 tests the function addDeviceToSpec
 func TestAddDeviceToSpec0(t *testing.T) {
 	devPath := "/dev/davinci0"
@@ -601,6 +709,40 @@ func TestAddDeviceToSpec0(t *testing.T) {
 	err := addDeviceToSpec(&spec, devPath, notRenameDeviceType)
 	assert.Nil(t, err)
 	assert.Contains(t, spec.Linux.Devices[0].Path, devPath)
+}
+
+// TestAddDeviceToSpecPatch1 tests the function addDeviceToSpec
+func TestAddDeviceToSpecPatch1(t *testing.T) {
+	convey.Convey("test addDeviceToSpec patch1", t, func() {
+		convey.Convey("01-DeviceFromPath error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(oci.DeviceFromPath, nil, testError)
+			defer patch.Reset()
+			convey.So(addDeviceToSpec(nil, "", ""), convey.ShouldBeError)
+		})
+		testSp := specs.Spec{
+			Linux: &specs.Linux{
+				Devices: make([]specs.LinuxDevice, 0),
+				Resources: &specs.LinuxResources{
+					Devices: make([]specs.LinuxDeviceCgroup, 0),
+				},
+			},
+		}
+		patches := gomonkey.ApplyFuncReturn(oci.DeviceFromPath, &specs.LinuxDevice{
+			Type:  testStr,
+			Major: 0,
+			Minor: 0,
+		}, nil)
+		defer patches.Reset()
+		convey.Convey("02-virtualDavinciName case, vDeviceNumber len error, should return error", func() {
+			convey.So(addDeviceToSpec(&testSp, "", virtualDavinciName), convey.ShouldBeError)
+		})
+		convey.Convey("03-virtualDavinciName success, should return nil", func() {
+			convey.So(addDeviceToSpec(&testSp, "0", virtualDavinciName), convey.ShouldBeNil)
+		})
+		convey.Convey("04-davinciManagerDocker success, should return nil", func() {
+			convey.So(addDeviceToSpec(&testSp, "", davinciManagerDocker), convey.ShouldBeNil)
+		})
+	})
 }
 
 // TestAddAscend310BManagerDevice tests the function addAscend310BManagerDevice
@@ -628,6 +770,24 @@ func TestAddAscend310BManagerDevice(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// TestAddAscend310BManagerDevicePatch1 tests the function addAscend310BManagerDevice
+func TestAddAscend310BManagerDevicePatch1(t *testing.T) {
+	convey.Convey("test addAscend310BManagerDevice patch1", t, func() {
+		convey.Convey("01-addDeviceToSpec error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(addDeviceToSpec, testError)
+			defer patch.Reset()
+			convey.So(addAscend310BManagerDevice(nil), convey.ShouldBeError)
+		})
+		patches := gomonkey.ApplyFuncReturn(addDeviceToSpec, nil)
+		defer patches.Reset()
+		convey.Convey("02-Stat error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, testError)
+			defer patch.Reset()
+			convey.So(addAscend310BManagerDevice(nil), convey.ShouldBeError)
+		})
+	})
+}
+
 // TestAddCommonManagerDevice tests the function addCommonManagerDevice
 func TestAddCommonManagerDevice(t *testing.T) {
 	statStub := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dPath string, deviceType string) error {
@@ -646,6 +806,26 @@ func TestAddCommonManagerDevice(t *testing.T) {
 
 	err := addCommonManagerDevice(&spec)
 	assert.Nil(t, err)
+}
+
+// TestAddCommonManagerDevicePatch1 tests the function addCommonManagerDevice
+func TestAddCommonManagerDevicePatch1(t *testing.T) {
+	convey.Convey("test addCommonManagerDevice patch1", t, func() {
+		convey.Convey("01-addDeviceToSpec error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(addDeviceToSpec, testError)
+			defer patch.Reset()
+			spec := specs.Spec{
+				Linux: &specs.Linux{
+					Devices: []specs.LinuxDevice{},
+					Resources: &specs.LinuxResources{
+						Devices: []specs.LinuxDeviceCgroup{},
+					},
+				},
+			}
+			err := addCommonManagerDevice(&spec)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }
 
 // TestAddManagerDevice tests the function addManagerDevice
@@ -721,6 +901,31 @@ func TestAddDevice(t *testing.T) {
 	assert.Contains(t, spec.Linux.Devices[0].Path, devPath)
 }
 
+// TestAddDevicePatch1 tests the function addDevice
+func TestAddDevicePatch1(t *testing.T) {
+	convey.Convey("test addDevice patch1", t, func() {
+		patches := gomonkey.ApplyFuncReturn(getValueByKey, testStr)
+		patches.Reset()
+		testSp := &specs.Spec{
+			Process: &specs.Process{
+				Env: make([]string, 0),
+			},
+		}
+		convey.Convey("01-addDeviceToSpec error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(strings.Contains, true).
+				ApplyFuncReturn(addDeviceToSpec, testError)
+			defer patch.Reset()
+			convey.So(addDevice(testSp, make([]int, 0)), convey.ShouldBeError)
+		})
+		convey.Convey("02-addManagerDevice error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(addDeviceToSpec, nil).
+				ApplyFuncReturn(addManagerDevice, testError)
+			defer patch.Reset()
+			convey.So(addDevice(testSp, make([]int, 0)), convey.ShouldBeError)
+		})
+	})
+}
+
 // TestAddHook tests the function addHook
 func TestAddHook(t *testing.T) {
 	patch := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
@@ -758,6 +963,83 @@ func TestAddHook(t *testing.T) {
 	}
 }
 
+// TestAddHookPatch1 tests the function addHook
+func TestAddHookPatch1(t *testing.T) {
+	convey.Convey("test addHook patch1", t, func() {
+		convey.Convey("01-deviceList is nil, should return nil", func() {
+			convey.So(addHook(&specs.Spec{}, nil), convey.ShouldBeNil)
+		})
+		testIn := make([]int, 1)
+		convey.Convey("02-Executable error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Executable, testStr, testError)
+			defer patch.Reset()
+			convey.So(addHook(&specs.Spec{}, &testIn), convey.ShouldBeError)
+		})
+		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
+			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
+		defer patches.Reset()
+		convey.Convey("03-Stat error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, testError)
+			defer patch.Reset()
+			convey.So(addHook(&specs.Spec{}, &testIn), convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+		convey.Convey("04-over MaxCommandLength, should return error", func() {
+			testSp := specs.Spec{
+				Hooks: &specs.Hooks{
+					Prestart: make([]specs.Hook, MaxCommandLength+1),
+				},
+			}
+			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+		})
+		convey.Convey("05-hook path contains hookCli, should return error", func() {
+			testSp := specs.Spec{
+				Hooks: &specs.Hooks{
+					Prestart: []specs.Hook{specs.Hook{
+						Path: hookCli,
+					}},
+				},
+				Process: &specs.Process{
+					Env: make([]string, MaxCommandLength+1),
+				},
+			}
+			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+		})
+	})
+}
+
+// TestAddHookPatch2 tests the function addHook
+func TestAddHookPatch2(t *testing.T) {
+	convey.Convey("test addHook patch2", t, func() {
+		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
+			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
+			ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+		defer patches.Reset()
+		testIn := make([]int, 1)
+		testSp := specs.Spec{
+			Hooks: &specs.Hooks{
+				Prestart: []specs.Hook{specs.Hook{
+					Path: hookCli,
+				}},
+			},
+			Process: &specs.Process{
+				Env: make([]string, 1),
+			},
+		}
+		convey.Convey("06-CreateVDevice error, return error", func() {
+			patch := gomonkey.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{}, testError)
+			defer patch.Reset()
+			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{VdeviceID: 0}, nil)
+		convey.Convey("07-success, should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook)
+			defer patch.Reset()
+			convey.So(addHook(&testSp, &testIn), convey.ShouldBeNil)
+		})
+	})
+}
+
 // TestParseAscendDevices tests the function parseAscendDevices
 func TestParseAscendDevices(t *testing.T) {
 	patchRealFileCheck := gomonkey.ApplyFunc(dcmi.GetChipName, func() (string, error) {
@@ -787,6 +1069,39 @@ func TestParseAscendDevices(t *testing.T) {
 			assert.Equalf(t, tt.want, got, "parseAscendDevices(%v)", tt.visibleDevices)
 		})
 	}
+}
+
+// TestParseAscendDevicesPatch1 tests the function parseAscendDevices
+func TestParseAscendDevicesPatch1(t *testing.T) {
+	convey.Convey("test parseAscendDevices patch1", t, func() {
+		convey.Convey("01-matchGroups is nil, should return error", func() {
+			devs := "test,"
+			_, err := parseAscendDevices(devs)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-Atoi error, should return error", func() {
+			devs := "Ascend910-8,"
+			patch := gomonkey.ApplyFuncReturn(strconv.Atoi, 0, testError)
+			defer patch.Reset()
+			_, err := parseAscendDevices(devs)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-GetChipName error, should return error", func() {
+			devs := testStr
+			patch := gomonkey.ApplyFuncReturn(dcmi.GetChipName, testStr, testError)
+			defer patch.Reset()
+			_, err := parseAscendDevices(devs)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("04-GetDeviceTypeByChipName error, should return error", func() {
+			devs := testStr
+			patch := gomonkey.ApplyFuncReturn(dcmi.GetChipName, testStr, nil).
+				ApplyFuncReturn(GetDeviceTypeByChipName, testStr)
+			defer patch.Reset()
+			_, err := parseAscendDevices(devs)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }
 
 // TestCheckVisibleDevice tests the function checkVisibleDevice
@@ -832,4 +1147,35 @@ func TestCheckVisibleDevice(t *testing.T) {
 			assert.Equalf(t, tt.want, got, "checkVisibleDevice(%v)", tt.spec)
 		})
 	}
+}
+
+// TestCheckVisibleDevicePatch1 tests the function checkVisibleDevice
+func TestCheckVisibleDevicePatch1(t *testing.T) {
+	convey.Convey("test checkVisibleDevice patch1", t, func() {
+		testSpec := &specs.Spec{
+			Process: &specs.Process{
+				Env: []string{ascendVisibleDevices + "=Ascend910-0"},
+			},
+		}
+		convey.Convey("01-visible devices is empty, should return nil)", func() {
+			patch := gomonkey.ApplyFuncReturn(getValueByDeviceKey, "")
+			defer patch.Reset()
+			_, err := checkVisibleDevice(testSpec)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("02-parseAscendDevices error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(getValueByDeviceKey, "Ascend").
+				ApplyFuncReturn(parseAscendDevices, []int{0}, testError)
+			defer patch.Reset()
+			_, err := checkVisibleDevice(testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-parseDevices error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(getValueByDeviceKey, testStr).
+				ApplyFuncReturn(parseDevices, []int{0}, testError)
+			defer patch.Reset()
+			_, err := checkVisibleDevice(testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }

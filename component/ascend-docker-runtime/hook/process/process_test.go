@@ -44,6 +44,7 @@ const (
 	ascendVisibleDeviceTestStr             = "ASCEND_VISIBLE_DEVICES=0-3,5,7"
 	configFile                             = "config.json"
 	strRepeatTimes                         = 129
+	testStr                                = "test"
 )
 
 var (
@@ -123,6 +124,84 @@ func TestDoPrestartHookCase5(t *testing.T) {
 	stub.StubFunc(&doExec, nil)
 	err := DoPrestartHook()
 	assert.NotNil(t, err)
+}
+
+// TestDoPrestartHookPatch1 test function DoPrestartHook
+func TestDoPrestartHookPatch1(t *testing.T) {
+	convey.Convey("test DoPrestartHook patch1", t, func() {
+		ctrCfg := &containerConfig{}
+		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
+			ApplyFuncReturn(getValueByKey, testStr).
+			ApplyFuncReturn(parseMounts, []string{testStr}).
+			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil)
+		defer patches.Reset()
+		convey.Convey("01-parseRuntimeOptions error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, nil)
+		convey.Convey("02-parseSoftLinkMode error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(parseSoftLinkMode, "", testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(parseSoftLinkMode, testStr, nil)
+		convey.Convey("03-Executable error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Executable, "", testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(os.Executable, testStr, nil)
+		convey.Convey("04-Stat error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Stat, fileInfoMock{}, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
+			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
+			ApplyFuncReturn(getArgs, []string{testStr})
+		convey.Convey("05-ChangeRuntimeLogMode error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestDoPrestartHookPatch2 test function DoPrestartHook
+func TestDoPrestartHookPatch2(t *testing.T) {
+	convey.Convey("test DoPrestartHook patch2", t, func() {
+		ctrCfg := &containerConfig{}
+		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
+			ApplyFuncReturn(getValueByKey, testStr).
+			ApplyFuncReturn(parseMounts, []string{testStr}).
+			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil).
+			ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, nil).
+			ApplyFuncReturn(parseSoftLinkMode, testStr, nil).
+			ApplyFuncReturn(os.Executable, testStr, nil).
+			ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
+			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
+			ApplyFuncReturn(getArgs, []string{testStr}).
+			ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, nil)
+		defer patches.Reset()
+		convey.Convey("06-doExec error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(doExec, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(doExec, nil)
+		convey.Convey("07-success, should return nil", func() {
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }
 
 // TestGetValueByKeyCase1 test the function getValueByKey
@@ -242,6 +321,64 @@ func TestGetContainerConfig(t *testing.T) {
 	defer stub.Reset()
 
 	getContainerConfig()
+}
+
+// TestGetContainerConfigPatch1 test the function getContainerConfig
+func TestGetContainerConfigPatch1(t *testing.T) {
+	convey.Convey("test getContainerConfig patch1", t, func() {
+		patches := gomonkey.ApplyMethodReturn(json.NewDecoder(containerConfigInputStream),
+			"Decode", nil)
+		defer patches.Reset()
+		convey.Convey("01-RealFileChecker error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, testError)
+			defer patch.Reset()
+			_, err := getContainerConfig()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
+		convey.Convey("02-parseOciSpecFile error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(parseOciSpecFile, &specs.Spec{}, testError)
+			defer patch.Reset()
+			_, err := getContainerConfig()
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-over MaxCommandLength, should return error", func() {
+			sp := &specs.Spec{
+				Process: &specs.Process{
+					Env: make([]string, MaxCommandLength+1),
+				},
+			}
+			patch := gomonkey.ApplyFuncReturn(parseOciSpecFile, sp, nil)
+			defer patch.Reset()
+			_, err := getContainerConfig()
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestGetContainerConfigPatch2 test the function getContainerConfig
+func TestGetContainerConfigPatch2(t *testing.T) {
+	convey.Convey("test getContainerConfig patch2", t, func() {
+		testSp := &specs.Spec{
+			Process: &specs.Process{
+				Env: make([]string, 1),
+			},
+			Root: &specs.Root{
+				Path: testStr,
+			},
+		}
+		patches := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
+			ApplyFuncReturn(parseOciSpecFile, testSp, nil).
+			ApplyMethodReturn(json.NewDecoder(containerConfigInputStream),
+				"Decode", nil)
+		defer patches.Reset()
+		convey.Convey("04-rfs not abs path, success, should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.Abs, testStr, false)
+			defer patch.Reset()
+			_, err := getContainerConfig()
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }
 
 // fileInfoMock is used to test

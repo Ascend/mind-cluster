@@ -111,6 +111,27 @@ func TestGetLogPrefix(t *testing.T) {
 	if logPrefix == "" || prefix != logPrefix {
 		t.Fatalf("get log prefix failed 2 %v %v", prefix, prefix)
 	}
+	convey.Convey("01-logPrefix not empty, should return nil", t, func() {
+		logPrefix = "test"
+		defer func() {
+			logPrefix = ""
+		}()
+		_, err := GetLogPrefix()
+		convey.So(err, convey.ShouldBeNil)
+	})
+	convey.Convey("02-uid less than 0, should return error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(os.Geteuid, -1)
+		defer patch.Reset()
+		_, err := GetLogPrefix()
+		convey.So(err, convey.ShouldBeError)
+	})
+	convey.Convey("03-EvalSymlinks error, should return error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(os.Geteuid, 1).
+			ApplyFuncReturn(filepath.EvalSymlinks, "", testError)
+		defer patch.Reset()
+		ret, _ := GetLogPrefix()
+		convey.So(strings.Contains(ret, "unknown"), convey.ShouldBeTrue)
+	})
 }
 
 // TestRealFileChecker test the function RealFileChecker
@@ -181,6 +202,11 @@ type MockFileInfo struct {
 // IsDir mock the method IsDir, return false
 func (MockFileInfo) IsDir() bool {
 	return false
+}
+
+// Mode mock the method Mode
+func (MockFileInfo) Mode() os.FileMode {
+	return os.ModePerm
 }
 
 // TestRealFileChecker2 test the function RealFileChecker patch2
@@ -354,4 +380,52 @@ func TestChangeRuntimeLogMode(t *testing.T) {
 			}
 		})
 	}
+	convey.Convey("Walk error, should return nil", t, func() {
+		patch := gomonkey.ApplyFuncReturn(filepath.Walk, testError)
+		defer patch.Reset()
+		convey.So(ChangeRuntimeLogMode(""), convey.ShouldBeNil)
+	})
+}
+
+// TestFileChecker tests the function FileChecker
+func TestFileChecker(t *testing.T) {
+	convey.Convey("test FileChecker", t, func() {
+		const maxDepth, groupWriteIndex, otherWriteIndex, permLength int = 99, 5, 8, 10
+		convey.Convey("01-deep over maxDepth, should return error", func() {
+			_, err := FileChecker("", false, false, false, maxDepth+1)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-contains .., should return error", func() {
+			_, err := FileChecker("..", false, false, false, 1)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("03-get abs path error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.Abs, "", testError)
+			defer patch.Reset()
+			_, err := FileChecker("", false, false, false, 1)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches := gomonkey.ApplyFuncReturn(filepath.Abs, "", nil)
+		defer patches.Reset()
+		convey.Convey("04-over DefaultStringSize, should return error", func() {
+			const strLen = 257
+			patch := gomonkey.ApplyFuncReturn(filepath.Base, strings.Repeat("1", strLen))
+			defer patch.Reset()
+			_, err := FileChecker("", false, false, false, 1)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(filepath.Base, "0").
+			ApplyFuncReturn(normalFileCheck, MockFileInfo{}, false, nil)
+		convey.Convey("05-len(perm) not equal permLength should return error", func() {
+			var a os.FileMode
+			patch := gomonkey.ApplyMethodReturn(a, "String", "")
+			defer patch.Reset()
+			_, err := FileChecker("", false, false, false, 1)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("06-write permission error, should return error", func() {
+			_, err := FileChecker("", false, false, false, 1)
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
 }
