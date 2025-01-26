@@ -27,8 +27,7 @@ func TestMain(m *testing.M) {
 	}
 	collector.InitCmCollectBuffer()
 	NewFaultProcessCenter()
-	code := m.Run()
-	os.Exit(code)
+	m.Run()
 }
 
 func readObjectFromUceAccompanyProcessorTestYaml() (

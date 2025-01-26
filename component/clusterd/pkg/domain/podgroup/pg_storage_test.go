@@ -6,7 +6,9 @@
 package podgroup
 
 import (
+	"clusterd/pkg/common/constant"
 	"context"
+	corev1 "k8s.io/api/core/v1"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -22,11 +24,12 @@ func init() {
 }
 
 const (
-	pgName1     = "job1"
-	pgNameSpace = "default"
-	jobUid1     = "123"
-	vcJobKey    = "job"
-	ptFrameWork = "pytorch"
+	pgName1      = "job1"
+	pgNameSpace  = "default"
+	jobUid1      = "123"
+	vcJobKey     = "job"
+	ptFrameWork  = "pytorch"
+	ResourceName = "huawei/" + constant.Ascend910Server
 )
 
 func TestSavePodGroup(t *testing.T) {
@@ -53,5 +56,8 @@ func getDemoPodGroup(pgName, nameSpace, jobUid string) *v1beta1.PodGroup {
 	labelMap := map[string]string{frameWorkKey: ptFrameWork}
 	podGroupInfo.Labels = labelMap
 	podGroupInfo.Annotations = make(map[string]string)
+	podGroupInfo.Spec.MinResources = &corev1.ResourceList{
+		ResourceName: {},
+	}
 	return podGroupInfo
 }

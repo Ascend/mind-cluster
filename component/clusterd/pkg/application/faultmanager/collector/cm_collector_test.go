@@ -9,33 +9,95 @@ import (
 	"clusterd/pkg/common/constant"
 )
 
-func TestDeviceInfoCollector(t *testing.T) {
+const (
+	CmName     = "CmName"
+	CmName2    = "CmName2"
+	UpdateTime = 0
+)
+
+func TestCmInfoCollector(t *testing.T) {
 	InitCmCollectBuffer()
 	t.Run("TestDeviceInfoCollector", func(t *testing.T) {
 		deviceInfo := &constant.DeviceInfo{
-			CmName: "test",
+			CmName: CmName,
 		}
 		DeviceInfoCollector(nil, deviceInfo, constant.AddOperator)
-		if len(DeviceCmCollectBuffer.buffer) == 0 {
+		if len(*DeviceCmCollectBuffer.buffer[CmName]) != 1 {
+			t.Error("TestDeviceInfoCollector failed")
+		}
+		DeviceInfoCollector(nil, deviceInfo, constant.DeleteOperator)
+		if len(*DeviceCmCollectBuffer.buffer[CmName]) != 2 {
 			t.Error("TestDeviceInfoCollector failed")
 		}
 	})
 	t.Run("TestNodeInfoCollector", func(t *testing.T) {
 		nodeInfo := &constant.NodeInfo{
-			CmName: "test",
+			CmName: CmName,
 		}
 		NodeCollector(nil, nodeInfo, constant.AddOperator)
-		if len(NodeCmCollectBuffer.buffer) == 0 {
+		if len(*NodeCmCollectBuffer.buffer[CmName]) != 1 {
+			t.Error("TestNodeInfoCollector failed")
+		}
+		NodeCollector(nil, nodeInfo, constant.DeleteOperator)
+		if len(*NodeCmCollectBuffer.buffer[CmName]) != 2 {
 			t.Error("TestNodeInfoCollector failed")
 		}
 	})
 	t.Run("TestSwitchInfoCollector", func(t *testing.T) {
 		switchInfo := &constant.SwitchInfo{
-			CmName: "test",
+			CmName: CmName,
 		}
 		SwitchInfoCollector(nil, switchInfo, constant.AddOperator)
-		if len(SwitchCmCollectBuffer.buffer) == 0 {
+		if len(*SwitchCmCollectBuffer.buffer[CmName]) != 1 {
 			t.Error("TestSwitchInfoCollector failed")
+		}
+		SwitchInfoCollector(nil, switchInfo, constant.DeleteOperator)
+		if len(*SwitchCmCollectBuffer.buffer[CmName]) != 2 {
+			t.Error("TestSwitchInfoCollector failed")
+		}
+	})
+}
+
+func TestUpdateInfoSuccess(t *testing.T) {
+	InitCmCollectBuffer()
+	t.Run("push info with update success", func(t *testing.T) {
+		deviceInfo := &constant.DeviceInfo{
+			CmName: CmName,
+		}
+		DeviceInfoCollector(nil, deviceInfo, constant.AddOperator)
+		if len(*DeviceCmCollectBuffer.buffer[CmName]) != 1 {
+			t.Error("TestDeviceInfoCollector failed")
+		}
+		DeviceInfoCollector(nil, deviceInfo, constant.DeleteOperator)
+		if len(*DeviceCmCollectBuffer.buffer[CmName]) != 2 {
+			t.Error("TestDeviceInfoCollector failed")
+		}
+	})
+}
+
+func TestPopInfoCorrect(t *testing.T) {
+	InitCmCollectBuffer()
+	t.Run("push info and pop info correctly", func(t *testing.T) {
+		deviceInfo := &constant.DeviceInfo{
+			CmName: CmName,
+		}
+		deviceInfo2 := &constant.DeviceInfo{
+			CmName: CmName2,
+		}
+		DeviceInfoCollector(nil, deviceInfo, constant.AddOperator)
+		DeviceInfoCollector(nil, deviceInfo2, constant.AddOperator)
+		DeviceInfoCollector(nil, deviceInfo, constant.DeleteOperator)
+		popInfo := DeviceCmCollectBuffer.Pop()
+		if len(popInfo) != 2 {
+			t.Error("TestPopInfoCorrect failed")
+		}
+		popInfo = DeviceCmCollectBuffer.Pop()
+		if len(popInfo) != 1 {
+			t.Error("TestPopInfoCorrect failed")
+		}
+		popInfo = DeviceCmCollectBuffer.Pop()
+		if len(popInfo) != 0 {
+			t.Error("TestPopInfoCorrect failed")
 		}
 	})
 }

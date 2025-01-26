@@ -155,3 +155,11 @@ func TestGetPGFromCacheOrPod(t *testing.T) {
 		convey.So(namespace, convey.ShouldEqual, pgNameSpace)
 	})
 }
+
+func TestGetResourceType(t *testing.T) {
+	convey.Convey("test TestGetResourceType success", t, func() {
+		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
+		resourceType := GetResourceType(pgDemo1)
+		convey.So(resourceType, convey.ShouldEqual, constant.Ascend910Server)
+	})
+}

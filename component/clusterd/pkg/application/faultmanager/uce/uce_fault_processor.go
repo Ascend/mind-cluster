@@ -94,6 +94,8 @@ func (processor *UceFaultProcessor) Process(info any) any {
 	hwlog.RunLog.Debugf("current uceDevicesOfUceJob %s", util.ObjToString(processor.uceDevicesOfUceJob))
 
 	currentTime := time.Now().UnixMilli()
+	hwlog.RunLog.Infof("currentTime %d", currentTime)
+
 	processor.processUceFaultInfo(currentTime)
 	faultdomain.AdvanceDeviceCmForNodeMapToString(processor.nodeDeviceCmMap, deviceInfos)
 
