@@ -104,3 +104,23 @@ func GetPGFromCacheOrPod(jobKey string) (jobName, pgName, namespace string) {
 	}
 	return GetJobNameByPG(&pg), pg.GetName(), pg.Namespace
 }
+
+// GetResourceType get resource type
+func GetResourceType(info *v1beta1.PodGroup) string {
+	if info == nil {
+		return ""
+	}
+	for key, _ := range info.Spec.MinResources.DeepCopy() {
+		if strings.Contains(string(key), constant.Ascend910Server) {
+			return constant.Ascend910Server
+		}
+		if strings.Contains(string(key), constant.Ascend310Server) {
+			return constant.Ascend310Server
+		}
+		if strings.Contains(string(key), constant.Ascend310PServer) {
+			return constant.Ascend310PServer
+		}
+	}
+	hwlog.RunLog.Warnf("GetResourceType failed for pg %s", info.GetName())
+	return constant.UnknownResourceType
+}

@@ -8,74 +8,77 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 )
 
-func (center *FaultProcessCenter) process() {
+func (center *FaultProcessCenter) Process() {
 	center.jobServerInfoMap = job.GetJobServerInfoMap()
-	center.deviceCenter.process()
-	center.nodeCenter.process()
-	center.switchCenter.process()
-	center.faultJobProcessor.process()
-	center.faultJobCenter.process()
+	center.DeviceCenter.Process()
+	center.NodeCenter.Process()
+	center.SwitchCenter.Process()
+	center.faultJobProcessor.Process()
+	center.FaultJobCenter.Process()
 }
 
 // NewFaultProcessCenter create deviceCenter,nodeCenter,switchCenter and work goroutine
-func NewFaultProcessCenter(ctx context.Context) {
+func NewFaultProcessCenter() *FaultProcessCenter {
 	GlobalFaultProcessCenter = &FaultProcessCenter{
-		deviceCenter:      newDeviceFaultProcessCenter(),
-		nodeCenter:        newNodeFaultProcessCenter(),
-		switchCenter:      newSwitchFaultProcessCenter(),
-		faultJobCenter:    newFaultJobProcessCenter(),
-		notifyProcessChan: make(chan int, 1000),
+		DeviceCenter:      NewDeviceFaultProcessCenter(),
+		NodeCenter:        NewNodeFaultProcessCenter(),
+		SwitchCenter:      NewSwitchFaultProcessCenter(),
+		FaultJobCenter:    NewFaultJobProcessCenter(),
+		NotifyProcessChan: make(chan int, 1000),
 	}
 
-	processor, err := GlobalFaultProcessCenter.deviceCenter.getJobFaultRankProcessor()
+	processor, err := GlobalFaultProcessCenter.DeviceCenter.getJobFaultRankProcessor()
 	if err != nil {
 		hwlog.RunLog.Errorf("get device fault rank processor failed, err: %v", err)
-		return
+		return nil
 	}
 
 	GlobalFaultProcessCenter.faultJobProcessor = &faultProcessorImpl{
 		jobRankFaultInfoProcessor: processor,
 	}
-	go GlobalFaultProcessCenter.work(ctx)
+	return GlobalFaultProcessCenter
 }
 
-func (center *FaultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
-	center.notifyProcessChan <- whichToProcess
+func (center *FaultProcessCenter) NotifyFaultCenterProcess(whichToProcess int) {
+	center.NotifyProcessChan <- whichToProcess
 }
 
-func (center *FaultProcessCenter) work(ctx context.Context) {
-	hwlog.RunLog.Info("FaultProcessCenter start work")
-	centerTicker := time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ctx.Done():
-			hwlog.RunLog.Info("FaultProcessCenter stop work")
-			return
-		case whichToProcess := <-center.notifyProcessChan:
-			switch whichToProcess {
-			case constant.AllProcessType:
-				center.process()
-			case constant.DeviceProcessType:
-				center.deviceCenter.process()
-			case constant.NodeProcessType:
-				center.nodeCenter.process()
-			case constant.SwitchProcessType:
-				center.switchCenter.process()
-			default:
-				hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
+func (center *FaultProcessCenter) Work(ctx context.Context) {
+	go func() {
+		hwlog.RunLog.Info("FaultProcessCenter start work")
+		centerTicker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-ctx.Done():
+				hwlog.RunLog.Info("FaultProcessCenter stop work")
+				return
+			case whichToProcess := <-center.NotifyProcessChan:
+				switch whichToProcess {
+				case constant.AllProcessType:
+					center.Process()
+				case constant.DeviceProcessType:
+					center.DeviceCenter.Process()
+				case constant.NodeProcessType:
+					center.NodeCenter.Process()
+				case constant.SwitchProcessType:
+					center.SwitchCenter.Process()
+				default:
+					hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
+				}
+			case <-centerTicker.C:
+				center.Process()
 			}
-		case <-centerTicker.C:
-			center.process()
 		}
-	}
+	}()
 }
 
 func (center *FaultProcessCenter) getJobFaultRankProcessor() (*jobRankFaultInfoProcessor, error) {
-	return center.deviceCenter.getJobFaultRankProcessor()
+	return center.DeviceCenter.getJobFaultRankProcessor()
 }
 
 // ReportRecoverInfo cluster grpc should call back for report uce fault
@@ -88,9 +91,9 @@ type ReportRecoverInfo struct {
 // CallbackForReportUceInfo callback function to report uce info
 func (center *FaultProcessCenter) CallbackForReportUceInfo(infos []ReportRecoverInfo) error {
 	for _, info := range infos {
-		center.deviceCenter.callbackForReportUceInfo(info.JobId, info.Rank, info.RecoverTime)
+		collector.ReportInfoCollector.ReportUceInfo(info.JobId, info.Rank, info.RecoverTime)
 	}
-	center.notifyFaultCenterProcess(constant.DeviceProcessType)
+	center.NotifyFaultCenterProcess(constant.DeviceProcessType)
 	return nil
 }
 
@@ -98,15 +101,15 @@ func (center *FaultProcessCenter) CallbackForReportUceInfo(infos []ReportRecover
 func (center *FaultProcessCenter) Register(ch chan int, whichToRegister int) {
 	switch whichToRegister {
 	case constant.SwitchProcessType:
-		center.switchCenter.register(ch)
+		center.SwitchCenter.register(ch)
 	case constant.NodeProcessType:
-		center.nodeCenter.register(ch)
+		center.NodeCenter.register(ch)
 	case constant.DeviceProcessType:
-		center.deviceCenter.register(ch)
+		center.DeviceCenter.register(ch)
 	case constant.AllProcessType:
-		center.switchCenter.register(ch)
-		center.nodeCenter.register(ch)
-		center.deviceCenter.register(ch)
+		center.SwitchCenter.register(ch)
+		center.NodeCenter.register(ch)
+		center.DeviceCenter.register(ch)
 	default:
 		hwlog.RunLog.Errorf("Wrong number %d, cannot decide which to register", whichToRegister)
 	}
@@ -124,15 +127,15 @@ func (center *FaultProcessCenter) QueryJobsFaultInfo(faultLevel string) map[stri
 
 // QueryDeviceInfoToReport query device info to report
 func (center *FaultProcessCenter) QueryDeviceInfoToReport() map[string]*constant.DeviceInfo {
-	return center.deviceCenter.getProcessedCm()
+	return center.DeviceCenter.getProcessedCm()
 }
 
 // QuerySwitchInfoToReport query switch info to report
 func (center *FaultProcessCenter) QuerySwitchInfoToReport() map[string]*constant.SwitchInfo {
-	return center.switchCenter.getProcessedCm()
+	return center.SwitchCenter.getProcessedCm()
 }
 
 // QueryNodeInfoToReport query node info to report
 func (center *FaultProcessCenter) QueryNodeInfoToReport() map[string]*constant.NodeInfo {
-	return center.nodeCenter.getProcessedCm()
+	return center.NodeCenter.getProcessedCm()
 }

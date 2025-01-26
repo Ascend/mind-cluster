@@ -6,6 +6,7 @@ package faultmanager
 import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -13,13 +14,13 @@ type faultProcessorImpl struct {
 	*jobRankFaultInfoProcessor
 }
 
-func (fpi *faultProcessorImpl) process() {
-	deviceInfos := GlobalFaultProcessCenter.deviceCenter.getProcessingCm()
+func (fpi *faultProcessorImpl) Process() {
+	deviceInfos := GlobalFaultProcessCenter.DeviceCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("deviceInfos: %#v", deviceInfos)
-	deviceCmForNodeMap := getAdvanceDeviceCmForNodeMap(deviceInfos)
-	nodeInfos := GlobalFaultProcessCenter.nodeCenter.getProcessingCm()
+	deviceCmForNodeMap := faultdomain.GetAdvanceDeviceCmForNodeMap(deviceInfos)
+	nodeInfos := GlobalFaultProcessCenter.NodeCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("nodeInfos: %#v", nodeInfos)
-	switchInfos := GlobalFaultProcessCenter.switchCenter.getProcessingCm()
+	switchInfos := GlobalFaultProcessCenter.SwitchCenter.getProcessingCm()
 	hwlog.RunLog.Debugf("switchInfos: %#v", switchInfos)
 
 	jobFaultInfos := make(map[string]JobFaultInfo)
@@ -39,7 +40,7 @@ func (fpi *faultProcessorImpl) process() {
 				continue
 			}
 			node := kube.GetNode(nodeName)
-			if node == nil || !isNodeReady(node) {
+			if node == nil || !faultdomain.IsNodeReady(node) {
 				hwlog.RunLog.Infof("node %s is not ready", nodeName)
 				jobFaultInfo.FaultList = append(jobFaultInfo.FaultList, serverHcclToFaultRank(server)...)
 				continue
@@ -68,7 +69,7 @@ func serverHcclToFaultRank(server constant.ServerHccl) []FaultRank {
 		faultRanks = append(faultRanks, FaultRank{
 			RankId:      device.RankID,
 			FaultCode:   "",
-			FaultLevel:  SeparateNPU,
+			FaultLevel:  constant.SeparateNPU,
 			DoStepRetry: false,
 		})
 	}

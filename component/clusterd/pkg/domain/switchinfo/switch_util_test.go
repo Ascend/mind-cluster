@@ -100,10 +100,10 @@ func TestBusinessDataIsNotEqual(t *testing.T) {
 			},
 		}
 		newSwitch := oldSwitch
-		notSame := BusinessDataIsNotEqual(&oldSwitch, &newSwitch)
+		notSame := constant.SwitchInfoBusinessDataIsNotEqual(&oldSwitch, &newSwitch)
 		convey.So(notSame, convey.ShouldBeFalse)
 		oldSwitch.NodeStatus = "Healthy"
-		notSame = BusinessDataIsNotEqual(&oldSwitch, &newSwitch)
+		notSame = constant.SwitchInfoBusinessDataIsNotEqual(&oldSwitch, &newSwitch)
 		convey.So(notSame, convey.ShouldBeTrue)
 	})
 }

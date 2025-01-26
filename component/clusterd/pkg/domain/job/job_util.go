@@ -104,6 +104,7 @@ func getJobBasicInfoByPodGroup(pgInfo v1beta1.PodGroup) constant.JobInfo {
 	jobInfo.JobType = podgroup.GetJobTypeByPG(&pgInfo)
 	jobInfo.NameSpace = pgInfo.Namespace
 	jobInfo.Framework = podgroup.GetModelFramework(&pgInfo)
+	jobInfo.ResourceType = podgroup.GetResourceType(&pgInfo)
 	return jobInfo
 }
 
@@ -191,13 +192,15 @@ func getHcclSlice(table constant.RankTable) []string {
 func GetJobServerInfoMap() constant.JobServerInfoMap {
 	allJobServerMap := make(map[string]map[string]constant.ServerHccl)
 	allUceJobFlag := make(map[string]bool)
+	resourceType := make(map[string]string)
 	for jobKey, jobInfo := range GetAllJobCache() {
 		jobServerMap := buildJobServerInfoMap(jobInfo)
 		allJobServerMap[jobKey] = jobServerMap
 		allUceJobFlag[jobKey] = podgroup.JudgeUceByJobKey(jobKey)
+		resourceType[jobKey] = jobInfo.ResourceType
 	}
 
-	return constant.JobServerInfoMap{InfoMap: allJobServerMap, UceTolerate: allUceJobFlag}
+	return constant.JobServerInfoMap{InfoMap: allJobServerMap, UceTolerate: allUceJobFlag, ResourceType: resourceType}
 }
 
 func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerHccl {

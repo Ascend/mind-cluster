@@ -11,6 +11,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -266,6 +267,7 @@ func getDemoPodGroup(jobName, nameSpace, jobUid string) *v1beta1.PodGroup {
 		UID:        types.UID(jobUid)}
 	podGroupInfo.SetOwnerReferences([]metav1.OwnerReference{owner})
 	podGroupInfo.Spec.MinMember = pgMinMember2
+	podGroupInfo.Spec.MinResources = &v1.ResourceList{"huawei/Ascend910": resource.Quantity{}}
 	return podGroupInfo
 }
 

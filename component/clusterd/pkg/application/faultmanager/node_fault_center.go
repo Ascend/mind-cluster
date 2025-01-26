@@ -6,17 +6,19 @@ package faultmanager
 import (
 	"sync"
 
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 )
 
-func newNodeFaultProcessCenter() *nodeFaultProcessCenter {
+func NewNodeFaultProcessCenter() *NodeFaultProcessCenter {
 	manager := faultCenterCmManager[*constant.NodeInfo]{
 		mutex:        sync.RWMutex{},
 		originalCm:   configMap[*constant.NodeInfo]{configmap: make(map[string]*constant.NodeInfo)},
 		processingCm: configMap[*constant.NodeInfo]{configmap: make(map[string]*constant.NodeInfo)},
 		processedCm:  configMap[*constant.NodeInfo]{configmap: make(map[string]*constant.NodeInfo)},
+		cmBuffer:     collector.NodeCmCollectBuffer,
 	}
-	return &nodeFaultProcessCenter{
+	return &NodeFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(&manager, constant.NodeProcessType),
 	}
 }

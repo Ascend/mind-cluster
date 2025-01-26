@@ -10,13 +10,15 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 )
 
 // ======= Test uceAccompanyFaultProcessor
 func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
-	deviceFaultProcessCenter := newDeviceFaultProcessCenter()
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
 	processor, err := deviceFaultProcessCenter.getUceAccompanyFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
@@ -29,13 +31,13 @@ func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v", err)
 		}
-		processor.deviceCmForNodeMap = getAdvanceDeviceCmForNodeMap(cmDeviceInfos)
+		processor.deviceCmForNodeMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		processor.uceAccompanyFaultInQue()
 		currentTime := 95 * time.Second.Milliseconds()
 		processor.filterFaultInfos(currentTime)
-		advanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, cmDeviceInfos)
-		if !reflect.DeepEqual(getAdvanceDeviceCmForNodeMap(cmDeviceInfos),
-			getAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
+		faultdomain.AdvanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, cmDeviceInfos)
+		if !reflect.DeepEqual(faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos),
+			faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
 			t.Errorf("result = %v, want %v",
 				util.ObjToString(cmDeviceInfos), util.ObjToString(expectProcessedDeviceInfos))
 		}
@@ -49,7 +51,7 @@ func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 
 // TestUceAccompanyFaultProcessorProcess when aic/aiv in queue is exceed DiagnosisTime, then should add in fault map
 func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
-	deviceFaultProcessCenter := newDeviceFaultProcessCenter()
+	deviceFaultProcessCenter := NewDeviceFaultProcessCenter()
 	processor, err := deviceFaultProcessCenter.getUceAccompanyFaultProcessor()
 	if err != nil {
 		t.Errorf("%v", err)
@@ -67,14 +69,14 @@ func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
 						FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
 							constant.AicFaultCode: {
 								FaultTime:  89 * time.Second.Milliseconds(),
-								FaultLevel: RestartRequest,
+								FaultLevel: constant.RestartRequest,
 							},
 						},
 					},
 				},
 			},
 		}
-		processor.deviceCmForNodeMap = make(map[string]AdvanceDeviceFaultCm)
+		processor.deviceCmForNodeMap = make(map[string]constant.AdvanceDeviceFaultCm)
 		processor.filterFaultInfos(currentTime)
 		if len(processor.deviceCmForNodeMap[nodeName].FaultDeviceList[deviceName]) != 1 {
 			t.Error("TestUceAccompanyFaultProcessorProcessForAddFault fail")
@@ -90,14 +92,12 @@ func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
 
 func TestUceAccompanyFaultProcessorIsBusinessUceFault(t *testing.T) {
 	t.Run("TestUceAccompanyFaultProcessorIsBusinessUceFault", func(t *testing.T) {
-		deviceProcessCenter := newDeviceFaultProcessCenter()
+		deviceProcessCenter := NewDeviceFaultProcessCenter()
 		uceAcompanyProcessor, _ := deviceProcessCenter.getUceAccompanyFaultProcessor()
-		uceProcessor, _ := deviceProcessCenter.getUceFaultProcessor()
-		infosForAllJobs := uceProcessor.reportInfo
 		reportTime := int64(1000)
-		patches := gomonkey.ApplyPrivateMethod(infosForAllJobs, "getInfoWithoutJobId",
-			func(nodeName, deviceName string) reportInfo {
-				return reportInfo{
+		patches := gomonkey.ApplyPrivateMethod(collector.ReportInfoCollector, "GetInfoWithoutJobId",
+			func(nodeName, deviceName string) constant.ReportInfo {
+				return constant.ReportInfo{
 					RecoverTime: reportTime,
 				}
 			})

@@ -10,8 +10,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -32,6 +34,80 @@ func init() {
 	}
 }
 
+func getFaultCodeTimeOutMap() map[string]int64 {
+	return faultCodeTimeOutMap
+}
+
+func setFaultCodeTimeOutMap(faultCode string, delTime int64) {
+	faultCodeTimeOutMap[faultCode] = delTime
+}
+
+func getFaultCodeDelMaxTime(faultCode string) int64 {
+	return getFaultCodeTimeOutMap()[faultCode]
+}
+
+func initRelationFaultStrategies(fileBytes []byte) {
+	if err := json.Unmarshal(fileBytes, &relationFaultStrategies); err != nil {
+		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
+		return
+	}
+}
+
+func initFaultDuration(fileBytes []byte) {
+	var tmpFaultDurationStrategies []FaultDuration
+	if err := json.Unmarshal(fileBytes, &tmpFaultDurationStrategies); err != nil {
+		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
+		return
+	}
+	if len(tmpFaultDurationStrategies) == 0 {
+		hwlog.RunLog.Error("fault duration fault config is invalid")
+		return
+	}
+	for _, faultConfig := range tmpFaultDurationStrategies {
+		if !validateFaultDurationConfig(faultConfig) {
+			continue
+		}
+		faultDurationStrategies = append(faultDurationStrategies, faultConfig)
+	}
+}
+
+func validateFaultDurationConfig(faultConfig FaultDuration) bool {
+	if faultConfig.FaultCode == "" {
+		hwlog.RunLog.Error("fault code is empty")
+		return false
+	}
+	if faultConfig.TimeOutInterval < 0 {
+		hwlog.RunLog.Error("fault code time interval is invalid",
+			faultConfig.TimeOutInterval)
+		return false
+	}
+	return true
+}
+
+func initFaultCodeTimeOutMap() {
+	for _, strategy := range faultDurationStrategies {
+		setFaultCodeTimeOutMap(strategy.FaultCode, strategy.TimeOutInterval)
+	}
+}
+
+func initRelationFaultCodesMap() {
+	for _, strategy := range relationFaultStrategies {
+		triggerFaultMap.Insert(strategy.TriggerFault)
+		for _, fCode := range strategy.RelationFaults {
+			relationFaultTypeMap.Insert(fCode)
+		}
+	}
+}
+
+// LoadConfigFromFile load fault config and fault type from local file
+func LoadConfigFromFile(filePath string) []byte {
+	fileBytes, err := utils.LoadFile(filePath)
+	if err != nil {
+		return nil
+	}
+	return fileBytes
+}
+
 func (fJob *FaultJob) initFaultJobAttr() {
 	fJob.FaultStrategy = FaultStrategy{}
 	fJob.TriggerFault = nil
@@ -48,7 +124,7 @@ func (fJob *FaultJob) initFaultJobAttr() {
 	}
 }
 
-func (fJob *FaultJob) process() {
+func (fJob *FaultJob) Process() {
 	fJob.preStartProcess()
 	fJob.processNetworkFault()
 	fJob.preStopProcess()
@@ -146,7 +222,7 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *faultInfo) {
 	}
 }
 
-func (fJob *FaultJob) initFaultJobByDeviceFault(nodeFaultInfo AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
+func (fJob *FaultJob) initFaultJobByDeviceFault(nodeFaultInfo constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
 	if fJob.SeparateNodes.Has(serverList.ServerName) {
 		return
 	}
@@ -194,7 +270,7 @@ func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *faultInfo) {
 		fJob.RelationFaults = append(fJob.RelationFaults, faultInfo)
 	}
 	if triggerFaultMap.Has(faultInfo.FaultCode) {
-		if fJob.IsA3Job && isCqeFault(faultInfo.FaultCode) {
+		if fJob.IsA3Job && faultdomain.IsCqeFault(faultInfo.FaultCode) {
 			return
 		}
 		fJob.TriggerFault = append(fJob.TriggerFault, *faultInfo)

@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
 // Package faultmanager contain fault process
-package faultmanager
+package faultdomain
 
 import (
 	"encoding/json"
@@ -14,13 +14,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
-// isNodeReady returns the node ready status
-func isNodeReady(node *v1.Node) bool {
+// IsNodeReady returns the node ready status
+func IsNodeReady(node *v1.Node) bool {
 	for _, cond := range node.Status.Conditions {
 		if cond.Type == v1.NodeReady {
 			return cond.Status == v1.ConditionTrue
@@ -29,19 +28,7 @@ func isNodeReady(node *v1.Node) bool {
 	return false
 }
 
-func getFaultCodeTimeOutMap() map[string]int64 {
-	return faultCodeTimeOutMap
-}
-
-func setFaultCodeTimeOutMap(faultCode string, delTime int64) {
-	faultCodeTimeOutMap[faultCode] = delTime
-}
-
-func getFaultCodeDelMaxTime(faultCode string) int64 {
-	return getFaultCodeTimeOutMap()[faultCode]
-}
-
-func getNodeAndDeviceFromJobIdAndRankId(
+func GetNodeAndDeviceFromJobIdAndRankId(
 	jobId, rankId string, jobServerInfoMap constant.JobServerInfoMap) (string, string, error) {
 	for _, server := range jobServerInfoMap.InfoMap[jobId] {
 		for _, dev := range server.DeviceList {
@@ -53,7 +40,7 @@ func getNodeAndDeviceFromJobIdAndRankId(
 	return "", "", fmt.Errorf("not find node and device from jobId %v and rankid %v", jobId, rankId)
 }
 
-func cmNameToNodeName(cmName string) string {
+func CmNameToNodeName(cmName string) string {
 	if !strings.HasPrefix(cmName, constant.DeviceInfoPrefix) {
 		hwlog.RunLog.Errorf("CmName %s has not prefix %s", cmName, constant.DeviceInfoPrefix)
 		return cmName
@@ -65,24 +52,24 @@ func nodeNameToCmName(nodeName string) string {
 	return constant.DeviceInfoPrefix + nodeName
 }
 
-func getAdvanceDeviceCmForNodeMap(deviceInfoCms map[string]*constant.DeviceInfo) map[string]AdvanceDeviceFaultCm {
-	advanceDeviceCmForNodeMap := make(map[string]AdvanceDeviceFaultCm)
+func GetAdvanceDeviceCmForNodeMap(deviceInfoCms map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
+	advanceDeviceCmForNodeMap := make(map[string]constant.AdvanceDeviceFaultCm)
 	for _, deviceInfo := range deviceInfoCms {
-		advanceDeviceCmForNodeMap[cmNameToNodeName(deviceInfo.CmName)] = getAdvanceDeviceCm(deviceInfo)
+		advanceDeviceCmForNodeMap[CmNameToNodeName(deviceInfo.CmName)] = GetAdvanceDeviceCm(deviceInfo)
 	}
 	return advanceDeviceCmForNodeMap
 }
 
 // deviceName->faults
-func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceFaultCm {
-	advanceDeviceCm := AdvanceDeviceFaultCm{
+func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaultCm {
+	advanceDeviceCm := constant.AdvanceDeviceFaultCm{
 		CmName:      devInfo.CmName,
 		SuperPodID:  devInfo.SuperPodID,
 		ServerIndex: devInfo.ServerIndex,
 		UpdateTime:  devInfo.UpdateTime,
-		ServerType:  getServerType(devInfo),
+		ServerType:  GetServerType(devInfo),
 	}
-	if faultList, ok := devInfo.DeviceList[getFaultListKey(devInfo)]; ok {
+	if faultList, ok := devInfo.DeviceList[GetFaultListKey(devInfo)]; ok {
 		var devicesFault []constant.DeviceFault
 		err := json.Unmarshal([]byte(faultList), &devicesFault)
 		if err != nil {
@@ -98,21 +85,21 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceFaultCm {
 			hwlog.RunLog.Debugf("device fault: %s of cm %s, time: %s",
 				util.ObjToString(deviceFault), devInfo.CmName, util.ReadableMsTime(devInfo.UpdateTime))
 			// device plugin may merge multiple fault codes in one string
-			deviceFaults := splitDeviceFault(deviceFault, cmNameToNodeName(devInfo.CmName))
+			deviceFaults := splitDeviceFault(deviceFault, CmNameToNodeName(devInfo.CmName))
 			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
 		}
 		advanceDeviceCm.FaultDeviceList = deviceFaultMap
 	} else {
 		hwlog.RunLog.Infof("get fault list for node %v failed. fault list does not exist", devInfo.CmName)
 	}
-	if networkUnhealthyCardList, ok := devInfo.DeviceList[getNetworkUnhealthyKey(devInfo)]; ok {
+	if networkUnhealthyCardList, ok := devInfo.DeviceList[GetNetworkUnhealthyKey(devInfo)]; ok {
 		cardList := strings.Split(networkUnhealthyCardList, ",")
 		advanceDeviceCm.NetworkUnhealthy = cardList
 	} else {
 		hwlog.RunLog.Infof("get NetworkUnhealthy list for node %v failed. fault list does not exist",
 			devInfo.CmName)
 	}
-	if cardUnhealthyCardList, ok := devInfo.DeviceList[getCardUnhealthyKey(devInfo)]; ok {
+	if cardUnhealthyCardList, ok := devInfo.DeviceList[GetCardUnhealthyKey(devInfo)]; ok {
 		var cardList []string
 		if len(cardUnhealthyCardList) == 0 {
 			cardList = make([]string, 0)
@@ -124,20 +111,20 @@ func getAdvanceDeviceCm(devInfo *constant.DeviceInfo) AdvanceDeviceFaultCm {
 	return advanceDeviceCm
 }
 
-func getServerType(devInfo *constant.DeviceInfo) string {
+func GetServerType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, Ascend910Server) {
-			return Ascend910Server
+		if strings.Contains(key, constant.Ascend910Server) {
+			return constant.Ascend910Server
 		}
-		if strings.Contains(key, Ascend310PServer) {
-			return Ascend310PServer
+		if strings.Contains(key, constant.Ascend310PServer) {
+			return constant.Ascend310PServer
 		}
-		if strings.Contains(key, Ascend310Server) {
-			return Ascend310Server
+		if strings.Contains(key, constant.Ascend310Server) {
+			return constant.Ascend310Server
 		}
 	}
 	hwlog.RunLog.Warn("cannot decide server type")
-	return Ascend910Server
+	return constant.Ascend910Server
 }
 
 // device plugin may merge multiple fault codes in one string
@@ -148,11 +135,11 @@ func splitDeviceFault(faultInfo constant.DeviceFault, nodeName string) []constan
 	for _, code := range codes {
 		var faultTimeAndLevel constant.FaultTimeAndLevel
 		var found bool
-		if code == "" && faultInfo.FaultLevel == ManuallySeparateNPU {
-			code = ManuallySeparateNPU
+		if code == "" && faultInfo.FaultLevel == constant.ManuallySeparateNPU {
+			code = constant.ManuallySeparateNPU
 			faultTimeAndLevel = constant.FaultTimeAndLevel{
 				FaultTime:  constant.UnknownFaultTime,
-				FaultLevel: ManuallySeparateNPU,
+				FaultLevel: constant.ManuallySeparateNPU,
 			}
 			found = true
 		} else {
@@ -196,12 +183,12 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 					"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
 			}
 			fautLevels = append(fautLevels, fault.FaultLevel)
-			if fault.FaultCode != ManuallySeparateNPU {
+			if fault.FaultCode != constant.ManuallySeparateNPU {
 				faultCodeList = append(faultCodeList, fault.FaultCode)
 				newTimeAndLevelMap[fault.FaultCode] = fault.FaultTimeAndLevelMap[fault.FaultCode]
 			}
 		}
-		faultLevel := getMostSeriousFaultLevel(fautLevels)
+		faultLevel := GetMostSeriousFaultLevel(fautLevels)
 		mergeFault := constant.DeviceFault{
 			FaultType:            faultsGroup[0].FaultType,
 			NPUName:              deviceName,
@@ -216,7 +203,7 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 	return result, nil
 }
 
-func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
+func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	delFault constant.DeviceFault) map[string][]constant.DeviceFault {
 	if faultMap == nil {
 		return make(map[string][]constant.DeviceFault)
@@ -236,7 +223,7 @@ func deleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
-func addFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
+func AddFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
 	addFault constant.DeviceFault) map[string][]constant.DeviceFault {
 	if faultMap == nil {
 		faultMap = make(map[string][]constant.DeviceFault)
@@ -259,8 +246,8 @@ func addFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
-func advanceDeviceCmForNodeMapToString(
-	advanceDeviceCm map[string]AdvanceDeviceFaultCm, orgDeviceCm map[string]*constant.DeviceInfo) {
+func AdvanceDeviceCmForNodeMapToString(
+	advanceDeviceCm map[string]constant.AdvanceDeviceFaultCm, orgDeviceCm map[string]*constant.DeviceInfo) {
 	for nodeName, advanceCm := range advanceDeviceCm {
 		advanceCm = mergeCodeAndRemoveUnhealthy(advanceCm)
 		cmName := nodeNameToCmName(nodeName)
@@ -268,18 +255,18 @@ func advanceDeviceCmForNodeMapToString(
 		if !found {
 			continue
 		}
-		faultListKey := getFaultListKey(deviceInfo)
+		faultListKey := GetFaultListKey(deviceInfo)
 		if faultListKey != "" {
 			orgDeviceCm[cmName].DeviceList[faultListKey] =
 				util.ObjToString(faultMapToFaultList(advanceCm.FaultDeviceList))
 		}
 
-		networkUnhealthyKey := getNetworkUnhealthyKey(deviceInfo)
+		networkUnhealthyKey := GetNetworkUnhealthyKey(deviceInfo)
 		if networkUnhealthyKey != "" {
 			orgDeviceCm[cmName].DeviceList[networkUnhealthyKey] = strings.Join(advanceCm.NetworkUnhealthy, ",")
 		}
 
-		cardUnhealthyKey := getCardUnhealthyKey(deviceInfo)
+		cardUnhealthyKey := GetCardUnhealthyKey(deviceInfo)
 		if cardUnhealthyKey != "" {
 			orgDeviceCm[cmName].DeviceList[cardUnhealthyKey] = strings.Join(advanceCm.CardUnHealthy, ",")
 		}
@@ -306,7 +293,7 @@ func faultsGroupByType(faults []constant.DeviceFault) map[string][]constant.Devi
 	return result
 }
 
-func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceFaultCm) AdvanceDeviceFaultCm {
+func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) constant.AdvanceDeviceFaultCm {
 	for deviceName, faults := range advanceDeviceCm.FaultDeviceList {
 		if len(faults) == 0 {
 			advanceDeviceCm.NetworkUnhealthy = util.DeleteStringSliceItem(advanceDeviceCm.NetworkUnhealthy, deviceName)
@@ -324,7 +311,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm AdvanceDeviceFaultCm) AdvanceDe
 	return advanceDeviceCm
 }
 
-func getFaultListKey(devInfo *constant.DeviceInfo) string {
+func GetFaultListKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Fault") {
 			return key
@@ -333,7 +320,7 @@ func getFaultListKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
-func getNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
+func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-NetworkUnhealthy") {
 			return key
@@ -342,7 +329,7 @@ func getNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
-func getCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
+func GetCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Unhealthy") {
 			return key
@@ -351,56 +338,56 @@ func getCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
-func isUceFault(faultCode string) bool {
+func IsUceFault(faultCode string) bool {
 	if strings.Contains(faultCode, constant.UceFaultCode) {
 		return true
 	}
 	return false
 }
 
-func isCqeFault(faultCode string) bool {
+func IsCqeFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.DevCqeFaultCode) ||
 		strings.Contains(faultCode, constant.HostCqeFaultCode)
 }
 
-func isLinkDownFault(faultCode string) bool {
+func IsLinkDownFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.LinkDownFaultCode)
 }
 
-func isUceAccompanyFault(faultCode string) bool {
+func IsUceAccompanyFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.AicFaultCode) ||
 		strings.Contains(faultCode, constant.AivFaultCode)
 }
 
-func isDeviceFaultEqual(one, other constant.DeviceFault) bool {
+func IsDeviceFaultEqual(one, other constant.DeviceFault) bool {
 	return reflect.DeepEqual(one, other)
 }
 
-func getMostSeriousFaultLevel(fautLevels []string) string {
+func GetMostSeriousFaultLevel(fautLevels []string) string {
 	faultTypeSet := sets.NewString(fautLevels...)
-	if faultTypeSet.Has(ManuallySeparateNPU) {
-		return ManuallySeparateNPU
-	} else if faultTypeSet.Has(SeparateNPU) {
-		return SeparateNPU
-	} else if faultTypeSet.Has(PreSeparateNPU) {
-		return PreSeparateNPU
-	} else if faultTypeSet.Has(RestartNPU) {
-		return RestartNPU
-	} else if faultTypeSet.Has(FreeRestartNPU) {
-		return FreeRestartNPU
-	} else if faultTypeSet.Has(RestartBusiness) {
-		return RestartBusiness
-	} else if faultTypeSet.Has(RestartRequest) {
-		return RestartRequest
-	} else if faultTypeSet.Has(SubHealthFault) {
-		return SubHealthFault
-	} else if faultTypeSet.Has(NotHandleFault) {
-		return NotHandleFault
+	if faultTypeSet.Has(constant.ManuallySeparateNPU) {
+		return constant.ManuallySeparateNPU
+	} else if faultTypeSet.Has(constant.SeparateNPU) {
+		return constant.SeparateNPU
+	} else if faultTypeSet.Has(constant.PreSeparateNPU) {
+		return constant.PreSeparateNPU
+	} else if faultTypeSet.Has(constant.RestartNPU) {
+		return constant.RestartNPU
+	} else if faultTypeSet.Has(constant.FreeRestartNPU) {
+		return constant.FreeRestartNPU
+	} else if faultTypeSet.Has(constant.RestartBusiness) {
+		return constant.RestartBusiness
+	} else if faultTypeSet.Has(constant.RestartRequest) {
+		return constant.RestartRequest
+	} else if faultTypeSet.Has(constant.SubHealthFault) {
+		return constant.SubHealthFault
+	} else if faultTypeSet.Has(constant.NotHandleFault) {
+		return constant.NotHandleFault
 	}
-	return NormalNPU
+	return constant.NormalNPU
 }
 
-func getFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
+func GetFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
 	faultTimeAndLevel, ok := fault.FaultTimeAndLevelMap[fault.FaultCode]
 	var faultTime int64
 	if !ok {
@@ -413,7 +400,7 @@ func getFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
 	return faultTime
 }
 
-func getContainedElementIdx(element string, stringList []string) int {
+func GetContainedElementIdx(element string, stringList []string) int {
 	for idx, deviceName := range stringList {
 		if element == deviceName {
 			return idx
@@ -422,7 +409,7 @@ func getContainedElementIdx(element string, stringList []string) int {
 	return -1
 }
 
-func canDoStepRetry(uceDevice *uceDeviceInfo) bool {
+func CanDoStepRetry(uceDevice *constant.UceDeviceInfo) bool {
 	if uceDevice.RecoverTime == constant.JobNotRecover {
 		return false
 	}
@@ -438,7 +425,7 @@ func canDoStepRetry(uceDevice *uceDeviceInfo) bool {
 	return false
 }
 
-func validBusinessRecoverTime(recoverTime int64) bool {
+func ValidBusinessRecoverTime(recoverTime int64) bool {
 	if recoverTime != constant.JobNotRecover &&
 		time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout <= recoverTime {
 		return true
@@ -446,68 +433,6 @@ func validBusinessRecoverTime(recoverTime int64) bool {
 	return false
 }
 
-func validBusinessUceReportInfo(info *reportInfo) bool {
-	return validBusinessRecoverTime(info.RecoverTime)
-}
-
-func initRelationFaultStrategies(fileBytes []byte) {
-	if err := json.Unmarshal(fileBytes, &relationFaultStrategies); err != nil {
-		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
-		return
-	}
-}
-
-func initFaultDuration(fileBytes []byte) {
-	var tmpFaultDurationStrategies []FaultDuration
-	if err := json.Unmarshal(fileBytes, &tmpFaultDurationStrategies); err != nil {
-		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
-		return
-	}
-	if len(tmpFaultDurationStrategies) == 0 {
-		hwlog.RunLog.Error("fault duration fault config is invalid")
-		return
-	}
-	for _, faultConfig := range tmpFaultDurationStrategies {
-		if !validateFaultDurationConfig(faultConfig) {
-			continue
-		}
-		faultDurationStrategies = append(faultDurationStrategies, faultConfig)
-	}
-}
-
-func validateFaultDurationConfig(faultConfig FaultDuration) bool {
-	if faultConfig.FaultCode == "" {
-		hwlog.RunLog.Error("fault code is empty")
-		return false
-	}
-	if faultConfig.TimeOutInterval < 0 {
-		hwlog.RunLog.Error("fault code time interval is invalid",
-			faultConfig.TimeOutInterval)
-		return false
-	}
-	return true
-}
-
-func initFaultCodeTimeOutMap() {
-	for _, strategy := range faultDurationStrategies {
-		setFaultCodeTimeOutMap(strategy.FaultCode, strategy.TimeOutInterval)
-	}
-}
-
-func initRelationFaultCodesMap() {
-	for _, strategy := range relationFaultStrategies {
-		triggerFaultMap.Insert(strategy.TriggerFault)
-		for _, fCode := range strategy.RelationFaults {
-			relationFaultTypeMap.Insert(fCode)
-		}
-	}
-}
-
-// LoadConfigFromFile load fault config and fault type from local file
-func LoadConfigFromFile(filePath string) []byte {
-	fileBytes, err := utils.LoadFile(filePath)
-	if err != nil {
-		return nil
-	}
-	return fileBytes
+func ValidBusinessUceReportInfo(info *constant.ReportInfo) bool {
+	return ValidBusinessRecoverTime(info.RecoverTime)
 }

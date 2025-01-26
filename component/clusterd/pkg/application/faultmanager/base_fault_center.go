@@ -14,7 +14,7 @@ import (
 
 func newBaseFaultCenter[T constant.ConfigMapInterface](cmManager *faultCenterCmManager[T], centerType int) baseFaultCenter[T] {
 	return baseFaultCenter[T]{
-		processorList:        make([]faultProcessor, 0),
+		processorList:        make([]constant.FaultProcessor, 0),
 		lastProcessTime:      0,
 		subscribeChannelList: make([]chan int, 0),
 		mutex:                sync.Mutex{},
@@ -28,15 +28,22 @@ func (baseCenter *baseFaultCenter[T]) isProcessLimited(currentTime int64) bool {
 	return baseCenter.lastProcessTime+baseCenter.processPeriod > currentTime
 }
 
-func (baseCenter *baseFaultCenter[T]) process() {
+func (baseCenter *baseFaultCenter[T]) Process() {
 	currentTime := time.Now().UnixMilli()
 	if baseCenter.isProcessLimited(currentTime) {
 		return
 	}
 	baseCenter.lastProcessTime = currentTime
+	updateOriginalCm := baseCenter.updateOriginalCm()
 	baseCenter.setProcessingCm(baseCenter.getOriginalCm())
 	for _, processor := range baseCenter.processorList {
-		processor.process()
+		processingCm := baseCenter.getProcessingCm()
+		info := constant.CenterProcessContent[T]{
+			AllConfigmap:    processingCm,
+			UpdateConfigmap: updateOriginalCm,
+		}
+		processingCm = processor.Process(info).(constant.CenterProcessContent[T]).AllConfigmap
+		baseCenter.setProcessingCm(processingCm)
 	}
 	baseCenter.setProcessedCm(baseCenter.getProcessingCm())
 	baseCenter.notifySubscriber()
@@ -54,7 +61,7 @@ func (baseCenter *baseFaultCenter[T]) notifySubscriber() {
 	}
 }
 
-func (baseCenter *baseFaultCenter[T]) addProcessors(processors []faultProcessor) {
+func (baseCenter *baseFaultCenter[T]) addProcessors(processors []constant.FaultProcessor) {
 	baseCenter.processorList = append(baseCenter.processorList, processors...)
 }
 
@@ -92,6 +99,6 @@ func (baseCenter *baseFaultCenter[T]) getProcessedCm() map[string]T {
 	return baseCenter.cmManager.getProcessedCm().configmap
 }
 
-func (baseCenter *baseFaultCenter[T]) updateOriginalCm(newInfo T, isAdd bool) {
-	baseCenter.cmManager.updateOriginalCm(newInfo, isAdd)
+func (baseCenter *baseFaultCenter[T]) updateOriginalCm() []constant.InformerCmItem[T] {
+	return baseCenter.cmManager.updateBatchOriginalCm()
 }

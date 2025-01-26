@@ -87,7 +87,7 @@ func TestReport(t *testing.T) {
 			return nil, nil
 		})
 		ctx, cancel := context.WithCancel(context.Background())
-		faultmanager.NewFaultProcessCenter(ctx)
+		faultmanager.NewFaultProcessCenter()
 		updateChan = make(chan int, 5)
 		updateChan <- constant.AllProcessType
 		updateChan <- constant.DeviceProcessType

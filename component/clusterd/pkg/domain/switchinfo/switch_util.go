@@ -101,18 +101,3 @@ func GetSafeData(switchInfos map[string]*constant.SwitchInfo) []string {
 	}
 	return SwitchSlice
 }
-
-// BusinessDataIsNotEqual judge is the faultcode and fault level is the same as known, if is not same returns true
-func BusinessDataIsNotEqual(oldSwitch, newSwitch *constant.SwitchInfo) bool {
-	if oldSwitch == nil && newSwitch == nil {
-		return false
-	}
-	if (oldSwitch != nil && newSwitch == nil) || (oldSwitch == nil && newSwitch != nil) {
-		return true
-	}
-	if newSwitch.FaultLevel != oldSwitch.FaultLevel || newSwitch.NodeStatus != oldSwitch.NodeStatus ||
-		len(newSwitch.FaultCode) != len(oldSwitch.FaultCode) {
-		return true
-	}
-	return false
-}

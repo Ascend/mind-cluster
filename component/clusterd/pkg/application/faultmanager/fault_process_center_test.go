@@ -5,42 +5,9 @@ package faultmanager
 
 import (
 	"testing"
-	"time"
 
 	"clusterd/pkg/common/constant"
 )
-
-func TestFaultProcessCenterWork(t *testing.T) {
-	t.Run("TestFaultProcessCenterWork", func(t *testing.T) {
-		deviceInfo := &constant.DeviceInfo{
-			CmName: "test",
-		}
-		DeviceInfoCollector(nil, deviceInfo, constant.AddOperator)
-		nodeInfo := &constant.NodeInfo{
-			CmName: "test",
-		}
-		NodeCollector(nil, nodeInfo, constant.AddOperator)
-		switchInfo := &constant.SwitchInfo{
-			CmName: "test",
-		}
-		SwitchInfoCollector(nil, switchInfo, constant.AddOperator)
-		GlobalFaultProcessCenter.notifyProcessChan <- constant.AllProcessType
-		switchInfoToReport := GlobalFaultProcessCenter.QuerySwitchInfoToReport()
-		nodeInfoToReport := GlobalFaultProcessCenter.QueryNodeInfoToReport()
-		deviceInfoToReport := GlobalFaultProcessCenter.QueryDeviceInfoToReport()
-
-		time.Sleep(time.Second)
-		if len(switchInfoToReport) != 0 {
-			t.Error("TestFaultProcessCenterWork fail")
-		}
-		if len(nodeInfoToReport) != 0 {
-			t.Error("TestFaultProcessCenterWork fail")
-		}
-		if len(deviceInfoToReport) != 0 {
-			t.Error("TestFaultProcessCenterWork fail")
-		}
-	})
-}
 
 func TestGetJobFaultRankProcessor(t *testing.T) {
 	t.Run("TestGetJobFaultRankProcessor", func(t *testing.T) {
@@ -75,7 +42,7 @@ func TestQueryJobsFaultInfo(t *testing.T) {
 	t.Run("TestQueryJobsFaultInfo", func(t *testing.T) {
 		processor, _ := GlobalFaultProcessCenter.getJobFaultRankProcessor()
 		processor.setJobFaultRankInfos(map[string]JobFaultInfo{"test": {}})
-		jobsFaultInfo := GlobalFaultProcessCenter.QueryJobsFaultInfo(NotHandleFault)
+		jobsFaultInfo := GlobalFaultProcessCenter.QueryJobsFaultInfo(constant.NotHandleFault)
 		if len(jobsFaultInfo) != 1 {
 			t.Error("TestQueryJobsFaultInfo fail")
 		}

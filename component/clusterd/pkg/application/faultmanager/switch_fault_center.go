@@ -6,17 +6,19 @@ package faultmanager
 import (
 	"sync"
 
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 )
 
-func newSwitchFaultProcessCenter() *switchFaultProcessCenter {
+func NewSwitchFaultProcessCenter() *SwitchFaultProcessCenter {
 	manager := faultCenterCmManager[*constant.SwitchInfo]{
 		mutex:        sync.RWMutex{},
 		originalCm:   configMap[*constant.SwitchInfo]{configmap: make(map[string]*constant.SwitchInfo)},
 		processingCm: configMap[*constant.SwitchInfo]{configmap: make(map[string]*constant.SwitchInfo)},
 		processedCm:  configMap[*constant.SwitchInfo]{configmap: make(map[string]*constant.SwitchInfo)},
+		cmBuffer:     collector.SwitchCmCollectBuffer,
 	}
-	return &switchFaultProcessCenter{
+	return &SwitchFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(&manager, constant.SwitchProcessType),
 	}
 }

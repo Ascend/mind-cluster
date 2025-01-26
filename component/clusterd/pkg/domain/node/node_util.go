@@ -92,22 +92,3 @@ func GetSafeData(nodeInfos map[string]*constant.NodeInfo) []string {
 	}
 	return nodeSlice
 }
-
-// BusinessDataIsNotEqual determine the business data is not equal
-func BusinessDataIsNotEqual(oldNodeInfo *constant.NodeInfo, newNodeInfo *constant.NodeInfo) bool {
-	if oldNodeInfo == nil && newNodeInfo == nil {
-		hwlog.RunLog.Debug("both oldNodeInfo and newNodeInfo are nil")
-		return false
-	}
-	if oldNodeInfo == nil || newNodeInfo == nil {
-		hwlog.RunLog.Debug("one of oldNodeInfo and newNodeInfo is not empty, and the other is empty")
-		return true
-	}
-	if oldNodeInfo.NodeStatus != newNodeInfo.NodeStatus ||
-		len(oldNodeInfo.FaultDevList) != len(newNodeInfo.FaultDevList) {
-		hwlog.RunLog.Debug("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo")
-		return true
-	}
-	hwlog.RunLog.Debug("oldNodeInfo is equal to newNodeInfo")
-	return false
-}

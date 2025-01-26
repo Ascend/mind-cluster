@@ -15,6 +15,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
@@ -66,9 +67,9 @@ func addJobFunc(ctx context.Context) {
 }
 
 func addResourceFunc() {
-	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
-	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
-	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
+	kube.AddCmSwitchFunc(constant.Resource, collector.SwitchInfoCollector)
+	kube.AddCmNodeFunc(constant.Resource, collector.NodeCollector)
+	kube.AddCmDeviceFunc(constant.Resource, collector.DeviceInfoCollector)
 }
 
 func main() {
@@ -100,7 +101,9 @@ func main() {
 		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
 	}
 	// election and running process
-	faultmanager.NewFaultProcessCenter(ctx)
+	collector.InitCmCollectBuffer()
+	collector.InitReportInfoCollector()
+	faultmanager.NewFaultProcessCenter().Work(ctx)
 	startInformer(ctx)
 	signalCatch(cancel)
 }

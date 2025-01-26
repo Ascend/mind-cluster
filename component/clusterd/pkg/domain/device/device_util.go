@@ -93,28 +93,3 @@ func GetSafeData(deviceInfos map[string]*constant.DeviceInfo) []string {
 	}
 	return deviceSlice
 }
-
-// BusinessDataIsNotEqual determine the business data is not equal
-func BusinessDataIsNotEqual(oldDevInfo *constant.DeviceInfo, devInfo *constant.DeviceInfo) bool {
-	if oldDevInfo == nil && devInfo == nil {
-		hwlog.RunLog.Debug("both oldDevInfo and devInfo are nil")
-		return false
-	}
-	if oldDevInfo == nil || devInfo == nil {
-		hwlog.RunLog.Debug("one of oldDevInfo and devInfo is not empty, and the other is empty")
-		return true
-	}
-	if len(oldDevInfo.DeviceList) != len(devInfo.DeviceList) {
-		hwlog.RunLog.Debug("the length of the deviceList of oldDevInfo is not equal to that of the deviceList of devInfo")
-		return true
-	}
-	for nKey, nValue := range oldDevInfo.DeviceList {
-		oValue, exists := devInfo.DeviceList[nKey]
-		if !exists || nValue != oValue {
-			hwlog.RunLog.Debug("neither oldDevInfo nor devInfo is empty, but oldDevInfo is not equal to devInfo")
-			return true
-		}
-	}
-	hwlog.RunLog.Debug("oldDevInfo is equal to devInfo")
-	return false
-}

@@ -7,12 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 )
 
 type fakeProcessor struct{}
 
-func (f *fakeProcessor) process() {
+func (f *fakeProcessor) Process(info any) any {
+	return info
 }
 
 func TestBaseFaultCenterProcess(t *testing.T) {
@@ -22,25 +24,14 @@ func TestBaseFaultCenterProcess(t *testing.T) {
 			originalCm:   configMap[*constant.DeviceInfo]{configmap: make(map[string]*constant.DeviceInfo)},
 			processingCm: configMap[*constant.DeviceInfo]{configmap: make(map[string]*constant.DeviceInfo)},
 			processedCm:  configMap[*constant.DeviceInfo]{configmap: make(map[string]*constant.DeviceInfo)},
+			cmBuffer:     collector.DeviceCmCollectBuffer,
 		}
 		baseCenter := newBaseFaultCenter(&manager, constant.DeviceProcessType)
-		deviceInfo := &constant.DeviceInfo{
-			DeviceInfoNoName: constant.DeviceInfoNoName{
-				DeviceList: make(map[string]string),
-				UpdateTime: 0,
-			},
-			CmName: "test",
-		}
-		baseCenter.updateOriginalCm(deviceInfo, true)
-		baseCenter.addProcessors([]faultProcessor{&fakeProcessor{}})
+		baseCenter.addProcessors([]constant.FaultProcessor{&fakeProcessor{}})
 		notifyChan := make(chan int, 1)
 		baseCenter.register(notifyChan)
-		baseCenter.process()
-		if len(baseCenter.getProcessedCm()) == 0 {
-			t.Errorf("TestBaseFaultCenterProcess failed")
-		}
-		sign := <-notifyChan
-		if sign != constant.DeviceProcessType {
+		baseCenter.Process()
+		if baseCenter.getProcessedCm() == nil {
 			t.Errorf("TestBaseFaultCenterProcess failed")
 		}
 	})

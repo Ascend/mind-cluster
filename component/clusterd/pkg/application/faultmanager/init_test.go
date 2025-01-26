@@ -9,10 +9,10 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/collector"
 	"clusterd/pkg/common/constant"
 )
 
@@ -25,162 +25,10 @@ func TestMain(m *testing.M) {
 		fmt.Printf("hwlog init failed, error is %v\n", err)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	NewFaultProcessCenter(ctx)
+	collector.InitCmCollectBuffer()
+	NewFaultProcessCenter()
 	code := m.Run()
-	cancel()
 	os.Exit(code)
-}
-
-func readObjectFromUceProcessorTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	map[string]uceNodeInfo, constant.JobServerInfoMap, map[string]uceJobInfo, error) {
-
-	var testDataPath = "../../../testdata/resource/uce_fault_processor_test.yaml"
-	var maxFileSize = 10000
-	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var expectProcessedDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var uceNodesInfos = make(map[string]uceNodeInfo)
-	var expectUceJobsInfo = make(map[string]uceJobInfo)
-	var err error
-	var fileSize int64
-	var decoder *yaml.YAMLOrJSONDecoder
-	var jobDevices = make(map[string]map[string]constant.ServerHccl)
-	var jobIsUce = make(map[string]bool)
-	var jobServerInfo constant.JobServerInfoMap
-	var open *os.File
-
-	fileInfo, err := os.Stat(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("testDataPath invalid")
-		goto ReturnLabel
-	}
-	fileSize = fileInfo.Size()
-	if fileSize > int64(maxFileSize) {
-		err = fmt.Errorf("testData file size too big")
-		goto ReturnLabel
-	}
-
-	open, err = os.Open(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("open testData file failed")
-		goto ReturnLabel
-	}
-
-	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-
-	err = decoder.Decode(&cmDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("cmDeviceInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&expectProcessedDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&uceNodesInfos)
-	if err != nil {
-		err = fmt.Errorf("uceNodesInfos decode failed")
-		goto ReturnLabel
-	}
-
-	err = decoder.Decode(&jobDevices)
-	if err != nil {
-		err = fmt.Errorf("jobs decode failed")
-		goto ReturnLabel
-	}
-	jobServerInfo.InfoMap = jobDevices
-
-	err = decoder.Decode(&jobIsUce)
-	if err != nil {
-		err = fmt.Errorf("jobIsUce decode failed")
-		goto ReturnLabel
-	}
-	jobServerInfo.UceTolerate = jobIsUce
-
-	err = decoder.Decode(&expectUceJobsInfo)
-	if err != nil {
-		err = fmt.Errorf("expectUceJobsInfo decode failed")
-		goto ReturnLabel
-	}
-
-ReturnLabel:
-	return cmDeviceInfos, expectProcessedDeviceInfos, uceNodesInfos, jobServerInfo, expectUceJobsInfo, err
-}
-
-func readObjectFromUceScenarioTestYaml() (
-	map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	constant.JobServerInfoMap, *reportInfosForAllJobs, error) {
-
-	var testDataPath = "../../../testdata/resource/uce_scenario_test.yaml"
-	var cmDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var expectDeviceInfos = make(map[string]*constant.DeviceInfo)
-	var err error
-	var fileSize int64
-	var decoder *yaml.YAMLOrJSONDecoder
-	var jobServerInfo constant.JobServerInfoMap
-	var open *os.File
-	var reportInfos reportInfosForAllJobs
-	maxFileSize := 10000
-
-	fileInfo, err := os.Stat(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("testDataPath invalid")
-		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-	fileSize = fileInfo.Size()
-	if fileSize > int64(maxFileSize) {
-		err = fmt.Errorf("testData file size too big")
-		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-	open, err = os.Open(testDataPath)
-	if err != nil {
-		err = fmt.Errorf("open testData file failed")
-		return cmDeviceInfos, expectDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-	decoder = yaml.NewYAMLOrJSONDecoder(open, maxFileSize)
-	return extractContent(decoder, cmDeviceInfos, expectDeviceInfos, jobServerInfo, reportInfos)
-}
-
-func extractContent(decoder *yaml.YAMLOrJSONDecoder, cmDeviceInfos map[string]*constant.DeviceInfo,
-	expectProcessedDeviceInfos map[string]*constant.DeviceInfo, jobServerInfo constant.JobServerInfoMap,
-	reportInfos reportInfosForAllJobs) (map[string]*constant.DeviceInfo, map[string]*constant.DeviceInfo,
-	constant.JobServerInfoMap, *reportInfosForAllJobs, error) {
-	err := decoder.Decode(&cmDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("cmDeviceInfos decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-
-	err = decoder.Decode(&expectProcessedDeviceInfos)
-	if err != nil {
-		err = fmt.Errorf("expectProcessedDeviceInfos decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-
-	var jobDevices = make(map[string]map[string]constant.ServerHccl)
-	err = decoder.Decode(&jobDevices)
-	if err != nil {
-		err = fmt.Errorf("jobs decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-	var jobIsUce = make(map[string]bool)
-	err = decoder.Decode(&jobIsUce)
-	if err != nil {
-		err = fmt.Errorf("josIsUce decode failed")
-		return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
-	}
-	jobServerInfo.InfoMap = jobDevices
-	jobServerInfo.UceTolerate = jobIsUce
-
-	err = decoder.Decode(&reportInfos)
-	if err != nil {
-		err = fmt.Errorf("reportInfos decode failed")
-	}
-	return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 }
 
 func readObjectFromUceAccompanyProcessorTestYaml() (
