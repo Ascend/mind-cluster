@@ -840,3 +840,7 @@ const (
 	// TimeMilliseconds indicate how many milliseconds are there in a second
 	TimeMilliseconds = 1000
 )
+
+const (
+	ComponentFaultDiag = "FaultDiag"
+)
