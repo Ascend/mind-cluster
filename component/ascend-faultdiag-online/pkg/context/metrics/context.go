@@ -21,7 +21,7 @@ package metrics
 
 import (
 	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/model/diag_model"
+	"ascend-faultdiag-online/pkg/model/diagmodel"
 	"ascend-faultdiag-online/pkg/utils/slice"
 )
 
@@ -46,7 +46,7 @@ type DiagItem struct {
 	Interval        int                                                                      // 检查间隔时间，单位为秒
 	Rules           []*DiagRule                                                              // 诊断规则
 	CustomRules     []func(ctx *context.FaultDiagContext, metricValue float64) (bool, error) // 自定义诊断规则
-	ConditionGroups [][]*diag_model.Condition                                                // 诊断触发条件
+	ConditionGroups [][]*diagmodel.Condition                                                 // 诊断触发条件
 	Description     string                                                                   // 描述信息
 	DiagFlag        chan bool                                                                // 启用诊断标志
 }

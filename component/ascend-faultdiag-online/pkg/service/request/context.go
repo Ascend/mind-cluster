@@ -19,12 +19,14 @@ Package request 提供请求上下文管理功能。
 */
 package request
 
+// Context 包含请求和响应信息以及结束标记。
 type Context struct {
 	Request    *Body
 	Response   *ResponseBody
 	FinishChan chan struct{} // 结束标记
 }
 
+// NewRequestContext 创建一个新的请求上下文。
 func NewRequestContext(req *Body) *Context {
 	return &Context{
 		Request:    req,

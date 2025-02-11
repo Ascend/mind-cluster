@@ -15,17 +15,19 @@ limitations under the License.
 */
 
 /*
-Package diag_model 提供诊断相关模型实体
+Package diagmodel 提供诊断相关模型实体
 */
-package diag_model
+package diagmodel
 
 import "ascend-faultdiag-online/pkg/context"
 
+// Condition 表示一个诊断条件，包含数据和匹配函数。
 type Condition struct {
 	Data         interface{}
 	MatchingFunc func(*context.FaultDiagContext, interface{}) (bool, error)
 }
 
+// IsMatching 检查当前条件是否与给定的数据匹配。
 func (condition *Condition) IsMatching(ctx *context.FaultDiagContext) (bool, error) {
 	return condition.MatchingFunc(ctx, condition.Data)
 }

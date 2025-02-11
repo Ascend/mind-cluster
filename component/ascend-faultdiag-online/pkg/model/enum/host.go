@@ -19,6 +19,7 @@ Package enum 提供枚举类
 */
 package enum
 
+// ChipType 定义芯片类型枚举类
 type ChipType string
 
 const (
@@ -39,5 +40,6 @@ const (
 )
 
 var (
+	// Ascend910SerialChips 910系列芯片
 	Ascend910SerialChips = []ChipType{Ascend910, Ascend910A2, Ascend910A3}
 )

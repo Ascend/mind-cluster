@@ -25,26 +25,28 @@ import (
 
 	"ascend-faultdiag-online/pkg/config"
 	"ascend-faultdiag-online/pkg/context/metrics"
-	"ascend-faultdiag-online/pkg/context/so_handle"
+	"ascend-faultdiag-online/pkg/context/sohandle"
 	"ascend-faultdiag-online/pkg/model/cluster"
 	"ascend-faultdiag-online/pkg/model/node"
 	"ascend-faultdiag-online/pkg/service/request"
 )
 
+// FaultDiagContext represents the global context for the plugin.
 type FaultDiagContext struct {
-	Config        *config.FaultDiagConfig         // 插件配置
-	SoHandlerMap  map[string]*so_handle.SoHandler // .so 文件处理器map
-	ReqQue        chan *request.Context           // 请求队列
-	IsRunning     bool                            // 循环服务是否运行
-	StopChan      chan struct{}                   // 停止信号
-	Logger        *log.Logger                     // 日志记录器
-	MetricCtx     *metrics.Context                // 指标诊断上下文
-	NodeStatus    *node.Status                    // 节点状态， node时使用
-	ClusterStatus *cluster.Status                 // 集群状态， cluster时使用
+	Config        *config.FaultDiagConfig        // 插件配置
+	SoHandlerMap  map[string]*sohandle.SoHandler // .so 文件处理器map
+	ReqQue        chan *request.Context          // 请求队列
+	IsRunning     bool                           // 循环服务是否运行
+	StopChan      chan struct{}                  // 停止信号
+	Logger        *log.Logger                    // 日志记录器
+	MetricCtx     *metrics.Context               // 指标诊断上下文
+	NodeStatus    *node.Status                   // 节点状态， node时使用
+	ClusterStatus *cluster.Status                // 集群状态， cluster时使用
 }
 
+// NewFaultDiagContext creates a new instance of FaultDiagContext.
 func NewFaultDiagContext(config *config.FaultDiagConfig) (*FaultDiagContext, error) {
-	soHandlerMap, err := so_handle.GenerateSoHandlerMap(config.SoDir)
+	soHandlerMap, err := sohandle.GenerateSoHandlerMap(config.SoDir)
 	if err != nil {
 		return nil, err
 	}

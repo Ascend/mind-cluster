@@ -21,6 +21,7 @@ package request
 
 import "ascend-faultdiag-online/pkg/model/enum"
 
+// ResponseBody 返回报文结构体，包含状态、消息和数据。
 type ResponseBody struct {
 	Status string      `json:"status"` // 状态
 	Msg    string      `json:"msg"`    // 消息

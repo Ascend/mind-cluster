@@ -18,6 +18,3 @@ limitations under the License.
 Package diagnose 提供诊断功能，用于检查系统或应用程序的健康状况。
 */
 package diagnose
-
-type Result struct {
-}

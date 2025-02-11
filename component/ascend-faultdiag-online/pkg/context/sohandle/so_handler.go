@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package so_handle 包含了加载和使用动态链接库（.so）的功能。
+Package sohandle 包含了加载和使用动态链接库（.so）的功能。
 */
-package so_handle
+package sohandle
 
 import (
 	"errors"
@@ -34,6 +34,7 @@ const (
 	Execute = "execute"
 )
 
+// SoHandler 结构体，用于管理动态链接库的句柄、类型以及主执行函数。
 type SoHandler struct {
 	SoHandle    syscall.Handle                           // .so 文件句柄
 	SoType      string                                   // .so 文件类型
@@ -123,6 +124,7 @@ func filterSOFiles(soDir string) ([]string, error) {
 	return soFiles, err
 }
 
+// GenerateSoHandlerMap 生成 .so 文件句柄映射表
 func GenerateSoHandlerMap(soDir string) (map[string]*SoHandler, error) {
 	soFiles, err := filterSOFiles(soDir)
 	if err != nil {

@@ -21,6 +21,7 @@ package container
 
 import "ascend-faultdiag-online/pkg/model/enum"
 
+// Status 容器状态信息
 type Status struct {
 	OsVersion enum.OsVersion
 }

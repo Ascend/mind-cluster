@@ -19,5 +19,6 @@ Package cluster 提供集群相关模型实体
 */
 package cluster
 
+// Status 集群状态结构体
 type Status struct {
 }

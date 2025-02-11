@@ -19,6 +19,7 @@ Package enum 提供枚举类
 */
 package enum
 
+// OsVersion os版本 版本枚举类型
 type OsVersion string
 
 const (

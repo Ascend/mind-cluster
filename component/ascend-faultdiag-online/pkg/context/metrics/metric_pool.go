@@ -24,12 +24,14 @@ import (
 	"time"
 )
 
+// MetricPoolItem 表示一个具体的指标项。
 type MetricPoolItem struct {
 	Name      string      // 指标名称
 	Value     interface{} // 指标值（可以是任意类型）
 	Timestamp time.Time   // 时间戳
 }
 
+// MetricPool 表示一个指标池，用于存储和管理多个指标项。
 type MetricPool struct {
 	metrics map[string][]MetricPoolItem // 指标名称到指标项的映射
 	mu      sync.RWMutex                // 读写锁，保证并发安全

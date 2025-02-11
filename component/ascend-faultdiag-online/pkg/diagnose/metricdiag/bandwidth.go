@@ -15,20 +15,20 @@ limitations under the License.
 */
 
 /*
-Package metric_diag 提供了一些诊断项的实现。
+Package metricdiag 提供了一些诊断项的实现。
 */
-package metric_diag
+package metricdiag
 
 import (
 	"ascend-faultdiag-online/pkg/context/metrics"
 	"ascend-faultdiag-online/pkg/diagnose/condition"
-	"ascend-faultdiag-online/pkg/model/diag_model"
+	"ascend-faultdiag-online/pkg/model/diagmodel"
 )
 
 // Ascend910A2BandwidthDiagItem 提供开发样例，仅供参考，非实际诊断项。
 var Ascend910A2BandwidthDiagItem = &metrics.DiagItem{
 	Interval:        60,
-	ConditionGroups: [][]*diag_model.Condition{{condition.Ascend910A2}},
+	ConditionGroups: [][]*diagmodel.Condition{{condition.Ascend910A2}},
 	Description:     "910A2带宽诊断",
 	Rules: []*metrics.DiagRule{
 		{

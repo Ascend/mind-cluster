@@ -30,6 +30,7 @@ import (
 	"ascend-faultdiag-online/pkg/utils/slice"
 )
 
+// FaultDiagConfig represents the configuration settings for the fault diagnosis system.
 type FaultDiagConfig struct {
 	Mode      enum.DeployMode `yaml:"mode"`       // 运行模式： "cluster" 或 "node"
 	SoDir     string          `yaml:"so_dir"`     // .so 文件目录
@@ -51,6 +52,7 @@ func configParamCheck(config *FaultDiagConfig) error {
 	return nil
 }
 
+// LoadConfig reads the configuration file and returns a FaultDiagConfig instance.
 func LoadConfig(path string) (*FaultDiagConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

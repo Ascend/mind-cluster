@@ -24,6 +24,7 @@ import (
 	"ascend-faultdiag-online/pkg/service/request"
 )
 
+// MetricProcess 处理指标相关的事务
 func MetricProcess(ctx *context.FaultDiagContext, reqCtx *request.Context) error {
 
 	return nil

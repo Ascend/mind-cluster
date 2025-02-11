@@ -19,10 +19,14 @@ Package enum 提供枚举类
 */
 package enum
 
+// BmcVersion 表示 BMC 的版本号
 type BmcVersion string
 
+// HdKVersion 表示 HDK 的版本号
 type HdKVersion string
 
+// FirmwareVersion 表示固件的版本号
 type FirmwareVersion string
 
+// CANNVersion 表示 CANN 的版本号
 type CANNVersion string

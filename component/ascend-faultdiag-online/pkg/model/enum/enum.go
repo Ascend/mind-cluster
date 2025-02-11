@@ -19,6 +19,7 @@ Package enum 提供枚举类
 */
 package enum
 
+// DeployMode 定义部署模式枚举类型
 type DeployMode string
 
 const (
@@ -26,8 +27,10 @@ const (
 	Node    DeployMode = "node"
 )
 
+// DeployModes 所以的部署模式
 var DeployModes = []DeployMode{Cluster, Node}
 
+// LogLevel 定义日志级别枚举类型
 type LogLevel string
 
 const (
@@ -39,13 +42,15 @@ const (
 
 var LogLevels = []LogLevel{LgInfo, LgDebug, LgWarn, LgError}
 
+// RequestType 定义请求类型
 type RequestType string
 
 const (
 	Event  RequestType = "event"
-	Metric RequestType = "metric_diag"
+	Metric RequestType = "metricdiag"
 )
 
+// ResponseBodyStatus 返回请求体状态
 type ResponseBodyStatus string
 
 const (
@@ -53,8 +58,10 @@ const (
 	Error   ResponseBodyStatus = "error"
 )
 
+// ResponseBodyStatuses 返回所有可能的响应体状态
 var ResponseBodyStatuses = []ResponseBodyStatus{Success, Error}
 
+// FaultType 故障类型
 type FaultType string
 
 const (
@@ -63,6 +70,7 @@ const (
 	SwitchFault FaultType = "switch"
 )
 
+// FaultState 故障状态
 type FaultState string
 
 const (

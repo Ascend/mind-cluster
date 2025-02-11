@@ -60,6 +60,7 @@ func startMetricDiagService(ctx *context.FaultDiagContext) {
 
 }
 
+// StartFaultDiagService 开启循环服务和指标诊断服务
 func StartFaultDiagService(ctx *context.FaultDiagContext) {
 	ctx.IsRunning = true
 	go StartLoopService(ctx)

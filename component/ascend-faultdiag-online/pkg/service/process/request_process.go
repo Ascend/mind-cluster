@@ -26,9 +26,10 @@ import (
 
 const (
 	EventType  = "event"
-	MetricType = "metric_diag"
+	MetricType = "metricdiag"
 )
 
+// RequestProcess 处理请求的函数，根据请求类型调用不同的处理函数
 func RequestProcess(ctx *context.FaultDiagContext, reqCtx *request.Context) error {
 	switch reqCtx.Request.RequestType {
 	case EventType:

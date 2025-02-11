@@ -21,13 +21,13 @@ package condition
 
 import (
 	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/model/diag_model"
+	"ascend-faultdiag-online/pkg/model/diagmodel"
 	"ascend-faultdiag-online/pkg/model/enum"
 	"ascend-faultdiag-online/pkg/utils/slice"
 )
 
-func getChipTypeCondition(chipTypes []enum.ChipType) *diag_model.Condition {
-	return &diag_model.Condition{
+func getChipTypeCondition(chipTypes []enum.ChipType) *diagmodel.Condition {
+	return &diagmodel.Condition{
 		Data: chipTypes,
 		MatchingFunc: func(ctx *context.FaultDiagContext, i interface{}) (bool, error) {
 			chipTypes, ok := i.([]enum.ChipType)
@@ -44,5 +44,6 @@ func getChipTypeCondition(chipTypes []enum.ChipType) *diag_model.Condition {
 }
 
 var (
+	// Ascend910A2 匹配 Ascend910A2 节点
 	Ascend910A2 = getChipTypeCondition([]enum.ChipType{enum.Ascend910A2})
 )

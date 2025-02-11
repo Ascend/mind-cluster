@@ -29,7 +29,7 @@ import (
 // Body 表示一个请求体
 type Body struct {
 	Component   string           `json:"component"`    // 消息来源组件，如 noded
-	RequestType enum.RequestType `json:"request_type"` // 消息类型：event（事件）或 metric_diag（指标）
+	RequestType enum.RequestType `json:"request_type"` // 消息类型：event（事件）或 metricdiag（指标）
 	Name        string           `json:"name"`         // 消息名称，事件名或指标名
 	SendTime    string           `json:"send_time"`    // 发送时间
 	ReceiveTime time.Time        `json:"receive_time"` // 接收时间
