@@ -6,6 +6,8 @@ package faultmanager
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
+
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
@@ -35,7 +37,11 @@ func TestRegister(t *testing.T) {
 
 func TestQueryJobsFaultInfo(t *testing.T) {
 	t.Run("TestQueryJobsFaultInfo", func(t *testing.T) {
-		faultrank.JobFaultRankProcessor.SetJobFaultRankInfos(map[string]constant.JobFaultInfo{"test": {}})
+		patches := gomonkey.ApplyPrivateMethod(faultrank.JobFaultRankProcessor, "GetJobFaultRankInfosFilterLevel",
+			func(faultLevel string) map[string]constant.JobFaultInfo {
+				return map[string]constant.JobFaultInfo{"test": {}}
+			})
+		defer patches.Reset()
 		jobsFaultInfo := QueryJobsFaultInfo(constant.NotHandleFault)
 		if len(jobsFaultInfo) != 1 {
 			t.Error("TestQueryJobsFaultInfo fail")

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -18,40 +18,42 @@ import (
 )
 
 var (
-	JobId          = "JobId"
-	NodeName       = "Node"
-	Time100Seconds = 100 * time.Second.Milliseconds()
-	Time1Seconds   = 1 * time.Second.Milliseconds()
-	DeviceId       = "0"
-	RankID         = "8"
-	CmName         = "mindx-dl-deviceinfo-" + NodeName
-	DeviceName     = constant.Ascend910Server + "-" + DeviceId
-	JobServerMap   = constant.JobServerInfoMap{
+	jobId          = "JobId"
+	nodeName       = "Node"
+	time100Seconds = 100 * time.Second.Milliseconds()
+	time120Seconds = 120 * time.Second.Milliseconds()
+	time1Seconds   = 1 * time.Second.Milliseconds()
+	deviceId       = "0"
+	rankID         = "8"
+	cmName         = "mindx-dl-deviceinfo-" + nodeName
+	deviceName     = constant.Ascend910Server + "-" + deviceId
+	jobServerMap   = constant.JobServerInfoMap{
 		InfoMap: map[string]map[string]constant.ServerHccl{
-			JobId: {
-				NodeName: {
+			jobId: {
+				nodeName: {
 					DeviceList: []constant.Device{{
-						DeviceID: DeviceId,
-						RankID:   RankID,
+						DeviceID: deviceId,
+						RankID:   rankID,
 					}},
-					ServerName: NodeName,
+					ServerName: nodeName,
 				},
 			},
 		},
 	}
-	OriginalDeviceCm = &constant.DeviceInfo{
-		CmName: CmName,
+	originalDeviceFaultCodeCnt = 2
+	OriginalDeviceCm           = &constant.DeviceInfo{
+		CmName: cmName,
 		DeviceInfoNoName: constant.DeviceInfoNoName{
 			DeviceList: map[string]string{
 				"huawei.com/Ascend910-Fault": `
 [
   {
     "fault_type": "CardUnhealthy",
-	"fault_code": "1801   ,  1809  ",
+	"fault_code": "80E01801      ,  80C98009    ",
     "fault_time_and_level_map":
       {
-        "1801": {"fault_time":1234, "fault_level": "RestartBusiness"}, 
-        "1809": {"fault_time":5678, "fault_level": "NotHandleFault"}
+        "80E01801": {"fault_time":100000, "fault_level": "RestartBusiness"}, 
+        "80C98009": {"fault_time":120000, "fault_level": "NotHandleFault"}
       },"npu_name": "Ascend910-0"
   }
 ]`,
@@ -232,9 +234,9 @@ func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	})
 }
 
-// TestMergeconstant.ManuallySeparateNPUTypeDeviceFault should combine other fault info and constant.ManuallySeparateNPU.
+// TestMergeManuallySeparateNPUTypeDeviceFault should combine other fault info and constant.ManuallySeparateNPU.
 func TestMergeManuallySeparateNPUTypeDeviceFault(t *testing.T) {
-	t.Run("TestMergeconstant.ManuallySeparateNPUTypeDeviceFault", func(t *testing.T) {
+	t.Run("TestMergeManuallySeparateNPUTypeDeviceFault", func(t *testing.T) {
 		npuName := "Ascend910-0"
 		split := []constant.DeviceFault{
 			{
@@ -278,19 +280,20 @@ func TestMergeManuallySeparateNPUTypeDeviceFault(t *testing.T) {
 			},
 		}
 		if !reflect.DeepEqual(got, want) {
-			t.Errorf("TestMergeconstant.ManuallySeparateNPUTypeDeviceFault() got = %v, want %v", util.ObjToString(got), util.ObjToString(want))
+			t.Error("TestMergeManuallySeparateNPUTypeDeviceFault fail")
 		}
 	})
 }
 
 func TestGetAdvanceDeviceCm(t *testing.T) {
 	advanceDeviceCm := GetAdvanceDeviceCm(OriginalDeviceCm)
-	if len(advanceDeviceCm.FaultDeviceList[DeviceName]) != 2 {
+	if len(advanceDeviceCm.FaultDeviceList[deviceName]) != originalDeviceFaultCodeCnt {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
 	}
-	faultTimeAndLevel, ok := advanceDeviceCm.FaultDeviceList[DeviceName][0].FaultTimeAndLevelMap["1801"]
-	if !ok || faultTimeAndLevel.FaultTime != 1234 || faultTimeAndLevel.FaultLevel != "RestartBusiness" {
+	faultTimeAndLevel, ok := advanceDeviceCm.FaultDeviceList[deviceName][0].FaultTimeAndLevelMap[constant.UceFaultCode]
+	if !ok || faultTimeAndLevel.FaultTime != time100Seconds ||
+		faultTimeAndLevel.FaultLevel != constant.RestartBusiness {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
 	}
@@ -299,12 +302,12 @@ func TestGetAdvanceDeviceCm(t *testing.T) {
 func TestValidBusinessUceReportInfo(t *testing.T) {
 	t.Run("TestValidBusinessUceReportInfo", func(t *testing.T) {
 		reportInfo := &constant.ReportInfo{
-			RecoverTime:  Time100Seconds - Time1Seconds,
+			RecoverTime:  time100Seconds - time1Seconds,
 			CompleteTime: 0,
 		}
 		mockTime := time.Time{}
 		mockUnixMilli := gomonkey.ApplyPrivateMethod(mockTime, "UnixMilli", func() int64 {
-			return Time100Seconds
+			return time100Seconds
 		})
 		mockNow := gomonkey.ApplyFunc(time.Now, func() time.Time {
 			return mockTime
@@ -325,15 +328,15 @@ func TestValidBusinessUceReportInfo(t *testing.T) {
 
 func TestCanDoStepRetry(t *testing.T) {
 	uceDeviceInfo := &constant.UceDeviceInfo{
-		DeviceName:   DeviceName,
-		FaultTime:    Time100Seconds,
-		RecoverTime:  Time100Seconds + Time1Seconds,
+		DeviceName:   deviceName,
+		FaultTime:    time100Seconds,
+		RecoverTime:  time100Seconds + time1Seconds,
 		CompleteTime: 0,
 	}
 	t.Run("TestCanDoStepRetry", func(t *testing.T) {
 		mockTime := time.Time{}
 		mockUnixMilli := gomonkey.ApplyPrivateMethod(mockTime, "UnixMilli", func() int64 {
-			return Time100Seconds + 20*Time1Seconds
+			return time120Seconds
 		})
 		mockNow := gomonkey.ApplyFunc(time.Now, func() time.Time {
 			return mockTime
@@ -365,13 +368,13 @@ func TestGetFaultTime(t *testing.T) {
 		FaultCode: constant.UceFaultCode,
 		FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
 			constant.UceFaultCode: {
-				FaultTime:  Time100Seconds,
+				FaultTime:  time100Seconds,
 				FaultLevel: constant.RestartBusiness,
 			},
 		},
 	}
 	t.Run("TestGetFaultTime", func(t *testing.T) {
-		if got := GetFaultTime(fault, ""); got != Time100Seconds {
+		if got := GetFaultTime(fault, ""); got != time100Seconds {
 			t.Error("GetFaultTime fail")
 		}
 		fault.FaultTimeAndLevelMap = make(map[string]constant.FaultTimeAndLevel)
@@ -404,29 +407,9 @@ func TestFaultCodeJudge(t *testing.T) {
 	})
 }
 
-func TestMergeCodeAndRemoveUnhealthy(t *testing.T) {
-	type args struct {
-		advanceDeviceCm constant.AdvanceDeviceFaultCm
-	}
-	tests := []struct {
-		name string
-		args args
-		want constant.AdvanceDeviceFaultCm
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := mergeCodeAndRemoveUnhealthy(tt.args.advanceDeviceCm); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("mergeCodeAndRemoveUnhealthy() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestAdvanceDeviceCmForNodeMapToString(t *testing.T) {
 	deviceInfoCms := map[string]*constant.DeviceInfo{
-		CmName: OriginalDeviceCm,
+		cmName: OriginalDeviceCm,
 	}
 	t.Run("TestAdvanceDeviceCmForNodeMapToString", func(t *testing.T) {
 		advanceMap := GetAdvanceDeviceCmForNodeMap(deviceInfoCms)
@@ -441,7 +424,7 @@ func TestAdvanceDeviceCmForNodeMapToString(t *testing.T) {
 
 func TestAddFaultAndDeleteFaultMap(t *testing.T) {
 	addFault := constant.DeviceFault{
-		NPUName: DeviceName,
+		NPUName: deviceName,
 	}
 	t.Run("TestAddFaultIntoFaultMap", func(t *testing.T) {
 		faultMap := AddFaultIntoFaultMap(nil, addFault)
@@ -464,11 +447,11 @@ func TestAddFaultAndDeleteFaultMap(t *testing.T) {
 
 func TestGetAdvanceDeviceCmForNodeMap(t *testing.T) {
 	deviceInfoCms := map[string]*constant.DeviceInfo{
-		CmName: OriginalDeviceCm,
+		cmName: OriginalDeviceCm,
 	}
 	t.Run("TestGetAdvanceDeviceConfigmap", func(t *testing.T) {
 		got := GetAdvanceDeviceCmForNodeMap(deviceInfoCms)
-		if len(got[NodeName].FaultDeviceList[DeviceName]) != 2 {
+		if len(got[nodeName].FaultDeviceList[deviceName]) != 2 {
 			t.Error("TestGetAdvanceDeviceConfigmap fail")
 		}
 	})
@@ -476,8 +459,8 @@ func TestGetAdvanceDeviceCmForNodeMap(t *testing.T) {
 
 func TestGetNodeAndDeviceFromJobIdAndRankId(t *testing.T) {
 	t.Run("TestGetNodeAndDeviceFromJobIdAndRankId", func(t *testing.T) {
-		serverName, deviceId, err := GetNodeAndDeviceFromJobIdAndRankId(JobId, RankID, JobServerMap)
-		if serverName != NodeName || deviceId != DeviceId || err != nil {
+		serverName, device, err := GetNodeAndDeviceFromJobIdAndRankId(jobId, rankID, jobServerMap)
+		if serverName != nodeName || device != deviceId || err != nil {
 			t.Error("TestGetNodeAndDeviceFromJobIdAndRankId fail")
 		}
 	})

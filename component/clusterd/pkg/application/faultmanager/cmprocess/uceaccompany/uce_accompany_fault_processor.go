@@ -162,6 +162,7 @@ func (processor *uceAccompanyFaultProcessor) isCurrentExceedDiagnosisTimeout(
 	return uceAccompanyFaultTime < currentTime-processor.DiagnosisAccompanyTimeout
 }
 
+// Process uce accompany fault
 func (processor *uceAccompanyFaultProcessor) Process(info any) any {
 	processContent, ok := info.(constant.OneConfigmapContent[*constant.DeviceInfo])
 	if !ok {

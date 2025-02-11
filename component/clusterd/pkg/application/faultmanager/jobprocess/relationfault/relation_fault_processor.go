@@ -5,6 +5,7 @@ package relationfault
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -18,7 +19,24 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+// RelationProcessor network relation fault process
 var RelationProcessor *relationFaultProcessor
+
+func init() {
+	RelationProcessor = &relationFaultProcessor{}
+	if fileBytes := LoadConfigFromFile(constant.FaultCustomizationPath); fileBytes != nil {
+		initRelationFaultStrategies(fileBytes)
+		initRelationFaultCodesMap()
+	} else {
+		fmt.Printf("load config from file %s failed\n", constant.FaultCustomizationPath)
+	}
+	if fileBytes := LoadConfigFromFile(constant.FaultDurationPath); fileBytes != nil {
+		initFaultDuration(fileBytes)
+		initFaultCodeTimeOutMap()
+	} else {
+		fmt.Printf("load config from file %s failed\n", constant.FaultDurationPath)
+	}
+}
 
 type relationFaultProcessor struct {
 	faultJobs    map[string]*FaultJob
@@ -27,6 +45,7 @@ type relationFaultProcessor struct {
 	nodeInfoCm   map[string]*constant.NodeInfo
 }
 
+// Process job network relation fault info
 func (processor *relationFaultProcessor) Process(info any) any {
 	content, ok := info.(constant.AllConfigmapContent)
 	if !ok {
@@ -56,13 +75,13 @@ func (processor *relationFaultProcessor) InitFaultJobs() {
 		if !ok {
 			tmpFaultJob = &FaultJob{}
 		}
-		tmpFaultJob.InitFaultJobAttr()
+		tmpFaultJob.initFaultJobAttr()
 		for nodeName, serverList := range serverLists {
 			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID >= 0
 			tmpFaultJob.PodNames[serverList.ServerName] = serverList.PodID
 			tmpFaultJob.NameSpace = serverList.PodNameSpace
-			tmpFaultJob.InitFaultJobBySwitchFault(processor.switchInfoCm[constant.SwitchInfoPrefix+nodeName], serverList)
-			tmpFaultJob.InitFaultJobByDeviceFault(deviceCmForNodeMap[nodeName], serverList)
+			tmpFaultJob.initBySwitchFault(processor.switchInfoCm[constant.SwitchInfoPrefix+nodeName], serverList)
+			tmpFaultJob.initByDeviceFault(deviceCmForNodeMap[nodeName], serverList)
 		}
 		faultJobs[jobId] = tmpFaultJob
 		hwlog.RunLog.Debugf("init fault job %v", util.ObjToString(faultJobs))
@@ -104,18 +123,6 @@ type FaultJob struct {
 	FindNPUUnderSwitch  bool
 }
 
-func init() {
-	if fileBytes := LoadConfigFromFile(constant.FaultCustomizationPath); fileBytes != nil {
-		initRelationFaultStrategies(fileBytes)
-		initRelationFaultCodesMap()
-	}
-	if fileBytes := LoadConfigFromFile(constant.FaultDurationPath); fileBytes != nil {
-		initFaultDuration(fileBytes)
-		initFaultCodeTimeOutMap()
-	}
-	RelationProcessor = &relationFaultProcessor{}
-}
-
 func getFaultCodeTimeOutMap() map[string]int64 {
 	return faultCodeTimeOutMap
 }
@@ -130,7 +137,7 @@ func getFaultCodeDelMaxTime(faultCode string) int64 {
 
 func initRelationFaultStrategies(fileBytes []byte) {
 	if err := json.Unmarshal(fileBytes, &relationFaultStrategies); err != nil {
-		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
+		fmt.Printf("unmarshal fault code byte failed: %v", err)
 		return
 	}
 }
@@ -138,11 +145,11 @@ func initRelationFaultStrategies(fileBytes []byte) {
 func initFaultDuration(fileBytes []byte) {
 	var tmpFaultDurationStrategies []constant.FaultDuration
 	if err := json.Unmarshal(fileBytes, &tmpFaultDurationStrategies); err != nil {
-		hwlog.RunLog.Errorf("unmarshal fault code byte failed: %v", err)
+		fmt.Printf("unmarshal fault code byte failed: %v", err)
 		return
 	}
 	if len(tmpFaultDurationStrategies) == 0 {
-		hwlog.RunLog.Error("fault duration fault config is invalid")
+		fmt.Printf("fault duration fault config is invalid")
 		return
 	}
 	for _, faultConfig := range tmpFaultDurationStrategies {
@@ -190,7 +197,7 @@ func LoadConfigFromFile(filePath string) []byte {
 	return fileBytes
 }
 
-func (fJob *FaultJob) InitFaultJobAttr() {
+func (fJob *FaultJob) initFaultJobAttr() {
 	fJob.FaultStrategy = constant.FaultStrategy{}
 	fJob.TriggerFault = nil
 	fJob.AllFaultCode = make(sets.String)
@@ -278,7 +285,7 @@ func (fJob *FaultJob) processFaultStrategies() {
 }
 
 func (fJob *FaultJob) clearProcessedAndTimeOutFault() {
-	var networkFaultInfo []*constant.FaultInfo
+	networkFaultInfo := make([]*constant.FaultInfo, 0)
 	preStopTime := time.Now().UnixMilli()
 	for _, fault := range fJob.RelationFaults {
 		if fault.ExecutedStrategy == constant.SeparateFaultStrategy {
@@ -304,7 +311,7 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 	}
 }
 
-func (fJob *FaultJob) InitFaultJobByDeviceFault(nodeFaultInfo constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
+func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
 	if fJob.SeparateNodes.Has(serverList.ServerName) {
 		return
 	}
@@ -363,7 +370,7 @@ func isAssociateFault(faultCode string) bool {
 	return relationFaultTypeMap.Has(faultCode) || triggerFaultMap.Has(faultCode)
 }
 
-func (fJob *FaultJob) InitFaultJobBySwitchFault(switchInfo *constant.SwitchInfo, serverList constant.ServerHccl) {
+func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverList constant.ServerHccl) {
 	if switchInfo == nil {
 		return
 	}
@@ -439,6 +446,18 @@ func (fJob *FaultJob) getAllNodeDeviceList(allUnhealthyDevices, allSubHealthDevi
 	// node level higher than device
 	nodeLvList, deviceLvList := fJob.handleAllSubHealthyDevices(nodeDeviceList, allSubHealthDevices)
 
+	return fJob.handleAllUnHealthyDevices(allUnhealthyDevices, nodeDeviceList, deviceLvList, nodeLvList)
+}
+
+func (fJob *FaultJob) handleAllUnHealthyDevices(allUnhealthyDevices []*constant.FaultInfo,
+	nodeDeviceList map[string]string, deviceLvList map[string][]constant.DeviceStrategy,
+	nodeLvList map[string]string) (map[string]string, map[string][]constant.DeviceStrategy) {
+	if nodeLvList == nil {
+		nodeLvList = make(map[string]string)
+	}
+	if deviceLvList == nil {
+		deviceLvList = make(map[string][]constant.DeviceStrategy)
+	}
 	for nodeName := range nodeDeviceList {
 		deviceList := deviceLvList[nodeName]
 		nodeLevel := false
@@ -446,7 +465,6 @@ func (fJob *FaultJob) getAllNodeDeviceList(allUnhealthyDevices, allSubHealthDevi
 			if device.NodeName != nodeName {
 				continue
 			}
-
 			if device.FaultType == constant.SwitchFault {
 				if fJob.FindNPUUnderSwitch {
 					deviceList = append(deviceList, fJob.getNPUUnderSwitch(allUnhealthyDevices)...)
@@ -457,9 +475,11 @@ func (fJob *FaultJob) getAllNodeDeviceList(allUnhealthyDevices, allSubHealthDevi
 			} else {
 				idx := fJob.getDeviceIdx(device, deviceList)
 				if idx < 0 {
-					deviceList = append(deviceList, constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SeparateFaultStrategy})
+					deviceList = append(deviceList,
+						constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SeparateFaultStrategy})
 				} else {
-					deviceList[idx] = constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SeparateFaultStrategy}
+					deviceList[idx] = constant.DeviceStrategy{NPUName: device.NPUName,
+						Strategy: constant.SeparateFaultStrategy}
 				}
 			}
 		}
@@ -512,7 +532,8 @@ func (fJob *FaultJob) getDeviceIdx(device *constant.FaultInfo, deviceList []cons
 }
 
 func (fJob *FaultJob) transferFaultToMap(relationFault []*constant.FaultInfo,
-	triggerFault []constant.FaultInfo) (map[string][]*constant.FaultInfo, map[string]string, map[string]constant.FaultInfo) {
+	triggerFault []constant.FaultInfo) (map[string][]*constant.FaultInfo,
+	map[string]string, map[string]constant.FaultInfo) {
 	relationCodeDeviceMap := make(map[string][]*constant.FaultInfo)
 	nodeList := make(map[string]string)
 	for _, device := range relationFault {
@@ -535,14 +556,15 @@ func (fJob *FaultJob) transferFaultToMap(relationFault []*constant.FaultInfo,
 }
 
 func (fJob *FaultJob) getCodeMatchedTables(relationCodeDeviceMap map[string][]*constant.FaultInfo,
-	triggerCodeDeviceMap map[string]constant.FaultInfo, strategyList []constant.RelationFaultStrategy) []constant.RelationFaultStrategy {
+	triggerCodeDeviceMap map[string]constant.FaultInfo,
+	strategyList []constant.RelationFaultStrategy) []constant.RelationFaultStrategy {
 	curFaultTables := make([]constant.RelationFaultStrategy, 0)
 
 	for _, trigger := range strategyList {
 		if _, ok := triggerCodeDeviceMap[trigger.TriggerFault]; !ok {
 			continue
 		}
-		if !fJob.relationFaultsMatched(relationCodeDeviceMap, trigger) {
+		if !fJob.matchRelationFaults(relationCodeDeviceMap, trigger) {
 			continue
 		}
 
@@ -551,7 +573,7 @@ func (fJob *FaultJob) getCodeMatchedTables(relationCodeDeviceMap map[string][]*c
 	return curFaultTables
 }
 
-func (fJob *FaultJob) relationFaultsMatched(relationCodeDeviceMap map[string][]*constant.FaultInfo, trigger constant.RelationFaultStrategy) bool {
+func (fJob *FaultJob) matchRelationFaults(relationCodeDeviceMap map[string][]*constant.FaultInfo, trigger constant.RelationFaultStrategy) bool {
 	for _, fault := range trigger.RelationFaults {
 		if _, ok := relationCodeDeviceMap[fault]; !ok {
 			return false

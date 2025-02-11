@@ -17,12 +17,8 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+// JobFaultRankProcessor process job fault rank
 var JobFaultRankProcessor *jobRankFaultInfoProcessor
-
-type jobRankFaultInfoProcessor struct {
-	jobFaultInfoMap map[string]constant.JobFaultInfo
-	mutex           sync.RWMutex
-}
 
 func init() {
 	JobFaultRankProcessor = &jobRankFaultInfoProcessor{
@@ -31,6 +27,12 @@ func init() {
 	}
 }
 
+type jobRankFaultInfoProcessor struct {
+	jobFaultInfoMap map[string]constant.JobFaultInfo
+	mutex           sync.RWMutex
+}
+
+// GetJobFaultRankInfos get job fault rank information
 func (processor *jobRankFaultInfoProcessor) GetJobFaultRankInfos() map[string]constant.JobFaultInfo {
 	processor.mutex.RLock()
 	defer processor.mutex.RUnlock()
@@ -64,13 +66,14 @@ func (processor *jobRankFaultInfoProcessor) GetJobFaultRankInfosFilterLevel(
 	return jobFaultRankInfos
 }
 
-func (processor *jobRankFaultInfoProcessor) SetJobFaultRankInfos(faultInfos map[string]constant.JobFaultInfo) {
+func (processor *jobRankFaultInfoProcessor) setJobFaultRankInfos(faultInfos map[string]constant.JobFaultInfo) {
 	processor.mutex.Lock()
 	defer processor.mutex.Unlock()
 	processor.jobFaultInfoMap = faultInfos
 }
 
-func (processor *jobRankFaultInfoProcessor) FindFaultRankForJob(nodeDeviceInfoMap map[string]constant.AdvanceDeviceFaultCm,
+func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
+	nodeDeviceInfoMap map[string]constant.AdvanceDeviceFaultCm,
 	nodeName string, serverList map[string]constant.ServerHccl, jobId string) []constant.FaultRank {
 	advanceDeviceInfo := nodeDeviceInfoMap[nodeName]
 	devicesOfJobOnNode, ok := serverList[nodeName]
@@ -138,7 +141,8 @@ func (processor *jobRankFaultInfoProcessor) uceInBusinessPlane(jobId, nodeName, 
 	return faultdomain.ValidBusinessRecoverTime(uceDevice.RecoverTime)
 }
 
-func (fpi *jobRankFaultInfoProcessor) Process(info any) any {
+// Process job fault rank info
+func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 	allConfigmap, ok := info.(constant.AllConfigmapContent)
 	if !ok {
 		hwlog.RunLog.Error("convert info to AllConfigmapContent failed")
@@ -161,7 +165,7 @@ func (fpi *jobRankFaultInfoProcessor) Process(info any) any {
 			HealthyState: constant.HealthyState,
 		}
 		hwlog.RunLog.Debugf("serverList: %d", len(serverList))
-		faultList, nodeStatusList := fpi.findNodeDeviceAndSwitchFault(serverList,
+		faultList, nodeStatusList := processor.findNodeDeviceAndSwitchFault(serverList,
 			nodeInfos, switchInfos, deviceCmForNodeMap, jobId)
 		jobFaultInfo.FaultList = faultList
 		if len(jobFaultInfo.FaultList) > 0 {
@@ -173,11 +177,11 @@ func (fpi *jobRankFaultInfoProcessor) Process(info any) any {
 		jobFaultInfo.HealthyState = getHealthState(faultList, nodeStatusList, podStrategiesMap)
 		jobFaultInfos[jobId] = jobFaultInfo
 	}
-	JobFaultRankProcessor.SetJobFaultRankInfos(jobFaultInfos)
+	processor.setJobFaultRankInfos(jobFaultInfos)
 	return nil
 }
 
-func (fpi *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
+func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 	serverList map[string]constant.ServerHccl, nodeInfos map[string]*constant.NodeInfo,
 	switchInfos map[string]*constant.SwitchInfo, deviceCmForNodeMap map[string]constant.AdvanceDeviceFaultCm,
 	jobId string) ([]constant.FaultRank, []string) {
@@ -206,7 +210,7 @@ func (fpi *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 			faultList = append(faultList, serverHcclToFaultRank(server)...)
 			continue
 		}
-		faultRankList := JobFaultRankProcessor.FindFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId)
+		faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId)
 		faultList = append(faultList, faultRankList...)
 	}
 	return faultList, nodeStatusList

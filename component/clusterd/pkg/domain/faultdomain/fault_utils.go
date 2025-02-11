@@ -28,6 +28,7 @@ func IsNodeReady(node *v1.Node) bool {
 	return false
 }
 
+// GetNodeAndDeviceFromJobIdAndRankId get node and device name from jobId and rankId
 func GetNodeAndDeviceFromJobIdAndRankId(
 	jobId, rankId string, jobServerInfoMap constant.JobServerInfoMap) (string, string, error) {
 	for _, server := range jobServerInfoMap.InfoMap[jobId] {
@@ -40,6 +41,7 @@ func GetNodeAndDeviceFromJobIdAndRankId(
 	return "", "", fmt.Errorf("not find node and device from jobId %v and rankid %v", jobId, rankId)
 }
 
+// CmNameToNodeName convert cmName to nodeName
 func CmNameToNodeName(cmName string) string {
 	if !strings.HasPrefix(cmName, constant.DeviceInfoPrefix) {
 		hwlog.RunLog.Errorf("CmName %s has not prefix %s", cmName, constant.DeviceInfoPrefix)
@@ -52,7 +54,9 @@ func nodeNameToCmName(nodeName string) string {
 	return constant.DeviceInfoPrefix + nodeName
 }
 
-func GetAdvanceDeviceCmForNodeMap(deviceInfoCms map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
+// GetAdvanceDeviceCmForNodeMap get advance device cm for node map
+func GetAdvanceDeviceCmForNodeMap(
+	deviceInfoCms map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
 	advanceDeviceCmForNodeMap := make(map[string]constant.AdvanceDeviceFaultCm)
 	for _, deviceInfo := range deviceInfoCms {
 		advanceDeviceCmForNodeMap[CmNameToNodeName(deviceInfo.CmName)] = GetAdvanceDeviceCm(deviceInfo)
@@ -60,7 +64,7 @@ func GetAdvanceDeviceCmForNodeMap(deviceInfoCms map[string]*constant.DeviceInfo)
 	return advanceDeviceCmForNodeMap
 }
 
-// deviceName->faults
+// GetAdvanceDeviceCm deviceName->faults
 func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaultCm {
 	advanceDeviceCm := constant.AdvanceDeviceFaultCm{
 		CmName:      devInfo.CmName,
@@ -111,6 +115,7 @@ func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaul
 	return advanceDeviceCm
 }
 
+// GetServerType get server type from DeviceInfo
 func GetServerType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, constant.Ascend910Server) {
@@ -203,6 +208,7 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 	return result, nil
 }
 
+// DeleteFaultFromFaultMap delete fault from faultMap
 func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	delFault constant.DeviceFault) map[string][]constant.DeviceFault {
 	if faultMap == nil {
@@ -223,6 +229,7 @@ func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
+// AddFaultIntoFaultMap add fault into faultMap
 func AddFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
 	addFault constant.DeviceFault) map[string][]constant.DeviceFault {
 	if faultMap == nil {
@@ -246,6 +253,7 @@ func AddFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
+// AdvanceDeviceCmForNodeMapToString convert advance device cm to original format
 func AdvanceDeviceCmForNodeMapToString(
 	advanceDeviceCm map[string]constant.AdvanceDeviceFaultCm, orgDeviceCm map[string]*constant.DeviceInfo) {
 	for nodeName, advanceCm := range advanceDeviceCm {
@@ -311,6 +319,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) 
 	return advanceDeviceCm
 }
 
+// GetFaultListKey get FaultList key in DeviceInfo
 func GetFaultListKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Fault") {
@@ -320,6 +329,7 @@ func GetFaultListKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
+// GetNetworkUnhealthyKey get networkUnhealthy key in DeviceInfo
 func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-NetworkUnhealthy") {
@@ -329,6 +339,7 @@ func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
+// GetCardUnhealthyKey get CardUnhealthy key in DeviceInfo
 func GetCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
 		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Unhealthy") {
@@ -338,6 +349,7 @@ func GetCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	return ""
 }
 
+// IsUceFault check faultCode is uce
 func IsUceFault(faultCode string) bool {
 	if strings.Contains(faultCode, constant.UceFaultCode) {
 		return true
@@ -345,24 +357,29 @@ func IsUceFault(faultCode string) bool {
 	return false
 }
 
+// IsCqeFault check faultCode is cqe fault
 func IsCqeFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.DevCqeFaultCode) ||
 		strings.Contains(faultCode, constant.HostCqeFaultCode)
 }
 
+// IsLinkDownFault check faultCode is linkdown fault
 func IsLinkDownFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.LinkDownFaultCode)
 }
 
+// IsUceAccompanyFault check faultCode is uce accompany
 func IsUceAccompanyFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.AicFaultCode) ||
 		strings.Contains(faultCode, constant.AivFaultCode)
 }
 
+// IsDeviceFaultEqual check two DeviceFault is equal
 func IsDeviceFaultEqual(one, other constant.DeviceFault) bool {
 	return reflect.DeepEqual(one, other)
 }
 
+// GetMostSeriousFaultLevel get most serious fault level
 func GetMostSeriousFaultLevel(fautLevels []string) string {
 	faultTypeSet := sets.NewString(fautLevels...)
 	if faultTypeSet.Has(constant.ManuallySeparateNPU) {
@@ -387,6 +404,7 @@ func GetMostSeriousFaultLevel(fautLevels []string) string {
 	return constant.NormalNPU
 }
 
+// GetFaultTime get fault time in fault
 func GetFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
 	faultTimeAndLevel, ok := fault.FaultTimeAndLevelMap[fault.FaultCode]
 	var faultTime int64
@@ -400,6 +418,7 @@ func GetFaultTime(fault constant.DeviceFault, errorMsg string) int64 {
 	return faultTime
 }
 
+// GetContainedElementIdx get element idx in stringList
 func GetContainedElementIdx(element string, stringList []string) int {
 	for idx, deviceName := range stringList {
 		if element == deviceName {
@@ -409,6 +428,7 @@ func GetContainedElementIdx(element string, stringList []string) int {
 	return -1
 }
 
+// CanDoStepRetry check UceDeviceInfo can do step retry
 func CanDoStepRetry(uceDevice *constant.UceDeviceInfo) bool {
 	if uceDevice.RecoverTime == constant.JobNotRecover {
 		return false
@@ -425,6 +445,7 @@ func CanDoStepRetry(uceDevice *constant.UceDeviceInfo) bool {
 	return false
 }
 
+// ValidBusinessRecoverTime check recoverTime is valid
 func ValidBusinessRecoverTime(recoverTime int64) bool {
 	if recoverTime != constant.JobNotRecover &&
 		time.Now().UnixMilli()-constant.JobReportInfoExpiredTimeout <= recoverTime {
@@ -433,6 +454,7 @@ func ValidBusinessRecoverTime(recoverTime int64) bool {
 	return false
 }
 
+// ValidBusinessUceReportInfo check ReportInfo is valid
 func ValidBusinessUceReportInfo(info *constant.ReportInfo) bool {
 	return ValidBusinessRecoverTime(info.RecoverTime)
 }

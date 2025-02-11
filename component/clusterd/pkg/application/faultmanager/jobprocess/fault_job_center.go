@@ -12,6 +12,7 @@ import (
 	"clusterd/pkg/common/constant"
 )
 
+// FaultJobCenter process fault about job
 var FaultJobCenter *faultJobProcessCenter
 
 type faultJobProcessCenter struct {

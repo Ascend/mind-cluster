@@ -70,6 +70,7 @@ func (processor *uceFaultProcessor) initUceDeviceFromNodeAndReportInfo(jobId str
 	return jobUceNodeInfo
 }
 
+// Process uce fault
 func (processor *uceFaultProcessor) Process(info any) any {
 	processContent, ok := info.(constant.OneConfigmapContent[*constant.DeviceInfo])
 	if !ok {

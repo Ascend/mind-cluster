@@ -9,7 +9,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess/uce"

@@ -18,6 +18,12 @@ import (
 // GlobalFaultProcessCenter is a global instance of faultProcessCenter used for processing faults.
 var GlobalFaultProcessCenter *faultProcessCenter
 
+func init() {
+	GlobalFaultProcessCenter = &faultProcessCenter{
+		notifyProcessChan: make(chan int, constant.MaxNotifyChanLen),
+	}
+}
+
 // faultProcessCenter processes the faults and coordinates the fault handling among different components.
 type faultProcessCenter struct {
 	notifyProcessChan chan int
@@ -30,13 +36,7 @@ func (center *faultProcessCenter) Process() {
 	jobprocess.FaultJobCenter.Process()
 }
 
-func init() {
-	GlobalFaultProcessCenter = &faultProcessCenter{
-		notifyProcessChan: make(chan int, constant.MaxNotifyChanLen),
-	}
-}
-
-func (center *faultProcessCenter) NotifyFaultCenterProcess(whichToProcess int) {
+func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
 	center.notifyProcessChan <- whichToProcess
 }
 
@@ -93,7 +93,7 @@ func CallbackForReportUceInfo(infos []constant.ReportRecoverInfo) {
 	for _, info := range infos {
 		collector.ReportInfoCollector.ReportUceInfo(info.JobId, info.Rank, info.RecoverTime)
 	}
-	GlobalFaultProcessCenter.NotifyFaultCenterProcess(constant.DeviceProcessType)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceProcessType)
 }
 
 // QueryJobsFaultInfo query jobs fault rank info, and filter fault below `faultLevel`
