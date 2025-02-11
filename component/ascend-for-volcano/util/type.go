@@ -288,13 +288,13 @@ const (
 	AffScore3
 	// AffScore4 value 4 for scored.
 	AffScore4
-	// AffScore5 value 4 for scored.
+	// AffScore5 value 5 for scored.
 	AffScore5
-	// AffScore6 value 4 for scored.
+	// AffScore6 value 6 for scored.
 	AffScore6
-	// AffScore7 value 4 for scored.
+	// AffScore7 value 7 for scored.
 	AffScore7
-	// AffScore8 value 4 for scored.
+	// AffScore8 value 8 for scored.
 	AffScore8
 )
 

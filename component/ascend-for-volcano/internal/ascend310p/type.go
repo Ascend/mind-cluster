@@ -43,8 +43,6 @@ const (
 	maxNodeNPUNum = 64
 	// Accelerator310Key accelerator key of 310
 	Accelerator310Key = "npu-310-strategy"
-	// Card310AcceleratorValue card value
-	Card310AcceleratorValue = "card"
 	// Chip310AcceleratorValue chip value
 	Chip310AcceleratorValue = "chip"
 	// DuoKeyLabel key and label for 300i duo

@@ -20,8 +20,6 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 
 package plugin
 
-type torType int
-
 const (
 	// TorNodeCMName the Name of tor info configmap
 	TorNodeCMName = "basic-tor-node-cm"
@@ -44,9 +42,7 @@ const (
 	// NullTag the value means not use tor affinity
 	NullTag = "null"
 	// JobDeleteFlag the flag mark job is deleted
-	JobDeleteFlag = "fault-job-delete"
-	// JobDelete the value of mark job is deleted
-	JobDelete            = "deleted"
+	JobDeleteFlag        = "fault-job-delete"
 	fillJobMaxNPUTaskNum = 4
 	keyOfSharedTorNum    = "shared-tor-num"
 	shareTorNum1         = 1

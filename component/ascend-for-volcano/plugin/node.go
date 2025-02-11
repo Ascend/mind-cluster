@@ -42,12 +42,6 @@ type NodeDeviceInfo struct {
 	UpdateTime int64
 }
 
-// NodeDeviceInfoWithTime is node device info with time
-type NodeDeviceInfoWithTime struct {
-	NodeDeviceInfoWithID
-	HostUpdateTime int64
-}
-
 // NodeDeviceInfoWithID is node the information reported by cm.
 type NodeDeviceInfoWithID struct {
 	NodeDeviceInfo

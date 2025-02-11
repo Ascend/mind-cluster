@@ -59,20 +59,6 @@ func (sHandle *ScheduleHandler) RegisterNPUScheduler(name string, pc NPUBuilder)
 	klog.V(util.LogInfoLev).Infof("NPU Scheduler[%s] registered.", name)
 }
 
-// UnRegisterNPUScheduler unRegister the plugin
-func (sHandle *ScheduleHandler) UnRegisterNPUScheduler(name string) error {
-	if sHandle == nil {
-		return errors.New(util.ArgumentError)
-	}
-	if _, ok := sHandle.NPUPlugins[name]; ok {
-		sHandle.NPUPlugins[name] = nil
-		delete(sHandle.NPUPlugins, name)
-		klog.V(util.LogErrorLev).Infof("NPU Scheduler[%s] delete.", name)
-	}
-	klog.V(util.LogDebugLev).Infof("NPU Scheduler[%s] unRegistered.", name)
-	return nil
-}
-
 // IsPluginRegistered Determine if the plug-in is registered.
 func (sHandle *ScheduleHandler) IsPluginRegistered(name string) bool {
 	if sHandle == nil {

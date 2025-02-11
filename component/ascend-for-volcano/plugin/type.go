@@ -34,9 +34,8 @@ const (
 	// PluginName the HuaWei NPU 's plugin name.
 	PluginName = "huaweiNPU"
 
-	nodesNoMeetNPUReqError = "insufficient npus on the schedulable nodes in cluster"
-	objectNilError         = "object or argument is nil"
-	podRankIndex           = "hccl/rankIndex"
+	objectNilError = "object or argument is nil"
+	podRankIndex   = "hccl/rankIndex"
 
 	// FormatIncorrectError format incorrect error
 	FormatIncorrectError = "format incorrect"
@@ -47,8 +46,6 @@ const (
 	AscendVNPULevelLow = "low"
 	// AscendVNPULevelHigh high
 	AscendVNPULevelHigh = "high"
-	// AscendVNPUPrefix vir
-	AscendVNPUPrefix = "vir"
 	// AscendVNPUDVPP dvpp enable
 	AscendVNPUDVPP = "vnpu-dvpp"
 	// AscendDVPPEnabledOff off
@@ -89,11 +86,8 @@ const (
 	cardHealthySuffix          = ""
 	unhealthyCardSuffix        = "-Unhealthy"
 	notNPUNodeError            = "getNodeDeviceInfoFromCM"
-	notNPUJobError             = "nil npu"
-	basePlugin                 = "base"
 	oneTor                     = 1
 	twoTor                     = 2
-	defaultResyncTime          = 30
 	// ResetInfoCMNamePrefix for reset configmap name prefix
 	ResetInfoCMNamePrefix = "reset-config-"
 	// ResetInfoCMDataKey for reset configmap data key
@@ -229,16 +223,6 @@ type AllocNodeRankOccurrence struct {
 	RankIndex  string
 	IsFault    bool
 	Occurrence int
-}
-
-type jobUsedNodeInfos struct {
-	NodeInfos string
-	JobName   string
-}
-
-type jobServerInfos struct {
-	IsSharedTor bool
-	Nodes       []jobUsedNodeInfos
 }
 
 type jobTorInfos struct {

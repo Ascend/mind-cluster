@@ -12,7 +12,6 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
@@ -51,27 +50,4 @@ func (vNodes vNodesList) Swap(i, j int) {
 		return
 	}
 	vNodes[i], vNodes[j] = vNodes[j], vNodes[i]
-}
-
-type vChipsList []*plugin.VChip
-
-// Len for order.
-func (vChips vChipsList) Len() int {
-	return len(vChips)
-}
-
-// Less for order.
-func (vChips vChipsList) Less(i, j int) bool {
-	if i > vChips.Len() || j > vChips.Len() {
-		return false
-	}
-	return !vChips[i].FreeRes.BeGreater(vChips[j].FreeRes)
-}
-
-// Swap for order.
-func (vChips vChipsList) Swap(i, j int) {
-	if i > vChips.Len() || j > vChips.Len() {
-		return
-	}
-	vChips[i], vChips[j] = vChips[j], vChips[i]
 }

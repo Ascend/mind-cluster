@@ -1316,12 +1316,3 @@ func (reScheduler ReScheduler) getFNodeByNodeName(nodeName string) *SimpleFNodeI
 	}
 	return nil
 }
-
-func (reScheduler ReScheduler) getFNodeOfGivenNameFromCache(nodeName string) *FaultNode {
-	for _, fNode := range reScheduler.FaultNodes {
-		if fNode.NodeName == nodeName {
-			return &fNode
-		}
-	}
-	return nil
-}

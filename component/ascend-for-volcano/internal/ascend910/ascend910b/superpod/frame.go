@@ -44,7 +44,6 @@ func New(name string) *module910SuperPod {
 	m.SetDefaultJobSchedulerConfig(nil)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
 	m.SetAcceleratorValue(util.JobKind910BValue)
-	m.SetArch(util.HuaweiArchX86 + util.HuaweiArchArm)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.dieNum = dieNPUNumber
 

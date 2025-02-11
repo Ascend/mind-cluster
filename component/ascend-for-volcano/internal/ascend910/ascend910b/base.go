@@ -20,14 +20,8 @@ Package ascend910b is using for HuaWei Ascend 910B pin affinity schedule.
 package ascend910b
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
-
-	"k8s.io/api/core/v1"
 	"k8s.io/klog"
-	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
@@ -39,16 +33,6 @@ func (ab *Base910b) SetAcceleratorValue(value string) {
 // GetAcceleratorValue Get the acceleratorValue to distinguish between task types.
 func (ab *Base910b) GetAcceleratorValue() string {
 	return ab.acceleratorValue
-}
-
-// SetArch Set the job arch to distinguish between jobs. A+X 16P,A+K 8p.
-func (ab *Base910b) SetArch(value string) {
-	ab.arch = value
-}
-
-// GetArch Get the job arch to distinguish between jobs. A+X 16P,A+K 8p.
-func (ab *Base910b) GetArch() string {
-	return ab.arch
 }
 
 // SetNpuNumInvalidMap  Set the single job not allow number. eg:A+X 16P:9,10,11,12,13,14,15
@@ -154,99 +138,4 @@ func (ab *Base910b) GetNodeBestScore(taskNPUNum int, npuTop []int) (int, error) 
 		return 0, err
 	}
 	return bestScore, nil
-}
-
-// ScoreAscendNPUNodes core ascend910B node by calculate task req npu num and node npu top
-func (ab *Base910b) ScoreAscendNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
-	if ab == nil || task == nil || len(nodes) == 0 || len(sMap) == 0 {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes %s.", err)
-		return err
-	}
-	taskNPUNum, getErr := ab.GetTaskReqNPUNum(task)
-	if getErr != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum %s: %s", ab.GetPluginName(), task.Name, getErr)
-		return getErr
-	}
-	for _, node := range nodes {
-		if reflect.ValueOf(node).IsNil() {
-			continue
-		}
-		nNode, ok := ab.Nodes[node.Name]
-		if !ok {
-			klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s is not npu node",
-				ab.GetPluginName(), task.Name, node.Name)
-			continue
-		}
-		cardIds, err := ab.GetUsableTopFromNode(nNode)
-		if err != nil {
-			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes getErr: %s", ab.GetPluginName(), err)
-			continue
-		}
-		bestScore, err := ab.GetNodeBestScore(taskNPUNum, cardIds)
-		if err != nil {
-			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes getErr: %s", ab.GetPluginName(), err)
-			continue
-		}
-		healthyNPUNum, ok := nNode.Allocate[v1.ResourceName(ab.GetAnnoName())]
-		if !ok {
-			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes node<%s> get allocate npu failed",
-				ab.GetPluginName(), node.Name)
-			continue
-		}
-		sortScore := ab.MaxNodeNPUNum - len(cardIds)
-		sMap[node.Name] = float64(ab.MaxNodeNPUNum*(int(healthyNPUNum/util.NPUHexKilo)-bestScore) + sortScore)
-	}
-	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes task<%s> sMap<%v>", ab.GetPluginName(),
-		task.Name, sMap)
-	return nil
-}
-
-// Use910bAnnotation select npu for 910b task from node
-func (ab *Base910b) Use910bAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	if ab == nil || task == nil || len(node.Annotation) == 0 {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogErrorLev).Infof("UseAnnotation %s.", err)
-		return nil
-	}
-	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %s",
-		ab.GetPluginName(), task.Name, node.Name, ab.GetAnnoName(), util.SafePrint(node.Annotation))
-	selectedNPU, err := ab.selectNPUFromNode(task, node)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", ab.GetPluginName(), err)
-		return nil
-	}
-	klog.V(util.LogInfoLev).Infof("%s UseAnnotation %s select %v.", ab.GetPluginName(), task.Name, selectedNPU)
-
-	ab.SetNPUTopologyToPodFn(task, selectedNPU, node)
-	newNode := ab.UpdateNodeInfo(node, selectedNPU)
-	return newNode
-}
-
-// Check910bNodeNPUByTask check nod npu meet 910B task req
-func (ab *Base910b) Check910bNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
-	if ab == nil || task == nil || len(node.Annotation) == 0 {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogErrorLev).Infof("CheckNodeNPUByTask err: %s", err)
-		return err
-	}
-
-	taskNPUNum, err := ab.GetTaskReqNPUNum(task)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum %s: %s", ab.GetPluginName(), task.Name, err)
-		return err
-	}
-
-	nodeTop, err := ab.GetUsableTopFromNode(node)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetUsableTopFromNode %s: %s", ab.GetPluginName(), task.Name, err)
-		return err
-	}
-
-	if err = ab.Judge910BNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s Judge910BNodeAndTaskNPU %s: %s", ab.GetPluginName(), task.Name, err)
-		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err)
-	}
-
-	return nil
 }

@@ -22,8 +22,6 @@ package ascend910b
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -82,28 +80,6 @@ func (tp *Base910b) InitVNPU() {
 			DowngradeCache: make(map[string][]string, util.MapInitNum),
 		},
 	}
-}
-
-func (tp *Base910b) checkStVJobReq() error {
-	if !tp.VHandle.StaticByConf {
-		return fmt.Errorf("volcano configuration %s false, only support dynamic vnpu", util.SegmentEnable)
-	}
-	for _, vT := range tp.Tasks {
-		if !strings.Contains(vT.ReqNPUName, tp.GetPluginName()) {
-			return fmt.Errorf("%s req %s not in template", vT.Name, vT.ReqNPUName)
-		}
-		if vT.ReqNPUNum != 1 {
-			return fmt.Errorf("%s req %d not 1", vT.Name, vT.ReqNPUNum)
-		}
-	}
-	return nil
-}
-
-func (tp *Base910b) validStVNPUJob() *api.ValidateResult {
-	if reqErr := tp.checkStVJobReq(); reqErr != nil {
-		return &api.ValidateResult{Pass: false, Reason: reqErr.Error(), Message: reqErr.Error()}
-	}
-	return nil
 }
 
 func (tp *Base910b) checkDyVJobReq() error {

@@ -20,14 +20,12 @@ Package rescheduling is using for HuaWei Ascend pin fault rescheduling.
 package rescheduling
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
 
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -89,17 +87,6 @@ func (fJob *FaultJob) IsNormalJobNeedRestart() bool {
 	return false
 }
 
-// GetJobFaultNPUTaskNum get fob fault NPU task num
-func (fJob *FaultJob) GetJobFaultNPUTaskNum() int {
-	var count int
-	for _, fTask := range fJob.FaultTasks {
-		if len(fTask.UseCardName) > 0 {
-			count++
-		}
-	}
-	return count
-}
-
 func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo) bool {
 	restartNum := 0
 	deleteNum := 0
@@ -129,30 +116,6 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo) bool {
 		return restartNum >= deleteNum
 	}
 	return restartNum >= len(fJob.FaultTasks)
-}
-
-// CheckJobExistsInKubernetes check whether job recorded in cache can be traced in kubernetes
-func (fJob *FaultJob) CheckJobExistsInKubernetes(ssn *framework.Session) bool {
-	var existTaskNum int
-	for _, fTask := range fJob.FaultTasks {
-		klog.V(util.LogDebugLev).Infof("check task %s via client-go", fTask.TaskName)
-		realPod, err := ssn.KubeClient().CoreV1().Pods(fTask.TaskNamespace).Get(
-			context.TODO(), fTask.TaskName, v1.GetOptions{})
-		if err != nil || realPod == nil {
-			klog.V(util.LogInfoLev).Infof("pod %s not in kubernetes", fTask.TaskName)
-			continue
-		}
-		for _, ref := range realPod.GetOwnerReferences() {
-			if ref.UID == fJob.UUID {
-				existTaskNum += 1
-			}
-		}
-		klog.V(util.LogDebugLev).Infof("task %s is in kubernetes", fTask.TaskName)
-	}
-	if existTaskNum > 0 {
-		return true
-	}
-	return false
 }
 
 // deleteJobWithLabels delete job with labels
@@ -433,7 +396,7 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 	}
 	newFailedTask := make(map[api.TaskID]struct{})
 	for taskId, task := range jobInfo.Tasks {
-		if task.Pod.Status.Phase == corev1.PodFailed {
+		if task.Pod.Status.Phase == v1.PodFailed {
 			newFailedTask[taskId] = struct{}{}
 		}
 	}

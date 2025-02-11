@@ -343,25 +343,6 @@ const (
 	mockNumFive   = 5
 )
 
-func TestGetJobFaultNPUTaskNum(t *testing.T) {
-	t.Run("01-GetJobFaultNPUTaskNum return 0 when fJob.FaultTasks is empty slice",
-		func(t *testing.T) {
-			fJob := &FaultJob{FaultTasks: []FaultTask{}}
-			if res := fJob.GetJobFaultNPUTaskNum(); res != 0 {
-				t.Errorf("GetJobFaultNPUTaskNum() res = %v, wantRes = 0", res)
-			}
-		})
-	t.Run("02-GetJobFaultNPUTaskNum return greater than 0 when fJob.FaultTasks is not empty slice",
-		func(t *testing.T) {
-			fJob := &FaultJob{FaultTasks: []FaultTask{{
-				UseCardName: []string{mockCardName1, mockCardName2},
-			}}}
-			if res := fJob.GetJobFaultNPUTaskNum(); res <= 0 {
-				t.Errorf("GetJobFaultNPUTaskNum() res = %v, wantRes > 0", res)
-			}
-		})
-}
-
 func TestIsJobGraceDeleteSuccess(t *testing.T) {
 	fJob := &FaultJob{FaultTasks: []FaultTask{{
 		IsFaultTask: true,
@@ -387,15 +368,6 @@ func TestIsJobGraceDeleteSuccess(t *testing.T) {
 				t.Errorf("isJobGraceDeleteSuccess() res = %v, want true", res)
 			}
 		})
-}
-
-func TestCheckJobExistsInKubernetes(t *testing.T) {
-	t.Run("01-CheckJobExistsInKubernetes return false when fJob.FaultTasks is nil", func(t *testing.T) {
-		fJob := &FaultJob{JobUID: mockJobUID}
-		if res := fJob.CheckJobExistsInKubernetes(nil); res != false {
-			t.Errorf("CheckJobExistsInKubernetes() res = %v, wantRes is false", res)
-		}
-	})
 }
 
 func TestDeleteJobWithLabels(t *testing.T) {

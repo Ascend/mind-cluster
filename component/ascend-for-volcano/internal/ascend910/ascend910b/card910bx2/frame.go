@@ -42,7 +42,6 @@ func New(name string) base.AscendHandler {
 	m.SetDefaultJobSchedulerConfig(nil)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
 	m.SetAcceleratorValue(util.JobKind910BValue)
-	m.SetArch(util.HuaweiArchX86 + util.HuaweiArchArm)
 	m.AffScoreList = [][]int{
 		{util.AffScore0, util.AffScore1},
 		{util.AffScore2, util.AffScore0},
@@ -77,12 +76,12 @@ func (tp *card910bx2) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 
 // ScoreBestNPUNodes core node by calculate task req npu num and node npu top
 func (tp *card910bx2) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
-	return tp.ScoreAscendNPUNodes(task, nodes, sMap)
+	return tp.NPUHandler.ScoreBestNPUNodes(task, nodes, sMap)
 }
 
 // UseAnnotation select npu for task from node
 func (tp *card910bx2) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	return tp.Use910bAnnotation(task, node)
+	return tp.NPUHandler.UseAnnotation(task, node)
 }
 
 // ReleaseAnnotation Release used resource.

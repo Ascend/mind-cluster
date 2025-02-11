@@ -44,7 +44,6 @@ func New(name string) base.AscendHandler {
 	m.SetDefaultJobSchedulerConfig(nil)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
 	m.SetAcceleratorValue(util.JobKind910BValue)
-	m.SetArch(util.HuaweiArchX86 + util.HuaweiArchArm)
 	m.InitVNPU()
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.AffScoreList = [][]int{

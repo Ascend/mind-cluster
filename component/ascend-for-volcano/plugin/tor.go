@@ -112,28 +112,6 @@ type Tor struct {
 	Jobs            map[api.JobID]SchedulerJob
 }
 
-// TorListInfo information for the current plugin
-type TorListInfo struct {
-	Status      string       `json:"status"`
-	Version     string       `json:"version"`
-	ServerCount int          `json:"server_count"`
-	TorCount    int          `json:"tor_count"`
-	ServerList  []ServerList `json:"server_list"`
-}
-
-// ServerList server interface
-type ServerList struct {
-	Id      int                      `json:"tor_id"`
-	Servers []map[string]interface{} `json:"server"`
-}
-
-// Slice include server
-type Slice struct {
-	Idle  int
-	Id    int
-	Nodes map[string]*Server
-}
-
 // Server server info
 type Server struct {
 	IsUsedByMulJob bool   `json:"-"`
@@ -144,31 +122,6 @@ type Server struct {
 	Jobs           map[api.JobID]SchedulerJob
 	CurrentJob     *api.JobID
 	Name           string
-}
-
-// Servers include basic tor
-type Servers struct {
-	Version     string      `json:"version"`
-	ServerCount int         `json:"server_count"`
-	TorCount    int         `json:"tor_count"`
-	ServerList  []*basicTor `json:"server_list"`
-}
-
-type basicTor struct {
-	IsHealthy   int
-	IsSharedTor int
-	Id          int            `json:"tor_id"`
-	IP          string         `json:"tor_ip"`
-	Servers     []*basicServer `json:"server"`
-}
-
-type basicServer struct {
-	torIp          string
-	IsUsedByMulJob bool   `json:"-"`
-	NodeRank       string `json:"-"`
-	IP             string `json:"server_ip"`
-	Count          int    `json:"npu_count"`
-	SliceId        int    `json:"slice_id"`
 }
 
 // TorShare tor share info
@@ -402,11 +355,6 @@ func initTorsByTorAttr(tors []*Tor, isShare, isHealthy int) []*Tor {
 		}
 	}
 	return tmpTors
-}
-
-// GetTorServer get all healthy tor
-func GetTorServer(tors []*Tor, sortType string) []*Tor {
-	return getTorServer(tors, allTor, healthyTor, sortType)
 }
 
 // GetSharedTorServer get healthy shared tors

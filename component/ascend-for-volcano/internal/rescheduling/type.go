@@ -70,22 +70,8 @@ const (
 	CmFaultNodeKind = "fault-node"
 	// CmFaultJob910bx2Kind key in configmap which saves the 910bx2 FaultJob cache
 	CmFaultJob910bx2Kind = "fault-job-910bx2"
-	// CmFaultJob910bx2InferKind key in configmap which saves the 910bx2-infer FaultJob cache
-	CmFaultJob910bx2InferKind = "fault-job-910bx2-infer"
-	// CmFaultJob910bx8Kind key in configmap which saves the 910bx8 FaultJob cache
-	CmFaultJob910bx8Kind = "fault-job-910bx8"
-	// CmFaultJob910bx16Kind key in configmap which saves the 910bx16 FaultJob cache
-	CmFaultJob910bx16Kind = "fault-job-910bx16"
 	// CmFaultJob910x8Kind key in configmap which saves the 910x8 FaultJob cache
 	CmFaultJob910x8Kind = "fault-job-910x8"
-	// CmFaultJob910x4Kind key in configmap which saves the 910x8 FaultJob cache
-	CmFaultJob910x4Kind = "fault-job-910x4"
-	// CmFaultJob910x2Kind key in configmap which saves the 910x8 FaultJob cache
-	CmFaultJob910x2Kind = "fault-job-910x2"
-	// CmFaultJob310x4Kind key in configmap which saves the 310x4 FaultJob cache
-	CmFaultJob310x4Kind = "fault-job-310x4"
-	// CmFaultJob310PKind key in configmap which saves the 310P FaultJob cache
-	CmFaultJob310PKind = "fault-job-310P"
 	// CmJobRemainRetryTimes key in configmap which saves remain retry times of job
 	CmJobRemainRetryTimes = "remain-retry-times"
 	// MaxRescheduleRecordsNum the upper limit of the cm kept reschedule records, oldest record will be deleted
@@ -93,8 +79,6 @@ const (
 	MaxRescheduleRecordsNum = 10
 	// MaxKbOfRescheduleRecords the upper limit words of the cm kept reschedule records
 	MaxKbOfRescheduleRecords = 950 * 1024
-	// ReduceRetryTimeLimit is the time limit of reduce loop
-	ReduceRetryTimeLimit = 20
 	// CmJobRescheduleReasonsKey keeping recent MaxRescheduleRecordsNum records of rescheduling
 	CmJobRescheduleReasonsKey = "recent-reschedule-records"
 	// CmNodeRankTimeMapKind record map jobUID rankIndex node and times of occurrence
@@ -105,7 +89,6 @@ const (
 	// CmFaultJob key in configmap which saves the FaultJob cache
 	CmFaultJob = "fault-job"
 
-	nodeUpdateTime = 5
 	// DefaultGraceOverTime time interval for grace delete
 	DefaultGraceOverTime = 900
 	minGraceOverTime     = 2
@@ -129,10 +112,6 @@ const (
 	NodeCardNetworkUnhealthy = "CardNetworkUnhealthy"
 	// NoFaultJobsErr none fault jobs
 	NoFaultJobsErr = "none fault jobs to be restarted in cache"
-	// JobFaultRankIDCMPre the job cm name prefix, for retraining
-	JobFaultRankIDCMPre = "fault-config-"
-	// JobFaultRankIDCMDataKey the job cm value key.
-	JobFaultRankIDCMDataKey = "fault-npus"
 	// JobRecovery Name of cm for recovery
 	JobRecovery = "job-recovery"
 	// DeviceFaultCmKey the key of DeviceFault info
@@ -153,24 +132,17 @@ const (
 	NotHandleFault = "NotHandleFault"
 	// NodeFaultCode fault type nodeUnhealthy
 	NodeFaultCode = "heartbeatTimeOut"
-	// AcJobTag the tag of AcJob
-	AcJobTag = "group-name"
-	// AcJobVersion the api version of AcJob
-	AcJobVersion = "mindxdl.gitee.com"
 	// SubHealthFault subHealth code
 	SubHealthFault = "SubHealthFault"
 )
 
 const (
-	getNoneJobsErr      = "get none jobs"
-	pendingTimes        = 12
-	defaultPendingTimes = 0
-	taskUnhealthy       = "taskUnhealthy"
-	spPendingTimes      = 6
+	getNoneJobsErr = "get none jobs"
+	pendingTimes   = 12
+	spPendingTimes = 6
 	// SuperPodAnnoKey annotation key of super pod
 	SuperPodAnnoKey          = "sp-block"
 	singleThreadDeletePodNum = 200
-	deviceInfoTimeout        = 60
 )
 
 const (
@@ -381,12 +353,6 @@ type FaultJob struct {
 	FaultRetryTimes     int
 	faultReason         string
 	UUID                types.UID
-}
-
-// FaultRankIdsJobCMData used by RestoreManager for every job.
-type FaultRankIdsJobCMData struct {
-	FaultRankIds []string
-	CreatTime    int64
 }
 
 type deletePodInfo struct {

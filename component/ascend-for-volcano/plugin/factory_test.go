@@ -623,50 +623,6 @@ func TestRegisterNPUScheduler(t *testing.T) {
 	}
 }
 
-type unRegisterNPUSchedulerArgs struct {
-	name string
-}
-
-type unRegisterNPUSchedulerTest struct {
-	name    string
-	fields  fields
-	args    unRegisterNPUSchedulerArgs
-	wantErr bool
-}
-
-func buildUnRegisterNPUSchedulerTest() []unRegisterNPUSchedulerTest {
-	tests := []unRegisterNPUSchedulerTest{
-		{
-			name:    "01-UnRegisterNPUScheduler not exist before test.",
-			fields:  fields{NPUPlugins: map[string]NPUBuilder{"hehe": nil}},
-			args:    unRegisterNPUSchedulerArgs{name: "haha"},
-			wantErr: false,
-		},
-		{
-			name:    "02-UnRegisterNPUScheduler exist test.",
-			fields:  fields{NPUPlugins: map[string]NPUBuilder{"haha": nil}},
-			args:    unRegisterNPUSchedulerArgs{name: "haha"},
-			wantErr: false,
-		},
-	}
-	return tests
-}
-
-func TestUnRegisterNPUScheduler(t *testing.T) {
-	tests := buildUnRegisterNPUSchedulerTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			if err := sHandle.UnRegisterNPUScheduler(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("UnRegisterNPUScheduler() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 type initVolcanoFrameFromSsnTestCase struct {
 	name    string
 	configs []conf.Configuration

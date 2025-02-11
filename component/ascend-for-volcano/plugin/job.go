@@ -564,14 +564,6 @@ func (sJob SchedulerJob) preCheckNodePredicate(taskInfo *api.TaskInfo, vcNode NP
 	return nil
 }
 
-func (sJob *SchedulerJob) npuSubHealthy(vcNode NPUNode) bool {
-	subHealthyAnnotation, exist := vcNode.Annotation[util.NpuSubHealthyKey]
-	if !exist || strings.TrimSpace(subHealthyAnnotation) == "" {
-		subHealthyAnnotation = strconv.FormatBool(false)
-	}
-	return subHealthyAnnotation == strconv.FormatBool(true)
-}
-
 // CheckTorJobSinglePodDeleteV1 valid node.
 func (sJob SchedulerJob) CheckTorJobSinglePodDeleteV1(sHandler *ScheduleHandler,
 	taskInfo *api.TaskInfo, vcNode NPUNode) error {
@@ -1474,19 +1466,6 @@ func (sJob SchedulerJob) GetAnnoName() (string, error) {
 		return util.AscendNPUCore, nil
 	}
 	return sJob.handler.GetAnnoName(), nil
-}
-
-// GetReqCardNameFromRingController Get request card name from RingController.
-func (sJob SchedulerJob) GetReqCardNameFromRingController() string {
-	ringType, ok := sJob.Label[util.JobKindKey]
-	if !ok {
-		return ""
-	}
-	ringTypeSplit := strings.Split(ringType, "-")
-	if len(ringTypeSplit) < util.NPUIndex2 {
-		return ""
-	}
-	return util.NPUCardPreName + ringTypeSplit[util.NPUIndex1]
 }
 
 func (sJob SchedulerJob) getJobsRestartedInfo() []AllocNodeRankOccurrence {
