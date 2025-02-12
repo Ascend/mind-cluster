@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package util is using for the total variable.
+/*
+Package util is using for the total variable.
+*/
 package util
-
-import "time"
 
 const (
 	// LogErrorLev for log error.
@@ -315,10 +315,6 @@ const (
 	PodGroupUnknown = "Unknown"
 	// PodGroupUnschedulableType the pg Unschedulable Condition
 	PodGroupUnschedulableType = "Unschedulable"
-	retryTime                 = 3
-	retrySleepTime            = 50 * time.Millisecond
-	torNodeCacheTime          = 60
-	torShareCacheTime         = 60 * 60 * 24
 	// PodDeleteTimes the tag of single pod has been deleted
 	PodDeleteTimes = "pod-delete-times"
 	// EnableFunc enable the function

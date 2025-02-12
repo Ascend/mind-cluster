@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // SetTestJobPodGroupPendingStatus set test job's PodGroupStatus

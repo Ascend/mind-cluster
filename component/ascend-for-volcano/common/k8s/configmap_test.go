@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package util is using for the total variable.
+Package k8s is using for the k8s operation.
 */
-package util
+package k8s
 
 import (
 	"context"
@@ -32,6 +32,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 type IsConfigMapChangedArgs struct {
@@ -252,14 +254,14 @@ func TestInformerConfigmapFilter(t *testing.T) {
 		{
 			name: "03-InformerConfigmapFilter device info",
 			args: args{obj: &v1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{Namespace: DevInfoNameSpace, Name: DevInfoPreName},
+				ObjectMeta: metav1.ObjectMeta{Namespace: util.DevInfoNameSpace, Name: util.DevInfoPreName},
 			}},
 			want: true,
 		},
 		{
 			name: "04-InformerConfigmapFilter node info",
 			args: args{obj: &v1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{Namespace: MindXDlNameSpace, Name: NodeDCmInfoNamePrefix},
+				ObjectMeta: metav1.ObjectMeta{Namespace: util.MindXDlNameSpace, Name: util.NodeDCmInfoNamePrefix},
 			}},
 			want: true,
 		},
@@ -295,7 +297,7 @@ func TestMakeDataHash(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MakeDataHash(tt.args.data); got != tt.want {
+			if got := util.MakeDataHash(tt.args.data); got != tt.want {
 				t.Errorf("MakeDataHash() = %v, want %v", got, tt.want)
 			}
 		})

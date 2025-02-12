@@ -27,8 +27,8 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 type nodeFields struct {
@@ -52,10 +52,8 @@ type checkNPUResourceStableTest struct {
 }
 
 func buildVCheckNPUResourceStableTest() []checkNPUResourceStableTest {
-	tJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.
-		NPUJob{ReqNPUName: util.NPU310PCardName}}}
-	vJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.
-		NPUJob{ReqNPUName: util.AscendNPUCore}}}
+	tJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.NPU310PCardName}}}
+	vJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.AscendNPUCore}}}
 	tests := []checkNPUResourceStableTest{
 		{
 			name:    "01-CheckNPUResourceStable no annotation test",

@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2022. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,15 +15,12 @@ limitations under the License.
 */
 
 /*
-Package util is using for HuaWei infer common Ascend pin affinity schedule.
+Package k8s is using for the k8s operation.
 */
-package util
+package k8s
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -34,6 +31,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // GetConfigMapWithRetry  Get config map from k8s.
@@ -78,22 +77,22 @@ func IsConfigMapChanged(k8s kubernetes.Interface, cm *v1.ConfigMap, cmName, name
 
 // CreateOrUpdateConfigMap Create or update configMap.
 func CreateOrUpdateConfigMap(k8s kubernetes.Interface, cm *v1.ConfigMap, cmName, nameSpace string) error {
-	klog.V(LogDebugLev).Infof("cmName: %s, cmNamespace: %s", cmName, cm.ObjectMeta.Namespace)
+	klog.V(util.LogDebugLev).Infof("cmName: %s, cmNamespace: %s", cmName, cm.ObjectMeta.Namespace)
 	_, cErr := k8s.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 	if cErr != nil {
 		if !errors.IsAlreadyExists(cErr) {
-			return fmt.Errorf("unable to create ConfigMap:%s", SafePrint(cErr))
+			return fmt.Errorf("unable to create ConfigMap:%s", util.SafePrint(cErr))
 		}
 
 		// To reduce the cm write operations
 		if !IsConfigMapChanged(k8s, cm, cmName, nameSpace) {
-			klog.V(LogInfoLev).Infof("configMap not changed,no need update")
+			klog.V(util.LogInfoLev).Infof("configMap not changed,no need update")
 			return nil
 		}
 
 		_, err := k8s.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Update(context.TODO(), cm, metav1.UpdateOptions{})
 		if err != nil {
-			return fmt.Errorf("unable to update ConfigMap:%s", SafePrint(cErr))
+			return fmt.Errorf("unable to update ConfigMap:%s", util.SafePrint(cErr))
 		}
 	}
 	return nil
@@ -107,7 +106,7 @@ func UpdateConfigmapIncrementally(kubeClient kubernetes.Interface, ns, name stri
 	}
 	oldCM, err := GetConfigMapWithRetry(kubeClient, ns, name)
 	if err != nil || oldCM == nil {
-		upCmErr := fmt.Errorf("get old configmap from kubernetes failed err:%s", SafePrint(err))
+		upCmErr := fmt.Errorf("get old configmap from kubernetes failed err:%s", util.SafePrint(err))
 		return newData, upCmErr
 
 	}
@@ -128,7 +127,7 @@ func UpdateConfigmapIncrementally(kubeClient kubernetes.Interface, ns, name stri
 func InformerConfigmapFilter(obj interface{}) bool {
 	cm, ok := obj.(*v1.ConfigMap)
 	if !ok {
-		klog.V(LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
+		klog.V(util.LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
 		return false
 	}
 	return CheckConfigMapIsDeviceInfo(cm) || CheckConfigMapIsNodeInfo(cm)
@@ -136,34 +135,10 @@ func InformerConfigmapFilter(obj interface{}) bool {
 
 // CheckConfigMapIsDeviceInfo check configmap is device info
 func CheckConfigMapIsDeviceInfo(cm *v1.ConfigMap) bool {
-	return cm.Namespace == DevInfoNameSpace && strings.HasPrefix(cm.Name, DevInfoPreName)
+	return cm.Namespace == util.DevInfoNameSpace && strings.HasPrefix(cm.Name, util.DevInfoPreName)
 }
 
 // CheckConfigMapIsNodeInfo check whether the configmap is kube-system/node-info-
 func CheckConfigMapIsNodeInfo(cm *v1.ConfigMap) bool {
-	return cm.Namespace == MindXDlNameSpace && strings.HasPrefix(cm.Name, NodeDCmInfoNamePrefix)
-}
-
-// MakeDataHash check code for configmap
-func MakeDataHash(data interface{}) string {
-	var dataBuffer []byte
-	if dataBuffer = marshalData(data); len(dataBuffer) == 0 {
-		return ""
-	}
-	h := sha256.New()
-	if _, err := h.Write(dataBuffer); err != nil {
-		klog.V(LogErrorLev).Infof("hash data error")
-		return ""
-	}
-	sum := h.Sum(nil)
-	return hex.EncodeToString(sum)
-}
-
-func marshalData(data interface{}) []byte {
-	dataBuffer, err := json.Marshal(data)
-	if err != nil {
-		klog.V(LogErrorLev).Infof("marshal data err: %s", SafePrint(err))
-		return nil
-	}
-	return dataBuffer
+	return cm.Namespace == util.MindXDlNameSpace && strings.HasPrefix(cm.Name, util.NodeDCmInfoNamePrefix)
 }

@@ -19,7 +19,9 @@ Package chip310px2 is using for HuaWei 300I Duo Ascend pin affinity schedule.
 */
 package chip310px2
 
-import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+)
 
 func (tp *chip310px2) getNPUIndex(cardNumGroups [][]int) map[int][]int {
 	npuNumberIndex := make(map[int][]int, util.MapInitNum)

@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 func makePodSpec(pod NPUPod) v1.PodSpec {

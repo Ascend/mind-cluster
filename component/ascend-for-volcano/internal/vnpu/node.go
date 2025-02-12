@@ -12,7 +12,7 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 func (tp *DynamicVNPU) orderVNodesByFreeResource(nodes []*api.NodeInfo) []*api.NodeInfo {

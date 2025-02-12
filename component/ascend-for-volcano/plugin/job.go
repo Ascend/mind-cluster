@@ -36,7 +36,8 @@ import (
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // Determine if the selectors are exactly equal.
@@ -340,7 +341,7 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 	if k, ok := sJob.Label[util.ProcessRecoverEnable]; ok && k == util.EnableFunc {
 		return
 	}
-	cm, err := util.GetConfigMapWithRetry(sHandle.FrameAttr.KubeClient, sJob.NameSpace,
+	cm, err := k8s.GetConfigMapWithRetry(sHandle.FrameAttr.KubeClient, sJob.NameSpace,
 		ResetInfoCMNamePrefix+sJob.ReferenceName)
 	if err != nil {
 		klog.V(util.LogWarningLev).Infof("get reset cm err by:%s", err)

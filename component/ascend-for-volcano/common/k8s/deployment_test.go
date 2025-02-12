@@ -1,5 +1,5 @@
 /*
-Copyright(C)2022-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package util is using for the total variable.
+Package k8s is using for the k8s operation.
 */
-package util
+package k8s
 
 import (
 	"context"
@@ -28,6 +28,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 const (
@@ -94,7 +96,7 @@ func TestClusterDDeploymentIsExist(t *testing.T) {
 			name:       "01-TestClusterDDeploymentIsExist normal case",
 			kubeClient: fake.NewSimpleClientset(),
 			mockDeploy: &v1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{Name: ClusterD, Namespace: MindXDlNameSpace}},
+				ObjectMeta: metav1.ObjectMeta{Name: util.ClusterD, Namespace: util.MindXDlNameSpace}},
 			want: true,
 		},
 		{
@@ -107,7 +109,7 @@ func TestClusterDDeploymentIsExist(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.kubeClient.AppsV1().Deployments(MindXDlNameSpace).Create(context.Background(),
+			tt.kubeClient.AppsV1().Deployments(util.MindXDlNameSpace).Create(context.Background(),
 				tt.mockDeploy, metav1.CreateOptions{})
 			if got := ClusterDDeploymentIsExist(tt.kubeClient); got != tt.want {
 				t.Errorf("ClusterDDeploymentIsExist() = %v, want %v", got, tt.want)

@@ -1,5 +1,5 @@
 /*
-Copyright(C)2022-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package util is using for the total variable.
+Package k8s is using for the k8s operation.
 */
-package util
+package k8s
 
 import (
 	"reflect"

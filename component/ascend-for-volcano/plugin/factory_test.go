@@ -37,8 +37,9 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 type fields struct {
@@ -60,7 +61,7 @@ type batchNodeOrderFnTest struct {
 
 // PatchGetCm go monkey patch get cm
 func PatchGetCm(name, nameSpace string, data map[string]string) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(util.GetConfigMap, func(client kubernetes.Interface, namespace, cmName string) (
+	return gomonkey.ApplyFunc(k8s.GetConfigMap, func(client kubernetes.Interface, namespace, cmName string) (
 		*v1.ConfigMap, error) {
 		return test.FakeConfigmap(name, nameSpace, data), nil
 	})
@@ -376,11 +377,11 @@ func buildBeforeCloseHandler() []beforeCloseHandlerTest {
 
 func TestBeforeCloseHandler(t *testing.T) {
 	tests := buildBeforeCloseHandler()
-	tmpPatche := gomonkey.ApplyFunc(util.CreateOrUpdateConfigMap,
+	tmpPatche := gomonkey.ApplyFunc(k8s.CreateOrUpdateConfigMap,
 		func(k8s kubernetes.Interface, cm *v1.ConfigMap, cmName, cmNameSpace string) error {
 			return nil
 		})
-	tmpPatche2 := gomonkey.ApplyFunc(util.GetConfigMapWithRetry, func(
+	tmpPatche2 := gomonkey.ApplyFunc(k8s.GetConfigMapWithRetry, func(
 		_ kubernetes.Interface, _, _ string) (*v1.ConfigMap, error) {
 		return test.FakeConfigmap(ResetInfoCMNamePrefix, "default", fakeResetCmInfos()), nil
 	})

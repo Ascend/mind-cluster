@@ -28,8 +28,9 @@ import (
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 func (reCache *DealReSchedulerCache) setFaultNodes(faultNodes []FaultNode) {
@@ -167,7 +168,7 @@ func (reCache *DealReSchedulerCache) SetJobRecentRescheduleRecords(firstStartup 
 		return errors.New(util.ArgumentError)
 	}
 	if firstStartup != nil && *firstStartup {
-		cm, err := util.GetConfigMap(client, RescheduleReasonCmNamespace, RescheduleReasonCmName)
+		cm, err := k8s.GetConfigMap(client, RescheduleReasonCmNamespace, RescheduleReasonCmName)
 		if err != nil {
 			return fmt.Errorf("failed to get reschedule reason configmap, err: %s", err.Error())
 		}

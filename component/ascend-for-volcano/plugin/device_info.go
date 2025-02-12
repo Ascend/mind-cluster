@@ -15,7 +15,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // GetResourceFromTemplate nodeType like Ascend310P, templateString like "vir04_3c_ndvpp"

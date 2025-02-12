@@ -32,8 +32,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 const (
@@ -541,7 +542,7 @@ func TestSetJobRecentRescheduleRecords(t *testing.T) {
 	testCases := buildSetJobRecentRescheduleRecordsTestCases()
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(util.GetConfigMap, tt.mockGetConfigMap)
+			patch := gomonkey.ApplyFunc(k8s.GetConfigMap, tt.mockGetConfigMap)
 			defer patch.Reset()
 
 			err := tt.reCache.SetJobRecentRescheduleRecords(&tt.firstStartup, nil)

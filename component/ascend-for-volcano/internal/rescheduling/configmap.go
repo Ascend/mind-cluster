@@ -25,7 +25,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 func (dealCM *DealReSchedulerConfigmap) setCMData(value map[string]string) {
@@ -68,7 +69,7 @@ func (dealCM *DealReSchedulerConfigmap) createEmptyReCM(kubeClient kubernetes.In
 		},
 		Data: cmData,
 	}
-	err := util.CreateOrUpdateConfigMap(kubeClient, faultCM, CmName, CmNameSpace)
+	err := k8s.CreateOrUpdateConfigMap(kubeClient, faultCM, CmName, CmNameSpace)
 	if err != nil {
 		return cmData, err
 	}

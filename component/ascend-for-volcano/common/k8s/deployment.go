@@ -1,5 +1,5 @@
 /*
-Copyright(C)2024-2024. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package util is using for deployment util function.
+Package k8s is using for the k8s operation.
 */
-package util
+package k8s
 
 import (
 	"context"
@@ -26,19 +26,21 @@ import (
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // GetDeployment Get deployment from k8s.
 func GetDeployment(kubeClient kubernetes.Interface, namespace, depName string) (*v1.Deployment, error) {
 	dep, err := kubeClient.AppsV1().Deployments(namespace).Get(context.TODO(), depName, v12.GetOptions{})
 	if err != nil {
-		klog.V(LogInfoLev).Infof("namespace %s deployment %s not in kubernetes, err: %s", namespace, depName, err)
+		klog.V(util.LogInfoLev).Infof("namespace %s deployment %s not in kubernetes, err: %s", namespace, depName, err)
 	}
 	return dep, err
 }
 
 // ClusterDDeploymentIsExist ClusterD deployment is exist
 func ClusterDDeploymentIsExist(kubeClient kubernetes.Interface) bool {
-	dep, err := GetDeployment(kubeClient, MindXDlNameSpace, ClusterD)
+	dep, err := GetDeployment(kubeClient, util.MindXDlNameSpace, util.ClusterD)
 	return err == nil && dep != nil
 }

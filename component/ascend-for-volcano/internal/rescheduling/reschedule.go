@@ -31,13 +31,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
-
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 // GetGraceDeleteTime Get the graceful delete time from configuration
@@ -863,7 +863,7 @@ func convertFaultTaskToRecords(fJob *FaultJob) []RescheduleTaskReason {
 }
 
 func updateResetConfigMapWithGraceExit(client kubernetes.Interface, name, nameSpace string, exitCode int) {
-	cm, err := util.GetConfigMapWithRetry(client, nameSpace, name)
+	cm, err := k8s.GetConfigMapWithRetry(client, nameSpace, name)
 	if err != nil {
 		klog.V(util.LogWarningLev).Infof("get reset cm err by:%s", err)
 		return

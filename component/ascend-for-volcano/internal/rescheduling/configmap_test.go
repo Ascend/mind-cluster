@@ -26,7 +26,8 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 )
 
 const emptyCheckCode = "ae36a9e9a0d411db6e2a8bd7c9f8c37f072f2bc36251eb68b342512e700297e0"
@@ -72,7 +73,7 @@ func buildTestDealReSchedulerConfigmapCreateEmptyReCMTests() []DealReSchedulerCo
 			kubeClient: nil,
 			jobType:    CmFaultJob910x8Kind,
 			cacheFuncBefore: func() {
-				tmpPatche = gomonkey.ApplyFunc(util.CreateOrUpdateConfigMap, func(_ kubernetes.Interface,
+				tmpPatche = gomonkey.ApplyFunc(k8s.CreateOrUpdateConfigMap, func(_ kubernetes.Interface,
 					_ *v1.ConfigMap, _, _ string) error {
 					return nil
 				})

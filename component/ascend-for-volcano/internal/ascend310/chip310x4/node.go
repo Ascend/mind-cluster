@@ -19,7 +19,9 @@ Package chip310x4 is using for HuaWei Ascend pin affinity schedule.
 */
 package chip310x4
 
-import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+)
 
 func (tp *chip310x4) getNPUIndex(cardNumGroups [][]int) map[int][]int {
 	npuNumberIndex := make(map[int][]int, util.MapInitNum)

@@ -34,14 +34,14 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
-
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 // RegisterNPUScheduler register the plugin,like factory.
@@ -393,7 +393,7 @@ func (sHandle *ScheduleHandler) saveCacheToCm() {
 			continue
 		}
 
-		data, err := util.UpdateConfigmapIncrementally(sHandle.FrameAttr.KubeClient, nameSpace, cmName, data)
+		data, err := k8s.UpdateConfigmapIncrementally(sHandle.FrameAttr.KubeClient, nameSpace, cmName, data)
 		if err != nil {
 			klog.V(util.LogInfoLev).Infof("get old %s configmap failed: %v, write new data into cm", spName, err)
 		}
@@ -404,7 +404,7 @@ func (sHandle *ScheduleHandler) saveCacheToCm() {
 			},
 			Data: data,
 		}
-		if err := util.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, tmpCM, cmName, nameSpace); err != nil {
+		if err := k8s.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, tmpCM, cmName, nameSpace); err != nil {
 			klog.V(util.LogErrorLev).Infof("CreateOrUpdateConfigMap : %s.", util.SafePrint(err))
 		}
 	}
@@ -483,7 +483,7 @@ func (sHandle *ScheduleHandler) initCmInformer() {
 	sHandle.Do(func() {
 		if sHandle.FrameAttr.CheckUseCIMByConfig() {
 			sHandle.initClusterCmInformer()
-			if !util.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
+			if !k8s.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
 				klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
 			}
 			return
@@ -518,7 +518,7 @@ func (sHandle *ScheduleHandler) initDeviceAndNodeDCmInformer() {
 	informerFactory := informers.NewSharedInformerFactory(sHandle.FrameAttr.KubeClient, 0)
 	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
 	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: util.InformerConfigmapFilter,
+		FilterFunc: k8s.InformerConfigmapFilter,
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				sHandle.UpdateConfigMap(obj, util.AddOperator)
@@ -680,7 +680,7 @@ func (sHandle *ScheduleHandler) CacheToShareCM() error {
 	data[GlobalTorInfoKey] = string(dataByte[:])
 	putCM := &v12.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: TorShareCMName,
 		Namespace: cmNameSpace}, Data: data}
-	if err := util.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, putCM, TorShareCMName,
+	if err := k8s.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, putCM, TorShareCMName,
 		cmNameSpace); err != nil {
 		klog.V(util.LogInfoLev).Infof("CacheToShareCM CreateOrUpdateConfigMap error: %s", util.SafePrint(err))
 	}
@@ -740,7 +740,7 @@ func (sHandle *ScheduleHandler) UpdateConfigMap(obj interface{}, operator string
 		klog.V(util.LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
 		return
 	}
-	if util.CheckConfigMapIsDeviceInfo(cm) {
+	if k8s.CheckConfigMapIsDeviceInfo(cm) {
 		if operator == util.AddOperator || operator == util.UpdateOperator {
 			sHandle.createOrUpdateDeviceInfo(cm)
 			sHandle.createOrUpdateSwitchInfo(cm)
@@ -756,7 +756,7 @@ func (sHandle *ScheduleHandler) UpdateConfigMap(obj interface{}, operator string
 			sHandle.SwitchInfosFromCm.Unlock()
 		}
 	}
-	if util.CheckConfigMapIsNodeInfo(cm) {
+	if k8s.CheckConfigMapIsNodeInfo(cm) {
 		if operator == util.AddOperator || operator == util.UpdateOperator {
 			sHandle.createOrUpdateNodeInfo(cm)
 		} else if operator == util.DeleteOperator {

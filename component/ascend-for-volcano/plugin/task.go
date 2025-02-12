@@ -28,7 +28,7 @@ import (
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // IsTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.

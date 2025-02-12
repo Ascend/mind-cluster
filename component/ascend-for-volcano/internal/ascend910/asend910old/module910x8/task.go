@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/klog"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 func (tp *module910x8) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {

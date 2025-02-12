@@ -21,8 +21,10 @@ package ascend910b
 
 import (
 	"fmt"
+
 	"k8s.io/klog"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
+
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 // SetAcceleratorValue Set the acceleratorValue to distinguish between task types.

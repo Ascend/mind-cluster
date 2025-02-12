@@ -27,10 +27,10 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	itest "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 // TestNew
@@ -375,8 +375,7 @@ func buildFakeScheduleEnv() plugin.ScheduleEnv {
 				util.NPU910CardName: "Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7", networkUnhealthyNPU: ""},
 				Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum8 * util.NPUHexKilo}}},
 			"node13": {CommonNode: plugin.CommonNode{Annotation: map[string]string{}}},
-			"node14": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.
-				NPU910CardName: "Ascend910-0"}}},
+			"node14": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "Ascend910-0"}}},
 			"node15": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "",
 				networkUnhealthyNPU: ""}}},
 		},

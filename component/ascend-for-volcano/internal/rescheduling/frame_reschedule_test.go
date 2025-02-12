@@ -36,10 +36,11 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 const (
@@ -170,7 +171,7 @@ func buildModule910x8PreStartActionTest1() module910x8PreStartActionTests {
 		wantErr: false,
 	}
 	test1.args.cacheFuncBefore2 = func() {
-		tmpPatche2 = gomonkey.ApplyFunc(util.GetConfigMapWithRetry, func(
+		tmpPatche2 = gomonkey.ApplyFunc(k8s.GetConfigMapWithRetry, func(
 			_ kubernetes.Interface, _, _ string) (*v1.ConfigMap, error) {
 			return nil, errors.New("")
 		})

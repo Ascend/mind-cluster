@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2022. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package util is using for the total variable.
+/*
+Package util is using for the total variable.
+*/
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -299,4 +304,28 @@ func IsNodeReady(node *v1.Node) bool {
 		}
 	}
 	return false
+}
+
+// MakeDataHash check code for configmap
+func MakeDataHash(data interface{}) string {
+	var dataBuffer []byte
+	if dataBuffer = marshalData(data); len(dataBuffer) == 0 {
+		return ""
+	}
+	h := sha256.New()
+	if _, err := h.Write(dataBuffer); err != nil {
+		klog.V(LogErrorLev).Infof("hash data error")
+		return ""
+	}
+	sum := h.Sum(nil)
+	return hex.EncodeToString(sum)
+}
+
+func marshalData(data interface{}) []byte {
+	dataBuffer, err := json.Marshal(data)
+	if err != nil {
+		klog.V(LogErrorLev).Infof("marshal data err: %s", SafePrint(err))
+		return nil
+	}
+	return dataBuffer
 }
