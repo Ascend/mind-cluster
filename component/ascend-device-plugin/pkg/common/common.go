@@ -696,3 +696,22 @@ func Keys[T comparable, U any](mp map[T]U) []T {
 	}
 	return result
 }
+
+// CompareStringMap compare whether two map[string]string are exactly the same
+func CompareStringMap(map1, map2 map[string]string) bool {
+	if map1 == nil && map2 == nil {
+		return true
+	}
+	if map1 == nil || map2 == nil {
+		return false
+	}
+	if len(map1) != len(map2) {
+		return false
+	}
+	for key, value := range map1 {
+		if val, exists := map2[key]; !exists || val != value {
+			return false
+		}
+	}
+	return true
+}

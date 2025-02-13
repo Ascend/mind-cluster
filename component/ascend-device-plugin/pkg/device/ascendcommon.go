@@ -55,7 +55,8 @@ const (
 	ipAddrTypeV6       = 1
 	ipv6LinkTypePrefix = "fe80"
 
-	checkNodeLabelPolling = 60 * 60
+	checkNodeLabelPolling     = 60 * 60
+	defaultUpdateTimeInterval = 5
 )
 
 // AscendTools struct definition
@@ -76,6 +77,7 @@ type AscendTools struct {
 	// record map[device_logic_id]failed times
 	resetFailedTimesMap  map[int32]int
 	resetFailedTimesLock sync.Mutex
+	lastUpdateTimeStamp  time.Time
 }
 
 // DevManager interface for manager device
@@ -246,12 +248,22 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if common.GetSyncMapLen(resetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
+		dataSame := common.CompareStringMap(deviceList, newDeviceList)
+		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
+		hwlog.RunLog.Debugf("dataSame is %v, timeDiff is %v", dataSame, timeDiff)
+		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
+			hwlog.RunLog.Debug("device info is not changed and " +
+				"timeDiff less than 5 minutes, no need to update")
+			return false, nil
+		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
 			return false, nil
 		}
-
+		tool.lastUpdateTimeStamp = time.Now()
+		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
+			tool.lastUpdateTimeStamp.Format(time.RFC3339))
 		return true, nil
 	})
 	return waitErr

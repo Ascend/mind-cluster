@@ -721,3 +721,41 @@ func TestIntInList(t *testing.T) {
 		convey.So(IntInList(4, list), convey.ShouldBeFalse)
 	})
 }
+
+// TestCompareStringMap for test CompareStringMap
+func TestCompareStringMap(t *testing.T) {
+	convey.Convey("test CompareStringMap", t, func() {
+		convey.Convey("01-map1 and map2 are both nil, should return true", func() {
+			res := CompareStringMap(nil, nil)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+		convey.Convey("02-map1 is nil and map2 is not nil, should return false", func() {
+			res := CompareStringMap(nil, map[string]string{})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("03-map1 and map2 length are different, should return false", func() {
+			map1 := map[string]string{"key1": "value1"}
+			map2 := map[string]string{"key1": "value1", "key2": "value2"}
+			res := CompareStringMap(map1, map2)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("04-map1 and map2 only key are different, should return false", func() {
+			map1 := map[string]string{"key1": "value"}
+			map2 := map[string]string{"key2": "value"}
+			res := CompareStringMap(map1, map2)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("05-map1 and map2 only value are different, should return false", func() {
+			map1 := map[string]string{"key": "value1"}
+			map2 := map[string]string{"key": "value2"}
+			res := CompareStringMap(map1, map2)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("06-map1 and map2 are same, should return false", func() {
+			map1 := map[string]string{"key": "value"}
+			map2 := map[string]string{"key": "value"}
+			res := CompareStringMap(map1, map2)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
+}
