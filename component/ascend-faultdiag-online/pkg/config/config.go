@@ -38,12 +38,12 @@ type FaultDiagConfig struct {
 	QueueSize int             `yaml:"queue_size"` // 数据队列大小
 }
 
-func configParamCheck(config *FaultDiagConfig) error {
+func paramCheck(config *FaultDiagConfig) error {
 	paramErr := errors.New("config wrong param")
-	if err := slice.ValueIn(config.Mode, enum.DeployModes); err != nil {
+	if err := slice.ValueIn(config.Mode, enum.DeployModes()); err != nil {
 		return err
 	}
-	if err := slice.ValueIn(config.LogLevel, enum.LogLevels); err != nil {
+	if err := slice.ValueIn(config.LogLevel, enum.LogLevels()); err != nil {
 		return err
 	}
 	if config.QueueSize <= 0 {
@@ -62,7 +62,7 @@ func LoadConfig(path string) (*FaultDiagConfig, error) {
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-	if err := configParamCheck(&config); err != nil {
+	if err := paramCheck(&config); err != nil {
 		return nil, err
 	}
 	return &config, nil

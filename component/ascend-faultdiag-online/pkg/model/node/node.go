@@ -23,6 +23,7 @@ import (
 	"ascend-faultdiag-online/pkg/model/enum"
 )
 
+// Status 计算节点信息
 type Status struct {
 	ChipType   enum.ChipType
 	OsVersion  enum.OsVersion

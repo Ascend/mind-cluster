@@ -21,5 +21,7 @@ package metricdiag
 
 import "ascend-faultdiag-online/pkg/context/metrics"
 
-// DefaultMetricItems 默认的诊断项列表。
-var DefaultMetricItems = []*metrics.DiagItem{Ascend910A2BandwidthDiagItem}
+// DefaultMetricItems 默认的诊断项列表
+func DefaultMetricItems() []*metrics.DiagItem {
+	return []*metrics.DiagItem{Ascend910A2BandwidthDiagItem()}
+}

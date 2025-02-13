@@ -43,7 +43,7 @@ func getChipTypeCondition(chipTypes []enum.ChipType) *diagmodel.Condition {
 	}
 }
 
-var (
-	// Ascend910A2 匹配 Ascend910A2 节点
-	Ascend910A2 = getChipTypeCondition([]enum.ChipType{enum.Ascend910A2})
-)
+// Ascend910A2Condition 表示Ascend910A2芯片的诊断条件
+func Ascend910A2Condition() *diagmodel.Condition {
+	return getChipTypeCondition([]enum.ChipType{enum.Ascend910A2})
+}

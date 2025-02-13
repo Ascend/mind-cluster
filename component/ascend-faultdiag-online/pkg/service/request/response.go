@@ -28,11 +28,13 @@ type ResponseBody struct {
 	Data   interface{} `json:"data"`   // 数据
 }
 
+// Influence 故障影响范围的结构体
 type Influence struct {
 	NodeIp string `json:"nodeIp"`
 	PhyIds []int  `json:"phyIds"`
 }
 
+// Fault 故障列表信息
 type Fault struct {
 	FaultType      enum.FaultType  `json:"faultType"`
 	FaultCode      string          `json:"faultCode"`
@@ -42,6 +44,7 @@ type Fault struct {
 	Influence      []*Influence    `json:"influence"`
 }
 
+// FaultBody 返回故障结构体，包括生产者、时间戳和故障列表
 type FaultBody struct {
 	Producer string `json:"producer"` // 生产者
 	Time     int64  `json:"time"`     // 时间戳

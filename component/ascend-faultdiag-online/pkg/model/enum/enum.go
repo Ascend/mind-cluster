@@ -23,30 +23,43 @@ package enum
 type DeployMode string
 
 const (
+	// Cluster 集群部署模式
 	Cluster DeployMode = "cluster"
-	Node    DeployMode = "node"
+	// Node 单节点部署模式
+	Node DeployMode = "node"
 )
 
-// DeployModes 所以的部署模式
-var DeployModes = []DeployMode{Cluster, Node}
+// DeployModes 所有的部署模式
+func DeployModes() []DeployMode {
+	return []DeployMode{Cluster, Node}
+}
 
 // LogLevel 定义日志级别枚举类型
 type LogLevel string
 
 const (
-	LgInfo  LogLevel = "info"
+	// LgInfo 表示信息级别的日志，用于记录一般的操作信息
+	LgInfo LogLevel = "info"
+	// LgDebug 表示调试级别的日志，用于记录详细的调试信息
 	LgDebug LogLevel = "debug"
-	LgWarn  LogLevel = "warn"
+	// LgWarn 表示警告级别的日志，用于记录潜在的问题或异常情况
+	LgWarn LogLevel = "warn"
+	// LgError 表示错误级别的日志，用于记录错误信息
 	LgError LogLevel = "error"
 )
 
-var LogLevels = []LogLevel{LgInfo, LgDebug, LgWarn, LgError}
+// LogLevels 所有的日志级别
+func LogLevels() []LogLevel {
+	return []LogLevel{LgInfo, LgDebug, LgWarn, LgError}
+}
 
 // RequestType 定义请求类型
 type RequestType string
 
 const (
-	Event  RequestType = "event"
+	// Event 请求类型：event
+	Event RequestType = "event"
+	// Metric 请求类型：metricdiag
 	Metric RequestType = "metricdiag"
 )
 
@@ -54,19 +67,26 @@ const (
 type ResponseBodyStatus string
 
 const (
+	// Success 响应成功时的请求体状态
 	Success ResponseBodyStatus = "success"
-	Error   ResponseBodyStatus = "error"
+	// Error 响应失败时的请求体状态
+	Error ResponseBodyStatus = "error"
 )
 
 // ResponseBodyStatuses 返回所有可能的响应体状态
-var ResponseBodyStatuses = []ResponseBodyStatus{Success, Error}
+func ResponseBodyStatuses() []ResponseBodyStatus {
+	return []ResponseBodyStatus{Success, Error}
+}
 
 // FaultType 故障类型
 type FaultType string
 
 const (
-	NodeFault   FaultType = "node"
-	ChipFault   FaultType = "chip"
+	// NodeFault 节点故障
+	NodeFault FaultType = "node"
+	// ChipFault 芯片故障
+	ChipFault FaultType = "chip"
+	// SwitchFault 交换机故障
 	SwitchFault FaultType = "switch"
 )
 
@@ -74,6 +94,8 @@ const (
 type FaultState string
 
 const (
-	OccurState    FaultState = "occur"
+	// OccurState 故障状态为发生
+	OccurState FaultState = "occur"
+	// RecoveryState 故障状态为恢复
 	RecoveryState FaultState = "recovery"
 )

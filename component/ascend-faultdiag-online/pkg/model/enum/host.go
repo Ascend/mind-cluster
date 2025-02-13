@@ -39,7 +39,7 @@ const (
 	Atlas200ISoc ChipType = "Atlas 200I SoC A1"
 )
 
-var (
-	// Ascend910SerialChips 910系列芯片
-	Ascend910SerialChips = []ChipType{Ascend910, Ascend910A2, Ascend910A3}
-)
+// Ascend910SerialChips 910系列芯片
+func Ascend910SerialChips() []ChipType {
+	return []ChipType{Ascend910, Ascend910A2, Ascend910A3}
+}

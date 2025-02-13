@@ -24,7 +24,7 @@ import (
 	"ascend-faultdiag-online/pkg/service/request"
 )
 
-// EventProcess
+// EventProcess 事务处理过程
 func EventProcess(ctx *context.FaultDiagContext, reqCtx *request.Context) error {
 
 	return nil

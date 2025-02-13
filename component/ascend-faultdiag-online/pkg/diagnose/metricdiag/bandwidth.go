@@ -26,18 +26,20 @@ import (
 )
 
 // Ascend910A2BandwidthDiagItem 提供开发样例，仅供参考，非实际诊断项。
-var Ascend910A2BandwidthDiagItem = &metrics.DiagItem{
-	Interval:        60,
-	ConditionGroups: [][]*diagmodel.Condition{{condition.Ascend910A2}},
-	Description:     "910A2带宽诊断",
-	Rules: []*metrics.DiagRule{
-		{
-			MetricName: "bandwidth",
-			Threshold:  1.0,
-			Unit:       "Gb/s",
-			CompareFunc: func(metric float64, threshold float64) (bool, error) {
-				return metric > threshold, nil
+func Ascend910A2BandwidthDiagItem() *metrics.DiagItem {
+	return &metrics.DiagItem{
+		Interval:        60,
+		ConditionGroups: [][]*diagmodel.Condition{{condition.Ascend910A2Condition()}},
+		Description:     "910A2带宽诊断",
+		Rules: []*metrics.DiagRule{
+			{
+				MetricName: "bandwidth",
+				Threshold:  1.0,
+				Unit:       "Gb/s",
+				CompareFunc: func(metric float64, threshold float64) (bool, error) {
+					return metric > threshold, nil
+				},
 			},
 		},
-	},
+	}
 }

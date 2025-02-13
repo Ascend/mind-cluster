@@ -25,7 +25,9 @@ import (
 )
 
 const (
-	EventType  = "event"
+	// EventType 事件类型：event
+	EventType = "event"
+	// MetricType 指标类型：metricdiag
 	MetricType = "metricdiag"
 )
 

@@ -33,6 +33,7 @@ type DiagRule struct {
 	CompareFunc func(float64, float64) (bool, error) // 当前值比较函数
 }
 
+// IsMatching 方法用于判断给定的指标值是否匹配诊断规则
 func (rule *DiagRule) IsMatching(metricValue float64) (bool, error) {
 	if res, err := rule.CompareFunc(metricValue, rule.Threshold); err != nil {
 		return false, err
@@ -41,6 +42,7 @@ func (rule *DiagRule) IsMatching(metricValue float64) (bool, error) {
 	}
 }
 
+// DiagItem 结构体用于表示一个诊断项
 type DiagItem struct {
 	Name            string                                                                   // 名称
 	Interval        int                                                                      // 检查间隔时间，单位为秒
@@ -51,11 +53,13 @@ type DiagItem struct {
 	DiagFlag        chan bool                                                                // 启用诊断标志
 }
 
+// Context 是一个诊断内容的结构体
 type Context struct {
 	MetricPool *MetricPool // 指标池
 	DiagItems  []*DiagItem // 诊断项
 }
 
+// NewMetricContext 创建一个新的 Context 实例，并初始化 MetricPool 和 DiagItems 字段
 func NewMetricContext() *Context {
 	return &Context{
 		MetricPool: NewMetricPool(),
@@ -63,6 +67,7 @@ func NewMetricContext() *Context {
 	}
 }
 
+// UpdateDiagItems 更新上下文中的诊断项列表，将新的诊断项添加到现有列表中
 func (ctx *Context) UpdateDiagItems(diagItems []*DiagItem) {
 	ctx.DiagItems = slice.Extend(ctx.DiagItems, diagItems)
 }

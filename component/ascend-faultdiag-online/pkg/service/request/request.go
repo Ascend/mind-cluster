@@ -37,19 +37,7 @@ type Body struct {
 	Data        interface{}      `json:"data"`         // 详细结构化信息，根据消息类型决定
 }
 
-// NewRequestBody 创建一个新的请求体
-func NewRequestBody(component string, requestType enum.RequestType, name, SendTime, msg string, data interface{}) *Body {
-	return &Body{
-		Component:   component,
-		RequestType: requestType,
-		Name:        name,
-		SendTime:    SendTime,
-		ReceiveTime: time.Now(), // 生成当前时间
-		Msg:         msg,
-		Data:        data,
-	}
-}
-
+// NewRequestBodyFromJson 从 JSON 字符串中解析创建 Body 请求体
 func NewRequestBodyFromJson(msgJson string) (*Body, error) {
 	request := Body{}
 	if err := json.Unmarshal([]byte(msgJson), &request); err != nil {

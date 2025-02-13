@@ -23,7 +23,10 @@ package enum
 type OsVersion string
 
 const (
+	// Ubuntu2204 操作系统版本版本：ubuntu 22.04
 	Ubuntu2204 OsVersion = "ubuntu_22.04"
-	Debian10   OsVersion = "debian_10"
-	CentOS7    OsVersion = "centos_7"
+	// Debian10 操作系统版本版本：debian 10
+	Debian10 OsVersion = "debian_10"
+	// CentOS7 操作系统版本版本：centos 7
+	CentOS7 OsVersion = "centos_7"
 )

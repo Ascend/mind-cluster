@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	// RequestTimeOut 请求超时时间默认为 5s
 	RequestTimeOut = 5 * time.Second
 )
 
