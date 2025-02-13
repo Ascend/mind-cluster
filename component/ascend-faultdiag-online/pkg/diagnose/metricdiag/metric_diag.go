@@ -18,10 +18,3 @@ limitations under the License.
 Package metricdiag 提供了一些诊断项的实现。
 */
 package metricdiag
-
-import "ascend-faultdiag-online/pkg/context/metrics"
-
-// DefaultMetricItems 默认的诊断项列表
-func DefaultMetricItems() []*metrics.DiagItem {
-	return []*metrics.DiagItem{Ascend910A2BandwidthDiagItem()}
-}

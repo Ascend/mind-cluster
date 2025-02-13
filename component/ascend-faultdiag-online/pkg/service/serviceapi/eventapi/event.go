@@ -15,17 +15,17 @@ limitations under the License.
 */
 
 /*
-Package process 提供事务处理
+Package eventapi provides API
 */
-package process
+package eventapi
 
-import (
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/service/request"
-)
+import "ascend-faultdiag-online/pkg/service/serviceapi"
 
-// EventProcess 事务处理过程
-func EventProcess(ctx *context.FaultDiagContext, reqCtx *request.Context) error {
+const apiEvent = "event"
 
-	return nil
+// GetEventApi 获取指标相关api
+func GetEventApi() *serviceapi.Api {
+	return serviceapi.NewApi(apiEvent, nil, []*serviceapi.Api{
+		GetDiagEventApi(),
+	})
 }

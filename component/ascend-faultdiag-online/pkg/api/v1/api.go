@@ -49,8 +49,8 @@ func StopService(ctx *context.FaultDiagContext) {
 }
 
 // Request 发起请求
-func Request(ctx *context.FaultDiagContext, reqJson string) (string, error) {
-	resp, err := service.HandleRequest(ctx, reqJson)
+func Request(ctx *context.FaultDiagContext, api string, reqJson string) (string, error) {
+	resp, err := service.HandleRequest(ctx, api, reqJson)
 	if err != nil {
 		return "", err
 	}

@@ -17,15 +17,23 @@ limitations under the License.
 /*
 Package request 提供请求上下文管理功能。
 */
-package request
+package servicemodel
 
 import "ascend-faultdiag-online/pkg/model/enum"
 
 // ResponseBody 返回报文结构体，包含状态、消息和数据。
 type ResponseBody struct {
-	Status string      `json:"status"` // 状态
-	Msg    string      `json:"msg"`    // 消息
-	Data   interface{} `json:"data"`   // 数据
+	Status enum.ResponseBodyStatus `json:"status"` // 状态
+	Msg    string                  `json:"msg"`    // 消息
+	Data   interface{}             `json:"data"`   // 数据
+}
+
+// ErrorResponse 异常回报
+func ErrorResponse(errMsg string) *ResponseBody {
+	return &ResponseBody{
+		Status: enum.Error,
+		Msg:    errMsg,
+	}
 }
 
 // Influence 故障影响范围的结构体

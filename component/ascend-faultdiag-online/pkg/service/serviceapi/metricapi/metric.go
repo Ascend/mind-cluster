@@ -15,17 +15,19 @@ limitations under the License.
 */
 
 /*
-Package process 提供事务处理
+Package metricapi provides API
 */
-package process
+package metricapi
 
 import (
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/service/request"
+	"ascend-faultdiag-online/pkg/service/serviceapi"
 )
 
-// MetricProcess 处理指标相关的事务
-func MetricProcess(ctx *context.FaultDiagContext, reqCtx *request.Context) error {
+const apiMetric = "metric"
 
-	return nil
+// GetMetricApi 获取指标相关api
+func GetMetricApi() *serviceapi.Api {
+	return serviceapi.NewApi(apiMetric, nil, []*serviceapi.Api{
+		GetAddMetricApi(),
+	})
 }

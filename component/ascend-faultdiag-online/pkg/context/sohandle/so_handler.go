@@ -30,15 +30,17 @@ import (
 
 // 定义SO文件常量
 const (
-	GetType = "getType"
-	Execute = "execute"
+	GetType      = "getType"
+	Execute      = "execute"
+	ByteSize     = 2048
+	SoFileSuffix = ".so"
 )
 
 // SoHandler 结构体，用于管理动态链接库的句柄、类型以及主执行函数。
 type SoHandler struct {
-	SoHandle    syscall.Handle                           // .so 文件句柄
-	SoType      string                                   // .so 文件类型
-	ExecuteFunc func(input, output *string) (int, error) // .so 文件中的主执行函数
+	SoHandle    syscall.Handle                                  // .so 文件句柄
+	SoType      string                                          // .so 文件类型
+	ExecuteFunc func(input, output [ByteSize]byte) (int, error) // .so 文件中的主执行函数
 }
 
 // NewSoHandler 创建一个新的 SoHandler
@@ -74,7 +76,7 @@ func getSoType(handle syscall.Handle, soPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var typeName string
+	var typeName [ByteSize]byte
 	_, _, ret := syscall.SyscallN(fn, uintptr(unsafe.Pointer(&typeName)))
 	if ret != 0 {
 		return "", errors.New(fmt.Sprintf("Call [%s] func [%s] failed, return code [%d]", soPath, GetType, ret))
@@ -83,15 +85,15 @@ func getSoType(handle syscall.Handle, soPath string) (string, error) {
 }
 
 // getExecuteFunc 获取主执行函数
-func getExecuteFunc(handle syscall.Handle, soPath string) (func(input, output *string) (int, error), error) {
+func getExecuteFunc(handle syscall.Handle, soPath string) (func(input, output [ByteSize]byte) (int, error), error) {
 	fn, err := syscall.GetProcAddress(handle, Execute)
 	if err != nil {
 		return nil, err
 	}
-	return func(input, output *string) (int, error) {
-		inputPtr := uintptr(unsafe.Pointer(input))
-		outputPtr := uintptr(unsafe.Pointer(output))
-		_, _, ret := syscall.SyscallN(fn, 1, inputPtr, outputPtr, 0, 0)
+	return func(input, output [ByteSize]byte) (int, error) {
+		inputPtr := uintptr(unsafe.Pointer(&input))
+		outputPtr := uintptr(unsafe.Pointer(&output))
+		_, _, ret := syscall.SyscallN(fn, inputPtr, outputPtr)
 		if ret != 0 {
 			return -1, errors.New(fmt.Sprintf("Call [%s] func [%s] failed, return code [%d]", soPath, Execute, ret))
 		}
@@ -116,7 +118,7 @@ func filterSOFiles(soDir string) ([]string, error) {
 			return err
 		}
 		// 检查是否为普通文件且扩展名是 .so
-		if !info.IsDir() && filepath.Ext(info.Name()) == ".so" {
+		if !info.IsDir() && filepath.Ext(info.Name()) == SoFileSuffix {
 			soFiles = append(soFiles, path)
 		}
 		return nil
@@ -138,5 +140,5 @@ func GenerateSoHandlerMap(soDir string) (map[string]*SoHandler, error) {
 		}
 		soHandlerMap[soHandler.SoType] = soHandler
 	}
-	return soHandlerMap, err
+	return soHandlerMap, nil
 }

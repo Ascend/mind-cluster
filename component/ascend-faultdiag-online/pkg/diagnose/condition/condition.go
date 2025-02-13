@@ -21,29 +21,29 @@ package condition
 
 import (
 	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/model/diagmodel"
+	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/model/enum"
-	"ascend-faultdiag-online/pkg/utils/slice"
+	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 
-func getChipTypeCondition(chipTypes []enum.ChipType) *diagmodel.Condition {
-	return &diagmodel.Condition{
+func getChipTypeCondition(chipTypes []enum.ChipType) *diagcontext.Condition {
+	return &diagcontext.Condition{
 		Data: chipTypes,
-		MatchingFunc: func(ctx *context.FaultDiagContext, i interface{}) (bool, error) {
-			chipTypes, ok := i.([]enum.ChipType)
+		MatchingFunc: func(ctx *context.FaultDiagContext, data interface{}) bool {
+			chipTypes, ok := data.([]enum.ChipType)
 			if !ok {
-				return false, nil
+				return false
 			}
-			err := slice.ValueIn(ctx.NodeStatus.ChipType, chipTypes)
+			err := slicetool.ValueIn(ctx.NodeStatus.ChipType, chipTypes)
 			if err != nil {
-				return false, err
+				return false
 			}
-			return true, nil
+			return true
 		},
 	}
 }
 
 // Ascend910A2Condition 表示Ascend910A2芯片的诊断条件
-func Ascend910A2Condition() *diagmodel.Condition {
+func Ascend910A2Condition() *diagcontext.Condition {
 	return getChipTypeCondition([]enum.ChipType{enum.Ascend910A2})
 }

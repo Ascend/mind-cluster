@@ -19,18 +19,22 @@ Package request 提供请求上下文管理功能。
 */
 package request
 
+import "ascend-faultdiag-online/pkg/model/servicemodel"
+
 // Context 包含请求和响应信息以及结束标记。
 type Context struct {
-	Request    *Body
-	Response   *ResponseBody
-	FinishChan chan struct{} // 结束标记
+	Api        string // 请求接口
+	ReqJson    string //请求json字符串
+	Response   *servicemodel.ResponseBody
+	FinishChan chan struct{} // 完成标记
 }
 
 // NewRequestContext 创建一个新的请求上下文。
-func NewRequestContext(req *Body) *Context {
+func NewRequestContext(api string, reqJson string) *Context {
 	return &Context{
-		Request:    req,
-		Response:   &ResponseBody{},
+		Api:        api,
+		ReqJson:    reqJson,
+		Response:   &servicemodel.ResponseBody{},
 		FinishChan: make(chan struct{}),
 	}
 }

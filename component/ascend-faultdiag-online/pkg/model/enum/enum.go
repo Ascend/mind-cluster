@@ -57,10 +57,10 @@ func LogLevels() []LogLevel {
 type RequestType string
 
 const (
-	// Event 请求类型：event
-	Event RequestType = "event"
-	// Metric 请求类型：metricdiag
-	Metric RequestType = "metricdiag"
+	// EventRequest 请求类型：event
+	EventRequest RequestType = "event"
+	// MetricRequest 请求类型：metric
+	MetricRequest RequestType = "metric"
 )
 
 // ResponseBodyStatus 返回请求体状态
@@ -98,4 +98,31 @@ const (
 	OccurState FaultState = "occur"
 	// RecoveryState 故障状态为恢复
 	RecoveryState FaultState = "recovery"
+)
+
+// MetricDomainType 指标域
+type MetricDomainType string
+
+const (
+	// NpuDomain NPU中的指标域
+	NpuDomain = "npu"
+	// HostDomain 主机中的指标域
+	HostDomain = "host"
+	// NetworkDomain 网络中的指标域
+	NetworkDomain = "network"
+	// NpuChipDomain Npu芯片中的指标域
+	NpuChipDomain = "npu_chip"
+)
+
+func GetMetricDomains() []MetricDomainType {
+	return []MetricDomainType{NpuDomain, HostDomain, NetworkDomain}
+}
+
+type MetricValueType string
+
+const (
+	// FloatMetric 浮点指标值
+	FloatMetric MetricValueType = "float"
+	// StringMetric 字符串指标值
+	StringMetric MetricValueType = "string"
 )

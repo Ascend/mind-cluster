@@ -27,7 +27,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"ascend-faultdiag-online/pkg/model/enum"
-	"ascend-faultdiag-online/pkg/utils/slice"
+	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 
 // FaultDiagConfig represents the configuration settings for the fault diagnosis system.
@@ -40,10 +40,10 @@ type FaultDiagConfig struct {
 
 func paramCheck(config *FaultDiagConfig) error {
 	paramErr := errors.New("config wrong param")
-	if err := slice.ValueIn(config.Mode, enum.DeployModes()); err != nil {
+	if err := slicetool.ValueIn(config.Mode, enum.DeployModes()); err != nil {
 		return err
 	}
-	if err := slice.ValueIn(config.LogLevel, enum.LogLevels()); err != nil {
+	if err := slicetool.ValueIn(config.LogLevel, enum.LogLevels()); err != nil {
 		return err
 	}
 	if config.QueueSize <= 0 {

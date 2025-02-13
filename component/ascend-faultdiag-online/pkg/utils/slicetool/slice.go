@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package slice 提供切片相关的能力
+Package slicetool 提供切片相关的能力
 */
-package slice
+package slicetool
 
 import (
 	"errors"
@@ -44,11 +44,6 @@ func ValueIn[T comparable](value T, slice []T) error {
 	return errors.New(fmt.Sprintf("The parameter %v is not in the list: %v\n", value, slice))
 }
 
-// Extend 切片扩展函数
-func Extend[T any](slice1 []*T, slice2 []*T) []*T {
-	return append(slice1, slice2...)
-}
-
 // Map 切片映射函数
 func Map[T, U any](slice []*T, mapper func(*T) *U) []*U {
 	result := make([]*U, len(slice))
@@ -65,6 +60,14 @@ func Filter[T any](slice []*T, predicate func(*T) bool) []*T {
 		if predicate(item) {
 			result = append(result, item)
 		}
+	}
+	return result
+}
+
+func MapToValue[T, U any](slice []*T, mapper func(*T) U) []U {
+	result := make([]U, len(slice))
+	for i, item := range slice {
+		result[i] = mapper(item)
 	}
 	return result
 }
@@ -87,4 +90,12 @@ func All[T any](slice []*T, predicate func(*T) bool) bool {
 		}
 	}
 	return false
+}
+
+func Chain[T any](slices [][]*T) []*T {
+	var result []*T
+	for _, slice := range slices {
+		result = append(result, slice...)
+	}
+	return result
 }

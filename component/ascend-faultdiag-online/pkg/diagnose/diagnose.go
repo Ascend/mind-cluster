@@ -18,3 +18,15 @@ limitations under the License.
 Package diagnose 提供诊断功能，用于检查系统或应用程序的健康状况。
 */
 package diagnose
+
+import (
+	"ascend-faultdiag-online/pkg/context/diagcontext"
+	"ascend-faultdiag-online/pkg/diagnose/metricdiag"
+)
+
+// DefaultDiagItems 默认的诊断项列表
+func DefaultDiagItems() []*diagcontext.DiagItem {
+	var diagItems []*diagcontext.DiagItem
+	diagItems = append(diagItems, metricdiag.GetBandWidthDiagItems()...)
+	return diagItems
+}

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/service/process"
+	"ascend-faultdiag-online/pkg/model/servicemodel"
 	"ascend-faultdiag-online/pkg/service/request"
 )
 
@@ -35,8 +35,8 @@ const (
 	RequestTimeOut = 5 * time.Second
 )
 
-// StartLoopService 启动循环服务
-func StartLoopService(ctx *context.FaultDiagContext) {
+// startLoopService 启动循环服务
+func startLoopService(ctx *context.FaultDiagContext) {
 	for {
 		select {
 		case reqCtx, ok := <-ctx.ReqQue:
@@ -46,8 +46,13 @@ func StartLoopService(ctx *context.FaultDiagContext) {
 			}
 			go func() {
 				defer close(reqCtx.FinishChan)
-				if err := process.RequestProcess(ctx, reqCtx); err != nil {
-					ctx.Logger.Println("handle requestBody error: %v", err)
+				if apiFunc, err := ctx.Router.HandleApi(reqCtx.Api); err != nil {
+					reqCtx.Response = servicemodel.ErrorResponse(err.Error())
+				} else {
+					err = apiFunc(ctx, reqCtx)
+					if err != nil {
+						reqCtx.Response = servicemodel.ErrorResponse(err.Error())
+					}
 				}
 			}()
 		case <-ctx.StopChan:
@@ -57,15 +62,11 @@ func StartLoopService(ctx *context.FaultDiagContext) {
 	}
 }
 
-func startMetricDiagService(ctx *context.FaultDiagContext) {
-
-}
-
 // StartFaultDiagService 开启循环服务和指标诊断服务
 func StartFaultDiagService(ctx *context.FaultDiagContext) {
 	ctx.IsRunning = true
-	go StartLoopService(ctx)
-	go startMetricDiagService(ctx)
+	go startLoopService(ctx)
+	go ctx.DiagCtx.StartDiag(ctx)
 }
 
 // StopFaultDiagService 停止循环服务
@@ -76,15 +77,11 @@ func StopFaultDiagService(ctx *context.FaultDiagContext) {
 }
 
 // HandleRequest 处理请求
-func HandleRequest(ctx *context.FaultDiagContext, reqJson string) (string, error) {
+func HandleRequest(ctx *context.FaultDiagContext, api string, reqJson string) (string, error) {
 	if !ctx.IsRunning {
 		return "", fmt.Errorf("service is not running")
 	}
-	reqBody, err := request.NewRequestBodyFromJson(reqJson)
-	if err != nil {
-		return "", err
-	}
-	reqCtx := request.NewRequestContext(reqBody)
+	reqCtx := request.NewRequestContext(api, reqJson)
 	// 等待添加进队列
 	select {
 	case ctx.ReqQue <- reqCtx:
