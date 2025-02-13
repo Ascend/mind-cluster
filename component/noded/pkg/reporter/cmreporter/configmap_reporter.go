@@ -27,7 +27,7 @@ import (
 	"nodeD/pkg/kubeclient"
 )
 
-const multipleOfReportInterval = 60
+const defaultReportInterval = 30 * time.Minute
 
 // ConfigMapReporter report fault device info by config map
 type ConfigMapReporter struct {
@@ -47,9 +47,8 @@ func NewConfigMapReporter(client *kubeclient.ClientK8s) *ConfigMapReporter {
 
 // Report send fault device info by config map
 func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
-	guaranteeReportInterval := time.Duration(common.ParamOption.ReportInterval) * time.Second * multipleOfReportInterval
 	if common.DeepEqualFaultDevInfo(faultDevInfo, &c.nodeInfoCache.NodeInfo) &&
-		time.Since(c.reportTime) < guaranteeReportInterval {
+		time.Since(c.reportTime) < defaultReportInterval {
 		hwlog.RunLog.Debugf("node fault device info is not changed and report time is not reached, no need to report")
 		return
 	}
