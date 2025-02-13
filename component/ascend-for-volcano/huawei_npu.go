@@ -73,6 +73,8 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 	// if node not meet the task require, the task will be failed. so need to intercept in advance
 	ssn.AddPredicateFn(tp.Name(), tp.addPredicateFn)
 
+	ssn.AddJobPipelinedFn(tp.Name(), tp.jobPipelinedFn)
+
 	addBatchNodeOrderFn(ssn, tp)
 
 	addJobReadyFn(ssn, tp)
@@ -121,13 +123,6 @@ func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 				klog.V(util.LogDebugLev).Infof("%s setJobFailed err:%s.", PluginName, util.SafePrint(setErr))
 			}
 		}
-		if vcJob, ok := tp.Scheduler.Jobs[task.Job]; ok && vcJob.JobReadyTag == false {
-			if _, exist := tp.Scheduler.DeleteJobInfos[task.Job]; !exist {
-				tp.Scheduler.DeleteJobInfos[task.Job] = ssn.Jobs[task.Job]
-				delete(ssn.Jobs, task.Job)
-			}
-		}
-
 		return score, nil
 	})
 }
@@ -152,6 +147,23 @@ func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		}
 		return job.JobReadyTag
 	})
+}
+
+func (tp *huaweiNPUPlugin) jobPipelinedFn(obj interface{}) int {
+	ji, ok := obj.(*api.JobInfo)
+	if !ok {
+		klog.V(util.LogErrorLev).Info("obj assertion failed.")
+		return util.Reject
+	}
+
+	job, ok := tp.Scheduler.Jobs[ji.UID]
+	if !ok {
+		return util.Abstain
+	}
+	if job.JobReadyTag {
+		return util.Abstain
+	}
+	return util.Reject
 }
 
 func addJobEnqueueableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
@@ -216,9 +228,6 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 	if *tp.Scheduler.IsFirstSession {
 		*tp.Scheduler.IsFirstSession = false
 	}
-	if ssn.Jobs == nil && len(tp.Scheduler.DeleteJobInfos) != 0 {
-		ssn.Jobs = make(map[api.JobID]*api.JobInfo)
-	}
 	// 1、Record job's unscheduled reason;
 	// 2、Update job statue;
 	// 3、Handle other post-dispatch issues.
@@ -229,9 +238,6 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 			// if all nodes not meet job require failed
 			tp.Scheduler.SetJobPendReasonByNodesCase(job)
 		}
-	}
-	for jobId, jobInfo := range tp.Scheduler.DeleteJobInfos {
-		ssn.Jobs[jobId] = jobInfo
 	}
 	tp.Scheduler.BeforeCloseHandler()
 }
@@ -249,7 +255,6 @@ func HandlerStart() *plugin.ScheduleHandler {
 			JobDeleteFlag:    map[api.JobID]struct{}{},
 			JobSinglePodFlag: map[api.JobID]bool{},
 			Nodes:            map[string]plugin.NPUNode{},
-			DeleteJobInfos:   map[api.JobID]*api.JobInfo{},
 			DeviceInfos: &plugin.DeviceInfosWithMutex{
 				Mutex:   sync.Mutex{},
 				Devices: map[string]plugin.NodeDeviceInfoWithID{},

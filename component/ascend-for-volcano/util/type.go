@@ -338,6 +338,15 @@ const (
 	DefaultPodDeleteTimes = "0"
 )
 
+const (
+	// Permit indicates permits job to be pipelined
+	Permit = 1
+	// Abstain indicates abstains in voting job to be pipelined
+	Abstain = 0
+	// Reject indicates  rejects job to be pipelined
+	Reject = -1
+)
+
 // VTemplate for vNode resource
 type VTemplate struct {
 	// ChipKind Ascend910/Ascend310P

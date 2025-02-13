@@ -186,7 +186,6 @@ type ScheduleEnv struct {
 	JobSeverInfos     map[api.JobID]struct{}
 	JobDeleteFlag     map[api.JobID]struct{}
 	DeviceInfos       *DeviceInfosWithMutex
-	DeleteJobInfos    map[api.JobID]*api.JobInfo
 	NodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
 	SwitchInfosFromCm *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
 	FrameAttr         VolcanoFrame

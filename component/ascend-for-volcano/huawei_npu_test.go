@@ -22,9 +22,12 @@ package main
 import (
 	"testing"
 
+	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/util"
 )
 
 type handlerStartTest struct {
@@ -167,6 +170,56 @@ func TestOnSessionClose(t *testing.T) {
 				Arguments: tt.fields.Arguments,
 			}
 			tp.OnSessionClose(tt.args.ssn)
+		})
+	}
+}
+
+type JobPipelinedFnTest struct {
+	name string
+	tp   *huaweiNPUPlugin
+	obj  interface{}
+	want int
+}
+
+func buildJobPipelinedFnTestCases() []JobPipelinedFnTest {
+	return []JobPipelinedFnTest{
+		{
+			name: "01 JobPipelinedFnTest will return Reject when obj is not job info",
+			tp:   &huaweiNPUPlugin{},
+			obj:  nil,
+			want: util.Reject,
+		},
+		{
+			name: "02 JobPipelinedFnTest will return Abstain when scheduler job is not exist",
+			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
+				Jobs: map[api.JobID]plugin.SchedulerJob{}}}},
+			obj:  &api.JobInfo{},
+			want: util.Abstain,
+		},
+		{
+			name: "03 JobPipelinedFnTest will return Abstain when job ready tag is true",
+			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
+				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: true}}}}},
+			obj:  &api.JobInfo{UID: "test-name"},
+			want: util.Abstain,
+		},
+		{
+			name: "04 JobPipelinedFnTest will return Reject when job ready tag is false",
+			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
+				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: false}}}}},
+			obj:  &api.JobInfo{UID: "test-name"},
+			want: util.Reject,
+		},
+	}
+}
+
+func TestJobPipelinedFn(t *testing.T) {
+	tests := buildJobPipelinedFnTestCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.tp.jobPipelinedFn(tt.obj); got != tt.want {
+				t.Errorf("jobPipelinedFn() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
