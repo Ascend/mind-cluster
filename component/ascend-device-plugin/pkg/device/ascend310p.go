@@ -94,7 +94,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 func (hnm *HwAscend310PManager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice) {
 	devStatusSet := hnm.getDevStatesDevSet(classifyDevs)
 	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.updateDeviceInfo); err != nil {
-		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
+		hwlog.RunLog.Debugf("update device info failed, err: %v", err)
 	}
 }
 
