@@ -306,7 +306,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) 
 		if len(faults) == 0 {
 			advanceDeviceCm.NetworkUnhealthy = util.DeleteStringSliceItem(advanceDeviceCm.NetworkUnhealthy, deviceName)
 			advanceDeviceCm.CardUnHealthy = util.DeleteStringSliceItem(advanceDeviceCm.CardUnHealthy, deviceName)
-			hwlog.RunLog.Errorf("remove device %s from unhealthy", deviceName)
+			hwlog.RunLog.Warnf("remove device %s from unhealthy", deviceName)
 			continue
 		}
 		mergedFaults, err := mergeDeviceFault(faults)

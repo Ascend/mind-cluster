@@ -17,17 +17,21 @@ import (
 	"clusterd/pkg/common/util"
 )
 
+const (
+	jobId                      = "JobId"
+	nodeName                   = "Node"
+	time100Seconds             = int64(100000)
+	time120Seconds             = int64(120000)
+	time1Seconds               = int64(1000)
+	deviceId                   = "0"
+	rankID                     = "8"
+	cmName                     = "mindx-dl-deviceinfo-" + nodeName
+	deviceName                 = constant.Ascend910Server + "-" + deviceId
+	originalDeviceFaultCodeCnt = 2
+)
+
 var (
-	jobId          = "JobId"
-	nodeName       = "Node"
-	time100Seconds = 100 * time.Second.Milliseconds()
-	time120Seconds = 120 * time.Second.Milliseconds()
-	time1Seconds   = 1 * time.Second.Milliseconds()
-	deviceId       = "0"
-	rankID         = "8"
-	cmName         = "mindx-dl-deviceinfo-" + nodeName
-	deviceName     = constant.Ascend910Server + "-" + deviceId
-	jobServerMap   = constant.JobServerInfoMap{
+	jobServerMap = constant.JobServerInfoMap{
 		InfoMap: map[string]map[string]constant.ServerHccl{
 			jobId: {
 				nodeName: {
@@ -40,8 +44,7 @@ var (
 			},
 		},
 	}
-	originalDeviceFaultCodeCnt = 2
-	OriginalDeviceCm           = &constant.DeviceInfo{
+	originalDeviceCm = &constant.DeviceInfo{
 		CmName: cmName,
 		DeviceInfoNoName: constant.DeviceInfoNoName{
 			DeviceList: map[string]string{
@@ -286,7 +289,7 @@ func TestMergeManuallySeparateNPUTypeDeviceFault(t *testing.T) {
 }
 
 func TestGetAdvanceDeviceCm(t *testing.T) {
-	advanceDeviceCm := GetAdvanceDeviceCm(OriginalDeviceCm)
+	advanceDeviceCm := GetAdvanceDeviceCm(originalDeviceCm)
 	if len(advanceDeviceCm.FaultDeviceList[deviceName]) != originalDeviceFaultCodeCnt {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
@@ -409,7 +412,7 @@ func TestFaultCodeJudge(t *testing.T) {
 
 func TestAdvanceDeviceCmForNodeMapToString(t *testing.T) {
 	deviceInfoCms := map[string]*constant.DeviceInfo{
-		cmName: OriginalDeviceCm,
+		cmName: originalDeviceCm,
 	}
 	t.Run("TestAdvanceDeviceCmForNodeMapToString", func(t *testing.T) {
 		advanceMap := GetAdvanceDeviceCmForNodeMap(deviceInfoCms)
@@ -447,11 +450,11 @@ func TestAddFaultAndDeleteFaultMap(t *testing.T) {
 
 func TestGetAdvanceDeviceCmForNodeMap(t *testing.T) {
 	deviceInfoCms := map[string]*constant.DeviceInfo{
-		cmName: OriginalDeviceCm,
+		cmName: originalDeviceCm,
 	}
 	t.Run("TestGetAdvanceDeviceConfigmap", func(t *testing.T) {
 		got := GetAdvanceDeviceCmForNodeMap(deviceInfoCms)
-		if len(got[nodeName].FaultDeviceList[deviceName]) != 2 {
+		if len(got[nodeName].FaultDeviceList[deviceName]) != originalDeviceFaultCodeCnt {
 			t.Error("TestGetAdvanceDeviceConfigmap fail")
 		}
 	})

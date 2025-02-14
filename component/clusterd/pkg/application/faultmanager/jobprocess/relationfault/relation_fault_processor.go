@@ -213,6 +213,7 @@ func (fJob *FaultJob) initFaultJobAttr() {
 	}
 }
 
+// Process fJob network relation fault
 func (fJob *FaultJob) Process() {
 	fJob.preStartProcess()
 	fJob.processNetworkFault()
@@ -326,7 +327,8 @@ func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo constant.AdvanceDeviceFaul
 	}
 }
 
-func (fJob *FaultJob) initFaultInfoByDeviceFault(faultList []constant.DeviceFault, nodeName, rankId string, isCardUnhealthy bool) {
+func (fJob *FaultJob) initFaultInfoByDeviceFault(
+	faultList []constant.DeviceFault, nodeName, rankId string, isCardUnhealthy bool) {
 	for _, fault := range faultList {
 		for faultCode, faultTimeAndLevel := range fault.FaultTimeAndLevelMap {
 			if isAssociateFault(faultCode) && !isCardUnhealthy {
@@ -393,7 +395,8 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 				FaultTime:   time.Now().UnixMilli(),
 				DealMaxTime: getFaultCodeDelMaxTime(tmpSwitchFaultInfo.AssembledFaultCode),
 				FaultLevel:  switchInfo.FaultLevel,
-				FaultUid:    serverList.ServerName + "-" + constant.AllCardId + "-" + tmpSwitchFaultInfo.AssembledFaultCode,
+				FaultUid: serverList.ServerName + "-" +
+					constant.AllCardId + "-" + tmpSwitchFaultInfo.AssembledFaultCode,
 			}
 			fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 			fJob.addFaultInfoByCodeType(&tmpFaultInfo)
@@ -402,7 +405,8 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 }
 
 func (fJob *FaultJob) handleJobFault(relationFault []*constant.FaultInfo,
-	triggerFault []constant.FaultInfo, strategyList []constant.RelationFaultStrategy) (map[string]string, map[string][]constant.DeviceStrategy) {
+	triggerFault []constant.FaultInfo, strategyList []constant.RelationFaultStrategy) (
+	map[string]string, map[string][]constant.DeviceStrategy) {
 
 	nodeLvList := make(map[string]string)
 	deviceLvList := make(map[string][]constant.DeviceStrategy)
@@ -459,35 +463,40 @@ func (fJob *FaultJob) handleAllUnHealthyDevices(allUnhealthyDevices []*constant.
 		deviceLvList = make(map[string][]constant.DeviceStrategy)
 	}
 	for nodeName := range nodeDeviceList {
-		deviceList := deviceLvList[nodeName]
-		nodeLevel := false
-		for _, device := range allUnhealthyDevices {
-			if device.NodeName != nodeName {
-				continue
-			}
-			if device.FaultType == constant.SwitchFault {
-				if fJob.FindNPUUnderSwitch {
-					deviceList = append(deviceList, fJob.getNPUUnderSwitch(allUnhealthyDevices)...)
-				} else {
-					nodeLvList[nodeName] = constant.SeparateFaultStrategy
-					nodeLevel = true
-				}
-			} else {
-				idx := fJob.getDeviceIdx(device, deviceList)
-				if idx < 0 {
-					deviceList = append(deviceList,
-						constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SeparateFaultStrategy})
-				} else {
-					deviceList[idx] = constant.DeviceStrategy{NPUName: device.NPUName,
-						Strategy: constant.SeparateFaultStrategy}
-				}
-			}
-		}
-		if !nodeLevel {
-			deviceLvList[nodeName] = deviceList
-		}
+		fJob.handleUnhealthyOnNode(allUnhealthyDevices, deviceLvList, nodeName, nodeLvList)
 	}
 	return nodeLvList, deviceLvList
+}
+
+func (fJob *FaultJob) handleUnhealthyOnNode(allUnhealthyDevices []*constant.FaultInfo,
+	deviceLvList map[string][]constant.DeviceStrategy, nodeName string, nodeLvList map[string]string) {
+	deviceList := deviceLvList[nodeName]
+	nodeLevel := false
+	for _, device := range allUnhealthyDevices {
+		if device.NodeName != nodeName {
+			continue
+		}
+		if device.FaultType == constant.SwitchFault {
+			if fJob.FindNPUUnderSwitch {
+				deviceList = append(deviceList, fJob.getNPUUnderSwitch(allUnhealthyDevices)...)
+			} else {
+				nodeLvList[nodeName] = constant.SeparateFaultStrategy
+				nodeLevel = true
+			}
+		} else {
+			idx := fJob.getDeviceIdx(device, deviceList)
+			if idx < 0 {
+				deviceList = append(deviceList,
+					constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SeparateFaultStrategy})
+			} else {
+				deviceList[idx] = constant.DeviceStrategy{NPUName: device.NPUName,
+					Strategy: constant.SeparateFaultStrategy}
+			}
+		}
+	}
+	if !nodeLevel {
+		deviceLvList[nodeName] = deviceList
+	}
 }
 
 func (fJob *FaultJob) handleAllSubHealthyDevices(nodeDeviceList map[string]string,
@@ -495,31 +504,37 @@ func (fJob *FaultJob) handleAllSubHealthyDevices(nodeDeviceList map[string]strin
 	nodeLvList := make(map[string]string)
 	deviceLvList := make(map[string][]constant.DeviceStrategy)
 	for nodeName := range nodeDeviceList {
-		deviceList := make([]constant.DeviceStrategy, 0)
-		nodeLevel := false
-		for _, device := range allSubHealthDevices {
-			if device.NodeName != nodeName {
-				continue
-			}
-
-			if device.FaultType == constant.SwitchFault {
-				if fJob.FindNPUUnderSwitch {
-					deviceList = append(deviceList, fJob.getNPUUnderSwitch(allSubHealthDevices)...)
-				} else {
-					nodeLvList[nodeName] = constant.SubHealthFaultStrategy
-					nodeLevel = true
-				}
-			} else {
-				if fJob.getDeviceIdx(device, deviceList) < 0 {
-					deviceList = append(deviceList, constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SubHealthFaultStrategy})
-				}
-			}
-		}
-		if !nodeLevel {
-			deviceLvList[nodeName] = deviceList
-		}
+		fJob.handleSubHealthyOnNode(allSubHealthDevices, nodeName, nodeLvList, deviceLvList)
 	}
 	return nodeLvList, deviceLvList
+}
+
+func (fJob *FaultJob) handleSubHealthyOnNode(allSubHealthDevices []*constant.FaultInfo, nodeName string,
+	nodeLvList map[string]string, deviceLvList map[string][]constant.DeviceStrategy) {
+	deviceList := make([]constant.DeviceStrategy, 0)
+	nodeLevel := false
+	for _, device := range allSubHealthDevices {
+		if device.NodeName != nodeName {
+			continue
+		}
+
+		if device.FaultType == constant.SwitchFault {
+			if fJob.FindNPUUnderSwitch {
+				deviceList = append(deviceList, fJob.getNPUUnderSwitch(allSubHealthDevices)...)
+			} else {
+				nodeLvList[nodeName] = constant.SubHealthFaultStrategy
+				nodeLevel = true
+			}
+		} else {
+			if fJob.getDeviceIdx(device, deviceList) < 0 {
+				deviceList = append(deviceList,
+					constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SubHealthFaultStrategy})
+			}
+		}
+	}
+	if !nodeLevel {
+		deviceLvList[nodeName] = deviceList
+	}
 }
 
 func (fJob *FaultJob) getDeviceIdx(device *constant.FaultInfo, deviceList []constant.DeviceStrategy) int {
@@ -573,7 +588,8 @@ func (fJob *FaultJob) getCodeMatchedTables(relationCodeDeviceMap map[string][]*c
 	return curFaultTables
 }
 
-func (fJob *FaultJob) matchRelationFaults(relationCodeDeviceMap map[string][]*constant.FaultInfo, trigger constant.RelationFaultStrategy) bool {
+func (fJob *FaultJob) matchRelationFaults(
+	relationCodeDeviceMap map[string][]*constant.FaultInfo, trigger constant.RelationFaultStrategy) bool {
 	for _, fault := range trigger.RelationFaults {
 		if _, ok := relationCodeDeviceMap[fault]; !ok {
 			return false

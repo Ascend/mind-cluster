@@ -85,36 +85,33 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 	for _, deviceInfo := range devicesOfJobOnNode.DeviceList {
 		deviceName := advanceDeviceInfo.ServerType + "-" + deviceInfo.DeviceID
 		faultList, found := advanceDeviceInfo.FaultDeviceList[deviceName]
-		uceInManagementPlane := false
-		if found {
-			// scan management plane fault info. management plane may filter uce fault in uceProcessor
-			for _, fault := range faultList {
-				faultRank := constant.FaultRank{
+		if !found {
+			// business plane find uce fault
+			if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
+				faultRankList = append(faultRankList, constant.FaultRank{
 					RankId:      deviceInfo.RankID,
-					FaultCode:   fault.FaultCode,
-					FaultLevel:  fault.FaultLevel,
-					DoStepRetry: false,
-				}
-				if strings.Contains(fault.FaultCode, constant.UceFaultCode) {
-					// management plane find uce fault
-					uceInManagementPlane = true
-					faultRank.DoStepRetry = processor.canDoStepRetry(jobId, nodeName, deviceName)
-				}
-				faultRankList = append(faultRankList, faultRank)
+					FaultCode:   constant.UceFaultCode,
+					FaultLevel:  constant.RestartBusiness,
+					DoStepRetry: processor.canDoStepRetry(jobId, nodeName, deviceName),
+				})
 			}
-		}
-		if uceInManagementPlane {
 			continue
 		}
-		// business plane find uce fault
-		if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
-			faultRankList = append(faultRankList, constant.FaultRank{
+		// scan management plane fault info. management plane may filter uce fault in uceProcessor
+		for _, fault := range faultList {
+			faultRank := constant.FaultRank{
 				RankId:      deviceInfo.RankID,
-				FaultCode:   constant.UceFaultCode,
-				FaultLevel:  constant.RestartBusiness,
-				DoStepRetry: processor.canDoStepRetry(jobId, nodeName, deviceName),
-			})
+				FaultCode:   fault.FaultCode,
+				FaultLevel:  fault.FaultLevel,
+				DoStepRetry: false,
+			}
+			if strings.Contains(fault.FaultCode, constant.UceFaultCode) {
+				// management plane find uce fault
+				faultRank.DoStepRetry = processor.canDoStepRetry(jobId, nodeName, deviceName)
+			}
+			faultRankList = append(faultRankList, faultRank)
 		}
+
 	}
 	return faultRankList
 }

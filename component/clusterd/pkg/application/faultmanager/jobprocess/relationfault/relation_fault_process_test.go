@@ -153,7 +153,8 @@ func TestRightNodeAndDeviceSeparate(t *testing.T) {
 		networkFaults := make([]*constant.FaultInfo, 0)
 		fault1 := constant.FaultInfo{NodeName: node100, NPUName: npu1, FaultType: deviceFault, FaultCode: faultCode0002}
 		fault2 := constant.FaultInfo{NodeName: node101, NPUName: npu2, FaultType: deviceFault, FaultCode: faultCode0003}
-		fault3 := constant.FaultInfo{NodeName: node103, NPUName: switchDevice, FaultType: constant.SwitchFault, FaultCode: faultCode0003}
+		fault3 := constant.FaultInfo{NodeName: node103, NPUName: switchDevice,
+			FaultType: constant.SwitchFault, FaultCode: faultCode0003}
 		networkFaults = append(networkFaults, &fault1, &fault2, &fault3)
 
 		triggerList := make([]constant.FaultInfo, 0)
@@ -237,7 +238,8 @@ func TestRightNodeDeviceSubHealthAndSeparate(t *testing.T) {
 		fault1 := constant.FaultInfo{NodeName: node100, NPUName: npu1, FaultType: deviceFault, FaultCode: faultCode0002}
 		fault2 := constant.FaultInfo{NodeName: node101, NPUName: npu2, FaultType: deviceFault, FaultCode: faultCode0003}
 		fault4 := constant.FaultInfo{NodeName: node100, NPUName: npu1, FaultType: deviceFault, FaultCode: faultCode0004}
-		nodeFault := constant.FaultInfo{NodeName: node103, NPUName: switchDevice, FaultType: constant.SwitchFault, FaultCode: faultCode0004}
+		nodeFault := constant.FaultInfo{NodeName: node103, NPUName: switchDevice,
+			FaultType: constant.SwitchFault, FaultCode: faultCode0004}
 
 		networkFaults = append(networkFaults, &fault1, &fault2, &nodeFault, &fault4)
 		triggerList := make([]constant.FaultInfo, 0)
