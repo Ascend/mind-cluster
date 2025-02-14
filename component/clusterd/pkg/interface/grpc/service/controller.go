@@ -635,7 +635,11 @@ func (ctl *EventController) notifyFaultForUceFaultCase(uceFaults,
 			normalFaults = allFaults
 			ctl.setCacheFault(uceFaults, normalFaults)
 
-			faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+			faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+			if err != nil {
+				hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+				return "", common.ServerInnerError, err
+			}
 			ctl.mergeFaultPod(faultPod)
 			cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 				allFaultRanks, constant.NotifyFaultListOperation)
@@ -675,7 +679,11 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 	ctl.setCacheFault(nil, allFaults)
 
 	var err error
-	faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+	faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+		return "", common.ServerInnerError, err
+	}
 	ctl.mergeFaultPod(faultPod)
 	hwlog.RunLog.Infof("jobId=%s, fault pod = %v", ctl.jobInfo.JobId, ctl.GetFaultPod())
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
@@ -749,7 +757,7 @@ func (ctl *EventController) agentSupportStrategy(strategy string) bool {
 	return false
 }
 
-func (ctl *EventController) chooseStrategy() string {
+func (ctl *EventController) chooseStrategy() (string, error) {
 	ctl.lock.RLock()
 	n := len(ctl.latestRecoverResult)
 	ctl.lock.RUnlock()
@@ -761,19 +769,23 @@ func (ctl *EventController) chooseStrategy() string {
 			ctl.takeUceFault2NormalFault()
 			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 			ctl.setCacheFault(nil, allFaults)
-			faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+			faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+			if err != nil {
+				hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+				return "", err
+			}
 			ctl.mergeFaultPod(faultPod)
-			return ctl.chooseForRecoverFail() // dump or exit
+			return ctl.chooseForRecoverFail(), nil // dump or exit
 		}
-		return strategy
+		return strategy, nil
 	}
 	res := ctl.latestRecoverResult[n-1]
 	if res.Strategy == constant.ProcessRetryStrategyName {
-		return ctl.chooseForRetryFail()
+		return ctl.chooseForRetryFail(), nil
 	} else if res.Strategy == constant.ProcessRecoverStrategyName {
-		return ctl.chooseForRecoverFail()
+		return ctl.chooseForRecoverFail(), nil
 	}
-	return constant.ProcessExitStrategyName
+	return constant.ProcessExitStrategyName, nil
 }
 
 func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCode, error) {
@@ -783,7 +795,12 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 		SignalType: constant.ChangeStrategySignalType,
 		Actions:    changeStrategyActions,
 	}
-	signal.ChangeStrategy = ctl.chooseStrategy()
+	var err error
+	signal.ChangeStrategy, err = ctl.chooseStrategy()
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+		return "", common.ServerInnerError, err
+	}
 	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
 		hwlog.RunLog.Infof("start wait plat rankTable ready, jobId=%s, pgName=%s",
 			ctl.jobInfo.JobId, ctl.jobInfo.PgName)
@@ -910,7 +927,11 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
 	ctl.setCacheFault(nil, allFaults)
 	var err error
-	faultPod := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+	faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+		return "", common.ServerInnerError, err
+	}
 	ctl.mergeFaultPod(faultPod)
 	hwlog.RunLog.Infof("jobId=%s, fault pod = %v", ctl.jobInfo.JobId, ctl.faultPod)
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,

@@ -297,6 +297,10 @@ func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
 func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string) (map[string]string, error) {
 	var faultPodRankList []string
 	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
+	if devicePerNode == 0 {
+		hwlog.RunLog.Errorf("get device num per pod failed, jobId: %s", jobId)
+		return nil, fmt.Errorf("get device num per pod failed, jobId: %s", jobId)
+	}
 	for _, rank := range rankList {
 		faultRank, err := strconv.Atoi(rank)
 		if err != nil {
@@ -316,9 +320,13 @@ func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string
 }
 
 // GetPodMap return a dict, key is fault pod rank, value is pod id
-func GetPodMap(jobId string, rankList []string) map[string]string {
+func GetPodMap(jobId string, rankList []string) (map[string]string, error) {
 	podMap := make(map[string]string)
 	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
+	if devicePerNode <= 0 {
+		hwlog.RunLog.Errorf("get device num per pod failed, jobId: %s", jobId)
+		return nil, fmt.Errorf("get device num per pod failed, jobId: %s", jobId)
+	}
 	for _, rank := range rankList {
 		faultRank, err := strconv.Atoi(rank)
 		if err != nil {
@@ -338,7 +346,7 @@ func GetPodMap(jobId string, rankList []string) map[string]string {
 		}
 		podMap[podRank] = string(pod.UID)
 	}
-	return podMap
+	return podMap, nil
 }
 
 func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string) (map[string]string, error) {

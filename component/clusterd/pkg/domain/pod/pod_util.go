@@ -214,6 +214,7 @@ func GetPodDeviceNumByJobId(jobKey string) int {
 			return len(podDevice.Devices)
 		}
 	}
+	hwlog.RunLog.Warnf("failed get pod device num, job key: %s, len(podJobMap): %d", jobKey, len(podJobMap))
 	return 0
 }
 
