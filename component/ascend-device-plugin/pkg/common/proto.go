@@ -43,11 +43,8 @@ type SwitchFaultEvent struct {
 	EventType uint
 	// SubType fault subtype used for id a fault
 	SubType uint
-	// FaultType To maintain compatibility with next incoming switch fault codes changes
-	// this filed is reserved for next version
-	// in this version this field is obtained through manually mapping in device-plugin
-	// next version this filed will be reported by switch driver
-	FaultID uint
+	// FaultID the fault id for switch fault 
+	FaultID string
 	// AssembledFaultCode is to assemble cgo lq.struct_LqDcmiEvent to a device-plugin recognized fault code type
 	// such as : [0x00f103b0,155904,na,na] in config file: SwitchFaultCode
 	AssembledFaultCode string

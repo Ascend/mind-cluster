@@ -25,6 +25,16 @@ import (
 	devmanagercommon "ascend-common/devmanager/common"
 )
 
+const (
+	linkDownAlarmID    = 0x08520003
+	commonFaultAlarmID = 0x00f10509
+	laneFaultID        = 132333
+	halfLaneFaultID    = 132332
+	invalidPortFaultID = 155912
+	enginAlarmID       = 0x00f103b6
+	enginFaultID       = 155909
+)
+
 // TestUpdateSwitchFaultLevel for test UpdateSwitchFaultLevel
 func TestUpdateSwitchFaultLevel(t *testing.T) {
 	convey.Convey("test UpdateSwitchFaultLevel", t, func() {
@@ -32,8 +42,6 @@ func TestUpdateSwitchFaultLevel(t *testing.T) {
 		notHandleCode := "[0x00f1ff09,155913,cpu,na]"
 		preSeparateCode := "[0x00f103b0,155907,na,na]"
 		separateCode := "[0x00f103b0,155649,na,na]"
-		mockSwitchFaultLevelMap := gomonkey.ApplyGlobalVar(&common.SwitchFaultLevelMap, map[string]int{})
-		defer mockSwitchFaultLevelMap.Reset()
 		mockNotHandleCodes := gomonkey.ApplyGlobalVar(&common.NotHandleFaultCodes, []string{notHandleCode})
 		defer mockNotHandleCodes.Reset()
 		mockPreseparateCodes := gomonkey.ApplyGlobalVar(&common.PreSeparateFaultCodes, []string{preSeparateCode})
@@ -59,39 +67,45 @@ func TestNewSwitchDevManager(t *testing.T) {
 func TestSetExtraFaultInfo(t *testing.T) {
 	convey.Convey("test setExtraFaultInfo", t, func() {
 		event := &common.SwitchFaultEvent{
-			EventType:      common.EventTypeOfSwitchPortFault,
-			SubType:        common.SubTypeOfPortDown,
+			EventType:      linkDownAlarmID,
+			SubType:        invalidNum,
 			PeerPortDevice: common.PeerDeviceChipOrCpuPort,
 		}
 		convey.Convey("01-EventType is SwitchPortFault, SubType is PortDown, "+
-			"AssembledFaultCode should be [0x08520003,,cpu,na]", func() {
-			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
-			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x08520003,,cpu,na]")
+			"AssembledFaultCode should be [0x08520003,na,cpu,na]", func() {
+			setExtraFaultInfo(event)
+			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x08520003,na,cpu,na]")
 		})
 		convey.Convey("02-EventType is SwitchPortFault, SubType is PortLaneReduceQuarter, "+
 			"AssembledFaultCode should be [0x00f10509,132333,npu,na]", func() {
-			event.SubType = common.SubTypeOfPortLaneReduceQuarter
+			event.EventType = commonFaultAlarmID
+			event.SubType = laneFaultID
 			event.PeerPortDevice = common.PeerDeviceNpuPort
-			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
+			setExtraFaultInfo(event)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132333,npu,na]")
 		})
 		convey.Convey("03-EventType is SwitchPortFault,SubType is PortLaneReduceHalf, "+
 			"AssembledFaultCode should be [0x00f10509,132332,L2,na]", func() {
-			event.SubType = common.SubTypeOfPortLaneReduceHalf
+			event.EventType = commonFaultAlarmID
+			event.SubType = halfLaneFaultID
 			event.PeerPortDevice = common.PeerDeviceL2Port
-			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
+			setExtraFaultInfo(event)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,132332,L2,na]")
 		})
 		convey.Convey("04-EventType is SwitchPortFault,SubType is other type, "+
 			"AssembledFaultCode should be [0x00f1ff09,155912,na,na]", func() {
-			event.SubType = 0
-			event.PeerPortDevice = 999999
-			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
-			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f1ff09,155912,na,na]")
+			event.EventType = commonFaultAlarmID
+			event.SubType = invalidPortFaultID
+			event.PeerPortDevice = common.PeerDeviceL2Port
+			event.SwitchPortId = invalidNum
+			setExtraFaultInfo(event)
+			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f10509,155912,na,na]")
 		})
 		convey.Convey("05-EventType is 6, AssembledFaultCode should be [0x00f103b6,155909,na,na]", func() {
-			event.EventType = 6
-			convey.So(setExtraFaultInfo(event), convey.ShouldBeNil)
+			event.EventType = enginAlarmID
+			event.SubType = enginFaultID
+			event.SwitchPortId = invalidNum
+			setExtraFaultInfo(event)
 			convey.So(event.AssembledFaultCode, convey.ShouldEqual, "[0x00f103b6,155909,na,na]")
 		})
 	})

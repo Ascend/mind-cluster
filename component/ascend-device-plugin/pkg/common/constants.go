@@ -729,10 +729,18 @@ const (
 const (
 	// PeerDeviceChipOrCpuPort if peer device is whole chip or cpu the given value should be 0
 	PeerDeviceChipOrCpuPort = 0
+	// PeerDeviceChipOrCpuPortName the name of  peer device is whole chip or cpu
+	PeerDeviceChipOrCpuPortName = "cpu"
 	// PeerDeviceNpuPort 1 means switch contact peer device is npu
 	PeerDeviceNpuPort = 1
+	// PeerDeviceNpuPortName the name of peer device is npu
+	PeerDeviceNpuPortName = "npu"
 	// PeerDeviceL2Port 1 means switch contact peer device is L2
 	PeerDeviceL2Port = 2
+	// PeerDeviceL2PortName the name of peer device is L2
+	PeerDeviceL2PortName = "L2"
+	// PeerDeviceNAPortName the name of switch peer device is not valid
+	PeerDeviceNAPortName = "na"
 )
 
 // port level switch fault event types
