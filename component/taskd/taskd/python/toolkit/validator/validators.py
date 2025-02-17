@@ -5,13 +5,13 @@ import os
 from typing import Callable, Any
 from typing import List, Optional, Tuple
 
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_CKPT_NUMS
-from component.taskd.taskd.python.framework.agent.constants.constants import MIN_SIZE
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_SIZE
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_DEVICE_NUM
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_RANK_SIZE
-from component.taskd.taskd.python.framework.agent.constants.constants import MIN_DEVICE_NUM
-from component.taskd.taskd.python.framework.agent.constants.constants import MIN_RANK_SIZE
+from taskd.python.toolkit.constants.constants import MAX_CKPT_NUMS
+from taskd.python.toolkit.constants.constants import MIN_SIZE
+from taskd.python.toolkit.constants.constants import MAX_SIZE
+from taskd.python.toolkit.constants.constants import MAX_DEVICE_NUM
+from taskd.python.toolkit.constants.constants import MAX_RANK_SIZE
+from taskd.python.toolkit.constants.constants import MIN_DEVICE_NUM
+from taskd.python.toolkit.constants.constants import MIN_RANK_SIZE
 
 
 class Validator:

@@ -9,7 +9,7 @@ from enum import Enum
 
 from OpenSSL import crypto
 
-from component.taskd.taskd.python.framework.agent.logger.log import run_log
+from taskd.python.toolkit.logger.log import run_log
 
 
 class PubkeyType(Enum):

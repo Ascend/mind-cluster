@@ -5,8 +5,8 @@
 import os
 import stat
 
-from component.taskd.taskd.python.framework.agent.constants import constants
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_SIZE
+from taskd.python.toolkit.constants import constants
+from taskd.python.toolkit.constants.constants import MAX_SIZE
 
 
 def safe_open(file, mode="r", encoding='utf-8', errors=None, newline=None):

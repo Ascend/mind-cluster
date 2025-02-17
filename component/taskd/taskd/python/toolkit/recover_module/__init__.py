@@ -3,4 +3,4 @@ __all__ = [
     "DLRecoverManager"
 ]
 
-from component.taskd.taskd.python.framework.agent.recover_module.recover_manager import DLRecoverManager
+from taskd.python.toolkit.recover_module.recover_manager import DLRecoverManager

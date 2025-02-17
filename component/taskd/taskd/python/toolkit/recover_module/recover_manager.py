@@ -8,13 +8,13 @@ from abc import ABC, abstractmethod
 from typing import Optional, List
 
 import grpc
-from component.taskd.taskd.python.framework.agent.constants import constants
-from component.taskd.taskd.python.framework.agent.validator.cert_check import CertContentsChecker
-from component.taskd.taskd.python.framework.agent.recover_module.pb import recover_pb2 as pb
-from component.taskd.taskd.python.framework.agent.recover_module.pb import recover_pb2_grpc as service
-from component.taskd.taskd.python.framework.agent.logger.log import run_log
-from component.taskd.taskd.python.framework.agent.validator.file_process import safe_get_file_info
-from component.taskd.taskd.python.framework.agent.recover_module import shared_data
+from taskd.python.toolkit.constants import constants
+from taskd.python.toolkit.validator.cert_check import CertContentsChecker
+from taskd.python.toolkit.recover_module.pb import recover_pb2 as pb
+from taskd.python.toolkit.recover_module.pb import recover_pb2_grpc as service
+from taskd.python.toolkit.logger.log import run_log
+from taskd.python.toolkit.validator.file_process import safe_get_file_info
+from taskd.python.toolkit.recover_module import shared_data
 
 MAX_CONNECT_GAP = 10
 BASE_CONNECT_GAP = 1

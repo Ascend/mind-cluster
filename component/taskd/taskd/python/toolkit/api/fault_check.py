@@ -7,12 +7,12 @@ import shutil
 import signal
 import time
 
-from component.taskd.taskd.python.framework.agent.config.path import TORCH_EXTENSIONS_CACHE_DIR
-from component.taskd.taskd.python.framework.agent.constants import constants
-from component.taskd.taskd.python.framework.agent.constants.constants import (WATCHDOG_ENV, WATCHDOG_ON,
+from taskd.python.toolkit.config.path import TORCH_EXTENSIONS_CACHE_DIR
+from taskd.python.toolkit.constants import constants
+from taskd.python.toolkit.constants.constants import (WATCHDOG_ENV, WATCHDOG_ON,
                                                                               WATCHDOG_OFF, ENABLE_RANKTABLE_ENV)
-from component.taskd.taskd.python.framework.agent.validator.file_process import safe_get_file_info
-from component.taskd.taskd.python.framework.agent.logger.log import run_log
+from taskd.python.toolkit.validator.file_process import safe_get_file_info
+from taskd.python.toolkit.logger.log import run_log
 
 
 def clean_before_restart():

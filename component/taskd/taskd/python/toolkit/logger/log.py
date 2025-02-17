@@ -6,16 +6,16 @@ import logging.handlers
 import os
 import yaml
 
-from component.taskd.taskd.python.framework.agent.config import path
-from component.taskd.taskd.python.framework.agent.constants.constants import (LOG_PRIVILEGE,
+from taskd.python.toolkit.config import path
+from taskd.python.toolkit.constants.constants import (LOG_PRIVILEGE,
                                                                               LOG_DIR_PRIVILEGE, LOG_BAK_PRIVILEGE, LOG_FILE_PATH_ENV)
-from component.taskd.taskd.python.framework.agent.constants.constants import MAX_SIZE
-from component.taskd.taskd.python.framework.agent.validator.file_process import safe_open
-from component.taskd.taskd.python.framework.agent.validator.validators import FileValidator
-from component.taskd.taskd.python.framework.agent.validator.validators import DirectoryValidator
-from component.taskd.taskd.python.framework.agent.constants.constants import LOG_MAX_LINE_LENGTH
-from component.taskd.taskd.python.framework.agent.constants.constants import LOG_SIMPLE_FORMAT
-from component.taskd.taskd.python.framework.agent.logger.custom_formatter import MaxLengthFormatter
+from taskd.python.toolkit.constants.constants import MAX_SIZE
+from taskd.python.toolkit.validator.file_process import safe_open
+from taskd.python.toolkit.validator.validators import FileValidator
+from taskd.python.toolkit.validator.validators import DirectoryValidator
+from taskd.python.toolkit.constants.constants import LOG_MAX_LINE_LENGTH
+from taskd.python.toolkit.constants.constants import LOG_SIMPLE_FORMAT
+from taskd.python.toolkit.logger.custom_formatter import MaxLengthFormatter
 
 
 def init_sys_log():

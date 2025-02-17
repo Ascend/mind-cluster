@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from component.taskd.taskd.python.framework.agent.recover_module.pb import recover_pb2 as recover__pb2
+from taskd.python.toolkit.recover_module.pb import recover_pb2 as recover__pb2
 
 class RecoverStub(object):
     """Missing associated documentation comment in .proto file."""
