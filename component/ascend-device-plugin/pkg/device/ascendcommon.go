@@ -254,7 +254,7 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and " +
 				"timeDiff less than 5 minutes, no need to update")
-			return false, nil
+			return true, nil
 		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
