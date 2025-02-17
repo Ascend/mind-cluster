@@ -275,6 +275,8 @@ const (
 	DistributedInferKey = "distributed"
 	// DistributedInferLabel true or false
 	DistributedInferLabel = "true"
+	// OperatorNameLabelKey pod label key for acjob operator name
+	OperatorNameLabelKey = "training.kubeflow.org/operator-name"
 )
 
 const (
