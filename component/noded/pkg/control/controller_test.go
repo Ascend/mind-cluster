@@ -16,6 +16,7 @@
 package control
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -41,6 +42,8 @@ func TestNodeController(t *testing.T) {
 	convey.Convey("test NodeController method 'updateFaultLevelMap'", t, testNodeCtlUpdateFaultLevelMap)
 	convey.Convey("test NodeController method 'getFaultLevel'", t, testNodeCtlGetFaultLevel)
 	convey.Convey("test NodeController method 'getNodeStatus'", t, testNodeCtlGetNodeStatus)
+
+	convey.Convey("test NodeController method 'initNodeAnnotation'", t, testInitNodeAnnotation)
 }
 
 func testNodeCtlSetNextFaultProcessor() {
@@ -56,6 +59,10 @@ func testNodeCtlInit() {
 	if nodeController == nil {
 		panic("nodeController is nil")
 	}
+	var p1 = gomonkey.ApplyFuncReturn(GetNodeSN, "123", nil)
+	defer p1.Reset()
+	var p2 = gomonkey.ApplyMethodReturn(nodeController.kubeClient, "AddAnnotation", nil)
+	defer p2.Reset()
 	err := nodeController.Init()
 	convey.So(err, convey.ShouldBeNil)
 }
@@ -202,4 +209,35 @@ func testNodeCtlGetNodeStatus() {
 		res := nodeController.getNodeStatus(testCase.input)
 		convey.So(res, convey.ShouldResemble, testCase.expRes)
 	}
+}
+
+func testInitNodeAnnotation() {
+	if nodeController == nil {
+		panic("nodeController is nil")
+	}
+	convey.Convey("when GetNodeSN success and AddAnnotation success, should return nil", func() {
+		var p1 = gomonkey.ApplyFuncReturn(GetNodeSN, "123", nil)
+		defer p1.Reset()
+		var p2 = gomonkey.ApplyMethodReturn(nodeController.kubeClient, "AddAnnotation", nil)
+		defer p2.Reset()
+		err := nodeController.initNodeAnnotation()
+		convey.So(err, convey.ShouldBeNil)
+	})
+	convey.Convey("when GetNodeSN failed and AddAnnotation success, should return err", func() {
+		var p1 = gomonkey.ApplyFuncReturn(GetNodeSN, "", errors.New("test err"))
+		defer p1.Reset()
+		var p2 = gomonkey.ApplyMethodReturn(nodeController.kubeClient, "AddAnnotation", nil)
+		defer p2.Reset()
+		err := nodeController.initNodeAnnotation()
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+	convey.Convey("when GetNodeSN success and AddAnnotation failed, should return err", func() {
+		var p1 = gomonkey.ApplyFuncReturn(GetNodeSN, "123", nil)
+		defer p1.Reset()
+		var p2 = gomonkey.ApplyMethodReturn(nodeController.kubeClient,
+			"AddAnnotation", errors.New("test err"))
+		defer p2.Reset()
+		err := nodeController.initNodeAnnotation()
+		convey.So(err, convey.ShouldNotBeNil)
+	})
 }

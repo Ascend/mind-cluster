@@ -43,6 +43,9 @@ const (
 	CmConsumerValue = "true"
 )
 
+// NodeSNAnnotation the node SN
+const NodeSNAnnotation = "product-serial-number"
+
 const (
 	// FaultConfigKey the fault config json file key of nodeD configuration
 	FaultConfigKey = "NodeDConfiguration.json"
