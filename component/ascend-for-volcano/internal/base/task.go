@@ -68,17 +68,19 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	task.Pod.Annotations[util.PodPredicateTime] = tmp
 	klog.V(util.LogInfoLev).Infof("%s setNPUTopologyToPod %s==%v top:%s.", tp.GetPluginName(),
 		task.Name, tmp, topologyStr)
-	if len(top) != int(node.Allocate[v1.ResourceName(tp.GetAnnoName())]/util.NPUHexKilo) || len(node.
-		BaseDeviceInfo) == 0 {
+	nodeAllocNum := node.Allocate[v1.ResourceName(tp.GetAnnoName())] / util.NPUHexKilo
+
+	if _, ok := task.Pod.Labels[util.OperatorNameLabelKey]; !ok &&
+		(len(top) != int(nodeAllocNum) || len(node.BaseDeviceInfo) == 0) {
 		return
 	}
 	ipMap := make(map[string]*util.NpuBaseInfo)
 	err := json.Unmarshal([]byte(node.BaseDeviceInfo), &ipMap)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("SetNPUTopologyToPodFn unmarshal device ips err: %s", err)
+		klog.V(util.LogErrorLev).Infof("setNPUTopologyToPodFn unmarshal device ips err: %s", err)
 		return
 	}
-	if len(ipMap) != len(top) {
+	if _, ok := task.Pod.Labels[util.OperatorNameLabelKey]; !ok && len(ipMap) != len(top) {
 		klog.V(util.LogDebugLev).Infof("device-ips(%d) not equal require npu(%d)", len(ipMap), len(top))
 		return
 	}
@@ -100,7 +102,7 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	}
 	marshedInst, err := json.Marshal(inst)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("SetNPUTopologyToPodFn marshal err: %s", err.Error())
+		klog.V(util.LogErrorLev).Infof("setNPUTopologyToPodFn marshal err: %s", err.Error())
 		return
 	}
 	task.Pod.Annotations[util.AscendNPUPodRealUse] = topologyStr

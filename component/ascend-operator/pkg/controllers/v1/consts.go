@@ -50,6 +50,7 @@ const (
 	npuCoreName = "huawei.com/npu-core"
 
 	statusPodIPDownwardAPI = "status.podIP"
+	ascendRealDownwardAPI  = "metadata.annotations['huawei.com/AscendReal']"
 
 	cmRetryTime      = 3
 	configmapPrefix  = "rings-config-"
@@ -102,6 +103,8 @@ const (
 
 	// hcclSuperPodLogicId is the logic id of the superpod, ascend container env name
 	hcclSuperPodLogicId = "HCCL_LOGIC_SUPERPOD_ID"
+	// ascendVisibleDevicesEnv represents the env of ASCEND_VISIBLE_DEVICES
+	ascendVisibleDevicesEnv = "ASCEND_VISIBLE_DEVICES"
 )
 
 const (
@@ -127,4 +130,13 @@ const (
 	decimal = 10
 	// labelFaultRetryTimes represents the key of label fault-retry-times.
 	labelFaultRetryTimes = "fault-retry-times"
+)
+
+const (
+	// NPU310CardName represents the name for 310 npu resource.
+	NPU310CardName = "huawei.com/Ascend310"
+	// NPU310PCardName represents the name for 310P npu resource.
+	NPU310PCardName = "huawei.com/Ascend310P"
+	// NPU910CardName represents the name for 910 npu resource.
+	NPU910CardName = "huawei.com/Ascend910"
 )

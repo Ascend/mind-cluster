@@ -628,3 +628,99 @@ func annotationResetMock(devErr, stateErr, nodeErr error) (*gomonkey.Patches, *g
 		})
 	return mockWrite, mockPatchNode, mockNode
 }
+
+func newTestPodWithAnnoAndPhase(annotations map[string]string, phase v1.PodPhase) v1.Pod {
+	return v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			UID:         "testUid",
+			Name:        "name",
+			Namespace:   "namespace",
+			Annotations: annotations,
+		},
+		Status: v1.PodStatus{
+			Phase: phase,
+		},
+	}
+}
+
+func TestGetPodsUsedNPUCase01(t *testing.T) {
+	convey.Convey("test GetPodsUsedNPU case 01", t, func() {
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("TestGetNode init kubernetes failed")
+		}
+		convey.Convey("should return empty string set "+
+			"when get pods information failed", func() {
+			patch := gomonkey.ApplyFunc(getPodsByKltPort, func() (*v1.PodList, error) {
+				return nil, fmt.Errorf("get pods information failed")
+			})
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("should return empty string set "+
+			"when check pod name or pod namespace failed", func() {
+			patch := gomonkey.ApplyFuncReturn(getPodsByKltPort, &v1.PodList{}, nil).
+				ApplyFuncReturn(common.CheckPodNameAndSpace, fmt.Errorf("failed"))
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("should return empty string set "+
+			"when pod status is Failed or Succeeded", func() {
+			testPod := newTestPodWithAnnoAndPhase(map[string]string{}, v1.PodFailed)
+			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
+			patch := gomonkey.ApplyFuncReturn(getPodsByKltPort, testPodList, nil).
+				ApplyFuncReturn(common.CheckPodNameAndSpace, nil)
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestGetPodsUsedNPUCase02(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestGetNode init kubernetes failed")
+	}
+	convey.Convey("test GetPodsUsedNPU case 02", t, func() {
+		commonPatch := gomonkey.ApplyFuncReturn(common.CheckPodNameAndSpace, nil)
+		defer commonPatch.Reset()
+		convey.Convey("should return empty string set "+
+			"when pod annotation not found realAllocTag", func() {
+			testPod := newTestPodWithAnnoAndPhase(map[string]string{}, v1.PodRunning)
+			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
+			patch := gomonkey.ApplyFuncReturn(getPodsByKltPort, testPodList, nil)
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("should return empty string set "+
+			"when pod annotation value is empty", func() {
+			annoKey := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+			anno := map[string]string{
+				annoKey: "",
+			}
+			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
+			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
+			patch := gomonkey.ApplyFuncReturn(getPodsByKltPort, testPodList, nil)
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("should return non-empty string set "+
+			"when pod annotation value is non-empty", func() {
+			annoKey := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+			anno := map[string]string{
+				annoKey: "Ascend910-0,Ascend910-1",
+			}
+			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
+			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
+			patch := gomonkey.ApplyFuncReturn(getPodsByKltPort, testPodList, nil)
+			defer patch.Reset()
+			pods := client.GetPodsUsedNPUByKlt()
+			convey.So(pods.Len(), convey.ShouldEqual, twoNum)
+		})
+	})
+}

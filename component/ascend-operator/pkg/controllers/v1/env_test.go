@@ -24,11 +24,80 @@ import (
 const (
 	fakeHostNetwork = "false"
 	fakeTaskID      = "123456"
-	msRoleIndex     = 8
+	msRoleIndex     = 6
 
-	ascend910    = "huawei.com/Ascend910"
-	chipsPerNode = "16"
+	ascend910      = "huawei.com/Ascend910"
+	ascend910vir2c = "huawei.com/Ascend910-2c"
+	chipsPerNode   = "16"
 )
+
+// TestIsVirtualResourceReq test isVirtualResourceReq
+func TestIsVirtualResourceReq(t *testing.T) {
+	convey.Convey("test isVirtualResourceReq", t, func() {
+		rc := &ASJobReconciler{}
+		convey.Convey("01-pod requests is nil, will return false", func() {
+			res := rc.isVirtualResourceReq(nil)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-pod requests virtual resource, will return true", func() {
+			fakeRequests := &corev1.ResourceList{ascend910vir2c: resource.Quantity{}}
+			res := rc.isVirtualResourceReq(fakeRequests)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+		convey.Convey("03-pod requests normal resource, will return false", func() {
+			fakeRequests := &corev1.ResourceList{ascend910: resource.Quantity{}}
+			res := rc.isVirtualResourceReq(fakeRequests)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestSetCommonEnv test setCommonEnv
+func TestSetCommonEnv(t *testing.T) {
+	convey.Convey("test setCommonEnv", t, func() {
+		ei := newCommonPodInfo()
+		podTemp := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+			Containers: make([]corev1.Container, 1),
+		}}
+		rc := &ASJobReconciler{}
+		convey.Convey("01-pod has no default container, will do nothing", func() {
+			rc.setCommonEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
+		})
+		podTemp.Spec.Containers[0] = corev1.Container{
+			Name: mindxdlv1.DefaultContainerName,
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					ascend910vir2c: resource.MustParse(chipsPerNode),
+				},
+			},
+		}
+		convey.Convey("02-pod request virtual resource, "+
+			"no need set ascendVisibleDevicesEnv", func() {
+			expectEnvs := []corev1.EnvVar{
+				{Name: taskIDEnvKey, Value: fakeTaskID},
+				{Name: mindxServerIPEnv, Value: ""},
+				{Name: hostNetwork, Value: fakeHostNetwork},
+				{Name: hcclSuperPodLogicId, Value: "0"}}
+			rc.setCommonEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
+		convey.Convey("03-pod request normal resource, "+
+			"set ascendVisibleDevicesEnv", func() {
+			podTemp.Spec.Containers[0].Resources.Requests = corev1.ResourceList{
+				ascend910: resource.MustParse(chipsPerNode),
+			}
+			expectEnvs := []corev1.EnvVar{
+				fakeRefEnv(ascendVisibleDevicesEnv, ascendRealDownwardAPI),
+				{Name: taskIDEnvKey, Value: fakeTaskID},
+				{Name: mindxServerIPEnv, Value: ""},
+				{Name: hostNetwork, Value: fakeHostNetwork},
+				{Name: hcclSuperPodLogicId, Value: "0"}}
+			rc.setCommonEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
+	})
+}
 
 // TestSetMindSporeEnv test setMindSporeEnv
 func TestSetMindSporeEnv(t *testing.T) {
@@ -46,15 +115,11 @@ func TestSetMindSporeEnv(t *testing.T) {
 			{Name: msSchedHost, Value: ei.ip},
 			{Name: msLocalWorker, Value: strconv.Itoa(ei.ctReq)},
 			{Name: msWorkerNum, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
-			{Name: taskIDEnvKey, Value: fakeTaskID},
-			{Name: mindxServerIPEnv, Value: ""},
 			{Name: msNodeRank, Value: strconv.Itoa(ei.rank)},
 			{Name: msSchedPort, Value: ei.port},
 			{Name: msServerNum, Value: "0"},
 			{Name: msRole, Value: msRoleMap[ei.rtype]},
-			{Name: hostNetwork, Value: fakeHostNetwork},
-			{Name: npuPod, Value: "false"},
-			{Name: hcclSuperPodLogicId, Value: "0"}}
+			{Name: npuPod, Value: "false"}}
 		convey.Convey("01-pod has no default container, will do nothing", func() {
 			rc.setMindSporeEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
@@ -67,13 +132,13 @@ func TestSetMindSporeEnv(t *testing.T) {
 				},
 			},
 		}
-		convey.Convey("01-rType is worker, scheduler host equal ei.ip", func() {
+		convey.Convey("02-rType is worker, scheduler host equal ei.ip", func() {
 			rc.setMindSporeEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
-		convey.Convey("01-rType is Scheduler, scheduler host equal ei.ip", func() {
+		convey.Convey("03-rType is Scheduler, scheduler host equal ei.ip", func() {
 			ei.rtype = mindxdlv1.MindSporeReplicaTypeScheduler
-			expectEnvs[0] = fakeRefEnv(msSchedHost)
+			expectEnvs[0] = fakeRefEnv(msSchedHost, statusPodIPDownwardAPI)
 			expectEnvs[msRoleIndex] = corev1.EnvVar{
 				Name:  msRole,
 				Value: msRoleMap[ei.rtype],
@@ -98,11 +163,7 @@ func TestSetPytorchEnv(t *testing.T) {
 			{Name: ptLocalRank, Value: localRankStr(ei.ctReq)},
 			{Name: ptMasterAddr, Value: ei.ip},
 			{Name: ptMasterPort, Value: ei.port},
-			{Name: ptRank, Value: strconv.Itoa(ei.rank)},
-			{Name: taskIDEnvKey, Value: fakeTaskID},
-			{Name: mindxServerIPEnv, Value: ""},
-			{Name: hostNetwork, Value: fakeHostNetwork},
-			{Name: hcclSuperPodLogicId, Value: "0"}}
+			{Name: ptRank, Value: strconv.Itoa(ei.rank)}}
 		convey.Convey("01-pod has no default container, will do nothing", func() {
 			rc.setPytorchEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
@@ -142,13 +203,9 @@ func TestSetTensorflowEnv(t *testing.T) {
 			{Name: tfWorkerSize, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
 			{Name: tfChiefPort, Value: ei.port},
 			{Name: tfRank, Value: "1"},
-			{Name: taskIDEnvKey, Value: fakeTaskID},
-			{Name: mindxServerIPEnv, Value: ""},
 			{Name: tfChiefDevice, Value: "0"},
-			{Name: hostNetwork, Value: fakeHostNetwork},
 			{Name: tfWorkerIP, ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{
-				FieldPath: statusPodIPDownwardAPI}}},
-			{Name: hcclSuperPodLogicId, Value: "0"}}
+				FieldPath: statusPodIPDownwardAPI}}}}
 		convey.Convey("01-pod has no default container, will do nothing", func() {
 			rc.setTensorflowEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
@@ -167,19 +224,19 @@ func TestSetTensorflowEnv(t *testing.T) {
 		})
 		convey.Convey("03-rType is master, scheduler host equal ei.ip", func() {
 			ei.rtype = mindxdlv1.TensorflowReplicaTypeChief
-			expectEnvs[0] = fakeRefEnv(tfChiefIP)
+			expectEnvs[0] = fakeRefEnv(tfChiefIP, statusPodIPDownwardAPI)
 			rc.setTensorflowEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
 	})
 }
 
-func fakeRefEnv(name string) corev1.EnvVar {
+func fakeRefEnv(name string, downwardAPI string) corev1.EnvVar {
 	return corev1.EnvVar{
 		Name: name,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
-				FieldPath: statusPodIPDownwardAPI,
+				FieldPath: downwardAPI,
 			},
 		},
 	}

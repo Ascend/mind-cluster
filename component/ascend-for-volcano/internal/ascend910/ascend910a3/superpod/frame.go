@@ -31,21 +31,23 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910a3"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 // New return npu plugin
-func New(name string) *module910SuperPod {
+func New(name string) base.AscendHandler {
 	m := &module910SuperPod{}
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
-	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetMaxNodeNPUNum(ascend910a3.NodeNPUNumber)
+	m.SetMaxCardNPUNum(ascend910a3.DieNPUNumber)
 	m.SetAcceleratorValue(util.JobKind910BValue)
 	m.SetIsNetworkFaultAttention(true)
-	m.netUnhealthyKey = networkUnhealthyNPU
-	m.dieNum = dieNPUNumber
+	m.NetUnhealthyKey = ascend910a3.NetworkUnhealthyNPU
 
 	return m
 }
@@ -83,7 +85,7 @@ func (tp *module910SuperPod) ValidNPUJob() *api.ValidateResult {
 
 func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 	if tp.NPUTaskNum == 1 {
-		if tp.ReqNPUNum == 1 || (tp.ReqNPUNum%tp.dieNum == 0 && tp.ReqNPUNum <= nodeNPUNumber) {
+		if tp.ReqNPUNum == 1 || (tp.ReqNPUNum%tp.MaxCardNPUNum == 0 && tp.ReqNPUNum <= tp.MaxNodeNPUNum) {
 			if tp.ReqNPUNum != tp.SpBlockNPUNum {
 				return &api.ValidateResult{
 					Pass:    false,
@@ -109,24 +111,7 @@ func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 				tp.ReqNPUNum),
 		}
 	}
-	return tp.checkReqNPUEqualNodeNPU()
-}
-
-func (tp *module910SuperPod) checkReqNPUEqualNodeNPU() *api.ValidateResult {
-	for _, task := range tp.Tasks {
-		// npu num required by task in distributed job must be node npu num
-		if task.ReqNPUNum != nodeNPUNumber {
-			if task.ReqNPUNum == 0 && task.Annotation[taskSpec] == schedulerSpec {
-				continue
-			}
-			return &api.ValidateResult{
-				Pass:    false,
-				Reason:  jobCheckFailedReason,
-				Message: fmt.Sprintf("distributed super-pod job require npu 16*n, instead of %d", task.ReqNPUNum),
-			}
-		}
-	}
-	return nil
+	return tp.CheckReqNPUEqualNodeNPU()
 }
 
 func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
@@ -137,17 +122,17 @@ func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 			Message: fmt.Sprintf("sp-block(%d) is invalid", tp.SpBlockNPUNum),
 		}
 	}
-	if tp.SpBlockNPUNum < nodeNPUNumber {
+	if tp.SpBlockNPUNum < tp.MaxNodeNPUNum {
 		tp.spBlock = 1
 	} else {
-		if tp.SpBlockNPUNum%nodeNPUNumber != 0 {
+		if tp.SpBlockNPUNum%tp.MaxNodeNPUNum != 0 {
 			return &api.ValidateResult{
 				Pass:    false,
 				Reason:  spBlockInvalidReason,
-				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, nodeNPUNumber),
+				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 			}
 		}
-		tp.spBlock = tp.SpBlockNPUNum / nodeNPUNumber
+		tp.spBlock = tp.SpBlockNPUNum / tp.MaxNodeNPUNum
 	}
 
 	if tp.spBlock > tp.FrameAttr.SuperPodSize {
@@ -185,7 +170,7 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 		return err
 	}
 
-	if err = tp.judgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
+	if err = tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s JudgeNodeAndTaskNPU err: %s", tp.GetPluginName(), err.Error())
 		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err.Error())
 	}
@@ -195,39 +180,6 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 			return fmt.Errorf("rescheduling CheckNodeNPUByTask %s", reErr.Error())
 		}
 	}
-	return nil
-}
-
-func (tp *module910SuperPod) judgeNodeAndTaskNPU(taskNPU int, nodeNPUTopology []int) error {
-	err := tp.NPUHandler.JudgeNodeAndTaskNPU(taskNPU, nodeNPUTopology)
-	if err != nil {
-		return err
-	}
-	if taskNPU == 1 {
-		return nil
-	}
-	sort.Ints(nodeNPUTopology)
-
-	cardTop := make(map[int][]int)
-	for _, index := range nodeNPUTopology {
-		cardId := index / tp.dieNum
-		_, ok := cardTop[cardId]
-		if !ok {
-			cardTop[cardId] = make([]int, 0)
-		}
-		cardTop[cardId] = append(cardTop[cardId], index)
-	}
-
-	fitDies := 0
-	for _, card := range cardTop {
-		if len(card) == tp.dieNum {
-			fitDies += tp.dieNum
-		}
-	}
-	if fitDies < taskNPU {
-		return fmt.Errorf("top[%v] is not meet task req(%d)", nodeNPUTopology, taskNPU)
-	}
-
 	return nil
 }
 
@@ -870,7 +822,7 @@ func (tp *module910SuperPod) UseAnnotation(task *api.TaskInfo, node plugin.NPUNo
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %#v",
 		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), node.Annotation)
-	selectedNPU, err := tp.selectNPUFromNode(task, node)
+	selectedNPU, err := tp.SelectNPUFromNode(task, node, tp.NPUTaskNum/tp.spBlock > 1)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", tp.GetPluginName(), err)
 		return nil
@@ -881,76 +833,4 @@ func (tp *module910SuperPod) UseAnnotation(task *api.TaskInfo, node plugin.NPUNo
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	newNode := tp.UpdateNodeInfo(node, selectedNPU)
 	return newNode
-}
-
-func (tp *module910SuperPod) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode) ([]int, error) {
-	taskNPUNum, err := tp.GetTaskReqNPUNum(task)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum err: %s", tp.GetPluginName(), err.Error())
-		return nil, err
-	}
-	npuTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum/tp.spBlock > 1)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, tp.GetPluginName(), err.Error())
-		return nil, err
-	}
-	if tp.NPUTaskNum > 1 {
-		if len(npuTop) == nodeNPUNumber {
-			return npuTop, nil
-		}
-		return nil, fmt.Errorf("node<%s> top<%v> can not meet task req<%d>", node.Name, len(npuTop), taskNPUNum)
-	}
-
-	return tp.selectNPUForStandaloneJob(taskNPUNum, npuTop, node)
-}
-
-func (tp *module910SuperPod) selectNPUForStandaloneJob(taskNPUNum int, npuTop []int,
-	node plugin.NPUNode) ([]int, error) {
-	sort.Ints(npuTop)
-	klog.V(util.LogInfoLev).Infof("%s select %d NPU Node(%s) nodeTop<%v>", tp.GetPluginName(), taskNPUNum,
-		node.Name, npuTop)
-	cardTop := tp.getNodeCardTop(npuTop)
-
-	cardTopSlice := make([][]int, 0)
-	for _, card := range cardTop {
-		cardTopSlice = append(cardTopSlice, card)
-	}
-
-	sort.Slice(cardTopSlice, func(i, j int) bool {
-		return len(cardTopSlice[i]) < len(cardTopSlice[j])
-	})
-	klog.V(util.LogInfoLev).Infof("%s selectNPUFromNode cardTopSlice<%v>", tp.GetPluginName(), cardTopSlice)
-	var selected []int
-	for _, card := range cardTopSlice {
-		if taskNPUNum == 0 {
-			break
-		}
-		if taskNPUNum == 1 {
-			selected = append(selected, card[0])
-			break
-		}
-		if len(card) == tp.dieNum {
-			selected = append(selected, card...)
-			taskNPUNum -= tp.dieNum
-		}
-	}
-	return selected, nil
-}
-
-func (tp *module910SuperPod) getNodeCardTop(npuTop []int) map[int][]int {
-	cardTop := make(map[int][]int)
-	for _, index := range npuTop {
-		cardId := index / tp.dieNum
-		_, ok := cardTop[cardId]
-		if !ok {
-			cardTop[cardId] = make([]int, 0)
-		}
-		cardTop[cardId] = append(cardTop[cardId], index)
-	}
-	return cardTop
-}
-
-// ReleaseAnnotation Release used resource.
-func (tp *module910SuperPod) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	return &node
 }

@@ -15,6 +15,9 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "patch"]
+  - apiGroups: [ "" ]
+    resources: [ "nodes/proxy" ]
+    verbs: [ "get" ]
   - apiGroups: [""]
     resources: ["nodes/status"]
     verbs: ["get", "patch", "update"]
@@ -123,6 +126,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
       volumes:
         - name: device-plugin
           hostPath:

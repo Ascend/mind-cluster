@@ -29,11 +29,12 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910a3/module910a3x16"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910a3/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/card910bx2"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/card910bx2infer"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/module910bx16"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/module910bx8"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/ascend910b/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/card910x2"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/half910x4"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910/asend910old/module910x8"
@@ -62,6 +63,7 @@ func New(npuName string) plugin.ISchedulerPlugin {
 	npuPlugin.Kind[card910bx2.SchedulerName] = card910bx2.New(card910bx2.SchedulerName)
 	npuPlugin.Kind[card910bx2infer.SchedulerName] = card910bx2infer.New(card910bx2infer.SchedulerName)
 	npuPlugin.Kind[superpod.SchedulerName] = superpod.New(superpod.SchedulerName)
+	npuPlugin.Kind[module910a3x16.SchedulerName] = module910a3x16.New(module910a3x16.SchedulerName)
 	return npuPlugin
 }
 

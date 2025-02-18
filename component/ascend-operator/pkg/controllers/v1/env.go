@@ -32,6 +32,50 @@ func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int
 	})
 }
 
+// isVirtualResourceReq return true when pod request virtual resource, otherwise return false
+func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bool {
+	if requests == nil {
+		return false
+	}
+	nonVirtualResources := map[corev1.ResourceName]struct{}{
+		NPU310CardName:  {},
+		NPU310PCardName: {},
+		NPU910CardName:  {},
+	}
+	for name := range *requests {
+		if _, ok := nonVirtualResources[name]; !ok {
+			hwlog.RunLog.Debugf("virtual resource name detected: %s", name)
+			return true
+		}
+	}
+	return false
+}
+
+func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
+	for i := range podTemplate.Spec.Containers {
+		if podTemplate.Spec.Containers[i].Name == mindxdlv1.DefaultContainerName {
+			if len(podTemplate.Spec.Containers[i].Env) == 0 {
+				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
+			}
+			if !r.isVirtualResourceReq(&podTemplate.Spec.Containers[i].Resources.Requests) {
+				podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
+					Name: ascendVisibleDevicesEnv,
+					ValueFrom: &corev1.EnvVarSource{
+						FieldRef: &corev1.ObjectFieldSelector{
+							FieldPath: ascendRealDownwardAPI,
+						},
+					},
+				})
+			}
+			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
+			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
+			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
+			addHcclSuperPodIdEnv(pi, podTemplate, i)
+			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
+		}
+	}
+}
+
 func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
 	msRoleMap := map[commonv1.ReplicaType]string{
 		mindxdlv1.MindSporeReplicaTypeScheduler: msSchedulerRole,
@@ -58,16 +102,12 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 				addEnvValue(podTemplate, msLocalWorker, strconv.Itoa(pi.ctReq), i)
 				addEnvValue(podTemplate, msWorkerNum, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
 			}
-			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
-			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, msNodeRank, strconv.Itoa(pi.rank), i)
 			addEnvValue(podTemplate, msSchedPort, pi.port, i)
 			addEnvValue(podTemplate, msServerNum, "0", i)
 			addEnvValue(podTemplate, msRole, msRoleMap[pi.rtype], i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 
 			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
-			addHcclSuperPodIdEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -88,10 +128,6 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 			addEnvValue(podTemplate, ptMasterAddr, pi.ip, i)
 			addEnvValue(podTemplate, ptMasterPort, pi.port, i)
 			addEnvValue(podTemplate, ptRank, strconv.Itoa(pi.rank), i)
-			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
-			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
-			addHcclSuperPodIdEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -121,10 +157,7 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 			}
 			addEnvValue(podTemplate, tfChiefPort, pi.port, i)
 			addEnvValue(podTemplate, tfRank, strconv.Itoa(pi.rank), i)
-			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
-			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, tfChiefDevice, "0", i)
-			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
 				Name: tfWorkerIP,
 				ValueFrom: &corev1.EnvVarSource{
@@ -133,7 +166,6 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 					},
 				},
 			})
-			addHcclSuperPodIdEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}

@@ -174,7 +174,7 @@ func sendToKubelet(stream v1beta1.DevicePlugin_ListAndWatchServer, resp *v1beta1
 
 func (ps *PluginServer) getNotPodUsedChips() sets.String {
 	usedChips := ps.manager.GetUsedChips()
-	podUsedChips := ps.manager.GetKubeClient().GetPodsUsedNpu()
+	podUsedChips := ps.manager.GetKubeClient().GetPodsUsedNPUByKlt()
 	notPodUsedChips := usedChips.Difference(podUsedChips)
 	return notPodUsedChips
 }

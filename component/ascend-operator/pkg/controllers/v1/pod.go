@@ -462,6 +462,7 @@ func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpe
 		return nil
 	}
 	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)
+	r.setCommonEnv(pi, podTemplate)
 	switch pi.frame {
 	case mindxdlv1.MindSporeFrameworkName:
 		r.setMindSporeEnv(pi, podTemplate)

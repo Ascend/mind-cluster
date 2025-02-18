@@ -444,7 +444,7 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 
 func (hdm *HwDevManager) updateDeviceUsedInfo(groupDevice map[string][]*common.NpuDevice) {
 	usedChips := hdm.manager.GetUsedChips()
-	podUsedChips := hdm.manager.GetKubeClient().GetPodsUsedNpu()
+	podUsedChips := hdm.manager.GetKubeClient().GetPodsUsedNPUByKlt()
 	notPodUsedChips := usedChips.Difference(podUsedChips)
 	hwlog.RunLog.Debugf("update deviceUsedInfo usedChips: %v, podUsedChips: %v, notPodUsedChips: %v",
 		usedChips, podUsedChips, notPodUsedChips)

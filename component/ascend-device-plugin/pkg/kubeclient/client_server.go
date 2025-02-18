@@ -363,6 +363,43 @@ func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 	return sets.NewString(useNpu...)
 }
 
+// GetPodsUsedNPUByKlt returns NPUs used by Pods
+func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
+	podList, err := getPodsByKltPort()
+	if err != nil {
+		hwlog.RunLog.Errorf("get pods used NPU failed: %v", err)
+		return sets.String{}
+	}
+	usedNPU := make([]string, 0)
+	for _, pod := range podList.Items {
+		if err := common.CheckPodNameAndSpace(pod.GetName(), common.PodNameMaxLength); err != nil {
+			hwlog.RunLog.Warnf("pod name syntax illegal, err: %v", err)
+			continue
+		}
+		if err := common.CheckPodNameAndSpace(pod.GetNamespace(), common.PodNameSpaceMaxLength); err != nil {
+			hwlog.RunLog.Warnf("pod namespace syntax illegal, err: %v", err)
+			continue
+		}
+		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
+			continue
+		}
+		realAllocTag := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+		tmpNPU, ok := pod.Annotations[realAllocTag]
+		if !ok || len(tmpNPU) == 0 || len(tmpNPU) > common.PodAnnotationMaxLength {
+			continue
+		}
+		tmpNPUList := strings.Split(tmpNPU, common.CommaSepDev)
+		if len(tmpNPUList) == 0 || len(tmpNPUList) > common.MaxDevicesNum {
+			hwlog.RunLog.Warnf("invalid annotation, len is %d", len(tmpNPUList))
+			continue
+		}
+		usedNPU = append(usedNPU, tmpNPUList...)
+		hwlog.RunLog.Debugf("pod Name: %s, get real allocate npu by pod, tmpNPU: %#v", pod.GetName(), tmpNPU)
+	}
+	hwlog.RunLog.Debugf("get pods by klt port, used NPU: %v", usedNPU)
+	return sets.NewString(usedNPU...)
+}
+
 // GetNodeServerID Get Node Server ID
 func (ki *ClientK8s) GetNodeServerID() (string, error) {
 	node, err := ki.GetNode()

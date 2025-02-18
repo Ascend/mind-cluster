@@ -19,13 +19,14 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"sync"
+	"strconv"
 	"time"
 	"unsafe"
 
-	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+
+	"Ascend-device-plugin/pkg/common"
 	devmanagercommon "ascend-common/devmanager/common"
 )
 
@@ -96,26 +97,12 @@ import "C"
 
 const (
 	maxFaultNum = 128
+	invalidNum  = 0xFFFFFFFF
 )
 
 // SwitchDevManager is the manager for switch
 type SwitchDevManager struct {
 }
-
-var (
-	switchInitOnce sync.Once
-	// eventTypeToFaultIDMapper 5/449 5/448 need to calculate in code
-	eventTypeToFaultIDMapper = map[uint]uint{13: 155907, 12: 155649, 11: 155904, 10: 132134, 8: 155910, 9: 155911,
-		7: 155908, 6: 155909, 5: 155912, 4: 155913, 3: 155914}
-	// faultIdToAlarmIdMapper  5/8  need alarmID
-	faultIdToAlarmIdMapper = map[uint]string{
-		155907: "0x00f103b0", 155649: "0x00f103b0", 155904: "0x00f103b0",
-		132134: "0x00f1ff06", 155910: "0x00f1ff06", 155911: "0x00f1ff06",
-		155908: "0x00f103b6", 155909: "0x00f103b6",
-		155912: "0x00f1ff09", 155913: "0x00f1ff09", 155914: "0x00f1ff09",
-		132332: "0x00f10509", 132333: "0x00f10509",
-	}
-)
 
 // UpdateSwitchFaultLevel update the map recording fault code and it's level, as long as deviceinfo changed
 func UpdateSwitchFaultLevel() {
@@ -144,7 +131,7 @@ func (sdm *SwitchDevManager) InitSwitchDev() error {
 	dcmiLibName := "liblingqu-dcmi.so"
 	dcmiLibPath, err := utils.GetDriverLibPath(dcmiLibName)
 	if err != nil {
-		return fmt.Errorf("failed to find switch library so, err:%s", err.Error())
+		return fmt.Errorf("failed to find switch library so, err: %s", err.Error())
 	}
 	cDcmiTemplateName := C.CString(dcmiLibPath)
 	defer C.free(unsafe.Pointer(cDcmiTemplateName))
@@ -154,7 +141,7 @@ func (sdm *SwitchDevManager) InitSwitchDev() error {
 	if retCode := C.dcmi_init_lq(); retCode != C.SUCCESS {
 		return fmt.Errorf("dcmi init call failed, error code: %d", int32(retCode))
 	}
-	hwlog.RunLog.Info("init switch library succeed")
+	hwlog.RunLog.Info("init switch library succeeded")
 
 	return nil
 }
@@ -172,7 +159,12 @@ func (sdm *SwitchDevManager) ShutDownSwitch() {
 func goFaultEventHandler(event *C.struct_LqDcmiEvent) {
 	// faultEventHandler callback function for subscribe mod, which will receive fault code when fault happens
 	faultEvent := convertFaultEvent(event)
-	hwlog.RunLog.Warnf("switch subscribe got fault:%#v, faultCode:%v", faultEvent, faultEvent.AssembledFaultCode)
+	hwlog.RunLog.Warnf("switch subscribe got fault:%s, faultCode:%v",
+		fmt.Sprintf("AlarmId: 0x%08x, FaultID: %v, AssembledFaultCode: %v, "+
+			"PeerPortDevice: %v, PeerPortId: %v, SwitchChipId: %v, SwitchPortId: %v, Assertion: %v",
+			faultEvent.EventType, faultEvent.FaultID,
+			faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice, faultEvent.PeerPortId,
+			faultEvent.SwitchChipId, faultEvent.SwitchPortId, faultEvent.Assertion), faultEvent.AssembledFaultCode)
 	// for recovered fault, delete them from current fault codes
 	if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
 		newFaultCodes := make([]common.SwitchFaultEvent, 0)
@@ -270,81 +262,56 @@ func convertFaultEvent(event *C.struct_LqDcmiEvent) common.SwitchFaultEvent {
 		NotifySerialNum: int(event.notifySerialNum),
 		AlarmRaisedTime: int64(event.alarmRaisedTime),
 	}
-	if err := setExtraFaultInfo(&fault); err != nil {
-		hwlog.RunLog.Error(err)
-	}
-	hwlog.RunLog.Debugf("convert switch fault finish, EventType:%v,SubType:%v,FaultID:%v,"+
-		"AssembledFaultCode:%v,PeerPortDevice:%v,AlarmRaisedTime:%v",
-		fault.EventType, fault.SubType, fault.FaultID, fault.AssembledFaultCode, fault.PeerPortDevice, fault.AlarmRaisedTime)
+	setExtraFaultInfo(&fault)
+	hwlog.RunLog.Debugf("convert switch fault finish, AlarmId:%v, FaultID:%v,"+
+		"AssembledFaultCode:%v, PeerPortDevice:%v, AlarmRaisedTime:%v",
+		fault.EventType, fault.FaultID, fault.AssembledFaultCode,
+		fault.PeerPortDevice, fault.AlarmRaisedTime)
 	return fault
 }
 
 // setExtraFaultInfo to convert fault event struct to a standard fault code as [0x00f1ff09,155912,cpu,na]
-func setExtraFaultInfo(event *common.SwitchFaultEvent) error {
-	faultID, ok, alarmID := uint(0), false, ""
-	// while eventType is 5, it depends on subtype to tell its faultID
-	if event.EventType == common.EventTypeOfSwitchPortFault {
-		switch event.SubType {
-		case common.SubTypeOfPortDown:
-			faultID = uint(0)
-			alarmID = "0x08520003"
-		case common.SubTypeOfPortLaneReduceQuarter:
-			faultID = uint(common.FaultIdOfPortLaneReduceQuarter)
-		case common.SubTypeOfPortLaneReduceHalf:
-			faultID = uint(common.FaultIdOfPortLaneReduceHalf)
-		default:
-			faultID = uint(common.FaultIdOfPortFailOnForwardingChip)
-		}
-	} else {
-		faultID, ok = eventTypeToFaultIDMapper[event.EventType]
-		if !ok {
-			hwlog.RunLog.Warnf("failed to find faultID for switch fault event: %v", event)
-		}
-	}
-	if alarmID == "" {
-		alarmID, ok = faultIdToAlarmIdMapper[faultID]
-		if !ok {
-			hwlog.RunLog.Warnf("failed to find alarm id for switch fault event: %v", event)
-		}
-	}
+func setExtraFaultInfo(event *common.SwitchFaultEvent) {
+	// to get peer device type, if switch port id is 0xFFFFFFFF, then it is not port level fault
 	PeerDeviceType, PeerDeviceName := int(event.PeerPortDevice), ""
-	if isPortLevelFault(int(event.EventType)) {
-		switch PeerDeviceType {
-		case common.PeerDeviceChipOrCpuPort:
-			PeerDeviceName = "cpu"
-		case common.PeerDeviceNpuPort:
-			PeerDeviceName = "npu"
-		case common.PeerDeviceL2Port:
-			PeerDeviceName = "L2"
-		default:
-			PeerDeviceName = "na"
-		}
+	if isPortLevelFault(int(event.SwitchPortId)) {
+		PeerDeviceName = getPeerDeviceName(PeerDeviceType)
 	} else {
-		PeerDeviceName = "na"
+		PeerDeviceName = common.PeerDeviceNAPortName
 	}
-	// currently the last part means ports, remain na for now
-	if faultID == uint(0) {
-		event.AssembledFaultCode = fmt.Sprintf("[%s,,%s,na]", alarmID, PeerDeviceName)
+	alarmID, faultID := event.EventType, event.SubType
+	// for linkdown fault event, the faultID will be na, received 0xFFFFFFFF from driver
+	if faultID == invalidNum {
+		event.FaultID = common.PeerDeviceNAPortName
+		event.AssembledFaultCode = fmt.Sprintf("[0x%08x,na,%s,na]", alarmID, PeerDeviceName)
 	} else {
-		event.AssembledFaultCode = fmt.Sprintf("[%s,%d,%s,na]", alarmID, faultID, PeerDeviceName)
+		event.FaultID = strconv.Itoa(int(faultID))
+		event.AssembledFaultCode = fmt.Sprintf("[0x%08x,%d,%s,na]", alarmID, faultID, PeerDeviceName)
 	}
-	event.FaultID = faultID
 	if event.AlarmRaisedTime == int64(0) {
 		event.AlarmRaisedTime = time.Now().Unix()
 	}
-	return nil
+}
+
+func getPeerDeviceName(PeerDeviceType int) string {
+	switch PeerDeviceType {
+	case common.PeerDeviceChipOrCpuPort:
+		return common.PeerDeviceChipOrCpuPortName
+	case common.PeerDeviceNpuPort:
+		return common.PeerDeviceNpuPortName
+	case common.PeerDeviceL2Port:
+		return common.PeerDeviceL2PortName
+	default:
+		return common.PeerDeviceNAPortName
+	}
 }
 
 // isPortLevelFault to judge if a fault is related to whole chip or any of its ports
 // if it is whole chip peer deviceType will be "na" while peerdeivce==0
-// else it is for its chip, peer deviceType will be "cpu" while peerdeivce==0
-func isPortLevelFault(eventType int) bool {
-	if eventType == common.PortFaultInvalidPkgEventType || eventType == common.PortFaultUnstableEventType ||
-		eventType == common.PortFaultFailEventType || eventType == common.PortFaultTimeoutLpEventType ||
-		eventType == common.PortFaultTimeoutRpEventType {
-		return true
-	}
-	return false
+// else it is for its chip, peer deviceType will be "cpu" while peerdeivce==0,
+// only when the switchPortId value is not 0xFFFFFFFF, it is port level fault
+func isPortLevelFault(switchPortId int) bool {
+	return switchPortId != invalidNum
 }
 
 // isFaultRecoveredEvent to judge if recoverEvent is the recover event for faultEvent
@@ -352,13 +319,13 @@ func isFaultRecoveredEvent(faultEvent, recoverEvent common.SwitchFaultEvent) boo
 	if int8(recoverEvent.Assertion) != devmanagercommon.FaultRecover || recoverEvent.Assertion == faultEvent.Assertion {
 		return false
 	}
-	faultEventInfo := fmt.Sprintf("EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,"+
+	faultEventInfo := fmt.Sprintf("EventType:%v,FaultID:%v,AssembledFaultCode:%v,"+
 		"PeerPortDevice:%v,PeerPortId:%v,SwitchChipId:%v,SwitchPortId:%v", faultEvent.EventType, faultEvent.SubType,
-		faultEvent.FaultID, faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice, faultEvent.PeerPortId,
+		faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice, faultEvent.PeerPortId,
 		faultEvent.SwitchChipId, faultEvent.SwitchPortId)
-	recoveredEventInfo := fmt.Sprintf("EventType:%v,SubType:%v,FaultID:%v,AssembledFaultCode:%v,"+
+	recoveredEventInfo := fmt.Sprintf("EventType:%v,FaultID:%v,AssembledFaultCode:%v,"+
 		"PeerPortDevice:%v,PeerPortId:%v,SwitchChipId:%v,SwitchPortId:%v", recoverEvent.EventType, recoverEvent.SubType,
-		recoverEvent.FaultID, recoverEvent.AssembledFaultCode, recoverEvent.PeerPortDevice, recoverEvent.PeerPortId,
+		recoverEvent.AssembledFaultCode, recoverEvent.PeerPortDevice, recoverEvent.PeerPortId,
 		recoverEvent.SwitchChipId, recoverEvent.SwitchPortId)
 	return faultEventInfo == recoveredEventInfo
 }

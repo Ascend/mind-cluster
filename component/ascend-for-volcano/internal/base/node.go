@@ -22,6 +22,7 @@ package base
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"k8s.io/klog"
 
@@ -46,6 +47,7 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 		return nil, err
 	}
 	if !disFlag || !tp.IsNetworkFaultAttention {
+		sort.Ints(nodeTop)
 		return nodeTop, nil
 	}
 	netUnhealthyTop, err := tp.getNetUnhealthyNPU(node)
@@ -55,6 +57,7 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 	}
 
 	res := util.RemoveCommonElement(nodeTop, netUnhealthyTop)
+	sort.Ints(res)
 	return res, nil
 }
 
