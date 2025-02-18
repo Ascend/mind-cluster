@@ -1,11 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import unittest
 from unittest.mock import patch, MagicMock
 import os
 import time
-from component.taskd.taskd.python.framework.agent.api.fault_check import FaultStatus
-from component.taskd.taskd.python.framework.agent.constants import constants
-from component.taskd.taskd.python.framework.agent.ms_mgr.MsRunPlugin import MSRunPlugin
-from component.taskd.taskd.python.framework.agent.recover_module import shared_data
+from taskd.python.toolkit.fault_checker.fault_check import FaultStatus
+from taskd.python.toolkit.constants import constants
+from taskd.python.framework.agent.ms_mgr.MsRunPlugin import MSRunPlugin
+from taskd.python.toolkit.recover_module import shared_data
 
 class TestMSRunPlugin(unittest.TestCase):
     def setUp(self):
@@ -17,12 +34,12 @@ class TestMSRunPlugin(unittest.TestCase):
     def test_register_callbacks(self):
         func = MagicMock()
         self.plugin.register_callbacks("TEST_OP", func)
-        self.assertEqual(self.plugin.__funcMap["TEST_OP"], func)
+        self.assertEqual(self.plugin._MSRunPlugin__funcMap["TEST_OP"], func)
 
     @patch('time.sleep')
     def test_start_mindspore_workers(self, mock_sleep):
         self.plugin.start_mindspore_workers()
-        self.plugin.__funcMap["START_ALL_WORKER"].assert_called_once()
+        self.plugin._MSRunPlugin__funcMap["START_ALL_WORKER"].assert_called_once()
 
     @patch('os.getenv', return_value="0")
     def test_init_grpc_client_if_needed(self, mock_getenv):
@@ -34,13 +51,13 @@ class TestMSRunPlugin(unittest.TestCase):
         self.plugin.grace_exit = 1
         result = self.plugin._handle_grace_exit()
         self.assertEqual(result, True)
-        self.plugin.__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
+        self.plugin._MSRunPlugin__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
 
     def test_handle_fault_status(self):
         fault_status = FaultStatus([], True, False, False)
         with self.assertRaises(SystemExit):
             self.plugin._handle_fault_status(fault_status)
-        self.plugin.__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
+        self.plugin._MSRunPlugin__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
 
     @patch('time.sleep')
     def test_handle_process_fault(self, mock_sleep):
@@ -48,15 +65,15 @@ class TestMSRunPlugin(unittest.TestCase):
         with patch.object(self.plugin, 'all_fault_has_recovered', return_value=True):
             result = self.plugin._handle_process_fault(fault_status)
             self.assertEqual(result, True)
-            self.plugin.__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
+            self.plugin._MSRunPlugin__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
 
     @patch('time.sleep')
     def test_handle_hardware_fault(self, mock_sleep):
         fault_status = FaultStatus([], False, True, False)
-        with patch.object(self.plugin, 'all_fault_has_recovered', return_value=True):
+        with patch.object(self.plugin, 'all_fault_has_recovered', return_value=False):
             result = self.plugin._handle_hardware_fault(fault_status)
             self.assertEqual(result, True)
-            self.plugin.__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
+            self.plugin._MSRunPlugin__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
 
     @patch('time.sleep')
     @patch.object(shared_data.shared_data_inst, 'set_kill_flag')
@@ -70,7 +87,7 @@ class TestMSRunPlugin(unittest.TestCase):
         self.plugin.rank_status = self.plugin.RankStatusUNHEALTHY
         with self.assertRaises(SystemExit):
             self.plugin._handle_exist_unhealthy_process()
-        self.plugin.__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
+        self.plugin._MSRunPlugin__funcMap["KILL_WORKER"].assert_called_once_with([constants.KILL_ALL_WORKERS])
 
     @patch('time.sleep')
     def test_update_rank_status(self, mock_sleep):

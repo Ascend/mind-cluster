@@ -1,7 +1,26 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import os
 
 from taskd.python.toolkit.constants import constants
+from taskd.python.toolkit.constants.constants import RANK_PID_KEY
 from taskd.python.toolkit.logger.log import run_log
+
 
 # check_monitor_res_valid to check whether mindspore monitor interface given a valid result
 def check_monitor_res_valid(rank_status_dict: dict):
@@ -15,7 +34,7 @@ def check_monitor_res_valid(rank_status_dict: dict):
             return False
 
         # 校验每个字典中必须有 'pid', 'status', 'global_rank' 键
-        required_keys = ['pid', 'status', constants.GLOBAL_RANK_ID_KEY]
+        required_keys = [constants.RANK_PID_KEY, constants.RANK_STATUS_KEY, constants.GLOBAL_RANK_ID_KEY]
         for key in required_keys:
             if key not in info:
                 run_log.warning(f"{rank} has no key: {key}")
@@ -37,13 +56,14 @@ def check_monitor_res_valid(rank_status_dict: dict):
             return False
     return True
 
+
 # 从环境变量计算当前节点的global rank 数组
 def calculate_global_rank():
     # 从环境变量中获取 MS_LOCAL_WORKER 和 MS_NODE_RANK
     ms_local_worker = os.getenv('MS_LOCAL_WORKER')
     ms_node_rank = os.getenv('MS_NODE_RANK')
     if ms_local_worker is None or ms_node_rank is None:
-        run_log.error("环境变量 MS_LOCAL_WORKER 或 MS_NODE_RANK 未设置")
+        run_log.error("the env variable MS_LOCAL_WORKER or MS_NODE_RANK is not set")
         return []
     try:
         ms_local_worker = int(ms_local_worker)

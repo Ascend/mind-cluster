@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (c) Huawei Technologies Co., Ltd. 2024. All rights reserved.
+# Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 import os
 import json
 import shutil
@@ -187,7 +187,7 @@ class FaultProcessor:
                 return False
             self.rank_table_version = file_rank_version
 
-        # if all fault ranks are recovered, torch api will restart workers. update recorded retry time and fault ranks
+        # if all fault ranks are recovered, torch fault_checker will restart workers. update recorded retry time and fault ranks
         recovered_infos = f'all fault recovered, updating fault_ranks={self.fault_ranks},' \
                           f' retry_time={self.retry_time}, restart_type={self.restart_type}'
         run_log.warning(recovered_infos)

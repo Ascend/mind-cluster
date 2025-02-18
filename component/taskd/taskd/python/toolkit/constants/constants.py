@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
+# Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 
 
 MIN_RANK_SIZE = 0
@@ -21,7 +21,7 @@ LOG_MAX_LINE_LENGTH = 1024
 LOG_SIMPLE_FORMAT = '[%(asctime)s][%(levelname)s][%(message)s]'
 LOG_FILE_PATH_ENV = "ELASTIC_LOG_PATH"
 
-# constants for api.run
+# constants for fault_checker.run
 RESET_CONFIG_PATH = "/user/restore/reset/config/reset.json"
 RANK_TABLE_VERSION_PATH = "/user/serverid/devindex/config/version"
 ENABLE_RANKTABLE_ENV = "RANK_TABLE_FILE"
@@ -84,3 +84,7 @@ RES_OK = 0
 
 # while getting -1, mindspore  kill_worker callback will kill all local ranks
 KILL_ALL_WORKERS = -1
+KILL_INTERVAL = 10
+KILL_ALL_WORKER_CALLBACK_NAME = "KILL_WORKER"
+START_ALL_WORKER_CALLBACK_NAME = "START_ALL_WORKER"
+MONITOR_CALLBACK_NAME = "MONITOR"

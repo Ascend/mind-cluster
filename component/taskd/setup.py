@@ -66,7 +66,7 @@ required_packages = get_required_packages()
 
 package_data = {
     '':
-        ['api/**',
+        ['fault_checker/**',
          'python/**'
         ]
 }

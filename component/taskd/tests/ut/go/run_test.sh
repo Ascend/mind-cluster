@@ -22,7 +22,7 @@ OUTPUT_DIR="${TOP_DIR}"/test/ut/go
 GO_PKG=${TOP_DIR}/taskd/go
 TEMP_DIR=${TOP_DIR}/taskd/go/test
 FILE_INPUT='testTaskdGo.txt'
-FILE_DETAIL_OUTPUT='api.html'
+FILE_DETAIL_OUTPUT='fault_checker.html'
 
 function unit_test() {
   if ! (go test -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out ${GO_PKG}/... >./$FILE_INPUT); then

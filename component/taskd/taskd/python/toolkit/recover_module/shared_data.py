@@ -1,4 +1,4 @@
-#  Copyright (C)  2024. Huawei Technologies Co., Ltd. All rights reserved.
+#  Copyright (C)  2025. Huawei Technologies Co., Ltd. All rights reserved.
 import threading
 lock = threading.Lock()
 
