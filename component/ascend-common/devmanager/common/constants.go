@@ -60,6 +60,8 @@ const (
 	VectorCore DeviceType = 12
 	// Overall Overall utilization rate of NPU
 	Overall DeviceType = 13
+	// HbmUtilization utilization rate of hbm
+	HbmUtilization DeviceType = 6
 )
 
 const (

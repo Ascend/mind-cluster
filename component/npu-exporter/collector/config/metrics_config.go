@@ -27,12 +27,19 @@ var (
 
 	// singleGoroutineMap metrics in this map will be collected in single goroutine
 	singleGoroutineMap = map[string]common.MetricsCollector{
-		groupHccs: &metrics.HccsCollector{},
-		groupPcie: &metrics.PcieCollector{},
+		groupHccs:    &metrics.HccsCollector{},
+		groupNpu:     &metrics.BaseInfoCollector{},
+		groupSio:     &metrics.SioCollector{},
+		groupVersion: &metrics.VersionCollector{},
+		groupHbm:     &metrics.HbmCollector{},
+		groupDDR:     &metrics.DdrCollector{},
+		groupVnpu:    &metrics.VnpuCollector{},
+		groupPcie:    &metrics.PcieCollector{},
 	}
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
 		groupNetwork: &metrics.NetworkCollector{},
+		groupRoce:    &metrics.RoceCollector{},
 		groupOptical: &metrics.OpticalCollector{},
 	}
 	configs = []map[string]string{

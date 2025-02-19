@@ -54,7 +54,7 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 	}
 	logger.Logger.DynamicConfigure(logger.Config{Acc: acc})
 
-	containerMap := make(map[int32]container.DevicesInfo)
+	containerMap := colcommon.GetContainerNPUInfo(npu.collector)
 	chips := colcommon.GetChipListWithVNPU(npu.collector)
 
 	fieldsMap = npu.gatherChain(fieldsMap, colcommon.ChainForSingleGoroutine, containerMap, chips)

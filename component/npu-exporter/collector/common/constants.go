@@ -24,6 +24,8 @@ const (
 	namespace   = "namespace"
 	podName     = "pod_name"
 	cntrName    = "container_name"
+
+
 )
 
 const (
@@ -85,6 +87,12 @@ const (
 	// DomainForSio domain for sio
 	DomainForSio = "sio"
 
+	// DomainForHBM domain for HBM
+	DomainForHBM = "hbm"
+
+	// DomainForHBMECC domain for hbmEcc
+	DomainForHBMECC = "hbmEcc"
+
 	// DomainForHccsBW domain for hccs bandwidth
 	DomainForHccsBW = "hccsBw"
 
@@ -120,6 +128,9 @@ const (
 
 	// DomainForProcess domain for process info
 	DomainForProcess = "processInfo"
+
+	// DomainForHbmUtilization domain for High Bandwidth Memory Utilization
+	DomainForHbmUtilization = "hbmUtilization"
 
 	// DomainForOverallUtilization domain for overall utilization
 	DomainForOverallUtilization = "overallUtilization"

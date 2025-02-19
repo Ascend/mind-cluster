@@ -94,28 +94,6 @@ func (c *HccsCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
-// Describe description of the metric
-func (c *HccsCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, desc := range hccsTxDescs {
-		ch <- desc
-	}
-	for _, desc := range hccsRxDescs {
-		ch <- desc
-	}
-	for _, desc := range hccsErrDescs {
-		ch <- desc
-	}
-	for _, desc := range hccsBWTxDescs {
-		ch <- desc
-	}
-	for _, desc := range hccsBWRxDescs {
-		ch <- desc
-	}
-	ch <- hccsBWProfilingTime
-	ch <- hccsBWTotalTx
-	ch <- hccsBWTotalRx
-}
-
 // CollectToCache collect the metric to cache
 func (c *HccsCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
 	for _, chip := range chipList {

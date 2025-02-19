@@ -39,6 +39,7 @@ import (
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/config"
 	"huawei.com/npu-exporter/v6/collector/container"
 	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
 	"huawei.com/npu-exporter/v6/plugins/prom"
@@ -132,10 +133,12 @@ func main() {
 	deviceParser.Timeout = time.Duration(updateTime) * time.Second
 
 	colcommon.Collector = colcommon.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second, deviceParser, dmgr)
+	config.Register(colcommon.Collector)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	colcommon.InitCardInfo(wg, ctx, colcommon.Collector)
+	colcommon.StartContainerInfoCollect(ctx, cancel, wg, colcommon.Collector)
 
 	colcommon.StartCollect(wg, ctx, colcommon.Collector)
 	switch platform {
