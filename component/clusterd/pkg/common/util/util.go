@@ -154,3 +154,16 @@ func IsSliceContain(keyword interface{}, targetSlice interface{}) bool {
 	}
 	return false
 }
+
+// RemoveDuplicates remove duplicates from slice
+func RemoveDuplicates[T comparable](slice []T) []T {
+	existMap := make(map[T]struct{})
+	result := make([]T, 0)
+	for _, str := range slice {
+		if _, ok := existMap[str]; !ok {
+			existMap[str] = struct{}{}
+			result = append(result, str)
+		}
+	}
+	return result
+}

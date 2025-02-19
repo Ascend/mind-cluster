@@ -32,6 +32,8 @@ const (
 	DumpError = 407
 	// UnInit not init
 	UnInit = 408
+	// InvalidReqParam invalid request parameters
+	InvalidReqParam = 409
 	// ClientError common client error
 	ClientError RespCode = 499
 

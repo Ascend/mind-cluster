@@ -25,9 +25,11 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
-	"google.golang.org/grpc"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -54,7 +56,7 @@ func GetConnection(endPoint string) (*grpc.ClientConn, error) {
 	if endPoint == "" {
 		return nil, fmt.Errorf("endpoint is not set")
 	}
-	hwlog.RunLog.Debugf("connect using endpoint '%s' with '%s' timeout", utils.MaskPrefix(strings.TrimPrefix(endPoint,
+	logger.Logger.Logf(logger.Debug, "connect using endpoint '%s' with '%s' timeout", utils.MaskPrefix(strings.TrimPrefix(endPoint,
 		unixPrefix+"://")), defaultTimeout)
 	addr, dialer, err := getAddressAndDialer(endPoint)
 	if err != nil {
@@ -67,7 +69,7 @@ func GetConnection(endPoint string) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	hwlog.RunLog.Debugf("connected successfully using endpoint: %s", utils.MaskPrefix(strings.TrimPrefix(endPoint,
+	logger.Logger.Logf(logger.Debug, "connected successfully using endpoint: %s", utils.MaskPrefix(strings.TrimPrefix(endPoint,
 		unixPrefix+"://")))
 	return conn, nil
 }

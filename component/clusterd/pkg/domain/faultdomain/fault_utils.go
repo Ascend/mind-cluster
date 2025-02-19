@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -71,7 +72,7 @@ func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaul
 		SuperPodID:  devInfo.SuperPodID,
 		ServerIndex: devInfo.ServerIndex,
 		UpdateTime:  devInfo.UpdateTime,
-		ServerType:  GetServerType(devInfo),
+		ServerType:  GetDeviceType(devInfo),
 	}
 	if faultList, ok := devInfo.DeviceList[GetFaultListKey(devInfo)]; ok {
 		var devicesFault []constant.DeviceFault
@@ -115,21 +116,21 @@ func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaul
 	return advanceDeviceCm
 }
 
-// GetServerType get server type from DeviceInfo
-func GetServerType(devInfo *constant.DeviceInfo) string {
+// GetDeviceType get device type from device info
+func GetDeviceType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, constant.Ascend910Server) {
-			return constant.Ascend910Server
+		if strings.Contains(key, constant.Ascend910) {
+			return constant.Ascend910
 		}
-		if strings.Contains(key, constant.Ascend310PServer) {
-			return constant.Ascend310PServer
+		if strings.Contains(key, constant.Ascend310P) {
+			return constant.Ascend310P
 		}
-		if strings.Contains(key, constant.Ascend310Server) {
-			return constant.Ascend310Server
+		if strings.Contains(key, constant.Ascend310) {
+			return constant.Ascend310
 		}
 	}
 	hwlog.RunLog.Warn("cannot decide server type")
-	return constant.Ascend910Server
+	return constant.Ascend910
 }
 
 // device plugin may merge multiple fault codes in one string
@@ -322,7 +323,7 @@ func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) 
 // GetFaultListKey get FaultList key in DeviceInfo
 func GetFaultListKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Fault") {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-Fault") {
 			return key
 		}
 	}
@@ -332,7 +333,7 @@ func GetFaultListKey(devInfo *constant.DeviceInfo) string {
 // GetNetworkUnhealthyKey get networkUnhealthy key in DeviceInfo
 func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-NetworkUnhealthy") {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-NetworkUnhealthy") {
 			return key
 		}
 	}
@@ -342,11 +343,87 @@ func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
 // GetCardUnhealthyKey get CardUnhealthy key in DeviceInfo
 func GetCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, "huawei.com/Ascend") && strings.Contains(key, "-Unhealthy") {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-Unhealthy") {
 			return key
 		}
 	}
 	return ""
+}
+
+// GetFaultListInfo get fault list info
+func GetFaultListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
+	for faultKey, faultInfo := range devCMInfo.DeviceList {
+		if strings.Contains(faultKey, constant.NPUPreName) && strings.Contains(faultKey, "-Fault") {
+			return faultKey, faultInfo
+		}
+	}
+	return "", ""
+}
+
+// GetAvailDevListInfo get available device list info
+func GetAvailDevListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
+	availKey := "huawei.com/" + GetDeviceType(devCMInfo)
+	availDevList, ok := devCMInfo.DeviceList[availKey]
+	if !ok {
+		return "", ""
+	}
+	return availKey, availDevList
+}
+
+// DelDevFromAvailList delete device from available device list
+func DelDevFromAvailList(devCMInfo *constant.DeviceInfo, npuNames []string) {
+	availKey, availList := GetAvailDevListInfo(devCMInfo)
+	var splitList []string
+	if len(availList) == 0 {
+		splitList = make([]string, 0)
+		return
+	}
+	splitList = strings.Split(availList, ",")
+	newList := make([]string, 0)
+	for _, npuName := range npuNames {
+		newList = append(newList, util.DeleteStringSliceItem(splitList, npuName)...)
+	}
+	newListData, err := json.Marshal(newList)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal new available list failed, error: %v", err)
+		return
+	}
+	devCMInfo.DeviceList[availKey] = string(newListData)
+	return
+}
+
+// GetUnhealthyListInfo get unhealthy list info
+func GetUnhealthyListInfo(devCMInfo *constant.DeviceInfo) (string, []string) {
+	for unHealthyKey, unHealthyCards := range devCMInfo.DeviceList {
+		if strings.Contains(unHealthyKey, constant.NPUPreName) && strings.Contains(unHealthyKey, "-Unhealthy") {
+			var cardList []string
+			if len(unHealthyCards) == 0 {
+				cardList = make([]string, 0)
+			} else {
+				cardList = strings.Split(unHealthyCards, ",")
+			}
+			return unHealthyKey, cardList
+		}
+	}
+	return "", []string{}
+}
+
+// AddDevFromUnhealthyList add device from unhealthy list
+func AddDevFromUnhealthyList(devCMInfo *constant.DeviceInfo, npuNames []string) {
+	unHealthyKey, unHealthyList := GetUnhealthyListInfo(devCMInfo)
+	for _, npuName := range npuNames {
+		if !util.IsSliceContain(npuName, unHealthyList) {
+			unHealthyList = append(unHealthyList, npuNames...)
+		}
+	}
+	sort.Strings(unHealthyList)
+
+	listData, err := json.Marshal(unHealthyList)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal new unhealthy list failed, error: %v", err)
+		return
+	}
+	devCMInfo.DeviceList[unHealthyKey] = string(listData)
 }
 
 // IsUceFault check faultCode is uce

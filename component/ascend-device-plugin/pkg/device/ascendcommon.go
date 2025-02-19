@@ -397,43 +397,6 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	return usedDevice
 }
 
-// GetUsedChips get chips which are being utilized by a process
-func (tool *AscendTools) GetUsedChips() sets.String {
-	if !common.ParamOption.PresetVDevice {
-		return sets.String{}
-	}
-	_, logicIDs, err := tool.dmgr.GetDeviceList()
-	if err != nil {
-		hwlog.RunLog.Warnf("get device list failed, err: %v", err)
-		return sets.String{}
-	}
-	if len(logicIDs) < 1 {
-		hwlog.RunLog.Warn("get device list failed, logicID is empty")
-		return sets.String{}
-	}
-	usedChips := make([]string, 0, len(logicIDs))
-	for _, logicID := range logicIDs {
-		chipInfo, err := tool.dmgr.GetDevProcessInfo(logicID)
-		if err != nil {
-			// use vnpu will report an 8255 error
-			hwlog.RunLog.Debugf("get device process info failed, err: %v", err)
-			continue
-		}
-		if chipInfo.ProcNum != 0 {
-			hwlog.RunLog.Debugf("the card logicID:[%d] is used, chipInfo: %#v", logicID, chipInfo)
-			davinCidev, err := tool.getDavinCiDev(logicID)
-			if err != nil {
-				hwlog.RunLog.Errorf("get davinci dev by logicID:[%d] failed, err: %v", logicID, err)
-				continue
-			}
-			chipName := fmt.Sprintf("%s-%d", tool.name, davinCidev.PhyID)
-			usedChips = append(usedChips, chipName)
-		}
-	}
-	hwlog.RunLog.Debugf("get used chips: %#v", usedChips)
-	return sets.NewString(usedChips...)
-}
-
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
 	totalUHDevices, totalNetUHDevices, allTypeUsedDevice, totalRCDevices :=

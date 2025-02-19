@@ -397,3 +397,16 @@ type ReportRecoverInfo struct {
 	Rank        string
 	RecoverTime int64
 }
+
+// PubFaultCache public fault in cache for node
+type PubFaultCache struct {
+	FaultDevIds   []int32
+	FaultDevNames []string
+	FaultId       string
+	FaultType     string
+	FaultCode     string
+	FaultLevel    string
+	FaultTime     int64
+	Assertion     string
+	FaultAddTime  int64
+}

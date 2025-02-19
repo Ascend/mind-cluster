@@ -26,7 +26,7 @@ const (
 	deviceId                   = "0"
 	rankID                     = "8"
 	cmName                     = "mindx-dl-deviceinfo-" + nodeName
-	deviceName                 = constant.Ascend910Server + "-" + deviceId
+	deviceName                 = constant.Ascend910 + "-" + deviceId
 	originalDeviceFaultCodeCnt = 2
 )
 

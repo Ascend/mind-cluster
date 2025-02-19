@@ -108,6 +108,9 @@ spec:
             mountPath: /var/log/mindx-dl/devicePlugin
           - name: tmp
             mountPath: /tmp
+          - name: containerd
+            mountPath: /run/containerd/containerd.sock
+            readOnly: true
         env:
           - name: NODE_NAME
             valueFrom:
@@ -134,3 +137,6 @@ spec:
         - name: tmp
           hostPath:
             path: /tmp
+        - name: containerd
+          hostPath:
+            path: /run/containerd/containerd.sock

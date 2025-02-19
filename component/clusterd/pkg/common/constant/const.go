@@ -179,11 +179,11 @@ const (
 	SubHealthFault = "SubHealthFault"
 )
 
-// cluster support server
+// support device type
 const (
-	Ascend910Server     = "Ascend910"
-	Ascend310PServer    = "Ascend310P"
-	Ascend310Server     = "Ascend310"
+	Ascend910           = "Ascend910"
+	Ascend310P          = "Ascend310P"
+	Ascend310           = "Ascend310"
 	UnknownResourceType = "unknown"
 )
 

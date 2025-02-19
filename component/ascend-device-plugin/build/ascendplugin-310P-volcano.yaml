@@ -119,6 +119,9 @@ spec:
             mountPath: /tmp
           - name: vnpucfg
             mountPath: /etc/vnpu.cfg
+          - name: containerd
+            mountPath: /run/containerd/containerd.sock
+            readOnly: true
         env:
           - name: NODE_NAME
             valueFrom:
@@ -149,3 +152,6 @@ spec:
           hostPath:
             path: /etc/vnpu.cfg
             type: File
+        - name: containerd
+          hostPath:
+            path: /run/containerd/containerd.sock

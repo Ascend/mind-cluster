@@ -103,3 +103,32 @@ const (
 	// UnHealthy
 	UnHealthy = "UnHealthy"
 )
+
+// public fault assertion
+const (
+	// AssertionRecover recover fault assertion
+	AssertionRecover = "recover"
+	// AssertionOccur occur fault assertion
+	AssertionOccur = "occur"
+)
+
+// public fault type
+const (
+	FaultTypeNPU     = "NPU"
+	FaultTypeNode    = "Node"
+	FaultTypeNetwork = "Network"
+	FaultTypeStorage = "Storage"
+)
+
+// public fault file path and name
+const (
+	PubFaultCodeFilePath      = "/home/hwMindX/publicFaultConfiguration.json"
+	PubFaultCodeFileName      = "publicFaultConfiguration.json"
+	PubFaultCustomizationPath = "/var/log/mindx-dl/clusterd/publicCustomization.json"
+	PubFaultCustomizationName = "publicCustomization.json"
+)
+
+const (
+	// NPUPreName npu pre name
+	NPUPreName = "huawei.com/Ascend"
+)

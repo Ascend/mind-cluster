@@ -111,14 +111,14 @@ func GetResourceType(info *v1beta1.PodGroup) string {
 		return ""
 	}
 	for key, _ := range info.Spec.MinResources.DeepCopy() {
-		if strings.Contains(string(key), constant.Ascend910Server) {
-			return constant.Ascend910Server
+		if strings.Contains(string(key), constant.Ascend910) {
+			return constant.Ascend910
 		}
-		if strings.Contains(string(key), constant.Ascend310Server) {
-			return constant.Ascend310Server
+		if strings.Contains(string(key), constant.Ascend310) {
+			return constant.Ascend310
 		}
-		if strings.Contains(string(key), constant.Ascend310PServer) {
-			return constant.Ascend310PServer
+		if strings.Contains(string(key), constant.Ascend310P) {
+			return constant.Ascend310P
 		}
 	}
 	hwlog.RunLog.Warnf("GetResourceType failed for pg %s", info.GetName())

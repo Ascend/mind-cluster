@@ -171,6 +171,9 @@ const (
 	SecondMagnification = 1000
 	// SecondMagnificationFloat is second-level unit magnification float
 	SecondMagnificationFloat = 1000.0
+
+	// DefaultContainerdSockPath is the default containerd sock path
+	DefaultContainerdSockPath = "/run/containerd/containerd.sock"
 )
 
 const (

@@ -16,6 +16,8 @@ const (
 	SwitchInfoPrefix = "mindx-dl-switchinfo-"
 	// DevInfoCMKey mindx-dl-deviceinfo configmap key
 	DevInfoCMKey = "DeviceInfoCfg"
+	// PubFaultCMKey public fault configmap key
+	PubFaultCMKey = "PublicFault"
 	// SwitchInfoCmKey is the key name of data of switchinfo configmap
 	SwitchInfoCmKey = "SwitchInfoCfg"
 	// NodeInfoCMKey mindx-dl-nodeinfo configmap key
@@ -31,6 +33,8 @@ const (
 const (
 	// CmConsumerCIM who uses these configmap
 	CmConsumerCIM = "mx-consumer-cim"
+	// CmConsumerPubFault cm label for public fault
+	CmConsumerPubFault = "mc-consumer-publicfault"
 	// CmConsumer who uses these configmap
 	CmConsumer = "mx-consumer-volcano"
 	// CmConsumerValue the value only for true

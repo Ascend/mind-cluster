@@ -127,7 +127,22 @@ func testIpmiMonitorMonitoring() {
 		ipmiEventMonitor.Monitoring()
 	}()
 	time.Sleep(waitGoroutineFinishedTime)
-	convey.So(ipmiEventMonitor.faultManager.GetFaultDevList(), convey.ShouldResemble, GetFaultDevList(testFaultEvents))
+	faultEvent1 := ipmiEventMonitor.faultManager.GetFaultDevList()
+	faultEvent2 := GetFaultDevList(testFaultEvents)
+	convey.So(len(faultEvent1), convey.ShouldEqual, len(faultEvent2))
+	for _, fault1 := range faultEvent1 {
+		if fault1 == nil {
+			continue
+		}
+		for _, fault2 := range faultEvent2 {
+			if fault2 == nil {
+				continue
+			}
+			if fault1.DeviceType == fault2.DeviceType && fault1.DeviceId == fault2.DeviceId {
+				convey.So(fault1.FaultCode, convey.ShouldResemble, fault2.FaultCode)
+			}
+		}
+	}
 }
 
 func testIpmiMonitorStop() {

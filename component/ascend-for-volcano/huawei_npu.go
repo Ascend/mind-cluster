@@ -134,13 +134,6 @@ func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 			klog.V(util.LogErrorLev).Info("obj assertion failed.")
 			return false
 		}
-		k, ok := ji.PodGroup.Labels[plugin.TorAffinityKey]
-		if !ok || k == plugin.NullTag {
-			return true
-		}
-		if tp.Scheduler.Tors == nil {
-			return false
-		}
 		job, ok := tp.Scheduler.Jobs[ji.UID]
 		if !ok {
 			return true

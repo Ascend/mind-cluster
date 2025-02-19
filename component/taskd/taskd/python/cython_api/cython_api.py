@@ -16,10 +16,12 @@
 # ==============================================================================
 import ctypes
 import os
+from taskd.python.utils.log import run_log
+from taskd.python.constants.constants import LIB_SO_NAME,LIB_SO_PATH
 
 try:
-    lib_path = os.path.join(os.path.dirname(__file__), 'libs', 'libtaskd.so')
+    lib_path = os.path.join(os.path.dirname(__file__), LIB_SO_PATH, LIB_SO_NAME)
     lib = ctypes.CDLL(lib_path)
-    print("libtaskd.so loaded successfully")
+    run_log.info(f"{LIB_SO_NAME} loaded successfully")
 except OSError as e:
-    print(f"libtaskd.so loaded failed： {e}")
+    run_log.info(f"{LIB_SO_NAME} loaded failed： {e}")

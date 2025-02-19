@@ -1,0 +1,71 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package logger for general collector
+package logger
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/influxdata/telegraf"
+
+	"ascend-common/common-utils/hwlog"
+)
+
+var defaultTelegrafLogPath = "/var/log/mindx-dl/npu-exporter/npu-plugin.log"
+
+type telegrafLogger struct {
+	acc telegraf.Accumulator
+}
+
+// DynamicConfigure configures the logger
+func (c *telegrafLogger) DynamicConfigure(config Config) {
+	c.acc = config.Acc
+}
+
+// Log logs with specified level
+func (c *telegrafLogger) Log(level Level, args ...interface{}) {
+	c.Logf(level, "%s", args...)
+}
+
+// Logf logs with specified level and format
+func (c *telegrafLogger) Logf(level Level, format string, args ...interface{}) {
+
+	if level < Info || c.acc == nil {
+		fn, ok := logfFuncs[level]
+		if !ok {
+			hwlog.RunLog.Warnf("unknown log level: %v", level)
+			return
+		}
+
+		fn(nil, format, args...)
+		return
+	}
+
+	c.acc.AddError(errors.New(fmt.Sprintf(format, args...)))
+}
+
+// LogfWithOptions print log info with options
+func (c *telegrafLogger) LogfWithOptions(level Level, opts LogOptions, format string, args ...interface{}) {
+
+	if opts.MaxCounts == 0 {
+		opts.MaxCounts = hwlog.ProblemOccurMaxNumbers
+	}
+
+	if needPrint, extraErrLog := hwlog.IsNeedPrintWithSpecifiedCounts(opts.Domain, opts.ID, opts.MaxCounts); needPrint {
+		format = fmt.Sprintf("%s %s", format, extraErrLog)
+		c.Logf(level, format, args...)
+	}
+}

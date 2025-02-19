@@ -137,6 +137,9 @@ const (
 	// InvalidID invalid ID
 	InvalidID = 0xffffffff
 
+	// NotSupportMetricValue for not support metric value
+	NotSupportMetricValue = 8255
+
 	// FailedMetricValue for failed metric value
 	FailedMetricValue = -1
 
@@ -216,27 +219,6 @@ const (
 const (
 	// DomainForLogicIdErr domain for faild to get cardId and deviceId by logicID
 	DomainForLogicIdErr = "logicID"
-
-	// DomainForHccs domain for hccs
-	DomainForHccs = "hccs"
-
-	// DomainForHccsBW domain for hccs-bandwidth
-	DomainForHccsBW = "hccs-bw"
-
-	// DomainForAICoreUtilization domain for ai core utilization
-	DomainForAICoreUtilization = "AICoreUtilization"
-
-	// DomainForVectorCoreUtilization domain for vector core utilization
-	DomainForVectorCoreUtilization = "VectorCoreUtilization"
-
-	// DomainForHbmUtilization domain for High Bandwidth Memory Utilization
-	DomainForHbmUtilization = "hbmUtilization"
-
-	// DomainForOverallUtilization domain for overall utilization
-	DomainForOverallUtilization = "overallUtilization"
-
-	// DomainForPcieBandwidth domain for pcie bandwidth
-	DomainForPcieBandwidth = "pcieBandwidth"
 )
 
 // DcmiDeviceType used to represent the dcmi device type

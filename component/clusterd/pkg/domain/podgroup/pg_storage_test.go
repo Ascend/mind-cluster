@@ -29,7 +29,7 @@ const (
 	jobUid1      = "123"
 	vcJobKey     = "job"
 	ptFrameWork  = "pytorch"
-	ResourceName = "huawei/" + constant.Ascend910Server
+	ResourceName = "huawei/" + constant.Ascend910
 )
 
 func TestSavePodGroup(t *testing.T) {

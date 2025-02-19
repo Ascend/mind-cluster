@@ -30,16 +30,19 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/limiter"
-	"ascend-common/devmanager/common"
 	"github.com/influxdata/telegraf/plugins/common/shim"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"huawei.com/npu-exporter/v6/collector"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/common"
+	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
+	"huawei.com/npu-exporter/v6/plugins/prom"
+	"huawei.com/npu-exporter/v6/utils/logger"
 	"huawei.com/npu-exporter/v6/versions"
 )
 
@@ -94,13 +97,9 @@ const (
 	pollIntervalStr            = "poll_interval"
 	platformStr                = "platform"
 	hccsBWProfilingTimeStr     = "hccsBWProfilingTime"
-	maxLogLineLength           = 1024
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
 )
-
-var hwLogConfig = &hwlog.LogConfig{LogFileName: defaultLogFile, ExpiredTime: hwlog.DefaultExpiredTime,
-	CacheSize: hwlog.DefaultCacheSize, MaxLineLength: maxLogLineLength}
 
 func main() {
 	flag.Parse()
@@ -108,17 +107,80 @@ func main() {
 		fmt.Printf("NPU-exporter version: %s \n", versions.BuildVersion)
 		return
 	}
+	err := logger.InitLogger(platform)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		return
+	}
+	initPaprams()
+	err = paramValid(platform)
+	if err != nil {
+		return
+	}
+	dmgr, err := devmanager.AutoInit("")
+	if err != nil {
+		logger.Logger.Logf(logger.Error, "new npu collector failed, error is %v", err)
+		return
+	}
+	logger.Logger.Logf(logger.Info, "npu exporter starting and the version is %s", versions.BuildVersion)
+	deviceParser := container.MakeDevicesParser(readCntMonitoringFlags())
+	defer deviceParser.Close()
 
-	common.SetHccsBWProfilingTime(hccsBWProfilingTime)
+	if err := deviceParser.Init(); err != nil {
+		logger.Logger.Logf(logger.Error, "failed to init devices parser: %v", err)
+	}
+	deviceParser.Timeout = time.Duration(updateTime) * time.Second
+
+	colcommon.Collector = colcommon.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second, deviceParser, dmgr)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+	colcommon.InitCardInfo(wg, ctx, colcommon.Collector)
+
+	colcommon.StartCollect(wg, ctx, colcommon.Collector)
 	switch platform {
 	case prometheusPlatform:
-		prometheusProcess()
+		prometheusProcss(wg, ctx, cancel)
 	case telegrafPlatform:
 		telegrafProcess()
 	default:
-		fmt.Fprintf(os.Stderr, "err platform input")
-		return
+		err = fmt.Errorf("err platform input")
 	}
+	wg.Wait()
+}
+
+func prometheusProcss(wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) {
+	c := prom.NewPrometheusCollector(colcommon.Collector)
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(c)
+
+	wg.Add(1)
+	go func() {
+		startServe(ctx, cancel, reg)
+		wg.Done()
+	}()
+}
+
+func initPaprams() {
+	common.SetHccsBWProfilingTime(hccsBWProfilingTime)
+	common.SetExternalParams(profilingTime)
+}
+
+func paramValid(platform string) error {
+	var err error
+	switch platform {
+	case prometheusPlatform:
+		err = paramValidInPrometheus()
+	case telegrafPlatform:
+		err = paramValidInTelegraf()
+	default:
+		err = fmt.Errorf("err platform input")
+	}
+	if err != nil {
+		logger.Logger.Log(logger.Error, err)
+		return err
+	}
+	return nil
 }
 
 func initConfig() *limiter.HandlerConfig {
@@ -149,7 +211,7 @@ func newServerAndListener(conf *limiter.HandlerConfig) (*http.Server, net.Listen
 	}
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
-		hwlog.RunLog.Errorf("listen ip and port error: %v", err)
+		logger.Logger.Log(logger.Error, "listen ip and port error: %v", err)
 		return nil, nil
 	}
 	limitLs, err := limiter.LimitListener(ln, limitTotalConn, limitIPConn, limiter.DefaultCacheSize)
@@ -201,7 +263,7 @@ func paramValidInPrometheus() error {
 		return errors.New("the listen ip is invalid")
 	}
 	ip = parsedIP.String()
-	hwlog.RunLog.Infof("listen on: %s", ip)
+	logger.Logger.Logf(logger.Info, "listen on: %s", ip)
 	if updateTime > oneMinute || updateTime < 1 {
 		return errors.New("the updateTime is invalid")
 	}
@@ -271,13 +333,13 @@ func init() {
 	flag.IntVar(&concurrency, "concurrency", defaultConcurrency,
 		"The max concurrency of the http server, range is [1-512]")
 	// hwlog configuration
-	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
+	flag.IntVar(&logger.HwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
-	flag.IntVar(&hwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
+	flag.IntVar(&logger.HwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
 		"Maximum number of days for backup log files, range [7, 700] days")
-	flag.StringVar(&hwLogConfig.LogFileName, "logFile", defaultLogFile,
+	flag.StringVar(&logger.HwLogConfig.LogFileName, "logFile", defaultLogFile,
 		"Log file path. If the file size exceeds 20MB, will be rotated")
-	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
+	flag.IntVar(&logger.HwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup log files, range is (0, 30]")
 	flag.IntVar(&cacheSize, "cacheSize", limiter.DefaultCacheSize, "the cacheSize for ip limit,"+
 		"range  is [1,1024000],keep default normally")
@@ -310,47 +372,12 @@ func indexHandler(w http.ResponseWriter, _ *http.Request) {
 			</body>
 			</html>`))
 	if err != nil {
-		hwlog.RunLog.Errorf("Write to response error: %v", err)
+		logger.Logger.Logf(logger.Error, "Write to response error: %v", err)
 	}
-}
-
-func initHwLogger() error {
-	if err := hwlog.InitRunLogger(hwLogConfig, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return err
-	}
-	return nil
 }
 
 func prometheusProcess() {
-	if err := initHwLogger(); err != nil {
-		return
-	}
-	hwlog.RunLog.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
-	if err := paramValidInPrometheus(); err != nil {
-		hwlog.RunLog.Error(err)
-		return
-	}
-	common.SetExternalParams(profilingTime)
-	deviceParser := container.MakeDevicesParser(readCntMonitoringFlags())
-	c := collector.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second,
-		deviceParser)
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(c)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		collector.Start(ctx, cancel, c)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		startServe(ctx, cancel, reg)
-	}()
-	wg.Wait()
 }
 
 func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
@@ -364,22 +391,22 @@ func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.
 	}
 
 	go func() {
-		hwlog.RunLog.Warn("enable unsafe http server")
+		logger.Logger.Log(logger.Warn, "enable unsafe http server")
 		if err := s.Serve(limitLs); err != nil {
-			hwlog.RunLog.Errorf("Http server error: %v and stopped", err)
+			logger.Logger.Logf(logger.Error, "Http server error: %v and stopped", err)
 			cancel()
 		}
 	}()
 
 	<-ctx.Done()
 	shutErr := func() error {
-		hwlog.RunLog.Info("received stop signal, STOP http server")
+		logger.Logger.Log(logger.Info, "received stop signal, STOP http server")
 		ctxShutDown, timeOut := context.WithTimeout(context.Background(), defaultShutDownTimeout)
 		defer timeOut()
 		return s.Shutdown(ctxShutDown)
 	}()
 	if shutErr != nil {
-		hwlog.RunLog.Errorf("shutdown http server error: %v", shutErr)
+		logger.Logger.Logf(logger.Error, "shutdown http server error: %v", shutErr)
 	}
 }
 
@@ -419,10 +446,6 @@ func paramValidInTelegraf() error {
 }
 
 func telegrafProcess() {
-	if err := paramValidInTelegraf(); err != nil {
-		fmt.Fprintf(os.Stderr, "Err param: %s\n", err)
-		return
-	}
 	// create the shim. This is what will run your plugins.
 	shim := shim.New()
 

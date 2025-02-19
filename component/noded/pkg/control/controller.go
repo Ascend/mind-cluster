@@ -18,11 +18,16 @@ package control
 import (
 	"fmt"
 	"sync"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/rand"
 
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 )
+
+const randSecond = 20
 
 // NodeController process fault device info based on configuration
 type NodeController struct {
@@ -48,6 +53,9 @@ func NewNodeController(client *kubeclient.ClientK8s) *NodeController {
 
 // Init initialize node controller
 func (nc *NodeController) Init() error {
+	if err := nc.initNodeAnnotation(); err != nil {
+		hwlog.RunLog.Warnf("init node annotation failed, err is %v", err)
+	}
 	return nil
 }
 
@@ -197,4 +205,21 @@ func (nc *NodeController) getNodeStatus(nodeFaultLevel int64) string {
 	default:
 		return ""
 	}
+}
+
+func (nc *NodeController) initNodeAnnotation() error {
+	rand.Seed(time.Now().UnixNano())
+	randomSecond := time.Duration(rand.Intn(randSecond)) * time.Second
+	time.Sleep(randomSecond)
+	nodeSN, err := GetNodeSN()
+	if err != nil {
+		hwlog.RunLog.Errorf("get node SN failed, err is %v", err)
+		return err
+	}
+	hwlog.RunLog.Infof("get node SN success, add SN(%s) to node annotation", nodeSN)
+	err = nc.kubeClient.AddAnnotation(common.NodeSNAnnotation, nodeSN)
+	if err != nil {
+		hwlog.RunLog.Errorf("add node annotation failed, err is %v", err)
+	}
+	return err
 }

@@ -157,6 +157,16 @@ func TestClientK8s(t *testing.T) {
 	convey.Convey("test ClientK8s method 'GetConfigMap'", t, testGetConfigMap)
 	convey.Convey("test ClientK8s method 'UpdateConfigMap'", t, testUpdateConfigMap)
 	convey.Convey("test ClientK8s method 'CreateOrUpdateConfigMap'", t, testCreateOrUpdateCM)
+
+	convey.Convey("test ClientK8s method 'AddAnnotation'", t, testAddAnnotation)
+}
+
+func testAddAnnotation() {
+	if testK8sClient == nil {
+		panic("testK8sClient is nil")
+	}
+	err := testK8sClient.AddAnnotation("testKey", "testValue")
+	convey.So(err.Error(), convey.ShouldEqual, `nodes "`+testNodeName+`" not found`)
 }
 
 func testCreateConfigMap() {

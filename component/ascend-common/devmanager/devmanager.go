@@ -174,6 +174,7 @@ func AutoInit(dType string) (*DeviceManager, error) {
 	default:
 		return nil, fmt.Errorf("unsupport device type (%s)", devType)
 	}
+	hwlog.RunLog.Infof("chipInfoName: %v, devType:%v", chipInfo.Name, devType)
 	if dType != "" && devType != dType {
 		return nil, fmt.Errorf("the value of dType(%s) is inconsistent with the actual chip type(%s)",
 			dType, devType)
@@ -301,13 +302,11 @@ func getValidMainBoardInfo(dcMgr dcmi.DcDriverInterface) (uint32, error) {
 		for devID := int32(0); devID < devNum; devID++ {
 			mainBoardId, err := dcMgr.DcGetDeviceMainBoardInfo(cardID, devID)
 			if err != nil {
-				hwlog.RunLog.Warnf("get mainBoardId info failed by cardID(%d), deviceID(%d), error: %v", cardID, devID,
-					err)
+				hwlog.RunLog.Warn(err)
 				continue
 			}
 			if !common.IsValidMainBoardInfo(mainBoardId) {
-				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID,
-					err)
+				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID, err)
 				continue
 			}
 			return mainBoardId, nil
@@ -519,7 +518,7 @@ func (d *DeviceManager) GetChipInfo(logicID int32) (*common.ChipInfo, error) {
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return nil, fmt.Errorf("failed to get chip info code by logicID(%d)", logicID)
+		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d), error: %v", logicID, err)
 	}
 	chipInfo, err := d.DcMgr.DcGetChipInfo(cardID, deviceID)
 	if err != nil {
@@ -782,11 +781,7 @@ func (d *DeviceManager) GetPCIEBandwidth(logicID int32, profilingTime int) (comm
 	}
 	pciePCIEBw, err := d.DcMgr.DcGetPCIEBandwidth(cardID, deviceID, profilingTime)
 	if err != nil {
-		hwlog.RunLog.ErrorfWithLimit(common.DomainForPcieBandwidth, logicID,
-			"get pcie bandwidth failed by cardID(%d)/deviceID(%d), %v", cardID, deviceID, err)
 		return common.PCIEBwStat{}, err
-	} else {
-		hwlog.ResetErrCnt(common.DomainForPcieBandwidth, logicID)
 	}
 	return pciePCIEBw, nil
 }
@@ -904,7 +899,7 @@ func (d *DeviceManager) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInf
 	}
 	cgoSPodSioInfo, err := d.DcMgr.DcGetSioInfo(cardID, deviceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get super pod sio info by logicID(%d), error: %v", logicID, err)
+		return nil, err
 	}
 
 	return &cgoSPodSioInfo, nil
@@ -922,8 +917,8 @@ func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatist
 	}
 	cgoHccsStatusInfo, err := d.DcMgr.DcGetHccsStatisticInfo(cardID, deviceID)
 	if err != nil {
-		return buildFailedHccsInfo(), fmt.Errorf("failed to get hccs statistic info by cardId(%d) deviceID(%d), error: %v",
-			cardID, deviceID, err)
+		return buildFailedHccsInfo(), err
+
 	}
 
 	return &cgoHccsStatusInfo, nil
@@ -1007,6 +1002,7 @@ func (d *DeviceManager) doGetCardIDAndDeviceID(logicID int32) (int32, int32, err
 			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
 		return common.RetError, common.RetError, err
 	}
+	hwlog.ResetErrCnt(common.DomainForLogicIdErr, logicID)
 	hwlog.RunLog.Debugf("get cardId and deviceId by logicID(%d) from dcmi, cardId:%v, deviceId:%v",
 		logicID, cardId, deviceId)
 	idCache.Store(logicID, npuIdMapping{logicId: logicID, cardId: cardId, deviceId: deviceId})

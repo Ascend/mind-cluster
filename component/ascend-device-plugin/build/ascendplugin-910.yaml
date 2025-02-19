@@ -110,6 +110,9 @@ spec:
             mountPath: /tmp
           - name: lingqu-log
             mountPath: /var/log/lingqu
+          - name: containerd
+            mountPath: /run/containerd/containerd.sock
+            readOnly: true
         env:
           - name: NODE_NAME
             valueFrom:
@@ -140,3 +143,6 @@ spec:
           hostPath:
             path: /var/log/lingqu
             type: DirectoryOrCreate
+        - name: containerd
+          hostPath:
+            path: /run/containerd/containerd.sock

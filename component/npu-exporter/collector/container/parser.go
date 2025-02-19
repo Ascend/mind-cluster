@@ -32,6 +32,7 @@ import (
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -113,7 +114,7 @@ func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
 		runtimeOperator.CriEndpoint = opts.CriEndpoint
 		runtimeOperator.OciEndpoint = opts.OciEndpoint
 	default:
-		hwlog.RunLog.Errorf("Invalid type value %d", opts.EndpointType)
+		logger.Logger.Log(logger.Error, "Invalid type value %d", opts.EndpointType)
 	}
 
 	return parser
@@ -214,17 +215,17 @@ func (dp *DevicesParser) getDevicesWithoutAscendRuntime(spec v1.Spec, c *CommonC
 	deviceInfo := DevicesInfo{}
 	devicesIDs, err := filterNPUDevices(spec)
 	if err != nil {
-		hwlog.RunLog.Debugf("filter npu devices failed by container id (%s), err is %v", c.Id, err)
+		logger.Logger.Logf(logger.Debug, "filter npu devices failed by container id (%s), err is %v", c.Id, err)
 		return DevicesInfo{}, nil
 	}
-	hwlog.RunLog.Debugf("filter npu devices %v in container (%s)", devicesIDs, c.Id)
+	logger.Logger.Logf(logger.Debug, "filter npu devices %v in container (%s)", devicesIDs, c.Id)
 
 	if len(devicesIDs) != 0 {
 		if deviceInfo, err = makeUpDeviceInfo(c); err == nil {
 			deviceInfo.Devices = devicesIDs
 			return deviceInfo, nil
 		} else {
-			hwlog.RunLog.Errorf("makeUpDeviceInfo failed: %s", err)
+			logger.Logger.Logf(logger.Error, "makeUpDeviceInfo failed: %s", err)
 		}
 		return DevicesInfo{}, err
 	}
@@ -233,7 +234,7 @@ func (dp *DevicesParser) getDevicesWithoutAscendRuntime(spec v1.Spec, c *CommonC
 }
 
 func (dp *DevicesParser) getDevicesWithAscendRuntime(ascendDevEnv string, c *CommonContainer) (DevicesInfo, error) {
-	hwlog.RunLog.Debugf("get device info by env (%s) in %s", ascendDevEnv, c.Id)
+	logger.Logger.Logf(logger.Debug, "get device info by env (%s) in %s", ascendDevEnv, c.Id)
 	devInfo := strings.Split(ascendDevEnv, "=")
 	if len(devInfo) != ascendEnvPart {
 		return DevicesInfo{}, fmt.Errorf("an invalid %s env(%s)", ascendDeviceInfo, ascendDevEnv)
@@ -274,7 +275,7 @@ func (dp *DevicesParser) getDeviceIDsByCommaStyle(devices, containerID string) [
 	for _, devID := range devList {
 		id, err := strconv.Atoi(devID)
 		if err != nil {
-			hwlog.RunLog.Errorf("container (%s) has an invalid device ID (%v) in %s, error is %s", containerID,
+			logger.Logger.Logf(logger.Error, "container (%s) has an invalid device ID (%v) in %s, error is %s", containerID,
 				devID, ascendDeviceInfo, err)
 			continue
 		}
@@ -289,12 +290,12 @@ func (dp *DevicesParser) getDeviceIDsByAscendStyle(devices, containerID string) 
 	for _, subDevice := range devList {
 		deviceName := strings.Split(subDevice, minus)
 		if len(deviceName) != ascendEnvPart {
-			hwlog.RunLog.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, nil))
+			logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "", ascendDeviceInfo, nil))
 			continue
 		}
 		id, err := strconv.Atoi(deviceName[1])
 		if err != nil {
-			hwlog.RunLog.Errorf(envErrDescribe(containerID, deviceName[1], ascendDeviceInfo, err))
+			logger.Logger.Logf(logger.Error, envErrDescribe(containerID, deviceName[1], ascendDeviceInfo, err))
 			continue
 		}
 		deviceIDs = append(deviceIDs, id)
@@ -306,25 +307,25 @@ func (dp *DevicesParser) getDeviceIDsByMinusStyle(devices, containerID string) [
 	deviceIDs := make([]int, 0)
 	devIDRange := strings.Split(devices, minus)
 	if len(devIDRange) != ascendEnvPart {
-		hwlog.RunLog.Errorf(envErrDescribe(containerID, "range", ascendDeviceInfo, nil))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "range", ascendDeviceInfo, nil))
 		return deviceIDs
 	}
 	minDevID, err := strconv.Atoi(devIDRange[0])
 	if err != nil {
-		hwlog.RunLog.Errorf(envErrDescribe(containerID, devIDRange[0], ascendDeviceInfo, err))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, devIDRange[0], ascendDeviceInfo, err))
 		return deviceIDs
 	}
 	maxDevID, err := strconv.Atoi(devIDRange[1])
 	if err != nil {
-		hwlog.RunLog.Errorf(envErrDescribe(containerID, devIDRange[1], ascendDeviceInfo, err))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, devIDRange[1], ascendDeviceInfo, err))
 		return deviceIDs
 	}
 	if minDevID > maxDevID {
-		hwlog.RunLog.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("min id bigger than max id")))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("min id bigger than max id")))
 		return deviceIDs
 	}
 	if maxDevID > math.MaxInt16 {
-		hwlog.RunLog.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("max id invalid")))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("max id invalid")))
 		return deviceIDs
 	}
 	for deviceID := minDevID; deviceID <= maxDevID; deviceID++ {
@@ -351,10 +352,10 @@ func (dp *DevicesParser) getDevWithoutAscendRuntimeInIsula(containerInfo isula.C
 	deviceInfo := DevicesInfo{}
 	devicesIDs, err := filterNPUDevicesInIsula(containerInfo)
 	if err != nil {
-		hwlog.RunLog.Debugf("filter npu devices failed by container id (%s), err is %v", c.Id, err)
+		logger.Logger.Logf(logger.Debug, "filter npu devices failed by container id (%s), err is %v", c.Id, err)
 		return DevicesInfo{}, nil
 	}
-	hwlog.RunLog.Debugf("filter npu devices %v in container (%s)", devicesIDs, c.Id)
+	logger.Logger.Logf(logger.Debug, "filter npu devices %v in container (%s)", devicesIDs, c.Id)
 
 	if len(devicesIDs) == 0 {
 		return DevicesInfo{}, nil
@@ -450,7 +451,7 @@ func (dp *DevicesParser) doParse(resultOut chan<- DevicesInfos) {
 
 	l := len(containers)
 	if l == 0 || l > maxContainers {
-		hwlog.RunLog.Debugf("get %d containers from cri interface, return empty data", l)
+		logger.Logger.Logf(logger.Debug, "get %d containers from cri interface, return empty data", l)
 		dp.result <- make(DevicesInfos)
 		return
 	}
@@ -472,7 +473,7 @@ func (dp *DevicesParser) doParse(resultOut chan<- DevicesInfos) {
 	defer cancelFn()
 	result, err = dp.collect(ctx, r, int32(l))
 	if err != nil {
-		hwlog.RunLog.Errorf("collect info error: %v", err)
+		logger.Logger.Logf(logger.Error, "collect info error: %v", err)
 	}
 
 	if result != nil {
@@ -485,7 +486,7 @@ func (dp *DevicesParser) doParse(resultOut chan<- DevicesInfos) {
 // resultOut channel is for fetching the current result
 func (dp *DevicesParser) FetchAndParse(resultOut chan<- DevicesInfos) {
 	if dp.err == nil {
-		hwlog.RunLog.Debug("device paster is not initialized")
+		logger.Logger.Log(logger.Debug, "device paster is not initialized")
 		return
 	}
 	go dp.doParse(resultOut)
@@ -604,7 +605,7 @@ func filterNPUDevicesInIsula(containerInfo isula.ContainerJson) ([]int, error) {
 	for _, dev := range devices {
 		Id, err := getDevIdFromPath(devicePathPattern, dev.PathInContainer)
 		if err != nil {
-			hwlog.RunLog.Warn(err)
+			logger.Logger.Log(logger.Warn, err)
 			continue
 		}
 		devIDs = append(devIDs, Id)

@@ -5,6 +5,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"syscall"
 	"testing"
 
@@ -22,10 +23,13 @@ const (
 )
 
 func init() {
-	hwLogConfig := hwlog.LogConfig{
+	logConfig := &hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
-	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
+		fmt.Printf("init hwlog failed, %v\n", err)
+		return
+	}
 }
 
 func TestNewSignalWatcher(t *testing.T) {
@@ -233,5 +237,14 @@ func TestDeepCopyForMap(t *testing.T) {
 		if len(a["111"].Data["111"]) > 0 {
 			t.Errorf("DeepCopy() failed")
 		}
+	})
+}
+
+func TestRemoveDuplicates(t *testing.T) {
+	convey.Convey("test func RemoveDuplicates", t, func() {
+		const expLen = 3
+		oriSli := []int{0, 2, 1, 2}
+		res := RemoveDuplicates(oriSli)
+		convey.So(len(res), convey.ShouldEqual, expLen)
 	})
 }

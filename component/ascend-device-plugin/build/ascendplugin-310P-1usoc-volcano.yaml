@@ -121,6 +121,9 @@ spec:
             - name: slogconf
               mountPath: /etc/slog.conf
               readOnly: true
+            - name: containerd
+              mountPath: /run/containerd/containerd.sock
+              readOnly: true
           env:
             - name: NODE_NAME
               valueFrom:
@@ -167,3 +170,6 @@ spec:
           hostPath:
             path: /etc/slog.conf
             type: File
+        - name: containerd
+          hostPath:
+            path: /run/containerd/containerd.sock
