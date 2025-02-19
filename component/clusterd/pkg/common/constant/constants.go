@@ -124,7 +124,7 @@ const (
 const (
 	PubFaultCodeFilePath      = "/home/hwMindX/publicFaultConfiguration.json"
 	PubFaultCodeFileName      = "publicFaultConfiguration.json"
-	PubFaultCustomizationPath = "/var/log/mindx-dl/clusterd/publicCustomization.json"
+	PubFaultCustomizationPath = "/user1/mindx-dl/clusterd/publicCustomization.json"
 	PubFaultCustomizationName = "publicCustomization.json"
 )
 

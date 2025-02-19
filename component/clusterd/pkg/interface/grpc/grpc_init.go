@@ -9,13 +9,15 @@ import (
 	"os"
 	"time"
 
-	"ascend-common/common-utils/limiter"
 	"google.golang.org/grpc"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/pb"
+	pb2 "clusterd/pkg/interface/grpc/pb-publicfault"
 	"clusterd/pkg/interface/grpc/service"
+	pubfaultsvc "clusterd/pkg/interface/grpc/service-pubfault"
 )
 
 // ClusterInfoMgrServer is a server of clusterd
@@ -49,7 +51,8 @@ func isIPValid(ipStr string) error {
 }
 
 // Start the grpc server
-func (server *ClusterInfoMgrServer) Start(service *service.FaultRecoverService) error {
+func (server *ClusterInfoMgrServer) Start(recoverSvc *service.FaultRecoverService,
+	pubFaultSvc *pubfaultsvc.PubFaultService) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
 		return err
@@ -67,7 +70,8 @@ func (server *ClusterInfoMgrServer) Start(service *service.FaultRecoverService) 
 		return err
 	}
 	server.grpcServer = grpc.NewServer(server.opts...)
-	pb.RegisterRecoverServer(server.grpcServer, service)
+	pb.RegisterRecoverServer(server.grpcServer, recoverSvc)
+	pb2.RegisterPubFaultServer(server.grpcServer, pubFaultSvc)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

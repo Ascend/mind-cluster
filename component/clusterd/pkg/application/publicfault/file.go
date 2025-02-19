@@ -5,6 +5,7 @@ package publicfault
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -15,9 +16,9 @@ import (
 	"clusterd/pkg/domain/publicfault"
 )
 
-// WatchPubFaultCustomFile watch file /var/log/mindx-dl/clusterd/publicCustomization.json
+// WatchPubFaultCustomFile watch file /user1/mindx-dl/clusterd/publicCustomization.json
 func WatchPubFaultCustomFile(ctx context.Context) {
-	eventCh, errCh, err := utils.GetFileWatcherChan(constant.PubFaultCustomizationPath)
+	eventCh, errCh, err := utils.GetFileWatcherChan(filepath.Dir(constant.PubFaultCustomizationPath))
 	if err != nil {
 		hwlog.RunLog.Errorf("get file watcher chan failed, error: %v", err)
 		return
@@ -35,6 +36,9 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 			if !ok {
 				hwlog.RunLog.Error("event channel is closed")
 				return
+			}
+			if event.Name != constant.PubFaultCustomizationPath {
+				continue
 			}
 			hwlog.RunLog.Infof("watch file %s event: %v", constant.PubFaultCustomizationName, event)
 			if event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Write == fsnotify.Write {

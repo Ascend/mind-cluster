@@ -5,7 +5,7 @@ package publicfault
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -35,8 +35,10 @@ func TestLimiter(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("test func LimiterWaitByResource failed, resource does not exist", t, func() {
-		err := LimiterWaitByResource("abc", context.Background())
-		convey.So(err, convey.ShouldResemble, errors.New("resource limiter does not exist"))
+		invalidResource := "abc"
+		err := LimiterWaitByResource(invalidResource, context.Background())
+		expErr := fmt.Errorf("resource <%s> limiter does not exist", invalidResource)
+		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }
 

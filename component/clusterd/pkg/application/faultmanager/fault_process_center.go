@@ -7,10 +7,12 @@ import (
 	"context"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
+	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/collector"
 )
@@ -137,4 +139,12 @@ func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, oper
 // NodeCollector collects node info
 func NodeCollector(oldNodeInfo, newNodeInfo *constant.NodeInfo, operator string) {
 	collector.NodeCollector(oldNodeInfo, newNodeInfo, operator)
+}
+
+// PubFaultCollector collects public fault info
+func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, operator string, ctx context.Context) {
+	if operator == constant.DeleteOperator {
+		return
+	}
+	publicfault.PubFaultCollector(newPubFaultInfo, ctx)
 }

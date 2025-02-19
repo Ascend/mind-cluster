@@ -1,0 +1,10 @@
+{
+  "publicFaultCode": {
+    "NotHandleFaultCodes":[],
+    "SubHealthFaultCodes":[],
+    "SeparateNPUCodes":[]
+  },
+  "publicFaultResource": [
+    "CCAE", "fd-online", "pingmesh"
+  ]
+}

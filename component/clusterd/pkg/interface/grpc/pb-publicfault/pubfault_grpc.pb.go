@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PubFaultClient interface {
-	SendPublicFault(ctx context.Context, in *PublicFaultRequest, opts ...grpc.CallOption) (*Status, error)
+	SendPublicFault(ctx context.Context, in *PublicFaultRequest, opts ...grpc.CallOption) (*RespStatus, error)
 }
 
 type pubFaultClient struct {
@@ -37,8 +37,8 @@ func NewPubFaultClient(cc grpc.ClientConnInterface) PubFaultClient {
 	return &pubFaultClient{cc}
 }
 
-func (c *pubFaultClient) SendPublicFault(ctx context.Context, in *PublicFaultRequest, opts ...grpc.CallOption) (*Status, error) {
-	out := new(Status)
+func (c *pubFaultClient) SendPublicFault(ctx context.Context, in *PublicFaultRequest, opts ...grpc.CallOption) (*RespStatus, error) {
+	out := new(RespStatus)
 	err := c.cc.Invoke(ctx, PubFault_SendPublicFault_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (c *pubFaultClient) SendPublicFault(ctx context.Context, in *PublicFaultReq
 // All implementations must embed UnimplementedPubFaultServer
 // for forward compatibility
 type PubFaultServer interface {
-	SendPublicFault(context.Context, *PublicFaultRequest) (*Status, error)
+	SendPublicFault(context.Context, *PublicFaultRequest) (*RespStatus, error)
 	mustEmbedUnimplementedPubFaultServer()
 }
 
@@ -58,7 +58,7 @@ type PubFaultServer interface {
 type UnimplementedPubFaultServer struct {
 }
 
-func (UnimplementedPubFaultServer) SendPublicFault(context.Context, *PublicFaultRequest) (*Status, error) {
+func (UnimplementedPubFaultServer) SendPublicFault(context.Context, *PublicFaultRequest) (*RespStatus, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendPublicFault not implemented")
 }
 func (UnimplementedPubFaultServer) mustEmbedUnimplementedPubFaultServer() {}

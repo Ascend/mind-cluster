@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -15,21 +16,25 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/informers/externalversions"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
+	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/domain/switchinfo"
 )
 
 var (
-	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
-	cmNodeFuncs   = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
-	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
-	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
-	podFuncs      = map[string][]func(*v1.Pod, *v1.Pod, string){}
-	informerCh    = make(chan struct{})
+	cmDeviceFuncs   = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
+	cmNodeFuncs     = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
+	cmSwitchFuncs   = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context){}
+	podGroupFuncs   = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
+	podFuncs        = map[string][]func(*v1.Pod, *v1.Pod, string){}
+	informerCh      = make(chan struct{})
 )
 
 // JobService a interface with DeleteJob method
@@ -101,6 +106,15 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
 }
 
+// AddCmPubFaultFunc add public fault deal func, map by business
+func AddCmPubFaultFunc(business string, func1 ...func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context)) {
+	if _, ok := cmPubFaultFuncs[business]; !ok {
+		cmPubFaultFuncs[business] = []func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context){}
+	}
+
+	cmPubFaultFuncs[business] = append(cmPubFaultFuncs[business], func1...)
+}
+
 // GetNodeFromIndexer get node from informer indexer
 func GetNodeFromIndexer(name string) (*v1.Node, error) {
 	item, exist, err := nodeInformer.GetIndexer().GetByKey(name)
@@ -119,7 +133,6 @@ var nodeInformer cache.SharedIndexInformer
 // InitPodAndNodeInformer init pod informer
 func InitPodAndNodeInformer() {
 	factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
-	nodeInformer = factory.Core().V1().Nodes().Informer()
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -134,8 +147,33 @@ func InitPodAndNodeInformer() {
 			podHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
+
+	nodeInformer = factory.Core().V1().Nodes().Informer()
+	nodeInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			nodeHandler(obj, constant.AddOperator)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			if !reflect.DeepEqual(oldObj, newObj) {
+				nodeHandler(newObj, constant.UpdateOperator)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			nodeHandler(obj, constant.DeleteOperator)
+		},
+	},
+	)
 	factory.Start(informerCh)
 	factory.WaitForCacheSync(wait.NeverStop)
+}
+
+func nodeHandler(newObj interface{}, operator string) {
+	newNodeInfo, ok := newObj.(*v1.Node)
+	if !ok {
+		hwlog.RunLog.Error("new obj os not node type")
+		return
+	}
+	statistics.UpdateNodeSNAndNameCache(newNodeInfo, operator)
 }
 
 func podHandler(oldObj interface{}, newObj interface{}, operator string) {
@@ -330,6 +368,63 @@ func checkConfigMapIsNodeInfo(obj interface{}) bool {
 
 func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.SwitchInfoPrefix)
+}
+
+// InitPubFaultCMInformer init cm informer for public fault
+func InitPubFaultCMInformer(ctx context.Context) {
+	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+			options.LabelSelector = constant.CmConsumerPubFault + "=" + constant.CmConsumerValue
+		}))
+	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
+
+	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			cmPubFaultHandler(nil, obj, constant.AddOperator, ctx)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			if !reflect.DeepEqual(oldObj, newObj) {
+				cmPubFaultHandler(oldObj, newObj, constant.UpdateOperator, ctx)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			cmPubFaultHandler(nil, obj, constant.DeleteOperator, ctx)
+		},
+	})
+
+	informerFactory.Start(informerCh)
+}
+
+func cmPubFaultHandler(oldObj, newObj interface{}, operator string, ctx context.Context) {
+	var oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo
+	var err error
+	if oldObj != nil {
+		oldPubFaultInfo, err = publicfault.ParsePubFaultCM(oldObj)
+		if err != nil {
+			hwlog.RunLog.Errorf("parse old public fault cm error: %v", err)
+			return
+		}
+	}
+	newPubFaultInfo, err = publicfault.ParsePubFaultCM(newObj)
+	if err != nil {
+		hwlog.RunLog.Errorf("parse new cm error: %v", err)
+		return
+	}
+	index := 0
+	for _, cmFuncs := range cmPubFaultFuncs {
+		// index = 0, use original obj; index > 0, use deepcopy obj, keep the original obj
+		// different cmFuncs use different data
+		oldPubFaultForBusiness := oldPubFaultInfo
+		newPubFaultForBusiness := newPubFaultInfo
+		if index > 0 {
+			oldPubFaultForBusiness = publicfault.DeepCopy(oldPubFaultInfo)
+			newPubFaultForBusiness = publicfault.DeepCopy(newPubFaultInfo)
+		}
+		for _, cmFunc := range cmFuncs {
+			cmFunc(oldPubFaultForBusiness, newPubFaultForBusiness, operator, ctx)
+		}
+		index++
+	}
 }
 
 // InitPodGroupInformer is to init pod group informer

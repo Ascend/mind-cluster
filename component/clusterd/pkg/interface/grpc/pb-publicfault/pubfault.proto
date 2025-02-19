@@ -2,7 +2,8 @@ syntax = "proto3";
 
 option go_package = ".;pb2";
 
-message Status {
+// different services with the same name may result in errors
+message RespStatus {
   int32 code = 1;
   string info = 2;
 }
@@ -32,5 +33,5 @@ message PubFaultInfo {
 }
 
 service PubFault {
-  rpc SendPublicFault(PublicFaultRequest) returns (Status){}
+  rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
 }

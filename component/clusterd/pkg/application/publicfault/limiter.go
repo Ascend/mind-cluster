@@ -5,7 +5,6 @@ package publicfault
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -39,12 +38,12 @@ func UpdateLimiter() {
 func LimiterWaitByResource(resource string, ctx context.Context) error {
 	limiter, ok := getLimiterByResource(resource)
 	if !ok {
-		hwlog.RunLog.Error("resource limiter does not exist")
-		return errors.New("resource limiter does not exist")
+		hwlog.RunLog.Errorf("resource <%s> limiter does not exist", resource)
+		return fmt.Errorf("resource <%s> limiter does not exist", resource)
 	}
 	if err := limiter.Wait(ctx); err != nil {
-		hwlog.RunLog.Errorf("%s limiter wait failed, error: %v", resource, err)
-		return fmt.Errorf("%s limiter wait failed", resource)
+		hwlog.RunLog.Errorf("resource <%s> limiter wait failed, error: %v", resource, err)
+		return fmt.Errorf("resource <%s> wait failed", resource)
 	}
 	return nil
 }

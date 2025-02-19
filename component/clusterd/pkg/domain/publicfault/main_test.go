@@ -33,7 +33,7 @@ var (
 	testFaultInfo = api.PubFaultInfo{
 		Id:        testId,
 		TimeStamp: testTimeStamp,
-		Version:   "v1.0",
+		Version:   "1.0",
 		Resource:  testResource1,
 		Faults:    []api.Fault{testFault},
 	}

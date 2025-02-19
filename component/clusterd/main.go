@@ -16,11 +16,14 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
+	pubfault "clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/publicfault"
 	sv "clusterd/pkg/interface/grpc"
 	"clusterd/pkg/interface/grpc/service"
+	pubfaultsvc "clusterd/pkg/interface/grpc/service-pubfault"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -51,11 +54,18 @@ func limitQPS(ctx context.Context, req interface{},
 
 func startInformer(ctx context.Context) {
 	kube.InitCMInformer()
+	kube.InitPubFaultCMInformer(ctx)
 	kube.InitPodAndNodeInformer()
 	kube.InitPodGroupInformer()
 	addResourceFunc()
 	addJobFunc(ctx)
 	go resource.Report(ctx)
+	dealPubFault(ctx)
+}
+
+func dealPubFault(ctx context.Context) {
+	go pubfault.WatchPubFaultCustomFile(ctx)
+	go publicfault.PubFaultNeedDelete.DealDelete(ctx)
 }
 
 func addJobFunc(ctx context.Context) {
@@ -69,6 +79,7 @@ func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
+	kube.AddCmPubFaultFunc(constant.Resource, faultmanager.PubFaultCollector)
 }
 
 func main() {
@@ -86,28 +97,29 @@ func main() {
 	if !checkParameters() {
 		return
 	}
-	err := initK8sServer()
-	if err != nil {
+	if err := initK8sServer(); err != nil {
 		hwlog.RunLog.Errorf("init k8s servers failed, error: %v", err)
 		return
 	}
-
-	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
-		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
-		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
-	if err = server.Start(recoverService); err != nil {
-		hwlog.RunLog.Errorf("cluster info server start failed, err: %#v", err)
-	}
-	// election and running process
+	initGrpcServer(ctx)
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
 	startInformer(ctx)
 	signalCatch(cancel)
 }
 
+func initGrpcServer(ctx context.Context) {
+	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
+		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
+		grpc.UnaryInterceptor(limitQPS)})
+	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
+	pubFaultSvc := pubfaultsvc.NewPubFaultService(ctx)
+	if err := server.Start(recoverService, pubFaultSvc); err != nil {
+		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
+	}
+}
+
 func initK8sServer() error {
-	err := kube.InitClientK8s()
-	if err != nil {
+	if err := kube.InitClientK8s(); err != nil {
 		return fmt.Errorf("new client config err: %v", err)
 	}
 	vcK8sClient, err := kube.InitClientVolcano()

@@ -59,6 +59,13 @@ func (pc *pubFaultCache) DeleteOccurFault(nodeName, faultKey string) {
 	delete(pc.faultCache[nodeName], faultKey)
 }
 
+// GetPubFault get public fault from cache
+func (pc *pubFaultCache) GetPubFault() map[string]map[string]*constant.PubFaultCache {
+	pc.mutex.Lock()
+	defer pc.mutex.Unlock()
+	return pc.faultCache
+}
+
 // GetPubFaultByNodeName get public fault from cache by node name
 func (pc *pubFaultCache) GetPubFaultByNodeName(nodeName string) (map[string]*constant.PubFaultCache, bool) {
 	pc.mutex.Lock()
