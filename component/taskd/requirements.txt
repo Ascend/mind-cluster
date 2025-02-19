@@ -4,3 +4,5 @@ mindspore
 grpcio >= 1.62.2
 protobuf >= 4.24.4
 pyOpenSSL
+PyYAML~=6.0.2
+setuptools~=65.5.0

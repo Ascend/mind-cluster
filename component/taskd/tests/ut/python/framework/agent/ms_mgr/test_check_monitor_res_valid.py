@@ -17,12 +17,11 @@
 
 import unittest
 from taskd.python.toolkit.constants import constants
-from taskd.python.framework.agent.ms_mgr.MsUtils import check_monitor_res_valid
+from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid
 
 
 class TestCheckMonitorResValid(unittest.TestCase):
     def setUp(self):
-        # 为测试用例设置一个有效的输入示例
         self.valid_rank_status_dict = {
             0: {'pid': 101, 'status': None, 'global_rank': 16},
             1: {'pid': 110, 'status': None, 'global_rank': 17},
@@ -35,46 +34,39 @@ class TestCheckMonitorResValid(unittest.TestCase):
         }
 
     def test_valid_input(self):
-        # 测试有效输入，期望返回 True
         result = check_monitor_res_valid(self.valid_rank_status_dict)
         self.assertEqual(result, True)
 
     def test_non_dict_input(self):
-        # 测试输入不是字典的情况，期望返回 False
         non_dict_input = [1, 2, 3]
         result = check_monitor_res_valid(non_dict_input)
         self.assertEqual(result, False)
 
     def test_non_dict_info(self):
-        # 测试某个 rank 的信息不是字典的情况，期望返回 False
         invalid_rank_status_dict = self.valid_rank_status_dict.copy()
         invalid_rank_status_dict[0] = [1, 2, 3]
         result = check_monitor_res_valid(invalid_rank_status_dict)
         self.assertEqual(result, False)
 
     def test_missing_key(self):
-        # 测试某个 rank 的信息缺少必要键的情况，期望返回 False
         invalid_rank_status_dict = self.valid_rank_status_dict.copy()
         del invalid_rank_status_dict[0]['pid']
         result = check_monitor_res_valid(invalid_rank_status_dict)
         self.assertEqual(result, False)
 
     def test_non_int_pid(self):
-        # 测试 'pid' 不是整数的情况，期望返回 False
         invalid_rank_status_dict = self.valid_rank_status_dict.copy()
         invalid_rank_status_dict[0]['pid'] = 'abc'
         result = check_monitor_res_valid(invalid_rank_status_dict)
         self.assertEqual(result, False)
 
     def test_non_int_status_non_none(self):
-        # 测试 'status' 不是整数且不为 None 的情况，期望返回 False
         invalid_rank_status_dict = self.valid_rank_status_dict.copy()
         invalid_rank_status_dict[0]['status'] = 'xyz'
         result = check_monitor_res_valid(invalid_rank_status_dict)
         self.assertEqual(result, False)
 
     def test_non_int_global_rank(self):
-        # 测试 'global_rank' 不是整数的情况，期望返回 False
         invalid_rank_status_dict = self.valid_rank_status_dict.copy()
         invalid_rank_status_dict[0][constants.GLOBAL_RANK_ID_KEY] = 'def'
         result = check_monitor_res_valid(invalid_rank_status_dict)

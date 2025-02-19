@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-#  Copyright (C)  2022. Huawei Technologies Co., Ltd. All rights reserved.
+#  Copyright (C)  2025. Huawei Technologies Co., Ltd. All rights reserved.
 import logging.config
 import logging.handlers
 import os
@@ -8,7 +8,7 @@ import yaml
 
 from taskd.python.toolkit.config import path
 from taskd.python.toolkit.constants.constants import (LOG_PRIVILEGE,
-                                                                              LOG_DIR_PRIVILEGE, LOG_BAK_PRIVILEGE, LOG_FILE_PATH_ENV)
+                                                      LOG_DIR_PRIVILEGE, LOG_BAK_PRIVILEGE, LOG_FILE_PATH_ENV)
 from taskd.python.toolkit.constants.constants import MAX_SIZE
 from taskd.python.toolkit.validator.file_process import safe_open
 from taskd.python.toolkit.validator.validators import FileValidator
@@ -123,13 +123,14 @@ def _exist_file_process(log_path: str) -> None:
 
 
 def _log_rotator(source: str, dest: str) -> None:
-    if os.path.exists(source):
-        os.rename(source, dest)
-        os.chmod(dest, mode=LOG_BAK_PRIVILEGE)
-        if not os.path.exists(source):
-            os.mknod(source, mode=LOG_PRIVILEGE)
-        else:
-            _exist_file_process(source)
+    if not os.path.exists(source):
+        return
+    os.rename(source, dest)
+    os.chmod(dest, mode=LOG_BAK_PRIVILEGE)
+    if not os.path.exists(source):
+        os.mknod(source, mode=LOG_PRIVILEGE)
+    else:
+        _exist_file_process(source)
 
 
 def _set_rotator_func(handlers: logging.handlers, rotate_func: callable) -> logging.handlers:

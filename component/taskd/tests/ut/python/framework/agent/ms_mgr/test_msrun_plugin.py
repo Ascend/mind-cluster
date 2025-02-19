@@ -21,7 +21,7 @@ import os
 import time
 from taskd.python.toolkit.fault_checker.fault_check import FaultStatus
 from taskd.python.toolkit.constants import constants
-from taskd.python.framework.agent.ms_mgr.MsRunPlugin import MSRunPlugin
+from taskd.python.framework.agent.ms_mgr.msrun_plugin import MSRunPlugin
 from taskd.python.toolkit.recover_module import shared_data
 
 class TestMSRunPlugin(unittest.TestCase):
