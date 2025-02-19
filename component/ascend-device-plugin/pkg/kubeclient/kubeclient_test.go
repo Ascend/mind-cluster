@@ -16,7 +16,9 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 package kubeclient
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -70,12 +72,17 @@ func TestNewClientK8s(t *testing.T) {
 		mockCheckNodeName := gomonkey.ApplyFuncReturn(checkNodeName, nil)
 		defer mockCheckNodeName.Reset()
 		client, err := NewClientK8s()
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		kltClient := &http.Client{Transport: transport}
 		expectclient := &ClientK8s{
 			Clientset:      &kubernetes.Clientset{},
 			NodeName:       nodeName,
 			DeviceInfoName: common.DeviceInfoCMNamePrefix + nodeName,
 			Queue:          client.Queue,
 			IsApiErr:       false,
+			KltClient:      kltClient,
 		}
 		convey.So(client, convey.ShouldResemble, expectclient)
 		convey.So(err, convey.ShouldBeNil)

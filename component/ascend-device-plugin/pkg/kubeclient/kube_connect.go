@@ -1,7 +1,6 @@
 package kubeclient
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -99,17 +98,13 @@ func createKltPodsReqWithToken() (*http.Request, error) {
 }
 
 // getPodsByKltPort returns pods information obtained through the kubelet port
-func getPodsByKltPort() (*v1.PodList, error) {
+func (ki *ClientK8s) getPodsByKltPort() (*v1.PodList, error) {
 	req, err := createKltPodsReqWithToken()
 	if err != nil {
 		hwlog.RunLog.Errorf("get kubelet http request failed: %v", err)
 		return nil, err
 	}
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: transport}
-	resp, err := client.Do(req)
+	resp, err := ki.KltClient.Do(req)
 	if err != nil {
 		hwlog.RunLog.Errorf("send kubelet http request failed: %v", err)
 		return nil, err

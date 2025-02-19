@@ -17,7 +17,9 @@ package kubeclient
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -36,7 +38,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-// ClientK8s include ClientK8sSet & nodeName & configmap name
+// ClientK8s include ClientK8sSet & nodeName & configmap name & kubelet http Client
 type ClientK8s struct {
 	Clientset      kubernetes.Interface
 	NodeName       string
@@ -44,6 +46,7 @@ type ClientK8s struct {
 	IsApiErr       bool
 	PodInformer    cache.SharedIndexInformer
 	Queue          workqueue.RateLimitingInterface
+	KltClient      *http.Client
 }
 
 // NewClientK8s create k8s client
@@ -63,6 +66,10 @@ func NewClientK8s() (*ClientK8s, error) {
 	if err != nil {
 		return nil, err
 	}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	kltClient := &http.Client{Transport: transport}
 
 	return &ClientK8s{
 		Clientset:      client,
@@ -70,6 +77,7 @@ func NewClientK8s() (*ClientK8s, error) {
 		DeviceInfoName: common.DeviceInfoCMNamePrefix + nodeName,
 		Queue:          workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		IsApiErr:       false,
+		KltClient:      kltClient,
 	}, nil
 }
 

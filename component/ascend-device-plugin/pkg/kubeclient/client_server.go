@@ -365,7 +365,7 @@ func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 
 // GetPodsUsedNPUByKlt returns NPUs used by Pods
 func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
-	podList, err := getPodsByKltPort()
+	podList, err := ki.getPodsByKltPort()
 	if err != nil {
 		hwlog.RunLog.Errorf("get pods used NPU failed: %v", err)
 		return sets.String{}

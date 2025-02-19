@@ -52,27 +52,26 @@ func TestCreateKltPodsReqWithToken(t *testing.T) {
 			convey.So(request, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+		commonPatch1 := gomonkey.ApplyFuncReturn(getKltPodsURL, mockHostIP, nil)
+		defer commonPatch1.Reset()
 		convey.Convey("should return nil and error when new request failed", func() {
-			patch := gomonkey.ApplyFuncReturn(getKltPodsURL, mockHostIP, nil).
-				ApplyFuncReturn(http.NewRequest, nil, errors.New("new request failed"))
+			patch := gomonkey.ApplyFuncReturn(http.NewRequest, nil, errors.New("new request failed"))
 			defer patch.Reset()
 			request, err := createKltPodsReqWithToken()
 			convey.So(request, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+		commonPatch2 := gomonkey.ApplyFuncReturn(http.NewRequest, &http.Request{Header: http.Header{}}, nil)
+		defer commonPatch2.Reset()
 		convey.Convey("should return nil and error when load token file failed", func() {
-			patch := gomonkey.ApplyFuncReturn(getKltPodsURL, mockHostIP, nil).
-				ApplyFuncReturn(http.NewRequest, &http.Request{Header: http.Header{}}, nil).
-				ApplyFuncReturn(rest.InClusterConfig, nil, fmt.Errorf("build config error"))
+			patch := gomonkey.ApplyFuncReturn(rest.InClusterConfig, nil, fmt.Errorf("build config error"))
 			defer patch.Reset()
 			request, err := createKltPodsReqWithToken()
 			convey.So(request, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("should return request and nil when create request with token success", func() {
-			patch := gomonkey.ApplyFuncReturn(getKltPodsURL, mockHostIP, nil).
-				ApplyFuncReturn(http.NewRequest, &http.Request{Header: http.Header{}}, nil).
-				ApplyFuncReturn(rest.InClusterConfig, &rest.Config{BearerToken: ""}, nil)
+			patch := gomonkey.ApplyFuncReturn(rest.InClusterConfig, &rest.Config{BearerToken: ""}, nil)
 			defer patch.Reset()
 			kubeConfig = &rest.Config{BearerToken: ""}
 			request, err := createKltPodsReqWithToken()
@@ -84,36 +83,40 @@ func TestCreateKltPodsReqWithToken(t *testing.T) {
 
 func TestGetPodsByKltPortCase01(t *testing.T) {
 	convey.Convey("test getPodsByKltPort case 01", t, func() {
+		utKubeClient, err := initK8S()
+		if err != nil {
+			t.Fatal("TestAnnotationReset init kubernetes failed")
+		}
 		convey.Convey("should return nil and error when create request with token failed", func() {
 			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
 				return nil, errors.New("create request with token failed")
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+		commonPatch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
+			return &http.Request{}, nil
+		})
+		defer commonPatch.Reset()
 		convey.Convey("should return nil and error when send request failed", func() {
-			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
-				return &http.Request{}, nil
-			}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
 				_ *http.Request) (*http.Response, error) {
 				return nil, errors.New("send request failed")
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("should return nil and error when response status code is not 200", func() {
-			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
-				return &http.Request{}, nil
-			}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
 				_ *http.Request) (*http.Response, error) {
 				return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(nil)}, nil
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -122,48 +125,44 @@ func TestGetPodsByKltPortCase01(t *testing.T) {
 
 func TestGetPodsByKltPortCase02(t *testing.T) {
 	convey.Convey("test getPodsByKltPort case 02", t, func() {
+		utKubeClient, err := initK8S()
+		if err != nil {
+			t.Fatal("TestAnnotationReset init kubernetes failed")
+		}
+		commonPatch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
+			return &http.Request{}, nil
+		}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
+			_ *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil
+		})
+		defer commonPatch.Reset()
 		convey.Convey("should return nil and error when read response body failed", func() {
-			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
-				return &http.Request{}, nil
-			}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
-				_ *http.Request) (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil
-			}).ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
+			patch := gomonkey.ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
 				return nil, errors.New("read response body failed")
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("should return nil and error when unmarshal response body failed", func() {
-			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
-				return &http.Request{}, nil
-			}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
-				_ *http.Request) (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil
-			}).ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
+			patch := gomonkey.ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
 				return []byte("invalid json"), nil
 			}).ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
 				return errors.New("unmarshal response body failed")
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldBeNil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("should return pod list and nil when get pods information success", func() {
-			patch := gomonkey.ApplyFunc(createKltPodsReqWithToken, func() (*http.Request, error) {
-				return &http.Request{}, nil
-			}).ApplyMethod(reflect.TypeOf(new(http.Client)), "Do", func(_ *http.Client,
-				_ *http.Request) (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil
-			}).ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
+			patch := gomonkey.ApplyFunc(io.ReadAll, func(_ io.Reader) ([]byte, error) {
 				validJSON := []byte(`{"items": [{"metadata": {"name": "pod1"}}, {"metadata": {"name": "pod2"}}]}`)
 				return validJSON, nil
 			})
 			defer patch.Reset()
-			pods, err := getPodsByKltPort()
+			pods, err := utKubeClient.getPodsByKltPort()
 			convey.So(pods, convey.ShouldNotBeNil)
 			convey.So(err, convey.ShouldBeNil)
 		})
