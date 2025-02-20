@@ -4,13 +4,12 @@
 package publicfault
 
 import (
-	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"golang.org/x/time/rate"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/domain/publicfault"
 )
 
@@ -25,25 +24,20 @@ func UpdateLimiter() {
 		return true
 	})
 
-	const (
-		limit = 100
-		burst = 200
-	)
+	const qpsLim = 100
 	for _, resource := range publicfault.PubFaultResource {
-		limiterMap.Store(resource, rate.NewLimiter(limit, burst))
+		limiterMap.Store(resource, rate.NewLimiter(rate.Every(time.Second), qpsLim))
 	}
 }
 
-// LimiterWaitByResource limiter wait by resource
-func LimiterWaitByResource(resource string, ctx context.Context) error {
+// LimitByResource limiter work by resource
+func LimitByResource(resource string) error {
 	limiter, ok := getLimiterByResource(resource)
 	if !ok {
-		hwlog.RunLog.Errorf("resource <%s> limiter does not exist", resource)
 		return fmt.Errorf("resource <%s> limiter does not exist", resource)
 	}
-	if err := limiter.Wait(ctx); err != nil {
-		hwlog.RunLog.Errorf("resource <%s> limiter wait failed, error: %v", resource, err)
-		return fmt.Errorf("resource <%s> wait failed", resource)
+	if !limiter.Allow() {
+		return fmt.Errorf("request exceeds the upper limit, resource: <%s>", resource)
 	}
 	return nil
 }

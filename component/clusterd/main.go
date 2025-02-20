@@ -54,7 +54,7 @@ func limitQPS(ctx context.Context, req interface{},
 
 func startInformer(ctx context.Context) {
 	kube.InitCMInformer()
-	kube.InitPubFaultCMInformer(ctx)
+	kube.InitPubFaultCMInformer()
 	kube.InitPodAndNodeInformer()
 	kube.InitPodGroupInformer()
 	addResourceFunc()

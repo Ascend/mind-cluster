@@ -4,7 +4,6 @@
 package kube
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 
@@ -31,7 +30,7 @@ var (
 	cmDeviceFuncs   = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs     = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs   = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
-	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context){}
+	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	podGroupFuncs   = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs        = map[string][]func(*v1.Pod, *v1.Pod, string){}
 	informerCh      = make(chan struct{})
@@ -107,9 +106,9 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 }
 
 // AddCmPubFaultFunc add public fault deal func, map by business
-func AddCmPubFaultFunc(business string, func1 ...func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context)) {
+func AddCmPubFaultFunc(business string, func1 ...func(*api.PubFaultInfo, *api.PubFaultInfo, string)) {
 	if _, ok := cmPubFaultFuncs[business]; !ok {
-		cmPubFaultFuncs[business] = []func(*api.PubFaultInfo, *api.PubFaultInfo, string, context.Context){}
+		cmPubFaultFuncs[business] = []func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	}
 
 	cmPubFaultFuncs[business] = append(cmPubFaultFuncs[business], func1...)
@@ -371,7 +370,7 @@ func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 }
 
 // InitPubFaultCMInformer init cm informer for public fault
-func InitPubFaultCMInformer(ctx context.Context) {
+func InitPubFaultCMInformer() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = constant.CmConsumerPubFault + "=" + constant.CmConsumerValue
@@ -380,22 +379,22 @@ func InitPubFaultCMInformer(ctx context.Context) {
 
 	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			cmPubFaultHandler(nil, obj, constant.AddOperator, ctx)
+			cmPubFaultHandler(nil, obj, constant.AddOperator)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if !reflect.DeepEqual(oldObj, newObj) {
-				cmPubFaultHandler(oldObj, newObj, constant.UpdateOperator, ctx)
+				cmPubFaultHandler(oldObj, newObj, constant.UpdateOperator)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			cmPubFaultHandler(nil, obj, constant.DeleteOperator, ctx)
+			cmPubFaultHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
 
 	informerFactory.Start(informerCh)
 }
 
-func cmPubFaultHandler(oldObj, newObj interface{}, operator string, ctx context.Context) {
+func cmPubFaultHandler(oldObj, newObj interface{}, operator string) {
 	var oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo
 	var err error
 	if oldObj != nil {
@@ -421,7 +420,7 @@ func cmPubFaultHandler(oldObj, newObj interface{}, operator string, ctx context.
 			newPubFaultForBusiness = publicfault.DeepCopy(newPubFaultInfo)
 		}
 		for _, cmFunc := range cmFuncs {
-			cmFunc(oldPubFaultForBusiness, newPubFaultForBusiness, operator, ctx)
+			cmFunc(oldPubFaultForBusiness, newPubFaultForBusiness, operator)
 		}
 		index++
 	}

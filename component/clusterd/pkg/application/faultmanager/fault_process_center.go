@@ -142,9 +142,9 @@ func NodeCollector(oldNodeInfo, newNodeInfo *constant.NodeInfo, operator string)
 }
 
 // PubFaultCollector collects public fault info
-func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, operator string, ctx context.Context) {
+func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, operator string) {
 	if operator == constant.DeleteOperator {
 		return
 	}
-	publicfault.PubFaultCollector(newPubFaultInfo, ctx)
+	publicfault.PubFaultCollector(newPubFaultInfo)
 }

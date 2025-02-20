@@ -6,10 +6,10 @@ package publicfault
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/util"
 )
 
@@ -47,7 +47,7 @@ func init() {
 
 // LoadPubFaultCfgFromFile load fault resource and fault code fault level from file
 func LoadPubFaultCfgFromFile(filePath string) error {
-	fileData, err := utils.LoadFile(filePath)
+	fileData, err := os.ReadFile(filePath)
 	if err != nil {
 		hwlog.RunLog.Errorf("load fault config from <%s> failed, error: %v", filePath, err)
 		return fmt.Errorf("load fault config from <%s> failed", filePath)

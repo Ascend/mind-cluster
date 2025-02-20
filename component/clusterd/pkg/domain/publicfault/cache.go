@@ -160,7 +160,8 @@ func (q *needDeleteQueue) DealDelete(ctx context.Context) {
 				PubFaultCache.DeleteOccurFault(needDeal.nodeName, needDeal.faultKey)
 				continue
 			}
-			time.Sleep(time.Duration(time.Now().Unix() - deleteTime))
+			diffTime := (deleteTime - time.Now().Unix()) * int64(time.Second)
+			time.Sleep(time.Duration(diffTime))
 			PubFaultCache.DeleteOccurFault(needDeal.nodeName, needDeal.faultKey)
 		}
 	}

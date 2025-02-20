@@ -373,22 +373,14 @@ func GetAvailDevListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
 // DelDevFromAvailList delete device from available device list
 func DelDevFromAvailList(devCMInfo *constant.DeviceInfo, npuNames []string) {
 	availKey, availList := GetAvailDevListInfo(devCMInfo)
-	var splitList []string
 	if len(availList) == 0 {
-		splitList = make([]string, 0)
 		return
 	}
-	splitList = strings.Split(availList, ",")
-	newList := make([]string, 0)
+	splitList := strings.Split(availList, ",")
 	for _, npuName := range npuNames {
-		newList = append(newList, util.DeleteStringSliceItem(splitList, npuName)...)
+		splitList = util.DeleteStringSliceItem(splitList, npuName)
 	}
-	newListData, err := json.Marshal(newList)
-	if err != nil {
-		hwlog.RunLog.Errorf("marshal new available list failed, error: %v", err)
-		return
-	}
-	devCMInfo.DeviceList[availKey] = string(newListData)
+	devCMInfo.DeviceList[availKey] = strings.Join(splitList, ",")
 	return
 }
 
@@ -413,17 +405,11 @@ func AddDevFromUnhealthyList(devCMInfo *constant.DeviceInfo, npuNames []string) 
 	unHealthyKey, unHealthyList := GetUnhealthyListInfo(devCMInfo)
 	for _, npuName := range npuNames {
 		if !util.IsSliceContain(npuName, unHealthyList) {
-			unHealthyList = append(unHealthyList, npuNames...)
+			unHealthyList = append(unHealthyList, npuName)
 		}
 	}
 	sort.Strings(unHealthyList)
-
-	listData, err := json.Marshal(unHealthyList)
-	if err != nil {
-		hwlog.RunLog.Errorf("marshal new unhealthy list failed, error: %v", err)
-		return
-	}
-	devCMInfo.DeviceList[unHealthyKey] = string(listData)
+	devCMInfo.DeviceList[unHealthyKey] = strings.Join(unHealthyList, ",")
 }
 
 // IsUceFault check faultCode is uce

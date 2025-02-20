@@ -26,7 +26,13 @@ func NewPubFaultService(ctx context.Context) *PubFaultService {
 // SendPublicFault send public fault to clusterd
 func (s *PubFaultService) SendPublicFault(ctx context.Context, req *pb2.PublicFaultRequest) (*pb2.RespStatus, error) {
 	pubFaultInfo := constructPubFaultInfo(req)
-	if err := publicfault.PubFaultCollector(pubFaultInfo, ctx); err != nil {
+	if err := publicfault.PubFaultCollector(pubFaultInfo); err != nil {
+		if err.Error() == "limiter work by resource failed" {
+			return &pb2.RespStatus{
+				Code: int32(common.InvalidReqRate),
+				Info: err.Error(),
+			}, nil
+		}
 		return &pb2.RespStatus{
 			Code: int32(common.InvalidReqParam),
 			Info: err.Error(),

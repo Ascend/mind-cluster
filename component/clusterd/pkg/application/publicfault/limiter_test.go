@@ -4,10 +4,10 @@
 package publicfault
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"golang.org/x/time/rate"
 
@@ -31,13 +31,20 @@ func TestLimiter(t *testing.T) {
 	})
 
 	convey.Convey("test func LimiterWaitByResource success", t, func() {
-		err := LimiterWaitByResource(testResource1, context.Background())
+		err := LimitByResource(testResource1)
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("test func LimiterWaitByResource failed, resource does not exist", t, func() {
 		invalidResource := "abc"
-		err := LimiterWaitByResource(invalidResource, context.Background())
+		err := LimitByResource(invalidResource)
 		expErr := fmt.Errorf("resource <%s> limiter does not exist", invalidResource)
+		convey.So(err, convey.ShouldResemble, expErr)
+	})
+	convey.Convey("test func LimiterWaitByResource failed, req exceeds the upper limit", t, func() {
+		p1 := gomonkey.ApplyMethodReturn(&rate.Limiter{}, "Allow", false)
+		defer p1.Reset()
+		err := LimitByResource(testResource1)
+		expErr := fmt.Errorf("request exceeds the upper limit, resource: <%s>", testResource1)
 		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }

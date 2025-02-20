@@ -34,6 +34,8 @@ const (
 	UnInit = 408
 	// InvalidReqParam invalid request parameters
 	InvalidReqParam = 409
+	// InvalidReqRate invalid request rate
+	InvalidReqRate = 410
 	// ClientError common client error
 	ClientError RespCode = 499
 

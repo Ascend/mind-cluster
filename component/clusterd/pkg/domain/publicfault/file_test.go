@@ -12,8 +12,6 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-
-	"ascend-common/common-utils/utils"
 )
 
 var (
@@ -58,7 +56,7 @@ func testLoadConfig() {
 }
 
 func testLoadConfigErrLoadFile() {
-	p1 := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, testErr)
+	p1 := gomonkey.ApplyFuncReturn(os.ReadFile, nil, testErr)
 	defer p1.Reset()
 	err := LoadPubFaultCfgFromFile(testFilePath)
 	convey.So(err, convey.ShouldResemble, fmt.Errorf("load fault config from <%s> failed", testFilePath))
