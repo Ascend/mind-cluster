@@ -29,7 +29,8 @@ message Fault {
 
 message PubFaultInfo {
   string nodeName=1;
-  repeated int32 deviceIds = 2;
+  string nodeSN=2;
+  repeated int32 deviceIds = 3;
 }
 
 service PubFault {

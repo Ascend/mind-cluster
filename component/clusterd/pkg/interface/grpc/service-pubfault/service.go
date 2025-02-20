@@ -51,6 +51,7 @@ func constructPubFaultInfo(req *pb2.PublicFaultRequest) *api.PubFaultInfo {
 		for _, reqInfluence := range reqFault.Influence {
 			influence = append(influence, api.Influence{
 				NodeName:  reqInfluence.NodeName,
+				NodeSN:    reqInfluence.NodeSN,
 				DeviceIds: reqInfluence.DeviceIds,
 			})
 		}
