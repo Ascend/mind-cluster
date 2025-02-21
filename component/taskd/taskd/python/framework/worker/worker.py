@@ -25,4 +25,4 @@ class Worker:
 
     @staticmethod
     def start():
-        return  "start worker!"
+        return "start worker!"

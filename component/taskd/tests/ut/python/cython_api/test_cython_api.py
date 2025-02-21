@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from taskd.python.cython_api.cython_api import *
+from taskd.python.cython_api import cython_api
+
 
 def test_cython_api():
     return

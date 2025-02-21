@@ -16,6 +16,7 @@
 # ==============================================================================
 from taskd.python.framework.worker.worker import Worker
 
+
 def test_start_worker():
     w = Worker(0)
     assert w.start() == "start worker!"

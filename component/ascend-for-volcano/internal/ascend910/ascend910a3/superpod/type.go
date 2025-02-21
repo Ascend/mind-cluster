@@ -26,7 +26,7 @@ import (
 
 type module910SuperPod struct {
 	ascend910a3.Base910A3
-	spBlock  int
+	spBlock int
 }
 
 const (

@@ -52,8 +52,10 @@ type checkNPUResourceStableTest struct {
 }
 
 func buildVCheckNPUResourceStableTest() []checkNPUResourceStableTest {
-	tJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.NPU310PCardName}}}
-	vJob := SchedulerJob{handler: New(testPluginName), SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.AscendNPUCore}}}
+	tJob := SchedulerJob{handler: New(testPluginName),
+		SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.NPU310PCardName}}}
+	vJob := SchedulerJob{handler: New(testPluginName),
+		SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.AscendNPUCore}}}
 	tests := []checkNPUResourceStableTest{
 		{
 			name:    "01-CheckNPUResourceStable no annotation test",

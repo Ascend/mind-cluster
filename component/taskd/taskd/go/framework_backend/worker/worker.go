@@ -15,25 +15,22 @@
 // Package worker for taskd worker backend
 package worker
 
-import (
-)
-
 // NewTaskDWorker return a taskd worker instance
-func NewTaskDWorker(rankId int) *Worker {
-	return &Worker{RankId: rankId}
+func NewTaskDWorker(rankId int) *BaseWorker {
+	return &BaseWorker{RankId: rankId}
 }
 
-// Worker the class of taskd worker backend
-type Worker struct {
+// BaseWorker the class of taskd worker backend
+type BaseWorker struct {
 	RankId int
 }
 
 // Start start taskd worker
-func (w *Worker) Start() string {
+func (w *BaseWorker) Start() string {
 	return "start worker!"
 }
 
 // Process process task
-func (w *Worker) Process() {
-    return
+func (w *BaseWorker) Process() {
+	return
 }
