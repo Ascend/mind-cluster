@@ -41,7 +41,7 @@ const maxMetricRecordSize = 10
 // ItemGroup 表示指标项，留存10条历史记录。
 type ItemGroup struct {
 	Metric *diagcontext.Metric // 指标项
-	Items  []*Item             //指标历史记录
+	Items  []*Item             // 指标历史记录
 	mu     sync.RWMutex        // 读写锁，保证并发安全
 }
 
@@ -72,6 +72,7 @@ func (group *ItemGroup) GetLatestMetricPoolItem() *Item {
 	return group.Items[len(group.Items)-1]
 }
 
+// TreeNode 表示一个指标树
 type TreeNode struct {
 	DomainType       enum.MetricDomainType
 	DomainValue      string
@@ -80,6 +81,7 @@ type TreeNode struct {
 	MetricMap        map[string]*ItemGroup                 // 指标名称到指标项的映射
 }
 
+// NewMetricPoolTreeNode 新建指标池的指标树
 func NewMetricPoolTreeNode(domainItem *metricmodel.DomainItem, parentNode *TreeNode) *TreeNode {
 	return &TreeNode{
 		DomainType:       domainItem.DomainType,
@@ -135,12 +137,7 @@ func (p *MetricPool) addToMetricTree(metric *diagcontext.Metric, poolItem *Item)
 		var node *TreeNode
 		nodes, ok := curNodesMap[domainItem.DomainType]
 		if ok {
-			for _, treeNode := range nodes {
-				if treeNode.DomainValue == domainItem.Value {
-					node = treeNode
-					break
-				}
-			}
+			node = exitNode(nodes, domainItem)
 		} else {
 			curNodesMap[domainItem.DomainType] = make([]*TreeNode, 0)
 		}
@@ -152,6 +149,16 @@ func (p *MetricPool) addToMetricTree(metric *diagcontext.Metric, poolItem *Item)
 		lastNode = node
 	}
 	lastNode.MetricMap[metric.Name].Add(poolItem)
+}
+
+// 获取指标树
+func exitNode(nodes []*TreeNode, domainItem *metricmodel.DomainItem) *TreeNode {
+	for _, treeNode := range nodes {
+		if treeNode.DomainValue == domainItem.Value {
+			return treeNode
+		}
+	}
+	return nil
 }
 
 // GetMetricByMetricKey 精确查找最新的指标项

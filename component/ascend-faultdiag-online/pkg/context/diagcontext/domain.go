@@ -42,7 +42,9 @@ func (factory *DomainFactory) GetInstance(domainItems []*metricmodel.DomainItem)
 	key := buildDomainItemsKey(domainItems)
 	domain, ok := factory.domainMap[key]
 	if !ok {
-		domain = &Domain{domainItems}
+		domain = &Domain{
+			DomainItems: domainItems,
+		}
 		factory.domainMap[key] = domain
 	}
 	return domain
