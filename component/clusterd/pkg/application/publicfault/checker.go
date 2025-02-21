@@ -253,7 +253,7 @@ func (c *influenceChecker) checkNodeNameOrSN() error {
 	}
 	_, ok := statistics.GetNodeNameBySN(c.influence.NodeSN)
 	if !ok {
-		return errors.New("invalid node sn, does not exist")
+		return errors.New("invalid node name and node sn, both them does not exist")
 	}
 	return nil
 }
@@ -265,9 +265,11 @@ func (c *influenceChecker) checkDeviceIds() error {
 		minDeviceId    = 0
 		maxDeviceId    = 31
 	)
-	if len(c.influence.DeviceIds) < minDeviceIdLen || len(c.influence.DeviceIds) > maxDeviceIdLen ||
-		len(c.influence.DeviceIds) != len(util.RemoveDuplicates(c.influence.DeviceIds)) {
+	if len(c.influence.DeviceIds) < minDeviceIdLen || len(c.influence.DeviceIds) > maxDeviceIdLen {
 		return errors.New("invalid device id length")
+	}
+	if len(c.influence.DeviceIds) != len(util.RemoveDuplicates(c.influence.DeviceIds)) {
+		return errors.New("invalid device id, duplicate ids")
 	}
 	for _, deviceId := range c.influence.DeviceIds {
 		if deviceId < minDeviceId || deviceId > maxDeviceId {

@@ -76,7 +76,7 @@ func (p *pubFaultProcessor) faultJoin(nodeName string) []constant.DeviceFault {
 		return nil
 	}
 
-	var dpNPUFaultLevelMap map[string]string
+	dpNPUFaultLevelMap := make(map[string]string)
 	for _, dpCMFault := range newFaultList {
 		dpNPUFaultLevelMap[dpCMFault.NPUName] = dpCMFault.FaultLevel
 	}
