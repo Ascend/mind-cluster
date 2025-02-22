@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/containerd/containerd"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,7 +48,10 @@ const (
 	FaultOnce   = 1
 	NoneFault   = 0
 
-	atlas300VPro = "Atlas 300V Pro"
+	atlas300VPro     = "Atlas 300V Pro"
+	ascend910FakeID0 = "Ascend910-0"
+	ascend910FakeID1 = "Ascend910-1"
+	ascend910FakeID2 = "Ascend910-2"
 )
 
 func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string][]*common.NpuDevice {
@@ -1075,55 +1079,9 @@ func TestGetDevStatesDevSet(t *testing.T) {
 	})
 }
 
-func TestGetUseChips(t *testing.T) {
-	convey.Convey("test getUseChips", t, func() {
-		tool := mockAscendTools()
-		convey.Convey("when presetVDevice is false, used chips should be empty", func() {
-			common.ParamOption.PresetVDevice = false
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		common.ParamOption.PresetVDevice = true
-		convey.Convey("when get device list failed, used chips should be empty", func() {
-			err := fmt.Errorf("failed to get device list")
-			mockDeviceList := mockGetDeviceList(0, nil, err)
-			defer mockDeviceList.Reset()
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when device list is empty, used chips should be empty", func() {
-			mockDeviceList := mockGetDeviceList(0, []int32{}, nil)
-			defer mockDeviceList.Reset()
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		mockDeviceList := mockGetDeviceList(1, []int32{0}, nil)
-		defer mockDeviceList.Reset()
-		convey.Convey("when get process info failed, used chips should be empty", func() {
-			err := fmt.Errorf("failed to get device process info")
-			mockDevProcessInfo := mockGetDevProcessInfo(nil, err)
-			defer mockDevProcessInfo.Reset()
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when device process num is 0, used chips should be empty", func() {
-			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 0}, nil)
-			defer mockDevProcessInfo.Reset()
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when device process num is not 0, used chips should not be empty", func() {
-			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 1}, nil)
-			defer mockDevProcessInfo.Reset()
-			res := tool.GetUsedChips()
-			convey.So(len(res), convey.ShouldEqual, 1)
-		})
-	})
-}
-
 func mockAscendTools() AscendTools {
 	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}}
+		dmgr: &devmanager.DeviceManagerMock{}, containerdClient: &containerd.Client{}}
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`

@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/containerd/containerd"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -61,16 +62,17 @@ const (
 
 // AscendTools struct definition
 type AscendTools struct {
-	client       *kubeclient.ClientK8s
-	dmgr         devmanager.DeviceInterface
-	name         string
-	deviceUsage  string
-	unHealthyKey string
-	devCount     int32
-	healthDevice sets.String
-	boardId      uint32
-	superPodID   int32
-	serverIndex  int32
+	client           *kubeclient.ClientK8s
+	containerdClient *containerd.Client
+	dmgr             devmanager.DeviceInterface
+	name             string
+	deviceUsage      string
+	unHealthyKey     string
+	devCount         int32
+	healthDevice     sets.String
+	boardId          uint32
+	superPodID       int32
+	serverIndex      int32
 	// record map[device_logic_id]inresetting to show
 	cardInResetMap  map[int32]bool
 	cardInResetLock sync.Mutex
@@ -91,6 +93,8 @@ type DevManager interface {
 	GetName() string
 	SetKubeClient(*kubeclient.ClientK8s)
 	GetKubeClient() *kubeclient.ClientK8s
+	SetContainerdClient(*containerd.Client)
+	GetContainerdClient() *containerd.Client
 	UpdateHealth(map[string][]*common.NpuDevice, []*common.NpuDevice, string)
 	GetChange(map[string][]*common.NpuDevice, map[string][]*common.NpuDevice) map[string]bool
 	AddPodAnnotation(*common.PodDeviceInfo, string, string, []common.NpuDevice) error
@@ -136,6 +140,16 @@ func (tool *AscendTools) SetKubeClient(client *kubeclient.ClientK8s) {
 // GetKubeClient get ClientK8s
 func (tool *AscendTools) GetKubeClient() *kubeclient.ClientK8s {
 	return tool.client
+}
+
+// SetContainerdClient set containerd Client
+func (tool *AscendTools) SetContainerdClient(client *containerd.Client) {
+	tool.containerdClient = client
+}
+
+// GetContainerdClient get containerd Client
+func (tool *AscendTools) GetContainerdClient() *containerd.Client {
+	return tool.containerdClient
 }
 
 // GetChipAICore get ai core
