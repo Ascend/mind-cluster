@@ -32,8 +32,10 @@ pwd = os.path.dirname(os.path.relpath(__file__))
 pkg_dir = os.path.join(pwd, "build/lib")
 version = os.getenv("PKGVERSION", "7.0.0")
 
+
 def _write_version(file):
     file.write(f"__version__ = '{version}'\n")
+
 
 def build_dependencies():
     """generate python file"""
@@ -45,6 +47,7 @@ def build_dependencies():
     with os.fdopen(os.open(version_file, os.O_WRONLY | os.O_CREAT, mode=stat.S_IRUSR | stat.S_IWUSR), 'w') as f:
         _write_version(f)
 
+
 def clean():
     for folder in cache_folder:
         if os.path.exists(folder):
@@ -53,6 +56,7 @@ def clean():
         for name in glob.glob(pattern):
             if os.path.exists(name):
                 shutil.rmtree(name)
+
 
 def get_required_packages():
     with open(os.path.join(pwd, 'requirements.txt'), encoding='UTF-8') as f:
@@ -74,7 +78,7 @@ package_data = {
 setup(
     name='taskd',
     version=version,
-    platforms=['linux',],
+    platforms=['linux', ],
     description='Ascend MindCluster taskd is a new library for training management',
     python_requires='>=3.7',
     install_requires=required_packages,

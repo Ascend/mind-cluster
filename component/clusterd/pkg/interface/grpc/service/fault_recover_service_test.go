@@ -461,10 +461,10 @@ func TestGiveSoftFault2FaultCenter(t *testing.T) {
 
 		patches := gomonkey.ApplyFunc(faultmanager.CallbackForReportUceInfo,
 			func(infos []constant.ReportRecoverInfo) {
-				convey.So(infos[0].JobId, convey.ShouldEqual, jobId)
-				convey.So(infos[0].Rank, convey.ShouldEqual, faults[0].RankId)
-				convey.So(infos[1].JobId, convey.ShouldEqual, jobId)
-				convey.So(infos[1].Rank, convey.ShouldEqual, faults[1].RankId)
+				for i, _ := range infos {
+					convey.So(infos[i].JobId, convey.ShouldEqual, jobId)
+					convey.So(infos[i].Rank, convey.ShouldEqual, faults[i].RankId)
+				}
 			})
 		defer patches.Reset()
 

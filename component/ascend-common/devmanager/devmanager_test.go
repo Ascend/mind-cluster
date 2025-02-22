@@ -38,7 +38,6 @@ func TestGetCardIdAndDeviceId(t *testing.T) {
 		errReturnValue   = int32(-1)
 	)
 	manager := &DeviceManager{DcMgr: &dcmi.DcManager{}}
-
 	convey.Convey("failed to get info by dcmi", t, func() {
 		mk2 := gomonkey.ApplyMethodReturn(manager.DcMgr, "DcGetCardIDDeviceID",
 			errReturnValue, errReturnValue, errors.New("mock err"))
