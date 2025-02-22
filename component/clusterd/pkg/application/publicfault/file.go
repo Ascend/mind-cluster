@@ -43,9 +43,13 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 			hwlog.RunLog.Infof("watch file %s event: %v", constant.PubFaultCustomizationName, event)
 			if event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Write == fsnotify.Write ||
 				event.Op&fsnotify.Chmod == fsnotify.Chmod {
+				hwlog.RunLog.Infof("start trying load public fault config from file %s",
+					constant.PubFaultCustomizationName)
 				tryLoadPubFaultCfgFromFile()
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
+				hwlog.RunLog.Infof("start trying load public fault config from file %s",
+					constant.PubFaultCustomizationName)
 				publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCodeFilePath)
 			}
 			UpdateLimiter()
