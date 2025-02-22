@@ -54,6 +54,8 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 	hwlog.RunLog.Infof("receive public fault, id: %s, resource: %s, timestamp: %d",
 		newPubFault.Id, newPubFault.Resource, newPubFault.TimeStamp)
 	for _, fault := range newPubFault.Faults {
+		hwlog.RunLog.Infof("faultId: %s, faultType: %s, faultCode: %s, faultTime: %d, assertion: %s",
+			fault.FaultId, fault.FaultType, fault.FaultCode, fault.FaultTime, fault.Assertion)
 		for _, influence := range fault.Influence {
 			newFault := convertPubFaultInfoToCache(fault, influence)
 			nodeName := getNodeName(influence)
