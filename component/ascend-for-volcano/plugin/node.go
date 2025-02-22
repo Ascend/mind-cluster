@@ -374,8 +374,9 @@ func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
 	if length == 1 && sSlice[0] == "" {
 		length = 0
 	}
-	if length != int(iNum/util.NPUHexKilo) {
-		return fmt.Errorf("%s not statble:device-info is <%d> but k8s is <%d>", k, length, int(iNum/util.NPUHexKilo))
+	// public fault occurred, device info <= k8s
+	if length > int(iNum/util.NPUHexKilo) {
+		return fmt.Errorf("%s not stable:device-info is <%d> but k8s is <%d>", k, length, int(iNum/util.NPUHexKilo))
 	}
 	return nil
 }
