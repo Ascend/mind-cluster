@@ -393,3 +393,22 @@ func CheckCardUsageMode(use310PMixedInsert bool, productTypes []string) error {
 	}
 	return nil
 }
+
+// DeepEqualSwitchFaultInfo compare two  SwitchFaultInfo
+func DeepEqualSwitchFaultInfo(this, other SwitchFaultInfo) bool {
+	if len(this.FaultCode) != len(other.FaultCode) {
+		return false
+	}
+	for _, code := range this.FaultCode {
+		if !StringTool.Contains(other.FaultCode, code) {
+			return false
+		}
+	}
+	if this.FaultLevel != other.FaultLevel {
+		return false
+	}
+	if this.NodeStatus != other.NodeStatus {
+		return false
+	}
+	return true
+}

@@ -176,7 +176,7 @@ func filterNPUDevices(spec *oci.Spec) ([]int, error) {
 			return nil, fmt.Errorf("get wrong device ID (%v)", dev.Minor)
 		}
 		major := strconv.FormatInt(*dev.Major, base)
-		if dev.Type == charDevice && contains(majorIDs, major) {
+		if dev.Type == charDevice && common.StringTool.Contains(majorIDs, major) {
 			devIDs = append(devIDs, int(*dev.Minor))
 		}
 	}
@@ -237,15 +237,6 @@ func getNPUMajorID() ([]string, error) {
 		majorID = append(majorID, fields[0])
 	}
 	return majorID, nil
-}
-
-func contains(slice []string, target string) bool {
-	for _, v := range slice {
-		if v == target {
-			return true
-		}
-	}
-	return false
 }
 
 func getContainerValidSpec(containerObj containerd.Container, ctx context.Context) (*oci.Spec, error) {
