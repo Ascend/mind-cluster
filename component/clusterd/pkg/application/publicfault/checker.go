@@ -74,7 +74,7 @@ func (c *pubFaultInfoChecker) checkTimeStamp() error {
 	}
 	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	if c.pubFaultInfo.TimeStamp < minAvailTime {
-		return errors.New("invalid timestamp, can not before 2025/01/01 00:00:00")
+		return errors.New("invalid timestamp, can not before 2025/01/01T00:00:00Z")
 	}
 	return nil
 }
@@ -170,7 +170,7 @@ func (c *faultChecker) checkFaultTime() error {
 	}
 	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	if c.fault.FaultTime < minAvailTime {
-		return errors.New("invalid fault time, can not before 2025/01/01 00:00:00")
+		return errors.New("invalid fault time, can not before 2025/01/01T00:00:00Z")
 	}
 	return nil
 }
