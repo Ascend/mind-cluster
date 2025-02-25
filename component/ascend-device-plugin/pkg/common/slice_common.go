@@ -139,3 +139,13 @@ func (s stringTool) HexStringToInt(sources []string) []int64 {
 	}
 	return intSlice
 }
+
+// Contains check whether slice contains target
+func (s stringTool) Contains(sources []string, target string) bool {
+	for _, v := range sources {
+		if v == target {
+			return true
+		}
+	}
+	return false
+}

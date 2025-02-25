@@ -77,9 +77,11 @@ type AscendTools struct {
 	cardInResetMap  map[int32]bool
 	cardInResetLock sync.Mutex
 	// record map[device_logic_id]failed times
-	resetFailedTimesMap  map[int32]int
-	resetFailedTimesLock sync.Mutex
-	lastUpdateTimeStamp  time.Time
+	resetFailedTimesMap     map[int32]int
+	resetFailedTimesLock    sync.Mutex
+	lastUpdateTimeStamp     time.Time
+	lastManuallySeparateNPU string
+	lastSwitchFaultInfo     common.SwitchFaultInfo
 }
 
 // DevManager interface for manager device
@@ -262,7 +264,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if common.GetSyncMapLen(resetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
-		dataSame := common.CompareStringMap(deviceList, newDeviceList)
+		dataSame := common.CompareStringMap(deviceList, newDeviceList) &&
+			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
+			manuallySeparateNPU == tool.lastManuallySeparateNPU
 		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
 		hwlog.RunLog.Debugf("dataSame is %v, timeDiff is %v", dataSame, timeDiff)
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
@@ -276,6 +280,8 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 			return false, nil
 		}
 		tool.lastUpdateTimeStamp = time.Now()
+		tool.lastManuallySeparateNPU = manuallySeparateNPU
+		tool.lastSwitchFaultInfo = switchFaultInfo
 		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
 			tool.lastUpdateTimeStamp.Format(time.RFC3339))
 		return true, nil

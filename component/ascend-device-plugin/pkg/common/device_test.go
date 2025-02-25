@@ -249,3 +249,43 @@ func TestUpdateSwitchFaultInfoAndFaultLevel(t *testing.T) {
 		convey.So(switchFaultCodeLevelToCm[generalFaultCode], convey.ShouldEqual, NotHandleFaultLevel)
 	})
 }
+
+// TestDeepEqualSwitchFaultInfo for test DeepEqualSwitchFaultInfo
+func TestDeepEqualSwitchFaultInfo(t *testing.T) {
+	convey.Convey("test DeepEqualSwitchFaultInfo", t, func() {
+		convey.Convey("when faultCode length different, result return false", func() {
+			res := DeepEqualSwitchFaultInfo(SwitchFaultInfo{FaultCode: []string{"1", "2"}},
+				SwitchFaultInfo{FaultCode: []string{"1"}})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when faultCode elements mismatch, result return false", func() {
+			res := DeepEqualSwitchFaultInfo(SwitchFaultInfo{FaultCode: []string{"1", "2"}},
+				SwitchFaultInfo{FaultCode: []string{"1", "3"}})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when faultLevel different, result return false", func() {
+			res := DeepEqualSwitchFaultInfo(SwitchFaultInfo{FaultLevel: NotHandleFaultLevelStr},
+				SwitchFaultInfo{FaultLevel: PreSeparateFaultLevelStr})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when nodeStatus different, result return false", func() {
+			res := DeepEqualSwitchFaultInfo(SwitchFaultInfo{NodeStatus: nodeHealthy},
+				SwitchFaultInfo{NodeStatus: nodeUnHealthy})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when all fields equal except updateTime, result return true", func() {
+			this := SwitchFaultInfo{
+				FaultCode:  []string{"1", "2"},
+				FaultLevel: NotHandleFaultLevelStr,
+				NodeStatus: nodeHealthy,
+				UpdateTime: 0}
+			other := SwitchFaultInfo{
+				FaultCode:  []string{"1", "2"},
+				FaultLevel: NotHandleFaultLevelStr,
+				NodeStatus: nodeHealthy,
+				UpdateTime: 1}
+			res := DeepEqualSwitchFaultInfo(this, other)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
+}
