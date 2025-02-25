@@ -266,11 +266,6 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 	}
 	doUpdateMetric(ch, timestamp, devProcessInfo.ProcNum, cardLabel, descDevProcessNum)
 
-	if devProcessInfo.ProcNum == 0 {
-		doUpdateMetric(ch, timestamp, 0, append(cardLabel, "", ""), descDevProcessInfo)
-		return
-	}
-
 	containerID := ""
 	containerName := ""
 	cNameArray := getContainerNameArray(containerInfo)
@@ -280,6 +275,11 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 	}
 	// containerName in process info is namespace_podName_containerName
 	cardLabel[len(cardLabel)-1] = containerName
+
+	if devProcessInfo.ProcNum == 0 {
+		doUpdateMetric(ch, timestamp, 0, append(cardLabel, "", containerID), descDevProcessInfo)
+		return
+	}
 
 	for i := int32(0); i < devProcessInfo.ProcNum; i++ {
 		procInfo := devProcessInfo.DevProcArray[i]
