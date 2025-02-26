@@ -24,8 +24,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-// ResetTool tool for npu reset
-type ResetTool struct {
+// ResetInfoMgr mgr for npu reset
+type ResetInfoMgr struct {
 	client    *kubeclient.ClientK8s
 	resetInfo *ResetInfo
 	mu        sync.RWMutex
@@ -62,60 +62,60 @@ const (
 )
 
 var (
-	instance *ResetTool
+	instance *ResetInfoMgr
 	once     sync.Once
 )
 
-// ResetToolInstance return the single instance of reset tool, load reset info from node annotation
-func ResetToolInstance(client *kubeclient.ClientK8s) *ResetTool {
+// GetResetInfoMgr return the single instance of reset mgr, load reset info from node annotation
+func GetResetInfoMgr(client *kubeclient.ClientK8s) *ResetInfoMgr {
 	once.Do(func() {
-		resetTool := ResetTool{
+		infoMgr := ResetInfoMgr{
 			client:    client,
 			resetInfo: &ResetInfo{},
 		}
 		curNode, err := client.GetNode()
 		if err != nil {
 			hwlog.RunLog.Errorf("fail to get node from k8s, err: %v", err)
-			instance = &resetTool
+			instance = &infoMgr
 			return
 		}
 		if curNode.Annotations == nil {
-			instance = &resetTool
+			instance = &infoMgr
 			return
 		}
-		resetTool.resetInfo = readAnnotation(curNode.Annotations, common.ResetInfoAnnotationKey)
-		instance = &resetTool
+		infoMgr.resetInfo = readAnnotation(curNode.Annotations, common.ResetInfoAnnotationKey)
+		instance = &infoMgr
 	})
 	return instance
 }
 
 // WriteResetInfo write reset info into cache and node annotation
-func (tool *ResetTool) WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode) {
-	tool.mu.Lock()
-	tool.resetInfo.ThirdPartyResetDevs = mergeFailDevs(tool.resetInfo.ThirdPartyResetDevs,
+func (mgr *ResetInfoMgr) WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode) {
+	mgr.mu.Lock()
+	mgr.resetInfo.ThirdPartyResetDevs = mergeFailDevs(mgr.resetInfo.ThirdPartyResetDevs,
 		resetInfo.ThirdPartyResetDevs, writeMode)
-	tool.resetInfo.ManualResetDevs = mergeFailDevs(tool.resetInfo.ManualResetDevs,
+	mgr.resetInfo.ManualResetDevs = mergeFailDevs(mgr.resetInfo.ManualResetDevs,
 		resetInfo.ManualResetDevs, writeMode)
-	hwlog.RunLog.Infof("reset info change: %v", *tool.resetInfo)
-	dataBytes, err := json.Marshal(*tool.resetInfo)
+	hwlog.RunLog.Infof("reset info change: %v", *mgr.resetInfo)
+	dataBytes, err := json.Marshal(*mgr.resetInfo)
 	if err != nil {
-		hwlog.RunLog.Errorf("marshal reset info erroo, data: %v, err: %v", *tool.resetInfo, err)
-		tool.mu.Unlock()
+		hwlog.RunLog.Errorf("marshal reset info error, data: %v, err: %v", *mgr.resetInfo, err)
+		mgr.mu.Unlock()
 		return
 	}
-	tool.mu.Unlock()
-	tool.writeNodeAnnotation(string(dataBytes))
+	mgr.mu.Unlock()
+	mgr.writeNodeAnnotation(string(dataBytes))
 }
 
 // ReadResetInfo read reset info from cache
-func (tool *ResetTool) ReadResetInfo() ResetInfo {
-	tool.mu.RLock()
-	defer tool.mu.RUnlock()
-	return *tool.resetInfo
+func (mgr *ResetInfoMgr) ReadResetInfo() ResetInfo {
+	mgr.mu.RLock()
+	defer mgr.mu.RUnlock()
+	return *mgr.resetInfo
 }
 
-func (tool *ResetTool) writeNodeAnnotation(resetStr string) {
-	if err := tool.client.AddAnnotation(common.ResetInfoAnnotationKey, resetStr); err != nil {
+func (mgr *ResetInfoMgr) writeNodeAnnotation(resetStr string) {
+	if err := mgr.client.AddAnnotation(common.ResetInfoAnnotationKey, resetStr); err != nil {
 		hwlog.RunLog.Errorf("fail to write reset info to node annotation, err: %v", err)
 	}
 }

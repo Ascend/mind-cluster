@@ -492,8 +492,8 @@ func TestCheckNodeResetInfo(t *testing.T) {
 	hdm := HwDevManager{}
 	flag := false
 	convey.Convey("test checkNodeResetInfo", t, func() {
-		patch := gomonkey.ApplyMethod(&device.ResetTool{}, "WriteResetInfo",
-			func(_ *device.ResetTool, resetInfo device.ResetInfo, writeMode device.WriteMode) {
+		patch := gomonkey.ApplyMethod(&device.ResetInfoMgr{}, "WriteResetInfo",
+			func(_ *device.ResetInfoMgr, resetInfo device.ResetInfo, writeMode device.WriteMode) {
 				flag = true
 			})
 		defer patch.Reset()
@@ -504,15 +504,15 @@ func TestCheckNodeResetInfo(t *testing.T) {
 			convey.So(flag, convey.ShouldBeFalse)
 		})
 		convey.Convey("02-dev num zero, flag should be false", func() {
-			patch1 := gomonkey.ApplyFuncReturn(device.ResetToolInstance, &device.ResetTool{})
+			patch1 := gomonkey.ApplyFuncReturn(device.GetResetInfoMgr, &device.ResetInfoMgr{})
 			defer patch1.Reset()
-			patch1.ApplyMethodReturn(&device.ResetTool{}, "ReadResetInfo",
+			patch1.ApplyMethodReturn(&device.ResetInfoMgr{}, "ReadResetInfo",
 				device.ResetInfo{})
 			hdm.checkNodeResetInfo()
 			convey.So(flag, convey.ShouldBeFalse)
 		})
-		patch.ApplyFuncReturn(device.ResetToolInstance, &device.ResetTool{})
-		patch.ApplyMethodReturn(&device.ResetTool{}, "ReadResetInfo",
+		patch.ApplyFuncReturn(device.GetResetInfoMgr, &device.ResetInfoMgr{})
+		patch.ApplyMethodReturn(&device.ResetInfoMgr{}, "ReadResetInfo",
 			device.ResetInfo{ThirdPartyResetDevs: []device.ResetFailDevice{
 				{PhyID: id0},
 			}})
@@ -564,7 +564,7 @@ func TestCheckDeviceStatus(t *testing.T) {
 		})
 	})
 }
-	
+
 // TestSetContainerdClient for test setContainerdClient
 func TestSetContainerdClient(t *testing.T) {
 	convey.Convey("test setContainerdClient", t, func() {

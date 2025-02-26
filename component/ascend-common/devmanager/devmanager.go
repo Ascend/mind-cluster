@@ -61,6 +61,11 @@ type DeviceInterface interface {
 	GetAllProductType() ([]string, error)
 	GetNpuWorkMode() string
 	SetDeviceReset(cardID, deviceID int32) error
+	GetBrotherCardID(int32, int32) (int32, error)
+	PreResetSoc(int32, int32) error
+	GetOutBandChannelState(int32, int32) error
+	SetDeviceResetOutBand(int32, int32) error
+	RescanSoc(int32, int32) error
 	GetDeviceBootStatus(logicID int32) (int, error)
 	GetDeviceAllErrorCode(logicID int32) (int32, []int64, error)
 	SubscribeDeviceFaultEvent(logicID int32) error
@@ -674,6 +679,31 @@ func (d *DeviceManager) GetNpuWorkMode() string {
 // SetDeviceReset reset spec device
 func (d *DeviceManager) SetDeviceReset(cardID, deviceID int32) error {
 	return d.DcMgr.DcSetDeviceReset(cardID, deviceID)
+}
+
+// GetBrotherCardID get brother card id
+func (d *DeviceManager) GetBrotherCardID(cardID, deviceID int32) (int32, error) {
+	return d.DcMgr.DcGetBrotherCardID(cardID, deviceID)
+}
+
+// GetOutBandChannelState get out band channel state
+func (d *DeviceManager) GetOutBandChannelState(cardID, deviceID int32) error {
+	return d.DcMgr.DcGetOutBandChannelState(cardID, deviceID)
+}
+
+// PreResetSoc pre reset soc, used before reset out band
+func (d *DeviceManager) PreResetSoc(cardID, deviceID int32) error {
+	return d.DcMgr.DcPreResetSoc(cardID, deviceID)
+}
+
+// SetDeviceResetOutBand reset spec device out band
+func (d *DeviceManager) SetDeviceResetOutBand(cardID, deviceID int32) error {
+	return d.DcMgr.DcSetDeviceResetOutBand(cardID, deviceID)
+}
+
+// RescanSoc trigger soc rescan, non-blocking
+func (d *DeviceManager) RescanSoc(cardID, deviceID int32) error {
+	return d.DcMgr.DcRescanSoc(cardID, deviceID)
 }
 
 // GetDeviceBootStatus get device boot status

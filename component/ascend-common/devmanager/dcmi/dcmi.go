@@ -210,6 +210,26 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
     CALL_FUNC(dcmi_set_device_reset,card_id,device_id,channel_type)
    }
 
+	static int (*dcmi_get_device_outband_channel_state_func)(int card_id, int device_id, int* channel_state);
+	int dcmi_get_device_outband_channel_state(int card_id, int device_id, int* channel_state){
+	 CALL_FUNC(dcmi_get_device_outband_channel_state,card_id,device_id,channel_state)
+	}
+
+	static int (*dcmi_pre_reset_soc_func)(int card_id, int device_id);
+	int dcmi_pre_reset_soc(int card_id, int device_id){
+	 CALL_FUNC(dcmi_pre_reset_soc,card_id,device_id)
+	}
+
+	static int (*dcmi_rescan_soc_func)(int card_id, int device_id);
+	int dcmi_rescan_soc(int card_id, int device_id){
+	 CALL_FUNC(dcmi_rescan_soc,card_id,device_id)
+	}
+
+	static int (*dcmi_get_netdev_brother_device_func)(int card_id, int device_id, int* brother_card_id);
+	int dcmi_get_netdev_brother_device(int card_id, int device_id, int* brother_card_id){
+	 CALL_FUNC(dcmi_get_netdev_brother_device,card_id,device_id,brother_card_id)
+	}
+
    static int (*dcmi_get_device_boot_status_func)(int card_id, int device_id, enum dcmi_boot_status *boot_status);
    int dcmi_get_device_boot_status(int card_id, int device_id, enum dcmi_boot_status *boot_status){
     CALL_FUNC(dcmi_get_device_boot_status,card_id,device_id,boot_status)
@@ -376,6 +396,14 @@ unsigned int *state){
 
    	dcmi_set_device_reset_func = dlsym(dcmiHandle,"dcmi_set_device_reset");
 
+	dcmi_get_device_outband_channel_state_func = dlsym(dcmiHandle,"dcmi_get_device_outband_channel_state");
+
+	dcmi_pre_reset_soc_func = dlsym(dcmiHandle,"dcmi_pre_reset_soc");
+
+	dcmi_rescan_soc_func = dlsym(dcmiHandle,"dcmi_rescan_soc");
+
+	dcmi_get_netdev_brother_device_func = dlsym(dcmiHandle,"dcmi_get_netdev_brother_device");
+
    	dcmi_get_device_boot_status_func = dlsym(dcmiHandle,"dcmi_get_device_boot_status");
 
    	dcmi_subscribe_fault_event_func = dlsym(dcmiHandle,"dcmi_subscribe_fault_event");
@@ -483,6 +511,11 @@ type DcDriverInterface interface {
 	DcGetProductType(int32, int32) (string, error)
 	DcGetNpuWorkMode(int32) (int, error)
 	DcSetDeviceReset(int32, int32) error
+	DcGetBrotherCardID(int32, int32) (int32, error)
+	DcPreResetSoc(int32, int32) error
+	DcGetOutBandChannelState(int32, int32) error
+	DcSetDeviceResetOutBand(int32, int32) error
+	DcRescanSoc(int32, int32) error
 	DcGetDeviceBootStatus(int32) (int, error)
 	DcGetSuperPodInfo(int32, int32) (common.CgoSuperPodInfo, error)
 
@@ -1566,10 +1599,61 @@ func (d *DcManager) DcGetNpuWorkMode(cardID int32) (int, error) {
 
 // DcSetDeviceReset reset spec device chip
 func (d *DcManager) DcSetDeviceReset(cardID, deviceID int32) error {
+	var channelType C.enum_dcmi_reset_channel = C.INBAND_CHANNEL
+	return d.setDeviceReset(cardID, deviceID, channelType)
+}
+
+// DcGetBrotherCardID get brother card id
+func (d *DcManager) DcGetBrotherCardID(cardID, deviceID int32) (int32, error) {
+	var broCardID C.int
+	errCode := C.dcmi_get_netdev_brother_device(C.int(cardID), C.int(deviceID), &broCardID)
+	if errCode != common.Success {
+		return common.RetError, fmt.Errorf("unable to get brother card, errCode: %v", errCode)
+	}
+	return int32(broCardID), nil
+}
+
+// DcGetOutBandChannelState get out band channel state
+func (d *DcManager) DcGetOutBandChannelState(cardID, deviceID int32) error {
+	var channelState C.int
+	errCode := C.dcmi_get_device_outband_channel_state(C.int(cardID), C.int(deviceID), &channelState)
+	if errCode != common.Success {
+		return fmt.Errorf("get out band channel state error, errCode: %v", errCode)
+	}
+	if channelState != common.ChannelStateOk {
+		return fmt.Errorf("chip reset not support, channel state: %v", channelState)
+	}
+	return nil
+}
+
+// DcPreResetSoc pre reset soc, used before reset out band
+func (d *DcManager) DcPreResetSoc(cardID, deviceID int32) error {
+	errCode := C.dcmi_pre_reset_soc(C.int(cardID), C.int(deviceID))
+	if errCode != common.Success {
+		return fmt.Errorf("pre reset failed, cardID: %v, deviceID: %v, errCode: %v", cardID, deviceID, errCode)
+	}
+	return nil
+}
+
+// DcSetDeviceResetOutBand reset spec device chip out band
+func (d *DcManager) DcSetDeviceResetOutBand(cardID, deviceID int32) error {
+	var channelType C.enum_dcmi_reset_channel = C.OUTBAND_CHANNEL
+	return d.setDeviceReset(cardID, deviceID, channelType)
+}
+
+// DcRescanSoc trigger soc rescan, non-blocking
+func (d *DcManager) DcRescanSoc(cardID, deviceID int32) error {
+	errCode := C.dcmi_rescan_soc(C.int(cardID), C.int(deviceID))
+	if errCode != common.Success {
+		return fmt.Errorf("fail to rescan chip cardID %d, deviceID %v, errCode: %v", cardID, deviceID, errCode)
+	}
+	return nil
+}
+
+func (d *DcManager) setDeviceReset(cardID, deviceID int32, channelType C.enum_dcmi_reset_channel) error {
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
-	var channelType C.enum_dcmi_reset_channel = C.INBAND_CHANNEL
 	if errCode := C.dcmi_set_device_reset(C.int(cardID), C.int(deviceID), channelType); errCode != 0 {
 		return fmt.Errorf("cardID(%d) and deviceID(%d) hot reset errCode: %v", cardID, deviceID, errCode)
 	}

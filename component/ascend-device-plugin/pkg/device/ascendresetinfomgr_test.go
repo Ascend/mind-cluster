@@ -36,7 +36,7 @@ func TestResetToolInstance(t *testing.T) {
 			&v1.Node{}, resettoolTestErr)
 		defer patch.Reset()
 		convey.Convey("01-get node error, should return empty object", func() {
-			resetTool := ResetToolInstance(&kubeclient.ClientK8s{})
+			resetTool := GetResetInfoMgr(&kubeclient.ClientK8s{})
 			convey.So(resetTool.resetInfo.ManualResetDevs, convey.ShouldBeEmpty)
 		})
 	})
@@ -44,11 +44,11 @@ func TestResetToolInstance(t *testing.T) {
 
 // TestWriteResetInfo tests WriteResetInfo
 func TestWriteResetInfo(t *testing.T) {
-	resetTool := &ResetTool{
+	resetTool := &ResetInfoMgr{
 		resetInfo: &ResetInfo{},
 	}
 	flag := false
-	patch := gomonkey.ApplyPrivateMethod(&ResetTool{}, "writeNodeAnnotation", func() {
+	patch := gomonkey.ApplyPrivateMethod(&ResetInfoMgr{}, "writeNodeAnnotation", func() {
 		flag = true
 	})
 	defer patch.Reset()
@@ -72,7 +72,7 @@ func TestWriteResetInfo(t *testing.T) {
 // TestReadResetNodeAnnotation tests ReadResetNodeAnnotation
 func TestReadResetNodeAnnotation(t *testing.T) {
 	const id0 = 0
-	resetTool := &ResetTool{
+	resetTool := &ResetInfoMgr{
 		resetInfo: &ResetInfo{
 			ManualResetDevs: []ResetFailDevice{
 				{
@@ -89,7 +89,7 @@ func TestReadResetNodeAnnotation(t *testing.T) {
 
 // TestWriteNodeAnnotation tests writeNodeAnnotation
 func TestWriteNodeAnnotation(t *testing.T) {
-	resetTool := &ResetTool{
+	resetTool := &ResetInfoMgr{
 		resetInfo: &ResetInfo{},
 	}
 	flag := false

@@ -302,3 +302,29 @@ func (d *DeviceManagerMock) GetMainBoardId() uint32 {
 func (d *DeviceManagerMock) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
 	return &common.HccsBandwidthInfo{}, nil
 }
+
+// GetBrotherCardID get brother card id
+func (d *DeviceManagerMock) GetBrotherCardID(cardID, deviceID int32) (int32, error) {
+	const noneBroCard = -1
+	return noneBroCard, nil
+}
+
+// GetOutBandChannelState get out band channel state
+func (d *DeviceManagerMock) GetOutBandChannelState(cardID, deviceID int32) error {
+	return nil
+}
+
+// PreResetSoc pre reset soc, used before reset out band
+func (d *DeviceManagerMock) PreResetSoc(cardID, deviceID int32) error {
+	return nil
+}
+
+// SetDeviceResetOutBand reset spec device out band
+func (d *DeviceManagerMock) SetDeviceResetOutBand(cardID, deviceID int32) error {
+	return nil
+}
+
+// RescanSoc trigger soc rescan, non-blocking
+func (d *DeviceManagerMock) RescanSoc(cardID, deviceID int32) error {
+	return nil
+}

@@ -1248,7 +1248,7 @@ func (hdm *HwDevManager) checkNodeResetInfo() {
 	if client == nil {
 		return
 	}
-	resetTool := device.ResetToolInstance(client)
+	resetTool := device.GetResetInfoMgr(client)
 	resetInfo := resetTool.ReadResetInfo()
 	if len(resetInfo.ThirdPartyResetDevs) <= 0 && len(resetInfo.ManualResetDevs) <= 0 {
 		return

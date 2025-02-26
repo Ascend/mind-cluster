@@ -85,6 +85,8 @@ const (
 	UnRetError = math.MaxUint32
 	// Abnormal status of Abnormal
 	Abnormal = "Abnormal"
+	// ChannelStateOk means out band channel is ok for resetting
+	ChannelStateOk = 1
 
 	// DeviceIPLength length of device ip address
 	DeviceIPLength = 4

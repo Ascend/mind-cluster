@@ -501,6 +501,14 @@ DCMIDLLEXPORT int dcmi_get_product_type(int card_id, int device_id, char *produc
 
 DCMIDLLEXPORT int dcmi_set_device_reset(int card_id, int device_id, enum dcmi_reset_channel channel_type);
 
+DCMIDLLEXPORT int dcmi_get_device_outband_channel_state(int card_id, int device_id, int* channel_state);
+
+DCMIDLLEXPORT int dcmi_pre_reset_soc(int card_id, int device_id);
+
+DCMIDLLEXPORT int dcmi_rescan_soc(int card_id, int device_id);
+
+DCMIDLLEXPORT int dcmi_get_netdev_brother_device(int card_id, int device_id, int* brother_card_id);
+
 DCMIDLLEXPORT int dcmi_get_device_boot_status(int card_id, int device_id, enum dcmi_boot_status *boot_status);
 
 DCMIDLLEXPORT int dcmi_subscribe_fault_event(int card_id, int device_id, struct dcmi_event_filter filter);
