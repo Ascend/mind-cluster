@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -35,6 +36,8 @@ const waitKubectlSockCreateTime = 5 * 60
 
 // Start starts the gRPC server, registers the device plugin with the Kubelet
 func (ps *PluginServer) Start(socketWatcher *common.FileWatch) error {
+	hwlog.RunLog.Infof("prepare start plugin server, restartTime=%d", ps.restartTimes.Load())
+	ps.restartTimes.Add(1)
 	if socketWatcher == nil {
 		return fmt.Errorf("param socketWatcher is nil pointer")
 	}
@@ -88,8 +91,12 @@ func (ps *PluginServer) serve(socketWatcher *common.FileWatch) error {
 		return err
 	}
 
+	keepAlive := keepalive.ServerParameters{
+		Time:    common.GrpcKeepAliveTime,
+		Timeout: common.GrpcKeepAliveTimeout,
+	}
 	ps.grpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(common.MaxGRPCRecvMsgSize),
-		grpc.MaxConcurrentStreams(common.MaxGRPCConcurrentStreams))
+		grpc.MaxConcurrentStreams(common.MaxGRPCConcurrentStreams), grpc.KeepaliveParams(keepAlive))
 
 	v1beta1.RegisterDevicePluginServer(ps.grpcServer, ps)
 	go func() {

@@ -17,6 +17,7 @@ package server
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"google.golang.org/grpc"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
@@ -31,6 +32,7 @@ type InterfaceServer interface {
 	Stop()
 	GetRestartFlag() bool
 	SetRestartFlag(bool)
+	LastSendSuccess() bool
 }
 
 // PluginServer implements the interface of DevicePluginServer; manages the registration and lifecycle of grpc server
@@ -48,6 +50,8 @@ type PluginServer struct {
 	stop                 chan interface{}
 	klt2RealDevMap       map[string]string
 	restart              bool
+	deviceSyncStat       *common.SendStats
+	restartTimes         atomic.Uint64
 }
 
 // PodDevice define device info in pod
