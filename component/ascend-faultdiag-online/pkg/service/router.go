@@ -1,0 +1,56 @@
+/*
+Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+Package service 提供服务
+*/
+package service
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"ascend-faultdiag-online/pkg/service/serviceapi"
+	"ascend-faultdiag-online/pkg/utils/constants"
+)
+
+// Router 路由
+type Router struct {
+	RootApi *serviceapi.Api // Api根节点
+}
+
+// NewRouter 创建路由实例
+func NewRouter() *Router {
+	return &Router{
+		RootApi: serviceapi.GetRootApi(),
+	}
+}
+
+// HandleApi 处理请求
+func (router *Router) HandleApi(api string) (serviceapi.ApiFunc, error) {
+	tempApiNode := router.RootApi
+	routeParts := strings.Split(api, constants.ApiSeparator)
+	apiErr := errors.New(fmt.Sprintf("api %s is not existed", api))
+	for _, routePart := range routeParts {
+		nextApiNode, ok := tempApiNode.SubApiMap[routePart]
+		if !ok {
+			return nil, apiErr
+		}
+		tempApiNode = nextApiNode
+	}
+	return tempApiNode.ApiFunc, nil
+}
