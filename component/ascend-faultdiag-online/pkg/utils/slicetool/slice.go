@@ -20,7 +20,6 @@ Package slicetool 提供切片相关的能力
 package slicetool
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -31,7 +30,7 @@ func In[T comparable](value *T, slice []*T) error {
 			return nil
 		}
 	}
-	return errors.New(fmt.Sprintf("The parameter %v is not in the list: %v\n", value, slice))
+	return fmt.Errorf("the parameter %v is not in the list: %v", value, slice)
 }
 
 // ValueIn 判断在切片中是否存在某个元素，如果不存在则返回错误信息
@@ -41,7 +40,7 @@ func ValueIn[T comparable](value T, slice []T) error {
 			return nil
 		}
 	}
-	return errors.New(fmt.Sprintf("The parameter %v is not in the list: %v\n", value, slice))
+	return fmt.Errorf("the parameter %v is not in the list: %v", value, slice)
 }
 
 // Map 切片映射函数
@@ -89,7 +88,7 @@ func All[T any](slice []*T, predicate func(*T) bool) bool {
 			return false
 		}
 	}
-	return false
+	return true
 }
 
 func Chain[T any](slices [][]*T) []*T {
