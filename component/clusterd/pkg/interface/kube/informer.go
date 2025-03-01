@@ -17,7 +17,6 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
@@ -33,6 +32,7 @@ var (
 	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	podGroupFuncs   = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs        = map[string][]func(*v1.Pod, *v1.Pod, string){}
+	nodeFuncs       = map[string][]func(*v1.Node, *v1.Node, string){}
 	informerCh      = make(chan struct{})
 )
 
@@ -56,8 +56,10 @@ func CleanFuncs() {
 	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs = map[string][]func(*v1.Pod, *v1.Pod, string){}
+	nodeFuncs = map[string][]func(*v1.Node, *v1.Node, string){}
 }
 
 // AddPodGroupFunc add podGroup func
@@ -76,6 +78,15 @@ func AddPodFunc(business string, func1 ...func(*v1.Pod, *v1.Pod, string)) {
 	}
 
 	podFuncs[business] = append(podFuncs[business], func1...)
+}
+
+// AddNodeFunc add node func
+func AddNodeFunc(business string, func1 ...func(*v1.Node, *v1.Node, string)) {
+	if _, ok := nodeFuncs[business]; !ok {
+		nodeFuncs[business] = []func(*v1.Node, *v1.Node, string){}
+	}
+
+	nodeFuncs[business] = append(nodeFuncs[business], func1...)
 }
 
 // AddCmDeviceFunc add device func, map by business
@@ -150,15 +161,15 @@ func InitPodAndNodeInformer() {
 	nodeInformer = factory.Core().V1().Nodes().Informer()
 	nodeInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			nodeHandler(obj, constant.AddOperator)
+			nodeHandler(nil, obj, constant.AddOperator)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if !reflect.DeepEqual(oldObj, newObj) {
-				nodeHandler(newObj, constant.UpdateOperator)
+				nodeHandler(oldObj, newObj, constant.UpdateOperator)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			nodeHandler(obj, constant.DeleteOperator)
+			nodeHandler(nil, obj, constant.DeleteOperator)
 		},
 	},
 	)
@@ -166,13 +177,34 @@ func InitPodAndNodeInformer() {
 	factory.WaitForCacheSync(wait.NeverStop)
 }
 
-func nodeHandler(newObj interface{}, operator string) {
-	newNodeInfo, ok := newObj.(*v1.Node)
+func nodeHandler(oldObj, newObj interface{}, operator string) {
+	newNode, ok := newObj.(*v1.Node)
 	if !ok {
-		hwlog.RunLog.Error("new obj os not node type")
+		hwlog.RunLog.Error("new obj is not node type")
 		return
 	}
-	statistics.UpdateNodeSNAndNameCache(newNodeInfo, operator)
+	var oldNode *v1.Node
+	if oldObj != nil {
+		oldNode, ok = oldObj.(*v1.Node)
+		if !ok {
+			hwlog.RunLog.Error("old obj is not node type")
+			return
+		}
+	}
+	index := 0
+	for _, nodeFunc := range nodeFuncs {
+		// different businesses use different data sources
+		oldNodeForBusiness := oldNode
+		newNodeForBusiness := newNode
+		if oldNode != nil && newNode != nil && index > 0 {
+			oldNodeForBusiness = oldNode.DeepCopy()
+			newNodeForBusiness = newNode.DeepCopy()
+		}
+		for _, nfunc := range nodeFunc {
+			nfunc(oldNodeForBusiness, newNodeForBusiness, operator)
+		}
+		index++
+	}
 }
 
 func podHandler(oldObj interface{}, newObj interface{}, operator string) {

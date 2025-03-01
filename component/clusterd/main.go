@@ -18,6 +18,7 @@ import (
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/resource"
+	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
@@ -79,6 +80,7 @@ func addResourceFunc() {
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
 	kube.AddCmPubFaultFunc(constant.Resource, faultmanager.PubFaultCollector)
+	kube.AddNodeFunc(constant.Resource, statistics.UpdateNodeSNAndNameCache)
 }
 
 func main() {

@@ -14,15 +14,15 @@ import (
 const nodeAnnotation = "product-serial-number"
 
 // UpdateNodeSNAndNameCache update node sn and name cache
-func UpdateNodeSNAndNameCache(nodeInfo *v1.Node, operator string) {
-	if nodeInfo == nil {
+func UpdateNodeSNAndNameCache(_, newNodeInfo *v1.Node, operator string) {
+	if newNodeInfo == nil {
 		return
 	}
-	nodeSN, ok := nodeInfo.Annotations[nodeAnnotation]
+	nodeSN, ok := newNodeInfo.Annotations[nodeAnnotation]
 	if !ok {
 		return
 	}
-	nodeName := nodeInfo.Name
+	nodeName := newNodeInfo.Name
 	switch operator {
 	case constant.AddOperator, constant.UpdateOperator:
 		statistics.GetNodeSNAndNameCache()[nodeSN] = nodeName
