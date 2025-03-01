@@ -33,6 +33,22 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
+func init() {
+	reSchedulerCache = newReSchedulerCache()
+}
+
+func newReSchedulerCache() *DealReSchedulerCache {
+	return &DealReSchedulerCache{
+		FaultNodes: map[string]*FaultNode{},
+		FaultJobs:  map[api.JobID]*FaultJob{},
+	}
+}
+
+// GetReSchedulerCache return reschedule cache
+func GetReSchedulerCache() *DealReSchedulerCache {
+	return reSchedulerCache
+}
+
 func (reCache *DealReSchedulerCache) setFaultNodes(faultNodes map[string]*FaultNode) {
 	reCache.FaultNodes = faultNodes
 }
@@ -245,4 +261,17 @@ func (reCache *DealReSchedulerCache) setRescheduleReasonToCache(env *plugin.Sche
 	}
 	reasonCmData[CmJobRescheduleReasonsKey] = jobRescheduleReasons
 	return nil
+}
+
+// judgePublicFaultInReason return fTask has public fault
+func judgePublicFaultInReason(fTask *miniFaultTask) bool {
+	if fTask == nil {
+		return false
+	}
+	for _, reason := range fTask.Reason {
+		if reason.FaultType == PublicFaultType {
+			return true
+		}
+	}
+	return false
 }

@@ -20,14 +20,13 @@ package plugin
 import (
 	"sync"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
 const (
@@ -96,21 +95,19 @@ const (
 	ResetInfoTypeKey = "restartType"
 	// PodRescheduleRestartType for hot reset restart type
 	PodRescheduleRestartType = "podReschedule"
-	normalNodeErr            = "not NPU node"
 	oldCapacity              = "Capability"
 	newCapacity              = "Capacity"
+	noneResourceErr          = "npu resource is not enable"
 )
 
 // SchedulerJob the plugin define job info
 type SchedulerJob struct {
 	util.SchedulerJobAttr
-	UnschedulableReason
-	handler      ISchedulerPlugin
-	ServerList   []*Tor
-	TorBlackMaps map[string]struct{}
-	JobReadyTag  *bool
-	SuperPods    map[string][]SuperNode
-	Owner        OwnerInfo
+	UnscheduledReason
+	handler     ISchedulerPlugin
+	JobReadyTag *bool
+	SuperPods   map[string][]SuperNode
+	Owner       OwnerInfo
 }
 
 // OwnerInfo the owner info of job
@@ -120,9 +117,9 @@ type OwnerInfo struct {
 	Replicas    *int32
 }
 
-// UnschedulableReason the message of pod pending
-type UnschedulableReason struct {
-	Reason map[string]map[string]struct{}
+// UnscheduledReason the message of pod pending
+type UnscheduledReason struct {
+	Reason PendingReason
 	*sync.Mutex
 }
 
@@ -134,18 +131,33 @@ type SuperNode struct {
 
 // VolcanoFrame passed in by the volcano frame.
 type VolcanoFrame struct {
-	UID            types.UID
-	Confs          []config.Configuration
-	KubeClient     kubernetes.Interface
-	VJobTemplate   map[string]map[string]util.VResource
-	SuperPodSize   int
-	ReservePodSize int
+	UID          types.UID
+	KubeClient   kubernetes.Interface
+	VJobTemplate map[string]map[string]util.VResource
+	ConfigParameters
 }
 
-// NslbParameters the Parameters os nslb
-type NslbParameters struct {
-	nslbVersion  string
-	sharedTorNum int
+// ConfigParameters some volcano scheduler parameters
+type ConfigParameters struct {
+	StaticParameters
+	DynamicParameters
+}
+
+// StaticParameters volcano scheduler static parameters
+type StaticParameters struct {
+	OnceInit       *sync.Once
+	UseClusterD    bool
+	NslbVersion    string
+	SharedTorNum   int
+	IsFirstSession *bool // scheduler first session message is unreliable
+}
+
+// DynamicParameters volcano scheduler dynamic parameters
+type DynamicParameters struct {
+	PresetVirtualDevice bool
+	GraceDeleteTime     int64
+	SuperPodSize        int
+	ReservePodSize      int
 }
 
 // ScheduleCache the plugin defined caches saving cm data
@@ -157,25 +169,42 @@ type ScheduleCache struct {
 
 // ScheduleEnv for job scheduler context.
 type ScheduleEnv struct {
-	IsFirstSession    *bool // scheduler first session message is unreliable
-	Jobs              map[api.JobID]SchedulerJob
-	JobReplicas       map[api.JobID]int32
-	Nodes             map[string]NPUNode
-	NodesNotInSsn     map[string]*corev1.Node
-	JobSinglePodFlag  map[api.JobID]bool
-	JobSeverInfos     map[api.JobID]struct{}
-	JobDeleteFlag     map[api.JobID]struct{}
+	JobScheduleInfoRecorder
+	ClusterInfoWitchCm
+	ClusterCache
+	FrameAttr VolcanoFrame
+	Cache     ScheduleCache
+}
+
+// ClusterCache cluster env cache
+type ClusterCache struct {
+	Jobs         map[api.JobID]SchedulerJob
+	Nodes        map[string]NPUNode
+	Tors         *TorList
+	SuperPodInfo *SuperPodInfo
+}
+
+// ClusterInfoWitchCm cluster info whit different configmap
+type ClusterInfoWitchCm struct {
 	DeviceInfos       *DeviceInfosWithMutex
-	DeleteJobInfos    map[api.JobID]*api.JobInfo
 	NodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
 	SwitchInfosFromCm *SwitchInfosFromCmWithMutex // SwitchInfosFromCm is get from mindx-dl/device-info- configmap
-	FrameAttr         VolcanoFrame
-	Cache             ScheduleCache
-	Tors              *TorList
-	NslbAttr          *NslbParameters
-	SuperPodInfo      *SuperPodInfo
-	JobPendingMessage map[api.JobID]map[string]map[string]struct{}
 }
+
+// JobScheduleInfoRecorder some info need recorded in job scheduling
+type JobScheduleInfoRecorder struct {
+	// PodScheduleFlag key is job uid, value is job schedule type, true is pod scheduling, false is job scheduling
+	PodScheduleFlag map[api.JobID]bool
+	// ResetCMSetFlag flag to record rescheduling job has been set reset cm
+	ResetCMSetFlag map[api.JobID]struct{}
+	// PendingMessage record different job pending reason and unschedulable nodes
+	PendingMessage map[api.JobID]PendingReason
+	// ServerListRecordFlag flag to record tor affinity job has been record server list to logs
+	ServerListRecordFlag map[api.JobID]struct{}
+}
+
+// PendingReason pod pending reason  type. key is pending reason, value is node name
+type PendingReason map[string]sets.String
 
 // SuperPodInfo cache super pod info for pod rescheduling
 type SuperPodInfo struct {
@@ -204,10 +233,9 @@ type SwitchInfosFromCmWithMutex struct {
 
 // ScheduleHandler information for the current plugin
 type ScheduleHandler struct {
-	NPUPlugins map[string]NPUBuilder
-	ScheduleEnv
+	NPUPlugins  map[string]NPUBuilder
 	FaultHandle FaultHandler
-	sync.Once
+	ScheduleEnv
 }
 
 // TaskResetInfo record task reset device information
@@ -233,4 +261,63 @@ type DevFaultInfo struct {
 	InitialPolicy string
 	ErrorCode     []int64
 	ErrorCodeHex  string
+}
+
+// NewJobScheduleInfoRecorder new default JobScheduleInfoRecorder
+func NewJobScheduleInfoRecorder() JobScheduleInfoRecorder {
+	return JobScheduleInfoRecorder{
+		PodScheduleFlag:      make(map[api.JobID]bool),
+		ResetCMSetFlag:       make(map[api.JobID]struct{}),
+		PendingMessage:       make(map[api.JobID]PendingReason),
+		ServerListRecordFlag: make(map[api.JobID]struct{}),
+	}
+}
+
+// NewClusterInfoWitchCm new empty cluster info with cm
+func NewClusterInfoWitchCm() ClusterInfoWitchCm {
+	return ClusterInfoWitchCm{
+		DeviceInfos: &DeviceInfosWithMutex{
+			Mutex:   sync.Mutex{},
+			Devices: map[string]NodeDeviceInfoWithID{},
+		},
+		NodeInfosFromCm: &NodeInfosFromCmWithMutex{
+			Mutex: sync.Mutex{},
+			Nodes: map[string]NodeDNodeInfo{},
+		},
+		SwitchInfosFromCm: &SwitchInfosFromCmWithMutex{
+			Mutex:    sync.Mutex{},
+			Switches: map[string]SwitchFaultInfo{},
+		},
+	}
+}
+
+// NewVolcanoFrame new empty volcano frame
+func NewVolcanoFrame() VolcanoFrame {
+	firstSession := true
+	return VolcanoFrame{
+		ConfigParameters: ConfigParameters{
+			StaticParameters: StaticParameters{
+				OnceInit:       &sync.Once{},
+				IsFirstSession: &firstSession,
+			},
+		},
+	}
+}
+
+// NewSuperPodInfo new empty super pod info
+func NewSuperPodInfo() *SuperPodInfo {
+	return &SuperPodInfo{
+		SuperPodReschdInfo:        map[api.JobID]map[string][]SuperNode{},
+		SuperPodFaultTaskNodes:    map[api.JobID][]string{},
+		SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
+	}
+}
+
+// NewClusterCache new empty  cluster cache
+func NewClusterCache() ClusterCache {
+	return ClusterCache{
+		Jobs:         map[api.JobID]SchedulerJob{},
+		Nodes:        map[string]NPUNode{},
+		SuperPodInfo: NewSuperPodInfo(),
+	}
 }

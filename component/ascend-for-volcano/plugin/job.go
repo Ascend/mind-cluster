@@ -31,6 +31,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -292,7 +293,7 @@ func (sJob *SchedulerJob) recordTorJobServerList(sHandle *ScheduleHandler) {
 	if sJob == nil || sHandle == nil || sHandle.Tors == nil || !sJob.IsTorAffinityJob() {
 		return
 	}
-	if _, found := sHandle.JobSeverInfos[sJob.Name]; found {
+	if _, found := sHandle.ServerListRecordFlag[sJob.Name]; found {
 		return
 	}
 	torShareMap := sHandleTorsToTorShareMap(sHandle)
@@ -318,7 +319,7 @@ func (sJob *SchedulerJob) recordTorJobServerList(sHandle *ScheduleHandler) {
 		klog.V(util.LogErrorLev).Infof("failed to convert jobLog to dataByte %v", err)
 		return
 	}
-	sHandle.JobSeverInfos[sJob.Name] = struct{}{}
+	sHandle.ServerListRecordFlag[sJob.Name] = struct{}{}
 	klog.V(util.LogWarningLev).Infof("record job %s , global tors info  %s", sJob.ReferenceName, string(dataByte))
 }
 
@@ -329,7 +330,7 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 	if k, ok := sJob.Label[util.SinglePodTag]; !ok || k != util.EnableFunc {
 		return
 	}
-	if _, found := sHandle.JobDeleteFlag[sJob.Name]; found {
+	if _, found := sHandle.ResetCMSetFlag[sJob.Name]; found {
 		return
 	}
 	if k, ok := sJob.Label[util.ProcessRecoverEnable]; ok && k == util.EnableFunc {
@@ -353,11 +354,11 @@ func (sJob *SchedulerJob) updateResetConfigMap(sHandle *ScheduleHandler) {
 		return
 	}
 	if upErr := updateResetCm(sJob, sHandle.FrameAttr.KubeClient, resetCm,
-		sHandle.JobSinglePodFlag[sJob.Name]); upErr != nil {
+		sHandle.PodScheduleFlag[sJob.Name]); upErr != nil {
 		klog.V(util.LogWarningLev).Infof("update cm err:%s", upErr)
 		return
 	}
-	sHandle.JobDeleteFlag[sJob.Name] = struct{}{}
+	sHandle.ResetCMSetFlag[sJob.Name] = struct{}{}
 }
 
 func updateResetCm(sJob *SchedulerJob, k8sClient kubernetes.Interface, resetCm TaskResetInfo, isSinglePod bool) error {
@@ -427,9 +428,8 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	}
 	tmpJobReadyTag := true
 	sJob.JobReadyTag = &tmpJobReadyTag
-	sJob.TorBlackMaps = map[string]struct{}{}
-	sJob.UnschedulableReason = UnschedulableReason{
-		Reason: map[string]map[string]struct{}{},
+	sJob.UnscheduledReason = UnscheduledReason{
+		Reason: make(PendingReason),
 		Mutex:  &sync.Mutex{},
 	}
 	sJob.SchedulerJobAttr.ComJob = util.ComJob{
@@ -441,7 +441,6 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	}
 	if sJob.Owner.Kind == ReplicaSetType {
 		num *= int(*sJob.Owner.Replicas)
-		sJob.SchedulerJobAttr.ComJob.Annotation = sJob.Owner.Annotations
 	}
 	subHealthyStrategy, exist := sJob.Label[util.SubHealthyStrategyLabel]
 	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
@@ -475,9 +474,9 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 // UpdateJobPendingMessage update job pending message
 func (sJob *SchedulerJob) UpdateJobPendingMessage(message, nodeName string) {
 	if _, ok := sJob.Reason[message]; !ok {
-		sJob.Reason[message] = make(map[string]struct{})
+		sJob.Reason[message] = make(sets.String)
 	}
-	sJob.Reason[message][nodeName] = struct{}{}
+	sJob.Reason[message].Insert(nodeName)
 }
 
 // IsNPUJob check SchedulerJob is npu job
@@ -515,22 +514,12 @@ func (sJob SchedulerJob) ValidJobFn() *api.ValidateResult {
 
 // PreCheckNodePredicate PreCheck Predicate nodes.
 func (sJob SchedulerJob) preCheckNodePredicate(taskInfo *api.TaskInfo, vcNode NPUNode) error {
-	if nodedEnable := vcNode.Label[util.NodeDEnableKey]; nodedEnable == util.NodeDEnableOnValue {
-		nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodedNodeHealtyStatuskey]
-		if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode || nodeHealthyStatusByNodeD == util.NodeUnHealthyByNodeD {
-			klog.V(util.LogDebugLev).Infof("NodePredicate %s failed, cause node is %s.", vcNode.Name,
-				nodeHealthyStatusByNodeD)
-			return fmt.Errorf("node is %s, due to nodeD reported node status", nodeHealthyStatusByNodeD)
-		}
+	nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodedNodeHealtyStatuskey]
+	if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode {
+		klog.V(util.LogDebugLev).Infof("NodePredicate %s failed, cause node is %s.", vcNode.Name,
+			nodeHealthyStatusByNodeD)
+		return fmt.Errorf("node is %s, due to nodeD reported node status", nodeHealthyStatusByNodeD)
 	}
-	klog.V(util.LogDebugLev).Infof("sub-healthy strategy=%s", sJob.SubHealthyStrategy)
-	nodeHealthyStatusBySwitch := vcNode.Annotation[util.SwitchNodeHealtyStatuskey]
-	if nodeHealthyStatusBySwitch == util.NodeUnHealthyByNodeD {
-		klog.V(util.LogDebugLev).Infof("NodePredicate %s failed, cause node is %s by reported switch info.", vcNode.Name,
-			nodeHealthyStatusBySwitch)
-		return fmt.Errorf("node is %s, due to switch reported node status", nodeHealthyStatusBySwitch)
-	}
-
 	if err := vcNode.CheckNPUResourceStable(sJob); err != nil {
 		return err
 	}
@@ -633,7 +622,7 @@ func (sHandle *ScheduleHandler) UpdatePodGroupPendingReason(job *api.JobInfo, re
 
 // RecordJobPendingMessage record the job pending message to log
 func (sHandle *ScheduleHandler) RecordJobPendingMessage(vcJob SchedulerJob) {
-	if util.MakeDataHash(sHandle.JobPendingMessage[vcJob.Name]) == util.MakeDataHash(vcJob.Reason) {
+	if util.MakeDataHash(sHandle.PendingMessage[vcJob.Name]) == util.MakeDataHash(vcJob.Reason) {
 		return
 	}
 	for reason, nodes := range vcJob.Reason {
@@ -644,7 +633,7 @@ func (sHandle *ScheduleHandler) RecordJobPendingMessage(vcJob SchedulerJob) {
 		klog.V(util.LogWarningLev).Infof("job %s schedule failed by:%s node list is %s",
 			vcJob.Name, reason, nodeNames)
 	}
-	sHandle.JobPendingMessage[vcJob.Name] = vcJob.Reason
+	sHandle.PendingMessage[vcJob.Name] = vcJob.Reason
 }
 
 // JobValid the job valid, used by volcano frame.
@@ -652,7 +641,7 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 	klog.V(util.LogInfoLev).Infof("enter job valid")
 	defer klog.V(util.LogInfoLev).Infof("leave job valid")
 
-	if sHandle == nil || *sHandle.IsFirstSession {
+	if sHandle == nil || *sHandle.FrameAttr.IsFirstSession {
 		return &api.ValidateResult{Pass: false, Reason: objectNilError,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, objectNilError)}
 	}

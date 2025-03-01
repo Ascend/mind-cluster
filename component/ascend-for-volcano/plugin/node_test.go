@@ -127,57 +127,63 @@ func buildNodePredicateTest() []nodePredicateTest {
 		{
 			name: "02-NodePredicate job not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs: map[api.JobID]SchedulerJob{"haha": {}}}},
+				ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{"haha": {}},
+				}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: false,
 		},
 		{
 			name: "03-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"lala": {}}}},
+				ClusterCache: ClusterCache{
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Nodes: map[string]NPUNode{"lala": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: false,
 		},
 		{
 			name: "04-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {}}}},
+				ClusterCache: ClusterCache{
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Nodes: map[string]NPUNode{"haha": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
 		},
 		{
 			name: "05-NodePredicate ok test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {}}}},
+				ClusterCache: ClusterCache{
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Nodes: map[string]NPUNode{"haha": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
 		},
 		{
 			name: "06-NodePredicate SubHealthy Node test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {
-					CommonNode: CommonNode{
-						Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-						Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeSubHealthy},
-					},
-				}}}},
+				ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Nodes: map[string]NPUNode{"haha": {
+						CommonNode: CommonNode{
+							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
+							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeSubHealthy},
+						},
+					}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
 		},
 		{
 			name: "07-NodePredicate UnHealthy Node test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
-				Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
-				Nodes: map[string]NPUNode{"haha": {
-					CommonNode: CommonNode{
-						Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-						Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeUnHealthyByNodeD},
-					},
-				}}}},
+				ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Nodes: map[string]NPUNode{"haha": {
+						CommonNode: CommonNode{
+							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
+							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeUnHealthyByNodeD},
+						}}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
 		},

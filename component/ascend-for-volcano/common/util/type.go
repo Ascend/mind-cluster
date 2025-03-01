@@ -365,6 +365,26 @@ const (
 	Reject = -1
 )
 
+const (
+	defaultSuperPodSize = 48
+	defaultReserveNodes = 2
+	// DefaultGraceOverTime time interval for grace delete
+	DefaultGraceOverTime = 900
+	// GraceOverTimeKey for GraceOverTime config by user
+	GraceOverTimeKey   = "grace-over-time"
+	minGraceOverTime   = 2
+	maxGraceOverTime   = 3600
+	keyOfSharedTorNum  = "shared-tor-num"
+	shareTorNum1       = 1
+	shareTorNum2       = 2
+	keyOfNSLBVersion   = "nslb-version"
+	defaultNSLBVersion = "1.0"
+	// NSLB2Version nslb 2.0 version
+	NSLB2Version = "2.0"
+	oldCapacity  = "Capability"
+	newCapacity  = "Capacity"
+)
+
 // VTemplate for vNode resource
 type VTemplate struct {
 	// ChipKind Ascend910/Ascend310P

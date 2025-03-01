@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 )
 
@@ -50,7 +49,6 @@ type VJob struct {
 type NPUJob struct {
 	// the mapKey is taskID, not Name.
 	Tasks             map[api.TaskID]NPUTask
-	SelectServers     string
 	NPUTaskNum        int
 	SchedulingTaskNum int
 	ReqNPUName        string
@@ -79,6 +77,7 @@ type SchedulerJobAttr struct {
 // IsLargeModelJob job is large model job
 func (sJob SchedulerJobAttr) IsLargeModelJob() bool {
 	return sJob.Label[TorAffinityKey] == LargeModelTag && sJob.NPUTaskNum >= fillJobMaxNPUTaskNum
+
 }
 
 // IsTorAffinityJob check job is tor affinity job
@@ -93,22 +92,6 @@ func (sJob *SchedulerJobAttr) IsTorAffinityJob() bool {
 func (sJob *SchedulerJobAttr) IsJobHasTorAffinityLabel() bool {
 	k, ok := sJob.Label[TorAffinityKey]
 	return ok && k != NullTag
-}
-
-// IsSelectorMeetJob check the selectors
-func IsSelectorMeetJob(jobSelectors, conf map[string]string) bool {
-	for jobKey, jobValue := range jobSelectors {
-		confValue, confOk := conf[jobKey]
-		if !confOk {
-			klog.V(LogInfoLev).Infof("conf has no job selector key:%s.", jobKey)
-			return false
-		}
-		if !strings.Contains(confValue, jobValue) {
-			klog.V(LogInfoLev).Infof("conf has no job selector value:%s.", jobValue)
-			return false
-		}
-	}
-	return true
 }
 
 // IsVJob Determine whether is the NPU virtual job.

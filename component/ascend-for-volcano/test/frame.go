@@ -97,7 +97,7 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		Queues:         snapshot.Queues,
 		NamespaceInfo:  snapshot.NamespaceInfo,
 		Configurations: confs,
-		NodeList:       nodes,
+		NodeList:       util.GetNodeList(snapshot.Nodes, snapshot.NodeList),
 	}
 	return ssn
 }

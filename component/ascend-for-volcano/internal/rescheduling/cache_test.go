@@ -424,3 +424,25 @@ func TestWriteRescheduleReasonsToCMString(t *testing.T) {
 			}
 		})
 }
+
+// TestJudgePublicFaultInReason pass when public fault in reason
+func TestJudgePublicFaultInReason(t *testing.T) {
+	t.Run("TestJudgePublicFaultInReason", func(t *testing.T) {
+		faultTask := miniFaultTask{
+			Reason: []FaultReasonList{
+				{
+					FaultDeviceList: FaultDeviceList{
+						FaultType: PublicFaultType,
+					},
+				}, {
+					FaultDeviceList: FaultDeviceList{
+						FaultType: CardUnhealthy,
+					},
+				},
+			},
+		}
+		if !judgePublicFaultInReason(&faultTask) {
+			t.Error("TestJudgePublicFaultInReason failed")
+		}
+	})
+}

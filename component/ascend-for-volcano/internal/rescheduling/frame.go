@@ -80,15 +80,13 @@ func (reScheduler *ReScheduler) PreStartAction(env *plugin.ScheduleEnv, ssn *fra
 func (reScheduler *ReScheduler) initialize(env *plugin.ScheduleEnv) {
 	// 1. Initialise ReScheduler.graceDeleteTime
 	klog.V(util.LogDebugLev).Infof("Initialising graceDeleteTime.")
-	graceDeleteTime := getGraceDeleteTime(env.FrameAttr.Confs)
-	reScheduler.setGraceOverTime(graceDeleteTime)
+	reScheduler.setGraceOverTime(env.FrameAttr.GraceDeleteTime)
 	reScheduler.DealReSchedulerCache = reSchedulerCache // 2.4 set DealReSchedulerCache
-	if recordErr := reSchedulerCache.SetJobRecentRescheduleRecords(env.IsFirstSession,
+	if recordErr := reSchedulerCache.SetJobRecentRescheduleRecords(env.FrameAttr.IsFirstSession,
 		env.FrameAttr.KubeClient); recordErr != nil {
 		klog.V(util.LogErrorLev).Infof("SetJobRecentRescheduleRecords: %s", util.SafePrint(recordErr))
 	}
 	reScheduler.Jobs = env.Jobs // 3 Initialise session Jobs Nodes copying data from env
 	reScheduler.Nodes = env.Nodes
-	reScheduler.IsFirstSession = env.IsFirstSession
-	reScheduler.kubeClient = env.FrameAttr.KubeClient
+	reScheduler.isFirstSession = env.FrameAttr.IsFirstSession
 }

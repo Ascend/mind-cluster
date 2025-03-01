@@ -100,10 +100,6 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	}
 	oldJobs := sHandle.Jobs
 	sHandle.Jobs = make(map[api.JobID]SchedulerJob, util.MapInitNum)
-	tmpJobServerInfos := make(map[api.JobID]struct{})
-	tmpJobDeleteFlags := make(map[api.JobID]struct{})
-	tmpJobSinglePodFlag := make(map[api.JobID]bool)
-	tmpJobPendingMessage := make(map[api.JobID]map[string]map[string]struct{})
 	for jobID, jobInfo := range ssn.Jobs {
 		ownerInfo, err := getOwnerInfo(jobInfo, ssn)
 		if err != nil {
@@ -121,25 +117,34 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 			sJob.SuperPods = oldJob.SuperPods
 		}
 		sHandle.Jobs[jobID] = sJob
+	}
+	return
+}
+
+// InitJobScheduleInfoRecorder update job schedule info recorder.
+func (sHandle *ScheduleHandler) InitJobScheduleInfoRecorder() {
+	tmpRecorder := NewJobScheduleInfoRecorder()
+	for jobID, sJob := range sHandle.Jobs {
 		// mark the job which server list has been recorded in logs
-		if _, ok := sHandle.JobSeverInfos[jobID]; ok && sJob.Status == util.PodGroupRunning {
-			tmpJobServerInfos[jobID] = struct{}{}
+		if _, ok := sHandle.ServerListRecordFlag[jobID]; ok && sJob.Status == util.PodGroupRunning {
+			tmpRecorder.ServerListRecordFlag[jobID] = struct{}{}
 		}
 		// mark the job which reset configmap has been set
-		if _, ok := sHandle.JobDeleteFlag[jobID]; ok && sJob.SchedulingTaskNum == 0 {
-			tmpJobDeleteFlags[jobID] = struct{}{}
+		if _, ok := sHandle.ResetCMSetFlag[jobID]; ok && sJob.SchedulingTaskNum == 0 {
+			tmpRecorder.ResetCMSetFlag[jobID] = struct{}{}
 		}
-		tmpJobSinglePodFlag[jobID] = sHandle.JobSinglePodFlag[jobID]
+		// default value is last session scheduled info that job is in job scheduling or pod scheduling
+		tmpRecorder.PodScheduleFlag[jobID] = sHandle.PodScheduleFlag[jobID]
+		// if job is need scheduled in this scheduling session, record job is job scheduling or pod scheduling
+		// if job is no need scheduled, use last session recorder.
 		if sJob.isPodScheduling() {
-			tmpJobSinglePodFlag[jobID] = sJob.SchedulingTaskNum != len(sJob.Tasks)
+			tmpRecorder.PodScheduleFlag[jobID] = sJob.SchedulingTaskNum != len(sJob.Tasks)
 		}
-		tmpJobPendingMessage[jobID] = sHandle.JobPendingMessage[jobID]
+		// record job last session pending message, for onsessionclose to compare pending message is change
+		tmpRecorder.PendingMessage[jobID] = sHandle.PendingMessage[jobID]
 	}
-	sHandle.JobSeverInfos = tmpJobServerInfos
-	sHandle.JobDeleteFlag = tmpJobDeleteFlags
-	sHandle.JobSinglePodFlag = tmpJobSinglePodFlag
-	sHandle.JobPendingMessage = tmpJobPendingMessage
-	return
+	sHandle.JobScheduleInfoRecorder = tmpRecorder
+
 }
 
 func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, error) {
@@ -155,7 +160,6 @@ func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, erro
 	}
 	return OwnerInfo{
 		OwnerReference: owner,
-		Annotations:    rs.Annotations,
 		Replicas:       rs.Spec.Replicas,
 	}, nil
 }
@@ -188,29 +192,6 @@ func getPodGroupOwnerRef(pg scheduling.PodGroup) metav1.OwnerReference {
 		}
 	}
 	return metav1.OwnerReference{}
-}
-
-// CheckVNPUSegmentEnableByConfig Check VNPU segmentEnable by init plugin parameters, return true if static
-func (vf *VolcanoFrame) CheckVNPUSegmentEnableByConfig() bool {
-	if vf == nil {
-		klog.V(util.LogDebugLev).Infof("CheckVNPUSegmentEnableByConfig failed: %s.", util.ArgumentError)
-		return false
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, vf.Confs)
-	if err != nil {
-		klog.V(util.LogDebugLev).Info("cannot get configuration, segmentEnable.")
-		return false
-	}
-	// get segmentEnable by user configuration
-	segmentEnable, ok := configuration.Arguments[util.SegmentEnable]
-	if !ok {
-		klog.V(util.LogDebugLev).Info("checkVNPUSegmentEnable doesn't exist presetVirtualDevice.")
-		return false
-	}
-	if segmentEnable == "true" {
-		return true
-	}
-	return false
 }
 
 // GetJobTemplate get template of all possible segmentation jobs
@@ -266,45 +247,36 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		klog.V(util.LogErrorLev).Infof("InitVolcanoFrameFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
+	configs := util.GetConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
+	sHandle.FrameAttr.UID = ssn.UID
+	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
+	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
+	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
+	sHandle.initDynamicParameters(configs)
+	sHandle.initStaticParameters(configs)
+}
 
-	configs := InitConfsFromSsn(ssn.Configurations)
-	superPodSize, err := util.GetSizeOfSuperPod(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetSizeOfSuperPod failed: %s, set default super-pod-size: %d", err,
-			defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
-	}
+// initStaticParameters
+func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) {
+	sHandle.FrameAttr.OnceInit.Do(func() {
+		sHandle.FrameAttr.NslbVersion = util.GetNslbVersion(configs)
+		sHandle.FrameAttr.SharedTorNum = util.GetShardTorNum(configs)
+		sHandle.FrameAttr.UseClusterD = util.GetUseClusterDConfig(configs)
+		klog.V(util.LogWarningLev).Infof("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
+			"change the parameters and it will not be changed during normal operation of the volcano")
+	})
+}
 
-	if superPodSize == 0 {
-		klog.V(util.LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
-			"set default super-pod-size: %d", defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
+// initDynamicParameters
+func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string) {
+	if sHandle == nil || configs == nil {
+		klog.V(util.LogInfoLev).Infof("InitCache failed: %s.", util.ArgumentError)
+		return
 	}
-
-	reserve, err := util.GetReserveNodes(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetReserveNodes failed: %s, set default reserve-nodes: %d", err,
-			defaultReserveNodes)
-		reserve = defaultReserveNodes
-	}
-	if reserve >= superPodSize {
-		validRes := 0
-		if superPodSize > defaultReserveNodes {
-			validRes = defaultReserveNodes
-		}
-		klog.V(util.LogWarningLev).Infof("reserve-nodes(%d) is larger than super-pod-size(%d), set reserve-nodes: %d",
-			reserve, superPodSize, validRes)
-		reserve = validRes
-	}
-
-	sHandle.FrameAttr = VolcanoFrame{
-		UID:            ssn.UID,
-		Confs:          configs,
-		KubeClient:     ssn.KubeClient(),
-		VJobTemplate:   sHandle.GetJobTemplate(),
-		SuperPodSize:   superPodSize,
-		ReservePodSize: reserve,
-	}
+	sHandle.FrameAttr.SuperPodSize = util.GetSizeOfSuperPod(configs)
+	sHandle.FrameAttr.ReservePodSize = util.GetReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
+	sHandle.FrameAttr.GraceDeleteTime = util.GetGraceDeleteTime(configs)
+	sHandle.FrameAttr.PresetVirtualDevice = util.GetPresetVirtualDeviceConfig(configs)
 }
 
 // InitConfsFromSsn init confs from session
@@ -367,7 +339,7 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 		return
 	}
 	for _, job := range sHandle.Jobs {
-		if err := job.handler.PreStartAction(sHandle.FaultHandle, ssn); err != nil {
+		if err := job.handler.PreStartAction(ssn); err != nil {
 			if strings.Contains(err.Error(), util.ArgumentError) {
 				continue
 			}
@@ -439,23 +411,17 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	klog.V(util.LogDebugLev).Infof("enter %s InitNPUSession.", PluginName)
 	defer klog.V(util.LogDebugLev).Infof("leave %s InitNPUSession.", PluginName)
 
-	if err := sHandle.checkSession(ssn); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s checkSession : %s.", PluginName, err)
-		return err
-	}
-
 	sHandle.InitVolcanoFrameFromSsn(ssn)
 	sHandle.initCmInformer()
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
+	sHandle.InitJobScheduleInfoRecorder()
 
 	sHandle.InitTorNodeInfo(ssn)
 	sHandle.InitJobsPlugin()
 	sHandle.InitCache()
 	sHandle.InitReschedulerFromSsn(ssn)
-	if sHandle.FaultHandle != nil {
-		sHandle.PreStartPlugin(ssn)
-	}
+	sHandle.PreStartPlugin(ssn)
 	return nil
 }
 
@@ -465,16 +431,17 @@ func (sHandle *ScheduleHandler) initCmInformer() {
 		klog.V(util.LogErrorLev).Info("kube client in session is nil")
 		return
 	}
-	sHandle.Do(func() {
-		if sHandle.FrameAttr.CheckUseCIMByConfig() {
-			sHandle.initClusterCmInformer()
-			if !k8s.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
-				klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
-			}
-			return
+	if sHandle.FrameAttr.IsFirstSession != nil && !*sHandle.FrameAttr.IsFirstSession {
+		return
+	}
+	if sHandle.FrameAttr.UseClusterD {
+		sHandle.initClusterCmInformer()
+		if !k8s.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
+			klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
 		}
-		sHandle.initDeviceAndNodeDCmInformer()
-	})
+		return
+	}
+	sHandle.initDeviceAndNodeDCmInformer()
 }
 
 func (sHandle *ScheduleHandler) initClusterCmInformer() {
@@ -601,26 +568,6 @@ func (sHandle *ScheduleHandler) dealClusterSwitchInfo(cm *v12.ConfigMap, operato
 		}
 	}
 	sHandle.SwitchInfosFromCm.Unlock()
-}
-
-// CheckUseCIMByConfig check use cluster info manager by config, default true
-func (vf *VolcanoFrame) CheckUseCIMByConfig() bool {
-	if vf == nil {
-		klog.V(util.LogDebugLev).Infof("CheckUseCIMByConfig failed: %s. use default true", util.ArgumentError)
-		return true
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, vf.Confs)
-	if err != nil {
-		klog.V(util.LogDebugLev).Info("cannot get configuration, segmentEnable.")
-		return true
-	}
-	// get segmentEnable by user configuration
-	useClusterInfoManager, ok := configuration.Arguments[util.UseClusterInfoManager]
-	if !ok {
-		klog.V(util.LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
-		return true
-	}
-	return useClusterInfoManager == "true"
 }
 
 // InitReschedulerFromSsn initialize re-scheduler
@@ -823,6 +770,9 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
 	errGet := vcJob.handler.ScoreBestNPUNodes(task, nodes, scoreMap)
+	if sHandle.FaultHandle != nil {
+		sHandle.FaultHandle.ScoreBestNPUNodes(task, scoreMap)
+	}
 	for nodeName := range scoreMap {
 		scoreMap[nodeName] *= scoreWeight
 	}

@@ -22,7 +22,6 @@ package test
 import (
 	"encoding/json"
 	"os"
-	"sync"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
@@ -116,36 +115,13 @@ func FakeSchedulerJobAttrByJob(job *api.JobInfo) util.SchedulerJobAttr {
 
 // NewDefaultHandler new default handler
 func NewDefaultHandler() *plugin.ScheduleHandler {
-	isFirstSession := true
 	scheduleHandler := &plugin.ScheduleHandler{
 		NPUPlugins: map[string]plugin.NPUBuilder{},
 		ScheduleEnv: plugin.ScheduleEnv{
-			IsFirstSession:   &isFirstSession,
-			Jobs:             map[api.JobID]plugin.SchedulerJob{},
-			JobSeverInfos:    map[api.JobID]struct{}{},
-			JobDeleteFlag:    map[api.JobID]struct{}{},
-			JobSinglePodFlag: map[api.JobID]bool{},
-			Nodes:            map[string]plugin.NPUNode{},
-			DeviceInfos: &plugin.DeviceInfosWithMutex{
-				Mutex:   sync.Mutex{},
-				Devices: map[string]plugin.NodeDeviceInfoWithID{},
-			},
-			NodeInfosFromCm: &plugin.NodeInfosFromCmWithMutex{
-				Mutex: sync.Mutex{},
-				Nodes: map[string]plugin.NodeDNodeInfo{},
-			},
-			SwitchInfosFromCm: &plugin.SwitchInfosFromCmWithMutex{
-				Mutex:    sync.Mutex{},
-				Switches: map[string]plugin.SwitchFaultInfo{},
-			},
-			FrameAttr: plugin.VolcanoFrame{},
-			NslbAttr:  &plugin.NslbParameters{},
-			SuperPodInfo: &plugin.SuperPodInfo{
-				SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-				SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-				SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-			},
-			JobPendingMessage: map[api.JobID]map[string]map[string]struct{}{},
+			FrameAttr:               plugin.NewVolcanoFrame(),
+			ClusterInfoWitchCm:      plugin.NewClusterInfoWitchCm(),
+			JobScheduleInfoRecorder: plugin.NewJobScheduleInfoRecorder(),
+			ClusterCache:            plugin.NewClusterCache(),
 		},
 	}
 	scheduleHandler.NPUPlugins[util.NPU910CardName] = func(string2 string) plugin.ISchedulerPlugin {

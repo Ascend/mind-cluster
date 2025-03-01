@@ -21,7 +21,6 @@ package base
 
 import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -42,7 +41,6 @@ type NPUHandler struct {
 	plugin.SchedulerPlugin
 	util.SchedulerJobAttr
 	plugin.ScheduleEnv
-	ReHandle                *rescheduling.ReScheduler
 	IsNetworkFaultAttention bool
 	NpuNumInvalidMap        map[int]struct{}
 	PolicyHandler           []plugin.ISchedulerPluginNeed

@@ -48,7 +48,7 @@ type ISchedulerPluginNeed interface {
 	ScoreBestNPUNodes(*api.TaskInfo, []*api.NodeInfo, map[string]float64) error
 	UseAnnotation(*api.TaskInfo, NPUNode) *NPUNode
 	ReleaseAnnotation(*api.TaskInfo, NPUNode) *NPUNode
-	PreStartAction(i interface{}, ssn *framework.Session) error
+	PreStartAction(ssn *framework.Session) error
 	InitMyJobPlugin(util.SchedulerJobAttr, ScheduleEnv) error
 }
 
@@ -60,6 +60,8 @@ type ISchedulerPlugin interface {
 
 type FaultHandler interface {
 	PreStartAction(*ScheduleEnv, *framework.Session) error
+	CheckNodeNPUByTask(*api.TaskInfo, NPUNode) error
+	ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)
 	PreStopAction(*ScheduleEnv) error
 }
 

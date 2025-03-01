@@ -36,7 +36,7 @@ import (
 )
 
 // PreStartAction pre-processing actions for rescheduling
-func (th *TorHandlerV2) PreStartAction(i interface{}, ssn *framework.Session) error {
+func (th *TorHandlerV2) PreStartAction(ssn *framework.Session) error {
 	if th.Job == nil {
 		return fmt.Errorf("prestart action is failed by job is nil")
 	}

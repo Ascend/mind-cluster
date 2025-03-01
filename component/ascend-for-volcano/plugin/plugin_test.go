@@ -119,7 +119,7 @@ func (tp *ascendTest) ReleaseAnnotation(task *api.TaskInfo, node NPUNode) *NPUNo
 	return nil
 }
 
-func (tp *ascendTest) PreStartAction(i interface{}, ssn *framework.Session) error {
+func (tp *ascendTest) PreStartAction(ssn *framework.Session) error {
 	if tp == nil {
 		return fmt.Errorf(util.ArgumentError)
 	}

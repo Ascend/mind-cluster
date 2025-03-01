@@ -22,7 +22,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
@@ -30,9 +29,9 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310p"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -218,8 +217,8 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 		klog.V(util.LogInfoLev).Infof("OnSessionClose failed: %s.", util.ArgumentError)
 		return
 	}
-	if *tp.Scheduler.IsFirstSession {
-		*tp.Scheduler.IsFirstSession = false
+	if *tp.Scheduler.FrameAttr.IsFirstSession {
+		*tp.Scheduler.FrameAttr.IsFirstSession = false
 	}
 	// 1、Record job's unscheduled reason;
 	// 2、Update job statue;
@@ -237,37 +236,14 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 
 // HandlerStart HuaWei NPU plugin start by frame.
 func HandlerStart() *plugin.ScheduleHandler {
-	isFirstSession := true
 	scheduleHandler := &plugin.ScheduleHandler{
 		NPUPlugins:  map[string]plugin.NPUBuilder{},
 		FaultHandle: rescheduling.NewHandler(),
 		ScheduleEnv: plugin.ScheduleEnv{
-			IsFirstSession:   &isFirstSession,
-			Jobs:             map[api.JobID]plugin.SchedulerJob{},
-			JobSeverInfos:    map[api.JobID]struct{}{},
-			JobDeleteFlag:    map[api.JobID]struct{}{},
-			JobSinglePodFlag: map[api.JobID]bool{},
-			Nodes:            map[string]plugin.NPUNode{},
-			DeviceInfos: &plugin.DeviceInfosWithMutex{
-				Mutex:   sync.Mutex{},
-				Devices: map[string]plugin.NodeDeviceInfoWithID{},
-			},
-			NodeInfosFromCm: &plugin.NodeInfosFromCmWithMutex{
-				Mutex: sync.Mutex{},
-				Nodes: map[string]plugin.NodeDNodeInfo{},
-			},
-			SwitchInfosFromCm: &plugin.SwitchInfosFromCmWithMutex{
-				Mutex:    sync.Mutex{},
-				Switches: map[string]plugin.SwitchFaultInfo{},
-			},
-			FrameAttr: plugin.VolcanoFrame{},
-			NslbAttr:  &plugin.NslbParameters{},
-			SuperPodInfo: &plugin.SuperPodInfo{
-				SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-				SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-				SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-			},
-			JobPendingMessage: map[api.JobID]map[string]map[string]struct{}{},
+			FrameAttr:               plugin.NewVolcanoFrame(),
+			ClusterInfoWitchCm:      plugin.NewClusterInfoWitchCm(),
+			JobScheduleInfoRecorder: plugin.NewJobScheduleInfoRecorder(),
+			ClusterCache:            plugin.NewClusterCache(),
 		},
 	}
 

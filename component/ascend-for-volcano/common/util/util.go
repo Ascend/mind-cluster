@@ -23,7 +23,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -88,31 +87,14 @@ func ChangeIntArrToStr(top []int, npuCardPreName string) string {
 	return str
 }
 
-// GetConfigFromSchedulerConfigMap get config info from yaml
-func GetConfigFromSchedulerConfigMap(configKey string, configurations []config.Configuration) (*config.Configuration,
-	error) {
-	if len(configurations) == 0 {
-		return nil, errors.New("no configurations in scheduler configmap")
-	}
-
-	// in the new version, the configuration is obtained based on the configured name field.
-	if cfg := getConfigurationByKey(configKey, configurations); cfg != nil {
-		klog.V(LogDebugLev).Infof("get the configurations by name [%s] successful.", configKey)
-		return cfg, nil
-	}
-
-	return nil, fmt.Errorf("cannot get configurations by name [%s], name not in configurations", configKey)
-}
-
-// getConfigurationByKey called by GetConfigFromSchedulerConfigMap
-func getConfigurationByKey(configKey string, configurations []config.Configuration) *config.Configuration {
+// GetConfigurationByKey called by GetConfigFromSchedulerConfigMap
+func GetConfigurationByKey(configurations []config.Configuration) map[string]string {
 	for _, cf := range configurations {
-		if cf.Name == configKey {
-			return &cf
+		if cf.Name == CMInitParamKey {
+			return cf.Arguments
 		}
 	}
-
-	return nil
+	return map[string]string{}
 }
 
 // Max return the bigger one
@@ -246,35 +228,141 @@ func GetNpuNameFromJobRequire(npuName string) string {
 }
 
 // GetSizeOfSuperPod get size of super pod
-func GetSizeOfSuperPod(configurations []config.Configuration) (int, error) {
-	return getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
+func GetSizeOfSuperPod(configurations map[string]string) int {
+	superPodSize := getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
+	if superPodSize == 0 {
+		klog.V(LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
+			"set default super-pod-size: %d", defaultSuperPodSize)
+		superPodSize = defaultSuperPodSize
+	}
+	return superPodSize
 }
 
 // GetReserveNodes get reserve nodes
-func GetReserveNodes(configurations []config.Configuration) (int, error) {
-	return getSuperPodInfoFromConfig(reserveNodesKey, configurations)
+func GetReserveNodes(configurations map[string]string, superPodSize int) int {
+	reserve := getSuperPodInfoFromConfig(reserveNodesKey, configurations)
+	if reserve == 0 {
+		reserve = defaultReserveNodes
+	}
+	if reserve >= superPodSize {
+		validRes := 0
+		if superPodSize > defaultReserveNodes {
+			validRes = defaultReserveNodes
+		}
+		klog.V(LogWarningLev).Infof("reserve-nodes(%d) is larger than super-pod-size(%d), set reserve-nodes: %d",
+			reserve, superPodSize, validRes)
+		reserve = validRes
+	}
+	return reserve
 }
 
-func getSuperPodInfoFromConfig(key string, configurations []config.Configuration) (int, error) {
-	configuration, err := GetConfigFromSchedulerConfigMap(CMInitParamKey, configurations)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get %s configuration, err: %v", CMInitParamKey, err)
+func getSuperPodInfoFromConfig(key string, configurations map[string]string) int {
+	if len(configurations) == 0 {
+		klog.V(LogWarningLev).Info("volcano scheduler config init-params map is nil")
+		return 0
 	}
-	// get segmentEnable by user configuration
-	value, ok := configuration.Arguments[key]
+	value, ok := configurations[key]
 	if !ok {
-		klog.V(LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
-		return 0, fmt.Errorf("%s configuration not exist", key)
+		klog.V(LogWarningLev).Infof("%s configuration not exist", key)
+		return 0
 	}
 
 	res, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, fmt.Errorf("cannot convert %s configuration, err: %v", key, err)
+		klog.V(LogWarningLev).Infof("cannot convert %s configuration, err: %v", key, err)
+		return 0
 	}
 	if res < 0 {
-		return 0, fmt.Errorf(" %s configuration should not be negative number", key)
+		klog.V(LogWarningLev).Infof(" %s configuration should not be negative number", key)
+		return 0
 	}
-	return res, nil
+	return res
+}
+
+// checkGraceDeleteTimeValid used by GetGraceDeleteTime for validity checking
+func checkGraceDeleteTimeValid(overTime int64) bool {
+	if overTime < minGraceOverTime || overTime > maxGraceOverTime {
+		klog.V(LogErrorLev).Infof("GraceOverTime value should be range [2, 3600], configured is [%d], "+
+			"GraceOverTime will not be changed", overTime)
+		return false
+	}
+	// use user's configuration to set grace over time
+	klog.V(LogInfoLev).Infof("set GraceOverTime to new value [%d].", overTime)
+	return true
+}
+
+// GetGraceDeleteTime get grace delete time
+func GetGraceDeleteTime(conf map[string]string) int64 {
+	klog.V(LogInfoLev).Infof("enter GetGraceDeleteTime ...")
+	defer klog.V(LogInfoLev).Infof("leave GetGraceDeleteTime ...")
+	if len(conf) == 0 {
+		klog.V(LogErrorLev).Infof("GetGraceDeleteTime failed: %s, no conf", ArgumentError)
+		return DefaultGraceOverTime
+	}
+	// get grace over time by user configuration
+	overTimeStr, ok := conf[GraceOverTimeKey]
+	if !ok {
+		klog.V(LogErrorLev).Info("set GraceOverTime failed and will not be changed, " +
+			"key grace-over-time doesn't exists.")
+		return DefaultGraceOverTime
+	}
+	overTime, err := strconv.ParseInt(overTimeStr, Base10, BitSize64)
+	if err != nil {
+		klog.V(LogErrorLev).Infof("set GraceOverTime failed and will not be changed, "+
+			"grace-over-time is invalid [%s].", SafePrint(overTimeStr))
+		return DefaultGraceOverTime
+	}
+	// check time validity
+	if !checkGraceDeleteTimeValid(overTime) {
+		return DefaultGraceOverTime
+	}
+	return overTime
+}
+
+// GetUseClusterDConfig check use cluster info manager by config, default true
+func GetUseClusterDConfig(conf map[string]string) bool {
+	useClusterInfoManager, ok := conf[UseClusterInfoManager]
+	if !ok {
+		klog.V(LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
+		return true
+	}
+	return useClusterInfoManager == "true"
+}
+
+// GetPresetVirtualDeviceConfig get VNPU segmentEnable by init plugin parameters, return true if static
+func GetPresetVirtualDeviceConfig(conf map[string]string) bool {
+	// get segmentEnable by user configuration
+	segmentEnable, ok := conf[SegmentEnable]
+	if !ok {
+		klog.V(LogDebugLev).Info("checkVNPUSegmentEnable doesn't exist presetVirtualDevice.")
+		return false
+	}
+	return segmentEnable == "true"
+}
+
+// GetShardTorNum get shared tor num from configmap
+func GetShardTorNum(conf map[string]string) int {
+	str := conf[keyOfSharedTorNum]
+	sharedTorNum, err := strconv.Atoi(str)
+	if err != nil {
+		klog.V(LogWarningLev).Infof("getSharedTorNum %s.", err)
+		return shareTorNum2
+	}
+	if sharedTorNum != shareTorNum1 && sharedTorNum != shareTorNum2 {
+		klog.V(LogWarningLev).Infof("sharedTorNum is illegal. use default config")
+		return shareTorNum2
+	}
+	return sharedTorNum
+}
+
+// GetNslbVersion get nslb version from config
+func GetNslbVersion(conf map[string]string) string {
+	nslbVersion := conf[keyOfNSLBVersion]
+	if nslbVersion != defaultNSLBVersion && nslbVersion != NSLB2Version {
+		klog.V(LogWarningLev).Infof("nslbVersion is illegal. use default config")
+		return defaultNSLBVersion
+	}
+	return nslbVersion
 }
 
 // CheckStrInSlice return whether str in string slice

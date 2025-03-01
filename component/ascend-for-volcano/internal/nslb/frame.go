@@ -59,7 +59,7 @@ func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plug
 }
 
 // PreStartAction pre-processing actions for rescheduling
-func (th *TorHandler) PreStartAction(_ interface{}, _ *framework.Session) error {
+func (th *TorHandler) PreStartAction(_ *framework.Session) error {
 	return nil
 }
 

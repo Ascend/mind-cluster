@@ -312,7 +312,7 @@ func (reScheduler *ReScheduler) SynCacheFaultJobWithSession(ssn *framework.Sessi
 			if plugin.GetJobInfoAllocatedTaskNum(jobInfo) >= jobInfo.MinAvailable {
 				// if fault scheduling reason is sub healthy fault and job has been rescheduled
 				// update the reset config map grace exit code to 0.
-				faultJob.resetGraceExitCode(reScheduler.kubeClient)
+				faultJob.resetGraceExitCode(ssn.KubeClient())
 				continue
 			}
 		}
@@ -435,19 +435,6 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		tmpFaultNodes[name] = faultNode
 	}
 	reScheduler.setFaultNodes(tmpFaultNodes)
-	reScheduler.setFaultNodeAttrToNPUNode()
-}
-
-func (reScheduler *ReScheduler) setFaultNodeAttrToNPUNode() {
-	for _, fNode := range reScheduler.FaultNodes {
-		if fNode.NodeHealthState == NodeUnhealthy {
-			node, ok := reScheduler.Nodes[fNode.NodeName]
-			if ok {
-				node.IsUnhealthy = true
-				reScheduler.Nodes[fNode.NodeName] = node
-			}
-		}
-	}
 }
 
 // RestartNeedForceDeleteJobs Restart jobs that need to be force deleted
@@ -648,11 +635,11 @@ func (reScheduler *ReScheduler) getNewCacheJobs(restartFaultJobs map[api.JobID]*
 }
 
 // ScoreBestNPUNodes add scores on scoreMap for normal nodes used by re-scheduling tasks
-func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap map[string]float64) error {
+func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap map[string]float64) {
 	if reScheduler == nil || task == nil || len(scoreMap) == 0 {
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes: %s, nil reScheduler or task or scoreMap",
 			util.ArgumentError)
-		return errors.New(util.ArgumentError)
+		return
 	}
 	klog.V(util.LogDebugLev).Infof("enter rescheduling ScoreBestNPUNodes %s...", task.Name)
 	klog.V(util.LogDebugLev).Infof("node score map before add rescheduling weights %#v", scoreMap)
@@ -660,15 +647,16 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 	fJob := reScheduler.FaultJobs[task.Job] // 2. get faultJob object given the faultTask object
 	if fJob == nil {
 		klog.V(util.LogInfoLev).Infof("task %s is not in rescheduler cache", task.Name)
-		return nil
+		return
 	}
 	if !fJob.IsFaultJob { // skip adding re-scheduling score for normal jobs
-		return fmt.Errorf("task %s belongs to job %s which is not a fault job", task.Name, fJob.JobName)
+		klog.V(util.LogDebugLev).Infof("task %s belongs to job %s which is not a fault job", task.Name, fJob.JobName)
+		return
 	}
 
 	reScheduler.reduceScoreForLastFaultNode(fJob, scoreMap)
 	klog.V(util.LogDebugLev).Infof("node score map after reduce rescheduling weights %#v", scoreMap)
-	return nil
+	return
 }
 
 func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, scoreMap map[string]float64) {
@@ -686,7 +674,7 @@ func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, 
 }
 
 // CheckNodeNPUByTask used in the predicate process of task and node
-func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode plugin.NPUNode, npuName string) error {
+func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode plugin.NPUNode) error {
 	klog.V(util.LogDebugLev).Infof("enter rescheduling CheckNodeNPUByTask ...(%s, %s)", task.Name, vcNode.Name)
 	defer klog.V(util.LogDebugLev).Infof("leave rescheduling CheckNodeNPUByTask ...(%s, %s)",
 		task.Name, vcNode.Name)
@@ -711,6 +699,10 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 	fNode, exist := reScheduler.FaultNodes[vcNode.Name]
 	if !exist {
 		return fmt.Errorf("node corresponding not in session")
+	}
+
+	if fNode.NodeHealthState == NodeUnhealthy {
+		return fmt.Errorf("node is unhealthy")
 	}
 
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,
@@ -860,7 +852,7 @@ func (reScheduler *ReScheduler) getTaskHealthStateByNode(fTask *FaultTask) (bool
 			NodeCardUnhealthy, NodeCardUnhealthy)
 		return true, NodeCardUnhealthy
 	}
-	if _, ok := reScheduler.Nodes[fTask.NodeName]; !ok && !*reScheduler.IsFirstSession {
+	if _, ok := reScheduler.Nodes[fTask.NodeName]; !ok && !*reScheduler.isFirstSession {
 		klog.V(util.LogErrorLev).Infof("task %s use node(%s) which is not ready thus task sets %s", fTask.TaskName,
 			fTask.NodeName, NodeUnhealthy)
 		return true, NodeUnhealthy
