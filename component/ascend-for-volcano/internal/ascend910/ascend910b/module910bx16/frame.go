@@ -75,6 +75,11 @@ func (tp *module910bx16) ValidNPUJob() *api.ValidateResult {
 	if tp.VJob.Type == util.JobTypeDyCut {
 		return tp.ValidDyVNPUJob()
 	}
+	for _, handler := range tp.PolicyHandler {
+		if validResult := handler.ValidNPUJob(); validResult != nil && !validResult.Pass {
+			return validResult
+		}
+	}
 	return tp.Valid910bNPUJob()
 }
 
@@ -87,6 +92,11 @@ func (tp *module910bx16) PreStartAction(i interface{}, ssn *framework.Session) e
 	tp.ReHandle = k
 	if vErr := tp.PreStartVNPU(ssn); vErr != nil {
 		return fmt.Errorf("preStartVNPU failed %s, err is %s", SchedulerName, vErr)
+	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.PreStartAction(i, ssn); err != nil {
+			return fmt.Errorf("rescheduling %s", err.Error())
+		}
 	}
 	return nil
 }
@@ -140,6 +150,11 @@ func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugi
 		klog.V(util.LogErrorLev).Infof("%s Judge910BNodeAndTaskNPU err: %s", tp.GetPluginName(), err.Error())
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[networkUnhealthyNPU])
+	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.CheckNodeNPUByTask(task, node); err != nil {
+			return fmt.Errorf("checkNodeNPUByTask %s", err.Error())
+		}
 	}
 	return nil
 }
@@ -202,6 +217,11 @@ func (tp *module910bx16) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.Node
 	}
 	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes task<%s> sMap<%v>", tp.GetPluginName(),
 		task.Name, sMap)
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.ScoreBestNPUNodes(task, nodes, sMap); err != nil {
+			return err
+		}
+	}
 	return tp.ReHandle.ScoreBestNPUNodes(task, sMap)
 }
 
@@ -226,6 +246,9 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	newNode := tp.NPUHandler.UpdateNodeInfo(node, selectedNPU)
+	for _, handler := range tp.PolicyHandler {
+		handler.UseAnnotation(task, node)
+	}
 	return newNode
 }
 

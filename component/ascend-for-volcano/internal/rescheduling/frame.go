@@ -57,7 +57,6 @@ func (reScheduler *ReScheduler) PreStartAction(env *plugin.ScheduleEnv, ssn *fra
 	reScheduler.SynCacheFaultJobWithSession(ssn)
 	reScheduler.SyncJobRemainRetryTimes(ssn)
 	reScheduler.SyncJobRecentRescheduleReason(ssn)
-	reScheduler.SynCacheNodeRankOccMapWithSession(ssn)
 	// 1. restart Fault Jobs that are recorded in cache
 	if restartErr := reScheduler.RestartNeedForceDeleteJobs(ssn, *env); restartErr != nil &&
 		restartErr.Error() != util.ArgumentError {
@@ -74,8 +73,6 @@ func (reScheduler *ReScheduler) PreStartAction(env *plugin.ScheduleEnv, ssn *fra
 		klog.V(util.LogErrorLev).Infof("RestartFaultJobs: %s", restartErr.Error())
 		return restartErr
 	}
-	// 5. save structure for later allocation process
-	reScheduler.GenerateNodeRankIndexTaskMap()
 	return nil
 }
 

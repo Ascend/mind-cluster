@@ -883,9 +883,8 @@ func buildReSchedulerCheckNodeNPUByTaskTests() []ReSchedulerCheckNodeNPUByTaskTe
 		*faultTask01}, "job0", "vcjob")
 	field1 := TestReScheduler{
 		DealReSchedulerCache: &DealReSchedulerCache{
-			FaultNodes:                 map[string]*FaultNode{faultNode.NodeName: faultNode},
-			FaultJobs:                  map[api.JobID]*FaultJob{faultJob0.JobUID: faultJob0},
-			AllocNodeRankOccurrenceMap: nil,
+			FaultNodes: map[string]*FaultNode{faultNode.NodeName: faultNode},
+			FaultJobs:  map[api.JobID]*FaultJob{faultJob0.JobUID: faultJob0},
 		},
 		GraceDeleteTime: 0,
 		Level:           "",
@@ -1274,29 +1273,6 @@ func TestScoreBestNPUNodes(t *testing.T) {
 				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is not nil", err)
 			}
 		})
-}
-
-func fakeSchedulerJobAttrByJob(job *api.JobInfo) util.SchedulerJobAttr {
-	attr := util.SchedulerJobAttr{
-		ComJob: util.ComJob{
-			Name:      job.UID,
-			NameSpace: job.Namespace,
-			Selector:  nil,
-			Label:     nil,
-		},
-	}
-	name, num, err := plugin.GetVCJobReqNPUTypeFromJobInfo(job)
-	if err != nil {
-		return attr
-	}
-	NPUJob := &util.NPUJob{
-		ReqNPUName: name,
-		ReqNPUNum:  num,
-		Tasks:      plugin.GetJobNPUTasks(job),
-	}
-	NPUJob.NPUTaskNum = NPUJob.GetNPUTaskNumInJob()
-	attr.NPUJob = NPUJob
-	return attr
 }
 
 func TestIsJobCanAssignToSubHealthNode(t *testing.T) {

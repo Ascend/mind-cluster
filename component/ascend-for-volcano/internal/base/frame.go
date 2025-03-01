@@ -29,6 +29,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/nslb"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -43,6 +44,18 @@ func (tp *NPUHandler) PreStartAction(i interface{}, ssn *framework.Session) erro
 	return nil
 }
 
+// SetPolicyHandler set attr and env for plugin
+func (tp *NPUHandler) SetPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) {
+	if tp == nil {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("InitMyJobPlugin %s.", err.Error())
+		return
+	}
+	if handler, ok := nslb.InitPolicyHandler(attr, env); ok {
+		tp.PolicyHandler = append(tp.PolicyHandler, handler)
+	}
+}
+
 // InitMyJobPlugin set attr and env for plugin
 func (tp *NPUHandler) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) error {
 	if tp == nil {
@@ -52,6 +65,12 @@ func (tp *NPUHandler) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.Sch
 	}
 	tp.SetSchedulerAttr(attr)
 	tp.SetSchedulerEnv(env)
+	tp.SetPolicyHandler(attr, env)
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.InitMyJobPlugin(attr, env); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

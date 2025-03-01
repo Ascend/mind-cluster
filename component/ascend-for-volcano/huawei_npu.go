@@ -138,7 +138,7 @@ func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		if !ok {
 			return true
 		}
-		return job.JobReadyTag
+		return *job.JobReadyTag
 	})
 }
 
@@ -153,7 +153,7 @@ func (tp *huaweiNPUPlugin) jobPipelinedFn(obj interface{}) int {
 	if !ok {
 		return util.Abstain
 	}
-	if job.JobReadyTag {
+	if *job.JobReadyTag {
 		return util.Abstain
 	}
 	return util.Reject

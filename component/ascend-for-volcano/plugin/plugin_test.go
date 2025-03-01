@@ -67,6 +67,9 @@ func (tp *ascendTest) Name() string {
 	return PluginName
 }
 
+// Name This need by frame init plugin.
+func (tp *ascendTest) SetPolicyHandler() {}
+
 func (tp *ascendTest) InitMyJobPlugin(attr util.SchedulerJobAttr, env ScheduleEnv) error {
 	fmt.Printf("enter %s InitMyJobPlugin", util.NPU910CardName)
 	if tp == nil {

@@ -391,6 +391,7 @@ func buildJobValidTest() []jobValidTest {
 	tJob3 := test.FakeNormalTestJob("testJob", 1)
 	test.AddTestJobLabel(tJob3, "haha", "who")
 	isFirstSession := false
+	fakeRsNum := int32(util.NPUIndex1)
 	tests := []jobValidTest{
 		{
 			name:   "01-JobValid not job test.",
@@ -411,6 +412,19 @@ func buildJobValidTest() []jobValidTest {
 				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{}, IsFirstSession: &isFirstSession}},
 			args: jobValidArgs{obj: tJob},
 			want: nil,
+		},
+		{
+			name: "04-JobValid job is deployment job and task is not ready.",
+			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{tJob.UID: {Owner: OwnerInfo{
+					OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
+					Replicas:       &fakeRsNum},
+					SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
+				},
+					IsFirstSession: &isFirstSession}},
+			args: jobValidArgs{obj: tJob},
+			want: &api.ValidateResult{Pass: false, Reason: "job is not ready",
+				Message: "job  task num 0 less than replicas 1"},
 		},
 	}
 	return tests
@@ -681,66 +695,8 @@ func TestSchedulerJobInit(t *testing.T) {
 	}
 }
 
-func TestSchedulerJobIsJobSinglePodDelete(t *testing.T) {
-	tests := []struct {
-		name  string
-		label map[string]string
-		want  bool
-	}{
-		{
-			name: "01-will return false when pod-rescheduling is not exist",
-			want: false,
-		},
-		{
-			name:  "02-will return true when anno is meet require",
-			label: map[string]string{util.SinglePodTag: util.EnableFunc},
-			want:  false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := SchedulerJob{}
-			sJob.NPUJob = &util.NPUJob{}
-			sJob.Label = tt.label
-			if got := sJob.IsJobSinglePodDelete(); got != tt.want {
-				t.Errorf("IsJobSinglePodDelete() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSchedulerJobIsJobSinglePodRunAsNormal(t *testing.T) {
-	tests := []struct {
-		name string
-		anno map[string]string
-		want bool
-	}{
-		{
-			name: "01-will return false when pod-rescheduling is not exist",
-			anno: map[string]string{util.PodDeleteTimes: util.DefaultPodDeleteTimes},
-			want: true,
-		},
-		{
-			name: "02-will return true when anno is meet require",
-			anno: map[string]string{util.PodDeleteTimes: util.TagOfPodPending},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := SchedulerJob{}
-			sJob.NPUJob = &util.NPUJob{}
-			sJob.Annotation = tt.anno
-			if got := sJob.isJobSinglePodRunAsNormal(); got != tt.want {
-				t.Errorf("IsJobSinglePodDelete() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type fieldsResetConfigMap struct {
 	SchedulerJobAttr util.SchedulerJobAttr
-	RankIndexInfo    RankIndexInfo
 	handler          ISchedulerPlugin
 	ServerList       []*Tor
 	TorBlackMaps     map[string]struct{}
@@ -776,11 +732,10 @@ func TestSchedulerJobUpdateResetConfigMap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sJob := &SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
-				RankIndexInfo:    tt.fields.RankIndexInfo,
 				handler:          tt.fields.handler,
 				ServerList:       tt.fields.ServerList,
 				TorBlackMaps:     tt.fields.TorBlackMaps,
-				JobReadyTag:      tt.fields.JobReadyTag,
+				JobReadyTag:      &tt.fields.JobReadyTag,
 			}
 			sJob.updateResetConfigMap(tt.args.sHandle)
 		})

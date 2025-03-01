@@ -329,6 +329,15 @@ const (
 	ProcessRecoverEnable = "process-recover-enable"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
+	// TorAffinityKey the key of tor affinity
+	TorAffinityKey = "tor-affinity"
+	// LargeModelTag the value of large model
+	LargeModelTag = "large-model-schema"
+	// NormalSchema the value of normal tor affinity
+	NormalSchema         = "normal-schema"
+	fillJobMaxNPUTaskNum = 4
+	// NullTag the value means not use tor affinity
+	NullTag = "null"
 )
 
 const (

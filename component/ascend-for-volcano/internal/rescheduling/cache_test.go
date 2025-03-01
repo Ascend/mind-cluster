@@ -52,9 +52,8 @@ func dealMarshal(data interface{}) string {
 }
 
 type ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields struct {
-	FaultNodes                 map[string]*FaultNode
-	FaultJobs                  map[api.JobID]*FaultJob
-	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
+	FaultNodes map[string]*FaultNode
+	FaultJobs  map[api.JobID]*FaultJob
 }
 
 type ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs struct {
@@ -73,9 +72,8 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 	test1 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
 		name: "01-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-nothing to write",
 		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			FaultNodes:                 map[string]*FaultNode{},
-			FaultJobs:                  map[api.JobID]*FaultJob{},
-			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
+			FaultNodes: map[string]*FaultNode{},
+			FaultJobs:  map[api.JobID]*FaultJob{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -93,9 +91,8 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 	test2 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
 		name: "02-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-with faultJob",
 		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			FaultNodes:                 map[string]*FaultNode{},
-			FaultJobs:                  map[api.JobID]*FaultJob{faultJob.JobUID: faultJob},
-			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
+			FaultNodes: map[string]*FaultNode{},
+			FaultJobs:  map[api.JobID]*FaultJob{faultJob.JobUID: faultJob},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -120,9 +117,8 @@ func TestDealReSchedulerCacheWriteReSchedulerCacheToEnvCache(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reCache := &DealReSchedulerCache{
-				FaultNodes:                 tt.fields.FaultNodes,
-				FaultJobs:                  tt.fields.FaultJobs,
-				AllocNodeRankOccurrenceMap: tt.fields.AllocNodeRankOccurrenceMap,
+				FaultNodes: tt.fields.FaultNodes,
+				FaultJobs:  tt.fields.FaultJobs,
 			}
 			if err := reCache.WriteReSchedulerCacheToEnvCache(
 				tt.args.env, tt.args.jobType); (err != nil) != tt.wantErr {
@@ -201,7 +197,6 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 	reCache := &DealReSchedulerCache{
 		FaultNodes:                 test.fields.FaultNodes,
 		FaultJobs:                  test.fields.FaultJobs,
-		AllocNodeRankOccurrenceMap: test.fields.AllocNodeRankOccurrenceMap,
 		JobRecentRescheduleRecords: records,
 	}
 	if len(records) == 0 {
@@ -223,9 +218,8 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 func initDealReSchedulerCache() *DealReSchedulerCache {
 	fields := fakeReSchedulerCache()
 	return &DealReSchedulerCache{
-		FaultNodes:                 fields.FaultNodes,
-		FaultJobs:                  fields.FaultJobs,
-		AllocNodeRankOccurrenceMap: fields.AllocNodeRankOccurrenceMap,
+		FaultNodes: fields.FaultNodes,
+		FaultJobs:  fields.FaultJobs,
 	}
 }
 

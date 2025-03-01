@@ -186,17 +186,17 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 		tp.ScheduleEnv.Jobs[task.Job] = job
 	}()
 
-	if !job.JobReadyTag {
+	if !*job.JobReadyTag {
 		return nil
 	}
 
 	defer func() {
-		if job.JobReadyTag {
+		if *job.JobReadyTag {
 			tp.scoreNodeForReadyJob(task, job, sMap)
 		}
 	}()
 
-	if job.JobReadyTag && len(job.SuperPods) != 0 {
+	if *job.JobReadyTag && len(job.SuperPods) != 0 {
 		klog.V(util.LogErrorLev).Infof("%s ScoreBestNPUNodes %s: job is ready, skip", tp.GetPluginName(),
 			task.Name)
 		return nil
@@ -208,10 +208,10 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 
 	selectedNodes, err := tp.selectSuperPodForJob(task, nodes, sMap)
 	if err != nil {
-		job.JobReadyTag = false
+		*job.JobReadyTag = false
 		return err
 	}
-	job.JobReadyTag = true
+	*job.JobReadyTag = true
 	job.SuperPods = selectedNodes
 	return nil
 }

@@ -104,12 +104,11 @@ const (
 // SchedulerJob the plugin define job info
 type SchedulerJob struct {
 	util.SchedulerJobAttr
-	RankIndexInfo
 	UnschedulableReason
 	handler      ISchedulerPlugin
 	ServerList   []*Tor
 	TorBlackMaps map[string]struct{}
-	JobReadyTag  bool
+	JobReadyTag  *bool
 	SuperPods    map[string][]SuperNode
 	Owner        OwnerInfo
 }
@@ -131,12 +130,6 @@ type UnschedulableReason struct {
 type SuperNode struct {
 	Name       string
 	SuperPodID int32
-}
-
-// RankIndexInfo the info of job used rank
-type RankIndexInfo struct {
-	HealthTorRankIndex map[string]string
-	FaultRankIndex     map[int]struct{}
 }
 
 // VolcanoFrame passed in by the volcano frame.
@@ -215,27 +208,6 @@ type ScheduleHandler struct {
 	ScheduleEnv
 	FaultHandle FaultHandler
 	sync.Once
-}
-
-// AllocNodeRankOccurrence object recording node rankIndex and whether index re-allocated to new node
-type AllocNodeRankOccurrence struct {
-	NodeName   string
-	RankIndex  string
-	IsFault    bool
-	Occurrence int
-}
-
-type jobTorInfos struct {
-	usedHealthyTor []*Tor
-	otherTor       []*Tor
-	torNums        map[string]int
-	usedAllTorNum  int
-}
-
-type usedTorInfos struct {
-	sharedTorNum   int
-	isSingleTorJob bool
-	usedTors       map[string]*Tor
 }
 
 // TaskResetInfo record task reset device information

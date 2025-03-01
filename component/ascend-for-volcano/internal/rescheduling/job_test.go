@@ -757,39 +757,6 @@ func TestJobInfoInSession(t *testing.T) {
 		})
 }
 
-func TestInitJobFaultRank(t *testing.T) {
-	fJob := mockFaultJobWithTasks()
-	t.Run("01-initJobFaultRank return nil when fJob.FaultTasks is empty", func(t *testing.T) {
-		if res := fJob.initJobFaultRank(); res == nil {
-			t.Errorf("initJobFaultRank() res = %v, wantRes is not nil", res)
-		}
-	})
-}
-
-func TestCheckJobNodeRankIndexValid(t *testing.T) {
-	fJob := mockFaultJobWithTasks()
-	t.Run("01-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is empty string",
-		func(t *testing.T) {
-			if res := fJob.checkJobNodeRankIndexValid(); res {
-				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is false", res)
-			}
-		})
-	t.Run("02-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is non-empty string",
-		func(t *testing.T) {
-			fJob.FaultTasks = []FaultTask{
-				{
-					IsFaultTask:   true,
-					TaskUID:       mockTaskUID,
-					NodeRankIndex: "1",
-					UseCardName:   []string{mockCardName1, mockCardName2},
-				},
-			}
-			if res := fJob.checkJobNodeRankIndexValid(); !res {
-				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is true", res)
-			}
-		})
-}
-
 func TestFaultRetryTimeOfJob(t *testing.T) {
 	job := test.FakeNormalTestJob("test", 1)
 	t.Run("01-faultRetryTimeOfJob return 0 when label is nil", func(t *testing.T) {

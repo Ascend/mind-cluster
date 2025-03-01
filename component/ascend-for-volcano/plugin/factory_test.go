@@ -20,9 +20,7 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
-	"encoding/json"
 	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -171,7 +169,7 @@ func buildBatchNodeOrderFn07() batchNodeOrderFnTest {
 	return batchNodeOrderFnTest{
 		name:    "07-BatchNodeOrderFn nslb 1.0 test full tor check filed by not enough logic tor",
 		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: true,
+		wantErr: false,
 	}
 }
 
@@ -231,7 +229,7 @@ func buildBatchNodeOrderFn010() batchNodeOrderFnTest {
 	return batchNodeOrderFnTest{
 		name:    "10-BatchNodeOrderFn nslb 2.0 test, tor node num is not enough for normal job",
 		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: true,
+		wantErr: false,
 	}
 }
 
@@ -254,8 +252,6 @@ func buildBatchNodeOrderFn012() batchNodeOrderFnTest {
 	ssn := test.FakeNormalSSN(test.FakeConfigurations())
 	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
 	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoAnnotations(fakeJob, JobDeleteFlag, fakeUsedNodeInfosByNodeNum(util.NPUIndex8))
-
 	test.AddJobInfoIntoSsn(ssn, fakeJob)
 	for _, task := range fakeJob.Tasks {
 		task.NodeName = ""
@@ -272,8 +268,6 @@ func buildBatchNodeOrderFn013() batchNodeOrderFnTest {
 	ssn.NodeList = deleteNodeByNodeName(ssn.NodeList, "node0")
 	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
 	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoAnnotations(fakeJob, JobDeleteFlag, fakeUsedNodeInfosByNodeNum(util.NPUIndex8))
-
 	test.AddJobInfoIntoSsn(ssn, fakeJob)
 	for _, task := range fakeJob.Tasks {
 		task.NodeName = ""
@@ -289,7 +283,6 @@ func buildBatchNodeOrderFn014() batchNodeOrderFnTest {
 	ssn := test.FakeNormalSSN(nil)
 	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
 	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoAnnotations(fakeJob, JobDeleteFlag, fakeUsedNodeInfosByNodeNum(util.NPUIndex8))
 
 	test.AddJobInfoIntoSsn(ssn, fakeJob)
 	for _, task := range fakeJob.Tasks {
@@ -332,7 +325,7 @@ func TestBatchNodeOrderFn(t *testing.T) {
 			initNormalsHandlerBySsnFunc(tt.args.ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
 				handle.InitJobsFromSsn, handle.InitTorNodeInfo)
 			if strings.Contains(tt.name, SingleLayer) {
-				handle.Tors.torLevel = SingleLayer
+				handle.Tors.TorLevel = SingleLayer
 			}
 			_, err := handle.BatchNodeOrderFn(tTask, tt.args.nodes)
 			if (err != nil) != tt.wantErr {
@@ -923,28 +916,6 @@ func addsHandlerCmInfosBySsn(ssn *framework.Session, sHandler *ScheduleHandler) 
 		sHandler.UpdateConfigMap(test.FakeConfigmap(util.NodeDCmInfoNamePrefix+nodeName, util.MindXDlNameSpace,
 			fakeNodeInfos()), util.AddOperator)
 	}
-}
-
-// fakeUsedNodeInfosByNodeNum fake used node infos by node num, first node is fault
-func fakeUsedNodeInfosByNodeNum(nodeNum int) string {
-	allocNodeRankOccurrences := make([]AllocNodeRankOccurrence, 0)
-	for i := 0; i < nodeNum; i++ {
-		tmpBool := false
-		if i == 0 {
-			tmpBool = true
-		}
-		tmp := AllocNodeRankOccurrence{
-			NodeName:   "node" + strconv.Itoa(i),
-			RankIndex:  strconv.Itoa(i),
-			IsFault:    tmpBool,
-			Occurrence: 0,
-		}
-		allocNodeRankOccurrences = append(allocNodeRankOccurrences, tmp)
-	}
-	if bytes, err := json.Marshal(allocNodeRankOccurrences); err == nil {
-		return string(bytes)
-	}
-	return ""
 }
 
 func deleteNodeByNodeName(nodes []*api.NodeInfo, nodeName string) []*api.NodeInfo {

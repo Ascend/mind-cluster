@@ -524,14 +524,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
 		return fmt.Errorf("checkNodeNPUByTask : %s", err)
 	}
-	klog.V(util.LogDebugLev).Infof("%s NodePredicate %s select successes.", PluginName, vcNode.Name)
-	if !(vcJob.IsJobSinglePodDelete() && vcJob.IsTorAffinityJob()) {
-		return nil
-	}
-	if sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return vcJob.CheckTorJobSinglePodDeleteV1(sHandle, taskInfo, vcNode)
-	}
-	return vcJob.CheckTorJobSinglePodDeleteV2(sHandle, vcNode)
+	return nil
 }
 
 func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {

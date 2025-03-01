@@ -384,14 +384,6 @@ func getTaskPodUidByTaskName(taskName string, jobInfo *api.JobInfo) api.TaskID {
 	return ""
 }
 
-func (fJob *FaultJob) setFaultTaskUseNode(jobInfo *api.JobInfo) {
-	for _, fTask := range fJob.FaultTasks {
-		if fTask.IsFaultTask {
-			jobInfo.PodGroup.Annotations[fTask.TaskName] = fTask.NodeName
-		}
-	}
-}
-
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc ||
 		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
@@ -605,28 +597,6 @@ func (fJob *FaultJob) recordFaultJobsToLogs() {
 		return
 	}
 	klog.V(util.LogWarningLev).Infof("Add FaultJob %s fault info: %s", fJob.JobName, string(str))
-}
-
-func (fJob *FaultJob) initJobFaultRank() []*AllocNodeRankOccurrence {
-	var nodeRankTimes []*AllocNodeRankOccurrence
-	for _, fTask := range fJob.FaultTasks {
-		nodeRankTime := &AllocNodeRankOccurrence{
-			NodeName:  fTask.NodeName,
-			RankIndex: fTask.NodeRankIndex,
-			IsFault:   fTask.IsFaultTask,
-		}
-		nodeRankTimes = append(nodeRankTimes, nodeRankTime)
-	}
-	return nodeRankTimes
-}
-
-func (fJob *FaultJob) checkJobNodeRankIndexValid() bool {
-	for _, fTask := range fJob.FaultTasks {
-		if fTask.NodeRankIndex == "" {
-			return false
-		}
-	}
-	return true
 }
 
 func (fJob *FaultJob) setJobFaultReScheduleLabel(value string) {

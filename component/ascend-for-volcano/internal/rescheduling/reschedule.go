@@ -323,39 +323,16 @@ func (reScheduler *ReScheduler) SynCacheFaultJobWithSession(ssn *framework.Sessi
 			reScheduler.updateJobHealthCode(faultJob)
 			faultJob.updateTaskPodUid(jobInfo)
 		}
-		reScheduler.initTorJobDeletedFlag(jobInfo, faultJob)
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
 	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %#v", reScheduler.FaultJobs)
 }
 
-func (reScheduler *ReScheduler) initTorJobDeletedFlag(jobInfo *api.JobInfo, fJob *FaultJob) {
-	if len(jobInfo.PodGroup.Labels) == 0 {
-		return
-	}
-	if k := jobInfo.PodGroup.Labels[plugin.TorAffinityKey]; k != plugin.LargeModelTag && k != plugin.NormalSchema {
-		return
-	}
-	jobRank := reScheduler.AllocNodeRankOccurrenceMap[fJob.JobUID]
-	if jobRank == nil {
-		jobRank = fJob.initJobFaultRank()
-	}
-	str, err := json.Marshal(jobRank)
-	if err != nil {
-		klog.V(util.LogInfoLev).Infof("Marshal %s NodeRankOccurrence failed %s", fJob.JobName, err)
-	}
-	if jobInfo.PodGroup.Annotations == nil {
-		jobInfo.PodGroup.Annotations = make(map[string]string)
-	}
-	jobInfo.PodGroup.Annotations[plugin.JobDeleteFlag] = string(str)
-}
-
 func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInfo, fJob *FaultJob) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
-	fJob.setFaultTaskUseNode(jobInfo)
 	if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
 		return
 	}
@@ -429,39 +406,6 @@ func (reScheduler *ReScheduler) SyncJobRecentRescheduleReason(ssn *framework.Ses
 		newInfo[jobID] = rescheduleRecord
 	}
 	reScheduler.JobRecentRescheduleRecords = newInfo
-}
-
-// SynCacheNodeRankOccMapWithSession Synchronise FaultJobs in cache by updating the information using current session
-func (reScheduler *ReScheduler) SynCacheNodeRankOccMapWithSession(ssn *framework.Session) {
-	klog.V(util.LogInfoLev).Info("enter SynCacheNodeRankOccMapWithSession ...")
-	defer klog.V(util.LogInfoLev).Info("leave SynCacheNodeRankOccMapWithSession ...")
-	if reScheduler == nil {
-		klog.V(util.LogErrorLev).Infof("SynCacheNodeRankOccMapWithSession: %s, nil reScheduler",
-			util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("NodeRankOccMap before sync: %#v", reScheduler.AllocNodeRankOccurrenceMap)
-	newNodeRankOccMap := make(map[api.JobID][]*AllocNodeRankOccurrence, util.MapInitNum)
-	for jobUID, NodeRankOcc := range reScheduler.AllocNodeRankOccurrenceMap {
-		for _, fJob := range reScheduler.FaultJobs {
-			if jobUID != fJob.JobUID {
-				continue
-			}
-			if !fJob.checkJobNodeRankIndexValid() {
-				newNodeRankOccMap[jobUID] = NodeRankOcc // restarted, leave the old map
-			}
-			ssnJob, ok := ssn.Jobs[fJob.JobUID]
-			if !ok {
-				newNodeRankOccMap[jobUID] = NodeRankOcc
-			}
-			if !fJob.IsFaultJob && plugin.IsJobRestarted(ssnJob) { // delete none faultJobs
-				continue
-			}
-			newNodeRankOccMap[jobUID] = NodeRankOcc // only add faultJobs in the re-scheduling process
-		}
-	}
-	reScheduler.AllocNodeRankOccurrenceMap = newNodeRankOccMap
-	klog.V(util.LogDebugLev).Infof("NodeRankOccMap after sync: %#v", reScheduler.AllocNodeRankOccurrenceMap)
 }
 
 // AddFaultNodeWithSession Add FaultNode objects for new nodes in session not in cache
@@ -739,43 +683,6 @@ func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, 
 			scoreMap[faultNodeName] = score
 		}
 	}
-}
-
-// GenerateNodeRankIndexTaskMap get the nodeName, rankIndex, and Occurrence of nodes in a job
-func (reScheduler *ReScheduler) GenerateNodeRankIndexTaskMap() {
-	klog.V(util.LogInfoLev).Info("enter GenerateNodeRankIndexTaskMap ...")
-	defer klog.V(util.LogInfoLev).Info("leave GenerateNodeRankIndexTaskMap ...")
-	if reScheduler == nil {
-		klog.V(util.LogErrorLev).Infof("GenerateNodeRankIndexTaskMap failed: %s, nil reScheduler",
-			util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("NodeRankOccMap before add: %#v", reScheduler.AllocNodeRankOccurrenceMap)
-	nodeRankIndexTaskMap := make(map[api.JobID][]*AllocNodeRankOccurrence, util.MapInitNum)
-	for _, fJob := range reScheduler.FaultJobs {
-		oldRecord, ok := reScheduler.AllocNodeRankOccurrenceMap[fJob.JobUID]
-		if ok {
-			klog.V(util.LogDebugLev).Infof("NodeRankOccMap for job %s already generated, keep it", fJob.JobName)
-			nodeRankIndexTaskMap[fJob.JobUID] = oldRecord
-			// continue but do not change those whose jobid already occurred
-			continue
-		}
-		if fJob.DeleteExecutedFlag {
-			klog.V(util.LogDebugLev).Infof("Create NodeRankOccMap for job %s", fJob.JobName)
-			var nodeRankTimes []*AllocNodeRankOccurrence
-			for _, fTask := range fJob.FaultTasks {
-				nodeRankTime := &AllocNodeRankOccurrence{
-					NodeName:  fTask.NodeName,
-					RankIndex: fTask.NodeRankIndex,
-					IsFault:   fTask.IsFaultTask,
-				}
-				nodeRankTimes = append(nodeRankTimes, nodeRankTime)
-			}
-			nodeRankIndexTaskMap[fJob.JobUID] = nodeRankTimes
-		}
-	}
-	reScheduler.AllocNodeRankOccurrenceMap = nodeRankIndexTaskMap
-	klog.V(util.LogDebugLev).Infof("NodeRankOccMap after add: %#v", reScheduler.AllocNodeRankOccurrenceMap)
 }
 
 // CheckNodeNPUByTask used in the predicate process of task and node

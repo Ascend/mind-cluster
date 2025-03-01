@@ -177,7 +177,6 @@ type FaultNodeInfoToCm struct {
 type DealReSchedulerCache struct {
 	FaultNodes                 map[string]*FaultNode
 	FaultJobs                  map[api.JobID]*FaultJob
-	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
 	JobRemainRetryTimes        map[api.JobID]*RemainRetryTimes
 	JobRecentRescheduleRecords map[api.JobID]*RescheduleReason
 }
@@ -220,13 +219,6 @@ type RescheduleTaskReason struct {
 type RemainRetryTimes struct {
 	UUID  types.UID
 	Times int
-}
-
-// AllocNodeRankOccurrence object recording node rankIndex and whether index re-allocated to new node
-type AllocNodeRankOccurrence struct {
-	NodeName  string
-	RankIndex string
-	IsFault   bool
 }
 
 // FaultCard card object for re-scheduling

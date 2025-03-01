@@ -188,51 +188,6 @@ func TestSetVJobStatusByInf(t *testing.T) {
 	}
 }
 
-func TestSchedulerJobAttrIsJobSinglePodDelete(t *testing.T) {
-	type fields struct {
-		ComJob ComJob
-		NPUJob *NPUJob
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   bool
-	}{
-		{
-			name: "01-IsJobSinglePodDelete  SchedulingTaskNum equal npu tasks",
-			fields: fields{
-				NPUJob: &NPUJob{
-					SchedulingTaskNum: 1,
-					Tasks:             map[api.TaskID]NPUTask{"task01": {ReqNPUNum: 1}},
-				},
-			},
-			want: false,
-		},
-		{
-			name: "02-IsJobSinglePodDelete SchedulingTaskNum not equal npu tasks",
-			fields: fields{
-				NPUJob: &NPUJob{
-					SchedulingTaskNum: 1,
-					Tasks: map[api.TaskID]NPUTask{
-						"task01": {ReqNPUNum: 1}, "task00": {ReqNPUNum: 1}},
-				},
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := SchedulerJobAttr{
-				ComJob: tt.fields.ComJob,
-				NPUJob: tt.fields.NPUJob,
-			}
-			if got := sJob.IsJobSinglePodDelete(); got != tt.want {
-				t.Errorf("IsJobSinglePodDelete() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestNPUJobIsNPUJob(t *testing.T) {
 	type fields struct {
 		ReqNPUName string
