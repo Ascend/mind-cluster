@@ -27,7 +27,7 @@ const (
 
 var regexps = map[string]*regexp.Regexp{
 	idStr:          regexp.MustCompile(`^[a-zA-Z0-9-_.]{8,128}$`),
-	timeStr:        regexp.MustCompile(`^\d{10}$`),
+	timeStr:        regexp.MustCompile(`^\d{13}$`),
 	descriptionStr: regexp.MustCompile(`^[\S ]{0,512}$`),
 	nodeNameStr:    regexp.MustCompile(`^[a-z0-9]([a-z0-9-.]{0,251}[a-z0-9])?$`),
 }
@@ -72,7 +72,7 @@ func (c *pubFaultInfoChecker) checkTimeStamp() error {
 	if !regexps[timeStr].MatchString(strconv.Itoa(int(c.pubFaultInfo.TimeStamp))) {
 		return errors.New("invalid timestamp")
 	}
-	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
 	if c.pubFaultInfo.TimeStamp < minAvailTime {
 		return errors.New("invalid timestamp, can not before 2025/01/01T00:00:00Z")
 	}
@@ -168,7 +168,7 @@ func (c *faultChecker) checkFaultTime() error {
 	if !regexps[timeStr].MatchString(strconv.Itoa(int(c.fault.FaultTime))) {
 		return errors.New("invalid fault time")
 	}
-	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	minAvailTime := time.Date(year2025, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
 	if c.fault.FaultTime < minAvailTime {
 		return errors.New("invalid fault time, can not before 2025/01/01T00:00:00Z")
 	}
