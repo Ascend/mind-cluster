@@ -571,6 +571,7 @@ func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int
 		pkt_size:      C.int(operate.PktSize),
 		pkt_send_num:  C.int(operate.PktSendNum),
 		pkt_interval:  C.int(operate.PktInterval),
+		timeout:       C.int(operate.Timeout),
 		task_interval: C.int(operate.TaskInterval),
 		task_id:       C.int(operate.TaskId),
 	}

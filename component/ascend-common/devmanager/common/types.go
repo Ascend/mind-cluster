@@ -47,6 +47,14 @@ type ChipInfo struct {
 	AICoreCnt int    `json:"aicore_cnt"`
 }
 
+// ChipBaseInfo all id of chip
+type ChipBaseInfo struct {
+	PhysicID int32
+	LogicID  int32
+	CardID   int32
+	DeviceID int32
+}
+
 // CgoCreateVDevOut create virtual device output info
 type CgoCreateVDevOut struct {
 	VDevID     uint32
@@ -394,6 +402,7 @@ type HccspingMeshOperate struct {
 	PktSize      int
 	PktSendNum   int
 	PktInterval  int
+	Timeout      int
 	TaskInterval int
 	TaskId       int
 }

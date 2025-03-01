@@ -273,4 +273,12 @@ const (
 	ExternalPingMeshTaskID uint = 1
 	// DefaultPingMeshPortID is the default ping mesh port
 	DefaultPingMeshPortID = 0
+	// DefaultPktSize is the default packet size
+	DefaultPktSize = 1792
+	// DefaultPktSendNum is the default packet send number
+	DefaultPktSendNum = 10
+	// DefaultPktInterval is the default packet interval
+	DefaultPktInterval = 10
+	// DefaultTimeout is the default timeout
+	DefaultTimeout = 1
 )

@@ -21,8 +21,6 @@ import (
 	"testing"
 )
 
-
-
 func TestBuildHccnErr(t *testing.T) {
 	t.Run("normal error", func(t *testing.T) {
 		phyID := int32(1)

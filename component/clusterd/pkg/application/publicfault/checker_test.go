@@ -18,7 +18,7 @@ import (
 
 const (
 	testId          = "11937763019444715778"
-	testTimeStamp   = 1739866717
+	testTimeStamp   = 1739866717000
 	testResource    = "resource1"
 	testFaultCode   = "000000001"
 	testNodeName    = "node1"
@@ -27,7 +27,7 @@ const (
 
 	testErrId         = "err id"
 	testErrTimeStamp  = 123
-	testErrTimeStamp2 = 1234567890
+	testErrTimeStamp2 = 1234567890000
 	testErrFaultCode  = "err code"
 	testErrAssertion  = "err assertion"
 	testErrNodeName   = "err name~~"

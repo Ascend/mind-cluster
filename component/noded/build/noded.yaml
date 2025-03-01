@@ -77,6 +77,11 @@ spec:
           volumeMounts:
             - name: log-noded
               mountPath: /var/log/mindx-dl/noded
+            - name: hiai-driver
+              mountPath: /usr/local/Ascend/driver
+              readOnly: true
+            - name: pingmesh-result
+              mountPath: /user/mind-cluster/pingmesh
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
@@ -85,6 +90,13 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/noded
             type: Directory
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver
+        - name: pingmesh-result
+          hostPath:
+            path: /user/mind-cluster/pingmesh
+            type: DirectoryOrCreate
         - name: localtime
           hostPath:
             path: /etc/localtime

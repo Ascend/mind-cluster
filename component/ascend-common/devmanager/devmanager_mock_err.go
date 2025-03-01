@@ -28,6 +28,26 @@ var errorMsg = "mock error"
 type DeviceManagerMockErr struct {
 }
 
+// DcStartHccsPingMesh start hccs ping mesh
+func (d *DeviceManagerMockErr) DcStartHccsPingMesh(i int32, i2 int32, i3 int, operate common.HccspingMeshOperate) error {
+	return errors.New(errorMsg)
+}
+
+// DcStopHccsPingMesh stop hccs ping mesh
+func (d *DeviceManagerMockErr) DcStopHccsPingMesh(i int32, i2 int32, i3 int, u uint) error {
+	return errors.New(errorMsg)
+}
+
+// DcGetHccsPingMeshInfo get hccs ping mesh info
+func (d *DeviceManagerMockErr) DcGetHccsPingMeshInfo(i int32, i2 int32, i3 int, u uint) (*common.HccspingMeshInfo, error) {
+	return nil, errors.New(errorMsg)
+}
+
+// DcGetHccsPingMeshState get hccs ping mesh state
+func (d *DeviceManagerMockErr) DcGetHccsPingMeshState(i int32, i2 int32, i3 int, u uint) (int, error) {
+	return 1, errors.New(errorMsg)
+}
+
 // Init load symbol and initialize dcmi
 func (d *DeviceManagerMockErr) Init() error {
 	return errors.New(errorMsg)
@@ -324,4 +344,9 @@ func (d *DeviceManagerMockErr) SetDeviceResetOutBand(cardID, deviceID int32) err
 // RescanSoc trigger soc rescan, non-blocking
 func (d *DeviceManagerMockErr) RescanSoc(cardID, deviceID int32) error {
 	return nil
+}
+
+// GetChipBaseInfos get chip base info
+func (d *DeviceManagerMockErr) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
+	return nil, errors.New(errorMsg)
 }

@@ -411,6 +411,7 @@ struct dcmi_hccsping_mesh_operate {
     int pkt_size;
     int pkt_send_num;
     int pkt_interval;
+    int timeout;
     int task_interval;
     int task_id;
 };
