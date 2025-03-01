@@ -24,8 +24,6 @@ const (
 	namespace   = "namespace"
 	podName     = "pod_name"
 	cntrName    = "container_name"
-
-
 )
 
 const (

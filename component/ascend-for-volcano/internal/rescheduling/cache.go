@@ -220,8 +220,8 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	if reCache == nil || env == nil {
 		return errors.New(util.ArgumentError)
 	}
-	env.Cache.Names[RePropertyName] = CmName
-	env.Cache.Namespaces[RePropertyName] = CmNameSpace
+	env.OutputCache.Names[RePropertyName] = CmName
+	env.OutputCache.Namespaces[RePropertyName] = CmNameSpace
 	fNodeToCMString, err := reCache.writeFaultNodesToCMString()
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("WriteReSchedulerCacheToEnvCache: %s", util.SafePrint(err))
@@ -236,10 +236,10 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 	if err := reCache.setRescheduleReasonToCache(env); err != nil {
 		klog.V(util.LogDebugLev).Infof("setRescheduleReasonToCache: %s", util.SafePrint(err))
 	}
-	cmData, ok := env.Cache.Data[RePropertyName]
+	cmData, ok := env.OutputCache.Data[RePropertyName]
 	if !ok {
 		cmData = make(map[string]string, util.MapInitNum)
-		env.Cache.Data[RePropertyName] = cmData
+		env.OutputCache.Data[RePropertyName] = cmData
 	}
 	cmData[CmJobRemainRetryTimes] = jobRemainRetryTimes
 	cmData[CmFaultNodeKind] = fNodeToCMString
@@ -247,17 +247,17 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 }
 
 func (reCache *DealReSchedulerCache) setRescheduleReasonToCache(env *plugin.ScheduleEnv) error {
-	env.Cache.Names[ReschedulingReasonKey] = RescheduleReasonCmName
-	env.Cache.Namespaces[ReschedulingReasonKey] = RescheduleReasonCmNamespace
+	env.OutputCache.Names[ReschedulingReasonKey] = RescheduleReasonCmName
+	env.OutputCache.Namespaces[ReschedulingReasonKey] = RescheduleReasonCmNamespace
 	jobRescheduleReasons, err := reCache.writeRescheduleReasonsToCMString()
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
 		return fmt.Errorf("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))
 	}
-	reasonCmData, ok := env.Cache.Data[ReschedulingReasonKey]
+	reasonCmData, ok := env.OutputCache.Data[ReschedulingReasonKey]
 	if !ok {
 		reasonCmData = make(map[string]string, util.MapInitNum)
-		env.Cache.Data[ReschedulingReasonKey] = reasonCmData
+		env.OutputCache.Data[ReschedulingReasonKey] = reasonCmData
 	}
 	reasonCmData[CmJobRescheduleReasonsKey] = jobRescheduleReasons
 	return nil

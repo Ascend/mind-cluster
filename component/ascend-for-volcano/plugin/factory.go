@@ -326,7 +326,7 @@ func (sHandle *ScheduleHandler) InitCache() {
 	data := make(map[string]map[string]string, util.MapInitNum)
 	data[util.RePropertyCacheName] = make(map[string]string, util.MapInitNum)
 	data[util.JobRecovery] = make(map[string]string, util.MapInitNum)
-	sHandle.Cache = ScheduleCache{
+	sHandle.OutputCache = ScheduleCache{
 		Names:      make(map[string]string, util.MapInitNum),
 		Namespaces: make(map[string]string, util.MapInitNum),
 		Data:       data}
@@ -349,9 +349,9 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 }
 
 func (sHandle *ScheduleHandler) saveCacheToCm() {
-	for spName, cmName := range sHandle.ScheduleEnv.Cache.Names {
-		nameSpace, okSp := sHandle.ScheduleEnv.Cache.Namespaces[spName]
-		data, okData := sHandle.ScheduleEnv.Cache.Data[spName]
+	for spName, cmName := range sHandle.ScheduleEnv.OutputCache.Names {
+		nameSpace, okSp := sHandle.ScheduleEnv.OutputCache.Namespaces[spName]
+		data, okData := sHandle.ScheduleEnv.OutputCache.Data[spName]
 		if !okSp || !okData {
 			klog.V(util.LogErrorLev).Infof("SaveCacheToCm %s no namespace or Data in cache.", spName)
 			continue

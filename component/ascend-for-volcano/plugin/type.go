@@ -172,11 +172,12 @@ type ScheduleEnv struct {
 	JobScheduleInfoRecorder
 	ClusterInfoWitchCm
 	ClusterCache
-	FrameAttr VolcanoFrame
-	Cache     ScheduleCache
+	FrameAttr   VolcanoFrame
+	OutputCache ScheduleCache
 }
 
 // ClusterCache cluster env cache
+// some cluster date needed when job scheduling, if add other cluster data, should add in this struct
 type ClusterCache struct {
 	Jobs         map[api.JobID]SchedulerJob
 	Nodes        map[string]NPUNode

@@ -354,7 +354,7 @@ func buildBeforeCloseHandler() []beforeCloseHandlerTest {
 			name: "02-BeforeCloseHandler save cache test",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Cache: ScheduleCache{Names: map[string]string{"fault": "test"},
+					OutputCache: ScheduleCache{Names: map[string]string{"fault": "test"},
 						Namespaces: map[string]string{"fault": "hahaNameSpace"},
 						Data:       map[string]map[string]string{"fault": {"test1": "testData"}}}}},
 		},
