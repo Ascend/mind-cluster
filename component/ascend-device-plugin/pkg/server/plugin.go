@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -243,30 +245,94 @@ func (ps *PluginServer) deepCopyDevice(cachedDevices []*common.NpuDevice) {
 	ps.cachedLock.Unlock()
 }
 
-// ListAndWatch is to send device info to kubelet
-func (ps *PluginServer) ListAndWatch(empty *v1beta1.Empty, stream v1beta1.DevicePlugin_ListAndWatchServer) error {
-	send := func(stream v1beta1.DevicePlugin_ListAndWatchServer) {
-		for i := 0; i < common.RetryUpdateCount; i++ {
-			if err := sendToKubelet(stream, ps.responseToKubelet()); err != nil {
-				hwlog.RunLog.Errorf("send to kubelet failed, error is %v", err)
-				continue
+// LastSendSuccess return last send status
+func (ps *PluginServer) LastSendSuccess() bool {
+	return ps.deviceSyncStat.GetLastSendStatus()
+}
+
+func (ps *PluginServer) strategyForSendStats() string {
+	if ps.LastSendSuccess() {
+		return common.EmptyStrategy
+	}
+	if ps.deviceSyncStat.GetConsecutiveFailures() >= common.FailureCountThresholdForRestart {
+		return common.ReStartDevicePluginStrategy
+	}
+	if ps.deviceSyncStat.GetConsecutiveFailures() >= common.FailureCountThresholdForReRegistry {
+		return common.ReRegistryStrategy
+	}
+	return common.EmptyStrategy
+}
+
+func exitSelfProcess() error {
+	hwlog.RunLog.Warn("process prepare exit")
+	pid := os.Getpid()
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+	return process.Signal(syscall.SIGTERM)
+}
+
+func (ps *PluginServer) reportDeviceInfo(stream v1beta1.DevicePlugin_ListAndWatchServer) {
+	for i := 0; i < common.RetryUpdateCount; i++ {
+		if err := sendToKubelet(stream, ps.responseToKubelet()); err != nil {
+			hwlog.RunLog.Errorf("send to kubelet failed, error is %v", err)
+			continue
+		}
+		hwlog.RunLog.Infof("send device-info to kubelet success, deviceType=%s", ps.deviceType)
+		ps.deviceSyncStat.RecordSendResult(true)
+		return
+	}
+	ps.deviceSyncStat.RecordSendResult(false)
+	hwlog.RunLog.Errorf("the number of retries (%d) retries send failed.", common.RetryUpdateCount)
+}
+
+func (ps *PluginServer) handleConsecutiveErrorStrategy(strategy string, serverRestartCount uint64) {
+	switch strategy {
+	case common.ReRegistryStrategy, common.ReStartDevicePluginStrategy:
+		hwlog.RunLog.Infof("strategy for sendStat=%s, %s, server restartTimes=%d",
+			strategy, ps.deviceSyncStat.String(), serverRestartCount)
+		ps.isRunning.Store(false)
+		if strategy == common.ReStartDevicePluginStrategy {
+			if err := exitSelfProcess(); err != nil {
+				hwlog.RunLog.Errorf("restart device plugin failed, err=%v", err)
+				ps.SetRestartFlag(true)
 			}
-			lastStatus.Store(true)
 			return
 		}
-		lastStatus.Store(false)
-		hwlog.RunLog.Errorf("the number of retries (%d) retries send failed.", common.RetryUpdateCount)
+		ps.SetRestartFlag(true)
+	case common.EmptyStrategy:
+	default:
+		hwlog.RunLog.Errorf("not support strategy=%s", strategy)
 	}
+}
+
+// ListAndWatch is to send device info to kubelet
+func (ps *PluginServer) ListAndWatch(empty *v1beta1.Empty, stream v1beta1.DevicePlugin_ListAndWatchServer) error {
+	serverRestartCount := ps.restartTimes.Load() - 1
+	hwlog.RunLog.Infof("receive ListAndWatch from kubelet, deviceType=%s, server restartTimes=%d",
+		ps.deviceType, serverRestartCount)
 	ps.isRunning.Store(true)
-	send(stream)
+	ps.reportDeviceInfo(stream)
 	for {
 		select {
+		case <-stream.Context().Done():
+			hwlog.RunLog.Warnf("grpc stream closed, deviceType=%s, server restartTimes=%d",
+				ps.deviceType, serverRestartCount)
+			ps.isRunning.Store(false)
+			ps.SetRestartFlag(true)
+			return nil
 		case <-ps.stop:
+			hwlog.RunLog.Warnf("ps.stop chan receive exit signal, deviceType=%s, server restartTimes=%d",
+				ps.deviceType, serverRestartCount)
 			ps.isRunning.Store(false)
 			return nil
-		case _, ok := <-ps.reciChan:
-			if ok {
-				send(stream)
+		case <-ps.reciChan:
+			ps.reportDeviceInfo(stream)
+			strategy := ps.strategyForSendStats()
+			ps.handleConsecutiveErrorStrategy(strategy, serverRestartCount)
+			if strategy != common.EmptyStrategy {
+				return nil
 			}
 		}
 	}
@@ -905,14 +971,16 @@ func NewPluginServer(deviceType string, devices []*common.NpuDevice, defaultDevs
 	manager device.DevManager) *PluginServer {
 	ps := &PluginServer{
 		restart:        true,
-		reciChan:       make(chan interface{}),
+		reciChan:       make(chan interface{}, 1),
 		deviceType:     deviceType,
 		defaultDevs:    defaultDevs,
 		stop:           make(chan interface{}),
 		klt2RealDevMap: make(map[string]string, common.MaxDevicesNum),
 		isRunning:      common.NewAtomicBool(false),
 		manager:        manager,
+		deviceSyncStat: common.NewSendStats(common.DefaultSendRecordLength),
 	}
+	ps.restartTimes.Store(0)
 	ps.deepCopyDevice(devices)
 	return ps
 }

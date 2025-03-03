@@ -15,6 +15,8 @@
 // Package common a series of common function
 package common
 
+import "time"
+
 const (
 	// Component component name
 	Component = "device-plugin"
@@ -856,4 +858,27 @@ const (
 	AssociatedFaultDiagnosisTime = 5
 	// TimeMilliseconds indicate how many milliseconds are there in a second
 	TimeMilliseconds = 1000
+)
+
+const (
+	// FailureCountThresholdForRestart threshold number of consecutive send failures for restart dp
+	FailureCountThresholdForRestart = 15
+	// FailureCountThresholdForReRegistry threshold number of consecutive send failures for reRegistry to kubelet
+	FailureCountThresholdForReRegistry = 5
+	// CheckFailurePeriodSecond period of check connection between kubelet and device-plugin
+	CheckFailurePeriodSecond = time.Second * 5
+	// EmptyStrategy do nothing for send result
+	EmptyStrategy = ""
+	// ReRegistryStrategy a strategy registry to kubelet
+	ReRegistryStrategy = "reRegistry"
+	// ReStartDevicePluginStrategy a strategy restart device-plugin
+	ReStartDevicePluginStrategy = "restart"
+	// MaxSendRecordLength max length record send result
+	MaxSendRecordLength = 1024
+	// DefaultSendRecordLength default length record send result
+	DefaultSendRecordLength = 128
+	// GrpcKeepAliveTime keep alive time for grpc connection
+	GrpcKeepAliveTime = 5 * time.Minute
+	// GrpcKeepAliveTimeout grpc timeout for keep-alive ping response
+	GrpcKeepAliveTimeout = 5 * time.Minute
 )
