@@ -197,6 +197,9 @@ enum dcmi_die_type {
 #define DCMI_MAX_EVENT_RESV_LENGTH 32
 #define HCCS_MAX_PCS_NUM 16
 #define HCCS_RES_PCS_NUM 64
+#define IP_ADDR_LIST_LEN 1024
+#define HCCS_PING_MESH_MAX_NUM 48
+#define ADDR_MAX_LEN 16
 
 struct dcmi_base_resource {
     unsigned long long token;
@@ -403,6 +406,29 @@ struct dcmi_sio_crc_err_statistic_info {
     unsigned char reserved[8];
 };
 
+struct dcmi_hccsping_mesh_operate {
+    char dst_addr_list[IP_ADDR_LIST_LEN];
+    int pkt_size;
+    int pkt_send_num;
+    int pkt_interval;
+    int timeout;
+    int task_interval;
+    int task_id;
+};
+
+struct dcmi_hccsping_mesh_info {
+    char dst_addr[HCCS_PING_MESH_MAX_NUM][ADDR_MAX_LEN];
+    unsigned int suc_pkt_num[HCCS_PING_MESH_MAX_NUM];
+    unsigned int fail_pkt_num[HCCS_PING_MESH_MAX_NUM];
+    long max_time[HCCS_PING_MESH_MAX_NUM];
+    long min_time[HCCS_PING_MESH_MAX_NUM];
+    long avg_time[HCCS_PING_MESH_MAX_NUM];
+    long tp95_time[HCCS_PING_MESH_MAX_NUM];
+    int reply_stat_num[HCCS_PING_MESH_MAX_NUM];
+    unsigned long long ping_total_num[HCCS_PING_MESH_MAX_NUM];
+    int dest_num;
+};
+
 #define DCMI_VERSION_1
 #define DCMI_VERSION_2
 
@@ -476,6 +502,14 @@ DCMIDLLEXPORT int dcmi_get_product_type(int card_id, int device_id, char *produc
 
 DCMIDLLEXPORT int dcmi_set_device_reset(int card_id, int device_id, enum dcmi_reset_channel channel_type);
 
+DCMIDLLEXPORT int dcmi_get_device_outband_channel_state(int card_id, int device_id, int* channel_state);
+
+DCMIDLLEXPORT int dcmi_pre_reset_soc(int card_id, int device_id);
+
+DCMIDLLEXPORT int dcmi_rescan_soc(int card_id, int device_id);
+
+DCMIDLLEXPORT int dcmi_get_netdev_brother_device(int card_id, int device_id, int* brother_card_id);
+
 DCMIDLLEXPORT int dcmi_get_device_boot_status(int card_id, int device_id, enum dcmi_boot_status *boot_status);
 
 DCMIDLLEXPORT int dcmi_subscribe_fault_event(int card_id, int device_id, struct dcmi_event_filter filter);
@@ -499,6 +533,13 @@ DCMIDLLEXPORT int dcmi_get_mainboard_id (int card_id, int device_id, unsigned in
 
 DCMIDLLEXPORT int dcmi_get_hccs_link_bandwidth_info (int card_id, int device_id, struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info);
 
+DCMIDLLEXPORT int dcmi_start_hccsping_mesh(int card_id, int device_id, int port_id, struct dcmi_hccsping_mesh_operate *hccsping_mesh);
+
+DCMIDLLEXPORT int dcmi_stop_hccsping_mesh(int card_id, int device_id, int port_id, unsigned int task_id);
+
+DCMIDLLEXPORT int dcmi_get_hccsping_mesh_info(int card_id, int device_id, int port_id, unsigned int task_id, struct dcmi_hccsping_mesh_info *hccsping_mesh_reply);
+
+DCMIDLLEXPORT int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int port_id, unsigned int task_id, unsigned int *state);
 
 #endif
 

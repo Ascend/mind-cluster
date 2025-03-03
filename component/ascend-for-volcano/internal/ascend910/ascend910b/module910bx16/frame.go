@@ -75,10 +75,12 @@ func (tp *module910bx16) ValidNPUJob() *api.ValidateResult {
 	if tp.VJob.Type == util.JobTypeDyCut {
 		return tp.ValidDyVNPUJob()
 	}
-	if err := tp.Valid910bNPUJob(); err != nil {
-		return err
+	for _, handler := range tp.PolicyHandler {
+		if validResult := handler.ValidNPUJob(); validResult != nil && !validResult.Pass {
+			return validResult
+		}
 	}
-	return tp.ReHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+	return tp.Valid910bNPUJob()
 }
 
 // PreStartAction pre-processing actions for rescheduling
@@ -90,6 +92,11 @@ func (tp *module910bx16) PreStartAction(i interface{}, ssn *framework.Session) e
 	tp.ReHandle = k
 	if vErr := tp.PreStartVNPU(ssn); vErr != nil {
 		return fmt.Errorf("preStartVNPU failed %s, err is %s", SchedulerName, vErr)
+	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.PreStartAction(i, ssn); err != nil {
+			return fmt.Errorf("rescheduling %s", err.Error())
+		}
 	}
 	return nil
 }
@@ -144,6 +151,11 @@ func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugi
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[networkUnhealthyNPU])
 	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.CheckNodeNPUByTask(task, node); err != nil {
+			return fmt.Errorf("checkNodeNPUByTask %s", err.Error())
+		}
+	}
 	return nil
 }
 
@@ -166,9 +178,26 @@ func (tp *module910bx16) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.Node
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes %s.", err)
 		return err
 	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.ScoreBestNPUNodes(task, nodes, sMap); err != nil {
+			return err
+		}
+	}
+	if len(tp.PolicyHandler) != 0 {
+		return nil
+	}
 	if tp.VJob.Type == util.JobTypeDyCut {
 		return tp.VHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, sMap)
 	}
+	if err := tp.setNodeScore(task, nodes, sMap); err != nil {
+		return err
+	}
+	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes task<%s> sMap<%v>", tp.GetPluginName(),
+		task.Name, sMap)
+	return tp.ReHandle.ScoreBestNPUNodes(task, sMap)
+}
+
+func (tp *module910bx16) setNodeScore(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
 	taskNPUNum, getErr := tp.GetTaskReqNPUNum(task)
 	if getErr != nil {
 		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum %s: %s", tp.GetPluginName(), task.Name, getErr)
@@ -203,9 +232,7 @@ func (tp *module910bx16) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.Node
 		sortScore := tp.MaxNodeNPUNum - len(cardIds)
 		sMap[node.Name] = float64(tp.MaxNodeNPUNum*(int(healthyNPUNum/util.NPUHexKilo)-bestScore) + sortScore)
 	}
-	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes task<%s> sMap<%v>", tp.GetPluginName(),
-		task.Name, sMap)
-	return tp.ReHandle.ScoreBestNPUNodes(task, sMap)
+	return nil
 }
 
 // UseAnnotation select npu for task from node
@@ -229,6 +256,9 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	newNode := tp.NPUHandler.UpdateNodeInfo(node, selectedNPU)
+	for _, handler := range tp.PolicyHandler {
+		handler.UseAnnotation(task, node)
+	}
 	return newNode
 }
 

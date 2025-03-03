@@ -69,10 +69,12 @@ func (tp *module910bx8) ValidNPUJob() *api.ValidateResult {
 	if tp.VJob.Type == util.JobTypeDyCut {
 		return tp.ValidDyVNPUJob()
 	}
-	if err := tp.Valid910bNPUJob(); err != nil {
-		return err
+	for _, handler := range tp.PolicyHandler {
+		if validResult := handler.ValidNPUJob(); validResult != nil && !validResult.Pass {
+			return validResult
+		}
 	}
-	return tp.ReHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+	return tp.Valid910bNPUJob()
 }
 
 // PreStartAction pre-processing actions for rescheduling
@@ -85,6 +87,12 @@ func (tp *module910bx8) PreStartAction(i interface{}, ssn *framework.Session) er
 	if vErr := tp.PreStartVNPU(ssn); vErr != nil {
 		return fmt.Errorf("preStartVNPU failed %s, err is %s", SchedulerName, vErr)
 	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.PreStartAction(i, ssn); err != nil {
+			return fmt.Errorf("preStartAction %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -111,6 +119,11 @@ func (tp *module910bx8) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNo
 	default:
 		return nil
 	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.CheckNodeNPUByTask(task, node); err != nil {
+			return fmt.Errorf("checkNodeNPUByTask %s", err.Error())
+		}
+	}
 	return nil
 }
 
@@ -122,6 +135,14 @@ func (tp *module910bx8) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 	}
 	if tp.VJob.Type == util.JobTypeDyCut {
 		return tp.VHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, sMap)
+	}
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.ScoreBestNPUNodes(task, nodes, sMap); err != nil {
+			return err
+		}
+	}
+	if len(tp.PolicyHandler) != 0 {
+		return nil
 	}
 	return tp.NPUHandler.ScoreBestNPUNodes(task, nodes, sMap)
 }
@@ -142,6 +163,9 @@ func (tp *module910bx8) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *
 				tp.GetPluginName(), tp.Name, err)
 		}
 		return tp.VHandle.DynamicVNPU.UseAnnotation(task, node, taskRes, tp.VHandle.VT)
+	}
+	for _, handler := range tp.PolicyHandler {
+		handler.UseAnnotation(task, node)
 	}
 	return tp.NPUHandler.UseAnnotation(task, node)
 }

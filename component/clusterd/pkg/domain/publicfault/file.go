@@ -59,6 +59,8 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 	}
 
 	PubFaultResource = util.RemoveDuplicates(pubFaultCfgFile.Resource)
+
+	resetPubFaultCodeCache()
 	// if one fault code corresponds to multiple fault levels, the most severe one will be dealt with
 	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.SeparateNPUCodes) {
 		PubFaultCodeCfg.SeparateNPUCodes[code] = struct{}{}
@@ -70,4 +72,10 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 		PubFaultCodeCfg.NotHandleFaultCodes[code] = struct{}{}
 	}
 	return nil
+}
+
+func resetPubFaultCodeCache() {
+	PubFaultCodeCfg.SeparateNPUCodes = make(map[string]struct{})
+	PubFaultCodeCfg.SubHealthFaultCodes = make(map[string]struct{})
+	PubFaultCodeCfg.NotHandleFaultCodes = make(map[string]struct{})
 }

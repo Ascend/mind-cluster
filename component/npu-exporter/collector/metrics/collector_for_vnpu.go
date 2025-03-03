@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -80,7 +81,14 @@ func (c *VnpuCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectToCache collect the metric to cache
 func (c *VnpuCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
-
+	for _, chip := range chipList {
+		cache := &chipCache{
+			chip: chip,
+		}
+		cache.timestamp = time.Now()
+		c.LocalCache.Store(chip.PhyId, *cache)
+	}
+	colcommon.UpdateCache[chipCache](n, colcommon.GetCacheKey(c), &c.LocalCache)
 }
 
 // UpdatePrometheus update prometheus metrics
@@ -89,21 +97,23 @@ func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 
 	updateSingleChip := func(cache chipCache, cardLabel []string) {
 		aiChip := cache.chip
-
-		containerName := getContainerNameArray(containerMap[aiChip.DeviceID])
-		if len(containerName) != colcommon.ContainerNameLen {
+		if aiChip.VDevInfos == nil {
 			return
 		}
-
-		vDevActivityInfo := aiChip.VDevActivityInfo
-
-		if vDevActivityInfo == nil || !common.IsValidVDevID(vDevActivityInfo.VDevID) {
-			return
+		for _, vDevActivityInfo := range aiChip.VDevInfos.VDevActivityInfo {
+			if !common.IsValidVDevID(vDevActivityInfo.VDevID) {
+				continue
+			}
+			containerName := getContainerNameArray(containerMap[int32(vDevActivityInfo.VDevID)])
+			if len(containerName) != colcommon.ContainerNameLen {
+				continue
+			}
+			aiChip.VDevActivityInfo = &vDevActivityInfo
+			cardLabel = getPodDisplayInfo(&aiChip, containerName)
+			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevAiCoreRate, cardLabel, podAiCoreUtilizationRate)
+			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevTotalMem, cardLabel, podTotalMemory)
+			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevUsedMem, cardLabel, podUsedMemory)
 		}
-		cardLabel = getPodDisplayInfo(&aiChip, containerName)
-		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevAiCoreRate, cardLabel, podAiCoreUtilizationRate)
-		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevTotalMem, cardLabel, podTotalMemory)
-		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevUsedMem, cardLabel, podUsedMemory)
 	}
 
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
@@ -143,14 +153,14 @@ func getPodDisplayInfo(chip *colcommon.HuaWeiAIChip, containerName []string) []s
 	chipInfo := common.DeepCopyChipInfo(chip.ChipInfo)
 	vDevActivityInfo := common.DeepCopyVDevActivityInfo(chip.VDevActivityInfo)
 
-	if !validateIsNilForEveryElement(chip) {
+	if !validateNotNilForEveryElement(chip) {
 		logger.Logger.Log(logger.Warn, "invalid chip param in function getPodDisplayInfo")
 		return []string{"", "", "", "",
 			containerName[colcommon.NameSpaceIdx], containerName[colcommon.PodNameIdx], containerName[colcommon.ConNameIdx], ""}
 	}
 
 	var vDevID, vDevAiCore, isVirtualDev string
-	if !validateIsNilForEveryElement(vDevActivityInfo) {
+	if !validateNotNilForEveryElement(vDevActivityInfo) {
 		logger.Logger.Logf(logger.Warn, "invalid vDevActivityInfo param in function getPodDisplayInfo")
 		vDevID = ""
 		vDevAiCore = ""

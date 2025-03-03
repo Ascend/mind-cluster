@@ -27,9 +27,9 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -78,13 +78,13 @@ func (fTask *FaultTask) getUseCardName(task *api.TaskInfo, cardName string) ([]s
 }
 
 // DeleteRealPodByTask delete pod from kubernetes of tasks
-func (fTask *FaultTask) DeleteRealPodByTask(ssn *framework.Session, waitTime int64) error {
+func (fTask *FaultTask) DeleteRealPodByTask(kubeClient kubernetes.Interface, waitTime int64) error {
 	deleteOptions := v1.DeleteOptions{
 		GracePeriodSeconds: &waitTime,
 		Preconditions:      v1.NewUIDPreconditions(string(fTask.TaskUID)),
 	}
 
-	err := ssn.KubeClient().CoreV1().Pods(fTask.TaskNamespace).Delete(
+	err := kubeClient.CoreV1().Pods(fTask.TaskNamespace).Delete(
 		context.TODO(), fTask.TaskName, deleteOptions)
 	if err != nil {
 		return err
@@ -132,9 +132,7 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 		TaskUID:            task.UID,
 		TaskNamespace:      task.Namespace,
 		NodeName:           task.NodeName,
-		JobName:            job.Name,
 		PodCreateTime:      task.Pod.CreationTimestamp.Unix(),
-		PodUID:             task.Pod.UID,
 		faultType:          NodeHealthy,
 	}
 	if faultTask.NodeName == "" {

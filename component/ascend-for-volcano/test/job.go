@@ -173,3 +173,8 @@ func FakeTaskWithResReq(name, resName string, resNum int) *api.TaskInfo {
 	task.Job = FakeJobName
 	return task
 }
+
+// SetJobStatusRunning set job status running
+func SetJobStatusRunning(Job *api.JobInfo) {
+	Job.PodGroup.Status.Phase = util.PodGroupRunning
+}

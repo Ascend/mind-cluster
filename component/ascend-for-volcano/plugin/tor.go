@@ -27,6 +27,7 @@ import (
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -61,7 +62,7 @@ func (sHandle *ScheduleHandler) InitTorNodeInfo(ssn *framework.Session) {
 		return
 	}
 	if level, ok := cm.Data[TorLevelCMKey]; ok {
-		torList.torLevel = level
+		torList.TorLevel = level
 		klog.V(util.LogInfoLev).Infof("basic tor level is %s", level)
 	}
 	if len(torList.Tors) == 0 {
@@ -93,7 +94,7 @@ func (sHandle *ScheduleHandler) InitTorNodeInfo(ssn *framework.Session) {
 type TorList struct {
 	sharedTorNum int
 	nslbVersion  string
-	torLevel     string
+	TorLevel     string `json:"-"`
 	Version      string `json:"version"`
 	TorCount     int    `json:"tor_count"`
 	Tors         []*Tor `json:"server_list"`
@@ -120,7 +121,7 @@ type Server struct {
 	IP             string `json:"server_ip"`
 	Count          int    `json:"npu_count"`
 	SliceId        int    `json:"slice_id"`
-	Jobs           map[api.JobID]SchedulerJob
+	Jobs           sets.String
 	CurrentJob     *api.JobID
 	Name           string
 }
@@ -149,12 +150,35 @@ func (tl *TorList) initTorMaps() {
 	}
 }
 
+// GetTorMaps return tor maps
+func (tl *TorList) GetTorMaps() map[string]*Tor {
+	if tl == nil {
+		return nil
+	}
+	return tl.torMaps
+}
+
+// GetServerMaps return server maps
+func (tl *TorList) GetServerMaps() map[string]*Server {
+	if tl == nil {
+		return nil
+	}
+	return tl.serverMaps
+}
+
+// GetTorIpMap return tor ip map
+func (tl *TorList) GetTorIpMap() map[string]string {
+	if tl == nil {
+		return nil
+	}
+	return tl.torIpMap
+}
+
 func (tl *TorList) initNodeNameByNodeIp(nodes map[string]NPUNode) {
 	ipNodeMap := make(map[string]NPUNode, len(nodes))
 	for _, node := range nodes {
 		ipNodeMap[node.Address] = node
 	}
-
 	for _, tor := range tl.Tors {
 		for _, tNode := range tor.Servers {
 			if node, ok := ipNodeMap[tNode.IP]; ok {
@@ -183,9 +207,9 @@ func (tl *TorList) syncByJob(job SchedulerJob) {
 			continue
 		}
 		if server.Jobs == nil {
-			server.Jobs = map[api.JobID]SchedulerJob{}
+			server.Jobs = sets.String{}
 		}
-		server.Jobs[job.Name] = job
+		server.Jobs.Insert(job.ReferenceName)
 		if tor.Jobs == nil {
 			tor.Jobs = map[api.JobID]SchedulerJob{}
 		}
@@ -250,6 +274,156 @@ func (tl *TorList) initTorShareStatus(jobs map[api.JobID]SchedulerJob) {
 			}
 		}
 	}
+}
+
+// MarkTorListByJobV1 mark the global nslb list by node list a job can be scheduled
+func (tl *TorList) MarkTorListByJobV1(nodes map[string]*api.NodeInfo, jobUid api.JobID, taskNum int) {
+	if tl == nil {
+		return
+	}
+	for _, tor := range tl.Tors {
+		count := 0
+		tmpName := jobUid
+		for _, server := range tor.Servers {
+			if nodes[server.Name] != nil {
+				count++
+				server.CurrentJob = &tmpName
+			}
+		}
+		if tor.HasAcrossJob(false, jobUid) && taskNum > count {
+			tmpName = ""
+		}
+	}
+}
+
+// MarkTorListByJobV2 mark the global nslb list by node list a job can be scheduled
+func (tl *TorList) MarkTorListByJobV2(nodes map[string]*api.NodeInfo, jobUid api.JobID) {
+	if tl == nil {
+		return
+	}
+	for _, tor := range tl.Tors {
+		count := 0
+		tmpName := jobUid
+		for _, server := range tor.Servers {
+			if nodes[server.Name] != nil {
+				count++
+				server.CurrentJob = &tmpName
+			}
+		}
+		tor.FreeServerCount = count
+	}
+}
+
+// SetTorFreeServerCountAndGetFullTor get the num of full nslb
+func (tl *TorList) SetTorFreeServerCountAndGetFullTor(jobUid api.JobID) int {
+	if tl == nil {
+		return 0
+	}
+	var fullTorNum int
+	for _, tor := range tl.Tors {
+		count := 0
+		for _, l := range tor.Servers {
+			if l.CurrentJob != nil && *l.CurrentJob == jobUid {
+				count++
+			}
+		}
+		if count == tl.TorCount {
+			fullTorNum++
+		}
+		tor.FreeServerCount = count
+	}
+	return fullTorNum
+}
+
+// GetLogicTorsAndFullTorNum get logic nslb list by global nslb list
+func (tl *TorList) GetLogicTorsAndFullTorNum(jobUid api.JobID, taskColumn, taskRow, netSliceNum int) ([]*Tor, int) {
+	if netSliceNum > util.MaxSliceNum {
+		klog.V(util.LogDebugLev).Infof("GetLogicTorList failed:%s", util.ArgumentError)
+		return nil, 0
+	}
+	torTransposed := make([][]*Server, netSliceNum)
+	for _, tor := range tl.Tors {
+		for i, server := range tor.Servers {
+			if server.CurrentJob == nil || *server.CurrentJob != jobUid {
+				continue
+			}
+			if i >= len(torTransposed) {
+				klog.V(util.LogDebugLev).Infof("invalid i: %d, logicTorList length: %d", i, len(torTransposed))
+			}
+			torTransposed[i] = append(torTransposed[i], server)
+		}
+	}
+
+	sort.Slice(torTransposed, func(i, j int) bool {
+		return len(torTransposed[i]) > len(torTransposed[j])
+	})
+
+	// judge the node num in slice x is enough for job request
+	// for example: a job has 22 npu task , netSliceNum is 4. taskRow = 5, taskColumn = 1
+	// slice 1 must have 5 nodes
+	if len(torTransposed[taskColumn]) < taskRow+1 {
+		klog.V(util.LogWarningLev).Infof("nslb check failed not enough resource by netslice <%d> server num"+
+			" <%d> is not enough for job require %d", getNetSliceId(torTransposed[taskColumn]),
+			len(torTransposed[taskColumn]), taskRow+1)
+		return nil, 0
+	}
+
+	if taskRow > 0 && len(torTransposed[netSliceNum-1]) < taskRow {
+		klog.V(util.LogWarningLev).Infof("nslb check failed not enough resource by logicTor full nslb num "+
+			"<%d> is not enough for job require <%d>", len(torTransposed[netSliceNum-1]), taskRow)
+		return nil, 0
+	}
+
+	return getLogicTorsAndFullTorNum(netSliceNum, torTransposed)
+}
+
+// GetSharedTorNum get shared tor num
+func (tl *TorList) GetSharedTorNum() int {
+	if tl == nil {
+		klog.V(util.LogDebugLev).Infof("getSharedTorNum %s.", util.ArgumentError)
+		return util.ErrorInt
+	}
+	return tl.sharedTorNum
+}
+
+// GetNSLBVersion get nslb version
+func (tl *TorList) GetNSLBVersion() string {
+	if tl == nil {
+		klog.V(util.LogDebugLev).Infof("getNSLBVersion %s.", util.ArgumentError)
+		return ""
+	}
+	return tl.nslbVersion
+}
+
+// RecoveryGlobalTor recovery global tor in cache
+func (tl *TorList) RecoveryGlobalTor(tors []*Tor) {
+	tl.Tors = tors
+	tl.initTorMaps()
+}
+
+// GetLogicTorsListAndFullTorNum transpose the logic nslb list
+func getLogicTorsAndFullTorNum(torCount int, torTransposed [][]*Server) ([]*Tor, int) {
+	tors := make([]*Tor, 0)
+	var fullTor int
+	for i := 0; i <= len(torTransposed[0]); i++ {
+		tmpTor := &Tor{}
+		for j := 0; j < torCount; j++ {
+			if j >= len(torTransposed) {
+				klog.V(util.LogDebugLev).Infof("invalid j: %d, logicList length: %d", j, len(torTransposed))
+				return tors, fullTor
+			}
+			if len(torTransposed[j]) < i+1 {
+				break
+			}
+			tmpTor.Servers = append(tmpTor.Servers, torTransposed[j][i])
+			if j == torCount-1 {
+				fullTor++
+			}
+		}
+		tmpTor.FreeServerCount = len(tmpTor.Servers)
+		tors = append(tors, tmpTor)
+	}
+	return tors, fullTor
 }
 
 func (t *Tor) setTorIsSharedTor(isShared string) {
@@ -333,151 +507,4 @@ func getNetSliceId(servers []*Server) int {
 		return server.SliceId
 	}
 	return -1
-}
-
-// getTorServer get tors by tor is shared and is healthy
-func getTorServer(tors []*Tor, isShare int, isHealthy int, sortType string) []*Tor {
-	tmpTors := initTorsByTorAttr(tors, isShare, isHealthy)
-	sort.Slice(tmpTors, func(i, j int) bool {
-		if sortType == descOrder {
-			return tmpTors[i].FreeServerCount > tmpTors[j].FreeServerCount
-		}
-		return tmpTors[i].FreeServerCount < tmpTors[j].FreeServerCount
-	})
-	return tmpTors
-}
-
-// initTorsByTorAttr init a tors by tor is shared and is healthy
-func initTorsByTorAttr(tors []*Tor, isShare, isHealthy int) []*Tor {
-	var tmpTors []*Tor
-	for _, tor := range tors {
-		if (tor.IsSharedTor == isShare || isShare == allTor) && (tor.IsHealthy == isHealthy || isHealthy == allTor) {
-			tmpTors = append(tmpTors, tor)
-		}
-	}
-	return tmpTors
-}
-
-// GetSharedTorServer get healthy shared tors
-func GetSharedTorServer(tors []*Tor, sortType string) []*Tor {
-	return getTorServer(tors, sharedTor, healthyTor, sortType)
-}
-
-// GetMaxSharedTorServerNum get max shared tor num a job can use
-func GetMaxSharedTorServerNum(tors []*Tor, sharedTorNum int) int {
-	n := len(tors)
-	if n == 0 || sharedTorNum <= 0 {
-		return 0
-	}
-	if n == 1 {
-		return tors[0].FreeServerCount
-	}
-	switch sharedTorNum {
-	case oneTor:
-		return tors[n-oneTor].FreeServerCount
-	case twoTor:
-		return tors[n-oneTor].FreeServerCount + tors[n-twoTor].FreeServerCount
-	default:
-		return 0
-	}
-}
-
-// GetNotShareTorServer get the exclusiveTor tors
-func GetNotShareTorServer(tors []*Tor, sortType string) []*Tor {
-	return getTorServer(tors, exclusiveTor, healthyTor, sortType)
-
-}
-
-// GetNotShareAndFreeTorServer get the free tors
-func GetNotShareAndFreeTorServer(tors []*Tor, sortType string) []*Tor {
-	return getTorServer(tors, freeTor, healthyTor, sortType)
-}
-
-// GetLargeModelMaxServerNum get the node num that nslb 2.0 job can use at most
-func GetLargeModelMaxServerNum(tors []*Tor, sharedTorNum int) int {
-	var n int
-	for _, tor := range GetNotShareAndFreeTorServer(tors, descOrder) {
-		n += tor.FreeServerCount
-	}
-	return n + GetMaxSharedTorServerNum(GetSharedTorServer(tors, ascOrder), sharedTorNum)
-}
-
-// GetUnhealthyTorServer get unhealthy shared tors
-func GetUnhealthyTorServer(tors []*Tor, sortType string) []*Tor {
-	return getTorServer(tors, sharedTor, unhealthyTor, sortType)
-}
-
-// GetHealthyTorUsedByNormalJob get shared tors only used by normal job
-func GetHealthyTorUsedByNormalJob(tors []*Tor, sortType string) []*Tor {
-	var tmpTors []*Tor
-	allShareTor := getTorServer(tors, sharedTor, healthyTor, sortType)
-	for _, tor := range allShareTor {
-		if !tor.IsUsedByAcrossLargeModelJob() {
-			tmpTors = append(tmpTors, tor)
-		}
-	}
-	return tmpTors
-}
-
-func initTempTor(tor *Tor, isShared, isHealthy int) *Tor {
-	return &Tor{
-		IsSharedTor: isShared,
-		IsHealthy:   isHealthy,
-		Id:          tor.Id,
-		IP:          tor.IP,
-	}
-}
-
-func getOneSharedTorServer(tors []*Tor, serverNum int) *Tor {
-	if len(tors) == 0 {
-		return nil
-	}
-	for _, tor := range tors {
-		if tor.FreeServerCount < serverNum {
-			continue
-		}
-		return tor
-	}
-	return nil
-}
-
-func getJobFreeServerNum(jobUid api.JobID, tors []*Tor) int {
-	var num int
-	for _, tor := range tors {
-		for _, s := range tor.Servers {
-			if s.CurrentJob != nil && *s.CurrentJob == jobUid {
-				num++
-			}
-		}
-	}
-	return num
-}
-
-func copyTorList(t []*Tor) []*Tor {
-	tmpTors := make([]*Tor, len(t))
-	copy(tmpTors, t)
-	return tmpTors
-}
-
-func deepCopyTorList(t []*Tor) []*Tor {
-	str, err := json.Marshal(t)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("deepCopyTorList Marshal %s", err)
-		return nil
-	}
-	var tmpTor []*Tor
-	if unMarErr := json.Unmarshal(str, &tmpTor); unMarErr != nil {
-		klog.V(util.LogErrorLev).Infof("deepCopyTorList Unmarshal %s", unMarErr)
-		return nil
-	}
-	return tmpTor
-}
-
-func initJobTorInfos() jobTorInfos {
-	return jobTorInfos{
-		torNums:        map[string]int{},
-		usedAllTorNum:  0,
-		usedHealthyTor: []*Tor{},
-		otherTor:       []*Tor{},
-	}
 }

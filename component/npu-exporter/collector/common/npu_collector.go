@@ -303,7 +303,8 @@ func GetChipListWithVNPU(n *NpuCollector) []HuaWeiAIChip {
 
 		for _, activityVDev := range chipInfo.VDevInfos.VDevActivityInfo {
 			vDevInfo := chipInfo
-			vDevInfo.VDevActivityInfo = &activityVDev
+			activityVDevCopy := activityVDev
+			vDevInfo.VDevActivityInfo = &activityVDevCopy
 			result = append(result, vDevInfo)
 		}
 	}

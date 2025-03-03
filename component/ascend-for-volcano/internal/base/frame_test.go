@@ -29,6 +29,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	itest "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
@@ -555,6 +556,42 @@ func TestScoreBestNPUNodes(t *testing.T) {
 			if !reflect.DeepEqual(err, tt.WantErr) || !reflect.DeepEqual(tt.ScoreMap, tt.WantSMap) {
 				t.Errorf("ScoreBestNPUNodes() scoreMap: %v, wantSMap: %v, error = %v, wantErr %v",
 					tt.ScoreMap, tt.WantSMap, err, tt.WantErr)
+			}
+		})
+	}
+}
+
+type fields struct {
+	name string
+	NPUHandler
+	args    interface{}
+	wantErr bool
+}
+
+func buildTestPreStartCases() []fields {
+	var i interface{}
+	return []fields{
+		{
+			name:       "01-it will return err when i is not *rescheduler",
+			NPUHandler: NPUHandler{},
+			args:       i,
+			wantErr:    true,
+		},
+		{
+			name:       "02-it will return nil when i is *rescheduler",
+			NPUHandler: NPUHandler{},
+			args:       &rescheduling.ReScheduler{},
+			wantErr:    false,
+		},
+	}
+}
+
+func TestPreStartRescheduling(t *testing.T) {
+	tests := buildTestPreStartCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.PreStartAction(tt.args, nil); (err != nil) != tt.wantErr {
+				t.Errorf("preStartRescheduling() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

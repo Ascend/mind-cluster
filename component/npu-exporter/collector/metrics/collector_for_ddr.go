@@ -96,7 +96,14 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 		doUpdateMetric(ch, cache.timestamp, memorySize, cardLabel, descTotalMemory)
 		doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, descUsedMemory)
 
-		if !c.Is910Series && len(getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))) == colcommon.ContainerNameLen {
+		// vnpu not support this metrics
+		vDevActivityInfo := cache.chip.VDevActivityInfo
+		if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
+			return
+		}
+
+		containerNameArray := getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))
+		if !c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
 			doUpdateMetric(ch, cache.timestamp, memorySize, cardLabel, npuCtrTotalMemory)
 			doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, npuCtrUsedMemory)
 		}

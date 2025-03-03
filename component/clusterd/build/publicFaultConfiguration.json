@@ -1,7 +1,7 @@
 {
   "publicFaultCode": {
     "NotHandleFaultCodes":[],
-    "SubHealthFaultCodes":[],
+    "SubHealthFaultCodes":["010001001"],
     "SeparateNPUCodes":[]
   },
   "publicFaultResource": [

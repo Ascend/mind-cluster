@@ -67,6 +67,8 @@ var (
 	reportInterval int
 	// monitorPeriod monitoring period
 	monitorPeriod int
+	// resultMaxAge pingmesh result max age
+	resultMaxAge int
 )
 
 func main() {

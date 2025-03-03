@@ -32,6 +32,7 @@ type AscendHandler interface {
 	SetSchedulerEnv(plugin.ScheduleEnv)
 	SetMaxNodeNPUNum(int)
 	SetMaxCardNPUNum(int)
+	SetPolicyHandler(util.SchedulerJobAttr, plugin.ScheduleEnv)
 	SetNpuNumInvalidMap(map[int]struct{})
 	SetIsNetworkFaultAttention(bool)
 }
@@ -44,6 +45,7 @@ type NPUHandler struct {
 	ReHandle                *rescheduling.ReScheduler
 	IsNetworkFaultAttention bool
 	NpuNumInvalidMap        map[int]struct{}
+	PolicyHandler           []plugin.ISchedulerPluginNeed
 	MaxNodeNPUNum           int
 	MaxCardNPUNum           int
 }

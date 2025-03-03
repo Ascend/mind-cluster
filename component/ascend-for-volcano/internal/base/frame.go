@@ -29,13 +29,31 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/nslb"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// New return npu plugin
-func New(name string) plugin.ISchedulerPlugin {
-	return &NPUHandler{}
+// PreStartAction pre-processing actions for rescheduling
+func (tp *NPUHandler) PreStartAction(i interface{}, ssn *framework.Session) error {
+	k, ok := i.(*rescheduling.ReScheduler)
+	if !ok {
+		return fmt.Errorf("preStartAction failed interface is not ReScheduler")
+	}
+	tp.ReHandle = k
+	return nil
+}
+
+// SetPolicyHandler set attr and env for plugin
+func (tp *NPUHandler) SetPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) {
+	if tp == nil {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("InitMyJobPlugin %s.", err.Error())
+		return
+	}
+	if handler, ok := nslb.InitPolicyHandler(attr, env); ok {
+		tp.PolicyHandler = append(tp.PolicyHandler, handler)
+	}
 }
 
 // InitMyJobPlugin set attr and env for plugin
@@ -47,6 +65,7 @@ func (tp *NPUHandler) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.Sch
 	}
 	tp.SetSchedulerAttr(attr)
 	tp.SetSchedulerEnv(env)
+	tp.SetPolicyHandler(attr, env)
 	return nil
 }
 
@@ -159,57 +178,6 @@ func (tp *NPUHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	return tp.UpdateNodeInfo(node, selectedNPU)
 }
 
-// PreStartAction do something before schedule
-// PreStartAction pre-processing actions for rescheduling
-func (tp *NPUHandler) PreStartAction(_ interface{}, ssn *framework.Session) error {
-	klog.V(util.LogInfoLev).Infof("Entering PreStartAction of %s...", PluginName)
-	defer klog.V(util.LogInfoLev).Infof("Leaving PreStartAction of %s", PluginName)
-	if tp == nil || ssn == nil || tp.FrameAttr.KubeClient == nil {
-		return fmt.Errorf("%s handler not enabled or ssn is nil: %s", PluginName, util.ArgumentError)
-	}
-	// initialise cache info from configmap
-	tp.ReHandle = rescheduling.New(&tp.ScheduleEnv, rescheduling.CmFaultJob)
-	if tp.ReHandle == nil {
-		klog.V(util.LogErrorLev).Infof("create new fault handler failed.")
-		return fmt.Errorf("%s reSchedule not enabled: %s", PluginName, util.ArgumentError)
-	}
-	tp.ReHandle.NewCommonReScheduler(rescheduling.CmFaultJob)
-	tp.ReHandle.SynCacheFaultNodeWithSession()
-	tp.ReHandle.AddFaultNodeWithSession()
-	tp.ReHandle.InitFaultNodeMap()
-	tp.ReHandle.SynCacheFaultJobWithSession(ssn)
-	tp.ReHandle.SyncJobRemainRetryTimes(ssn)
-	tp.ReHandle.SyncJobRecentRescheduleReason(ssn)
-	tp.ReHandle.SynCacheNodeRankOccMapWithSession(ssn)
-	// 1. restart Fault Jobs that are recorded in cache
-	if restartErr := tp.ReHandle.RestartNeedForceDeleteJobs(ssn, tp.ScheduleEnv); restartErr != nil &&
-		restartErr.Error() != util.ArgumentError {
-		klog.V(util.LogErrorLev).Infof("%s RestartNeedForceDeleteJobs: %s", PluginName, restartErr.Error())
-	}
-	// 2. get all the new 910x8 jobs in session
-	runningJobs, getRunErr := tp.ReHandle.GetRunningJobs(ssn)
-	if getRunErr != nil {
-		klog.V(util.LogDebugLev).Infof("%s GetRunningJobs: %s", PluginName, getRunErr.Error())
-	}
-	// 3. get nodes of session and fault jobs
-	if err := tp.ReHandle.AddFaultJobWithSession(runningJobs, tp.ScheduleEnv); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s AddFaultJobWithSession %s", PluginName, err)
-	}
-	// 4. restart the fault jobs
-	if restartErr := tp.ReHandle.RestartFaultJobs(ssn, tp.ScheduleEnv); restartErr != nil {
-		klog.V(util.LogErrorLev).Infof("%s RestartFaultJobs: %s", PluginName, restartErr.Error())
-		return restartErr
-	}
-	// 5. save structure for later allocation process
-	tp.ReHandle.GenerateNodeRankIndexTaskMap()
-	return nil
-}
-
-// GetReHandle do something after schedule
-func (tp *NPUHandler) GetReHandle() interface{} {
-	return tp.ReHandle
-}
-
 // SetIsNetworkFaultAttention set network fault attention
 func (tp *NPUHandler) SetIsNetworkFaultAttention(value bool) {
 	tp.IsNetworkFaultAttention = value
@@ -304,19 +272,6 @@ func (tp *NPUHandler) SelectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 			node.Name, nodeTop, taskNPUNum)
 	}
 	return nodeTop[:taskNPUNum], nil
-}
-
-// PreStopAction post-processing actions for re-scheduling
-func (tp *NPUHandler) PreStopAction(env *plugin.ScheduleEnv) error {
-	klog.V(util.LogInfoLev).Infof("enter PreStopAction of %s...", PluginName)
-	defer klog.V(util.LogInfoLev).Infof("leave PreStopAction of %s...", PluginName)
-	if tp == nil || tp.ReHandle == nil || env == nil || tp.FrameAttr.KubeClient == nil {
-		return fmt.Errorf("%s reSchedule not enabled or nil env: %s", PluginName, util.ArgumentError)
-	}
-	if err := tp.ReHandle.WriteReSchedulerCacheToEnvCache(env, rescheduling.CmFaultJob); err != nil {
-		return err
-	}
-	return nil
 }
 
 // ReleaseAnnotation release annotation

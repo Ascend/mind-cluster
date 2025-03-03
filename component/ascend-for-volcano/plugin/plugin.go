@@ -49,15 +49,18 @@ type ISchedulerPluginNeed interface {
 	UseAnnotation(*api.TaskInfo, NPUNode) *NPUNode
 	ReleaseAnnotation(*api.TaskInfo, NPUNode) *NPUNode
 	PreStartAction(i interface{}, ssn *framework.Session) error
-	PreStopAction(*ScheduleEnv) error
 	InitMyJobPlugin(util.SchedulerJobAttr, ScheduleEnv) error
-	GetReHandle() interface{}
 }
 
 // ISchedulerPlugin for volcano-npu plugin has function.
 type ISchedulerPlugin interface {
 	ISchedulerPluginBase
 	ISchedulerPluginNeed
+}
+
+type FaultHandler interface {
+	PreStartAction(*ScheduleEnv, *framework.Session) error
+	PreStopAction(*ScheduleEnv) error
 }
 
 // SchedulerPlugin for all volcano-npu plugin.

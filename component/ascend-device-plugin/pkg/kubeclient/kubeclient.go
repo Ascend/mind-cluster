@@ -18,11 +18,13 @@ package kubeclient
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +39,8 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
 )
+
+const retryTime = 3
 
 // ClientK8s include ClientK8sSet & nodeName & configmap name & kubelet http Client
 type ClientK8s struct {
@@ -96,6 +100,31 @@ func (ki *ClientK8s) PatchNodeState(curNode, newNode *v1.Node) (*v1.Node, []byte
 	}
 
 	return node, patchBytes, err
+}
+
+// AddAnnotation add annotation
+func (ki *ClientK8s) AddAnnotation(key, value string) error {
+	patchMap := map[string]string{
+		"op":    "replace",
+		"path":  "/metadata/annotations/" + key,
+		"value": value,
+	}
+	patchMapByte, err := json.Marshal([]interface{}{patchMap})
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal patchMap failed, err is %v", err)
+		return err
+	}
+	for i := 0; i < retryTime; i++ {
+		_, err = ki.Clientset.CoreV1().Nodes().Patch(context.TODO(), ki.NodeName,
+			types.JSONPatchType, patchMapByte, metav1.PatchOptions{})
+		if err != nil {
+			hwlog.RunLog.Errorf("patch node annotation failed, err is %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	return err
 }
 
 // GetPod get pod by namespace and name

@@ -126,17 +126,15 @@ func (c *MetricsCollectorAdapter) IsSupported(*NpuCollector) bool {
 
 // UpdateCache update cache
 func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) {
-	var cacheInfo map[int32]T
+	var cacheInfo = make(map[int32]T)
 	obj, err := n.cache.Get(cacheKey)
 	if err != nil {
 		logger.Logger.Logf(logger.Debug, "get info of %s failed: %v, use initial data", cacheKey, err)
-		cacheInfo = make(map[int32]T)
 	} else {
 		if oldCacheInfo, ok := obj.(map[int32]T); ok {
-			cacheInfo = oldCacheInfo
+			cacheInfo = copyMap(oldCacheInfo)
 		} else {
 			logger.Logger.Logf(logger.Debug, "cache format invalid, reset")
-			cacheInfo = make(map[int32]T)
 		}
 	}
 
@@ -158,6 +156,14 @@ func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) 
 	} else {
 		logger.Logger.Logf(logger.Info, UpdateCachePattern, cacheKey)
 	}
+}
+
+func copyMap[T any](oldCacheInfo map[int32]T) map[int32]T {
+	var cacheInfo = make(map[int32]T)
+	for key, value := range oldCacheInfo {
+		cacheInfo[key] = value
+	}
+	return cacheInfo
 }
 
 // GetInfoFromCache get info from cache

@@ -270,67 +270,6 @@ func TestCheckNodeDeviceInfo(t *testing.T) {
 	}
 }
 
-type checkNPUResourceStableReSchedulingArgs struct {
-	vcJob SchedulerJob
-}
-
-type checkNPUResourceStableReSchedulingTest struct {
-	name    string
-	fields  nodeFields
-	args    checkNPUResourceStableReSchedulingArgs
-	wantErr bool
-}
-
-func buildCheckNPUResourceStableReSchedulingTest() []checkNPUResourceStableReSchedulingTest {
-	tJob := SchedulerJob{handler: New(testPluginName)}
-	tJob.NPUJob = &util.NPUJob{ReqNPUName: testCardName}
-	tests := []checkNPUResourceStableReSchedulingTest{
-		{
-			name:    "01-CheckNPUResourceStableReScheduling nil test.",
-			fields:  nodeFields{},
-			args:    checkNPUResourceStableReSchedulingArgs{vcJob: tJob},
-			wantErr: true,
-		},
-		{
-			name: "02-CheckNPUResourceStableReScheduling not stable test.",
-			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{testCardName: 1},
-				Annotation: map[string]string{testCardName: "AscendTest-0,AscendTest-1"}},
-			args:    checkNPUResourceStableReSchedulingArgs{vcJob: tJob},
-			wantErr: true,
-		},
-		{
-			name: "03-CheckNPUResourceStableReScheduling ok test.",
-			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{testCardName: util.NPUHexKilo},
-				Annotation: map[string]string{testCardName: "AscendTest-0"}},
-			args:    checkNPUResourceStableReSchedulingArgs{vcJob: tJob},
-			wantErr: false,
-		},
-	}
-	return tests
-}
-
-// TestCheckNPUResourceStableReScheduling test CheckNPUResourceStableReScheduling
-func TestCheckNPUResourceStableReScheduling(t *testing.T) {
-	tests := buildCheckNPUResourceStableReSchedulingTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := NPUNode{
-				CommonNode: CommonNode{
-					Name:       tt.fields.Name,
-					Capability: tt.fields.Capability,
-					Allocate:   tt.fields.Allocate,
-					Idle:       tt.fields.Idle,
-					Annotation: tt.fields.Annotation,
-					Label:      tt.fields.Label,
-				},
-			}
-			if err := n.CheckNPUResourceStableReScheduling(tt.args.vcJob.SchedulerJobAttr); (err != nil) != tt.wantErr {
-				t.Errorf("CheckNPUResourceStableReScheduling() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 type nPUNodeGetNewNPUNodeAnnotationTest struct {
 	name            string
 	usedTop         []int

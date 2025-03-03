@@ -40,29 +40,21 @@ const (
 	// NormalSchema the value of normal tor affinity
 	NormalSchema = "normal-schema"
 	// NullTag the value means not use tor affinity
-	NullTag = "null"
-	// JobDeleteFlag the flag mark job is deleted
-	JobDeleteFlag        = "fault-job-delete"
-	fillJobMaxNPUTaskNum = 4
-	keyOfSharedTorNum    = "shared-tor-num"
-	shareTorNum1         = 1
-	shareTorNum2         = 2
-	keyOfNSLBVersion     = "nslb-version"
-	defaultNSLBVersion   = "1.0"
+	NullTag            = "null"
+	keyOfSharedTorNum  = "shared-tor-num"
+	shareTorNum1       = 1
+	shareTorNum2       = 2
+	keyOfNSLBVersion   = "nslb-version"
+	defaultNSLBVersion = "1.0"
 	// NSLB2Version nslb 2.0 version
-	NSLB2Version  = "2.0"
-	descOrder     = "desc"
-	ascOrder      = "asc"
-	isHealthy     = "isHealthy"
-	isSharedTor   = "isSharedTor"
-	vcTaskIndex   = "VC_TASK_INDEX"
-	noneSharedTor = 0
-	cmNameSpace   = "volcano-system"
+	NSLB2Version = "2.0"
+	isHealthy    = "isHealthy"
+	isSharedTor  = "isSharedTor"
+	vcTaskIndex  = "VC_TASK_INDEX"
+	cmNameSpace  = "volcano-system"
 
 	defaultSuperPodSize = 48
 	defaultReserveNodes = 2
-	// SharedTorIp shared tor Ip
-	SharedTorIp = "sharedTorIp"
 	// PodRankIndexKey rank index key
 	PodRankIndexKey = "hccl/rankIndex"
 	// ReplicaSetType replicaset type
@@ -70,12 +62,7 @@ const (
 )
 
 const (
-	// the define of tor attr
-	sharedTor    = 1
-	exclusiveTor = 2
-	freeTor      = 0
-	allTor       = -1
-	freeTorAnno  = "0"
+	freeTor = 0
 )
 
 const (

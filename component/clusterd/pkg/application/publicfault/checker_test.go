@@ -5,12 +5,12 @@ package publicfault
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/domain/statistics"
@@ -18,7 +18,7 @@ import (
 
 const (
 	testId          = "11937763019444715778"
-	testTimeStamp   = 1739866717
+	testTimeStamp   = 1739866717000
 	testResource    = "resource1"
 	testFaultCode   = "000000001"
 	testNodeName    = "node1"
@@ -27,7 +27,7 @@ const (
 
 	testErrId         = "err id"
 	testErrTimeStamp  = 123
-	testErrTimeStamp2 = 1234567890
+	testErrTimeStamp2 = 1234567890000
 	testErrFaultCode  = "err code"
 	testErrAssertion  = "err assertion"
 	testErrNodeName   = "err name~~"
@@ -329,7 +329,7 @@ var (
 		{"both node name and sn not exist", api.Influence{
 			DeviceIds: []int32{0},
 		}},
-		{"node name not exist, node sn invalid", api.Influence{
+		{"node name not exist, node sn does not exist in cache", api.Influence{
 			NodeSN:    testErrNodeSN,
 			DeviceIds: []int32{0},
 		}},
@@ -338,11 +338,15 @@ var (
 			DeviceIds: []int32{0},
 		}},
 		{"device id not exist", api.Influence{
-			NodeSN: testNodeSN,
+			NodeName: testNodeName,
 		}},
 		{"device id value invalid", api.Influence{
-			NodeSN:    testNodeSN,
+			NodeName:  testNodeName,
 			DeviceIds: []int32{testErrDevId},
+		}},
+		{"device id value invalid, duplicate ids", api.Influence{
+			NodeName:  testNodeName,
+			DeviceIds: []int32{0, 1, 1},
 		}},
 	}
 )
@@ -375,7 +379,7 @@ func testInvalidFaultInfo() {
 	for _, testCase := range errFaultInfoTC {
 		getTestFaultInfo(testCase.faultInfo)
 		err := NewPubFaultInfoChecker(testPubFaultInfo).Check()
-		fmt.Println(err)
+		hwlog.RunLog.Error(err)
 		convey.So(err, convey.ShouldNotBeNil)
 	}
 }
@@ -401,6 +405,7 @@ func testInvalidFault() {
 		getTestFault(testCase.fault)
 		var checker = faultChecker{fault: testFault}
 		err := checker.check()
+		hwlog.RunLog.Error(err)
 		convey.So(err, convey.ShouldNotBeNil)
 	}
 }
@@ -426,6 +431,7 @@ func testInvalidInfluence() {
 		getTestInfluence(testCase.influence)
 		var checker = influenceChecker{influence: testInfluence}
 		err := checker.check()
+		hwlog.RunLog.Error(err)
 		convey.So(err, convey.ShouldNotBeNil)
 	}
 }

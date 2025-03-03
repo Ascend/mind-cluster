@@ -38,6 +38,8 @@ const (
 	updateResetCMFailedPattern   = "failed to update reset cm to recovered status, err: %v"
 	unsetTaskFailedPattern       = "failed to unset task in reset, err: %v"
 	failedToUpdateCmPattern      = "failed to update reset cm to recover failed status, err: %v"
+	beforeRescanDelay            = 3 // seconds sleep before rescan devices
+	afterRescanDelay             = 2 // seconds sleep after rescan devices
 )
 
 var (
@@ -1496,30 +1498,115 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 	return nil
 }
 
+func (hnm *HwAscend910Manager) canResetDevice(cardID, deviceID int32) bool {
+	if IsDevBusy(cardID, deviceID) {
+		hwlog.RunLog.Infof("device is busy, can not reset, cardID %v, deviceID %v", cardID, deviceID)
+		return false
+	}
+	if GetResetCnt(cardID, deviceID) > common.MaxResetTimes {
+		hwlog.RunLog.Infof("device reset count over, can not reset, cardID %v, deviceID %v", cardID, deviceID)
+		return false
+	}
+	AddResetCnt(cardID, deviceID)
+	return true
+}
+
 func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 	errList := make([]error, 0, len(devMap))
+	resetFailDevs := make([]ResetDevice, 0)
+	resetSuccDevs := make([]ResetDevice, 0)
 	for resetLogicId, faultLogicId := range devMap {
 		cardId, deviceId, err := hnm.GetDmgr().GetCardIDDeviceID(resetLogicId)
 		if err != nil {
 			hwlog.RunLog.Errorf("failed to get reset device card id and device id, err %v", err)
 			return err
 		}
+		if !hnm.canResetDevice(cardId, deviceId) {
+			continue
+		}
 		shouldCheckNet := hnm.isShouldCheckNet(faultLogicId)
 		if err := hnm.tryResetDevice(cardId, deviceId); err != nil {
 			errList = append(errList, err)
+			resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId})
 			continue
 		}
 		// wait for the device to reset completely
 		if err := hnm.isRingResetComplete(resetLogicId, shouldCheckNet); err != nil {
 			errList = append(errList, err)
+			resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId})
 			continue
 		}
+		resetSuccDevs = append(resetSuccDevs, ResetDevice{CardId: cardId, DeviceId: deviceId})
 		hwlog.RunLog.Infof("hot reset complete, cardId: %d, logicId: %d", cardId, resetLogicId)
 	}
 	if len(errList) == 0 {
+		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
 		return nil
 	}
-	return errList[0]
+	if common.ParamOption.RealCardType != common.Ascend910A3 {
+		hwlog.RunLog.Info("out band reset only support A3")
+		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
+		return errList[0]
+	}
+	return hnm.execOutBandReset(resetFailDevs, resetSuccDevs)
+}
+
+func (hnm *HwAscend910Manager) execOutBandReset(devs, sucDevs []ResetDevice) error {
+	var resetError error
+	failDevs := make([]ResetDevice, 0)
+	newSucDevs := make([]ResetDevice, 0)
+	newSucDevs = append(newSucDevs, sucDevs...)
+	for _, dev := range devs {
+		if err := hnm.resetDeviceOutBand(dev.CardId, dev.DeviceId); err != nil {
+			resetError = err
+			failDevs = append(failDevs, dev)
+			continue
+		}
+		newSucDevs = append(newSucDevs, dev)
+	}
+	if len(failDevs) < len(devs) {
+		time.Sleep(afterRescanDelay * time.Second)
+	}
+	hnm.updateResetInfo(failDevs, newSucDevs)
+	return resetError
+}
+
+// updateResetInfo update in rest devices, wait third party devices, wait manually devices
+func (hnm *HwAscend910Manager) updateResetInfo(failDevs, sucDevs []ResetDevice) {
+	hwlog.RunLog.Infof("reset failed devices: %v, reset success devices: %v", failDevs, sucDevs)
+	resetInfo := ReadResetInfo()
+	for _, dev := range sucDevs {
+		FreeBusyDev(dev.CardId, dev.DeviceId)
+	}
+	if common.ParamOption.RealCardType == common.Ascend910A3 {
+		resetInfo.ThirdPartyResetDevs = append(resetInfo.ThirdPartyResetDevs, failDevs...)
+	} else {
+		resetInfo.ManualResetDevs = append(resetInfo.ManualResetDevs, failDevs...)
+	}
+
+	WriteResetInfo(resetInfo, WMOverwrite)
+}
+
+func (hnm *HwAscend910Manager) resetDeviceOutBand(cardId, deviceId int32) error {
+	if err := hnm.dmgr.GetOutBandChannelState(cardId, deviceId); err != nil {
+		hwlog.RunLog.Warnf("out band channel state error: %v", err)
+		return err
+	}
+	if err := hnm.dmgr.PreResetSoc(cardId, deviceId); err != nil {
+		hwlog.RunLog.Errorf("pre reset failed: %v", err)
+		return err
+	}
+	if err := hnm.dmgr.SetDeviceResetOutBand(cardId, deviceId); err != nil {
+		hwlog.RunLog.Errorf("reset out band failed: %v", err)
+		return err
+	}
+	time.Sleep(beforeRescanDelay * time.Second)
+	if err := hnm.dmgr.RescanSoc(cardId, deviceId); err != nil {
+		hwlog.RunLog.Errorf("rescan device failed: %v", err)
+		return err
+	}
+	hwlog.RunLog.Infof("out band reset success, card id: %v, device id: %v", cardId, deviceId)
+	return nil
 }
 
 func (hnm *HwAscend910Manager) isNetResetCompleted(logicId int32) bool {

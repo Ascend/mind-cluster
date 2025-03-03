@@ -58,6 +58,8 @@ const (
 	A800IA2WithHccs    = 0x3d
 )
 
+var ascend910testErr = errors.New("test")
+
 func createFake910Manager() *HwAscend910Manager {
 	manager := NewHwAscend910Manager()
 	manager.SetDmgr(&devmanager.DeviceManagerMock{})
@@ -1001,12 +1003,131 @@ func TestExecResetDevice(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test execResetDevice", t, func() {
 		convey.Convey("01-hot reset success, should return nil", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "canResetDevice", func(_, _ int32) bool {
+				return false
+			})
+			patch1.ApplyPrivateMethod(manager, "updateResetInfo", func(_, _ []ResetDevice) {
+				return
+			})
+			defer patch1.Reset()
 			manager.hotResetManager = &HotResetTools{
 				faultDev2PodMap: map[int32]v1.Pod{},
 				resetDevNumOnce: 1,
 			}
 			devMap := map[int32]int32{chipPhyID0: chipPhyID0}
 			convey.So(manager.execResetDevice(devMap), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestExecOutBandReset test the function execOutBandReset
+func TestExecOutBandReset(t *testing.T) {
+	manager := createFake910Manager()
+	const testCardID, testDeviceID = 0, 0
+	convey.Convey("test execOutBandReset", t, func() {
+		patch := gomonkey.ApplyPrivateMethod(manager, "updateResetInfo", func(failDevs, sucDevs []ResetDevice) {
+			return
+		})
+		defer patch.Reset()
+		common.ParamOption.RealCardType = common.Ascend910A3
+		convey.Convey("01-reset error, should return error", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "resetDeviceOutBand",
+				func(cardId, deviceId int32) error {
+					return ascend910testErr
+				})
+			defer patch1.Reset()
+			err := manager.execOutBandReset([]ResetDevice{
+				{CardId: testCardID, DeviceId: testDeviceID},
+			}, []ResetDevice{})
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch.ApplyPrivateMethod(manager, "resetDeviceOutBand",
+			func(cardId, deviceId int32) error {
+				return nil
+			})
+		convey.Convey("02-success, should return nil", func() {
+			err := manager.execOutBandReset([]ResetDevice{
+				{CardId: testCardID, DeviceId: testDeviceID},
+			}, []ResetDevice{})
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestUpdateResetInfo test the function updateResetInfo
+func TestUpdateResetInfo(t *testing.T) {
+	manager := createFake910Manager()
+	const id = 0
+	var testDevs = []ResetDevice{
+		{CardId: id},
+	}
+	convey.Convey("test updateResetInfo", t, func() {
+		patch := gomonkey.ApplyFuncReturn(GetResetInfoMgr, ResetInfoMgr{})
+		patch.ApplyFuncReturn(ReadResetInfo, ResetInfo{})
+		ri := ResetInfo{}
+		patch.ApplyFunc(WriteResetInfo, func(resetInfo ResetInfo, writeMode WriteMode) {
+			ri = resetInfo
+			return
+		})
+		defer patch.Reset()
+		convey.Convey("01-A3 device, should append to third party", func() {
+			common.ParamOption.RealCardType = common.Ascend910A3
+			manager.updateResetInfo(testDevs, []ResetDevice{})
+			convey.So(ri.ThirdPartyResetDevs, convey.ShouldResemble, testDevs)
+		})
+		convey.Convey("02-not A3, should append to manual devices", func() {
+			common.ParamOption.RealCardType = common.Ascend910B
+			manager.updateResetInfo(testDevs, []ResetDevice{})
+			convey.So(ri.ManualResetDevs, convey.ShouldResemble, testDevs)
+		})
+	})
+}
+
+// TestResetDeviceOutBand test the function resetDeviceOutBand
+func TestResetDeviceOutBand(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test resetDeviceOutBand", t, func() {
+		const testCardID, testDeviceID = 0, 0
+		convey.Convey("01-out band channel error, should return error", func() {
+			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetOutBandChannelState", ascend910testErr)
+			defer patch1.Reset()
+			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"GetOutBandChannelState", nil)
+		defer patch.Reset()
+		convey.Convey("02-pre reset error, should return error", func() {
+			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"PreResetSoc", ascend910testErr)
+			defer patch1.Reset()
+			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"PreResetSoc", nil)
+		convey.Convey("03-reset out band error, should return error", func() {
+			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"SetDeviceResetOutBand", ascend910testErr)
+			defer patch1.Reset()
+			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"SetDeviceResetOutBand", nil)
+		convey.Convey("04-rescan error, should return error", func() {
+			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"RescanSoc", ascend910testErr)
+			defer patch1.Reset()
+			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"RescanSoc", nil)
+		convey.Convey("05-success, should return nil", func() {
+			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }

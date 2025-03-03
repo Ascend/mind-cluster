@@ -144,3 +144,25 @@ func InitDebugLogger(config *LogConfig, ctx context.Context) error {
 	}
 	return nil
 }
+
+// CustomLogger custom logger
+type CustomLogger struct {
+	*logger
+}
+
+// NewCustomLogger create a new custom logger
+func NewCustomLogger(config *LogConfig, ctx context.Context) (*CustomLogger, error) {
+	if config == nil {
+		return nil, errors.New("logger config is nil")
+	}
+
+	log := new(logger)
+
+	if err := log.setLogger(config); err != nil {
+		return nil, err
+	}
+	if !log.isInit() {
+		return nil, errors.New("logger init failed")
+	}
+	return &CustomLogger{logger: log}, nil
+}

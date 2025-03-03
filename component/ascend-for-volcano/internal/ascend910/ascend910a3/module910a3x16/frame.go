@@ -82,10 +82,7 @@ func (tp *module910a3x16) ValidNPUJob() *api.ValidateResult {
 			Message: fmt.Sprintf("job need label(%s: %s)", util.JobKindKey, util.JobKind910BValue),
 		}
 	}
-	if err := tp.checkRequireNPU(); err != nil {
-		return err
-	}
-	return tp.ReHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+	return tp.checkRequireNPU()
 }
 
 func (tp *module910a3x16) checkRequireNPU() *api.ValidateResult {

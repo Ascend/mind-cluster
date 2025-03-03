@@ -43,14 +43,6 @@ const (
 	perLoopJobNum     = 50
 )
 
-func fakeInvalidReSchedulerCMData() *DealReSchedulerConfigmap {
-	return &DealReSchedulerConfigmap{
-		CMName:      CmName,
-		CMNameSpace: CmNameSpace,
-		CMData:      nil,
-	}
-}
-
 func dealMarshal(data interface{}) string {
 	dataString, err := json.Marshal(data)
 	if err != nil {
@@ -59,80 +51,9 @@ func dealMarshal(data interface{}) string {
 	return string(dataString)
 }
 
-func fakeNormalReSchedulerCMData() *DealReSchedulerConfigmap {
-	faultNodes := []FaultNode{
-		*fakeTestFaultNodeNodeHealthy("node0"),
-		*fakeTestFaultNodeNodeHealthy("node1"),
-	}
-	faultJobs := []FaultJob{
-		*fakeTestFaultJob([]string{"node0", "node1"}, []string{"0", "9"},
-			nil, "job1", "test"),
-	}
-
-	fNodeBuffer := dealMarshal(faultNodes)
-	fJobBuffer := dealMarshal(faultJobs)
-
-	return &DealReSchedulerConfigmap{
-		CMName:      CmName,
-		CMNameSpace: CmNameSpace,
-		CMData: map[string]string{
-			CmFaultNodeKind:     string(fNodeBuffer),
-			CmFaultJob910x8Kind: string(fJobBuffer),
-		},
-	}
-}
-
-type DealReSchedulerCacheSetFaultNodesFromCMTests struct {
-	fields  *DealReSchedulerCache
-	name    string
-	wantErr bool
-}
-
-func buildDealReSchedulerCacheSetFaultNodesFromCMTests() []DealReSchedulerCacheSetFaultNodesFromCMTests {
-	field1 := fakeReSchedulerCache()
-	field1.DealReSchedulerConfigmap = fakeInvalidReSchedulerCMData()
-	field2 := fakeReSchedulerCache()
-	field2.DealReSchedulerConfigmap = fakeNormalReSchedulerCMData()
-
-	test1 := DealReSchedulerCacheSetFaultNodesFromCMTests{
-		name:    "01-DealReSchedulerCache_SetFaultNodesFromCM()  invalid cache structure",
-		fields:  field1,
-		wantErr: true,
-	}
-	test2 := DealReSchedulerCacheSetFaultNodesFromCMTests{
-		name:    "02-DealReSchedulerCache_SetFaultNodesFromCM()  succeed",
-		fields:  field2,
-		wantErr: false,
-	}
-	testCases := []DealReSchedulerCacheSetFaultNodesFromCMTests{
-		test1,
-		test2,
-	}
-	return testCases
-}
-
-// TestDealReSchedulerCacheSetFaultNodesFromCM test for set FaultNodes struct from configmap
-func TestDealReSchedulerCacheSetFaultNodesFromCM(t *testing.T) {
-	tests := buildDealReSchedulerCacheSetFaultNodesFromCMTests()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			reCache := &DealReSchedulerCache{
-				FaultNodes:               tt.fields.FaultNodes,
-				FaultJobs:                tt.fields.FaultJobs,
-				DealReSchedulerConfigmap: tt.fields.DealReSchedulerConfigmap,
-			}
-			if err := reCache.SetFaultNodesFromCM(); (err != nil) != tt.wantErr {
-				t.Errorf("SetFaultNodesFromCM() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 type ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields struct {
-	DealReSchedulerConfigmap   *DealReSchedulerConfigmap
-	FaultNodes                 []FaultNode
-	FaultJobs                  []FaultJob
-	AllocNodeRankOccurrenceMap map[api.JobID][]*AllocNodeRankOccurrence
+	FaultNodes map[string]*FaultNode
+	FaultJobs  map[api.JobID]*FaultJob
 }
 
 type ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs struct {
@@ -151,10 +72,8 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 	test1 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
 		name: "01-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-nothing to write",
 		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			DealReSchedulerConfigmap:   nil,
-			FaultNodes:                 []FaultNode{},
-			FaultJobs:                  []FaultJob{},
-			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
+			FaultNodes: map[string]*FaultNode{},
+			FaultJobs:  map[api.JobID]*FaultJob{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -172,10 +91,8 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 	test2 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
 		name: "02-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-with faultJob",
 		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			DealReSchedulerConfigmap:   nil,
-			FaultNodes:                 []FaultNode{},
-			FaultJobs:                  []FaultJob{*faultJob},
-			AllocNodeRankOccurrenceMap: map[api.JobID][]*AllocNodeRankOccurrence{},
+			FaultNodes: map[string]*FaultNode{},
+			FaultJobs:  map[api.JobID]*FaultJob{faultJob.JobUID: faultJob},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -200,10 +117,8 @@ func TestDealReSchedulerCacheWriteReSchedulerCacheToEnvCache(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reCache := &DealReSchedulerCache{
-				DealReSchedulerConfigmap:   tt.fields.DealReSchedulerConfigmap,
-				FaultNodes:                 tt.fields.FaultNodes,
-				FaultJobs:                  tt.fields.FaultJobs,
-				AllocNodeRankOccurrenceMap: tt.fields.AllocNodeRankOccurrenceMap,
+				FaultNodes: tt.fields.FaultNodes,
+				FaultJobs:  tt.fields.FaultJobs,
 			}
 			if err := reCache.WriteReSchedulerCacheToEnvCache(
 				tt.args.env, tt.args.jobType); (err != nil) != tt.wantErr {
@@ -217,9 +132,8 @@ func buildTestCaseForMaxLengthOfRescheduleReason() ReSchedulerCacheWriteReSchedu
 	test1 := ReSchedulerCacheWriteReSchedulerCacheToEnvCacheTests{
 		name: "01-ReSchedulerCache_WriteReSchedulerCacheToEnvCache()-max reschedule reason to write",
 		fields: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheFields{
-			DealReSchedulerConfigmap: nil,
-			FaultNodes:               []FaultNode{},
-			FaultJobs:                []FaultJob{},
+			FaultNodes: map[string]*FaultNode{},
+			FaultJobs:  map[api.JobID]*FaultJob{},
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
@@ -281,10 +195,8 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 	test := buildTestCaseForMaxLengthOfRescheduleReason()
 	records := gen950KbRecords()
 	reCache := &DealReSchedulerCache{
-		DealReSchedulerConfigmap:   test.fields.DealReSchedulerConfigmap,
 		FaultNodes:                 test.fields.FaultNodes,
 		FaultJobs:                  test.fields.FaultJobs,
-		AllocNodeRankOccurrenceMap: test.fields.AllocNodeRankOccurrenceMap,
 		JobRecentRescheduleRecords: records,
 	}
 	if len(records) == 0 {
@@ -305,85 +217,10 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 
 func initDealReSchedulerCache() *DealReSchedulerCache {
 	fields := fakeReSchedulerCache()
-	fields.DealReSchedulerConfigmap = fakeNormalReSchedulerCMData()
 	return &DealReSchedulerCache{
-		DealReSchedulerConfigmap:   fields.DealReSchedulerConfigmap,
-		FaultNodes:                 fields.FaultNodes,
-		FaultJobs:                  fields.FaultJobs,
-		AllocNodeRankOccurrenceMap: fields.AllocNodeRankOccurrenceMap,
+		FaultNodes: fields.FaultNodes,
+		FaultJobs:  fields.FaultJobs,
 	}
-}
-
-func TestGetFaultNodesFromCM(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	t.Run("01-getFaultNodesFromCM return error when json unmarshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return errors.New("json unmarshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.getFaultNodesFromCM(""); err == nil {
-				t.Errorf("getFaultNodesFromCM() error = %v, wantErr is not nil", err)
-			}
-		})
-	t.Run("02-getFaultNodesFromCM return nil when json unmarshal success",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return nil
-			})
-			defer patch.Reset()
-			if _, err := reCache.getFaultNodesFromCM(""); err != nil {
-				t.Errorf("getFaultNodesFromCM() error = %v, wantErr is nil", err)
-			}
-		})
-}
-
-func TestGetFaultJobsFromCM(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	t.Run("01-getFaultJobsFromCM return error when json unmarshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return errors.New("json unmarshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.getFaultJobsFromCM(""); err == nil {
-				t.Errorf("getFaultJobsFromCM() error = %v, wantErr is not nil", err)
-			}
-		})
-	t.Run("02-getFaultJobsFromCM return nil when json unmarshal success",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return nil
-			})
-			defer patch.Reset()
-			if _, err := reCache.getFaultJobsFromCM(""); err != nil {
-				t.Errorf("getFaultJobsFromCM() error = %v, wantErr is nil", err)
-			}
-		})
-}
-
-func TestGetRetryTimesFromCM(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	t.Run("01-getRetryTimesFromCM return error when json unmarshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return errors.New("json unmarshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.getRetryTimesFromCM(""); err == nil {
-				t.Errorf("getRetryTimesFromCM() error = %v, wantErr is not nil", err)
-			}
-		})
-	t.Run("02-getRetryTimesFromCM return nil when json unmarshal success",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return nil
-			})
-			defer patch.Reset()
-			if _, err := reCache.getRetryTimesFromCM(""); err != nil {
-				t.Errorf("getRetryTimesFromCM() error = %v, wantErr is nil", err)
-			}
-		})
 }
 
 func TestGetRecentReschedulingRecordsFromCm(t *testing.T) {
@@ -408,85 +245,6 @@ func TestGetRecentReschedulingRecordsFromCm(t *testing.T) {
 				t.Errorf("getRecentReschedulingRecordsFromCm() error = %v, wantErr is nil", err)
 			}
 		})
-}
-
-func TestGetNodeRankOccurrenceMapFromCM(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	t.Run("01-getNodeRankOccurrenceMapFromCM return error when json unmarshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return errors.New("json unmarshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.getNodeRankOccurrenceMapFromCM(""); err == nil {
-				t.Errorf("getNodeRankOccurrenceMapFromCM() error = %v, wantErr is not nil", err)
-			}
-		})
-	t.Run("02-getNodeRankOccurrenceMapFromCM return nil when json unmarshal success",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
-				return nil
-			})
-			defer patch.Reset()
-			if _, err := reCache.getNodeRankOccurrenceMapFromCM(""); err != nil {
-				t.Errorf("getNodeRankOccurrenceMapFromCM() error = %v, wantErr is nil", err)
-			}
-		})
-}
-
-func TestSetFaultJobsFromCM(t *testing.T) {
-	var reCache *DealReSchedulerCache
-	t.Run("01-setFaultJobsFromCM return error when reCache is nil", func(t *testing.T) {
-		if err := reCache.SetFaultJobsFromCM(""); err == nil {
-			t.Errorf("SetFaultJobsFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	reCache = initDealReSchedulerCache()
-	t.Run("02-setFaultJobsFromCM return error when len(jobType) is 0", func(t *testing.T) {
-		if err := reCache.SetFaultJobsFromCM(""); err == nil {
-			t.Errorf("SetFaultJobsFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	t.Run("03-setFaultJobsFromCM return nil when getFaultNodesFromCM success", func(t *testing.T) {
-		if err := reCache.SetFaultJobsFromCM(CmFaultNodeKind); err != nil {
-			t.Errorf("SetFaultJobsFromCM() error = %v, wantErr is nil", err)
-		}
-	})
-	t.Run("04-setFaultJobsFromCM return nil when faultJobData is empty", func(t *testing.T) {
-		reCache.CMData[CmFaultJob910bx2Kind] = ""
-		if err := reCache.SetFaultJobsFromCM(CmFaultJob910bx2Kind); err != nil {
-			t.Errorf("SetFaultJobsFromCM() error = %v, wantErr is nil", err)
-		}
-	})
-	t.Run("05-setFaultJobsFromCM return nil when faultJobData unmarshal failed", func(t *testing.T) {
-		reCache.CMData[CmFaultJob910bx2Kind] = "testCMData"
-		if err := reCache.SetFaultJobsFromCM(CmFaultJob910bx2Kind); err == nil {
-			t.Errorf("SetFaultJobsFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-}
-
-func TestSetRetryTimesFromCM(t *testing.T) {
-	var reCache *DealReSchedulerCache
-	t.Run("01-SetRetryTimesFromCM return error when reCache is nil", func(t *testing.T) {
-		if err := reCache.SetRetryTimesFromCM(); err == nil {
-			t.Errorf("SetRetryTimesFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	reCache = initDealReSchedulerCache()
-	t.Run("02-SetRetryTimesFromCM return error when getRetryTimesFromCM failed", func(t *testing.T) {
-		reCache.CMData[CmJobRemainRetryTimes] = "testCMData"
-		if err := reCache.SetRetryTimesFromCM(); err == nil {
-			t.Errorf("SetRetryTimesFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	t.Run("03-SetRetryTimesFromCM return error when getRetryTimesFromCM success", func(t *testing.T) {
-		faultCM := map[api.JobID]*RemainRetryTimes{}
-		reCache.CMData[CmJobRemainRetryTimes] = dealMarshal(faultCM)
-		if err := reCache.SetRetryTimesFromCM(); err != nil {
-			t.Errorf("SetRetryTimesFromCM() error = %v, wantErr is nil", err)
-		}
-	})
 }
 
 type dealReSchedulerCacheTestCase struct {
@@ -514,8 +272,8 @@ func buildSetJobRecentRescheduleRecordsTestCases() []dealReSchedulerCacheTestCas
 			},
 		},
 		{
-			name:    "03-SetJobRecentRescheduleRecords return nil when CMData is empty",
-			reCache: initDealReSchedulerCache(), firstStartup: true, wantErr: false,
+			name:    "03-SetJobRecentRescheduleRecords return err when CMData is empty",
+			reCache: initDealReSchedulerCache(), firstStartup: true, wantErr: true,
 			mockGetConfigMap: func(_ kubernetes.Interface, _, _ string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{Data: map[string]string{CmJobRescheduleReasonsKey: ""}}, nil
 			},
@@ -554,35 +312,6 @@ func TestSetJobRecentRescheduleRecords(t *testing.T) {
 	}
 }
 
-func TestSetNodeRankOccurrenceMapFromCM(t *testing.T) {
-	var reCache *DealReSchedulerCache
-	t.Run("01-SetNodeRankOccurrenceMapFromCM return error when reCache is nil", func(t *testing.T) {
-		if err := reCache.SetNodeRankOccurrenceMapFromCM(); err == nil {
-			t.Errorf("SetNodeRankOccurrenceMapFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	reCache = initDealReSchedulerCache()
-	t.Run("02-SetNodeRankOccurrenceMapFromCM return error when CMData is empty", func(t *testing.T) {
-		if err := reCache.SetNodeRankOccurrenceMapFromCM(); err == nil {
-			t.Errorf("SetNodeRankOccurrenceMapFromCM() error = %v, wantErr is not nil", err)
-		}
-	})
-	reCache.CMData[CmNodeRankTimeMapKind] = "testCMData"
-	t.Run("03-SetNodeRankOccurrenceMapFromCM return error when getNodeRankOccurrenceMapFromCM failed",
-		func(t *testing.T) {
-			if err := reCache.SetNodeRankOccurrenceMapFromCM(); err == nil {
-				t.Errorf("SetNodeRankOccurrenceMapFromCM() error = %v, wantErr is not nil", err)
-			}
-		})
-	reCache.CMData[CmNodeRankTimeMapKind] = dealMarshal(map[api.JobID][]*AllocNodeRankOccurrence{})
-	t.Run("04-SetNodeRankOccurrenceMapFromCM return nil when getNodeRankOccurrenceMapFromCM success",
-		func(t *testing.T) {
-			if err := reCache.SetNodeRankOccurrenceMapFromCM(); err != nil {
-				t.Errorf("SetNodeRankOccurrenceMapFromCM() error = %v, wantErr is nil", err)
-			}
-		})
-}
-
 func TestMarshalCacheDataToString(t *testing.T) {
 	t.Run("01-marshalCacheDataToString return error when reCache is nil", func(t *testing.T) {
 		patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
@@ -604,13 +333,13 @@ func TestWriteFaultNodesToCMString(t *testing.T) {
 				return nil, errors.New("marshal failed")
 			})
 			defer patch.Reset()
-			if _, _, err := reCache.writeFaultNodesToCMString(); err == nil {
+			if _, err := reCache.writeFaultNodesToCMString(); err == nil {
 				t.Errorf("writeFaultNodesToCMString() error = %v, wantErr is not nil", err)
 			}
 		})
 	t.Run("02-writeFaultNodesToCMString return error when marshal success",
 		func(t *testing.T) {
-			if _, _, err := reCache.writeFaultNodesToCMString(); err != nil {
+			if _, err := reCache.writeFaultNodesToCMString(); err != nil {
 				t.Errorf("writeFaultNodesToCMString() error = %v, wantErr is nil", err)
 			}
 		})
@@ -619,8 +348,8 @@ func TestWriteFaultNodesToCMString(t *testing.T) {
 func TestGetFaultNodeToCm(t *testing.T) {
 	t.Run("01-getFaultNodeToCm return error when marshal failed",
 		func(t *testing.T) {
-			realFaultNode := []FaultNode{
-				{
+			realFaultNode := map[string]*FaultNode{
+				"node0": {
 					NodeName:            "node0",
 					UpdateTime:          fakeTime,
 					UnhealthyNPU:        []string{"Ascend910-0"},
@@ -628,8 +357,6 @@ func TestGetFaultNodeToCm(t *testing.T) {
 					IsFaultNode:         true,
 					NodeDEnable:         true,
 					NodeHealthState:     NodeCardUnhealthy,
-					AllCards: []string{"Ascend910-0", "Ascend910-1", "Ascend910-2", "Ascend910-3",
-						"Ascend910-4", "Ascend910-5", "Ascend910-6", "Ascend910-7"},
 					FaultCards: []FaultCard{
 						*fakeTestFaultCardUnhealthy("Ascend910-0", "node0", NodeCardUnhealthy),
 						*fakeTestFaultCardHealthy("Ascend910-1", "node0"),
@@ -648,45 +375,31 @@ func TestGetFaultNodeToCm(t *testing.T) {
 		})
 }
 
-func TestWriteFaultJobsToCMString(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	t.Run("01-writeFaultJobsToCMString return error when marshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
-				return nil, errors.New("marshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.writeFaultJobsToCMString(); err == nil {
-				t.Errorf("writeFaultJobsToCMString() error = %v, wantErr is not nil", err)
-			}
-		})
-}
-
-func TestWriteRemainTimesToCMString(t *testing.T) {
+func TestGetRemainTimesToCMString(t *testing.T) {
 	reCache := initDealReSchedulerCache()
 	reCache.JobRemainRetryTimes = make(map[api.JobID]*RemainRetryTimes)
 	reCache.JobRemainRetryTimes["testUid"] = &RemainRetryTimes{
 		UUID:  "testUuid",
 		Times: 0,
 	}
-	t.Run("01-writeRemainTimesToCMString return error when marshal failed",
+	t.Run("01-getRemainTimesToCMString return error when marshal failed",
 		func(t *testing.T) {
 			patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
 				return nil, errors.New("marshal failed")
 			})
 			defer patch.Reset()
-			if _, err := reCache.writeRemainTimesToCMString(); err == nil {
-				t.Errorf("writeRemainTimesToCMString() error = %v, wantErr is not nil", err)
+			if _, err := reCache.getRemainTimesToCMString(); err == nil {
+				t.Errorf("getRemainTimesToCMString() error = %v, wantErr is not nil", err)
 			}
 		})
-	t.Run("01-writeRemainTimesToCMString return error when marshal success",
+	t.Run("01-getRemainTimesToCMString return error when marshal success",
 		func(t *testing.T) {
 			patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
 				return nil, nil
 			})
 			defer patch.Reset()
-			if _, err := reCache.writeRemainTimesToCMString(); err != nil {
-				t.Errorf("writeRemainTimesToCMString() error = %v, wantErr is nil", err)
+			if _, err := reCache.getRemainTimesToCMString(); err != nil {
+				t.Errorf("getRemainTimesToCMString() error = %v, wantErr is nil", err)
 			}
 		})
 }
@@ -708,38 +421,6 @@ func TestWriteRescheduleReasonsToCMString(t *testing.T) {
 			defer patch.Reset()
 			if _, err := reCache.writeRescheduleReasonsToCMString(); err == nil {
 				t.Errorf("writeRescheduleReasonsToCMString() error = %v, wantErr is not nil", err)
-			}
-		})
-}
-
-func TestWriteNodeRankOccurrenceMapToCMString(t *testing.T) {
-	reCache := initDealReSchedulerCache()
-	reCache.AllocNodeRankOccurrenceMap = map[api.JobID][]*AllocNodeRankOccurrence{
-		"testUid": {
-			{
-				NodeName:  "node0",
-				RankIndex: "rank0",
-			},
-		},
-	}
-	t.Run("01-writeNodeRankOccurrenceMapToCMString return error when marshal failed",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
-				return nil, errors.New("marshal failed")
-			})
-			defer patch.Reset()
-			if _, err := reCache.writeNodeRankOccurrenceMapToCMString(); err == nil {
-				t.Errorf("writeNodeRankOccurrenceMapToCMString() error = %v, wantErr is not nil", err)
-			}
-		})
-	t.Run("02-writeNodeRankOccurrenceMapToCMString return nil when marshal success",
-		func(t *testing.T) {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(interface{}) ([]byte, error) {
-				return nil, nil
-			})
-			defer patch.Reset()
-			if _, err := reCache.writeNodeRankOccurrenceMapToCMString(); err != nil {
-				t.Errorf("writeNodeRankOccurrenceMapToCMString() error = %v, wantErr is nil", err)
 			}
 		})
 }

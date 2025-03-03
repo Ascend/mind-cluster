@@ -117,10 +117,6 @@ func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(cache opticalCache, cardLabel []string) {
-		extInfo := cache.extInfo
-		if extInfo == nil {
-			return
-		}
 		opticalInfo := cache.extInfo
 		if opticalInfo == nil {
 			return
@@ -176,15 +172,6 @@ func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface
 		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalRxPower3, extInfo.OpticalRxPower3, "")
 	}
 	return fieldsMap
-}
-func collectOpticalInfo(phyID int32) *common.OpticalInfo {
-	result := &common.OpticalInfo{}
-	if opticalInfo, err := hccn.GetNPUOpticalInfo(phyID); err == nil {
-		result = getMainOptInfo(opticalInfo)
-	} else {
-		result = nil
-	}
-	return result
 }
 
 func getMainOptInfo(opticalInfo map[string]string) *common.OpticalInfo {

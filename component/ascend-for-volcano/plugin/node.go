@@ -374,29 +374,9 @@ func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
 	if length == 1 && sSlice[0] == "" {
 		length = 0
 	}
-	if length != int(iNum/util.NPUHexKilo) {
-		return fmt.Errorf("%s not statble:device-info is <%d> but k8s is <%d>", k, length, int(iNum/util.NPUHexKilo))
-	}
-	return nil
-}
-
-// CheckNPUResourceStableReScheduling check resource stabilize.
-func (n NPUNode) CheckNPUResourceStableReScheduling(vcJob util.SchedulerJobAttr) error {
-	k := vcJob.ReqNPUName
-	iNum, iOK := n.Idle[v1.ResourceName(k)]
-	nodeA, aOK := n.Annotation[k]
-	if iOK != true || aOK != true {
-		return fmt.Errorf("not has(or not same) %s", k)
-	}
-
-	sSlice := strings.Split(nodeA, ",")
-	length := len(sSlice)
-	if length == 1 && sSlice[0] == "" {
-		length = 0
-	}
-	iNumInt := int(iNum / util.NPUHexKilo)
-	if length != iNumInt && iNumInt >= 0 {
-		return fmt.Errorf("%s not stable:%d=>%d", k, length, iNumInt)
+	// public fault occurred, device info <= k8s
+	if length > int(iNum/util.NPUHexKilo) {
+		return fmt.Errorf("%s not stable:device-info is <%d> but k8s is <%d>", k, length, int(iNum/util.NPUHexKilo))
 	}
 	return nil
 }
@@ -544,14 +524,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
 		return fmt.Errorf("checkNodeNPUByTask : %s", err)
 	}
-	klog.V(util.LogDebugLev).Infof("%s NodePredicate %s select successes.", PluginName, vcNode.Name)
-	if !(vcJob.IsJobSinglePodDelete() && vcJob.IsTorAffinityJob()) {
-		return nil
-	}
-	if sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return vcJob.CheckTorJobSinglePodDeleteV1(sHandle, taskInfo, vcNode)
-	}
-	return vcJob.CheckTorJobSinglePodDeleteV2(sHandle, vcNode)
+	return nil
 }
 
 func (sHandle *ScheduleHandler) delNPUNodeNotInSsn(ssn *framework.Session) {

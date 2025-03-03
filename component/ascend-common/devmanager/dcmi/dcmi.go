@@ -210,6 +210,26 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
     CALL_FUNC(dcmi_set_device_reset,card_id,device_id,channel_type)
    }
 
+	static int (*dcmi_get_device_outband_channel_state_func)(int card_id, int device_id, int* channel_state);
+	int dcmi_get_device_outband_channel_state(int card_id, int device_id, int* channel_state){
+	 CALL_FUNC(dcmi_get_device_outband_channel_state,card_id,device_id,channel_state)
+	}
+
+	static int (*dcmi_pre_reset_soc_func)(int card_id, int device_id);
+	int dcmi_pre_reset_soc(int card_id, int device_id){
+	 CALL_FUNC(dcmi_pre_reset_soc,card_id,device_id)
+	}
+
+	static int (*dcmi_rescan_soc_func)(int card_id, int device_id);
+	int dcmi_rescan_soc(int card_id, int device_id){
+	 CALL_FUNC(dcmi_rescan_soc,card_id,device_id)
+	}
+
+	static int (*dcmi_get_netdev_brother_device_func)(int card_id, int device_id, int* brother_card_id);
+	int dcmi_get_netdev_brother_device(int card_id, int device_id, int* brother_card_id){
+	 CALL_FUNC(dcmi_get_netdev_brother_device,card_id,device_id,brother_card_id)
+	}
+
    static int (*dcmi_get_device_boot_status_func)(int card_id, int device_id, enum dcmi_boot_status *boot_status);
    int dcmi_get_device_boot_status(int card_id, int device_id, enum dcmi_boot_status *boot_status){
     CALL_FUNC(dcmi_get_device_boot_status,card_id,device_id,boot_status)
@@ -276,6 +296,31 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
     int dcmi_get_mainboard_id(int card_id, int device_id, unsigned int *mainboard_id){
         CALL_FUNC(dcmi_get_mainboard_id,card_id,device_id,mainboard_id)
     }
+
+	static int (*dcmi_start_hccsping_mesh_func)(int card_id, int device_id, int port_id,
+struct dcmi_hccsping_mesh_operate *hccsping_mesh);
+    int dcmi_start_hccsping_mesh(int card_id, int device_id, int port_id,
+struct dcmi_hccsping_mesh_operate *hccsping_mesh){
+		CALL_FUNC(dcmi_start_hccsping_mesh,card_id,device_id,port_id,hccsping_mesh)
+}
+	static int (*dcmi_stop_hccsping_mesh_func)(int card_id, int device_id, int port_id, unsigned int task_id);
+	int dcmi_stop_hccsping_mesh(int card_id, int device_id, int port_id, unsigned int task_id){
+		CALL_FUNC(dcmi_stop_hccsping_mesh,card_id,device_id,port_id,task_id)
+	}
+
+	static int (*dcmi_get_hccsping_mesh_info_func)(int card_id, int device_id, int port_id, unsigned int task_id,
+struct dcmi_hccsping_mesh_info *hccsping_mesh_info);
+	int dcmi_get_hccsping_mesh_info(int card_id, int device_id, int port_id, unsigned int task_id,
+struct dcmi_hccsping_mesh_info *hccsping_mesh_info){
+        CALL_FUNC(dcmi_get_hccsping_mesh_info,card_id,device_id,port_id,task_id,hccsping_mesh_info)
+}
+
+	static int (*dcmi_get_hccsping_mesh_state_func)(int card_id, int device_id, int port_id, unsigned int task_id,
+unsigned int *state);
+	int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int port_id, unsigned int task_id,
+unsigned int *state){
+		CALL_FUNC(dcmi_get_hccsping_mesh_state,card_id,device_id,port_id,task_id,state)
+}
 
    // load .so files and functions
    static int dcmiInit_dl(const char* dcmiLibPath){
@@ -351,6 +396,14 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
 
    	dcmi_set_device_reset_func = dlsym(dcmiHandle,"dcmi_set_device_reset");
 
+	dcmi_get_device_outband_channel_state_func = dlsym(dcmiHandle,"dcmi_get_device_outband_channel_state");
+
+	dcmi_pre_reset_soc_func = dlsym(dcmiHandle,"dcmi_pre_reset_soc");
+
+	dcmi_rescan_soc_func = dlsym(dcmiHandle,"dcmi_rescan_soc");
+
+	dcmi_get_netdev_brother_device_func = dlsym(dcmiHandle,"dcmi_get_netdev_brother_device");
+
    	dcmi_get_device_boot_status_func = dlsym(dcmiHandle,"dcmi_get_device_boot_status");
 
    	dcmi_subscribe_fault_event_func = dlsym(dcmiHandle,"dcmi_subscribe_fault_event");
@@ -375,6 +428,13 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
 
    	dcmi_get_hccs_link_bandwidth_info_func = dlsym(dcmiHandle,"dcmi_get_hccs_link_bandwidth_info");
 
+	dcmi_start_hccsping_mesh_func = dlsym(dcmiHandle,"dcmi_start_hccsping_mesh");
+
+	dcmi_stop_hccsping_mesh_func = dlsym(dcmiHandle,"dcmi_stop_hccsping_mesh");
+
+	dcmi_get_hccsping_mesh_info_func = dlsym(dcmiHandle,"dcmi_get_hccsping_mesh_info");
+
+	dcmi_get_hccsping_mesh_state_func = dlsym(dcmiHandle,"dcmi_get_hccsping_mesh_state");
 
    	return SUCCESS;
    }
@@ -451,6 +511,11 @@ type DcDriverInterface interface {
 	DcGetProductType(int32, int32) (string, error)
 	DcGetNpuWorkMode(int32) (int, error)
 	DcSetDeviceReset(int32, int32) error
+	DcGetBrotherCardID(int32, int32) (int32, error)
+	DcPreResetSoc(int32, int32) error
+	DcGetOutBandChannelState(int32, int32) error
+	DcSetDeviceResetOutBand(int32, int32) error
+	DcRescanSoc(int32, int32) error
 	DcGetDeviceBootStatus(int32) (int, error)
 	DcGetSuperPodInfo(int32, int32) (common.CgoSuperPodInfo, error)
 
@@ -465,17 +530,140 @@ type DcDriverInterface interface {
 	DcGetHccsStatisticInfo(int32, int32) (common.HccsStatisticInfo, error)
 	DcGetDeviceMainBoardInfo(int32, int32) (uint32, error)
 	DcGetHccsBandwidthInfo(int32, int32, int) (common.HccsBandwidthInfo, error)
+
+	DcStartHccsPingMesh(int32, int32, int, common.HccspingMeshOperate) error
+	DcStopHccsPingMesh(int32, int32, int, uint) error
+	DcGetHccsPingMeshInfo(int32, int32, int, uint) (*common.HccspingMeshInfo, error)
+	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
 }
 
 const (
-	dcmiLibraryName = "libdcmi.so"
-	templateNameLen = 32
+	dcmiLibraryName    = "libdcmi.so"
+	templateNameLen    = 32
+	ipAddrListLen      = 1024
+	hcclpingMeshMaxNum = 48
 )
 
 var faultEventCallFunc func(common.DevFaultInfo) = nil
 
 // DcManager for manager dcmi interface
 type DcManager struct{}
+
+// DcStartHccsPingMesh start hccs ping mesh
+func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int,
+	operate common.HccspingMeshOperate) error {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidPortID(portID) {
+		return fmt.Errorf("portID(%d) is invalid", portID)
+	}
+	if err := common.IsValidHccspingMeshOperate(operate); err != nil {
+		return fmt.Errorf("operate(%v) is invalid, err: %v", operate, err)
+	}
+	dtsAddrLsit := [ipAddrListLen]C.char{0}
+	for i := 0; i < len(operate.DstAddr); i++ {
+		dtsAddrLsit[i] = C.char(operate.DstAddr[i])
+	}
+
+	op := C.struct_dcmi_hccsping_mesh_operate{
+		dst_addr_list: dtsAddrLsit,
+		pkt_size:      C.int(operate.PktSize),
+		pkt_send_num:  C.int(operate.PktSendNum),
+		pkt_interval:  C.int(operate.PktInterval),
+		timeout:       C.int(operate.Timeout),
+		task_interval: C.int(operate.TaskInterval),
+		task_id:       C.int(operate.TaskId),
+	}
+	if retCode := C.dcmi_start_hccsping_mesh(C.int(cardID), C.int(deviceID), C.int(portID),
+		&op); retCode != common.Success {
+		return fmt.Errorf("dcmi start hccs ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+
+	return nil
+}
+
+// DcStopHccsPingMesh stop hccs ping mesh
+func (d *DcManager) DcStopHccsPingMesh(cardID int32, deviceID int32, portID int, taskID uint) error {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidPortID(portID) {
+		return fmt.Errorf("portID(%d) is invalid", portID)
+	}
+	if !common.IsValidTaskID(taskID) {
+		return fmt.Errorf("taskID(%d) is invalid", taskID)
+	}
+	if retCode := C.dcmi_stop_hccsping_mesh(C.int(cardID), C.int(deviceID), C.int(portID),
+		C.uint(taskID)); retCode != common.Success {
+		return fmt.Errorf("dcmi stop hccs ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+	return nil
+}
+
+// DcGetHccsPingMeshInfo get hccs ping mesh info
+func (d *DcManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, portID int,
+	taskID uint) (*common.HccspingMeshInfo, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return nil, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidPortID(portID) {
+		return nil, fmt.Errorf("portID(%d) is invalid", portID)
+	}
+	if !common.IsValidTaskID(taskID) {
+		return nil, fmt.Errorf("taskID(%d) is invalid", taskID)
+	}
+	var info C.struct_dcmi_hccsping_mesh_info
+	if retCode := C.dcmi_get_hccsping_mesh_info(C.int(cardID), C.int(deviceID), C.int(portID), C.uint(taskID),
+		&info); retCode != common.Success {
+		return nil, fmt.Errorf("dcmi get hccs ping mesh info failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+	return convertHccspingMeshInfo(&info)
+}
+
+func convertHccspingMeshInfo(cInfo *C.struct_dcmi_hccsping_mesh_info) (*common.HccspingMeshInfo, error) {
+	if int(cInfo.dest_num) > hcclpingMeshMaxNum {
+		return nil, fmt.Errorf("dest_num(%d) is invalid, should not be greater than %d", int(cInfo.dest_num),
+			hcclpingMeshMaxNum)
+	}
+	info := &common.HccspingMeshInfo{}
+	for i := 0; i < int(cInfo.dest_num); i++ {
+		info.DstAddr = append(info.DstAddr, convertToString(cInfo.dst_addr[i]))
+		info.SucPktNum = append(info.SucPktNum, uint(cInfo.suc_pkt_num[i]))
+		info.FailPktNum = append(info.FailPktNum, uint(cInfo.fail_pkt_num[i]))
+		info.MaxTime = append(info.MaxTime, int(cInfo.max_time[i]))
+		info.MinTime = append(info.MinTime, int(cInfo.min_time[i]))
+		info.AvgTime = append(info.AvgTime, int(cInfo.avg_time[i]))
+		info.TP95Time = append(info.TP95Time, int(cInfo.tp95_time[i]))
+		info.ReplyStatNum = append(info.ReplyStatNum, int(cInfo.reply_stat_num[i]))
+		info.PingTotalNum = append(info.PingTotalNum, int(cInfo.ping_total_num[i]))
+	}
+	info.DestNum = int(cInfo.dest_num)
+	return info, nil
+}
+
+// DcGetHccsPingMeshState get hccs ping mesh state
+func (d *DcManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID int, taskID uint) (int, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return common.RetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidPortID(portID) {
+		return common.RetError, fmt.Errorf("portID(%d) is invalid", portID)
+	}
+	if !common.IsValidTaskID(taskID) {
+		return common.RetError, fmt.Errorf("taskID(%d) is invalid", taskID)
+	}
+	var state C.uint
+	if retCode := C.dcmi_get_hccsping_mesh_state(C.int(cardID), C.int(deviceID), C.int(portID), C.uint(taskID),
+		&state); retCode != common.Success {
+		return common.RetError, fmt.Errorf("dcmi get hccs ping mesh state failed cardID(%d) deviceID(%d) error "+
+			"code: %d", cardID, deviceID, int32(retCode))
+	}
+	return int(state), nil
+}
 
 // DcInit load symbol and initialize dcmi
 func (d *DcManager) DcInit() error {
@@ -1329,7 +1517,7 @@ func (d *DcManager) DcGetDeviceNetWorkHealth(cardID, deviceID int32) (uint32, er
 		return common.UnRetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
 
-	result := make(chan common.DeviceNetworkHealth)
+	result := make(chan common.DeviceNetworkHealth, 1)
 	go callDcmiGetDeviceNetworkHealth(cardID, deviceID, result)
 	select {
 	case res := <-result:
@@ -1412,10 +1600,61 @@ func (d *DcManager) DcGetNpuWorkMode(cardID int32) (int, error) {
 
 // DcSetDeviceReset reset spec device chip
 func (d *DcManager) DcSetDeviceReset(cardID, deviceID int32) error {
+	var channelType C.enum_dcmi_reset_channel = C.INBAND_CHANNEL
+	return d.setDeviceReset(cardID, deviceID, channelType)
+}
+
+// DcGetBrotherCardID get brother card id
+func (d *DcManager) DcGetBrotherCardID(cardID, deviceID int32) (int32, error) {
+	var broCardID C.int
+	errCode := C.dcmi_get_netdev_brother_device(C.int(cardID), C.int(deviceID), &broCardID)
+	if errCode != common.Success {
+		return common.RetError, fmt.Errorf("unable to get brother card, errCode: %v", errCode)
+	}
+	return int32(broCardID), nil
+}
+
+// DcGetOutBandChannelState get out band channel state
+func (d *DcManager) DcGetOutBandChannelState(cardID, deviceID int32) error {
+	var channelState C.int
+	errCode := C.dcmi_get_device_outband_channel_state(C.int(cardID), C.int(deviceID), &channelState)
+	if errCode != common.Success {
+		return fmt.Errorf("get out band channel state error, errCode: %v", errCode)
+	}
+	if channelState != common.ChannelStateOk {
+		return fmt.Errorf("chip reset not support, channel state: %v", channelState)
+	}
+	return nil
+}
+
+// DcPreResetSoc pre reset soc, used before reset out band
+func (d *DcManager) DcPreResetSoc(cardID, deviceID int32) error {
+	errCode := C.dcmi_pre_reset_soc(C.int(cardID), C.int(deviceID))
+	if errCode != common.Success {
+		return fmt.Errorf("pre reset failed, cardID: %v, deviceID: %v, errCode: %v", cardID, deviceID, errCode)
+	}
+	return nil
+}
+
+// DcSetDeviceResetOutBand reset spec device chip out band
+func (d *DcManager) DcSetDeviceResetOutBand(cardID, deviceID int32) error {
+	var channelType C.enum_dcmi_reset_channel = C.OUTBAND_CHANNEL
+	return d.setDeviceReset(cardID, deviceID, channelType)
+}
+
+// DcRescanSoc trigger soc rescan, non-blocking
+func (d *DcManager) DcRescanSoc(cardID, deviceID int32) error {
+	errCode := C.dcmi_rescan_soc(C.int(cardID), C.int(deviceID))
+	if errCode != common.Success {
+		return fmt.Errorf("fail to rescan chip cardID %d, deviceID %v, errCode: %v", cardID, deviceID, errCode)
+	}
+	return nil
+}
+
+func (d *DcManager) setDeviceReset(cardID, deviceID int32, channelType C.enum_dcmi_reset_channel) error {
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
-	var channelType C.enum_dcmi_reset_channel = C.INBAND_CHANNEL
 	if errCode := C.dcmi_set_device_reset(C.int(cardID), C.int(deviceID), channelType); errCode != 0 {
 		return fmt.Errorf("cardID(%d) and deviceID(%d) hot reset errCode: %v", cardID, deviceID, errCode)
 	}

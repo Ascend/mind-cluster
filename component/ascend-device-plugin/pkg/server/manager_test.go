@@ -17,6 +17,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -24,15 +25,18 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/containerd/containerd"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 )
@@ -41,6 +45,8 @@ const (
 	serverNum  = 2
 	rqtTaskNum = 4
 )
+
+var testErr = errors.New("test")
 
 func setPatch() *gomonkey.Patches {
 	patch := gomonkey.ApplyFuncReturn(kubeclient.NewClientK8s, &kubeclient.ClientK8s{
@@ -209,8 +215,8 @@ func TestGetNewNodeLabel(t *testing.T) {
 			Labels: map[string]string{common.ServerTypeLabelKey: "test server type"},
 			Name:   "node",
 		}}
-	mockGetDmgr := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetDmgr",
-		func(_ *device.AscendTools) devmanager.DeviceInterface { return &devmanager.DeviceManagerMock{} })
+	mockGetDmgr := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend310Manager)), "GetDmgr",
+		func(_ *device.HwAscend310Manager) devmanager.DeviceInterface { return &devmanager.DeviceManagerMock{} })
 	defer mockGetDmgr.Reset()
 	convey.Convey("test getNewNodeLabel when chip info error", t, func() {
 		mockGetValidChipInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
@@ -465,4 +471,131 @@ func getMockDeviceInfo() []*common.PodDeviceInfo {
 			RealDevice: []string{""},
 		},
 	}
+}
+
+type mockDevManager struct {
+	device.DevManager
+}
+
+// GetKubeClient mocks GetKubeClient
+func (mdm mockDevManager) GetKubeClient() *kubeclient.ClientK8s {
+	return nil
+}
+
+// GetNPUs mocks GetNPUs
+func (mdm mockDevManager) GetNPUs() (common.NpuAllInfo, error) {
+	return common.NpuAllInfo{}, testErr
+}
+
+// TestCheckNodeResetInfo tests the function checkNodeResetInfo
+func TestCheckNodeResetInfo(t *testing.T) {
+	hdm := HwDevManager{}
+	flag := false
+	convey.Convey("test checkNodeResetInfo", t, func() {
+		patch := gomonkey.ApplyFunc(device.WriteResetInfo,
+			func(resetInfo device.ResetInfo, writeMode device.WriteMode) {
+				flag = true
+			})
+		defer patch.Reset()
+		const id0 = 0
+		convey.Convey("01-client nil, flag should be false", func() {
+			hdm.manager = mockDevManager{}
+			hdm.checkNodeResetInfo()
+			convey.So(flag, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-dev num zero, flag should be false", func() {
+			patch1 := gomonkey.ApplyFuncReturn(device.GetResetInfoMgr, &device.ResetInfoMgr{})
+			defer patch1.Reset()
+			patch1.ApplyFuncReturn(device.ReadResetInfo, device.ResetInfo{})
+			hdm.checkNodeResetInfo()
+			convey.So(flag, convey.ShouldBeFalse)
+		})
+		patch.ApplyFuncReturn(device.GetResetInfoMgr, &device.ResetInfoMgr{})
+		patch.ApplyFuncReturn(device.ReadResetInfo,
+			device.ResetInfo{ThirdPartyResetDevs: []device.ResetDevice{
+				{PhyID: id0},
+			}})
+		patch.ApplyMethodReturn(mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
+		convey.Convey("03-get npus error, flag should be false", func() {
+			hdm.checkNodeResetInfo()
+			convey.So(flag, convey.ShouldBeFalse)
+		})
+		patch.ApplyMethodReturn(mockDevManager{}, "GetNPUs", common.NpuAllInfo{}, nil)
+		convey.Convey("04-success, flag should be true", func() {
+			patch1 := gomonkey.ApplyFuncReturn(checkDeviceStatus, []device.ResetDevice{}, true)
+			defer patch1.Reset()
+			hdm.checkNodeResetInfo()
+			convey.So(flag, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestCheckDeviceStatus tests the function checkDeviceStatus
+func TestCheckDeviceStatus(t *testing.T) {
+	convey.Convey("test checkDeviceStatus", t, func() {
+		const id1, id2, id3 = 1, 2, 3
+		convey.Convey("01-status change, should return true", func() {
+			patch := gomonkey.ApplyFunc(device.FreeBusyDev, func(cardID, deviceID int32) {
+				return
+			})
+			defer patch.Reset()
+			allInfo := common.NpuAllInfo{
+				AllDevs: []common.NpuDevice{
+					{
+						PhyID:  id1,
+						Health: v1beta1.Healthy,
+					},
+					{
+						PhyID:  id2,
+						Health: v1beta1.Unhealthy,
+					},
+				},
+			}
+			failDevs := []device.ResetDevice{
+				{
+					PhyID: id1,
+				},
+				{
+					PhyID: id2,
+				},
+				{
+					PhyID: id3,
+				},
+			}
+			_, isChange := checkDeviceStatus(failDevs, allInfo)
+			convey.So(isChange, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestSetContainerdClient for test setContainerdClient
+func TestSetContainerdClient(t *testing.T) {
+	convey.Convey("test setContainerdClient", t, func() {
+		hdm := &HwDevManager{
+			manager: device.NewHwAscend310Manager(),
+			allInfo: common.NpuAllInfo{
+				AllDevs: []common.NpuDevice{{LogicID: 0}},
+			},
+		}
+		convey.Convey("when not exist containerd sock file, result return err", func() {
+			mock := gomonkey.ApplyFuncReturn(utils.IsExist, false)
+			defer mock.Reset()
+			err := hdm.setContainerdClient()
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("when containerd client create failed, result return err", func() {
+			mock := gomonkey.ApplyFuncReturn(utils.IsExist, true).
+				ApplyFuncReturn(containerd.New, nil, fmt.Errorf("test error"))
+			defer mock.Reset()
+			err := hdm.setContainerdClient()
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("when containerd client create success, return error is nil", func() {
+			mock := gomonkey.ApplyFuncReturn(utils.IsExist, true).
+				ApplyFuncReturn(containerd.New, &containerd.Client{}, nil)
+			defer mock.Reset()
+			err := hdm.setContainerdClient()
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }

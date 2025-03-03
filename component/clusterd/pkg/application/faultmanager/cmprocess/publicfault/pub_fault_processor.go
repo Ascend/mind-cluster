@@ -86,7 +86,7 @@ func (p *pubFaultProcessor) faultJoin(nodeName string) []constant.DeviceFault {
 		pubFaultCache.FaultDevNames = convertNPUIdsToName(pubFaultCache.FaultDevIds, devType)
 		for _, faultDevName := range pubFaultCache.FaultDevNames {
 			newFaultList = append(newFaultList, constant.DeviceFault{
-				FaultType:            pubFaultCache.FaultType,
+				FaultType:            constant.PublicFaultType,
 				NPUName:              faultDevName,
 				LargeModelFaultLevel: pubFaultCache.FaultLevel,
 				FaultLevel:           pubFaultCache.FaultLevel,

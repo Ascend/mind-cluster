@@ -25,11 +25,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-var (
-	// Logger Unified log printer
-	Logger UnifiedLogger = nil
-)
-
 // the method mapping table (avoid rebuilding with every call)
 var (
 	logFuncs  = map[Level]logFunc{}
@@ -60,9 +55,19 @@ var HwLogConfig = &hwlog.LogConfig{
 	MaxLineLength: maxLogLineLength,
 }
 
+// Level log level
 type Level int
+
+// logFunc log function
 type logFunc func(ctx context.Context, args ...interface{})
+
+// logfFunc logf function
 type logfFunc func(ctx context.Context, format string, args ...interface{})
+
+var (
+	// Logger Unified log printer
+	Logger UnifiedLogger
+)
 
 // InitLogger initialize the log manager
 func InitLogger(platform string) error {
@@ -103,6 +108,8 @@ type LogOptions struct {
 	ID        interface{}
 	MaxCounts int
 }
+
+// Config config for telegraf
 type Config struct {
 	Acc telegraf.Accumulator
 }

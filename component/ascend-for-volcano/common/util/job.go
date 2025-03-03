@@ -76,9 +76,23 @@ type SchedulerJobAttr struct {
 	*NPUJob
 }
 
-// IsJobSinglePodDelete valid job.
-func (sJob SchedulerJobAttr) IsJobSinglePodDelete() bool {
-	return sJob.SchedulingTaskNum != len(sJob.Tasks)
+// IsLargeModelJob job is large model job
+func (sJob SchedulerJobAttr) IsLargeModelJob() bool {
+	return sJob.Label[TorAffinityKey] == LargeModelTag && sJob.NPUTaskNum >= fillJobMaxNPUTaskNum
+}
+
+// IsTorAffinityJob check job is tor affinity job
+func (sJob *SchedulerJobAttr) IsTorAffinityJob() bool {
+	if k, ok := sJob.Label[TorAffinityKey]; ok && (k == LargeModelTag || k == NormalSchema) {
+		return true
+	}
+	return false
+}
+
+// IsJobHasTorAffinityLabel check job has tor affinity label
+func (sJob *SchedulerJobAttr) IsJobHasTorAffinityLabel() bool {
+	k, ok := sJob.Label[TorAffinityKey]
+	return ok && k != NullTag
 }
 
 // IsSelectorMeetJob check the selectors

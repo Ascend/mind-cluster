@@ -117,10 +117,7 @@ func (tp *ascend310P) ValidNPUJob() *api.ValidateResult {
 		if tp.SchedulerJobAttr.Label[DuoKeyLabel] == TrueStr {
 			return tp.handle.ValidNPUJob()
 		}
-		if validErr := tp.NPUHandler.ValidNPUJob(); validErr != nil {
-			return validErr
-		}
-		return tp.ReHandle.ValidJobByReschedule(tp.SchedulerJobAttr)
+		return tp.NPUHandler.ValidNPUJob()
 	case util.JobTypeStCut:
 		return tp.validStVNPUJob()
 	case util.JobTypeDyCut:

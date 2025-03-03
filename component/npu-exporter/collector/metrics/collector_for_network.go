@@ -91,21 +91,25 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(cache netInfoCache, cardLabel []string) {
-		extInfo := cache.extInfo
-		if extInfo == nil {
-			return
-		}
 		netInfo := cache.extInfo
 		if netInfo == nil {
 			return
 		}
 		time := cache.timestamp
-		doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.TxValue, cardLabel, descBandwidthTx)
-		doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.RxValue, cardLabel, descBandwidthRx)
-		doUpdateMetricWithValidateNum(ch, time, netInfo.LinkSpeedInfo.Speed, cardLabel, npuChipLinkSpeed)
-		doUpdateMetricWithValidateNum(ch, time, netInfo.LinkStatInfo.LinkUPNum, cardLabel, npuChipLinkUpNum)
-		doUpdateMetricWithValidateNum(ch, time, float64(hccn.GetLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
-			cardLabel, descLinkStatus)
+		if validateNotNilForEveryElement(netInfo.BandwidthInfo) {
+			doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.TxValue, cardLabel, descBandwidthTx)
+			doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.RxValue, cardLabel, descBandwidthRx)
+		}
+		if validateNotNilForEveryElement(netInfo.LinkSpeedInfo) {
+			doUpdateMetricWithValidateNum(ch, time, netInfo.LinkSpeedInfo.Speed, cardLabel, npuChipLinkSpeed)
+		}
+		if validateNotNilForEveryElement(netInfo.LinkStatInfo) {
+			doUpdateMetricWithValidateNum(ch, time, netInfo.LinkStatInfo.LinkUPNum, cardLabel, npuChipLinkUpNum)
+		}
+		if validateNotNilForEveryElement(netInfo.LinkStatusInfo) {
+			doUpdateMetricWithValidateNum(ch, time, float64(hccn.GetLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
+				cardLabel, descLinkStatus)
+		}
 	}
 	updateFrame[netInfoCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
 }
@@ -125,15 +129,24 @@ func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface
 		if extInfo == nil {
 			continue
 		}
-		doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthTx, extInfo.BandwidthInfo.TxValue, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthRx, extInfo.BandwidthInfo.RxValue, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkSpeed, extInfo.LinkSpeedInfo.Speed, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkUpNum, extInfo.LinkStatInfo.LinkUPNum, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descLinkStatus,
-			float64(hccn.GetLinkStatusCode(extInfo.LinkStatusInfo.LinkState)), "")
+		if validateNotNilForEveryElement(extInfo.BandwidthInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthTx, extInfo.BandwidthInfo.TxValue, "")
+			doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthRx, extInfo.BandwidthInfo.RxValue, "")
+		}
+		if validateNotNilForEveryElement(extInfo.LinkSpeedInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkSpeed, extInfo.LinkSpeedInfo.Speed, "")
+		}
+		if validateNotNilForEveryElement(extInfo.LinkStatInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkUpNum, extInfo.LinkStatInfo.LinkUPNum, "")
+		}
+		if validateNotNilForEveryElement(extInfo.LinkStatusInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, descLinkStatus,
+				float64(hccn.GetLinkStatusCode(extInfo.LinkStatusInfo.LinkState)), "")
+		}
 	}
 	return fieldsMap
 }
+
 func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 	newNetInfo := common.NpuNetInfo{}
 
@@ -146,28 +159,31 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 		newNetInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
 	}
 
-	newNetInfo.BandwidthInfo = &common.BandwidthInfo{}
 	if tx, rx, err := hccn.GetNPUInterfaceTraffic(phyID); err == nil {
+		newNetInfo.BandwidthInfo = &common.BandwidthInfo{}
 		newNetInfo.BandwidthInfo.RxValue = rx
 		newNetInfo.BandwidthInfo.TxValue = tx
 		hwlog.ResetErrCnt(colcommon.DomainForBandwidth, phyID)
 	} else {
+		newNetInfo.BandwidthInfo = nil
 		logErrMetricsWithLimit(colcommon.DomainForBandwidth, phyID, err)
 	}
 
-	newNetInfo.LinkStatInfo = &common.LinkStatInfo{}
 	if linkUpNum, err := hccn.GetNPULinkUpNum(phyID); err == nil {
+		newNetInfo.LinkStatInfo = &common.LinkStatInfo{}
 		newNetInfo.LinkStatInfo.LinkUPNum = float64(linkUpNum)
 		hwlog.ResetErrCnt(colcommon.DomainForLinkStat, phyID)
 	} else {
+		newNetInfo.LinkStatInfo = nil
 		logErrMetricsWithLimit(colcommon.DomainForLinkStat, phyID, err)
 	}
 
-	newNetInfo.LinkSpeedInfo = &common.LinkSpeedInfo{}
 	if speed, err := hccn.GetNPULinkSpeed(phyID); err == nil {
+		newNetInfo.LinkSpeedInfo = &common.LinkSpeedInfo{}
 		newNetInfo.LinkSpeedInfo.Speed = float64(speed)
 		hwlog.ResetErrCnt(colcommon.DomainForLinkSpeed, phyID)
 	} else {
+		newNetInfo.LinkSpeedInfo = nil
 		logErrMetricsWithLimit(colcommon.DomainForLinkSpeed, phyID, err)
 	}
 

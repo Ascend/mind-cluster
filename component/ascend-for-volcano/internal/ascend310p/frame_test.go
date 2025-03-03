@@ -188,22 +188,7 @@ func buildCheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 func buildCheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 	return []checkNodeNPUByTaskTestCase{
 		{
-			Name: "04-CheckNodeNPUByTask return err when tp.Type is util.JobTypeStCut",
-			Task: test.FakeTaskWithResReq("pod1", util.NPU310PCardName, util.NPUIndex4),
-			Node: plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Name:       "node1",
-					Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1,Ascend310P-3,Ascend310P-4"},
-				},
-			},
-			Attr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{
-				test.FakeTaskName1: {VTask: &util.VTask{Type: util.JobTypeStCut}},
-			},
-				VJob: &util.VJob{Type: util.JobTypeStCut}}},
-			WantErr: errors.New("rescheduling CheckNodeNPUByTask invalid argument"),
-		},
-		{
-			Name: "05-CheckNodeNPUByTask return err when ty.Type is util.JobTypeDyCut",
+			Name: "04-CheckNodeNPUByTask return err when ty.Type is util.JobTypeDyCut",
 			Task: test.FakeTaskWithResReq("pod1", util.NPU310PCardName, util.NPUIndex4),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
@@ -218,7 +203,7 @@ func buildCheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 			WantErr: errors.New("task pod1 AscendNPUCore read failed"),
 		},
 		{
-			Name: "06-CheckNodeNPUByTask return err when ty.Type is other",
+			Name: "05-CheckNodeNPUByTask return err when ty.Type is other",
 			Task: test.FakeTaskWithResReq("pod1", util.NPU310PCardName, util.NPUIndex4),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{

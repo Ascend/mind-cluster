@@ -30,10 +30,17 @@ var (
 // TestContains for test Contains
 func TestContains(t *testing.T) {
 	convey.Convey("test Contains", t, func() {
-		convey.Convey("Contains success", func() {
+		convey.Convey("int32Tool Contains success", func() {
 			tool := int32Tool{}
 			sources := []int32{1}
 			existVal, unExistVal := int32(1), int32(2)
+			convey.So(tool.Contains(sources, existVal), convey.ShouldBeTrue)
+			convey.So(tool.Contains(sources, unExistVal), convey.ShouldBeFalse)
+		})
+		convey.Convey("stringTool Contains success", func() {
+			tool := stringTool{}
+			sources := []string{"1"}
+			existVal, unExistVal := "1", "2"
 			convey.So(tool.Contains(sources, existVal), convey.ShouldBeTrue)
 			convey.So(tool.Contains(sources, unExistVal), convey.ShouldBeFalse)
 		})

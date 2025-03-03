@@ -23,7 +23,6 @@ import (
 	"reflect"
 	"testing"
 
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -46,8 +45,7 @@ func buildFaultNodeGetAllNPUCardsFromDeviceInfoTests() []FaultNodeGetAllNPUCards
 		name:   "01-FaultNodeGetAllNPUCardsFromDeviceInfoTests() nil device info",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetAllNPUCardsFromDeviceInfoArgs{
-			node:     fakeNPUNodeNilDeviceInfo("node0"),
-			cardName: util.NPU910CardName,
+			node: fakeNPUNodeNilDeviceInfo("node0"),
 		},
 		want:    []string{},
 		wantErr: true,
@@ -56,8 +54,7 @@ func buildFaultNodeGetAllNPUCardsFromDeviceInfoTests() []FaultNodeGetAllNPUCards
 		name:   "02-FaultNodeGetAllNPUCardsFromDeviceInfoTests() succeed",
 		fields: fakeTestFaultNodeNodeHealthy("node0"),
 		args: FaultNodeGetAllNPUCardsFromDeviceInfoArgs{
-			node:     node2,
-			cardName: util.NPU910CardName,
+			node: node2,
 		},
 		want:    []string{"Ascend910-0", "Ascend910-1", "Ascend910-2"},
 		wantErr: false,
@@ -75,7 +72,7 @@ func TestFaultNodeGetAllNPUCardsFromDeviceInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fNode := tt.fields
-			got, err := fNode.getAllNPUCardsFromDeviceInfo(tt.args.node, tt.args.cardName)
+			got, err := fNode.getAllNPUCardsFromDeviceInfo(tt.args.node)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getAllNPUCardsFromDeviceInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return

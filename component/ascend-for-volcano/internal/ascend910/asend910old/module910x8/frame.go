@@ -27,11 +27,9 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -53,16 +51,6 @@ func New(name string) base.AscendHandler {
 		{util.AffScore4, util.AffScore4, util.AffScore4, util.AffScore0},
 	}
 	return m
-}
-
-// PreStartAction pre-processing actions for rescheduling
-func (tp *module910x8) PreStartAction(i interface{}, _ *framework.Session) error {
-	k, ok := i.(*rescheduling.ReScheduler)
-	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
-	}
-	tp.NPUHandler.ReHandle = k
-	return nil
 }
 
 // CheckNodeNPUByTask check nod npu meet task req

@@ -321,7 +321,8 @@ func (dp *DevicesParser) getDeviceIDsByMinusStyle(devices, containerID string) [
 		return deviceIDs
 	}
 	if minDevID > maxDevID {
-		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("min id bigger than max id")))
+		logger.Logger.Logf(logger.Error, envErrDescribe(containerID, "",
+			ascendDeviceInfo, errors.New("min id bigger than max id")))
 		return deviceIDs
 	}
 	if maxDevID > math.MaxInt16 {

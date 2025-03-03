@@ -98,6 +98,40 @@ func IsValidVDevID(vDevID uint32) bool {
 	return vDevID >= MinVDevID && vDevID < MaxVDevID
 }
 
+// IsValidPortID valid port id
+func IsValidPortID(portID int) bool {
+	return portID == DefaultPingMeshPortID
+}
+
+// IsValidTaskID valid task id
+func IsValidTaskID(taskID uint) bool {
+	return taskID == InternalPingMeshTaskID || taskID == ExternalPingMeshTaskID
+}
+
+// IsValidHccspingMeshOperate valid hccsping mesh operate
+func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
+	if len(operate.DstAddr) > MaxHccspingMeshAddr {
+		return fmt.Errorf("dst addr length %d is invalid, should not be greater than %d", len(operate.DstAddr),
+			MaxHccspingMeshAddr)
+	}
+	if operate.PktSize < MinPktSize || operate.PktSize > MaxPktSize {
+		return fmt.Errorf("pkt size %d is invalid, should be between %d and %d", operate.PktSize, MinPktSize, MaxPktSize)
+	}
+	if operate.PktSendNum < MinPktSendNum || operate.PktSendNum > MaxPktSendNum {
+		return fmt.Errorf("pkt send num %d is invalid, should be between %d and %d", operate.PktSendNum, MinPktSendNum, MaxPktSendNum)
+	}
+	if operate.PktInterval < MinPktInterval || operate.PktInterval > MaxPktInterval {
+		return fmt.Errorf("pkt interval %d is invalid, should be between %d and %d", operate.PktInterval, MinPktInterval, MaxPktInterval)
+	}
+	if operate.TaskInterval < MinTaskInterval || operate.TaskInterval > MaxTaskInterval {
+		return fmt.Errorf("task interval %d is invalid, should be between %d and %d", operate.TaskInterval, MinTaskInterval, MaxTaskInterval)
+	}
+	if !IsValidTaskID(uint(operate.TaskId)) {
+		return fmt.Errorf("task id %d is invalid", operate.TaskId)
+	}
+	return nil
+}
+
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
 	if strings.Contains(chipName, "310P") {

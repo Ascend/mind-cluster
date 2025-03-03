@@ -76,10 +76,13 @@ func (fJob *FaultJob) IsNormalJobNeedRestart() bool {
 	}
 	for _, fTask := range fJob.FaultTasks {
 		if fTask.IsSoftwareFault {
+			klog.V(util.LogWarningLev).Infof("task %s has software fault, need restart by platform", fTask.TaskName)
 			return true
 		}
 		for _, reason := range fTask.Reason {
 			if reason.FaultHandling == PreSeparateNPU {
+				klog.V(util.LogWarningLev).Infof("task %s has PreSeparateNPU fault, "+
+					"need restart by platform", fTask.TaskName)
 				return true
 			}
 		}
@@ -135,7 +138,7 @@ func (fJob *FaultJob) deleteJobWithSubHealthyLabels(ssn *framework.Session, resc
 	klog.V(util.LogWarningLev).Infof("delete job %s subHealthyStrategy %s", fJob.JobName,
 		fJob.SubHealthyStrategy)
 	if fJob.SubHealthyStrategy == util.SubHealthyForceExit {
-		return fJob.ForceDeleteJob(ssn, schedulerJob, env)
+		return fJob.ForceDeleteJob(schedulerJob, env)
 	}
 	if !fJob.IsProcessReschedulingJob(schedulerJob) {
 		klog.V(util.LogWarningLev).Infof("reset configmap be updated with graceExit, job:%s", fJob.JobName)
@@ -151,7 +154,7 @@ func (fJob *FaultJob) deleteJobWithFaultLabels(ssn *framework.Session, reschedul
 	klog.V(util.LogWarningLev).Infof("delete job %s ReScheduleKey %s", fJob.JobName,
 		fJob.ReScheduleKey)
 	if fJob.ReScheduleKey == JobForceRescheduleLabelValue {
-		return fJob.ForceDeleteJob(ssn, schedulerJob, env)
+		return fJob.ForceDeleteJob(schedulerJob, env)
 	}
 
 	return fJob.GraceDeleteJob(ssn, schedulerJob, env)
@@ -191,10 +194,10 @@ func (fJob *FaultJob) isContainTask(ids []string, nodeName string, env plugin.Sc
 }
 
 // ForceDeleteJob force delete jobs includes labelled force delete ones and grace delete failed ones
-func (fJob *FaultJob) ForceDeleteJob(ssn *framework.Session, schedulerJob *plugin.SchedulerJob,
+func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv) error {
 	klog.V(util.LogDebugLev).Infof("enter ForceDeleteJob")
-	if fJob == nil || ssn == nil || schedulerJob == nil {
+	if fJob == nil || schedulerJob == nil {
 		return fmt.Errorf(
 			"getJobFaultRescheduleLabel fJob object or ssn or schedulerJob does not exist")
 	}
@@ -216,11 +219,11 @@ func (fJob *FaultJob) ForceDeleteJob(ssn *framework.Session, schedulerJob *plugi
 		superPod:      superPod,
 		ids:           ids,
 	}
-	fJob.forceDeletePods(ssn, schedulerJob, env, dpi)
+	fJob.forceDeletePods(schedulerJob, env, dpi)
 	return nil
 }
 
-func (fJob *FaultJob) forceDeletePods(ssn *framework.Session, schedulerJob *plugin.SchedulerJob,
+func (fJob *FaultJob) forceDeletePods(schedulerJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv, dpi *deletePodInfo) {
 	var waitDeleteTask = make([]FaultTask, 0)
 	for _, fTask := range fJob.FaultTasks {
@@ -231,7 +234,7 @@ func (fJob *FaultJob) forceDeletePods(ssn *framework.Session, schedulerJob *plug
 		waitDeleteTask = append(waitDeleteTask, fTask)
 		klog.V(util.LogInfoLev).Infof("superpod delete pods:%s", fTask.TaskName)
 	}
-	fJob.deletingTasksConcurrently(waitDeleteTask, ssn)
+	fJob.deletingTasksConcurrently(waitDeleteTask, env.FrameAttr.KubeClient)
 }
 
 func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plugin.SchedulerJob,
@@ -267,34 +270,34 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 	return true
 }
 
-func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, ssn *framework.Session) {
+func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, kubeClient kubernetes.Interface) {
 	if len(waitDeleteTask) == 0 {
 		return
 	}
 	if len(waitDeleteTask) <= singleThreadDeletePodNum {
-		fJob.forceDeleteTasks(waitDeleteTask, ssn)
+		fJob.forceDeleteTasks(waitDeleteTask, kubeClient)
 		return
 	}
 	var deleteJobSync sync.WaitGroup
 	for i := 0; i < len(waitDeleteTask); i += singleThreadDeletePodNum {
 		deleteJobSync.Add(1)
 		if i+singleThreadDeletePodNum > len(waitDeleteTask) {
-			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:], ssn, &deleteJobSync)
+			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:], kubeClient, &deleteJobSync)
 		}
-		go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], ssn, &deleteJobSync)
+		go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], kubeClient, &deleteJobSync)
 	}
 	deleteJobSync.Wait()
 }
 
-func (fJob *FaultJob) forceDeleteTasksConcurrently(waitDeleteTask []FaultTask, ssn *framework.Session,
+func (fJob *FaultJob) forceDeleteTasksConcurrently(waitDeleteTask []FaultTask, kubeClient kubernetes.Interface,
 	deleteJobSync *sync.WaitGroup) {
-	fJob.forceDeleteTasks(waitDeleteTask, ssn)
+	fJob.forceDeleteTasks(waitDeleteTask, kubeClient)
 	deleteJobSync.Done()
 }
 
-func (fJob *FaultJob) forceDeleteTasks(waitDeleteTask []FaultTask, ssn *framework.Session) {
+func (fJob *FaultJob) forceDeleteTasks(waitDeleteTask []FaultTask, kubeClient kubernetes.Interface) {
 	for _, fTask := range waitDeleteTask {
-		if deleteErr := fTask.DeleteRealPodByTask(ssn, 0); deleteErr != nil {
+		if deleteErr := fTask.DeleteRealPodByTask(kubeClient, 0); deleteErr != nil {
 			klog.V(util.LogWarningLev).Infof("ForceDeleteFaultPod %s: %s.", fTask.TaskName, util.SafePrint(deleteErr))
 		}
 	}
@@ -381,14 +384,6 @@ func getTaskPodUidByTaskName(taskName string, jobInfo *api.JobInfo) api.TaskID {
 	return ""
 }
 
-func (fJob *FaultJob) setFaultTaskUseNode(jobInfo *api.JobInfo) {
-	for _, fTask := range fJob.FaultTasks {
-		if fTask.IsFaultTask {
-			jobInfo.PodGroup.Annotations[fTask.TaskName] = fTask.NodeName
-		}
-	}
-}
-
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc ||
 		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
@@ -419,6 +414,8 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 // isPodFailedCanRestarted if the pod status is failed, judge whether job can be restarted
 func (fJob *FaultJob) isFaultJobCanRestarted(reScheduler *ReScheduler) bool {
 	if !fJob.IsFaultJob {
+		klog.V(util.LogWarningLev).Infof("fJob %s has software fault or PreSeparateNPU fault, "+
+			"need restarted by platform skip delete pod", fJob.JobName)
 		return false
 	}
 	if fJob.faultReason == PodFailed {
@@ -542,11 +539,6 @@ func (fJob *FaultJob) resetGraceExitCode(k8sClient kubernetes.Interface) {
 		fJob.ReferenceName, fJob.JobNamespace, plugin.DefaultExitValue)
 }
 
-func (fJob *FaultJob) isJobInSession(jobs map[api.JobID]plugin.SchedulerJob) bool {
-	_, ok := jobs[fJob.JobUID]
-	return ok
-}
-
 func (fJob *FaultJob) jobInfoInSession(jobs map[api.JobID]*api.JobInfo) *api.JobInfo {
 	if fJob.ElasticScheduling == JobOnElasticScheduling {
 		for _, job := range jobs {
@@ -567,15 +559,6 @@ func (fJob *FaultJob) jobInfoInSession(jobs map[api.JobID]*api.JobInfo) *api.Job
 	return nil
 }
 
-func (fJob *FaultJob) getJobUseNodes() []string {
-	jobUseNodes := make([]string, len(fJob.FaultTasks))
-	for i, fTask := range fJob.FaultTasks {
-		jobUseNodes[i] = fTask.NodeName
-		fJob.NodeNameMaps[fTask.NodeName] = struct{}{}
-	}
-	return jobUseNodes
-}
-
 func (fJob *FaultJob) getIsFaultJob() bool {
 	for _, task := range fJob.FaultTasks {
 		if task.IsFaultTask {
@@ -593,7 +576,6 @@ func (fJob *FaultJob) recordFaultJobsToLogs() {
 	}
 	var tmpfJobInfo miniFaultJob
 	tmpfJobInfo.ReferenceName = fJob.ReferenceName
-	tmpfJobInfo.FaultRetryTimes = fJob.FaultRetryTimes
 	for _, fTask := range fJob.FaultTasks {
 		if !fTask.IsFaultTask {
 			continue
@@ -605,6 +587,9 @@ func (fJob *FaultJob) recordFaultJobsToLogs() {
 		tmpfTaskInfo.FaultType = fTask.faultType
 		tmpfTaskInfo.UseCardName = fTask.UseCardName
 		tmpfTaskInfo.NodeRankIndex = fTask.NodeRankIndex
+		if JudgePublicFaultInReason(&tmpfTaskInfo) {
+			tmpfTaskInfo.FaultType = PublicFaultType
+		}
 		tmpfJobInfo.FaultTasks = append(tmpfJobInfo.FaultTasks, tmpfTaskInfo)
 	}
 	str, err := json.Marshal(tmpfJobInfo)
@@ -612,28 +597,6 @@ func (fJob *FaultJob) recordFaultJobsToLogs() {
 		return
 	}
 	klog.V(util.LogWarningLev).Infof("Add FaultJob %s fault info: %s", fJob.JobName, string(str))
-}
-
-func (fJob *FaultJob) initJobFaultRank() []*AllocNodeRankOccurrence {
-	var nodeRankTimes []*AllocNodeRankOccurrence
-	for _, fTask := range fJob.FaultTasks {
-		nodeRankTime := &AllocNodeRankOccurrence{
-			NodeName:  fTask.NodeName,
-			RankIndex: fTask.NodeRankIndex,
-			IsFault:   fTask.IsFaultTask,
-		}
-		nodeRankTimes = append(nodeRankTimes, nodeRankTime)
-	}
-	return nodeRankTimes
-}
-
-func (fJob *FaultJob) checkJobNodeRankIndexValid() bool {
-	for _, fTask := range fJob.FaultTasks {
-		if fTask.NodeRankIndex == "" {
-			return false
-		}
-	}
-	return true
 }
 
 func (fJob *FaultJob) setJobFaultReScheduleLabel(value string) {
@@ -646,14 +609,6 @@ func (fJob *FaultJob) setJobElasticReScheduleLabel(value string) {
 
 func (fJob *FaultJob) setFaultTasks(value []FaultTask) {
 	fJob.FaultTasks = value
-}
-
-func (fJob *FaultJob) setJobRankIds(value []string) {
-	fJob.JobRankIds = value
-}
-
-func (fJob *FaultJob) setNodeNames(value []string) {
-	fJob.NodeNames = value
 }
 
 func (fJob *FaultJob) setIsSubHealthFault() {
@@ -673,21 +628,18 @@ func (fJob *FaultJob) setIsFaultJob(value bool) {
 	fJob.IsFaultJob = value
 }
 
-func newFaultJobDefault(job *api.JobInfo, updateTime int64) FaultJob {
-	faultJob := FaultJob{
-		ReScheduleKey:       JobOffRescheduleLabelValue, // off/grace/force
-		IsInSession:         true,
-		JobName:             job.Name,
-		JobUID:              job.UID,
-		JobNamespace:        job.Namespace,
-		UpdateTime:          updateTime,
-		JobRankIdCreateTime: updateTime,
-		FaultTypes:          make([]string, 0),
-		ElasticScheduling:   JobOffElasticScheduling,
-		ReferenceName:       util.ReferenceNameOfJob(job),
-		UUID:                util.UuidOfJob(job),
-		FaultRetryTimes:     faultRetryTimeOfJob(job),
-		NodeNameMaps:        map[string]struct{}{},
+func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
+	faultJob := &FaultJob{
+		ReScheduleKey:     JobOffRescheduleLabelValue, // off/grace/force
+		JobName:           job.Name,
+		JobUID:            job.UID,
+		JobNamespace:      job.Namespace,
+		UpdateTime:        updateTime,
+		FaultTypes:        make([]string, 0),
+		ElasticScheduling: JobOffElasticScheduling,
+		ReferenceName:     util.ReferenceNameOfJob(job),
+		UUID:              util.UuidOfJob(job),
+		FaultRetryTimes:   faultRetryTimeOfJob(job),
 	}
 	subHealthyStrategy, exist := job.PodGroup.Labels[util.SubHealthyStrategyLabel]
 	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
@@ -714,11 +666,11 @@ func faultRetryTimeOfJob(job *api.JobInfo) int {
 	return v
 }
 
-func getRealFaultJobForCM(fJobs []FaultJob) []FaultJob {
-	var realFaultJobs []FaultJob
+func getRealFaultJobForCache(fJobs map[api.JobID]*FaultJob) map[api.JobID]*FaultJob {
+	realFaultJobs := make(map[api.JobID]*FaultJob)
 	for _, fJob := range fJobs {
 		if fJob.IsFaultJob {
-			realFaultJobs = append(realFaultJobs, fJob)
+			realFaultJobs[fJob.JobUID] = fJob
 		}
 	}
 	return realFaultJobs

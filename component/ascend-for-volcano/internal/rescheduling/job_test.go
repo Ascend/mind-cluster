@@ -25,6 +25,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -52,7 +53,6 @@ type FaultJobTestField struct {
 }
 
 type FaultJobForceDeleteJobArgs struct {
-	ssn             *framework.Session
 	schedulerJob    *plugin.SchedulerJob
 	cacheFuncBefore func()
 	cacheFuncAfter  func()
@@ -67,10 +67,8 @@ type FaultJobForceDeleteJobTests struct {
 
 func buildFaultJobForceDeleteJobTests() []FaultJobForceDeleteJobTests {
 	var tmpPatch *gomonkey.Patches = nil
-	faultTask1 := fakeReSchedulerFaultTask(true, []string{"pod0", "vcjob", "node0", "job0", "0"}, 0,
-		"ppppppppppppp")
-	faultTask2 := fakeReSchedulerFaultTask(false, []string{"pod1", "vcjob", "node1", "job0", "1"}, 0,
-		"ppppppppppppp")
+	faultTask1 := fakeReSchedulerFaultTask(true, []string{"pod0", "vcjob", "node0", "job0", "0"}, 0)
+	faultTask2 := fakeReSchedulerFaultTask(false, []string{"pod1", "vcjob", "node1", "job0", "1"}, 0)
 	schedulerJob := fakeSchedulerJobEmptyTask("job0", "vcjob")
 	test1 := FaultJobForceDeleteJobTests{
 		name: "01-FaultJobForceDeleteJob()-delete success",
@@ -87,11 +85,10 @@ func buildFaultJobForceDeleteJobTests() []FaultJobForceDeleteJobTests {
 			DeleteExecutedFlag:  false,
 		},
 		args: FaultJobForceDeleteJobArgs{
-			ssn:          test.FakeSSNReSchedule(),
 			schedulerJob: &schedulerJob,
 			cacheFuncBefore: func() {
 				tmpPatch = gomonkey.ApplyMethod(reflect.TypeOf(&FaultTask{}), "DeleteRealPodByTask",
-					func(_ *FaultTask, _ *framework.Session, _ int64) error { return nil })
+					func(_ *FaultTask, _ kubernetes.Interface, _ int64) error { return nil })
 			},
 			cacheFuncAfter: func() {
 				if tmpPatch != nil {
@@ -120,22 +117,18 @@ func TestFaultJobForceDeleteJob(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.args.cacheFuncBefore()
 			fJob := &FaultJob{
-				ReScheduleKey:       tt.fields.ReScheduleKey,
-				IsFaultJob:          tt.fields.IsFaultJob,
-				IsInSession:         tt.fields.IsInSession,
-				JobName:             tt.fields.JobName,
-				JobUID:              tt.fields.JobUID,
-				JobNamespace:        tt.fields.JobNamespace,
-				JobRankIds:          tt.fields.JobRankIds,
-				NodeNames:           tt.fields.NodeNames,
-				FaultTasks:          tt.fields.FaultTasks,
-				UpdateTime:          tt.fields.UpdateTime,
-				JobRankIdCreateTime: tt.fields.JobRankIdCreateTime,
-				FaultTypes:          tt.fields.FaultTypes,
-				DeleteExecutedFlag:  tt.fields.DeleteExecutedFlag,
-				ElasticScheduling:   tt.fields.ElasticScheduling,
+				ReScheduleKey:      tt.fields.ReScheduleKey,
+				IsFaultJob:         tt.fields.IsFaultJob,
+				JobName:            tt.fields.JobName,
+				JobUID:             tt.fields.JobUID,
+				JobNamespace:       tt.fields.JobNamespace,
+				FaultTasks:         tt.fields.FaultTasks,
+				UpdateTime:         tt.fields.UpdateTime,
+				FaultTypes:         tt.fields.FaultTypes,
+				DeleteExecutedFlag: tt.fields.DeleteExecutedFlag,
+				ElasticScheduling:  tt.fields.ElasticScheduling,
 			}
-			if err := fJob.ForceDeleteJob(tt.args.ssn, tt.args.schedulerJob, env); (err != nil) != tt.wantErr {
+			if err := fJob.ForceDeleteJob(tt.args.schedulerJob, env); (err != nil) != tt.wantErr {
 				t.Errorf("ForceDeleteJob() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			tt.args.cacheFuncAfter()
@@ -760,39 +753,6 @@ func TestJobInfoInSession(t *testing.T) {
 		func(t *testing.T) {
 			if res := fJob.jobInfoInSession(jobs); res == nil {
 				t.Errorf("jobInfoInSession() res = %v, wantRes is not nil", res)
-			}
-		})
-}
-
-func TestInitJobFaultRank(t *testing.T) {
-	fJob := mockFaultJobWithTasks()
-	t.Run("01-initJobFaultRank return nil when fJob.FaultTasks is empty", func(t *testing.T) {
-		if res := fJob.initJobFaultRank(); res == nil {
-			t.Errorf("initJobFaultRank() res = %v, wantRes is not nil", res)
-		}
-	})
-}
-
-func TestCheckJobNodeRankIndexValid(t *testing.T) {
-	fJob := mockFaultJobWithTasks()
-	t.Run("01-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is empty string",
-		func(t *testing.T) {
-			if res := fJob.checkJobNodeRankIndexValid(); res {
-				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is false", res)
-			}
-		})
-	t.Run("02-checkJobNodeRankIndexValid return nil when fTask.NodeRankIndex is non-empty string",
-		func(t *testing.T) {
-			fJob.FaultTasks = []FaultTask{
-				{
-					IsFaultTask:   true,
-					TaskUID:       mockTaskUID,
-					NodeRankIndex: "1",
-					UseCardName:   []string{mockCardName1, mockCardName2},
-				},
-			}
-			if res := fJob.checkJobNodeRankIndexValid(); !res {
-				t.Errorf("checkJobNodeRankIndexValid() res = %v, wantRes is true", res)
 			}
 		})
 }

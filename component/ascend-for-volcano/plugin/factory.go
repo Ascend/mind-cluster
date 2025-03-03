@@ -267,7 +267,7 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		return
 	}
 
-	configs := initConfsFromSsn(ssn.Configurations)
+	configs := InitConfsFromSsn(ssn.Configurations)
 	superPodSize, err := util.GetSizeOfSuperPod(configs)
 	if err != nil {
 		klog.V(util.LogWarningLev).Infof("GetSizeOfSuperPod failed: %s, set default super-pod-size: %d", err,
@@ -307,7 +307,8 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 	}
 }
 
-func initConfsFromSsn(confs []conf.Configuration) []config.Configuration {
+// InitConfsFromSsn init confs from session
+func InitConfsFromSsn(confs []conf.Configuration) []config.Configuration {
 	var out []byte
 	var err error
 	newConfs := make([]config.Configuration, len(confs))
@@ -366,7 +367,7 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 		return
 	}
 	for _, job := range sHandle.Jobs {
-		if err := job.handler.PreStartAction(sHandle.BaseHandle.GetReHandle(), ssn); err != nil {
+		if err := job.handler.PreStartAction(sHandle.FaultHandle, ssn); err != nil {
 			if strings.Contains(err.Error(), util.ArgumentError) {
 				continue
 			}
@@ -413,14 +414,14 @@ func (sHandle *ScheduleHandler) BeforeCloseHandler() {
 			job.updateResetConfigMap(sHandle)
 		}
 	}
-	if sHandle.BaseHandle != nil {
-		if err := sHandle.BaseHandle.PreStopAction(&sHandle.ScheduleEnv); err != nil {
+	if sHandle.FaultHandle != nil {
+		if err := sHandle.FaultHandle.PreStopAction(&sHandle.ScheduleEnv); err != nil {
 			klog.V(util.LogErrorLev).Infof("PreStopPlugin  %s.", util.SafePrint(err))
 		}
 	}
 
 	sHandle.saveCacheToCm()
-	if sHandle.Tors == nil || sHandle.getNSLBVsersion() == defaultNSLBVersion {
+	if sHandle.Tors == nil || sHandle.Tors.GetNSLBVersion() == defaultNSLBVersion {
 		return
 	}
 	err := sHandle.CacheToShareCM()
@@ -452,15 +453,9 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	sHandle.InitJobsPlugin()
 	sHandle.InitCache()
 	sHandle.InitReschedulerFromSsn(ssn)
-	if sHandle.BaseHandle != nil {
+	if sHandle.FaultHandle != nil {
 		sHandle.PreStartPlugin(ssn)
 	}
-
-	if sHandle.Tors == nil || sHandle.getNSLBVsersion() == defaultNSLBVersion {
-		return nil
-	}
-	klog.V(util.LogInfoLev).Infof("InitNSLB2.0")
-	sHandle.InitNSLB2(ssn)
 	return nil
 }
 
@@ -630,33 +625,13 @@ func (vf *VolcanoFrame) CheckUseCIMByConfig() bool {
 
 // InitReschedulerFromSsn initialize re-scheduler
 func (sHandle *ScheduleHandler) InitReschedulerFromSsn(ssn *framework.Session) {
-	var i interface{}
-	if sHandle.BaseHandle == nil {
+	if sHandle.FaultHandle == nil {
 		return
 	}
-	if err := sHandle.BaseHandle.InitMyJobPlugin(util.SchedulerJobAttr{}, sHandle.ScheduleEnv); err != nil {
-		klog.V(util.LogWarningLev).Infof("InitBasePlugin failed by %s", err)
-		return
-	}
-	if preErr := sHandle.BaseHandle.PreStartAction(i, ssn); preErr != nil {
+	if preErr := sHandle.FaultHandle.PreStartAction(&sHandle.ScheduleEnv, ssn); preErr != nil {
 		klog.V(util.LogWarningLev).Infof("PreStartAction failed by %s", preErr)
 		return
 	}
-}
-
-// InitNSLB2 Init NSLB 2.0
-func (sHandle *ScheduleHandler) InitNSLB2(ssn *framework.Session) {
-	tmpJobMaps := make(map[api.JobID]SchedulerJob)
-	for _, vcJob := range sHandle.Jobs {
-		if vcJob.SchedulingTaskNum == len(vcJob.Tasks) || !vcJob.IsTorAffinityJob() {
-			tmpJobMaps[vcJob.Name] = vcJob
-			continue
-		}
-		vcJob.initJobBlackTorMaps(sHandle.Tors.torMaps, vcJob.getUsedTorInfos(sHandle))
-		vcJob.Annotation = ssn.Jobs[vcJob.Name].PodGroup.Annotations
-		tmpJobMaps[vcJob.Name] = vcJob
-	}
-	sHandle.Jobs = tmpJobMaps
 }
 
 // CacheToShareCM cache tors info to configmap
@@ -689,8 +664,8 @@ func sHandleTorsToTorShareMap(sHandle *ScheduleHandler) map[string]TorShare {
 		nodeJobs = []NodeJobInfo{}
 		for _, server := range tor.Servers {
 			jobList = []string{}
-			for _, job := range server.Jobs {
-				jobList = append(jobList, job.ReferenceName)
+			for jobName := range server.Jobs {
+				jobList = append(jobList, jobName)
 			}
 			nodeJob = NodeJobInfo{
 				NodeIp:   server.IP,
@@ -846,20 +821,6 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 		return scoreMap, nil
 	}
 
-	if vcJob.IsTorAffinityJob() {
-		nodeMaps := util.ChangeNodesToNodeMaps(nodes)
-		klog.V(util.LogDebugLev).Infof("validNPUJob job is now use tor affinity")
-		if sHandle.Tors.torLevel == SingleLayer {
-			return sHandle.SetSingleLayerTorAffinityJobNodesScore(task, nodeMaps, vcJob, scoreMap)
-		}
-		if sHandle.getNSLBVsersion() == defaultNSLBVersion && vcJob.isJobSinglePodRunAsNormal() {
-			return sHandle.SetTorAffinityJobNodesScore(task, nodeMaps, vcJob, vcJob.Label[TorAffinityKey], scoreMap)
-		}
-		if sHandle.getNSLBVsersion() == NSLB2Version {
-			return sHandle.SetTorAffinityJobNodesScoreV2(task, nodeMaps, vcJob, scoreMap)
-		}
-	}
-
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
 	errGet := vcJob.handler.ScoreBestNPUNodes(task, nodes, scoreMap)
 	for nodeName := range scoreMap {
@@ -868,174 +829,9 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	if errGet != nil {
 		// get suitable node failed
 		klog.V(util.LogErrorLev).Infof("batchNodeOrderFn task[%s] failed by err:[%s].", task.Name, util.SafePrint(errGet))
-		return scoreMap, nil
+		return scoreMap, errGet
 	}
 	klog.V(util.LogInfoLev).Infof("batchNodeOrderFn Get task:%s for NPU %+v.", task.Name, scoreMap)
 
 	return scoreMap, nil
-}
-
-// SetSingleLayerTorAffinityJobNodesScore single layer switch networking rule
-func (sHandle *ScheduleHandler) SetSingleLayerTorAffinityJobNodesScore(task *api.TaskInfo,
-	nodeMaps map[string]*api.NodeInfo, vcJob SchedulerJob, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes %s.", err)
-		return scoreMap, nil
-	}
-	result := SetJobServerList(vcJob, sHandle, nodeMaps)
-	vcJob = sHandle.Jobs[task.Job]
-	if result != nil {
-		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s,"+
-			"used servers is %s", vcJob.Name, result, vcJob.SelectServers)
-		vcJob.JobReadyTag = false
-		sHandle.Jobs[task.Job] = vcJob
-	}
-	if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
-	}
-	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
-	return scoreMap, result
-}
-
-// SetTorAffinityJobNodesScore nslb 1.0 rule
-func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScore(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	vcJob SchedulerJob, label string, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes %s.", err)
-		return scoreMap, nil
-	}
-
-	result := CheckNetSliceIsMeetJobRequire(vcJob, sHandle, nodeMaps)
-	vcJob = sHandle.Jobs[task.Job]
-	if result != nil {
-		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s,"+
-			"used servers is %s", vcJob.Name, result, vcJob.SelectServers)
-		switch label {
-		case LargeModelTag:
-			vcJob.JobReadyTag = false
-		case NormalSchema:
-			vcJob.SetNormalJobServerList(sHandle)
-		default:
-			return scoreMap, nil
-		}
-		sHandle.Jobs[task.Job] = vcJob
-	}
-	if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
-	}
-	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
-	return scoreMap, result
-}
-
-// SetTorAffinityJobNodesScoreV2 nslb 2.0 rule
-func (sHandle *ScheduleHandler) SetTorAffinityJobNodesScoreV2(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	vcJob SchedulerJob, scoreMap map[string]float64) (map[string]float64, error) {
-	if sHandle == nil || task == nil || len(nodeMaps) == 0 || len(scoreMap) == 0 || !vcJob.JobReadyTag {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes err: %s.", err)
-		return scoreMap, nil
-	}
-	defer func() {
-		if errGet := sHandle.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-			// get suitable node failed
-			klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] failed[%s].", task.Name, util.SafePrint(errGet))
-		}
-	}()
-	if vcJob.ServerList != nil {
-		return scoreMap, nil
-	}
-	vcJob.MarkTorListByJob(nodeMaps, sHandle)
-	if ri := vcJob.getJobsRestartedInfo(); ri != nil {
-		if err := vcJob.setJobNodesAfterRestarted(sHandle, ri, vcJob.SchedulingTaskNum); err == nil {
-			vcJob.initJobNodeRankByFaultRank(ri, nodeMaps)
-			sHandle.Jobs[task.Job] = vcJob
-			return scoreMap, nil
-		}
-		if vcJob.IsJobSinglePodDelete() {
-			vcJob.JobReadyTag = false
-			sHandle.Jobs[task.Job] = vcJob
-			return scoreMap, nil
-		}
-		klog.V(util.LogWarningLev).Infof("the job is not meet the rescheduling logic and will be scheduled normally")
-	}
-
-	tmpTors := deepCopyTorList(sHandle.Tors.Tors)
-	result := setJobAvailableNodes(&vcJob, sHandle, nodeMaps)
-	if result != nil {
-		// recovery the Tors in global
-		sHandle.recoveryGlobalTor(tmpTors)
-		klog.V(util.LogErrorLev).Infof("check job %s tor affinity failed: %s", vcJob.Name, result)
-		vcJob.JobReadyTag = false
-	}
-	sHandle.Jobs[task.Job] = vcJob
-
-	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn Get %s for NPU %+v.", task.Name, scoreMap)
-	return scoreMap, result
-}
-
-func (sHandle *ScheduleHandler) recoveryGlobalTor(tors []*Tor) {
-	sHandle.Tors.Tors = tors
-	sHandle.Tors.initTorMaps()
-}
-
-func (sHandle *ScheduleHandler) scoreBestNPUNodes(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	sMap map[string]float64) error {
-
-	vcjob, ok := sHandle.ScheduleEnv.Jobs[task.Job]
-	if !ok {
-		return errors.New(util.ArgumentError)
-	}
-
-	if vcjob.setBestNodeFromRankIndex(task, sMap) {
-		return nil
-	}
-
-	vcjob.setJobFaultRankIndex()
-
-	for _, sl := range vcjob.ServerList {
-		for _, server := range sl.Servers {
-			if vcjob.HealthTorRankIndex[server.Name] != "" {
-				continue
-			}
-			setNodeScoreByTorAttr(sMap, server.Name, sl)
-			if _, exist := nodeMaps[server.Name]; exist && server.NodeRank == task.Pod.Annotations[podRankIndex] {
-				sMap[server.Name] = maxTorAffinityNodeScore
-				return nil
-			}
-		}
-	}
-	klog.V(util.LogInfoLev).Infof("ScoreBestNPUNodes task<%s> sMap<%v>", task.Name, sMap)
-	return nil
-}
-
-func (sHandle *ScheduleHandler) getSharedTorNum() int {
-	if sHandle == nil || sHandle.Tors == nil {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("getSharedTorNum %s.", err)
-		return util.ErrorInt
-	}
-	return sHandle.Tors.sharedTorNum
-}
-
-func (sHandle *ScheduleHandler) getNSLBVsersion() string {
-	if sHandle == nil || sHandle.Tors == nil {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogDebugLev).Infof("getNSLBVsersion %s.", err)
-		return ""
-	}
-	return sHandle.Tors.nslbVersion
-}
-
-func setNodeScoreByTorAttr(sMap map[string]float64, nodeName string, sl *Tor) {
-	if sMap == nil {
-		return
-	}
-	sMap[nodeName] = halfTorAffinityNodeScore
-	if sl.IsSharedTor == sharedTor {
-		sMap[nodeName] = sharedTorAffinityNodeScore
-	}
 }

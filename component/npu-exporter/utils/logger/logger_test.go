@@ -52,7 +52,7 @@ func TestInitLogger(t *testing.T) {
 	HwLogConfig.MaxAge = hwlog.DefaultMinSaveAge
 
 	var noExistLevel Level = 5
-	var args = "test"
+	var args = "mock"
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := InitLogger(tt.platform)

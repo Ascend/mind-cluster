@@ -35,6 +35,7 @@ type DeviceInterface interface {
 	GetCardList() (int32, []int32, error)
 	GetDeviceNumInCard(cardID int32) (int32, error)
 	GetDeviceList() (int32, []int32, error)
+	GetChipBaseInfos() ([]*common.ChipBaseInfo, error)
 	GetDeviceHealth(logicID int32) (uint32, error)
 	GetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error)
@@ -61,6 +62,11 @@ type DeviceInterface interface {
 	GetAllProductType() ([]string, error)
 	GetNpuWorkMode() string
 	SetDeviceReset(cardID, deviceID int32) error
+	GetBrotherCardID(int32, int32) (int32, error)
+	PreResetSoc(int32, int32) error
+	GetOutBandChannelState(int32, int32) error
+	SetDeviceResetOutBand(int32, int32) error
+	RescanSoc(int32, int32) error
 	GetDeviceBootStatus(logicID int32) (int, error)
 	GetDeviceAllErrorCode(logicID int32) (int32, []int64, error)
 	SubscribeDeviceFaultEvent(logicID int32) error
@@ -79,6 +85,11 @@ type DeviceInterface interface {
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
 	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
+
+	DcStartHccsPingMesh(int32, int32, int, common.HccspingMeshOperate) error
+	DcStopHccsPingMesh(int32, int32, int, uint) error
+	DcGetHccsPingMeshInfo(int32, int32, int, uint) (*common.HccspingMeshInfo, error)
+	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
 }
 
 var (
@@ -676,6 +687,31 @@ func (d *DeviceManager) SetDeviceReset(cardID, deviceID int32) error {
 	return d.DcMgr.DcSetDeviceReset(cardID, deviceID)
 }
 
+// GetBrotherCardID get brother card id
+func (d *DeviceManager) GetBrotherCardID(cardID, deviceID int32) (int32, error) {
+	return d.DcMgr.DcGetBrotherCardID(cardID, deviceID)
+}
+
+// GetOutBandChannelState get out band channel state
+func (d *DeviceManager) GetOutBandChannelState(cardID, deviceID int32) error {
+	return d.DcMgr.DcGetOutBandChannelState(cardID, deviceID)
+}
+
+// PreResetSoc pre reset soc, used before reset out band
+func (d *DeviceManager) PreResetSoc(cardID, deviceID int32) error {
+	return d.DcMgr.DcPreResetSoc(cardID, deviceID)
+}
+
+// SetDeviceResetOutBand reset spec device out band
+func (d *DeviceManager) SetDeviceResetOutBand(cardID, deviceID int32) error {
+	return d.DcMgr.DcSetDeviceResetOutBand(cardID, deviceID)
+}
+
+// RescanSoc trigger soc rescan, non-blocking
+func (d *DeviceManager) RescanSoc(cardID, deviceID int32) error {
+	return d.DcMgr.DcRescanSoc(cardID, deviceID)
+}
+
 // GetDeviceBootStatus get device boot status
 func (d *DeviceManager) GetDeviceBootStatus(logicID int32) (int, error) {
 	return d.DcMgr.DcGetDeviceBootStatus(logicID)
@@ -1007,4 +1043,61 @@ func (d *DeviceManager) doGetCardIDAndDeviceID(logicID int32) (int32, int32, err
 		logicID, cardId, deviceId)
 	idCache.Store(logicID, npuIdMapping{logicId: logicID, cardId: cardId, deviceId: deviceId})
 	return cardId, deviceId, nil
+}
+
+// GetChipBaseInfos get chip base info
+func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
+	_, cardList, err := d.DcMgr.DcGetCardList()
+	if err != nil {
+		return nil, fmt.Errorf("get card list failed, error: %v", err)
+	}
+	var chips []*common.ChipBaseInfo
+	for _, cardID := range cardList {
+		devNumInCard, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
+		if err != nil {
+			return nil, fmt.Errorf("get device num by cardID: %d failed, error: %v",
+				cardID, err)
+		}
+		for devID := int32(0); devID < devNumInCard; devID++ {
+			logicID, err := d.DcMgr.DcGetDeviceLogicID(cardID, devID)
+			if err != nil {
+				return nil, fmt.Errorf("get device (cardID: %d, deviceID: %d) logic id "+
+					"failed, error: %v", cardID, devID, err)
+			}
+			physicID, err := d.DcMgr.DcGetPhysicIDFromLogicID(logicID)
+			if err != nil {
+				return nil, fmt.Errorf("get device (cardID: %d, deviceID: %d) physic id "+"failed, error: %v",
+					cardID, devID, err)
+			}
+			chips = append(chips, &common.ChipBaseInfo{
+				PhysicID: physicID,
+				LogicID:  logicID,
+				CardID:   cardID,
+				DeviceID: logicID,
+			})
+		}
+	}
+	return chips, nil
+}
+
+// DcStartHccsPingMesh start hccs ping mesh
+func (d *DeviceManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int,
+	operate common.HccspingMeshOperate) error {
+	return d.DcMgr.DcStartHccsPingMesh(cardID, deviceID, portID, operate)
+}
+
+// DcStopHccsPingMesh stop hccs ping mesh
+func (d *DeviceManager) DcStopHccsPingMesh(cardID int32, deviceID int32, portID int, taskID uint) error {
+	return d.DcMgr.DcStopHccsPingMesh(cardID, deviceID, portID, taskID)
+}
+
+// DcGetHccsPingMeshInfo get hccs ping mesh info
+func (d *DeviceManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, portID int,
+	taskID uint) (*common.HccspingMeshInfo, error) {
+	return d.DcMgr.DcGetHccsPingMeshInfo(cardID, deviceID, portID, taskID)
+}
+
+// DcGetHccsPingMeshState get hccs ping mesh state
+func (d *DeviceManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID int, taskID uint) (int, error) {
+	return d.DcMgr.DcGetHccsPingMeshState(cardID, deviceID, portID, taskID)
 }

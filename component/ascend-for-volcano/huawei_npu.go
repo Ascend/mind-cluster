@@ -33,7 +33,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend310p"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/ascend910"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -138,7 +138,7 @@ func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		if !ok {
 			return true
 		}
-		return job.JobReadyTag
+		return *job.JobReadyTag
 	})
 }
 
@@ -153,7 +153,7 @@ func (tp *huaweiNPUPlugin) jobPipelinedFn(obj interface{}) int {
 	if !ok {
 		return util.Abstain
 	}
-	if job.JobReadyTag {
+	if *job.JobReadyTag {
 		return util.Abstain
 	}
 	return util.Reject
@@ -239,8 +239,8 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 func HandlerStart() *plugin.ScheduleHandler {
 	isFirstSession := true
 	scheduleHandler := &plugin.ScheduleHandler{
-		NPUPlugins: map[string]plugin.NPUBuilder{},
-		BaseHandle: base.New(base.PluginName),
+		NPUPlugins:  map[string]plugin.NPUBuilder{},
+		FaultHandle: rescheduling.NewHandler(),
 		ScheduleEnv: plugin.ScheduleEnv{
 			IsFirstSession:   &isFirstSession,
 			Jobs:             map[api.JobID]plugin.SchedulerJob{},

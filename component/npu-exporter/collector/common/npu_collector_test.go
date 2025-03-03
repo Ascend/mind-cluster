@@ -18,9 +18,13 @@ package common
 
 import (
 	"context"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
 	"ascend-common/common-utils/hwlog"
@@ -42,6 +46,7 @@ const (
 	npuCount          = 8
 	time5s            = 5 * time.Second
 	defaultUpdateTime = 5 * time.Second
+	num100            = 100
 )
 
 type mockContainerRuntimeOperator struct{}
@@ -150,9 +155,81 @@ func TestGetChipInfo(t *testing.T) {
 }
 
 func init() {
-	logger.HwLogConfig.LogLevel = 0
-	logger.HwLogConfig.MaxBackups = hwlog.DefaultMaxBackups
-	logger.HwLogConfig.LogFileName = defaultLogFile
-	logger.HwLogConfig.MaxAge = hwlog.DefaultMinSaveAge
+	logger.HwLogConfig = &hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
 	logger.InitLogger("Prometheus")
+}
+
+func mockGetNPUChipList() []HuaWeiAIChip {
+	chips := make([]HuaWeiAIChip, 0)
+	for id := int32(0); id < npuCount; id++ {
+		chip := HuaWeiAIChip{
+			CardId:   id,
+			PhyId:    id,
+			DeviceID: id,
+			LogicID:  id,
+		}
+
+		chips = append(chips, chip)
+	}
+	return chips
+}
+
+// TestInitCardInfo test  method getChipInfo
+func TestInitCardInfo(t *testing.T) {
+
+	patches := gomonkey.ApplyFuncReturn(getNPUChipList, mockGetNPUChipList())
+	defer patches.Reset()
+	convey.Convey("test InitCardInfo", t, func() {
+
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		defer cancelFunc()
+		npuCollector := mockNewNpuCollector()
+
+		InitCardInfo(&sync.WaitGroup{}, ctx, npuCollector)
+		time.Sleep(time.Millisecond * num100)
+		cancelFunc()
+		chips := getChipListCache(npuCollector)
+		convey.So(len(chips), convey.ShouldEqual, npuCount)
+	})
+}
+
+// TestGetChipListCache test  method getChipListCache
+func TestGetChipListCache(t *testing.T) {
+	npuCollector := mockNewNpuCollector()
+	tests := []testCase{
+		{name: "should return 0 chips when cache is nil", wantErr: false, mockPart: func() {}, expectCount: 0},
+		{name: "should return chips : " + strconv.Itoa(npuCount), expectCount: npuCount, wantErr: false,
+			mockPart: func() { npuCollector.cache.Set(npuListCacheKey, mockGetNPUChipList(), cacheTime) }},
+		{name: "should return 0 chips when cache value is nil", wantErr: false, expectCount: 0,
+			mockPart: func() { npuCollector.cache.Set(npuListCacheKey, nil, cacheTime) }},
+		{name: "should return 0 chips when value is a incorrect type", expectCount: 0, wantErr: false,
+			mockPart: func() { npuCollector.cache.Set(npuListCacheKey, &HuaWeiAIChip{}, cacheTime) }},
+		{name: "should return 0 chips when cache is empty", expectCount: 0, wantErr: false,
+			mockPart: func() { npuCollector.cache.Set(npuListCacheKey, []HuaWeiAIChip{}, cacheTime) },
+		},
+	}
+
+	convey.Convey("getChipListCache", t, func() {
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				tt.mockPart.(func())()
+				chips := getChipListCache(npuCollector)
+				assert.Len(t, chips, tt.expectCount.(int))
+				convey.So(len(chips), convey.ShouldEqual, tt.expectCount)
+			})
+		}
+	})
+}
+
+func mockNewNpuCollector() *NpuCollector {
+	tc := newNpuCollectorTestCase{
+		cacheTime:    cacheTime,
+		updateTime:   defaultUpdateTime,
+		deviceParser: &container.DevicesParser{},
+		dmgr:         &devmanager.DeviceManager{},
+	}
+	c := NewNpuCollector(tc.cacheTime, tc.updateTime, tc.deviceParser, tc.dmgr)
+	return c
 }

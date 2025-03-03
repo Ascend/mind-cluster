@@ -182,6 +182,8 @@ type JobPipelinedFnTest struct {
 }
 
 func buildJobPipelinedFnTestCases() []JobPipelinedFnTest {
+	jobReady := true
+	jobNotReady := false
 	return []JobPipelinedFnTest{
 		{
 			name: "01 JobPipelinedFnTest will return Reject when obj is not job info",
@@ -199,14 +201,14 @@ func buildJobPipelinedFnTestCases() []JobPipelinedFnTest {
 		{
 			name: "03 JobPipelinedFnTest will return Abstain when job ready tag is true",
 			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
-				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: true}}}}},
+				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobReady}}}}},
 			obj:  &api.JobInfo{UID: "test-name"},
 			want: util.Abstain,
 		},
 		{
 			name: "04 JobPipelinedFnTest will return Reject when job ready tag is false",
 			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
-				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: false}}}}},
+				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobNotReady}}}}},
 			obj:  &api.JobInfo{UID: "test-name"},
 			want: util.Reject,
 		},

@@ -20,13 +20,8 @@ Package half910x4 is using for HuaWei A800/9000 Ascend910 pin affinity schedule.
 package half910x4
 
 import (
-	"fmt"
-
-	"volcano.sh/volcano/pkg/scheduler/framework"
-
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 )
 
 // New return npu plugin
@@ -39,14 +34,4 @@ func New(name string) base.AscendHandler {
 	m.SetMaxNodeNPUNum(npuNumPerHccs)
 	m.SetIsNetworkFaultAttention(true)
 	return m
-}
-
-// PreStartAction pre-processing actions for rescheduling
-func (tp *half910x4) PreStartAction(i interface{}, _ *framework.Session) error {
-	k, ok := i.(*rescheduling.ReScheduler)
-	if !ok {
-		return fmt.Errorf("preStartAction failed %s, interface is not ReScheduler", SchedulerName)
-	}
-	tp.NPUHandler.ReHandle = k
-	return nil
 }

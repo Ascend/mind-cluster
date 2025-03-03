@@ -93,7 +93,7 @@ func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 			return
 		}
 		timestamp := cache.timestamp
-		doUpdateMetric(ch, timestamp, cache.hbmUtilization, cardLabel, descHbmUtilization)
+		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.hbmUtilization), cardLabel, descHbmUtilization)
 
 		updateHbmInfo(ch, cache, cardLabel, c, containerMap)
 
@@ -120,7 +120,7 @@ func (c *HbmCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, 
 			continue
 		}
 
-		doUpdateTelegraf(fieldMap, descHbmUtilization, cache.hbmUtilization, "")
+		doUpdateTelegrafWithValidateNum(fieldMap, descHbmUtilization, float64(cache.hbmUtilization), "")
 
 		doUpdateTelegraf(fieldMap, descHbmUsedMemory, extInfo.Usage, "")
 		doUpdateTelegraf(fieldMap, descHbmTotalMemory, extInfo.MemorySize, "")
@@ -185,7 +185,14 @@ func updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []stri
 	doUpdateMetric(ch, timestamp, hbmInfo.Usage, cardLabel, descHbmUsedMemory)
 	doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, descHbmTotalMemory)
 
-	if c.Is910Series && len(getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))) == colcommon.ContainerNameLen {
+	// vnpu not support this metrics
+	vDevActivityInfo := cache.chip.VDevActivityInfo
+	if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
+		return
+	}
+
+	containerNameArray := getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))
+	if c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
 		doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, npuCtrTotalMemory)
 		doUpdateMetric(ch, timestamp, hbmInfo.Usage, cardLabel, npuCtrUsedMemory)
 	}

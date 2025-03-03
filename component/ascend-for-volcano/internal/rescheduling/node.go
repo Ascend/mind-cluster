@@ -31,14 +31,18 @@ import (
 )
 
 // createFaultCardHandlers initialise FaultCard struct == getInoperableNPUCards
-func (fNode *FaultNode) createFaultCardHandlers(node *plugin.NPUNode) ([]FaultCard, error) {
+func (fNode *FaultNode) createFaultCardHandlers(node *plugin.NPUNode) []FaultCard {
 	klog.V(util.LogInfoLev).Infof("create new fault card handlers for node %s", node.Name)
 	faultCards := make([]FaultCard, 0)
-	for _, card := range fNode.AllCards {
+	allCards, err := fNode.getAllNPUCardsFromDeviceInfo(node)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("get all fault card info for node %s, err %v", node.Name, err.Error())
+		return faultCards
+	}
+	for _, card := range allCards {
 		faultCard := FaultCard{
 			IsFaultCard: false,
 			NPUName:     card,
-			NodeName:    node.Name,
 			FaultType:   CardHealthy,
 		}
 
@@ -59,14 +63,17 @@ func (fNode *FaultNode) createFaultCardHandlers(node *plugin.NPUNode) ([]FaultCa
 		faultCards = append(faultCards, faultCard)
 	}
 
-	return faultCards, nil
+	return faultCards
 }
 
 // getNodeNPUsByKey get the npu list from node.DeviceInfo
 func (fNode *FaultNode) getNodeNPUsByKey(node *plugin.NPUNode, deviceKey string) ([]string, error) {
 	npuStr, ok := node.Annotation[deviceKey]
-	if !ok || len(npuStr) == 0 {
-		return nil, fmt.Errorf("%s get nil npus", node.Name)
+	if !ok {
+		return nil, fmt.Errorf("%s device info don't have key %s", node.Name, deviceKey)
+	}
+	if len(npuStr) == 0 {
+		return nil, nil
 	}
 	npus := strings.Split(npuStr, ",")
 
@@ -74,9 +81,9 @@ func (fNode *FaultNode) getNodeNPUsByKey(node *plugin.NPUNode, deviceKey string)
 }
 
 // getAllNPUCardsFromDeviceInfo get un-allocated healthy card from device info
-func (fNode *FaultNode) getAllNPUCardsFromDeviceInfo(node *plugin.NPUNode, cardName string) ([]string, error) {
+func (fNode *FaultNode) getAllNPUCardsFromDeviceInfo(node *plugin.NPUNode) ([]string, error) {
 	var allCard []string
-	healthyCard, err := fNode.getNodeNPUsByKey(node, cardName) // ["Ascend910-0", ...]
+	healthyCard, err := fNode.getNodeNPUsByKey(node, fNode.NPUName) // ["Ascend910-0", ...]
 	allCard = append(allCard, healthyCard...)
 	allCard = append(allCard, fNode.UnhealthyNPU...)
 	allCard = append(allCard, fNode.NetworkUnhealthyNPU...)
@@ -88,15 +95,14 @@ func (fNode *FaultNode) getAllNPUCardsFromDeviceInfo(node *plugin.NPUNode, cardN
 }
 
 // getUnhealthyCardsFromDeviceInfo get unhealthyCard from device info
-func (fNode *FaultNode) getUnhealthyCardsFromDeviceInfo(node *plugin.NPUNode, cardName string) ([]string, error) {
-	unhealthyCardName := fmt.Sprintf("%s-%s", cardName, CardUnhealthy) // ["Ascend910-1"]
+func (fNode *FaultNode) getUnhealthyCardsFromDeviceInfo(node *plugin.NPUNode) ([]string, error) {
+	unhealthyCardName := fmt.Sprintf("%s-%s", fNode.NPUName, CardUnhealthy) // ["Ascend910-1"]
 	return fNode.getNodeNPUsByKey(node, unhealthyCardName)
 }
 
 // getNetworkUnhealthyCardsFromDeviceInfo get networkUnhealthyCard from device info
-func (fNode *FaultNode) getNetworkUnhealthyCardsFromDeviceInfo(
-	node *plugin.NPUNode, cardName string) ([]string, error) {
-	networkUnhealthyCardName := fmt.Sprintf("%s-%s", cardName, CardNetworkUnhealthy) // ["Ascend910-1"]
+func (fNode *FaultNode) getNetworkUnhealthyCardsFromDeviceInfo(node *plugin.NPUNode) ([]string, error) {
+	networkUnhealthyCardName := fmt.Sprintf("%s-%s", fNode.NPUName, CardNetworkUnhealthy) // ["Ascend910-1"]
 	return fNode.getNodeNPUsByKey(node, networkUnhealthyCardName)
 }
 
@@ -108,28 +114,22 @@ func (fCard *FaultCard) isCardNetworkUnhealthy(networkUnhealthyList []string) bo
 	return util.IsSliceContain(fCard.NPUName, networkUnhealthyList)
 }
 
-func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode, cardName string) {
+func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 	klog.V(util.LogInfoLev).Infof("update information from device info for node %s", node.Name)
-	tmpUnhealthyNPUs, err := fNode.getUnhealthyCardsFromDeviceInfo(node, cardName)
+	tmpUnhealthyNPUs, err := fNode.getUnhealthyCardsFromDeviceInfo(node)
 	if err != nil {
-		klog.V(util.LogInfoLev).Infof("getUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
+		klog.V(util.LogErrorLev).Infof("getUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
 	}
 	fNode.setUnhealthyNPUList(tmpUnhealthyNPUs)
-	klog.V(util.LogInfoLev).Infof("Unhealthy cards from device info: %v", tmpUnhealthyNPUs)
+	klog.V(util.LogErrorLev).Infof("Unhealthy cards from device info: %v", tmpUnhealthyNPUs)
 
-	tmpNetworkUnhealthyNPUs, err := fNode.getNetworkUnhealthyCardsFromDeviceInfo(node, cardName)
+	tmpNetworkUnhealthyNPUs, err := fNode.getNetworkUnhealthyCardsFromDeviceInfo(node)
 	if err != nil {
-		klog.V(util.LogInfoLev).Infof("getNetworkUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
+		klog.V(util.LogErrorLev).Infof("getNetworkUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
 	}
 	fNode.setNetworkUnhealthyNPUList(tmpNetworkUnhealthyNPUs)
 	klog.V(util.LogInfoLev).Infof("Network unhealthy cards from device info: %v", tmpUnhealthyNPUs)
 
-	tmpAllCardsList, err := fNode.getAllNPUCardsFromDeviceInfo(node, cardName)
-	if err != nil {
-		klog.V(util.LogInfoLev).Infof("getAllNPUCardsFromDeviceInfo: %s", util.SafePrint(err))
-	}
-	fNode.setAllCardList(tmpAllCardsList)
-	klog.V(util.LogDebugLev).Infof("Unallocated and fault cards from device info: %v", tmpAllCardsList)
 	DeviceFaultReason, err := GetNodeDeviceFaultFromDeviceInfo(node)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("GetNodeDeviceFaultFromDeviceInfo: %s", util.SafePrint(err))
@@ -153,14 +153,10 @@ func GetNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, 
 }
 
 // updateFaultNodesAttr update Information from device Info
-func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) error {
+func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) {
 	klog.V(util.LogInfoLev).Infof("Update node %s attributes", node.Name)
 	// 1. create fault Card Object
-	tmpFaultCards, err := fNode.createFaultCardHandlers(node)
-	if err != nil {
-		klog.V(util.LogDebugLev).Infof("Getting node card failed: %s", util.SafePrint(err))
-		return err
-	}
+	tmpFaultCards := fNode.createFaultCardHandlers(node)
 	fNode.setFaultCards(tmpFaultCards)
 
 	fNode.setNodeHealthStateValue(NodeHealthy)
@@ -172,13 +168,12 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) error {
 	fNode.setNodeHealthyBySwitch(node)
 
 	if fNode.NodeHealthState == NodeUnhealthy {
-		return nil
+		return
 	}
 
 	fNode.setHasSwitchSubHealthFault(node.Annotation[util.SwitchNodeHealtyStatuskey] == util.NodeSubHealthy)
 	// 4. set node health state by card unhealthy
 	fNode.setNodeHealthyByCardHealth(node)
-	return nil
 }
 
 func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
@@ -252,21 +247,6 @@ func (fNode *FaultNode) isNodeDEnabled(node *plugin.NPUNode) bool {
 	}
 }
 
-func (fNode *FaultNode) getFaultCardIds(cardName string) ([]int, error) {
-	if fNode.UnhealthyNPU == nil && fNode.NetworkUnhealthyNPU == nil {
-		return nil, fmt.Errorf("no fault card on node")
-	}
-	allFaultCards := append(fNode.UnhealthyNPU, fNode.NetworkUnhealthyNPU...)
-	faultCardIds := util.ChangeTopToIntArray(strings.Join(allFaultCards, ","), cardName)
-	return faultCardIds, nil
-}
-
-// isNodeInSessionByNpuNodes judge if node is sent in session
-func (fNode *FaultNode) isNodeInSessionByNpuNodes(nodes map[string]plugin.NPUNode) bool {
-	_, ok := nodes[fNode.NodeName]
-	return ok
-}
-
 func (fNode *FaultNode) setNodeDValue(value bool) {
 	fNode.NodeDEnable = value
 }
@@ -283,20 +263,12 @@ func (fNode *FaultNode) setNodeHealthStateValue(nodeHealthState string) {
 	fNode.NodeHealthState = nodeHealthState
 }
 
-func (fNode *FaultNode) setAllCardList(value []string) {
-	fNode.AllCards = value
-}
-
 func (fNode *FaultNode) setUnhealthyNPUList(value []string) {
 	fNode.UnhealthyNPU = value
 }
 
 func (fNode *FaultNode) setNetworkUnhealthyNPUList(value []string) {
 	fNode.NetworkUnhealthyNPU = value
-}
-
-func (fNode *FaultNode) setUpdateTime(value int64) {
-	fNode.UpdateTime = value
 }
 
 func (fNode *FaultNode) setFaultCards(value []FaultCard) {
@@ -324,8 +296,8 @@ func (fNode *FaultNode) setNodeHasCardSubHealthFault() {
 	}
 }
 
-func newFaultNodeDefault(nodeName string, updateTime int64) FaultNode {
-	faultNode := FaultNode{
+func newFaultNodeDefault(nodeName string, updateTime int64) *FaultNode {
+	faultNode := &FaultNode{
 		NodeName:            nodeName,
 		UpdateTime:          updateTime,
 		UnhealthyNPU:        nil,
@@ -333,24 +305,8 @@ func newFaultNodeDefault(nodeName string, updateTime int64) FaultNode {
 		IsFaultNode:         false,
 		NodeDEnable:         false,
 		NodeHealthState:     NodeHealthy,
-		AllCards:            nil,
 		FaultCards:          nil,
 		FaultDeviceList:     []FaultDeviceList{},
 	}
 	return faultNode
-}
-
-func isNodeInSessionByNodeName(NodeName string, nodes map[string]plugin.NPUNode) bool {
-	_, ok := nodes[NodeName]
-	return ok
-}
-
-func initSimpleFNodeInfoByFNode(node *FaultNode) SimpleFNodeInfo {
-	return SimpleFNodeInfo{
-		NodeName:                node.NodeName,
-		IsFaultNode:             node.IsFaultNode,
-		HasCardSubHealthFault:   node.HasCardSubHealthFault,
-		HasSwitchSubHealthFault: node.HasSwitchSubHealthFault,
-		NodeHealthState:         node.NodeHealthState,
-	}
 }

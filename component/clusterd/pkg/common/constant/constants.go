@@ -118,6 +118,7 @@ const (
 	FaultTypeNode    = "Node"
 	FaultTypeNetwork = "Network"
 	FaultTypeStorage = "Storage"
+	PublicFaultType  = "PublicFault"
 )
 
 // public fault file path and name

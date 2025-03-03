@@ -27,7 +27,6 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 )
 
 // GetUsedChips return chips used by process and containerd
@@ -79,17 +78,11 @@ func (tool *AscendTools) getChipsUsedByProcess() sets.String {
 // getChipsUsedByContainerd return chips used by process
 func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 	usedChips := sets.NewString()
-	if !utils.IsExist(common.DefaultContainerdSockPath) {
-		hwlog.RunLog.Warn("containerd socket file not exist")
+	if tool.containerdClient == nil {
+		hwlog.RunLog.Debug("containerd client is nil")
 		return usedChips
 	}
-	client, err := containerd.New(common.DefaultContainerdSockPath)
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to connect to containerd: %v", err)
-		return usedChips
-	}
-	defer client.Close()
-	nss, err := client.NamespaceService().List(context.Background())
+	nss, err := tool.containerdClient.NamespaceService().List(context.Background())
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to get namespace list: %v", err)
 		return usedChips
@@ -97,7 +90,7 @@ func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 	hwlog.RunLog.Debugf("containerd namespace list: %v", nss)
 	for _, ns := range nss {
 		ctx := namespaces.WithNamespace(context.Background(), ns)
-		taskList, err := client.TaskService().List(ctx, &tasks.ListTasksRequest{})
+		taskList, err := tool.containerdClient.TaskService().List(ctx, &tasks.ListTasksRequest{})
 		if err != nil {
 			hwlog.RunLog.Warnf("failed to get task list: %v", err)
 			continue
@@ -108,7 +101,7 @@ func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 		}
 		for _, taskInfo := range taskList.Tasks {
 			hwlog.RunLog.Debugf("Task ID: %s, PID: %d", taskInfo.ID, taskInfo.Pid)
-			containerObj, err := client.LoadContainer(ctx, taskInfo.ID)
+			containerObj, err := tool.containerdClient.LoadContainer(ctx, taskInfo.ID)
 			if err != nil {
 				hwlog.RunLog.Warnf("failed to load container %s, err: %v", taskInfo.ID, err)
 				continue
@@ -144,7 +137,7 @@ func (tool *AscendTools) getDeviceWithAscendRuntime(containerObj containerd.Cont
 			hwlog.RunLog.Debugf("get device info by env (%s) in %s", envs[i], containerInfo.ID)
 			devInfo := strings.Split(envs[i], "=")
 			if len(devInfo) != ascendEnvPart {
-				hwlog.RunLog.Warnf("an invalid %s env(%s)", common.AscendVisibleDevicesEnv, envs[i])
+				hwlog.RunLog.Debugf("an invalid %s env(%s)", common.AscendVisibleDevicesEnv, envs[i])
 				continue
 			}
 			devicesIDs := parseDiffEnvFmt(devInfo[1], containerInfo.ID)
@@ -162,12 +155,12 @@ func (tool *AscendTools) getDeviceWithoutAscendRuntime(containerObj containerd.C
 	usedChips := sets.NewString()
 	spec, err := getContainerValidSpec(containerObj, ctx)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get container valid spec: %v", err)
+		hwlog.RunLog.Debugf("failed to get container valid spec: %v", err)
 		return usedChips
 	}
 	deviceIDs, err := filterNPUDevices(spec)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get device ids: %v", err)
+		hwlog.RunLog.Debugf("failed to get device ids: %v", err)
 		return usedChips
 	}
 	hwlog.RunLog.Debugf("filter npu devices get deviceIDs: %v", deviceIDs)

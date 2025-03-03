@@ -170,7 +170,7 @@ func logErrMetricsWithLimit(metric string, logicID int32, err error) {
 		"logicID(%d),%v", logicID, err)
 }
 
-func validateIsNilForEveryElement(objs ...interface{}) bool {
+func validateNotNilForEveryElement(objs ...interface{}) bool {
 	for _, v := range objs {
 		val := reflect.ValueOf(v)
 		if val.Kind() != reflect.Ptr {

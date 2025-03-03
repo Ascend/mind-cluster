@@ -42,6 +42,7 @@ type npuAllocateFuncTest struct {
 func buildNPUAllocateFuncTest() []npuAllocateFuncTest {
 	task := test.FakeNormalTestTasks(1)[0]
 	name, num := GetVCTaskReqNPUTypeFromTaskInfo(task)
+	tmpJobReadyTag := true
 	npuTask := util.NPUTask{
 		Name: task.Name, NameSpace: task.Namespace, ReqNPUName: name,
 		ReqNPUNum: num,
@@ -67,11 +68,13 @@ func buildNPUAllocateFuncTest() []npuAllocateFuncTest {
 			name: "03-NPUAllocateFunc no node test",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs: map[api.JobID]SchedulerJob{task.Job: {SchedulerJobAttr: util.SchedulerJobAttr{
-						NPUJob: &util.NPUJob{
-							Tasks: map[api.TaskID]util.NPUTask{task.UID: npuTask},
-						},
-					}}},
+					Jobs: map[api.JobID]SchedulerJob{task.Job: {
+						JobReadyTag: &tmpJobReadyTag,
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							NPUJob: &util.NPUJob{
+								Tasks: map[api.TaskID]util.NPUTask{task.UID: npuTask},
+							},
+						}}},
 					Nodes:     map[string]NPUNode{},
 					FrameAttr: VolcanoFrame{}}},
 			args: npuAllocateFuncArgs{task: task},

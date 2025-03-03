@@ -117,13 +117,16 @@ func FakeNormalTestTasks(num int) []*api.TaskInfo {
 		return nil
 	}
 	var tasks []*api.TaskInfo
-
+	annoCards := "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
 	for i := 0; i < num; i++ {
 		strNum := strconv.Itoa(i)
 		task := FakeNormalTestTask("pod"+strNum, "node"+strNum, "pg"+strNum)
+		task.Pod.Annotations[AscendNPUPodRealUse] = annoCards
+		task.Pod.Annotations[podRankIndex] = strNum
 		tasks = append(tasks, task)
 	}
 	tasks[0].Pod.Annotations[npuCoreName] = fakeWholeCardStr
+	tasks[0].Pod.Labels["fault-scheduling"] = "force"
 	return tasks
 }
 

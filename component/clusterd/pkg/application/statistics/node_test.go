@@ -55,35 +55,35 @@ func TestUpdateNodeSNAndNameCache(t *testing.T) {
 	}
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, node is nil", t, func() {
-		UpdateNodeSNAndNameCache(nil, constant.AddOperator)
+		UpdateNodeSNAndNameCache(nil, nil, constant.AddOperator)
 	})
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, add node when node does not exist", t, func() {
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
-		UpdateNodeSNAndNameCache(node, constant.AddOperator)
+		UpdateNodeSNAndNameCache(nil, node, constant.AddOperator)
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 1)
 	})
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, add node when node exist", t, func() {
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 1)
-		UpdateNodeSNAndNameCache(node, constant.AddOperator)
+		UpdateNodeSNAndNameCache(nil, node, constant.AddOperator)
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 1)
 	})
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, delete node when node exist", t, func() {
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 1)
-		UpdateNodeSNAndNameCache(node, constant.DeleteOperator)
+		UpdateNodeSNAndNameCache(nil, node, constant.DeleteOperator)
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
 	})
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, delete node when node does not exist", t, func() {
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
-		UpdateNodeSNAndNameCache(node, constant.DeleteOperator)
+		UpdateNodeSNAndNameCache(nil, node, constant.DeleteOperator)
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
 	})
 
 	convey.Convey("test func UpdateNodeSNAndNameCache, invalid operator", t, func() {
-		UpdateNodeSNAndNameCache(node, "invalid operator")
+		UpdateNodeSNAndNameCache(nil, node, "invalid operator")
 		convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
 	})
 
@@ -97,6 +97,6 @@ func testLabelNotExist() {
 			Annotations: map[string]string{"label not exist": nodeSN},
 		},
 	}
-	UpdateNodeSNAndNameCache(node1, constant.AddOperator)
+	UpdateNodeSNAndNameCache(nil, node1, constant.AddOperator)
 	convey.So(len(statistics.GetNodeSNAndNameCache()), convey.ShouldEqual, 0)
 }

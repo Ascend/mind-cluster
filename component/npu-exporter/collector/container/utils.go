@@ -56,8 +56,8 @@ func GetConnection(endPoint string) (*grpc.ClientConn, error) {
 	if endPoint == "" {
 		return nil, fmt.Errorf("endpoint is not set")
 	}
-	logger.Logger.Logf(logger.Debug, "connect using endpoint '%s' with '%s' timeout", utils.MaskPrefix(strings.TrimPrefix(endPoint,
-		unixPrefix+"://")), defaultTimeout)
+	logger.Logger.Logf(logger.Debug, "connect using endpoint '%s' with '%s' timeout",
+		utils.MaskPrefix(strings.TrimPrefix(endPoint, unixPrefix+"://")), defaultTimeout)
 	addr, dialer, err := getAddressAndDialer(endPoint)
 	if err != nil {
 		hwlog.RunLog.Error(err)
@@ -69,8 +69,8 @@ func GetConnection(endPoint string) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Logger.Logf(logger.Debug, "connected successfully using endpoint: %s", utils.MaskPrefix(strings.TrimPrefix(endPoint,
-		unixPrefix+"://")))
+	logger.Logger.Logf(logger.Debug, "connected successfully using endpoint: %s",
+		utils.MaskPrefix(strings.TrimPrefix(endPoint, unixPrefix+"://")))
 	return conn, nil
 }
 

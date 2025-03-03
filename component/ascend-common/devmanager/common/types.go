@@ -47,6 +47,14 @@ type ChipInfo struct {
 	AICoreCnt int    `json:"aicore_cnt"`
 }
 
+// ChipBaseInfo all id of chip
+type ChipBaseInfo struct {
+	PhysicID int32
+	LogicID  int32
+	CardID   int32
+	DeviceID int32
+}
+
 // CgoCreateVDevOut create virtual device output info
 type CgoCreateVDevOut struct {
 	VDevID     uint32
@@ -386,4 +394,29 @@ type OpticalInfo struct {
 	OpticalVcc float64
 	// Optical module temperature
 	OpticalTemp float64
+}
+
+// HccspingMeshOperate refers to the operation of hccsping mesh
+type HccspingMeshOperate struct {
+	DstAddr      string
+	PktSize      int
+	PktSendNum   int
+	PktInterval  int
+	Timeout      int
+	TaskInterval int
+	TaskId       int
+}
+
+// HccspingMeshInfo refers to the result of hccsping mesh
+type HccspingMeshInfo struct {
+	DstAddr      []string
+	SucPktNum    []uint
+	FailPktNum   []uint
+	MaxTime      []int
+	MinTime      []int
+	AvgTime      []int
+	TP95Time     []int
+	ReplyStatNum []int
+	PingTotalNum []int
+	DestNum      int
 }

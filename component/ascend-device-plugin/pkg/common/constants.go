@@ -99,6 +99,8 @@ const (
 	MetaDataAnnotation = "metadata.annotations"
 	// MetaData is meta data of pod
 	MetaData = "metadata"
+	// ResetInfoAnnotationKey is the key of reset fail information in node annotation
+	ResetInfoAnnotationKey = "ResetInfo"
 
 	// SlowNodeStepTimeEnvNum is the number of environment value for step time cm
 	SlowNodeStepTimeEnvNum = 2
@@ -717,7 +719,7 @@ const (
 	MinLogicID = 0
 	// MaxResetTimes the max reset times of a device while error happened,
 	// setting to 30 to avoid manually reset on host machine
-	MaxResetTimes = 30
+	MaxResetTimes = 3
 )
 
 // the severity level of fault

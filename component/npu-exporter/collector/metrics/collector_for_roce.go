@@ -155,10 +155,6 @@ func (c *RoceCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(cache roceCache, cardLabel []string) {
-		extInfo := cache.extInfo
-		if extInfo == nil {
-			return
-		}
 		statInfo := cache.extInfo
 		if statInfo == nil {
 			return

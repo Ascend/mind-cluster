@@ -116,10 +116,6 @@ func (c *PcieCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(cache pcieCache, cardLabel []string) {
-		extInfo := cache.extInfo
-		if extInfo == nil {
-			return
-		}
 		pcieBwInfo := cache.extInfo
 		if pcieBwInfo == nil {
 			return

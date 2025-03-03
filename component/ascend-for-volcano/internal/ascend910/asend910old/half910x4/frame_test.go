@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 )
 
 // TestNew
@@ -41,40 +40,4 @@ func TestNew(t *testing.T) {
 				npu.GetPluginName(), util.NPU910CardNamePre)
 		}
 	})
-}
-
-type fields struct {
-	name string
-	half910x4
-	args    interface{}
-	wantErr bool
-}
-
-func buildTestPreStartCases() []fields {
-	var i interface{}
-	return []fields{
-		{
-			name:      "01-it will return err when i is not *rescheduler",
-			half910x4: half910x4{},
-			args:      i,
-			wantErr:   true,
-		},
-		{
-			name:      "02-it will return err when i is not *rescheduler",
-			half910x4: half910x4{},
-			args:      &rescheduling.ReScheduler{},
-			wantErr:   false,
-		},
-	}
-}
-
-func TestPreStartRescheduling(t *testing.T) {
-	tests := buildTestPreStartCases()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.PreStartAction(tt.args, nil); (err != nil) != tt.wantErr {
-				t.Errorf("preStartRescheduling() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
 }
