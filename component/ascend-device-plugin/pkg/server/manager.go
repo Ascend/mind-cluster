@@ -166,9 +166,10 @@ func (hdm *HwDevManager) updateNode() error {
 		return err
 	}
 	newNode.Annotations[common.BaseDeviceInfoKey] = string(mashaledNpuInfo)
+	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
-			hwlog.RunLog.Infof("update node label success")
+			hwlog.RunLog.Info("update node label success")
 			return nil
 		}
 		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)

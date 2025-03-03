@@ -93,6 +93,8 @@ const (
 	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
+	// SuperPodIDKey super node id
+	SuperPodIDKey = "superPodID"
 	// ChipNameLabel update chip name to node label
 	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// MetaDataAnnotation downward api which map annotation from volcano to container's env
