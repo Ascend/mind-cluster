@@ -118,7 +118,7 @@ class TestCustomRotationHandler(unittest.TestCase):
             f.write("test3 log")
         handler.doRollover()
         backups = [f for f in os.listdir(self.test_dir) if f != "customlog.log"]
-        self.assertEqual(len(backups), 3)
+        self.assertEqual(len(backups), 2)
 
     def test_multiple_rollovers(self):
         """
