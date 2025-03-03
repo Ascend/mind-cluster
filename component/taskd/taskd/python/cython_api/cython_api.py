@@ -17,7 +17,7 @@
 import ctypes
 import os
 from taskd.python.utils.log import run_log
-from taskd.python.constants.constants import LIB_SO_NAME,LIB_SO_PATH
+from taskd.python.constants.constants import LIB_SO_NAME, LIB_SO_PATH
 
 try:
     lib_path = os.path.join(os.path.dirname(__file__), LIB_SO_PATH, LIB_SO_NAME)

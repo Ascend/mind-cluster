@@ -20,11 +20,11 @@ import os
 import re
 import sys
 from logging.handlers import RotatingFileHandler
-from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH,LOG_MAX_LINE_LENGTH,LOG_DATE_FORMAT,
-                                              LOG_SIMPLE_FORMAT,LOG_DEFAULT_FILE,LOG_DEFAULT_FILE_NAME,
-                                              LOG_DEFAULT_BACKUP_COUNT, LOG_DEFAULT_MAX_BYTES,LOG_BACKUP_FORMAT,
-                                              LOG_PRIVILEGE,LOG_DIR_PRIVILEGE,LOG_BAK_PRIVILEGE,LOG_BACKUP_PATTERN,
-                                              TASKD_LOG_LEVEL,TASKD_LOG_STDOUT,TASKD_LOG_PATH)
+from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH, LOG_MAX_LINE_LENGTH, LOG_DATE_FORMAT,
+                                              LOG_SIMPLE_FORMAT, LOG_DEFAULT_FILE, LOG_DEFAULT_FILE_NAME,
+                                              LOG_DEFAULT_BACKUP_COUNT, LOG_DEFAULT_MAX_BYTES, LOG_BACKUP_FORMAT,
+                                              LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BAK_PRIVILEGE, LOG_BACKUP_PATTERN,
+                                              TASKD_LOG_LEVEL, TASKD_LOG_STDOUT, TASKD_LOG_PATH)
 from taskd.python.utils.validator import FileValidator
 
 
@@ -32,6 +32,7 @@ class MaxLengthFormatter(logging.Formatter):
     '''
     Max Length Formatter format log max length
     '''
+
     def __init__(self, fmt, max_length, datefmt=None):
         super().__init__(fmt=fmt, datefmt=datefmt)
         self.max_length = max_length
@@ -45,13 +46,15 @@ class MaxLengthFormatter(logging.Formatter):
             return msg[:self.max_length] + '...'
         return msg
 
+
 class CustomRotatingHandler(RotatingFileHandler):
     '''
     Custom RotatingFileHandler to backup same format log file
     '''
+
     def __init__(self, filename, maxBytes=0, backupCount=0, encoding=None, delay=None):
         super().__init__(
-            filename,maxBytes=maxBytes,
+            filename, maxBytes=maxBytes,
             backupCount=backupCount,
             encoding=encoding,
             delay=delay
@@ -59,7 +62,7 @@ class CustomRotatingHandler(RotatingFileHandler):
 
     def rotation_filename(self, default_name):
         base, ext = os.path.splitext(self.baseFilename)
-        back_time = datetime.datetime.now().strftime(LOG_BACKUP_FORMAT)[:-3]
+        back_time = datetime.datetime.now(tz=datetime.timezone.utc).strftime(LOG_BACKUP_FORMAT)[:-3]
         return f"{base}-{back_time}{ext}"
 
     def doRollover(self):
@@ -91,7 +94,7 @@ class CustomRotatingHandler(RotatingFileHandler):
                 if match:
                     timestamp_str = match.group(1)
                     # get timestamp str for sort file
-                    timestamp_str = timestamp_str[len(base)+1:-len(ext)]
+                    timestamp_str = timestamp_str[len(base) + 1:-len(ext)]
 
                     try:
                         # resolve timestamps in file names
@@ -118,6 +121,7 @@ class LogConfig:
     '''
     Log Config include logger configuration
     '''
+
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
         self.log_level = logging.INFO
@@ -151,7 +155,7 @@ class LogConfig:
 
     def build_log_stdout(self):
         log_stdout = os.getenv(TASKD_LOG_STDOUT)
-        if log_stdout is not None and log_stdout == False:
+        if log_stdout is not None and log_stdout is False:
             self.log_std_out = False
 
 
@@ -160,16 +164,19 @@ def _set_formatter(logger: logging.Logger, fmt: str):
         formatter = MaxLengthFormatter(fmt, LOG_MAX_LINE_LENGTH, datefmt=LOG_DATE_FORMAT)
         handler.setFormatter(formatter)
 
+
 def _set_loglevel(logger: logging.Logger, level: int):
     logger.setLevel(level)
     for handler in logger.handlers:
         handler.setLevel(level)
 
+
 def _set_rotator(logger: logging.Logger, rotate_func: callable):
     for handler in logger.handlers:
         handler.rotator = rotate_func
 
-def _log_rotator(source: str, dest:str) -> None:
+
+def _log_rotator(source: str, dest: str) -> None:
     if os.path.exists(source):
         os.rename(source, dest)
         os.chmod(dest, mode=LOG_PRIVILEGE)
@@ -178,7 +185,8 @@ def _log_rotator(source: str, dest:str) -> None:
         else:
             _exit_file_process(source)
 
-def _exit_file_process(log_path:str)->None:
+
+def _exit_file_process(log_path: str) -> None:
     """
     Handle log file when file is already existed.
     :param log_path: log file path
@@ -191,17 +199,20 @@ def _exit_file_process(log_path:str)->None:
     # check log file permission
     os.chmod(log_path, LOG_PRIVILEGE)
 
+
 def _get_stream_handler(cfg: LogConfig):
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(cfg.log_level)
     stream_handler.setFormatter(logging.Formatter(cfg.log_format, datefmt=LOG_DATE_FORMAT))
     return stream_handler
 
+
 def _get_file_handler(cfg: LogConfig):
-    file_handler = CustomRotatingHandler(cfg.log_file, maxBytes=cfg.log_max_bytes,backupCount=cfg.log_backup_count)
+    file_handler = CustomRotatingHandler(cfg.log_file, maxBytes=cfg.log_max_bytes, backupCount=cfg.log_backup_count)
     file_handler.setLevel(cfg.log_level)
     file_handler.setFormatter(logging.Formatter(cfg.log_format, datefmt=LOG_DATE_FORMAT))
     return file_handler
+
 
 def _get_logger() -> logging.Logger:
     # init logger and log config
@@ -219,5 +230,6 @@ def _get_logger() -> logging.Logger:
     _set_formatter(logger, log_cfg.log_format)
     _set_loglevel(logger, log_cfg.log_level)
     return logger
+
 
 run_log = _get_logger()

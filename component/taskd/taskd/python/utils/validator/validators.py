@@ -18,8 +18,9 @@
 import os
 from typing import Callable, Any
 from typing import List, Optional, Tuple
-from taskd.python.constants.constants import (MAX_SIZE,MIN_SIZE,MIN_RANK_SIZE,MAX_RANK_SIZE,
-                                    MAX_FILE_NUMS,MIN_DEVICE_NUM,MAX_DEVICE_NUM)
+from taskd.python.constants.constants import (MAX_SIZE, MIN_SIZE, MIN_RANK_SIZE, MAX_RANK_SIZE,
+                                              MAX_FILE_NUMS, MIN_DEVICE_NUM, MAX_DEVICE_NUM)
+
 
 class Validator:
     """

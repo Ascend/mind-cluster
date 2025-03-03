@@ -283,7 +283,7 @@ def init_mindio_controller(frame: str = "pytorch"):
 
 
 def init_grpc_client(frame: str = "pytorch"):
-    start_process = threading.Thread(target=init_grpc_process,args=(frame,))
+    start_process = threading.Thread(target=init_grpc_process, args=(frame,))
     start_process.setDaemon(True)
     start_process.start()
 
