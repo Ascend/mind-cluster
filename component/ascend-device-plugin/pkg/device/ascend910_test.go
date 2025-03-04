@@ -1229,7 +1229,7 @@ func TestExecResetDevice(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test execResetDevice", t, func() {
 		convey.Convey("01-hot reset success, should return nil", func() {
-			patch1 := gomonkey.ApplyPrivateMethod(manager, "canResetDevice", func(_, _ int32) bool {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "canResetDevice", func(_, _, _ int32) bool {
 				return false
 			})
 			patch1.ApplyPrivateMethod(manager, "updateResetInfo", func(_, _ []ResetDevice) {
@@ -1242,6 +1242,41 @@ func TestExecResetDevice(t *testing.T) {
 			}
 			devMap := map[int32]int32{chipPhyID0: chipPhyID0}
 			convey.So(manager.execResetDevice(devMap), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestCanResetDevice test the function canResetDevice
+func TestCanResetDevice(t *testing.T) {
+	manager := createFake910Manager()
+	convey.Convey("test canResetDevice", t, func() {
+		convey.Convey("01-dev busy, should return false", func() {
+			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
+			defer patch1.Reset()
+			convey.So(manager.canResetDevice(id1, id1, id1), convey.ShouldBeFalse)
+		})
+		patch := gomonkey.ApplyFuncReturn(IsDevBusy, false)
+		defer patch.Reset()
+		convey.Convey("02-can not be reset, should return false", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "canBeReset",
+				func(dev *common.DevFaultInfo) (bool, error) {
+					return false, testErr
+				})
+			defer patch1.Reset()
+			convey.So(manager.canResetDevice(id1, id1, id1), convey.ShouldBeFalse)
+		})
+		patch.ApplyPrivateMethod(manager, "canBeReset",
+			func(dev *common.DevFaultInfo) (bool, error) {
+				return true, nil
+			})
+		convey.Convey("03-reset cnt over, should return false", func() {
+			patch1 := gomonkey.ApplyFuncReturn(GetResetCnt, common.MaxResetTimes+id1)
+			defer patch1.Reset()
+			convey.So(manager.canResetDevice(id1, id1, id1), convey.ShouldBeFalse)
+		})
+		patch.ApplyFuncReturn(GetResetCnt, common.MaxResetTimes-id1)
+		convey.Convey("04-success, should return true", func() {
+			convey.So(manager.canResetDevice(id1, id1, id1), convey.ShouldBeTrue)
 		})
 	})
 }

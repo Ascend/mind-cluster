@@ -1726,6 +1726,7 @@ func (hnm *HwAscend910Manager) canResetDevice(cardID, deviceID, logicId int32) b
 		hwlog.RunLog.Infof("device is busy, can not reset, cardID %v, deviceID %v", cardID, deviceID)
 		return false
 	}
+	// check whether there is process running on the device
 	if ok, err := hnm.canBeReset(&common.DevFaultInfo{LogicId: logicId}); err != nil || !ok {
 		return false
 	}
