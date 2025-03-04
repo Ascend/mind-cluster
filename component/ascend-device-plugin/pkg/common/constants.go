@@ -15,6 +15,8 @@
 // Package common a series of common function
 package common
 
+import "time"
+
 const (
 	// Component component name
 	Component = "device-plugin"
@@ -93,6 +95,8 @@ const (
 	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
+	// SuperPodIDKey super node id
+	SuperPodIDKey = "superPodID"
 	// ChipNameLabel update chip name to node label
 	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// MetaDataAnnotation downward api which map annotation from volcano to container's env
@@ -708,7 +712,7 @@ const (
 	// MinFaultTimeout is the min time(s) for the fault duration time of fault duration
 	MinFaultTimeout = 0
 	// MaxRecoverTimeout is the max time(s) for the fault recover duration time of fault duration
-	MaxRecoverTimeout = 600
+	MaxRecoverTimeout = 86400
 	// MinRecoverTimeout is the min time(s) for the fault recover duration time of fault duration
 	MinRecoverTimeout = 0
 	// DefaultSubscribeToPollingTime is the default time from subscribe to polling
@@ -854,4 +858,27 @@ const (
 	AssociatedFaultDiagnosisTime = 5
 	// TimeMilliseconds indicate how many milliseconds are there in a second
 	TimeMilliseconds = 1000
+)
+
+const (
+	// FailureCountThresholdForRestart threshold number of consecutive send failures for restart dp
+	FailureCountThresholdForRestart = 15
+	// FailureCountThresholdForReRegistry threshold number of consecutive send failures for reRegistry to kubelet
+	FailureCountThresholdForReRegistry = 5
+	// CheckFailurePeriodSecond period of check connection between kubelet and device-plugin
+	CheckFailurePeriodSecond = time.Second * 5
+	// EmptyStrategy do nothing for send result
+	EmptyStrategy = ""
+	// ReRegistryStrategy a strategy registry to kubelet
+	ReRegistryStrategy = "reRegistry"
+	// ReStartDevicePluginStrategy a strategy restart device-plugin
+	ReStartDevicePluginStrategy = "restart"
+	// MaxSendRecordLength max length record send result
+	MaxSendRecordLength = 1024
+	// DefaultSendRecordLength default length record send result
+	DefaultSendRecordLength = 128
+	// GrpcKeepAliveTime keep alive time for grpc connection
+	GrpcKeepAliveTime = 5 * time.Minute
+	// GrpcKeepAliveTimeout grpc timeout for keep-alive ping response
+	GrpcKeepAliveTimeout = 5 * time.Minute
 )

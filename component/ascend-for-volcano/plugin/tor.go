@@ -22,7 +22,6 @@ package plugin
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 
@@ -34,7 +33,6 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
 // InitTorNodeInfo init tor node if basic tor node configmap exits
@@ -70,14 +68,8 @@ func (sHandle *ScheduleHandler) InitTorNodeInfo(ssn *framework.Session) {
 		return
 	}
 
-	if sHandle.NslbAttr.nslbVersion == "" {
-		torList.initParamFromConfig(sHandle.FrameAttr.Confs)
-		sHandle.NslbAttr.nslbVersion = torList.nslbVersion
-		sHandle.NslbAttr.sharedTorNum = torList.sharedTorNum
-	} else {
-		torList.nslbVersion = sHandle.NslbAttr.nslbVersion
-		torList.sharedTorNum = sHandle.NslbAttr.sharedTorNum
-	}
+	torList.nslbVersion = sHandle.FrameAttr.NslbVersion
+	torList.sharedTorNum = sHandle.FrameAttr.SharedTorNum
 
 	torList.initNodeNameByNodeIp(sHandle.Nodes)
 	torList.syncBySsnJobs(sHandle.Jobs)
@@ -228,40 +220,6 @@ func (tl *TorList) getTorAndServerByNodeName(nodeName string) (*Tor, *Server) {
 	return nil, nil
 }
 
-func (tl *TorList) initParamFromConfig(Confs []config.Configuration) {
-	tl.sharedTorNum = 0
-	tl.nslbVersion = defaultNSLBVersion
-	if len(Confs) == 0 {
-		err := fmt.Errorf(util.ArgumentError)
-		klog.V(util.LogWarningLev).Infof("getSharedTorNum %s. use default config", err)
-		return
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, Confs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("getSharedTorNum %s. use default config", err)
-		return
-	}
-	str := configuration.Arguments[keyOfSharedTorNum]
-	sharedTorNum, err := strconv.Atoi(str)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("getSharedTorNum %s.", err)
-		return
-	}
-	if sharedTorNum != shareTorNum1 && sharedTorNum != shareTorNum2 {
-		klog.V(util.LogWarningLev).Infof("sharedTorNum is illegal. use default config")
-		return
-	}
-	nslbVersion := configuration.Arguments[keyOfNSLBVersion]
-	if nslbVersion != defaultNSLBVersion && nslbVersion != NSLB2Version {
-		klog.V(util.LogWarningLev).Infof("nslbVersion is illegal. use default config")
-		return
-	}
-	tl.nslbVersion = nslbVersion
-	tl.sharedTorNum = sharedTorNum
-	klog.V(util.LogWarningLev).Infof("nslbVersion and sharedTorNum init success.can not change the parameters and" +
-		" it will not be changed during normal operation of the volcano")
-}
-
 func (tl *TorList) initTorShareStatus(jobs map[api.JobID]SchedulerJob) {
 	for _, job := range jobs {
 		if job.Status != util.PodGroupRunning && job.Status != util.PodGroupUnknown {
@@ -276,7 +234,7 @@ func (tl *TorList) initTorShareStatus(jobs map[api.JobID]SchedulerJob) {
 	}
 }
 
-// MarkTorListByJobV1 mark the global nslb list by node list a job can be scheduled
+// MarkTorListByJobV1 mark the global tor list by node list a job can be scheduled
 func (tl *TorList) MarkTorListByJobV1(nodes map[string]*api.NodeInfo, jobUid api.JobID, taskNum int) {
 	if tl == nil {
 		return
@@ -296,7 +254,7 @@ func (tl *TorList) MarkTorListByJobV1(nodes map[string]*api.NodeInfo, jobUid api
 	}
 }
 
-// MarkTorListByJobV2 mark the global nslb list by node list a job can be scheduled
+// MarkTorListByJobV2 mark the global tor list by node list a job can be scheduled
 func (tl *TorList) MarkTorListByJobV2(nodes map[string]*api.NodeInfo, jobUid api.JobID) {
 	if tl == nil {
 		return
@@ -314,7 +272,7 @@ func (tl *TorList) MarkTorListByJobV2(nodes map[string]*api.NodeInfo, jobUid api
 	}
 }
 
-// SetTorFreeServerCountAndGetFullTor get the num of full nslb
+// SetTorFreeServerCountAndGetFullTor get the num of full tor
 func (tl *TorList) SetTorFreeServerCountAndGetFullTor(jobUid api.JobID) int {
 	if tl == nil {
 		return 0
@@ -335,7 +293,7 @@ func (tl *TorList) SetTorFreeServerCountAndGetFullTor(jobUid api.JobID) int {
 	return fullTorNum
 }
 
-// GetLogicTorsAndFullTorNum get logic nslb list by global nslb list
+// GetLogicTorsAndFullTorNum get logic tor list by global tor list
 func (tl *TorList) GetLogicTorsAndFullTorNum(jobUid api.JobID, taskColumn, taskRow, netSliceNum int) ([]*Tor, int) {
 	if netSliceNum > util.MaxSliceNum {
 		klog.V(util.LogDebugLev).Infof("GetLogicTorList failed:%s", util.ArgumentError)
@@ -362,14 +320,14 @@ func (tl *TorList) GetLogicTorsAndFullTorNum(jobUid api.JobID, taskColumn, taskR
 	// for example: a job has 22 npu task , netSliceNum is 4. taskRow = 5, taskColumn = 1
 	// slice 1 must have 5 nodes
 	if len(torTransposed[taskColumn]) < taskRow+1 {
-		klog.V(util.LogWarningLev).Infof("nslb check failed not enough resource by netslice <%d> server num"+
+		klog.V(util.LogWarningLev).Infof("tor check failed not enough resource by netslice <%d> server num"+
 			" <%d> is not enough for job require %d", getNetSliceId(torTransposed[taskColumn]),
 			len(torTransposed[taskColumn]), taskRow+1)
 		return nil, 0
 	}
 
 	if taskRow > 0 && len(torTransposed[netSliceNum-1]) < taskRow {
-		klog.V(util.LogWarningLev).Infof("nslb check failed not enough resource by logicTor full nslb num "+
+		klog.V(util.LogWarningLev).Infof("tor check failed not enough resource by logicTor full tor num "+
 			"<%d> is not enough for job require <%d>", len(torTransposed[netSliceNum-1]), taskRow)
 		return nil, 0
 	}
@@ -401,7 +359,7 @@ func (tl *TorList) RecoveryGlobalTor(tors []*Tor) {
 	tl.initTorMaps()
 }
 
-// GetLogicTorsListAndFullTorNum transpose the logic nslb list
+// getLogicTorsListAndFullTorNum transpose the logic tor list
 func getLogicTorsAndFullTorNum(torCount int, torTransposed [][]*Server) ([]*Tor, int) {
 	tors := make([]*Tor, 0)
 	var fullTor int

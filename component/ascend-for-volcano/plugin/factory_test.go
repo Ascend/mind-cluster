@@ -347,15 +347,14 @@ func buildBeforeCloseHandler() []beforeCloseHandlerTest {
 			name: "01-BeforeCloseHandler no cache test",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 		},
 		{
 			name: "02-BeforeCloseHandler save cache test",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Cache: ScheduleCache{Names: map[string]string{"fault": "test"},
+					OutputCache: ScheduleCache{Names: map[string]string{"fault": "test"},
 						Namespaces: map[string]string{"fault": "hahaNameSpace"},
 						Data:       map[string]map[string]string{"fault": {"test1": "testData"}}}}},
 		},
@@ -389,65 +388,6 @@ func TestBeforeCloseHandler(t *testing.T) {
 	}
 	tmpPatche.Reset()
 	tmpPatche2.Reset()
-}
-
-type getNPUSchedulerArgs struct {
-	name string
-}
-
-type getNPUSchedulerTest struct {
-	name   string
-	fields fields
-	args   getNPUSchedulerArgs
-	want   ISchedulerPlugin
-	want1  bool
-}
-
-func buildGetNPUSchedulerTest() []getNPUSchedulerTest {
-	tests := []getNPUSchedulerTest{
-		{
-			name: "01-GetNPUScheduler not found test",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
-			args:  getNPUSchedulerArgs{name: "testPlugin"},
-			want:  nil,
-			want1: false,
-		},
-		{
-			name: "02-GetNPUScheduler found test",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{"testPlugin": nil},
-				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
-			args:  getNPUSchedulerArgs{name: "testPlugin"},
-			want:  nil,
-			want1: true,
-		},
-	}
-	return tests
-}
-
-func TestGetNPUScheduler(t *testing.T) {
-	tests := buildGetNPUSchedulerTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			got, got1 := sHandle.GetNPUScheduler(tt.args.name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetNPUScheduler() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("GetNPUScheduler() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
 }
 
 type initNPUSessionArgs struct {
@@ -485,7 +425,6 @@ func TestInitNPUSession(t *testing.T) {
 	defer patch1.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			addsHandlerCmInfosBySsn(tt.args.ssn, tt.sHandler)
 			if err := tt.sHandler.InitNPUSession(tt.args.ssn); (err != nil) != tt.wantErr {
 				t.Errorf("InitNPUSession() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -510,9 +449,8 @@ func buildIsPluginRegisteredTest() []isPluginRegisteredTest {
 			name: "01-IsPluginRegistered not registered test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args: isPluginRegisteredArgs{name: "haha"},
 			want: false,
 		},
@@ -652,9 +590,10 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   40,
-				ReservePodSize: 2,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   40,
+					ReservePodSize: 2,
+				}}},
 		},
 		{
 			name: "06-GetReserveNodes failed, set default reserve-nodes: 2",
@@ -668,9 +607,10 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   40,
-				ReservePodSize: 2,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   40,
+					ReservePodSize: 2,
+				}}},
 		},
 	}
 }
@@ -690,9 +630,10 @@ func getDefaultVolcanoFrameCasesOfReserveNodesValueMoreError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   8,
-				ReservePodSize: 2,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   8,
+					ReservePodSize: 2,
+				}}},
 		},
 		{
 			name: "08-reserve-nodes is bigger than super-pod-size, set default reserve-nodes: 1",
@@ -706,9 +647,10 @@ func getDefaultVolcanoFrameCasesOfReserveNodesValueMoreError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   2,
-				ReservePodSize: 0,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   2,
+					ReservePodSize: 0,
+				}}},
 		},
 	}
 }
@@ -726,9 +668,11 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: defaultReserveNodes,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+
+					SuperPodSize:   defaultSuperPodSize,
+					ReservePodSize: defaultReserveNodes,
+				}}},
 		},
 		{
 			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 48",
@@ -742,9 +686,10 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: defaultReserveNodes,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   defaultSuperPodSize,
+					ReservePodSize: defaultReserveNodes,
+				}}},
 		},
 	}
 }
@@ -764,9 +709,10 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: 3,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   defaultSuperPodSize,
+					ReservePodSize: 3,
+				}}},
 		},
 		{
 			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 48",
@@ -780,16 +726,17 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 				},
 			},
 			want: VolcanoFrame{
-				SuperPodSize:   defaultSuperPodSize,
-				ReservePodSize: 4,
-			},
+				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
+					SuperPodSize:   defaultSuperPodSize,
+					ReservePodSize: 4,
+				}}},
 		},
 	}
 }
 
 func TestInitVolcanoFrameFromSsn(t *testing.T) {
 	ssn := &framework.Session{}
-	sHandle := &ScheduleHandler{}
+	sHandle := newDefaultHandler()
 	for _, tt := range buildInitVolcanoFrameFromSsnTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			ssn.Configurations = tt.configs
@@ -837,39 +784,16 @@ func TestGetPodGroupOwnerRef(t *testing.T) {
 
 // HandlerStart HuaWei NPU plugin start by frame.
 func newDefaultHandler() *ScheduleHandler {
-	isFirstSession := true
 	scheduleHandler := &ScheduleHandler{
 		NPUPlugins: map[string]NPUBuilder{},
 		ScheduleEnv: ScheduleEnv{
-			IsFirstSession:   &isFirstSession,
-			Jobs:             map[api.JobID]SchedulerJob{},
-			JobSeverInfos:    map[api.JobID]struct{}{},
-			JobDeleteFlag:    map[api.JobID]struct{}{},
-			JobSinglePodFlag: map[api.JobID]bool{},
-			Nodes:            map[string]NPUNode{},
-			DeviceInfos: &DeviceInfosWithMutex{
-				Mutex:   sync.Mutex{},
-				Devices: map[string]NodeDeviceInfoWithID{},
-			},
-			NodeInfosFromCm: &NodeInfosFromCmWithMutex{
-				Mutex: sync.Mutex{},
-				Nodes: map[string]NodeDNodeInfo{},
-			},
-			SwitchInfosFromCm: &SwitchInfosFromCmWithMutex{
-				Mutex:    sync.Mutex{},
-				Switches: map[string]SwitchFaultInfo{},
-			},
-			FrameAttr: VolcanoFrame{},
-			NslbAttr:  &NslbParameters{},
-			SuperPodInfo: &SuperPodInfo{
-				SuperPodReschdInfo:        map[api.JobID]map[string][]SuperNode{},
-				SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-				SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-			},
-			JobPendingMessage: map[api.JobID]map[string]map[string]struct{}{},
+			ClusterCache:            NewClusterCache(),
+			FrameAttr:               NewVolcanoFrame(),
+			JobScheduleInfoRecorder: NewJobScheduleInfoRecorder(),
 		},
 	}
 
+	scheduleHandler.FrameAttr.OnceInit = &sync.Once{}
 	scheduleHandler.RegisterNPUScheduler(util.NPU910CardName, New)
 	return scheduleHandler
 }
@@ -901,20 +825,6 @@ func initNormalsHandlerBySsnFunc(ssn *framework.Session, initSsnFunc ...func(ssn
 func initNormalsHandlerByNormalFunc(initFuncs ...func()) {
 	for _, initFunc := range initFuncs {
 		initFunc()
-	}
-}
-
-func addsHandlerCmInfosBySsn(ssn *framework.Session, sHandler *ScheduleHandler) {
-	if ssn == nil {
-		return
-	}
-	for nodeName := range ssn.Nodes {
-		sHandler.UpdateConfigMap(fakeDeviceInfoCMDataByNode(nodeName, fakeDeviceList()), util.DeleteOperator)
-		sHandler.UpdateConfigMap(fakeDeviceInfoCMDataByNode(nodeName, fakeDeviceList()), util.AddOperator)
-		sHandler.UpdateConfigMap(test.FakeConfigmap(util.NodeDCmInfoNamePrefix+nodeName, util.MindXDlNameSpace,
-			fakeNodeInfos()), util.DeleteOperator)
-		sHandler.UpdateConfigMap(test.FakeConfigmap(util.NodeDCmInfoNamePrefix+nodeName, util.MindXDlNameSpace,
-			fakeNodeInfos()), util.AddOperator)
 	}
 }
 
@@ -979,46 +889,6 @@ func TestScheduleHandlerInitCmInformer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.sHandle.initCmInformer()
-		})
-	}
-}
-
-type CheckVNPUSegmentEnableByConfigTest struct {
-	name    string
-	ssn     *framework.Session
-	sHandle *ScheduleHandler
-	want    bool
-}
-
-func TestVolcanoFrameCheckVNPUSegmentEnableByConfig(t *testing.T) {
-	tmpConf := test.FakeConfigurations()
-	tmpConf[0].Arguments[util.SegmentEnable] = "true"
-	tests := []CheckVNPUSegmentEnableByConfigTest{
-		{
-			name:    "01-CheckVNPUSegmentEnableByConfigTest will return true when presetVirtualDevice is true",
-			ssn:     test.FakeNormalSSN(tmpConf),
-			sHandle: newDefaultHandler(),
-			want:    true,
-		},
-		{
-			name:    "02-CheckVNPUSegmentEnableByConfigTest will return true when conf is empty",
-			ssn:     test.FakeNormalSSN(nil),
-			sHandle: newDefaultHandler(),
-			want:    false,
-		},
-		{
-			name:    "03-CheckVNPUSegmentEnableByConfigTest will return true when presetVirtualDevice is false",
-			ssn:     test.FakeNormalSSN(test.FakeConfigurations()),
-			sHandle: newDefaultHandler(),
-			want:    false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.sHandle.InitVolcanoFrameFromSsn(tt.ssn)
-			if got := tt.sHandle.FrameAttr.CheckVNPUSegmentEnableByConfig(); got != tt.want {
-				t.Errorf("CheckVNPUSegmentEnableByConfig() = %v, want %v", got, tt.want)
-			}
 		})
 	}
 }

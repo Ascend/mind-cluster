@@ -17,6 +17,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -57,12 +59,15 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
 			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
 	}
+	fakeErr = errors.New("fake error")
 )
 
 const (
 	mockPerfDumpPath       = "/root/a"
 	mockPerfDumpConfig     = "step:true,time=4"
 	slowNodeStepTimeEnvNum = 2
+	intNum10               = 10
+	intNum2                = 2
 )
 
 func init() {
@@ -72,6 +77,22 @@ func init() {
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 	common.ParamOption.PresetVDevice = true
 }
+
+type fakeGrpcStream struct{}
+
+func (stream *fakeGrpcStream) SetHeader(md metadata.MD) error { return nil }
+
+func (stream *fakeGrpcStream) SendHeader(md metadata.MD) error { return nil }
+
+func (stream *fakeGrpcStream) SetTrailer(md metadata.MD) {}
+
+func (stream *fakeGrpcStream) Context() context.Context { return context.Background() }
+
+func (stream *fakeGrpcStream) SendMsg(m interface{}) error { return nil }
+
+func (stream *fakeGrpcStream) RecvMsg(m interface{}) error { return nil }
+
+func (stream *fakeGrpcStream) Send(*v1beta1.ListAndWatchResponse) error { return nil }
 
 // TestListAndWatch for test the interface ListAndWatch
 func TestListAndWatch(t *testing.T) {
@@ -94,7 +115,8 @@ func TestListAndWatch(t *testing.T) {
 					return sets.String{}
 				})
 			defer mockGetUsedChips.Reset()
-			go ps.ListAndWatch(&v1beta1.Empty{}, nil)
+			stream := fakeGrpcStream{}
+			go ps.ListAndWatch(&v1beta1.Empty{}, &stream)
 			time.Sleep(time.Second)
 			ret := ps.Notify(devices)
 			convey.So(ret, convey.ShouldBeTrue)
@@ -483,6 +505,87 @@ func TestDoWithVolcanoSchedule(t *testing.T) {
 		})
 	})
 	common.ParamOption.PresetVDevice = true
+}
+
+// TestStrategyForSendStats for strategyForSendStats
+func TestStrategyForSendStats(t *testing.T) {
+	ps := NewPluginServer(common.Ascend910, devices, []string{common.HiAIManagerDevice},
+		device.NewHwAscend910Manager())
+	convey.Convey("test strategyForSendStats", t, func() {
+		convey.Convey("case last send success, expect EmptyStrategy", func() {
+			ps.deviceSyncStat.RecordSendResult(true)
+			convey.So(ps.strategyForSendStats(), convey.ShouldEqual, common.EmptyStrategy)
+		})
+		convey.Convey("case send failure count >= threshold for reRegistry, expect ReRegistryStrategy",
+			func() {
+				for i := 0; i < intNum10/intNum2; i++ {
+					ps.deviceSyncStat.RecordSendResult(false)
+				}
+				convey.So(ps.strategyForSendStats(), convey.ShouldEqual, common.ReRegistryStrategy)
+			})
+		convey.Convey("case send failure count >= threshold for restart, expect ReStartDevicePluginStrategy",
+			func() {
+				for i := 0; i < intNum10; i++ {
+					ps.deviceSyncStat.RecordSendResult(false)
+				}
+				convey.So(ps.strategyForSendStats(), convey.ShouldEqual, common.ReStartDevicePluginStrategy)
+			})
+	})
+}
+
+// func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse
+// TestReportDeviceInfo for reportDeviceInfo
+func TestReportDeviceInfo(t *testing.T) {
+	ps := NewPluginServer(common.Ascend910, devices, []string{common.HiAIManagerDevice},
+		device.NewHwAscend910Manager())
+	convey.Convey("test reportDeviceInfo", t, func() {
+		convey.Convey("case sendToKubelet success, expect last send success", func() {
+			patch := gomonkey.ApplyFuncReturn(sendToKubelet, nil).
+				ApplyPrivateMethod(reflect.TypeOf(ps), "responseToKubelet", func() *v1beta1.ListAndWatchResponse {
+					return nil
+				})
+			defer patch.Reset()
+			ps.reportDeviceInfo(nil)
+			convey.So(ps.deviceSyncStat.GetLastSendStatus(), convey.ShouldBeTrue)
+		})
+		convey.Convey("case sendToKubelet failed, expect last send failed", func() {
+			patch := gomonkey.ApplyFuncReturn(sendToKubelet, fakeErr).
+				ApplyPrivateMethod(reflect.TypeOf(ps), "responseToKubelet", func() *v1beta1.ListAndWatchResponse {
+					return nil
+				})
+			defer patch.Reset()
+			ps.reportDeviceInfo(nil)
+			convey.So(ps.deviceSyncStat.GetLastSendStatus(), convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestHandleConsecutiveErrorStrategy for handleConsecutiveErrorStrategy
+func TestHandleConsecutiveErrorStrategy(t *testing.T) {
+	ps := NewPluginServer(common.Ascend910, devices, []string{common.HiAIManagerDevice},
+		device.NewHwAscend910Manager())
+	ps.isRunning.Store(true)
+	convey.Convey("test handleConsecutiveErrorStrategy", t, func() {
+		convey.Convey("case restart device plugin, expect isRunning=false",
+			func() {
+				patch := gomonkey.ApplyFuncReturn(exitSelfProcess, nil)
+				defer patch.Reset()
+				ps.handleConsecutiveErrorStrategy(common.ReStartDevicePluginStrategy, 0)
+				convey.So(ps.isRunning.Load(), convey.ShouldBeFalse)
+			})
+		ps.isRunning.Store(true)
+		convey.Convey("case reRegistry strategy, isRunning=false",
+			func() {
+				ps.handleConsecutiveErrorStrategy(common.ReRegistryStrategy, 0)
+				convey.So(ps.isRunning.Load(), convey.ShouldBeFalse)
+			})
+		ps.isRunning.Store(true)
+		convey.Convey("case empty strategy, isRunning=true",
+			func() {
+				ps.handleConsecutiveErrorStrategy(common.EmptyStrategy, 0)
+				convey.So(ps.isRunning.Load(), convey.ShouldBeTrue)
+			})
+	})
 }
 
 func getMockPodList() []v1.Pod {

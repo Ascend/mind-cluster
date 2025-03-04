@@ -158,7 +158,7 @@ type ReScheduler struct {
 	GraceDeleteTime int64
 	Jobs            map[api.JobID]plugin.SchedulerJob
 	Nodes           map[string]plugin.NPUNode
-	IsFirstSession  *bool
+	isFirstSession  *bool
 	kubeClient      kubernetes.Interface
 }
 

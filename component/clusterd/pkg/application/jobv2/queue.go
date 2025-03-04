@@ -13,6 +13,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
@@ -132,17 +133,27 @@ func Handler(ctx context.Context) {
 			switch operator {
 			case queueOperatorAdd:
 				addJob(jobUniqueKey)
+				jobStcMessage(jobUniqueKey, constant.JobInfoAdd)
 			case queueOperatorUpdate:
 				updateJob(jobUniqueKey)
+				jobStcMessage(jobUniqueKey, constant.JobInfoUpdate)
 			case queueOperatorPreDelete:
 				preDeleteJob(jobUniqueKey)
+				jobStcMessage(jobUniqueKey, constant.JobInfoPreDelete)
 			case queueOperatorDelete:
+				jobStcMessage(jobUniqueKey, constant.JobInfoDelete)
 				deleteJob(jobUniqueKey)
 			default:
 				hwlog.RunLog.Errorf("error operator: %s, jobKey: %s", operator, jobUniqueKey)
 			}
 		}
 	}
+}
+
+// jobStcMessage notify to job statistic
+func jobStcMessage(jobKey string, operator string) {
+	notifyMsg := constant.JobNotifyMsg{Operator: operator, JobKey: jobKey}
+	statistics.GlobalJobCollectMgr.JobNotifyChan <- notifyMsg
 }
 
 // podGroupMessage set job operator with pogGroup

@@ -29,7 +29,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	itest "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
@@ -234,8 +233,8 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 	npu.SetMaxNodeNPUNum(maxNodeNPUNum)
 	npu.SetMaxCardNPUNum(maxCardNPUNum)
 	npu.SetSchedulerAttr(attr1)
-	env := plugin.ScheduleEnv{
-		Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr1}},
+	env := plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{
+		Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr1}}},
 	}
 	npu.SetSchedulerEnv(env)
 	testCases := buildCheckNodeNPUByTaskTestCases()
@@ -329,7 +328,8 @@ func TestUseAnnotation(t *testing.T) {
 	job := test.FakeNormalTestJob("job", 1)
 	test.SetFakeJobResRequest(job, util.NPU910CardName, "2")
 	attr := itest.FakeSchedulerJobAttrByJob(job)
-	env := plugin.ScheduleEnv{Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr}}}
+	env := plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{
+		Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr}}}}
 	if err := npu.InitMyJobPlugin(attr, env); err != nil {
 		t.Errorf("InitMyJobPlugin failed err: %s", err.Error())
 	}
@@ -498,41 +498,42 @@ func buildScoreBestNPUNodesTestCases02() []scoreBestNPUNodesTestCase {
 func buildFakeScheduleEnv() plugin.ScheduleEnv {
 	const allocateNPUNum4 = 4
 	return plugin.ScheduleEnv{
-		Nodes: map[string]plugin.NPUNode{
-			"node1": {
-				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0", networkUnhealthyNPU: ""},
-					Allocate:   map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo},
+		ClusterCache: plugin.ClusterCache{
+			Nodes: map[string]plugin.NPUNode{
+				"node1": {
+					CommonNode: plugin.CommonNode{
+						Annotation: map[string]string{util.NPU910CardName: "Ascend910-0", networkUnhealthyNPU: ""},
+						Allocate:   map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo},
+					},
 				},
-			},
-			"node2": {
-				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1"},
+				"node2": {
+					CommonNode: plugin.CommonNode{
+						Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1"},
+					},
 				},
-			},
-			"node3": {
-				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2",
-						networkUnhealthyNPU: ""},
+				"node3": {
+					CommonNode: plugin.CommonNode{
+						Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2",
+							networkUnhealthyNPU: ""},
+						Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo}},
+				},
+				"node4": {
+					CommonNode: plugin.CommonNode{
+						Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1",
+							networkUnhealthyNPU: ""},
+						Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo}},
+				},
+				"node5": {CommonNode: plugin.CommonNode{
+					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2," +
+						"Ascend910-3", networkUnhealthyNPU: ""},
 					Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo}},
-			},
-			"node4": {
-				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1",
-						networkUnhealthyNPU: ""},
-					Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo}},
-			},
-			"node5": {CommonNode: plugin.CommonNode{
-				Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2," +
-					"Ascend910-3", networkUnhealthyNPU: ""},
-				Allocate: map[v1.ResourceName]float64{util.NPU910CardName: allocateNPUNum4 * util.NPUHexKilo}},
-			},
-			"node6": {CommonNode: plugin.CommonNode{Annotation: map[string]string{}}},
-			"node7": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "Ascend910-0"}}},
-			"node8": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "",
-				networkUnhealthyNPU: ""}}},
-			"node9": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "",
-				networkUnhealthyNPU: ""}}},
+				},
+				"node6": {CommonNode: plugin.CommonNode{Annotation: map[string]string{}}},
+				"node7": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "Ascend910-0"}}},
+				"node8": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "",
+					networkUnhealthyNPU: ""}}},
+				"node9": {CommonNode: plugin.CommonNode{Annotation: map[string]string{util.NPU910CardName: "",
+					networkUnhealthyNPU: ""}}}},
 		},
 	}
 }
@@ -556,42 +557,6 @@ func TestScoreBestNPUNodes(t *testing.T) {
 			if !reflect.DeepEqual(err, tt.WantErr) || !reflect.DeepEqual(tt.ScoreMap, tt.WantSMap) {
 				t.Errorf("ScoreBestNPUNodes() scoreMap: %v, wantSMap: %v, error = %v, wantErr %v",
 					tt.ScoreMap, tt.WantSMap, err, tt.WantErr)
-			}
-		})
-	}
-}
-
-type fields struct {
-	name string
-	NPUHandler
-	args    interface{}
-	wantErr bool
-}
-
-func buildTestPreStartCases() []fields {
-	var i interface{}
-	return []fields{
-		{
-			name:       "01-it will return err when i is not *rescheduler",
-			NPUHandler: NPUHandler{},
-			args:       i,
-			wantErr:    true,
-		},
-		{
-			name:       "02-it will return nil when i is *rescheduler",
-			NPUHandler: NPUHandler{},
-			args:       &rescheduling.ReScheduler{},
-			wantErr:    false,
-		},
-	}
-}
-
-func TestPreStartRescheduling(t *testing.T) {
-	tests := buildTestPreStartCases()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.PreStartAction(tt.args, nil); (err != nil) != tt.wantErr {
-				t.Errorf("preStartRescheduling() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

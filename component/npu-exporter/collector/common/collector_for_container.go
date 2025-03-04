@@ -96,6 +96,7 @@ func GetContainerNPUInfo(n *NpuCollector) map[int32]container.DevicesInfo {
 		hwlog.RunLog.ErrorfWithLimit(DomainForContainerInfo, 0, "error container npu info cache and convert failed")
 		return nil
 	}
+	hwlog.ResetErrCnt(DomainForContainerInfo, 0)
 	res := make(map[int32]container.DevicesInfo, initSize)
 	for _, v := range cntNpuInfos {
 		for _, deviceID := range v.Devices {

@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2024. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,11 +28,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
-	v12 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -100,10 +97,6 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	}
 	oldJobs := sHandle.Jobs
 	sHandle.Jobs = make(map[api.JobID]SchedulerJob, util.MapInitNum)
-	tmpJobServerInfos := make(map[api.JobID]struct{})
-	tmpJobDeleteFlags := make(map[api.JobID]struct{})
-	tmpJobSinglePodFlag := make(map[api.JobID]bool)
-	tmpJobPendingMessage := make(map[api.JobID]map[string]map[string]struct{})
 	for jobID, jobInfo := range ssn.Jobs {
 		ownerInfo, err := getOwnerInfo(jobInfo, ssn)
 		if err != nil {
@@ -121,25 +114,34 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 			sJob.SuperPods = oldJob.SuperPods
 		}
 		sHandle.Jobs[jobID] = sJob
+	}
+	return
+}
+
+// InitJobScheduleInfoRecorder update job schedule info recorder.
+func (sHandle *ScheduleHandler) InitJobScheduleInfoRecorder() {
+	tmpRecorder := NewJobScheduleInfoRecorder()
+	for jobID, sJob := range sHandle.Jobs {
 		// mark the job which server list has been recorded in logs
-		if _, ok := sHandle.JobSeverInfos[jobID]; ok && sJob.Status == util.PodGroupRunning {
-			tmpJobServerInfos[jobID] = struct{}{}
+		if _, ok := sHandle.ServerListRecordFlag[jobID]; ok && sJob.Status == util.PodGroupRunning {
+			tmpRecorder.ServerListRecordFlag[jobID] = struct{}{}
 		}
 		// mark the job which reset configmap has been set
-		if _, ok := sHandle.JobDeleteFlag[jobID]; ok && sJob.SchedulingTaskNum == 0 {
-			tmpJobDeleteFlags[jobID] = struct{}{}
+		if _, ok := sHandle.ResetCMSetFlag[jobID]; ok && sJob.SchedulingTaskNum == 0 {
+			tmpRecorder.ResetCMSetFlag[jobID] = struct{}{}
 		}
-		tmpJobSinglePodFlag[jobID] = sHandle.JobSinglePodFlag[jobID]
+		// default value is last session scheduled info that job is in job scheduling or pod scheduling
+		tmpRecorder.PodScheduleFlag[jobID] = sHandle.PodScheduleFlag[jobID]
+		// if job is need scheduled in this scheduling session, record job is job scheduling or pod scheduling
+		// if job is no need scheduled, use last session recorder.
 		if sJob.isPodScheduling() {
-			tmpJobSinglePodFlag[jobID] = sJob.SchedulingTaskNum != len(sJob.Tasks)
+			tmpRecorder.PodScheduleFlag[jobID] = sJob.SchedulingTaskNum != len(sJob.Tasks)
 		}
-		tmpJobPendingMessage[jobID] = sHandle.JobPendingMessage[jobID]
+		// record job last session pending message, for onsessionclose to compare pending message is change
+		tmpRecorder.PendingMessage[jobID] = sHandle.PendingMessage[jobID]
 	}
-	sHandle.JobSeverInfos = tmpJobServerInfos
-	sHandle.JobDeleteFlag = tmpJobDeleteFlags
-	sHandle.JobSinglePodFlag = tmpJobSinglePodFlag
-	sHandle.JobPendingMessage = tmpJobPendingMessage
-	return
+	sHandle.JobScheduleInfoRecorder = tmpRecorder
+
 }
 
 func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, error) {
@@ -155,7 +157,6 @@ func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, erro
 	}
 	return OwnerInfo{
 		OwnerReference: owner,
-		Annotations:    rs.Annotations,
 		Replicas:       rs.Spec.Replicas,
 	}, nil
 }
@@ -188,29 +189,6 @@ func getPodGroupOwnerRef(pg scheduling.PodGroup) metav1.OwnerReference {
 		}
 	}
 	return metav1.OwnerReference{}
-}
-
-// CheckVNPUSegmentEnableByConfig Check VNPU segmentEnable by init plugin parameters, return true if static
-func (vf *VolcanoFrame) CheckVNPUSegmentEnableByConfig() bool {
-	if vf == nil {
-		klog.V(util.LogDebugLev).Infof("CheckVNPUSegmentEnableByConfig failed: %s.", util.ArgumentError)
-		return false
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, vf.Confs)
-	if err != nil {
-		klog.V(util.LogDebugLev).Info("cannot get configuration, segmentEnable.")
-		return false
-	}
-	// get segmentEnable by user configuration
-	segmentEnable, ok := configuration.Arguments[util.SegmentEnable]
-	if !ok {
-		klog.V(util.LogDebugLev).Info("checkVNPUSegmentEnable doesn't exist presetVirtualDevice.")
-		return false
-	}
-	if segmentEnable == "true" {
-		return true
-	}
-	return false
 }
 
 // GetJobTemplate get template of all possible segmentation jobs
@@ -266,45 +244,37 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		klog.V(util.LogErrorLev).Infof("InitVolcanoFrameFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
+	configs := util.GetConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
+	sHandle.FrameAttr.UID = ssn.UID
+	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
+	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
+	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
+	sHandle.initDynamicParameters(configs)
+	sHandle.initStaticParameters(configs)
+}
 
-	configs := InitConfsFromSsn(ssn.Configurations)
-	superPodSize, err := util.GetSizeOfSuperPod(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetSizeOfSuperPod failed: %s, set default super-pod-size: %d", err,
-			defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
-	}
+// initStaticParameters
+func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) {
+	sHandle.FrameAttr.OnceInit.Do(func() {
+		sHandle.FrameAttr.NslbVersion = util.GetNslbVersion(configs)
+		sHandle.FrameAttr.SharedTorNum = util.GetShardTorNum(configs)
+		sHandle.FrameAttr.UseClusterD = util.GetUseClusterDConfig(configs)
+		klog.V(util.LogWarningLev).Infof("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
+			"change the parameters and it will not be changed during normal operation of the volcano")
+	})
+}
 
-	if superPodSize == 0 {
-		klog.V(util.LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
-			"set default super-pod-size: %d", defaultSuperPodSize)
-		superPodSize = defaultSuperPodSize
+// initDynamicParameters
+func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string) {
+	if sHandle == nil || configs == nil {
+		klog.V(util.LogInfoLev).Infof("InitCache failed: %s.", util.ArgumentError)
+		return
 	}
-
-	reserve, err := util.GetReserveNodes(configs)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("GetReserveNodes failed: %s, set default reserve-nodes: %d", err,
-			defaultReserveNodes)
-		reserve = defaultReserveNodes
-	}
-	if reserve >= superPodSize {
-		validRes := 0
-		if superPodSize > defaultReserveNodes {
-			validRes = defaultReserveNodes
-		}
-		klog.V(util.LogWarningLev).Infof("reserve-nodes(%d) is larger than super-pod-size(%d), set reserve-nodes: %d",
-			reserve, superPodSize, validRes)
-		reserve = validRes
-	}
-
-	sHandle.FrameAttr = VolcanoFrame{
-		UID:            ssn.UID,
-		Confs:          configs,
-		KubeClient:     ssn.KubeClient(),
-		VJobTemplate:   sHandle.GetJobTemplate(),
-		SuperPodSize:   superPodSize,
-		ReservePodSize: reserve,
-	}
+	sHandle.FrameAttr.SuperPodSize = util.GetSizeOfSuperPod(configs)
+	sHandle.FrameAttr.ReservePodSize = util.GetReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
+	sHandle.FrameAttr.GraceDeleteTime = util.GetGraceDeleteTime(configs)
+	sHandle.FrameAttr.PresetVirtualDevice = util.GetPresetVirtualDeviceConfig(configs)
+	sHandle.FrameAttr.needRestartInformer = false
 }
 
 // InitConfsFromSsn init confs from session
@@ -354,7 +324,7 @@ func (sHandle *ScheduleHandler) InitCache() {
 	data := make(map[string]map[string]string, util.MapInitNum)
 	data[util.RePropertyCacheName] = make(map[string]string, util.MapInitNum)
 	data[util.JobRecovery] = make(map[string]string, util.MapInitNum)
-	sHandle.Cache = ScheduleCache{
+	sHandle.OutputCache = ScheduleCache{
 		Names:      make(map[string]string, util.MapInitNum),
 		Namespaces: make(map[string]string, util.MapInitNum),
 		Data:       data}
@@ -367,7 +337,7 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 		return
 	}
 	for _, job := range sHandle.Jobs {
-		if err := job.handler.PreStartAction(sHandle.FaultHandle, ssn); err != nil {
+		if err := job.handler.PreStartAction(ssn); err != nil {
 			if strings.Contains(err.Error(), util.ArgumentError) {
 				continue
 			}
@@ -377,9 +347,9 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 }
 
 func (sHandle *ScheduleHandler) saveCacheToCm() {
-	for spName, cmName := range sHandle.ScheduleEnv.Cache.Names {
-		nameSpace, okSp := sHandle.ScheduleEnv.Cache.Namespaces[spName]
-		data, okData := sHandle.ScheduleEnv.Cache.Data[spName]
+	for spName, cmName := range sHandle.ScheduleEnv.OutputCache.Names {
+		nameSpace, okSp := sHandle.ScheduleEnv.OutputCache.Namespaces[spName]
+		data, okData := sHandle.ScheduleEnv.OutputCache.Data[spName]
 		if !okSp || !okData {
 			klog.V(util.LogErrorLev).Infof("SaveCacheToCm %s no namespace or Data in cache.", spName)
 			continue
@@ -389,7 +359,7 @@ func (sHandle *ScheduleHandler) saveCacheToCm() {
 		if err != nil {
 			klog.V(util.LogInfoLev).Infof("get old %s configmap failed: %v, write new data into cm", spName, err)
 		}
-		var tmpCM = &v12.ConfigMap{
+		var tmpCM = &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cmName,
 				Namespace: nameSpace,
@@ -439,23 +409,17 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	klog.V(util.LogDebugLev).Infof("enter %s InitNPUSession.", PluginName)
 	defer klog.V(util.LogDebugLev).Infof("leave %s InitNPUSession.", PluginName)
 
-	if err := sHandle.checkSession(ssn); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s checkSession : %s.", PluginName, err)
-		return err
-	}
-
 	sHandle.InitVolcanoFrameFromSsn(ssn)
 	sHandle.initCmInformer()
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
+	sHandle.InitJobScheduleInfoRecorder()
 
 	sHandle.InitTorNodeInfo(ssn)
 	sHandle.InitJobsPlugin()
 	sHandle.InitCache()
 	sHandle.InitReschedulerFromSsn(ssn)
-	if sHandle.FaultHandle != nil {
-		sHandle.PreStartPlugin(ssn)
-	}
+	sHandle.PreStartPlugin(ssn)
 	return nil
 }
 
@@ -465,162 +429,7 @@ func (sHandle *ScheduleHandler) initCmInformer() {
 		klog.V(util.LogErrorLev).Info("kube client in session is nil")
 		return
 	}
-	sHandle.Do(func() {
-		if sHandle.FrameAttr.CheckUseCIMByConfig() {
-			sHandle.initClusterCmInformer()
-			if !k8s.ClusterDDeploymentIsExist(sHandle.FrameAttr.KubeClient) {
-				klog.V(util.LogErrorLev).Info("ClusterD deployment is not exist， please apply ClusterD")
-			}
-			return
-		}
-		sHandle.initDeviceAndNodeDCmInformer()
-	})
-}
-
-func (sHandle *ScheduleHandler) initClusterCmInformer() {
-	informerFactory := informers.NewSharedInformerFactoryWithOptions(sHandle.FrameAttr.KubeClient, 0,
-		informers.WithNamespace(util.MindXDlNameSpace),
-		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = util.CmConsumer + "=" + util.CmConsumerValue
-		}))
-	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
-	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			sHandle.updateConfigMapCluster(obj, util.AddOperator)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			sHandle.updateConfigMapCluster(newObj, util.UpdateOperator)
-		},
-		DeleteFunc: func(obj interface{}) {
-			sHandle.updateConfigMapCluster(obj, util.DeleteOperator)
-		},
-	})
-	informerFactory.Start(wait.NeverStop)
-	informerFactory.WaitForCacheSync(wait.NeverStop)
-}
-
-func (sHandle *ScheduleHandler) initDeviceAndNodeDCmInformer() {
-	informerFactory := informers.NewSharedInformerFactory(sHandle.FrameAttr.KubeClient, 0)
-	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
-	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: k8s.InformerConfigmapFilter,
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				sHandle.UpdateConfigMap(obj, util.AddOperator)
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				sHandle.UpdateConfigMap(newObj, util.UpdateOperator)
-			},
-			DeleteFunc: func(obj interface{}) {
-				sHandle.UpdateConfigMap(obj, util.DeleteOperator)
-			},
-		},
-	})
-	informerFactory.Start(wait.NeverStop)
-	informerFactory.WaitForCacheSync(wait.NeverStop)
-}
-
-func (sHandle *ScheduleHandler) updateConfigMapCluster(obj interface{}, operator string) {
-	if sHandle == nil {
-		klog.V(util.LogDebugLev).Infof("updateConfigMapCluster failed: %s.", util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("update cluster configMap to cache")
-
-	cm, ok := obj.(*v12.ConfigMap)
-	if !ok {
-		klog.V(util.LogErrorLev).Infof("cannot convert to ConfigMap: %#v", obj)
-		return
-	}
-	sHandle.dealClusterDeviceInfo(cm, operator)
-	sHandle.dealClusterNodeInfo(cm, operator)
-	sHandle.dealClusterSwitchInfo(cm, operator)
-}
-
-func (sHandle *ScheduleHandler) dealClusterDeviceInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterDeviceInfo) {
-		return
-	}
-	deviceInfoMap, err := getDeviceClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get device info failed :%#v", err)
-		return
-	}
-	sHandle.DeviceInfos.Lock()
-	for deviceCmName, deviceInfo := range deviceInfoMap {
-		nodeName := strings.TrimPrefix(deviceCmName, util.DevInfoPreName)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.DeviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
-				NodeDeviceInfo: deviceInfo.NodeDeviceInfo,
-				SuperPodID:     deviceInfo.SuperPodID,
-			}
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.DeviceInfos.Devices, nodeName)
-		}
-	}
-	sHandle.DeviceInfos.Unlock()
-}
-
-func (sHandle *ScheduleHandler) dealClusterNodeInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterNodeInfo) {
-		return
-	}
-	nodeInfoMap, err := getNodeClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get node info failed :%#v", err)
-		return
-	}
-	sHandle.NodeInfosFromCm.Lock()
-	for nodeCmName, nodeInfo := range nodeInfoMap {
-		nodeName := strings.TrimPrefix(nodeCmName, util.NodeDCmInfoNamePrefix)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.NodeInfosFromCm.Nodes[nodeName] = nodeInfo
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.NodeInfosFromCm.Nodes, nodeName)
-		}
-	}
-	sHandle.NodeInfosFromCm.Unlock()
-}
-
-func (sHandle *ScheduleHandler) dealClusterSwitchInfo(cm *v12.ConfigMap, operator string) {
-	if !strings.HasPrefix(cm.Name, util.ClusterSwitchInfo) {
-		return
-	}
-	switchInfoMap, err := getSwitchClusterInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get switch info failed :%v", err)
-		return
-	}
-	sHandle.SwitchInfosFromCm.Lock()
-	for switchCmName, switchInfo := range switchInfoMap {
-		nodeName := strings.TrimPrefix(switchCmName, util.SwitchCmInfoNamePrefix)
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.SwitchInfosFromCm.Switches[nodeName] = switchInfo
-		} else if operator == util.DeleteOperator {
-			delete(sHandle.SwitchInfosFromCm.Switches, nodeName)
-		}
-	}
-	sHandle.SwitchInfosFromCm.Unlock()
-}
-
-// CheckUseCIMByConfig check use cluster info manager by config, default true
-func (vf *VolcanoFrame) CheckUseCIMByConfig() bool {
-	if vf == nil {
-		klog.V(util.LogDebugLev).Infof("CheckUseCIMByConfig failed: %s. use default true", util.ArgumentError)
-		return true
-	}
-	configuration, err := util.GetConfigFromSchedulerConfigMap(util.CMInitParamKey, vf.Confs)
-	if err != nil {
-		klog.V(util.LogDebugLev).Info("cannot get configuration, segmentEnable.")
-		return true
-	}
-	// get segmentEnable by user configuration
-	useClusterInfoManager, ok := configuration.Arguments[util.UseClusterInfoManager]
-	if !ok {
-		klog.V(util.LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
-		return true
-	}
-	return useClusterInfoManager == "true"
+	k8s.InitCmInformer(sHandle.FrameAttr.KubeClient, sHandle.FrameAttr.UseClusterD)
 }
 
 // InitReschedulerFromSsn initialize re-scheduler
@@ -643,7 +452,7 @@ func (sHandle *ScheduleHandler) CacheToShareCM() error {
 		return fmt.Errorf("marshal tor configmap data error %v", err)
 	}
 	data[GlobalTorInfoKey] = string(dataByte[:])
-	putCM := &v12.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: TorShareCMName,
+	putCM := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: TorShareCMName,
 		Namespace: cmNameSpace}, Data: data}
 	if err := k8s.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, putCM, TorShareCMName,
 		cmNameSpace); err != nil {
@@ -692,110 +501,6 @@ func isContain(target string, strArray []string) bool {
 	return false
 }
 
-// UpdateConfigMap update deviceInfo in cache
-func (sHandle *ScheduleHandler) UpdateConfigMap(obj interface{}, operator string) {
-	if sHandle == nil {
-		klog.V(util.LogDebugLev).Infof("UpdateConfigMap failed: %s.", util.ArgumentError)
-		return
-	}
-	klog.V(util.LogDebugLev).Infof("Update DeviceInfo to cache")
-
-	cm, ok := obj.(*v12.ConfigMap)
-	if !ok {
-		klog.V(util.LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
-		return
-	}
-	if k8s.CheckConfigMapIsDeviceInfo(cm) {
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.createOrUpdateDeviceInfo(cm)
-			sHandle.createOrUpdateSwitchInfo(cm)
-		} else if operator == util.DeleteOperator {
-			klog.V(util.LogDebugLev).Infof("Del DeviceInfo from cache")
-			nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
-			sHandle.DeviceInfos.Lock()
-			delete(sHandle.DeviceInfos.Devices, nodeName)
-			sHandle.DeviceInfos.Unlock()
-
-			sHandle.SwitchInfosFromCm.Lock()
-			delete(sHandle.SwitchInfosFromCm.Switches, nodeName)
-			sHandle.SwitchInfosFromCm.Unlock()
-		}
-	}
-	if k8s.CheckConfigMapIsNodeInfo(cm) {
-		if operator == util.AddOperator || operator == util.UpdateOperator {
-			sHandle.createOrUpdateNodeInfo(cm)
-		} else if operator == util.DeleteOperator {
-			klog.V(util.LogDebugLev).Infof("Del NodeInfo from cache")
-			nodeName := strings.TrimPrefix(cm.Name, util.NodeDCmInfoNamePrefix)
-			sHandle.NodeInfosFromCm.Lock()
-			delete(sHandle.NodeInfosFromCm.Nodes, nodeName)
-			sHandle.NodeInfosFromCm.Unlock()
-		}
-	}
-}
-
-func (sHandle *ScheduleHandler) createOrUpdateDeviceInfo(cm *v12.ConfigMap) {
-	devInfo, err := getNodeDeviceInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("get device info failed:%s", err)
-		return
-	}
-
-	nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
-	sHandle.DeviceInfos.Lock()
-	sHandle.DeviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
-		NodeDeviceInfo: devInfo.DeviceInfo,
-		SuperPodID:     devInfo.SuperPodID,
-	}
-	sHandle.DeviceInfos.Unlock()
-}
-
-func (sHandler *ScheduleHandler) createOrUpdateNodeInfo(cm *v12.ConfigMap) {
-	nodeInfo, err := getNodeInfoFromCM(cm)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get node info from configmap %s/%s failed, err: %s", cm.Namespace, cm.Name, err)
-		return
-	}
-	nodeName := strings.TrimPrefix(cm.Name, util.NodeDCmInfoNamePrefix)
-	sHandler.NodeInfosFromCm.Lock()
-	sHandler.NodeInfosFromCm.Nodes[nodeName] = nodeInfo.NodeInfo
-	sHandler.NodeInfosFromCm.Unlock()
-}
-
-func (sHandler *ScheduleHandler) createOrUpdateSwitchInfo(cm *v12.ConfigMap) {
-	if cm == nil {
-		return
-	}
-	switchInfo := SwitchFaultInfo{}
-	data, ok := cm.Data[util.SwitchInfoCmKey]
-	if !ok {
-		return
-	}
-	unmarshalErr := json.Unmarshal([]byte(data), &switchInfo)
-	if unmarshalErr != nil {
-		klog.V(util.LogInfoLev).Infof("unmarshal switchInfo info failed, err: %s.", util.SafePrint(unmarshalErr))
-		return
-	}
-	nodeName := strings.TrimPrefix(cm.Name, util.DevInfoPreName)
-	sHandler.SwitchInfosFromCm.Lock()
-	sHandler.SwitchInfosFromCm.Switches[nodeName] = switchInfo
-	sHandler.SwitchInfosFromCm.Unlock()
-}
-
-// GetNPUScheduler get the NPU scheduler by name
-func (sHandle *ScheduleHandler) GetNPUScheduler(name string) (ISchedulerPlugin, bool) {
-	if sHandle == nil {
-		klog.V(util.LogInfoLev).Infof("GetNPUScheduler failed: %s.", util.ArgumentError)
-		return nil, false
-	}
-	pb, found := sHandle.NPUPlugins[name]
-	if found && pb != nil {
-		return pb(name), found
-	}
-
-	return nil, found
-}
-
 // BatchNodeOrderFn Score the selected nodes.
 func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	nodes []*api.NodeInfo) (map[string]float64, error) {
@@ -823,6 +528,9 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
 	errGet := vcJob.handler.ScoreBestNPUNodes(task, nodes, scoreMap)
+	if sHandle.FaultHandle != nil {
+		sHandle.FaultHandle.ScoreBestNPUNodes(task, scoreMap)
+	}
 	for nodeName := range scoreMap {
 		scoreMap[nodeName] *= scoreWeight
 	}

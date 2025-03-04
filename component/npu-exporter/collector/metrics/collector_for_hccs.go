@@ -156,7 +156,7 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 func (c *HccsCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache hccsCache, cardLabel []string) {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache hccsCache, cardLabel []string) {
 		timestamp := cache.timestamp
 		promUpdateHccsStatisticInfo(ch, cache, c, timestamp, cardLabel)
 		promUpdateHccsBwInfo(ch, cache, c, timestamp, cardLabel)
@@ -202,8 +202,8 @@ func promUpdateHccsStatisticInfo(ch chan<- prometheus.Metric, cache hccsCache, c
 }
 
 // UpdateTelegraf update telegraf
-func (c *HccsCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *HccsCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[hccsCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

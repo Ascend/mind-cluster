@@ -22,7 +22,10 @@ package k8s
 import "time"
 
 const (
-	retryTime        = 3
-	retrySleepTime   = 50 * time.Millisecond
-	torNodeCacheTime = 60
+	retryTime              = 3
+	retrySleepTime         = 50 * time.Millisecond
+	torNodeCacheTime       = 60
+	minRestartInterval     = 600
+	deviceInfoRefreshTime  = 600
+	clusterInfoRefreshTime = 60
 )

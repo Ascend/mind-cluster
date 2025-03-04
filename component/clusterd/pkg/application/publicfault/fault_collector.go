@@ -67,13 +67,14 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 }
 
 func convertPubFaultInfoToCache(fault api.Fault, influence api.Influence) *constant.PubFaultCache {
+	const convertMSToSec = 1000
 	return &constant.PubFaultCache{
 		FaultDevIds: influence.DeviceIds,
 		FaultId:     fault.FaultId,
 		FaultType:   fault.FaultType,
 		FaultCode:   fault.FaultCode,
 		FaultLevel:  publicfault.GetFaultLevelByCode(fault.FaultCode),
-		FaultTime:   fault.FaultTime,
+		FaultTime:   fault.FaultTime / convertMSToSec,
 		Assertion:   fault.Assertion,
 	}
 }

@@ -30,7 +30,7 @@ TASKD_LOG_STDOUT = 'TASKD_LOG_STDOUT'
 TASKD_LOG_PATH = 'TASKD_LOG_PATH'
 
 # logger default config
-LOG_MAX_LINE_LENGTH=1023
+LOG_MAX_LINE_LENGTH = 1023
 LOG_SIMPLE_FORMAT = '[%(levelname)s]     %(asctime)s.%(msecs)06d %(process)d   %(filename)s:%(lineno)d     %(message)s'
 LOG_DATE_FORMAT = '%Y/%m/%d %H:%M:%S'
 LOG_BACKUP_FORMAT = '%Y-%m-%dT%H-%M-%S.%f'

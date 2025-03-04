@@ -153,11 +153,9 @@ type CustomLogger struct {
 // NewCustomLogger create a new custom logger
 func NewCustomLogger(config *LogConfig, ctx context.Context) (*CustomLogger, error) {
 	if config == nil {
-		return nil, errors.New("logger config is nil")
+		return nil, errors.New("custom logger config is nil")
 	}
-
 	log := new(logger)
-
 	if err := log.setLogger(config); err != nil {
 		return nil, err
 	}

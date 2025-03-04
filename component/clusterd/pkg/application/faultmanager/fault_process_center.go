@@ -42,7 +42,7 @@ func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
 	center.notifyProcessChan <- whichToProcess
 }
 
-// faultProcessCenter work goroutine
+// Work faultProcessCenter work goroutine
 func (center *faultProcessCenter) Work(ctx context.Context) {
 	go func() {
 		hwlog.RunLog.Info("faultProcessCenter start work")

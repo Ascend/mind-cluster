@@ -33,11 +33,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
@@ -259,98 +257,6 @@ func fakeNPUNodeWithDeviceInfo(name string) *plugin.NPUNode {
 	return npuNode
 }
 
-type FaultReSchedulerGetGraceDeleteTimeFields struct {
-	DealReSchedulerCache *DealReSchedulerCache
-	GraceDeleteTime      int64
-}
-
-type FaultReSchedulerGetGraceDeleteTimeArgs struct {
-	conf           []config.Configuration
-	cacheFunBefore func()
-	cacheFunAfter  func()
-}
-
-type FaultReSchedulerGetGraceDeleteTimeTests struct {
-	name    string
-	fields  FaultReSchedulerGetGraceDeleteTimeFields
-	args    FaultReSchedulerGetGraceDeleteTimeArgs
-	want    int64
-	wantErr bool
-}
-
-func fakeSchedulerConfiguration(_ string, _ []conf.Configuration) *config.Configuration {
-	schedulerConf := &config.Configuration{
-		Name:      "util.CMInitParamKey",
-		Arguments: map[string]string{GraceOverTimeKey: "800"},
-	}
-	return schedulerConf
-}
-
-func fakeSchedulerConfGraceOverTime() []config.Configuration {
-	schedulerConf := []config.Configuration{
-		{
-			Name:      "util.CMInitParamKey",
-			Arguments: map[string]string{GraceOverTimeKey: "800"},
-		},
-	}
-	return schedulerConf
-}
-
-func buildFaultReSchedulerGetGraceDeleteArgs(conf2 []config.Configuration,
-	tmpPatche *gomonkey.Patches) FaultReSchedulerGetGraceDeleteTimeArgs {
-	args := FaultReSchedulerGetGraceDeleteTimeArgs{
-		conf: conf2,
-		cacheFunBefore: func() {
-			tmpPatche = gomonkey.ApplyFunc(util.GetConfigFromSchedulerConfigMap, fakeSchedulerConfiguration)
-		},
-		cacheFunAfter: func() {
-			if tmpPatche != nil {
-				tmpPatche.Reset()
-			}
-		},
-	}
-	return args
-}
-
-func buildFaultReSchedulerGetGraceDeleteTestCases() []FaultReSchedulerGetGraceDeleteTimeTests {
-	var tmpPatche *gomonkey.Patches
-	testCases := []FaultReSchedulerGetGraceDeleteTimeTests{
-		{
-			name: "01-test FaultReSchedulerGetGraceDelete-no config",
-			fields: FaultReSchedulerGetGraceDeleteTimeFields{
-				GraceDeleteTime:      graceDeleteTime,
-				DealReSchedulerCache: fakeReSchedulerCache(),
-			},
-			args: buildFaultReSchedulerGetGraceDeleteArgs(nil, tmpPatche),
-			want: graceDeleteTime,
-		},
-		{
-			name: "02-test FaultReSchedulerGetGraceDelete-succeed",
-			fields: FaultReSchedulerGetGraceDeleteTimeFields{
-				GraceDeleteTime:      graceDeleteTime,
-				DealReSchedulerCache: fakeReSchedulerCache(),
-			},
-			args: buildFaultReSchedulerGetGraceDeleteArgs(plugin.InitConfsFromSsn(
-				test.FakeConfigurations()), tmpPatche),
-			want: graceDeleteTime,
-		},
-	}
-	return testCases
-}
-
-// TestFaultReSchedulerGetGraceDeleteTime test for grace delete time
-func TestFaultReSchedulerGetGraceDeleteTime(t *testing.T) {
-	tests := buildFaultReSchedulerGetGraceDeleteTestCases()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getGraceDeleteTime(tt.args.conf)
-			if got != tt.want {
-				t.Errorf("GetGraceDeleteTime() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type ReSchedulerAddFaultJobWithSessionArgs struct {
 	jobs        map[api.JobID]*api.JobInfo
 	cardName    string
@@ -484,7 +390,6 @@ func reNewReScheduler(graceTime int64) *ReScheduler {
 		GraceDeleteTime:      graceTime,
 		Jobs:                 nil,
 		Nodes:                nil,
-		kubeClient:           nil,
 		DealReSchedulerCache: nil,
 	}
 	return &fakeReScheduler
@@ -553,12 +458,8 @@ func buildReSchedulerAddFaultJobWithSession() []ReSchedulerAddFaultJobWithSessio
 
 // TestReSchedulerAddFaultJobWithSession test for add fault job
 func TestReSchedulerAddFaultJobWithSession(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	tests := buildReSchedulerAddFaultJobWithSession()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -919,7 +820,7 @@ func TestReSchedulerCheckNodeNPUByTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reScheduler := fakeTestTTReScheduler(tt.fields)
-			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, tt.args.vcNode, tt.npuName); !reflect.DeepEqual(err,
+			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, tt.args.vcNode); !reflect.DeepEqual(err,
 				tt.wantErr) {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -993,23 +894,7 @@ func fakeTestTTReScheduler(fields TestReScheduler) *ReScheduler {
 		GraceDeleteTime:      fields.GraceDeleteTime,
 		Jobs:                 fields.Jobs,
 		Nodes:                fields.Nodes,
-		kubeClient:           fields.kubeClient,
 	}
-}
-
-func TestCheckGraceDeleteTimeValid(t *testing.T) {
-	t.Run("01-checkGraceDeleteTimeValid() return true when overTime in [2,3600]", func(t *testing.T) {
-		res := checkGraceDeleteTimeValid(maxGraceOverTime)
-		if !res {
-			t.Errorf("checkGraceDeleteTimeValid() res = %v, wantRes is true", res)
-		}
-	})
-	t.Run("02-checkGraceDeleteTimeValid() return false when overTime not in [2,3600]", func(t *testing.T) {
-		res := checkGraceDeleteTimeValid(0)
-		if res {
-			t.Errorf("checkGraceDeleteTimeValid() res = %v, wantRes is false", res)
-		}
-	})
 }
 
 func mockJobInfo(jobName string, taskNum int) *api.JobInfo {
@@ -1240,37 +1125,38 @@ func TestScoreBestNPUNodes(t *testing.T) {
 	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()
 	taskInfo := &api.TaskInfo{}
 	scoreMap := map[string]float64{"test": 1}
-	t.Run("01-ScoreBestNPUNodes() return error when task is nil",
+	wantScore := map[string]float64{"test": 1}
+	t.Run("01-ScoreBestNPUNodes() scoreMap not change when task is nil",
 		func(t *testing.T) {
-			err := reScheduler.ScoreBestNPUNodes(nil, scoreMap)
-			if err == nil {
-				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is not nil", err)
+			reScheduler.ScoreBestNPUNodes(nil, scoreMap)
+			if !reflect.DeepEqual(scoreMap, wantScore) {
+				t.Errorf("ScoreBestNPUNodes() scoreMap = %v, wantScore is %v", scoreMap, wantScore)
 			}
 		})
-	t.Run("02-ScoreBestNPUNodes() return nil when fJob is nil",
+	t.Run("02-ScoreBestNPUNodes() scoreMap not change when fJob is nil",
 		func(t *testing.T) {
-			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
-			if err != nil {
-				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is nil", err)
+			reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if !reflect.DeepEqual(scoreMap, wantScore) {
+				t.Errorf("ScoreBestNPUNodes() scoreMap = %v, wantScore is %v", scoreMap, wantScore)
 			}
 		})
 	taskInfo.Job = mockJobUID
-	t.Run("03-ScoreBestNPUNodes() return nil when add scores on scoreMap success",
+	t.Run("03-ScoreBestNPUNodes() scoreMap not change when add scores on scoreMap success",
 		func(t *testing.T) {
-			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
-			if err != nil {
-				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is nil", err)
+			reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if !reflect.DeepEqual(scoreMap, wantScore) {
+				t.Errorf("ScoreBestNPUNodes() scoreMap = %v, wantScore is %v", scoreMap, wantScore)
 			}
 
 		})
-	t.Run("04-ScoreBestNPUNodes() return error when fJob.IsFaultJob is false",
+	t.Run("04-ScoreBestNPUNodes() scoreMap not change when fJob.IsFaultJob is false",
 		func(t *testing.T) {
 			reScheduler.DealReSchedulerCache.FaultJobs = map[api.JobID]*FaultJob{
 				mockJobUID: {JobUID: mockJobUID, IsFaultJob: false},
 			}
-			err := reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
-			if err == nil {
-				t.Errorf("ScoreBestNPUNodes() err = %v, wantErr is not nil", err)
+			reScheduler.ScoreBestNPUNodes(taskInfo, scoreMap)
+			if !reflect.DeepEqual(scoreMap, wantScore) {
+				t.Errorf("ScoreBestNPUNodes() scoreMap = %v, wantScore is %v", scoreMap, wantScore)
 			}
 		})
 }

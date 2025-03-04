@@ -95,25 +95,22 @@ func (c *VnpuCollector) CollectToCache(n *colcommon.NpuCollector, chipList []col
 func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache chipCache, cardLabel []string) {
-		aiChip := cache.chip
-		if aiChip.VDevInfos == nil {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipCache, cardLabel []string) {
+		if chipWithVnpu.VDevActivityInfo == nil {
 			return
 		}
-		for _, vDevActivityInfo := range aiChip.VDevInfos.VDevActivityInfo {
-			if !common.IsValidVDevID(vDevActivityInfo.VDevID) {
-				continue
-			}
-			containerName := getContainerNameArray(containerMap[int32(vDevActivityInfo.VDevID)])
-			if len(containerName) != colcommon.ContainerNameLen {
-				continue
-			}
-			aiChip.VDevActivityInfo = &vDevActivityInfo
-			cardLabel = getPodDisplayInfo(&aiChip, containerName)
-			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevAiCoreRate, cardLabel, podAiCoreUtilizationRate)
-			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevTotalMem, cardLabel, podTotalMemory)
-			doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevUsedMem, cardLabel, podUsedMemory)
+		vDevActivityInfo := chipWithVnpu.VDevActivityInfo
+		if !common.IsValidVDevID(vDevActivityInfo.VDevID) {
+			return
 		}
+		containerName := getContainerNameArray(containerMap[int32(vDevActivityInfo.VDevID)])
+		if len(containerName) != colcommon.ContainerNameLen {
+			return
+		}
+		cardLabel = getPodDisplayInfo(&chipWithVnpu, containerName)
+		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevAiCoreRate, cardLabel, podAiCoreUtilizationRate)
+		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevTotalMem, cardLabel, podTotalMemory)
+		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevUsedMem, cardLabel, podUsedMemory)
 	}
 
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
@@ -121,8 +118,8 @@ func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *VnpuCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *VnpuCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -130,16 +127,21 @@ func (c *VnpuCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{},
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
-		vDevActivityInfo := cache.chip.VDevActivityInfo
+		vDevActivityInfo := chip.VDevActivityInfo
 		if vDevActivityInfo == nil || !common.IsValidVDevID(vDevActivityInfo.VDevID) {
 			continue
 		}
 
-		doUpdateTelegraf(fieldMap, podAiCoreUtilizationRate, vDevActivityInfo.VDevAiCoreRate, "")
-		doUpdateTelegraf(fieldMap, podTotalMemory, vDevActivityInfo.VDevTotalMem, "")
-		doUpdateTelegraf(fieldMap, podUsedMemory, vDevActivityInfo.VDevUsedMem, "")
+		devTagKey := strconv.Itoa(int(cache.chip.LogicID)) + "_" + strconv.Itoa(int(vDevActivityInfo.VDevID))
+
+		if fieldsMap[devTagKey] == nil {
+			fieldsMap[devTagKey] = make(map[string]interface{})
+		}
+
+		doUpdateTelegraf(fieldsMap[devTagKey], podAiCoreUtilizationRate, vDevActivityInfo.VDevAiCoreRate, "")
+		doUpdateTelegraf(fieldsMap[devTagKey], podTotalMemory, vDevActivityInfo.VDevTotalMem, "")
+		doUpdateTelegraf(fieldsMap[devTagKey], podUsedMemory, vDevActivityInfo.VDevUsedMem, "")
 	}
 	return fieldsMap
 }

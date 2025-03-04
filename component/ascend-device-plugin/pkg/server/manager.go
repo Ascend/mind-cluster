@@ -42,7 +42,6 @@ import (
 	npuCommon "ascend-common/devmanager/common"
 )
 
-var lastStatus = common.NewAtomicBool(false)
 var resourceVersion = ""
 
 // HwDevManager manages huawei device devices.
@@ -166,9 +165,10 @@ func (hdm *HwDevManager) updateNode() error {
 		return err
 	}
 	newNode.Annotations[common.BaseDeviceInfoKey] = string(mashaledNpuInfo)
+	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
-			hwlog.RunLog.Infof("update node label success")
+			hwlog.RunLog.Info("update node label success")
 			return nil
 		}
 		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)
@@ -507,7 +507,13 @@ func (hdm *HwDevManager) notifyToK8s(initTime *time.Time) {
 	isDevStateChange := hdm.manager.GetChange(hdm.groupDevice, oldGroupDevice)
 
 	for devType, isChanged := range isDevStateChange {
-		if !isChanged && (time.Now().Sub(*initTime) < time.Minute || lastStatus.Load()) {
+		server := hdm.ServerMap[devType]
+		if server == nil {
+			continue
+		}
+		if !isChanged &&
+			(time.Now().Sub(*initTime) < time.Minute || server.LastSendSuccess()) &&
+			time.Now().Sub(*initTime) < time.Hour {
 			continue
 		}
 		*initTime = time.Now()
@@ -779,9 +785,10 @@ func (hdm *HwDevManager) handleEvents(ctx context.Context, restartSignal chan os
 			hdm.handleDeleteEvent(deleteFile)
 		}
 		if event.Name == v1beta1.KubeletSocket && event.Op&fsnotify.Create == fsnotify.Create {
-			hwlog.RunLog.Info("notify: kubelet.sock file created, restarting.")
-			hdm.setRestartForAll()
+			hwlog.RunLog.Info("notify: kubelet.sock file created.")
 		}
+	default:
+		time.Sleep(common.CheckFailurePeriodSecond)
 	}
 	return false
 }

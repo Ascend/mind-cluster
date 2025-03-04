@@ -87,7 +87,7 @@ func (c *HbmCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colc
 func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache hbmCache, cardLabel []string) {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache hbmCache, cardLabel []string) {
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			return
@@ -95,7 +95,7 @@ func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 		timestamp := cache.timestamp
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.hbmUtilization), cardLabel, descHbmUtilization)
 
-		updateHbmInfo(ch, cache, cardLabel, c, containerMap)
+		c.updateHbmInfo(ch, cache, cardLabel, containerMap, chipWithVnpu)
 
 		eccInfo := extInfo.ECCInfo
 		updateHbmEccInfo(ch, eccInfo, timestamp, cardLabel)
@@ -105,8 +105,8 @@ func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 }
 
 // UpdateTelegraf updates the telegraf metrics.
-func (c *HbmCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *HbmCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 	caches := colcommon.GetInfoFromCache[hbmCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
@@ -175,8 +175,8 @@ func updateHbmEccInfo(ch chan<- prometheus.Metric, eccInfo *common.ECCInfo, time
 	doUpdateMetric(ch, timestamp, eccInfo.DoubleBitIsolatedPagesCnt, cardLabel, descEccDoubleBitIoslatedPagesCnt)
 }
 
-func updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []string, c *HbmCollector,
-	containerMap map[int32]container.DevicesInfo) {
+func (c *HbmCollector) updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []string,
+	containerMap map[int32]container.DevicesInfo, chipWithVnpu colcommon.HuaWeiAIChip) {
 	hbmInfo := cache.extInfo
 	if hbmInfo == nil {
 		return
@@ -186,12 +186,12 @@ func updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []stri
 	doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, descHbmTotalMemory)
 
 	// vnpu not support this metrics
-	vDevActivityInfo := cache.chip.VDevActivityInfo
+	vDevActivityInfo := chipWithVnpu.VDevActivityInfo
 	if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
 		return
 	}
 
-	containerNameArray := getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))
+	containerNameArray := getContainerNameArray(geenContainerInfo(&chipWithVnpu, containerMap))
 	if c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
 		doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, npuCtrTotalMemory)
 		doUpdateMetric(ch, timestamp, hbmInfo.Usage, cardLabel, npuCtrUsedMemory)

@@ -40,6 +40,23 @@ func TestInitRunLogger(t *testing.T) {
 	})
 }
 
+func TestNewCustomLogger(t *testing.T) {
+	convey.Convey("test hwlog adaptor", t, func() {
+		convey.Convey("test init custom log", func() {
+			ctx, cancel := context.WithCancel(context.TODO())
+			_, err := NewCustomLogger(nil, ctx)
+			convey.So(err, convey.ShouldBeError, errors.New("custom logger config is nil"))
+			lgConfig := &LogConfig{OnlyToStdout: true}
+			_, err = NewCustomLogger(lgConfig, ctx)
+			convey.So(err, convey.ShouldBeNil)
+			// repeat initialize
+			_, err = NewCustomLogger(lgConfig, ctx)
+			convey.So(err, convey.ShouldBeNil)
+			cancel()
+		})
+	})
+}
+
 func TestInitOperateLogger(t *testing.T) {
 	convey.Convey("test hwlog adaptor", t, func() {
 		convey.Convey("test init operate log", func() {

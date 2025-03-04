@@ -45,8 +45,8 @@ func (c *VersionCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *comm
 }
 
 // UpdateTelegraf update telegraf metric
-func (c *VersionCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *VersionCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	if fieldsMap[common.GeneralDevTagKey] == nil {
 		fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})

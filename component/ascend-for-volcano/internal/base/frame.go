@@ -30,17 +30,16 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/nslb"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 // PreStartAction pre-processing actions for rescheduling
-func (tp *NPUHandler) PreStartAction(i interface{}, ssn *framework.Session) error {
-	k, ok := i.(*rescheduling.ReScheduler)
-	if !ok {
-		return fmt.Errorf("preStartAction failed interface is not ReScheduler")
+func (tp *NPUHandler) PreStartAction(ssn *framework.Session) error {
+	for _, handler := range tp.PolicyHandler {
+		if err := handler.PreStartAction(ssn); err != nil {
+			return fmt.Errorf("preStartAction failed by %s", err)
+		}
 	}
-	tp.ReHandle = k
 	return nil
 }
 
@@ -114,12 +113,6 @@ func (tp *NPUHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
-
-	if tp.ReHandle != nil {
-		if reErr := tp.ReHandle.CheckNodeNPUByTask(task, node, tp.ReqNPUName); reErr != nil {
-			return fmt.Errorf("rescheduling %s", reErr)
-		}
-	}
 	return nil
 }
 
@@ -150,11 +143,6 @@ func (tp *NPUHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 			continue
 		}
 		scoreMap[node.Name] = healthyNPUNum/nodeWeight - float64(len(nodeTop))
-	}
-	reErr := tp.ReHandle.ScoreBestNPUNodes(task, scoreMap)
-	if reErr != nil {
-		klog.V(util.LogErrorLev).Infof(
-			"rescheduling ScoreBestNPUNodes failed :%s.", reErr)
 	}
 	return nil
 }

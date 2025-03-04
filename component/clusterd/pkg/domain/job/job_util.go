@@ -39,6 +39,8 @@ const (
 	StatusRankTableInit = "initializing"
 	// StatusRankTableComplete is the complete rankTable status
 	StatusRankTableComplete = "complete"
+	// CustomJobID  custom id key
+	CustomJobID = "custom-job-id"
 )
 
 // PreDeleteCmAndCache set job status
@@ -105,6 +107,7 @@ func getJobBasicInfoByPodGroup(pgInfo v1beta1.PodGroup) constant.JobInfo {
 	jobInfo.NameSpace = pgInfo.Namespace
 	jobInfo.Framework = podgroup.GetModelFramework(&pgInfo)
 	jobInfo.ResourceType = podgroup.GetResourceType(&pgInfo)
+	jobInfo.CustomJobID = pgInfo.Annotations[CustomJobID]
 	return jobInfo
 }
 

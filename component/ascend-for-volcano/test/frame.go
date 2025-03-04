@@ -35,7 +35,10 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/util"
 )
 
-const maxTaskNum = 10000
+const (
+	annoCards  = "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
+	maxTaskNum = 10000
+)
 
 // AddResource add resource into resourceList
 func AddResource(resourceList v1.ResourceList, name v1.ResourceName, need string) {
@@ -76,6 +79,7 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		node.Node.Labels[acceleratorKey] = acceleratorValue
 		node.Node.Labels[serverTypeKey] = fake910ServerType
 		node.Node.Labels[chipTypeKey] = fakeChipName + fakeChipType
+		node.Node.Annotations[NPU910CardName] = annoCards
 		schedulerCache.AddNode(node.Node)
 	}
 
@@ -97,7 +101,7 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		Queues:         snapshot.Queues,
 		NamespaceInfo:  snapshot.NamespaceInfo,
 		Configurations: confs,
-		NodeList:       nodes,
+		NodeList:       util.GetNodeList(snapshot.Nodes, snapshot.NodeList),
 	}
 	return ssn
 }

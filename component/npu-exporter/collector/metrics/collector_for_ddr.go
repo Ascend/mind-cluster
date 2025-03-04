@@ -85,7 +85,7 @@ func (c *DdrCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colc
 func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache ddrCache, cardLabel []string) {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache ddrCache, cardLabel []string) {
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			return
@@ -97,12 +97,12 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 		doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, descUsedMemory)
 
 		// vnpu not support this metrics
-		vDevActivityInfo := cache.chip.VDevActivityInfo
+		vDevActivityInfo := chipWithVnpu.VDevActivityInfo
 		if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
 			return
 		}
 
-		containerNameArray := getContainerNameArray(geenContainerInfo(&cache.chip, containerMap))
+		containerNameArray := getContainerNameArray(geenContainerInfo(&chipWithVnpu, containerMap))
 		if !c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
 			doUpdateMetric(ch, cache.timestamp, memorySize, cardLabel, npuCtrTotalMemory)
 			doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, npuCtrUsedMemory)
@@ -113,8 +113,8 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *DdrCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *DdrCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[ddrCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

@@ -88,6 +88,32 @@ type DeviceInfoNoName struct {
 	UpdateTime int64
 }
 
+// CurrJobStatistic current job statistic information
+type CurrJobStatistic struct {
+	JobStatistic map[string]JobStatistic
+}
+
+// JobNotifyMsg notify msg
+type JobNotifyMsg struct {
+	Operator string
+	JobKey   string
+}
+
+// JobStatistic job statistic information
+type JobStatistic struct {
+	K8sJobID            string `json:"ID"`                 // k8s job id
+	CustomJobID         string `json:"customID,omitempty"` // custom job id
+	CardNums            int64  `json:"cardNum,omitempty"`
+	PodFirstRunningTime int64  `json:"PodFirstRunTime,omitempty"`
+	StopTime            int64  `json:"StopTime,omitempty"` // stop time when job failed or complete
+	PodLastRunningTime  int64  `json:"PodLastRunTime,omitempty"`
+	PodLastFaultTime    int64  `json:"PodLastFaultTime,omitempty"`
+	PodFaultTimes       int64  `json:"PodFaultTimes,omitempty"`
+	Status              string `json:"-"`
+	Name                string `json:"-"`
+	NameSpace           string `json:"-"`
+}
+
 // JobInfo : normal job info
 type JobInfo struct {
 	JobType           string
@@ -107,6 +133,7 @@ type JobInfo struct {
 	SharedTorIp       string
 	MasterAddr        string
 	ResourceType      string
+	CustomJobID       string
 }
 
 // RankTable rank table info

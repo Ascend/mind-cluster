@@ -28,6 +28,7 @@ import (
 	"nodeD/pkg/control"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring"
+	"nodeD/pkg/pingmesh"
 	"nodeD/pkg/reporter"
 )
 
@@ -54,11 +55,12 @@ var (
 		LogFileName:   defaultLogFile,
 		MaxLineLength: maxLineLength,
 	}
-	controller     = &control.NodeController{}
-	configManager  = &config.FaultConfigurator{}
-	monitorManager = &monitoring.MonitorManager{}
-	reportManager  = &reporter.ReportManager{}
-	version        bool
+	controller      = &control.NodeController{}
+	configManager   = &config.FaultConfigurator{}
+	monitorManager  = &monitoring.MonitorManager{}
+	reportManager   = &reporter.ReportManager{}
+	pingmeshManager *pingmesh.Manager
+	version         bool
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
@@ -99,6 +101,9 @@ func main() {
 	}
 	go configManager.Run(ctx)
 	go monitorManager.Run(ctx)
+	if pingmeshManager != nil {
+		go pingmeshManager.Run(ctx)
+	}
 	signalCatch(cancel)
 }
 
@@ -117,6 +122,8 @@ func init() {
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup operation logs, range is (0, 30]")
+	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmesh.DefaultResultMaxAge,
+		"Maximum number of days for backup run pingmesh result files, range [7, 700] days")
 }
 
 func checkParameters() bool {
@@ -126,6 +133,11 @@ func checkParameters() bool {
 	}
 	if monitorPeriod < minMonitorPeriod || monitorPeriod > maxMonitorPeriod {
 		hwlog.RunLog.Errorf("monitor period %d out of range [60,600]", monitorPeriod)
+		return false
+	}
+	if resultMaxAge < pingmesh.MinResultMaxAge || resultMaxAge > pingmesh.MaxResultMaxAge {
+		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmesh.MinResultMaxAge,
+			pingmesh.MaxResultMaxAge)
 		return false
 	}
 	return true
@@ -151,6 +163,10 @@ func createWorkers() error {
 	controller = control.NewNodeController(clientK8s)
 	monitorManager = monitoring.NewMonitorManager(clientK8s)
 	reportManager = reporter.NewReporterManager(clientK8s)
+	pingmeshManager = pingmesh.NewManager(&pingmesh.Config{
+		ResultMaxAge: resultMaxAge,
+		KubeClient:   clientK8s,
+	})
 
 	// build the connections between workers
 	monitorManager.SetNextFaultProcessor(controller)

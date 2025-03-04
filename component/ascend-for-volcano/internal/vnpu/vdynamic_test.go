@@ -92,9 +92,8 @@ func mockVNode() plugin.VNode {
 
 func mockNode() plugin.NPUNode {
 	return plugin.NPUNode{
-		CommonNode:  mockCommonNode(),
-		VNode:       mockVNode(),
-		IsUnhealthy: false,
+		CommonNode: mockCommonNode(),
+		VNode:      mockVNode(),
 	}
 }
 

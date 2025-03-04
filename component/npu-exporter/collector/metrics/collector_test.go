@@ -234,7 +234,7 @@ func TestUpdateTelegraf(t *testing.T) {
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
 		mockSioCache(n, chips, colcommon.GetCacheKey(&SioCollector{}))
-		fieldsMap := make(map[int]map[string]interface{})
+		fieldsMap := make(map[string]map[string]interface{})
 
 		for _, c := range collectorChain {
 			c.UpdateTelegraf(fieldsMap, n, containerInfos, chips)

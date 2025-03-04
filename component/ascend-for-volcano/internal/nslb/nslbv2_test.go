@@ -21,7 +21,7 @@ package nslb
 
 import (
 	"reflect"
-	"strconv"
+	"strings"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -112,9 +112,6 @@ func buildScoreBestNPUNodesV204() scoreBestNPUNodesTest {
 
 func buildScoreBestNPUNodesV205() scoreBestNPUNodesTest {
 	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	for i := 0; i <= util.NPUIndex7; i++ {
-		ssn.NodeList = deleteNodeByNodeName(ssn.NodeList, "node"+strconv.Itoa(i))
-	}
 	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
 	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
 	test.AddJobInfoIntoSsn(ssn, fakeJob)
@@ -158,7 +155,10 @@ func TestTorHandlerV2ScoreBestNPUNodes(t *testing.T) {
 	for _, tt := range buildScoreBestNPUNodesV2TestCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			torHandlerV2 := TorHandlerV2{TorHandler: tt.torHandler}
-			torHandlerV2.PreStartAction(nil, nil)
+			torHandlerV2.PreStartAction(nil)
+			if strings.Contains(tt.name, "05-ScoreBestNPUNodes") {
+				tt.ssn.NodeList = tt.ssn.NodeList[util.NPUIndex8:]
+			}
 			if err := torHandlerV2.ScoreBestNPUNodes(tTask, tt.ssn.NodeList, scoreMap); (err != nil) != tt.wantErr {
 				t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -179,7 +179,7 @@ func buildTorHandlerUseAnnotationTest() []torHandlerUseAnnotationTest {
 	test.AddJobInfoLabel(fakeJob, TorAffinityKey, LargeModelTag)
 	test.AddJobInfoIntoSsn(ssn, fakeJob)
 	torHandlerV2 := &TorHandlerV2{TorHandler: newTestTorHandler(ssn)}
-	torHandlerV2.PreStartAction(nil, nil)
+	torHandlerV2.PreStartAction(nil)
 	return []torHandlerUseAnnotationTest{
 		{
 			name:     "01 will return err when th is nil",

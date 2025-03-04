@@ -25,17 +25,19 @@ from unittest.mock import patch
 from taskd.python.constants.constants import LOG_BACKUP_FORMAT, LOG_BACKUP_PATTERN
 from taskd.python.utils.log.logger import CustomRotatingHandler
 
+
 class TestLogger(unittest.TestCase):
     def test_logger_init(self):
         from taskd.python.utils.log import run_log
         assert run_log is not None
+
 
 class TestCustomRotationHandler(unittest.TestCase):
     def setUp(self):
         # create a temporary dir
         self.temp_dir = tempfile.TemporaryDirectory()
         self.test_dir = self.temp_dir.name
-        self.base_filename = os.path.join(self.test_dir, 'customlog.log')
+        self.base_filename = os.path.join(self.test_dir, "customlog.log")
 
     def tearDown(self):
         # clear the temporary dir
@@ -59,7 +61,7 @@ class TestCustomRotationHandler(unittest.TestCase):
         test backup file name format
         """
         fixed_time = datetime.datetime(2023, 10, 5, 12, 34, 56)
-        with patch('datetime.datetime') as mock_datetime:
+        with patch("datetime.datetime") as mock_datetime:
             mock_datetime.now.return_value = fixed_time
             handler = self.create_handler()
             rotated_name = handler.rotation_filename("unused")
@@ -72,10 +74,10 @@ class TestCustomRotationHandler(unittest.TestCase):
         test backup file creation
         """
         handler = self.create_handler(backup_count=2)
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("test log")
         handler.doRollover()
-        backups = [ f for f in os.listdir(self.test_dir) if f != "customlog.log" ]
+        backups = [f for f in os.listdir(self.test_dir) if f != "customlog.log"]
         self.assertEqual(len(backups), 1)
         self.assertRegex(backups[0], re.compile(LOG_BACKUP_PATTERN))
 
@@ -90,9 +92,9 @@ class TestCustomRotationHandler(unittest.TestCase):
             "customlog-2023-10-05T12-20-00.000.log"
         ]
         for fname in old_backups:
-            with open(os.path.join(self.test_dir, fname), 'w') as f:
+            with open(os.path.join(self.test_dir, fname), "w") as f:
                 f.write("old log")
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("new log")
         handler.doRollover()
         remaining = sorted(f for f in os.listdir(self.test_dir) if f != "customlog.log")
@@ -104,18 +106,18 @@ class TestCustomRotationHandler(unittest.TestCase):
         test backup deletion when backup count is zero
         """
         handler = self.create_handler(backup_count=0)
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("test log")
         handler.doRollover()
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("test2 log")
         handler.doRollover()
         # sleep to ensure that file creation timestamps are not duplicated
         time.sleep(0.001)
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("test3 log")
         handler.doRollover()
-        backups = [ f for f in os.listdir(self.test_dir) if f != "customlog.log"]
+        backups = [f for f in os.listdir(self.test_dir) if f != "customlog.log"]
         self.assertEqual(len(backups), 2)
 
     def test_multiple_rollovers(self):
@@ -129,15 +131,15 @@ class TestCustomRotationHandler(unittest.TestCase):
             "customlog-2023-10-05T12-20-00.000.log"
         ]
         for fname in old_backups:
-            with open(os.path.join(self.test_dir, fname), 'w') as f:
+            with open(os.path.join(self.test_dir, fname), "w") as f:
                 f.write("old log")
-        for i in range(4):
-            with open(self.base_filename, 'w') as f:
+        for _ in range(4):
+            with open(self.base_filename, "w") as f:
                 f.write("new log")
             handler.doRollover()
-        backups = [ f for f in os.listdir(self.test_dir) if f != "customlog.log"]
+        backups = [f for f in os.listdir(self.test_dir) if f != "customlog.log"]
         self.assertEqual(len(backups), 2)
-        self.assertNotIn( "customlog-2023-10-05T12-00-00.000.log", backups)
+        self.assertNotIn("customlog-2023-10-05T12-00-00.000.log", backups)
         self.assertNotIn("customlog-2023-10-05T12-10-00.000.log", backups)
         self.assertNotIn("customlog-2023-10-05T12-20-00.000.log", backups)
 
@@ -153,18 +155,17 @@ class TestCustomRotationHandler(unittest.TestCase):
             "customlog-2023-10-05T12-00-00.000.txt"
         ]
         for fname in [valid_file] + invalid_files:
-            with open(os.path.join(self.test_dir, fname), 'w') as f:
+            with open(os.path.join(self.test_dir, fname), "w") as f:
                 f.write("new log")
-        with open(self.base_filename, 'w') as f:
+        with open(self.base_filename, "w") as f:
             f.write("new log")
         handler.doRollover()
         remaining = os.listdir(self.test_dir)
         for invalid in invalid_files:
             self.assertIn(invalid, remaining)
-        backups = [ f for f in os.listdir(self.test_dir) if re.match(rf'customlog-{LOG_BACKUP_PATTERN}.log', f)]
+        backups = [f for f in os.listdir(self.test_dir) if re.match(rf"customlog-{LOG_BACKUP_PATTERN}.log", f)]
         self.assertEqual(len(backups), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

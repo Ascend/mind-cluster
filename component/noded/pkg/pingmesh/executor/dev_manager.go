@@ -61,7 +61,6 @@ func New() (*Executor, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	var superPodId uint32
 	for _, chip := range chips {
 		_, err = dm.DcGetHccsPingMeshState(chip.CardID, chip.DeviceID, 0, common.InternalPingMeshTaskID)
@@ -104,7 +103,6 @@ func (d *Executor) Start(stopCh <-chan struct{}) {
 	for {
 		select {
 		case <-stopCh:
-			// todo consider to stop hccsping-mesh
 			d.stopCollect()
 			return
 		case cmd := <-d.commandChan:
@@ -129,11 +127,6 @@ func (d *Executor) startHccspingMesh() {
 		}
 
 		for taskID := range addrs {
-			err := d.devManager.DcStopHccsPingMesh(chip.CardID, chip.DeviceID, 0, taskID)
-			if err != nil {
-				hwlog.RunLog.Errorf("deviceManager stop hccspingmesh failed, err: %v", err)
-				continue
-			}
 			hwlog.RunLog.Debugf("deviceManager start hccspingmesh, cardID: %d, deviceID: %d, taskID: %d",
 				chip.CardID, chip.DeviceID, taskID)
 			if err := d.devManager.DcStartHccsPingMesh(chip.CardID, chip.DeviceID, 0, common.HccspingMeshOperate{
@@ -167,7 +160,7 @@ func (d *Executor) stopAllTasks() {
 				continue
 			}
 
-			hwlog.RunLog.Infof("deviceManager stop hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
+			hwlog.RunLog.Debugf("deviceManager stop hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
 				chip.CardID, chip.DeviceID, taskID)
 		}
 	}
@@ -229,9 +222,7 @@ func (d *Executor) getHccspingMeshInfo() {
 
 	if d.resultHandler != nil {
 		d.resultHandler(&types.HccspingMeshResult{
-			UID:     d.currentPolicy.UID,
-			Address: d.currentPolicy.DestAddr,
-			Config:  d.currentPolicy.Config,
+			Policy:  d.currentPolicy,
 			Results: res,
 		})
 	}

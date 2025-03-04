@@ -1069,11 +1069,12 @@ func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 				return nil, fmt.Errorf("get device (cardID: %d, deviceID: %d) physic id "+"failed, error: %v",
 					cardID, devID, err)
 			}
+			hwlog.RunLog.Infof("get chip base info, cardID: %d, deviceID: %d, logicID: %d, physicID: %d", cardID, devID, logicID, physicID)
 			chips = append(chips, &common.ChipBaseInfo{
 				PhysicID: physicID,
 				LogicID:  logicID,
 				CardID:   cardID,
-				DeviceID: logicID,
+				DeviceID: devID,
 			})
 		}
 	}

@@ -194,21 +194,23 @@ func buildJobPipelinedFnTestCases() []JobPipelinedFnTest {
 		{
 			name: "02 JobPipelinedFnTest will return Abstain when scheduler job is not exist",
 			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
-				Jobs: map[api.JobID]plugin.SchedulerJob{}}}},
+				ClusterCache: plugin.ClusterCache{Jobs: map[api.JobID]plugin.SchedulerJob{}}}}},
 			obj:  &api.JobInfo{},
 			want: util.Abstain,
 		},
 		{
 			name: "03 JobPipelinedFnTest will return Abstain when job ready tag is true",
 			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
-				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobReady}}}}},
+				ClusterCache: plugin.ClusterCache{
+					Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobReady}}}}}},
 			obj:  &api.JobInfo{UID: "test-name"},
 			want: util.Abstain,
 		},
 		{
 			name: "04 JobPipelinedFnTest will return Reject when job ready tag is false",
 			tp: &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{ScheduleEnv: plugin.ScheduleEnv{
-				Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobNotReady}}}}},
+				ClusterCache: plugin.ClusterCache{
+					Jobs: map[api.JobID]plugin.SchedulerJob{"test-name": {JobReadyTag: &jobNotReady}}}}}},
 			obj:  &api.JobInfo{UID: "test-name"},
 			want: util.Reject,
 		},

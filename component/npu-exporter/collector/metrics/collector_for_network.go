@@ -90,7 +90,7 @@ func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache netInfoCache, cardLabel []string) {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoCache, cardLabel []string) {
 		netInfo := cache.extInfo
 		if netInfo == nil {
 			return
@@ -115,8 +115,8 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[netInfoCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -155,7 +155,7 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 		newNetInfo.LinkStatusInfo.LinkState = linkState
 		hwlog.ResetErrCnt(colcommon.DomainForLinkState, phyID)
 	} else {
-		logErrMetricsWithLimit(colcommon.DomainForOptical, phyID, err)
+		logErrMetricsWithLimit(colcommon.DomainForLinkState, phyID, err)
 		newNetInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
 	}
 

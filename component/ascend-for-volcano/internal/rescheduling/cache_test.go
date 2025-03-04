@@ -77,7 +77,7 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
-				Cache: plugin.ScheduleCache{
+				OutputCache: plugin.ScheduleCache{
 					Names:      map[string]string{RePropertyName: CmName},
 					Namespaces: map[string]string{RePropertyName: CmNameSpace},
 					Data:       map[string]map[string]string{RePropertyName: make(map[string]string, util.MapInitNum)},
@@ -96,7 +96,7 @@ func buildReSchedulerCacheWriteReSchedulerCacheToEnvCache() []ReSchedulerCacheWr
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
-				Cache: plugin.ScheduleCache{
+				OutputCache: plugin.ScheduleCache{
 					Names:      map[string]string{RePropertyName: CmName},
 					Namespaces: map[string]string{RePropertyName: CmNameSpace},
 					Data: map[string]map[string]string{RePropertyName: make(map[string]string, util.MapInitNum),
@@ -137,7 +137,7 @@ func buildTestCaseForMaxLengthOfRescheduleReason() ReSchedulerCacheWriteReSchedu
 		},
 		args: ReSchedulerCacheWriteReSchedulerCacheToEnvCacheArgs{
 			env: &plugin.ScheduleEnv{
-				Cache: plugin.ScheduleCache{
+				OutputCache: plugin.ScheduleCache{
 					Names:      map[string]string{ReschedulingReasonKey: RescheduleReasonCmName},
 					Namespaces: map[string]string{ReschedulingReasonKey: RescheduleReasonCmNamespace},
 					Data: map[string]map[string]string{ReschedulingReasonKey: make(map[string]string,
@@ -423,4 +423,26 @@ func TestWriteRescheduleReasonsToCMString(t *testing.T) {
 				t.Errorf("writeRescheduleReasonsToCMString() error = %v, wantErr is not nil", err)
 			}
 		})
+}
+
+// TestJudgePublicFaultInReason pass when public fault in reason
+func TestJudgePublicFaultInReason(t *testing.T) {
+	t.Run("TestJudgePublicFaultInReason", func(t *testing.T) {
+		faultTask := miniFaultTask{
+			Reason: []FaultReasonList{
+				{
+					FaultDeviceList: FaultDeviceList{
+						FaultType: PublicFaultType,
+					},
+				}, {
+					FaultDeviceList: FaultDeviceList{
+						FaultType: CardUnhealthy,
+					},
+				},
+			},
+		}
+		if !judgePublicFaultInReason(&faultTask) {
+			t.Error("TestJudgePublicFaultInReason failed")
+		}
+	})
 }

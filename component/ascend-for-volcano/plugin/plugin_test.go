@@ -23,9 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -119,83 +116,12 @@ func (tp *ascendTest) ReleaseAnnotation(task *api.TaskInfo, node NPUNode) *NPUNo
 	return nil
 }
 
-func (tp *ascendTest) PreStartAction(i interface{}, ssn *framework.Session) error {
+func (tp *ascendTest) PreStartAction(ssn *framework.Session) error {
 	if tp == nil {
 		return fmt.Errorf(util.ArgumentError)
 	}
 
 	return nil
-}
-
-func (tp *ascendTest) PreStopAction(env *ScheduleEnv) error {
-	if tp == nil {
-		return fmt.Errorf(util.ArgumentError)
-	}
-
-	return nil
-}
-
-func fakeDeviceInfoCMDataByNode(nodeName string, deviceList map[string]string) *v1.ConfigMap {
-	cmName := util.DevInfoPreName + nodeName
-	const testTime = 1657527526
-	cmData := NodeDeviceInfoWithDevPlugin{
-		DeviceInfo: NodeDeviceInfo{
-			DeviceList: deviceList,
-			UpdateTime: testTime,
-		},
-		CheckCode: "6b8de396fd9945be231d24720ca66ed950baf0a5972717f335aad7571cb6457a",
-	}
-	var data = make(map[string]string, 1)
-	cmDataStr, err := json.Marshal(cmData)
-	if err != nil {
-		return nil
-	}
-	data["DeviceInfoCfg"] = string(cmDataStr)
-	data[util.SwitchInfoCmKey] = fakeSwitchInfos()
-	var faultNPUConfigMap = &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cmName,
-			Namespace: "kube-system",
-		},
-		Data: data,
-	}
-	return faultNPUConfigMap
-}
-
-func fakeDeviceList() map[string]string {
-	return map[string]string{
-		util.NPU910CardName: annoCards,
-		networkUnhealthyNPU: "",
-		unhealthyNPU:        "",
-	}
-}
-
-func fakeSwitchInfos() string {
-	tmpSwitchInfo := SwitchFaultInfo{
-		NodeStatus: util.NodeHealthyByNodeD,
-	}
-	if bytes, err := json.Marshal(tmpSwitchInfo); err == nil {
-		return string(bytes)
-	}
-	return ""
-}
-
-func fakeNodeInfos() map[string]string {
-	nodeInfos := NodeDNodeInfo{
-		NodeStatus: util.NodeHealthyByNodeD,
-	}
-	tmpData := NodeInfoWithNodeD{
-		NodeInfo:  nodeInfos,
-		CheckCode: util.MakeDataHash(nodeInfos),
-	}
-
-	nodeInfoBytes, err := json.Marshal(tmpData)
-	if err != nil {
-		return nil
-	}
-	return map[string]string{
-		util.NodeInfoCMKey: string(nodeInfoBytes),
-	}
 }
 
 func fakeResetCmInfos() map[string]string {

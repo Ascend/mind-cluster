@@ -91,8 +91,6 @@ func (d DestinationAddress) DeepCopy() DestinationAddress {
 
 // HccspingMeshResult hccsping-mesh result
 type HccspingMeshResult struct {
-	UID     string
-	Config  *HccspingMeshConfig
-	Address map[string]DestinationAddress
+	Policy  *HccspingMeshPolicy
 	Results map[string]map[uint]*common.HccspingMeshInfo
 }

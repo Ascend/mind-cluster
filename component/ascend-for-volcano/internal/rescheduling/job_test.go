@@ -106,12 +106,8 @@ func buildFaultJobForceDeleteJobTests() []FaultJobForceDeleteJobTests {
 
 // TestFaultJobForceDeleteJob test for force delete function
 func TestFaultJobForceDeleteJob(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	tests := buildFaultJobForceDeleteJobTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -138,12 +134,8 @@ func TestFaultJobForceDeleteJob(t *testing.T) {
 
 // TestGetVirSupPodId test getVirSupPodId
 func TestGetVirSupPodId(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	fJob := &FaultJob{
 		JobUID: "test",
 	}
@@ -171,12 +163,9 @@ func TestGetVirSupPodId(t *testing.T) {
 
 // TestIsContainTask test isContainTask
 func TestIsContainTask(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
+
 	fJob := &FaultJob{
 		JobUID: "test",
 	}
@@ -204,12 +193,9 @@ func TestIsContainTask(t *testing.T) {
 
 // TestGetIds test getIds
 func TestGetIds(t *testing.T) {
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
+
 	fJob := &FaultJob{
 		JobUID: "test",
 	}
@@ -379,8 +365,10 @@ func TestDeleteJobWithLabels(t *testing.T) {
 			FrameAttr: plugin.VolcanoFrame{
 				KubeClient: fake.NewSimpleClientset(),
 			},
-			SuperPodInfo: &plugin.SuperPodInfo{
-				SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+			ClusterCache: plugin.ClusterCache{
+				SuperPodInfo: &plugin.SuperPodInfo{
+					SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+				},
 			},
 		}
 		if err := fJob.deleteJobWithLabels(ssn, &ReScheduler{}, &plugin.SchedulerJob{}, env); err != nil {
@@ -461,8 +449,10 @@ func TestDeleteJobWithSubHealthyLabels(t *testing.T) {
 			FrameAttr: plugin.VolcanoFrame{
 				KubeClient: fake.NewSimpleClientset(),
 			},
-			SuperPodInfo: &plugin.SuperPodInfo{
-				SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+			ClusterCache: plugin.ClusterCache{
+				SuperPodInfo: &plugin.SuperPodInfo{
+					SuperPodFaultTaskNodes: map[api.JobID][]string{mockJobUID: {}},
+				},
 			},
 		}
 		err := fJob.deleteJobWithSubHealthyLabels(ssn, &ReScheduler{}, &plugin.SchedulerJob{}, env)
@@ -547,14 +537,8 @@ func initIsNormalTaskCanBeDeleteArgs() isNormalTaskCanBeDeleteArgs {
 	}
 	schedulerJob := &plugin.SchedulerJob{}
 	schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-		},
-	}
-
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	return isNormalTaskCanBeDeleteArgs{
 		faultJob:      fJob,
 		deletePodInfo: dpi,
@@ -629,13 +613,8 @@ func TestGetTaskPodUidByTaskName(t *testing.T) {
 
 func TestGraceDeleteJob(t *testing.T) {
 	fJob := &FaultJob{JobUID: mockJobUID}
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-		},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	npuJob := &plugin.SchedulerJob{}
 	t.Run("01-GraceDeleteJob return error when ssn is nil", func(t *testing.T) {
 		err := fJob.GraceDeleteJob(nil, &plugin.SchedulerJob{}, env)
@@ -680,13 +659,8 @@ func TestGraceDeletePods(t *testing.T) {
 			},
 		},
 	}
-	env := plugin.ScheduleEnv{
-		SuperPodInfo: &plugin.SuperPodInfo{
-			SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-			SuperPodFaultTaskNodes:    map[api.JobID][]string{},
-			SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{},
-		},
-	}
+	env := plugin.ScheduleEnv{}
+	env.SuperPodInfo = plugin.NewSuperPodInfo()
 	t.Run("01-graceDeletePods return error when npuTask not in session", func(t *testing.T) {
 		if err := fJob.graceDeletePods(ssn, npuJob, env, &deletePodInfo{}); err == nil {
 			t.Errorf("graceDeletePods() err = %v, wantErr is not nil", err)

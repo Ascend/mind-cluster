@@ -116,7 +116,7 @@ func (c *OpticalCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
-	updateSingleChip := func(cache opticalCache, cardLabel []string) {
+	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache opticalCache, cardLabel []string) {
 		opticalInfo := cache.extInfo
 		if opticalInfo == nil {
 			return
@@ -142,8 +142,8 @@ func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[int]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[int]map[string]interface{} {
+func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[opticalCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

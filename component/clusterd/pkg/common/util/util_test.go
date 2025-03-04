@@ -6,10 +6,12 @@ package util
 import (
 	"context"
 	"fmt"
+	"math"
 	"syscall"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 
 	"ascend-common/common-utils/hwlog"
 )
@@ -29,6 +31,48 @@ func init() {
 	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
 		fmt.Printf("init hwlog failed, %v\n", err)
 		return
+	}
+}
+
+func TestFloatRound(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    float64
+		bit      int
+		expected float64
+	}{
+		// Positive number test
+		{name: "Positive numbers retain 0 decimal places", input: 123.456, bit: 0, expected: 123.0},
+		{name: "Positive numbers retain 2 decimal places and round up", input: 123.4567, bit: 2, expected: 123.46},
+		{name: "Positive numbers retain 3 decimal places and do not carry", input: 123.4564, bit: 3, expected: 123.456},
+		{name: "The positive number is rounded to 0.5.", input: 2.5, bit: 0, expected: 3.0},
+
+		// Negative number test
+		{name: "Negative numbers retain 0 decimal places", input: -123.756, bit: 0, expected: -124.0},
+		{name: "Negative numbers are rounded to 2 decimal places", input: -123.4567, bit: 2, expected: -123.46},
+		{name: "Negative numbers are rounded to 0.5", input: -3.5, bit: 0, expected: -3.0},
+
+		// Special value test
+		{name: "Zero value is rounded to 3 decimal places", input: 0.0, bit: 3, expected: 0.0},
+		{name: "Keep 5 decimal places for the smallest positive number", input: 0.000000123, bit: 5, expected: 0.00000},
+
+		// Boundary Testing
+		{name: "Keep 15 decimal places (maximum supported precision)", input: 0.1234567890123456789, bit: 15,
+			expected: 0.123456789012346},
+		{name: "Negative precision", input: 123.456, bit: -1, expected: math.NaN()},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := FloatRound(tc.input, tc.bit)
+			if math.IsNaN(tc.expected) {
+				assert.True(t, math.IsNaN(actual))
+			} else {
+				assert.Equal(t, tc.expected, actual, "Precision: %d decimal places", tc.bit)
+				// Verify that the accuracy error is within 1e-bit
+				assert.InDelta(t, tc.expected, actual, math.Pow10(-tc.bit))
+			}
+		})
 	}
 }
 

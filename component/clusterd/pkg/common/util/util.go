@@ -9,6 +9,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
+	"math"
 	"os"
 	"os/signal"
 	"reflect"
@@ -17,6 +18,15 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 )
+
+// FloatRound Keep n decimal places
+func FloatRound(v float64, bit int) float64 {
+	if bit < 0 {
+		return math.NaN()
+	}
+	pow10 := math.Pow10(bit)
+	return math.Floor(v*pow10+0.5) / pow10
+}
 
 // NewSignalWatcher create a new signal watcher
 func NewSignalWatcher(signals ...os.Signal) chan os.Signal {

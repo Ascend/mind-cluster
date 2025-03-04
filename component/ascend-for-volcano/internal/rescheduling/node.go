@@ -121,7 +121,7 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 		klog.V(util.LogErrorLev).Infof("getUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
 	}
 	fNode.setUnhealthyNPUList(tmpUnhealthyNPUs)
-	klog.V(util.LogErrorLev).Infof("Unhealthy cards from device info: %v", tmpUnhealthyNPUs)
+	klog.V(util.LogInfoLev).Infof("Unhealthy cards from device info: %v", tmpUnhealthyNPUs)
 
 	tmpNetworkUnhealthyNPUs, err := fNode.getNetworkUnhealthyCardsFromDeviceInfo(node)
 	if err != nil {

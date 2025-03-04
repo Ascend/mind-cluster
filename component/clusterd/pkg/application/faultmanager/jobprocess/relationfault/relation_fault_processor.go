@@ -68,7 +68,7 @@ func (processor *relationFaultProcessor) InitFaultJobs() {
 	jobServerInfoMap := job.GetJobServerInfoMap()
 	for jobId, serverLists := range jobServerInfoMap.InfoMap {
 		if len(serverLists) == 0 {
-			hwlog.RunLog.Warnf("job %s serverList is empty", jobId)
+			hwlog.RunLog.Debugf("job %s serverList is empty", jobId)
 			continue
 		}
 		tmpFaultJob, ok := processor.faultJobs[jobId]

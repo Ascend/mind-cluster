@@ -205,7 +205,7 @@ func GetNPUOpticalInfo(phyID int32) (map[string]string, error) {
 	// success result include: [device x]link up count : y
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
-		return nil, buildHccnErr(phyID, "npu stat", err)
+		return nil, buildHccnErr(phyID, "optical", err)
 	}
 	lines := strings.Split(outStr, newLine)
 	opticalInfoMap := make(map[string]string)

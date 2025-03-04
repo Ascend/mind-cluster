@@ -133,3 +133,11 @@ const (
 	// NPUPreName npu pre name
 	NPUPreName = "huawei.com/Ascend"
 )
+
+// jobStc notify msg
+const (
+	JobInfoAdd       = "JobInfoAdd"
+	JobInfoUpdate    = "JobInfoUpdate"
+	JobInfoPreDelete = "JobPreDelete"
+	JobInfoDelete    = "JobDelete"
+)

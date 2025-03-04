@@ -56,14 +56,14 @@ func buildInitPolicyHandlerTestCases() []InitPolicyHandlerTest {
 		{
 			name: "03 will return single level handler when tor level is Single Layer",
 			job:  util.SchedulerJobAttr{ComJob: util.ComJob{Label: map[string]string{TorAffinityKey: LargeModelTag}}},
-			env:  plugin.ScheduleEnv{Tors: &plugin.TorList{TorLevel: SingleLayer}},
+			env:  plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{Tors: &plugin.TorList{TorLevel: SingleLayer}}},
 			want: &TorSingleLevelHandler{TorHandler: TorHandler{globalTorEnv: &plugin.TorList{TorLevel: SingleLayer},
 				pluginName: pluginName}},
 		},
 		{
 			name: "04 will return default handler when tor level is not Single Layer",
 			job:  util.SchedulerJobAttr{ComJob: util.ComJob{Label: map[string]string{TorAffinityKey: LargeModelTag}}},
-			env:  plugin.ScheduleEnv{Tors: &plugin.TorList{}},
+			env:  plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{Tors: &plugin.TorList{}}},
 			want: &TorHandler{globalTorEnv: &plugin.TorList{}, pluginName: pluginName},
 		},
 	}
@@ -142,7 +142,7 @@ func TestISchedulerPluginNeedInterface(t *testing.T) {
 	})
 
 	t.Run("05 test PreStartAction will return nil", func(t *testing.T) {
-		if got := th.PreStartAction(nil, nil); !reflect.DeepEqual(got, nil) {
+		if got := th.PreStartAction(nil); !reflect.DeepEqual(got, nil) {
 			t.Errorf("PreStartAction() = %v, want %v", got, nil)
 		}
 	})
@@ -160,7 +160,8 @@ func TestInitMyJobPlugin(t *testing.T) {
 	fakeJobAttr.Name = "test"
 	fakeJob := plugin.SchedulerJob{SchedulerJobAttr: fakeJobAttr}
 	t.Run("02 test InitMyJobPlugin will return nil", func(t *testing.T) {
-		if got := th.InitMyJobPlugin(fakeJobAttr, plugin.ScheduleEnv{Jobs: map[api.JobID]plugin.SchedulerJob{"test": fakeJob}}); !reflect.DeepEqual(got, nil) {
+		if got := th.InitMyJobPlugin(fakeJobAttr, plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{
+			Jobs: map[api.JobID]plugin.SchedulerJob{"test": fakeJob}}}); !reflect.DeepEqual(got, nil) {
 			t.Errorf("InitMyJobPlugin() = %v, want %v", got, nil)
 		}
 	})

@@ -134,6 +134,10 @@ func (cw *configMapWatcher) Init() {
 
 // Watch is a function that watches configmap changes
 func (cw *configMapWatcher) Watch(stopCh <-chan struct{}) {
+	if stopCh == nil {
+		hwlog.RunLog.Errorf("stopCh is nil")
+		return
+	}
 	go cw.informerFactory.Start(stopCh)
 	cache.WaitForCacheSync(stopCh, cw.informerFactory.Core().V1().ConfigMaps().Informer().HasSynced)
 

@@ -27,8 +27,6 @@ import (
 
 	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
-
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
 const (
@@ -150,77 +148,6 @@ func TestChangeIntArrToStr(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ChangeIntArrToStr(tt.args.top, tt.args.npuCardPreName); got != tt.want {
 				t.Errorf("ChangeIntArrToStr() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-type configFromSchedulerArgs struct {
-	configKey      string
-	configurations []config.Configuration
-}
-
-type configFromSchedulerConfigMapTest struct {
-	name    string
-	args    configFromSchedulerArgs
-	want    *config.Configuration
-	wantErr bool
-}
-
-const (
-	configKey = "test"
-)
-
-func buildConfigFromSchedulerConfigMapTest() []configFromSchedulerConfigMapTest {
-	return []configFromSchedulerConfigMapTest{
-		{
-			name: "01-GetConfigFromSchedulerConfigMap no configurations in scheduler configmap",
-			args: configFromSchedulerArgs{
-				configKey:      configKey,
-				configurations: []config.Configuration{},
-			},
-			wantErr: true,
-		},
-		{
-			name: "02-GetConfigFromSchedulerConfigMap get the configurations by name",
-			args: configFromSchedulerArgs{
-				configKey:      configKey,
-				configurations: []config.Configuration{{Name: configKey}},
-			},
-			want:    &config.Configuration{Name: configKey},
-			wantErr: false,
-		},
-		{
-			name: "03-GetConfigFromSchedulerConfigMap cannot get configurations by name",
-			args: configFromSchedulerArgs{
-				configKey:      configKey,
-				configurations: []config.Configuration{{Name: configKey + "0"}},
-			},
-			wantErr: true,
-		},
-		{
-			name: "04-GetConfigFromSchedulerConfigMap compatible with old versions",
-			args: configFromSchedulerArgs{
-				configKey:      CMSelectorKey,
-				configurations: []config.Configuration{{Name: configKey + "0"}, {Name: configKey + "1"}},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-}
-
-func TestGetConfigFromSchedulerConfigMap(t *testing.T) {
-	tests := buildConfigFromSchedulerConfigMapTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetConfigFromSchedulerConfigMap(tt.args.configKey, tt.args.configurations)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetConfigFromSchedulerConfigMap() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetConfigFromSchedulerConfigMap() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -506,7 +433,7 @@ func TestGetNpuNameFromJobRequire(t *testing.T) {
 
 type superPodInfoArgs struct {
 	key            string
-	configurations []config.Configuration
+	configurations map[string]string
 }
 
 type superPodInfoArgsTest struct {
@@ -521,47 +448,42 @@ func buildSuperPodInfoTest() []superPodInfoArgsTest {
 		{
 			name: "01-getSuperPodInfoFromConfig get super pod size",
 			args: superPodInfoArgs{key: sizeOfSuperPodKey,
-				configurations: []config.Configuration{
-					{Name: CMInitParamKey, Arguments: map[string]string{sizeOfSuperPodKey: "1"}}},
+				configurations: map[string]string{sizeOfSuperPodKey: "1"},
 			},
 			want: 1,
 		},
 		{
 			name: "02-getSuperPodInfoFromConfig get super pod size",
 			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: []config.Configuration{
-					{Name: CMInitParamKey, Arguments: map[string]string{reserveNodesKey: "1"}}},
+				configurations: map[string]string{reserveNodesKey: "1"},
 			},
 			want: 1,
 		},
 		{
 			name: "03-getSuperPodInfoFromConfig error",
 			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: []config.Configuration{},
+				configurations: map[string]string{},
 			},
 			wantErr: true,
 		},
 		{
 			name: "04-getSuperPodInfoFromConfig reserveNodesKey not exist",
 			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: []config.Configuration{
-					{Name: CMInitParamKey, Arguments: map[string]string{"abcd": "1"}}},
+				configurations: map[string]string{"abcd": "1"},
 			},
 			wantErr: true,
 		},
 		{
 			name: "5-getSuperPodInfoFromConfig not number",
 			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: []config.Configuration{
-					{Name: CMInitParamKey, Arguments: map[string]string{reserveNodesKey: "1xx"}}},
+				configurations: map[string]string{reserveNodesKey: "1xx"},
 			},
 			wantErr: true,
 		},
 		{
 			name: "06-getSuperPodInfoFromConfig less than zero",
 			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: []config.Configuration{
-					{Name: CMInitParamKey, Arguments: map[string]string{reserveNodesKey: "-1"}}},
+				configurations: map[string]string{reserveNodesKey: "-1"},
 			},
 			wantErr: true,
 		},
@@ -572,11 +494,7 @@ func TestGetSuperPodInfoFromConfig(t *testing.T) {
 	tests := buildSuperPodInfoTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getSuperPodInfoFromConfig(tt.args.key, tt.args.configurations)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getSuperPodInfoFromConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := getSuperPodInfoFromConfig(tt.args.key, tt.args.configurations)
 			if got != tt.want {
 				t.Errorf("getSuperPodInfoFromConfig() got = %v, want %v", got, tt.want)
 			}
@@ -609,30 +527,6 @@ func TestCheckStrInSlice(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := CheckStrInSlice(tt.args.str, tt.args.slice); got != tt.want {
 				t.Errorf("CheckStrInSlice() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestDeepCopyCmData(t *testing.T) {
-	type args struct {
-		cmData map[string]string
-	}
-	tests := []struct {
-		name string
-		args args
-		want map[string]string
-	}{
-		{
-			name: "01-DeepCopyCmData",
-			args: args{cmData: map[string]string{"a": "a", "b": "b"}},
-			want: map[string]string{"a": "a", "b": "b"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := DeepCopyCmData(tt.args.cmData); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeepCopyCmData() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -818,41 +712,37 @@ func TestVResourceBeGreater(t *testing.T) {
 func TestGetSizeOfSuperPod(t *testing.T) {
 	tests := []struct {
 		name    string
-		conf    []config.Configuration
+		conf    map[string]string
 		want    int
 		wantErr bool
 	}{
 		{
 			name:    "01-GetSizeOfSuperPod return error when conf is empty",
-			conf:    []config.Configuration{},
-			want:    0,
+			conf:    map[string]string{},
+			want:    defaultSuperPodSize,
 			wantErr: true,
 		},
 		{
 			name:    "02-GetSizeOfSuperPod return error when conf is nil",
 			conf:    nil,
-			want:    0,
+			want:    defaultSuperPodSize,
 			wantErr: true,
 		},
 		{
 			name:    "03-GetSizeOfSuperPod return error when conf not exist init-params",
-			conf:    []config.Configuration{{Name: "test"}},
-			want:    0,
+			conf:    nil,
+			want:    defaultSuperPodSize,
 			wantErr: true,
 		},
 		{
 			name: "04-GetSizeOfSuperPod return 1 when conf exist init-params",
-			conf: []config.Configuration{{Name: CMInitParamKey, Arguments: map[string]string{sizeOfSuperPodKey: "1"}}},
+			conf: map[string]string{sizeOfSuperPodKey: "1"},
 			want: 1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetSizeOfSuperPod(tt.conf)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetSizeOfSuperPod() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := GetSizeOfSuperPod(tt.conf)
 			if got != tt.want {
 				t.Errorf("GetSizeOfSuperPod() got = %v, want %v", got, tt.want)
 			}
@@ -862,42 +752,30 @@ func TestGetSizeOfSuperPod(t *testing.T) {
 
 func TestGetReserveNodes(t *testing.T) {
 	tests := []struct {
-		name    string
-		conf    []config.Configuration
-		want    int
-		wantErr bool
+		name         string
+		conf         map[string]string
+		superPodSize int
+		want         int
 	}{
 		{
-			name:    "01-GetReserveNodes return error when conf is empty",
-			conf:    []config.Configuration{},
-			want:    0,
-			wantErr: true,
+			name: "01-GetReserveNodes return error when conf is nil",
+			conf: nil,
+			want: 2,
 		},
 		{
-			name:    "02-GetReserveNodes return error when conf is nil",
-			conf:    nil,
-			want:    0,
-			wantErr: true,
+			name: "02-GetReserveNodes return error when conf not exist init-params",
+			conf: map[string]string{sizeOfSuperPodKey: "1"},
+			want: 2,
 		},
 		{
-			name:    "03-GetReserveNodes return error when conf not exist init-params",
-			conf:    []config.Configuration{{Name: "test"}},
-			want:    0,
-			wantErr: true,
-		},
-		{
-			name: "04-GetReserveNodes return 1 when conf exist init-params",
-			conf: []config.Configuration{{Name: CMInitParamKey, Arguments: map[string]string{reserveNodesKey: "1"}}},
+			name: "03-GetReserveNodes return 1 when conf exist init-params",
+			conf: map[string]string{reserveNodesKey: "1"},
 			want: 1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetReserveNodes(tt.conf)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetReserveNodes() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := GetReserveNodes(tt.conf, defaultSuperPodSize)
 			if got != tt.want {
 				t.Errorf("GetReserveNodes() got = %v, want %v", got, tt.want)
 			}

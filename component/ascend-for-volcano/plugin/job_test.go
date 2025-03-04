@@ -390,38 +390,37 @@ func buildJobValidTest() []jobValidTest {
 	test.SetFakeNPUJobStatusPending(tJob2)
 	tJob3 := test.FakeNormalTestJob("testJob", 1)
 	test.AddTestJobLabel(tJob3, "haha", "who")
-	isFirstSession := false
 	fakeRsNum := int32(util.NPUIndex1)
 	tests := []jobValidTest{
 		{
 			name:   "01-JobValid not job test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{IsFirstSession: &isFirstSession}},
+			fields: fields{ScheduleEnv: ScheduleEnv{}},
 			args:   jobValidArgs{obj: "haha"},
 			want: &api.ValidateResult{Pass: false, Reason: "job convert failed",
 				Message: `validJobFn ["haha"] failed:job convert failed`},
 		},
 		{
 			name:   "02-JobValid job not initial test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{IsFirstSession: &isFirstSession}},
+			fields: fields{ScheduleEnv: ScheduleEnv{}},
 			args:   jobValidArgs{obj: tJob2},
 			want:   nil,
 		},
 		{
 			name: "03-JobValid job not in jobs test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{}, IsFirstSession: &isFirstSession}},
+				ScheduleEnv: ScheduleEnv{ClusterCache: NewClusterCache()}},
 			args: jobValidArgs{obj: tJob},
 			want: nil,
 		},
 		{
 			name: "04-JobValid job is deployment job and task is not ready.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{Jobs: map[api.JobID]SchedulerJob{tJob.UID: {Owner: OwnerInfo{
-					OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
-					Replicas:       &fakeRsNum},
-					SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
-				},
-					IsFirstSession: &isFirstSession}},
+				ScheduleEnv: ScheduleEnv{ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{tJob.UID: {Owner: OwnerInfo{
+						OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
+						Replicas:       &fakeRsNum},
+						SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
+					}}}},
 			args: jobValidArgs{obj: tJob},
 			want: &api.ValidateResult{Pass: false, Reason: "job is not ready",
 				Message: "job  task num 0 less than replicas 1"},
@@ -432,12 +431,14 @@ func buildJobValidTest() []jobValidTest {
 
 func TestJobValid(t *testing.T) {
 	tests := buildJobValidTest()
+	isFirstSession := false
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sHandle := &ScheduleHandler{
 				NPUPlugins:  tt.fields.NPUPlugins,
 				ScheduleEnv: tt.fields.ScheduleEnv,
 			}
+			sHandle.FrameAttr.IsFirstSession = &isFirstSession
 			if got := sHandle.JobValid(tt.args.obj); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("JobValid() = %v, want %v", got, tt.want)
 			}
@@ -464,18 +465,16 @@ func buildSetJobPendReasonByNodesCaseTest() []setJobPendReasonByNodesCaseTest {
 			name: "01-SetJobPendReasonByNodesCase job no error test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args: setJobPendReasonByNodesCaseArgs{job: tJob},
 		},
 		{
 			name: "02-SetJobPendReasonByNodesCase test ok.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args: setJobPendReasonByNodesCaseArgs{job: tJob1},
 		},
 	}
@@ -514,9 +513,8 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 			name: "01-SetJobPendingReason nil test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args:    setJobPendingReasonArgs{vcJob: nil},
 			wantErr: true,
 		},
@@ -524,9 +522,8 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 			name: "02-SetJobPendingReason not support type test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args:    setJobPendingReasonArgs{vcJob: tJob, reason: api.NodeInfo{}},
 			wantErr: true,
 		},
@@ -534,9 +531,8 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 			name: "03-SetJobPendingReason string type test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args:    setJobPendingReasonArgs{vcJob: tJob, reason: "haha"},
 			wantErr: false,
 		},
@@ -544,9 +540,8 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 			name: "04-SetJobPendingReason nodeErrors test.",
 			fields: fields{NPUPlugins: map[string]NPUBuilder{},
 				ScheduleEnv: ScheduleEnv{
-					Jobs:      map[api.JobID]SchedulerJob{},
-					Nodes:     map[string]NPUNode{},
-					FrameAttr: VolcanoFrame{}}},
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{}}},
 			args:    setJobPendingReasonArgs{vcJob: tJob, reason: map[api.TaskID]*api.FitErrors{}},
 			wantErr: false,
 		},
@@ -605,7 +600,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{
 				NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
-				VNode{}, false, 0}},
+				VNode{}}},
 			wantErr: true,
 		},
 		{
@@ -613,7 +608,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
 				ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
-				VNode{}, false, 0}},
+				VNode{}}},
 			wantErr: true,
 		},
 		{
@@ -733,8 +728,6 @@ func TestSchedulerJobUpdateResetConfigMap(t *testing.T) {
 			sJob := &SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
 				handler:          tt.fields.handler,
-				ServerList:       tt.fields.ServerList,
-				TorBlackMaps:     tt.fields.TorBlackMaps,
 				JobReadyTag:      &tt.fields.JobReadyTag,
 			}
 			sJob.updateResetConfigMap(tt.args.sHandle)

@@ -147,12 +147,12 @@ func getContainerNameArray(devInfo container.DevicesInfo) []string {
 	return strings.Split(devInfo.Name, "_")
 }
 
-func getFieldMap(fieldsMap map[int]map[string]interface{}, devTagKey int32) map[string]interface{} {
-	devTagKeyInt := int(devTagKey)
-	if fieldsMap[devTagKeyInt] == nil {
-		fieldsMap[devTagKeyInt] = make(map[string]interface{})
+func getFieldMap(fieldsMap map[string]map[string]interface{}, devTagKey int32) map[string]interface{} {
+	devTagKeyStr := strconv.Itoa(int(devTagKey))
+	if fieldsMap[devTagKeyStr] == nil {
+		fieldsMap[devTagKeyStr] = make(map[string]interface{})
 	}
-	return fieldsMap[devTagKeyInt]
+	return fieldsMap[devTagKeyStr]
 }
 
 func handleErr(err error, domain string, logicID int32) {
@@ -189,7 +189,7 @@ func handleUnsupportDevice(isSupport bool, devType string, group string, extInfo
 }
 
 func updateFrame[T any](cacheKey string, n *colcommon.NpuCollector, containerMap map[int32]container.DevicesInfo,
-	chips []colcommon.HuaWeiAIChip, callBack func(cache T, cardLabel []string)) {
+	chips []colcommon.HuaWeiAIChip, callBack func(chipWithVnpu colcommon.HuaWeiAIChip, cache T, cardLabel []string)) {
 
 	caches := colcommon.GetInfoFromCache[T](n, cacheKey)
 	if len(caches) == 0 {
@@ -204,6 +204,6 @@ func updateFrame[T any](cacheKey string, n *colcommon.NpuCollector, containerMap
 			continue
 		}
 
-		callBack(cache, cardLabel)
+		callBack(chip, cache, cardLabel)
 	}
 }
