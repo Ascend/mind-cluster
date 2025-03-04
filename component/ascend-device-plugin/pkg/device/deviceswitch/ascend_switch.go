@@ -242,8 +242,10 @@ func GetSwitchFaults() ([]common.SwitchFaultEvent, error) {
 		errorCodes = append(errorCodes, faultEvent.AssembledFaultCode)
 		retErrorInfo = append(retErrorInfo, faultEvent)
 	}
-	// DO NOT edit this log, if necessary DO inform fault dialog
-	hwlog.RunLog.Warnf("switch of 910A3 get fault codes: %#v", errorCodes)
+	if len(errorCodes) > 0 {
+		// DO NOT edit this log, if necessary DO inform fault dialog
+		hwlog.RunLog.Warnf("switch of 910A3 get fault codes: %#v", errorCodes)
+	}
 	return retErrorInfo, nil
 }
 
