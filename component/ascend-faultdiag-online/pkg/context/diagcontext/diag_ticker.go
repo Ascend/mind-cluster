@@ -3,7 +3,7 @@ package diagcontext
 import (
 	"time"
 
-	"ascend-faultdiag-online/pkg/context"
+	"ascend-faultdiag-online/pkg/context/contextdata"
 )
 
 // DiagTicker 诊断计时器
@@ -28,7 +28,7 @@ func (diagTicker *DiagTicker) Close() {
 }
 
 // Start 开始诊断任务
-func (diagTicker *DiagTicker) Start(fdCtx *context.FaultDiagContext) {
+func (diagTicker *DiagTicker) Start(ctxData *contextdata.CtxData, diagCtx *DiagContext) {
 	if diagTicker.running {
 		return
 	}
@@ -42,8 +42,8 @@ func (diagTicker *DiagTicker) Start(fdCtx *context.FaultDiagContext) {
 		for {
 			select {
 			case <-ticker.C:
-				fdCtx.DiagCtx.DiagRecordStore.UpdateRecord(diagTicker.DiagItem, diagTicker.DiagItem.Diag(fdCtx))
-			case _, ok := <-fdCtx.StopChan:
+				diagCtx.DiagRecordStore.UpdateRecord(diagTicker.DiagItem, diagTicker.DiagItem.Diag(ctxData, diagCtx))
+			case _, ok := <-ctxData.Framework.StopChan:
 				if !ok {
 					break
 				}

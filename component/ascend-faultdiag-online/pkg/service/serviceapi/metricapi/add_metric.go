@@ -20,23 +20,23 @@ Package metricapi provides API
 package metricapi
 
 import (
-	"ascend-faultdiag-online/pkg/context"
+	"ascend-faultdiag-online/pkg/context/contextdata"
 	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
 	"ascend-faultdiag-online/pkg/model/enum"
 	"ascend-faultdiag-online/pkg/service/request"
-	"ascend-faultdiag-online/pkg/service/serviceapi"
+	"ascend-faultdiag-online/pkg/service/servicecore"
 	"ascend-faultdiag-online/pkg/utils"
 )
 
 const apiAddMetric = "add"
 
 // GetAddMetricApi 获取添加指标的api
-func GetAddMetricApi() *serviceapi.Api {
-	return serviceapi.BuildApi(apiAddMetric, &metricmodel.MetricReqData{}, apiAddMetricFunc, nil)
+func GetAddMetricApi() *servicecore.Api {
+	return servicecore.BuildApi(apiAddMetric, &metricmodel.MetricReqData{}, apiAddMetricFunc, nil)
 }
 
-func apiAddMetricFunc(fdCtx *context.FaultDiagContext, reqCtx *request.Context, model *metricmodel.MetricReqData) error {
+func apiAddMetricFunc(_ *contextdata.CtxData, diagCtx *diagcontext.DiagContext, reqCtx *request.Context, model *metricmodel.MetricReqData) error {
 	for _, metric := range model.Metrics {
 		var metricValue interface{}
 		switch metric.ValueType {
@@ -45,8 +45,8 @@ func apiAddMetricFunc(fdCtx *context.FaultDiagContext, reqCtx *request.Context, 
 		case enum.StringMetric:
 			metricValue = utils.ToString(metric.Value)
 		}
-		domain := fdCtx.DiagCtx.DomainFactory.GetInstance(metric.Domain)
-		fdCtx.DiagCtx.MetricPool.AddMetric(&diagcontext.Metric{Domain: domain, Name: metric.Name}, metricValue)
+		domain := diagCtx.DomainFactory.GetInstance(metric.Domain)
+		diagCtx.MetricPool.AddMetric(&diagcontext.Metric{Domain: domain, Name: metric.Name}, metricValue)
 	}
 	reqCtx.Response.Status = enum.Success
 	reqCtx.Response.Msg = "add metric success"

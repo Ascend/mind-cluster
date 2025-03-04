@@ -49,7 +49,7 @@ func startLoopService(ctx *context.FaultDiagContext) {
 				if apiFunc, err := ctx.Router.HandleApi(reqCtx.Api); err != nil {
 					reqCtx.Response = servicemodel.ErrorResponse(err.Error())
 				} else {
-					err = apiFunc(ctx, reqCtx)
+					err = apiFunc(ctx.GetCtxData(), ctx.DiagContext, reqCtx)
 					if err != nil {
 						reqCtx.Response = servicemodel.ErrorResponse(err.Error())
 					}
@@ -66,7 +66,7 @@ func startLoopService(ctx *context.FaultDiagContext) {
 func StartFaultDiagService(ctx *context.FaultDiagContext) {
 	ctx.IsRunning = true
 	go startLoopService(ctx)
-	go ctx.DiagCtx.StartDiag(ctx)
+	go ctx.DiagContext.StartDiag(ctx.GetCtxData())
 }
 
 // StopFaultDiagService 停止循环服务
