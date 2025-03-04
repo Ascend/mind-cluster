@@ -181,7 +181,7 @@ func mergeFailDevs(curDevs, newDevs []ResetDevice, writeMode WriteMode) []ResetD
 	case WMAppend:
 		return mergeAndDeduplicate(curDevs, newDevs)
 	case WMDelete:
-		return deleteFrom(curDevs, newDevs)
+		return excludeArray(curDevs, newDevs)
 	default:
 		hwlog.RunLog.Errorf("write mode %v is invalid", writeMode)
 		return curDevs
@@ -209,7 +209,7 @@ func mergeAndDeduplicate(curArr, newArr []ResetDevice) []ResetDevice {
 	return result
 }
 
-func deleteFrom(curArr, delArr []ResetDevice) []ResetDevice {
+func excludeArray(curArr, delArr []ResetDevice) []ResetDevice {
 	ret := make([]ResetDevice, 0, len(curArr))
 	toDelMap := make(map[int32]struct{}, len(delArr))
 	for _, dev := range delArr {
