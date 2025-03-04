@@ -340,17 +340,17 @@ func TestCanBeReset(t *testing.T) {
 // TestCanA3BeReset test the function canA3BeReset
 func TestCanA3BeReset(t *testing.T) {
 	manager := createFake910Manager()
-	dev := &common.DevFaultInfo{LogicId: id1}
+	dev := &common.DevFaultInfo{LogicId: int32(id1)}
 	convey.Convey("test canA3BeReset", t, func() {
 		convey.Convey("01-get cardID failed, should return false", func() {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
-				id1, id1, testErr)
+				int32(id1), int32(id1), testErr)
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeFalse)
+			convey.So(ret, convey.ShouldBeFalse)
 		})
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
-			id1, id1, nil)
+			int32(id1), int32(id1), nil)
 		defer patch.Reset()
 		convey.Convey("02-get associated card error, should return false", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
@@ -359,7 +359,7 @@ func TestCanA3BeReset(t *testing.T) {
 				})
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeFalse)
+			convey.So(ret, convey.ShouldBeFalse)
 		})
 		patch.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
 			func(logicID, cardID, deviceID int32) ([]int32, error) {
@@ -370,7 +370,7 @@ func TestCanA3BeReset(t *testing.T) {
 				nil, testErr)
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeFalse)
+			convey.So(ret, convey.ShouldBeFalse)
 		})
 		patch.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodList", nil, nil)
 		patch.ApplyPrivateMethod(manager, "getBusyChipListFromPod",
@@ -384,7 +384,7 @@ func TestCanA3BeReset(t *testing.T) {
 				})
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeFalse)
+			convey.So(ret, convey.ShouldBeFalse)
 		})
 	})
 }
@@ -392,10 +392,10 @@ func TestCanA3BeReset(t *testing.T) {
 // TestCanA3BeResetPatch1 test the function canA3BeReset patch1
 func TestCanA3BeResetPatch1(t *testing.T) {
 	manager := createFake910Manager()
-	dev := &common.DevFaultInfo{LogicId: id1}
+	dev := &common.DevFaultInfo{LogicId: int32(id1)}
 	convey.Convey("test canA3BeReset patch1", t, func() {
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
-			id1, id1, nil)
+			int32(id1), int32(id1), nil)
 		defer patch.Reset()
 		patch.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
 			func(logicID, cardID, deviceID int32) ([]int32, error) {
@@ -413,7 +413,7 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 				})
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeFalse)
+			convey.So(ret, convey.ShouldBeFalse)
 		})
 		convey.Convey("06-success, should return true", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "isChipActive",
@@ -422,7 +422,7 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 				})
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
-			convey.Convey(ret, convey.ShouldBeTrue)
+			convey.So(ret, convey.ShouldBeTrue)
 		})
 	})
 }
@@ -543,7 +543,7 @@ func TestSetUnhealthyForA3(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test setUnhealthyForA3", t, func() {
 		convey.Convey("01-get associated card error, should return error", func() {
-			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
+			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)
 			patch1.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
 				func(logicID, cardID, deviceID int32) ([]int32, error) {
 					return nil, testErr
@@ -585,7 +585,7 @@ func TestGetAssociatedLogicIDs(t *testing.T) {
 				id1int32, testErr)
 			defer patch1.Reset()
 			_, err := manager.getAssociatedLogicIDs(id1int32, id1int32, id1int32)
-			convey.Convey(err, convey.ShouldBeError)
+			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
 			id1int32, nil)
@@ -1257,7 +1257,7 @@ func TestCanResetDevice(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test canResetDevice", t, func() {
 		convey.Convey("01-dev busy, should return false", func() {
-			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
+			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)
 			defer patch1.Reset()
 			convey.So(manager.canResetDevice(id1, id1, id1), convey.ShouldBeFalse)
 		})
