@@ -3,19 +3,18 @@ package diagcontext
 import (
 	"time"
 
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/context/diagcontext/metricpool"
+	"ascend-faultdiag-online/pkg/context/contextdata"
 	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 
 // DiagFunc 诊断函数
-type DiagFunc func(diagItem *DiagItem, thresholds []*MetricThreshold, domainMetrics []*metricpool.DomainMetrics) []*MetricDiagRes
+type DiagFunc func(diagItem *DiagItem, thresholds []*MetricThreshold, domainMetrics []*DomainMetrics) []*MetricDiagRes
 
 // CustomRuleFunc 自定义规则函数
-type CustomRuleFunc func(ctx *context.FaultDiagContext, item *DiagItem) []*MetricDiagRes
+type CustomRuleFunc func(ctxData *contextdata.CtxData, item *DiagItem) []*MetricDiagRes
 
 // MetricPoolQueryFunc 指标池查找规则
-type MetricPoolQueryFunc func(pool *metricpool.MetricPool) []*metricpool.DomainMetrics
+type MetricPoolQueryFunc func(pool *MetricPool) []*DomainMetrics
 
 // MetricCompareFunc 指标比较函数
 type MetricCompareFunc func(metric, threshold interface{}) *CompareRes
@@ -42,7 +41,7 @@ type DiagRule struct {
 }
 
 // Diag 方法用于判断给定的指标值是否匹配诊断规则
-func (rule *DiagRule) Diag(diagItem *DiagItem, pool *metricpool.MetricPool) []*MetricDiagRes {
+func (rule *DiagRule) Diag(diagItem *DiagItem, pool *MetricPool) []*MetricDiagRes {
 	domainMetrics := rule.QueryFunc(pool)
 	return rule.DiagFunc(diagItem, rule.Thresholds, domainMetrics)
 }
@@ -75,17 +74,17 @@ type DiagItem struct {
 }
 
 // Diag 方法用于执行诊断逻辑
-func (d *DiagItem) Diag(ctx *context.FaultDiagContext) []*MetricDiagRes {
-	matching := d.ConditionGroup.IsDynamicMatching(ctx)
+func (d *DiagItem) Diag(ctxData *contextdata.CtxData, diagCtx *DiagContext) []*MetricDiagRes {
+	matching := d.ConditionGroup.IsDynamicMatching(ctxData)
 	if !matching {
 		return nil
 	}
-	pool := ctx.DiagCtx.MetricPool
-	return append(d.ruleDiag(pool), d.customRulesDiag(ctx)...)
+	pool := diagCtx.MetricPool
+	return append(d.ruleDiag(pool), d.customRulesDiag(ctxData)...)
 }
 
 // ruleDiag 构建诊断结果
-func (d *DiagItem) ruleDiag(pool *metricpool.MetricPool) []*MetricDiagRes {
+func (d *DiagItem) ruleDiag(pool *MetricPool) []*MetricDiagRes {
 	if len(d.Rules) == 0 {
 		return nil
 	}
@@ -96,12 +95,12 @@ func (d *DiagItem) ruleDiag(pool *metricpool.MetricPool) []*MetricDiagRes {
 }
 
 // customRulesDiag 自定义诊断规则匹配
-func (d *DiagItem) customRulesDiag(ctx *context.FaultDiagContext) []*MetricDiagRes {
+func (d *DiagItem) customRulesDiag(ctxData *contextdata.CtxData) []*MetricDiagRes {
 	if len(d.CustomRules) == 0 {
 		return nil
 	}
 	resLists := slicetool.MapToValue(d.CustomRules, func(rule *CustomRule) []*MetricDiagRes {
-		return rule.CustomRuleFunc(ctx, d)
+		return rule.CustomRuleFunc(ctxData, d)
 	})
 	return slicetool.Chain(resLists)
 }

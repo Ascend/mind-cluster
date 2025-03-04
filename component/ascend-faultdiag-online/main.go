@@ -14,3 +14,26 @@
 
 // Package main implements online fault diagnosis.
 package main
+
+import (
+	"fmt"
+
+	apiv1 "ascend-faultdiag-online/pkg/api/v1"
+)
+
+func main() {
+	ctx, err := apiv1.CreateFdCtx("D:\\MyRepo\\mind-cluster\\component\\ascend-faultdiag-online\\test.yaml")
+	if err != nil {
+		fmt.Println("%v", err)
+		return
+	}
+	apiv1.StartService(ctx)
+	resp, err := apiv1.Request(ctx, "metric/add", "{"+
+		""+
+		"}")
+	if err != nil {
+		fmt.Println("%v", err)
+		return
+	}
+	fmt.Println(resp)
+}

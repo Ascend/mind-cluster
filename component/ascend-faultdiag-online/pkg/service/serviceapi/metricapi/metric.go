@@ -20,14 +20,14 @@ Package metricapi provides API
 package metricapi
 
 import (
-	"ascend-faultdiag-online/pkg/service/serviceapi"
+	"ascend-faultdiag-online/pkg/service/servicecore"
 )
 
 const apiMetric = "metric"
 
 // GetMetricApi 获取指标相关api
-func GetMetricApi() *serviceapi.Api {
-	return serviceapi.NewApi(apiMetric, nil, []*serviceapi.Api{
+func GetMetricApi() *servicecore.Api {
+	return servicecore.NewApi(apiMetric, nil, []*servicecore.Api{
 		GetAddMetricApi(),
 	})
 }

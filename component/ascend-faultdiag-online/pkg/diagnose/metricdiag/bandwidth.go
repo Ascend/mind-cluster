@@ -22,7 +22,6 @@ package metricdiag
 import (
 	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/context/diagcontext/diagtemplate"
-	"ascend-faultdiag-online/pkg/context/diagcontext/metricpool"
 	"ascend-faultdiag-online/pkg/diagnose/condition"
 	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
 	"ascend-faultdiag-online/pkg/model/enum"
@@ -49,8 +48,8 @@ func ascend910A2BandwidthDiagItem() *diagcontext.DiagItem {
 		},
 		Rules: []*diagcontext.DiagRule{
 			{
-				QueryFunc: func(pool *metricpool.MetricPool) []*metricpool.DomainMetrics {
-					return metricpool.NewQueryBuilder(pool).
+				QueryFunc: func(pool *diagcontext.MetricPool) []*diagcontext.DomainMetrics {
+					return diagcontext.NewQueryBuilder(pool).
 						QueryByDomainItem(&metricmodel.DomainItem{DomainType: enum.NpuDomain}).
 						CollectDomainMetrics([]string{constants.MetricBandwidth})
 				},

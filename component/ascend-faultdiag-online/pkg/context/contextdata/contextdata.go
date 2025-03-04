@@ -15,19 +15,12 @@ limitations under the License.
 */
 
 /*
-Package eventapi provides API
+Package contextdata 全局上下文信息
 */
-package eventapi
+package contextdata
 
-import (
-	"ascend-faultdiag-online/pkg/service/servicecore"
-)
-
-const apiEvent = "event"
-
-// GetEventApi 获取指标相关api
-func GetEventApi() *servicecore.Api {
-	return servicecore.NewApi(apiEvent, nil, []*servicecore.Api{
-		GetDiagEventApi(),
-	})
+// CtxData 全局上下文信息
+type CtxData struct {
+	Environment *Environment
+	Framework   *Framework
 }

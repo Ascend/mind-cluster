@@ -20,23 +20,22 @@ Package diagcontext 包提供了与监控和诊断相关的上下文信息。
 package diagcontext
 
 import (
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/context/diagcontext/metricpool"
+	"ascend-faultdiag-online/pkg/context/contextdata"
 )
 
-// Context 是一个诊断上下文的结构体
-type Context struct {
-	MetricPool      *metricpool.MetricPool // 指标池
+// DiagContext 是一个诊断上下文的结构体
+type DiagContext struct {
+	MetricPool      *MetricPool            // 指标池
 	DiagItemMap     map[string]*DiagItem   // 诊断项字典
 	DiagRecordStore *DiagRecordStore       // 当前诊断结果记录
 	DomainFactory   *DomainFactory         //指标域工厂类
 	tickerMap       map[string]*DiagTicker // 诊断周期任务字典
 }
 
-// NewDiagContext 创建一个新的 Context 实例，并初始化 MetricPool 和 DiagItemMap 字段
-func NewDiagContext() *Context {
-	return &Context{
-		MetricPool:      metricpool.NewMetricPool(),
+// NewDiagContext 创建一个新的 DiagContext 实例，并初始化 MetricPool 和 DiagItemMap 字段
+func NewDiagContext() *DiagContext {
+	return &DiagContext{
+		MetricPool:      NewMetricPool(),
 		DiagItemMap:     make(map[string]*DiagItem),
 		DiagRecordStore: NewDiagRecordStore(),
 		DomainFactory:   NewDomainFactory(),
@@ -45,7 +44,7 @@ func NewDiagContext() *Context {
 }
 
 // UpdateDiagItems 更新上下文中的诊断项列表，将新的诊断项添加到现有列表中
-func (ctx *Context) UpdateDiagItems(diagItems []*DiagItem) []*DiagTicker {
+func (ctx *DiagContext) UpdateDiagItems(diagItems []*DiagItem) []*DiagTicker {
 	tickers := make([]*DiagTicker, 0)
 	for _, item := range diagItems {
 		ctx.DiagItemMap[item.Name] = item
@@ -57,14 +56,14 @@ func (ctx *Context) UpdateDiagItems(diagItems []*DiagItem) []*DiagTicker {
 }
 
 // StartDiag 开始诊断
-func (ctx *Context) StartDiag(fdCtx *context.FaultDiagContext) {
+func (ctx *DiagContext) StartDiag(ctxData *contextdata.CtxData) {
 	for _, ticker := range ctx.tickerMap {
-		ticker.Start(fdCtx)
+		ticker.Start(ctxData, ctx)
 	}
 }
 
 // CloseDiagItem 关闭
-func (ctx *Context) CloseDiagItem(itemName string) {
+func (ctx *DiagContext) CloseDiagItem(itemName string) {
 	ticker, ok := ctx.tickerMap[itemName]
 	if !ok {
 		return

@@ -15,19 +15,18 @@ limitations under the License.
 */
 
 /*
-Package metricpool 包提供了指标池相关的能力。
+Package diagcontext 包提供了指标池相关的能力。
 */
-package metricpool
+package diagcontext
 
 import (
-	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
 	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 
 // DomainMetrics 在同一个域下面不同指标的汇聚结构
 type DomainMetrics struct {
-	Domain       *diagcontext.Domain
+	Domain       *Domain
 	ItemGroupMap map[string]*ItemGroup // 指标字典，key为指标名，value为指标值结构
 }
 
@@ -69,7 +68,7 @@ func (p *MetricQueryBuilder) QueryByDomainItem(domainItem *metricmodel.DomainIte
 }
 
 // QueryByDomain 根据整个域查找
-func (p *MetricQueryBuilder) QueryByDomain(domain *diagcontext.Domain) *MetricQueryBuilder {
+func (p *MetricQueryBuilder) QueryByDomain(domain *Domain) *MetricQueryBuilder {
 	for _, item := range domain.DomainItems {
 		p.QueryByDomainItem(item)
 	}
@@ -80,7 +79,7 @@ func (p *MetricQueryBuilder) QueryByDomain(domain *diagcontext.Domain) *MetricQu
 func (p *MetricQueryBuilder) CollectDomainMetrics(metricNames []string) []*DomainMetrics {
 	results := make([]*DomainMetrics, 0)
 	for _, node := range p.tempTreeNodes {
-		var domain *diagcontext.Domain
+		var domain *Domain
 		itemGroupMap := make(map[string]*ItemGroup)
 		for _, name := range metricNames {
 			metricItem, ok := node.MetricMap[name]

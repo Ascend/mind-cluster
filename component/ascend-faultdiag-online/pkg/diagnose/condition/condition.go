@@ -20,7 +20,7 @@ Package condition 提供场景匹配条件。
 package condition
 
 import (
-	"ascend-faultdiag-online/pkg/context"
+	"ascend-faultdiag-online/pkg/context/contextdata"
 	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/model/enum"
 	"ascend-faultdiag-online/pkg/utils/slicetool"
@@ -29,12 +29,15 @@ import (
 func getChipTypeCondition(chipTypes []enum.ChipType) *diagcontext.Condition {
 	return &diagcontext.Condition{
 		Data: chipTypes,
-		MatchingFunc: func(ctx *context.FaultDiagContext, data interface{}) bool {
+		MatchingFunc: func(ctxData *contextdata.CtxData, data interface{}) bool {
 			chipTypes, ok := data.([]enum.ChipType)
 			if !ok {
 				return false
 			}
-			err := slicetool.ValueIn(ctx.NodeStatus.ChipType, chipTypes)
+			if ctxData.Environment.NodeStatus == nil {
+				return false
+			}
+			err := slicetool.ValueIn(ctxData.Environment.NodeStatus.ChipType, chipTypes)
 			if err != nil {
 				return false
 			}

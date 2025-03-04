@@ -15,16 +15,15 @@ limitations under the License.
 */
 
 /*
-Package metricpool 包提供了指标池相关的能力。
+Package diagcontext 包提供了指标池相关的能力。
 */
-package metricpool
+package diagcontext
 
 import (
 	"strings"
 	"sync"
 	"time"
 
-	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
 	"ascend-faultdiag-online/pkg/model/enum"
 )
@@ -40,13 +39,13 @@ const maxMetricRecordSize = 10
 
 // ItemGroup 表示指标项，留存10条历史记录。
 type ItemGroup struct {
-	Metric *diagcontext.Metric // 指标项
-	Items  []*Item             // 指标历史记录
-	mu     sync.RWMutex        // 读写锁，保证并发安全
+	Metric *Metric      // 指标项
+	Items  []*Item      // 指标历史记录
+	mu     sync.RWMutex // 读写锁，保证并发安全
 }
 
 // NewMetricPoolItemGroup 创建一个新的 MetricPoolItemGroup 实例。
-func NewMetricPoolItemGroup(metric *diagcontext.Metric) *ItemGroup {
+func NewMetricPoolItemGroup(metric *Metric) *ItemGroup {
 	return &ItemGroup{
 		Metric: metric,
 		Items:  make([]*Item, 0),
@@ -107,7 +106,7 @@ func NewMetricPool() *MetricPool {
 }
 
 // AddMetric 添加指标项
-func (p *MetricPool) AddMetric(metric *diagcontext.Metric, value interface{}) {
+func (p *MetricPool) AddMetric(metric *Metric, value interface{}) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	poolItem := &Item{
@@ -119,7 +118,7 @@ func (p *MetricPool) AddMetric(metric *diagcontext.Metric, value interface{}) {
 }
 
 // 添加到指标字典
-func (p *MetricPool) addToMetricMap(metric *diagcontext.Metric, poolItem *Item) {
+func (p *MetricPool) addToMetricMap(metric *Metric, poolItem *Item) {
 	key := metric.GetMetricKey()
 
 	if _, ok := p.metricMap[key]; !ok {
@@ -129,7 +128,7 @@ func (p *MetricPool) addToMetricMap(metric *diagcontext.Metric, poolItem *Item) 
 }
 
 // 添加到指标树
-func (p *MetricPool) addToMetricTree(metric *diagcontext.Metric, poolItem *Item) {
+func (p *MetricPool) addToMetricTree(metric *Metric, poolItem *Item) {
 	var curNodesMap map[enum.MetricDomainType][]*TreeNode
 	var lastNode *TreeNode
 	curNodesMap = p.poolRootNodesMap
@@ -162,7 +161,7 @@ func exitNode(nodes []*TreeNode, domainItem *metricmodel.DomainItem) *TreeNode {
 }
 
 // GetMetricByMetricKey 精确查找最新的指标项
-func (p *MetricPool) GetMetricByMetricKey(metric *diagcontext.Metric) []*ItemGroup {
+func (p *MetricPool) GetMetricByMetricKey(metric *Metric) []*ItemGroup {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	group, ok := p.metricMap[metric.GetMetricKey()]
@@ -173,7 +172,7 @@ func (p *MetricPool) GetMetricByMetricKey(metric *diagcontext.Metric) []*ItemGro
 }
 
 // GetDomainMetrics 根据指标域精确查找数据
-func (p *MetricPool) GetDomainMetrics(domain *diagcontext.Domain) []*ItemGroup {
+func (p *MetricPool) GetDomainMetrics(domain *Domain) []*ItemGroup {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	domainKey := domain.GetDomainKey()

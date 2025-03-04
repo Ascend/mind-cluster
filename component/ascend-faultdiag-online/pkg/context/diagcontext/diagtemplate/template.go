@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"ascend-faultdiag-online/pkg/context/diagcontext"
-	"ascend-faultdiag-online/pkg/context/diagcontext/metricpool"
 	"ascend-faultdiag-online/pkg/utils"
 )
 
@@ -14,7 +13,7 @@ type FloatMetricCompareFunc func(metric, threshold float64) *diagcontext.Compare
 // StringMetricCompareFunc 指标比较函数
 type StringMetricCompareFunc func(metric, threshold string) *diagcontext.CompareRes
 
-func buildMetricDiagRes(domainMetrics []*metricpool.DomainMetrics, metricName string,
+func buildMetricDiagRes(domainMetrics []*diagcontext.DomainMetrics, metricName string,
 	compareFunc diagcontext.MetricCompareFunc, threshold *diagcontext.MetricThreshold,
 	results []*diagcontext.MetricDiagRes) []*diagcontext.MetricDiagRes {
 	for _, metric := range domainMetrics {
@@ -41,7 +40,7 @@ func buildMetricDiagRes(domainMetrics []*metricpool.DomainMetrics, metricName st
 func SingleMetricDiagFunc(targetThreshold *diagcontext.MetricThreshold,
 	compareFunc diagcontext.MetricCompareFunc) diagcontext.DiagFunc {
 	return func(diagItem *diagcontext.DiagItem, thresholds []*diagcontext.MetricThreshold,
-		domainMetrics []*metricpool.DomainMetrics) []*diagcontext.MetricDiagRes {
+		domainMetrics []*diagcontext.DomainMetrics) []*diagcontext.MetricDiagRes {
 		var results []*diagcontext.MetricDiagRes
 		for _, threshold := range thresholds {
 			if threshold.Name != targetThreshold.Name {

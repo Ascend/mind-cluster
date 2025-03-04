@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package service 提供服务
+Package route 路由
 */
-package service
+package route
 
 import (
 	"errors"
@@ -25,12 +25,13 @@ import (
 	"strings"
 
 	"ascend-faultdiag-online/pkg/service/serviceapi"
+	"ascend-faultdiag-online/pkg/service/servicecore"
 	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 // Router 路由
 type Router struct {
-	RootApi *serviceapi.Api // Api根节点
+	RootApi *servicecore.Api // Api根节点
 }
 
 // NewRouter 创建路由实例
@@ -41,7 +42,7 @@ func NewRouter() *Router {
 }
 
 // HandleApi 处理请求
-func (router *Router) HandleApi(api string) (serviceapi.ApiFunc, error) {
+func (router *Router) HandleApi(api string) (servicecore.ApiFunc, error) {
 	tempApiNode := router.RootApi
 	routeParts := strings.Split(api, constants.ApiSeparator)
 	apiErr := errors.New(fmt.Sprintf("api %s is not existed", api))
