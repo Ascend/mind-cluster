@@ -27,7 +27,6 @@ import (
 	"strings"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -76,33 +75,6 @@ type NPUTask struct {
 	PodStatus  v1.PodPhase
 	Index      int
 	*VTask
-}
-
-// GetRealPodByTask get pod specified by task name and namespace from kubernetes
-func (asTask *NPUTask) GetRealPodByTask(ssn *framework.Session) (*v1.Pod, error) {
-	if asTask == nil {
-		klog.V(LogErrorLev).Infof("GetRealPodByTask failed: %s.", ArgumentError)
-		return nil, fmt.Errorf(ArgumentError)
-	}
-	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, asTask.Name)
-	if getErr != nil {
-		klog.V(LogErrorLev).Infof("GetRealPodByTask %s: %s", asTask.Name, SafePrint(getErr))
-		return nil, getErr
-	}
-
-	pod, err := ssn.KubeClient().CoreV1().Pods(taskInfo.Namespace).Get(
-		context.TODO(), asTask.Name, metav1.GetOptions{})
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			klog.V(LogErrorLev).Infof("Failed to get pod %s in %s: %s",
-				taskInfo.Namespace, asTask.Name, SafePrint(err))
-			return nil, err
-		}
-		klog.V(LogErrorLev).Infof("pod %v in%v not found: %s",
-			taskInfo.Namespace, asTask.Name, SafePrint(err))
-		return nil, err
-	}
-	return pod, nil
 }
 
 // DeleteRealPodByTask generally used by force deletion

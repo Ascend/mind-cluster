@@ -20,6 +20,8 @@ Package util is using for the total variable.
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"reflect"
@@ -431,77 +433,6 @@ func TestGetNpuNameFromJobRequire(t *testing.T) {
 	}
 }
 
-type superPodInfoArgs struct {
-	key            string
-	configurations map[string]string
-}
-
-type superPodInfoArgsTest struct {
-	name    string
-	args    superPodInfoArgs
-	want    int
-	wantErr bool
-}
-
-func buildSuperPodInfoTest() []superPodInfoArgsTest {
-	return []superPodInfoArgsTest{
-		{
-			name: "01-getSuperPodInfoFromConfig get super pod size",
-			args: superPodInfoArgs{key: sizeOfSuperPodKey,
-				configurations: map[string]string{sizeOfSuperPodKey: "1"},
-			},
-			want: 1,
-		},
-		{
-			name: "02-getSuperPodInfoFromConfig get super pod size",
-			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: map[string]string{reserveNodesKey: "1"},
-			},
-			want: 1,
-		},
-		{
-			name: "03-getSuperPodInfoFromConfig error",
-			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: map[string]string{},
-			},
-			wantErr: true,
-		},
-		{
-			name: "04-getSuperPodInfoFromConfig reserveNodesKey not exist",
-			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: map[string]string{"abcd": "1"},
-			},
-			wantErr: true,
-		},
-		{
-			name: "5-getSuperPodInfoFromConfig not number",
-			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: map[string]string{reserveNodesKey: "1xx"},
-			},
-			wantErr: true,
-		},
-		{
-			name: "06-getSuperPodInfoFromConfig less than zero",
-			args: superPodInfoArgs{key: reserveNodesKey,
-				configurations: map[string]string{reserveNodesKey: "-1"},
-			},
-			wantErr: true,
-		},
-	}
-}
-
-func TestGetSuperPodInfoFromConfig(t *testing.T) {
-	tests := buildSuperPodInfoTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getSuperPodInfoFromConfig(tt.args.key, tt.args.configurations)
-			if got != tt.want {
-				t.Errorf("getSuperPodInfoFromConfig() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCheckStrInSlice(t *testing.T) {
 	type args struct {
 		str   string
@@ -709,75 +640,43 @@ func TestVResourceBeGreater(t *testing.T) {
 	}
 }
 
-func TestGetSizeOfSuperPod(t *testing.T) {
+func TestMakeDataHash(t *testing.T) {
+	expectHash := func(data string) string {
+		sum := sha256.Sum256([]byte(data))
+		return hex.EncodeToString(sum[:])
+	}
 	tests := []struct {
-		name    string
-		conf    map[string]string
-		want    int
-		wantErr bool
+		name  string
+		input interface{}
+		want  string
 	}{
 		{
-			name:    "01-GetSizeOfSuperPod return error when conf is empty",
-			conf:    map[string]string{},
-			want:    defaultSuperPodSize,
-			wantErr: true,
+			name:  "01 nil input",
+			input: nil,
+			want:  expectHash("null"),
 		},
 		{
-			name:    "02-GetSizeOfSuperPod return error when conf is nil",
-			conf:    nil,
-			want:    defaultSuperPodSize,
-			wantErr: true,
+			name:  "02 empty struct",
+			input: struct{}{},
+			want:  expectHash("{}"),
 		},
 		{
-			name:    "03-GetSizeOfSuperPod return error when conf not exist init-params",
-			conf:    nil,
-			want:    defaultSuperPodSize,
-			wantErr: true,
+			name:  "03 simple map",
+			input: map[string]string{"key": "value"},
+			want:  expectHash(`{"key":"value"}`),
 		},
 		{
-			name: "04-GetSizeOfSuperPod return 1 when conf exist init-params",
-			conf: map[string]string{sizeOfSuperPodKey: "1"},
-			want: 1,
+			name:  "04 unserializable type",
+			input: make(chan int),
+			want:  "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := GetSizeOfSuperPod(tt.conf)
-			if got != tt.want {
-				t.Errorf("GetSizeOfSuperPod() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestGetReserveNodes(t *testing.T) {
-	tests := []struct {
-		name         string
-		conf         map[string]string
-		superPodSize int
-		want         int
-	}{
-		{
-			name: "01-GetReserveNodes return error when conf is nil",
-			conf: nil,
-			want: 2,
-		},
-		{
-			name: "02-GetReserveNodes return error when conf not exist init-params",
-			conf: map[string]string{sizeOfSuperPodKey: "1"},
-			want: 2,
-		},
-		{
-			name: "03-GetReserveNodes return 1 when conf exist init-params",
-			conf: map[string]string{reserveNodesKey: "1"},
-			want: 1,
-		},
-	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetReserveNodes(tt.conf, defaultSuperPodSize)
+			got := MakeDataHash(tt.input)
 			if got != tt.want {
-				t.Errorf("GetReserveNodes() got = %v, want %v", got, tt.want)
+				t.Errorf("Expected %q, got %q", tt.want, got)
 			}
 		})
 	}

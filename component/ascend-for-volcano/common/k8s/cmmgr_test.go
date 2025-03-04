@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
@@ -48,6 +49,7 @@ func TestInitCmInformer(t *testing.T) {
 	t.Run("02 start device info informer success with clusterd", func(t *testing.T) {
 		InitCmInformer(fake.NewSimpleClientset(), true)
 	})
+	needStartInformer = true
 	t.Run("03 start device info informer success without clutserd", func(t *testing.T) {
 		InitCmInformer(fake.NewSimpleClientset(), false)
 	})
@@ -198,4 +200,33 @@ func TestUpdateConfigMapCluster(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetCmInfos(t *testing.T) {
+	nodeList := []*api.NodeInfo{{Name: testName}}
+	t.Run("GetSwitchInfos test, get empty switch info", func(t *testing.T) {
+		if got := GetSwitchInfos(nodeList); !reflect.DeepEqual(got, map[string]SwitchFaultInfo{testName: {}}) {
+			t.Errorf("GetSwitchInfos() = %v, want %v", got, map[string]SwitchFaultInfo{testName: {}})
+		}
+	})
+
+	t.Run("GetNodeDInfos test, get empty nodeD info", func(t *testing.T) {
+		if got := GetNodeDInfos(nodeList); !reflect.DeepEqual(got, map[string]NodeDNodeInfo{testName: {}}) {
+			t.Errorf("GetSwitchInfos() = %v, want %v", got, map[string]NodeDNodeInfo{testName: {}})
+		}
+	})
+	tmpDeviceList := NodeDeviceInfo{DeviceList: make(map[string]string)}
+	tmpDeviceInfos := map[string]NodeDeviceInfoWithID{testName: {NodeDeviceInfo: tmpDeviceList}}
+	needStartInformer = false
+	t.Run("Get device info test, get empty device info with use clusterD", func(t *testing.T) {
+		if got := GetDeviceInfosAndSetInformerStart(nodeList, true); !reflect.DeepEqual(got, tmpDeviceInfos) {
+			t.Errorf("Get device info = %v, want %v", got, tmpDeviceInfos)
+		}
+	})
+
+	t.Run("Get device info test, get empty device info without use clusterD", func(t *testing.T) {
+		if got := GetDeviceInfosAndSetInformerStart(nodeList, false); !reflect.DeepEqual(got, tmpDeviceInfos) {
+			t.Errorf("Get device info = %v, want %v", got, tmpDeviceInfos)
+		}
+	})
 }

@@ -128,3 +128,14 @@ const (
 	// DefaultExitValue default exit value
 	DefaultExitValue = 0
 )
+
+const (
+	// DefaultGraceOverTime time interval for grace delete
+	DefaultGraceOverTime = 900
+	// GraceOverTimeKey for GraceOverTime config by user
+	GraceOverTimeKey  = "grace-over-time"
+	minGraceOverTime  = 2
+	maxGraceOverTime  = 3600
+	reserveNodesKey   = "reserve-nodes"
+	sizeOfSuperPodKey = "super-pod-size"
+)

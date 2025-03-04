@@ -31,69 +31,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 )
 
-const (
-	testName = "test"
-)
-
-type GetRealPodByTaskTest struct {
-	name    string
-	npuTask *NPUTask
-	ssn     *framework.Session
-	want    *v1.Pod
-	wantErr bool
-}
-
-func buildGetRealPodByTaskTestCase01() []GetRealPodByTaskTest {
-	tests := []GetRealPodByTaskTest{
-		{
-			name:    "01-GetRealPodByTask will return err when asTask is nil",
-			npuTask: nil,
-			ssn:     nil,
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name:    "02-GetRealPodByTask will return err when ssn is nil",
-			npuTask: &NPUTask{ReqNPUNum: 1},
-			ssn:     nil,
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name:    "03-GetRealPodByTask will return err when ReqNPUName is nil",
-			npuTask: &NPUTask{ReqNPUNum: 1},
-			ssn:     &framework.Session{},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name:    "04-GetRealPodByTask will return err when ssn job not exist npu job",
-			npuTask: &NPUTask{Name: testName},
-			ssn: &framework.Session{Jobs: map[api.JobID]*api.JobInfo{"0": {Tasks: map[api.TaskID]*api.TaskInfo{
-				"1": {Name: "task0", Namespace: testName}}}}},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	return tests
-}
-
-func TestGetRealPodByTask(t *testing.T) {
-	tests := buildGetRealPodByTaskTestCase01()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.npuTask.GetRealPodByTask(tt.ssn)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetRealPodByTask() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetRealPodByTask() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type DeleteRealPodByTaskTest struct {
 	name     string
 	npuTask  *NPUTask

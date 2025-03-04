@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -244,7 +245,7 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		klog.V(util.LogErrorLev).Infof("InitVolcanoFrameFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
-	configs := util.GetConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
+	configs := getConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
 	sHandle.FrameAttr.UID = ssn.UID
 	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
 	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
@@ -256,10 +257,10 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 // initStaticParameters
 func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) {
 	sHandle.FrameAttr.OnceInit.Do(func() {
-		sHandle.FrameAttr.NslbVersion = util.GetNslbVersion(configs)
-		sHandle.FrameAttr.SharedTorNum = util.GetShardTorNum(configs)
-		sHandle.FrameAttr.UseClusterD = util.GetUseClusterDConfig(configs)
-		klog.V(util.LogWarningLev).Infof("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
+		sHandle.FrameAttr.NslbVersion = getNslbVersion(configs)
+		sHandle.FrameAttr.SharedTorNum = getShardTorNum(configs)
+		sHandle.FrameAttr.UseClusterD = getUseClusterDConfig(configs)
+		klog.V(util.LogWarningLev).Info("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
 			"change the parameters and it will not be changed during normal operation of the volcano")
 	})
 }
@@ -270,10 +271,10 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 		klog.V(util.LogInfoLev).Infof("InitCache failed: %s.", util.ArgumentError)
 		return
 	}
-	sHandle.FrameAttr.SuperPodSize = util.GetSizeOfSuperPod(configs)
-	sHandle.FrameAttr.ReservePodSize = util.GetReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
-	sHandle.FrameAttr.GraceDeleteTime = util.GetGraceDeleteTime(configs)
-	sHandle.FrameAttr.PresetVirtualDevice = util.GetPresetVirtualDeviceConfig(configs)
+	sHandle.FrameAttr.SuperPodSize = getSizeOfSuperPod(configs)
+	sHandle.FrameAttr.ReservePodSize = getReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
+	sHandle.FrameAttr.GraceDeleteTime = getGraceDeleteTime(configs)
+	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
 	sHandle.FrameAttr.needRestartInformer = false
 }
 
@@ -542,4 +543,152 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	klog.V(util.LogInfoLev).Infof("batchNodeOrderFn Get task:%s for NPU %+v.", task.Name, scoreMap)
 
 	return scoreMap, nil
+}
+
+// getConfigurationByKey called by GetConfigFromSchedulerConfigMap
+func getConfigurationByKey(configurations []config.Configuration) map[string]string {
+	for _, cf := range configurations {
+		if cf.Name == util.CMInitParamKey {
+			return cf.Arguments
+		}
+	}
+	return map[string]string{}
+}
+
+// getSizeOfSuperPod get size of super pod
+func getSizeOfSuperPod(configurations map[string]string) int {
+	superPodSize := getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
+	if superPodSize == 0 {
+		klog.V(util.LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
+			"set default super-pod-size: %d", defaultSuperPodSize)
+		superPodSize = defaultSuperPodSize
+	}
+	return superPodSize
+}
+
+// getReserveNodes get reserve nodes
+func getReserveNodes(configurations map[string]string, superPodSize int) int {
+	reserve := getSuperPodInfoFromConfig(reserveNodesKey, configurations)
+	if reserve == 0 {
+		reserve = defaultReserveNodes
+	}
+	if reserve >= superPodSize {
+		validRes := 0
+		if superPodSize > defaultReserveNodes {
+			validRes = defaultReserveNodes
+		}
+		klog.V(util.LogWarningLev).Infof("reserve-nodes(%d) is larger than super-pod-size(%d), set reserve-nodes: %d",
+			reserve, superPodSize, validRes)
+		reserve = validRes
+	}
+	return reserve
+}
+
+func getSuperPodInfoFromConfig(key string, configurations map[string]string) int {
+	if len(configurations) == 0 {
+		klog.V(util.LogWarningLev).Info("volcano scheduler config init-params map is nil")
+		return 0
+	}
+	value, ok := configurations[key]
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("%s configuration not exist", key)
+		return 0
+	}
+
+	res, err := strconv.Atoi(value)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("cannot convert %s configuration, err: %v", key, err)
+		return 0
+	}
+	if res < 0 {
+		klog.V(util.LogWarningLev).Infof(" %s configuration should not be negative number", key)
+		return 0
+	}
+	return res
+}
+
+// checkGraceDeleteTimeValid used by GetGraceDeleteTime for validity checking
+func checkGraceDeleteTimeValid(overTime int64) bool {
+	if overTime < minGraceOverTime || overTime > maxGraceOverTime {
+		klog.V(util.LogErrorLev).Infof("GraceOverTime value should be range [2, 3600], configured is [%d], "+
+			"GraceOverTime will not be changed", overTime)
+		return false
+	}
+	// use user's configuration to set grace over time
+	klog.V(util.LogInfoLev).Infof("set GraceOverTime to new value [%d].", overTime)
+	return true
+}
+
+// getGraceDeleteTime get grace delete time
+func getGraceDeleteTime(conf map[string]string) int64 {
+	klog.V(util.LogInfoLev).Info("enter GetGraceDeleteTime ...")
+	defer klog.V(util.LogInfoLev).Info("leave GetGraceDeleteTime ...")
+	if len(conf) == 0 {
+		klog.V(util.LogErrorLev).Infof("GetGraceDeleteTime failed: %s, no conf", util.ArgumentError)
+		return DefaultGraceOverTime
+	}
+	// get grace over time by user configuration
+	overTimeStr, ok := conf[GraceOverTimeKey]
+	if !ok {
+		klog.V(util.LogErrorLev).Info("set GraceOverTime failed and will not be changed, " +
+			"key grace-over-time doesn't exists.")
+		return DefaultGraceOverTime
+	}
+	overTime, err := strconv.ParseInt(overTimeStr, util.Base10, util.BitSize64)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("set GraceOverTime failed and will not be changed, "+
+			"grace-over-time is invalid [%s].", util.SafePrint(overTimeStr))
+		return DefaultGraceOverTime
+	}
+	// check time validity
+	if !checkGraceDeleteTimeValid(overTime) {
+		return DefaultGraceOverTime
+	}
+	return overTime
+}
+
+// getUseClusterDConfig check use cluster info manager by config, default true
+func getUseClusterDConfig(conf map[string]string) bool {
+	useClusterInfoManager, ok := conf[util.UseClusterInfoManager]
+	if !ok {
+		klog.V(util.LogDebugLev).Info("CheckUseCIMByConfig doesn't exist useClusterInfoManager.")
+		return true
+	}
+	return useClusterInfoManager == "true"
+}
+
+// getPresetVirtualDeviceConfig get VNPU segmentEnable by init plugin parameters, return true if static
+func getPresetVirtualDeviceConfig(conf map[string]string) bool {
+	// get segmentEnable by user configuration
+	segmentEnable, ok := conf[util.SegmentEnable]
+	if !ok {
+		klog.V(util.LogDebugLev).Info("checkVNPUSegmentEnable doesn't exist presetVirtualDevice.")
+		return false
+	}
+	return segmentEnable == "true"
+}
+
+// getShardTorNum get shared tor num from configmap
+func getShardTorNum(conf map[string]string) int {
+	str := conf[keyOfSharedTorNum]
+	sharedTorNum, err := strconv.Atoi(str)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("getSharedTorNum %s.", err)
+		return shareTorNum2
+	}
+	if sharedTorNum != shareTorNum1 && sharedTorNum != shareTorNum2 {
+		klog.V(util.LogWarningLev).Info("sharedTorNum is illegal. use default config")
+		return shareTorNum2
+	}
+	return sharedTorNum
+}
+
+// getNslbVersion get nslb version from config
+func getNslbVersion(conf map[string]string) string {
+	nslbVersion := conf[keyOfNSLBVersion]
+	if nslbVersion != defaultNSLBVersion && nslbVersion != NSLB2Version {
+		klog.V(util.LogWarningLev).Info("nslbVersion is illegal. use default config")
+		return defaultNSLBVersion
+	}
+	return nslbVersion
 }
