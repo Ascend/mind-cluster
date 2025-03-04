@@ -20,8 +20,16 @@ ROOT_PATH=$(readlink -f "${CUR_PATH}"/..)
 CI_PACKAGE_DIR="${ROOT_PATH}"/output/
 OUTPUT_DIR="${ROOT_PATH}"/_package_output_py3
 BUILD_DIR="${ROOT_PATH}"/build/
-export PKGVERSION=$1
-echo "package version is ${PKGVERSION}"
+VER_FILE="${ROOT_PATH}"/service_config.ini
+build_version="v7.0.RC1"
+if [ -f "$VER_FILE" ]; then
+  line=$(sed -n '1p' "$VER_FILE" 2>&1)
+  #cut the chars after ':' and add char 'v', the final example is v3.0.0
+  build_version="v"${line#*=}
+  echo "build version in service_config.ini:  ${build_version}"
+fi
+export BUILD_VERSION=${build_version}
+echo "build version is ${BUILD_VERSION}"
 
 bash "$BUILD_DIR"/build_backend.sh
 

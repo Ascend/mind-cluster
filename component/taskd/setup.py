@@ -30,7 +30,7 @@ cache_folder = ('taskd.egg-info', '_package_output')
 
 pwd = os.path.dirname(os.path.relpath(__file__))
 pkg_dir = os.path.join(pwd, "build/lib")
-version = os.getenv("PKGVERSION", "7.0.0")
+version = os.getenv("BUILD_VERSION", "v7.0.RC1")
 
 
 def _write_version(file):

@@ -18,7 +18,7 @@ CUR_DIR=$(dirname $(readlink -f $0))
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
 VER_FILE="${TOP_DIR}"/service_config.ini
-build_version="v${PKGVERSION}"
+build_version=${BUILD_VERSION}
 output_name="libtaskd.so"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
