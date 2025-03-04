@@ -1818,10 +1818,10 @@ func (hnm *HwAscend910Manager) fillResetDevs(devs []ResetDevice) ([]ResetDevice,
 		phyId, exist := logicIdMap[devCopy[i].LogicID]
 		if exist {
 			devCopy[i].PhyID = phyId
-		} else {
-			return nil, fmt.Errorf("logicId %v can found, cardID: %v, deviceID: %v",
-				devCopy[i].LogicID, devCopy[i].CardId, devCopy[i].DeviceId)
+			continue
 		}
+		return nil, fmt.Errorf("logicId %v can found, cardID: %v, deviceID: %v",
+			devCopy[i].LogicID, devCopy[i].CardId, devCopy[i].DeviceId)
 	}
 	return devCopy, nil
 }
