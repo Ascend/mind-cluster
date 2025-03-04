@@ -141,25 +141,28 @@ type Instance struct { // Instance
 
 // Option option
 type Option struct {
-	GetFdFlag          bool     // to describe FdFlag
-	UseAscendDocker    bool     // UseAscendDocker to choose docker type
-	UseVolcanoType     bool     // use volcano mode
-	AutoStowingDevs    bool     // auto stowing fixes devices or not
-	PresetVDevice      bool     // preset virtual device
-	Use310PMixedInsert bool     // chose 310P mixed insert mode
-	GraceToleranceOn   bool     // check if grace tolerance is on
-	ListAndWatchPeriod int      // set listening device state period
-	HotReset           int      // unhealthy chip hot reset
-	ShareCount         uint     // share device count
-	AiCoreCount        int32    // found by dcmi interface
-	BuildScene         string   // build scene judge device-plugin start scene
-	ProductTypes       []string // all product types
-	RealCardType       string   // real card type
-	LinkdownTimeout    int64    // linkdown timeout duration
-	DealWatchHandler   bool     // update pod cache when receiving pod informer watch errors
-	EnableSwitchFault  bool     // if enable switch fault
-	CheckCachedPods    bool     // check cached pods periodically
-	EnableSlowNode     bool     // switch of set slow node notice environment
+	GetFdFlag           bool     // to describe FdFlag
+	UseAscendDocker     bool     // UseAscendDocker to choose docker type
+	UseVolcanoType      bool     // use volcano mode
+	AutoStowingDevs     bool     // auto stowing fixes devices or not
+	PresetVDevice       bool     // preset virtual device
+	Use310PMixedInsert  bool     // chose 310P mixed insert mode
+	GraceToleranceOn    bool     // check if grace tolerance is on
+	ListAndWatchPeriod  int      // set listening device state period
+	HotReset            int      // unhealthy chip hot reset
+	ShareCount          uint     // share device count
+	AiCoreCount         int32    // found by dcmi interface
+	BuildScene          string   // build scene judge device-plugin start scene
+	ProductTypes        []string // all product types
+	RealCardType        string   // real card type
+	LinkdownTimeout     int64    // linkdown timeout duration
+	DealWatchHandler    bool     // update pod cache when receiving pod informer watch errors
+	EnableSwitchFault   bool     // if enable switch fault
+	CheckCachedPods     bool     // check cached pods periodically
+	EnableSlowNode      bool     // switch of set slow node notice environment
+	ThirdPartyScanDelay int      // delay time (seconds) for scanning devices when third party resetting
+	ScanInterval        int      // scan interval(seconds) of scanning devices when third party resetting
+	ScanDuration        int      // scan duration(seconds) of scanning devices when third party resetting
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List

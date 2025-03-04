@@ -1273,6 +1273,7 @@ func (hdm *HwDevManager) checkNodeResetInfo() {
 	}
 	newResetInfo.ThirdPartyResetDevs = newThirdPartyResetDevs
 	newResetInfo.ManualResetDevs = newManualResetDevs
+	newResetInfo = checkOverRetryDev(newResetInfo)
 	device.WriteResetInfo(newResetInfo, device.WMOverwrite)
 }
 
@@ -1294,7 +1295,24 @@ func checkDeviceStatus(failDevs []device.ResetDevice, allInfo common.NpuAllInfo)
 			continue
 		}
 		device.FreeBusyDev(failDev.CardId, failDev.DeviceId)
+		// device recovered, set reset times to 0, then that device could be reset again
+		device.SetResetCnt(failDev.CardId, failDev.DeviceId, 0)
 		isChange = true
 	}
 	return newDevs, isChange
+}
+
+func checkOverRetryDev(info device.ResetInfo) device.ResetInfo {
+	ret := device.ResetInfo{
+		ThirdPartyResetDevs: make([]device.ResetDevice, 0, len(info.ThirdPartyResetDevs)),
+		ManualResetDevs:     info.ManualResetDevs,
+	}
+	for _, dev := range info.ThirdPartyResetDevs {
+		if device.GetResetCnt(dev.CardId, dev.DeviceId) <= common.MaxResetTimes {
+			ret.ThirdPartyResetDevs = append(ret.ThirdPartyResetDevs, dev)
+			continue
+		}
+		ret.ManualResetDevs = append(ret.ManualResetDevs, dev)
+	}
+	return ret
 }

@@ -105,6 +105,12 @@ const (
 	MetaData = "metadata"
 	// ResetInfoAnnotationKey is the key of reset fail information in node annotation
 	ResetInfoAnnotationKey = "ResetInfo"
+	// DefaultScanDelay default delay time before scanning devices reset by third party, seconds
+	DefaultScanDelay = 300
+	// DefaultScanInterval scan interval(second)
+	DefaultScanInterval = 10
+	// DefaultScanDuration scan duration(second)
+	DefaultScanDuration = 60
 
 	// SlowNodeStepTimeEnvNum is the number of environment value for step time cm
 	SlowNodeStepTimeEnvNum = 2

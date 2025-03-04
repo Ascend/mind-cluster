@@ -64,6 +64,8 @@ const (
 	WMOverwrite WriteMode = iota
 	// WMAppend write mode which will append to content
 	WMAppend
+	// WMDelete write mode which will delete from content
+	WMDelete
 )
 
 var (
@@ -178,24 +180,26 @@ func mergeFailDevs(curDevs, newDevs []ResetDevice, writeMode WriteMode) []ResetD
 		return newDevs
 	case WMAppend:
 		return mergeAndDeduplicate(curDevs, newDevs)
+	case WMDelete:
+		return deleteFrom(curDevs, newDevs)
 	default:
 		hwlog.RunLog.Errorf("write mode %v is invalid", writeMode)
 		return curDevs
 	}
 }
 
-func mergeAndDeduplicate(arr1, arr2 []ResetDevice) []ResetDevice {
+func mergeAndDeduplicate(curArr, NewArr []ResetDevice) []ResetDevice {
 	seen := make(map[int32]struct{})
 	result := make([]ResetDevice, 0)
 
-	for _, v := range arr1 {
+	for _, v := range curArr {
 		if _, exists := seen[v.PhyID]; !exists {
 			seen[v.PhyID] = struct{}{}
 			result = append(result, v)
 		}
 	}
 
-	for _, v := range arr2 {
+	for _, v := range NewArr {
 		if _, exists := seen[v.PhyID]; !exists {
 			seen[v.PhyID] = struct{}{}
 			result = append(result, v)
@@ -203,6 +207,22 @@ func mergeAndDeduplicate(arr1, arr2 []ResetDevice) []ResetDevice {
 	}
 
 	return result
+}
+
+func deleteFrom(curArr, delArr []ResetDevice) []ResetDevice {
+	ret := make([]ResetDevice, 0, len(curArr))
+	toDelMap := make(map[int32]struct{})
+	for _, dev := range delArr {
+		if _, exist := toDelMap[dev.PhyID]; !exist {
+			toDelMap[dev.PhyID] = struct{}{}
+		}
+	}
+	for _, dev := range curArr {
+		if _, exist := toDelMap[dev.PhyID]; !exist {
+			ret = append(ret, dev)
+		}
+	}
+	return ret
 }
 
 func readAnnotation(annotation map[string]string, key string) *ResetInfo {

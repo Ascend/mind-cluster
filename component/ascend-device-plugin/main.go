@@ -47,6 +47,8 @@ const (
 	maxLinkdownTimeout = 30
 	// minLinkdownTimeout is the min linkdown timeout duration
 	minLinkdownTimeout = 1
+	// minScanDelay min scan delay time
+	minScanDelay = 0
 )
 
 var (
@@ -85,6 +87,12 @@ var (
 		"check pods in cache periodically, default true")
 	enableSlowNode = flag.Bool("enableSlowNode", false,
 		"switch of set slow node notice environment,default false")
+	thirdPartyScanDelay = flag.Int("thirdPartyScanDelay", common.DefaultScanDelay,
+		"delay time(second) before scanning devices reset by third party")
+	scanInterval = flag.Int("scanInterval", common.DefaultScanInterval,
+		"scan interval of scanning devices reset by third party")
+	scanDuration = flag.Int("scanDuration", common.DefaultScanDuration,
+		"scan duration of scanning devices reset by third party")
 )
 
 var (
@@ -159,8 +167,28 @@ func checkParam() bool {
 		hwlog.RunLog.Warn("linkdown timeout duration out of range")
 		return false
 	}
+	if !checkThirdPartScanParams() {
+		return false
+	}
 
 	return checkShareDevCount()
+}
+
+func checkThirdPartScanParams() bool {
+	if *thirdPartyScanDelay < minScanDelay {
+		hwlog.RunLog.Errorf("reset scan delay %v is invalid", *thirdPartyScanDelay)
+		return false
+	}
+	if *scanDuration < minScanDelay {
+		hwlog.RunLog.Errorf("reset scan interval %v is invalid", *thirdPartyScanDelay)
+		return false
+	}
+	if *scanInterval < minScanDelay || *scanInterval > *scanDuration {
+		hwlog.RunLog.Errorf("reset scan duration %v is invalid or greater than duration", *thirdPartyScanDelay)
+		return false
+	}
+	return true
+
 }
 
 func checkShareDevCount() bool {
@@ -226,20 +254,23 @@ func InitFunction() (*server.HwDevManager, error) {
 
 func setParameters() {
 	common.ParamOption = common.Option{
-		GetFdFlag:          *fdFlag,
-		UseAscendDocker:    *useAscendDocker,
-		UseVolcanoType:     *volcanoType,
-		AutoStowingDevs:    *autoStowing,
-		ListAndWatchPeriod: *listWatchPeriod,
-		PresetVDevice:      *presetVirtualDevice,
-		Use310PMixedInsert: *use310PMixedInsert,
-		HotReset:           *hotReset,
-		BuildScene:         BuildScene,
-		ShareCount:         *shareDevCount,
-		LinkdownTimeout:    *linkdownTimeout,
-		DealWatchHandler:   *dealWatchHandler,
-		CheckCachedPods:    *checkCachedPods,
-		EnableSlowNode:     *enableSlowNode,
+		GetFdFlag:           *fdFlag,
+		UseAscendDocker:     *useAscendDocker,
+		UseVolcanoType:      *volcanoType,
+		AutoStowingDevs:     *autoStowing,
+		ListAndWatchPeriod:  *listWatchPeriod,
+		PresetVDevice:       *presetVirtualDevice,
+		Use310PMixedInsert:  *use310PMixedInsert,
+		HotReset:            *hotReset,
+		BuildScene:          BuildScene,
+		ShareCount:          *shareDevCount,
+		LinkdownTimeout:     *linkdownTimeout,
+		DealWatchHandler:    *dealWatchHandler,
+		CheckCachedPods:     *checkCachedPods,
+		EnableSlowNode:      *enableSlowNode,
+		ThirdPartyScanDelay: *thirdPartyScanDelay,
+		ScanInterval:        *scanInterval,
+		ScanDuration:        *scanDuration,
 	}
 }
 
