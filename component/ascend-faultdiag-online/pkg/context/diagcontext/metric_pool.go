@@ -80,6 +80,15 @@ type TreeNode struct {
 	MetricMap        map[string]*ItemGroup                 // 指标名称到指标项的映射
 }
 
+func (treeNode *TreeNode) GetItemGroup(metric *Metric) *ItemGroup {
+	itemGroup, ok := treeNode.MetricMap[metric.Name]
+	if !ok {
+		itemGroup = NewMetricPoolItemGroup(metric)
+		treeNode.MetricMap[metric.Name] = itemGroup
+	}
+	return itemGroup
+}
+
 // NewMetricPoolTreeNode 新建指标池的指标树
 func NewMetricPoolTreeNode(domainItem *metricmodel.DomainItem, parentNode *TreeNode) *TreeNode {
 	return &TreeNode{
@@ -101,7 +110,8 @@ type MetricPool struct {
 // NewMetricPool 创建一个新的指标池
 func NewMetricPool() *MetricPool {
 	return &MetricPool{
-		metricMap: make(map[string]*ItemGroup),
+		metricMap:        make(map[string]*ItemGroup),
+		poolRootNodesMap: make(map[enum.MetricDomainType][]*TreeNode),
 	}
 }
 
@@ -147,7 +157,10 @@ func (p *MetricPool) addToMetricTree(metric *Metric, poolItem *Item) {
 		curNodesMap = node.ChildrenNodesMap
 		lastNode = node
 	}
-	lastNode.MetricMap[metric.Name].Add(poolItem)
+	if lastNode == nil {
+		return
+	}
+	lastNode.GetItemGroup(metric).Add(poolItem)
 }
 
 // 获取指标树

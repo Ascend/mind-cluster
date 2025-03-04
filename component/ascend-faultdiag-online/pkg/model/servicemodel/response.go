@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package request 提供请求上下文管理功能。
+Package servicemodel 服务相关模型。
 */
 package servicemodel
 

@@ -28,9 +28,23 @@ func main() {
 		return
 	}
 	apiv1.StartService(ctx)
-	resp, err := apiv1.Request(ctx, "metric/add", "{"+
-		""+
-		"}")
+	resp, err := apiv1.Request(ctx, "metric/add", `
+		{
+			"metrics": [
+				{
+					"domain": [
+						{
+							"domain_type": "NPU",
+							"value": "1" 
+						}
+					],
+					"name": "bandwidth",
+					"value_type": "float",
+					"value": "300"
+				}
+			]
+		}
+	`)
 	if err != nil {
 		fmt.Println("%v", err)
 		return
