@@ -28,6 +28,7 @@ var ctx context.Context = context.Background()
 //
 //export InitTaskMonitor
 func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
+
 	return C.int(0)
 }
 
@@ -35,6 +36,7 @@ func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
 //
 //export StartMonitorClient
 func StartMonitorClient() C.int {
+
 	return C.int(0)
 }
 
