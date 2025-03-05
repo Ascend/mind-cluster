@@ -97,8 +97,8 @@ func BuildApiFunc(param *ApiFuncBuildParam) (ApiFunc, error) {
 			return err
 		}
 		args = append(args, reflect.ValueOf(fdCtxData))
-		args = append(args, reflect.ValueOf(reqCtx))
 		args = append(args, reflect.ValueOf(diagCtx))
+		args = append(args, reflect.ValueOf(reqCtx))
 		args = append(args, modelArgValue)
 		results := funcValue.Call(args)
 		if len(results) == 0 {
