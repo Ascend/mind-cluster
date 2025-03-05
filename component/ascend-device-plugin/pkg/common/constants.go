@@ -858,5 +858,5 @@ const (
 
 const (
 	// ComponentFaultDiag is used for fault diagnosis in the component.
-	ComponentFaultDiag = "FaultDiag"
+	ComponentFaultDiag = "FaultDiag-Online"
 )
