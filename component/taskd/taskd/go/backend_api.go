@@ -18,32 +18,24 @@ package main
 import (
 	"C"
 	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"ascend-common/common-utils/hwlog"
-	"taskd/common/constant"
 )
 
-func init() {
-	var logFile string
-	logFilePath := os.Getenv(constant.LogFilePathEnv)
-	if logFilePath == "" {
-		logFile = constant.DefaultLogFile
-	} else {
-		logFile = filepath.Join(logFile, constant.LogFileName)
-	}
-	hwLogConfig := hwlog.LogConfig{
-		LogFileName:   logFile,
-		LogLevel:      constant.DefaultLogLevel,
-		MaxBackups:    constant.DefaultMaxBackups,
-		MaxAge:        constant.DefaultMaxAge,
-		MaxLineLength: constant.DefaultMaxLineLength,
-	}
-	if err := hwlog.InitRunLogger(&hwLogConfig, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-	}
+var ctx context.Context = context.Background()
+
+// InitTaskMonitor to init tasdD monitor, should be called by python api,
+// and this python api will be called in user script
+// rank: the global rank of current process, upperLimitOfDiskInMb is the upper limit of disk usage
+//
+//export InitTaskMonitor
+func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
+	return C.int(0)
+}
+
+// StartMonitorClient this function is the entrance for monitoring, is called by user through python api
+//
+//export StartMonitorClient
+func StartMonitorClient() C.int {
+	return C.int(0)
 }
 
 func main() {

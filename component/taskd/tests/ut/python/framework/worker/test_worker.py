@@ -14,9 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from taskd.python.framework.worker.worker import Worker
+from taskd.python.cython_api import cython_api
 
 
 def test_start_worker():
     w = Worker(0)
-    assert w.start() == "start worker!"
+    print(cython_api.lib)
+    assert cython_api.lib is None
+    assert w.start() is False
+

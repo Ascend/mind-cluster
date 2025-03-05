@@ -19,7 +19,7 @@ import os
 
 from taskd.python.toolkit.constants import constants
 from taskd.python.toolkit.constants.constants import RANK_PID_KEY
-from taskd.python.toolkit.logger.log import run_log
+from taskd.python.utils.log import run_log
 
 
 # check_monitor_res_valid to check whether mindspore monitor interface given a valid result
