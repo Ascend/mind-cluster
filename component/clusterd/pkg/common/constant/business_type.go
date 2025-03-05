@@ -4,6 +4,8 @@
 package constant
 
 const (
+	// PingMesh business for ping mesh
+	PingMesh = "pingMesh"
 	// Resource business type Resource
 	Resource = "resource"
 	// Job business type Job

@@ -6,6 +6,7 @@ package kube
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,6 +23,7 @@ import (
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
+	"clusterd/pkg/domain/superpod"
 	"clusterd/pkg/domain/switchinfo"
 )
 
@@ -175,6 +177,38 @@ func InitPodAndNodeInformer() {
 	)
 	factory.Start(informerCh)
 	factory.WaitForCacheSync(wait.NeverStop)
+	initClusterDevice()
+}
+
+func initClusterDevice() {
+	nodes := getNodesFromInformer()
+	hwlog.RunLog.Infof("init cluster node length=%d", len(nodes))
+	for _, n := range nodes {
+		nodeDevice, superPodID := superpod.GetNodeDeviceAndSuperPodID(n)
+		superPodID = strings.Trim(superPodID, " ")
+		if nodeDevice == nil || superPodID == "" {
+			continue
+		}
+		superpod.SaveNode(superPodID, nodeDevice)
+	}
+}
+
+func getNodesFromInformer() []*v1.Node {
+	nodes := nodeInformer.GetStore().List()
+	if len(nodes) == 0 {
+		hwlog.RunLog.Warn("get empty node from informer")
+		return nil
+	}
+	res := make([]*v1.Node, 0, len(nodes))
+	for _, obj := range nodes {
+		nodeResource, ok := obj.(*v1.Node)
+		if !ok {
+			hwlog.RunLog.Error("convert to Node error")
+			continue
+		}
+		res = append(res, nodeResource)
+	}
+	return res
 }
 
 func nodeHandler(oldObj, newObj interface{}, operator string) {
