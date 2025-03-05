@@ -276,13 +276,12 @@ func (hnm *HwAscend910Manager) setAllDevUnhealthyOnRing(classifyDevs map[string]
 	if !isHotResetOn {
 		return nil
 	}
-
-	if common.ParamOption.RealCardType == common.Ascend910A3 &&
-		hnm.setUnhealthyForA3(devStatusList) == nil {
-		return nil
-	}
 	if inResetDev == -1 {
 		hwlog.RunLog.Debug("should not set device to unhealthy")
+		return nil
+	}
+	if common.ParamOption.RealCardType == common.Ascend910A3 &&
+		hnm.setUnhealthyForA3(devStatusList) == nil {
 		return nil
 	}
 	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
@@ -303,25 +302,17 @@ func (hnm *HwAscend910Manager) setAllDevUnhealthyOnRing(classifyDevs map[string]
 
 func (hnm *HwAscend910Manager) setUnhealthyForA3(devStatusList []*common.NpuDevice) error {
 	// get busy status, get associated cards, set to unhealthy
-	devToBeSet := make(map[int32]struct{})
-	for _, dev := range devStatusList {
-		if _, exist := devToBeSet[dev.LogicID]; exist {
-			continue
-		}
-		if !IsDevBusy(dev.CardID, dev.DeviceID) {
-			continue
-		}
-		logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
-		if err != nil {
-			return err
-		}
-		for _, id := range logicIdArr {
-			devToBeSet[id] = struct{}{}
-		}
+	if int(inResetDev) >= len(devStatusList) || inResetDev < 0 {
+		return fmt.Errorf("invalid in reset dev id %v", inResetDev)
 	}
-	for idx, _ := range devToBeSet {
-		if int(idx) >= len(devStatusList) {
-			hwlog.RunLog.Errorf("device logicID %v is greater than device list length %v",
+	dev := devStatusList[inResetDev]
+	logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
+	if err != nil {
+		return err
+	}
+	for _, idx := range logicIdArr {
+		if int(idx) >= len(devStatusList) || int(idx) < 0 {
+			hwlog.RunLog.Errorf("device logicID %v is invalid, device list length is %v",
 				idx, len(devStatusList))
 			continue
 		}
@@ -992,14 +983,16 @@ func (hnm *HwAscend910Manager) filterDevStatus(classifyDevs map[string][]*common
 
 func (hnm *HwAscend910Manager) filterDevStatusForA3(devStatusList []*common.NpuDevice) error {
 	devToBeSet := make(map[int32]struct{})
+	devInReset := hnm.hotResetManager.GetDevListInReset()
 	for _, dev := range devStatusList {
-		if _, exist := devToBeSet[dev.LogicID]; exist {
-			continue
-		}
-		if IsDevBusy(dev.CardID, dev.DeviceID) {
+		if _, ok := devInReset[dev.LogicID]; !ok || dev.Health == v1beta1.Healthy ||
+			hnm.isDevShouldBeIsolate(dev.LogicID) {
 			continue
 		}
 		dev.Health = v1beta1.Healthy
+		if _, exist := devToBeSet[dev.LogicID]; exist {
+			continue
+		}
 		logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
 		if err != nil {
 			return err
@@ -1479,7 +1472,7 @@ func (hnm *HwAscend910Manager) updateResetCMStatusToIsolate(taskName string,
 	return nil
 }
 
-func (hnm *HwAscend910Manager) getAllLogicMapForA3(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
+func (hnm *HwAscend910Manager) getA3LogicMapByAssociation(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
 	if common.ParamOption.RealCardType != common.Ascend910A3 {
 		return nil, fmt.Errorf("only support A3")
 	}
@@ -1508,7 +1501,7 @@ func (hnm *HwAscend910Manager) getAllLogicMapForA3(devFaultInfoList []*common.Ta
 // getNeedResetDeviceLogicIdList gets the list of logic ids of the devices that need to be reset.
 func (hnm *HwAscend910Manager) getNeedResetDeviceLogicIdMap(devFaultInfoList []*common.TaskDevInfo) (
 	map[int32]int32, error) {
-	if devMap, err := hnm.getAllLogicMapForA3(devFaultInfoList); err == nil {
+	if devMap, err := hnm.getA3LogicMapByAssociation(devFaultInfoList); err == nil {
 		return devMap, nil
 	}
 	resetFaultInfoMap, err := hnm.hotResetManager.GetNeedResetDevMap(devFaultInfoList)
@@ -2002,6 +1995,11 @@ func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheck
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return err
+	}
+	if common.ParamOption.RealCardType == common.Ascend910A3 {
+		if _, err := hnm.getResetIndexForA3(oriLogicID); err == nil {
+			resetDevNumOnce = ringNumOfA3
+		}
 	}
 	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
 	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
