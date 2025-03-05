@@ -167,6 +167,10 @@ func (c *Manager) parseSuperDeviceIDs(data map[string]string) (map[string]types.
 		return nil, fmt.Errorf("superPodId not match, expect: %s, actual: %s",
 			strconv.Itoa(int(c.executor.SuperPodId)), superPodDevice.SuperPodID)
 	}
+	if _, ok = superPodDevice.NodeDeviceMap[c.nodeName]; !ok {
+		return nil, fmt.Errorf("node %s not found in superPodDevice", c.nodeName)
+	}
+
 	nodes := make(map[string]types.SuperDeviceIDs, len(superPodDevice.NodeDeviceMap))
 	for node, devices := range superPodDevice.NodeDeviceMap {
 		nodes[node] = devices.DeviceMap

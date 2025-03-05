@@ -60,6 +60,7 @@ function build() {
 function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/noded.yaml "${TOP_DIR}"/output/noded-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/pingmesh-config.yaml "${TOP_DIR}"/output/pingmesh-config.yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/${NODE_CONFIG_FILE_NAME} "${TOP_DIR}"/output
   chmod 400 "${TOP_DIR}"/output/*

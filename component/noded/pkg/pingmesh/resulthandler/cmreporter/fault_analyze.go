@@ -24,7 +24,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -59,6 +58,14 @@ type faultReporter struct {
 	labels          map[string]string
 }
 
+type state string
+
+const (
+	stateFault   state = "fault"
+	stateHealthy state = "healthy"
+	stateUnknown state = "unknown"
+)
+
 // New creat a new fault-reporter
 func New(cfg *Config) *faultReporter {
 	return &faultReporter{
@@ -72,21 +79,22 @@ func New(cfg *Config) *faultReporter {
 // HandlePingMeshInfo handle ping-mesh result
 func (f *faultReporter) HandlePingMeshInfo(res *types.HccspingMeshResult) error {
 	hwlog.RunLog.Debugf("start to handle ping-mesh result, res:%v", res)
-	curFault, err := f.calCurrentFault(res)
-	if err != nil {
-		return err
-	}
 	lastFault, err := f.getLastFault()
 	if err != nil {
 		return err
 	}
 	lastFault = refreshFault(lastFault)
 
-	fault, change := f.checkFault(lastFault, curFault)
+	cardStates := make(map[string]state, len(res.Results))
+	for physicID, infos := range res.Results {
+		cardStates[physicID] = checkFaultCard(infos)
+	}
+
+	fault, change := f.checkFault(lastFault, cardStates)
 	if !change {
 		return nil
 	}
-	hwlog.RunLog.Infof("fault change, lastFault:%v, curFault:%v", lastFault, curFault)
+	hwlog.RunLog.Infof("fault change, cur Fault:%v", fault)
 	f.lastFault = fault
 	return f.reportFault()
 }
@@ -151,138 +159,88 @@ func (f *faultReporter) getLastFault() (*api.PubFaultInfo, error) {
 	return lastFault, nil
 }
 
-type faultCard struct {
-	physicID string
-}
-
-func (f *faultReporter) filterFaultCards(res *types.HccspingMeshResult) ([]*faultCard, error) {
-	faultCardIds := make([]*faultCard, 0)
-	for physicID, infos := range res.Results {
-		fault, err := checkFaultCard(infos)
-		if err != nil {
-			return nil, fmt.Errorf("check fault card %s failed, err:%v", physicID, err)
-		}
-		if fault {
-			faultCardIds = append(faultCardIds, &faultCard{physicID: physicID})
-		}
-
-	}
-	return faultCardIds, nil
-}
-
-func checkFaultCard(infos map[uint]*common.HccspingMeshInfo) (bool, error) {
+func checkFaultCard(infos map[uint]*common.HccspingMeshInfo) state {
 	hasSuc := false
 	for _, info := range infos {
 		for i := 0; i < info.DestNum; i++ {
 			if info.ReplyStatNum[i] == 0 {
-				return false, fmt.Errorf("no reply from %s", info.DstAddr[i])
+				return stateUnknown
 			}
 			if info.SucPktNum[i] != 0 {
 				hasSuc = true
 			}
 		}
 	}
-	return !hasSuc, nil
+	if hasSuc {
+		return stateHealthy
+	}
+	return stateFault
 }
 
-func (f *faultReporter) constructFaultInfo(faultCards []*faultCard) *api.PubFaultInfo {
-	pf := &api.PubFaultInfo{
+func (f *faultReporter) checkFault(last *api.PubFaultInfo, states map[string]state) (*api.PubFaultInfo, bool) {
+	hwlog.RunLog.Debugf("checkFault, last: %v, cur states: %v", last, states)
+	now := time.Now().Unix()
+	newFault := &api.PubFaultInfo{
 		Version:   publicFaultVersion,
 		Id:        string(uuid.NewUUID()),
-		TimeStamp: time.Now().Unix(),
+		TimeStamp: now,
 		Resource:  faultResource,
-		Faults:    make([]api.Fault, 0, len(faultCards)),
 	}
 
-	for _, fc := range faultCards {
-		id, err := strconv.Atoi(fc.physicID)
-		if err != nil {
-			hwlog.RunLog.Errorf("faultCardId %s is not a number", fc.physicID)
-			continue
+	oldFaultMap := make(map[string]api.Fault, 0)
+	if last != nil {
+		for _, fault := range last.Faults {
+			oldFaultMap[strconv.Itoa(int(fault.Influence[0].DeviceIds[0]))] = fault
 		}
-		now := time.Now()
-		nodeName := os.Getenv(nodecommon.ENVNodeNameKey)
-		pf.Faults = append(pf.Faults, api.Fault{
-			Assertion:     faultAssertionOccur,
-			FaultId:       generateFaultID(nodeName, fc.physicID),
-			FaultType:     "NPU",
-			FaultCode:     faultCode,
-			FaultTime:     now.Unix(),
-			FaultLocation: map[string]string{},
-			Influence: []api.Influence{
-				{
-					NodeName:  nodeName,
-					DeviceIds: []int32{int32(id)},
-				},
-			},
-			Description: "hccsping-mesh fault",
-		})
-	}
-
-	return pf
-}
-
-func (f *faultReporter) calCurrentFault(res *types.HccspingMeshResult) (*api.PubFaultInfo, error) {
-	faultCardIds, err := f.filterFaultCards(res)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(faultCardIds) == 0 {
-		return nil, nil
-	}
-	return f.constructFaultInfo(faultCardIds), nil
-}
-
-func (f *faultReporter) checkFault(last, cur *api.PubFaultInfo) (*api.PubFaultInfo, bool) {
-	hwlog.RunLog.Debugf("checkFault, last: %v, cur: %v", last, cur)
-	if last == nil {
-		return cur, cur != nil
-	}
-	newFault := &api.PubFaultInfo{
-		Version:   last.Version,
-		Id:        last.Id,
-		TimeStamp: time.Now().Unix(),
-		Resource:  last.Resource,
-		Faults:    last.Faults,
-	}
-	if cur == nil {
-		for i, fault := range newFault.Faults {
-			fault.Assertion = faultAssertionRecover
-			newFault.Faults[i] = fault
-		}
-		return newFault, true
-	}
-	oldFaultMap := make(map[string]api.Fault, len(last.Faults))
-	curFaultMap := make(map[string]api.Fault, len(cur.Faults))
-
-	for _, fault := range last.Faults {
-		oldFaultMap[fault.FaultId] = fault
-	}
-	for _, fault := range cur.Faults {
-		curFaultMap[fault.FaultId] = fault
 	}
 
 	change := false
-	for faultID, fault := range oldFaultMap {
-		if _, ok := curFaultMap[faultID]; !ok {
+	for cardID, fault := range oldFaultMap {
+		if st, ok := states[cardID]; ok && st == stateHealthy {
 			fault.Assertion = faultAssertionRecover
-			oldFaultMap[faultID] = fault
+			oldFaultMap[cardID] = fault
 			change = true
+		}
+	}
+	for cardID, st := range states {
+		if st != stateFault {
+			continue
+		}
+		if _, ok := oldFaultMap[cardID]; !ok {
+			change = true
+			oldFaultMap[cardID] = constructFaultInfo(cardID, now)
 		}
 	}
 
-	for faultID, fault := range curFaultMap {
-		if _, ok := oldFaultMap[faultID]; !ok {
-			oldFaultMap[faultID] = fault
-			change = true
-		}
-	}
 	newFault.Faults = make([]api.Fault, 0, len(oldFaultMap))
 	for _, fault := range oldFaultMap {
 		newFault.Faults = append(newFault.Faults, fault)
 	}
 	return newFault, change
+}
+
+func constructFaultInfo(cardID string, timestamp int64) api.Fault {
+	nodeName := os.Getenv(nodecommon.ENVNodeNameKey)
+	id, err := strconv.Atoi(cardID)
+	if err != nil {
+		hwlog.RunLog.Errorf("faultCardId %s is not a number", cardID)
+		return api.Fault{}
+	}
+	return api.Fault{
+		Assertion:     faultAssertionOccur,
+		FaultId:       generateFaultID(nodeName, cardID),
+		FaultType:     "NPU",
+		FaultCode:     faultCode,
+		FaultTime:     timestamp,
+		FaultLocation: map[string]string{},
+		Influence: []api.Influence{
+			{
+				NodeName:  nodeName,
+				DeviceIds: []int32{int32(id)},
+			},
+		},
+		Description: "hccsping-mesh fault",
+	}
 }
 
 func generateFaultID(nodeName, cardId string) string {

@@ -33,9 +33,9 @@ import (
 )
 
 const (
-	notMatchErrCode     = "-99996"
-	notSupportErrCode   = "-8255"
-	collectPeriodFactor = 10
+	notFoundFunctionErrCode = "-99998"
+	notSupportErrCode       = "-8255"
+	collectPeriodFactor     = 10
 )
 
 // Executor execute action of hccsping mesh
@@ -65,7 +65,8 @@ func New() (*Executor, error) {
 		_, err = dm.DcGetHccsPingMeshState(chip.CardID, chip.DeviceID, 0, common.InternalPingMeshTaskID)
 		if err != nil {
 			hwlog.RunLog.Warnf("deviceManager get hccsPingMeshState failed, err: %v", err)
-			if strings.Contains(err.Error(), notSupportErrCode) || strings.Contains(err.Error(), notMatchErrCode) {
+			if strings.Contains(err.Error(), notSupportErrCode) ||
+				strings.Contains(err.Error(), notFoundFunctionErrCode) {
 				return nil, err
 			}
 		}
@@ -108,7 +109,7 @@ func (d *Executor) Start(stopCh <-chan struct{}) {
 			d.stopCollect()
 			return
 		case cmd := <-d.commandChan:
-			hwlog.RunLog.Infof("executor receive cmd, start: %v, uid: %s", cmd.Config.Activate, cmd.UID)
+			hwlog.RunLog.Infof("executor receive cmd, activate: %v, uid: %s", cmd.Config.Activate, cmd.UID)
 			d.stopHccspingMesh()
 			d.stopCollect()
 			if cmd.Config.Activate == types.ActivateOff {
