@@ -33,6 +33,12 @@ type PublicFaultCache struct {
 
 // AddPubFaultToCache add new public fault to cache. After adding, notify statistic module
 func (pc *PublicFaultCache) AddPubFaultToCache(newFault *constant.PubFaultCache, nodeName, faultKey string) {
+	const maxPubFaultCacheNum = 50000
+	if pc.GetPubFaultNum() >= maxPubFaultCacheNum {
+		hwlog.RunLog.Errorf("add public fault to cache failed, "+
+			"public fault number in cache exceeds the upper limit %d", maxPubFaultCacheNum)
+		return
+	}
 	newFault.FaultAddTime = time.Now().Unix()
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
@@ -57,6 +63,18 @@ func (pc *PublicFaultCache) GetPubFault() map[string]map[string]*constant.PubFau
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	return pc.faultCache
+}
+
+// GetPubFaultNum get public fault number in cache
+func (pc *PublicFaultCache) GetPubFaultNum() int {
+	pc.mutex.Lock()
+	defer pc.mutex.Unlock()
+	faultNum := 0
+	for _, faultsCache := range pc.faultCache {
+		faultNumPerNode := len(faultsCache)
+		faultNum += faultNumPerNode
+	}
+	return faultNum
 }
 
 // GetPubFaultByNodeName get public fault from cache by node name

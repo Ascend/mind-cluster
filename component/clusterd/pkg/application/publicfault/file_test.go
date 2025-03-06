@@ -54,7 +54,7 @@ func testTryLoad() {
 	resetPubFaultResource()
 	fileData, err := utils.LoadFile(testFilePath)
 	convey.So(err, convey.ShouldBeNil)
-	p1 := gomonkey.ApplyFuncReturn(os.ReadFile, fileData, nil)
+	p1 := gomonkey.ApplyFuncReturn(utils.LoadFile, fileData, nil)
 	defer p1.Reset()
 	tryLoadPubFaultCfgFromFile()
 	convey.So(publicfault.PubFaultResource, convey.ShouldResemble, []string{"CCAE", "fd-online", "pingmesh"})
@@ -68,7 +68,7 @@ func testTryLoadErrOne() {
 		{Values: gomonkey.Params{nil, testErr}, Times: 3},
 		{Values: gomonkey.Params{fileData, nil}},
 	}
-	p1 := gomonkey.ApplyFuncSeq(os.ReadFile, output)
+	p1 := gomonkey.ApplyFuncSeq(utils.LoadFile, output)
 	defer p1.Reset()
 	tryLoadPubFaultCfgFromFile()
 	convey.So(publicfault.PubFaultResource, convey.ShouldResemble, []string{"CCAE", "fd-online", "pingmesh"})
@@ -76,7 +76,7 @@ func testTryLoadErrOne() {
 
 func testTryLoadErr() {
 	resetPubFaultResource()
-	p1 := gomonkey.ApplyFuncReturn(os.ReadFile, nil, testErr)
+	p1 := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, testErr)
 	defer p1.Reset()
 	tryLoadPubFaultCfgFromFile()
 	convey.So(publicfault.PubFaultResource, convey.ShouldResemble, []string{})

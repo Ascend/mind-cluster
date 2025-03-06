@@ -37,6 +37,7 @@ func TestPubFaultCache(t *testing.T) {
 	convey.Convey("test PubFaultCache method 'DeleteOccurFault'", t, testDelete)
 	convey.Convey("test PubFaultCache method 'GetPubFaultsForCM'", t, testGetPubFaultsForCM)
 	convey.Convey("test PubFaultCache method 'LoadFaultToCache'", t, testLoadFaultToCache)
+	convey.Convey("test PubFaultCache method 'GetPubFaultNum'", t, testGetPubFaultNum)
 }
 
 func testAdd() {
@@ -55,6 +56,14 @@ func testAdd() {
 	// both node and fault exist
 	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
 	convey.So(len(PubFaultCache.faultCache), convey.ShouldEqual, cacheLen)
+
+	// public fault number in cache exceeds the upper limit
+	const maxPubFaultCacheNum = 50000
+	p1 := gomonkey.ApplyMethodReturn(&PublicFaultCache{}, "GetPubFaultNum", maxPubFaultCacheNum)
+	defer p1.Reset()
+	resetCache()
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
+	convey.So(len(PubFaultCache.faultCache), convey.ShouldEqual, 0)
 }
 
 func resetCache() {
@@ -65,6 +74,10 @@ func resetCache() {
 }
 
 func testGet() {
+	resetCache()
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName2, faultKey2)
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey2)
 	// node exist
 	nodeFault, nodeExisted := PubFaultCache.GetPubFaultByNodeName(testNodeName1)
 	convey.So(nodeExisted, convey.ShouldBeTrue)
@@ -171,4 +184,14 @@ func testLoadFaultToCache() {
 		}
 	}
 	convey.So(len(PubFaultCache.faultCache), convey.ShouldEqual, cacheLen)
+}
+
+func testGetPubFaultNum() {
+	const expFaultNum = 3
+	resetCache()
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName2, faultKey2)
+	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey2)
+	faultNum := PubFaultCache.GetPubFaultNum()
+	convey.So(faultNum, convey.ShouldEqual, expFaultNum)
 }
