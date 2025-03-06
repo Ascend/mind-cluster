@@ -20,7 +20,6 @@ Package config provides configuration management functionalities for the ascend-
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -39,7 +38,6 @@ type FaultDiagConfig struct {
 }
 
 func paramCheck(config *FaultDiagConfig) error {
-	paramErr := errors.New("config wrong param")
 	if err := slicetool.ValueIn(config.Mode, enum.DeployModes()); err != nil {
 		return err
 	}
@@ -47,7 +45,7 @@ func paramCheck(config *FaultDiagConfig) error {
 		return err
 	}
 	if config.QueueSize <= 0 {
-		return errors.Join(paramErr, errors.New(fmt.Sprintf("queue size %d must great than 0", config.QueueSize)))
+		return fmt.Errorf("config wrong param: queue size %d must great than 0", config.QueueSize)
 	}
 	return nil
 }

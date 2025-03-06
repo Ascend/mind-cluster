@@ -1,3 +1,20 @@
+/*
+Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package core provides the definition and the model of API
 package servicecore
 
 import (
@@ -73,11 +90,14 @@ const (
 // ApiFuncBuildParam 构建参数
 type ApiFuncBuildParam struct {
 	ReqModel   interface{} // 请求模型
-	TargetFunc interface{} // 目标函数, 首个参数必须为fdCtx，第二个参数为reqCtx，第三个参数为ReqModel
+	TargetFunc interface{} // 目标函数, 首个参数必须为ctxData, 第二个参数为 diagCtx，第二个参数为reqCtx，第三个参数为ReqModel, 返回 error
 }
 
 // BuildApiFunc 通过反射创建Api处理函数，避免重复执行反序列化
 func BuildApiFunc(param *ApiFuncBuildParam) (ApiFunc, error) {
+	if param == nil || param.ReqModel == nil || param.TargetFunc == nil {
+		return nil, errors.New("invalid param: reqModel or targetFunc is nil")
+	}
 	funcValue := reflect.ValueOf(param.TargetFunc)
 	funcType := funcValue.Type()
 	if funcType.Kind() != reflect.Func {
@@ -107,6 +127,6 @@ func BuildApiFunc(param *ApiFuncBuildParam) (ApiFunc, error) {
 		if results[0].Interface() == nil {
 			return nil
 		}
-		return errors.New(fmt.Sprintf("%v", results[0].Interface()))
+		return fmt.Errorf("%v", results[0].Interface())
 	}, nil
 }

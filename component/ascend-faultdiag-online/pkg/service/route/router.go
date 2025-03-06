@@ -20,7 +20,6 @@ Package route 路由
 package route
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -45,11 +44,10 @@ func NewRouter() *Router {
 func (router *Router) HandleApi(api string) (servicecore.ApiFunc, error) {
 	tempApiNode := router.RootApi
 	routeParts := strings.Split(api, constants.ApiSeparator)
-	apiErr := errors.New(fmt.Sprintf("api %s is not existed", api))
 	for _, routePart := range routeParts {
 		nextApiNode, ok := tempApiNode.SubApiMap[routePart]
 		if !ok {
-			return nil, apiErr
+			return nil, fmt.Errorf("api %s is not existed", api)
 		}
 		tempApiNode = nextApiNode
 	}
