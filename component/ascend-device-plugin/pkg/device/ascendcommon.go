@@ -771,7 +771,7 @@ func (tool *AscendTools) GetChange(groupDevice, oldGroupDevice map[string][]*com
 func (tool *AscendTools) UpdateDeviceUsedStatus(groupDevice map[string][]*common.NpuDevice) {
 	for _, devices := range groupDevice {
 		for _, device := range devices {
-			hwlog.RunLog.Debugf("update not pod used chip NotPodUsedChipStatus:%v", device.NotPodUsedChips)
+			hwlog.RunLog.Debugf("update not pod used chip status, notPodUsedChips is:%v", device.NotPodUsedChips)
 			if _, ok := device.NotPodUsedChips[device.DeviceName]; ok {
 				device.NotPodUsedChipStatus = common.NPUUsedChipStatus
 				continue
