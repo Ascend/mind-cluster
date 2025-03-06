@@ -42,6 +42,7 @@ const (
 type Executor struct {
 	devManager    devmanager.DeviceInterface
 	stopChan      chan struct{}
+	hasStop       chan struct{}
 	commandChan   chan *types.HccspingMeshPolicy
 	currentPolicy *types.HccspingMeshPolicy
 	chips         map[string]*common.ChipBaseInfo
@@ -110,12 +111,15 @@ func (d *Executor) Start(stopCh <-chan struct{}) {
 			return
 		case cmd := <-d.commandChan:
 			hwlog.RunLog.Infof("executor receive cmd, activate: %v, uid: %s", cmd.Config.Activate, cmd.UID)
-			d.stopHccspingMesh()
 			d.stopCollect()
+			d.stopHccspingMesh()
 			if cmd.Config.Activate == types.ActivateOff {
 				continue
 			}
 			d.currentPolicy = cmd
+			if d.hasStop != nil {
+				<-d.hasStop
+			}
 			d.startHccspingMesh()
 			go d.startCollect()
 		}
@@ -197,6 +201,10 @@ func (d *Executor) startCollect() {
 		select {
 		case <-d.stopChan:
 			hwlog.RunLog.Infof("stop collect hccspingmesh info")
+			if d.hasStop == nil {
+				d.hasStop = make(chan struct{}, 1)
+			}
+			d.hasStop <- struct{}{}
 			return
 		case <-ticker.C:
 			d.getHccspingMeshInfo()
