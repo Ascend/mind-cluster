@@ -1261,28 +1261,34 @@ func (hdm *HwDevManager) checkNodeResetInfo() {
 	if len(resetInfo.ThirdPartyResetDevs) <= 0 && len(resetInfo.ManualResetDevs) <= 0 {
 		return
 	}
-	allInfo, err := hdm.manager.GetNPUs()
-	if err != nil {
-		hwlog.RunLog.Errorf("get all npu info failed, err: %v", err)
-		return
-	}
 	newResetInfo := device.ResetInfo{}
-	newThirdPartyResetDevs, tpChanged := checkDeviceStatus(resetInfo.ThirdPartyResetDevs, allInfo)
-	newManualResetDevs, manChanged := checkDeviceStatus(resetInfo.ManualResetDevs, allInfo)
+	newThirdPartyResetDevs, tpChanged := checkDeviceStatus(resetInfo.ThirdPartyResetDevs, hdm.groupDevice)
+	newManualResetDevs, manChanged := checkDeviceStatus(resetInfo.ManualResetDevs, hdm.groupDevice)
 	if !tpChanged && !manChanged {
 		return
 	}
 	newResetInfo.ThirdPartyResetDevs = newThirdPartyResetDevs
 	newResetInfo.ManualResetDevs = newManualResetDevs
-	newResetInfo = checkOverRetryDev(newResetInfo)
+	newResetInfo = checkOverRetryDev(newResetInfo, hdm.groupDevice)
 	device.WriteResetInfo(newResetInfo, device.WMOverwrite)
 }
 
-func checkDeviceStatus(failDevs []device.ResetDevice, allInfo common.NpuAllInfo) ([]device.ResetDevice, bool) {
+func flattenMap(m map[string][]*common.NpuDevice) []*common.NpuDevice {
+	var result []*common.NpuDevice
+	for _, values := range m {
+		for _, value := range values {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
+func checkDeviceStatus(failDevs []device.ResetDevice,
+	groupDev map[string][]*common.NpuDevice) ([]device.ResetDevice, bool) {
 	isChange := false
 	var newDevs []device.ResetDevice
-	devMap := make(map[int32]common.NpuDevice)
-	for _, dev := range allInfo.AllDevs {
+	devMap := make(map[int32]*common.NpuDevice)
+	for _, dev := range flattenMap(groupDev) {
 		devMap[dev.PhyID] = dev
 	}
 	for _, failDev := range failDevs {
@@ -1303,17 +1309,28 @@ func checkDeviceStatus(failDevs []device.ResetDevice, allInfo common.NpuAllInfo)
 	return newDevs, isChange
 }
 
-func checkOverRetryDev(info device.ResetInfo) device.ResetInfo {
+func checkOverRetryDev(info device.ResetInfo, groupDev map[string][]*common.NpuDevice) device.ResetInfo {
 	ret := device.ResetInfo{
 		ThirdPartyResetDevs: make([]device.ResetDevice, 0, len(info.ThirdPartyResetDevs)),
 		ManualResetDevs:     info.ManualResetDevs,
 	}
+	allDevs := flattenMap(groupDev)
 	for _, dev := range info.ThirdPartyResetDevs {
 		if device.GetResetCnt(dev.CardId, dev.DeviceId) <= common.MaxResetTimes {
 			ret.ThirdPartyResetDevs = append(ret.ThirdPartyResetDevs, dev)
 			continue
 		}
 		ret.ManualResetDevs = append(ret.ManualResetDevs, dev)
+	}
+	for _, dev := range allDevs {
+		if device.GetResetCnt(dev.CardID, dev.DeviceID) > common.MaxResetTimes {
+			ret.ManualResetDevs = append(ret.ManualResetDevs, device.ResetDevice{
+				CardId:   dev.CardID,
+				DeviceId: dev.DeviceID,
+				PhyID:    dev.PhyID,
+				LogicID:  dev.LogicID,
+			})
+		}
 	}
 	return ret
 }

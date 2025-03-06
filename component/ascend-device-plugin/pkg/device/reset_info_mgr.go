@@ -103,6 +103,7 @@ func GetResetInfoMgr() *ResetInfoMgr {
 // WriteResetInfo write reset info into cache and node annotation
 func WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode) {
 	mgr.mu.Lock()
+	hwlog.RunLog.Infof("write reset info, current: %v, new: %v", *mgr.resetInfo, resetInfo)
 	mgr.resetInfo.ThirdPartyResetDevs = mergeFailDevs(mgr.resetInfo.ThirdPartyResetDevs,
 		resetInfo.ThirdPartyResetDevs, writeMode)
 	mgr.resetInfo.ManualResetDevs = mergeFailDevs(mgr.resetInfo.ManualResetDevs,
@@ -177,7 +178,7 @@ func writeNodeAnnotation(resetStr string) {
 func mergeFailDevs(curDevs, newDevs []ResetDevice, writeMode WriteMode) []ResetDevice {
 	switch writeMode {
 	case WMOverwrite:
-		return newDevs
+		return deduplicate(newDevs)
 	case WMAppend:
 		return mergeAndDeduplicate(curDevs, newDevs)
 	case WMDelete:
@@ -200,6 +201,20 @@ func mergeAndDeduplicate(curArr, newArr []ResetDevice) []ResetDevice {
 	}
 
 	for _, v := range newArr {
+		if _, exists := seen[v.PhyID]; !exists {
+			seen[v.PhyID] = struct{}{}
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+func deduplicate(arr []ResetDevice) []ResetDevice {
+	seen := make(map[int32]struct{})
+	result := make([]ResetDevice, 0, len(arr))
+
+	for _, v := range arr {
 		if _, exists := seen[v.PhyID]; !exists {
 			seen[v.PhyID] = struct{}{}
 			result = append(result, v)

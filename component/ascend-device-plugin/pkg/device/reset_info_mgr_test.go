@@ -86,6 +86,7 @@ func TestGetResetCnt(t *testing.T) {
 	const testNum = 1
 	convey.Convey("test GetResetCnt", t, func() {
 		convey.Convey("01-not exist, should return 0", func() {
+			SetResetCnt(testCardId, testDeviceId, zeroVal)
 			cnt := GetResetCnt(testCardId, testDeviceId)
 			convey.So(cnt, convey.ShouldEqual, zeroVal)
 		})
@@ -231,5 +232,19 @@ func TestReadAnnotation(t *testing.T) {
 			info := readAnnotation(annotations, key)
 			convey.So(*info, convey.ShouldResemble, *res)
 		})
+	})
+}
+
+// TestDeduplicate test function deduplicate
+func TestDeduplicate(t *testing.T) {
+	convey.Convey("test deduplicate", t, func() {
+		devs := []ResetDevice{
+			{}, {},
+		}
+		target := []ResetDevice{
+			{},
+		}
+		ret := deduplicate(devs)
+		convey.So(ret, convey.ShouldResemble, target)
 	})
 }

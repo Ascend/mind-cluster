@@ -540,15 +540,11 @@ func TestCheckDeviceStatus(t *testing.T) {
 				return
 			})
 			defer patch.Reset()
-			allInfo := common.NpuAllInfo{
-				AllDevs: []common.NpuDevice{
-					{
-						PhyID:  id1,
+			allInfo := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					&common.NpuDevice{
+						PhyID:  int32(id1),
 						Health: v1beta1.Healthy,
-					},
-					{
-						PhyID:  id2,
-						Health: v1beta1.Unhealthy,
 					},
 				},
 			}
@@ -604,7 +600,15 @@ func TestSetContainerdClient(t *testing.T) {
 // TestCheckOverRetryDev test the function checkOverRetryDev
 func TestCheckOverRetryDev(t *testing.T) {
 	const id = 0
-	const numOne, numZero = 1, 0
+	const numTwo, numOne, numZero = 2, 1, 0
+	groupDev := map[string][]*common.NpuDevice{
+		common.Ascend910: {
+			&common.NpuDevice{
+				PhyID:  int32(id),
+				Health: v1beta1.Healthy,
+			},
+		},
+	}
 	convey.Convey("test checkOverRetryDev", t, func() {
 		input := device.ResetInfo{
 			ThirdPartyResetDevs: []device.ResetDevice{{
@@ -615,14 +619,38 @@ func TestCheckOverRetryDev(t *testing.T) {
 		convey.Convey("01-over retry time, dev should be add to manualDev", func() {
 			patch1 := gomonkey.ApplyFuncReturn(device.GetResetCnt, common.MaxResetTimes+numOne)
 			defer patch1.Reset()
-			ret := checkOverRetryDev(input)
-			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numOne)
+			ret := checkOverRetryDev(input, groupDev)
+			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numTwo)
 		})
 		convey.Convey("02-not over retry times, dev be add to third party", func() {
 			patch1 := gomonkey.ApplyFuncReturn(device.GetResetCnt, common.MaxResetTimes-numOne)
 			defer patch1.Reset()
-			ret := checkOverRetryDev(input)
+			ret := checkOverRetryDev(input, groupDev)
 			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numZero)
 		})
 	})
+}
+
+// TestFlattenMap test the function flattenMap
+func TestFlattenMap(t *testing.T) {
+	const id = 0
+	const targetLen = 2
+	m := map[string][]*common.NpuDevice{
+		common.Ascend910: {
+			&common.NpuDevice{
+				PhyID:  int32(id),
+				Health: v1beta1.Healthy,
+			},
+		},
+		common.Ascend310P: {
+			&common.NpuDevice{
+				PhyID:  int32(id),
+				Health: v1beta1.Healthy,
+			},
+		},
+	}
+	ret := flattenMap(m)
+	if len(ret) != targetLen {
+		t.Errorf("expect len %v, got %v", targetLen, len(ret))
+	}
 }
