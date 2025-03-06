@@ -29,8 +29,8 @@ func TestBuildCmData(t *testing.T) {
 	cmData := mgr.BuildCmData(curJobStatistic)
 
 	assert.Equal(t, "2", cmData[statistics.TotalJobsCmKey])
-	assert.Contains(t, cmData[statistics.JobDataCmKey], `{"ID":"job1"}`)
-	assert.Contains(t, cmData[statistics.JobDataCmKey], `{"ID":"job2"}`)
+	assert.Contains(t, cmData[statistics.JobDataCmKey], `{"id":"job1"}`)
+	assert.Contains(t, cmData[statistics.JobDataCmKey], `{"id":"job2"}`)
 }
 
 func TestCurrJobStcOutputWithDataChange(t *testing.T) {

@@ -352,18 +352,40 @@ func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 		hrt.queue.Forget(obj)
 		return
 	}
-
-	path := common.GenResetFileName(cm.Namespace, cm.Name)
-	if _, checkErr := os.Stat(path); checkErr != nil {
-		hwlog.RunLog.Debugf("check file(%s) failed, err: %v", path, checkErr)
-		hrt.queue.Forget(obj)
-		return
+	if strings.HasPrefix(cm.Name, common.DataTraceCmPrefix) {
+		dir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, cm.Namespace+"."+cm.Name)
+		fileName := fmt.Sprintf("%s/%s", dir, common.DataTraceCmProfilingSwitchKey)
+		if _, checkErr := os.Stat(fileName); checkErr != nil && !os.IsNotExist(checkErr) {
+			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", fileName, checkErr)
+			hrt.queue.Forget(obj)
+			return
+		}
+		data, ok := cm.Data[common.DataTraceCmProfilingSwitchKey]
+		if !ok {
+			hwlog.RunLog.Warnf("found data trace cm %s, but without key %s", cm.Namespace+"."+cm.Name,
+				common.DataTraceCmProfilingSwitchKey)
+			hrt.queue.Forget(obj)
+			return
+		}
+		if err := common.WriteToFile(data, fileName); err != nil {
+			hwlog.RunLog.Errorf("failed to write file: %s for cm: %s, err: %v", fileName,
+				cm.Namespace+"."+cm.Name, err)
+			hrt.queue.AddRateLimited(obj)
+			return
+		}
 	}
-
-	if err = hrt.writeCMToFile(cm); err != nil {
-		hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", cm.Name, err)
-		hrt.queue.AddRateLimited(obj)
-		return
+	if strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) {
+		path := common.GenResetFileName(cm.Namespace, cm.Name)
+		if _, checkErr := os.Stat(path); checkErr != nil {
+			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", path, checkErr)
+			hrt.queue.Forget(obj)
+			return
+		}
+		if err = hrt.writeCMToFile(cm); err != nil {
+			hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", cm.Name, err)
+			hrt.queue.AddRateLimited(obj)
+			return
+		}
 	}
 	hrt.queue.Forget(obj)
 }
@@ -394,7 +416,7 @@ func checkConfigMap(obj interface{}) bool {
 		hwlog.RunLog.Debugf("Cannot convert to ConfigMap:%#v", obj)
 		return false
 	}
-	return strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix)
+	return strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) || strings.HasPrefix(cm.Name, "data-trace-")
 }
 
 // GetResetDevNumOnce get reset device num at a time

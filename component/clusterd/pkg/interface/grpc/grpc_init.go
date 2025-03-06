@@ -4,6 +4,7 @@
 package grpc
 
 import (
+	pb_profiling "clusterd/pkg/interface/grpc/pb-profiling"
 	"errors"
 	"net"
 	"os"
@@ -52,7 +53,7 @@ func isIPValid(ipStr string) error {
 
 // Start the grpc server
 func (server *ClusterInfoMgrServer) Start(recoverSvc *service.FaultRecoverService,
-	pubFaultSvc *pubfaultsvc.PubFaultService) error {
+	pubFaultSvc *pubfaultsvc.PubFaultService, dataTraceSvc *service.ProfilingSwitchManager) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
 		return err
@@ -72,6 +73,7 @@ func (server *ClusterInfoMgrServer) Start(recoverSvc *service.FaultRecoverServic
 	server.grpcServer = grpc.NewServer(server.opts...)
 	pb.RegisterRecoverServer(server.grpcServer, recoverSvc)
 	pb2.RegisterPubFaultServer(server.grpcServer, pubFaultSvc)
+	pb_profiling.RegisterTrainingDataTraceServer(server.grpcServer, dataTraceSvc)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

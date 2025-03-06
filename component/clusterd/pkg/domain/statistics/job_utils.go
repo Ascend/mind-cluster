@@ -42,13 +42,14 @@ func UpdateStatistic(jobStc constant.JobStatistic, jobInfo constant.JobInfo) con
 		return jobStc
 
 	case job.StatusJobFail:
-		jobStc.PodLastFaultTime = time.Now().Unix()
-		jobStc.PodFaultTimes += 1
-		if jobInfo.IsPreDelete {
-			jobStc.StopTime = jobStc.PodLastFaultTime
+		if jobStc.PodLastRunningTime >= jobStc.PodLastFaultTime {
+			jobStc.PodLastFaultTime = time.Now().Unix()
+			jobStc.PodFaultTimes += 1
+			if jobInfo.IsPreDelete {
+				jobStc.StopTime = jobStc.PodLastFaultTime
+			}
+			return jobStc
 		}
-		return jobStc
-
 	default:
 		return jobStc
 	}

@@ -23,7 +23,7 @@ from taskd.python.toolkit.fault_checker.fault_check import fault_processor, grac
 from taskd.python.toolkit.constants import constants
 from taskd.python.toolkit.constants.constants import KILL_ALL_WORKERS, KILL_ALL_WORKER_CALLBACK_NAME, \
     START_ALL_WORKER_CALLBACK_NAME, MONITOR_CALLBACK_NAME, KILL_INTERVAL
-from taskd.python.toolkit.logger.log import run_log
+from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank
 from taskd.python.toolkit.recover_module import shared_data
 from taskd.python.toolkit.recover_module.recover_manager import init_grpc_client, register_callback_func, \

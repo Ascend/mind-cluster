@@ -119,6 +119,8 @@ spec:
           - name: containerd
             mountPath: /run/containerd
             readOnly: true
+          - name: data-trace-file-dir
+            mountPath: /user/cluster-info/datatrace-config
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
@@ -146,9 +148,13 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/devicePlugin
             type: Directory
-        - name : reset-config-dir
+        - name: reset-config-dir
           hostPath:
             path: /user/restore/reset
+            type: DirectoryOrCreate
+        - name: data-trace-file-dir
+          hostPath:
+            path: /user/cluster-info/datatrace-config
             type: DirectoryOrCreate
         - name: vnpu-cut
           hostPath:

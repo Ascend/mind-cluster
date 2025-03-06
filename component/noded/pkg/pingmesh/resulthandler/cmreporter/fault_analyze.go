@@ -178,8 +178,7 @@ func checkFaultCard(infos map[uint]*common.HccspingMeshInfo) state {
 }
 
 func (f *faultReporter) checkFault(last *api.PubFaultInfo, states map[string]state) (*api.PubFaultInfo, bool) {
-	hwlog.RunLog.Debugf("cur states: %v", last, states)
-	hwlog.RunLog.Debugf("checkFault, last: %v", last, states)
+	hwlog.RunLog.Debugf("checkFault, last: %v, cur states: %v", last, states)
 	now := time.Now().Unix()
 	newFault := &api.PubFaultInfo{
 		Version:   publicFaultVersion,

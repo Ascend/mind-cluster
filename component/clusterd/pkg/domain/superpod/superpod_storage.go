@@ -69,10 +69,10 @@ func init() {
 }
 
 // GetSuperPodDevice get superPod with lock
-func GetSuperPodDevice(jobKey string) *api.SuperPodDevice {
+func GetSuperPodDevice(superPodID string) *api.SuperPodDevice {
 	superPodManager.rwLock.RLock()
 	defer superPodManager.rwLock.RUnlock()
-	superPod, ok := superPodManager.snMap[jobKey]
+	superPod, ok := superPodManager.snMap[superPodID]
 	if !ok {
 		return nil
 	}
@@ -139,6 +139,7 @@ func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 		return nil, ""
 	}
 	superPodID, hasSuperPodIDKey := node.Annotations[superPodIDKey]
+	superPodID = strings.Trim(superPodID, " ")
 	if !hasSuperPodIDKey || len(superPodID) == 0 {
 		hwlog.RunLog.Errorf("empty super pod id, nodeName=%s", node.Name)
 		return nil, ""

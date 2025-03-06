@@ -863,6 +863,15 @@ const (
 )
 
 const (
+	// DataTraceCmPrefix is the prefix string for profiling confingmap
+	DataTraceCmPrefix = "data-trace-"
+	// DataTraceConfigDir is the directory containing the configuration
+	DataTraceConfigDir = "/user/cluster-info/datatrace-config"
+	// DataTraceCmProfilingSwitchKey is the key in the configuration map for enabling profiling switch
+	DataTraceCmProfilingSwitchKey = "profilingSwitch"
+)
+
+const (
 	// FailureCountThresholdForRestart threshold number of consecutive send failures for restart dp
 	FailureCountThresholdForRestart = 15
 	// FailureCountThresholdForReRegistry threshold number of consecutive send failures for reRegistry to kubelet

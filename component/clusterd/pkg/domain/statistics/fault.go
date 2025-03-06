@@ -48,7 +48,7 @@ func LoadFaultFromCM() error {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// If there are no faults in the cluster, cm does not exist
-			hwlog.RunLog.Warnf("cm <%s> does not exist, skip load in cache", constant.StatisticFaultCMName)
+			hwlog.RunLog.Warnf("cm <%s> does not exist, skip loading in cache", constant.StatisticFaultCMName)
 			return nil
 		}
 		hwlog.RunLog.Errorf("get cm <%s> failed, error: %v", constant.StatisticFaultCMName, err)

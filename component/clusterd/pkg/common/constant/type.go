@@ -101,14 +101,14 @@ type JobNotifyMsg struct {
 
 // JobStatistic job statistic information
 type JobStatistic struct {
-	K8sJobID            string `json:"ID"`                 // k8s job id
+	K8sJobID            string `json:"id"`                 // k8s job id
 	CustomJobID         string `json:"customID,omitempty"` // custom job id
 	CardNums            int64  `json:"cardNum,omitempty"`
-	PodFirstRunningTime int64  `json:"PodFirstRunTime,omitempty"`
-	StopTime            int64  `json:"StopTime,omitempty"` // stop time when job failed or complete
-	PodLastRunningTime  int64  `json:"PodLastRunTime,omitempty"`
-	PodLastFaultTime    int64  `json:"PodLastFaultTime,omitempty"`
-	PodFaultTimes       int64  `json:"PodFaultTimes,omitempty"`
+	PodFirstRunningTime int64  `json:"podFirstRunTime,omitempty"`
+	StopTime            int64  `json:"stopTime,omitempty"` // stop time when job failed or complete
+	PodLastRunningTime  int64  `json:"podLastRunTime,omitempty"`
+	PodLastFaultTime    int64  `json:"podLastFaultTime,omitempty"`
+	PodFaultTimes       int64  `json:"podFaultTimes,omitempty"`
 	Status              string `json:"-"`
 	Name                string `json:"-"`
 	NameSpace           string `json:"-"`
@@ -455,5 +455,5 @@ type FaultNum struct {
 	DevFaultNum        int `json:"-"`
 	DevNetworkFaultNum int `json:"-"`
 	NodeFaultNum       int `json:"-"`
-	PubFaultNum        int `json:"PublicFaultNum"`
+	PubFaultNum        int `json:"publicFaultNum"`
 }

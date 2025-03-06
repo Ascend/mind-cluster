@@ -16,6 +16,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
+	"clusterd/pkg/application/pingmesh"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/application/statistics"
@@ -57,10 +58,12 @@ func startInformer(ctx context.Context) {
 	// starting informer requires after adding processing functions
 	addResourceFunc()
 	addJobFunc()
+	kube.AddNodeFunc(constant.PingMesh, pingmesh.NodeCollector)
 	kube.InitCMInformer()
 	kube.InitPubFaultCMInformer()
 	kube.InitPodAndNodeInformer()
 	kube.InitPodGroupInformer()
+	go pingmesh.TickerCheckSuperPodDevice(ctx)
 	// specific functions requires after informer
 	addFuncAfterInformer()
 
@@ -136,7 +139,8 @@ func initGrpcServer(ctx context.Context) {
 		grpc.UnaryInterceptor(limitQPS)})
 	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
 	pubFaultSvc := pubfaultsvc.NewPubFaultService(ctx)
-	if err := server.Start(recoverService, pubFaultSvc); err != nil {
+	dataTraceSvc := &service.ProfilingSwitchManager{}
+	if err := server.Start(recoverService, pubFaultSvc, dataTraceSvc); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
 }

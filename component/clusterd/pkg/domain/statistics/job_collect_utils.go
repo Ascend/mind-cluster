@@ -56,7 +56,7 @@ func (j *JobStcMgr) LoadConfigMapToCache(namespace, cmName string) {
 	cmData, err := kube.GetConfigMap(cmName, namespace)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			hwlog.RunLog.Infof("job Statistic ConfigMap %s in namespace %s not found, skip load in cache",
+			hwlog.RunLog.Infof("job Statistic ConfigMap %s in namespace %s not found, skip loading in cache",
 				cmName, namespace)
 			return
 		}
@@ -229,7 +229,7 @@ func (j *JobStcMgr) DeleteJobStatistic(jobKey string) {
 		hwlog.RunLog.Debugf("job Statistic cache is empty, skip delete job %s statistc", jobKey)
 		return
 	}
-	hwlog.RunLog.Debugf("delete jobStc, current job Status: %s, jobStc Key: %s",
+	hwlog.RunLog.Infof("delete jobStc, current job Status: %s, jobStc Key: %s",
 		jobInfo.Status, jobKey)
 	//  update the stop time if stopTime not exist
 	if jobStc.StopTime == 0 {

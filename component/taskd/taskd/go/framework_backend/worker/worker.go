@@ -15,12 +15,12 @@
 // Package worker for taskd worker backend
 package worker
 
-// NewTaskDWorker return a taskd worker instance
+// NewTaskDWorker return taskd worker instance
 func NewTaskDWorker(rankId int) *BaseWorker {
 	return &BaseWorker{RankId: rankId}
 }
 
-// BaseWorker the class of taskd worker backend
+// BaseWorker the class taskd worker backend
 type BaseWorker struct {
 	RankId int
 }

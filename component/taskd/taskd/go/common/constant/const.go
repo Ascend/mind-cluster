@@ -15,6 +15,11 @@
 // Package constant a package for constant
 package constant
 
+import (
+	"sync"
+	"time"
+)
+
 const (
 	// LogFilePathEnv for log file path environment
 	LogFilePathEnv = "TASKD_LOG_PATH"
@@ -34,3 +39,85 @@ const (
 	// DefaultMaxLineLength max line length in log
 	DefaultMaxLineLength = 1023
 )
+
+const (
+	// TaskThreadHold the threshold of task queue
+	TaskThreadHold = 0.8
+	// DiskUsageCheckInterval the interval between each check
+	DiskUsageCheckInterval = 60
+)
+
+const (
+	// DefaultBufferSizeInBytes default buffer size in bytes
+	DefaultBufferSizeInBytes = 2 * 1024
+	// SizeLimitPerProfilingFile the size of each profiling
+	SizeLimitPerProfilingFile = 10 * 1024 * 1024
+	// BytesPerMB default bytes per in 1 MB
+	BytesPerMB = 1024 * 1024
+	// DefaultDiskUpperLimitInMB the initial size of upper limit
+	DefaultDiskUpperLimitInMB = 5 * 1024
+	// LeastBufferSize is the buffer size for flush file
+	LeastBufferSize = 4096
+	// MaxCacheRecords if the cache num is more than MaxCacheRecords, will flush to file
+	MaxCacheRecords = 500
+	// CheckProfilingCacheInterval every interval to check cache
+	CheckProfilingCacheInterval = 5 * time.Second
+	// DomainCheckInterval the interval between each check of domain change
+	DomainCheckInterval = 2 * time.Second
+	// ProfilingFileMode the mode of profiling file
+	ProfilingFileMode = 0644
+	// ProfilingDirMode the mode of profiling directory
+	ProfilingDirMode = 0755
+
+	// NumberOfParts the number of parts
+	NumberOfParts = 5
+	// MinProfilingFileNum the number of profiling file to reserve
+	MinProfilingFileNum = 3
+	// TenBase is 10 base number
+	TenBase = 10
+	// BitSize64 is the 64 bit size
+	BitSize64 = 64
+	// PathLengthLimit is the max length of path
+	PathLengthLimit = 1024
+	// DefaultRecordLength the default length of records to estimate the size of buffer
+	DefaultRecordLength = 200
+)
+
+const (
+	// TaskBufferSize is the buffer size for each rank
+	TaskBufferSize = 20
+)
+
+const (
+	// TaskUidKey is the uid of acjob which is in env wrote by ascend-operator
+	TaskUidKey = "MINDX_TASK_ID"
+	// ProfilingBaseDir is the path store all profiling data
+	ProfilingBaseDir = "/user/cluster-info/profiling"
+	// MsptiLibPath the path of mspti
+	// MsptiLibPath the path of mspti so need to consider other path by user
+	MsptiLibPath = "/usr/local/Ascend/ascend-toolkit/latest/lib64/"
+	// ProfilingSwitchFilePath the path of the switch controller, wrote by device-plugin
+	ProfilingSwitchFilePath = "/user/cluster-info/datatrace-config/profilingSwitch"
+	// LineSeperator is the line separator for each record
+	LineSeperator = '\n'
+)
+
+const (
+	// DefaultDomainName default domain name
+	DefaultDomainName = "default"
+	// CommunicationDomainName communication domain name
+	CommunicationDomainName = "communication"
+	// SwitchOFF off status
+	SwitchOFF = "off"
+	// SwitchON on status
+	SwitchON = "on"
+)
+
+// MuMark mutex locker for marker
+var MuMark sync.Mutex
+
+// MuApi mutex locker for api
+var MuApi sync.Mutex
+
+// MuKernal mutex locker for kernel
+var MuKernal sync.Mutex

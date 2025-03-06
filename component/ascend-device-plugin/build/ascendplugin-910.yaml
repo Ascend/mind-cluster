@@ -116,6 +116,8 @@ spec:
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
+          - name: data-trace-file-dir
+            mountPath: /user/cluster-info/datatrace-config
         env:
           - name: NODE_NAME
             valueFrom:
@@ -139,6 +141,10 @@ spec:
           hostPath:
             path: /var/log/mindx-dl/devicePlugin
             type: Directory
+        - name: data-trace-file-dir
+          hostPath:
+            path: /user/cluster-info/datatrace-config
+            type: DirectoryOrCreate
         - name: tmp
           hostPath:
             path: /tmp

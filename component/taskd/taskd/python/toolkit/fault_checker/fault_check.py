@@ -10,9 +10,9 @@ import time
 from taskd.python.toolkit.config.path import TORCH_EXTENSIONS_CACHE_DIR
 from taskd.python.toolkit.constants import constants
 from taskd.python.toolkit.constants.constants import (WATCHDOG_ENV, WATCHDOG_ON,
-                                                                              WATCHDOG_OFF, ENABLE_RANKTABLE_ENV)
+                                                      WATCHDOG_OFF, ENABLE_RANKTABLE_ENV)
 from taskd.python.toolkit.validator.file_process import safe_get_file_info
-from taskd.python.toolkit.logger.log import run_log
+from taskd.python.utils.log import run_log
 
 
 def clean_before_restart():

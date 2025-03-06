@@ -64,15 +64,18 @@ def get_required_packages():
     lines = [line.strip('\n') for line in lines]
     return lines
 
+
 clean()
 build_dependencies()
 required_packages = get_required_packages()
 
 package_data = {
     '':
-        ['fault_checker/**',
-         'python/**',
-         '*.yaml',
+        [
+            'api/**',
+            'python/**',
+            '*.yaml',
+            'python/cython_api/libs/*.so',
         ]
 }
 
@@ -83,7 +86,7 @@ setup(
     description='Ascend MindCluster taskd is a new library for training management',
     python_requires='>=3.7',
     install_requires=required_packages,
-    ext_requires={"torch":["torch"]},
+    ext_requires={"torch": ["torch"]},
     package_data=package_data,
     packages=find_packages(exclude=["**test**"]),
     include_package_data=True,

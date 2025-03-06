@@ -8,9 +8,13 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/superpod"
 )
 
 var (
@@ -89,5 +93,41 @@ func TestCheckConfigMapIsNodeInfo(t *testing.T) {
 		defer mockMatchedTrue.Reset()
 		nodeCheck := checkConfigMapIsNodeInfo(obj)
 		convey.So(nodeCheck, convey.ShouldBeTrue)
+	})
+}
+
+func TestInitClusterDevice(t *testing.T) {
+	convey.Convey("Test initClusterDevice", t, func() {
+		fakeNodes := []*v1.Node{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-node-1",
+				},
+			},
+		}
+		patchGetNodes := gomonkey.ApplyFunc(getNodesFromInformer, func() []*v1.Node {
+			return fakeNodes
+		})
+		defer patchGetNodes.Reset()
+
+		var calledSaveNode bool
+		patchGetNodeDevice := gomonkey.ApplyFunc(superpod.GetNodeDeviceAndSuperPodID,
+			func(node *v1.Node) (*api.NodeDevice, string) {
+				return &api.NodeDevice{
+					NodeName: node.Name,
+				}, "test-superpod-id"
+			})
+		defer patchGetNodeDevice.Reset()
+
+		patchSaveNode := gomonkey.ApplyFunc(superpod.SaveNode,
+			func(superPodID string, node *api.NodeDevice) {
+				calledSaveNode = true
+				convey.So(superPodID, convey.ShouldEqual, "test-superpod-id")
+				convey.So(node.NodeName, convey.ShouldEqual, "test-node-1")
+			})
+		defer patchSaveNode.Reset()
+
+		initClusterDevice()
+		convey.So(calledSaveNode, convey.ShouldBeTrue)
 	})
 }
