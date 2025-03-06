@@ -88,10 +88,14 @@ func (c *Manager) initWatcher(config *Config) {
 }
 
 func (c *Manager) initHandler(config *Config) {
+	var handleFuncs []resulthandler.HandleFunc
 	fw := filewriter.New(&filewriter.Config{
 		Path:   consts.ResultRootDir + "/" + c.nodeName,
 		MaxAge: config.ResultMaxAge,
 	})
+	if fw != nil {
+		handleFuncs = append(handleFuncs, fw.HandlePingMeshInfo)
+	}
 	reporter := cmreporter.New(&cmreporter.Config{
 		Client:    config.KubeClient,
 		Namespace: consts.ConfigmapNamespace,
@@ -101,7 +105,10 @@ func (c *Manager) initHandler(config *Config) {
 		},
 		NodeName: c.nodeName,
 	})
-	c.handler = resulthandler.NewAggregatedHandler(fw.HandlePingMeshInfo, reporter.HandlePingMeshInfo)
+	if reporter != nil {
+		handleFuncs = append(handleFuncs, reporter.HandlePingMeshInfo)
+	}
+	c.handler = resulthandler.NewAggregatedHandler(handleFuncs...)
 }
 
 // Run start the pingmesh controller
