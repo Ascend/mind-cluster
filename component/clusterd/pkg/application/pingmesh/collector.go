@@ -15,7 +15,7 @@ import (
 func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
 	superPodDevice, superPodID := superpod.GetNodeDeviceAndSuperPodID(newNodeInfo)
 	if superPodID == "" || superPodDevice == nil {
-		hwlog.RunLog.Warnf("discard illegal super pod device info, superPodID=%s.", superPodID)
+		hwlog.RunLog.Debugf("discard illegal super pod device info, superPodID=%s.", superPodID)
 		return
 	}
 	switch operator {

@@ -87,7 +87,7 @@ func initSuperPodsCM() {
 		checkCode := util.MakeDataHash(superPodDevice)
 		err := updateSuperPodDeviceCM(superPodDevice, checkCode, true)
 		if err != nil {
-			hwlog.RunLog.Errorf("init cm error, superPodID=%s, err=%v",
+			hwlog.RunLog.Debugf("init cm error, superPodID=%s, err=%v",
 				superPodDevice.SuperPodID, err)
 			failedTasks = append(failedTasks, task{
 				superPodID: superPodDevice.SuperPodID,
@@ -116,7 +116,7 @@ func handleUpdate(superPodID string, device *api.SuperPodDevice) error {
 		return nil
 	}
 	checkCode := util.MakeDataHash(device)
-	log, exist := publishMgr.publishLogMap[checkCode]
+	log, exist := publishMgr.publishLogMap[superPodID]
 	if exist && log.preCheckCode == checkCode {
 		hwlog.RunLog.Debugf("super pod device checkCode not change, superPodID=%s", checkCode)
 		return nil

@@ -86,7 +86,7 @@ func SaveNode(superPodID string, node *api.NodeDevice) {
 		return
 	}
 	if len(superPodID) == 0 {
-		hwlog.RunLog.Warnf("reject add node device with empty superPodID, nodeName=%s",
+		hwlog.RunLog.Debugf("reject add node device with empty superPodID, nodeName=%s",
 			node.NodeName)
 		return
 	}
@@ -131,23 +131,23 @@ func DeleteNode(superPodID string, nodeName string) {
 // GetNodeDeviceAndSuperPodID parse NodeDevice and superPodID from node
 func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 	if node == nil {
-		hwlog.RunLog.Error("empty node")
+		hwlog.RunLog.Warn("node is nil")
 		return nil, ""
 	}
 	if len(node.Name) == 0 {
-		hwlog.RunLog.Error("empty node name")
+		hwlog.RunLog.Debugf("empty node name")
 		return nil, ""
 	}
 	superPodID, hasSuperPodIDKey := node.Annotations[superPodIDKey]
 	superPodID = strings.Trim(superPodID, " ")
 	if !hasSuperPodIDKey || len(superPodID) == 0 {
-		hwlog.RunLog.Errorf("empty super pod id, nodeName=%s", node.Name)
+		hwlog.RunLog.Debugf("empty super pod id, nodeName=%s", node.Name)
 		return nil, ""
 	}
 	baseDeviceMap := make(map[string]*api.NpuBaseInfo)
 	deviceStr, hasDeviceKey := node.Annotations[deviceKey]
 	if !hasDeviceKey || len(deviceStr) == 0 {
-		hwlog.RunLog.Errorf("empty device info, nodeName=%s", node.Name)
+		hwlog.RunLog.Debugf("empty device info, nodeName=%s", node.Name)
 		return nil, superPodID
 	}
 	if err := json.Unmarshal([]byte(deviceStr), &baseDeviceMap); err != nil {
