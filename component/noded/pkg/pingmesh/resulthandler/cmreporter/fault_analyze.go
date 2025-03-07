@@ -91,11 +91,11 @@ func (f *faultReporter) HandlePingMeshInfo(res *types.HccspingMeshResult) error 
 	}
 
 	fault, change := f.checkFault(lastFault, cardStates)
+	f.lastFault = fault
 	if !change {
 		return nil
 	}
 	hwlog.RunLog.Infof("fault change, cur Fault:%v", fault)
-	f.lastFault = fault
 	return f.reportFault()
 }
 
@@ -144,6 +144,7 @@ func (f *faultReporter) getLastFault() (*api.PubFaultInfo, error) {
 	if f.lastFault != nil {
 		return f.lastFault, nil
 	}
+	hwlog.RunLog.Infof("try to get last fault from configmap")
 	cm, err := f.client.GetConfigMap(f.name, consts.ConfigmapNamespace)
 	if errors.IsNotFound(err) {
 		return nil, nil
@@ -151,10 +152,17 @@ func (f *faultReporter) getLastFault() (*api.PubFaultInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	faultInfo, ok := cm.Data[faultConfigmapKey]
+	if !ok {
+		hwlog.RunLog.Warnf("fault configmap not found key %s", faultConfigmapKey)
+		return nil, nil
+	}
+
 	lastFault := &api.PubFaultInfo{}
-	err = json.Unmarshal([]byte(cm.Data[faultConfigmapKey]), lastFault)
+	err = json.Unmarshal([]byte(faultInfo), lastFault)
 	if err != nil {
-		return nil, err
+		hwlog.RunLog.Warnf("unmarshal fault info failed, err:%v, will ignore last fault info", err)
+		return nil, nil
 	}
 	return lastFault, nil
 }
