@@ -203,6 +203,10 @@ func TestHotResetHandler(t *testing.T) {
 				devInfo *common.DevFaultInfo, npuDev *common.NpuDevice) {
 				return
 			}).ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
+		mockHandleResetProcess.ApplyPrivateMethod(manager, "canBeReset",
+			func(dev *common.DevFaultInfo) (bool, error) {
+				return true, nil
+			})
 		defer mockHandleResetProcess.Reset()
 		mockHandleResetProcess.ApplyPrivateMethod(manager, "hotResetTryOutBand",
 			func(_ *HwAscend910Manager, devs []*common.NpuDevice) {
@@ -596,6 +600,13 @@ func TestGetAssociatedLogicIDs(t *testing.T) {
 // TestTryResetDevice an ut for function tryResetDevice
 func TestTryResetDevice(t *testing.T) {
 	manager := createFake910Manager()
+	patch := gomonkey.ApplyFunc(AddBusyDev, func(cardID, deviceID int32) {
+		return
+	})
+	patch.ApplyFunc(AddResetCnt, func(cardID, deviceID int32) {
+		return
+	})
+	defer patch.Reset()
 	convey.Convey("exec ut function tryResetDevice", t, func() {
 		err := manager.tryResetDevice(0, 0)
 		convey.So(err, convey.ShouldBeNil)
@@ -1370,10 +1381,6 @@ func TestGetNeedResetDevMapForA3(t *testing.T) {
 // TestCanResetDevice test the function canResetDevice
 func TestCanResetDevice(t *testing.T) {
 	manager := createFake910Manager()
-	patch := gomonkey.ApplyFunc(AddBusyDev, func(cardID, deviceID int32) {
-		return
-	})
-	defer patch.Reset()
 	convey.Convey("test canResetDevice", t, func() {
 		convey.Convey("01-dev busy, should return false", func() {
 			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)

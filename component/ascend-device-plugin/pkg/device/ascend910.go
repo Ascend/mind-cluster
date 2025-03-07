@@ -181,6 +181,11 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		if !hnm.canResetDevice(dev.CardID, dev.DeviceID) {
 			continue
 		}
+		canReset, err := hnm.canBeReset(tempFaultInfo)
+		if err != nil || !canReset {
+			hwlog.RunLog.Infof("device %v cannot reset, it is busy, err: %v", tempFaultInfo.LogicId, err)
+			continue
+		}
 		if tempFaultInfo.Policy == common.ResetError || tempFaultInfo.Policy == common.FreeResetError {
 			hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 				"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
@@ -251,15 +256,6 @@ func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFaultInfo *common.DevFa
 // startUpHotReset starts hot reset goroutine when chips are free
 func (hnm *HwAscend910Manager) startUpHotReset(classifyDevs map[string][]*common.NpuDevice,
 	tempFaultInfo *common.DevFaultInfo, dev *common.NpuDevice) error {
-	canReset, err := hnm.canBeReset(tempFaultInfo)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to find if device is active, err: %v", err)
-		return err
-	}
-	if !canReset {
-		hwlog.RunLog.Debug("At least one device is busy on ring")
-		return nil
-	}
 	hwlog.RunLog.Infof("start handling fault: %s", tempFaultInfo.Policy)
 	inResetDev = tempFaultInfo.LogicId
 	hnm.handleResetProcess(classifyDevs, tempFaultInfo, dev)
@@ -1756,8 +1752,6 @@ func (hnm *HwAscend910Manager) canResetDevice(cardID, deviceID int32) bool {
 		return false
 	}
 	hwlog.RunLog.Infof("device can be reset, cardID %v, deviceID %v", cardID, deviceID)
-	AddResetCnt(cardID, deviceID)
-	AddBusyDev(cardID, deviceID)
 	return true
 }
 
@@ -2020,6 +2014,8 @@ func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheck
 }
 
 func (hnm *HwAscend910Manager) tryResetDevice(cardId, deviceId int32) error {
+	AddResetCnt(cardId, deviceId)
+	AddBusyDev(cardId, deviceId)
 	var realError error
 	for i := 0; i < common.ResetRetryTimes; i++ {
 		hwlog.RunLog.Infof("start to execute cardId %d reset", cardId)
