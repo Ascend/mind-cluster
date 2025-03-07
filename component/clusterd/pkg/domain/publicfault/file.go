@@ -6,7 +6,7 @@ package publicfault
 import (
 	"encoding/json"
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -54,8 +54,8 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 	}
 	var pubFaultCfgFile pubFaultCfgFromFile
 	if err = json.Unmarshal(fileData, &pubFaultCfgFile); err != nil {
-		hwlog.RunLog.Errorf("unmarshal from <%s> failed, error: %v", path.Base(filePath), err)
-		return fmt.Errorf("unmarshal from <%s> failed", path.Base(filePath))
+		hwlog.RunLog.Errorf("unmarshal from <%s> failed, error: %v", filepath.Base(filePath), err)
+		return fmt.Errorf("unmarshal from <%s> failed", filepath.Base(filePath))
 	}
 
 	PubFaultResource = util.RemoveDuplicates(pubFaultCfgFile.Resource)
@@ -71,6 +71,7 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.NotHandleFaultCodes) {
 		PubFaultCodeCfg.NotHandleFaultCodes[code] = struct{}{}
 	}
+	hwlog.RunLog.Infof("load fault config from <%s> success", filepath.Base(filePath))
 	return nil
 }
 

@@ -49,7 +49,7 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
 				hwlog.RunLog.Infof("start trying load public fault config from file %s",
-					constant.PubFaultCustomizationName)
+					constant.PubFaultCodeFileName)
 				publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCodeFilePath)
 			}
 			UpdateLimiter()
@@ -70,7 +70,6 @@ func tryLoadPubFaultCfgFromFile() {
 	for i := 0; i < retryTime; i++ {
 		if err := publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCustomizationPath); err == nil {
 			loadSuc = true
-			hwlog.RunLog.Infof("load fault config from <%s> success", constant.PubFaultCustomizationName)
 			break
 		}
 		time.Sleep(1 * time.Second)
@@ -82,6 +81,5 @@ func tryLoadPubFaultCfgFromFile() {
 			hwlog.RunLog.Errorf("load from <%s> failed, error: %v", constant.PubFaultCodeFileName, err)
 			return
 		}
-		hwlog.RunLog.Infof("load from <%s> success", constant.PubFaultCodeFileName)
 	}
 }

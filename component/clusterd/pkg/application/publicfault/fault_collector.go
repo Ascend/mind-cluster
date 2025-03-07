@@ -22,8 +22,9 @@ var pubFaultInitOnce sync.Once
 // PubFaultCollector collect public fault info to cache
 func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 	pubFaultInitOnce.Do(func() {
+		hwlog.RunLog.Infof("start trying load public fault config from file %s",
+			constant.PubFaultCustomizationPath)
 		if err := publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCustomizationPath); err == nil {
-			hwlog.RunLog.Infof("load fault config from <%s> success", constant.PubFaultCustomizationName)
 			UpdateLimiter()
 			return
 		}
@@ -34,7 +35,6 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 		for i := 0; i < retryTime; i++ {
 			var err error
 			if err = publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCodeFilePath); err == nil {
-				hwlog.RunLog.Infof("load fault config from <%s> success", constant.PubFaultCodeFileName)
 				break
 			}
 			hwlog.RunLog.Warnf("load fault config from <%s> failed, error: %v",
