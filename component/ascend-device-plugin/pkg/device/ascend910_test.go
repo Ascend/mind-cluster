@@ -1646,7 +1646,7 @@ func TestCanContinueGraceProcess(t *testing.T) {
 	manager := createFake910Manager()
 	taskName := "mockTaskName"
 	convey.Convey("test canContinueGraceProcess", t, func() {
-		faultDeviceLogicIdMap := map[int32]int32{1: 2, 2: 0}
+		faultDeviceLogicIdMap := map[int32]int32{chipPhyID1: 1, chipPhyID2: 0}
 		convey.Convey("01-number of all process is zero, should return true", func() {
 			ret := manager.canContinueGraceProcess(faultDeviceLogicIdMap, taskName, true)
 			convey.So(ret, convey.ShouldBeTrue)
