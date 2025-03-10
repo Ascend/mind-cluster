@@ -493,7 +493,7 @@ func TestCheckNodeResetInfo(t *testing.T) {
 	flag := false
 	convey.Convey("test checkNodeResetInfo", t, func() {
 		patch := gomonkey.ApplyFunc(device.WriteResetInfo,
-			func(resetInfo device.ResetInfo, writeMode device.WriteMode) {
+			func(resetInfo device.ResetInfo, writeMode device.WriteMode, update bool) {
 				flag = true
 			})
 		patch.ApplyFuncReturn(checkOverRetryDev, device.ResetInfo{})
@@ -600,15 +600,7 @@ func TestSetContainerdClient(t *testing.T) {
 // TestCheckOverRetryDev test the function checkOverRetryDev
 func TestCheckOverRetryDev(t *testing.T) {
 	const id = 0
-	const numTwo, numOne, numZero = 2, 1, 0
-	groupDev := map[string][]*common.NpuDevice{
-		common.Ascend910: {
-			&common.NpuDevice{
-				PhyID:  int32(id),
-				Health: v1beta1.Healthy,
-			},
-		},
-	}
+	const numOne, numZero = 1, 0
 	convey.Convey("test checkOverRetryDev", t, func() {
 		input := device.ResetInfo{
 			ThirdPartyResetDevs: []device.ResetDevice{{
@@ -619,13 +611,13 @@ func TestCheckOverRetryDev(t *testing.T) {
 		convey.Convey("01-over retry time, dev should be add to manualDev", func() {
 			patch1 := gomonkey.ApplyFuncReturn(device.GetResetCnt, common.MaxResetTimes+numOne)
 			defer patch1.Reset()
-			ret := checkOverRetryDev(input, groupDev)
-			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numTwo)
+			ret := checkOverRetryDev(input)
+			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numOne)
 		})
 		convey.Convey("02-not over retry times, dev be add to third party", func() {
 			patch1 := gomonkey.ApplyFuncReturn(device.GetResetCnt, common.MaxResetTimes-numOne)
 			defer patch1.Reset()
-			ret := checkOverRetryDev(input, groupDev)
+			ret := checkOverRetryDev(input)
 			convey.So(len(ret.ManualResetDevs), convey.ShouldEqual, numZero)
 		})
 	})

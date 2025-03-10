@@ -49,14 +49,14 @@ func TestWriteResetInfo(t *testing.T) {
 		convey.Convey("01-write cache success, flag should be true", func() {
 			patch1 := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, nil)
 			defer patch1.Reset()
-			WriteResetInfo(ResetInfo{}, WMOverwrite)
+			WriteResetInfo(ResetInfo{}, WMOverwrite, true)
 			convey.So(flag, convey.ShouldBeTrue)
 		})
 		convey.Convey("02-json marshal failed, flag should be false", func() {
 			patch1 := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, resettoolTestErr)
 			defer patch1.Reset()
 			flag = false
-			WriteResetInfo(ResetInfo{}, WMOverwrite)
+			WriteResetInfo(ResetInfo{}, WMOverwrite, true)
 			convey.So(flag, convey.ShouldBeFalse)
 		})
 	})
@@ -153,7 +153,7 @@ func TestReadResetNodeAnnotation(t *testing.T) {
 				PhyID: id0,
 			},
 		},
-	}, WMOverwrite)
+	}, WMOverwrite, true)
 	info := ReadResetInfo()
 	if len(info.ManualResetDevs) == 0 {
 		t.Errorf("devs length expected greater than zero, but got zero")

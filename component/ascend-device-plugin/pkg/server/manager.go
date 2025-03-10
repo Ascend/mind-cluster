@@ -1269,8 +1269,8 @@ func (hdm *HwDevManager) checkNodeResetInfo() {
 	}
 	newResetInfo.ThirdPartyResetDevs = newThirdPartyResetDevs
 	newResetInfo.ManualResetDevs = newManualResetDevs
-	newResetInfo = checkOverRetryDev(newResetInfo, hdm.groupDevice)
-	device.WriteResetInfo(newResetInfo, device.WMOverwrite)
+	newResetInfo = checkOverRetryDev(newResetInfo)
+	device.WriteResetInfo(newResetInfo, device.WMOverwrite, true)
 }
 
 func flattenMap(m map[string][]*common.NpuDevice) []*common.NpuDevice {
@@ -1309,28 +1309,17 @@ func checkDeviceStatus(failDevs []device.ResetDevice,
 	return newDevs, isChange
 }
 
-func checkOverRetryDev(info device.ResetInfo, groupDev map[string][]*common.NpuDevice) device.ResetInfo {
+func checkOverRetryDev(info device.ResetInfo) device.ResetInfo {
 	ret := device.ResetInfo{
 		ThirdPartyResetDevs: make([]device.ResetDevice, 0, len(info.ThirdPartyResetDevs)),
 		ManualResetDevs:     info.ManualResetDevs,
 	}
-	allDevs := flattenMap(groupDev)
 	for _, dev := range info.ThirdPartyResetDevs {
 		if device.GetResetCnt(dev.CardId, dev.DeviceId) <= common.MaxResetTimes {
 			ret.ThirdPartyResetDevs = append(ret.ThirdPartyResetDevs, dev)
 			continue
 		}
 		ret.ManualResetDevs = append(ret.ManualResetDevs, dev)
-	}
-	for _, dev := range allDevs {
-		if device.GetResetCnt(dev.CardID, dev.DeviceID) > common.MaxResetTimes {
-			ret.ManualResetDevs = append(ret.ManualResetDevs, device.ResetDevice{
-				CardId:   dev.CardID,
-				DeviceId: dev.DeviceID,
-				PhyID:    dev.PhyID,
-				LogicID:  dev.LogicID,
-			})
-		}
 	}
 	return ret
 }

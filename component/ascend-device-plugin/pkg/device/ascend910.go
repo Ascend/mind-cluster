@@ -1827,20 +1827,20 @@ func (hnm *HwAscend910Manager) scanDeviceForThirdParty(failDevs []ResetDevice) {
 }
 
 func (hnm *HwAscend910Manager) execRescan(failDevs []ResetDevice) {
+	scanFailDevs := make([]ResetDevice, 0, len(failDevs))
+	sucDevs := make([]ResetDevice, 0, len(failDevs))
 	for _, dev := range failDevs {
 		if err := hnm.GetDmgr().RescanSoc(dev.CardId, dev.DeviceId); err != nil {
 			hwlog.RunLog.Errorf("fail to rescan cardID %v deviceID %v, error: %v",
 				dev.CardId, dev.DeviceId, err)
-			WriteResetInfo(ResetInfo{
-				ManualResetDevs: []ResetDevice{dev},
-			}, WMAppend)
+			scanFailDevs = append(scanFailDevs, dev)
 			continue
 		}
 		FreeBusyDev(dev.CardId, dev.DeviceId)
-		WriteResetInfo(ResetInfo{
-			ThirdPartyResetDevs: []ResetDevice{dev},
-		}, WMDelete)
+		sucDevs = append(sucDevs, dev)
 	}
+	WriteResetInfo(ResetInfo{ThirdPartyResetDevs: failDevs}, WMDelete, false)
+	WriteResetInfo(ResetInfo{ManualResetDevs: scanFailDevs}, WMAppend, true)
 }
 
 // fillResetDevs complement phyID and associatedCardID
@@ -1895,7 +1895,7 @@ func (hnm *HwAscend910Manager) updateResetInfo(failDevs, sucDevs []ResetDevice) 
 	} else {
 		resetInfo.ManualResetDevs = append(resetInfo.ManualResetDevs, filledFailDevs...)
 	}
-	WriteResetInfo(resetInfo, WMOverwrite)
+	WriteResetInfo(resetInfo, WMOverwrite, true)
 }
 
 func (hnm *HwAscend910Manager) resetDeviceOutBand(cardId, deviceId int32) error {

@@ -1005,7 +1005,7 @@ func TestExecRescan(t *testing.T) {
 	devs := []ResetDevice{
 		{CardId: int32(id1), DeviceId: int32(id2)},
 	}
-	patch := gomonkey.ApplyFunc(WriteResetInfo, func(resetInfo ResetInfo, writeMode WriteMode) {
+	patch := gomonkey.ApplyFunc(WriteResetInfo, func(resetInfo ResetInfo, writeMode WriteMode, update bool) {
 		return
 	})
 	flag := false
@@ -1450,7 +1450,7 @@ func TestUpdateResetInfo(t *testing.T) {
 		patch := gomonkey.ApplyFuncReturn(GetResetInfoMgr, ResetInfoMgr{})
 		patch.ApplyFuncReturn(ReadResetInfo, ResetInfo{})
 		ri := ResetInfo{}
-		patch.ApplyFunc(WriteResetInfo, func(resetInfo ResetInfo, writeMode WriteMode) {
+		patch.ApplyFunc(WriteResetInfo, func(resetInfo ResetInfo, writeMode WriteMode, update bool) {
 			ri = resetInfo
 			return
 		})

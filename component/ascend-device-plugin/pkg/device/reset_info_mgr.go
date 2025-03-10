@@ -101,9 +101,9 @@ func GetResetInfoMgr() *ResetInfoMgr {
 }
 
 // WriteResetInfo write reset info into cache and node annotation
-func WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode) {
+func WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode, updateNode bool) {
 	mgr.mu.Lock()
-	hwlog.RunLog.Infof("write reset info, current: %v, new: %v", *mgr.resetInfo, resetInfo)
+	hwlog.RunLog.Infof("write reset info, current: %v, new: %v, mode: %v", *mgr.resetInfo, resetInfo, writeMode)
 	mgr.resetInfo.ThirdPartyResetDevs = mergeFailDevs(mgr.resetInfo.ThirdPartyResetDevs,
 		resetInfo.ThirdPartyResetDevs, writeMode)
 	mgr.resetInfo.ManualResetDevs = mergeFailDevs(mgr.resetInfo.ManualResetDevs,
@@ -116,7 +116,9 @@ func WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode) {
 		return
 	}
 	mgr.mu.Unlock()
-	writeNodeAnnotation(string(dataBytes))
+	if updateNode {
+		writeNodeAnnotation(string(dataBytes))
+	}
 }
 
 // ReadResetInfo read reset info from cache
