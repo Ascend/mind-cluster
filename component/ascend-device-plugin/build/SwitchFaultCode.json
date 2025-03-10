@@ -2,7 +2,7 @@
   "NotHandleFaultCodes":[
     "[0x00f1fef5,155913,cpu,na]","[0x00f1fef5,155913,L2,na]","[0x08520003,na,L2,na]","[0x00f10509,132333,L2,na]",
     "[0x00f1fef5,155913,na,na]","[0x00f1fef5,155913,npu,na]","[0x00f1fef5,155914,L2,na]","[0x00f10509,132332,L2,na]",
-    "[0x00f1fef5,155912,L2,na]"
+    "[0x00f1fef5,155912,L2,na]","[0x00f1fef5,155915,cpu,na]","[0x00f1fef5,155915,npu,na]","[0x00f1fef5,155915,L2,na]"
   ],
   "SubHealthFaultCodes": [
     "[0x00f103b6,155908,na,na]","[0x00f10509,132332,cpu,na]","[0x00f1ff06,155910,na,na]","[0x00f10509,132332,npu,na]",
