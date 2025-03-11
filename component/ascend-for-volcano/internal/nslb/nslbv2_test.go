@@ -138,6 +138,22 @@ func buildScoreBestNPUNodesV206() scoreBestNPUNodesTest {
 	}
 }
 
+func buildScoreBestNPUNodesV207() scoreBestNPUNodesTest {
+	ssn := test.FakeNormalSSN(test.FakeConfigurations())
+	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex13)
+	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
+	test.AddJobInfoIntoSsn(ssn, fakeJob)
+	for _, task := range fakeJob.Tasks {
+		task.NodeName = ""
+	}
+	return scoreBestNPUNodesTest{
+		name:       "07-ScoreBestNPUNodes nslb 2.0 test, tor node num is enough for normal job",
+		ssn:        ssn,
+		torHandler: newTestTorHandler(ssn),
+		wantErr:    false,
+	}
+}
+
 func buildScoreBestNPUNodesV2TestCases() []scoreBestNPUNodesTest {
 	return []scoreBestNPUNodesTest{
 		buildScoreBestNPUNodesV201(),
@@ -146,6 +162,7 @@ func buildScoreBestNPUNodesV2TestCases() []scoreBestNPUNodesTest {
 		buildScoreBestNPUNodesV204(),
 		buildScoreBestNPUNodesV205(),
 		buildScoreBestNPUNodesV206(),
+		buildScoreBestNPUNodesV207(),
 	}
 }
 

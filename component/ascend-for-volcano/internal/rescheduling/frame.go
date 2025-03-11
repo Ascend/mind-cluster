@@ -54,7 +54,7 @@ func (reScheduler *ReScheduler) PreStartAction(env *plugin.ScheduleEnv, ssn *fra
 
 	reScheduler.initialize(env)
 	reScheduler.AddFaultNodeWithSession()
-	reScheduler.SynCacheFaultJobWithSession(ssn)
+	reScheduler.synCacheFaultJobWithSession(ssn)
 	reScheduler.SyncJobRemainRetryTimes(ssn)
 	reScheduler.SyncJobRecentRescheduleReason(ssn)
 	// 1. restart Fault Jobs that are recorded in cache

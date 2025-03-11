@@ -41,11 +41,11 @@ func (th *TorSingleLevelHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*
 	refreshScoreMap(nodes, scoreMap)
 	nodeMaps := util.ChangeNodesToNodeMaps(nodes)
 	klog.V(util.LogDebugLev).Infof("validNPUJob job is now use tor affinity")
-	return th.setSingleLayerTorAffinityJobNodesScore(task, nodeMaps, scoreMap)
+	return th.setSingleLayerTorJobNodesScore(task, nodeMaps, scoreMap)
 }
 
-// setSingleLayerTorAffinityJobNodesScore single layer switch networking rule
-func (th *TorSingleLevelHandler) setSingleLayerTorAffinityJobNodesScore(task *api.TaskInfo,
+// setSingleLayerTorJobNodesScore single layer switch networking rule
+func (th *TorSingleLevelHandler) setSingleLayerTorJobNodesScore(task *api.TaskInfo,
 	nodeMaps map[string]*api.NodeInfo, scoreMap map[string]float64) error {
 	if th == nil || !*th.Job.JobReadyTag {
 		err := errors.New(util.ArgumentError)
@@ -58,10 +58,7 @@ func (th *TorSingleLevelHandler) setSingleLayerTorAffinityJobNodesScore(task *ap
 			th.Job.Name, err)
 		*th.Job.JobReadyTag = false
 	}
-	if errGet := th.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
-	}
+	th.scoreBestNPUNodes(task, nodeMaps, scoreMap)
 	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
 	return err
 }

@@ -130,7 +130,10 @@ func TestReSchedulerPreStartAction(t *testing.T) {
 			if tt.ssn == nil {
 				return
 			}
-			reScheduler.SynCacheFaultJobWithSession(tt.ssn)
+			tt.ssn.Jobs["vcjob/pg0"].Tasks = map[api.TaskID]*api.TaskInfo{}
+			tt.ssn.Jobs["vcjob/pg0"].PodGroup.Labels = map[string]string{util.SinglePodTag: util.EnableFunc}
+			reScheduler.FaultJobs["vcjob/pg0"].PendingSessionNum = pendingTimes - 1
+			reScheduler.synCacheFaultJobWithSession(tt.ssn)
 		})
 	}
 }

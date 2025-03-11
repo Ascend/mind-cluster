@@ -90,16 +90,13 @@ func (th *TorHandlerV2) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *
 // setTorAffinityJobNodesScore nslb 2.0 rule
 func (th *TorHandlerV2) setTorAffinityJobNodesScore(task *api.TaskInfo,
 	nodeMaps map[string]*api.NodeInfo, scoreMap map[string]float64) error {
-	if th == nil || task == nil || len(nodeMaps) == 0 || scoreMap == nil || !*th.Job.JobReadyTag {
+	if !*th.Job.JobReadyTag {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes err: %s.", err)
 		return nil
 	}
 	defer func() {
-		if errGet := th.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-			// get suitable node failed
-			klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] failed[%s].", task.Name, util.SafePrint(errGet))
-		}
+		th.scoreBestNPUNodes(task, nodeMaps, scoreMap)
 	}()
 	if th.ServerList != nil {
 		return nil
@@ -215,9 +212,6 @@ func (th *TorHandlerV2) setNormalJobServerList(nTaskNum int) error {
 
 // setOneUnhealthySharedTor set 1  unhealthy shared tor attr
 func (th *TorHandlerV2) setOneUnhealthySharedTor(tor *plugin.Tor, serverNum int) {
-	if tor == nil {
-		return
-	}
 	t := initTempTor(tor, sharedTor, unhealthyTor)
 	tor.IsSharedTor = sharedTor
 	tor.IsHealthy = unhealthyTor

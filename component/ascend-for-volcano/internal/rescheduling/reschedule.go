@@ -280,14 +280,10 @@ func (reScheduler *ReScheduler) isDelayingJobTimeout(fJob *FaultJob) bool {
 	return false
 }
 
-// SynCacheFaultJobWithSession Synchronise FaultJobs in cache by updating the information using current session
-func (reScheduler *ReScheduler) SynCacheFaultJobWithSession(ssn *framework.Session) {
-	klog.V(util.LogInfoLev).Infof("enter SynCacheFaultJobWithSession...")
-	defer klog.V(util.LogInfoLev).Infof("leave SynCacheFaultJobWithSession...")
-	if reScheduler == nil {
-		klog.V(util.LogErrorLev).Infof("SynCacheFaultJobWithSession: %s, nil reScheduler", util.ArgumentError)
-		return
-	}
+// synCacheFaultJobWithSession Synchronise FaultJobs in cache by updating the information using current session
+func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Session) {
+	klog.V(util.LogInfoLev).Infof("enter synCacheFaultJobWithSession...")
+	defer klog.V(util.LogInfoLev).Infof("leave synCacheFaultJobWithSession...")
 	updatedFaultJobs := make(map[api.JobID]*FaultJob)
 	nowTime := time.Now().Unix()
 	for jobId, faultJob := range reScheduler.FaultJobs {
@@ -355,7 +351,7 @@ func (reScheduler *ReScheduler) SyncJobRemainRetryTimes(ssn *framework.Session) 
 	klog.V(util.LogInfoLev).Info("enter SynJobRemainRetryTimes...")
 	defer klog.V(util.LogInfoLev).Info("leave SynJobRemainRetryTimes...")
 	if reScheduler == nil {
-		klog.V(util.LogErrorLev).Infof("SynCacheFaultJobWithSession: %s, nil reScheduler", util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("synCacheFaultJobWithSession: %s, nil reScheduler", util.ArgumentError)
 		return
 	}
 

@@ -114,12 +114,22 @@ func buildScoreBestNPUNodes04() scoreBestNPUNodesTest {
 	}
 }
 
+func buildScoreBestNPUNodes05() scoreBestNPUNodesTest {
+	return scoreBestNPUNodesTest{
+		name:       "05-ScoreBestNPUNodes will return err when node is nil",
+		ssn:        &framework.Session{},
+		torHandler: TorHandler{},
+		wantErr:    true,
+	}
+}
+
 func buildScoreBestNPUNodesTestCases() []scoreBestNPUNodesTest {
 	return []scoreBestNPUNodesTest{
 		buildScoreBestNPUNodes01(),
 		buildScoreBestNPUNodes02(),
 		buildScoreBestNPUNodes03(),
 		buildScoreBestNPUNodes04(),
+		buildScoreBestNPUNodes05(),
 	}
 }
 
@@ -176,6 +186,58 @@ func TestTorHandlerV1CheckNodeNPUByTask(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.th.CheckNodeNPUByTask(tTask, tt.node); (err != nil) != tt.wantErr {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type preStartActionTestCase struct {
+	name    string
+	th      *TorHandlerV1
+	wantErr bool
+}
+
+func buildPreStartActionTestCase() []preStartActionTestCase {
+	ssn := test.FakeNormalSSN(test.FakeConfigurations())
+	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
+	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
+	for _, task := range fakeJob.Tasks {
+		if task.Name == "pod0" {
+			task.NodeName = ""
+			break
+		}
+	}
+	test.AddJobInfoIntoSsn(ssn, fakeJob)
+	return []preStartActionTestCase{
+		{
+			name:    "01 will return err when job is nil",
+			th:      &TorHandlerV1{},
+			wantErr: true,
+		},
+		{
+			name:    "02 will return err when global tor env is nil",
+			th:      &TorHandlerV1{TorHandler: TorHandler{Job: &plugin.SchedulerJob{}}},
+			wantErr: true,
+		},
+		{
+			name:    "03 pre start success",
+			th:      &TorHandlerV1{TorHandler: newTestTorHandler(ssn)},
+			wantErr: false,
+		},
+		{
+			name: "04 pre will return nil when scheduling task is 0",
+			th: &TorHandlerV1{TorHandler: TorHandler{Job: &plugin.SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{}}}, globalTorEnv: &plugin.TorList{}}},
+			wantErr: false,
+		},
+	}
+}
+
+func TestTorHandlerV1_PreStartAction(t *testing.T) {
+	for _, tt := range buildPreStartActionTestCase() {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.th.PreStartAction(nil); (err != nil) != tt.wantErr {
+				t.Errorf("PreStartAction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

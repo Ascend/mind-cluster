@@ -84,6 +84,8 @@
     },
     {
       "tor_id": 3,
+      "IsSharedTor": 1,
+      "IsHealthy": 1,
       "tor_ip": "1.0.0.3",
       "server": [
         {

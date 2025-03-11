@@ -95,21 +95,20 @@ func changeTorMapsToSlice(torMaps map[string]*plugin.Tor) []*plugin.Tor {
 func (th *TorHandler) GetPluginName() string { return th.pluginName }
 
 func (th *TorHandler) scoreBestNPUNodes(task *api.TaskInfo, nodeMaps map[string]*api.NodeInfo,
-	sMap map[string]float64) error {
+	sMap map[string]float64) {
 	th.sortJobServerListBySliceId()
 	th.setNodeRankIndex()
-
 	for _, sl := range th.ServerList {
 		for _, server := range sl.Servers {
 			setNodeScoreByTorAttr(sMap, server.Name, sl)
 			if _, exist := nodeMaps[server.Name]; exist && server.NodeRank == task.Pod.Annotations[podRankIndex] {
 				sMap[server.Name] = maxTorAffinityNodeScore
-				return nil
+				return
 			}
 		}
 	}
 	klog.V(util.LogInfoLev).Infof("ScoreBestNPUNodes task<%s> sMap<%v>", task.Name, sMap)
-	return nil
+	return
 }
 
 // sortJobServerListBySliceId sort JobServer list by SliceId

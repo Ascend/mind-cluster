@@ -94,7 +94,7 @@ func (th *TorHandlerV1) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 // setTorAffinityJobNodesScore nslb 1.0 rule
 func (th *TorHandlerV1) setTorAffinityJobNodesScore(task *api.TaskInfo,
 	nodeMaps map[string]*api.NodeInfo, scoreMap map[string]float64) error {
-	if len(nodeMaps) == 0 || scoreMap == nil || !*th.Job.JobReadyTag {
+	if !*th.Job.JobReadyTag {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes %s.", err)
 		return nil
@@ -112,19 +112,12 @@ func (th *TorHandlerV1) setTorAffinityJobNodesScore(task *api.TaskInfo,
 			return nil
 		}
 	}
-	if errGet := th.scoreBestNPUNodes(task, nodeMaps, scoreMap); errGet != nil {
-		// get suitable node failed
-		klog.V(util.LogDebugLev).Infof("batchNodeOrderFn task[%s] is failed[%s].", task.Name, util.SafePrint(errGet))
-	}
+	th.scoreBestNPUNodes(task, nodeMaps, scoreMap)
 	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn set %s for NPU %+v.", task.Name, scoreMap)
 	return result
 }
 
 func (th *TorHandlerV1) setTorHandlerServerList(nodeMaps map[string]*api.NodeInfo) error {
-	if th == nil || th.globalTorEnv == nil || len(nodeMaps) == 0 {
-		err := errors.New(util.ArgumentError)
-		return fmt.Errorf("initTorHandlerV1 err: %s", err.Error())
-	}
 	if len(th.ServerList) != 0 {
 		klog.V(util.LogDebugLev).Infof("InitTorHandlerV1 len(serverList):%d", len(th.ServerList))
 		return nil
@@ -201,10 +194,6 @@ func (th *TorHandlerV1) markMulJobServerList() {
 
 // setNormalJobServerList set the server list of normal job in nslb 1.0
 func (th *TorHandlerV1) setNormalJobServerList(schedulingTaskNum int) {
-	if th == nil {
-		klog.V(util.LogDebugLev).Infof("setNormalJobServerList failed:%s", util.ArgumentError)
-		return
-	}
 	th.ServerList = []*plugin.Tor{}
 	var count int
 	for _, tor := range th.globalTorEnv.Tors {

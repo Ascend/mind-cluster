@@ -22,7 +22,11 @@ package nslb
 import (
 	"testing"
 
+	"volcano.sh/volcano/pkg/scheduler/api"
+	"volcano.sh/volcano/pkg/scheduler/framework"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
 
@@ -41,6 +45,12 @@ func buildSingleLevelScoreBestNPUNodes01() []scoreBestNPUNodesTest {
 			torHandler: newTestTorHandler(ssn),
 			wantErr:    false,
 		},
+		{
+			name:       "02-ScoreBestNPUNodes will return err when node is nil",
+			ssn:        &framework.Session{},
+			torHandler: TorHandler{},
+			wantErr:    true,
+		},
 	}
 }
 
@@ -54,6 +64,41 @@ func TestTorSingleLevelHandlerScoreBestNPUNodes(t *testing.T) {
 			}
 			if err := th.ScoreBestNPUNodes(tTask, tt.ssn.NodeList, scoreMap); (err != nil) != tt.wantErr {
 				t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type testSetSingleLayerTorJobNodesScore struct {
+	name    string
+	th      *TorSingleLevelHandler
+	wantErr bool
+}
+
+func buildTestSetSingleLayerTorJobNodesScore() []testSetSingleLayerTorJobNodesScore {
+	falseTag := false
+	trueTag := true
+	fakeJob := plugin.SchedulerJob{JobReadyTag: &falseTag}
+	fakeJob2 := plugin.SchedulerJob{JobReadyTag: &trueTag}
+	return []testSetSingleLayerTorJobNodesScore{
+		{
+			name:    "01 will return err when th job ready tag is false",
+			th:      &TorSingleLevelHandler{TorHandler: TorHandler{Job: &fakeJob}},
+			wantErr: false,
+		},
+		{
+			name:    "02 will return err when th global tor is nil",
+			th:      &TorSingleLevelHandler{TorHandler: TorHandler{Job: &fakeJob2}},
+			wantErr: true,
+		},
+	}
+}
+
+func TestSetSingleLayerTorAffinityJobNodesScore(t *testing.T) {
+	for _, tt := range buildTestSetSingleLayerTorJobNodesScore() {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.th.setSingleLayerTorJobNodesScore(&api.TaskInfo{}, nil, nil); (err != nil) != tt.wantErr {
+				t.Errorf("setSingleLayerTorJobNodesScore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

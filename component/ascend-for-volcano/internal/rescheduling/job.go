@@ -385,7 +385,7 @@ func getTaskPodUidByTaskName(taskName string, jobInfo *api.JobInfo) api.TaskID {
 }
 
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
-	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc ||
+	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc &&
 		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
 		return
 	}
