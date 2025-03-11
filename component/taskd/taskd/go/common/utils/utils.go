@@ -20,9 +20,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
+	"taskd/framework_backend/worker/monitor/profiling_service"
 )
 
 // InitHwLog init hwlog
@@ -30,7 +32,7 @@ func InitHwLog(ctx context.Context) error {
 	var logFile string
 	logFilePath := os.Getenv(constant.LogFilePathEnv)
 	if logFilePath == "" {
-		logFile = constant.DefaultLogFile
+		logFile = constant.DefaultLogFile + "-worker-" + strconv.Itoa(profiling_service.GlobalRankId)
 	} else {
 		logFile = filepath.Join(logFile, constant.LogFileName)
 	}

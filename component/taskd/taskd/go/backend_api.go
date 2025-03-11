@@ -40,7 +40,7 @@ var ctx context.Context = context.Background()
 func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
 	profiling_service.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
 	profiling_service.GlobalRankId = rank
-	// init so should not use print to avoid impact on sys calls
+	// init so should not use print to avoid impact on system calls
 	err := utils.InitHwLog(ctx)
 	if err != nil {
 		fmt.Println(err)

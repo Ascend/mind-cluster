@@ -27,7 +27,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
@@ -63,15 +62,8 @@ func SaveProfilingDataIntoFile(rank int) error {
 		return fmt.Errorf("failed to get newest file to write profiling data,err: %s", err.Error())
 	}
 	fileName := path.Join(savePath, newestFileName)
-	if _, err := os.Stat(fileName); err == nil {
-		if err := os.Rename(fileName, fileName+".tmp"); err != nil {
-			hwlog.RunLog.Errorf("failed to rename existing file %s, err:%s", fileName, fileName+".tmp")
-		}
-		hwlog.RunLog.Infof("file %s has been rename to %s", fileName, fileName+".tmp")
-	}
-	fileNameTmp := path.Join(savePath, newestFileName+".tmp")
-	hwlog.RunLog.Debugf("rank:%v,the save fileName is %s", GlobalRankId, fileNameTmp)
-	file, err := os.OpenFile(fileNameTmp, os.O_WRONLY|os.O_APPEND|os.O_CREATE, constant.ProfilingFileMode)
+	hwlog.RunLog.Debugf("rank:%v,the save fileName is %s", GlobalRankId, fileName)
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, constant.ProfilingFileMode)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to open save file, err:%s", err)
 		return err
@@ -131,8 +123,7 @@ func isFileOver10MB(filePath string) (bool, error) {
 }
 
 func saveProfileFile(file *os.File) error {
-	// .tmp means that file is not done writing yet
-	// 将 profilingRecords 序列化为 JSON
+	// marshal all profilingRecords to json
 	hwlog.RunLog.Debugf("rank:%v,will stat to save file", GlobalRankId)
 	recordsBytes := writeToBytes()
 	hwlog.RunLog.Debugf("rank:%v, finished to unmarsh marker to string at:%v", GlobalRankId, time.Now())
@@ -142,11 +133,6 @@ func saveProfileFile(file *os.File) error {
 		return err
 	}
 	hwlog.RunLog.Debugf("Data successfully written to %s, will try to rename file to indicate wrote", file.Name())
-	err := os.Rename(file.Name(), strings.TrimRight(file.Name(), ".tmp"))
-	if err != nil {
-		hwlog.RunLog.Errorf("Error renaming file:%s", err.Error())
-		return err
-	}
 	return nil
 }
 

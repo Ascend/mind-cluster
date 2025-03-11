@@ -118,9 +118,9 @@ class CustomRotatingHandler(RotatingFileHandler):
 
 
 class LogConfig:
-    '''
+    """
     Log Config include logger configuration
-    '''
+    """
 
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
