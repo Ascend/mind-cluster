@@ -156,7 +156,7 @@ func (c *Manager) updateConfig() {
 			return
 		}
 		c.current.UID = uid
-		hwlog.RunLog.Infof("update config, uid: %s", c.current.UID)
+		hwlog.RunLog.Infof("update config %v, uid: %s", c.current.Config, c.current.UID)
 		c.executor.UpdateConfig(c.current.DeepCopy())
 	}
 }
@@ -188,6 +188,7 @@ func (c *Manager) parseSuperDeviceIDs(data map[string]string) (map[string]types.
 func (c *Manager) parsePingMeshConfig(data map[string]string) (*types.HccspingMeshConfig, error) {
 	cfg, ok := data[strconv.Itoa(int(c.executor.SuperPodId))]
 	if !ok {
+		hwlog.RunLog.Infof("no config for superPodId %d, try to get global config", c.executor.SuperPodId)
 		cfg, ok = data[globalConfigKey]
 		if !ok {
 			return nil, errors.New("get activate config failed")

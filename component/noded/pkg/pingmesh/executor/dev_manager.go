@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
@@ -41,9 +42,8 @@ const (
 // Executor execute action of hccsping mesh
 type Executor struct {
 	devManager    devmanager.DeviceInterface
-	stopChan      chan struct{}
-	hasStop       chan struct{}
 	commandChan   chan *types.HccspingMeshPolicy
+	wg            *sync.WaitGroup
 	currentPolicy *types.HccspingMeshPolicy
 	chips         map[string]*common.ChipBaseInfo
 	resultHandler func(result *types.HccspingMeshResult)
@@ -88,6 +88,7 @@ func New() (*Executor, error) {
 		devManager:  dm,
 		chips:       physicID2ChipInfo,
 		SuperPodId:  superPodId,
+		wg:          &sync.WaitGroup{},
 		commandChan: make(chan *types.HccspingMeshPolicy, 1),
 	}, nil
 }
@@ -104,24 +105,33 @@ func (d *Executor) SetResultHandler(handler func(result *types.HccspingMeshResul
 
 // Start executor
 func (d *Executor) Start(stopCh <-chan struct{}) {
+	var currentStop chan struct{}
+
 	for {
 		select {
 		case <-stopCh:
-			d.stopCollect()
+			// when main goroutine exit, children goroutine should exit
+			if currentStop != nil {
+				close(currentStop)
+				d.wg.Wait()
+			}
 			return
 		case cmd := <-d.commandChan:
 			hwlog.RunLog.Infof("executor receive cmd, activate: %v, uid: %s", cmd.Config.Activate, cmd.UID)
-			d.stopCollect()
+			// need stop collect goroutine and wait the goroutine done
+			if currentStop != nil {
+				close(currentStop)
+				d.wg.Wait()
+			}
 			d.stopHccspingMesh()
 			if cmd.Config.Activate == types.ActivateOff {
 				continue
 			}
 			d.currentPolicy = cmd
-			if d.hasStop != nil {
-				<-d.hasStop
-			}
 			d.startHccspingMesh()
-			go d.startCollect()
+			currentStop = make(chan struct{})
+			d.wg.Add(1)
+			go d.startCollect(currentStop)
 		}
 	}
 }
@@ -190,31 +200,19 @@ func (d *Executor) stopLastTasks() {
 	}
 }
 
-func (d *Executor) startCollect() {
-	if d.stopChan == nil {
-		d.stopChan = make(chan struct{}, 1)
-	}
-
+func (d *Executor) startCollect(stop <-chan struct{}) {
+	hwlog.RunLog.Infof("start collect hccsping mesh info")
+	defer d.wg.Done()
 	ticker := time.NewTicker(time.Duration(d.currentPolicy.Config.TaskInterval*collectPeriodFactor) * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-d.stopChan:
-			hwlog.RunLog.Infof("stop collect hccspingmesh info")
-			if d.hasStop == nil {
-				d.hasStop = make(chan struct{}, 1)
-			}
-			d.hasStop <- struct{}{}
+		case <-stop:
+			hwlog.RunLog.Infof("stop collect hccsping mesh info")
 			return
 		case <-ticker.C:
 			d.getHccspingMeshInfo()
 		}
-	}
-}
-
-func (d *Executor) stopCollect() {
-	if d.stopChan != nil {
-		d.stopChan <- struct{}{}
 	}
 }
 
