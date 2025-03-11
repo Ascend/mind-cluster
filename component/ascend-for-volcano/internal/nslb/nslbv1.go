@@ -83,6 +83,7 @@ func (th *TorHandlerV1) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes err: %s.", err.Error())
 		return err
 	}
+	refreshScoreMap(nodes, scoreMap)
 	if th.Job.SchedulingTaskNum < len(th.Job.Tasks) {
 		return nil
 	}

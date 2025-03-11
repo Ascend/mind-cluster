@@ -38,6 +38,7 @@ func (th *TorSingleLevelHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes err: %s.", err.Error())
 		return err
 	}
+	refreshScoreMap(nodes, scoreMap)
 	nodeMaps := util.ChangeNodesToNodeMaps(nodes)
 	klog.V(util.LogDebugLev).Infof("validNPUJob job is now use tor affinity")
 	return th.setSingleLayerTorAffinityJobNodesScore(task, nodeMaps, scoreMap)

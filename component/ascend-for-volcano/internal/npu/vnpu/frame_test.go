@@ -36,7 +36,6 @@ import (
 type virtualNPUTestFields struct {
 	DynamicByConf bool
 	VT            VTemplate
-	StaticVNPU    StaticVNPU
 	DynamicVNPU   DynamicVNPU
 }
 
@@ -296,7 +295,6 @@ func TestGetTaskResource(t *testing.T) {
 			var tp = &VirtualNPU{
 				StaticByConf: tt.fields.DynamicByConf,
 				VT:           tt.fields.VT,
-				StaticVNPU:   tt.fields.StaticVNPU,
 				DynamicVNPU:  tt.fields.DynamicVNPU,
 			}
 			got, err := tp.GetTaskResource(tt.args.task, tt.args.node)
@@ -316,7 +314,6 @@ func newVirtualNPU() *VirtualNPU {
 	return &VirtualNPU{
 		StaticByConf: fields.DynamicByConf,
 		VT:           fields.VT,
-		StaticVNPU:   fields.StaticVNPU,
 		DynamicVNPU:  fields.DynamicVNPU,
 	}
 }

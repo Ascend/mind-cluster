@@ -26,31 +26,27 @@ import (
 
 // AscendHandler ascend npu event handler
 type AscendHandler interface {
-	plugin.ISchedulerPlugin
+	plugin.SchedulerPlugin
 	SetSchedulerAttr(util.SchedulerJobAttr)
 	SetSchedulerEnv(plugin.ScheduleEnv)
 	SetMaxNodeNPUNum(int)
 	SetMaxCardNPUNum(int)
-	SetPolicyHandler(util.SchedulerJobAttr, plugin.ScheduleEnv)
 	SetNpuNumInvalidMap(map[int]struct{})
 	SetIsNetworkFaultAttention(bool)
 }
 
 // NPUHandler base npu handler
 type NPUHandler struct {
-	plugin.SchedulerPlugin
+	plugin.SchedulerBaseAttr
 	util.SchedulerJobAttr
 	plugin.ScheduleEnv
 	IsNetworkFaultAttention bool
 	NpuNumInvalidMap        map[int]struct{}
-	PolicyHandler           []plugin.ISchedulerPluginNeed
 	MaxNodeNPUNum           int
 	MaxCardNPUNum           int
 }
 
 const (
-	// PluginName plugin name
-	PluginName          = "base"
 	nodeWeight          = 10.0
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 )

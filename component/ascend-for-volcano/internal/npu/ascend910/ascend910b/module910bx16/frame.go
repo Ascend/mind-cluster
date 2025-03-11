@@ -23,16 +23,13 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -43,8 +40,6 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
-	m.SetAcceleratorValue(util.JobKind910BValue)
-	m.InitVNPU()
 	m.SetNpuNumInvalidMap(map[int]struct{}{util.NPUIndex9: {}, util.NPUIndex11: {}, util.NPUIndex13: {},
 		util.NPUIndex15: {}})
 	m.SetIsNetworkFaultAttention(true)
@@ -69,29 +64,6 @@ func New(name string) base.AscendHandler {
 	return m
 }
 
-// ValidNPUJob check job req npu num and mode
-func (tp *module910bx16) ValidNPUJob() *api.ValidateResult {
-	if tp.VJob.Type == util.JobTypeDyCut {
-		return tp.ValidDyVNPUJob()
-	}
-	for _, handler := range tp.PolicyHandler {
-		if validResult := handler.ValidNPUJob(); validResult != nil && !validResult.Pass {
-			return validResult
-		}
-	}
-	return tp.Valid910bNPUJob()
-}
-
-// PreStartAction pre-processing actions for rescheduling
-func (tp *module910bx16) PreStartAction(ssn *framework.Session) error {
-	for _, handler := range tp.PolicyHandler {
-		if err := handler.PreStartAction(ssn); err != nil {
-			return fmt.Errorf("preStartAction failed by %s", err)
-		}
-	}
-	return tp.PreStartVNPU(ssn)
-}
-
 // CheckNodeNPUByTask check nod npu meet task req
 func (tp *module910bx16) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
 	if tp == nil || task == nil || len(node.Annotation) == 0 {
@@ -99,19 +71,7 @@ func (tp *module910bx16) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUN
 		klog.V(util.LogErrorLev).Infof("CheckNodeNPUByTask err: %s", err.Error())
 		return err
 	}
-	switch tp.VJob.Type {
-	case util.JobTypeDyCut:
-		if err := tp.checkNodeNPUForDyCut(task, node); err != nil {
-			return err
-		}
-	case util.JobTypeWhole:
-		if err := tp.checkNodeNPUForWholeCard(task, node); err != nil {
-			return err
-		}
-	default:
-		return nil
-	}
-	return nil
+	return tp.checkNodeNPUForWholeCard(task, node)
 }
 
 func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugin.NPUNode) error {
@@ -136,25 +96,7 @@ func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugi
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[networkUnhealthyNPU])
 	}
-	for _, handler := range tp.PolicyHandler {
-		if err := handler.CheckNodeNPUByTask(task, node); err != nil {
-			return fmt.Errorf("checkNodeNPUByTask %s", err.Error())
-		}
-	}
 	return nil
-}
-
-func (tp *module910bx16) checkNodeNPUForDyCut(task *api.TaskInfo, node plugin.NPUNode) error {
-	taskRes, err := tp.VHandle.GetTaskResource(task, node)
-	if err != nil {
-		return err
-	}
-	if !node.IsResourceWholeCard(taskRes.Aicore) {
-		return tp.VHandle.CheckNodeNPUByDyTask(task, node, taskRes)
-	}
-	nodeTop := node.GetNodeTopForWholeCard()
-	taskNPUNum := taskRes.Aicore / node.AiCorePerChip
-	return tp.Judge910BNodeAndTaskNPU(taskNPUNum, nodeTop)
 }
 
 func (tp *module910bx16) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
@@ -162,17 +104,6 @@ func (tp *module910bx16) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.Node
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes %s.", err)
 		return err
-	}
-	for _, handler := range tp.PolicyHandler {
-		if err := handler.ScoreBestNPUNodes(task, nodes, sMap); err != nil {
-			return err
-		}
-	}
-	if len(tp.PolicyHandler) != 0 {
-		return nil
-	}
-	if tp.VJob.Type == util.JobTypeDyCut {
-		return tp.VHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, sMap)
 	}
 	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes task<%s> sMap<%v>", tp.GetPluginName(),
 		task.Name, sMap)
@@ -224,9 +155,6 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 		klog.V(util.LogErrorLev).Infof("UseAnnotation %s.", err)
 		return nil
 	}
-	if tp.VJob.Type == util.JobTypeDyCut {
-		return tp.useAnnotationForDyCut(task, node)
-	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %s",
 		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), util.SafePrint(node.Annotation))
 	selectedNPU, err := tp.selectNPUFromNode(task, node)
@@ -238,32 +166,7 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	newNode := tp.NPUHandler.UpdateNodeInfo(node, selectedNPU)
-	for _, handler := range tp.PolicyHandler {
-		handler.UseAnnotation(task, node)
-	}
 	return newNode
-}
-
-func (tp *module910bx16) useAnnotationForDyCut(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	taskRes, err := tp.VHandle.GetTaskResource(task, node)
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s UseAnnotation job(%s) get require task resource failed: %s",
-			tp.GetPluginName(), tp.Name, err)
-		return &node
-	}
-	if !node.IsResourceWholeCard(taskRes.Aicore) {
-		return tp.VHandle.DynamicVNPU.UseAnnotation(task, node, taskRes, tp.VHandle.VT)
-	}
-	nodeTop := node.GetNodeTopForWholeCard()
-	taskNPUNum := taskRes.Aicore / node.AiCorePerChip
-	selectNpu, err := tp.selectNPUByTaskNPUNumAndNodeTop(taskNPUNum, nodeTop)
-	if err != nil {
-		return nil
-	}
-	allocChipID := strings.Join(changeIntSliceToString(selectNpu), ",")
-	tp.VHandle.SetNPUTopologyToPodFn(task, node, taskRes, allocChipID, tp.VHandle.VT)
-	return tp.VHandle.UpdateNodeInfo(node, allocChipID, taskRes)
-
 }
 
 func (tp *module910bx16) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode) ([]int, error) {
@@ -277,126 +180,5 @@ func (tp *module910bx16) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNo
 		klog.V(util.LogErrorLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}
-	return tp.selectNPUByTaskNPUNumAndNodeTop(taskNPUNum, nodeTop)
-}
-
-func (tp *module910bx16) selectNPUByTaskNPUNumAndNodeTop(taskNPUNum int, nodeTop []int) ([]int, error) {
-	if taskNPUNum == tp.MaxNodeNPUNum {
-		if len(nodeTop) == tp.MaxNodeNPUNum {
-			return nodeTop, nil
-		}
-		err := fmt.Errorf("node top<%v> can not meet task req<%d>", nodeTop, taskNPUNum)
-		klog.V(util.LogErrorLev).Infof("%s selectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
-		return nil, err
-	}
-	priorityArray, err := tp.GetNPUAllocPriorityArray(taskNPUNum)
-	if err != nil {
-		klog.V(util.LogErrorLev).Info(err.Error())
-		return nil, err
-	}
-	klog.V(util.LogInfoLev).Infof("selectNPUFromNode %s[%d] priority:%v in %v.",
-		tp.GetPluginName(), taskNPUNum, priorityArray, nodeTop)
-
-	leftHccsArray, rightHccsArray, samePlaceHccsArray := tp.GetNodeHccsArray(nodeTop, tp.NPUTaskNum > 1)
-	for _, priority := range priorityArray {
-		if priority == len(leftHccsArray) {
-			return leftHccsArray[:taskNPUNum], nil
-		}
-		if priority == len(rightHccsArray) {
-			return rightHccsArray[:taskNPUNum], nil
-		}
-		if priority == len(samePlaceHccsArray) {
-			return samePlaceHccsArray[:taskNPUNum], nil
-		}
-	}
-	err = fmt.Errorf("node top<%v> can not meet task req<%d>", len(nodeTop), taskNPUNum)
-	klog.V(util.LogErrorLev).Infof("%s selectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
-	return nil, err
-}
-
-// ReleaseAnnotation Release used resource.
-func (tp *module910bx16) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	return &node
-}
-
-func (tp *module910bx16) GetNPUAllocPriorityArray(taskNPUNumber int) ([]int, error) {
-
-	var err error
-	if !tp.IsVaildNpuNum(taskNPUNumber) {
-		err = fmt.Errorf("illegal request npu number: %d", taskNPUNumber)
-		klog.V(util.LogErrorLev).Infof("%s %s.", tp.GetPluginName(), err)
-		return nil, err
-	}
-	var priorityArray []int
-	if taskNPUNumber == tp.MaxNodeNPUNum {
-		return []int{tp.MaxNodeNPUNum}, nil
-	}
-	if taskNPUNumber <= tp.MaxNodeNPUNum/util.NPUIndex2 {
-		for i := taskNPUNumber; i <= tp.MaxNodeNPUNum/util.NPUIndex2; i++ {
-			priorityArray = append(priorityArray, i)
-		}
-		return priorityArray, nil
-	}
-	if taskNPUNumber > tp.MaxNodeNPUNum/util.NPUIndex2 {
-		for i := taskNPUNumber; i <= tp.MaxNodeNPUNum; i = i + util.NPUIndex2 {
-			priorityArray = append(priorityArray, i)
-		}
-		return priorityArray, nil
-	}
-	return priorityArray, nil
-}
-
-func (tp *module910bx16) GetNodeHccsArray(nodeTop []int, isMultNpuReplica bool) ([]int, []int, []int) {
-	var leftHccsArray []int
-	var rightHccsArray []int
-
-	idCutNum := tp.MaxNodeNPUNum / util.NPUIndex2
-	for _, v := range nodeTop {
-		if v < idCutNum {
-			leftHccsArray = append(leftHccsArray, v)
-			continue
-		}
-		rightHccsArray = append(rightHccsArray, v)
-	}
-	crossHccsArray := getCrossHccsArray(leftHccsArray, rightHccsArray, isMultNpuReplica, idCutNum)
-	return leftHccsArray, rightHccsArray, crossHccsArray
-}
-
-func getCrossHccsArray(leftHccsArray, rightHccsArray []int, isMultNpuReplica bool, idCutNum int) []int {
-	var crossHccsArray []int
-	if isMultNpuReplica {
-		minLen := len(leftHccsArray)
-		if minLen > len(rightHccsArray) {
-			minLen = len(rightHccsArray)
-		}
-		for i := 0; i < minLen; i++ {
-			crossHccsArray = append(crossHccsArray, leftHccsArray[i], rightHccsArray[i])
-		}
-		return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
-	}
-	for _, leftCardID := range leftHccsArray {
-		for _, rightCardID := range rightHccsArray {
-			if leftCardID+idCutNum == rightCardID {
-				crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
-				break
-			}
-		}
-	}
-	return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
-}
-
-func getCrossHccsArrayByCutNum(crossHccsArray []int, idCutNum int) []int {
-	// npu num must bigger than hccs's npu number, if task is cross hccs
-	if len(crossHccsArray) <= idCutNum {
-		return []int{}
-	}
-	return crossHccsArray
-}
-
-func changeIntSliceToString(npuTop []int) []string {
-	s := make([]string, len(npuTop))
-	for i, chipId := range npuTop {
-		s[i] = strconv.Itoa(chipId)
-	}
-	return s
+	return tp.SelectNPUByTaskNPUNumAndNodeTop(taskNPUNum, nodeTop)
 }

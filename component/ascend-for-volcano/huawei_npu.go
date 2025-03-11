@@ -24,14 +24,13 @@ import (
 	"strings"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/controller"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -45,7 +44,7 @@ func init() {
 // HandlerStart HuaWei NPU plugin start by frame.
 func HandlerStart() *plugin.ScheduleHandler {
 	scheduleHandler := &plugin.ScheduleHandler{
-		NPUPlugins:  map[string]plugin.NPUBuilder{},
+		NPUPlugins:  sets.String{util.NPU910CardName: {}, util.NPU310CardName: {}, util.NPU310PCardName: {}},
 		FaultHandle: rescheduling.NewHandler(),
 		ScheduleEnv: plugin.ScheduleEnv{
 			FrameAttr:               plugin.NewVolcanoFrame(),
@@ -53,12 +52,7 @@ func HandlerStart() *plugin.ScheduleHandler {
 			ClusterCache:            plugin.NewClusterCache(),
 		},
 	}
-
-	// Register new npu scheduler strategy.
-	scheduleHandler.RegisterNPUScheduler(ascend310.PluginName, ascend310.New)
-	scheduleHandler.RegisterNPUScheduler(ascend310p.PluginName, ascend310p.New)
-	scheduleHandler.RegisterNPUScheduler(ascend910.PluginName, ascend910.New)
-	klog.V(util.LogInfoLev).Infof("HandlerStart %#v.", scheduleHandler.NPUPlugins)
+	scheduleHandler.PolicyBuilder = controller.New
 	return scheduleHandler
 }
 
@@ -214,7 +208,7 @@ func addJobEnqueueableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 			return util.JobEnqueueSkip
 		}
 		npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
-		if _, ok := tp.Scheduler.NPUPlugins[npuName]; !ok {
+		if !tp.Scheduler.NPUPlugins.Has(npuName) {
 			return util.JobEnqueueSkip
 		}
 		tNpuNum := getNpuNum(ssn, tp, npuName)

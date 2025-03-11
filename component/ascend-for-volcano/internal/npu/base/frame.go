@@ -29,30 +29,53 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/nslb"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// PreStartAction pre-processing actions for rescheduling
-func (tp *NPUHandler) PreStartAction(ssn *framework.Session) error {
-	for _, handler := range tp.PolicyHandler {
-		if err := handler.PreStartAction(ssn); err != nil {
-			return fmt.Errorf("preStartAction failed by %s", err)
-		}
+type option func(AscendHandler)
+
+// WithNpuInvalidMap build AscendHandler with NpuInvalidMap
+func WithNpuInvalidMap(m map[int]struct{}) option {
+	return func(h AscendHandler) {
+		h.SetNpuNumInvalidMap(m)
 	}
-	return nil
 }
 
-// SetPolicyHandler set attr and env for plugin
-func (tp *NPUHandler) SetPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) {
-	if tp == nil {
-		err := errors.New(util.ArgumentError)
-		klog.V(util.LogErrorLev).Infof("InitMyJobPlugin %s.", err.Error())
-		return
+// WithMaxNodeNum build AscendHandler WithMaxNodeNum
+func WithMaxNodeNum(num int) option {
+	return func(h AscendHandler) {
+		h.SetMaxNodeNPUNum(num)
 	}
-	if handler, ok := nslb.InitPolicyHandler(attr, env); ok {
-		tp.PolicyHandler = append(tp.PolicyHandler, handler)
+}
+
+// WithAnnoPreVal build AscendHandler WithAnnoPreVal
+func WithAnnoPreVal(annoPre string) option {
+	return func(h AscendHandler) {
+		h.SetAnnoPreVal(annoPre)
 	}
+}
+
+// WithNetworkFault build AscendHandler WithNetworkFault
+func WithNetworkFault(enable bool) option {
+	return func(h AscendHandler) {
+		h.SetIsNetworkFaultAttention(enable)
+	}
+}
+
+// New return npu plugin
+func New(name string, opts ...option) AscendHandler {
+	m := &NPUHandler{}
+	m.SetPluginName(name)
+	m.SetAnnoName(name)
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// PreStartAction pre-processing actions for rescheduling
+func (tp *NPUHandler) PreStartAction(ssn *framework.Session) error {
+	return nil
 }
 
 // InitMyJobPlugin set attr and env for plugin
@@ -64,7 +87,6 @@ func (tp *NPUHandler) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.Sch
 	}
 	tp.SetSchedulerAttr(attr)
 	tp.SetSchedulerEnv(env)
-	tp.SetPolicyHandler(attr, env)
 	return nil
 }
 
@@ -108,7 +130,6 @@ func (tp *NPUHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
-
 	if err := tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
 		return err

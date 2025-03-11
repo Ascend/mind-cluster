@@ -33,7 +33,7 @@ type InitPolicyHandlerTest struct {
 	name string
 	job  util.SchedulerJobAttr
 	env  plugin.ScheduleEnv
-	want plugin.ISchedulerPluginNeed
+	want plugin.SchedulerPluginNeed
 }
 
 func buildInitPolicyHandlerTestCases() []InitPolicyHandlerTest {

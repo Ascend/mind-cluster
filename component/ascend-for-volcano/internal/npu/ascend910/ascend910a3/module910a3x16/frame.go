@@ -27,8 +27,8 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -40,7 +40,6 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
 	m.SetMaxNodeNPUNum(ascend910a3.NodeNPUNumber)
 	m.SetMaxCardNPUNum(ascend910a3.DieNPUNumber)
-	m.SetAcceleratorValue(util.JobKind910BValue)
 	m.SetIsNetworkFaultAttention(true)
 	m.setAffinityScore()
 	m.NetUnhealthyKey = ascend910a3.NetworkUnhealthyNPU
@@ -63,17 +62,6 @@ func (tp *module910a3x16) setAffinityScore() {
 
 // ValidNPUJob check job req npu num and mode
 func (tp *module910a3x16) ValidNPUJob() *api.ValidateResult {
-	if err := tp.CheckJobForm(); err != nil {
-		return &api.ValidateResult{
-			Pass:    false,
-			Reason:  "job label is invalid",
-			Message: fmt.Sprintf("job need label(%s: %s)", util.JobKindKey, util.JobKind910BValue),
-		}
-	}
-	return tp.checkRequireNPU()
-}
-
-func (tp *module910a3x16) checkRequireNPU() *api.ValidateResult {
 	// single node job, allow require npu [1, 2, 4, 6, 8, 10, 12, 14, 16]
 	if tp.NPUTaskNum == 1 {
 		if tp.ReqNPUNum == 1 || (tp.ReqNPUNum%tp.MaxCardNPUNum == 0 && tp.ReqNPUNum <= tp.MaxNodeNPUNum) {

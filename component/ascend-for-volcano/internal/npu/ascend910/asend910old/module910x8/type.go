@@ -20,7 +20,7 @@ Package module910x8 is using for HuaWei Ascend pin affinity schedule.
 package module910x8
 
 import (
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
 type module910x8 struct {

@@ -50,9 +50,9 @@ type checkNPUResourceStableTest struct {
 }
 
 func buildVCheckNPUResourceStableTest() []checkNPUResourceStableTest {
-	tJob := SchedulerJob{handler: New(testPluginName),
+	tJob := SchedulerJob{policyHandler: New(testPluginName),
 		SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.NPU310PCardName}}}
-	vJob := SchedulerJob{handler: New(testPluginName),
+	vJob := SchedulerJob{policyHandler: New(testPluginName),
 		SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.AscendNPUCore}}}
 	tests := []checkNPUResourceStableTest{
 		{
@@ -135,7 +135,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 			name: "03-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
-					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"lala": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: false,
@@ -144,7 +144,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 			name: "04-NodePredicate node not in test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
-					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
@@ -153,7 +153,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 			name: "05-NodePredicate ok test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
-					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Jobs:  map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
@@ -162,7 +162,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 			name: "06-NodePredicate SubHealthy Node test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
-					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {
 						CommonNode: CommonNode{
 							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
@@ -176,7 +176,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 			name: "07-NodePredicate UnHealthy Node test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
-					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {handler: New(PluginName)}},
+					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {
 						CommonNode: CommonNode{
 							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},

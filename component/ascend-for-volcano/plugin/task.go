@@ -87,7 +87,7 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	} else {
 		task.Pod.Annotations[util.DistributedJobKey] = util.StandaloneJobValue
 	}
-	vcNode := vcJob.handler.UseAnnotation(task, node)
+	vcNode := vcJob.policyHandler.UseAnnotation(task, node)
 	if vcNode != nil {
 		// update node.
 		sHandle.Nodes[nodeName] = *vcNode
@@ -129,7 +129,7 @@ func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob Sche
 	sHandle.Nodes[vcNode.Name] = vcNode
 	klog.V(util.LogDebugLev).Infof("%s releaseAnnotation %s's %s on %s,new top:[%s].", PluginName, task.Name,
 		reqStr, vcNode.Name, reqStr+","+value)
-	tmpNode := vcJob.handler.ReleaseAnnotation(task, vcNode)
+	tmpNode := vcJob.policyHandler.ReleaseAnnotation(task, vcNode)
 	if tmpNode != nil {
 		// update node.
 		sHandle.Nodes[vcNode.Name] = *tmpNode

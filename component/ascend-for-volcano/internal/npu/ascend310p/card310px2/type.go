@@ -20,7 +20,7 @@ Package card310px2 is using for HuaWei 300I Duo Ascend pin affinity schedule.
 package card310px2
 
 import (
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
 type card310px2 struct {

@@ -71,6 +71,7 @@ func (th *TorHandlerV2) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes err: %s.", err.Error())
 		return err
 	}
+	refreshScoreMap(nodes, scoreMap)
 	nodeMaps := util.ChangeNodesToNodeMaps(nodes)
 	return th.setTorAffinityJobNodesScore(task, nodeMaps, scoreMap)
 }

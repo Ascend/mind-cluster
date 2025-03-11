@@ -104,10 +104,10 @@ const (
 type SchedulerJob struct {
 	util.SchedulerJobAttr
 	UnscheduledReason
-	handler     ISchedulerPlugin
-	JobReadyTag *bool
-	SuperPods   map[string][]SuperNode
-	Owner       OwnerInfo
+	policyHandler SchedulerPluginNeed
+	JobReadyTag   *bool
+	SuperPods     map[string][]SuperNode
+	Owner         OwnerInfo
 }
 
 // OwnerInfo the owner info of job
@@ -154,7 +154,6 @@ type StaticParameters struct {
 
 // DynamicParameters volcano scheduler dynamic parameters
 type DynamicParameters struct {
-	needRestartInformer bool
 	PresetVirtualDevice bool
 	GraceDeleteTime     int64
 	SuperPodSize        int
@@ -209,8 +208,9 @@ type SuperPodInfo struct {
 
 // ScheduleHandler information for the current plugin
 type ScheduleHandler struct {
-	NPUPlugins  map[string]NPUBuilder
-	FaultHandle FaultHandler
+	NPUPlugins    sets.String
+	PolicyBuilder PolicyBuilder
+	FaultHandle   FaultHandler
 	ScheduleEnv
 }
 

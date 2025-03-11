@@ -27,16 +27,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// SetAcceleratorValue Set the acceleratorValue to distinguish between task types.
-func (ab *Base910b) SetAcceleratorValue(value string) {
-	ab.acceleratorValue = value
-}
-
-// GetAcceleratorValue Get the acceleratorValue to distinguish between task types.
-func (ab *Base910b) GetAcceleratorValue() string {
-	return ab.acceleratorValue
-}
-
 func (ab *Base910b) initSelectNodeInf(npuTop []int) SelectNodeInf {
 	var sNodeInf SelectNodeInf
 	var leftHccsTop []int
@@ -129,4 +119,114 @@ func (ab *Base910b) GetNodeBestScore(taskNPUNum int, npuTop []int) (int, error) 
 		return 0, err
 	}
 	return bestScore, nil
+}
+
+// SelectNPUByTaskNPUNumAndNodeTop select npu by task num and node card topo
+func (tp *Base910b) SelectNPUByTaskNPUNumAndNodeTop(taskNPUNum int, nodeTop []int) ([]int, error) {
+	if taskNPUNum == tp.MaxNodeNPUNum {
+		if len(nodeTop) == tp.MaxNodeNPUNum {
+			return nodeTop, nil
+		}
+		err := fmt.Errorf("node top<%v> can not meet task req<%d>", nodeTop, taskNPUNum)
+		klog.V(util.LogErrorLev).Infof("%s SelectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
+		return nil, err
+	}
+	priorityArray, err := tp.GetNPUAllocPriorityArray(taskNPUNum)
+	if err != nil {
+		klog.V(util.LogErrorLev).Info(err.Error())
+		return nil, err
+	}
+	klog.V(util.LogInfoLev).Infof("SelectNPUFromNode %s[%d] priority:%v in %v.",
+		tp.GetPluginName(), taskNPUNum, priorityArray, nodeTop)
+
+	leftHccsArray, rightHccsArray, samePlaceHccsArray := tp.GetNodeHccsArray(nodeTop, tp.NPUTaskNum > 1)
+	for _, priority := range priorityArray {
+		if priority == len(leftHccsArray) {
+			return leftHccsArray[:taskNPUNum], nil
+		}
+		if priority == len(rightHccsArray) {
+			return rightHccsArray[:taskNPUNum], nil
+		}
+		if priority == len(samePlaceHccsArray) {
+			return samePlaceHccsArray[:taskNPUNum], nil
+		}
+	}
+	err = fmt.Errorf("node top<%v> can not meet task req<%d>", len(nodeTop), taskNPUNum)
+	klog.V(util.LogErrorLev).Infof("%s SelectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
+	return nil, err
+}
+
+// GetNPUAllocPriorityArray get npu allocate array
+func (tp *Base910b) GetNPUAllocPriorityArray(taskNPUNumber int) ([]int, error) {
+	var err error
+	if !tp.IsVaildNpuNum(taskNPUNumber) {
+		err = fmt.Errorf("illegal request npu number: %d", taskNPUNumber)
+		klog.V(util.LogErrorLev).Infof("%s %s.", tp.GetPluginName(), err)
+		return nil, err
+	}
+	var priorityArray []int
+	if taskNPUNumber == tp.MaxNodeNPUNum {
+		return []int{tp.MaxNodeNPUNum}, nil
+	}
+	if taskNPUNumber <= tp.MaxNodeNPUNum/util.NPUIndex2 {
+		for i := taskNPUNumber; i <= tp.MaxNodeNPUNum/util.NPUIndex2; i++ {
+			priorityArray = append(priorityArray, i)
+		}
+		return priorityArray, nil
+	}
+	if taskNPUNumber > tp.MaxNodeNPUNum/util.NPUIndex2 {
+		for i := taskNPUNumber; i <= tp.MaxNodeNPUNum; i = i + util.NPUIndex2 {
+			priorityArray = append(priorityArray, i)
+		}
+		return priorityArray, nil
+	}
+	return priorityArray, nil
+}
+
+// GetNodeHccsArray get node hccs array
+func (tp *Base910b) GetNodeHccsArray(nodeTop []int, isMultNpuReplica bool) ([]int, []int, []int) {
+	var leftHccsArray []int
+	var rightHccsArray []int
+
+	idCutNum := tp.MaxNodeNPUNum / util.NPUIndex2
+	for _, v := range nodeTop {
+		if v < idCutNum {
+			leftHccsArray = append(leftHccsArray, v)
+			continue
+		}
+		rightHccsArray = append(rightHccsArray, v)
+	}
+	crossHccsArray := getCrossHccsArray(leftHccsArray, rightHccsArray, isMultNpuReplica, idCutNum)
+	return leftHccsArray, rightHccsArray, crossHccsArray
+}
+
+func getCrossHccsArray(leftHccsArray, rightHccsArray []int, isMultNpuReplica bool, idCutNum int) []int {
+	var crossHccsArray []int
+	if isMultNpuReplica {
+		minLen := len(leftHccsArray)
+		if minLen > len(rightHccsArray) {
+			minLen = len(rightHccsArray)
+		}
+		for i := 0; i < minLen; i++ {
+			crossHccsArray = append(crossHccsArray, leftHccsArray[i], rightHccsArray[i])
+		}
+		return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
+	}
+	for _, leftCardID := range leftHccsArray {
+		for _, rightCardID := range rightHccsArray {
+			if leftCardID+idCutNum == rightCardID {
+				crossHccsArray = append(crossHccsArray, leftCardID, rightCardID)
+				break
+			}
+		}
+	}
+	return getCrossHccsArrayByCutNum(crossHccsArray, idCutNum)
+}
+
+func getCrossHccsArrayByCutNum(crossHccsArray []int, idCutNum int) []int {
+	// npu num must bigger than hccs's npu number, if task is cross hccs
+	if len(crossHccsArray) <= idCutNum {
+		return []int{}
+	}
+	return crossHccsArray
 }

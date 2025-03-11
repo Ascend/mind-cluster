@@ -20,7 +20,7 @@ Package card310x4 is using for HuaWei A300T Ascend pin affinity schedule.
 package card310x4
 
 import (
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
 type card310x4 struct {

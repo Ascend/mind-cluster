@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 )
 
@@ -72,6 +73,39 @@ type ComJob struct {
 type SchedulerJobAttr struct {
 	ComJob
 	*NPUJob
+}
+
+// GetPluginNameByReq get plugin name by job request resource name
+func (sJob SchedulerJobAttr) GetPluginNameByReq() string {
+	name := sJob.ReqNPUName
+	// 1. dynamic vJobs
+	if name == AscendNPUCore {
+		label, ok := sJob.Label[JobKindKey]
+		if !ok {
+			klog.V(LogErrorLev).Infof("%s no has %s label in dyCut mode.", sJob.Name, JobKindKey)
+			return ""
+		}
+		switch label {
+		case JobKind910Value, JobKind910BValue:
+			name = NPU910CardName
+		case JobKind310Value:
+			name = NPU310CardName
+		case JobKind310PValue:
+			name = NPU310PCardName
+		default:
+			klog.V(LogErrorLev).Infof("%s unknown label: %s in dyCut mode.", sJob.Name, label)
+			return ""
+		}
+	}
+	// 2. static vJobs
+	if strings.HasSuffix(name, "c") {
+		nameSplit := strings.Split(name, "-")
+		if len(nameSplit) < NPUIndex2 {
+			return ""
+		}
+		return nameSplit[0]
+	}
+	return name
 }
 
 // IsLargeModelJob job is large model job

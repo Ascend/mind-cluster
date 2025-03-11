@@ -24,6 +24,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -68,14 +69,14 @@ func FakeSchedulerJobAttrByJob(job *api.JobInfo) util.SchedulerJobAttr {
 // NewDefaultHandler new default handler
 func NewDefaultHandler() *plugin.ScheduleHandler {
 	scheduleHandler := &plugin.ScheduleHandler{
-		NPUPlugins: map[string]plugin.NPUBuilder{},
+		NPUPlugins: make(sets.String),
 		ScheduleEnv: plugin.ScheduleEnv{
 			FrameAttr:               plugin.NewVolcanoFrame(),
 			JobScheduleInfoRecorder: plugin.NewJobScheduleInfoRecorder(),
 			ClusterCache:            plugin.NewClusterCache(),
 		},
 	}
-	scheduleHandler.NPUPlugins[util.NPU910CardName] = func(string2 string) plugin.ISchedulerPlugin {
+	scheduleHandler.PolicyBuilder = func() plugin.SchedulerPluginNeed {
 		return nil
 	}
 	return scheduleHandler
@@ -91,6 +92,9 @@ func FakeScheduleEnv() *plugin.ScheduleEnv {
 	sHandle.InitVolcanoFrameFromSsn(ssn)
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
+	task := sHandle.Jobs["vcjob/pg0"].Tasks["vcjob-pod1"]
+	task.Status = util.TaskStatusAllocate
+	sHandle.Jobs["vcjob/pg0"].Tasks["vcjob-pod1"] = task
 	sHandle.ScheduleEnv.FrameAttr.KubeClient = fake.NewSimpleClientset()
 	node0 := sHandle.ScheduleEnv.Nodes[fakeNodeName]
 	node0.Annotation[unhealthyNPU] = annoCards

@@ -28,6 +28,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/apis/pkg/apis/scheduling"
@@ -41,7 +42,7 @@ import (
 )
 
 type fields struct {
-	NPUPlugins  map[string]NPUBuilder
+	NPUPlugins  sets.String
 	ScheduleEnv ScheduleEnv
 }
 
@@ -345,14 +346,14 @@ func buildBeforeCloseHandler() []beforeCloseHandlerTest {
 	tests := []beforeCloseHandlerTest{
 		{
 			name: "01-BeforeCloseHandler no cache test",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: map[string]sets.Empty{},
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
 		},
 		{
 			name: "02-BeforeCloseHandler save cache test",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: map[string]sets.Empty{},
 				ScheduleEnv: ScheduleEnv{
 					OutputCache: ScheduleCache{Names: map[string]string{"fault": "test"},
 						Namespaces: map[string]string{"fault": "hahaNameSpace"},
@@ -360,7 +361,7 @@ func buildBeforeCloseHandler() []beforeCloseHandlerTest {
 		},
 		{
 			name: "03-BeforeCloseHandler save reset cm and tor infos",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: map[string]sets.Empty{},
 				ScheduleEnv: newDefaultsHandlerByFakeSsn().ScheduleEnv},
 		},
 	}
@@ -432,53 +433,6 @@ func TestInitNPUSession(t *testing.T) {
 	}
 }
 
-type isPluginRegisteredArgs struct {
-	name string
-}
-
-type isPluginRegisteredTest struct {
-	name   string
-	fields fields
-	args   isPluginRegisteredArgs
-	want   bool
-}
-
-func buildIsPluginRegisteredTest() []isPluginRegisteredTest {
-	tests := []isPluginRegisteredTest{
-		{
-			name: "01-IsPluginRegistered not registered test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
-				ScheduleEnv: ScheduleEnv{
-					ClusterCache: NewClusterCache(),
-					FrameAttr:    VolcanoFrame{}}},
-			args: isPluginRegisteredArgs{name: "haha"},
-			want: false,
-		},
-		{
-			name:   "02-IsPluginRegistered registered test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{"haha": nil}},
-			args:   isPluginRegisteredArgs{name: "haha"},
-			want:   true,
-		},
-	}
-	return tests
-}
-
-func TestIsPluginRegistered(t *testing.T) {
-	tests := buildIsPluginRegisteredTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			if got := sHandle.IsPluginRegistered(tt.args.name); got != tt.want {
-				t.Errorf("IsPluginRegistered() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type preStartPluginArgs struct {
 	ssn *framework.Session
 }
@@ -509,48 +463,6 @@ func TestScheduleHandlerPreStartPlugin(t *testing.T) {
 				ScheduleEnv: tt.fields.ScheduleEnv,
 			}
 			sHandle.PreStartPlugin(tt.args.ssn)
-		})
-	}
-}
-
-type registerNPUSchedulerArgs struct {
-	name string
-	pc   NPUBuilder
-}
-
-type registerNPUSchedulerTest struct {
-	name   string
-	fields fields
-	args   registerNPUSchedulerArgs
-}
-
-func buildRegisterNPUSchedulerTest() []registerNPUSchedulerTest {
-	tests := []registerNPUSchedulerTest{
-		{
-			name:   "01-RegisterNPUScheduler not exist before test.",
-			fields: fields{NPUPlugins: nil},
-			args: registerNPUSchedulerArgs{
-				name: "haha", pc: nil},
-		},
-		{
-			name:   "02-RegisterNPUScheduler exist before test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{"haha": nil}},
-			args: registerNPUSchedulerArgs{
-				name: "haha", pc: nil},
-		},
-	}
-	return tests
-}
-
-func TestRegisterNPUScheduler(t *testing.T) {
-	tests := buildRegisterNPUSchedulerTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
-			}
-			sHandle.RegisterNPUScheduler(tt.args.name, tt.args.pc)
 		})
 	}
 }
@@ -785,7 +697,7 @@ func TestGetPodGroupOwnerRef(t *testing.T) {
 // HandlerStart HuaWei NPU plugin start by frame.
 func newDefaultHandler() *ScheduleHandler {
 	scheduleHandler := &ScheduleHandler{
-		NPUPlugins: map[string]NPUBuilder{},
+		NPUPlugins: sets.String{},
 		ScheduleEnv: ScheduleEnv{
 			ClusterCache:            NewClusterCache(),
 			FrameAttr:               NewVolcanoFrame(),
@@ -794,7 +706,9 @@ func newDefaultHandler() *ScheduleHandler {
 	}
 
 	scheduleHandler.FrameAttr.OnceInit = &sync.Once{}
-	scheduleHandler.RegisterNPUScheduler(util.NPU910CardName, New)
+	scheduleHandler.PolicyBuilder = func() SchedulerPluginNeed {
+		return New(util.NPU910CardName)
+	}
 	return scheduleHandler
 }
 

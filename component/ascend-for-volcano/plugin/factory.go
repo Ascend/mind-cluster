@@ -42,45 +42,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
-// RegisterNPUScheduler register the plugin,like factory.
-func (sHandle *ScheduleHandler) RegisterNPUScheduler(name string, pc NPUBuilder) {
-	if sHandle == nil || pc == nil {
-		klog.V(util.LogInfoLev).Infof("RegisterNPUScheduler : %s.", objectNilError)
-		return
-	}
-	if _, ok := sHandle.NPUPlugins[name]; ok {
-		klog.V(util.LogInfoLev).Infof("NPU Scheduler[%s] has been registered before.", name)
-		return
-	}
-
-	sHandle.NPUPlugins[name] = pc
-	klog.V(util.LogInfoLev).Infof("NPU Scheduler[%s] registered.", name)
-}
-
-// IsPluginRegistered Determine if the plug-in is registered.
-func (sHandle *ScheduleHandler) IsPluginRegistered(name string) bool {
-	if sHandle == nil {
-		klog.V(util.LogErrorLev).Infof("IsPluginRegistered %s", objectNilError)
-		return false
-	}
-	pNames := strings.Split(name, "-")
-	if len(pNames) == 0 {
-		klog.V(util.LogErrorLev).Infof("IsPluginRegistered %s %#v", name, pNames)
-		return false
-	}
-	if len(pNames) > 1 {
-		// vnpu support
-		pNames[0] = pNames[0] + "-"
-	}
-	for k := range sHandle.NPUPlugins {
-		if k == pNames[0] {
-			return true
-		}
-	}
-	klog.V(util.LogErrorLev).Infof("IsPluginRegistered %s not in NPUPlugins %+v", name, sHandle.NPUPlugins)
-	return false
-}
-
 // checkSession check the ssn's parameters
 func (sHandle *ScheduleHandler) checkSession(ssn *framework.Session) error {
 	if sHandle == nil || ssn == nil {
@@ -249,7 +210,6 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 	sHandle.FrameAttr.UID = ssn.UID
 	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
 	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
-	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
 	sHandle.initDynamicParameters(configs)
 	sHandle.initStaticParameters(configs)
 }
@@ -275,7 +235,6 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 	sHandle.FrameAttr.ReservePodSize = getReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
 	sHandle.FrameAttr.GraceDeleteTime = getGraceDeleteTime(configs)
 	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
-	sHandle.FrameAttr.needRestartInformer = false
 }
 
 // InitConfsFromSsn init confs from session
@@ -306,11 +265,11 @@ func (sHandle *ScheduleHandler) InitJobsPlugin() {
 		return
 	}
 	for _, vcJob := range sHandle.Jobs {
-		if vcJob.handler == nil {
+		if vcJob.policyHandler == nil {
 			klog.V(util.LogErrorLev).Infof("InitJobsPlugin %s's plugin not register.", vcJob.Name)
 			continue
 		}
-		if err := vcJob.handler.InitMyJobPlugin(vcJob.SchedulerJobAttr, sHandle.ScheduleEnv); err != nil {
+		if err := vcJob.policyHandler.InitMyJobPlugin(vcJob.SchedulerJobAttr, sHandle.ScheduleEnv); err != nil {
 			return
 		}
 	}
@@ -338,7 +297,7 @@ func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
 		return
 	}
 	for _, job := range sHandle.Jobs {
-		if err := job.handler.PreStartAction(ssn); err != nil {
+		if err := job.policyHandler.PreStartAction(ssn); err != nil {
 			if strings.Contains(err.Error(), util.ArgumentError) {
 				continue
 			}
@@ -528,7 +487,7 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	}
 
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
-	errGet := vcJob.handler.ScoreBestNPUNodes(task, nodes, scoreMap)
+	errGet := vcJob.policyHandler.ScoreBestNPUNodes(task, nodes, scoreMap)
 	if sHandle.FaultHandle != nil {
 		sHandle.FaultHandle.ScoreBestNPUNodes(task, scoreMap)
 	}

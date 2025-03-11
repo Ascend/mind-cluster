@@ -32,7 +32,7 @@ import (
 )
 
 // InitPolicyHandler init nslb policy handler
-func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plugin.ISchedulerPluginNeed, bool) {
+func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plugin.SchedulerPluginNeed, bool) {
 	if !attr.IsJobHasTorAffinityLabel() {
 		return nil, false
 	}

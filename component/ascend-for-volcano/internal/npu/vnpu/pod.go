@@ -19,6 +19,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 func getNamespaceEvents(ssn *framework.Session, namespace string) (*v1.EventList, error) {
@@ -81,4 +82,22 @@ func getPodFromKubernetes(ssn *framework.Session, name, namespace string) *v1.Po
 	}
 	klog.V(util.LogInfoLev).Infof("in getPodEvent pod %s segmentation fault event", name)
 	return faultPod
+}
+
+// GetVNPUTaskDVPP dvpp default is null
+func GetVNPUTaskDVPP(asTask util.NPUTask) string {
+	value, ok := asTask.Label[plugin.AscendVNPUDVPP]
+	if !ok {
+		value = plugin.AscendDVPPEnabledNull
+	}
+	return value
+}
+
+// GetVNPUTaskCpuLevel cpu default is null
+func GetVNPUTaskCpuLevel(asTask util.NPUTask) string {
+	value, ok := asTask.Label[plugin.AscendVNPULevel]
+	if !ok {
+		value = plugin.AscendVNPULevelLow
+	}
+	return value
 }

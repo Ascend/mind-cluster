@@ -30,8 +30,8 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -102,8 +102,8 @@ func TestValidNPUJob(t *testing.T) {
 		Task       map[api.TaskID]util.NPUTask
 		pass       bool
 	}{
-		{name: "01-want not pass when job label is invalid", NPUTaskNum: 1, ReqNPUNum: 0,
-			Labels: map[string]string{}, pass: false},
+		{name: "01-want  pass when job label is nil", NPUTaskNum: 1, ReqNPUNum: 0,
+			Labels: map[string]string{}, pass: true},
 		{name: "02-want pass when job is invalid", NPUTaskNum: 1, ReqNPUNum: 1,
 			Labels: map[string]string{util.JobKindKey: util.JobKind910BValue}, pass: true},
 		{name: "03-want pass when request 1 npu", NPUTaskNum: 1, ReqNPUNum: 1,

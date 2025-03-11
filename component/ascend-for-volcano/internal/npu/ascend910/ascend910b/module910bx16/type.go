@@ -33,3 +33,11 @@ const (
 	nodeNPUNumber       = 16
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 )
+
+// SelectNodeInf for node hccs.
+type SelectNodeInf struct {
+	AllNPUNum   int
+	LeftNPUNum  int
+	RightNPUNum int
+	crossNPUNum int
+}

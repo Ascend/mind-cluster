@@ -38,7 +38,6 @@ const (
 type vNPUTaskFields struct {
 	StaticByConf bool
 	VT           VTemplate
-	StaticVNPU   StaticVNPU
 	DynamicVNPU  DynamicVNPU
 }
 
@@ -76,15 +75,17 @@ func mockCommonNode() plugin.CommonNode {
 func mockVNode() plugin.VNode {
 	return plugin.VNode{
 		Chips: map[int]*plugin.VChip{
-			0: {TotalRes: util.VResource{Aicore: 5}},
+			0: {TotalRes: util.VResource{Aicore: util.NPUIndex8},
+				FreeRes: util.VResource{Aicore: util.NPUIndex8, Aicpu: util.NPUIndex8},
+				Name:    Ascend910Card},
 		},
 		ChipKind:         plugin.Ascend910,
 		UnhealthyChipIds: map[int]struct{}{},
 		ServerType:       Ascend910Card,
-		TotalChipNum:     1,
-		AiCorePerChip:    1,
-		FreeChipNum:      1,
-		TotalRes:         util.VResource{Aicore: 1},
+		TotalChipNum:     util.NPUIndex8,
+		AiCorePerChip:    util.NPUIndex8,
+		FreeChipNum:      util.NPUIndex8,
+		TotalRes:         util.VResource{Aicore: util.CoreNum25},
 		ValidVNode:       true,
 		ChipType:         plugin.ChipTypeB1,
 	}
@@ -110,14 +111,12 @@ func mockVirtualNPU(fields vNPUTaskFields) *VirtualNPU {
 	return &VirtualNPU{
 		StaticByConf: fields.StaticByConf,
 		VT:           fields.VT,
-		StaticVNPU:   fields.StaticVNPU,
 		DynamicVNPU:  fields.DynamicVNPU,
 	}
 }
 
 func mockDynamicVNPU(fields dynamicVNPUFields) *DynamicVNPU {
 	return &DynamicVNPU{
-		vnpuHandler:    fields.vnpuHandler,
 		DowngradeCache: fields.DowngradeCache,
 		ConCache:       fields.ConCache,
 	}
@@ -153,7 +152,7 @@ func buildCheckNodeNPUByDyTaskTestCase06() vNPUTestCase {
 		name:   "06 will return error when node.ChipKind is plugin.Ascend310P",
 		fields: mockVNPUTaskFields(),
 		args: vNPUTaskArgs{task: &api.TaskInfo{}, node: node,
-			taskResReq: util.VResource{Aicore: 2, Aicpu: 2}},
+			taskResReq: util.VResource{Aicore: util.NPUIndex16, Aicpu: util.NPUIndex16}},
 		wantErr: true,
 	}
 }
@@ -189,16 +188,16 @@ func buildCheckNodeNPUByDyTaskTestCase() []vNPUTestCase {
 			args: vNPUTaskArgs{
 				task:       &api.TaskInfo{},
 				node:       mockNode(),
-				taskResReq: util.VResource{Aicore: 6, Aicpu: 4},
+				taskResReq: util.VResource{Aicore: util.NPUIndex16, Aicpu: util.NPUIndex16},
 			},
 			wantErr: true,
 		},
 		{
-			name:   "04 will return error when task can be down grade and node res is not meet job require",
+			name:   "04 will return error when task can be down grade and node res is  meet job require",
 			fields: mockVNPUTaskFields(),
 			args: vNPUTaskArgs{task: &api.TaskInfo{}, node: mockNode(),
 				taskResReq: util.VResource{Aicore: 2, Aicpu: 2}},
-			wantErr: true,
+			wantErr: false,
 		},
 		buildCheckNodeNPUByDyTaskTestCase05(),
 		buildCheckNodeNPUByDyTaskTestCase06(),
@@ -220,7 +219,6 @@ func TestVirtualNPUCheckNodeNPUByDyTask(t *testing.T) {
 }
 
 type dynamicVNPUFields struct {
-	vnpuHandler    vnpuHandler
 	DowngradeCache map[string][]string
 	ConCache       map[string]map[string]map[api.TaskID]struct{}
 }
@@ -547,6 +545,15 @@ func buildUseAnnotationTestCase() []vNPUTestCase {
 			args: vNPUTaskArgs{task: mockTask1, node: mockNode(), vt: VTemplate{Data: testVT},
 				taskResReq: util.VResource{
 					Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull},
+			},
+			wantRes: true,
+		},
+		{
+			name:   "03 will return not nil when tp and task are whole card",
+			fields: vNPUTaskFields{DynamicVNPU: DynamicVNPU{ConCache: conCache}},
+			args: vNPUTaskArgs{task: mockTask1, node: mockNode(), vt: VTemplate{Data: testVT},
+				taskResReq: util.VResource{
+					Aicore: util.NPUIndex8, Aicpu: util.NPUIndex1, DVPP: plugin.AscendDVPPEnabledNull},
 			},
 			wantRes: true,
 		},

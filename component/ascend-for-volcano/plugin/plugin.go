@@ -27,11 +27,11 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// NPUBuilder PluginBuilder plugin management
-type NPUBuilder = func(string2 string) ISchedulerPlugin
+// PolicyBuilder PolicyBuilder plugin management
+type PolicyBuilder = func() SchedulerPluginNeed
 
-// ISchedulerPluginBase the frame plugin need implement.
-type ISchedulerPluginBase interface {
+// SchedulerPluginBase the frame plugin need implement.
+type SchedulerPluginBase interface {
 	GetPluginName() string
 	SetPluginName(string)
 	GetAnnoPreVal() string
@@ -40,8 +40,8 @@ type ISchedulerPluginBase interface {
 	SetAnnoName(string)
 }
 
-// ISchedulerPluginNeed The interface that the specific plug-in needs to implement.
-type ISchedulerPluginNeed interface {
+// SchedulerPluginNeed The interface that the specific plug-in needs to implement.
+type SchedulerPluginNeed interface {
 	// ValidNPUJob Valid the job part of npu scheduler policy, if not, disallowed.
 	ValidNPUJob() *api.ValidateResult
 	CheckNodeNPUByTask(*api.TaskInfo, NPUNode) error
@@ -52,10 +52,10 @@ type ISchedulerPluginNeed interface {
 	InitMyJobPlugin(util.SchedulerJobAttr, ScheduleEnv) error
 }
 
-// ISchedulerPlugin for volcano-npu plugin has function.
-type ISchedulerPlugin interface {
-	ISchedulerPluginBase
-	ISchedulerPluginNeed
+// SchedulerPlugin for volcano-npu plugin has function.
+type SchedulerPlugin interface {
+	SchedulerPluginBase
+	SchedulerPluginNeed
 }
 
 type FaultHandler interface {
@@ -65,25 +65,23 @@ type FaultHandler interface {
 	PreStopAction(*ScheduleEnv) error
 }
 
-// SchedulerPlugin for all volcano-npu plugin.
-type SchedulerPlugin struct {
+// SchedulerBaseAttr for all volcano-npu plugin.
+type SchedulerBaseAttr struct {
 	// the new func add name
 	pluginName string
 	// in k8s annotation huawei.com/Ascend310,huawei.com/Ascend910
 	annoName string
 	// huawei.com/
 	annoPreVal string
-	// config like arm x86
-	defaultJobSchedulerConfig map[string]string
 }
 
 // GetPluginName get PluginName.
-func (sp SchedulerPlugin) GetPluginName() string {
+func (sp SchedulerBaseAttr) GetPluginName() string {
 	return sp.pluginName
 }
 
 // SetPluginName set PluginName.
-func (sp *SchedulerPlugin) SetPluginName(name string) {
+func (sp *SchedulerBaseAttr) SetPluginName(name string) {
 	if sp == nil {
 		klog.V(util.LogInfoLev).Infof("SetPluginName failed: %s.", util.ArgumentError)
 		return
@@ -92,12 +90,12 @@ func (sp *SchedulerPlugin) SetPluginName(name string) {
 }
 
 // GetAnnoPreVal get AnnoPreVal.
-func (sp SchedulerPlugin) GetAnnoPreVal() string {
+func (sp SchedulerBaseAttr) GetAnnoPreVal() string {
 	return sp.annoPreVal
 }
 
 // SetAnnoPreVal set AnnoPreVal.
-func (sp *SchedulerPlugin) SetAnnoPreVal(value string) {
+func (sp *SchedulerBaseAttr) SetAnnoPreVal(value string) {
 	if sp == nil {
 		klog.V(util.LogInfoLev).Infof("SetAnnoPreVal failed: %s.", util.ArgumentError)
 		return
@@ -106,12 +104,12 @@ func (sp *SchedulerPlugin) SetAnnoPreVal(value string) {
 }
 
 // GetAnnoName get AnnoName.
-func (sp SchedulerPlugin) GetAnnoName() string {
+func (sp SchedulerBaseAttr) GetAnnoName() string {
 	return sp.annoName
 }
 
 // SetAnnoName set AnnoName.
-func (sp *SchedulerPlugin) SetAnnoName(annoName string) {
+func (sp *SchedulerBaseAttr) SetAnnoName(annoName string) {
 	if sp == nil {
 		klog.V(util.LogInfoLev).Infof("SetAnnoName failed: %s.", util.ArgumentError)
 		return

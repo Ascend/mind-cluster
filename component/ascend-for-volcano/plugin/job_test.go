@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -407,14 +408,14 @@ func buildJobValidTest() []jobValidTest {
 		},
 		{
 			name: "03-JobValid job not in jobs test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{ClusterCache: NewClusterCache()}},
 			args: jobValidArgs{obj: tJob},
 			want: nil,
 		},
 		{
 			name: "04-JobValid job is deployment job and task is not ready.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{ClusterCache: ClusterCache{
 					Jobs: map[api.JobID]SchedulerJob{tJob.UID: {Owner: OwnerInfo{
 						OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
@@ -463,7 +464,7 @@ func buildSetJobPendReasonByNodesCaseTest() []setJobPendReasonByNodesCaseTest {
 	tests := []setJobPendReasonByNodesCaseTest{
 		{
 			name: "01-SetJobPendReasonByNodesCase job no error test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -471,7 +472,7 @@ func buildSetJobPendReasonByNodesCaseTest() []setJobPendReasonByNodesCaseTest {
 		},
 		{
 			name: "02-SetJobPendReasonByNodesCase test ok.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -511,7 +512,7 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 	tests := []setJobPendingReasonTest{
 		{
 			name: "01-SetJobPendingReason nil test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -520,7 +521,7 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 		},
 		{
 			name: "02-SetJobPendingReason not support type test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -529,7 +530,7 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 		},
 		{
 			name: "03-SetJobPendingReason string type test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -538,7 +539,7 @@ func buildSetJobPendingReasonTest() []setJobPendingReasonTest {
 		},
 		{
 			name: "04-SetJobPendingReason nodeErrors test.",
-			fields: fields{NPUPlugins: map[string]NPUBuilder{},
+			fields: fields{NPUPlugins: make(sets.String),
 				ScheduleEnv: ScheduleEnv{
 					ClusterCache: NewClusterCache(),
 					FrameAttr:    VolcanoFrame{}}},
@@ -566,7 +567,7 @@ func TestScheduleHandlerSetJobPendingReason(t *testing.T) {
 
 type schedulerJobFields struct {
 	SchedulerJobAttr util.SchedulerJobAttr
-	handler          ISchedulerPlugin
+	handler          SchedulerPlugin
 }
 
 type CheckNodeNumArgs struct {
@@ -635,7 +636,7 @@ func TestSchedulerJobCheckNodeNum(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sJob := &SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
-				handler:          tt.fields.handler,
+				policyHandler:    tt.fields.handler,
 			}
 			if err := sJob.CheckNodeNum(tt.args.taskInfo, tt.args.vcNode); (err != nil) != tt.wantErr {
 				t.Errorf("CheckNodeNum() error = %v, wantErr %v", err, tt.wantErr)
@@ -681,7 +682,7 @@ func TestSchedulerJobInit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sJob := &SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
-				handler:          tt.fields.handler,
+				policyHandler:    tt.fields.handler,
 			}
 			if err := sJob.Init(tt.args.vcJob, tt.args.sHandle); (err != nil) != tt.wantErr {
 				t.Errorf("Init() error = %v, wantErr %v", err, tt.wantErr)
@@ -692,7 +693,7 @@ func TestSchedulerJobInit(t *testing.T) {
 
 type fieldsResetConfigMap struct {
 	SchedulerJobAttr util.SchedulerJobAttr
-	handler          ISchedulerPlugin
+	handler          SchedulerPlugin
 	ServerList       []*Tor
 	TorBlackMaps     map[string]struct{}
 	JobReadyTag      bool
@@ -727,7 +728,7 @@ func TestSchedulerJobUpdateResetConfigMap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sJob := &SchedulerJob{
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
-				handler:          tt.fields.handler,
+				policyHandler:    tt.fields.handler,
 				JobReadyTag:      &tt.fields.JobReadyTag,
 			}
 			sJob.updateResetConfigMap(tt.args.sHandle)

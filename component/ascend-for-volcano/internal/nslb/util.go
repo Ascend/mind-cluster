@@ -162,3 +162,9 @@ func (th *TorHandler) setFillJobServerList(Tors []*plugin.Tor, taskNum int) erro
 func isFillJob(label map[string]string, nTaskNum int) bool {
 	return label[TorAffinityKey] == LargeModelTag && nTaskNum < fillJobMaxNPUTaskNum
 }
+
+func refreshScoreMap(nodes []*api.NodeInfo, scoreMap map[string]float64) {
+	for _, node := range nodes {
+		scoreMap[node.Name] = 0
+	}
+}

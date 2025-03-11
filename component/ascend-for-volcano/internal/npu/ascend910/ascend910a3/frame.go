@@ -144,8 +144,3 @@ func (tp *Base910A3) selectNPUForStandaloneJob(taskNPUNum int, npuTop []int,
 	}
 	return selected, nil
 }
-
-// ReleaseAnnotation Release used resource.
-func (tp *Base910A3) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
-	return &node
-}

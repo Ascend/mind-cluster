@@ -21,9 +21,7 @@ package vnpu
 
 import (
 	"volcano.sh/volcano/pkg/scheduler/api"
-
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 const (
@@ -53,28 +51,15 @@ type VTemplate struct {
 type VirtualNPU struct {
 	StaticByConf bool
 	VT           VTemplate
-	StaticVNPU
 	DynamicVNPU
-}
-
-// StaticVNPU Static VNPU struct.
-type StaticVNPU struct {
-	vnpuHandler
 }
 
 // DynamicVNPU dynamic VNPU struct.
 type DynamicVNPU struct {
-	vnpuHandler
 	DowngradeCache map[string][]string // taskName: nodes
 	// for Concurrent task. not same core request task only has one on a node in same time.
 	// nodeName: templateName:taskUID
 	ConCache map[string]map[string]map[api.TaskID]struct{}
-}
-
-type vnpuHandler interface {
-	CheckNodeNPUByTask(*api.TaskInfo, plugin.NPUNode, util.VResource) error
-	ScoreBestNPUNodes(*api.TaskInfo, []*api.NodeInfo, map[string]float64) error
-	UseAnnotation(*api.TaskInfo, plugin.NPUNode, util.VResource, VTemplate) *plugin.NPUNode
 }
 
 // Action vnpu actions

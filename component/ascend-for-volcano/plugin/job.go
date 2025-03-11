@@ -217,23 +217,13 @@ func GetJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 	return resultMap
 }
 
-// initSelfPluginByJobInfo init job's handler, the deal plugin.
+// initSelfPluginByJobInfo init job's policyHandler, the deal plugin.
 func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 	if sJob == nil {
 		return
 	}
 
-	pluginName := sJob.getPluginNameByReq()
-	if pluginName == "" {
-		return
-	}
-
-	plugin, ok := sHandle.NPUPlugins[pluginName]
-	if !ok {
-		return
-	}
-
-	sJob.handler = plugin(pluginName)
+	sJob.policyHandler = sHandle.PolicyBuilder()
 }
 
 // IsJobInitial Determine if the task is ready.
@@ -280,7 +270,7 @@ func (sJob *SchedulerJob) Init(vcJob *api.JobInfo, sHandle *ScheduleHandler) err
 		return initErr
 	}
 
-	if !sJob.isJobSupportByPlugin(sHandle) {
+	if !sJob.isJobSupportByPlugin() {
 		klog.V(util.LogDebugLev).Infof("%s IsJobSupportByPlugin not has suitable plugin.", sJob.Name)
 		return fmt.Errorf("%s's plugin not regist", sJob.Name)
 	}
@@ -460,7 +450,7 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 		}
 	}
 	sJob.SchedulerJobAttr.NPUJob = nil
-	sJob.handler = nil
+	sJob.policyHandler = nil
 	sJob.SchedulerJobAttr.NPUJob = &util.NPUJob{ReqNPUName: name, ReqNPUNum: num, Tasks: GetJobNPUTasks(vcJob),
 		VJob: &util.VJob{}, SpBlockNPUNum: spBlock}
 	sJob.NPUTaskNum = sJob.GetNPUTaskNumInJob()
@@ -483,7 +473,7 @@ func (sJob *SchedulerJob) UpdateJobPendingMessage(message, nodeName string) {
 
 // IsNPUJob check SchedulerJob is npu job
 func (sJob SchedulerJob) IsNPUJob() bool {
-	return sJob.handler != nil
+	return sJob.policyHandler != nil
 }
 
 // ValidJobFn valid job.
@@ -504,8 +494,15 @@ func (sJob SchedulerJob) ValidJobFn() *api.ValidateResult {
 			i++
 		}
 	}
+	if sJob.VJob.Type == util.JobTypeStCut && sJob.ReqNPUNum != 1 {
+		return &api.ValidateResult{
+			Message: fmt.Sprintf("static job %s task require npu num %d is not 1", sJob.Name, sJob.ReqNPUNum),
+			Reason:  "job is not ready",
+			Pass:    false,
+		}
+	}
 
-	if result := sJob.handler.ValidNPUJob(); result != nil {
+	if result := sJob.policyHandler.ValidNPUJob(); result != nil {
 		klog.V(util.LogErrorLev).Infof("%s validNPUJob failed:%s.", PluginName, result.Message)
 		return result
 	}
@@ -709,45 +706,13 @@ func (sJob *SchedulerJob) CheckNodeNum(taskInfo *api.TaskInfo, vcNode NPUNode) e
 	return nil
 }
 
-func (sJob SchedulerJob) getPluginNameByReq() string {
-	name := sJob.ReqNPUName
-	// 1. dynamic vJobs
-	if strings.Contains(name, "npu-core") {
-		label, ok := sJob.Label[util.JobKindKey]
-		if !ok {
-			klog.V(util.LogErrorLev).Infof("%s no has %s label in dyCut mode.", sJob.Name, util.JobKindKey)
-			return ""
-		}
-		switch label {
-		case util.JobKind910Value, util.JobKind910BValue:
-			name = util.NPU910CardName
-		case util.JobKind310Value:
-			name = util.NPU310CardName
-		case util.JobKind310PValue:
-			name = util.NPU310PCardName
-		default:
-			klog.V(util.LogErrorLev).Infof("%s unknown label: %s in dyCut mode.", sJob.Name, label)
-			return ""
-		}
-	}
-	// 2. static vJobs
-	if strings.HasSuffix(name, "c") {
-		nameSplit := strings.Split(name, "-")
-		if len(nameSplit) < util.NPUIndex2 {
-			return ""
-		}
-		return nameSplit[0]
-	}
-	return name
-}
-
 // isJobSupportByPlugin judge job whether has it's plugin.
-func (sJob SchedulerJob) isJobSupportByPlugin(sHandle *ScheduleHandler) bool {
-	name := sJob.getPluginNameByReq()
+func (sJob SchedulerJob) isJobSupportByPlugin() bool {
+	name := sJob.GetPluginNameByReq()
 	if name == "" {
 		return false
 	}
-	return sHandle.IsPluginRegistered(name)
+	return true
 }
 
 // GetAnnoName get job AnnoName, include vNPU job.
@@ -761,7 +726,7 @@ func (sJob SchedulerJob) GetAnnoName() (string, error) {
 		}
 		return util.AscendNPUCore, nil
 	}
-	return sJob.handler.GetAnnoName(), nil
+	return name, nil
 }
 
 // GetJobInfoAllocatedTaskNum get job allocated task num

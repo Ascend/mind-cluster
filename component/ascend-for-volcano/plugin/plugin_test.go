@@ -42,7 +42,7 @@ const (
 
 type ascendTest struct {
 	// need plugin
-	SchedulerPlugin
+	SchedulerBaseAttr
 	// env
 	ScheduleEnv
 	// job's attribute
@@ -50,7 +50,7 @@ type ascendTest struct {
 }
 
 // New return npu plugin.
-func New(npuName string) ISchedulerPlugin {
+func New(npuName string) SchedulerPlugin {
 	var npuPlugin = &ascendTest{}
 	npuPlugin.SetPluginName(npuName)
 	npuPlugin.SetAnnoName(testCardName)
