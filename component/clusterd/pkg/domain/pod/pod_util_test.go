@@ -8,10 +8,20 @@ package pod
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	testJobId            = "testJobId"
+	testPodRank          = "0"
+	testIllegalCardRank  = "-1"
+	testDeviceNumPerNode = 8
+	testPodName          = "testPodName"
+	testPodUid           = "testPodUid"
 )
 
 func TestGetJobKeyByPod(t *testing.T) {
@@ -238,6 +248,46 @@ func TestGetPGByPod(t *testing.T) {
 			convey.So(jobName, convey.ShouldEqual, jobName1)
 			convey.So(pgName, convey.ShouldEqual, pgName1)
 			convey.So(namespace, convey.ShouldEqual, podNameSpace1)
+		})
+	})
+}
+
+func TestGetPodRankAndPodUid(t *testing.T) {
+	convey.Convey("test IsSliceContain", t, func() {
+		convey.Convey("case pod.GetPodDeviceNumByJobId small than 1", func() {
+			patch := gomonkey.ApplyFuncReturn(GetPodDeviceNumByJobId, 0)
+			defer patch.Reset()
+			podRank, podUid := GetPodRankAndPodUid(testJobId, "")
+			convey.So(podRank, convey.ShouldEqual, "")
+			convey.So(podUid, convey.ShouldEqual, "")
+		})
+		convey.Convey("case illegal card rank", func() {
+			patch := gomonkey.ApplyFuncReturn(GetPodDeviceNumByJobId, testDeviceNumPerNode)
+			defer patch.Reset()
+			podRank, podUid := GetPodRankAndPodUid(testJobId, testIllegalCardRank)
+			convey.So(podRank, convey.ShouldEqual, "")
+			convey.So(podUid, convey.ShouldEqual, "")
+		})
+		convey.Convey("case empty pod name", func() {
+			patch := gomonkey.ApplyFuncReturn(GetPodDeviceNumByJobId, testDeviceNumPerNode).
+				ApplyFuncReturn(GetPodByRankIndex, v1.Pod{})
+			defer patch.Reset()
+			podRank, podUid := GetPodRankAndPodUid(testJobId, "0")
+			convey.So(podRank, convey.ShouldEqual, testPodRank)
+			convey.So(podUid, convey.ShouldEqual, "")
+		})
+		convey.Convey("normal case", func() {
+			patch := gomonkey.ApplyFuncReturn(GetPodDeviceNumByJobId, testDeviceNumPerNode).
+				ApplyFuncReturn(GetPodByRankIndex, v1.Pod{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{Name: testPodName, UID: testPodUid},
+					Spec:       v1.PodSpec{},
+					Status:     v1.PodStatus{},
+				})
+			defer patch.Reset()
+			podRank, podUid := GetPodRankAndPodUid(testJobId, "0")
+			convey.So(podRank, convey.ShouldEqual, testPodRank)
+			convey.So(podUid, convey.ShouldEqual, testPodUid)
 		})
 	})
 }

@@ -65,8 +65,8 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 			ctl := svr.eventCtl[mockJob]
 			convey.So(ctl, convey.ShouldNotBeNil)
 			convey.So(ctl.healthState == constant.UnHealthyState, convey.ShouldBeTrue)
-			convey.So(len(ctl.cacheNormalFault) == 1, convey.ShouldBeTrue)
-			convey.So(len(ctl.cacheUceFault) == 1, convey.ShouldBeTrue)
+			convey.So(len(ctl.cacheNormalFault) == 1, convey.ShouldBeFalse)
+			convey.So(len(ctl.cacheUceFault) == 1, convey.ShouldBeFalse)
 		})
 	})
 }

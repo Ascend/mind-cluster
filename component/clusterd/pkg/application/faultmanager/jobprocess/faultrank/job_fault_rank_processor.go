@@ -14,6 +14,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -81,15 +82,17 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 	if !ok || len(devicesOfJobOnNode.DeviceList) == 0 {
 		return faultRankList
 	}
-
 	for _, deviceInfo := range devicesOfJobOnNode.DeviceList {
 		deviceName := advanceDeviceInfo.ServerType + "-" + deviceInfo.DeviceID
 		faultList, found := advanceDeviceInfo.FaultDeviceList[deviceName]
+		podRank, podUid := pod.GetPodRankAndPodUid(jobId, deviceInfo.RankID)
 		if !found {
 			// business plane find uce fault
 			if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
 				faultRankList = append(faultRankList, constant.FaultRank{
 					RankId:      deviceInfo.RankID,
+					PodUid:      podUid,
+					PodRank:     podRank,
 					FaultCode:   constant.UceFaultCode,
 					FaultLevel:  constant.RestartBusiness,
 					DoStepRetry: processor.canDoStepRetry(jobId, nodeName, deviceName),
@@ -101,6 +104,8 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		for _, fault := range faultList {
 			faultRank := constant.FaultRank{
 				RankId:      deviceInfo.RankID,
+				PodUid:      podUid,
+				PodRank:     podRank,
 				FaultCode:   fault.FaultCode,
 				FaultLevel:  fault.FaultLevel,
 				DoStepRetry: false,
@@ -192,19 +197,19 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 		}
 		if ok && switchInfo.NodeStatus == constant.UnHealthyState {
 			hwlog.RunLog.Debugf("node %s switch is unhealthy", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server)...)
+			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
 			continue
 		}
 		nodeInfo, ok := nodeInfos[constant.NodeInfoPrefix+nodeName]
 		if ok && nodeInfo.NodeStatus == constant.UnHealthyState {
 			hwlog.RunLog.Debugf("node %s is unhealthy", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server)...)
+			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
 			continue
 		}
 		node := kube.GetNode(nodeName)
 		if node == nil || !faultdomain.IsNodeReady(node) {
 			hwlog.RunLog.Debugf("node %s is not ready", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server)...)
+			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
 			continue
 		}
 		faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId)
@@ -213,11 +218,14 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 	return faultList, nodeStatusList
 }
 
-func serverHcclToFaultRank(server constant.ServerHccl) []constant.FaultRank {
+func serverHcclToFaultRank(server constant.ServerHccl, jobId string) []constant.FaultRank {
 	faultRanks := make([]constant.FaultRank, 0, len(server.DeviceList))
 	for _, device := range server.DeviceList {
+		podRank, podUid := pod.GetPodRankAndPodUid(jobId, device.RankID)
 		faultRanks = append(faultRanks, constant.FaultRank{
 			RankId:      device.RankID,
+			PodUid:      podUid,
+			PodRank:     podRank,
 			FaultCode:   "",
 			FaultLevel:  constant.SeparateNPU,
 			DoStepRetry: false,

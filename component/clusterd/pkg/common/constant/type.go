@@ -354,6 +354,8 @@ func NodeInfoBusinessDataIsNotEqual(oldNodeInfo *NodeInfo, newNodeInfo *NodeInfo
 // It includes the rank ID and fault code.
 type FaultRank struct {
 	RankId      string
+	PodUid      string
+	PodRank     string
 	FaultCode   string
 	FaultLevel  string
 	DoStepRetry bool

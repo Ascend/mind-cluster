@@ -62,6 +62,15 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	}
 	var grpcFormatFaults []*pb.FaultRank
 	for _, info := range faultInfo.FaultList {
+		if info.PodUid == "" || info.PodRank == "" {
+			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s",
+				info.PodUid, info.PodRank)
+			continue
+		}
+		faultPod := make(map[string]string)
+		faultPod[info.PodRank] = info.PodUid
+		controller.mergeFaultPod(faultPod)
+		hwlog.RunLog.Debugf("mergeFaultPod: %v", faultPod)
 		fault := &pb.FaultRank{
 			RankId: info.RankId,
 		}
