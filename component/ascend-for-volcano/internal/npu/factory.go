@@ -162,7 +162,7 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 	if !ok {
 		klog.V(util.LogInfoLev).Info("not 300I duo")
 		return base.New(util.NPU310PCardName,
-			base.WithAnnoPreVal(util.NPU310PCardNamePre), base.WithMaxNodeNum(card310pMaxNodeNPUNum)), false
+			base.WithAnnoPreVal(util.NPU310PCardNamePre), base.WithMaxNodeNum(card310pMaxNodeNPUNum)), true
 	}
 	v, ok := attr.Label[accelerator310Key]
 	if !ok {
