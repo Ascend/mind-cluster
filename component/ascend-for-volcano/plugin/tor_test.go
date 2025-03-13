@@ -16,7 +16,7 @@ const (
 )
 
 func fakeNormalTorList(enableNodeNum int, jobUid api.JobID) *TorList {
-	var tmpTors []*Tor
+	var tmpTors = []*Tor{}
 	taskNodeNum := 0
 	for i := 0; i < fakeServerNum; i++ {
 		tmpTor := &Tor{}
@@ -65,7 +65,7 @@ func buildGetLogicTorsAndFullTorNumTestCase() []getLogicTorsAndFullTorNumTest {
 	}
 }
 
-func TestTorList_GetLogicTorsAndFullTorNum(t *testing.T) {
+func TestTorListGetLogicTorsAndFullTorNum(t *testing.T) {
 	tl := fakeNormalTorList(fakeEnableNodeNum, fakeJobId)
 	for _, tt := range buildGetLogicTorsAndFullTorNumTestCase() {
 		t.Run(tt.name, func(t *testing.T) {

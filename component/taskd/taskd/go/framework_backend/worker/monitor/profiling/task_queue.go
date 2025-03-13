@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package profiling_service contains functions that support dynamically collecting profiling data
-package profiling_service
+// Package profiling contains functions that support dynamically collecting profiling data
+package profiling
 
 /*
 #include <stdint.h>

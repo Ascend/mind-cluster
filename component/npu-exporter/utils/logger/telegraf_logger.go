@@ -59,7 +59,8 @@ func (c *telegrafLogger) logf(ctx context.Context, level Level, format string, a
 }
 
 // LogfWithOptions print log info with options
-func (c *telegrafLogger) logfWithOptions(ctx context.Context, level Level, opts LogOptions, format string, args ...interface{}) {
+func (c *telegrafLogger) logfWithOptions(ctx context.Context, level Level, opts LogOptions, format string,
+	args ...interface{}) {
 
 	if opts.MaxCounts == 0 {
 		opts.MaxCounts = hwlog.ProblemOccurMaxNumbers

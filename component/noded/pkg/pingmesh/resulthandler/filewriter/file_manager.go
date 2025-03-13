@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package filewriter is using for pingmesh result writing to file
 */
-
 package filewriter
 
 import (
@@ -43,6 +42,7 @@ const (
 	deviceIDMinuend  = 199
 )
 
+// New creates a new manager
 func New(cfg *Config) *manager {
 	if cfg == nil || cfg.Path == "" {
 		hwlog.RunLog.Warnf("pingmesh result config is nil or dir is empty")

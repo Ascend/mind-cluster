@@ -29,7 +29,8 @@ type DeviceManagerMockErr struct {
 }
 
 // DcStartHccsPingMesh start hccs ping mesh
-func (d *DeviceManagerMockErr) DcStartHccsPingMesh(i int32, i2 int32, i3 int, operate common.HccspingMeshOperate) error {
+func (d *DeviceManagerMockErr) DcStartHccsPingMesh(i int32, i2 int32, i3 int,
+	operate common.HccspingMeshOperate) error {
 	return errors.New(errorMsg)
 }
 
@@ -39,7 +40,8 @@ func (d *DeviceManagerMockErr) DcStopHccsPingMesh(i int32, i2 int32, i3 int, u u
 }
 
 // DcGetHccsPingMeshInfo get hccs ping mesh info
-func (d *DeviceManagerMockErr) DcGetHccsPingMeshInfo(i int32, i2 int32, i3 int, u uint) (*common.HccspingMeshInfo, error) {
+func (d *DeviceManagerMockErr) DcGetHccsPingMeshInfo(i int32, i2 int32, i3 int, u uint) (*common.HccspingMeshInfo,
+	error) {
 	return nil, errors.New(errorMsg)
 }
 

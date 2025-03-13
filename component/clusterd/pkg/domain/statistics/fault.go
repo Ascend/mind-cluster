@@ -21,9 +21,10 @@ func UpdateFaultToCM(faults, faultNum string, exceedsLimiter bool) error {
 	cmData[constant.StatisticFaultNumKey] = faultNum
 	cmData[constant.StatisticPubFaultKey] = faults
 	if exceedsLimiter {
-		const faultDesc = "The current total number of faults is too large, and only a portion of the detailed fault data is displayed"
-		hwlog.RunLog.Errorf("public fault number exceeds the upper limit of %d. "+
-			"Will not update the detailed info of the faults this time, only the 'FaultNum' will be updated", constant.MaxFaultNum)
+		const faultDesc = "The current total number of faults is too large, and only a portion of " +
+			"the detailed fault data is displayed"
+		hwlog.RunLog.Errorf("public fault number exceeds the upper limit of %d. Will not update the detailed "+
+			"info of the faults this time, only the 'FaultNum' will be updated", constant.MaxFaultNum)
 		patchData := map[string]string{constant.StatisticFaultNumKey: faultNum, constant.StatisticFaultDescKey: faultDesc}
 		_, err := kube.PatchCMData(constant.StatisticFaultCMName, constant.ClusterNamespace, patchData)
 		if err != nil {

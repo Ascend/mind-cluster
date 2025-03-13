@@ -23,7 +23,6 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 		hwlog.RunLog.Errorf("get file watcher chan failed, error: %v", err)
 		return
 	}
-
 	for {
 		select {
 		case _, ok := <-ctx.Done():

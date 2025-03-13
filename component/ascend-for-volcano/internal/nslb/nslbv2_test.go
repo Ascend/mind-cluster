@@ -213,7 +213,7 @@ func buildTorHandlerUseAnnotationTest() []torHandlerUseAnnotationTest {
 	}
 }
 
-func TestTorHandlerV2_UseAnnotation(t *testing.T) {
+func TestTorHandlerV2UseAnnotation(t *testing.T) {
 	tTask := test.FakeNormalTestTasks(1)[0]
 	for _, tt := range buildTorHandlerUseAnnotationTest() {
 		t.Run(tt.name, func(t *testing.T) {

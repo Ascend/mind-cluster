@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -23,13 +22,6 @@ import (
 )
 
 func init() {
-	JobStcMgrInst = &JobStcMgr{
-		data: constant.CurrJobStatistic{
-			JobStatistic: make(map[string]constant.JobStatistic),
-		},
-		mutex:   sync.RWMutex{},
-		version: InitVersion,
-	}
 
 	if err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background()); err != nil {
 		fmt.Printf("hwlog init failed, error is %v\n", err)

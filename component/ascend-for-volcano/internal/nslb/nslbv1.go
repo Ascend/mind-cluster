@@ -55,6 +55,9 @@ func (th *TorHandlerV1) initEnableSliceId() {
 			if server == nil {
 				continue
 			}
+			if server.SliceId < 0 || server.SliceId >= th.globalTorEnv.TorCount {
+				continue
+			}
 			usedTorCount[server.SliceId]++
 		}
 	}

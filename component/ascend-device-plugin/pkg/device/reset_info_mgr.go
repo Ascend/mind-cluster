@@ -69,7 +69,7 @@ const (
 )
 
 var (
-	mgr  *ResetInfoMgr
+	mgr  = &ResetInfoMgr{}
 	once sync.Once
 )
 

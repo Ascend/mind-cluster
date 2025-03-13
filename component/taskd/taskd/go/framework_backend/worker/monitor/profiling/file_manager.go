@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package profiling_service contains functions that support dynamically collecting profiling data
-package profiling_service
+// Package profiling contains functions that support dynamically collecting profiling data
+package profiling
 
 import (
 	"bufio"
@@ -83,7 +83,7 @@ func getNewestFileName(filePath string) (string, error) {
 		return "", err
 	}
 	var latestTime int64 = -1
-	var latestFileName string
+	var latestFileName = ""
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue

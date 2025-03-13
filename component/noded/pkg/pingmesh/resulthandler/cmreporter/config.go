@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package cmreporter is using for pingmesh result report to configmap
 */
-
 package cmreporter
 
 import (

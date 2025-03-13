@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package profiling_service contains functions that support dynamically collecting profiling data
-package profiling_service
+// Package profiling contains functions that support dynamically collecting profiling data
+package profiling
 
 import (
 	"encoding/json"
@@ -25,54 +25,14 @@ import (
 // Each kind is associated with a activity record structure that holds the information associated with the kind.
 type MsptiActivityKind int32
 
-const (
-	// MSPTI_ACTIVITY_KIND_INVALID The activity record is invalid.
-	MSPTI_ACTIVITY_KIND_INVALID MsptiActivityKind = 0
-	// MSPTI_ACTIVITY_KIND_MARKER Extended, optional, data about a marker.
-	// The corresponding activity record structure is msptiActivityMark
-	MSPTI_ACTIVITY_KIND_MARKER MsptiActivityKind = 1
-	MSPTI_ACTIVITY_KIND_KERNEL MsptiActivityKind = 2
-	MSPTI_ACTIVITY_KIND_API    MsptiActivityKind = 3
-	MSPTI_ACTIVITY_KIND_COUNT
-	MSPTI_ACTIVITY_KIND_FORCE_INT MsptiActivityKind = 0x7fffffff
-)
-
 // MsptiActivitySourceKind The source kinds of mark data.
 // Each mark activity record kind represents information about host or device
 type MsptiActivitySourceKind int32
-
-const (
-	MSPTI_ACTIVITY_SOURCE_KIND_HOST   = 0
-	MSPTI_ACTIVITY_SOURCE_KIND_DEVICE = 1
-)
 
 // MsptiActivityFlag Flags associated with activity records.
 // Activity record flags. Flags can be combined by bitwise OR to associated multiple flags with an activity record.
 // specific to a certain activity kind, as noted below.
 type MsptiActivityFlag int32
-
-const (
-	// MSPTI_ACTIVITY_FLAG_NONE Indicates the activity record has no flags.
-	MSPTI_ACTIVITY_FLAG_NONE MsptiActivityFlag = 0
-	// MSPTI_ACTIVITY_FLAG_MARKER_INSTANTANEOUS Indicates the activity represents an pure host instantaneous marker.
-	// Valid for MSPTI_ACTIVITY_KIND_MARKER.
-	MSPTI_ACTIVITY_FLAG_MARKER_INSTANTANEOUS MsptiActivityFlag = 1 << 0
-	// MSPTI_ACTIVITY_FLAG_MARKER_START Indicates the activity represents a pure host region start marker.
-	// Valid for MSPTI_ACTIVITY_KIND_MARKER
-	MSPTI_ACTIVITY_FLAG_MARKER_START MsptiActivityFlag = 1 << 1
-	// MSPTI_ACTIVITY_FLAG_MARKER_END Indicates the activity represents a pure host region end marker.
-	// Valid for MSPTI_ACTIVITY_KIND_MARKER.
-	MSPTI_ACTIVITY_FLAG_MARKER_END MsptiActivityFlag = 1 << 2
-	// MSPTI_ACTIVITY_FLAG_MARKER_INSTANTANEOUS_WITH_DEVICE Indicates the activity represents an instantaneous marker with device.
-	// Valid for MSPTI_ACTIVITY_KIND_MARKER.
-	MSPTI_ACTIVITY_FLAG_MARKER_INSTANTANEOUS_WITH_DEVICE = 1 << 3
-	// MSPTI_ACTIVITY_FLAG_MARKER_START_WITH_DEVICE Indicates the activity represents a pure start marker with device.
-	//Valid for MSPTI_ACTIVITY_KIND_MARKER
-	MSPTI_ACTIVITY_FLAG_MARKER_START_WITH_DEVICE = 1 << 4
-	// MSPTI_ACTIVITY_FLAG_MARKER_END_WITH_DEVICE Indicates the activity represents a pure end marker with device.
-	// Valid for MSPTI_ACTIVITY_KIND_MARKER.
-	MSPTI_ACTIVITY_FLAG_MARKER_END_WITH_DEVICE = 1 << 5
-)
 
 type MsptiObjectID struct {
 	// Pt A process object requires that we identify the process ID.
@@ -95,7 +55,7 @@ type MsptiActivity interface {
 }
 
 type MsptiActivityMark struct {
-	// Kind The activity record kind, must be MSPTI_ACTIVITY_KIND_MARKER.
+	// Kind The activity record kind, must be msptiActivityKindMarker.
 	Kind MsptiActivityKind
 	// Flag The flags associated with the marker MsptiActivityFlag
 	Flag MsptiActivityFlag
@@ -133,9 +93,9 @@ func (mark MsptiActivityMark) Marshal() []byte {
 	return bytes
 }
 
-// 当前支持一些acln算子，
+// MsptiActivityApi obtain api kind activity from mspti
 type MsptiActivityApi struct {
-	// Kind The activity record kind, must be MSPTI_ACTIVITY_KIND_API.
+	// Kind The activity record kind, must be msptiActivityKindApi.
 	Kind MsptiActivityKind
 	// Start The start timestamp for the api, in ns.
 	Start uint64
@@ -167,7 +127,7 @@ func (api MsptiActivityApi) Marshal() []byte {
 }
 
 type MsptiActivityKernel struct {
-	// Kind The activity record kind, must be MSPTI_ACTIVITY_KIND_KERNEL.
+	// Kind The activity record kind, must be msptiActivityKindKernel.
 	Kind MsptiActivityKind
 	// Start The start timestamp for the api, in ns.
 	Start uint64

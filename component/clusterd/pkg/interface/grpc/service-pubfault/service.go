@@ -45,7 +45,7 @@ func (s *PubFaultService) SendPublicFault(ctx context.Context, req *pb2.PublicFa
 }
 
 func constructPubFaultInfo(req *pb2.PublicFaultRequest) *api.PubFaultInfo {
-	var faults []api.Fault
+	var faults = []api.Fault{}
 	for _, reqFault := range req.Faults {
 		var influence []api.Influence
 		for _, reqInfluence := range reqFault.Influence {

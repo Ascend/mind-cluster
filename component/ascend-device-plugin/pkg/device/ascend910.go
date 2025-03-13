@@ -164,13 +164,13 @@ func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.
 
 // hotResetHandler handling hot reset
 func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common.NpuDevice) error {
-	var err error
 	deviceList, ok := classifyDevs[common.Ascend910]
 	if !ok {
 		return fmt.Errorf("device list not found, %v", common.Ascend910)
 	}
 	resetDevs := make([]*common.NpuDevice, 0, len(deviceList))
 	isHotResetOn = true
+	var err error
 	for _, dev := range deviceList {
 		tempFaultInfo, tempErr := hnm.hotResetManager.GetGlobalDevFaultInfo(dev.LogicID)
 		if tempErr != nil {
@@ -1468,7 +1468,8 @@ func (hnm *HwAscend910Manager) updateResetCMStatusToIsolate(taskName string,
 	return nil
 }
 
-func (hnm *HwAscend910Manager) getA3LogicMapByAssociation(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
+func (hnm *HwAscend910Manager) getA3LogicMapByAssociation(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32,
+	error) {
 	if common.ParamOption.RealCardType != common.Ascend910A3 {
 		return nil, fmt.Errorf("only support A3")
 	}

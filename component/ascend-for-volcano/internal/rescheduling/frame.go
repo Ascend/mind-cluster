@@ -45,6 +45,7 @@ func (reScheduler *ReScheduler) PreStopAction(env *plugin.ScheduleEnv) error {
 	return nil
 }
 
+// PreStartAction pre-processing actions for rescheduler handler
 func (reScheduler *ReScheduler) PreStartAction(env *plugin.ScheduleEnv, ssn *framework.Session) error {
 	klog.V(util.LogInfoLev).Infof("Entering reScheduler PreStartAction")
 	defer klog.V(util.LogInfoLev).Infof("Leaving reScheduler PreStartAction")

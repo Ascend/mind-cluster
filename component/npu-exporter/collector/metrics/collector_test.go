@@ -34,12 +34,14 @@ import (
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
-var (
+const (
 	maxMetricsCount         = 2000
 	num5                    = 5
 	mockContainerName       = "mockContainerName"
 	maxChipNum        int32 = 8
+)
 
+var (
 	collectorChain []colcommon.MetricsCollector
 )
 

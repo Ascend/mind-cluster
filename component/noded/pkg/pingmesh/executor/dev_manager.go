@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package executor is using for execute hccsping mesh
 */
-
 package executor
 
 import (
@@ -61,7 +60,7 @@ func New() (*DevManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	var superPodId uint32
+	var superPodId uint32 = 0
 	for _, chip := range chips {
 		_, err = dm.DcGetHccsPingMeshState(chip.CardID, chip.DeviceID, 0, common.InternalPingMeshTaskID)
 		if err != nil {

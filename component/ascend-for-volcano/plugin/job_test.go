@@ -606,23 +606,26 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 		},
 		{
 			name: "03-CheckNodeNum no node idle test.",
-			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
-				ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
+			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
+				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
+					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
 				VNode{}}},
 			wantErr: true,
 		},
 		{
 			name: "04-CheckNodeNum not meet test.",
-			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
-				ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
+			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
+				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
+					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
 			args:    CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: tNode1},
 			wantErr: true,
 		},
 		{
 			name: "05-CheckNodeNum meet test.",
-			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
-				ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
+			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
+				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
+					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
 			args:    CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: tNode2},
 			wantErr: false,
 		},

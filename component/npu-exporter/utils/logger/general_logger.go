@@ -56,7 +56,8 @@ func (c *generalLogger) logf(ctx context.Context, level Level, format string, ar
 	fn(hwlog.DeepIncrease(ctx), format, args...)
 }
 
-func (c *generalLogger) logfWithOptions(ctx context.Context, level Level, opts LogOptions, format string, args ...interface{}) {
+func (c *generalLogger) logfWithOptions(ctx context.Context, level Level, opts LogOptions, format string,
+	args ...interface{}) {
 
 	if opts.MaxCounts == 0 {
 		opts.MaxCounts = hwlog.ProblemOccurMaxNumbers

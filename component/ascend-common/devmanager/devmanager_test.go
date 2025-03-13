@@ -32,7 +32,7 @@ import (
 func TestGetCardIdAndDeviceId(t *testing.T) {
 
 	var (
-		cardId, deviceId int32
+		cardId, deviceId = int32(0), int32(0)
 		err              error
 		returnValue      = int32(0)
 		errReturnValue   = int32(-1)

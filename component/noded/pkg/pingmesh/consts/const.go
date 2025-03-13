@@ -15,9 +15,8 @@ limitations under the License.
 */
 
 /*
-Package types is all type of hccsping mesh
+Package consts define common variable
 */
-
 package consts
 
 const (

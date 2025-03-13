@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package pingmesh is using for checking hccs network
 */
-
 package pingmesh
 
 import (
@@ -77,7 +76,8 @@ func NewManager(config *Config) *Manager {
 func (c *Manager) initWatcher(config *Config) {
 	var opts []configmap.Option
 	opts = append(opts, configmap.WithNamespace(consts.ConfigmapNamespace))
-	opts = append(opts, configmap.WithLabelSector(fmt.Sprintf("%s=%s", consts.PingMeshConfigLabelKey, consts.PingMeshConfigLabelValue)))
+	opts = append(opts, configmap.WithLabelSector(fmt.Sprintf("%s=%s", consts.PingMeshConfigLabelKey,
+		consts.PingMeshConfigLabelValue)))
 	opts = append(opts, configmap.WithNamedHandlers(
 		configmap.NamedHandler{Name: c.ipCmName, Handle: c.handleClusterAddress},
 		configmap.NamedHandler{Name: consts.PingMeshConfigCm, Handle: c.handleUserConfig},

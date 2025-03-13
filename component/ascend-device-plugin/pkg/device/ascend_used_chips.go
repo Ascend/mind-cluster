@@ -119,7 +119,8 @@ func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 	return usedChips
 }
 
-func (tool *AscendTools) getDeviceWithAscendRuntime(containerObj containerd.Container, ctx context.Context) sets.String {
+func (tool *AscendTools) getDeviceWithAscendRuntime(containerObj containerd.Container,
+	ctx context.Context) sets.String {
 	usedChips := sets.NewString()
 	containerInfo, err := containerObj.Info(ctx, containerd.WithoutRefreshedMetadata)
 	if err != nil {
@@ -156,7 +157,8 @@ func (tool *AscendTools) getDeviceWithAscendRuntime(containerObj containerd.Cont
 	return usedChips
 }
 
-func (tool *AscendTools) getDeviceWithoutAscendRuntime(containerObj containerd.Container, ctx context.Context) sets.String {
+func (tool *AscendTools) getDeviceWithoutAscendRuntime(containerObj containerd.Container,
+	ctx context.Context) sets.String {
 	usedChips := sets.NewString()
 	spec, err := getContainerValidSpec(containerObj, ctx)
 	if err != nil {

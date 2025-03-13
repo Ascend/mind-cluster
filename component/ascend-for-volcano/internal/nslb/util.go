@@ -98,6 +98,9 @@ func (th *TorHandler) scoreBestNPUNodes(task *api.TaskInfo, nodeMaps map[string]
 	sMap map[string]float64) {
 	th.sortJobServerListBySliceId()
 	th.setNodeRankIndex()
+	if sMap == nil {
+		return
+	}
 	for _, sl := range th.ServerList {
 		for _, server := range sl.Servers {
 			setNodeScoreByTorAttr(sMap, server.Name, sl)

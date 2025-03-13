@@ -137,7 +137,6 @@ func TestIsValidHccspingMeshOperate01(t *testing.T) {
 func TestIsValidHccspingMeshOperate02(t *testing.T) {
 	convey.Convey("Given a pingmesh operate", t, func() {
 		op := defaultHccspingMeshOperate()
-		var expectedErr error
 		convey.Convey("04-When the pkt interval is invalid, should return error", func() {
 			pattern := "pkt interval %d is invalid, should be between %d and %d"
 			op.PktInterval = MinPktInterval - 1
@@ -154,6 +153,7 @@ func TestIsValidHccspingMeshOperate02(t *testing.T) {
 			check(op, expectedError(pattern, op.TaskInterval, MinTaskInterval, MaxTaskInterval))
 		})
 		op.TaskInterval = MinTaskInterval
+		var expectedErr error
 		convey.Convey("06-When the task id is invalid, should return error", func() {
 			op.TaskId = int(ExternalPingMeshTaskID) + 1
 			expectedErr = fmt.Errorf("task id %d is invalid", op.TaskId)

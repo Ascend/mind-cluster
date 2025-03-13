@@ -562,7 +562,7 @@ func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int
 		return fmt.Errorf("operate(%v) is invalid, err: %v", operate, err)
 	}
 	dtsAddrLsit := [ipAddrListLen]C.char{0}
-	for i := 0; i < len(operate.DstAddr); i++ {
+	for i := 0; i < len(operate.DstAddr) && i < len(dtsAddrLsit); i++ {
 		dtsAddrLsit[i] = C.char(operate.DstAddr[i])
 	}
 

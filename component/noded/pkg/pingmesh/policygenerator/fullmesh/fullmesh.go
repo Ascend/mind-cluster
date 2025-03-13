@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package fullmesh is one of policy generator for pingmesh
 */
-
 package fullmesh
 
 import (
@@ -33,6 +32,7 @@ type generatorImp struct {
 	local string
 }
 
+// Rule is the rule for generating pingmesh destination addresses
 const Rule types.PingMeshRule = "full-mesh"
 
 // New create a new generator

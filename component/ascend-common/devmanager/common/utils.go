@@ -118,13 +118,16 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 		return fmt.Errorf("pkt size %d is invalid, should be between %d and %d", operate.PktSize, MinPktSize, MaxPktSize)
 	}
 	if operate.PktSendNum < MinPktSendNum || operate.PktSendNum > MaxPktSendNum {
-		return fmt.Errorf("pkt send num %d is invalid, should be between %d and %d", operate.PktSendNum, MinPktSendNum, MaxPktSendNum)
+		return fmt.Errorf("pkt send num %d is invalid, should be between %d and %d", operate.PktSendNum,
+			MinPktSendNum, MaxPktSendNum)
 	}
 	if operate.PktInterval < MinPktInterval || operate.PktInterval > MaxPktInterval {
-		return fmt.Errorf("pkt interval %d is invalid, should be between %d and %d", operate.PktInterval, MinPktInterval, MaxPktInterval)
+		return fmt.Errorf("pkt interval %d is invalid, should be between %d and %d", operate.PktInterval,
+			MinPktInterval, MaxPktInterval)
 	}
 	if operate.TaskInterval < MinTaskInterval || operate.TaskInterval > MaxTaskInterval {
-		return fmt.Errorf("task interval %d is invalid, should be between %d and %d", operate.TaskInterval, MinTaskInterval, MaxTaskInterval)
+		return fmt.Errorf("task interval %d is invalid, should be between %d and %d", operate.TaskInterval,
+			MinTaskInterval, MaxTaskInterval)
 	}
 	if !IsValidTaskID(uint(operate.TaskId)) {
 		return fmt.Errorf("task id %d is invalid", operate.TaskId)

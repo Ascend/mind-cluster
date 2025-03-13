@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package watcher is using for watch resource.
 */
-
 package watcher
 
 // Interface is the interface of watcher.

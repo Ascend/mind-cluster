@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package profiling_service contains functions that support dynamically collecting profiling data
-package profiling_service
+// Package profiling contains functions that support dynamically collecting profiling data
+package profiling
 
 import "C"
 import (
@@ -27,8 +27,8 @@ import (
 	"taskd/common/constant"
 )
 
-// ProfilingSwitch is the struct for serialization and deserialization of profiling switches
-type ProfilingSwitch struct {
+// SwitchProfiling is the struct for serialization and deserialization of profiling switches
+type SwitchProfiling struct {
 	CommunicationOperator string
 	Step                  string
 	SaveCheckpoint        string
@@ -37,12 +37,12 @@ type ProfilingSwitch struct {
 }
 
 // GetProfilingSwitch get profile switch status from file, if any fault happened return all switch off
-func GetProfilingSwitch(filePath string) ProfilingSwitch {
+func GetProfilingSwitch(filePath string) SwitchProfiling {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		// if reading failed close all
 		hwlog.RunLog.Errorf("failed to read file %s, err%v", filePath, err)
-		return ProfilingSwitch{
+		return SwitchProfiling{
 			CommunicationOperator: constant.SwitchOFF,
 			Step:                  constant.SwitchOFF,
 			SaveCheckpoint:        constant.SwitchOFF,
@@ -51,12 +51,12 @@ func GetProfilingSwitch(filePath string) ProfilingSwitch {
 		}
 	}
 
-	var profiling ProfilingSwitch
+	var profiling SwitchProfiling
 
 	err = json.Unmarshal(data, &profiling)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to parse profiling switch %#v: %v", profiling, err)
-		return ProfilingSwitch{
+		return SwitchProfiling{
 			CommunicationOperator: constant.SwitchOFF,
 			Step:                  constant.SwitchOFF,
 			SaveCheckpoint:        constant.SwitchOFF,
@@ -96,7 +96,7 @@ func ManageDomainEnableStatus(ctx context.Context) {
 	}
 }
 
-func changeProfileSwitchStatus(profilingSwitches ProfilingSwitch) {
+func changeProfileSwitchStatus(profilingSwitches SwitchProfiling) {
 	// if all kinds of records are off,  disable all marker
 	if profilingSwitches.Step == constant.SwitchOFF && profilingSwitches.SaveCheckpoint == constant.SwitchOFF &&
 		profilingSwitches.FP == constant.SwitchOFF && profilingSwitches.DataLoader == constant.SwitchOFF &&
@@ -117,7 +117,7 @@ func changeProfileSwitchStatus(profilingSwitches ProfilingSwitch) {
 	}
 }
 
-func getProfilingStatusStr(profilingSwiches ProfilingSwitch) string {
+func getProfilingStatusStr(profilingSwiches SwitchProfiling) string {
 	return fmt.Sprintf("communication:%s,step:%s,FP:%s,dataloader:%s,ckpt:%s",
 		profilingSwiches.CommunicationOperator, profilingSwiches.Step, profilingSwiches.FP,
 		profilingSwiches.DataLoader, profilingSwiches.SaveCheckpoint)

@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package profiling_service contains functions that support dynamically collecting profiling data
-package profiling_service
+// Package profiling contains functions that support dynamically collecting profiling data
+package profiling
 
 /*
 	#cgo CFLAGS: -I.
@@ -42,7 +42,8 @@ package profiling_service
 		goBufferCompleted(buffer, size, validSize);
 	}
 
-	static msptiResult (*cgo_mspti_activity_register_callbacks)(msptiBuffersCallbackRequestFunc funcBufferRequested, msptiBuffersCallbackCompleteFunc funcBufferCompleted);
+	static msptiResult (*cgo_mspti_activity_register_callbacks)(msptiBuffersCallbackRequestFunc funcBufferRequested,
+		msptiBuffersCallbackCompleteFunc funcBufferCompleted);
 	static msptiResult msptiActivityRegisterCallbacksWrapper() {
 		//return MSPTI_ERROR_DEVICE_OFFLINE;
 		return cgo_mspti_activity_register_callbacks(bufferRequestedCallback, bufferCompletedCallback);
@@ -64,8 +65,10 @@ package profiling_service
 		return cgo_mspti_activity_dis_enable(kind);
 	}
 
-	static int (*cgo_mspti_activity_get_next_record)(uint8_t *buffer, size_t validBufferSizeBytes, msptiActivity **record);
-    static msptiResult mspti_activity_get_next_record(uint8_t *buffer, size_t validBufferSizeBytes, msptiActivity **record){
+	static int (*cgo_mspti_activity_get_next_record)(uint8_t *buffer, size_t validBufferSizeBytes,
+		msptiActivity **record);
+    static msptiResult mspti_activity_get_next_record(uint8_t *buffer, size_t validBufferSizeBytes,
+		msptiActivity **record){
 		return cgo_mspti_activity_get_next_record(buffer,validBufferSizeBytes,record);
 	}
 
@@ -115,8 +118,12 @@ package profiling_service
 			return NULL;
 		}
 
-		snprintf(result, 1000, "{\"Kind\":%d,\"Flag\":%d,\"SourceKind\":%d,\"Timestamp\":%llu,\"Id\":%llu,\"MsptiObjectId\":{\"Pt\":{\"ProcessId\":%u,\"ThreadId\":%u},\"Ds\":{\"DeviceId\":%u,\"StreamId\":%u}},\"Name\":\"%s\",\"Domain\":\"%s\"}"
-				,activity->kind, activity->flag,activity->sourceKind,(unsigned long long)activity->timestamp,(unsigned long long)activity->id,activity->objectId.pt.processId,activity->objectId.pt.threadId,activity->objectId.ds.deviceId,activity->objectId.ds.streamId,activity->name,activity->domain);
+		snprintf(result, 1000, "{\"Kind\":%d,\"Flag\":%d,\"SourceKind\":%d,\"Timestamp\":%llu,\"Id\":%llu,"
+				"\"MsptiObjectId\":{\"Pt\":{\"ProcessId\":%u,\"ThreadId\":%u},\"Ds\":{\"DeviceId\":%u,\"StreamId\":%u}}"
+				",\"Name\":\"%s\",\"Domain\":\"%s\"}",activity->kind, activity->flag,
+				activity->sourceKind,(unsigned long long)activity->timestamp,(unsigned long long)activity->id,
+				activity->objectId.pt.processId,activity->objectId.pt.threadId,activity->objectId.ds.deviceId,
+				activity->objectId.ds.streamId,activity->name,activity->domain);
 
 		return result;
 
@@ -128,8 +135,10 @@ package profiling_service
 		if (result == NULL) {
 			return NULL;
 		}
-		snprintf(result, 300, "{\"Kind\":%d, \"Start\":%llu,\"End\":%llu,\"Pt\":{\"ProcessId\":%u,\"ThreadId\":%u},\"CorrelationId\":%llu,\"Name\":\"%s\" }"
-				,activity->kind, (unsigned long long)activity->start,(unsigned long long)activity->end,activity->pt.processId,activity->pt.threadId,(unsigned long long)activity->correlationId,activity->name);
+		snprintf(result, 300, "{\"Kind\":%d, \"Start\":%llu,\"End\":%llu,\"Pt\":{\"ProcessId\":%u,\"ThreadId\":%u},"
+				"\"CorrelationId\":%llu,\"Name\":\"%s\" }",activity->kind, (unsigned long long)activity->start,
+				(unsigned long long)activity->end,activity->pt.processId,activity->pt.threadId,
+				(unsigned long long)activity->correlationId,activity->name);
 		return result;
 	}
 
@@ -153,8 +162,10 @@ package profiling_service
 			return NULL;
 		}
 
-		snprintf(result, 300, "{\"Kind\":%d, \"Start\":%llu,\"End\":%llu,\"Ds\":{\"DeviceId\":%u,\"StreamId\":%u},\"CorrelationId\":%llu,\"Type\":\"%s\",\"Name\":\"%s\" }"
-				,activity->kind, (unsigned long long)activity->start,(unsigned long long)activity->end,activity->ds.deviceId,activity->ds.streamId,(unsigned long long)activity->correlationId,activity->type,activity->name);
+		snprintf(result, 300, "{\"Kind\":%d, \"Start\":%llu,\"End\":%llu,\"Ds\":{\"DeviceId\":%u,\"StreamId\":%u},"
+				"\"CorrelationId\":%llu,\"Type\":\"%s\",\"Name\":\"%s\" }",activity->kind,
+				(unsigned long long)activity->start,(unsigned long long)activity->end,activity->ds.deviceId,
+				activity->ds.streamId,(unsigned long long)activity->correlationId,activity->type,activity->name);
 		return result;
 	}
 

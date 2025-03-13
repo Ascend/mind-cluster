@@ -110,7 +110,6 @@ func TestInitClusterDevice(t *testing.T) {
 		})
 		defer patchGetNodes.Reset()
 
-		var calledSaveNode bool
 		patchGetNodeDevice := gomonkey.ApplyFunc(superpod.GetNodeDeviceAndSuperPodID,
 			func(node *v1.Node) (*api.NodeDevice, string) {
 				return &api.NodeDevice{
@@ -119,6 +118,7 @@ func TestInitClusterDevice(t *testing.T) {
 			})
 		defer patchGetNodeDevice.Reset()
 
+		var calledSaveNode bool
 		patchSaveNode := gomonkey.ApplyFunc(superpod.SaveNode,
 			func(superPodID string, node *api.NodeDevice) {
 				calledSaveNode = true

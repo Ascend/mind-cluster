@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package policygenerator is policy generator for pingmesh
 */
-
 package policygenerator
 
 import "nodeD/pkg/pingmesh/types"

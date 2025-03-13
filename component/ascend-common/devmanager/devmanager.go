@@ -1051,7 +1051,7 @@ func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get card list failed, error: %v", err)
 	}
-	var chips []*common.ChipBaseInfo
+	var chips = []*common.ChipBaseInfo{}
 	for _, cardID := range cardList {
 		devNumInCard, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
 		if err != nil {
@@ -1069,7 +1069,8 @@ func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 				return nil, fmt.Errorf("get device (cardID: %d, deviceID: %d) physic id "+"failed, error: %v",
 					cardID, devID, err)
 			}
-			hwlog.RunLog.Infof("get chip base info, cardID: %d, deviceID: %d, logicID: %d, physicID: %d", cardID, devID, logicID, physicID)
+			hwlog.RunLog.Infof("get chip base info, cardID: %d, deviceID: %d, logicID: %d, physicID: %d", cardID,
+				devID, logicID, physicID)
 			chips = append(chips, &common.ChipBaseInfo{
 				PhysicID: physicID,
 				LogicID:  logicID,

@@ -34,7 +34,7 @@ import (
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
-var (
+const (
 	maxMetricsCount         = 2000
 	num5                    = 5
 	mockContainerName       = "mockContainerName"

@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package resulthandler is using for handle hccsping mesh result
 */
-
 package resulthandler
 
 import (

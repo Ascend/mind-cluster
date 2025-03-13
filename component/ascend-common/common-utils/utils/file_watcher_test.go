@@ -56,7 +56,7 @@ func TestGetFileWatcherChan(t *testing.T) {
 		convey.So(err.Error(), convey.ShouldContainSubstring, expErr)
 	})
 	convey.Convey("test func GetFileWatcherChan failed, watcher is nil", t, func() {
-		var watcher *FileWatcher
+		var watcher = &FileWatcher{}
 		eventCh := watcher.Events()
 		convey.So(eventCh, convey.ShouldBeNil)
 		errCh := watcher.Errors()

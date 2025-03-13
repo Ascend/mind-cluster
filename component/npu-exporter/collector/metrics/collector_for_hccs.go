@@ -223,7 +223,7 @@ func (c *HccsCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface
 
 func telegrafUpdateHccsBwInfo(cache hccsCache, c *HccsCollector, fieldMap map[string]interface{}) {
 	bandwidthInfo := cache.hccsBW
-	if bandwidthInfo == nil {
+	if bandwidthInfo == nil || c.hccsBeginIndex < 0 {
 		return
 	}
 	for i := c.hccsBeginIndex; i < MaxHccsNum; i++ {
@@ -238,7 +238,7 @@ func telegrafUpdateHccsBwInfo(cache hccsCache, c *HccsCollector, fieldMap map[st
 func telegrafUpdateHccsStatisticInfo(cache hccsCache, c *HccsCollector, fieldMap map[string]interface{}) {
 	statisticInfo := cache.hccsStat
 
-	if statisticInfo == nil {
+	if statisticInfo == nil || c.hccsBeginIndex < 0 {
 		return
 	}
 	for i := c.hccsBeginIndex; i < MaxHccsNum; i++ {

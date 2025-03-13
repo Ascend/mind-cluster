@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package filewriter is using for pingmesh result writing to file
 */
-
 package filewriter
 
 // Config is the configuration for the file writer

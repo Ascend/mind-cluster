@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package pingmesh is using for checking hccs network
 */
-
 package pingmesh
 
 import (

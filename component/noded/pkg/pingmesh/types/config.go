@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package types is all type of hccsping mesh
 */
-
 package types
 
 import "ascend-common/devmanager/common"
@@ -81,6 +80,7 @@ func (s SuperDeviceIDs) DeepCopy() SuperDeviceIDs {
 // DestinationAddress is a map of hccsping mesh taskID to destination address
 type DestinationAddress map[uint]string
 
+// DeepCopy creates a deep copy of the DestinationAddress
 func (d DestinationAddress) DeepCopy() DestinationAddress {
 	nd := make(DestinationAddress, len(d))
 	for k, v := range d {

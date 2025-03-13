@@ -17,7 +17,6 @@ limitations under the License.
 /*
 Package configmap is using for watching configmap changes.
 */
-
 package configmap
 
 import (

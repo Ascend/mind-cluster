@@ -143,6 +143,9 @@ func (tp *module910bx16) setNodeScore(task *api.TaskInfo, nodes []*api.NodeInfo,
 			continue
 		}
 		sortScore := tp.MaxNodeNPUNum - len(cardIds)
+		if sMap == nil {
+			return errors.New("sMap is nil")
+		}
 		sMap[node.Name] = float64(tp.MaxNodeNPUNum*(int(healthyNPUNum/util.NPUHexKilo)-bestScore) + sortScore)
 	}
 	return nil

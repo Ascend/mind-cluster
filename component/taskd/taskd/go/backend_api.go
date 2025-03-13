@@ -27,7 +27,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/common/utils"
-	"taskd/framework_backend/worker/monitor/profiling_service"
+	"taskd/framework_backend/worker/monitor/profiling"
 )
 
 var ctx context.Context = context.Background()
@@ -38,15 +38,15 @@ var ctx context.Context = context.Background()
 //
 //export InitTaskMonitor
 func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
-	profiling_service.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
-	profiling_service.GlobalRankId = rank
+	profiling.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
+	profiling.GlobalRankId = rank
 	// init so should not use print to avoid impact on system calls
 	err := utils.InitHwLog(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return C.int(1)
 	}
-	if err := profiling_service.InitMspti(); err != nil {
+	if err := profiling.InitMspti(); err != nil {
 		hwlog.RunLog.Error(err)
 		return C.int(1)
 	}
@@ -75,13 +75,13 @@ func StartMonitorClient() C.int {
 				" function is disabled: %v\n", time.Now(), r)
 		}
 	}()
-	hwlog.RunLog.Infof("rank %d will start its client", profiling_service.GlobalRankId)
-	go profiling_service.ManageSaveProfiling(ctx)
-	go profiling_service.ManageDomainEnableStatus(ctx)
-	go profiling_service.ManageProfilingDiskUsage(constant.ProfilingBaseDir, ctx)
-	profiling_service.ProfilingTaskQueue = profiling_service.NewTaskQueue(ctx)
+	hwlog.RunLog.Infof("rank %d will start its client", profiling.GlobalRankId)
+	go profiling.ManageSaveProfiling(ctx)
+	go profiling.ManageDomainEnableStatus(ctx)
+	go profiling.ManageProfilingDiskUsage(constant.ProfilingBaseDir, ctx)
+	profiling.ProfilingTaskQueue = profiling.NewTaskQueue(ctx)
 
-	if err := profiling_service.MsptiActivityRegisterCallbacksWrapper(); err != nil {
+	if err := profiling.MsptiActivityRegisterCallbacksWrapper(); err != nil {
 		return C.int(1)
 	}
 	return C.int(0)

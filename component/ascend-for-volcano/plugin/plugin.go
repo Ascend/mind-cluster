@@ -58,6 +58,7 @@ type SchedulerPlugin interface {
 	SchedulerPluginNeed
 }
 
+// FaultHandler fault handler for job
 type FaultHandler interface {
 	PreStartAction(*ScheduleEnv, *framework.Session) error
 	CheckNodeNPUByTask(*api.TaskInfo, NPUNode) error
