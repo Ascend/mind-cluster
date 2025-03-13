@@ -155,32 +155,14 @@ func getPodDisplayInfo(chip *colcommon.HuaWeiAIChip, containerName []string) []s
 	chipInfo := common.DeepCopyChipInfo(chip.ChipInfo)
 	vDevActivityInfo := common.DeepCopyVDevActivityInfo(chip.VDevActivityInfo)
 
-	if !validateNotNilForEveryElement(chip) {
-		logger.Warn("invalid chip param in function getPodDisplayInfo")
-		return []string{"", "", "", "",
-			containerName[colcommon.NameSpaceIdx], containerName[colcommon.PodNameIdx], containerName[colcommon.ConNameIdx], ""}
-	}
-
-	var vDevID, vDevAiCore, isVirtualDev string
-	if !validateNotNilForEveryElement(vDevActivityInfo) {
-		logger.Warn("invalid vDevActivityInfo param in function getPodDisplayInfo")
-		vDevID = ""
-		vDevAiCore = ""
-		isVirtualDev = ""
-	} else {
-		vDevID = strconv.Itoa(int(vDevActivityInfo.VDevID))
-		vDevAiCore = strconv.FormatFloat(vDevActivityInfo.VDevAiCore, 'f', colcommon.DecimalPlaces, colcommon.BitSize)
-		isVirtualDev = strconv.FormatBool(vDevActivityInfo.IsVirtualDev)
-	}
-
 	return []string{
 		strconv.Itoa(int(chip.DeviceID)),
 		common.GetNpuName(chipInfo),
-		vDevID,
-		vDevAiCore,
+		strconv.Itoa(int(vDevActivityInfo.VDevID)),
+		strconv.FormatFloat(vDevActivityInfo.VDevAiCore, 'f', colcommon.DecimalPlaces, colcommon.BitSize),
 		containerName[colcommon.NameSpaceIdx],
 		containerName[colcommon.PodNameIdx],
 		containerName[colcommon.ConNameIdx],
-		isVirtualDev,
+		strconv.FormatBool(vDevActivityInfo.IsVirtualDev),
 	}
 }

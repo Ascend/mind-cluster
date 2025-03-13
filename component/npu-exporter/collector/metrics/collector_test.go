@@ -530,3 +530,17 @@ func initChain() {
 		&OpticalCollector{},
 	}
 }
+
+func createChip() colcommon.HuaWeiAIChip {
+	return colcommon.HuaWeiAIChip{
+		CardId:   0,
+		PhyId:    0,
+		DeviceID: 0,
+		LogicID:  0,
+		ChipInfo: &common.ChipInfo{
+			Name:    common.Ascend910,
+			Type:    "Ascend",
+			Version: "V1",
+		},
+	}
+}

@@ -16,11 +16,9 @@
 package common
 
 import (
-	"context"
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -180,24 +178,6 @@ func GetInfoFromCache[T any](n *NpuCollector, cacheKey string) map[int32]T {
 	}
 	logger.Error("cache type mismatch")
 	return res
-}
-
-// StartCollectGoroutine start a goroutine to collect metrics info , and add log to monitor elapsedTime
-func (c *MetricsCollectorAdapter) StartCollectGoroutine(n *NpuCollector, ctx context.Context, group *sync.WaitGroup,
-	chip HuaWeiAIChip, doCollect func(HuaWeiAIChip)) {
-	group.Add(1)
-	go func() {
-		defer group.Done()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				doCollect(chip)
-				time.Sleep(n.updateTime)
-			}
-		}
-	}()
 }
 
 // GetCacheKey Obtain the name of the struct pointer as the key of the cache
