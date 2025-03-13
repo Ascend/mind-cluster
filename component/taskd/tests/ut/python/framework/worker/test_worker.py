@@ -21,7 +21,6 @@ from taskd.python.cython_api import cython_api
 
 def test_start_worker():
     w = Worker(0)
-    print(cython_api.lib)
     assert cython_api.lib is None
     assert w.start() is False
 

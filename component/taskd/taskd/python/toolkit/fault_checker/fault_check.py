@@ -138,7 +138,7 @@ class FaultProcessor:
 
     def wait_to_start(self, worker_group) -> bool:
         local_ranks = [worker.global_rank for worker in worker_group.workers]
-        reset_data = self._get_reset_info_from_cm()
+        reset_data = self.get_reset_info_from_cm()
         fault_ranks, retry_time = reset_data.fault_ranks, reset_data.retry_time
         fault_flush = reset_data.fault_flush
         self.pre_retry_time = retry_time
@@ -187,7 +187,8 @@ class FaultProcessor:
                 return False
             self.rank_table_version = file_rank_version
 
-        # if all fault ranks are recovered, torch fault_checker will restart workers. update recorded retry time and fault ranks
+        # if all fault ranks are recovered, torch fault_checker will restart workers. update recorded retry time and
+        # fault ranks
         recovered_infos = f'all fault recovered, updating fault_ranks={self.fault_ranks},' \
                           f' retry_time={self.retry_time}, restart_type={self.restart_type}'
         run_log.warning(recovered_infos)
@@ -228,6 +229,9 @@ class FaultProcessor:
             return max_retry_times - self.retry_time
         return 0
 
+    def get_reset_info_from_cm(self):
+        return self._get_reset_info_from_cm()
+
     def _get_reset_info_from_cm(self) -> ResetCmData:
         file_content = self._get_reset_config()
         fault_ranks = []
@@ -257,7 +261,7 @@ class FaultProcessor:
         return ResetCmData(fault_ranks, retry_time, grace_exit, restart_type, fault_flush)
 
     def _update_reset_info(self):
-        reset_data = self._get_reset_info_from_cm()
+        reset_data = self.get_reset_info_from_cm()
         self.fault_ranks = reset_data.fault_ranks
         self.retry_time = reset_data.retry_time
         self.grace_exit = reset_data.grace_exit

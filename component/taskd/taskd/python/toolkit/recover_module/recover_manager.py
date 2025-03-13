@@ -68,12 +68,12 @@ class DLRecoverManager(RecoverManager):
     """
     DLRecoverManager is a realization of RecoverManager.
     """
-    _instance = None
+    instance = None
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        if not cls.instance:
+            cls.instance = super().__new__(cls)
+        return cls.instance
 
     def __init__(self, info: pb.ClientInfo, server_addr: str, secure_conn: bool = True, cert_path: str = ""):
         """
@@ -234,9 +234,9 @@ def get_instance(cls):
     if not hasattr(cls, '_instance'):
         raise TypeError(f"{cls.__name__} is not a singleton class")
     # Check whether the instance has been created.
-    if cls._instance is None:
+    if cls.instance is None:
         raise RuntimeError(f"{cls.__name__} instance has not been created yet")
-    return cls._instance
+    return cls.instance
 
 
 def register_callback_func():

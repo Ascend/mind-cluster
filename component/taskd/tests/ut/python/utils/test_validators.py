@@ -18,7 +18,8 @@ import os
 import tempfile
 import unittest
 
-from taskd.python.utils.validator import *
+from taskd.python.utils.validator import Validator, StringValidator, MapValidator, DirectoryValidator, \
+    RankSizeValidator, FileValidator, IntValidator, ClassValidator
 
 BIN_PATH = "/usr/bin"
 DIRECTORY_BLACKLIST_PATH = "/abc/d/e"
@@ -135,7 +136,6 @@ class TestValidators(unittest.TestCase):
 
     def test_file_check(self):
         file_path = os.path.join(os.path.dirname(__file__), "test_data", "test.txt")
-        print("file path is", file_path)
         self.assertFalse(FileValidator(file_path).check_file_size().check().is_valid())
         self.assertTrue(FileValidator(file_path).check_not_soft_link().check().is_valid())
         os.chown(file_path, os.getuid(), os.getgid())

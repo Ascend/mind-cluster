@@ -49,7 +49,7 @@ class MSRunPlugin:
     def __init__(self):
         # This time is the interval time of the infinite loop.
         self.all_rank_succeed = False
-        self.monitor_interval: float = 5
+        self.monitor_interval = 5
         # Use a string to mark the health status of all global ranks to determine
         # whether it is necessary to kill the processes.
         self.rank_status = ""
@@ -68,7 +68,7 @@ class MSRunPlugin:
         self.pre_retry_time = 0
         self.grace_exit = None
         self.restart_type = None
-        self.__funcMap = {}
+        self.__func_map = {}
         self.rank_table_version = 0
 
         self.reset_cm_path = constants.RESET_CONFIG_PATH
@@ -79,10 +79,10 @@ class MSRunPlugin:
         self.ms_node_rank = os.getenv("MS_NODE_RANK")
 
     def register_callbacks(self, operator, func):
-        self.__funcMap[operator] = func
+        self.__func_map[operator] = func
 
     def start_mindspore_workers(self):
-        start_worker_func = self.__funcMap[START_ALL_WORKER_CALLBACK_NAME]
+        start_worker_func = self.__func_map[START_ALL_WORKER_CALLBACK_NAME]
         init_time = 0
         while True:
             if init_time >= constants.INIT_TIMEOUT:
@@ -95,88 +95,6 @@ class MSRunPlugin:
                 break
             time.sleep(constants.WAITING_INTERVAL)
             init_time = init_time + constants.WAITING_INTERVAL
-
-    def _init_grpc_client_if_needed(self):
-        if self.ms_node_rank == "0":
-            run_log.info("rank 0 will start controller grpc client")
-            init_grpc_client(self.framework)
-
-    def _handle_grace_exit(self):
-        if self.grace_exit != 1:
-            return False
-        try:
-            grace_exit_pids(self.rank_pids)
-        except Exception as e:
-            run_log.info(f"failed to gracefully kill worker process, {e}")
-        finally:
-            self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-            stop_pids(self.rank_pids)
-        return True
-
-    def _handle_fault_status(self, fault_status):
-        if not fault_status.is_fault:
-            return
-        run_log.warning(f"nodeRank:{self.ms_node_rank}  entering fault_status.is_fault")
-        self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-        force_exit_pids(self.rank_pids)
-        run_log.warning(f"local rank got fault, will stop worker{self.node_global_rank_ids}")
-        exit(1)
-
-    def _handle_process_retry_fault(self, fault_status):
-        if fault_status.is_retried and not fault_status.is_unrecovered:
-            run_log.warning(
-                f"nodeRank:{self.ms_node_rank} entering fault_status.is_retried and not "
-                f"fault_status.is_unrecovered")
-            # In this scenario, there is no content in the fault_rank.
-            # restart the training after the rank table is updated.
-            if not self.all_fault_has_recovered():
-                return True
-            self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-            if self.ms_node_rank == "0":
-                run_log.warning("will kill mindio controller")
-                shared_data.shared_data_inst.set_exit_flag(True)
-            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for 10 secs, after kill workers")
-            time.sleep(KILL_INTERVAL)
-            run_log.warning("sleep over, will start")
-            self.start_mindspore_workers()
-            self.update_pre_fault_infos()
-            return True
-        return False
-
-    def _handle_hardware_fault(self, fault_status):
-        if not fault_status.is_unrecovered:
-            return False
-        run_log.warning(f"nodeRank:{self.ms_node_rank} entering fault_status.is_unrecovered")
-        self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-        if self.all_fault_has_recovered():
-            self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-            self.start_mindspore_workers()
-        return True
-
-    def _handle_all_process_succeed(self):
-        if not self.all_rank_succeed:
-            return
-        run_log.info(
-            f"nodeRank:{self.ms_node_rank} successfully finished."
-        )
-        shared_data.shared_data_inst.set_kill_flag(True)
-        time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
-        exit(0)
-
-    def _handle_exist_unhealthy_process(self):
-        if self.rank_status in {self.RANK_STATUS_UNHEALTHY}:
-            run_log.warning(f"nodeRank:{self.ms_node_rank} some rank is unhealthy will stop workers, "
-                            f"and exit this node")
-            if self.ms_node_rank == "0":
-                run_log.warning("will kill mindio controller")
-                shared_data.shared_data_inst.set_kill_flag(True)
-                time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
-            stop_res = self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
-            run_log.warning(f"rank with pid {self.rank_pids} will be killed")
-            if stop_res is not constants.RES_OK:
-                run_log.error(
-                    f"nodeRank:{self.ms_node_rank} failed to stop workers with return code:{stop_res}")
-            exit(1)
 
     def all_fault_has_recovered(self) -> bool:
         """
@@ -247,10 +165,10 @@ class MSRunPlugin:
 
     # start() should be called by mindspore msrun,to take over the control of training processes
     def start(self):
-        kill_worker_func = self.__funcMap[KILL_ALL_WORKER_CALLBACK_NAME]
-        start_worker_func = self.__funcMap[START_ALL_WORKER_CALLBACK_NAME]
+        kill_worker_func = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]
+        start_worker_func = self.__func_map[START_ALL_WORKER_CALLBACK_NAME]
         # {rank_0: {pid: pidNum, status: 状态码}，1：状态码 …..}
-        monitor_func = self.__funcMap[MONITOR_CALLBACK_NAME]
+        monitor_func = self.__func_map[MONITOR_CALLBACK_NAME]
         if kill_worker_func is None or start_worker_func is None or monitor_func is None:
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")
 
@@ -298,7 +216,8 @@ class MSRunPlugin:
             if self._handle_process_retry_fault(fault_status):
                 continue
             # There is an unrecoverable scenario with fault_rank, covering hardware failures.
-            self._handle_hardware_fault(fault_status)
+            if self._handle_hardware_fault(fault_status):
+                continue
             # to exit while all training process has exit with succeed code
             self._handle_all_process_succeed()
             # If the result of the process monitoring is abnormal,
@@ -324,14 +243,14 @@ class MSRunPlugin:
         all_succeed = True
         rank_pids = []
         local_rank_ids = []
-        for rank, details in rank_status_dict.items():
+        for _, details in rank_status_dict.items():
             # if process is in ok, not start yet[msrun taken over by taskd, monitor maybe called before training],
             # sleeping[during process recover]
-            if details[constants.RANK_STATUS_KEY] not in {constants.rank_status_ok, constants.rank_status_not_start,
-                                                          constants.rank_status_complete}:
+            if details[constants.RANK_STATUS_KEY] not in {constants.RANK_STATUS_OK, constants.RANK_STATUS_NOT_START,
+                                                          constants.RANK_STATUS_COMPLETE}:
                 self.rank_status = self.RANK_STATUS_UNHEALTHY
                 all_healthy = False
-            if details[constants.RANK_STATUS_KEY] not in {constants.rank_status_complete}:
+            if details[constants.RANK_STATUS_KEY] not in {constants.RANK_STATUS_COMPLETE}:
                 all_succeed = False
             rank_pids.append(details[constants.RANK_PID_KEY])
             local_rank_ids.append(details[constants.GLOBAL_RANK_ID_KEY])
@@ -343,7 +262,7 @@ class MSRunPlugin:
 
     # Read the content of resetcm and update the relevant content.
     def update_reset_info(self):
-        reset_data = fault_processor._get_reset_info_from_cm()
+        reset_data = fault_processor.get_reset_info_from_cm()
         self.fault_ranks = reset_data.fault_ranks
         self.retry_time = reset_data.retry_time
         self.grace_exit = reset_data.grace_exit
@@ -354,7 +273,7 @@ class MSRunPlugin:
         self.pre_fault_ranks = []
 
     def wait_to_start(self) -> bool:
-        reset_data = fault_processor._get_reset_info_from_cm()
+        reset_data = fault_processor.get_reset_info_from_cm()
         # 通过环境变量计算 global ranks
         self.node_global_rank_ids = calculate_global_rank()
         fault_ranks, retry_time = reset_data.fault_ranks, reset_data.retry_time
@@ -374,3 +293,85 @@ class MSRunPlugin:
             if rank_id in self.node_global_rank_ids and status == constants.VALUE_FAULT:
                 return False
         return True
+
+    def _init_grpc_client_if_needed(self):
+        if self.ms_node_rank == "0":
+            run_log.info("rank 0 will start controller grpc client")
+            init_grpc_client(self.framework)
+
+    def _handle_grace_exit(self):
+        if self.grace_exit != 1:
+            return False
+        try:
+            grace_exit_pids(self.rank_pids)
+        except Exception as e:
+            run_log.info(f"failed to gracefully kill worker process, {e}")
+        finally:
+            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            stop_pids(self.rank_pids)
+        return True
+
+    def _handle_fault_status(self, fault_status):
+        if not fault_status.is_fault:
+            return
+        run_log.warning(f"nodeRank:{self.ms_node_rank}  entering fault_status.is_fault")
+        self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+        force_exit_pids(self.rank_pids)
+        run_log.warning(f"local rank got fault, will stop worker{self.node_global_rank_ids}")
+        exit(1)
+
+    def _handle_process_retry_fault(self, fault_status):
+        if fault_status.is_retried and not fault_status.is_unrecovered:
+            run_log.warning(
+                f"nodeRank:{self.ms_node_rank} entering fault_status.is_retried and not "
+                f"fault_status.is_unrecovered")
+            # In this scenario, there is no content in the fault_rank.
+            # restart the training after the rank table is updated.
+            if not self.all_fault_has_recovered():
+                return True
+            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            if self.ms_node_rank == "0":
+                run_log.warning("will kill mindio controller")
+                shared_data.shared_data_inst.set_exit_flag(True)
+            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for 10 secs, after kill workers")
+            time.sleep(KILL_INTERVAL)
+            run_log.warning("sleep over, will start")
+            self.start_mindspore_workers()
+            self.update_pre_fault_infos()
+            return True
+        return False
+
+    def _handle_hardware_fault(self, fault_status):
+        if not fault_status.is_unrecovered:
+            return False
+        run_log.warning(f"nodeRank:{self.ms_node_rank} entering fault_status.is_unrecovered")
+        self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+        if self.all_fault_has_recovered():
+            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            self.start_mindspore_workers()
+        return True
+
+    def _handle_all_process_succeed(self):
+        if not self.all_rank_succeed:
+            return
+        run_log.info(
+            f"nodeRank:{self.ms_node_rank} successfully finished."
+        )
+        shared_data.shared_data_inst.set_kill_flag(True)
+        time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
+        exit(0)
+
+    def _handle_exist_unhealthy_process(self):
+        if self.rank_status in {self.RANK_STATUS_UNHEALTHY}:
+            run_log.warning(f"nodeRank:{self.ms_node_rank} some rank is unhealthy will stop workers, "
+                            f"and exit this node")
+            if self.ms_node_rank == "0":
+                run_log.warning("will kill mindio controller")
+                shared_data.shared_data_inst.set_kill_flag(True)
+                time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
+            stop_res = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            run_log.warning(f"rank with pid {self.rank_pids} will be killed")
+            if stop_res is not constants.RES_OK:
+                run_log.error(
+                    f"nodeRank:{self.ms_node_rank} failed to stop workers with return code:{stop_res}")
+            exit(1)

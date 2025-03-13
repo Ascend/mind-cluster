@@ -42,7 +42,7 @@ def init_taskd_worker(rank_id: int, upper_limit_of_disk_in_mb: int = 5000) -> bo
         taskd_worker = Worker(rank_id)
         return taskd_worker.init_monitor(rank_id, upper_limit_of_disk_in_mb)
     except Exception as e:
-        print(f"Failed to initialize worker: {e}")
+        run_log.error(f"Failed to initialize worker: {e}")
         return False
 
 

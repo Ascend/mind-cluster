@@ -69,15 +69,15 @@ RANK_PID_KEY = "pid"
 GLOBAL_RANK_ID_KEY = "global_rank"
 
 # status code of training processes of monitor callback
-rank_status_ok = None
-# rank_status_sleep this code means the process is sleeping, during process recover it will be sleeping
-rank_status_sleep = 1
-# rank_status_not_start means the training processes are not started yet
-rank_status_not_start = 200
+RANK_STATUS_OK = None
+# RANK_STATUS_SLEEP this code means the process is sleeping, during process recover it will be sleeping
+RANK_STATUS_SLEEP = 1
+# RANK_STATUS_NOT_START means the training processes are not started yet
+RANK_STATUS_NOT_START = 200
 # the process is disappeared
-rank_pid_not_exist = 300
+RANK_PID_NOT_EXIST = 300
 # training process exit with code 0, which means training finished
-rank_status_complete = 0
+RANK_STATUS_COMPLETE = 0
 
 # the result of calling method ok
 RES_OK = 0
