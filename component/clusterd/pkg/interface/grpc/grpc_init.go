@@ -13,12 +13,13 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
+	"clusterd/pkg/application/profiling"
+	"clusterd/pkg/application/publicfault"
+	"clusterd/pkg/application/recover"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/pb"
 	pbprofiling "clusterd/pkg/interface/grpc/pb-profiling"
 	pb2 "clusterd/pkg/interface/grpc/pb-publicfault"
-	"clusterd/pkg/interface/grpc/service"
-	pubfaultsvc "clusterd/pkg/interface/grpc/service-pubfault"
 )
 
 // ClusterInfoMgrServer is a server of clusterd
@@ -52,8 +53,8 @@ func isIPValid(ipStr string) error {
 }
 
 // Start the grpc server
-func (server *ClusterInfoMgrServer) Start(recoverSvc *service.FaultRecoverService,
-	pubFaultSvc *pubfaultsvc.PubFaultService, dataTraceSvc *service.ProfilingSwitchManager) error {
+func (server *ClusterInfoMgrServer) Start(recoverSvc *recover.FaultRecoverService,
+	pubFaultSvc *publicfault.PubFaultService, dataTraceSvc *profiling.ProfilingSwitchManager) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
 		return err

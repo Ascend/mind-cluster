@@ -1,6 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-package service
+// Package profiling a series of service function for profiling
+package profiling
 
 import (
 	"context"

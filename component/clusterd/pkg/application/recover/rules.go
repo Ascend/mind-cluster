@@ -1,9 +1,11 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package service a series of service function
-package service
+// Package recover a series of service function
+package recover
 
-import "clusterd/pkg/interface/grpc/common"
+import (
+	"clusterd/pkg/domain/common"
+)
 
 func (ctl *EventController) getPreRules() []common.TransRule {
 	return []common.TransRule{

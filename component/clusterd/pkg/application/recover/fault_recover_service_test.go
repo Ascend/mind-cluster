@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-// Package service a series of fault recover service test function
-package service
+// Package recover a series of fault recover service test function
+package recover
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/interface/grpc/common"
+	"clusterd/pkg/domain/common"
 	"clusterd/pkg/interface/grpc/pb"
 )
 

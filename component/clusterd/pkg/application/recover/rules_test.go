@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-// Package service a series of state machine rules test function
-package service
+// Package recover a series of state machine rules test function
+package recover
 
 import (
 	"testing"

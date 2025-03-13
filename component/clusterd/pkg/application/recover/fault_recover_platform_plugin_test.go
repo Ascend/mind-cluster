@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package service a series of service function
-package service
+// Package recover a series of service function
+package recover
 
 import (
 	"errors"

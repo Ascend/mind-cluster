@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package service a series of service function
-package service
+// Package recover a series of service function
+package recover
 
 import (
 	"context"
@@ -14,10 +14,10 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
-	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 	"clusterd/pkg/interface/kube"
 )

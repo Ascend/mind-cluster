@@ -1,14 +1,13 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package pubfaultsvc for public fault service
-package pubfaultsvc
+// Package publicfault for public fault service
+package publicfault
 
 import (
 	"context"
 
 	"ascend-common/api"
-	"clusterd/pkg/application/publicfault"
-	"clusterd/pkg/interface/grpc/common"
+	"clusterd/pkg/domain/common"
 	pb2 "clusterd/pkg/interface/grpc/pb-publicfault"
 )
 
@@ -26,7 +25,7 @@ func NewPubFaultService(ctx context.Context) *PubFaultService {
 // SendPublicFault send public fault to clusterd
 func (s *PubFaultService) SendPublicFault(ctx context.Context, req *pb2.PublicFaultRequest) (*pb2.RespStatus, error) {
 	pubFaultInfo := constructPubFaultInfo(req)
-	if err := publicfault.PubFaultCollector(pubFaultInfo); err != nil {
+	if err := PubFaultCollector(pubFaultInfo); err != nil {
 		if err.Error() == "limiter work by resource failed" {
 			return &pb2.RespStatus{
 				Code: int32(common.InvalidReqRate),

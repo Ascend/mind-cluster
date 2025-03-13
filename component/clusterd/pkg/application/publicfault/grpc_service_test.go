@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package pubfaultsvc test for public fault service
-package pubfaultsvc
+// Package publicfault test for public fault service
+package publicfault
 
 import (
 	"context"
@@ -11,24 +11,20 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/interface/grpc/common"
+	"clusterd/pkg/domain/common"
 	pb2 "clusterd/pkg/interface/grpc/pb-publicfault"
 )
 
 var (
 	pubFaultSvc *PubFaultService
 	req         *pb2.PublicFaultRequest
-	testErr     = errors.New("test error")
 )
 
 const (
-	testId        = "11937763019444715778"
-	testTimeStamp = 1739866717000
-	testResource  = "resource1"
-	testFaultCode = "000000001"
-	testNodeName  = "node1"
+	testId       = "11937763019444715778"
+	testResource = "resource1"
+	testNodeName = "node1"
 )
 
 func fakeService() *PubFaultService {
@@ -65,7 +61,7 @@ func TestSendPublicFault(t *testing.T) {
 }
 
 func testSendFault() {
-	p1 := gomonkey.ApplyFuncReturn(publicfault.PubFaultCollector, nil)
+	p1 := gomonkey.ApplyFuncReturn(PubFaultCollector, nil)
 	defer p1.Reset()
 	resp, err := pubFaultSvc.SendPublicFault(context.Background(), req)
 	expInfo := "public fault send successfully"
@@ -76,7 +72,7 @@ func testSendFault() {
 
 func testSendFaultErrLimit() {
 	limitErr := errors.New("limiter work by resource failed")
-	p1 := gomonkey.ApplyFuncReturn(publicfault.PubFaultCollector, limitErr)
+	p1 := gomonkey.ApplyFuncReturn(PubFaultCollector, limitErr)
 	defer p1.Reset()
 	resp, err := pubFaultSvc.SendPublicFault(context.Background(), req)
 	expInfo := "limiter work by resource failed"
@@ -86,7 +82,7 @@ func testSendFaultErrLimit() {
 }
 
 func testSendFaultErrCheck() {
-	p1 := gomonkey.ApplyFuncReturn(publicfault.PubFaultCollector, testErr)
+	p1 := gomonkey.ApplyFuncReturn(PubFaultCollector, testErr)
 	defer p1.Reset()
 	resp, err := pubFaultSvc.SendPublicFault(context.Background(), req)
 	convey.So(err, convey.ShouldBeNil)

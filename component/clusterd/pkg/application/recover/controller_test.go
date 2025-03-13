@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-// Package service a series of controller test function
-package service
+// Package recover a series of controller test function
+package recover
 
 import (
 	"context"
@@ -15,8 +15,8 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/interface/grpc/common"
 	"clusterd/pkg/interface/grpc/pb"
 )
 

@@ -17,15 +17,15 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/pingmesh"
+	"clusterd/pkg/application/profiling"
 	"clusterd/pkg/application/publicfault"
+	"clusterd/pkg/application/recover"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/common/util"
 	sv "clusterd/pkg/interface/grpc"
-	"clusterd/pkg/interface/grpc/service"
-	pubfaultsvc "clusterd/pkg/interface/grpc/service-pubfault"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -137,9 +137,9 @@ func initGrpcServer(ctx context.Context) {
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS)})
-	recoverService := service.NewFaultRecoverService(keepAliveInterval, ctx)
-	pubFaultSvc := pubfaultsvc.NewPubFaultService(ctx)
-	dataTraceSvc := &service.ProfilingSwitchManager{}
+	recoverService := recover.NewFaultRecoverService(keepAliveInterval, ctx)
+	pubFaultSvc := publicfault.NewPubFaultService(ctx)
+	dataTraceSvc := &profiling.ProfilingSwitchManager{}
 	if err := server.Start(recoverService, pubFaultSvc, dataTraceSvc); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
