@@ -28,7 +28,7 @@ var (
 )
 
 func resetCache() {
-	PubFaultCache = &PublicFaultCache{
+	PubFaultCache = &cache{
 		faultCache: make(map[string]map[string]*constant.PubFaultCache),
 		mutex:      sync.Mutex{},
 	}
@@ -66,7 +66,7 @@ func testAdd() {
 
 	// public fault number in cache exceeds the upper limit
 	const maxPubFaultCacheNum = 50000
-	p1 := gomonkey.ApplyMethodReturn(&PublicFaultCache{}, "GetPubFaultNum", maxPubFaultCacheNum)
+	p1 := gomonkey.ApplyMethodReturn(&cache{}, "GetPubFaultNum", maxPubFaultCacheNum)
 	defer p1.Reset()
 	resetCache()
 	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)

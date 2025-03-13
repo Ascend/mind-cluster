@@ -47,8 +47,8 @@ func (ps *ProfilingSwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Cont
 			Code: ErrInvalidParam}, fmt.Errorf("the format of jobNsName is not namespace/jobName")
 	}
 	jobNs, jobName := jobNameInfo[0], jobNameInfo[1]
-	dtc := profiling.NewDataTraceController(jobNs, jobName)
-	if cm, err := kube.GetConfigMap(profiling.DataTraceCmPrefix+dtc.JobName,
+	dtc := profile.NewDataTraceController(jobNs, jobName)
+	if cm, err := kube.GetConfigMap(profile.DataTraceCmPrefix+dtc.JobName,
 		dtc.JobNamespace); cm == nil || err != nil {
 		if !errors.IsNotFound(err) {
 			return &pb_profiling.DataTypeRes{Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]",
@@ -79,7 +79,7 @@ func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context
 			Code: ErrInvalidParam}, nil
 	}
 	jobNs, jobName := jobNameInfo[0], jobNameInfo[1]
-	dtc := profiling.NewDataTraceController(jobNs, jobName)
+	dtc := profile.NewDataTraceController(jobNs, jobName)
 	cm, err := dtc.IsDataTraceCmExist()
 	if cm == nil || err != nil {
 		hwlog.RunLog.Errorf("can not find data trace configmap[%s/%s]", dtc.JobNamespace, dtc.JobName)
@@ -87,10 +87,10 @@ func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context
 			Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]", dtc.JobNamespace, dtc.JobName),
 			Code:    ErrNotFound}, err
 	}
-	data, ok := cm.Data[profiling.DataTraceCmProfilingSwitchKey]
+	data, ok := cm.Data[profile.DataTraceCmProfilingSwitchKey]
 	if !ok {
 		hwlog.RunLog.Infof("data trace configmap[%s/%s] has no %s field",
-			dtc.JobNamespace, dtc.JobName, profiling.DataTraceCmProfilingSwitchKey)
+			dtc.JobNamespace, dtc.JobName, profile.DataTraceCmProfilingSwitchKey)
 		return &pb_profiling.DataStatusRes{Message: "data trace configmap does not contain the 'profilingSwitch' field",
 			Code: ErrNotFound}, nil
 	}

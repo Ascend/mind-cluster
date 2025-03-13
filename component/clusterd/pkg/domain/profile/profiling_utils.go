@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-// Package profiling provides utils for profile
-package profiling
+// Package profile provides utils for profile
+package profile
 
 import (
 	"encoding/json"
@@ -57,7 +57,7 @@ func (dtc *DataTraceController) UpdateDataTraceCm(inParam *pbprofiling.Profiling
 		return fmt.Errorf(" failed to get cm,%v", err)
 	}
 	data := dataTraceCm.Data[DataTraceCmProfilingSwitchKey]
-	var dataTraceParam ProfilingSwitchStruct
+	var dataTraceParam SwitchStruct
 	if err := json.Unmarshal([]byte(data), &dataTraceParam); err != nil {
 		hwlog.RunLog.Error("the content of current data-trace cm is not serialize legally, will cover with new")
 	}
@@ -88,7 +88,7 @@ func (dtc *DataTraceController) CreateDataTraceCm(inParam *pbprofiling.Profiling
 			Labels:    map[string]string{"reset": "true"},
 		},
 	}
-	var dataTraceParam ProfilingSwitchStruct
+	var dataTraceParam SwitchStruct
 	dtc.setDataTraceData(&dataTraceParam, inParam)
 	newProParam, err := json.Marshal(dataTraceParam)
 	if err != nil {
@@ -105,7 +105,7 @@ func (dtc *DataTraceController) CreateDataTraceCm(inParam *pbprofiling.Profiling
 	return nil
 }
 
-func (dtc *DataTraceController) setDataTraceData(dataTraceParam *ProfilingSwitchStruct,
+func (dtc *DataTraceController) setDataTraceData(dataTraceParam *SwitchStruct,
 	inParam *pbprofiling.ProfilingSwitch) {
 	dataTraceParam.CommunicationOperator = inParam.CommunicationOperator
 	dataTraceParam.FP = inParam.FP

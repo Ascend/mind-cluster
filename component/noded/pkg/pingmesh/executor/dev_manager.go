@@ -39,8 +39,8 @@ const (
 	collectPeriodFactor     = 10
 )
 
-// Executor execute action of hccsping mesh
-type Executor struct {
+// DevManager execute action of hccsping mesh
+type DevManager struct {
 	devManager    devmanager.DeviceInterface
 	commandChan   chan *types.HccspingMeshPolicy
 	wg            *sync.WaitGroup
@@ -51,7 +51,7 @@ type Executor struct {
 }
 
 // New create new device manager
-func New() (*Executor, error) {
+func New() (*DevManager, error) {
 	dm, err := devmanager.GetDeviceManager()
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func New() (*Executor, error) {
 		physicID2ChipInfo[strconv.Itoa(int(chip.PhysicID))] = chip
 	}
 
-	return &Executor{
+	return &DevManager{
 		devManager:  dm,
 		chips:       physicID2ChipInfo,
 		SuperPodId:  superPodId,
@@ -94,17 +94,17 @@ func New() (*Executor, error) {
 }
 
 // UpdateConfig update config
-func (d *Executor) UpdateConfig(config *types.HccspingMeshPolicy) {
+func (d *DevManager) UpdateConfig(config *types.HccspingMeshPolicy) {
 	d.commandChan <- config
 }
 
 // SetResultHandler set result handler
-func (d *Executor) SetResultHandler(handler func(result *types.HccspingMeshResult)) {
+func (d *DevManager) SetResultHandler(handler func(result *types.HccspingMeshResult)) {
 	d.resultHandler = handler
 }
 
 // Start executor
-func (d *Executor) Start(stopCh <-chan struct{}) {
+func (d *DevManager) Start(stopCh <-chan struct{}) {
 	var currentStop chan struct{}
 
 	for {
@@ -136,7 +136,7 @@ func (d *Executor) Start(stopCh <-chan struct{}) {
 	}
 }
 
-func (d *Executor) startHccspingMesh() {
+func (d *DevManager) startHccspingMesh() {
 	for physicID, addrs := range d.currentPolicy.DestAddr {
 		chip, ok := d.chips[physicID]
 		if !ok {
@@ -161,7 +161,7 @@ func (d *Executor) startHccspingMesh() {
 	}
 }
 
-func (d *Executor) stopHccspingMesh() {
+func (d *DevManager) stopHccspingMesh() {
 	if d.currentPolicy == nil {
 		d.stopAllTasks()
 		return
@@ -169,7 +169,7 @@ func (d *Executor) stopHccspingMesh() {
 	d.stopLastTasks()
 }
 
-func (d *Executor) stopAllTasks() {
+func (d *DevManager) stopAllTasks() {
 	for _, chip := range d.chips {
 		for _, taskID := range []uint{common.InternalPingMeshTaskID, common.ExternalPingMeshTaskID} {
 			if err := d.devManager.DcStopHccsPingMesh(chip.CardID, chip.DeviceID, 0, taskID); err != nil {
@@ -183,7 +183,7 @@ func (d *Executor) stopAllTasks() {
 	}
 }
 
-func (d *Executor) stopLastTasks() {
+func (d *DevManager) stopLastTasks() {
 	for physicID, address := range d.currentPolicy.DestAddr {
 		chip, ok := d.chips[physicID]
 		if !ok {
@@ -200,7 +200,7 @@ func (d *Executor) stopLastTasks() {
 	}
 }
 
-func (d *Executor) startCollect(stop <-chan struct{}) {
+func (d *DevManager) startCollect(stop <-chan struct{}) {
 	hwlog.RunLog.Infof("start collect hccsping mesh info")
 	defer d.wg.Done()
 	ticker := time.NewTicker(time.Duration(d.currentPolicy.Config.TaskInterval*collectPeriodFactor) * time.Second)
@@ -216,7 +216,7 @@ func (d *Executor) startCollect(stop <-chan struct{}) {
 	}
 }
 
-func (d *Executor) getHccspingMeshInfo() {
+func (d *DevManager) getHccspingMeshInfo() {
 	hwlog.RunLog.Infof("deviceManager get hccspingmesh info, time: %s", time.Now().Format(time.RFC3339))
 	res := make(map[string]map[uint]*common.HccspingMeshInfo)
 	for physicID, tasks := range d.currentPolicy.DestAddr {

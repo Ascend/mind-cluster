@@ -4,7 +4,6 @@
 package grpc
 
 import (
-	pb_profiling "clusterd/pkg/interface/grpc/pb-profiling"
 	"errors"
 	"net"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"ascend-common/common-utils/limiter"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/pb"
+	pbprofiling "clusterd/pkg/interface/grpc/pb-profiling"
 	pb2 "clusterd/pkg/interface/grpc/pb-publicfault"
 	"clusterd/pkg/interface/grpc/service"
 	pubfaultsvc "clusterd/pkg/interface/grpc/service-pubfault"
@@ -73,7 +73,7 @@ func (server *ClusterInfoMgrServer) Start(recoverSvc *service.FaultRecoverServic
 	server.grpcServer = grpc.NewServer(server.opts...)
 	pb.RegisterRecoverServer(server.grpcServer, recoverSvc)
 	pb2.RegisterPubFaultServer(server.grpcServer, pubFaultSvc)
-	pb_profiling.RegisterTrainingDataTraceServer(server.grpcServer, dataTraceSvc)
+	pbprofiling.RegisterTrainingDataTraceServer(server.grpcServer, dataTraceSvc)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

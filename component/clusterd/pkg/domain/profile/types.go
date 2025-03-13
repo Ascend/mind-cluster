@@ -1,9 +1,10 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-package profiling
+// Package profile provides utils for profile
+package profile
 
-// ProfilingSwitchStruct containes all switches for marker
-type ProfilingSwitchStruct struct {
+// SwitchStruct containes all switches for marker
+type SwitchStruct struct {
 	CommunicationOperator string
 	Step                  string
 	SaveCheckpoint        string

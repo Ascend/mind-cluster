@@ -46,7 +46,7 @@ import (
 // Manager is the controller for pingmesh
 type Manager struct {
 	watcher       watcher.Interface
-	executor      *executor.Executor
+	executor      *executor.DevManager
 	handler       resulthandler.Interface
 	policyFactory policygenerator.Factory
 	nodeName      string

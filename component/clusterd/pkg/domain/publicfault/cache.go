@@ -15,24 +15,24 @@ import (
 )
 
 // PubFaultCache public fault cache
-var PubFaultCache *PublicFaultCache
+var PubFaultCache *cache
 
 func init() {
-	PubFaultCache = &PublicFaultCache{
+	PubFaultCache = &cache{
 		faultCache: make(map[string]map[string]*constant.PubFaultCache),
 		mutex:      sync.Mutex{},
 	}
 }
 
-// PublicFaultCache public fault cache
-type PublicFaultCache struct {
+// cache public fault cache
+type cache struct {
 	// key: node name; value: {faultResource+faultId:fault}
 	faultCache map[string]map[string]*constant.PubFaultCache
 	mutex      sync.Mutex
 }
 
 // AddPubFaultToCache add new public fault to cache. After adding, notify statistic module
-func (pc *PublicFaultCache) AddPubFaultToCache(newFault *constant.PubFaultCache, nodeName, faultKey string) {
+func (pc *cache) AddPubFaultToCache(newFault *constant.PubFaultCache, nodeName, faultKey string) {
 	const maxPubFaultCacheNum = 50000
 	if pc.GetPubFaultNum() >= maxPubFaultCacheNum {
 		hwlog.RunLog.Errorf("add public fault to cache failed, "+
@@ -52,21 +52,21 @@ func (pc *PublicFaultCache) AddPubFaultToCache(newFault *constant.PubFaultCache,
 }
 
 // DeleteOccurFault delete occur from cache. After deleting, notify statistic module
-func (pc *PublicFaultCache) DeleteOccurFault(nodeName, faultKey string) {
+func (pc *cache) DeleteOccurFault(nodeName, faultKey string) {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	delete(pc.faultCache[nodeName], faultKey)
 }
 
 // GetPubFault get public fault from cache
-func (pc *PublicFaultCache) GetPubFault() map[string]map[string]*constant.PubFaultCache {
+func (pc *cache) GetPubFault() map[string]map[string]*constant.PubFaultCache {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	return pc.faultCache
 }
 
 // GetPubFaultNum get public fault number in cache
-func (pc *PublicFaultCache) GetPubFaultNum() int {
+func (pc *cache) GetPubFaultNum() int {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	faultNum := 0
@@ -78,7 +78,7 @@ func (pc *PublicFaultCache) GetPubFaultNum() int {
 }
 
 // GetPubFaultByNodeName get public fault from cache by node name
-func (pc *PublicFaultCache) GetPubFaultByNodeName(nodeName string) (map[string]*constant.PubFaultCache, bool) {
+func (pc *cache) GetPubFaultByNodeName(nodeName string) (map[string]*constant.PubFaultCache, bool) {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	nodeFault, nodeExisted := pc.faultCache[nodeName]
@@ -86,7 +86,7 @@ func (pc *PublicFaultCache) GetPubFaultByNodeName(nodeName string) (map[string]*
 }
 
 // DeepCopy deep copy fault cache
-func (pc *PublicFaultCache) DeepCopy() (map[string]map[string]*constant.PubFaultCache, error) {
+func (pc *cache) DeepCopy() (map[string]map[string]*constant.PubFaultCache, error) {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	result := new(map[string]map[string]*constant.PubFaultCache)
@@ -98,7 +98,7 @@ func (pc *PublicFaultCache) DeepCopy() (map[string]map[string]*constant.PubFault
 }
 
 // FaultExisted if occur existed, means fault existed, return fault add time
-func (pc *PublicFaultCache) FaultExisted(nodeName, faultKey string) (bool, int64) {
+func (pc *cache) FaultExisted(nodeName, faultKey string) (bool, int64) {
 	pc.mutex.Lock()
 	nodeFault, nodeExist := pc.faultCache[nodeName]
 	fault, faultExist := nodeFault[faultKey]
@@ -110,7 +110,7 @@ func (pc *PublicFaultCache) FaultExisted(nodeName, faultKey string) (bool, int64
 }
 
 // GetPubFaultsForCM get public faults for configmap statistic-fault-info
-func (pc *PublicFaultCache) GetPubFaultsForCM() (map[string][]constant.NodeFault, int) {
+func (pc *cache) GetPubFaultsForCM() (map[string][]constant.NodeFault, int) {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
 	pubFaults := make(map[string][]constant.NodeFault, len(pc.faultCache))
@@ -138,7 +138,7 @@ func (pc *PublicFaultCache) GetPubFaultsForCM() (map[string][]constant.NodeFault
 }
 
 // LoadFaultToCache load public fault to cache
-func (pc *PublicFaultCache) LoadFaultToCache(faults map[string][]constant.NodeFault) {
+func (pc *cache) LoadFaultToCache(faults map[string][]constant.NodeFault) {
 	for nodeName, nodeFaults := range faults {
 		for _, nodeFault := range nodeFaults {
 			faultKey := nodeFault.FaultResource + nodeFault.FaultId
