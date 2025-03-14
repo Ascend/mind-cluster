@@ -27,7 +27,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-func (tp *module910x8) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
+func judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
 	var reFlag = false
 
 	sNodeInf := initSelectNodeInf(nodeTop)

@@ -721,30 +721,6 @@ func (tp *module910SuperPod) selectNodesFromSuperPods(unReadyID []string, totalC
 	}
 }
 
-func (tp *module910SuperPod) firstLevelRefreshSuperPodSlice(reserveNode map[string]plugin.NPUNode,
-	firstLevelSuperPodsSlice, secondLevelSuperPodsSlice []map[string]plugin.NPUNode) (
-	[]map[string]plugin.NPUNode, []map[string]plugin.NPUNode) {
-	if len(reserveNode)-tp.FrameAttr.ReservePodSize >= tp.spBlock {
-		firstLevelSuperPodsSlice[0] = reserveNode
-		return firstLevelSuperPodsSlice, secondLevelSuperPodsSlice
-	}
-	firstLevelSuperPodsSlice = firstLevelSuperPodsSlice[1:]
-	if len(reserveNode) >= tp.spBlock {
-		secondLevelSuperPodsSlice = append(secondLevelSuperPodsSlice, reserveNode)
-	}
-	return firstLevelSuperPodsSlice, secondLevelSuperPodsSlice
-}
-
-func (tp *module910SuperPod) secondLevelRefreshSuperPodSlice(reserveNode map[string]plugin.NPUNode,
-	secondLevelSuperPodsSlice []map[string]plugin.NPUNode) []map[string]plugin.NPUNode {
-	if len(reserveNode) >= tp.spBlock {
-		secondLevelSuperPodsSlice[0] = reserveNode
-		return secondLevelSuperPodsSlice
-	}
-	secondLevelSuperPodsSlice = secondLevelSuperPodsSlice[1:]
-	return secondLevelSuperPodsSlice
-}
-
 func (tp *module910SuperPod) selectNodesFromSuperPod(vid string, superPod map[string]plugin.NPUNode,
 	selectNodes map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
 	count := 0
@@ -772,14 +748,6 @@ func (tp *module910SuperPod) selectNodesFromSuperPod(vid string, superPod map[st
 		count++
 	}
 	return reserveNode
-}
-
-func transMapToSlice(nodesMap map[int32]map[string]plugin.NPUNode) []map[string]plugin.NPUNode {
-	nodesSlice := make([]map[string]plugin.NPUNode, 0)
-	for _, superPod := range nodesMap {
-		nodesSlice = append(nodesSlice, superPod)
-	}
-	return nodesSlice
 }
 
 // UseAnnotation select npu for task from node
