@@ -297,8 +297,12 @@ func (ps *PluginServer) ListAndWatch(empty *v1beta1.Empty, stream v1beta1.Device
 		case <-stream.Context().Done():
 			hwlog.RunLog.Warnf("grpc stream closed, deviceType=%s, server restartTimes=%d",
 				ps.deviceType, serverRestartCount)
-			ps.isRunning.Store(false)
-			ps.SetRestartFlag(true)
+			if ps.isRunning.Load() {
+				hwlog.RunLog.Infof("server should running, restart it, restartTimes=%d",
+					serverRestartCount)
+				ps.isRunning.Store(false)
+				ps.SetRestartFlag(true)
+			}
 			return nil
 		case <-ps.stop:
 			hwlog.RunLog.Warnf("ps.stop chan receive exit signal, deviceType=%s, server restartTimes=%d",
