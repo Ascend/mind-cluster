@@ -80,7 +80,7 @@ func (tp *module910x8) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 		return err
 	}
 
-	if err = tp.judgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
+	if err = judgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[tp.netUnhealthyKey])

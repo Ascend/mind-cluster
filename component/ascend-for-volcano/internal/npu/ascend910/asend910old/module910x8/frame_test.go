@@ -431,3 +431,19 @@ func TestUseAnnotation(t *testing.T) {
 		})
 	}
 }
+
+func TestNilFunc(t *testing.T) {
+	t.Run("tp nil test", func(t *testing.T) {
+		var tp *module910x8
+		wantErr := errors.New(util.ArgumentError)
+		if err := tp.CheckNodeNPUByTask(nil, plugin.NPUNode{}); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, wantErr)
+		}
+		if err := tp.ScoreBestNPUNodes(nil, nil, nil); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, wantErr)
+		}
+		if node := tp.UseAnnotation(nil, plugin.NPUNode{}); node != nil {
+			t.Errorf("UseAnnotation() error = %v, want %v", node, nil)
+		}
+	})
+}

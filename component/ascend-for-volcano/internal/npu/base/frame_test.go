@@ -20,6 +20,7 @@ Package base is using for HuaWei Ascend pin affinity schedule.
 package base
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -75,6 +76,30 @@ func TestInitMyJobPlugin(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNilFunc(t *testing.T) {
+	t.Run("tp nil test", func(t *testing.T) {
+		var tp *NPUHandler
+		tp.SetSchedulerAttr(util.SchedulerJobAttr{})
+		tp.SetSchedulerEnv(plugin.ScheduleEnv{})
+		wantErr := errors.New(util.ArgumentError)
+		if err := tp.InitMyJobPlugin(util.SchedulerJobAttr{}, plugin.ScheduleEnv{}); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("InitMyJobPlugin() err: %v, wantErr: %v", err, wantErr)
+		}
+		if result := tp.ValidNPUJob(); result.Pass != false {
+			t.Errorf("ValidNPUJob() cann pass = %v, want %v", result.Pass, false)
+		}
+		if err := tp.CheckNodeNPUByTask(nil, plugin.NPUNode{}); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, wantErr)
+		}
+		if err := tp.ScoreBestNPUNodes(nil, nil, nil); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, wantErr)
+		}
+		if _, err := tp.SelectNPUFromNode(nil, plugin.NPUNode{}); !reflect.DeepEqual(err, wantErr) {
+			t.Errorf("SelectNPUFromNode() error = %v, wantErr %v", err, wantErr)
+		}
+	})
 }
 
 // validNPUJobTestCase validNPUJob test case
@@ -224,14 +249,12 @@ func buildCheckNodeNPUByTaskTestCases() []checkNodeNPUByTaskTestCase {
 
 // TestCheckNodeNPUByTask
 func TestCheckNodeNPUByTask(t *testing.T) {
-	npu := NPUHandler{}
-	npu.SetAnnoName(util.NPU310PCardName)
-	npu.SetAnnoPreVal(util.NPU310PCardNamePre)
+	npu := New(util.NPU310PCardName,
+		WithAnnoPreVal(util.NPU310PCardNamePre), WithMaxNodeNum(maxNodeNPUNum),
+		WithNpuInvalidMap(nil), WithNetworkFault(true))
 	job := test.FakeNormalTestJob("job", 1)
 	test.SetFakeJobResRequest(job, util.NPU310PCardName, "2")
 	attr1 := itest.FakeSchedulerJobAttrByJob(job)
-	npu.SetMaxNodeNPUNum(maxNodeNPUNum)
-	npu.SetMaxCardNPUNum(maxCardNPUNum)
 	npu.SetSchedulerAttr(attr1)
 	env := plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{
 		Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr1}}},
@@ -263,15 +286,18 @@ func buildUseAnnotationTestCases01() []useAnnotationTestCase {
 			Task: test.FakeTaskWithResReq("pod0", util.NPU310PCardName, util.NPUIndex2),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1"},
-					Allocate:   map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
+					Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1",
+						networkUnhealthyNPU: "Ascend910-0"},
+					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
+					BaseDeviceInfo: fakeBaseInfo(),
 				},
 			},
 			PodAnno: "Ascend310P-0,Ascend310P-1",
 			WantNode: &plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
-					Allocate:   map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
-					Annotation: map[string]string{util.NPU310PCardName: ""},
+					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
+					Annotation:     map[string]string{util.NPU310PCardName: "", networkUnhealthyNPU: "Ascend910-0"},
+					BaseDeviceInfo: fakeBaseInfo(),
 				},
 			},
 		},
@@ -325,7 +351,8 @@ func TestUseAnnotation(t *testing.T) {
 	npu.SetAnnoName(util.NPU310PCardName)
 	npu.SetAnnoPreVal(util.NPU310PCardNamePre)
 	npu.SetMaxNodeNPUNum(maxNodeNPUNum)
-	job := test.FakeNormalTestJob("job", 1)
+	npu.SetIsNetworkFaultAttention(true)
+	job := test.FakeNormalTestJob("job", util.NPUIndex2)
 	test.SetFakeJobResRequest(job, util.NPU910CardName, "2")
 	attr := itest.FakeSchedulerJobAttrByJob(job)
 	env := plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{
@@ -560,4 +587,16 @@ func TestScoreBestNPUNodes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func fakeBaseInfo() string {
+	fakeInfo := map[string]*util.NpuBaseInfo{
+		"Ascend310P-0": {IP: "testIp", SuperDeviceID: 0},
+		"Ascend310P-1": {IP: "testIp", SuperDeviceID: 0},
+	}
+	str, err := json.Marshal(fakeInfo)
+	if err != nil {
+		return ""
+	}
+	return string(str)
 }
