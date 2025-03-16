@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/busconfig"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/pingmesh"
@@ -140,7 +141,8 @@ func initGrpcServer(ctx context.Context) {
 	recoverService := recover.NewFaultRecoverService(keepAliveInterval, ctx)
 	pubFaultSvc := publicfault.NewPubFaultService(ctx)
 	dataTraceSvc := &profiling.ProfilingSwitchManager{}
-	if err := server.Start(recoverService, pubFaultSvc, dataTraceSvc); err != nil {
+	configSvc := busconfig.NewBusinessConfigServer(ctx)
+	if err := server.Start(recoverService, pubFaultSvc, dataTraceSvc, configSvc); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
 }

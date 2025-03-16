@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option go_package = ".;config";
+package config;
 
 message Status {
   int32 code = 1;
@@ -16,7 +17,7 @@ message RankTableStream {
   string rankTable = 2;
 }
 
-service Recover {
+service config {
   rpc Register(ClientInfo) returns (Status) {}
   rpc SubscribeRankTable(ClientInfo) returns (stream RankTableStream) {}
 }

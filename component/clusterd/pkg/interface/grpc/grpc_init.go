@@ -13,10 +13,12 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
+	"clusterd/pkg/application/busconfig"
 	"clusterd/pkg/application/profiling"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/recover"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/interface/grpc/config"
 	pbprofiling "clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/pubfault"
 	"clusterd/pkg/interface/grpc/recover"
@@ -54,7 +56,8 @@ func isIPValid(ipStr string) error {
 
 // Start the grpc server
 func (server *ClusterInfoMgrServer) Start(recoverSvc *recover.FaultRecoverService,
-	pubFaultSvc *publicfault.PubFaultService, dataTraceSvc *profiling.ProfilingSwitchManager) error {
+	pubFaultSvc *publicfault.PubFaultService, dataTraceSvc *profiling.ProfilingSwitchManager,
+	configSvc *busconfig.BusinessConfigServer) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
 		return err
@@ -75,6 +78,7 @@ func (server *ClusterInfoMgrServer) Start(recoverSvc *recover.FaultRecoverServic
 	pb.RegisterRecoverServer(server.grpcServer, recoverSvc)
 	pubfault.RegisterPubFaultServer(server.grpcServer, pubFaultSvc)
 	pbprofiling.RegisterTrainingDataTraceServer(server.grpcServer, dataTraceSvc)
+	config.RegisterConfigServer(server.grpcServer, configSvc)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {

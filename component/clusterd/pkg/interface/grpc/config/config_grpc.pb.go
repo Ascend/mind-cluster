@@ -19,41 +19,41 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Recover_Register_FullMethodName           = "/Recover/Register"
-	Recover_SubscribeRankTable_FullMethodName = "/Recover/SubscribeRankTable"
+	Config_Register_FullMethodName           = "/config.config/Register"
+	Config_SubscribeRankTable_FullMethodName = "/config.config/SubscribeRankTable"
 )
 
-// RecoverClient is the client API for Recover service.
+// ConfigClient is the client API for Config service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type RecoverClient interface {
+type ConfigClient interface {
 	Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error)
-	SubscribeRankTable(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Recover_SubscribeRankTableClient, error)
+	SubscribeRankTable(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Config_SubscribeRankTableClient, error)
 }
 
-type recoverClient struct {
+type configClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewRecoverClient(cc grpc.ClientConnInterface) RecoverClient {
-	return &recoverClient{cc}
+func NewConfigClient(cc grpc.ClientConnInterface) ConfigClient {
+	return &configClient{cc}
 }
 
-func (c *recoverClient) Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error) {
+func (c *configClient) Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error) {
 	out := new(Status)
-	err := c.cc.Invoke(ctx, Recover_Register_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Config_Register_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *recoverClient) SubscribeRankTable(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Recover_SubscribeRankTableClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Recover_ServiceDesc.Streams[0], Recover_SubscribeRankTable_FullMethodName, opts...)
+func (c *configClient) SubscribeRankTable(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Config_SubscribeRankTableClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Config_ServiceDesc.Streams[0], Config_SubscribeRankTable_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &recoverSubscribeRankTableClient{stream}
+	x := &configSubscribeRankTableClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -63,16 +63,16 @@ func (c *recoverClient) SubscribeRankTable(ctx context.Context, in *ClientInfo, 
 	return x, nil
 }
 
-type Recover_SubscribeRankTableClient interface {
+type Config_SubscribeRankTableClient interface {
 	Recv() (*RankTableStream, error)
 	grpc.ClientStream
 }
 
-type recoverSubscribeRankTableClient struct {
+type configSubscribeRankTableClient struct {
 	grpc.ClientStream
 }
 
-func (x *recoverSubscribeRankTableClient) Recv() (*RankTableStream, error) {
+func (x *configSubscribeRankTableClient) Recv() (*RankTableStream, error) {
 	m := new(RankTableStream)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -80,93 +80,93 @@ func (x *recoverSubscribeRankTableClient) Recv() (*RankTableStream, error) {
 	return m, nil
 }
 
-// RecoverServer is the server API for Recover service.
-// All implementations must embed UnimplementedRecoverServer
+// ConfigServer is the server API for Config service.
+// All implementations must embed UnimplementedConfigServer
 // for forward compatibility
-type RecoverServer interface {
+type ConfigServer interface {
 	Register(context.Context, *ClientInfo) (*Status, error)
-	SubscribeRankTable(*ClientInfo, Recover_SubscribeRankTableServer) error
-	mustEmbedUnimplementedRecoverServer()
+	SubscribeRankTable(*ClientInfo, Config_SubscribeRankTableServer) error
+	mustEmbedUnimplementedConfigServer()
 }
 
-// UnimplementedRecoverServer must be embedded to have forward compatible implementations.
-type UnimplementedRecoverServer struct {
+// UnimplementedConfigServer must be embedded to have forward compatible implementations.
+type UnimplementedConfigServer struct {
 }
 
-func (UnimplementedRecoverServer) Register(context.Context, *ClientInfo) (*Status, error) {
+func (UnimplementedConfigServer) Register(context.Context, *ClientInfo) (*Status, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedRecoverServer) SubscribeRankTable(*ClientInfo, Recover_SubscribeRankTableServer) error {
+func (UnimplementedConfigServer) SubscribeRankTable(*ClientInfo, Config_SubscribeRankTableServer) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeRankTable not implemented")
 }
-func (UnimplementedRecoverServer) mustEmbedUnimplementedRecoverServer() {}
+func (UnimplementedConfigServer) mustEmbedUnimplementedConfigServer() {}
 
-// UnsafeRecoverServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to RecoverServer will
+// UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ConfigServer will
 // result in compilation errors.
-type UnsafeRecoverServer interface {
-	mustEmbedUnimplementedRecoverServer()
+type UnsafeConfigServer interface {
+	mustEmbedUnimplementedConfigServer()
 }
 
-func RegisterRecoverServer(s grpc.ServiceRegistrar, srv RecoverServer) {
-	s.RegisterService(&Recover_ServiceDesc, srv)
+func RegisterConfigServer(s grpc.ServiceRegistrar, srv ConfigServer) {
+	s.RegisterService(&Config_ServiceDesc, srv)
 }
 
-func _Recover_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Config_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ClientInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RecoverServer).Register(ctx, in)
+		return srv.(ConfigServer).Register(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Recover_Register_FullMethodName,
+		FullMethod: Config_Register_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RecoverServer).Register(ctx, req.(*ClientInfo))
+		return srv.(ConfigServer).Register(ctx, req.(*ClientInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Recover_SubscribeRankTable_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Config_SubscribeRankTable_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ClientInfo)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(RecoverServer).SubscribeRankTable(m, &recoverSubscribeRankTableServer{stream})
+	return srv.(ConfigServer).SubscribeRankTable(m, &configSubscribeRankTableServer{stream})
 }
 
-type Recover_SubscribeRankTableServer interface {
+type Config_SubscribeRankTableServer interface {
 	Send(*RankTableStream) error
 	grpc.ServerStream
 }
 
-type recoverSubscribeRankTableServer struct {
+type configSubscribeRankTableServer struct {
 	grpc.ServerStream
 }
 
-func (x *recoverSubscribeRankTableServer) Send(m *RankTableStream) error {
+func (x *configSubscribeRankTableServer) Send(m *RankTableStream) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// Recover_ServiceDesc is the grpc.ServiceDesc for Recover service.
+// Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Recover_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Recover",
-	HandlerType: (*RecoverServer)(nil),
+var Config_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "config.config",
+	HandlerType: (*ConfigServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Register",
-			Handler:    _Recover_Register_Handler,
+			Handler:    _Config_Register_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "SubscribeRankTable",
-			Handler:       _Recover_SubscribeRankTable_Handler,
+			Handler:       _Config_SubscribeRankTable_Handler,
 			ServerStreams: true,
 		},
 	},
