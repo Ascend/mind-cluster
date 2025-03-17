@@ -18,6 +18,7 @@ limitations under the License.
 package plugin
 
 import (
+	"regexp"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,6 +100,11 @@ const (
 	oldCapacity              = "Capability"
 	newCapacity              = "Capacity"
 	noneResourceErr          = "npu resource is not enable"
+)
+
+var (
+	Ascend910VirtualDevNameReg = regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c")
+	Ascend310VirtualDevNameReg = regexp.MustCompile("Ascend310P-(1|2|4)c")
 )
 
 // SchedulerJob the plugin define job info

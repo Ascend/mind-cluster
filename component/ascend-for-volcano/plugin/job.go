@@ -646,6 +646,7 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return &api.ValidateResult{Pass: false, Reason: reason,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
 	}
+
 	if !IsJobInitial(job) {
 		reason := "job is not ready"
 		klog.V(util.LogErrorLev).Infof("%s job(%s) not ready:%s.", PluginName, job.Name,
@@ -653,20 +654,26 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return &api.ValidateResult{Pass: false, Reason: reason,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
 	}
+	var result *api.ValidateResult
+	defer func() {
+		if result != nil && !result.Pass {
+			if setErr := sHandle.SetJobPendingReason(job, result.Message); setErr != nil {
+				klog.V(util.LogErrorLev).Infof("%s setJobFailed err: %s.", PluginName, util.SafePrint(setErr))
+			}
+		}
+	}()
+	if result = validVirtualDevJob(job); result != nil {
+		return result
+	}
+
 	vcJob, ok := sHandle.Jobs[job.UID]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("%s %s not support or init", PluginName, job.Name)
 		return nil
 	}
 
-	result := vcJob.ValidJobFn()
-	if result != nil {
-		if setErr := sHandle.SetJobPendingReason(job, result.Message); setErr != nil {
-			klog.V(util.LogErrorLev).Infof("%s setJobFailed err: %s.", PluginName, util.SafePrint(setErr))
-		}
-		return result
-	}
-	return nil
+	result = vcJob.ValidJobFn()
+	return result
 }
 
 // SetJobPendReasonByNodesCase In nodes select case, set node failed and add failed reason.
@@ -722,4 +729,19 @@ func GetJobInfoAllocatedTaskNum(jobInfo *api.JobInfo) int32 {
 		}
 	}
 	return allocated
+}
+
+func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
+	npuName, rNpuNum, err := GetVCJobReqNPUTypeFromJobInfo(job)
+	if err != nil {
+		return nil
+	}
+	if (Ascend910VirtualDevNameReg.MatchString(npuName) || Ascend310VirtualDevNameReg.MatchString(npuName)) &&
+		(rNpuNum > util.NPUIndex1 || len(job.Tasks) > util.NPUIndex1) {
+		err := fmt.Errorf("job %s task num is <%v> request <%v> more than 1 virtual device"+
+			"and 1 replicas , keep job pending ", job.Name, len(job.Tasks), rNpuNum)
+		klog.V(util.LogDebugLev).Infof(err.Error())
+		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
+	}
+	return nil
 }
