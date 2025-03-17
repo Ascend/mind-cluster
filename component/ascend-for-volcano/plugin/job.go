@@ -494,19 +494,14 @@ func (sJob SchedulerJob) ValidJobFn() *api.ValidateResult {
 			i++
 		}
 	}
-	if sJob.VJob.Type == util.JobTypeStCut && sJob.ReqNPUNum != 1 {
-		return &api.ValidateResult{
-			Message: fmt.Sprintf("static job %s task require npu num %d is not 1", sJob.Name, sJob.ReqNPUNum),
-			Reason:  "job is not ready",
-			Pass:    false,
-		}
+	if sJob.policyHandler == nil {
+		klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by job<%s> policyHandler is nil.", PluginName, sJob.Name)
+		return nil
 	}
-
 	if result := sJob.policyHandler.ValidNPUJob(); result != nil {
 		klog.V(util.LogErrorLev).Infof("%s validNPUJob failed:%s.", PluginName, result.Message)
 		return result
 	}
-
 	klog.V(util.LogInfoLev).Infof("%s valid ok.", sJob.Name)
 	return nil
 }
@@ -713,20 +708,6 @@ func (sJob SchedulerJob) isJobSupportByPlugin() bool {
 		return false
 	}
 	return true
-}
-
-// GetAnnoName get job AnnoName, include vNPU job.
-func (sJob SchedulerJob) GetAnnoName() (string, error) {
-	name := sJob.ReqNPUName
-	if strings.Contains(name, "npu-core") {
-		_, ok := sJob.Label[util.JobKindKey]
-		if !ok {
-			klog.V(util.LogErrorLev).Infof("%s no has %s label in dyCut mode.", sJob.Name, util.JobKindKey)
-			return "", fmt.Errorf("no %s label in dyCut mode", util.JobKindKey)
-		}
-		return util.AscendNPUCore, nil
-	}
-	return name, nil
 }
 
 // GetJobInfoAllocatedTaskNum get job allocated task num

@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -131,9 +132,10 @@ type SuperNode struct {
 
 // VolcanoFrame passed in by the volcano frame.
 type VolcanoFrame struct {
-	UID          types.UID
-	KubeClient   kubernetes.Interface
-	VJobTemplate map[string]map[string]util.VResource
+	UID             types.UID
+	KubeClient      kubernetes.Interface
+	informerFactory informers.SharedInformerFactory
+	VJobTemplate    map[string]map[string]util.VResource
 	ConfigParameters
 }
 

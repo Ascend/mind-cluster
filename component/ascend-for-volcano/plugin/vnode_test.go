@@ -20,6 +20,7 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
+	"reflect"
 	"testing"
 
 	"k8s.io/api/core/v1"
@@ -56,6 +57,9 @@ func mockCommonNode() CommonNode {
 func mockVNode() VNode {
 	return VNode{
 		Chips: map[int]*VChip{
+			util.NPUIndex1: {TotalRes: util.VResource{Aicore: util.NPUIndex1},
+				FreeRes: util.VResource{Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1},
+				Name:    ascend310PCard, Kind: Ascend310P, ID: []string{"Ascend310P-2c.1cpu-105-0_3"}},
 			0: {TotalRes: util.VResource{Aicore: util.NPUIndex8},
 				FreeRes: util.VResource{Aicore: util.NPUIndex8, Aicpu: util.NPUIndex8},
 				Name:    ascend310PCard, Kind: Ascend310P, ID: []string{"Ascend310P-2c.1cpu-105-0_3"}},
@@ -92,7 +96,7 @@ func buildTestNodeMeetResCases() []testNodeMeetRes {
 		{
 			name:    "02 will return false when node resource is enough and task is vnpu",
 			node:    node,
-			taskRes: util.VResource{Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1},
+			taskRes: util.VResource{Aicore: util.NPUIndex4, Aicpu: util.NPUIndex3},
 			want:    false,
 		},
 		{
@@ -141,4 +145,36 @@ func TestVNodeIsResourceWholeCard(t *testing.T) {
 			t.Errorf("IsResourceWholeCard() = %v, want %v", got, false)
 		}
 	})
+}
+
+type getNodeTopForWholeCardTest struct {
+	name  string
+	vNode *VNode
+	want  []int
+}
+
+func buildGetNodeTopForWholeCardTestCases() []getNodeTopForWholeCardTest {
+	fakeNode := mockVNode()
+	return []getNodeTopForWholeCardTest{
+		{
+			name:  "01 will return nil when vnode is empty",
+			vNode: &VNode{},
+			want:  nil,
+		},
+		{
+			name:  "02 will return card id  when vnode is normal node",
+			vNode: &fakeNode,
+			want:  []int{util.NPUIndex1, util.NPUIndex0},
+		},
+	}
+}
+
+func TestGetNodeTopForWholeCard(t *testing.T) {
+	for _, tt := range buildGetNodeTopForWholeCardTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.vNode.GetNodeTopForWholeCard(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetNodeTopForWholeCard() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

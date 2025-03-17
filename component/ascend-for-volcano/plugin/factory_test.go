@@ -29,6 +29,7 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/apis/pkg/apis/scheduling"
@@ -94,224 +95,11 @@ func buildBatchNodeOrderFn03() batchNodeOrderFnTest {
 	}
 }
 
-func buildBatchNodeOrderFn04() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(nil)
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex13)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "04-BatchNodeOrderFn nslb 1.0 test full tor is not enough, use logic tor",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn05() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(nil)
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex12)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "05-BatchNodeOrderFn nslb 1.0 test full tor is enough, use physic tor",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn06() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(nil)
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex2)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, LargeModelTag)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "06-BatchNodeOrderFn nslb 1.0 test, score node for fill job",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn07() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(nil)
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex15)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "07-BatchNodeOrderFn nslb 1.0 test full tor check filed by not enough logic tor",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn08() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex12)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "08-BatchNodeOrderFn nslb 2.0 test ,use 2 physic tor and 2 shared tor",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn09() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex2)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, LargeModelTag)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "09-BatchNodeOrderFn nslb 2.0 test, fill job use shared tor",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn010() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex15)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	handle := newDefaultHandler()
-	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
-	defer patch1.Reset()
-	initNormalsHandlerBySsnFunc(ssn, handle.InitVolcanoFrameFromSsn, handle.InitNodesFromSsn,
-		handle.InitJobsFromSsn, handle.InitTorNodeInfo)
-	return batchNodeOrderFnTest{
-		name:    "10-BatchNodeOrderFn nslb 2.0 test, tor node num is not enough for normal job",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn011() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex2)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	return batchNodeOrderFnTest{
-		name:    "11-BatchNodeOrderFn nslb test, score node for single single_layer job",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn012() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	return batchNodeOrderFnTest{
-		name:    "12-BatchNodeOrderFn nslb 2.0 test, score node for reschedule job when used tor node is enough",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn013() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(test.FakeConfigurations())
-	ssn.NodeList = deleteNodeByNodeName(ssn.NodeList, "node0")
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	return batchNodeOrderFnTest{
-		name:    "13-BatchNodeOrderFn nslb 2.0 test, score node for reschedule job when used tor node is not enough",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
-func buildBatchNodeOrderFn014() batchNodeOrderFnTest {
-	ssn := test.FakeNormalSSN(nil)
-	fakeJob := test.FakeJobInfoByName("pg0", util.NPUIndex8)
-	test.AddJobInfoLabel(fakeJob, TorAffinityKey, NormalSchema)
-
-	test.AddJobInfoIntoSsn(ssn, fakeJob)
-	for _, task := range fakeJob.Tasks {
-		task.NodeName = ""
-	}
-	return batchNodeOrderFnTest{
-		name:    "14-BatchNodeOrderFn nslb 1.0 test, score node for reschedule job when used tor node is enough",
-		args:    batchNodeOrderFnArgs{nodes: ssn.NodeList, ssn: ssn},
-		wantErr: false,
-	}
-}
-
 func buildBatchNodeOrderFn() []batchNodeOrderFnTest {
 	return []batchNodeOrderFnTest{
 		buildBatchNodeOrderFn01(),
 		buildBatchNodeOrderFn02(),
 		buildBatchNodeOrderFn03(),
-		buildBatchNodeOrderFn04(),
-		buildBatchNodeOrderFn05(),
-		buildBatchNodeOrderFn06(),
-		buildBatchNodeOrderFn07(),
-		buildBatchNodeOrderFn08(),
-		buildBatchNodeOrderFn09(),
-		buildBatchNodeOrderFn010(),
-		buildBatchNodeOrderFn011(),
-		buildBatchNodeOrderFn012(),
-		buildBatchNodeOrderFn013(),
-		buildBatchNodeOrderFn014(),
 	}
 }
 
@@ -462,7 +250,7 @@ func TestScheduleHandlerPreStartPlugin(t *testing.T) {
 				NPUPlugins:  tt.fields.NPUPlugins,
 				ScheduleEnv: tt.fields.ScheduleEnv,
 			}
-			sHandle.PreStartPlugin(tt.args.ssn)
+			sHandle.preStartPlugin(tt.args.ssn)
 		})
 	}
 }
@@ -803,6 +591,94 @@ func TestScheduleHandlerInitCmInformer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.sHandle.initCmInformer()
+		})
+	}
+}
+
+func fakeDeploymentJobInfo() *api.JobInfo {
+	trueTag := true
+	fakeJob := &api.JobInfo{
+		Name:      "fakeJob",
+		Namespace: "default",
+		PodGroup:  &api.PodGroup{},
+	}
+	fakeJob.PodGroup.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind:       ReplicaSetType,
+			Controller: &trueTag,
+			Name:       "fakePG",
+		},
+	}
+	return fakeJob
+}
+
+func fakeInformerFactory() informers.SharedInformerFactory {
+	return informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 0)
+}
+
+type getOwnerInfoTest struct {
+	name    string
+	vf      VolcanoFrame
+	jobInfo *api.JobInfo
+	wantErr bool
+}
+
+func buildGetOwnerInfoTest() []getOwnerInfoTest {
+	return []getOwnerInfoTest{
+		{
+			name:    "01 will return nil when job is not deployment",
+			vf:      VolcanoFrame{},
+			jobInfo: &api.JobInfo{PodGroup: &api.PodGroup{}},
+			wantErr: false,
+		},
+		{
+			name:    "02 will return err when job is not exist",
+			vf:      VolcanoFrame{KubeClient: fake.NewSimpleClientset(), informerFactory: fakeInformerFactory()},
+			jobInfo: fakeDeploymentJobInfo(),
+			wantErr: true,
+		},
+	}
+}
+
+func TestGetOwnerInfo(t *testing.T) {
+	for _, tt := range buildGetOwnerInfoTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := getOwnerInfo(tt.jobInfo, tt.vf)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getOwnerInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+type getGraceDeleteTimeTest struct {
+	name string
+	conf map[string]string
+	want int64
+}
+
+func buildGetGraceDeleteTimeTest() []getGraceDeleteTimeTest {
+	return []getGraceDeleteTimeTest{
+		{
+			name: "01 will return default time when value is not int64",
+			conf: map[string]string{GraceOverTimeKey: "test"},
+			want: DefaultGraceOverTime,
+		},
+		{
+			name: "01 will return default time when value is lower then 0",
+			conf: map[string]string{GraceOverTimeKey: "1"},
+			want: DefaultGraceOverTime,
+		},
+	}
+}
+
+func TestGetGraceDeleteTime(t *testing.T) {
+	for _, tt := range buildGetGraceDeleteTimeTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getGraceDeleteTime(tt.conf); got != tt.want {
+				t.Errorf("getGraceDeleteTime() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

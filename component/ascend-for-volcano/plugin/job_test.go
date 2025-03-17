@@ -905,3 +905,38 @@ func TestGetJobInfoAllocatedTaskNum(t *testing.T) {
 		})
 	}
 }
+
+type validJobFnTest struct {
+	name string
+	sJob SchedulerJob
+	want bool
+}
+
+func buildValidJobFnTestCases() []validJobFnTest {
+	fakeTaskNum := int32(util.NPUIndex1)
+	return []validJobFnTest{
+		{
+			name: "01 will return false when job is deployment and task is not ready",
+			sJob: SchedulerJob{Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
+				Replicas: &fakeTaskNum}, SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
+			want: false,
+		},
+		{
+			name: "02 will return true when job is deployment and task is  ready",
+			sJob: SchedulerJob{Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
+				Replicas: &fakeTaskNum}, SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{"test-pod": {}}, VJob: &util.VJob{}}}},
+			want: false,
+		},
+	}
+}
+
+func TestValidJobFn(t *testing.T) {
+	for _, tt := range buildValidJobFnTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			if result := tt.sJob.ValidJobFn(); result != nil && !reflect.DeepEqual(result.Pass, tt.want) {
+				t.Errorf("ValidJobFn() = %v, want %v", result.Pass, tt.want)
+			}
+		})
+	}
+}

@@ -51,7 +51,7 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	oldJobs := sHandle.Jobs
 	sHandle.Jobs = make(map[api.JobID]SchedulerJob, util.MapInitNum)
 	for jobID, jobInfo := range ssn.Jobs {
-		ownerInfo, err := getOwnerInfo(jobInfo, ssn)
+		ownerInfo, err := getOwnerInfo(jobInfo, sHandle.FrameAttr)
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("%s getOwnerInfo failed: %s.", jobInfo.Name, util.SafePrint(err))
 			continue
@@ -97,14 +97,14 @@ func (sHandle *ScheduleHandler) InitJobScheduleInfoRecorder() {
 
 }
 
-func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, error) {
+func getOwnerInfo(jobInfo *api.JobInfo, vf VolcanoFrame) (OwnerInfo, error) {
 	owner := getPodGroupOwnerRef(jobInfo.PodGroup.PodGroup)
 	if owner.Kind != ReplicaSetType {
 		return OwnerInfo{
 			OwnerReference: owner,
 		}, nil
 	}
-	rs, err := getReplicaSet(ssn, jobInfo.Namespace, owner.Name)
+	rs, err := getReplicaSet(vf, jobInfo.Namespace, owner.Name)
 	if err != nil {
 		return OwnerInfo{}, err
 	}
@@ -114,14 +114,14 @@ func getOwnerInfo(jobInfo *api.JobInfo, ssn *framework.Session) (OwnerInfo, erro
 	}, nil
 }
 
-func getReplicaSet(ssn *framework.Session, namespace, name string) (*appsv1.ReplicaSet, error) {
+func getReplicaSet(vf VolcanoFrame, namespace, name string) (*appsv1.ReplicaSet, error) {
 	var rs *appsv1.ReplicaSet
 	var ok bool
 	key := namespace + "/" + name
-	obj, exist, err := ssn.InformerFactory().Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(key)
+	obj, exist, err := vf.informerFactory.Apps().V1().ReplicaSets().Informer().GetIndexer().GetByKey(key)
 	if err != nil || !exist {
 		klog.V(util.LogWarningLev).Infof("Get rs from indexer failed err: %s, exist: %v.", util.SafePrint(err), exist)
-		rs, err = ssn.KubeClient().AppsV1().ReplicaSets(namespace).Get(context.TODO(), name,
+		rs, err = vf.KubeClient.AppsV1().ReplicaSets(namespace).Get(context.TODO(), name,
 			metav1.GetOptions{})
 		if err != nil {
 			return nil, err
@@ -200,6 +200,7 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 	configs := getConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
 	sHandle.FrameAttr.UID = ssn.UID
 	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
+	sHandle.FrameAttr.informerFactory = ssn.InformerFactory()
 	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
 	sHandle.initDynamicParameters(configs)
 	sHandle.initStaticParameters(configs)
@@ -249,15 +250,11 @@ func InitConfsFromSsn(confs []conf.Configuration) []config.Configuration {
 	return newConfs
 }
 
-// InitJobsPlugin init job by plugins.
-func (sHandle *ScheduleHandler) InitJobsPlugin() {
-	if sHandle == nil {
-		klog.V(util.LogErrorLev).Infof("InitJobsPlugin failed: %s.", util.ArgumentError)
-		return
-	}
+// initJobsPlugin init job by plugins.
+func (sHandle *ScheduleHandler) initJobsPlugin() {
 	for _, vcJob := range sHandle.Jobs {
 		if vcJob.policyHandler == nil {
-			klog.V(util.LogErrorLev).Infof("InitJobsPlugin %s's plugin not register.", vcJob.Name)
+			klog.V(util.LogErrorLev).Infof("initJobsPlugin %s's plugin not register.", vcJob.Name)
 			continue
 		}
 		if err := vcJob.policyHandler.InitMyJobPlugin(vcJob.SchedulerJobAttr, sHandle.ScheduleEnv); err != nil {
@@ -266,12 +263,8 @@ func (sHandle *ScheduleHandler) InitJobsPlugin() {
 	}
 }
 
-// InitCache init ScheduleHandler's cache.
-func (sHandle *ScheduleHandler) InitCache() {
-	if sHandle == nil {
-		klog.V(util.LogInfoLev).Infof("InitCache failed: %s.", util.ArgumentError)
-		return
-	}
+// initCache init ScheduleHandler's cache.
+func (sHandle *ScheduleHandler) initCache() {
 	data := make(map[string]map[string]string, util.MapInitNum)
 	data[util.RePropertyCacheName] = make(map[string]string, util.MapInitNum)
 	data[util.JobRecovery] = make(map[string]string, util.MapInitNum)
@@ -281,12 +274,8 @@ func (sHandle *ScheduleHandler) InitCache() {
 		Data:       data}
 }
 
-// PreStartPlugin preStart plugin action.
-func (sHandle *ScheduleHandler) PreStartPlugin(ssn *framework.Session) {
-	if sHandle == nil || ssn == nil {
-		klog.V(util.LogInfoLev).Infof("PreStartPlugin failed: %s.", util.ArgumentError)
-		return
-	}
+// preStartPlugin preStart plugin action.
+func (sHandle *ScheduleHandler) preStartPlugin(ssn *framework.Session) {
 	for _, job := range sHandle.Jobs {
 		if err := job.policyHandler.PreStartAction(ssn); err != nil {
 			if strings.Contains(err.Error(), util.ArgumentError) {
@@ -367,10 +356,10 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	sHandle.InitJobScheduleInfoRecorder()
 
 	sHandle.InitTorNodeInfo(ssn)
-	sHandle.InitJobsPlugin()
-	sHandle.InitCache()
-	sHandle.InitReschedulerFromSsn(ssn)
-	sHandle.PreStartPlugin(ssn)
+	sHandle.initJobsPlugin()
+	sHandle.initCache()
+	sHandle.initReschedulerFromSsn(ssn)
+	sHandle.preStartPlugin(ssn)
 	return nil
 }
 
@@ -383,8 +372,8 @@ func (sHandle *ScheduleHandler) initCmInformer() {
 	k8s.InitCmInformer(sHandle.FrameAttr.KubeClient, sHandle.FrameAttr.UseClusterD)
 }
 
-// InitReschedulerFromSsn initialize re-scheduler
-func (sHandle *ScheduleHandler) InitReschedulerFromSsn(ssn *framework.Session) {
+// initReschedulerFromSsn initialize re-scheduler
+func (sHandle *ScheduleHandler) initReschedulerFromSsn(ssn *framework.Session) {
 	if sHandle.FaultHandle == nil {
 		return
 	}

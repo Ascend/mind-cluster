@@ -20,11 +20,16 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 package plugin
 
 import (
+	"reflect"
 	"testing"
+	"time"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
+	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
@@ -63,10 +68,10 @@ func buildVCheckNPUResourceStableTest() []checkNPUResourceStableTest {
 		},
 		{
 			name: "02-CheckNPUResourceStable ok test.",
-			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{testCardName: 1},
-				Annotation: map[string]string{testCardName: "haha"}},
+			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUHexKilo},
+				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0"}},
 			args:    checkNPUResourceStableArgs{vcJob: tJob},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "03-CheckNPUResourceStable vNPU ok test.",
@@ -159,28 +164,14 @@ func buildNodePredicateTest() []nodePredicateTest {
 			wantErr: true,
 		},
 		{
-			name: "06-NodePredicate SubHealthy Node test.",
+			name: "06-NodePredicate UnHealthy Node test.",
 			fields: fields{ScheduleEnv: ScheduleEnv{
 				ClusterCache: ClusterCache{
 					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {
 						CommonNode: CommonNode{
 							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeSubHealthy},
-						},
-					}}}}},
-			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
-			wantErr: true,
-		},
-		{
-			name: "07-NodePredicate UnHealthy Node test.",
-			fields: fields{ScheduleEnv: ScheduleEnv{
-				ClusterCache: ClusterCache{
-					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
-					Nodes: map[string]NPUNode{"haha": {
-						CommonNode: CommonNode{
-							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.NodeUnHealthyByNodeD},
+							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.PreSeparateFaultCode},
 						}}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
@@ -282,6 +273,80 @@ func TestNPUNodeGetNewNPUNodeAnnotation(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("GetNewNPUNodeAnnotation() got = %v, want = %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type updateNPUNodeDeviceInfosTest struct {
+	name string
+	node NPUNode
+	data k8s.NodeDeviceInfoWithID
+}
+
+func buildUpdateNPUNodeDeviceInfosTest() []updateNPUNodeDeviceInfosTest {
+	return []updateNPUNodeDeviceInfosTest{
+		{
+			name: "01 force update by device info cm",
+			node: NPUNode{CommonNode: CommonNode{devInfoUpdateTime: 0, Annotation: map[string]string{}}},
+			data: k8s.NodeDeviceInfoWithID{NodeDeviceInfo: k8s.NodeDeviceInfo{UpdateTime: time.Now().Unix(),
+				DeviceList: k8s.FakeDeviceList(),
+			}},
+		},
+		{
+			name: "02 update by device info cm and volcano cache",
+			node: NPUNode{CommonNode: CommonNode{
+				Idle:              map[v1.ResourceName]float64{util.NPU910CardName: util.NPUHexKilo},
+				devInfoUpdateTime: time.Now().Unix(),
+				Annotation:        map[string]string{util.NPU910CardName: "Ascend910-0"}}},
+			data: k8s.NodeDeviceInfoWithID{NodeDeviceInfo: k8s.NodeDeviceInfo{UpdateTime: time.Now().Unix() +
+				util.NPUIndex3, DeviceList: k8s.FakeDeviceList(),
+			}},
+		},
+	}
+}
+
+func TestUpdateNPUNodeDeviceInfos(t *testing.T) {
+	for _, tt := range buildUpdateNPUNodeDeviceInfosTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.node.updateNPUNodeDeviceInfos(tt.data)
+		})
+	}
+}
+
+type getNeedInitNodeListTest struct {
+	name    string
+	ssn     *framework.Session
+	sHandle *ScheduleHandler
+	want    []*api.NodeInfo
+}
+
+func buildGetNeedInitNodeListTest() []getNeedInitNodeListTest {
+	sHandler := &ScheduleHandler{}
+	sHandler.FrameAttr.KubeClient = fake.NewSimpleClientset()
+	sHandler.FrameAttr.informerFactory = fakeInformerFactory()
+	sHandler.Nodes = map[string]NPUNode{"node01": {}}
+	return []getNeedInitNodeListTest{
+		{
+			name:    "01 will return nil when node list is nil and kubeClient is nil",
+			ssn:     &framework.Session{},
+			sHandle: &ScheduleHandler{},
+			want:    nil,
+		},
+		{
+			name:    "02 will return empty when node list is nil ",
+			ssn:     &framework.Session{},
+			sHandle: sHandler,
+			want:    []*api.NodeInfo{},
+		},
+	}
+}
+
+func TestScheduleHandler_getNeedInitNodeList(t *testing.T) {
+	for _, tt := range buildGetNeedInitNodeListTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sHandle.getNeedInitNodeList(tt.ssn); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getNeedInitNodeList() = %v, want %v", got, tt.want)
 			}
 		})
 	}

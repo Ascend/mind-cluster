@@ -27,6 +27,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -92,7 +93,7 @@ func FakeNormalTestJobByCreatTime(jobName string, taskNum int, creatTime int64) 
 	job.MinAvailable = int32(taskNum)
 	job.PodGroup = new(api.PodGroup)
 	job.PodGroup.Status.Phase = util.PodGroupRunning
-
+	job.PodGroup.Status.Conditions = make([]scheduling.PodGroupCondition, 1)
 	job.CreationTimestamp = metav1.Time{Time: time.Unix(time.Now().Unix()+creatTime, 0)}
 	return job
 }

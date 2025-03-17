@@ -200,10 +200,7 @@ func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
 		return nil
 	}
 
-	k, err := vcJob.GetAnnoName()
-	if err != nil {
-		return err
-	}
+	k := vcJob.ReqNPUName
 	iNum, iOK := n.Idle[v1.ResourceName(k)]
 	nodeA, aOK := n.Annotation[k]
 	if iOK != true || aOK != true {
@@ -321,7 +318,7 @@ func (sHandle *ScheduleHandler) getNeedInitNodeList(ssn *framework.Session) []*a
 		return ssn.NodeList
 	}
 	nodeList := make([]*api.NodeInfo, 0)
-	indexer := ssn.InformerFactory().Core().V1().Nodes().Informer().GetIndexer()
+	indexer := sHandle.FrameAttr.informerFactory.Core().V1().Nodes().Informer().GetIndexer()
 	for nodeName := range sHandle.Nodes {
 		if _, exist := ssn.Nodes[nodeName]; exist {
 			continue
