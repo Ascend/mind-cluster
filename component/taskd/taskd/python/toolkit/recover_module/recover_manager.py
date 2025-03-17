@@ -230,8 +230,8 @@ class CallBackFuncs:
 
 
 def get_instance(cls):
-    # Check whether the class has the _instance attribute.
-    if not hasattr(cls, '_instance'):
+    # Check whether the class has the instance attribute.
+    if not hasattr(cls, 'instance'):
         raise TypeError(f"{cls.__name__} is not a singleton class")
     # Check whether the instance has been created.
     if cls.instance is None:
