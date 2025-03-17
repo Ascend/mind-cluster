@@ -32,38 +32,39 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-type option func(AscendHandler)
+// Option the func for AscendHandler add attr
+type Option func(AscendHandler)
 
 // WithNpuInvalidMap build AscendHandler with NpuInvalidMap
-func WithNpuInvalidMap(m map[int]struct{}) option {
+func WithNpuInvalidMap(m map[int]struct{}) Option {
 	return func(h AscendHandler) {
 		h.SetNpuNumInvalidMap(m)
 	}
 }
 
 // WithMaxNodeNum build AscendHandler WithMaxNodeNum
-func WithMaxNodeNum(num int) option {
+func WithMaxNodeNum(num int) Option {
 	return func(h AscendHandler) {
 		h.SetMaxNodeNPUNum(num)
 	}
 }
 
 // WithAnnoPreVal build AscendHandler WithAnnoPreVal
-func WithAnnoPreVal(annoPre string) option {
+func WithAnnoPreVal(annoPre string) Option {
 	return func(h AscendHandler) {
 		h.SetAnnoPreVal(annoPre)
 	}
 }
 
 // WithNetworkFault build AscendHandler WithNetworkFault
-func WithNetworkFault(enable bool) option {
+func WithNetworkFault(enable bool) Option {
 	return func(h AscendHandler) {
 		h.SetIsNetworkFaultAttention(enable)
 	}
 }
 
 // New return npu plugin
-func New(name string, opts ...option) AscendHandler {
+func New(name string, opts ...Option) AscendHandler {
 	m := &NPUHandler{}
 	m.SetPluginName(name)
 	m.SetAnnoName(name)
@@ -241,7 +242,6 @@ func (tp *NPUHandler) SetMaxCardNPUNum(num int) {
 		return
 	}
 	tp.MaxCardNPUNum = num
-
 }
 
 // JudgeNodeAndTaskNPU judge node and task npu num

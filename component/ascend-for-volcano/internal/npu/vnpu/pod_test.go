@@ -27,6 +27,8 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
 
@@ -124,6 +126,58 @@ func TestIsEventSegmentFailurePod(t *testing.T) {
 			res := isEventSegmentFailurePod(tt.args.event)
 			if res != tt.wantRes {
 				t.Errorf("GetSegmentFailureTaskIDs() res = %v, wantErr %v", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestGetVNPUTaskDVPP(t *testing.T) {
+	tests := []struct {
+		name   string
+		asTask util.NPUTask
+		want   string
+	}{
+		{
+			name:   "01 will return null when task label is nil",
+			asTask: util.NPUTask{},
+			want:   plugin.AscendDVPPEnabledNull,
+		},
+		{
+			name:   "02 will return value when task label is nil",
+			asTask: util.NPUTask{Label: map[string]string{plugin.AscendVNPUDVPP: plugin.AscendDVPPEnabledOff}},
+			want:   plugin.AscendDVPPEnabledOff,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetVNPUTaskDVPP(tt.asTask); got != tt.want {
+				t.Errorf("GetVNPUTaskDVPP() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetVNPUTaskCpuLevel(t *testing.T) {
+	tests := []struct {
+		name   string
+		asTask util.NPUTask
+		want   string
+	}{
+		{
+			name:   "01 will return null when task label is nil",
+			asTask: util.NPUTask{},
+			want:   plugin.AscendVNPULevelLow,
+		},
+		{
+			name:   "02 will return value when task label is nil",
+			asTask: util.NPUTask{Label: map[string]string{plugin.AscendVNPULevel: plugin.AscendVNPULevelLow}},
+			want:   plugin.AscendVNPULevelLow,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetVNPUTaskCpuLevel(tt.asTask); got != tt.want {
+				t.Errorf("GetVNPUTaskCpuLevel() = %v, want %v", got, tt.want)
 			}
 		})
 	}
