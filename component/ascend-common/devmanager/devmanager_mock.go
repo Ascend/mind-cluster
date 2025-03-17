@@ -36,7 +36,7 @@ func (d *DeviceManagerMock) DcStopHccsPingMesh(i int32, i2 int32, i3 int, u uint
 
 // DcGetHccsPingMeshInfo get hccs ping mesh info
 func (d *DeviceManagerMock) DcGetHccsPingMeshInfo(i int32, i2 int32, i3 int, u uint) (*common.HccspingMeshInfo, error) {
-	return nil, nil
+	return &common.HccspingMeshInfo{}, nil
 }
 
 // DcGetHccsPingMeshState get hccs ping mesh state
@@ -175,7 +175,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 

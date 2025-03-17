@@ -23,6 +23,7 @@ package executor
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -113,9 +114,9 @@ func TestStart(t *testing.T) {
 			chips:         map[string]*common.ChipBaseInfo{"0": {}},
 			SuperPodId:    1,
 		}
-		var expected int
+		var expected atomic.Int32
 		executor.SetResultHandler(func(result *types.HccspingMeshResult) {
-			expected = 1
+			expected.Add(1)
 		})
 		convey.Convey("01-activate is off will do nothing", func() {
 			stopChan := make(chan struct{})
@@ -127,7 +128,7 @@ func TestStart(t *testing.T) {
 				UID: "",
 			})
 			time.Sleep(1 * time.Second)
-			convey.So(expected, convey.ShouldEqual, 0)
+			convey.So(expected.Load(), convey.ShouldEqual, 0)
 			close(stopChan)
 		})
 		convey.Convey("02-activate is on will change expected", func() {
@@ -144,7 +145,7 @@ func TestStart(t *testing.T) {
 			})
 			const sleepNum = 11
 			time.Sleep(sleepNum * time.Second)
-			convey.So(expected, convey.ShouldEqual, 1)
+			convey.So(expected.Load(), convey.ShouldEqual, 1)
 			close(stopChan)
 		})
 	})

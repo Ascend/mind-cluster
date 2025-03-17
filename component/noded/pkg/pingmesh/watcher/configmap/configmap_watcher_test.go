@@ -22,6 +22,7 @@ package configmap
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -70,14 +71,14 @@ func TestInit(t *testing.T) {
 
 func TestWatch(t *testing.T) {
 	convey.Convey("Test Watch", t, func() {
-		expected := 0
+		var expected atomic.Int32
 		client := fake.NewSimpleClientset()
 		watcher := NewWatcher(&kubeclient.ClientK8s{
 			ClientSet: client,
 		}, WithNamespace("test-namespace"), WithNamedHandlers(NamedHandler{
 			Name: "test",
 			Handle: func(cm *corev1.ConfigMap) {
-				expected++
+				expected.Add(1)
 			},
 		}))
 		watcher.Init()
@@ -91,6 +92,6 @@ func TestWatch(t *testing.T) {
 		go watcher.Watch(stopCh)
 		time.Sleep(time.Second)
 		close(stopCh)
-		convey.So(expected, convey.ShouldEqual, 1)
+		convey.So(expected.Load(), convey.ShouldEqual, 1)
 	})
 }

@@ -36,6 +36,8 @@ const (
 	notFoundFunctionErrCode = "-99998"
 	notSupportErrCode       = "-8255"
 	collectPeriodFactor     = 10
+	// pingMeshTaskStopped pingmesh task stopped
+	pingMeshTaskStopped = 0
 )
 
 // DevManager execute action of hccsping mesh
@@ -230,6 +232,15 @@ func (d *DevManager) getHccspingMeshInfo() {
 				hwlog.RunLog.Errorf("deviceManager get hccspingmesh info failed, err: %v", err)
 				continue
 			}
+			if info == nil {
+				hwlog.RunLog.Warnf("deviceManager get hccspingmesh info is empty")
+				continue
+			}
+			// when reset chip, pingmesh task will be stopped, so we should restart pingmesh task
+			if info.DestNum == 0 {
+				d.restartStoppedPingMeshTask(chip.CardID, chip.DeviceID, taskID, tasks[taskID])
+				continue
+			}
 			infos[taskID] = info
 		}
 		res[physicID] = infos
@@ -241,4 +252,34 @@ func (d *DevManager) getHccspingMeshInfo() {
 			Results: res,
 		})
 	}
+}
+
+func (d *DevManager) restartStoppedPingMeshTask(cardID, deviceID int32, taskID uint, addr string) {
+	state, err := d.devManager.DcGetHccsPingMeshState(cardID, deviceID, 0, taskID)
+	if err != nil {
+		hwlog.RunLog.Errorf("deviceManager get hccspingmesh state failed, cardID: %d, "+
+			"deviceID: %d, taskID: %d, err:%v", cardID, deviceID, taskID, err)
+		return
+	}
+	if state != pingMeshTaskStopped {
+		return
+	}
+
+	hwlog.RunLog.Infof("hccspingmesh task stopped, ready to restart, cardID: %d, "+
+		"deviceID: %d, taskID: %d", cardID, deviceID, taskID)
+	if err := d.devManager.DcStartHccsPingMesh(cardID, deviceID, 0, common.HccspingMeshOperate{
+		DstAddr:      addr,
+		PktSize:      common.DefaultPktSize,
+		PktSendNum:   common.DefaultPktSendNum,
+		PktInterval:  common.DefaultPktInterval,
+		Timeout:      common.DefaultTimeout,
+		TaskInterval: d.currentPolicy.Config.TaskInterval,
+		TaskId:       int(taskID),
+	}); err != nil {
+		hwlog.RunLog.Errorf("start hccspingmesh failed, cardID: %d, deviceID: %d, "+
+			"taskID: %d err: %v", cardID, deviceID, taskID, err)
+		return
+	}
+	hwlog.RunLog.Infof("start hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
+		cardID, deviceID, taskID)
 }

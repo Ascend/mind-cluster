@@ -21,6 +21,7 @@ Package resulthandler is using for handle hccsping mesh result
 package resulthandler
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -32,22 +33,22 @@ import (
 
 func TestHandle(t *testing.T) {
 	convey.Convey("TestHandle", t, func() {
-		var expected int
+		var expected atomic.Int32
 		convey.Convey("01-nil Stop chan will do nothing", func() {
 			h := NewAggregatedHandler()
 			h.Handle(nil)
-			convey.So(expected, convey.ShouldEqual, 0)
+			convey.So(expected.Load(), convey.ShouldEqual, 0)
 		})
 		convey.Convey("02-Stop chan will do nothing", func() {
 			h := NewAggregatedHandler(func(*types.HccspingMeshResult) error {
-				expected++
+				expected.Add(1)
 				return nil
 			})
 			stopChan := make(chan struct{})
 			go h.Handle(stopChan)
 			h.Receive(&types.HccspingMeshResult{})
 			time.Sleep(time.Second)
-			convey.So(expected, convey.ShouldEqual, 1)
+			convey.So(expected.Load(), convey.ShouldEqual, 1)
 		})
 	})
 }
