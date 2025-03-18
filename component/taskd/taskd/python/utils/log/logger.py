@@ -20,11 +20,13 @@ import os
 import re
 import sys
 from logging.handlers import RotatingFileHandler
+
 from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH, LOG_MAX_LINE_LENGTH, LOG_DATE_FORMAT,
                                               LOG_SIMPLE_FORMAT, LOG_DEFAULT_FILE, LOG_DEFAULT_FILE_NAME,
                                               LOG_DEFAULT_BACKUP_COUNT, LOG_DEFAULT_MAX_BYTES, LOG_BACKUP_FORMAT,
-                                              LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BAK_PRIVILEGE, LOG_BACKUP_PATTERN,
-                                              TASKD_LOG_LEVEL, TASKD_LOG_STDOUT, TASKD_LOG_PATH)
+                                              LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BACKUP_PATTERN,
+                                              TASKD_LOG_STDOUT, TASKD_LOG_PATH, TASKD_FILE_LOG_LEVEL,
+                                              TASKD_STD_LOG_LEVEL)
 from taskd.python.utils.validator import FileValidator
 
 
@@ -124,7 +126,8 @@ class LogConfig:
 
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
-        self.log_level = logging.INFO
+        self.file_log_level = logging.INFO
+        self.std_log_level = logging.INFO
         self.log_format = LOG_SIMPLE_FORMAT
         self.log_file = LOG_DEFAULT_FILE
         self.log_std_out = True
@@ -155,13 +158,16 @@ class LogConfig:
         self.log_file = log_file
 
     def build_loglevel(self):
-        log_level = os.getenv(TASKD_LOG_LEVEL)
-        if log_level is not None:
-            self.log_level = log_level
+        file_log_level = os.getenv(TASKD_FILE_LOG_LEVEL)
+        if file_log_level is not None:
+            self.file_log_level = file_log_level
+        std_log_level = os.getenv(TASKD_STD_LOG_LEVEL)
+        if std_log_level is not None:
+            self.std_log_level = std_log_level
 
     def build_log_stdout(self):
         log_stdout = os.getenv(TASKD_LOG_STDOUT)
-        if log_stdout is not None and log_stdout is False:
+        if log_stdout is not None and log_stdout == "False":
             self.log_std_out = False
 
 
@@ -211,14 +217,14 @@ def _exit_file_process(log_path: str) -> None:
 
 def _get_stream_handler(cfg: LogConfig):
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(cfg.log_level)
+    stream_handler.setLevel(cfg.std_log_level)
     stream_handler.setFormatter(logging.Formatter(cfg.log_format, datefmt=LOG_DATE_FORMAT))
     return stream_handler
 
 
 def _get_file_handler(cfg: LogConfig):
     file_handler = CustomRotatingHandler(cfg.log_file, maxBytes=cfg.log_max_bytes, backupCount=cfg.log_backup_count)
-    file_handler.setLevel(cfg.log_level)
+    file_handler.setLevel(cfg.file_log_level)
     file_handler.setFormatter(logging.Formatter(cfg.log_format, datefmt=LOG_DATE_FORMAT))
     return file_handler
 
@@ -237,7 +243,6 @@ def _get_logger() -> logging.Logger:
 
     _set_rotator(logger, rotate_func=_log_rotator)
     _set_formatter(logger, log_cfg.log_format)
-    _set_loglevel(logger, log_cfg.log_level)
     return logger
 
 

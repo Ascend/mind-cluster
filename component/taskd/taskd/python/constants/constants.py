@@ -24,8 +24,11 @@ LOG_PRIVILEGE = 0o640
 LOG_DIR_PRIVILEGE = 0o750
 LOG_BAK_PRIVILEGE = 0o400
 
-# log config env str name
-TASKD_LOG_LEVEL = "TASKD_LOG_LEVEL"
+# log level for flush into log file
+TASKD_FILE_LOG_LEVEL = "TASKD_FILE_LOG_LEVEL"
+# log level for print to screen
+TASKD_STD_LOG_LEVEL = "TASKD_STD_LOG_LEVEL"
+# to determine whether to print log into screen
 TASKD_LOG_STDOUT = 'TASKD_LOG_STDOUT'
 TASKD_LOG_PATH = 'TASKD_LOG_PATH'
 
