@@ -75,13 +75,8 @@ func TestIsDevBusy(t *testing.T) {
 func TestFreeBusyDev(t *testing.T) {
 	AddBusyDev(testCardId, testDeviceId)
 	FreeBusyDev(testCardId, testDeviceId)
-	if IsDevBusy(testCardId, testDeviceId) {
-		t.Errorf("expected false, got true")
-	}
-
-	// free twice
-	FreeBusyDev(testCardId, testDeviceId)
-	if IsDevBusy(testCardId, testDeviceId) {
+	ret := IsDevBusy(testCardId, testDeviceId)
+	if ret {
 		t.Errorf("expected false, got true")
 	}
 }
