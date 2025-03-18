@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = ".;pb_profiling";
+option go_package = ".;profiling";
 
 //protoc --go_out=. --go-grpc_out=. ./profiling.proto
 

@@ -24,7 +24,7 @@ const (
 
 // ProfilingSwitchManager represents profiling switch manager
 type ProfilingSwitchManager struct {
-	pb_profiling.UnimplementedTrainingDataTraceServer
+	profiling.UnimplementedTrainingDataTraceServer
 }
 
 const (
@@ -40,11 +40,11 @@ const (
 
 // ModifyTrainingDataTraceSwitch to modify the profiling marker status by updating the cm
 func (ps *ProfilingSwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
-	in *pb_profiling.DataTypeReq) (*pb_profiling.DataTypeRes, error) {
+	in *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")
 	if len(jobNameInfo) != PartsOfJobNs {
-		return &pb_profiling.DataTypeRes{Message: "the format of jobNsName is not namespace/jobName",
+		return &profiling.DataTypeRes{Message: "the format of jobNsName is not namespace/jobName",
 			Code: ErrInvalidParam}, fmt.Errorf("the format of jobNsName is not namespace/jobName")
 	}
 	jobNs, jobName := jobNameInfo[0], jobNameInfo[1]
@@ -52,31 +52,31 @@ func (ps *ProfilingSwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Cont
 	if cm, err := kube.GetConfigMap(profile.DataTraceCmPrefix+dtc.JobName,
 		dtc.JobNamespace); cm == nil || err != nil {
 		if !errors.IsNotFound(err) {
-			return &pb_profiling.DataTypeRes{Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]",
+			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]",
 				dtc.JobNamespace, dtc.JobName), Code: ErrNotFound}, err
 		}
 		if err := dtc.CreateDataTraceCm(in.ProfilingSwitch); err != nil {
-			return &pb_profiling.DataTypeRes{Message: fmt.Sprintf("failed to create comfigmap:[%s/%s] "+
+			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to create comfigmap:[%s/%s] "+
 				"while cm is not exist", dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
 		}
-		return &pb_profiling.DataTypeRes{Message: fmt.Sprintf("comfigmap:[%s/%s] has been created"+
+		return &profiling.DataTypeRes{Message: fmt.Sprintf("comfigmap:[%s/%s] has been created"+
 			" and param is updated to change profiling marker status", dtc.JobNamespace, dtc.JobName), Code: OK}, nil
 	}
 	if err := dtc.UpdateDataTraceCm(in.ProfilingSwitch); err != nil {
-		return &pb_profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]",
+		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]",
 			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
 	}
-	response := &pb_profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
+	response := &profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
 	return response, nil
 }
 
 // GetTrainingDataTraceSwitch get  current profiling marker status
 func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context,
-	in *pb_profiling.DataStatusReq) (*pb_profiling.DataStatusRes, error) {
+	in *profiling.DataStatusReq) (*profiling.DataStatusRes, error) {
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")
 	if len(jobNameInfo) != PartsOfJobNs {
-		return &pb_profiling.DataStatusRes{Message: "the format of jobNsName is not namespace/jobName",
+		return &profiling.DataStatusRes{Message: "the format of jobNsName is not namespace/jobName",
 			Code: ErrInvalidParam}, nil
 	}
 	jobNs, jobName := jobNameInfo[0], jobNameInfo[1]
@@ -84,7 +84,7 @@ func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context
 	cm, err := dtc.IsDataTraceCmExist()
 	if cm == nil || err != nil {
 		hwlog.RunLog.Errorf("can not find data trace configmap[%s/%s]", dtc.JobNamespace, dtc.JobName)
-		return &pb_profiling.DataStatusRes{
+		return &profiling.DataStatusRes{
 			Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]", dtc.JobNamespace, dtc.JobName),
 			Code:    ErrNotFound}, err
 	}
@@ -92,17 +92,17 @@ func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context
 	if !ok {
 		hwlog.RunLog.Infof("data trace configmap[%s/%s] has no %s field",
 			dtc.JobNamespace, dtc.JobName, profile.DataTraceCmProfilingSwitchKey)
-		return &pb_profiling.DataStatusRes{Message: "data trace configmap does not contain the 'profilingSwitch' field",
+		return &profiling.DataStatusRes{Message: "data trace configmap does not contain the 'profilingSwitch' field",
 			Code: ErrNotFound}, nil
 	}
-	var resProfile pb_profiling.ProfilingSwitch
+	var resProfile profiling.ProfilingSwitch
 	if err := json.Unmarshal([]byte(data), &resProfile); err != nil {
 		hwlog.RunLog.Errorf("failed to unmarshal configmap[%s/%s], err:%v", dtc.JobNamespace, dtc.JobName, err)
-		return &pb_profiling.DataStatusRes{
+		return &profiling.DataStatusRes{
 			Message: fmt.Sprintf("failed to convert comfigmap:[%s/%s]", dtc.JobNamespace, dtc.JobName),
 			Code:    ErrServerFault}, err
 	}
-	return &pb_profiling.DataStatusRes{
+	return &profiling.DataStatusRes{
 		Message:         fmt.Sprintf("successfully get the status of job[%s/%s]", dtc.JobNamespace, dtc.JobName),
 		ProfilingSwitch: &resProfile,
 		Code:            OK}, nil
