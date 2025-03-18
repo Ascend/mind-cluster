@@ -31,10 +31,11 @@ import (
 func InitHwLog(ctx context.Context) error {
 	var logFile string
 	logFilePath := os.Getenv(constant.LogFilePathEnv)
+	logFileName := "taskd-worker-" + strconv.Itoa(profiling.GlobalRankId) + ".log"
 	if logFilePath == "" {
-		logFile = constant.DefaultLogFile + "-worker-" + strconv.Itoa(profiling.GlobalRankId)
+		logFile = constant.DefaultLogFilePath + logFileName
 	} else {
-		logFile = filepath.Join(logFile, constant.LogFileName)
+		logFile = filepath.Join(logFilePath, logFileName)
 	}
 	hwLogConfig := hwlog.LogConfig{
 		LogFileName:   logFile,

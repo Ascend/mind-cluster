@@ -28,8 +28,8 @@ const (
 )
 
 const (
-	// DefaultLogFile default log file
-	DefaultLogFile = "./taskd_log/taskd.log"
+	// DefaultLogFilePath default log file
+	DefaultLogFilePath = "./taskd_log/"
 	// DefaultLogLevel default log level
 	DefaultLogLevel = 0
 	// DefaultMaxBackups max backup log file num
