@@ -181,6 +181,7 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
@@ -300,15 +301,19 @@ func goBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 
 func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	if validSize > 0 {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
 		var status C.msptiResult
+		count := 0
 		for {
 			var pRecord *C.msptiActivity
 			status = C.mspti_activity_get_next_record(buffer, validSize, &pRecord)
 			if status == C.MSPTI_SUCCESS {
+				count++
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
-				hwlog.RunLog.Debugf("there is no more records in the buffer,the current mark size is %v",
-					len(ProfilingRecordsMark))
+				hwlog.RunLog.Warnf("there is no more records in the buffer,the current mark size is %v, count is: %v",
+					len(ProfilingRecordsMark), count)
 				break
 			} else if status == C.MSPTI_ERROR_INVALID_PARAMETER {
 				hwlog.RunLog.Warnf("given buffer is nil, code: %v", status)

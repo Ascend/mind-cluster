@@ -142,10 +142,16 @@ class LogConfig:
         if log_path is None:
             log_path = LOG_DEFAULT_FILE_PATH
         if not os.path.exists(log_path):
-            os.makedirs(log_path, mode=LOG_DIR_PRIVILEGE, exist_ok=True)
+            try:
+                os.makedirs(log_path, mode=LOG_DIR_PRIVILEGE, exist_ok=True)
+            except FileExistsError:
+                pass
         log_file = os.path.join(log_path, LOG_DEFAULT_FILE_NAME)
         if not os.path.exists(log_file):
-            os.mknod(log_file, mode=LOG_PRIVILEGE)
+            try:
+                os.mknod(log_file, mode=LOG_PRIVILEGE)
+            except FileExistsError:
+                pass
         self.log_file = log_file
 
     def build_loglevel(self):
@@ -177,13 +183,16 @@ def _set_rotator(logger: logging.Logger, rotate_func: callable):
 
 
 def _log_rotator(source: str, dest: str) -> None:
-    if os.path.exists(source):
-        os.rename(source, dest)
-        os.chmod(dest, mode=LOG_PRIVILEGE)
-        if not os.path.exists(source):
-            os.mknod(source, mode=LOG_PRIVILEGE)
-        else:
-            _exit_file_process(source)
+    try:
+        if os.path.exists(source):
+            os.rename(source, dest)
+            os.chmod(dest, mode=LOG_PRIVILEGE)
+            if not os.path.exists(source):
+                os.mknod(source, mode=LOG_PRIVILEGE)
+            else:
+                _exit_file_process(source)
+    except Exception as e:
+        return
 
 
 def _exit_file_process(log_path: str) -> None:

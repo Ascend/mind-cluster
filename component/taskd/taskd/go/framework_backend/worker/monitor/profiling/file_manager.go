@@ -267,6 +267,7 @@ func deleteOldestFileForEachRank(jobDir string) error {
 	for i := 0; i < len(profileFiles)/constant.NumberOfParts && len(profileFiles) > constant.MinProfilingFileNum; i++ {
 		oldestFilePath := filepath.Join(jobDir, strconv.Itoa(GlobalRankId),
 			profileFiles[i].Name())
+		hwlog.RunLog.Infof("oldestFilePath:%s,fileName:%s", oldestFilePath, profileFiles[i].Name())
 		if _, err := os.Stat(oldestFilePath); os.IsNotExist(err) {
 			hwlog.RunLog.Errorf("file %s dose not exist", oldestFilePath)
 			continue
@@ -331,7 +332,7 @@ func ManageProfilingDiskUsage(baseDir string, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			hwlog.RunLog.Warnf("ManageProfilingDiskUsage received exit signal")
+			hwlog.RunLog.Warn("manage profiling disk usage received exit signal")
 			return
 		default:
 			// "/user/cluster-info/profiling"
