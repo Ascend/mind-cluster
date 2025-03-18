@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package controller is using for HuaWei Ascend pin scheduling policy schedule.
+Package internal is using for HuaWei Ascend pin scheduling policy schedule.
 */
-package controller
+package internal
 
 import (
 	"errors"

@@ -30,7 +30,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/controller"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -52,7 +52,7 @@ func HandlerStart() *plugin.ScheduleHandler {
 			ClusterCache:            plugin.NewClusterCache(),
 		},
 	}
-	scheduleHandler.PolicyBuilder = controller.New
+	scheduleHandler.PolicyBuilder = internal.New
 	return scheduleHandler
 }
 

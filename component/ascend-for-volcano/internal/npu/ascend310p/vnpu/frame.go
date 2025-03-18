@@ -84,9 +84,9 @@ func (tp *virtual310NPU) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUN
 }
 
 // ScoreBestNPUNodes score node by calculate task req npu num and node npu top
-func (tp *virtual310NPU) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, scoreMap map[string]float64) error {
+func (tp *virtual310NPU) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
 	klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes job(%s).", tp.GetPluginName(), tp.Name)
-	return tp.vHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, scoreMap)
+	return tp.vHandle.DynamicVNPU.ScoreBestNPUNodes(task, nodes, sMap)
 }
 
 // UseAnnotation select npu for task from node

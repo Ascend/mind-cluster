@@ -233,7 +233,7 @@ func buildPreStartActionTestCase() []preStartActionTestCase {
 	}
 }
 
-func TestTorHandlerV1_PreStartAction(t *testing.T) {
+func TestPreStartAction(t *testing.T) {
 	for _, tt := range buildPreStartActionTestCase() {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.th.PreStartAction(nil); (err != nil) != tt.wantErr {

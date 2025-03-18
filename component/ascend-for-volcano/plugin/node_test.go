@@ -342,7 +342,7 @@ func buildGetNeedInitNodeListTest() []getNeedInitNodeListTest {
 	}
 }
 
-func TestScheduleHandler_getNeedInitNodeList(t *testing.T) {
+func TestGetNeedInitNodeList(t *testing.T) {
 	for _, tt := range buildGetNeedInitNodeListTest() {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.sHandle.getNeedInitNodeList(tt.ssn); !reflect.DeepEqual(got, tt.want) {
