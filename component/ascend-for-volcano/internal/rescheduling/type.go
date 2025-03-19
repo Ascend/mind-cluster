@@ -21,7 +21,6 @@ package rescheduling
 
 import (
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -159,7 +158,6 @@ type ReScheduler struct {
 	Jobs            map[api.JobID]plugin.SchedulerJob
 	Nodes           map[string]plugin.NPUNode
 	isFirstSession  *bool
-	kubeClient      kubernetes.Interface
 }
 
 // FaultNodeInfoToCm fault node info to cm

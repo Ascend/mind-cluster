@@ -20,12 +20,13 @@ Package ascend910a3 is using for A3 affinity schedule.
 package ascend910a3
 
 import (
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
 // Base910A3 is the struct of Base910A3.
 type Base910A3 struct {
-	ascend910b.Base910b
+	base.NPUHandler
+	AffScoreList    [][]int
 	NetUnhealthyKey string
 }
 
