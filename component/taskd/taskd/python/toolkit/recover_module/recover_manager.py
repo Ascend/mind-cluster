@@ -128,6 +128,7 @@ class DLRecoverManager(RecoverManager):
                 time.sleep(constants.SLEEP_GAP)
             except Exception as e:
                 run_log.warning(f"init process recover catch exception:{e}")
+                time.sleep(constants.SLEEP_GAP)
                 continue
 
     def start_subscribe(self, frame: str = "pytorch"):
