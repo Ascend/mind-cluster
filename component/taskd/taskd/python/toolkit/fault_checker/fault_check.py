@@ -257,7 +257,7 @@ class FaultProcessor:
         fault_ranks.sort(key=self._get_rank_id)
         cm_infos = f'get reset config from file, retry_time={retry_time}, restart_type={restart_type},' \
                    f' grace_exit={grace_exit}, fault_flush={fault_flush}, fault_ranks={fault_ranks}'
-        run_log.info(cm_infos)
+        run_log.debug(cm_infos)
         return ResetCmData(fault_ranks, retry_time, grace_exit, restart_type, fault_flush)
 
     def _update_reset_info(self):
@@ -275,7 +275,7 @@ class FaultProcessor:
             return dict()
 
         restart_type_content = safe_get_file_info(self.restart_type_path).strip()
-        run_log.info(f"got restart_type_content:{restart_type_content}")
+        run_log.debug(f"got restart_type_content:{restart_type_content}")
         reset_file_content[constants.KEY_RESTART_TYPE] = restart_type_content
         return reset_file_content
 

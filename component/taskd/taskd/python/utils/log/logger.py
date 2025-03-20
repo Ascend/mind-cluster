@@ -126,7 +126,7 @@ class LogConfig:
 
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
-        self.file_log_level = logging.INFO
+        self.file_log_level = logging.DEBUG
         self.std_log_level = logging.INFO
         self.log_format = LOG_SIMPLE_FORMAT
         self.log_file = LOG_DEFAULT_FILE
@@ -234,13 +234,14 @@ def _get_logger() -> logging.Logger:
     log_cfg = LogConfig()
     logger = logging.getLogger()
 
+    logger.setLevel(logging.INFO)
+
     # set log print std out
     if log_cfg.log_std_out:
         logger.addHandler(_get_stream_handler(log_cfg))
 
     # set log write to file
     logger.addHandler(_get_file_handler(log_cfg))
-
     _set_rotator(logger, rotate_func=_log_rotator)
     _set_formatter(logger, log_cfg.log_format)
     return logger

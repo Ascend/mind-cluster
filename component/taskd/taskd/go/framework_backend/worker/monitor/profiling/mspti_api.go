@@ -312,7 +312,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 				count++
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
-				hwlog.RunLog.Warnf("there is no more records in the buffer,the current mark size is %v, count is: %v",
+				hwlog.RunLog.Debugf("there is no more records in the buffer,the current mark size is %v, count is: %v",
 					len(ProfilingRecordsMark), count)
 				break
 			} else if status == C.MSPTI_ERROR_INVALID_PARAMETER {

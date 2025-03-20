@@ -148,7 +148,7 @@ class MSRunPlugin:
                     continue
                 rank_id = fault_rank.get("RankId")
                 status = fault_rank.get("Status")
-                run_log.info(
+                run_log.debug(
                     f"status:{status},rankId:{rank_id},local:{local_worker_ranks}, {rank_id in local_worker_ranks}")
                 if status == "fault" and rank_id in local_worker_ranks:
                     fault_local_ranks.append(rank_id)
@@ -184,7 +184,7 @@ class MSRunPlugin:
             time.sleep(self.monitor_interval)
             # After entering the loop, first obtain the process status once.
             ms_proc_status = monitor_func([-1])
-            run_log.info(f"nodeRank:{self.ms_node_rank} has got mindspore process status:{ms_proc_status}")
+            run_log.debug(f"nodeRank:{self.ms_node_rank} has got mindspore process status:{ms_proc_status}")
             if not check_monitor_res_valid(ms_proc_status):
                 run_log.warning(f"monitor not return a valid result, but {ms_proc_status}")
                 continue
@@ -195,7 +195,7 @@ class MSRunPlugin:
             # 进入循环后更新reset cm相关内容
             self.update_reset_info()
             fault_status = self.get_fault_status()
-            run_log.info(f"nodeRank:{self.ms_node_rank}  fault status: is_fault:{fault_status.is_fault},"
+            run_log.debug(f"nodeRank:{self.ms_node_rank}  fault status: is_fault:{fault_status.is_fault},"
                          f"is_unrecovered:{fault_status.is_unrecovered},is_retried:{fault_status.is_retried},"
                          f"local_ranks:{fault_status.local_ranks}")
 
