@@ -16,9 +16,15 @@
 package common
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+)
+
+const (
+	FilePerm = 0755
 )
 
 // TestWriteToFile test of WriteToFile
@@ -31,7 +37,7 @@ func TestWriteToFile(t *testing.T) {
 			path1 := ResetInfoDir + "/default.test/restartType"
 			crErr1 := WriteToFile("test", path1)
 			convey.So(crErr1, convey.ShouldBeNil)
-			rmErr := RemoveFileAndDir("default", "test")
+			rmErr := RemoveResetFileAndDir("default", "test")
 			convey.So(rmErr, convey.ShouldBeNil)
 		})
 	})
@@ -63,6 +69,40 @@ func TestGenResetTypeFileName(t *testing.T) {
 		convey.Convey("Test GenResetTypeFileName success", func() {
 			name := GenResetTypeFileName("default", "test")
 			convey.ShouldEqual(name, ResetInfoDir+"/default.test/resetType")
+		})
+	})
+}
+
+// TestRemoveDataTraceFileAndDir test RemoveDataTraceFileAndDir
+func TestRemoveDataTraceFileAndDir(t *testing.T) {
+	convey.Convey("Given a namespace and job name", t, func() {
+		namespace := "test_namespace"
+		jobName := "test_job"
+
+		convey.Convey("When the directory exists", func() {
+			dir := filepath.Join(DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
+			err := os.MkdirAll(dir, FilePerm)
+			convey.ShouldBeNil(err)
+
+			convey.Convey("Then the directory should be removed successfully", func() {
+				err := RemoveDataTraceFileAndDir(namespace, jobName)
+				convey.ShouldBeNil(err)
+				_, err = os.Stat(dir)
+				if err != nil {
+					convey.ShouldBeTrue(os.IsNotExist(err))
+				}
+			})
+		})
+
+		convey.Convey("When the directory does not exist", func() {
+			convey.Convey("Then the function should return nil or an IsNotExist error", func() {
+				err := RemoveDataTraceFileAndDir(namespace, jobName)
+				if err != nil {
+					convey.ShouldBeTrue(os.IsNotExist(err))
+				} else {
+					convey.ShouldBeNil(err)
+				}
+			})
 		})
 	})
 }

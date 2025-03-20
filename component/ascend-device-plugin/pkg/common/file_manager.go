@@ -44,25 +44,32 @@ func WriteToFile(info, path string) error {
 	return err
 }
 
-// RemoveFileAndDir remove file and dir
-func RemoveFileAndDir(namespace, name string) error {
+// RemoveResetFileAndDir remove file and dir
+func RemoveResetFileAndDir(namespace, name string) error {
 	file := GenResetFileName(namespace, name)
 	rmErr := os.Remove(file)
-	if rmErr != nil {
+	if rmErr != nil && !os.IsNotExist(rmErr) {
 		return fmt.Errorf("failed to remove file(%s): %v", file, rmErr)
 	}
 	typeFile := GenResetTypeFileName(namespace, name)
 	rmErr = os.Remove(typeFile)
-	if rmErr != nil {
+	if rmErr != nil && !os.IsNotExist(rmErr) {
 		return fmt.Errorf("failed to remove file(%s): %v", typeFile, rmErr)
 	}
 	dir := GenResetDirName(namespace, name)
 	err := os.Remove(dir)
-	if err != nil {
+	if err != nil && !os.IsNotExist(rmErr) {
 		return fmt.Errorf("failed to remove dir(%s): %v", dir, err)
 	}
 	hwlog.RunLog.Infof("delete cm(%s) file(%s)", name, file)
 	return nil
+}
+
+// RemoveDataTraceFileAndDir remove the job related data-trace config dir
+func RemoveDataTraceFileAndDir(namespace, jobName string) error {
+	dir := fmt.Sprintf("%s/%s", DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
+	hwlog.RunLog.Infof("will delete dir: %s", dir)
+	return os.RemoveAll(dir)
 }
 
 // GenResetDirName generate reset cm dir name

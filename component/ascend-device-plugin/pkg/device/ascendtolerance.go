@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -228,24 +229,47 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 		return
 	}
 	hrt.jobs[event.Key] = jobName
-	cmKey := fmt.Sprintf(pod.GetNamespace() + "/" + common.ResetInfoCMNamePrefix + jobName)
-	cm, err := hrt.GetCMFromCache(cmKey)
-	if err != nil {
-		_, ok = hrt.noResetCmPodKeys[event.Key]
-		if !ok {
-			hwlog.RunLog.Warn(err)
-			hrt.noResetCmPodKeys[event.Key] = struct{}{}
-		}
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
-	err = hrt.writeCMToFile(cm)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", cm.Name, err)
+	needRetry := hrt.writeCmToFileWhilePodAdd(pod, event)
+
+	if needRetry {
 		hrt.queue.AddRateLimited(obj)
 		return
 	}
 	hrt.queue.Forget(obj)
+}
+
+func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient.Event) bool {
+	if pod == nil {
+		return false
+	}
+	needRetry := false
+	jobName := common.GetJobNameOfPod(pod)
+	dataTraceCm, err := hrt.GetCMFromCache(fmt.Sprintf(pod.GetNamespace() + "/" + common.DataTraceCmPrefix + jobName))
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to get cm cache for pod %s", pod.Name)
+		needRetry = true
+	} else {
+		if err := hrt.writeCMToFile(dataTraceCm); err != nil {
+			hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", dataTraceCm.Name, err)
+			needRetry = true
+		}
+	}
+
+	resetCm, err := hrt.GetCMFromCache(fmt.Sprintf(pod.GetNamespace() + "/" + common.ResetInfoCMNamePrefix + jobName))
+	if err != nil {
+		_, ok := hrt.noResetCmPodKeys[event.Key]
+		if !ok {
+			hwlog.RunLog.Warn(err)
+			hrt.noResetCmPodKeys[event.Key] = struct{}{}
+		}
+		needRetry = true
+	} else {
+		if err := hrt.writeCMToFile(resetCm); err != nil {
+			hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", resetCm.Name, err)
+			needRetry = true
+		}
+	}
+	return needRetry
 }
 
 func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
@@ -271,10 +295,13 @@ func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 		return
 	}
 	namespace := keySlice[0]
-	rmErr := common.RemoveFileAndDir(namespace, common.ResetInfoCMNamePrefix+jobName)
-	if rmErr != nil {
+	if rmErr := common.RemoveResetFileAndDir(namespace, common.ResetInfoCMNamePrefix+jobName); rmErr != nil {
 		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
 	}
+	if rmErr := common.RemoveDataTraceFileAndDir(namespace, jobName); rmErr != nil {
+		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+	}
+
 	delete(hrt.jobs, event.Key)
 	hrt.queue.Forget(obj)
 }
@@ -305,23 +332,39 @@ func (hrt *HotResetTools) GetCMFromCache(cmKey string) (*v1.ConfigMap, error) {
 }
 
 func (hrt *HotResetTools) writeCMToFile(cm *v1.ConfigMap) error {
-	data, ok := cm.Data[common.ResetInfoCMDataKey]
-	if !ok {
-		return fmt.Errorf("cm(%s) data(%s) not exist", cm.Name, common.ResetInfoCMDataKey)
-	}
-	writeErr := common.WriteToFile(data, common.GenResetFileName(cm.Namespace, cm.Name))
-	if writeErr != nil {
-		return fmt.Errorf("failed to write data to file: %v", writeErr)
-	}
-	hwlog.RunLog.Debugf("write cm(%s) data(%s) to file success", cm.Name, data)
-
-	restartType, ok := cm.Data[common.ResetInfoTypeKey]
-	if ok {
-		err := common.WriteToFile(restartType, common.GenResetTypeFileName(cm.Namespace, cm.Name))
-		if err != nil {
-			return fmt.Errorf("failed to write restartType to file: %v", err)
+	if strings.HasPrefix(cm.Name, common.DataTraceCmPrefix) {
+		dir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, cm.Namespace+"."+cm.Name)
+		fileFullName := filepath.Join(dir, common.DataTraceCmProfilingSwitchKey)
+		data, ok := cm.Data[common.DataTraceCmProfilingSwitchKey]
+		if !ok {
+			return fmt.Errorf("found cm %s, but without key %s",
+				cm.Namespace+"."+cm.Name, common.DataTraceCmProfilingSwitchKey)
 		}
-		hwlog.RunLog.Debugf("write cm(%s) restartType(%s) to file success", cm.Name, restartType)
+		if err := common.WriteToFile(data, fileFullName); err != nil {
+			return fmt.Errorf("failed to write file %s, err: %v", fileFullName, common.DataTraceCmProfilingSwitchKey)
+		}
+		hwlog.RunLog.Infof("suceessfully wrote file %s", fileFullName)
+		return nil
+	}
+	if strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) {
+		data, ok := cm.Data[common.ResetInfoCMDataKey]
+		if !ok {
+			return fmt.Errorf("cm(%s) data(%s) not exist", cm.Name, common.ResetInfoCMDataKey)
+		}
+		writeErr := common.WriteToFile(data, common.GenResetFileName(cm.Namespace, cm.Name))
+		if writeErr != nil {
+			return fmt.Errorf("failed to write data to file: %v", writeErr)
+		}
+		hwlog.RunLog.Debugf("write cm(%s) data(%s) to file success", cm.Name, data)
+
+		restartType, ok := cm.Data[common.ResetInfoTypeKey]
+		if ok {
+			err := common.WriteToFile(restartType, common.GenResetTypeFileName(cm.Namespace, cm.Name))
+			if err != nil {
+				return fmt.Errorf("failed to write restartType to file: %v", err)
+			}
+			hwlog.RunLog.Debugf("write cm(%s) restartType(%s) to file success", cm.Name, restartType)
+		}
 	}
 	return nil
 }
@@ -342,7 +385,7 @@ func (hrt *HotResetTools) handleConfigMapEvent(obj interface{}) {
 func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 	event, ok := obj.(kubeclient.Event)
 	if !ok {
-		hwlog.RunLog.Error("get kubeclient event failed")
+		hwlog.RunLog.Error("get kube client event failed")
 		return
 	}
 	hwlog.RunLog.Infof("handle cm(%s) update event", event.Key)
@@ -354,25 +397,19 @@ func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 	}
 	if strings.HasPrefix(cm.Name, common.DataTraceCmPrefix) {
 		dir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, cm.Namespace+"."+cm.Name)
-		fileName := fmt.Sprintf("%s/%s", dir, common.DataTraceCmProfilingSwitchKey)
-		if _, checkErr := os.Stat(fileName); checkErr != nil && !os.IsNotExist(checkErr) {
-			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", fileName, checkErr)
+		fileFullName := filepath.Join(dir, common.DataTraceCmProfilingSwitchKey)
+		// if file is not created yet, will not deal with it, only when pod is sighted by this node
+		// the file will be created in pod informer handler
+		// then if the configmap is updated, this handler will update file
+		if _, checkErr := os.Stat(fileFullName); checkErr != nil {
+			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", fileFullName, checkErr)
 			hrt.queue.Forget(obj)
 			return
 		}
-		data, ok := cm.Data[common.DataTraceCmProfilingSwitchKey]
-		if !ok {
-			hwlog.RunLog.Warnf("found data trace cm %s, but without key %s", cm.Namespace+"."+cm.Name,
-				common.DataTraceCmProfilingSwitchKey)
-			hrt.queue.Forget(obj)
-			return
+		if err = hrt.writeCmToFileSystem(cm, common.DataTraceCmProfilingSwitchKey, fileFullName, obj); err != nil {
+			hwlog.RunLog.Error(err)
 		}
-		if err := common.WriteToFile(data, fileName); err != nil {
-			hwlog.RunLog.Errorf("failed to write file: %s for cm: %s, err: %v", fileName,
-				cm.Namespace+"."+cm.Name, err)
-			hrt.queue.AddRateLimited(obj)
-			return
-		}
+		return
 	}
 	if strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) {
 		path := common.GenResetFileName(cm.Namespace, cm.Name)
@@ -403,11 +440,36 @@ func (hrt *HotResetTools) handleCMDeleteEvent(obj interface{}) {
 		return
 	}
 	namespace, name := keySlice[0], keySlice[1]
-	rmErr := common.RemoveFileAndDir(namespace, name)
-	if rmErr != nil {
-		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+	if strings.HasPrefix(name, common.ResetInfoCMNamePrefix) {
+		rmErr := common.RemoveResetFileAndDir(namespace, name)
+		if rmErr != nil {
+			hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+		}
+	}
+	if strings.HasPrefix(name, common.DataTraceCmPrefix) {
+		jobName := strings.TrimPrefix(name, common.DataTraceCmPrefix)
+		if rmErr := common.RemoveDataTraceFileAndDir(namespace, jobName); rmErr != nil {
+			hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+		}
 	}
 	hrt.queue.Forget(obj)
+}
+
+// writeCmToFileSystem write the cm data cm.data[key] into filePath
+func (hrt *HotResetTools) writeCmToFileSystem(cm *v1.ConfigMap, key, filePath string, obj interface{}) error {
+	data, ok := cm.Data[key]
+	if !ok {
+		hwlog.RunLog.Warnf("found cm %s, but without key %s", cm.Namespace+"."+cm.Name, key)
+		hrt.queue.Forget(obj)
+		return fmt.Errorf("found cm %s, but without key %s", cm.Namespace+"."+cm.Name, key)
+	}
+	if err := common.WriteToFile(data, filePath); err != nil {
+		hwlog.RunLog.Errorf("failed to write file: %s for cm: %s, err: %v", filePath,
+			cm.Namespace+"."+cm.Name, err)
+		hrt.queue.AddRateLimited(obj)
+		return fmt.Errorf("failed to write file: %s for cm: %s, err: %v", filePath, cm.Namespace+"."+cm.Name, err)
+	}
+	return nil
 }
 
 func checkConfigMap(obj interface{}) bool {

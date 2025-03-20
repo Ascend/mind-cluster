@@ -17,7 +17,9 @@ package device
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -1150,8 +1152,8 @@ func TestWriteCMToFile(t *testing.T) {
 		convey.Convey("write cm to file failed when cm has not reset.json", func() {
 			cm := &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "default",
-					Namespace: "reset-config-test1",
+					Namespace: "default",
+					Name:      "reset-config-test1",
 				},
 				Data: map[string]string{"xxx": "yyy"},
 			}
@@ -1161,8 +1163,8 @@ func TestWriteCMToFile(t *testing.T) {
 		convey.Convey("write cm to file failed when dir is not exist", func() {
 			cm := &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "default",
-					Namespace: "reset-config-test2",
+					Namespace: "default",
+					Name:      "reset-config-test2",
 				},
 				Data: map[string]string{common.ResetInfoCMDataKey: "yyy"},
 			}
@@ -1172,8 +1174,8 @@ func TestWriteCMToFile(t *testing.T) {
 		convey.Convey("write cm to file success when dir is exist", func() {
 			cm := &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "default",
-					Namespace: "reset-config-test2",
+					Namespace: "default",
+					Name:      "reset-config-test2",
 				},
 				Data: map[string]string{common.ResetInfoCMDataKey: "yyy", common.ResetInfoTypeKey: "zzz"},
 			}
@@ -1264,6 +1266,71 @@ func TestHandleCMDeleteEvent(t *testing.T) {
 			}
 			ascend910HotResetManager.queue.Add(mokeEvent)
 			ascend910HotResetManager.handleCMDeleteEvent(mokeEvent)
+		})
+	})
+}
+
+// TestWriteCmToFileSystem test write file to system
+func TestWriteCmToFileSystem(t *testing.T) {
+	ascend910HotResetManager := newHotResetTools()
+	cmName := "default/data-trace-test-default"
+	fileContent := "YYY"
+	convey.Convey("test handleCMDeleteEvent", t, func() {
+		convey.Convey("test handle delete event success", func() {
+			mokeEvent := kubeclient.Event{
+				Resource: kubeclient.CMResource,
+				Key:      "default/" + cmName,
+				Type:     kubeclient.EventTypeAdd,
+			}
+			cm := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cmName,
+					Namespace: "default",
+				},
+				Data: map[string]string{common.DataTraceCmProfilingSwitchKey: fileContent},
+			}
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			dir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, cm.Namespace+"."+cm.Name)
+			fileFullName := filepath.Join(dir, common.DataTraceCmProfilingSwitchKey)
+			err := ascend910HotResetManager.writeCmToFileSystem(cm, common.DataTraceCmProfilingSwitchKey,
+				fileFullName, mokeEvent)
+			convey.ShouldBeNil(err)
+			_, err = os.Stat(fileFullName)
+			convey.ShouldBeNil(err)
+			content, err := os.ReadFile(fileFullName)
+			convey.ShouldBeNil(err)
+			convey.ShouldEqual(string(content), fileContent)
+			err = os.RemoveAll(fileFullName)
+			convey.ShouldBeNil(err)
+		})
+	})
+}
+
+// TestWriteCmToFileSystemWithoutKey test write file to system but cm not key
+func TestWriteCmToFileSystemWithoutKey(t *testing.T) {
+	ascend910HotResetManager := newHotResetTools()
+	cmName := "default/data-trace-test-default"
+	fileContent := "YYY"
+	convey.Convey("test handleCMDeleteEvent", t, func() {
+		convey.Convey("test handle delete event success", func() {
+			mokeEvent := kubeclient.Event{
+				Resource: kubeclient.CMResource,
+				Key:      "default/" + cmName,
+				Type:     kubeclient.EventTypeAdd,
+			}
+			cm := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cmName,
+					Namespace: "default",
+				},
+				Data: map[string]string{common.DataTraceCmProfilingSwitchKey + "fake": fileContent},
+			}
+			ascend910HotResetManager.queue.Add(mokeEvent)
+			dir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, cm.Namespace+"."+cm.Name)
+			fileFullName := filepath.Join(dir, common.DataTraceCmProfilingSwitchKey)
+			err := ascend910HotResetManager.writeCmToFileSystem(cm, common.DataTraceCmProfilingSwitchKey,
+				fileFullName, mokeEvent)
+			convey.ShouldNotBeNil(err)
 		})
 	})
 }
