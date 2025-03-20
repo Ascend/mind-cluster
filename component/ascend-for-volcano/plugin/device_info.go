@@ -18,8 +18,8 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// GetResourceFromTemplate nodeType like Ascend310P, templateString like "vir04_3c_ndvpp"
-func GetResourceFromTemplate(nodeType string, templateString string,
+// getResourceFromTemplate nodeType like Ascend310P, templateString like "vir04_3c_ndvpp"
+func getResourceFromTemplate(nodeType string, templateString string,
 	taskTemplate map[string]map[string]util.VResource) *util.VResource {
 	taskNodeTemplate, ok := taskTemplate[nodeType]
 	if !ok {
@@ -32,8 +32,8 @@ func GetResourceFromTemplate(nodeType string, templateString string,
 	return &taskResource
 }
 
-// IsPodWholeCardFromAscendCore judge if card is whole card 0,1/0-vir04
-func IsPodWholeCardFromAscendCore(coreCardName string) bool {
+// isPodWholeCardFromAscendCore judge if card is whole card 0,1/0-vir04
+func isPodWholeCardFromAscendCore(coreCardName string) bool {
 	temp := strings.Split(coreCardName, ",")
 	for _, cardName := range temp {
 		singleCardTemp := strings.Split(cardName, "-")
@@ -44,8 +44,8 @@ func IsPodWholeCardFromAscendCore(coreCardName string) bool {
 	return false
 }
 
-// IsPodWholeCardFromAscendReal judge if card is whole card Ascend310P-0/Ascend310P-1c-400-3_0
-func IsPodWholeCardFromAscendReal(realCardName string) bool {
+// isPodWholeCardFromAscendReal judge if card is whole card Ascend310P-0/Ascend310P-1c-400-3_0
+func isPodWholeCardFromAscendReal(realCardName string) bool {
 	temp := strings.Split(realCardName, "-")
 	if len(temp) == util.NPUIndex2 {
 		return true
@@ -55,7 +55,7 @@ func IsPodWholeCardFromAscendReal(realCardName string) bool {
 
 // GetPhysicCardNameFromVChip get cardName from whole Ascend310P-0/Ascend310P-1c-400-3_0
 func GetPhysicCardNameFromVChip(realCardName string) string {
-	if IsPodWholeCardFromAscendReal(realCardName) {
+	if isPodWholeCardFromAscendReal(realCardName) {
 		return realCardName
 	}
 	temp := strings.Split(realCardName, "-")
@@ -73,8 +73,8 @@ func GetPhysicCardNameFromVChip(realCardName string) string {
 	return fmt.Sprintf("%s-%s", cardType, cardID)
 }
 
-// GetWholeCardIDFromAscendReal get card physics id from Ascend910-0
-func GetWholeCardIDFromAscendReal(cardNameStr string) (int, error) {
+// getWholeCardIDFromAscendReal get card physics id from Ascend910-0
+func getWholeCardIDFromAscendReal(cardNameStr string) (int, error) {
 	idStr := strings.Split(cardNameStr, "-")
 	if len(idStr) < util.NPUIndex2 {
 		return util.ErrorInt, fmt.Errorf("getCardIDFromCardNameStr %s %s", cardNameStr, FormatIncorrectError)
@@ -86,8 +86,8 @@ func GetWholeCardIDFromAscendReal(cardNameStr string) (int, error) {
 	return id, nil
 }
 
-// GetCardPhysicsIDFromAscendCore get card physics id from 0,1/0-vir04
-func GetCardPhysicsIDFromAscendCore(pod *v1.Pod, isWholeCard bool) ([]int, error) {
+// getCardPhysicsIDFromAscendCore get card physics id from 0,1/0-vir04
+func getCardPhysicsIDFromAscendCore(pod *v1.Pod, isWholeCard bool) ([]int, error) {
 	physicsIDs := make([]int, 0)
 	if pod == nil {
 		return physicsIDs, fmt.Errorf("pod is nil")

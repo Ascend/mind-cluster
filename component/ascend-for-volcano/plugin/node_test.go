@@ -61,20 +61,20 @@ func buildVCheckNPUResourceStableTest() []checkNPUResourceStableTest {
 		SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: util.AscendNPUCore}}}
 	tests := []checkNPUResourceStableTest{
 		{
-			name:    "01-CheckNPUResourceStable no annotation test",
+			name:    "01-checkNPUResourceStable no annotation test",
 			fields:  nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{testCardName: 1}, Annotation: nil},
 			args:    checkNPUResourceStableArgs{vcJob: tJob},
 			wantErr: true,
 		},
 		{
-			name: "02-CheckNPUResourceStable ok test.",
+			name: "02-checkNPUResourceStable ok test.",
 			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUHexKilo},
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0"}},
 			args:    checkNPUResourceStableArgs{vcJob: tJob},
 			wantErr: false,
 		},
 		{
-			name: "03-CheckNPUResourceStable vNPU ok test.",
+			name: "03-checkNPUResourceStable vNPU ok test.",
 			fields: nodeFields{Name: "haha", Idle: map[v1.ResourceName]float64{testCardName: 1},
 				Annotation: map[string]string{testCardName: "haha"}},
 			args:    checkNPUResourceStableArgs{vcJob: vJob},
@@ -98,8 +98,8 @@ func TestCheckNPUResourceStable(t *testing.T) {
 					Label:      tt.fields.Label,
 				},
 			}
-			if err := n.CheckNPUResourceStable(tt.args.vcJob); (err != nil) != tt.wantErr {
-				t.Errorf("CheckNPUResourceStable() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.checkNPUResourceStable(tt.args.vcJob); (err != nil) != tt.wantErr {
+				t.Errorf("checkNPUResourceStable() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

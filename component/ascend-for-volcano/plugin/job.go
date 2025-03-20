@@ -68,28 +68,28 @@ func isEachStringContainsSameElement(first, second, seq string) bool {
 	return false
 }
 
-// GetTaskSelectors get task's selector.
-func GetTaskSelectors(task *api.TaskInfo) map[string]string {
+// getTaskSelectors get task's selector.
+func getTaskSelectors(task *api.TaskInfo) map[string]string {
 	if task == nil {
-		klog.V(util.LogErrorLev).Infof("GetTaskSelectors task nil.")
+		klog.V(util.LogErrorLev).Infof("getTaskSelectors task nil.")
 		return nil
 	}
 	return task.Pod.Spec.NodeSelector
 }
 
-// GetTaskLabels get task's Labels.
-func GetTaskLabels(task *api.TaskInfo) map[string]string {
+// getTaskLabels get task's Labels.
+func getTaskLabels(task *api.TaskInfo) map[string]string {
 	if task == nil {
-		klog.V(util.LogErrorLev).Infof("GetTaskLabels task nil.")
+		klog.V(util.LogErrorLev).Infof("getTaskLabels task nil.")
 		return nil
 	}
 	return task.Pod.Labels
 }
 
-// GetJobSelectorFromVcJob get job selector.
-func GetJobSelectorFromVcJob(job *api.JobInfo) map[string]string {
+// getJobSelectorFromVcJob get job selector.
+func getJobSelectorFromVcJob(job *api.JobInfo) map[string]string {
 	if job == nil {
-		klog.V(util.LogErrorLev).Infof("GetJobSelectorFromVcJob job nil.")
+		klog.V(util.LogErrorLev).Infof("getJobSelectorFromVcJob job nil.")
 		return nil
 	}
 	var jobLabel = make(map[string]string, util.MapInitNum)
@@ -113,10 +113,10 @@ func GetJobSelectorFromVcJob(job *api.JobInfo) map[string]string {
 	return jobLabel
 }
 
-// GetJobLabelFromVcJob get job's label, not task's.
-func GetJobLabelFromVcJob(job *api.JobInfo) map[string]string {
+// getJobLabelFromVcJob get job's label, not task's.
+func getJobLabelFromVcJob(job *api.JobInfo) map[string]string {
 	if job == nil {
-		klog.V(util.LogErrorLev).Infof("GetJobLabelFromVcJob job nil.")
+		klog.V(util.LogErrorLev).Infof("getJobLabelFromVcJob job nil.")
 		return nil
 	}
 	resLabel := make(map[string]string, util.MapInitNum)
@@ -127,7 +127,7 @@ func GetJobLabelFromVcJob(job *api.JobInfo) map[string]string {
 	}
 
 	for _, task := range job.Tasks {
-		taskSelector := GetTaskLabels(task)
+		taskSelector := getTaskLabels(task)
 		for k, v := range taskSelector {
 			label, ok := resLabel[k]
 			if !ok {
@@ -171,10 +171,10 @@ func getVcjobMinResource(job *api.JobInfo) *api.Resource {
 	return api.NewResource(*job.PodGroup.Spec.MinResources)
 }
 
-// GetVCTaskReqNPUTypeFromTaskInfo get task request resource, only NPU.
-func GetVCTaskReqNPUTypeFromTaskInfo(vcTask *api.TaskInfo) (string, int) {
+// getVCTaskReqNPUTypeFromTaskInfo get task request resource, only NPU.
+func getVCTaskReqNPUTypeFromTaskInfo(vcTask *api.TaskInfo) (string, int) {
 	if vcTask == nil || vcTask.Resreq == nil {
-		klog.V(util.LogInfoLev).Infof("GetVCTaskReqNPUTypeFromTaskInfo nil job's parameter.")
+		klog.V(util.LogInfoLev).Infof("getVCTaskReqNPUTypeFromTaskInfo nil job's parameter.")
 		return "", 0
 	}
 	for k, v := range vcTask.Resreq.ScalarResources {
@@ -184,7 +184,7 @@ func GetVCTaskReqNPUTypeFromTaskInfo(vcTask *api.TaskInfo) (string, int) {
 		}
 		continue
 	}
-	klog.V(util.LogInfoLev).Infof("GetVCTaskReqNPUTypeFromTaskInfo %+v.", vcTask.Resreq.ScalarResources)
+	klog.V(util.LogInfoLev).Infof("getVCTaskReqNPUTypeFromTaskInfo %+v.", vcTask.Resreq.ScalarResources)
 	return "", 0
 }
 
@@ -200,14 +200,14 @@ func GetJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 	resultMap := make(map[api.TaskID]util.NPUTask, util.MapInitNum)
 	for taskID, taskInf := range vcJob.Tasks {
 		initVcJobHcclIndex(taskInf)
-		name, num := GetVCTaskReqNPUTypeFromTaskInfo(taskInf)
+		name, num := getVCTaskReqNPUTypeFromTaskInfo(taskInf)
 		resultMap[taskID] = util.NPUTask{
 			Name:       taskInf.Name,
 			NameSpace:  taskInf.Namespace,
 			ReqNPUName: name,
 			ReqNPUNum:  num,
-			Selector:   GetTaskSelectors(taskInf),
-			Label:      GetTaskLabels(taskInf),
+			Selector:   getTaskSelectors(taskInf),
+			Label:      getTaskLabels(taskInf),
 			VTask:      &util.VTask{},
 			NodeName:   taskInf.NodeName,
 			Annotation: taskInf.Pod.Annotations,
@@ -226,7 +226,7 @@ func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 	sJob.policyHandler = sHandle.PolicyBuilder()
 }
 
-// IsJobInitial Determine if the task is ready.
+// isJobInitial Determine if the task is ready.
 func initVcJobHcclIndex(taskInf *api.TaskInfo) {
 	if taskInf.Pod.Annotations == nil {
 		taskInf.Pod.Annotations = make(map[string]string)
@@ -244,8 +244,8 @@ func initVcJobHcclIndex(taskInf *api.TaskInfo) {
 	}
 }
 
-// IsJobInitial Determine if the task is ready.
-func IsJobInitial(job *api.JobInfo) bool {
+// isJobInitial Determine if the task is ready.
+func isJobInitial(job *api.JobInfo) bool {
 	return job.ValidTaskNum() >= job.MinAvailable && getJobTerminatingPodNum(job) == 0
 }
 
@@ -259,8 +259,8 @@ func getJobTerminatingPodNum(job *api.JobInfo) int {
 	return tNum
 }
 
-// Init the SchedulerJob's init.
-func (sJob *SchedulerJob) Init(vcJob *api.JobInfo, sHandle *ScheduleHandler) error {
+// init the SchedulerJob's init.
+func (sJob *SchedulerJob) init(vcJob *api.JobInfo, sHandle *ScheduleHandler) error {
 	if sJob == nil || vcJob == nil {
 		klog.V(util.LogErrorLev).Infof("SchedulerJob_Init: parameter is nil.")
 		return errors.New("parameter is nil")
@@ -427,8 +427,8 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	sJob.SchedulerJobAttr.ComJob = util.ComJob{
 		Name: vcJob.UID, NameSpace: vcJob.Namespace,
 		ReferenceName: util.ReferenceNameOfJob(vcJob),
-		Selector:      GetJobSelectorFromVcJob(vcJob),
-		Label:         GetJobLabelFromVcJob(vcJob),
+		Selector:      getJobSelectorFromVcJob(vcJob),
+		Label:         getJobLabelFromVcJob(vcJob),
 		Annotation:    vcJob.PodGroup.Annotations,
 	}
 	if sJob.Owner.Kind == ReplicaSetType {
@@ -471,13 +471,13 @@ func (sJob *SchedulerJob) UpdateJobPendingMessage(message, nodeName string) {
 	sJob.Reason[message].Insert(nodeName)
 }
 
-// IsNPUJob check SchedulerJob is npu job
-func (sJob SchedulerJob) IsNPUJob() bool {
+// isNPUJob check SchedulerJob is npu job
+func (sJob SchedulerJob) isNPUJob() bool {
 	return sJob.policyHandler != nil
 }
 
-// ValidJobFn valid job.
-func (sJob SchedulerJob) ValidJobFn() *api.ValidateResult {
+// validJobFn valid job.
+func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 	if sJob.Owner.Kind == ReplicaSetType {
 		if len(sJob.Tasks) < int(*sJob.Owner.Replicas) {
 			return &api.ValidateResult{
@@ -514,10 +514,10 @@ func (sJob SchedulerJob) preCheckNodePredicate(taskInfo *api.TaskInfo, vcNode NP
 			nodeHealthyStatusByNodeD)
 		return fmt.Errorf("node is %s, due to nodeD reported node status", nodeHealthyStatusByNodeD)
 	}
-	if err := vcNode.CheckNPUResourceStable(sJob); err != nil {
+	if err := vcNode.checkNPUResourceStable(sJob); err != nil {
 		return err
 	}
-	if err := sJob.CheckNodeNum(taskInfo, vcNode); err != nil {
+	if err := sJob.checkNodeNum(taskInfo, vcNode); err != nil {
 		return err
 	}
 	return nil
@@ -577,18 +577,18 @@ func (sHandle *ScheduleHandler) SetJobPendingReason(vcJob *api.JobInfo, reason i
 			reasonTmp += nodeErrors.Error()
 		}
 		if sJob, ok := sHandle.Jobs[vcJob.UID]; ok {
-			sHandle.RecordJobPendingMessage(sJob)
+			sHandle.recordJobPendingMessage(sJob)
 		}
 	default:
 		return fmt.Errorf("assert reason(%T) failed", reason)
 	}
 	// for write pending reason into vcjob
-	sHandle.UpdatePodGroupPendingReason(vcJob, reasonTmp)
+	sHandle.updatePodGroupPendingReason(vcJob, reasonTmp)
 	return nil
 }
 
-// UpdatePodGroupPendingReason update pg
-func (sHandle *ScheduleHandler) UpdatePodGroupPendingReason(job *api.JobInfo, reason string) {
+// updatePodGroupPendingReason update pg
+func (sHandle *ScheduleHandler) updatePodGroupPendingReason(job *api.JobInfo, reason string) {
 	job.JobFitErrors = reason
 
 	if len(job.PodGroup.Status.Conditions) == 0 {
@@ -614,8 +614,8 @@ func (sHandle *ScheduleHandler) UpdatePodGroupPendingReason(job *api.JobInfo, re
 	job.PodGroup.Status.Conditions = append(job.PodGroup.Status.Conditions, *jc)
 }
 
-// RecordJobPendingMessage record the job pending message to log
-func (sHandle *ScheduleHandler) RecordJobPendingMessage(vcJob SchedulerJob) {
+// recordJobPendingMessage record the job pending message to log
+func (sHandle *ScheduleHandler) recordJobPendingMessage(vcJob SchedulerJob) {
 	if util.MakeDataHash(sHandle.PendingMessage[vcJob.Name]) == util.MakeDataHash(vcJob.Reason) {
 		return
 	}
@@ -647,7 +647,7 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
 	}
 
-	if !IsJobInitial(job) {
+	if !isJobInitial(job) {
 		reason := "job is not ready"
 		klog.V(util.LogErrorLev).Infof("%s job(%s) not ready:%s.", PluginName, job.Name,
 			job.PodGroup.Status.Phase)
@@ -672,7 +672,7 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return nil
 	}
 
-	result = vcJob.ValidJobFn()
+	result = vcJob.validJobFn()
 	return result
 }
 
@@ -688,14 +688,14 @@ func (sHandle ScheduleHandler) SetJobPendReasonByNodesCase(job *api.JobInfo) {
 	}
 }
 
-// CheckNodeNum Check whether the number of cards on the node meets the task requirements.
-func (sJob *SchedulerJob) CheckNodeNum(taskInfo *api.TaskInfo, vcNode NPUNode) error {
+// checkNodeNum Check whether the number of cards on the node meets the task requirements.
+func (sJob *SchedulerJob) checkNodeNum(taskInfo *api.TaskInfo, vcNode NPUNode) error {
 	if sJob == nil || taskInfo == nil {
 		return errors.New(objectNilError)
 	}
 	vcTask, ok := sJob.NPUJob.Tasks[taskInfo.UID]
 	if !ok {
-		klog.V(util.LogErrorLev).Infof("CheckNodeNum %+v.", sJob.SchedulerJobAttr.NPUJob)
+		klog.V(util.LogErrorLev).Infof("checkNodeNum %+v.", sJob.SchedulerJobAttr.NPUJob)
 		return fmt.Errorf("no %s in SchedulerJob", taskInfo.UID)
 	}
 	nodeNPUNum, ok := vcNode.Idle[v1.ResourceName(vcTask.ReqNPUName)]

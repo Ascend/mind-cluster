@@ -59,7 +59,7 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 		sJob := SchedulerJob{
 			Owner: ownerInfo,
 		}
-		if err := sJob.Init(jobInfo, sHandle); err != nil {
+		if err := sJob.init(jobInfo, sHandle); err != nil {
 			klog.V(util.LogDebugLev).Infof("%s InitJobsFromSsn failed: %s.", jobInfo.Name, util.SafePrint(err))
 			continue
 		}
@@ -71,8 +71,8 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	return
 }
 
-// InitJobScheduleInfoRecorder update job schedule info recorder.
-func (sHandle *ScheduleHandler) InitJobScheduleInfoRecorder() {
+// initJobScheduleInfoRecorder update job schedule info recorder.
+func (sHandle *ScheduleHandler) initJobScheduleInfoRecorder() {
 	tmpRecorder := NewJobScheduleInfoRecorder()
 	for jobID, sJob := range sHandle.Jobs {
 		// mark the job which server list has been recorded in logs
@@ -144,8 +144,8 @@ func getPodGroupOwnerRef(pg scheduling.PodGroup) metav1.OwnerReference {
 	return metav1.OwnerReference{}
 }
 
-// GetJobTemplate get template of all possible segmentation jobs
-func (sHandle *ScheduleHandler) GetJobTemplate() map[string]map[string]util.VResource {
+// getJobTemplate get template of all possible segmentation jobs
+func (sHandle *ScheduleHandler) getJobTemplate() map[string]map[string]util.VResource {
 	jobTemplate := map[string]map[string]util.VResource{
 		Ascend310P: {
 			VNPUTempVir01:        {Aicore: 1, Aicpu: 1, DVPP: AscendDVPPEnabledNull},
@@ -197,11 +197,11 @@ func (sHandle *ScheduleHandler) InitVolcanoFrameFromSsn(ssn *framework.Session) 
 		klog.V(util.LogErrorLev).Infof("InitVolcanoFrameFromSsn failed: %s.", util.ArgumentError)
 		return
 	}
-	configs := getConfigurationByKey(InitConfsFromSsn(ssn.Configurations))
+	configs := getConfigurationByKey(initConfsFromSsn(ssn.Configurations))
 	sHandle.FrameAttr.UID = ssn.UID
 	sHandle.FrameAttr.KubeClient = ssn.KubeClient()
 	sHandle.FrameAttr.informerFactory = ssn.InformerFactory()
-	sHandle.FrameAttr.VJobTemplate = sHandle.GetJobTemplate()
+	sHandle.FrameAttr.VJobTemplate = sHandle.getJobTemplate()
 	sHandle.initDynamicParameters(configs)
 	sHandle.initStaticParameters(configs)
 }
@@ -229,8 +229,8 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
 }
 
-// InitConfsFromSsn init confs from session
-func InitConfsFromSsn(confs []conf.Configuration) []config.Configuration {
+// initConfsFromSsn init confs from session
+func initConfsFromSsn(confs []conf.Configuration) []config.Configuration {
 	var out []byte
 	var err error
 	newConfs := make([]config.Configuration, len(confs))
@@ -334,9 +334,9 @@ func (sHandle *ScheduleHandler) BeforeCloseHandler() {
 	if sHandle.Tors == nil || sHandle.Tors.GetNSLBVersion() == defaultNSLBVersion {
 		return
 	}
-	err := sHandle.CacheToShareCM()
+	err := sHandle.cacheToShareCM()
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("CacheToShareCM error: %v", err)
+		klog.V(util.LogErrorLev).Infof("cacheToShareCM error: %v", err)
 	}
 }
 
@@ -353,7 +353,7 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	sHandle.initCmInformer()
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
-	sHandle.InitJobScheduleInfoRecorder()
+	sHandle.initJobScheduleInfoRecorder()
 
 	sHandle.InitTorNodeInfo(ssn)
 	sHandle.initJobsPlugin()
@@ -383,8 +383,8 @@ func (sHandle *ScheduleHandler) initReschedulerFromSsn(ssn *framework.Session) {
 	}
 }
 
-// CacheToShareCM cache tors info to configmap
-func (sHandle *ScheduleHandler) CacheToShareCM() error {
+// cacheToShareCM cache tors info to configmap
+func (sHandle *ScheduleHandler) cacheToShareCM() error {
 	data := make(map[string]string, 1)
 	toShareMap := sHandleTorsToTorShareMap(sHandle)
 	dataByte, err := json.Marshal(toShareMap)
@@ -396,7 +396,7 @@ func (sHandle *ScheduleHandler) CacheToShareCM() error {
 		Namespace: cmNameSpace}, Data: data}
 	if err := k8s.CreateOrUpdateConfigMap(sHandle.FrameAttr.KubeClient, putCM, TorShareCMName,
 		cmNameSpace); err != nil {
-		klog.V(util.LogInfoLev).Infof("CacheToShareCM CreateOrUpdateConfigMap error: %s", util.SafePrint(err))
+		klog.V(util.LogInfoLev).Infof("cacheToShareCM CreateOrUpdateConfigMap error: %s", util.SafePrint(err))
 	}
 	return nil
 }
@@ -451,7 +451,7 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	klog.V(util.LogDebugLev).Infof("Enter batchNodeOrderFn")
 	defer klog.V(util.LogDebugLev).Infof("leaving batchNodeOrderFn")
 
-	if !IsNPUTask(task) {
+	if !isNPUTask(task) {
 		return nil, nil
 	}
 	if len(sHandle.Nodes) == 0 {

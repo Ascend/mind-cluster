@@ -193,8 +193,8 @@ func (n *NPUNode) GetNewNPUNodeAnnotation(usedTop []int, resourceName, resourceN
 	return newTopStr, nil
 }
 
-// CheckNPUResourceStable check resource stabilize.
-func (n NPUNode) CheckNPUResourceStable(vcJob SchedulerJob) error {
+// checkNPUResourceStable check resource stabilize.
+func (n NPUNode) checkNPUResourceStable(vcJob SchedulerJob) error {
 	if vcJob.IsVJob() {
 		klog.V(util.LogDebugLev).Infof("%s is vNPU job no need check %s stable in frame.", vcJob.Name, n.Name)
 		return nil
@@ -347,7 +347,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogErrorLev).Infof("NodePredicate got null parameter(s), which is invalid.")
 		return fmt.Errorf("got null parameter(s)")
 	}
-	if !IsNPUTask(taskInfo) {
+	if !isNPUTask(taskInfo) {
 		return nil
 	}
 	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", nodeInfo.Name)
@@ -358,7 +358,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		return nil
 	}
 	// check vcjob is npu job
-	if !vcJob.IsNPUJob() {
+	if !vcJob.isNPUJob() {
 		klog.V(util.LogDebugLev).Infof("NodePredicate vc-job:%#v is not npu job.", vcJob)
 		return nil
 	}

@@ -30,26 +30,26 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// IsTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
-func (sHandle ScheduleHandler) IsTaskNeedNPUAllocated(task *api.TaskInfo) bool {
-	if !IsNPUTask(task) {
-		klog.V(util.LogDebugLev).Infof("IsTaskNeedNPUAllocated %s not npu task.", task.Name)
+// isTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
+func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
+	if !isNPUTask(task) {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
 		return false
 	}
 
 	vcJob, ok := sHandle.Jobs[task.Job]
 	if !ok {
-		klog.V(util.LogDebugLev).Infof("IsTaskNeedNPUAllocated %s not in npu jobs.", task.Job)
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu jobs.", task.Job)
 		return false
 	}
 	nTask, ok := vcJob.Tasks[task.UID]
 	if !ok {
-		klog.V(util.LogDebugLev).Infof("IsTaskNeedNPUAllocated %s not in npu tasks.", task.Name)
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu tasks.", task.Name)
 		return false
 	}
 	// static cut job no need allocated,it followed by kubelet in device-plugin.
 	if nTask.Type == util.JobTypeStCut {
-		klog.V(util.LogDebugLev).Infof("IsTaskNeedNPUAllocated %s is static cut job.", task.Name)
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s is static cut job.", task.Name)
 		return false
 	}
 	return true
@@ -62,7 +62,7 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		return
 	}
 
-	if !sHandle.IsTaskNeedNPUAllocated(task) {
+	if !sHandle.isTaskNeedNPUAllocated(task) {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s no need to set pod annotation.", task.Name)
 		return
 	}
@@ -174,8 +174,8 @@ func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {
 	task.Pod.Status.Conditions = append(task.Pod.Status.Conditions, condition)
 }
 
-// IsNPUTask to judge the task either is NPU task or not.
-func IsNPUTask(nT *api.TaskInfo) bool {
+// isNPUTask to judge the task either is NPU task or not.
+func isNPUTask(nT *api.TaskInfo) bool {
 	for k := range nT.Resreq.ScalarResources {
 		// must contain "huawei.com/"
 		if strings.Contains(string(k), util.HwPreName) {

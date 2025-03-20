@@ -42,12 +42,12 @@ type npuAllocateFuncTest struct {
 
 func buildNPUAllocateFuncTest() []npuAllocateFuncTest {
 	task := test.FakeNormalTestTasks(1)[0]
-	name, num := GetVCTaskReqNPUTypeFromTaskInfo(task)
+	name, num := getVCTaskReqNPUTypeFromTaskInfo(task)
 	tmpJobReadyTag := true
 	npuTask := util.NPUTask{
 		Name: task.Name, NameSpace: task.Namespace, ReqNPUName: name,
 		ReqNPUNum: num,
-		Selector:  GetTaskSelectors(task), Label: GetTaskLabels(task), VTask: &util.VTask{Type: util.JobTypeWhole}}
+		Selector:  getTaskSelectors(task), Label: getTaskLabels(task), VTask: &util.VTask{Type: util.JobTypeWhole}}
 	tests := []npuAllocateFuncTest{
 		{
 			name:   "01-NPUAllocateFunc task nil test",

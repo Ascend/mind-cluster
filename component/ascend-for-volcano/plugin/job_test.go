@@ -46,27 +46,27 @@ func TestGetJobLabelFromVcJob(t *testing.T) {
 		want map[string]string
 	}{
 		{
-			name: "01-GetJobLabelFromVcJob get ok test",
+			name: "01-getJobLabelFromVcJob get ok test",
 			args: args{job: tJob},
 			want: map[string]string{"fault-scheduling": "force", "haha": "who"},
 		},
 		{
-			name: "02-GetJobLabelFromVcJob return nil when job is nil",
+			name: "02-getJobLabelFromVcJob return nil when job is nil",
 			args: args{job: nil}, want: nil,
 		},
 		{
-			name: "03-GetJobLabelFromVcJob return nil when job tasks is empty",
+			name: "03-getJobLabelFromVcJob return nil when job tasks is empty",
 			args: args{job: &api.JobInfo{}}, want: map[string]string{},
 		},
 		{
-			name: "04-GetJobLabelFromVcJob return selector when job tasks not empty",
+			name: "04-getJobLabelFromVcJob return selector when job tasks not empty",
 			args: args{job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
 				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
 					"a": "1"}}}}},
 			}}, want: map[string]string{"a": "1"},
 		},
 		{
-			name: "05-GetJobLabelFromVcJob return selector when job tasks not empty",
+			name: "05-getJobLabelFromVcJob return selector when job tasks not empty",
 			args: args{job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
 				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
 					"a": "1", "b": "1"}}}},
@@ -79,8 +79,8 @@ func TestGetJobLabelFromVcJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetJobLabelFromVcJob(tt.args.job); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetJobLabelFromVcJob() = %v, want %v", got, tt.want)
+			if got := getJobLabelFromVcJob(tt.args.job); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getJobLabelFromVcJob() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -142,34 +142,34 @@ func buildGetJobSelectorFromVcJobTest() []getJobSelectorFromVcJobTest {
 	tJob2 := test.FakeNormalTestJob("test1", 1)
 	tests := []getJobSelectorFromVcJobTest{
 		{
-			name: "01-GetJobSelectorFromVcJob nil job selector test",
+			name: "01-getJobSelectorFromVcJob nil job selector test",
 			args: getJobSelectorFromVcJobArgs{job: tJob2},
 			want: make(map[string]string, util.MapInitNum),
 		},
 		{
-			name: "02-GetJobSelectorFromVcJob nil job selector test",
+			name: "02-getJobSelectorFromVcJob nil job selector test",
 			args: getJobSelectorFromVcJobArgs{job: tJob1},
 			want: map[string]string{"haha": "heihei"},
 		},
 		{
-			name: "03-GetJobSelectorFromVcJob return nil when job is nil",
+			name: "03-getJobSelectorFromVcJob return nil when job is nil",
 			args: getJobSelectorFromVcJobArgs{job: nil},
 			want: nil,
 		},
 		{
-			name: "04-GetJobSelectorFromVcJob return nil when job tasks is empty",
+			name: "04-getJobSelectorFromVcJob return nil when job tasks is empty",
 			args: getJobSelectorFromVcJobArgs{job: &api.JobInfo{}},
 			want: map[string]string{},
 		},
 		{
-			name: "05-GetJobSelectorFromVcJob return selector when job tasks not empty",
+			name: "05-getJobSelectorFromVcJob return selector when job tasks not empty",
 			args: getJobSelectorFromVcJobArgs{
 				job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
 					"task1": {Pod: &v1.Pod{Spec: v1.PodSpec{NodeSelector: map[string]string{"a": "1"}}}}}}},
 			want: map[string]string{"a": "1"},
 		},
 		{
-			name: "06-GetJobSelectorFromVcJob return selector when job tasks not empty",
+			name: "06-getJobSelectorFromVcJob return selector when job tasks not empty",
 			args: getJobSelectorFromVcJobArgs{
 				job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
 					"task1": {Pod: &v1.Pod{Spec: v1.PodSpec{NodeSelector: map[string]string{
@@ -186,8 +186,8 @@ func TestGetJobSelectorFromVcJob(t *testing.T) {
 	tests := buildGetJobSelectorFromVcJobTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetJobSelectorFromVcJob(tt.args.job); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetJobSelectorFromVcJob() = %v, want %v", got, tt.want)
+			if got := getJobSelectorFromVcJob(tt.args.job); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getJobSelectorFromVcJob() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -205,25 +205,25 @@ func TestGetTaskSelectors(t *testing.T) {
 		want map[string]string
 	}{
 		{
-			name: "01-GetTaskSelectors no selector test.",
+			name: "01-getTaskSelectors no selector test.",
 			args: args{task: tTasks[0]},
 			want: nil,
 		},
 		{
-			name: "02-GetTaskSelectors ok test.",
+			name: "02-getTaskSelectors ok test.",
 			args: args{task: tTasks[1]},
 			want: map[string]string{"haha": "who"},
 		},
 		{
-			name: "01-GetTaskSelectors return nil when task is nil",
+			name: "01-getTaskSelectors return nil when task is nil",
 			args: args{task: nil},
 			want: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetTaskSelectors(tt.args.task); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetTaskSelectors() = %v, want %v", got, tt.want)
+			if got := getTaskSelectors(tt.args.task); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getTaskSelectors() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -297,19 +297,19 @@ func buildGetVCTaskReqNPUTypeFromTaskInfoTest() []getVCTaskReqNPUTypeFromTaskInf
 	tTasks := test.FakeNormalTestTasks(1)
 	tests := []getVCTaskReqNPUTypeFromTaskInfoTest{
 		{
-			name:  "01-GetVCTaskReqNPUTypeFromTaskInfo nil test.",
+			name:  "01-getVCTaskReqNPUTypeFromTaskInfo nil test.",
 			args:  getVCTaskReqNPUTypeFromTaskInfoArgs{vcTask: nil},
 			want:  "",
 			want1: 0,
 		},
 		{
-			name:  "02-GetVCTaskReqNPUTypeFromTaskInfo ok test.",
+			name:  "02-getVCTaskReqNPUTypeFromTaskInfo ok test.",
 			args:  getVCTaskReqNPUTypeFromTaskInfoArgs{vcTask: tTasks[0]},
 			want:  util.NPU910CardName,
 			want1: util.NPUIndex8,
 		},
 		{
-			name: "03-GetVCTaskReqNPUTypeFromTaskInfo no res test.",
+			name: "03-getVCTaskReqNPUTypeFromTaskInfo no res test.",
 			args: getVCTaskReqNPUTypeFromTaskInfoArgs{vcTask: &api.TaskInfo{Resreq: &api.Resource{
 				ScalarResources: map[v1.ResourceName]float64{v1.ResourceName("abc"): float64(util.NPUIndex8)},
 			}}},
@@ -324,12 +324,12 @@ func TestGetVCTaskReqNPUTypeFromTaskInfo(t *testing.T) {
 	tests := buildGetVCTaskReqNPUTypeFromTaskInfoTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := GetVCTaskReqNPUTypeFromTaskInfo(tt.args.vcTask)
+			got, got1 := getVCTaskReqNPUTypeFromTaskInfo(tt.args.vcTask)
 			if got != tt.want {
-				t.Errorf("GetVCTaskReqNPUTypeFromTaskInfo() got = %v, want %v", got, tt.want)
+				t.Errorf("getVCTaskReqNPUTypeFromTaskInfo() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
-				t.Errorf("GetVCTaskReqNPUTypeFromTaskInfo() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("getVCTaskReqNPUTypeFromTaskInfo() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}
@@ -351,12 +351,12 @@ func buildGIsJobInitialTest() []isJobInitialTest {
 	test.SetFakeNPUJobStatusPending(tJob2)
 	tests := []isJobInitialTest{
 		{
-			name: "01-IsJobInitial pending test",
+			name: "01-isJobInitial pending test",
 			args: isJobInitialArgs{job: tJob2},
 			want: true,
 		},
 		{
-			name: "02-IsJobInitial test ok",
+			name: "02-isJobInitial test ok",
 			args: isJobInitialArgs{job: tJob},
 			want: true,
 		},
@@ -368,8 +368,8 @@ func TestIsJobInitial(t *testing.T) {
 	tests := buildGIsJobInitialTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsJobInitial(tt.args.job); got != tt.want {
-				t.Errorf("IsJobInitial() = %v, want %v", got, tt.want)
+			if got := isJobInitial(tt.args.job); got != tt.want {
+				t.Errorf("isJobInitial() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -592,13 +592,13 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 		util.NPU910CardName: util.NPUIndex8 * util.NPUHexKilo}}}
 	tests := []CheckNodeNumTest{
 		{
-			name:    "01-CheckNodeNum no task request test.",
+			name:    "01-checkNodeNum no task request test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
 			args:    CheckNodeNumArgs{taskInfo: nil},
 			wantErr: true,
 		},
 		{
-			name: "02-CheckNodeNum no task test.",
+			name: "02-checkNodeNum no task test.",
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{
 				NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 			args: CheckNodeNumArgs{taskInfo: tTasks[0], vcNode: NPUNode{CommonNode{Name: "testNode1", Idle: nil},
@@ -606,7 +606,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			wantErr: true,
 		},
 		{
-			name: "03-CheckNodeNum no node idle test.",
+			name: "03-checkNodeNum no node idle test.",
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
 				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
 					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
@@ -615,7 +615,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			wantErr: true,
 		},
 		{
-			name: "04-CheckNodeNum not meet test.",
+			name: "04-checkNodeNum not meet test.",
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
 				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
 					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
@@ -623,7 +623,7 @@ func buildCheckNodeNumTest() []CheckNodeNumTest {
 			wantErr: true,
 		},
 		{
-			name: "05-CheckNodeNum meet test.",
+			name: "05-checkNodeNum meet test.",
 			fields: schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{
 				Tasks: map[api.TaskID]util.NPUTask{tTasks[0].UID: {Name: tTasks[0].Name,
 					ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8}}}}},
@@ -642,8 +642,8 @@ func TestSchedulerJobCheckNodeNum(t *testing.T) {
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
 				policyHandler:    tt.fields.handler,
 			}
-			if err := sJob.CheckNodeNum(tt.args.taskInfo, tt.args.vcNode); (err != nil) != tt.wantErr {
-				t.Errorf("CheckNodeNum() error = %v, wantErr %v", err, tt.wantErr)
+			if err := sJob.checkNodeNum(tt.args.taskInfo, tt.args.vcNode); (err != nil) != tt.wantErr {
+				t.Errorf("checkNodeNum() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -665,13 +665,13 @@ func buildInitTest() []initTest {
 	tJob := test.FakeNormalTestJob("haha", 1)
 	tests := []initTest{
 		{
-			name:    "01-Init vcJob nil test.",
+			name:    "01-init vcJob nil test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
 			args:    initArgs{vcJob: nil},
 			wantErr: true,
 		},
 		{
-			name:    "02-Init plugin not register test.",
+			name:    "02-init plugin not register test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
 			args:    initArgs{vcJob: tJob},
 			wantErr: true,
@@ -688,8 +688,8 @@ func TestSchedulerJobInit(t *testing.T) {
 				SchedulerJobAttr: tt.fields.SchedulerJobAttr,
 				policyHandler:    tt.fields.handler,
 			}
-			if err := sJob.Init(tt.args.vcJob, tt.args.sHandle); (err != nil) != tt.wantErr {
-				t.Errorf("Init() error = %v, wantErr %v", err, tt.wantErr)
+			if err := sJob.init(tt.args.vcJob, tt.args.sHandle); (err != nil) != tt.wantErr {
+				t.Errorf("init() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -818,20 +818,20 @@ func TestGetTaskLabels(t *testing.T) {
 		want map[string]string
 	}{
 		{
-			name: "01-GetTaskLabels return nil when task is nil",
+			name: "01-getTaskLabels return nil when task is nil",
 			task: nil,
 			want: nil,
 		},
 		{
-			name: "02-GetTaskLabels return labels when task labels not nil",
+			name: "02-getTaskLabels return labels when task labels not nil",
 			task: &api.TaskInfo{Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"foo": "bar"}}}},
 			want: map[string]string{"foo": "bar"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetTaskLabels(tt.task); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetTaskLabels() = %v, want %v", got, tt.want)
+			if got := getTaskLabels(tt.task); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getTaskLabels() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -935,8 +935,8 @@ func buildValidJobFnTestCases() []validJobFnTest {
 func TestValidJobFn(t *testing.T) {
 	for _, tt := range buildValidJobFnTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			if result := tt.sJob.ValidJobFn(); result != nil && !reflect.DeepEqual(result.Pass, tt.want) {
-				t.Errorf("ValidJobFn() = %v, want %v", result.Pass, tt.want)
+			if result := tt.sJob.validJobFn(); result != nil && !reflect.DeepEqual(result.Pass, tt.want) {
+				t.Errorf("validJobFn() = %v, want %v", result.Pass, tt.want)
 			}
 		})
 	}
