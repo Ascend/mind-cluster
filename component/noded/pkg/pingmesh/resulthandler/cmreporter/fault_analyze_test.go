@@ -85,7 +85,7 @@ func TestFaultReporter_HandlePingMeshInfo01(t *testing.T) {
 				Name:      "fake-name",
 			},
 			Data: map[string]string{
-				"publicFault": mockFault([]string{"1", "2"}),
+				faultConfigmapKey: mockFault([]string{"1", "2"}),
 			},
 		}
 		fakeClient.PrependReactor("get", "configmaps", func(action clientgotest.Action) (handled bool, ret runtime.Object, err error) {

@@ -46,7 +46,7 @@ const (
 	faultAssertionOccur   = "occur"
 	publicFaultVersion    = "1.0"
 	faultResource         = "pingmesh"
-	faultConfigmapKey     = "publicFault"
+	faultConfigmapKey     = "PublicFault"
 	faultCode             = "220001001"
 )
 
@@ -194,7 +194,7 @@ func checkFaultCard(infos map[uint]*common.HccspingMeshInfo) state {
 
 func (f *faultReporter) checkFault(last *api.PubFaultInfo, states map[string]state) (*api.PubFaultInfo, bool) {
 	hwlog.RunLog.Debugf("checkFault, last: %v, cur states: %v", last, states)
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 	newFault := &api.PubFaultInfo{
 		Version:   publicFaultVersion,
 		Id:        string(uuid.NewUUID()),
