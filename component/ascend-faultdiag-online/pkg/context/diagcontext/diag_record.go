@@ -63,7 +63,7 @@ func (store *DiagRecordStore) UpdateRecord(diagItem *DiagItem, diagResList []*Me
 	}
 	if len(recordItem.DiagRecords)+len(abnormalRes) > maXDiagItemRecordsSize {
 		overflowSize := len(recordItem.DiagRecords) + len(abnormalRes) - maXDiagItemRecordsSize
-		recordItem.DiagRecords = recordItem.DiagRecords[overflowSize:maXDiagItemRecordsSize]
+		recordItem.DiagRecords = recordItem.DiagRecords[overflowSize:len(recordItem.DiagRecords)]
 	}
-	recordItem.DiagRecords = append(recordItem.DiagRecords, diagResList...)
+	recordItem.DiagRecords = append(recordItem.DiagRecords, abnormalRes...)
 }

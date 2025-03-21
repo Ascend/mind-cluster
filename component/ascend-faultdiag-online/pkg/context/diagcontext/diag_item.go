@@ -34,10 +34,10 @@ type MetricThreshold struct {
 
 // DiagRule 是一个诊断规则的结构体
 type DiagRule struct {
-	QueryFunc   MetricPoolQueryFunc //查找规则
+	QueryFunc   MetricPoolQueryFunc // 查找规则
 	DiagFunc    DiagFunc            // 诊断函数
 	Thresholds  []*MetricThreshold  // 阈值列表
-	Description string              //描述
+	Description string              // 描述
 }
 
 // Diag 方法用于判断给定的指标值是否匹配诊断规则
@@ -53,14 +53,14 @@ type MetricDiagRes struct {
 	Threshold   interface{} // 阈值
 	Time        time.Time   // 时间戳
 	Unit        string      // 单位
-	IsAbnormal  bool        //是否异常
+	IsAbnormal  bool        // 是否异常
 	Description string      // 诊断规则描述
 }
 
 // CompareRes 比较结果
 type CompareRes struct {
-	IsAbnormal  bool   //是否异常
-	Description string //描述
+	IsAbnormal  bool   // 是否异常
+	Description string // 描述
 }
 
 // DiagItem 结构体用于表示一个诊断项
