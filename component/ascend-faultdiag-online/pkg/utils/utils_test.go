@@ -17,7 +17,10 @@ limitations under the License.
 // Package utils provides some DTs
 package utils
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestToFloat64(t *testing.T) {
 	type testCase struct {
@@ -93,4 +96,40 @@ func TestToString(t *testing.T) {
 			t.Errorf("ToString(%v) = %v, expected %v", tc.origin, got, tc.expected)
 		}
 	}
+}
+
+func TestCopyInstance(t *testing.T) {
+	type testCase struct {
+		origin   any
+		expected string
+	}
+	// src为nil
+	var valueNil interface{}
+	instanceNil, errNil := CopyInstance(valueNil)
+	assert.Error(t, errNil)
+	assert.Equal(t, errNil.Error(), "src cannot be nil")
+	assert.Nil(t, instanceNil)
+
+	// src不是指针对象
+	testCases := testCase{
+		origin:   "name",
+		expected: "123",
+	}
+	instance, err := CopyInstance(testCases)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "copy instance src is not ptr")
+	assert.Nil(t, instance)
+
+	// src是指针对象，但为空
+	var testCasesOne *testCase
+	instanceOne, errOne := CopyInstance(testCasesOne)
+	assert.Error(t, errOne)
+	assert.Equal(t, errOne.Error(), "src ptr cannot be nil")
+	assert.Nil(t, instanceOne)
+
+	// 正常复制实例
+	testCasesTwo := &testCases
+	instanceTwo, notErr := CopyInstance(testCasesTwo)
+	assert.Nil(t, notErr)
+	assert.Equal(t, instanceTwo, testCasesTwo)
 }

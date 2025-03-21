@@ -28,6 +28,7 @@ import (
 	"ascend-faultdiag-online/pkg/context/contextdata"
 	"ascend-faultdiag-online/pkg/context/diagcontext"
 	"ascend-faultdiag-online/pkg/service/request"
+	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
@@ -112,7 +113,11 @@ func BuildApiFunc(param *ApiFuncBuildParam) (ApiFunc, error) {
 	}
 	args := make([]reflect.Value, 0, targetFuncParamSize)
 	return func(fdCtxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext, reqCtx *request.Context) error {
-		err := json.Unmarshal([]byte(reqCtx.ReqJson), param.ReqModel)
+		newInstance, err := utils.CopyInstance(param.ReqModel)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal([]byte(reqCtx.ReqJson), newInstance)
 		if err != nil {
 			return err
 		}
