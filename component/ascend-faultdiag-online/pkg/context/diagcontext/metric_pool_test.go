@@ -51,9 +51,9 @@ var (
 		Domain: domain,
 		Name:   "metric_name",
 	}
-	// 1、指标group（指标域和指标名 + 指标项和时间）
+	// 1、指标group（指标域和指标名 + 指标值和时间）
 	itemGroup = NewMetricPoolItemGroup(metric)
-	// 具体的指标项（指标项和时间）
+	// 具体的指标项（指标值和时间）
 	itemFirst = &Item{
 		Value:     "item_value_first",
 		Timestamp: time.Now(),
@@ -82,10 +82,10 @@ func TestAdd(t *testing.T) {
 		}
 		itemGroup.Add(itemTemp)
 	}
-	assert.True(t, len(itemGroup.Items) == maxMetricRecordSize)
+	assert.Equal(t, len(itemGroup.Items), maxMetricRecordSize)
 
 	itemGroup.Add(itemLast)
-	assert.True(t, len(itemGroup.Items) == maxMetricRecordSize)
+	assert.Equal(t, len(itemGroup.Items), maxMetricRecordSize)
 	if slices.Contains(itemGroup.Items, itemFirst) {
 		assert.Fail(t, "如果超过最大记录数，则移除最旧的一个")
 	}
@@ -128,7 +128,7 @@ func TestAddMetric(t *testing.T) {
 
 	group, exit := metricPool.metricMap[key]
 	assert.True(t, exit, "添加后，指标名称到指标项的映射中含有该指标group")
-	assert.True(t, group.Items[0].Value == itemValue)
+	assert.Equal(t, group.Items[0].Value, itemValue)
 	// todo验证addToMetricTree
 }
 
@@ -142,7 +142,7 @@ func TestGetMetricByMetricKey(t *testing.T) {
 	key := metric.GetMetricKey()
 	group, exit := metricPool.metricMap[key]
 	assert.True(t, exit, "添加后，精确查找到指标项")
-	assert.True(t, groups[0] == group)
+	assert.Equal(t, groups[0], group)
 }
 
 func TestGetDomainMetrics(t *testing.T) {
@@ -155,5 +155,5 @@ func TestGetDomainMetrics(t *testing.T) {
 	key := domainKey + constants.TypeSeparator + metric.Name
 	group, exit := metricPool.metricMap[key]
 	assert.True(t, exit, "添加后，根据指标域精确查找到数据")
-	assert.True(t, results[0] == group)
+	assert.Equal(t, results[0], group)
 }
