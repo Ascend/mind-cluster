@@ -18,10 +18,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
+	mindxdlutils "ascend-operator/pkg/utils"
 )
 
 const (
@@ -41,8 +43,9 @@ type BaseGenerator struct {
 	fileStatus     utils.RankTableStatus
 	rtMu           sync.Mutex
 
-	servers    *sync.Map
-	rankTabler generator.RankTableGenerator
+	servers       *sync.Map
+	rankTabler    generator.RankTableGenerator
+	isMindIEEPJob bool
 
 	Status      utils.RankTableStatus `json:"status"`
 	ServerList  []*Server             `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
@@ -54,15 +57,16 @@ type BaseGenerator struct {
 func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.RankTableGenerator) *BaseGenerator {
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
-		dir:        rankTableDir,
-		path:       path.Join(rankTableDir, rankTableFile),
-		cmStatus:   utils.InitialRTStatus,
-		fileStatus: utils.InitialRTStatus,
-		servers:    &sync.Map{},
-		rankTabler: r,
-		Status:     utils.InitialRTStatus,
-		ServerList: []*Server{},
-		Version:    version,
+		dir:           rankTableDir,
+		path:          path.Join(rankTableDir, rankTableFile),
+		cmStatus:      utils.InitialRTStatus,
+		fileStatus:    utils.InitialRTStatus,
+		servers:       &sync.Map{},
+		rankTabler:    r,
+		Status:        utils.InitialRTStatus,
+		ServerList:    []*Server{},
+		Version:       version,
+		isMindIEEPJob: mindxdlutils.IsMindIEEPJob(job),
 	}
 }
 
@@ -232,6 +236,10 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 		ServerID:    instance.ServerID,
 		ContainerIP: pod.Status.PodIP,
 		DeviceList:  make([]*Device, 0),
+	}
+	if r.isMindIEEPJob {
+		hwlog.RunLog.Debugf("pod(%s/%s) belong mindIEEP job: %v", pod.Namespace, pod.Name)
+		server.Hardware = pod.Annotations[api.PodUsedHardwareTypeKey]
 	}
 	rankFactor := len(instance.Devices)
 

@@ -9,7 +9,8 @@ package common
 
 // Server to hccl
 type Server struct {
-	DeviceList  []*Device `json:"device"`    // device list in each server
+	DeviceList  []*Device `json:"device"` // device list in each server
+	Hardware    string    `json:"hardware_type,omitempty"`
 	ServerID    string    `json:"server_id"` // server id, represented by ip address
 	ContainerIP string    `json:"container_ip,omitempty"`
 }

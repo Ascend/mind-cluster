@@ -118,19 +118,6 @@ func TestNewPodInfo01(t *testing.T) {
 			_, err := rc.newPodInfo(job, rtype, spec, framework)
 			convey.So(err, convey.ShouldResemble, errors.New("getMngSvcIpAndPort failed"))
 		})
-		patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getMngSvcIpAndPort",
-			func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob, _ string, _ commonv1.ReplicaType) (string, string, error) {
-				return "127.0.0.1", "2222", nil
-			})
-		defer patch.Reset()
-		convey.Convey("02-getNpuReqInfoPerPod failed should return err", func() {
-			patch1 := gomonkey.ApplyFunc(getNpuReqInfoPerPod, func(job *mindxdlv1.AscendJob) (string, int) {
-				return "", 0
-			})
-			defer patch1.Reset()
-			_, err := rc.newPodInfo(job, rtype, spec, framework)
-			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%s/%s> not req npu", job.Namespace, job.Name))
-		})
 	})
 }
 
@@ -150,12 +137,6 @@ func TestNewPodInfo02(t *testing.T) {
 			return "", 1
 		})
 		defer patch1.Reset()
-		convey.Convey("03-getTotalNpuReplicas failed should return err", func() {
-			patch2 := gomonkey.ApplyFunc(getTotalNpuReplicas, func(job *mindxdlv1.AscendJob) int { return 0 })
-			defer patch2.Reset()
-			_, err := rc.newPodInfo(job, rtype, spec, framework)
-			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%s/%s> npu pod is 0", job.Namespace, job.Name))
-		})
 		convey.Convey("04-get all info success should return pod info", func() {
 			job.Spec.ReplicaSpecs = make(map[commonv1.ReplicaType]*commonv1.ReplicaSpec)
 			spec.Replicas = newReplicas(1)
@@ -819,12 +800,12 @@ func TestSetEnv(t *testing.T) {
 			frame: mindxdlv1.MindSporeFrameworkName,
 			job:   job,
 			rtype: mindxdlv1.ReplicaTypeWorker,
+			ctReq: 1,
 		}
 		convey.Convey("01-job with frame of mindspore and 1 replicas need not set env", func() {
 			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				mindxdlv1.ReplicaTypeWorker: {},
 			}
-
 			err := rc.setEnv(pi, podTemplate)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -833,7 +814,11 @@ func TestSetEnv(t *testing.T) {
 			err := rc.setEnv(pi, podTemplate)
 			convey.So(err, convey.ShouldResemble, fmt.Errorf("frameworke<%s> is not support", pi.frame))
 		})
-
+		convey.Convey("03-pod without requiring npu should return nil", func() {
+			pi.ctReq = 0
+			err := rc.setEnv(pi, podTemplate)
+			convey.So(err, convey.ShouldBeNil)
+		})
 	})
 }
 

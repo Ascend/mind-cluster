@@ -22,9 +22,11 @@ import (
 )
 
 const (
-	fakeHostNetwork = "false"
-	fakeTaskID      = "123456"
-	msRoleIndex     = 6
+	fakeHostNetwork     = "false"
+	fakeTaskID          = "123456"
+	fakeJobIdLabelValue = "jobIdLabelValue"
+	fakeAppLabelValue   = "appLabelValue"
+	msRoleIndex         = 6
 
 	ascend910      = "huawei.com/Ascend910"
 	ascend910vir2c = "huawei.com/Ascend910-2c"
@@ -52,6 +54,57 @@ func TestIsVirtualResourceReq(t *testing.T) {
 	})
 }
 
+func fakeExpectEnvsForSetInferEnv01() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{Name: taskIDEnvKey, Value: fakeJobIdLabelValue},
+		{Name: appTypeEnvKey, Value: fakeAppLabelValue},
+		{Name: mindxServerIPEnv, Value: ""},
+	}
+}
+
+// TestSetInferEnv test setInferEnv
+func TestSetInferEnv(t *testing.T) {
+	convey.Convey("setInferEnv", t, func() {
+		ei := newCommonPodInfo()
+		podTemp := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+			Containers: make([]corev1.Container, 1),
+		}}
+		rc := &ASJobReconciler{}
+		convey.Convey("01-pod has no default container, will do nothing", func() {
+			rc.setInferEnv(ei, podTemp)
+			convey.ShouldBeNil(podTemp.Spec.Containers[0].Env)
+		})
+		podTemp.Spec.Containers[0] = corev1.Container{
+			Name: mindxdlv1.DefaultContainerName,
+		}
+		convey.Convey("02-rType is worker, scheduler host equal ei.ip", func() {
+			ei.job.SetLabels(map[string]string{
+				mindxdlv1.JodIdLabelKey: fakeJobIdLabelValue,
+				mindxdlv1.AppLabelKey:   fakeAppLabelValue,
+			})
+			rc.setInferEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, fakeExpectEnvsForSetInferEnv01())
+		})
+	})
+}
+
+func fakeExpectEnvsForSetCommonEnv02() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{Name: taskIDEnvKey, Value: fakeTaskID},
+		{Name: mindxServerIPEnv, Value: ""},
+		{Name: hostNetwork, Value: fakeHostNetwork},
+		{Name: hcclSuperPodLogicId, Value: "0"}}
+}
+
+func fakeExpectEnvsForSetCommonEnv03() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		fakeRefEnv(ascendVisibleDevicesEnv, ascendRealDownwardAPI),
+		{Name: taskIDEnvKey, Value: fakeTaskID},
+		{Name: mindxServerIPEnv, Value: ""},
+		{Name: hostNetwork, Value: fakeHostNetwork},
+		{Name: hcclSuperPodLogicId, Value: "0"}}
+}
+
 // TestSetCommonEnv test setCommonEnv
 func TestSetCommonEnv(t *testing.T) {
 	convey.Convey("test setCommonEnv", t, func() {
@@ -74,11 +127,7 @@ func TestSetCommonEnv(t *testing.T) {
 		}
 		convey.Convey("02-pod request virtual resource, "+
 			"no need set ascendVisibleDevicesEnv", func() {
-			expectEnvs := []corev1.EnvVar{
-				{Name: taskIDEnvKey, Value: fakeTaskID},
-				{Name: mindxServerIPEnv, Value: ""},
-				{Name: hostNetwork, Value: fakeHostNetwork},
-				{Name: hcclSuperPodLogicId, Value: "0"}}
+			expectEnvs := fakeExpectEnvsForSetCommonEnv02()
 			rc.setCommonEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
@@ -87,12 +136,7 @@ func TestSetCommonEnv(t *testing.T) {
 			podTemp.Spec.Containers[0].Resources.Requests = corev1.ResourceList{
 				ascend910: resource.MustParse(chipsPerNode),
 			}
-			expectEnvs := []corev1.EnvVar{
-				fakeRefEnv(ascendVisibleDevicesEnv, ascendRealDownwardAPI),
-				{Name: taskIDEnvKey, Value: fakeTaskID},
-				{Name: mindxServerIPEnv, Value: ""},
-				{Name: hostNetwork, Value: fakeHostNetwork},
-				{Name: hcclSuperPodLogicId, Value: "0"}}
+			expectEnvs := fakeExpectEnvsForSetCommonEnv03()
 			rc.setCommonEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})

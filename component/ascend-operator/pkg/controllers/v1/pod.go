@@ -46,6 +46,7 @@ import (
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
+	mindxdlutils "ascend-operator/pkg/utils"
 )
 
 // ReconcilePods checks and updates pods for each given ReplicaSpec.
@@ -97,14 +98,8 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	}
 
 	npuName, ctReq := getNpuReqInfoPerPod(job)
-	if ctReq == 0 {
-		return nil, fmt.Errorf("job<%s/%s> not req npu", job.Namespace, job.Name)
-	}
 
 	npuReplicas := getTotalNpuReplicas(job)
-	if npuReplicas == 0 {
-		return nil, fmt.Errorf("job<%s/%s> npu pod is 0", job.Namespace, job.Name)
-	}
 
 	return &podInfo{
 		isDynamicCutJob: npuName == npuCoreName,
@@ -457,12 +452,21 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 }
 
 func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) error {
+	if mindxdlutils.IsMindIEEPJob(pi.job) {
+		hwlog.RunLog.Debugf("Set mindIEEP AscendJob<%s-%s> env", pi.job.Namespace, pi.job.Name)
+		r.setInferEnv(pi, podTemplate)
+		return nil
+	}
 	if pi.frame == mindxdlv1.MindSporeFrameworkName && len(pi.job.Spec.ReplicaSpecs) == 1 &&
 		pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		return nil
 	}
 	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)
 	r.setCommonEnv(pi, podTemplate)
+	if pi.ctReq == 0 {
+		return nil
+	}
+
 	switch pi.frame {
 	case mindxdlv1.MindSporeFrameworkName:
 		r.setMindSporeEnv(pi, podTemplate)
@@ -506,7 +510,11 @@ func (r *ASJobReconciler) GetPodSlices(pods []*corev1.Pod, replicas int) [][]*co
 	if r == nil {
 		return nil
 	}
-	podSlices := make([][]*corev1.Pod, core.CalculatePodSliceSize(pods, replicas))
+	sliceLen := core.CalculatePodSliceSize(pods, replicas)
+	if replicas == 0 {
+		sliceLen = 0
+	}
+	podSlices := make([][]*corev1.Pod, sliceLen)
 	for _, pod := range pods {
 		index, err := labels.ReplicaIndex(pod.Labels)
 		if err != nil {

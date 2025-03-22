@@ -274,6 +274,13 @@ func Get310PProductType() map[string]string {
 	}
 }
 
+// HasOnChipMemory check if card has on-chip-memory
+func HasOnChipMemory() bool {
+	return ParamOption.RealCardType == Ascend910B ||
+		ParamOption.RealCardType == Ascend910 ||
+		ParamOption.RealCardType == Ascend910A3
+}
+
 // PodDeviceInfo define device info of pod, include kubelet allocate and real allocate device
 type PodDeviceInfo struct {
 	Pod        v1.Pod

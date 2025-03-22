@@ -23,6 +23,7 @@ import (
 const (
 	logEnvPattern = "set pod<%s> env: %v"
 	taskIDEnvKey  = "MINDX_TASK_ID"
+	appTypeEnvKey = "APP_TYPE"
 )
 
 func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int) {
@@ -49,6 +50,21 @@ func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bo
 		}
 	}
 	return false
+}
+
+func (r *ASJobReconciler) setInferEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
+	for i := range podTemplate.Spec.Containers {
+		if podTemplate.Spec.Containers[i].Name != mindxdlv1.DefaultContainerName {
+			continue
+		}
+		if len(podTemplate.Spec.Containers[i].Env) == 0 {
+			podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
+		}
+		addEnvValue(podTemplate, taskIDEnvKey, pi.job.Labels[mindxdlv1.JodIdLabelKey], i)
+		addEnvValue(podTemplate, appTypeEnvKey, pi.job.Labels[mindxdlv1.AppLabelKey], i)
+		addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
+		hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
+	}
 }
 
 func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {

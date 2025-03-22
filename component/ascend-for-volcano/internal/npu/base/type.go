@@ -50,3 +50,16 @@ const (
 	nodeWeight          = 10.0
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 )
+
+const (
+	// nPUChipMemoryKey key of npu chip memory in node labels
+	nPUChipMemoryKey = "mind-cluster/npu-chip-memory"
+	// podUsedHardwareTypeKey key of pod used hardware type in pod annotation
+	podUsedHardwareTypeKey = "mind-cluster/hardware-type"
+	// hardwareType800IA2 hardware type 800I A2
+	hardwareType800IA2 = "800I-A2"
+	// serverUsageKey key of server usage in node labels
+	serverUsageKey = "server-usage"
+	// inferUsage infer value of server usage in node labels
+	inferUsage = "infer"
+)

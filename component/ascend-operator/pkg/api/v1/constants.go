@@ -46,4 +46,9 @@ const (
 
 	// DefaultRestartPolicy is default RestartPolicy for MSReplicaSpec.
 	DefaultRestartPolicy = v1.RestartPolicyNever
+
+	// JodIdLabelKey is AscendJob label key jobID
+	JodIdLabelKey = "jobID"
+	// AppLabelKey is AscendJob label key app
+	AppLabelKey = "app"
 )

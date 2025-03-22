@@ -199,17 +199,6 @@ func TestCheckReplicaSpecs01(t *testing.T) {
 	convey.Convey("01-checkReplicaSpecs", t, func() {
 		frame := mindxdlv1.MindSporeFrameworkName
 		specs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
-
-		convey.Convey("01-spec without replicas will return err", func() {
-			spec := newCommonSpec()
-			spec.Replicas = newReplicas(0)
-			specs[mindxdlv1.ReplicaTypeWorker] = spec
-			err := checkReplicaSpecs(frame, specs)
-			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("replicaType<%s> replicas is 0", mindxdlv1.ReplicaTypeWorker),
-			})
-		})
 		convey.Convey("02-spec without container will return err", func() {
 			spec := newCommonSpec()
 			spec.Replicas = newReplicas(1)
@@ -258,17 +247,6 @@ func TestCheckReplicaSpecs02(t *testing.T) {
 		ct := newCommonContainer()
 		ct.Image = "xxx"
 		ct.Name = mindxdlv1.DefaultContainerName
-		convey.Convey("05-leader with invalid replicas should return error", func() {
-			ct.Resources.Requests = corev1.ResourceList{}
-			spec.Template.Spec.Containers[0] = ct
-			specs[mindxdlv1.PytorchReplicaTypeMaster] = spec
-			err := checkReplicaSpecs(frame, specs)
-			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ContainerError",
-				message: fmt.Sprintf("replicaType<%s> req npu<%d> is invalid, it can not be 0",
-					mindxdlv1.PytorchReplicaTypeMaster, 0),
-			})
-		})
 		convey.Convey("06-pytorch  without leader replicas should return error", func() {
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
@@ -343,18 +321,6 @@ func TestValidateContainer(t *testing.T) {
 				reason: "ContainerError",
 				message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
 					mindxdlv1.DefaultContainerName, rtype),
-			})
-		})
-		convey.Convey("04-spec with ascend container should return nil", func() {
-			container = newCommonContainer()
-			container.Image = "fake-image"
-			container.Name = mindxdlv1.DefaultContainerName
-			container.Resources = corev1.ResourceRequirements{}
-			spec.Template.Spec.Containers[0] = container
-			err := validateContainer(rtype, spec)
-			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ContainerError",
-				message: fmt.Sprintf("replicaType<%s> req npu<%d> is invalid, it can not be 0", rtype, 0),
 			})
 		})
 	})

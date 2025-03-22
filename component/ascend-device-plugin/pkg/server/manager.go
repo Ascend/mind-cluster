@@ -36,6 +36,7 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
@@ -43,6 +44,8 @@ import (
 )
 
 var resourceVersion = ""
+
+const memoryRadix = 1024
 
 // HwDevManager manages huawei device devices.
 type HwDevManager struct {
@@ -190,6 +193,17 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node board info, err: %s", err.Error())
 	}
+
+	if common.HasOnChipMemory() {
+		hwlog.RunLog.Debug("get node on-chip-memory info")
+		hbmInfo, err := hdm.manager.GetDmgr().GetDeviceHbmInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
+		if err != nil {
+			hwlog.RunLog.Warnf("failed to get node on-chip-memory info, err: %s", err)
+		} else {
+			newLabelMap[api.NPUChipMemoryKey] = fmt.Sprintf("%dG", hbmInfo.MemorySize/memoryRadix)
+		}
+	}
+
 	if common.ParamOption.RealCardType == common.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
 		// only auto label 300IA2 with910B card
 		if boardInfo.BoardId == common.A300IA2BoardId {
