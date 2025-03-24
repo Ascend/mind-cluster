@@ -94,8 +94,8 @@ func sendRankTable(stream config.Config_SubscribeRankTableServer, data *config.R
 }
 
 // SaveData save data to rankTableChan
-func (c *ConfigPublisher) SaveData(jobId, data string) (saved bool) {
-	saved = true
+func (c *ConfigPublisher) SaveData(jobId, data string) bool {
+	saved := true
 	defer func() {
 		if r := recover(); r != nil {
 			saved = false
