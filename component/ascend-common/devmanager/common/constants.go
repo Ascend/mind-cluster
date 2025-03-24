@@ -31,9 +31,9 @@ var (
 	// HccsBWProfilingTime for getting hccs bandwidth
 	HccsBWProfilingTime int
 
-	// a900A3SuperPodBoardIds for A900/A9000 A3 Super Pod Board IDs
-	a900A3SuperPodBoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
-		A900A3SuperPodBin3BoardId)
+	// a3BoardIds for A3 Board IDs
+	a3BoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
+		A900A3SuperPodBin3BoardId, A800IA3BoardId)
 
 	// a900A3SuperPodMainBoardIds for A900 A3 Super Pod Main Board IDs
 	a900A3SuperPodMainBoardIds = sets.NewInt32(A900A3SuperPodMainBoardId1, A900A3SuperPodMainBoardId2)
@@ -206,11 +206,17 @@ const (
 	// A900A3SuperPodBin3BoardId board id of A900/A9000 A3 SuperPod Bin3
 	A900A3SuperPodBin3BoardId = 0xb2
 
+	// A800IA3BoardId board id of A800I A3
+	A800IA3BoardId = 0xb3
+
 	// A900A3SuperPodMainBoardId1 board id of A900 A3 SuperPod MainBoard1
 	A900A3SuperPodMainBoardId1 = 0x18
 
 	// A900A3SuperPodMainBoardId2 board id of A900 A3 SuperPod MainBoard2
 	A900A3SuperPodMainBoardId2 = 0x19
+
+	// A800IA3MainBoardId A800I A3 MainBoardId
+	A800IA3MainBoardId = 0x14
 
 	// A9000A3SuperPodMainBoardId1 board id of A9000 A3 SuperPod MainBoard1
 	A9000A3SuperPodMainBoardId1 = 0x1C

@@ -143,12 +143,16 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 	}
 	chipOne := chipList[0]
 	devType := n.Dmgr.GetDevType()
-	if devType == common.Ascend910B || common.IsA900A3SuperPod(chipOne.MainBoardId) {
-		// 910B or A900A3SuperPod begin at 1st bit
+	if devType == common.Ascend910B || common.IsA900A3SuperPod(chipOne.MainBoardId) ||
+		common.Is800IA3Chip(chipOne.MainBoardId) {
+		// A2 or A900A3 SuperPod or 800IA3 begin at 1st bit
 		c.hccsBeginIndex = num1
 	} else if common.IsA9000A3SuperPod(chipOne.MainBoardId) {
 		// A9000A3SuperPod begin at 2nd bit
 		c.hccsBeginIndex = num2
+	} else {
+		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: "hccs", ID: "0"},
+			"not support main board id:%d", chipOne.MainBoardId)
 	}
 }
 

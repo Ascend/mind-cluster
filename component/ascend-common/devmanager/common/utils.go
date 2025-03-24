@@ -522,7 +522,7 @@ func GetDevType(chipName string, boardId uint32) string {
 
 // Is910A3Chip current chip is 910A3 or not,include A900A3 and A9000A3
 func Is910A3Chip(boardId uint32) bool {
-	return a900A3SuperPodBoardIds.Has(int32(boardId))
+	return a3BoardIds.Has(int32(boardId))
 }
 
 // IsA900A3SuperPod current product is A900A3 super pod or not
@@ -533,4 +533,9 @@ func IsA900A3SuperPod(mainBoardId uint32) bool {
 // IsA9000A3SuperPod current product is A9000A3 super pod or not
 func IsA9000A3SuperPod(mainBoardId uint32) bool {
 	return a9000A3SuperPodMainBoardIds.Has(int32(mainBoardId))
+}
+
+// Is800IA3Chip current chip is 800IA3 or not
+func Is800IA3Chip(mainBoardId uint32) bool {
+	return mainBoardId == A800IA3MainBoardId
 }
