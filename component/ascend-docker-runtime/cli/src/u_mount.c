@@ -37,6 +37,7 @@ static bool CheckSrcFile(const char *src)
             if (!CheckExternalFile(src, strlen(src), maxFileSzieMb, false)) {
                 char* str = FormatLogMessage("failed to mount src: %s.", src);
                 Logger(str, LEVEL_ERROR, SCREEN_YES);
+                free(str);
                 return false;
             }
     }
