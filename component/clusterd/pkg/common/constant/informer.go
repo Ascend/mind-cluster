@@ -10,4 +10,9 @@ const (
 	AddOperator = "add"
 	// UpdateOperator informer operator
 	UpdateOperator = "update"
+
+	// SingleNodePdDeployMode PD deploy mode is single node
+	SingleNodePdDeployMode = "Single-Node-Mode"
+	// CrossNodePdDeployMode PD deploy mode is cross node
+	CrossNodePdDeployMode = "Cross-Node-Mode"
 )

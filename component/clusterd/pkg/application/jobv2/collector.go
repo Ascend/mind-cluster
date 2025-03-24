@@ -9,6 +9,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/epranktable"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 )
@@ -39,4 +40,26 @@ func PodCollector(oldPodInfo, newPodInfo *v1.Pod, operator string) {
 		return
 	}
 	podMessage(oldPodInfo, newPodInfo, operator)
+}
+
+// EpGlobalRankTableMassageCollector collector generate global rank table message
+func EpGlobalRankTableMassageCollector(oldPodInfo, newPodInfo *v1.Pod, operator string) {
+	if !checkPodIsControllerOrCoordinator(newPodInfo) {
+		return
+	}
+	epranktable.EpRankTableInformerHandler(oldPodInfo, newPodInfo, operator)
+}
+
+// checkPodIsControllerOrCoordinator check if pod is controller or coordinator
+func checkPodIsControllerOrCoordinator(obj interface{}) bool {
+	changedPod, ok := obj.(*v1.Pod)
+	if !ok {
+		hwlog.RunLog.Errorf("Cannot convert to Pod:%v", obj)
+		return false
+	}
+	appType, ok := changedPod.Labels[constant.MindIeAppTypeLabelKey]
+	if !ok {
+		return false
+	}
+	return appType == constant.ControllerAppType || appType == constant.CoordinatorAppType
 }

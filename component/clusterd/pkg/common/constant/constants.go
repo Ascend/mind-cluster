@@ -146,3 +146,39 @@ const (
 	// MaxFaultNum max detailed fault number form statistic
 	MaxFaultNum = 4500
 )
+
+const (
+	// MindIeJobIdLabelKey mindie job id label key
+	MindIeJobIdLabelKey = "jobID"
+	// MindIeAppTypeLabelKey mindie job type label key
+	MindIeAppTypeLabelKey = "app"
+
+	// ControllerAppType controller app type
+	ControllerAppType = "mindie-ms-controller"
+	// CoordinatorAppType coordinator app type
+	CoordinatorAppType = "mindie-ms-coordinator"
+	// ServerAppType server app type
+	ServerAppType = "mindie-ms-server"
+	// MetaDataName metadata name
+	MetaDataName = "metadata.name"
+	// StatusRankTableCompleted is the complete rankTable status
+	StatusRankTableCompleted = "completed"
+	// RankTableVersion is the rank table version
+	RankTableVersion = "1.0"
+	// MaxRetryTime max retry time
+	MaxRetryTime = 3
+	// QueueInitDelay queue init delay
+	QueueInitDelay = 2 * time.Second
+	// QueueMaxDelay queue max delay
+	QueueMaxDelay = 16 * time.Second
+	// GroupId0 group id 0
+	GroupId0 = "0"
+	// GroupId1 group id 1
+	GroupId1 = "1"
+	// GroupId2 group id 2
+	GroupId2 = "2"
+	// GroupIdOffset group id offset
+	GroupIdOffset = 2
+	// ServerCountGroupId0Or1 server count group id 0 or 1
+	ServerCountGroupId0Or1 = "1"
+)

@@ -134,6 +134,10 @@ type JobInfo struct {
 	MasterAddr        string
 	ResourceType      string
 	CustomJobID       string
+	// MindIeJobId is the job id of mindie acjob, unique identification of a reasoning task
+	MindIeJobId string
+	// MindIeAppType is the app type of mindie acjob, controller coordinator or server
+	MindIeAppType string
 }
 
 // RankTable rank table info

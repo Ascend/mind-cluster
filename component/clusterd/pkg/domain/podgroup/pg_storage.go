@@ -6,8 +6,9 @@ package podgroup
 import (
 	"sync"
 
-	"ascend-common/common-utils/hwlog"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (

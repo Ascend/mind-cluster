@@ -4,6 +4,7 @@
 package job
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -120,4 +121,72 @@ func GetShouldUpdateJobKey() []string {
 		return true
 	})
 	return allJobKey
+}
+
+// GetNamespaceByJobIdAndAppType get namespace by jobId and appType
+func GetNamespaceByJobIdAndAppType(jobId, appType string) (string, error) {
+	namespace := ""
+	jobSummaryMap.Range(func(_, value any) bool {
+		jobInfo, ok := value.(constant.JobInfo)
+		if !ok {
+			return true
+		}
+		if jobInfo.MindIeJobId == jobId && jobInfo.MindIeAppType == appType {
+			namespace = jobInfo.NameSpace
+			return false
+		}
+		return true
+	})
+	if namespace == "" {
+		return "", fmt.Errorf("no jobId (%s) server job", jobId)
+	}
+	return namespace, nil
+}
+
+// GetPdDeploymentMode get pd deployment mode
+func GetPdDeploymentMode(jobId, namespace, appType string) (string, error) {
+	pdDeploymentMode := constant.SingleNodePdDeployMode
+	// check if there is a server job
+	cnt := 0
+	jobSummaryMap.Range(func(_, value any) bool {
+		jobInfo, ok := value.(constant.JobInfo)
+		if !ok {
+			return true
+		}
+		if jobInfo.MindIeAppType == appType && jobInfo.MindIeJobId == jobId && jobInfo.NameSpace == namespace {
+			cnt++
+			if jobInfo.Replicas > 1 {
+				pdDeploymentMode = constant.CrossNodePdDeployMode
+				return false
+			}
+		}
+		return true
+	})
+	if cnt == 0 {
+		return "", fmt.Errorf("no server job")
+	}
+	return pdDeploymentMode, nil
+}
+
+// GetInstanceJobKey retrieve the jobKey containing jobID=jobId and app=appType in the label under nameSpace
+func GetInstanceJobKey(jobId, namespace, appType string) (string, error) {
+	jobKey := ""
+	jobSummaryMap.Range(func(key, value any) bool {
+		jobInfo, ok := value.(constant.JobInfo)
+		if !ok {
+			return true
+		}
+		if jobInfo.MindIeJobId == jobId && jobInfo.NameSpace == namespace && jobInfo.MindIeAppType == appType {
+			jobKey, ok = key.(string)
+			if !ok {
+				return true
+			}
+			return false
+		}
+		return true
+	})
+	if jobKey == "" {
+		return "", fmt.Errorf("no %s job found", appType)
+	}
+	return jobKey, nil
 }

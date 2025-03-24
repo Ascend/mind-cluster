@@ -29,14 +29,15 @@ import (
 )
 
 var (
-	cmDeviceFuncs   = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
-	cmNodeFuncs     = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
-	cmSwitchFuncs   = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
-	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
-	podGroupFuncs   = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
-	podFuncs        = map[string][]func(*v1.Pod, *v1.Pod, string){}
-	nodeFuncs       = map[string][]func(*v1.Node, *v1.Node, string){}
-	informerCh      = make(chan struct{})
+	cmDeviceFuncs    = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
+	cmNodeFuncs      = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
+	cmSwitchFuncs    = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	cmPubFaultFuncs  = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
+	podGroupFuncs    = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
+	podFuncs         = map[string][]func(*v1.Pod, *v1.Pod, string){}
+	nodeFuncs        = map[string][]func(*v1.Node, *v1.Node, string){}
+	cmRankTableFuncs = map[string][]func(interface{}, interface{}, string){}
+	informerCh       = make(chan struct{})
 )
 
 // JobService a interface with DeleteJob method
@@ -63,6 +64,7 @@ func CleanFuncs() {
 	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs = map[string][]func(*v1.Pod, *v1.Pod, string){}
 	nodeFuncs = map[string][]func(*v1.Node, *v1.Node, string){}
+	cmRankTableFuncs = map[string][]func(interface{}, interface{}, string){}
 }
 
 // AddPodGroupFunc add podGroup func
@@ -126,6 +128,15 @@ func AddCmPubFaultFunc(business string, func1 ...func(*api.PubFaultInfo, *api.Pu
 	}
 
 	cmPubFaultFuncs[business] = append(cmPubFaultFuncs[business], func1...)
+}
+
+// AddCmRankTableFunc add rank table cm func, map by business
+func AddCmRankTableFunc(business string, func1 ...func(interface{}, interface{}, string)) {
+	if _, ok := cmRankTableFuncs[business]; !ok {
+		cmRankTableFuncs[business] = []func(interface{}, interface{}, string){}
+	}
+
+	cmRankTableFuncs[business] = append(cmRankTableFuncs[business], func1...)
 }
 
 // GetNodeFromIndexer get node from informer indexer
@@ -274,13 +285,19 @@ func podHandler(oldObj interface{}, newObj interface{}, operator string) {
 	}
 }
 
+var cmInformer cache.SharedIndexInformer
+
+func GetCmInformer() cache.SharedIndexInformer {
+	return cmInformer
+}
+
 // InitCMInformer init configmap informer
 func InitCMInformer() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = constant.CmConsumerCIM + "=" + constant.CmConsumerValue
 		}))
-	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
+	cmInformer = informerFactory.Core().V1().ConfigMaps().Informer()
 
 	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: checkConfigMapIsDeviceInfo,
@@ -316,7 +333,37 @@ func InitCMInformer() {
 		},
 	})
 
+	AddRankTableEventHandler(&cmInformer)
+
 	informerFactory.Start(informerCh)
+}
+
+// AddRankTableEventHandler add rank table event handler for cmInformer
+func AddRankTableEventHandler(cmInformer *cache.SharedIndexInformer) {
+	(*cmInformer).AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: checkConfigMapIsEpRankTableInfo,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				cmRankTableHandler(nil, obj, constant.AddOperator)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if !reflect.DeepEqual(oldObj, newObj) {
+					cmRankTableHandler(oldObj, newObj, constant.UpdateOperator)
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				cmRankTableHandler(nil, obj, constant.DeleteOperator)
+			},
+		},
+	})
+}
+
+func cmRankTableHandler(oldObj interface{}, newObj interface{}, operator string) {
+	for _, cmFuncs := range cmRankTableFuncs {
+		for _, cmFunc := range cmFuncs {
+			cmFunc(oldObj, newObj, operator)
+		}
+	}
 }
 
 func cmDeviceHandler(oldObj interface{}, newObj interface{}, operator string) {
@@ -434,6 +481,16 @@ func checkConfigMapIsDeviceInfo(obj interface{}) bool {
 // checkConfigMapIsNodeInfo check if configmap is node info
 func checkConfigMapIsNodeInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.NodeInfoPrefix)
+}
+
+// checkConfigMapIsEpRankTableInfo check if configmap is ep ranktable info
+func checkConfigMapIsEpRankTableInfo(obj interface{}) bool {
+	cm, ok := obj.(*v1.ConfigMap)
+	if !ok {
+		hwlog.RunLog.Errorf("Cannot convert to ConfigMap:%v", obj)
+		return false
+	}
+	return strings.HasPrefix(cm.Name, constant.MindIeRanktablePrefix)
 }
 
 func checkConfigMapIsSwitchInfo(obj interface{}) bool {

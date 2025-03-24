@@ -24,6 +24,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/epranktable"
 	"clusterd/pkg/interface/grpc/config"
 )
 
@@ -33,9 +34,10 @@ const (
 
 // BusinessConfigServer business config server
 type BusinessConfigServer struct {
-	serviceCtx      context.Context
-	configPublisher map[string]*ConfigPublisher
-	lock            sync.RWMutex
+	serviceCtx       context.Context
+	configPublisher  map[string]*ConfigPublisher
+	rankTableManager *epranktable.RankTableManager
+	lock             sync.RWMutex
 	config.UnimplementedConfigServer
 }
 
@@ -46,6 +48,8 @@ func NewBusinessConfigServer(ctx context.Context) *BusinessConfigServer {
 		configPublisher: make(map[string]*ConfigPublisher),
 		lock:            sync.RWMutex{},
 	}
+	server.rankTableManager = epranktable.GetEpGlobalRankTableManager()
+	server.rankTableManager.HandlerRankTable = server.rankTableChange
 	return server
 }
 
@@ -90,6 +94,10 @@ func (c *BusinessConfigServer) SubscribeRankTable(request *config.ClientInfo,
 		hwlog.RunLog.Warnf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 		return fmt.Errorf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 	}
+	epranktable.GetRankTableMessageQueue().AddRateLimited(&epranktable.GenerateGlobalRankTableMessage{
+		JobId:     request.JobId,
+		Namespace: "",
+	})
 	publisher.listenRankTableChange(stream)
 	c.deletePublisher(request.JobId)
 	return nil

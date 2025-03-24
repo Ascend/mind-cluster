@@ -18,4 +18,6 @@ const (
 	JobNodeHealthyType = "node"
 	// JobDeviceHealthyType is device healthy type
 	JobDeviceHealthyType = "device"
+	// EpRankTable business for ep rank table
+	EpRankTable = "epRankTable"
 )

@@ -16,6 +16,8 @@ const (
 	NodeInfoPrefix = "mindx-dl-nodeinfo-"
 	// SwitchInfoPrefix is prefix of switch info name, which is reported by device-plugin
 	SwitchInfoPrefix = "mindx-dl-switchinfo-"
+	// MindIeRanktablePrefix is prefix of mindie ranktable cm name
+	MindIeRanktablePrefix = "rings-config-"
 	// StatisticFaultCMName statistic fault configmap name
 	StatisticFaultCMName = "statistic-fault-info"
 	// DevInfoCMKey mindx-dl-deviceinfo configmap key

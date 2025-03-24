@@ -18,7 +18,7 @@ import (
 const (
 	configmapPrefix   = "job-summary"
 	configmapLabel    = "outside-job-info"
-	hcclJson          = "hccl.json"
+	HcclJson          = "hccl.json"
 	configmapOperator = "operator"
 	operatorAdd       = "add"
 	operatorDelete    = "delete"
@@ -46,7 +46,7 @@ func initCM(jobInfo constant.JobInfo) bool {
 	data[jobStatus] = jobInfo.Status
 	data[cmIndex] = "0"
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
-	data[hcclJson] = defaultHcclJson
+	data[HcclJson] = defaultHcclJson
 	data[configmapOperator] = operatorAdd
 	data[addTime] = strconv.Itoa(int(jobInfo.AddTime))
 	cmName := fmt.Sprintf("%s-%s", configmapPrefix, jobInfo.Name)
@@ -71,7 +71,7 @@ func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	data[configmapOperator] = operatorAdd
 	data[cmIndex] = strconv.Itoa(index)
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
-	data[hcclJson] = hccl
+	data[HcclJson] = hccl
 	// deleteTime should be changed to updateTime next version
 	if jobInfo.Status == StatusJobFail || jobInfo.Status == StatusJobCompleted {
 		data[deleteTime] = strconv.Itoa(int(time.Now().Unix()))
@@ -100,7 +100,7 @@ func preDeleteCM(jobInfo constant.JobInfo, hccls []string) bool {
 	data[frameWorkKey] = jobInfo.Framework
 	data[jobStatus] = jobInfo.Status
 	data[jobId] = jobInfo.Key
-	data[hcclJson] = defaultHcclJson
+	data[HcclJson] = defaultHcclJson
 	data[configmapOperator] = operatorDelete
 	data[deleteTime] = strconv.Itoa(int(jobInfo.DeleteTime))
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
@@ -115,7 +115,7 @@ func preDeleteCM(jobInfo constant.JobInfo, hccls []string) bool {
 		}
 		data[cmIndex] = fmt.Sprintf("%d", i)
 		if i < len(hccls) {
-			data[hcclJson] = hccls[i]
+			data[HcclJson] = hccls[i]
 		}
 		err := kube.CreateOrUpdateConfigMap(cmName, jobInfo.NameSpace, data, getDefaultLabel())
 		if err != nil {

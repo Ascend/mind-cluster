@@ -139,6 +139,9 @@ func ReadableMsTime(msTime int64) string {
 
 // DeepCopy for object using gob
 func DeepCopy(dst, src interface{}) error {
+	if src == nil {
+		return nil
+	}
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
 		return err

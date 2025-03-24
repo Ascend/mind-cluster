@@ -225,11 +225,23 @@ func GetPodDeviceNumByJobId(jobKey string) int {
 	podManager.podMapMutex.RLock()
 	defer podManager.podMapMutex.RUnlock()
 	podJobMap := podManager.podJobMap[jobKey]
+
+	// is inference task?
+	var isInference bool
+
 	for _, pod := range podJobMap {
 		podDevice, _ := getPodDevice(pod)
+		if pod.Labels != nil && pod.Labels[constant.MindIeJobIdLabelKey] != "" &&
+			pod.Labels[constant.MindIeAppTypeLabelKey] != "" {
+			isInference = true
+		}
 		if len(podDevice.Devices) != 0 {
 			return len(podDevice.Devices)
 		}
+	}
+	// inference task, return 0
+	if isInference || len(podJobMap) == 0 {
+		return 0
 	}
 	hwlog.RunLog.Warnf("failed get pod device num, job key: %s, len(podJobMap): %d", jobKey, len(podJobMap))
 	return 0

@@ -4,8 +4,9 @@
 package logs
 
 import (
-	"ascend-common/common-utils/hwlog"
 	"context"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (

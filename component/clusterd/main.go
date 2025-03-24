@@ -27,6 +27,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/epranktable"
 	sv "clusterd/pkg/interface/grpc"
 	"clusterd/pkg/interface/kube"
 )
@@ -61,6 +62,7 @@ func startInformer(ctx context.Context) {
 	// starting informer requires after adding processing functions
 	addResourceFunc()
 	addJobFunc()
+	addEpRankTableFunc()
 	kube.AddNodeFunc(constant.PingMesh, pingmesh.NodeCollector)
 	kube.InitCMInformer()
 	kube.InitPubFaultCMInformer()
@@ -69,6 +71,9 @@ func startInformer(ctx context.Context) {
 	go pingmesh.TickerCheckSuperPodDevice(ctx)
 	// specific functions requires after informer
 	addFuncAfterInformer()
+
+	// generate global ranktable message handler
+	go epranktable.GetEpGlobalRankTableManager().ConsumerForQueue()
 
 	go jobv2.Handler(ctx)
 	go jobv2.Checker(ctx)
@@ -84,6 +89,11 @@ func dealPubFault(ctx context.Context) {
 func addJobFunc() {
 	kube.AddPodGroupFunc(constant.Job, jobv2.PodGroupCollector)
 	kube.AddPodFunc(constant.Job, jobv2.PodCollector)
+}
+
+func addEpRankTableFunc() {
+	kube.AddPodFunc(constant.EpRankTable, jobv2.EpGlobalRankTableMassageCollector)
+	kube.AddCmRankTableFunc(constant.EpRankTable, epranktable.EpRankTableInformerHandler)
 }
 
 func addResourceFunc() {
