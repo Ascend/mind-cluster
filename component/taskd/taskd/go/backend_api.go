@@ -76,14 +76,14 @@ func StartMonitorClient() C.int {
 		}
 	}()
 	hwlog.RunLog.Infof("rank %d will start its client", profiling.GlobalRankId)
+	if err := profiling.MsptiActivityRegisterCallbacksWrapper(); err != nil {
+		return C.int(1)
+	}
 	go profiling.ManageSaveProfiling(ctx)
 	go profiling.ManageDomainEnableStatus(ctx)
 	go profiling.ManageProfilingDiskUsage(constant.ProfilingBaseDir, ctx)
 	profiling.ProfilingTaskQueue = profiling.NewTaskQueue(ctx)
 
-	if err := profiling.MsptiActivityRegisterCallbacksWrapper(); err != nil {
-		return C.int(1)
-	}
 	return C.int(0)
 }
 

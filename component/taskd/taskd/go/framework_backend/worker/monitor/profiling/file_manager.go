@@ -36,6 +36,9 @@ import (
 // GlobalRankId is the global rank id pass in by python api
 var GlobalRankId int
 
+// SavePathTimeStamp the timestamp of current rank in case of env MINDX_TASK_ID not exist
+var SavePathTimeStamp int
+
 // diskUsageUpperlimitMB is the  ProfilingBaseDir total upper limit containing all  jobs
 var diskUsageUpperLimitMB = constant.DefaultDiskUpperLimitInMB
 
@@ -47,7 +50,7 @@ func SetDiskUsageUpperLimitMB(upperLimitInMB int) {
 // SaveProfilingDataIntoFile save current profiling data to file
 func SaveProfilingDataIntoFile(rank int) error {
 	if len(ProfilingRecordsMark) == 0 && len(ProfilingRecordsApi) == 0 && len(ProfilingRecordsKernel) == 0 {
-		hwlog.RunLog.Debugf("ProfilingRecords is all empty, will do nothing")
+		hwlog.RunLog.Debug("Profiling Records is all empty, will do nothing")
 		return nil
 	}
 
@@ -195,7 +198,12 @@ func getCurrentSavePath(rank int) (string, error) {
 	uid := os.Getenv(constant.TaskUidKey)
 	// fault tolerance，if pg id not found, use default_task_id
 	if uid == "" {
-		uid = "default_task_id_" + strconv.Itoa(int(time.Now().Unix()))
+		if SavePathTimeStamp == 0 {
+			SavePathTimeStamp = int(time.Now().Unix())
+			uid = "default_task_id_" + strconv.Itoa(SavePathTimeStamp)
+		} else {
+			uid = "default_task_id_" + strconv.Itoa(SavePathTimeStamp)
+		}
 	}
 	rankPath := path.Join(constant.ProfilingBaseDir, uid, strconv.Itoa(rank))
 	if len(rankPath) > constant.PathLengthLimit {
@@ -292,32 +300,15 @@ func ManageSaveProfiling(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			hwlog.RunLog.Warnf("manage profiling disk usage received exit signal")
+			hwlog.RunLog.Warn("manage profiling disk usage received exit signal")
 			return
 		default:
-			if !needSave() {
-				hwlog.RunLog.Debugf("rank:%v, no need to save profiling to disk", GlobalRankId)
-				time.Sleep(constant.CheckProfilingCacheInterval)
-				continue
-			}
 			if err := SaveProfilingDataIntoFile(GlobalRankId); err != nil {
 				hwlog.RunLog.Errorf("failed to save profiling, error: %v", err)
 			}
 			time.Sleep(constant.CheckProfilingCacheInterval)
 		}
 	}
-}
-
-func needSave() bool {
-	if len(ProfilingRecordsMark)+len(ProfilingRecordsApi)+len(ProfilingRecordsKernel) > constant.MaxCacheRecords {
-		return true
-	} else {
-		if err := FlushAllActivity(); err != nil {
-			hwlog.RunLog.Errorf("failed to flush profiling data,err: %s", err.Error())
-			return false
-		}
-	}
-	return true
 }
 
 // ManageProfilingDiskUsage when the dir usage is more than guage, will delete the oldest file

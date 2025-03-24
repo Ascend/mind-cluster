@@ -58,8 +58,6 @@ const (
 	DefaultDiskUpperLimitInMB = 5 * 1024
 	// LeastBufferSize is the buffer size for flush file
 	LeastBufferSize = 4096
-	// MaxCacheRecords if the cache num is more than MaxCacheRecords, will flush to file
-	MaxCacheRecords = 500
 	// CheckProfilingCacheInterval every interval to check cache
 	CheckProfilingCacheInterval = 5 * time.Second
 	// DomainCheckInterval the interval between each check of domain change

@@ -329,6 +329,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 		hwlog.RunLog.Debugf("will free current buffer, the buffer address is %v", buffer)
 		// free address
 		C.free(unsafe.Pointer(buffer))
+		buffer = nil
 	}
 }
 
