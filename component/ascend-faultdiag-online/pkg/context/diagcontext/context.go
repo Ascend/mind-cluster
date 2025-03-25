@@ -28,7 +28,7 @@ type DiagContext struct {
 	MetricPool      *MetricPool            // 指标池
 	DiagItemMap     map[string]*DiagItem   // 诊断项字典
 	DiagRecordStore *DiagRecordStore       // 当前诊断结果记录
-	DomainFactory   *DomainFactory         //指标域工厂类
+	DomainFactory   *DomainFactory         // 指标域工厂类
 	tickerMap       map[string]*DiagTicker // 诊断周期任务字典
 }
 
