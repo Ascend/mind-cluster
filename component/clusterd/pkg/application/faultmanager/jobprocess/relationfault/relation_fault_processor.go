@@ -6,6 +6,7 @@ package relationfault
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -21,20 +22,24 @@ import (
 
 // RelationProcessor network relation fault process
 var RelationProcessor *relationFaultProcessor
+var loadConfigTag = sync.Once{}
 
 func init() {
 	RelationProcessor = &relationFaultProcessor{}
+}
+
+func loadConfig() {
 	if fileBytes := LoadConfigFromFile(constant.FaultCustomizationPath); fileBytes != nil {
 		initRelationFaultStrategies(fileBytes)
 		initRelationFaultCodesMap()
 	} else {
-		fmt.Printf("load config from file %s failed\n", constant.FaultCustomizationPath)
+		hwlog.RunLog.Errorf("load config from file %s failed", constant.FaultCustomizationPath)
 	}
 	if fileBytes := LoadConfigFromFile(constant.FaultDurationPath); fileBytes != nil {
 		initFaultDuration(fileBytes)
 		initFaultCodeTimeOutMap()
 	} else {
-		fmt.Printf("load config from file %s failed\n", constant.FaultDurationPath)
+		hwlog.RunLog.Errorf("load config from file %s failed", constant.FaultDurationPath)
 	}
 }
 
@@ -47,6 +52,9 @@ type relationFaultProcessor struct {
 
 // Process job network relation fault info
 func (processor *relationFaultProcessor) Process(info any) any {
+	loadConfigTag.Do(func() {
+		loadConfig()
+	})
 	content, ok := info.(constant.AllConfigmapContent)
 	if !ok {
 		hwlog.RunLog.Errorf("convert info to AllConfigmapContent failed")
