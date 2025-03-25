@@ -172,14 +172,14 @@ class DLRecoverManager(RecoverManager):
     def __signal_pipe_line(self, signal: pb.ProcessManageSignal):
         info = (f"jobId={signal.jobId}, event_id={signal.uuid}, signal_type={signal.signalType}, "
                 f"actions={signal.actions}, faultRanks={signal.faultRanks}, changeStrategy={signal.changeStrategy}")
-        run_log.info(f"__signal_pipe_line receive signal: {info}")
+        run_log.debug(f"__signal_pipe_line receive signal: {info}")
         if signal.signalType == "killMaster":
             run_log.info("killMaster signal received, set kill flag")
             tft_destroy_controller()
             shared_data.shared_data_inst.set_kill_flag(True)
             return
         if signal.signalType == "keep-alive":
-            run_log.info("keep-alive signal now not handle")
+            run_log.debug("keep-alive signal now not handle")
             return
         if len(signal.actions) == 0:
             run_log.info("signal actions length is 0")
