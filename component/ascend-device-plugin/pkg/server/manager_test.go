@@ -30,6 +30,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
@@ -639,4 +640,279 @@ func TestFlattenMap(t *testing.T) {
 	if len(ret) != targetLen {
 		t.Errorf("expect len %v, got %v", targetLen, len(ret))
 	}
+}
+
+// TestIsSupportGraceTolerance test isSupportGraceTolerance
+func TestIsSupportGraceTolerance(t *testing.T) {
+	var hdm HwDevManager
+	tmpGraceToleranceOn := common.ParamOption.GraceToleranceOn
+	tmpHotReset := common.ParamOption.HotReset
+
+	common.ParamOption.GraceToleranceOn = false
+	convey.Convey("test isSupportGraceTolerance when hot reset mode error", t, func() {
+		common.ParamOption.HotReset = common.HotResetInfer
+		hdm.isSupportGraceTolerance()
+		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
+	})
+
+	common.ParamOption.HotReset = common.HotResetTrainOnLine
+	convey.Convey("test isSupportGraceTolerance when run mode is not Ascend910", t, func() {
+		hdm.RunMode = common.Ascend310P
+		hdm.isSupportGraceTolerance()
+		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
+	})
+
+	hdm.RunMode = common.Ascend910
+	tmpRealCardType := common.ParamOption.RealCardType
+	common.ParamOption.RealCardType = common.Ascend910
+	convey.Convey("test isSupportGraceTolerance when SMP chip mode is not for Ascend910", t, func() {
+		hdm.WorkMode = common.AMPMode
+		hdm.isSupportGraceTolerance()
+		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
+	})
+
+	hdm.WorkMode = common.SMPMode
+	convey.Convey("test isSupportGraceTolerance when GraceToleranceOn is true", t, func() {
+		hdm.isSupportGraceTolerance()
+		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldEqual, true)
+	})
+
+	common.ParamOption.HotReset = tmpHotReset
+	common.ParamOption.RealCardType = tmpRealCardType
+	common.ParamOption.GraceToleranceOn = tmpGraceToleranceOn
+}
+
+// TestUpdateAllInfo test updateAllInfo
+func TestUpdateAllInfo(t *testing.T) {
+	hdm := &HwDevManager{}
+	tmpPresetVDevice := common.ParamOption.PresetVDevice
+	convey.Convey("test updateAllInfo when PresetVDevice is true return nil", t, func() {
+		common.ParamOption.PresetVDevice = true
+		err := hdm.updateAllInfo()
+		convey.So(err, convey.ShouldBeNil)
+	})
+	common.ParamOption.PresetVDevice = false
+	convey.Convey("test updateAllInfo when not found npu-core in server map return error", t, func() {
+		err := hdm.updateAllInfo()
+		convey.So(err.Error(), convey.ShouldEqual, "not found npu-core plugin server")
+	})
+	hdm = &HwDevManager{ServerMap: map[string]InterfaceServer{common.AiCoreResourceName: &PluginServer{}},
+		manager: &device.HwAscend310Manager{}}
+	convey.Convey("test updateAllInfo when DestroyNotUsedVNPU is error return error", t, func() {
+		patch := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "DestroyNotUsedVNPU",
+			func(_ *PluginServer) error { return fmt.Errorf("error") })
+		defer patch.Reset()
+		err := hdm.updateAllInfo()
+		convey.So(err.Error(), convey.ShouldEqual, "error")
+	})
+	patch := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "DestroyNotUsedVNPU",
+		func(_ *PluginServer) error { return nil })
+	defer patch.Reset()
+	mockCheckDeviceTypeLabel := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "CheckDeviceTypeLabel",
+		func(_ *device.AscendTools) error { return fmt.Errorf("error") })
+	defer mockCheckDeviceTypeLabel.Reset()
+	convey.Convey("test updateAllInfo when GetNPUs is error return error", t, func() {
+		patch := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend310Manager)), "GetNPUs", func(
+			_ *device.HwAscend310Manager) (common.NpuAllInfo, error) {
+			return common.NpuAllInfo{}, fmt.Errorf("error")
+		})
+		defer patch.Reset()
+		err := hdm.updateAllInfo()
+		convey.So(err.Error(), convey.ShouldEqual, "error")
+	})
+	mockGetNPUs := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend310Manager)), "GetNPUs",
+		func(_ *device.HwAscend310Manager) (common.NpuAllInfo, error) {
+			return common.NpuAllInfo{AllDevs: []common.NpuDevice{}, AllDevTypes: []string{}}, nil
+		})
+	defer mockGetNPUs.Reset()
+	convey.Convey("test updateAllInfo success return nil", t, func() {
+		err := hdm.updateAllInfo()
+		convey.So(err, convey.ShouldBeNil)
+	})
+	common.ParamOption.PresetVDevice = tmpPresetVDevice
+}
+
+func mockGetConfigMap(configmap *v1.ConfigMap, err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+		func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+			return configmap, err
+		})
+}
+
+// TestTryToClearResetInfoCM1 test tryToClearResetInfoCM
+func TestTryToClearResetInfoCM1(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	convey.Convey("test tryToClearResetInfoCM when get task name failed return error", t, func() {
+		pod := v1.Pod{}
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual, "failed to get task name by task key")
+	})
+	pod := v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.ResetTaskNameKey: "taskName"}}}
+	mockGetKubeClient := gomonkey.ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
+	defer mockGetKubeClient.Reset()
+	convey.Convey("test tryToClearResetInfoCM when get reset cm failed return error", t, func() {
+		mockGetConfigMap := mockGetConfigMap(nil, errors.New("error"))
+		defer mockGetConfigMap.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual, "error")
+	})
+	convey.Convey("test tryToClearResetInfoCM when reset.json not exist return error", t, func() {
+		mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{}}, nil)
+		defer mockGetConfigMap.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual, "reset.json not exist")
+	})
+	convey.Convey("test tryToClearResetInfoCM when cm data size out of memory return error", t, func() {
+		mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{
+			common.ResetInfoCMDataKey: string(make([]byte, common.CMDataMaxLength+1))}}, nil)
+		defer mockGetConfigMap.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual, "configmap data size is out of memory")
+	})
+}
+
+// TestTryToClearResetInfoCM2 test tryToClearResetInfoCM
+func TestTryToClearResetInfoCM2(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	pod := v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.ResetTaskNameKey: "taskName"}}}
+	mockGetKubeClient := gomonkey.ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
+	defer mockGetKubeClient.Reset()
+	mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{common.ResetInfoCMDataKey: "key"}}, nil)
+	defer mockGetConfigMap.Reset()
+	convey.Convey("test tryToClearResetInfoCM when unmarshal configmap data failed return error", t, func() {
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual,
+			"unmarshal configmap data failed, err: invalid character 'k' looking for beginning of value")
+	})
+	convey.Convey("test tryToClearResetInfoCM when reset info config map is initialized return nil", t, func() {
+		mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, nil)
+		defer mockUnmarshal.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err, convey.ShouldBeNil)
+	})
+	mockUnmarshal := gomonkey.ApplyFunc(json.Unmarshal, func(_ []byte, value any) error {
+		taskResetInfo, ok := value.(*common.TaskResetInfo)
+		if !ok {
+			return errors.New("error")
+		}
+		taskResetInfo.UpdateTime = 1
+		return nil
+	})
+	defer mockUnmarshal.Reset()
+	convey.Convey("test tryToClearResetInfoCM when clear reset info failed return error", t, func() {
+		mockClearResetInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "ClearResetInfo",
+			func(_ *kubeclient.ClientK8s, _, _ string) error { return errors.New("error") })
+		defer mockClearResetInfo.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err.Error(), convey.ShouldEqual, "clear reset configMap failed err is: error")
+	})
+	convey.Convey("test tryToClearResetInfoCM when clear reset info success return nil", t, func() {
+		mockClearResetInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "ClearResetInfo",
+			func(_ *kubeclient.ClientK8s, _, _ string) error { return nil })
+		defer mockClearResetInfo.Reset()
+		err := hdm.tryToClearResetInfoCM(pod)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+// TestResetHccsServer tests the ResetHccsServer function.
+func TestResetHccsServer(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	convey.Convey("Test ResetHccsServer", t, func() {
+		convey.Convey("When all devices are healthy, do nothing", func() {
+			devices := []*common.NpuDevice{{Health: v1beta1.Healthy}, {Health: v1beta1.Healthy}}
+			hdm.ResetHccsServer("devType", devices, &PodResource{})
+		})
+		devices := []*common.NpuDevice{{Health: v1beta1.Unhealthy}}
+		convey.Convey("When reset failed times exceed max limit, log warning and return", func() {
+			patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetResetFailedTimes", common.MaxResetTimes+1)
+			defer patch.Reset()
+			hdm.ResetHccsServer("devType", devices, &PodResource{})
+		})
+		convey.Convey("When cards are in resetting, do nothing", func() {
+			patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetIfCardsInResetting", true)
+			defer patch.Reset()
+			hdm.ResetHccsServer("devType", devices, &PodResource{})
+		})
+		patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetResetFailedTimes", 0).ApplyMethodReturn(hdm.manager,
+			"GetIfCardsInResetting", false)
+		defer patch1.Reset()
+		convey.Convey("When index out of range, log error and return", func() {
+			devices := make([]*common.NpuDevice, 0)
+			hdm.ResetHccsServer("devType", devices, &PodResource{})
+		})
+	})
+}
+
+// TestSubscribeNpuFaultEvent tests the subscribeNpuFaultEvent function.
+func TestSubscribeNpuFaultEvent(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: common.Ascend910}
+	convey.Convey("Test subscribeNpuFaultEvent", t, func() {
+		convey.Convey("When LoadFaultCodeFromFile fails, set SubscribeFailed and log error", func() {
+			patch := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { return errors.New("load faultCode.json failed") })
+			defer patch.Reset()
+			hdm.subscribeNpuFaultEvent()
+			convey.So(common.SubscribeFailed, convey.ShouldBeTrue)
+		})
+		patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile, func() error { return nil })
+		defer patch1.Reset()
+		convey.Convey("When RunMode is not Ascend910, set SubscribeFailed and log debug", func() {
+			hdm.RunMode = "otherMode"
+			hdm.subscribeNpuFaultEvent()
+			convey.So(common.SubscribeFailed, convey.ShouldBeTrue)
+			hdm.RunMode = common.Ascend910
+		})
+		mockDmgr := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+		defer mockDmgr.Reset()
+		convey.Convey("When SetFaultEventCallFunc fails, set SubscribeFailed and log error", func() {
+			patch2 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SetFaultEventCallFunc",
+				errors.New("set callback failed"))
+			defer patch2.Reset()
+			hdm.subscribeNpuFaultEvent()
+			convey.So(common.SubscribeFailed, convey.ShouldBeTrue)
+		})
+		patch2 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SetFaultEventCallFunc", nil)
+		defer patch2.Reset()
+		tmpSubscribeFailed := common.SubscribeFailed
+		common.SubscribeFailed = false
+		convey.Convey("When SubscribeDeviceFaultEvent succeeds, return directly", func() {
+			patch3 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SubscribeDeviceFaultEvent", nil)
+			defer patch3.Reset()
+			hdm.subscribeNpuFaultEvent()
+			convey.So(common.SubscribeFailed, convey.ShouldBeFalse)
+		})
+		common.SubscribeFailed = tmpSubscribeFailed
+		convey.Convey("When SubscribeDeviceFaultEvent fails after retries, set SubscribeFailed and log error", func() {
+			patch3 := gomonkey.ApplyMethod(hdm.manager.GetDmgr(), "SubscribeDeviceFaultEvent",
+				func(_ *devmanager.DeviceManager, _ int32) error { return errors.New("subscribe failed") })
+			patch4 := gomonkey.ApplyFunc(time.Sleep, func(_ time.Duration) {})
+			defer patch3.Reset()
+			defer patch4.Reset()
+			hdm.subscribeNpuFaultEvent()
+			convey.So(common.SubscribeFailed, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestHotReset tests the hotReset function.
+func TestHotReset(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: common.Ascend910}
+	npuDevice := &common.NpuDevice{DeviceName: "name", LogicID: 0}
+	convey.Convey("Test hotReset", t, func() {
+		patch := gomonkey.ApplyMethod(hdm.manager, "SetCardsInResetting",
+			func(_ *device.HwAscend310Manager, _ int32, _ bool) {}).ApplyMethod(hdm.manager, "SetResetFailedTimes",
+			func(_ *device.HwAscend310Manager, _ int32, _ int) {})
+		defer patch.Reset()
+		convey.Convey("When PollImmediate error log warn and return", func() {
+			mockPollImmediate := gomonkey.ApplyFuncReturn(wait.PollImmediate, errors.New("error"))
+			defer mockPollImmediate.Reset()
+			hdm.hotReset(npuDevice)
+		})
+		mockPollImmediate := gomonkey.ApplyFuncReturn(wait.PollImmediate, nil)
+		defer mockPollImmediate.Reset()
+		convey.Convey("When PollImmediate return nil   hot rest success", func() {
+			hdm.hotReset(npuDevice)
+		})
+	})
 }

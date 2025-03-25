@@ -550,6 +550,12 @@ func TestSortFaultEventsInAscendingOrder(t *testing.T) {
 
 // TestMergeContinuousElementBasedAssertion for test mergeContinuousElementBasedAssertion
 func TestMergeContinuousElementBasedAssertion(t *testing.T) {
+	convey.Convey("test deFaultInfo is empty ,merge fault occur continuous assertion failed ,return", t, func() {
+		devFaultInfo := &[]common.DevFaultInfo{}
+		mergeContinuousElementBasedAssertion(devFaultInfo)
+		convey.So(*devFaultInfo, convey.ShouldResemble, []common.DevFaultInfo{})
+	})
+
 	convey.Convey("test merge fault occur continuous assertion success", t, func() {
 		devFaultInfo := []common.DevFaultInfo{{Assertion: common.FaultOccur}, {Assertion: common.FaultOccur}}
 		expectVal := []common.DevFaultInfo{{Assertion: common.FaultOccur}}
@@ -1352,38 +1358,39 @@ func TestGetMostSeriousFaultType(t *testing.T) {
 		fautTypes := []string{NotHandleFault, ManuallySeparateNPU}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, ManuallySeparateNPU)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case2", t, func() {
 		fautTypes := []string{NotHandleFault, SeparateNPU}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, SeparateNPU)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case3", t, func() {
 		fautTypes := []string{NotHandleFault, PreSeparateNPU}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, PreSeparateNPU)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case4", t, func() {
 		fautTypes := []string{NotHandleFault, RestartNPU}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, RestartNPU)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case5", t, func() {
 		fautTypes := []string{NotHandleFault, FreeRestartNPU}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, FreeRestartNPU)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case6", t, func() {
 		fautTypes := []string{NotHandleFault, RestartBusiness}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, RestartBusiness)
 	})
-
 	convey.Convey("test getMostSeriousFaultType success case7", t, func() {
+		fautTypes := []string{NotHandleFault, RestartRequest}
+		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, RestartRequest)
+	})
+	convey.Convey("test getMostSeriousFaultType success case8", t, func() {
+		fautTypes := []string{NotHandleFault, SubHealthFault}
+		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, SubHealthFault)
+	})
+	convey.Convey("test getMostSeriousFaultType success case9", t, func() {
 		fautTypes := []string{NotHandleFault, NotHandleFault}
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, NotHandleFault)
 	})
-
-	convey.Convey("test getMostSeriousFaultType success case8", t, func() {
+	convey.Convey("test getMostSeriousFaultType success case10", t, func() {
 		fautTypes := make([]string, 0)
 		convey.So(getMostSeriousFaultType(fautTypes), convey.ShouldEqual, NormalNPU)
 	})
