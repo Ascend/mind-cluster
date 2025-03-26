@@ -21,6 +21,36 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
+func (n *NPUNode) setNodeVNPUInfo(ni *api.NodeInfo, jobTemplate map[string]map[string]util.VResource) error {
+	n.VNode = VNode{
+		Chips:            make(map[int]*VChip, util.MapInitNum),
+		UnhealthyChipIds: make(map[int]struct{}),
+	}
+
+	if !n.checkDyVNodeResourceInitialized() {
+		return fmt.Errorf("setNodeVNPUInfo %s: DyVNode resource not initialized", n.Name)
+	}
+
+	// 1. get chipKind like Ascend910, chipLabel like Ascend310P-8
+	if err := n.setChipPropertiesFromNPUNode(); err != nil {
+		return fmt.Errorf("setNodeVNPUInfo %s: %v", n.Name, err)
+	}
+
+	// 2. get resource capacity, totalChipNum, freeChipNum
+	if err := n.setTotalResAndChipNumByTemplates(); err != nil {
+		return fmt.Errorf("setNodeVNPUInfo node %s: %v", n.Name, err)
+	}
+
+	// 3. create vChips on node and update vChip resource
+	if err := n.initVChips(ni, jobTemplate); err != nil {
+		return fmt.Errorf("setNodeVNPUInfo node %s: %v", n.Name, err)
+	}
+
+	n.ValidVNode = true
+	klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s initialisation success:<%#v>", n.Name, n.VNode)
+	return nil
+}
+
 func initTemplate() []util.VTemplate {
 	nodeTemplate := make([]util.VTemplate, util.NPUIndex6)
 	if len(nodeTemplate) < util.NPUIndex6 {
@@ -57,36 +87,6 @@ func initTemplate() []util.VTemplate {
 		AICPU:    util.CpuNum6,
 	}
 	return nodeTemplate
-}
-
-func (n *NPUNode) setNodeVNPUInfo(ni *api.NodeInfo, jobTemplate map[string]map[string]util.VResource) error {
-	n.VNode = VNode{
-		Chips:            make(map[int]*VChip, util.MapInitNum),
-		UnhealthyChipIds: make(map[int]struct{}),
-	}
-
-	if !n.checkDyVNodeResourceInitialized() {
-		return fmt.Errorf("setNodeVNPUInfo %s: DyVNode resource not initialized", n.Name)
-	}
-
-	// 1. get chipKind like Ascend910, chipLabel like Ascend310P-8
-	if err := n.setChipPropertiesFromNPUNode(); err != nil {
-		return fmt.Errorf("setNodeVNPUInfo %s: %v", n.Name, err)
-	}
-
-	// 2. get resource capacity, totalChipNum, freeChipNum
-	if err := n.setTotalResAndChipNumByTemplates(); err != nil {
-		return fmt.Errorf("setNodeVNPUInfo node %s: %v", n.Name, err)
-	}
-
-	// 3. create vChips on node and update vChip resource
-	if err := n.initVChips(ni, jobTemplate); err != nil {
-		return fmt.Errorf("setNodeVNPUInfo node %s: %v", n.Name, err)
-	}
-
-	n.ValidVNode = true
-	klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s initialisation success:<%#v>", n.Name, n.VNode)
-	return nil
 }
 
 func (n *NPUNode) checkDyVNodeResourceInitialized() bool {

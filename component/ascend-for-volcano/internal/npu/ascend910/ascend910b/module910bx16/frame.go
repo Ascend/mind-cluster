@@ -87,12 +87,12 @@ func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugi
 	}
 	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s GetUsableTopFromNode err: %s", task.Name, err.Error())
 		return err
 	}
 
 	if err = tp.Judge910BNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s Judge910BNodeAndTaskNPU err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s Judge910BNodeAndTaskNPU err: %s", task.Name, err.Error())
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[networkUnhealthyNPU])
 	}
@@ -162,7 +162,7 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), util.SafePrint(node.Annotation))
 	selectedNPU, err := tp.selectNPUFromNode(task, node)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", tp.GetPluginName(), err)
+		klog.V(util.LogErrorLev).Infof("task %s UseAnnotation err:%s.", task.Name, err)
 		return nil
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation %s select %v.", tp.GetPluginName(), task.Name, selectedNPU)
@@ -175,12 +175,12 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 func (tp *module910bx16) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode) ([]int, error) {
 	taskNPUNum, err := tp.GetTaskReqNPUNum(task)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s GetTaskReqNPUNum err: %s", task.Name, err.Error())
 		return nil, err
 	}
 	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s GetUsableTopFromNode err: %s", task.Name, err.Error())
 		return nil, err
 	}
 	return tp.SelectNPUByTaskNPUNumAndNodeTop(taskNPUNum, nodeTop)

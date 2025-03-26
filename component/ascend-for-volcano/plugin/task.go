@@ -30,31 +30,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// isTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
-func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
-	if !isNPUTask(task) {
-		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
-		return false
-	}
-
-	vcJob, ok := sHandle.Jobs[task.Job]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu jobs.", task.Job)
-		return false
-	}
-	nTask, ok := vcJob.Tasks[task.UID]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu tasks.", task.Name)
-		return false
-	}
-	// static cut job no need allocated,it followed by kubelet in device-plugin.
-	if nTask.Type == util.JobTypeStCut {
-		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s is static cut job.", task.Name)
-		return false
-	}
-	return true
-}
-
 // NPUAllocateFunc Allocate npu and called by volcano frame.
 func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	if task == nil {
@@ -93,6 +68,53 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		sHandle.Nodes[nodeName] = *vcNode
 	}
 	klog.V(util.LogDebugLev).Infof("%s %s useAnnotation node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
+}
+
+// NPUDeallocateFunc Free assigned npu, if allocate failed by volcano frame.
+func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
+	if sHandle == nil || task == nil {
+		klog.V(util.LogInfoLev).Infof("NPUDeallocateFunc failed: %s.", util.ArgumentError)
+		return
+	}
+	vcJob, ok := sHandle.Jobs[task.Job]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("NPUDeallocateFunc %s not req npu.", task.Name)
+		return
+	}
+	nodeName := task.NodeName
+	node, found := sHandle.Nodes[nodeName]
+	if !found {
+		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc NOT EXIST node [%s].", PluginName, nodeName)
+		return
+	}
+	sHandle.releaseAnnotation(task, vcJob, node)
+	klog.V(util.LogDebugLev).Infof("%s %s NPUDeallocateFunc node [%s]'s top.",
+		PluginName, util.SafePrint(task.Name), nodeName)
+}
+
+// isTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
+func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
+	if !isNPUTask(task) {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
+		return false
+	}
+
+	vcJob, ok := sHandle.Jobs[task.Job]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu jobs.", task.Job)
+		return false
+	}
+	nTask, ok := vcJob.Tasks[task.UID]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not in npu tasks.", task.Name)
+		return false
+	}
+	// static cut job no need allocated,it followed by kubelet in device-plugin.
+	if nTask.Type == util.JobTypeStCut {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s is static cut job.", task.Name)
+		return false
+	}
+	return true
 }
 
 func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob SchedulerJob, vcNode NPUNode) {
@@ -134,28 +156,6 @@ func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob Sche
 		// update node.
 		sHandle.Nodes[vcNode.Name] = *tmpNode
 	}
-}
-
-// NPUDeallocateFunc Free assigned npu, if allocate failed by volcano frame.
-func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
-	if sHandle == nil || task == nil {
-		klog.V(util.LogInfoLev).Infof("NPUDeallocateFunc failed: %s.", util.ArgumentError)
-		return
-	}
-	vcJob, ok := sHandle.Jobs[task.Job]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("NPUDeallocateFunc %s not req npu.", task.Name)
-		return
-	}
-	nodeName := task.NodeName
-	node, found := sHandle.Nodes[nodeName]
-	if !found {
-		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc NOT EXIST node [%s].", PluginName, nodeName)
-		return
-	}
-	sHandle.releaseAnnotation(task, vcJob, node)
-	klog.V(util.LogDebugLev).Infof("%s %s NPUDeallocateFunc node [%s]'s top.",
-		PluginName, util.SafePrint(task.Name), nodeName)
 }
 
 func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {

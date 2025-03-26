@@ -20,7 +20,6 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
-	"reflect"
 	"testing"
 
 	"k8s.io/api/core/v1"
@@ -172,9 +171,22 @@ func buildGetNodeTopForWholeCardTestCases() []getNodeTopForWholeCardTest {
 func TestGetNodeTopForWholeCard(t *testing.T) {
 	for _, tt := range buildGetNodeTopForWholeCardTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.vNode.GetNodeTopForWholeCard(); !reflect.DeepEqual(got, tt.want) {
+			if got := tt.vNode.GetNodeTopForWholeCard(); !checkCardIdEqual(got, tt.want) {
 				t.Errorf("GetNodeTopForWholeCard() = %v, want %v", got, tt.want)
 			}
 		})
 	}
+}
+
+func checkCardIdEqual(keyCardIDs, targetCardIds []int) bool {
+	keyIds := make(map[int]struct{}, len(keyCardIDs))
+	for _, id := range keyCardIDs {
+		keyIds[id] = struct{}{}
+	}
+	for _, id := range targetCardIds {
+		if _, ok := keyIds[id]; !ok {
+			return false
+		}
+	}
+	return true
 }

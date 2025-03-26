@@ -227,10 +227,12 @@ func addJobEnqueueableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		}
 		tNpuNum := getNpuNum(ssn, tp, npuName)
 		if tNpuNum < rNpuNum {
-			klog.V(util.LogWarningLev).Infof("Add enqueue failed, require npu num is %v "+
-				"but cluster npu num is %v", rNpuNum, tNpuNum)
+			klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue failed, require npu num is %v "+
+				"but cluster npu num is %v", vcjob.Name, rNpuNum, tNpuNum)
 			return util.JobNotEnqueue
 		}
+		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue success will start schedule, require npu num is <%v> "+
+			"and cluster npu num is <%v>.", vcjob.Name, rNpuNum, tNpuNum)
 		return util.JobEnqueue
 	})
 }

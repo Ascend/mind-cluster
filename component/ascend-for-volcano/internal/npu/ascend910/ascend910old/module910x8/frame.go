@@ -76,12 +76,12 @@ func (tp *module910x8) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 	}
 	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return err
 	}
 
 	if err = judgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return fmt.Errorf("npu topology not meet job require,network unhealthy card is [ %s ]",
 			node.Annotation[tp.netUnhealthyKey])
 	}
@@ -146,7 +146,7 @@ func (tp *module910x8) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *p
 		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), util.SafePrint(node.Annotation))
 	selectedNPU, err := tp.selectNPUFromNode(task, node)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s UseAnnotation err:%s.", task.Name, err.Error())
 		return nil
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",

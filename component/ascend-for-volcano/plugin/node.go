@@ -98,6 +98,61 @@ type VChip struct {
 	FreeRes     util.VResource
 }
 
+// InitNodesFromSsn init all nodes in ssn.
+func (sHandle *ScheduleHandler) InitNodesFromSsn(ssn *framework.Session) {
+	if sHandle == nil {
+		return
+	}
+	// 1.obtain need init node info list
+	nodeList := sHandle.getNeedInitNodeList(ssn)
+	// 2.init NPU Nodes by enable node list
+	sHandle.initNodesFromSsn(nodeList)
+	return
+}
+
+// NodePredicate Predicate nodes.
+func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
+	if sHandle == nil || taskInfo == nil || nodeInfo == nil {
+		klog.V(util.LogErrorLev).Infof("NodePredicate got null parameter(s), which is invalid.")
+		return fmt.Errorf("got null parameter(s)")
+	}
+	if !isNPUTask(taskInfo) {
+		return nil
+	}
+	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", nodeInfo.Name)
+	defer klog.V(util.LogDebugLev).Infof("leave node(%s) predicate", nodeInfo.Name)
+	vcJob, ok := sHandle.Jobs[taskInfo.Job]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("NodePredicate not support job:%s.", util.SafePrint(taskInfo.Job))
+		return nil
+	}
+	// check vcjob is npu job
+	if !vcJob.isNPUJob() {
+		klog.V(util.LogDebugLev).Infof("NodePredicate vc-job:%#v is not npu job.", vcJob)
+		return nil
+	}
+
+	vcNode, ok := sHandle.Nodes[nodeInfo.Name]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("NodePredicate %s not in.", nodeInfo.Name)
+		return nil
+	}
+
+	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {
+		return err
+	}
+
+	if err := vcJob.policyHandler.CheckNodeNPUByTask(taskInfo, vcNode); err != nil {
+		// node doesn't have enough npu for the task
+		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
+		return fmt.Errorf("checkNodeNPUByTask : %s", err)
+	}
+	if sHandle.FaultHandle == nil {
+		return nil
+	}
+	return sHandle.FaultHandle.CheckNodeNPUByTask(taskInfo, vcNode)
+}
+
 // initNPUNodeByNodeInf init NPU node from node info and cm.
 func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.NodeDeviceInfoWithID,
 	nodeInfoOfNodeD k8s.NodeDNodeInfo, switchInfo k8s.SwitchFaultInfo,
@@ -301,18 +356,6 @@ func (n *NPUNode) syncAnnotation(npuNode *api.NodeInfo, nodeInfoOfNodeD k8s.Node
 }
 
 // InitNodesFromSsn init all nodes in ssn.
-func (sHandle *ScheduleHandler) InitNodesFromSsn(ssn *framework.Session) {
-	if sHandle == nil {
-		return
-	}
-	// 1.obtain need init node info list
-	nodeList := sHandle.getNeedInitNodeList(ssn)
-	// 2.init NPU Nodes by enable node list
-	sHandle.initNodesFromSsn(nodeList)
-	return
-}
-
-// InitNodesFromSsn init all nodes in ssn.
 func (sHandle *ScheduleHandler) getNeedInitNodeList(ssn *framework.Session) []*api.NodeInfo {
 	if sHandle == nil || sHandle.FrameAttr.KubeClient == nil {
 		return ssn.NodeList
@@ -339,49 +382,6 @@ func (sHandle *ScheduleHandler) getNeedInitNodeList(ssn *framework.Session) []*a
 		nodeList = append(nodeList, api.NewNodeInfo(vNode))
 	}
 	return append(nodeList, ssn.NodeList...)
-}
-
-// NodePredicate Predicate nodes.
-func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
-	if sHandle == nil || taskInfo == nil || nodeInfo == nil {
-		klog.V(util.LogErrorLev).Infof("NodePredicate got null parameter(s), which is invalid.")
-		return fmt.Errorf("got null parameter(s)")
-	}
-	if !isNPUTask(taskInfo) {
-		return nil
-	}
-	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", nodeInfo.Name)
-	defer klog.V(util.LogDebugLev).Infof("leave node(%s) predicate", nodeInfo.Name)
-	vcJob, ok := sHandle.Jobs[taskInfo.Job]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("NodePredicate not support job:%s.", util.SafePrint(taskInfo.Job))
-		return nil
-	}
-	// check vcjob is npu job
-	if !vcJob.isNPUJob() {
-		klog.V(util.LogDebugLev).Infof("NodePredicate vc-job:%#v is not npu job.", vcJob)
-		return nil
-	}
-
-	vcNode, ok := sHandle.Nodes[nodeInfo.Name]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("NodePredicate %s not in.", nodeInfo.Name)
-		return nil
-	}
-
-	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {
-		return err
-	}
-
-	if err := vcJob.policyHandler.CheckNodeNPUByTask(taskInfo, vcNode); err != nil {
-		// node doesn't have enough npu for the task
-		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
-		return fmt.Errorf("checkNodeNPUByTask : %s", err)
-	}
-	if sHandle.FaultHandle == nil {
-		return nil
-	}
-	return sHandle.FaultHandle.CheckNodeNPUByTask(taskInfo, vcNode)
 }
 
 func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {

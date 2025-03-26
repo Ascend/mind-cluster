@@ -128,11 +128,11 @@ func (tp *NPUHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 
 	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return err
 	}
 	if err := tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
-		klog.V(util.LogErrorLev).Infof("%s CheckNodeNPUByTask err: %s", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return err
 	}
 	return nil
@@ -152,7 +152,7 @@ func (tp *NPUHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 		}
 		nodeTop, err := tp.GetUsableTopFromNode(nNode, tp.NPUTaskNum > 1)
 		if err != nil {
-			klog.V(util.LogErrorLev).Infof("%s ScoreBestNPUNodes err: %s", tp.GetPluginName(), err.Error())
+			klog.V(util.LogErrorLev).Infof("task %s ScoreBestNPUNodes err: %s", task.Name, err.Error())
 			continue
 		}
 		if len(nodeTop) > tp.MaxNodeNPUNum {
@@ -178,7 +178,7 @@ func (tp *NPUHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	}
 	selectedNPU, err := tp.SelectNPUFromNode(task, node)
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err: %s.", tp.GetPluginName(), err.Error())
+		klog.V(util.LogErrorLev).Infof("task %s UseAnnotation err: %s.", task.Name, err.Error())
 		return nil
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",

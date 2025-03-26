@@ -80,15 +80,9 @@ const (
 	// Ascend310P 310P template name
 	Ascend310P = "Ascend310P"
 	// Ascend910 910 template name
-	Ascend910                  = "Ascend910"
-	maxTorAffinityNodeScore    = float64(200)
-	halfTorAffinityNodeScore   = float64(100)
-	sharedTorAffinityNodeScore = float64(99)
-	cardHealthySuffix          = ""
-	unhealthyCardSuffix        = "-Unhealthy"
-	notNPUNodeError            = "getNodeDeviceInfoFromCM"
-	oneTor                     = 1
-	twoTor                     = 2
+	Ascend910           = "Ascend910"
+	cardHealthySuffix   = ""
+	unhealthyCardSuffix = "-Unhealthy"
 	// ResetInfoCMNamePrefix for reset configmap name prefix
 	ResetInfoCMNamePrefix = "reset-config-"
 	// ResetInfoCMDataKey for reset configmap data key

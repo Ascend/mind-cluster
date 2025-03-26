@@ -40,6 +40,26 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
+// init the SchedulerJob's init.
+func (sJob *SchedulerJob) init(vcJob *api.JobInfo, sHandle *ScheduleHandler) error {
+	if sJob == nil || vcJob == nil {
+		klog.V(util.LogErrorLev).Infof("SchedulerJob_Init: parameter is nil.")
+		return errors.New("parameter is nil")
+	}
+	if initErr := sJob.initByJobInfo(vcJob); initErr != nil {
+		klog.V(util.LogDebugLev).Infof("%s initByJobInfo %s", vcJob.UID, initErr)
+		return initErr
+	}
+
+	if !sJob.isJobSupportByPlugin() {
+		klog.V(util.LogDebugLev).Infof("%s IsJobSupportByPlugin not has suitable plugin.", sJob.Name)
+		return fmt.Errorf("%s's plugin not regist", sJob.Name)
+	}
+
+	sJob.initSelfPluginByJobInfo(sHandle)
+	return nil
+}
+
 // Determine if the selectors are exactly equal.
 func isSelectorContains(defValue, jobValue string) bool {
 	for _, v := range strings.Split(defValue, "|") {
@@ -257,26 +277,6 @@ func getJobTerminatingPodNum(job *api.JobInfo) int {
 		}
 	}
 	return tNum
-}
-
-// init the SchedulerJob's init.
-func (sJob *SchedulerJob) init(vcJob *api.JobInfo, sHandle *ScheduleHandler) error {
-	if sJob == nil || vcJob == nil {
-		klog.V(util.LogErrorLev).Infof("SchedulerJob_Init: parameter is nil.")
-		return errors.New("parameter is nil")
-	}
-	if initErr := sJob.initByJobInfo(vcJob); initErr != nil {
-		klog.V(util.LogDebugLev).Infof("%s initByJobInfo %s", vcJob.UID, initErr)
-		return initErr
-	}
-
-	if !sJob.isJobSupportByPlugin() {
-		klog.V(util.LogDebugLev).Infof("%s IsJobSupportByPlugin not has suitable plugin.", sJob.Name)
-		return fmt.Errorf("%s's plugin not regist", sJob.Name)
-	}
-
-	sJob.initSelfPluginByJobInfo(sHandle)
-	return nil
 }
 
 func (sJob *SchedulerJob) recordTorJobServerList(sHandle *ScheduleHandler) {

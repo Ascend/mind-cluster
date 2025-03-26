@@ -42,6 +42,29 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
+// InitNPUSession init npu plugin and nodes.
+func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
+	if sHandle == nil || ssn == nil {
+		klog.V(util.LogDebugLev).Infof("InitNPUSession failed: %s.", util.ArgumentError)
+		return errors.New(util.ArgumentError)
+	}
+	klog.V(util.LogDebugLev).Infof("enter %s InitNPUSession.", PluginName)
+	defer klog.V(util.LogDebugLev).Infof("leave %s InitNPUSession.", PluginName)
+
+	sHandle.InitVolcanoFrameFromSsn(ssn)
+	sHandle.initCmInformer()
+	sHandle.InitNodesFromSsn(ssn)
+	sHandle.InitJobsFromSsn(ssn)
+	sHandle.initJobScheduleInfoRecorder()
+
+	sHandle.InitTorNodeInfo(ssn)
+	sHandle.initJobsPlugin()
+	sHandle.initCache()
+	sHandle.initReschedulerFromSsn(ssn)
+	sHandle.preStartPlugin(ssn)
+	return nil
+}
+
 // InitJobsFromSsn init all jobs in ssn.
 func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	if sHandle == nil || ssn == nil {
@@ -214,6 +237,8 @@ func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) 
 		sHandle.FrameAttr.UseClusterD = getUseClusterDConfig(configs)
 		klog.V(util.LogWarningLev).Info("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
 			"change the parameters and it will not be changed during normal operation of the volcano")
+		klog.V(util.LogWarningLev).Infof("init static parameters, nslbversion is <%v>, SharedTorNum <%v>, UseClusterD"+
+			" is <%v>", sHandle.FrameAttr.NslbVersion, sHandle.FrameAttr.SharedTorNum, sHandle.FrameAttr.UseClusterD)
 	})
 }
 
@@ -338,29 +363,6 @@ func (sHandle *ScheduleHandler) BeforeCloseHandler() {
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("cacheToShareCM error: %v", err)
 	}
-}
-
-// InitNPUSession init npu plugin and nodes.
-func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
-	if sHandle == nil || ssn == nil {
-		klog.V(util.LogDebugLev).Infof("InitNPUSession failed: %s.", util.ArgumentError)
-		return errors.New(util.ArgumentError)
-	}
-	klog.V(util.LogDebugLev).Infof("enter %s InitNPUSession.", PluginName)
-	defer klog.V(util.LogDebugLev).Infof("leave %s InitNPUSession.", PluginName)
-
-	sHandle.InitVolcanoFrameFromSsn(ssn)
-	sHandle.initCmInformer()
-	sHandle.InitNodesFromSsn(ssn)
-	sHandle.InitJobsFromSsn(ssn)
-	sHandle.initJobScheduleInfoRecorder()
-
-	sHandle.InitTorNodeInfo(ssn)
-	sHandle.initJobsPlugin()
-	sHandle.initCache()
-	sHandle.initReschedulerFromSsn(ssn)
-	sHandle.preStartPlugin(ssn)
-	return nil
 }
 
 // initCmInformer init cm informer, support cluster info manager and device plugin

@@ -84,6 +84,7 @@ func (reCache *DealReSchedulerCache) SetJobRecentRescheduleRecords(firstStartup 
 			return fmt.Errorf("getRecentReschedulingRecordsFromCm %s", util.SafePrint(err))
 		}
 		reCache.JobRecentRescheduleRecords = recordedRecords
+		klog.V(util.LogDebugLev).Infof("start sync old rescheduling records %#v", recordedRecords)
 		return nil
 	}
 	return nil
