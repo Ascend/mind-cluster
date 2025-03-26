@@ -372,7 +372,7 @@ class MSRunPlugin:
             if self.ms_node_rank == "0":
                 run_log.warning("will kill mindio controller")
                 shared_data.shared_data_inst.set_kill_flag(True)
-                time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
+            time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
             stop_res = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
             run_log.warning(f"rank with pid {self.rank_pids} will be killed")
             if stop_res is not constants.RES_OK:
