@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -630,6 +631,16 @@ func (reScheduler *ReScheduler) getNewCacheJobs(restartFaultJobs map[api.JobID]*
 	return newCacheJobs
 }
 
+func (reScheduler *ReScheduler) reduceForSubHealthyNodes(smp map[string]float64) {
+	for nodeName, score := range smp {
+		fNode, exist := reScheduler.FaultNodes[nodeName]
+		if !exist || (!fNode.HasCardSubHealthFault && !fNode.HasSwitchSubHealthFault) {
+			continue
+		}
+		smp[nodeName] = math.Max(0.0, score-util.AffScore1)
+	}
+}
+
 // ScoreBestNPUNodes add scores on scoreMap for normal nodes used by re-scheduling tasks
 func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap map[string]float64) {
 	if reScheduler == nil || task == nil || len(scoreMap) == 0 {
@@ -640,6 +651,7 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 	klog.V(util.LogDebugLev).Infof("enter rescheduling ScoreBestNPUNodes %s...", task.Name)
 	klog.V(util.LogDebugLev).Infof("node score map before add rescheduling weights %#v", scoreMap)
 	defer klog.V(util.LogDebugLev).Infof("leave rescheduling ScoreBestNPUNodes ...")
+	reScheduler.reduceForSubHealthyNodes(scoreMap)
 	fJob := reScheduler.FaultJobs[task.Job] // 2. get faultJob object given the faultTask object
 	if fJob == nil {
 		klog.V(util.LogInfoLev).Infof("task %s is not in rescheduler cache", task.Name)

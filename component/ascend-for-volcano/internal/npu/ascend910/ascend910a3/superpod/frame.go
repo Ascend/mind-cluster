@@ -246,15 +246,34 @@ func (tp *module910SuperPod) selectNodesWithLeastResourceForSingle(nodes []*api.
 			ScalarResources[v1.ResourceName(tp.ReqNPUName)]
 	})
 	n0 := nodes[0]
-	fitNodes := make([]*api.NodeInfo, 0)
+	preFitNodes := make([]*api.NodeInfo, 0, len(nodes))
 	for _, node := range nodes {
 		if node.Idle.ScalarResources[v1.ResourceName(tp.ReqNPUName)] > n0.Idle.ScalarResources[v1.
 			ResourceName(tp.ReqNPUName)] {
 			break
 		}
+		preFitNodes = append(preFitNodes, node)
+	}
+
+	rescheduleCache := rescheduling.GetReSchedulerCache()
+	if rescheduleCache == nil {
+		klog.V(util.LogDebugLev).Info("rescheduleCache is nil")
+		return preFitNodes
+	}
+
+	fitNodes := make([]*api.NodeInfo, 0, len(preFitNodes))
+	for _, node := range preFitNodes {
+		if fNode, exist := rescheduleCache.FaultNodes[node.Name]; exist &&
+			(fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {
+			klog.V(util.LogDebugLev).Infof("try to filter subHealthy node: %s", fNode.NodeName)
+			continue
+		}
 		fitNodes = append(fitNodes, node)
 	}
-	return fitNodes
+	if len(fitNodes) > 0 {
+		return fitNodes
+	}
+	return preFitNodes
 }
 
 func (tp *module910SuperPod) selectSuperPodForJob(task *api.TaskInfo, nodes []*api.NodeInfo,
@@ -731,9 +750,19 @@ func (tp *module910SuperPod) selectNodesFromSuperPod(vid string, superPod map[st
 	if len(superPod) < tp.spBlock {
 		return superPod
 	}
+	rescheduleCache := rescheduling.GetReSchedulerCache()
+	subHealthyNodes := make([]plugin.NPUNode, 0, len(superPod))
 	for _, nNode := range superPod {
-		if count >= tp.spBlock {
+		subHealthy := false
+		if rescheduleCache != nil {
+			fNode, exist := rescheduleCache.FaultNodes[nNode.Name]
+			if exist && (fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {
+				subHealthy = true
+			}
+		}
+		if count >= tp.spBlock || subHealthy {
 			reserveNode[nNode.Name] = nNode
+			subHealthyNodes = append(subHealthyNodes, nNode)
 			continue
 		}
 		klog.V(util.LogInfoLev).Infof("select nNode %s, super-pod ID: %d", nNode.Name, nNode.SuperPodID)
@@ -746,6 +775,17 @@ func (tp *module910SuperPod) selectNodesFromSuperPod(vid string, superPod map[st
 			SuperPodID: nNode.SuperPodID,
 		})
 		count++
+	}
+	if count >= tp.spBlock {
+		return reserveNode
+	}
+	for i := 0; i < len(subHealthyNodes) && count < tp.spBlock; i++ {
+		selectNodes[vid] = append(selectNodes[vid], plugin.SuperNode{
+			Name:       subHealthyNodes[i].Name,
+			SuperPodID: subHealthyNodes[i].SuperPodID,
+		})
+		count++
+		delete(reserveNode, subHealthyNodes[i].Name)
 	}
 	return reserveNode
 }
