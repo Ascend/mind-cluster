@@ -4,8 +4,6 @@
 package statistics
 
 import (
-	"context"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -14,25 +12,10 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/common/logs"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/kube"
 )
-
-func init() {
-
-	if err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return
-	}
-
-	if err := logs.InitJobEventLogger(context.Background()); err != nil {
-		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
-		return
-	}
-}
 
 func TestLoadConfigMapToCache(t *testing.T) {
 	t.Run("cm successful load, Data length is 1", func(t *testing.T) {

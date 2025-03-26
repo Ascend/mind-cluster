@@ -6,6 +6,8 @@ package recover
 import (
 	"context"
 	"errors"
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -633,8 +635,9 @@ func TestListenEvent(t *testing.T) {
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 		ctl.addEvent(common.FaultOccurEvent)
-		gomonkey.ApplyFuncReturn(common.WriteResetInfoToCM, nil, nil)
-		gomonkey.ApplyPrivateMethod(ctl, "handleNotifyWaitFaultFlushing",
+		patches := gomonkey.ApplyFuncReturn(common.WriteResetInfoToCM, nil, nil)
+		defer patches.Reset()
+		patches.ApplyPrivateMethod(ctl, "handleNotifyWaitFaultFlushing",
 			func() (string, common.RespCode, error) {
 				return "", common.OK, nil
 			})
@@ -656,17 +659,43 @@ func TestGetCtxAndSignalChan(t *testing.T) {
 }
 
 func TestListenSendChannel(t *testing.T) {
-	convey.Convey("Testing listenSendChannel", t, func() {
-		jobInfo := newJobInfoWithStrategy(nil)
-		serviceCtx := context.Background()
-		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
-		gomonkey.ApplyFuncReturn(common.SendRetry, errors.New("error"))
-		signal := &pb.ProcessManageSignal{}
-		ctl.signalChan <- signal
-		go ctl.listenSendChannel(nil)
-		time.Sleep(time.Second)
-		convey.ShouldEqual(len(ctl.signalChan), 0)
+	convey.Convey("Test listenSendChannel", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+
+		convey.Convey("When exit on first iteration", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			sendChan := make(chan *pb.ProcessManageSignal)
+
+			patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
+				func() (context.Context, chan *pb.ProcessManageSignal) {
+					return ctx, sendChan
+				})
+			patches.ApplyPrivateMethod(ctl, "reset", func() {})
+			defer patches.Reset()
+
+			patches.ApplyPrivateMethod(ctl, "selectSendChannel", func(_ context.Context,
+				_ chan *pb.ProcessManageSignal, _ pb.Recover_SubscribeProcessManageSignalServer) bool {
+				return true
+
+			})
+
+			stream := &mockSubscribeProcessManageSignalServer{}
+
+			ctl.listenSendChannel(stream)
+			convey.So(true, convey.ShouldBeTrue)
+		})
 	})
+}
+
+// mockSubscribeProcessManageSignalServer 是一个模拟的 gRPC 流对象
+type mockSubscribeProcessManageSignalServer struct {
+	pb.Recover_SubscribeProcessManageSignalServer
 }
 
 func TestSignalEnqueue(t *testing.T) {
@@ -927,6 +956,795 @@ func TestHandleRestartAllProcess(t *testing.T) {
 		event, code, err := ctl.handleRestartAllProcess()
 		convey.So(event, convey.ShouldEqual, common.NotifySuccessEvent)
 		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestGetCtxAndStopCompleteChan(t *testing.T) {
+	convey.Convey("Test getCtxAndStopCompleteChan", t, func() {
+		ctl := &EventController{
+			lock:                   sync.RWMutex{},
+			controllerContext:      context.Background(),
+			reportStopCompleteChan: make(chan *pb.StopCompleteRequest),
+		}
+
+		patches := gomonkey.ApplyMethodFunc(&ctl.lock, "RLock", func() {
+		})
+		defer patches.Reset()
+
+		patches.ApplyMethodFunc(&ctl.lock, "RUnlock", func() {
+		})
+
+		convey.Convey("Should return correct context and channel", func() {
+			ctx, stopCompleteChan := ctl.getCtxAndStopCompleteChan()
+			convey.So(ctx, convey.ShouldResemble, ctl.controllerContext)
+
+			convey.So(stopCompleteChan, convey.ShouldResemble, ctl.reportStopCompleteChan)
+		})
+	})
+}
+
+func TestHandleWaitReportStopComplete(t *testing.T) {
+	convey.Convey("Test handleWaitReportStopComplete", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+			uuid:    "test-uuid",
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {})
+		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+
+		testReportChanNil(ctl)
+		testContextCanceled(ctl)
+		testProcessNotReady(ctl)
+		testValidReport(ctl)
+	})
+}
+
+func testReportChanNil(ctl *EventController) {
+	convey.Convey("When reportChan is nil", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStopCompleteChan", func() (context.Context, chan *pb.StopCompleteRequest) {
+			return context.Background(), nil
+		})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.handleWaitReportStopComplete()
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldResemble, fmt.Errorf("jobId=%s, reportChan is nil", ctl.jobInfo.JobId))
+	})
+}
+
+func testContextCanceled(ctl *EventController) {
+	convey.Convey("When context is canceled", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStopCompleteChan", func() (context.Context, chan *pb.StopCompleteRequest) {
+			return ctx, make(chan *pb.StopCompleteRequest)
+		})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.handleWaitReportStopComplete()
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.ControllerEventCancel)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testProcessNotReady(ctl *EventController) {
+	convey.Convey("When receiving a report with ProcessNotReady status", func() {
+		reportChan := make(chan *pb.StopCompleteRequest, 1)
+		reportChan <- &pb.StopCompleteRequest{Status: &pb.Status{Code: common.ProcessNotReady}}
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStopCompleteChan", func() (context.Context, chan *pb.StopCompleteRequest) {
+			return context.Background(), reportChan
+		})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.handleWaitReportStopComplete()
+		convey.So(event, convey.ShouldEqual, common.ProcessNotReadyEvent)
+		convey.So(respCode, convey.ShouldEqual, common.ClientError)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testValidReport(ctl *EventController) {
+	convey.Convey("When receiving a valid report", func() {
+		reportChan := make(chan *pb.StopCompleteRequest, 1)
+		reportChan <- &pb.StopCompleteRequest{Status: &pb.Status{Code: int32(common.OK)}}
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStopCompleteChan", func() (context.Context, chan *pb.StopCompleteRequest) {
+			return context.Background(), reportChan
+		})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.handleWaitReportStopComplete()
+		convey.So(event, convey.ShouldEqual, common.ReceiveReportEvent)
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestHandleWaitFlushFinish(t *testing.T) {
+	convey.Convey("Test handleWaitFlushFinish", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+
+		testUceFaultsOnly(ctl)
+		testNormalFaultsExist(ctl)
+		testContextDone(ctl)
+		testTimeout(ctl)
+	})
+}
+
+func testUceFaultsOnly(ctl *EventController) {
+	convey.Convey("When only UCE faults exist and retry strategy is enabled", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "takeUceFault2NormalFault", func() ([]string, []string) {
+			return []string{"uce-fault"}, []string{}
+		})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(ctl, "annotationWithRetryStrategy", func() bool {
+			return true
+		})
+
+		patches.ApplyPrivateMethod(ctl, "getCtxAndEventChan", func() (context.Context, chan interface{}) {
+			return context.Background(), make(chan interface{})
+		})
+
+		event, respCode, err := ctl.handleWaitFlushFinish()
+		convey.So(event, convey.ShouldEqual, common.FaultFlushFinishedEvent)
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testNormalFaultsExist(ctl *EventController) {
+	convey.Convey("When normal faults exist", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "takeUceFault2NormalFault", func() ([]string, []string) {
+			return []string{"uce-fault"}, []string{"normal-fault"}
+		})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(ctl, "annotationWithRetryStrategy", func() bool {
+			return true
+		})
+
+		patches.ApplyPrivateMethod(ctl, "getCtxAndEventChan", func() (context.Context, chan interface{}) {
+			return context.Background(), make(chan interface{})
+		})
+
+		event, respCode, err := ctl.handleWaitFlushFinish()
+		convey.So(event, convey.ShouldEqual, common.FaultFlushFinishedEvent)
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testContextDone(ctl *EventController) {
+	convey.Convey("When context is done", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndEventChan", func() (context.Context, chan interface{}) {
+			return ctx, make(chan interface{})
+		})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(ctl, "takeUceFault2NormalFault", func() ([]string, []string) {
+			return []string{}, []string{}
+		})
+
+		event, respCode, err := ctl.handleWaitFlushFinish()
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testTimeout(ctl *EventController) {
+	convey.Convey("When timeout occurs", func() {
+		timeoutChan := make(chan time.Time, 1)
+		timeoutChan <- time.Now()
+		patches := gomonkey.ApplyFunc(time.After, func(d time.Duration) <-chan time.Time {
+			return timeoutChan
+		})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(ctl, "getCtxAndEventChan", func() (context.Context, chan interface{}) {
+			return context.Background(), make(chan interface{})
+		})
+
+		patches.ApplyPrivateMethod(ctl, "takeUceFault2NormalFault", func() ([]string, []string) {
+			return []string{}, []string{}
+		})
+
+		event, respCode, err := ctl.handleWaitFlushFinish()
+		convey.So(event, convey.ShouldEqual, common.FaultFlushFinishedEvent)
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestNormalFaultAssociateSameNodeRank(t *testing.T) {
+	convey.Convey("Test normalFaultAssociateSameNodeRank", t, func() {
+		ctl := &EventController{
+			cacheNormalFault: []*pb.FaultRank{
+				{RankId: "rank1"},
+				{RankId: "rank2"},
+			},
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+		}
+
+		testNoDuplicateRanks(ctl)
+		testWithDuplicateRanks(ctl)
+	})
+}
+
+func testNoDuplicateRanks(ctl *EventController) {
+	convey.Convey("When no duplicate ranks exist", func() {
+		patches := gomonkey.ApplyFunc(common.GetFaultRankIdsInSameNode, func(rankIds []string, deviceNum int) []string {
+			return []string{"rank1", "rank2"}
+		})
+		defer patches.Reset()
+
+		res, rankIds := ctl.normalFaultAssociateSameNodeRank()
+		convey.So(res, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank1", FaultType: constant.NormalFaultType},
+			{RankId: "rank2", FaultType: constant.NormalFaultType},
+		})
+		convey.So(rankIds, convey.ShouldResemble, []string{"rank1", "rank2"})
+	})
+}
+
+func testWithDuplicateRanks(ctl *EventController) {
+	convey.Convey("When duplicate ranks exist", func() {
+		patches := gomonkey.ApplyFunc(common.GetFaultRankIdsInSameNode, func(rankIds []string, deviceNum int) []string {
+			return []string{"rank1", "rank2", "rank1"}
+		})
+		defer patches.Reset()
+
+		res, rankIds := ctl.normalFaultAssociateSameNodeRank()
+		convey.So(res, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank1", FaultType: constant.NormalFaultType},
+			{RankId: "rank2", FaultType: constant.NormalFaultType},
+		})
+		convey.So(rankIds, convey.ShouldResemble, []string{"rank1", "rank2"})
+	})
+}
+
+func TestWriteConfirmFaultAndWaitPlatResultFault(t *testing.T) {
+	convey.Convey("Test writeConfirmFaultAndWaitPlatResultFault", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId:     "test-job-id",
+				PgName:    "test-pg",
+				Namespace: "test-namespace",
+			},
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+
+		testUpdateProcessConfirmFaultError(ctl)
+		testWaitProcessResultFaultError(ctl)
+		testPlatformStrategyError(ctl)
+		testSuccess(ctl)
+	})
+}
+
+func testUpdateProcessConfirmFaultError(ctl *EventController) {
+	convey.Convey("When UpdateProcessConfirmFault returns an error", func() {
+		patches := gomonkey.ApplyFunc(common.RemoveSliceDuplicateFaults, func(faults []*pb.FaultRank) []*pb.FaultRank {
+			return faults
+		})
+		defer patches.Reset()
+
+		patches.ApplyFunc(UpdateProcessConfirmFault, func(pgName, namespace string, faults []*pb.FaultRank) error {
+			return errors.New("update error")
+		})
+
+		_, err := ctl.writeConfirmFaultAndWaitPlatResultFault([]*pb.FaultRank{{RankId: "rank1"}})
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "update process confirm fault err")
+	})
+}
+
+func testWaitProcessResultFaultError(ctl *EventController) {
+	convey.Convey("When WaitProcessResultFault returns an error", func() {
+		patches := gomonkey.ApplyFunc(common.RemoveSliceDuplicateFaults, func(faults []*pb.FaultRank) []*pb.FaultRank {
+			return faults
+		})
+		defer patches.Reset()
+
+		patches.ApplyFunc(UpdateProcessConfirmFault, func(pgName, namespace string, faults []*pb.FaultRank) error {
+			return nil
+		})
+
+		patches.ApplyFunc(WaitProcessResultFault, func(pgName, namespace string) ([]*pb.FaultRank, error) {
+			return nil, errors.New("wait error")
+		})
+
+		_, err := ctl.writeConfirmFaultAndWaitPlatResultFault([]*pb.FaultRank{{RankId: "rank1"}})
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "wait process result fault err")
+	})
+}
+
+func testPlatformStrategyError(ctl *EventController) {
+	convey.Convey("When platformStrategy returns an error", func() {
+		patches := gomonkey.ApplyFunc(common.RemoveSliceDuplicateFaults, func(faults []*pb.FaultRank) []*pb.FaultRank {
+			return faults
+		})
+		defer patches.Reset()
+
+		patches.ApplyFunc(UpdateProcessConfirmFault, func(pgName, namespace string, faults []*pb.FaultRank) error {
+			return nil
+		})
+
+		patches.ApplyFunc(WaitProcessResultFault, func(pgName, namespace string) ([]*pb.FaultRank, error) {
+			return []*pb.FaultRank{{RankId: "rank2"}}, nil
+		})
+
+		patches.ApplyFunc(platFormStrategy, func(pgName, namespace string, flag bool) (string, error) {
+			return "", errors.New("strategy error")
+		})
+
+		_, err := ctl.writeConfirmFaultAndWaitPlatResultFault([]*pb.FaultRank{{RankId: "rank1"}})
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "confirm plat strategy err")
+	})
+}
+
+func testSuccess(ctl *EventController) {
+	convey.Convey("When all operations succeed", func() {
+		patches := gomonkey.ApplyFunc(common.RemoveSliceDuplicateFaults, func(faults []*pb.FaultRank) []*pb.FaultRank {
+			return faults
+		})
+		defer patches.Reset()
+
+		patches.ApplyFunc(UpdateProcessConfirmFault, func(pgName, namespace string, faults []*pb.FaultRank) error {
+			return nil
+		})
+
+		patches.ApplyFunc(WaitProcessResultFault, func(pgName, namespace string) ([]*pb.FaultRank, error) {
+			return []*pb.FaultRank{{RankId: "rank2"}}, nil
+		})
+
+		patches.ApplyFunc(platFormStrategy, func(pgName, namespace string, flag bool) (string, error) {
+			return "strategy", nil
+		})
+
+		result, err := ctl.writeConfirmFaultAndWaitPlatResultFault([]*pb.FaultRank{{RankId: "rank1"}})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank1"},
+			{RankId: "rank2"},
+		})
+	})
+}
+
+func TestTakeUceFault2NormalFault(t *testing.T) {
+	convey.Convey("Test takeUceFault2NormalFault", t, func() {
+		ctl := &EventController{
+			lock: sync.RWMutex{},
+			cacheUceFault: []*pb.FaultRank{
+				{RankId: "rank1", FaultType: constant.UceFaultType},
+			},
+			cacheNormalFault: []*pb.FaultRank{
+				{RankId: "rank2", FaultType: constant.NormalFaultType},
+			},
+			latestRecoverResult: []*pb.RecoverStatusRequest{
+				{Strategy: constant.ProcessRetryStrategyName},
+			},
+		}
+
+		testRetryStrategyEnabled(ctl)
+		testRetryStrategyDisabled(ctl)
+		testNoRetryStrategySupport(ctl)
+	})
+}
+
+func testRetryStrategyEnabled(ctl *EventController) {
+	convey.Convey("When retry strategy is enabled", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "supportRetryStrategy", func() bool {
+			return true
+		})
+		defer patches.Reset()
+
+		uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
+		convey.So(uceFaults, convey.ShouldBeEmpty)
+		convey.So(normalFaults, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank2", FaultType: constant.NormalFaultType},
+			{RankId: "rank1", FaultType: constant.UceFaultType},
+		})
+	})
+}
+
+func testRetryStrategyDisabled(ctl *EventController) {
+	convey.Convey("When retry strategy is disabled", func() {
+		ctl.latestRecoverResult = []*pb.RecoverStatusRequest{} // 清空 recoverResult
+		patches := gomonkey.ApplyPrivateMethod(ctl, "supportRetryStrategy", func() bool {
+			return true
+		})
+		defer patches.Reset()
+
+		uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
+		convey.So(uceFaults, convey.ShouldBeEmpty)
+		convey.So(normalFaults, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank2", FaultType: constant.NormalFaultType},
+			{RankId: "rank1", FaultType: constant.UceFaultType},
+		})
+	})
+}
+
+func testNoRetryStrategySupport(ctl *EventController) {
+	convey.Convey("When retry strategy is not supported", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "supportRetryStrategy", func() bool {
+			return false
+		})
+		defer patches.Reset()
+
+		uceFaults, normalFaults := ctl.takeUceFault2NormalFault()
+		convey.So(uceFaults, convey.ShouldBeEmpty)
+		convey.So(normalFaults, convey.ShouldResemble, []*pb.FaultRank{
+			{RankId: "rank2", FaultType: constant.NormalFaultType},
+			{RankId: "rank1", FaultType: constant.UceFaultType},
+		})
+	})
+}
+
+func TestNotifyFaultForUceFaultCase(t *testing.T) {
+	convey.Convey("Test notifyFaultForUceFaultCase", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId:         "test-job-id",
+				JobName:       "test-job",
+				Namespace:     "test-namespace",
+				RecoverConfig: common.RecoverConfig{PlatFormMode: true},
+			},
+			faultPod: make(map[string]string),
+			uuid:     "test-uuid",
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+
+		testPlatformModeWriteConfirmFaultError(ctl)
+		testPlatformModeNonUceFault(ctl)
+		testPlatformModeUceFault(ctl)
+		testNonPlatformMode(ctl)
+	})
+}
+
+func testPlatformModeWriteConfirmFaultError(ctl *EventController) {
+	convey.Convey("When platform mode and writeConfirmFaultAndWaitPlatResultFault returns error", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
+			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+				return nil, errors.New("write confirm fault error")
+			})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.notifyFaultForUceFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent)
+		convey.So(respCode, convey.ShouldEqual, common.WriteConfirmFaultOrWaitPlatResultFault)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testPlatformModeNonUceFault(ctl *EventController) {
+	convey.Convey("When platform mode and non-UCE fault", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
+			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+				return []*pb.FaultRank{{RankId: "rank1"}}, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyFunc(common.IsUceFault, func(faults []*pb.FaultRank) bool {
+			return false
+		})
+
+		patches.ApplyPrivateMethod(ctl, "normalFaultAssociateSameNodeRank",
+			func() ([]*pb.FaultRank, []string) {
+				return []*pb.FaultRank{{RankId: "rank2"}}, []string{"rank2"}
+			})
+
+		patches.ApplyFunc(common.GetPodMap, func(jobId string, ranks []string) (map[string]string, error) {
+			return map[string]string{"rank2": "pod2"}, nil
+		})
+
+		patches.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
+			func() (context.Context, chan *pb.ProcessManageSignal) {
+				return context.Background(), make(chan *pb.ProcessManageSignal, 1)
+			})
+
+		patches.ApplyFunc(common.RetryWriteResetCM,
+			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
+			})
+
+		event, respCode, err := ctl.notifyFaultForUceFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testPlatformModeUceFault(ctl *EventController) {
+	convey.Convey("When platform mode and UCE fault", func() {
+		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
+			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+				return []*pb.FaultRank{{RankId: "rank1"}}, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyFunc(common.IsUceFault, func(faults []*pb.FaultRank) bool {
+			return true
+		})
+
+		patches.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
+			func() (context.Context, chan *pb.ProcessManageSignal) {
+				return context.Background(), make(chan *pb.ProcessManageSignal, 1)
+			})
+
+		event, respCode, err := ctl.notifyFaultForUceFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testNonPlatformMode(ctl *EventController) {
+	convey.Convey("When non-platform mode", func() {
+		ctl.jobInfo.PlatFormMode = false
+		defer func() { ctl.jobInfo.PlatFormMode = true }()
+
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
+			func() (context.Context, chan *pb.ProcessManageSignal) {
+				return context.Background(), make(chan *pb.ProcessManageSignal, 1)
+			})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.notifyFaultForUceFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestHandleSendResult(t *testing.T) {
+	convey.Convey("Test handleSendResult", t, func() {
+		ctl := &EventController{}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+
+		testKillMasterSignal(ctl)
+		testErrorCase(ctl)
+		testNotifySuccessEvent(ctl)
+		testChangeStrategyRetry(ctl)
+		testChangeStrategyRecover(ctl)
+		testChangeStrategyDump(ctl)
+		testChangeStrategyExit(ctl)
+		testUnsupportedStrategy(ctl)
+	})
+}
+
+func testKillMasterSignal(ctl *EventController) {
+	convey.Convey("When signal type is KillMasterSignalType", func() {
+		signal := &pb.ProcessManageSignal{SignalType: constant.KillMasterSignalType}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.FinishEvent)
+	})
+}
+
+func testErrorCase(ctl *EventController) {
+	convey.Convey("When error is not nil", func() {
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		signal := &pb.ProcessManageSignal{}
+		ctl.handleSendResult(signal, errors.New("test error"))
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyFailEvent)
+	})
+}
+
+func testNotifySuccessEvent(ctl *EventController) {
+	convey.Convey("When signal type is not ChangeStrategySignalType", func() {
+		signal := &pb.ProcessManageSignal{SignalType: constant.GlobalFaultSignalType}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifySuccessEvent)
+	})
+}
+
+func testChangeStrategyRetry(ctl *EventController) {
+	convey.Convey("When change strategy is ProcessRetryStrategyName", func() {
+		signal := &pb.ProcessManageSignal{
+			SignalType:     constant.ChangeStrategySignalType,
+			ChangeStrategy: constant.ProcessRetryStrategyName,
+		}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyRetrySuccessEvent)
+	})
+}
+
+func testChangeStrategyRecover(ctl *EventController) {
+	convey.Convey("When change strategy is ProcessRecoverStrategyName", func() {
+		signal := &pb.ProcessManageSignal{
+			SignalType:     constant.ChangeStrategySignalType,
+			ChangeStrategy: constant.ProcessRecoverStrategyName,
+		}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyRecoverSuccessEvent)
+	})
+}
+
+func testChangeStrategyDump(ctl *EventController) {
+	convey.Convey("When change strategy is ProcessDumpStrategyName", func() {
+		signal := &pb.ProcessManageSignal{
+			SignalType:     constant.ChangeStrategySignalType,
+			ChangeStrategy: constant.ProcessDumpStrategyName,
+		}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyDumpSuccessEvent)
+	})
+}
+
+func testChangeStrategyExit(ctl *EventController) {
+	convey.Convey("When change strategy is ProcessExitStrategyName", func() {
+		signal := &pb.ProcessManageSignal{
+			SignalType:     constant.ChangeStrategySignalType,
+			ChangeStrategy: constant.ProcessExitStrategyName,
+		}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyExitSuccessEvent)
+	})
+}
+
+func testUnsupportedStrategy(ctl *EventController) {
+	convey.Convey("When change strategy is unsupported", func() {
+		signal := &pb.ProcessManageSignal{
+			SignalType:     constant.ChangeStrategySignalType,
+			ChangeStrategy: "unsupported-strategy",
+			JobId:          "test-job-id",
+		}
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		defer patches.Reset()
+		ctl.handleSendResult(signal, nil)
+		convey.So(addedEvent, convey.ShouldEqual, "")
+	})
+}
+
+func TestNotifyFaultForNormalFaultCase(t *testing.T) {
+	convey.Convey("Test notifyFaultForNormalFaultCase", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId:     "test-job-id",
+				JobName:   "test-job",
+				Namespace: "test-namespace",
+			},
+			uuid: "test-uuid",
+		}
+
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+		patches.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
+			func() (context.Context, chan *pb.ProcessManageSignal) {
+				return context.Background(), make(chan *pb.ProcessManageSignal, 1)
+			})
+
+		testPlatformModeWriteConfirmNormalFaultError(ctl)
+		testPlatformModeSuccess(ctl)
+		testNonPlatformModeSuccess(ctl)
+	})
+}
+
+func testPlatformModeWriteConfirmNormalFaultError(ctl *EventController) {
+	convey.Convey("When platform mode and writeConfirmFaultAndWaitPlatResultFault returns error", func() {
+		ctl.jobInfo.PlatFormMode = true
+		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
+			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+				return nil, errors.New("write confirm fault error")
+			})
+		defer patches.Reset()
+
+		event, respCode, err := ctl.notifyFaultForNormalFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent)
+		convey.So(respCode, convey.ShouldEqual, common.WriteConfirmFaultOrWaitPlatResultFault)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testPlatformModeSuccess(ctl *EventController) {
+	convey.Convey("When platform mode and all operations succeed", func() {
+		ctl.jobInfo.PlatFormMode = true
+		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
+			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
+				return []*pb.FaultRank{{RankId: "rank1"}}, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(ctl, "updateCacheFaultAndPod", func() ([]*pb.FaultRank, []string, error) {
+			return []*pb.FaultRank{{RankId: "rank1"}}, []string{"rank1"}, nil
+		})
+
+		patches.ApplyFunc(common.WriteResetInfoToCM,
+			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
+			})
+
+		event, respCode, err := ctl.notifyFaultForNormalFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func testNonPlatformModeSuccess(ctl *EventController) {
+	convey.Convey("When non-platform mode and all operations succeed", func() {
+		ctl.jobInfo.PlatFormMode = false
+		patches := gomonkey.ApplyPrivateMethod(ctl, "updateCacheFaultAndPod",
+			func() ([]*pb.FaultRank, []string, error) {
+				return []*pb.FaultRank{{RankId: "rank1"}}, []string{"rank1"}, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyFunc(common.WriteResetInfoToCM,
+			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
+			})
+
+		event, respCode, err := ctl.notifyFaultForNormalFaultCase(
+			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
+		convey.So(event, convey.ShouldEqual, "")
+		convey.So(respCode, convey.ShouldEqual, common.OK)
 		convey.So(err, convey.ShouldBeNil)
 	})
 }

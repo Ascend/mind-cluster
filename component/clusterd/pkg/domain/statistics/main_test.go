@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/logs"
 )
 
 var testErr = errors.New("test error")
@@ -34,5 +35,12 @@ func initLog() error {
 		fmt.Printf("init hwlog failed, %v\n", err)
 		return errors.New("init hwlog failed")
 	}
+
+	logger, err := hwlog.NewCustomLogger(logConfig, context.Background())
+	if err != nil {
+		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
+		return errors.New("init logs failed")
+	}
+	logs.JobEventLog = logger
 	return nil
 }
