@@ -20,7 +20,6 @@ Package npu is using for HuaWei Ascend pin affinity schedule.
 package npu
 
 import (
-	"fmt"
 	"strings"
 
 	"k8s.io/klog"
@@ -41,9 +40,9 @@ import (
 )
 
 var (
-	card910Factory  = map[string]base.AscendHandler{}
-	card310Factory  = map[string]base.AscendHandler{}
-	card310pFactory = map[string]base.AscendHandler{}
+	card910Factory  = map[string]func() base.AscendHandler{}
+	card310Factory  = map[string]func() base.AscendHandler{}
+	card310pFactory = map[string]func() base.AscendHandler{}
 )
 
 const (
@@ -72,29 +71,43 @@ func init() {
 }
 
 func initCard310Factory() {
-	card310Factory[chip310x4.SchedulerName] = chip310x4.New(chip310x4.SchedulerName)
-	card310Factory[card310x4.SchedulerName] = card310x4.New(card310x4.SchedulerName)
+	card310Factory[chip310x4.SchedulerName] =
+		func() base.AscendHandler { return chip310x4.New(chip310x4.SchedulerName) }
+	card310Factory[card310x4.SchedulerName] =
+		func() base.AscendHandler { return card310x4.New(card310x4.SchedulerName) }
 }
 
 func initCard310PFactory() {
-	card310pFactory[chip310px2.SchedulerName] = chip310px2.New(chip310px2.SchedulerName)
-	card310pFactory[card310px2.SchedulerName] = card310px2.New(card310px2.SchedulerName)
+	card310pFactory[chip310px2.SchedulerName] =
+		func() base.AscendHandler { return chip310px2.New(chip310px2.SchedulerName) }
+	card310pFactory[card310px2.SchedulerName] =
+		func() base.AscendHandler { return card310px2.New(card310px2.SchedulerName) }
 }
 
 func initCard910Factory() {
-	card910Factory[card910x2Name] = base.New(util.NPU910CardName,
-		base.WithAnnoPreVal(util.NPU910CardNamePre), base.WithMaxNodeNum(util.NPUIndex2))
-	card910Factory[module910bx8Name] = base.New(util.NPU910CardName,
-		base.WithAnnoPreVal(util.NPU910CardNamePre), base.WithMaxNodeNum(util.NPUIndex8), base.WithNetworkFault(true))
-	card910Factory[half910x4Name] = base.New(util.NPU910CardName,
-		base.WithAnnoPreVal(util.NPU910CardNamePre),
-		base.WithMaxNodeNum(util.NPUIndex4),
-		base.WithNetworkFault(true),
-		base.WithNpuInvalidMap(map[int]struct{}{util.NPUIndex3: {}}))
-	card910Factory[module910bx16.SchedulerName] = module910bx16.New(module910bx16.SchedulerName)
-	card910Factory[module910x8.SchedulerName] = module910x8.New(module910x8.SchedulerName)
-	card910Factory[superpod.SchedulerName] = superpod.New(superpod.SchedulerName)
-	card910Factory[module910a3x16.SchedulerName] = module910a3x16.New(module910a3x16.SchedulerName)
+	card910Factory[card910x2Name] = func() base.AscendHandler {
+		return base.New(util.NPU910CardName,
+			base.WithAnnoPreVal(util.NPU910CardNamePre), base.WithMaxNodeNum(util.NPUIndex2))
+	}
+	card910Factory[module910bx8Name] = func() base.AscendHandler {
+		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),
+			base.WithMaxNodeNum(util.NPUIndex8), base.WithNetworkFault(true))
+	}
+	card910Factory[half910x4Name] = func() base.AscendHandler {
+		return base.New(util.NPU910CardName,
+			base.WithAnnoPreVal(util.NPU910CardNamePre),
+			base.WithMaxNodeNum(util.NPUIndex4),
+			base.WithNetworkFault(true),
+			base.WithNpuInvalidMap(map[int]struct{}{util.NPUIndex3: {}}))
+	}
+	card910Factory[module910bx16.SchedulerName] =
+		func() base.AscendHandler { return module910bx16.New(module910bx16.SchedulerName) }
+	card910Factory[module910x8.SchedulerName] =
+		func() base.AscendHandler { return module910x8.New(module910x8.SchedulerName) }
+	card910Factory[superpod.SchedulerName] =
+		func() base.AscendHandler { return superpod.New(superpod.SchedulerName) }
+	card910Factory[module910a3x16.SchedulerName] =
+		func() base.AscendHandler { return module910a3x16.New(module910a3x16.SchedulerName) }
 }
 
 // InitPolicyHandler init npu affinity policy handler
@@ -117,11 +130,11 @@ func init310CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 	if !ok {
 		v = chipAcceleratorValue
 	}
-	value, ok := card310Factory[attr.ReqNPUName+v]
+	handlerFunc, ok := card310Factory[attr.ReqNPUName+v]
 	if !ok {
 		return nil, false
 	}
-	return value, true
+	return handlerFunc(), true
 }
 
 func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPluginNeed, bool) {
@@ -129,23 +142,20 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 		return vnpu2.New(util.NPU910CardName), true
 	}
 	handlerName := get910CardHandlerName(attr)
-	value, ok := card910Factory[handlerName]
+	handlerFunc, ok := card910Factory[handlerName]
 	if !ok {
-		err := fmt.Errorf("not support %s", handlerName)
-		klog.V(util.LogErrorLev).Infof("Init910CardPolicyHandler err: %s", err.Error())
+		klog.V(util.LogErrorLev).Infof("Handler %s not found in card910Factory", handlerName)
 		return nil, false
 	}
-	return value, ok
+	return handlerFunc(), true
 }
 
 func get910CardHandlerName(attr util.SchedulerJobAttr) string {
-	_, ok := attr.Annotation[superpod.SuperPodAnnoKey]
-	if ok {
+	if _, ok := attr.Annotation[superpod.SuperPodAnnoKey]; ok {
 		return superpod.SchedulerName
 	}
 	v, ok := attr.Selector[util.AcceleratorType]
 	if !ok {
-		v = util.ModuleAcceleratorType
 		return util.NPU910CardName + util.ModuleAcceleratorType
 	}
 	if strings.Contains(v, cardAcceleratorValue) {
@@ -171,9 +181,9 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 	if duo == trueStr {
 		duo = duoKeyLabel
 	}
-	value, ok := card310pFactory[attr.ReqNPUName+duo+v]
+	handlerFunc, ok := card310pFactory[attr.ReqNPUName+duo+v]
 	if !ok {
 		return nil, false
 	}
-	return value, true
+	return handlerFunc(), true
 }
