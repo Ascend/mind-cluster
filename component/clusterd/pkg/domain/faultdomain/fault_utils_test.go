@@ -496,30 +496,77 @@ func TestIsNodeReady(t *testing.T) {
 	})
 }
 
-// TestIsNotHandleFaultsWithFaultType check faults in specified fault type are NotHandleFault
-func TestIsNotHandleFaultsWithFaultType(t *testing.T) {
-	t.Run("TestIsNotHandleFaultsWithFaultType", func(t *testing.T) {
-		faults := make([]constant.DeviceFault, 0)
-		faults = append(faults, constant.DeviceFault{
-			FaultType:  constant.CardUnhealthy,
-			FaultLevel: constant.NotHandleFault,
-		})
-		faults = append(faults, constant.DeviceFault{
-			FaultType:  constant.CardNetworkUnhealthy,
-			FaultLevel: constant.NotHandleFault,
-		})
-		if !isNotHandleFaultsWithFaultType(faults, constant.CardNetworkUnhealthy) {
-			t.Error("TestIsNotHandleFaultsWithFaultType fail")
+func getCardNotHandleFaults() []constant.DeviceFault {
+	return append([]constant.DeviceFault{}, constant.DeviceFault{
+		FaultType:  constant.CardUnhealthy,
+		FaultLevel: constant.NotHandleFault,
+	})
+}
+
+func getCardNotHandleAndPublicFaultSeparateNPU() []constant.DeviceFault {
+	return append([]constant.DeviceFault{}, constant.DeviceFault{
+		FaultType:  constant.CardUnhealthy,
+		FaultLevel: constant.NotHandleFault,
+	}, constant.DeviceFault{
+		FaultType:  constant.PublicFaultType,
+		FaultLevel: constant.SeparateNPU,
+	})
+}
+
+func getCardNetworkNotHandleAndPublicFaultSeparateNPU() []constant.DeviceFault {
+	return append([]constant.DeviceFault{}, constant.DeviceFault{
+		FaultType:  constant.CardNetworkUnhealthy,
+		FaultLevel: constant.NotHandleFault,
+	}, constant.DeviceFault{
+		FaultType:  constant.PublicFaultType,
+		FaultLevel: constant.SeparateNPU,
+	})
+}
+
+func getCardNotHandleAndPublicFaultSubHealth() []constant.DeviceFault {
+	return append([]constant.DeviceFault{}, constant.DeviceFault{
+		FaultType:  constant.CardUnhealthy,
+		FaultLevel: constant.NotHandleFault,
+	}, constant.DeviceFault{
+		FaultType:  constant.PublicFaultType,
+		FaultLevel: constant.SubHealthFault,
+	})
+}
+
+// TestIsFaultDeletable check faults in specified fault type are NotHandleFault and SubHealthFault
+func TestIsFaultDeletable(t *testing.T) {
+	t.Run("TestIsFaultDeletable", func(t *testing.T) {
+		deletableFaultLevels := []string{constant.NotHandleFault, constant.SubHealthFault}
+		faults := getCardNotHandleFaults()
+		if !isFaultDeletable(faults, []string{constant.CardUnhealthy}, deletableFaultLevels) {
+			t.Error("when only NotHandleFault in CardUnhealthy then should remove")
 		}
-		if !isNotHandleFaultsWithFaultType(faults, constant.CardUnhealthy) {
-			t.Error("TestIsNotHandleFaultsWithFaultType fail")
+		if !isFaultDeletable(faults, []string{constant.CardNetworkUnhealthy}, deletableFaultLevels) {
+			t.Error("when no fault in CardNetworkUnhealthy then should remove from CardNetworkUnhealthy")
 		}
-		faults = append(faults, constant.DeviceFault{
-			FaultType:  constant.CardUnhealthy,
-			FaultLevel: constant.SeparateNPU,
-		})
-		if isNotHandleFaultsWithFaultType(faults, constant.CardUnhealthy) {
-			t.Error("TestIsNotHandleFaultsWithFaultType fail")
+
+		faults = getCardNotHandleAndPublicFaultSeparateNPU()
+		if isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
+			t.Error("when PublicFaultType is SeparateNPU then should not remove from CardUnhealthy")
+		}
+
+		faults = getCardNetworkNotHandleAndPublicFaultSeparateNPU()
+		if !isFaultDeletable(faults, []string{constant.CardNetworkUnhealthy}, deletableFaultLevels) {
+			t.Error("when PublicFaultType is SeparateNPU and CardNetworkUnhealthy is NotHandleFault " +
+				"then should remove from CardNetworkUnhealthy")
+		}
+
+		faults = append([]constant.DeviceFault{}, constant.DeviceFault{FaultType: constant.PublicFaultType})
+		if isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
+			t.Error("when PublicFaultType is SeparateNPU then should not remove from CardUnhealthy")
+		}
+		faults = make([]constant.DeviceFault, 0)
+		if !isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
+			t.Error("when no faults then should remove from CardUnhealthy")
+		}
+		faults = getCardNotHandleAndPublicFaultSubHealth()
+		if !isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
+			t.Error("when SubHealthFault and NotHandleFault faults then should remove from CardUnhealthy")
 		}
 	})
 }

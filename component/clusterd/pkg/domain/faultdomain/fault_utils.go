@@ -13,6 +13,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/utils/strings/slices"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -302,9 +303,9 @@ func faultsGroupByType(faults []constant.DeviceFault) map[string][]constant.Devi
 	return result
 }
 
-func isNotHandleFaultsWithFaultType(faults []constant.DeviceFault, faultType string) bool {
+func isFaultDeletable(faults []constant.DeviceFault, faultTypes []string, faultLevels []string) bool {
 	for _, fault := range faults {
-		if fault.FaultType == faultType && fault.FaultLevel != constant.NotHandleFault {
+		if slices.Contains(faultTypes, fault.FaultType) && !slices.Contains(faultLevels, fault.FaultLevel) {
 			return false
 		}
 	}
@@ -313,11 +314,12 @@ func isNotHandleFaultsWithFaultType(faults []constant.DeviceFault, faultType str
 
 func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) constant.AdvanceDeviceFaultCm {
 	for deviceName, faults := range advanceDeviceCm.FaultDeviceList {
-		if isNotHandleFaultsWithFaultType(faults, constant.CardUnhealthy) {
+		deletableFaultLevels := []string{constant.NotHandleFault, constant.SubHealthFault}
+		if isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
 			advanceDeviceCm.CardUnHealthy = util.DeleteStringSliceItem(advanceDeviceCm.CardUnHealthy, deviceName)
 			hwlog.RunLog.Debugf("remove device %s from CardUnHealthy", deviceName)
 		}
-		if isNotHandleFaultsWithFaultType(faults, constant.CardNetworkUnhealthy) {
+		if isFaultDeletable(faults, []string{constant.CardNetworkUnhealthy}, deletableFaultLevels) {
 			advanceDeviceCm.NetworkUnhealthy = util.DeleteStringSliceItem(advanceDeviceCm.NetworkUnhealthy, deviceName)
 			hwlog.RunLog.Debugf("remove device %s from NetworkUnhealthy", deviceName)
 		}
