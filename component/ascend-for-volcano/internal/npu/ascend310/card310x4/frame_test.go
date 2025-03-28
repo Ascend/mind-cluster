@@ -134,7 +134,7 @@ func buildCheckNodeNPUByTaskTestCases() []checkNodeNPUByTaskTestCase {
 			Name:    "03-CheckNodeNPUByTask return err when node has no req npu",
 			Task:    test.FakeTaskWithResReq(MockPodZeroName, util.NPU310CardName, util.NPUIndex3),
 			Node:    initNode(MockNodeOneName, util.NPU310PCardName, ""),
-			WantErr: fmt.Errorf("getUsableTopFromNode %s don't have %s", MockNodeOneName, util.NPU310CardName),
+			WantErr: fmt.Errorf("getUsableTopFromNode don't have %s", util.NPU310CardName),
 		},
 		{
 			Name: "04-CheckNodeNPUByTask return err when node has no req npu",

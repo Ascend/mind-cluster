@@ -94,7 +94,7 @@ func buildCheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 					Annotation: map[string]string{util.NPU310CardName: "Ascend310-0,Ascend310-1,Ascend310-2"},
 				},
 			},
-			WantErr: errors.New("getUsableTopFromNode node1 don't have huawei.com/Ascend910"),
+			WantErr: errors.New("getUsableTopFromNode don't have huawei.com/Ascend910"),
 		},
 	}
 

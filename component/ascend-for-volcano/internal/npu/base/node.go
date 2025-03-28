@@ -37,12 +37,12 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 	}
 	topStr, ok := node.Annotation[tp.GetAnnoName()]
 	if !ok || len(topStr) == 0 {
-		return nil, fmt.Errorf("getUsableTopFromNode %s don't have %s", node.Name, tp.GetAnnoName())
+		return nil, fmt.Errorf("getUsableTopFromNode don't have %s", tp.GetAnnoName())
 	}
 
 	nodeTop := util.ChangeTopToIntArray(topStr, tp.GetAnnoPreVal())
 	if len(nodeTop) > tp.MaxNodeNPUNum {
-		err := fmt.Errorf("node<%s> npu top<%v> is invalid", node.Name, nodeTop)
+		err := fmt.Errorf("node npu top<%v> is invalid", nodeTop)
 		klog.V(util.LogWarningLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}

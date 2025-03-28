@@ -168,22 +168,25 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 	if attr.ReqNPUName == util.AscendNPUCore {
 		return vnpu.New(util.NPU310PCardName), true
 	}
-	duo, ok := attr.Label[duoKeyLabel]
+	handlerName := get310PCardHandlerName(attr)
+	handlerFunc, ok := card310pFactory[handlerName]
 	if !ok {
-		klog.V(util.LogInfoLev).Info("not 300I duo")
+		klog.V(util.LogWarningLev).Infof("Handler %s not found in card310p Factory", handlerName)
 		return base.New(util.NPU310PCardName,
 			base.WithAnnoPreVal(util.NPU310PCardNamePre), base.WithMaxNodeNum(card310pMaxNodeNPUNum)), true
+	}
+	return handlerFunc(), true
+}
+
+func get310PCardHandlerName(attr util.SchedulerJobAttr) string {
+	duo := attr.Label[duoKeyLabel]
+	if duo == trueStr {
+		klog.V(util.LogInfoLev).Info("is 300I duo")
+		duo = duoKeyLabel
 	}
 	v, ok := attr.Label[accelerator310Key]
 	if !ok {
 		v = chipAcceleratorValue
 	}
-	if duo == trueStr {
-		duo = duoKeyLabel
-	}
-	handlerFunc, ok := card310pFactory[attr.ReqNPUName+duo+v]
-	if !ok {
-		return nil, false
-	}
-	return handlerFunc(), true
+	return attr.ReqNPUName + duo + v
 }
