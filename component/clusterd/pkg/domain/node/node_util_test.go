@@ -4,7 +4,6 @@
 package node
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -12,7 +11,6 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -27,13 +25,6 @@ var (
 	testDeviceKey   = "key"
 	testDeviceValue = "value"
 )
-
-func init() {
-	hwLogConfig := hwlog.LogConfig{
-		OnlyToStdout: true,
-	}
-	hwlog.InitRunLogger(&hwLogConfig, context.Background())
-}
 
 func TestParseNodeInfoCM(t *testing.T) {
 	convey.Convey("TestParseNodeInfoCM", t, func() {

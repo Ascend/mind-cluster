@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package statistics main test for statistics
-package statistics
+// Package node main test for node
+package node
 
 import (
 	"context"
@@ -16,7 +16,7 @@ var testErr = errors.New("test error")
 
 func TestMain(m *testing.M) {
 	if err := setup(); err != nil {
-		return
+		panic(err)
 	}
 	code := m.Run()
 	fmt.Printf("exit_code = %v\n", code)

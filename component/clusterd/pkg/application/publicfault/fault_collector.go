@@ -11,10 +11,10 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	statistics2 "clusterd/pkg/application/statistics"
+	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
-	"clusterd/pkg/domain/statistics"
 )
 
 var pubFaultInitOnce sync.Once
@@ -65,7 +65,7 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 		}
 	}
 	// a public fault message, update statistic configmap once
-	statistics2.StatisticFault.Notify()
+	statistics.StatisticFault.Notify()
 	return nil
 }
 
@@ -86,7 +86,7 @@ func getNodeName(influence api.Influence) string {
 	if influence.NodeName != "" {
 		return influence.NodeName
 	}
-	name, ok := statistics.GetNodeNameBySN(influence.NodeSN)
+	name, ok := node.GetNodeNameBySN(influence.NodeSN)
 	if !ok {
 		hwlog.RunLog.Error("get node name by sn failed, sn does not exist")
 		return ""

@@ -196,7 +196,8 @@ func initClusterDevice() {
 	nodes := getNodesFromInformer()
 	hwlog.RunLog.Infof("init cluster node length=%d", len(nodes))
 	for _, n := range nodes {
-		nodeDevice, superPodID := superpod.GetNodeDeviceAndSuperPodID(n)
+		node.SaveNodeToCache(n)
+		nodeDevice, superPodID := node.GetNodeDeviceAndSuperPodID(n)
 		if nodeDevice == nil || superPodID == "" {
 			continue
 		}

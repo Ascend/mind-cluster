@@ -1,33 +1,27 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package kube main test for kube
-package kube
+// Package node main test for node
+package node
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/agiledragon/gomonkey/v2"
-	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
-var (
-	testErr       = errors.New("test error")
-	testK8sClient *K8sClient
-)
+var testErr = errors.New("test error")
 
 func TestMain(m *testing.M) {
-	var patches = gomonkey.ApplyFuncReturn(newClientK8s,
-		&K8sClient{
-			ClientSet: fake.NewSimpleClientset(),
-		}, nil)
-	defer patches.Reset()
 	if err := setup(); err != nil {
-		return
+		panic(err)
 	}
 	code := m.Run()
 	fmt.Printf("exit_code = %v\n", code)
@@ -37,10 +31,7 @@ func setup() error {
 	if err := initLog(); err != nil {
 		return err
 	}
-	if err := initK8sClient(); err != nil {
-		return err
-	}
-	return nil
+	return constructNodeInfo()
 }
 
 func initLog() error {
@@ -54,12 +45,20 @@ func initLog() error {
 	return nil
 }
 
-func initK8sClient() error {
-	err := InitClientK8s()
+func constructNodeInfo() error {
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
 	if err != nil {
-		hwlog.RunLog.Errorf("init k8s client failed when start, err: %v", err)
 		return err
 	}
-	testK8sClient = GetClientK8s()
+	node = &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName1,
+			Annotations: map[string]string{
+				api.NodeSNAnnotation: nodeSN1,
+				superPodIDKey:        superPodIDStr,
+				baseDevInfoAnno:      string(baseDevInfo),
+			},
+		},
+	}
 	return nil
 }

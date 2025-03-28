@@ -10,12 +10,13 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/superpod"
 )
 
 // NodeCollector collector node info
 func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
-	superPodDevice, superPodID := superpod.GetNodeDeviceAndSuperPodID(newNodeInfo)
+	superPodDevice, superPodID := node.GetNodeDeviceAndSuperPodID(newNodeInfo)
 	if superPodID == "" || superPodDevice == nil {
 		hwlog.RunLog.Debugf("discard illegal super pod device info, superPodID=%s.", superPodID)
 		return

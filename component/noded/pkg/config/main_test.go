@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 		return
 	}
 	code := m.Run()
-	fmt.Printf("exit_xode = %v\n", code)
+	fmt.Printf("exit_code = %v\n", code)
 }
 
 func setup() error {

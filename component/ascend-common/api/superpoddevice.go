@@ -9,10 +9,10 @@ type NpuBaseInfo struct {
 	SuperDeviceID uint32
 }
 
-// NodeDevice node device info, key is physicID, value is superPod device id
+// NodeDevice node device info
 type NodeDevice struct {
 	NodeName  string
-	DeviceMap map[string]string
+	DeviceMap map[string]string // key: dev phyID, value: superPod device id
 }
 
 // SuperPodDevice super node device info, key is superPodID, value is NodeDevice

@@ -12,8 +12,8 @@ import (
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
-	"clusterd/pkg/domain/statistics"
 )
 
 const (
@@ -251,7 +251,7 @@ func (c *influenceChecker) checkNodeNameOrSN() error {
 		}
 		return nil
 	}
-	_, ok := statistics.GetNodeNameBySN(c.influence.NodeSN)
+	_, ok := node.GetNodeNameBySN(c.influence.NodeSN)
 	if !ok {
 		return errors.New("invalid node name or node sn")
 	}

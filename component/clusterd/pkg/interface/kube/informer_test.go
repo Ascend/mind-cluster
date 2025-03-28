@@ -14,6 +14,7 @@ import (
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/superpod"
 )
 
@@ -110,7 +111,7 @@ func TestInitClusterDevice(t *testing.T) {
 		})
 		defer patchGetNodes.Reset()
 
-		patchGetNodeDevice := gomonkey.ApplyFunc(superpod.GetNodeDeviceAndSuperPodID,
+		patchGetNodeDevice := gomonkey.ApplyFunc(node.GetNodeDeviceAndSuperPodID,
 			func(node *v1.Node) (*api.NodeDevice, string) {
 				return &api.NodeDevice{
 					NodeName: node.Name,

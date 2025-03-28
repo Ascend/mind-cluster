@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -171,70 +169,6 @@ func TestDeleteNode(t *testing.T) {
 		DeleteNode(supperNodeID, nodeDevice6.NodeName)
 		retrieved = GetSuperPodDevice(supperNodeID)
 		convey.So(retrieved, convey.ShouldBeNil)
-	})
-}
-
-func TestGetNodeDeviceAndSuperNodeID(t *testing.T) {
-	clearHistory()
-	convey.Convey("Testing GetNodeDeviceAndSuperNodeID", t, func() {
-		node := &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: node1,
-				Annotations: map[string]string{
-					superPodIDKey: superNode1,
-					deviceKey:     `{"Ascend910-1":{"IP":"192.168.1.1","SuperDeviceID":1}}`,
-				},
-			},
-		}
-		nodeDevice, supperNodeID := GetNodeDeviceAndSuperPodID(node)
-		convey.So(nodeDevice, convey.ShouldNotBeNil)
-		convey.So(supperNodeID, convey.ShouldEqual, superNode1)
-		convey.So(nodeDevice.NodeName, convey.ShouldEqual, node1)
-		convey.So(nodeDevice.DeviceMap["1"], convey.ShouldEqual, "1")
-	})
-}
-
-func TestGetNodeDeviceAndSuperNodeIDWithEmptyNode(t *testing.T) {
-	clearHistory()
-	convey.Convey("Testing GetNodeDeviceAndSuperNodeID with empty node", t, func() {
-		nodeDevice, supperNodeID := GetNodeDeviceAndSuperPodID(nil)
-		convey.So(nodeDevice, convey.ShouldBeNil)
-		convey.So(supperNodeID, convey.ShouldBeEmpty)
-	})
-}
-
-func TestGetNodeDeviceAndSuperNodeIDWithEmptyName(t *testing.T) {
-	clearHistory()
-	convey.Convey("Testing GetNodeDeviceAndSuperNodeID with empty node name", t, func() {
-		node := &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					superPodIDKey: superNode1,
-					deviceKey:     `{"device1":{"IP":"192.168.1.1","SuperDeviceID":1}}`,
-				},
-			},
-		}
-		nodeDevice, supperNodeID := GetNodeDeviceAndSuperPodID(node)
-		convey.So(nodeDevice, convey.ShouldBeNil)
-		convey.So(supperNodeID, convey.ShouldBeEmpty)
-	})
-}
-
-func TestGetNodeDeviceAndSuperNodeIDWithInvalidJSON(t *testing.T) {
-	clearHistory()
-	convey.Convey("Testing GetNodeDeviceAndSuperNodeID with invalid JSON", t, func() {
-		node := &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-node",
-				Annotations: map[string]string{
-					superPodIDKey: superNode1,
-					deviceKey:     "invalid json",
-				},
-			},
-		}
-		nodeDevice, supperNodeID := GetNodeDeviceAndSuperPodID(node)
-		convey.So(nodeDevice, convey.ShouldBeNil)
-		convey.So(supperNodeID, convey.ShouldEqual, superNode1)
 	})
 }
 

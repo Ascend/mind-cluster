@@ -15,6 +15,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/superpod"
 )
 
@@ -43,7 +44,7 @@ func setupNode() *v1.Node {
 }
 
 func setupGetNodeDeviceAndSuperPodIDPatches() *gomonkey.Patches {
-	return gomonkey.ApplyFunc(superpod.GetNodeDeviceAndSuperPodID,
+	return gomonkey.ApplyFunc(node.GetNodeDeviceAndSuperPodID,
 		func(node *v1.Node) (*api.NodeDevice, string) {
 			if node == nil {
 				return nil, ""
@@ -147,7 +148,7 @@ func TestNodeCollectorInvalidOperator(t *testing.T) {
 
 func TestNodeCollectorParseInvalidNode(t *testing.T) {
 	convey.Convey("Testing NodeCollector with Invalid node", t, func() {
-		patches := gomonkey.ApplyFunc(superpod.GetNodeDeviceAndSuperPodID,
+		patches := gomonkey.ApplyFunc(node.GetNodeDeviceAndSuperPodID,
 			func(node *v1.Node) (*api.NodeDevice, string) {
 				return nil, ""
 			})

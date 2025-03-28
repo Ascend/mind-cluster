@@ -13,11 +13,13 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
-	"clusterd/pkg/domain/statistics"
 )
 
 const (
@@ -103,7 +105,15 @@ func TestGetNodeName(t *testing.T) {
 		NodeSN:    testNodeSN1,
 		DeviceIds: []int32{0},
 	}
-	statistics.GetNodeSNAndNameCache()[testNodeSN1] = testNodeName1
+	nodeInfo := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: testNodeName1,
+			Annotations: map[string]string{
+				"product-serial-number": testNodeSN1,
+			},
+		},
+	}
+	node.SaveNodeToCache(nodeInfo)
 	convey.Convey("test func getNodeName when node name does not exist, get sn success", t, func() {
 		res := getNodeName(inf)
 		convey.So(res, convey.ShouldEqual, testNodeName1)

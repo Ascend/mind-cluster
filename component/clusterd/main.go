@@ -18,6 +18,7 @@ import (
 	"clusterd/pkg/application/busconfig"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
+	"clusterd/pkg/application/node"
 	"clusterd/pkg/application/pingmesh"
 	"clusterd/pkg/application/profiling"
 	"clusterd/pkg/application/publicfault"
@@ -100,7 +101,8 @@ func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
-	kube.AddNodeFunc(constant.Resource, statistics.UpdateNodeSNAndNameCache)
+	// UpdateNodeInfoCache must be before pingmesh
+	kube.AddNodeFunc(constant.Resource, node.UpdateNodeInfoCache)
 }
 
 func addFuncAfterInformer() {

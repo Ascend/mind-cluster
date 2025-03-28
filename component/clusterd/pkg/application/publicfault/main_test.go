@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	faultKey4 = testResource2 + testId1
 	code := m.Run()
 	teardown()
-	fmt.Printf("exit_xode = %v\n", code)
+	fmt.Printf("exit_code = %v\n", code)
 }
 
 func setup() error {

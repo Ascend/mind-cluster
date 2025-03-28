@@ -4,16 +4,10 @@
 package superpod
 
 import (
-	"encoding/json"
-	"strconv"
-	"strings"
 	"sync"
-
-	"k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/common/constant"
 )
 
 const (
@@ -21,11 +15,6 @@ const (
 	maxSuperPodNum         = 1024
 	initNodeNumPerSuperPod = 64
 	initSuperPodNum        = 32
-	maxNodeDeviceNum       = 128
-	formatBase             = 10
-
-	deviceKey     = "baseDeviceInfos"
-	superPodIDKey = "superPodID"
 )
 
 func deepCopyNodeDevice(device *api.NodeDevice) *api.NodeDevice {
@@ -126,56 +115,6 @@ func DeleteNode(superPodID string, nodeName string) {
 		delete(superPodManager.snMap, superPodID)
 	}
 	return
-}
-
-// GetNodeDeviceAndSuperPodID parse NodeDevice and superPodID from node
-func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
-	if node == nil {
-		hwlog.RunLog.Warn("node is nil")
-		return nil, ""
-	}
-	if len(node.Name) == 0 {
-		hwlog.RunLog.Debugf("empty node name")
-		return nil, ""
-	}
-	superPodID, hasSuperPodIDKey := node.Annotations[superPodIDKey]
-	superPodID = strings.Trim(superPodID, " ")
-	if !hasSuperPodIDKey || len(superPodID) == 0 {
-		hwlog.RunLog.Debugf("empty super pod id, nodeName=%s", node.Name)
-		return nil, ""
-	}
-	baseDeviceMap := make(map[string]*api.NpuBaseInfo)
-	deviceStr, hasDeviceKey := node.Annotations[deviceKey]
-	if !hasDeviceKey || len(deviceStr) == 0 {
-		hwlog.RunLog.Debugf("empty device info, nodeName=%s", node.Name)
-		return nil, superPodID
-	}
-	if err := json.Unmarshal([]byte(deviceStr), &baseDeviceMap); err != nil {
-		hwlog.RunLog.Errorf("unmarshal device info error, err=%v, nodeName=%s",
-			err, node.Name)
-		return nil, superPodID
-	}
-	if len(baseDeviceMap) == 0 || len(baseDeviceMap) > maxNodeDeviceNum {
-		hwlog.RunLog.Errorf("illegal device length, deviceLen=%d, nodeName=%s",
-			len(baseDeviceMap), node.Name)
-		return nil, superPodID
-	}
-	nodeDevice := &api.NodeDevice{
-		NodeName:  node.Name,
-		DeviceMap: make(map[string]string, len(baseDeviceMap)),
-	}
-	for device, info := range baseDeviceMap {
-		physicID := strings.TrimPrefix(device, constant.AscendDevPrefix)
-		_, err := strconv.Atoi(physicID)
-		if err != nil {
-			hwlog.RunLog.Errorf("illegal device name, deviceName=%s, nodeName=%s",
-				device, node.Name)
-			return nil, superPodID
-		}
-		superDeviceID := strconv.FormatUint(uint64(info.SuperDeviceID), formatBase)
-		nodeDevice.DeviceMap[physicID] = superDeviceID
-	}
-	return nodeDevice, superPodID
 }
 
 // ListClusterDevice return slice of cluster super pod device

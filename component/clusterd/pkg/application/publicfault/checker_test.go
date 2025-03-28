@@ -8,12 +8,14 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
-	"clusterd/pkg/domain/statistics"
 )
 
 const (
@@ -353,9 +355,17 @@ func TestPubFaultInfoChecker(t *testing.T) {
 	convey.Convey("test fault success", t, testValidFault)
 	convey.Convey("test fault failed", t, testInvalidFault)
 
-	statistics.GetNodeSNAndNameCache()[testNodeSN1] = testNodeName1
+	nodeInfo := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: testNodeName1,
+			Annotations: map[string]string{
+				"product-serial-number": testNodeSN1,
+			},
+		},
+	}
+	node.SaveNodeToCache(nodeInfo)
 	convey.Convey("test influence success", t, testValidInfluence)
-	delete(statistics.GetNodeSNAndNameCache(), testNodeSN1)
+	node.DeleteNodeFromCache(nodeInfo)
 	convey.Convey("test influence failed", t, testInvalidInfluence)
 }
 
