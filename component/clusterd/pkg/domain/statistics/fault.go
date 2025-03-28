@@ -9,6 +9,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/publicfault"
@@ -26,7 +27,7 @@ func UpdateFaultToCM(faults, faultNum string, exceedsLimiter bool) error {
 		hwlog.RunLog.Errorf("public fault number exceeds the upper limit of %d. Will not update the detailed "+
 			"info of the faults this time, only the 'FaultNum' will be updated", constant.MaxFaultNum)
 		patchData := map[string]string{constant.StatisticFaultNumKey: faultNum, constant.StatisticFaultDescKey: faultDesc}
-		_, err := kube.PatchCMData(constant.StatisticFaultCMName, constant.ClusterNamespace, patchData)
+		_, err := kube.PatchCMData(constant.StatisticFaultCMName, api.ClusterNS, patchData)
 		if err != nil {
 			hwlog.RunLog.Errorf("patch cm <%s> data failed, error: %v", constant.StatisticFaultCMName, err)
 			return fmt.Errorf("patch cm <%s> data failed", constant.StatisticFaultCMName)
@@ -35,7 +36,7 @@ func UpdateFaultToCM(faults, faultNum string, exceedsLimiter bool) error {
 	}
 
 	label := map[string]string{constant.CmStatisticFault: constant.CmConsumerValue}
-	if err := kube.UpdateOrCreateConfigMap(constant.StatisticFaultCMName, constant.ClusterNamespace,
+	if err := kube.UpdateOrCreateConfigMap(constant.StatisticFaultCMName, api.ClusterNS,
 		cmData, label); err != nil {
 		hwlog.RunLog.Errorf("update or create cm <%s> failed, error: %v", constant.StatisticFaultCMName, err)
 		return fmt.Errorf("update or create cm <%s> failed", constant.StatisticFaultCMName)
@@ -45,7 +46,7 @@ func UpdateFaultToCM(faults, faultNum string, exceedsLimiter bool) error {
 
 // LoadFaultFromCM load fault from configmap statistic-fault-info
 func LoadFaultFromCM() error {
-	cm, err := kube.GetConfigMap(constant.StatisticFaultCMName, constant.ClusterNamespace)
+	cm, err := kube.GetConfigMap(constant.StatisticFaultCMName, api.ClusterNS)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// If there are no faults in the cluster, cm does not exist

@@ -36,6 +36,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
@@ -203,7 +204,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 	logicIDsHandledFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuHandled)
 	deviceInfoName := tool.client.DeviceInfoName
 	physicIDsFromDeviceInfo := tool.client.
-		GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, common.DeviceInfoCMNameSpace)
+		GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
 	for _, logicId := range logicIDsHandledFromCache {
 		physicId, err := tool.GetDmgr().GetPhysicIDFromLogicID(logicId)
 		if err != nil {
@@ -436,7 +437,7 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	podList := tool.client.GetActivePodListCache()
 	usedDevice := sets.String{}
 	for _, pod := range podList {
-		realDevice, exist := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
+		realDevice, exist := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
 		if !exist {
 			continue
 		}
@@ -751,8 +752,8 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 	}
 	annotation := make(map[string]string, 1)
 	if !common.IsVirtualDev(deviceType) {
-		annotation[common.ResourceNamePrefix+common.Pod2kl] = strings.Join(podDev.KltDevice, common.CommaSepDev)
-		annotation[common.ResourceNamePrefix+common.PodRealAlloc] = strings.Join(podDev.RealDevice, common.CommaSepDev)
+		annotation[api.ResourceNamePrefix+common.Pod2kl] = strings.Join(podDev.KltDevice, common.CommaSepDev)
+		annotation[api.ResourceNamePrefix+common.PodRealAlloc] = strings.Join(podDev.RealDevice, common.CommaSepDev)
 	}
 	if tool.name == common.Ascend910 || common.IsContainAll300IDuo() {
 		if _, ok := annotation[common.Pod910DeviceKey]; ok {
@@ -905,7 +906,7 @@ func (tool *AscendTools) isNetworkHealthy(device *common.NpuDevice) string {
 func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 	podList := tool.client.GetActivePodListCache()
 	for _, pod := range podList {
-		annotationTag := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
 		tmpNpu, ok := pod.Annotations[annotationTag]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
@@ -1271,7 +1272,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 	}
 	faultInfo.AlarmRaisedTime = time.Now().UnixMilli()
 	event := &v1.Event{
-		ObjectMeta: metav1.ObjectMeta{Namespace: common.DeviceInfoCMNameSpace,
+		ObjectMeta: metav1.ObjectMeta{Namespace: api.KubeNS,
 			Name: fmt.Sprintf("%s.%d%d", podName, faultInfo.AlarmRaisedTime, faultInfo.LogicID),
 		},
 		Type: v1.EventTypeWarning,
@@ -1283,7 +1284,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 		Reason:    assertionName, Action: faultLevelName,
 		Source: v1.EventSource{Component: common.Component, Host: nodeName},
 		InvolvedObject: v1.ObjectReference{
-			Kind: common.ResourceKindPod, Namespace: common.DeviceInfoCMNameSpace, Name: podName,
+			Kind: common.ResourceKindPod, Namespace: api.KubeNS, Name: podName,
 		},
 		ReportingController: common.Component, ReportingInstance: podName,
 	}

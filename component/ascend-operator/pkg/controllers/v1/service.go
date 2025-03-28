@@ -32,6 +32,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
@@ -86,7 +87,7 @@ func (r *ASJobReconciler) genServiceLabels(job metav1.Object, rtype commonv1.Rep
 }
 
 func (r *ASJobReconciler) getClusterDSvcIp() string {
-	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, mindxServiceNamespace, mindxDefaultServerDomain)
+	clusterdSvcIp := r.getIpFromSvcName(mindxServiceName, api.DLNamespace, mindxDefaultServerDomain)
 	hwlog.RunLog.Infof("get ClusterD service ip = %s", clusterdSvcIp)
 	return clusterdSvcIp
 }

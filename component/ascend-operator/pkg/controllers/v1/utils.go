@@ -27,6 +27,7 @@ import (
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
@@ -84,7 +85,7 @@ func ContainsChiefOrMasterSpec(replicas map[commonv1.ReplicaType]*commonv1.Repli
 
 func getContainerResourceReq(ct corev1.Container) int {
 	for rName, rNum := range ct.Resources.Requests {
-		if strings.Contains(string(rName), npuPrefix) {
+		if strings.Contains(string(rName), api.ResourceNamePrefix) {
 			return int(rNum.Value())
 		}
 	}
@@ -93,7 +94,7 @@ func getContainerResourceReq(ct corev1.Container) int {
 
 func getContainerNPUResourceNameAndReq(ct corev1.Container) (string, int) {
 	for rName, rNum := range ct.Resources.Requests {
-		if strings.Contains(string(rName), npuPrefix) {
+		if strings.Contains(string(rName), api.ResourceNamePrefix) {
 			return string(rName), int(rNum.Value())
 		}
 	}

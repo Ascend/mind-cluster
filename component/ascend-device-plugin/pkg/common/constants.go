@@ -15,7 +15,11 @@
 // Package common a series of common function
 package common
 
-import "time"
+import (
+	"time"
+
+	"ascend-common/api"
+)
 
 const (
 	// Component component name
@@ -60,21 +64,13 @@ const (
 	// UpdatePodWaitTime default try update pod wait time 200 millisecond
 	UpdatePodWaitTime = 200
 
-	// DeviceInfoCMNameSpace namespace of device info configmap
-	DeviceInfoCMNameSpace = "kube-system"
 	// DeviceInfoCMNamePrefix device info configmap name prefix
 	DeviceInfoCMNamePrefix = "mindx-dl-deviceinfo-"
-	// DeviceInfoCMDataKey device info configmap data key
-	DeviceInfoCMDataKey = "DeviceInfoCfg"
-	// SwitchInfoCMDataKey the key of switch info in device-info configmap
-	SwitchInfoCMDataKey = "SwitchInfoCfg"
 	// DeviceInfoCMManuallySeparateNPUKey for deviceinfo configmap ManuallySeparateNPU key
 	DeviceInfoCMManuallySeparateNPUKey = "ManuallySeparateNPU"
 	// SlowNodeNoticeCMName the name for slow node notice configmap
 	SlowNodeNoticeCMName = "steptime-dtpgroup"
 
-	// CmConsumer who uses these configmap
-	CmConsumer = "mx-consumer-cim"
 	// CmConsumerValue the value only for true
 	CmConsumerValue = "true"
 
@@ -93,11 +89,9 @@ const (
 	PodRealAlloc = "AscendReal"
 	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
 	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
-	// BaseDeviceInfoKey base device info key
-	BaseDeviceInfoKey = "baseDeviceInfos"
 	// SuperPodIDKey super node id
 	SuperPodIDKey = "superPodID"
-	// ChipNameLabel update chip name to node label
+	// ChipNameLabel label value is card type, eg. 910A
 	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// MetaDataAnnotation downward api which map annotation from volcano to container's env
 	MetaDataAnnotation = "metadata.annotations"
@@ -185,8 +179,6 @@ const (
 )
 
 const (
-	// ResourceNamePrefix prefix
-	ResourceNamePrefix = "huawei.com/"
 	// DistributedJob annotation indicates that the job is distributed
 	DistributedJob = "distributed-job"
 	// Ascend310P 310p
@@ -212,7 +204,7 @@ const (
 	// Ascend310Pc4Cpu3Ndvpp Ascend310P 4core 3cpu ndvpp
 	Ascend310Pc4Cpu3Ndvpp = Ascend310P + "-" + Core4Cpu3Ndvpp
 	// HuaweiAscend310P with prefix
-	HuaweiAscend310P = ResourceNamePrefix + Ascend310P
+	HuaweiAscend310P = api.ResourceNamePrefix + Ascend310P
 
 	// Ascend910 910
 	Ascend910 = "Ascend910"
@@ -247,14 +239,14 @@ const (
 	Ascend910vir3Cpu1Gb8 = Ascend910 + "-" + Core3Cpu1Gb8
 
 	// HuaweiAscend910 with prefix
-	HuaweiAscend910 = ResourceNamePrefix + Ascend910
+	HuaweiAscend910 = api.ResourceNamePrefix + Ascend910
 
 	// Ascend310 310
 	Ascend310 = "Ascend310"
 	// Ascend310B 310B chip
 	Ascend310B = "Ascend310B"
 	// HuaweiAscend310 with prefix
-	HuaweiAscend310 = ResourceNamePrefix + Ascend310
+	HuaweiAscend310 = api.ResourceNamePrefix + Ascend310
 	// AscendfdPrefix use in fd
 	AscendfdPrefix = "davinci-mini"
 
@@ -265,26 +257,26 @@ const (
 	Ascend910A3 = "Ascend910A3"
 
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
-	HuaweiNetworkUnHealthAscend910 = ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
+	HuaweiNetworkUnHealthAscend910 = api.ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
 	// HuaweiUnHealthAscend910 unhealthy
-	HuaweiUnHealthAscend910 = ResourceNamePrefix + Ascend910 + "-Unhealthy"
+	HuaweiUnHealthAscend910 = api.ResourceNamePrefix + Ascend910 + "-Unhealthy"
 	// HuaweiRecoveringAscend910 recovering
-	HuaweiRecoveringAscend910 = ResourceNamePrefix + Ascend910 + "-Recovering"
+	HuaweiRecoveringAscend910 = api.ResourceNamePrefix + Ascend910 + "-Recovering"
 	// HuaweiUnHealthAscend310P 310p unhealthy
-	HuaweiUnHealthAscend310P = ResourceNamePrefix + Ascend310P + "-Unhealthy"
+	HuaweiUnHealthAscend310P = api.ResourceNamePrefix + Ascend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
-	HuaweiUnHealthAscend310 = ResourceNamePrefix + Ascend310 + "-Unhealthy"
+	HuaweiUnHealthAscend310 = api.ResourceNamePrefix + Ascend310 + "-Unhealthy"
 	// HuaweiNetworkRecoverAscend910 910 network recover
-	HuaweiNetworkRecoverAscend910 = ResourceNamePrefix + Ascend910 + "-NetworkRecover"
+	HuaweiNetworkRecoverAscend910 = api.ResourceNamePrefix + Ascend910 + "-NetworkRecover"
 	// HuaweiRecoverAscend910 910 recover
-	HuaweiRecoverAscend910 = ResourceNamePrefix + Ascend910 + "-Recover"
+	HuaweiRecoverAscend910 = api.ResourceNamePrefix + Ascend910 + "-Recover"
 
 	// HuaweiFaultCodeAscend910 910 fault code
-	HuaweiFaultCodeAscend910 = ResourceNamePrefix + Ascend910 + "-Fault"
+	HuaweiFaultCodeAscend910 = api.ResourceNamePrefix + Ascend910 + "-Fault"
 	// HuaweiFaultCodeAscend310P 310p fault code
-	HuaweiFaultCodeAscend310P = ResourceNamePrefix + Ascend310P + "-Fault"
+	HuaweiFaultCodeAscend310P = api.ResourceNamePrefix + Ascend310P + "-Fault"
 	// HuaweiFaultCodeAscend310 310 fault code
-	HuaweiFaultCodeAscend310 = ResourceNamePrefix + Ascend310 + "-Fault"
+	HuaweiFaultCodeAscend310 = api.ResourceNamePrefix + Ascend310 + "-Fault"
 
 	// AiCoreResourceName resource name for virtual device
 	AiCoreResourceName = "npu-core"
@@ -661,8 +653,6 @@ const (
 	PartNumOfFaultCode = 4
 	// FaultCodeCMName is the name of the configmap that is used to save fault code
 	FaultCodeCMName = "mindx-dl-fault-config"
-	// FaultCodeCMNameSpace is the namespace of the fault code configmap
-	FaultCodeCMNameSpace = "kube-system"
 	// FaultCodeKey is the key to find fault code in cm
 	FaultCodeKey = "faultCode.json"
 	// SwitchFaultCodeKey is the key of the switch fault code

@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 )
@@ -53,17 +54,6 @@ var (
 		"ascend310":   regexp.MustCompile(`^Ascend310-\d+`),
 		"ascend310P":  regexp.MustCompile(`^Ascend310P-\d+`),
 	}
-)
-
-// the env key of pt ms tf framework while pod is dynamic cut job
-const (
-	ptWorldSizeEnv      = "WORLD_SIZE"
-	ptLocalWorldSizeEnv = "LOCAL_WORLD_SIZE"
-	tfWorkerSizeEnv     = "CM_WORKER_SIZE"
-	tfLocalWorker       = "CM_LOCAL_WORKER"
-	msWorkerNumEnv      = "MS_WORKER_NUM"
-	msLocalWorker       = "MS_LOCAL_WORKER"
-	ptLocalRank         = "LOCAL_RANK"
 )
 
 // ServerInfo used for pass parameters
@@ -112,13 +102,13 @@ func SetAscendRuntimeEnv(devices []int, ascendRuntimeOptions string, resp *v1bet
 	}
 	// npu dynamic cut, dp write the env which job use npu num to container instead of ascend-operator
 	if !ParamOption.PresetVDevice {
-		(*resp).Envs[msLocalWorker] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[msWorkerNumEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptWorldSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptLocalWorldSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[ptLocalRank] = localRankStr(len(deviceStr))
-		(*resp).Envs[tfWorkerSizeEnv] = strconv.Itoa(len(deviceStr))
-		(*resp).Envs[tfLocalWorker] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.MsLocalWorkerEnv] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.MsWorkerNumEnv] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.PtWorldSizeEnv] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.PtLocalWorldSizeEnv] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.PtLocalRankEnv] = localRankStr(len(deviceStr))
+		(*resp).Envs[api.TfWorkerSizeEnv] = strconv.Itoa(len(deviceStr))
+		(*resp).Envs[api.TfLocalWorkerEnv] = strconv.Itoa(len(deviceStr))
 	}
 	hwlog.RunLog.Infof("allocate resp env: %s; %s", (*resp).Envs[AscendVisibleDevicesEnv], ascendRuntimeOptions)
 }
@@ -174,7 +164,7 @@ func GetPodAnnotationByDeviceType(pod *v1.Pod, deviceType string) (string, error
 	if pod == nil {
 		return "", fmt.Errorf("invalid pod")
 	}
-	annotationTag := fmt.Sprintf("%s%s", ResourceNamePrefix, deviceType)
+	annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType)
 	annotation, exist := pod.Annotations[annotationTag]
 	if !exist {
 		return "", fmt.Errorf("cannot find the annotation")
@@ -329,7 +319,7 @@ func getNPUResourceNumOfPod(pod *v1.Pod, deviceType string) int64 {
 		return int64(0)
 	}
 	var total int64
-	annotationTag := fmt.Sprintf("%s%s", ResourceNamePrefix, deviceType)
+	annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType)
 	for _, container := range containers {
 		val, ok := container.Resources.Limits[v1.ResourceName(annotationTag)]
 		if !ok {
@@ -349,7 +339,7 @@ func isAscendAssignedPod(pod *v1.Pod, deviceType string) bool {
 	if IsVirtualDev(deviceType) {
 		return true
 	}
-	annotationTag := fmt.Sprintf("%s%s", ResourceNamePrefix, deviceType)
+	annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType)
 	if _, ok := pod.ObjectMeta.Annotations[annotationTag]; !ok {
 		hwlog.RunLog.Debugf("no assigned flag, pod Name: %s, pod NameSpace: %s", pod.Name, pod.Namespace)
 		return false

@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 )
@@ -79,7 +80,7 @@ func TestInitStatistic(t *testing.T) {
 	t.Run("Without CustomJobID", func(t *testing.T) {
 		jobInfo := constant.JobInfo{
 			Name:      "k8s-job",
-			NameSpace: "kube-system",
+			NameSpace: api.KubeNS,
 			Status:    job.StatusJobRunning,
 		}
 

@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
@@ -116,7 +117,7 @@ func (c *FaultConfigurator) Init() error {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(c.client.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.FieldSelector = fields.Set{
-				common.MetaDataNameSpace: common.FaultConfigCMNameSpace,
+				common.MetaDataNameSpace: api.DLNamespace,
 				common.MetaDataName:      common.FaultConfigCMName,
 			}.String()
 		}))
@@ -214,7 +215,7 @@ func (c *FaultConfigurator) UpdateConfigCache(cm *v1.ConfigMap) error {
 // initFaultConfigFromCM init fault config from config map
 func (c *FaultConfigurator) initFaultConfigFromCM() error {
 	c.initFromCMFlag = true
-	configCM, err := c.client.GetConfigMap(common.FaultConfigCMName, common.FaultConfigCMNameSpace)
+	configCM, err := c.client.GetConfigMap(common.FaultConfigCMName, api.DLNamespace)
 	if err != nil {
 		hwlog.RunLog.Info("get config cm failed when init, may be not create, load from local json file")
 		return err

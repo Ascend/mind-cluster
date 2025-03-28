@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 )
@@ -69,7 +70,7 @@ func NewClientK8s() (*ClientK8s, error) {
 
 // GetNodeNameFromEnv get node name from env
 func GetNodeNameFromEnv() (string, error) {
-	nodeName := os.Getenv(common.ENVNodeNameKey)
+	nodeName := os.Getenv(api.NodeNameEnv)
 	if err := checkNodeName(nodeName); err != nil {
 		return "", fmt.Errorf("check node name failed, err is %v", err)
 	}

@@ -33,6 +33,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -547,7 +548,7 @@ func (ps *PluginServer) GetRealAllocateDevicesFromEnv(pod v1.Pod) []string {
 			// fieldPath is key of annotation updated by volcano,
 			// for example, metadata.annotations['huawei.com/Ascend910']
 			fieldPath := fmt.Sprintf("%s['%s%s']",
-				common.MetaDataAnnotation, common.ResourceNamePrefix, ps.deviceType)
+				common.MetaDataAnnotation, api.ResourceNamePrefix, ps.deviceType)
 			if env.ValueFrom.FieldRef.FieldPath != fieldPath {
 				hwlog.RunLog.Errorf("fieldPath in downward api is different from %v, "+
 					"which may affect the mounting of device", ps.deviceType)
@@ -584,7 +585,7 @@ func (ps *PluginServer) GetKltAndRealAllocateDev(podList []v1.Pod) ([]*common.Po
 		if !exist {
 			continue
 		}
-		if podResource.ResourceName != common.ResourceNamePrefix+ps.deviceType {
+		if podResource.ResourceName != api.ResourceNamePrefix+ps.deviceType {
 			hwlog.RunLog.Debugf("podKey %s resource name %s not equal device type %s", podKey,
 				podResource.ResourceName, ps.deviceType)
 			continue
@@ -622,7 +623,7 @@ func (ps *PluginServer) GetRealAllocateDevices(pod v1.Pod, kltAllocate []string)
 		return realDeviceList, nil
 	}
 	hwlog.RunLog.Warnf("get real allocate devices err: %v", err)
-	realDevice, exist := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
+	realDevice, exist := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
 	if exist {
 		realDeviceList = strings.Split(realDevice, common.CommaSepDev)
 		ps.updateAllocMap(realDeviceList, kltAllocate)
@@ -934,7 +935,7 @@ func (ps *PluginServer) SetSlowNodeNoticeEnv(resp *v1beta1.ContainerAllocateResp
 	if len((*resp).Envs) == 0 {
 		(*resp).Envs = make(map[string]string, common.SlowNodeStepTimeEnvNum)
 	}
-	configMap, err := ps.manager.GetKubeClient().GetConfigMap(common.SlowNodeNoticeCMName, common.DeviceInfoCMNameSpace)
+	configMap, err := ps.manager.GetKubeClient().GetConfigMap(common.SlowNodeNoticeCMName, api.KubeNS)
 	if err != nil {
 		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.SlowNodeNoticeCMName, err)
 		return

@@ -26,9 +26,9 @@ import (
 	"os"
 	"strconv"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
-	nodedcommon "nodeD/pkg/common"
 	"nodeD/pkg/pingmesh/types"
 )
 
@@ -85,7 +85,7 @@ func (m *manager) HandlePingMeshInfo(res *types.HccspingMeshResult) error {
 	}
 	m.writer.Infof("uid: %s, config: %#v", res.Policy.UID, res.Policy.Config)
 	for physicID, infos := range res.Results {
-		devices, ok := res.Policy.Address[os.Getenv(nodedcommon.ENVNodeNameKey)]
+		devices, ok := res.Policy.Address[os.Getenv(api.NodeNameEnv)]
 		if !ok {
 			continue
 		}

@@ -10,6 +10,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -24,10 +25,10 @@ func ParseSwitchInfoCM(obj interface{}) (*constant.SwitchInfo, error) {
 		return &constant.SwitchInfo{}, fmt.Errorf("not configmap")
 	}
 	switchInfoCM := constant.SwitchFaultInfo{}
-	data, ok := switchCm.Data[constant.SwitchInfoCmKey]
+	data, ok := switchCm.Data[api.SwitchInfoCMDataKey]
 	if !ok {
 		return &constant.SwitchInfo{},
-			fmt.Errorf("configmap %s has no key: %s", switchCm.Name, constant.SwitchInfoCmKey)
+			fmt.Errorf("configmap %s has no key: %s", switchCm.Name, api.SwitchInfoCMDataKey)
 	}
 
 	if unmarshalErr := json.Unmarshal([]byte(data), &switchInfoCM); unmarshalErr != nil {

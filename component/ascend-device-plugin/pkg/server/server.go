@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 )
@@ -144,7 +145,7 @@ func (ps *PluginServer) register() error {
 	reqt := &v1beta1.RegisterRequest{
 		Version:      v1beta1.Version,
 		Endpoint:     fmt.Sprintf("%s.sock", ps.deviceType),
-		ResourceName: common.ResourceNamePrefix + ps.deviceType,
+		ResourceName: api.ResourceNamePrefix + ps.deviceType,
 	}
 	if _, err = client.Register(context.Background(), reqt); err != nil {
 		return fmt.Errorf("register to kubelet fail: %v", err)

@@ -37,6 +37,7 @@ import (
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -320,7 +321,7 @@ func (ki *ClientK8s) CreateEvent(evt *v1.Event) (*v1.Event, error) {
 
 // GetNodeNameFromEnv get current node name from env
 func GetNodeNameFromEnv() (string, error) {
-	nodeName := os.Getenv("NODE_NAME")
+	nodeName := os.Getenv(api.NodeNameEnv)
 	if err := checkNodeName(nodeName); err != nil {
 		return "", fmt.Errorf("check node name failed: %v", err)
 	}

@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	JobStcNamespace      = "mindx-dl"
 	JobStcCMName         = "current-job-statistic"
 	JobDataCmKey         = "data"
 	TotalJobsCmKey       = "totalJob"

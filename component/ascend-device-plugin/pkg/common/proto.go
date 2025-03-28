@@ -21,6 +21,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/api"
 )
 
 var (
@@ -167,19 +169,19 @@ type Option struct {
 // GetAllDeviceInfoTypeList Get All Device Info Type List
 func GetAllDeviceInfoTypeList() map[string]struct{} {
 	return map[string]struct{}{HuaweiUnHealthAscend910: {}, HuaweiNetworkUnHealthAscend910: {},
-		ResourceNamePrefix + Ascend910: {}, ResourceNamePrefix + Ascend910vir2: {},
-		ResourceNamePrefix + Ascend910vir4: {}, ResourceNamePrefix + Ascend910vir8: {},
-		ResourceNamePrefix + Ascend910vir16: {}, ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},
-		ResourceNamePrefix + Ascend910vir5Cpu1Gb16: {}, ResourceNamePrefix + Ascend910vir6Cpu1Gb16: {},
-		ResourceNamePrefix + Ascend910vir10Cpu3Gb16: {}, ResourceNamePrefix + Ascend910vir3Cpu1Gb8: {},
-		ResourceNamePrefix + Ascend910vir10Cpu3Gb16Ndvpp: {}, ResourceNamePrefix + Ascend910vir10Cpu3Gb32: {},
-		ResourceNamePrefix + Ascend910vir10Cpu4Gb16Dvpp: {},
-		ResourceNamePrefix + Ascend910vir12Cpu3Gb32:     {}, ResourceNamePrefix + Ascend310: {},
-		ResourceNamePrefix + Ascend310P: {}, ResourceNamePrefix + Ascend310Pc1: {},
-		ResourceNamePrefix + Ascend310Pc2: {}, ResourceNamePrefix + Ascend310Pc4: {},
-		ResourceNamePrefix + Ascend310Pc2Cpu1: {}, ResourceNamePrefix + Ascend310Pc4Cpu3: {},
-		ResourceNamePrefix + Ascend310Pc4Cpu3Ndvpp: {}, ResourceNamePrefix + Ascend310Pc4Cpu4Dvpp: {},
-		HuaweiUnHealthAscend310P: {}, HuaweiUnHealthAscend310: {}, ResourceNamePrefix + AiCoreResourceName: {}}
+		api.ResourceNamePrefix + Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
+		api.ResourceNamePrefix + Ascend910vir4: {}, api.ResourceNamePrefix + Ascend910vir8: {},
+		api.ResourceNamePrefix + Ascend910vir16: {}, api.ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},
+		api.ResourceNamePrefix + Ascend910vir5Cpu1Gb16: {}, api.ResourceNamePrefix + Ascend910vir6Cpu1Gb16: {},
+		api.ResourceNamePrefix + Ascend910vir10Cpu3Gb16: {}, api.ResourceNamePrefix + Ascend910vir3Cpu1Gb8: {},
+		api.ResourceNamePrefix + Ascend910vir10Cpu3Gb16Ndvpp: {}, api.ResourceNamePrefix + Ascend910vir10Cpu3Gb32: {},
+		api.ResourceNamePrefix + Ascend910vir10Cpu4Gb16Dvpp: {},
+		api.ResourceNamePrefix + Ascend910vir12Cpu3Gb32:     {}, api.ResourceNamePrefix + Ascend310: {},
+		api.ResourceNamePrefix + Ascend310P: {}, api.ResourceNamePrefix + Ascend310Pc1: {},
+		api.ResourceNamePrefix + Ascend310Pc2: {}, api.ResourceNamePrefix + Ascend310Pc4: {},
+		api.ResourceNamePrefix + Ascend310Pc2Cpu1: {}, api.ResourceNamePrefix + Ascend310Pc4Cpu3: {},
+		api.ResourceNamePrefix + Ascend310Pc4Cpu3Ndvpp: {}, api.ResourceNamePrefix + Ascend310Pc4Cpu4Dvpp: {},
+		HuaweiUnHealthAscend310P: {}, HuaweiUnHealthAscend310: {}, api.ResourceNamePrefix + AiCoreResourceName: {}}
 }
 
 // FileWatch is used to watch sock file

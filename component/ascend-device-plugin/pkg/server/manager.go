@@ -167,7 +167,7 @@ func (hdm *HwDevManager) updateNode() error {
 		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
 		return err
 	}
-	newNode.Annotations[common.BaseDeviceInfoKey] = string(mashaledNpuInfo)
+	newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
 	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
@@ -386,7 +386,7 @@ func (hdm *HwDevManager) updateAllInfo() error {
 func (hdm *HwDevManager) separateNPUIDFromDeviceInfoIntoCache() {
 	deviceInfoName := hdm.manager.GetKubeClient().DeviceInfoName
 	physicIDsFromDeviceInfo := hdm.manager.GetKubeClient().GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName,
-		common.DeviceInfoCMNameSpace)
+		api.KubeNS)
 
 	for _, physicId := range physicIDsFromDeviceInfo {
 		logicId, err := hdm.manager.GetDmgr().GetLogicIDFromPhysicID(physicId)
@@ -925,7 +925,7 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 	}
 	for _, deviceInfo := range podDeviceInfo {
 		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
-		_, existRealAlloc := deviceInfo.Pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
+		_, existRealAlloc := deviceInfo.Pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
 		if existRealAlloc {
 			continue
 		}
@@ -1109,8 +1109,7 @@ func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
 			return
 		default:
 			hwlog.RunLog.Debugf("polling '%s' configmap", common.FaultCodeCMName)
-			configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName,
-				common.FaultCodeCMNameSpace)
+			configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
 			if err != nil {
 				hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
 				initFaultInfoFromFile()

@@ -45,9 +45,7 @@ const (
 	gangSchedulingPodGroupAnnotation = "scheduling.k8s.io/group-name"
 	// for ascend-volcano-plugin rescheduling
 	rankIndexKey = "hccl/rankIndex"
-	// prefix of request npu name
-	npuPrefix   = "huawei.com/"
-	npuCoreName = "huawei.com/npu-core"
+	npuCoreName  = "huawei.com/npu-core"
 
 	statusPodIPDownwardAPI = "status.podIP"
 	ascendRealDownwardAPI  = "metadata.annotations['huawei.com/AscendReal']"
@@ -69,8 +67,6 @@ const (
 
 const (
 	msServerNum     = "MS_SERVER_NUM"
-	msWorkerNum     = "MS_WORKER_NUM"
-	msLocalWorker   = "MS_LOCAL_WORKER"
 	msSchedHost     = "MS_SCHED_HOST"
 	msSchedPort     = "MS_SCHED_PORT"
 	msRole          = "MS_ROLE"
@@ -78,18 +74,13 @@ const (
 	msSchedulerRole = "MS_SCHED"
 	msWorkerRole    = "MS_WORKER"
 
-	ptMasterAddr     = "MASTER_ADDR"
-	ptMasterPort     = "MASTER_PORT"
-	ptWorldSize      = "WORLD_SIZE"
-	ptRank           = "RANK"
-	ptLocalWorldSize = "LOCAL_WORLD_SIZE"
-	ptLocalRank      = "LOCAL_RANK"
+	ptMasterAddr = "MASTER_ADDR"
+	ptMasterPort = "MASTER_PORT"
+	ptRank       = "RANK"
 
 	tfChiefIP     = "CM_CHIEF_IP"
 	tfChiefPort   = "CM_CHIEF_PORT"
 	tfChiefDevice = "CM_CHIEF_DEVICE"
-	tfWorkerSize  = "CM_WORKER_SIZE"
-	tfLocalWorker = "CM_LOCAL_WORKER"
 	tfWorkerIP    = "CM_WORKER_IP"
 	tfRank        = "CM_RANK"
 
@@ -98,7 +89,6 @@ const (
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name
-	mindxServiceNamespace    = "mindx-dl"                                     // clusterd grpc service namespace
 	mindxDefaultServerDomain = "clusterd-grpc-svc.mindx-dl.svc.cluster.local" // clusterd grpc service domain
 
 	// hcclSuperPodLogicId is the logic id of the superpod, ascend container env name

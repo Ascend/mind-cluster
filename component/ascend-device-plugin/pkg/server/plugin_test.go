@@ -34,6 +34,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -57,7 +58,7 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test4", Namespace: "test4", Annotations: map[string]string{common.
 			PodPredicateTime: "4", common.HuaweiAscend910: "Ascend910-2"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
-			PodPredicateTime: "5", common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
+			PodPredicateTime: "5", api.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
 	}
 	fakeErr = errors.New("fake error")
 )
@@ -359,7 +360,7 @@ func TestAllocateWithVolcano2(t *testing.T) {
 		convey.Convey("common.GetDeviceFromPodAnnotation failed", func() {
 			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 				Annotations: map[string]string{common.PodPredicateTime: "5",
-					common.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}}}
+					api.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}}}
 			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
 			mockUpdatePod := mockTryUpdatePodAnnotation(nil)

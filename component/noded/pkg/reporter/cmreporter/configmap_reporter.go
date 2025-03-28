@@ -22,6 +22,7 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
@@ -66,12 +67,12 @@ func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
 	nodeInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.client.NodeInfoName,
-			Namespace: common.NodeInfoCMNameSpace,
-			Labels:    map[string]string{common.CmConsumer: common.CmConsumerValue},
+			Namespace: api.DLNamespace,
+			Labels:    map[string]string{api.CIMCMLabelKey: common.CmConsumerValue},
 		},
 		Data: map[string]string{
-			common.NodeInfoCMDataKey: string(data),
-			"updateTime":             time.Now().Format(time.RFC3339),
+			api.NodeInfoCMDataKey: string(data),
+			"updateTime":          time.Now().Format(time.RFC3339),
 		},
 	}
 	if err := c.client.CreateOrUpdateConfigMap(nodeInfoCM); err != nil {
@@ -89,7 +90,7 @@ func (c *ConfigMapReporter) Init() error {
 	nodeInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.client.NodeInfoName,
-			Namespace: common.NodeInfoCMNameSpace,
+			Namespace: api.DLNamespace,
 		},
 		Data: map[string]string{},
 	}

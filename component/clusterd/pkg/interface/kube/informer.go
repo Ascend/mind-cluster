@@ -296,7 +296,7 @@ func GetCmInformer() cache.SharedIndexInformer {
 func InitCMInformer() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = constant.CmConsumerCIM + "=" + constant.CmConsumerValue
+			options.LabelSelector = api.CIMCMLabelKey + "=" + constant.CmConsumerValue
 		}))
 	cmInformer = informerFactory.Core().V1().ConfigMaps().Informer()
 
@@ -398,7 +398,7 @@ func cmDeviceHandler(oldObj interface{}, newObj interface{}, operator string) {
 		index++
 	}
 	if deviceCm, ok := newObj.(*v1.ConfigMap); ok {
-		if _, ok := deviceCm.Data[constant.SwitchInfoCmKey]; ok {
+		if _, ok := deviceCm.Data[api.SwitchInfoCMDataKey]; ok {
 			cmSwitchHandler(oldObj, newObj, operator)
 		}
 	}
@@ -476,12 +476,12 @@ func cmSwitchHandler(oldObj interface{}, newObj interface{}, operator string) {
 
 // checkConfigMapIsDeviceInfo check if configmap is device info
 func checkConfigMapIsDeviceInfo(obj interface{}) bool {
-	return util.IsNSAndNameMatched(obj, constant.KubeNamespace, constant.DeviceInfoPrefix)
+	return util.IsNSAndNameMatched(obj, api.KubeNS, constant.DeviceInfoPrefix)
 }
 
 // checkConfigMapIsNodeInfo check if configmap is node info
 func checkConfigMapIsNodeInfo(obj interface{}) bool {
-	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.NodeInfoPrefix)
+	return util.IsNSAndNameMatched(obj, api.DLNamespace, constant.NodeInfoPrefix)
 }
 
 // checkConfigMapIsEpRankTableInfo check if configmap is ep ranktable info
@@ -495,14 +495,14 @@ func checkConfigMapIsEpRankTableInfo(obj interface{}) bool {
 }
 
 func checkConfigMapIsSwitchInfo(obj interface{}) bool {
-	return util.IsNSAndNameMatched(obj, constant.DLNamespace, constant.SwitchInfoPrefix)
+	return util.IsNSAndNameMatched(obj, api.DLNamespace, constant.SwitchInfoPrefix)
 }
 
 // InitPubFaultCMInformer init cm informer for public fault
 func InitPubFaultCMInformer() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = constant.CmConsumerPubFault + "=" + constant.CmConsumerValue
+			options.LabelSelector = api.PubFaultCMLabelKey + "=" + constant.CmConsumerValue
 		}))
 	cmInformer := informerFactory.Core().V1().ConfigMaps().Informer()
 

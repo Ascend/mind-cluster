@@ -9,6 +9,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -23,9 +24,9 @@ func ParseDeviceInfoCM(obj interface{}) (*constant.DeviceInfo, error) {
 		return &constant.DeviceInfo{}, fmt.Errorf("not device configmap")
 	}
 	devInfoCM := constant.DeviceInfoCM{}
-	data, ok := deviceCm.Data[constant.DevInfoCMKey]
+	data, ok := deviceCm.Data[api.DeviceInfoCMDataKey]
 	if !ok {
-		return &constant.DeviceInfo{}, fmt.Errorf("configmap %s has no %s", deviceCm.Name, constant.DevInfoCMKey)
+		return &constant.DeviceInfo{}, fmt.Errorf("configmap %s has no %s", deviceCm.Name, api.DeviceInfoCMDataKey)
 	}
 
 	if unmarshalErr := json.Unmarshal([]byte(data), &devInfoCM); unmarshalErr != nil {

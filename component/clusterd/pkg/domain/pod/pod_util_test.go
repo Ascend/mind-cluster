@@ -13,6 +13,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"ascend-common/api"
 )
 
 const (
@@ -213,7 +215,7 @@ func TestDeviceAllocateIsCompleted(t *testing.T) {
 				podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 				container := v1.Container{}
 				container.Resources.Limits = v1.ResourceList{
-					resourceNamePrefix: resource.Quantity{},
+					api.ResourceNamePrefix: resource.Quantity{},
 				}
 				podDemo1.Spec.Containers = append(podDemo1.Spec.Containers, container)
 				convey.So(DeviceAllocateIsCompleted(*podDemo1), convey.ShouldBeTrue)
@@ -223,7 +225,7 @@ func TestDeviceAllocateIsCompleted(t *testing.T) {
 				podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 				container := v1.Container{}
 				container.Resources.Limits = v1.ResourceList{
-					resourceNamePrefix: resource.Quantity{},
+					api.ResourceNamePrefix: resource.Quantity{},
 				}
 				podDemo1.Spec.Containers = append(podDemo1.Spec.Containers, container)
 				delete(podDemo1.Annotations, podDeviceKey)

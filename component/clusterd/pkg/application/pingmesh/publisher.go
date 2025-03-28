@@ -24,7 +24,6 @@ const (
 	publishInterval       = 10 * time.Millisecond
 	handleBatch           = 5
 	initSuperPodNum       = 128
-	nameSpace             = "cluster-system"
 	publishCmNamePrefix   = "super-pod"
 	superPodDeviceInfoKey = "superPodDevice"
 	eventCheckPeriod      = 5 * time.Second
@@ -67,9 +66,9 @@ func updateSuperPodDeviceCM(device *api.SuperPodDevice, checkCode string, init b
 	cmName := fmt.Sprintf("%s-%s", publishCmNamePrefix, device.SuperPodID)
 	data := map[string]string{superPodDeviceInfoKey: string(b)}
 	if init {
-		return kube.CreateOrUpdateConfigMap(cmName, nameSpace, data, pingMeshLabel)
+		return kube.CreateOrUpdateConfigMap(cmName, api.ClusterNS, data, pingMeshLabel)
 	}
-	return kube.UpdateOrCreateConfigMap(cmName, nameSpace, data, pingMeshLabel)
+	return kube.UpdateOrCreateConfigMap(cmName, api.ClusterNS, data, pingMeshLabel)
 }
 
 func addEvent(superPodID, operator string) {
@@ -136,7 +135,7 @@ func handleUpdate(superPodID string, device *api.SuperPodDevice) error {
 
 func handleDelete(superPodID string) error {
 	cmName := fmt.Sprintf("%s-%s", publishCmNamePrefix, superPodID)
-	err := kube.DeleteConfigMap(cmName, nameSpace)
+	err := kube.DeleteConfigMap(cmName, api.ClusterNS)
 	if err == nil || errors.IsNotFound(err) {
 		hwlog.RunLog.Infof("delete super pod device cm success, superPodID=%s", superPodID)
 		delete(publishMgr.publishLogMap, superPodID)

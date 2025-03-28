@@ -12,6 +12,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 )
 
@@ -22,7 +23,7 @@ func TestParsePubFaultCM(t *testing.T) {
 	}
 	convey.Convey("test func ParsePubFaultCM success", t, func() {
 		cm := v1.ConfigMap{
-			Data: map[string]string{constant.PubFaultCMKey: string(faultData)},
+			Data: map[string]string{api.PubFaultCMDataKey: string(faultData)},
 		}
 		_, err = ParsePubFaultCM(&cm)
 		convey.So(err, convey.ShouldBeNil)
@@ -42,7 +43,7 @@ func TestParsePubFaultCM(t *testing.T) {
 		p1 := gomonkey.ApplyFuncReturn(json.Unmarshal, testErr)
 		defer p1.Reset()
 		cm := v1.ConfigMap{
-			Data: map[string]string{constant.PubFaultCMKey: string(faultData)},
+			Data: map[string]string{api.PubFaultCMDataKey: string(faultData)},
 		}
 		_, err = ParsePubFaultCM(&cm)
 		convey.So(err, convey.ShouldNotBeNil)

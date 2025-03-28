@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -192,18 +193,18 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 	deviceInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ki.DeviceInfoName,
-			Namespace: common.DeviceInfoCMNameSpace,
-			Labels:    map[string]string{common.CmConsumer: common.CmConsumerValue},
+			Namespace: api.KubeNS,
+			Labels:    map[string]string{api.CIMCMLabelKey: common.CmConsumerValue},
 		},
 	}
 	if common.ParamOption.RealCardType != common.Ascend910A3 {
 		deviceInfoCM.Data = map[string]string{
-			common.DeviceInfoCMDataKey:                string(data),
+			api.DeviceInfoCMDataKey:                   string(data),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
 	} else {
 		deviceInfoCM.Data = map[string]string{
-			common.DeviceInfoCMDataKey:                string(data),
-			common.SwitchInfoCMDataKey:                string(switchData),
+			api.DeviceInfoCMDataKey:                   string(data),
+			api.SwitchInfoCMDataKey:                   string(switchData),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
 	}
 
@@ -347,7 +348,7 @@ func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 	podList := ki.GetActivePodListCache()
 	var useNpu = make([]string, 0)
 	for _, pod := range podList {
-		tmpNpu, ok := pod.Annotations[common.ResourceNamePrefix+common.PodRealAlloc]
+		tmpNpu, ok := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
 		}
@@ -383,7 +384,7 @@ func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
 		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
 			continue
 		}
-		realAllocTag := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+		realAllocTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
 		tmpNPU, ok := pod.Annotations[realAllocTag]
 		if !ok || len(tmpNPU) == 0 || len(tmpNPU) > common.PodAnnotationMaxLength {
 			continue

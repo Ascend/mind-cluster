@@ -12,6 +12,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -47,7 +48,7 @@ func TestParseDeviceInfoCM(t *testing.T) {
 			cm := &v1.ConfigMap{}
 			cm.Name = testCmName
 			_, err := ParseDeviceInfoCM(cm)
-			convey.So(err.Error(), convey.ShouldEndWith, constant.DevInfoCMKey)
+			convey.So(err.Error(), convey.ShouldEndWith, api.DeviceInfoCMDataKey)
 		})
 		convey.Convey("obj checkCode is not equal", func() {
 			cm := &v1.ConfigMap{}
@@ -60,7 +61,7 @@ func TestParseDeviceInfoCM(t *testing.T) {
 				UpdateTime: 0,
 			}
 			cm.Data = map[string]string{}
-			cm.Data[constant.DevInfoCMKey] = util.ObjToString(devInfoCM)
+			cm.Data[api.DeviceInfoCMDataKey] = util.ObjToString(devInfoCM)
 			_, err := ParseDeviceInfoCM(cm)
 			convey.So(err.Error(), convey.ShouldEqual, fmt.Sprintf("device info configmap %s is not valid", cm.Name))
 		})
@@ -75,7 +76,7 @@ func TestParseDeviceInfoCM(t *testing.T) {
 				UpdateTime: 0,
 			}
 			cm.Data = map[string]string{}
-			cm.Data[constant.DevInfoCMKey] = util.ObjToString(devInfoCM)
+			cm.Data[api.DeviceInfoCMDataKey] = util.ObjToString(devInfoCM)
 			_, err := ParseDeviceInfoCM(cm)
 			convey.So(err, convey.ShouldBeNil)
 		})

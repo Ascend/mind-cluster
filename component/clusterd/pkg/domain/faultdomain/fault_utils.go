@@ -14,6 +14,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -376,7 +377,7 @@ func GetFaultListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
 
 // GetAvailDevListInfo get available device list info
 func GetAvailDevListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
-	availKey := "huawei.com/" + GetDeviceType(devCMInfo)
+	availKey := api.ResourceNamePrefix + GetDeviceType(devCMInfo)
 	availDevList, ok := devCMInfo.DeviceList[availKey]
 	if !ok {
 		return "", ""

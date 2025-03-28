@@ -124,14 +124,14 @@ func createFakeConfigCM(client *fake.Clientset) error {
 
 	cm1 := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: consts.ConfigmapNamespace,
+			Namespace: api.ClusterNS,
 			Name:      consts.PingMeshConfigCm,
 		},
 		Data: map[string]string{
 			globalConfigKey: string(cfg),
 		},
 	}
-	_, err = client.CoreV1().ConfigMaps(consts.ConfigmapNamespace).Create(context.TODO(), cm1,
+	_, err = client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm1,
 		metav1.CreateOptions{})
 	return err
 }
@@ -153,7 +153,7 @@ func createFakeAddrCM(client *fake.Clientset, cmName string) error {
 	convey.So(err, convey.ShouldBeNil)
 	cm2 := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: consts.ConfigmapNamespace,
+			Namespace: api.ClusterNS,
 			Name:      cmName,
 		},
 		Data: map[string]string{
@@ -161,7 +161,7 @@ func createFakeAddrCM(client *fake.Clientset, cmName string) error {
 		},
 	}
 
-	_, err = client.CoreV1().ConfigMaps(consts.ConfigmapNamespace).Create(context.TODO(), cm2,
+	_, err = client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm2,
 		metav1.CreateOptions{})
 	return err
 }

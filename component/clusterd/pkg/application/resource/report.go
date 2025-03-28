@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
@@ -178,7 +179,7 @@ func updateConfig(cmName, data string) {
 	newClusterCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cmName,
-			Namespace: constant.DLNamespace,
+			Namespace: api.DLNamespace,
 			Labels:    map[string]string{constant.CmConsumer: constant.CmConsumerValue},
 		},
 		Data: map[string]string{cmName: data},

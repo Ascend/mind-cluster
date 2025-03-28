@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
@@ -33,7 +34,7 @@ func TestMain(m *testing.M) {
 func TestParseSwitchInfoCM(t *testing.T) {
 	convey.Convey("test parse switch info", t, func() {
 		config := v1.ConfigMap{
-			Data: map[string]string{constant.SwitchInfoCmKey: "invalid"},
+			Data: map[string]string{api.SwitchInfoCMDataKey: "invalid"},
 		}
 		_, err := ParseSwitchInfoCM(&config)
 		convey.So(err, convey.ShouldNotBeNil)
@@ -54,7 +55,7 @@ func TestParseSwitchInfoCM(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: constant.SwitchInfoPrefix + "testName",
 			},
-			Data: map[string]string{constant.SwitchInfoCmKey: string(bytes)},
+			Data: map[string]string{api.SwitchInfoCMDataKey: string(bytes)},
 		}
 		_, err = ParseSwitchInfoCM(&config)
 		convey.So(err, convey.ShouldBeNil)

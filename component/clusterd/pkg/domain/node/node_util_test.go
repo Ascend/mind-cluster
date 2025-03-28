@@ -11,6 +11,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
@@ -21,9 +22,6 @@ var (
 	testOneSafeStr       = 2000
 	testTwoSafeStr       = 2001
 	testTwoSafeStrLength = 2
-
-	testDeviceKey   = "key"
-	testDeviceValue = "value"
 )
 
 func TestParseNodeInfoCM(t *testing.T) {
@@ -36,7 +34,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			cm := &v1.ConfigMap{}
 			cm.Name = testCmName
 			_, err := ParseNodeInfoCM(cm)
-			convey.So(err.Error(), convey.ShouldEndWith, constant.NodeInfoCMKey)
+			convey.So(err.Error(), convey.ShouldEndWith, api.NodeInfoCMDataKey)
 		})
 		convey.Convey("obj checkCode is not equal", func() {
 			cm := &v1.ConfigMap{}
@@ -45,7 +43,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			nodeInfoCM.CheckCode = ""
 			nodeInfoCM.NodeInfo = constant.NodeInfoNoName{}
 			cm.Data = map[string]string{}
-			cm.Data[constant.NodeInfoCMKey] = util.ObjToString(nodeInfoCM)
+			cm.Data[api.NodeInfoCMDataKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
 			convey.So(err.Error(), convey.ShouldEqual, fmt.Sprintf("node info configmap %s is not valid", cm.Name))
 		})
@@ -56,7 +54,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			nodeInfoCM.CheckCode = testNodeCheckCode
 			nodeInfoCM.NodeInfo = constant.NodeInfoNoName{}
 			cm.Data = map[string]string{}
-			cm.Data[constant.NodeInfoCMKey] = util.ObjToString(nodeInfoCM)
+			cm.Data[api.NodeInfoCMDataKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
 			convey.So(err, convey.ShouldNotBeNil)
 		})

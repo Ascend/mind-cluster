@@ -39,8 +39,6 @@ const (
 
 // Node
 const (
-	// ChipNameLabel label value is card type, eg. 910A
-	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// NPUChipMemoryLabel label value is npu chip memory
 	NPUChipMemoryLabel = "mind-cluster/npu-chip-memory"
 
@@ -54,8 +52,6 @@ const (
 const (
 	// PodUsedHardwareTypeAnno annotation value is the hardware type that real used in pod
 	PodUsedHardwareTypeAnno = "mind-cluster/hardware-type"
-	// PodRealUseAscendNPUAnno annotation value is the npu that real used in pod
-	PodRealUseAscendNPUAnno = "huawei.com/AscendReal"
 )
 
 // ConfigMap

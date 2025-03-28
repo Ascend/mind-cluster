@@ -15,6 +15,7 @@ import (
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/utils"
@@ -115,8 +116,8 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 				addEnvValue(podTemplate, msSchedHost, pi.ip, i)
 			}
 			if !pi.isDynamicCutJob {
-				addEnvValue(podTemplate, msLocalWorker, strconv.Itoa(pi.ctReq), i)
-				addEnvValue(podTemplate, msWorkerNum, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
+				addEnvValue(podTemplate, api.MsLocalWorkerEnv, strconv.Itoa(pi.ctReq), i)
+				addEnvValue(podTemplate, api.MsWorkerNumEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
 			}
 			addEnvValue(podTemplate, msNodeRank, strconv.Itoa(pi.rank), i)
 			addEnvValue(podTemplate, msSchedPort, pi.port, i)
@@ -137,9 +138,9 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
 			if !pi.isDynamicCutJob {
-				addEnvValue(podTemplate, ptLocalWorldSize, strconv.Itoa(pi.ctReq), i)
-				addEnvValue(podTemplate, ptWorldSize, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
-				addEnvValue(podTemplate, ptLocalRank, localRankStr(pi.ctReq), i)
+				addEnvValue(podTemplate, api.PtLocalWorldSizeEnv, strconv.Itoa(pi.ctReq), i)
+				addEnvValue(podTemplate, api.PtWorldSizeEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
+				addEnvValue(podTemplate, api.PtLocalRankEnv, localRankStr(pi.ctReq), i)
 			}
 			addEnvValue(podTemplate, ptMasterAddr, pi.ip, i)
 			addEnvValue(podTemplate, ptMasterPort, pi.port, i)
@@ -168,8 +169,8 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 				addEnvValue(podTemplate, tfChiefIP, pi.ip, i)
 			}
 			if !pi.isDynamicCutJob {
-				addEnvValue(podTemplate, tfLocalWorker, strconv.Itoa(pi.ctReq), i)
-				addEnvValue(podTemplate, tfWorkerSize, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
+				addEnvValue(podTemplate, api.TfLocalWorkerEnv, strconv.Itoa(pi.ctReq), i)
+				addEnvValue(podTemplate, api.TfWorkerSizeEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
 			}
 			addEnvValue(podTemplate, tfChiefPort, pi.port, i)
 			addEnvValue(podTemplate, tfRank, strconv.Itoa(pi.rank), i)
@@ -190,7 +191,7 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 // addHcclSuperPodIdEnv add HCCL_LOGIC_SUPERPOD_ID env to build hccs network
 func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 	for name, res := range pod.Spec.Containers[index].Resources.Requests {
-		if strings.Contains(string(name), npuPrefix) {
+		if strings.Contains(string(name), api.ResourceNamePrefix) {
 			chipsPerNode := int(res.Value())
 			superPodId := strconv.Itoa(utils.GetLogicSuperPodId(pi.rank, utils.GetSpBlock(pi.job), chipsPerNode))
 			hwlog.RunLog.Debugf("pod<%s> resource<%v=%v> pod-rank=%v sp-block=%v set %s=%v",

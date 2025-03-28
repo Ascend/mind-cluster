@@ -6,6 +6,7 @@ package statistics
 import (
 	"context"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/statistics"
@@ -35,7 +36,7 @@ func init() {
 func (j *JobCollectorMgr) JobCollector(ctx context.Context) {
 
 	// load configMap into Cache if configMap is existed
-	statistics.JobStcMgrInst.LoadConfigMapToCache(statistics.JobStcNamespace, statistics.JobStcCMName)
+	statistics.JobStcMgrInst.LoadConfigMapToCache(api.DLNamespace, statistics.JobStcCMName)
 
 	for {
 		select {

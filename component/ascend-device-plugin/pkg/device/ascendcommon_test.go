@@ -34,6 +34,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 )
@@ -1016,7 +1017,7 @@ func TestGetResetInfoData(t *testing.T) {
 func TestNpuIsUsedNow(t *testing.T) {
 	convey.Convey("test npuIsUsedNow", t, func() {
 		tool := mockAscendTools()
-		annotationTag := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{annotationTag: ""}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},
@@ -1037,7 +1038,7 @@ func TestNpuIsUsedNow(t *testing.T) {
 func TestGetRealUsedDevices(t *testing.T) {
 	convey.Convey("test getRealUsedDevices", t, func() {
 		tool := mockAscendTools()
-		annotationTag := common.ResourceNamePrefix + common.PodRealAlloc
+		annotationTag := api.ResourceNamePrefix + common.PodRealAlloc
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{"test tag": "device3"}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},

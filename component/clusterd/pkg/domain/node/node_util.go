@@ -9,6 +9,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -23,10 +24,10 @@ func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
 		return &constant.NodeInfo{}, fmt.Errorf("not node info configmap")
 	}
 	nodeInfoCM := constant.NodeInfoCM{}
-	data, ok := nodeCm.Data[constant.NodeInfoCMKey]
+	data, ok := nodeCm.Data[api.NodeInfoCMDataKey]
 	if !ok {
 		return &constant.NodeInfo{},
-			fmt.Errorf("configmap %s has no key: %s", nodeCm.Name, constant.NodeInfoCMKey)
+			fmt.Errorf("configmap %s has no key: %s", nodeCm.Name, api.NodeInfoCMDataKey)
 	}
 
 	if unmarshalErr := json.Unmarshal([]byte(data), &nodeInfoCM); unmarshalErr != nil {

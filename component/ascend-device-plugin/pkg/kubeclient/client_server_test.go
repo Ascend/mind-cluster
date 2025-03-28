@@ -36,11 +36,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
 const (
-	nodeNameKey     = "NODE_NAME"
 	nodeNameValue   = "master"
 	invalidNodeName = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
 		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
@@ -136,7 +136,7 @@ func TestGetPodsUsedNpu(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetPodsUsedNpu init kubernetes failed")
 	}
-	podList := getMockPodList(common.ResourceNamePrefix+common.PodRealAlloc, npuChip310PhyID0)
+	podList := getMockPodList(api.ResourceNamePrefix+common.PodRealAlloc, npuChip310PhyID0)
 	convey.Convey("get used npu on pods without get pod list", t, func() {
 		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetActivePodListCache",
 			func(_ *ClientK8s) []v1.Pod {
@@ -345,7 +345,7 @@ func TestGetDeviceInfoManuallySeparateNPUData(t *testing.T) {
 	convey.Convey("failed when cm ascendType is not ManuallySeparateNPU", t, func() { ascendTypeIsNil(utKubeClient) })
 	convey.Convey("failed to get device run mode", t, func() {
 		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-			common.DeviceInfoCMNameSpace)
+			api.KubeNS)
 		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
 	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, common.Ascend910, nil)
@@ -353,14 +353,14 @@ func TestGetDeviceInfoManuallySeparateNPUData(t *testing.T) {
 	convey.Convey("failed when npu cache is empty", t, func() { npuCacheIsEmpty(utKubeClient) })
 	convey.Convey("manuallySeparateNPU will be ignored", t, func() {
 		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-			common.DeviceInfoCMNameSpace)
+			api.KubeNS)
 		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
 	mockCheckDeviceName := gomonkey.ApplyFuncReturn(common.CheckDeviceName, true)
 	defer mockCheckDeviceName.Reset()
 	convey.Convey("failed to convert string phyIDStr type to int type", t, func() {
 		phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-			common.DeviceInfoCMNameSpace)
+			api.KubeNS)
 		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
 	convey.Convey("get device info manually separate npu success", t, func() { appendPhyIdSuccess(utKubeClient) })
@@ -371,7 +371,7 @@ func getCMError(utKubeClient *ClientK8s) {
 		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) { return nil, fmt.Errorf("get cm error") })
 	defer mockGetConfigMap.Reset()
 	phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-		common.DeviceInfoCMNameSpace)
+		api.KubeNS)
 	convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 }
 
@@ -384,7 +384,7 @@ func ascendTypeIsNil(utKubeClient *ClientK8s) {
 		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) { return mockCreateCM, nil })
 	defer mockGetConfigMap.Reset()
 	phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-		common.DeviceInfoCMNameSpace)
+		api.KubeNS)
 	convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 }
 
@@ -396,7 +396,7 @@ func npuCacheIsEmpty(utKubeClient *ClientK8s) {
 		func(_ *ClientK8s, _ string, _ string) (*v1.ConfigMap, error) { return mockCreateCM, nil })
 	defer mockGetConfigMap.Reset()
 	phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-		common.DeviceInfoCMNameSpace)
+		api.KubeNS)
 	convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 }
 
@@ -404,7 +404,7 @@ func appendPhyIdSuccess(utKubeClient *ClientK8s) {
 	mockAtoI := gomonkey.ApplyFuncReturn(strconv.Atoi, 1, nil)
 	defer mockAtoI.Reset()
 	phyIDs := utKubeClient.GetManuallySeparateNPUIDFromDeviceInfo(utKubeClient.DeviceInfoName,
-		common.DeviceInfoCMNameSpace)
+		api.KubeNS)
 	convey.So(phyIDs, convey.ShouldResemble, []int32{1})
 }
 
@@ -706,7 +706,7 @@ func TestGetPodsUsedNPUCase02(t *testing.T) {
 		})
 		convey.Convey("should return empty string set "+
 			"when pod annotation value is empty", func() {
-			annoKey := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+			annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
 			anno := map[string]string{annoKey: ""}
 			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
 			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
@@ -720,7 +720,7 @@ func TestGetPodsUsedNPUCase02(t *testing.T) {
 		})
 		convey.Convey("should return non-empty string set "+
 			"when pod annotation value is non-empty", func() {
-			annoKey := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.PodRealAlloc)
+			annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
 			anno := map[string]string{annoKey: "Ascend910-0,Ascend910-1"}
 			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
 			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}

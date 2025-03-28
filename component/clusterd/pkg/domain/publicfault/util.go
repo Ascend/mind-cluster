@@ -22,9 +22,9 @@ func ParsePubFaultCM(obj interface{}) (*api.PubFaultInfo, error) {
 		return nil, errors.New("input is not a valid cm")
 	}
 
-	data, ok := pubFaultCm.Data[constant.PubFaultCMKey]
+	data, ok := pubFaultCm.Data[api.PubFaultCMDataKey]
 	if !ok {
-		return nil, fmt.Errorf("public fault cm <%s> has no key '%s'", pubFaultCm.Name, constant.PubFaultCMKey)
+		return nil, fmt.Errorf("public fault cm <%s> has no key '%s'", pubFaultCm.Name, api.PubFaultCMDataKey)
 	}
 
 	var pubFaultInfo api.PubFaultInfo

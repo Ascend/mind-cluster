@@ -18,16 +18,8 @@ package common
 const (
 	// FaultConfigCMName the name of fault config map
 	FaultConfigCMName = "mindx-dl-node-fault-config"
-	// FaultConfigCMNameSpace the name space of fault config map
-	FaultConfigCMNameSpace = "mindx-dl"
 	// NodeInfoCMNamePrefix the name prefix of node info config map
 	NodeInfoCMNamePrefix = "mindx-dl-nodeinfo-"
-	// NodeInfoCMNameSpace the name space of node info config map
-	NodeInfoCMNameSpace = "mindx-dl"
-	// NodeInfoCMDataKey the data key of node info config map
-	NodeInfoCMDataKey = "NodeInfo"
-	// ENVNodeNameKey the env key to get node name
-	ENVNodeNameKey = "NODE_NAME"
 	// RegexNodeNameKey the regex key of node name
 	RegexNodeNameKey = "nodeName"
 	// RegexFaultCodeKey the regex key of code str
@@ -37,14 +29,9 @@ const (
 	// MetaDataName the metadata key of name
 	MetaDataName = "metadata.name"
 
-	// CmConsumer who uses these configmap
-	CmConsumer = "mx-consumer-cim"
 	// CmConsumerValue the value only for true
 	CmConsumerValue = "true"
 )
-
-// NodeSNAnnotation the node SN
-const NodeSNAnnotation = "product-serial-number"
 
 const (
 	// FaultConfigKey the fault config json file key of nodeD configuration

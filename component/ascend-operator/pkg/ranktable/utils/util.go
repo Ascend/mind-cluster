@@ -14,6 +14,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -101,7 +102,7 @@ func podUseNpu(pod *corev1.Pod) bool {
 			if !ok {
 				continue
 			}
-			if strings.Contains(string(resName), npuPrefix) && resValNum > 0 {
+			if strings.Contains(string(resName), api.ResourceNamePrefix) && resValNum > 0 {
 				return true
 			}
 		}
@@ -117,9 +118,6 @@ const (
 	PodRankKey = "hccl/rankIndex"
 
 	rankTableDir = "/user/mindx-dl/ranktable"
-
-	// prefix of request npu name
-	npuPrefix = "huawei.com/"
 
 	// rank table volume name
 	rankTableName = "ranktable"

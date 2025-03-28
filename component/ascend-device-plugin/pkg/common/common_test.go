@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 )
@@ -117,7 +118,7 @@ func TestGetDeviceFromPodAnnotation(t *testing.T) {
 		})
 		convey.Convey("annotationTag exist", func() {
 			pod := v1.Pod{}
-			pod.Annotations = map[string]string{ResourceNamePrefix + Ascend910: "Ascend910-0"}
+			pod.Annotations = map[string]string{api.ResourceNamePrefix + Ascend910: "Ascend910-0"}
 			_, err := GetDeviceFromPodAnnotation(&pod, Ascend910)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -244,14 +245,14 @@ func TestFilterPods1(t *testing.T) {
 		convey.Convey("annotationTag exist, device is virtual", func() {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(len(res), convey.ShouldEqual, 1)
 		})
 		convey.Convey("limitsDevNum exceeds the upper limit", func() {
 			limits := resource.NewQuantity(MaxDevicesNum*MaxAICoreNum+1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-				ResourceRequirements{Limits: v1.ResourceList{ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -259,7 +260,7 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-					ResourceList{ResourceNamePrefix + Ascend910: *limits}}}}}}}
+					ResourceList{api.ResourceNamePrefix + Ascend910: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})

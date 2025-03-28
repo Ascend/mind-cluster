@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
@@ -217,7 +218,7 @@ func (nc *NodeController) initNodeAnnotation() error {
 		return err
 	}
 	hwlog.RunLog.Infof("get node SN success, add SN(%s) to node annotation", nodeSN)
-	err = nc.kubeClient.AddAnnotation(common.NodeSNAnnotation, nodeSN)
+	err = nc.kubeClient.AddAnnotation(api.NodeSNAnnotation, nodeSN)
 	if err != nil {
 		hwlog.RunLog.Errorf("add node annotation failed, err is %v", err)
 	}

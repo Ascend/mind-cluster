@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -563,7 +564,7 @@ func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []str
 		if pod.Status.Phase == v1.PodSucceeded {
 			continue
 		}
-		annotationTag := fmt.Sprintf("%s%s", common.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
 		annotation, exist := pod.Annotations[annotationTag]
 		if !exist {
 			continue

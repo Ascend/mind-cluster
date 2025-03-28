@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -48,7 +49,7 @@ func (c *OutputMgr) JobOutput(ctx context.Context) {
 			}
 			lastVersion = version
 			cmData := c.BuildCmData(curJobStatistic)
-			err := kube.UpdateOrCreateConfigMap(statistics.JobStcCMName, statistics.JobStcNamespace, cmData, nil)
+			err := kube.UpdateOrCreateConfigMap(statistics.JobStcCMName, api.DLNamespace, cmData, nil)
 			if err != nil {
 				hwlog.RunLog.Errorf("update or create cm err:%v", err)
 			}

@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	_ "ascend-operator/pkg/testtool"
 )
@@ -157,8 +158,8 @@ func TestSetMindSporeEnv(t *testing.T) {
 		}
 		expectEnvs := []corev1.EnvVar{
 			{Name: msSchedHost, Value: ei.ip},
-			{Name: msLocalWorker, Value: strconv.Itoa(ei.ctReq)},
-			{Name: msWorkerNum, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
+			{Name: api.MsLocalWorkerEnv, Value: strconv.Itoa(ei.ctReq)},
+			{Name: api.MsWorkerNumEnv, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
 			{Name: msNodeRank, Value: strconv.Itoa(ei.rank)},
 			{Name: msSchedPort, Value: ei.port},
 			{Name: msServerNum, Value: "0"},
@@ -202,9 +203,9 @@ func TestSetPytorchEnv(t *testing.T) {
 		}}
 		rc := &ASJobReconciler{}
 		expectEnvs := []corev1.EnvVar{
-			{Name: ptLocalWorldSize, Value: strconv.Itoa(ei.ctReq)},
-			{Name: ptWorldSize, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
-			{Name: ptLocalRank, Value: localRankStr(ei.ctReq)},
+			{Name: api.PtLocalWorldSizeEnv, Value: strconv.Itoa(ei.ctReq)},
+			{Name: api.PtWorldSizeEnv, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
+			{Name: api.PtLocalRankEnv, Value: localRankStr(ei.ctReq)},
 			{Name: ptMasterAddr, Value: ei.ip},
 			{Name: ptMasterPort, Value: ei.port},
 			{Name: ptRank, Value: strconv.Itoa(ei.rank)}}
@@ -243,8 +244,8 @@ func TestSetTensorflowEnv(t *testing.T) {
 		rc := &ASJobReconciler{}
 		expectEnvs := []corev1.EnvVar{
 			{Name: tfChiefIP, Value: ei.ip},
-			{Name: tfLocalWorker, Value: strconv.Itoa(ei.ctReq)},
-			{Name: tfWorkerSize, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
+			{Name: api.TfLocalWorkerEnv, Value: strconv.Itoa(ei.ctReq)},
+			{Name: api.TfWorkerSizeEnv, Value: strconv.Itoa(ei.ctReq * ei.npuReplicas)},
 			{Name: tfChiefPort, Value: ei.port},
 			{Name: tfRank, Value: "1"},
 			{Name: tfChiefDevice, Value: "0"},

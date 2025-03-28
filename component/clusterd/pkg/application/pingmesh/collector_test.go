@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	deviceKey       = "baseDeviceInfos"
 	superPodIDKey   = "superPodID"
 	testNodeName    = "test-node"
 	testDeviceKey   = `{"device1":{"IP":"192.168.1.1","SuperDeviceID":1}}`
@@ -36,8 +35,8 @@ func setupNode() *v1.Node {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testNodeName,
 			Annotations: map[string]string{
-				superPodIDKey: testSuperPodID,
-				deviceKey:     testDeviceKey,
+				superPodIDKey:       testSuperPodID,
+				api.BaseDevInfoAnno: testDeviceKey,
 			},
 		},
 	}

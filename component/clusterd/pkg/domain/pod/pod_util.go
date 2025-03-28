@@ -11,19 +11,19 @@ import (
 
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
 
 const (
-	podDeviceKey       = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
-	podRankIndexKey    = "hccl/rankIndex"
-	torIpTag           = "sharedTorIp"
-	podLabelKey        = "app"
-	resourceNamePrefix = "huawei.com/"
-	podGroupKey        = "scheduling.k8s.io/group-name"
-	acJobNameKey       = "job-name"
-	vcJobNameKey       = "volcano.sh/job-name"
+	podDeviceKey    = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
+	podRankIndexKey = "hccl/rankIndex"
+	torIpTag        = "sharedTorIp"
+	podLabelKey     = "app"
+	podGroupKey     = "scheduling.k8s.io/group-name"
+	acJobNameKey    = "job-name"
+	vcJobNameKey    = "volcano.sh/job-name"
 )
 
 // GetJobKeyByPod get job unique key by pod
@@ -293,7 +293,7 @@ func shouldAllocated(containers []v1.Container) bool {
 			continue
 		}
 		for resourceName := range resourceLimits {
-			if strings.Contains(resourceName.String(), resourceNamePrefix) {
+			if strings.Contains(resourceName.String(), api.ResourceNamePrefix) {
 				return true
 			}
 		}

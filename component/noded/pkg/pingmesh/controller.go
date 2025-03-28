@@ -75,7 +75,7 @@ func NewManager(config *Config) *Manager {
 
 func (c *Manager) initWatcher(config *Config) {
 	var opts []configmap.Option
-	opts = append(opts, configmap.WithNamespace(consts.ConfigmapNamespace))
+	opts = append(opts, configmap.WithNamespace(api.ClusterNS))
 	opts = append(opts, configmap.WithLabelSector(fmt.Sprintf("%s=%s", consts.PingMeshConfigLabelKey,
 		consts.PingMeshConfigLabelValue)))
 	opts = append(opts, configmap.WithNamedHandlers(
@@ -98,10 +98,10 @@ func (c *Manager) initHandler(config *Config) {
 	}
 	reporter := cmreporter.New(&cmreporter.Config{
 		Client:    config.KubeClient,
-		Namespace: consts.ConfigmapNamespace,
+		Namespace: api.ClusterNS,
 		Name:      consts.PingMeshFaultCmPrefix + c.nodeName,
 		Labels: map[string]string{
-			consts.FaultConfigmapLabelKey: consts.FaultConfigmapLabelValue,
+			api.PubFaultCMLabelKey: consts.FaultConfigmapLabelValue,
 		},
 		NodeName: c.nodeName,
 	})

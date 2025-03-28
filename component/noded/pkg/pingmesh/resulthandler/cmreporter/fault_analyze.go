@@ -35,9 +35,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
-	nodecommon "nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
-	"nodeD/pkg/pingmesh/consts"
 	"nodeD/pkg/pingmesh/types"
 )
 
@@ -46,7 +44,6 @@ const (
 	faultAssertionOccur   = "occur"
 	publicFaultVersion    = "1.0"
 	faultResource         = "pingmesh"
-	faultConfigmapKey     = "PublicFault"
 	faultCode             = "220001001"
 )
 
@@ -132,7 +129,7 @@ func (f *faultReporter) reportFault() error {
 			Labels:    f.labels,
 		},
 		Data: map[string]string{
-			faultConfigmapKey: string(faultByte),
+			api.PubFaultCMDataKey: string(faultByte),
 		},
 	}
 
@@ -144,16 +141,16 @@ func (f *faultReporter) getLastFault() (*api.PubFaultInfo, error) {
 		return f.lastFault, nil
 	}
 	hwlog.RunLog.Info("try to get last fault from configmap")
-	cm, err := f.client.GetConfigMap(f.name, consts.ConfigmapNamespace)
+	cm, err := f.client.GetConfigMap(f.name, api.ClusterNS)
 	if errors.IsNotFound(err) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	faultInfo, ok := cm.Data[faultConfigmapKey]
+	faultInfo, ok := cm.Data[api.PubFaultCMDataKey]
 	if !ok {
-		hwlog.RunLog.Warnf("fault configmap not found key %s", faultConfigmapKey)
+		hwlog.RunLog.Warnf("fault configmap not found key %s", api.PubFaultCMDataKey)
 		return nil, nil
 	}
 
@@ -235,7 +232,7 @@ func (f *faultReporter) checkFault(last *api.PubFaultInfo, states map[string]sta
 }
 
 func constructFaultInfo(cardID string, timestamp int64) api.Fault {
-	nodeName := os.Getenv(nodecommon.ENVNodeNameKey)
+	nodeName := os.Getenv(api.NodeNameEnv)
 	id, err := strconv.Atoi(cardID)
 	if err != nil {
 		hwlog.RunLog.Errorf("faultCardId %s is not a number", cardID)

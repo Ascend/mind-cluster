@@ -37,6 +37,7 @@ import (
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 )
 
 // TestNewClientK8s test create k8s client
@@ -68,7 +69,7 @@ func TestNewClientK8s(t *testing.T) {
 		convey.So(err.Error(), convey.ShouldEqual, "get node name from env error")
 	})
 	convey.Convey("test create k8s client success", t, func() {
-		nodeName := os.Getenv("NODE_NAME")
+		nodeName := os.Getenv(api.NodeNameEnv)
 		mockCheckNodeName := gomonkey.ApplyFuncReturn(checkNodeName, nil)
 		defer mockCheckNodeName.Reset()
 		client, err := NewClientK8s()
