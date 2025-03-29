@@ -16,11 +16,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -36,6 +38,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
 	"ascend-common/common-utils/utils"
@@ -913,6 +916,405 @@ func TestHotReset(t *testing.T) {
 		defer mockPollImmediate.Reset()
 		convey.Convey("When PollImmediate return nil   hot rest success", func() {
 			hdm.hotReset(npuDevice)
+		})
+	})
+}
+
+// TestResetCommonInferCard tests the resetCommonInferCard function.
+func TestResetCommonInferCard(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, allInfo: common.NpuAllInfo{AllDevs: []common.NpuDevice{
+		{DeviceName: "device1", Health: v1beta1.Healthy}, {DeviceName: "device2", Health: v1beta1.Unhealthy}}}}
+	devices := []*common.NpuDevice{{DeviceName: "device1", Health: v1beta1.Healthy},
+		{DeviceName: "device2", Health: v1beta1.Unhealthy}}
+	convey.Convey("Test resetCommonInferCard", t, func() {
+		convey.Convey("When hdm is nil or allInfo.AllDevs is empty, log error and return", func() {
+			tmpAllDevs := hdm.allInfo.AllDevs
+			hdm.allInfo.AllDevs = []common.NpuDevice{}
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+			hdm.allInfo.AllDevs = tmpAllDevs
+		})
+		convey.Convey("When getServerUsageAndBoardId fails, log error and return", func() {
+			patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), errors.New("error"))
+			defer patch.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(common.A800IA2NoneHccsBoardId),
+			nil).ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{}).ApplyMethodReturn(
+			&kubeclient.ClientK8s{}, "GetServerUsageLabelCache", common.Infer, nil)
+		defer patch.Reset()
+		convey.Convey("When usage is Infer and boardId is A800IA2NoneHccsBoardId, call ResetWithoutHccsServer", func() {
+			patch1 := gomonkey.ApplyMethod(hdm, "ResetWithoutHccsServer",
+				func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When usage is Infer and boardId is not A800IA2NoneHccsBoardId, call ResetHccsServer", func() {
+			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), nil).ApplyMethod(hdm,
+				"ResetHccsServer", func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When usage is not Infer, call hotReset for unhealthy devices", func() {
+			patch1 := gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetServerUsageLabelCache", "otherUsage",
+				nil).ApplyMethod(hdm.manager, "SetCardsInResetting",
+				func(_ *device.HwAscend310Manager, _ int32, _ bool) {}).ApplyMethod(hdm.manager, "SetResetFailedTimes",
+				func(_ *device.HwAscend310Manager, _ int32, _ int) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+	})
+}
+
+// TestExecResetChip tests the execResetChip function.
+func TestExecResetChip(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	isResetExec := false
+	convey.Convey("Test execResetChip", t, func() {
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{}).ApplyFuncReturn(
+			common.IsContainAtlas300IDuo, true)
+		defer patch.Reset()
+		convey.Convey("When isResetExec is true, return nil", func() {
+			isResetExec := true
+			err := hdm.execResetChip(int32(0), &isResetExec)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("When GetCardIDDeviceID fails, log error and return", func() {
+			patch1 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID",
+				int32(0), int32(0), errors.New("getCardIDDeviceID error"))
+			defer patch1.Reset()
+			err := hdm.execResetChip(int32(0), &isResetExec)
+			convey.So(err.Error(), convey.ShouldEqual, "getCardIDDeviceID error")
+		})
+		patch1 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0),
+			nil).ApplyMethodReturn(hdm.manager.GetDmgr(), "SetDeviceReset", nil)
+		defer patch1.Reset()
+		convey.Convey("When SetDeviceReset fails, log error and return", func() {
+			patch2 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SetDeviceReset",
+				errors.New("setDeviceReset error"))
+			defer patch2.Reset()
+			err := hdm.execResetChip(int32(0), &isResetExec)
+			convey.So(err.Error(), convey.ShouldEqual, "setDeviceReset error")
+		})
+		convey.Convey("When exec set device reset function success, return nil", func() {
+			err := hdm.execResetChip(int32(0), &isResetExec)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestPollFaultCodeCM tests the pollFaultCodeCM function.
+func TestPollFaultCodeCM(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	convey.Convey("Test pollFaultCodeCM", t, func() {
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", &kubeclient.ClientK8s{})
+		defer patch.Reset()
+		convey.Convey("When context is canceled, stop polling", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			hdm.pollFaultCodeCM(ctx)
+		})
+	})
+}
+
+// TestInitFaultInfoFromFile tests the initFaultInfoFromFile function.
+func TestInitFaultInfoFromFile(t *testing.T) {
+	originalCardType := common.ParamOption.RealCardType
+	originalEnableSwitch := common.ParamOption.EnableSwitchFault
+	convey.Convey("Test initFaultInfoFromFile", t, func() {
+		convey.Convey("When LoadFaultCodeFromFile fails", func() {
+			initFaultInfoFromFile()
+			convey.So(len(common.NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
+		})
+		generalFaultCode := "[0x00f103b0,155649,na,NoneExist]"
+		switchFileInfo := common.SwitchFaultFileInfo{NotHandleFaultCodes: []string{generalFaultCode}}
+		bytes, err := json.Marshal(switchFileInfo)
+		convey.So(err, convey.ShouldBeNil)
+		tmpNotHandleFaultCodes := common.NotHandleFaultCodes
+		patch := gomonkey.ApplyFuncReturn(json.Unmarshal, nil).ApplyFunc(deviceswitch.UpdateSwitchFaultLevel,
+			func() {}).ApplyFuncReturn(utils.LoadFile, bytes, nil).ApplyFuncReturn(common.LoadFaultCodeFromFile, nil).
+			ApplyFuncReturn(common.LoadFaultCustomizationFromFile, nil)
+		defer patch.Reset()
+		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.EnableSwitchFault = true
+		convey.Convey("When load switch fault code from file error", func() {
+			patch1 := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, errors.New("load error"))
+			defer patch1.Reset()
+			initFaultInfoFromFile()
+			convey.So(len(common.NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
+			common.NotHandleFaultCodes = tmpNotHandleFaultCodes
+		})
+		convey.Convey("When all loads succeed", func() {
+			initFaultInfoFromFile()
+			convey.So(len(common.NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
+			common.NotHandleFaultCodes = tmpNotHandleFaultCodes
+		})
+	})
+	common.ParamOption.RealCardType = originalCardType
+	common.ParamOption.EnableSwitchFault = originalEnableSwitch
+}
+
+// TestGetFaultCodeCMPollInterval tests the getFaultCodeCMPollInterval function.
+func TestGetFaultCodeCMPollInterval(t *testing.T) {
+	type testCase struct {
+		name          string
+		configMapData map[string]string
+		expected      int
+	}
+	testCases := []testCase{{name: "No PollInterval key", configMapData: map[string]string{},
+		expected: common.PollFaultCodeCMInterval},
+		{name: "Invalid PollInterval format", configMapData: map[string]string{common.PollIntervalKey: "invalid"},
+			expected: common.PollFaultCodeCMInterval},
+		{name: "PollInterval too small", configMapData: map[string]string{
+			common.PollIntervalKey: strconv.Itoa(common.PollFaultCodeCMMinInterval - 1)},
+			expected: common.PollFaultCodeCMInterval},
+		{name: "PollInterval too large", configMapData: map[string]string{
+			common.PollIntervalKey: strconv.Itoa(common.PollFaultCodeCMMaxInterval + 1)},
+			expected: common.PollFaultCodeCMInterval},
+		{name: "Valid PollInterval at lower bound", expected: common.PollFaultCodeCMMinInterval,
+			configMapData: map[string]string{common.PollIntervalKey: strconv.Itoa(common.PollFaultCodeCMMinInterval)}},
+		{name: "Valid PollInterval at upper bound", expected: common.PollFaultCodeCMMaxInterval,
+			configMapData: map[string]string{common.PollIntervalKey: strconv.Itoa(common.PollFaultCodeCMMaxInterval)}},
+		{name: "Valid PollInterval in middle", configMapData: map[string]string{common.PollIntervalKey: "30"},
+			expected: common.PollFaultCodeCMMinInterval},
+	}
+	convey.Convey("Test getFaultCodeCMPollInterval", t, func() {
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				configMap := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+					Data: tc.configMapData}
+				result := getFaultCodeCMPollInterval(configMap)
+				convey.So(result, convey.ShouldEqual, tc.expected)
+			})
+		}
+	})
+}
+
+// CapturePanic executes a function and returns any panic value that occurred
+// Returns nil if the function executed without panicking
+func CapturePanic(f func()) error {
+	var err error
+	defer func() {
+		err = nil
+		if recovered := recover(); recovered != nil {
+			err = errors.New("panic error")
+		}
+	}()
+	f()
+	return err
+}
+
+// TestChipHotReset tests the chipHotReset function.
+func TestChipHotReset(t *testing.T) {
+	hdm := &HwDevManager{groupDevice: map[string][]*common.NpuDevice{"type1": {{DeviceName: "device1"}},
+		"virtual": {{DeviceName: "virtual1"}}}, manager: &device.HwAscend310Manager{},
+		allInfo: common.NpuAllInfo{AllDevs: []common.NpuDevice{}}}
+	originalHotReset := common.ParamOption.HotReset
+	convey.Convey("Test chipHotReset", t, func() {
+		convey.Convey("When HotReset mode is not Infer, log debug and return", func() {
+			common.ParamOption.HotReset = common.HotResetTrainOnLine
+			convey.So(CapturePanic(func() { hdm.chipHotReset() }), convey.ShouldBeNil)
+		})
+		common.ParamOption.HotReset = common.HotResetInfer
+		patch := gomonkey.ApplyFuncReturn(common.IsVirtualDev, false).ApplyFuncReturn(common.IsContainAtlas300IDuo,
+			false).ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), errors.New("error"))
+		defer patch.Reset()
+		convey.Convey("When device is virtual, skip it", func() {
+			patch := gomonkey.ApplyFuncReturn(common.IsVirtualDev, true)
+			defer patch.Reset()
+			convey.So(CapturePanic(func() { hdm.chipHotReset() }), convey.ShouldBeNil)
+		})
+		convey.Convey("When device is Atlas300IDuo, call resetDuoCard", func() {
+			mockAtlas := gomonkey.ApplyFuncReturn(common.IsContainAtlas300IDuo, true)
+			defer mockAtlas.Reset()
+			convey.So(CapturePanic(func() { hdm.chipHotReset() }), convey.ShouldBeNil)
+		})
+		convey.Convey("When normal infer device, call resetCommonInferCard", func() { hdm.chipHotReset() })
+	})
+	common.ParamOption.HotReset = originalHotReset
+}
+
+// TestResetDuoCard tests the resetDuoCard function.
+func TestResetDuoCard(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, ServerMap: map[string]InterfaceServer{}}
+	devices := []*common.NpuDevice{{CardID: 1, DeviceName: "device1", Health: v1beta1.Unhealthy},
+		{CardID: 1, DeviceName: "device2"}}
+	prClient := &PodResource{}
+	convey.Convey("Test resetDuoCard", t, func() {
+		patch := gomonkey.ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
+		defer patch.Reset()
+		convey.Convey("When duo card not removable, skip reset", func() {
+			mockRemove := gomonkey.ApplyMethodReturn(hdm.manager.GetKubeClient(), "GetAllPodListCache", []v1.Pod{})
+			defer mockRemove.Reset()
+			convey.So(CapturePanic(func() { hdm.resetDuoCard("type1", devices, prClient) }), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestIsPodRemove tests the isPodRemove function.
+func TestIsPodRemove(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{},
+		ServerMap: map[string]InterfaceServer{"type1": &PluginServer{}}}
+	convey.Convey("Test isPodRemove", t, func() {
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", &kubeclient.ClientK8s{}).ApplyMethodReturn(
+			&kubeclient.ClientK8s{}, "GetAllPodListCache", []v1.Pod{})
+		defer patch.Reset()
+		convey.Convey("When devType not found in ServerMap, return false", func() {
+			result := hdm.isPodRemove("invalidType", &common.NpuDevice{DeviceName: "device1"}, &PodResource{})
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("When pod not removed, return false", func() {
+			mockIsPodMove := gomonkey.ApplyMethodReturn(&PodResource{}, "IsPodMoveComplete", false)
+			defer mockIsPodMove.Reset()
+			result := hdm.isPodRemove("type1", &common.NpuDevice{DeviceName: "device1"}, &PodResource{})
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("When pod removed, return true", func() {
+			mockIsPodMove := gomonkey.ApplyMethodReturn(&PodResource{}, "IsPodMoveComplete", true)
+			defer mockIsPodMove.Reset()
+			result := hdm.isPodRemove("type1", &common.NpuDevice{DeviceName: "device1"}, &PodResource{})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestUpdateFaultConfigFromCm tests the updateFaultConfigFromCm function.
+func TestUpdateFaultConfigFromCm(t *testing.T) {
+	originalVersion := resourceVersion
+	originalCardType := common.ParamOption.RealCardType
+	originalEnableSwitchFault := common.ParamOption.EnableSwitchFault
+	configMap := &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{ResourceVersion: "new-version"}}
+	convey.Convey("Test updateFaultConfigFromCm", t, func() {
+		convey.Convey("When version not changed, do nothing", func() {
+			resourceVersion = "new-version"
+			convey.So(CapturePanic(func() { updateFaultConfigFromCm(configMap) }), convey.ShouldBeNil)
+		})
+		patch := gomonkey.ApplyFunc(loadFaultCode, func(_ *v1.ConfigMap) {}).
+			ApplyFunc(loadFaultCustomization, func(_ *v1.ConfigMap) {})
+		defer patch.Reset()
+		convey.Convey("When version changed, update config", func() {
+			resourceVersion = "old-version"
+			updateFaultConfigFromCm(configMap)
+			convey.So(resourceVersion, convey.ShouldEqual, "new-version")
+		})
+		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.EnableSwitchFault = true
+		convey.Convey("When is Ascend910A3 with switch fault enabled", func() {
+			mockSwitch := gomonkey.ApplyFunc(loadSwitchFaultCode, func(_ *v1.ConfigMap) {}).
+				ApplyFunc(deviceswitch.UpdateSwitchFaultLevel, func() {})
+			defer mockSwitch.Reset()
+			convey.So(CapturePanic(func() { updateFaultConfigFromCm(configMap) }), convey.ShouldBeNil)
+		})
+	})
+	resourceVersion = originalVersion
+	common.ParamOption.RealCardType = originalCardType
+	common.ParamOption.EnableSwitchFault = originalEnableSwitchFault
+}
+
+// TestLoadFaultCustomization tests the loadFaultCustomization function.
+func TestLoadFaultCustomization(t *testing.T) {
+	configMap := &v1.ConfigMap{Data: map[string]string{common.FaultCustomizationKey: "test-data"}}
+	emptyConfig := &v1.ConfigMap{Data: map[string]string{}}
+	convey.Convey("Test loadFaultCustomization", t, func() {
+		patch := gomonkey.ApplyFunc(common.ResetFaultCustomizationCache, func() {}).
+			ApplyFunc(common.LoadFaultCustomizationFromFile, func() error { return nil })
+		defer patch.Reset()
+		convey.Convey("When key not found, load from file", func() {
+			convey.So(CapturePanic(func() { loadFaultCustomization(emptyConfig) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When key not found, load from file error", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCustomizationFromFile,
+				func() error { return errors.New("error") })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadFaultCustomization(emptyConfig) }), convey.ShouldBeNil)
+		})
+		patch1 := gomonkey.ApplyFunc(common.LoadFaultCustomization,
+			func([]byte) error { return errors.New("load error") })
+		defer patch1.Reset()
+		convey.Convey("When load from cm failed, fallback to file", func() {
+			convey.So(CapturePanic(func() { loadFaultCustomization(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When load from cm success", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCustomization, func([]byte) error { return nil })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadFaultCustomization(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When both cm and file load failed", func() {
+			patch2 := gomonkey.ApplyFunc(common.LoadFaultCustomizationFromFile,
+				func() error { return errors.New("file load error") })
+			defer patch2.Reset()
+			convey.So(CapturePanic(func() { loadFaultCustomization(configMap) }), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestLoadSwitchFaultCode tests the loadSwitchFaultCode function
+func TestLoadSwitchFaultCode(t *testing.T) {
+	configMap := &v1.ConfigMap{Data: map[string]string{common.SwitchFaultCodeKey: "test-data"}}
+	emptyConfig := &v1.ConfigMap{Data: map[string]string{}}
+	convey.Convey("Test loadSwitchFaultCode", t, func() {
+		patch := gomonkey.ApplyFunc(common.LoadSwitchFaultCodeFromFile, func() error { return nil })
+		defer patch.Reset()
+		convey.Convey("When key not found, load from file", func() {
+			convey.So(CapturePanic(func() { loadSwitchFaultCode(emptyConfig) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When key not found, load from file error", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadSwitchFaultCodeFromFile,
+				func() error { return errors.New("error") })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadSwitchFaultCode(emptyConfig) }), convey.ShouldBeNil)
+		})
+		patch1 := gomonkey.ApplyFunc(common.LoadSwitchFaultCode,
+			func([]byte) error { return errors.New("load error") })
+		defer patch1.Reset()
+		convey.Convey("When load from cm failed, fallback to file", func() {
+			convey.So(CapturePanic(func() { loadSwitchFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When load from cm success", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadSwitchFaultCode, func([]byte) error { return nil })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadSwitchFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When both cm and file load failed", func() {
+			patch2 := gomonkey.ApplyFunc(common.LoadSwitchFaultCodeFromFile,
+				func() error { return errors.New("file load error") })
+			defer patch2.Reset()
+			convey.So(CapturePanic(func() { loadSwitchFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestLoadFaultCode tests the loadFaultCode function
+func TestLoadFaultCode(t *testing.T) {
+	configMap := &v1.ConfigMap{Data: map[string]string{common.FaultCodeKey: "test-data"}}
+	emptyConfig := &v1.ConfigMap{Data: map[string]string{}}
+	convey.Convey("Test loadFaultCode", t, func() {
+		patch := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile, func() error { return nil })
+		defer patch.Reset()
+		convey.Convey("When key not found, load from file", func() {
+			convey.So(CapturePanic(func() { loadFaultCode(emptyConfig) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When key not found, load from file error", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { return errors.New("error") })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadFaultCode(emptyConfig) }), convey.ShouldBeNil)
+		})
+		patch1 := gomonkey.ApplyFunc(common.LoadFaultCode,
+			func([]byte) error { return errors.New("load error") })
+		defer patch1.Reset()
+		convey.Convey("When load from cm failed, fallback to file", func() {
+			convey.So(CapturePanic(func() { loadFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When load from cm success", func() {
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCode, func([]byte) error { return nil })
+			defer patch1.Reset()
+			convey.So(CapturePanic(func() { loadFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+		convey.Convey("When both cm and file load failed", func() {
+			patch2 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { return errors.New("file load error") })
+			defer patch2.Reset()
+			convey.So(CapturePanic(func() { loadFaultCode(configMap) }), convey.ShouldBeNil)
 		})
 	})
 }
