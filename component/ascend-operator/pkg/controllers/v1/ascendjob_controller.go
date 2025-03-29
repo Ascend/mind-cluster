@@ -385,9 +385,6 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
 		controllerRef := metav1.GetControllerOf(e.Object)
-		if controllerRef == nil {
-			return false
-		}
 		replicaType, ok := e.Object.GetLabels()[commonv1.ReplicaTypeLabel]
 		if !ok || len(replicaType) == 0 {
 			return false
@@ -402,7 +399,9 @@ func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 			return false
 		}
 		hwlog.RunLog.Infof("deleted pod <%s> version is: %v", e.Object.GetName(), version)
-
+		if controllerRef == nil {
+			return true
+		}
 		currentVersion, ok := r.versions[controllerRef.UID]
 		if ok && int32(versionNumber) == currentVersion {
 			r.versions[controllerRef.UID]++

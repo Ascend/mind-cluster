@@ -531,32 +531,33 @@ func TestOnPodDeleteFunc(t *testing.T) {
 		trueValue := true
 		pod := &corev1.Pod{}
 		pod.Labels = make(map[string]string)
-		convey.Convey("01-pod without controller ref should return false", func() {
-			res := fn(event.DeleteEvent{Object: pod})
-			convey.So(res, convey.ShouldEqual, false)
-		})
-		pod.OwnerReferences = []metav1.OwnerReference{metav1.OwnerReference{
-			APIVersion: mindxdlv1.GroupVersion.String(),
-			Kind:       mindxdlv1.Kind,
-			Name:       "fake-job",
-			UID:        job.UID,
-			Controller: &trueValue,
-		}}
-		convey.Convey("02-pod without replica-type label should return false", func() {
+		convey.Convey("01-pod without replica-type label should return false", func() {
 			res := fn(event.DeleteEvent{Object: pod})
 			convey.So(res, convey.ShouldEqual, false)
 		})
 		pod.Labels[commonv1.ReplicaTypeLabel] = "master"
-		convey.Convey("03-pod with version label should return false", func() {
+		convey.Convey("02-pod with version label should return false", func() {
 			res := fn(event.DeleteEvent{Object: pod})
 			convey.So(res, convey.ShouldEqual, false)
 		})
-		convey.Convey("04-pod with invalid version labels should return false", func() {
+		convey.Convey("03-pod with invalid version labels should return false", func() {
 			pod.Labels[podVersionLabel] = "xx"
 			res := fn(event.DeleteEvent{Object: pod})
 			convey.So(res, convey.ShouldEqual, false)
 		})
+		pod.Labels[podVersionLabel] = "1"
+		convey.Convey("04-pod without controller ref should return true", func() {
+			res := fn(event.DeleteEvent{Object: pod})
+			convey.So(res, convey.ShouldEqual, true)
+		})
 		convey.Convey("05-pod with valid version labels should return true", func() {
+			pod.OwnerReferences = []metav1.OwnerReference{metav1.OwnerReference{
+				APIVersion: mindxdlv1.GroupVersion.String(),
+				Kind:       mindxdlv1.Kind,
+				Name:       "fake-job",
+				UID:        job.UID,
+				Controller: &trueValue,
+			}}
 			pod.Labels[podVersionLabel] = "1"
 			res := fn(event.DeleteEvent{Object: pod})
 			convey.So(res, convey.ShouldEqual, true)
