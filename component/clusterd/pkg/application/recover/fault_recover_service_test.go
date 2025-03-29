@@ -5,6 +5,7 @@ package recover
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -13,6 +14,7 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 )
 
@@ -534,4 +536,97 @@ func TestPreRegistry(t *testing.T) {
 		convey.So(code, convey.ShouldEqual, common.JobNotExist)
 		convey.So(err, convey.ShouldNotBeNil)
 	})
+}
+
+func TestGetJobBaseInfo_Normal(t *testing.T) {
+	patch1 := gomonkey.ApplyFunc(podgroup.GetPGFromCacheOrPod,
+		func(jobId string) (string, string, string) {
+			return "testJobName", "testPgName", "testNamespace"
+		})
+	defer patch1.Reset()
+
+	patch2 := gomonkey.ApplyFunc(common.GetRecoverBaseInfo,
+		func(pgName, namespace string) (common.RecoverConfig, common.RespCode, error) {
+			return common.RecoverConfig{
+				ProcessRecoverEnable: true,
+			}, common.OK, nil
+		})
+	defer patch2.Reset()
+
+	jobId := "testJobId"
+	info, code, err := getJobBaseInfo(jobId)
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if code != common.OK {
+		t.Errorf("Expected response code %d, but got %d", common.OK, code)
+	}
+	if info.JobId != jobId {
+		t.Errorf("Expected jobId %s, but got %s", jobId, info.JobId)
+	}
+}
+
+func TestGetJobBaseInfo_GetPGFromCacheError(t *testing.T) {
+	patch := gomonkey.ApplyFunc(podgroup.GetPGFromCacheOrPod,
+		func(jobId string) (string, string, string) {
+			return "", "", ""
+		})
+	defer patch.Reset()
+
+	jobId := "testJobId"
+	_, code, err := getJobBaseInfo(jobId)
+	if err == nil {
+		t.Errorf("Expected an error, but got nil")
+	}
+	if code != common.OperatePodGroupError {
+		t.Errorf("Expected response code %d, but got %d", common.OperatePodGroupError, code)
+	}
+}
+
+func TestGetJobBaseInfo_GetRecoverBaseInfoError(t *testing.T) {
+	patch1 := gomonkey.ApplyFunc(podgroup.GetPGFromCacheOrPod,
+		func(jobId string) (string, string, string) {
+			return "testJobName", "testPgName", "testNamespace"
+		})
+	defer patch1.Reset()
+
+	patch2 := gomonkey.ApplyFunc(common.GetRecoverBaseInfo,
+		func(pgName, namespace string) (common.RecoverConfig, common.RespCode, error) {
+			return common.RecoverConfig{}, common.OperatePodGroupError, errors.New("test error")
+		})
+	defer patch2.Reset()
+
+	jobId := "testJobId"
+	_, code, err := getJobBaseInfo(jobId)
+	if err == nil {
+		t.Errorf("Expected an error, but got nil")
+	}
+	if code != common.OperatePodGroupError {
+		t.Errorf("Expected response code %d, but got %d", common.OperatePodGroupError, code)
+	}
+}
+
+func TestGetJobBaseInfo_ProcessRecoverEnableOff(t *testing.T) {
+	patch1 := gomonkey.ApplyFunc(podgroup.GetPGFromCacheOrPod,
+		func(jobId string) (string, string, string) {
+			return "testJobName", "testPgName", "testNamespace"
+		})
+	defer patch1.Reset()
+
+	patch2 := gomonkey.ApplyFunc(common.GetRecoverBaseInfo,
+		func(pgName, namespace string) (common.RecoverConfig, common.RespCode, error) {
+			return common.RecoverConfig{
+				ProcessRecoverEnable: false,
+			}, common.OK, nil
+		})
+	defer patch2.Reset()
+
+	jobId := "testJobId"
+	_, code, err := getJobBaseInfo(jobId)
+	if err == nil {
+		t.Errorf("Expected an error, but got nil")
+	}
+	if code != common.ProcessRecoverEnableOff {
+		t.Errorf("Expected response code %d, but got %d", common.ProcessRecoverEnableOff, code)
+	}
 }

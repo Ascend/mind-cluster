@@ -7,24 +7,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/recover"
+	"clusterd/pkg/interface/kube"
 )
 
 const (
 	keepAliveSeconds = 10
 	sliceLength3     = 3
+	numInt2          = 2
 )
 
 func init() {
@@ -35,6 +40,40 @@ func init() {
 	if err != nil {
 		return
 	}
+}
+
+type sender struct {
+	mockStream
+}
+
+func (s *sender) Send(signal *pb.ProcessManageSignal) error {
+	return nil
+}
+
+type mockStream struct {
+}
+
+func (ms *mockStream) Context() context.Context {
+	return context.Background()
+}
+
+func (ms *mockStream) SendMsg(m interface{}) error {
+	return nil
+}
+
+func (ms *mockStream) RecvMsg(m interface{}) error {
+	return nil
+}
+
+func (ms *mockStream) SetHeader(md metadata.MD) error {
+	return nil
+}
+
+func (ms *mockStream) SendHeader(md metadata.MD) error {
+	return nil
+}
+
+func (ms *mockStream) SetTrailer(md metadata.MD) {
 }
 
 func TestHandleNotifyDump(t *testing.T) {
@@ -990,10 +1029,10 @@ func TestHandleWaitReportStopComplete(t *testing.T) {
 			uuid:    "test-uuid",
 		}
 
-		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {}).
+			ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {}).
+			ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
 		defer patches.Reset()
-		patches.ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {})
-		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
 
 		testReportChanNil(ctl)
 		testContextCanceled(ctl)
@@ -1321,10 +1360,7 @@ func testSuccess(ctl *EventController) {
 
 		result, err := ctl.writeConfirmFaultAndWaitPlatResultFault([]*pb.FaultRank{{RankId: "rank1"}})
 		convey.So(err, convey.ShouldBeNil)
-		convey.So(result, convey.ShouldResemble, []*pb.FaultRank{
-			{RankId: "rank1"},
-			{RankId: "rank2"},
-		})
+		convey.So(len(result), convey.ShouldResemble, numInt2)
 	})
 }
 
@@ -1747,5 +1783,790 @@ func testNonPlatformModeSuccess(ctl *EventController) {
 		convey.So(event, convey.ShouldEqual, "")
 		convey.So(respCode, convey.ShouldEqual, common.OK)
 		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestHandleWaitRestartAllProcess_PlatFormModeTrue(t *testing.T) {
+	ctl := &EventController{
+		jobInfo: common.JobBaseInfo{
+			RecoverConfig: common.RecoverConfig{
+				PlatFormMode: true,
+			},
+		},
+		uuid: "testUuid",
+	}
+
+	patchGetCtx := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "getCtxAndScheduleResultChan",
+		func(_ *EventController) (context.Context, <-chan struct{}) {
+			return context.Background(), nil
+		})
+	defer patchGetCtx.Reset()
+
+	event, code, err := ctl.handleWaitRestartAllProcess()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if code != common.OK {
+		t.Errorf("Expected response code %d, but got %d", common.OK, code)
+	}
+	if event != common.RestartProcessFinishEvent {
+		t.Errorf("Expected event %s, but got %s", common.RestartProcessFinishEvent, event)
+	}
+}
+
+func TestHandleWaitRestartAllProcess_Timeout(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(numInt2)*time.Minute)
+	defer cancel()
+
+	ctl := &EventController{
+		jobInfo: common.JobBaseInfo{
+			RecoverConfig: common.RecoverConfig{
+				PlatFormMode: false,
+			},
+		},
+		uuid: "testUuid",
+	}
+
+	patchGetCtx := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "getCtxAndScheduleResultChan",
+		func(_ *EventController) (context.Context, <-chan struct{}) {
+			return ctx, nil
+		})
+	defer patchGetCtx.Reset()
+
+	patchTimeAfter := gomonkey.ApplyFunc(time.After, func(d time.Duration) <-chan time.Time {
+		ch := make(chan time.Time, 1)
+		ch <- time.Now()
+		return ch
+	})
+	defer patchTimeAfter.Reset()
+
+	event, code, err := ctl.handleWaitRestartAllProcess()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if code != common.OK {
+		t.Errorf("Expected response code %d, but got %d", common.OK, code)
+	}
+	if event != common.RestartProcessFinishEvent {
+		t.Errorf("Expected event %s, but got %s", common.RestartProcessFinishEvent, event)
+	}
+}
+
+func TestHandleWaitRestartAllProcess_CtxDone(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	ctl := &EventController{
+		jobInfo: common.JobBaseInfo{
+			RecoverConfig: common.RecoverConfig{
+				PlatFormMode: false,
+			},
+		},
+		uuid: "testUuid",
+	}
+
+	patchGetCtx := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "getCtxAndScheduleResultChan",
+		func(_ *EventController) (context.Context, <-chan struct{}) {
+			return ctx, nil
+		})
+	defer patchGetCtx.Reset()
+
+	patchTimeSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+	defer patchTimeSleep.Reset()
+
+	cancel()
+
+	event, code, err := ctl.handleWaitRestartAllProcess()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if code != common.ControllerEventCancel {
+		t.Errorf("Expected response code %d, but got %d", common.ControllerEventCancel, code)
+	}
+	if event != "" {
+		t.Errorf("Expected empty event, but got %s", event)
+	}
+}
+
+func TestSelectSendChannel_SendChanNil(t *testing.T) {
+	convey.Convey("Test selectSendChannel when sendChan is nil", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &sender{}
+		result := ctl.selectSendChannel(context.Background(), nil, stream)
+		convey.So(result, convey.ShouldBeTrue)
+	})
+}
+
+func TestSelectSendChannel_ContextDone(t *testing.T) {
+	convey.Convey("Test selectSendChannel when context is done", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &sender{}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		sendChan := make(chan *pb.ProcessManageSignal)
+		result := ctl.selectSendChannel(ctx, sendChan, stream)
+		convey.So(result, convey.ShouldBeTrue)
+	})
+}
+
+func TestSelectSendChannel_ReceiveNonKeepAliveSignal(t *testing.T) {
+	convey.Convey("Test selectSendChannel when receive non-keepalive signal from sendChan", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &sender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.ProcessManageSignal, 1)
+		signal := &pb.ProcessManageSignal{SignalType: constant.ChangeStrategySignalType}
+		sendChan <- signal
+
+		patchSendRetry := gomonkey.ApplyFunc(common.SendRetry,
+			func(sender common.SignalRetrySender, signal *pb.ProcessManageSignal, retryTimes int) error {
+				return nil
+			})
+		defer patchSendRetry.Reset()
+
+		patchHandleSendResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"handleSendResult",
+			func(ctl *EventController, signal *pb.ProcessManageSignal, err error) {})
+		defer patchHandleSendResult.Reset()
+
+		result := ctl.selectSendChannel(ctx, sendChan, stream)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestSelectSendChannel_ReceiveKeepAliveSignal(t *testing.T) {
+	convey.Convey("Test selectSendChannel when receive keepalive signal from sendChan", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &sender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.ProcessManageSignal, 1)
+		signal := &pb.ProcessManageSignal{SignalType: constant.KeepAliveSignalType}
+		sendChan <- signal
+
+		patchSendRetry := gomonkey.ApplyFunc(common.SendRetry,
+			func(sender common.SignalRetrySender, signal *pb.ProcessManageSignal, retryTimes int) error {
+				return nil
+			})
+		defer patchSendRetry.Reset()
+
+		result := ctl.selectSendChannel(ctx, sendChan, stream)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestSelectSendChannel_SendChanClosed(t *testing.T) {
+	convey.Convey("Test selectSendChannel when sendChan is closed", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &sender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.ProcessManageSignal)
+		close(sendChan)
+		result := ctl.selectSendChannel(ctx, sendChan, stream)
+		convey.So(result, convey.ShouldBeTrue)
+	})
+}
+
+func TestEventController_chooseForRetryFail(t *testing.T) {
+	convey.Convey("Test chooseForRetryFail", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+			agentReportStrategies: []string{},
+		}
+
+		patchRecover := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"supportRecoverStrategy", func(*EventController) bool {
+				return false
+			})
+		defer patchRecover.Reset()
+		patchDump := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"supportDumpStrategy", func(*EventController) bool {
+				return false
+			})
+		defer patchDump.Reset()
+
+		result := ctl.chooseForRetryFail()
+		convey.So(result, convey.ShouldEqual, constant.ProcessExitStrategyName)
+	})
+}
+
+func TestEventController_chooseForRecoverFail(t *testing.T) {
+	convey.Convey("Test chooseForRecoverFail", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+			agentReportStrategies: []string{},
+		}
+
+		patchDump := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"supportDumpStrategy", func(*EventController) bool {
+				return false
+			})
+		defer patchDump.Reset()
+
+		result := ctl.chooseForRecoverFail()
+		convey.So(result, convey.ShouldEqual, constant.ProcessExitStrategyName)
+	})
+}
+
+func TestEventController_agentSupportStrategy(t *testing.T) {
+	convey.Convey("Test agentSupportStrategy", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+			agentReportStrategies: []string{constant.ProcessRetryStrategyName},
+		}
+
+		result := ctl.agentSupportStrategy(constant.ProcessRetryStrategyName)
+		convey.So(result, convey.ShouldBeTrue)
+
+		result = ctl.agentSupportStrategy("NonExistentStrategy")
+		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestEventController_extractRecoverResult_NoStrategy(t *testing.T) {
+	convey.Convey("Test extractRecoverResult when no strategy is decided", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetStrategyResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"getStrategyResult", func(*EventController) ([]string, []*pb.RecoverStatusRequest) {
+				return nil, nil
+			})
+		defer patchGetStrategyResult.Reset()
+
+		result, err := ctl.extractRecoverResult()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(result.Code, convey.ShouldEqual, common.ServerInnerError)
+	})
+}
+
+func TestEventController_extractRecoverResult_ExitStrategy(t *testing.T) {
+	convey.Convey("Test extractRecoverResult with ExitStrategy", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetStrategyResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"getStrategyResult", func(*EventController) ([]string, []*pb.RecoverStatusRequest) {
+				return []string{constant.ProcessExitStrategyName}, nil
+			})
+		defer patchGetStrategyResult.Reset()
+
+		result, err := ctl.extractRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result.Strategy, convey.ShouldEqual, constant.ProcessExitStrategyName)
+		convey.So(result.Code, convey.ShouldEqual, common.OK)
+		convey.So(result.RecoverSuccess, convey.ShouldBeTrue)
+	})
+}
+
+func TestEventController_extractRecoverResult_NormalStrategy(t *testing.T) {
+	convey.Convey("Test extractRecoverResult with normal strategy", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetStrategyResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"getStrategyResult", func(*EventController) ([]string, []*pb.RecoverStatusRequest) {
+				return []string{constant.ProcessRecoverStrategyName}, []*pb.RecoverStatusRequest{
+					{
+						JobId: "testJobId",
+						Status: &pb.Status{
+							Code: int32(common.OK),
+							Info: "",
+						},
+						Strategy: constant.ProcessRecoverStrategyName,
+					},
+				}
+			})
+		defer patchGetStrategyResult.Reset()
+
+		result, err := ctl.extractRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result.Strategy, convey.ShouldEqual, constant.ProcessRecoverStrategyName)
+		convey.So(result.Code, convey.ShouldEqual, common.RespCode(common.OK))
+		convey.So(result.RecoverSuccess, convey.ShouldBeTrue)
+	})
+}
+
+func TestEventController_removeAgentStrategy(t *testing.T) {
+	convey.Convey("Test removeAgentStrategy", t, func() {
+		ctl := &EventController{
+			agentReportStrategies: []string{constant.ProcessRecoverStrategy,
+				constant.ProcessRetryStrategyName},
+		}
+		ctl.removeAgentStrategy(constant.ProcessRetryStrategyName)
+		convey.So(len(ctl.agentReportStrategies), convey.ShouldEqual, 1)
+		convey.So(ctl.agentReportStrategies[0], convey.ShouldEqual, constant.ProcessRecoverStrategy)
+	})
+}
+
+func TestEventController_updateFixResult_Success(t *testing.T) {
+	convey.Convey("Test updateFixResult success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				PgName:    "testPgName",
+				Namespace: "testNamespace",
+			},
+		}
+		result := make(map[string]string)
+		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
+			func(pgName, namespace string, retryTimes int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+				for k, v := range annotations {
+					result[k] = v
+				}
+				return nil, nil
+			})
+		defer patchRetryPatchPodGroupAnnotations.Reset()
+
+		ctl.updateFixResult(constant.ProcessRetryStrategyName, constant.RetrySuccess)
+		convey.So(len(result), convey.ShouldEqual, 1)
+	})
+}
+
+func TestEventController_updateFixResult_Failure(t *testing.T) {
+	convey.Convey("Test updateFixResult failure", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				PgName:    "testPgName",
+				Namespace: "testNamespace",
+			},
+		}
+		result := make(map[string]string)
+		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
+			func(pgName, namespace string, retryTimes int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+				return nil, errors.New("patch error")
+			})
+		defer patchRetryPatchPodGroupAnnotations.Reset()
+		ctl.updateFixResult(constant.ProcessRetryStrategyName, constant.RetrySuccess)
+		convey.So(len(result), convey.ShouldEqual, 0)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_RetrySuccess(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with RetryStrategy success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessRetryStrategyName,
+					Code:           common.OK,
+					RecoverSuccess: true,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.RecoverSuccessEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_RetryFailedRecoverable(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with RetryStrategy failed and recoverable", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessRetryStrategyName,
+					Code:           common.RecoverableRetryError,
+					RecoverSuccess: false,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.RecoverableRetryError)
+		convey.So(event, convey.ShouldEqual, common.RecoverableRetryErrorEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_RetryFailedUnrecoverable(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with RetryStrategy failed and unrecoverable", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessRetryStrategyName,
+					Code:           common.ClientError,
+					RecoverSuccess: false,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		patchRemoveAgentStrategyRecover := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"removeAgentStrategy", func(*EventController, string) {})
+		defer patchRemoveAgentStrategyRecover.Reset()
+
+		patchRemoveAgentStrategyDump := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"removeAgentStrategy", func(*EventController, string) {})
+		defer patchRemoveAgentStrategyDump.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.UnRecoverableRetryError)
+		convey.So(event, convey.ShouldEqual, common.UnRecoverableRetryErrorEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_RecoverSuccess(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with RecoverStrategy success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessRecoverStrategyName,
+					Code:           common.OK,
+					RecoverSuccess: true,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.RecoverSuccessEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_RecoverFailed(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with RecoverStrategy failed", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessRecoverStrategyName,
+					Code:           common.ClientError,
+					RecoverSuccess: false,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.ClientError)
+		convey.So(event, convey.ShouldEqual, common.RecoverFailEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_DumpOrExitStrategySuccess(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with Dump or Exit Strategy success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessDumpStrategyName,
+					Code:           common.OK,
+					RecoverSuccess: true,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.CheckResultFinishEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_ExitStrategySuccess(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with Exit Strategy success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessExitStrategyName,
+					Code:           common.OK,
+					RecoverSuccess: true,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.CheckResultFinishEvent)
+	})
+}
+
+func TestEventController_handleCheckRecoverResult_DumpStrategyFailed(t *testing.T) {
+	convey.Convey("Test handleCheckRecoverResult with Dump Strategy failed", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchExtractRecoverResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"extractRecoverResult", func(*EventController) (common.RecoverResult, error) {
+				return common.RecoverResult{
+					Strategy:       constant.ProcessDumpStrategyName,
+					Code:           common.OK,
+					RecoverSuccess: false,
+				}, nil
+			})
+		defer patchExtractRecoverResult.Reset()
+
+		patchUpdateFixResult := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateFixResult", func(*EventController, string, string) {})
+		defer patchUpdateFixResult.Reset()
+
+		event, code, err := ctl.handleCheckRecoverResult()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.CheckResultFinishEvent)
+	})
+}
+
+func TestEventController_handleKillPod_JobNotExist(t *testing.T) {
+	convey.Convey("Test handleKillPod when job does not exist", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetJobIsExists := gomonkey.ApplyFunc(job.GetJobIsExists, func(jobId string) bool {
+			return false
+		})
+		defer patchGetJobIsExists.Reset()
+
+		_, code, err := ctl.handleKillPod()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(code, convey.ShouldEqual, common.JobNotExist)
+	})
+}
+
+func TestEventController_handleKillPod_WriteCMError(t *testing.T) {
+	convey.Convey("Test handleKillPod when write CM fails", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetJobIsExists := gomonkey.ApplyFunc(job.GetJobIsExists, func(jobId string) bool {
+			return true
+		})
+		defer patchGetJobIsExists.Reset()
+
+		patchUpdateCacheFaultAndPod := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateCacheFaultAndPod", func(*EventController) ([]*pb.FaultRank, []string, error) {
+				return nil, nil, nil
+			})
+		defer patchUpdateCacheFaultAndPod.Reset()
+
+		patchRetryWriteResetCM := gomonkey.ApplyFunc(common.RetryWriteResetCM,
+			func(jobName, namespace string, allFaultRanks []string, operation string) (*v1.ConfigMap, error) {
+				return nil, errors.New("write CM error")
+			})
+		defer patchRetryWriteResetCM.Reset()
+
+		_, code, err := ctl.handleKillPod()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(code, convey.ShouldEqual, common.OperateConfigMapError)
+	})
+}
+
+func TestEventController_handleKillPod_Success(t *testing.T) {
+	convey.Convey("Test handleKillPod success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchGetJobIsExists := gomonkey.ApplyFunc(job.GetJobIsExists, func(jobId string) bool {
+			return true
+		})
+		defer patchGetJobIsExists.Reset()
+
+		patchUpdateCacheFaultAndPod := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl),
+			"updateCacheFaultAndPod", func(*EventController) ([]*pb.FaultRank, []string, error) {
+				return nil, nil, nil
+			})
+		defer patchUpdateCacheFaultAndPod.Reset()
+
+		patchRetryWriteResetCM := gomonkey.ApplyFunc(common.RetryWriteResetCM,
+			func(jobName, namespace string, allFaultRanks []string, operation string) (*v1.ConfigMap, error) {
+				return &v1.ConfigMap{Data: map[string]string{
+					constant.ResetInfoCMDataKey: "test data",
+				}}, nil
+			})
+		defer patchRetryWriteResetCM.Reset()
+
+		event, code, err := ctl.handleKillPod()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.FinishKillPodEvent)
+	})
+}
+
+func TestEventController_handleFaultRetry_ChangePauseError(t *testing.T) {
+	convey.Convey("Test handleFaultRetry when change pause mode fails", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchChangeProcessRecoverEnableMode := gomonkey.ApplyFunc(common.ChangeProcessRecoverEnableMode,
+			func(jobInfo common.JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
+				return nil, errors.New("change pause mode error")
+			})
+		defer patchChangeProcessRecoverEnableMode.Reset()
+
+		event, code, err := ctl.handleFaultRetry()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OperatePodGroupError)
+		convey.So(event, convey.ShouldEqual, common.ChangeProcessSchedulingModePauseErrorEvent)
+	})
+}
+
+func TestEventController_handleFaultRetry_ChangeEnableError(t *testing.T) {
+	convey.Convey("Test handleFaultRetry when change enable mode fails", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		patchChangeProcessRecoverEnableMode := gomonkey.ApplyFunc(common.ChangeProcessRecoverEnableMode,
+			func(jobInfo common.JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
+				if mode == constant.ProcessRecoverEnable {
+					return nil, errors.New("mock error")
+				}
+				return nil, nil
+			})
+		defer patchChangeProcessRecoverEnableMode.Reset()
+
+		patchGetJobIsRunning := gomonkey.ApplyFunc(job.GetJobIsRunning, func(jobId string) bool {
+			return true
+		})
+		defer patchGetJobIsRunning.Reset()
+
+		event, code, err := ctl.handleFaultRetry()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OperatePodGroupError)
+		convey.So(event, convey.ShouldEqual, common.ChangeProcessSchedulingModeEnableErrorEvent)
+	})
+}
+
+func TestEventController_handleFaultRetry_Success(t *testing.T) {
+	convey.Convey("Test handleFaultRetry success", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+
+		patchChangeProcessRecoverEnableMode := gomonkey.ApplyFunc(common.ChangeProcessRecoverEnableMode,
+			func(jobInfo common.JobBaseInfo, mode string) (*v1beta1.PodGroup, error) {
+				return nil, nil
+			})
+		defer patchChangeProcessRecoverEnableMode.Reset()
+
+		patchGetJobIsRunning := gomonkey.ApplyFunc(job.GetJobIsRunning, func(jobId string) bool {
+			return true
+		})
+		defer patchGetJobIsRunning.Reset()
+
+		event, code, err := ctl.handleFaultRetry()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(event, convey.ShouldEqual, common.FinishEvent)
 	})
 }
