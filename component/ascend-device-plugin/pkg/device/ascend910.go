@@ -186,6 +186,8 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			err = tempErr
 			continue
 		}
+		hwlog.RunLog.Infof("find fault on device %v, errCode: %v, policy: %v", dev.LogicID,
+			tempFaultInfo.ErrorCodeHex, tempFaultInfo.Policy)
 		idx, err := hnm.getResetIndex(dev)
 		if err != nil {
 			continue
