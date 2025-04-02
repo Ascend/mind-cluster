@@ -29,8 +29,8 @@ import (
 	"taskd/common/constant"
 )
 
-// ProfTaskQueue is a global task queue
-var ProfTaskQueue *TaskQueue
+// ProfileTaskQueue is a global task queue
+var ProfileTaskQueue *TaskQueue
 
 // BufferCompletedCallback is a callback function that is called when the buffer is completed
 type BufferCompletedCallback func(buffer *C.uint8_t, size C.size_t, validSize C.size_t)

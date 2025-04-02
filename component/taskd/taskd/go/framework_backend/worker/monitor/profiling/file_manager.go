@@ -49,7 +49,7 @@ func SetDiskUsageUpperLimitMB(upperLimitInMB int) {
 
 // SaveProfilingDataIntoFile save current profiling data to file
 func SaveProfilingDataIntoFile(rank int) error {
-	if len(ProfRecordsMark) == 0 && len(ProfRecordsApi) == 0 && len(ProfRecordsKernel) == 0 {
+	if len(ProfileRecordsMark) == 0 && len(ProfileRecordsApi) == 0 && len(ProfileRecordsKernel) == 0 {
 		hwlog.RunLog.Debug("Profiling Records is all empty, will do nothing")
 		return nil
 	}
@@ -160,35 +160,35 @@ func writeLongStringToFileWithBuffer(file *os.File, bytes []byte) error {
 
 func writeToBytes() []byte {
 	var buffer bytes.Buffer
-	estimatedSize := (len(ProfRecordsMark) + len(ProfRecordsApi) +
-		len(ProfRecordsKernel)) * constant.DefaultRecordLength
+	estimatedSize := (len(ProfileRecordsMark) + len(ProfileRecordsApi) +
+		len(ProfileRecordsKernel)) * constant.DefaultRecordLength
 	if estimatedSize < constant.LeastBufferSize { // 最小预分配4KB
 		estimatedSize = constant.LeastBufferSize
 	}
 	buffer.Grow(estimatedSize)
 	constant.MuMark.Lock()
 	defer constant.MuMark.Unlock()
-	for _, v := range ProfRecordsMark {
+	for _, v := range ProfileRecordsMark {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfRecordsMark = make([]MsptiActivityMark, 0)
+	ProfileRecordsMark = make([]MsptiActivityMark, 0)
 
 	constant.MuApi.Lock()
 	defer constant.MuApi.Unlock()
-	for _, v := range ProfRecordsApi {
+	for _, v := range ProfileRecordsApi {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfRecordsApi = make([]MsptiActivityApi, 0)
+	ProfileRecordsApi = make([]MsptiActivityApi, 0)
 
 	constant.MuKernal.Lock()
 	defer constant.MuKernal.Unlock()
-	for _, v := range ProfRecordsKernel {
+	for _, v := range ProfileRecordsKernel {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfRecordsKernel = make([]MsptiActivityKernel, 0)
+	ProfileRecordsKernel = make([]MsptiActivityKernel, 0)
 	return buffer.Bytes()
 }
 
