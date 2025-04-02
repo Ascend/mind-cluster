@@ -23,19 +23,15 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-const (
-	defaultPerm = 0666
-)
-
 // WriteToFile write data to file
 func WriteToFile(info, path string) error {
 	dirPath := filepath.Dir(path)
-	err := os.MkdirAll(dirPath, defaultPerm)
+	err := os.MkdirAll(dirPath, DefaultPerm)
 	if err != nil {
 		return err
 	}
 	hwlog.RunLog.Infof("start write info into file: %s", path)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, defaultPerm)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultPerm)
 	if err != nil {
 		return err
 	}
@@ -56,10 +52,9 @@ func RemoveResetFileAndDir(namespace, name string) error {
 	if rmErr != nil && !os.IsNotExist(rmErr) {
 		return fmt.Errorf("failed to remove file(%s): %v", typeFile, rmErr)
 	}
-	dir := GenResetDirName(namespace, name)
-	err := os.Remove(dir)
-	if err != nil && !os.IsNotExist(rmErr) {
-		return fmt.Errorf("failed to remove dir(%s): %v", dir, err)
+	resetDir := GenResetDirName(namespace, name)
+	if rmErr = os.Remove(resetDir); rmErr != nil && !os.IsNotExist(rmErr) {
+		return fmt.Errorf("failed to remove dir(%s): %v", typeFile, rmErr)
 	}
 	hwlog.RunLog.Infof("delete cm(%s) file(%s)", name, file)
 	return nil
@@ -67,9 +62,9 @@ func RemoveResetFileAndDir(namespace, name string) error {
 
 // RemoveDataTraceFileAndDir remove the job related data-trace config dir
 func RemoveDataTraceFileAndDir(namespace, jobName string) error {
-	dir := fmt.Sprintf("%s/%s", DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
-	hwlog.RunLog.Infof("will delete dir: %s", dir)
-	return os.RemoveAll(dir)
+	dataTraceDirName := fmt.Sprintf("%s/%s", DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
+	hwlog.RunLog.Infof("will delete data trace file: %s", dataTraceDirName)
+	return os.RemoveAll(dataTraceDirName)
 }
 
 // GenResetDirName generate reset cm dir name

@@ -215,11 +215,15 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 		hwlog.RunLog.Error("get kubeclient event error")
 		return
 	}
-	hwlog.RunLog.Debugf("handle pod(%s) %s event", event.Key, event.Type)
+	hwlog.RunLog.Infof("handle pod(%s) %s event", event.Key, event.Type)
 	pod, err := hrt.getPodFromCache(event.Key)
 	if err != nil {
 		hwlog.RunLog.Warn(err)
-		hrt.queue.AddRateLimited(obj)
+		if hrt.queue.NumRequeues(obj) < common.MaxPodEventRetryTimes {
+			hrt.queue.AddRateLimited(obj)
+		} else {
+			hrt.queue.Forget(obj)
+		}
 		return
 	}
 	jobName := common.GetJobNameOfPod(pod)
@@ -229,29 +233,31 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 		return
 	}
 	hrt.jobs[event.Key] = jobName
-	needRetry := hrt.writeCmToFileWhilePodAdd(pod, event)
-
-	if needRetry {
-		hrt.queue.AddRateLimited(obj)
-		return
-	}
+	hrt.writeCmToFileWhilePodAdd(pod, event)
 	hrt.queue.Forget(obj)
 }
 
-func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient.Event) bool {
+func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient.Event) {
 	if pod == nil {
-		return false
+		return
 	}
-	needRetry := false
+	podNameSpace := pod.GetNamespace()
 	jobName := common.GetJobNameOfPod(pod)
+	dataTraceDir := fmt.Sprintf("%s/%s", common.DataTraceConfigDir, podNameSpace+"."+common.DataTraceCmPrefix+jobName)
+	resetDir := common.GenResetDirName(podNameSpace, common.ResetInfoCMNamePrefix+jobName)
+	if err := os.MkdirAll(dataTraceDir, common.DefaultPerm); err != nil {
+		hwlog.RunLog.Warnf("failed to create data trace configmap dir for pod %s, err: %v", pod.Name, err)
+	}
+	if err := os.MkdirAll(resetDir, common.DefaultPerm); err != nil {
+		hwlog.RunLog.Warnf("failed to create reset configmap dir for pod %s, err: %v", pod.Name, err)
+	}
+
 	dataTraceCm, err := hrt.GetCMFromCache(fmt.Sprintf(pod.GetNamespace() + "/" + common.DataTraceCmPrefix + jobName))
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to get cm cache for pod %s", pod.Name)
-		needRetry = true
 	} else {
 		if err := hrt.writeCMToFile(dataTraceCm); err != nil {
 			hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", dataTraceCm.Name, err)
-			needRetry = true
 		}
 	}
 
@@ -262,14 +268,11 @@ func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient
 			hwlog.RunLog.Warn(err)
 			hrt.noResetCmPodKeys[event.Key] = struct{}{}
 		}
-		needRetry = true
 	} else {
 		if err := hrt.writeCMToFile(resetCm); err != nil {
 			hwlog.RunLog.Errorf("failed to write cm(%s) to file, err: %v", resetCm.Name, err)
-			needRetry = true
 		}
 	}
-	return needRetry
 }
 
 func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
@@ -371,6 +374,8 @@ func (hrt *HotResetTools) writeCMToFile(cm *v1.ConfigMap) error {
 
 func (hrt *HotResetTools) handleConfigMapEvent(obj interface{}) {
 	switch obj.(kubeclient.Event).Type {
+	case kubeclient.EventTypeAdd:
+		hrt.handleCMUpdateEvent(obj)
 	case kubeclient.EventTypeUpdate:
 		hrt.handleCMUpdateEvent(obj)
 	case kubeclient.EventTypeDelete:
@@ -401,8 +406,8 @@ func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 		// if file is not created yet, will not deal with it, only when pod is sighted by this node
 		// the file will be created in pod informer handler
 		// then if the configmap is updated, this handler will update file
-		if _, checkErr := os.Stat(fileFullName); checkErr != nil {
-			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", fileFullName, checkErr)
+		if _, checkErr := os.Stat(dir); checkErr != nil {
+			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", dir, checkErr)
 			hrt.queue.Forget(obj)
 			return
 		}
@@ -412,9 +417,9 @@ func (hrt *HotResetTools) handleCMUpdateEvent(obj interface{}) {
 		return
 	}
 	if strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) {
-		path := common.GenResetFileName(cm.Namespace, cm.Name)
-		if _, checkErr := os.Stat(path); checkErr != nil {
-			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", path, checkErr)
+		dir := common.GenResetDirName(cm.Namespace, cm.Name)
+		if _, checkErr := os.Stat(dir); checkErr != nil {
+			hwlog.RunLog.Debugf("check file(%s) failed, err: %v", dir, checkErr)
 			hrt.queue.Forget(obj)
 			return
 		}
@@ -441,15 +446,24 @@ func (hrt *HotResetTools) handleCMDeleteEvent(obj interface{}) {
 	}
 	namespace, name := keySlice[0], keySlice[1]
 	if strings.HasPrefix(name, common.ResetInfoCMNamePrefix) {
-		rmErr := common.RemoveResetFileAndDir(namespace, name)
-		if rmErr != nil {
-			hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+		file := common.GenResetFileName(namespace, name)
+		rmErr := os.Remove(file)
+		if rmErr != nil && !os.IsNotExist(rmErr) {
+			hwlog.RunLog.Errorf("failed to remove file(%s): %v", file, rmErr)
+		}
+		typeFile := common.GenResetTypeFileName(namespace, name)
+		rmErr = os.Remove(typeFile)
+		if rmErr != nil && !os.IsNotExist(rmErr) {
+			hwlog.RunLog.Errorf("failed to remove file(%s): %v", typeFile, rmErr)
 		}
 	}
 	if strings.HasPrefix(name, common.DataTraceCmPrefix) {
 		jobName := strings.TrimPrefix(name, common.DataTraceCmPrefix)
-		if rmErr := common.RemoveDataTraceFileAndDir(namespace, jobName); rmErr != nil {
-			hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+		dataTraceFileName := fmt.Sprintf("%s/%s/%s", common.DataTraceConfigDir,
+			namespace+"."+common.DataTraceCmPrefix+jobName, common.DataTraceCmProfilingSwitchKey)
+		hwlog.RunLog.Infof("will delete data trace file: %s", dataTraceFileName)
+		if rmErr := os.Remove(dataTraceFileName); rmErr != nil && !os.IsNotExist(rmErr) {
+			hwlog.RunLog.Errorf("failed to remove file(%s): %v", dataTraceFileName, rmErr)
 		}
 	}
 	hrt.queue.Forget(obj)
@@ -469,6 +483,7 @@ func (hrt *HotResetTools) writeCmToFileSystem(cm *v1.ConfigMap, key, filePath st
 		hrt.queue.AddRateLimited(obj)
 		return fmt.Errorf("failed to write file: %s for cm: %s, err: %v", filePath, cm.Namespace+"."+cm.Name, err)
 	}
+	hrt.queue.Forget(obj)
 	return nil
 }
 

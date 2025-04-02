@@ -346,9 +346,6 @@ func checkNodeName(nodeName string) error {
 func (ki *ClientK8s) ResourceEventHandler(res ResourceType, filter func(obj interface{}) bool) cache.
 	ResourceEventHandler {
 	enqueue := func(obj interface{}, event EventType) {
-		if res == CMResource && event == EventTypeAdd {
-			return
-		}
 		if res == PodResource && event == EventTypeUpdate {
 			return
 		}

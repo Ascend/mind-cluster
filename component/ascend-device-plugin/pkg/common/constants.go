@@ -881,3 +881,13 @@ const (
 	// GrpcKeepAliveTimeout grpc timeout for keep-alive ping response
 	GrpcKeepAliveTimeout = 5 * time.Minute
 )
+
+const (
+	// DefaultPerm default perm for creating dir
+	DefaultPerm = 0666
+)
+
+const (
+	// MaxPodEventRetryTimes max try time for pod add event while cache none
+	MaxPodEventRetryTimes = 4
+)
