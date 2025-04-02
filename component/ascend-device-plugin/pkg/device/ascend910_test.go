@@ -1185,8 +1185,13 @@ func TestHwAscend910ManagerWaitForAllFaultyDeviceProcessesToZero(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.name == "waitForAllFaultyDeviceProcessesToZero ut for timeout" {
-				mockGetNeedResetDevMapPatch := mockGetNeedResetDevMap()
-				defer mockGetNeedResetDevMapPatch.Reset()
+				patch1 := mockGetNeedResetDevMap().
+					ApplyFunc(time.After, func(d time.Duration) <-chan time.Time {
+						ch := make(chan time.Time, 1)
+						ch <- time.Now()
+						return ch
+					})
+				defer patch1.Reset()
 			}
 			if err := hnm.waitForAllFaultyDeviceProcessesToZero("", nil); (err != nil) != tt.wantErr {
 				t.Errorf("waitForAllFaultyDeviceProcessesToZero() error = %v, wantErr %v", err, tt.wantErr)

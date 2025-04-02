@@ -1318,3 +1318,68 @@ func TestLoadFaultCode(t *testing.T) {
 		})
 	})
 }
+
+// chipHotResetFor300IDuoTestCase chipHotReset test case for 300IDuo
+type chipHotResetFor300IDuoTestCase struct {
+	Name            string
+	mockIsCompleted bool
+	groupDevice     map[string][]*common.NpuDevice
+	serverMap       map[string]InterfaceServer
+	wantFailedTimes int
+}
+
+func buildChipHotResetFor300IDuoTestCases() []chipHotResetFor300IDuoTestCase {
+	return []chipHotResetFor300IDuoTestCase{
+		{
+			Name:            "01-pod not move, should not reset chip",
+			mockIsCompleted: false,
+			groupDevice: map[string][]*common.NpuDevice{
+				"Ascend310P-4c": {
+					{CardID: 0, LogicID: 0, Health: v1beta1.Healthy},
+					{CardID: 0, LogicID: 1, Health: v1beta1.Unhealthy},
+				},
+			},
+			serverMap:       map[string]InterfaceServer{"Ascend310P-4c": &PluginServer{}},
+			wantFailedTimes: 1,
+		},
+		{
+			Name:            "02-reset chip",
+			mockIsCompleted: true,
+			groupDevice: map[string][]*common.NpuDevice{
+				"ascend310-4": {
+					{CardID: 0, LogicID: 0, Health: v1beta1.Healthy},
+					{CardID: 0, LogicID: 1, Health: v1beta1.Unhealthy},
+				},
+			},
+			serverMap:       map[string]InterfaceServer{"ascend310-4": &PluginServer{}},
+			wantFailedTimes: 0,
+		},
+	}
+}
+
+func TestChipHotResetFor300IDuo(t *testing.T) {
+	testCases := buildChipHotResetFor300IDuoTestCases()
+	patch := gomonkey.ApplyGlobalVar(&common.ParamOption,
+		common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer}).
+		ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodListCache", nil).
+		ApplyFuncReturn(wait.PollImmediate, nil)
+	defer patch.Reset()
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			hdm := &HwDevManager{
+				manager: device.NewHwAscend310Manager(),
+			}
+			hdm.groupDevice = tt.groupDevice
+			hdm.ServerMap = tt.serverMap
+			patch1 := gomonkey.ApplyMethodReturn(&PodResource{}, "IsPodMoveComplete", tt.mockIsCompleted)
+			hdm.manager.SetResetFailedTimes(0, 1)
+			hdm.chipHotReset()
+			patch1.Reset()
+			failedTimes := hdm.manager.GetResetFailedTimes(0)
+			if failedTimes != tt.wantFailedTimes {
+				t.Errorf("chipHotReset() ResetFailedTimes = %v, "+
+					"wantFailedTimes = %v", failedTimes, tt.wantFailedTimes)
+			}
+		})
+	}
+}

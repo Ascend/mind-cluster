@@ -589,6 +589,75 @@ func TestHandleConsecutiveErrorStrategy(t *testing.T) {
 	})
 }
 
+type getRealAllocateDevicesFromEnvTestCase struct {
+	Name    string
+	pod     v1.Pod
+	WantDev []string
+}
+
+func buildGetRealAllocateDevicesFromEnvTestCases() []getRealAllocateDevicesFromEnvTestCase {
+	fieldPath := fmt.Sprintf("%s['%s%s']",
+		common.MetaDataAnnotation, api.ResourceNamePrefix, common.Ascend910)
+	annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
+	return []getRealAllocateDevicesFromEnvTestCase{
+		{
+			Name:    "01-containers len is zero, should return nil",
+			pod:     v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{}}},
+			WantDev: nil,
+		},
+		{
+			Name:    "02-all env is empty, should return nil",
+			pod:     v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{{Env: []v1.EnvVar{}}}}},
+			WantDev: nil,
+		},
+		{
+			Name: "03-get device from pod annotation failed, should return nil",
+			pod: v1.Pod{
+				Spec: v1.PodSpec{Containers: []v1.Container{{Env: []v1.EnvVar{
+					{Name: "fakeName", ValueFrom: nil},
+					{Name: common.AscendVisibleDevicesEnv,
+						ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "fakePath"}},
+					},
+					{Name: common.AscendVisibleDevicesEnv,
+						ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: fieldPath}},
+					},
+				}}}},
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}},
+			},
+			WantDev: nil,
+		},
+		{
+			Name: "04-get real dev from env success, should return devices",
+			pod: v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{
+				{Env: []v1.EnvVar{
+					{Name: common.AscendVisibleDevicesEnv,
+						ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: fieldPath}},
+					},
+				}}}},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{annotationTag: "0,1"},
+				}},
+			WantDev: []string{"0", "1"},
+		},
+	}
+}
+
+// TestGetRealAllocateDevicesFromEnv for test GetRealAllocateDevicesFromEnv
+func TestGetRealAllocateDevicesFromEnv(t *testing.T) {
+	testCases := buildGetRealAllocateDevicesFromEnvTestCases()
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			ps := NewPluginServer(common.Ascend910, devices, []string{common.HiAIManagerDevice},
+				device.NewHwAscend910Manager())
+			deviceList := ps.GetRealAllocateDevicesFromEnv(tt.pod)
+			if !reflect.DeepEqual(deviceList, tt.WantDev) {
+				t.Errorf("GetRealAllocateDevicesFromEnv() Devices = %v, WantDevices = %v",
+					deviceList, tt.WantDev)
+			}
+		})
+	}
+}
+
 func getMockPodList() []v1.Pod {
 	return []v1.Pod{
 		getMockPod(),
@@ -645,4 +714,99 @@ func mockFilterPods(mockPods []v1.Pod) *gomonkey.Patches {
 		conditionFunc func(pod *v1.Pod) bool) []v1.Pod {
 		return mockPods
 	})
+}
+
+const (
+	virDevType      = "Ascend910-16c"
+	devType         = "Ascend910-16"
+	realResNameVir  = api.ResourceNamePrefix + virDevType
+	realResName     = api.ResourceNamePrefix + devType
+	podRealAllocKey = api.ResourceNamePrefix + common.PodRealAlloc
+)
+
+type getKltAndRealAllocateDevArgs struct {
+	mockPodDevice map[string]PodDevice
+	mockErr       error
+	podList       []v1.Pod
+	deviceType    string
+}
+
+func getFakePodList() []v1.Pod {
+	return []v1.Pod{
+		{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "pod1",
+			Annotations: map[string]string{podRealAllocKey: "0,1,2,3"}}},
+		{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "pod2",
+			Annotations: map[string]string{podRealAllocKey: "4,5,6,7"}}},
+		{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "pod3",
+			Annotations: map[string]string{}}},
+	}
+}
+
+// getKltAndRealAllocateDevTestCase GetKltAndRealAllocateDev test case
+type getKltAndRealAllocateDevTestCase struct {
+	Name        string
+	args        getKltAndRealAllocateDevArgs
+	wantRealDev []string
+	wantErr     error
+}
+
+func buildGetKltAndRealAllocateDevTestCaseTestCases() []getKltAndRealAllocateDevTestCase {
+	podList := getFakePodList()
+	return []getKltAndRealAllocateDevTestCase{
+		{
+			Name: "01-get pod resource failed, should return empty pod device info and error",
+			args: getKltAndRealAllocateDevArgs{mockErr: fakeErr,
+				podList: []v1.Pod{}, mockPodDevice: map[string]PodDevice{}, deviceType: virDevType},
+			wantRealDev: nil,
+			wantErr:     errors.New("get pod resource failed, fake error"),
+		},
+		{
+			Name: "02-get virtual dev info success, should return pod virtual device info and nil",
+			args: getKltAndRealAllocateDevArgs{mockErr: nil, podList: podList, deviceType: virDevType,
+				mockPodDevice: map[string]PodDevice{"ns_pod1": {ResourceName: "fakeName", DeviceIds: []string{"0"}},
+					"ns_pod2": {ResourceName: realResNameVir, DeviceIds: []string{"4"}}}},
+			wantRealDev: []string{"4"},
+			wantErr:     nil,
+		},
+		{
+			Name: "03-get dev info success, should return pod device info and nil",
+			args: getKltAndRealAllocateDevArgs{mockErr: nil, podList: podList, deviceType: devType,
+				mockPodDevice: map[string]PodDevice{"ns_pod1": {ResourceName: realResName, DeviceIds: []string{"0"}},
+					"ns_pod3": {ResourceName: realResName, DeviceIds: []string{"8"}}}},
+			wantRealDev: []string{"0", "1", "2", "3"},
+			wantErr:     nil,
+		},
+	}
+}
+
+func TestGetKltAndRealAllocateDev(t *testing.T) {
+	testCases := buildGetKltAndRealAllocateDevTestCaseTestCases()
+	patch := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{PresetVDevice: true}).
+		ApplyPrivateMethod(&PluginServer{}, "updateAllocMap", func(*PluginServer, []string, []string) {}).
+		ApplyMethod(&PluginServer{}, "GetRealAllocateDevicesFromMap",
+			func(*PluginServer, []string) ([]string, error) { return nil, fakeErr }).
+		ApplyMethod(&PluginServer{}, "GetRealAllocateDevicesFromEnv",
+			func(*PluginServer, v1.Pod) []string { return nil })
+	defer patch.Reset()
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			ps := NewPluginServer(tt.args.deviceType, devices, []string{common.HiAIManagerDevice},
+				device.NewHwAscend910Manager())
+			patch1 := gomonkey.ApplyMethodReturn(&PodResource{}, "GetPodResource",
+				tt.args.mockPodDevice, tt.args.mockErr)
+			info, err := ps.GetKltAndRealAllocateDev(tt.args.podList)
+			patch1.Reset()
+			if len(info) == 0 && len(tt.wantRealDev) > 0 {
+				t.Error("GetKltAndRealAllocateDev() failed")
+			}
+			if len(info) > 0 && !reflect.DeepEqual(info[0].RealDevice, tt.wantRealDev) {
+				t.Errorf("GetKltAndRealAllocateDev() realDev = %v, "+
+					"wantRealDev = %v", info[0].RealDevice, tt.wantRealDev)
+			}
+			if !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("GetKltAndRealAllocateDev() err = %v, wantErr = %v", err, tt.wantErr)
+			}
+		})
+	}
 }
