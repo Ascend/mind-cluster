@@ -177,17 +177,12 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	resetDevs := make([]*common.NpuDevice, 0, len(deviceList))
 	resetFaultInfos := make([]*common.DevFaultInfo, 0, len(deviceList))
 	isHotResetOn = true
-	var err error
 	resetRing := make(map[int32]struct{})
 	for _, dev := range deviceList {
-		tempFaultInfo, tempErr := hnm.hotResetManager.GetGlobalDevFaultInfo(dev.LogicID)
-		if tempErr != nil {
-			hwlog.RunLog.Errorf("failed to get global device fault info from cache, err: %v", err)
-			err = tempErr
+		tempFaultInfo := hnm.getDevFaultInfo(dev.LogicID)
+		if tempFaultInfo == nil {
 			continue
 		}
-		hwlog.RunLog.Infof("find fault on device %v, errCode: %v, policy: %v", dev.LogicID,
-			tempFaultInfo.ErrorCodeHex, tempFaultInfo.Policy)
 		idx, err := hnm.getResetIndex(dev)
 		if err != nil {
 			continue
@@ -195,8 +190,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		if _, exist := resetRing[idx]; exist {
 			continue
 		}
-		canReset, err := hnm.canBeReset(tempFaultInfo)
-		if err != nil || !canReset {
+		if canReset, err := hnm.canBeReset(tempFaultInfo); err != nil || !canReset {
 			hwlog.RunLog.Infof("device %v cannot reset, it is busy, err: %v", tempFaultInfo.LogicId, err)
 			continue
 		}
@@ -210,6 +204,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 			"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
 	}
+	var err error
 	for idx, dev := range resetDevs {
 		if err = hnm.startUpHotReset(classifyDevs, resetFaultInfos[idx], dev); err != nil {
 			hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
@@ -217,6 +212,18 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	}
 	isHotResetOn = false
 	return err
+}
+
+func (hnm *HwAscend910Manager) getDevFaultInfo(logicID int32) *common.DevFaultInfo {
+	tempFaultInfo, tempErr := hnm.hotResetManager.GetGlobalDevFaultInfo(logicID)
+	if tempErr != nil {
+		hwlog.RunLog.Errorf("failed to get global device fault info from cache, err: %v", tempErr)
+		return nil
+	}
+	if tempFaultInfo.Policy == common.EmptyError {
+		return nil
+	}
+	return tempFaultInfo
 }
 
 func (hnm *HwAscend910Manager) getResetIndex(dev *common.NpuDevice) (int32, error) {

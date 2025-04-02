@@ -3009,3 +3009,68 @@ func TestGetResetIndex(t *testing.T) {
 		})
 	})
 }
+
+func getDevFaultInfoTestCases() []struct {
+	name           string
+	logicID        int32
+	mockFaultInfo  *common.DevFaultInfo
+	mockErr        error
+	expectedResult *common.DevFaultInfo
+} {
+	return []struct {
+		name           string
+		logicID        int32
+		mockFaultInfo  *common.DevFaultInfo
+		mockErr        error
+		expectedResult *common.DevFaultInfo
+	}{
+		{
+			name:    "get fault info success, should return fault",
+			logicID: 1,
+			mockFaultInfo: &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  "test_policy",
+			},
+			mockErr: nil,
+			expectedResult: &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  "test_policy",
+			},
+		},
+		{
+			name:           "get fault error, should return nil",
+			logicID:        2,
+			mockFaultInfo:  nil,
+			mockErr:        testErr,
+			expectedResult: nil,
+		},
+		{
+			name:    "no fault, should return nil",
+			logicID: 3,
+			mockFaultInfo: &common.DevFaultInfo{
+				LogicId: 3,
+				Policy:  common.EmptyError,
+			},
+			mockErr:        nil,
+			expectedResult: nil,
+		},
+	}
+}
+
+func TestGetDevFaultInfo(t *testing.T) {
+	tests := getDevFaultInfoTestCases()
+	for _, tt := range tests {
+		convey.Convey("test getDevFaultInfo", t, func() {
+			manager := createFake910Manager()
+			manager.hotResetManager = newTestHotResetManager(common.Ascend910, common.Train)
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyMethod(manager.hotResetManager, "GetGlobalDevFaultInfo",
+				func(_ *HotResetTools, logicID int32) (*common.DevFaultInfo, error) {
+					return tt.mockFaultInfo, tt.mockErr
+				})
+			result := manager.getDevFaultInfo(tt.logicID)
+			convey.So(result, convey.ShouldResemble, tt.expectedResult)
+		})
+	}
+}
