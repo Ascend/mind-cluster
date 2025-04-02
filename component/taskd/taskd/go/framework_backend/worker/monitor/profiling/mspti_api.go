@@ -214,14 +214,14 @@ func EnableMarkerDomain(domainName string, status string) error {
 	return nil
 }
 
-// ProfilingRecordsMark cache all Marker kind records
-var ProfilingRecordsMark = make([]MsptiActivityMark, 0)
+// ProfRecordsMark cache all Marker kind records
+var ProfRecordsMark = make([]MsptiActivityMark, 0)
 
-// ProfilingRecordsApi cache all Api kind records
-var ProfilingRecordsApi = make([]MsptiActivityApi, 0)
+// ProfRecordsApi cache all Api kind records
+var ProfRecordsApi = make([]MsptiActivityApi, 0)
 
-// ProfilingRecordsKernel cache all Kernel kind records
-var ProfilingRecordsKernel = make([]MsptiActivityKernel, 0)
+// ProfRecordsKernel cache all Kernel kind records
+var ProfRecordsKernel = make([]MsptiActivityKernel, 0)
 
 // MsptiActivityRegisterCallbacksWrapper to register callbacks to mspti
 func MsptiActivityRegisterCallbacksWrapper() error {
@@ -283,7 +283,7 @@ func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size
 //
 //export goBufferCompleted
 func goBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
-	ProfilingTaskQueue.AddTask(dealBufferCompleted, buffer, size, validSize)
+	ProfTaskQueue.AddTask(dealBufferCompleted, buffer, size, validSize)
 }
 
 func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
@@ -309,7 +309,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
 				hwlog.RunLog.Debugf("there is no more records in the buffer,the current mark size is %v, count is: %v",
-					len(ProfilingRecordsMark), count)
+					len(ProfRecordsMark), count)
 				break
 			} else if status == C.MSPTI_ERROR_INVALID_PARAMETER {
 				hwlog.RunLog.Warnf("given buffer is nil, code: %v", status)
@@ -384,17 +384,17 @@ func handleKernelRecord(pRecord *C.msptiActivity) {
 func appendKernel(kernel MsptiActivityKernel) {
 	constant.MuKernal.Lock()
 	defer constant.MuKernal.Unlock()
-	ProfilingRecordsKernel = append(ProfilingRecordsKernel, kernel)
+	ProfRecordsKernel = append(ProfRecordsKernel, kernel)
 }
 
 func appendApi(api MsptiActivityApi) {
 	constant.MuApi.Lock()
 	defer constant.MuApi.Unlock()
-	ProfilingRecordsApi = append(ProfilingRecordsApi, api)
+	ProfRecordsApi = append(ProfRecordsApi, api)
 }
 
 func appendMark(mark MsptiActivityMark) {
 	constant.MuMark.Lock()
 	defer constant.MuMark.Unlock()
-	ProfilingRecordsMark = append(ProfilingRecordsMark, mark)
+	ProfRecordsMark = append(ProfRecordsMark, mark)
 }

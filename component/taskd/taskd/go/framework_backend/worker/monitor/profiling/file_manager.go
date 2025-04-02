@@ -36,9 +36,6 @@ import (
 // GlobalRankId is the global rank id pass in by python api
 var GlobalRankId int
 
-// SavePathTimeStamp the timestamp of current rank in case of env MINDX_TASK_ID not exist
-var SavePathTimeStamp int
-
 // diskUsageUpperlimitMB is the  ProfilingBaseDir total upper limit containing all  jobs
 var diskUsageUpperLimitMB = constant.DefaultDiskUpperLimitInMB
 
@@ -52,7 +49,7 @@ func SetDiskUsageUpperLimitMB(upperLimitInMB int) {
 
 // SaveProfilingDataIntoFile save current profiling data to file
 func SaveProfilingDataIntoFile(rank int) error {
-	if len(ProfilingRecordsMark) == 0 && len(ProfilingRecordsApi) == 0 && len(ProfilingRecordsKernel) == 0 {
+	if len(ProfRecordsMark) == 0 && len(ProfRecordsApi) == 0 && len(ProfRecordsKernel) == 0 {
 		hwlog.RunLog.Debug("Profiling Records is all empty, will do nothing")
 		return nil
 	}
@@ -163,37 +160,40 @@ func writeLongStringToFileWithBuffer(file *os.File, bytes []byte) error {
 
 func writeToBytes() []byte {
 	var buffer bytes.Buffer
-	estimatedSize := (len(ProfilingRecordsMark) + len(ProfilingRecordsApi) +
-		len(ProfilingRecordsKernel)) * constant.DefaultRecordLength
+	estimatedSize := (len(ProfRecordsMark) + len(ProfRecordsApi) +
+		len(ProfRecordsKernel)) * constant.DefaultRecordLength
 	if estimatedSize < constant.LeastBufferSize { // 最小预分配4KB
 		estimatedSize = constant.LeastBufferSize
 	}
 	buffer.Grow(estimatedSize)
 	constant.MuMark.Lock()
 	defer constant.MuMark.Unlock()
-	for _, v := range ProfilingRecordsMark {
+	for _, v := range ProfRecordsMark {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfilingRecordsMark = make([]MsptiActivityMark, 0)
+	ProfRecordsMark = make([]MsptiActivityMark, 0)
 
 	constant.MuApi.Lock()
 	defer constant.MuApi.Unlock()
-	for _, v := range ProfilingRecordsApi {
+	for _, v := range ProfRecordsApi {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfilingRecordsApi = make([]MsptiActivityApi, 0)
+	ProfRecordsApi = make([]MsptiActivityApi, 0)
 
 	constant.MuKernal.Lock()
 	defer constant.MuKernal.Unlock()
-	for _, v := range ProfilingRecordsKernel {
+	for _, v := range ProfRecordsKernel {
 		buffer.Write(v.Marshal())
 		buffer.WriteByte(constant.LineSeperator)
 	}
-	ProfilingRecordsKernel = make([]MsptiActivityKernel, 0)
+	ProfRecordsKernel = make([]MsptiActivityKernel, 0)
 	return buffer.Bytes()
 }
+
+// SavePathTimeStamp the timestamp of current rank in case of env MINDX_TASK_ID not exist
+var SavePathTimeStamp int
 
 func getCurrentSavePath(rank int) (string, error) {
 	// rank should be pass in by user python script, for example dist.get_rank in pytorch

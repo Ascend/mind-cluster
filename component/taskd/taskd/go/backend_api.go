@@ -82,7 +82,7 @@ func StartMonitorClient() C.int {
 	go profiling.ManageSaveProfiling(ctx)
 	go profiling.ManageDomainEnableStatus(ctx)
 	go profiling.ManageProfilingDiskUsage(constant.ProfilingBaseDir, ctx)
-	profiling.ProfilingTaskQueue = profiling.NewTaskQueue(ctx)
+	profiling.ProfTaskQueue = profiling.NewTaskQueue(ctx)
 
 	return C.int(0)
 }
