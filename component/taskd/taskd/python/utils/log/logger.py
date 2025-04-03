@@ -198,6 +198,7 @@ def _log_rotator(source: str, dest: str) -> None:
             else:
                 _exit_file_process(source)
     except Exception as e:
+        logging.error('exception occurred while rotating log: %s', str(e))
         return
 
 

@@ -82,7 +82,7 @@ class MSRunPlugin:
         self.__func_map[operator] = func
 
     def start_mindspore_workers(self):
-        start_worker_func = self.__func_map[START_ALL_WORKER_CALLBACK_NAME]
+        start_worker_func = self.__func_map.get(START_ALL_WORKER_CALLBACK_NAME)
         init_time = 0
         while True:
             if init_time >= constants.INIT_TIMEOUT:
@@ -165,10 +165,10 @@ class MSRunPlugin:
 
     # start() should be called by mindspore msrun,to take over the control of training processes
     def start(self):
-        kill_worker_func = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]
-        start_worker_func = self.__func_map[START_ALL_WORKER_CALLBACK_NAME]
-        # {rank_0: {pid: pidNum, status: 状态码}，1：状态码 …..}
-        monitor_func = self.__func_map[MONITOR_CALLBACK_NAME]
+        kill_worker_func = self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)
+        start_worker_func = self.__func_map.get(START_ALL_WORKER_CALLBACK_NAME)
+        # {rank_0: {pid: pidNum, status: status code}，1：status code …..}
+        monitor_func = self.__func_map.get(MONITOR_CALLBACK_NAME)
         if kill_worker_func is None or start_worker_func is None or monitor_func is None:
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")
 
@@ -307,7 +307,7 @@ class MSRunPlugin:
         except Exception as e:
             run_log.info(f"failed to gracefully kill worker process, {e}")
         finally:
-            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
             stop_pids(self.rank_pids)
         return True
 
@@ -315,7 +315,7 @@ class MSRunPlugin:
         if not fault_status.is_fault:
             return
         run_log.warning(f"nodeRank:{self.ms_node_rank}  entering fault_status.is_fault")
-        self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+        self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
         force_exit_pids(self.rank_pids)
         run_log.warning(f"local rank got fault, will stop worker{self.node_global_rank_ids}")
         exit(1)
@@ -329,7 +329,7 @@ class MSRunPlugin:
             # restart the training after the rank table is updated.
             if not self.all_fault_has_recovered():
                 return True
-            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
             if self.ms_node_rank == "0":
                 run_log.warning("will kill mindio controller")
                 shared_data.shared_data_inst.set_exit_flag(True)
@@ -345,9 +345,9 @@ class MSRunPlugin:
         if not fault_status.is_unrecovered:
             return False
         run_log.warning(f"nodeRank:{self.ms_node_rank} entering fault_status.is_unrecovered")
-        self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+        self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
         if self.all_fault_has_recovered():
-            self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
             self.start_mindspore_workers()
         return True
 
@@ -359,7 +359,7 @@ class MSRunPlugin:
         )
         shared_data.shared_data_inst.set_kill_flag(True)
         time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
-        stop_res = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+        stop_res = self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
         run_log.warning(f"rank with pid {self.rank_pids} will be cleared")
         if stop_res is not constants.RES_OK:
             run_log.error(f"nodeRank:{self.ms_node_rank} failed to stop workers with return code:{stop_res}")
@@ -373,7 +373,7 @@ class MSRunPlugin:
                 run_log.warning("will kill mindio controller")
                 shared_data.shared_data_inst.set_kill_flag(True)
             time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
-            stop_res = self.__func_map[KILL_ALL_WORKER_CALLBACK_NAME]([KILL_ALL_WORKERS])
+            stop_res = self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
             run_log.warning(f"rank with pid {self.rank_pids} will be killed")
             if stop_res is not constants.RES_OK:
                 run_log.error(

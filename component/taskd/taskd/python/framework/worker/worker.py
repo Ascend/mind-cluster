@@ -32,7 +32,6 @@ class Worker:
     def init_monitor(self, rank: int, upper_limit_of_disk_in_mb: int) -> bool:
         if cython_api.lib is None:
             run_log.error("the libtaskd.so has not been loaded!")
-            print("the libtaskd.so has not been loaded!")
             return False
         self.rank = rank
         init_taskd_func = cython_api.lib.InitTaskMonitor
@@ -47,7 +46,6 @@ class Worker:
         try:
             if cython_api.lib is None:
                 run_log.error("the libtaskd.so has not been loaded!")
-                print("the libtaskd.so has not been loaded!")
                 return False
             start_monitor_client_func = cython_api.lib.StartMonitorClient
             result = start_monitor_client_func()
