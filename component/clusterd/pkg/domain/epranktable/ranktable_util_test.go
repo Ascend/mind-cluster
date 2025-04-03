@@ -12,6 +12,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
@@ -57,21 +58,42 @@ var (
 
 func TestParseMindIeRankTableCM(t *testing.T) {
 	convey.Convey("test parseMindIeRankTableCM", t, func() {
-		convey.Convey("when obj is not configmap", func() {
+		convey.Convey("01-when obj is not configmap should return error", func() {
 			result, err := parseMindIeRankTableCM("invalid")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(result, convey.ShouldBeNil)
 		})
-		convey.Convey("when obj is configmap", func() {
-			cm := &v1.ConfigMap{
-				Data: map[string]string{
-					job.HcclJson: rankTableCm,
-				},
+		cm := &v1.ConfigMap{
+			Data: map[string]string{
+				job.HcclJson: rankTableCm,
+			},
+		}
+		convey.Convey("02-when configmap has labels of grt-server/deploy-server and grt-group/deploy-server should"+
+			" return error", func() {
+			cm.Labels = map[string]string{
+				standaloneDeployServerKey:  "1",
+				distributedDeployServerKey: "2",
 			}
-			rankTable, err := parseMindIeRankTableCM(cm)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(rankTable.Status, convey.ShouldEqual, constant.StatusRankTableCompleted)
+			result, err := parseMindIeRankTableCM(cm)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(result, convey.ShouldBeNil)
 		})
+		convey.Convey("02-when configmap has label of grt-server/deploy-server should return correct result",
+			func() {
+				cm.Labels = map[string]string{standaloneDeployServerKey: "1"}
+				rankTable, err := parseMindIeRankTableCM(cm)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(rankTable.Status, convey.ShouldEqual, constant.StatusRankTableCompleted)
+				convey.So(rankTable.deployServer, convey.ShouldEqual, "1")
+			})
+		convey.Convey("02-when configmap has label of grt-group/deploy-server should return correct result",
+			func() {
+				cm.Labels = map[string]string{distributedDeployServerKey: "2"}
+				rankTable, err := parseMindIeRankTableCM(cm)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(rankTable.Status, convey.ShouldEqual, constant.StatusRankTableCompleted)
+				convey.So(rankTable.deployServer, convey.ShouldEqual, "2")
+			})
 	})
 }
 
@@ -141,6 +163,11 @@ func TestGetA2RankTableList(t *testing.T) {
 		convey.Convey("when GetA2RankTableList succeeds", func() {
 			cmList := []v1.ConfigMap{
 				{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							standaloneDeployServerKey: "1",
+						},
+					},
 					Data: map[string]string{
 						job.HcclJson: rankTableCm,
 					},

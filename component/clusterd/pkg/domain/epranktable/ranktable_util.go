@@ -16,6 +16,13 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+const (
+	// standaloneDeployServerKey is the label key for server num of standalone deploy mode
+	standaloneDeployServerKey = "grt-server/deploy-server"
+	// distributedDeployServerKey is the label key for server num of distributed deploy mode
+	distributedDeployServerKey = "grt-group/deploy-server"
+)
+
 // RankTableStatus is rank table status
 type RankTableStatus string
 
@@ -38,10 +45,11 @@ type Device struct {
 
 // A2RankTable is rank table for a2
 type A2RankTable struct {
-	Status      RankTableStatus `json:"status"`
-	ServerList  []*Server       `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
-	ServerCount string          `json:"server_count" json:"server_count,omitempty"` // hccl_json server count
-	Version     string          `json:"version" json:"version,omitempty"`           // hccl_json version
+	deployServer string
+	Status       RankTableStatus `json:"status"`
+	ServerList   []*Server       `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
+	ServerCount  string          `json:"server_count" json:"server_count,omitempty"` // hccl_json server count
+	Version      string          `json:"version" json:"version,omitempty"`           // hccl_json version
 }
 
 // PdDeployModeRankTable is global rank table for single node or cross node pd deploy mode
@@ -54,7 +62,8 @@ type PdDeployModeRankTable struct {
 
 // PdDeployModeServer is server for pd deploy mode
 type PdDeployModeServer struct {
-	DeviceList   []*Device `json:"device,omitempty"`        // device list in each server
+	DeviceList   []*Device `json:"device,omitempty"` // device list in each server
+	DeployServer string    `json:"deploy_server,omitempty"`
 	ServerID     string    `json:"server_id"`               // server id, represented by ip address
 	ContainerIP  string    `json:"server_ip,omitempty"`     // pod ip
 	HardwareType string    `json:"hardware_type,omitempty"` // hardware type
@@ -62,9 +71,10 @@ type PdDeployModeServer struct {
 
 // ServerGroup is server group
 type ServerGroup struct {
-	GroupId     string                `json:"group_id"`
-	ServerCount string                `json:"server_count"`
-	ServerList  []*PdDeployModeServer `json:"server_list"`
+	GroupId      string                `json:"group_id"`
+	DeployServer string                `json:"deploy_server,omitempty"`
+	ServerCount  string                `json:"server_count"`
+	ServerList   []*PdDeployModeServer `json:"server_list"`
 }
 
 // parseMindIeRankTableCM parse mindie rank table configmap
@@ -80,6 +90,23 @@ func parseMindIeRankTableCM(obj interface{}) (*A2RankTable, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	grtServer, hasGrtServer := ranktableInfoCm.Labels[standaloneDeployServerKey]
+	grtGroup, hasGrtGroup := ranktableInfoCm.Labels[distributedDeployServerKey]
+
+	switch {
+	case hasGrtServer && hasGrtGroup:
+		return nil, fmt.Errorf("%s and %s cannot exist at the same time",
+			standaloneDeployServerKey, distributedDeployServerKey)
+	case hasGrtServer:
+		a2RankTable.deployServer = grtServer
+	case hasGrtGroup:
+		a2RankTable.deployServer = grtGroup
+	default:
+		return nil, fmt.Errorf("configmap(%s) no %s or %s label", ranktableInfoCm.Name,
+			standaloneDeployServerKey, distributedDeployServerKey)
+	}
+
 	return &a2RankTable, nil
 }
 
@@ -168,6 +195,7 @@ func GenerateServerGroup2(a2RankTableList []*A2RankTable) *ServerGroup {
 	for i, a2RankTable := range a2RankTableList {
 		server := a2RankTable.ServerList[0]
 		pdDeployModeServer := &PdDeployModeServer{
+			DeployServer: a2RankTable.deployServer,
 			ServerID:     server.ServerID,
 			ContainerIP:  server.ContainerIP,
 			DeviceList:   server.DeviceList,
@@ -206,9 +234,10 @@ func GenerateServerGroupList(a2RankTableList []*A2RankTable) []*ServerGroup {
 			pdDeployModeServerList[j] = pdDeployModeServer
 		}
 		serverGroup := &ServerGroup{
-			GroupId:     fmt.Sprintf("%d", i+constant.GroupIdOffset),
-			ServerCount: a2RankTable.ServerCount,
-			ServerList:  pdDeployModeServerList,
+			GroupId:      fmt.Sprintf("%d", i+constant.GroupIdOffset),
+			DeployServer: a2RankTable.deployServer,
+			ServerCount:  a2RankTable.ServerCount,
+			ServerList:   pdDeployModeServerList,
 		}
 		serverGroupList[i] = serverGroup
 	}
