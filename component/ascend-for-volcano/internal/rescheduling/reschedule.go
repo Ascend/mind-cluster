@@ -632,6 +632,9 @@ func (reScheduler *ReScheduler) getNewCacheJobs(restartFaultJobs map[api.JobID]*
 }
 
 func (reScheduler *ReScheduler) reduceForSubHealthyNodes(smp map[string]float64) {
+	if smp == nil {
+		return
+	}
 	for nodeName, score := range smp {
 		fNode, exist := reScheduler.FaultNodes[nodeName]
 		if !exist || (!fNode.HasCardSubHealthFault && !fNode.HasSwitchSubHealthFault) {

@@ -166,6 +166,9 @@ func isFillJob(label map[string]string, nTaskNum int) bool {
 }
 
 func refreshScoreMap(nodes []*api.NodeInfo, scoreMap map[string]float64) {
+	if scoreMap == nil {
+		return
+	}
 	for _, node := range nodes {
 		scoreMap[node.Name] = 0
 	}

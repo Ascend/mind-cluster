@@ -56,7 +56,7 @@ func isIPValid(ipStr string) error {
 
 // Start the grpc server
 func (server *ClusterInfoMgrServer) Start(recoverSvc *recover.FaultRecoverService,
-	pubFaultSvc *publicfault.PubFaultService, dataTraceSvc *profiling.ProfilingSwitchManager,
+	pubFaultSvc *publicfault.PubFaultService, dataTraceSvc *profiling.SwitchManager,
 	configSvc *busconfig.BusinessConfigServer) error {
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {

@@ -200,7 +200,7 @@ class DLRecoverManager(RecoverManager):
         try:
             run_log.info(f"do action {action}, jobId={self.client_info.jobId}, arg={arg}")
             self.lock.acquire()
-            func = self.action_func_map[action]
+            func = self.action_func_map.get(action)
             if func is None:
                 raise Exception(f"action {action} unregistered")
 

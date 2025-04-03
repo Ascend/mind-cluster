@@ -60,7 +60,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		hwlog.RunLog.Infof("jobId=%s skip handle subHealthy faults", faultInfo.JobId)
 		return
 	}
-	var grpcFormatFaults []*pb.FaultRank
+	var grpcFormatFaults []*pb.FaultRank = nil
 	for _, info := range faultInfo.FaultList {
 		if info.PodUid == "" || info.PodRank == "" {
 			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s",

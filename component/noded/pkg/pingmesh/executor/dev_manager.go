@@ -106,7 +106,7 @@ func (d *DevManager) SetResultHandler(handler func(result *types.HccspingMeshRes
 
 // Start executor
 func (d *DevManager) Start(stopCh <-chan struct{}) {
-	var currentStop chan struct{}
+	var currentStop chan struct{} = nil
 
 	for {
 		select {

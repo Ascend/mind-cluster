@@ -20,11 +20,16 @@ import (
 )
 
 const (
-	JobStcCMName         = "current-job-statistic"
-	JobDataCmKey         = "data"
-	TotalJobsCmKey       = "totalJob"
+	// JobStcCMName is the name of ConfigMap used to store job statistic data.
+	JobStcCMName = "current-job-statistic"
+	// JobDataCmKey is the key of ConfigMap data.
+	JobDataCmKey = "data"
+	// TotalJobsCmKey is the key of ConfigMap data.
+	TotalJobsCmKey = "totalJob"
+	// maxCMJobStatisticNum is the maximum number of job statistic data in ConfigMap.
 	maxCMJobStatisticNum = 10000
-	InitVersion          = 0
+	// InitVersion is the initial version of job statistic data.
+	InitVersion = 0
 )
 
 // JobStcMgr used to job statistic data.

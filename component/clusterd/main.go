@@ -94,7 +94,7 @@ func addJobFunc() {
 
 func addEpRankTableFunc() {
 	kube.AddPodFunc(constant.EpRankTable, jobv2.EpGlobalRankTableMassageCollector)
-	kube.AddCmRankTableFunc(constant.EpRankTable, epranktable.EpRankTableInformerHandler)
+	kube.AddCmRankTableFunc(constant.EpRankTable, epranktable.InformerHandler)
 }
 
 func addResourceFunc() {
@@ -159,7 +159,7 @@ func initGrpcServer(ctx context.Context) {
 		grpc.KeepaliveParams(keepAlive)})
 	recoverService := recover.NewFaultRecoverService(keepAliveInterval, ctx)
 	pubFaultSvc := publicfault.NewPubFaultService(ctx)
-	dataTraceSvc := &profiling.ProfilingSwitchManager{}
+	dataTraceSvc := &profiling.SwitchManager{}
 	configSvc := busconfig.NewBusinessConfigServer(ctx)
 	if err := server.Start(recoverService, pubFaultSvc, dataTraceSvc, configSvc); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
