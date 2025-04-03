@@ -34,6 +34,7 @@ type MsptiActivitySourceKind int32
 // specific to a certain activity kind, as noted below.
 type MsptiActivityFlag int32
 
+// MsptiObjectID The identifier for the activity object associated with this marker.
 type MsptiObjectID struct {
 	// Pt A process object requires that we identify the process ID.
 	// A thread object requires that we identify both the process and thread ID.
@@ -50,10 +51,12 @@ type MsptiObjectID struct {
 	}
 }
 
+// MsptiActivity interface
 type MsptiActivity interface {
 	Marshal() []byte
 }
 
+// MsptiActivityMark obtain marker kind activity from mspti
 type MsptiActivityMark struct {
 	// Kind The activity record kind, must be msptiActivityKindMarker.
 	Kind MsptiActivityKind
@@ -75,6 +78,7 @@ type MsptiActivityMark struct {
 	Domain *string
 }
 
+// Marshal marshal MsptiActivityMark
 func (mark MsptiActivityMark) Marshal() []byte {
 	name, domain := "NULL", "NULL"
 	if mark.Name != nil {
@@ -112,6 +116,7 @@ type MsptiActivityApi struct {
 	Name *string
 }
 
+// Marshal marshal MsptiActivityApi
 func (api MsptiActivityApi) Marshal() []byte {
 	name := "NULL"
 	if api.Name != nil {
@@ -126,6 +131,7 @@ func (api MsptiActivityApi) Marshal() []byte {
 	return bytes
 }
 
+// MsptiActivityKernel obtain kernel kind activity from mspti
 type MsptiActivityKernel struct {
 	// Kind The activity record kind, must be msptiActivityKindKernel.
 	Kind MsptiActivityKind
@@ -146,6 +152,7 @@ type MsptiActivityKernel struct {
 	Name *string
 }
 
+// Marshal marshal MsptiActivityKernel
 func (kernel MsptiActivityKernel) Marshal() []byte {
 	name, Type := "NULL", "NULL"
 	if kernel.Name != nil {
