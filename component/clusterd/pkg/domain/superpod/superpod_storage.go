@@ -45,6 +45,7 @@ func deepCopySuperPodDevice(superPodDevice *api.SuperPodDevice) *api.SuperPodDev
 	return copySuperPodDevice
 }
 
+// Manager the manager of super pod
 type Manager struct {
 	snMap  map[string]*api.SuperPodDevice
 	rwLock sync.RWMutex

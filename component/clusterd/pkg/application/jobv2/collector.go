@@ -47,7 +47,7 @@ func EpGlobalRankTableMassageCollector(oldPodInfo, newPodInfo *v1.Pod, operator 
 	if !checkPodIsControllerOrCoordinator(newPodInfo) {
 		return
 	}
-	epranktable.EpRankTableInformerHandler(oldPodInfo, newPodInfo, operator)
+	epranktable.InformerHandler(oldPodInfo, newPodInfo, operator)
 }
 
 // checkPodIsControllerOrCoordinator check if pod is controller or coordinator

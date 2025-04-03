@@ -117,7 +117,7 @@ func TestPushGlobalRankTable(t *testing.T) {
 }
 
 func TestEpRankTableInformerHandler(t *testing.T) {
-	convey.Convey("test EpRankTableInformerHandler", t, func() {
+	convey.Convey("test InformerHandler", t, func() {
 		convey.Convey("with ConfigMap", func() {
 			cm := &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
@@ -128,7 +128,7 @@ func TestEpRankTableInformerHandler(t *testing.T) {
 					},
 				},
 			}
-			EpRankTableInformerHandler(nil, cm, "")
+			InformerHandler(nil, cm, "")
 			msg, _ := epGlobalRankTableManager.rankTableQueue.Get()
 			if msg != nil {
 				rankTableMsg, ok := msg.(*GenerateGlobalRankTableMessage)
@@ -147,7 +147,7 @@ func TestEpRankTableInformerHandler(t *testing.T) {
 					},
 				},
 			}
-			EpRankTableInformerHandler(nil, pod, "")
+			InformerHandler(nil, pod, "")
 			msg, _ := epGlobalRankTableManager.rankTableQueue.Get()
 			if msg != nil {
 				rankTableMsg, ok := msg.(*GenerateGlobalRankTableMessage)
@@ -157,7 +157,7 @@ func TestEpRankTableInformerHandler(t *testing.T) {
 			}
 		})
 		convey.Convey("with invalid object", func() {
-			EpRankTableInformerHandler(nil, "invalid", "")
+			InformerHandler(nil, "invalid", "")
 		})
 	})
 }

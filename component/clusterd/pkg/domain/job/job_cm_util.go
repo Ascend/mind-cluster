@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	configmapPrefix   = "job-summary"
-	configmapLabel    = "outside-job-info"
+	configmapPrefix = "job-summary"
+	configmapLabel  = "outside-job-info"
+	// HcclJson hccl info key of configmap
 	HcclJson          = "hccl.json"
 	configmapOperator = "operator"
 	operatorAdd       = "add"

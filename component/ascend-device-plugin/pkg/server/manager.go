@@ -1296,7 +1296,7 @@ func flattenMap(m map[string][]*common.NpuDevice) []*common.NpuDevice {
 func checkDeviceStatus(failDevs []device.ResetDevice,
 	groupDev map[string][]*common.NpuDevice) ([]device.ResetDevice, bool) {
 	isChange := false
-	var newDevs []device.ResetDevice
+	var newDevs []device.ResetDevice = nil
 	devMap := make(map[int32]*common.NpuDevice)
 	for _, dev := range flattenMap(groupDev) {
 		if dev.Health != v1beta1.Healthy {

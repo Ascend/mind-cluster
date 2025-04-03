@@ -14,7 +14,7 @@ import (
 )
 
 // epGlobalRankTableManager ep global rank table manager
-var epGlobalRankTableManager *RankTableManager
+var epGlobalRankTableManager *RankTableManager = nil
 
 // RankTableManager ep rank table manager
 type RankTableManager struct {
@@ -174,10 +174,10 @@ func (rm *RankTableManager) pushGlobalRankTable(message *GenerateGlobalRankTable
 	rm.rankTableQueue.Forget(message)
 }
 
-// EpRankTableInformerHandler collects generate global ranktable message and add to queue
-func EpRankTableInformerHandler(oldObj, newObj interface{}, operator string) {
-	var jobId string
-	var namespace string
+// InformerHandler collects generate global ranktable message and add to queue
+func InformerHandler(oldObj, newObj interface{}, operator string) {
+	var jobId = ""
+	var namespace = ""
 	var exist bool
 
 	switch newObj.(type) {

@@ -32,6 +32,7 @@ func init() {
 	GlobalJobOutputMgr = &OutputMgr{}
 }
 
+// JobOutput output cache to cm
 func (c *OutputMgr) JobOutput(ctx context.Context) {
 	// Create a timer that fires every 3 seconds and updates cm if the data is updated
 	var lastVersion int64 = statistics.InitVersion
@@ -57,6 +58,7 @@ func (c *OutputMgr) JobOutput(ctx context.Context) {
 	}
 }
 
+// BuildCmData build cm data
 func (c *OutputMgr) BuildCmData(curJobStatistic constant.CurrJobStatistic) map[string]string {
 	tmpSlice := make([]constant.JobStatistic, 0, len(curJobStatistic.JobStatistic))
 	cmData := make(map[string]string)

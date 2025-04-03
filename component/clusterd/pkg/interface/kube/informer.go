@@ -288,6 +288,7 @@ func podHandler(oldObj interface{}, newObj interface{}, operator string) {
 
 var cmInformer cache.SharedIndexInformer
 
+// GetCmInformer get cm informer
 func GetCmInformer() cache.SharedIndexInformer {
 	return cmInformer
 }

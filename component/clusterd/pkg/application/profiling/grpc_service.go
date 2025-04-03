@@ -22,8 +22,8 @@ const (
 	PartsOfJobNs = 2
 )
 
-// ProfilingSwitchManager represents profiling switch manager
-type ProfilingSwitchManager struct {
+// SwitchManager represents profiling switch manager
+type SwitchManager struct {
 	profiling.UnimplementedTrainingDataTraceServer
 }
 
@@ -39,7 +39,7 @@ const (
 )
 
 // ModifyTrainingDataTraceSwitch to modify the profiling marker status by updating the cm
-func (ps *ProfilingSwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
+func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 	in *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")
@@ -71,7 +71,7 @@ func (ps *ProfilingSwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Cont
 }
 
 // GetTrainingDataTraceSwitch get  current profiling marker status
-func (ps *ProfilingSwitchManager) GetTrainingDataTraceSwitch(ctx context.Context,
+func (ps *SwitchManager) GetTrainingDataTraceSwitch(ctx context.Context,
 	in *profiling.DataStatusReq) (*profiling.DataStatusRes, error) {
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")

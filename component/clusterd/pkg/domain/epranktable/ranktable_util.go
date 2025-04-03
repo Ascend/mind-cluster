@@ -46,9 +46,10 @@ type A2RankTable struct {
 
 // PdDeployModeRankTable is global rank table for single node or cross node pd deploy mode
 type PdDeployModeRankTable struct {
-	Version         string          `json:"version" json:"version,omitempty"` // hccl_json version
-	Status          RankTableStatus `json:"status"`
-	ServerGroupList []*ServerGroup  `json:"server_group_list" json:"server_group_list,omitempty"` // hccl_json server group list
+	Version string          `json:"version" json:"version,omitempty"` // hccl_json version
+	Status  RankTableStatus `json:"status"`
+	// ServerGroupList hccl_json server group list
+	ServerGroupList []*ServerGroup `json:"server_group_list" json:"server_group_list,omitempty"`
 }
 
 // PdDeployModeServer is server for pd deploy mode
@@ -217,7 +218,7 @@ func GenerateServerGroupList(a2RankTableList []*A2RankTable) []*ServerGroup {
 // getGlobalRankTableInfo get string global rank table info
 func getGlobalRankTableInfo(a2RankTableList []*A2RankTable, serverGroup0, serverGroup1 *ServerGroup,
 	pdDeploymentMode string) (string, error) {
-	var pdDeployModeRankTable *PdDeployModeRankTable
+	var pdDeployModeRankTable = &PdDeployModeRankTable{}
 	switch pdDeploymentMode {
 	case constant.SingleNodePdDeployMode:
 		serverGroup2 := GenerateServerGroup2(a2RankTableList)
