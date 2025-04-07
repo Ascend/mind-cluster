@@ -2609,6 +2609,49 @@ func TestCanResetDevice(t *testing.T) {
 	})
 }
 
+// TestExecOutBandReset test the function execOutBandReset
+func TestExecOutBandReset(t *testing.T) {
+	manager := createFake910Manager()
+	const testCardID, testDeviceID = 0, 0
+	convey.Convey("test execOutBandReset", t, func() {
+		patch := gomonkey.ApplyPrivateMethod(manager, "updateResetInfo",
+			func(_ *HwAscend910Manager, failDevs, sucDevs []ResetDevice) {
+				return
+			}).
+			ApplyPrivateMethod(manager, "scanDeviceForThirdParty",
+				func(_ *HwAscend910Manager, failDevs []ResetDevice) {
+					return
+				}).
+			ApplyPrivateMethod(manager, "fillResetDevs",
+				func(_ *HwAscend910Manager, devs []ResetDevice) ([]ResetDevice, error) {
+					return devs, nil
+				})
+		defer patch.Reset()
+		common.ParamOption.RealCardType = common.Ascend910A3
+		convey.Convey("01-reset error, should return error", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "resetDeviceOutBand",
+				func(_ *HwAscend910Manager, cardId, deviceId int32) error {
+					return ascend910testErr
+				})
+			defer patch1.Reset()
+			err := manager.execOutBandReset([]ResetDevice{
+				{CardId: testCardID, DeviceId: testDeviceID},
+			}, []ResetDevice{})
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch.ApplyPrivateMethod(manager, "resetDeviceOutBand",
+			func(_ *HwAscend910Manager, cardId, deviceId int32) error {
+				return nil
+			})
+		convey.Convey("02-success, should return nil", func() {
+			err := manager.execOutBandReset([]ResetDevice{
+				{CardId: testCardID, DeviceId: testDeviceID},
+			}, []ResetDevice{})
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
 // TestUpdateResetInfo test the function updateResetInfo
 func TestUpdateResetInfo(t *testing.T) {
 	manager := createFake910Manager()
