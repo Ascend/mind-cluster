@@ -156,21 +156,8 @@ func testGetChipsUsedByContainerdCase2(tool AscendTools) {
 }
 
 func testGetChipsUsedByContainerdCase3(tool AscendTools) {
-	convey.Convey("when container use chip by ascend runtime, result should not be empty", func() {
-		mock := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getDeviceWithAscendRuntime",
-			func(_ *AscendTools, _ containerd.Container, _ context.Context) sets.String {
-
-				return sets.NewString().Insert(ascend910FakeID0)
-			})
-		defer mock.Reset()
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 1)
-	})
-	convey.Convey("when container not use chip by ascend runtime, result should not be empty", func() {
-		mock := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getDeviceWithAscendRuntime",
-			func(_ *AscendTools, _ containerd.Container, _ context.Context) sets.String {
-				return sets.NewString()
-			}).ApplyPrivateMethod(reflect.TypeOf(&tool), "getDeviceWithoutAscendRuntime",
+	convey.Convey("when container use chip without ascend runtime, result should not be empty", func() {
+		mock := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getDeviceWithoutAscendRuntime",
 			func(_ *AscendTools, _ containerd.Container, _ context.Context) sets.String {
 				return sets.NewString().Insert(ascend910FakeID0)
 			})
@@ -204,45 +191,6 @@ func TestGetChipsUsedByContainerd(t *testing.T) {
 			"LoadContainer", *new(containerd.Container), nil)
 		defer mockLoadContainer.Reset()
 		testGetChipsUsedByContainerdCase3(tool)
-	})
-}
-
-// TestGetDeviceWithAscendRuntime for test getDeviceWithAscendRuntime
-func TestGetDeviceWithAscendRuntime(t *testing.T) {
-	tool := mockAscendTools()
-	convey.Convey("test getDeviceWithAscendRuntime", t, func() {
-		convey.Convey("01-get info failed, should return empty sets", func() {
-			patch := gomonkey.ApplyFuncReturn((*MockContainer).Info, nil, errors.New("get info failed"))
-			defer patch.Reset()
-			chips := tool.getDeviceWithAscendRuntime(MockContainer{}, nil)
-			convey.So(chips, convey.ShouldResemble, sets.NewString())
-		})
-		convey.Convey("02-get spec failed, should return empty sets", func() {
-			patch := gomonkey.ApplyFuncReturn(getContainerValidSpec, nil, errors.New("get spec failed"))
-			defer patch.Reset()
-			chips := tool.getDeviceWithAscendRuntime(MockContainer{}, nil)
-			convey.So(chips, convey.ShouldResemble, sets.NewString())
-		})
-		convey.Convey("03-invalid env, should return empty sets", func() {
-			spec := &oci.Spec{Process: &specs.Process{
-				Env: []string{"ASCEND_VISIBLE_DEVICES", "FAKE_ENV"},
-			}}
-			patch := gomonkey.ApplyFuncReturn(getContainerValidSpec, spec, nil)
-			defer patch.Reset()
-			chips := tool.getDeviceWithAscendRuntime(MockContainer{}, nil)
-			convey.So(chips, convey.ShouldResemble, sets.NewString())
-		})
-		convey.Convey("04-get dev success, should return chip set", func() {
-			spec := &oci.Spec{Process: &specs.Process{
-				Env: []string{"ASCEND_VISIBLE_DEVICES=0,1", "FAKE_ENV"},
-			}}
-			patch := gomonkey.ApplyFuncReturn(getContainerValidSpec, spec, nil)
-			defer patch.Reset()
-			chips := tool.getDeviceWithAscendRuntime(MockContainer{}, nil)
-			dev0 := fmt.Sprintf("%s-%d", common.Ascend910, 0)
-			dev1 := fmt.Sprintf("%s-%d", common.Ascend910, 1)
-			convey.So(chips, convey.ShouldResemble, sets.NewString(dev0, dev1))
-		})
 	})
 }
 
