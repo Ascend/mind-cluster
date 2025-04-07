@@ -18,7 +18,6 @@ package device
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/api/services/tasks/v1"
@@ -111,12 +110,6 @@ func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 				hwlog.RunLog.Warnf("failed to load container %s, err: %v", taskInfo.ID, err)
 				continue
 			}
-			usedChipsWithAscendRuntime := tool.getDeviceWithAscendRuntime(containerObj, ctx)
-			if usedChipsWithAscendRuntime.Len() > 0 {
-				curUsedChipsContainerMap[taskInfo.ID] = usedChipsWithAscendRuntime
-				usedChips = usedChips.Union(usedChipsWithAscendRuntime)
-				continue
-			}
 			usedChipsWithoutAscendRuntime := tool.getDeviceWithoutAscendRuntime(containerObj, ctx)
 			if usedChipsWithoutAscendRuntime.Len() > 0 {
 				curUsedChipsContainerMap[taskInfo.ID] = usedChipsWithoutAscendRuntime
@@ -127,44 +120,6 @@ func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
 	if !common.CompareStringSetMap(curUsedChipsContainerMap, tool.lastUsedChipsContainerMap) {
 		hwlog.RunLog.Infof("containerd used chips: %v", curUsedChipsContainerMap)
 		tool.lastUsedChipsContainerMap = curUsedChipsContainerMap
-	}
-	return usedChips
-}
-
-func (tool *AscendTools) getDeviceWithAscendRuntime(containerObj containerd.Container,
-	ctx context.Context) sets.String {
-	usedChips := sets.NewString()
-	containerInfo, err := containerObj.Info(ctx, containerd.WithoutRefreshedMetadata)
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to get container info: %v", err)
-		return usedChips
-	}
-	spec, err := getContainerValidSpec(containerObj, ctx)
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to get container valid spec: %v", err)
-		return usedChips
-	}
-	envs := spec.Process.Env
-	for i := len(envs) - 1; i >= 0; i-- {
-		devInfo := strings.Split(envs[i], "=")
-		if len(devInfo) != ascendEnvPart {
-			if len(devInfo) > 0 && devInfo[0] == common.AscendVisibleDevicesEnv {
-				hwlog.RunLog.Warnf("an invalid %s env(%s)", common.AscendVisibleDevicesEnv, envs[i])
-				return usedChips
-			}
-			hwlog.RunLog.Debugf("an invalid env(%s)", envs[i])
-			continue
-		}
-		if devInfo[0] == common.AscendVisibleDevicesEnv {
-			hwlog.RunLog.Debugf("get device info by env (%s) in %s", envs[i], containerInfo.ID)
-			devicesIDs := parseDiffEnvFmt(devInfo[1], containerInfo.ID)
-			hwlog.RunLog.Debugf("parse diffEnv get devicesIDs %v", devicesIDs)
-			for _, deviceID := range devicesIDs {
-				chipName := fmt.Sprintf("%s-%d", tool.name, deviceID)
-				usedChips.Insert(chipName)
-			}
-			break
-		}
 	}
 	return usedChips
 }
