@@ -90,5 +90,6 @@ class TestFunctions(unittest.TestCase):
         result = calculate_global_rank()
         self.assertEqual(result, [])
 
+
 if __name__ == '__main__':
     unittest.main()

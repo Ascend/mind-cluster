@@ -129,7 +129,6 @@ func saveProfileFile(file *os.File) error {
 	hwlog.RunLog.Debugf("rank:%v,will stat to save file", GlobalRankId)
 	recordsBytes := writeToBytes()
 	hwlog.RunLog.Debugf("rank:%v, finished to unmarsh marker to string at:%v", GlobalRankId, time.Now())
-
 	if err := writeLongStringToFileWithBuffer(file, recordsBytes); err != nil {
 		hwlog.RunLog.Errorf("Error writing to file: %s", err.Error())
 		return err
