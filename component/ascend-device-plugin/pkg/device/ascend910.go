@@ -2056,11 +2056,6 @@ func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheck
 		hwlog.RunLog.Error(err)
 		return err
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 {
-		if _, err := hnm.getResetIndexForA3(oriLogicID); err == nil {
-			resetDevNumOnce = ringNumOfA3
-		}
-	}
 	resetStartLogicID := oriLogicID / int32(resetDevNumOnce) * int32(resetDevNumOnce)
 	for logicID := resetStartLogicID; logicID < resetStartLogicID+int32(resetDevNumOnce); logicID++ {
 		if err := hnm.waitDeviceResetComplete(logicID, &totalTime, shouldCheckNet); err != nil {
