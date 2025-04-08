@@ -596,6 +596,13 @@ func getSelectNodes(faultNodeNameMap map[string]struct{}, spNodes []plugin.Super
 	return newNodes
 }
 
+/*
+Consider []superpod as a collection of the same superPods, and examine SuperPods
+init a two-dimensional array of SuperPods based on the size of the physical super pod and the sp-block of the task.
+The horizontal coordinate is the remainder of the available node count under a certain super  pod minus ReservePodSize
+divided by sp-block, and the vertical coordinate is the quotient of the available node count under the super pod
+minus ReservePodSize divided by sp-block.
+*/
 func (tp *module910SuperPod) initRemainderTop() [][][]superPod {
 	maxMultiple := tp.FrameAttr.SuperPodSize/tp.spBlock + 1
 	rmd := make([][][]superPod, tp.spBlock)
@@ -605,6 +612,25 @@ func (tp *module910SuperPod) initRemainderTop() [][][]superPod {
 	return rmd
 }
 
+/*
+classify superPod by spBlock and  global Reserve Pod Size.
+for example, spBlock is 14 and ReservePodSize is 2, four super pod A, B, C, D, E have 47, 16, 31, 31, 15 nodes
+A: (47 - 2) % 14 = 3  (47 - 2) / 14 = 3
+B: (16 - 2) % 14 = 0  (16 - 2) / 14 = 1
+C: (31 - 2) % 14 = 1  (31 - 2) / 14 = 2
+D: (31 - 2) % 14 = 1  (31 - 2) / 14 = 2
+E: (15 - 2) % 14 = 13 (15 - 2) / 14 = 0
+
+	0      1     2     3     4
+
+0  nil     B    nil   nil   nil
+1  nil    nil   C,D   nil   nil
+2  nil    nil   nil   nil   nil
+3  nil    nil   nil    A    nil
+...
+13  E     nil   nil   nil   nil
+The super pod  affinity scheduling algorithm selects nodes based on this two-dimensional array
+*/
 func (tp *module910SuperPod) classifySuperPod(totalNodes map[int32]superPod) superPodInfo {
 	firstLevelRemainTop := tp.initRemainderTop()
 	countVSuperPod := 0

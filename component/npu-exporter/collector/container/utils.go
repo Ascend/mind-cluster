@@ -38,9 +38,9 @@ const (
 	// MaxLenDNS configName max len
 	MaxLenDNS = 63
 	// MinLenDNS configName min len
-	MinLenDNS = 2
+	MinLenDNS = 1
 	// DNSReWithDot DNS regex string
-	DNSReWithDot  = `^[a-z0-9]+[a-z0-9-.]*[a-z0-9]+$`
+	DNSReWithDot  = `^[a-z0-9]+(?:[a-z0-9-.]*[a-z0-9]+|)$`
 	maxContainers = 1024
 	maxCgroupPath = 2048
 

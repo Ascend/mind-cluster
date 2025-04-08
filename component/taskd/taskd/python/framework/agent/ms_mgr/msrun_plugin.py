@@ -274,7 +274,7 @@ class MSRunPlugin:
 
     def wait_to_start(self) -> bool:
         reset_data = fault_processor.get_reset_info_from_cm()
-        # 通过环境变量计算 global ranks
+        #  calculate global ranks from env
         self.node_global_rank_ids = calculate_global_rank()
         fault_ranks, retry_time = reset_data.fault_ranks, reset_data.retry_time
         fault_flush = reset_data.fault_flush

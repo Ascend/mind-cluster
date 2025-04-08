@@ -30,3 +30,12 @@ func TestStartWorker(t *testing.T) {
 		})
 	})
 }
+
+func TestProcessWorker(t *testing.T) {
+	convey.Convey("test process taskd worker", t, func() {
+		convey.Convey("test process taskd worker success", func() {
+			newWorker := NewTaskDWorker(1)
+			newWorker.Process()
+		})
+	})
+}
