@@ -1795,6 +1795,7 @@ func (hnm *HwAscend910Manager) canResetDeviceByLogicID(logicID int32) bool {
 		hwlog.RunLog.Errorf("get cardID deviceID by logicID %v failed: %v", logicID, err)
 		return false
 	}
+
 	return hnm.canResetDevice(cardID, deviceID)
 }
 
