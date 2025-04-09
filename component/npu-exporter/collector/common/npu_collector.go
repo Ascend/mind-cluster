@@ -78,13 +78,13 @@ func startCollectForMultiGoroutine(group *sync.WaitGroup, ctx context.Context, n
 	group.Add(len(chips))
 	for _, chip := range chips {
 		go func(chip HuaWeiAIChip) {
-
+			defer group.Done()
 			ticker := time.NewTicker(n.updateTime)
 			defer ticker.Stop()
 			for {
 				select {
 				case <-ctx.Done():
-					logger.Info("received the stop signal,stop npu base info collect")
+					logger.Infof("received the stop signal,stop collect network info of npu(%d)", chip.LogicID)
 					return
 				default:
 					singleChipSlice := []HuaWeiAIChip{chip}
@@ -162,7 +162,7 @@ func InitCardInfo(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
 			logger.Info("start to collect npu chip list info")
 			select {
 			case <-ctx.Done():
-				logger.Info("received the stop signal,stop npu base info collect")
+				logger.Info("received the stop signal,stop card info collect")
 				return
 			default:
 				npuInfo := getNPUChipList(n.Dmgr)
