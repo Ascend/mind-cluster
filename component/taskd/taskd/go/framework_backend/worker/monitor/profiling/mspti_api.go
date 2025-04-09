@@ -210,8 +210,8 @@ func EnableMarkerDomain(domainName string, status string) error {
 			hwlog.RunLog.Errorf("failed to enable domain %s with retCode:%v", domainName, result)
 			return fmt.Errorf("failed to enable domain %s with retCode:%v", domainName, result)
 		}
-		hwlog.RunLog.Infof("successfully enabled domain %s, rank:%d", domainName, GlobalRankId)
 	}
+	hwlog.RunLog.Infof("successfully changed domain %s status to %s, rank:%d", domainName, status, GlobalRankId)
 	return nil
 }
 
@@ -275,7 +275,6 @@ var wg sync.WaitGroup
 //
 //export goBufferRequested
 func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size_t) {
-	hwlog.RunLog.Infof("current requested buffer num:%v", len(requestSem))
 	wg.Add(1)
 	requestSem <- struct{}{}
 	defer func() {
@@ -283,11 +282,11 @@ func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size
 		<-requestSem
 	}()
 	bufSize := constant.NormalBufferSizeInBytes
-	hwlog.RunLog.Debugf("request callbask got buffer size:%d", bufSize)
 	maxRecords := 0
 	*buffer = (*C.uint8_t)(C.malloc(C.size_t(bufSize)))
 	*size = C.size_t(bufSize)
 	*maxNumRecords = C.size_t(maxRecords)
+	hwlog.RunLog.Infof("requeste for buffer, current requested buffer num:%v", len(requestSem))
 }
 
 // goBufferCompleted  fulfilled it will call goBufferCompleted

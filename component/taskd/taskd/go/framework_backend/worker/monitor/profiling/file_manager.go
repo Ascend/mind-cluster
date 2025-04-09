@@ -265,7 +265,7 @@ func deleteOldestFileForEachRank(jobDir string) error {
 		return err
 	}
 	if len(profileFiles) == 0 {
-		hwlog.RunLog.Infof("No profiling files found in %s\n", jobDir)
+		hwlog.RunLog.Infof("No profiling files found in %s", jobDir)
 		return nil
 	}
 	// deleting the oldest profile file
@@ -357,7 +357,7 @@ func dealWithDiskUsage(baseDir string, usedSize float64) {
 			jobDirPath := filepath.Join(baseDir, jobDir.Name())
 			err := deleteOldestFileForEachRank(jobDirPath)
 			if err != nil {
-				hwlog.RunLog.Errorf("Failed to delete oldest step in %s: %s", jobDirPath, err.Error())
+				hwlog.RunLog.Debugf("Failed to delete oldest step in %s: %s", jobDirPath, err.Error())
 			}
 		}
 	}
