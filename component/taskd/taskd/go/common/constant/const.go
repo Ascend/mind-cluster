@@ -82,10 +82,10 @@ const (
 const (
 	// TaskBufferSize is the buffer size for each rank
 	TaskBufferSize = 20
-	// LargeBufferSizeInBytes is the buffer size used in communication is on
-	LargeBufferSizeInBytes = 2048 * 1024
 	// NormalBufferSizeInBytes is the buffer size used in common scenario
-	NormalBufferSizeInBytes = 2 * 1024
+	NormalBufferSizeInBytes = 2048 * 1024
+	// MaxRequestBufferNum is the max num of buffer at same time
+	MaxRequestBufferNum = 100
 )
 
 const (

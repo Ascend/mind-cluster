@@ -169,6 +169,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
+	"sync"
 	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
@@ -263,15 +264,25 @@ func FlushAllActivity() error {
 		hwlog.RunLog.Errorf("failed to flush all activities, errCode:%v", retCode)
 		return fmt.Errorf("failed to flush all activties, errCode:%v", retCode)
 	}
-	hwlog.RunLog.Debugf("rank:%v successfully flush all activities", GlobalRankId)
+	hwlog.RunLog.Infof("rank:%v successfully flush all activities", GlobalRankId)
 	return nil
 }
+
+var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
+var wg sync.WaitGroup
 
 // goBufferRequested mspti will request for memory, after fulfilled it will call goBufferCompleted
 //
 //export goBufferRequested
 func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size_t) {
-	bufSize := defaultBufferSizeInBytes
+	hwlog.RunLog.Infof("current requested buffer num:%v", len(requestSem))
+	wg.Add(1)
+	requestSem <- struct{}{}
+	defer func() {
+		wg.Done()
+		<-requestSem
+	}()
+	bufSize := constant.NormalBufferSizeInBytes
 	hwlog.RunLog.Debugf("request callbask got buffer size:%d", bufSize)
 	maxRecords := 0
 	*buffer = (*C.uint8_t)(C.malloc(C.size_t(bufSize)))
@@ -308,7 +319,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 				count++
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
-				hwlog.RunLog.Debugf("there is no more records in the buffer,the current mark size is %v, count is: %v",
+				hwlog.RunLog.Infof("there is no more records in the buffer,the current mark size is %v, count is: %v",
 					len(ProfileRecordsMark), count)
 				break
 			} else if status == C.MSPTI_ERROR_INVALID_PARAMETER {

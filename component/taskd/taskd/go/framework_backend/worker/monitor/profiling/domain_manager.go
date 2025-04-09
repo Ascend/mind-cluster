@@ -84,11 +84,6 @@ func ManageDomainEnableStatus(ctx context.Context) {
 			return
 		default:
 			profilingSwitches := GetProfilingSwitch(constant.ProfilingSwitchFilePath)
-			if profilingSwitches.CommunicationOperator == constant.SwitchON {
-				defaultBufferSizeInBytes = constant.LargeBufferSizeInBytes
-			} else {
-				defaultBufferSizeInBytes = constant.NormalBufferSizeInBytes
-			}
 			if lastStatus == getProfilingStatusStr(profilingSwitches) {
 				hwlog.RunLog.Debug("status not changed will not call mspti")
 				time.Sleep(constant.DomainCheckInterval)

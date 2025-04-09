@@ -254,6 +254,9 @@ func TestManageSaveProfiling(t *testing.T) {
 		patches.ApplyFunc(getNewestFileName, func(filePath string) (string, error) {
 			return fileName, nil
 		})
+		patches.ApplyFunc(FlushAllActivity, func() error {
+			return nil
+		})
 
 		ProfileRecordsKernel = []MsptiActivityKernel{{}}
 		go ManageSaveProfiling(ctx)

@@ -39,9 +39,6 @@ var GlobalRankId int
 // diskUsageUpperlimitMB is the  ProfilingBaseDir total upper limit containing all  jobs
 var diskUsageUpperLimitMB = constant.DefaultDiskUpperLimitInMB
 
-// defaultBufferSizeInBytes default buffer size in bytes
-var defaultBufferSizeInBytes = constant.NormalBufferSizeInBytes
-
 // SetDiskUsageUpperLimitMB is the ProfilingBaseDir total upper limit containing all jobs
 func SetDiskUsageUpperLimitMB(upperLimitInMB int) {
 	diskUsageUpperLimitMB = upperLimitInMB
@@ -306,6 +303,9 @@ func ManageSaveProfiling(ctx context.Context) {
 		default:
 			if err := SaveProfilingDataIntoFile(GlobalRankId); err != nil {
 				hwlog.RunLog.Errorf("failed to save profiling, error: %v", err)
+			}
+			if err := FlushAllActivity(); err != nil {
+				hwlog.RunLog.Errorf("failed to flush profiling data,err: %s", err.Error())
 			}
 			time.Sleep(constant.CheckProfilingCacheInterval)
 		}
