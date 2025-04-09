@@ -126,7 +126,7 @@ class LogConfig:
 
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
-        self.file_log_level = logging.DEBUG
+        self.file_log_level = logging.INFO
         self.std_log_level = logging.INFO
         self.log_format = LOG_SIMPLE_FORMAT
         self.log_file = LOG_DEFAULT_FILE
