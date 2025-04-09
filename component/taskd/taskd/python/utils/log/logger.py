@@ -233,9 +233,9 @@ def _get_file_handler(cfg: LogConfig):
 def _get_logger() -> logging.Logger:
     # init logger and log config
     log_cfg = LogConfig()
-    logger = logging.getLogger()
+    logger = logging.getLogger("taskd")
 
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # set log print std out
     if log_cfg.log_std_out:
