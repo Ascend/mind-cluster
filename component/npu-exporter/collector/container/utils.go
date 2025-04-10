@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -36,11 +35,9 @@ const (
 	defaultTimeout = 5 * time.Second
 	unixPrefix     = "unix"
 	// MaxLenDNS configName max len
-	MaxLenDNS = 63
+	MaxLenDNS = 512
 	// MinLenDNS configName min len
-	MinLenDNS = 1
-	// DNSReWithDot DNS regex string
-	DNSReWithDot  = `^[a-z0-9]+(?:[a-z0-9-.]*[a-z0-9]+|)$`
+	MinLenDNS     = 1
 	maxContainers = 1024
 	maxCgroupPath = 2048
 
@@ -110,10 +107,6 @@ func dial(ctx context.Context, addr string) (net.Conn, error) {
 func validDNSRe(dnsContent string) error {
 	if len(dnsContent) < MinLenDNS || len(dnsContent) > MaxLenDNS {
 		return errors.New("param len invalid")
-	}
-
-	if match, err := regexp.MatchString(DNSReWithDot, dnsContent); err != nil || !match {
-		return fmt.Errorf("param invalid, not meet requirement or match error: %v", err)
 	}
 	return nil
 }
