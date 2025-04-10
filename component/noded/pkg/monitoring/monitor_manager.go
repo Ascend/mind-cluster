@@ -77,7 +77,6 @@ func (m *MonitorManager) Run(ctx context.Context) {
 			return
 		default:
 			m.Execute(m.faultManager.GetFaultDevInfo())
-			hwlog.RunLog.Infof("report interval: %d", common.ParamOption.ReportInterval)
 			time.Sleep(time.Duration(common.ParamOption.ReportInterval) * time.Second)
 		}
 	}
