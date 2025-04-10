@@ -561,7 +561,9 @@ func getVNPUInfo(chipInfo HuaWeiAIChip) []*HuaWeiAIChip {
 
 	for _, activityVDev := range chipInfo.VDevInfos.VDevActivityInfo {
 		vDevInfo := chipInfo
-		vDevInfo.VDevActivityInfo = &activityVDev
+		// compatible with GO 1.21 and below
+		activityVDevCopy := activityVDev
+		vDevInfo.VDevActivityInfo = &activityVDevCopy
 		aiChips = append(aiChips, &vDevInfo)
 	}
 	return aiChips
