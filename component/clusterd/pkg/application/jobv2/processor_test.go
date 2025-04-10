@@ -172,23 +172,23 @@ func TestGetStatusByCacheForPending(t *testing.T) {
 		newJob := getDemoJob(jobName1, jobNameSpace, jobUid1)
 		convey.Convey("test pod is empty and podGroup is empty", func() {
 			var podGroup v1beta1.PodGroup
-			var podJobMap map[string]v1.Pod
-			isPreDelete, status := getStatusByCache(podGroup, podJobMap, newJob)
+			var podsInJob map[string]v1.Pod
+			isPreDelete, status := getStatusByCache(podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeTrue)
 			convey.So(status, convey.ShouldEqual, job.StatusJobPending)
 		})
 		convey.Convey("test pod is empty and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
-			var podJobMap map[string]v1.Pod
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			var podsInJob map[string]v1.Pod
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobPending)
 		})
 		convey.Convey("test pod is pending and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
-			podJobMap := make(map[string]v1.Pod)
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodPending)
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			podsInJob := make(map[string]v1.Pod)
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodPending)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobPending)
 		})
@@ -196,10 +196,10 @@ func TestGetStatusByCacheForPending(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := make(map[string]v1.Pod)
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
+			podsInJob := make(map[string]v1.Pod)
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobPending)
 		})
@@ -207,11 +207,11 @@ func TestGetStatusByCacheForPending(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := make(map[string]v1.Pod)
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
-			podJobMap[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodPending)
+			podsInJob := make(map[string]v1.Pod)
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
+			podsInJob[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodPending)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobPending)
 		})
@@ -228,9 +228,9 @@ func TestGetStatusByCacheForRunning(t *testing.T) {
 		convey.Convey("test pod is running and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 1
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobRunning)
 		})
@@ -238,11 +238,11 @@ func TestGetStatusByCacheForRunning(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
-			podJobMap[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodRunning)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
+			podsInJob[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodRunning)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobRunning)
 		})
@@ -259,9 +259,9 @@ func TestGetStatusByCacheForComplete(t *testing.T) {
 		convey.Convey("test pod is complete and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 1
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobCompleted)
 		})
@@ -269,11 +269,11 @@ func TestGetStatusByCacheForComplete(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
-			podJobMap[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodSucceeded)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodSucceeded)
+			podsInJob[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodSucceeded)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobCompleted)
 		})
@@ -290,9 +290,9 @@ func TestGetStatusByCacheForFailed(t *testing.T) {
 		convey.Convey("test pod is failed and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 1
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobFail)
 		})
@@ -300,11 +300,11 @@ func TestGetStatusByCacheForFailed(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
-			podJobMap[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodFailed)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
+			podsInJob[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodFailed)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobFail)
 		})
@@ -312,11 +312,11 @@ func TestGetStatusByCacheForFailed(t *testing.T) {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
 
-			podJobMap := map[string]v1.Pod{}
-			podJobMap[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
-			podJobMap[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodRunning)
+			podsInJob := map[string]v1.Pod{}
+			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodFailed)
+			podsInJob[podUid2] = getDemoPodWithStatus(podName2, podNameSpace1, podUid2, v1.PodRunning)
 
-			isPreDelete, status := getStatusByCache(*podGroup, podJobMap, newJob)
+			isPreDelete, status := getStatusByCache(*podGroup, podsInJob, newJob)
 			convey.So(isPreDelete, convey.ShouldBeFalse)
 			convey.So(status, convey.ShouldEqual, job.StatusJobFail)
 		})
@@ -334,7 +334,7 @@ func TestUpdateJob(t *testing.T) {
 			newJob.IsPreDelete = false
 			newJob.Status = job.StatusJobFail
 			mockGetStatusByCache := gomonkey.ApplyFunc(getStatusByCache,
-				func(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {
+				func(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {
 					return false, job.StatusJobFail
 				})
 			defer mockGetStatusByCache.Reset()

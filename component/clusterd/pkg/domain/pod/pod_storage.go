@@ -25,13 +25,13 @@ var podManager Manager
 // Manager use for pod data manager
 type Manager struct {
 	podMap      map[string]v1.Pod
-	podJobMap   map[string]map[string]v1.Pod
+	jobPodMap   map[string]map[string]v1.Pod
 	podMapMutex sync.RWMutex
 }
 
 func init() {
 	podManager.podMap = make(map[string]v1.Pod, initPodNum)
-	podManager.podJobMap = make(map[string]map[string]v1.Pod, initJobNum)
+	podManager.jobPodMap = make(map[string]map[string]v1.Pod, initJobNum)
 	podManager.podMapMutex = sync.RWMutex{}
 }
 
@@ -46,10 +46,10 @@ func SavePod(podInfo *v1.Pod) {
 	}
 	podManager.podMap[GetPodKey(podInfo)] = *podInfo
 	jobKey := GetJobKeyByPod(podInfo)
-	if podManager.podJobMap[jobKey] == nil {
-		podManager.podJobMap[jobKey] = map[string]v1.Pod{}
+	if podManager.jobPodMap[jobKey] == nil {
+		podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
 	}
-	podManager.podJobMap[jobKey][GetPodKey(podInfo)] = *podInfo
+	podManager.jobPodMap[jobKey][GetPodKey(podInfo)] = *podInfo
 }
 
 // DeletePod delete pod with lock, Please do not add time-consuming code
@@ -57,10 +57,10 @@ func DeletePod(podInfo *v1.Pod) {
 	podManager.podMapMutex.Lock()
 	delete(podManager.podMap, GetPodKey(podInfo))
 	jobKey := GetJobKeyByPod(podInfo)
-	if len(podManager.podJobMap[jobKey]) > 0 {
-		delete(podManager.podJobMap[jobKey], GetPodKey(podInfo))
-		if len(podManager.podJobMap[jobKey]) == 0 {
-			delete(podManager.podJobMap, jobKey)
+	if len(podManager.jobPodMap[jobKey]) > 0 {
+		delete(podManager.jobPodMap[jobKey], GetPodKey(podInfo))
+		if len(podManager.jobPodMap[jobKey]) == 0 {
+			delete(podManager.jobPodMap, jobKey)
 		}
 	}
 	podManager.podMapMutex.Unlock()
@@ -70,7 +70,7 @@ func DeletePod(podInfo *v1.Pod) {
 func GetPodByJobId(jobKey string) map[string]v1.Pod {
 	podManager.podMapMutex.RLock()
 	defer podManager.podMapMutex.RUnlock()
-	localPodMap := podManager.podJobMap[jobKey]
+	localPodMap := podManager.jobPodMap[jobKey]
 	newPodMap := new(map[string]v1.Pod)
 	err := util.DeepCopy(newPodMap, localPodMap)
 	if err != nil {

@@ -59,6 +59,11 @@ func constructNodeInfo() error {
 				baseDevInfoAnno:      string(baseDevInfo),
 			},
 		},
+		Status: v1.NodeStatus{
+			Addresses: []v1.NodeAddress{
+				{Type: v1.NodeInternalIP, Address: nodeIp1},
+			},
+		},
 	}
 	return nil
 }

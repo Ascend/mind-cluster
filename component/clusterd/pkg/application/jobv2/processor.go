@@ -46,8 +46,8 @@ func updateJob(jobKey string) {
 		hwlog.RunLog.Debugf("job cache is empty and podGroup is empty, skip %s message", jobKey)
 		return
 	}
-	podJobMap := pod.GetPodByJobId(jobKey)
-	isPreDelete, status := getStatusByCache(pg, podJobMap, jobInfo)
+	podsInJob := pod.GetPodByJobId(jobKey)
+	isPreDelete, status := getStatusByCache(pg, podsInJob, jobInfo)
 	if ok && jobInfo.Status == status && jobInfo.IsPreDelete == isPreDelete {
 		hwlog.RunLog.Debugf("the job %s cache is consistent with pod and podGroup cache", jobInfo.Name)
 		return
@@ -68,7 +68,7 @@ func updateJob(jobKey string) {
 	}
 	// update job to running or completed or failed
 	if jobInfo.Status != status {
-		job.UpdateCmAndCache(status, jobInfo, pg, podJobMap)
+		job.UpdateCmAndCache(status, jobInfo, pg, podsInJob)
 		return
 	}
 	hwlog.RunLog.Warnf("this logic branch is unreachable, there must have been some issues with the code."+
@@ -76,17 +76,17 @@ func updateJob(jobKey string) {
 		isPreDelete, status, jobInfo.Name, jobInfo.IsPreDelete, jobInfo.Status)
 }
 
-func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {
-	if podGroup.Name == "" && len(podJobMap) == 0 {
+func getStatusByCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {
+	if podGroup.Name == "" && len(podsInJob) == 0 {
 		return true, getStatusByOldStatus(jobInfo)
 	}
-	if len(podJobMap) == 0 {
+	if len(podsInJob) == 0 {
 		return false, getStatusByOldStatus(jobInfo)
 	}
 	isFailed := false
 	isSuccess := true
 	isRunning := true
-	for _, p := range podJobMap {
+	for _, p := range podsInJob {
 		if p.Status.Phase == v1.PodFailed {
 			isFailed = true
 			isSuccess = false
@@ -105,10 +105,10 @@ func getStatusByCache(podGroup v1beta1.PodGroup, podJobMap map[string]v1.Pod, jo
 	if isFailed {
 		return false, job.StatusJobFail
 	}
-	if isSuccess && len(podJobMap) >= int(podGroup.Spec.MinMember) {
+	if isSuccess && len(podsInJob) >= int(podGroup.Spec.MinMember) {
 		return false, job.StatusJobCompleted
 	}
-	if isRunning && len(podJobMap) >= int(podGroup.Spec.MinMember) {
+	if isRunning && len(podsInJob) >= int(podGroup.Spec.MinMember) {
 		return false, job.StatusJobRunning
 	}
 	return false, getStatusByOldStatus(jobInfo)
@@ -135,8 +135,8 @@ func preDeleteJob(jobKey string) {
 	if jobInfo.IsPreDelete {
 		return
 	}
-	podJobMap := pod.GetPodByJobId(jobKey)
-	if len(podJobMap) > 0 {
+	podsInJob := pod.GetPodByJobId(jobKey)
+	if len(podsInJob) > 0 {
 		uniqueQueue.Store(jobKey, queueOperatorUpdate)
 		return
 	}

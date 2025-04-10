@@ -151,10 +151,11 @@ type RankTable struct {
 // ServerHccl to hccl
 type ServerHccl struct {
 	DeviceList   []Device `json:"device"`
-	ServerID     string   `json:"server_id"`
+	ServerID     string   `json:"server_id"` // host ip
 	PodID        string   `json:"-"`
 	PodNameSpace string   `json:"-"`
-	ServerName   string   `json:"server_name"`
+	ServerName   string   `json:"server_name"` // node name
+	ServerSN     string   `json:"server_sn"`   // node sn
 }
 
 // Device to hccl with rankId
@@ -168,7 +169,7 @@ type Device struct {
 type PodDevice struct {
 	Devices  []Device `json:"devices"`
 	PodName  string   `json:"pod_name"`
-	ServerID string   `json:"server_id"`
+	ServerID string   `json:"server_id"` // host ip
 }
 
 // JobServerInfoMap to store job server info

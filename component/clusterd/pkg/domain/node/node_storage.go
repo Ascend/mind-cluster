@@ -37,12 +37,13 @@ func init() {
 type nodeCache struct {
 	nodeInfoCache      map[string]nodeInfo // key: node name
 	nodeSNAndNameCache map[string]string   // key: node sn; value: node name
-	mutex              sync.RWMutex        // lock to ensure synchronous updates of two caches
+	mutex              sync.RWMutex        // lock to ensure synchronous updates of caches
 }
 
 type nodeInfo struct {
 	nodeName     string
 	nodeSN       string
+	nodeIP       string
 	superPodID   string
 	baseDevInfos map[string]*api.NpuBaseInfo // key: node name, value: baseDevInfos
 	nodeDevice   *api.NodeDevice
@@ -56,6 +57,7 @@ func SaveNodeToCache(node *v1.Node) {
 	}
 	nodeName := node.Name
 	nodeSN := getNodeSN(node)
+	nodeIP := getNodeIP(node)
 	superPodID := getSuerPodID(node)
 	baseDevInfos := getBaseDevInfos(node)
 	nodeDeviceInfo := getNodeDevice(baseDevInfos, nodeName)
@@ -66,6 +68,7 @@ func SaveNodeToCache(node *v1.Node) {
 	cache.nodeInfoCache[nodeName] = nodeInfo{
 		nodeName:     nodeName,
 		nodeSN:       nodeSN,
+		nodeIP:       nodeIP,
 		superPodID:   superPodID,
 		baseDevInfos: baseDevInfos,
 		nodeDevice:   nodeDeviceInfo,
@@ -96,6 +99,15 @@ func getSuerPodID(node *v1.Node) string {
 		return ""
 	}
 	return superPodID
+}
+
+func getNodeIP(node *v1.Node) string {
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == v1.NodeInternalIP {
+			return addr.Address
+		}
+	}
+	return ""
 }
 
 func getBaseDevInfos(node *v1.Node) map[string]*api.NpuBaseInfo {
@@ -149,6 +161,29 @@ func GetNodeNameBySN(nodeSN string) (string, bool) {
 		return "", false
 	}
 	return name, true
+}
+
+// GetNodeSNByName get node sn by name
+func GetNodeSNByName(nodeName string) string {
+	cache.mutex.RLock()
+	defer cache.mutex.RUnlock()
+	info, ok := cache.nodeInfoCache[nodeName]
+	if !ok {
+		hwlog.RunLog.Warnf("node[%s] does not exist in cache", nodeName)
+		return ""
+	}
+	return info.nodeSN
+}
+
+// GetNodeIPAndSNMap get node ip and sn map
+func GetNodeIPAndSNMap() map[string]string {
+	cache.mutex.RLock()
+	defer cache.mutex.RUnlock()
+	ipSNMap := make(map[string]string)
+	for _, info := range cache.nodeInfoCache {
+		ipSNMap[info.nodeIP] = info.nodeSN
+	}
+	return ipSNMap
 }
 
 // GetNodeDeviceAndSuperPodID get node device and super pod id

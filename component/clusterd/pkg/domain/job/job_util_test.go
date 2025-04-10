@@ -153,7 +153,7 @@ func TestInitCmAndCache(t *testing.T) {
 func TestGetJobBasicInfoByPodGroup(t *testing.T) {
 	convey.Convey("test getJobBasicInfoByPodGroup success", t, func() {
 		newPGInfo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
-		jobInfo := getJobBasicInfoByPodGroup(*newPGInfo)
+		jobInfo := getJobBasicInfoByPG(*newPGInfo)
 		convey.So(jobInfo.Name, convey.ShouldEqual, jobName1)
 	})
 }
@@ -161,7 +161,7 @@ func TestGetJobBasicInfoByPodGroup(t *testing.T) {
 func TestUpdateCmAndCache(t *testing.T) {
 	pgDemo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 	jobDemo := getDemoJob(jobName1, jobNameSpace, jobUid1)
-	mockInitRankTableByPod := gomonkey.ApplyFunc(pod.InitRankTableByPod, getDemoRankTable)
+	mockInitRankTableByPod := gomonkey.ApplyFunc(pod.ConstructRankTableByPod, getDemoRankTable)
 	defer mockInitRankTableByPod.Reset()
 	convey.Convey("test UpdateCmAndCache Job status", t, func() {
 		convey.Convey("when jobInfo is nil, updateCM success. job status should be running", func() {

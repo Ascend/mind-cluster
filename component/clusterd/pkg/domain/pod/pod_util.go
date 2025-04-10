@@ -14,6 +14,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 )
 
 const (
@@ -142,8 +143,8 @@ func getEnvFromContainer(container v1.Container, envName string) (bool, string) 
 	return false, ""
 }
 
-// InitRankTableByPod init rank table by pod
-func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) (constant.RankTable, int) {
+// ConstructRankTableByPod construct rank table by pod
+func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constant.RankTable, int) {
 	var rankTable constant.RankTable
 	if replicas <= 0 {
 		hwlog.RunLog.Error("illegal param replicas")
@@ -151,34 +152,22 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) (constant.Ran
 	}
 	completedPodNum := 0
 	rankTable.ServerList = make([]constant.ServerHccl, 0, replicas)
-	for _, pod := range podJobMap {
-		nodeRank := getNodeRank(pod)
-		if nodeRank == -1 || nodeRank >= replicas {
-			hwlog.RunLog.Warnf("illegal job information, replicas is %d, but nodeRank is %d", replicas, nodeRank)
+	ipSnMap := node.GetNodeIPAndSNMap()
+	for _, pod := range podsInJob {
+		podRank := getPodRank(pod)
+		if podRank == -1 || podRank >= replicas {
+			hwlog.RunLog.Warnf("illegal job information, replicas is %d, but podRank is %d", replicas, podRank)
 			continue
 		}
-		var server constant.ServerHccl
-		podDevice, isShouldAllocated := getPodDevice(pod)
-		if len(podDevice.Devices) > 0 || !isShouldAllocated {
+		podDev, isShouldAllocated := getPodDevice(pod)
+		if len(podDev.Devices) > 0 || !isShouldAllocated {
 			completedPodNum++
 		}
-		if len(podDevice.Devices) == 0 {
+		if len(podDev.Devices) == 0 {
 			continue
 		}
-		server.ServerID = podDevice.ServerID
-		server.PodID = podDevice.PodName
-		server.PodNameSpace = pod.Namespace
-		server.ServerName = pod.Spec.NodeName
-
-		podDeviceNum := len(podDevice.Devices)
-		for index, device := range podDevice.Devices {
-			var serverDevice constant.Device
-			serverDevice.DeviceID = device.DeviceID
-			serverDevice.DeviceIP = device.DeviceIP
-			serverDevice.RankID = strconv.Itoa(nodeRank*podDeviceNum + index)
-			server.DeviceList = append(server.DeviceList, serverDevice)
-		}
-		rankTable.ServerList = append(rankTable.ServerList, server)
+		serverInfo := getServerInfo(podDev, pod, ipSnMap, podRank)
+		rankTable.ServerList = append(rankTable.ServerList, serverInfo)
 	}
 	sort.Slice(rankTable.ServerList, func(i, j int) bool {
 		iRankID, iErr := strconv.Atoi(rankTable.ServerList[i].DeviceList[0].RankID)
@@ -192,63 +181,95 @@ func InitRankTableByPod(podJobMap map[string]v1.Pod, replicas int) (constant.Ran
 	return rankTable, completedPodNum
 }
 
+func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
+	server := constant.ServerHccl{
+		ServerID:     podDev.ServerID,
+		PodID:        podDev.PodName,
+		PodNameSpace: pod.Namespace,
+		ServerName:   pod.Spec.NodeName,
+		ServerSN:     getSN(pod.Spec.NodeName, podDev.ServerID, ipSnMap),
+	}
+
+	podDevNum := len(podDev.Devices)
+	for idx, dev := range podDev.Devices {
+		serverDev := constant.Device{
+			DeviceID: dev.DeviceID,
+			DeviceIP: dev.DeviceIP,
+			RankID:   strconv.Itoa(podRank*podDevNum + idx),
+		}
+		server.DeviceList = append(server.DeviceList, serverDev)
+	}
+	return server
+}
+
+func getSN(serverName, serverID string, ipSnMap map[string]string) string {
+	if serverName != "" {
+		return node.GetNodeSNByName(serverName)
+	}
+	if serverID != "" {
+		return ipSnMap[serverID]
+	}
+	hwlog.RunLog.Warn("server name and server id are both empty")
+	return ""
+}
+
 func getPodDevice(pod v1.Pod) (constant.PodDevice, bool) {
-	deviceInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
+	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
 	if !exist {
 		return constant.PodDevice{}, shouldAllocated(pod.Spec.Containers)
 	}
-	var podDevice constant.PodDevice
-	if err := json.Unmarshal([]byte(deviceInfo), &podDevice); err != nil {
+	var podDev constant.PodDevice
+	if err := json.Unmarshal([]byte(devInfo), &podDev); err != nil {
 		hwlog.RunLog.Errorf("parse annotation of pod %s/%s error: %v", pod.Namespace, pod.Name, err)
 	}
-	return podDevice, true
+	return podDev, true
 }
 
-func getNodeRank(pod v1.Pod) int {
-	rankIndexStr, rankExist := pod.Annotations[api.PodRankIndexAnno]
-	if !rankExist {
-		hwlog.RunLog.Errorf("get pod annotation %s failed, pod:%s", api.PodRankIndexAnno, pod.Name)
+func getPodRank(pod v1.Pod) int {
+	rankIndexStr, ok := pod.Annotations[api.PodRankIndexAnno]
+	if !ok {
+		hwlog.RunLog.Errorf("get pod annotation %s failed, pod: %s", api.PodRankIndexAnno, pod.Name)
 		return -1
 	}
-	intValue, err := strconv.Atoi(rankIndexStr)
+	rankIndexInt, err := strconv.Atoi(rankIndexStr)
 	if err != nil {
-		hwlog.RunLog.Errorf("string to int failed, pod:%s, err:%v", pod.Name, err)
+		hwlog.RunLog.Errorf("string to int failed, pod: %s, err: %v", pod.Name, err)
 		return -1
 	}
-	return intValue
+	return rankIndexInt
 }
 
 // GetPodDeviceNumByJobId get pod device num by job Key
 func GetPodDeviceNumByJobId(jobKey string) int {
 	podManager.podMapMutex.RLock()
 	defer podManager.podMapMutex.RUnlock()
-	podJobMap := podManager.podJobMap[jobKey]
+	podsInJob := podManager.jobPodMap[jobKey]
 
 	// is inference task?
 	var isInference bool
 
-	for _, pod := range podJobMap {
-		podDevice, _ := getPodDevice(pod)
+	for _, pod := range podsInJob {
+		podDev, _ := getPodDevice(pod)
 		if pod.Labels != nil && pod.Labels[constant.MindIeJobIdLabelKey] != "" &&
 			pod.Labels[constant.MindIeAppTypeLabelKey] != "" {
 			isInference = true
 		}
-		if len(podDevice.Devices) != 0 {
-			return len(podDevice.Devices)
+		if len(podDev.Devices) != 0 {
+			return len(podDev.Devices)
 		}
 	}
 	// inference task, return 0
-	if isInference || len(podJobMap) == 0 {
+	if isInference || len(podsInJob) == 0 {
 		return 0
 	}
-	hwlog.RunLog.Warnf("failed get pod device num, job key: %s, len(podJobMap): %d", jobKey, len(podJobMap))
+	hwlog.RunLog.Warnf("failed get pod device num, job key: %s, len(podsInJob): %d", jobKey, len(podsInJob))
 	return 0
 }
 
 // GetPodByRankIndex get pod by rank index
 func GetPodByRankIndex(jobKey, podRank string) v1.Pod {
-	podJobMap := GetPodByJobId(jobKey)
-	for _, pod := range podJobMap {
+	podsInJob := GetPodByJobId(jobKey)
+	for _, pod := range podsInJob {
 		if pod.Annotations[api.PodRankIndexAnno] == podRank {
 			return pod
 		}
@@ -257,8 +278,8 @@ func GetPodByRankIndex(jobKey, podRank string) v1.Pod {
 }
 
 // GetModelFramework get model framework
-func GetModelFramework(podJobMap map[string]v1.Pod) string {
-	for _, pod := range podJobMap {
+func GetModelFramework(podsInJob map[string]v1.Pod) string {
+	for _, pod := range podsInJob {
 		modelFramework := pod.GetLabels()
 		framework, ok := modelFramework[podLabelKey]
 		if ok {
@@ -301,8 +322,8 @@ func shouldAllocated(containers []v1.Container) bool {
 
 // GetPGByPod get PodGroup by pod info
 func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
-	podJobMap := GetPodByJobId(jobKey)
-	for _, po := range podJobMap {
+	podsInJob := GetPodByJobId(jobKey)
+	for _, po := range podsInJob {
 		jobName, pgName, namespace = GetPGInfo(&po)
 		if jobName != "" && pgName != "" && namespace != "" {
 			return jobName, pgName, namespace

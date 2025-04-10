@@ -82,7 +82,7 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 		return
 	}
 	// 1.init job basic info
-	jobInfo := getJobBasicInfoByPodGroup(podGroup)
+	jobInfo := getJobBasicInfoByPG(podGroup)
 	// 2.set job status info
 	jobInfo.Status = StatusJobPending
 	jobInfo.IsPreDelete = false
@@ -95,7 +95,7 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	}
 }
 
-func getJobBasicInfoByPodGroup(pgInfo v1beta1.PodGroup) constant.JobInfo {
+func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
 	var jobInfo constant.JobInfo
 	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
 	jobInfo.Key = key
@@ -114,23 +114,23 @@ func getJobBasicInfoByPodGroup(pgInfo v1beta1.PodGroup) constant.JobInfo {
 
 // UpdateCmAndCache update cm and cache
 func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.PodGroup,
-	podJobMap map[string]v1.Pod) {
+	podsInJob map[string]v1.Pod) {
 	if jobInfo.Name == "" {
-		jobInfo = getJobBasicInfoByPodGroup(podGroup)
+		jobInfo = getJobBasicInfoByPG(podGroup)
 	}
 	jobInfo.Status = status
 	jobInfo.IsPreDelete = false
 	var completedPodNum int
-	jobInfo.JobRankTable, completedPodNum = pod.InitRankTableByPod(podJobMap, jobInfo.Replicas)
+	jobInfo.JobRankTable, completedPodNum = pod.ConstructRankTableByPod(podsInJob, jobInfo.Replicas)
 	if jobInfo.Framework == "" {
 		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
-		jobInfo.Framework = pod.GetModelFramework(podJobMap)
+		jobInfo.Framework = pod.GetModelFramework(podsInJob)
 	}
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
-		initJobShareTorInfo(&jobInfo, podJobMap)
+		initJobShareTorInfo(&jobInfo, podsInJob)
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
 	}
@@ -150,20 +150,20 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	}
 }
 
-func initJobShareTorInfo(jobInfo *constant.JobInfo, podJobMap map[string]v1.Pod) {
+func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
 	if jobInfo.Framework != ptFramework {
 		return
 	}
 	if jobInfo.MasterAddr != "" || jobInfo.SharedTorIp != "" {
 		return
 	}
-	jobInfo.SharedTorIp = pod.GetSharedTorIpByPod(podJobMap)
+	jobInfo.SharedTorIp = pod.GetSharedTorIpByPod(podsInJob)
 	if jobInfo.JobType == vcJobKind {
 		if len(jobInfo.JobRankTable.ServerList) > 0 {
 			jobInfo.MasterAddr = jobInfo.JobRankTable.ServerList[0].ServerID
 		}
 	} else {
-		jobInfo.MasterAddr = pod.GetEnvByPod(podJobMap, masterAddr)
+		jobInfo.MasterAddr = pod.GetEnvByPod(podsInJob, masterAddr)
 	}
 }
 

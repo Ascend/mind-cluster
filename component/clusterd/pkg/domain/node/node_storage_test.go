@@ -18,11 +18,12 @@ import (
 
 const (
 	nodeSN1       = "nodeSN1"
-	notExistSN    = "not exist node sn"
 	nodeName1     = "node1"
+	nodeIp1       = "10.10.10.10"
 	nodeName2     = "node2"
 	superPodIDStr = "0"
 	notExistName  = "node exist node name"
+	notExistIp    = "not exist node ip"
 
 	devName0       = "Ascend910-0"
 	devPhyID0      = "0"
@@ -71,6 +72,7 @@ func TestSaveNodeToCache(t *testing.T) {
 		info := nodeInfo{
 			nodeName:     nodeName1,
 			nodeSN:       nodeSN1,
+			nodeIP:       nodeIp1,
 			superPodID:   superPodIDStr,
 			baseDevInfos: baseDeviceMap,
 			nodeDevice: &api.NodeDevice{
@@ -116,6 +118,30 @@ func TestGetNodeNameBySN(t *testing.T) {
 		name, exist := GetNodeNameBySN(notExistName)
 		convey.So(name, convey.ShouldEqual, "")
 		convey.So(exist, convey.ShouldBeFalse)
+	})
+}
+
+func TestGetNodeSNByName(t *testing.T) {
+	resetCache()
+	convey.Convey("test func GetNodeSNByName success", t, func() {
+		SaveNodeToCache(node)
+		sn := GetNodeSNByName(nodeName1)
+		convey.So(sn, convey.ShouldEqual, nodeSN1)
+	})
+	convey.Convey("test func GetNodeSNByName failed, node sn does not exist", t, func() {
+		SaveNodeToCache(node)
+		sn := GetNodeSNByName(notExistName)
+		convey.So(sn, convey.ShouldEqual, "")
+	})
+}
+
+func TestGetNodeSNByIP(t *testing.T) {
+	resetCache()
+	convey.Convey("test func GetNodeIPAndSNMap success", t, func() {
+		SaveNodeToCache(node)
+		ipSnMap := GetNodeIPAndSNMap()
+		expMap := map[string]string{nodeIp1: nodeSN1}
+		convey.So(ipSnMap, convey.ShouldResemble, expMap)
 	})
 }
 
