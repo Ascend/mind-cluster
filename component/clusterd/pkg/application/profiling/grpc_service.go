@@ -67,6 +67,7 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
 	}
 	response := &profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
+	hwlog.RunLog.Infof("successfully changed profiling marker enable status: %#v", in.ProfilingSwitch)
 	return response, nil
 }
 
