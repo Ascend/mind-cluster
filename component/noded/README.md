@@ -2,7 +2,7 @@
 
 # 组件介绍
 
-    NodeD是一个节点心跳检测组件，当NodeD最近一次上报心跳之后一段时间内未再次上报心跳（大于两次心跳上报间隔的阈值）时，调度组件就会认为NodeD所在的节点故障，从而触发故障重调度。当后续NodeD两次心跳上报间隔小于等于阈值时，则认为NodeD所在节点恢复正常
+    NodeD是一个检测节点状态异常的组件，负责从ipmi获取到计算节点的CPU、内存、硬盘的故障信息，上报给ClusterD。
 
 # 编译NodeD
 
@@ -10,7 +10,7 @@
 
     示例：源码放在/home/mind-cluster/component/noded目录下
 
-2.  执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件。
+2.  执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件等。
 
     **cd** _/home/mind-cluster/component/_**noded/build/**
 
@@ -23,11 +23,11 @@
     **ll** _/home/mind-cluster/component/_**noded/output**
 
     ```
-    drwxr-xr-x  2 root root     4096 Nov 14 07:10 .
-    drwxr-xr-x 10 root root     4096 Nov 14 07:10 ..
-    -r--------  1 root root      623 Nov 14 07:10 Dockerfile
-    -r-x------  1 root root 30522008 Nov 14 07:10 noded
-    -r--------  1 root root     3438 Nov 14 07:10 noded-v5.0.0.yaml
+    -r--------  1 root root      480 Nov 14 07:10 Dockerfile
+    -r-x------  1 root root 36550304 Nov 14 07:10 noded
+    -r--------  1 root root      434 Nov 14 07:10 NodeDConfiguration.json
+    -r--------  1 root root     2883 Nov 14 07:10 noded-v6.0.RC1.yaml
+    -r--------  1 root root      273 Nov 14 07:10 pingmesh-config.yaml
     ```
 
 # 说明
