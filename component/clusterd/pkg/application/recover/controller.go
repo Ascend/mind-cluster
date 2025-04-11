@@ -294,6 +294,18 @@ func (ctl *EventController) onlySupportDumpStrategy() bool {
 			ctl.jobInfo.JobId, ctl.jobInfo.ProcessRecoverEnable)
 		return false
 	}
+	if ctl.jobInfo.PlatFormMode {
+		if ctl.platStrategy != constant.ProcessDumpStrategyName {
+			hwlog.RunLog.Infof("jobId=%s platStrategy=%v, should not dump", ctl.jobInfo.JobId, ctl.platStrategy)
+			return false
+		}
+		if !util.IsSliceContain(ctl.platStrategy, ctl.jobInfo.MindXConfigStrategies) {
+			hwlog.RunLog.Infof("jobId=%s strategy=%v should not dump",
+				ctl.jobInfo.JobId, ctl.jobInfo.MindXConfigStrategies)
+			return false
+		}
+		return true
+	}
 	// MindXConfigStrategies have been sorted by priority defined by recoverStrategyPriorityMap
 	mindXConfiged := len(ctl.jobInfo.MindXConfigStrategies) > 0 &&
 		ctl.jobInfo.MindXConfigStrategies[0] == constant.ProcessDumpStrategyName
@@ -302,15 +314,7 @@ func (ctl *EventController) onlySupportDumpStrategy() bool {
 			ctl.jobInfo.JobId, ctl.jobInfo.MindXConfigStrategies)
 		return false
 	}
-	if !ctl.jobInfo.PlatFormMode {
-		return mindXConfiged
-	}
-	if ctl.platStrategy == constant.ProcessDumpStrategyName {
-		return true
-	}
-	hwlog.RunLog.Infof("jobId=%s plat strategy=%v not only support dump",
-		ctl.jobInfo.JobId, ctl.platStrategy)
-	return false
+	return true
 }
 
 func (ctl *EventController) shouldDumpWhenOccurFault() bool {
@@ -512,13 +516,8 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 		ctl.platStrategy = strategy
 	}
 	if ctl.shouldDumpWhenOccurFault() {
-		if ctl.jobInfo.PlatFormMode && !util.IsSliceContain(ctl.platStrategy, ctl.jobInfo.MindXConfigStrategies) {
-			hwlog.RunLog.Infof("jobId=%s plat strategy=%s not in strategies=%v",
-				ctl.jobInfo.JobId, ctl.platStrategy, ctl.jobInfo.MindXConfigStrategies)
-			return "", common.ServerInnerError, errors.New("plat strategy not in strategies")
-		}
-		hwlog.RunLog.Infof("should dump, job id: %s, plat strategy: %s",
-			ctl.jobInfo.JobId, ctl.platStrategy)
+		hwlog.RunLog.Infof("should dump, jobId=%s, strategies=%v, platFormMode=%v, plat strategy=%s",
+			ctl.jobInfo.JobId, ctl.jobInfo.MindXConfigStrategies, ctl.jobInfo.PlatFormMode, ctl.platStrategy)
 		ctl.agentReportStrategies = append(ctl.agentReportStrategies, constant.ProcessDumpStrategyName)
 		return common.DumpForFaultEvent, common.OK, nil
 	}

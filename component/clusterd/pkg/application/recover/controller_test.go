@@ -140,29 +140,19 @@ func TestHandleNotifyWaitFaultFlushing(t *testing.T) {
 		strategy := "dump"
 		mockFunc := gomonkey.ApplyFuncReturn(WaitPlatFormStrategyReady, strategy, nil)
 		defer mockFunc.Reset()
-		convey.Convey("should dump when occur fault", func() {
+		convey.Convey("02-should dump when occur fault", func() {
 			mockFunc1 := gomonkey.ApplyPrivateMethod(&EventController{}, "shouldDumpWhenOccurFault",
 				func(*EventController) bool { return true })
 			defer mockFunc1.Reset()
-			convey.Convey("02-config strategies not contain plat strategy, should return err", func() {
-				ctl.jobInfo.MindXConfigStrategies = []string{"exit"}
-				result, respCode, err := ctl.handleNotifyWaitFaultFlushing()
-				convey.So(err, convey.ShouldNotBeNil)
-				convey.So(respCode == common.ServerInnerError, convey.ShouldBeTrue)
-				convey.So(result == "", convey.ShouldBeTrue)
-			})
-			convey.Convey("03-config strategies contain plat strategy, should return dump event", func() {
-				ctl.jobInfo.MindXConfigStrategies = []string{"dump", "exit"}
-				result, respCode, err := ctl.handleNotifyWaitFaultFlushing()
-				convey.So(err, convey.ShouldBeNil)
-				convey.So(respCode == common.OK, convey.ShouldBeTrue)
-				convey.So(result == common.DumpForFaultEvent, convey.ShouldBeTrue)
-			})
+			result, respCode, err := ctl.handleNotifyWaitFaultFlushing()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(respCode == common.OK, convey.ShouldBeTrue)
+			convey.So(result == common.DumpForFaultEvent, convey.ShouldBeTrue)
 		})
-		mockFunc1 := gomonkey.ApplyPrivateMethod(&EventController{}, "shouldDumpWhenOccurFault",
-			func(*EventController) bool { return false })
-		defer mockFunc1.Reset()
 		convey.Convey("04-retry write reset cm fail, should return operate cm error", func() {
+			mockFunc1 := gomonkey.ApplyPrivateMethod(&EventController{}, "shouldDumpWhenOccurFault",
+				func(*EventController) bool { return false })
+			defer mockFunc1.Reset()
 			mockFunc2 := gomonkey.ApplyFuncReturn(common.RetryWriteResetCM, nil, errors.New("mock error"))
 			defer mockFunc2.Reset()
 			result, respCode, err := ctl.handleNotifyWaitFaultFlushing()
@@ -173,38 +163,93 @@ func TestHandleNotifyWaitFaultFlushing(t *testing.T) {
 	})
 }
 
+type getOnlySupportDumpStrategyTestCase struct {
+	name    string
+	ctl     *EventController
+	wantRet bool
+}
+
+func buildGetOnlySupportDumpStrategyTestCases() []getOnlySupportDumpStrategyTestCase {
+	firstDump := []string{constant.ProcessDumpStrategyName, constant.ProcessExitStrategyName}
+	notFirstDump := []string{constant.ProcessRecoverStrategyName, constant.ProcessDumpStrategyName,
+		constant.ProcessExitStrategyName}
+	notSupportDump := []string{constant.ProcessRecoverStrategyName, constant.ProcessExitStrategyName}
+	normalModeCase := getOnlySupportDumpStrategyNotPlatModeTestCase(firstDump, notFirstDump, notSupportDump)
+	platModeCase := getOnlySupportDumpStrategyPlatModeTestCase(firstDump, notFirstDump, notSupportDump)
+	return append(normalModeCase, platModeCase...)
+}
+
+func getOnlySupportDumpStrategyNotPlatModeTestCase(firstDump, notFirstDump,
+	notSupportDump []string) []getOnlySupportDumpStrategyTestCase {
+	return []getOnlySupportDumpStrategyTestCase{
+		{
+			name: "01-ProcessRecoverEnable is false, should return false",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: false, PlatFormMode: false, MindXConfigStrategies: firstDump}},
+			},
+			wantRet: false,
+		},
+		{
+			name: "02-not platform mode, cluster not first support dump, should return false",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: true, PlatFormMode: false, MindXConfigStrategies: notFirstDump}},
+			},
+			wantRet: false,
+		},
+		{
+			name: "03-not platform mode, cluster support dump, should return true",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: true, PlatFormMode: false, MindXConfigStrategies: firstDump}},
+			},
+			wantRet: true,
+		},
+	}
+}
+
+func getOnlySupportDumpStrategyPlatModeTestCase(firstDump, notFirstDump,
+	notSupportDump []string) []getOnlySupportDumpStrategyTestCase {
+	return []getOnlySupportDumpStrategyTestCase{
+		{
+			name: "04-platform mode, platform strategy is not dump, should return false",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: true, PlatFormMode: true, MindXConfigStrategies: firstDump}},
+				platStrategy: constant.ProcessExitStrategyName,
+			},
+			wantRet: false,
+		},
+		{
+			name: "05-platform mode, platform strategy is dump, cluster not contain dump, should return false",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: true, PlatFormMode: true, MindXConfigStrategies: notSupportDump}},
+				platStrategy: constant.ProcessDumpStrategyName,
+			},
+			wantRet: false,
+		},
+		{
+			name: "06-platform mode, platform strategy is dump, cluster contain dump, should return true",
+			ctl: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{
+					ProcessRecoverEnable: true, PlatFormMode: true, MindXConfigStrategies: notFirstDump}},
+				platStrategy: constant.ProcessDumpStrategyName,
+			},
+			wantRet: true,
+		},
+	}
+}
+
 func TestOnlySupportDumpStrategy(t *testing.T) {
-	convey.Convey("onlySupportDumpStrategy", t, func() {
-		ctl := EventController{}
-		convey.Convey("01-ProcessRecoverEnable is false, should return false", func() {
-			ctl.jobInfo.ProcessRecoverEnable = false
-			convey.So(ctl.shouldDumpWhenOccurFault(), convey.ShouldBeFalse)
+	tests := buildGetOnlySupportDumpStrategyTestCases()
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			shouldDump := tt.ctl.onlySupportDumpStrategy()
+			convey.So(shouldDump, convey.ShouldEqual, tt.wantRet)
 		})
-		ctl.jobInfo.ProcessRecoverEnable = true
-		convey.Convey("02-cluster not support dump, should return false", func() {
-			ctl.jobInfo.MindXConfigStrategies = []string{constant.ProcessRecoverStrategyName,
-				constant.ProcessDumpStrategyName}
-			convey.So(ctl.onlySupportDumpStrategy(), convey.ShouldBeFalse)
-		})
-		convey.Convey("03-cluster support exit, should return false", func() {
-			ctl.jobInfo.MindXConfigStrategies = []string{constant.ProcessExitStrategyName}
-			convey.So(ctl.onlySupportDumpStrategy(), convey.ShouldBeFalse)
-		})
-		ctl.jobInfo.MindXConfigStrategies = []string{constant.ProcessDumpStrategyName}
-		convey.Convey("04-cluster support dump, not platform mode, should return true", func() {
-			ctl.jobInfo.PlatFormMode = false
-			convey.So(ctl.onlySupportDumpStrategy(), convey.ShouldBeTrue)
-		})
-		ctl.jobInfo.PlatFormMode = true
-		convey.Convey("05-platform mode, platform strategy is not dump, should return false", func() {
-			ctl.platStrategy = constant.ProcessExitStrategyName
-			convey.So(ctl.onlySupportDumpStrategy(), convey.ShouldBeFalse)
-		})
-		convey.Convey("06-platform mode, platform strategy is dump, should return true", func() {
-			ctl.platStrategy = constant.ProcessDumpStrategyName
-			convey.So(ctl.onlySupportDumpStrategy(), convey.ShouldBeTrue)
-		})
-	})
+	}
 }
 
 func TestShouldDumpWhenOccurFault(t *testing.T) {
