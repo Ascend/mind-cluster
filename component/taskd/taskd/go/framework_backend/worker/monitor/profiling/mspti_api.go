@@ -169,13 +169,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
-	"sync"
 	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
+
+var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
 
 // InitMspti found mspti so and init it
 func InitMspti() error {
@@ -264,29 +265,22 @@ func FlushAllActivity() error {
 		hwlog.RunLog.Errorf("failed to flush all activities, errCode:%v", retCode)
 		return fmt.Errorf("failed to flush all activties, errCode:%v", retCode)
 	}
-	hwlog.RunLog.Infof("rank:%v successfully flush all activities", GlobalRankId)
+	hwlog.RunLog.Debugf("rank:%v successfully flush all activities", GlobalRankId)
 	return nil
 }
-
-var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
-var wg sync.WaitGroup
 
 // goBufferRequested mspti will request for memory, after fulfilled it will call goBufferCompleted
 //
 //export goBufferRequested
 func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size_t) {
-	wg.Add(1)
+	if len(requestSem) > constant.MaxRequestBufferNum/constant.HalfSize {
+		hwlog.RunLog.Warnf("requeste for buffer, current requested buffer num:%v", len(requestSem))
+	}
 	requestSem <- struct{}{}
-	defer func() {
-		wg.Done()
-		<-requestSem
-	}()
-	bufSize := constant.NormalBufferSizeInBytes
 	maxRecords := 0
-	*buffer = (*C.uint8_t)(C.malloc(C.size_t(bufSize)))
-	*size = C.size_t(bufSize)
+	*buffer = (*C.uint8_t)(C.malloc(C.size_t(constant.NormalBufferSizeInBytes)))
+	*size = C.size_t(constant.NormalBufferSizeInBytes)
 	*maxNumRecords = C.size_t(maxRecords)
-	hwlog.RunLog.Infof("requeste for buffer, current requested buffer num:%v", len(requestSem))
 }
 
 // goBufferCompleted  fulfilled it will call goBufferCompleted
@@ -298,6 +292,7 @@ func goBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 
 func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	defer func() {
+		<-requestSem
 		hwlog.RunLog.Debugf("the buffer free status is: %v", buffer == nil)
 		if buffer != nil {
 			hwlog.RunLog.Debugf("will free current buffer, the buffer address is %v", buffer)

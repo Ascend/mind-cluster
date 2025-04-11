@@ -86,6 +86,8 @@ const (
 	NormalBufferSizeInBytes = 2048 * 1024
 	// MaxRequestBufferNum is the max num of buffer at same time
 	MaxRequestBufferNum = 100
+	// HalfSize the halfsize
+	HalfSize = 2
 )
 
 const (
