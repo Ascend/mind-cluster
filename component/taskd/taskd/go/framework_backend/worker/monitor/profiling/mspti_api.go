@@ -176,6 +176,8 @@ import (
 	"taskd/common/constant"
 )
 
+var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
+
 // InitMspti found mspti so and init it
 func InitMspti() error {
 	libMsptiName := "libmspti.so"
@@ -209,8 +211,8 @@ func EnableMarkerDomain(domainName string, status string) error {
 			hwlog.RunLog.Errorf("failed to enable domain %s with retCode:%v", domainName, result)
 			return fmt.Errorf("failed to enable domain %s with retCode:%v", domainName, result)
 		}
-		hwlog.RunLog.Infof("successfully enabled domain %s, rank:%d", domainName, GlobalRankId)
 	}
+	hwlog.RunLog.Infof("successfully changed domain %s status to %s, rank:%d", domainName, status, GlobalRankId)
 	return nil
 }
 
@@ -271,11 +273,13 @@ func FlushAllActivity() error {
 //
 //export goBufferRequested
 func goBufferRequested(buffer **C.uint8_t, size *C.size_t, maxNumRecords *C.size_t) {
-	bufSize := defaultBufferSizeInBytes
-	hwlog.RunLog.Debugf("request callbask got buffer size:%d", bufSize)
+	if len(requestSem) > constant.MaxRequestBufferNum/constant.HalfSize {
+		hwlog.RunLog.Warnf("requeste for buffer, current requested buffer num:%v", len(requestSem))
+	}
+	requestSem <- struct{}{}
 	maxRecords := 0
-	*buffer = (*C.uint8_t)(C.malloc(C.size_t(bufSize)))
-	*size = C.size_t(bufSize)
+	*buffer = (*C.uint8_t)(C.malloc(C.size_t(constant.NormalBufferSizeInBytes)))
+	*size = C.size_t(constant.NormalBufferSizeInBytes)
 	*maxNumRecords = C.size_t(maxRecords)
 }
 
@@ -288,6 +292,7 @@ func goBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 
 func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	defer func() {
+		<-requestSem
 		hwlog.RunLog.Debugf("the buffer free status is: %v", buffer == nil)
 		if buffer != nil {
 			hwlog.RunLog.Debugf("will free current buffer, the buffer address is %v", buffer)
@@ -308,7 +313,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 				count++
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
-				hwlog.RunLog.Debugf("there is no more records in the buffer,the current mark size is %v, count is: %v",
+				hwlog.RunLog.Infof("there is no more records in the buffer,the current mark size is %v, count is: %v",
 					len(ProfileRecordsMark), count)
 				break
 			} else if status == C.MSPTI_ERROR_INVALID_PARAMETER {

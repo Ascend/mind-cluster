@@ -58,7 +58,7 @@ func InitTaskMonitor(rank int, upperLimitOfDiskInMb int) C.int {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigChan
-		hwlog.RunLog.Errorf("Received signal: %v, exiting...\n", sig)
+		hwlog.RunLog.Errorf("Received signal: %v, exiting...", sig)
 		cancel()
 	}()
 	return C.int(0)

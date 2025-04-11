@@ -126,7 +126,7 @@ class LogConfig:
 
     def __init__(self):
         self.log_max_line_length = LOG_MAX_LINE_LENGTH
-        self.file_log_level = logging.DEBUG
+        self.file_log_level = logging.INFO
         self.std_log_level = logging.INFO
         self.log_format = LOG_SIMPLE_FORMAT
         self.log_file = LOG_DEFAULT_FILE
@@ -233,9 +233,9 @@ def _get_file_handler(cfg: LogConfig):
 def _get_logger() -> logging.Logger:
     # init logger and log config
     log_cfg = LogConfig()
-    logger = logging.getLogger()
+    logger = logging.getLogger("taskd")
 
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # set log print std out
     if log_cfg.log_std_out:
