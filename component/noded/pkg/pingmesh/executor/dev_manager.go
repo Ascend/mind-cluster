@@ -126,6 +126,7 @@ func (d *DevManager) Start(stopCh <-chan struct{}) {
 			}
 			d.stopHccspingMesh()
 			if cmd.Config.Activate == types.ActivateOff {
+				currentStop = nil
 				continue
 			}
 			d.currentPolicy = cmd
