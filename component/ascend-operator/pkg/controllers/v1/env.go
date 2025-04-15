@@ -9,6 +9,7 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -75,20 +76,29 @@ func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTempl
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
 			if !r.isVirtualResourceReq(&podTemplate.Spec.Containers[i].Resources.Requests) {
-				podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-					Name: ascendVisibleDevicesEnv,
-					ValueFrom: &corev1.EnvVarSource{
-						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: ascendRealDownwardAPI,
-						},
-					},
-				})
+				r.setAscendVisibleDevicesEnv(&podTemplate.Spec.Containers[i])
 			}
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 			addHcclSuperPodIdEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
+		}
+	}
+}
+
+func (r *ASJobReconciler) setAscendVisibleDevicesEnv(container *corev1.Container) {
+	for resourceAnnoKey := range container.Resources.Requests {
+		if strings.Contains(string(resourceAnnoKey), api.ResourceNamePrefix) {
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name: ascendVisibleDevicesEnv,
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: fmt.Sprintf("metadata.annotations['%s']", resourceAnnoKey),
+					},
+				},
+			})
+			return
 		}
 	}
 }
