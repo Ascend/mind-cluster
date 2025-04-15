@@ -32,6 +32,8 @@ const (
 	ascend910      = "huawei.com/Ascend910"
 	ascend910vir2c = "huawei.com/Ascend910-2c"
 	chipsPerNode   = "16"
+
+	ascend910DownwardAPI = "metadata.annotations['huawei.com/Ascend910']"
 )
 
 // TestIsVirtualResourceReq test isVirtualResourceReq
@@ -99,7 +101,7 @@ func fakeExpectEnvsForSetCommonEnv02() []corev1.EnvVar {
 
 func fakeExpectEnvsForSetCommonEnv03() []corev1.EnvVar {
 	return []corev1.EnvVar{
-		fakeRefEnv(ascendVisibleDevicesEnv, ascendRealDownwardAPI),
+		fakeRefEnv(ascendVisibleDevicesEnv, ascend910DownwardAPI),
 		{Name: taskIDEnvKey, Value: fakeTaskID},
 		{Name: mindxServerIPEnv, Value: ""},
 		{Name: hostNetwork, Value: fakeHostNetwork},
