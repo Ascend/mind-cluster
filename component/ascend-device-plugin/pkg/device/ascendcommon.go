@@ -50,6 +50,8 @@ var (
 	lastCheckNodeLabel     int64
 	useIpv4                = true
 	re                     = regexp.MustCompile(`"fault_time":\d+,`)
+	// counter to record all card get ip times
+	counter = 0
 )
 
 const (
@@ -633,7 +635,17 @@ func (tool *AscendTools) getDavinCiDev(logicID int32) (common.DavinCiDev, error)
 	if err != nil {
 		return common.DavinCiDev{}, err
 	}
-	ip, err := tool.getDeviceIP("", int(phyID))
+	ip := ""
+	ip, err = tool.getDeviceIP("", int(phyID))
+	for counter < common.GetIpRetryTimes && err != nil {
+		time.Sleep(common.GetIpRetryInterval * time.Second)
+		ip, err = tool.getDeviceIP("", int(phyID))
+		if err == nil {
+			break
+		}
+		hwlog.RunLog.Warnf("get device ip failed, err: %v, will retry", err)
+		counter++
+	}
 	if err != nil {
 		hwlog.RunLog.Warnf("get device ip failed, err: %v", err)
 		ip = ""

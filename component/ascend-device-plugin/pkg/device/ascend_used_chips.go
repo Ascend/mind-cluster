@@ -61,12 +61,12 @@ func (tool *AscendTools) getChipsUsedByProcess() sets.String {
 		}
 		if chipInfo.ProcNum != 0 {
 			hwlog.RunLog.Debugf("the card logicID:[%d] is used, chipInfo: %#v", logicID, chipInfo)
-			davinCidev, err := tool.getDavinCiDev(logicID)
+			phyID, err := tool.dmgr.GetPhysicIDFromLogicID(logicID)
 			if err != nil {
 				hwlog.RunLog.Errorf("get davinci dev by logicID:[%d] failed, err: %v", logicID, err)
 				continue
 			}
-			chipName := fmt.Sprintf("%s-%d", tool.name, davinCidev.PhyID)
+			chipName := fmt.Sprintf("%s-%d", tool.name, phyID)
 			usedChips = append(usedChips, chipName)
 		}
 	}

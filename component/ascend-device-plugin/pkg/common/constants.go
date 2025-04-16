@@ -891,3 +891,10 @@ const (
 	// MaxPodEventRetryTimes max try time for pod add event while cache none
 	MaxPodEventRetryTimes = 4
 )
+
+const (
+	// GetIpRetryTimes the upper limit of get device ip
+	GetIpRetryTimes = 18
+	// GetIpRetryInterval the interval between each retry in seconds
+	GetIpRetryInterval = 10
+)

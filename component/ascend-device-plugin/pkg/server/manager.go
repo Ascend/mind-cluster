@@ -162,12 +162,21 @@ func (hdm *HwDevManager) updateNode() error {
 	for key, value := range newLabelMap {
 		newNode.Labels[key] = value
 	}
-	mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
-		return err
+	needBaseDevInfoAnno := true
+	for _, dev := range hdm.allInfo.AllDevs {
+		if dev.IP == "" {
+			needBaseDevInfoAnno = false
+			break
+		}
 	}
-	newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
+	if needBaseDevInfoAnno {
+		mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
+			return err
+		}
+		newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
+	}
 	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
