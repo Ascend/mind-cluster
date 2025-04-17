@@ -176,6 +176,8 @@ func (hdm *HwDevManager) updateNode() error {
 			return err
 		}
 		newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
+	} else {
+		newNode.Annotations[api.BaseDevInfoAnno] = ""
 	}
 	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {

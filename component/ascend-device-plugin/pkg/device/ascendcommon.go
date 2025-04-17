@@ -637,7 +637,12 @@ func (tool *AscendTools) getDavinCiDev(logicID int32) (common.DavinCiDev, error)
 	}
 	ip := ""
 	ip, err = tool.getDeviceIP("", int(phyID))
-	for counter < common.GetIpRetryTimes && err != nil {
+	devType := tool.dmgr.GetDevType()
+	needRetry := false
+	if devType == common.Ascend910 || devType == common.Ascend910B || devType == common.Ascend910A3 {
+		needRetry = true
+	}
+	for counter < common.GetIpRetryTimes && err != nil && needRetry {
 		time.Sleep(common.GetIpRetryInterval * time.Second)
 		ip, err = tool.getDeviceIP("", int(phyID))
 		if err == nil {
