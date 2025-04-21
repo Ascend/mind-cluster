@@ -18,3 +18,11 @@ func IsMindIEEPJob(job *v1.AscendJob) bool {
 	}
 	return true
 }
+
+// IsSoftStrategyJob judge soft strategy job
+func IsSoftStrategyJob(job *v1.AscendJob) bool {
+	if job == nil || job.Labels == nil {
+		return false
+	}
+	return job.Labels[SuperPodAffinity] == SoftStrategy
+}

@@ -35,6 +35,13 @@ func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int
 	})
 }
 
+func addEnvValueForSoftStrategy(pod *corev1.PodTemplateSpec, envKey string, index int) {
+	pod.Spec.Containers[index].Env = append(pod.Spec.Containers[index].Env, corev1.EnvVar{
+		Name:      envKey,
+		ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: utils.SuperPodEnvPath}},
+	})
+}
+
 // isVirtualResourceReq return true when pod request virtual resource, otherwise return false
 func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bool {
 	if requests == nil {
@@ -206,7 +213,11 @@ func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 			superPodId := strconv.Itoa(utils.GetLogicSuperPodId(pi.rank, utils.GetSpBlock(pi.job), chipsPerNode))
 			hwlog.RunLog.Debugf("pod<%s> resource<%v=%v> pod-rank=%v sp-block=%v set %s=%v",
 				pod.Name, name, chipsPerNode, pi.rank, utils.GetSpBlock(pi.job), hcclSuperPodLogicId, superPodId)
-			addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
+			if pi.job.Labels[utils.SuperPodAffinity] == utils.SoftStrategy {
+				addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
+			} else {
+				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
+			}
 			break
 		}
 	}

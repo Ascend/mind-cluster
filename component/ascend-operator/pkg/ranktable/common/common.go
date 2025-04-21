@@ -43,9 +43,10 @@ type BaseGenerator struct {
 	fileStatus     utils.RankTableStatus
 	rtMu           sync.Mutex
 
-	servers       *sync.Map
-	rankTabler    generator.RankTableGenerator
-	isMindIEEPJob bool
+	servers        *sync.Map
+	rankTabler     generator.RankTableGenerator
+	isMindIEEPJob  bool
+	isSoftStrategy bool
 
 	Status      utils.RankTableStatus `json:"status"`
 	ServerList  []*Server             `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
@@ -57,16 +58,17 @@ type BaseGenerator struct {
 func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.RankTableGenerator) *BaseGenerator {
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
-		dir:           rankTableDir,
-		path:          path.Join(rankTableDir, rankTableFile),
-		cmStatus:      utils.InitialRTStatus,
-		fileStatus:    utils.InitialRTStatus,
-		servers:       &sync.Map{},
-		rankTabler:    r,
-		Status:        utils.InitialRTStatus,
-		ServerList:    []*Server{},
-		Version:       version,
-		isMindIEEPJob: mindxdlutils.IsMindIEEPJob(job),
+		dir:            rankTableDir,
+		path:           path.Join(rankTableDir, rankTableFile),
+		cmStatus:       utils.InitialRTStatus,
+		fileStatus:     utils.InitialRTStatus,
+		servers:        &sync.Map{},
+		rankTabler:     r,
+		Status:         utils.InitialRTStatus,
+		ServerList:     []*Server{},
+		Version:        version,
+		isMindIEEPJob:  mindxdlutils.IsMindIEEPJob(job),
+		isSoftStrategy: mindxdlutils.IsSoftStrategyJob(job),
 	}
 }
 
@@ -128,6 +130,11 @@ func (r *BaseGenerator) SetConfigmapStatus(status utils.RankTableStatus) {
 // GetConfigmapStatus is used to get the status of ranktable in configmap.
 func (r *BaseGenerator) GetConfigmapStatus() utils.RankTableStatus {
 	return r.cmStatus
+}
+
+// GetIsSoftStrategy get is soft strategy
+func (r *BaseGenerator) GetIsSoftStrategy() bool {
+	return r.isSoftStrategy
 }
 
 // WriteToFile is used to write ranktable to file.
@@ -240,6 +247,9 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 	if r.isMindIEEPJob {
 		hwlog.RunLog.Debugf("pod(%s/%s) belong mindIEEP", pod.Namespace, pod.Name)
 		server.Hardware = pod.Annotations[api.PodUsedHardwareTypeAnno]
+	}
+	if r.isSoftStrategy {
+		server.SuperPodRank = pod.Annotations[mindxdlutils.SuperPodRankAnno]
 	}
 	rankFactor := len(instance.Devices)
 

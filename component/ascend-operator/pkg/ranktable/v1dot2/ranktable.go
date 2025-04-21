@@ -50,6 +50,14 @@ func New(job *v1.AscendJob) *RankTable {
 
 // GatherServerList gather server list
 func (r *RankTable) GatherServerList() {
+	if r.BaseGenerator.GetIsSoftStrategy() {
+		r.GatherServerListForSoftStrategy()
+		return
+	}
+	r.GatherServerListForHardStrategy()
+}
+
+func (r *RankTable) GatherServerListForHardStrategy() {
 	r.BaseGenerator.GatherServerList()
 	r.SuperPodList = make([]*SuperPod, 0)
 	for id, server := range r.ServerList {
@@ -61,5 +69,26 @@ func (r *RankTable) GatherServerList() {
 			})
 		}
 		r.SuperPodList[vid].ServerList = append(r.SuperPodList[vid].ServerList, &Server{ServerID: server.ServerID})
+	}
+}
+
+func (r *RankTable) GatherServerListForSoftStrategy() {
+	r.BaseGenerator.GatherServerList()
+	tmpSuperPods := make(map[string]*SuperPod)
+	for _, server := range r.ServerList {
+		if tmpSuperPods[server.SuperPodRank] == nil {
+			tmpSuperPods[server.SuperPodRank] = &SuperPod{}
+		}
+		tmpSuperPods[server.SuperPodRank].SuperPodID = server.SuperPodRank
+		tmpSuperPods[server.SuperPodRank].ServerList = append(tmpSuperPods[server.SuperPodRank].ServerList,
+			&Server{ServerID: server.ServerID})
+	}
+	r.SuperPodList = make([]*SuperPod, len(tmpSuperPods))
+	for _, superPod := range tmpSuperPods {
+		id, err := strconv.Atoi(superPod.SuperPodID)
+		if err != nil || id >= len(r.SuperPodList) {
+			continue
+		}
+		r.SuperPodList[id] = superPod
 	}
 }

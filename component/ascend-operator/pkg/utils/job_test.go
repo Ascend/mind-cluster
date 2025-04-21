@@ -58,3 +58,33 @@ func TestIsMindIEEPJob(t *testing.T) {
 			})
 	})
 }
+
+// TestIsSoftStrategyJob test IsSoftStrategyJob
+func TestIsSoftStrategyJob(t *testing.T) {
+	convey.Convey("isSoftStrategyJob", t, func() {
+		job := newCommonAscendJob()
+		convey.Convey("01-job nil will return false", func() {
+			res := IsSoftStrategyJob(nil)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-label nil will return false", func() {
+			res := IsSoftStrategyJob(job)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("03-label SuperPodAffinity not exist will return false", func() {
+			job.SetLabels(map[string]string{"otherLabel": ""})
+			res := IsSoftStrategyJob(job)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("04-label SuperPodAffinity not equal SoftStrategy will return false", func() {
+			job.SetLabels(map[string]string{SuperPodAffinity: "otherValue"})
+			res := IsSoftStrategyJob(job)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("05-label SuperPodAffinity equal SoftStrategy will return true", func() {
+			job.SetLabels(map[string]string{SuperPodAffinity: SoftStrategy})
+			res := IsSoftStrategyJob(job)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
+}

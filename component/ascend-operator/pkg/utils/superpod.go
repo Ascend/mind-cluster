@@ -16,6 +16,19 @@ const (
 	AnnoKeyOfSuperPod = "sp-block"
 )
 
+const (
+	// SuperPodEnvPath super pod env path
+	SuperPodEnvPath = `metadata.annotations['super-pod-rank']`
+	// SuperPodAffinity super pod affinity key
+	SuperPodAffinity = "super-pod-affinity"
+	// SoftStrategy soft strategy
+	SoftStrategy = "soft"
+	// HardStrategy hard strategy
+	HardStrategy = "hard"
+	// SuperPodRankAnno super pod rank annotation key
+	SuperPodRankAnno = "super-pod-rank"
+)
+
 // GetLogicSuperPodNodes Return the number of computational nodes contained in the logical utils
 func getLogicSuperPodNodes(spBlock, chipsPerNode int) int {
 	if spBlock < chipsPerNode {
