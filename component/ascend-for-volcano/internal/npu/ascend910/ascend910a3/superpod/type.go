@@ -26,22 +26,29 @@ import (
 
 type module910SuperPod struct {
 	ascend910a3.Base910A3
-	spBlock int
+	nodeVPodId map[string]string
+	spBlock    int
 }
 
 const (
 	// SchedulerName name of scheduler
 	SchedulerName = "huawei.com/Ascend910super-pod"
 	// SuperPodAnnoKey annotation key of super pod
-	SuperPodAnnoKey = "sp-block"
-
+	SuperPodAnnoKey            = "sp-block"
 	jobCheckFailedReason       = "npu num is invalid"
 	spBlockInvalidReason       = "sp-block is invalid"
 	getNPUFromPodFailedPattern = "%s getUsableTopFromNode err: %s"
 	scoreForNode               = 100000000
+	taskSpec                   = "volcano.sh/task-spec"
+	schedulerSpec              = "scheduler"
+	delayingTime               = 10
+)
 
-	taskSpec      = "volcano.sh/task-spec"
-	schedulerSpec = "scheduler"
+const (
+	superPodAffinity = "super-pod-affinity"
+	hardRequire      = "hard"
+	softRequire      = "soft"
+	superPodRankKey  = "super-pod-rank"
 )
 
 type superPodInfo struct {
@@ -52,3 +59,9 @@ type superPodInfo struct {
 type remainderTop = [][][]superPod
 
 type superPod = map[string]plugin.NPUNode
+
+type vPodIdRecorder struct {
+	unReadyId  []string
+	leftIndex  int
+	rightIndex int
+}

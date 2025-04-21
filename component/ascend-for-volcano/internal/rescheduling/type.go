@@ -307,6 +307,7 @@ type FaultReasonList struct {
 // FaultJob job object for re-scheduling
 type FaultJob struct {
 	ReScheduleKey      string // values taken off/grace/force
+	RescheduleTime     int64
 	SubHealthyStrategy string
 	IsSubHealthFault   bool
 	PendingSessionNum  int

@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -258,6 +259,23 @@ func marshalData(data interface{}) []byte {
 		return nil
 	}
 	return dataBuffer
+}
+
+// SortByNumericValue sort string
+func SortByNumericValue(s []string) {
+	sort.Slice(s, func(i, j int) bool {
+		num1, err1 := strconv.Atoi(s[i])
+		if err1 != nil {
+			klog.V(LogErrorLev).Infof("Atoi data err: %s", SafePrint(err1))
+			return false
+		}
+		num2, err2 := strconv.Atoi(s[j])
+		if err2 != nil {
+			klog.V(LogErrorLev).Infof("Atoi data err: %s", SafePrint(err2))
+			return true
+		}
+		return num1 >= num2
+	})
 }
 
 // PtrInit return base type ptr

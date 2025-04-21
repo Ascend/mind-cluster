@@ -24,6 +24,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -543,7 +544,8 @@ func TestScoreBestNPUNodes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			initScoreMap(scoreMap, tt.nodes)
 			tp := &module910SuperPod{
-				spBlock: tt.spBlock,
+				nodeVPodId: map[string]string{},
+				spBlock:    tt.spBlock,
 			}
 			if err := tp.InitMyJobPlugin(tt.env.Jobs["vcjob/pg0"].SchedulerJobAttr, tt.env); err != nil {
 				return
@@ -599,6 +601,243 @@ func TestGetSelectNodes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getSelectNodes(tt.fNodeNameMap, tt.spNodes, tt.spNodeMaps); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getSelectNodes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type getSuperPodRanksTest struct {
+	name     string
+	job      plugin.SchedulerJob
+	rank     int
+	wantSpID string
+	wantLR   int
+	wantErr  bool
+}
+
+func buildGetSuperPodRanksTest() []getSuperPodRanksTest {
+	return []getSuperPodRanksTest{
+		{
+			name: "01 normal case - first pod in first superpod",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     0,
+			wantSpID: "0",
+			wantLR:   0,
+		},
+		{
+			name: "02 normal case - last pod in first superpod",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     util.NPUIndex1,
+			wantSpID: "0",
+			wantLR:   util.NPUIndex1,
+		},
+		{
+			name: "03 normal case - first pod in second superpod",
+			job: plugin.SchedulerJob{
+				SuperPods: map[string][]plugin.SuperNode{
+					"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     util.NPUIndex2,
+			wantSpID: "1",
+			wantLR:   0,
+		},
+		{
+			name: "04 edge case - rank exceeds total nodes",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:    util.NPUIndex4,
+			wantErr: true,
+		},
+		{
+			name:    "05 edge case - empty superpods",
+			job:     plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{}},
+			rank:    0,
+			wantErr: true,
+		},
+		{
+			name:    "06 edge case - invalid superpod key",
+			job:     plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{"invalid": {{Name: "node0"}}}},
+			rank:    0,
+			wantErr: true,
+		},
+	}
+}
+
+func TestGetSuperPodRanks(t *testing.T) {
+	for _, tt := range buildGetSuperPodRanksTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSpID, gotLR := getSuperPodRanks(tt.job, tt.rank)
+			if (gotSpID == "" && gotLR == 0) != tt.wantErr {
+				t.Errorf("getSuperPodRanks() error = %v, wantErr %v", (gotSpID == "" && gotLR == 0), tt.wantErr)
+				return
+			}
+			if gotSpID != tt.wantSpID {
+				t.Errorf("getSuperPodRanks() gotSpID = %v, want %v", gotSpID, tt.wantSpID)
+			}
+			if gotLR != tt.wantLR {
+				t.Errorf("getSuperPodRanks() gotLR = %v, want %v", gotLR, tt.wantLR)
+			}
+		})
+	}
+}
+
+func TestGetVPodID(t *testing.T) {
+	tests := []struct {
+		name      string
+		recorder  *vPodIdRecorder
+		want      string
+		wantRight int
+	}{
+		{
+			name:      "01 normal case - get from unReadyId",
+			recorder:  &vPodIdRecorder{unReadyId: []string{"pod1", "pod2"}, leftIndex: 1, rightIndex: 0},
+			want:      "pod2",
+			wantRight: 0,
+		},
+		{
+			name:      "02 edge case - leftIndex out of range",
+			recorder:  &vPodIdRecorder{unReadyId: []string{"pod1"}, leftIndex: util.NPUIndex2, rightIndex: 0},
+			want:      "",
+			wantRight: 0,
+		},
+		{
+			name:      "03 edge case - leftIndex negative",
+			recorder:  &vPodIdRecorder{unReadyId: []string{}, leftIndex: -1, rightIndex: 0},
+			want:      "0",
+			wantRight: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.recorder.getVPodID()
+			if got != tt.want {
+				t.Errorf("getVPodID() = %v, want %v", got, tt.want)
+			}
+			if tt.recorder.rightIndex != tt.wantRight {
+				t.Errorf("rightIndex = %v, want %v", tt.recorder.rightIndex, tt.wantRight)
+			}
+		})
+	}
+}
+
+type selectNodesForSoftStrategyTest struct {
+	name        string
+	recorder    *vPodIdRecorder
+	totalNode   int
+	superPods   []superPod
+	selectNodes map[string][]plugin.SuperNode
+	wantTotal   int
+	wantLen     int
+}
+
+func buildSelectNodesForSoftStrategyTestCases() []selectNodesForSoftStrategyTest {
+	return []selectNodesForSoftStrategyTest{
+		{
+			name: "01 normal case - select nodes from non-empty superPods",
+			recorder: &vPodIdRecorder{
+				unReadyId: []string{"pod1"},
+				leftIndex: 0,
+			},
+			totalNode: util.NPUIndex2,
+			superPods: []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}}},
+				{"node3": {CommonNode: plugin.CommonNode{Name: "node3"}}},
+			},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			wantTotal:   0,
+			wantLen:     util.NPUIndex2,
+		},
+		{
+			name: "02 edge case - empty superPods",
+			recorder: &vPodIdRecorder{
+				unReadyId: []string{"pod1"},
+				leftIndex: 0,
+			},
+			totalNode:   util.NPUIndex2,
+			superPods:   []superPod{},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			wantTotal:   util.NPUIndex2,
+			wantLen:     0,
+		},
+		{
+			name: "03 edge case - zero totalNode",
+			recorder: &vPodIdRecorder{
+				unReadyId: []string{"pod1"},
+				leftIndex: 0,
+			},
+			totalNode: 0,
+			superPods: []superPod{
+				{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}}},
+			},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			wantTotal:   0,
+			wantLen:     1,
+		},
+	}
+}
+
+func TestSelectNodesForSoftStrategy(t *testing.T) {
+	for _, tt := range buildSelectNodesForSoftStrategyTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{spBlock: 1}
+			got := tp.selectNodesForSoftStrategy(tt.recorder, &tt.totalNode, tt.superPods, tt.selectNodes)
+			if tt.totalNode != tt.wantTotal {
+				t.Errorf("selectNodesForSoftStrategy() totalNode = %v, want %v", tt.totalNode, tt.wantTotal)
+			}
+			if len(got) != tt.wantLen {
+				t.Errorf("selectNodesForSoftStrategy() len = %v, want %v", len(got), tt.wantLen)
+			}
+		})
+	}
+}
+
+type isDelayingJobTest struct {
+	name     string
+	fJob     *rescheduling.FaultJob
+	nodes    []*api.NodeInfo
+	expected bool
+}
+
+func TestIsDelayingJob(t *testing.T) {
+	now := time.Now().Unix()
+	tests := []isDelayingJobTest{
+		{
+			name: "01 timeout case - should skip wait",
+			fJob: &rescheduling.FaultJob{JobName: "test-job", RescheduleTime: now - util.NPUIndex11,
+				FaultTasks: []rescheduling.FaultTask{{IsFaultTask: false, NodeName: "node1"}}},
+			nodes:    []*api.NodeInfo{{Name: "node1"}},
+			expected: true,
+		},
+		{
+			name: "02 normal case - node released",
+			fJob: &rescheduling.FaultJob{JobName: "test-job", RescheduleTime: now - util.NPUIndex5,
+				FaultTasks: []rescheduling.FaultTask{{IsFaultTask: false, NodeName: "node1"}}},
+			nodes:    []*api.NodeInfo{{Name: "node1"}},
+			expected: true,
+		},
+		{
+			name: "03 normal case - node not released",
+			fJob: &rescheduling.FaultJob{JobName: "test-job", RescheduleTime: now - util.NPUIndex5,
+				FaultTasks: []rescheduling.FaultTask{{IsFaultTask: false, NodeName: "node2"}}},
+			nodes:    []*api.NodeInfo{{Name: "node1"}},
+			expected: false,
+		},
+		{
+			name: "04 edge case - no fault tasks",
+			fJob: &rescheduling.FaultJob{JobName: "test-job", RescheduleTime: now - util.NPUIndex5,
+				FaultTasks: []rescheduling.FaultTask{}},
+			nodes:    []*api.NodeInfo{{Name: "node1"}},
+			expected: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{}
+			result := tp.isDelayingJob(tt.fJob, tt.nodes)
+			if result != tt.expected {
+				t.Errorf("isDelayingJob() = %v, want %v", result, tt.expected)
 			}
 		})
 	}
