@@ -57,6 +57,7 @@ func (r *RankTable) GatherServerList() {
 	r.GatherServerListForHardStrategy()
 }
 
+// GatherServerListForHardStrategy gather server list for hard strategy
 func (r *RankTable) GatherServerListForHardStrategy() {
 	r.BaseGenerator.GatherServerList()
 	r.SuperPodList = make([]*SuperPod, 0)
@@ -72,6 +73,7 @@ func (r *RankTable) GatherServerListForHardStrategy() {
 	}
 }
 
+// GatherServerListForSoftStrategy gather server list for soft strategy
 func (r *RankTable) GatherServerListForSoftStrategy() {
 	r.BaseGenerator.GatherServerList()
 	tmpSuperPods := make(map[string]*SuperPod)
