@@ -73,8 +73,8 @@ var (
 	descRoceRxCnpPktNum = colcommon.BuildDesc("npu_chip_roce_rx_cnp_pkt_num", "npu interface receive roce-rx-cnp-pkt-num")
 	descRoceTxCnpPktNum = colcommon.BuildDesc("npu_chip_roce_tx_cnp_pkt_num", "npu interface receive roce-tx-cnp-pkt-num")
 
-	descRoceNewPktRtyNum = colcommon.BuildDesc("npu_chip_roce_new_pkt_rty_num", "npu interface receive roce-new-pkt-rty-num")
-
+	descRoceNewPktRtyNum = colcommon.BuildDesc("npu_chip_roce_new_pkt_rty_num",
+		"npu interface receive roce-new-pkt-rty-num")
 	descRoceOutOfOrderNum = colcommon.BuildDesc("npu_chip_roce_out_of_order_num",
 		"the npu interface receive roce-out-of-order-num")
 	descRoceQpStatusErrNum = colcommon.BuildDesc("npu_chip_roce_qp_status_err_num",

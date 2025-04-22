@@ -1231,15 +1231,15 @@ func (d *DcManager) DcGetDeviceFrequency(cardID, deviceID int32, devType common.
 		return common.UnRetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
 	var cFrequency C.uint
-	if retCode := C.dcmi_get_device_frequency(C.int(cardID), C.int(deviceID), C.enum_dcmi_freq_type(devType),
+	if retCode := C.dcmi_get_device_frequency(C.int(cardID), C.int(deviceID), C.enum_dcmi_freq_type(devType.Code),
 		&cFrequency); int32(retCode) != common.Success {
-		return common.UnRetError, fmt.Errorf("failed to obtain the frequency based on card_id(%d) and "+
-			"device_id(%d), error code: %d", cardID, deviceID, int32(retCode))
+		return common.UnRetError,
+			buildDcmiErr(cardID, deviceID, fmt.Sprintf("frequency (name: %v, code:%d)", devType.Name, devType.Code), retCode)
 	}
 	// check whether cFrequency is too big
 	if common.IsGreaterThanOrEqualInt32(int64(cFrequency)) || int64(cFrequency) < 0 {
-		return common.UnRetError, fmt.Errorf("frequency value out of range [0, int32), "+
-			"card_id(%d) and device_id(%d), frequency: %d", cardID, deviceID, int64(cFrequency))
+		return common.UnRetError, fmt.Errorf("frequency value out of range [0, int32),card_id(%d) and device_id(%d), "+
+			"frequency (name: %v, code:%d): %d", cardID, deviceID, devType.Name, devType.Code, int64(cFrequency))
 	}
 	return uint32(cFrequency), nil
 }
@@ -1390,14 +1390,14 @@ func (d *DcManager) DcGetDeviceUtilizationRate(cardID, deviceID int32, devType c
 		return common.RetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
 	var rate C.uint
-	if retCode := C.dcmi_get_device_utilization_rate(C.int(cardID), C.int(deviceID), C.int(devType),
+	if retCode := C.dcmi_get_device_utilization_rate(C.int(cardID), C.int(deviceID), C.int(devType.Code),
 		&rate); int32(retCode) != common.Success {
-		return common.RetError, buildDcmiErr(cardID, deviceID, "utilization (type:"+strconv.Itoa(int(devType))+")", retCode)
+		return common.RetError,
+			buildDcmiErr(cardID, deviceID, fmt.Sprintf("utilization (name: %v, code:%d)", devType.Name, devType.Code), retCode)
 	}
 	if !common.IsValidUtilizationRate(uint32(rate)) {
-		return common.RetError, fmt.Errorf("get wrong device (cardID: %d, deviceID: %d)"+string(devType)+
-			" utilization rate: %d",
-			cardID, deviceID, uint32(rate))
+		return common.RetError, fmt.Errorf("get wrong device (cardID: %d, deviceID: %d) "+
+			"utilization (name: %v, code:%d): %d", cardID, deviceID, devType.Name, devType.Code, uint32(rate))
 	}
 	return int32(rate), nil
 }

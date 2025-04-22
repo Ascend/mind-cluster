@@ -21,8 +21,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// DeviceType device type enum
-type DeviceType int32
+// DeviceType define device type
+type DeviceType struct {
+	// Code device type code
+	Code int32
+	// Name device type name
+	Name string
+}
 
 var (
 	// ProfilingTime for getting PCIe bandwidth
@@ -42,26 +47,30 @@ var (
 	a9000A3SuperPodMainBoardIds = sets.NewInt32(A9000A3SuperPodMainBoardId1, A9000A3SuperPodMainBoardId2)
 )
 
-const (
+// DeviceType for utilization
+var (
 	// AICore Ascend310 & Ascend910
-	AICore DeviceType = 2
-
-	// MemoryFreq Ascend310 & Ascend310P
-	MemoryFreq DeviceType = 1
-	// CtrlCpuFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	CtrlCpuFreq DeviceType = 2
-	// HBMFreq Ascend310 & Ascend910 & Ascend910B
-	HBMFreq DeviceType = 6
-	// AICoreCurrentFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	AICoreCurrentFreq DeviceType = 7
-	// AICoreRatedFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	AICoreRatedFreq = 9
-	// VectorCore Ascend310P
-	VectorCore DeviceType = 12
-	// Overall Overall utilization rate of NPU
-	Overall DeviceType = 13
+	AICore = DeviceType{Code: 2, Name: "AICore"}
 	// HbmUtilization utilization rate of hbm
-	HbmUtilization DeviceType = 6
+	HbmUtilization = DeviceType{Code: 6, Name: "Hbm"}
+	// VectorCore Ascend310P
+	VectorCore = DeviceType{Code: 12, Name: "VectorCore"}
+	// Overall Overall utilization rate of NPU
+	Overall = DeviceType{Code: 13, Name: "Overall"}
+)
+
+// DeviceType for frequency
+var (
+	// MemoryFreq Ascend310 & Ascend310P
+	MemoryFreq = DeviceType{Code: 1, Name: "Memory"}
+	// CtrlCpuFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
+	CtrlCpuFreq = DeviceType{Code: 2, Name: "CtrlCpu"}
+	// HbmFreq Ascend310 & Ascend910 & Ascend910B
+	HbmFreq = DeviceType{Code: 6, Name: "Hbm"}
+	// AICoreCurrentFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
+	AICoreCurrentFreq = DeviceType{Code: 7, Name: "AICore Current"}
+	// AICoreRatedFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
+	AICoreRatedFreq = DeviceType{Code: 9, Name: "AICore Rated"}
 )
 
 const (
