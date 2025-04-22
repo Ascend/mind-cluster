@@ -131,7 +131,7 @@ func GetNamespaceByJobIdAndAppType(jobId, appType string) (string, error) {
 		if !ok {
 			return true
 		}
-		if jobInfo.MindIeJobId == jobId && jobInfo.MindIeAppType == appType {
+		if jobInfo.MultiInstanceJobId == jobId && jobInfo.AppType == appType {
 			namespace = jobInfo.NameSpace
 			return false
 		}
@@ -153,7 +153,7 @@ func GetPdDeploymentMode(jobId, namespace, appType string) (string, error) {
 		if !ok {
 			return true
 		}
-		if jobInfo.MindIeAppType == appType && jobInfo.MindIeJobId == jobId && jobInfo.NameSpace == namespace {
+		if jobInfo.AppType == appType && jobInfo.MultiInstanceJobId == jobId && jobInfo.NameSpace == namespace {
 			cnt++
 			if jobInfo.Replicas > 1 {
 				pdDeploymentMode = constant.CrossNodePdDeployMode
@@ -176,7 +176,7 @@ func GetInstanceJobKey(jobId, namespace, appType string) (string, error) {
 		if !ok {
 			return true
 		}
-		if jobInfo.MindIeJobId == jobId && jobInfo.NameSpace == namespace && jobInfo.MindIeAppType == appType {
+		if jobInfo.MultiInstanceJobId == jobId && jobInfo.NameSpace == namespace && jobInfo.AppType == appType {
 			jobKey, ok = key.(string)
 			if !ok {
 				return true

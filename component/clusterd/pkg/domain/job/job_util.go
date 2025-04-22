@@ -107,8 +107,8 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
 	jobInfo.Framework = podgroup.GetModelFramework(&pgInfo)
 	jobInfo.ResourceType = podgroup.GetResourceType(&pgInfo)
 	jobInfo.CustomJobID = pgInfo.Annotations[CustomJobID]
-	jobInfo.MindIeJobId = pgInfo.Labels[constant.MindIeJobIdLabelKey]
-	jobInfo.MindIeAppType = pgInfo.Labels[constant.MindIeAppTypeLabelKey]
+	jobInfo.MultiInstanceJobId = pgInfo.Labels[constant.MindIeJobIdLabelKey]
+	jobInfo.AppType = pgInfo.Labels[constant.MindIeAppTypeLabelKey]
 	return jobInfo
 }
 

@@ -12,19 +12,19 @@
    limitations under the License.
 */
 
-// Package busconfig business configuration service for grpc client
-package busconfig
+// Package config business configuration service for grpc client
+package config
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/config"
 )
 
@@ -59,10 +59,10 @@ func TestRankTableChange(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resent, convey.ShouldBeFalse)
 			publisher, _ := service.getPublisher(job1)
-			data, ok := <-publisher.rankTableChan
+			data, ok := <-publisher.sendChan
 			convey.So(ok, convey.ShouldBeTrue)
 			convey.So(data.RankTable, convey.ShouldEqual, rankTable)
-			close(publisher.rankTableChan)
+			close(publisher.sendChan)
 		})
 	})
 }
@@ -71,7 +71,8 @@ func TestRankTableChange(t *testing.T) {
 func TestRegister(t *testing.T) {
 	convey.Convey("test Register", t, func() {
 		service := fakeService()
-		service.configPublisher[job1] = NewConfigPublisher(job1, context.Background())
+		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
 		convey.Convey("01-publisher not exist, should register", func() {
 			req := &config.ClientInfo{
 				JobId: job2,
@@ -91,9 +92,6 @@ func TestSubscribeRankTable(t *testing.T) {
 			JobId: job1,
 			Role:  "",
 		}
-		patch := gomonkey.ApplyPrivateMethod(&ConfigPublisher{}, "listenRankTableChange",
-			func(*ConfigPublisher, config.Config_SubscribeRankTableServer) { return })
-		defer patch.Reset()
 		convey.Convey("01-publisher not exist, should return error", func() {
 			service := fakeService()
 			err := service.SubscribeRankTable(req, nil)
@@ -102,6 +100,9 @@ func TestSubscribeRankTable(t *testing.T) {
 		convey.Convey("02-subscribe rank table service success, should return nil", func() {
 			service := fakeService()
 			service.addPublisher(job1)
+			publisher, exist := service.getPublisher(job1)
+			convey.So(exist, convey.ShouldBeTrue)
+			close(publisher.sendChan)
 			err := service.SubscribeRankTable(req, &mockConfigSubscribeRankTableServer{})
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -115,7 +116,8 @@ func TestGetPublisher(t *testing.T) {
 		publisher, ok := service.getPublisher(job1)
 		convey.So(ok, convey.ShouldBeFalse)
 		convey.So(publisher, convey.ShouldBeNil)
-		service.configPublisher[job1] = NewConfigPublisher(job1, context.Background())
+		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
 		publisher, ok = service.getPublisher(job1)
 		convey.So(ok, convey.ShouldBeTrue)
 		convey.So(publisher, convey.ShouldNotBeNil)
@@ -126,7 +128,8 @@ func TestGetPublisher(t *testing.T) {
 func TestDeletePublisher(t *testing.T) {
 	convey.Convey("test deletePublisher", t, func() {
 		service := fakeService()
-		service.configPublisher[job1] = NewConfigPublisher(job1, context.Background())
+		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
 		service.deletePublisher(job1)
 		publisher, ok := service.getPublisher(job1)
 		convey.So(ok, convey.ShouldBeFalse)

@@ -182,3 +182,28 @@ const (
 	// ServerCountGroupId0Or1 server count group id 0 or 1
 	ServerCountGroupId0Or1 = "1"
 )
+
+const (
+	// RankTableDataType rankTable data type
+	RankTableDataType = "rankTable"
+	// FaultMsgDataType faultMsg data type
+	FaultMsgDataType = "faultMsg"
+	// FaultTypeSwitch Types of switch faults
+	FaultTypeSwitch = "Switch"
+	// HealthyLevel int value of Healthy state
+	HealthyLevel = 0
+	// SubHealthyLevel int value of SubHealthy state
+	SubHealthyLevel = 1
+	// UnHealthyLevel int value of UnHealthy state
+	UnHealthyLevel = 2
+	// SignalTypeNormal signal type that fault can be ignored or no fault has occurred
+	SignalTypeNormal = "normal"
+	// SignalTypeFault signal type that fault occur
+	SignalTypeFault = "fault"
+	// Comma comma
+	Comma = ","
+	// EmptyDeviceId device id for node or switch fault
+	EmptyDeviceId = "-1"
+	// FormatBase The base number used to convert int to string
+	FormatBase = 10
+)

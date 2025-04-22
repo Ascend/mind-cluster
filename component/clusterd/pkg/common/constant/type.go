@@ -134,10 +134,11 @@ type JobInfo struct {
 	MasterAddr        string
 	ResourceType      string
 	CustomJobID       string
-	// MindIeJobId is the job id of mindie acjob, unique identification of a reasoning task
-	MindIeJobId string
-	// MindIeAppType is the app type of mindie acjob, controller coordinator or server
-	MindIeAppType string
+	// MultiInstanceJobId is the job id of multi-instance acjob, unique identification of a reasoning task
+	MultiInstanceJobId string
+	// AppType is the app type of acjob
+	// for multi-instance job, the value is controller coordinator or server
+	AppType string
 }
 
 // RankTable rank table info
@@ -364,13 +365,26 @@ type FaultRank struct {
 	FaultCode   string
 	FaultLevel  string
 	DoStepRetry bool
+	DeviceId    string // This value will only be filled in when fault type is npu
 }
 
 // JobFaultInfo job fault rank info
 type JobFaultInfo struct {
 	JobId        string
 	FaultList    []FaultRank
+	FaultDevice  []FaultDevice
 	HealthyState string
+}
+
+// FaultDevice fault device  info
+type FaultDevice struct {
+	ServerName string
+	ServerSN   string
+	ServerId   string
+	DeviceId   string
+	FaultCode  string
+	FaultLevel string
+	DeviceType string
 }
 
 // FaultStrategy fault strategies

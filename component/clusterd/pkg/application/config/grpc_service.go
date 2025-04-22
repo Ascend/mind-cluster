@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package busconfig business configuration service for grpc client
-package busconfig
+// Package config business configuration service for grpc client
+package config
 
 import (
 	"context"
@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/epranktable"
 	"clusterd/pkg/interface/grpc/config"
@@ -35,7 +36,7 @@ const (
 // BusinessConfigServer business config server
 type BusinessConfigServer struct {
 	serviceCtx       context.Context
-	configPublisher  map[string]*ConfigPublisher
+	configPublisher  map[string]*ConfigPublisher[*config.RankTableStream]
 	rankTableManager *epranktable.RankTableManager
 	lock             sync.RWMutex
 	config.UnimplementedConfigServer
@@ -45,7 +46,7 @@ type BusinessConfigServer struct {
 func NewBusinessConfigServer(ctx context.Context) *BusinessConfigServer {
 	server := &BusinessConfigServer{
 		serviceCtx:      ctx,
-		configPublisher: make(map[string]*ConfigPublisher),
+		configPublisher: make(map[string]*ConfigPublisher[*config.RankTableStream]),
 		lock:            sync.RWMutex{},
 	}
 	server.rankTableManager = epranktable.GetEpGlobalRankTableManager()
@@ -60,7 +61,11 @@ func (c *BusinessConfigServer) rankTableChange(jobId, data string) (bool, error)
 		return true, errors.New("job not registered")
 	}
 	hwlog.RunLog.Infof("ranktable changed, jobId=%s", jobId)
-	if isSaved := publisher.SaveData(jobId, data); !isSaved {
+	rankTable := &config.RankTableStream{
+		JobId:     jobId,
+		RankTable: data,
+	}
+	if isSaved := publisher.SaveData(rankTable); !isSaved {
 		return true, errors.New("save data failed")
 	}
 	return false, nil
@@ -72,7 +77,7 @@ func (c *BusinessConfigServer) Register(ctx context.Context, req *config.ClientI
 		req.JobId, req.Role)
 	publisher, ok := c.getPublisher(req.JobId)
 	if ok && publisher != nil {
-		publisher.stop()
+		publisher.Stop()
 		for {
 			if _, ok = c.getPublisher(req.JobId); !ok {
 				break
@@ -98,12 +103,12 @@ func (c *BusinessConfigServer) SubscribeRankTable(request *config.ClientInfo,
 		JobId:     request.JobId,
 		Namespace: "",
 	})
-	publisher.listenRankTableChange(stream)
+	publisher.ListenDataChange(stream)
 	c.deletePublisher(request.JobId)
 	return nil
 }
 
-func (c *BusinessConfigServer) getPublisher(jobId string) (*ConfigPublisher, bool) {
+func (c *BusinessConfigServer) getPublisher(jobId string) (*ConfigPublisher[*config.RankTableStream], bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	publisher, ok := c.configPublisher[jobId]
@@ -119,6 +124,6 @@ func (c *BusinessConfigServer) deletePublisher(jobId string) {
 func (c *BusinessConfigServer) addPublisher(jobId string) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	publisher := NewConfigPublisher(jobId, c.serviceCtx)
+	publisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx, constant.RankTableDataType, nil)
 	c.configPublisher[jobId] = publisher
 }

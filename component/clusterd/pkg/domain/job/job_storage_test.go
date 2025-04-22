@@ -229,8 +229,8 @@ func TestNamespaceByJobIdAndAppType(t *testing.T) {
 		jobSummaryMap = sync.Map{}
 		convey.Convey("when jobId and appType match", func() {
 			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
-			jobInfo.MindIeJobId = jobUid1
-			jobInfo.MindIeAppType = constant.ControllerAppType
+			jobInfo.MultiInstanceJobId = jobUid1
+			jobInfo.AppType = constant.ControllerAppType
 			SaveJobCache(jobUid1, jobInfo)
 			defer DeleteJobCache(jobUid1)
 			namespace, err := GetNamespaceByJobIdAndAppType(jobUid1, constant.ControllerAppType)
@@ -250,8 +250,8 @@ func TestPdDeploymentMode(t *testing.T) {
 		jobSummaryMap = sync.Map{}
 		convey.Convey("when there is a server job with single node", func() {
 			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
-			jobInfo.MindIeJobId = jobUid1
-			jobInfo.MindIeAppType = constant.ServerAppType
+			jobInfo.MultiInstanceJobId = jobUid1
+			jobInfo.AppType = constant.ServerAppType
 			jobInfo.Replicas = 1
 			SaveJobCache(jobUid1, jobInfo)
 			defer DeleteJobCache(jobUid1)
@@ -261,8 +261,8 @@ func TestPdDeploymentMode(t *testing.T) {
 		})
 		convey.Convey("when there is a server job with cross node", func() {
 			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
-			jobInfo.MindIeJobId = jobUid1
-			jobInfo.MindIeAppType = constant.ServerAppType
+			jobInfo.MultiInstanceJobId = jobUid1
+			jobInfo.AppType = constant.ServerAppType
 			SaveJobCache(jobUid1, jobInfo)
 			defer DeleteJobCache(jobUid1)
 			mode, err := GetPdDeploymentMode(jobUid1, jobNameSpace, constant.ServerAppType)
@@ -282,8 +282,8 @@ func TestInstanceJobKey(t *testing.T) {
 		jobSummaryMap = sync.Map{}
 		convey.Convey("when jobId, namespace, and appType match", func() {
 			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
-			jobInfo.MindIeJobId = jobUid1
-			jobInfo.MindIeAppType = constant.ControllerAppType
+			jobInfo.MultiInstanceJobId = jobUid1
+			jobInfo.AppType = constant.ControllerAppType
 			SaveJobCache(jobUid1, jobInfo)
 			defer DeleteJobCache(jobUid1)
 			jobKey, err := GetInstanceJobKey(jobUid1, jobNameSpace, constant.ControllerAppType)
