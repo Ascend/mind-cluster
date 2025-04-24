@@ -110,6 +110,8 @@ const (
 	AssertionRecover = "recover"
 	// AssertionOccur occur fault assertion
 	AssertionOccur = "occur"
+	// AssertionOnce once fault assertion
+	AssertionOnce = "once"
 )
 
 // public fault type

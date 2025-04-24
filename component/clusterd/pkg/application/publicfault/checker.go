@@ -176,7 +176,7 @@ func (c *faultChecker) checkFaultTime() error {
 }
 
 func (c *faultChecker) checkAssertion() error {
-	var allowAssertions = []string{constant.AssertionOccur, constant.AssertionRecover}
+	var allowAssertions = []string{constant.AssertionOccur, constant.AssertionRecover, constant.AssertionOnce}
 	if !util.IsSliceContain(c.fault.Assertion, allowAssertions) {
 		return errors.New("invalid fault assertion")
 	}

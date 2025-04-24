@@ -131,6 +131,7 @@ func TestDealFault(t *testing.T) {
 	convey.Convey("test func dealFault when fault assertion is recover, fault existed", t, testFaultExisted)
 	convey.Convey("test func dealFault when fault assertion is recover. first recover, second occur", t, testRecoverOccur)
 	convey.Convey("test func dealFault when fault assertion is recover. first occur, second recover", t, testOccurRecover)
+	convey.Convey("test func dealFault when fault assertion is once", t, testOnce)
 }
 
 func testOccur() {
@@ -203,6 +204,28 @@ func testOccurRecover() {
 	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 1)
 	// fault recover ->
 	dealFault(constant.AssertionRecover, testNodeName1, faultKey1, faultCache)
+
+	// after 1s, fault still exists ->
+	time.Sleep(sec1)
+	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 1)
+	// will be deleted after 5s
+	time.Sleep(diffTime)
+	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 0)
+}
+
+func testOnce() {
+	resetFaultCache()
+	resetQueueCache()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		PubFaultNeedDelete.DealDelete(ctx)
+	}()
+	defer cancel()
+
+	// fault once ->
+	dealFault(constant.AssertionOnce, testNodeName1, faultKey1, faultCache)
+	// add to PubFaultCache ->
+	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 1)
 
 	// after 1s, fault still exists ->
 	time.Sleep(sec1)

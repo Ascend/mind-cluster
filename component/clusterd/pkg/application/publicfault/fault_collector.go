@@ -118,6 +118,15 @@ func dealFault(assertion, nodeName, faultKey string, newFault *constant.PubFault
 		// delete 'recover' after 5 seconds
 		deleteTime := addTime + diffTime
 		PubFaultNeedDelete.Push(deleteTime, nodeName, faultKey)
+	case constant.AssertionOnce:
+		if !faultExisted {
+			newFault.Assertion = constant.AssertionOccur
+			publicfault.PubFaultCache.AddPubFaultToCache(newFault, nodeName, faultKey)
+			// deal 'once' after 5 seconds
+			dealTime := time.Now().Unix() + diffTime
+			// push 'occur' to PubFaultNeedDelete
+			PubFaultNeedDelete.Push(dealTime, nodeName, faultKey)
+		}
 	default:
 		return
 	}
