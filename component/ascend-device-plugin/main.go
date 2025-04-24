@@ -76,7 +76,7 @@ var (
 	hotReset = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, "+
 		"1-train-online, 2-train-offline")
 	shareDevCount = flag.Uint("shareDevCount", 1, "share device function, enable the func by setting "+
-		"a value greater than 1, range is [1, 100], only support 310B")
+		"a value greater than 1, range is [1, 100], only support inference product")
 	linkdownTimeout = flag.Int64("linkdownTimeout", defaultLinkdownTimeout, "linkdown timeout duration, "+
 		", range [1, 30]")
 	dealWatchHandler = flag.Bool("dealWatchHandler", false,
