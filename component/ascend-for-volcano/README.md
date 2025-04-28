@@ -5,9 +5,7 @@
 
 基于开源Volcano调度的插件机制，增加昇腾处理器的亲和性调度，虚拟设备调度等特性，最大化发挥昇腾处理器计算性能。
 
-<h2 id="亲和性策略说明文档">亲和性策略说明</h2>
-
-## 昇腾910 AI处理器亲和性规则<a name="section14879332111413"></a>
+<h2 id="亲和性策略说明文档">亲和性策略说明（以昇腾910 AI处理器为例）</h2>
 
 昇腾910 AI处理器是华为研发的一款高性能AI处理器。其内部的处理器之间采用HCCS方式连接。每台物理设备具备8颗处理器，两个HCCS。每个HCCS存在4颗处理器，同一HCCS内处理器可做数据交换，不同HCCS内处理器不能通信，即同一Pod分配的昇腾910 AI处理器（若小于等于4）必须在同一个HCCS环内，否则任务运行失败。昇腾910 AI处理器的互联拓扑图如[图1](#fig997414281914)所示。
 
@@ -54,13 +52,6 @@
 <td class="cellrowborder" valign="top" width="69.57695769576956%" headers="mcps1.2.4.1.3 "><p id="p175701445129"><a name="p175701445129"></a><a name="p175701445129"></a>优先选择满足1~3条件的HCCS，然后选择剩余处理器数量为偶数的HCCS。</p>
 </td>
 </tr>
-<tr id="row15617913135"><td class="cellrowborder" valign="top" width="10.35103510351035%" headers="mcps1.2.4.1.1 "><p id="p4618141141310"><a name="p4618141141310"></a><a name="p4618141141310"></a>--</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.072007200720073%" headers="mcps1.2.4.1.2 "><p id="p13570104491211"><a name="p13570104491211"></a><a name="p13570104491211"></a>多节点支持原则</p>
-</td>
-<td class="cellrowborder" valign="top" width="69.57695769576956%" headers="mcps1.2.4.1.3 "><p id="p861812114139"><a name="p861812114139"></a><a name="p861812114139"></a>一次训练任务只支持8*N的方式分配。</p>
-</td>
-</tr>
 </tbody>
 </table>
 
@@ -70,10 +61,8 @@
 
 1.  当训练任务申请昇腾910 AI处理器数量不大于4个时，需要将所需的昇腾910 AI处理器调度到同一个HCCS内。
 2.  当训练任务申请的昇腾910 AI处理器数量为8个时，需要将节点的昇腾910 AI处理器分配给该任务。
-3.  当申请的NPU数量大于8个时，申请数量只能是8\*N（N\>=1）个。
-4.  当训练任务申请的昇腾910 AI处理器数量不大于8时，只能申请一个Pod。大于8则每个Pod为8个昇腾910 AI处理器。
-5.  当训练任务申请虚拟设备vNPU时，申请数量只能为1。
-6.  遵循Volcano开源部分的其他约束。
+3.  当训练任务申请虚拟设备vNPU时，申请数量只能为1。
+4.  遵循Volcano开源部分的其他约束。
 
 <h2 id="调度算法设计说明文档">调度算法设计说明</h2>
 
@@ -306,7 +295,7 @@
 
 -   确保PC机连接至互联网，并已完成Git和Docker的安装。参见[Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)，[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
 
--   已完成Go语言环境的安装（版本\>1.13，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
+-   已完成Go语言环境的安装（版本\>=1.21，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
 -   完成musl的安装（版本\>=1.2.0）。参见[http://musl.libc.org/](http://musl.libc.org/)。
 -   根据所在网络环境配置Go代理地址，国内可使用**Goproxy China**，例如：
 
@@ -319,7 +308,7 @@
 
 1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0（或v1.7.0）版本官方开源代码。
 
-   **cd** **$GOPATH/src/volcano.sh/**
+   **cd** **$GOPATH/src/volcano.sh/**\
    **git clone -b release-1.9 https://github.com/volcano-sh/volcano.git**
 
 2. 将代码目录“ascend-for-volcano“重命名为“ascend-volcano-plugin”拷贝至Volcano官方开源代码的插件路径下（“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
@@ -341,7 +330,7 @@
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row10210471506"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p5211747145012"><a name="p5211747145012"></a><a name="p5211747145012"></a>volcano-npu-<em id="i58081714114017"><a name="i58081714114017"></a><a name="i58081714114017"></a>{version}</em>.so</p>
+    <tbody><tr id="row10210471506"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p5211747145012"><a name="p5211747145012"></a><a name="p5211747145012"></a>volcano-npu_v6.0.0_linux-<em id="i58081714114017"><a name="i58081714114017"></a><a name="i58081714114017"></a>{arch}</em>.so</p>
     </td>
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p121447195011"><a name="p121447195011"></a><a name="p121447195011"></a>Volcano华为NPU调度插件动态链接库</p>
     </td>
@@ -374,5 +363,6 @@
     </tbody>
     </table>
 
-   >![](doc/figures/icon-note.gif) **说明：**
-   >_\{__version__\}_：表示版本号。
+   >![](doc/figures/icon-note.gif) **说明：**\
+   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0。\
+   > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。

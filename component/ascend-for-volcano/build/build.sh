@@ -26,7 +26,7 @@ fi
 
 echo "Build Version is ${BASE_VER}"
 
-DEFAULT_VER='v6.0.RC3'
+DEFAULT_VER='v6.0.0'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
 BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
