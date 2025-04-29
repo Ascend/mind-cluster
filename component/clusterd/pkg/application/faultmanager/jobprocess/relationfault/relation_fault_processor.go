@@ -45,7 +45,7 @@ func loadConfig() {
 
 type relationFaultProcessor struct {
 	faultJobs    map[string]*FaultJob
-	deviceInfoCm map[string]*constant.DeviceInfo
+	deviceInfoCm map[string]*constant.AdvanceDeviceFaultCm
 	switchInfoCm map[string]*constant.SwitchInfo
 	nodeInfoCm   map[string]*constant.NodeInfo
 }
@@ -71,7 +71,6 @@ func (processor *relationFaultProcessor) Process(info any) any {
 }
 
 func (processor *relationFaultProcessor) InitFaultJobs() {
-	deviceCmForNodeMap := faultdomain.GetAdvanceDeviceCmForNodeMap(processor.deviceInfoCm)
 	faultJobs := make(map[string]*FaultJob)
 	jobServerInfoMap := job.GetJobServerInfoMap()
 	for jobId, serverLists := range jobServerInfoMap.InfoMap {
@@ -85,11 +84,17 @@ func (processor *relationFaultProcessor) InitFaultJobs() {
 		}
 		tmpFaultJob.initFaultJobAttr()
 		for nodeName, serverList := range serverLists {
-			tmpFaultJob.IsA3Job = deviceCmForNodeMap[nodeName].SuperPodID >= 0
 			tmpFaultJob.PodNames[serverList.ServerName] = serverList.PodID
 			tmpFaultJob.NameSpace = serverList.PodNameSpace
-			tmpFaultJob.initBySwitchFault(processor.switchInfoCm[constant.SwitchInfoPrefix+nodeName], serverList)
-			tmpFaultJob.initByDeviceFault(deviceCmForNodeMap[nodeName], serverList)
+			switchInfo, ok := processor.switchInfoCm[constant.SwitchInfoPrefix+nodeName]
+			if ok {
+				tmpFaultJob.initBySwitchFault(switchInfo, serverList)
+			}
+			deviceInfo, ok := processor.deviceInfoCm[nodeName]
+			if ok {
+				tmpFaultJob.IsA3Job = deviceInfo.SuperPodID >= 0
+				tmpFaultJob.initByDeviceFault(deviceInfo, serverList)
+			}
 		}
 		faultJobs[jobId] = tmpFaultJob
 		hwlog.RunLog.Debugf("init fault job %v", util.ObjToString(faultJobs))
@@ -320,12 +325,12 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 	}
 }
 
-func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
+func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo *constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
 	if fJob.SeparateNodes.Has(serverList.ServerName) {
 		return
 	}
 	for _, deviceInfo := range serverList.DeviceList {
-		deviceName := nodeFaultInfo.ServerType + "-" + deviceInfo.DeviceID
+		deviceName := nodeFaultInfo.DeviceType + "-" + deviceInfo.DeviceID
 		fault, ok := nodeFaultInfo.FaultDeviceList[deviceName]
 		if !ok {
 			continue

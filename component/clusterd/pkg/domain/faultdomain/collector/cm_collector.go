@@ -8,9 +8,10 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/faultdomain"
 )
 
-var DeviceCmCollectBuffer *ConfigmapCollectBuffer[*constant.DeviceInfo]
+var DeviceCmCollectBuffer *ConfigmapCollectBuffer[*constant.AdvanceDeviceFaultCm]
 var NodeCmCollectBuffer *ConfigmapCollectBuffer[*constant.NodeInfo]
 var SwitchCmCollectBuffer *ConfigmapCollectBuffer[*constant.SwitchInfo]
 
@@ -21,10 +22,10 @@ type ConfigmapCollectBuffer[T constant.ConfigMapInterface] struct {
 }
 
 func init() {
-	DeviceCmCollectBuffer = &ConfigmapCollectBuffer[*constant.DeviceInfo]{
+	DeviceCmCollectBuffer = &ConfigmapCollectBuffer[*constant.AdvanceDeviceFaultCm]{
 		mutex:    sync.Mutex{},
-		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.DeviceInfo]),
-		lastItem: make(map[string]constant.InformerCmItem[*constant.DeviceInfo]),
+		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]),
+		lastItem: make(map[string]constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]),
 	}
 	NodeCmCollectBuffer = &ConfigmapCollectBuffer[*constant.NodeInfo]{
 		mutex:    sync.Mutex{},
@@ -86,7 +87,10 @@ func informerItemEqual[T constant.ConfigMapInterface](lastItem, newItem constant
 func informInfoUpdate(newInfo any, whichToInformer int, isAdd bool) {
 	switch whichToInformer {
 	case constant.DeviceProcessType:
-		DeviceCmCollectBuffer.Push(newInfo.(*constant.DeviceInfo), isAdd)
+		advanceFaultForNode :=
+			faultdomain.GetAdvanceFaultForNode(newInfo.(*constant.DeviceInfo)).(*constant.AdvanceDeviceFaultCm)
+		faultdomain.SortDataForAdvanceDeviceInfo(advanceFaultForNode)
+		DeviceCmCollectBuffer.Push(advanceFaultForNode, isAdd)
 	case constant.NodeProcessType:
 		NodeCmCollectBuffer.Push(newInfo.(*constant.NodeInfo), isAdd)
 	case constant.SwitchProcessType:

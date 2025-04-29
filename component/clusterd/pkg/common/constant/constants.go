@@ -80,7 +80,6 @@ const (
 	JobReportRecoverTimeout     = 10 * 1000
 	JobReportInfoExpiredTimeout = 10 * 1000
 	JobReportCompleteTimeout    = 30 * 1000
-	FaultCenterProcessPeriod    = 3 * 1000
 	MaxFaultCenterSubscriber    = 10
 	UnknownFaultTime            = -1
 )

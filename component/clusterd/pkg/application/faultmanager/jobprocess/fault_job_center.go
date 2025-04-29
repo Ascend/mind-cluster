@@ -4,8 +4,10 @@
 package jobprocess
 
 import (
-	"time"
+	"fmt"
+	"sync"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
@@ -16,26 +18,28 @@ import (
 var FaultJobCenter *faultJobProcessCenter
 
 type faultJobProcessCenter struct {
-	lastProcessTime int64
-	processorList   []constant.FaultProcessor
+	processorList        []constant.FaultProcessor
+	subscribeChannelList []*subscriber
+	mutex                sync.Mutex
+}
+
+type subscriber struct {
+	ch  chan map[string]constant.JobFaultInfo
+	src string
 }
 
 func init() {
 	FaultJobCenter = &faultJobProcessCenter{
-		lastProcessTime: 0,
 		processorList: []constant.FaultProcessor{
 			relationfault.RelationProcessor,
 			faultrank.JobFaultRankProcessor,
 		},
+		mutex:                sync.Mutex{},
+		subscribeChannelList: make([]*subscriber, 0),
 	}
 }
 
 func (fJobCenter *faultJobProcessCenter) Process() {
-	currentTime := time.Now().UnixMilli()
-	if fJobCenter.isProcessLimited(currentTime) {
-		return
-	}
-	fJobCenter.lastProcessTime = currentTime
 	content := constant.AllConfigmapContent{
 		DeviceCm: cmprocess.DeviceCenter.GetProcessedCm(),
 		SwitchCm: cmprocess.SwitchCenter.GetProcessedCm(),
@@ -44,8 +48,37 @@ func (fJobCenter *faultJobProcessCenter) Process() {
 	for _, processor := range fJobCenter.processorList {
 		processor.Process(content)
 	}
+	fJobCenter.notifySubscriber()
 }
 
-func (fJobCenter *faultJobProcessCenter) isProcessLimited(currentTime int64) bool {
-	return fJobCenter.lastProcessTime+constant.FaultCenterProcessPeriod > currentTime
+// Register notify chan
+func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.JobFaultInfo, src string) error {
+	if ch == nil {
+		return fmt.Errorf("invalid chanel for send")
+	}
+	fJobCenter.mutex.Lock()
+	defer fJobCenter.mutex.Unlock()
+	length := len(fJobCenter.subscribeChannelList)
+	if length > constant.MaxFaultCenterSubscriber {
+		return fmt.Errorf("the number of registrants is %d, cannot add any more", length)
+	}
+	fJobCenter.subscribeChannelList = append(fJobCenter.subscribeChannelList, &subscriber{
+		ch:  ch,
+		src: src,
+	})
+	return nil
+}
+
+func (fJobCenter *faultJobProcessCenter) notifySubscriber() {
+	faultRankInfos := faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(constant.NotHandleFault)
+	for _, sub := range fJobCenter.subscribeChannelList {
+		if sub.ch == nil {
+			continue
+		}
+		select {
+		case sub.ch <- faultRankInfos:
+		default:
+			hwlog.RunLog.Warnf("notify %s fault rank failed.", sub.src)
+		}
+	}
 }

@@ -6,6 +6,7 @@ package cmprocess
 import (
 	"testing"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
 )
@@ -14,6 +15,11 @@ type fakeProcessor struct{}
 
 func (f *fakeProcessor) Process(info any) any {
 	return info
+}
+
+func TestMain(m *testing.M) {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, nil)
+	m.Run()
 }
 
 func TestBaseFaultCenterProcess(t *testing.T) {

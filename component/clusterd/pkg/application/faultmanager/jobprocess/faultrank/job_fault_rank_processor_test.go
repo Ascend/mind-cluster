@@ -69,7 +69,11 @@ func TestFaultProcessorImplProcess(t *testing.T) {
 			mockKube.Reset()
 			mockJob.Reset()
 		}()
-		JobFaultRankProcessor.Process(constant.AllConfigmapContent{})
+		JobFaultRankProcessor.Process(constant.AllConfigmapContent{
+			DeviceCm: make(map[string]*constant.AdvanceDeviceFaultCm),
+			SwitchCm: make(map[string]*constant.SwitchInfo),
+			NodeCm:   make(map[string]*constant.NodeInfo),
+		})
 		faultRankInfos := JobFaultRankProcessor.GetJobFaultRankInfos()
 		if len(faultRankInfos[jobId].FaultList) != len(jobServerMap.InfoMap[jobId][nodeName].DeviceList) {
 			t.Error("TestFaultProcessorImplProcess fail")
@@ -172,9 +176,9 @@ func TestFindFaultRankForJob(t *testing.T) {
 
 func testNoDevicesOnNode(processor *jobRankFaultInfoProcessor) {
 	convey.Convey("When no devices on node", func() {
-		nodeDeviceInfoMap := map[string]constant.AdvanceDeviceFaultCm{
+		nodeDeviceInfoMap := map[string]*constant.AdvanceDeviceFaultCm{
 			"node1": {
-				ServerType:      "server-type",
+				DeviceType:      "server-type",
 				FaultDeviceList: map[string][]constant.DeviceFault{},
 			},
 		}
@@ -184,16 +188,17 @@ func testNoDevicesOnNode(processor *jobRankFaultInfoProcessor) {
 			},
 		}
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(
+			nodeDeviceInfoMap["node1"], "node1", serverList, "job1")
 		convey.So(faultRanks, convey.ShouldBeEmpty)
 	})
 }
 
 func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 	convey.Convey("When UCE fault in management plane", func() {
-		nodeDeviceInfoMap := map[string]constant.AdvanceDeviceFaultCm{
+		nodeDeviceInfoMap := map[string]*constant.AdvanceDeviceFaultCm{
 			"node1": {
-				ServerType: "server-type",
+				DeviceType: "server-type",
 				FaultDeviceList: map[string][]constant.DeviceFault{
 					"server-type-device1": {
 						{FaultCode: constant.UceFaultCode, FaultLevel: constant.RestartBusiness},
@@ -215,7 +220,8 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 			})
 		defer patches.Reset()
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(
+			nodeDeviceInfoMap["node1"], "node1", serverList, "job1")
 		convey.So(faultRanks, convey.ShouldHaveLength, 1)
 		convey.So(faultRanks[0].FaultCode, convey.ShouldEqual, constant.UceFaultCode)
 		convey.So(faultRanks[0].DoStepRetry, convey.ShouldBeTrue)
@@ -224,9 +230,9 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 
 func testUceInBusinessPlane(processor *jobRankFaultInfoProcessor) {
 	convey.Convey("When UCE fault in business plane", func() {
-		nodeDeviceInfoMap := map[string]constant.AdvanceDeviceFaultCm{
+		nodeDeviceInfoMap := map[string]*constant.AdvanceDeviceFaultCm{
 			"node1": {
-				ServerType:      "server-type",
+				DeviceType:      "server-type",
 				FaultDeviceList: map[string][]constant.DeviceFault{},
 			},
 		}
@@ -249,7 +255,8 @@ func testUceInBusinessPlane(processor *jobRankFaultInfoProcessor) {
 				return true
 			})
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(
+			nodeDeviceInfoMap["node1"], "node1", serverList, "job1")
 		convey.So(faultRanks, convey.ShouldHaveLength, 1)
 		convey.So(faultRanks[0].FaultCode, convey.ShouldEqual, constant.UceFaultCode)
 		convey.So(faultRanks[0].DoStepRetry, convey.ShouldBeTrue)

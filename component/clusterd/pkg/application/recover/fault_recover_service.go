@@ -6,6 +6,7 @@ package recover
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ type FaultRecoverService struct {
 	eventCtl          map[string]*EventController
 	initJob           map[string]common.JobBaseInfo
 	lock              sync.RWMutex
+	faultCh           chan map[string]constant.JobFaultInfo
 	pb.UnimplementedRecoverServer
 }
 
@@ -42,6 +44,10 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.serviceCtx = ctx
 	s.eventCtl = make(map[string]*EventController)
 	s.initJob = make(map[string]common.JobBaseInfo)
+	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
+	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(s).Name()); err != nil {
+		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
+	}
 	go s.checkFaultFromFaultCenter()
 	return s
 }
@@ -106,12 +112,7 @@ func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []constant.J
 	wg.Wait()
 }
 
-func (s *FaultRecoverService) checkFault() {
-	if faultmanager.GlobalFaultProcessCenter == nil {
-		hwlog.RunLog.Warnf("global center is nil, try it after %d second", globalFaultBeaconSecond)
-		return
-	}
-	allJobFaultInfo := faultmanager.QueryJobsFaultInfo(constant.NotHandleFault)
+func (s *FaultRecoverService) checkFault(allJobFaultInfo map[string]constant.JobFaultInfo) {
 	var registeredJobInfo []constant.JobFaultInfo
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		if !s.registered(jobId) {
@@ -126,15 +127,12 @@ func (s *FaultRecoverService) checkFault() {
 }
 
 func (s *FaultRecoverService) checkFaultFromFaultCenter() {
-	ticker := time.NewTicker(time.Duration(globalFaultBeaconSecond) * time.Second)
-	defer ticker.Stop()
 	for {
 		select {
 		case <-s.serviceCtx.Done():
 			return
-		case <-ticker.C:
-			hwlog.RunLog.Debug("ticker check npu fault from global center")
-			s.checkFault()
+		case allJobFaultInfo := <-s.faultCh:
+			s.checkFault(allJobFaultInfo)
 		}
 	}
 }

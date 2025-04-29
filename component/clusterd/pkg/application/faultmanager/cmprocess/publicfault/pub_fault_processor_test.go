@@ -4,11 +4,14 @@
 package publicfault
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/publicfault"
 )
@@ -49,8 +52,8 @@ func TestProcessor(t *testing.T) {
 
 func testNilCache() {
 	resetFaultCache()
-	ori := constant.OneConfigmapContent[*constant.DeviceInfo]{
-		AllConfigmap:    oriDevInfo1,
+	ori := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
+		AllConfigmap:    faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo1),
 		UpdateConfigmap: nil,
 	}
 	res := PubFaultProcessor.Process(ori)
@@ -67,25 +70,27 @@ func testInputInvalid() {
 func testNodeNameInvalid() {
 	resetFaultCache()
 	publicfault.PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName3, faultKey1)
-	content := constant.OneConfigmapContent[*constant.DeviceInfo]{
-		AllConfigmap:    oriDevInfo1,
+	content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
+		AllConfigmap:    faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo1),
 		UpdateConfigmap: nil,
 	}
-	exp := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.DeviceInfo])
+	exp := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
 	convey.So(content, convey.ShouldResemble, exp)
 }
 
 func testDiff() {
 	resetFaultCache()
 	publicfault.PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
-	content := constant.OneConfigmapContent[*constant.DeviceInfo]{
-		AllConfigmap:    oriDevInfo1,
+	content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
+		AllConfigmap:    faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo1),
 		UpdateConfigmap: nil,
 	}
-	resContent := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.DeviceInfo])
-	ori := faultdomain.GetAdvanceDeviceCmForNodeMap(resContent.AllConfigmap)
-	exp := faultdomain.GetAdvanceDeviceCmForNodeMap(expDeviceInfo1)
-	convey.So(ori, convey.ShouldResemble, exp)
+	resContent := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
+	sortDeviceFaultList(resContent.AllConfigmap)
+	want := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expDeviceInfo1)
+	sortDeviceFaultList(want)
+	result := resContent.AllConfigmap
+	convey.So(result, convey.ShouldResemble, want)
 }
 
 func testCommon() {
@@ -93,18 +98,37 @@ func testCommon() {
 	const card5 = 5
 	testCacheData.FaultDevIds = []int32{0, card5}
 	publicfault.PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName2, faultKey2)
-	content := constant.OneConfigmapContent[*constant.DeviceInfo]{
-		AllConfigmap:    oriDevInfo2,
+	content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
+		AllConfigmap:    faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo2),
 		UpdateConfigmap: nil,
 	}
-	resContent := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.DeviceInfo])
-	res := faultdomain.GetAdvanceDeviceCmForNodeMap(resContent.AllConfigmap)
-	exp := faultdomain.GetAdvanceDeviceCmForNodeMap(expDeviceInfo2)
-	convey.So(res, convey.ShouldResemble, exp)
+	resContent := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
+	hwlog.RunLog.Infof(util.ObjToString(resContent.AllConfigmap))
+	hwlog.RunLog.Infof(
+		util.ObjToString(faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expDeviceInfo2)))
+	sortDeviceFaultList(resContent.AllConfigmap)
+	result := resContent.AllConfigmap
+	want := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expDeviceInfo2)
+	sortDeviceFaultList(want)
+	convey.So(result, convey.ShouldResemble, want)
 }
 
 func resetFaultCache() {
 	for nodeName := range publicfault.PubFaultCache.GetPubFault() {
 		delete(publicfault.PubFaultCache.GetPubFault(), nodeName)
+	}
+}
+
+func sortDeviceFaultList(advanceFaultCm map[string]*constant.AdvanceDeviceFaultCm) {
+	for _, advanceDeviceCm := range advanceFaultCm {
+		for _, fault := range advanceDeviceCm.FaultDeviceList {
+			sort.Slice(fault, func(i, j int) bool {
+				return util.MakeDataHash(fault[i]) < util.MakeDataHash(fault[j])
+			})
+		}
+		sort.Strings(advanceDeviceCm.CardUnHealthy)
+		sort.Strings(advanceDeviceCm.NetworkUnhealthy)
+		sort.Strings(advanceDeviceCm.Recovering)
+		sort.Strings(advanceDeviceCm.AvailableDeviceList)
 	}
 }
