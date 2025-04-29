@@ -57,8 +57,8 @@ func NewBusinessConfigServer(ctx context.Context) *BusinessConfigServer {
 // rankTableChange The callback function when the rank table changes
 func (c *BusinessConfigServer) rankTableChange(jobId, data string) (bool, error) {
 	publisher, ok := c.getPublisher(jobId)
-	if !ok {
-		return true, errors.New("job not registered")
+	if !ok || !publisher.IsSubscribed() {
+		return true, errors.New("job not registered or not subscribed")
 	}
 	hwlog.RunLog.Infof("ranktable changed, jobId=%s", jobId)
 	rankTable := &config.RankTableStream{
@@ -75,17 +75,7 @@ func (c *BusinessConfigServer) rankTableChange(jobId, data string) (bool, error)
 func (c *BusinessConfigServer) Register(ctx context.Context, req *config.ClientInfo) (*config.Status, error) {
 	hwlog.RunLog.Infof("business config service receive Register request, jobId=%s, role=%s",
 		req.JobId, req.Role)
-	publisher, ok := c.getPublisher(req.JobId)
-	if ok && publisher != nil {
-		publisher.Stop()
-		for {
-			if _, ok = c.getPublisher(req.JobId); !ok {
-				break
-			}
-			time.Sleep(waitTime)
-		}
-	}
-	c.addPublisher(req.JobId)
+	c.preemptPublisher(req.JobId)
 	return &config.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
@@ -104,8 +94,22 @@ func (c *BusinessConfigServer) SubscribeRankTable(request *config.ClientInfo,
 		Namespace: "",
 	})
 	publisher.ListenDataChange(stream)
-	c.deletePublisher(request.JobId)
+	c.deletePublisher(request.JobId, publisher.GetCreateTime())
+	hwlog.RunLog.Infof("jobId=%s stop subscribe ranktable, createTime=%v",
+		request.JobId, publisher.GetCreateTime().UnixNano())
 	return nil
+}
+
+func (c *BusinessConfigServer) preemptPublisher(jobId string) *ConfigPublisher[*config.RankTableStream] {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	publisher, ok := c.configPublisher[jobId]
+	if ok && publisher != nil {
+		publisher.Stop()
+	}
+	newPublisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx, constant.RankTableDataType, nil)
+	c.configPublisher[jobId] = newPublisher
+	return newPublisher
 }
 
 func (c *BusinessConfigServer) getPublisher(jobId string) (*ConfigPublisher[*config.RankTableStream], bool) {
@@ -115,15 +119,19 @@ func (c *BusinessConfigServer) getPublisher(jobId string) (*ConfigPublisher[*con
 	return publisher, ok
 }
 
-func (c *BusinessConfigServer) deletePublisher(jobId string) {
+func (c *BusinessConfigServer) deletePublisher(jobId string, createTime time.Time) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	publisher, ok := c.configPublisher[jobId]
+	if !ok || publisher == nil || !createTime.Equal(publisher.GetCreateTime()) {
+		return
+	}
 	delete(c.configPublisher, jobId)
 }
 
 func (c *BusinessConfigServer) addPublisher(jobId string) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	publisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx, constant.RankTableDataType, nil)
 	c.configPublisher[jobId] = publisher
 }

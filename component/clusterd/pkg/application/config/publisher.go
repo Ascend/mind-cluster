@@ -17,18 +17,23 @@ package config
 
 import (
 	"context"
+	"io"
 	"sync"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/config"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
 const (
 	retryTimes     = 3
+	waitSendTime   = 3 * time.Second
 	chanBufferSize = 1000
 )
 
@@ -52,6 +57,8 @@ type ConfigPublisher[T signalType] struct {
 	ctxContext     context.Context
 	ctxCancelFunc  context.CancelFunc
 	serviceContext context.Context
+	isChanClosed   bool
+	createTime     time.Time
 	lock           sync.RWMutex
 }
 
@@ -66,6 +73,8 @@ func NewConfigPublisher[T signalType](jobId string, serviceCtx context.Context, 
 		subscribe:      false,
 		compareFunc:    compareFunc,
 		serviceContext: serviceCtx,
+		isChanClosed:   false,
+		createTime:     time.Now(),
 		lock:           sync.RWMutex{},
 	}
 	publisher.ctxContext, publisher.ctxCancelFunc = context.WithCancel(publisher.serviceContext)
@@ -73,7 +82,8 @@ func NewConfigPublisher[T signalType](jobId string, serviceCtx context.Context, 
 }
 
 func (c *ConfigPublisher[T]) ListenDataChange(stream grpcServerStreamType[T]) {
-	hwlog.RunLog.Infof("start listen a new %s sendChan, jobId=%s", c.dataType, c.jobId)
+	hwlog.RunLog.Infof("start listen a new %s sendChan, jobId=%s, createTime=%v",
+		c.dataType, c.jobId, c.createTime.UnixNano())
 	c.SetSubscribe(true)
 	for {
 		if !c.selectChanAndContext(stream) {
@@ -96,10 +106,11 @@ func (c *ConfigPublisher[T]) selectChanAndContext(stream grpcServerStreamType[T]
 			if c.compareFunc != nil && c.compareFunc(data, c.sentData) {
 				return true
 			}
-			if sendDataToClient(stream, data, c.jobId, c.dataType) {
+			sendSuccess, stillListen := sendDataToClient(stream, data, c.jobId, c.dataType)
+			if sendSuccess {
 				c.SetSentData(data)
 			}
-			return true
+			return stillListen
 		} else {
 			hwlog.RunLog.Warnf("%s sendChan closed, jobId=%s break listen sendChan", c.dataType, c.jobId)
 			return false
@@ -107,19 +118,50 @@ func (c *ConfigPublisher[T]) selectChanAndContext(stream grpcServerStreamType[T]
 	}
 }
 
-func sendDataToClient[T signalType](stream grpcServerStreamType[T], data T, jobId, dataType string) bool {
+func sendDataToClient[T signalType](stream grpcServerStreamType[T], data T, jobId, dataType string) (bool, bool) {
+	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
 	for i := 0; i < retryTimes; i++ {
-		err := stream.Send(data)
+		err := sendWithTimeout(stream, data)
 		if err == nil {
 			hwlog.RunLog.Infof("send %s success, jobId=%s", dataType, jobId)
-			return true
+			hwlog.RunLog.Debugf("send %s success, jobId=%s, data=%v", dataType, jobId, util.ObjToString(data))
+			return true, true
+		}
+		if err == io.EOF {
+			hwlog.RunLog.Warnf("send %s failed, client cancel connection, jobId=%s", dataType, jobId)
+			return false, false
 		}
 		hwlog.RunLog.Errorf("send %s failed, jobId=%s, error= %v", dataType, jobId, err)
-		if i < retryTimes-1 {
-			time.Sleep(time.Second)
+		if i >= retryTimes-1 {
+			break
+		}
+		timer.Reset(time.Second)
+		select {
+		case <-timer.C:
+			continue
+		case <-stream.Context().Done():
+			hwlog.RunLog.Warnf("stream is closed, do not send %s, jobId=%s", dataType, jobId)
+			return false, false
 		}
 	}
-	return false
+	return false, true
+}
+
+func sendWithTimeout[T signalType](stream grpcServerStreamType[T], data T) error {
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- stream.Send(data)
+	}()
+	timer := time.NewTimer(waitSendTime)
+	defer timer.Stop()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-timer.C:
+		return status.Error(codes.DeadlineExceeded, "send data timeout")
+	}
 }
 
 // SaveData save data to sendChan
@@ -143,10 +185,14 @@ func (c *ConfigPublisher[T]) Stop() {
 	hwlog.RunLog.Infof("jobId=%s enter %s stop function", c.jobId, c.dataType)
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	if c.isChanClosed {
+		return
+	}
 	if c.ctxCancelFunc != nil {
 		c.ctxCancelFunc()
 	}
 	close(c.sendChan)
+	c.isChanClosed = true
 }
 
 // SetSubscribe set subscribe when client subscribe to or unsubscribe from the service
@@ -182,4 +228,8 @@ func (c *ConfigPublisher[T]) GetSentChan() chan T {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return c.sendChan
+}
+
+func (c *ConfigPublisher[T]) GetCreateTime() time.Time {
+	return c.createTime
 }

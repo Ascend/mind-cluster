@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
@@ -59,15 +60,14 @@ func (s *FaultServer) Register(ctx context.Context, req *fault.ClientInfo) (*fau
 	hwlog.RunLog.Infof("fault service receive Register request, jobId=%s, role=%s",
 		req.JobId, req.Role)
 	publisher, ok := s.getPublisher(req.JobId)
-	if ok && publisher != nil {
-		return &fault.Status{Code: int32(common.OK), Info: "register success"}, nil
+	if !ok || publisher == nil {
+		code, err := s.preRegistry(req)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, preCheck err:%v", req.JobId, err)
+			return &fault.Status{Code: int32(code), Info: err.Error()}, err
+		}
 	}
-	code, err := s.preRegistry(req)
-	if err != nil {
-		hwlog.RunLog.Errorf("jobId=%s, preCheck err:%v", req.JobId, err)
-		return &fault.Status{Code: int32(code), Info: err.Error()}, err
-	}
-	s.addPublisher(req.JobId)
+	s.preemptPublisher(req.JobId)
 	return &fault.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
@@ -98,14 +98,27 @@ func (s *FaultServer) SubscribeFaultMsgSignal(request *fault.ClientInfo,
 	hwlog.RunLog.Infof("receive Subscribe fault message signal request, %s", requestInfo)
 	faultPublisher, exist := s.getPublisher(request.JobId)
 	if !exist || faultPublisher == nil {
+		hwlog.RunLog.Warnf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 		return fmt.Errorf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 	}
-	faultPublisher.Stop()
-	s.addPublisher(request.JobId)
-
-	faultPublisher, _ = s.getPublisher(request.JobId)
 	faultPublisher.ListenDataChange(stream)
+	s.deletePublisher(request.JobId, faultPublisher.GetCreateTime())
+	hwlog.RunLog.Infof("jobId=%s stop subscribe fault message signal, createTime=%v",
+		request.JobId, faultPublisher.GetCreateTime().UnixNano())
 	return nil
+}
+
+func (s *FaultServer) preemptPublisher(jobId string) *config.ConfigPublisher[*fault.FaultMsgSignal] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	publisher, ok := s.faultPublisher[jobId]
+	if ok && publisher != nil {
+		publisher.Stop()
+	}
+	newPublisher := config.NewConfigPublisher[*fault.FaultMsgSignal](jobId,
+		s.serviceCtx, constant.FaultMsgDataType, compareFaultMsg)
+	s.faultPublisher[jobId] = newPublisher
+	return newPublisher
 }
 
 func (s *FaultServer) getPublisher(jobId string) (*config.ConfigPublisher[*fault.FaultMsgSignal], bool) {
@@ -113,6 +126,16 @@ func (s *FaultServer) getPublisher(jobId string) (*config.ConfigPublisher[*fault
 	defer s.lock.RUnlock()
 	publisher, ok := s.faultPublisher[jobId]
 	return publisher, ok
+}
+
+func (s *FaultServer) deletePublisher(jobId string, createTime time.Time) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	publisher, ok := s.faultPublisher[jobId]
+	if !ok || publisher == nil || !createTime.Equal(publisher.GetCreateTime()) {
+		return
+	}
+	delete(s.faultPublisher, jobId)
 }
 
 func (s *FaultServer) addPublisher(jobId string) {

@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -50,15 +51,17 @@ func TestRankTableChange(t *testing.T) {
 			service := fakeService()
 			resent, err := service.rankTableChange(job1, rankTable)
 			convey.So(resent, convey.ShouldBeTrue)
-			convey.So(err, convey.ShouldResemble, errors.New("job not registered"))
+			convey.So(err, convey.ShouldResemble, errors.New("job not registered or not subscribed"))
 		})
 		convey.Convey("02-publisher exist, should save channel", func() {
 			service := fakeService()
 			service.addPublisher(job1)
+			publisher, _ := service.getPublisher(job1)
+			publisher.SetSubscribe(true)
 			resent, err := service.rankTableChange(job1, rankTable)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resent, convey.ShouldBeFalse)
-			publisher, _ := service.getPublisher(job1)
+			publisher, _ = service.getPublisher(job1)
 			data, ok := <-publisher.sendChan
 			convey.So(ok, convey.ShouldBeTrue)
 			convey.So(data.RankTable, convey.ShouldEqual, rankTable)
@@ -87,6 +90,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestSubscribeRankTable(t *testing.T) {
+	const sleepTime = 100 * time.Millisecond
 	convey.Convey("test rankTableChange", t, func() {
 		req := &config.ClientInfo{
 			JobId: job1,
@@ -100,9 +104,16 @@ func TestSubscribeRankTable(t *testing.T) {
 		convey.Convey("02-subscribe rank table service success, should return nil", func() {
 			service := fakeService()
 			service.addPublisher(job1)
-			publisher, exist := service.getPublisher(job1)
-			convey.So(exist, convey.ShouldBeTrue)
-			close(publisher.sendChan)
+			go func() {
+				for {
+					publisher, ok := service.getPublisher(job1)
+					if ok && publisher.IsSubscribed() {
+						publisher.Stop()
+						break
+					}
+					time.Sleep(sleepTime)
+				}
+			}()
 			err := service.SubscribeRankTable(req, &mockConfigSubscribeRankTableServer{})
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -128,9 +139,10 @@ func TestGetPublisher(t *testing.T) {
 func TestDeletePublisher(t *testing.T) {
 	convey.Convey("test deletePublisher", t, func() {
 		service := fakeService()
-		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+		publisher := NewConfigPublisher[*config.RankTableStream](job1,
 			context.Background(), constant.RankTableDataType, nil)
-		service.deletePublisher(job1)
+		service.configPublisher[job1] = publisher
+		service.deletePublisher(job1, publisher.GetCreateTime())
 		publisher, ok := service.getPublisher(job1)
 		convey.So(ok, convey.ShouldBeFalse)
 		convey.So(publisher, convey.ShouldBeNil)

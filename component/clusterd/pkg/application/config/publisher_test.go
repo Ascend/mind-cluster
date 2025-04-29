@@ -83,14 +83,14 @@ func TestSendRankTable(t *testing.T) {
 		convey.Convey("01-send data to client success", func() {
 			patch := gomonkey.ApplyMethodReturn(&mockConfigSubscribeRankTableServer{}, "Send", nil)
 			defer patch.Reset()
-			isSent := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
+			isSent, _ := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
 				job1, constant.RankTableDataType)
 			convey.So(isSent, convey.ShouldBeTrue)
 		})
 		convey.Convey("02-send data to client failed", func() {
 			patch := gomonkey.ApplyFuncReturn(time.Sleep)
 			defer patch.Reset()
-			isSent := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
+			isSent, _ := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
 				job1, constant.RankTableDataType)
 			convey.So(isSent, convey.ShouldBeFalse)
 		})
