@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/interface/grpc/config"
 )
 
@@ -33,9 +34,12 @@ const (
 type ConfigPublisher struct {
 	jobId          string
 	rankTableChan  chan *config.RankTableStream
+	subscribe      bool
 	ctxContext     context.Context
 	ctxCancelFunc  context.CancelFunc
 	serviceContext context.Context
+	isChanClosed   bool
+	createTime     time.Time
 	lock           sync.RWMutex
 }
 
@@ -44,7 +48,10 @@ func NewConfigPublisher(jobId string, serviceCtx context.Context) *ConfigPublish
 	publisher := &ConfigPublisher{
 		jobId:          jobId,
 		rankTableChan:  make(chan *config.RankTableStream, chanBufferSize),
+		subscribe:      false,
 		serviceContext: serviceCtx,
+		isChanClosed:   false,
+		createTime:     time.Now(),
 		lock:           sync.RWMutex{},
 	}
 	publisher.ctxContext, publisher.ctxCancelFunc = context.WithCancel(publisher.serviceContext)
@@ -52,12 +59,15 @@ func NewConfigPublisher(jobId string, serviceCtx context.Context) *ConfigPublish
 }
 
 func (c *ConfigPublisher) listenRankTableChange(stream config.Config_SubscribeRankTableServer) {
-	hwlog.RunLog.Infof("start listen a new rankTableChan, jobId=%s", c.jobId)
+	hwlog.RunLog.Infof("start listen a new rankTableChan, jobId=%s, createTime=%v",
+		c.jobId, c.createTime.UnixNano())
+	c.setSubscribe(true)
 	for {
 		if !c.selectChanAndContext(stream) {
 			break
 		}
 	}
+	c.setSubscribe(false)
 }
 
 func (c *ConfigPublisher) selectChanAndContext(stream config.Config_SubscribeRankTableServer) bool {
@@ -84,6 +94,7 @@ func sendRankTable(stream config.Config_SubscribeRankTableServer, data *config.R
 		err := stream.Send(data)
 		if err == nil {
 			hwlog.RunLog.Infof("send ranktable success, jobId=%s", data.JobId)
+			hwlog.RunLog.Debugf("send ranktable success, jobId=%s, data=%v", data.JobId, util.ObjToString(data))
 			return
 		}
 		hwlog.RunLog.Errorf("send ranktable failed, jobId=%s, error= %v", data.JobId, err)
@@ -116,8 +127,30 @@ func (c *ConfigPublisher) SaveData(jobId, data string) bool {
 
 func (c *ConfigPublisher) stop() {
 	hwlog.RunLog.Infof("jobId=%s enter publisher stop function", c.jobId)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if c.isChanClosed {
+		return
+	}
 	if c.ctxCancelFunc != nil {
 		c.ctxCancelFunc()
 	}
 	close(c.rankTableChan)
+	c.isChanClosed = true
+}
+
+func (c *ConfigPublisher) setSubscribe(isSubscribed bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.subscribe = isSubscribed
+}
+
+func (c *ConfigPublisher) isSubscribed() bool {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.subscribe
+}
+
+func (c *ConfigPublisher) getCreateTime() time.Time {
+	return c.createTime
 }

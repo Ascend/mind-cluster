@@ -50,20 +50,24 @@ func TestRankTableChange(t *testing.T) {
 			service := fakeService()
 			resent, err := service.rankTableChange(job1, rankTable)
 			convey.So(resent, convey.ShouldBeTrue)
-			convey.So(err, convey.ShouldResemble, errors.New("job not registered"))
+			convey.So(err, convey.ShouldResemble, errors.New("job not registered or not subscribed"))
 		})
 		convey.Convey("02-publisher exist, should save channel", func() {
 			service := fakeService()
 			service.addPublisher(job1)
+			publisher, _ := service.getPublisher(job1)
+			publisher.setSubscribe(true)
 			resent, err := service.rankTableChange(job1, rankTable)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resent, convey.ShouldBeFalse)
-			publisher, _ := service.getPublisher(job1)
+			publisher, _ = service.getPublisher(job1)
 			data, ok := <-publisher.rankTableChan
 			convey.So(ok, convey.ShouldBeTrue)
 			convey.So(data.RankTable, convey.ShouldEqual, rankTable)
 			close(publisher.rankTableChan)
 		})
+		data := &config.RankTableStream{}
+		hwlog.RunLog.Infof("send rank table success, data=%v", data)
 	})
 }
 
@@ -127,7 +131,8 @@ func TestDeletePublisher(t *testing.T) {
 	convey.Convey("test deletePublisher", t, func() {
 		service := fakeService()
 		service.configPublisher[job1] = NewConfigPublisher(job1, context.Background())
-		service.deletePublisher(job1)
+		publisher, _ := service.getPublisher(job1)
+		service.deletePublisher(job1, publisher.getCreateTime())
 		publisher, ok := service.getPublisher(job1)
 		convey.So(ok, convey.ShouldBeFalse)
 		convey.So(publisher, convey.ShouldBeNil)

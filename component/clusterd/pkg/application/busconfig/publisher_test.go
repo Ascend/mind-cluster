@@ -126,3 +126,12 @@ func TestStop(t *testing.T) {
 		convey.So(stopFunc, convey.ShouldPanic)
 	})
 }
+
+// TestSetSubscribeAndIsSubscribed for test setSubscribe and IsSubscribed
+func TestSetSubscribeAndIsSubscribed(t *testing.T) {
+	convey.Convey("test setSubscribe and IsSubscribed", t, func() {
+		publisher := fakePublisher()
+		publisher.setSubscribe(true)
+		convey.So(publisher.isSubscribed(), convey.ShouldBeTrue)
+	})
+}
