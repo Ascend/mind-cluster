@@ -301,3 +301,83 @@ func testFilterFaultLevel(processor *jobRankFaultInfoProcessor) {
 		convey.So(result["job1"].FaultList[0].FaultLevel, convey.ShouldEqual, "NoRestart")
 	})
 }
+
+func TestGetFaultDeviceInfo(t *testing.T) {
+	const nodeSN = "fakeNodeSN"
+	convey.Convey("Test GetFaultDeviceInfo by faultRank,nodeInfo and switchInfo", t, func() {
+		server := &constant.ServerHccl{
+			ServerName: nodeName,
+			ServerSN:   nodeSN,
+			ServerID:   "1",
+		}
+		testGetFautDeviceInfoByFaultRank(server, nodeSN)
+		testGetFaultDeviceInfoByNodeInfo(server, nodeSN)
+		testGetFaultDeviceInfoBySwitchInfo(server, nodeSN)
+	})
+}
+
+func testGetFautDeviceInfoByFaultRank(server *constant.ServerHccl, nodeSN string) {
+	convey.Convey("Test getFautDeviceInfoByFaultRank", func() {
+		faultRankList := []constant.FaultRank{
+			{FaultCode: "code1", FaultLevel: constant.RestartBusiness, DeviceId: "0"},
+		}
+		faultDeviceList := getFautDeviceInfoByFaultRank(server, faultRankList)
+		convey.So(faultDeviceList, convey.ShouldHaveLength, 1)
+		convey.So(faultDeviceList, convey.ShouldResemble, []constant.FaultDevice{
+			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: "0", FaultCode: "code1",
+				FaultLevel: constant.RestartBusiness, DeviceType: constant.FaultTypeNPU},
+		})
+	})
+}
+
+func testGetFaultDeviceInfoByNodeInfo(server *constant.ServerHccl, nodeSN string) {
+	fauleDeviceLen := 2
+	convey.Convey("Test getFaultDeviceInfoByNodeInfo", func() {
+		nodeInfo := &constant.NodeInfo{
+			NodeInfoNoName: constant.NodeInfoNoName{FaultDevList: []*constant.FaultDev{
+				{DeviceType: "CPU", DeviceId: 0, FaultCode: []string{"code1", "code2"},
+					FaultLevel: constant.PreSeparateFault},
+			}}}
+		faultDeviceList := getFaultDeviceInfoByNodeInfo(server, nodeInfo)
+		convey.So(faultDeviceList, convey.ShouldHaveLength, fauleDeviceLen)
+		convey.So(faultDeviceList, convey.ShouldResemble, []constant.FaultDevice{
+			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: "0", FaultCode: "code1",
+				FaultLevel: constant.PreSeparateFault, DeviceType: "CPU"},
+			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: "0", FaultCode: "code2",
+				FaultLevel: constant.PreSeparateFault, DeviceType: "CPU"},
+		})
+	})
+}
+
+func testGetFaultDeviceInfoBySwitchInfo(server *constant.ServerHccl, nodeSN string) {
+	convey.Convey("Test getFaultDeviceInfoBySwitchInfo", func() {
+		switchInfo := &constant.SwitchInfo{
+			SwitchFaultInfo: constant.SwitchFaultInfo{
+				FaultCode:  []string{"code1", "code2"},
+				FaultLevel: constant.PreSeparateFaultLevelStr,
+			},
+		}
+		faultDeviceList := getFaultDeviceInfoBySwitchInfo(server, switchInfo)
+		convey.So(faultDeviceList, convey.ShouldResemble, []constant.FaultDevice{
+			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: constant.EmptyDeviceId,
+				FaultCode:  "code1",
+				FaultLevel: constant.PreSeparateFaultLevelStr, DeviceType: constant.FaultTypeSwitch},
+			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: constant.EmptyDeviceId,
+				FaultCode:  "code2",
+				FaultLevel: constant.PreSeparateFaultLevelStr, DeviceType: constant.FaultTypeSwitch},
+		})
+	})
+}
+
+func TestGetFaultCodeByNodeInfo(t *testing.T) {
+	convey.Convey("Test getFaultCodeByNodeInfo", t, func() {
+		nodeInfo := &constant.NodeInfo{
+			NodeInfoNoName: constant.NodeInfoNoName{FaultDevList: []*constant.FaultDev{
+				{FaultCode: []string{"code1", "code2"}},
+				{FaultCode: []string{"code2", "code3"}},
+			}},
+		}
+		codeList := getFaultCodeByNodeInfo(nodeInfo)
+		convey.So(codeList, convey.ShouldResemble, []string{"code1", "code2", "code3"})
+	})
+}

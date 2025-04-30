@@ -50,11 +50,14 @@ func (s *FaultServer) checkPublishFault(allJobFaultInfo map[string]constant.JobF
 			hwlog.RunLog.Errorf("jobId=%s jobInfo is not found", jobId)
 			continue
 		}
-		jobFaultMap[jobId] = append(jobFaultMap[jobId], jobFaultInfo.FaultDevice...)
+		filterList := filterFault(jobFaultInfo.FaultDevice)
+		if len(filterList) == 0 {
+			continue
+		}
+		jobFaultMap[jobId] = append(jobFaultMap[jobId], filterList...)
 
 		if len(jobInfo.MultiInstanceJobId) > 0 {
-			jobFaultMap[jobInfo.MultiInstanceJobId] = append(jobFaultMap[jobInfo.MultiInstanceJobId],
-				jobFaultInfo.FaultDevice...)
+			jobFaultMap[jobInfo.MultiInstanceJobId] = append(jobFaultMap[jobInfo.MultiInstanceJobId], filterList...)
 		}
 	}
 	s.dealWithFaultInfoForMergedJob(jobFaultMap)
@@ -65,7 +68,7 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 	s.lock.Lock()
 	for targetJobId, faultPublisher := range s.faultPublisher {
 		if faultPublisher == nil || !faultPublisher.IsSubscribed() {
-			hwlog.RunLog.Errorf("jobId=%s not registered or subscribe fault service", targetJobId)
+			hwlog.RunLog.Debugf("jobId=%s not registered or subscribe fault service", targetJobId)
 			continue
 		}
 		jobPublisherMap[targetJobId] = faultPublisher
@@ -216,9 +219,9 @@ func getStateLevelByFaultLevel(faultLevel string) (string, int) {
 		return constant.HealthyState, constant.HealthyLevel
 	}
 	switch faultLevel {
-	case constant.NotHandleFault:
+	case constant.NotHandleFault, constant.NotHandleFaultLevelStr:
 		return constant.HealthyState, constant.HealthyLevel
-	case constant.SubHealthFault:
+	case constant.SubHealthFault, constant.PreSeparateFault, constant.PreSeparateFaultLevelStr:
 		return constant.SubHealthyState, constant.SubHealthyLevel
 	default:
 		return constant.UnHealthyState, constant.UnHealthyLevel
@@ -253,4 +256,19 @@ func compareFaultMsg(this, other *fault.FaultMsgSignal) bool {
 		return false
 	}
 	return proto.Equal(this, other)
+}
+
+func filterFault(faultDeviceList []constant.FaultDevice) []constant.FaultDevice {
+	if len(faultDeviceList) == 0 {
+		return nil
+	}
+	filteredList := make([]constant.FaultDevice, 0, len(faultDeviceList))
+	for _, faultDevice := range faultDeviceList {
+		if _, level := getStateLevelByFaultLevel(faultDevice.FaultLevel); level == constant.HealthyLevel {
+			hwlog.RunLog.Debugf("fileter fault device %v", faultDevice)
+			continue
+		}
+		filteredList = append(filteredList, faultDevice)
+	}
+	return filteredList
 }

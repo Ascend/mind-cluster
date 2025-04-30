@@ -175,6 +175,12 @@ const (
 	CardNetworkUnhealthy = "CardNetworkUnhealthy"
 	// SubHealthFault  sub healthy fault
 	SubHealthFault = "SubHealthFault"
+	// NotHandleFaultLevelStr NotHandle Fault Level Str
+	NotHandleFaultLevelStr = "NotHandle"
+	// PreSeparateFaultLevelStr PreSeparate Fault Level Str
+	PreSeparateFaultLevelStr = "PreSeparate"
+	// PreSeparateFault pre-separate fault
+	PreSeparateFault = "PreSeparateFault"
 )
 
 // support device type
