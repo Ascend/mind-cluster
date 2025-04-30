@@ -45,12 +45,12 @@ func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
 // Work faultProcessCenter work goroutine
 func (center *faultProcessCenter) Work(ctx context.Context) {
 	go func() {
-		hwlog.RunLog.Info("faultProcessCenter start work!")
+		hwlog.RunLog.Info("faultProcessCenter start work")
 		centerTicker := time.NewTicker(time.Second)
 		for {
 			select {
 			case <-ctx.Done():
-				hwlog.RunLog.Info("faultProcessCenter stop work!")
+				hwlog.RunLog.Info("faultProcessCenter stop work")
 				return
 			case whichToProcess := <-center.notifyProcessChan:
 				switch whichToProcess {
@@ -104,7 +104,7 @@ func QueryJobsFaultInfo(faultLevel string) map[string]constant.JobFaultInfo {
 }
 
 // QueryDeviceInfoToReport query device info to report
-func QueryDeviceInfoToReport() map[string]*constant.AdvanceDeviceFaultCm {
+func QueryDeviceInfoToReport() map[string]*constant.DeviceInfo {
 	infos := cmprocess.DeviceCenter.GetProcessedCm()
 	for _, info := range infos {
 		info.UpdateTime = time.Now().Unix()
@@ -147,9 +147,4 @@ func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, opera
 		return
 	}
 	publicfault.PubFaultCollector(newPubFaultInfo)
-}
-
-// RegisterForJobFaultRank register for job fault info
-func RegisterForJobFaultRank(ch chan map[string]constant.JobFaultInfo, src string) error {
-	return jobprocess.FaultJobCenter.Register(ch, src)
 }

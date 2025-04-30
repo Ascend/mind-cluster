@@ -53,107 +53,69 @@ func CmNameToNodeName(cmName string) string {
 	return strings.TrimPrefix(cmName, constant.DeviceInfoPrefix)
 }
 
-// GetAdvanceFaultCm return more usable fault cm, ONLY FOR TESTCASE
-func GetAdvanceFaultCm[U, T constant.ConfigMapInterface](
-	cmInfos map[string]T) map[string]U {
-	result := make(map[string]U)
-	for _, info := range cmInfos {
-		result[CmNameToNodeName(info.GetCmName())] = GetAdvanceFaultForNode(info).(U)
-	}
-	return result
+func nodeNameToCmName(nodeName string) string {
+	return constant.DeviceInfoPrefix + nodeName
 }
 
-// GetAdvanceFaultForNode return more usable fault cm for one node
-func GetAdvanceFaultForNode[T constant.ConfigMapInterface](cmForNode T) constant.ConfigMapInterface {
-	switch cm := any(cmForNode).(type) {
-	case *constant.DeviceInfo:
-		return GetAdvanceDeviceCm(cm)
-	case *constant.NodeInfo:
-		return cm
-	case *constant.SwitchInfo:
-		return cm
-	case *constant.AdvanceDeviceFaultCm:
-		return cm
-	default:
-		hwlog.RunLog.Errorf("cmForNode type is not support.")
-		return nil
+// GetAdvanceDeviceCmForNodeMap get advance device cm for node map
+func GetAdvanceDeviceCmForNodeMap(
+	deviceInfoCms map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
+	advanceDeviceCmForNodeMap := make(map[string]constant.AdvanceDeviceFaultCm)
+	for _, deviceInfo := range deviceInfoCms {
+		advanceDeviceCmForNodeMap[CmNameToNodeName(deviceInfo.CmName)] = GetAdvanceDeviceCm(deviceInfo)
 	}
+	return advanceDeviceCmForNodeMap
 }
 
-// GetAdvanceDeviceCm return more usable device cm
-func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) *constant.AdvanceDeviceFaultCm {
-	advanceDeviceCm := &constant.AdvanceDeviceFaultCm{
+// GetAdvanceDeviceCm deviceName->faults
+func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) constant.AdvanceDeviceFaultCm {
+	advanceDeviceCm := constant.AdvanceDeviceFaultCm{
 		CmName:      devInfo.CmName,
 		SuperPodID:  devInfo.SuperPodID,
 		ServerIndex: devInfo.ServerIndex,
 		UpdateTime:  devInfo.UpdateTime,
-		DeviceType:  GetDeviceType(devInfo),
+		ServerType:  GetDeviceType(devInfo),
 	}
-	advanceDeviceCm.FaultDeviceList = getFaultListInfo(devInfo)
-	advanceDeviceCm.NetworkUnhealthy = getNetworkUnhealthyCardList(devInfo)
-	advanceDeviceCm.CardUnHealthy = getCardUnHealthy(devInfo)
-	advanceDeviceCm.AvailableDeviceList = getAvailableDevices(devInfo)
-	advanceDeviceCm.Recovering = getRecoveringDevList(devInfo)
-	return advanceDeviceCm
-}
-
-func getFaultListInfo(devInfo *constant.DeviceInfo) map[string][]constant.DeviceFault {
-	_, faultList := getFaultListString(devInfo)
-	if len(faultList) == 0 {
-		hwlog.RunLog.Infof("get fault list for node %v failed. fault list does not exist", devInfo.CmName)
-		return make(map[string][]constant.DeviceFault)
-	}
-	var devicesFault []constant.DeviceFault
-	err := json.Unmarshal([]byte(faultList), &devicesFault)
-	if err != nil {
-		hwlog.RunLog.Errorf("get fault list for node %v failed. "+
-			"Json unmarshall exception: %v", devInfo.CmName, err)
-		return make(map[string][]constant.DeviceFault)
-	}
-	deviceFaultMap := make(map[string][]constant.DeviceFault)
-	for _, deviceFault := range devicesFault {
-		if _, ok := deviceFaultMap[deviceFault.NPUName]; !ok {
-			deviceFaultMap[deviceFault.NPUName] = make([]constant.DeviceFault, 0)
+	if faultList, ok := devInfo.DeviceList[GetFaultListKey(devInfo)]; ok {
+		var devicesFault []constant.DeviceFault
+		err := json.Unmarshal([]byte(faultList), &devicesFault)
+		if err != nil {
+			hwlog.RunLog.Errorf("get fault list for node %v failed. "+
+				"Json unmarshall exception: %v", devInfo.CmName, err)
+			return advanceDeviceCm
 		}
-		hwlog.RunLog.Debugf("device fault: %s of cm %s, time: %s",
-			util.ObjToString(deviceFault), devInfo.CmName, util.ReadableMsTime(devInfo.UpdateTime))
-		// device plugin may merge multiple fault codes in one string
-		deviceFaults := splitDeviceFault(deviceFault, CmNameToNodeName(devInfo.CmName))
-		deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
+		deviceFaultMap := make(map[string][]constant.DeviceFault)
+		for _, deviceFault := range devicesFault {
+			if _, ok := deviceFaultMap[deviceFault.NPUName]; !ok {
+				deviceFaultMap[deviceFault.NPUName] = make([]constant.DeviceFault, 0)
+			}
+			hwlog.RunLog.Debugf("device fault: %s of cm %s, time: %s",
+				util.ObjToString(deviceFault), devInfo.CmName, util.ReadableMsTime(devInfo.UpdateTime))
+			// device plugin may merge multiple fault codes in one string
+			deviceFaults := splitDeviceFault(deviceFault, CmNameToNodeName(devInfo.CmName))
+			deviceFaultMap[deviceFault.NPUName] = append(deviceFaultMap[deviceFault.NPUName], deviceFaults...)
+		}
+		advanceDeviceCm.FaultDeviceList = deviceFaultMap
+	} else {
+		hwlog.RunLog.Infof("get fault list for node %v failed. fault list does not exist", devInfo.CmName)
 	}
-	return deviceFaultMap
-}
-
-func getCardUnHealthy(devInfo *constant.DeviceInfo) []string {
-	_, info := getCardUnhealthyString(devInfo)
-	if len(info) == 0 {
-		return make([]string, 0)
+	if networkUnhealthyCardList, ok := devInfo.DeviceList[GetNetworkUnhealthyKey(devInfo)]; ok {
+		cardList := strings.Split(networkUnhealthyCardList, ",")
+		advanceDeviceCm.NetworkUnhealthy = cardList
+	} else {
+		hwlog.RunLog.Infof("get NetworkUnhealthy list for node %v failed. fault list does not exist",
+			devInfo.CmName)
 	}
-	return strings.Split(info, ",")
-}
-
-func getNetworkUnhealthyCardList(devInfo *constant.DeviceInfo) []string {
-	_, info := getNetworkUnhealthyString(devInfo)
-	if len(info) == 0 {
-		return make([]string, 0)
+	if cardUnhealthyCardList, ok := devInfo.DeviceList[GetCardUnhealthyKey(devInfo)]; ok {
+		var cardList []string
+		if len(cardUnhealthyCardList) == 0 {
+			cardList = make([]string, 0)
+		} else {
+			cardList = strings.Split(cardUnhealthyCardList, ",")
+		}
+		advanceDeviceCm.CardUnHealthy = cardList
 	}
-	return strings.Split(info, ",")
-}
-
-func getAvailableDevices(devInfo *constant.DeviceInfo) []string {
-	_, info := getAvailDevListString(devInfo)
-	if len(info) == 0 {
-		return make([]string, 0)
-	}
-	return strings.Split(info, ",")
-}
-
-func getRecoveringDevList(devInfo *constant.DeviceInfo) []string {
-	_, info := getRecoveringString(devInfo)
-	if len(info) == 0 {
-		return make([]string, 0)
-	}
-	return strings.Split(info, ",")
+	return advanceDeviceCm
 }
 
 // GetDeviceType get device type from device info
@@ -218,9 +180,7 @@ func splitDeviceFault(faultInfo constant.DeviceFault, nodeName string) []constan
 func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.DeviceFault, error) {
 	faultsGroupByType := faultsGroupByType(notGroupDeviceFaults)
 	result := make([]constant.DeviceFault, 0)
-	faultTypes := getSortedKeys(faultsGroupByType)
-	for _, faultType := range faultTypes {
-		faultsGroup := faultsGroupByType[faultType]
+	for _, faultsGroup := range faultsGroupByType {
 		deviceName := faultsGroup[0].NPUName
 		fautLevels := make([]string, 0)
 		newTimeAndLevelMap := make(map[string]constant.FaultTimeAndLevel, len(faultsGroup))
@@ -268,11 +228,7 @@ func DeleteFaultFromFaultMap(faultMap map[string][]constant.DeviceFault,
 		}
 		newDeviceFaults = append(newDeviceFaults, fault)
 	}
-	if len(newDeviceFaults) == 0 {
-		delete(faultMap, delFault.NPUName)
-	} else {
-		faultMap[delFault.NPUName] = newDeviceFaults
-	}
+	faultMap[delFault.NPUName] = newDeviceFaults
 	return faultMap
 }
 
@@ -300,77 +256,38 @@ func AddFaultIntoFaultMap(faultMap map[string][]constant.DeviceFault,
 	return faultMap
 }
 
-func AdvanceFaultMapToOriginalFaultMap[U, T constant.ConfigMapInterface](advanceFaultCm map[string]T) map[string]U {
-	orgFaultCm := make(map[string]U)
-	for _, advanceCmForNode := range advanceFaultCm {
-		orgFaultCm[advanceCmForNode.GetCmName()] = AdvanceCmToOriginalCm(advanceCmForNode).(U)
+// AdvanceDeviceCmForNodeMapToString convert advance device cm to original format
+func AdvanceDeviceCmForNodeMapToString(
+	advanceDeviceCm map[string]constant.AdvanceDeviceFaultCm, orgDeviceCm map[string]*constant.DeviceInfo) {
+	for nodeName, advanceCm := range advanceDeviceCm {
+		advanceCm = mergeCodeAndRemoveUnhealthy(advanceCm)
+		cmName := nodeNameToCmName(nodeName)
+		deviceInfo, found := orgDeviceCm[cmName]
+		if !found {
+			continue
+		}
+		faultListKey := GetFaultListKey(deviceInfo)
+		if faultListKey != "" {
+			orgDeviceCm[cmName].DeviceList[faultListKey] =
+				util.ObjToString(faultMapToFaultList(advanceCm.FaultDeviceList))
+		}
+
+		networkUnhealthyKey := GetNetworkUnhealthyKey(deviceInfo)
+		if networkUnhealthyKey != "" {
+			orgDeviceCm[cmName].DeviceList[networkUnhealthyKey] = strings.Join(advanceCm.NetworkUnhealthy, ",")
+		}
+
+		cardUnhealthyKey := GetCardUnhealthyKey(deviceInfo)
+		if cardUnhealthyKey != "" {
+			orgDeviceCm[cmName].DeviceList[cardUnhealthyKey] = strings.Join(advanceCm.CardUnHealthy, ",")
+		}
 	}
-	return orgFaultCm
-}
-
-func AdvanceCmToOriginalCm[T constant.ConfigMapInterface](advanceCmForNode T) constant.ConfigMapInterface {
-	switch cm := any(advanceCmForNode).(type) {
-	case *constant.AdvanceDeviceFaultCm:
-		return AdvanceDevCmToOrigCm(cm)
-	case *constant.SwitchInfo:
-		return cm
-	case *constant.NodeInfo:
-		return cm
-	default:
-		hwlog.RunLog.Errorf("AdvanceFaultCmToOriginalCmForNode don't support this type.")
-		return nil
-	}
-}
-
-// AdvanceDevCmToOrigCm convert advance device cm to original format
-func AdvanceDevCmToOrigCm(advanceDeviceCm *constant.AdvanceDeviceFaultCm) *constant.DeviceInfo {
-	orgDeviceCm := &constant.DeviceInfo{
-		DeviceInfoNoName: constant.DeviceInfoNoName{
-			DeviceList: make(map[string]string),
-			UpdateTime: advanceDeviceCm.UpdateTime,
-		},
-		CmName:      advanceDeviceCm.CmName,
-		SuperPodID:  advanceDeviceCm.SuperPodID,
-		ServerIndex: advanceDeviceCm.ServerIndex,
-	}
-
-	FixUnhealthyInfo(advanceDeviceCm)
-	mergeCode(advanceDeviceCm)
-
-	orgDeviceCm.DeviceList[advanceDeviceCm.GetFaultDeviceListKey()] =
-		util.ObjToString(faultMapToFaultList(advanceDeviceCm.FaultDeviceList))
-
-	orgDeviceCm.DeviceList[advanceDeviceCm.GetNetworkUnhealthyKey()] = ""
-	if len(advanceDeviceCm.NetworkUnhealthy) > 0 {
-		orgDeviceCm.DeviceList[advanceDeviceCm.GetNetworkUnhealthyKey()] =
-			strings.Join(advanceDeviceCm.NetworkUnhealthy, ",")
-	}
-
-	orgDeviceCm.DeviceList[advanceDeviceCm.GetCardUnHealthyKey()] = ""
-	if len(advanceDeviceCm.CardUnHealthy) > 0 {
-		orgDeviceCm.DeviceList[advanceDeviceCm.GetCardUnHealthyKey()] =
-			strings.Join(advanceDeviceCm.CardUnHealthy, ",")
-	}
-
-	orgDeviceCm.DeviceList[advanceDeviceCm.GetRecoveringKey()] = ""
-	if len(advanceDeviceCm.Recovering) > 0 {
-		orgDeviceCm.DeviceList[advanceDeviceCm.GetRecoveringKey()] =
-			strings.Join(advanceDeviceCm.Recovering, ",")
-	}
-
-	orgDeviceCm.DeviceList[advanceDeviceCm.GetAvailableDeviceListKey()] = ""
-	if len(advanceDeviceCm.AvailableDeviceList) > 0 {
-		orgDeviceCm.DeviceList[advanceDeviceCm.GetAvailableDeviceListKey()] =
-			strings.Join(advanceDeviceCm.AvailableDeviceList, ",")
-	}
-	return orgDeviceCm
 }
 
 func faultMapToFaultList(deviceFaultMap map[string][]constant.DeviceFault) []constant.DeviceFault {
 	deviceFaultList := make([]constant.DeviceFault, 0)
-	deviceNames := getSortedKeys(deviceFaultMap)
-	for _, deviceName := range deviceNames {
-		deviceFaultList = append(deviceFaultList, deviceFaultMap[deviceName]...)
+	for _, faultList := range deviceFaultMap {
+		deviceFaultList = append(deviceFaultList, faultList...)
 	}
 	return deviceFaultList
 }
@@ -396,8 +313,17 @@ func isFaultDeletable(faults []constant.DeviceFault, faultTypes []string, faultL
 	return true
 }
 
-func mergeCode(advanceDeviceCm *constant.AdvanceDeviceFaultCm) {
+func mergeCodeAndRemoveUnhealthy(advanceDeviceCm constant.AdvanceDeviceFaultCm) constant.AdvanceDeviceFaultCm {
 	for deviceName, faults := range advanceDeviceCm.FaultDeviceList {
+		deletableFaultLevels := []string{constant.NotHandleFault, constant.SubHealthFault}
+		if isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
+			advanceDeviceCm.CardUnHealthy = util.DeleteStringSliceItem(advanceDeviceCm.CardUnHealthy, deviceName)
+			hwlog.RunLog.Debugf("remove device %s from CardUnHealthy", deviceName)
+		}
+		if isFaultDeletable(faults, []string{constant.CardNetworkUnhealthy}, deletableFaultLevels) {
+			advanceDeviceCm.NetworkUnhealthy = util.DeleteStringSliceItem(advanceDeviceCm.NetworkUnhealthy, deviceName)
+			hwlog.RunLog.Debugf("remove device %s from NetworkUnhealthy", deviceName)
+		}
 		if len(faults) == 0 {
 			continue
 		}
@@ -408,56 +334,99 @@ func mergeCode(advanceDeviceCm *constant.AdvanceDeviceFaultCm) {
 		}
 		advanceDeviceCm.FaultDeviceList[deviceName] = mergedFaults
 	}
+	return advanceDeviceCm
 }
 
-// FixUnhealthyInfo fix the CardUnHealthy/NetworkUnhealthy/AvailableDevice list
-func FixUnhealthyInfo(advanceDeviceCm *constant.AdvanceDeviceFaultCm) {
-	newCardUnHealthy := make([]string, 0)
-	newNetworkUnhealthy := make([]string, 0)
-	availableDeviceList := advanceDeviceCm.AvailableDeviceList
-	for deviceName, faults := range advanceDeviceCm.FaultDeviceList {
-		deletableFaultLevels := []string{constant.NotHandleFault, constant.SubHealthFault}
-		if !isFaultDeletable(faults, []string{constant.CardUnhealthy, constant.PublicFaultType}, deletableFaultLevels) {
-			newCardUnHealthy = append(newCardUnHealthy, deviceName)
-			availableDeviceList = util.DeleteStringSliceItem(availableDeviceList, deviceName)
-		}
-		if !isFaultDeletable(faults, []string{constant.CardNetworkUnhealthy}, deletableFaultLevels) {
-			newNetworkUnhealthy = append(newNetworkUnhealthy, deviceName)
-			availableDeviceList = util.DeleteStringSliceItem(availableDeviceList, deviceName)
+// GetFaultListKey get FaultList key in DeviceInfo
+func GetFaultListKey(devInfo *constant.DeviceInfo) string {
+	for key, _ := range devInfo.DeviceList {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-Fault") {
+			return key
 		}
 	}
-	advanceDeviceCm.CardUnHealthy = newCardUnHealthy
-	advanceDeviceCm.NetworkUnhealthy = newNetworkUnhealthy
-	advanceDeviceCm.AvailableDeviceList = availableDeviceList
+	return ""
 }
 
-func getNetworkUnhealthyString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmCardNetworkUnhealthySuffix
-	return key, devInfo.DeviceList[key]
+// GetNetworkUnhealthyKey get networkUnhealthy key in DeviceInfo
+func GetNetworkUnhealthyKey(devInfo *constant.DeviceInfo) string {
+	for key, _ := range devInfo.DeviceList {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-NetworkUnhealthy") {
+			return key
+		}
+	}
+	return ""
 }
 
-func getCardUnhealthyString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmCardUnhealthySuffix
-	return key, devInfo.DeviceList[key]
+// GetCardUnhealthyKey get CardUnhealthy key in DeviceInfo
+func GetCardUnhealthyKey(devInfo *constant.DeviceInfo) string {
+	for key, _ := range devInfo.DeviceList {
+		if strings.Contains(key, constant.NPUPreName) && strings.Contains(key, "-Unhealthy") {
+			return key
+		}
+	}
+	return ""
 }
 
-func getRecoveringString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmRecoveringSuffix
-	return key, devInfo.DeviceList[key]
+// GetFaultListInfo get fault list info
+func GetFaultListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
+	for faultKey, faultInfo := range devCMInfo.DeviceList {
+		if strings.Contains(faultKey, constant.NPUPreName) && strings.Contains(faultKey, "-Fault") {
+			return faultKey, faultInfo
+		}
+	}
+	return "", ""
 }
 
-func getFaultListString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmFaultListSuffix
-	return key, devInfo.DeviceList[key]
-}
-
-func getAvailDevListString(devCMInfo *constant.DeviceInfo) (string, string) {
+// GetAvailDevListInfo get available device list info
+func GetAvailDevListInfo(devCMInfo *constant.DeviceInfo) (string, string) {
 	availKey := api.ResourceNamePrefix + GetDeviceType(devCMInfo)
 	availDevList, ok := devCMInfo.DeviceList[availKey]
 	if !ok {
 		return "", ""
 	}
 	return availKey, availDevList
+}
+
+// DelDevFromAvailList delete device from available device list
+func DelDevFromAvailList(devCMInfo *constant.DeviceInfo, npuNames []string) {
+	availKey, availList := GetAvailDevListInfo(devCMInfo)
+	if len(availList) == 0 {
+		return
+	}
+	splitList := strings.Split(availList, ",")
+	for _, npuName := range npuNames {
+		splitList = util.DeleteStringSliceItem(splitList, npuName)
+	}
+	devCMInfo.DeviceList[availKey] = strings.Join(splitList, ",")
+	return
+}
+
+// GetUnhealthyListInfo get unhealthy list info
+func GetUnhealthyListInfo(devCMInfo *constant.DeviceInfo) (string, []string) {
+	for unHealthyKey, unHealthyCards := range devCMInfo.DeviceList {
+		if strings.Contains(unHealthyKey, constant.NPUPreName) && strings.Contains(unHealthyKey, "-Unhealthy") {
+			var cardList []string
+			if len(unHealthyCards) == 0 {
+				cardList = make([]string, 0)
+			} else {
+				cardList = strings.Split(unHealthyCards, ",")
+			}
+			return unHealthyKey, cardList
+		}
+	}
+	return "", []string{}
+}
+
+// AddDevFromUnhealthyList add device from unhealthy list
+func AddDevFromUnhealthyList(devCMInfo *constant.DeviceInfo, npuNames []string) {
+	unHealthyKey, unHealthyList := GetUnhealthyListInfo(devCMInfo)
+	for _, npuName := range npuNames {
+		if !util.IsSliceContain(npuName, unHealthyList) {
+			unHealthyList = append(unHealthyList, npuName)
+		}
+	}
+	sort.Strings(unHealthyList)
+	devCMInfo.DeviceList[unHealthyKey] = strings.Join(unHealthyList, ",")
 }
 
 // IsUceFault check faultCode is uce
@@ -568,70 +537,4 @@ func ValidBusinessRecoverTime(recoverTime int64) bool {
 // ValidBusinessUceReportInfo check ReportInfo is valid
 func ValidBusinessUceReportInfo(info *constant.ReportInfo) bool {
 	return ValidBusinessRecoverTime(info.RecoverTime)
-}
-
-// SortDataForAdvanceDeviceInfo sort the field of deviceInfo
-func SortDataForAdvanceDeviceInfo(deviceInfo *constant.AdvanceDeviceFaultCm) {
-	sort.Strings(deviceInfo.AvailableDeviceList)
-	sort.Strings(deviceInfo.CardUnHealthy)
-	sort.Strings(deviceInfo.NetworkUnhealthy)
-	sort.Strings(deviceInfo.Recovering)
-	for _, faultList := range deviceInfo.FaultDeviceList {
-		sort.Slice(faultList, func(i, j int) bool {
-			if compareDeviceFault(faultList[i], faultList[j]) <= 0 {
-				return true
-			}
-			return false
-		})
-	}
-}
-
-func compareDeviceFault(a, b constant.DeviceFault) int {
-	if res := strings.Compare(a.FaultType, b.FaultType); res != 0 {
-		return res
-	}
-	if res := strings.Compare(a.NPUName, b.NPUName); res != 0 {
-		return res
-	}
-	if res := strings.Compare(a.LargeModelFaultLevel, b.LargeModelFaultLevel); res != 0 {
-		return res
-	}
-	if res := strings.Compare(a.FaultLevel, b.FaultLevel); res != 0 {
-		return res
-	}
-	if res := strings.Compare(a.FaultHandling, b.FaultHandling); res != 0 {
-		return res
-	}
-	if res := strings.Compare(a.FaultCode, b.FaultCode); res != 0 {
-		return res
-	}
-	keysA := getSortedKeys(a.FaultTimeAndLevelMap)
-	keysB := getSortedKeys(b.FaultTimeAndLevelMap)
-	for i := 0; i < len(keysA); i++ {
-		if cmp := strings.Compare(keysA[i], keysB[i]); cmp != 0 {
-			return cmp
-		}
-		valA := a.FaultTimeAndLevelMap[keysA[i]]
-		valB := b.FaultTimeAndLevelMap[keysB[i]]
-		if cmp := compareFaultTimeAndLevel(valA, valB); cmp != 0 {
-			return cmp
-		}
-	}
-	return 0
-}
-
-func compareFaultTimeAndLevel(a, b constant.FaultTimeAndLevel) int {
-	if res := a.FaultTime - b.FaultTime; res != 0 {
-		return int(res)
-	}
-	return strings.Compare(a.FaultLevel, b.FaultLevel)
-}
-
-func getSortedKeys[T any](m map[string]T) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }

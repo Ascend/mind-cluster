@@ -289,7 +289,7 @@ func TestUceFaultProcessorGetUceDeviceOfNodes(t *testing.T) {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
-		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
+		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		deviceOfNodes := UceProcessor.getUceDeviceOfNodes()
 		if !reflect.DeepEqual(deviceOfNodes, uceNodesInfos) {
 			t.Errorf("getUceDeviceOfNodes() = %v, want %v",
@@ -306,7 +306,7 @@ func TestUceFaultProcessorGetUceDevicesForUceTolerateJobs(t *testing.T) {
 		}
 
 		UceProcessor.jobServerInfoMap = jobServerInfoMap
-		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
+		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		UceProcessor.uceDeviceOfNode = UceProcessor.getUceDeviceOfNodes()
 		UceProcessor.uceDevicesOfUceJob = UceProcessor.getUceDevicesForUceTolerateJobs()
 		if !reflect.DeepEqual(UceProcessor.uceDevicesOfUceJob, expectUceJobsInfo) {
@@ -324,15 +324,16 @@ func TestUceFaultProcessorProcessUceFaultInfo(t *testing.T) {
 		}
 
 		UceProcessor.jobServerInfoMap = jobServerInfoMap
-		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
+		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		UceProcessor.uceDeviceOfNode = UceProcessor.getUceDeviceOfNodes()
 		UceProcessor.uceDevicesOfUceJob = UceProcessor.getUceDevicesForUceTolerateJobs()
 		currentTime := 109 * time.Second.Milliseconds()
 		UceProcessor.processUceFaultInfo(currentTime)
-		result := UceProcessor.nodeDeviceCmMap
-		want := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expectProcessedDeviceInfos)
+		faultdomain.AdvanceDeviceCmForNodeMapToString(UceProcessor.nodeDeviceCmMap, cmDeviceInfos)
+		result := faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
+		want := faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)
 		if !reflect.DeepEqual(result, want) {
-			t.Errorf("result:\n%v\n\nwant:\n%v",
+			t.Errorf("processUceFaultInfo() = %v, want %v",
 				util.ObjToString(result), util.ObjToString(want))
 		}
 	})
@@ -348,15 +349,16 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 		collector.ReportInfoCollector = reportInfos
 
 		UceProcessor.jobServerInfoMap = jobServerInfoMap
-		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
+		UceProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		UceProcessor.uceDeviceOfNode = UceProcessor.getUceDeviceOfNodes()
 		UceProcessor.uceDevicesOfUceJob = UceProcessor.getUceDevicesForUceTolerateJobs()
 		currentTime := 100 * time.Second.Milliseconds()
 		UceProcessor.processUceFaultInfo(currentTime)
-		result := UceProcessor.nodeDeviceCmMap
-		want := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expectProcessedDeviceInfos)
+		faultdomain.AdvanceDeviceCmForNodeMapToString(UceProcessor.nodeDeviceCmMap, cmDeviceInfos)
+		result := faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
+		want := faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)
 		if !reflect.DeepEqual(result, want) {
-			t.Errorf("processUceFaultInfo() = %v, \n\nwant %v",
+			t.Errorf("processUceFaultInfo() = %v, want %v",
 				util.ObjToString(result), util.ObjToString(want))
 		}
 	})
@@ -364,14 +366,14 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 
 func TestUceFaultProcessorScenario2(t *testing.T) {
 	t.Run("TestUceFaultProcessorScenario2", func(t *testing.T) {
-		cmDeviceInfos, expProcessedDeviceInfos, jobServerInfoMap, reportInfos, testFileErr :=
+		cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfoMap, reportInfos, testFileErr :=
 			readObjectFromUceScenarioTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
-		content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
-			AllConfigmap: faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos),
-			UpdateConfigmap: []constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]{
+		content := constant.OneConfigmapContent[*constant.DeviceInfo]{
+			AllConfigmap: cmDeviceInfos,
+			UpdateConfigmap: []constant.InformerCmItem[*constant.DeviceInfo]{
 				{
 					IsAdd: false,
 					Data:  nil},
@@ -394,9 +396,9 @@ func TestUceFaultProcessorScenario2(t *testing.T) {
 			mockUnixMilli.Reset()
 		}()
 
-		resultContent := UceProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
-		result := resultContent.AllConfigmap
-		want := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expProcessedDeviceInfos)
+		resultContent := UceProcessor.Process(content).(constant.OneConfigmapContent[*constant.DeviceInfo])
+		result := faultdomain.GetAdvanceDeviceCmForNodeMap(resultContent.AllConfigmap)
+		want := faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)
 		if !reflect.DeepEqual(result, want) {
 			t.Errorf("processUceFaultInfo() = %v, want %v",
 				util.ObjToString(result), util.ObjToString(want))

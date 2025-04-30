@@ -6,26 +6,36 @@ package fault
 import (
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
+const (
+	publishFaultInterval = 1
+)
+
 func (s *FaultServer) checkFaultFromFaultCenter() {
+	ticker := time.NewTicker(time.Duration(publishFaultInterval) * time.Second)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-s.serviceCtx.Done():
 			return
-		case allJobFaultInfo, ok := <-s.faultCh:
-			if !ok {
-				hwlog.RunLog.Info("faultCh has been closed.")
+		case <-ticker.C:
+			hwlog.RunLog.Debug("ticker publish fault from global center")
+			if faultmanager.GlobalFaultProcessCenter == nil {
+				hwlog.RunLog.Warnf("global center is nil, try it after %d second", publishFaultInterval)
 				return
 			}
+			allJobFaultInfo := faultmanager.QueryJobsFaultInfo(constant.NotHandleFault)
 			hwlog.RunLog.Debugf("global fault info: %v", allJobFaultInfo)
 			s.checkPublishFault(allJobFaultInfo)
 		}

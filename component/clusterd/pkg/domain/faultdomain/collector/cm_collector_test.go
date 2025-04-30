@@ -17,10 +17,10 @@ const (
 )
 
 func resetDeviceCmCollector() {
-	DeviceCmCollectBuffer = &ConfigmapCollectBuffer[*constant.AdvanceDeviceFaultCm]{
+	DeviceCmCollectBuffer = &ConfigmapCollectBuffer[*constant.DeviceInfo]{
 		mutex:    sync.Mutex{},
-		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]),
-		lastItem: make(map[string]constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]),
+		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.DeviceInfo]),
+		lastItem: make(map[string]constant.InformerCmItem[*constant.DeviceInfo]),
 	}
 }
 func TestCmInfoCollector(t *testing.T) {

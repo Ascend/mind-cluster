@@ -495,18 +495,25 @@ func TestDealWithJobFaultInfo(t *testing.T) {
 func TestCheckFault(t *testing.T) {
 	convey.Convey("Testing checkFault", t, func() {
 		service := fakeService()
-		patches := gomonkey.ApplyFunc(service.dealWithJobFaultInfo, func(jobFaultInfoList []constant.JobFaultInfo) {
+		patches := gomonkey.ApplyFunc(faultmanager.QueryJobsFaultInfo,
+			func(faultLevel string) map[string]constant.JobFaultInfo {
+				return map[string]constant.JobFaultInfo{
+					fakeJobID1: {JobId: fakeJobID1, FaultList: []constant.FaultRank{{}}},
+					fakeJobID2: {JobId: fakeJobID2, FaultList: []constant.FaultRank{{}}},
+				}
+			}).ApplyFunc(service.registered, func(jobId string) bool {
+			if jobId == "job1" {
+				return true
+			}
+			return false
+		}).ApplyFunc(service.dealWithJobFaultInfo, func(jobFaultInfoList []constant.JobFaultInfo) {
 			convey.So(jobFaultInfoList, convey.ShouldHaveLength, 1)
 		})
 		defer patches.Reset()
-		info := map[string]constant.JobFaultInfo{
-			fakeJobID1: {JobId: fakeJobID1, FaultList: []constant.FaultRank{{}}},
-			fakeJobID2: {JobId: fakeJobID2, FaultList: []constant.FaultRank{{}}},
-		}
-		service.checkFault(info)
+		service.checkFault()
 
 		faultmanager.GlobalFaultProcessCenter = nil
-		service.checkFault(info)
+		service.checkFault()
 	})
 }
 

@@ -177,18 +177,6 @@ const (
 	SubHealthFault = "SubHealthFault"
 )
 
-// About cm keys
-const (
-	// CmRecoveringSuffix Recovering Suffix
-	CmRecoveringSuffix = "-Recovering"
-	// CmCardUnhealthySuffix CardUnhealthy Suffix
-	CmCardUnhealthySuffix = "-Unhealthy"
-	// CmCardNetworkUnhealthySuffix NetworkUnhealthy Suffix
-	CmCardNetworkUnhealthySuffix = "-NetworkUnhealthy"
-	// CmFaultListSuffix FaultList Suffix
-	CmFaultListSuffix = "-Fault"
-)
-
 // support device type
 const (
 	Ascend910           = "Ascend910"

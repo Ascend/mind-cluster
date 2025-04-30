@@ -18,13 +18,11 @@ package fault
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
-	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
@@ -37,7 +35,6 @@ type FaultServer struct {
 	faultPublisher map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]
 	lock           sync.RWMutex
 	fault.UnimplementedFaultServer
-	faultCh chan map[string]constant.JobFaultInfo
 }
 
 // NewFaultServer create a fault server
@@ -46,10 +43,6 @@ func NewFaultServer(ctx context.Context) *FaultServer {
 		serviceCtx:     ctx,
 		faultPublisher: make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]),
 		lock:           sync.RWMutex{},
-		faultCh:        make(chan map[string]constant.JobFaultInfo, 5),
-	}
-	if err := faultmanager.RegisterForJobFaultRank(server.faultCh, reflect.TypeOf(server).Name()); err != nil {
-		hwlog.RunLog.Error("RegisterForJobFaultRank fail")
 	}
 	go server.checkFaultFromFaultCenter()
 	return server

@@ -16,35 +16,39 @@ type ConfigMap[T constant.ConfigMapInterface] struct {
 	Data map[string]T
 }
 
-var DeviceCenterCmManager *FaultCenterCmManager[*constant.AdvanceDeviceFaultCm]
+var DeviceCenterCmManager *FaultCenterCmManager[*constant.DeviceInfo]
 var SwitchCenterCmManager *FaultCenterCmManager[*constant.SwitchInfo]
 var NodeCenterCmManager *FaultCenterCmManager[*constant.NodeInfo]
 
 type FaultCenterCmManager[T constant.ConfigMapInterface] struct {
-	mutex       sync.RWMutex
-	cmBuffer    *collector.ConfigmapCollectBuffer[T]
-	originalCm  ConfigMap[T]
-	processedCm ConfigMap[T]
+	mutex        sync.RWMutex
+	cmBuffer     *collector.ConfigmapCollectBuffer[T]
+	originalCm   ConfigMap[T]
+	processingCm ConfigMap[T]
+	processedCm  ConfigMap[T]
 }
 
 func init() {
-	DeviceCenterCmManager = &FaultCenterCmManager[*constant.AdvanceDeviceFaultCm]{
-		mutex:       sync.RWMutex{},
-		originalCm:  ConfigMap[*constant.AdvanceDeviceFaultCm]{Data: make(map[string]*constant.AdvanceDeviceFaultCm)},
-		processedCm: ConfigMap[*constant.AdvanceDeviceFaultCm]{Data: make(map[string]*constant.AdvanceDeviceFaultCm)},
-		cmBuffer:    collector.DeviceCmCollectBuffer,
+	DeviceCenterCmManager = &FaultCenterCmManager[*constant.DeviceInfo]{
+		mutex:        sync.RWMutex{},
+		originalCm:   ConfigMap[*constant.DeviceInfo]{Data: make(map[string]*constant.DeviceInfo)},
+		processingCm: ConfigMap[*constant.DeviceInfo]{Data: make(map[string]*constant.DeviceInfo)},
+		processedCm:  ConfigMap[*constant.DeviceInfo]{Data: make(map[string]*constant.DeviceInfo)},
+		cmBuffer:     collector.DeviceCmCollectBuffer,
 	}
 	SwitchCenterCmManager = &FaultCenterCmManager[*constant.SwitchInfo]{
-		mutex:       sync.RWMutex{},
-		originalCm:  ConfigMap[*constant.SwitchInfo]{Data: make(map[string]*constant.SwitchInfo)},
-		processedCm: ConfigMap[*constant.SwitchInfo]{Data: make(map[string]*constant.SwitchInfo)},
-		cmBuffer:    collector.SwitchCmCollectBuffer,
+		mutex:        sync.RWMutex{},
+		originalCm:   ConfigMap[*constant.SwitchInfo]{Data: make(map[string]*constant.SwitchInfo)},
+		processingCm: ConfigMap[*constant.SwitchInfo]{Data: make(map[string]*constant.SwitchInfo)},
+		processedCm:  ConfigMap[*constant.SwitchInfo]{Data: make(map[string]*constant.SwitchInfo)},
+		cmBuffer:     collector.SwitchCmCollectBuffer,
 	}
 	NodeCenterCmManager = &FaultCenterCmManager[*constant.NodeInfo]{
-		mutex:       sync.RWMutex{},
-		originalCm:  ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
-		processedCm: ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
-		cmBuffer:    collector.NodeCmCollectBuffer,
+		mutex:        sync.RWMutex{},
+		originalCm:   ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
+		processingCm: ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
+		processedCm:  ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
+		cmBuffer:     collector.NodeCmCollectBuffer,
 	}
 }
 
@@ -52,6 +56,18 @@ func (manager *FaultCenterCmManager[T]) GetOriginalCm() ConfigMap[T] {
 	manager.mutex.RLock()
 	defer manager.mutex.RUnlock()
 	return manager.originalCm.deepCopy()
+}
+
+func (manager *FaultCenterCmManager[T]) SetProcessingCm(cm ConfigMap[T]) {
+	manager.mutex.Lock()
+	defer manager.mutex.Unlock()
+	manager.processingCm = cm.deepCopy()
+}
+
+func (manager *FaultCenterCmManager[T]) GetProcessingCm() ConfigMap[T] {
+	manager.mutex.RLock()
+	defer manager.mutex.RUnlock()
+	return manager.processingCm.deepCopy()
 }
 
 func (manager *FaultCenterCmManager[T]) SetProcessedCm(cm ConfigMap[T]) bool {

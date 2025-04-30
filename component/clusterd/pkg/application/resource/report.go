@@ -18,7 +18,6 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
-	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/switchinfo"
 	"clusterd/pkg/interface/kube"
@@ -66,8 +65,7 @@ func Report(ctx context.Context) {
 			})
 			switch whichToReport {
 			case constant.DeviceProcessType:
-				deviceArr := device.GetSafeData(faultdomain.AdvanceFaultMapToOriginalFaultMap[*constant.DeviceInfo](
-					faultmanager.QueryDeviceInfoToReport()))
+				deviceArr := device.GetSafeData(faultmanager.QueryDeviceInfoToReport())
 				updateDeviceInfoCm(deviceArr)
 			case constant.NodeProcessType:
 				nodeArr := node.GetSafeData(faultmanager.QueryNodeInfoToReport())
@@ -76,8 +74,7 @@ func Report(ctx context.Context) {
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
 				updateSwitchInfoCm(switchArr)
 			case constant.AllProcessType:
-				deviceArr := device.GetSafeData(faultdomain.AdvanceFaultMapToOriginalFaultMap[*constant.DeviceInfo](
-					faultmanager.QueryDeviceInfoToReport()))
+				deviceArr := device.GetSafeData(faultmanager.QueryDeviceInfoToReport())
 				nodeArr := node.GetSafeData(faultmanager.QueryNodeInfoToReport())
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
 				updateAllCm(deviceArr, nodeArr, switchArr)

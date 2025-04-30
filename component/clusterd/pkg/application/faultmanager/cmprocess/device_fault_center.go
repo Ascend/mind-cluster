@@ -16,7 +16,7 @@ var DeviceCenter *deviceFaultProcessCenter
 
 // deviceFaultProcessCenter
 type deviceFaultProcessCenter struct {
-	baseFaultCenter[*constant.AdvanceDeviceFaultCm]
+	baseFaultCenter[*constant.DeviceInfo]
 }
 
 func init() {

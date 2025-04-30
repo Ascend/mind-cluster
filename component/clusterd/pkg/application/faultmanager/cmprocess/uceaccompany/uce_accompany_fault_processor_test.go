@@ -36,12 +36,12 @@ func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
-		UceAccompanyProcessor.deviceCmForNodeMap =
-			faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
+		UceAccompanyProcessor.deviceCmForNodeMap = faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos)
 		UceAccompanyProcessor.uceAccompanyFaultInQue()
 		UceAccompanyProcessor.filterFaultInfos(CurrentTime)
-		if !reflect.DeepEqual(UceAccompanyProcessor.deviceCmForNodeMap,
-			faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expectProcessedDeviceInfos)) {
+		faultdomain.AdvanceDeviceCmForNodeMapToString(UceAccompanyProcessor.deviceCmForNodeMap, cmDeviceInfos)
+		if !reflect.DeepEqual(faultdomain.GetAdvanceDeviceCmForNodeMap(cmDeviceInfos),
+			faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
 			t.Errorf("result = %v, want %v",
 				util.ObjToString(cmDeviceInfos), util.ObjToString(expectProcessedDeviceInfos))
 		}
@@ -60,9 +60,9 @@ func TestUceAccompanyFaultProcessorProcessE2E(t *testing.T) {
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
-		content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
-			AllConfigmap:    faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos),
-			UpdateConfigmap: []constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]{{}},
+		content := constant.OneConfigmapContent[*constant.DeviceInfo]{
+			AllConfigmap:    cmDeviceInfos,
+			UpdateConfigmap: []constant.InformerCmItem[*constant.DeviceInfo]{{}},
 		}
 		mockTime := time.Time{}
 		mockUnixMilli := gomonkey.ApplyPrivateMethod(mockTime, "UnixMilli", func() int64 {
@@ -75,13 +75,12 @@ func TestUceAccompanyFaultProcessorProcessE2E(t *testing.T) {
 			mockNow.Reset()
 			mockUnixMilli.Reset()
 		}()
-		res := UceAccompanyProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
+		resultContent := UceAccompanyProcessor.Process(content).(constant.OneConfigmapContent[*constant.DeviceInfo])
 
-		exp := faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expectProcessedDeviceInfos)
-		if !reflect.DeepEqual(res.AllConfigmap, exp) {
-			t.Errorf("result:\n%v\nwant:\n%v",
-				util.ObjToString(res.AllConfigmap),
-				util.ObjToString(exp))
+		if !reflect.DeepEqual(faultdomain.GetAdvanceDeviceCmForNodeMap(resultContent.AllConfigmap),
+			faultdomain.GetAdvanceDeviceCmForNodeMap(expectProcessedDeviceInfos)) {
+			t.Errorf("result = %v, want %v",
+				util.ObjToString(cmDeviceInfos), util.ObjToString(expectProcessedDeviceInfos))
 		}
 
 		if len(UceAccompanyProcessor.uceAccompanyFaultQue["node1"]["Ascend910-1"]) != 1 &&
@@ -112,7 +111,7 @@ func TestUceAccompanyFaultProcessorProcessForAddFault(t *testing.T) {
 				},
 			},
 		}
-		UceAccompanyProcessor.deviceCmForNodeMap = map[string]*constant.AdvanceDeviceFaultCm{"node1": {}}
+		UceAccompanyProcessor.deviceCmForNodeMap = make(map[string]constant.AdvanceDeviceFaultCm)
 		UceAccompanyProcessor.filterFaultInfos(CurrentTime)
 		if len(UceAccompanyProcessor.deviceCmForNodeMap[nodeName].FaultDeviceList[deviceName]) != 1 {
 			t.Error("TestUceAccompanyFaultProcessorProcessForAddFault fail")

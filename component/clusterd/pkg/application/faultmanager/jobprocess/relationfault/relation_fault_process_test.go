@@ -16,6 +16,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/kube"
 )
@@ -328,7 +329,7 @@ func testInvalidInfoType(processor *relationFaultProcessor) {
 func testValidInfoType(processor *relationFaultProcessor) {
 	convey.Convey("When info type is valid", func() {
 		content := constant.AllConfigmapContent{
-			DeviceCm: map[string]*constant.AdvanceDeviceFaultCm{},
+			DeviceCm: map[string]*constant.DeviceInfo{},
 			SwitchCm: map[string]*constant.SwitchInfo{},
 			NodeCm:   map[string]*constant.NodeInfo{},
 		}
@@ -479,8 +480,8 @@ func testSuccess(fJob *FaultJob) {
 func testInitByDeviceFault(fJob *FaultJob) {
 	convey.Convey("When initializing by device fault", func() {
 		cardName := "server-type-device1"
-		nodeFaultInfo := &constant.AdvanceDeviceFaultCm{
-			DeviceType: "server-type",
+		nodeFaultInfo := constant.AdvanceDeviceFaultCm{
+			ServerType: "server-type",
 			FaultDeviceList: map[string][]constant.DeviceFault{
 				cardName: {
 					{
@@ -723,6 +724,7 @@ func testValidConfig() {
 func TestInitFaultJobs(t *testing.T) {
 	convey.Convey("Test InitFaultJobs", t, func() {
 		processor := &relationFaultProcessor{
+			deviceInfoCm: map[string]*constant.DeviceInfo{},
 			switchInfoCm: map[string]*constant.SwitchInfo{},
 			faultJobs:    make(map[string]*FaultJob),
 		}
@@ -734,10 +736,11 @@ func TestInitFaultJobs(t *testing.T) {
 
 func testEmptyServerList(processor *relationFaultProcessor) {
 	convey.Convey("When server list is empty", func() {
-		patches := gomonkey.NewPatches()
+		patches := gomonkey.ApplyFunc(faultdomain.GetAdvanceDeviceCmForNodeMap,
+			func(deviceInfoCm map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
+				return map[string]constant.AdvanceDeviceFaultCm{"node1": {SuperPodID: 1}}
+			})
 		defer patches.Reset()
-		deviceInfo := map[string]*constant.AdvanceDeviceFaultCm{"node1": {SuperPodID: 1}}
-		processor.deviceInfoCm = deviceInfo
 
 		patches.ApplyFunc(job.GetJobServerInfoMap, func() constant.JobServerInfoMap {
 			return constant.JobServerInfoMap{
@@ -755,10 +758,11 @@ func testEmptyServerList(processor *relationFaultProcessor) {
 
 func testInitFaultJob(processor *relationFaultProcessor) {
 	convey.Convey("When initializing fault job", func() {
-		patches := gomonkey.NewPatches()
+		patches := gomonkey.ApplyFunc(faultdomain.GetAdvanceDeviceCmForNodeMap,
+			func(deviceInfoCm map[string]*constant.DeviceInfo) map[string]constant.AdvanceDeviceFaultCm {
+				return map[string]constant.AdvanceDeviceFaultCm{"node1": {SuperPodID: 1}}
+			})
 		defer patches.Reset()
-		deviceInfo := map[string]*constant.AdvanceDeviceFaultCm{"node1": {SuperPodID: 1}}
-		processor.deviceInfoCm = deviceInfo
 
 		patches.ApplyFunc(job.GetJobServerInfoMap, func() constant.JobServerInfoMap {
 			return constant.JobServerInfoMap{
