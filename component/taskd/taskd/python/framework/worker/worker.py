@@ -16,7 +16,7 @@
 # ==============================================================================
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
-from taskd.python.constants import PYTORCH, CHECK_STEP_PERIOD, JOB_ID_KEY, PROFILING_BASE_DIR, \
+from taskd.python.constants.constants import PYTORCH, CHECK_STEP_PERIOD, JOB_ID_KEY, PROFILING_BASE_DIR, \
     PROFILING_DIR_MODE, GROUP_INFO_NAME, GROUP_INFO_KEY, GROUP_NAME_KEY, GROUP_RANK_KEY, \
         GLOBAL_RANKS_KEY, DEFAULT_GROUP
 import threading, os, json, time
