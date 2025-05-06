@@ -169,6 +169,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
+	"sync/atomic"
 	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
@@ -177,9 +178,11 @@ import (
 )
 
 var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
+var stepFlag atomic.Bool
 
 // InitMspti found mspti so and init it
 func InitMspti() error {
+	stepFlag.Store(false)
 	libMsptiName := "libmspti.so"
 	libPath, err := utils.GetDriverLibPath(libMsptiName)
 	if err != nil {
@@ -310,6 +313,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 			var pRecord *C.msptiActivity
 			status = C.mspti_activity_get_next_record(buffer, validSize, &pRecord)
 			if status == C.MSPTI_SUCCESS {
+				stepFlag.Store(true)
 				count++
 				handleActivityRecord(pRecord)
 			} else if status == C.MSPTI_ERROR_MAX_LIMIT_REACHED {
@@ -326,6 +330,10 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 		}
 	}
 	hwlog.RunLog.Debugf("the buffer free status is: %v", buffer == nil)
+}
+
+func Stepout() bool {
+	return stepFlag.Load()
 }
 
 func handleActivityRecord(pRecord *C.msptiActivity) {

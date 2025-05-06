@@ -87,5 +87,15 @@ func StartMonitorClient() C.int {
 	return C.int(0)
 }
 
+// StepOut this function return whether step out, is called by user through python api
+//
+//export StepOut
+func StepOut() C.int {
+	if profiling.Stepout() {
+		return C.int(1)
+	}
+	return C.int(0)
+}
+
 func main() {
 }

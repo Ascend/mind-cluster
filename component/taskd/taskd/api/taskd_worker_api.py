@@ -17,30 +17,29 @@
 
 from taskd.python.framework.worker.worker import Worker
 from taskd.python.utils.log import run_log
+from taskd.python.framework.worker.worker import WorkerConfig
 
 taskd_worker = None
 
-
-def init_taskd_worker(rank_id: int, upper_limit_of_disk_in_mb: int = 5000) -> bool:
+def init_taskd_worker(self, config: WorkerConfig) -> bool:
     """
     init_taskd_worker: to init taskd worker
-    rank_id: the global rank id of the process, this should be called after rank is initialized
-    upper_limit_of_disk_in_mb: the limit of profiling file of all jobs
+    config: worker's config
     """
     global taskd_worker
     try:
-        if not isinstance(rank_id, int) or not isinstance(upper_limit_of_disk_in_mb, int):
-            run_log.error(f"rank_id {rank_id} and upper_limit_of_disk_in_mb {upper_limit_of_disk_in_mb} "
+        if not isinstance(config.rank_id, int) or not isinstance(config.upper_limit_of_disk_in_mb, int):
+            run_log.error(f"rank_id {config.rank_id} and upper_limit_of_disk_in_mb {config.upper_limit_of_disk_in_mb} "
                           f"should be integers")
             return False
-        if rank_id < 0:
-            run_log.error(f"rank_id {rank_id} should not less than 0")
+        if config.rank_id < 0:
+            run_log.error(f"rank_id {config.rank_id} should not less than 0")
             return False
-        if upper_limit_of_disk_in_mb < 0:
-            run_log.error(f"upper_limit_of_disk_in_mb {upper_limit_of_disk_in_mb} should not less than 0")
+        if config.upper_limit_of_disk_in_mb < 0:
+            run_log.error(f"upper_limit_of_disk_in_mb {config.upper_limit_of_disk_in_mb} should not less than 0")
             return False
-        taskd_worker = Worker(rank_id)
-        return taskd_worker.init_monitor(rank_id, upper_limit_of_disk_in_mb)
+        taskd_worker = Worker(config.rank_id)
+        return taskd_worker.init_monitor(config.rank_id, config.upper_limit_of_disk_in_mb)
     except Exception as e:
         run_log.error(f"Failed to initialize worker: {e}")
         return False

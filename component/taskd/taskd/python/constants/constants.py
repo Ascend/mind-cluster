@@ -52,3 +52,27 @@ MIN_DEVICE_NUM = 1
 MAX_DEVICE_NUM = 4096
 MAX_SIZE = 1024 * 1024
 MIN_SIZE = 0
+
+# AI framework
+PYTORCH = "pytorch"
+MINDSPORE = "mindspore"
+
+# check step out period
+CHECK_STEP_PERIOD = 10
+
+# jobid env key
+JOB_ID_KEY = "MINDX_TASK_ID"
+
+# profiling base dir
+PROFILING_BASE_DIR = "/user/cluster-info/profiling"
+
+# profiling dir mode
+PROFILING_DIR_MODE = 0o755
+
+# group info constants
+GROUP_INFO_NAME = "parallel_group.json"
+GROUP_INFO_KEY = "parallel_group_info"
+GROUP_NAME_KEY = "group_name"
+GROUP_RANK_KEY = "group_rank"
+GLOBAL_RANKS_KEY = "global_ranks"
+DEFAULT_GROUP = "default_group"
