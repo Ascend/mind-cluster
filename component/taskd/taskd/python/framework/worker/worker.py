@@ -102,7 +102,7 @@ def save_group_info(framework: str, rank: int):
         return
     check_step_out = cython_api.lib.StepOut
     try:    
-        while  check_step_out() != 1:
+        while check_step_out() != 1:
             run_log.warn(f'not ready to write group info, try it after a few seconds')
             time.sleep(CHECK_STEP_PERIOD)
         run_log.info(f'start dump group info for rank={rank}')
