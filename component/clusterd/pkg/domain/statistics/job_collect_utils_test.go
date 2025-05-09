@@ -193,3 +193,24 @@ func TestInnerAddJobStatistic(t *testing.T) {
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
 }
+
+func TestGetAllJobStatistic(t *testing.T) {
+	t.Run("get data ok", func(t *testing.T) {
+		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatistic{Status: "Running"}
+		JobStcMgrInst.version = 1
+		data, version := JobStcMgrInst.GetAllJobStatistic()
+		assert.Equal(t, "Running", data.JobStatistic["test"].Status)
+		assert.Equal(t, "Running", JobStcMgrInst.data.JobStatistic["test"].Status)
+		assert.Equal(t, int64(1), version)
+	})
+
+	t.Run("change data after get data", func(t *testing.T) {
+		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatistic{Status: "Running"}
+		JobStcMgrInst.version = 1
+		data, version := JobStcMgrInst.GetAllJobStatistic()
+		delete(data.JobStatistic, "test")
+		assert.Equal(t, 0, len(data.JobStatistic))
+		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
+		assert.Equal(t, int64(1), version)
+	})
+}
