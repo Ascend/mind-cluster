@@ -45,7 +45,10 @@ import (
 
 var resourceVersion = ""
 
-const memoryRadix = 1024
+const (
+	memoryRadix                  = 1024
+	nodeAnnotationUpdateInterval = 60
+)
 
 // HwDevManager manages huawei device devices.
 type HwDevManager struct {
@@ -56,6 +59,7 @@ type HwDevManager struct {
 	manager          device.DevManager
 	RunMode          string
 	WorkMode         string
+	baseNPUInfo      map[string]*common.NpuBaseInfo
 }
 
 // NewHwDevManager function is used to new a dev manager.
@@ -167,6 +171,7 @@ func (hdm *HwDevManager) updateNode() error {
 		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
 		return err
 	}
+	hdm.baseNPUInfo = hdm.getNpuBaseInfo()
 	newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
 	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	for i := 0; i < common.RetryUpdateCount; i++ {
@@ -437,6 +442,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	if common.ParamOption.CheckCachedPods {
 		go hdm.manager.GetKubeClient().PodInformerInspector(ctx)
 	}
+	go hdm.updateNodeAnnotations(ctx)
 
 	initTime := time.Now()
 	ticker := time.NewTicker(time.Duration(common.ParamOption.ListAndWatchPeriod) * time.Second)
@@ -459,6 +465,73 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 			hdm.handleDeviceInfoUpdate(&initTime)
 		}
 	}
+}
+
+func (hdm *HwDevManager) updateNodeAnnotations(ctx context.Context) {
+	ticker := time.NewTicker(nodeAnnotationUpdateInterval * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			hdm.doUpdateNodeAnnotations()
+		}
+	}
+}
+
+func (hdm *HwDevManager) doUpdateNodeAnnotations() {
+	baseInfoChange, newBaseInfo := hdm.compareBaseNPUInfo()
+	if !baseInfoChange {
+		hwlog.RunLog.Debug("npu IP is not changed")
+		return
+	}
+	hwlog.RunLog.Info("base npu info changed, update node annotation")
+	mashaledNpuInfo, err := json.Marshal(newBaseInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
+		return
+	}
+
+	for i := 0; i < common.RetryUpdateCount; i++ {
+		if err = hdm.manager.GetKubeClient().AddAnnotation(api.BaseDevInfoAnno, string(mashaledNpuInfo)); err == nil {
+			hwlog.RunLog.Info("update node annotations success")
+			hdm.baseNPUInfo = newBaseInfo
+			return
+		}
+		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)
+		time.Sleep(time.Second)
+	}
+}
+
+func (hdm *HwDevManager) compareBaseNPUInfo() (bool, map[string]*common.NpuBaseInfo) {
+	var baseInfoChange bool
+	newInfo := make(map[string]*common.NpuBaseInfo, len(hdm.baseNPUInfo))
+	for _, dev := range hdm.allInfo.AllDevs {
+		info, ok := hdm.baseNPUInfo[dev.DeviceName]
+		if !ok {
+			continue
+		}
+		newItem := &common.NpuBaseInfo{
+			IP:            info.IP,
+			SuperDeviceID: info.SuperDeviceID,
+		}
+
+		newInfo[dev.DeviceName] = newItem
+
+		ip, err := hdm.manager.GetDeviceIP(dev.DevType, int(dev.PhyID))
+		if err != nil {
+			hwlog.RunLog.Warnf("get %s device ip failed, err: %v", dev.DeviceName, err)
+			continue
+		}
+		if info.IP != ip {
+			baseInfoChange = true
+			newItem.IP = ip
+		}
+	}
+
+	return baseInfoChange, newInfo
 }
 
 func (hdm *HwDevManager) parseTriggers(initTime time.Time) {

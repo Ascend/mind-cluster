@@ -1415,3 +1415,94 @@ func TestParseTriggers(t *testing.T) {
 		convey.So(deviceInfoHandled, convey.ShouldBeFalse)
 	})
 }
+
+func TestUpdateNodeAnnotations(t *testing.T) {
+	convey.Convey("TestUpdateNodeAnnotations", t, func() {
+		hdm := &HwDevManager{
+			manager: device.NewHwAscend910Manager(),
+		}
+		convey.Convey("01-npu IP not changed will do nothing", func() {
+			patch := gomonkey.ApplyPrivateMethod(hdm, "compareBaseNPUInfo", func(_ *HwDevManager) (bool,
+				map[string]*common.NpuBaseInfo) {
+				return false, nil
+			})
+			defer patch.Reset()
+			hdm.doUpdateNodeAnnotations()
+			convey.So(hdm.baseNPUInfo, convey.ShouldBeNil)
+		})
+		patch := gomonkey.ApplyPrivateMethod(hdm, "compareBaseNPUInfo", func(_ *HwDevManager) (bool,
+			map[string]*common.NpuBaseInfo) {
+			return true, map[string]*common.NpuBaseInfo{
+				"Ascend910-0": {IP: "127.0.1.1"}}
+		})
+		defer patch.Reset()
+		preBaseInfo := map[string]*common.NpuBaseInfo{"Ascend910-0": {IP: "127.0.0.1"}}
+		hdm.baseNPUInfo = preBaseInfo
+		client := &kubeclient.ClientK8s{}
+		patch2 := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", client)
+		defer patch2.Reset()
+		convey.Convey("02-update node annotations failed will not refresh cache", func() {
+			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotation", errors.New("patch node failed"))
+			defer patch3.Reset()
+			hdm.doUpdateNodeAnnotations()
+			convey.So(hdm.baseNPUInfo, convey.ShouldResemble, preBaseInfo)
+		})
+		convey.Convey("04-update node annotations succeed will refresh cache", func() {
+			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotation", nil)
+			defer patch3.Reset()
+			hdm.doUpdateNodeAnnotations()
+			convey.So(hdm.baseNPUInfo, convey.ShouldResemble, map[string]*common.NpuBaseInfo{
+				"Ascend910-0": {IP: "127.0.1.1"}})
+		})
+	})
+}
+
+func TestCompareBaseNPUInfo(t *testing.T) {
+	convey.Convey("TestCompareBaseNPUInfo", t, func() {
+		hdm := &HwDevManager{
+			manager: device.NewHwAscend910Manager(),
+			allInfo: common.NpuAllInfo{
+				AllDevs: []common.NpuDevice{{
+					DeviceName: "Ascend910-0",
+					IP:         "127.0.0.1",
+				}},
+			},
+			baseNPUInfo: map[string]*common.NpuBaseInfo{
+				"Ascend910-0": {
+					IP:            "127.0.0.1",
+					SuperDeviceID: 0,
+				}},
+		}
+		hdm.manager.SetDmgr(&devmanager.DeviceManagerMock{})
+		convey.Convey("01-get npu IP failed should return false", func() {
+			patch := gomonkey.ApplyMethod(hdm.manager, "GetDeviceIP", func(_ *device.HwAscend910Manager,
+				_ string, _ int) (string, error) {
+				return "", errors.New("get npu IP failed")
+			})
+			defer patch.Reset()
+			res, _ := hdm.compareBaseNPUInfo()
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-npu IP not changed should return false", func() {
+			patch := gomonkey.ApplyMethod(hdm.manager, "GetDeviceIP", func(_ *device.HwAscend910Manager,
+				_ string, _ int) (string, error) {
+				return "127.0.0.1", nil
+			})
+			defer patch.Reset()
+			res, newInfo := hdm.compareBaseNPUInfo()
+			convey.So(res, convey.ShouldBeFalse)
+			convey.So(newInfo, convey.ShouldResemble, hdm.baseNPUInfo)
+		})
+		convey.Convey("03-npu IP changed should return false return true", func() {
+			patch := gomonkey.ApplyMethod(hdm.manager, "GetDeviceIP", func(_ *device.HwAscend910Manager,
+				_ string, _ int) (string, error) {
+				return "127.0.1.1", nil
+			})
+			defer patch.Reset()
+			res, newInfo := hdm.compareBaseNPUInfo()
+			convey.So(res, convey.ShouldBeTrue)
+			convey.So(newInfo, convey.ShouldResemble, map[string]*common.NpuBaseInfo{
+				"Ascend910-0": {IP: "127.0.1.1"}})
+		})
+	})
+}

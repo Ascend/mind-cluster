@@ -125,6 +125,7 @@ type DevManager interface {
 	LogFaultModeChange(*common.NpuDevice, []int32, string)
 	GetUsedChips() sets.String
 	UpdateDeviceUsedStatus(groupDevice map[string][]*common.NpuDevice)
+	GetDeviceIP(deviceType string, phyID int) (string, error)
 }
 
 // SetDmgr set devmanager
@@ -633,7 +634,7 @@ func (tool *AscendTools) getDavinCiDev(logicID int32) (common.DavinCiDev, error)
 	if err != nil {
 		return common.DavinCiDev{}, err
 	}
-	ip, err := tool.getDeviceIP("", int(phyID))
+	ip, err := tool.GetDeviceIP("", int(phyID))
 	if err != nil {
 		hwlog.RunLog.Warnf("get device ip failed, err: %v", err)
 		ip = ""
@@ -655,7 +656,8 @@ func (tool *AscendTools) getVirtualDevice(logicID int32) (npuCommon.VirtualDevIn
 	return virtualDevInfos, nil
 }
 
-func (tool *AscendTools) getDeviceIP(deviceType string, phyID int) (string, error) {
+// GetDeviceIP get device ip
+func (tool *AscendTools) GetDeviceIP(deviceType string, phyID int) (string, error) {
 	if common.IsVirtualDev(deviceType) {
 		return common.DefaultDeviceIP, nil
 	}
@@ -714,7 +716,7 @@ func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (m
 			devicesWithIP[id] = ""
 			continue
 		}
-		deviceIP, err := tool.getDeviceIP(deviceType, id)
+		deviceIP, err := tool.GetDeviceIP(deviceType, id)
 		if err != nil {
 			hwlog.RunLog.Errorf("get device %d ip err: %v", id, err)
 			return nil, err
