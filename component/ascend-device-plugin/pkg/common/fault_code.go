@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/time/rate"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
@@ -124,6 +125,7 @@ var (
 		RestartNPU, PreSeparateNPU, SeparateNPU, SubHealthFault)
 	// NetworkFaultCodes is a set that contains all the network fault codes
 	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
+	limiter           = rate.NewLimiter(rate.Every(1*time.Minute/FaultCallBackRateLimit), FaultCallBackRateLimit)
 )
 
 // fault customization
@@ -947,8 +949,11 @@ func getMostSeriousFaultType(fautTypes []string) string {
 // SetDeviceInit set should init device's logicID
 func SetDeviceInit(logicID int32) {
 	logicIDLock.Lock()
+	defer logicIDLock.Unlock()
+	if Int32Tool.Contains(initLogicIDs, logicID) {
+		return
+	}
 	initLogicIDs = append(initLogicIDs, logicID)
-	logicIDLock.Unlock()
 }
 
 // GetAndCleanLogicID get should init device's logicID and clean cache
@@ -1156,7 +1161,13 @@ func DelOnceFrequencyFault() {
 
 // SaveDevFaultInfo save device fault info , subscribe interface call back function
 func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
-	hwlog.RunLog.Infof("receive devFaultInfo: %v, hex code: %v", devFaultInfo,
+	if !limiter.Allow() {
+		hwlog.RunLog.Warnf("fault callback rate limit overflowed, current fault: %#v will be discard", devFaultInfo)
+		hwlog.RunLog.Warnf("will set current device: %v into init status", devFaultInfo.LogicID)
+		SetDeviceInit(devFaultInfo.LogicID)
+		return
+	}
+	hwlog.RunLog.Infof("receive devFaultInfo: %#v, hex code: %v", devFaultInfo,
 		strconv.FormatInt(devFaultInfo.EventID, Hex))
 	if devFaultInfo.EventID == 0 {
 		return
