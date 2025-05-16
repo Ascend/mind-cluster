@@ -25,7 +25,9 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/apimachinery/pkg/api/errors"
 
+	"ascend-common/api"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/reporter/cmreporter"
@@ -71,38 +73,58 @@ func testReportMgrExecute() {
 	if reportManager == nil {
 		panic("reportManager is nil")
 	}
-
 	setReporters()
-	convey.Convey("test method Execute success", func() {
-		go func() {
-			reportManager.Execute(testFaultDevInfo)
-		}()
-		time.Sleep(waitGoroutineFinishedTime)
-		convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
-		convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
-	})
+	convey.Convey("test method Execute success", testExc)
+	convey.Convey("test method Execute failed, ConfigMapReporter unmarshal error", testExcErrUnmarshal)
+	convey.Convey("test method Execute failed, ConfigMapReporter update cm error", testExcErrUpdate)
+}
 
-	convey.Convey("test method Execute failed, ConfigMapReporter unmarshal error", func() {
-		var p1 = gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr)
-		defer p1.Reset()
-		go func() {
-			reportManager.Execute(testFaultDevInfo)
-		}()
-		time.Sleep(waitGoroutineFinishedTime)
-		convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
-		convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
-	})
+func testExc() {
+	go func() {
+		reportManager.Execute(testFaultDevInfo)
+	}()
+	time.Sleep(waitGoroutineFinishedTime)
+	convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
+	convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
 
-	convey.Convey("test method Execute failed, ConfigMapReporter update cm error", func() {
-		var p2 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "UpdateConfigMap", nil, testErr)
-		defer p2.Reset()
-		go func() {
-			reportManager.Execute(testFaultDevInfo)
-		}()
-		time.Sleep(waitGoroutineFinishedTime)
-		convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
-		convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
-	})
+	cm, err := testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(err, convey.ShouldBeNil)
+	cmInfo := parseNodeInfoCMData(cm.Data[api.NodeInfoCMDataKey])
+	convey.So(len(cmInfo.NodeInfo.FaultDevList), convey.ShouldEqual, len(testFaultDevList))
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testExcErrUnmarshal() {
+	err := deleteCM(testNodeInfoName, api.DLNamespace)
+	convey.So(err, convey.ShouldBeNil)
+	var p1 = gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr)
+	defer p1.Reset()
+	go func() {
+		reportManager.Execute(testFaultDevInfo)
+	}()
+	time.Sleep(waitGoroutineFinishedTime)
+	convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
+	convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
+
+	_, err = testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(errors.IsNotFound(err), convey.ShouldBeTrue)
+}
+
+func testExcErrUpdate() {
+	const retryInterval = 4 * time.Second
+	err := deleteCM(testNodeInfoName, api.DLNamespace)
+	convey.So(err, convey.ShouldBeNil)
+	var p2 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "UpdateConfigMap", nil, testErr)
+	defer p2.Reset()
+	go func() {
+		reportManager.Execute(testFaultDevInfo)
+	}()
+	time.Sleep(retryInterval)
+	convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
+	convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
+
+	_, err = testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(errors.IsNotFound(err), convey.ShouldBeTrue)
 }
 
 func setReporters() {
@@ -111,4 +133,11 @@ func setReporters() {
 	}
 	cmReporter := cmreporter.NewConfigMapReporter(testK8sClient)
 	reportManager.reporters = append(reportManager.reporters, cmReporter)
+}
+
+func parseNodeInfoCMData(data string) common.NodeInfoCM {
+	var nodeInfo common.NodeInfoCM
+	err := json.Unmarshal([]byte(data), &nodeInfo)
+	convey.So(err, convey.ShouldBeNil)
+	return nodeInfo
 }

@@ -17,6 +17,7 @@ package ipmimonitor
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 	"time"
 
@@ -61,7 +62,7 @@ func (i *IpmiEventMonitor) Monitoring() {
 			return
 		default:
 			if err := i.UpdateFaultDevList(); err != nil {
-				hwlog.RunLog.Errorf("ipmi monitor update device info failed, err is %v", err)
+				hwlog.RunLog.Errorf("ipmi monitor update fault device list failed, error: %v", err)
 			}
 			time.Sleep(time.Duration(common.ParamOption.MonitorPeriod) * time.Second)
 		}
@@ -72,13 +73,13 @@ func (i *IpmiEventMonitor) Monitoring() {
 func (i *IpmiEventMonitor) Init() error {
 	ipmiTool, err := ipmi.Open(0)
 	if err != nil {
-		hwlog.RunLog.Errorf("open ipmi device failed, err is %v", err)
+		hwlog.RunLog.Errorf("open ipmi device failed, error: %v", err)
 		return err
 	}
 	i.ipmiTool = ipmiTool
 	if err := i.UpdateFaultDevList(); err != nil {
-		hwlog.RunLog.Errorf("initialize ipmi msg failed, please check bmc version and server type, "+
-			"err is %v", err)
+		hwlog.RunLog.Errorf("ipmi monitor update fault device list failed, please check bmc version and server type, "+
+			"error: %v", err)
 		return err
 	}
 	return nil
@@ -92,12 +93,17 @@ func (i *IpmiEventMonitor) Stop() {
 	i.stopChan <- struct{}{}
 }
 
+// Name get monitor name
+func (i *IpmiEventMonitor) Name() string {
+	return "ipmi event monitor"
+}
+
 // UpdateFaultDevList update fault device list
 func (i *IpmiEventMonitor) UpdateFaultDevList() error {
 	currentAlarmFaultEvents, err := i.GetCurrentAlarmFaultEvents()
 	if err != nil {
-		hwlog.RunLog.Errorf("get current alarm fault events failed, err is %#v", err)
-		return err
+		hwlog.RunLog.Errorf("get current alarm fault events failed, error: %v", err)
+		return errors.New("get current alarm fault events failed")
 	}
 	printFaultEvents(currentAlarmFaultEvents)
 	i.faultManager.SetFaultDevList(GetFaultDevList(currentAlarmFaultEvents))
@@ -111,8 +117,8 @@ func (i *IpmiEventMonitor) GetCurrentAlarmFaultEvents() ([]*common.FaultEvent, e
 	var eventIndex int64 = 0
 	firstAlarmMsg, err := i.ipmiTool.RawCmd(GetCurrentAlarmReq(eventIndex))
 	if err != nil || len(firstAlarmMsg) < common.EventFieldStartIndex {
-		hwlog.RunLog.Errorf("get ipmi msg failed, err is %v", err)
-		return nil, err
+		hwlog.RunLog.Errorf("get first alarm msg from ipmi failed, error: %v", err)
+		return nil, errors.New("get first alarm msg from ipmi failed")
 	}
 	alarmEvents = append(alarmEvents, GetFaultEvents(firstAlarmMsg[common.EventFieldStartIndex:])...)
 	totalNumEvents := GetTotalEventsNum(firstAlarmMsg[common.TotalEventsStartIndex:common.TotalEventsEndIndex])
@@ -123,8 +129,8 @@ func (i *IpmiEventMonitor) GetCurrentAlarmFaultEvents() ([]*common.FaultEvent, e
 	for totalNumEvents > 0 {
 		nextAlarmMsg, err := i.ipmiTool.RawCmd(GetCurrentAlarmReq(eventIndex))
 		if err != nil {
-			hwlog.RunLog.Errorf("get ipmi msg failed, err is %v", err)
-			return nil, err
+			hwlog.RunLog.Errorf("get another alarm msg from ipmi failed, error: %v", err)
+			return nil, errors.New("get another alarm msg from ipmi failed")
 		}
 		msgNumEvents = int64(nextAlarmMsg[common.MsgEventsIndex])
 		eventIndex += msgNumEvents

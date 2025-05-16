@@ -30,6 +30,7 @@ type PluginMonitor interface {
 	Monitoring()
 	Init() error
 	Stop()
+	Name() string
 }
 
 // MonitorManager manage monitors
@@ -52,13 +53,26 @@ func NewMonitorManager(client *kubeclient.ClientK8s) *MonitorManager {
 
 // Init register monitor plugin and start them
 func (m *MonitorManager) Init() error {
+	const retryTime = 3
 	m.monitors = append(m.monitors, ipmimonitor.NewIpmiEventMonitor(m.faultManager))
 	for _, monitor := range m.monitors {
-		if err := monitor.Init(); err != nil {
-			hwlog.RunLog.Errorf("init monitor failed, err is %v", err)
-			continue
+		var initSuc bool
+		for i := 0; i < retryTime; i++ {
+			if err := monitor.Init(); err != nil {
+				hwlog.RunLog.Errorf("init monitor[%s] failed, error: %v, retry count: %d", monitor.Name(), err, i+1)
+				time.Sleep(time.Second)
+				continue
+			}
+			initSuc = true
+			break
 		}
-		go monitor.Monitoring()
+		if initSuc {
+			hwlog.RunLog.Infof("init monitor[%s] success", monitor.Name())
+			go monitor.Monitoring()
+		} else {
+			hwlog.RunLog.Errorf("init monitor[%s] failed, the maximum number of retries (%d) has been reached",
+				monitor.Name(), retryTime)
+		}
 	}
 	return nil
 }

@@ -154,7 +154,7 @@ func createWorkers() error {
 	// init k8s client
 	clientK8s, err := kubeclient.NewClientK8s()
 	if err != nil {
-		hwlog.RunLog.Infof("init k8s client failed when start, err is %v", err)
+		hwlog.RunLog.Errorf("init k8s client failed when start, error: %v", err)
 		return err
 	}
 

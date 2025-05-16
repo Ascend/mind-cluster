@@ -28,7 +28,10 @@ import (
 	"nodeD/pkg/kubeclient"
 )
 
-const defaultReportInterval = 30 * time.Minute
+const (
+	defaultReportInterval = 30 * time.Minute
+	retryTime             = 3
+)
 
 // ConfigMapReporter report fault device info by config map
 type ConfigMapReporter struct {
@@ -75,8 +78,21 @@ func (c *ConfigMapReporter) Report(faultDevInfo *common.FaultDevInfo) {
 			"updateTime":          time.Now().Format(time.RFC3339),
 		},
 	}
-	if err := c.client.CreateOrUpdateConfigMap(nodeInfoCM); err != nil {
-		hwlog.RunLog.Errorf("report node fault device info to k8s by configmap failed, err is %v", err)
+
+	var initSuc bool
+	for i := 0; i < retryTime; i++ {
+		if err := c.client.CreateOrUpdateConfigMap(nodeInfoCM); err != nil {
+			hwlog.RunLog.Errorf("report node fault device info to k8s by configmap failed, error: %v, "+
+				"retry count: %d", err, i+1)
+			time.Sleep(time.Second)
+			continue
+		}
+		initSuc = true
+		break
+	}
+	if !initSuc {
+		hwlog.RunLog.Errorf("report node fault device info to k8s by configmap failed, "+
+			"the maximum number of retries (%d) has been reached", retryTime)
 		return
 	}
 	c.reportTime = time.Now()

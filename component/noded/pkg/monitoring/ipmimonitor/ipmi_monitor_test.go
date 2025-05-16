@@ -175,6 +175,7 @@ func testGetCurrentAlarmFaultEvents() {
 		})
 		defer p2.Reset()
 		_, err := ipmiEventMonitor.GetCurrentAlarmFaultEvents()
-		convey.So(err, convey.ShouldResemble, testErr)
+		expErr := errors.New("get another alarm msg from ipmi failed")
+		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }

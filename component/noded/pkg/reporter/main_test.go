@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"ascend-common/common-utils/hwlog"
@@ -31,6 +32,8 @@ import (
 )
 
 const (
+	testNodeName              = "test-node-name"
+	testNodeInfoName          = common.NodeInfoCMNamePrefix + testNodeName
 	testDeviceType            = "CPU"
 	faultCode1                = "00000001"
 	faultCode2                = "00000002"
@@ -61,12 +64,11 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	const testNodeName = "test-node-name"
 	var patches = gomonkey.ApplyFuncReturn(
 		kubeclient.NewClientK8s, &kubeclient.ClientK8s{
 			ClientSet:    fake.NewSimpleClientset(),
 			NodeName:     testNodeName,
-			NodeInfoName: common.NodeInfoCMNamePrefix + testNodeName,
+			NodeInfoName: testNodeInfoName,
 		}, nil)
 	defer patches.Reset()
 
@@ -106,4 +108,12 @@ func initK8sClient() error {
 		return err
 	}
 	return nil
+}
+
+func deleteCM(cmName, cmNS string) error {
+	_, err := testK8sClient.GetConfigMap(cmName, cmNS)
+	if err != nil {
+		return nil
+	}
+	return testK8sClient.ClientSet.CoreV1().ConfigMaps(cmNS).Delete(context.TODO(), cmName, v1.DeleteOptions{})
 }

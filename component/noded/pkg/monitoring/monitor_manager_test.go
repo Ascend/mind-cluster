@@ -28,6 +28,7 @@ import (
 
 	"nodeD/pkg/common"
 	"nodeD/pkg/control"
+	"nodeD/pkg/monitoring/ipmimonitor"
 )
 
 var (
@@ -60,6 +61,15 @@ func testMonitorMgrInit() {
 		err = monitorManager.Init()
 	}()
 	time.Sleep(waitGoroutineFinishedTime)
+	monitorManager.Stop()
+	convey.So(err, convey.ShouldBeNil)
+
+	var p1 = gomonkey.ApplyMethodReturn(&ipmimonitor.IpmiEventMonitor{}, "Init", mockErr)
+	defer p1.Reset()
+	go func() {
+		err = monitorManager.Init()
+	}()
+	time.Sleep(retryInterval)
 	monitorManager.Stop()
 	convey.So(err, convey.ShouldBeNil)
 }
