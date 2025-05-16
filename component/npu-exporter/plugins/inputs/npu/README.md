@@ -76,7 +76,7 @@ type LogConfig struct {
 ### 2、二进制集成，使用telegraf的execd机制（适合已安装Telegraf的情况）
 对应官方文档：https://docs.influxdata.com/telegraf/v1.26/configure_plugins/external_plugins/shim/
 
-从[MindX DL社区](https://www.hiascend.com/zh/software/mindx-dl/community)获取npu-exporter软件包，并从中解压出npu-exporter二进制文件
+从[MindCluster社区](https://www.hiascend.com/developer/download/community/result?module=cluster)获取npu-exporter软件包，并从中解压出npu-exporter二进制文件
 
 ### 使用
 运行前请先创建日志目录：（该日志是插件调用底层api将记录的日志）
