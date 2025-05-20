@@ -46,11 +46,23 @@ type Device struct {
 
 // A2RankTable is rank table for a2
 type A2RankTable struct {
-	deployServer string
-	Status       RankTableStatus `json:"status"`
-	ServerList   []*Server       `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
-	ServerCount  string          `json:"server_count" json:"server_count,omitempty"` // hccl_json server count
-	Version      string          `json:"version" json:"version,omitempty"`           // hccl_json version
+	deployServer     string
+	Status           RankTableStatus `json:"status"`
+	ServerList       []*Server       `json:"server_list" json:"server_list,omitempty"`       // hccl_json server list
+	ServerCount      string          `json:"server_count" json:"server_count,omitempty"`     // hccl_json server count
+	Version          string          `json:"version" json:"version,omitempty"`               // hccl_json version
+	SuperPodInfoList []*SuperPodInfo `json:"super_pod_list" json:"super_pod_list,omitempty"` // hccl_json super pod list
+}
+
+// SuperPodInfo in superpod hccl.json
+type SuperPodInfo struct {
+	SuperPodId         string            `json:"super_pod_id" json:"super_pod_id,omitempty"` // hccl_json super pod id
+	SuperPodServerList []*SuperPodServer `json:"server_list" json:"server_list,omitempty"`   // hccl_json super pod server list
+}
+
+// SuperPodServer in superpod hccl.json
+type SuperPodServer struct {
+	SuperPodServerId string `json:"server_id" json:"server_id,omitempty"` // hccl_json super pod server id
 }
 
 // PdDeployModeRankTable is global rank table for single node or cross node pd deploy mode
@@ -76,6 +88,7 @@ type ServerGroup struct {
 	DeployServer string                `json:"deploy_server,omitempty"`
 	ServerCount  string                `json:"server_count"`
 	ServerList   []*PdDeployModeServer `json:"server_list"`
+	SuperPodList []*SuperPodInfo       `json:"super_pod_list,omitempty"`
 }
 
 // parseMindIeRankTableCM parse mindie rank table configmap
@@ -232,9 +245,11 @@ func GenerateServerGroupList(a2RankTableList []*A2RankTable) []*ServerGroup {
 			DeployServer: a2RankTable.deployServer,
 			ServerCount:  a2RankTable.ServerCount,
 			ServerList:   pdDeployModeServerList,
+			SuperPodList: a2RankTable.SuperPodInfoList,
 		}
 		serverGroupList[i] = serverGroup
 	}
+	hwlog.RunLog.Debugf("GenerateServerGroupList : %v", serverGroupList)
 	return serverGroupList
 }
 
@@ -258,7 +273,7 @@ func getGlobalRankTableInfo(a2RankTableList []*A2RankTable, serverGroup0, server
 	case constant.CrossNodePdDeployMode:
 		serverGroupList := GenerateServerGroupList(a2RankTableList)
 		crossNodePdDeployModeRankTable := &PdDeployModeRankTable{
-			Version: constant.RankTableVersion,
+			Version: a2RankTableList[0].Version,
 			Status:  constant.StatusRankTableCompleted,
 			ServerGroupList: []*ServerGroup{
 				serverGroup0,

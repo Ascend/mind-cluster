@@ -28,9 +28,14 @@ const (
 	groupId0    = "0"
 	groupId1    = "1"
 	serverCount = "1"
+	deviceId    = "0"
+	rankId      = "0"
 	len1        = 1
 	rankTableCm = `{"status":"completed","server_list":[{"server_id":"serverId",
     "device":[{"device_id":"deviceId","device_ip":"deviceIp"}]}]}`
+	superDeviceId    = "8888"
+	superPodId       = "1"
+	superPodServerId = "192.168.1.2"
 )
 
 var (
@@ -46,8 +51,37 @@ var (
 					ContainerIP: serverIp,
 					DeviceList: []*Device{
 						{
-							DeviceID: "0",
-							RankID:   "0",
+							DeviceID:      deviceId,
+							RankID:        rankId,
+							SuperDeviceID: superDeviceId,
+						},
+					},
+				},
+			},
+			SuperPodInfoList: []*SuperPodInfo{
+				{
+					SuperPodId: superPodId,
+					SuperPodServerList: []*SuperPodServer{
+						{
+							SuperPodServerId: superPodServerId,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	a2RankTableList2 = []*A2RankTable{
+		{
+			ServerList: []*Server{
+				{
+					ServerID:    serverId,
+					ContainerIP: serverIp,
+					DeviceList: []*Device{
+						{
+							DeviceID:      deviceId,
+							RankID:        rankId,
+							SuperDeviceID: superDeviceId,
 						},
 					},
 				},
@@ -93,6 +127,14 @@ func TestParseMindIeRankTableCM(t *testing.T) {
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(rankTable.Status, convey.ShouldEqual, constant.StatusRankTableCompleted)
 				convey.So(rankTable.deployServer, convey.ShouldEqual, "2")
+			})
+		convey.Convey("02-when configmap does not have superdevice into, should return correct result",
+			func() {
+				cm.Labels = map[string]string{distributedDeployServerKey: "2"}
+				rankTable, err := parseMindIeRankTableCM(cm)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(rankTable.SuperPodInfoList, convey.ShouldEqual, nil)
+				convey.So(rankTable.ServerList[0].DeviceList[0].SuperDeviceID, convey.ShouldEqual, "")
 			})
 	})
 }
@@ -232,6 +274,15 @@ func TestGenerateServerGroupList(t *testing.T) {
 		groupList := GenerateServerGroupList(a2RankTableList)
 		convey.So(len(groupList), convey.ShouldEqual, len1)
 		convey.So(groupList[0].ServerList[0].ServerID, convey.ShouldEqual, serverId)
+		convey.So(groupList[0].ServerList[0].DeviceList[0].SuperDeviceID, convey.ShouldEqual, superDeviceId)
+		convey.So(groupList[0].SuperPodList[0].SuperPodId, convey.ShouldEqual, superPodId)
+		convey.So(groupList[0].SuperPodList[0].SuperPodServerList[0].SuperPodServerId, convey.ShouldEqual, superPodServerId)
+	})
+	convey.Convey("test GenerateServerGroupList do not have SuperPodInfoList ", t, func() {
+		groupList := GenerateServerGroupList(a2RankTableList2)
+		convey.So(groupList[0].ServerList[0].ServerID, convey.ShouldEqual, serverId)
+		convey.So(groupList[0].ServerList[0].DeviceList[0].SuperDeviceID, convey.ShouldEqual, superDeviceId)
+		convey.So(groupList[0].SuperPodList, convey.ShouldEqual, nil)
 	})
 }
 
