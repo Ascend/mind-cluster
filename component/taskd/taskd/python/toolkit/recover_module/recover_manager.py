@@ -94,21 +94,11 @@ class DLRecoverManager(RecoverManager):
         }
         self.server_addr = server_addr
         self.lock = threading.Lock()
-        if not secure_conn:
-            run_log.warning("using insecure channel is not safe.")
-            self.grpc_channel = grpc.insecure_channel(self.server_addr)
-            self.grpc_stub = service.RecoverStub(self.grpc_channel)
-            return
-        try:
-            cert_bytes = safe_get_file_info(cert_path).encode()
-            domain_name = CertContentsChecker().check_cert_info(cert_bytes)
-        except Exception as err:
-            run_log.error(f"check cert failed, {err}")
-            raise ValueError from err
-        ssl_credentials = grpc.ssl_channel_credentials(root_certificates=cert_bytes)
-        options = (('grpc.ssl_target_name_override', domain_name),)
-        self.grpc_channel = grpc.secure_channel(self.server_addr, ssl_credentials, options)
-        self.grpc_stub = service.RecoverStub(self.grpc_channel)
+        self.secure_conn = secure_conn
+        self.cert_path = cert_path
+        self.grpc_channel = None
+        self.grpc_stub = None
+        self._init_client()
 
     def register(self, request: pb.ClientInfo) -> pb.Status:
         info = f"call Register, jobId={request.jobId}"
@@ -129,6 +119,7 @@ class DLRecoverManager(RecoverManager):
             except Exception as e:
                 run_log.warning(f"init process recover catch exception:{e}")
                 time.sleep(constants.SLEEP_GAP)
+                self._init_client()
                 continue
 
     def start_subscribe(self, frame: str = "pytorch"):
@@ -155,6 +146,31 @@ class DLRecoverManager(RecoverManager):
                 run_log.warning(info)
             time.sleep(min(MAX_CONNECT_GAP, i * BASE_CONNECT_GAP))
             i += 1
+
+    def _init_client(self):
+        options = [
+            (constants.GRPC_KEEPALIVE_TIME_MS, 3 * 1000),
+            (constants.GRPC_KEEPALIVE_TIMEOUT_MS, 1 * 1000),
+            (constants.GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1),
+            (constants.GRPC_MAX_PINGS_WITHOUT_DATA, 1)
+        ]
+        if not self.secure_conn:
+            run_log.warning("using insecure channel is not safe.")
+            self.grpc_channel = grpc.insecure_channel(self.server_addr, options)
+            self.grpc_stub = service.RecoverStub(self.grpc_channel)
+            return
+        try:
+            cert_bytes = safe_get_file_info(self.cert_path).encode()
+            domain_name = CertContentsChecker().check_cert_info(cert_bytes)
+        except Exception as err:
+            run_log.error(f"check cert failed, {err} and set kill flag to end training")
+            tft_destroy_controller()
+            shared_data.shared_data_inst.set_kill_flag(True)
+            raise ValueError from err
+        ssl_credentials = grpc.ssl_channel_credentials(root_certificates=cert_bytes)
+        options.append((constants.GRPC_SSL_TARGET_NAME_OVERRIDE, domain_name))
+        self.grpc_channel = grpc.secure_channel(self.server_addr, ssl_credentials, options)
+        self.grpc_stub = service.RecoverStub(self.grpc_channel)
 
     def __listen_signal(self):
         stream = self.grpc_stub.SubscribeProcessManageSignal(self.client_info)

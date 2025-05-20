@@ -88,3 +88,9 @@ KILL_INTERVAL = 10
 KILL_ALL_WORKER_CALLBACK_NAME = "KILL_WORKER"
 START_ALL_WORKER_CALLBACK_NAME = "START_ALL_WORKER"
 MONITOR_CALLBACK_NAME = "MONITOR"
+
+GRPC_KEEPALIVE_TIME_MS = 'grpc.keepalive_time_ms'
+GRPC_KEEPALIVE_TIMEOUT_MS = 'grpc.keepalive_timeout_ms'
+GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS = 'grpc.keepalive_permit_without_calls'
+GRPC_MAX_PINGS_WITHOUT_DATA = 'grpc.http2.max_pings_without_data'
+GRPC_SSL_TARGET_NAME_OVERRIDE = 'grpc.ssl_target_name_override'
