@@ -33,4 +33,6 @@ bool CheckExternalFile(const char* filePath, const size_t filePathLen,
 bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen);
 bool CheckExistsFile(const char* filePath, const size_t filePathLen,
     const size_t maxFileSzieMb, const bool checkWgroup);
+bool GetAllowLink();
+void SetAllowLink(bool value);
 #endif

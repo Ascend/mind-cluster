@@ -37,8 +37,6 @@
 #define MAX_ARGC 1024
 #define MAX_ARG_LEN 1024
 
-bool g_allowLink = false;
-
 struct CmdArgs {
     char rootfs[BUF_SIZE];
     long pid;
@@ -127,7 +125,7 @@ static bool CheckFileLegality(const char* filePath, const size_t filePathLen,
         Logger("realpath failed!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-    if (!g_allowLink && strcmp(resolvedPath, filePath) != 0) { // 存在软链接
+    if (!GetAllowLink() && strcmp(resolvedPath, filePath) != 0) { // 存在软链接
         Logger("filePath has a soft link!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
@@ -286,11 +284,11 @@ static bool LinkCheckCmdArgParser(const char *argv)
     }
 
     if (strcmp(argv, "True") == 0) {
-        g_allowLink = true;
+        SetAllowLink(true);
         return true;
     }
     if (strcmp(argv, "False") == 0) {
-        g_allowLink = false;
+        SetAllowLink(false);
         return true;
     }
 

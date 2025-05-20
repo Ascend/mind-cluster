@@ -30,7 +30,7 @@
 #define LOG_LENGTH 1024
 
 static bool g_checkWgroup = true;
-bool g_allowLink;
+static bool g_allowLink = false;
 
 char *FormatLogMessage(char *format, ...)
 {
@@ -379,4 +379,12 @@ bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
     }
     closedir(dir);
     return true;
+}
+
+bool GetAllowLink() {
+    return g_allowLink;
+}
+
+void SetAllowLink(bool value) {
+    g_allowLink = value;
 }

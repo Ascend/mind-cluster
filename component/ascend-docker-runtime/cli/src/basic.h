@@ -55,8 +55,6 @@
 #define MOUNT_SUBSTR_GAP 2
 #define ROOT_SUBSTR_GAP 2
 
-extern bool g_allowLink;
-
 struct PathInfo {
     char* src;
     size_t srcLen;
