@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"ascend-common/common-utils/hwlog"
+	fdol "ascend-faultdiag-online"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/node"
@@ -40,10 +41,11 @@ var (
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName string
-	version   bool
-	server    *sv.ClusterInfoMgrServer
-	limiter   = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	BuildName    string
+	version      bool
+	server       *sv.ClusterInfoMgrServer
+	limiter      = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	fdConfigPath = "/usr/local/fdConfig.yaml"
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -134,6 +136,7 @@ func main() {
 	}
 	initGrpcServer(ctx)
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
+	fdol.StartFDOnline(fdConfigPath, []string{"slowNode", "netFault"}, "cluster")
 	startInformer(ctx)
 	initStatisticModule(ctx)
 	signalCatch(cancel)

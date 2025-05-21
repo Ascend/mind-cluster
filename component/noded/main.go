@@ -23,6 +23,7 @@ import (
 	"syscall"
 
 	"ascend-common/common-utils/hwlog"
+	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
 	"nodeD/pkg/config"
 	"nodeD/pkg/control"
@@ -48,6 +49,7 @@ const (
 	minMonitorPeriod = 60
 	// maxLineLength is max length of each log line
 	maxLineLength = 512
+	fdConfigPath  = "/usr/local/fdConfig.yaml"
 )
 
 var (
@@ -104,6 +106,7 @@ func main() {
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}
+	fdol.StartFDOnline(fdConfigPath, []string{"slowNode"}, "node")
 	signalCatch(cancel)
 }
 

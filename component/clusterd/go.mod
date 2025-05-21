@@ -65,6 +65,7 @@ require (
 
 replace (
 	ascend-common => ../ascend-common
+	ascend-faultdiag-online => ../ascend-faultdiag-online
 	k8s.io/api => k8s.io/api v0.25.3
 	k8s.io/apimachinery => k8s.io/apimachinery v0.25.3
 	k8s.io/client-go => k8s.io/client-go v0.25.3
