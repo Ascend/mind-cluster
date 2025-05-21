@@ -56,8 +56,10 @@ type A2RankTable struct {
 
 // SuperPodInfo in superpod hccl.json
 type SuperPodInfo struct {
-	SuperPodId         string            `json:"super_pod_id" json:"super_pod_id,omitempty"` // hccl_json super pod id
-	SuperPodServerList []*SuperPodServer `json:"server_list" json:"server_list,omitempty"`   // hccl_json super pod server list
+	// hccl_json super pod id
+	SuperPodId string `json:"super_pod_id" json:"super_pod_id,omitempty"`
+	// hccl_json super pod server list
+	SuperPodServerList []*SuperPodServer `json:"server_list" json:"server_list,omitempty"`
 }
 
 // SuperPodServer in superpod hccl.json
