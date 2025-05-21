@@ -17,7 +17,6 @@
 
 #include <sys/types.h>
 #include <limits.h>
-#include <stdbool.h>
 
 #define DEFAULT_DIR_MODE      0755
 #define DEFAULT_LOG_MODE      0600
