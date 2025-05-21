@@ -12,9 +12,9 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "create", "update", "list", "watch"]
-  - apiGroups: [ "" ]
-    resources: [ "nodes" ]
-    verbs: [ "patch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["patch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -68,6 +68,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: XDL_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
           args: [ "/usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0" ]
@@ -85,6 +89,10 @@ spec:
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
+            - name: dev-dir
+              mountPath: /dev
+            - name: slownode
+              mountPath: /user/cluster-info/profiling
       volumes:
         - name: log-noded
           hostPath:
@@ -100,3 +108,11 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
+        - name: dev-dir
+          hostPath:
+            path: /dev
+            type: Directory
+        - name: slownode
+          hostPath:
+            path: /user/cluster-info/profiling
+            type: DirectoryOrCreate
