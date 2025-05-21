@@ -16,12 +16,14 @@ import (
 	"ascend-common/common-utils/limiter"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/application/fault"
+	"clusterd/pkg/application/jobinfo"
 	"clusterd/pkg/application/profiling"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/recover"
 	"clusterd/pkg/common/constant"
 	grpcconfig "clusterd/pkg/interface/grpc/config"
 	grpcfault "clusterd/pkg/interface/grpc/fault"
+	"clusterd/pkg/interface/grpc/job"
 	pbprofiling "clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/pubfault"
 	"clusterd/pkg/interface/grpc/recover"
@@ -68,6 +70,7 @@ func (server *ClusterInfoMgrServer) Start(ctx context.Context) error {
 	dataTraceSvc := &profiling.SwitchManager{}
 	configSvc := config.NewBusinessConfigServer(ctx)
 	faultSvc := fault.NewFaultServer(ctx)
+	jobSvc := jobinfo.NewJobServer(ctx)
 
 	ipStr := os.Getenv("POD_IP")
 	if err := isIPValid(ipStr); err != nil {
@@ -91,6 +94,7 @@ func (server *ClusterInfoMgrServer) Start(ctx context.Context) error {
 	pbprofiling.RegisterTrainingDataTraceServer(server.grpcServer, dataTraceSvc)
 	grpcconfig.RegisterConfigServer(server.grpcServer, configSvc)
 	grpcfault.RegisterFaultServer(server.grpcServer, faultSvc)
+	job.RegisterJobServer(server.grpcServer, jobSvc)
 
 	go func() {
 		if err := server.grpcServer.Serve(limitedListener); err != nil {
