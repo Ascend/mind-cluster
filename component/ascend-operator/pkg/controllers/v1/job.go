@@ -233,6 +233,7 @@ func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
 }
 
 func (r *ASJobReconciler) syncReplicas(ji *jobInfo) error {
+	r.genRankTable(ji)
 	status := checkNonWorkerRplMountChips(ji)
 	annotations := ji.mtObj.GetAnnotations()
 	if annotations == nil {
@@ -246,7 +247,6 @@ func (r *ASJobReconciler) syncReplicas(ji *jobInfo) error {
 			return err
 		}
 	}
-	r.genRankTable(ji)
 	return nil
 }
 
