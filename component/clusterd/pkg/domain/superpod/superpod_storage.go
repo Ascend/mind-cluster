@@ -22,8 +22,10 @@ func deepCopyNodeDevice(device *api.NodeDevice) *api.NodeDevice {
 		return nil
 	}
 	copyDevice := &api.NodeDevice{
-		NodeName:  device.NodeName,
-		DeviceMap: make(map[string]string, len(device.DeviceMap)),
+		ServerType: device.ServerType,
+		ServerID:   device.ServerID,
+		NodeName:   device.NodeName,
+		DeviceMap:  make(map[string]string, len(device.DeviceMap)),
 	}
 	for k, v := range device.DeviceMap {
 		copyDevice.DeviceMap[k] = v
@@ -36,6 +38,7 @@ func deepCopySuperPodDevice(superPodDevice *api.SuperPodDevice) *api.SuperPodDev
 		return nil
 	}
 	copySuperPodDevice := &api.SuperPodDevice{
+		Version:       superPodDevice.Version,
 		SuperPodID:    superPodDevice.SuperPodID,
 		NodeDeviceMap: make(map[string]*api.NodeDevice, len(superPodDevice.NodeDeviceMap)),
 	}
@@ -90,6 +93,7 @@ func SaveNode(superPodID string, node *api.NodeDevice) {
 			return
 		}
 		superPod = &api.SuperPodDevice{
+			Version:       node.ServerType,
 			SuperPodID:    superPodID,
 			NodeDeviceMap: make(map[string]*api.NodeDevice, initNodeNumPerSuperPod),
 		}
@@ -115,7 +119,6 @@ func DeleteNode(superPodID string, nodeName string) {
 	if len(superPod.NodeDeviceMap) == 0 {
 		delete(superPodManager.snMap, superPodID)
 	}
-	return
 }
 
 // ListClusterDevice return slice of cluster super pod device

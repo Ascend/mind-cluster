@@ -18,6 +18,8 @@ import (
 )
 
 const (
+	serverIndexKey   = "serverIndex"
+	serverTypeKey    = "serverType"
 	baseDevInfoAnno  = "baseDeviceInfos"
 	superPodIDKey    = "superPodID"
 	maxNodeDeviceNum = 128
@@ -41,6 +43,8 @@ type nodeCache struct {
 }
 
 type nodeInfo struct {
+	deviceType   string
+	spIndex      string
 	nodeName     string
 	nodeSN       string
 	nodeIP       string
@@ -60,7 +64,9 @@ func SaveNodeToCache(node *v1.Node) {
 	nodeIP := getNodeIP(node)
 	superPodID := getSuerPodID(node)
 	baseDevInfos := getBaseDevInfos(node)
-	nodeDeviceInfo := getNodeDevice(baseDevInfos, nodeName)
+	devType := getDeviceType(node)
+	spIndex := getServerID(node)
+	nodeDeviceInfo := getNodeDevice(baseDevInfos, nodeName, devType, spIndex)
 
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
@@ -72,6 +78,8 @@ func SaveNodeToCache(node *v1.Node) {
 		superPodID:   superPodID,
 		baseDevInfos: baseDevInfos,
 		nodeDevice:   nodeDeviceInfo,
+		deviceType:   devType,
+		spIndex:      spIndex,
 	}
 }
 
@@ -85,6 +93,16 @@ func DeleteNodeFromCache(node *v1.Node) {
 	defer cache.mutex.Unlock()
 	delete(cache.nodeSNAndNameCache, getNodeSN(node))
 	delete(cache.nodeInfoCache, node.Name)
+}
+
+func getServerID(node *v1.Node) string {
+	serverID, hasServerIdKey := node.Annotations[serverIndexKey]
+	serverID = strings.Trim(serverID, " ")
+	if !hasServerIdKey || len(serverID) == 0 {
+		hwlog.RunLog.Debugf("empty server id, nodeName=%s", node.Name)
+		return ""
+	}
+	return serverID
 }
 
 func getNodeSN(node *v1.Node) string {
@@ -130,13 +148,15 @@ func getBaseDevInfos(node *v1.Node) map[string]*api.NpuBaseInfo {
 	return baseDeviceMap
 }
 
-func getNodeDevice(baseDevInfos map[string]*api.NpuBaseInfo, nodeName string) *api.NodeDevice {
+func getNodeDevice(baseDevInfos map[string]*api.NpuBaseInfo, nodeName, devType, serverIndex string) *api.NodeDevice {
 	if baseDevInfos == nil {
 		return nil
 	}
 	nodeDevice := &api.NodeDevice{
-		NodeName:  nodeName,
-		DeviceMap: make(map[string]string, len(baseDevInfos)),
+		NodeName:   nodeName,
+		ServerID:   serverIndex,
+		ServerType: devType,
+		DeviceMap:  make(map[string]string, len(baseDevInfos)),
 	}
 	for device, info := range baseDevInfos {
 		physicID := strings.TrimPrefix(device, constant.AscendDevPrefix)
@@ -214,7 +234,9 @@ func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 		// so we need to obtain it again
 		spId := getSuerPodID(node)
 		baseDevInfos := getBaseDevInfos(node)
-		nodeDevice := getNodeDevice(baseDevInfos, nodeName)
+		deviceType := getDeviceType(node)
+		spIndex := getServerID(node)
+		nodeDevice := getNodeDevice(baseDevInfos, nodeName, deviceType, spIndex)
 		return nodeDevice, spId
 	}
 
@@ -229,4 +251,14 @@ func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 		return nil, info.superPodID
 	}
 	return newDev, info.superPodID
+}
+
+func getDeviceType(node *v1.Node) string {
+	devType, hasVersionKey := node.Annotations[serverTypeKey]
+	devType = strings.Trim(devType, " ")
+	if !hasVersionKey || len(devType) == 0 {
+		hwlog.RunLog.Debugf("empty version, nodeName=%s", node.Name)
+		return ""
+	}
+	return devType
 }

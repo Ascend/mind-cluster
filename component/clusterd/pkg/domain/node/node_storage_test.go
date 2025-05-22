@@ -33,6 +33,7 @@ const (
 	devPhyID1      = "1"
 	superPodID     = 0
 	invalidDevName = "invalid device name"
+	serverID2      = "2"
 )
 
 var (
@@ -269,7 +270,7 @@ func TestGetBaseDevInfos(t *testing.T) {
 func TestGetNodeDevice(t *testing.T) {
 	resetCache()
 	convey.Convey("test func getNodeDevice failed, baseDevInfos is nil", t, func() {
-		nodeDev := getNodeDevice(nil, nodeName1)
+		nodeDev := getNodeDevice(nil, nodeName1, "", "")
 		convey.So(nodeDev, convey.ShouldBeNil)
 	})
 
@@ -280,7 +281,96 @@ func TestGetNodeDevice(t *testing.T) {
 				SuperDeviceID: superPodID,
 			},
 		}
-		nodeDev := getNodeDevice(baseDevInfos, nodeName1)
+		nodeDev := getNodeDevice(baseDevInfos, nodeName1, "", "")
 		convey.So(nodeDev, convey.ShouldBeNil)
+	})
+}
+
+// TestGetServerID test case for func getServerID
+func TestGetServerID(t *testing.T) {
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
+	if err != nil {
+		return
+	}
+	convey.Convey("test func getServerID should return empty when input has no version key", t, func() {
+		actual := getServerID(node)
+		convey.So(actual, convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("test func getServerID should return empty when version value is blank", t, func() {
+		node2 := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName2,
+				Annotations: map[string]string{
+					api.NodeSNAnnotation: nodeSN1,
+					superPodIDKey:        superPodIDStr,
+					baseDevInfoAnno:      string(baseDevInfo),
+					serverIndexKey:       " ",
+				},
+			},
+		}
+		actual := getServerID(node2)
+		convey.So(actual, convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("test func getServerID should return value when version value is valid", t, func() {
+		node2 := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName2,
+				Annotations: map[string]string{
+					api.NodeSNAnnotation: nodeSN1,
+					superPodIDKey:        superPodIDStr,
+					baseDevInfoAnno:      string(baseDevInfo),
+					serverIndexKey:       serverID2,
+				},
+			},
+		}
+		actual := getServerID(node2)
+		convey.So(actual, convey.ShouldEqual, serverID2)
+	})
+}
+
+// TestGetVersion test case for func getVersion
+func TestGetVersion(t *testing.T) {
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
+	if err != nil {
+		return
+	}
+	convey.Convey("test func getVersion should return empty when input has no version key", t, func() {
+		actual := getDeviceType(node)
+		convey.So(actual, convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("test func getVersion should return empty when version value is blank", t, func() {
+		node2 := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName2,
+				Annotations: map[string]string{
+					api.NodeSNAnnotation: nodeSN1,
+					superPodIDKey:        superPodIDStr,
+					baseDevInfoAnno:      string(baseDevInfo),
+					serverTypeKey:        "  ",
+				},
+			},
+		}
+		actual := getDeviceType(node2)
+		convey.So(actual, convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("test func getVersion should return value when version value is valid", t, func() {
+		const testDevType = "testDevType"
+		node2 := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName2,
+				Annotations: map[string]string{
+					api.NodeSNAnnotation: nodeSN1,
+					superPodIDKey:        superPodIDStr,
+					baseDevInfoAnno:      string(baseDevInfo),
+					serverTypeKey:        testDevType,
+				},
+			},
+		}
+		actual := getDeviceType(node2)
+		convey.So(actual, convey.ShouldEqual, testDevType)
 	})
 }

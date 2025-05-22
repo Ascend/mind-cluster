@@ -16,8 +16,8 @@ import (
 
 // NodeCollector collector node info
 func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
-	superPodDevice, superPodID := node.GetNodeDeviceAndSuperPodID(newNodeInfo)
-	if superPodID == "" || superPodDevice == nil {
+	nodeDevice, superPodID := node.GetNodeDeviceAndSuperPodID(newNodeInfo)
+	if superPodID == "" || nodeDevice == nil {
 		hwlog.RunLog.Debugf("discard illegal super pod device info, superPodID=%s.", superPodID)
 		return
 	}
@@ -28,7 +28,7 @@ func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
 	}
 	switch operator {
 	case constant.AddOperator, constant.UpdateOperator:
-		superpod.SaveNode(superPodID, superPodDevice)
+		superpod.SaveNode(superPodID, nodeDevice)
 		addEvent(superPodID, constant.UpdateOperator)
 	case constant.DeleteOperator:
 		superpod.DeleteNode(superPodID, newNodeInfo.Name)

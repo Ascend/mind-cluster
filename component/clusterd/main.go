@@ -43,6 +43,7 @@ var (
 	// BuildName build name
 	BuildName    string
 	version      bool
+	enableFdOl   bool
 	server       *sv.ClusterInfoMgrServer
 	limiter      = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
 	fdConfigPath = "/usr/local/fdConfig.yaml"
@@ -105,6 +106,7 @@ func addResourceFunc() {
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
 	// UpdateNodeInfoCache must be before pingmesh
 	kube.AddNodeFunc(constant.Resource, node.UpdateNodeInfoCache)
+	kube.AddCmConfigPingMeshFunc(constant.Resource, pingmesh.PingMeshConfigCollector)
 }
 
 func addFuncAfterInformer() {
@@ -136,7 +138,9 @@ func main() {
 	}
 	initGrpcServer(ctx)
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
-	fdol.StartFDOnline(fdConfigPath, []string{"slowNode", "netFault"}, "cluster")
+	if enableFdOl {
+		fdol.StartFDOnline(fdConfigPath, []string{"slowNode", "netFault"}, "cluster")
+	}
 	startInformer(ctx)
 	initStatisticModule(ctx)
 	signalCatch(cancel)
@@ -184,7 +188,7 @@ func initK8sServer() error {
 
 func init() {
 	flag.BoolVar(&version, "version", false, "the version of the program")
-
+	flag.BoolVar(&enableFdOl, "enableFdOl", false, "switch of fd online")
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")

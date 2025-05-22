@@ -96,10 +96,10 @@ func TestInitSuperPodsCM(t *testing.T) {
 			})
 		defer patchUpdate.Reset()
 
-		oldPublishLogMapLen := len(publishMgr.publishLogMap)
+		oldPublishLogMapLen := len(publishMgr.cmPublishLogMap)
 		initSuperPodsCM()
-		convey.So(len(publishMgr.publishLogMap), convey.ShouldEqual, oldPublishLogMapLen+1)
-		convey.So(publishMgr.publishLogMap[testSuperPodID], convey.ShouldNotBeNil)
+		convey.So(len(publishMgr.cmPublishLogMap), convey.ShouldEqual, oldPublishLogMapLen+1)
+		convey.So(publishMgr.cmPublishLogMap[testSuperPodID], convey.ShouldNotBeNil)
 	})
 }
 
@@ -122,19 +122,26 @@ func TestHandleUpdate(t *testing.T) {
 		}
 
 		convey.Convey("Test new check code", func() {
+			ptUpdate := gomonkey.ApplyFuncReturn(handleCmUpdate, nil).
+				ApplyFuncReturn(handleFileUpdate, nil)
+			defer ptUpdate.Reset()
 			err := handleUpdate(testSuperPodID, device)
 			convey.So(err, convey.ShouldEqual, nil)
-			convey.So(publishMgr.publishLogMap[testSuperPodID].preCheckCode, convey.ShouldEqual, testCheckCode)
+			convey.So(publishMgr.cmPublishLogMap[testSuperPodID].preCheckCode, convey.ShouldEqual, testCheckCode)
 		})
 
 		convey.Convey("Test same check code", func() {
-			publishMgr.publishLogMap[testSuperPodID] = &publishLog{
+			publishMgr.cmPublishLogMap[testSuperPodID] = &publishLog{
+				publishKey:   testSuperPodID,
+				preCheckCode: testCheckCode,
+			}
+			publishMgr.filePublishLogMap[testSuperPodID] = &publishLog{
 				publishKey:   testSuperPodID,
 				preCheckCode: testCheckCode,
 			}
 			err := handleUpdate(testSuperPodID, device)
 			convey.So(err, convey.ShouldEqual, nil)
-			convey.So(publishMgr.publishLogMap[testSuperPodID].preCheckCode, convey.ShouldEqual, testCheckCode)
+			convey.So(publishMgr.cmPublishLogMap[testSuperPodID].preCheckCode, convey.ShouldEqual, testCheckCode)
 		})
 
 		convey.Convey("Test nil device", func() {
@@ -159,11 +166,9 @@ func TestHandleDelete(t *testing.T) {
 		defer patchHandleUpdate.Reset()
 
 		convey.Convey("Test nil device", func() {
-			err := handleDelete(testSuperPodID)
-			convey.So(err, convey.ShouldEqual, nil)
-		})
-
-		convey.Convey("Test non - nil device", func() {
+			patchHandleDelete := gomonkey.ApplyFuncReturn(handleFileDelete, nil).
+				ApplyFuncReturn(handleCmDelete, nil)
+			defer patchHandleDelete.Reset()
 			err := handleDelete(testSuperPodID)
 			convey.So(err, convey.ShouldEqual, nil)
 		})
