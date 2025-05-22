@@ -49,6 +49,7 @@ type DevManager struct {
 	chips         map[string]*common.ChipBaseInfo
 	resultHandler func(result *types.HccspingMeshResult)
 	SuperPodId    uint32
+	ServerIndex   uint32
 }
 
 // New create new device manager
@@ -63,6 +64,7 @@ func New() (*DevManager, error) {
 		return nil, err
 	}
 	var superPodId uint32 = 0
+	var serverIndex uint32 = 0
 	for _, chip := range chips {
 		_, err = dm.DcGetHccsPingMeshState(chip.CardID, chip.DeviceID, 0, common.InternalPingMeshTaskID)
 		if err != nil {
@@ -77,6 +79,7 @@ func New() (*DevManager, error) {
 			return nil, fmt.Errorf("deviceManager get cgoSuperPodInfo failed, err: %v", err)
 		}
 		superPodId = superPodInfo.SuperPodId
+		serverIndex = superPodInfo.ServerId
 		break
 	}
 
@@ -89,6 +92,7 @@ func New() (*DevManager, error) {
 		devManager:  dm,
 		chips:       physicID2ChipInfo,
 		SuperPodId:  superPodId,
+		ServerIndex: serverIndex,
 		wg:          &sync.WaitGroup{},
 		commandChan: make(chan *types.HccspingMeshPolicy, 1),
 	}, nil

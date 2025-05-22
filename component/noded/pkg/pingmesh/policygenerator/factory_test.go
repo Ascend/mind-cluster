@@ -33,7 +33,7 @@ func TestRule(t *testing.T) {
 	convey.Convey("TestRule", t, func() {
 		factory := NewFactory()
 		convey.Convey("01-register and get", func() {
-			factory.Register(fullmesh.Rule, fullmesh.New("node"))
+			factory.Register(fullmesh.Rule, fullmesh.New("node", "", ""))
 			gen := factory.Rule(fullmesh.Rule)
 			convey.So(gen, convey.ShouldNotBeNil)
 		})

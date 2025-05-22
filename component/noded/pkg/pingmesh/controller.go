@@ -25,21 +25,27 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/consts"
 	"nodeD/pkg/pingmesh/executor"
 	"nodeD/pkg/pingmesh/policygenerator"
 	"nodeD/pkg/pingmesh/policygenerator/fullmesh"
 	"nodeD/pkg/pingmesh/resulthandler"
-	"nodeD/pkg/pingmesh/resulthandler/cmreporter"
 	"nodeD/pkg/pingmesh/resulthandler/filewriter"
 	"nodeD/pkg/pingmesh/types"
 	"nodeD/pkg/pingmesh/watcher"
 	"nodeD/pkg/pingmesh/watcher/configmap"
+)
+
+const (
+	maxRetryTimes        = 24
+	waitTimesForGenerate = 5
 )
 
 // Manager is the controller for pingmesh
@@ -48,6 +54,8 @@ type Manager struct {
 	executor      *executor.DevManager
 	handler       resulthandler.Interface
 	policyFactory policygenerator.Factory
+	superPodId    string
+	serverIndex   string
 	nodeName      string
 	ipCmName      string
 	current       *types.HccspingMeshPolicy
@@ -61,12 +69,16 @@ func NewManager(config *Config) *Manager {
 		return nil
 	}
 	c := &Manager{
-		executor: devExecutor,
-		ipCmName: consts.IpConfigmapNamePrefix + strconv.Itoa(int(devExecutor.SuperPodId)),
-		nodeName: config.KubeClient.NodeName,
-		current:  &types.HccspingMeshPolicy{},
+		executor:    devExecutor,
+		ipCmName:    consts.IpConfigmapNamePrefix + strconv.Itoa(int(devExecutor.SuperPodId)),
+		nodeName:    config.KubeClient.NodeName,
+		current:     &types.HccspingMeshPolicy{},
+		superPodId:  strconv.Itoa(int(devExecutor.SuperPodId)),
+		serverIndex: strconv.Itoa(int(devExecutor.ServerIndex)),
 	}
-	c.policyFactory = policygenerator.NewFactory().Register(fullmesh.Rule, fullmesh.New(c.nodeName))
+
+	gen := fullmesh.New(c.nodeName, c.superPodId, c.serverIndex)
+	c.policyFactory = policygenerator.NewFactory().Register(fullmesh.Rule, gen)
 	c.initWatcher(config)
 	c.initHandler(config)
 	c.executor.SetResultHandler(c.handler.Receive)
@@ -90,23 +102,13 @@ func (c *Manager) initWatcher(config *Config) {
 func (c *Manager) initHandler(config *Config) {
 	var handleFuncs []resulthandler.HandleFunc
 	fw := filewriter.New(&filewriter.Config{
-		Path:   consts.ResultRootDir + "/" + c.nodeName + consts.SuffixOfPingMeshLogFile,
-		MaxAge: config.ResultMaxAge,
+		Path:        consts.ResultRootDir + "/" + c.nodeName + consts.SuffixOfPingMeshLogFile,
+		MaxAge:      config.ResultMaxAge,
+		SuperPodId:  c.superPodId,
+		ServerIndex: c.serverIndex,
 	})
 	if fw != nil {
 		handleFuncs = append(handleFuncs, fw.HandlePingMeshInfo)
-	}
-	reporter := cmreporter.New(&cmreporter.Config{
-		Client:    config.KubeClient,
-		Namespace: api.ClusterNS,
-		Name:      consts.PingMeshFaultCmPrefix + c.nodeName,
-		Labels: map[string]string{
-			api.PubFaultCMLabelKey: consts.FaultConfigmapLabelValue,
-		},
-		NodeName: c.nodeName,
-	})
-	if reporter != nil {
-		handleFuncs = append(handleFuncs, reporter.HandlePingMeshInfo)
 	}
 	c.handler = resulthandler.NewAggregatedHandler(handleFuncs...)
 }
@@ -146,7 +148,31 @@ func (c *Manager) handleClusterAddress(cm *v1.ConfigMap) {
 func (c *Manager) updateConfig() {
 	hwlog.RunLog.Infof("has dest: %v, has config %v", len(c.current.Address) != 0, c.current.Config != nil)
 	if len(c.current.Address) != 0 && c.current.Config != nil {
-		c.current.DestAddr = c.policyFactory.Rule(fullmesh.Rule).Generate(c.current.Address)
+		gen := c.policyFactory.Rule(fullmesh.Rule)
+		retryTime := 0
+		for ; retryTime < maxRetryTimes; retryTime++ {
+			if c.current.Config.Activate == types.ActivateOff {
+				hwlog.RunLog.Infof("current config Activate is %s, no need retry", types.ActivateOff)
+				break
+			}
+			dstAddrs := gen.Generate(c.current.Address)
+			if dstAddrs != nil {
+				c.current.DestAddr = dstAddrs
+				c.current.DestAddrMap = gen.GetDestAddrMap()
+				hwlog.RunLog.Infof("generate dstAddrs from policyFactory success")
+				break
+			}
+			if c.current.Config.Activate == types.ActivateOff {
+				hwlog.RunLog.Infof("current config Activate is %s, no need retry", types.ActivateOff)
+				break
+			}
+			hwlog.RunLog.Infof("generate dstAddrs from policyFactory failed, will retry it")
+			time.Sleep(waitTimesForGenerate * time.Second)
+		}
+		if retryTime >= maxRetryTimes {
+			hwlog.RunLog.Errorf("generate ping list info failed")
+			return
+		}
 		uid, err := generateJobUID(c.current.Config, c.current.Address)
 		if err != nil {
 			hwlog.RunLog.Errorf("generate job uid failed, err: %v", err)
@@ -156,7 +182,7 @@ func (c *Manager) updateConfig() {
 			return
 		}
 		c.current.UID = uid
-		hwlog.RunLog.Infof("update config %v, uid: %s", c.current.Config, c.current.UID)
+		hwlog.RunLog.Infof("update config %+v, uid: %s", *(c.current.Config), c.current.UID)
 		c.executor.UpdateConfig(c.current.DeepCopy())
 	}
 }
@@ -198,6 +224,10 @@ func (c *Manager) parsePingMeshConfig(data map[string]string) (*types.HccspingMe
 	err := json.Unmarshal([]byte(cfg), config)
 	if err != nil {
 		return nil, err
+	}
+	if config.TaskInterval < common.MinTaskInterval || config.TaskInterval > common.MaxTaskInterval {
+		return nil, fmt.Errorf("task interval %d is invalid, should be between %d and %d", config.TaskInterval,
+			common.MinTaskInterval, common.MaxTaskInterval)
 	}
 	return config, nil
 }

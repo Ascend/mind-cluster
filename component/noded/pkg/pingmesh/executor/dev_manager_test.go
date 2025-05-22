@@ -66,7 +66,7 @@ func patchGetSuperPodInfo(spInfo common.CgoSuperPodInfo, err error) *gomonkey.Pa
 func TestNew(t *testing.T) {
 	convey.Convey("Testing New", t, func() {
 		convey.Convey("01-GetDeviceManager failed should return error", func() {
-			patch := patchGetDeviceManager(nil, errors.New("getDeviceManager failed"))
+			patch := patchGetDeviceManager(&devmanager.DeviceManager{}, errors.New("getDeviceManager failed"))
 			defer patch.Reset()
 			_, err := New()
 			convey.So(err, convey.ShouldNotBeNil)
@@ -95,9 +95,9 @@ func TestNew(t *testing.T) {
 			_, err := New()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patch3 := patchGetSuperPodInfo(common.CgoSuperPodInfo{}, nil)
-		defer patch3.Reset()
 		convey.Convey("05-GetSuperPodInfo success should return success", func() {
+			patch3 := patchGetSuperPodInfo(common.CgoSuperPodInfo{}, nil)
+			defer patch3.Reset()
 			_, err := New()
 			convey.So(err, convey.ShouldBeNil)
 		})

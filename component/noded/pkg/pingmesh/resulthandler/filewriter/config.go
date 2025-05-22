@@ -21,6 +21,8 @@ package filewriter
 
 // Config is the configuration for the file writer
 type Config struct {
-	Path   string
-	MaxAge int
+	Path        string
+	MaxAge      int
+	SuperPodId  string
+	ServerIndex string
 }

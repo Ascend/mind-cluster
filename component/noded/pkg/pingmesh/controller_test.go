@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -43,7 +44,8 @@ import (
 )
 
 const (
-	fakeNode = "node"
+	fakeNode        = "node"
+	fakeServerIndex = 2
 )
 
 func TestNewManager(t *testing.T) {
@@ -64,11 +66,12 @@ func TestNewManager(t *testing.T) {
 				KubeClient: &kubeclient.ClientK8s{},
 			}
 			patch := gomonkey.ApplyFunc(executor.New, func() (*executor.DevManager, error) {
-				return &executor.DevManager{SuperPodId: 1}, nil
+				return &executor.DevManager{SuperPodId: 1, ServerIndex: fakeServerIndex}, nil
 			})
 			defer patch.Reset()
 			m := NewManager(config)
 			convey.So(m, convey.ShouldNotBeNil)
+			convey.So(m.serverIndex, convey.ShouldEqual, strconv.Itoa(fakeServerIndex))
 		})
 	})
 }

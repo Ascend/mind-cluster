@@ -4,6 +4,7 @@ metadata:
   name: pingmesh-config
   namespace: cluster-system
   labels:
+    mx-consumer-cim: true
     app: pingmesh
 data:
   global: '{"activate": "off", "task_interval": 1}'

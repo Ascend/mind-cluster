@@ -24,4 +24,5 @@ import "nodeD/pkg/pingmesh/types"
 // Interface is policy generator interface
 type Interface interface {
 	Generate(addrs map[string]types.SuperDeviceIDs) map[string]types.DestinationAddress
+	GetDestAddrMap() map[string][]types.PingItem
 }

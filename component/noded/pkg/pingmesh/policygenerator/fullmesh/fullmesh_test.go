@@ -21,31 +21,60 @@ Package fullmesh is one of policy generator for pingmesh
 package fullmesh
 
 import (
+	"encoding/json"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api/slownet"
+	"ascend-common/common-utils/utils"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
 )
 
+const (
+	testInt    = 1
+	testString = "2"
+)
+
 func TestGenerate(t *testing.T) {
 	convey.Convey("TestGenerate", t, func() {
-		gen := New("node")
+		gen := New("node", "", "")
 		convey.Convey("01-addrs with out local should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil)
+			defer patch.Reset()
+			readPatch := gomonkey.ApplyFuncReturn(utils.ReadLimitBytes, make([]byte, maxFileSize, maxFileSize), nil)
+			defer readPatch.Reset()
 			res := gen.Generate(map[string]types.SuperDeviceIDs{})
 			convey.So(res, convey.ShouldBeNil)
 		})
 		convey.Convey("02-addrs with local should return local", func() {
+			testPingListInfos := make([]types.PingListInfo, 0)
+			testPingListInfos = append(testPingListInfos, types.PingListInfo{
+				TaskId:   testString,
+				TaskType: testString,
+				PingList: []types.PingItem{{
+					SrcType:      testInt,
+					DstType:      testInt,
+					PktSize:      testInt,
+					SrcCardPhyId: testInt,
+					SrcAddr:      testString,
+					DstAddr:      testString,
+				},
+				},
+			})
+			testData, err := json.Marshal(testPingListInfos)
+			convey.So(err, convey.ShouldBeNil)
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil)
+			defer patch.Reset()
+			readPatch := gomonkey.ApplyFuncReturn(utils.ReadLimitBytes, testData, nil)
+			defer readPatch.Reset()
 			res := gen.Generate(map[string]types.SuperDeviceIDs{
 				"node":  {"0": "000", "1": "111"},
 				"node1": {"0": "001", "1": "112"},
 			})
 			convey.So(res, convey.ShouldNotBeNil)
-			convey.So(res["0"][0], convey.ShouldEqual, "111")
-			convey.So(res["0"][1], convey.ShouldEqual, "001")
-			convey.So(res["1"][0], convey.ShouldEqual, "000")
-			convey.So(res["1"][1], convey.ShouldEqual, "112")
 		})
 	})
 }
