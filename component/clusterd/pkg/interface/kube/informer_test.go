@@ -25,8 +25,9 @@ import (
 )
 
 var (
-	testTwoDeviceFunc = 2
-	testTwoNodeFunc   = 2
+	testTwoDeviceFunc   = 2
+	testTwoNodeFunc     = 2
+	testTwoPingMeshFunc = 2
 )
 
 func TestStopInformer(t *testing.T) {
@@ -306,4 +307,25 @@ func TestInitACJobInformer(t *testing.T) {
 		convey.So(called, convey.ShouldEqual, true)
 	})
 
+}
+
+func TestAddCmConfigPingMeshFunc(t *testing.T) {
+	convey.Convey("When adding functions for a new business", t, func() {
+		defer CleanFuncs()
+		business := "test_business"
+		func1 := func(cm1, cm2 constant.ConfigPingMesh, s string) {}
+		func2 := func(cm1, cm2 constant.ConfigPingMesh, s string) {}
+
+		convey.So(cmPingMeshCMFuncs[business], convey.ShouldBeNil)
+
+		AddCmConfigPingMeshFunc(business, func1)
+		convey.So(cmPingMeshCMFuncs[business], convey.ShouldNotBeNil)
+		convey.So(len(cmPingMeshCMFuncs[business]), convey.ShouldEqual, 1)
+		convey.So(cmPingMeshCMFuncs[business][0], convey.ShouldEqual, func1)
+
+		AddCmConfigPingMeshFunc(business, func2)
+		convey.So(len(cmPingMeshCMFuncs[business]), convey.ShouldEqual, testTwoPingMeshFunc)
+		convey.So(cmPingMeshCMFuncs[business][0], convey.ShouldEqual, func1)
+		convey.So(cmPingMeshCMFuncs[business][1], convey.ShouldEqual, func2)
+	})
 }

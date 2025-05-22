@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// ComponentName is the name of component
-	ComponentName = "clusterd"
-
 	// MaxLogLineLength max log line length
 	MaxLogLineLength = 2047
 
@@ -214,4 +211,45 @@ const (
 	EmptyDeviceId = "-1"
 	// FormatBase The base number used to convert int to string
 	FormatBase = 10
+)
+
+// ras feature const
+const (
+	// RasNetDetectOff ras net fault detect status is off
+	RasNetDetectOff = 0
+	// RasNetDetectOn ras net fault detect status is on
+	RasNetDetectOn = 1
+
+	// RasGlobalKey one of the key of pingmesh config
+	RasGlobalKey = "global"
+	// RasNetDetectOnStr the string of detect on
+	RasNetDetectOnStr = "on"
+	// RasNetDetectOffStr the string of detect off
+	RasNetDetectOffStr = "off"
+
+	// NewStr the string of new
+	NewStr = "new"
+	// OldStr the string of old
+	OldStr = "old"
+
+	// StartApi to request start
+	StartApi = "start"
+	// StopApi to request stop
+	StopApi = "stop"
+	// ReloadApi to request reload
+	ReloadApi = "reload"
+
+	// PingMeshCMNamespace is the namespace of pingmesh configmap
+	PingMeshCMNamespace = "cluster-system"
+	// PingMeshConfigCm is the name of pingmesh configmap
+	PingMeshConfigCm = "pingmesh-config"
+	// PingMeshConfigLabelKey is the label key of pingmesh configmap
+	PingMeshConfigLabelKey = "app"
+	// PingMeshConfigLabelValue is the label value of pingmesh configmap
+	PingMeshConfigLabelValue = "pingmesh"
+
+	// DefaultGroupId the default value of groupId for node
+	DefaultGroupId = -1
+	// OneDayHours the hours of one day is 24
+	OneDayHours = 24
 )

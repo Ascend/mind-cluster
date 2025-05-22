@@ -26,6 +26,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
 	"clusterd/pkg/domain/node"
+	"clusterd/pkg/domain/pingmeshconfig"
 	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/domain/superpod"
 	"clusterd/pkg/domain/switchinfo"
@@ -43,6 +44,9 @@ var (
 	nodeFuncs        = map[string][]func(*v1.Node, *v1.Node, string){}
 	cmRankTableFuncs = map[string][]func(interface{}, interface{}, string){}
 	informerCh       = make(chan struct{})
+
+	// ping mesh configmap deal func
+	cmPingMeshCMFuncs = map[string][]func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
 )
 
 // JobService a interface with DeleteJob method
@@ -72,6 +76,7 @@ func CleanFuncs() {
 	podFuncs = map[string][]func(*v1.Pod, *v1.Pod, string){}
 	nodeFuncs = map[string][]func(*v1.Node, *v1.Node, string){}
 	cmRankTableFuncs = map[string][]func(interface{}, interface{}, string){}
+	cmPingMeshCMFuncs = map[string][]func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
 }
 
 // AddACJobFunc add acJob func
@@ -144,6 +149,15 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	}
 
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
+}
+
+// AddCmConfigPingMeshFunc add configmap func of pingmesh config
+func AddCmConfigPingMeshFunc(business string,
+	func1 ...func(constant.ConfigPingMesh, constant.ConfigPingMesh, string)) {
+	if _, ok := cmPingMeshCMFuncs[business]; !ok {
+		cmPingMeshCMFuncs[business] = []func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
+	}
+	cmPingMeshCMFuncs[business] = append(cmPingMeshCMFuncs[business], func1...)
 }
 
 // AddCmPubFaultFunc add public fault deal func, map by business
@@ -359,10 +373,64 @@ func InitCMInformer() {
 			},
 		},
 	})
-
 	AddRankTableEventHandler(&cmInformer)
-
+	addPingMeshConfigEventHandler(&cmInformer)
 	informerFactory.Start(informerCh)
+}
+
+func addPingMeshConfigEventHandler(cmInformer *cache.SharedIndexInformer) {
+	(*cmInformer).AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: checkConfigMapIsPingMeshInfo,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				cmPingMeshConfigHandler(nil, obj, constant.AddOperator)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if !reflect.DeepEqual(oldObj, newObj) {
+					cmPingMeshConfigHandler(oldObj, newObj, constant.UpdateOperator)
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				cmPingMeshConfigHandler(nil, obj, constant.DeleteOperator)
+			},
+		},
+	})
+}
+
+func checkConfigMapIsPingMeshInfo(obj interface{}) bool {
+	return util.IsNSAndNameMatched(obj, constant.PingMeshCMNamespace, constant.PingMeshConfigCm)
+}
+
+func cmPingMeshConfigHandler(oldObj interface{}, newObj interface{}, operator string) {
+	var oldInfo constant.ConfigPingMesh
+	var newInfo constant.ConfigPingMesh
+	var err error
+	if oldObj != nil {
+		oldInfo, err = pingmeshconfig.ParseFaultNetworkInfoCM(oldObj)
+		if err != nil {
+			hwlog.RunLog.Errorf("parse old cm error: %v", err)
+			return
+		}
+	}
+	newInfo, err = pingmeshconfig.ParseFaultNetworkInfoCM(newObj)
+	if err != nil {
+		hwlog.RunLog.Errorf("parse new cm error: %v", err)
+		return
+	}
+	index := 0
+	for _, cmFuncs := range cmPingMeshCMFuncs {
+		// different businesses use different data sources
+		oldInfoForBusiness := oldInfo
+		newInfoForBusiness := newInfo
+		if index > 0 {
+			oldInfoForBusiness = pingmeshconfig.DeepCopy(oldInfo)
+			newInfoForBusiness = pingmeshconfig.DeepCopy(newInfo)
+		}
+		for _, cmFunc := range cmFuncs {
+			cmFunc(oldInfoForBusiness, newInfoForBusiness, operator)
+		}
+		index++
+	}
 }
 
 // AddRankTableEventHandler add rank table event handler for cmInformer

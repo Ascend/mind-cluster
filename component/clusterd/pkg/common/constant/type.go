@@ -386,3 +386,32 @@ type FaultNum struct {
 	NodeFaultNum       int `json:"-"`
 	PubFaultNum        int `json:"publicFaultNum"`
 }
+
+// HccspingMeshItem is the configuration for the pingmesh component
+type HccspingMeshItem struct {
+	Activate     string `json:"activate"`
+	TaskInterval int    `json:"task_interval"`
+}
+
+// ConfigPingMesh the config of pingmesh set by user
+type ConfigPingMesh map[string]*HccspingMeshItem
+
+// CathelperConf config info for cathelper
+type CathelperConf struct {
+	SuppressedPeriod int `json:"suppressedPeriod"`
+	NetworkType      int `json:"networkType"`
+	PingType         int `json:"pingType"`
+	PingTimes        int `json:"pingTimes"`
+	PingInterval     int `json:"pingInterval"`
+	Period           int `json:"period"`
+}
+
+// CacheStatus cache the status
+type CacheStatus struct {
+	Inited bool
+}
+
+// NetFaultInfo the ras feature cm of fault network
+type NetFaultInfo struct {
+	NetFault int // the switch of fault network feature
+}
