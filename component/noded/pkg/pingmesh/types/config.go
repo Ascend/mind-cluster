@@ -27,30 +27,63 @@ type HccspingMeshConfig struct {
 	TaskInterval int    `json:"task_interval"`
 }
 
+// PingItem ping info item
+type PingItem struct {
+	SrcType      int    `json:"srcType"`
+	DstType      int    `json:"dstType"`
+	PktSize      int    `json:"pktSize"`
+	SrcCardPhyId int    `json:"srcCardPhyId"`
+	SrcAddr      string `json:"srcAddr"`
+	DstAddr      string `json:"dstAddr"`
+}
+
+// PingListInfo ping list info
+type PingListInfo struct {
+	TaskId       string     `json:"taskId"`
+	TaskType     string     `json:"taskType"`
+	Timestamp    int64      `json:"timestamp"`
+	PingInterval int        `json:"pingInterval"`
+	PingTimes    int        `json:"pingTimes"`
+	PingPeriod   int        `json:"pingPeriod"`
+	PingList     []PingItem `json:"pingList"`
+}
+
 // HccspingMeshPolicy is the policy for the pingmesh component
 type HccspingMeshPolicy struct {
-	Config   *HccspingMeshConfig
-	Address  map[string]SuperDeviceIDs
-	DestAddr map[string]DestinationAddress
-	UID      string
+	Config      *HccspingMeshConfig
+	Address     map[string]SuperDeviceIDs
+	DestAddr    map[string]DestinationAddress
+	UID         string
+	DestAddrMap map[string][]PingItem
 }
 
 // DeepCopy creates a deep copy of the HccspingMeshPolicy
 func (p *HccspingMeshPolicy) DeepCopy() *HccspingMeshPolicy {
 	np := &HccspingMeshPolicy{
-		Config: &HccspingMeshConfig{
-			p.Config.Activate,
-			p.Config.TaskInterval,
-		},
-		Address:  make(map[string]SuperDeviceIDs, len(p.Address)),
-		DestAddr: make(map[string]DestinationAddress, len(p.DestAddr)),
-		UID:      p.UID,
+		Address:     make(map[string]SuperDeviceIDs, len(p.Address)),
+		DestAddr:    make(map[string]DestinationAddress, len(p.DestAddr)),
+		UID:         p.UID,
+		DestAddrMap: make(map[string][]PingItem, len(p.DestAddrMap)),
+	}
+	if p.Config != nil {
+		np.Config = &HccspingMeshConfig{
+			Activate:     p.Config.Activate,
+			TaskInterval: p.Config.TaskInterval,
+		}
 	}
 	for k, v := range p.Address {
 		np.Address[k] = v.DeepCopy()
 	}
 	for k, v := range p.DestAddr {
 		np.DestAddr[k] = v.DeepCopy()
+	}
+	for k, v := range p.DestAddrMap {
+		pingItem := make([]PingItem, 0, len(v))
+		for _, item := range v {
+			newItem := item
+			pingItem = append(pingItem, newItem)
+		}
+		np.DestAddrMap[k] = pingItem
 	}
 	return np
 }
