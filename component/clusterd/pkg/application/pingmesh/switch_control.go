@@ -16,12 +16,7 @@
 package pingmesh
 
 import (
-	"fmt"
-
 	"ascend-common/common-utils/hwlog"
-	"ascend-faultdiag-online/pkg/api/v1"
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/global/globalctx"
 	"clusterd/pkg/common/constant"
 )
 
@@ -29,29 +24,19 @@ const controllerUrl = "feature/netfault/controller"
 
 // StartController to start controller
 func StartController() {
-	requestFD(globalctx.Fdctx, constant.StartApi)
+	requestFD(constant.StartApi)
 }
 
 // StopController to stop controller
 func StopController() {
-	requestFD(globalctx.Fdctx, constant.StopApi)
+	requestFD(constant.StopApi)
 }
 
 // ReloadController to reload controller
 func ReloadController() {
-	requestFD(globalctx.Fdctx, constant.ReloadApi)
+	requestFD(constant.ReloadApi)
 }
 
-func requestFD(fdCtx *context.FaultDiagContext, api string) {
-	if fdCtx == nil {
-		hwlog.RunLog.Errorf("fdCtx is nil")
-		return
-	}
-	url := fmt.Sprintf("%s/%s", controllerUrl, api)
-	resp, err := v1.Request(fdCtx, url, "{}")
-	if err != nil {
-		hwlog.RunLog.Errorf("stop controller algorithm failed: %v", err)
-		return
-	}
-	hwlog.RunLog.Infof("the response of %s controller is %v", api, resp)
+func requestFD(api string) {
+	hwlog.RunLog.Infof("unsupported")
 }

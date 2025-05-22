@@ -23,7 +23,6 @@ import (
 	"syscall"
 
 	"ascend-common/common-utils/hwlog"
-	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
 	"nodeD/pkg/config"
 	"nodeD/pkg/control"
@@ -106,7 +105,6 @@ func main() {
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}
-	fdol.StartFDOnline(fdConfigPath, []string{"slowNode"}, "node")
 	signalCatch(cancel)
 }
 

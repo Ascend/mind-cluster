@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"ascend-common/common-utils/hwlog"
-	fdol "ascend-faultdiag-online"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/node"
@@ -138,9 +137,6 @@ func main() {
 	}
 	initGrpcServer(ctx)
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
-	if enableFdOl {
-		fdol.StartFDOnline(fdConfigPath, []string{"slowNode", "netFault"}, "cluster")
-	}
 	startInformer(ctx)
 	initStatisticModule(ctx)
 	signalCatch(cancel)
