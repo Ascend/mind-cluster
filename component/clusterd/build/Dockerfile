@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:18.04
 
 RUN useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX &&\
     usermod root -s /usr/sbin/nologin

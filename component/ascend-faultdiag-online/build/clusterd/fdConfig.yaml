@@ -1,0 +1,4 @@
+mode: cluster
+so_dir: /home/hwMindX
+log_level: info
+queue_size: 10
