@@ -20,6 +20,7 @@ import (
 	"ascend-common/api/slownet"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"clusterd/pkg/application/fdapi"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/superpod"
@@ -283,7 +284,7 @@ func handleFileUpdate(superPodID string, device *api.SuperPodDevice, checkCode s
 		preCheckCode: checkCode,
 	}
 	hwlog.RunLog.Infof("update super pod device file success, superPodID=%s", superPodID)
-	ReloadController()
+	fdapi.ReloadController()
 	return nil
 }
 
@@ -307,7 +308,7 @@ func handleCmDelete(superPodID string) error {
 		hwlog.RunLog.Infof("delete super pod device cm success, superPodID=%s", superPodID)
 		if RasNetDetectInst.CheckIsOn() {
 			hwlog.RunLog.Infof("super-pod-%s file is deleted and controller will be reloaded", superPodID)
-			ReloadController()
+			fdapi.ReloadController()
 		}
 		delete(publishMgr.cmPublishLogMap, superPodID)
 		return nil

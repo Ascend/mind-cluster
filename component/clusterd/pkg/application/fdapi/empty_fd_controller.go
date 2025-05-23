@@ -1,3 +1,5 @@
+//go:build !fdol
+
 /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,31 +14,29 @@
    limitations under the License.
 */
 
-// Package pingmesh for a series of function handle ping mesh configmap create/update/delete
-package pingmesh
+// Package fdapi for a series of function of fd controller
+package fdapi
 
 import (
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/common/constant"
 )
 
-const controllerUrl = "feature/netfault/controller"
+// StartFdOL start fd-ol
+func StartFdOL() {
+	hwlog.RunLog.Warn("start fd-ol not support, please build with fd-ol tags")
+}
 
 // StartController to start controller
 func StartController() {
-	requestFD(constant.StartApi)
+	hwlog.RunLog.Warn("start controller not support, please build with fd-ol tags")
 }
 
 // StopController to stop controller
 func StopController() {
-	requestFD(constant.StopApi)
+	hwlog.RunLog.Warn("stop controller not support, please build with fd-ol tags")
 }
 
 // ReloadController to reload controller
 func ReloadController() {
-	requestFD(constant.ReloadApi)
-}
-
-func requestFD(api string) {
-	hwlog.RunLog.Infof("unsupported")
+	hwlog.RunLog.Warn("reload controller not support, please build with fd-ol tags")
 }

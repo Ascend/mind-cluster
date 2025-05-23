@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/fdapi"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/superpod"
 )
@@ -95,10 +96,10 @@ func (cf *ConfigPingMeshCmManager) startOrReloadController() {
 	hwlog.RunLog.Info("config changed and will reload or start controller")
 	if !cf.cacheStatus.Inited {
 		cf.cacheStatus.Inited = true
-		StartController()
+		fdapi.StartController()
 		return
 	}
-	ReloadController()
+	fdapi.ReloadController()
 }
 
 func getConfigItemBySuperPodId(configInfo constant.ConfigPingMesh,

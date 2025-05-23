@@ -5,6 +5,7 @@ package pingmesh
 
 import (
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/fdapi"
 	"clusterd/pkg/common/constant"
 )
 
@@ -21,7 +22,7 @@ func updatePingMeshConfigCM(newConfigInfo constant.ConfigPingMesh) {
 	hwlog.RunLog.Info("ready to update pingmesh config")
 	if isNeedToStop(newConfigInfo) {
 		RasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOff})
-		StopController()
+		fdapi.StopController()
 		return
 	}
 	RasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOn})

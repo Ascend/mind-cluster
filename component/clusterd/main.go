@@ -16,6 +16,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
+	"clusterd/pkg/application/fdapi"
 	"clusterd/pkg/application/jobv2"
 	"clusterd/pkg/application/node"
 	"clusterd/pkg/application/pingmesh"
@@ -40,12 +41,11 @@ var (
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName    string
-	version      bool
-	enableFdOl   bool
-	server       *sv.ClusterInfoMgrServer
-	limiter      = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
-	fdConfigPath = "/usr/local/fdConfig.yaml"
+	BuildName  string
+	version    bool
+	enableFdOl bool
+	server     *sv.ClusterInfoMgrServer
+	limiter    = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -136,6 +136,7 @@ func main() {
 		return
 	}
 	initGrpcServer(ctx)
+	fdapi.StartFdOL()
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
 	startInformer(ctx)
 	initStatisticModule(ctx)

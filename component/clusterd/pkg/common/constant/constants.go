@@ -232,13 +232,6 @@ const (
 	// OldStr the string of old
 	OldStr = "old"
 
-	// StartApi to request start
-	StartApi = "start"
-	// StopApi to request stop
-	StopApi = "stop"
-	// ReloadApi to request reload
-	ReloadApi = "reload"
-
 	// PingMeshCMNamespace is the namespace of pingmesh configmap
 	PingMeshCMNamespace = "cluster-system"
 	// PingMeshConfigCm is the name of pingmesh configmap

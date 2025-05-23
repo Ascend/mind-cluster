@@ -162,7 +162,7 @@ func getNodeDevice(baseDevInfos map[string]*api.NpuBaseInfo, nodeName, devType, 
 		physicID := strings.TrimPrefix(device, constant.AscendDevPrefix)
 		_, err := strconv.Atoi(physicID)
 		if err != nil {
-			hwlog.RunLog.Errorf("illegal device name, deviceName=%s, nodeName=%s",
+			hwlog.RunLog.Warnf("illegal device name, deviceName=%s, nodeName=%s",
 				device, nodeName)
 			return nil
 		}
