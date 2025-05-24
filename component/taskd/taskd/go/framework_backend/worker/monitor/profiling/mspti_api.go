@@ -179,11 +179,13 @@ import (
 )
 
 var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
-var stepFlag atomic.Bool
+var stepCount atomic.Int32
+
+const int2 int32 = 2
 
 // InitMspti found mspti so and init it
 func InitMspti() error {
-	stepFlag.Store(false)
+	stepCount.Store(0)
 	libMsptiName := "libmspti.so"
 	libPath, err := utils.GetDriverLibPath(libMsptiName)
 	if err != nil {
@@ -333,7 +335,7 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 }
 
 func StepOut() bool {
-	return stepFlag.Load()
+	return stepCount.Load() >= int2
 }
 
 func handleActivityRecord(pRecord *C.msptiActivity) {
@@ -362,11 +364,9 @@ func handleMarkerRecord(pRecord *C.msptiActivity) {
 		hwlog.RunLog.Errorf("failed to decode record %v err:%v", jsonStr, err)
 		return
 	}
-	if !stepFlag.Load() {
-		if strings.Contains(*mark.Name, "step") {
-			hwlog.RunLog.Infof("set stepout flag=true, %s", *mark.Name)
-			stepFlag.Store(true)
-		}
+	if strings.Contains(*mark.Name, "step") {
+		hwlog.RunLog.Infof("set stepout flag=true, %s", *mark.Name)
+		stepCount.Add(1)
 	}
 	hwlog.RunLog.Debugf("got a marker kind record: %v", mark.Timestamp)
 	appendMark(mark)
