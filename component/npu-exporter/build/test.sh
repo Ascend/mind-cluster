@@ -26,7 +26,18 @@ function execute_test() {
   else
     gocov convert cov.out | gocov-html >"$file_detail_output"
     gotestsum --junitfile unit-tests.xml "${TOP_DIR}"/...
-    exit 0
+
+    total_coverage=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
+    # round up
+    coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
+                                          else print ($1 == int($1)) ? int($1) : int($1)}')
+    if [[ $coverage -ge 80 ]]; then
+      echo "coverage passed: $coverage%"
+      exit 0
+    else
+      echo "coverage failed: $coverage%, it needs to be greater than 80%."
+      exit 1
+    fi
   fi
 }
 
