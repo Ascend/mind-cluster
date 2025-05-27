@@ -175,56 +175,37 @@ func sendToKubelet(stream v1beta1.DevicePlugin_ListAndWatchServer, resp *v1beta1
 	return stream.Send(resp)
 }
 
-func (ps *PluginServer) getNotPodUsedChips() sets.String {
-	usedChips := ps.manager.GetUsedChips()
-	podUsedChips := ps.manager.GetKubeClient().GetPodsUsedNPUByKlt()
-	notPodUsedChips := usedChips.Difference(podUsedChips)
-	return notPodUsedChips
-}
-
 func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 	resp := new(v1beta1.ListAndWatchResponse)
 	ps.cachedLock.RLock()
-	usedChips := ps.getNotPodUsedChips()
-	hwlog.RunLog.Debugf("response to kubelet usedChips:%v not used by K8s", usedChips)
 	if !common.ParamOption.PresetVDevice {
 		unhealthyDev := ps.getUnhealthyAICore()
 		for _, device := range ps.cachedDevices {
-			if _, ok := usedChips[device.DeviceName]; ok {
-				hwlog.RunLog.Warnf("filter used chip %s", device.DeviceName)
-				continue
-			}
 			if unhealthyDev.Has(device.DeviceName) {
 				device.Health = v1beta1.Unhealthy
 			} else {
 				device.Health = v1beta1.Healthy
 			}
-			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s", device.DeviceName, device.Health)
+			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s, NotPodUsed: %v",
+				device.DeviceName, device.Health, device.NotPodUsed)
 			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: device.DeviceName, Health: device.Health})
 		}
 	} else if common.ParamOption.UseVolcanoType && !common.IsVirtualDev(ps.deviceType) {
 		vol2kltMap := ps.generateAllDeviceMap()
 		for _, device := range ps.cachedDevices {
-			if _, ok := usedChips[device.DeviceName]; ok {
-				hwlog.RunLog.Warnf("filter used chip %s", device.DeviceName)
-				continue
-			}
 			d, exist := vol2kltMap[device.DeviceName]
 			if !exist {
 				hwlog.RunLog.Warnf(" not exist map key, %s  map %+v", device.DeviceName, vol2kltMap)
 				continue
 			}
-			hwlog.RunLog.Infof("ListAndWatch resp devices: inner device: %s %s, real device: %s %s", d,
-				device.Health, device.DeviceName, device.Health)
+			hwlog.RunLog.Infof("ListAndWatch resp devices: inner device: %s %s, real device: %s %s, "+
+				"NotPodUsed: %v", d, device.Health, device.DeviceName, device.Health, device.NotPodUsed)
 			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: d, Health: device.Health})
 		}
 	} else {
 		for _, device := range ps.cachedDevices {
-			if _, ok := usedChips[device.DeviceName]; ok {
-				hwlog.RunLog.Warnf("filter used chip %s", device.DeviceName)
-				continue
-			}
-			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s", device.DeviceName, device.Health)
+			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s, NotPodUsed: %v",
+				device.DeviceName, device.Health, device.NotPodUsed)
 			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: device.DeviceName, Health: device.Health})
 		}
 	}

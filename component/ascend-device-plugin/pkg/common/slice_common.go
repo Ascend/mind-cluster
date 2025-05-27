@@ -104,6 +104,16 @@ func (i int64Tool) Abs(var1, var2 int64) int64 {
 	return var2 - var1
 }
 
+// Contains slice for int64 contains
+func (i int64Tool) Contains(sources []int64, target int64) bool {
+	for _, sourceNum := range sources {
+		if sourceNum == target {
+			return true
+		}
+	}
+	return false
+}
+
 // Index slice for string search the index with target
 func (s stringTool) Index(sources []string, target string) int {
 	for i, source := range sources {

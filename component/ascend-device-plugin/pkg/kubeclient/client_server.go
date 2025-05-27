@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +33,8 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
+
+const domainForKubeletConnectErr = "kubeletConnect"
 
 // Similar to the K8s metadata structure
 type metaData struct {
@@ -343,8 +346,8 @@ func (ki *ClientK8s) AnnotationReset() error {
 	return err
 }
 
-// GetPodsUsedNpu get npu by status
-func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
+// GetPodsUsedNpuByCommon get npu by status
+func (ki *ClientK8s) GetPodsUsedNpuByCommon() sets.String {
 	podList := ki.GetActivePodListCache()
 	var useNpu = make([]string, 0)
 	for _, pod := range podList {
@@ -360,7 +363,7 @@ func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 		useNpu = append(useNpu, tmpNpuList...)
 		hwlog.RunLog.Debugf("pod Name: %s, getNPUByStatus vol : %#v", pod.Name, tmpNpu)
 	}
-	hwlog.RunLog.Debugf("nodeName: %s, useNpus: %#v", ki.NodeName, useNpu)
+	hwlog.RunLog.Debugf("get pods by cache from api-server, used NPU: %v", useNpu)
 	return sets.NewString(useNpu...)
 }
 
@@ -368,8 +371,9 @@ func (ki *ClientK8s) GetPodsUsedNpu() sets.String {
 func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
 	podList, err := ki.getPodsByKltPort()
 	if err != nil {
-		hwlog.RunLog.Errorf("get pods used NPU failed: %v", err)
-		return sets.String{}
+		hwlog.RunLog.ErrorfWithLimit(domainForKubeletConnectErr, os.Getenv(KubeletPortEnv),
+			"get pods used NPU failed: %v", err)
+		return ki.GetPodsUsedNpuByCommon()
 	}
 	usedNPU := make([]string, 0)
 	for _, pod := range podList.Items {
@@ -395,7 +399,7 @@ func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
 			continue
 		}
 		usedNPU = append(usedNPU, tmpNPUList...)
-		hwlog.RunLog.Debugf("pod Name: %s, get real allocate npu by pod, tmpNPU: %#v", pod.GetName(), tmpNPU)
+		hwlog.RunLog.Debugf("pod Name: %s, get real allocate npu by pod, tmpNPU: %v", pod.GetName(), tmpNPU)
 	}
 	hwlog.RunLog.Debugf("get pods by klt port, used NPU: %v", usedNPU)
 	return sets.NewString(usedNPU...)

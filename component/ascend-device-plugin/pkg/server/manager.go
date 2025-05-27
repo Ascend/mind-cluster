@@ -29,6 +29,7 @@ import (
 	"github.com/containerd/containerd"
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
@@ -472,9 +473,8 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				PhyID:                  npuDevice.PhyID,
 				CardID:                 npuDevice.CardID,
 				Status:                 npuDevice.Status,
-				NotPodUsedChipStatus:   npuDevice.NotPodUsedChipStatus,
-				PodUsedChips:           npuDevice.PodUsedChips,
-				NotPodUsedChips:        npuDevice.NotPodUsedChips,
+				PodUsed:                npuDevice.PodUsed,
+				NotPodUsed:             npuDevice.NotPodUsed,
 			}
 			newNpuDevices = append(newNpuDevices, newNpuDevice)
 		}
@@ -489,12 +489,47 @@ func (hdm *HwDevManager) updateDeviceUsedInfo(groupDevice map[string][]*common.N
 	notPodUsedChips := usedChips.Difference(podUsedChips)
 	hwlog.RunLog.Debugf("update deviceUsedInfo usedChips: %v, podUsedChips: %v, notPodUsedChips: %v",
 		usedChips, podUsedChips, notPodUsedChips)
-	for devType, devices := range groupDevice {
-		for idx := range devices {
-			groupDevice[devType][idx].PodUsedChips = podUsedChips
-			groupDevice[devType][idx].NotPodUsedChips = notPodUsedChips
+	for _, devices := range groupDevice {
+		updateDevices(devices, podUsedChips, notPodUsedChips)
+	}
+}
+
+func updateDevices(devices []*common.NpuDevice, podUsedChips, notPodUsedChips sets.String) {
+	for _, deviceInfo := range devices {
+		deviceInfo.PodUsed = podUsedChips.Has(deviceInfo.DeviceName)
+		deviceInfo.NotPodUsed = notPodUsedChips.Has(deviceInfo.DeviceName)
+		existCardDropFaultCode := common.Int64Tool.Contains(deviceInfo.FaultCodes, common.CardDropFaultCode)
+		if deviceInfo.NotPodUsed && !existCardDropFaultCode {
+			faultDevice(deviceInfo)
+		} else if !deviceInfo.NotPodUsed && existCardDropFaultCode {
+			if deviceInfo.CardDrop {
+				continue
+			}
+			recoverDevice(deviceInfo)
 		}
 	}
+}
+
+func faultDevice(deviceInfo *common.NpuDevice) {
+	faultInfo := npuCommon.DevFaultInfo{
+		EventID:         common.CardDropFaultCode,
+		LogicID:         deviceInfo.LogicID,
+		Assertion:       npuCommon.FaultOccur,
+		AlarmRaisedTime: time.Now().UnixMilli(),
+	}
+	common.SaveDevFaultInfo(faultInfo)
+	hwlog.RunLog.Infof("create non-kubelet use chip %v fault", deviceInfo.LogicID)
+}
+
+func recoverDevice(deviceInfo *common.NpuDevice) {
+	faultInfo := npuCommon.DevFaultInfo{
+		EventID:         common.CardDropFaultCode,
+		LogicID:         deviceInfo.LogicID,
+		Assertion:       npuCommon.FaultRecover,
+		AlarmRaisedTime: time.Now().UnixMilli(),
+	}
+	common.SaveDevFaultInfo(faultInfo)
+	hwlog.RunLog.Infof("recover non-kubelet use chip %v fault", deviceInfo.LogicID)
 }
 
 func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType string) {
@@ -516,9 +551,7 @@ func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType s
 func (hdm *HwDevManager) notifyToK8s(initTime *time.Time) {
 	hdm.isSupportGraceTolerance()
 	oldGroupDevice := deepCopyGroupDevice(hdm.groupDevice)
-	hdm.manager.UpdateDeviceUsedStatus(hdm.groupDevice)
 	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
-
 	// If hot reset is used, the health of the device being reset is set here to healthy
 	hdm.graceTolerance(hdm.groupDevice)
 	isDevStateChange := hdm.manager.GetChange(hdm.groupDevice, oldGroupDevice)

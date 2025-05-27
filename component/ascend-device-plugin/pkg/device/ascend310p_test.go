@@ -51,7 +51,7 @@ func TestDoWithVolcanoListAndWatch310p(t *testing.T) {
 		allInfo, err := manager.GetNPUs()
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
-		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		mockGetPodsUsedNpu := mockGetPodsUsedNpuByCommon()
 		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{common.Ascend310P: "Ascend310p-1"})
 		mockCreateConfigMap := mockWriteDeviceInfoDataIntoCM()
 		defer func() {

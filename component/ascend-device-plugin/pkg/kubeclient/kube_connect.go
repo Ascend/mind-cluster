@@ -125,7 +125,8 @@ func (ki *ClientK8s) getPodsByKltPort() (*v1.PodList, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("get kubelet http response failed: %v", resp.StatusCode)
+		return nil, fmt.Errorf("get kubelet http response failed, resp status code: %v is not %v",
+			resp.StatusCode, http.StatusOK)
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, limiter.DefaultDataLimit))
 	if err != nil {

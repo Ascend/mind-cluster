@@ -96,7 +96,7 @@ func TestDoWithVolcanoListAndWatch910(t *testing.T) {
 		allInfo, err := manager.GetNPUs()
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
-		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		mockGetPodsUsedNpu := mockGetPodsUsedNpuByCommon()
 		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{common.Ascend910: ascend910LogicID1})
 		mockPatchNodeState := mockPatchNodeState()
 		mockCreateConfigMap := mockWriteDeviceInfoDataIntoCM()
@@ -150,9 +150,9 @@ func mockGetDeviceInfoCMCache(deviceList map[string]string) *gomonkey.Patches {
 		})
 }
 
-func mockGetPodsUsedNpu() *gomonkey.Patches {
+func mockGetPodsUsedNpuByCommon() *gomonkey.Patches {
 	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-		"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
+		"GetPodsUsedNpuByCommon", func(_ *kubeclient.ClientK8s) sets.String {
 			return nil
 		})
 }

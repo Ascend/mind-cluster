@@ -130,8 +130,8 @@ func TestGetNodeServerID(t *testing.T) {
 	})
 }
 
-// TestGetPodsUsedNpu test used npu devices on pod
-func TestGetPodsUsedNpu(t *testing.T) {
+// TestGetPodsUsedNpuByCommon test used npu devices on pod
+func TestGetPodsUsedNpuByCommon(t *testing.T) {
 	utKubeClient, err := initK8S()
 	if err != nil {
 		t.Fatal("TestGetPodsUsedNpu init kubernetes failed")
@@ -143,7 +143,7 @@ func TestGetPodsUsedNpu(t *testing.T) {
 				return nil
 			})
 		defer mockPodList.Reset()
-		useNpu := utKubeClient.GetPodsUsedNpu()
+		useNpu := utKubeClient.GetPodsUsedNpuByCommon()
 		convey.So(useNpu, convey.ShouldEqual, sets.String{})
 	})
 	convey.Convey("get used npu on pods", t, func() {
@@ -152,7 +152,7 @@ func TestGetPodsUsedNpu(t *testing.T) {
 				return podList
 			})
 		defer mockPodList.Reset()
-		useNpu := utKubeClient.GetPodsUsedNpu()
+		useNpu := utKubeClient.GetPodsUsedNpuByCommon()
 		convey.So(strings.Join(useNpu.List(), ","), convey.ShouldEqual, npuChip310PhyID0)
 	})
 }
@@ -629,8 +629,25 @@ func annotationResetMock(devErr, stateErr, nodeErr error) (*gomonkey.Patches, *g
 	return mockWrite, mockPatchNode, mockNode
 }
 
-func newTestPodWithAnnoAndPhase(annotations map[string]string, phase v1.PodPhase) v1.Pod {
-	return v1.Pod{
+type getPodsUsedNPUByKltTest struct {
+	name               string
+	mockPods           *v1.PodList
+	mockPodsErr        error
+	mockCheckPodResult error
+	expectedLen        int
+}
+
+func mockAnnosWithTooLongVal() map[string]string {
+	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	longValue := make([]string, common.PodAnnotationMaxLength+1)
+	for i := range longValue {
+		longValue[i] = fmt.Sprintf("Ascend910-%d", i)
+	}
+	return map[string]string{annoKey: strings.Join(longValue, common.CommaSepDev)}
+}
+
+func mockPodList(annotations map[string]string, phase v1.PodPhase) *v1.PodList {
+	return &v1.PodList{Items: []v1.Pod{{
 		ObjectMeta: metav1.ObjectMeta{
 			UID:         "testUid",
 			Name:        "name",
@@ -640,97 +657,97 @@ func newTestPodWithAnnoAndPhase(annotations map[string]string, phase v1.PodPhase
 		Status: v1.PodStatus{
 			Phase: phase,
 		},
+	}}}
+}
+
+func buildGetPodsUsedNPUByKltTestCases() []getPodsUsedNPUByKltTest {
+	tests := make([]getPodsUsedNPUByKltTest, 0)
+	tests = append(tests, buildErrorHandlingTests()...)
+	tests = append(tests, buildAnnotationTests()...)
+	return tests
+}
+
+func buildErrorHandlingTests() []getPodsUsedNPUByKltTest {
+	return []getPodsUsedNPUByKltTest{
+		{
+			name:               "01-should return empty string set when get pods information failed",
+			mockPods:           nil,
+			mockPodsErr:        fmt.Errorf("get pods information failed"),
+			mockCheckPodResult: nil,
+			expectedLen:        0,
+		},
+		{
+			name:               "02-should return empty string set when check pod name or pod namespace failed",
+			mockPods:           mockPodList(map[string]string{}, v1.PodRunning),
+			mockPodsErr:        nil,
+			mockCheckPodResult: fmt.Errorf("failed"),
+			expectedLen:        0,
+		},
 	}
 }
 
-func TestGetPodsUsedNPUCase01(t *testing.T) {
-	convey.Convey("test GetPodsUsedNPU case 01", t, func() {
-		client, err := newTestClientK8s()
-		if err != nil {
-			t.Fatal("TestGetNode init kubernetes failed")
-		}
-		convey.Convey("should return empty string set "+
-			"when get pods information failed", func() {
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return nil, fmt.Errorf("get pods information failed")
-				})
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, 0)
-		})
-		convey.Convey("should return empty string set "+
-			"when check pod name or pod namespace failed", func() {
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return &v1.PodList{}, nil
-				}).ApplyFuncReturn(common.CheckPodNameAndSpace, fmt.Errorf("failed"))
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, 0)
-		})
-		convey.Convey("should return empty string set "+
-			"when pod status is Failed or Succeeded", func() {
-			testPod := newTestPodWithAnnoAndPhase(map[string]string{}, v1.PodFailed)
-			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return testPodList, nil
-				}).ApplyFuncReturn(common.CheckPodNameAndSpace, nil)
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, 0)
-		})
-	})
+func buildAnnotationTests() []getPodsUsedNPUByKltTest {
+	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	const expectedLen = 2
+	return []getPodsUsedNPUByKltTest{
+		{
+			name:               "03-should return empty string set when pod status is Failed or Succeeded",
+			mockPods:           mockPodList(map[string]string{}, v1.PodFailed),
+			mockPodsErr:        nil,
+			mockCheckPodResult: nil,
+			expectedLen:        0,
+		},
+		{
+			name:               "04-should return empty string set when pod annotation not found realAllocTag",
+			mockPods:           mockPodList(map[string]string{}, v1.PodRunning),
+			mockPodsErr:        nil,
+			mockCheckPodResult: nil,
+			expectedLen:        0,
+		},
+		{
+			name:               "05-should return empty string set when pod annotation value is empty",
+			mockPods:           mockPodList(map[string]string{annoKey: ""}, v1.PodRunning),
+			mockPodsErr:        nil,
+			mockCheckPodResult: nil,
+			expectedLen:        0,
+		},
+		{
+			name:               "06-should return non-empty string set when pod annotation value is too long",
+			mockPods:           mockPodList(mockAnnosWithTooLongVal(), v1.PodRunning),
+			mockPodsErr:        nil,
+			mockCheckPodResult: nil,
+			expectedLen:        0,
+		},
+		{
+			name:               "07-should return non-empty string set when pod annotation value is right",
+			mockPods:           mockPodList(map[string]string{annoKey: "Ascend910-0, Ascend910-1"}, v1.PodRunning),
+			mockPodsErr:        nil,
+			mockCheckPodResult: nil,
+			expectedLen:        expectedLen,
+		},
+	}
 }
 
-func TestGetPodsUsedNPUCase02(t *testing.T) {
+func TestGetPodsUsedNPUByKlt(t *testing.T) {
 	client, err := newTestClientK8s()
 	if err != nil {
 		t.Fatal("TestGetNode init kubernetes failed")
 	}
-	convey.Convey("test GetPodsUsedNPU case 02", t, func() {
-		commonPatch := gomonkey.ApplyFuncReturn(common.CheckPodNameAndSpace, nil)
-		defer commonPatch.Reset()
-		convey.Convey("should return empty string set "+
-			"when pod annotation not found realAllocTag", func() {
-			testPod := newTestPodWithAnnoAndPhase(map[string]string{}, v1.PodRunning)
-			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return testPodList, nil
-				})
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, 0)
-		})
-		convey.Convey("should return empty string set "+
-			"when pod annotation value is empty", func() {
-			annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
-			anno := map[string]string{annoKey: ""}
-			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
-			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return testPodList, nil
-				})
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, 0)
-		})
-		convey.Convey("should return non-empty string set "+
-			"when pod annotation value is non-empty", func() {
-			annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
-			anno := map[string]string{annoKey: "Ascend910-0,Ascend910-1"}
-			testPod := newTestPodWithAnnoAndPhase(anno, v1.PodRunning)
-			testPodList := &v1.PodList{Items: []v1.Pod{testPod}}
-			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
-				func() (*v1.PodList, error) {
-					return testPodList, nil
-				})
-			defer patch.Reset()
-			pods := client.GetPodsUsedNPUByKlt()
-			convey.So(pods.Len(), convey.ShouldEqual, twoNum)
-		})
+	tests := buildGetPodsUsedNPUByKltTestCases()
+	convey.Convey("GetPodsUsedNPUByKlt tests", t, func() {
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
+					func() (*v1.PodList, error) {
+						return tt.mockPods, tt.mockPodsErr
+					})
+				if tt.mockCheckPodResult != nil {
+					patch.ApplyFuncReturn(common.CheckPodNameAndSpace, tt.mockCheckPodResult)
+				}
+				defer patch.Reset()
+				pods := client.GetPodsUsedNPUByKlt()
+				convey.So(pods.Len(), convey.ShouldEqual, tt.expectedLen)
+			})
+		}
 	})
 }

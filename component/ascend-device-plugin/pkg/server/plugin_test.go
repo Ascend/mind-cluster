@@ -112,7 +112,7 @@ func TestListAndWatch(t *testing.T) {
 				"GetUsedChips", func(_ *device.AscendTools) sets.String {
 					return sets.String{}
 				}).ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
+				"GetPodsUsedNpuByCommon", func(_ *kubeclient.ClientK8s) sets.String {
 					return sets.String{}
 				})
 			defer mockGetUsedChips.Reset()
@@ -196,7 +196,7 @@ func TestResponseToKubelet(t *testing.T) {
 			"GetUsedChips", func(_ *device.AscendTools) sets.String {
 				return sets.String{}
 			}).ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetPodsUsedNpu", func(_ *kubeclient.ClientK8s) sets.String {
+			"GetPodsUsedNpuByCommon", func(_ *kubeclient.ClientK8s) sets.String {
 				return sets.String{}
 			})
 		defer mockGetUsedChips.Reset()

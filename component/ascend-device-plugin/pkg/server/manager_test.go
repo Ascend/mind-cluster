@@ -32,6 +32,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -1382,4 +1383,36 @@ func TestChipHotResetFor300IDuo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateDeviceUsedInfo(t *testing.T) {
+	convey.Convey("TestUpdateDeviceUsedInfo when device used by non-Pod, the NotPodUsed should be true",
+		t, func() {
+			hdm := &HwDevManager{
+				manager: device.NewHwAscend910Manager(),
+			}
+			mockGetUsedChips := gomonkey.ApplyMethodReturn(hdm.manager, "GetUsedChips",
+				sets.NewString("Ascend910-0", "Ascend910-1"))
+			defer mockGetUsedChips.Reset()
+			client := &kubeclient.ClientK8s{}
+			mockGetClient := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", client)
+			mockGetPodsUsedNPUByKlt := gomonkey.ApplyMethodReturn(client, "GetPodsUsedNPUByKlt",
+				sets.NewString("Ascend910-1"))
+			defer mockGetPodsUsedNPUByKlt.Reset()
+			defer mockGetClient.Reset()
+			groupDevice := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					&common.NpuDevice{
+						DeviceName: "Ascend910-0",
+						NotPodUsed: false,
+					},
+					&common.NpuDevice{
+						DeviceName: "Ascend910-1",
+						NotPodUsed: false,
+					},
+				},
+			}
+			hdm.updateDeviceUsedInfo(groupDevice)
+			convey.So(groupDevice[common.Ascend910][0].NotPodUsed, convey.ShouldBeTrue)
+		})
 }

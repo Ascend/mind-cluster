@@ -176,25 +176,6 @@ func TestIsDeviceStatusChange(t *testing.T) {
 	})
 }
 
-// TestUpdateDeviceUsedStatus for test UpdateDeviceUsedStatus
-func TestUpdateDeviceUsedStatus(t *testing.T) {
-	convey.Convey("test UpdateDeviceUsedStatus", t, func() {
-		tool := mockAscendTools()
-		convey.Convey("01-used chip is empty, not update chip status", func() {
-			groupDevices := map[string][]*common.NpuDevice{common.Ascend910: {{DeviceName: ascend910LogicID1}}}
-			tool.UpdateDeviceUsedStatus(groupDevices)
-			convey.So(groupDevices[common.Ascend910][0].NotPodUsedChipStatus == common.NPUUsedChipStatus, convey.ShouldBeFalse)
-		})
-		convey.Convey("02-used chip is not empty, update chip status, "+
-			"groupDevices[common.Ascend910][0] should be used", func() {
-			groupDevices := map[string][]*common.NpuDevice{common.Ascend910: {{DeviceName: ascend910LogicID1,
-				NotPodUsedChips: sets.String{ascend910LogicID1: struct{}{}}}}}
-			tool.UpdateDeviceUsedStatus(groupDevices)
-			convey.So(groupDevices[common.Ascend910][0].NotPodUsedChipStatus == common.NPUUsedChipStatus, convey.ShouldBeTrue)
-		})
-	})
-}
-
 // TestSetAICoreHealthyIfVNpu for test setAICoreHealthyIfVNpu
 func TestSetAICoreHealthyIfVNpu(t *testing.T) {
 	convey.Convey("test setAICoreHealthyIfVNpu", t, func() {
@@ -1070,7 +1051,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 			func(_ *AscendTools, subClassDevices []*common.NpuDevice, runMode string) common.DevStatusSet {
 				return common.DevStatusSet{HealthDevices: sets.String{"Ascend910-0": sets.Empty{}}}
 			})
-		mockGetPodsUsedNpu := mockGetPodsUsedNpu()
+		mockGetPodsUsedNpu := mockGetPodsUsedNpuByCommon()
 		defer func() {
 			mockGetRealUsedDevices.Reset()
 			mockGroupDevsByStatus.Reset()
@@ -1201,5 +1182,46 @@ func TestCompareDeviceList(t *testing.T) {
 			res := compareDeviceList(deviceList, newDeviceList)
 			convey.So(res, convey.ShouldBeTrue)
 		})
+	})
+}
+
+func TestGetUsedDevices(t *testing.T) {
+	tool := &AscendTools{}
+	tests := []struct {
+		name           string
+		input          []*common.NpuDevice
+		expectedOutput sets.String
+	}{
+		{
+			name:           "01-nil input, should return emtpy sets.String",
+			input:          nil,
+			expectedOutput: sets.NewString(),
+		},
+		{
+			name: "02-no devices used, should return emtpy sets.String",
+			input: []*common.NpuDevice{
+				{DeviceName: "device0", PodUsed: false},
+				{DeviceName: "device1", PodUsed: false},
+			},
+			expectedOutput: sets.NewString(),
+		},
+		{
+			name: "03-some devices used, , should return used devices",
+			input: []*common.NpuDevice{
+				{DeviceName: "device0", PodUsed: true},
+				{DeviceName: "device1", PodUsed: false},
+				{DeviceName: "device2", PodUsed: true},
+			},
+			expectedOutput: sets.NewString("device0", "device2"),
+		},
+	}
+
+	convey.Convey("getUsedDevices tests", t, func() {
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				result := tool.getUsedDevices(tt.input)
+				convey.So(result, convey.ShouldEqual, tt.expectedOutput)
+			})
+		}
 	})
 }
