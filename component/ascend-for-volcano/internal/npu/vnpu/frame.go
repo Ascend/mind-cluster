@@ -67,6 +67,9 @@ func (tp *VirtualNPU) GetTaskResource(task *api.TaskInfo, node plugin.NPUNode) (
 	if node.ChipKind == plugin.Ascend310P {
 		virTemplate = getResTemplateFromTaskSetting(coreNum, cpuLevel, dvpp)
 	}
+	if virTemplate == "" {
+		return util.VResource{}, fmt.Errorf("task<%s> get virTemplate is null", task.Name)
+	}
 
 	klog.V(util.LogDebugLev).Infof("vnpu template string for cur task:<%s>", virTemplate)
 	taskReqRes := tp.VT.Data[virTemplate]

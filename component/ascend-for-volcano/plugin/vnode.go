@@ -52,8 +52,8 @@ func (n *NPUNode) setNodeVNPUInfo(ni *api.NodeInfo, jobTemplate map[string]map[s
 }
 
 func initTemplate() []util.VTemplate {
-	nodeTemplate := make([]util.VTemplate, util.NPUIndex6)
-	if len(nodeTemplate) < util.NPUIndex6 {
+	nodeTemplate := make([]util.VTemplate, util.NPUIndex7)
+	if len(nodeTemplate) < util.NPUIndex7 {
 		return nodeTemplate
 	}
 	nodeTemplate[0] = util.VTemplate{
@@ -85,6 +85,11 @@ func initTemplate() []util.VTemplate {
 		ChipKind: ChipTypeB2,
 		AICore:   util.CoreNum24,
 		AICPU:    util.CpuNum6,
+	}
+	nodeTemplate[util.NPUIndex6] = util.VTemplate{
+		ChipKind: Ascend310P,
+		AICore:   util.CoreNum10,
+		AICPU:    util.NPUIndex7,
 	}
 	return nodeTemplate
 }

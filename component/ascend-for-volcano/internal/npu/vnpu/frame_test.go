@@ -160,8 +160,8 @@ func buildGetTaskResourceTestCase07() getTaskResourceTest {
 		name:    "07-task coreNum 03 test.",
 		fields:  virtualNPUTestFields{VT: VTemplate{Data: testVT}},
 		args:    getTaskResourceArgs{task: tempTask, node: tempNode},
-		want:    util.VResource{Aicore: 0, Aicpu: 0},
-		wantErr: nil,
+		want:    util.VResource{},
+		wantErr: errors.New("task<pod1> get virTemplate is null"),
 	}
 }
 

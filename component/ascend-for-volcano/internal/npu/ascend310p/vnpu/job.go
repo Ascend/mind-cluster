@@ -40,7 +40,7 @@ func (tp *virtual310NPU) checkDyVJobReq() error {
 	}
 	for _, vT := range tp.Tasks {
 		if vT.ReqNPUNum == 1 || vT.ReqNPUNum == util.NPUIndex2 || vT.ReqNPUNum == util.NPUIndex4 ||
-			vT.ReqNPUNum%util.NPUIndex8 == 0 {
+			vT.ReqNPUNum%util.NPUIndex8 == 0 || vT.ReqNPUNum%util.NPUIndex10 == 0 {
 			continue
 		}
 		return fmt.Errorf("%s req err %d", vT.Name, vT.ReqNPUNum)
@@ -55,7 +55,7 @@ func (tp *virtual310NPU) validDyVNPUTaskDVPPLabel(vT util.NPUTask) error {
 
 	dvppValue := vnpu.GetVNPUTaskDVPP(vT)
 
-	if vT.ReqNPUNum > 0 && vT.ReqNPUNum%util.NPUIndex8 == 0 {
+	if vT.ReqNPUNum > 0 && (vT.ReqNPUNum%util.NPUIndex8 == 0 || vT.ReqNPUNum%util.NPUIndex10 == 0) {
 		return nil
 	}
 	switch vT.ReqNPUNum {
