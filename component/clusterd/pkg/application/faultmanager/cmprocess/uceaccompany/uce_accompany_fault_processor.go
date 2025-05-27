@@ -171,17 +171,17 @@ func (processor *uceAccompanyFaultProcessor) Process(info any) any {
 	}
 	deviceInfos := processContent.AllConfigmap
 	processor.deviceCmForNodeMap = faultdomain.GetAdvanceDeviceCmForNodeMap(deviceInfos)
-	hwlog.RunLog.Debugf("current deviceInfos: %s", util.ObjToString(deviceInfos))
-	hwlog.RunLog.Debugf("current deviceCmForNodeMap: %s", util.ObjToString(processor.deviceCmForNodeMap))
+	hwlog.RunLog.Debugf("current deviceInfos: %v", deviceInfos)
+	hwlog.RunLog.Debugf("current deviceCmForNodeMap: %v", processor.deviceCmForNodeMap)
 
 	processor.uceAccompanyFaultInQue()
-	hwlog.RunLog.Debugf("current uceAccompanyFaultQue: %s", util.ObjToString(processor.uceAccompanyFaultQue))
+	hwlog.RunLog.Debugf("current uceAccompanyFaultQue: %v", processor.uceAccompanyFaultQue)
 	currentTime := time.Now().UnixMilli()
 
 	processor.filterFaultInfos(currentTime)
 	faultdomain.AdvanceDeviceCmForNodeMapToString(processor.deviceCmForNodeMap, deviceInfos)
 
-	hwlog.RunLog.Debugf("uceAccompanyFaultProcessor result: %s", util.ObjToString(deviceInfos))
+	hwlog.RunLog.Debugf("uceAccompanyFaultProcessor result: %v", deviceInfos)
 	processContent.AllConfigmap = deviceInfos
 	return processContent
 }

@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
@@ -32,6 +33,7 @@ const (
 	podNameSpace1 = "default"
 	podUid1       = "123"
 	podUid2       = "456"
+	podRank1      = "1"
 
 	vcJobKey = "job"
 )
@@ -79,7 +81,7 @@ func TestPodGroupCollector(t *testing.T) {
 func TestPodIsControllerOrCoordinator(t *testing.T) {
 	convey.Convey("test PodIsControllerOrCoordinator", t, func() {
 		convey.Convey("when pod is controller or coordinator", func() {
-			demoPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			demoPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			demoPod.ObjectMeta.Labels = map[string]string{
 				constant.MindIeAppTypeLabelKey: constant.ControllerAppType,
 			}
@@ -92,7 +94,7 @@ func TestPodIsControllerOrCoordinator(t *testing.T) {
 			convey.So(result, convey.ShouldBeTrue)
 		})
 		convey.Convey("when pod is neither controller nor coordinator", func() {
-			demoPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			demoPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			demoPod.ObjectMeta.Labels = map[string]string{
 				constant.MindIeAppTypeLabelKey: constant.ServerAppType,
 			}
@@ -100,7 +102,7 @@ func TestPodIsControllerOrCoordinator(t *testing.T) {
 			convey.So(result, convey.ShouldBeFalse)
 		})
 		convey.Convey("when pod has no app type label", func() {
-			demoPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			demoPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			result := checkPodIsControllerOrCoordinator(demoPod)
 			convey.So(result, convey.ShouldBeFalse)
 		})
@@ -128,11 +130,12 @@ func getDemoPodGroup(jobName, nameSpace, jobUid string) *v1beta1.PodGroup {
 
 func TestPodCollector(t *testing.T) {
 	convey.Convey("test PodCollector", t, func() {
-		oldPod := getDemoPod(podName1, podNameSpace1, podUid1)
-		newPod := getDemoPod(podName1, podNameSpace1, podUid1)
+		oldPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
+		newPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 		convey.Convey("test add pod message", func() {
 			PodCollector(oldPod, newPod, constant.AddOperator)
 			convey.So(len(pod.GetPodByJobId(jobUid1)), convey.ShouldEqual, 1)
+			convey.So(len(pod.GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 			value, ok := uniqueQueue.Load(jobUid1)
 			convey.So(ok, convey.ShouldEqual, true)
 			convey.So(value, convey.ShouldEqual, queueOperatorUpdate)
@@ -140,6 +143,7 @@ func TestPodCollector(t *testing.T) {
 		convey.Convey("test update pod message", func() {
 			PodCollector(oldPod, newPod, constant.UpdateOperator)
 			convey.So(len(pod.GetPodByJobId(jobUid1)), convey.ShouldEqual, 1)
+			convey.So(len(pod.GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 			value, ok := uniqueQueue.Load(jobUid1)
 			convey.So(ok, convey.ShouldEqual, true)
 			convey.So(value, convey.ShouldEqual, queueOperatorUpdate)
@@ -147,6 +151,7 @@ func TestPodCollector(t *testing.T) {
 		convey.Convey("test delete pod message", func() {
 			PodCollector(oldPod, newPod, constant.DeleteOperator)
 			convey.So(len(pod.GetPodByJobId(jobUid1)), convey.ShouldEqual, 0)
+			convey.So(len(pod.GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 0)
 			value, ok := uniqueQueue.Load(jobUid1)
 			convey.So(ok, convey.ShouldEqual, true)
 			convey.So(value, convey.ShouldEqual, queueOperatorUpdate)
@@ -160,7 +165,7 @@ func TestPodCollector(t *testing.T) {
 	})
 }
 
-func getDemoPod(name, nameSpace, podUid string) *v1.Pod {
+func getDemoPod(name, nameSpace, podUid, podRank string) *v1.Pod {
 	p := &v1.Pod{}
 	p.Name = name
 	p.Namespace = nameSpace
@@ -172,6 +177,8 @@ func getDemoPod(name, nameSpace, podUid string) *v1.Pod {
 		Kind:       vcJobKey,
 		UID:        types.UID(jobUid1)}
 	p.SetOwnerReferences([]metav1.OwnerReference{owner})
+	p.Annotations = make(map[string]string)
+	p.Annotations[api.PodRankIndexAnno] = podRank
 	return p
 }
 

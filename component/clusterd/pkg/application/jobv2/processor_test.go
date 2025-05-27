@@ -46,7 +46,7 @@ func TestAddJob(t *testing.T) {
 			convey.So(ok, convey.ShouldEqual, false)
 		})
 		convey.Convey("test podGroup exists, pod exists, job cache dose not exist", func() {
-			newPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			newPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			pod.SavePod(newPod)
 			addJob(jobUid1)
 			value, ok := uniqueQueue.Load(jobUid1)
@@ -54,7 +54,7 @@ func TestAddJob(t *testing.T) {
 			convey.So(value, convey.ShouldEqual, queueOperatorUpdate)
 		})
 		convey.Convey("test podGroup exists, pod not exists, job exists", func() {
-			newPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			newPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			pod.DeletePod(newPod)
 			newJob := getDemoJob(jobName1, jobNameSpace, jobUid1)
 			job.SaveJobCache(jobUid1, newJob)
@@ -111,7 +111,7 @@ func TestPreDeleteJob(t *testing.T) {
 			newJob := getDemoJob(jobName1, jobNameSpace, jobUid1)
 			newJob.IsPreDelete = false
 			job.SaveJobCache(jobUid1, newJob)
-			newPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			newPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			pod.SavePod(newPod)
 			preDeleteJob(jobUid1)
 			value, ok := uniqueQueue.Load(jobUid1)
@@ -125,7 +125,7 @@ func TestPreDeleteJob(t *testing.T) {
 			newJob := getDemoJob(jobName1, jobNameSpace, jobUid1)
 			newJob.IsPreDelete = false
 			job.SaveJobCache(jobUid1, newJob)
-			newPod := getDemoPod(podName1, podNameSpace1, podUid1)
+			newPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
 			pod.DeletePod(newPod)
 			preDeleteJob(jobUid1)
 			jobInfo, ok := job.GetJobCache(jobUid1)

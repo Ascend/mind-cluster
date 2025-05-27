@@ -46,8 +46,8 @@ func TestSavePod(t *testing.T) {
 		convey.Convey("when pod cache less than maxPodNum, cache should save success", func() {
 			SavePod(podDemo1)
 			defer DeletePod(podDemo1)
-			podMap := GetPodByJobId(jobUid1)
-			convey.So(len(podMap), convey.ShouldEqual, 1)
+			convey.So(len(GetPodByJobId(jobUid1)), convey.ShouldEqual, 1)
+			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 		})
 	})
 }
@@ -58,8 +58,8 @@ func TestDeletePod(t *testing.T) {
 		convey.Convey("when pod cache less than maxPodNum, cache should save success", func() {
 			SavePod(podDemo1)
 			DeletePod(podDemo1)
-			podMap := GetPodByJobId(jobUid1)
-			convey.So(len(podMap), convey.ShouldEqual, 0)
+			convey.So(len(GetPodByJobId(jobUid1)), convey.ShouldEqual, 0)
+			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 0)
 		})
 	})
 }

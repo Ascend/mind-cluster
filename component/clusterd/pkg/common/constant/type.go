@@ -463,3 +463,9 @@ type FaultNum struct {
 	NodeFaultNum       int `json:"-"`
 	PubFaultNum        int `json:"publicFaultNum"`
 }
+
+// SimplePodInfo
+type SimplePodInfo struct {
+	PodUid  string
+	PodRank int
+}

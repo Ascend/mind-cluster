@@ -21,9 +21,12 @@ import (
 
 const (
 	// jobId job id
-	jobId = "Job"
+	jobId   = "Job"
+	podUid  = "pod1"
+	podRank = 0
 	// nodeName node name
-	nodeName = "Node"
+	nodeName       = "Node"
+	deviceNumOfPod = 8
 )
 
 func TestMain(m *testing.M) {
@@ -65,9 +68,20 @@ func TestFaultProcessorImplProcess(t *testing.T) {
 		mockJob := gomonkey.ApplyFunc(job.GetJobServerInfoMap, func() constant.JobServerInfoMap {
 			return jobServerMap
 		})
+		mockPod := gomonkey.ApplyFunc(pod.GetPodDeviceNumByJobId, func(jobId string) int {
+			return deviceNumOfPod
+		}).ApplyFunc(pod.GetSimplePodByJobId, func(jobId string) map[string]*constant.SimplePodInfo {
+			return map[string]*constant.SimplePodInfo{
+				podUid: {
+					PodUid:  podUid,
+					PodRank: podRank,
+				},
+			}
+		})
 		defer func() {
 			mockKube.Reset()
 			mockJob.Reset()
+			mockPod.Reset()
 		}()
 		JobFaultRankProcessor.Process(constant.AllConfigmapContent{})
 		faultRankInfos := JobFaultRankProcessor.GetJobFaultRankInfos()
@@ -184,7 +198,17 @@ func testNoDevicesOnNode(processor *jobRankFaultInfoProcessor) {
 			},
 		}
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, jobId,
+			&jobPodInfoMap{
+				podOfRank: map[int]*constant.SimplePodInfo{
+					podRank: {
+						PodUid:  podUid,
+						PodRank: podRank,
+					},
+				},
+				deviceNumOfPod: deviceNumOfPod,
+				jobId:          jobId,
+			})
 		convey.So(faultRanks, convey.ShouldBeEmpty)
 	})
 }
@@ -195,7 +219,7 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 			"node1": {
 				ServerType: "server-type",
 				FaultDeviceList: map[string][]constant.DeviceFault{
-					"server-type-device1": {
+					"server-type-1": {
 						{FaultCode: constant.UceFaultCode, FaultLevel: constant.RestartBusiness},
 					},
 				},
@@ -204,7 +228,7 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 		serverList := map[string]constant.ServerHccl{
 			"node1": {
 				DeviceList: []constant.Device{
-					{DeviceID: "device1", RankID: "rank1"},
+					{DeviceID: "1", RankID: "1"},
 				},
 			},
 		}
@@ -215,7 +239,17 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 			})
 		defer patches.Reset()
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, jobId,
+			&jobPodInfoMap{
+				podOfRank: map[int]*constant.SimplePodInfo{
+					podRank: {
+						PodUid:  podUid,
+						PodRank: podRank,
+					},
+				},
+				deviceNumOfPod: deviceNumOfPod,
+				jobId:          jobId,
+			})
 		convey.So(faultRanks, convey.ShouldHaveLength, 1)
 		convey.So(faultRanks[0].FaultCode, convey.ShouldEqual, constant.UceFaultCode)
 		convey.So(faultRanks[0].DoStepRetry, convey.ShouldBeTrue)
@@ -233,7 +267,7 @@ func testUceInBusinessPlane(processor *jobRankFaultInfoProcessor) {
 		serverList := map[string]constant.ServerHccl{
 			"node1": {
 				DeviceList: []constant.Device{
-					{DeviceID: "device1", RankID: "rank1"},
+					{DeviceID: "1", RankID: "1"},
 				},
 			},
 		}
@@ -249,7 +283,17 @@ func testUceInBusinessPlane(processor *jobRankFaultInfoProcessor) {
 				return true
 			})
 
-		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, "job1")
+		faultRanks := processor.findFaultRankForJob(nodeDeviceInfoMap, "node1", serverList, jobId,
+			&jobPodInfoMap{
+				podOfRank: map[int]*constant.SimplePodInfo{
+					podRank: {
+						PodUid:  podUid,
+						PodRank: podRank,
+					},
+				},
+				deviceNumOfPod: deviceNumOfPod,
+				jobId:          jobId,
+			})
 		convey.So(faultRanks, convey.ShouldHaveLength, 1)
 		convey.So(faultRanks[0].FaultCode, convey.ShouldEqual, constant.UceFaultCode)
 		convey.So(faultRanks[0].DoStepRetry, convey.ShouldBeTrue)

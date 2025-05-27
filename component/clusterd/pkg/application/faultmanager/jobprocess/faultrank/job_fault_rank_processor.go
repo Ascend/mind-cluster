@@ -4,6 +4,8 @@
 package faultrank
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -31,6 +33,36 @@ func init() {
 type jobRankFaultInfoProcessor struct {
 	jobFaultInfoMap map[string]constant.JobFaultInfo
 	mutex           sync.RWMutex
+}
+
+type jobPodInfoMap struct {
+	podOfRank      map[int]*constant.SimplePodInfo
+	deviceNumOfPod int
+	jobId          string
+}
+
+func getJobPodInfoMap(jobId string) *jobPodInfoMap {
+	return &jobPodInfoMap{
+		podOfRank:      podInfoByPodRank(pod.GetSimplePodByJobId(jobId)),
+		deviceNumOfPod: pod.GetPodDeviceNumByJobId(jobId),
+		jobId:          jobId,
+	}
+}
+
+func (m *jobPodInfoMap) getPodUidAndRankByCardRank(cardRankStr string) (string, string, error) {
+	if m == nil || m.deviceNumOfPod <= 0 {
+		return "", "", fmt.Errorf("invalid jobPodInfoMap")
+	}
+	cardRank, err := strconv.Atoi(cardRankStr)
+	if err != nil {
+		return "", "", fmt.Errorf("convert %s err: %v", cardRankStr, err)
+	}
+	podRank := cardRank / m.deviceNumOfPod
+	podRankStr := strconv.Itoa(podRank)
+	if info, ok := m.podOfRank[podRank]; ok {
+		return info.PodUid, podRankStr, nil
+	}
+	return "", "", fmt.Errorf("cardRank %s has no podRank", cardRankStr)
 }
 
 // GetJobFaultRankInfos get job fault rank information
@@ -74,8 +106,8 @@ func (processor *jobRankFaultInfoProcessor) setJobFaultRankInfos(faultInfos map[
 }
 
 func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
-	nodeDeviceInfoMap map[string]constant.AdvanceDeviceFaultCm,
-	nodeName string, serverList map[string]constant.ServerHccl, jobId string) []constant.FaultRank {
+	nodeDeviceInfoMap map[string]constant.AdvanceDeviceFaultCm, nodeName string,
+	serverList map[string]constant.ServerHccl, jobId string, podInfo *jobPodInfoMap) []constant.FaultRank {
 	advanceDeviceInfo := nodeDeviceInfoMap[nodeName]
 	devicesOfJobOnNode, ok := serverList[nodeName]
 	faultRankList := make([]constant.FaultRank, 0)
@@ -85,20 +117,20 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 	for _, deviceInfo := range devicesOfJobOnNode.DeviceList {
 		deviceName := advanceDeviceInfo.ServerType + "-" + deviceInfo.DeviceID
 		faultList := advanceDeviceInfo.FaultDeviceList[deviceName]
-		podRank, podUid := pod.GetPodRankAndPodUid(jobId, deviceInfo.RankID)
 		uceInManagementPlane := false
-		// scan management plane fault info. management plane may filter uce fault in uceProcessor
 		for _, fault := range faultList {
-			faultRank := constant.FaultRank{
-				RankId:      deviceInfo.RankID,
-				PodUid:      podUid,
-				PodRank:     podRank,
-				FaultCode:   fault.FaultCode,
-				FaultLevel:  fault.FaultLevel,
-				DoStepRetry: false,
+			if podInfo == nil {
+				podInfo = getJobPodInfoMap(jobId)
+			}
+			podUid, podRankStr, err := podInfo.getPodUidAndRankByCardRank(deviceInfo.RankID)
+			if err != nil {
+				hwlog.RunLog.Errorf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
+					deviceInfo.DeviceIP, deviceInfo.RankID, err)
+			}
+			faultRank := constant.FaultRank{RankId: deviceInfo.RankID, PodUid: podUid, PodRank: podRankStr,
+				FaultCode: fault.FaultCode, FaultLevel: fault.FaultLevel, DoStepRetry: false,
 			}
 			if strings.Contains(fault.FaultCode, constant.UceFaultCode) {
-				// management plane find uce fault
 				uceInManagementPlane = true
 				faultRank.DoStepRetry = processor.canDoStepRetry(jobId, nodeName, deviceName)
 			}
@@ -107,14 +139,17 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		if uceInManagementPlane {
 			continue
 		}
-		// business plane find uce fault
 		if processor.uceInBusinessPlane(jobId, nodeName, deviceName) {
-			faultRankList = append(faultRankList, constant.FaultRank{
-				RankId:      deviceInfo.RankID,
-				PodUid:      podUid,
-				PodRank:     podRank,
-				FaultCode:   constant.UceFaultCode,
-				FaultLevel:  constant.RestartBusiness,
+			if podInfo == nil {
+				podInfo = getJobPodInfoMap(jobId)
+			}
+			podUid, podRankStr, err := podInfo.getPodUidAndRankByCardRank(deviceInfo.RankID)
+			if err != nil {
+				hwlog.RunLog.Errorf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
+					deviceInfo.DeviceIP, deviceInfo.RankID, err)
+			}
+			faultRankList = append(faultRankList, constant.FaultRank{RankId: deviceInfo.RankID, PodUid: podUid,
+				PodRank: podRankStr, FaultCode: constant.UceFaultCode, FaultLevel: constant.RestartBusiness,
 				DoStepRetry: processor.canDoStepRetry(jobId, nodeName, deviceName),
 			})
 		}
@@ -194,39 +229,63 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 	jobId string) ([]constant.FaultRank, []string) {
 	faultList := make([]constant.FaultRank, 0)
 	nodeStatusList := make([]string, 0)
+	var info *jobPodInfoMap = nil
+	var initJobPodInfoMap = sync.Once{}
+
 	for nodeName, server := range serverList {
 		hwlog.RunLog.Debugf("nodeName: %s, server: %#v", nodeName, server)
 		switchInfo, ok := switchInfos[constant.SwitchInfoPrefix+nodeName]
 		if ok {
 			nodeStatusList = append(nodeStatusList, switchInfo.NodeStatus)
 		}
+		var hcclToFaultRank []constant.FaultRank = nil
+		var initHcclToFaultRank = sync.Once{}
 		if ok && switchInfo.NodeStatus == constant.UnHealthyState {
 			hwlog.RunLog.Debugf("node %s switch is unhealthy", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
+			initJobPodInfoMap.Do(func() { info = getJobPodInfoMap(jobId) })
+			initHcclToFaultRank.Do(func() { hcclToFaultRank = serverHcclToFaultRank(server, info) })
+			faultList = append(faultList, hcclToFaultRank...)
 			continue
 		}
 		nodeInfo, ok := nodeInfos[constant.NodeInfoPrefix+nodeName]
 		if ok && nodeInfo.NodeStatus == constant.UnHealthyState {
 			hwlog.RunLog.Debugf("node %s is unhealthy", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
+			initJobPodInfoMap.Do(func() { info = getJobPodInfoMap(jobId) })
+			initHcclToFaultRank.Do(func() { hcclToFaultRank = serverHcclToFaultRank(server, info) })
+			faultList = append(faultList, hcclToFaultRank...)
 			continue
 		}
 		node := kube.GetNode(nodeName)
 		if node == nil || !faultdomain.IsNodeReady(node) {
 			hwlog.RunLog.Debugf("node %s is not ready", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server, jobId)...)
+			initJobPodInfoMap.Do(func() { info = getJobPodInfoMap(jobId) })
+			initHcclToFaultRank.Do(func() { hcclToFaultRank = serverHcclToFaultRank(server, info) })
+			faultList = append(faultList, hcclToFaultRank...)
 			continue
 		}
-		faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId)
+		faultRankList := processor.findFaultRankForJob(deviceCmForNodeMap, nodeName, serverList, jobId, info)
 		faultList = append(faultList, faultRankList...)
 	}
 	return faultList, nodeStatusList
 }
 
-func serverHcclToFaultRank(server constant.ServerHccl, jobId string) []constant.FaultRank {
+func podInfoByPodRank(podInfos map[string]*constant.SimplePodInfo) map[int]*constant.SimplePodInfo {
+	result := make(map[int]*constant.SimplePodInfo)
+	for _, podInfo := range podInfos {
+		result[podInfo.PodRank] = podInfo
+	}
+	return result
+}
+
+func serverHcclToFaultRank(server constant.ServerHccl, podInfos *jobPodInfoMap) []constant.FaultRank {
 	faultRanks := make([]constant.FaultRank, 0, len(server.DeviceList))
 	for _, device := range server.DeviceList {
-		podRank, podUid := pod.GetPodRankAndPodUid(jobId, device.RankID)
+		podUid, podRank, err := podInfos.getPodUidAndRankByCardRank(device.RankID)
+		if err != nil {
+			hwlog.RunLog.Errorf("device %s's rank id is %s getPodUidAndRankByCardRank err: %v",
+				device.DeviceIP, device.RankID, err)
+			continue
+		}
 		faultRanks = append(faultRanks, constant.FaultRank{
 			RankId:      device.RankID,
 			PodUid:      podUid,

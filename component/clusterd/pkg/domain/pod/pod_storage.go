@@ -4,11 +4,14 @@
 package pod
 
 import (
+	"strconv"
 	"sync"
 
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
@@ -77,4 +80,25 @@ func GetPodByJobId(jobKey string) map[string]v1.Pod {
 		hwlog.RunLog.Errorf("copy podMap failed, err：%v", err)
 	}
 	return *newPodMap
+}
+
+// GetSimplePodByJobId get pod by jobId
+func GetSimplePodByJobId(jobKey string) map[string]*constant.SimplePodInfo {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+	localPodMap := podManager.podJobMap[jobKey]
+	result := make(map[string]*constant.SimplePodInfo)
+	for uid, pod := range localPodMap {
+		podRankStr := pod.Annotations[api.PodRankIndexAnno]
+		podRank, err := strconv.Atoi(podRankStr)
+		if err != nil {
+			hwlog.RunLog.Errorf("get rank for pod %s error, podRankStr is %s, err: %v", pod.Name, podRankStr, err)
+			continue
+		}
+		result[uid] = &constant.SimplePodInfo{
+			PodUid:  uid,
+			PodRank: podRank,
+		}
+	}
+	return result
 }

@@ -81,14 +81,14 @@ func (processor *uceFaultProcessor) Process(info any) any {
 
 	processor.jobServerInfoMap = job.GetJobServerInfoMap()
 	processor.nodeDeviceCmMap = faultdomain.GetAdvanceDeviceCmForNodeMap(deviceInfos)
-	hwlog.RunLog.Debugf("current deviceInfos %s", util.ObjToString(deviceInfos))
-	hwlog.RunLog.Debugf("current nodeDeviceCmMap %s", util.ObjToString(processor.nodeDeviceCmMap))
+	hwlog.RunLog.Debugf("current deviceInfos %v", deviceInfos)
+	hwlog.RunLog.Debugf("current nodeDeviceCmMap %v", processor.nodeDeviceCmMap)
 
 	processor.uceDeviceOfNode = processor.getUceDeviceOfNodes()
-	hwlog.RunLog.Debugf("current uceDeviceOfNode %s", util.ObjToString(processor.uceDeviceOfNode))
+	hwlog.RunLog.Debugf("current uceDeviceOfNode %v", processor.uceDeviceOfNode)
 
 	processor.uceDevicesOfUceJob = processor.getUceDevicesForUceTolerateJobs()
-	hwlog.RunLog.Debugf("current uceDevicesOfUceJob %s", util.ObjToString(processor.uceDevicesOfUceJob))
+	hwlog.RunLog.Debugf("current uceDevicesOfUceJob %v", processor.uceDevicesOfUceJob)
 
 	currentTime := time.Now().UnixMilli()
 	hwlog.RunLog.Debugf("currentTime %d", currentTime)
@@ -96,7 +96,7 @@ func (processor *uceFaultProcessor) Process(info any) any {
 	processor.processUceFaultInfo(currentTime)
 	faultdomain.AdvanceDeviceCmForNodeMapToString(processor.nodeDeviceCmMap, deviceInfos)
 
-	hwlog.RunLog.Debugf("result deviceInfos %s", util.ObjToString(deviceInfos))
+	hwlog.RunLog.Debugf("result deviceInfos %v", deviceInfos)
 	processContent.AllConfigmap = deviceInfos
 	return processContent
 }

@@ -10,10 +10,9 @@ import (
 	"syscall"
 	"testing"
 
+	"ascend-common/common-utils/hwlog"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
-
-	"ascend-common/common-utils/hwlog"
 )
 
 const (
