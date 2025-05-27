@@ -407,7 +407,7 @@ func TestNotifyToK8s(t *testing.T) {
 			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
 			hdm.ServerMap[common.AiCoreResourceName] = NewPluginServer(common.Ascend310P, nil, nil, nil)
 			initTime := time.Now()
-			hdm.notifyToK8s(&initTime)
+			hdm.notifyToK8s(context.TODO(), &initTime)
 			convey.So(len(hdm.ServerMap), convey.ShouldEqual, serverNum)
 		})
 	})
@@ -1400,7 +1400,7 @@ func TestParseTriggers(t *testing.T) {
 		default:
 			fmt.Println("update channel is full")
 		}
-		hdm.parseTriggers(time.Now())
+		hdm.parseTriggers(context.TODO(), time.Now())
 		convey.So(deviceInfoHandled, convey.ShouldBeTrue)
 	})
 	convey.Convey("no signal, should not update device info", t, func() {
@@ -1412,7 +1412,7 @@ func TestParseTriggers(t *testing.T) {
 		default:
 			fmt.Println("update channel is empty")
 		}
-		hdm.parseTriggers(time.Now())
+		hdm.parseTriggers(context.TODO(), time.Now())
 		convey.So(deviceInfoHandled, convey.ShouldBeFalse)
 	})
 }

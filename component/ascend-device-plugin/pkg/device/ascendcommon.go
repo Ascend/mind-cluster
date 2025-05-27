@@ -96,7 +96,7 @@ type AscendTools struct {
 type DevManager interface {
 	GetNPUs() (common.NpuAllInfo, error)
 	DoWithVolcanoListAndWatch(map[string][]*common.NpuDevice)
-	GraceTolerance(map[string][]*common.NpuDevice)
+	GraceTolerance(context.Context, map[string][]*common.NpuDevice)
 	SetDmgr(devmanager.DeviceInterface)
 	GetDmgr() devmanager.DeviceInterface
 	GetChipAICore() int32

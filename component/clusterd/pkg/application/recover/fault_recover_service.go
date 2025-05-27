@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
@@ -17,6 +19,7 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
+	"clusterd/pkg/interface/kube"
 )
 
 var globalFaultBeaconSecond = 2
@@ -48,6 +51,13 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(s).Name()); err != nil {
 		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
 	}
+	// delete EventController cache added by register interface according delete event of podGroup when job is deleted.
+	kube.AddPodGroupFunc("fault-recover", func(_ *v1beta1.PodGroup, pg *v1beta1.PodGroup, op string) {
+		if op != constant.DeleteOperator {
+			return
+		}
+		s.DeleteJob(podgroup.GetJobKeyByPG(pg))
+	})
 	go s.checkFaultFromFaultCenter()
 	return s
 }
@@ -425,7 +435,7 @@ func (s *FaultRecoverService) DeleteJob(jobId string) {
 	if !exist || controller == nil {
 		return
 	}
-	controller.reset()
+	controller.reset(true)
 	delete(s.eventCtl, jobId)
 	if s.initJob != nil {
 		delete(s.initJob, jobId)

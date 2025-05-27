@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -119,6 +120,6 @@ func (hnm *HwAscend310PManager) updateDeviceInfo(_, newDevInfo map[string]string
 }
 
 // GraceTolerance graceful fault tolerance, not supported currently
-func (hnm *HwAscend310PManager) GraceTolerance(map[string][]*common.NpuDevice) {
+func (hnm *HwAscend310PManager) GraceTolerance(context.Context, map[string][]*common.NpuDevice) {
 	return
 }

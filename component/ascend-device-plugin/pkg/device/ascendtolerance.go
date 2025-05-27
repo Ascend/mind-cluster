@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -81,7 +81,7 @@ type HotResetManager interface {
 	IsExistFaultyDevInTask(string) bool
 	DeepCopyDevInfo(*common.TaskDevInfo) *common.TaskDevInfo
 	DeepCopyDevFaultInfoList([]*common.TaskDevInfo) []*common.TaskDevInfo
-	SyncResetCM(*kubeclient.ClientK8s)
+	SyncResetCM(context.Context, *kubeclient.ClientK8s)
 	GetCMFromCache(string) (*v1.ConfigMap, error)
 }
 
@@ -142,7 +142,7 @@ func getResetDevNumOnce(devUsage string, deviceNum int) int {
 }
 
 // SyncResetCM sync reset-cm event
-func (hrt *HotResetTools) SyncResetCM(client *kubeclient.ClientK8s) {
+func (hrt *HotResetTools) SyncResetCM(ctx context.Context, client *kubeclient.ClientK8s) {
 	cmFactory := informers.NewSharedInformerFactoryWithOptions(client.Clientset, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = labels.SelectorFromSet(labels.Set{"reset": "true"}).String()
@@ -150,15 +150,20 @@ func (hrt *HotResetTools) SyncResetCM(client *kubeclient.ClientK8s) {
 	)
 	cmInformer := cmFactory.Core().V1().ConfigMaps().Informer()
 	cmInformer.AddEventHandler(client.ResourceEventHandler(kubeclient.CMResource, checkConfigMap))
-	go cmInformer.Run(wait.NeverStop)
+	go cmInformer.Run(ctx.Done())
 
 	hrt.queue = client.Queue
 	hrt.podIndexer = client.PodInformer.GetIndexer()
 	hrt.cmIndexer = cmInformer.GetIndexer()
 
-	cache.WaitForCacheSync(wait.NeverStop, cmInformer.HasSynced, client.PodInformer.HasSynced)
+	cache.WaitForCacheSync(ctx.Done(), cmInformer.HasSynced, client.PodInformer.HasSynced)
 
 	go hrt.run()
+
+	go func() {
+		<-ctx.Done()
+		hrt.queue.ShutDown()
+	}()
 }
 
 func (hrt *HotResetTools) run() {
@@ -215,7 +220,7 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 		hwlog.RunLog.Error("get kubeclient event error")
 		return
 	}
-	hwlog.RunLog.Infof("handle pod(%s) %s event", event.Key, event.Type)
+	hwlog.RunLog.Debugf("handle pod(%s) %s event", event.Key, event.Type)
 	pod, err := hrt.getPodFromCache(event.Key)
 	if err != nil {
 		hwlog.RunLog.Warn(err)

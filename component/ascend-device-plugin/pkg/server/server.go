@@ -64,11 +64,10 @@ func (ps *PluginServer) Start(socketWatcher *common.FileWatch) error {
 
 // Stop the gRPC server
 func (ps *PluginServer) Stop() {
-	ps.isRunning.Store(false)
-
 	if ps.grpcServer == nil {
 		return
 	}
+
 	ps.stopListAndWatch()
 	ps.grpcServer.Stop()
 

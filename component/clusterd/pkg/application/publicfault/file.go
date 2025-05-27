@@ -18,11 +18,19 @@ import (
 
 // WatchPubFaultCustomFile watch file /user1/mindx-dl/clusterd/publicCustomization.json
 func WatchPubFaultCustomFile(ctx context.Context) {
-	eventCh, errCh, err := utils.GetFileWatcherChan(filepath.Dir(constant.PubFaultCustomizationPath))
+	watcher, err := utils.GetFileWatcherChan(filepath.Dir(constant.
+		PubFaultCustomizationPath))
 	if err != nil {
 		hwlog.RunLog.Errorf("get file watcher chan failed, error: %v", err)
 		return
 	}
+	defer func() {
+		err = watcher.Close()
+		if err != nil {
+			hwlog.RunLog.Errorf("close file watcher failed, error: %v", err)
+		}
+	}()
+
 	for {
 		select {
 		case _, ok := <-ctx.Done():
@@ -31,7 +39,7 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 			}
 			hwlog.RunLog.Infof("listen file <%s> stop", constant.PubFaultCustomizationName)
 			return
-		case event, ok := <-eventCh:
+		case event, ok := <-watcher.Events():
 			if !ok {
 				hwlog.RunLog.Error("event channel is closed")
 				return
@@ -52,7 +60,7 @@ func WatchPubFaultCustomFile(ctx context.Context) {
 				publicfault.LoadPubFaultCfgFromFile(constant.PubFaultCodeFilePath)
 			}
 			UpdateLimiter()
-		case watchErr, ok := <-errCh:
+		case watchErr, ok := <-watcher.Errors():
 			if !ok {
 				hwlog.RunLog.Error("error channel is closed")
 				return

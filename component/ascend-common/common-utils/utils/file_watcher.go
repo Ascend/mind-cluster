@@ -72,16 +72,14 @@ func (fw *FileWatcher) Close() error {
 }
 
 // GetFileWatcherChan get eventCh and errCh for file watcher
-func GetFileWatcherChan(filePath string) (chan fsnotify.Event, chan error, error) {
+func GetFileWatcherChan(filePath string) (*FileWatcher, error) {
 	watcher, err := NewFileWatcher()
 	if err != nil {
-		return nil, nil, fmt.Errorf("new file watcher failed, error: %v", err)
+		return nil, fmt.Errorf("new file watcher failed, error: %v", err)
 	}
 	if err = watcher.WatchFile(filePath); err != nil {
-		return nil, nil, fmt.Errorf("watch file <%s> failed, error: %v", filePath, err)
+		return nil, fmt.Errorf("watch file <%s> failed, error: %v", filePath, err)
 	}
 	fmt.Printf("watching file <%s>...\n", filePath)
-	eventCh := watcher.Events()
-	errCh := watcher.Errors()
-	return eventCh, errCh, nil
+	return watcher, nil
 }

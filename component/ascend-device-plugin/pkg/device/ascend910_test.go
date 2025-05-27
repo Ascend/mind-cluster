@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -189,9 +190,9 @@ func TestGraceTolerance(t *testing.T) {
 		defer mockGetCM.Reset()
 		defer mockPodList.Reset()
 		patch := gomonkey.ApplyMethod(new(HotResetTools), "SyncResetCM",
-			func(_ *HotResetTools, _ *kubeclient.ClientK8s) { return })
+			func(_ *HotResetTools, _ context.Context, _ *kubeclient.ClientK8s) { return })
 		defer patch.Reset()
-		manager.GraceTolerance(mockGroupDevice())
+		manager.GraceTolerance(context.TODO(), mockGroupDevice())
 		convey.So(manager.hotResetManager, convey.ShouldNotBeNil)
 	})
 }

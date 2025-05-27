@@ -412,7 +412,7 @@ func TestReset(t *testing.T) {
 		patch := gomonkey.ApplyFuncReturn(common.RetryWriteResetCM,
 			&v1.ConfigMap{Data: make(map[string]string)}, nil)
 		defer patch.Reset()
-		ctl.reset()
+		ctl.reset(false)
 		convey.So(ctl.faultFlushing, convey.ShouldBeFalse)
 		convey.So(ctl.uuid, convey.ShouldBeEmpty)
 		convey.So(ctl.latestStrategy, convey.ShouldHaveLength, 0)

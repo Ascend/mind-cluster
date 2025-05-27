@@ -129,7 +129,7 @@ func (ctl *EventController) saveCacheFault(faults []*pb.FaultRank) {
 		ctl.jobInfo.JobId, common.Faults2String(ctl.cacheNormalFault), common.Faults2String((ctl.cacheUceFault)))
 }
 
-func (ctl *EventController) reset() {
+func (ctl *EventController) reset(stop bool) {
 	hwlog.RunLog.Infof("jobId=%s enter reset function", ctl.jobInfo.JobId)
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
@@ -156,6 +156,9 @@ func (ctl *EventController) reset() {
 	close(ctl.reportRecoverStrategyChan)
 	close(ctl.reportStatusChan)
 	close(ctl.scheduleResultChan)
+	if stop {
+		return
+	}
 	ctl.events = make(chan string, eventChanLength)
 	ctl.signalChan = make(chan *pb.ProcessManageSignal, 1)
 	ctl.reportStopCompleteChan = make(chan *pb.StopCompleteRequest, 1)
@@ -352,7 +355,7 @@ func (ctl *EventController) addEvent(event string) {
 			ctl.jobInfo.JobId, ctl.uuid, ctl.state.GetState(), event)
 	default:
 		hwlog.RunLog.Infof("add event=%s timeout, reset state machine", event)
-		ctl.reset()
+		ctl.reset(false)
 	}
 }
 
@@ -376,7 +379,7 @@ func (ctl *EventController) selectEventChan(ctx context.Context, eventChan chan 
 			hwlog.RunLog.Infof("jobId=%s's action path = {%s}", ctl.jobInfo.JobId, ctl.state.GetPathGraph())
 			if err != nil {
 				hwlog.RunLog.Errorf("jobId=%s trigger error, code=%d, err=%v", ctl.jobInfo.JobId, code, err)
-				ctl.reset()
+				ctl.reset(false)
 				return true
 			}
 			if nextEvent != "" {
@@ -437,12 +440,15 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 
 func (ctl *EventController) selectSendChannel(ctx context.Context, sendChan chan *pb.ProcessManageSignal,
 	stream pb.Recover_SubscribeProcessManageSignalServer) bool {
-	if sendChan == nil {
+	if sendChan == nil || stream == nil {
 		return true
 	}
 	select {
 	case <-ctx.Done():
 		hwlog.RunLog.Infof("context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
+		return true
+	case <-stream.Context().Done():
+		hwlog.RunLog.Infof("stream context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
 		return true
 	case signal, ok := <-sendChan:
 		if ok {
@@ -459,7 +465,7 @@ func (ctl *EventController) selectSendChannel(ctx context.Context, sendChan chan
 }
 
 func (ctl *EventController) listenSendChannel(stream pb.Recover_SubscribeProcessManageSignalServer) {
-	ctl.reset()
+	ctl.reset(false)
 	ctx, sendChan := ctl.getCtxAndSignalChan()
 	hwlog.RunLog.Infof("start listen a new send channel, jobId=%s", ctl.jobInfo.JobId)
 	exit := false
@@ -499,7 +505,7 @@ func (ctl *EventController) trigger(event string) (string, common.RespCode, erro
 }
 
 func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
-	ctl.reset()
+	ctl.reset(false)
 	return "", common.OK, nil
 }
 

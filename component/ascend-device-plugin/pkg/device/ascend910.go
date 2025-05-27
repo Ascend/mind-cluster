@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -124,14 +125,14 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 }
 
 // GraceTolerance process training task with device fault gracefully
-func (hnm *HwAscend910Manager) GraceTolerance(classifyDevs map[string][]*common.NpuDevice) {
+func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
 		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]))
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
 			return
 		}
-		hnm.hotResetManager.SyncResetCM(hnm.GetKubeClient())
+		hnm.hotResetManager.SyncResetCM(ctx, hnm.GetKubeClient())
 	})
 	if !common.ParamOption.GraceToleranceOn {
 		return

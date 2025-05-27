@@ -39,6 +39,7 @@ import (
 
 func (ps *PluginServer) stopListAndWatch() {
 	if ps.isRunning.Load() {
+		ps.isRunning.Store(false)
 		ps.stop <- struct{}{}
 	}
 }

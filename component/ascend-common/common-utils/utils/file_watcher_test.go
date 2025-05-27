@@ -40,18 +40,18 @@ func TestGetFileWatcherChan(t *testing.T) {
 	p1 := gomonkey.ApplyFuncReturn(PathStringChecker, "", nil)
 	defer p1.Reset()
 	convey.Convey("test func GetFileWatcherChan success", t, func() {
-		_, _, err := GetFileWatcherChan(testFilePath)
+		_, err := GetFileWatcherChan(testFilePath)
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("test func GetFileWatcherChan failed, new watcher err", t, func() {
 		p2 := gomonkey.ApplyFuncReturn(fsnotify.NewWatcher, nil, testErr)
 		defer p2.Reset()
-		_, _, err := GetFileWatcherChan(testFilePath)
+		_, err := GetFileWatcherChan(testFilePath)
 		expErr := fmt.Errorf("new file watcher failed, error: %v", testErr)
 		convey.So(err, convey.ShouldResemble, expErr)
 	})
 	convey.Convey("test func GetFileWatcherChan failed, file does not exist", t, func() {
-		_, _, err := GetFileWatcherChan(errFilePath)
+		_, err := GetFileWatcherChan(errFilePath)
 		expErr := fmt.Sprintf("watch file <%s> failed", errFilePath)
 		convey.So(err.Error(), convey.ShouldContainSubstring, expErr)
 	})

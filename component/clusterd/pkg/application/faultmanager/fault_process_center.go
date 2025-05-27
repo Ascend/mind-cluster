@@ -47,6 +47,7 @@ func (center *faultProcessCenter) Work(ctx context.Context) {
 	go func() {
 		hwlog.RunLog.Info("faultProcessCenter start work!")
 		centerTicker := time.NewTicker(time.Second)
+		defer centerTicker.Stop()
 		for {
 			select {
 			case <-ctx.Done():

@@ -415,7 +415,7 @@ func (hdm *HwDevManager) separateNPUIDFromDeviceInfoIntoCache() {
 	}
 }
 
-func (hdm *HwDevManager) handleDeviceInfoUpdate(initTime *time.Time) {
+func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *time.Time) {
 	common.LockAllDeviceInfo()
 	defer common.UnlockAllDeviceInfo()
 
@@ -427,7 +427,7 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(initTime *time.Time) {
 	// complete the fault codes that cannot be reported by the event subscribe interface
 	hdm.mendSubscribeFaultEvents()
 	hdm.updateDeviceUsedInfo(hdm.groupDevice)
-	hdm.notifyToK8s(initTime)
+	hdm.notifyToK8s(ctx, initTime)
 
 	// if node annotation has reset fail devices but all devices are healthy, clear node annotation
 	hdm.checkNodeResetInfo()
@@ -473,10 +473,10 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 			hwlog.RunLog.Info("listen device stop")
 			return
 		case <-triggerTicker.C:
-			hdm.parseTriggers(initTime)
+			hdm.parseTriggers(ctx, initTime)
 		case <-ticker.C:
 			hwlog.RunLog.Debug("Periodic device info update")
-			hdm.handleDeviceInfoUpdate(&initTime)
+			hdm.handleDeviceInfoUpdate(ctx, &initTime)
 		}
 	}
 }
@@ -548,11 +548,11 @@ func (hdm *HwDevManager) compareBaseNPUInfo() (bool, map[string]*common.NpuBaseI
 	return baseInfoChange, newInfo
 }
 
-func (hdm *HwDevManager) parseTriggers(initTime time.Time) {
+func (hdm *HwDevManager) parseTriggers(ctx context.Context, initTime time.Time) {
 	select {
 	case <-common.GetUpdateChan():
 		hwlog.RunLog.Info("Received update trigger, processing device info update")
-		hdm.handleDeviceInfoUpdate(&initTime)
+		hdm.handleDeviceInfoUpdate(ctx, &initTime)
 	default:
 		hwlog.RunLog.Debug("No update trigger, skipping device info update")
 	}
@@ -653,12 +653,12 @@ func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType s
 	}
 }
 
-func (hdm *HwDevManager) notifyToK8s(initTime *time.Time) {
+func (hdm *HwDevManager) notifyToK8s(ctx context.Context, initTime *time.Time) {
 	hdm.isSupportGraceTolerance()
 	oldGroupDevice := deepCopyGroupDevice(hdm.groupDevice)
 	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
 	// If hot reset is used, the health of the device being reset is set here to healthy
-	hdm.graceTolerance(hdm.groupDevice)
+	hdm.graceTolerance(ctx, hdm.groupDevice)
 	isDevStateChange := hdm.manager.GetChange(hdm.groupDevice, oldGroupDevice)
 
 	for devType, isChanged := range isDevStateChange {
@@ -1214,8 +1214,8 @@ func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 }
 
 // graceTolerance start fault tolerance for training tasks
-func (hdm *HwDevManager) graceTolerance(groupDevice map[string][]*common.NpuDevice) {
-	hdm.manager.GraceTolerance(groupDevice)
+func (hdm *HwDevManager) graceTolerance(ctx context.Context, groupDevice map[string][]*common.NpuDevice) {
+	hdm.manager.GraceTolerance(ctx, groupDevice)
 	return
 }
 

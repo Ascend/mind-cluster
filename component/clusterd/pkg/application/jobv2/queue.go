@@ -43,7 +43,9 @@ func init() {
 // Checker check if the queue is blocked, if not, set update message to queue for check job cache is right
 func Checker(ctx context.Context) {
 	hourTimer := time.NewTicker(time.Hour)
+	defer hourTimer.Stop()
 	minuteTimer := time.NewTicker(time.Minute)
+	defer minuteTimer.Stop()
 	for {
 		select {
 		case <-ctx.Done():

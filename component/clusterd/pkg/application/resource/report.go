@@ -52,7 +52,7 @@ func Report(ctx context.Context) {
 	reportTime = time.Now().UnixMilli()
 	timeSleepInitOnce := sync.Once{}
 	faultmanager.GlobalFaultProcessCenter.Register(updateChan, constant.AllProcessType)
-	go cycleReport()
+	go cycleReport(ctx)
 	for {
 		select {
 		case whichToReport, ok := <-updateChan:
@@ -105,10 +105,14 @@ func limitRate() {
 	initTime = time.Now().UnixMilli()
 }
 
-func cycleReport() {
+func cycleReport(ctx context.Context) {
 	cycleTicker = time.NewTicker(1 * time.Second)
+	defer cycleTicker.Stop()
 	for {
 		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Infof("reporter cycle task stop work")
+			return
 		case _, ok := <-cycleTicker.C:
 			if !ok {
 				hwlog.RunLog.Errorf("catch invalid signal")
