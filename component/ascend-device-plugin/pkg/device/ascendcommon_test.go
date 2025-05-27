@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/containerd/containerd"
@@ -454,8 +456,13 @@ func TestWriteFaultToEvent(t *testing.T) {
 				return errors.New("write fault to event fail")
 			})
 		defer mockDoWriteFaultToEventMethod.Reset()
-		faultInfo := []npuCommon.DevFaultInfo{{LogicID: 0, Assertion: 3, EventID: common.CardDropFaultCode}}
-		tool.writeFaultToEvent(faultInfo)
+		allFaultInfo <- npuCommon.DevFaultInfo{LogicID: 0, Assertion: FaultOnce, EventID: common.CardDropFaultCode}
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			time.Sleep(time.Second)
+			cancel()
+		}()
+		tool.WriteFaultToEvent(ctx)
 	})
 }
 

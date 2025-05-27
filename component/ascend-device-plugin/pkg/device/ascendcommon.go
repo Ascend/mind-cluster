@@ -16,6 +16,7 @@
 package device
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"github.com/containerd/containerd"
+	"golang.org/x/time/rate"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -51,7 +53,9 @@ var (
 	useIpv4                = true
 	re                     = regexp.MustCompile(`"fault_time":\d+,`)
 	// counter to record all card get ip times
-	counter = 0
+	counter      = 0
+	allFaultInfo = make(chan npuCommon.DevFaultInfo, common.WriteEventChanLenLimit)
+	limiter      = rate.NewLimiter(rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
 )
 
 const (
@@ -127,6 +131,7 @@ type DevManager interface {
 	LogFaultModeChange(*common.NpuDevice, []int32, string)
 	GetUsedChips() sets.String
 	UpdateDeviceUsedStatus(groupDevice map[string][]*common.NpuDevice)
+	WriteFaultToEvent(ctx context.Context)
 }
 
 // SetDmgr set devmanager
@@ -1098,7 +1103,15 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 func (tool *AscendTools) flushFaultCodesWithInit(device *common.NpuDevice,
 	devFaultInfoMap map[int32][]npuCommon.DevFaultInfo) {
 	if devFaultInfo, ok := devFaultInfoMap[device.LogicID]; ok {
-		tool.writeFaultToEvent(devFaultInfo)
+		for _, faultInfo := range devFaultInfo {
+			select {
+			case allFaultInfo <- faultInfo:
+				hwlog.RunLog.Debugf("fault %#v has been put into queue", faultInfo)
+			default:
+				hwlog.RunLog.Warnf("there is too many fault already in queue, queue len:%d, "+
+					"will not write to k8s event: %#v", len(allFaultInfo), faultInfo)
+			}
+		}
 	}
 	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
 	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
@@ -1254,11 +1267,25 @@ func (tool *AscendTools) SetResetFailedTimes(deviceLogicId int32, count int) {
 	tool.resetFailedTimesMap[deviceLogicId] = count
 }
 
-func (tool *AscendTools) writeFaultToEvent(devFaultInfo []npuCommon.DevFaultInfo) {
-	for _, faultInfo := range devFaultInfo {
-		if err := tool.doWriteFaultToEvent(faultInfo); err != nil {
-			hwlog.RunLog.Errorf("failed to write device fault to event, %v", err)
-			continue
+func (tool *AscendTools) WriteFaultToEvent(ctx context.Context) {
+	for {
+		select {
+		case _, ok := <-ctx.Done():
+			if !ok {
+				hwlog.RunLog.Info("stop signal chanel closed")
+			}
+			hwlog.RunLog.Info("write fault to k8s event stop")
+			return
+		case faultInfo := <-allFaultInfo:
+			if !limiter.Allow() {
+				hwlog.RunLog.Warn("write k8s event limiter overflowed")
+				hwlog.RunLog.Warnf("current event for fault:%#v will be discard", faultInfo)
+				continue
+			}
+			if err := tool.doWriteFaultToEvent(faultInfo); err != nil {
+				hwlog.RunLog.Errorf("failed to write device fault to k8s event, %v", err)
+				continue
+			}
 		}
 	}
 }
@@ -1311,6 +1338,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 	if _, err := tool.client.CreateEvent(event); err != nil {
 		return fmt.Errorf("failed to create event, %v", err)
 	}
+	hwlog.RunLog.Infof("successfully create event for fault: %#v", faultInfo)
 	return nil
 }
 

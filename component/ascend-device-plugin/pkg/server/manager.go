@@ -414,6 +414,8 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	if common.ParamOption.CheckCachedPods {
 		go hdm.manager.GetKubeClient().PodInformerInspector(ctx)
 	}
+	// report device fault to k8s event
+	go hdm.manager.WriteFaultToEvent(ctx)
 	initTime := time.Now()
 	for {
 		select {

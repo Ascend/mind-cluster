@@ -898,3 +898,12 @@ const (
 	// GetIpRetryInterval the interval between each retry in seconds
 	GetIpRetryInterval = 10
 )
+
+const (
+	// WriteEventRateLimit upper limit rate of write fault to k8s event per minute
+	WriteEventRateLimit = 10
+	// FaultCallBackRateLimit  upper limit rate of call back receive fault from driver per minute
+	FaultCallBackRateLimit = 1000
+	// WriteEventChanLenLimit upper limit of length of cache event
+	WriteEventChanLenLimit = 100
+)
