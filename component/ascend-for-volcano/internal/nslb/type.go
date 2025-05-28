@@ -22,6 +22,7 @@ package nslb
 import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -48,6 +49,42 @@ type TorHandlerV2 struct {
 // TorSingleLevelHandler single level tor handler
 type TorSingleLevelHandler struct {
 	TorHandler
+}
+
+// TorHandlerDP nslb dp handler
+type TorHandlerDP struct {
+	TorHandler
+	vPodSize        int
+	superPodTors    map[int32][]*plugin.Tor
+	useSuperPodTors []*superPodTors
+}
+
+type superPodTors struct {
+	name           string
+	superPodId     int32
+	full           int // full tor num
+	partial        int // partial tor num
+	remainFull     int
+	remainPart     int
+	usedFull       int
+	usedPartial    int
+	torCount       int
+	fullTors       []*plugin.Tor
+	usePartialTors []*plugin.Tor
+	partialTors    [util.NPUIndex3][]*plugin.Tor
+}
+
+type item struct {
+	spTors      *superPodTors
+	taskSize    int
+	currentGain int
+	futureGain  int
+	index       int
+}
+
+// PriorityQueue priority queue for super pod tors
+type PriorityQueue struct {
+	items []*item
 }
 
 type jobUsedTorInfos struct {
@@ -85,6 +122,7 @@ const (
 	TorInfoCMKey = "tor_info"
 	// TorLevelCMKey the key of tor level in configmap
 	TorLevelCMKey = "tor_level"
+	nslbDPTag     = "sp-block"
 )
 
 const (

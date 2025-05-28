@@ -62,7 +62,8 @@ const (
 )
 
 const (
-	freeTor = 0
+	sharedTor = 1
+	freeTor   = 0
 )
 
 const (

@@ -385,7 +385,7 @@ func getLogicTorsAndFullTorNum(torCount int, torTransposed [][]*Server) ([]*Tor,
 }
 
 func (t *Tor) setTorIsSharedTor(isShared string) {
-	if t.IsSharedTor != freeTor {
+	if t.IsSharedTor == sharedTor {
 		return
 	}
 	isSharedT, err := strconv.Atoi(isShared)

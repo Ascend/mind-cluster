@@ -33,6 +33,9 @@ import (
 
 // InitPolicyHandler init nslb policy handler
 func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plugin.SchedulerPluginNeed, bool) {
+	if _, ok := attr.Annotation[nslbDPTag]; ok {
+		return InitDPPolicyHandler(attr, env)
+	}
 	if !attr.IsJobHasTorAffinityLabel() {
 		return nil, false
 	}
