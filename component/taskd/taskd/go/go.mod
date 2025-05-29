@@ -6,6 +6,7 @@ require (
 	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/golang/protobuf v1.5.4
+	github.com/google/uuid v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.57.2
