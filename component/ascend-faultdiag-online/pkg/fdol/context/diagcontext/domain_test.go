@@ -27,12 +27,12 @@ import (
 
 var factory = NewDomainFactory()
 
-func TestDomain_GetDomainKey(t *testing.T) {
+func TestDomainGetDomainKey(t *testing.T) {
 	// 指标域的type1:指标域的name1-指标域的type2:指标域的name2
 	assert.Equal(t, domain.GetDomainKey(), "domain_type_string:domain_item_1-domain_type_string:domain_item_2")
 }
 
-func TestDomain_Size(t *testing.T) {
+func TestDomainSize(t *testing.T) {
 	domainLen := 2
 	assert.Equal(t, len(domain.DomainItems), domainLen)
 	assert.Equal(t, domain.Size(), domainLen)
@@ -42,7 +42,7 @@ func TestNewDomainFactory(t *testing.T) {
 	assert.NotNil(t, factory)
 }
 
-func TestDomainFactory_GetInstance(t *testing.T) {
+func TestDomainFactoryGetInstance(t *testing.T) {
 	key := buildDomainItemsKey(domainItems)
 	_, notExit := factory.domainMap[key]
 	assert.False(t, notExit)

@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"ascend-faultdiag-online/pkg/fdol/api"
 )
 
 func TestNewRouter(t *testing.T) {
@@ -30,12 +32,10 @@ func TestNewRouter(t *testing.T) {
 func TestHandleApi(t *testing.T) {
 
 	router := NewRouter()
+	router.RootApi = &api.Api{}
 
 	// non-exist api
 	apiFunc, err := router.HandleApi("v1/invalid")
 	assert.Error(t, err)
 	assert.Nil(t, apiFunc)
-
-	// exist api - TODO
-
 }

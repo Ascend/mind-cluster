@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMetric_GetMetricKey(t *testing.T) {
+func TestMetricGetMetricKey(t *testing.T) {
 	// 指标域的type1:指标域的name1-指标域的type2:指标域的name2_指标名
 	metricKey := "domain_type_string:domain_item_1-domain_type_string:domain_item_2-metric_name"
 	assert.Equal(t, metric.GetMetricKey(), metricKey)

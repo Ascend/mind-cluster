@@ -43,7 +43,7 @@ func TestNewDiagTicker(t *testing.T) {
 	assert.NotNil(t, diagTicker)
 }
 
-func TestDiagTicker_Close(t *testing.T) {
+func TestDiagTickerClose(t *testing.T) {
 	select {
 	case <-diagTicker.StopChan:
 		assert.True(t, false, "没有对无缓冲管道写入数据，阻塞监测管道读取数据")
@@ -60,7 +60,7 @@ func TestDiagTicker_Close(t *testing.T) {
 	}
 }
 
-func TestDiagTicker_Start(t *testing.T) {
+func TestDiagTickerStart(t *testing.T) {
 	ctxData := &contextdata.CtxData{
 		Environment: contextdata.NewEnvironment(),
 		Framework:   &contextdata.Framework{StopChan: make(chan struct{})},

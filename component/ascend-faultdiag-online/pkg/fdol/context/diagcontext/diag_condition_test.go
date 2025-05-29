@@ -54,7 +54,7 @@ var (
 	}
 )
 
-func TestCondition_IsMatching(t *testing.T) {
+func TestConditionIsMatching(t *testing.T) {
 	// 匹配
 	assert.True(t, conditionOne.IsMatching(srcAndDestData))
 	// 不匹配
@@ -65,7 +65,7 @@ func TestCondition_IsMatching(t *testing.T) {
 	assert.False(t, conditionOne.IsMatching(setData))
 }
 
-func TestConditionGroup_IsStaticMatching(t *testing.T) {
+func TestConditionGroupIsStaticMatching(t *testing.T) {
 	assert.True(t, conditionGroup.IsStaticMatching(srcAndDestData))
 	// 测试len(group.StaticConditions) == 0
 	nilGroup := &ConditionGroup{}
@@ -73,6 +73,6 @@ func TestConditionGroup_IsStaticMatching(t *testing.T) {
 
 }
 
-func TestConditionGroup_IsDynamicMatching(t *testing.T) {
+func TestConditionGroupIsDynamicMatching(t *testing.T) {
 	assert.True(t, conditionGroup.IsDynamicMatching(srcAndDestData))
 }

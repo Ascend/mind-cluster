@@ -226,7 +226,7 @@ func netfaultResultCallBack(cMessage *C.char) {
 	message := C.GoString(cMessage)
 	defer C.free(unsafe.Pointer(cMessage))
 
-	if dContext == nil {
+	if dContext == nil || contextData == nil {
 		hwlog.RunLog.Errorf("netfault result callback err: context is nil")
 		return
 	}
@@ -300,7 +300,7 @@ func addMetricFromClusterResult(models []*metricmodel.MetricReqModel, context *d
 	// 统一处理 MetricPool 添加逻辑
 	for _, metric := range models {
 		if slicetool.ValueIn(metric.ValueType, []enum.MetricValueType{enum.FloatMetric, enum.StringMetric}) != nil {
-			contextData.Framework.Logger.Println("Unknown Metric Type", metric.ValueType)
+			hwlog.RunLog.Infof("Unknown Metric Type: %s", metric.ValueType)
 			continue
 		}
 		domain := context.DomainFactory.GetInstance(metric.Domain)
