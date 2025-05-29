@@ -19,42 +19,41 @@ package common
 
 // Position represents the position information of a node.
 type Position struct {
-	Role        string // The role of the node.
-	ServerRank  string // The server rank of the node.
-	ProcessRank string // The process rank of the node.
+	Role        string `json:"role"`          // The role of the node.
+	ServerRank  string `json:"server_rank"`   // The server rank of the node.
+	ProcessRank string `json:"process_rank"`  // The process rank of the node.
 }
 
 // Message represents a message structure.
 type Message struct {
-	Uuid    string    // The unique identifier of the message.
-	BizType string    // The business type of the message.
-	Src     *Position // The source position of the message.
-	Dst     *Position // The destination position of the message.
-	Body    string    // The body content of the message.
+	Uuid    string    `json:"uuid"`           // The unique identifier of the message.
+	BizType string    `json:"biz_type"`       // The business type of the message.
+	Src     *Position `json:"src"`            // The source position of the message.
+	Dst     *Position `json:"dst"`            // The destination position of the message.
+	Body    string    `json:"body"`           // The body content of the message.
 }
 
 // Ack represents an acknowledgment structure.
 type Ack struct {
-	Uuid string    // The unique identifier of the acknowledgment.
-	Code uint32    // The response code of the acknowledgment.
-	Src  *Position // The source position of the acknowledgment.
+	Uuid string    `json:"uuid"`           // The unique identifier of the acknowledgment.
+	Code uint32    `json:"code"`           // The response code of the acknowledgment.
+	Src  *Position `json:"src"`            // The source position of the acknowledgment.
 }
 
 // TaskNetConfig represents the network configuration of a task.
 type TaskNetConfig struct {
-	Pos          Position   // The position of the task node.
-	ListenAddr   string     // The listening address of the task node.
-	UpstreamAddr string     // The upstream address of the task node.
-	ServerTLS    bool       // Whether to enable server TLS.
-	ClientTLS    bool       // Whether to enable client TLS.
-	TlsConf      *TLSConfig // The TLS configuration.
+	Pos          Position   `json:"pos"`            // The position of the task node.
+	ListenAddr   string     `json:"listen_addr"`    // The listening address of the task node.
+	UpstreamAddr string     `json:"upstream_addr"`  // The upstream address of the task node.
+	EnableTls    bool       `json:"enable_tls"`     // Whether to enable TLS.
+	TlsConf      *TLSConfig `json:"tls_conf"`       // The TLS configuration.
 }
 
 // TLSConfig represents the TLS configuration.
 type TLSConfig struct {
-	CA        string // The certificate authority file path.
-	ServerKey string // The server private key file path.
-	ServerCrt string // The server certificate file path.
-	ClientKey string // The client private key file path.
-	ClientCrt string // The client certificate file path.
+	CA        string `json:"ca"`             // The certificate authority file path.
+	ServerKey string `json:"server_key"`     // The server private key file path.
+	ServerCrt string `json:"server_crt"`     // The server certificate file path.
+	ClientKey string `json:"client_key"`     // The client private key file path.
+	ClientCrt string `json:"client_crt"`     // The client certificate file path.
 }

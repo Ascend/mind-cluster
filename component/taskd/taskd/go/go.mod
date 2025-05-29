@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	google.golang.org/grpc v1.57.2
 )
 
