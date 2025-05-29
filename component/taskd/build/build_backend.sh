@@ -69,8 +69,4 @@ function main() {
   mv_file
 }
 
-if [ "$1" = clean ]; then
-  clean
-  exit 0
-fi
 main
