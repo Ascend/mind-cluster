@@ -147,9 +147,9 @@ function copy_file_output()
     chmod 550 ${OUTPUT}/${RUN_PKG_NAME}
 }
 
-function clean()
-{
-    [ -d "${OUTPUT}" ] && cd ${OUTPUT}&&rm -rf *
+function clean() {
+    rm -rf "${OUTPUT}"
+    mkdir -p "${OUTPUT}"
 }
 
 clean

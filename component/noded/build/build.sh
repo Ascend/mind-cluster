@@ -36,7 +36,7 @@ OUTPUT_NAME="noded"
 DOCKER_FILE_NAME="Dockerfile"
 NODE_CONFIG_FILE_NAME="NodeDConfiguration.json"
 function clean() {
-    rm -rf "${TOP_DIR}"/output/
+    rm -rf "${TOP_DIR}"/output
     mkdir -p "${TOP_DIR}"/output
 }
 

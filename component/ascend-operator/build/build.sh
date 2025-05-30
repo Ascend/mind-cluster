@@ -23,7 +23,7 @@ sed -i "s/ascend-operator:.*/ascend-operator:${build_version}/" "${TOP_DIR}"/bui
 DOCKER_FILE_NAME="Dockerfile"
 
 function clear_env() {
-  rm -rf "${TOP_DIR}"/output/*
+  rm -rf "${TOP_DIR}"/output
   mkdir -p "${TOP_DIR}/output"
 }
 

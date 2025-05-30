@@ -44,7 +44,7 @@ if [ "$1" == "edge" ]; then
 fi
 
 function clean() {
-    rm -rf "${TOP_DIR}"/output/
+    rm -rf "${TOP_DIR}"/output
     mkdir -p "${TOP_DIR}"/output
 }
 
