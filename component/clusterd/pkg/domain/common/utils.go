@@ -34,6 +34,7 @@ var (
 		constant.ProcessDumpStrategyName:    3,
 		constant.ProcessExitStrategyName:    4,
 	}
+	faultLabelKey = "fault-type"
 )
 
 // Faults2String return string of faults
@@ -310,7 +311,8 @@ func RemoveSliceDuplicateFaults(faults []*pb.FaultRank) []*pb.FaultRank {
 }
 
 // LabelFaultPod label fault for software fault
-func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string) (map[string]string, error) {
+func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string,
+	faultReason string) (map[string]string, error) {
 	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
 	if devicePerNode == 0 {
 		hwlog.RunLog.Errorf("get device num per pod failed, jobId: %s", jobId)
@@ -327,7 +329,7 @@ func LabelFaultPod(jobId string, rankList []string, labeledMap map[string]string
 		faultPodRankList = append(faultPodRankList, strconv.Itoa(faultPodRank))
 	}
 	faultPodRankList = util.RemoveSliceDuplicateElement(faultPodRankList)
-	podMap, err := labelPodFault(jobId, faultPodRankList, labeledMap)
+	podMap, err := labelPodFault(jobId, faultPodRankList, labeledMap, faultReason)
 	if err != nil {
 		hwlog.RunLog.Errorf("label fault pod failed, err is %v", err)
 		return podMap, fmt.Errorf("label fault pod failed, err is %v", err)
@@ -365,11 +367,12 @@ func GetPodMap(jobId string, rankList []string) (map[string]string, error) {
 	return podMap, nil
 }
 
-func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string) (map[string]string, error) {
+func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string,
+	faultReason string) (map[string]string, error) {
 	if labeledMap == nil {
 		labeledMap = make(map[string]string)
 	}
-	faultLabel := map[string]string{"fault-type": "software"}
+	faultLabel := map[string]string{faultLabelKey: faultReason}
 	var err error = nil
 	for _, podRank := range faultPodRankList {
 		_, labeled := labeledMap[podRank]

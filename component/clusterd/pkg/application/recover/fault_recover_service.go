@@ -20,6 +20,11 @@ import (
 
 var globalFaultBeaconSecond = 2
 
+const (
+	normalFaultValue = "software"
+	uceFaultValue    = "hbm-uce"
+)
+
 // FaultRecoverService is a service for fault recover
 type FaultRecoverService struct {
 	keepAliveInterval int
@@ -382,8 +387,9 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	}
 	controller.saveCacheFault(request.FaultRanks)
 	var err error
+	faultReason := getFaultReason(request.FaultRanks)
 	faultPod, err := common.LabelFaultPod(request.JobId,
-		common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod())
+		common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod(), faultReason)
 	controller.mergeFaultPod(faultPod)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
@@ -426,4 +432,11 @@ func (s *FaultRecoverService) DeleteJob(jobId string) {
 	if s.initJob != nil {
 		delete(s.initJob, jobId)
 	}
+}
+
+func getFaultReason(faults []*pb.FaultRank) string {
+	if common.IsUceFault(faults) {
+		return uceFaultValue
+	}
+	return normalFaultValue
 }

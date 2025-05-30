@@ -378,7 +378,7 @@ func TestLabelFaultPod(t *testing.T) {
 			defer patch.Reset()
 			patch1 := gomonkey.ApplyFuncReturn(labelPodFault, map[string]string{"1": "rank1PodUid"}, nil)
 			defer patch1.Reset()
-			mp, err := LabelFaultPod(info.JobId, []string{"8"}, nil)
+			mp, err := LabelFaultPod(info.JobId, []string{"8"}, nil, "")
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(mp), convey.ShouldEqual, 1)
 		})
@@ -391,7 +391,7 @@ func TestLabelFaultPod(t *testing.T) {
 			patch1 := gomonkey.ApplyFuncReturn(labelPodFault,
 				map[string]string{"1": "rank1PodUid"}, errors.New("fake error"))
 			defer patch1.Reset()
-			mp, err := LabelFaultPod(info.JobId, []string{"8"}, nil)
+			mp, err := LabelFaultPod(info.JobId, []string{"8"}, nil, "")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(len(mp), convey.ShouldEqual, 1)
 		})
@@ -420,7 +420,7 @@ func TestLabelPodFault(t *testing.T) {
 					return nil, nil
 				})
 			defer patch1.Reset()
-			_, err := labelPodFault(info.JobId, []string{"1", "2"}, map[string]string{"1": "rank1PodUid"})
+			_, err := labelPodFault(info.JobId, []string{"1", "2"}, map[string]string{"1": "rank1PodUid"}, "")
 			convey.So(err, convey.ShouldEqual, nil)
 		})
 		convey.Convey("case patch pod fail", func() {
@@ -429,13 +429,13 @@ func TestLabelPodFault(t *testing.T) {
 					return nil, errors.New("fake patch error")
 				})
 			defer patch1.Reset()
-			_, err := labelPodFault(info.JobId, []string{"1", "2"}, map[string]string{"1": "rank1PodUid"})
+			_, err := labelPodFault(info.JobId, []string{"1", "2"}, map[string]string{"1": "rank1PodUid"}, "")
 			convey.So(err, convey.ShouldEqual, nil)
 		})
 		convey.Convey("case labeled map is nil", func() {
 			patch1 := gomonkey.ApplyFuncReturn(kube.PatchPodLabel, nil, nil)
 			defer patch1.Reset()
-			_, err := labelPodFault(info.JobId, []string{"1", "2"}, nil)
+			_, err := labelPodFault(info.JobId, []string{"1", "2"}, nil, "")
 			convey.So(err, convey.ShouldEqual, nil)
 		})
 	})
@@ -448,7 +448,7 @@ func caseDeviceNumPerNodeZero() {
 			return 0
 		})
 	defer patch.Reset()
-	_, err := LabelFaultPod(info.JobId, []string{"8"}, nil)
+	_, err := LabelFaultPod(info.JobId, []string{"8"}, nil, "")
 	convey.ShouldNotBeNil(err)
 }
 
@@ -459,7 +459,7 @@ func caseRankStrIllegal() {
 			return deviceNumPerNode
 		})
 	defer patch.Reset()
-	_, err := LabelFaultPod(info.JobId, []string{errorRank}, nil)
+	_, err := LabelFaultPod(info.JobId, []string{errorRank}, nil, "")
 	convey.ShouldNotBeNil(err)
 }
 

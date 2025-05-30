@@ -630,3 +630,26 @@ func TestGetJobBaseInfo_ProcessRecoverEnableOff(t *testing.T) {
 		t.Errorf("Expected response code %d, but got %d", common.ProcessRecoverEnableOff, code)
 	}
 }
+
+func TestGetFaultReason(t *testing.T) {
+	convey.Convey("Testing getFaultReason", t, func() {
+		faults1 := []*pb.FaultRank{&pb.FaultRank{
+			RankId:    "0",
+			FaultType: "1",
+		}}
+		faults2 := []*pb.FaultRank{&pb.FaultRank{
+			RankId:    "0",
+			FaultType: "0",
+		}, &pb.FaultRank{
+			RankId:    "1",
+			FaultType: "1",
+		}}
+		faults3 := []*pb.FaultRank{&pb.FaultRank{
+			RankId:    "0",
+			FaultType: "0",
+		}}
+		convey.So(getFaultReason(faults1), convey.ShouldEqual, normalFaultValue)
+		convey.So(getFaultReason(faults2), convey.ShouldEqual, normalFaultValue)
+		convey.So(getFaultReason(faults3), convey.ShouldEqual, uceFaultValue)
+	})
+}
