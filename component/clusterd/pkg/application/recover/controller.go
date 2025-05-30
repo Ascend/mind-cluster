@@ -550,6 +550,7 @@ func (ctl *EventController) handleNotifyStopTrain() (string, common.RespCode, er
 		Actions:        stopTrainActions,
 		ChangeStrategy: "",
 	}
+	signal.FaultRanks = append(ctl.cacheUceFault, ctl.cacheNormalFault...)
 	return ctl.signalEnqueue(signal)
 }
 
