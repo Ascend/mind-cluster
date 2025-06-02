@@ -67,7 +67,7 @@ func isIPValid(ipStr string) error {
 func (server *ClusterInfoMgrServer) Start(ctx context.Context) error {
 	recoverSvc := recover.NewFaultRecoverService(keepAliveInterval, ctx)
 	pubFaultSvc := publicfault.NewPubFaultService(ctx)
-	dataTraceSvc := &profiling.SwitchManager{}
+	dataTraceSvc := profiling.NewSwitchManager(ctx)
 	configSvc := config.NewBusinessConfigServer(ctx)
 	faultSvc := fault.NewFaultServer(ctx)
 	jobSvc := jobinfo.NewJobServer(ctx)

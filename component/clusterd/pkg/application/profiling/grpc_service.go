@@ -8,10 +8,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/config"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/profile"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/kube"
@@ -25,6 +31,18 @@ const (
 // SwitchManager represents profiling switch manager
 type SwitchManager struct {
 	profiling.UnimplementedTrainingDataTraceServer
+	publishers map[string]*config.ConfigPublisher[*profiling.DataStatusRes]
+	lock       sync.RWMutex
+	ctx        context.Context
+}
+
+// NewSwitchManager new SwitchManager
+func NewSwitchManager(ctx context.Context) *SwitchManager {
+	return &SwitchManager{
+		publishers: make(map[string]*config.ConfigPublisher[*profiling.DataStatusRes]),
+		lock:       sync.RWMutex{},
+		ctx:        ctx,
+	}
 }
 
 const (
@@ -66,9 +84,35 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]",
 			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
 	}
+	jobInfo := job.GetJobByNameSpaceAndName(jobName, jobNs)
+	if len(jobInfo.Key) == 0 {
+		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to find ns %s with job %s in jobcache",
+			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, fmt.Errorf("no such job")
+	}
+	if err := ps.publish(jobInfo.Key, in.ProfilingSwitch); err != nil {
+		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to notify taskd comfigmap:[%s/%s]",
+			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
+	}
 	response := &profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
 	hwlog.RunLog.Infof("successfully changed profiling marker enable status: %#v", in.ProfilingSwitch)
 	return response, nil
+}
+
+func (ps *SwitchManager) publish(jobId string, info *profiling.ProfilingSwitch) error {
+	publisher, ok := ps.getPublisher(jobId)
+	if ok {
+		updateMsg := profiling.DataStatusRes{
+			Message:         "update profiling switch",
+			ProfilingSwitch: info,
+			Code:            OK,
+		}
+		ok := publisher.SaveData(&updateMsg)
+		if !ok {
+			return fmt.Errorf("send update profiling switch %v for job %v fail", info, jobId)
+		}
+		return nil
+	}
+	return fmt.Errorf("getPublisher for job %v fail", jobId)
 }
 
 // GetTrainingDataTraceSwitch get  current profiling marker status
@@ -107,4 +151,74 @@ func (ps *SwitchManager) GetTrainingDataTraceSwitch(ctx context.Context,
 		Message:         fmt.Sprintf("successfully get the status of job[%s/%s]", dtc.JobNamespace, dtc.JobName),
 		ProfilingSwitch: &resProfile,
 		Code:            OK}, nil
+}
+
+// SubscribeDataTraceSwitch subscribe profiling date trace switch
+func (ps *SwitchManager) SubscribeDataTraceSwitch(
+	clientInfo *profiling.ProfilingClientInfo, stream profiling.TrainingDataTrace_SubscribeDataTraceSwitchServer) error {
+	hwlog.RunLog.Infof("receive Subscribe profiling message signal request, %v", clientInfo)
+	publisher, ok := ps.getPublisher(clientInfo.JobId)
+	if !ok || publisher == nil {
+		_, err := ps.preRegistry(clientInfo)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, preCheck err:%v", clientInfo.JobId, err)
+			return fmt.Errorf("jobId=%s not registered, role=%s", clientInfo.JobId, clientInfo.Role)
+		}
+	}
+	publisher = ps.preemptPublisher(clientInfo.JobId)
+	publisher.ListenDataChange(stream)
+	ps.deletePublisher(clientInfo.JobId, publisher.GetCreateTime())
+	hwlog.RunLog.Infof("jobId=%s stop subscribe fault message signal, createTime=%v",
+		clientInfo.JobId, publisher.GetCreateTime().UnixNano())
+	return nil
+}
+
+func (ps *SwitchManager) getPublisher(jobId string) (*config.ConfigPublisher[*profiling.DataStatusRes], bool) {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+	publisher, ok := ps.publishers[jobId]
+	return publisher, ok
+}
+
+func (ps *SwitchManager) preRegistry(req *profiling.ProfilingClientInfo) (common.RespCode, error) {
+	_, ok := job.GetJobCache(req.JobId)
+	_, err := job.GetNamespaceByJobIdAndAppType(req.JobId, req.Role)
+	if !ok && err != nil {
+		hwlog.RunLog.Errorf("jobId=%s not exist and is not multi-instance job", req.JobId)
+		return common.JobNotExist, fmt.Errorf("jobId=%s not exist and is not multi-instance", req.JobId)
+	}
+	if ps.serveJobNum() >= constant.MaxServeJobs {
+		return common.OutOfMaxServeJobs,
+			fmt.Errorf("jobId=%s out of max serve jobs", req.JobId)
+	}
+	return common.OK, nil
+}
+
+func (ps *SwitchManager) serveJobNum() int {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+	return len(ps.publishers)
+}
+
+func (ps *SwitchManager) preemptPublisher(jobId string) *config.ConfigPublisher[*profiling.DataStatusRes] {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+	publisher, ok := ps.publishers[jobId]
+	if ok && publisher != nil {
+		publisher.Stop()
+	}
+	newPublisher := config.NewConfigPublisher[*profiling.DataStatusRes](jobId,
+		ps.ctx, constant.ProfilingDataType, nil)
+	ps.publishers[jobId] = newPublisher
+	return newPublisher
+}
+
+func (ps *SwitchManager) deletePublisher(jobId string, createTime time.Time) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+	publisher, ok := ps.publishers[jobId]
+	if !ok || publisher == nil || !createTime.Equal(publisher.GetCreateTime()) {
+		return
+	}
+	delete(ps.publishers, jobId)
 }

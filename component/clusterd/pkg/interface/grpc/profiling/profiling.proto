@@ -7,6 +7,12 @@ option go_package = ".;profiling";
 service TrainingDataTrace {
   rpc ModifyTrainingDataTraceSwitch (DataTypeReq) returns (DataTypeRes);
   rpc GetTrainingDataTraceSwitch (DataStatusReq) returns (DataStatusRes);
+  rpc SubscribeDataTraceSwitch (ProfilingClientInfo) returns (stream DataStatusRes);
+}
+
+message ProfilingClientInfo{
+  string jobId = 1;
+  string role = 2;
 }
 
 message ProfilingSwitch{

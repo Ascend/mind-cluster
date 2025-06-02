@@ -28,6 +28,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/config"
 	"clusterd/pkg/interface/grpc/fault"
+	"clusterd/pkg/interface/grpc/profiling"
 )
 
 const (
@@ -37,7 +38,7 @@ const (
 )
 
 type signalType interface {
-	*config.RankTableStream | *fault.FaultMsgSignal
+	*config.RankTableStream | *fault.FaultMsgSignal | *profiling.DataStatusRes
 }
 
 type grpcServerStreamType[T signalType] interface {

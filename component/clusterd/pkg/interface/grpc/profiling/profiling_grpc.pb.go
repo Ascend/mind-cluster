@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	TrainingDataTrace_ModifyTrainingDataTraceSwitch_FullMethodName = "/TrainingDataTrace/ModifyTrainingDataTraceSwitch"
 	TrainingDataTrace_GetTrainingDataTraceSwitch_FullMethodName    = "/TrainingDataTrace/GetTrainingDataTraceSwitch"
+	TrainingDataTrace_SubscribeDataTraceSwitch_FullMethodName      = "/TrainingDataTrace/SubscribeDataTraceSwitch"
 )
 
 // TrainingDataTraceClient is the client API for TrainingDataTrace service.
@@ -29,6 +30,7 @@ const (
 type TrainingDataTraceClient interface {
 	ModifyTrainingDataTraceSwitch(ctx context.Context, in *DataTypeReq, opts ...grpc.CallOption) (*DataTypeRes, error)
 	GetTrainingDataTraceSwitch(ctx context.Context, in *DataStatusReq, opts ...grpc.CallOption) (*DataStatusRes, error)
+	SubscribeDataTraceSwitch(ctx context.Context, in *ProfilingClientInfo, opts ...grpc.CallOption) (TrainingDataTrace_SubscribeDataTraceSwitchClient, error)
 }
 
 type trainingDataTraceClient struct {
@@ -57,12 +59,45 @@ func (c *trainingDataTraceClient) GetTrainingDataTraceSwitch(ctx context.Context
 	return out, nil
 }
 
+func (c *trainingDataTraceClient) SubscribeDataTraceSwitch(ctx context.Context, in *ProfilingClientInfo, opts ...grpc.CallOption) (TrainingDataTrace_SubscribeDataTraceSwitchClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TrainingDataTrace_ServiceDesc.Streams[0], TrainingDataTrace_SubscribeDataTraceSwitch_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &trainingDataTraceSubscribeDataTraceSwitchClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type TrainingDataTrace_SubscribeDataTraceSwitchClient interface {
+	Recv() (*DataStatusRes, error)
+	grpc.ClientStream
+}
+
+type trainingDataTraceSubscribeDataTraceSwitchClient struct {
+	grpc.ClientStream
+}
+
+func (x *trainingDataTraceSubscribeDataTraceSwitchClient) Recv() (*DataStatusRes, error) {
+	m := new(DataStatusRes)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TrainingDataTraceServer is the server API for TrainingDataTrace service.
 // All implementations must embed UnimplementedTrainingDataTraceServer
 // for forward compatibility
 type TrainingDataTraceServer interface {
 	ModifyTrainingDataTraceSwitch(context.Context, *DataTypeReq) (*DataTypeRes, error)
 	GetTrainingDataTraceSwitch(context.Context, *DataStatusReq) (*DataStatusRes, error)
+	SubscribeDataTraceSwitch(*ProfilingClientInfo, TrainingDataTrace_SubscribeDataTraceSwitchServer) error
 	mustEmbedUnimplementedTrainingDataTraceServer()
 }
 
@@ -75,6 +110,9 @@ func (UnimplementedTrainingDataTraceServer) ModifyTrainingDataTraceSwitch(contex
 }
 func (UnimplementedTrainingDataTraceServer) GetTrainingDataTraceSwitch(context.Context, *DataStatusReq) (*DataStatusRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrainingDataTraceSwitch not implemented")
+}
+func (UnimplementedTrainingDataTraceServer) SubscribeDataTraceSwitch(*ProfilingClientInfo, TrainingDataTrace_SubscribeDataTraceSwitchServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeDataTraceSwitch not implemented")
 }
 func (UnimplementedTrainingDataTraceServer) mustEmbedUnimplementedTrainingDataTraceServer() {}
 
@@ -125,6 +163,27 @@ func _TrainingDataTrace_GetTrainingDataTraceSwitch_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TrainingDataTrace_SubscribeDataTraceSwitch_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ProfilingClientInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TrainingDataTraceServer).SubscribeDataTraceSwitch(m, &trainingDataTraceSubscribeDataTraceSwitchServer{stream})
+}
+
+type TrainingDataTrace_SubscribeDataTraceSwitchServer interface {
+	Send(*DataStatusRes) error
+	grpc.ServerStream
+}
+
+type trainingDataTraceSubscribeDataTraceSwitchServer struct {
+	grpc.ServerStream
+}
+
+func (x *trainingDataTraceSubscribeDataTraceSwitchServer) Send(m *DataStatusRes) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // TrainingDataTrace_ServiceDesc is the grpc.ServiceDesc for TrainingDataTrace service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -141,6 +200,12 @@ var TrainingDataTrace_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TrainingDataTrace_GetTrainingDataTraceSwitch_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeDataTraceSwitch",
+			Handler:       _TrainingDataTrace_SubscribeDataTraceSwitch_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "profiling.proto",
 }

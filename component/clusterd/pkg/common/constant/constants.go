@@ -193,6 +193,8 @@ const (
 	RankTableDataType = "rankTable"
 	// FaultMsgDataType faultMsg data type
 	FaultMsgDataType = "faultMsg"
+	// ProfilingDataType profiling data type
+	ProfilingDataType = "profiling"
 	// FaultTypeSwitch Types of switch faults
 	FaultTypeSwitch = "Switch"
 	// HealthyLevel int value of Healthy state
