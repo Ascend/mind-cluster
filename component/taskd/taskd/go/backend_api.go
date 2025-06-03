@@ -265,5 +265,15 @@ func DestroyTaskdProxy() {
 	proxy.DestroyProxy()
 }
 
+//export InitTaskdLog
+func InitTaskdLog(logName *C.char) C.int {
+	logStr := C.GoString(logName) // convert C string to g
+	if err := utils.InitHwLogger(logStr, context.Background()); err != nil {
+		fmt.Printf("%s init hwlog failed, err: %v", logStr, err)
+		return C.int(1)
+	}
+	return C.int(0)
+}
+
 func main() {
 }
