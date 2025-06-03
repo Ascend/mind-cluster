@@ -175,6 +175,7 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.healthState = constant.HealthyState
 	ctl.latestRecoverResult = ctl.latestRecoverResult[:0]
 	ctl.agentReportStrategies = ctl.agentReportStrategies[:0]
+	ctl.platStrategy = ""
 	ctl.globalSwitchRankIDs = ctl.globalSwitchRankIDs[:0]
 	ctl.globalOps = ctl.globalOps[:0]
 	ctl.state.Reset()
