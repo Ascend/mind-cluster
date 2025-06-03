@@ -211,6 +211,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
 		}
 	}
+	hnm.hotResetTryOutBand(resetDevs)
 	isHotResetOn = false
 	return err
 }
@@ -1847,9 +1848,15 @@ func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 		hwlog.RunLog.Infof("hot reset complete, cardId: %d, logicId: %d", cardId, resetLogicId)
 	}
 	if len(errList) == 0 {
+		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
 		return nil
 	}
-	return errList[0]
+	if common.ParamOption.RealCardType != common.Ascend910A3 {
+		hwlog.RunLog.Info("out band reset only support A3")
+		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
+		return errList[0]
+	}
+	return hnm.execOutBandReset(resetFailDevs, resetSuccDevs)
 }
 
 func (hnm *HwAscend910Manager) execOutBandReset(inBandFailDevs, sucDevs []ResetDevice) error {
@@ -1902,7 +1909,7 @@ func (hnm *HwAscend910Manager) execRescan(failDevs []ResetDevice) {
 		sucDevs = append(sucDevs, dev)
 	}
 	WriteResetInfo(ResetInfo{ThirdPartyResetDevs: failDevs}, WMDelete, false)
-	WriteResetInfo(ResetInfo{ManualResetDevs: scanFailDevs}, WMAppend, false)
+	WriteResetInfo(ResetInfo{ManualResetDevs: scanFailDevs}, WMAppend, true)
 }
 
 // fillResetDevs complement phyID and associatedCardID
@@ -1954,7 +1961,7 @@ func (hnm *HwAscend910Manager) updateResetInfo(failDevs, sucDevs []ResetDevice) 
 	} else {
 		resetInfo.ManualResetDevs = append(resetInfo.ManualResetDevs, filledFailDevs...)
 	}
-	WriteResetInfo(resetInfo, WMOverwrite, false)
+	WriteResetInfo(resetInfo, WMOverwrite, true)
 }
 
 func (hnm *HwAscend910Manager) resetDeviceOutBand(cardId, deviceId int32) error {

@@ -1420,7 +1420,7 @@ func (hdm *HwDevManager) checkNodeResetInfo() {
 	newResetInfo.ThirdPartyResetDevs = newThirdPartyResetDevs
 	newResetInfo.ManualResetDevs = newManualResetDevs
 	newResetInfo = checkOverRetryDev(newResetInfo)
-	device.WriteResetInfo(newResetInfo, device.WMOverwrite, false)
+	device.WriteResetInfo(newResetInfo, device.WMOverwrite, true)
 }
 
 func flattenMap(m map[string][]*common.NpuDevice) []*common.NpuDevice {
