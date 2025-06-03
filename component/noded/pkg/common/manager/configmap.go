@@ -12,39 +12,40 @@
    limitations under the License.
 */
 
-// Package common for common function
-package common
+// Package manager for configmap function
+package manager
 
 import (
 	"sync"
 
 	"ascend-common/common-utils/hwlog"
+	"nodeD/pkg/common"
 )
 
 // ConfigManager manage fault config
 type ConfigManager interface {
-	GetFaultConfig() *FaultConfig
-	GetFaultTypeCode() *FaultTypeCode
-	SetFaultConfig(*FaultConfig)
-	SetFaultTypeCode(*FaultTypeCode)
+	GetFaultConfig() *common.FaultConfig
+	GetFaultTypeCode() *common.FaultTypeCode
+	SetFaultConfig(*common.FaultConfig)
+	SetFaultTypeCode(*common.FaultTypeCode)
 }
 
 // NewConfigManager create a config manager
 func NewConfigManager() ConfigManager {
 	return &ConfigTools{
-		config:     &FaultConfig{&FaultTypeCode{}},
+		config:     &common.FaultConfig{&common.FaultTypeCode{}},
 		configLock: &sync.Mutex{},
 	}
 }
 
 // ConfigTools the config tool definition
 type ConfigTools struct {
-	config     *FaultConfig
+	config     *common.FaultConfig
 	configLock *sync.Mutex
 }
 
 // GetFaultConfig return fault config
-func (c *ConfigTools) GetFaultConfig() *FaultConfig {
+func (c *ConfigTools) GetFaultConfig() *common.FaultConfig {
 	if c.config == nil {
 		hwlog.RunLog.Error("config is nil when get fault config")
 		return nil
@@ -55,7 +56,7 @@ func (c *ConfigTools) GetFaultConfig() *FaultConfig {
 }
 
 // GetFaultTypeCode return fault type code
-func (c *ConfigTools) GetFaultTypeCode() *FaultTypeCode {
+func (c *ConfigTools) GetFaultTypeCode() *common.FaultTypeCode {
 	if c.config == nil {
 		hwlog.RunLog.Error("config is nil when get fault type code")
 		return nil
@@ -66,23 +67,23 @@ func (c *ConfigTools) GetFaultTypeCode() *FaultTypeCode {
 }
 
 // SetFaultConfig set the fault config
-func (c *ConfigTools) SetFaultConfig(faultConfig *FaultConfig) {
+func (c *ConfigTools) SetFaultConfig(faultConfig *common.FaultConfig) {
 	if c.config == nil {
 		hwlog.RunLog.Error("config is nil when set fault config")
 		return
 	}
 	c.configLock.Lock()
 	defer c.configLock.Unlock()
-	DeepCopyFaultConfig(c.config, faultConfig)
+	common.DeepCopyFaultConfig(c.config, faultConfig)
 }
 
 // SetFaultTypeCode set the fault type code
-func (c *ConfigTools) SetFaultTypeCode(faultTypeCode *FaultTypeCode) {
+func (c *ConfigTools) SetFaultTypeCode(faultTypeCode *common.FaultTypeCode) {
 	if c.config == nil {
 		hwlog.RunLog.Error("config is nil when set fault type code")
 		return
 	}
 	c.configLock.Lock()
 	defer c.configLock.Unlock()
-	DeepCopyFaultTypeCode(c.config.FaultTypeCode, faultTypeCode)
+	common.DeepCopyFaultTypeCode(c.config.FaultTypeCode, faultTypeCode)
 }

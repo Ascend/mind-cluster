@@ -61,6 +61,9 @@ var (
 		FaultDevList: testFaultDevList,
 		NodeStatus:   common.PreSeparate,
 	}
+	testFCDevInfo = &common.FaultAndConfigInfo{
+		FaultDevInfo: testFaultDevInfo,
+	}
 )
 
 func TestMain(m *testing.M) {

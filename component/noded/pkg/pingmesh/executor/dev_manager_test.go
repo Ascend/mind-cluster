@@ -150,3 +150,30 @@ func TestStart(t *testing.T) {
 		})
 	})
 }
+
+func TestStopLastTasks(t *testing.T) {
+	convey.Convey("Testing stopLastTasks", t, func() {
+		executor := &DevManager{
+			devManager: &devmanager.DeviceManager{},
+			currentPolicy: &types.HccspingMeshPolicy{
+				DestAddr: map[string]types.DestinationAddress{
+					"0": {
+						1: "TEST",
+					},
+				},
+			},
+			chips: map[string]*common.ChipBaseInfo{"0": {}},
+		}
+		flag := false
+		convey.Convey("01-when destAddr is valid, DcStopHccsPingMesh should be execute ", func() {
+			patch := gomonkey.ApplyMethod(executor.devManager, "DcStopHccsPingMesh",
+				func(_ *devmanager.DeviceManager, _ int32, _ int32, _ int, _ uint) error {
+					flag = true
+					return nil
+				})
+			defer patch.Reset()
+			executor.stopLastTasks()
+			convey.So(flag, convey.ShouldBeTrue)
+		})
+	})
+}

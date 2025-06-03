@@ -24,11 +24,12 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
-	"nodeD/pkg/config"
 	"nodeD/pkg/control"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring"
+	"nodeD/pkg/monitoring/config"
 	"nodeD/pkg/pingmesh"
+	"nodeD/pkg/processmanager"
 	"nodeD/pkg/reporter"
 )
 
@@ -56,7 +57,7 @@ var (
 		LogFileName:   defaultLogFile,
 		MaxLineLength: maxLineLength,
 	}
-	controller      = &control.NodeController{}
+	controller      = &control.ControlManager{}
 	configManager   = &config.FaultConfigurator{}
 	monitorManager  = &monitoring.MonitorManager{}
 	reportManager   = &reporter.ReportManager{}
@@ -100,7 +101,6 @@ func main() {
 		hwlog.RunLog.Errorf("init function failed, err is %v", err)
 		return
 	}
-	go configManager.Run(ctx)
 	go monitorManager.Run(ctx)
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
@@ -160,8 +160,7 @@ func createWorkers() error {
 	}
 
 	// init workers
-	configManager = config.NewFaultConfigurator(clientK8s)
-	controller = control.NewNodeController(clientK8s)
+	controller = control.NewControlManager(clientK8s)
 	monitorManager = monitoring.NewMonitorManager(clientK8s)
 	reportManager = reporter.NewReporterManager(clientK8s)
 	pingmeshManager = pingmesh.NewManager(&pingmesh.Config{
@@ -172,27 +171,19 @@ func createWorkers() error {
 	// build the connections between workers
 	monitorManager.SetNextFaultProcessor(controller)
 	controller.SetNextFaultProcessor(reportManager)
-	configManager.SetNextConfigProcessor(controller)
 	return nil
 }
 
 func initFunction() error {
-	if err := configManager.Init(); err != nil {
-		hwlog.RunLog.Errorf("init config manager failed when start, err is %v", err)
-		return err
-	}
-	if err := controller.Init(); err != nil {
+	if err := processmanager.InitPlugin(); err != nil {
 		hwlog.RunLog.Errorf("init controller failed when start, err is %v", err)
 		return err
 	}
-	if err := monitorManager.Init(); err != nil {
-		hwlog.RunLog.Errorf("init monitor manager failed when start, err is %v", err)
-		return err
-	}
-	if err := reportManager.Init(); err != nil {
-		hwlog.RunLog.Errorf("init reporter manager failed when start, err is %v", err)
-		return err
-	}
+	go func() {
+		if err := controller.InitNodeAnnotation(); err != nil {
+			hwlog.RunLog.Warnf("init node annotation failed when start, err is %v", err)
+		}
+	}()
 	return nil
 }
 

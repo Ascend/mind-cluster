@@ -22,22 +22,12 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
-	"nodeD/pkg/monitoring/ipmimonitor"
+	"nodeD/pkg/processmanager"
 )
-
-// PluginMonitor monitor plugin interface
-type PluginMonitor interface {
-	Monitoring()
-	Init() error
-	Stop()
-	Name() string
-}
 
 // MonitorManager manage monitors
 type MonitorManager struct {
-	monitors           []PluginMonitor
 	client             *kubeclient.ClientK8s
-	faultManager       common.FaultManager
 	nextFaultProcessor common.FaultProcessor
 	stopChan           chan struct{}
 }
@@ -45,36 +35,9 @@ type MonitorManager struct {
 // NewMonitorManager create a monitor manager
 func NewMonitorManager(client *kubeclient.ClientK8s) *MonitorManager {
 	return &MonitorManager{
-		client:       client,
-		faultManager: common.NewFaultManager(),
-		stopChan:     make(chan struct{}, 1),
+		client:   client,
+		stopChan: make(chan struct{}, 1),
 	}
-}
-
-// Init register monitor plugin and start them
-func (m *MonitorManager) Init() error {
-	const retryTime = 3
-	m.monitors = append(m.monitors, ipmimonitor.NewIpmiEventMonitor(m.faultManager))
-	for _, monitor := range m.monitors {
-		var initSuc bool
-		for i := 0; i < retryTime; i++ {
-			if err := monitor.Init(); err != nil {
-				hwlog.RunLog.Errorf("init monitor[%s] failed, error: %v, retry count: %d", monitor.Name(), err, i+1)
-				time.Sleep(time.Second)
-				continue
-			}
-			initSuc = true
-			break
-		}
-		if initSuc {
-			hwlog.RunLog.Infof("init monitor[%s] success", monitor.Name())
-			go monitor.Monitoring()
-		} else {
-			hwlog.RunLog.Errorf("init monitor[%s] failed, the maximum number of retries (%d) has been reached",
-				monitor.Name(), retryTime)
-		}
-	}
-	return nil
 }
 
 // Run working loop
@@ -83,6 +46,7 @@ func (m *MonitorManager) Run(ctx context.Context) {
 	defer ticker.Stop()
 	triggerTicker := time.NewTicker(time.Second)
 	defer triggerTicker.Stop()
+	lastUpdateTime := time.Now()
 	for {
 		select {
 		case _, ok := <-ctx.Done():
@@ -94,33 +58,61 @@ func (m *MonitorManager) Run(ctx context.Context) {
 			m.Stop()
 			return
 		case <-triggerTicker.C:
+			lastUpdateTime = time.Now()
 			m.parseTriggers()
 		case <-ticker.C:
-			m.Execute(m.faultManager.GetFaultDevInfo())
+			if time.Since(lastUpdateTime) < time.Duration(common.ParamOption.ReportInterval)*time.Second {
+				continue
+			}
+			lastUpdateTime = time.Now()
+			m.ExecuteAll()
 		}
 	}
 }
 
 func (m *MonitorManager) parseTriggers() {
-	select {
-	case <-common.GetUpdateChan():
-		hwlog.RunLog.Info("receive update trigger, processing fault report")
-		m.Execute(m.faultManager.GetFaultDevInfo())
-	default:
-		hwlog.RunLog.Debug("No update trigger, skipping execute")
+	for {
+		select {
+		case processType, ok := <-common.GetTrigger():
+			if !ok {
+				hwlog.RunLog.Error("updateTrigger channel is closed")
+				return
+			}
+			m.Execute(processType)
+		default:
+			hwlog.RunLog.Debug("No update trigger, skipping execute")
+			return
+		}
 	}
 }
 
 // Stop terminate working loop
 func (m *MonitorManager) Stop() {
-	for _, monitor := range m.monitors {
-		monitor.Stop()
+	processTypes := processmanager.GetAllProcessType()
+	for _, processType := range processTypes {
+		pluginMonitor := processmanager.GetMonitorPlugins(processType)
+		if pluginMonitor != nil {
+			pluginMonitor.Stop()
+		}
+	}
+}
+
+// ExecuteAll periodically report all monitoring data regardless of whether the data has changed.
+func (m *MonitorManager) ExecuteAll() {
+	processTypes := processmanager.GetAllLoopProcessType()
+	for _, processType := range processTypes {
+		m.Execute(processType)
 	}
 }
 
 // Execute update node status and send message to next fault processor
-func (m *MonitorManager) Execute(faultDevInfo *common.FaultDevInfo) {
-	m.nextFaultProcessor.Execute(faultDevInfo)
+func (m *MonitorManager) Execute(processType string) {
+	pluginMonitor := processmanager.GetMonitorPlugins(processType)
+	if pluginMonitor == nil {
+		hwlog.RunLog.Errorf("processType:%s don't have monitor", processType)
+		return
+	}
+	m.nextFaultProcessor.Execute(pluginMonitor.GetMonitorData(), processType)
 }
 
 // SetNextFaultProcessor set the next fault processor

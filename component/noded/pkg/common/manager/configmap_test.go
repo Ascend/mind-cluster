@@ -13,7 +13,7 @@
 */
 
 // Package common for common function
-package common
+package manager
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/hwlog"
+	"nodeD/pkg/common"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func TestSetFaultConfig(t *testing.T) {
 	convey.Convey("test set fault config", t, func() {
 		convey.Convey("config manager set fault config", func() {
 			configManager := NewConfigManager()
-			faultConfig := &FaultConfig{FaultTypeCode: &FaultTypeCode{
+			faultConfig := &common.FaultConfig{FaultTypeCode: &common.FaultTypeCode{
 				NotHandleFaultCodes:   []string{"00000001"},
 				PreSeparateFaultCodes: []string{"00000002"},
 				SeparateFaultCodes:    []string{"00000003"},
@@ -50,7 +51,7 @@ func TestSetFaultConfig(t *testing.T) {
 		})
 		convey.Convey("wrong config manager set fault config", func() {
 			configManager := mockWrongConfigManager()
-			faultConfig := &FaultConfig{FaultTypeCode: &FaultTypeCode{
+			faultConfig := &common.FaultConfig{FaultTypeCode: &common.FaultTypeCode{
 				NotHandleFaultCodes:   []string{"00000001"},
 				PreSeparateFaultCodes: []string{"00000002"},
 				SeparateFaultCodes:    []string{"00000003"},
@@ -61,12 +62,37 @@ func TestSetFaultConfig(t *testing.T) {
 	})
 }
 
+// FaultConfigEqual judge if fault config is equal
+func FaultConfigEqual(oldFaultConfig, newFaultConfig *common.FaultConfig) {
+	convey.So(oldFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
+	convey.So(newFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
+	FaultTypeCodesEqual(oldFaultConfig.FaultTypeCode, newFaultConfig.FaultTypeCode)
+}
+
+// FaultTypeCodesEqual judge if fault type code is equal
+func FaultTypeCodesEqual(oldFaultTypeCode, newFaultTypeCode *common.FaultTypeCode) {
+	SliceStrEqual(oldFaultTypeCode.NotHandleFaultCodes, newFaultTypeCode.NotHandleFaultCodes)
+	SliceStrEqual(oldFaultTypeCode.PreSeparateFaultCodes, newFaultTypeCode.PreSeparateFaultCodes)
+	SliceStrEqual(oldFaultTypeCode.SeparateFaultCodes, newFaultTypeCode.SeparateFaultCodes)
+}
+
+// SliceStrEqual judge string slice is equal
+func SliceStrEqual(slice1, slice2 []string) {
+	convey.So(len(slice1), convey.ShouldEqual, len(slice2))
+	if len(slice1) != len(slice2) {
+		return
+	}
+	for i := range slice1 {
+		convey.So(slice1[i], convey.ShouldEqual, slice2[i])
+	}
+}
+
 // TestSetFaultTypeCodes test the function of set fault type codes
 func TestSetFaultTypeCodes(t *testing.T) {
 	convey.Convey("test set fault type codes", t, func() {
 		convey.Convey("config manager set fault type codes", func() {
 			configManager := NewConfigManager()
-			faultTypeCodes := &FaultTypeCode{
+			faultTypeCodes := &common.FaultTypeCode{
 				NotHandleFaultCodes:   []string{"00000001"},
 				PreSeparateFaultCodes: []string{"00000002"},
 				SeparateFaultCodes:    []string{"00000003"},
@@ -76,7 +102,7 @@ func TestSetFaultTypeCodes(t *testing.T) {
 		})
 		convey.Convey("wrong config manager set fault type codes", func() {
 			configManager := mockWrongConfigManager()
-			faultTypeCodes := &FaultTypeCode{
+			faultTypeCodes := &common.FaultTypeCode{
 				NotHandleFaultCodes:   []string{"00000001"},
 				PreSeparateFaultCodes: []string{"00000002"},
 				SeparateFaultCodes:    []string{"00000003"},

@@ -79,8 +79,9 @@ var (
 			DeviceId:   1,
 		},
 	}
-	alarmResp  = []byte{00, 07, 00, 01, 00, 01, 00, 01, 00, 00, 28, 01, 00, 00, 28, 02, 01, 00, 00, 00, 00, 00}
-	alarmResp2 = []byte{00, 07, 00, 01, 00, 01, 128, 01, 00}
+	alarmResp       = []byte{00, 07, 00, 01, 00, 01, 00, 01, 00, 00, 28, 01, 00, 00, 28, 02, 01, 00, 00, 00, 00, 00, 00}
+	alarmResp2      = []byte{00, 07, 00, 01, 00, 01, 128, 01}
+	currentAlarmReq = []byte{0x30, 0x94, 0xDB, 0x07, 0x00, 0x40, 0x00, 0x00, 0x00, 0x0E, 0xFF}
 )
 
 func TestIpmiEventMonitor(t *testing.T) {
@@ -90,7 +91,7 @@ func TestIpmiEventMonitor(t *testing.T) {
 		ApplyGlobalVar(&common.ParamOption, common.Option{MonitorPeriod: 1})
 	defer patches.Reset()
 
-	ipmiEventMonitor = NewIpmiEventMonitor(common.NewFaultManager())
+	ipmiEventMonitor = NewIpmiEventMonitor()
 	convey.Convey("test IpmiEventMonitor method 'Init'", t, testIpmiMonitorInit)
 	convey.Convey("test IpmiEventMonitor method 'Monitoring'", t, testIpmiMonitorMonitoring)
 	convey.Convey("test IpmiEventMonitor method 'Stop'", t, testIpmiMonitorStop)

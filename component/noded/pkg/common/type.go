@@ -28,14 +28,14 @@ type Option struct {
 
 // FaultProcessor fault processor responsibility chain interface
 type FaultProcessor interface {
-	Execute(*FaultDevInfo)
+	Execute(*FaultAndConfigInfo, string)
 	SetNextFaultProcessor(FaultProcessor)
 }
 
-// ConfigProcessor fault processor responsibility chain interface
-type ConfigProcessor interface {
-	UpdateConfig(*FaultConfig) error
-	SetNextConfigProcessor(ConfigProcessor)
+// FaultAndConfigInfo fault device info
+type FaultAndConfigInfo struct {
+	FaultDevInfo *FaultDevInfo
+	FaultConfig  *FaultConfig
 }
 
 // FaultDevInfo fault device info
@@ -76,4 +76,26 @@ type FaultEvent struct {
 	Severity   int64
 	DeviceType string
 	DeviceId   int64
+}
+
+// PluginMonitor monitor plugin interface
+type PluginMonitor interface {
+	GetMonitorData() *FaultAndConfigInfo
+	Monitoring()
+	Init() error
+	Stop()
+	Name() string
+}
+
+// PluginReporter reporter plugin interface
+type PluginReporter interface {
+	Report(*FaultDevInfo)
+	Init() error
+}
+
+// PluginControl control plugin interface
+type PluginControl interface {
+	Control(*FaultDevInfo) *FaultDevInfo
+	UpdateConfig(faultConfig *FaultConfig) *FaultConfig
+	Name() string
 }

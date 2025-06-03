@@ -16,23 +16,15 @@
 package reporter
 
 import (
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
-	"nodeD/pkg/reporter/cmreporter"
+	"nodeD/pkg/processmanager"
 )
-
-// PluginReporter reporter plugin interface
-type PluginReporter interface {
-	Report(*common.FaultDevInfo)
-	Init() error
-}
 
 // ReportManager manage reporters
 type ReportManager struct {
-	reporters          []PluginReporter
+	reporters          []common.PluginReporter
 	client             *kubeclient.ClientK8s
-	faultManager       common.FaultManager
 	nextFaultProcessor common.FaultProcessor
 	stopChan           chan struct{}
 }
@@ -40,28 +32,16 @@ type ReportManager struct {
 // NewReporterManager  create a reporter manager
 func NewReporterManager(client *kubeclient.ClientK8s) *ReportManager {
 	return &ReportManager{
-		client:       client,
-		faultManager: common.NewFaultManager(),
-		stopChan:     make(chan struct{}, 1),
+		client:   client,
+		stopChan: make(chan struct{}, 1),
 	}
-}
-
-// Init register reporter plugin and initialize them
-func (r *ReportManager) Init() error {
-	r.reporters = append(r.reporters, cmreporter.NewConfigMapReporter(r.client))
-	for _, reporter := range r.reporters {
-		if err := reporter.Init(); err != nil {
-			hwlog.RunLog.Errorf("init reporter failed, err is %v", err)
-			return err
-		}
-	}
-	return nil
 }
 
 // Execute reporter fault device info
-func (r *ReportManager) Execute(faultDevInfo *common.FaultDevInfo) {
-	r.faultManager.SetFaultDevInfo(faultDevInfo)
-	for _, reporter := range r.reporters {
+func (r *ReportManager) Execute(fcInfo *common.FaultAndConfigInfo, processType string) {
+	faultDevInfo := fcInfo.FaultDevInfo
+	reporters := processmanager.GetReporterPlugins(processType)
+	for _, reporter := range reporters {
 		go reporter.Report(faultDevInfo)
 	}
 }

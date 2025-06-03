@@ -33,7 +33,7 @@ var (
 		RegexNodeNameKey:  regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
 		RegexFaultCodeKey: regexp.MustCompile(`^[a-zA-Z0-9]{8}$`),
 	}
-	updateTriggerChan = make(chan struct{}, 1)
+	updateTriggerChan = make(chan string, 10)
 )
 
 var (
@@ -190,16 +190,16 @@ func CheckFaultCodes(codes []string) error {
 }
 
 // TriggerUpdate send signal to UpdateTriggerChan to trigger noded report
-func TriggerUpdate(msg string) {
+func TriggerUpdate(processType string) {
 	select {
-	case updateTriggerChan <- struct{}{}:
-		hwlog.RunLog.Infof("update signal send, %s", msg)
+	case updateTriggerChan <- processType:
+		hwlog.RunLog.Infof("update signal send, %s", processType)
 	default:
-		hwlog.RunLog.Debugf("update signal exists, receive %s", msg)
+		hwlog.RunLog.Debugf("update signal exists, receive %s", processType)
 	}
 }
 
-// GetUpdateChan get update trigger chan
-func GetUpdateChan() chan struct{} {
+// GetTrigger get monitor update info
+func GetTrigger() chan string {
 	return updateTriggerChan
 }

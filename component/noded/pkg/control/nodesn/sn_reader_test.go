@@ -13,15 +13,19 @@
 */
 
 // Package control for the node controller test
-package control
+package nodesn
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/u-root/u-root/pkg/ipmi"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 var (
@@ -30,6 +34,15 @@ var (
 )
 
 const testSN = "IP"
+
+func init() {
+	logConfig := &hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
+		fmt.Printf("init hwlog failed, %v\n", err)
+	}
+}
 
 func TestSNReader(t *testing.T) {
 	convey.Convey("test GetNodeSN", t, func() {
@@ -55,7 +68,7 @@ func TestSNReader(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("when Open ipmi success and get serial numbers empty "+
-			"and get manufacturer name success, err should be nil and sn should be empty", func() {
+			"and get manufacturer name empty, err should not be nil and sn should be empty", func() {
 			var p1 = gomonkey.ApplyFuncReturn(ipmi.Open, &ipmi.IPMI{}, nil)
 			defer p1.Reset()
 			var p2 = gomonkey.ApplyMethodReturn(&ipmi.IPMI{}, "RawCmd",
@@ -64,8 +77,8 @@ func TestSNReader(t *testing.T) {
 			var p3 = gomonkey.ApplyMethodReturn(&ipmi.IPMI{}, "Close", nil)
 			defer p3.Reset()
 			sn, err := GetNodeSN()
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(sn, convey.ShouldEqual, "")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(sn, convey.ShouldBeEmpty)
 		})
 	})
 }

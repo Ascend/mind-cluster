@@ -127,3 +127,20 @@ const (
 	// UnknownDevice unknown device type
 	UnknownDevice = "UNKNOWN"
 )
+
+const (
+	// DpcProcess dpc process map key
+	DpcProcess = "dpc"
+	// IpmiProcess ipmi process map key
+	IpmiProcess = "ipmi"
+	// ConfigProcess config process key
+	ConfigProcess = "config"
+	// PluginMonitorIpmi plugin monitor ipmi
+	PluginMonitorIpmi = "ipmi_monitor"
+	// PluginMonitorDpc plugin monitor dpc
+	PluginMonitorDpc = "dpc_monitor"
+	// PluginMonitorCm plugin monitor cm
+	PluginMonitorCm = "cm_monitor"
+	// PluginControlFault plugin control fault
+	PluginControlFault = "fault_monitor"
+)

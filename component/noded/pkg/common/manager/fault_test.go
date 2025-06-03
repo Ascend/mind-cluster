@@ -13,7 +13,7 @@
 */
 
 // Package common for common function
-package common
+package manager
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/hwlog"
+	"nodeD/pkg/common"
 )
 
 func init() {
@@ -40,28 +41,28 @@ func TestSetFaultDevInfo(t *testing.T) {
 	convey.Convey("test set fault dev info", t, func() {
 		convey.Convey("fault manager set fault dev info", func() {
 			faultManager := NewFaultManager()
-			faultDevInfo := &FaultDevInfo{
-				FaultDevList: []*FaultDev{&FaultDev{
+			faultDevInfo := &common.FaultDevInfo{
+				FaultDevList: []*common.FaultDev{&common.FaultDev{
 					DeviceType: "CPU",
 					DeviceId:   0,
 					FaultCode:  []string{"01010001"},
-					FaultLevel: NotHandleFault,
+					FaultLevel: common.NotHandleFault,
 				}},
-				NodeStatus: NodeHealthy,
+				NodeStatus: common.NodeHealthy,
 			}
 			faultManager.SetFaultDevInfo(faultDevInfo)
 			FaultDevInfoEqual(faultManager.GetFaultDevInfo(), faultDevInfo)
 		})
 		convey.Convey("wrong fault manager set fault dev info", func() {
 			faultManager := mockWrongFaultManager()
-			faultDevInfo := &FaultDevInfo{
-				FaultDevList: []*FaultDev{&FaultDev{
+			faultDevInfo := &common.FaultDevInfo{
+				FaultDevList: []*common.FaultDev{&common.FaultDev{
 					DeviceType: "CPU",
 					DeviceId:   0,
 					FaultCode:  []string{"01010001"},
-					FaultLevel: NotHandleFault,
+					FaultLevel: common.NotHandleFault,
 				}},
-				NodeStatus: NodeHealthy,
+				NodeStatus: common.NodeHealthy,
 			}
 			faultManager.SetFaultDevInfo(faultDevInfo)
 			convey.So(faultManager.GetFaultDevList(), convey.ShouldBeNil)
@@ -75,11 +76,11 @@ func TestSetFaultDevList(t *testing.T) {
 	convey.Convey("test set fault dev list", t, func() {
 		convey.Convey("fault manager set fault dev list", func() {
 			faultManager := NewFaultManager()
-			faultDevList := []*FaultDev{&FaultDev{
+			faultDevList := []*common.FaultDev{&common.FaultDev{
 				DeviceType: "CPU",
 				DeviceId:   0,
 				FaultCode:  []string{"01010001"},
-				FaultLevel: NotHandleFault,
+				FaultLevel: common.NotHandleFault,
 			},
 			}
 			faultManager.SetFaultDevList(faultDevList)
@@ -87,11 +88,11 @@ func TestSetFaultDevList(t *testing.T) {
 		})
 		convey.Convey("wrong fault manager set fault dev List", func() {
 			faultManager := mockWrongFaultManager()
-			faultDevList := []*FaultDev{&FaultDev{
+			faultDevList := []*common.FaultDev{&common.FaultDev{
 				DeviceType: "CPU",
 				DeviceId:   0,
 				FaultCode:  []string{"01010001"},
-				FaultLevel: NotHandleFault,
+				FaultLevel: common.NotHandleFault,
 			},
 			}
 			faultManager.SetFaultDevList(faultDevList)
@@ -105,20 +106,20 @@ func TestSetNodeStatus(t *testing.T) {
 	convey.Convey("test set node status", t, func() {
 		convey.Convey("fault manager set node status", func() {
 			faultManager := NewFaultManager()
-			faultManager.SetNodeStatus(NodeUnHealthy)
-			convey.So(faultManager.GetNodeStatus(), convey.ShouldEqual, NodeUnHealthy)
+			faultManager.SetNodeStatus(common.NodeUnHealthy)
+			convey.So(faultManager.GetNodeStatus(), convey.ShouldEqual, common.NodeUnHealthy)
 		})
 	})
 }
 
 // FaultDevInfoEqual judge if fault dev info is equal
-func FaultDevInfoEqual(oldFaultDevInfo, newFaultDevInfo *FaultDevInfo) {
+func FaultDevInfoEqual(oldFaultDevInfo, newFaultDevInfo *common.FaultDevInfo) {
 	FaultDevListEqual(oldFaultDevInfo.FaultDevList, newFaultDevInfo.FaultDevList)
 	convey.So(oldFaultDevInfo.NodeStatus, convey.ShouldEqual, newFaultDevInfo.NodeStatus)
 }
 
 // FaultDevListEqual judge if fault dev list is equal
-func FaultDevListEqual(oldFaultDevList, newFaultDevList []*FaultDev) {
+func FaultDevListEqual(oldFaultDevList, newFaultDevList []*common.FaultDev) {
 	convey.So(len(oldFaultDevList), convey.ShouldEqual, len(newFaultDevList))
 	for i, faultDev := range newFaultDevList {
 		if i >= len(oldFaultDevList) {
@@ -129,7 +130,7 @@ func FaultDevListEqual(oldFaultDevList, newFaultDevList []*FaultDev) {
 }
 
 // FaultDevEqual judge if fault dev is equal
-func FaultDevEqual(oldFaultDev, newFaultDev *FaultDev) {
+func FaultDevEqual(oldFaultDev, newFaultDev *common.FaultDev) {
 	convey.So(oldFaultDev.DeviceType, convey.ShouldEqual, newFaultDev.DeviceType)
 	convey.So(oldFaultDev.DeviceId, convey.ShouldEqual, newFaultDev.DeviceId)
 	convey.So(oldFaultDev.FaultLevel, convey.ShouldEqual, newFaultDev.FaultLevel)

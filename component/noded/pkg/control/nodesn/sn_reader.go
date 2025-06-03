@@ -12,10 +12,12 @@
    limitations under the License.
 */
 
-// Package control for read SN
-package control
+// Package nodesn for read SN
+package nodesn
 
 import (
+	"fmt"
+
 	"github.com/u-root/u-root/pkg/ipmi"
 
 	"ascend-common/common-utils/hwlog"
@@ -52,6 +54,9 @@ func GetNodeSN() (string, error) {
 		if err != nil {
 			hwlog.RunLog.Errorf("get manufacturer name failed, err is %v", err)
 			return "", err
+		} else if len(response) <= snFieldStartIndex {
+			hwlog.RunLog.Errorf("get manufacturer name failed, (%v)length is too short", response)
+			return "", fmt.Errorf("get manufacturer name failed, (%v)length is too short", response)
 		}
 	}
 	snMsgByte := response[snFieldStartIndex:]

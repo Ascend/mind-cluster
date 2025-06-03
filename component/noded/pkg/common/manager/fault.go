@@ -12,42 +12,43 @@
    limitations under the License.
 */
 
-// Package common for common function
-package common
+// Package manager for fault function
+package manager
 
 import (
 	"strings"
 	"sync"
 
 	"ascend-common/common-utils/hwlog"
+	"nodeD/pkg/common"
 )
 
 // FaultManager manage fault device info
 type FaultManager interface {
-	GetFaultDevInfo() *FaultDevInfo
-	GetFaultDevList() []*FaultDev
+	GetFaultDevInfo() *common.FaultDevInfo
+	GetFaultDevList() []*common.FaultDev
 	GetNodeStatus() string
-	SetFaultDevInfo(*FaultDevInfo)
-	SetFaultDevList([]*FaultDev)
+	SetFaultDevInfo(*common.FaultDevInfo)
+	SetFaultDevList([]*common.FaultDev)
 	SetNodeStatus(string)
 }
 
 // NewFaultManager create
 func NewFaultManager() FaultManager {
 	return &FaultTools{
-		faultDevInfo: &FaultDevInfo{},
+		faultDevInfo: &common.FaultDevInfo{},
 		devInfoLock:  &sync.Mutex{},
 	}
 }
 
 // FaultTools the fault tool definition
 type FaultTools struct {
-	faultDevInfo *FaultDevInfo
+	faultDevInfo *common.FaultDevInfo
 	devInfoLock  *sync.Mutex
 }
 
 // GetFaultDevInfo return fault device info
-func (f *FaultTools) GetFaultDevInfo() *FaultDevInfo {
+func (f *FaultTools) GetFaultDevInfo() *common.FaultDevInfo {
 	if f.faultDevInfo == nil {
 		hwlog.RunLog.Error("fault dev info is nil when get fault dev info")
 		return nil
@@ -56,7 +57,7 @@ func (f *FaultTools) GetFaultDevInfo() *FaultDevInfo {
 }
 
 // GetFaultDevList return fault device list
-func (f *FaultTools) GetFaultDevList() []*FaultDev {
+func (f *FaultTools) GetFaultDevList() []*common.FaultDev {
 	if f.faultDevInfo == nil {
 		hwlog.RunLog.Error("fault dev info is nil when get fault device list")
 		return nil
@@ -74,7 +75,7 @@ func (f *FaultTools) GetNodeStatus() string {
 }
 
 // SetFaultDevInfo set fault device info
-func (f *FaultTools) SetFaultDevInfo(faultDevInfo *FaultDevInfo) {
+func (f *FaultTools) SetFaultDevInfo(faultDevInfo *common.FaultDevInfo) {
 	if f.faultDevInfo == nil {
 		hwlog.RunLog.Error("fault dev info is nil when set fault device info")
 		return
@@ -84,14 +85,14 @@ func (f *FaultTools) SetFaultDevInfo(faultDevInfo *FaultDevInfo) {
 }
 
 // SetFaultDevList set fault device list
-func (f *FaultTools) SetFaultDevList(faultDevList []*FaultDev) {
+func (f *FaultTools) SetFaultDevList(faultDevList []*common.FaultDev) {
 	if f.faultDevInfo == nil {
 		hwlog.RunLog.Error("fault dev info is nil when set fault device list")
 		return
 	}
-	f.faultDevInfo.FaultDevList = make([]*FaultDev, len(faultDevList))
+	f.faultDevInfo.FaultDevList = make([]*common.FaultDev, len(faultDevList))
 	for i, faultDev := range faultDevList {
-		faultDevTmp := &FaultDev{}
+		faultDevTmp := &common.FaultDev{}
 		f.DeepCopyFaultDev(faultDevTmp, faultDev)
 		f.faultDevInfo.FaultDevList[i] = faultDevTmp
 	}
@@ -107,8 +108,8 @@ func (f *FaultTools) SetNodeStatus(status string) {
 }
 
 // DeepCopyFaultDev deep copy fault device
-func (f *FaultTools) DeepCopyFaultDev(oldFaultDev, newFaultDev *FaultDev) {
-	oldFaultDev.FaultCode = CopyStringSlice(newFaultDev.FaultCode)
+func (f *FaultTools) DeepCopyFaultDev(oldFaultDev, newFaultDev *common.FaultDev) {
+	oldFaultDev.FaultCode = common.CopyStringSlice(newFaultDev.FaultCode)
 	oldFaultDev.DeviceType = strings.Clone(newFaultDev.DeviceType)
 	oldFaultDev.DeviceId = newFaultDev.DeviceId
 	oldFaultDev.FaultLevel = strings.Clone(newFaultDev.FaultLevel)

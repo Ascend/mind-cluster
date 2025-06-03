@@ -24,9 +24,11 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/api"
 	"nodeD/pkg/common"
+	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/reporter/cmreporter"
 )
 
@@ -35,7 +37,6 @@ var reportManager *ReportManager
 func TestReportManager(t *testing.T) {
 	reportManager = NewReporterManager(testK8sClient)
 	convey.Convey("test ReportManager method 'SetNextFaultProcessor'", t, testReportMgrSetNextFaultProcessor)
-	convey.Convey("test ReportManager method 'Init'", t, testReportMgrInit)
 	convey.Convey("test ReportManager method 'Execute'", t, testReportMgrExecute)
 }
 
@@ -47,44 +48,50 @@ func testReportMgrSetNextFaultProcessor() {
 	convey.So(reportManager.nextFaultProcessor, convey.ShouldResemble, reportManager)
 }
 
-func testReportMgrInit() {
-	if reportManager == nil {
-		panic("reportManager is nil")
-	}
-	convey.Convey("test method Init success", func() {
-		err := reportManager.Init()
-		convey.So(err, convey.ShouldBeNil)
-	})
-	convey.Convey("test method Init failed, cm reporter init error", func() {
-		var p1 = gomonkey.ApplyPrivateMethod(&cmreporter.ConfigMapReporter{}, "Init",
-			func(*cmreporter.ConfigMapReporter) error { return testErr })
-		defer p1.Reset()
-		err := reportManager.Init()
-		convey.So(err, convey.ShouldResemble, testErr)
-	})
-}
-
 func testReportMgrExecute() {
 	if reportManager == nil {
 		panic("reportManager is nil")
 	}
 	setReporters()
 	convey.Convey("test method Execute success", testExc)
+	convey.Convey("test method Execute failed, ConfigMapReporter unmarshal error", testExcErrUnmarshal)
+	convey.Convey("test method Execute failed, ConfigMapReporter update cm error", testExcErrUpdate)
 }
 
 func testExc() {
 	go func() {
-		reportManager.Execute(testFaultDevInfo)
+		reportManager.Execute(testFCDevInfo, "")
 	}()
 	time.Sleep(waitGoroutineFinishedTime)
-	convey.So(reportManager.faultManager.GetFaultDevList(), convey.ShouldResemble, testFaultDevList)
-	convey.So(reportManager.faultManager.GetNodeStatus(), convey.ShouldResemble, common.PreSeparate)
+	_, err := testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(err, convey.ShouldNotBeNil)
+}
 
-	cm, err := testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+func testExcErrUnmarshal() {
+	err := deleteCM(testNodeInfoName, api.DLNamespace)
 	convey.So(err, convey.ShouldBeNil)
-	cmInfo := parseNodeInfoCMData(cm.Data[api.NodeInfoCMDataKey])
-	convey.So(len(cmInfo.NodeInfo.FaultDevList), convey.ShouldEqual, len(testFaultDevList))
+	var p1 = gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr)
+	defer p1.Reset()
+	go func() {
+		reportManager.Execute(testFCDevInfo, "")
+	}()
+	time.Sleep(waitGoroutineFinishedTime)
+	_, err = testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(errors.IsNotFound(err), convey.ShouldBeTrue)
+}
+
+func testExcErrUpdate() {
+	const retryInterval = 4 * time.Second
+	err := deleteCM(testNodeInfoName, api.DLNamespace)
 	convey.So(err, convey.ShouldBeNil)
+	var p2 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "UpdateConfigMap", nil, testErr)
+	defer p2.Reset()
+	go func() {
+		reportManager.Execute(testFCDevInfo, "")
+	}()
+	time.Sleep(retryInterval)
+	_, err = testK8sClient.GetConfigMap(testNodeInfoName, api.DLNamespace)
+	convey.So(errors.IsNotFound(err), convey.ShouldBeTrue)
 }
 
 func setReporters() {

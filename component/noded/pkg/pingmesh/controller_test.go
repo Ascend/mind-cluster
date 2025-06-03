@@ -30,7 +30,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -38,14 +38,18 @@ import (
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/pingmesh/consts"
 	"nodeD/pkg/pingmesh/executor"
+	"nodeD/pkg/pingmesh/policygenerator"
+	"nodeD/pkg/pingmesh/policygenerator/fullmesh"
 	"nodeD/pkg/pingmesh/resulthandler"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
 )
 
 const (
-	fakeNode        = "node"
-	fakeServerIndex = 2
+	fakeNode           = "node"
+	fakeServerIndex    = 2
+	fakeServerIndexStr = "2"
+	fakeSuperPodIdStr  = "1"
 )
 
 func TestNewManager(t *testing.T) {
@@ -115,17 +119,14 @@ func TestRun(t *testing.T) {
 	})
 }
 
-func createFakeConfigCM(client *fake.Clientset) error {
+func getFakeConfigCM() *v1.ConfigMap {
 	globalConfig := types.HccspingMeshConfig{
-		Activate:     "on",
+		Activate:     "off",
 		TaskInterval: 1,
 	}
 	cfg, err := json.Marshal(globalConfig)
-	if err != nil {
-		return err
-	}
-
-	cm1 := &v1.ConfigMap{
+	convey.So(err, convey.ShouldBeNil)
+	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: api.ClusterNS,
 			Name:      consts.PingMeshConfigCm,
@@ -134,12 +135,34 @@ func createFakeConfigCM(client *fake.Clientset) error {
 			globalConfigKey: string(cfg),
 		},
 	}
-	_, err = client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm1,
+}
+
+func getFakeErrorConfigCM() *v1.ConfigMap {
+	globalConfig := types.HccspingMeshConfig{
+		Activate:     "invalid type",
+		TaskInterval: 1,
+	}
+	cfg, err := json.Marshal(globalConfig)
+	convey.So(err, convey.ShouldBeNil)
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: api.ClusterNS,
+			Name:      consts.PingMeshConfigCm,
+		},
+		Data: map[string]string{
+			globalConfigKey: string(cfg),
+		},
+	}
+}
+
+func createFakeConfigCM(client *fake.Clientset) error {
+	cm1 := getFakeConfigCM()
+	_, err := client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm1,
 		metav1.CreateOptions{})
 	return err
 }
 
-func createFakeAddrCM(client *fake.Clientset, cmName string) error {
+func getFakeAddrCM(cmName string) *v1.ConfigMap {
 	spDevice := &api.SuperPodDevice{
 		SuperPodID: "1",
 		NodeDeviceMap: map[string]*api.NodeDevice{
@@ -154,7 +177,7 @@ func createFakeAddrCM(client *fake.Clientset, cmName string) error {
 	}
 	spd, err := json.Marshal(spDevice)
 	convey.So(err, convey.ShouldBeNil)
-	cm2 := &v1.ConfigMap{
+	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: api.ClusterNS,
 			Name:      cmName,
@@ -163,8 +186,52 @@ func createFakeAddrCM(client *fake.Clientset, cmName string) error {
 			superPodCMKey: string(spd),
 		},
 	}
+}
 
-	_, err = client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm2,
+func createFakeAddrCM(client *fake.Clientset, cmName string) error {
+	cm2 := getFakeAddrCM(cmName)
+	_, err := client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm2,
 		metav1.CreateOptions{})
 	return err
+}
+
+func TestHandleUserConfig(t *testing.T) {
+	convey.Convey("Testing handleUserConfig", t, func() {
+		gen := fullmesh.New(fakeNode, fakeSuperPodIdStr, fakeServerIndexStr)
+		m := &Manager{
+			executor: &executor.DevManager{
+				SuperPodId: 1,
+			},
+			current:       &types.HccspingMeshPolicy{},
+			nodeName:      fakeNode,
+			policyFactory: policygenerator.NewFactory().Register(fullmesh.Rule, gen),
+		}
+		convey.Convey("01-configmap data is valid, activate status should be on", func() {
+			flag := false
+			patch := gomonkey.ApplyMethod(m.executor, "UpdateConfig",
+				func(_ *executor.DevManager, _ *types.HccspingMeshPolicy) {
+					flag = true
+				})
+			defer patch.Reset()
+			patch.ApplyMethod(&fullmesh.GeneratorImp{}, "GetDestAddrMap",
+				func(_ *fullmesh.GeneratorImp) map[string][]types.PingItem {
+					return map[string][]types.PingItem{}
+				})
+			m.handleClusterAddress(getFakeAddrCM(consts.IpConfigmapNamePrefix + fakeSuperPodIdStr))
+			m.handleUserConfig(getFakeConfigCM())
+			convey.So(flag, convey.ShouldBeTrue)
+			convey.So(m.current.Config.Activate, convey.ShouldEqual, "off")
+		})
+		convey.Convey("02--configmap data is invalid,  activate status should be empty", func() {
+			flag := false
+			patch := gomonkey.ApplyMethod(m.executor, "UpdateConfig",
+				func(_ *executor.DevManager, _ *types.HccspingMeshPolicy) {
+					flag = true
+				})
+			defer patch.Reset()
+			m.handleUserConfig(getFakeErrorConfigCM())
+			convey.So(flag, convey.ShouldBeFalse)
+			convey.So(m.current.Config, convey.ShouldBeNil)
+		})
+	})
 }

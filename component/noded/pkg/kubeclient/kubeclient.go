@@ -36,6 +36,8 @@ import (
 
 const retryTime = 3
 
+var k8sClient *ClientK8s
+
 // ClientK8s k8s client include node name and node info name
 type ClientK8s struct {
 	ClientSet    kubernetes.Interface
@@ -61,11 +63,17 @@ func NewClientK8s() (*ClientK8s, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ClientK8s{
+	k8sClient = &ClientK8s{
 		ClientSet:    client,
 		NodeName:     nodeName,
 		NodeInfoName: common.NodeInfoCMNamePrefix + nodeName,
-	}, nil
+	}
+	return k8sClient, nil
+}
+
+// GetK8sClient get k8s client
+func GetK8sClient() *ClientK8s {
+	return k8sClient
 }
 
 // GetNodeNameFromEnv get node name from env

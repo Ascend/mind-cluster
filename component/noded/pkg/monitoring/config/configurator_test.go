@@ -19,11 +19,9 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -31,20 +29,14 @@ import (
 
 	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
-	"nodeD/pkg/control"
 	"nodeD/pkg/kubeclient"
 )
 
 var configManager *FaultConfigurator
 
-const time100s = 100 * time.Second
-
 func TestFaultConfigurator(t *testing.T) {
 	configManager = NewFaultConfigurator(testK8sClient)
-	configManager.SetNextConfigProcessor(control.NewNodeController(testK8sClient))
-	convey.Convey("test FaultConfigurator method 'Run'", t, testFaultCfgRun)
 	convey.Convey("test FaultConfigurator method 'Stop'", t, testFaultCfgStop)
-	convey.Convey("test FaultConfigurator method 'UpdateConfig'", t, testFaultCfgUpdateConfig)
 	convey.Convey("test FaultConfigurator method 'Init'", t, testFaultCfgInit)
 	convey.Convey("test FaultConfigurator method 'AddConfigCM'", t, testAddConfigCM)
 	convey.Convey("test FaultConfigurator method 'UpdateConfigCM'", t, testUpdateConfigCM)
@@ -56,35 +48,12 @@ func TestFaultConfigurator(t *testing.T) {
 	convey.Convey("test FaultConfigurator method 'getFaultConfigFromCM'", t, testGetFaultConfigFromCM)
 }
 
-func testFaultCfgRun() {
-	if configManager == nil {
-		panic("configManager is nil")
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	haveStopped := false
-	go func() {
-		configManager.Run(ctx)
-		haveStopped = true
-	}()
-	cancel()
-	time.Sleep(time100s)
-	convey.So(haveStopped, convey.ShouldBeTrue)
-}
-
 func testFaultCfgStop() {
 	if configManager == nil {
 		panic("configManager is nil")
 	}
 	configManager.Stop()
 	convey.So(<-configManager.stopChan, convey.ShouldResemble, struct{}{})
-}
-
-func testFaultCfgUpdateConfig() {
-	if configManager == nil {
-		panic("configManager is nil")
-	}
-	err := configManager.UpdateConfig(testFaultConfig)
-	convey.So(err, convey.ShouldBeNil)
 }
 
 func testFaultCfgInit() {
@@ -158,14 +127,6 @@ func testInitFaultConfigFromCM() {
 		err := configManager.initFaultConfigFromCM()
 		convey.So(err, convey.ShouldResemble, testErr)
 	})
-
-	convey.Convey("test method initFaultConfigFromCM failed, UpdateConfig error", func() {
-		var p4 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetConfigMap", fakeNodeFaultConfigCM(), nil).
-			ApplyMethodReturn(&FaultConfigurator{}, "UpdateConfig", testErr)
-		defer p4.Reset()
-		err := configManager.initFaultConfigFromCM()
-		convey.So(err, convey.ShouldResemble, testErr)
-	})
 }
 
 func testLoadFaultConfigFromFile() {
@@ -206,14 +167,6 @@ func testLoadFaultConfigFromFile() {
 		defer p4.Reset()
 		err = configManager.loadFaultConfigFromFile()
 		convey.So(err.Error(), convey.ShouldContainSubstring, "contains illegal character")
-	})
-
-	convey.Convey("test method loadFaultConfigFromFile failed, UpdateConfig error", func() {
-		var p5 = gomonkey.ApplyFuncReturn(utils.LoadFile, data, nil).
-			ApplyMethodReturn(&FaultConfigurator{}, "UpdateConfig", testErr)
-		defer p5.Reset()
-		err = configManager.loadFaultConfigFromFile()
-		convey.So(err, convey.ShouldResemble, testErr)
 	})
 }
 
@@ -285,7 +238,7 @@ func testAddConfigCM() {
 	convey.Convey("test method AddConfigCM, initFromCMFlag is false", func() {
 		configManager.initFromCMFlag = false
 		configManager.AddConfigCM(fakeNodeFaultConfigCM())
-		convey.So(<-configManager.updateChan, convey.ShouldResemble, struct{}{})
+		convey.So(<-common.GetTrigger(), convey.ShouldResemble, common.ConfigProcess)
 	})
 
 	convey.Convey("test method AddConfigCM, input type error", func() {
@@ -306,7 +259,7 @@ func testUpdateConfigCM() {
 	convey.Convey("test method UpdateConfigCM", func() {
 		configManager.UpdateConfigCM(nil, fakeNodeFaultConfigCM())
 		convey.So(configManager.initFromCMFlag, convey.ShouldBeFalse)
-		convey.So(<-configManager.updateChan, convey.ShouldResemble, struct{}{})
+		convey.So(<-common.GetTrigger(), convey.ShouldResemble, common.ConfigProcess)
 	})
 
 	convey.Convey("test method UpdateConfigCM, input type error", func() {

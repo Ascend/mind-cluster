@@ -517,24 +517,22 @@ func testHandlePingMeshInfoShouldWriteSuccessWhenInputDataIsGood() {
 		defer patchCalc.Reset()
 		patchPrepare := patchPrepareResultFilePaths(m, appendMode, tempCsv, tempCsvBak)
 		defer patchPrepare.Reset()
-		patchEnv := patchGetEnv(nodeName0)
-		defer patchEnv.Reset()
+		patches := patchGetEnv(nodeName0)
+		defer patches.Reset()
 		callCnt := 0
-		patchWriteForCard := gomonkey.ApplyPrivateMethod(m, "writeForCard",
-			func(physicID string, destAddrList []types.PingItem, infos map[uint]*common.HccspingMeshInfo) {
+		patches.ApplyFunc(getPingItemByDestAddr,
+			func(_ []types.PingItem, _ string) (types.PingItem, error) {
 				callCnt++
-				return
+				return getPingItem(), nil
 			},
 		)
-		defer patchWriteForCard.Reset()
 		callCntCsv := 0
-		patchWriteForCardCsv := gomonkey.ApplyPrivateMethod(m, "writeForCardToCsv",
-			func(csvWriter *csv.Writer, destAddrList []types.PingItem, infos map[uint]*common.HccspingMeshInfo) {
+		patches.ApplyMethod(&csv.Writer{}, "Write",
+			func(_ *csv.Writer, _ []string) error {
 				callCntCsv++
-				return
+				return nil
 			},
 		)
-		defer patchWriteForCardCsv.Reset()
 		m.serverIndex = nodeName0
 		policy := makePolicyData()
 
@@ -552,6 +550,17 @@ func testHandlePingMeshInfoShouldWriteSuccessWhenInputDataIsGood() {
 		convey.So(callCnt, convey.ShouldBeGreaterThan, 0)
 		convey.So(callCntCsv, convey.ShouldBeGreaterThan, 0)
 	})
+}
+
+func getPingItem() types.PingItem {
+	return types.PingItem{
+		SrcType:      0,
+		DstType:      0,
+		PktSize:      common.MinPktSize,
+		SrcCardPhyId: physicID1Int,
+		SrcAddr:      physicID1Ip1,
+		DstAddr:      physicID2Ip1,
+	}
 }
 
 func makePolicyData() *types.HccspingMeshPolicy {
@@ -600,4 +609,23 @@ func mockHccspingMeshInfo() *common.HccspingMeshInfo {
 		PingTotalNum: []int{1},
 		DestNum:      1,
 	}
+}
+
+func TestGetPingItemByDestAddr(t *testing.T) {
+	convey.Convey("Test getPingItemByDestAddr func", t, func() {
+		convey.Convey("when data is valid, err should be nil", func() {
+			dstAddrList := []types.PingItem{
+				{
+					SrcType:      0,
+					DstType:      0,
+					PktSize:      common.MinPktSize,
+					SrcCardPhyId: physicID1Int,
+					SrcAddr:      physicID1Ip1,
+					DstAddr:      physicID2Ip1,
+				},
+			}
+			_, err := getPingItemByDestAddr(dstAddrList, physicID2Ip1)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }

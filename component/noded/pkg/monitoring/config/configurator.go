@@ -16,7 +16,6 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -31,89 +30,31 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
+	"nodeD/pkg/common/manager"
 	"nodeD/pkg/kubeclient"
 )
 
 // FaultConfigurator manage dynamically configuration information
 type FaultConfigurator struct {
-	client              *kubeclient.ClientK8s
-	configManager       common.ConfigManager
-	configCache         *common.FaultConfig
-	nextConfigProcessor common.ConfigProcessor
-	updateChan          chan struct{}
-	stopChan            chan struct{}
-	initFromCMFlag      bool
+	client         *kubeclient.ClientK8s
+	configManager  manager.ConfigManager
+	configCache    *common.FaultConfig
+	stopChan       chan struct{}
+	initFromCMFlag bool
 }
 
 // NewFaultConfigurator create a configurator
 func NewFaultConfigurator(client *kubeclient.ClientK8s) *FaultConfigurator {
 	return &FaultConfigurator{
 		client:        client,
-		configManager: common.NewConfigManager(),
+		configManager: manager.NewConfigManager(),
 		configCache:   &common.FaultConfig{FaultTypeCode: &common.FaultTypeCode{}},
-		updateChan:    make(chan struct{}, 1),
 		stopChan:      make(chan struct{}, 1),
 	}
 }
 
-// Run start working loop
-func (c *FaultConfigurator) Run(ctx context.Context) {
-	for {
-		select {
-		case _, ok := <-ctx.Done():
-			if !ok {
-				hwlog.RunLog.Error("ctx stop channel is closed")
-			}
-			hwlog.RunLog.Info("receive ctx stop signal, config manager shut down")
-			return
-		case _, ok := <-c.stopChan:
-			if !ok {
-				hwlog.RunLog.Error("stop channel is closed")
-			}
-			hwlog.RunLog.Info("receive stop signal, config manager shut down")
-			return
-		case _, ok := <-c.updateChan:
-			if !ok {
-				hwlog.RunLog.Error("update config channel is closed")
-				return
-			}
-			if err := c.UpdateConfig(c.configCache); err != nil {
-				hwlog.RunLog.Warn("update fault config filed, original fault config will be maintained")
-			}
-		}
-	}
-}
-
-// Stop terminate working loop
-func (c *FaultConfigurator) Stop() {
-	c.stopChan <- struct{}{}
-}
-
-// UpdateConfig update config and send message to next config processor
-func (c *FaultConfigurator) UpdateConfig(faultConfig *common.FaultConfig) error {
-	c.configManager.SetFaultConfig(faultConfig)
-	if err := c.nextConfigProcessor.UpdateConfig(c.configManager.GetFaultConfig()); err != nil {
-		return err
-	}
-	hwlog.RunLog.Info("update fault config success")
-	return nil
-}
-
-// SetNextConfigProcessor set next config processor
-func (c *FaultConfigurator) SetNextConfigProcessor(configProcessor common.ConfigProcessor) {
-	c.nextConfigProcessor = configProcessor
-}
-
-// Init initialize configuration information and start informer for fault config map
-func (c *FaultConfigurator) Init() error {
-	if err := c.initFaultConfigFromCM(); err != nil {
-		hwlog.RunLog.Info("init fault config from config map failed, start load local json file")
-		if err := c.loadFaultConfigFromFile(); err != nil {
-			hwlog.RunLog.Errorf("load fault config from local file failed, err is %v", err)
-			return err
-		}
-		hwlog.RunLog.Info("init config from local json file success")
-	}
+// Monitoring start working loop
+func (c *FaultConfigurator) Monitoring() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(c.client.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.FieldSelector = fields.Set{
@@ -129,6 +70,35 @@ func (c *FaultConfigurator) Init() error {
 			DeleteFunc: c.DeleteConfigCM,
 		})
 	informerFactory.Start(wait.NeverStop)
+}
+
+func (c *FaultConfigurator) GetMonitorData() *common.FaultAndConfigInfo {
+	fcInfo := &common.FaultAndConfigInfo{
+		FaultConfig: c.configManager.GetFaultConfig(),
+	}
+	return fcInfo
+}
+
+// Stop terminate working loop
+func (c *FaultConfigurator) Stop() {
+	c.stopChan <- struct{}{}
+}
+
+// Name get monitor name
+func (c *FaultConfigurator) Name() string {
+	return common.PluginMonitorCm
+}
+
+// Init initialize configuration information and start informer for fault config map
+func (c *FaultConfigurator) Init() error {
+	if err := c.initFaultConfigFromCM(); err != nil {
+		hwlog.RunLog.Info("init fault config from config map failed, start load local json file")
+		if err := c.loadFaultConfigFromFile(); err != nil {
+			hwlog.RunLog.Errorf("load fault config from local file failed, err is %v", err)
+			return err
+		}
+		hwlog.RunLog.Info("init config from local json file success")
+	}
 	return nil
 }
 
@@ -152,11 +122,12 @@ func (c *FaultConfigurator) AddConfigCM(obj interface{}) {
 		hwlog.RunLog.Warn("update config failed when add cm, original fault config will be maintained")
 		return
 	}
-	c.updateChan <- struct{}{}
+	c.configManager.SetFaultConfig(c.configCache)
+	common.TriggerUpdate(common.ConfigProcess)
 }
 
 // UpdateConfigCM update config when update fault config map
-func (c *FaultConfigurator) UpdateConfigCM(old, new interface{}) {
+func (c *FaultConfigurator) UpdateConfigCM(_, new interface{}) {
 	if c == nil {
 		hwlog.RunLog.Error("config manager is nil when update config cm")
 		return
@@ -170,11 +141,12 @@ func (c *FaultConfigurator) UpdateConfigCM(old, new interface{}) {
 		hwlog.RunLog.Warn("update config failed when update cm, original fault config will be maintained")
 		return
 	}
-	c.updateChan <- struct{}{}
+	c.configManager.SetFaultConfig(c.configCache)
+	common.TriggerUpdate(common.ConfigProcess)
 }
 
 // DeleteConfigCM warn when update fault config map
-func (c *FaultConfigurator) DeleteConfigCM(obj interface{}) {
+func (c *FaultConfigurator) DeleteConfigCM(_ interface{}) {
 	if c == nil {
 		hwlog.RunLog.Error("config manager is nil when delete config cm")
 		return
@@ -224,10 +196,8 @@ func (c *FaultConfigurator) initFaultConfigFromCM() error {
 		hwlog.RunLog.Errorf("update config cache failed, please check config map content, err is %v", err)
 		return err
 	}
-	if err := c.UpdateConfig(c.configCache); err != nil {
-		hwlog.RunLog.Error("update fault config failed when init fault config from config map")
-		return err
-	}
+	c.configManager.SetFaultConfig(c.configCache)
+	common.TriggerUpdate(common.ConfigProcess)
 	hwlog.RunLog.Info("init fault config from config map success")
 	return nil
 }
@@ -246,10 +216,9 @@ func (c *FaultConfigurator) loadFaultConfigFromFile() error {
 		hwlog.RunLog.Error("check fault codes failed when load local json file")
 		return err
 	}
-	if err := c.UpdateConfig(&fileConfig); err != nil {
-		hwlog.RunLog.Errorf("update fault config failed when load local file: %v", err)
-		return err
-	}
+	c.configCache = &fileConfig
+	c.configManager.SetFaultConfig(&fileConfig)
+	common.TriggerUpdate(common.ConfigProcess)
 	return nil
 }
 

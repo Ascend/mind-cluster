@@ -16,6 +16,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"syscall"
@@ -23,6 +24,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const ValidDiveType = 0x03
@@ -32,6 +35,13 @@ var testFaultTypeCode = &FaultTypeCode{
 	NotHandleFaultCodes:   []string{"00000001"},
 	PreSeparateFaultCodes: []string{"00000002"},
 	SeparateFaultCodes:    []string{"00000003"},
+}
+
+func init() {
+	hwLogConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 }
 
 // TestGetDeviceType get device type
@@ -123,6 +133,13 @@ func TestDeepCopyFaultConfig(t *testing.T) {
 	})
 }
 
+// FaultConfigEqual judge if fault config is equal
+func FaultConfigEqual(oldFaultConfig, newFaultConfig *FaultConfig) {
+	convey.So(oldFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
+	convey.So(newFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
+	FaultTypeCodesEqual(oldFaultConfig.FaultTypeCode, newFaultConfig.FaultTypeCode)
+}
+
 // TestRemoveDuplicateString test string deduplication
 func TestRemoveDuplicateString(t *testing.T) {
 	convey.Convey("test remove duplicate string", t, func() {
@@ -211,13 +228,6 @@ func TestCheckFaultCodes(t *testing.T) {
 	})
 }
 
-// FaultConfigEqual judge if fault config is equal
-func FaultConfigEqual(oldFaultConfig, newFaultConfig *FaultConfig) {
-	convey.So(oldFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
-	convey.So(newFaultConfig.FaultTypeCode, convey.ShouldNotBeNil)
-	FaultTypeCodesEqual(oldFaultConfig.FaultTypeCode, newFaultConfig.FaultTypeCode)
-}
-
 // FaultTypeCodesEqual judge if fault type code is equal
 func FaultTypeCodesEqual(oldFaultTypeCode, newFaultTypeCode *FaultTypeCode) {
 	SliceStrEqual(oldFaultTypeCode.NotHandleFaultCodes, newFaultTypeCode.NotHandleFaultCodes)
@@ -247,31 +257,13 @@ func SliceByteEqual(slice1, slice2 []byte) {
 	}
 }
 
+// TestTriggerUpdate test triggerUpdate
 func TestTriggerUpdate(t *testing.T) {
-	convey.Convey("trigger update success", t, func() {
-		verifyUpdateTrigger(t)
-		TriggerUpdate("test trigger update")
-		convey.So(verifyUpdateTrigger(t), convey.ShouldBeTrue)
+	convey.Convey("test TriggerUpdate", t, func() {
+		convey.Convey("01-when send ipmi, should get ipmi", func() {
+			TriggerUpdate("ipmi")
+			processType := <-GetTrigger()
+			convey.So(processType, convey.ShouldEqual, "ipmi")
+		})
 	})
-	convey.Convey("not trigger update", t, func() {
-		verifyUpdateTrigger(t)
-		if updateTriggerChan == nil {
-			t.Error("updateTriggerChan is nil")
-		}
-		updateTriggerChan <- struct{}{}
-		TriggerUpdate("test trigger update")
-		convey.So(verifyUpdateTrigger(t), convey.ShouldBeTrue)
-	})
-}
-
-func verifyUpdateTrigger(t *testing.T) bool {
-	if updateTriggerChan == nil {
-		t.Error("updateTriggerChan is nil")
-	}
-	select {
-	case <-updateTriggerChan:
-		return true
-	default:
-		return false
-	}
 }

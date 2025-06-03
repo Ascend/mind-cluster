@@ -1,4 +1,4 @@
-/* Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2024-2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,107 +12,75 @@
    limitations under the License.
 */
 
-// Package control for fault handling
-package control
+// Package faultcontrol for ipmi fault handling
+package faultcontrol
 
 import (
 	"fmt"
 	"sync"
-	"time"
 
-	"k8s.io/apimachinery/pkg/util/rand"
-
-	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
-	"nodeD/pkg/kubeclient"
+	"nodeD/pkg/common/manager"
 )
 
-const randSecond = 20
-
-// NodeController process fault device info based on configuration
+// NodeController control fault on server by ipmi and configmap
 type NodeController struct {
-	kubeClient          *kubeclient.ClientK8s
-	faultManager        common.FaultManager
-	configManager       common.ConfigManager
-	nextConfigProcessor common.ConfigProcessor
-	nextFaultProcessor  common.FaultProcessor
-	faultLevelMap       map[string]int
-	faultLevelMapLock   *sync.Mutex
+	faultManager      manager.FaultManager
+	configManager     manager.ConfigManager
+	faultLevelMap     map[string]int
+	faultLevelMapLock *sync.Mutex
 }
 
 // NewNodeController create a node controller
-func NewNodeController(client *kubeclient.ClientK8s) *NodeController {
+func NewNodeController() *NodeController {
 	return &NodeController{
-		kubeClient:        client,
-		faultManager:      common.NewFaultManager(),
-		configManager:     common.NewConfigManager(),
+		configManager:     manager.NewConfigManager(),
+		faultManager:      manager.NewFaultManager(),
 		faultLevelMap:     map[string]int{},
 		faultLevelMapLock: &sync.Mutex{},
 	}
 }
 
-// Init initialize node controller
-func (nc *NodeController) Init() error {
-	if err := nc.initNodeAnnotation(); err != nil {
-		hwlog.RunLog.Warnf("init node annotation failed, err is %v", err)
-	}
-	return nil
-}
-
-// Execute process fault device info and send message to next fault processor
-func (nc *NodeController) Execute(faultDevInfo *common.FaultDevInfo) {
-	nc.faultManager.SetFaultDevInfo(faultDevInfo)
-	nc.updateFaultDevInfo()
-	nc.nextFaultProcessor.Execute(nc.faultManager.GetFaultDevInfo())
-}
-
-// SetNextFaultProcessor set the next fault processor
-func (nc *NodeController) SetNextFaultProcessor(faultProcessor common.FaultProcessor) {
-	nc.nextFaultProcessor = faultProcessor
+func (nc *NodeController) Name() string {
+	return common.PluginControlFault
 }
 
 // UpdateConfig update config and update fault level map
-func (nc *NodeController) UpdateConfig(faultConfig *common.FaultConfig) error {
+func (nc *NodeController) UpdateConfig(faultConfig *common.FaultConfig) *common.FaultConfig {
+	if faultConfig == nil {
+		return nil
+	}
 	if err := nc.updateFaultLevelMap(faultConfig.FaultTypeCode); err != nil {
-		hwlog.RunLog.Errorf("update fault level map failed, err is %v", err)
-		return err
+		return nil
 	}
 	nc.configManager.SetFaultConfig(faultConfig)
-	return nil
+	return faultConfig
 }
 
-// SetNextConfigProcessor set next config processor
-func (nc *NodeController) SetNextConfigProcessor(configProcessor common.ConfigProcessor) {
-	nc.nextConfigProcessor = configProcessor
-}
+// Control update fault device info
+func (nc *NodeController) Control(faultDevInfo *common.FaultDevInfo) *common.FaultDevInfo {
+	// get support fault code
+	faultDevs := nc.getSupportFaultDev(faultDevInfo)
 
-// updateFaultDevInfo update fault device info
-func (nc *NodeController) updateFaultDevInfo() {
-	// filter not support fault device
-	nc.filterNotSupportFaultDev()
-
-	faultDevInfo := nc.faultManager.GetFaultDevInfo()
 	var nodeFaultLevel int64
 	// update fault level
-	for _, faultDev := range faultDevInfo.FaultDevList {
+	for _, faultDev := range faultDevs {
 		faultLevelStr, faultLevelInt := nc.getFaultLevel(faultDev.FaultCode)
 		faultDev.FaultLevel = faultLevelStr
 		if faultLevelInt > nodeFaultLevel {
 			nodeFaultLevel = faultLevelInt
 		}
 	}
+	nc.faultManager.SetFaultDevList(faultDevs)
 	// update node status
 	nc.faultManager.SetNodeStatus(nc.getNodeStatus(nodeFaultLevel))
+	return nc.faultManager.GetFaultDevInfo()
 }
 
-// filterNotSupportFaultDev filter not support fault devs
-func (nc *NodeController) filterNotSupportFaultDev() {
-	faultDevInfo := nc.faultManager.GetFaultDevInfo()
-	newFaultDevInfo := &common.FaultDevInfo{
-		FaultDevList: make([]*common.FaultDev, 0),
-		NodeStatus:   faultDevInfo.NodeStatus,
-	}
+// getSupportFaultDev get support fault devs
+func (nc *NodeController) getSupportFaultDev(faultDevInfo *common.FaultDevInfo) []*common.FaultDev {
+	faultDevs := make([]*common.FaultDev, 0)
 	for _, faultDev := range faultDevInfo.FaultDevList {
 		tmpFaultDev := &common.FaultDev{
 			DeviceType: faultDev.DeviceType,
@@ -121,10 +89,10 @@ func (nc *NodeController) filterNotSupportFaultDev() {
 			FaultLevel: faultDev.FaultLevel,
 		}
 		if len(tmpFaultDev.FaultCode) > 0 {
-			newFaultDevInfo.FaultDevList = append(newFaultDevInfo.FaultDevList, tmpFaultDev)
+			faultDevs = append(faultDevs, tmpFaultDev)
 		}
 	}
-	nc.faultManager.SetFaultDevInfo(newFaultDevInfo)
+	return faultDevs
 }
 
 // filterNotSupportFaultCodes filter not support fault codes
@@ -206,21 +174,4 @@ func (nc *NodeController) getNodeStatus(nodeFaultLevel int64) string {
 	default:
 		return ""
 	}
-}
-
-func (nc *NodeController) initNodeAnnotation() error {
-	rand.Seed(time.Now().UnixNano())
-	randomSecond := time.Duration(rand.Intn(randSecond)) * time.Second
-	time.Sleep(randomSecond)
-	nodeSN, err := GetNodeSN()
-	if err != nil {
-		hwlog.RunLog.Errorf("get node SN failed, err is %v", err)
-		return err
-	}
-	hwlog.RunLog.Infof("get node SN success, add SN(%s) to node annotation", nodeSN)
-	err = nc.kubeClient.AddAnnotation(api.NodeSNAnnotation, nodeSN)
-	if err != nil {
-		hwlog.RunLog.Errorf("add node annotation failed, err is %v", err)
-	}
-	return err
 }

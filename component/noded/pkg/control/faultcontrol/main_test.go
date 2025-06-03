@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package control for the node controller main test
-package control
+// Package faultcontrol for the node controller main test
+package faultcontrol
 
 import (
 	"context"
@@ -29,8 +29,50 @@ import (
 	"nodeD/pkg/kubeclient"
 )
 
+const (
+	testDeviceType = "CPU"
+	faultCode1     = "00000001"
+	faultCode2     = "00000002"
+	faultCode3     = "00000003"
+	wrongFaultCode = "00000000"
+)
+
 var (
-	testK8sClient *kubeclient.ClientK8s
+	testK8sClient     *kubeclient.ClientK8s
+	testFaultLevelMap = map[string]int{
+		faultCode1: common.NotHandleFaultLevel,
+		faultCode2: common.PreSeparateFaultLevel,
+		faultCode3: common.SeparateFaultLevel,
+	}
+	faultTypeCode = &common.FaultTypeCode{
+		NotHandleFaultCodes:   []string{faultCode1},
+		PreSeparateFaultCodes: []string{faultCode2},
+		SeparateFaultCodes:    []string{faultCode3},
+	}
+	testWrongFaultConfig = &common.FaultConfig{
+		FaultTypeCode: &common.FaultTypeCode{
+			NotHandleFaultCodes:   []string{faultCode1},
+			PreSeparateFaultCodes: []string{faultCode1},
+			SeparateFaultCodes:    []string{faultCode1},
+		},
+	}
+	testFaultDevInfo = &common.FaultDevInfo{
+		FaultDevList: []*common.FaultDev{
+			{
+				DeviceType: testDeviceType,
+				DeviceId:   0,
+				FaultCode:  []string{faultCode1, faultCode2},
+				FaultLevel: common.PreSeparateFault,
+			},
+			{
+				DeviceType: testDeviceType,
+				DeviceId:   1,
+				FaultCode:  []string{faultCode1, faultCode2},
+				FaultLevel: common.PreSeparateFault,
+			},
+		},
+		NodeStatus: common.PreSeparate,
+	}
 )
 
 func TestMain(m *testing.M) {
@@ -79,4 +121,12 @@ func initK8sClient() error {
 		return err
 	}
 	return nil
+}
+
+func resetFaultLevelMap() {
+	nodeController.faultLevelMap = testFaultLevelMap
+}
+
+func resetFaultDevInfo() {
+	nodeController.faultManager.SetFaultDevInfo(testFaultDevInfo)
 }
