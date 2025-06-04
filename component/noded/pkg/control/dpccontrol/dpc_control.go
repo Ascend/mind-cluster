@@ -22,6 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
 	"nodeD/pkg/common"
 	"nodeD/pkg/grpcclient/pubfault"
 )
@@ -131,10 +133,28 @@ func constructDpcError(errorStatus bool, id string, faultCode string) *pubfault.
 		Influence: []*pubfault.PubFaultInfo{
 			{
 				NodeName:  nodeName,
-				DeviceIds: []int32{int32(0)},
+				DeviceIds: getNodeCardId(),
 			},
 		},
 	}
+}
+
+func getNodeCardId() []int32 {
+	dm, err := devmanager.GetDeviceManager()
+	if err != nil {
+		hwlog.RunLog.Errorf("get dev manager failed, err is %v", err)
+		return []int32{int32(0)}
+	}
+	cardNum, cardList, err := dm.GetCardList()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return []int32{int32(0)}
+	}
+	if cardNum == 0 {
+		hwlog.RunLog.Errorf("get chip info failed, no card found")
+		return []int32{int32(0)}
+	}
+	return cardList
 }
 
 func getNewDpcProcessStatus(newStatusMap map[int]common.DpcStatus) bool {

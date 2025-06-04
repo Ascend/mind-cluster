@@ -229,7 +229,7 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 
 func getStatusByText(text string, key string) (bool, error) {
 	errMatch := errRegex.FindStringSubmatch(text)
-	if len(errMatch) != dpcErrorResultIndex {
+	if len(errMatch) < dpcErrorResultIndex {
 		return false, errors.New("get status failed, not match regex")
 	}
 	fileKey := errMatch[dpcErrorTypeIndex]
