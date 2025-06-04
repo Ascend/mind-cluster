@@ -53,6 +53,7 @@ type EventController struct {
 	healthState               string
 	globalSwitchRankIDs       []string
 	globalOps                 []bool
+	switchNicResponse         chan *pb.SwitchNicResponse
 	controllerContext         context.Context
 	ctxCancelFunc             context.CancelFunc
 	serviceContext            context.Context
@@ -87,6 +88,7 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		healthState:               constant.HealthyState,
 		globalSwitchRankIDs:       []string{},
 		globalOps:                 []bool{},
+		switchNicResponse:         make(chan *pb.SwitchNicResponse, 1),
 		serviceContext:            serviceCtx,
 		lock:                      sync.RWMutex{},
 	}
@@ -161,6 +163,7 @@ func (ctl *EventController) reset(stop bool) {
 	close(ctl.reportRecoverStrategyChan)
 	close(ctl.reportStatusChan)
 	close(ctl.scheduleResultChan)
+	close(ctl.switchNicResponse)
 	if stop {
 		return
 	}
@@ -178,6 +181,7 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.platStrategy = ""
 	ctl.globalSwitchRankIDs = ctl.globalSwitchRankIDs[:0]
 	ctl.globalOps = ctl.globalOps[:0]
+	ctl.switchNicResponse = make(chan *pb.SwitchNicResponse, 1)
 	ctl.state.Reset()
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	go ctl.listenEvent()
@@ -424,6 +428,12 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 		return
 	}
 	if err != nil {
+		if ctl.isSwitchingNic() {
+			ctl.switchNicResponse <- &pb.SwitchNicResponse{
+				Msg:   "switch nic failed, send signal failed",
+				JobID: ctl.jobInfo.JobId,
+			}
+		}
 		ctl.addEvent(common.NotifyFailEvent)
 		return
 	}
@@ -894,6 +904,9 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
 		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
 		// it goes through the failure recovery state machine again.
+	} else if res.Strategy == constant.ProcessDumpStrategyName &&
+		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.PtFramework {
+		return constant.ProcessDumpStrategyName, nil
 	}
 	return constant.ProcessExitStrategyName, nil
 }
@@ -1031,6 +1044,8 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		}
 		if result.RecoverSuccess {
 			ctl.updateFixResult(result.Strategy, constant.DumpSuccess)
+		} else if result.Code == common.UnRecoverableRetryError && ctl.isSwitchingNic() {
+			return common.SwitchNicFailRecoverEvent, common.OK, nil
 		} else {
 			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
 		}

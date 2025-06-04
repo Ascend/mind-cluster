@@ -154,5 +154,6 @@ func (ctl *EventController) getBaseRules() []common.TransRule {
 	rules = append(rules, ctl.getExtendPreRules()...)
 	rules = append(rules, ctl.getFixRules()...)
 	rules = append(rules, ctl.getAfterRules()...)
+	rules = append(rules, ctl.geOMRules()...)
 	return rules
 }

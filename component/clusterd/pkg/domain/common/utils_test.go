@@ -570,8 +570,29 @@ type successSwitchNicSender struct {
 	mockStream
 }
 
+func (s *successSwitchNicSender) Send(signal *pb.SwitchNicResponse) error {
+	return nil
+}
+
 type failSwitchNicSender struct {
 	mockStream
+}
+
+func (s *failSwitchNicSender) Send(signal *pb.SwitchNicResponse) error {
+	return errors.New("fake error")
+}
+
+func TestSendSwitchNicRetry(t *testing.T) {
+	convey.Convey("Test SwitchNicSendRetry", t, func() {
+		convey.Convey("case send success", func() {
+			err := SwitchNicSendRetry(&successSwitchNicSender{}, nil, constant.RetryTime)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("case send fail", func() {
+			err := SwitchNicSendRetry(&failSwitchNicSender{}, nil, constant.RetryTime)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
 }
 
 func TestStrategySupported(t *testing.T) {

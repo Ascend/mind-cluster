@@ -26,6 +26,8 @@ const (
 	Recover_ReportRecoverStrategy_FullMethodName        = "/Recover/ReportRecoverStrategy"
 	Recover_ReportRecoverStatus_FullMethodName          = "/Recover/ReportRecoverStatus"
 	Recover_ReportProcessFault_FullMethodName           = "/Recover/ReportProcessFault"
+	Recover_SwitchNicTrack_FullMethodName               = "/Recover/SwitchNicTrack"
+	Recover_SubscribeSwitchNicSignal_FullMethodName     = "/Recover/SubscribeSwitchNicSignal"
 )
 
 // RecoverClient is the client API for Recover service.
@@ -39,6 +41,8 @@ type RecoverClient interface {
 	ReportRecoverStrategy(ctx context.Context, in *RecoverStrategyRequest, opts ...grpc.CallOption) (*Status, error)
 	ReportRecoverStatus(ctx context.Context, in *RecoverStatusRequest, opts ...grpc.CallOption) (*Status, error)
 	ReportProcessFault(ctx context.Context, in *ProcessFaultRequest, opts ...grpc.CallOption) (*Status, error)
+	SwitchNicTrack(ctx context.Context, in *SwitchNics, opts ...grpc.CallOption) (*Status, error)
+	SubscribeSwitchNicSignal(ctx context.Context, in *SwitchNicRequest, opts ...grpc.CallOption) (Recover_SubscribeSwitchNicSignalClient, error)
 }
 
 type recoverClient struct {
@@ -135,6 +139,47 @@ func (c *recoverClient) ReportProcessFault(ctx context.Context, in *ProcessFault
 	return out, nil
 }
 
+func (c *recoverClient) SwitchNicTrack(ctx context.Context, in *SwitchNics, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, Recover_SwitchNicTrack_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *recoverClient) SubscribeSwitchNicSignal(ctx context.Context, in *SwitchNicRequest, opts ...grpc.CallOption) (Recover_SubscribeSwitchNicSignalClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Recover_ServiceDesc.Streams[1], Recover_SubscribeSwitchNicSignal_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &recoverSubscribeSwitchNicSignalClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Recover_SubscribeSwitchNicSignalClient interface {
+	Recv() (*SwitchNicResponse, error)
+	grpc.ClientStream
+}
+
+type recoverSubscribeSwitchNicSignalClient struct {
+	grpc.ClientStream
+}
+
+func (x *recoverSubscribeSwitchNicSignalClient) Recv() (*SwitchNicResponse, error) {
+	m := new(SwitchNicResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RecoverServer is the server API for Recover service.
 // All implementations must embed UnimplementedRecoverServer
 // for forward compatibility
@@ -146,6 +191,8 @@ type RecoverServer interface {
 	ReportRecoverStrategy(context.Context, *RecoverStrategyRequest) (*Status, error)
 	ReportRecoverStatus(context.Context, *RecoverStatusRequest) (*Status, error)
 	ReportProcessFault(context.Context, *ProcessFaultRequest) (*Status, error)
+	SwitchNicTrack(context.Context, *SwitchNics) (*Status, error)
+	SubscribeSwitchNicSignal(*SwitchNicRequest, Recover_SubscribeSwitchNicSignalServer) error
 	mustEmbedUnimplementedRecoverServer()
 }
 
@@ -173,6 +220,12 @@ func (UnimplementedRecoverServer) ReportRecoverStatus(context.Context, *RecoverS
 }
 func (UnimplementedRecoverServer) ReportProcessFault(context.Context, *ProcessFaultRequest) (*Status, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReportProcessFault not implemented")
+}
+func (UnimplementedRecoverServer) SwitchNicTrack(context.Context, *SwitchNics) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwitchNicTrack not implemented")
+}
+func (UnimplementedRecoverServer) SubscribeSwitchNicSignal(*SwitchNicRequest, Recover_SubscribeSwitchNicSignalServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeSwitchNicSignal not implemented")
 }
 func (UnimplementedRecoverServer) mustEmbedUnimplementedRecoverServer() {}
 
@@ -316,6 +369,45 @@ func _Recover_ReportProcessFault_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Recover_SwitchNicTrack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchNics)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecoverServer).SwitchNicTrack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Recover_SwitchNicTrack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecoverServer).SwitchNicTrack(ctx, req.(*SwitchNics))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Recover_SubscribeSwitchNicSignal_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SwitchNicRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RecoverServer).SubscribeSwitchNicSignal(m, &recoverSubscribeSwitchNicSignalServer{stream})
+}
+
+type Recover_SubscribeSwitchNicSignalServer interface {
+	Send(*SwitchNicResponse) error
+	grpc.ServerStream
+}
+
+type recoverSubscribeSwitchNicSignalServer struct {
+	grpc.ServerStream
+}
+
+func (x *recoverSubscribeSwitchNicSignalServer) Send(m *SwitchNicResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Recover_ServiceDesc is the grpc.ServiceDesc for Recover service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -347,11 +439,20 @@ var Recover_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ReportProcessFault",
 			Handler:    _Recover_ReportProcessFault_Handler,
 		},
+		{
+			MethodName: "SwitchNicTrack",
+			Handler:    _Recover_SwitchNicTrack_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "SubscribeProcessManageSignal",
 			Handler:       _Recover_SubscribeProcessManageSignal_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "SubscribeSwitchNicSignal",
+			Handler:       _Recover_SubscribeSwitchNicSignal_Handler,
 			ServerStreams: true,
 		},
 	},

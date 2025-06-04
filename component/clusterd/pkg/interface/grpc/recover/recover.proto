@@ -51,6 +51,32 @@ message ProcessFaultRequest{
   repeated FaultRank faultRanks = 2;
 }
 
+message SwitchNicResponse{
+  string jobID = 1;
+  string msg = 2;
+}
+
+message SwitchNicRequest{
+  string jobID = 1;
+}
+
+message SwitchNics {
+  string jobID = 1;
+  map<string, DeviceList> nicOps = 2;
+}
+
+message SwitchStatus {
+  string jobID = 1;
+  string rankID = 2;
+  bool res = 3;
+  string msg = 4;
+}
+
+message DeviceList {
+  repeated  string dev = 1;
+  repeated  bool op = 2;
+}
+
 service Recover {
   rpc Init(ClientInfo) returns (Status) {}
   rpc Register(ClientInfo) returns (Status) {}
@@ -59,4 +85,6 @@ service Recover {
   rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (Status) {}
   rpc ReportRecoverStatus(RecoverStatusRequest) returns(Status) {}
   rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
+  rpc SwitchNicTrack(SwitchNics) returns (Status) {}
+  rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse) {}
 }

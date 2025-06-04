@@ -435,3 +435,16 @@ func SortRecoverStrategies(strSlice []string) {
 		return firstPri < secondPri
 	})
 }
+
+// SwitchNicSendRetry send signal util send success or retry times upper retryTimes
+func SwitchNicSendRetry(stream pb.Recover_SubscribeSwitchNicSignalServer, signal *pb.SwitchNicResponse, retryTimes int) error {
+	var err error
+	for i := 0; i < retryTimes; i++ {
+		err = stream.Send(signal)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Duration(i+1) * time.Second)
+	}
+	return err
+}

@@ -50,6 +50,10 @@ type switchNicSender struct {
 	mockStream
 }
 
+func (s *switchNicSender) Send(signal *pb.SwitchNicResponse) error {
+	return nil
+}
+
 func (s *sender) Send(signal *pb.ProcessManageSignal) error {
 	return nil
 }
@@ -1615,6 +1619,7 @@ func TestHandleSendResult(t *testing.T) {
 
 		testKillMasterSignal(ctl)
 		testErrorCase(ctl)
+		testErrorSwitchNicCase(ctl)
 		testNotifySuccessEvent(ctl)
 		testChangeStrategyRetry(ctl)
 		testChangeStrategyRecover(ctl)
@@ -1647,6 +1652,26 @@ func testErrorCase(ctl *EventController) {
 		defer patches.Reset()
 		signal := &pb.ProcessManageSignal{}
 		ctl.handleSendResult(signal, errors.New("test error"))
+		convey.So(addedEvent, convey.ShouldEqual, common.NotifyFailEvent)
+	})
+}
+
+func testErrorSwitchNicCase(ctl *EventController) {
+	convey.Convey("When error is not nil, and switching nic", func() {
+		addedEvent := ""
+		patches := gomonkey.ApplyPrivateMethod(ctl, "addEvent", func(ctl *EventController, event string) {
+			addedEvent = event
+		})
+		patches2 := gomonkey.ApplyPrivateMethod(ctl, "isSwitchingNic", func() bool {
+			return true
+		})
+		defer patches.Reset()
+		defer patches2.Reset()
+		signal := &pb.ProcessManageSignal{}
+		ctl.switchNicResponse = make(chan *pb.SwitchNicResponse, 1)
+		ctl.handleSendResult(signal, errors.New("test error"))
+		res := <-ctl.switchNicResponse
+		convey.So(res.Msg, convey.ShouldEqual, "switch nic failed, send signal failed")
 		convey.So(addedEvent, convey.ShouldEqual, common.NotifyFailEvent)
 	})
 }

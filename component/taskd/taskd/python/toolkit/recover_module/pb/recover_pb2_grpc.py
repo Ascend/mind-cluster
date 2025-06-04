@@ -69,6 +69,16 @@ class RecoverStub(object):
                 request_serializer=recover__pb2.ProcessFaultRequest.SerializeToString,
                 response_deserializer=recover__pb2.Status.FromString,
                 _registered_method=True)
+        self.SwitchNicTrack = channel.unary_unary(
+                '/Recover/SwitchNicTrack',
+                request_serializer=recover__pb2.SwitchNics.SerializeToString,
+                response_deserializer=recover__pb2.Status.FromString,
+                _registered_method=True)
+        self.SubscribeSwitchNicSignal = channel.unary_stream(
+                '/Recover/SubscribeSwitchNicSignal',
+                request_serializer=recover__pb2.SwitchNicRequest.SerializeToString,
+                response_deserializer=recover__pb2.SwitchNicResponse.FromString,
+                _registered_method=True)
 
 
 class RecoverServicer(object):
@@ -116,6 +126,18 @@ class RecoverServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SwitchNicTrack(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SubscribeSwitchNicSignal(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_RecoverServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -153,6 +175,16 @@ def add_RecoverServicer_to_server(servicer, server):
                     servicer.ReportProcessFault,
                     request_deserializer=recover__pb2.ProcessFaultRequest.FromString,
                     response_serializer=recover__pb2.Status.SerializeToString,
+            ),
+            'SwitchNicTrack': grpc.unary_unary_rpc_method_handler(
+                    servicer.SwitchNicTrack,
+                    request_deserializer=recover__pb2.SwitchNics.FromString,
+                    response_serializer=recover__pb2.Status.SerializeToString,
+            ),
+            'SubscribeSwitchNicSignal': grpc.unary_stream_rpc_method_handler(
+                    servicer.SubscribeSwitchNicSignal,
+                    request_deserializer=recover__pb2.SwitchNicRequest.FromString,
+                    response_serializer=recover__pb2.SwitchNicResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -344,6 +376,60 @@ class Recover(object):
             '/Recover/ReportProcessFault',
             recover__pb2.ProcessFaultRequest.SerializeToString,
             recover__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SwitchNicTrack(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Recover/SwitchNicTrack',
+            recover__pb2.SwitchNics.SerializeToString,
+            recover__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SubscribeSwitchNicSignal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/Recover/SubscribeSwitchNicSignal',
+            recover__pb2.SwitchNicRequest.SerializeToString,
+            recover__pb2.SwitchNicResponse.FromString,
             options,
             channel_credentials,
             insecure,
