@@ -220,12 +220,11 @@ func IsIPValid(ipStr string) error {
 
 // GetIpFromAddr extracts the IP address from a string in the format "host:port".
 func GetIpFromAddr(addr string) string {
-	sl := strings.Split(addr, ":")
-	n := len(sl)
-	if n > 1 {
-		return sl[n-1]
+	ip, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return ""
 	}
-	return ""
+	return ip
 }
 
 // DstCase determines the destination case based on the current and destination positions.

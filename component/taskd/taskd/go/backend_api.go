@@ -193,12 +193,11 @@ func ReceiveMessageC(toolPtr uintptr) unsafe.Pointer {
 	if !ok {
 		return unsafe.Pointer(nil)
 	}
-
+	rw.RUnlock()
 	msg := tool.ReceiveMessage()
 	if msg == nil {
 		return unsafe.Pointer(nil)
 	}
-	rw.RUnlock()
 
 	msgJSON, err := json.Marshal(msg)
 	if err != nil {
