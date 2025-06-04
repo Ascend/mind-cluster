@@ -45,8 +45,7 @@ class NetworkConfig:
     pos: Position
     upstream_addr: str
     listen_addr: str
-    server_tls: bool
-    client_tls: bool
+    enable_tls: bool
     tls_conf: TLSConfig
 
 
@@ -98,3 +97,5 @@ DEFAULT_PROCESSRANK = "-1"
 CONFIG_FRAMEWORK_KEY = "Framework"
 DEFAULT_AGENT_ROLE = "Agent"
 DEFAULT_AGENT_UPSTREAMPORT = "9602"
+
+DEFAULT_BIZTYPE = "DEFAULT"

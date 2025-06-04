@@ -49,8 +49,7 @@ def init_taskd_proxy(config : dict) -> bool:
         ),
         upstream_addr = config_values[CONFIG_UPSTREAMIP_KEY] + ":" + config_values[CONFIG_UPSTREAMPORT_KEY],
         listen_addr = config_values[CONFIG_LISTENIP_KEY] + ":" + config_values[CONFIG_LISTENPORT_KEY],
-        server_tls = False,
-        client_tls = False,
+        enable_tls = False,
         tls_conf = None
     )
 

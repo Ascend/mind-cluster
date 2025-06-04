@@ -57,8 +57,7 @@ def init_taskd_agent(config : dict = {}, cls = None) -> bool:
             ),
             upstream_addr = config_values[CONFIG_UPSTREAMIP_KEY] + ":" + config_values[CONFIG_UPSTREAMPORT_KEY],
             listen_addr = '',
-            server_tls = False,
-            client_tls = False,
+            enable_tls = False,
             tls_conf = None
         )
     log_name = "agent-" + config_values[CONFIG_SERVERRANK_KEY] + ".log"

@@ -25,7 +25,7 @@ import uuid
 from dataclasses import asdict
 from taskd.python.utils.log import run_log
 from taskd.python.cython_api import cython_api
-from taskd.python.framework.common.type import MsgBody, MessageInfo, Position
+from taskd.python.framework.common.type import MsgBody, MessageInfo, Position, DEFAULT_BIZTYPE
 from taskd.python.toolkit.constants.constants import SEND_RETRY_TIMES
 
 
@@ -71,7 +71,7 @@ class AgentMessageManager():
         body_json = json.dumps(asdict(msg_body))
         msg = MessageInfo(
             uuid = str(uuid.uuid4()),
-            biz_type = "register",
+            biz_type = DEFAULT_BIZTYPE,
             dst = dst,
             body = body_json
         )

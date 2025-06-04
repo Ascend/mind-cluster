@@ -26,6 +26,8 @@ const (
 	// LogFileName default log file name
 	LogFileName          = "taskd.log"
 	WorkerLogPathPattern = "taskd-worker-%s.log"
+	// ProxyLogPathPattern for proxy log path pattern
+	ProxyLogPathPattern = "taskd-proxy-%s.log"
 )
 
 const (
