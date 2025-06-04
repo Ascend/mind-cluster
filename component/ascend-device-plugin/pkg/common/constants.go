@@ -71,6 +71,11 @@ const (
 	DeviceInfoCMNamePrefix = "mindx-dl-deviceinfo-"
 	// DeviceInfoCMManuallySeparateNPUKey for deviceinfo configmap ManuallySeparateNPU key
 	DeviceInfoCMManuallySeparateNPUKey = "ManuallySeparateNPU"
+	// DescriptionKey for deviceinfo configmap Description key
+	DescriptionKey = "Description"
+	// DescriptionValue for deviceinfo configmap Description value
+	DescriptionValue = "The field[huawei.com/xxx] is sunset. Volcano has the ability to maintain the usage status of " +
+		"chips on its own, and can temporarily use this field by configuring the Volcano parameter 'self-maintain-available-card'"
 	// SlowNodeNoticeCMName the name for slow node notice configmap
 	SlowNodeNoticeCMName = "steptime-dtpgroup"
 

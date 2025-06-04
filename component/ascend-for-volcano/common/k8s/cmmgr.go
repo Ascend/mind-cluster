@@ -22,11 +22,13 @@ package k8s
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -327,11 +329,12 @@ func (cmMgr *ClusterInfoWitchCm) createOrUpdateNodeInfo(cm *v1.ConfigMap) {
 }
 
 // GetDeviceInfosAndSetInformerStart get device Infos and check Informer health state
-func GetDeviceInfosAndSetInformerStart(nodeList []*api.NodeInfo, useClusterD bool) map[string]NodeDeviceInfoWithID {
+func GetDeviceInfosAndSetInformerStart(nodeList []*api.NodeInfo, useClusterD,
+	selfMaintainAvailCard bool) map[string]NodeDeviceInfoWithID {
 	deviceInfos := make(map[string]NodeDeviceInfoWithID)
 	cmManager.deviceInfos.Lock()
 	for _, nodeInfo := range nodeList {
-		tmpDeviceInfo := initNodeDeviceInfoByCmMgr(cmManager.deviceInfos.Devices[nodeInfo.Name])
+		tmpDeviceInfo := initNodeDeviceInfoByCmMgr(nodeInfo, cmManager.deviceInfos.Devices[nodeInfo.Name], selfMaintainAvailCard)
 		setNeedRestartInformer(tmpDeviceInfo.CacheUpdateTime, useClusterD)
 		deviceInfos[nodeInfo.Name] = tmpDeviceInfo
 	}
@@ -361,7 +364,8 @@ func GetSwitchInfos(nodeList []*api.NodeInfo) map[string]SwitchFaultInfo {
 	return switchInfos
 }
 
-func initNodeDeviceInfoByCmMgr(deviceInfo NodeDeviceInfoWithID) NodeDeviceInfoWithID {
+func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfoWithID,
+	selfMaintainAvailCard bool) NodeDeviceInfoWithID {
 	tmpDeviceInfo := NodeDeviceInfoWithID{
 		NodeDeviceInfo: NodeDeviceInfo{
 			DeviceList: make(map[string]string),
@@ -370,8 +374,25 @@ func initNodeDeviceInfoByCmMgr(deviceInfo NodeDeviceInfoWithID) NodeDeviceInfoWi
 		SuperPodID:      deviceInfo.SuperPodID,
 		CacheUpdateTime: deviceInfo.CacheUpdateTime,
 	}
-	for deviceName, deviceID := range deviceInfo.DeviceList {
-		tmpDeviceInfo.DeviceList[deviceName] = deviceID
+	availableDevKey, _ := util.GetAvailableDevInfo(deviceInfo.DeviceList)
+	for devListKey, devListValue := range deviceInfo.DeviceList {
+		if devListKey == availableDevKey && selfMaintainAvailCard {
+			devType := util.GetDeviceType(deviceInfo.DeviceList)
+			nodeDevList, err := util.GetNodeDevListFromAnno(nodeInfo)
+			if err != nil {
+				klog.V(util.LogErrorLev).Infof("get node device list from annotation failed, error: %v", err)
+				return tmpDeviceInfo
+			}
+			_, unHealthyDevList := util.GetUnhealthyDevInfo(deviceInfo.DeviceList)
+			podUsedDevList := util.GetActivePodUsedDevFromNode(nodeInfo, devType)
+			availDev := sets.NewString(nodeDevList...).Delete(podUsedDevList...).Delete(unHealthyDevList...).List()
+			sort.Strings(availDev)
+			tmpDeviceInfo.DeviceList[devListKey] = strings.Join(availDev, ",")
+			klog.V(util.LogDebugLev).Infof("node[%s] device list: %v, available list: %v, pod used list: %v, "+
+				"unhealthy list: %v", nodeInfo.Name, nodeDevList, availDev, podUsedDevList, unHealthyDevList)
+		} else {
+			tmpDeviceInfo.DeviceList[devListKey] = devListValue
+		}
 	}
 	return tmpDeviceInfo
 }

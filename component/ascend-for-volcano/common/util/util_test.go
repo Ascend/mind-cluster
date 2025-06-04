@@ -22,12 +22,17 @@ package util
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
+	"strings"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 )
 
@@ -680,4 +685,293 @@ func TestMakeDataHash(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetDeviceType(t *testing.T) {
+	tests := []struct {
+		name    string
+		devList map[string]string
+		want    string
+	}{
+		{
+			name:    "01 device type is Ascend910",
+			devList: map[string]string{HwPreName + Ascend910: "Ascend910-0"},
+			want:    Ascend910,
+		},
+		{
+			name:    "02 device type is Ascend310",
+			devList: map[string]string{HwPreName + Ascend310: "Ascend310-0"},
+			want:    Ascend310,
+		},
+		{
+			name:    "03 device type is Ascend310P",
+			devList: map[string]string{HwPreName + Ascend310P: "Ascend310P-0"},
+			want:    Ascend310P,
+		},
+		{
+			name:    "04 device type is invalid",
+			devList: map[string]string{"invalid key": "Ascend910-0"},
+			want:    Ascend910,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetDeviceType(tt.devList); got != tt.want {
+				t.Errorf("GetDeviceType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+const (
+	nodeName  = "nodeName"
+	defaultNS = "default"
+	taskName1 = "task1"
+	taskName2 = "task2"
+	taskUid1  = "task-uid1"
+	taskUid2  = "task-uid2"
+	podName1  = "pod1"
+	podName2  = "pod2"
+
+	devName0   = "Ascend910-0"
+	devName1   = "Ascend910-1"
+	devName2   = "Ascend910-2"
+	ip0        = "192.168.1.0"
+	ip1        = "192.168.1.1"
+	ip2        = "192.168.1.2"
+	superPodID = 0
+)
+
+var (
+	baseDeviceMap = map[string]*NpuBaseInfo{
+		devName0: {
+			IP:            ip0,
+			SuperDeviceID: superPodID,
+		},
+		devName1: {
+			IP:            ip1,
+			SuperDeviceID: superPodID,
+		},
+		devName2: {
+			IP:            ip2,
+			SuperDeviceID: superPodID,
+		},
+	}
+)
+
+func TestGetNodeDevListFromAnno(t *testing.T) {
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
+	if err != nil {
+		return
+	}
+	nodeInfo := &api.NodeInfo{
+		Node: &v1.Node{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{BaseDeviceInfoKey: string(baseDevInfo)},
+			},
+		},
+	}
+	t.Run("test func GetNodeDevListFromAnno success", func(t *testing.T) {
+		expDevList := []string{devName0, devName1, devName2}
+		got, err := GetNodeDevListFromAnno(nodeInfo)
+		if !reflect.DeepEqual(got, expDevList) || !reflect.DeepEqual(err, nil) {
+			t.Errorf("Get node device list = %v, want %v. err = %v, want nil", got, expDevList, err)
+		}
+	})
+	t.Run("test func GetNodeDevListFromAnno failed, annotation does not exist", func(t *testing.T) {
+		invalidNodeInfo := &api.NodeInfo{
+			Node: &v1.Node{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+				},
+			},
+		}
+		_, err = GetNodeDevListFromAnno(invalidNodeInfo)
+		expErr := fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
+		if !reflect.DeepEqual(err, expErr) {
+			t.Errorf("Get node device list, err = %v, want %v", err, expErr)
+		}
+	})
+	t.Run("test func GetNodeDevListFromAnno failed, unmarshal error", func(t *testing.T) {
+		p1 := gomonkey.ApplyFunc(json.Unmarshal, func(data []byte, v any) error {
+			return errors.New("test error")
+		})
+		defer p1.Reset()
+		_, err = GetNodeDevListFromAnno(nodeInfo)
+		expErr := errors.New("unmarshal node device list failed")
+		if !reflect.DeepEqual(err, expErr) {
+			t.Errorf("Get node device list, err = %v, want %v", err, expErr)
+		}
+	})
+}
+
+func TestGetActivePodUsedDevFromNode(t *testing.T) {
+	tests := []struct {
+		name     string
+		nodeInfo *api.NodeInfo
+		want     []string
+	}{
+		{
+			name:     "01 test func GetActivePodUsedDevFromNode success",
+			nodeInfo: fakeNodeInfo(pod1, pod2),
+			want:     []string{devName0, devName2},
+		},
+		{
+			name:     "02 test func GetActivePodUsedDevFromNode success, pod success",
+			nodeInfo: fakeNodeInfo(pod1, successPod),
+			want:     []string{devName0},
+		},
+		{
+			name:     "03 test func GetActivePodUsedDevFromNode failed, pod name and namespace is invalid",
+			nodeInfo: fakeNodeInfo(invalidNamePod, invalidNSPod),
+			want:     []string{},
+		},
+		{
+			name:     "04 test func GetActivePodUsedDevFromNode failed, annotation does not exist",
+			nodeInfo: fakeNodeInfo(pod1, annoDoesNotExistPod),
+			want:     []string{devName0},
+		},
+		{
+			name:     "05 test func GetActivePodUsedDevFromNode failed, annotation does not exist",
+			nodeInfo: fakeNodeInfo(pod1, annoDoesNotExistPod),
+			want:     []string{devName0},
+		},
+		{
+			name:     "06 test func GetActivePodUsedDevFromNode failed, annotation does not exist",
+			nodeInfo: fakeNodeInfo(pod1, invalidAnnoPod),
+			want:     []string{devName0},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetActivePodUsedDevFromNode(tt.nodeInfo, Ascend910)
+			sort.Strings(got)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Get active pod used device list = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+var (
+	pod1 = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName1,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{HwPreName + Ascend910: strings.Join([]string{devName0}, ",")},
+		},
+	}
+	pod2 = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName2,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{HwPreName + Ascend910: strings.Join([]string{devName2}, ",")},
+		},
+	}
+	successPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName2,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{HwPreName + Ascend910: strings.Join([]string{devName2}, ",")},
+		},
+		Status: v1.PodStatus{Phase: v1.PodFailed},
+	}
+
+	invalidNamePod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "???",
+			Namespace:   defaultNS,
+			Annotations: map[string]string{HwPreName + Ascend910: strings.Join([]string{devName0}, ",")},
+		},
+	}
+	invalidNSPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName1,
+			Namespace:   "???",
+			Annotations: map[string]string{HwPreName + Ascend910: strings.Join([]string{devName0}, ",")},
+		},
+	}
+	annoDoesNotExistPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName1,
+			Namespace: defaultNS,
+		},
+	}
+	invalidAnnoPod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName1,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{HwPreName + Ascend910: ""},
+		},
+	}
+)
+
+func fakeNodeInfo(pod1, pod2 *v1.Pod) *api.NodeInfo {
+	taskInfo1 := &api.TaskInfo{
+		UID:       taskUid1,
+		Name:      taskName1,
+		Namespace: defaultNS,
+		Pod:       pod1,
+	}
+	taskInfo2 := &api.TaskInfo{
+		UID:       taskUid2,
+		Name:      taskName2,
+		Namespace: defaultNS,
+		Pod:       pod2,
+	}
+
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
+	if err != nil {
+		return nil
+	}
+	nodeInfo := &api.NodeInfo{
+		Node: &v1.Node{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{BaseDeviceInfoKey: string(baseDevInfo)},
+			},
+		},
+		Tasks: map[api.TaskID]*api.TaskInfo{taskInfo1.UID: taskInfo1, taskInfo2.UID: taskInfo2},
+	}
+	return nodeInfo
+}
+
+// FakeDeviceList fake device list
+func FakeDeviceList() map[string]string {
+	return map[string]string{
+		NPU910CardName:         availNPU,
+		networkUnhealthyNPUKey: networkUnhealthyNPUValue,
+		unhealthyNPUKey:        unhealthyNPUValue,
+	}
+}
+
+const (
+	availNPU                 = "Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
+	networkUnhealthyNPUKey   = "huawei.com/Ascend910-NetworkUnhealthy"
+	networkUnhealthyNPUValue = "Ascend910-1"
+	unhealthyNPUKey          = "huawei.com/Ascend910-Unhealthy"
+	unhealthyNPUValue        = "Ascend910-0"
+)
+
+func TestGetAvailableDevInfo(t *testing.T) {
+	t.Run("test func GetAvailableDevInfo success", func(t *testing.T) {
+		availDevKey, availDevList := GetAvailableDevInfo(FakeDeviceList())
+		if !reflect.DeepEqual(availDevKey, NPU910CardName) || !reflect.DeepEqual(strings.Join(availDevList, ","), availNPU) {
+			t.Errorf("get available device info key = %v, want %v; value = %v, want = %v",
+				availDevKey, NPU910CardName, availDevList, availNPU)
+		}
+	})
+}
+
+func TestGetUnhealthyDevInfo(t *testing.T) {
+	t.Run("test func GetUnhealthyDevInfo success", func(t *testing.T) {
+		unHealthyKey, unHealthyDevList := GetUnhealthyDevInfo(FakeDeviceList())
+		if !reflect.DeepEqual(unHealthyKey, unhealthyNPUKey) || !reflect.DeepEqual(strings.Join(unHealthyDevList,
+			","), unhealthyNPUValue) {
+			t.Errorf("get available device info key = %v, want %v; value = %v, want = %v",
+				unHealthyKey, NPU910CardName, unHealthyDevList, availNPU)
+		}
+	})
 }

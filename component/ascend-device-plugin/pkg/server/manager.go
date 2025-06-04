@@ -1078,8 +1078,6 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, serverID, hdm.allInfo.AllDevs); err != nil {
 			hwlog.RunLog.Errorf("update pod %s_%s annotation failed, %v", deviceInfo.Pod.Namespace,
 				deviceInfo.Pod.Name, err)
-		} else {
-			hwlog.RunLog.Infof("update pod %s_%s annotation success", deviceInfo.Pod.Namespace, deviceInfo.Pod.Name)
 		}
 
 		if common.ParamOption.HotReset != common.HotResetTrainOnLine {

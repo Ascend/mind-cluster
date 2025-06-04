@@ -23,6 +23,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -280,3 +281,111 @@ func SortByNumericValue(s []string) {
 
 // PtrInit return base type ptr
 func PtrInit[T any](v T) *T { return &v }
+
+// GetDeviceType get device type from dev list
+func GetDeviceType(devList map[string]string) string {
+	for key, _ := range devList {
+		if strings.Contains(key, Ascend910) {
+			return Ascend910
+		}
+		if strings.Contains(key, Ascend310P) {
+			return Ascend310P
+		}
+		if strings.Contains(key, Ascend310) {
+			return Ascend310
+		}
+	}
+	klog.V(LogErrorLev).Info("cannot decide device type from dev list")
+	return Ascend910
+}
+
+// GetNodeDevListFromAnno get node device list from annotation
+func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, error) {
+	baseDevInfo, ok := nodeInfo.Node.Annotations[BaseDeviceInfoKey]
+	if !ok {
+		klog.V(LogErrorLev).Infof("node annotation[%s] does not exist", BaseDeviceInfoKey)
+		return nil, fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
+	}
+	devIpMap := make(map[string]NpuBaseInfo)
+	if err := json.Unmarshal([]byte(baseDevInfo), &devIpMap); err != nil {
+		klog.V(LogErrorLev).Infof("unmarshal node device list failed, error: %v", err)
+		return nil, errors.New("unmarshal node device list failed")
+	}
+	var nodeDevList = make([]string, 0)
+	for devName := range devIpMap {
+		nodeDevList = append(nodeDevList, devName)
+	}
+	return nodeDevList, nil
+}
+
+// GetActivePodUsedDevFromNode get active pod used device from node
+func GetActivePodUsedDevFromNode(nodeInfo *api.NodeInfo, devType string) []string {
+	var usedDev = make([]string, 0)
+	for _, pod := range nodeInfo.Pods() {
+		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
+			continue
+		}
+		if err := CheckPodNameOrSpace(PodName, pod.GetName(), PodNameMaxLength); err != nil {
+			klog.V(LogErrorLev).Infof("pod name is illegal, error: %v", err)
+			continue
+		}
+		if err := CheckPodNameOrSpace(Namespace, pod.GetNamespace(), PodNameSpaceMaxLength); err != nil {
+			klog.V(LogErrorLev).Infof("pod namespace is illegal, error: %v", err)
+			continue
+		}
+		tmpDev, ok := pod.Annotations[fmt.Sprintf("%s%s", HwPreName, devType)]
+		if !ok || len(tmpDev) == 0 || len(tmpDev) > PodAnnotationMaxLength {
+			continue
+		}
+		tmpDevList := strings.Split(tmpDev, ",")
+		if len(tmpDevList) == 0 || len(tmpDevList) > MaxDevicesNum {
+			klog.V(LogErrorLev).Info("invalid device list length from annotation")
+			continue
+		}
+		usedDev = append(usedDev, tmpDevList...)
+	}
+	klog.V(LogDebugLev).Infof("nodeName: %s, usedDev: %v", nodeInfo.Name, usedDev)
+	return usedDev
+}
+
+// GetAvailableDevInfo get available device info from device list
+func GetAvailableDevInfo(devList map[string]string) (string, []string) {
+	availDevKey := HwPreName + GetDeviceType(devList)
+	klog.V(LogDebugLev).Infof("available device key: %s", availDevKey)
+	availDevStr := devList[availDevKey]
+	if len(availDevStr) == 0 {
+		return availDevKey, []string{}
+	}
+	availDevList := strings.Split(availDevStr, ",")
+	klog.V(LogDebugLev).Infof("available device list: %v", availDevList)
+	return availDevKey, availDevList
+}
+
+// GetUnhealthyDevInfo get unhealthy device info from device list
+func GetUnhealthyDevInfo(devList map[string]string) (string, []string) {
+	unHealthyKey := HwPreName + GetDeviceType(devList) + "-Unhealthy"
+	klog.V(LogDebugLev).Infof("unhealthy device key: %s", unHealthyKey)
+	unHealthyDevStr := devList[unHealthyKey]
+	if len(unHealthyDevStr) == 0 {
+		return unHealthyKey, []string{}
+	}
+	unHealthyDevList := strings.Split(unHealthyDevStr, ",")
+	klog.V(LogDebugLev).Infof("unhealthy device list: %v", unHealthyDevList)
+	return unHealthyKey, unHealthyDevList
+}
+
+// CheckPodNameOrSpace check pod name or pod namespace
+func CheckPodNameOrSpace(checkItem, podParam string, maxLength int) error {
+	if len(podParam) > maxLength {
+		return fmt.Errorf("length %d is bigger than %d", len(podParam), maxLength)
+	}
+
+	pattern, ok := podRegexp[checkItem]
+	if !ok {
+		return errors.New("invalid check item")
+	}
+	if match := pattern.MatchString(podParam); !match {
+		return errors.New("does not meet regex")
+	}
+	return nil
+}

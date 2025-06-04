@@ -147,11 +147,12 @@ type ConfigParameters struct {
 
 // StaticParameters volcano scheduler static parameters
 type StaticParameters struct {
-	OnceInit       *sync.Once
-	UseClusterD    bool
-	NslbVersion    string
-	SharedTorNum   int
-	IsFirstSession *bool // scheduler first session message is unreliable
+	OnceInit              *sync.Once
+	UseClusterD           bool
+	SelfMaintainAvailCard bool
+	NslbVersion           string
+	SharedTorNum          int
+	IsFirstSession        *bool // scheduler first session message is unreliable
 }
 
 // DynamicParameters volcano scheduler dynamic parameters

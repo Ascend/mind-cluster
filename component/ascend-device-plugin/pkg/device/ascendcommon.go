@@ -18,6 +18,7 @@ package device
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -454,18 +455,18 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
-	totalUHDevices, totalNetUHDevices, allTypeUsedDevice, totalRCDevices :=
+	totalUHDevices, totalNetUHDevices, podUsedDev, totalRCDevices :=
 		sets.String{}, sets.String{}, sets.String{}, sets.String{}
 	totalDeviceFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
 	if !common.ParamOption.PresetVDevice {
-		allTypeUsedDevice = tool.getRealUsedDevices()
+		podUsedDev = tool.getRealUsedDevices()
 	}
 	for devType, classifyDev := range classifyDevs {
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
 		kltUsedDevices := tool.getUsedDevices(classifyDev)
 		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(kltUsedDevices)
 		if !common.ParamOption.PresetVDevice {
-			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(allTypeUsedDevice)
+			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(podUsedDev)
 		}
 		totalUHDevices = totalUHDevices.Union(partDevStatusSet.UnHealthyDevice)
 		totalNetUHDevices = totalNetUHDevices.Union(partDevStatusSet.NetUnHealthyDevice)
@@ -733,21 +734,21 @@ func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (m
 	return devicesWithIP, nil
 }
 
-// AddPodAnnotation get ip of device list
-func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceType, serverID string,
-	allDevices []common.NpuDevice) error {
+func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType, serverID string,
+	allDevices []common.NpuDevice) (string, error) {
 	ascendRuntimeOptions := ""
 	if common.IsVirtualDev(deviceType) {
 		ascendRuntimeOptions = common.VirtualDev
 	}
 	phyDevMapVirtualDev, _, err := common.GetDeviceListID(podDev.RealDevice, ascendRuntimeOptions)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device list id err: %v", err)
-		return err
+		hwlog.RunLog.Errorf("get device list id failed, error: %v", err)
+		return "", errors.New("get device list id failed")
 	}
 	ascendVisibleDevices, err := tool.getDeviceListIP(podDev.RealDevice, deviceType)
 	if err != nil {
-		return fmt.Errorf("get ascend devices ip failed, err: %v", err)
+		hwlog.RunLog.Errorf("get device list ip failed, error: %v", err)
+		return "", errors.New("get device list ip failed")
 	}
 	info := common.ServerInfo{
 		ServerID:   serverID,
@@ -756,22 +757,58 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 	}
 	configuration := common.GetPodConfiguration(phyDevMapVirtualDev, ascendVisibleDevices,
 		podDev.Pod.Name, info, allDevices)
+	return configuration, nil
+}
+
+// AddPodAnnotation check and update pod annotations
+// correct annotation 'AscendReal', 'Ascend910', 'kltDev', 'ascend-910-configuration' per 5s
+func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceType, serverID string,
+	allDevices []common.NpuDevice) error {
 	if !common.ParamOption.PresetVDevice {
 		tool.AppendVGroupInfo(podDev.RealDevice)
 	}
-	annotation := make(map[string]string, 1)
-	if !common.IsVirtualDev(deviceType) {
-		annotation[api.ResourceNamePrefix+common.Pod2kl] = strings.Join(podDev.KltDevice, common.CommaSepDev)
-		annotation[api.ResourceNamePrefix+common.PodRealAlloc] = strings.Join(podDev.RealDevice, common.CommaSepDev)
+	sort.Strings(podDev.KltDevice)
+	sort.Strings(podDev.RealDevice)
+	allUsedDev := strings.Join(podDev.RealDevice, common.CommaSepDev)
+	annoChecker := []struct {
+		annoKey   string
+		annoValue string
+	}{
+		{annoKey: api.ResourceNamePrefix + common.Pod2kl, annoValue: strings.Join(podDev.KltDevice, common.CommaSepDev)},
+		{annoKey: api.ResourceNamePrefix + common.PodRealAlloc, annoValue: allUsedDev},
+		{annoKey: fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType), annoValue: allUsedDev},
 	}
-	if tool.name == common.Ascend910 || common.IsContainAll300IDuo() {
-		if _, ok := annotation[api.Pod910DeviceAnno]; ok {
-			hwlog.RunLog.Infof("pod %s already has %s annotation", podDev.Pod.Name, api.Pod910DeviceAnno)
-		} else {
-			annotation[api.Pod910DeviceAnno] = configuration
+	annotation := make(map[string]string)
+	if !common.IsVirtualDev(deviceType) {
+		for _, checker := range annoChecker {
+			if podDev.Pod.Annotations[checker.annoKey] != checker.annoValue {
+				hwlog.RunLog.Warnf("need correct: annotKey: %s, old value: %s, new value: %s",
+					checker.annoKey, podDev.Pod.Annotations[checker.annoKey], checker.annoValue)
+				annotation[checker.annoKey] = checker.annoValue
+			}
 		}
 	}
-	return tool.client.TryUpdatePodAnnotation(&podDev.Pod, annotation)
+	if tool.name == common.Ascend910 || common.IsContainAll300IDuo() {
+		config, err := tool.getConfigAnno(podDev, deviceType, serverID, allDevices)
+		if err != nil {
+			return err
+		}
+		if podDev.Pod.Annotations[api.Pod910DeviceAnno] != config {
+			hwlog.RunLog.Warnf("need correct: annotKey: %s, old value: %s, new value: %s",
+				api.Pod910DeviceAnno, podDev.Pod.Annotations[api.Pod910DeviceAnno], config)
+			annotation[api.Pod910DeviceAnno] = config
+		}
+	}
+	if len(annotation) == 0 {
+		hwlog.RunLog.Debug("annotation do not need to be updated")
+		return nil
+	}
+	if err := tool.client.TryUpdatePodAnnotation(&podDev.Pod, annotation); err != nil {
+		hwlog.RunLog.Errorf("correct pod[%s:%s] annotation failed, error: %v", podDev.Pod.Namespace, podDev.Pod.Name, err)
+		return err
+	}
+	hwlog.RunLog.Infof("correct pod[%s:%s] annotation success", podDev.Pod.Namespace, podDev.Pod.Name)
+	return nil
 }
 
 // UpdateHealth update group device healthy

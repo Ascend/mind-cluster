@@ -3938,7 +3938,7 @@ data:
     configurations:
       - name: init-params
         arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
-    "useClusterInfoManager":"true","super-pod-size": "48", "reserve-nodes": "2"}
+    "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "48", "reserve-nodes": "2"}
 
 ---
 # Source: volcano/templates/scheduler.yaml

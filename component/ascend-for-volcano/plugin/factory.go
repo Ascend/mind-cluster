@@ -231,8 +231,9 @@ func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) 
 		sHandle.FrameAttr.NslbVersion = getNslbVersion(configs)
 		sHandle.FrameAttr.SharedTorNum = getShardTorNum(configs)
 		sHandle.FrameAttr.UseClusterD = getUseClusterDConfig(configs)
-		klog.V(util.LogWarningLev).Info("nslbVersion and sharedTorNum  useClusterInfoManager init success.can not " +
-			"change the parameters and it will not be changed during normal operation of the volcano")
+		sHandle.FrameAttr.SelfMaintainAvailCard = getSelfMaintainAvailCard(configs)
+		klog.V(util.LogWarningLev).Info("param nslbVersion, sharedTorNum, useClusterInfoManager and self-maintain-mount-card " +
+			"init success. can not change them and it will not be changed during normal operation of the volcano")
 		klog.V(util.LogWarningLev).Infof("init static parameters, nslbversion is <%v>, SharedTorNum <%v>, UseClusterD"+
 			" is <%v>", sHandle.FrameAttr.NslbVersion, sHandle.FrameAttr.SharedTorNum, sHandle.FrameAttr.UseClusterD)
 	})
@@ -592,6 +593,16 @@ func getUseClusterDConfig(conf map[string]string) bool {
 		return true
 	}
 	return useClusterInfoManager == "true"
+}
+
+// getSelfMaintainAvailCard check volcano self maintain available card by config, default true
+func getSelfMaintainAvailCard(conf map[string]string) bool {
+	selfMaintainAvailCard, ok := conf[util.SelfMaintainAvailCard]
+	if !ok {
+		klog.V(util.LogDebugLev).Info("CheckUseCIMByConfig doesn't exist self-maintain-available-card.")
+		return true
+	}
+	return selfMaintainAvailCard == "true"
 }
 
 // getPresetVirtualDeviceConfig get VNPU segmentEnable by init plugin parameters, return true if static

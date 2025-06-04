@@ -203,12 +203,14 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 	if common.ParamOption.RealCardType != common.Ascend910A3 {
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DescriptionKey:                     common.DescriptionValue}
 	} else {
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DescriptionKey:                     common.DescriptionValue}
 	}
 
 	hwlog.RunLog.Debugf("write device info cache into cm: %s/%s.", deviceInfoCM.Namespace, deviceInfoCM.Name)

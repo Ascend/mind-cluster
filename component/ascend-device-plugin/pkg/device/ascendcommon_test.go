@@ -1034,11 +1034,11 @@ func TestGetRealUsedDevices(t *testing.T) {
 		mockMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetActivePodListCache",
 			func(_ *kubeclient.ClientK8s) []v1.Pod { return pods })
 		defer mockMethod.Reset()
-		usedDevice := tool.getRealUsedDevices()
+		podUsedDev := tool.getRealUsedDevices()
 		// 01-annotationTag has target device, should contain target device
-		convey.So(usedDevice.Has("device1"), convey.ShouldBeTrue)
+		convey.So(podUsedDev.Has("device1"), convey.ShouldBeTrue)
 		// 02-annotationTag has not target device, should not contain target device
-		convey.So(usedDevice.Has("device3"), convey.ShouldBeFalse)
+		convey.So(podUsedDev.Has("device3"), convey.ShouldBeFalse)
 	})
 }
 

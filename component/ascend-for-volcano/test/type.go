@@ -81,6 +81,16 @@ const (
 )
 
 const (
+	defaultNS = "default"
+	taskName1 = "task1"
+	taskName2 = "task2"
+	taskUid1  = "task-uid1"
+	taskUid2  = "task-uid2"
+	podName1  = "pod1"
+	podName2  = "pod2"
+)
+
+const (
 	chipTypeKey    = "node.kubernetes.io/npu.chip.name"
 	fakeChipType   = "B3"
 	fakeChipName   = "910"
