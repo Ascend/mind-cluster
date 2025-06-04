@@ -18,6 +18,7 @@ package example
 import (
 	"ascend-common/common-utils/hwlog"
 	"taskd/framework_backend/manager/infrastructure"
+	"taskd/framework_backend/manager/infrastructure/storage"
 )
 
 const (
@@ -46,7 +47,7 @@ func (e *ExamplePlugin) Register() (string, error) {
 }
 
 // Predicate return the stream request
-func (e *ExamplePlugin) Predicate(snapShot infrastructure.SnapShot) (infrastructure.PredicateResult, error) {
+func (e *ExamplePlugin) Predicate(snapShot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	return infrastructure.PredicateResult{}, nil
 }
 

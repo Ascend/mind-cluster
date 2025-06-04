@@ -18,9 +18,12 @@ package manager
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/application"
+	"taskd/framework_backend/manager/infrastructure/storage"
 )
 
 // ClusterInfo define the information from the cluster
@@ -59,6 +62,10 @@ func NewTaskDManager(config Config) *BaseManager {
 // BaseManager the class taskd manager backend
 type BaseManager struct {
 	Config
+	BusinessHandler *application.BusinessStreamProcessor
+	MsgHd           *application.MsgHandler
+	svcCtx          context.Context
+	cancelFunc      context.CancelFunc
 }
 
 // Init base manger
@@ -67,6 +74,16 @@ func (m *BaseManager) Init() error {
 		fmt.Printf("manager init hwlog failed, err: %v \n", err)
 		return err
 	}
+	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
+	m.MsgHd = application.NewMsgHandler()
+	m.MsgHd.Start(m.svcCtx)
+
+	m.BusinessHandler = application.NewBusinessStreamProcessor(m.MsgHd)
+	if err := m.BusinessHandler.Init(); err != nil {
+		hwlog.RunLog.Errorf("business handler init failed, err: %v", err)
+		return err
+	}
+
 	hwlog.RunLog.Info("manager init success!")
 	return nil
 }
@@ -86,5 +103,25 @@ func (m *BaseManager) Start() error {
 
 // Process task main process
 func (m *BaseManager) Process() error {
+	for {
+		time.Sleep(time.Second)
+		snapshot, err := m.MsgHd.DataPool.GetSnapShot()
+		if err != nil {
+			return fmt.Errorf("get datapool snapshot failed, err: %v", err)
+		}
+		if err := m.Service(snapshot); err != nil {
+			return fmt.Errorf("service execute failed, err: %v", err)
+		}
+		hwlog.RunLog.Infof("manager process loop!")
+	}
+}
+
+// Service for taskd business serve
+func (m *BaseManager) Service(snapshot *storage.SnapShot) error {
+	m.BusinessHandler.AllocateToken(snapshot)
+	if err := m.BusinessHandler.StreamRun(); err != nil {
+		hwlog.RunLog.Errorf("business handler stream run failed, err: %v", err)
+		return err
+	}
 	return nil
 }

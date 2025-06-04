@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"taskd/framework_backend/manager/infrastructure"
+	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/example"
 )
 
@@ -48,7 +49,7 @@ func (m *MockManagerPlugin) Handle() (infrastructure.HandleResult, error) {
 	return args.Get(0).(infrastructure.HandleResult), args.Error(1)
 }
 
-func (m *MockManagerPlugin) Predicate(snapshot infrastructure.SnapShot) (infrastructure.PredicateResult, error) {
+func (m *MockManagerPlugin) Predicate(snapshot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	args := m.Called(snapshot)
 	return args.Get(0).(infrastructure.PredicateResult), args.Error(1)
 }
@@ -144,7 +145,7 @@ func TestHandle_PluginError(t *testing.T) {
 
 func TestPredicate_Success(t *testing.T) {
 	handler := NewPluginHandler()
-	snapshot := infrastructure.SnapShot{}
+	snapshot := storage.SnapShot{}
 
 	// Plugin1: normal return
 	plugin1 := &MockManagerPlugin{}
@@ -167,7 +168,7 @@ func TestPredicate_Success(t *testing.T) {
 	_ = handler.Register("plugin2", plugin2)
 	_ = handler.Register("plugin3", plugin3)
 
-	results := handler.Predicate(snapshot)
+	results := handler.Predicate(&snapshot)
 	assert.Len(t, results, 2) // Only two plugins return results (plugin2 error skipped)
 	assert.Contains(t, results, result1)
 	assert.Contains(t, results, result3)

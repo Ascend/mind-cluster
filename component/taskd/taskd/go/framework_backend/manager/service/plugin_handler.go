@@ -20,6 +20,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/framework_backend/manager/infrastructure"
+	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/example"
 )
 
@@ -78,10 +79,10 @@ func (p *PluginHandler) Handle(pluginName string) (infrastructure.HandleResult, 
 }
 
 // Predicate execute the predicate function of all registered plugin
-func (p *PluginHandler) Predicate(snapshot infrastructure.SnapShot) []infrastructure.PredicateResult {
+func (p *PluginHandler) Predicate(snapshot *storage.SnapShot) []infrastructure.PredicateResult {
 	var predicateResults []infrastructure.PredicateResult
 	for _, plugin := range p.Plugins {
-		result, err := plugin.Predicate(snapshot)
+		result, err := plugin.Predicate(*snapshot)
 		if err != nil {
 			continue
 		}

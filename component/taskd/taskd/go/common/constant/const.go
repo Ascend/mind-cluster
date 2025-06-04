@@ -221,3 +221,17 @@ const (
 	// MgrPort grpc manager ListenAddr port
 	MgrPort = ":9601"
 )
+
+const (
+	// HandleStageInit indicate plugin handle state in start
+	HandleStageInit = "Init"
+	// HandleStageProcess indicate plugin handle state in process
+	HandleStageProcess = "process"
+	// HandleStageFinal indicate plugin handle state in final
+	HandleStageFinal = "Final"
+)
+
+const (
+	// CandidateStatus indicate plugin request stream
+	CandidateStatus = "candidate"
+)

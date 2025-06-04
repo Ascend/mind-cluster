@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package manager for taskd manager backend
-package manager
+// Package application for taskd manager application
+package application
 
 import (
 	"context"

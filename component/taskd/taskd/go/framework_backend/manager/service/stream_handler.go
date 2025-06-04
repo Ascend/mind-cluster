@@ -72,6 +72,13 @@ func (s *StreamHandler) GetStream(streamName string) *infrastructure.Stream {
 	return stream
 }
 
+// GetStreams return all streams
+func (s *StreamHandler) GetStreams() map[string]*infrastructure.Stream {
+	s.StreamsLock.RLock()
+	defer s.StreamsLock.RUnlock()
+	return s.Streams
+}
+
 // AllocateToken allocate stream token to plugin
 func (s *StreamHandler) AllocateToken(streamName, plugin string) error {
 	stream := s.GetStream(streamName)
