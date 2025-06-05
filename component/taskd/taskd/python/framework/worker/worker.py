@@ -56,7 +56,9 @@ class Worker:
             if cython_api.lib is None:
                 run_log.error("the libtaskd.so has not been loaded!")
                 return False
+            run_log.info(f"begin cython_api.lib.StartMonitorClient")
             start_monitor_client_func = cython_api.lib.StartMonitorClient
+            run_log.info(f"end cython_api.lib.StartMonitorClient")
             result = start_monitor_client_func()
             if result == 0:
                 run_log.info(f"Successfully start monitor client for rank:{self.global_rank}")

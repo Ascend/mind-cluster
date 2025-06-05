@@ -16,12 +16,15 @@
 package storage
 
 import (
+	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/toolkit_backend/net/common"
 )
@@ -29,7 +32,7 @@ import (
 // All mock agent,cluster,worker
 var (
 	agentName = "agent1"
-	agentInfo = &Agent{
+	agentInfo = &AgentInfo{
 		Status:    map[string]string{"status1": "value1"},
 		NodeRank:  "1",
 		HeartBeat: time.Now(),
@@ -37,7 +40,7 @@ var (
 		RWMutex:   sync.RWMutex{},
 	}
 	workerName = "worker1"
-	workerInfo = &Worker{
+	workerInfo = &WorkerInfo{
 		Status:     map[string]string{"status1": "value1"},
 		GlobalRank: "1",
 		HeartBeat:  time.Now(),
@@ -45,13 +48,42 @@ var (
 		RWMutex:    sync.RWMutex{},
 	}
 	clusterName = "cluster1"
-	clusterInfo = &Cluster{
+	clusterInfo = &ClusterInfo{
 		Command:   map[string]string{"cmd1": "value1"},
 		HeartBeat: time.Now(),
 		Business:  []int32{0, 0, 0},
 		RWMutex:   sync.RWMutex{},
 	}
+	testPos = &common.Position{
+		Role:        "testRole",
+		ServerRank:  "1",
+		ProcessRank: "0",
+	}
 )
+
+// TestMain test main
+func TestMain(m *testing.M) {
+	if err := setup(); err != nil {
+		return
+	}
+	code := m.Run()
+	fmt.Printf("exit_code = %v\n", code)
+}
+
+func setup() error {
+	return initLog()
+}
+
+func initLog() error {
+	logConfig := &hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
+		fmt.Printf("init hwlog failed, %v\n", err)
+		return err
+	}
+	return nil
+}
 
 func newMsgQueue(length int32) *MsgQueue {
 	return &MsgQueue{Queue: make([]BaseMessage, length), Mutex: sync.Mutex{}}
@@ -61,17 +93,17 @@ func newDataPool() *DataPool {
 	return &DataPool{
 		Snapshot: &SnapShot{
 			AgentInfos: &AgentInfos{
-				Agents:    make(map[string]*Agent),
+				Agents:    make(map[string]*AgentInfo),
 				AllStatus: make(map[string]string),
 				RWMutex:   sync.RWMutex{},
 			},
 			WorkerInfos: &WorkerInfos{
-				Workers:   make(map[string]*Worker),
+				Workers:   make(map[string]*WorkerInfo),
 				AllStatus: make(map[string]string),
 				RWMutex:   sync.RWMutex{},
 			},
 			ClusterInfos: &ClusterInfos{
-				Clusters:  make(map[string]*Cluster),
+				Clusters:  make(map[string]*ClusterInfo),
 				AllStatus: make(map[string]string),
 				RWMutex:   sync.RWMutex{},
 			},
@@ -152,12 +184,12 @@ func TestRegisterWorker(t *testing.T) {
 func TestRegisterCluster(t *testing.T) {
 	dp := newDataPool()
 	convey.Convey("RegisterCluster should add new cluster", t, func() {
-		dp.RegisterCluster(clusterName, clusterInfo)
+		_ = dp.RegisterCluster(clusterName)
 
 		cluster, err := dp.GetCluster(clusterName)
 		convey.So(err, convey.ShouldBeNil)
-		convey.So(len(cluster.Command), convey.ShouldEqual, 1)
-		convey.So(cluster.Business, convey.ShouldResemble, []int32{0, 0, 0})
+		convey.So(len(cluster.Command), convey.ShouldEqual, 0)
+		convey.So(cluster.Business, convey.ShouldResemble, []int32{})
 	})
 }
 
@@ -166,7 +198,7 @@ func TestUpdateAgent(t *testing.T) {
 	dp := newDataPool()
 	convey.Convey("UpdateAgent should modify existing agent", t, func() {
 		_ = dp.RegisterAgent(agentName, agentInfo)
-		updatedAgent := &Agent{
+		updatedAgent := &AgentInfo{
 			Status:    map[string]string{"status1": "updated"},
 			NodeRank:  "2",
 			HeartBeat: time.Now(),
@@ -192,7 +224,7 @@ func TestUpdateWorker(t *testing.T) {
 	dp := newDataPool()
 	convey.Convey("UpdateWorker should modify existing worker", t, func() {
 		_ = dp.RegisterWorker(workerName, workerInfo)
-		updatedWorker := &Worker{
+		updatedWorker := &WorkerInfo{
 			Status:     map[string]string{"status1": "updated"},
 			GlobalRank: "2",
 			HeartBeat:  time.Now(),
@@ -217,9 +249,9 @@ func TestUpdateWorker(t *testing.T) {
 func TestUpdateCluster(t *testing.T) {
 	dp := newDataPool()
 	convey.Convey("UpdateCluster should modify existing cluster", t, func() {
-		dp.RegisterCluster(clusterName, clusterInfo)
+		_ = dp.RegisterCluster(clusterName)
 		business := []int32{0, 0}
-		updatedCluster := &Cluster{
+		updatedCluster := &ClusterInfo{
 			Command:   map[string]string{"cmd1": "updated"},
 			HeartBeat: time.Now(),
 			Business:  business,
@@ -275,7 +307,7 @@ func TestGetWorker(t *testing.T) {
 func TestGetCluster(t *testing.T) {
 	dp := newDataPool()
 	convey.Convey("GetCluster should return cluster info", t, func() {
-		dp.RegisterCluster(clusterName, clusterInfo)
+		_ = dp.RegisterCluster(clusterName)
 
 		cluster, err := dp.GetCluster(clusterName)
 		convey.So(err, convey.ShouldBeNil)
@@ -289,20 +321,66 @@ func TestGetCluster(t *testing.T) {
 	})
 }
 
+func TestGetPos(t *testing.T) {
+	dp := newDataPool()
+	_ = dp.RegisterAgent(agentName, &AgentInfo{Pos: testPos})
+	_ = dp.RegisterWorker(workerName, &WorkerInfo{Pos: testPos})
+	convey.Convey("Test get agent pos success return agent pos", t, func() {
+		pos, err := dp.GetPos(common.AgentRole, agentName)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(pos, convey.ShouldNotBeNil)
+		convey.So(pos.Role, convey.ShouldEqual, testPos.Role)
+		convey.So(pos.ServerRank, convey.ShouldEqual, testPos.ServerRank)
+	})
+	convey.Convey("Test get worker pos success return worker pos", t, func() {
+		pos, err := dp.GetPos(common.WorkerRole, workerName)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(pos, convey.ShouldNotBeNil)
+		convey.So(pos.Role, convey.ShouldEqual, testPos.Role)
+	})
+	convey.Convey("Test get agent pos, agent is unregistered return error", t, func() {
+		_, err := dp.GetPos(common.AgentRole, "unregistered_agent")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "agent name is unregistered : unregistered_agent")
+	})
+	convey.Convey("Test get worker pos, worker is unregistered return error", t, func() {
+		_, err := dp.GetPos(common.WorkerRole, "unregistered_worker")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "worker name is unregistered : unregistered_worker")
+	})
+	convey.Convey("Test get pos, type is invalid return error", t, func() {
+		_, err := dp.GetPos("invalid_type", agentName)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid info type")
+	})
+	convey.Convey("Test get agent pos, pos is nil return error", t, func() {
+		_ = dp.RegisterAgent("no_pos_agent", &AgentInfo{Pos: nil})
+		_, err := dp.GetPos(common.AgentRole, "no_pos_agent")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "agent name is unregistered : no_pos_agent")
+	})
+	convey.Convey("Test get worker pos, pos is nil return error", t, func() {
+		_ = dp.RegisterWorker("no_pos_worker", &WorkerInfo{Pos: nil})
+		_, err := dp.GetPos(common.WorkerRole, "no_pos_worker")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "worker name is unregistered : no_pos_worker")
+	})
+}
+
 // TestGetSnapShot test get data pool snapshot
 func TestGetSnapShot(t *testing.T) {
 	convey.Convey("TestGetSnapShot test get data pool snapshot success", t, func() {
 		snapshot := &SnapShot{
 			AgentInfos: &AgentInfos{
-				Agents:    map[string]*Agent{"nilAgent": nil, agentName: agentInfo},
+				Agents:    map[string]*AgentInfo{"nilAgent": nil, agentName: agentInfo},
 				AllStatus: map[string]string{"status": "value1"},
 			},
 			WorkerInfos: &WorkerInfos{
-				Workers:   map[string]*Worker{"nilWorker": nil, workerName: workerInfo},
+				Workers:   map[string]*WorkerInfo{"nilWorker": nil, workerName: workerInfo},
 				AllStatus: map[string]string{"status": "value1"},
 			},
 			ClusterInfos: &ClusterInfos{
-				Clusters:  map[string]*Cluster{"nilCluster": nil, clusterName: clusterInfo},
+				Clusters:  map[string]*ClusterInfo{"nilCluster": nil, clusterName: clusterInfo},
 				AllStatus: map[string]string{"status": "value1"},
 			},
 		}

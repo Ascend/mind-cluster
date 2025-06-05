@@ -20,9 +20,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
@@ -201,4 +203,58 @@ func CopyStringMap(src map[string]string) map[string]string {
 		dst[k] = v
 	}
 	return dst
+}
+
+// SliceContains judge slice contain some item
+func SliceContains[T comparable](slice []T, one T) bool {
+	for _, item := range slice {
+		if item == one {
+			return true
+		}
+	}
+	return false
+}
+
+// ParseProfilingDomainCmd convert string to ProfilingDomainCmd
+func ParseProfilingDomainCmd(defaultDomainCmd string, commDomainCmd string) (constant.ProfilingDomainCmd, error) {
+	var switchOff = constant.ProfilingDomainCmd{
+		DefaultDomainAble: false,
+		CommDomainAble:    false,
+	}
+	defaultDomainOpen, err := strconv.ParseBool(defaultDomainCmd)
+	if err != nil {
+		return switchOff, fmt.Errorf("get DefaultDomainCmd %s err: %v", defaultDomainCmd, err)
+	}
+	commDomainOpen, err := strconv.ParseBool(commDomainCmd)
+	if err != nil {
+		return switchOff, fmt.Errorf("get commDomainCmd %s err: %v", commDomainCmd, err)
+	}
+	return constant.ProfilingDomainCmd{
+		DefaultDomainAble: defaultDomainOpen,
+		CommDomainAble:    commDomainOpen,
+	}, nil
+}
+
+// ProfilingCmdToBizCode convert code to ProfilingDomainCmd
+func ProfilingCmdToBizCode(cmd constant.ProfilingDomainCmd) int32 {
+	if cmd.DefaultDomainAble && !cmd.CommDomainAble {
+		return constant.ProfilingDefaultDomainOnCode
+	}
+	if !cmd.DefaultDomainAble && cmd.CommDomainAble {
+		return constant.ProfilingCommDomainOnCode
+	}
+	if cmd.DefaultDomainAble && cmd.CommDomainAble {
+		return constant.ProfilingAllOnCmdCode
+	}
+	return constant.ProfilingAllCloseCmdCode
+}
+
+func GetClusterdAddr() (string, error) {
+	ipFromEnv := os.Getenv(constant.MindxServerIp)
+	parsedIP := net.ParseIP(ipFromEnv)
+	if parsedIP == nil {
+		return "", fmt.Errorf("%s is NOT a valid IP address", ipFromEnv)
+
+	}
+	return ipFromEnv + constant.ClusterdPort, nil
 }

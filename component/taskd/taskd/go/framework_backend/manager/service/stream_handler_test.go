@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"ascend-common/common-utils/hwlog"
+	"taskd/common/constant"
 )
 
 func init() {
@@ -36,17 +37,17 @@ func TestStreamHandler_Init(t *testing.T) {
 	sh := NewStreamHandler()
 	err := sh.Init()
 	assert.NoError(t, err)
-	assert.NotNil(t, sh.Streams["ProfilingCollect"])
-	assert.Equal(t, "ProfilingCollect", sh.Streams["ProfilingCollect"].Name)
+	assert.NotNil(t, sh.Streams[constant.ProfilingStream])
+	assert.Equal(t, constant.ProfilingStream, sh.Streams[constant.ProfilingStream].Name)
 }
 
 // Test getting an existing stream
 func TestGetStream_Exist(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	stream := sh.GetStream("ProfilingCollect")
+	stream := sh.GetStream(constant.ProfilingStream)
 	assert.NotNil(t, stream)
-	assert.Equal(t, "ProfilingCollect", stream.Name)
+	assert.Equal(t, constant.ProfilingStream, stream.Name)
 }
 
 // Test getting a non-existing stream
@@ -61,7 +62,7 @@ func TestGetStream_NotExist(t *testing.T) {
 func TestAllocateToken_Success(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	err := sh.AllocateToken("ProfilingCollect", "plugin1")
+	err := sh.AllocateToken(constant.ProfilingStream, "plugin1")
 	assert.NoError(t, err)
 }
 
@@ -77,8 +78,8 @@ func TestAllocateToken_StreamNotExist(t *testing.T) {
 func TestAllocateToken_Duplicate(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	_ = sh.AllocateToken("ProfilingCollect", "plugin1")
-	err := sh.AllocateToken("ProfilingCollect", "plugin1")
+	_ = sh.AllocateToken(constant.ProfilingStream, "plugin1")
+	err := sh.AllocateToken(constant.ProfilingStream, "plugin1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "bind plugin failed")
 }
@@ -87,8 +88,8 @@ func TestAllocateToken_Duplicate(t *testing.T) {
 func TestReleaseToken_Success(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	_ = sh.AllocateToken("ProfilingCollect", "plugin1")
-	err := sh.ReleaseToken("ProfilingCollect", "plugin1")
+	_ = sh.AllocateToken(constant.ProfilingStream, "plugin1")
+	err := sh.ReleaseToken(constant.ProfilingStream, "plugin1")
 	assert.NoError(t, err)
 }
 
@@ -96,7 +97,7 @@ func TestReleaseToken_Success(t *testing.T) {
 func TestReleaseToken_NotAllocated(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	err := sh.ReleaseToken("ProfilingCollect", "plugin1")
+	err := sh.ReleaseToken(constant.ProfilingStream, "plugin1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "release failed")
 }
@@ -105,10 +106,10 @@ func TestReleaseToken_NotAllocated(t *testing.T) {
 func TestResetToken(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	_ = sh.AllocateToken("ProfilingCollect", "plugin1")
-	err := sh.ResetToken("ProfilingCollect")
+	_ = sh.AllocateToken(constant.ProfilingStream, "plugin1")
+	err := sh.ResetToken(constant.ProfilingStream)
 	assert.NoError(t, err)
-	assert.Empty(t, sh.GetStream("ProfilingCollect").GetTokenOwner())
+	assert.Empty(t, sh.GetStream(constant.ProfilingStream).GetTokenOwner())
 }
 
 // Test resetting non-existing stream
@@ -124,7 +125,7 @@ func TestPrioritize(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
 	requests := []string{"req3", "req1", "req2"}
-	sorted, err := sh.Prioritize("ProfilingCollect", requests)
+	sorted, err := sh.Prioritize(constant.ProfilingStream, requests)
 	assert.NoError(t, err)
 	expected := []string{"req1", "req2", "req3"} // Assuming Stream.Prioritize sorts alphabetically
 	assert.Equal(t, expected, sorted)
@@ -134,8 +135,8 @@ func TestPrioritize(t *testing.T) {
 func TestIsStreamWork_True(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	_ = sh.AllocateToken("ProfilingCollect", "plugin1")
-	working, err := sh.IsStreamWork("ProfilingCollect")
+	_ = sh.AllocateToken(constant.ProfilingStream, "plugin1")
+	working, err := sh.IsStreamWork(constant.ProfilingStream)
 	assert.NoError(t, err)
 	assert.True(t, working)
 }
@@ -144,7 +145,7 @@ func TestIsStreamWork_True(t *testing.T) {
 func TestIsStreamWork_False(t *testing.T) {
 	sh := NewStreamHandler()
 	_ = sh.Init()
-	working, err := sh.IsStreamWork("ProfilingCollect")
+	working, err := sh.IsStreamWork(constant.ProfilingStream)
 	assert.NoError(t, err)
 	assert.False(t, working)
 }

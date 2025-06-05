@@ -16,6 +16,8 @@
 # ==============================================================================
 from taskd.api.taskd_manager_api import init_taskd_manager,start_taskd_manager
 from taskd.api.taskd_worker_api import init_taskd_worker,start_taskd_worker
+from taskd.api.taskd_agent_api import init_taskd_agent,start_taskd_agent,register_func
+from taskd.api.taskd_proxy_api import init_taskd_proxy,destroy_taskd_proxy
 
-__all__ = ['init_taskd_manager', 'start_taskd_manager', 'init_taskd_worker', 'start_taskd_worker']
-
+__all__ = ['init_taskd_manager', 'start_taskd_manager', 'init_taskd_worker', 'start_taskd_worker',\
+     'init_taskd_agent', 'start_taskd_agent', 'register_func', 'init_taskd_proxy', 'destroy_taskd_proxy']

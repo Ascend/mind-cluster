@@ -115,7 +115,7 @@ class MsAgent(BaseAgent):
         if not self.check_new_fault(fault_ranks):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
             return
-        report_info = AgentReportInfo(FaultRanks=fault_ranks)
+        report_info = AgentReportInfo(fault_ranks=fault_ranks)
         self.send_message_to_manager('STATUS', REPORT_CODE, report_info)
         self.local_fault_rank = fault_ranks
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
@@ -133,7 +133,7 @@ class MsAgent(BaseAgent):
     def exit_agent(self, msg):
         run_log.info(f'receive {msg.MsgType} command, start to exit agent')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
-        self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo(Info='EXIT AGENT'))
+        self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):

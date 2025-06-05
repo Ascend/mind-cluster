@@ -26,6 +26,8 @@ const (
 	// LogFileName default log file name
 	LogFileName          = "taskd.log"
 	WorkerLogPathPattern = "taskd-worker-%s.log"
+	// ProxyLogPathPattern for proxy log path pattern
+	ProxyLogPathPattern = "taskd-proxy-%s.log"
 )
 
 const (
@@ -211,3 +213,55 @@ var ProfilingUnknownStatus = NewProfilingExecRes(Unknown)
 var ProfilingOnStatus = NewProfilingExecRes(On)
 var ProfilingOffStatus = NewProfilingExecRes(Off)
 var ProfilingExpStatus = NewProfilingExecRes(Exp)
+
+// All grpc ip must be defined here
+const (
+	// DefaultIP grpc manager ListenAddr default ip
+	DefaultIP = "127.0.0.1"
+	// MgrPort grpc manager ListenAddr port
+	MgrPort      = ":9601"
+	ProxyPort    = ":9602"
+	ClusterdPort = ":8899"
+)
+
+const (
+	// HandleStageInit indicate plugin handle state in start
+	HandleStageInit = "Init"
+	// HandleStageProcess indicate plugin handle state in process
+	HandleStageProcess = "process"
+	// HandleStageFinal indicate plugin handle state in final
+	HandleStageFinal = "Final"
+)
+
+const (
+	// CandidateStatus indicate plugin request stream
+	CandidateStatus = "candidate"
+)
+
+// All kind of ProfilingWorkerState
+var ProfilingWorkerOpenedState = NewWorkerProfilingState(Opened)
+var ProfilingWorkerClosedState = NewWorkerProfilingState(Closed)
+var ProfilingWorkerWaitOpenState = NewWorkerProfilingState(WaitOpen)
+var ProfilingWorkerExceptionState = NewWorkerProfilingState(Exception)
+var ProfilingWorkerWaitCloseState = NewWorkerProfilingState(WaitClose)
+
+// Profiling states
+const (
+	Opened    = "opened"
+	Closed    = "closed"
+	WaitOpen  = "waitOpen"
+	Exception = "exception"
+	WaitClose = "waitClose"
+	Invalid   = "Invalid"
+)
+
+// All env variables
+const (
+	MindxServerIp = "MINDX_SERVER_IP"
+)
+
+// StreamName and PluginName
+const (
+	ProfilingStream     = "ProfilingCollect"
+	ProfilingPluginName = "ProfilingPlugin"
+)

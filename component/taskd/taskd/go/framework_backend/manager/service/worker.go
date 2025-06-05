@@ -51,19 +51,19 @@ func (mpc *MsgProcessor) workerHandler(dataPool *storage.DataPool, data storage.
 }
 
 func (mpc *MsgProcessor) workerRegister(dataPool *storage.DataPool, data storage.BaseMessage) error {
-	workerInfo := &storage.Worker{
+	workerInfo := &storage.WorkerInfo{
 		Status:     map[string]string{constant.REGISTER: constant.REGISTER},
-		GlobalRank: data.Header.Src.ServerRank,
+		GlobalRank: data.Header.Src.ProcessRank,
 		Pos:        data.Header.Src,
 		HeartBeat:  time.Now(),
 		RWMutex:    sync.RWMutex{},
 	}
-	workerName := data.Header.Src.Role + data.Header.Src.ServerRank
+	workerName := data.Header.Src.Role + data.Header.Src.ProcessRank
 	err := dataPool.RegisterWorker(workerName, workerInfo)
 	return err
 }
 
-func (mpc *MsgProcessor) workerStatus(data storage.BaseMessage, workerInfo *storage.Worker) error {
+func (mpc *MsgProcessor) workerStatus(data storage.BaseMessage, workerInfo *storage.WorkerInfo) error {
 	statusType := utils.GetThousandsAndHundreds(data.Body.Code)
 	switch statusType {
 	case constant.ProfilingAllCloseCode:
@@ -73,7 +73,7 @@ func (mpc *MsgProcessor) workerStatus(data storage.BaseMessage, workerInfo *stor
 	}
 }
 
-func profilingStatus(data storage.BaseMessage, workerInfo *storage.Worker) error {
+func profilingStatus(data storage.BaseMessage, workerInfo *storage.WorkerInfo) error {
 	commDomainStatus := utils.GetOnesDigit(data.Body.Code)
 	defaultDomainStatus := utils.GetTensDigit(data.Body.Code)
 	statusMap := map[int32]string{

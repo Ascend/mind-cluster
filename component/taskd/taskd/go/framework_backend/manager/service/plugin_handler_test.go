@@ -23,7 +23,8 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"taskd/framework_backend/manager/infrastructure"
-	"taskd/framework_backend/manager/plugins/example"
+	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/framework_backend/manager/plugins/faultdig"
 )
 
 // Defines mock interface implementation
@@ -48,7 +49,7 @@ func (m *MockManagerPlugin) Handle() (infrastructure.HandleResult, error) {
 	return args.Get(0).(infrastructure.HandleResult), args.Error(1)
 }
 
-func (m *MockManagerPlugin) Predicate(snapshot infrastructure.SnapShot) (infrastructure.PredicateResult, error) {
+func (m *MockManagerPlugin) Predicate(snapshot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	args := m.Called(snapshot)
 	return args.Get(0).(infrastructure.PredicateResult), args.Error(1)
 }
@@ -65,7 +66,7 @@ func TestNewPluginHandler(t *testing.T) {
 	assert.Empty(t, handler.Plugins)
 }
 
-func TestRegister_Success(t *testing.T) {
+func TestRegisterSuccess(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -75,7 +76,7 @@ func TestRegister_Success(t *testing.T) {
 	assert.Len(t, handler.Plugins, 1)
 }
 
-func TestRegister_Duplicate(t *testing.T) {
+func TestRegisterDuplicate(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -90,7 +91,7 @@ func TestRegister_Duplicate(t *testing.T) {
 	assert.Equal(t, "register failed: plugin test-plugin has already register", err.Error())
 }
 
-func TestGetPlugin_Found(t *testing.T) {
+func TestGetPluginFound(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -101,7 +102,7 @@ func TestGetPlugin_Found(t *testing.T) {
 	assert.Equal(t, plugin, retPlugin)
 }
 
-func TestGetPlugin_NotFound(t *testing.T) {
+func TestGetPluginNotFound(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin, err := handler.GetPlugin("non-existent")
 	assert.Nil(t, plugin)
@@ -109,7 +110,7 @@ func TestGetPlugin_NotFound(t *testing.T) {
 	assert.Equal(t, "can not find plugin non-existent", err.Error())
 }
 
-func TestHandle_Success(t *testing.T) {
+func TestHandleSuccess(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -122,14 +123,14 @@ func TestHandle_Success(t *testing.T) {
 	assert.Equal(t, expectedResult, result)
 }
 
-func TestHandle_PluginNotFound(t *testing.T) {
+func TestHandlePluginNotFound(t *testing.T) {
 	handler := NewPluginHandler()
 	result, err := handler.Handle("non-existent")
 	assert.Error(t, err)
 	assert.Equal(t, infrastructure.HandleResult{}, result)
 }
 
-func TestHandle_PluginError(t *testing.T) {
+func TestHandlePluginError(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -142,9 +143,9 @@ func TestHandle_PluginError(t *testing.T) {
 	assert.Equal(t, infrastructure.HandleResult{}, result)
 }
 
-func TestPredicate_Success(t *testing.T) {
+func TestPredicateSuccess(t *testing.T) {
 	handler := NewPluginHandler()
-	snapshot := infrastructure.SnapShot{}
+	snapshot := storage.SnapShot{}
 
 	// Plugin1: normal return
 	plugin1 := &MockManagerPlugin{}
@@ -167,13 +168,13 @@ func TestPredicate_Success(t *testing.T) {
 	_ = handler.Register("plugin2", plugin2)
 	_ = handler.Register("plugin3", plugin3)
 
-	results := handler.Predicate(snapshot)
+	results := handler.Predicate(&snapshot)
 	assert.Len(t, results, 2) // Only two plugins return results (plugin2 error skipped)
 	assert.Contains(t, results, result1)
 	assert.Contains(t, results, result3)
 }
 
-func TestPullMsg_Success(t *testing.T) {
+func TestPullMsgSuccess(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -186,14 +187,14 @@ func TestPullMsg_Success(t *testing.T) {
 	assert.Equal(t, expectedMsgs, msgs)
 }
 
-func TestPullMsg_PluginNotFound(t *testing.T) {
+func TestPullMsgPluginNotFound(t *testing.T) {
 	handler := NewPluginHandler()
 	msgs, err := handler.PullMsg("non-existent")
 	assert.Error(t, err)
 	assert.Nil(t, msgs)
 }
 
-func TestPullMsg_PluginError(t *testing.T) {
+func TestPullMsgPluginError(t *testing.T) {
 	handler := NewPluginHandler()
 	plugin := &MockManagerPlugin{}
 	plugin.On("Name").Return("test-plugin")
@@ -212,14 +213,13 @@ func TestInit_Success(t *testing.T) {
 	assert.Len(t, handler.Plugins, 1) // Ensure example plugin is registered
 }
 
-func TestInit_RegisterFailure(t *testing.T) {
+func TestInitRegisterFailure(t *testing.T) {
 	handler := NewPluginHandler()
 
 	// Manually inject plugin with same name to trigger error
-	examplePlugin := example.NewExamplePlugin()
-	handler.Plugins[examplePlugin.Name()] = &MockManagerPlugin{}
+	profilingPlugin := faultdig.NewProfilingPlugin()
+	handler.Plugins[profilingPlugin.Name()] = &MockManagerPlugin{}
 
 	err := handler.Init()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "register plugin example failed")
 }

@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package manager for taskd manager backend
-package manager
+// Package application for taskd manager application
+package application
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
+	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/service"
 	"taskd/toolkit_backend/net"
@@ -50,17 +51,17 @@ func NewMsgHandler() *MsgHandler {
 		DataPool: &storage.DataPool{
 			Snapshot: &storage.SnapShot{
 				AgentInfos: &storage.AgentInfos{
-					Agents:    map[string]*storage.Agent{},
+					Agents:    map[string]*storage.AgentInfo{},
 					AllStatus: map[string]string{},
 					RWMutex:   sync.RWMutex{},
 				},
 				WorkerInfos: &storage.WorkerInfos{
-					Workers:   map[string]*storage.Worker{},
+					Workers:   map[string]*storage.WorkerInfo{},
 					AllStatus: map[string]string{},
 					RWMutex:   sync.RWMutex{},
 				},
 				ClusterInfos: &storage.ClusterInfos{
-					Clusters:  map[string]*storage.Cluster{},
+					Clusters:  map[string]*storage.ClusterInfo{},
 					AllStatus: map[string]string{},
 					RWMutex:   sync.RWMutex{},
 				},
@@ -86,7 +87,7 @@ func (mhd *MsgHandler) Start(ctx context.Context) {
 func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	ip := os.Getenv("POD_IP")
 	if ip == "" {
-		ip = "127.0.0.1"
+		ip = constant.DefaultIP
 	}
 	tool, err := net.InitNetwork(&common.TaskNetConfig{
 		Pos: common.Position{
@@ -94,7 +95,7 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 			ServerRank:  "0",
 			ProcessRank: "-1",
 		},
-		ListenAddr: ip + ":5555",
+		ListenAddr: ip + constant.MgrPort,
 	})
 	if err != nil {
 		return err, nil
@@ -134,6 +135,7 @@ func (mhd *MsgHandler) processOne(ctx context.Context) {
 			if err != nil {
 				continue
 			}
+			hwlog.RunLog.Debugf("dequeue msg: %v", msg)
 			err = mhd.Processor.MsgProcessor(mhd.DataPool, msg)
 			if err != nil {
 				hwlog.RunLog.Error(err)
@@ -147,7 +149,7 @@ func (mhd *MsgHandler) receiver(tool *net.NetInstance, ctx context.Context) {
 		go func() {
 			msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool, ctx)
 			if err != nil {
-				mhd.SendMsgToMgr(msg.Uuid, msg.BizType, msg.Src, msgBody)
+				mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
 			}
 		}()
 	}

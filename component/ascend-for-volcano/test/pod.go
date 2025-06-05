@@ -22,6 +22,7 @@ package test
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -185,4 +186,36 @@ func AddTestTaskLabel(task *api.TaskInfo, labelKey, labelValue string) {
 		task.Pod.Labels = make(map[string]string, npuIndex3)
 	}
 	task.Pod.Labels[labelKey] = labelValue
+}
+
+// FakeTaskInfo fake task info for node
+func FakeTaskInfo(podUsedCard1, podUsedCard2 []string) map[api.TaskID]*api.TaskInfo {
+	pod1 := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName1,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{util.HwPreName + util.Ascend910: strings.Join(podUsedCard1, ",")},
+		},
+	}
+	taskInfo1 := &api.TaskInfo{
+		UID:       taskUid1,
+		Name:      taskName1,
+		Namespace: defaultNS,
+		Pod:       pod1,
+	}
+
+	pod2 := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        podName2,
+			Namespace:   defaultNS,
+			Annotations: map[string]string{util.HwPreName + util.Ascend910: strings.Join(podUsedCard2, ",")},
+		},
+	}
+	taskInfo2 := &api.TaskInfo{
+		UID:       taskUid2,
+		Name:      taskName2,
+		Namespace: defaultNS,
+		Pod:       pod2,
+	}
+	return map[api.TaskID]*api.TaskInfo{taskInfo1.UID: taskInfo1, taskInfo2.UID: taskInfo2}
 }

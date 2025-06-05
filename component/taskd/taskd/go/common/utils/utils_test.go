@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -28,8 +29,10 @@ import (
 )
 
 const (
-	tryTime = 10
-	anyPath = "/a/b/c"
+	tryTime      = 10
+	anyPath      = "/a/b/c"
+	anyCorrectIp = "127.0.0.1"
+	anfWrongIp   = "abc.aaa.333.1111.44"
 )
 
 func TestGetProfilingSwitchValidJson(t *testing.T) {
@@ -126,5 +129,21 @@ func TestBizCodeToProfilingCmd(t *testing.T) {
 	convey.ShouldBeTrue(cmd.CommDomainAble)
 	convey.ShouldBeTrue(cmd.DefaultDomainAble)
 	_, err = BizCodeToProfilingCmd(0)
+	convey.ShouldNotBeNil(err)
+}
+
+func TestGetClusterdAddr(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	defer patches.Reset()
+	patches.ApplyFunc(os.Getenv, func(string) string {
+		return anyCorrectIp
+	})
+	addr, err := GetClusterdAddr()
+	convey.ShouldBeNil(err)
+	convey.ShouldEqual(addr, anyCorrectIp+constant.ClusterdPort)
+	patches.ApplyFunc(os.Getenv, func(string) string {
+		return anfWrongIp
+	})
+	addr, err = GetClusterdAddr()
 	convey.ShouldNotBeNil(err)
 }

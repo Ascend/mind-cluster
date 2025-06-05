@@ -19,6 +19,8 @@ Package util is using for the total variable.
 */
 package util
 
+import "regexp"
+
 const (
 	// LogErrorLev for log error.
 	LogErrorLev = 1
@@ -136,11 +138,20 @@ const (
 	// Ascend910bName for judge Ascend910b npu resource.
 	Ascend910bName = "huawei.com/Ascend910b"
 
+	// Ascend310P device type 310P
+	Ascend310P = "Ascend310P"
+	// Ascend310 device type 310
+	Ascend310 = "Ascend310"
+	// Ascend910 device type 910
+	Ascend910 = "Ascend910"
+
 	// SegmentEnable for VNPU segment enable flag. Default is "false".
 	SegmentEnable = "presetVirtualDevice"
 
-	// UseClusterInfoManager for use cluster info manager , default is true
+	// UseClusterInfoManager for use cluster info manager, default is true
 	UseClusterInfoManager = "useClusterInfoManager"
+	// SelfMaintainAvailCard for volcano self maintain available card, default is true
+	SelfMaintainAvailCard = "self-maintain-available-card"
 
 	// SubHealthyStrategyLabel sub-healthy handle strategy. default is grace exit
 	SubHealthyStrategyLabel = "subHealthyStrategy"
@@ -330,6 +341,28 @@ const (
 	Abstain = 0
 	// Reject indicates  rejects job to be pipelined
 	Reject = -1
+)
+
+const (
+	// Namespace check item podName namespace
+	Namespace = "namespace"
+	// PodName check item podName
+	PodName = "podName"
+	// PodNameMaxLength pod name max length
+	PodNameMaxLength = 253
+	// PodNameSpaceMaxLength pod namespace max length
+	PodNameSpaceMaxLength = 63
+	// PodAnnotationMaxLength pod annotation max data length 1MB
+	PodAnnotationMaxLength = 1024 * 1024
+	// MaxDevicesNum max device num
+	MaxDevicesNum = 100
+)
+
+var (
+	podRegexp = map[string]*regexp.Regexp{
+		Namespace: regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
+		PodName:   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+	}
 )
 
 // VTemplate for vNode resource

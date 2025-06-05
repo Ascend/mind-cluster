@@ -5,6 +5,7 @@ package statistics
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -37,14 +38,14 @@ func testUpdateFault() {
 	// ctx stop
 	StatisticFault.updateChan = make(chan struct{}, 1)
 	ctx, cancel := context.WithCancel(context.Background())
-	haveStopped := false
+	haveStopped := atomic.Bool{}
 	go func() {
 		StatisticFault.UpdateFault(ctx)
-		haveStopped = true
+		haveStopped.Store(true)
 	}()
 	cancel()
 	time.Sleep(waitGoroutineFinishedTime)
-	convey.So(haveStopped, convey.ShouldBeTrue)
+	convey.So(haveStopped.Load(), convey.ShouldBeTrue)
 
 	// notify updateChan
 	StatisticFault.Notify()

@@ -20,18 +20,20 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"taskd/common/utils"
 	"taskd/toolkit_backend/net/common"
 )
 
 // WorkerInfos all worker infos
 type WorkerInfos struct {
-	Workers   map[string]*Worker
+	Workers   map[string]*WorkerInfo
 	AllStatus map[string]string
 	RWMutex   sync.RWMutex
 }
 
-// Worker the worker info
-type Worker struct {
+// WorkerInfo the worker info
+type WorkerInfo struct {
 	Config     map[string]string
 	Actions    map[string]string
 	Status     map[string]string
@@ -42,30 +44,40 @@ type Worker struct {
 	RWMutex    sync.RWMutex
 }
 
-func (w *WorkerInfos) registerWorker(workerName string, workerInfo *Worker) error {
+func (w *WorkerInfos) registerWorker(workerName string, workerInfo *WorkerInfo) error {
 	w.RWMutex.Lock()
-	defer w.RWMutex.Unlock()
 	w.Workers[workerName] = workerInfo
+	w.RWMutex.Unlock()
+	hwlog.RunLog.Infof("register worker name:%v agentInfo:%v", workerName, utils.ObjToString(workerInfo))
 	return nil
 }
 
-func (w *WorkerInfos) getWorker(workerName string) (*Worker, error) {
+func (w *WorkerInfos) getWorker(workerName string) (*WorkerInfo, error) {
 	if worker, exists := w.Workers[workerName]; exists {
 		return worker.getWorker()
 	}
 	return nil, fmt.Errorf("worker name is unregistered : %v", workerName)
 }
 
-func (w *Worker) getWorker() (*Worker, error) {
+func (w *WorkerInfo) getWorker() (*WorkerInfo, error) {
 	w.RWMutex.RLock()
 	defer w.RWMutex.RUnlock()
-	return w, nil
+	return &WorkerInfo{
+		Config:     w.Config,
+		Actions:    w.Actions,
+		Status:     w.Status,
+		GlobalRank: w.GlobalRank,
+		HeartBeat:  w.HeartBeat,
+		FaultInfo:  w.FaultInfo,
+		Pos:        w.Pos,
+		RWMutex:    sync.RWMutex{},
+	}, nil
 }
 
-func (w *WorkerInfos) updateWorker(workerName string, newWorker *Worker) error {
+func (w *WorkerInfos) updateWorker(workerName string, newWorker *WorkerInfo) error {
 	w.Workers[workerName].RWMutex.Lock()
 	defer w.Workers[workerName].RWMutex.Unlock()
-	w.Workers[workerName] = &Worker{
+	w.Workers[workerName] = &WorkerInfo{
 		Config:     newWorker.Config,
 		Actions:    newWorker.Actions,
 		Status:     newWorker.Status,

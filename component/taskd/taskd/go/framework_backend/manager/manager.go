@@ -18,9 +18,20 @@ package manager
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
+	"time"
+
+	"github.com/google/uuid"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/interface/grpc/profiling"
+	"taskd/common/constant"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/application"
+	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/toolkit_backend/net/common"
 )
 
 // ClusterInfo define the information from the cluster
@@ -59,7 +70,17 @@ func NewTaskDManager(config Config) *BaseManager {
 // BaseManager the class taskd manager backend
 type BaseManager struct {
 	Config
+	BusinessHandler       *application.BusinessStreamProcessor
+	MsgHd                 *application.MsgHandler
+	svcCtx                context.Context
+	cancelFunc            context.CancelFunc
+	profilingFromClusterD atomic.Bool
 }
+
+const (
+	roleTaskd       = "taskd"
+	maxRegRetryTime = 60
+)
 
 // Init base manger
 func (m *BaseManager) Init() error {
@@ -67,6 +88,18 @@ func (m *BaseManager) Init() error {
 		fmt.Printf("manager init hwlog failed, err: %v \n", err)
 		return err
 	}
+	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
+	m.MsgHd = application.NewMsgHandler()
+	m.MsgHd.Start(m.svcCtx)
+
+	m.BusinessHandler = application.NewBusinessStreamProcessor(m.MsgHd)
+	if err := m.BusinessHandler.Init(); err != nil {
+		hwlog.RunLog.Errorf("business handler init failed, err: %v", err)
+		return err
+	}
+	go m.registerClusterD(0)
+	go m.watchProfilingCmdChange()
+
 	hwlog.RunLog.Info("manager init success!")
 	return nil
 }
@@ -86,5 +119,152 @@ func (m *BaseManager) Start() error {
 
 // Process task main process
 func (m *BaseManager) Process() error {
+	for {
+		time.Sleep(time.Second)
+		snapshot, err := m.MsgHd.DataPool.GetSnapShot()
+		if err != nil {
+			return fmt.Errorf("get datapool snapshot failed, err: %v", err)
+		}
+		if err := m.Service(snapshot); err != nil {
+			return fmt.Errorf("service execute failed, err: %v", err)
+		}
+		hwlog.RunLog.Infof("manager process loop!")
+	}
+}
+
+// Service for taskd business serve
+func (m *BaseManager) Service(snapshot *storage.SnapShot) error {
+	m.BusinessHandler.AllocateToken(snapshot)
+	if err := m.BusinessHandler.StreamRun(); err != nil {
+		hwlog.RunLog.Errorf("business handler stream run failed, err: %v", err)
+		return err
+	}
 	return nil
+}
+
+func (m *BaseManager) registerClusterD(retryTime time.Duration) {
+	if retryTime >= maxRegRetryTime {
+		hwlog.RunLog.Error("init clusterd connect meet max retry time")
+		return
+	}
+	time.Sleep(retryTime * time.Second)
+	addr, err := utils.GetClusterdAddr()
+	if err != nil {
+		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
+		return
+	}
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
+		m.registerClusterD(retryTime + 1)
+		return
+	}
+
+	go m.subscribeProfiling(conn, 0)
+}
+
+func (m *BaseManager) subscribeProfiling(conn *grpc.ClientConn, retryTime time.Duration) {
+	m.profilingFromClusterD.Store(false)
+	if retryTime >= maxRegRetryTime {
+		hwlog.RunLog.Error("register Cluster profiling meet max retry time")
+		return
+	}
+	time.Sleep(retryTime * time.Second)
+	traceClient := profiling.NewTrainingDataTraceClient(conn)
+	stream, err := traceClient.SubscribeDataTraceSwitch(m.svcCtx, &profiling.ProfilingClientInfo{
+		JobId: m.JobId,
+		Role:  roleTaskd,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("register Cluster profiling fail, err: %v", err)
+		go m.subscribeProfiling(conn, retryTime+1)
+		return
+	}
+	m.profilingFromClusterD.Store(true)
+	for {
+		select {
+		case <-m.svcCtx.Done():
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			return
+		case <-stream.Context().Done():
+			hwlog.RunLog.Info("client stream exit, stop subscribe profiling info and re-register")
+			go m.subscribeProfiling(conn, retryTime+1)
+			return
+		default:
+			responseMsg, recvErr := stream.Recv()
+			if recvErr != nil {
+				hwlog.RunLog.Error(recvErr)
+			} else {
+				hwlog.RunLog.Infof("receive profiling info: %v", responseMsg)
+				profilingMsg := responseMsg.GetProfilingSwitch()
+				// notify framework receive profiling msg
+				domainSwitch := utils.PfSwitchToPfDomainSwitch(convertProfilingMsg(profilingMsg))
+				m.enqueueProfilingSwitch(domainSwitch, constant.ClusterDRank)
+			}
+		}
+	}
+}
+
+func (m *BaseManager) enqueueProfilingSwitch(cmd constant.ProfilingDomainCmd, whichServer string) {
+	message := storage.BaseMessage{
+		Header: storage.MsgHeader{
+			BizType: "default",
+			Uuid:    uuid.New().String(),
+			Src: &common.Position{
+				Role:       constant.ClusterRole,
+				ServerRank: whichServer,
+			},
+			Timestamp: time.Now(),
+		},
+		Body: storage.MsgBody{
+			MsgType: constant.Action,
+			Code:    utils.ProfilingCmdToBizCode(cmd),
+		},
+	}
+	err := m.MsgHd.MsgQueue.Enqueue(message)
+	if err != nil {
+		hwlog.RunLog.Infof("%s enqueue profiling cmd %v err %v", whichServer, cmd, err)
+		return
+	}
+	hwlog.RunLog.Infof("%s enqueue profiling cmd %v", whichServer, cmd)
+}
+
+func (m *BaseManager) watchProfilingCmdChange() {
+	hwlog.RunLog.Info("begin watch ProfilingSwitchFilePath...")
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-m.svcCtx.Done():
+			hwlog.RunLog.Info("end watch ProfilingSwitchFilePath...")
+			return
+		case <-ticker.C:
+			if m.profilingFromClusterD.Load() {
+				hwlog.RunLog.Infof("manager register clusterd, donot watch profiling file.")
+				return
+			}
+			m.getProfilingFromFile()
+		}
+	}
+}
+
+func (m *BaseManager) getProfilingFromFile() {
+	profilingSwitch, err := utils.GetProfilingSwitch(constant.ProfilingSwitchFilePath)
+	if err != nil {
+		hwlog.RunLog.Errorf("GetProfilingSwitch err: %v", err)
+		return
+	}
+	domainSwitch := utils.PfSwitchToPfDomainSwitch(profilingSwitch)
+	m.enqueueProfilingSwitch(domainSwitch, constant.TaskDRank)
+}
+
+func convertProfilingMsg(profilingSwitchData *profiling.ProfilingSwitch) constant.ProfilingSwitch {
+	profilingSwitch := constant.ProfilingSwitch{
+		CommunicationOperator: profilingSwitchData.CommunicationOperator,
+		Step:                  profilingSwitchData.Step,
+		SaveCheckpoint:        profilingSwitchData.SaveCheckpoint,
+		FP:                    profilingSwitchData.FP,
+		DataLoader:            profilingSwitchData.DataLoader,
+	}
+	return profilingSwitch
 }

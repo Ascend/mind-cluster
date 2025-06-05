@@ -20,7 +20,8 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/framework_backend/manager/infrastructure"
-	"taskd/framework_backend/manager/plugins/example"
+	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/framework_backend/manager/plugins/faultdig"
 )
 
 // PluginHandler is defined to handle plugins operation
@@ -30,10 +31,10 @@ type PluginHandler struct {
 
 // Init register all plugin
 func (p *PluginHandler) Init() error {
-	plugin := example.NewExamplePlugin()
-	if err := p.Register(plugin.Name(), plugin); err != nil {
-		hwlog.RunLog.Errorf("register plugin %s failed!", plugin.Name())
-		return fmt.Errorf("register plugin %s failed", plugin.Name())
+	profilingPlugin := faultdig.NewProfilingPlugin()
+	if err := p.Register(profilingPlugin.Name(), profilingPlugin); err != nil {
+		hwlog.RunLog.Errorf("register plugin %s failed!", profilingPlugin.Name())
+		return fmt.Errorf("register plugin %s failed", profilingPlugin.Name())
 	}
 	return nil
 }
@@ -78,10 +79,10 @@ func (p *PluginHandler) Handle(pluginName string) (infrastructure.HandleResult, 
 }
 
 // Predicate execute the predicate function of all registered plugin
-func (p *PluginHandler) Predicate(snapshot infrastructure.SnapShot) []infrastructure.PredicateResult {
+func (p *PluginHandler) Predicate(snapshot *storage.SnapShot) []infrastructure.PredicateResult {
 	var predicateResults []infrastructure.PredicateResult
 	for _, plugin := range p.Plugins {
-		result, err := plugin.Predicate(snapshot)
+		result, err := plugin.Predicate(*snapshot)
 		if err != nil {
 			continue
 		}

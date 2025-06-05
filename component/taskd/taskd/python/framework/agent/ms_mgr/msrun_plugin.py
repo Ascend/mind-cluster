@@ -22,9 +22,10 @@ from taskd.python.toolkit.fault_checker.fault_check import fault_processor, grac
     force_exit_pids
 from taskd.python.toolkit.constants import constants
 from taskd.python.toolkit.constants.constants import KILL_ALL_WORKERS, KILL_ALL_WORKER_CALLBACK_NAME, \
-    START_ALL_WORKER_CALLBACK_NAME, MONITOR_CALLBACK_NAME, KILL_INTERVAL
+    START_ALL_WORKER_CALLBACK_NAME, MONITOR_CALLBACK_NAME, KILL_INTERVAL, START_WORKER_LIST_CALLBACK_NAME
 from taskd.python.utils.log import run_log
-from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank
+from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank, \
+    calculate_local_rank_by_global_rank
 from taskd.python.toolkit.recover_module import shared_data
 from taskd.python.toolkit.recover_module.recover_manager import init_grpc_client, register_callback_func, \
     init_grpc_recover_manager, init_grpc_process
@@ -59,11 +60,13 @@ class MSRunPlugin:
         self.rank_info = {}
         # The global rank corresponding to the local rank, which is the value of the global rank.
         self.node_global_rank_ids = []
+        self.local_rank_to_pid = {}
 
         # The previously recorded faulty ranks are used to determine whether the ranks have been updated.
         self.pre_fault_ranks = None
         # Record all the faulty ranks from the reset CM, not just the local ranks.
         self.fault_ranks = None
+        self.restart_fault_process = False
         self.retry_time = 0
         self.pre_retry_time = 0
         self.grace_exit = None
@@ -93,6 +96,23 @@ class MSRunPlugin:
                 start_worker_func()
                 run_log.info("all training processes has been started")
                 break
+            time.sleep(constants.WAITING_INTERVAL)
+            init_time = init_time + constants.WAITING_INTERVAL
+
+    def start_mindspore_worker_list(self, global_rank_list: list):
+        local_rank_list = calculate_local_rank_by_global_rank(global_rank_list)
+        start_worker_list_func = self.__func_map.get(START_WORKER_LIST_CALLBACK_NAME)
+        init_time = 0
+        while True:
+            if init_time >= constants.INIT_TIMEOUT:
+                raise ValueError("failed to start worker list, initialized timeout")
+            run_log.warning(f"self.wait_to_start():{self.wait_to_start()}")
+            if self.wait_to_start():
+                run_log.info(f"nodeRank:{self.ms_node_rank} will start worker list, global rank:{global_rank_list},"
+                             f" local rank:{local_rank_list}")
+                start_worker_list_func(local_rank_list)
+                run_log.info(f"training process list has been started, global rank:{global_rank_list},"
+                             f" local rank:{local_rank_list}")
             time.sleep(constants.WAITING_INTERVAL)
             init_time = init_time + constants.WAITING_INTERVAL
 
@@ -155,7 +175,7 @@ class MSRunPlugin:
                     fault_status = True
                 if status == "unrecovered" or status == "recovered":
                     unrecovered_status = True
-        return FaultStatus(fault_local_ranks, fault_status, unrecovered_status, retry_status)
+        return FaultStatus(fault_local_ranks, fault_status, unrecovered_status, retry_status, self.restart_fault_process)
 
     def read_rank_table_version(self) -> int:
         version = safe_get_file_info(self.rank_version_path).strip()
@@ -167,9 +187,11 @@ class MSRunPlugin:
     def start(self):
         kill_worker_func = self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)
         start_worker_func = self.__func_map.get(START_ALL_WORKER_CALLBACK_NAME)
+        start_single_worker_func = self.__func_map.get(START_WORKER_LIST_CALLBACK_NAME)
         # {rank_0: {pid: pidNum, status: status code}，1：status code …..}
         monitor_func = self.__func_map.get(MONITOR_CALLBACK_NAME)
-        if kill_worker_func is None or start_worker_func is None or monitor_func is None:
+        if (kill_worker_func is None or start_worker_func is None or monitor_func is None or
+                start_single_worker_func is None):
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")
 
         # First, start the MindSpore training.
@@ -207,7 +229,8 @@ class MSRunPlugin:
             # The exit of pods with non-faulty ranks is covered by the following two scenarios.
             # process fault clusterd will write rank， if fault_status.is_retried and not fault_status.is_unrecovered
             # retry be wrotten by clusterd，status as fault,
-            self._handle_fault_status(fault_status)
+            if self._handle_fault_status(fault_status):
+                continue
             # When there is no fault_rank but the retry_time has increased,
             # it covers the single-Pod rescheduling scenario [business-side fault].
             # The process-level recovery scenario is not enabled. After a fault is detected,
@@ -243,6 +266,7 @@ class MSRunPlugin:
         all_succeed = True
         rank_pids = []
         local_rank_ids = []
+        local_rank_to_pid = {}
         for _, details in rank_status_dict.items():
             # if process is in ok, not start yet[msrun taken over by taskd, monitor maybe called before training],
             # sleeping[during process recover]
@@ -254,9 +278,11 @@ class MSRunPlugin:
                 all_succeed = False
             rank_pids.append(details[constants.RANK_PID_KEY])
             local_rank_ids.append(details[constants.GLOBAL_RANK_ID_KEY])
+            local_rank_to_pid[details[constants.GLOBAL_RANK_ID_KEY]] = details[constants.RANK_PID_KEY]
         self.rank_pids = rank_pids
         self.node_global_rank_ids = local_rank_ids
         self.all_rank_succeed = all_succeed
+        self.local_rank_to_pid = local_rank_to_pid
         if all_healthy:
             self.rank_status = self.RANK_STATUS_HEALTHY
 
@@ -267,6 +293,7 @@ class MSRunPlugin:
         self.retry_time = reset_data.retry_time
         self.grace_exit = reset_data.grace_exit
         self.restart_type = reset_data.restart_type
+        self.restart_fault_process = reset_data.restart_fault_process
 
     def update_pre_fault_infos(self):
         self.pre_retry_time = self.retry_time
@@ -279,6 +306,7 @@ class MSRunPlugin:
         fault_ranks, retry_time = reset_data.fault_ranks, reset_data.retry_time
         fault_flush = reset_data.fault_flush
         self.pre_retry_time = retry_time
+        self.restart_fault_process = reset_data.restart_fault_process
         if fault_flush:
             return False
 
@@ -313,8 +341,18 @@ class MSRunPlugin:
 
     def _handle_fault_status(self, fault_status):
         if not fault_status.is_fault:
-            return
+            return False
         run_log.warning(f"nodeRank:{self.ms_node_rank}  entering fault_status.is_fault")
+        if self.ms_node_rank != "0" and self.restart_fault_process and \
+                os.getenv(constants.ENABLE_RESTART_FAULT_PROCESS_ENV) == "on":
+            run_log.info(f"restart part workers, fault global rank:{fault_status.local_ranks}")
+            fault_pid_list = [self.local_rank_to_pid.get(locak_rank) for locak_rank in fault_status.local_ranks \
+                           if locak_rank in self.local_rank_to_pid]
+            if len(fault_pid_list) > 0:
+                self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
+                force_exit_pids(fault_pid_list)
+                self.start_mindspore_worker_list(fault_status.local_ranks)
+                return True
         self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)([KILL_ALL_WORKERS])
         force_exit_pids(self.rank_pids)
         run_log.warning(f"local rank got fault, will stop worker{self.node_global_rank_ids}")
@@ -367,6 +405,33 @@ class MSRunPlugin:
 
     def _handle_exist_unhealthy_process(self):
         if self.rank_status in {self.RANK_STATUS_UNHEALTHY}:
+            if self.ms_node_rank != "0" and os.getenv(constants.ENABLE_RESTART_FAULT_PROCESS_ENV) == "on":
+                run_log.warning(f"nodeRank:{self.ms_node_rank} some rank is unhealthy, "
+                                f"waiting for cluster notify fault rank")
+                init_time = 0
+                can_restart_process = False
+                fault_status = self.get_fault_status()
+                while True:
+                    run_log.debug(f"waiting for cluster notify fault status:{fault_status}")
+                    if init_time >= constants.INIT_RESET_CHANGE_TIMEOUT:
+                        run_log.warning("waiting for cluster notify fault status timeout")
+                        break
+                    if fault_status.is_fault:
+                        if fault_status.restart_fault_process:
+                            can_restart_process = True
+                        break
+                    fault_status = self.get_fault_status()
+                    time.sleep(constants.WAITING_RESET_CHANGE_INTERVAL)
+                    init_time = init_time + constants.WAITING_RESET_CHANGE_INTERVAL
+                fault_pid_list = [self.local_rank_to_pid.get(local_rank) for local_rank in \
+                                  fault_status.local_ranks if local_rank in self.local_rank_to_pid]
+                if can_restart_process and len(fault_pid_list) > 0:
+                    run_log.info(f"nodeRank:{self.ms_node_rank} restart part workers, fault global rank:"
+                                 f"{fault_status.local_ranks}")
+                    self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
+                    force_exit_pids(fault_pid_list)
+                    self.start_mindspore_worker_list(fault_status.local_ranks)
+                    return
             run_log.warning(f"nodeRank:{self.ms_node_rank} some rank is unhealthy will stop workers, "
                             f"and exit this node")
             if self.ms_node_rank == "0":

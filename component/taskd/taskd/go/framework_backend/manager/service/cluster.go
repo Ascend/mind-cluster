@@ -18,7 +18,6 @@ package service
 import (
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"taskd/common/constant"
@@ -27,12 +26,9 @@ import (
 
 func (mpc *MsgProcessor) clusterHandler(dataPool *storage.DataPool, data storage.BaseMessage) error {
 	clusterName := data.Header.Src.ServerRank
-	var clusterInfo = &storage.Cluster{RWMutex: sync.RWMutex{}}
-	cluster, err := dataPool.GetCluster(clusterName)
+	clusterInfo, err := dataPool.GetCluster(clusterName)
 	if err != nil {
-		dataPool.RegisterCluster(clusterName, clusterInfo)
-	} else {
-		clusterInfo = cluster
+		clusterInfo = dataPool.RegisterCluster(clusterName)
 	}
 	switch data.Body.MsgType {
 	case constant.Action:

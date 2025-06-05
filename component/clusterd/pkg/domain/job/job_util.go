@@ -51,6 +51,9 @@ func PreDeleteCmAndCache(jobKey string) {
 	if !ok {
 		return
 	}
+	if jobInfo.AddTime == 0 {
+		jobInfo.AddTime = time.Now().Unix()
+	}
 	jobInfo.IsPreDelete = true
 	// when a job is deleted, if it is not in a successful state, it must be in a failed state
 	if jobInfo.Status != StatusJobCompleted {
@@ -91,7 +94,6 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	jobInfo.Status = StatusJobPending
 	jobInfo.IsPreDelete = false
 	jobInfo.JobRankTable = constant.RankTable{}
-	jobInfo.AddTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo, defaultHcclJson, operatorAdd))
 	if initCM(jobInfo) {
@@ -114,6 +116,7 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
 	jobInfo.CustomJobID = pgInfo.Annotations[CustomJobID]
 	jobInfo.MultiInstanceJobId = pgInfo.Labels[constant.MindIeJobIdLabelKey]
 	jobInfo.AppType = pgInfo.Labels[constant.MindIeAppTypeLabelKey]
+	jobInfo.AddTime = time.Now().Unix()
 	return jobInfo
 }
 
@@ -122,6 +125,9 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	podsInJob map[string]v1.Pod) {
 	if jobInfo.Name == "" {
 		jobInfo = getJobBasicInfoByPG(podGroup)
+	}
+	if jobInfo.AddTime == 0 {
+		jobInfo.AddTime = time.Now().Unix()
 	}
 	jobInfo.Status = status
 	jobInfo.IsPreDelete = false

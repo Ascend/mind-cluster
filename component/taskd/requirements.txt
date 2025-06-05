@@ -1,5 +1,3 @@
-torch >= 2.1.0
-torch_npu
 grpcio >= 1.62.2
 protobuf >= 4.24.4
 pyOpenSSL

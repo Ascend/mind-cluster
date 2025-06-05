@@ -15,6 +15,8 @@
 // Package infrastructure for taskd manager backend infrastructure
 package infrastructure
 
+import "taskd/framework_backend/manager/infrastructure/storage"
+
 // PredicateResult indicate predicate result from plugin
 type PredicateResult struct {
 	// PluginName indicate plugin name
@@ -39,32 +41,14 @@ type HandleResult struct {
 type Msg struct {
 	// Receiver indicate all message receives
 	Receiver []string
-	// Code indicate the message code
-	Code string
 	// Body indicate the message body
-	Body MsgBody
-}
-
-// MsgBody defines the message body
-type MsgBody struct {
-	// Type indicate the message type
-	Type string
-	// Code indicate the message code
-	Code string
-	// Message indicate the message context
-	Message string
-	// Extension indicate the extension
-	Extension map[string]string
-}
-
-// SnapShot defines the snapshot
-type SnapShot struct {
+	Body storage.MsgBody
 }
 
 // ManagerPlugin defines the interface for management plugins
 type ManagerPlugin interface {
 	Name() string
-	Predicate(shot SnapShot) (PredicateResult, error)
+	Predicate(shot storage.SnapShot) (PredicateResult, error)
 	Release() error
 	Handle() (HandleResult, error)
 	PullMsg() ([]Msg, error)

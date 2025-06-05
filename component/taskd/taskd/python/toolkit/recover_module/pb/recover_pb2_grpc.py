@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import recover_pb2 as recover__pb2
+from . import recover_pb2 as recover__pb2
 
 
 class RecoverStub(object):

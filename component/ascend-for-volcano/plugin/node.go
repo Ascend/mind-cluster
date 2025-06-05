@@ -392,8 +392,9 @@ func (sHandle *ScheduleHandler) getNeedInitNodeList(ssn *framework.Session) []*a
 }
 
 func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
-	// 1.obtain device infos ,and if node not in session, its device info should not keep in cache
-	deviceInfos := k8s.GetDeviceInfosAndSetInformerStart(nodeList, sHandle.FrameAttr.UseClusterD)
+	// 1.obtain device infos, and if node not in session, its device info should not keep in cache
+	deviceInfos := k8s.GetDeviceInfosAndSetInformerStart(nodeList, sHandle.FrameAttr.UseClusterD,
+		sHandle.FrameAttr.SelfMaintainAvailCard)
 	// 2. obtain node infos of noded configmap
 	nodeInfosOfNodeD := k8s.GetNodeDInfos(nodeList)
 	// 3. obtain switch infos of switch configmap

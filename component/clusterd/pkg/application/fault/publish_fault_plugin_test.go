@@ -5,6 +5,7 @@ package fault
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -173,14 +174,14 @@ func TestCheckFaultFromFaultCenter(t *testing.T) {
 		service := fakeFaultService()
 		ctx, cancel := context.WithCancel(context.Background())
 		service.serviceCtx = ctx
-		success := false
+		success := atomic.Bool{}
 		go func() {
 			service.checkFaultFromFaultCenter()
-			success = true
+			success.Store(true)
 		}()
 		cancel()
 		time.Sleep(sleepTime)
-		convey.So(success, convey.ShouldBeTrue)
+		convey.So(success.Load(), convey.ShouldBeTrue)
 	})
 }
 

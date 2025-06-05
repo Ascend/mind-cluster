@@ -11,6 +11,10 @@ func (ctl *EventController) getExtendPreRules() []common.TransRule {
 	return []common.TransRule{
 		{Src: common.NotifyDecidedStrategyState, Event: common.WaitHCCLRoutingConvergenceFail,
 			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
+		{Src: common.NotifyDecidedStrategyState, Event: common.KillPodAfterRestartProcessEvent,
+			Dst: common.KillPodForChooseStrategyAgainState, Handler: ctl.handleKillPod},
+		{Src: common.KillPodForChooseStrategyAgainState, Event: common.FinishKillPodEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
 	}
 }
 

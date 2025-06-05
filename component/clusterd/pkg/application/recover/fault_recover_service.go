@@ -107,6 +107,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		controller.jobInfo.JobId, common.Faults2String(grpcFormatFaults))
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
+	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
 
 	controller.addEvent(common.FaultOccurEvent)
 }
@@ -412,6 +413,7 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	if !common.IsRetryFault(request.FaultRanks) {
 		// when config only support dump strategy, in order to be able to dump directly, set healthState to UnHealthy
 		controller.healthState = constant.UnHealthyState
+		controller.restartFaultProcess = common.CanRestartFaultProcess(request.JobId, nil)
 		controller.addEvent(common.FaultOccurEvent)
 	} else {
 		if faultmanager.GlobalFaultProcessCenter != nil {

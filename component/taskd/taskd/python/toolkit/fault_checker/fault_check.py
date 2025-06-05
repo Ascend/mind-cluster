@@ -89,20 +89,24 @@ def stop_pids(pids):
 
 
 class ResetCmData:
-    def __init__(self, fault_ranks, retry_time, grace_exit, restart_type, fault_flush: bool = False):
+    def __init__(self, fault_ranks, retry_time, grace_exit, restart_type, fault_flush: bool = False,
+                 restart_fault_process: bool = False):
         self.fault_ranks = fault_ranks
         self.retry_time = retry_time
         self.grace_exit = grace_exit
         self.restart_type = restart_type
         self.fault_flush = fault_flush
+        self.restart_fault_process = restart_fault_process
 
 
 class FaultStatus:
-    def __init__(self, fault_ranks: list, fault_status: bool, unrecovered_status: bool, retry_status: bool):
+    def __init__(self, fault_ranks: list, fault_status: bool, unrecovered_status: bool, retry_status: bool,
+                 restart_fault_process: bool):
         self.local_ranks = fault_ranks
         self.is_fault = fault_status
         self.is_unrecovered = unrecovered_status
         self.is_retried = retry_status
+        self.restart_fault_process = restart_fault_process
 
 
 class FaultProcessor:
@@ -116,6 +120,7 @@ class FaultProcessor:
         self.restart_type = ""
         self.pre_fault_ranks = []
         self.fault_ranks = []
+        self.restart_fault_process = False
         self.rank_table_version = 0
         self.check_watchdog()
 
@@ -218,7 +223,7 @@ class FaultProcessor:
                     fault_status = True
                 if status == constants.VALUE_UNRECOVERED or status == constants.VALUE_RECOVERED:
                     unrecovered_status = True
-        return FaultStatus(fault_local_ranks, fault_status, unrecovered_status, retry_status)
+        return FaultStatus(fault_local_ranks, fault_status, unrecovered_status, retry_status, self.restart_fault_process)
 
     def update_fault_info(self):
         self.pre_retry_time = self.retry_time
@@ -239,9 +244,13 @@ class FaultProcessor:
         grace_exit = 0
         restart_type = ""
         fault_flush = False
+        restart_fault_process = False
         if constants.KEY_FAULT_FLUSH in file_content.keys() \
                 and isinstance(file_content[constants.KEY_FAULT_FLUSH], bool):
             fault_flush = file_content[constants.KEY_FAULT_FLUSH]
+        if constants.KEY_RESTART_FAULT_PROCESS in file_content.keys() \
+                and isinstance(file_content[constants.KEY_RESTART_FAULT_PROCESS], bool):
+            restart_fault_process = file_content[constants.KEY_RESTART_FAULT_PROCESS]
         if constants.KEY_RANK_LIST in file_content.keys() and isinstance(file_content[constants.KEY_RANK_LIST], list):
             fault_ranks = []
             for raw_rank in file_content[constants.KEY_RANK_LIST]:
@@ -256,9 +265,10 @@ class FaultProcessor:
             restart_type = file_content[constants.KEY_RESTART_TYPE]
         fault_ranks.sort(key=self._get_rank_id)
         cm_infos = f'get reset config from file, retry_time={retry_time}, restart_type={restart_type},' \
-                   f' grace_exit={grace_exit}, fault_flush={fault_flush}, fault_ranks={fault_ranks}'
+                   f' grace_exit={grace_exit}, fault_flush={fault_flush}, fault_ranks={fault_ranks},' \
+                   f' restart_fault_process={restart_fault_process}'
         run_log.debug(cm_infos)
-        return ResetCmData(fault_ranks, retry_time, grace_exit, restart_type, fault_flush)
+        return ResetCmData(fault_ranks, retry_time, grace_exit, restart_type, fault_flush, restart_fault_process)
 
     def _update_reset_info(self):
         reset_data = self.get_reset_info_from_cm()
@@ -266,6 +276,7 @@ class FaultProcessor:
         self.retry_time = reset_data.retry_time
         self.grace_exit = reset_data.grace_exit
         self.restart_type = reset_data.restart_type
+        self.restart_fault_process = reset_data.restart_fault_process
 
     def _get_reset_config(self) -> dict:
         try:

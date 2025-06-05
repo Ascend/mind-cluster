@@ -46,7 +46,7 @@ func (mpc *MsgProcessor) agentHandler(dataPool *storage.DataPool, data storage.B
 }
 
 func (mpc *MsgProcessor) agentRegister(dataPool *storage.DataPool, data storage.BaseMessage) error {
-	agentInfo := &storage.Agent{
+	agentInfo := &storage.AgentInfo{
 		Status:    map[string]string{constant.REGISTER: constant.REGISTER},
 		NodeRank:  data.Header.Src.ServerRank,
 		Pos:       data.Header.Src,
@@ -59,7 +59,7 @@ func (mpc *MsgProcessor) agentRegister(dataPool *storage.DataPool, data storage.
 }
 
 func (mpc *MsgProcessor) agentStatus(dataPool *storage.DataPool, data storage.BaseMessage, agentName string,
-	agentInfo *storage.Agent) error {
+	agentInfo *storage.AgentInfo) error {
 	switch data.Body.Code {
 	case constant.RestartTimeCode:
 		agentInfo.Status[constant.ReportRestartTime] = data.Body.Message

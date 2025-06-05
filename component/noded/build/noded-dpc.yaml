@@ -122,4 +122,3 @@ spec:
         - name: dpcstatus
           hostPath:
             path: /proc/odcs
-            type: DirectoryOrCreate

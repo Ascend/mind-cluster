@@ -405,6 +405,27 @@ func IsHcclRetryFault(faultCode string) bool {
 	return false
 }
 
+// GetRetryTypeByFaultCode get retry fault type by fault code
+func GetRetryTypeByFaultCode(faultCode string) string {
+	if IsUceFault(faultCode) {
+		return constant.UceFaultType
+	} else if IsHcclRetryFault(faultCode) {
+		return constant.HcclFaultType
+	}
+	return constant.NormalFaultType
+}
+
+// GetRetryCodeByFaultType get retry fault code by fault type
+func GetRetryCodeByFaultType(faultType string) string {
+	var faultCode string
+	if faultType == constant.UceFaultType {
+		faultCode = constant.UceFaultCode
+	} else if faultType == constant.HcclFaultType {
+		faultCode = constant.HcclRetryFaultCode
+	}
+	return faultCode
+}
+
 // IsCqeFault check faultCode is cqe fault
 func IsCqeFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.DevCqeFaultCode) ||
@@ -420,6 +441,16 @@ func IsLinkDownFault(faultCode string) bool {
 func IsUceAccompanyFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.AicFaultCode) ||
 		strings.Contains(faultCode, constant.AivFaultCode)
+}
+
+// IsL2L3Fault check faultLevel is L2 or L3
+func IsL2L3Fault(faultLevel string) bool {
+	return faultLevel == constant.RestartRequest || faultLevel == constant.RestartBusiness
+}
+
+// IsL1Fault check faultLevel is L1
+func IsL1Fault(faultLevel string) bool {
+	return faultLevel == constant.NotHandleFault
 }
 
 // IsDeviceFaultEqual check two DeviceFault is equal
@@ -476,18 +507,18 @@ func GetContainedElementIdx(element string, stringList []string) int {
 	return -1
 }
 
-// CanDoStepRetry check RetryDeviceInfo can do step retry
-func CanDoStepRetry(retryDevice *constant.RetryDeviceInfo) bool {
-	if retryDevice.RecoverTime == constant.JobNotRecover {
+// CanDoStepRetry check DeviceFaultDetail can do step retry
+func CanDoStepRetry(faultDetail *constant.DeviceFaultDetail) bool {
+	if faultDetail.RecoverTime == constant.JobNotRecover {
 		return false
 	}
-	if time.Now().UnixMilli()-constant.JobReportRecoverTimeout <= retryDevice.RecoverTime {
+	if time.Now().UnixMilli()-constant.JobReportRecoverTimeout <= faultDetail.RecoverTime {
 		return true
 	}
-	if retryDevice.FaultTime == constant.DeviceNotFault {
+	if faultDetail.FaultTime == constant.DeviceNotFault {
 		return false
 	}
-	if retryDevice.FaultTime+constant.JobReportRecoverTimeout >= retryDevice.RecoverTime {
+	if faultDetail.FaultTime+constant.JobReportRecoverTimeout >= faultDetail.RecoverTime {
 		return true
 	}
 	return false

@@ -20,18 +20,20 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"taskd/common/utils"
 	"taskd/toolkit_backend/net/common"
 )
 
 // AgentInfos all agent infos
 type AgentInfos struct {
-	Agents    map[string]*Agent
+	Agents    map[string]*AgentInfo
 	AllStatus map[string]string
 	RWMutex   sync.RWMutex
 }
 
-// Agent the agent info
-type Agent struct {
+// AgentInfo the agent info
+type AgentInfo struct {
 	Config    map[string]string
 	Actions   map[string]string
 	Status    map[string]string
@@ -42,30 +44,40 @@ type Agent struct {
 	RWMutex   sync.RWMutex
 }
 
-func (a *AgentInfos) registerAgent(agentName string, agentInfo *Agent) error {
+func (a *AgentInfos) registerAgent(agentName string, agentInfo *AgentInfo) error {
 	a.RWMutex.Lock()
-	defer a.RWMutex.Unlock()
 	a.Agents[agentName] = agentInfo
+	a.RWMutex.Unlock()
+	hwlog.RunLog.Infof("register agent name:%v agentInfo:%v", agentName, utils.ObjToString(agentInfo))
 	return nil
 }
 
-func (a *AgentInfos) getAgent(agentName string) (*Agent, error) {
+func (a *AgentInfos) getAgent(agentName string) (*AgentInfo, error) {
 	if agent, exists := a.Agents[agentName]; exists {
 		return agent.getAgent()
 	}
 	return nil, fmt.Errorf("agent name is unregistered : %v", agentName)
 }
 
-func (a *Agent) getAgent() (*Agent, error) {
+func (a *AgentInfo) getAgent() (*AgentInfo, error) {
 	a.RWMutex.RLock()
 	defer a.RWMutex.RUnlock()
-	return a, nil
+	return &AgentInfo{
+		Config:    a.Config,
+		Actions:   a.Actions,
+		Status:    a.Status,
+		NodeRank:  a.NodeRank,
+		HeartBeat: a.HeartBeat,
+		FaultInfo: a.FaultInfo,
+		Pos:       a.Pos,
+		RWMutex:   sync.RWMutex{},
+	}, nil
 }
 
-func (a *AgentInfos) updateAgent(agentName string, newAgent *Agent) error {
+func (a *AgentInfos) updateAgent(agentName string, newAgent *AgentInfo) error {
 	a.Agents[agentName].RWMutex.Lock()
 	defer a.Agents[agentName].RWMutex.Unlock()
-	a.Agents[agentName] = &Agent{
+	a.Agents[agentName] = &AgentInfo{
 		Config:    newAgent.Config,
 		Actions:   newAgent.Actions,
 		Status:    newAgent.Status,

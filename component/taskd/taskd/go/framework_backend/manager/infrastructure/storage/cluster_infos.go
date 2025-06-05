@@ -20,18 +20,20 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"taskd/common/utils"
 	"taskd/toolkit_backend/net/common"
 )
 
 // ClusterInfos all cluster infos
 type ClusterInfos struct {
-	Clusters  map[string]*Cluster
+	Clusters  map[string]*ClusterInfo
 	AllStatus map[string]string
 	RWMutex   sync.RWMutex
 }
 
-// Cluster the cluster info
-type Cluster struct {
+// ClusterInfo the cluster info
+type ClusterInfo struct {
 	Command   map[string]string
 	Business  []int32
 	HeartBeat time.Time
@@ -40,29 +42,46 @@ type Cluster struct {
 	RWMutex   sync.RWMutex
 }
 
-func (c *ClusterInfos) registerCluster(clusterName string, clusterInfo *Cluster) {
+func (c *ClusterInfos) registerCluster(clusterName string) *ClusterInfo {
 	c.RWMutex.Lock()
-	defer c.RWMutex.Unlock()
+	clusterInfo := &ClusterInfo{
+		Command:   make(map[string]string),
+		Business:  make([]int32, 0),
+		HeartBeat: time.Now(),
+		FaultInfo: make(map[string]string),
+		Pos:       &common.Position{},
+		RWMutex:   sync.RWMutex{},
+	}
 	c.Clusters[clusterName] = clusterInfo
+	c.RWMutex.Unlock()
+	hwlog.RunLog.Infof("register cluster name:%v agentInfo:%v", clusterName, utils.ObjToString(clusterInfo))
+	return clusterInfo
 }
 
-func (c *ClusterInfos) getCluster(clusterName string) (*Cluster, error) {
+func (c *ClusterInfos) getCluster(clusterName string) (*ClusterInfo, error) {
 	if cluster, exists := c.Clusters[clusterName]; exists {
 		return cluster.getCluster()
 	}
 	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
 }
 
-func (c *Cluster) getCluster() (*Cluster, error) {
+func (c *ClusterInfo) getCluster() (*ClusterInfo, error) {
 	c.RWMutex.RLock()
 	defer c.RWMutex.RUnlock()
-	return c, nil
+	return &ClusterInfo{
+		Command:   c.Command,
+		Business:  c.Business,
+		HeartBeat: c.HeartBeat,
+		FaultInfo: c.FaultInfo,
+		Pos:       c.Pos,
+		RWMutex:   sync.RWMutex{},
+	}, nil
 }
 
-func (c *ClusterInfos) updateCluster(clusterName string, newCluster *Cluster) error {
+func (c *ClusterInfos) updateCluster(clusterName string, newCluster *ClusterInfo) error {
 	c.Clusters[clusterName].RWMutex.Lock()
 	defer c.Clusters[clusterName].RWMutex.Unlock()
-	c.Clusters[clusterName] = &Cluster{
+	c.Clusters[clusterName] = &ClusterInfo{
 		Command:   newCluster.Command,
 		Business:  newCluster.Business,
 		HeartBeat: newCluster.HeartBeat,

@@ -77,11 +77,13 @@ func (up *upStreamEndpoint) close() {
 func (up *upStreamEndpoint) resetNet() {
 	if up.stream != nil {
 		err := up.stream.CloseSend()
-		hwlog.RunLog.Errorf("close stream error: %v", err)
+		hwlog.RunLog.Errorf("close upstream error: %v, role=%s, srvRank=%s, processRank=%s",
+			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 	if up.upStreamCoon != nil {
 		err := up.upStreamCoon.Close()
-		hwlog.RunLog.Errorf("close client connection error: %v", err)
+		hwlog.RunLog.Errorf("close client connection error: %v, role=%s, srvRank=%s, processRank=%s",
+			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 }
 
@@ -89,7 +91,8 @@ func (up *upStreamEndpoint) resetNet() {
 func (up *upStreamEndpoint) joinTaskNetwork() {
 	err := up.join()
 	if err != nil {
-		hwlog.RunLog.Errorf("join task network error: %v", err)
+		hwlog.RunLog.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
+			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 	for err != nil {
 		if up.destroyed.Load() {
@@ -98,7 +101,8 @@ func (up *upStreamEndpoint) joinTaskNetwork() {
 		time.Sleep(time.Second)
 		err = up.join()
 		if err != nil {
-			hwlog.RunLog.Errorf("join task network error: %v", err)
+			hwlog.RunLog.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
+				err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		}
 	}
 	pos := &proto.Position{
@@ -120,15 +124,18 @@ func (up *upStreamEndpoint) pathJoin(pos *proto.Position) {
 			Path:     []*proto.Position{pos},
 		})
 		if err == nil {
+			hwlog.RunLog.Infof("path join success, role=%s, srvRank=%s, processRank=%s",
+				up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 			break
 		}
+		hwlog.RunLog.Errorf("path join failed, role=%s, srvRank=%s, processRank=%s, err=%v",
+			up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank, err)
 		time.Sleep(time.Second)
 	}
 }
 
 // setUpStream sets up the upstream stream.
 func (up *upStreamEndpoint) setUpStream() error {
-	log.Println("start set up stream")
 	var err error
 	up.mu.Lock()
 	defer up.mu.Unlock()
@@ -152,12 +159,11 @@ func (up *upStreamEndpoint) timeoutAckUpStream(ack *proto.Ack) error {
 
 	select {
 	case err := <-done:
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	case <-time.After(ackTimeout):
-		return errors.New("ack time out")
+		hwlog.RunLog.Errorf("send ack time out, msgId=%s, role=%s, srvRank=%s, processRank=%s",
+			ack.Uuid, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
+		return errors.New("send ack time out")
 	}
 }
 
@@ -186,6 +192,8 @@ func (up *upStreamEndpoint) handleUpStreamData(msg *proto.Message) {
 
 // rebuildNet resets the network and attempts to rejoin the task network and set up the stream.
 func (up *upStreamEndpoint) rebuildNet() error {
+	hwlog.RunLog.Infof("rebuild net, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	up.resetNet()
 	up.joinTaskNetwork()
 	return up.setUpStream()
@@ -200,7 +208,8 @@ func (up *upStreamEndpoint) listenUpStreamMessage() {
 	for err != nil && !up.destroyed.Load() {
 		err = up.rebuildNet()
 		if err != nil {
-			hwlog.RunLog.Errorf("rebuild net error: %v", err)
+			hwlog.RunLog.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
+				err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		}
 	}
 	for !up.destroyed.Load() {
@@ -208,7 +217,8 @@ func (up *upStreamEndpoint) listenUpStreamMessage() {
 		if err != nil {
 			err = up.rebuildNet()
 			if err != nil {
-				hwlog.RunLog.Errorf("rebuild net error: %v", err)
+				hwlog.RunLog.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
+					err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 			}
 			continue
 		}
@@ -224,6 +234,8 @@ func (up *upStreamEndpoint) join() error {
 	conn, err := grpc.Dial(up.netInstance.config.UpstreamAddr,
 		grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
+		hwlog.RunLog.Errorf("join task network error on dial, err=%v, role=%s, srvRank=%s, processRank=%s",
+			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return fmt.Errorf("join task network error on dial, err=%v", err)
 	}
 	up.mu.Lock()
@@ -233,7 +245,8 @@ func (up *upStreamEndpoint) join() error {
 	ack, err := up.upStreamClient.Register(context.Background(),
 		common.RegisterReqFrame(&up.netInstance.config.Pos))
 	if err != nil || ack.Code != 0 {
-		log.Println("join task network error on register, err=", err, ", code=", ack.Code)
+		hwlog.RunLog.Errorf("join task network error on register, err=%v, code=%d, role=%s, srvRank=%s, processRank=%s",
+			err, ack.Code, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return fmt.Errorf("join task network error on register, err=%v, code=%d", err, ack.Code)
 	}
 	return nil

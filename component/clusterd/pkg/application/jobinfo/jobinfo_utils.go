@@ -37,6 +37,7 @@ const (
 
 var jobUpdateChan = make(chan job.JobSummarySignal, jobUpdateChanCache)
 
+// SendJobInfoSignal send jobInfo signal
 func SendJobInfoSignal(jobSignal job.JobSummarySignal) {
 	select {
 	case jobUpdateChan <- jobSignal:
@@ -45,6 +46,7 @@ func SendJobInfoSignal(jobSignal job.JobSummarySignal) {
 	}
 }
 
+// BuildJobSignalFromJobInfo build jobSignal from jobInfo
 func BuildJobSignalFromJobInfo(jobInfo constant.JobInfo, hccl, operator string) job.JobSummarySignal {
 	jobSignal := job.JobSummarySignal{
 		JobId:     jobInfo.Key,

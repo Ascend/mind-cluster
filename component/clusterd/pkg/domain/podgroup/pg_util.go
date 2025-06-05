@@ -70,6 +70,10 @@ func GetModelFramework(info *v1beta1.PodGroup) string {
 
 // JudgeRetryByJobKey judge uce label by jobKey
 func JudgeRetryByJobKey(jobKey string) bool {
+	return judgeTargetRecoverStrategyByJobKey(jobKey, constant.ProcessRetryStrategyName)
+}
+
+func judgeTargetRecoverStrategyByJobKey(jobKey string, strategy string) bool {
 	podGroup := GetPodGroup(jobKey)
 	flag, exit := podGroup.Labels[constant.ProcessRecoverEnableLabel]
 	if !exit || flag != constant.ProcessRecoverEnable {
@@ -83,11 +87,16 @@ func JudgeRetryByJobKey(jobKey string) bool {
 	}
 	mindXConfig = strings.Replace(mindXConfig, " ", "", -1)
 	strategyList := strings.Split(mindXConfig, ",")
-	if slices.Contains(strategyList, constant.ProcessRetryStrategyName) {
+	if slices.Contains(strategyList, strategy) {
 		return true
 	}
-	hwlog.RunLog.Debugf("strategyList isn't contains %s", constant.ProcessRetryStrategyName)
+	hwlog.RunLog.Debugf("strategyList isn't contains %s", strategy)
 	return false
+}
+
+// JudgeRestartProcessByJobKey judge recover restart-process label by jobKey
+func JudgeRestartProcessByJobKey(jobKey string) bool {
+	return judgeTargetRecoverStrategyByJobKey(jobKey, constant.ProcessRecoverInPlaceStrategyName)
 }
 
 // JudgeIsRunningByJobKey judge podGroup is running  by jobKey

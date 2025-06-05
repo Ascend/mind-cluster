@@ -16,9 +16,13 @@
 package proxy
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"ascend-common/common-utils/hwlog"
+	"taskd/common/constant"
+	"taskd/common/utils"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
 )
@@ -44,9 +48,6 @@ func newProxyInstance(proxyConfig *common.TaskNetConfig) error {
 	var err error
 	if proxyInstance != nil {
 		return nil
-	}
-	if proxyConfig == nil {
-		return errors.New("proxyConfig is nil")
 	}
 	proxyInstance = &proxyClient{
 		networkInstence: nil,
@@ -87,6 +88,14 @@ func (p *proxyClient) destroyNet() {
 
 // InitProxy init proxy grpc
 func InitProxy(proxyConfig *common.TaskNetConfig) error {
+	if proxyConfig == nil {
+		return errors.New("proxyConfig is nil")
+	}
+	logName := fmt.Sprintf(constant.ProxyLogPathPattern, proxyConfig.Pos.ServerRank)
+	if err := utils.InitHwLogger(logName, context.Background()); err != nil {
+		fmt.Printf("%s init hwlog failed, err: %v \n", logName, err)
+		return err
+	}
 	err := newProxyInstance(proxyConfig)
 	if err != nil {
 		hwlog.RunLog.Errorf("InitProxy failed:%s.", err)

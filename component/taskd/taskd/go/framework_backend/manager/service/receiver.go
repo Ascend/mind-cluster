@@ -35,6 +35,7 @@ func (mrc *MsgReceiver) ReceiveMsg(mq *storage.MsgQueue, tool *net.NetInstance, 
 	for {
 		select {
 		case <-ctx.Done():
+			hwlog.RunLog.Debug("Mgr ReceiveMsg exit")
 			return nil, storage.MsgBody{}, nil
 		default:
 			msg := tool.ReceiveMessage()
@@ -49,6 +50,7 @@ func (mrc *MsgReceiver) ReceiveMsg(mq *storage.MsgQueue, tool *net.NetInstance, 
 			}
 			data := mq.NewMsg(msg.Uuid, msg.BizType, msg.Src, msgBody)
 			err = mq.Enqueue(data)
+			hwlog.RunLog.Debugf("enqueue msg: %v", data)
 			if err != nil {
 				hwlog.RunLog.Errorf("enqueue failed: %v", err)
 				return msg, msgBody, err

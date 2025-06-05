@@ -18,13 +18,13 @@ package net
 import (
 	"context"
 	"errors"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/toolkit_backend/grpool"
 	"taskd/toolkit_backend/net/common"
 	"taskd/toolkit_backend/net/proto"
@@ -62,20 +62,24 @@ func InitNetwork(conf *common.TaskNetConfig) (*NetInstance, error) {
 	netIns.ctx, netIns.cancel = context.WithCancel(context.Background())
 	workers := common.RoleWorkerNum(conf.Pos.Role)
 	if workers <= 0 {
+		hwlog.RunLog.Errorf("worker num must be greater than 0, but got %d", workers)
 		return nil, errors.New("worker num must be greater than 0")
 	}
 	netIns.grPool = grpool.NewPool(uint32(workers), netIns.ctx)
 	if common.RoleLevel(conf.Pos.Role) > common.MinRoleLevel {
-		log.Println("need start server")
+		hwlog.RunLog.Infof("need start server, role=%s, srvRank=%s, processRank=%s",
+			conf.Pos.Role, conf.Pos.ServerRank, conf.Pos.ProcessRank)
 		netIns.downEndpoint, err = newDownStreamEndpoint(netIns)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if common.RoleLevel(conf.Pos.Role) < common.MaxRoleLevel {
-		log.Println("need start client")
+		hwlog.RunLog.Infof("need start client, role=%s, srvRank=%s, processRank=%s",
+			conf.Pos.Role, conf.Pos.ServerRank, conf.Pos.ProcessRank)
 		netIns.upEndpoint, err = newUpStreamEndpoint(netIns)
 		if err != nil {
+			hwlog.RunLog.Errorf("newUpStreamEndpoint failed, err=%v", err)
 			return nil, err
 		}
 	}
@@ -85,6 +89,13 @@ func InitNetwork(conf *common.TaskNetConfig) (*NetInstance, error) {
 // SyncSendMessage sends a message synchronously.
 func (nt *NetInstance) SyncSendMessage(uuid, mtype, msgBody string, dst *common.Position) (*common.Ack, error) {
 	data := common.DataFrame(uuid, mtype, msgBody, &nt.config.Pos, dst)
+	if data == nil {
+		return &common.Ack{
+			Uuid: uuid,
+			Code: common.ClientErr,
+			Src:  &nt.config.Pos,
+		}, errors.New("nil data")
+	}
 	data.Header.Sync = true
 	code, err := common.ValidateAndCorrectFrame(data)
 	if err != nil {
@@ -99,12 +110,17 @@ func (nt *NetInstance) SyncSendMessage(uuid, mtype, msgBody string, dst *common.
 	}
 	dstType := common.DstCase(&nt.config.Pos, dst)
 	protoAck, err := nt.route(data, dstType, common.DataFromLower)
+	hwlog.RunLog.Debugf("SyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, protoAck=%v, err=%v",
+		uuid, mtype, msgBody, dst, dstType, protoAck, err)
 	return common.ExtractAckFrame(protoAck), err
 }
 
 // AsyncSendMessage sends a message asynchronously.
 func (nt *NetInstance) AsyncSendMessage(uuid, mtype, msgBody string, dst *common.Position) error {
 	data := common.DataFrame(uuid, mtype, msgBody, &nt.config.Pos, dst)
+	if data == nil {
+		return errors.New("nil data")
+	}
 	data.Header.Sync = false
 	_, err := common.ValidateAndCorrectFrame(data)
 	if err != nil {
@@ -112,6 +128,8 @@ func (nt *NetInstance) AsyncSendMessage(uuid, mtype, msgBody string, dst *common
 	}
 	dstType := common.DstCase(&nt.config.Pos, dst)
 	_, err = nt.route(data, dstType, common.DataFromLower)
+	hwlog.RunLog.Debugf("AsyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, err=%v",
+		uuid, mtype, msgBody, dst, dstType, err)
 	return err
 }
 
@@ -119,14 +137,19 @@ func (nt *NetInstance) AsyncSendMessage(uuid, mtype, msgBody string, dst *common
 func (nt *NetInstance) ReceiveMessage() *common.Message {
 	select {
 	case msg := <-nt.recvBuffer:
+		hwlog.RunLog.Debugf("receive a message, msg=%v", msg)
 		return msg
 	case <-nt.ctx.Done():
+		hwlog.RunLog.Infof("ReceiveMessage, ctx done, role=%s, srvRank=%s, processRank=%s",
+			nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return nil
 	}
 }
 
 // Destroy destroys the network netIns.
 func (nt *NetInstance) Destroy() {
+	hwlog.RunLog.Infof("taskNet Destroy, role=%s, srvRank=%s, processRank=%s",
+		nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 	nt.destroyed.Store(true)
 	nt.grPool.Close()
 	nt.cancel()
@@ -144,6 +167,8 @@ func (nt *NetInstance) send2Buffer(msg *proto.Message) (*proto.Ack, error) {
 	case nt.recvBuffer <- common.ExtractDataFrame(msg):
 		return common.AckFrame(msg.Header.Uuid, common.OK, &nt.config.Pos), nil
 	case <-time.After(time.Millisecond * int10):
+		hwlog.RunLog.Errorf("send2Buffer failed, dst recv buffer busy, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+			msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.RecvBufBusy, &nt.config.Pos),
 			errors.New("dst recv buffer busy")
 	}
@@ -153,24 +178,20 @@ func (nt *NetInstance) send2Buffer(msg *proto.Message) (*proto.Ack, error) {
 func (nt *NetInstance) route(msg *proto.Message, dstType string, fromType string) (*proto.Ack, error) {
 	switch dstType {
 	case common.Dst2Self:
-		log.Println("dst is self", msg.Body)
 		return nt.send2Buffer(msg)
 	case common.Dst2LowerLevel:
-		log.Println("dst is lower level", msg.Body)
 		return nt.downEndpoint.send(msg)
 	case common.Dst2SameLevel, common.Dst2UpperLevel:
-		if dstType == common.Dst2SameLevel {
-			log.Println("dst is same level", msg.Body)
-		} else {
-			log.Println("dst is upper level", msg.Body)
-		}
 		if fromType == common.DataFromUpper {
-			log.Println("from is upper is not allowed")
+			hwlog.RunLog.Errorf("from is upper is not allowed, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+				msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 			return common.AckFrame(msg.Header.Uuid, common.NoRoute, &nt.config.Pos),
 				errors.New("no route")
 		}
 		return nt.upEndpoint.send(msg)
 	default:
+		hwlog.RunLog.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+			msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.ClientErr, &nt.config.Pos),
 			errors.New("no route")
 	}

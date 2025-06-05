@@ -33,8 +33,7 @@ class TestDataClasses(unittest.TestCase):
             pos=self.position,
             upstream_addr='upstream_addr',
             listen_addr='listen_addr',
-            server_tls=True,
-            client_tls=False,
+            enable_tls=True,
             tls_conf=self.tls_config
         )
         self.message_info = MessageInfo(
@@ -70,8 +69,7 @@ class TestDataClasses(unittest.TestCase):
         self.assertEqual(self.network_config.pos, self.position)
         self.assertEqual(self.network_config.upstream_addr, 'upstream_addr')
         self.assertEqual(self.network_config.listen_addr, 'listen_addr')
-        self.assertEqual(self.network_config.server_tls, True)
-        self.assertEqual(self.network_config.client_tls, False)
+        self.assertEqual(self.network_config.enable_tls, True)
         self.assertEqual(self.network_config.tls_conf, self.tls_config)
 
     def test_message_info(self):

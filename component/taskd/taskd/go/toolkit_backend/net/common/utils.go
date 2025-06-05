@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/toolkit_backend/net/proto"
 )
 
@@ -70,6 +71,10 @@ func ExtractDataFrame(msg *proto.Message) *Message {
 
 // DataFrame creates a new proto.Message with the given parameters.
 func DataFrame(uid, mtype, body string, src, dst *Position) *proto.Message {
+	if src == nil || dst == nil {
+		hwlog.RunLog.Error("src or dst is nil")
+		return nil
+	}
 	return &proto.Message{
 		Header: &proto.MessageHeader{
 			Uuid:  uid,

@@ -191,14 +191,21 @@ type JobServerInfoMap struct {
 	ResourceType  map[string]string
 }
 
+// DeviceFaultDetail device fault detail
+type DeviceFaultDetail struct {
+	HasFaultAboveL3 bool
+	FaultTime       int64
+	RecoverTime     int64
+	CompleteTime    int64
+	FaultType       string
+}
+
 // RetryDeviceInfo uce device info
 type RetryDeviceInfo struct {
 	// DeviceName has prefix Ascend910
-	DeviceName   string
-	FaultTime    int64
-	RecoverTime  int64
-	CompleteTime int64
-	FaultType    string
+	DeviceName     string
+	FaultDetail    map[string]DeviceFaultDetail // key is retry or normal
+	FaultCodeLevel map[string]string
 }
 
 // RetryNodeInfo uce node info
@@ -269,13 +276,14 @@ type ConfigMapInterface interface {
 // FaultRank defines the structure for storing fault rank information.
 // It includes the rank ID and fault code.
 type FaultRank struct {
-	RankId      string
-	PodUid      string
-	PodRank     string
-	FaultCode   string
-	FaultLevel  string
-	DoStepRetry bool
-	DeviceId    string // This value will only be filled in when fault type is npu
+	RankId           string
+	PodUid           string
+	PodRank          string
+	FaultCode        string
+	FaultLevel       string
+	DoStepRetry      bool
+	DoRestartInPlace bool
+	DeviceId         string // This value will only be filled in when fault type is npu
 }
 
 // JobFaultInfo job fault rank info

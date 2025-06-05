@@ -71,35 +71,35 @@ func (mq *MsgQueue) Enqueue(msg BaseMessage) error {
 
 // Dequeue message departure
 func (mq *MsgQueue) Dequeue() (BaseMessage, error) {
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
 	if len(mq.Queue) == 0 {
 		return BaseMessage{}, fmt.Errorf("message queue is empty")
 	}
-	mq.Mutex.Lock()
-	defer mq.Mutex.Unlock()
 	msg := mq.Queue[0]
 	mq.Queue = mq.Queue[1:]
 	return msg, nil
 }
 
 // RegisterAgent register agent in the data pool
-func (d *DataPool) RegisterAgent(agentName string, agentInfo *Agent) error {
+func (d *DataPool) RegisterAgent(agentName string, agentInfo *AgentInfo) error {
 	err := d.Snapshot.AgentInfos.registerAgent(agentName, agentInfo)
 	return err
 }
 
 // RegisterWorker register worker in the data pool
-func (d *DataPool) RegisterWorker(workerName string, workerInfo *Worker) error {
+func (d *DataPool) RegisterWorker(workerName string, workerInfo *WorkerInfo) error {
 	err := d.Snapshot.WorkerInfos.registerWorker(workerName, workerInfo)
 	return err
 }
 
 // RegisterCluster register cluster in the data pool
-func (d *DataPool) RegisterCluster(clusterName string, clusterInfo *Cluster) {
-	d.Snapshot.ClusterInfos.registerCluster(clusterName, clusterInfo)
+func (d *DataPool) RegisterCluster(clusterName string) *ClusterInfo {
+	return d.Snapshot.ClusterInfos.registerCluster(clusterName)
 }
 
 // UpdateAgent update agent info in the data pool
-func (d *DataPool) UpdateAgent(agentName string, agentInfo *Agent) error {
+func (d *DataPool) UpdateAgent(agentName string, agentInfo *AgentInfo) error {
 	if d == nil || d.Snapshot == nil || d.Snapshot.AgentInfos == nil || d.Snapshot.AgentInfos.Agents == nil {
 		return fmt.Errorf("agents is not initialized")
 	}
@@ -108,7 +108,7 @@ func (d *DataPool) UpdateAgent(agentName string, agentInfo *Agent) error {
 }
 
 // UpdateWorker update worker info in the data pool
-func (d *DataPool) UpdateWorker(workerName string, workerInfo *Worker) error {
+func (d *DataPool) UpdateWorker(workerName string, workerInfo *WorkerInfo) error {
 	if d == nil || d.Snapshot == nil || d.Snapshot.WorkerInfos == nil || d.Snapshot.WorkerInfos.Workers == nil {
 		return fmt.Errorf("workers is not initialized")
 	}
@@ -117,7 +117,7 @@ func (d *DataPool) UpdateWorker(workerName string, workerInfo *Worker) error {
 }
 
 // UpdateCluster update cluster info in the data pool
-func (d *DataPool) UpdateCluster(clusterName string, clusterInfo *Cluster) error {
+func (d *DataPool) UpdateCluster(clusterName string, clusterInfo *ClusterInfo) error {
 	if d == nil || d.Snapshot == nil || d.Snapshot.ClusterInfos == nil || d.Snapshot.ClusterInfos.Clusters == nil {
 		return fmt.Errorf("clusters is not initialized")
 	}
@@ -126,18 +126,38 @@ func (d *DataPool) UpdateCluster(clusterName string, clusterInfo *Cluster) error
 }
 
 // GetAgent return agent info about agent name
-func (d *DataPool) GetAgent(agentName string) (*Agent, error) {
+func (d *DataPool) GetAgent(agentName string) (*AgentInfo, error) {
 	return d.Snapshot.AgentInfos.getAgent(agentName)
 }
 
 // GetWorker return worker info about worker name
-func (d *DataPool) GetWorker(workerName string) (*Worker, error) {
+func (d *DataPool) GetWorker(workerName string) (*WorkerInfo, error) {
 	return d.Snapshot.WorkerInfos.getWorker(workerName)
 }
 
 // GetCluster return cluster info about cluster name
-func (d *DataPool) GetCluster(clusterName string) (*Cluster, error) {
+func (d *DataPool) GetCluster(clusterName string) (*ClusterInfo, error) {
 	return d.Snapshot.ClusterInfos.getCluster(clusterName)
+}
+
+// GetPos return worker or agent position
+func (d *DataPool) GetPos(infoType, name string) (*common.Position, error) {
+	switch infoType {
+	case common.AgentRole:
+		agent, err := d.GetAgent(name)
+		if err != nil || agent == nil || agent.Pos == nil {
+			return nil, fmt.Errorf("agent name is unregistered : %v", name)
+		}
+		return agent.Pos, nil
+	case common.WorkerRole:
+		worker, err := d.GetWorker(name)
+		if err != nil || worker == nil || worker.Pos == nil {
+			return nil, fmt.Errorf("worker name is unregistered : %v", name)
+		}
+		return worker.Pos, nil
+	default:
+		return nil, fmt.Errorf("invalid info type")
+	}
 }
 
 // GetSnapShot get data pool snapshot
@@ -166,7 +186,7 @@ func (s *SnapShot) deepCopy() (*SnapShot, error) {
 
 func deepCopyAgent(agentInfos *AgentInfos) *AgentInfos {
 	clone := &AgentInfos{
-		Agents:    make(map[string]*Agent, len(agentInfos.Agents)),
+		Agents:    make(map[string]*AgentInfo, len(agentInfos.Agents)),
 		AllStatus: make(map[string]string, len(agentInfos.AllStatus)),
 	}
 	for k, v := range agentInfos.AllStatus {
@@ -177,7 +197,7 @@ func deepCopyAgent(agentInfos *AgentInfos) *AgentInfos {
 			clone.Agents[k] = nil
 			continue
 		}
-		cloneAgent := &Agent{
+		cloneAgent := &AgentInfo{
 			Status:    v.Status,
 			NodeRank:  v.NodeRank,
 			HeartBeat: v.HeartBeat,
@@ -199,7 +219,7 @@ func deepCopyAgent(agentInfos *AgentInfos) *AgentInfos {
 
 func deepCopyWorker(workerInfos *WorkerInfos) *WorkerInfos {
 	clone := &WorkerInfos{
-		Workers:   make(map[string]*Worker, len(workerInfos.Workers)),
+		Workers:   make(map[string]*WorkerInfo, len(workerInfos.Workers)),
 		AllStatus: make(map[string]string, len(workerInfos.AllStatus)),
 	}
 	for k, v := range workerInfos.AllStatus {
@@ -210,7 +230,7 @@ func deepCopyWorker(workerInfos *WorkerInfos) *WorkerInfos {
 			clone.Workers[k] = nil
 			continue
 		}
-		cloneWorker := &Worker{
+		cloneWorker := &WorkerInfo{
 			Status:     v.Status,
 			GlobalRank: v.GlobalRank,
 			HeartBeat:  v.HeartBeat,
@@ -233,7 +253,7 @@ func deepCopyWorker(workerInfos *WorkerInfos) *WorkerInfos {
 
 func deepCopyCluster(clusterInfos *ClusterInfos) *ClusterInfos {
 	clone := &ClusterInfos{
-		Clusters:  make(map[string]*Cluster, len(clusterInfos.Clusters)),
+		Clusters:  make(map[string]*ClusterInfo, len(clusterInfos.Clusters)),
 		AllStatus: make(map[string]string, len(clusterInfos.AllStatus)),
 	}
 	for k, v := range clusterInfos.AllStatus {
@@ -244,7 +264,7 @@ func deepCopyCluster(clusterInfos *ClusterInfos) *ClusterInfos {
 			clone.Clusters[k] = nil
 			continue
 		}
-		cloneCluster := &Cluster{
+		cloneCluster := &ClusterInfo{
 			HeartBeat: v.HeartBeat,
 		}
 		cloneCluster.Command = utils.CopyStringMap(v.Command)

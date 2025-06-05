@@ -27,9 +27,9 @@ from taskd.python.framework.common.type import MsgBody, MessageInfo
 
 
 DEFAULT_DST = {
-    "Role": "Mgr",
-    "ServerRank": "0",
-    "ProcessRank": "-1"
+    "role": "Mgr",
+    "server_rank": "0",
+    "process_rank": "-1"
 }
 
 
