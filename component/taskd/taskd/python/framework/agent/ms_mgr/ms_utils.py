@@ -71,3 +71,19 @@ def calculate_global_rank():
     for local_worker in range(ms_local_worker):
         global_rank.append(ms_node_rank * ms_local_worker + local_worker)
     return global_rank
+
+
+def calculate_local_rank_by_global_rank(global_rank_list: list):
+    ms_local_worker = os.getenv('MS_LOCAL_WORKER')
+    if ms_local_worker is None :
+        run_log.error("the env variable MS_LOCAL_WORKER is not set")
+        return None
+    try:
+        ms_local_worker = int(ms_local_worker)
+    except ValueError as e:
+        run_log.info(f"failed to get MS_LOCAL_WORKER from env, please set it: {e}")
+        return None
+    local_rank_list = []
+    for global_rank in global_rank_list:
+        local_rank_list.append(global_rank % ms_local_worker)
+    return local_rank_list
