@@ -256,5 +256,5 @@ func GetClusterdAddr() (string, error) {
 		return "", fmt.Errorf("%s is NOT a valid IP address", ipFromEnv)
 
 	}
-	return string(parsedIP) + constant.ClusterdPort, nil
+	return ipFromEnv + constant.ClusterdPort, nil
 }

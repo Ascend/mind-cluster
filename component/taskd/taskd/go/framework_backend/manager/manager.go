@@ -155,7 +155,7 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 	}
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		hwlog.RunLog.Error("init clusterd connect failed")
+		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
 		m.registerClusterD(retryTime + 1)
 		return
 	}

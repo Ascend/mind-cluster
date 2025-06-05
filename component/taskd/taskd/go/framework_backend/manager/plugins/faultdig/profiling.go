@@ -225,7 +225,9 @@ func (p *PfPlugin) handleNewCmd() {
 // PullMsg return Msg
 func (p *PfPlugin) PullMsg() ([]infrastructure.Msg, error) {
 	hwlog.RunLog.Infof("Profiling PullMsg: %s", utils.ObjToString(p.pullMsg))
-	return p.pullMsg, nil
+	res := p.pullMsg
+	p.pullMsg = make([]infrastructure.Msg, 0)
+	return res, nil
 }
 
 // NewProfilingPlugin return New ProfilingPlugin
@@ -261,7 +263,7 @@ func (p *PfPlugin) changeCmd(cmd constant.ProfilingDomainCmd) {
 }
 
 func (p *PfPlugin) getAllWorkerName() []string {
-	names := make([]string, len(p.workerStatus.workers))
+	names := make([]string, 0, len(p.workerStatus.workers))
 	for name := range p.workerStatus.workers {
 		names = append(names, name)
 	}
