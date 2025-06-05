@@ -85,12 +85,8 @@ func TestJobRankFaultInfoProcessorCanDoStepRetry(t *testing.T) {
 	t.Run("TestJobRankFaultInfoProcessorCanDoStepRetry", func(t *testing.T) {
 		patches := gomonkey.ApplyPrivateMethod(retry.RetryProcessor, "GetRetryDeviceFromJob",
 			func(jobId, nodeName, deviceName string) (constant.RetryDeviceInfo, bool) {
-				return constant.RetryDeviceInfo{
-					DeviceName:   "test",
-					FaultTime:    0,
-					RecoverTime:  0,
-					CompleteTime: 0,
-				}, true
+				return constant.RetryDeviceInfo{FaultDetail: map[string]constant.DeviceFaultDetail{
+					constant.DeviceRetryFault: {FaultTime: 0, RecoverTime: 0, CompleteTime: 0}}}, true
 			})
 		defer patches.Reset()
 		retry := JobFaultRankProcessor.canDoStepRetry("jobId", "nodeName", "deviceName")
@@ -104,13 +100,13 @@ func TestUceInBusinessPlane(t *testing.T) {
 	t.Run("TestUceInBusinessPlane", func(t *testing.T) {
 		patches := gomonkey.ApplyPrivateMethod(retry.RetryProcessor, "GetRetryDeviceFromJob",
 			func(jobId, nodeName, deviceName string) (constant.RetryDeviceInfo, bool) {
-				return constant.RetryDeviceInfo{
-					DeviceName:   "test",
-					FaultTime:    0,
-					RecoverTime:  0,
-					CompleteTime: 0,
-					FaultType:    constant.UceFaultType,
-				}, true
+				return constant.RetryDeviceInfo{FaultDetail: map[string]constant.DeviceFaultDetail{
+					constant.DeviceRetryFault: {
+						FaultTime:    0,
+						RecoverTime:  0,
+						CompleteTime: 0,
+						FaultType:    constant.UceFaultType,
+					}}}, true
 			})
 		defer patches.Reset()
 		_, isUceInBusinessPlane := JobFaultRankProcessor.retryInBusinessPlane("jobId", "nodeName", "deviceName")
@@ -252,8 +248,8 @@ func testUceInBusinessPlane(processor *jobRankFaultInfoProcessor) {
 		defer patches.Reset()
 
 		patches.ApplyPrivateMethod(processor, "retryInBusinessPlane",
-			func(_ *jobRankFaultInfoProcessor, jobId, nodeName, deviceName string) (constant.RetryDeviceInfo, bool) {
-				return constant.RetryDeviceInfo{
+			func(_ *jobRankFaultInfoProcessor, jobId, nodeName, deviceName string) (constant.DeviceFaultDetail, bool) {
+				return constant.DeviceFaultDetail{
 					FaultType: constant.UceFaultType,
 				}, true
 			})

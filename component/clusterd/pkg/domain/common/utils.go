@@ -21,7 +21,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -29,10 +31,11 @@ import (
 var (
 	faultSplitLength           = 2
 	recoverStrategyPriorityMap = map[string]int{
-		constant.ProcessRetryStrategyName:   1,
-		constant.ProcessRecoverStrategyName: 2,
-		constant.ProcessDumpStrategyName:    3,
-		constant.ProcessExitStrategyName:    4,
+		constant.ProcessRetryStrategyName:          1,
+		constant.ProcessRecoverInPlaceStrategyName: 2,
+		constant.ProcessRecoverStrategyName:        3,
+		constant.ProcessDumpStrategyName:           4,
+		constant.ProcessExitStrategyName:           5,
 	}
 )
 
@@ -162,12 +165,12 @@ func ChangeProcessRecoverEnableMode(jobInfo JobBaseInfo, mode string) (*v1beta1.
 }
 
 // RetryWriteResetCM retry write the reset info configMap
-func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, operator string) (*v1.ConfigMap, error) {
+func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool, operator string) (*v1.ConfigMap, error) {
 	var err error
 	var configMap *v1.ConfigMap
 	for i := 0; i < constant.WriteResetInfoRetryTimes; i++ {
 		time.Sleep(time.Duration(i) * time.Second) // first i==0, sleep zero second
-		configMap, err = WriteResetInfoToCM(taskName, nameSpace, faultRankList, operator)
+		configMap, err = WriteResetInfoToCM(taskName, nameSpace, faultRankList, restartFaultProcess, operator)
 		if err == nil {
 			return configMap, err
 		}
@@ -177,7 +180,7 @@ func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, opera
 
 // WriteResetInfoToCM write the reset info configMap
 func WriteResetInfoToCM(taskName, namespace string,
-	faultRankList []string, operation string) (*v1.ConfigMap, error) {
+	faultRankList []string, restartFaultProcess bool, operation string) (*v1.ConfigMap, error) {
 	oldCM, err := kube.GetConfigMap(constant.ResetInfoCMNamePrefix+taskName, namespace)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get reset cm of task %s, err is : %v", taskName, err)
@@ -194,7 +197,7 @@ func WriteResetInfoToCM(taskName, namespace string,
 		hwlog.RunLog.Errorf("failed to unmarshal reset info data, err: %v", err)
 		return nil, fmt.Errorf("failed to unmarshal reset info data, err: %v", err)
 	}
-	newTaskInfo, err := setNewTaskInfo(oldTaskInfo, faultRankList, operation)
+	newTaskInfo, err := setNewTaskInfo(oldTaskInfo, faultRankList, restartFaultProcess, operation)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to set new task info, err: %v", err)
 	}
@@ -215,7 +218,7 @@ func WriteResetInfoToCM(taskName, namespace string,
 }
 
 func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
-	faultRankList []string, operation string) (TaskResetInfo, error) {
+	faultRankList []string, restartFaultProcess bool, operation string) (TaskResetInfo, error) {
 	for _, rank := range oldTaskResetInfo.RankList {
 		if rank.Policy == constant.HotResetPolicy {
 			return TaskResetInfo{}, errors.New("hotReset=1 is not compatible with process-recover")
@@ -250,6 +253,7 @@ func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 			},
 		})
 	}
+	newTaskInfo.RestartFaultProcess = restartFaultProcess
 	return newTaskInfo, nil
 }
 
@@ -434,6 +438,19 @@ func SortRecoverStrategies(strSlice []string) {
 		}
 		return firstPri < secondPri
 	})
+}
+
+// CanRestartFaultProcess judge whether processes can be restarted in place
+func CanRestartFaultProcess(jobId string, faultRank []constant.FaultRank) bool {
+	if !podgroup.JudgeRestartProcessByJobKey(jobId) {
+		return false
+	}
+	for _, fault := range faultRank {
+		if !faultdomain.IsL2L3Fault(fault.FaultLevel) || !fault.DoRestartInPlace {
+			return false
+		}
+	}
+	return true
 }
 
 // SwitchNicSendRetry send signal util send success or retry times upper retryTimes

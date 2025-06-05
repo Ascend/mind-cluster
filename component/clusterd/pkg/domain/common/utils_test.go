@@ -501,13 +501,13 @@ func TestRetryWriteResetCM(t *testing.T) {
 		convey.Convey("case write success", func() {
 			patch1 := gomonkey.ApplyFuncReturn(WriteResetInfoToCM, &v1.ConfigMap{}, nil)
 			defer patch1.Reset()
-			_, err := RetryWriteResetCM(info.JobName, info.Namespace, []string{"8"}, constant.ClearOperation)
+			_, err := RetryWriteResetCM(info.JobName, info.Namespace, []string{"8"}, false, constant.ClearOperation)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("case write fail", func() {
 			patch1 := gomonkey.ApplyFuncReturn(WriteResetInfoToCM, &v1.ConfigMap{}, errors.New("fake error"))
 			defer patch1.Reset()
-			_, err := RetryWriteResetCM(info.JobName, info.Namespace, []string{"8"}, constant.ClearOperation)
+			_, err := RetryWriteResetCM(info.JobName, info.Namespace, []string{"8"}, false, constant.ClearOperation)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -697,30 +697,30 @@ func caseHaveRestKey() {
 		return newCm, nil
 	})
 	defer patch1.Reset()
-	cm, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.ClearOperation)
+	cm, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.ClearOperation)
 	convey.So(err, convey.ShouldBeNil)
 	var newReset TaskResetInfo
 	err = json.Unmarshal([]byte(cm.Data[constant.ResetInfoCMDataKey]), &newReset)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(len(newReset.RankList), convey.ShouldEqual, 0)
-	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.RestartAllProcessOperation)
+	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.RestartAllProcessOperation)
 	convey.So(err, convey.ShouldBeNil)
 	err = json.Unmarshal([]byte(cm.Data[constant.ResetInfoCMDataKey]), &newReset)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(newReset.RetryTime, convey.ShouldEqual, 1)
-	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.NotifyFaultListOperation)
+	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, true, constant.NotifyFaultListOperation)
 	convey.So(err, convey.ShouldBeNil)
 	err = json.Unmarshal([]byte(cm.Data[constant.ResetInfoCMDataKey]), &newReset)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(len(newReset.RankList), convey.ShouldEqual, 1)
-	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.NotifyFaultFlushingOperation)
+	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.NotifyFaultFlushingOperation)
 	convey.So(err, convey.ShouldBeNil)
 	err = json.Unmarshal([]byte(cm.Data[constant.ResetInfoCMDataKey]), &newReset)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(newReset.FaultFlushing, convey.ShouldBeTrue)
 	patch2 := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("fake unmarshal error"))
 	defer patch2.Reset()
-	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.NotifyFaultFlushingOperation)
+	cm, err = WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.NotifyFaultFlushingOperation)
 	convey.ShouldNotBeNil(err)
 }
 
@@ -730,7 +730,7 @@ func TestWriteResetInfoToCM(t *testing.T) {
 		convey.Convey("case get config map error", func() {
 			patch := gomonkey.ApplyFuncReturn(kube.GetConfigMap, &v1.ConfigMap{}, errors.New("fake error"))
 			defer patch.Reset()
-			_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.ClearOperation)
+			_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.ClearOperation)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("case not have reset key", func() {
@@ -738,7 +738,7 @@ func TestWriteResetInfoToCM(t *testing.T) {
 				Data: make(map[string]string),
 			}, nil)
 			defer patch0.Reset()
-			_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, constant.ClearOperation)
+			_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{"8"}, false, constant.ClearOperation)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("case have reset key", caseHaveRestKey)
@@ -760,7 +760,7 @@ func setNewTaskInfoError() {
 			return newCm, nil
 		})
 		defer patch1.Reset()
-		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{""}, constant.ClearOperation)
+		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{""}, false, constant.ClearOperation)
 		convey.ShouldNotBeNil(err)
 	})
 	convey.Convey("case rank error", func() {
@@ -774,7 +774,7 @@ func setNewTaskInfoError() {
 			return newCm, nil
 		})
 		defer patch1.Reset()
-		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{errorRank}, constant.NotifyFaultListOperation)
+		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{errorRank}, true, constant.NotifyFaultListOperation)
 		convey.ShouldNotBeNil(err)
 	})
 }
@@ -790,7 +790,7 @@ func jsonMarshalError() {
 	}).ApplyFuncReturn(util.MakeDataHash, "").
 		ApplyFuncReturn(json.Marshal, nil, errors.New("fake marshal error"))
 	defer patch0.Reset()
-	_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{""}, constant.ClearOperation)
+	_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{""}, false, constant.ClearOperation)
 	convey.ShouldNotBeNil(err)
 }
 

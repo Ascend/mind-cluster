@@ -97,4 +97,7 @@ const (
 	SwitchNicFailRecoverEvent = "switchNicFailRecover"
 	// SwitchNicFailEvent switch nic fail
 	SwitchNicFailEvent = "switchNicFail"
+
+	// KillPodAfterRestartProcessEvent kill pod when cant not restart process
+	KillPodAfterRestartProcessEvent = "KillPodAfterRestartProcessEvent"
 )

@@ -1039,7 +1039,8 @@ func TestHandleRestartAllProcess(t *testing.T) {
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 
 		patches := gomonkey.ApplyFunc(common.RetryWriteResetCM,
-			func(jobName, namespace string, faultRanks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, faultRanks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{}, nil
 			})
 		defer patches.Reset()
@@ -1554,7 +1555,8 @@ func testPlatformModeNonUceFault(ctl *EventController) {
 			})
 
 		patches.ApplyFunc(common.RetryWriteResetCM,
-			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, ranks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
 			})
 
@@ -1843,7 +1845,8 @@ func testPlatformModeSuccess(ctl *EventController) {
 			})
 
 		patches.ApplyFunc(common.WriteResetInfoToCM,
-			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, ranks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
 			})
 
@@ -1865,7 +1868,8 @@ func testNonPlatformModeSuccess(ctl *EventController) {
 		defer patches.Reset()
 
 		patches.ApplyFunc(common.WriteResetInfoToCM,
-			func(jobName, namespace string, ranks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, ranks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
 			})
 
@@ -2542,7 +2546,8 @@ func TestEventControllerHandleKillPodWriteCMError(t *testing.T) {
 		defer patchUpdateCacheFaultAndPod.Reset()
 
 		patchRetryWriteResetCM := gomonkey.ApplyFunc(common.RetryWriteResetCM,
-			func(jobName, namespace string, allFaultRanks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, allFaultRanks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return nil, errors.New("write CM error")
 			})
 		defer patchRetryWriteResetCM.Reset()
@@ -2573,7 +2578,8 @@ func TestEventControllerHandleKillPodSuccess(t *testing.T) {
 		defer patchUpdateCacheFaultAndPod.Reset()
 
 		patchRetryWriteResetCM := gomonkey.ApplyFunc(common.RetryWriteResetCM,
-			func(jobName, namespace string, allFaultRanks []string, operation string) (*v1.ConfigMap, error) {
+			func(jobName, namespace string, allFaultRanks []string,
+				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{Data: map[string]string{
 					constant.ResetInfoCMDataKey: "test data",
 				}}, nil

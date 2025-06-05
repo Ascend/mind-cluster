@@ -78,8 +78,11 @@ const (
 	JobReportRecoverTimeout     = 10 * 1000
 	JobReportInfoExpiredTimeout = 10 * 1000
 	JobReportCompleteTimeout    = 30 * 1000
+	JobRestartInPlaceTimeout    = 60 * 1000
 	MaxFaultCenterSubscriber    = 10
 	UnknownFaultTime            = -1
+	DeviceRetryFault            = "retry"
+	DeviceNormalFault           = "normal"
 )
 
 // fault center

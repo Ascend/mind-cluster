@@ -51,10 +51,11 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation1(t *testing.T) {
 				currentTime = rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1)
 			}
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:   "test-device",
-				FaultTime:    UceFaultTime,
-				RecoverTime:  constant.JobNotRecover,
-				CompleteTime: constant.JobNotRecoverComplete,
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:    UceFaultTime,
+					RecoverTime:  constant.JobNotRecover,
+					CompleteTime: constant.JobNotRecoverComplete}},
 			}
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v. uceDevice = %v, currentTime = %v",
@@ -72,10 +73,11 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation2(t *testing.T) {
 	t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation2-1", func(t *testing.T) {
 		currentTime := UceFaultTime + constant.JobReportRecoverTimeout + 1 // exceed 1ns
 		uceDevice := constant.RetryDeviceInfo{
-			DeviceName:   "test-device",
-			FaultTime:    UceFaultTime,
-			RecoverTime:  constant.JobNotRecover,
-			CompleteTime: constant.JobNotRecoverComplete,
+			DeviceName: "test-device",
+			FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+				FaultTime:    UceFaultTime,
+				RecoverTime:  constant.JobNotRecover,
+				CompleteTime: constant.JobNotRecoverComplete}},
 		}
 		if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 			t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
@@ -86,10 +88,11 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation2(t *testing.T) {
 	t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation2-2", func(t *testing.T) {
 		currentTime := UceFaultTime + constant.JobReportRecoverTimeout + 1
 		uceDevice := constant.RetryDeviceInfo{
-			DeviceName:   "test-device",
-			FaultTime:    UceFaultTime,
-			RecoverTime:  UceFaultTime + constant.JobReportRecoverTimeout + 1, // exceed 1ns
-			CompleteTime: constant.JobNotRecoverComplete,
+			DeviceName: "test-device",
+			FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+				FaultTime:    UceFaultTime,
+				RecoverTime:  UceFaultTime + constant.JobReportRecoverTimeout + 1, // exceed 1ns
+				CompleteTime: constant.JobNotRecoverComplete}},
 		}
 		if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 			t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
@@ -105,18 +108,20 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation3(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation3-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:   "test-device",
-				FaultTime:    UceFaultTime,
-				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-				CompleteTime: constant.JobNotRecoverComplete,
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:    UceFaultTime,
+					RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+					CompleteTime: constant.JobNotRecoverComplete}},
 			}
 			var currentTime int64
 			if i == 0 {
-				currentTime = uceDevice.RecoverTime
+				currentTime = uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime
 			} else if i == 1 {
-				currentTime = uceDevice.RecoverTime + constant.JobReportCompleteTimeout
+				currentTime = uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime + constant.JobReportCompleteTimeout
 			} else {
-				currentTime = rand.Int63nRange(uceDevice.RecoverTime, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+				currentTime = rand.Int63nRange(uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime,
+					uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 			}
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
@@ -134,12 +139,14 @@ func TestUceFaultUceProcessorCanFilterUceDeviceFaultInfoSituation4(t *testing.T)
 	for i := 0; i < 10; i++ {
 		t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation4-1-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:   "test-device",
-				FaultTime:    UceFaultTime,
-				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-				CompleteTime: constant.JobNotRecoverComplete,
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:    UceFaultTime,
+					RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+					CompleteTime: constant.JobNotRecoverComplete}},
 			}
-			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+				uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 			}
@@ -150,12 +157,15 @@ func TestUceFaultUceProcessorCanFilterUceDeviceFaultInfoSituation4(t *testing.T)
 	for i := 0; i < 10; i++ {
 		t.Run("Test_uceFaultProcessor_canFilterUceDeviceFaultInfoSituation4-2-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:   "test-device",
-				FaultTime:    UceFaultTime,
-				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-				CompleteTime: constant.JobReportRecoverTimeout + 1, // exceed 1s
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:    UceFaultTime,
+					RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+					CompleteTime: constant.JobReportRecoverTimeout + 1, // exceed 1s
+				}},
 			}
-			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+				uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 			}
@@ -171,19 +181,29 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation5(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation5-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:   "test-device",
-				FaultTime:    UceFaultTime,
-				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-				CompleteTime: constant.JobNotRecoverComplete,
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:    UceFaultTime,
+					RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+					CompleteTime: constant.JobNotRecoverComplete}},
 			}
 			if i == 0 {
-				uceDevice.CompleteTime = uceDevice.RecoverTime
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			} else if i == 1 {
-				uceDevice.CompleteTime = uceDevice.RecoverTime + constant.JobReportCompleteTimeout
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime +
+					constant.JobReportCompleteTimeout
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			} else {
-				uceDevice.CompleteTime = rand.Int63nRange(uceDevice.RecoverTime, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = rand.Int63nRange(uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime,
+					uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			}
-			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+				uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 			}
@@ -199,13 +219,14 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation6(t *testing.T) {
 	// CompleteTime smaller than FaultTime
 	t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation6-1", func(t *testing.T) {
 		uceDevice := constant.RetryDeviceInfo{
-			DeviceName:   "test-device",
-			FaultTime:    UceFaultTime,
-			RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-			CompleteTime: UceFaultTime - 1,
+			DeviceName: "test-device",
+			FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+				FaultTime:    UceFaultTime,
+				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+				CompleteTime: UceFaultTime - 1}},
 		}
-
-		currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+		currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+			uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 		if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 			t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 		}
@@ -214,14 +235,17 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation6(t *testing.T) {
 	// CompleteTime smaller than RecoverTime
 	t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation6-2", func(t *testing.T) {
 		uceDevice := constant.RetryDeviceInfo{
-			DeviceName:   "test-device",
-			FaultTime:    UceFaultTime,
-			RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
-			CompleteTime: constant.JobNotRecoverComplete,
+			DeviceName: "test-device",
+			FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+				FaultTime:    UceFaultTime,
+				RecoverTime:  rand.Int63nRange(UceFaultTime, UceFaultTime+constant.JobReportRecoverTimeout+1),
+				CompleteTime: constant.JobNotRecoverComplete}},
 		}
-		uceDevice.CompleteTime = uceDevice.RecoverTime - 1
+		faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+		faultDetail.CompleteTime = faultDetail.RecoverTime - 1
 
-		currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+		currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+			faultDetail.RecoverTime+constant.JobReportCompleteTimeout+1)
 		if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 			t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 		}
@@ -236,18 +260,27 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation7(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		t.Run("TestUceFaultUceProcessorCanFilterUceDeviceFaultInfoSituation7-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:  "test-device",
-				FaultTime:   UceFaultTime,
-				RecoverTime: UceFaultTime - 1,
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:   UceFaultTime,
+					RecoverTime: UceFaultTime - 1}},
 			}
 			if i == 0 {
-				uceDevice.CompleteTime = uceDevice.FaultTime
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = faultDetail.FaultTime
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			} else if i == 1 {
-				uceDevice.CompleteTime = uceDevice.RecoverTime + constant.JobReportCompleteTimeout
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = faultDetail.RecoverTime + constant.JobReportCompleteTimeout
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			} else {
-				uceDevice.CompleteTime = rand.Int63nRange(uceDevice.FaultTime, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+				faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
+				faultDetail.CompleteTime = rand.Int63nRange(faultDetail.FaultTime,
+					faultDetail.RecoverTime+constant.JobReportCompleteTimeout+1)
+				uceDevice.FaultDetail[constant.DeviceRetryFault] = faultDetail
 			}
-			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+				uceDevice.FaultDetail[constant.DeviceRetryFault].RecoverTime+constant.JobReportCompleteTimeout+1)
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 			}
@@ -264,16 +297,19 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation8(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		t.Run("TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation8-"+string(rune(i)), func(t *testing.T) {
 			uceDevice := constant.RetryDeviceInfo{
-				DeviceName:  "test-device",
-				FaultTime:   UceFaultTime,
-				RecoverTime: UceFaultTime - int64(31*time.Second),
+				DeviceName: "test-device",
+				FaultDetail: map[string]constant.DeviceFaultDetail{constant.DeviceRetryFault: {
+					FaultTime:   UceFaultTime,
+					RecoverTime: UceFaultTime - int64(31*time.Second)}},
 			}
+			faultDetail := uceDevice.FaultDetail[constant.DeviceRetryFault]
 			if i == 0 {
-				uceDevice.CompleteTime = uceDevice.FaultTime
+				faultDetail.CompleteTime = faultDetail.FaultTime
 			} else if i == 1 {
-				uceDevice.CompleteTime = uceDevice.RecoverTime + constant.JobReportCompleteTimeout
+				faultDetail.CompleteTime = faultDetail.RecoverTime + constant.JobReportCompleteTimeout
 			}
-			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1, uceDevice.RecoverTime+constant.JobReportCompleteTimeout+1)
+			currentTime := max(UceFaultTime+constant.JobReportRecoverTimeout+1,
+				faultDetail.RecoverTime+constant.JobReportCompleteTimeout+1)
 			if got := RetryProcessor.canFilterRetryDeviceFaultInfo(uceDevice, currentTime); got != want {
 				t.Errorf("canFilterRetryDeviceFaultInfo() = %v, want %v", got, want)
 			}
@@ -291,6 +327,12 @@ func TestUceFaultProcessorGetUceDeviceOfNodes(t *testing.T) {
 
 		RetryProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
 		deviceOfNodes := RetryProcessor.getRetryDeviceOfNodes()
+		for nodeName, filterNode := range deviceOfNodes {
+			for deviceName, filterDevice := range filterNode.DeviceInfo {
+				filterDevice.FaultCodeLevel = nil
+				deviceOfNodes[nodeName].DeviceInfo[deviceName] = filterDevice
+			}
+		}
 		if !reflect.DeepEqual(deviceOfNodes, uceNodesInfos) {
 			t.Errorf("getRetryDeviceOfNodes() = %v, want %v",
 				util.ObjToString(deviceOfNodes), util.ObjToString(uceNodesInfos))
@@ -305,10 +347,19 @@ func TestUceFaultProcessorGetUceDevicesForUceTolerateJobs(t *testing.T) {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
+		RetryProcessor.normalFaultDetailOfJob = make(map[string]constant.DeviceFaultDetail)
 		RetryProcessor.jobServerInfoMap = jobServerInfoMap
 		RetryProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
 		RetryProcessor.retryDeviceOfNode = RetryProcessor.getRetryDeviceOfNodes()
 		RetryProcessor.retryDevicesOfJob = RetryProcessor.getRetryDevicesForTolerateJobs()
+		for jobId, filterJob := range RetryProcessor.retryDevicesOfJob {
+			for nodeName, filterNode := range filterJob.RetryNode {
+				for deviceName, filterDevice := range filterNode.DeviceInfo {
+					filterDevice.FaultCodeLevel = nil
+					RetryProcessor.retryDevicesOfJob[jobId].RetryNode[nodeName].DeviceInfo[deviceName] = filterDevice
+				}
+			}
+		}
 		if !reflect.DeepEqual(RetryProcessor.retryDevicesOfJob, expectUceJobsInfo) {
 			t.Errorf("getRetryDevicesForTolerateJobs() = %v, want %v",
 				util.ObjToString(RetryProcessor.retryDevicesOfJob), util.ObjToString(expectUceJobsInfo))
@@ -323,6 +374,7 @@ func TestUceFaultProcessorProcessUceFaultInfo(t *testing.T) {
 			t.Errorf("init data failed. %v", testFileErr)
 		}
 
+		RetryProcessor.normalFaultDetailOfJob = make(map[string]constant.DeviceFaultDetail)
 		RetryProcessor.jobServerInfoMap = jobServerInfoMap
 		RetryProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
 		RetryProcessor.retryDeviceOfNode = RetryProcessor.getRetryDeviceOfNodes()
@@ -348,6 +400,7 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 		}
 		collector.ReportInfoCollector = reportInfos
 
+		RetryProcessor.normalFaultDetailOfJob = make(map[string]constant.DeviceFaultDetail)
 		RetryProcessor.jobServerInfoMap = jobServerInfoMap
 		RetryProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](cmDeviceInfos)
 		RetryProcessor.retryDeviceOfNode = RetryProcessor.getRetryDeviceOfNodes()

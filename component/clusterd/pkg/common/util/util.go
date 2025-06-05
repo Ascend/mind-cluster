@@ -100,6 +100,14 @@ func MaxInt(x, y int64) int64 {
 	return y
 }
 
+// MinInt return min between x and y
+func MinInt(x, y int64) int64 {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 // StringSliceToIntSlice convert string slice to int slice
 func StringSliceToIntSlice(strSlice []string) []int {
 	var result []int

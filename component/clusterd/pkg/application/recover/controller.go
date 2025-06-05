@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
@@ -54,6 +55,7 @@ type EventController struct {
 	globalSwitchRankIDs       []string
 	globalOps                 []bool
 	switchNicResponse         chan *pb.SwitchNicResponse
+	restartFaultProcess       bool
 	controllerContext         context.Context
 	ctxCancelFunc             context.CancelFunc
 	serviceContext            context.Context
@@ -143,7 +145,7 @@ func (ctl *EventController) reset(stop bool) {
 	hwlog.RunLog.Infof("jobId=%s's action path = {%s}", ctl.jobInfo.JobId, ctl.state.GetPathGraph())
 	if len(ctl.cacheNormalFault)+len(ctl.cacheRetryFault) > 0 {
 		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-			nil, constant.ClearOperation)
+			nil, false, constant.ClearOperation)
 		if err != nil {
 			hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
 		} else {
@@ -249,9 +251,13 @@ func (ctl *EventController) supportRetryStrategy() bool {
 }
 
 func (ctl *EventController) supportRecoverStrategy() bool {
+	return ctl.supportTargetRecoverStrategy(constant.ProcessRecoverStrategyName)
+}
+
+func (ctl *EventController) supportTargetRecoverStrategy(recoverStrategy string) bool {
 	mindXConfiged := false
 	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == constant.ProcessRecoverStrategyName {
+		if strategy == recoverStrategy {
 			mindXConfiged = true
 			break
 		}
@@ -273,6 +279,10 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 		return true
 	}
 	return false
+}
+
+func (ctl *EventController) supportRestartProcessStrategy() bool {
+	return ctl.restartFaultProcess && ctl.supportTargetRecoverStrategy(constant.ProcessRecoverInPlaceStrategyName)
 }
 
 func (ctl *EventController) supportDumpStrategy() bool {
@@ -528,6 +538,7 @@ func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("fault occur, restart fault process: %v", ctl.restartFaultProcess)
 	if ctl.jobInfo.PlatFormMode {
 		hwlog.RunLog.Infof("start wait plat strategy ready, jobId=%s, pgName=%s",
 			ctl.jobInfo.JobId, ctl.jobInfo.PgName)
@@ -545,7 +556,7 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 		ctl.agentReportStrategies = append(ctl.agentReportStrategies, constant.ProcessDumpStrategyName)
 		return common.DumpForFaultEvent, common.OK, nil
 	}
-	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
+	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, ctl.restartFaultProcess,
 		constant.NotifyFaultFlushingOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
@@ -556,7 +567,8 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 }
 
 func (ctl *EventController) handleFaultClear() (string, common.RespCode, error) {
-	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.ClearOperation)
+	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
+		constant.ClearOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
 		return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil
@@ -592,7 +604,7 @@ func (ctl *EventController) handleNotifyDump() (string, common.RespCode, error) 
 		return "", common.ServerInnerError, err
 	}
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-		allFaultRanks, constant.NotifyFaultListOperation)
+		allFaultRanks, false, constant.NotifyFaultListOperation)
 	if err != nil {
 		err = fmt.Errorf("notify agent faultList error, jobId=%s, err=%v", ctl.jobInfo.JobId, err)
 		hwlog.RunLog.Error(err)
@@ -651,6 +663,9 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 	var faultRankIds []string
 	for _, fault := range ctl.cacheNormalFault {
 		faultRankIds = append(faultRankIds, fault.RankId)
+	}
+	if ctl.restartFaultProcess {
+		return ctl.cacheNormalFault, faultRankIds
 	}
 	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId))
 	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
@@ -750,7 +765,7 @@ func (ctl *EventController) notifyFaultForRetryFaultCase(retryFaults,
 			}
 			ctl.mergeFaultPod(faultPod)
 			cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-				allFaultRanks, constant.NotifyFaultListOperation)
+				allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
 			if err != nil {
 				hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
 				return common.NotifyFailEvent, common.OperateConfigMapError, nil
@@ -789,13 +804,17 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 		hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
 	}
-	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-		allFaultRanks, constant.NotifyFaultListOperation)
-	if err != nil {
-		hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
-		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	if !ctl.restartFaultProcess {
+		hwlog.RunLog.Infof("jobId=%s write reset json, restartFaultProcess: %v, faultRanks: %v",
+			ctl.jobInfo.JobId, ctl.restartFaultProcess, allFaultRanks)
+		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
+		if err != nil {
+			hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
+		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	}
-	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
@@ -839,6 +858,13 @@ func (ctl *EventController) firstChooseStrategy() string {
 	if ctl.supportRetryStrategy() && len(ctl.cacheNormalFault) <= 0 {
 		return constant.ProcessRetryStrategyName
 	}
+	if ctl.supportRestartProcessStrategy() {
+		return constant.ProcessRecoverInPlaceStrategyName
+	}
+	return ctl.chooseForRestartProcessFail()
+}
+
+func (ctl *EventController) chooseForRestartProcessFail() string {
 	if ctl.supportRecoverStrategy() {
 		return constant.ProcessRecoverStrategyName
 	}
@@ -849,6 +875,9 @@ func (ctl *EventController) firstChooseStrategy() string {
 }
 
 func (ctl *EventController) chooseForRetryFail() string {
+	if ctl.supportRestartProcessStrategy() {
+		return constant.ProcessRecoverInPlaceStrategyName
+	}
 	if ctl.supportRecoverStrategy() {
 		return constant.ProcessRecoverStrategyName
 	}
@@ -945,8 +974,61 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 			return common.WaitHCCLRoutingConvergenceFail, common.HCCLRoutingConvergenceFail, nil
 		}
 	}
+	if ctl.restartFaultProcess {
+		return ctl.handleRestartFaultProcess(signal)
+	}
 	hwlog.RunLog.Infof("jobId=%s, choose strategy:%s", ctl.jobInfo.JobId, signal.ChangeStrategy)
 	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSignal) (string,
+	common.RespCode, error) {
+	hwlog.RunLog.Infof("jobId:%s, enter handleRestartFaultProcess func, choose strategy:%s",
+		ctl.jobInfo.JobId, signal.ChangeStrategy)
+	if signal.ChangeStrategy == constant.ProcessRecoverInPlaceStrategyName {
+		if err := ctl.WaitNormalFaultRecovery(); err != nil {
+			hwlog.RunLog.Warnf("jobId:%s wait fault recover timeout, err:%v", ctl.jobInfo.JobId, err)
+			ctl.restartFaultProcess = false
+			return common.KillPodAfterRestartProcessEvent, common.ServerInnerError, nil
+		}
+		_, allFaultRanks, err := ctl.updateCacheFaultAndPod()
+		if err != nil {
+			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
+			return "", common.ServerInnerError, err
+		}
+		hwlog.RunLog.Infof("jobId=%s write reset json for restar process, faultRanks: %v",
+			ctl.jobInfo.JobId, allFaultRanks)
+		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
+		if err != nil {
+			hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
+		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
+		signal.ChangeStrategy = constant.ProcessRecoverStrategyName
+	} else if signal.ChangeStrategy != constant.ProcessRetryStrategyName {
+		hwlog.RunLog.Warnf("choose strategy: %s, not restart fault process", signal.ChangeStrategy)
+		ctl.restartFaultProcess = false
+		return common.KillPodAfterRestartProcessEvent, common.ServerInnerError, nil
+	}
+	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) WaitNormalFaultRecovery() error {
+	startTime := time.Now().Unix()
+	for {
+		if !retry.RetryProcessor.JobHasFault(ctl.jobInfo.JobId) {
+			return nil
+		}
+		time.Sleep(constant.CheckPeriod * time.Second)
+		timeUse := time.Now().Unix() - startTime
+		if timeUse > constant.JobFaultRecoverTimeout {
+			hwlog.RunLog.Warnf("wait fault recover timeout, jobId:%s timeUse=%d > %d second",
+				ctl.jobInfo.JobId, startTime, constant.JobFaultRecoverTimeout)
+			return fmt.Errorf("wait fault recover timeout, jobId:%s timeUse=%d > %d second",
+				ctl.jobInfo.JobId, startTime, constant.JobFaultRecoverTimeout)
+		}
+	}
 }
 
 func (ctl *EventController) getStrategyResult() ([]string, []*pb.RecoverStatusRequest) {
@@ -1067,7 +1149,7 @@ func (ctl *EventController) handleKillPod() (string, common.RespCode, error) {
 		return "", common.ServerInnerError, err
 	}
 	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-		allFaultRanks, constant.NotifyFaultListOperation)
+		allFaultRanks, false, constant.NotifyFaultListOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify kill pod fail, err=%v", err)
 		return "", common.OperateConfigMapError, fmt.Errorf("jobId=%s write cm err:%v",
@@ -1270,7 +1352,8 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 			if !scheduleSuccess {
 				return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
 			}
-			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, constant.ClearOperation)
+			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, ctl.restartFaultProcess,
+				constant.ClearOperation)
 			if err != nil {
 				hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s", err, ctl.jobInfo.JobId, ctl.uuid)
 				return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil
@@ -1340,7 +1423,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
-	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
+	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, ctl.restartFaultProcess,
 		constant.RestartAllProcessOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",

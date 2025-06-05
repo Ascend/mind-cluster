@@ -27,6 +27,8 @@ const (
 	ProcessRetryStrategyName = "retry"
 	// ProcessRecoverStrategyName strategy name of process online recover
 	ProcessRecoverStrategyName = "recover"
+	// ProcessRecoverInPlaceStrategyName strategy name of recover in place with only restarting fault processes
+	ProcessRecoverInPlaceStrategyName = "recover-in-place"
 	// ProcessDumpStrategyName strategy name of save check point
 	ProcessDumpStrategyName = "dump"
 	// ProcessExitStrategyName strategy name of directly exit
@@ -113,6 +115,8 @@ const (
 	CheckPeriod = 3
 	// ProcessControlTimeout wait process annotation until timeout
 	ProcessControlTimeout = 300
+	// JobFaultRecoverTimeout wait fault recover until timeout
+	JobFaultRecoverTimeout = 15
 	// RetrySuccess retry success
 	RetrySuccess = "retry-success"
 	// RetryFailed retry failed
