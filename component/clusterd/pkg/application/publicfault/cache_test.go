@@ -6,6 +6,7 @@ package publicfault
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -71,14 +72,14 @@ func testDealDelete() {
 
 	// ctx stop
 	ctx, cancel := context.WithCancel(context.Background())
-	haveStopped := false
+	haveStopped := atomic.Bool{}
 	go func() {
 		PubFaultNeedDelete.DealDelete(ctx)
-		haveStopped = true
+		haveStopped.Store(true)
 	}()
 	cancel()
 	time.Sleep(waitGoroutineFinishedTime)
-	convey.So(haveStopped, convey.ShouldBeTrue)
+	convey.So(haveStopped.Load(), convey.ShouldBeTrue)
 
 	// delete faults
 	ctx, cancel = context.WithCancel(context.Background())

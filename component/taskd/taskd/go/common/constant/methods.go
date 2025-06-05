@@ -29,3 +29,14 @@ func NewProfilingExecRes(status string) ProfilingExecRes {
 		return ProfilingExecRes{status: Unknown}
 	}
 }
+
+// NewWorkerProfilingState construct ProfilingWorkerState from string
+func NewWorkerProfilingState(state string) ProfilingWorkerState {
+	switch state {
+	case Opened, Closed, WaitOpen, Exception, WaitClose:
+		return ProfilingWorkerState{state: state}
+	default:
+		hwlog.RunLog.Errorf("invalid state: %s", state)
+		return ProfilingWorkerState{state: Invalid}
+	}
+}

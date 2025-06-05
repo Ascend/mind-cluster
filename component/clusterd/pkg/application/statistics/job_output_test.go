@@ -5,6 +5,7 @@ package statistics
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -44,9 +45,9 @@ func TestCurrJobStcOutputWithDataChange(t *testing.T) {
 	})
 
 	// Mock kube client
-	var updateCalled bool
+	var updateCalled atomic.Bool
 	patches.ApplyFunc(kube.UpdateOrCreateConfigMap, func(string, string, map[string]string, map[string]string) error {
-		updateCalled = true
+		updateCalled.Store(true)
 		return nil
 	})
 
@@ -69,7 +70,7 @@ func TestCurrJobStcOutputWithDataChange(t *testing.T) {
 	tickCh <- time.Now()
 	time.Sleep(time.Second)
 
-	assert.True(t, updateCalled)
+	assert.True(t, updateCalled.Load())
 }
 
 func TestCurrJobStcOutputNoDataChange(t *testing.T) {

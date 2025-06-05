@@ -125,6 +125,10 @@ func (b *BusinessStreamProcessor) StreamRun() error {
 			}
 			continue
 		}
+		if err = b.DistributeMsg(msg); err != nil {
+			hwlog.RunLog.Errorf("manager distribute plugin %s msg failed, err: %v", pluginName, err)
+			continue
+		}
 		hwlog.RunLog.Debugf("plugin %s pull msg: %v", pluginName, msg)
 	}
 	return nil

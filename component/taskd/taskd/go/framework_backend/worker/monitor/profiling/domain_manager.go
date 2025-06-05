@@ -27,16 +27,12 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
 )
 
 const maxRegisterTime = 5
-
-type msgBody struct {
-	MsgType string
-	Code    int32
-}
 
 // CmdChan for SwitchProfiling
 var CmdChan chan constant.ProfilingDomainCmd
@@ -111,12 +107,12 @@ func loopWatchProfilingFile() {
 				hwlog.RunLog.Info("MgrProfilingCmd load, return")
 				return
 			}
-			getCmd(lastPrintErr)
+			lastPrintErr = getCmd(lastPrintErr)
 		}
 	}
 }
 
-func getCmd(lastPrintErr time.Time) {
+func getCmd(lastPrintErr time.Time) time.Time {
 	profilingSwitches, err := utils.GetProfilingSwitch(constant.ProfilingSwitchFilePath)
 	if err != nil {
 		if time.Since(lastPrintErr) > printErrDuration {
@@ -127,6 +123,7 @@ func getCmd(lastPrintErr time.Time) {
 		profilingDomainCmd := utils.PfSwitchToPfDomainSwitch(profilingSwitches)
 		CmdChan <- profilingDomainCmd
 	}
+	return lastPrintErr
 }
 
 func changeProfileSwitchStatus(profilingDomainCmd constant.ProfilingDomainCmd) {
@@ -171,9 +168,10 @@ func notifyMgrSwitchChange(result constant.ProfilingResult) {
 		hwlog.RunLog.Errorf("NetTool for worker is nil?")
 		return
 	}
-	msg := make(map[string]any)
-	msg["MsgType"] = "STATUS"
-	msg["Code"] = utils.ProfilingResultToBizCode(result)
+	msg := storage.MsgBody{
+		MsgType: constant.STATUS,
+		Code:    utils.ProfilingResultToBizCode(result),
+	}
 	_, err := NetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
 		Role:       common.MgrRole,
 		ServerRank: "0",
@@ -203,7 +201,7 @@ func RegisterAndLoopRecv(ctx context.Context) {
 		hwlog.RunLog.Error("cannot RegisterAndLoopRecv for profiling, net tool init timeout")
 		return
 	}
-	body := msgBody{
+	body := storage.MsgBody{
 		MsgType: "REGISTER",
 		Code:    101,
 	}
@@ -226,6 +224,7 @@ func RegisterAndLoopRecv(ctx context.Context) {
 		return
 	}
 	hwlog.RunLog.Errorf("worker %d register manager success, begin recv msg", GlobalRank)
+	MgrProfilingCmd.Store(true)
 	for {
 		select {
 		case <-ctx.Done():
@@ -245,12 +244,11 @@ func processMsg(globalRank int, msg *common.Message) {
 		hwlog.RunLog.Errorf("getSwitchProfiling err: %v", err)
 		return
 	}
-	MgrProfilingCmd.Store(true)
 	CmdChan <- profilingSwitch
 }
 
 func getProfilingSwitch(msg *common.Message) (constant.ProfilingDomainCmd, error) {
-	body, err := utils.StringToObj[msgBody](msg.Body)
+	body, err := utils.StringToObj[storage.MsgBody](msg.Body)
 	if err != nil {
 		err = fmt.Errorf("get msgBody err: %v, msgBody is %v", err, body)
 		return constant.ProfilingDomainCmd{}, err

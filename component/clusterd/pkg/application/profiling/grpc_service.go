@@ -73,29 +73,38 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]",
 				dtc.JobNamespace, dtc.JobName), Code: ErrNotFound}, err
 		}
-		if err := dtc.CreateDataTraceCm(in.ProfilingSwitch); err != nil {
-			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to create comfigmap:[%s/%s] "+
-				"while cm is not exist", dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
+		createErr := dtc.CreateDataTraceCm(in.ProfilingSwitch)
+		notifyErr := ps.notifySubscriber(jobName, jobNs, dtc, in)
+		if createErr != nil && notifyErr != nil {
+			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to create comfigmap:[%s/%s]."+
+					"And notify subcriber failed", dtc.JobNamespace, dtc.JobName), Code: ErrServerFault},
+				fmt.Errorf("create cm err:%v, notify subcriber err %v", createErr, notifyErr)
 		}
 		return &profiling.DataTypeRes{Message: fmt.Sprintf("comfigmap:[%s/%s] has been created"+
 			" and param is updated to change profiling marker status", dtc.JobNamespace, dtc.JobName), Code: OK}, nil
 	}
-	if err := dtc.UpdateDataTraceCm(in.ProfilingSwitch); err != nil {
-		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]",
-			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
-	}
-	jobInfo := job.GetJobByNameSpaceAndName(jobName, jobNs)
-	if len(jobInfo.Key) == 0 {
-		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to find ns %s with job %s in jobcache",
-			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, fmt.Errorf("no such job")
-	}
-	if err := ps.publish(jobInfo.Key, in.ProfilingSwitch); err != nil {
-		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to notify taskd comfigmap:[%s/%s]",
-			dtc.JobNamespace, dtc.JobName), Code: ErrServerFault}, err
+	updateCmErr := dtc.UpdateDataTraceCm(in.ProfilingSwitch)
+	notifyErr := ps.notifySubscriber(jobName, jobNs, dtc, in)
+	if updateCmErr != nil && notifyErr != nil {
+		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]."+
+				" And notify subcriber failed", dtc.JobNamespace, dtc.JobName), Code: ErrServerFault},
+			fmt.Errorf("update cm err:%v, notify subcriber err %v", updateCmErr, notifyErr)
 	}
 	response := &profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
 	hwlog.RunLog.Infof("successfully changed profiling marker enable status: %#v", in.ProfilingSwitch)
 	return response, nil
+}
+
+func (ps *SwitchManager) notifySubscriber(jobName string, jobNs string, dtc *profile.DataTraceController,
+	in *profiling.DataTypeReq) error {
+	jobInfo := job.GetJobByNameSpaceAndName(jobName, jobNs)
+	if len(jobInfo.Key) == 0 {
+		return fmt.Errorf("no such job")
+	}
+	if err := ps.publish(jobInfo.Key, in.ProfilingSwitch); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ps *SwitchManager) publish(jobId string, info *profiling.ProfilingSwitch) error {

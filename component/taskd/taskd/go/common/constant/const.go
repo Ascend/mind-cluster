@@ -219,7 +219,9 @@ const (
 	// DefaultIP grpc manager ListenAddr default ip
 	DefaultIP = "127.0.0.1"
 	// MgrPort grpc manager ListenAddr port
-	MgrPort = ":9601"
+	MgrPort      = ":9601"
+	ProxyPort    = ":9602"
+	ClusterdPort = ":8899"
 )
 
 const (
@@ -234,4 +236,32 @@ const (
 const (
 	// CandidateStatus indicate plugin request stream
 	CandidateStatus = "candidate"
+)
+
+// All kind of ProfilingWorkerState
+var ProfilingWorkerOpenedState = NewWorkerProfilingState(Opened)
+var ProfilingWorkerClosedState = NewWorkerProfilingState(Closed)
+var ProfilingWorkerWaitOpenState = NewWorkerProfilingState(WaitOpen)
+var ProfilingWorkerExceptionState = NewWorkerProfilingState(Exception)
+var ProfilingWorkerWaitCloseState = NewWorkerProfilingState(WaitClose)
+
+// Profiling states
+const (
+	Opened    = "opened"
+	Closed    = "closed"
+	WaitOpen  = "waitOpen"
+	Exception = "exception"
+	WaitClose = "waitClose"
+	Invalid   = "Invalid"
+)
+
+// All env variables
+const (
+	MindxServerIp = "MINDX_SERVER_IP"
+)
+
+// StreamName and PluginName
+const (
+	ProfilingStream     = "ProfilingCollect"
+	ProfilingPluginName = "ProfilingPlugin"
 )

@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"ascend-common/common-utils/hwlog"
+	"taskd/common/constant"
 	"taskd/framework_backend/manager/infrastructure"
 )
 
@@ -39,7 +40,8 @@ func NewStreamHandler() *StreamHandler {
 
 // Init create business stream
 func (s *StreamHandler) Init() error {
-	profilingCollectStream := infrastructure.NewStream("ProfilingCollect", map[string]int{"profiling1": 1})
+	profilingCollectStream := infrastructure.NewStream(
+		constant.ProfilingStream, map[string]int{constant.ProfilingPluginName: 1})
 	if err := s.SetStream(profilingCollectStream); err != nil {
 		hwlog.RunLog.Errorf("init stream handler failed: set stream %s failed",
 			profilingCollectStream.GetName())

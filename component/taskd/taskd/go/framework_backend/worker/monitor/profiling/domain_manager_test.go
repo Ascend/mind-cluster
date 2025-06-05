@@ -28,6 +28,7 @@ import (
 
 	"taskd/common/constant"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
 )
@@ -326,7 +327,7 @@ func TestRegisterAndLoopRecv(t *testing.T) {
 	patches.ApplyMethod(NetTool, "ReceiveMessage", func(nt *net.NetInstance) *common.Message {
 		time.Sleep(time.Second)
 		return &common.Message{
-			Body: utils.ObjToString(msgBody{
+			Body: utils.ObjToString(storage.MsgBody{
 				Code: constant.ProfilingAllOnCmdCode,
 			}),
 		}

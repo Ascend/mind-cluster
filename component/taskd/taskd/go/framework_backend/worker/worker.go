@@ -34,7 +34,9 @@ var netTool *net.NetInstance
 var monitorInitCtx context.Context
 var monitorInitNotify context.CancelFunc
 
-const waitInitMsptiTimeout = 20 * time.Second
+const (
+	waitInitMsptiTimeout = 60 * time.Second
+)
 
 func init() {
 	monitorInitCtx, monitorInitNotify = context.WithCancel(context.Background())
@@ -45,6 +47,7 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 	profiling.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
 	profiling.GlobalRankId = globalRank
 
+	hwlog.RunLog.Info("begin init mspti lib so")
 	if err := profiling.InitMspti(); err != nil {
 		hwlog.RunLog.Errorf("init profiling err: %v", err)
 		return
@@ -62,7 +65,7 @@ func InitNetwork(globalRank, nodeRank int) {
 	if ip == "" {
 		ip = "127.0.0.1"
 	}
-	addr := ip + ":6666"
+	addr := ip + constant.ProxyPort
 	var err error
 	netTool, err = net.InitNetwork(&common.TaskNetConfig{
 		Pos: common.Position{
