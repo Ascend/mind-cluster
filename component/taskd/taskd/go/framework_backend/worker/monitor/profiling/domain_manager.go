@@ -39,7 +39,7 @@ var CmdChan chan constant.ProfilingDomainCmd
 
 const (
 	maxCmdChanLen      = 10
-	maxWaitNetInitTime = 60 * time.Second
+	maxWaitNetInitTime = 180 * time.Second
 	printErrDuration   = 30 * time.Second
 )
 

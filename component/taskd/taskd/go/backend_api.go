@@ -135,6 +135,8 @@ func InitNetwork(configJSON *C.char) uintptr {
 	if err != nil {
 		return 0
 	}
+	hwlog.RunLog.Infof("init network success, role=%s, srvRank=%s, processRank=%s",
+		config.Pos.Role, config.Pos.ServerRank, config.Pos.ProcessRank)
 	toolPtr := uintptr(unsafe.Pointer(tool))
 	rw.Lock()
 	netLifeCtl[toolPtr] = tool
@@ -157,6 +159,10 @@ func SyncSendMessage(toolPtr uintptr, msgJSON *C.char) C.int {
 	if !ok {
 		return C.int(-1)
 	}
+	if goMessage.Dst != nil {
+		hwlog.RunLog.Infof("py sync send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
+			goMessage.Dst.Role, goMessage.Dst.ServerRank, goMessage.Dst.ProcessRank)
+	}
 	_, err = tool.SyncSendMessage(goMessage.Uuid, goMessage.BizType, goMessage.Body, goMessage.Dst)
 	if err != nil {
 		return C.int(-1)
@@ -178,6 +184,10 @@ func AsyncSendMessage(toolPtr uintptr, msgJSON *C.char) C.int {
 	tool, ok := netLifeCtl[toolPtr]
 	if !ok {
 		return C.int(-1)
+	}
+	if goMessage.Dst != nil {
+		hwlog.RunLog.Infof("py async send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
+			goMessage.Dst.Role, goMessage.Dst.ServerRank, goMessage.Dst.ProcessRank)
 	}
 	err = tool.AsyncSendMessage(goMessage.Uuid, goMessage.BizType, goMessage.Body, goMessage.Dst)
 	if err != nil {

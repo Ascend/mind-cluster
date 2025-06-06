@@ -62,7 +62,7 @@ def init_taskd_agent(config : dict = {}, cls = None) -> bool:
         )
     log_name = "agent-" + config_values[CONFIG_SERVERRANK_KEY] + ".log"
     init_taskd_log_func = cython_api.lib.InitTaskdLog
-    result = init_taskd_log_func(log_name)
+    result = init_taskd_log_func(log_name.encode('utf-8'))
     if result != 0:
         run_log.error("init_taskd_agent: init_taskd_log failed")
         return False
