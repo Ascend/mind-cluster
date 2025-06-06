@@ -75,6 +75,7 @@ func (up *upStreamEndpoint) close() {
 
 // resetNet closes the stream and the client connection.
 func (up *upStreamEndpoint) resetNet() {
+	up.netInstance.upClientInited.Store(false)
 	if up.stream != nil {
 		err := up.stream.CloseSend()
 		hwlog.RunLog.Errorf("close upstream error: %v, role=%s, srvRank=%s, processRank=%s",
@@ -146,6 +147,9 @@ func (up *upStreamEndpoint) setUpStream() error {
 	}
 	ctx := common.SetContextMetaData(up.netInstance.ctx, metaKv)
 	up.stream, err = up.upStreamClient.InitServerDownStream(ctx)
+	if err == nil {
+		up.netInstance.upClientInited.Store(true)
+	}
 	return err
 }
 

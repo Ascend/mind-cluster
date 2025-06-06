@@ -32,7 +32,7 @@ import (
 	"taskd/toolkit_backend/net/common"
 )
 
-const maxRegisterTime = 5
+const maxRegisterTime = 10
 
 // CmdChan for SwitchProfiling
 var CmdChan chan constant.ProfilingDomainCmd

@@ -18,6 +18,7 @@ package net
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,15 +40,16 @@ var limiter = rate.NewLimiter(rate.Every(time.Second), common.GrpcQps)
 
 // NetInstance represents the network netIns.
 type NetInstance struct {
-	config       *common.TaskNetConfig
-	upEndpoint   *upStreamEndpoint
-	downEndpoint *downStreamEndpoint
-	recvBuffer   chan *common.Message
-	destroyed    atomic.Bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	grPool       grpool.GrPool
-	rw           sync.RWMutex
+	config         *common.TaskNetConfig
+	upEndpoint     *upStreamEndpoint
+	upClientInited atomic.Bool
+	downEndpoint   *downStreamEndpoint
+	recvBuffer     chan *common.Message
+	destroyed      atomic.Bool
+	ctx            context.Context
+	cancel         context.CancelFunc
+	grPool         grpool.GrPool
+	rw             sync.RWMutex
 }
 
 // InitNetwork initializes the network netIns.
@@ -188,6 +190,13 @@ func (nt *NetInstance) route(msg *proto.Message, dstType string, fromType string
 			return common.AckFrame(msg.Header.Uuid, common.NoRoute, &nt.config.Pos),
 				errors.New("no route")
 		}
+		if nt.upEndpoint == nil || nt.upClientInited.Load() == false {
+			hwlog.RunLog.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+				nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
+			return common.AckFrame(msg.Header.Uuid, common.ServerErr, &nt.config.Pos),
+				fmt.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+					nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
+		}
 		return nt.upEndpoint.send(msg)
 	default:
 		hwlog.RunLog.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
@@ -209,8 +218,12 @@ func (nt *NetInstance) proxyPathDiscovery(ctx context.Context, req *proto.PathDi
 	}
 	req.ProxyPos = pos
 	req.Path = append(req.Path, pos)
-	if nt.upEndpoint == nil || nt.upEndpoint.upStreamClient == nil {
-		return common.AckFrame(req.Uuid, common.OK, &nt.config.Pos), nil
+	if nt.upEndpoint == nil || nt.upEndpoint.upStreamClient == nil || nt.upClientInited.Load() == false {
+		hwlog.RunLog.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+			nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
+		return common.AckFrame(req.Uuid, common.ClientErr, &nt.config.Pos),
+			fmt.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+				nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 	}
 	return nt.upEndpoint.upStreamClient.PathDiscovery(ctx, req)
 }
