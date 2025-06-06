@@ -88,6 +88,7 @@ func (m *BaseManager) Init() error {
 		fmt.Printf("manager init hwlog failed, err: %v \n", err)
 		return err
 	}
+	hwlog.RunLog.Infof("manager config: %v", m.Config)
 	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
 	m.MsgHd = application.NewMsgHandler()
 	m.MsgHd.Start(m.svcCtx)
@@ -153,6 +154,7 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
 		return
 	}
+	hwlog.RunLog.Infof("get clusterd addr %v", addr)
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)

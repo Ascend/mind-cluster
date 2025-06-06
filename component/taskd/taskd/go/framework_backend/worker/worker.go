@@ -18,7 +18,6 @@ package worker
 import "C"
 import (
 	"context"
-	"os"
 	"strconv"
 	"time"
 
@@ -35,7 +34,7 @@ var monitorInitCtx context.Context
 var monitorInitNotify context.CancelFunc
 
 const (
-	waitInitMsptiTimeout = 60 * time.Second
+	waitInitMsptiTimeout = 180 * time.Second
 )
 
 func init() {
@@ -59,13 +58,10 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 
 // InitNetwork register worker to manager
 func InitNetwork(globalRank, nodeRank int) {
+	hwlog.RunLog.Infof("worker %d init network begin", globalRank)
 	profiling.GlobalRank = globalRank
 	profiling.NodeRank = nodeRank
-	ip := os.Getenv("POD_IP")
-	if ip == "" {
-		ip = "127.0.0.1"
-	}
-	addr := ip + constant.ProxyPort
+	addr := constant.DefaultIP + constant.ProxyPort
 	var err error
 	netTool, err = net.InitNetwork(&common.TaskNetConfig{
 		Pos: common.Position{
@@ -81,6 +77,7 @@ func InitNetwork(globalRank, nodeRank int) {
 	if err != nil {
 		hwlog.RunLog.Errorf("worker %d init network err: %v", globalRank, err)
 	}
+	hwlog.RunLog.Infof("worker %d init network end", globalRank)
 	profiling.NetTool = netTool
 	profiling.NetToolInitNotify()
 }
