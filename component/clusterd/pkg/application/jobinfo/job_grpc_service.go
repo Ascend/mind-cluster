@@ -68,6 +68,7 @@ func NewJobServer(ctx context.Context) *JobServer {
 func (s *JobServer) Register(ctx context.Context, req *job.ClientInfo) (*job.Status, error) {
 	hwlog.RunLog.Infof("role: %v call Register", req.Role)
 	if !clientWhiteList[req.Role] {
+		hwlog.RunLog.Warnf("role:%v is not in whitelist:%#v", req.Role, clientWhiteList)
 		return &job.Status{
 			Code:     int32(common.UnRegistry),
 			Info:     fmt.Sprintf("role:%v is not in whitelist:%#v", req.Role, clientWhiteList),
@@ -76,7 +77,7 @@ func (s *JobServer) Register(ctx context.Context, req *job.ClientInfo) (*job.Sta
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if len(s.clients) > maxClientNum {
+	if len(s.clients) >= maxClientNum {
 		hwlog.RunLog.Warn("too many clients registered for job info")
 		return &job.Status{
 			Code:     common.RateLimitedCode,
