@@ -19,12 +19,12 @@ import os
 from dataclasses import asdict
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
-from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, DEFAULT_PROXY_UPSTREAMPORT,\
-     DEFAULT_PRXOY_LISTENPORT, DEFAULT_PROXY_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY,\
+from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, DEFAULT_PROXY_UPSTREAMPORT, \
+     DEFAULT_PRXOY_LISTENPORT, DEFAULT_PROXY_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
      CONFIG_LISTENIP_KEY, CONFIG_UPSTREAMPORT_KEY, CONFIG_LISTENPORT_KEY
 
 
-def init_taskd_proxy(config : dict) -> bool:
+def init_taskd_proxy(config: dict) -> bool:
     if cython_api.lib is None:
         run_log.error("init_taskd_proxy: the libtaskd.so has not been loaded!")
         return False
@@ -43,14 +43,14 @@ def init_taskd_proxy(config : dict) -> bool:
 
     configs = NetworkConfig(
         pos=Position(
-            role = DEFAULT_PROXY_ROLE,
-            server_rank = config_values[CONFIG_SERVERRANK_KEY],
-            process_rank = DEFAULT_PROCESSRANK
+            role=DEFAULT_PROXY_ROLE,
+            server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
+            process_rank=DEFAULT_PROCESSRANK
         ),
-        upstream_addr = config_values[CONFIG_UPSTREAMIP_KEY] + ":" + config_values[CONFIG_UPSTREAMPORT_KEY],
-        listen_addr = config_values[CONFIG_LISTENIP_KEY] + ":" + config_values[CONFIG_LISTENPORT_KEY],
-        enable_tls = False,
-        tls_conf = None
+        upstream_addr=config_values.get(CONFIG_UPSTREAMIP_KEY) + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
+        listen_addr=config_values.get(CONFIG_LISTENIP_KEY) + ":" + config_values.get(CONFIG_LISTENPORT_KEY),
+        enable_tls=False,
+        tls_conf=None
     )
 
     run_log.info(f"init_taskd_proxy: configs is {configs}")

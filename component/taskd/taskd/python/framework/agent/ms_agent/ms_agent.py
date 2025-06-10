@@ -39,7 +39,7 @@ class MsAgent(BaseAgent):
     RANK_STATUS_FAILED = "FAILED"
     FRAMEWORK_MS_NAME = "mindspore"
 
-    def __init__(self, network_config = None):
+    def __init__(self, network_config=None):
         super().__init__()
         self.all_rank_succeed = False
         self.monitor_interval = 5

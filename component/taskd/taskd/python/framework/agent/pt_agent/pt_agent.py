@@ -28,11 +28,12 @@ except ImportError:
     WorkerState = None
     RunResult = None
 
+
 class PtAgent(BaseAgent):
     """
     PtAgent is for PyTorch to manage training process.
     """
-    def __init__(self, cls, network_config = None):
+    def __init__(self, cls, network_config=None):
         super().__init__()
         self.pt_instance = cls
         self.worker_group = cls._worker_group

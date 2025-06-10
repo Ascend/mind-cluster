@@ -58,22 +58,22 @@ class AgentMessageManager():
         Register agent to taskd manager.
         """
         dst = Position(
-            role = "Mgr",
-            server_rank = "0",
-            process_rank = "-1"
+            role="Mgr",
+            server_rank="0",
+            process_rank="-1"
         )
         msg_body = MsgBody(
-            msg_type = "REGISTER",
-            code = 0,
-            message = "",
-            extension = {}
+            msg_type="REGISTER",
+            code=0,
+            message="",
+            extension={}
         )
         body_json = json.dumps(asdict(msg_body))
         msg = MessageInfo(
-            uuid = str(uuid.uuid4()),
-            biz_type = DEFAULT_BIZTYPE,
-            dst = dst,
-            body = body_json
+            uuid=str(uuid.uuid4()),
+            biz_type=DEFAULT_BIZTYPE,
+            dst=dst,
+            body=body_json
         )
         run_log.info(f"agent register: {msg}")
         self.send_message(msg)
@@ -162,6 +162,7 @@ class AgentMessageManager():
             run_log.error("init_network_func failed!")
             raise Exception("init_network_func failed!")
 
+
 def init_network_client(network_config, msg_queue):
     start_process = threading.Thread(target=init_message_manager, args=(network_config, msg_queue))
     start_process.daemon = True
@@ -199,7 +200,8 @@ def get_message_manager() -> AgentMessageManager:
     """
     return AgentMessageManager.instance
 
-def network_send_message(msg :MessageInfo):
+
+def network_send_message(msg: MessageInfo):
     """
     Send message to taskd manager.
     """

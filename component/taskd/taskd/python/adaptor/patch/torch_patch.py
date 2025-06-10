@@ -34,7 +34,7 @@ def patch_default_signal():
 
 
 def patch_invoke_run(self, role: str = DEFAULT_ROLE) -> RunResult:
-    proxy = threading.Thread(target=init_taskd_proxy, args=({CONFIG_UPSTREAMIP_KEY : os.getenv("MASTER_ADDR", LOCAL_HOST)},))
+    proxy = threading.Thread(target=init_taskd_proxy, args=({CONFIG_UPSTREAMIP_KEY: os.getenv("MASTER_ADDR", LOCAL_HOST)},))
     proxy.daemon = True
     proxy.start()
     init_taskd_agent({CONFIG_FRAMEWORK_KEY: 'PyTorch'}, self)

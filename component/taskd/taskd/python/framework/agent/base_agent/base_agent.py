@@ -22,7 +22,7 @@ import uuid
 from dataclasses import asdict
 from taskd.python.utils.log import run_log
 from taskd.python.toolkit.fault_checker.fault_check import grace_exit_pids, stop_pids
-from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message,\
+from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message, \
     get_msg_network_instance
 from taskd.python.framework.common.type import MsgBody, MessageInfo
 

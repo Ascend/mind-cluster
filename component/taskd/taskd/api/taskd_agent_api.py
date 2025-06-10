@@ -20,8 +20,8 @@ from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.pt_agent.pt_agent import PtAgent
 from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
-from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST,\
-     DEFAULT_AGENT_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY,\
+from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, \
+     DEFAULT_AGENT_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
      CONFIG_UPSTREAMPORT_KEY, CONFIG_FRAMEWORK_KEY, DEFAULT_AGENT_UPSTREAMPORT
 
 
@@ -29,7 +29,7 @@ taskd_agent = None
 framework = None
 
 
-def init_taskd_agent(config : dict = {}, cls = None) -> bool:
+def init_taskd_agent(config: dict = {}, cls=None) -> bool:
     global taskd_agent, framework
     if cython_api.lib is None:
         run_log.error("init_taskd_agent: the libtaskd.so has not been loaded!")
@@ -51,16 +51,16 @@ def init_taskd_agent(config : dict = {}, cls = None) -> bool:
         config_values[key] = config.get(key, default)
     network_config = NetworkConfig(
             pos=Position(
-                role = DEFAULT_AGENT_ROLE,
-                server_rank = config_values[CONFIG_SERVERRANK_KEY],
-                process_rank = DEFAULT_PROCESSRANK
+                role=DEFAULT_AGENT_ROLE,
+                server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
+                process_rank=DEFAULT_PROCESSRANK
             ),
-            upstream_addr = config_values[CONFIG_UPSTREAMIP_KEY] + ":" + config_values[CONFIG_UPSTREAMPORT_KEY],
-            listen_addr = '',
-            enable_tls = False,
-            tls_conf = None
+            upstream_addr=config_values.get(CONFIG_UPSTREAMIP_KEY) + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
+            listen_addr='',
+            enable_tls=False,
+            tls_conf=None
         )
-    log_name = "agent-" + config_values[CONFIG_SERVERRANK_KEY] + ".log"
+    log_name = "agent-" + config_values.get(CONFIG_SERVERRANK_KEY) + ".log"
     init_taskd_log_func = cython_api.lib.InitTaskdLog
     result = init_taskd_log_func(log_name.encode('utf-8'))
     if result != 0:

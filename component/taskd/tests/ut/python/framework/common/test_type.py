@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import unittest
-from taskd.python.framework.common.type import Position, TLSConfig, NetworkConfig,\
+from taskd.python.framework.common.type import Position, TLSConfig, NetworkConfig, \
      MessageInfo, MsgBody, AgentReportInfo
 
 
@@ -69,7 +69,7 @@ class TestDataClasses(unittest.TestCase):
         self.assertEqual(self.network_config.pos, self.position)
         self.assertEqual(self.network_config.upstream_addr, 'upstream_addr')
         self.assertEqual(self.network_config.listen_addr, 'listen_addr')
-        self.assertEqual(self.network_config.enable_tls, True)
+        self.assertTrue(self.network_config.enable_tls)
         self.assertEqual(self.network_config.tls_conf, self.tls_config)
 
     def test_message_info(self):
