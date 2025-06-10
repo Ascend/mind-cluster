@@ -426,3 +426,9 @@ type CacheStatus struct {
 type NetFaultInfo struct {
 	NetFault int // the switch of fault network feature
 }
+
+// SimplePodInfo of Pod
+type SimplePodInfo struct {
+	PodUid  string
+	PodRank string
+}

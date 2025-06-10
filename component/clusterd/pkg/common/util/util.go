@@ -146,6 +146,7 @@ func ReadableMsTime(msTime int64) string {
 }
 
 // DeepCopy for object using gob
+// DeepCopy has performance problem, cannot use in Time-sensitive scenario
 func DeepCopy(dst, src interface{}) error {
 	if src == nil {
 		return nil
