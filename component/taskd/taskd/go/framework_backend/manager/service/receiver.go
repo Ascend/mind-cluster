@@ -47,6 +47,7 @@ func (mrc *MsgReceiver) ReceiveMsg(mq *storage.MsgQueue, tool *net.NetInstance, 
 			err := json.Unmarshal([]byte(msg.Body), &msgBody)
 			if err != nil {
 				hwlog.RunLog.Errorf("unmarshal failed: %v", err)
+				continue
 			}
 			data := mq.NewMsg(msg.Uuid, msg.BizType, msg.Src, msgBody)
 			err = mq.Enqueue(data)
