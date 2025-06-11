@@ -31,6 +31,10 @@ const (
 	rankTableFile = "hccl.json"
 	versionFile   = "version"
 	decimal       = 10
+	// Version1 is the version of ranktable v1.0.
+	Version1 = "1.0"
+	// Version1Dot2 is the version of ranktable v1.2
+	Version1Dot2 = "1.2"
 )
 
 // BaseGenerator is the base struct for ranktable generator.
@@ -216,60 +220,86 @@ func (r *BaseGenerator) ToString() (string, error) {
 
 // AddPod is used to add pod to ranktable.
 func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
-	deviceInfo, ok := pod.Annotations[api.Pod910DeviceAnno]
-	if !ok {
+	instance, err := r.parseDeviceInfo(pod)
+	if err != nil {
+		return err
+	}
+	if instance == nil {
 		return nil
 	}
-	var instance Instance
-	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
-		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v", pod.Namespace, pod.Name,
-			deviceInfo, err)
-		return err
-	}
 
-	if pod.Status.PodIP == "" {
-		hwlog.RunLog.Errorf("pod(%s/%s) ip is empty", pod.Namespace, pod.Name)
-		return fmt.Errorf("pod(%s/%s) ip is empty", pod.Namespace, pod.Name)
-	}
-
-	rankIndex, err := strconv.Atoi(pod.Annotations[api.PodRankIndexAnno])
+	server, err := r.buildServerInfo(pod, instance)
 	if err != nil {
-		hwlog.RunLog.Errorf("parse pod(%s/%s) rankIndex(%s) failed: %v", pod.Namespace, pod.Name,
-			pod.Annotations[api.PodRankIndexAnno], err)
 		return err
-	}
-	hwlog.RunLog.Debugf("instance: %v", instance)
-	server := &Server{
-		ServerID:    instance.ServerID,
-		ContainerIP: pod.Status.PodIP,
-		DeviceList:  make([]*Device, 0),
-	}
-	if r.IsMindIEEPJob {
-		hwlog.RunLog.Debugf("pod(%s/%s) belong mindIEEP", pod.Namespace, pod.Name)
-		server.Hardware = pod.Annotations[api.PodUsedHardwareTypeAnno]
-		server.SuperPodID = pod.Annotations["super-pod-id"]
-	}
-	if r.isSoftStrategy {
-		server.SuperPodRank = pod.Annotations[mindxdlutils.SuperPodRankAnno]
-	}
-	rankFactor := len(instance.Devices)
-
-	for index, device := range instance.Devices {
-		var serverDevice Device
-		serverDevice.DeviceID = device.DeviceID
-		serverDevice.DeviceIP = device.DeviceIP
-		if r.Version == "1.2" {
-			serverDevice.SuperDeviceID = device.SuperDeviceID
-		}
-		serverDevice.RankID = strconv.Itoa(rankIndex*rankFactor + index)
-		server.DeviceList = append(server.DeviceList, &serverDevice)
-	}
-	if len(server.DeviceList) < 1 {
-		return fmt.Errorf("%s/%s get deviceList failed", pod.Namespace, pod.Name)
 	}
 
 	r.servers.Store(pod.UID, server)
 	return nil
+}
+
+func (r *BaseGenerator) parseDeviceInfo(pod *corev1.Pod) (*Instance, error) {
+	deviceInfo, ok := pod.Annotations[api.Pod910DeviceAnno]
+	if !ok {
+		return nil, nil
+	}
+	var instance Instance
+	if err := json.Unmarshal([]byte(deviceInfo), &instance); err != nil {
+		hwlog.RunLog.Errorf("unmarshal pod(%s/%s) deviceInfo(%s) failed: %v",
+			pod.Namespace, pod.Name, deviceInfo, err)
+		return nil, err
+	}
+	hwlog.RunLog.Debugf("instance: %v", instance)
+	return &instance, nil
+}
+
+func (r *BaseGenerator) buildServerInfo(pod *corev1.Pod, instance *Instance) (*Server, error) {
+	if pod.Status.PodIP == "" {
+		hwlog.RunLog.Errorf("pod(%s/%s) ip is empty", pod.Namespace, pod.Name)
+		return nil, fmt.Errorf("pod(%s/%s) ip is empty", pod.Namespace, pod.Name)
+	}
+
+	rankIndex, err := strconv.Atoi(pod.Annotations[api.PodRankIndexAnno])
+	if err != nil {
+		hwlog.RunLog.Errorf("parse pod(%s/%s) rankIndex(%s) failed: %v",
+			pod.Namespace, pod.Name, pod.Annotations[api.PodRankIndexAnno], err)
+		return nil, err
+	}
+
+	server := &Server{
+		ServerID:    instance.ServerID,
+		ContainerIP: pod.Status.PodIP,
+		DeviceList:  r.getDeviceList(instance.Devices, rankIndex),
+	}
+
+	r.setExtendedServerInfo(pod, server)
+	return server, nil
+}
+
+func (r *BaseGenerator) getDeviceList(devices []Dev, rankIndex int) []*Device {
+	deviceList := make([]*Device, 0, len(devices))
+	rankFactor := len(devices)
+
+	for index, device := range devices {
+		var serverDevice Device
+		serverDevice.DeviceID = device.DeviceID
+		serverDevice.DeviceIP = device.DeviceIP
+		serverDevice.RankID = strconv.Itoa(rankIndex*rankFactor + index)
+		if r.Version == Version1Dot2 {
+			serverDevice.SuperDeviceID = device.SuperDeviceID
+		}
+		deviceList = append(deviceList, &serverDevice)
+	}
+	return deviceList
+}
+
+func (r *BaseGenerator) setExtendedServerInfo(pod *corev1.Pod, server *Server) {
+	if r.IsMindIEEPJob {
+		server.Hardware = pod.Annotations[api.PodUsedHardwareTypeAnno]
+		server.SuperPodID = pod.Annotations[api.SuperPodIDAnno]
+	}
+	if r.isSoftStrategy {
+		server.SuperPodRank = pod.Annotations[mindxdlutils.SuperPodRankAnno]
+	}
 }
 
 // DeletePod is used to delete pod from ranktable.
