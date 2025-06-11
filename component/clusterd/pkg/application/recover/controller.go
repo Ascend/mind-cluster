@@ -1008,7 +1008,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 			return "", common.ServerInnerError, err
 		}
-		hwlog.RunLog.Infof("jobId=%s write reset json for restar process, faultRanks: %v",
+		hwlog.RunLog.Infof("jobId=%s write reset json for restart process, faultRanks: %v",
 			ctl.jobInfo.JobId, allFaultRanks)
 		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)

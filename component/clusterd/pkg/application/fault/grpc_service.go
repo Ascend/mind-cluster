@@ -110,7 +110,7 @@ func (s *FaultServer) serveJobNum() int {
 // SubscribeFaultMsgSignal subscribe fault message signal from ClusterD
 func (s *FaultServer) SubscribeFaultMsgSignal(request *fault.ClientInfo,
 	stream fault.Fault_SubscribeFaultMsgSignalServer) error {
-	requestInfo := fmt.Sprintf("jobId=%s, rule=%s", request.JobId, request.Role)
+	requestInfo := fmt.Sprintf("jobId=%s, role=%s", request.JobId, request.Role)
 	hwlog.RunLog.Infof("receive Subscribe fault message signal request, %s", requestInfo)
 	faultPublisher, exist := s.getPublisher(request.JobId)
 	if !exist || faultPublisher == nil {
