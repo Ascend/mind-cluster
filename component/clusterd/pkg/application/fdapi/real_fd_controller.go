@@ -22,19 +22,18 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	fdol "ascend-faultdiag-online"
-	"ascend-faultdiag-online/pkg/api/v1"
-	"ascend-faultdiag-online/pkg/context"
-	"ascend-faultdiag-online/pkg/global/globalctx"
+	"ascend-faultdiag-online/pkg/fdol/context"
 )
 
 const (
 	controllerUrl = "feature/netfault/controller"
-	fdConfigPath  = "/usr/local/fdConfig.yaml"
+	fdConfigPath  = "/home/hwMindX/fdConfig.yaml"
 	startApi      = "start"
 	stopApi       = "stop"
 	reloadApi     = "reload"
 )
 
+// StartFdOL for starting FdOL feature
 func StartFdOL() {
 	hwlog.RunLog.Info("start real fd-ol")
 	fdol.StartFDOnline(fdConfigPath, []string{"slowNode", "netFault"}, "cluster")
@@ -42,17 +41,17 @@ func StartFdOL() {
 
 // StartController to start controller
 func StartController() {
-	requestFD(globalctx.Fdctx, startApi)
+	requestFD(context.FdCtx, startApi)
 }
 
 // StopController to stop controller
 func StopController() {
-	requestFD(globalctx.Fdctx, stopApi)
+	requestFD(context.FdCtx, stopApi)
 }
 
 // ReloadController to reload controller
 func ReloadController() {
-	requestFD(globalctx.Fdctx, reloadApi)
+	requestFD(context.FdCtx, reloadApi)
 }
 
 func requestFD(fdCtx *context.FaultDiagContext, api string) {
@@ -61,7 +60,7 @@ func requestFD(fdCtx *context.FaultDiagContext, api string) {
 		return
 	}
 	url := fmt.Sprintf("%s/%s", controllerUrl, api)
-	resp, err := v1.Request(fdCtx, url, "{}")
+	resp, err := fdCtx.Request(url, "{}")
 	if err != nil {
 		hwlog.RunLog.Errorf("stop controller algorithm failed: %v", err)
 		return
