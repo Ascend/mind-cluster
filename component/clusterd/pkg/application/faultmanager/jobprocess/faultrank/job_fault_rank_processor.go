@@ -60,7 +60,7 @@ func podInfoByPodRank(podInfos map[string]*constant.SimplePodInfo) map[string]*c
 
 func (m *jobPodInfoMap) getPodUidAndRankByCardRank(cardRankStr string) (string, string, error) {
 	if m == nil || m.deviceNumOfPod <= 0 {
-		return "", "", fmt.Errorf("invalid jobPodInfoMap")
+		return "", "", nil
 	}
 	cardRank, err := strconv.Atoi(cardRankStr)
 	if err != nil {
