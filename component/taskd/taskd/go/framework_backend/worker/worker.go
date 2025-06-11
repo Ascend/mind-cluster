@@ -166,6 +166,7 @@ func registerAndLoopRecv(ctx context.Context) {
 			return
 		default:
 			msg := NetTool.ReceiveMessage()
+			om.ProcessMsg(GlobalRank, msg)
 			profiling.ProcessMsg(GlobalRank, msg)
 		}
 	}

@@ -20,13 +20,17 @@ import (
 	"fmt"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/hwlog"
+	"taskd/common/constant"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/worker/monitor/profiling"
+	"taskd/framework_backend/worker/om"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
 )
@@ -86,4 +90,39 @@ func TestInitNetwork(t *testing.T) {
 	})
 	InitNetwork(0, 0)
 	convey.ShouldBeTrue(called.Load())
+}
+
+func TestRegisterAndLoopRecv(t *testing.T) {
+	NetTool = &net.NetInstance{}
+	patches := gomonkey.NewPatches()
+	patches.ApplyMethod(NetTool, "SyncSendMessage",
+		func(nt *net.NetInstance, uuid, mtype, msgBody string, dst *common.Position) (*common.Ack, error) {
+			return nil, nil
+		})
+	patches.ApplyMethod(NetTool, "ReceiveMessage", func(nt *net.NetInstance) *common.Message {
+		time.Sleep(time.Second)
+		return &common.Message{
+			Body: utils.ObjToString(storage.MsgBody{
+				Code: constant.ProfilingAllOnCmdCode,
+			}),
+		}
+	})
+	patches.ApplyFunc(waitNetToolInit, func() bool {
+		return true
+	})
+	called := false
+	patches.ApplyFunc(profiling.ProcessMsg, func(globalRank int, msg *common.Message) {
+		called = true
+		return
+	})
+	patches.ApplyFunc(om.ProcessMsg, func(globalRank int, msg *common.Message) {
+		return
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	go func() {
+		time.Sleep(time.Second)
+		cancel()
+	}()
+	registerAndLoopRecv(ctx)
+	convey.ShouldBeTrue(called)
 }

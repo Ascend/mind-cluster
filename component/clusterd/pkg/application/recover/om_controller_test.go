@@ -575,3 +575,133 @@ func testSwitchNicPauseTrainValidReport(ctl *EventController) {
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
+
+func TestSwitchNicSignalEnqueueEnqueue(t *testing.T) {
+	convey.Convey("Testing switchNicSignalEnqueue", t, func() {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		signal := &pb.SwitchRankList{
+			JobId:  "test-job",
+			RankID: make([]string, 0),
+			Op:     make([]bool, 0),
+		}
+		_, code, err := ctl.switchNicSignalEnqueue(signal)
+		convey.So(code, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestGetCtxAndSwitchNicNotifyChan(t *testing.T) {
+	convey.Convey("Testing getCtxAndSwitchNicNotifyChan", t, func() {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		ctx, ch := ctl.getCtxAndSwitchNicNotifyChan()
+		convey.So(ctx, convey.ShouldNotBeNil)
+		convey.So(ch, convey.ShouldNotBeNil)
+	})
+}
+
+func TestListenSwitchNicNotifyChannel(t *testing.T) {
+	convey.Convey("Test listenSwitchNicNotifyChannel", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		sendChan := make(chan *pb.SwitchRankList, 1)
+		patches.ApplyPrivateMethod(ctl, "getCtxAndSwitchNicNotifyChan",
+			func() (context.Context, chan *pb.SwitchRankList) {
+				return ctx, sendChan
+			})
+		patches.ApplyPrivateMethod(ctl, "reset", func() {})
+		patches.ApplyPrivateMethod(ctl, "selectNotifySwitchNic", func(_ context.Context,
+			_ chan *pb.SwitchRankList, _ pb.Recover_SubscribeNotifySwitchServer) bool {
+			return true
+		})
+
+		stream := &notifySwitchNicSender{}
+		ctl.listenSwitchNicNotifyChannel(stream)
+		convey.So(true, convey.ShouldBeTrue)
+
+	})
+}
+
+func TestSelectNotifySwitchNicNil(t *testing.T) {
+	convey.Convey("Test chan when sendChan is nil", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifySwitchNicSender{}
+		res := ctl.selectNotifySwitchNic(context.Background(), nil, stream)
+		convey.ShouldBeTrue(res)
+	})
+}
+
+func TestSelectNotifySwitchNicContextDone(t *testing.T) {
+	convey.Convey("Test chan when context is done", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifySwitchNicSender{}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		sendChan := make(chan *pb.SwitchRankList)
+		res := ctl.selectNotifySwitchNic(ctx, sendChan, stream)
+		convey.ShouldBeTrue(res)
+	})
+}
+
+func TestSelectNotifySwitchNicReceiveSignal(t *testing.T) {
+	convey.Convey("Test chan when receive signal from sendChan", t, func() {
+		jobID := "testJobId"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobID,
+			},
+		}
+		var rules []common.TransRule = ctl.getBaseRules()
+		ctl.state = common.NewStateMachine(common.InitState, rules)
+		stream := &notifySwitchNicSender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.SwitchRankList, 1)
+		signal := &pb.SwitchRankList{JobId: jobID}
+		sendChan <- signal
+		called := false
+		patchSendRetry := gomonkey.ApplyFunc(common.NotifySwitchNicSendRetry,
+			func(stream pb.Recover_SubscribeNotifySwitchServer, signal *pb.SwitchRankList, retryTimes int) error {
+				called = true
+				return nil
+			})
+		defer patchSendRetry.Reset()
+		ctl.selectNotifySwitchNic(ctx, sendChan, stream)
+		convey.ShouldBeTrue(called)
+	})
+}
+
+func TestSelectNotifySwitchNicClosed(t *testing.T) {
+	convey.Convey("Test Chan when sendChan is closed", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifySwitchNicSender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.SwitchRankList, 1)
+		close(sendChan)
+		res := ctl.selectNotifySwitchNic(ctx, sendChan, stream)
+		_, ok := <-sendChan
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(res, convey.ShouldBeTrue)
+	})
+}

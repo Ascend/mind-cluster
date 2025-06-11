@@ -44,6 +44,7 @@ func (mpc *MsgProcessor) clusterHandler(dataPool *storage.DataPool, data storage
 			clusterInfo.Command[constant.DefaultDomainCmd] = defaultDomainCmd
 			clusterInfo.Command[constant.CommDomainCmd] = commDomainCmd
 		}
+		return err
 	case constant.KeepAlive:
 		clusterInfo.HeartBeat = time.Now()
 	default:

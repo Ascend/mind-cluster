@@ -408,7 +408,9 @@ func getHealthState(faultList []constant.FaultRank, nodeStatusList []string,
 	podStrategiesMap map[string]string) string {
 	hasSubHealthFault := false
 	for _, faultRank := range faultList {
-		if faultRank.FaultLevel != constant.SubHealthFault && faultRank.FaultLevel != constant.NotHandleFault {
+		if faultRank.FaultLevel != constant.SubHealthFault &&
+			faultRank.FaultLevel != constant.NotHandleFault &&
+			faultRank.FaultLevel != constant.PreSeparateNPU {
 			return constant.UnHealthyState
 		}
 		if faultRank.FaultLevel == constant.SubHealthFault {

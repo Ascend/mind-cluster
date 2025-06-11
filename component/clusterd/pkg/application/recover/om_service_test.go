@@ -124,6 +124,28 @@ func TestSubscribeSwitchNicSignal(t *testing.T) {
 	})
 }
 
+func TestSubscribeNotifySwitch(t *testing.T) {
+	info := &pb.ClientInfo{
+		JobId: "jobID",
+	}
+	t.Run("case job not registered", func(t *testing.T) {
+		s := fakeService()
+		err := s.SubscribeNotifySwitch(info, nil)
+		assert.Error(t, err)
+	})
+	t.Run("case job registered", func(t *testing.T) {
+		s := fakeService()
+		patch := gomonkey.ApplyPrivateMethod(&EventController{}, "listenSwitchNicNotifyChannel",
+			func(pb.Recover_SubscribeNotifySwitchServer) {
+				return
+			})
+		defer patch.Reset()
+		s.eventCtl[info.JobId] = &EventController{}
+		err := s.SubscribeNotifySwitch(info, nil)
+		assert.Nil(t, err)
+	})
+}
+
 func TestCheckNicsParam(t *testing.T) {
 	jobID := "jobID"
 	nodeName := "nodeName"
@@ -270,5 +292,32 @@ func TestGetGlobalRankIDAndOp(t *testing.T) {
 		})
 		assert.Equal(t, rankID, globalRankIDs[0])
 		assert.Equal(t, true, globalOps[0])
+	})
+}
+
+func TestReplySwitchNicResult(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	ctx := context.Background()
+	jobID := "jobID"
+
+	defer patches.Reset()
+	t.Run("req is nil", func(t *testing.T) {
+		s := fakeService()
+		res, _ := s.ReplySwitchNicResult(ctx, nil)
+		assert.Equal(t, int32(common.NicParamInvalid), res.Code)
+	})
+	t.Run("not register", func(t *testing.T) {
+		s := fakeService()
+		res, _ := s.ReplySwitchNicResult(ctx, &pb.SwitchResult{JobId: ""})
+		assert.Equal(t, int32(common.UnRegistry), res.Code)
+	})
+	t.Run("reply success", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{}
+		patches.ApplyPrivateMethod(&EventController{}, "setSwitchNicResult", func(result *pb.SwitchResult) {
+			return
+		})
+		res, _ := s.ReplySwitchNicResult(ctx, &pb.SwitchResult{JobId: jobID})
+		assert.Equal(t, int32(common.OK), res.Code)
 	})
 }
