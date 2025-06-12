@@ -47,6 +47,7 @@ const (
 var (
 	dpcProcessError = false
 	dpcMemoryError  = false
+	isFirst         = true
 )
 
 // Controller control dpc fault on server
@@ -71,15 +72,16 @@ func (dc *Controller) Control(faultDevInfo *common.FaultAndConfigInfo) *common.F
 	}
 	var faults []*pubfault.Fault
 	newDpcProcessStatus := getNewDpcProcessStatus(newDpcStatusMap)
-	if newDpcProcessStatus != dpcProcessError {
+	if newDpcProcessStatus != dpcProcessError || isFirst {
 		dpcProcessError = newDpcProcessStatus
 		faults = append(faults, constructDpcError(dpcProcessError, dpcProcessErrorId, processFaultCode))
 	}
 	newDpcMemoryStatus := getNewDpcMemoryStatus(newDpcStatusMap)
-	if newDpcMemoryStatus != dpcMemoryError {
+	if newDpcMemoryStatus != dpcMemoryError || isFirst {
 		dpcMemoryError = newDpcMemoryStatus
 		faults = append(faults, constructDpcError(dpcMemoryError, dpcMemoryErrorId, memoryFaultCode))
 	}
+	isFirst = false
 	if len(faults) == 0 {
 		return faultDevInfo
 	}
