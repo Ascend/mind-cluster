@@ -75,7 +75,7 @@ def calculate_global_rank():
 
 def calculate_local_rank_by_global_rank(global_rank_list: list):
     ms_local_worker = os.getenv('MS_LOCAL_WORKER')
-    if ms_local_worker is None :
+    if ms_local_worker is None:
         run_log.error("the env variable MS_LOCAL_WORKER is not set")
         return None
     try:

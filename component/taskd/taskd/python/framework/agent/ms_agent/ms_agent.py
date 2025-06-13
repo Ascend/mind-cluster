@@ -58,7 +58,6 @@ class MsAgent(BaseAgent):
     def start(self):
         kill_worker_func = self._func_map.get('KILL_WORKER')
         start_worker_func = self._func_map.get('START_ALL_WORKER')
-        # {rank_0: {pid: pidNum, status: status code}，1：status code …..}
         monitor_func = self._func_map.get('MONITOR')
         if kill_worker_func is None or start_worker_func is None or monitor_func is None:
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")

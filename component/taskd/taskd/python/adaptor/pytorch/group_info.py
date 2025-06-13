@@ -19,7 +19,11 @@ from taskd.python.utils.log import run_log
 from taskd.python.constants.constants import CHECK_STEP_PERIOD, JOB_ID_KEY, DEFAULT_GROUP_DIR, \
     PROFILING_DIR_MODE, GROUP_INFO_NAME, GROUP_INFO_KEY, GROUP_NAME_KEY, GROUP_RANK_KEY, \
         GLOBAL_RANKS_KEY, DEFAULT_GROUP, GROUP_BASE_DIR_ENV
-import threading, os, json, time
+import threading
+import os
+import json
+import time
+
 
 def get_save_path(rank) -> str:
     job_id = os.getenv(JOB_ID_KEY)
@@ -30,20 +34,21 @@ def get_save_path(rank) -> str:
     if base_dir is None:
         base_dir = ""
     if not os.path.exists(base_dir):
-        run_log.warn(f"config group base dir {base_dir} not exists, use default group info dir")
+        run_log.warning(f"config group base dir {base_dir} not exists, use default group info dir")
         base_dir = DEFAULT_GROUP_DIR
     rank_path = os.path.join(base_dir, job_id, str(rank))
     try:
         os.makedirs(rank_path, mode=PROFILING_DIR_MODE, exist_ok=True)
     except FileExistsError:
-        run_log.warn(f"filepath={rank_path} exist")
+        run_log.warning(f"filepath={rank_path} exist")
         return rank_path
     except OSError as err:
         run_log.error(f"filepath={rank_path} failed, err={err}")
         return ""
     return rank_path
 
-def get_group_info(rank: int) ->dict :
+
+def get_group_info(rank: int) -> dict:
     try:
         import torch
         from torch.distributed.distributed_c10d import _world as distributed_world
@@ -56,7 +61,7 @@ def get_group_info(rank: int) ->dict :
         for group, group_config in distributed_world.pg_map.items():
             run_log.debug(f'distributed world data: {group}, {group_config}')
             if len(group_config) < 1:
-                run_log.warn(f'group config is invalid, group={group}, group_config={group_config}')
+                run_log.warning(f'group config is invalid, group={group}, group_config={group_config}')
                 continue
             backend = str(group_config[0]).lower()
             if backend != "hccl":
@@ -82,11 +87,12 @@ def get_group_info(rank: int) ->dict :
         run_log.error(f'get group info failed, err={err}')
         return {}
 
+
 def save_group_info(rank: int):
     check_step_out = cython_api.lib.StepOut
     try:
         while check_step_out() != 1:
-            run_log.warn(f'not ready to write group info, try it after a few seconds')
+            run_log.warning(f'not ready to write group info, try it after a few seconds')
             time.sleep(CHECK_STEP_PERIOD)
         run_log.info(f'start dump group info for rank={rank}')
         import torch
@@ -107,6 +113,7 @@ def save_group_info(rank: int):
                 json.dump(group_info, f, ensure_ascii=False, indent=4)
     except Exception as err:
         run_log.error(f'save group info failed: {err}')
+
 
 def dump_group_info(rank: int):
     thread = threading.Thread(target=save_group_info, args=(rank,))
