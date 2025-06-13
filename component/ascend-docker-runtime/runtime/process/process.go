@@ -696,6 +696,7 @@ func DoProcess() error {
 	}
 
 	if args.bundleDirPath == "" {
+		hwlog.RunLog.Warn("get bundleDirPath is empty,try get current working dir from pwd ")
 		args.bundleDirPath, err = os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current working dir: %v", err)
