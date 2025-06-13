@@ -31,6 +31,13 @@ import (
 	"taskd/toolkit_backend/net/common"
 )
 
+// MsgHandlerInterface define MsgHandler interface
+type MsgHandlerInterface interface {
+	GetDataPool() *storage.DataPool
+	SendMsgUseGrpc(msgType string, msgBody string, dst *common.Position)
+	SendMsgToMgr(uuid string, bizType string, src *common.Position, msgBody storage.MsgBody)
+}
+
 // MsgHandler receive, send, process and store message info
 type MsgHandler struct {
 	Sender    *service.MsgSender
@@ -177,4 +184,9 @@ func (mhd *MsgHandler) SendMsgToMgr(uuid string, bizType string, src *common.Pos
 		hwlog.RunLog.Errorf("enqueue failed: %v", err)
 		mhd.SendMsgUseGrpc(bizType, err.Error(), src)
 	}
+}
+
+// GetDataPool return data pool
+func (mhd *MsgHandler) GetDataPool() *storage.DataPool {
+	return mhd.DataPool
 }

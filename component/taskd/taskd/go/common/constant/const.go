@@ -230,9 +230,11 @@ const (
 	// HandleStageInit indicate plugin handle state in start
 	HandleStageInit = "Init"
 	// HandleStageProcess indicate plugin handle state in process
-	HandleStageProcess = "process"
+	HandleStageProcess = "Process"
 	// HandleStageFinal indicate plugin handle state in final
 	HandleStageFinal = "Final"
+	// HandleStageException indicate plugin handle state in exce
+	HandleStageException = "Exception"
 )
 
 const (

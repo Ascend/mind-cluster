@@ -24,6 +24,19 @@ import (
 	"taskd/framework_backend/manager/infrastructure"
 )
 
+// StreamHandlerInterface define the interface of stream handler
+type StreamHandlerInterface interface {
+	Init() error
+	SetStream(*infrastructure.Stream) error
+	GetStream(string) *infrastructure.Stream
+	GetStreams() map[string]*infrastructure.Stream
+	AllocateToken(string, string) error
+	ReleaseToken(string, string) error
+	ResetToken(string) error
+	Prioritize(string, []string) ([]string, error)
+	IsStreamWork(string) (bool, error)
+}
+
 // StreamHandler define the stream handler struct
 type StreamHandler struct {
 	Streams     map[string]*infrastructure.Stream

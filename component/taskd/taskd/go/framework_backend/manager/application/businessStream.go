@@ -32,13 +32,13 @@ import (
 
 // BusinessStreamProcessor define the class of business stream processor
 type BusinessStreamProcessor struct {
-	MsgHandler    *MsgHandler
-	PluginHandler *service.PluginHandler
-	StreamHandler *service.StreamHandler
+	MsgHandler    MsgHandlerInterface
+	PluginHandler service.PluginHandlerInterface
+	StreamHandler service.StreamHandlerInterface
 }
 
 // NewBusinessStreamProcessor return a business stream handler
-func NewBusinessStreamProcessor(msgHandler *MsgHandler) *BusinessStreamProcessor {
+func NewBusinessStreamProcessor(msgHandler MsgHandlerInterface) *BusinessStreamProcessor {
 	return &BusinessStreamProcessor{
 		MsgHandler:    msgHandler,
 		PluginHandler: service.NewPluginHandler(),
@@ -62,7 +62,7 @@ func (b *BusinessStreamProcessor) Init() error {
 // AllocateToken allocate stream token to plugin
 func (b *BusinessStreamProcessor) AllocateToken(snapShot *storage.SnapShot) {
 	predicateResult := b.PluginHandler.Predicate(snapShot)
-	streamTokenRequest := make(map[string][]string, len(b.StreamHandler.Streams))
+	streamTokenRequest := make(map[string][]string, len(b.StreamHandler.GetStreams()))
 	for _, pluginRequest := range predicateResult {
 		if pluginRequest.CandidateStatus != constant.CandidateStatus {
 			continue
@@ -172,14 +172,14 @@ func (b *BusinessStreamProcessor) DistributedMsgToOthers(receiver string, sendMs
 	var dst *common.Position
 	var err error
 	if strings.Contains(receiver, common.WorkerRole) {
-		dst, err = b.MsgHandler.DataPool.GetPos(common.WorkerRole, receiver)
+		dst, err = b.MsgHandler.GetDataPool().GetPos(common.WorkerRole, receiver)
 		if err != nil {
 			hwlog.RunLog.Errorf("get worker pos failed: err %v", err)
 			return
 		}
 	}
 	if strings.Contains(receiver, common.AgentRole) {
-		dst, err = b.MsgHandler.DataPool.GetPos(common.AgentRole, receiver)
+		dst, err = b.MsgHandler.GetDataPool().GetPos(common.AgentRole, receiver)
 		if err != nil {
 			hwlog.RunLog.Errorf("get Agent pos failed: err %v", err)
 			return

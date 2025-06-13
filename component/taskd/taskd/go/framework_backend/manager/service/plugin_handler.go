@@ -25,6 +25,16 @@ import (
 	"taskd/framework_backend/manager/plugins/om"
 )
 
+// PluginHandlerInterface define the interface of plugin handler
+type PluginHandlerInterface interface {
+	Init() error
+	GetPlugin(string) (infrastructure.ManagerPlugin, error)
+	Register(string, infrastructure.ManagerPlugin) error
+	Handle(string) (infrastructure.HandleResult, error)
+	Predicate(*storage.SnapShot) []infrastructure.PredicateResult
+	PullMsg(string) ([]infrastructure.Msg, error)
+}
+
 // PluginHandler is defined to handle plugins operation
 type PluginHandler struct {
 	Plugins map[string]infrastructure.ManagerPlugin
