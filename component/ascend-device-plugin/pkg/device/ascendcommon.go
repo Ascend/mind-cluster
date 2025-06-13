@@ -781,6 +781,11 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 	annotation := make(map[string]string)
 	if !common.IsVirtualDev(deviceType) {
 		for _, checker := range annoChecker {
+			// dynamic scene, not correct huawei.com/npu-core
+			if deviceType == common.AiCoreResourceName && checker.annoKey ==
+				fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType) {
+				continue
+			}
 			if podDev.Pod.Annotations[checker.annoKey] != checker.annoValue {
 				hwlog.RunLog.Warnf("need correct: annotKey: %s, old value: %s, new value: %s",
 					checker.annoKey, podDev.Pod.Annotations[checker.annoKey], checker.annoValue)
