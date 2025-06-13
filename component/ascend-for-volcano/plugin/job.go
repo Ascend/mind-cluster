@@ -408,10 +408,11 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	if err != nil {
 		return err
 	}
+	sJob.initCommonJob(vcJob)
 	if sJob.Owner.Kind == ReplicaSetType {
 		num *= int(*sJob.Owner.Replicas)
+		sJob.Annotation = sJob.Owner.Annotations
 	}
-	sJob.initCommonJob(vcJob)
 	sJob.initNPUJob(vcJob, name, num)
 	return nil
 }
