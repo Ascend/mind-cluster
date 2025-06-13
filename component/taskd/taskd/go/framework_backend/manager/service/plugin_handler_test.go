@@ -210,7 +210,7 @@ func TestInit_Success(t *testing.T) {
 	handler := NewPluginHandler()
 	err := handler.Init()
 	assert.NoError(t, err)
-	assert.Len(t, handler.Plugins, 1) // Ensure example plugin is registered
+	assert.Len(t, handler.Plugins, 2) // Ensure example plugin is registered
 }
 
 func TestInitRegisterFailure(t *testing.T) {

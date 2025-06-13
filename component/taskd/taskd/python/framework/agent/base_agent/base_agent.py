@@ -22,7 +22,8 @@ import uuid
 from dataclasses import asdict
 from taskd.python.utils.log import run_log
 from taskd.python.toolkit.fault_checker.fault_check import grace_exit_pids, stop_pids
-from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message
+from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message, \
+    get_msg_network_instance
 from taskd.python.framework.common.type import MsgBody, MessageInfo
 
 
@@ -115,7 +116,7 @@ class BaseAgent:
             if time_cost > 60:
                 run_log.error('waiting for message manager timeout')
                 raise ValueError("failed to initialized agent network, initialization message_manager timeout")
-            if get_message_manager() is None:
+            if get_msg_network_instance() is None:
                 run_log.info('waiting for message manager')
                 time.sleep(1)
                 time_cost += 1

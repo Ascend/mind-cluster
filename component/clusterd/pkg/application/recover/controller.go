@@ -55,6 +55,8 @@ type EventController struct {
 	globalSwitchRankIDs       []string
 	globalOps                 []bool
 	switchNicResponse         chan *pb.SwitchNicResponse
+	switchRankList            chan *pb.SwitchRankList
+	switchRankResult          chan *pb.SwitchResult
 	restartFaultProcess       bool
 	controllerContext         context.Context
 	ctxCancelFunc             context.CancelFunc
@@ -91,6 +93,8 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		globalSwitchRankIDs:       []string{},
 		globalOps:                 []bool{},
 		switchNicResponse:         make(chan *pb.SwitchNicResponse, 1),
+		switchRankList:            make(chan *pb.SwitchRankList, 1),
+		switchRankResult:          make(chan *pb.SwitchResult, 1),
 		serviceContext:            serviceCtx,
 		lock:                      sync.RWMutex{},
 	}
@@ -159,13 +163,7 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.uuid = ""
 	ctl.latestStrategy = ctl.latestStrategy[:0]
 	ctl.faultPod = make(map[string]string)
-	close(ctl.events)
-	close(ctl.signalChan)
-	close(ctl.reportStopCompleteChan)
-	close(ctl.reportRecoverStrategyChan)
-	close(ctl.reportStatusChan)
-	close(ctl.scheduleResultChan)
-	close(ctl.switchNicResponse)
+	ctl.closeControllerChan()
 	if stop {
 		return
 	}
@@ -184,10 +182,24 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.globalSwitchRankIDs = ctl.globalSwitchRankIDs[:0]
 	ctl.globalOps = ctl.globalOps[:0]
 	ctl.switchNicResponse = make(chan *pb.SwitchNicResponse, 1)
+	ctl.switchRankList = make(chan *pb.SwitchRankList, 1)
+	ctl.switchRankResult = make(chan *pb.SwitchResult, 1)
 	ctl.state.Reset()
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	go ctl.listenEvent()
 	go ctl.keepAlive()
+}
+
+func (ctl *EventController) closeControllerChan() {
+	close(ctl.events)
+	close(ctl.signalChan)
+	close(ctl.reportStopCompleteChan)
+	close(ctl.reportRecoverStrategyChan)
+	close(ctl.reportStatusChan)
+	close(ctl.scheduleResultChan)
+	close(ctl.switchNicResponse)
+	close(ctl.switchRankList)
+	close(ctl.switchRankResult)
 }
 
 func (ctl *EventController) selectKeepAlive(ctx context.Context, sendChan chan *pb.ProcessManageSignal) bool {
@@ -930,11 +942,11 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 		return ctl.chooseForRetryFail(), nil
 	} else if res.Strategy == constant.ProcessRecoverStrategyName {
 		return ctl.chooseForRecoverFail(), nil
+	} else if res.Strategy == constant.ProcessDumpStrategyName &&
+		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.PtFramework {
 		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
 		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
 		// it goes through the failure recovery state machine again.
-	} else if res.Strategy == constant.ProcessDumpStrategyName &&
-		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.PtFramework {
 		return constant.ProcessDumpStrategyName, nil
 	}
 	return constant.ProcessExitStrategyName, nil
@@ -986,7 +998,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 	hwlog.RunLog.Infof("jobId:%s, enter handleRestartFaultProcess func, choose strategy:%s",
 		ctl.jobInfo.JobId, signal.ChangeStrategy)
 	if signal.ChangeStrategy == constant.ProcessRecoverInPlaceStrategyName {
-		if err := ctl.WaitNormalFaultRecovery(); err != nil {
+		if err := ctl.waitNormalFaultRecovery(); err != nil {
 			hwlog.RunLog.Warnf("jobId:%s wait fault recover timeout, err:%v", ctl.jobInfo.JobId, err)
 			ctl.restartFaultProcess = false
 			return common.KillPodAfterRestartProcessEvent, common.ServerInnerError, nil
@@ -996,7 +1008,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 			return "", common.ServerInnerError, err
 		}
-		hwlog.RunLog.Infof("jobId=%s write reset json for restar process, faultRanks: %v",
+		hwlog.RunLog.Infof("jobId=%s write reset json for restart process, faultRanks: %v",
 			ctl.jobInfo.JobId, allFaultRanks)
 		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
@@ -1014,7 +1026,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 	return ctl.signalEnqueue(signal)
 }
 
-func (ctl *EventController) WaitNormalFaultRecovery() error {
+func (ctl *EventController) waitNormalFaultRecovery() error {
 	startTime := time.Now().Unix()
 	for {
 		if !retry.RetryProcessor.JobHasFault(ctl.jobInfo.JobId) {

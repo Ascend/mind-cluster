@@ -42,7 +42,7 @@ func TestQueryJobsFaultInfo(t *testing.T) {
 				return map[string]constant.JobFaultInfo{"test": {}}
 			})
 		defer patches.Reset()
-		jobsFaultInfo := QueryJobsFaultInfo(constant.NotHandleFault)
+		jobsFaultInfo := QueryJobsFaultInfo([]string{constant.NotHandleFault})
 		if len(jobsFaultInfo) != 1 {
 			t.Error("TestQueryJobsFaultInfo fail")
 		}

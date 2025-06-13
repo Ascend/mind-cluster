@@ -36,15 +36,16 @@ var ClusterFaultCenter *ClusterFaultProcessor
 // faultLevelMap to indicate fault level num
 var faultLevelMap = make(map[string]int)
 
-const clusterFaultCacheInterval = 3
+const (
+	clusterFaultCacheInterval = 3
+	healthyLevelNum           = 0
+	subHealthyLevelNum        = 1
+)
 
 func init() {
 	ClusterFaultCenter = newClusterFaultProcessor()
-	faultLevelMap[constant.NotHandleFault] = 0
-	faultLevelMap[constant.NotHandleFaultLevelStr] = 0
-	faultLevelMap[constant.SubHealthFault] = 1
-	faultLevelMap[constant.PreSeparateFault] = 1
-	faultLevelMap[constant.PreSeparateFaultLevelStr] = 1
+	faultLevelMap[constant.NotHandleFault] = healthyLevelNum
+	faultLevelMap[constant.SubHealthFault] = subHealthyLevelNum
 }
 
 func newClusterFaultProcessor() *ClusterFaultProcessor {
@@ -224,13 +225,17 @@ func getNpuDeviceFaultInfo(deviceCm *constant.AdvanceDeviceFaultCm) []*fault.Dev
 }
 
 func getDeviceFaultInfo(deviceFaults []constant.DeviceFault) ([]string, string) {
-	maxFaultLevl := constant.HealthyState
+	maxFaultLevel := constant.HealthyState
 	faultCode := make([]string, 0)
 	for _, faultMsg := range deviceFaults {
 		faultCode = append(faultCode, faultMsg.FaultCode)
-		if faultLevelMap[faultMsg.FaultLevel] > faultLevelMap[faultMsg.FaultLevel] {
-			maxFaultLevl = faultMsg.FaultLevel
+		faultLevel, ok := faultLevelMap[faultMsg.FaultLevel]
+		if !ok {
+			maxFaultLevel = constant.UnHealthyState
+		}
+		if faultLevel == subHealthyLevelNum {
+			maxFaultLevel = constant.SubHealthyState
 		}
 	}
-	return faultCode, maxFaultLevl
+	return faultCode, maxFaultLevel
 }

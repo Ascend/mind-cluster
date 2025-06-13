@@ -18,7 +18,7 @@ const (
 
 var (
 	jobEventHwLogConfig = &hwlog.LogConfig{LogFileName: jobEventLog, MaxBackups: jobEventMaxBackupLogs,
-		MaxLineLength: jobEventMaxLogLineLength, MaxAge: jobEventMaxAge}
+		MaxLineLength: jobEventMaxLogLineLength, MaxAge: jobEventMaxAge, OnlyToFile: true}
 	// JobEventLog is used to log job event
 	JobEventLog *hwlog.CustomLogger
 )

@@ -48,6 +48,7 @@ func TestSavePod(t *testing.T) {
 			defer DeletePod(podDemo1)
 			podMap := GetPodByJobId(jobUid1)
 			convey.So(len(podMap), convey.ShouldEqual, 1)
+			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 		})
 	})
 }
@@ -60,6 +61,7 @@ func TestDeletePod(t *testing.T) {
 			DeletePod(podDemo1)
 			podMap := GetPodByJobId(jobUid1)
 			convey.So(len(podMap), convey.ShouldEqual, 0)
+			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 0)
 		})
 	})
 }

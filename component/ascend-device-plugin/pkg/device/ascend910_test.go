@@ -2644,6 +2644,10 @@ func TestExecOutBandReset(t *testing.T) {
 			func(_ *HwAscend910Manager, cardId, deviceId int32) error {
 				return nil
 			})
+		patch.ApplyPrivateMethod(manager, "isRingResetComplete",
+			func(_ *HwAscend910Manager, oriLogicID int32, shouldCheckNet bool) error {
+				return nil
+			})
 		convey.Convey("02-success, should return nil", func() {
 			err := manager.execOutBandReset([]ResetDevice{
 				{CardId: testCardID, DeviceId: testDeviceID},

@@ -36,7 +36,7 @@ import (
 
 const retryTime = 3
 
-var k8sClient *ClientK8s
+var k8sClient *ClientK8s = nil
 
 // ClientK8s k8s client include node name and node info name
 type ClientK8s struct {

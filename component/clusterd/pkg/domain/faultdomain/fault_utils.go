@@ -1,6 +1,6 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
-// Package faultmanager contain fault process
+// Package faultdomain contain fault process
 package faultdomain
 
 import (

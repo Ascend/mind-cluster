@@ -1,17 +1,21 @@
 package fault
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
+	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
@@ -23,7 +27,11 @@ func init() {
 	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
 }
 
-const sleepTime = 100 * time.Millisecond
+const (
+	sleepTime            = 100 * time.Millisecond
+	mockJobIdWithChinese = "job123你好"
+	mockValidJobId       = "abc12345"
+)
 
 func fakeFaultService() *FaultServer {
 	return &FaultServer{
@@ -91,20 +99,75 @@ func TestSubscribeFaultMsgSignal(t *testing.T) {
 	})
 }
 
+// TestIsValidJobId test isValidJobId
+func TestIsValidJobId(t *testing.T) {
+	tests := []struct {
+		name     string
+		jobId    string
+		expected bool
+	}{
+		{
+			name:     "TestIsValidJobId with valid jobId",
+			jobId:    mockValidJobId,
+			expected: true,
+		},
+		{
+			name:     "TestIsValidJobId with too short jobId",
+			jobId:    string(bytes.Repeat([]byte{'a'}, minJobIdLen-1)),
+			expected: false,
+		},
+		{
+			name:     "TestIsValidJobId with Too long jobId",
+			jobId:    string(bytes.Repeat([]byte{'a'}, maxJobIdLen+1)),
+			expected: false,
+		},
+		{
+			name:     "TestIsValidJobId with jobId contains Chinese",
+			jobId:    mockJobIdWithChinese,
+			expected: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isValidJobId(tt.jobId)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 // TestGetFaultMsgSignal test getFaultMsgSignal
 func TestGetFaultMsgSignal(t *testing.T) {
-	convey.Convey("TestGetFaultMsgSignal with fake id", t, func() {
-		service := fakeFaultService()
+	service := fakeFaultService()
+	convey.Convey("TestGetFaultMsgSignal with invalid jobId", t, func() {
 		resp, err := service.GetFaultMsgSignal(context.TODO(), &fault.ClientInfo{
-			JobId: "fakejobId",
+			JobId: mockJobIdWithChinese,
+			Role:  "",
+		})
+		convey.ShouldNotBeNil(err)
+		convey.So(resp.Code, convey.ShouldEqual, int32(common.InvalidReqParam))
+	})
+	convey.Convey("TestGetFaultMsgSignal with valid jobId but jobId not exist", t, func() {
+		resp, err := service.GetFaultMsgSignal(context.TODO(), &fault.ClientInfo{
+			JobId: mockValidJobId,
 			Role:  "",
 		})
 		convey.ShouldBeNil(err)
 		convey.So(resp.Code, convey.ShouldEqual, int32(common.SuccessCode))
+		convey.So(resp.FaultSignal, convey.ShouldBeNil)
 	})
-
-	convey.Convey("TestGetFaultMsgSignal without id", t, func() {
-		service := fakeFaultService()
+	convey.Convey("TestGetFaultMsgSignal with valid jobId but jobId exist", t, func() {
+		patches := gomonkey.ApplyMethodReturn(faultrank.JobFaultRankProcessor, "GetJobFaultRankInfos",
+			map[string]constant.JobFaultInfo{mockValidJobId: {}})
+		defer patches.Reset()
+		resp, err := service.GetFaultMsgSignal(context.TODO(), &fault.ClientInfo{
+			JobId: mockValidJobId,
+			Role:  "",
+		})
+		convey.ShouldBeNil(err)
+		convey.So(resp.Code, convey.ShouldEqual, int32(common.SuccessCode))
+		convey.So(resp.FaultSignal, convey.ShouldNotBeNil)
+	})
+	convey.Convey("TestGetFaultMsgSignal without jobId", t, func() {
 		resp, err := service.GetFaultMsgSignal(context.TODO(), &fault.ClientInfo{
 			JobId: "",
 			Role:  "",
@@ -112,7 +175,16 @@ func TestGetFaultMsgSignal(t *testing.T) {
 		convey.ShouldBeNil(err)
 		convey.So(resp.Code, convey.ShouldEqual, int32(common.SuccessCode))
 	})
-
+	convey.Convey("TestGetFaultMsgSignal with too many requests", t, func() {
+		patches := gomonkey.ApplyMethodReturn(&util.AdvancedRateLimiter{}, "Allow", false)
+		defer patches.Reset()
+		resp, err := service.GetFaultMsgSignal(context.TODO(), &fault.ClientInfo{
+			JobId: "",
+			Role:  "",
+		})
+		convey.ShouldNotBeNil(err)
+		convey.So(resp.Code, convey.ShouldEqual, int32(common.RateLimitedCode))
+	})
 }
 
 func TestAddAndGetFaultPublisher(t *testing.T) {

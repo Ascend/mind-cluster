@@ -21,7 +21,7 @@ from taskd.python.utils.log import run_log
 taskd_manager = None
 
 
-def init_taskd_manager(config:dict) -> bool:
+def init_taskd_manager(config: dict) -> bool:
     """
     init_taskd_manager: to init taskd manager
     """

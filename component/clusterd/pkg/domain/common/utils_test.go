@@ -578,18 +578,47 @@ type failSwitchNicSender struct {
 	mockStream
 }
 
+type successNotifySwitchNicSender struct {
+	mockStream
+}
+
+type failNotifySwitchNicSender struct {
+	mockStream
+}
+
+func (s *successNotifySwitchNicSender) Send(signal *pb.SwitchRankList) error {
+	return nil
+}
+
+func (s *failNotifySwitchNicSender) Send(signal *pb.SwitchRankList) error {
+	return errors.New("fake error")
+}
+
 func (s *failSwitchNicSender) Send(signal *pb.SwitchNicResponse) error {
 	return errors.New("fake error")
 }
 
 func TestSendSwitchNicRetry(t *testing.T) {
-	convey.Convey("Test SwitchNicSendRetry", t, func() {
+	convey.Convey("Test SwitchNicResponseSendRetry", t, func() {
 		convey.Convey("case send success", func() {
-			err := SwitchNicSendRetry(&successSwitchNicSender{}, nil, constant.RetryTime)
+			err := SwitchNicResponseSendRetry(&successSwitchNicSender{}, nil, constant.RetryTime)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("case send fail", func() {
-			err := SwitchNicSendRetry(&failSwitchNicSender{}, nil, constant.RetryTime)
+			err := SwitchNicResponseSendRetry(&failSwitchNicSender{}, nil, constant.RetryTime)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestNotifySwitchNicSendRetry(t *testing.T) {
+	convey.Convey("Test NotifySwitchNicSendRetry", t, func() {
+		convey.Convey("case send success", func() {
+			err := NotifySwitchNicSendRetry(&successNotifySwitchNicSender{}, nil, constant.RetryTime)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("case send fail", func() {
+			err := NotifySwitchNicSendRetry(&failNotifySwitchNicSender{}, nil, constant.RetryTime)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -774,7 +803,8 @@ func setNewTaskInfoError() {
 			return newCm, nil
 		})
 		defer patch1.Reset()
-		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{errorRank}, true, constant.NotifyFaultListOperation)
+		_, err := WriteResetInfoToCM(info.JobName, info.Namespace, []string{errorRank}, true,
+			constant.NotifyFaultListOperation)
 		convey.ShouldNotBeNil(err)
 	})
 }

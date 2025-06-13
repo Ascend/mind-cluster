@@ -29,12 +29,18 @@ func (mpc *MsgProcessor) workerHandler(dataPool *storage.DataPool, data storage.
 	if data.Body.MsgType == constant.REGISTER {
 		return mpc.workerRegister(dataPool, data)
 	}
-	workerName := data.Header.Src.Role + data.Header.Src.ServerRank
+	workerName := data.Header.Src.Role + data.Header.Src.ProcessRank
 	workerInfo, err := dataPool.GetWorker(workerName)
 	if err != nil {
 		return err
 	}
 	switch data.Body.MsgType {
+	case constant.Action:
+		if data.Body.Code == constant.SwitchNicCode {
+			workerInfo.Status[constant.SwitchNic] = data.Body.Message
+			workerInfo.Status[constant.SwitchNicUUID] = data.Body.Extension[constant.SwitchNicUUID]
+			return nil
+		}
 	case constant.STATUS:
 		err := mpc.workerStatus(data, workerInfo)
 		if err != nil {
@@ -43,7 +49,7 @@ func (mpc *MsgProcessor) workerHandler(dataPool *storage.DataPool, data storage.
 	case constant.KeepAlive:
 		workerInfo.HeartBeat = time.Now()
 	default:
-		return fmt.Errorf("unknow message type: %v", data.Body.MsgType)
+		return fmt.Errorf("unknown message type: %v", data.Body.MsgType)
 	}
 	err = dataPool.UpdateWorker(workerName, workerInfo)
 	return err
@@ -69,7 +75,7 @@ func (mpc *MsgProcessor) workerStatus(data storage.BaseMessage, workerInfo *stor
 	case constant.ProfilingAllCloseCode:
 		return profilingStatus(data, workerInfo)
 	default:
-		return fmt.Errorf("unknow message status code: %v", data.Body.Code)
+		return fmt.Errorf("unknown message status code: %v", data.Body.Code)
 	}
 }
 

@@ -88,7 +88,7 @@ func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 		hwlog.RunLog.Debugf("%s Predicate failed, errCmd: %v, errRes: %v", p.Name(), errCmd, errRes)
 		return infrastructure.PredicateResult{
 			PluginName:      p.Name(),
-			CandidateStatus: "unselected",
+			CandidateStatus: constant.UnselectStatus,
 			PredicateStream: nil,
 		}, nil
 	}

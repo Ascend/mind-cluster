@@ -77,7 +77,7 @@ func writeConfigToFile(rasConfig *constant.CathelperConf, filePath string) error
 		return errInfo
 	}
 
-	var file *os.File
+	var file *os.File = nil
 	defer func(file *os.File) {
 		if file == nil {
 			return

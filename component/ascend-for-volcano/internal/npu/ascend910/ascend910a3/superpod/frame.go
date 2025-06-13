@@ -541,7 +541,7 @@ func (tp *module910SuperPod) ifPodLevelRescheduling(fJob *rescheduling.FaultJob)
 		return false
 	}
 	klog.V(util.LogInfoLev).Infof("label pod-rescheduling is: %s", job.Label[util.SinglePodTag])
-	return job.Label[util.SinglePodTag] == util.EnableFunc
+	return job.SchedulingTaskNum != len(job.Tasks)
 }
 
 func (tp *module910SuperPod) selectNodeForPodLevelRescheduling(fJob *rescheduling.FaultJob,
@@ -555,33 +555,39 @@ func (tp *module910SuperPod) selectNodeForPodLevelRescheduling(fJob *reschedulin
 			return
 		}
 		spn := fJob.SuperPods[superPodId][0]
-		count := 0
-		ids, count := tp.getIds(fJob, superPodId, count)
-		if len(fJob.SuperPods[superPodId]) != count {
-			if selectNodesForFaultPod(fJob, ids, totalNodes, spn, superPodId) {
-				return
-			}
+		ids := tp.getIds(fJob, superPodId)
+		if len(ids) == 0 {
 			klog.V(util.LogInfoLev).Infof("superPodId: %s is satisfied superPod: %v in super-pod: %d and ids: %v",
 				superPodId, fJob.SuperPods[superPodId], spn.SuperPodID, ids)
 			selectNodes[superPodId] = fJob.SuperPods[superPodId]
 			vSuperPodID[superPodId] = true
+			continue
 		}
+		if len(ids) > len(totalNodes[spn.SuperPodID]) || tp.SchedulingTaskNum >= len(fJob.SuperPods[superPodId]) {
+			continue
+		}
+		selectNodesForFaultPod(fJob, ids, totalNodes, spn, superPodId)
+		klog.V(util.LogInfoLev).Infof("superPodId: %s is satisfied superPod: %v in super-pod: %d and ids: %v",
+			superPodId, fJob.SuperPods[superPodId], spn.SuperPodID, ids)
+		selectNodes[superPodId] = fJob.SuperPods[superPodId]
+		vSuperPodID[superPodId] = true
 	}
 }
 
 func selectNodesForFaultPod(fJob *rescheduling.FaultJob, ids []int, totalNodes map[int32]map[string]plugin.NPUNode,
-	spn plugin.SuperNode, superPodId string) bool {
+	spn plugin.SuperNode, superPodId string) {
 	for _, id := range ids {
 		for _, node := range totalNodes[spn.SuperPodID] {
 			if inSuperPods(fJob, superPodId, node) {
-				return true
+				delete(totalNodes[spn.SuperPodID], node.Name)
+				break
 			}
 			fJob.SuperPods[superPodId][id].Name = node.Name
 			delete(totalNodes[spn.SuperPodID], node.Name)
 			break
 		}
 	}
-	return false
+	return
 }
 
 func inSuperPods(fJob *rescheduling.FaultJob, superPodId string, node plugin.NPUNode) bool {
@@ -593,17 +599,16 @@ func inSuperPods(fJob *rescheduling.FaultJob, superPodId string, node plugin.NPU
 	return false
 }
 
-func (tp *module910SuperPod) getIds(fJob *rescheduling.FaultJob, superPodId string, count int) ([]int, int) {
+func (tp *module910SuperPod) getIds(fJob *rescheduling.FaultJob, superPodId string) []int {
 	var ids []int
 	for _, task := range fJob.FaultTasks {
 		if task.IsFaultTask {
 			if ok, index := tp.isContain(fJob.SuperPods[superPodId], task.TaskName, fJob.JobUID); ok {
-				count++
 				ids = append(ids, index)
 			}
 		}
 	}
-	return ids, count
+	return ids
 }
 
 func getSelectNodes(faultNodeNameMap map[string]struct{}, spNodes []plugin.SuperNode,

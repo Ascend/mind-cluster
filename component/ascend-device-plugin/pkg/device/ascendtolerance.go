@@ -103,8 +103,8 @@ type HotResetTools struct {
 }
 
 // NewHotResetManager create HotResetManager and init data
-func NewHotResetManager(devUsage string, deviceNum int) HotResetManager {
-	resetDevNumOnce := getResetDevNumOnce(devUsage, deviceNum)
+func NewHotResetManager(devUsage string, deviceNum int, boardId uint32) HotResetManager {
+	resetDevNumOnce := getResetDevNumOnce(devUsage, deviceNum, boardId)
 	if resetDevNumOnce == 0 {
 		return nil
 	}
@@ -120,15 +120,20 @@ func NewHotResetManager(devUsage string, deviceNum int) HotResetManager {
 
 // getResetDevNumOnce get reset device num at a time.
 // 910 and 910A2 device reset by ring, 910A3 reset all devices on the node
-func getResetDevNumOnce(devUsage string, deviceNum int) int {
+func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 	var resetDevNumOnce int
 	switch common.ParamOption.RealCardType {
 	case common.Ascend910:
 		resetDevNumOnce = common.Ascend910RingsNum
 	case common.Ascend910B:
 		if devUsage == common.Infer {
-			resetDevNumOnce = common.Ascend910BRingsNumInfer
+			if boardId == common.A300IA2BoardId || boardId == common.A800IA2NoneHccsBoardId || boardId == common.
+				A800IA2NoneHccsBoardIdOld {
+				return common.Ascend910BRingsNumInfer
+			}
+			resetDevNumOnce = common.Ascend910BRingsNumTrain
 		}
+
 		if devUsage == common.Train {
 			resetDevNumOnce = common.Ascend910BRingsNumTrain
 		}

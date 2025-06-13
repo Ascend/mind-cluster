@@ -127,7 +127,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 // GraceTolerance process training task with device fault gracefully
 func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
-		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]))
+		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]), hnm.boardId)
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
 			return
@@ -1832,7 +1832,7 @@ func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 		if err := hnm.tryResetDevice(cardId, deviceId); err != nil {
 			errList = append(errList, err)
 			resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId,
-				LogicID: resetLogicId})
+				LogicID: resetLogicId, shouldCheckNet: shouldCheckNet})
 			continue
 		}
 		// wait for the device to reset completely
@@ -1868,6 +1868,11 @@ func (hnm *HwAscend910Manager) execOutBandReset(inBandFailDevs, sucDevs []ResetD
 		if err := hnm.resetDeviceOutBand(dev.CardId, dev.DeviceId); err != nil {
 			resetError = err
 			failDevs = append(failDevs, dev)
+			continue
+		}
+		// wait for the device to reset completely
+		if err := hnm.isRingResetComplete(dev.LogicID, dev.shouldCheckNet); err != nil {
+			resetError = err
 			continue
 		}
 		newSucDevs = append(newSucDevs, dev)

@@ -736,9 +736,11 @@ const (
 	devName0   = "Ascend910-0"
 	devName1   = "Ascend910-1"
 	devName2   = "Ascend910-2"
+	devName3   = "Ascend910-2c-180-3"
 	ip0        = "192.168.1.0"
 	ip1        = "192.168.1.1"
 	ip2        = "192.168.1.2"
+	ip3        = "192.168.1.3"
 	superPodID = 0
 )
 
@@ -754,6 +756,10 @@ var (
 		},
 		devName2: {
 			IP:            ip2,
+			SuperDeviceID: superPodID,
+		},
+		devName3: {
+			IP:            ip3,
 			SuperDeviceID: superPodID,
 		},
 	}
@@ -772,9 +778,10 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 			},
 		},
 	}
-	t.Run("test func GetNodeDevListFromAnno success", func(t *testing.T) {
+	t.Run("test func GetNodeDevListFromAnno success. If vnpu is included, it will be removed", func(t *testing.T) {
 		expDevList := []string{devName0, devName1, devName2}
 		got, err := GetNodeDevListFromAnno(nodeInfo)
+		sort.Strings(got)
 		if !reflect.DeepEqual(got, expDevList) || !reflect.DeepEqual(err, nil) {
 			t.Errorf("Get node device list = %v, want %v. err = %v, want nil", got, expDevList, err)
 		}

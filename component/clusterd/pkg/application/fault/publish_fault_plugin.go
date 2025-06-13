@@ -131,9 +131,15 @@ func faultDeviceToSortedFaultMsgSignal(targetJobId string, faultList []constant.
 			msg.NodeFaultInfo = append(msg.NodeFaultInfo, nodeInfo)
 		}
 	}
-	msg.SignalType = constant.SignalTypeFault
 	if len(msg.NodeFaultInfo) == 0 {
 		return &fault.FaultMsgSignal{JobId: targetJobId, SignalType: constant.SignalTypeNormal}
+	}
+	msg.SignalType = constant.SignalTypeNormal
+	for _, nodeFaultInfo := range msg.NodeFaultInfo {
+		if nodeFaultInfo.FaultLevel != constant.HealthyState {
+			msg.SignalType = constant.SignalTypeFault
+			break
+		}
 	}
 	sort.Slice(msg.NodeFaultInfo, func(i, j int) bool {
 		return msg.NodeFaultInfo[i].NodeIP < msg.NodeFaultInfo[j].NodeIP
@@ -141,6 +147,7 @@ func faultDeviceToSortedFaultMsgSignal(targetJobId string, faultList []constant.
 	return msg
 }
 
+// getNodeFaultInfo get node all fault info
 func getNodeFaultInfo(faultList []constant.FaultDevice) *fault.NodeFaultInfo {
 	if len(faultList) == 0 {
 		return nil
@@ -165,9 +172,6 @@ func getNodeFaultInfo(faultList []constant.FaultDevice) *fault.NodeFaultInfo {
 			maxLevel = level
 		}
 	}
-	if maxLevel == constant.HealthyLevel {
-		return nil
-	}
 	info.FaultLevel = getStateByLevel(maxLevel)
 	sort.Slice(info.FaultDevice, func(i, j int) bool {
 		if info.FaultDevice[i].DeviceId == info.FaultDevice[j].DeviceId {
@@ -178,6 +182,7 @@ func getNodeFaultInfo(faultList []constant.FaultDevice) *fault.NodeFaultInfo {
 	return info
 }
 
+// getFaultDeviceInfo get device all fault info
 func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInfo, int) {
 	if len(faultList) == 0 {
 		return nil, constant.HealthyLevel
@@ -195,9 +200,6 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 		if faultInfo.FaultCode != "" {
 			info.FaultCodes = append(info.FaultCodes, faultInfo.FaultCode)
 		}
-	}
-	if maxLevel == constant.HealthyLevel {
-		return nil, constant.HealthyLevel
 	}
 	info.FaultLevel = getStateByLevel(maxLevel)
 	sort.Strings(info.FaultCodes)

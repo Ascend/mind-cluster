@@ -12,7 +12,6 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/fault"
@@ -63,6 +62,7 @@ func getMockFaultMsgForTest() *fault.FaultMsgSignal {
 					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.UnHealthyState},
 					{DeviceId: "1", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.UnHealthyState},
 					{DeviceId: "2", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.SubHealthyState},
+					{DeviceId: "3", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.HealthyState},
 				},
 			},
 			{
@@ -71,6 +71,14 @@ func getMockFaultMsgForTest() *fault.FaultMsgSignal {
 				FaultLevel: constant.SubHealthyState,
 				FaultDevice: []*fault.DeviceFaultInfo{
 					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.SubHealthyState},
+				},
+			},
+			{
+				NodeName:   "node3",
+				NodeIP:     "3",
+				FaultLevel: constant.HealthyState,
+				FaultDevice: []*fault.DeviceFaultInfo{
+					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.HealthyState},
 				},
 			},
 		},
@@ -82,6 +90,20 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 	normalMsg := &fault.FaultMsgSignal{
 		JobId:      fakeJobID1,
 		SignalType: constant.SignalTypeNormal,
+	}
+	normalMsgWithFaultInfo := &fault.FaultMsgSignal{
+		JobId:      fakeJobID1,
+		SignalType: constant.SignalTypeNormal,
+		NodeFaultInfo: []*fault.NodeFaultInfo{
+			{
+				NodeName:   "node3",
+				NodeIP:     "3",
+				FaultLevel: constant.HealthyState,
+				FaultDevice: []*fault.DeviceFaultInfo{
+					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.HealthyState},
+				},
+			},
+		},
 	}
 	convey.Convey("faultList is empty, should convert to normal msg", t, func() {
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, nil)
@@ -95,7 +117,7 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
-		convey.So(msg, convey.ShouldResemble, normalMsg)
+		convey.So(msg, convey.ShouldResemble, normalMsgWithFaultInfo)
 	})
 }
 
@@ -169,8 +191,6 @@ func TestCheckPublishFault(t *testing.T) {
 // TestCheckFaultFromFaultCenter for test checkFaultFromFaultCenter
 func TestCheckFaultFromFaultCenter(t *testing.T) {
 	convey.Convey("occur fault, should send fault msg", t, func() {
-		patch := gomonkey.ApplyFuncReturn(faultmanager.QueryJobsFaultInfo, nil)
-		defer patch.Reset()
 		service := fakeFaultService()
 		ctx, cancel := context.WithCancel(context.Background())
 		service.serviceCtx = ctx

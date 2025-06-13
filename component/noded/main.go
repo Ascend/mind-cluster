@@ -57,7 +57,7 @@ var (
 		LogFileName:   defaultLogFile,
 		MaxLineLength: maxLineLength,
 	}
-	controller      = &control.ControlManager{}
+	controller      = &control.ControllerManager{}
 	configManager   = &config.FaultConfigurator{}
 	monitorManager  = &monitoring.MonitorManager{}
 	reportManager   = &reporter.ReportManager{}

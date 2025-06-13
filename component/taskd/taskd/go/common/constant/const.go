@@ -124,6 +124,7 @@ const (
 	RestartTimeCode              = 201
 	FaultRankCode                = 202
 	ExitAgentCode                = 203
+	SwitchNicCode                = 204
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -145,6 +146,7 @@ const (
 	KeepAlive         = "KEEP_ALIVE"
 	ReportRestartTime = "REPORT_RESTART_TIME"
 	Exit              = "EXIT"
+	SwitchNic         = "SWITCH_NIC"
 )
 
 // All num const must be defined here
@@ -236,6 +238,8 @@ const (
 const (
 	// CandidateStatus indicate plugin request stream
 	CandidateStatus = "candidate"
+	// UnselectStatus indicate plugin request stream
+	UnselectStatus = "unselect"
 )
 
 // All kind of ProfilingWorkerState
@@ -264,4 +268,23 @@ const (
 const (
 	ProfilingStream     = "ProfilingCollect"
 	ProfilingPluginName = "ProfilingPlugin"
+)
+
+const (
+	// OMPluginName name of OMPlugin
+	OMPluginName = "OmPlugin"
+	// OMStreamName name of OMStream
+	OMStreamName = "OmStream"
+	// GlobalRankKey key of global ranks
+	GlobalRankKey = "globalRankIDs"
+	// GlobalOpKey key of global ops
+	GlobalOpKey = "globalOps"
+	// SwitchNicUUID key of switch nic uuid
+	SwitchNicUUID = "switchNicUUID"
+	// SwitchJobID key of switch job id
+	SwitchJobID = "switchJobID"
+	// SwitchOK value of switch ok
+	SwitchOK = "switchOK"
+	// SwitchFail value of switch fail
+	SwitchFail = "switchFail"
 )

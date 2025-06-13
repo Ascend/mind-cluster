@@ -52,6 +52,9 @@ func testReportNoToNo() {
 	err := deleteCM(testNodeInfoName, api.DLNamespace)
 	convey.So(err, convey.ShouldBeNil)
 
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testNormalDevInfo
 	go func() {
 		cmReporter.Report(fcNormalInfo)
@@ -68,6 +71,9 @@ func testReportNoToHas() {
 	err := deleteCM(testNodeInfoName, api.DLNamespace)
 	convey.So(err, convey.ShouldBeNil)
 
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testNormalDevInfo
 	go func() {
 		cmReporter.Report(fcFaultInfo)
@@ -89,6 +95,9 @@ func testReportHasToNo() {
 	convey.So(len(cmInfo.NodeInfo.FaultDevList), convey.ShouldEqual, len(testFaultDevList))
 	convey.So(err, convey.ShouldBeNil)
 
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testFaultDevInfo
 	go func() {
 		cmReporter.Report(fcNormalInfo)
@@ -103,6 +112,9 @@ func testReportHasToNo() {
 func testReportHasToHas() {
 	// origin: has fault, has cm; after: has fault, has cm
 	testReportNoToHas()
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testNormalDevInfo
 	go func() {
 		cmReporter.Report(fcFaultInfo)
@@ -121,6 +133,9 @@ func testReportErrDelete() {
 	defer p1.Reset()
 
 	testReportNoToHas()
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testFaultDevInfo
 	go func() {
 		cmReporter.Report(fcNormalInfo)
@@ -139,6 +154,9 @@ func testReportErrUnmarshal() {
 	convey.So(err, convey.ShouldBeNil)
 	var p1 = gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr)
 	defer p1.Reset()
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testNormalDevInfo
 	go func() {
 		cmReporter.Report(fcFaultInfo)
@@ -155,6 +173,9 @@ func testReportErrUpdate() {
 	convey.So(err, convey.ShouldBeNil)
 	var p2 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "UpdateConfigMap", nil, testErr)
 	defer p2.Reset()
+	if cmReporter == nil {
+		panic("cmReporter is nil")
+	}
 	cmReporter.nodeInfoCache.NodeInfo = *testNormalDevInfo
 	go func() {
 		cmReporter.Report(fcFaultInfo)

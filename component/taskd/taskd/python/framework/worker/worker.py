@@ -15,10 +15,13 @@
 # limitations under the License.
 # ==============================================================================
 import os
+from ctypes import CFUNCTYPE, POINTER, c_int, c_bool
+from typing import List
 
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
 from taskd.python.adaptor.pytorch.group_info import dump_group_info
+
 
 class Worker:
     """
@@ -26,6 +29,7 @@ class Worker:
     """
 
     def __init__(self, global_rank: int, framework: str = "pt"):
+        self._callback = None
         self.global_rank = global_rank
         self.framework = framework
 
@@ -45,11 +49,21 @@ class Worker:
             return False
         result = init_taskd_func(self.global_rank, node_rank, upper_limit_of_disk_in_mb)
         if result == 0:
+            self.register_callback()
             dump_group_info(self.global_rank)
             run_log.info("Successfully init taskd monitor")
             return True
         run_log.warning(f"failed to init taskd monitor with ret code:f{result}")
         return False
+
+    def register_callback(self):
+        c_callback = CFUNCTYPE(c_bool, POINTER(c_int), POINTER(c_bool), c_int)
+        self._callback = c_callback(self._switch_nic_callback)
+        if cython_api.lib:
+            cython_api.lib.RegisterSwitchCallback(self._callback)
+            run_log.info("Successfully register switch callback")
+        else:
+            run_log.error("register switch callback failed!")
 
     def _start_up_monitor(self) -> bool:
         try:
@@ -67,4 +81,29 @@ class Worker:
             return False
         except Exception as e:
             run_log.error(f"failed to start up monitro client, e:{e}")
+            return False
+
+    def _do_switch_nic(self, ranks: List[int], ops: List[bool]) -> bool:
+        try:
+            if self.framework == "pt":
+                from torch_npu.npu import _comm_switch_nic
+                switch_func = _comm_switch_nic
+            elif self.framework == "ms":
+                from mindspore.communication.management import _comm_switch_nic
+                switch_func = _comm_switch_nic
+            run_log.info(f"ranks:{ranks}, ops:{ops}")
+            ret = switch_func(ranks, ops)
+            run_log.info(f"ret:{ret}")
+            return ret
+        except Exception as e:
+            run_log.error(e)
+            return False
+
+    def _switch_nic_callback(self, ranks_ptr, ops_ptr, length):
+        try:
+            ranks = [ranks_ptr[i] for i in range(length)]
+            ops = [ops_ptr[i] for i in range(length)]
+            return self._do_switch_nic(ranks, ops)
+        except Exception as e:
+            run_log.error(f"callback failed: {str(e)}")
             return False

@@ -57,9 +57,9 @@ type publishManager struct {
 
 var publishMgr *publishManager
 
-// RasNetDetectInst the switch for net fault detect feature in ras
-var RasNetDetectInst RasNetFaultCmManager
-var rasConfig constant.CathelperConf
+// rasNetDetectInst the switch for net fault detect feature in ras
+var rasNetDetectInst = RasNetFaultCmManager{}
+var rasConfig = constant.CathelperConf{}
 
 func init() {
 	publishMgr = &publishManager{
@@ -69,7 +69,7 @@ func init() {
 		rwLock:            sync.RWMutex{},
 	}
 	publishMgr.inited.Store(false)
-	RasNetDetectInst = RasNetFaultCmManager{
+	rasNetDetectInst = RasNetFaultCmManager{
 		RWMutex: sync.RWMutex{},
 		NetInfo: constant.NetFaultInfo{NetFault: constant.RasNetDetectOff},
 	}
@@ -306,7 +306,7 @@ func handleCmDelete(superPodID string) error {
 	err := kube.DeleteConfigMap(cmName, api.ClusterNS)
 	if err == nil || errors.IsNotFound(err) {
 		hwlog.RunLog.Infof("delete super pod device cm success, superPodID=%s", superPodID)
-		if RasNetDetectInst.CheckIsOn() {
+		if rasNetDetectInst.CheckIsOn() {
 			hwlog.RunLog.Infof("super-pod-%s file is deleted and controller will be reloaded", superPodID)
 			fdapi.ReloadController()
 		}
@@ -391,7 +391,7 @@ func handleTasks(tasks []task) {
 
 // TickerCheckSuperPodDevice ticker check super pod device modify event
 func TickerCheckSuperPodDevice(ctx context.Context) {
-	if RasNetDetectInst.CheckIsOn() {
+	if rasNetDetectInst.CheckIsOn() {
 		initSuperPodsCM()
 	}
 	ticker := time.NewTicker(eventCheckPeriod)
@@ -399,7 +399,7 @@ func TickerCheckSuperPodDevice(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			if !RasNetDetectInst.CheckIsOn() {
+			if !rasNetDetectInst.CheckIsOn() {
 				hwlog.RunLog.Debug("ras feature net fault detect is inactive")
 				continue
 			}

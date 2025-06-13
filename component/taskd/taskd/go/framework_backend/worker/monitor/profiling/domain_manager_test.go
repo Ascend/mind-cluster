@@ -317,29 +317,20 @@ func TestNotifyMgrSwitchChange(t *testing.T) {
 	convey.ShouldBeTrue(called)
 }
 
-func TestRegisterAndLoopRecv(t *testing.T) {
-	NetTool = &net.NetInstance{}
+func TestProcessMsg(t *testing.T) {
 	patches := gomonkey.NewPatches()
-	patches.ApplyMethod(NetTool, "SyncSendMessage",
-		func(nt *net.NetInstance, uuid, mtype, msgBody string, dst *common.Position) (*common.Ack, error) {
-			return nil, nil
-		})
-	patches.ApplyMethod(NetTool, "ReceiveMessage", func(nt *net.NetInstance) *common.Message {
-		time.Sleep(time.Second)
-		return &common.Message{
-			Body: utils.ObjToString(storage.MsgBody{
-				Code: constant.ProfilingAllOnCmdCode,
-			}),
-		}
+	defer patches.Reset()
+	ProcessMsg(0, &common.Message{
+		Body: utils.ObjToString(storage.MsgBody{
+			Code: constant.ProfilingAllOnCmdCode,
+		}),
 	})
-	patches.ApplyFunc(waitNetToolInit, func() bool {
-		return true
-	})
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	go func() {
-		time.Sleep(time.Second)
-		cancel()
-	}()
-	RegisterAndLoopRecv(ctx)
-	convey.ShouldBeGreaterThan(len(CmdChan), 1)
+	var profilingSwitch constant.ProfilingDomainCmd
+	select {
+	case msg := <-CmdChan:
+		profilingSwitch = msg
+	default:
+	}
+	convey.ShouldBeTrue(profilingSwitch.CommDomainAble)
+	convey.ShouldBeTrue(profilingSwitch.DefaultDomainAble)
 }

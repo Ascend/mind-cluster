@@ -70,7 +70,8 @@ func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.Jo
 }
 
 func (fJobCenter *faultJobProcessCenter) notifySubscriber() {
-	faultRankInfos := faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(constant.NotHandleFault)
+	faultRankInfos := faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(
+		[]string{constant.NotHandleFault, constant.PreSeparateNPU})
 	for _, sub := range fJobCenter.subscribeChannelList {
 		if sub.ch == nil {
 			continue

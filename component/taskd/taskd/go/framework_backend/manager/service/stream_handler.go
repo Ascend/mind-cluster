@@ -47,6 +47,12 @@ func (s *StreamHandler) Init() error {
 			profilingCollectStream.GetName())
 		return err
 	}
+	OmStream := infrastructure.NewStream(constant.OMStreamName, map[string]int{constant.OMPluginName: 1})
+	if err := s.SetStream(OmStream); err != nil {
+		hwlog.RunLog.Errorf("init stream handler failed: set stream %s failed",
+			OmStream.GetName())
+		return err
+	}
 	return nil
 }
 

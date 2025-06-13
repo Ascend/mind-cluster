@@ -53,7 +53,8 @@ type ResetDevice struct {
 	// PhyId npu physic id
 	PhyID int32
 	// LogicID npu logic id
-	LogicID int32
+	LogicID        int32
+	shouldCheckNet bool
 }
 
 // WriteMode the mode determines how the content is written

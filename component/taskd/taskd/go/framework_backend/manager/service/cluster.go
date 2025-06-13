@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/framework_backend/manager/infrastructure/storage"
 )
@@ -32,19 +33,36 @@ func (mpc *MsgProcessor) clusterHandler(dataPool *storage.DataPool, data storage
 	}
 	switch data.Body.MsgType {
 	case constant.Action:
+		err := mpc.clusterAction(data, clusterInfo)
+		if err != nil {
+			hwlog.RunLog.Errorf("clusterHandler error : %v", err)
+			return err
+		}
+	case constant.KeepAlive:
+		clusterInfo.HeartBeat = time.Now()
+	default:
+		return fmt.Errorf("unknown message type: %v", data.Body.MsgType)
+	}
+	err = dataPool.UpdateCluster(clusterName, clusterInfo)
+	return err
+}
+
+func (mpc *MsgProcessor) clusterAction(data storage.BaseMessage, clusterInfo *storage.ClusterInfo) error {
+	switch data.Body.Code {
+	case constant.SwitchNicCode:
+		clusterInfo.Command[constant.GlobalRankKey] = data.Body.Extension[constant.GlobalRankKey]
+		clusterInfo.Command[constant.GlobalOpKey] = data.Body.Extension[constant.GlobalOpKey]
+		clusterInfo.Command[constant.SwitchNicUUID] = data.Header.Uuid
+		clusterInfo.Command[constant.SwitchJobID] = data.Body.Extension[constant.SwitchJobID]
+	default:
 		defaultDomainCmd, commDomainCmd, err := profilingCmd(data.Body.Code)
 		if err != nil {
 			return err
 		}
 		clusterInfo.Command[constant.DefaultDomainCmd] = defaultDomainCmd
 		clusterInfo.Command[constant.CommDomainCmd] = commDomainCmd
-	case constant.KeepAlive:
-		clusterInfo.HeartBeat = time.Now()
-	default:
-		return fmt.Errorf("unknow message type: %v", data.Body.MsgType)
 	}
-	err = dataPool.UpdateCluster(clusterName, clusterInfo)
-	return err
+	return nil
 }
 
 func profilingCmd(actionCode int32) (string, string, error) {

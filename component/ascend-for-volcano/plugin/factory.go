@@ -130,7 +130,7 @@ func getOwnerInfo(jobInfo *api.JobInfo, vf VolcanoFrame) (OwnerInfo, error) {
 	if err != nil {
 		return OwnerInfo{}, err
 	}
-	return OwnerInfo{OwnerReference: owner, Replicas: rs.Spec.Replicas}, nil
+	return OwnerInfo{OwnerReference: owner, Replicas: rs.Spec.Replicas, Annotations: rs.Annotations}, nil
 }
 
 func getReplicaSet(vf VolcanoFrame, namespace, name string) (*appsv1.ReplicaSet, error) {

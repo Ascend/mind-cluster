@@ -165,7 +165,8 @@ func ChangeProcessRecoverEnableMode(jobInfo JobBaseInfo, mode string) (*v1beta1.
 }
 
 // RetryWriteResetCM retry write the reset info configMap
-func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool, operator string) (*v1.ConfigMap, error) {
+func RetryWriteResetCM(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+	operator string) (*v1.ConfigMap, error) {
 	var err error
 	var configMap *v1.ConfigMap
 	for i := 0; i < constant.WriteResetInfoRetryTimes; i++ {
@@ -453,8 +454,23 @@ func CanRestartFaultProcess(jobId string, faultRank []constant.FaultRank) bool {
 	return true
 }
 
-// SwitchNicSendRetry send signal util send success or retry times upper retryTimes
-func SwitchNicSendRetry(stream pb.Recover_SubscribeSwitchNicSignalServer, signal *pb.SwitchNicResponse, retryTimes int) error {
+// SwitchNicResponseSendRetry send signal util send success or retry times upper retryTimes
+func SwitchNicResponseSendRetry(stream pb.Recover_SubscribeSwitchNicSignalServer,
+	signal *pb.SwitchNicResponse, retryTimes int) error {
+	var err error
+	for i := 0; i < retryTimes; i++ {
+		err = stream.Send(signal)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Duration(i+1) * time.Second)
+	}
+	return err
+}
+
+// NotifySwitchNicSendRetry send switch nic signal util send success or retry times upper retryTimes
+func NotifySwitchNicSendRetry(stream pb.Recover_SubscribeNotifySwitchServer,
+	signal *pb.SwitchRankList, retryTimes int) error {
 	var err error
 	for i := 0; i < retryTimes; i++ {
 		err = stream.Send(signal)

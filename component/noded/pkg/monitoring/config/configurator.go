@@ -72,6 +72,7 @@ func (c *FaultConfigurator) Monitoring() {
 	informerFactory.Start(wait.NeverStop)
 }
 
+// GetMonitorData get monitor data
 func (c *FaultConfigurator) GetMonitorData() *common.FaultAndConfigInfo {
 	fcInfo := &common.FaultAndConfigInfo{
 		FaultConfig: c.configManager.GetFaultConfig(),

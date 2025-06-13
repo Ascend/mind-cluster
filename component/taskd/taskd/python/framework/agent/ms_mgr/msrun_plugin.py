@@ -17,10 +17,13 @@
 
 import os
 import time
+import threading
 
 from taskd.python.toolkit.fault_checker.fault_check import fault_processor, grace_exit_pids, stop_pids, FaultStatus, \
     force_exit_pids
 from taskd.python.toolkit.constants import constants
+from taskd.api.taskd_proxy_api import init_taskd_proxy
+from taskd.python.framework.common.type import CONFIG_UPSTREAMIP_KEY, LOCAL_HOST
 from taskd.python.toolkit.constants.constants import KILL_ALL_WORKERS, KILL_ALL_WORKER_CALLBACK_NAME, \
     START_ALL_WORKER_CALLBACK_NAME, MONITOR_CALLBACK_NAME, KILL_INTERVAL, START_WORKER_LIST_CALLBACK_NAME
 from taskd.python.utils.log import run_log
@@ -83,6 +86,12 @@ class MSRunPlugin:
 
     def register_callbacks(self, operator, func):
         self.__func_map[operator] = func
+
+    def start_proxy(self):
+        th = threading.Thread(target=init_taskd_proxy,
+                              args=({CONFIG_UPSTREAMIP_KEY: os.getenv("MS_SCHED_HOST", LOCAL_HOST)},))
+        th.daemon = True
+        th.start()
 
     def start_mindspore_workers(self):
         start_worker_func = self.__func_map.get(START_ALL_WORKER_CALLBACK_NAME)
@@ -185,6 +194,7 @@ class MSRunPlugin:
 
     # start() should be called by mindspore msrun,to take over the control of training processes
     def start(self):
+        self.start_proxy()
         kill_worker_func = self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)
         start_worker_func = self.__func_map.get(START_ALL_WORKER_CALLBACK_NAME)
         start_single_worker_func = self.__func_map.get(START_WORKER_LIST_CALLBACK_NAME)

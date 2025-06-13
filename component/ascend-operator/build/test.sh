@@ -19,6 +19,7 @@ set -e
 # execute go test and echo result to report files
 function execute_test() {
   if ! (go test -mod=mod -v -race -coverprofile cov.out "${TOP_DIR}"/pkg/controllers/... >./"$file_input"); then
+    cat ./$file_input
     echo '****** go test cases error! ******'
     exit 1
   else

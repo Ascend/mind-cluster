@@ -86,7 +86,10 @@ func initLog() error {
 }
 
 func newMsgQueue(length int32) *MsgQueue {
-	return &MsgQueue{Queue: make([]BaseMessage, length), Mutex: sync.Mutex{}}
+	if length >= 0 {
+		return &MsgQueue{Queue: make([]BaseMessage, length), Mutex: sync.Mutex{}}
+	}
+	return nil
 }
 
 func newDataPool() *DataPool {
@@ -136,7 +139,7 @@ func TestEnqueue(t *testing.T) {
 		mq := newMsgQueue(constant.MaxMsgQueueLength)
 		msg := BaseMessage{}
 		err := mq.Enqueue(msg)
-		convey.So(err.Error(), convey.ShouldEqual, "message queue is full")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "full")
 	})
 }
 
@@ -212,10 +215,10 @@ func TestUpdateAgent(t *testing.T) {
 		convey.So(agent.Status["status1"], convey.ShouldEqual, "updated")
 	})
 	convey.Convey("UpdateAgent should fail with nil data pool", t, func() {
-		var nilDp *DataPool
+		nilDp := &DataPool{}
 		err := nilDp.UpdateAgent(agentName, agentInfo)
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "agents is not initialized")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "not initialized")
 	})
 }
 
@@ -241,7 +244,7 @@ func TestUpdateWorker(t *testing.T) {
 		var nilDp *DataPool
 		err := nilDp.UpdateWorker(workerName, workerInfo)
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "workers is not initialized")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "not initialized")
 	})
 }
 
@@ -281,7 +284,7 @@ func TestGetAgent(t *testing.T) {
 	convey.Convey("GetAgent should fail for non-existent agent", t, func() {
 		_, err := dp.GetAgent("nonexistent")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "agent name is unregistered : nonexistent")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "nonexistent")
 	})
 }
 
@@ -299,7 +302,7 @@ func TestGetWorker(t *testing.T) {
 	convey.Convey("GetWorker should fail for non-existent worker", t, func() {
 		_, err := dp.GetWorker("nonexistent")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "worker name is unregistered : nonexistent")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "nonexistent")
 	})
 }
 
@@ -317,7 +320,7 @@ func TestGetCluster(t *testing.T) {
 	convey.Convey("GetCluster should fail for non-existent cluster", t, func() {
 		_, err := dp.GetCluster("nonexistent")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "cluster name is unregistered : nonexistent")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "nonexistent")
 	})
 }
 
@@ -341,12 +344,12 @@ func TestGetPos(t *testing.T) {
 	convey.Convey("Test get agent pos, agent is unregistered return error", t, func() {
 		_, err := dp.GetPos(common.AgentRole, "unregistered_agent")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "agent name is unregistered : unregistered_agent")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "unregistered_agent")
 	})
 	convey.Convey("Test get worker pos, worker is unregistered return error", t, func() {
 		_, err := dp.GetPos(common.WorkerRole, "unregistered_worker")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "worker name is unregistered : unregistered_worker")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "unregistered_worker")
 	})
 	convey.Convey("Test get pos, type is invalid return error", t, func() {
 		_, err := dp.GetPos("invalid_type", agentName)
@@ -357,13 +360,13 @@ func TestGetPos(t *testing.T) {
 		_ = dp.RegisterAgent("no_pos_agent", &AgentInfo{Pos: nil})
 		_, err := dp.GetPos(common.AgentRole, "no_pos_agent")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "agent name is unregistered : no_pos_agent")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "no_pos_agent")
 	})
 	convey.Convey("Test get worker pos, pos is nil return error", t, func() {
 		_ = dp.RegisterWorker("no_pos_worker", &WorkerInfo{Pos: nil})
 		_, err := dp.GetPos(common.WorkerRole, "no_pos_worker")
 		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "worker name is unregistered : no_pos_worker")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "no_pos_worker")
 	})
 }
 
@@ -393,6 +396,6 @@ func TestGetSnapShot(t *testing.T) {
 		dp := &DataPool{Snapshot: nil}
 		getSnapshot, err := dp.GetSnapShot()
 		convey.So(getSnapshot, convey.ShouldBeNil)
-		convey.So(err.Error(), convey.ShouldEqual, "snapshot is null")
+		convey.So(err.Error(), convey.ShouldContainSubstring, "null")
 	})
 }

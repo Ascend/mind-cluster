@@ -38,7 +38,6 @@ const (
 )
 
 var (
-	testK8sClient     *kubeclient.ClientK8s
 	testFaultLevelMap = map[string]int{
 		faultCode1: common.NotHandleFaultLevel,
 		faultCode2: common.PreSeparateFaultLevel,
@@ -93,13 +92,7 @@ func TestMain(m *testing.M) {
 }
 
 func setup() error {
-	if err := initLog(); err != nil {
-		return err
-	}
-	if err := initK8sClient(); err != nil {
-		return err
-	}
-	return nil
+	return initLog()
 }
 
 func initLog() error {
@@ -109,16 +102,6 @@ func initLog() error {
 	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
 		fmt.Printf("init hwlog failed, %v\n", err)
 		return errors.New("init hwlog failed")
-	}
-	return nil
-}
-
-func initK8sClient() error {
-	var err error
-	testK8sClient, err = kubeclient.NewClientK8s()
-	if err != nil {
-		hwlog.RunLog.Errorf("init k8s client failed when start, err: %v", err)
-		return err
 	}
 	return nil
 }

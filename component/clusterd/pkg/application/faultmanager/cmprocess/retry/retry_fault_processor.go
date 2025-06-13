@@ -150,30 +150,30 @@ func (processor *retryFaultProcessor) processEachNodeRetryFaultInfo(
 				"currentTime: %s, ", retryDevice.DeviceName, nodeName, util.ReadableMsTime(currentTime))
 			if detailInfo, ok := retryDevice.FaultDetail[constant.DeviceRetryFault]; ok &&
 				processor.jobServerInfoMap.RetryTolerate[jobId] {
+				fullLog := log + fmt.Sprintf("faultTime: %s, recoverTime: %s , faultType: %s ",
+					util.ReadableMsTime(detailInfo.FaultTime),
+					util.ReadableMsTime(detailInfo.RecoverTime),
+					detailInfo.FaultType)
 				if processor.canFilterRetryDeviceFaultInfo(retryDevice, currentTime) {
-					log = log + fmt.Sprintf("faultTime: %s, recoverTime: %s , faultType: %s ",
-						util.ReadableMsTime(detailInfo.FaultTime),
-						util.ReadableMsTime(detailInfo.RecoverTime),
-						detailInfo.FaultType)
-					hwlog.RunLog.Warn("retryProcessor filter retry " + log)
+					hwlog.RunLog.Warn("retryProcessor filter retry " + fullLog)
 					processor.filterRetryDeviceFaultInfo(deviceName, deviceInfo)
 					modified = true
 				} else {
-					hwlog.RunLog.Warn("retryProcessor cannot filter retry " + log)
+					hwlog.RunLog.Warn("retryProcessor cannot filter retry " + fullLog)
 				}
 			}
 			if detailInfo, ok := retryDevice.FaultDetail[constant.DeviceNormalFault]; ok &&
 				podgroup.JudgeRestartProcessByJobKey(jobId) {
+				fullLog := log + fmt.Sprintf("faultTime: %s, recoverTime: %s , faultType: %s ",
+					util.ReadableMsTime(detailInfo.FaultTime),
+					util.ReadableMsTime(detailInfo.RecoverTime),
+					detailInfo.FaultType)
 				if processor.canFilterNormalDeviceFaultInfo(jobId, retryDevice, currentTime) {
-					log = log + fmt.Sprintf("faultTime: %s, recoverTime: %s , faultType: %s ",
-						util.ReadableMsTime(detailInfo.FaultTime),
-						util.ReadableMsTime(detailInfo.RecoverTime),
-						detailInfo.FaultType)
-					hwlog.RunLog.Warn("retryProcessor filter normal " + log)
+					hwlog.RunLog.Warn("retryProcessor filter normal " + fullLog)
 					processor.filterNormalDeviceFaultInfo(deviceName, deviceInfo)
 					modified = true
 				} else {
-					hwlog.RunLog.Warn("retryProcessor cannot filter normal " + log)
+					hwlog.RunLog.Warn("retryProcessor cannot filter normal " + fullLog)
 				}
 			}
 		}

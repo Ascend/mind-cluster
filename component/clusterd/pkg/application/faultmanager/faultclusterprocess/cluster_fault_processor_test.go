@@ -17,13 +17,33 @@
 package faultclusterprocess
 
 import (
+	"context"
 	"strconv"
 	"testing"
+	"time"
 
-	"clusterd/pkg/common/constant"
-	"clusterd/pkg/interface/grpc/fault"
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/cmprocess"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/faultdomain"
+	"clusterd/pkg/domain/node"
+	"clusterd/pkg/interface/grpc/fault"
+	"clusterd/pkg/interface/kube"
 )
+
+const (
+	invalidCacheTime = -5
+)
+
+func init() {
+	err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+	convey.ShouldBeNil(err)
+}
 
 func TestGetMaxLevel(t *testing.T) {
 	convey.Convey("Given a NodeFaultInfo with various fault devices", t, func() {
@@ -111,4 +131,151 @@ func TestGetNodeFaultInfo(t *testing.T) {
 			convey.So(result[0].FaultLevel, convey.ShouldEqual, constant.HealthyState)
 		})
 	})
+}
+
+// TestNewClusterFaultProcessor tests the creation of a new ClusterFaultProcessor instance.
+func TestNewClusterFaultProcessor(t *testing.T) {
+	convey.Convey("Test NewClusterFaultProcessor func to return a none nil object", t, func() {
+		processor := newClusterFaultProcessor()
+		convey.So(processor, convey.ShouldNotBeNil)
+		convey.So(processor.ClusterFaultCache, convey.ShouldNotBeNil)
+		convey.So(processor.ClusterFaultCache.NodeFaultInfo, convey.ShouldHaveLength, 0)
+	})
+}
+
+// TestClusterFaultProcessorGatherClusterFaultInfo tests the GatherClusterFaultInfo method.
+func TestClusterFaultProcessorGatherClusterFaultInfo(t *testing.T) {
+	convey.Convey("Test get all fault info while cache is available", t, func() {
+		processor := newClusterFaultProcessor()
+		processor.lastUpdateTime = time.Now()
+		result := processor.GatherClusterFaultInfo()
+		convey.So(result, convey.ShouldEqual, processor.ClusterFaultCache)
+	})
+
+	convey.Convey("Test get all fault info while cache is available", t, func() {
+		processor := newClusterFaultProcessor()
+		processor.lastUpdateTime = time.Now().Add(invalidCacheTime * time.Second)
+		mockDependencies()
+		result := processor.GatherClusterFaultInfo()
+		convey.So(result.SignalType, convey.ShouldEqual, constant.SignalTypeNormal)
+	})
+}
+
+// TestGetAllKindsFaults tests the getAllKindsFaults function.
+func TestGetAllKindsFaults(t *testing.T) {
+	convey.Convey("Test get npu device fault,got mock fault", t, func() {
+		mockDependencies()
+		content := constant.AllConfigmapContent{
+			DeviceCm: map[string]*constant.AdvanceDeviceFaultCm{
+				"device-node1": {
+					FaultDeviceList: map[string][]constant.DeviceFault{
+						"npu-0": {{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault}},
+					},
+				},
+			},
+		}
+		faults := getAllKindsFaults(content)
+		convey.So(len(faults), convey.ShouldEqual, 1)
+		convey.So(faults[0].FaultDevice[0].FaultCodes[0], convey.ShouldEqual, "NPU001")
+	})
+
+	convey.Convey("Test gets switch fault", t, func() {
+		mockDependencies()
+		nodeName := "switch-node1"
+		content := constant.AllConfigmapContent{
+			DeviceCm: map[string]*constant.AdvanceDeviceFaultCm{constant.DeviceInfoPrefix + nodeName: {}},
+			SwitchCm: map[string]*constant.SwitchInfo{
+				constant.SwitchInfoPrefix + nodeName: {
+					SwitchFaultInfo: constant.SwitchFaultInfo{
+						NodeStatus: constant.PreSeparateFault,
+						FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "SW001"}},
+					},
+				},
+			},
+		}
+		faults := getAllKindsFaults(content)
+		convey.So(len(faults), convey.ShouldEqual, 1)
+		convey.So(faults[0].FaultDevice[0].FaultCodes[0], convey.ShouldEqual, "SW001")
+	})
+}
+
+// TestGetSwitchFaultInfo tests the getSwitchFaultInfo function
+func TestGetSwitchFaultInfo(t *testing.T) {
+	convey.Convey("Test with nil switch info with nil input to get nil", t, func() {
+		faults := getSwitchFaultInfo(nil)
+		convey.So(faults, convey.ShouldBeNil)
+	})
+
+	convey.Convey("Test with switch fault, with switch fault input,got switch faults", t, func() {
+		switchInfo := &constant.SwitchInfo{
+			SwitchFaultInfo: constant.SwitchFaultInfo{
+				NodeStatus: constant.PreSeparateFault,
+				FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "SW001"}},
+			},
+		}
+		faults := getSwitchFaultInfo(switchInfo)
+		convey.So(faults[0].FaultCodes[0], convey.ShouldEqual, "SW001")
+	})
+}
+
+// TestGetNpuDeviceFaultInfo tests the getNpuDeviceFaultInfo function.
+func TestGetNpuDeviceFaultInfo(t *testing.T) {
+	convey.Convey("Test with nil device cm to get nil return", t, func() {
+		faults := getNpuDeviceFaultInfo(nil)
+		convey.So(faults, convey.ShouldBeNil)
+	})
+
+	convey.Convey("Test with device fault, got device fault", t, func() {
+		deviceCm := &constant.AdvanceDeviceFaultCm{
+			FaultDeviceList: map[string][]constant.DeviceFault{
+				"npu-0": {{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault}},
+			},
+		}
+		faults := getNpuDeviceFaultInfo(deviceCm)
+		convey.So(faults[0].DeviceId, convey.ShouldEqual, "0")
+	})
+}
+
+// TestGetDeviceFaultInfo tests the getDeviceFaultInfo function.
+func TestGetDeviceFaultInfo(t *testing.T) {
+	convey.Convey("Test with healthy state", t, func() {
+		deviceFaults := []constant.DeviceFault{
+			{FaultCode: "NPU001", FaultLevel: constant.NotHandleFault},
+		}
+		codes, level := getDeviceFaultInfo(deviceFaults)
+		convey.So(codes[0], convey.ShouldEqual, "NPU001")
+		convey.So(level, convey.ShouldEqual, constant.HealthyState)
+	})
+
+	convey.Convey("Test with sub healthy state", t, func() {
+		deviceFaults := []constant.DeviceFault{
+			{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault},
+		}
+		_, level := getDeviceFaultInfo(deviceFaults)
+		convey.So(level, convey.ShouldEqual, constant.SubHealthyState)
+	})
+	convey.Convey("Test with unhealthy state", t, func() {
+		deviceFaults := []constant.DeviceFault{
+			{FaultCode: "NPU001", FaultLevel: "unknowLevel"},
+		}
+		_, level := getDeviceFaultInfo(deviceFaults)
+		convey.So(level, convey.ShouldEqual, constant.UnHealthyState)
+	})
+}
+
+// mockDependencies sets up mock implementations for external dependencies.
+func mockDependencies() {
+	gomonkey.ApplyFuncReturn(cmprocess.DeviceCenter.GetProcessedCm, nil)
+	gomonkey.ApplyFuncReturn(cmprocess.SwitchCenter.GetProcessedCm, nil)
+	gomonkey.ApplyFuncReturn(cmprocess.NodeCenter.GetProcessedCm, nil)
+	gomonkey.ApplyFunc(kube.GetNode, func(nodeName string) *v1.Node {
+		return &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName,
+			},
+		}
+	})
+	gomonkey.ApplyFuncReturn(node.GetNodeIpByName, "192.168.1.1")
+	gomonkey.ApplyFuncReturn(node.GetNodeSNByName, "SN-1")
+	gomonkey.ApplyFuncReturn(faultdomain.IsNodeReady, true)
 }

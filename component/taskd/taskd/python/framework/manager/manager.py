@@ -21,12 +21,13 @@ import taskd
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
 
+
 class Manager:
     """
     Manager is a framework of task management
     """
 
-    def init_taskd_manager(self, config:dict) -> bool:
+    def init_taskd_manager(self, config: dict) -> bool:
         if cython_api.lib is None:
             run_log.error("the libtaskd.so has not been loaded!")
             return False

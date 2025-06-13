@@ -120,8 +120,9 @@ func PfSwitchToPfDomainSwitch(profilingSwitch constant.ProfilingSwitch) constant
 		DefaultDomainAble: false,
 		CommDomainAble:    false,
 	}
-	if profilingSwitch.Step == constant.SwitchON || profilingSwitch.SaveCheckpoint == constant.SwitchON &&
-		profilingSwitch.FP == constant.SwitchON || profilingSwitch.DataLoader == constant.SwitchON {
+	if profilingSwitch.Step == constant.SwitchON || profilingSwitch.SaveCheckpoint == constant.SwitchON ||
+		profilingSwitch.FP == constant.SwitchON || profilingSwitch.DataLoader == constant.SwitchON ||
+		profilingSwitch.CommunicationOperator == constant.SwitchON {
 		profilingDomainCmd.DefaultDomainAble = true
 	}
 	if profilingSwitch.CommunicationOperator == constant.SwitchON {

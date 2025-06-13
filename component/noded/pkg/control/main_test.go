@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	testK8sClient *kubeclient.ClientK8s
+	testK8sClient *kubeclient.ClientK8s = nil
 )
 
 func TestMain(m *testing.M) {

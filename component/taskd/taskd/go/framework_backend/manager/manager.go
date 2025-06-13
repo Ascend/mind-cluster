@@ -18,6 +18,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"io"
 	"sync/atomic"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/profiling"
+	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/application"
@@ -80,6 +82,8 @@ type BaseManager struct {
 const (
 	roleTaskd       = "taskd"
 	maxRegRetryTime = 60
+	maxWaitTime     = 60
+	waitGapTime     = 1
 )
 
 // Init base manger
@@ -88,6 +92,7 @@ func (m *BaseManager) Init() error {
 		fmt.Printf("manager init hwlog failed, err: %v \n", err)
 		return err
 	}
+	hwlog.RunLog.Infof("manager config: %v", m.Config)
 	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
 	m.MsgHd = application.NewMsgHandler()
 	m.MsgHd.Start(m.svcCtx)
@@ -128,7 +133,7 @@ func (m *BaseManager) Process() error {
 		if err := m.Service(snapshot); err != nil {
 			return fmt.Errorf("service execute failed, err: %v", err)
 		}
-		hwlog.RunLog.Infof("manager process loop!")
+		hwlog.RunLog.Debug("manager process loop!")
 	}
 }
 
@@ -153,6 +158,7 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
 		return
 	}
+	hwlog.RunLog.Infof("get clusterd addr %v", addr)
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
@@ -161,6 +167,90 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 	}
 
 	go m.subscribeProfiling(conn, 0)
+	go m.subscribeSwitchNic(conn)
+}
+
+func (m *BaseManager) subscribeSwitchNic(conn *grpc.ClientConn) {
+	client := pb.NewRecoverClient(conn)
+	clientInfo := &pb.ClientInfo{
+		JobId: m.JobId,
+		Role:  roleTaskd,
+	}
+	for {
+		exit, wTime := m.listenSignal(client, clientInfo, waitGapTime)
+		if exit {
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			break
+		}
+		time.Sleep(time.Duration(wTime) * time.Second)
+		if wTime > maxWaitTime {
+			wTime = 1
+		}
+	}
+}
+
+func (m *BaseManager) listenSignal(client pb.RecoverClient, clientInfo *pb.ClientInfo, wTime int) (bool, int) {
+	stream, err := client.SubscribeNotifySwitch(m.svcCtx, clientInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("register Clusterd notify switch fail, err: %v", err)
+		return false, wTime + waitGapTime
+	}
+	for {
+		select {
+		case <-m.svcCtx.Done():
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			return true, 0
+		case <-stream.Context().Done():
+			hwlog.RunLog.Error("server stream abnormal interruption, register again")
+			return false, wTime + waitGapTime
+		default:
+			responseMsg, recvErr := stream.Recv()
+			if recvErr == io.EOF {
+				hwlog.RunLog.Info("stream EOF, register again")
+				return false, waitGapTime
+			}
+			if recvErr != nil {
+				hwlog.RunLog.Error(recvErr)
+				continue
+			}
+			hwlog.RunLog.Infof("receive switch nic info: %v", responseMsg)
+			globalOps := responseMsg.GetOp()
+			globalRanks := responseMsg.GetRankID()
+			m.enqueueSwitchNic(globalRanks, globalOps)
+		}
+	}
+}
+
+func (m *BaseManager) enqueueSwitchNic(ranks []string, ops []bool) {
+	rankStr := utils.ObjToString(ranks)
+	opStr := utils.ObjToString(ops)
+	msg := map[string]string{
+		constant.GlobalRankKey: rankStr,
+		constant.GlobalOpKey:   opStr,
+		constant.SwitchJobID:   m.JobId,
+	}
+	message := storage.BaseMessage{
+		Header: storage.MsgHeader{
+			BizType: "default",
+			Uuid:    uuid.New().String(),
+			Src: &common.Position{
+				Role:       constant.ClusterRole,
+				ServerRank: constant.ClusterDRank,
+			},
+			Timestamp: time.Now(),
+		},
+		Body: storage.MsgBody{
+			MsgType:   constant.Action,
+			Code:      constant.SwitchNicCode,
+			Extension: msg,
+		},
+	}
+	err := m.MsgHd.MsgQueue.Enqueue(message)
+	if err != nil {
+		hwlog.RunLog.Errorf("enqueue switch msg err %v", err)
+		return
+	}
+	hwlog.RunLog.Infof("enqueue switch msg %v", msg)
 }
 
 func (m *BaseManager) subscribeProfiling(conn *grpc.ClientConn, retryTime time.Duration) {

@@ -58,6 +58,8 @@ const (
 	podUsedHardwareTypeKey = "mind-cluster/hardware-type"
 	// hardwareType800IA2 hardware type 800I A2
 	hardwareType800IA2 = "800I-A2"
+	// hardwareType800IA3 hardware type 800I A3
+	hardwareType800IA3 = "800I-A3"
 	// serverUsageKey key of server usage in node labels
 	serverUsageKey = "server-usage"
 	// inferUsage infer value of server usage in node labels

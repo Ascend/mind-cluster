@@ -146,12 +146,16 @@ func (mhd *MsgHandler) processOne(ctx context.Context) {
 
 func (mhd *MsgHandler) receiver(tool *net.NetInstance, ctx context.Context) {
 	for i := 0; i < constant.RequestChanNum; i++ {
-		go func() {
-			msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool, ctx)
-			if err != nil {
-				mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
-			}
-		}()
+		go mhd.receiveGoroutine(tool, ctx)
+	}
+}
+
+func (mhd *MsgHandler) receiveGoroutine(tool *net.NetInstance, ctx context.Context) {
+	msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool, ctx)
+	if err != nil {
+		hwlog.RunLog.Errorf("receive msg enqueue failed: %v", err)
+		mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
+		mhd.receiveGoroutine(tool, ctx)
 	}
 }
 

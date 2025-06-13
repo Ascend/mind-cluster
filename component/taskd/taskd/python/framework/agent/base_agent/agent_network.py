@@ -58,22 +58,22 @@ class AgentMessageManager():
         Register agent to taskd manager.
         """
         dst = Position(
-            role = "Mgr",
-            server_rank = "0",
-            process_rank = "-1"
+            role="Mgr",
+            server_rank="0",
+            process_rank="-1"
         )
         msg_body = MsgBody(
-            msg_type = "REGISTER",
-            code = 0,
-            message = "",
-            extension = {}
+            msg_type="REGISTER",
+            code=0,
+            message="",
+            extension={}
         )
         body_json = json.dumps(asdict(msg_body))
         msg = MessageInfo(
-            uuid = str(uuid.uuid4()),
-            biz_type = DEFAULT_BIZTYPE,
-            dst = dst,
-            body = body_json
+            uuid=str(uuid.uuid4()),
+            biz_type=DEFAULT_BIZTYPE,
+            dst=dst,
+            body=body_json
         )
         run_log.info(f"agent register: {msg}")
         self.send_message(msg)
@@ -121,6 +121,12 @@ class AgentMessageManager():
                 self.lib.DestroyNetwork(self._network_instance)
                 return
 
+    def get_network_instance(self):
+        """
+        Get network instance.
+        """
+        return self._network_instance
+
     def _parse_msg(self, msg_json) -> MsgBody:
         """
         Parse message from taskd manager.
@@ -156,6 +162,7 @@ class AgentMessageManager():
             run_log.error("init_network_func failed!")
             raise Exception("init_network_func failed!")
 
+
 def init_network_client(network_config, msg_queue):
     start_process = threading.Thread(target=init_message_manager, args=(network_config, msg_queue))
     start_process.daemon = True
@@ -170,6 +177,19 @@ def init_message_manager(network_config, msg_queue):
         run_log.error("network_config is None!")
         raise Exception("network_config is None!")
     msg_manager = AgentMessageManager(network_config, msg_queue)
+
+    time_use = 0
+    while True:
+        if time_use > 60:
+            run_log.error("init message manager failed!")
+            return
+        if msg_manager.get_network_instance() is not None:
+            run_log.info("init message manager success!")
+            break
+        time.sleep(1)
+        time_use += 1
+        run_log.info("wait get_network_instance")
+
     msg_manager.register(network_config.pos.server_rank)
     msg_manager.receive_message()
 
@@ -180,9 +200,23 @@ def get_message_manager() -> AgentMessageManager:
     """
     return AgentMessageManager.instance
 
-def network_send_message(msg :MessageInfo):
+
+def network_send_message(msg: MessageInfo):
     """
     Send message to taskd manager.
     """
     msg_manager = get_message_manager()
+    if msg_manager.get_network_instance() is None:
+        run_log.warning("network instance is None!")
+        return
     msg_manager.send_message(msg)
+
+
+def get_msg_network_instance():
+    """
+    Get network instance.
+    """
+    msg_manager = get_message_manager()
+    if msg_manager is None:
+        return None
+    return msg_manager.get_network_instance()

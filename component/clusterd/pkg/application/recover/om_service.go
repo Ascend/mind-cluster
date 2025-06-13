@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
@@ -40,7 +41,11 @@ func (s *FaultRecoverService) SwitchNicTrack(ctx context.Context, nics *pb.Switc
 }
 
 // SubscribeSwitchNicSignal return the result of switch nic
-func (s *FaultRecoverService) SubscribeSwitchNicSignal(req *pb.SwitchNicRequest, stream pb.Recover_SubscribeSwitchNicSignalServer) error {
+func (s *FaultRecoverService) SubscribeSwitchNicSignal(req *pb.SwitchNicRequest,
+	stream pb.Recover_SubscribeSwitchNicSignalServer) error {
+	if req == nil {
+		return fmt.Errorf("request is nil")
+	}
 	hwlog.RunLog.Infof("receive Subscribe signal request, jobID: %s", req.JobID)
 	controller, exist := s.getController(req.JobID)
 	if !exist {
@@ -51,6 +56,38 @@ func (s *FaultRecoverService) SubscribeSwitchNicSignal(req *pb.SwitchNicRequest,
 	}
 	controller.listenSwitchNicChannel(stream)
 	return nil
+}
+
+// SubscribeNotifySwitch notify worker switch nic
+func (s *FaultRecoverService) SubscribeNotifySwitch(req *pb.ClientInfo, stream pb.Recover_SubscribeNotifySwitchServer) error {
+	if req == nil {
+		return fmt.Errorf("request is nil")
+	}
+	controller, exist := s.getController(req.JobId)
+	if !exist {
+		hwlog.RunLog.Debugf("jobId=%s not registed, wait job running", req.JobId)
+		return fmt.Errorf("jobId=%s not registed, please wait agent register", req.JobId)
+	}
+	hwlog.RunLog.Infof("receive Subscribe notify switch signal request, jobID: %s", req.JobId)
+	controller.listenSwitchNicNotifyChannel(stream)
+	return nil
+}
+
+// ReplySwitchNicResult notify worker switch nic
+func (s *FaultRecoverService) ReplySwitchNicResult(ctx context.Context, res *pb.SwitchResult) (*pb.Status, error) {
+	if res == nil {
+		return &pb.Status{Code: int32(common.NicParamInvalid), Info: "request is nil"}, nil
+	}
+	controller, exist := s.getController(res.JobId)
+	if !exist {
+		hwlog.RunLog.Errorf("jobId=%s not registed", res.JobId)
+		return &pb.Status{
+			Code: int32(common.UnRegistry),
+			Info: fmt.Sprintf("jobId=%s not registed", res.JobId)}, nil
+	}
+	controller.setSwitchNicResult(res)
+	hwlog.RunLog.Infof("jobId=%s nic swtich result: %v", res.JobId, res.Result)
+	return &pb.Status{Code: int32(common.OK), Info: "reply success"}, nil
 }
 
 func (s *FaultRecoverService) checkNicsParam(nics *pb.SwitchNics) (bool, string) {
@@ -68,12 +105,19 @@ func (s *FaultRecoverService) checkNicsParam(nics *pb.SwitchNics) (bool, string)
 		return false, fmt.Sprintf("job:%s is not running", nics.JobID)
 	}
 	jobServerMap := s.getNodeDeviceMap(jobInfo.PreServerList)
+	deviceInfos := faultmanager.QueryDeviceInfoToReport()
 	for node, devs := range nics.NicOps {
 		if _, ok := jobServerMap[node]; !ok {
 			return false, fmt.Sprintf("node:%s not exist in job:%s", node, nics.JobID)
 		}
+		if _, ok := deviceInfos[node]; !ok {
+			return false, fmt.Sprintf("node:%s not exist in job:%s", node, nics.JobID)
+		}
 		if msg, ok := s.checkDevsValid(devs, jobServerMap[node], node); !ok {
 			return false, msg
+		}
+		if deviceInfos[node].SuperPodID < 0 {
+			return false, fmt.Sprintf("node:%s should operate in superPodID", node)
 		}
 	}
 	return true, ""

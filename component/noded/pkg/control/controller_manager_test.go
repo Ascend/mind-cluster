@@ -26,7 +26,7 @@ import (
 	"nodeD/pkg/reporter"
 )
 
-var controlManager *ControlManager
+var controlManager *ControllerManager
 
 func TestNodeController(t *testing.T) {
 	controlManager = NewControlManager(testK8sClient)

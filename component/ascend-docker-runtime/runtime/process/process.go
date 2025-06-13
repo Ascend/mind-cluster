@@ -600,65 +600,87 @@ func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdLi
 }
 
 func modifySpecFile(path string) error {
+	spec, err := readSpecFile(path)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to read spec file, error: %v", err)
+		return err
+	}
+
+	if err := processDevicesAndHooks(spec); err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
+
+	return writeSpecFile(path, spec)
+}
+
+// readSpecFile handles file reading and parsing
+func readSpecFile(path string) (*specs.Spec, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("spec file doesnt exist %s: %v", path, err)
+		return nil, fmt.Errorf("spec file doesnt exist %s: %v", path, err)
 	}
+
 	if _, err = mindxcheckutils.RealFileChecker(path, true, true, mindxcheckutils.DefaultSize); err != nil {
-		return err
+		return nil, err
 	}
 
 	jsonFile, err := os.OpenFile(path, os.O_RDWR, stat.Mode())
 	if err != nil {
-		return fmt.Errorf("cannot open oci spec file %s: %v", path, err)
+		return nil, fmt.Errorf("cannot open oci spec file %s: %v", path, err)
 	}
-
 	defer jsonFile.Close()
 
 	jsonContent, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
-		return fmt.Errorf("failed to read oci spec file %s: %v", path, err)
-	}
-
-	if err = jsonFile.Truncate(0); err != nil {
-		return fmt.Errorf("failed to truncate: %v", err)
-	}
-	if _, err = jsonFile.Seek(0, 0); err != nil {
-		return fmt.Errorf("failed to seek: %v", err)
+		return nil, fmt.Errorf("failed to read oci spec file %s: %v", path, err)
 	}
 
 	var spec specs.Spec
 	if err = json.Unmarshal(jsonContent, &spec); err != nil {
-		return fmt.Errorf("failed to unmarshal oci spec file %s: %v", path, err)
+		return nil, fmt.Errorf("failed to unmarshal oci spec file %s: %v", path, err)
 	}
+	return &spec, nil
+}
 
-	devices, err := checkVisibleDevice(&spec)
+// processDevicesAndHooks handles device detection and hook addition
+func processDevicesAndHooks(spec *specs.Spec) error {
+	devices, err := checkVisibleDevice(spec)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to check ASCEND_VISIBLE_DEVICES parameter, err: %v", err)
 		return fmt.Errorf("failed to check ASCEND_VISIBLE_DEVICES parameter, err: %v", err)
 	}
+
 	if len(devices) != 0 {
-		if err = addHook(&spec, &devices); err != nil {
-			hwlog.RunLog.Errorf("failed to inject hook, err: %v", err)
+		if err = addHook(spec, &devices); err != nil {
 			return fmt.Errorf("failed to inject hook, err: %v", err)
 		}
-		if err = addDevice(&spec, devices); err != nil {
-			hwlog.RunLog.Errorf("failed to add device to env, err: %v", err)
+		if err = addDevice(spec, devices); err != nil {
 			return fmt.Errorf("failed to add device to env: %v", err)
 		}
 	}
+	addAscendDockerEnv(spec)
+	return nil
+}
 
-	addAscendDockerEnv(&spec)
+// writeSpecFile handles file write-back
+func writeSpecFile(path string, spec *specs.Spec) error {
+	jsonFile, err := os.OpenFile(path, os.O_RDWR, 0)
+	if err != nil {
+		return fmt.Errorf("cannot reopen spec file %s: %v", path, err)
+	}
+	defer jsonFile.Close()
 
 	jsonOutput, err := json.Marshal(spec)
 	if err != nil {
 		return fmt.Errorf("failed to marshal OCI spec file: %v", err)
 	}
 
+	if err = jsonFile.Truncate(0); err != nil {
+		return fmt.Errorf("failed to truncate: %v", err)
+	}
 	if _, err = jsonFile.WriteAt(jsonOutput, 0); err != nil {
 		return fmt.Errorf("failed to write OCI spec file: %v", err)
 	}
-
 	return nil
 }
 
@@ -674,6 +696,7 @@ func DoProcess() error {
 	}
 
 	if args.bundleDirPath == "" {
+		hwlog.RunLog.Warn("get bundleDirPath is empty,try get current working dir from pwd ")
 		args.bundleDirPath, err = os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current working dir: %v", err)

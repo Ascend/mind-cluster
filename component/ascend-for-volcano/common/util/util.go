@@ -313,6 +313,11 @@ func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, error) {
 	}
 	var nodeDevList = make([]string, 0)
 	for devName := range devIpMap {
+		splitDev := strings.Split(devName, "-")
+		// remove vnpu card
+		if len(splitDev) > DevSplitNum {
+			continue
+		}
 		nodeDevList = append(nodeDevList, devName)
 	}
 	return nodeDevList, nil

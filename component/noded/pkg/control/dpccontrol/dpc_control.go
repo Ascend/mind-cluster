@@ -45,41 +45,43 @@ const (
 )
 
 var (
-	dpcProcessError bool
-	dpcMemoryError  bool
+	dpcProcessError = false
+	dpcMemoryError  = false
+	isFirst         = true
 )
 
-// DpcController control dpc fault on server
-type DpcController struct {
+// Controller control dpc fault on server
+type Controller struct {
 }
 
 // NewDpcController create a dpc controller
-func NewDpcController() *DpcController {
-	return &DpcController{}
+func NewDpcController() *Controller {
+	return &Controller{}
 }
 
 // Name get dpc control name
-func (dc *DpcController) Name() string {
+func (dc *Controller) Name() string {
 	return common.PluginControlFault
 }
 
 // Control update fault dpc info
-func (dc *DpcController) Control(faultDevInfo *common.FaultAndConfigInfo) *common.FaultAndConfigInfo {
+func (dc *Controller) Control(faultDevInfo *common.FaultAndConfigInfo) *common.FaultAndConfigInfo {
 	newDpcStatusMap := faultDevInfo.DpcStatusMap
 	if newDpcStatusMap == nil {
 		return faultDevInfo
 	}
 	var faults []*pubfault.Fault
 	newDpcProcessStatus := getNewDpcProcessStatus(newDpcStatusMap)
-	if newDpcProcessStatus != dpcProcessError {
+	if newDpcProcessStatus != dpcProcessError || isFirst {
 		dpcProcessError = newDpcProcessStatus
 		faults = append(faults, constructDpcError(dpcProcessError, dpcProcessErrorId, processFaultCode))
 	}
 	newDpcMemoryStatus := getNewDpcMemoryStatus(newDpcStatusMap)
-	if newDpcMemoryStatus != dpcMemoryError {
+	if newDpcMemoryStatus != dpcMemoryError || isFirst {
 		dpcMemoryError = newDpcMemoryStatus
 		faults = append(faults, constructDpcError(dpcMemoryError, dpcMemoryErrorId, memoryFaultCode))
 	}
+	isFirst = false
 	if len(faults) == 0 {
 		return faultDevInfo
 	}

@@ -42,6 +42,7 @@ func NewNodeController() *NodeController {
 	}
 }
 
+// Name get fault_monitor control name
 func (nc *NodeController) Name() string {
 	return common.PluginControlFault
 }

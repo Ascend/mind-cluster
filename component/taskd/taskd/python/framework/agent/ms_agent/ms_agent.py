@@ -39,7 +39,7 @@ class MsAgent(BaseAgent):
     RANK_STATUS_FAILED = "FAILED"
     FRAMEWORK_MS_NAME = "mindspore"
 
-    def __init__(self, network_config = None):
+    def __init__(self, network_config=None):
         super().__init__()
         self.all_rank_succeed = False
         self.monitor_interval = 5
@@ -58,7 +58,6 @@ class MsAgent(BaseAgent):
     def start(self):
         kill_worker_func = self._func_map.get('KILL_WORKER')
         start_worker_func = self._func_map.get('START_ALL_WORKER')
-        # {rank_0: {pid: pidNum, status: status code}，1：status code …..}
         monitor_func = self._func_map.get('MONITOR')
         if kill_worker_func is None or start_worker_func is None or monitor_func is None:
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")

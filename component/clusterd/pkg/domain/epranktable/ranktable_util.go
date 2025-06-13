@@ -1,5 +1,6 @@
 // Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
-// package epranktable for
+
+// Package epranktable for generating global rank table
 package epranktable
 
 import (

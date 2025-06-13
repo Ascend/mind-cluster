@@ -132,7 +132,7 @@ func mockWrongTaskDevInfoList() []*common.TaskDevInfo {
 func newTestHotResetManager(deviceType string, model string) HotResetManager {
 	common.ParamOption.RealCardType = deviceType
 	deviceNum := 16
-	return NewHotResetManager(model, deviceNum)
+	return NewHotResetManager(model, deviceNum, common.EmptyBoardId)
 }
 
 // TestGetChipCountOnRing for test the default count of ring ond different device
@@ -156,7 +156,7 @@ func TestGetChipCountOnRing(t *testing.T) {
 			ascend910BInferHotResetManager := newTestHotResetManager(common.Ascend910B, common.Infer)
 			convey.So(ascend910BInferHotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910BInferHotResetManager.GetResetDevNumOnce()
-			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumInfer)
+			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumTrain)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910A3 chip count on ring success", func() {

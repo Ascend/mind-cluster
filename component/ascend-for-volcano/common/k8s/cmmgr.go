@@ -389,7 +389,11 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 			sort.Strings(availDev)
 			tmpDeviceInfo.DeviceList[devListKey] = strings.Join(availDev, ",")
 			klog.V(util.LogDebugLev).Infof("node[%s] device list: %v, available list: %v, pod used list: %v, "+
-				"unhealthy list: %v", nodeInfo.Name, nodeDevList, availDev, podUsedDevList, unHealthyDevList)
+				"unhealthy list: %v. The above does not include vnpu card, may not be accurate in the vnpu scence",
+				nodeInfo.Name, nodeDevList, availDev, podUsedDevList, unHealthyDevList)
+			// device info cm has not been updated properly, which may cause the self maintain card to be
+			// unable to update timely. This will affect rescheduling
+			tmpDeviceInfo.UpdateTime = time.Now().Unix()
 		} else {
 			tmpDeviceInfo.DeviceList[devListKey] = devListValue
 		}

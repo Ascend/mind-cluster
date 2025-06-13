@@ -50,6 +50,14 @@ type switchNicSender struct {
 	mockStream
 }
 
+type notifySwitchNicSender struct {
+	mockStream
+}
+
+func (s *notifySwitchNicSender) Send(signal *pb.SwitchRankList) error {
+	return nil
+}
+
 func (s *switchNicSender) Send(signal *pb.SwitchNicResponse) error {
 	return nil
 }

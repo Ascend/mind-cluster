@@ -89,7 +89,7 @@ func (cf *ConfigPingMeshCmManager) checkConfChanged(oldInfo, newInfo constant.Co
 }
 
 func (cf *ConfigPingMeshCmManager) startOrReloadController() {
-	if !RasNetDetectInst.CheckIsOn() {
+	if !rasNetDetectInst.CheckIsOn() {
 		hwlog.RunLog.Info("ping mesh config detect is inactive, no need to reload or start controller")
 		return
 	}

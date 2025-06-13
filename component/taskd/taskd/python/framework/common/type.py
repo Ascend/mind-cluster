@@ -30,11 +30,11 @@ class Position:
 
 @dataclass
 class TLSConfig:
-	ca: str
-	server_key: str
-	server_crt: str
-	client_key: str
-	client_crt: str
+    ca: str
+    server_key: str
+    server_crt: str
+    client_key: str
+    client_crt: str
 
 
 @dataclass

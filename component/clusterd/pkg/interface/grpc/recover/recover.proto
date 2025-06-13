@@ -77,6 +77,17 @@ message DeviceList {
   repeated  bool op = 2;
 }
 
+message SwitchRankList {
+  repeated  string rankID = 1;
+  repeated  bool op = 2;
+  string jobId = 3;
+}
+
+message SwitchResult {
+  string jobId = 1;
+  bool result = 2;
+}
+
 service Recover {
   rpc Init(ClientInfo) returns (Status) {}
   rpc Register(ClientInfo) returns (Status) {}
@@ -87,4 +98,6 @@ service Recover {
   rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
   rpc SwitchNicTrack(SwitchNics) returns (Status) {}
   rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse) {}
+  rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
+  rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
 }

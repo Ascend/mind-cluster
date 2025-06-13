@@ -22,6 +22,7 @@ import (
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/faultdig"
+	"taskd/framework_backend/manager/plugins/om"
 )
 
 // PluginHandler is defined to handle plugins operation
@@ -35,6 +36,11 @@ func (p *PluginHandler) Init() error {
 	if err := p.Register(profilingPlugin.Name(), profilingPlugin); err != nil {
 		hwlog.RunLog.Errorf("register plugin %s failed!", profilingPlugin.Name())
 		return fmt.Errorf("register plugin %s failed", profilingPlugin.Name())
+	}
+	omPlugin := om.NewOmPlugin()
+	if err := p.Register(omPlugin.Name(), omPlugin); err != nil {
+		hwlog.RunLog.Errorf("register plugin %s failed!", omPlugin.Name())
+		return fmt.Errorf("register plugin %s failed", omPlugin.Name())
 	}
 	return nil
 }

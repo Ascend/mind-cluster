@@ -31,28 +31,28 @@ import (
 
 const randSecond = 20
 
-// ControlManager control manager
-type ControlManager struct {
+// ControllerManager controller manager
+type ControllerManager struct {
 	kubeClient         *kubeclient.ClientK8s
 	configManager      manager.ConfigManager
 	nextFaultProcessor common.FaultProcessor
 }
 
 // NewControlManager create a control manager
-func NewControlManager(client *kubeclient.ClientK8s) *ControlManager {
-	return &ControlManager{
+func NewControlManager(client *kubeclient.ClientK8s) *ControllerManager {
+	return &ControllerManager{
 		kubeClient:    client,
 		configManager: manager.NewConfigManager(),
 	}
 }
 
 // Init initialize node controller
-func (nc *ControlManager) Init() error {
+func (nc *ControllerManager) Init() error {
 	return nil
 }
 
 // Execute process fault device info and send message to next fault processor
-func (nc *ControlManager) Execute(fcInfo *common.FaultAndConfigInfo, processType string) {
+func (nc *ControllerManager) Execute(fcInfo *common.FaultAndConfigInfo, processType string) {
 	controls := processmanager.GetControlPlugins(processType)
 	for _, plugin := range controls {
 		fcInfo = plugin.Control(fcInfo)
@@ -61,12 +61,12 @@ func (nc *ControlManager) Execute(fcInfo *common.FaultAndConfigInfo, processType
 }
 
 // SetNextFaultProcessor set the next fault processor
-func (nc *ControlManager) SetNextFaultProcessor(faultProcessor common.FaultProcessor) {
+func (nc *ControllerManager) SetNextFaultProcessor(faultProcessor common.FaultProcessor) {
 	nc.nextFaultProcessor = faultProcessor
 }
 
 // InitNodeAnnotation init node sn
-func (nc *ControlManager) InitNodeAnnotation() error {
+func (nc *ControllerManager) InitNodeAnnotation() error {
 	rand.Seed(time.Now().UnixNano())
 	randomSecond := time.Duration(rand.Intn(randSecond)) * time.Second
 	time.Sleep(randomSecond)

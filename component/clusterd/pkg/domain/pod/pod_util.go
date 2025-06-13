@@ -333,22 +333,3 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 	hwlog.RunLog.Errorf("job(uid=%s) relative pods is empty, get pgName, jobName failed", jobKey)
 	return
 }
-
-// GetPodRankAndPodUid return pod uid according jobId and card rank
-func GetPodRankAndPodUid(jobId string, cardRank string) (string, string) {
-	devicePerNode := GetPodDeviceNumByJobId(jobId)
-	if devicePerNode <= 0 {
-		return "", ""
-	}
-	rankId, err := strconv.Atoi(cardRank)
-	if err != nil || rankId < 0 {
-		return "", ""
-	}
-	podRank := rankId / devicePerNode
-	podRankStr := strconv.Itoa(podRank)
-	podResource := GetPodByRankIndex(jobId, podRankStr)
-	if podResource.Name == "" {
-		return podRankStr, ""
-	}
-	return podRankStr, string(podResource.UID)
-}

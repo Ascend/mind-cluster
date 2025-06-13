@@ -9,8 +9,8 @@ import (
 	"clusterd/pkg/common/constant"
 )
 
-// PingMeshConfigCollector the collector of fault network
-func PingMeshConfigCollector(_, newInfo constant.ConfigPingMesh, operator string) {
+// ConfigCollector the collector of fault network
+func ConfigCollector(_, newInfo constant.ConfigPingMesh, operator string) {
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		updatePingMeshConfigCM(newInfo)
 		return
@@ -21,11 +21,11 @@ func PingMeshConfigCollector(_, newInfo constant.ConfigPingMesh, operator string
 func updatePingMeshConfigCM(newConfigInfo constant.ConfigPingMesh) {
 	hwlog.RunLog.Info("ready to update pingmesh config")
 	if isNeedToStop(newConfigInfo) {
-		RasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOff})
+		rasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOff})
 		fdapi.StopController()
 		return
 	}
-	RasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOn})
+	rasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOn})
 	if err := ConfigPingMeshInst.UpdateConfig(newConfigInfo); err != nil {
 		hwlog.RunLog.Errorf("update pingmesh config from cm failed, error :%s", err.Error())
 	}

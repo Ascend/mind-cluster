@@ -96,6 +96,11 @@ func (tp *NPUHandler) setHardwareTypeToPod(task *api.TaskInfo, node plugin.NPUNo
 	// Special requirements for large EP scenarios
 	if accelerator == util.Module910bx8AcceleratorType && usage == inferUsage {
 		task.Pod.Annotations[podUsedHardwareTypeKey] = fmt.Sprintf("%s-%s", hardwareType800IA2, memory)
+		return
+	}
+
+	if accelerator == util.ModuleA3x16AcceleratorType && usage == inferUsage {
+		task.Pod.Annotations[podUsedHardwareTypeKey] = fmt.Sprintf("%s-%s", hardwareType800IA3, memory)
 	}
 }
 

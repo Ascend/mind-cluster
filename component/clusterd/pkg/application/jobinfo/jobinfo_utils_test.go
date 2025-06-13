@@ -17,6 +17,7 @@
 package jobinfo
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -30,6 +31,7 @@ const (
 	jobAddTime = 1630000000
 )
 
+// TestSendJobInfoSignal test send signal
 func TestSendJobInfoSignal(t *testing.T) {
 	convey.Convey("test SendJobInfoSignal function", t, func() {
 		originalChan := jobUpdateChan
@@ -48,6 +50,27 @@ func TestSendJobInfoSignal(t *testing.T) {
 	})
 }
 
+// TestSendJobInfoSignalDrop test drop msg
+func TestSendJobInfoSignalDrop(t *testing.T) {
+	convey.Convey("test while jobUpdateChan full", t, func() {
+		jobUpdateChan = make(chan job.JobSummarySignal, jobUpdateChanCache)
+
+		for i := 0; i < jobUpdateChanCache; i++ {
+			SendJobInfoSignal(job.JobSummarySignal{JobId: fmt.Sprintf("job-%d", i)})
+		}
+
+		convey.Convey("11 signal go default", func() {
+			signal := job.JobSummarySignal{JobId: "overflow-job"}
+			SendJobInfoSignal(signal)
+			convey.So(len(jobUpdateChan), convey.ShouldEqual, jobUpdateChanCache)
+		})
+		convey.Reset(func() {
+			close(jobUpdateChan)
+		})
+	})
+}
+
+// TestBuildJobSignalFromJobInfo test build signal
 func TestBuildJobSignalFromJobInfo(t *testing.T) {
 	convey.Convey("test BuildJobSignalFromJobInfo", t, func() {
 		convey.Convey("PyTorch init status", func() {

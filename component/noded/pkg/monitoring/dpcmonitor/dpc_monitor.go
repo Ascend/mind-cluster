@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	dpcMap map[int]common.DpcStatus
+	dpcMap map[int]common.DpcStatus = nil
 	// dpc file match: [instidx=N]
 	instRegex = regexp.MustCompile(`^\[instidx=(\d+)\]$`)
 	// dpc file match: DPC_INTERNAL_ERROR: XX
@@ -47,8 +47,10 @@ const (
 	logDomainId         = 0
 	maxSearchLine       = 20
 	dpcInternalErrorKey = "DPC_INTERNAL_ERROR"
+	dpcInternalHealthy  = 0
 	dpcInternalError    = -12
 	dpcProcessErrorKey  = "DPC_PROCESS_ERROR"
+	dpcProcessHealthy   = 0
 	dpcProcessError     = -1
 	dpcInstResultIndex  = 1
 	dpcErrorTypeIndex   = 1
@@ -244,14 +246,18 @@ func getStatusByText(text string, key string) (bool, error) {
 	case dpcInternalErrorKey:
 		if value == dpcInternalError {
 			return true, nil
-		} else {
+		} else if value == dpcInternalHealthy {
 			return false, nil
+		} else {
+			return false, errors.New("get DPC_INTERNAL_ERROR failed, value is invalid")
 		}
 	case dpcProcessErrorKey:
 		if value == dpcProcessError {
 			return true, nil
-		} else {
+		} else if value == dpcProcessHealthy {
 			return false, nil
+		} else {
+			return false, errors.New("get DPC_PROCESS_ERROR failed, value is invalid")
 		}
 	default:
 		return false, errors.New("get status failed, key is invalid")

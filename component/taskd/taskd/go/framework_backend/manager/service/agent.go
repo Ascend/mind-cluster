@@ -39,7 +39,7 @@ func (mpc *MsgProcessor) agentHandler(dataPool *storage.DataPool, data storage.B
 	case constant.KeepAlive:
 		agentInfo.HeartBeat = time.Now()
 	default:
-		return fmt.Errorf("unknow message type: %v", data.Body.MsgType)
+		return fmt.Errorf("unknown message type: %v", data.Body.MsgType)
 	}
 	err = dataPool.UpdateAgent(agentName, agentInfo)
 	return err
@@ -70,7 +70,7 @@ func (mpc *MsgProcessor) agentStatus(dataPool *storage.DataPool, data storage.Ba
 		agentInfo.Status[constant.Exit] = data.Body.Message
 		dataPool.Snapshot.AgentInfos.AllStatus[agentName] = data.Body.Message
 	default:
-		return fmt.Errorf("unknow message status code: %v", data.Body.Code)
+		return fmt.Errorf("unknown message status code: %v", data.Body.Code)
 	}
 	return nil
 }

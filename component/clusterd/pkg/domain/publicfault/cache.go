@@ -26,7 +26,7 @@ func init() {
 
 // cache public fault cache
 type cache struct {
-	// key: node name; value: {faultResource+faultId:fault}
+	// faultCache key is node name, value is {faultResource+faultId:fault}
 	faultCache map[string]map[string]*constant.PubFaultCache
 	mutex      sync.Mutex
 }

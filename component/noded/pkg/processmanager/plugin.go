@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	precessPluginMap map[string]Plugin
+	processPluginMap map[string]Plugin = nil
 )
 
 const (
@@ -64,17 +64,17 @@ func InitPlugin(ctx context.Context) error {
 	configMapReporter := cmreporter.NewConfigMapReporter(kubeclient.GetK8sClient())
 	pfReporter := publicfault.NewGrpcReporter()
 
-	precessPluginMap = make(map[string]Plugin, processNum)
-	precessPluginMap[common.IpmiProcess] = Plugin{
+	processPluginMap = make(map[string]Plugin, processNum)
+	processPluginMap[common.IpmiProcess] = Plugin{
 		monitor:   ipmiEventMonitor,
 		controls:  []common.PluginControl{nodeController},
 		reporters: []common.PluginReporter{configMapReporter},
 	}
-	precessPluginMap[common.ConfigProcess] = Plugin{
+	processPluginMap[common.ConfigProcess] = Plugin{
 		monitor:  configmapEventMonitor,
 		controls: []common.PluginControl{nodeController},
 	}
-	precessPluginMap[common.DpcProcess] = Plugin{
+	processPluginMap[common.DpcProcess] = Plugin{
 		monitor:   dpcEventMonitor,
 		controls:  []common.PluginControl{dpcController},
 		reporters: []common.PluginReporter{pfReporter},
@@ -87,7 +87,7 @@ func InitPlugin(ctx context.Context) error {
 
 // GetMonitorPlugins get monitor plugins with process type
 func GetMonitorPlugins(processType string) common.PluginMonitor {
-	if pluginMonitor, ok := precessPluginMap[processType]; !ok {
+	if pluginMonitor, ok := processPluginMap[processType]; !ok {
 		return nil
 	} else {
 		return pluginMonitor.monitor
@@ -96,7 +96,7 @@ func GetMonitorPlugins(processType string) common.PluginMonitor {
 
 // GetControlPlugins get control plugins with process type
 func GetControlPlugins(processType string) []common.PluginControl {
-	if pluginControl, ok := precessPluginMap[processType]; !ok {
+	if pluginControl, ok := processPluginMap[processType]; !ok {
 		return []common.PluginControl{}
 	} else {
 		return pluginControl.controls
@@ -105,7 +105,7 @@ func GetControlPlugins(processType string) []common.PluginControl {
 
 // GetReporterPlugins get Reporter plugins with process type
 func GetReporterPlugins(processType string) []common.PluginReporter {
-	if pluginReporter, ok := precessPluginMap[processType]; !ok {
+	if pluginReporter, ok := processPluginMap[processType]; !ok {
 		return []common.PluginReporter{}
 	} else {
 		return pluginReporter.reporters
@@ -124,22 +124,22 @@ func GetAllLoopProcessType() []string {
 
 func startAllMonitor() error {
 	errNum := 0
-	for _, precessPlugin := range precessPluginMap {
+	for _, processPlugin := range processPluginMap {
 		for i := 0; i < retryTime; i++ {
-			if err := precessPlugin.monitor.Init(); err == nil {
-				hwlog.RunLog.Infof("init monitor[%s] success", precessPlugin.monitor.Name())
-				go precessPlugin.monitor.Monitoring()
+			if err := processPlugin.monitor.Init(); err == nil {
+				hwlog.RunLog.Infof("init monitor[%s] success", processPlugin.monitor.Name())
+				go processPlugin.monitor.Monitoring()
 				break
 			} else if i+1 < retryTime {
 				hwlog.RunLog.Errorf("init monitor[%s] failed, error: %v, retry count: %d",
-					precessPlugin.monitor.Name(), err, i+1)
+					processPlugin.monitor.Name(), err, i+1)
 				time.Sleep(time.Second)
 			} else {
 				errNum++
 			}
 		}
 	}
-	if errNum == len(precessPluginMap) {
+	if errNum == len(processPluginMap) {
 		return errors.New("all monitor init failed")
 	}
 	return nil

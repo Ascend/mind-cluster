@@ -100,7 +100,7 @@ func CallbackForReportRetryInfo(infos []constant.ReportRecoverInfo) {
 }
 
 // QueryJobsFaultInfo query jobs fault rank info, and filter fault below `faultLevel`
-func QueryJobsFaultInfo(faultLevel string) map[string]constant.JobFaultInfo {
+func QueryJobsFaultInfo(faultLevel []string) map[string]constant.JobFaultInfo {
 	return faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(faultLevel)
 }
 

@@ -56,6 +56,8 @@ const (
 	Pod910DeviceAnno = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// PodRankIndexAnno annotation value is rank index of the pod
 	PodRankIndexAnno = "hccl/rankIndex"
+	// SuperPodIDAnno annotation key of the super pod id
+	SuperPodIDAnno = "super-pod-id"
 )
 
 // PodGroup
