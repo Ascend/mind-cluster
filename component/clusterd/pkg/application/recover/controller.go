@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -872,6 +873,7 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 		if err := ctl.waitNormalFaultRecovery(); err != nil {
 			hwlog.RunLog.Warnf("jobId:%s wait fault recover timeout, err:%v", ctl.jobInfo.JobId, err)
 			ctl.restartFaultProcess = false
+			faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, time.Now().UnixMilli())
 		}
 	}
 	return ctl.notifyFaultForNormalFaultCase(retryFaults, normalFaults)
@@ -1028,6 +1030,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 	} else if signal.ChangeStrategy != constant.ProcessRetryStrategyName {
 		hwlog.RunLog.Warnf("choose strategy: %s, not restart fault process", signal.ChangeStrategy)
 		ctl.restartFaultProcess = false
+		faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, time.Now().UnixMilli())
 		return common.KillPodAfterRestartProcessEvent, common.ServerInnerError, nil
 	}
 	return ctl.signalEnqueue(signal)

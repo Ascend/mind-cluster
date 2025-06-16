@@ -16,16 +16,20 @@ import (
 
 var ReportInfoCollector *JobReportInfoCollector
 
-// JobId->node->device->report_info
+// JobReportInfoCollector job report info collector
 type JobReportInfoCollector struct {
-	InfoMap map[string]map[string]map[string]constant.ReportInfo
-	RwMutex sync.RWMutex
+	// JobId->node->device->report_info
+	RetryMap map[string]map[string]map[string]constant.ReportInfo
+	// JobId->reportFaultTime
+	NoRetryMap map[string]int64
+	RwMutex    sync.RWMutex
 }
 
 func init() {
 	ReportInfoCollector = &JobReportInfoCollector{
-		InfoMap: make(map[string]map[string]map[string]constant.ReportInfo),
-		RwMutex: sync.RWMutex{},
+		RetryMap:   make(map[string]map[string]map[string]constant.ReportInfo),
+		NoRetryMap: make(map[string]int64),
+		RwMutex:    sync.RWMutex{},
 	}
 }
 
@@ -39,10 +43,21 @@ func (reportInfos *JobReportInfoCollector) GetInfo(jobId, nodeName, deviceName s
 	}
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
-	if info, ok := reportInfos.InfoMap[jobId][nodeName][deviceName]; ok {
+	if info, ok := reportInfos.RetryMap[jobId][nodeName][deviceName]; ok {
 		return info
 	}
 	return noReport
+}
+
+// GetNoRetryReportTime get no retry report time
+func (reportInfos *JobReportInfoCollector) GetNoRetryReportTime(jobId string) int64 {
+	reportTime := constant.JobShouldReportFault
+	reportInfos.RwMutex.RLock()
+	defer reportInfos.RwMutex.RUnlock()
+	if time, ok := reportInfos.NoRetryMap[jobId]; ok {
+		return time
+	}
+	return reportTime
 }
 
 func (reportInfos *JobReportInfoCollector) GetInfoWithoutJobId(nodeName, deviceName string) constant.ReportInfo {
@@ -55,7 +70,7 @@ func (reportInfos *JobReportInfoCollector) GetInfoWithoutJobId(nodeName, deviceN
 	}
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
-	for _, infoMapValue := range reportInfos.InfoMap {
+	for _, infoMapValue := range reportInfos.RetryMap {
 		if infoMapValue == nil {
 			continue
 		}
@@ -79,7 +94,7 @@ func (reportInfos *JobReportInfoCollector) ReportRetryInfo(jobId string, rankId 
 	deviceName := jobServerInfoMap.ResourceType[jobId] + "-" + deviceId
 	reportInfos.RwMutex.Lock()
 	defer reportInfos.RwMutex.Unlock()
-	infoMap := reportInfos.InfoMap
+	infoMap := reportInfos.RetryMap
 	info := constant.ReportInfo{
 		RecoverTime:  recoverTime,
 		CompleteTime: constant.JobNotRecoverComplete,
@@ -100,8 +115,22 @@ func (reportInfos *JobReportInfoCollector) ReportRetryInfo(jobId string, rankId 
 		}
 		infoMap[jobId][nodeName][deviceName] = info
 	}
-	reportInfos.InfoMap = infoMap
+	reportInfos.RetryMap = infoMap
 	hwlog.RunLog.Infof("callbackForReportRetryInfo receive report info(%s, %s, %d)", jobId, rankId, recoverTime)
-	hwlog.RunLog.Debugf("Current reportInfo is %s", util.ObjToString(reportInfos.InfoMap))
+	hwlog.RunLog.Debugf("Current retry reportInfo is %s", util.ObjToString(reportInfos.RetryMap))
 	return nil
+}
+
+// ReportNoRetryInfo report no retry fault info
+func (reportInfos *JobReportInfoCollector) ReportNoRetryInfo(jobId string, reportFaultTime int64) {
+	reportInfos.RwMutex.Lock()
+	defer reportInfos.RwMutex.Unlock()
+	noRetryMap := reportInfos.NoRetryMap
+	if noRetryMap == nil {
+		noRetryMap = make(map[string]int64)
+	}
+	noRetryMap[jobId] = reportFaultTime
+	reportInfos.NoRetryMap = noRetryMap
+	hwlog.RunLog.Infof("callbackForReportNoRetryInfo receive report info(%s, %d)", jobId, reportFaultTime)
+	hwlog.RunLog.Debugf("Current no retry reportInfo is %s", util.ObjToString(reportInfos.NoRetryMap))
 }

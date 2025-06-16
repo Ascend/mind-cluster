@@ -106,26 +106,32 @@ job4: true
 job5: true
 ---
 # mindio report info
-InfoMap:
+RetryMap:
   job3:
     node1:
       Ascend910-2:
         RecoverTime: 95000
+        ReportTime: 9223372036854775807
     node2:
       Ascend910-2:
         RecoverTime: 95000
+        ReportTime: 9223372036854775807
   job4:
     node1:
       Ascend910-3:
         RecoverTime: 60000
         CompleteTime: 90000
+        ReportTime: 9223372036854775807
       Ascend910-1: # Not belong to job4, no effect
         RecoverTime: 101000
         CompleteTime: 102000
+        ReportTime: 9223372036854775807
     node2:
       Ascend910-3:
         RecoverTime: 60000
         CompleteTime: 90000
+        ReportTime: 9223372036854775807
       Ascend910-1: # Not belong to job4, no effect
         RecoverTime: 101000
         CompleteTime: 102000
+        ReportTime: 9223372036854775807

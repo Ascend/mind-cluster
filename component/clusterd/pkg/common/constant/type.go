@@ -194,9 +194,11 @@ type JobServerInfoMap struct {
 // DeviceFaultDetail device fault detail
 type DeviceFaultDetail struct {
 	HasFaultAboveL3 bool
+	HasRank0Fault   bool // pod rank 0 has fault. effective when fault data is in the job dimension
 	FaultTime       int64
 	RecoverTime     int64
 	CompleteTime    int64
+	ReportTime      int64 // ReportTime: notify the data center to report the fault directly to cm
 	FaultType       string
 }
 

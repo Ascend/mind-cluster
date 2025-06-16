@@ -481,3 +481,17 @@ func NotifySwitchNicSendRetry(stream pb.Recover_SubscribeNotifySwitchServer,
 	}
 	return err
 }
+
+// CalculateStringDivInt calculate div result, dividend is of type string
+func CalculateStringDivInt(dividendStr string, divisor int) int {
+	if divisor <= 0 {
+		hwlog.RunLog.Warnf("divisor is invalid, %v", divisor)
+		return constant.InvalidResult
+	}
+	dividend, err := strconv.Atoi(dividendStr)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert %s err: %v", dividendStr, err)
+		return constant.InvalidResult
+	}
+	return dividend / divisor
+}

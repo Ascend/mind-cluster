@@ -56,6 +56,9 @@ const (
 	DefaultLogLevel = 0
 	// MaxNotifyChanLen max support notify chan
 	MaxNotifyChanLen = 1000
+
+	// InvalidResult invalid result
+	InvalidResult = -1
 )
 
 // fault code const
@@ -74,6 +77,7 @@ const (
 	JobNotRecover               = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
 	JobNotRecoverComplete       = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
 	DeviceNotFault              = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
+	JobShouldReportFault        = int64(math.MaxInt64) // Cannot be used for calculation, only for comparison.
 	DiagnosisAccompanyTimeout   = 5 * 1000
 	JobReportRecoverTimeout     = 10 * 1000
 	JobReportInfoExpiredTimeout = 10 * 1000

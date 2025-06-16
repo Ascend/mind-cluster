@@ -616,3 +616,81 @@ func extractContent(decoder *yaml.YAMLOrJSONDecoder, cmDeviceInfos map[string]*c
 	}
 	return cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfo, &reportInfos, err
 }
+
+func TestUpdateNormalFaultDetailOfJob(t *testing.T) {
+	const jobName = "job"
+	current := time.Now().UnixMilli()
+	RetryProcessor.normalFaultDetailOfJob = make(map[string]constant.DeviceFaultDetail)
+	t.Run("TestUpdateNormalFaultDetailOfJob, data not exist, update success", func(t *testing.T) {
+		detail := constant.DeviceFaultDetail{
+			FaultTime: current, ReportTime: constant.JobShouldReportFault, HasFaultAboveL3: true,
+		}
+		target := constant.DeviceFaultDetail{
+			FaultTime: current, ReportTime: constant.JobShouldReportFault, HasFaultAboveL3: true, HasRank0Fault: false,
+		}
+		RetryProcessor.updateNormalFaultDetailOfJob(jobName, &detail, 1)
+		result, ok := RetryProcessor.normalFaultDetailOfJob[jobName]
+		if !ok {
+			t.Error("update map failed")
+		}
+		if !reflect.DeepEqual(result, target) {
+			t.Errorf("updateNormalFaultDetailOfJob() = %v, want %v", result, target)
+		}
+
+	})
+	t.Run("TestUpdateNormalFaultDetailOfJob, data already exist, update success", func(t *testing.T) {
+		detail := constant.DeviceFaultDetail{
+			FaultTime: constant.JobShouldReportFault, ReportTime: current, HasFaultAboveL3: false,
+		}
+		target := constant.DeviceFaultDetail{
+			FaultTime: current, ReportTime: current, HasFaultAboveL3: true, HasRank0Fault: true,
+		}
+		RetryProcessor.updateNormalFaultDetailOfJob(jobName, &detail, 0)
+		result, ok := RetryProcessor.normalFaultDetailOfJob[jobName]
+		if !ok {
+			t.Error("update map failed")
+		}
+		if !reflect.DeepEqual(result, target) {
+			t.Errorf("updateNormalFaultDetailOfJob() = %v, want %v", result, target)
+		}
+	})
+}
+
+const (
+	job1, job2       = "job1", "job2"
+	node1, node2     = "node1", "node2"
+	device1, device2 = "device1", "device2"
+)
+
+func getMockRetryDeviceOfJobMap() map[string]constant.RetryJobInfo {
+
+	return map[string]constant.RetryJobInfo{
+		job1: {RetryNode: map[string]constant.RetryNodeInfo{
+			node1: {DeviceInfo: map[string]constant.RetryDeviceInfo{
+				device1: {}},
+			}},
+		},
+	}
+}
+
+func TestGetRetryDeviceFromJob(t *testing.T) {
+	RetryProcessor.retryDevicesOfJob = getMockRetryDeviceOfJobMap()
+	t.Run("GetRetryDeviceFromJob, do not contain jobKey, should return false", func(t *testing.T) {
+		_, found := RetryProcessor.GetRetryDeviceFromJob(job2, node1, device2)
+		if found {
+			t.Errorf("GetRetryDeviceFromJob() = %v, want %v", found, false)
+		}
+	})
+	t.Run("GetRetryDeviceFromJob, contain jobKey and nodeKey, should return false", func(t *testing.T) {
+		_, found := RetryProcessor.GetRetryDeviceFromJob(job1, node1, device2)
+		if found {
+			t.Errorf("GetRetryDeviceFromJob() = %v, want %v", found, false)
+		}
+	})
+	t.Run("GetRetryDeviceFromJob, get info success, should return true", func(t *testing.T) {
+		_, found := RetryProcessor.GetRetryDeviceFromJob(job1, node1, device1)
+		if !found {
+			t.Errorf("GetRetryDeviceFromJob() = %v, want %v", found, true)
+		}
+	})
+}

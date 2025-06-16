@@ -5,12 +5,14 @@ package faultmanager
 
 import (
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/faultdomain/collector"
 )
 
 func TestMain(m *testing.M) {
@@ -23,6 +25,17 @@ func TestCallbackForReportUceInfo(t *testing.T) {
 		infos := make([]constant.ReportRecoverInfo, 0)
 		infos = append(infos, constant.ReportRecoverInfo{})
 		CallbackForReportRetryInfo(infos)
+	})
+}
+
+func TestCallbackForReportNoRetryInfo(t *testing.T) {
+	t.Run("CallbackForReportNoRetryInfo", func(t *testing.T) {
+		currentTime := time.Now().UnixMilli()
+		CallbackForReportNoRetryInfo("job1", currentTime)
+		reportTime := collector.ReportInfoCollector.GetNoRetryReportTime("job1")
+		if reportTime != currentTime {
+			t.Error("report no retry info failed")
+		}
 	})
 }
 

@@ -843,3 +843,26 @@ func TestSortRecoverStrategies(t *testing.T) {
 		})
 	})
 }
+
+func TestCalculatePodRank(t *testing.T) {
+	const (
+		deviceNum    = 8
+		deviceNpuStr = "8"
+	)
+	convey.Convey("Test CalculatePodRank", t, func() {
+		convey.Convey("01-deviceNumOfPod is less than equal to 0, should return -1", func() {
+			podRank := CalculateStringDivInt("", 0)
+			convey.So(podRank, convey.ShouldEqual, constant.InvalidResult)
+		})
+		convey.Convey("02-covert cardRandStr failed, should return -1", func() {
+			podRank := CalculateStringDivInt("string", deviceNum)
+			convey.So(podRank, convey.ShouldEqual, constant.InvalidResult)
+		})
+		convey.Convey("03-calculate success, should return valid pod rank", func() {
+			podRank := CalculateStringDivInt("1", deviceNum)
+			convey.So(podRank, convey.ShouldEqual, 0)
+			podRank = CalculateStringDivInt(deviceNpuStr, deviceNum)
+			convey.So(podRank, convey.ShouldEqual, 1)
+		})
+	})
+}

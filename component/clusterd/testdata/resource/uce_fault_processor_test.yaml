@@ -276,11 +276,13 @@ job1:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
     node2:
       NodeName: node2
@@ -292,11 +294,13 @@ job1:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "1"
 job2:
   JobId: job2
@@ -311,11 +315,13 @@ job2:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
     node2:
       NodeName: node2
@@ -327,11 +333,13 @@ job2:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
 job3:
   JobId: job3
@@ -346,11 +354,13 @@ job3:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
     node2:
       NodeName: node2
@@ -362,11 +372,13 @@ job3:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
 job4:
   JobId: job4
@@ -381,11 +393,13 @@ job4:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
     node2:
       NodeName: node2
@@ -397,11 +411,13 @@ job4:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
 job5:
   JobId: job5
@@ -416,11 +432,13 @@ job5:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "1"
     node2:
       NodeName: node2
@@ -432,9 +450,11 @@ job5:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"
             normal:
               FaultTime: 100000
               RecoverTime: 9223372036854775807
               CompleteTime: 9223372036854775807
+              ReportTime: 9223372036854775807
               FaultType: "0"

@@ -99,6 +99,12 @@ func CallbackForReportRetryInfo(infos []constant.ReportRecoverInfo) {
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceProcessType)
 }
 
+// CallbackForReportNoRetryInfo callback function to report no retry info
+func CallbackForReportNoRetryInfo(jobId string, reportFaultTime int64) {
+	collector.ReportInfoCollector.ReportNoRetryInfo(jobId, reportFaultTime)
+	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceProcessType)
+}
+
 // QueryJobsFaultInfo query jobs fault rank info, and filter fault below `faultLevel`
 func QueryJobsFaultInfo(faultLevel []string) map[string]constant.JobFaultInfo {
 	return faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(faultLevel)
