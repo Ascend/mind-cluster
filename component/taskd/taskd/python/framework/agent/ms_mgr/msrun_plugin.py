@@ -359,8 +359,7 @@ class MSRunPlugin:
         if self.ms_node_rank != "0" and self.restart_fault_process and \
                 os.getenv(constants.ENABLE_RESTART_FAULT_PROCESS_ENV) == "on":
             run_log.info(f"restart part workers, fault global rank:{fault_status.local_ranks}")
-            fault_pid_list = [self.local_rank_to_pid.get(local_rank) for local_rank in fault_status.local_ranks \
-                           if local_rank in self.local_rank_to_pid]
+            fault_pid_list = self.get_fault_pid_list_by_local_ranks(fault_status.local_ranks)
             if len(fault_pid_list) > 0:
                 self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
                 force_exit_pids(fault_pid_list)
@@ -437,8 +436,7 @@ class MSRunPlugin:
                     fault_status = self.get_fault_status()
                     time.sleep(constants.WAITING_RESET_CHANGE_INTERVAL)
                     init_time = init_time + constants.WAITING_RESET_CHANGE_INTERVAL
-                fault_pid_list = [self.local_rank_to_pid.get(local_rank) for local_rank in \
-                                  fault_status.local_ranks if local_rank in self.local_rank_to_pid]
+                fault_pid_list = self.get_fault_pid_list_by_local_ranks(fault_status.local_ranks)
                 if can_restart_process and len(fault_pid_list) > 0:
                     run_log.info(f"nodeRank:{self.ms_node_rank} restart part workers")
                     self.__func_map.get(KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
@@ -457,3 +455,11 @@ class MSRunPlugin:
                 run_log.error(
                     f"nodeRank:{self.ms_node_rank} failed to stop workers with return code:{stop_res}")
             exit(1)
+
+    def get_fault_pid_list_by_local_ranks(self, local_ranks):
+        pid_list = []
+        for local_rank in local_ranks:
+            if local_rank in self.local_rank_to_pid:
+                pid = self.local_rank_to_pid.get(local_rank)
+                pid_list.append(pid)
+        return pid_list
