@@ -1100,7 +1100,7 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 			tool.flushFaultCodesWithInit(device, devFaultInfoMap)
 			common.CountFaultDuration(device, devFaultInfoMap)
 			device.Health = tool.isHealthy(device)
-			if runMode == common.Ascend910 && tool.deviceUsage == common.Train {
+			if runMode == common.Ascend910 {
 				device.NetworkHealth = tool.isNetworkHealthy(device)
 			}
 		}
