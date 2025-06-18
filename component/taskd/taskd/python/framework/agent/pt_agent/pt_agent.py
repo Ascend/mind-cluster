@@ -96,25 +96,25 @@ class PtAgent(BaseAgent):
         return
 
     def initialize_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, restart time is {msg.Extension},'
+        run_log.info(f'receive {msg.msg_type} command, restart time is {msg.extension},'
                      f' start to initialize workers')
-        self.pt_instance._remaining_restarts = int(msg.Extension)
+        self.pt_instance._remaining_restarts = int(msg.extension)
         self._func_map.get('START_ALL_WORKER')(self.worker_group)
 
     def stop_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to stop workers')
+        run_log.info(f'receive {msg.msg_type} command, start to stop workers')
         self._func_map.get('KILL_WORKER')(self.worker_group)
         self.worker_group.state = WorkerState.STOPPED
 
     def exit_agent(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to exit agent')
+        run_log.info(f'receive {msg.msg_type} command, start to exit agent')
         self._func_map.get('KILL_WORKER')(self.worker_group)
         self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to restart workers, restart time is {msg.Extension}')
-        self.pt_instance._remaining_restarts = int(msg.Extension)
+        run_log.info(f'receive {msg.msg_type} command, start to restart workers, restart time is {msg.extension}')
+        self.pt_instance._remaining_restarts = int(msg.extension)
         self._func_map.get('KILL_WORKER')(self.worker_group)
         self.worker_group.state = WorkerState.STOPPED
         self._func_map.get('START_ALL_WORKER')(self.worker_group)

@@ -117,7 +117,7 @@ class AgentMessageManager():
                 continue
             self.msg_queue.put(msg)
             self.lib.FreeCMemory(msg_ptr)
-            if msg.MsgType == "exit":
+            if msg.msg_type == "exit":
                 self.lib.DestroyNetwork(self._network_instance)
                 return
 
@@ -133,13 +133,13 @@ class AgentMessageManager():
         """
         try:
             msg_json = json.loads(msg_json)
-            msg_body_json = msg_json["Body"]
+            msg_body_json = msg_json["body"]
             msg_body = json.loads(msg_body_json)
             msg = MsgBody(
-                MsgType=msg_body["MsgType"],
-                Code=msg_body["Code"],
-                Message=msg_body["Message"],
-                Extension=msg_body["Extension"]
+                msg_type=msg_body["msg_type"],
+                code=msg_body["code"],
+                message=msg_body["message"],
+                extension=msg_body["extension"]
             )
         except Exception as e:
             run_log.error(f"agent parse message failed, reason: {e}")

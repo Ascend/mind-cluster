@@ -2,3 +2,4 @@ pytest
 pytest-cov
 pytest-html
 coverage
+torch == 2.1.0

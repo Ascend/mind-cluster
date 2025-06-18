@@ -122,20 +122,20 @@ class MsAgent(BaseAgent):
 
 
     def initialize_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to initialize workers')
+        run_log.info(f'receive {msg.msg_type} command, start to initialize workers')
         self._func_map.get('START_ALL_WORKER')()
 
     def stop_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to stop workers')
+        run_log.info(f'receive {msg.msg_type} command, start to stop workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
 
     def exit_agent(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to exit agent')
+        run_log.info(f'receive {msg.msg_type} command, start to exit agent')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
         self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):
-        run_log.info(f'receive {msg.MsgType} command, start to restart workers')
+        run_log.info(f'receive {msg.msg_type} command, start to restart workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
         self._func_map.get('START_ALL_WORKER')()

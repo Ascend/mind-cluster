@@ -84,7 +84,7 @@ class BaseAgent:
         self.command_map.get(item.MsgType)(item)
 
     def grace_exit(self, msg):
-        run_log.info(f'receive {item.MsgType} command, start to grace exit workers')
+        run_log.info(f'receive {msg.msg_type} command, start to grace exit workers')
         try:
             grace_exit_pids(self.pids)
         except Exception as e:
