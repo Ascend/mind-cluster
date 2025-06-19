@@ -216,10 +216,14 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 		})
 		convey.Convey("test actually level", func() {
+			currentSwitchFault = []SwitchFaultEvent{}
+			fault := GetSwitchFaultInfo()
+			convey.So(fault.FaultLevel == "", convey.ShouldBeTrue)
+
 			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
-			fault := GetSwitchFaultInfo()
+			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
