@@ -97,7 +97,7 @@ func (tp *module910a3x16) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPU
 		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum err: %v", task.Name, err)
 		return err
 	}
-	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
+	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1 || tp.IsInstanceOfJobGroup())
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s getUsableTopFromNode err: %v", task.Name, err)
 		return err

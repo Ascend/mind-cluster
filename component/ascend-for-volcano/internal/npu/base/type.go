@@ -65,3 +65,7 @@ const (
 	// inferUsage infer value of server usage in node labels
 	inferUsage = "infer"
 )
+
+const (
+	jobGroupIDLabelKey = "jobID"
+)

@@ -141,7 +141,7 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 		return err
 	}
 
-	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum/tp.spBlock > 1)
+	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum/tp.spBlock > 1 || tp.IsInstanceOfJobGroup())
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, task.Name, err.Error())
 		return err

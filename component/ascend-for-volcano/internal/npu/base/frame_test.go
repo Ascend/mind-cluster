@@ -40,6 +40,36 @@ const (
 	maxCardNPUNum = 4
 )
 
+func TestIsInstanceOfJobGroup(t *testing.T) {
+	tests := []struct {
+		name     string
+		labels   map[string]string
+		expected bool
+	}{
+		{
+			name:     "01 - jobID labels exist (app and jobID) should return true",
+			labels:   map[string]string{jobGroupIDLabelKey: "123"},
+			expected: true,
+		},
+		{
+			name:     "02 - Missing app label should return false",
+			labels:   map[string]string{},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &NPUHandler{}
+			tp.Label = tt.labels
+			result := tp.IsInstanceOfJobGroup()
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("isMindIEJob() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
 // initMyJobPluginTestCase test case
 type initMyJobPluginTestCase struct {
 	Name    string
