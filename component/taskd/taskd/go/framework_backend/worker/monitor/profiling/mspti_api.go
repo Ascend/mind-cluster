@@ -169,8 +169,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
-	"strings"
-	"sync/atomic"
 	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
@@ -179,13 +177,11 @@ import (
 )
 
 var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)
-var stepCount atomic.Int32
 
 const int2 int32 = 2
 
 // InitMspti found mspti so and init it
 func InitMspti() error {
-	stepCount.Store(0)
 	libMsptiName := "libmspti.so"
 	libPath, err := utils.GetDriverLibPath(libMsptiName)
 	if err != nil {
@@ -333,10 +329,6 @@ func dealBufferCompleted(buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	hwlog.RunLog.Debugf("the buffer free status is: %v", buffer == nil)
 }
 
-func StepOut() bool {
-	return stepCount.Load() >= int2
-}
-
 func handleActivityRecord(pRecord *C.msptiActivity) {
 	if pRecord.kind == C.MSPTI_ACTIVITY_KIND_MARKER {
 		handleMarkerRecord(pRecord)
@@ -362,10 +354,6 @@ func handleMarkerRecord(pRecord *C.msptiActivity) {
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to decode record %v err:%v", jsonStr, err)
 		return
-	}
-	if strings.Contains(*mark.Name, "step") {
-		hwlog.RunLog.Infof("set stepout flag=true, %s", *mark.Name)
-		stepCount.Add(1)
 	}
 	hwlog.RunLog.Debugf("got a marker kind record: %v", mark.Timestamp)
 	appendMark(mark)

@@ -17,11 +17,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import os
-import json
-import time
 
-from taskd.python.adaptor.pytorch.group_info import get_save_path, get_group_info, save_group_info, dump_group_info
-from taskd.python.utils.log import run_log
+from taskd.python.adaptor.pytorch.group_info import get_save_path, get_group_info, dump_group_info
 
 
 class TestGroupInfoFunctions(unittest.TestCase):
@@ -44,14 +41,6 @@ class TestGroupInfoFunctions(unittest.TestCase):
         mock_makedirs.side_effect = OSError('Test error')
         result = get_save_path(1)
         self.assertEqual(result, "")
-
-    @patch('threading.Thread')
-    def test_dump_group_info(self, mock_thread):
-        dump_group_info(1)
-        mock_thread.assert_called_once_with(target=save_group_info, args=(1,))
-        mock_thread.return_value.daemon = True
-        mock_thread.return_value.start.assert_called_once()
-
 
 if __name__ == '__main__':
     unittest.main()

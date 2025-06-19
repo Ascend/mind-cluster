@@ -88,18 +88,11 @@ def get_group_info(rank: int) -> dict:
         return {}
 
 
-def save_group_info(rank: int):
-    check_step_out = cython_api.lib.StepOut
+def dump_group_info():
     try:
-        while check_step_out() != 1:
-            run_log.warning(f'not ready to write group info, try it after a few seconds')
-            time.sleep(CHECK_STEP_PERIOD)
-        run_log.info(f'start dump group info for rank={rank}')
         import torch
-        from torch.distributed.distributed_c10d import _world as distributed_world
-        if not torch.distributed.is_available() or not torch.distributed.is_initialized():
-            run_log.error(f'distributed is not available or not initialized, rank={rank}')
-            return
+        rank = torch.distributed.get_rank()
+        run_log.info(f'start dump group info for rank={rank}')
         group_info = get_group_info(rank)
         if group_info is not None:
             run_log.info(f'get group info: {group_info}')
@@ -113,9 +106,3 @@ def save_group_info(rank: int):
                 json.dump(group_info, f, ensure_ascii=False, indent=4)
     except Exception as err:
         run_log.error(f'save group info failed: {err}')
-
-
-def dump_group_info(rank: int):
-    thread = threading.Thread(target=save_group_info, args=(rank,))
-    thread.daemon = True
-    thread.start()

@@ -99,16 +99,6 @@ func StartMonitorClient() C.int {
 	return C.int(0)
 }
 
-// StepOut this function return whether step out, is called by user through python api
-//
-//export StepOut
-func StepOut() C.int {
-	if profiling.StepOut() {
-		return C.int(1)
-	}
-	return C.int(0)
-}
-
 // InitTaskdManager this function is the entrance for initialize taskd manager, is called by user through python api
 //
 //export InitTaskdManager

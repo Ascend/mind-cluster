@@ -50,7 +50,6 @@ class Worker:
         result = init_taskd_func(self.global_rank, node_rank, upper_limit_of_disk_in_mb)
         if result == 0:
             self.register_callback()
-            dump_group_info(self.global_rank)
             run_log.info("Successfully init taskd monitor")
             return True
         run_log.warning(f"failed to init taskd monitor with ret code:f{result}")
