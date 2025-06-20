@@ -17,7 +17,8 @@
 import unittest
 from unittest.mock import patch
 
-from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank
+from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank, \
+    calculate_local_rank_by_global_rank
 from taskd.python.utils.log import run_log
 
 
@@ -90,6 +91,19 @@ class TestFunctions(unittest.TestCase):
         result = calculate_global_rank()
         self.assertEqual(result, [])
 
+    @patch('os.getenv')
+    def test_calculate_local_rank_by_global_rank(self, mock_getenv):
+        mock_getenv.return_value = None
+        res = calculate_local_rank_by_global_rank([])
+        self.assertEqual(res, None)
+
+        mock_getenv.return_value = 'not_an_int'
+        res = calculate_local_rank_by_global_rank([])
+        self.assertEqual(res, None)
+
+        mock_getenv.return_value = 8
+        res = calculate_local_rank_by_global_rank([8,9,10])
+        self.assertEqual(res, [0,1,2])
 
 if __name__ == '__main__':
     unittest.main()

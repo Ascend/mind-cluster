@@ -268,7 +268,7 @@ class MSRunPlugin:
         numbers corresponding to the current node.
         data = {
             {0: {'pid': 101, 'status': None, 'global_rank': 16}, 1: {'pid': 110, 'status': None, 'global_rank': 17},
-            2: {'pid': 119, 'status': None, 'global_rank': 18}, 3: {' 129, 'status': None, 'global_rank': 19},
+            2: {'pid': 119, 'status': None, 'global_rank': 18}, 3: {'pid': 129, 'status': None, 'global_rank': 19},
             4: {'pid': 143, 'status': None, 'global_rank': 20}, 5: {'pid': 155, 'status': None, 'global_rank': 21},
             6: {'pid': 167, 'status': None, 'global_rank': 22}, 7: {'pid': 176, 'status': None, 'global_rank': 23}}
         }
