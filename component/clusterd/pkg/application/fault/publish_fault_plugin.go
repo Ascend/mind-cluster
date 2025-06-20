@@ -8,10 +8,12 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/fault"
 )
@@ -88,6 +90,7 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 		go func(jobId string, faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
 			defer wg.Done()
 			faultPublisher.SaveData(&fault.FaultMsgSignal{
+				Uuid:       string(uuid.NewUUID()),
 				JobId:      jobId,
 				SignalType: constant.SignalTypeNormal,
 			})
@@ -99,6 +102,7 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 func (s *FaultServer) publishFaultInfoForMergedJob(targetJobId string, faultList []constant.FaultDevice,
 	faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
 	msg := faultDeviceToSortedFaultMsgSignal(targetJobId, faultList)
+	msg.Uuid = string(uuid.NewUUID())
 	sentData := faultPublisher.GetSentData()
 	hwlog.RunLog.Debugf("jobId=%s generate fault msg=%v", targetJobId, msg)
 	hwlog.RunLog.Debugf("jobId=%s sent fault msg=%v", targetJobId, sentData)
@@ -202,7 +206,10 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 		}
 	}
 	info.FaultLevel = getStateByLevel(maxLevel)
-	sort.Strings(info.FaultCodes)
+	if len(info.FaultCodes) > 1 {
+		info.FaultCodes = util.RemoveDuplicates(info.FaultCodes)
+		sort.Strings(info.FaultCodes)
+	}
 	return info, maxLevel
 }
 
@@ -214,7 +221,8 @@ func GetStateLevelByFaultLevel(faultLevel string) (string, int) {
 	switch faultLevel {
 	case constant.NotHandleFault, constant.NotHandleFaultLevelStr:
 		return constant.HealthyState, constant.HealthyLevel
-	case constant.SubHealthFault, constant.PreSeparateFault, constant.PreSeparateFaultLevelStr:
+	case constant.SubHealthFault, constant.PreSeparateFault, constant.PreSeparateFaultLevelStr,
+		constant.SubHealthFaultStrategy:
 		return constant.SubHealthyState, constant.SubHealthyLevel
 	default:
 		return constant.UnHealthyState, constant.UnHealthyLevel
@@ -245,10 +253,16 @@ func compareFaultMsg(this, other *fault.FaultMsgSignal) bool {
 	if this.SignalType == constant.SignalTypeNormal && other.SignalType == constant.SignalTypeNormal {
 		return true
 	}
-	if this.SignalType != other.SignalType {
+	if this.SignalType != other.SignalType || this.JobId != other.JobId ||
+		len(this.NodeFaultInfo) != len(other.NodeFaultInfo) {
 		return false
 	}
-	return proto.Equal(this, other)
+	for i, faultInfo := range this.NodeFaultInfo {
+		if !proto.Equal(faultInfo, other.NodeFaultInfo[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func filterFault(faultDeviceList []constant.FaultDevice) []constant.FaultDevice {

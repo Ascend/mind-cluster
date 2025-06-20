@@ -164,7 +164,7 @@ func TestCheckPublishFault(t *testing.T) {
 		service.checkPublishFault(allJobFaultInfo)
 		convey.So(len(sendChan), convey.ShouldEqual, 1)
 		data = <-sendChan
-		convey.So(data, convey.ShouldResemble, getMockFaultMsgForTest1())
+		convey.So(compareFaultMsg(data, getMockFaultMsgForTest1()), convey.ShouldBeTrue)
 	})
 	convey.Convey("occur not change, should not send fault msg", t, func() {
 		faultPublisher.SetSentData(data)
@@ -176,10 +176,10 @@ func TestCheckPublishFault(t *testing.T) {
 		service.checkPublishFault(nil)
 		convey.So(len(sendChan), convey.ShouldEqual, 1)
 		data = <-sendChan
-		convey.So(data, convey.ShouldResemble, &fault.FaultMsgSignal{
+		convey.So(compareFaultMsg(data, &fault.FaultMsgSignal{
 			JobId:      fakeJobID1,
 			SignalType: constant.SignalTypeNormal,
-		})
+		}), convey.ShouldBeTrue)
 	})
 	convey.Convey("fault recover and already sent to the client, should not send fault recover msg", t, func() {
 		faultPublisher.SetSentData(data)

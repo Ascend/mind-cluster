@@ -67,6 +67,7 @@ func TestNoTriggerNetworkFault(t *testing.T) {
 		relationFaultStrategies = strategyList
 		faultJob.RelationFaults = networkFaults
 		faultJob.TriggerFault = triggerList
+		faultJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 		faultJob.processNetworkFault()
 		if len(faultJob.FaultStrategy.DeviceLvList) != 0 {
 			t.Errorf("FaultStrategy is wrong:")
@@ -111,6 +112,7 @@ func TestNotAllNetworkInRelationFaults(t *testing.T) {
 		relationFaultStrategies = strategyList
 		faultJob.RelationFaults = networkFaults
 		faultJob.TriggerFault = triggerList
+		faultJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 		faultJob.processNetworkFault()
 		if len(faultJob.FaultStrategy.DeviceLvList) != 0 {
 			t.Errorf("FaultStrategy is wrong:")
@@ -173,6 +175,7 @@ func TestRightNodeAndDeviceSeparate(t *testing.T) {
 		relationFaultStrategies = strategyList
 		faultJob.RelationFaults = networkFaults
 		faultJob.TriggerFault = triggerList
+		faultJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 		faultJob.processNetworkFault()
 
 		deviceList := map[string][]constant.DeviceStrategy{
@@ -215,6 +218,7 @@ func TestRightNodeDeviceSubHealth(t *testing.T) {
 		relationFaultStrategies = strategyList
 		faultJob.RelationFaults = networkFaults
 		faultJob.TriggerFault = triggerList
+		faultJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 		faultJob.processNetworkFault()
 
 		deviceList := map[string][]constant.DeviceStrategy{
@@ -261,6 +265,7 @@ func TestRightNodeDeviceSubHealthAndSeparate(t *testing.T) {
 		relationFaultStrategies = strategyList
 		faultJob.RelationFaults = networkFaults
 		faultJob.TriggerFault = triggerList
+		faultJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 		faultJob.processNetworkFault()
 
 		deviceList := map[string][]constant.DeviceStrategy{
@@ -353,6 +358,7 @@ func TestFaultJobMethods(t *testing.T) {
 			RelationFaults:      []*constant.FaultInfo{},
 			PodNames:            make(map[string]string),
 			PodStrategiesMaps:   make(map[string]string),
+			NodeFaultInfoMap:    map[string][]*constant.FaultInfo{},
 		}
 
 		testInitFaultJobAttr(fJob)
@@ -422,6 +428,7 @@ func TestProcessFaultStrategies(t *testing.T) {
 			PodNames:          map[string]string{"node1": "pod1"},
 			PodStrategiesMaps: map[string]string{},
 			NameSpace:         "test-namespace",
+			NodeFaultInfoMap:  map[string][]*constant.FaultInfo{},
 		}
 
 		testDeepCopyError(fJob)
@@ -509,6 +516,7 @@ func TestInitFaultInfoByDeviceFault(t *testing.T) {
 			AllFaultCode:        sets.NewString(),
 			ProcessingFaultCode: sets.NewString(),
 			RelationFaults:      []*constant.FaultInfo{},
+			NodeFaultInfoMap:    map[string][]*constant.FaultInfo{},
 		}
 
 		testAssociateFault(fJob)
@@ -592,6 +600,7 @@ func TestInitBySwitchFault(t *testing.T) {
 			ProcessingFaultCode: sets.NewString(),
 			RelationFaults:      []*constant.FaultInfo{},
 			SeparateNodes:       sets.NewString(),
+			NodeFaultInfoMap:    map[string][]*constant.FaultInfo{},
 		}
 
 		testNilSwitchInfo(fJob)
@@ -750,4 +759,36 @@ func testInitFaultJob(processor *relationFaultProcessor) {
 		convey.So(processor.faultJobs["job1"].IsA3Job, convey.ShouldBeTrue)
 		convey.So(processor.faultJobs["job1"].PodNames["node1"], convey.ShouldEqual, "pod1")
 	})
+}
+
+func TestGetRelationFaultInfo(t *testing.T) {
+	convey.Convey("Test GetRelationFaultInfo", t, func() {
+		fJobCenter := &relationFaultProcessor{
+			faultJobs: map[string]*FaultJob{
+				"job1": {NodeFaultInfoMap: map[string][]*constant.FaultInfo{
+					"node1": {{FaultCode: faultCode0001}},
+				}},
+			}}
+		convey.Convey("01-relation fault not exit, should return nil", func() {
+			faultList := fJobCenter.GetRelationFaultInfo("job2", "node1")
+			convey.So(faultList, convey.ShouldBeNil)
+		})
+		convey.Convey("02-relation fault exit, should return list", func() {
+			faultList := fJobCenter.GetRelationFaultInfo("job1", "node1")
+			convey.So(faultList, convey.ShouldResemble, []*constant.FaultInfo{{FaultCode: faultCode0001}})
+		})
+	})
+
+}
+
+func TestUpdateNodeFaultInfoMap(t *testing.T) {
+	convey.Convey("Test updateNodeFaultInfoMap", t, func() {
+		fJob := &FaultJob{
+			NodeFaultInfoMap: map[string][]*constant.FaultInfo{},
+		}
+		fault := &constant.FaultInfo{NodeName: "node1"}
+		fJob.updateNodeFaultInfoMap(fault)
+		convey.So(len(fJob.NodeFaultInfoMap) == 1, convey.ShouldBeTrue)
+	})
+
 }

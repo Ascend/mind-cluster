@@ -124,8 +124,7 @@ func sendDataToClient[T signalType](stream grpcServerStreamType[T], data T, jobI
 	for i := 0; i < retryTimes; i++ {
 		err := sendWithTimeout(stream, data)
 		if err == nil {
-			hwlog.RunLog.Infof("send %s success, jobId=%s", dataType, jobId)
-			hwlog.RunLog.Debugf("send %s success, jobId=%s, data=%v", dataType, jobId, data)
+			hwlog.RunLog.Infof("send %s success, jobId=%s, data=%v", dataType, jobId, data)
 			return true, true
 		}
 		if err == io.EOF {

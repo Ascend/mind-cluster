@@ -104,14 +104,31 @@ func (processor *relationFaultProcessor) InitFaultJobs() {
 
 // GetPodStrategiesMapsByJobId get PodStrategiesMaps by job id
 func (processor *relationFaultProcessor) GetPodStrategiesMapsByJobId(jobId string) map[string]string {
+	faultJob := processor.getFaultJobByJobId(jobId)
+	if faultJob == nil {
+		return nil
+	}
+	return faultJob.PodStrategiesMaps
+}
+
+func (processor *relationFaultProcessor) getFaultJobByJobId(jobId string) *FaultJob {
 	if processor.faultJobs == nil {
 		return nil
 	}
-	falutJob, ok := processor.faultJobs[jobId]
-	if !ok || falutJob == nil {
+	faultJob, ok := processor.faultJobs[jobId]
+	if !ok || faultJob == nil {
 		return nil
 	}
-	return falutJob.PodStrategiesMaps
+	return faultJob
+}
+
+// GetRelationFaultInfo get relation fault info
+func (processor *relationFaultProcessor) GetRelationFaultInfo(jobId, nodeName string) []*constant.FaultInfo {
+	faultJob := processor.getFaultJobByJobId(jobId)
+	if faultJob == nil || faultJob.NodeFaultInfoMap == nil {
+		return nil
+	}
+	return faultJob.NodeFaultInfoMap[nodeName]
 }
 
 var relationFaultStrategies = make([]constant.RelationFaultStrategy, 0)
@@ -134,6 +151,7 @@ type FaultJob struct {
 	ProcessingFaultCode sets.String
 	PodStrategiesMaps   map[string]string
 	FindNPUUnderSwitch  bool
+	NodeFaultInfoMap    map[string][]*constant.FaultInfo
 }
 
 func getFaultCodeTimeOutMap() map[string]int64 {
@@ -215,6 +233,7 @@ func (fJob *FaultJob) initFaultJobAttr() {
 	fJob.TriggerFault = nil
 	fJob.AllFaultCode = make(sets.String)
 	fJob.SeparateNodes = make(sets.String)
+	fJob.NodeFaultInfoMap = make(map[string][]*constant.FaultInfo)
 	if fJob.PodNames == nil {
 		fJob.PodNames = make(map[string]string)
 	}
@@ -322,6 +341,9 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 	}
 	if fault.FaultType == constant.SwitchFaultType {
 		fJob.FaultStrategy.NodeLvList[fault.NodeName] = constant.SubHealthFaultStrategy
+		newFault := *fault
+		newFault.ExecutedStrategy = constant.SubHealthFaultStrategy
+		fJob.updateNodeFaultInfoMap(&newFault)
 	}
 }
 
@@ -448,6 +470,10 @@ func (fJob *FaultJob) handleJobFault(relationFault []*constant.FaultInfo,
 	return nodeLvList, deviceLvList
 }
 
+func (fJob *FaultJob) updateNodeFaultInfoMap(fault *constant.FaultInfo) {
+	fJob.NodeFaultInfoMap[fault.NodeName] = append(fJob.NodeFaultInfoMap[fault.NodeName], fault)
+}
+
 func (fJob *FaultJob) getNPUUnderSwitch(faultDevices []*constant.FaultInfo) []constant.DeviceStrategy {
 	return make([]constant.DeviceStrategy, 0)
 }
@@ -501,6 +527,7 @@ func (fJob *FaultJob) handleUnhealthyOnNode(allUnhealthyDevices []*constant.Faul
 					Strategy: constant.SeparateFaultStrategy}
 			}
 		}
+		fJob.updateNodeFaultInfoMap(device)
 	}
 	if !nodeLevel {
 		deviceLvList[nodeName] = deviceList
@@ -539,6 +566,7 @@ func (fJob *FaultJob) handleSubHealthyOnNode(allSubHealthDevices []*constant.Fau
 					constant.DeviceStrategy{NPUName: device.NPUName, Strategy: constant.SubHealthFaultStrategy})
 			}
 		}
+		fJob.updateNodeFaultInfoMap(device)
 	}
 	if !nodeLevel {
 		deviceLvList[nodeName] = deviceList

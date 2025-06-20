@@ -219,6 +219,8 @@ const (
 	SignalTypeFault = "fault"
 	// Comma comma
 	Comma = ","
+	// Minus minus
+	Minus = "-"
 	// EmptyDeviceId device id for node or switch fault
 	EmptyDeviceId = "-1"
 	// FormatBase The base number used to convert int to string

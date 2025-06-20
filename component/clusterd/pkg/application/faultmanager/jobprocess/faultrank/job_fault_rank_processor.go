@@ -304,8 +304,37 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 		faultRankList := processor.findFaultRankForJob(advanceDeviceInfo, nodeName, serverList, info)
 		faultList = append(faultList, faultRankList...)
 		faultDeviceList = append(faultDeviceList, getFautDeviceInfoByFaultRank(&server, faultRankList)...)
+		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByRelationFault(jobId, nodeName, &server)...)
 	}
 	return faultList, nodeStatusList, faultDeviceList
+}
+
+func getFaultDeviceInfoByRelationFault(jobId, nodeName string, server *constant.ServerHccl) []constant.FaultDevice {
+	relationFaultList := relationfault.RelationProcessor.GetRelationFaultInfo(jobId, nodeName)
+	hwlog.RunLog.Debugf("jobId: %s, nodeName: %s,  relationFaultList: %v", jobId, nodeName, relationFaultList)
+	faultList := make([]constant.FaultDevice, 0)
+	for _, fault := range relationFaultList {
+		faultType, deviceId := "", ""
+		if fault.FaultType == constant.SwitchFaultType {
+			faultType, deviceId = constant.FaultTypeSwitch, constant.EmptyDeviceId
+		} else if fault.FaultType == constant.DeviceFaultType {
+			targetLength := 2
+			if fields := strings.Split(fault.NPUName, constant.Minus); len(fields) == targetLength {
+				deviceId = fields[targetLength-1]
+			} else {
+				hwlog.RunLog.Errorf("jobId %s, node %s, npu name [%s] is invalid",
+					jobId, nodeName, fault.NPUName)
+				continue
+			}
+			faultType = constant.FaultTypeNPU
+		} else {
+			hwlog.RunLog.Warnf("relation fault type:[%s] is unknown", fault.FaultType)
+			continue
+		}
+		faultList = append(faultList, convertToFaultDevice(server, fault.FaultCode, fault.ExecutedStrategy,
+			deviceId, faultType))
+	}
+	return faultList
 }
 
 func getFautDeviceInfoByFaultRank(server *constant.ServerHccl,

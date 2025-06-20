@@ -13,6 +13,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
+	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
@@ -456,5 +457,72 @@ func TestAppendFilterFaultCodeAndLevel(t *testing.T) {
 			{FaultCode: "fakeCode2", FaultLevel: "level3"},
 			{FaultCode: "fakeCode1", FaultLevel: "level3"},
 		})
+	})
+}
+
+func TestGetFaultDeviceInfoByRelationFault(t *testing.T) {
+	server := &constant.ServerHccl{ServerName: "nodeName", ServerSN: "nodeSN", ServerID: "nodeID"}
+	convey.Convey("Test GetJobFaultRankInfosFilterLevel", t, func() {
+		testGetFaultDeviceInfoByRelationFault1(server)
+		testGetFaultDeviceInfoByRelationFault2(server)
+		testGetFaultDeviceInfoByRelationFault3(server)
+	})
+}
+
+func testGetFaultDeviceInfoByRelationFault1(server *constant.ServerHccl) {
+	convey.Convey("switch type relation fault, should add to fault list", func() {
+		relationFault := []*constant.FaultInfo{
+			{FaultType: constant.SwitchFaultType, NPUName: constant.AllCardId,
+				FaultCode: "[0x08520003,na,L2,na]", ExecutedStrategy: constant.SeparateFaultStrategy},
+		}
+		wantFaultList := []constant.FaultDevice{
+			{ServerName: "nodeName", ServerSN: "nodeSN", ServerId: "nodeID", DeviceId: constant.EmptyDeviceId,
+				FaultCode: "[0x08520003,na,L2,na]", FaultLevel: constant.SeparateFaultStrategy,
+				DeviceType: constant.FaultTypeSwitch},
+		}
+		patches := gomonkey.ApplyPrivateMethod(relationfault.RelationProcessor, "GetRelationFaultInfo",
+			func(jobId, nodeName string) []*constant.FaultInfo {
+				return relationFault
+			})
+		defer patches.Reset()
+		faultList := getFaultDeviceInfoByRelationFault("", "", server)
+		convey.So(faultList, convey.ShouldResemble, wantFaultList)
+	})
+}
+
+func testGetFaultDeviceInfoByRelationFault2(server *constant.ServerHccl) {
+	convey.Convey("device type relation fault,should add to fault list", func() {
+		relationFault := []*constant.FaultInfo{
+			{FaultType: constant.DeviceFaultType, NPUName: constant.AscendDevPrefix + "1",
+				FaultCode: "81078603", ExecutedStrategy: constant.SubHealthFaultStrategy},
+		}
+		wantFaultList := []constant.FaultDevice{
+			{ServerName: "nodeName", ServerSN: "nodeSN", ServerId: "nodeID", DeviceId: "1",
+				FaultCode: "81078603", FaultLevel: constant.SubHealthFaultStrategy,
+				DeviceType: constant.FaultTypeNPU},
+		}
+		patches := gomonkey.ApplyPrivateMethod(relationfault.RelationProcessor, "GetRelationFaultInfo",
+			func(jobId, nodeName string) []*constant.FaultInfo {
+				return relationFault
+			})
+		defer patches.Reset()
+		faultList := getFaultDeviceInfoByRelationFault("", "", server)
+		convey.So(faultList, convey.ShouldResemble, wantFaultList)
+	})
+}
+func testGetFaultDeviceInfoByRelationFault3(server *constant.ServerHccl) {
+	convey.Convey("invalid fault type, should not add to fault list", func() {
+		relationFault := []*constant.FaultInfo{
+			{FaultType: "", NPUName: constant.AscendDevPrefix + "1",
+				FaultCode: "81078603", ExecutedStrategy: constant.SubHealthFaultStrategy},
+		}
+		wantFaultList := make([]constant.FaultDevice, 0)
+		patches := gomonkey.ApplyPrivateMethod(relationfault.RelationProcessor, "GetRelationFaultInfo",
+			func(jobId, nodeName string) []*constant.FaultInfo {
+				return relationFault
+			})
+		defer patches.Reset()
+		faultList := getFaultDeviceInfoByRelationFault("", "", server)
+		convey.So(faultList, convey.ShouldResemble, wantFaultList)
 	})
 }
