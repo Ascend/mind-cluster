@@ -33,7 +33,7 @@ class PtAgent(BaseAgent):
     """
     PtAgent is for PyTorch to manage training process.
     """
-    def __init__(self, cls, network_config=None):
+    def __init__(self, cls, network_config, logger):
         super().__init__()
         self.pt_instance = cls
         self.worker_group = cls._worker_group
@@ -47,9 +47,10 @@ class PtAgent(BaseAgent):
             'RESTART': self.restart_workers,
             'GRACE_EXIT': self.grace_exit,
         }
+        self.logger = logger
 
     def invoke_run(self, role) -> RunResult:
-        init_network_client(self.network_config, self.msg_queue)
+        init_network_client(self.network_config, self.msg_queue, self.logger)
         self.check_network()
         spec = self.worker_group.spec
         role = spec.role

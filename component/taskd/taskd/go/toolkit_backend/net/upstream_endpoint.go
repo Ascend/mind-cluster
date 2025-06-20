@@ -27,7 +27,6 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
-	"ascend-common/common-utils/hwlog"
 	"taskd/toolkit_backend/net/common"
 	"taskd/toolkit_backend/net/proto"
 )
@@ -77,12 +76,12 @@ func (up *upStreamEndpoint) resetNet() {
 	up.netInstance.upClientInited.Store(false)
 	if up.stream != nil {
 		err := up.stream.CloseSend()
-		hwlog.RunLog.Errorf("close upstream error: %v, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("close upstream error: %v, role=%s, srvRank=%s, processRank=%s",
 			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 	if up.upStreamCoon != nil {
 		err := up.upStreamCoon.Close()
-		hwlog.RunLog.Errorf("close client connection error: %v, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("close client connection error: %v, role=%s, srvRank=%s, processRank=%s",
 			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 }
@@ -91,7 +90,7 @@ func (up *upStreamEndpoint) resetNet() {
 func (up *upStreamEndpoint) joinTaskNetwork() {
 	err := up.join()
 	if err != nil {
-		hwlog.RunLog.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
 			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	}
 	for err != nil {
@@ -101,7 +100,7 @@ func (up *upStreamEndpoint) joinTaskNetwork() {
 		time.Sleep(time.Second)
 		err = up.join()
 		if err != nil {
-			hwlog.RunLog.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
+			up.netInstance.netlogger.Errorf("join task network error: %v, role=%s, srvRank=%s, processRank=%s",
 				err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		}
 	}
@@ -124,11 +123,11 @@ func (up *upStreamEndpoint) pathJoin(pos *proto.Position) {
 			Path:     []*proto.Position{pos},
 		})
 		if err == nil {
-			hwlog.RunLog.Infof("path join success, role=%s, srvRank=%s, processRank=%s",
+			up.netInstance.netlogger.Infof("path join success, role=%s, srvRank=%s, processRank=%s",
 				up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 			break
 		}
-		hwlog.RunLog.Errorf("path join failed, role=%s, srvRank=%s, processRank=%s, err=%v",
+		up.netInstance.netlogger.Errorf("path join failed, role=%s, srvRank=%s, processRank=%s, err=%v",
 			up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank, err)
 		time.Sleep(time.Second)
 	}
@@ -164,7 +163,7 @@ func (up *upStreamEndpoint) timeoutAckUpStream(ack *proto.Ack) error {
 	case err := <-done:
 		return err
 	case <-time.After(ackTimeout):
-		hwlog.RunLog.Errorf("send ack time out, msgId=%s, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("send ack time out, msgId=%s, role=%s, srvRank=%s, processRank=%s",
 			ack.Uuid, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return errors.New("send ack time out")
 	}
@@ -195,7 +194,7 @@ func (up *upStreamEndpoint) handleUpStreamData(msg *proto.Message) {
 
 // rebuildNet resets the network and attempts to rejoin the task network and set up the stream.
 func (up *upStreamEndpoint) rebuildNet() error {
-	hwlog.RunLog.Infof("rebuild net, role=%s, srvRank=%s, processRank=%s",
+	up.netInstance.netlogger.Infof("rebuild net, role=%s, srvRank=%s, processRank=%s",
 		up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 	up.resetNet()
 	up.joinTaskNetwork()
@@ -204,13 +203,13 @@ func (up *upStreamEndpoint) rebuildNet() error {
 
 // listenUpStreamMessage listens for messages from the upstream stream.
 func (up *upStreamEndpoint) listenUpStreamMessage() {
-	hwlog.RunLog.Info("start listen upstream message")
+	up.netInstance.netlogger.Info("start listen upstream message")
 	var err error
 	err = up.setUpStream()
 	for err != nil && !up.destroyed.Load() {
 		err = up.rebuildNet()
 		if err != nil {
-			hwlog.RunLog.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
+			up.netInstance.netlogger.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
 				err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		}
 	}
@@ -220,7 +219,7 @@ func (up *upStreamEndpoint) listenUpStreamMessage() {
 		if err != nil {
 			err = up.rebuildNet()
 			if err != nil {
-				hwlog.RunLog.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
+				up.netInstance.netlogger.Errorf("rebuild net error: %v, role=%s, srvRank=%s, processRank=%s",
 					err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 			}
 			continue
@@ -237,7 +236,7 @@ func (up *upStreamEndpoint) join() error {
 	conn, err := grpc.Dial(up.netInstance.config.UpstreamAddr,
 		grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		hwlog.RunLog.Errorf("join task network error on dial, err=%v, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("join task network error on dial, err=%v, role=%s, srvRank=%s, processRank=%s",
 			err, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return fmt.Errorf("join task network error on dial, err=%v", err)
 	}
@@ -248,7 +247,7 @@ func (up *upStreamEndpoint) join() error {
 	ack, err := up.upStreamClient.Register(context.Background(),
 		common.RegisterReqFrame(&up.netInstance.config.Pos))
 	if err != nil || ack.Code != 0 {
-		hwlog.RunLog.Errorf("join task network error on register, err=%v, code=%d, role=%s, srvRank=%s, processRank=%s",
+		up.netInstance.netlogger.Errorf("join task network error on register, err=%v, code=%d, role=%s, srvRank=%s, processRank=%s",
 			err, ack.Code, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return fmt.Errorf("join task network error on register, err=%v, code=%d", err, ack.Code)
 	}

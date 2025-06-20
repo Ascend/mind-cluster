@@ -23,6 +23,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -40,11 +41,16 @@ const fiveHundred = 500
 
 // TestReceiveMsg test receive message
 func TestReceiveMsg(t *testing.T) {
+	hwLogConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	customLog := hwlog.SetCustomLogger(hwlog.RunLog)
 	mrc := &MsgReceiver{}
 	mq := &storage.MsgQueue{Queue: make([]storage.BaseMessage, 0)}
 	tool, _ := net.InitNetwork(&common.TaskNetConfig{
 		Pos:        common.Position{Role: common.MgrRole, ServerRank: "0", ProcessRank: "-1"},
-		ListenAddr: constant.DefaultIP + constant.MgrPort})
+		ListenAddr: constant.DefaultIP + constant.MgrPort}, customLog)
 	mockMsg := &common.Message{Uuid: "test_uuid", BizType: "test_biz_type", Src: workerPos,
 		Dst: workerPos, Body: utils.ObjToString(&storage.MsgBody{})}
 	patch := gomonkey.ApplyMethod(tool, "ReceiveMessage", func(*net.NetInstance) *common.Message {

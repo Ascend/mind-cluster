@@ -47,7 +47,9 @@ import (
 var ctx context.Context = context.Background()
 var netLifeCtl = make(map[uintptr]*net.NetInstance)
 var rw sync.RWMutex
+var logLock sync.RWMutex
 var managerInstance = &manager.BaseManager{}
+var loggerLifeCtl = make(map[uintptr]*hwlog.CustomLogger)
 
 // RegisterSwitchCallback register switch callback, is called by om worker
 //
@@ -122,18 +124,24 @@ func StartTaskdManager() C.int {
 }
 
 //export InitNetwork
-func InitNetwork(configJSON *C.char) uintptr {
+func InitNetwork(configJSON *C.char, loggerPtr uintptr) uintptr {
 	configStr := C.GoString(configJSON)
 	var config common.TaskNetConfig
 	err := json.Unmarshal([]byte(configStr), &config)
 	if err != nil {
 		return 0
 	}
-	tool, err := net.InitNetwork(&config)
+	logLock.RLock()
+	logger, ok := loggerLifeCtl[loggerPtr]
+	logLock.RUnlock()
+	if !ok {
+		return 0
+	}
+	tool, err := net.InitNetwork(&config, logger)
 	if err != nil {
 		return 0
 	}
-	hwlog.RunLog.Infof("init network success, role=%s, srvRank=%s, processRank=%s",
+	logger.Infof("init network success, role=%s, srvRank=%s, processRank=%s",
 		config.Pos.Role, config.Pos.ServerRank, config.Pos.ProcessRank)
 	toolPtr := uintptr(unsafe.Pointer(tool))
 	rw.Lock()
@@ -158,7 +166,7 @@ func SyncSendMessage(toolPtr uintptr, msgJSON *C.char) C.int {
 		return C.int(-1)
 	}
 	if goMessage.Dst != nil {
-		hwlog.RunLog.Infof("py sync send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
+		tool.GetNetworkerLogger().Infof("py sync send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
 			goMessage.Dst.Role, goMessage.Dst.ServerRank, goMessage.Dst.ProcessRank)
 	}
 	_, err = tool.SyncSendMessage(goMessage.Uuid, goMessage.BizType, goMessage.Body, goMessage.Dst)
@@ -184,7 +192,7 @@ func AsyncSendMessage(toolPtr uintptr, msgJSON *C.char) C.int {
 		return C.int(-1)
 	}
 	if goMessage.Dst != nil {
-		hwlog.RunLog.Infof("py async send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
+		tool.GetNetworkerLogger().Infof("py async send message, dstRole=%s, dstSrvRank=%s, DstProcessRank=%s",
 			goMessage.Dst.Role, goMessage.Dst.ServerRank, goMessage.Dst.ProcessRank)
 	}
 	err = tool.AsyncSendMessage(goMessage.Uuid, goMessage.BizType, goMessage.Body, goMessage.Dst)
@@ -262,14 +270,20 @@ func DestroyTaskdProxy() {
 	proxy.DestroyProxy()
 }
 
-//export InitTaskdLog
-func InitTaskdLog(logName *C.char) C.int {
-	logStr := C.GoString(logName) // convert C string to g
-	if err := utils.InitHwLogger(logStr, context.Background()); err != nil {
-		fmt.Printf("%s init hwlog failed, err: %v", logStr, err)
-		return C.int(1)
+//export CreateTaskdLog
+func CreateTaskdLog(logName *C.char) uintptr {
+	logFileName := C.GoString(logName) // convert C string to g
+	hwLogConfig := utils.GetLoggerConfigWithFileName(logFileName)
+	logger, err := hwlog.NewCustomLogger(&hwLogConfig, context.Background())
+	if err != nil {
+		fmt.Printf("hwlog init failed, error is %v\n", err)
+		return 0
 	}
-	return C.int(0)
+	loggerPtr := uintptr(unsafe.Pointer(logger))
+	logLock.Lock()
+	loggerLifeCtl[loggerPtr] = logger
+	logLock.Unlock()
+	return loggerPtr
 }
 
 func main() {

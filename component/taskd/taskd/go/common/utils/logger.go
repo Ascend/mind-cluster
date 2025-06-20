@@ -27,6 +27,16 @@ import (
 
 // InitHwLogger init hwlogger
 func InitHwLogger(logFileName string, ctx context.Context) error {
+	hwLogConfig := GetLoggerConfigWithFileName(logFileName)
+	if err := hwlog.InitRunLogger(&hwLogConfig, context.Background()); err != nil {
+		fmt.Printf("hwlog init failed, error is %v\n", err)
+		return err
+	}
+	return nil
+}
+
+// GetLoggerConfigWithFileName get logger config with log file name
+func GetLoggerConfigWithFileName(logFileName string) hwlog.LogConfig {
 	var logFile string
 	logFilePath := os.Getenv(constant.LogFilePathEnv)
 	if logFilePath == "" {
@@ -43,9 +53,5 @@ func InitHwLogger(logFileName string, ctx context.Context) error {
 		// do not print to screen to avoid influence training log
 		OnlyToFile: true,
 	}
-	if err := hwlog.InitRunLogger(&hwLogConfig, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return err
-	}
-	return nil
+	return hwLogConfig
 }

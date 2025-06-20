@@ -50,26 +50,30 @@ type NetInstance struct {
 	cancel         context.CancelFunc
 	grPool         grpool.GrPool
 	rw             sync.RWMutex
+	netlogger      *hwlog.CustomLogger
 }
 
 // InitNetwork initializes the network netIns.
-func InitNetwork(conf *common.TaskNetConfig) (*NetInstance, error) {
+func InitNetwork(conf *common.TaskNetConfig, logger *hwlog.CustomLogger) (*NetInstance, error) {
 	err := common.CheckConfig(conf)
 	if err != nil {
 		return nil, err
 	}
-	netIns := &NetInstance{config: conf}
+	if logger == nil {
+		return nil, errors.New("logger is nil")
+	}
+	netIns := &NetInstance{config: conf, netlogger: logger}
 	netIns.destroyed.Store(false)
 	netIns.recvBuffer = make(chan *common.Message, common.RoleRecvBuffer(conf.Pos.Role))
 	netIns.ctx, netIns.cancel = context.WithCancel(context.Background())
 	workers := common.RoleWorkerNum(conf.Pos.Role)
 	if workers <= 0 {
-		hwlog.RunLog.Errorf("worker num must be greater than 0, but got %d", workers)
+		netIns.netlogger.Errorf("worker num must be greater than 0, but got %d", workers)
 		return nil, errors.New("worker num must be greater than 0")
 	}
 	netIns.grPool = grpool.NewPool(uint32(workers), netIns.ctx)
 	if common.RoleLevel(conf.Pos.Role) > common.MinRoleLevel {
-		hwlog.RunLog.Infof("need start server, role=%s, srvRank=%s, processRank=%s",
+		netIns.netlogger.Infof("need start server, role=%s, srvRank=%s, processRank=%s",
 			conf.Pos.Role, conf.Pos.ServerRank, conf.Pos.ProcessRank)
 		netIns.downEndpoint, err = newDownStreamEndpoint(netIns)
 		if err != nil {
@@ -77,11 +81,11 @@ func InitNetwork(conf *common.TaskNetConfig) (*NetInstance, error) {
 		}
 	}
 	if common.RoleLevel(conf.Pos.Role) < common.MaxRoleLevel {
-		hwlog.RunLog.Infof("need start client, role=%s, srvRank=%s, processRank=%s",
+		netIns.netlogger.Infof("need start client, role=%s, srvRank=%s, processRank=%s",
 			conf.Pos.Role, conf.Pos.ServerRank, conf.Pos.ProcessRank)
 		netIns.upEndpoint, err = newUpStreamEndpoint(netIns)
 		if err != nil {
-			hwlog.RunLog.Errorf("newUpStreamEndpoint failed, err=%v", err)
+			netIns.netlogger.Errorf("newUpStreamEndpoint failed, err=%v", err)
 			return nil, err
 		}
 	}
@@ -112,7 +116,7 @@ func (nt *NetInstance) SyncSendMessage(uuid, mtype, msgBody string, dst *common.
 	}
 	dstType := common.DstCase(&nt.config.Pos, dst)
 	protoAck, err := nt.route(data, dstType, common.DataFromLower)
-	hwlog.RunLog.Debugf("SyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, protoAck=%v, err=%v",
+	nt.netlogger.Debugf("SyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, protoAck=%v, err=%v",
 		uuid, mtype, msgBody, dst, dstType, protoAck, err)
 	return common.ExtractAckFrame(protoAck), err
 }
@@ -130,7 +134,7 @@ func (nt *NetInstance) AsyncSendMessage(uuid, mtype, msgBody string, dst *common
 	}
 	dstType := common.DstCase(&nt.config.Pos, dst)
 	_, err = nt.route(data, dstType, common.DataFromLower)
-	hwlog.RunLog.Debugf("AsyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, err=%v",
+	nt.netlogger.Debugf("AsyncSendMessage error, uuid=%s, mtype=%s, msgBody=%s, dst=%v, dstType=%s, err=%v",
 		uuid, mtype, msgBody, dst, dstType, err)
 	return err
 }
@@ -139,10 +143,10 @@ func (nt *NetInstance) AsyncSendMessage(uuid, mtype, msgBody string, dst *common
 func (nt *NetInstance) ReceiveMessage() *common.Message {
 	select {
 	case msg := <-nt.recvBuffer:
-		hwlog.RunLog.Debugf("receive a message, msg=%v", msg)
+		nt.netlogger.Debugf("receive a message, msg=%v", msg)
 		return msg
 	case <-nt.ctx.Done():
-		hwlog.RunLog.Infof("ReceiveMessage, ctx done, role=%s, srvRank=%s, processRank=%s",
+		nt.netlogger.Infof("ReceiveMessage, ctx done, role=%s, srvRank=%s, processRank=%s",
 			nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return nil
 	}
@@ -150,7 +154,7 @@ func (nt *NetInstance) ReceiveMessage() *common.Message {
 
 // Destroy destroys the network netIns.
 func (nt *NetInstance) Destroy() {
-	hwlog.RunLog.Infof("taskNet Destroy, role=%s, srvRank=%s, processRank=%s",
+	nt.netlogger.Infof("taskNet Destroy, role=%s, srvRank=%s, processRank=%s",
 		nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 	nt.destroyed.Store(true)
 	nt.grPool.Close()
@@ -163,13 +167,18 @@ func (nt *NetInstance) Destroy() {
 	}
 }
 
+// GetNetworkerLogger returns the networker logger.
+func (nt *NetInstance) GetNetworkerLogger() *hwlog.CustomLogger {
+	return nt.netlogger
+}
+
 // send2Buffer sends a message to the receive buffer.
 func (nt *NetInstance) send2Buffer(msg *proto.Message) (*proto.Ack, error) {
 	select {
 	case nt.recvBuffer <- common.ExtractDataFrame(msg):
 		return common.AckFrame(msg.Header.Uuid, common.OK, &nt.config.Pos), nil
 	case <-time.After(time.Millisecond * int10):
-		hwlog.RunLog.Errorf("send2Buffer failed, dst recv buffer busy, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		nt.netlogger.Errorf("send2Buffer failed, dst recv buffer busy, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.RecvBufBusy, &nt.config.Pos),
 			errors.New("dst recv buffer busy")
@@ -185,13 +194,13 @@ func (nt *NetInstance) route(msg *proto.Message, dstType string, fromType string
 		return nt.downEndpoint.send(msg)
 	case common.Dst2SameLevel, common.Dst2UpperLevel:
 		if fromType == common.DataFromUpper {
-			hwlog.RunLog.Errorf("from is upper is not allowed, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+			nt.netlogger.Errorf("from is upper is not allowed, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 				msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 			return common.AckFrame(msg.Header.Uuid, common.NoRoute, &nt.config.Pos),
 				errors.New("no route")
 		}
 		if nt.upEndpoint == nil || nt.upClientInited.Load() == false {
-			hwlog.RunLog.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+			nt.netlogger.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
 				nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 			return common.AckFrame(msg.Header.Uuid, common.ServerErr, &nt.config.Pos),
 				fmt.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
@@ -199,7 +208,7 @@ func (nt *NetInstance) route(msg *proto.Message, dstType string, fromType string
 		}
 		return nt.upEndpoint.send(msg)
 	default:
-		hwlog.RunLog.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		nt.netlogger.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.ClientErr, &nt.config.Pos),
 			errors.New("no route")
@@ -219,7 +228,7 @@ func (nt *NetInstance) proxyPathDiscovery(ctx context.Context, req *proto.PathDi
 	req.ProxyPos = pos
 	req.Path = append(req.Path, pos)
 	if nt.upEndpoint == nil || nt.upEndpoint.upStreamClient == nil || nt.upClientInited.Load() == false {
-		hwlog.RunLog.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
+		nt.netlogger.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",
 			nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 		return common.AckFrame(req.Uuid, common.ClientErr, &nt.config.Pos),
 			fmt.Errorf("client not inited, role=%s, srvRank=%s, processRank=%s",

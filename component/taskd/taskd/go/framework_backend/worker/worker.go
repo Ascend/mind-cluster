@@ -73,6 +73,11 @@ func InitNetwork(globalRank, nodeRank int) {
 	profiling.NodeRank = nodeRank
 	addr := constant.DefaultIP + constant.ProxyPort
 	var err error
+	customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
+	if customLogger == nil {
+		hwlog.RunLog.Errorf("manager SetCustomLogger failed")
+		return
+	}
 	netTool, err = net.InitNetwork(&common.TaskNetConfig{
 		Pos: common.Position{
 			Role:        common.WorkerRole,
@@ -83,7 +88,7 @@ func InitNetwork(globalRank, nodeRank int) {
 		UpstreamAddr: addr,
 		EnableTls:    false,
 		TlsConf:      nil,
-	})
+	}, customLogger)
 	if err != nil {
 		hwlog.RunLog.Errorf("worker %d init network err: %v", globalRank, err)
 	}

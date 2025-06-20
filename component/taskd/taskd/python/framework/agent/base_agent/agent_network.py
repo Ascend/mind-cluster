@@ -40,7 +40,7 @@ class AgentMessageManager():
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __init__(self, network_config, msg_queue):
+    def __init__(self, network_config, msg_queue, logger):
         if cython_api.lib is None:
             run_log.error("the libtaskd.so has not been loaded!")
             raise Exception("the libtaskd.so has not been loaded!")
@@ -51,7 +51,7 @@ class AgentMessageManager():
         self.rank = None
         self.msg_queue = msg_queue
         self._network_instance = None
-        self._init_network(network_config)
+        self._init_network(network_config, logger)
 
     def register(self, rank: str):
         """
@@ -147,7 +147,7 @@ class AgentMessageManager():
         run_log.info(f"agent parse message body: {msg}")
         return msg
 
-    def _init_network(self, network_config):
+    def _init_network(self, network_config, logger):
         """
         Initialize network.
         """ 
@@ -155,28 +155,29 @@ class AgentMessageManager():
         config_json = json.dumps(asdict(network_config)).encode('utf-8')
 
         init_network_func = self.lib.InitNetwork
-        init_network_func.argtypes = [ctypes.c_char_p]
+        init_network_func.argtypes = [ctypes.c_char_p, ctypes.c_void_p]
         init_network_func.restype = ctypes.c_void_p
-        self._network_instance = init_network_func(config_json)
+        self._network_instance = init_network_func(config_json, logger)
         if self._network_instance is None:
             run_log.error("init_network_func failed!")
             raise Exception("init_network_func failed!")
 
 
-def init_network_client(network_config, msg_queue):
-    start_process = threading.Thread(target=init_message_manager, args=(network_config, msg_queue))
+def init_network_client(network_config, msg_queue, logger):
+    start_process = threading.Thread(target=init_message_manager, args=(network_config, msg_queue, logger))
     start_process.daemon = True
     start_process.start()
 
 
-def init_message_manager(network_config, msg_queue):
+def init_message_manager(network_config, msg_queue, logger):
     """
     Initialize message manager.
     """
-    if network_config is None:
-        run_log.error("network_config is None!")
+    if network_config is None or msg_queue is None or logger is None:
+        run_log.error(f"network_config/msg_queue/logger  is None, \
+        network_config:{network_config}, msg_queue:{msg_queue}, logger:{logger}")
         raise Exception("network_config is None!")
-    msg_manager = AgentMessageManager(network_config, msg_queue)
+    msg_manager = AgentMessageManager(network_config, msg_queue, logger)
 
     time_use = 0
     while True:

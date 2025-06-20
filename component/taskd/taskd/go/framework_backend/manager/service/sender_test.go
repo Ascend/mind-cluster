@@ -16,12 +16,14 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
@@ -29,10 +31,15 @@ import (
 
 // TestSendMessage test manager grpc send message
 func TestSendMessage(t *testing.T) {
+	hwLogConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	customLog := hwlog.SetCustomLogger(hwlog.RunLog)
 	msd := &MsgSender{}
 	tool, _ := net.InitNetwork(&common.TaskNetConfig{
 		Pos:        common.Position{Role: common.MgrRole, ServerRank: "0", ProcessRank: "-1"},
-		ListenAddr: constant.DefaultIP + constant.MgrPort})
+		ListenAddr: constant.DefaultIP + constant.MgrPort}, customLog)
 	req := SendGrpcMsg{Uuid: "test_uuid", MsgType: "test_msgType", MsgBody: "test_msgBody", Dst: workerPos}
 	convey.Convey("TestSendMessage test grpc send message failed", t, func() {
 		patch := gomonkey.ApplyFuncReturn(tool.SyncSendMessage, &common.Ack{}, fmt.Errorf("test error"))

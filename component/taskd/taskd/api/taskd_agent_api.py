@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import os
+import ctypes
 
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
@@ -61,16 +62,17 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
             tls_conf=None
         )
     log_name = "agent-" + config_values.get(CONFIG_SERVERRANK_KEY) + ".log"
-    init_taskd_log_func = cython_api.lib.InitTaskdLog
-    result = init_taskd_log_func(log_name.encode('utf-8'))
-    if result != 0:
+    create_taskd_log_func = cython_api.lib.CreateTaskdLog
+    create_taskd_log_func.restype = ctypes.c_void_p
+    logger = create_taskd_log_func(log_name.encode('utf-8'))
+    if logger is None:
         run_log.error("init_taskd_agent: init_taskd_log failed")
         return False
     run_log.info(f"init_taskd_agent: network configs is {network_config}")
     if framework == "PyTorch" and cls is not None:
-        taskd_agent = PtAgent(cls, network_config)
+        taskd_agent = PtAgent(cls, network_config, logger)
     if framework == "MindSpore":
-        taskd_agent = MsAgent(network_config)
+        taskd_agent = MsAgent(network_config, logger)
     return True
 
 

@@ -27,7 +27,7 @@ class TestPtAgent(unittest.TestCase):
         self.mock_worker = MagicMock()
         self.mock_worker.global_rank = 0
         self.mock_worker.id = 12345
-        
+        self.logger = MagicMock()
         self.mock_worker_group = MagicMock()
         self.mock_worker_group.workers = [self.mock_worker]
         self.mock_worker_group.spec.rdzv_handler.rank = 0
@@ -52,7 +52,7 @@ class TestPtAgent(unittest.TestCase):
                 self.mock_run_result.failures = {}
                 mock_RunResult.return_value = self.mock_run_result
                 
-                self.agent = PtAgent(self.mock_cls, self.network_config)
+                self.agent = PtAgent(self.mock_cls, self.network_config, self.logger)
                 self.agent._func_map = {
                     'START_ALL_WORKER': MagicMock(),
                     'KILL_WORKER': MagicMock(),
@@ -82,7 +82,7 @@ class TestPtAgent(unittest.TestCase):
             
             result = self.agent.invoke_run('trainer')
             
-            mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue)
+            mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue, self.logger)
             mock_check_net.assert_called_once()
             self.agent._func_map['START_ALL_WORKER'].assert_called_once_with(self.mock_worker_group)
             mock_send.assert_has_calls([call('KEEP_ALIVE', 0, AgentReportInfo())])

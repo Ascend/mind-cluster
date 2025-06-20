@@ -36,10 +36,11 @@ import (
 
 // downstreamEntry represents an entry for the downstream connection.
 type downstreamEntry struct {
-	mu     sync.Mutex
-	ctx    context.Context
-	cancel context.CancelFunc
-	stream proto.TaskNet_InitServerDownStreamServer
+	mu          sync.Mutex
+	ctx         context.Context
+	cancel      context.CancelFunc
+	stream      proto.TaskNet_InitServerDownStreamServer
+	entryLogger *hwlog.CustomLogger
 }
 
 // setEntry sets the stream, context, and cancel function for the downstream entry.
@@ -74,7 +75,7 @@ func (entry *downstreamEntry) waitAck(curPos *common.Position, msgId string) *ac
 	go func() {
 		ack, err := entry.stream.Recv()
 		if err != nil {
-			hwlog.RunLog.Errorf("recv ack failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
+			entry.entryLogger.Errorf("recv ack failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
 				msgId, curPos.Role, curPos.ServerRank, curPos.ProcessRank, err)
 		}
 		resultChan <- &ackWrapper{
@@ -86,7 +87,7 @@ func (entry *downstreamEntry) waitAck(curPos *common.Position, msgId string) *ac
 	case res := <-resultChan:
 		return res
 	case <-ctx.Done():
-		hwlog.RunLog.Errorf("recv ack timeout, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		entry.entryLogger.Errorf("recv ack timeout, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msgId, curPos.Role, curPos.ServerRank, curPos.ProcessRank)
 		return &ackWrapper{
 			ack: common.AckFrame(msgId, common.NetworkAckLost, curPos),
@@ -105,7 +106,7 @@ func (entry *downstreamEntry) send(msg *proto.Message, curPos *common.Position) 
 		ProcessRank: msg.Header.Src.ProcessRank,
 	}
 	if entry.stream == nil {
-		hwlog.RunLog.Errorf("stream is nil, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		entry.entryLogger.Errorf("stream is nil, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, curPos.Role, curPos.ServerRank, curPos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.NetStreamNotInited, src),
 			errors.New("stream not inited")
@@ -113,17 +114,17 @@ func (entry *downstreamEntry) send(msg *proto.Message, curPos *common.Position) 
 
 	err := entry.stream.Send(msg)
 	if err != nil {
-		hwlog.RunLog.Errorf("send msg failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
+		entry.entryLogger.Errorf("send msg failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
 			msg.Header.Uuid, curPos.Role, curPos.ServerRank, curPos.ProcessRank, err)
 		return common.AckFrame(msg.Header.Uuid, common.NetworkSendLost, curPos),
 			err
 	}
 	if !msg.Header.Sync {
-		hwlog.RunLog.Infof("send msg success, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		entry.entryLogger.Infof("send msg success, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, curPos.Role, curPos.ServerRank, curPos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.OK, curPos), nil
 	}
-	hwlog.RunLog.Infof("start wait ack, msgid=%s, role=%s, srvRank=%s, processRank=%s, need wait ack",
+	entry.entryLogger.Infof("start wait ack, msgid=%s, role=%s, srvRank=%s, processRank=%s, need wait ack",
 		msg.Header.Uuid, curPos.Role, curPos.ServerRank, curPos.ProcessRank)
 	ackWrap := entry.waitAck(curPos, msg.Header.Uuid)
 	return ackWrap.ack, ackWrap.err
@@ -178,7 +179,7 @@ func (de *downStreamEndpoint) startServer() (*downStreamEndpoint, error) {
 	proto.RegisterTaskNetServer(de.server, de)
 	go func() {
 		err = de.server.Serve(listen)
-		hwlog.RunLog.Errorf("downstream server serve failed, err=%v", err)
+		de.netInstance.netlogger.Errorf("downstream server serve failed, err=%v", err)
 	}()
 
 	// Wait for grpc server ready
@@ -195,7 +196,7 @@ func (de *downStreamEndpoint) addDownStream(pos common.Position,
 	entry, exist := de.entryMap[pos]
 	if !exist {
 		de.rwLock.RUnlock()
-		hwlog.RunLog.Errorf("downstream entry not exist, role=%s, srvRank=%s, processRank=%s",
+		de.netInstance.netlogger.Errorf("downstream entry not exist, role=%s, srvRank=%s, processRank=%s",
 			pos.Role, pos.ServerRank, pos.ProcessRank)
 		return errors.New("un registry error")
 	}
@@ -218,7 +219,7 @@ func (de *downStreamEndpoint) addDownStream(pos common.Position,
 
 // Register handles the registration request.
 func (de *downStreamEndpoint) Register(ctx context.Context, req *proto.RegisterReq) (*proto.Ack, error) {
-	hwlog.RunLog.Infof("recv register req, role=%s, srvRank=%s, processRank=%s",
+	de.netInstance.netlogger.Infof("recv register req, role=%s, srvRank=%s, processRank=%s",
 		req.Pos.Role, req.Pos.ServerRank, req.Pos.ProcessRank)
 	pos := common.Position{
 		Role:        req.Pos.Role,
@@ -233,17 +234,17 @@ func (de *downStreamEndpoint) Register(ctx context.Context, req *proto.RegisterR
 		return common.AckFrame(req.Uuid, common.OK, &de.netInstance.config.Pos), nil
 	}
 	if len(de.entryMap) >= common.MaxRegistryNum {
-		hwlog.RunLog.Errorf("exceed max registry num, role=%s, srvRank=%s, processRank=%s",
+		de.netInstance.netlogger.Errorf("exceed max registry num, role=%s, srvRank=%s, processRank=%s",
 			pos.Role, pos.ServerRank, pos.ProcessRank)
 		return common.AckFrame(req.Uuid, common.ExceedMaxRegistryNum, &de.netInstance.config.Pos),
 			errors.New("exceed max registry num")
 	}
-	de.entryMap[pos] = &downstreamEntry{}
+	de.entryMap[pos] = &downstreamEntry{entryLogger: de.netInstance.netlogger}
 	return common.AckFrame(req.Uuid, common.OK, &de.netInstance.config.Pos), nil
 }
 
 func (de *downStreamEndpoint) PathDiscovery(ctx context.Context, req *proto.PathDiscoveryReq) (*proto.Ack, error) {
-	hwlog.RunLog.Infof("recv path discovery req, role=%s, srvRank=%s, processRank=%s",
+	de.netInstance.netlogger.Infof("recv path discovery req, role=%s, srvRank=%s, processRank=%s",
 		req.ProxyPos.Role, req.ProxyPos.ServerRank, req.ProxyPos.ProcessRank)
 	proxyPos := common.Position{
 		Role:        req.ProxyPos.Role,
@@ -267,7 +268,7 @@ func (de *downStreamEndpoint) PathDiscovery(ctx context.Context, req *proto.Path
 }
 
 func (de *downStreamEndpoint) TransferMessage(ctx context.Context, msg *proto.Message) (*proto.Ack, error) {
-	hwlog.RunLog.Infof("recv transfer message, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+	de.netInstance.netlogger.Infof("recv transfer message, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 		msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 		de.netInstance.config.Pos.ProcessRank)
 	dst := common.Position{
@@ -280,7 +281,7 @@ func (de *downStreamEndpoint) TransferMessage(ctx context.Context, msg *proto.Me
 	case common.Dst2Self, common.Dst2LowerLevel, common.Dst2SameLevel, common.Dst2UpperLevel:
 		return de.netInstance.route(msg, dstType, common.DataFromLower)
 	default:
-		hwlog.RunLog.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		de.netInstance.netlogger.Errorf("dst type illegal, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 			de.netInstance.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid,
@@ -289,7 +290,7 @@ func (de *downStreamEndpoint) TransferMessage(ctx context.Context, msg *proto.Me
 }
 
 func (de *downStreamEndpoint) InitServerDownStream(stream proto.TaskNet_InitServerDownStreamServer) error {
-	hwlog.RunLog.Infof("recv init server down stream, role=%s, srvRank=%s, processRank=%s",
+	de.netInstance.netlogger.Infof("recv init server down stream, role=%s, srvRank=%s, processRank=%s",
 		de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 		de.netInstance.config.Pos.ProcessRank)
 	ctx := stream.Context()
@@ -335,7 +336,7 @@ func (de *downStreamEndpoint) broadCast(msg *proto.Message) error {
 		taskFunc := func(t grpool.Task) (interface{}, error) {
 			ack, err := de.doSend(msg, hop)
 			if err != nil {
-				hwlog.RunLog.Debugf("broadcast failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
+				de.netInstance.netlogger.Debugf("broadcast failed, msgid=%s, role=%s, srvRank=%s, processRank=%s, err=%v",
 					msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 					de.netInstance.config.Pos.ProcessRank, err)
 				success.Store(false)
@@ -359,7 +360,7 @@ func (de *downStreamEndpoint) uniCast(msg *proto.Message) (*proto.Ack, error) {
 		ProcessRank: msg.Header.Dst.ProcessRank,
 	}]
 	if !exist {
-		hwlog.RunLog.Errorf("next hop not found in route table, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		de.netInstance.netlogger.Errorf("next hop not found in route table, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 			de.netInstance.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.NoRoute, &de.netInstance.config.Pos),
@@ -375,7 +376,7 @@ func (de *downStreamEndpoint) doSend(msg *proto.Message,
 	entry, exist := de.entryMap[nextHop]
 	de.rwLock.RUnlock()
 	if !exist {
-		hwlog.RunLog.Errorf("next hop entry not inited, msgid=%s, role=%s, srvRank=%s, processRank=%s",
+		de.netInstance.netlogger.Errorf("next hop entry not inited, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 			de.netInstance.config.Pos.ProcessRank)
 		return common.AckFrame(msg.Header.Uuid, common.NoRoute, &de.netInstance.config.Pos),
@@ -392,7 +393,7 @@ func (de *downStreamEndpoint) send(msg *proto.Message) (*proto.Ack, error) {
 }
 
 func (de *downStreamEndpoint) close() {
-	hwlog.RunLog.Infof("downstream endpoint close, role=%s, srvRank=%s, processRank=%s",
+	de.netInstance.netlogger.Infof("downstream endpoint close, role=%s, srvRank=%s, processRank=%s",
 		de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 		de.netInstance.config.Pos.ProcessRank)
 	de.destroyed.Store(true)

@@ -164,3 +164,11 @@ func NewCustomLogger(config *LogConfig, ctx context.Context) (*CustomLogger, err
 	}
 	return &CustomLogger{logger: log}, nil
 }
+
+// SetCustomLogger set custom logger
+func SetCustomLogger(log *logger) *CustomLogger {
+	if log == nil {
+		return nil
+	}
+	return &CustomLogger{logger: log}
+}

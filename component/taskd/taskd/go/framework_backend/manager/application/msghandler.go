@@ -17,6 +17,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"os"
 	"sync"
 
@@ -96,6 +97,10 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	if ip == "" {
 		ip = constant.DefaultIP
 	}
+	customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
+	if customLogger == nil {
+		return errors.New("manager SetCustomLogger failed"), nil
+	}
 	tool, err := net.InitNetwork(&common.TaskNetConfig{
 		Pos: common.Position{
 			Role:        common.MgrRole,
@@ -103,7 +108,7 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 			ProcessRank: "-1",
 		},
 		ListenAddr: ip + constant.MgrPort,
-	})
+	}, customLogger)
 	if err != nil {
 		return err, nil
 	}

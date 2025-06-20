@@ -26,7 +26,8 @@ from taskd.python.framework.common.type import AgentReportInfo
 class TestMsAgent(unittest.TestCase):
     def setUp(self):
         self.network_config = {'test': 'config'}
-        self.agent = MsAgent(self.network_config)
+        self.logger = MagicMock()
+        self.agent = MsAgent(self.network_config, self.logger)
         self.agent._func_map = {
             'KILL_WORKER': MagicMock(),
             'START_ALL_WORKER': MagicMock(),
@@ -38,7 +39,7 @@ class TestMsAgent(unittest.TestCase):
     @patch('taskd.python.framework.agent.ms_agent.ms_agent.os.getenv')
     def test_init(self, mock_getenv):
         mock_getenv.return_value = '0'
-        agent = MsAgent(self.network_config)
+        agent = MsAgent(self.network_config, self.logger)
         
         self.assertEqual(agent.network_config, self.network_config)
         self.assertEqual(agent.monitor_interval, 5)
@@ -69,7 +70,7 @@ class TestMsAgent(unittest.TestCase):
                 self.agent.start()
         
         mock_calc_rank.assert_called_once()
-        mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue)
+        mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue, self.logger)
         mock_check_net.assert_called_once()
         self.agent._func_map['START_ALL_WORKER'].assert_called_once()
         
