@@ -135,7 +135,7 @@ Usage: ./Ascend-docker-runtime_${PACKAGE_VERSION}_linux-$(uname -m).run [options
 Options:
   --help | -h                   Print this message
   --check|--info|--list|--quiet|--tar|
-  --nox11|--noexec|--extract    These parameters are meaningless for Ascend-docker-runtime and
+                                These parameters are meaningless for Ascend-docker-runtime and
                                 will be discarded in the future
   --install                     Install into this system
   --install-path                Specify the installation path (default: /usr/local/Ascend/Ascend-Docker-Runtime),

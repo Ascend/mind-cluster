@@ -204,8 +204,7 @@ MS_Help()
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar|
-  --noexec|--extract    These parameters are meaningless for Ascend-docker-runtime and
+  --check|--info|--list|--quiet|--tar    These parameters are meaningless for Ascend-docker-runtime and
                                 will be discarded in the future
 \${helpheader}
 EOH
@@ -218,8 +217,7 @@ Error input
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar|
-  --noexec|--extract    These parameters are meaningless for Ascend-docker-runtime and
+  --check|--info|--list|--quiet|--tar    These parameters are meaningless for Ascend-docker-runtime and
                                 will be discarded in the future
 \${helpheader}
 EOH
@@ -452,18 +450,6 @@ do
       log "[INFO]" "tar success"
       exit 0
       ;;
-    --noexec)
-      echo "[WARNING]: --noexec is meaningless for Ascend-docker-runtime and will be discarded in the future"
-      script=""
-      cleanup_script=""
-      shift
-      ;;
-    --extract=*)
-      echo "[WARNING]: --extract is meaningless for Ascend-docker-runtime and will be discarded in the future"
-      keep=y
-      targetdir=\`echo \$1 | cut -d"=" -f2 \`
-        if ! shift; then MS_Help; exit 1; fi
-      ;;
     --check)
     echo "[WARNING]: --check is meaningless for Ascend-docker-runtime and will be discarded in the future"
 	MS_Check "\$0" y
@@ -514,7 +500,6 @@ else
     fi
     mkdir \$dashp -m 750 "\$tmpdir" || {
 	echo 'Cannot create target directory' \$tmpdir >&2
-	echo 'You should try option --extract=<path>' >&2
     log "[ERROR]" "extract failed, Cannot create target directory: \$tmpdir"
 	eval \$finish
 	exit 1
