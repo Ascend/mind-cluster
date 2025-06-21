@@ -368,9 +368,6 @@ func (fJob *FaultJob) IsProcessReschedulingJob(sJob *plugin.SchedulerJob) bool {
 
 func (fJob *FaultJob) updateTaskPodUid(jobInfo *api.JobInfo) {
 	for i := 0; i < len(fJob.FaultTasks); i++ {
-		if !fJob.FaultTasks[i].IsFaultTask {
-			continue
-		}
 		fJob.FaultTasks[i].TaskUID = getTaskPodUidByTaskName(fJob.FaultTasks[i].TaskName, jobInfo)
 	}
 }
