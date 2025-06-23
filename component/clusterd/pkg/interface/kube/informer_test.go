@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/informers"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/informers/externalversions"
@@ -28,6 +30,13 @@ var (
 	testTwoDeviceFunc   = 2
 	testTwoNodeFunc     = 2
 	testTwoPingMeshFunc = 2
+	testCmName          = "test-node-name"
+	testNodeCheckCode   = "4c97cddcb947bd707778eb50b0986a69768afc2ef3e4f351db0b92e9d07d1fed"
+	testDeviceCheckCode = "aaa60c794e2dbec298a2f3c18ea64dea9a1fd2ccdb0cc577b8dfe2c3c5966965"
+
+	testFaultInfo = api.PubFaultInfo{
+		Version: "1.0",
+	}
 )
 
 func TestStopInformer(t *testing.T) {
@@ -327,5 +336,191 @@ func TestAddCmConfigPingMeshFunc(t *testing.T) {
 		convey.So(len(cmPingMeshCMFuncs[business]), convey.ShouldEqual, testTwoPingMeshFunc)
 		convey.So(cmPingMeshCMFuncs[business][0], convey.ShouldEqual, func1)
 		convey.So(cmPingMeshCMFuncs[business][1], convey.ShouldEqual, func2)
+	})
+}
+
+func TestGetNodeFromIndexer(t *testing.T) {
+	convey.Convey("Test GetNodeFromIndexer", t, func() {
+		convey.Convey("when nodeInformer is not nil, but indexer is empty, should return err", func() {
+			factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
+			nodeInformer = factory.Core().V1().Nodes().Informer()
+			_, err := GetNodeFromIndexer("testNode")
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestNodeHandler(t *testing.T) {
+	convey.Convey("Test nodeHandler", t, func() {
+		isAdd := false
+		AddNodeFunc("testType", func(_ *v1.Node, _ *v1.Node, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			nodeHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			fakeNode := v1.Node{}
+			nodeHandler(nil, &fakeNode, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestPodHandler(t *testing.T) {
+	convey.Convey("Test podHandler", t, func() {
+		isAdd := false
+		AddPodFunc("testType", func(_ *v1.Pod, _ *v1.Pod, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			podHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			fakePod := v1.Pod{}
+			podHandler(nil, &fakePod, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestCmDeviceHandler(t *testing.T) {
+	convey.Convey("Test cmDeviceHandler", t, func() {
+		isAdd := false
+		AddCmDeviceFunc("testType", func(_ *constant.DeviceInfo, _ *constant.DeviceInfo, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			cmDeviceHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			fakeCm := &v1.ConfigMap{}
+			fakeCm.Name = testCmName
+			devInfoCM := constant.DeviceInfoCM{}
+			devInfoCM.CheckCode = testDeviceCheckCode
+			devInfoCM.SuperPodID = 1
+			devInfoCM.SuperPodID = 1
+			devInfoCM.DeviceInfo = constant.DeviceInfoNoName{
+				UpdateTime: 0,
+			}
+			fakeCm.Data = map[string]string{}
+			fakeCm.Data[api.DeviceInfoCMDataKey] = util.ObjToString(devInfoCM)
+			cmDeviceHandler(nil, fakeCm, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestCmNodeHandler(t *testing.T) {
+	convey.Convey("Test cmNodeHandler", t, func() {
+		isAdd := false
+		AddCmNodeFunc("testType", func(_ *constant.NodeInfo, _ *constant.NodeInfo, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			cmNodeHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			fakeCm := &v1.ConfigMap{}
+			fakeCm.Name = testCmName
+			nodeInfoCM := constant.NodeInfoCM{}
+			nodeInfoCM.CheckCode = testNodeCheckCode
+			nodeInfoCM.NodeInfo = constant.NodeInfoNoName{}
+			fakeCm.Data = map[string]string{}
+			fakeCm.Data[api.NodeInfoCMDataKey] = util.ObjToString(nodeInfoCM)
+			cmNodeHandler(nil, fakeCm, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestCmPingMeshConfigHandler(t *testing.T) {
+	convey.Convey("Test cmPingMeshConfigHandler", t, func() {
+		isAdd := false
+		AddCmConfigPingMeshFunc("testType", func(_ constant.ConfigPingMesh,
+			_ constant.ConfigPingMesh, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			cmPingMeshConfigHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			fakeCm := &v1.ConfigMap{}
+			fakeCm.Name = "testCmName"
+			configInfo := constant.ConfigPingMesh{}
+			configInfo["global"] = &constant.HccspingMeshItem{Activate: "on"}
+			fakeCm.Data = map[string]string{"global": util.ObjToString(configInfo)}
+			cmPingMeshConfigHandler(nil, fakeCm, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestCmSwitchHandler(t *testing.T) {
+	convey.Convey("Test cmSwitchHandler", t, func() {
+		isAdd := false
+		AddCmSwitchFunc("testType", func(_ *constant.SwitchInfo,
+			_ *constant.SwitchInfo, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			cmSwitchHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			swit := constant.SwitchFaultInfo{
+				FaultInfo:  []constant.SimpleSwitchFaultInfo{},
+				FaultLevel: "FaultLevel",
+				UpdateTime: 0,
+				NodeStatus: "Healthy",
+			}
+			bytes, err := json.Marshal(swit)
+			convey.So(err, convey.ShouldBeNil)
+			fakeCm := v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: constant.SwitchInfoPrefix + "testName",
+				},
+				Data: map[string]string{api.SwitchInfoCMDataKey: string(bytes)},
+			}
+			cmSwitchHandler(nil, &fakeCm, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestCmPubFaultHandler(t *testing.T) {
+	convey.Convey("Test cmPubFaultHandler", t, func() {
+		isAdd := false
+		AddCmPubFaultFunc("testType", func(_ *api.PubFaultInfo,
+			_ *api.PubFaultInfo, _ string) {
+			isAdd = true
+		})
+		defer CleanFuncs()
+		convey.Convey("when newObj is nil, should not exec function", func() {
+			cmPubFaultHandler(nil, nil, "add")
+			convey.So(isAdd, convey.ShouldBeFalse)
+		})
+		convey.Convey("when newObj is not nil, should exec function", func() {
+			faultData, err := json.Marshal(testFaultInfo)
+			if err != nil {
+				t.Error(err)
+			}
+			fakeCm := v1.ConfigMap{
+				Data: map[string]string{api.PubFaultCMDataKey: string(faultData)},
+			}
+			cmPubFaultHandler(nil, &fakeCm, "add")
+			convey.So(isAdd, convey.ShouldBeTrue)
+		})
 	})
 }

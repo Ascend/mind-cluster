@@ -36,7 +36,7 @@ function execute_test() {
       exit 0
     else
       echo "coverage failed: $coverage%, it needs to be greater than 80%."
-      # exit 1
+      exit 1
     fi
   fi
 }

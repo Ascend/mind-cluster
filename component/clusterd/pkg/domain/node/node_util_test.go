@@ -18,7 +18,7 @@ import (
 
 var (
 	testCmName           = "test-node-name"
-	testNodeCheckCode    = "ade0c5676e5fb5a070232c70f0903c0b166f2a222fdf66e4f8361ba9b61e4269"
+	testNodeCheckCode    = "4c97cddcb947bd707778eb50b0986a69768afc2ef3e4f351db0b92e9d07d1fed"
 	testOneSafeStr       = 2000
 	testTwoSafeStr       = 2001
 	testTwoSafeStrLength = 2
@@ -30,13 +30,13 @@ func TestParseNodeInfoCM(t *testing.T) {
 			_, err := ParseNodeInfoCM(nil)
 			convey.So(err.Error(), convey.ShouldEqual, "not node info configmap")
 		})
-		convey.Convey("obj without NodeInfo key", func() {
+		convey.Convey("obj without NodeInfo key, should return err", func() {
 			cm := &v1.ConfigMap{}
 			cm.Name = testCmName
 			_, err := ParseNodeInfoCM(cm)
 			convey.So(err.Error(), convey.ShouldEndWith, api.NodeInfoCMDataKey)
 		})
-		convey.Convey("obj checkCode is not equal", func() {
+		convey.Convey("obj checkCode is not equal, should return err", func() {
 			cm := &v1.ConfigMap{}
 			cm.Name = testCmName
 			nodeInfoCM := constant.NodeInfoCM{}
@@ -47,7 +47,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			_, err := ParseNodeInfoCM(cm)
 			convey.So(err.Error(), convey.ShouldEqual, fmt.Sprintf("node info configmap %s is not valid", cm.Name))
 		})
-		convey.Convey("obj checkCode is equal", func() {
+		convey.Convey("obj checkCode is equal, err should be nil", func() {
 			cm := &v1.ConfigMap{}
 			cm.Name = testCmName
 			nodeInfoCM := constant.NodeInfoCM{}
@@ -56,7 +56,7 @@ func TestParseNodeInfoCM(t *testing.T) {
 			cm.Data = map[string]string{}
 			cm.Data[api.NodeInfoCMDataKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
-			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }
