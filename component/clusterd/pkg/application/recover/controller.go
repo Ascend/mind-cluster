@@ -24,12 +24,15 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+const (
+	retryTimes           = 3
+	randomLen            = 16
+	reportTimeoutMinutes = 15
+	faultFlushSeconds    = 10
+	eventChanLength      = 10
+)
+
 var (
-	retryTimes            = 3
-	randomLen             = 16
-	reportTimeoutMinutes  = 15
-	faultFlushSeconds     = 10
-	eventChanLength       = 10
 	saveAndExitActions    = []string{"save_and_exit"}
 	stopTrainActions      = []string{"stop_train"}
 	pauseTrainActions     = []string{"pause_train"}
