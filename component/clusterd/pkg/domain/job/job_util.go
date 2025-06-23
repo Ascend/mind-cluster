@@ -76,7 +76,11 @@ func DeleteCmAndCache(jobKey string) {
 	if !ok {
 		return
 	}
-	if deleteCm(jobInfo) {
+	jobInfos := GetJobByNameSpaceAndNameAndPreDelete(jobInfo.Name, jobInfo.NameSpace, false)
+	if len(jobInfos) > 0 {
+		hwlog.RunLog.Infof("job(%s) with same name, only delete local cache", jobInfo.Name)
+		DeleteJobCache(jobKey)
+	} else if deleteCm(jobInfo) {
 		hwlog.RunLog.Debugf("delete job:%s success", jobInfo.Name)
 		DeleteJobCache(jobKey)
 	}

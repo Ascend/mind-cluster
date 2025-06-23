@@ -48,7 +48,7 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 		hwlog.RunLog.Errorf("limiter work by resource failed, error: %v", err)
 		return errors.New("limiter work by resource failed")
 	}
-	if err := NewPubFaultInfoChecker(newPubFault).Check(); err != nil {
+	if err := NewPubFaultInfoChecker(newPubFault).CheckAndFlush(); err != nil {
 		hwlog.RunLog.Errorf("check public fault info failed, error: %v", err)
 		return fmt.Errorf("check public fault info failed, error: %v", err)
 	}

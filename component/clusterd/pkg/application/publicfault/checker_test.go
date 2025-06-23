@@ -372,7 +372,7 @@ func TestPubFaultInfoChecker(t *testing.T) {
 func testValidFaultInfo() {
 	for _, testCase := range validFaultInfoTC {
 		getTestFaultInfo(testCase.faultInfo)
-		err := NewPubFaultInfoChecker(testPubFaultInfo).Check()
+		err := NewPubFaultInfoChecker(testPubFaultInfo).CheckAndFlush()
 		convey.So(err, convey.ShouldBeNil)
 	}
 }
@@ -380,7 +380,7 @@ func testValidFaultInfo() {
 func testInvalidFaultInfo() {
 	for _, testCase := range errFaultInfoTC {
 		getTestFaultInfo(testCase.faultInfo)
-		err := NewPubFaultInfoChecker(testPubFaultInfo).Check()
+		err := NewPubFaultInfoChecker(testPubFaultInfo).CheckAndFlush()
 		hwlog.RunLog.Error(err)
 		convey.So(err, convey.ShouldNotBeNil)
 	}

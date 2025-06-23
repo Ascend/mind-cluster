@@ -84,6 +84,7 @@ func TestPreDeleteCmAndCache(t *testing.T) {
 func TestDeleteCmAndCache(t *testing.T) {
 	convey.Convey("test DeleteCmAndCache", t, func() {
 		jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+		jobInfo.IsPreDelete = true
 		convey.Convey("when job cache is nil", func() {
 			DeleteCmAndCache(jobUid1)
 			jobInfo1, _ := GetJobCache(jobUid1)
@@ -109,6 +110,22 @@ func TestDeleteCmAndCache(t *testing.T) {
 			defer mockPreDeleteCM.Reset()
 			SaveJobCache(jobUid1, jobInfo)
 			defer DeleteJobCache(jobUid1)
+			DeleteCmAndCache(jobUid1)
+			_, ok := GetJobCache(jobUid1)
+			convey.So(ok, convey.ShouldEqual, false)
+		})
+		convey.Convey("when job cache is not nil, deleteCm failed but have job with same name. "+
+			"job should not be exists", func() {
+			mockPreDeleteCM := gomonkey.ApplyFunc(deleteCm,
+				func(jobInfo constant.JobInfo) bool {
+					return false
+				})
+			defer mockPreDeleteCM.Reset()
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+			jobInfo2 := getDemoJob(jobName1, jobNameSpace, jobUid2)
+			SaveJobCache(jobUid2, jobInfo2)
+			defer DeleteJobCache(jobUid2)
 			DeleteCmAndCache(jobUid1)
 			_, ok := GetJobCache(jobUid1)
 			convey.So(ok, convey.ShouldEqual, false)

@@ -56,7 +56,7 @@ var (
 func TestPubFaultCollector(t *testing.T) {
 	patches := gomonkey.ApplyFuncReturn(publicfault.LoadPubFaultCfgFromFile, nil).
 		ApplyFuncReturn(LimitByResource, nil).
-		ApplyMethodReturn(&pubFaultInfoChecker{}, "Check", nil)
+		ApplyMethodReturn(&pubFaultInfoChecker{}, "CheckAndFlush", nil)
 	defer patches.Reset()
 	convey.Convey("test func PubFaultCollector success", t, testLoadCustomFile)
 	convey.Convey("test func PubFaultCollector failed, limit error", t, testErrLimit)
@@ -89,7 +89,7 @@ func testErrLimit() {
 }
 
 func testErrCheck() {
-	p3 := gomonkey.ApplyMethodReturn(&pubFaultInfoChecker{}, "Check", testErr)
+	p3 := gomonkey.ApplyMethodReturn(&pubFaultInfoChecker{}, "CheckAndFlush", testErr)
 	defer p3.Reset()
 	err := PubFaultCollector(&faultInfo)
 	expErr := fmt.Errorf("check public fault info failed, error: %v", testErr)

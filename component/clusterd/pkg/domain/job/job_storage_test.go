@@ -162,6 +162,31 @@ func TestGetJobByNameSpaceAndName(t *testing.T) {
 	})
 }
 
+func TestGetJobByNameSpaceAndNameAndPreDelete(t *testing.T) {
+	convey.Convey("test GetJobByNameSpaceAndNameAndPreDelete", t, func() {
+		jobSummaryMap = sync.Map{}
+		convey.Convey("when job cache is empty, get empty job info", func() {
+			jobInfos := GetJobByNameSpaceAndNameAndPreDelete(jobName1, jobNameSpace, true)
+			convey.So(len(jobInfos), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when job cache is not empty and isPreDelete is not right, get empty job info", func() {
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+			jobInfos := GetJobByNameSpaceAndNameAndPreDelete(jobName1, jobNameSpace, true)
+			convey.So(len(jobInfos), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when job cache is not empty and isPreDelete is right, get job info", func() {
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.IsPreDelete = true
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+			jobInfos := GetJobByNameSpaceAndNameAndPreDelete(jobName1, jobNameSpace, true)
+			convey.So(len(jobInfos), convey.ShouldEqual, 1)
+		})
+	})
+}
+
 func TestGetShouldDeleteJobKey(t *testing.T) {
 	convey.Convey("test GetShouldDeleteJobKey", t, func() {
 		jobSummaryMap = sync.Map{}

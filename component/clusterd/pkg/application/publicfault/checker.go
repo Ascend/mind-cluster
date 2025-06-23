@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/node"
@@ -41,8 +42,8 @@ type pubFaultInfoChecker struct {
 	pubFaultInfo *api.PubFaultInfo
 }
 
-// Check is used to check public fault parameters
-func (c *pubFaultInfoChecker) Check() error {
+// CheckAndFlush is used to check public fault parameters and flush faults
+func (c *pubFaultInfoChecker) CheckAndFlush() error {
 	if c.pubFaultInfo == nil {
 		return errors.New("public fault info is nil")
 	}
@@ -51,7 +52,7 @@ func (c *pubFaultInfoChecker) Check() error {
 		c.checkTimeStamp,
 		c.checkVersion,
 		c.checkResource,
-		c.checkFaults,
+		c.checkFaultsAndFlush,
 	}
 	for _, checkFun := range checkFuncs {
 		if err := checkFun(); err != nil {
@@ -93,7 +94,7 @@ func (c *pubFaultInfoChecker) checkResource() error {
 	return nil
 }
 
-func (c *pubFaultInfoChecker) checkFaults() error {
+func (c *pubFaultInfoChecker) checkFaultsAndFlush() error {
 	const (
 		minFaultsLen = 1
 		maxFaultsLen = 100
@@ -101,12 +102,19 @@ func (c *pubFaultInfoChecker) checkFaults() error {
 	if len(c.pubFaultInfo.Faults) < minFaultsLen || len(c.pubFaultInfo.Faults) > maxFaultsLen {
 		return errors.New("invalid faults length")
 	}
+	newFaults := make([]api.Fault, 0)
 	for _, fault := range c.pubFaultInfo.Faults {
 		var checker = faultChecker{fault: &fault}
 		if err := checker.check(); err != nil {
-			return err
+			hwlog.RunLog.Errorf("fault(%s) is invalid and will be removed, err is %v", fault.FaultId, err)
+			continue
 		}
+		newFaults = append(newFaults, fault)
 	}
+	if len(newFaults) == 0 {
+		return errors.New("there is no valid fault")
+	}
+	c.pubFaultInfo.Faults = newFaults
 	return nil
 }
 

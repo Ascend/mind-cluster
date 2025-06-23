@@ -81,9 +81,25 @@ func GetJobByNameSpaceAndName(name, nameSpace string) constant.JobInfo {
 	return ji
 }
 
+// GetJobByNameSpaceAndNameAndPreDelete get job by job name and nameSpace
+func GetJobByNameSpaceAndNameAndPreDelete(name, nameSpace string, isPreDelete bool) []constant.JobInfo {
+	jobInfos := make([]constant.JobInfo, 0)
+	jobSummaryMap.Range(func(_, value any) bool {
+		jobInfo, ok := value.(constant.JobInfo)
+		if !ok {
+			return true
+		}
+		if jobInfo.Name == name && jobInfo.NameSpace == nameSpace && jobInfo.IsPreDelete == isPreDelete {
+			jobInfos = append(jobInfos, jobInfo)
+		}
+		return true
+	})
+	return jobInfos
+}
+
 // GetShouldDeleteJobKey get should delete job key
 func GetShouldDeleteJobKey() []string {
-	var allJob = make([]string, 0)
+	allJob := make([]string, 0)
 	nowTime := time.Now().Unix()
 	jobSummaryMap.Range(func(key, value any) bool {
 		jobKey, ok := key.(string)
