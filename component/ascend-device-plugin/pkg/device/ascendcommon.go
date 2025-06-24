@@ -458,11 +458,13 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 	totalUHDevices, totalNetUHDevices, podUsedDev, totalRCDevices :=
 		sets.String{}, sets.String{}, sets.String{}, sets.String{}
 	totalDeviceFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
+	allDevices := sets.String{}
 	if !common.ParamOption.PresetVDevice {
 		podUsedDev = tool.getRealUsedDevices()
 	}
 	for devType, classifyDev := range classifyDevs {
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
+		allDevices = allDevices.Union(partDevStatusSet.AllDevices)
 		kltUsedDevices := tool.getUsedDevices(classifyDev)
 		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(kltUsedDevices)
 		if !common.ParamOption.PresetVDevice {
@@ -479,6 +481,7 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 		NetUnHealthyDevice: totalNetUHDevices,
 		RecoveringDevices:  totalRCDevices,
 		DeviceFault:        totalDeviceFaults,
+		AllDevices:         allDevices,
 	}
 	hwlog.RunLog.Debugf("get device status devStatusSet=%#v", devStatusSet)
 	return devStatusSet
@@ -498,7 +501,9 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 	healthDevice, totalUHDevices, totalNetworkUHDevices, totalRCDevices :=
 		sets.String{}, sets.String{}, sets.String{}, sets.String{}
 	deviceFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
+	allDevices := sets.NewString()
 	for _, device := range subClassDevices {
+		allDevices.Insert(device.DeviceName)
 		deviceFaults = append(deviceFaults, tool.getDeviceFaults(device)...)
 		if device.NetworkHealth == v1beta1.Unhealthy {
 			totalNetworkUHDevices.Insert(device.DeviceName)
@@ -529,6 +534,7 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 		NetUnHealthyDevice: totalNetworkUHDevices,
 		RecoveringDevices:  totalRCDevices,
 		DeviceFault:        deviceFaults,
+		AllDevices:         allDevices,
 	}
 }
 

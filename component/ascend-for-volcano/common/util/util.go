@@ -379,6 +379,19 @@ func GetUnhealthyDevInfo(devList map[string]string) (string, []string) {
 	return unHealthyKey, unHealthyDevList
 }
 
+// GetRecoveringDevInfo get recovering device info from device list
+func GetRecoveringDevInfo(devList map[string]string) (string, []string) {
+	recoveringKey := HwPreName + GetDeviceType(devList) + "-Recovering"
+	klog.V(LogDebugLev).Infof("recovering device key: %s", recoveringKey)
+	recoveringDevStr := devList[recoveringKey]
+	if len(recoveringDevStr) == 0 {
+		return recoveringKey, []string{}
+	}
+	recoveringDevList := strings.Split(recoveringDevStr, ",")
+	klog.V(LogDebugLev).Infof("recovering device list: %v", recoveringDevList)
+	return recoveringKey, recoveringDevList
+}
+
 // CheckPodNameOrSpace check pod name or pod namespace
 func CheckPodNameOrSpace(checkItem, podParam string, maxLength int) error {
 	if len(podParam) > maxLength {

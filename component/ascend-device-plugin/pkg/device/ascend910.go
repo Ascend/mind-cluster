@@ -628,19 +628,21 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 		common.ConvertDevListToSets(oldDevInfo[common.HuaweiNetworkUnHealthAscend910], common.CommaSepDev),
 		nodeFmtDevNetRecover)
 	newDevInfo[common.HuaweiAscend910] = newAscend910
+	newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.RecoveringDevices, common.CommaSepDev)
 	// hnm.isNeedBlockAllDevice: server is A800IA2 with hccs and there are fault devices or is already in resetting,
 	// no more pod should be scheduled to this node cause all npu resetting is on the way
 	// if reset failed more than ResetRetryTimes times, will no longer try to reset server
 	if common.ParamOption.HotReset == common.HotResetInfer &&
 		hnm.GetResetFailedTimes(common.FirstDevice) <= common.MaxResetTimes &&
 		hnm.isNeedBlockAllDevice(devStatusSet.DeviceFault) {
+
 		newDevInfo[common.HuaweiAscend910] = ""
+		newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.AllDevices, common.CommaSepDev)
 		hwlog.RunLog.Warnf("all device on node have been cleared, due to resetting all devices in process")
 	}
 
 	newDevInfo[common.HuaweiUnHealthAscend910] = common.ToString(devStatusSet.UnHealthyDevice, common.CommaSepDev)
 	newDevInfo[common.HuaweiNetworkUnHealthAscend910] = common.ToString(newNetUHDevSets, common.CommaSepDev)
-	newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.RecoveringDevices, common.CommaSepDev)
 	var data []byte
 	if data = common.MarshalData(devStatusSet.DeviceFault); len(data) == 0 {
 		return fmt.Errorf("device fault code marshal failed")

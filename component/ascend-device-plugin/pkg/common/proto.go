@@ -196,6 +196,7 @@ type DevStatusSet struct {
 	RecoveringDevices  sets.String
 	FreeHealthyDevice  map[string]sets.String
 	DeviceFault        []DeviceFault
+	AllDevices         sets.String
 }
 
 // FaultTimeAndLevel of each fault code

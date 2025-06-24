@@ -951,6 +951,7 @@ func FakeDeviceList() map[string]string {
 		NPU910CardName:         availNPU,
 		networkUnhealthyNPUKey: networkUnhealthyNPUValue,
 		unhealthyNPUKey:        unhealthyNPUValue,
+		recoveringNPUKey:       unhealthyNPUValue,
 	}
 }
 
@@ -959,7 +960,9 @@ const (
 	networkUnhealthyNPUKey   = "huawei.com/Ascend910-NetworkUnhealthy"
 	networkUnhealthyNPUValue = "Ascend910-1"
 	unhealthyNPUKey          = "huawei.com/Ascend910-Unhealthy"
+	recoveringNPUKey         = "huawei.com/Ascend910-Recovering"
 	unhealthyNPUValue        = "Ascend910-0"
+	recoveringNPUValue       = "Ascend910-0"
 )
 
 func TestGetAvailableDevInfo(t *testing.T) {
@@ -979,6 +982,16 @@ func TestGetUnhealthyDevInfo(t *testing.T) {
 			","), unhealthyNPUValue) {
 			t.Errorf("get available device info key = %v, want %v; value = %v, want = %v",
 				unHealthyKey, NPU910CardName, unHealthyDevList, availNPU)
+		}
+	})
+}
+func TestGetRecoveringDevInfo(t *testing.T) {
+	t.Run("test func GetRecoveringDevInfo success", func(t *testing.T) {
+		recoveringKey, recoveringList := GetRecoveringDevInfo(FakeDeviceList())
+		if !reflect.DeepEqual(recoveringKey, recoveringNPUKey) || !reflect.DeepEqual(strings.Join(recoveringList,
+			","), recoveringNPUValue) {
+			t.Errorf("get available device info key = %v, want %v; value = %v, want = %v",
+				recoveringKey, NPU910CardName, recoveringList, availNPU)
 		}
 	})
 }

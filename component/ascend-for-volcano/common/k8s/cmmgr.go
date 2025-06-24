@@ -384,8 +384,10 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 				return tmpDeviceInfo
 			}
 			_, unHealthyDevList := util.GetUnhealthyDevInfo(deviceInfo.DeviceList)
+			_, recoveringDevList := util.GetRecoveringDevInfo(deviceInfo.DeviceList)
 			podUsedDevList := util.GetActivePodUsedDevFromNode(nodeInfo, devType)
-			availDev := sets.NewString(nodeDevList...).Delete(podUsedDevList...).Delete(unHealthyDevList...).List()
+			availDev := sets.NewString(nodeDevList...).
+				Delete(podUsedDevList...).Delete(unHealthyDevList...).Delete(recoveringDevList...).List()
 			sort.Strings(availDev)
 			tmpDeviceInfo.DeviceList[devListKey] = strings.Join(availDev, ",")
 			klog.V(util.LogDebugLev).Infof("node[%s] device list: %v, available list: %v, pod used list: %v, "+
