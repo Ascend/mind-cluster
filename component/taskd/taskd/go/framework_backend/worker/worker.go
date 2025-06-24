@@ -91,6 +91,11 @@ func InitNetwork(globalRank, nodeRank int) {
 	}, customLogger)
 	if err != nil {
 		hwlog.RunLog.Errorf("worker %d init network err: %v", globalRank, err)
+		return
+	}
+	if netTool == nil {
+		hwlog.RunLog.Errorf("worker %d init network nil", globalRank)
+		return
 	}
 	hwlog.RunLog.Infof("worker %d init network end", globalRank)
 	profiling.NetTool = netTool
