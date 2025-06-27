@@ -33,7 +33,7 @@ func GetJobKeyAndNameByPG(info *v1beta1.PodGroup) (key, name string) {
 		return "", ""
 	}
 	for _, owner := range info.GetOwnerReferences() {
-		if *owner.Controller {
+		if owner.Controller != nil && *owner.Controller {
 			return string(owner.UID), owner.Name
 		}
 	}
@@ -47,7 +47,7 @@ func GetJobTypeByPG(podGroup *v1beta1.PodGroup) string {
 		return ""
 	}
 	for _, owner := range podGroup.GetOwnerReferences() {
-		if *owner.Controller {
+		if owner.Controller != nil && *owner.Controller {
 			return owner.Kind
 		}
 	}

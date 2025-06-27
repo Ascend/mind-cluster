@@ -32,7 +32,7 @@ func GetJobKeyByPod(info *v1.Pod) string {
 		return ""
 	}
 	for _, owner := range info.GetOwnerReferences() {
-		if *owner.Controller {
+		if owner.Controller != nil && *owner.Controller {
 			return string(owner.UID)
 		}
 	}

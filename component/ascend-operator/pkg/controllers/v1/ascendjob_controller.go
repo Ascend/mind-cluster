@@ -290,7 +290,7 @@ func (r *ASJobReconciler) watchDeploymentRelatedResource(c controller.Controller
 		handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
 			deployPod := false
 			for _, owner := range object.GetOwnerReferences() {
-				if *owner.Controller && owner.Kind == "ReplicaSet" {
+				if owner.Controller != nil && *owner.Controller && owner.Kind == "ReplicaSet" {
 					deployPod = true
 					break
 				}
