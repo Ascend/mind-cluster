@@ -629,3 +629,11 @@ func TestGetPingItemByDestAddr(t *testing.T) {
 		})
 	})
 }
+
+func TestSuperDeviceIDToIP(t *testing.T) {
+	convey.Convey("Test superDeviceIDToIP", t, func() {
+		convey.Convey("should return empty string for invalid input", func() {
+			convey.So(superDeviceIDToIP("abc"), convey.ShouldEqual, "")
+		})
+	})
+}

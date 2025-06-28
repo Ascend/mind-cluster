@@ -22,6 +22,7 @@ package fullmesh
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -41,40 +42,67 @@ const (
 func TestGenerate(t *testing.T) {
 	convey.Convey("TestGenerate", t, func() {
 		gen := New("node", "", "")
-		convey.Convey("01-addrs with out local should return nil", func() {
-			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil)
+		convey.Convey("01-case GetPingListFilePath error, should return nil", func() {
+			gen := New("node", "", "")
+			gen.local = "local"
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", errors.New(""))
 			defer patch.Reset()
-			readPatch := gomonkey.ApplyFuncReturn(utils.ReadLimitBytes, make([]byte, maxFileSize, maxFileSize), nil)
-			defer readPatch.Reset()
+			res := gen.Generate(map[string]types.SuperDeviceIDs{"local": {}})
+			convey.So(res, convey.ShouldEqual, nil)
+		})
+		convey.Convey("02-case ReadLimitBytes return error, should return nil", func() {
+			gen := New("node", "", "")
+			gen.local = "local"
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil).
+				ApplyFuncReturn(utils.ReadLimitBytes, make([]byte, maxFileSize, maxFileSize), errors.New(""))
+			defer patch.Reset()
+			res := gen.Generate(map[string]types.SuperDeviceIDs{"local": {}})
+			convey.So(res, convey.ShouldBeNil)
+		})
+		convey.Convey("03-case with out local should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil).
+				ApplyFuncReturn(utils.ReadLimitBytes, make([]byte, maxFileSize, maxFileSize), nil)
+			defer patch.Reset()
 			res := gen.Generate(map[string]types.SuperDeviceIDs{})
 			convey.So(res, convey.ShouldBeNil)
 		})
-		convey.Convey("02-addrs with local should return local", func() {
+		convey.Convey("04-case with local should return local", func() {
 			testPingListInfos := make([]types.PingListInfo, 0)
 			testPingListInfos = append(testPingListInfos, types.PingListInfo{
-				TaskId:   testString,
-				TaskType: testString,
+				TaskId: testString, TaskType: testString,
 				PingList: []types.PingItem{{
-					SrcType:      testInt,
-					DstType:      testInt,
-					PktSize:      testInt,
-					SrcCardPhyId: testInt,
-					SrcAddr:      testString,
-					DstAddr:      testString,
+					SrcType: testInt, DstType: testInt,
+					PktSize: testInt, SrcCardPhyId: testInt,
+					SrcAddr: testString, DstAddr: testString,
 				},
 				},
 			})
 			testData, err := json.Marshal(testPingListInfos)
 			convey.So(err, convey.ShouldBeNil)
-			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil)
+			patch := gomonkey.ApplyFuncReturn(slownet.GetPingListFilePath, "string", nil).
+				ApplyFuncReturn(utils.ReadLimitBytes, testData, nil)
 			defer patch.Reset()
-			readPatch := gomonkey.ApplyFuncReturn(utils.ReadLimitBytes, testData, nil)
-			defer readPatch.Reset()
 			res := gen.Generate(map[string]types.SuperDeviceIDs{
 				"node":  {"0": "000", "1": "111"},
 				"node1": {"0": "001", "1": "112"},
 			})
 			convey.So(res, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestGetDestAddrMap(t *testing.T) {
+	convey.Convey("Given a GeneratorImp instance", t, func() {
+		convey.Convey("When the receiver is nil", func() {
+			var g *GeneratorImp
+			result := g.GetDestAddrMap()
+			convey.So(result, convey.ShouldBeNil)
+		})
+
+		convey.Convey("When DestAddrMap is empty", func() {
+			g := &GeneratorImp{DestAddrMap: make(map[string][]types.PingItem)}
+			result := g.GetDestAddrMap()
+			convey.So(result, convey.ShouldBeEmpty)
 		})
 	})
 }

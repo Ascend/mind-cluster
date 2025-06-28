@@ -45,7 +45,6 @@ package profiling
 	static msptiResult (*cgo_mspti_activity_register_callbacks)(msptiBuffersCallbackRequestFunc funcBufferRequested,
 		msptiBuffersCallbackCompleteFunc funcBufferCompleted);
 	static msptiResult msptiActivityRegisterCallbacksWrapper() {
-		//return MSPTI_ERROR_DEVICE_OFFLINE;
 		return cgo_mspti_activity_register_callbacks(bufferRequestedCallback, bufferCompletedCallback);
 	}
 

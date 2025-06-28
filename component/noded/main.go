@@ -28,7 +28,7 @@ import (
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring"
 	"nodeD/pkg/monitoring/config"
-	"nodeD/pkg/pingmesh"
+	"nodeD/pkg/pingmeshv1"
 	"nodeD/pkg/processmanager"
 	"nodeD/pkg/reporter"
 )
@@ -61,7 +61,7 @@ var (
 	configManager   = &config.FaultConfigurator{}
 	monitorManager  = &monitoring.MonitorManager{}
 	reportManager   = &reporter.ReportManager{}
-	pingmeshManager *pingmesh.Manager
+	pingmeshManager *pingmeshv1.Manager
 	version         bool
 	// BuildVersion build version
 	BuildVersion string
@@ -123,7 +123,7 @@ func init() {
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup operation logs, range is (0, 30]")
-	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmesh.DefaultResultMaxAge,
+	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmeshv1.DefaultResultMaxAge,
 		"Maximum number of days for backup run pingmesh result files, range [7, 700] days")
 }
 
@@ -136,9 +136,9 @@ func checkParameters() bool {
 		hwlog.RunLog.Errorf("monitor period %d out of range [60,600]", monitorPeriod)
 		return false
 	}
-	if resultMaxAge < pingmesh.MinResultMaxAge || resultMaxAge > pingmesh.MaxResultMaxAge {
-		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmesh.MinResultMaxAge,
-			pingmesh.MaxResultMaxAge)
+	if resultMaxAge < pingmeshv1.MinResultMaxAge || resultMaxAge > pingmeshv1.MaxResultMaxAge {
+		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmeshv1.MinResultMaxAge,
+			pingmeshv1.MaxResultMaxAge)
 		return false
 	}
 	return true
@@ -163,7 +163,7 @@ func createWorkers() error {
 	controller = control.NewControlManager(clientK8s)
 	monitorManager = monitoring.NewMonitorManager(clientK8s)
 	reportManager = reporter.NewReporterManager(clientK8s)
-	pingmeshManager = pingmesh.NewManager(&pingmesh.Config{
+	pingmeshManager = pingmeshv1.NewManager(&pingmeshv1.Config{
 		ResultMaxAge: resultMaxAge,
 		KubeClient:   clientK8s,
 	})

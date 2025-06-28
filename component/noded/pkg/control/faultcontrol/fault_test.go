@@ -16,8 +16,10 @@
 package faultcontrol
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
 	"nodeD/pkg/common"
@@ -33,6 +35,41 @@ func TestNodeController(t *testing.T) {
 	convey.Convey("test NodeController method 'updateFaultLevelMap'", t, testNodeCtlUpdateFaultLevelMap)
 	convey.Convey("test NodeController method 'getFaultLevel'", t, testNodeCtlGetFaultLevel)
 	convey.Convey("test NodeController method 'getNodeStatus'", t, testNodeCtlGetNodeStatus)
+}
+
+func TestName(t *testing.T) {
+	nodeController = NewNodeController()
+	convey.Convey("test Name", t, func() {
+		convey.So(nodeController.Name(), convey.ShouldEqual, common.PluginControlFault)
+	})
+}
+
+func TestUpdateConfig(t *testing.T) {
+	nodeController = NewNodeController()
+	convey.Convey("test UpdateConfig", t, func() {
+		convey.So(nodeController.UpdateConfig(nil), convey.ShouldEqual, nil)
+	})
+}
+
+func TestControl(t *testing.T) {
+	nodeController = NewNodeController()
+	convey.Convey("test Control", t, func() {
+		patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(nodeController), "updateFault",
+			func(_ *NodeController, faultDevInfo *common.FaultDevInfo) *common.FaultDevInfo {
+				return nil
+			}).ApplyMethod(reflect.TypeOf(nodeController), "UpdateConfig",
+			func(_ *NodeController, faultConfig *common.FaultConfig) *common.FaultConfig {
+				return nil
+			})
+		defer patch.Reset()
+		info := &common.FaultAndConfigInfo{
+			FaultDevInfo: &common.FaultDevInfo{},
+			FaultConfig:  &common.FaultConfig{},
+		}
+		nodeController.Control(info)
+		convey.So(info.FaultDevInfo, convey.ShouldBeNil)
+		convey.So(info.FaultConfig, convey.ShouldBeNil)
+	})
 }
 
 func testNodeCtlUpdateConfig() {

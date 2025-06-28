@@ -112,3 +112,19 @@ func TestGenerateFaultID(t *testing.T) {
 		})
 	})
 }
+
+func TestFaultDevListEqual(t *testing.T) {
+	convey.Convey("test faultDevListEqual", t, func() {
+		convey.Convey("case length is not equal", func() {
+			src := []*FaultDev{{DeviceId: 0}}
+			res := faultDevListEqual(src, nil)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("case map length is not equal", func() {
+			src := []*FaultDev{{DeviceId: 0}, {DeviceId: 0}}
+			dst := []*FaultDev{{DeviceId: 0}, {DeviceId: 1}}
+			res := faultDevListEqual(src, dst)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+	})
+}

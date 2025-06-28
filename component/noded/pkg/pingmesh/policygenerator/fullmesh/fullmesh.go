@@ -42,9 +42,6 @@ func New(node string, superPodId string, serverIndex string) *GeneratorImp {
 
 // Generate generate pingmesh dest addresses
 func (g *GeneratorImp) Generate(addrs map[string]types.SuperDeviceIDs) map[string]types.DestinationAddress {
-	if g == nil {
-		return nil
-	}
 	_, ok := addrs[g.local]
 	if !ok {
 		hwlog.RunLog.Errorf("local node %s not found in addrs", g.local)

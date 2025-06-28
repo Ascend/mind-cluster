@@ -21,10 +21,22 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 )
 
+func fakeHccspingMeshPolicy() *HccspingMeshPolicy {
+	hmp := &HccspingMeshPolicy{
+		Address:     make(map[string]SuperDeviceIDs),
+		DestAddr:    make(map[string]DestinationAddress),
+		DestAddrMap: make(map[string][]PingItem),
+	}
+	hmp.Address["testSrc"] = map[string]string{"testSrc": "testDst"}
+	hmp.DestAddr["testSrc"] = map[uint]string{uint(1): "testDst"}
+	hmp.DestAddrMap["testSrc"] = []PingItem{PingItem{}}
+	return hmp
+}
+
 func TestDeepClone(t *testing.T) {
 	convey.Convey("Testing HccspingMeshPolicy DeepClone", t, func() {
 		convey.Convey("01.deep copy empty success", func() {
-			current := &HccspingMeshPolicy{}
+			current := fakeHccspingMeshPolicy()
 			res := current.DeepCopy()
 			convey.So(res.UID, convey.ShouldEqual, current.UID)
 		})
