@@ -498,10 +498,11 @@ func updateDevices(devices []*common.NpuDevice, podUsedChips, notPodUsedChips se
 	for _, deviceInfo := range devices {
 		deviceInfo.PodUsed = podUsedChips.Has(deviceInfo.DeviceName)
 		deviceInfo.NotPodUsed = notPodUsedChips.Has(deviceInfo.DeviceName)
-		existCardDropFaultCode := common.Int64Tool.Contains(deviceInfo.FaultCodes, common.CardDropFaultCode)
-		if deviceInfo.NotPodUsed && !existCardDropFaultCode {
+		existCardAbnoramlOccupyFaultCode := common.Int64Tool.Contains(deviceInfo.FaultCodes,
+			common.CardAbnoramlOccupyFaultCode)
+		if deviceInfo.NotPodUsed && !existCardAbnoramlOccupyFaultCode {
 			faultDevice(deviceInfo)
-		} else if !deviceInfo.NotPodUsed && existCardDropFaultCode {
+		} else if !deviceInfo.NotPodUsed && existCardAbnoramlOccupyFaultCode {
 			if deviceInfo.CardDrop {
 				continue
 			}
@@ -512,24 +513,26 @@ func updateDevices(devices []*common.NpuDevice, podUsedChips, notPodUsedChips se
 
 func faultDevice(deviceInfo *common.NpuDevice) {
 	faultInfo := npuCommon.DevFaultInfo{
-		EventID:         common.CardDropFaultCode,
+		EventID:         common.CardAbnoramlOccupyFaultCode,
 		LogicID:         deviceInfo.LogicID,
 		Assertion:       npuCommon.FaultOccur,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
 	common.SaveDevFaultInfo(faultInfo)
-	hwlog.RunLog.Infof("create non-kubelet use chip %v fault", deviceInfo.LogicID)
+	hwlog.RunLog.Infof("create non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
+		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
 
 func recoverDevice(deviceInfo *common.NpuDevice) {
 	faultInfo := npuCommon.DevFaultInfo{
-		EventID:         common.CardDropFaultCode,
+		EventID:         common.CardAbnoramlOccupyFaultCode,
 		LogicID:         deviceInfo.LogicID,
 		Assertion:       npuCommon.FaultRecover,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
 	common.SaveDevFaultInfo(faultInfo)
-	hwlog.RunLog.Infof("recover non-kubelet use chip %v fault", deviceInfo.LogicID)
+	hwlog.RunLog.Infof("recover non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
+		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
 
 func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType string) {

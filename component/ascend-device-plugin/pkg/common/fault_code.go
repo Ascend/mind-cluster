@@ -83,6 +83,8 @@ const (
 	PollingInterval time.Duration = DefaultPollingInterval
 	// SubHealthFault subHealth code
 	SubHealthFault = "SubHealthFault"
+	// CardAbnoramlOccupyFaultCode card abnoraml occupy fault code
+	CardAbnoramlOccupyFaultCode = 0xFFFFFFFF01
 )
 
 var (
@@ -416,6 +418,7 @@ func LoadFaultCode(faultCodeBytes []byte) error {
 		SeparateNPUNetworkCodes:    StringTool.HexStringToInt(fileInfo.SeparateNPUNetworkCodes),
 		SubHealthFaultCodes:        StringTool.HexStringToInt(fileInfo.SubHealthFaultCodes),
 	}
+	faultTypeCode.PreSeparateNPUCodes = append(faultTypeCode.PreSeparateNPUCodes, CardAbnoramlOccupyFaultCode)
 
 	// It is not clear whether the current network fault is separated from the chip fault. The network fault configured
 	// in chip fault is temporarily mapped to network processing policy for processing.

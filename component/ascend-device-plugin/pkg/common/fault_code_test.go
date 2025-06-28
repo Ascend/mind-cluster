@@ -61,7 +61,7 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 			convey.So(LoadFaultCodeFromFile(), convey.ShouldBeNil)
 			convey.So(faultTypeCode.NotHandleFaultCodes, convey.ShouldResemble, []int64{2162298887})
 			convey.So(faultTypeCode.SeparateNPUCodes, convey.ShouldResemble, []int64{2162401793})
-			convey.So(faultTypeCode.PreSeparateNPUCodes, convey.ShouldResemble, []int64{2164753923})
+			convey.So(faultTypeCode.PreSeparateNPUCodes, convey.ShouldResemble, []int64{2164753923, CardAbnoramlOccupyFaultCode})
 			convey.So(len(faultTypeCode.RestartBusinessCodes), convey.ShouldEqual, 0)
 		})
 	})
