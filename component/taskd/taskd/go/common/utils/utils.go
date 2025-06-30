@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -27,8 +26,11 @@ import (
 	"strconv"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
+
+const maxReadBytes = 1024 * 1024
 
 // InitHwLog init hwlog
 func InitHwLog(logFileName string, ctx context.Context) error {
@@ -85,7 +87,7 @@ func StringToObj[T any](str string) (T, error) {
 
 // GetProfilingSwitch get profile switch status from file, if any fault happened return all switch off
 func GetProfilingSwitch(filePath string) (constant.ProfilingSwitch, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := utils.ReadLimitBytes(filePath, maxReadBytes)
 	if err != nil {
 		// if reading failed close all
 		err := fmt.Errorf("failed to read file %s, err%v", filePath, err)

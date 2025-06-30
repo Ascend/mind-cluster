@@ -26,6 +26,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
+	ut "ascend-common/common-utils/utils"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -56,7 +57,7 @@ func TestGetProfilingSwitchValidJson(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		// Mock read file content
-		patches.ApplyFunc(ioutil.ReadFile, func(path string) ([]byte, error) {
+		patches.ApplyFunc(ut.ReadLimitBytes, func(path string) ([]byte, error) {
 			return json.Marshal(constant.ProfilingSwitch{
 				CommunicationOperator: "ON",
 				Step:                  "OFF",

@@ -18,13 +18,13 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
 
@@ -40,7 +40,7 @@ func TestGetProfilingSwitchValidJson(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		// Mock read file content
-		patches.ApplyFunc(ioutil.ReadFile, func(path string) ([]byte, error) {
+		patches.ApplyFunc(utils.ReadLimitBytes, func(path string) ([]byte, error) {
 			return json.Marshal(constant.ProfilingSwitch{
 				CommunicationOperator: "ON",
 				Step:                  "OFF",
