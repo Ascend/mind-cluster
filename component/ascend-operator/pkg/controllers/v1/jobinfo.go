@@ -168,6 +168,7 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 	name := common.GenGeneralName(job.GetName(), strings.ToLower(string(rtype)), "0")
 	svc, err := r.getSvcFromApiserver(name, job.GetNamespace())
 	if err == nil {
+		hwlog.RunLog.Debugf("get service %s/%s success", job.GetNamespace(), name)
 		return svc, nil
 	}
 
@@ -176,7 +177,12 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 		if gerr != nil {
 			return nil, gerr
 		}
-		return r.createService(job.GetNamespace(), newSvc)
+		svc, err = r.createService(job.GetNamespace(), newSvc)
+		if err != nil {
+			return nil, err
+		}
+		hwlog.RunLog.Infof("create service %s/%s success", job.GetNamespace(), name)
+		return svc, err
 	}
 	return nil, err
 }

@@ -389,6 +389,7 @@ func (r *ASJobReconciler) createPodGroup(job metav1.Object, pgSpec v1beta1.PodGr
 	if err != nil {
 		return createdPodGroup, fmt.Errorf("unable to create PodGroup: %v", err)
 	}
+	hwlog.RunLog.Infof("create podGroup %s/%s success", job.GetNamespace(), createdPodGroup.Name)
 	return createdPodGroup, nil
 }
 

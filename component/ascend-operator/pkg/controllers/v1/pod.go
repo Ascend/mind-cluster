@@ -159,7 +159,12 @@ func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
 			p.Annotations = make(map[string]string, 1)
 		}
 		p.Annotations[api.PodRankIndexAnno] = strconv.FormatUint(rankIndex, decimal)
-		r.Update(context.TODO(), p)
+		err := r.Update(context.TODO(), p)
+		if err != nil {
+			hwlog.RunLog.Warnf("update pod %s/%s rank index %d error: %s", p.Namespace, p.Name, rankIndex, err)
+		} else {
+			hwlog.RunLog.Infof("update pod %s/%s rank index %d success", p.Namespace, p.Name, rankIndex)
+		}
 		rankIndex++
 	}
 	hwlog.RunLog.Info("write rank index success")
@@ -409,6 +414,7 @@ func (r *ASJobReconciler) createNewPod(pi *podInfo, replicas map[commonv1.Replic
 			job.Namespace, job.Name)
 		return err
 	}
+	hwlog.RunLog.Infof("create pod: %s/%s success", job.Namespace, podTemplate.Name)
 	return nil
 }
 

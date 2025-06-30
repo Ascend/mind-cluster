@@ -50,6 +50,7 @@ const noDefaultTemplate = `{
 const (
 	maxCommandLength         = 65535
 	logPath                  = "/var/log/ascend-docker-runtime/install-helper-run.log"
+	minCommandLength         = 2
 	installSceneIndexFromEnd = 2
 )
 
@@ -88,6 +89,9 @@ func main() {
 	}
 	var behavior string
 	hwlog.RunLog.Infof("command: %v", command)
+	if len(command) < minCommandLength {
+		log.Fatalf("error param")
+	}
 	installScene := command[len(command)-installSceneIndexFromEnd]
 	if installScene == process.InstallSceneDocker || installScene == process.InstallSceneIsula {
 		behavior, err = process.DockerProcess(command)

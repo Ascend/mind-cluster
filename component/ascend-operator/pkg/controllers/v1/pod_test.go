@@ -300,7 +300,7 @@ func TestCreateNewPod(t *testing.T) {
 		convey.Convey("03-create pod spec success should return nil", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "createPodSpec", func(_ *ASJobReconciler,
 				_ *podInfo, _ *commonv1.ReplicaSpec) (*corev1.PodTemplateSpec, error) {
-				return nil, nil
+				return &corev1.PodTemplateSpec{}, nil
 			})
 			defer patch.Reset()
 			err := rc.createNewPod(pi, replicas)
