@@ -154,6 +154,10 @@ func writeJsonDataByteToFile(superPodID string, data []byte) error {
 			return
 		}
 	}()
+	if _, err = utils.RealFileChecker(filePath, false, false, defaultSize); err != nil {
+		hwlog.RunLog.Errorf("file %s is opened, but check failed, err: %v", filePath, err)
+		return err
+	}
 
 	dataJsonStr := string(data)
 	if _, err = f.WriteString(dataJsonStr); err != nil {

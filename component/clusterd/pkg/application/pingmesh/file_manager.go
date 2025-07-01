@@ -38,6 +38,8 @@ const (
 
 	startIndex        = 1
 	confFileRetryTime = 3
+	// defaultSize default size of file allowed
+	defaultSize = 100
 )
 
 // NewCathelperConf new CathelperConf info
@@ -91,6 +93,10 @@ func writeConfigToFile(rasConfig *constant.CathelperConf, filePath string) error
 		var err error
 		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, defaultPerm)
 		if err == nil {
+			if _, err = utils.RealFileChecker(filePath, false, false, defaultSize); err != nil {
+				hwlog.RunLog.Errorf("file %s is opened, but check failed, err: %v", filePath, err)
+				return err
+			}
 			break
 		}
 		hwlog.RunLog.Errorf("failed to create or overwrite file: %v and retry times : %d", err, i)

@@ -623,7 +623,8 @@ func faultDevice(deviceInfo *common.NpuDevice) {
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
 	common.SaveDevFaultInfo(faultInfo)
-	hwlog.RunLog.Infof("create non-kubelet use chip %v fault", deviceInfo.LogicID)
+	hwlog.RunLog.Infof("create non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
+		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
 
 func recoverDevice(deviceInfo *common.NpuDevice) {
@@ -634,7 +635,8 @@ func recoverDevice(deviceInfo *common.NpuDevice) {
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
 	common.SaveDevFaultInfo(faultInfo)
-	hwlog.RunLog.Infof("recover non-kubelet use chip %v fault", deviceInfo.LogicID)
+	hwlog.RunLog.Infof("recover non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
+		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
 
 func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType string) {

@@ -620,17 +620,15 @@ func readSpecFile(path string) (*specs.Spec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("spec file doesnt exist %s: %v", path, err)
 	}
-
-	if _, err = mindxcheckutils.RealFileChecker(path, true, true, mindxcheckutils.DefaultSize); err != nil {
-		return nil, err
-	}
-
 	jsonFile, err := os.OpenFile(path, os.O_RDWR, stat.Mode())
 	if err != nil {
 		return nil, fmt.Errorf("cannot open oci spec file %s: %v", path, err)
 	}
 	defer jsonFile.Close()
-
+	if _, err = mindxcheckutils.RealFileChecker(path, false, true,
+		mindxcheckutils.DefaultSize); err != nil {
+		return nil, err
+	}
 	jsonContent, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read oci spec file %s: %v", path, err)
@@ -669,6 +667,10 @@ func writeSpecFile(path string, spec *specs.Spec) error {
 		return fmt.Errorf("cannot reopen spec file %s: %v", path, err)
 	}
 	defer jsonFile.Close()
+	if _, err = mindxcheckutils.RealFileChecker(path, false, true,
+		mindxcheckutils.DefaultSize); err != nil {
+		return err
+	}
 
 	jsonOutput, err := json.Marshal(spec)
 	if err != nil {

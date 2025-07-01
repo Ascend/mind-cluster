@@ -11,6 +11,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
@@ -119,6 +120,15 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
 		convey.So(msg, convey.ShouldResemble, normalMsgWithFaultInfo)
 	})
+	convey.Convey("faultList includes only L1 faults, nodeInfo is nil,"+
+		"should convert to normal msg", t, func() {
+		patch := gomonkey.ApplyFuncReturn(getNodeFaultInfo, nil)
+		defer patch.Reset()
+		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
+			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
+		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
+		convey.So(msg, convey.ShouldResemble, normalMsg)
+	})
 }
 
 func getMockFaultDeviceListForTest1() []constant.FaultDevice {
@@ -216,4 +226,105 @@ func TestFilterFault(t *testing.T) {
 		convey.So(filteredList, convey.ShouldResemble, []constant.FaultDevice{
 			{ServerName: "node1", DeviceId: "0", FaultLevel: constant.SeparateNPU}})
 	})
+}
+
+// Helper function to create a FaultMsgSignal with given fields
+func newFaultMsg(signalType string, jobId string, nodeFaultInfo []*fault.NodeFaultInfo) *fault.FaultMsgSignal {
+	return &fault.FaultMsgSignal{
+		SignalType:    signalType,
+		JobId:         jobId,
+		NodeFaultInfo: nodeFaultInfo,
+	}
+}
+
+// Helper function to create a NodeFault for testing
+func newNodeFault(nodeName string) *fault.NodeFaultInfo {
+	return &fault.NodeFaultInfo{
+		NodeName: nodeName,
+	}
+}
+
+type FaultMsgTestCase struct {
+	name     string
+	this     *fault.FaultMsgSignal
+	other    *fault.FaultMsgSignal
+	expected bool
+}
+
+func buildFaultMsgTestCases1() []FaultMsgTestCase {
+	return []FaultMsgTestCase{
+		{
+			name:     "TC01 - Both nil",
+			this:     nil,
+			other:    nil,
+			expected: true,
+		},
+		{
+			name:     "TC02 - This nil, Other is Normal",
+			this:     nil,
+			other:    newFaultMsg(constant.SignalTypeNormal, "", nil),
+			expected: true,
+		},
+		{
+			name:     "TC03 - This is Normal, Other nil",
+			this:     newFaultMsg(constant.SignalTypeNormal, "", nil),
+			other:    nil,
+			expected: true,
+		},
+		{
+			name:     "TC04 - Both are Normal",
+			this:     newFaultMsg(constant.SignalTypeNormal, "", nil),
+			other:    newFaultMsg(constant.SignalTypeNormal, "", nil),
+			expected: true,
+		},
+	}
+}
+
+func buildFaultMsgTestCases2() []FaultMsgTestCase {
+	return []FaultMsgTestCase{
+		{
+			name:     "TC05 - SignalType mismatch",
+			this:     newFaultMsg("Fault", "1", nil),
+			other:    newFaultMsg(constant.SignalTypeNormal, "1", nil),
+			expected: false,
+		},
+		{
+			name:     "TC06 - JobId mismatch",
+			this:     newFaultMsg("Fault", "1", nil),
+			other:    newFaultMsg("Fault", "2", nil),
+			expected: false,
+		},
+		{
+			name: "TC07 - NodeFaultInfo content different",
+			this: newFaultMsg("Fault", "1", []*fault.NodeFaultInfo{
+				newNodeFault("node1"),
+			}),
+			other: newFaultMsg("Fault", "1", []*fault.NodeFaultInfo{
+				newNodeFault("node2"),
+			}),
+			expected: false,
+		},
+		{
+			name: "TC08 - All fields match",
+			this: newFaultMsg("Fault", "1", []*fault.NodeFaultInfo{
+				newNodeFault("node1"),
+			}),
+			other: newFaultMsg("Fault", "1", []*fault.NodeFaultInfo{
+				newNodeFault("node1"),
+			}),
+			expected: true,
+		},
+	}
+}
+
+func TestCompareFaultMsg(t *testing.T) {
+	tests := buildFaultMsgTestCases1()
+	tests = append(tests, buildFaultMsgTestCases2()...)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := compareFaultMsg(tt.this, tt.other)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
