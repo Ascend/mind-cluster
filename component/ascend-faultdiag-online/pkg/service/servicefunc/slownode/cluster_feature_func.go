@@ -283,22 +283,26 @@ func clusterWriteFile(dir, fileName string, data map[string]any) {
 		return
 	}
 
-	// 检查目录是否存在，如果不存在则创建
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, os.ModePerm) // 创建目录，包括必要的父目录
-		if err != nil {
-			hwlog.RunLog.Errorf("[FD-OL SLOWNODE]created directory failed: %v", err)
-			return
+	if fileInfo, err := os.Lstat(dir); err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(dir, os.ModePerm) // create directory, including necessary parent directories
+			if err != nil {
+				hwlog.RunLog.Errorf("[FD-OL SLOWNODE]created directory failed: %v", err)
+				return
+			}
 		}
+	} else if (fileInfo.Mode() & os.ModeSymlink) != 0 {
+		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]the path %s is a symlink, unsupport", dir)
+		return
 	}
 
-	// 写入文件
+	// write the data
 	err = os.WriteFile(filePath, bytes, FileMode)
 	if err != nil {
 		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]wrote bytes to file(%s) failed: %v", filePath, err)
 		return
 	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]wrote data to file(%s) successfully.", filePath)
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]wrote data to file(%s) successfully", filePath)
 }
 
 func isMatchNodeIPs(jobId string, nodesIP []string) bool {
