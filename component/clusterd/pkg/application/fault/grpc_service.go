@@ -119,7 +119,9 @@ func (s *FaultServer) SubscribeFaultMsgSignal(request *fault.ClientInfo,
 	event := "subscribe fault msg signal"
 	logs.RecordLog(request.Role, event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog(request.Role, event, res)
+	defer func() {
+		logs.RecordLog(request.Role, event, res)
+	}()
 
 	requestInfo := fmt.Sprintf("jobId=%s, role=%s", request.JobId, request.Role)
 	hwlog.RunLog.Infof("receive Subscribe fault message signal request, %s", requestInfo)
@@ -152,7 +154,9 @@ func (s *FaultServer) GetFaultMsgSignal(ctx context.Context, request *fault.Clie
 	event := "get fault info"
 	logs.RecordLog(request.Role, event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog(request.Role, event, res)
+	defer func() {
+		logs.RecordLog(request.Role, event, res)
+	}()
 
 	hwlog.RunLog.Infof("job %s role %s call get faults", request.JobId, request.Role)
 	if !s.limiter.Allow(ctx) {

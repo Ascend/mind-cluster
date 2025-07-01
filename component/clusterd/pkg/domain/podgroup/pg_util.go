@@ -4,8 +4,10 @@
 package podgroup
 
 import (
+	"errors"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
@@ -39,6 +41,21 @@ func GetJobKeyAndNameByPG(info *v1beta1.PodGroup) (key, name string) {
 	}
 	hwlog.RunLog.Error("get unique key failed, podGroup don't have controller")
 	return "", ""
+}
+
+// GetOwnerRefByPG get owner reference by pg
+func GetOwnerRefByPG(info *v1beta1.PodGroup) (v1.OwnerReference, error) {
+	if info == nil {
+		hwlog.RunLog.Error("pg info is nil")
+		return v1.OwnerReference{}, errors.New("pg info is nil")
+	}
+	for _, owner := range info.GetOwnerReferences() {
+		if owner.Controller != nil && *owner.Controller {
+			return owner, nil
+		}
+	}
+	hwlog.RunLog.Errorf("pg[%s/%s] don't have controller", info.Namespace, info.Name)
+	return v1.OwnerReference{}, errors.New("pg don't have controller")
 }
 
 // GetJobTypeByPG get job type by podGroup

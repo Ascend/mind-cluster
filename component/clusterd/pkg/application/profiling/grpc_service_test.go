@@ -4,14 +4,13 @@
 package profiling
 
 import (
-	"clusterd/pkg/domain/job"
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +19,7 @@ import (
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/profile"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/kube"
@@ -200,7 +200,7 @@ func setupCreateDataTraceCmSuccessMock(patches *gomonkey.Patches) {
 	patches.ApplyMethodFunc(
 		&profile.DataTraceController{},
 		"CreateDataTraceCm",
-		func(*profiling.ProfilingSwitch) error { return nil },
+		func(*profiling.ProfilingSwitch, metav1.OwnerReference) error { return nil },
 	)
 }
 
@@ -208,7 +208,7 @@ func setupCreateDataTraceCmFailMock(patches *gomonkey.Patches) {
 	patches.ApplyMethodFunc(
 		&profile.DataTraceController{},
 		"CreateDataTraceCm",
-		func(*profiling.ProfilingSwitch) error { return fmt.Errorf("creation error") },
+		func(*profiling.ProfilingSwitch, metav1.OwnerReference) error { return fmt.Errorf("creation error") },
 	)
 }
 
@@ -216,7 +216,7 @@ func setupUpdateDataTraceCmSuccessMock(patches *gomonkey.Patches) {
 	patches.ApplyMethodFunc(
 		&profile.DataTraceController{},
 		"UpdateDataTraceCm",
-		func(*profiling.ProfilingSwitch) error { return nil },
+		func(*profiling.ProfilingSwitch, metav1.OwnerReference) error { return nil },
 	)
 }
 
@@ -224,7 +224,7 @@ func setupUpdateDataTraceCmFailMock(patches *gomonkey.Patches) {
 	patches.ApplyMethodFunc(
 		&profile.DataTraceController{},
 		"UpdateDataTraceCm",
-		func(*profiling.ProfilingSwitch) error { return fmt.Errorf("update error") },
+		func(*profiling.ProfilingSwitch, metav1.OwnerReference) error { return fmt.Errorf("update error") },
 	)
 }
 

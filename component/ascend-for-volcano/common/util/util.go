@@ -295,7 +295,7 @@ func GetDeviceType(devList map[string]string) string {
 			return Ascend310
 		}
 	}
-	klog.V(LogErrorLev).Info("cannot decide device type from dev list")
+	klog.V(LogDebugLev).Info("cannot decide device type from dev list")
 	return Ascend910
 }
 

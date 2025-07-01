@@ -46,10 +46,10 @@ func getDemoPodGroup(pgName, nameSpace, jobUid string) *v1beta1.PodGroup {
 	podGroupInfo := &v1beta1.PodGroup{}
 	podGroupInfo.Name = pgName
 	podGroupInfo.Namespace = nameSpace
-	isControlle := true
+	isControl := true
 	owner := v1.OwnerReference{
 		Name:       pgName,
-		Controller: &isControlle,
+		Controller: &isControl,
 		Kind:       vcJobKey,
 		UID:        types.UID(jobUid)}
 	podGroupInfo.SetOwnerReferences([]v1.OwnerReference{owner})

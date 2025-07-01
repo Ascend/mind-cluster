@@ -30,7 +30,9 @@ func (s *PubFaultService) SendPublicFault(ctx context.Context,
 	event := "send public fault"
 	logs.RecordLog(req.Resource, event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog(req.Resource, event, res)
+	defer func() {
+		logs.RecordLog(req.Resource, event, res)
+	}()
 
 	pubFaultInfo := constructPubFaultInfo(req)
 	if err := PubFaultCollector(pubFaultInfo); err != nil {

@@ -6,10 +6,12 @@
 package podgroup
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"clusterd/pkg/common/constant"
@@ -177,5 +179,33 @@ func TestJudgeRestartProcessByJobKey(t *testing.T) {
 				convey.So(JudgeRestartProcessByJobKey(jobUid1), convey.ShouldBeTrue)
 			},
 		)
+	})
+}
+
+func TestGetOwnerRefByPG(t *testing.T) {
+	convey.Convey("test GetOwnerRefByPG", t, func() {
+		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
+		convey.Convey("get owner reference success", func() {
+			isControl := true
+			expOwner := v1.OwnerReference{
+				Name:       pgName1,
+				Controller: &isControl,
+				Kind:       vcJobKey,
+				UID:        types.UID(jobUid1)}
+			owner, err := GetOwnerRefByPG(pgDemo1)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(owner, convey.ShouldResemble, expOwner)
+		})
+		convey.Convey("get owner reference failed, info is nil", func() {
+			_, err := GetOwnerRefByPG(nil)
+			expErr := errors.New("pg info is nil")
+			convey.So(err, convey.ShouldResemble, expErr)
+		})
+		convey.Convey("get owner reference failed, pg don't have controller", func() {
+			pgDemo1.OwnerReferences = []v1.OwnerReference{}
+			_, err := GetOwnerRefByPG(pgDemo1)
+			expErr := errors.New("pg don't have controller")
+			convey.So(err, convey.ShouldResemble, expErr)
+		})
 	})
 }

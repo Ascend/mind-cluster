@@ -48,20 +48,23 @@ func (dtc *DataTraceController) IsDataTraceCmExist() (*v1.ConfigMap, error) {
 }
 
 // UpdateDataTraceCm to update the datatrace configmap with in parameters
-func (dtc *DataTraceController) UpdateDataTraceCm(inParam *profiling.ProfilingSwitch) error {
-	if inParam == nil {
+func (dtc *DataTraceController) UpdateDataTraceCm(switchParam *profiling.ProfilingSwitch,
+	owner metav1.OwnerReference) error {
+	if switchParam == nil {
 		return errors.New("the incoming param is nil")
 	}
 	dataTraceCm, err := kube.GetConfigMap(DataTraceCmPrefix+dtc.JobName, dtc.JobNamespace)
 	if err != nil {
 		return fmt.Errorf(" failed to get cm,%v", err)
 	}
+	dataTraceCm.OwnerReferences = []metav1.OwnerReference{owner}
+
 	data := dataTraceCm.Data[DataTraceCmProfilingSwitchKey]
 	var dataTraceParam SwitchStruct
 	if err := json.Unmarshal([]byte(data), &dataTraceParam); err != nil {
 		hwlog.RunLog.Error("the content of current data-trace cm is not serialize legally, will cover with new")
 	}
-	dtc.setDataTraceData(&dataTraceParam, inParam)
+	dtc.setDataTraceData(&dataTraceParam, switchParam)
 	newProParam, err := json.Marshal(dataTraceParam)
 	if err != nil {
 		return fmt.Errorf("failed to marshal content, err: %v", err)
@@ -77,19 +80,22 @@ func (dtc *DataTraceController) UpdateDataTraceCm(inParam *profiling.ProfilingSw
 }
 
 // CreateDataTraceCm creates a new data trace for the given profile
-func (dtc *DataTraceController) CreateDataTraceCm(inParam *profiling.ProfilingSwitch) error {
-	if inParam == nil {
+func (dtc *DataTraceController) CreateDataTraceCm(switchParam *profiling.ProfilingSwitch,
+	owner metav1.OwnerReference) error {
+	if switchParam == nil {
 		return errors.New("the incoming param is nil")
 	}
+
 	cm := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DataTraceCmPrefix + dtc.JobName,
-			Namespace: dtc.JobNamespace,
-			Labels:    map[string]string{"reset": "true"},
+			Name:            DataTraceCmPrefix + dtc.JobName,
+			Namespace:       dtc.JobNamespace,
+			Labels:          map[string]string{"reset": "true"},
+			OwnerReferences: []metav1.OwnerReference{owner},
 		},
 	}
 	var dataTraceParam SwitchStruct
-	dtc.setDataTraceData(&dataTraceParam, inParam)
+	dtc.setDataTraceData(&dataTraceParam, switchParam)
 	newProParam, err := json.Marshal(dataTraceParam)
 	if err != nil {
 		return fmt.Errorf("failed to marshal content, err: %v", err)

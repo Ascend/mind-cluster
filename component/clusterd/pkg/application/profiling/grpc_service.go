@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
@@ -19,6 +20,7 @@ import (
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/domain/profile"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/kube"
@@ -63,7 +65,9 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 	event := "modify profiling marker status"
 	logs.RecordLog("", event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog("", event, res)
+	defer func() {
+		logs.RecordLog("", event, res)
+	}()
 
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")
@@ -72,6 +76,7 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 			Code: ErrInvalidParam}, fmt.Errorf("the format of jobNsName is not namespace/jobName")
 	}
 	jobNs, jobName := jobNameInfo[0], jobNameInfo[1]
+	owner := getPGOwner(jobNs, jobName)
 	dtc := profile.NewDataTraceController(jobNs, jobName)
 	if cm, err := kube.GetConfigMap(profile.DataTraceCmPrefix+dtc.JobName,
 		dtc.JobNamespace); cm == nil || err != nil {
@@ -79,7 +84,7 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to found comfigmap:[%s/%s]",
 				dtc.JobNamespace, dtc.JobName), Code: ErrNotFound}, err
 		}
-		createErr := dtc.CreateDataTraceCm(in.ProfilingSwitch)
+		createErr := dtc.CreateDataTraceCm(in.ProfilingSwitch, owner)
 		notifyErr := ps.notifySubscriber(jobName, jobNs, dtc, in)
 		if createErr != nil && notifyErr != nil {
 			return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to create comfigmap:[%s/%s]."+
@@ -90,7 +95,7 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 		return &profiling.DataTypeRes{Message: fmt.Sprintf("comfigmap:[%s/%s] has been created"+
 			" and param is updated to change profiling marker status", dtc.JobNamespace, dtc.JobName), Code: OK}, nil
 	}
-	updateCmErr := dtc.UpdateDataTraceCm(in.ProfilingSwitch)
+	updateCmErr := dtc.UpdateDataTraceCm(in.ProfilingSwitch, owner)
 	notifyErr := ps.notifySubscriber(jobName, jobNs, dtc, in)
 	if updateCmErr != nil && notifyErr != nil {
 		return &profiling.DataTypeRes{Message: fmt.Sprintf("failed to update comfigmap:[%s/%s]."+
@@ -101,6 +106,17 @@ func (ps *SwitchManager) ModifyTrainingDataTraceSwitch(ctx context.Context,
 	response := &profiling.DataTypeRes{Message: "successfully changed profiling marker enable status", Code: OK}
 	hwlog.RunLog.Infof("successfully changed profiling marker enable status: %#v", in.ProfilingSwitch)
 	return response, nil
+}
+
+func getPGOwner(jobNs, jobName string) v1.OwnerReference {
+	jobInfo := job.GetJobByNameSpaceAndName(jobName, jobNs)
+	pgInfo := podgroup.GetPodGroup(jobInfo.Key)
+	owner, err := podgroup.GetOwnerRefByPG(&pgInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("get owner from pg failed, error: %v", err)
+		return v1.OwnerReference{}
+	}
+	return owner
 }
 
 func (ps *SwitchManager) notifySubscriber(jobName string, jobNs string, dtc *profile.DataTraceController,
@@ -138,7 +154,9 @@ func (ps *SwitchManager) GetTrainingDataTraceSwitch(ctx context.Context,
 	event := "get profiling switch info"
 	logs.RecordLog("", event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog("", event, res)
+	defer func() {
+		logs.RecordLog("", event, res)
+	}()
 
 	jobNsName := in.GetJobNsName()
 	jobNameInfo := strings.Split(jobNsName, "/")
@@ -182,7 +200,9 @@ func (ps *SwitchManager) SubscribeDataTraceSwitch(
 	event := "subscribe profiling message signal"
 	logs.RecordLog(clientInfo.Role, event, constant.Start)
 	res := constant.Failed
-	defer logs.RecordLog("", event, res)
+	defer func() {
+		logs.RecordLog("", event, res)
+	}()
 
 	hwlog.RunLog.Infof("receive Subscribe profiling message signal request, %v", clientInfo)
 	publisher, ok := ps.getPublisher(clientInfo.JobId)
