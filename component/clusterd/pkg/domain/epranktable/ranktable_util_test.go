@@ -308,17 +308,8 @@ func TestGetGlobalRankTableInfo(t *testing.T) {
 				},
 			},
 		}
-		convey.Convey("when pdDeploymentMode is invalid", func() {
-			_, err := getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1, "invalid")
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("when pdDeploymentMode is SingleNodePdDeployMode", func() {
-			info, err := getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1, constant.SingleNodePdDeployMode)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(info, convey.ShouldNotBeEmpty)
-		})
 		convey.Convey("when pdDeploymentMode is CrossNodePdDeployMode", func() {
-			info, err := getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1, constant.CrossNodePdDeployMode)
+			info, err := getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(info, convey.ShouldNotBeEmpty)
 		})

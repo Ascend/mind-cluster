@@ -257,39 +257,19 @@ func GenerateServerGroupList(a2RankTableList []*A2RankTable) []*ServerGroup {
 }
 
 // getGlobalRankTableInfo get string global rank table info
-func getGlobalRankTableInfo(a2RankTableList []*A2RankTable, serverGroup0, serverGroup1 *ServerGroup,
-	pdDeploymentMode string) (string, error) {
-	var pdDeployModeRankTable = &PdDeployModeRankTable{}
-	switch pdDeploymentMode {
-	case constant.SingleNodePdDeployMode:
-		serverGroup2 := GenerateServerGroup2(a2RankTableList)
-		singleNodePdDeployModeRankTable := &PdDeployModeRankTable{
-			Version: constant.RankTableVersion,
-			Status:  constant.StatusRankTableCompleted,
-			ServerGroupList: []*ServerGroup{
-				serverGroup0,
-				serverGroup1,
-				serverGroup2,
-			},
-		}
-		pdDeployModeRankTable = singleNodePdDeployModeRankTable
-	case constant.CrossNodePdDeployMode:
-		serverGroupList := GenerateServerGroupList(a2RankTableList)
-		crossNodePdDeployModeRankTable := &PdDeployModeRankTable{
-			Version: a2RankTableList[0].Version,
-			Status:  constant.StatusRankTableCompleted,
-			ServerGroupList: []*ServerGroup{
-				serverGroup0,
-				serverGroup1,
-			},
-		}
-		crossNodePdDeployModeRankTable.ServerGroupList =
-			append(crossNodePdDeployModeRankTable.ServerGroupList, serverGroupList...)
-		pdDeployModeRankTable = crossNodePdDeployModeRankTable
-	default:
-		return "", fmt.Errorf("pd deployment mode is invalid")
+func getGlobalRankTableInfo(a2RankTableList []*A2RankTable, serverGroup0, serverGroup1 *ServerGroup) (string, error) {
+	serverGroupList := GenerateServerGroupList(a2RankTableList)
+	crossNodePdDeployModeRankTable := &PdDeployModeRankTable{
+		Version: a2RankTableList[0].Version,
+		Status:  constant.StatusRankTableCompleted,
+		ServerGroupList: []*ServerGroup{
+			serverGroup0,
+			serverGroup1,
+		},
 	}
-	globalRankTableInfo, err := pdDeployModeRankTable.ToString()
+	crossNodePdDeployModeRankTable.ServerGroupList =
+		append(crossNodePdDeployModeRankTable.ServerGroupList, serverGroupList...)
+	globalRankTableInfo, err := crossNodePdDeployModeRankTable.ToString()
 	if err != nil {
 		return "", err
 	}

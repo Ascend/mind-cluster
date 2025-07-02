@@ -50,7 +50,7 @@ func TestGeneratePdDeployModeRankTable(t *testing.T) {
 				return nil, fmt.Errorf("mock error")
 			})
 			defer patches.Reset()
-			info, retry := GeneratePdDeployModeRankTable(msg, constant.CrossNodePdDeployMode)
+			info, retry := GeneratePdDeployModeRankTable(msg)
 			convey.So(retry, convey.ShouldBeTrue)
 			convey.So(info, convey.ShouldBeEmpty)
 		})
@@ -83,7 +83,7 @@ func TestGeneratePdDeployModeRankTable(t *testing.T) {
 				}, nil
 			})
 			defer patchGenGroup.Reset()
-			info, retry := GeneratePdDeployModeRankTable(msg, constant.SingleNodePdDeployMode)
+			info, retry := GeneratePdDeployModeRankTable(msg)
 			convey.So(retry, convey.ShouldBeFalse)
 			convey.So(info, convey.ShouldNotBeEmpty)
 		})

@@ -84,19 +84,11 @@ func (rm *RankTableManager) handleGenerateGlobalRankTableMessage() bool {
 		return false
 	}
 
-	// get pd deployment mode
-	pdDeploymentMode, err := job.GetPdDeploymentMode(message.JobId, message.Namespace, constant.ServerAppType)
-	if err != nil {
-		hwlog.RunLog.Errorf("get pd deployment mode failed, err: %v", err)
-		rm.rankTableQueue.AddRateLimited(item)
-		return false
-	}
-
 	// global ranktable information that needs to be pushed to grpc
 	var globalRankTableInfo string
 	// indicate whether a retry is required
 	var retry bool
-	globalRankTableInfo, retry = GeneratePdDeployModeRankTable(message, pdDeploymentMode)
+	globalRankTableInfo, retry = GeneratePdDeployModeRankTable(message)
 
 	if retry {
 		rm.rankTableQueue.AddRateLimited(item)
@@ -107,7 +99,7 @@ func (rm *RankTableManager) handleGenerateGlobalRankTableMessage() bool {
 }
 
 // GeneratePdDeployModeRankTable generate single node or cross node pd deploy mode rank table
-func GeneratePdDeployModeRankTable(message *GenerateGlobalRankTableMessage, pdDeploymentMode string) (string, bool) {
+func GeneratePdDeployModeRankTable(message *GenerateGlobalRankTableMessage) (string, bool) {
 	a2RankTableList, err := GetA2RankTableList(message)
 	if err != nil {
 		hwlog.RunLog.Errorf("get a2 rank table list failed, err: %v", err)
@@ -124,7 +116,7 @@ func GeneratePdDeployModeRankTable(message *GenerateGlobalRankTableMessage, pdDe
 		return "", true
 	}
 	var globalRankTableInfo string
-	globalRankTableInfo, err = getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1, pdDeploymentMode)
+	globalRankTableInfo, err = getGlobalRankTableInfo(a2RankTableList, serverGroup0, serverGroup1)
 	if err != nil {
 		hwlog.RunLog.Errorf("get global rank table info failed, err: %v", err)
 		return "", true
