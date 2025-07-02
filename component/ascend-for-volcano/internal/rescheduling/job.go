@@ -326,10 +326,8 @@ func (fJob *FaultJob) updateSuperPodsReschdInfo(env plugin.ScheduleEnv) {
 		}
 		env.SuperPodInfo.SuperPodFaultTaskNodes[fJob.JobUID] = nodesName
 	}
-	if _, ok := env.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]; !ok {
-		if len(fJob.SuperPods) > 0 {
-			env.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID] = fJob.SuperPods
-		}
+	if len(fJob.SuperPods) > 0 {
+		env.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID] = fJob.SuperPods
 	}
 	klog.V(util.LogInfoLev).Infof("cache superpods %+v", env.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID])
 }
