@@ -366,3 +366,9 @@
    >![](doc/figures/icon-note.gif) **说明：**\
    >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0。\
    > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。
+
+   >![](doc/figures/icon-note.gif) **说明：**\
+   > 执行build.sh脚本时会修改以下volcano开源代码，具体修改详见ascend-for-volcano/build/build.sh文件。\
+   > volcano.sh/volcano/pkg/controllers/job/state/running.go \
+   > volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go \
+   > volcano.sh/volcano/go.mod

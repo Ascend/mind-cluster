@@ -149,12 +149,22 @@ function replace_node_score() {
     echo "volcano version is $BASE_VER, will not change allocate.go codes"
 }
 
+function replace_k8s_version() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/go.mod"
+    if [[ "$BASE_VER" == "v1.7.0" ]];then
+      sed -i "s/1.25.0/1.25.14/g" "$REPLACE_FILE"
+      return
+    fi
+    echo "volcano version is $BASE_VER, will not change go.mod codes"
+}
+
 function main() {
   clean
   copy_yaml
   replace_code
   replace_node_predicate
   replace_node_score
+  replace_k8s_version
   build
 }
 
