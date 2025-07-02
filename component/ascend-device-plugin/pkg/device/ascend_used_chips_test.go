@@ -24,8 +24,6 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/api/services/tasks/v1"
-	"github.com/containerd/containerd/api/types/task"
 	"github.com/containerd/containerd/cio"
 	"github.com/containerd/containerd/containers"
 	"github.com/containerd/containerd/oci"
@@ -35,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
-	npuCommon "ascend-common/devmanager/common"
 )
 
 // TestGetUseChips for test GetUsedChips
@@ -77,120 +74,19 @@ func TestGetUseChips(t *testing.T) {
 func TestGetChipsUsedByProcess(t *testing.T) {
 	convey.Convey("test getChipsUsedByProcess", t, func() {
 		tool := mockAscendTools()
-		convey.Convey("when presetVDevice is false, used chips should be empty", func() {
-			common.ParamOption.PresetVDevice = false
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		common.ParamOption.PresetVDevice = true
-		convey.Convey("when get device list failed, used chips should be empty", func() {
-			err := fmt.Errorf("failed to get device list")
-			mockDeviceList := mockGetDeviceList(0, nil, err)
-			defer mockDeviceList.Reset()
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 0)
-
-		})
-		convey.Convey("when device list is empty, used chips should be empty", func() {
-			mockDeviceList := mockGetDeviceList(0, []int32{}, nil)
-			defer mockDeviceList.Reset()
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		mockDeviceList := mockGetDeviceList(1, []int32{0}, nil)
-		defer mockDeviceList.Reset()
-		convey.Convey("when get process info failed, used chips should be empty", func() {
-			err := fmt.Errorf("failed to get device process info")
-			mockDevProcessInfo := mockGetDevProcessInfo(nil, err)
-			defer mockDevProcessInfo.Reset()
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when device process num is 0, used chips should be empty", func() {
-			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 0}, nil)
-			defer mockDevProcessInfo.Reset()
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when device process num is not 0, used chips should not be empty", func() {
-			mockDevProcessInfo := mockGetDevProcessInfo(&npuCommon.DevProcessInfo{ProcNum: 1}, nil)
-			defer mockDevProcessInfo.Reset()
-			res := tool.getChipsUsedByProcess()
-			convey.So(len(res), convey.ShouldEqual, 1)
-		})
+		res := tool.getChipsUsedByProcess()
+		convey.So(len(res), convey.ShouldEqual, 0)
 	})
 }
 
 var testErr = fmt.Errorf("test error")
 
-func testGetChipsUsedByContainerdCase1(tool AscendTools) {
-	convey.Convey("when containerd client is nil, result should be empty", func() {
-		tool.containerdClient = nil
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 0)
-	})
-	convey.Convey("when list namespaces failed, result should be empty", func() {
-		mock := gomonkey.ApplyMethodReturn(tool.containerdClient.NamespaceService(),
-			"List", nil, testErr)
-		defer mock.Reset()
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 0)
-	})
-}
-
-func testGetChipsUsedByContainerdCase2(tool AscendTools) {
-	convey.Convey("when list tasks failed, result should be empty", func() {
-		mock := gomonkey.ApplyMethodReturn(tool.containerdClient.TaskService(),
-			"List", nil, testErr)
-		defer mock.Reset()
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 0)
-	})
-	convey.Convey("when taskList is empty, result should be empty", func() {
-		mock := gomonkey.ApplyMethodReturn(tool.containerdClient.TaskService(),
-			"List", &tasks.ListTasksResponse{Tasks: []*task.Process{}}, nil)
-		defer mock.Reset()
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 0)
-	})
-}
-
-func testGetChipsUsedByContainerdCase3(tool AscendTools) {
-	convey.Convey("when container use chip without ascend runtime, result should not be empty", func() {
-		mock := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&tool), "getDeviceWithoutAscendRuntime",
-			func(_ *AscendTools, _ containerd.Container, _ context.Context) sets.String {
-				return sets.NewString().Insert(ascend910FakeID0)
-			})
-		defer mock.Reset()
-		res := tool.getChipsUsedByContainerd()
-		convey.So(len(res), convey.ShouldEqual, 1)
-	})
-}
-
 // TestGetChipsUsedByContainerd for test getChipsUsedByContainerd
 func TestGetChipsUsedByContainerd(t *testing.T) {
 	convey.Convey("test getChipsUsedByContainerd", t, func() {
 		tool := mockAscendTools()
-		testGetChipsUsedByContainerdCase1(tool)
-		namespaceList := []string{"default"}
-		mockListNameSpace := gomonkey.ApplyMethodReturn(tool.containerdClient.NamespaceService(),
-			"List", namespaceList, nil)
-		defer mockListNameSpace.Reset()
-		testGetChipsUsedByContainerdCase2(tool)
-		mockListTask := gomonkey.ApplyMethodReturn(tool.containerdClient.TaskService(),
-			"List", &tasks.ListTasksResponse{Tasks: []*task.Process{&task.Process{}}}, nil)
-		defer mockListTask.Reset()
-		convey.Convey("when load container failed, result should be empty", func() {
-			mock := gomonkey.ApplyMethodReturn(tool.containerdClient,
-				"LoadContainer", nil, testErr)
-			defer mock.Reset()
-			res := tool.getChipsUsedByContainerd()
-			convey.So(len(res), convey.ShouldEqual, 0)
-		})
-		mockLoadContainer := gomonkey.ApplyMethodReturn(tool.containerdClient,
-			"LoadContainer", *new(containerd.Container), nil)
-		defer mockLoadContainer.Reset()
-		testGetChipsUsedByContainerdCase3(tool)
+		res := tool.getChipsUsedByContainerd()
+		convey.So(len(res), convey.ShouldEqual, 0)
 	})
 }
 

@@ -20,11 +20,8 @@ import (
 	"fmt"
 
 	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/api/services/tasks/v1"
-	"github.com/containerd/containerd/namespaces"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -39,89 +36,12 @@ func (tool *AscendTools) GetUsedChips() sets.String {
 
 // getChipsUsedByProcess return chips used by process
 func (tool *AscendTools) getChipsUsedByProcess() sets.String {
-	if !common.ParamOption.PresetVDevice {
-		return sets.String{}
-	}
-	_, logicIDs, err := tool.dmgr.GetDeviceList()
-	if err != nil {
-		hwlog.RunLog.Warnf("get device list failed, err: %v", err)
-		return sets.String{}
-	}
-	if len(logicIDs) < 1 {
-		hwlog.RunLog.Warn("get device list failed, logicID is empty")
-		return sets.String{}
-	}
-	usedChips := make([]string, 0, len(logicIDs))
-	for _, logicID := range logicIDs {
-		chipInfo, err := tool.dmgr.GetDevProcessInfo(logicID)
-		if err != nil {
-			// use vnpu will report an 8255 error
-			hwlog.RunLog.Debugf("get device process info failed, err: %v", err)
-			continue
-		}
-		if chipInfo.ProcNum != 0 {
-			hwlog.RunLog.Debugf("the card logicID:[%d] is used, chipInfo: %#v", logicID, chipInfo)
-			davinCidev, err := tool.getDavinCiDev(logicID)
-			if err != nil {
-				hwlog.RunLog.Errorf("get davinci dev by logicID:[%d] failed, err: %v", logicID, err)
-				continue
-			}
-			chipName := fmt.Sprintf("%s-%d", tool.name, davinCidev.PhyID)
-			usedChips = append(usedChips, chipName)
-		}
-	}
-	curProcUsedChips := sets.NewString(usedChips...)
-	if !curProcUsedChips.Equal(tool.lastUsedChipsByProcess) {
-		hwlog.RunLog.Infof("process used chips: %v", usedChips)
-		tool.lastUsedChipsByProcess = curProcUsedChips
-	}
-	return curProcUsedChips
+	return sets.String{}
 }
 
 // getChipsUsedByContainerd return chips used by process
 func (tool *AscendTools) getChipsUsedByContainerd() sets.String {
-	usedChips := sets.NewString()
-	if tool.containerdClient == nil {
-		hwlog.RunLog.Debug("containerd client is nil")
-		return usedChips
-	}
-	nss, err := tool.containerdClient.NamespaceService().List(context.Background())
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to get namespace list: %v", err)
-		return usedChips
-	}
-	hwlog.RunLog.Debugf("containerd namespace list: %v", nss)
-	curUsedChipsContainerMap := make(map[string]sets.String)
-	for _, ns := range nss {
-		ctx := namespaces.WithNamespace(context.Background(), ns)
-		taskList, err := tool.containerdClient.TaskService().List(ctx, &tasks.ListTasksRequest{})
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to get task list: %v", err)
-			continue
-		}
-		if len(taskList.Tasks) == 0 {
-			hwlog.RunLog.Debugf("no tasks found in namespace %s", ns)
-			continue
-		}
-		for _, taskInfo := range taskList.Tasks {
-			hwlog.RunLog.Debugf("Task ID: %s, PID: %d", taskInfo.ID, taskInfo.Pid)
-			containerObj, err := tool.containerdClient.LoadContainer(ctx, taskInfo.ID)
-			if err != nil {
-				hwlog.RunLog.Warnf("failed to load container %s, err: %v", taskInfo.ID, err)
-				continue
-			}
-			usedChipsWithoutAscendRuntime := tool.getDeviceWithoutAscendRuntime(containerObj, ctx)
-			if usedChipsWithoutAscendRuntime.Len() > 0 {
-				curUsedChipsContainerMap[taskInfo.ID] = usedChipsWithoutAscendRuntime
-			}
-			usedChips = usedChips.Union(usedChipsWithoutAscendRuntime)
-		}
-	}
-	if !common.CompareStringSetMap(curUsedChipsContainerMap, tool.lastUsedChipsContainerMap) {
-		hwlog.RunLog.Infof("containerd used chips: %v", curUsedChipsContainerMap)
-		tool.lastUsedChipsContainerMap = curUsedChipsContainerMap
-	}
-	return usedChips
+	return sets.String{}
 }
 
 func (tool *AscendTools) getDeviceWithoutAscendRuntime(containerObj containerd.Container,
