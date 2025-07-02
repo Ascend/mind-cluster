@@ -17,8 +17,8 @@ import (
 
 var ReportInfoCollector *JobReportInfoCollector
 
-// ReportTimeExpireTime report time expire time
-const ReportTimeExpireTime = 10 * 1000
+// dataExpireTime report time expire time
+const dataExpireTime = 60 * 1000
 
 // JobReportInfoCollector job report info collector
 type JobReportInfoCollector struct {
@@ -52,7 +52,7 @@ func (reportInfos *JobReportInfoCollector) GetInfo(jobId, nodeName, deviceName s
 		return noReport
 	}
 	currentTime := time.Now().UnixMilli()
-	if currentTime-info.RecoverTime > ReportTimeExpireTime {
+	if currentTime-info.RecoverTime > dataExpireTime {
 		reportInfos.deleteInfo(jobId, nodeName, deviceName)
 		hwlog.RunLog.Infof("delete expired report info(%s, %s, %s), info: %v", jobId, nodeName, deviceName, info)
 		return noReport

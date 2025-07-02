@@ -102,7 +102,7 @@ func TestGetInfoCollectTimeout(t *testing.T) {
 			JobId: {
 				NodeName: {
 					DeviceName: {
-						RecoverTime:  time.Now().UnixMilli() - ReportTimeExpireTime - 1,
+						RecoverTime:  time.Now().UnixMilli() - dataExpireTime - 1,
 						CompleteTime: constant.JobNotRecoverComplete,
 					},
 				},
