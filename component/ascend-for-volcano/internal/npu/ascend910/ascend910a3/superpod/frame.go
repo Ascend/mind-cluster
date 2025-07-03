@@ -423,7 +423,7 @@ func (tp *module910SuperPod) selectNodeFromOriginVSuperPod(fJob *rescheduling.Fa
 		fJob.SuperPods = tp.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]
 	}
 	if tp.ifPodLevelRescheduling(fJob) {
-		return tp.selectForPodRescheduling(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
+		return tp.selectForPodRescheduling(fJob, selectNodes, vSuperPodID)
 	}
 	return tp.selectForJobRescheduling(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
 }
@@ -431,6 +431,9 @@ func (tp *module910SuperPod) selectNodeFromOriginVSuperPod(fJob *rescheduling.Fa
 func (tp *module910SuperPod) selectForJobRescheduling(fJob *rescheduling.FaultJob, sMap map[string]float64,
 	selectNodes map[string][]plugin.SuperNode, totalNodes map[int32]superPod,
 	vSuperPodID map[string]bool) (map[string]struct{}, error) {
+	if selectNodes == nil || vSuperPodID == nil {
+		return nil, nil
+	}
 	notReadySuperPod := make(map[string]struct{})
 	for superPodId, superPod := range fJob.SuperPods {
 		count := 0
@@ -453,9 +456,11 @@ func (tp *module910SuperPod) selectForJobRescheduling(fJob *rescheduling.FaultJo
 	return notReadySuperPod, nil
 }
 
-func (tp *module910SuperPod) selectForPodRescheduling(fJob *rescheduling.FaultJob, sMap map[string]float64,
-	selectNodes map[string][]plugin.SuperNode, totalNodes map[int32]superPod,
-	vSuperPodID map[string]bool) (map[string]struct{}, error) {
+func (tp *module910SuperPod) selectForPodRescheduling(fJob *rescheduling.FaultJob,
+	selectNodes map[string][]plugin.SuperNode, vSuperPodID map[string]bool) (map[string]struct{}, error) {
+	if selectNodes == nil || vSuperPodID == nil {
+		return nil, nil
+	}
 	notReadySuperPod := make(map[string]struct{})
 	for superPodId, superPod := range fJob.SuperPods {
 		count := 0
