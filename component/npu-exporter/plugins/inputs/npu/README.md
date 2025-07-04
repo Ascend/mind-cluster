@@ -11,22 +11,22 @@ git clone -b v1.26.0 https://github.com/influxdata/telegraf.git
 ```
 拉取插件源码
 ```shell
-git clone -b [latest_tag] git@gitee.com:ascend/ascend-npu-exporter.git
+git clone -b [latest_tag] https://gitee.com/ascend/mind-cluster.git
 # [latest_tag]此tag请自行修改，建议采用仓库的最新标签，否则可能导致引用函数失效
 ```
-将插件代码集成到telegraf源码中
+将插件代码集成到telegraf源码中(其中路径按实际修改)
 ```shell
-cp -r path_to_telegraf_npu_plugin/plugins/inputs/npu path_to_telegraf/plugins/inputs
+cp -r mind-cluster/component/npu-exporter/plugins/inputs/npu telegraf/plugins/inputs
 ```
-将插件注册到telegraf
+将插件注册到telegraf(其中路径按实际修改)
 ```shell
-cp -r path_to_telegraf_npu_plugin/plugins/inputs/all/npu.go path_to_telegraf/plugins/inputs/all
+cp -r mind-cluster/component/npu-exporter/plugins/inputs/all/npu.go telegraf/plugins/inputs/all
 ```
 将telegraf源码中的Makefile里的“CGO_ENABLED=0”改为“CGO_ENABLED=1”
 ```shell
 sed -i s"/CGO_ENABLED=0/CGO_ENABLED=1/" Makefile
 ```
-将 “require huawei.com/npu-exporter/v6 v6.0.0-RC1” 和 “replace huawei.com/npu-exporter/v6 => gitee.com/ascend/ascend-npu-exporter/v6 [latest_tag]”加入到telegraf源码的go.mod的文件里
+将 “require huawei.com/npu-exporter/v6 v6.0.0-RC1”、“replace huawei.com/npu-exporter/v6 => gitee.com/ascend/mind-cluster/component/npu-exporter/v6 [latest_tag]”和“replace ascend-common => gitee.com/ascend/mind-cluster/component/ascend-common [latest_tag]”加入到telegraf源码的go.mod的文件里
 注意：[latest_tag]此tag请自行修改，建议采用仓库的最新标签并且与前面[latest_tag]一致，否则可能导致引用函数失效
 然后执行
 ```shell
@@ -76,7 +76,7 @@ type LogConfig struct {
 ### 2、二进制集成，使用telegraf的execd机制（适合已安装Telegraf的情况）
 对应官方文档：https://docs.influxdata.com/telegraf/v1.26/configure_plugins/external_plugins/shim/
 
-从[MindX DL社区](https://www.hiascend.com/zh/software/mindx-dl/community)获取npu-exporter软件包，并从中解压出npu-exporter二进制文件
+从[MindCluster社区](https://www.hiascend.com/developer/download/community/result?module=cluster)获取npu-exporter软件包，并从中解压出npu-exporter二进制文件
 
 ### 使用
 运行前请先创建日志目录：（该日志是插件调用底层api将记录的日志）
