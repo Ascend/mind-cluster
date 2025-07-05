@@ -103,15 +103,21 @@ func (processor *retryFaultProcessor) initRetryDeviceFromNodeAndReportInfo(jobId
 			jobRetryNodeInfo.DeviceInfo[deviceName] = jobRetryDevice
 		}
 		if hasReport {
-			delete(processor.onceFaultMap, nodeName)
-			delete(processor.onceRetryDeviceInfo, nodeName)
-			delete(processor.linkdownDeviceFault, nodeName)
-			delete(processor.linkdownSwitchFault, nodeName)
+			processor.clearFault(jobId)
 			continue
 		}
 		processor.addOnceRetryDevices(nodeName, deviceName, currentTime, &jobRetryNodeInfo)
 	}
 	return jobRetryNodeInfo
+}
+
+func (processor *retryFaultProcessor) clearFault(jobID string) {
+	for node, _ := range processor.jobServerInfoMap.InfoMap[jobID] {
+		delete(processor.linkdownDeviceFault, node)
+		delete(processor.linkdownSwitchFault, node)
+		delete(processor.onceFaultMap, node)
+		delete(processor.onceRetryDeviceInfo, node)
+	}
 }
 
 func (processor *retryFaultProcessor) addOnceRetryDevices(nodeName, deviceName string,
@@ -276,7 +282,7 @@ func (processor *retryFaultProcessor) addRetryFault(nodeName string,
 	}
 	if fault, ok := processor.linkdownDeviceFault[nodeName][deviceName]; ok {
 		deviceInfo.AddFaultAndFix(fault)
-		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown linkdown: %v ", nodeName, deviceName, fault)
+		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown fault: %v ", nodeName, deviceName, fault)
 	}
 	if fault, ok := processor.linkdownSwitchFault[nodeName]; ok {
 		processor.nodeSwitchCmMap[constant.SwitchInfoPrefix+nodeName].AddFaultAndFix(fault)

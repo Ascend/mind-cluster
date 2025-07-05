@@ -317,6 +317,56 @@ func TestUceFaultProcessorCanFilterUceDeviceFaultInfoSituation8(t *testing.T) {
 	}
 }
 
+func TestClearFault(t *testing.T) {
+	t.Run("TestClearFault success", func(t *testing.T) {
+		nodeName := "test-node"
+		deviceName := "test-device"
+		jobId := "test-job"
+		fault := constant.DeviceFault{}
+		curTime := time.Now().Unix()
+		switchFault := constant.SimpleSwitchFaultInfo{
+			AlarmRaisedTime: curTime - 100,
+		}
+		retryInfo := constant.RetryDeviceInfo{
+			DeviceName: deviceName,
+			FaultDetail: map[string]constant.DeviceFaultDetail{
+				constant.DeviceRetryFault: {
+					FaultType: constant.HcclFaultType,
+				},
+			},
+		}
+		RetryProcessor.onceRetryDeviceInfo = map[string]map[string]constant.RetryDeviceInfo{
+			nodeName: {
+				deviceName: retryInfo,
+			},
+		}
+		RetryProcessor.onceFaultMap = map[string]map[string]constant.DeviceFault{
+			nodeName: {
+				deviceName: fault,
+			},
+		}
+		RetryProcessor.linkdownDeviceFault = map[string]map[string]constant.DeviceFault{
+			nodeName: {
+				deviceName: fault,
+			},
+		}
+		RetryProcessor.linkdownSwitchFault = map[string]constant.SimpleSwitchFaultInfo{
+			constant.SwitchInfoPrefix + nodeName: switchFault,
+		}
+		RetryProcessor.jobServerInfoMap = constant.JobServerInfoMap{
+			InfoMap: map[string]map[string]constant.ServerHccl{
+				jobId: {
+					nodeName: {},
+				},
+			},
+		}
+		RetryProcessor.clearFault(jobId)
+		if len(RetryProcessor.onceRetryDeviceInfo) != 0 {
+			t.Errorf("clearFault() onceRetryDeviceInfo = %v, want %v", RetryProcessor.onceRetryDeviceInfo, 0)
+		}
+	})
+}
+
 // =============Test scenario===========
 func TestUceFaultProcessorGetUceDeviceOfNodes(t *testing.T) {
 	t.Run("TestUceFaultProcessorGetUceDeviceOfNodes", func(t *testing.T) {
