@@ -125,8 +125,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 		accompanyFaultTime := faultdomain.GetFaultTime(fault, errorMsg)
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
-			hwlog.RunLog.Warnf("filter uce accompany fault %v, fault time: %s",
-				fault, util.ReadableMsTime(accompanyFaultTime))
+			hwlog.RunLog.Warnf("filter uce accompany fault %v on node %s, fault time: %s",
+				fault, nodeName, util.ReadableMsTime(accompanyFaultTime))
 			deviceFaultCm.DelFaultAndFix(fault)
 			modified = true
 			continue
@@ -134,8 +134,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 		// if current is not exceed diagnosis time,
 		// then cannot decide fault is accompany or not, filter, and in que to decide in next turn.
 		if !processor.isCurrentExceedDiagnosisTimeout(currentTime, accompanyFaultTime) {
-			hwlog.RunLog.Warnf("filter uce accompany like fault %v, fault time: %s",
-				fault, util.ReadableMsTime(accompanyFaultTime))
+			hwlog.RunLog.Debugf("filter uce accompany like fault %v on node %s, fault time: %s",
+				fault, nodeName, util.ReadableMsTime(accompanyFaultTime))
 			deviceFaultCm.DelFaultAndFix(fault)
 			modified = true
 			newDeviceFaultQue = append(newDeviceFaultQue, fault)
@@ -144,8 +144,8 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 		// cannot filter, add the aic/aiv fault into faultMap
 		deviceFaultCm.AddFaultAndFix(fault)
 		modified = true
-		hwlog.RunLog.Warnf("cannot filter uce accompany like fault %v, uce fault time: %s",
-			fault, util.ReadableMsTime(uceFaultTime))
+		hwlog.RunLog.Warnf("cannot filter uce accompany like fault %v on node %s, uce fault time: %s",
+			fault, nodeName, util.ReadableMsTime(uceFaultTime))
 	}
 	if modified {
 		faultdomain.SortDataForAdvanceDeviceInfo(deviceFaultCm)
