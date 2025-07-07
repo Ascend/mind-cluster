@@ -865,6 +865,10 @@ func TestHandleFinish(t *testing.T) {
 		jobInfo := newJobInfoWithStrategy(nil)
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "reset", func(*EventController, bool) {
+			return
+		})
+		defer patches.Reset()
 		_, code, err := ctl.handleFinish()
 		convey.So(code, convey.ShouldEqual, common.OK)
 		convey.So(err, convey.ShouldBeNil)
