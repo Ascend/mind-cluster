@@ -230,8 +230,8 @@ class MSRunPlugin:
             self.update_reset_info()
             fault_status = self.get_fault_status()
             run_log.debug(f"nodeRank:{self.ms_node_rank}  fault status: is_fault:{fault_status.is_fault},"
-                         f"is_unrecovered:{fault_status.is_unrecovered},is_retried:{fault_status.is_retried},"
-                         f"local_ranks:{fault_status.local_ranks}")
+                          f"is_unrecovered:{fault_status.is_unrecovered},is_retried:{fault_status.is_retried},"
+                          f"local_ranks:{fault_status.local_ranks}")
 
             # If the "reset cm" indicates that the training needs to be exited, use it in the sub-healthy state.
             if self._handle_grace_exit():
