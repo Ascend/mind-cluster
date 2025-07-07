@@ -135,7 +135,7 @@ func TestMakeSureDir(t *testing.T) {
 func TestGetDriverLibPath(t *testing.T) {
 	convey.Convey("test GetDriverLibPath func", t, func() {
 		convey.Convey("should return itself given empty string", func() {
-			err := os.Setenv(ldLibPath, "")
+			err := os.Setenv(LdLibPath, "")
 			convey.So(err, convey.ShouldBeNil)
 			res, err := GetDriverLibPath("")
 			convey.So(res, convey.ShouldBeEmpty)
