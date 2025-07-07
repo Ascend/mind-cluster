@@ -6,6 +6,7 @@ package recover
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -399,7 +400,7 @@ func testDeleteJobCase4() {
 		service := fakeService()
 		service.eventCtl[fakeJobID1] = ctl
 		service.initJob[fakeJobID1] = jobInfo
-		patches := gomonkey.ApplyFunc(ctl.reset, func(bool) {
+		patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "reset", func(*EventController, bool) {
 			return
 		})
 		defer patches.Reset()
@@ -421,7 +422,7 @@ func testDeleteJobCase5() {
 		service.eventCtl[jobInfo.JobId] = ctl
 		service.initJob[jobInfo.JobId] = jobInfo
 
-		patches := gomonkey.ApplyFunc(ctl.reset, func(bool) {
+		patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "reset", func(*EventController, bool) {
 			return
 		})
 		defer patches.Reset()
@@ -442,7 +443,7 @@ func testDeleteJobCase6() {
 		service := fakeService()
 		service.eventCtl[jobInfo.JobId] = ctl
 
-		patches := gomonkey.ApplyFunc(ctl.reset, func(bool) {
+		patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ctl), "reset", func(*EventController, bool) {
 			return
 		})
 		defer patches.Reset()

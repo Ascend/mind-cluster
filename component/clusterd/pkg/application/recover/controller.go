@@ -154,14 +154,12 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
 	hwlog.RunLog.Infof("jobId=%s's action path = {%s}", ctl.jobInfo.JobId, ctl.state.GetPathGraph())
-	if len(ctl.cacheNormalFault)+len(ctl.cacheRetryFault) > 0 {
-		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-			nil, false, constant.ClearOperation)
-		if err != nil {
-			hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
-		} else {
-			hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[constant.ResetInfoCMDataKey])
-		}
+	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+		nil, false, constant.ClearOperation)
+	if err != nil {
+		hwlog.RunLog.Errorf("clear reset configmap error, err=%v", err)
+	} else {
+		hwlog.RunLog.Infof("clear reset configmap success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	}
 	if ctl.ctxCancelFunc != nil {
 		ctl.ctxCancelFunc()
