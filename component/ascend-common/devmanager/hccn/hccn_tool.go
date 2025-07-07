@@ -18,10 +18,10 @@ package hccn
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -48,16 +48,9 @@ const (
 	normalCode   = 1
 	abnormalCode = 0
 
-	problemOccurMaxNumbers = 3
-	naValue                = "NA"
-	notSupport             = "not supported"
-	unknownStr             = "Unknown!"
-	generalMaxCardNum      = 16
-)
-
-var (
-	getLinkSpeedFromHccnToolErrorMapLock  = &sync.Mutex{}
-	getLinkStatusFromHccnToolErrorMapLock = &sync.Mutex{}
+	naValue    = "NA"
+	notSupport = "not supported"
+	unknownStr = "Unknown!"
 )
 
 func getInfoFromHccnTool(args ...string) (string, error) {
@@ -67,6 +60,10 @@ func getInfoFromHccnTool(args ...string) (string, error) {
 	}
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(hccnTool, args...)
+	cmd.Env = []string{
+		"PATH=" + os.Getenv("PATH"),
+		utils.LdLibPath + "=" + os.Getenv(utils.LdLibPath),
+	}
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
@@ -84,8 +81,6 @@ func GetNPULinkStatus(phyID int32) (string, error) {
 	// success result example is: link status: DOWN
 	outStr, err := getInfoFromHccnTool(args...)
 	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
-	getLinkStatusFromHccnToolErrorMapLock.Lock()
-	defer getLinkStatusFromHccnToolErrorMapLock.Unlock()
 	if err != nil {
 		return common.Abnormal, buildHccnErr(phyID, "link status", err)
 	}
@@ -106,8 +101,6 @@ func GetNPULinkSpeed(phyID int32) (int, error) {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-speed", "-g"}
 	// command example: hccn_tool -i 0 -speed -g
 	// success result example is: Speed: 100000 Mb/s
-	getLinkSpeedFromHccnToolErrorMapLock.Lock()
-	defer getLinkSpeedFromHccnToolErrorMapLock.Unlock()
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
 		return common.RetError, buildHccnErr(phyID, "link speed", err)

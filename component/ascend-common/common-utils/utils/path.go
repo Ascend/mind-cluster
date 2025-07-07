@@ -44,8 +44,9 @@ const (
 	ldLibPathIndex = 1
 	ldCommand      = "/sbin/ldconfig"
 	ldParam        = "--print-cache"
-	ldLibPath      = "LD_LIBRARY_PATH"
-	grepCommand    = "/bin/grep"
+	// LdLibPath LD_LIBRARY_PATH
+	LdLibPath   = "LD_LIBRARY_PATH"
+	grepCommand = "/bin/grep"
 )
 
 // IsDir check whether the path is a directory.
@@ -249,7 +250,7 @@ func checkLibsPath(libraryPaths []string) (string, error) {
 }
 
 func getLibFromEnv(libraryName string) (string, error) {
-	ldLibraryPath := os.Getenv(ldLibPath)
+	ldLibraryPath := os.Getenv(LdLibPath)
 	if len(ldLibraryPath) > maxPathLength {
 		return "", fmt.Errorf("invalid library path env")
 	}
