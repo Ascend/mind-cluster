@@ -511,7 +511,7 @@ func (ctl *EventController) selectSendChannel(ctx context.Context, sendChan chan
 		hwlog.RunLog.Infof("context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
 		return true
 	case <-stream.Context().Done():
-		ctl.reset(true)
+		ctl.reset(false)
 		hwlog.RunLog.Infof("stream context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
 		return true
 	case signal, ok := <-sendChan:
