@@ -61,6 +61,7 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 		hwlog.RunLog.Errorf("init profiling err: %v", err)
 		return
 	}
+	profiling.MsSubscribed.Store(false)
 	profiling.MgrProfilingCmd.Store(false)
 	hwlog.RunLog.Info("successfully init mspti lib so")
 	monitorInitNotify()

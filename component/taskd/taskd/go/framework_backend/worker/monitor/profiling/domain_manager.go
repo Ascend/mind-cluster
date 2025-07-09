@@ -40,6 +40,9 @@ const (
 	printErrDuration   = 30 * time.Second
 )
 
+// MsSubscribed whether ms light profiling is subscribed
+var MsSubscribed atomic.Bool
+
 // NetTool from worker
 var NetTool *net.NetInstance
 
@@ -126,15 +129,35 @@ func changeProfileSwitchStatus(profilingDomainCmd constant.ProfilingDomainCmd) {
 		DefaultDomain: constant.ProfilingUnknownStatus,
 		CommDomain:    constant.ProfilingUnknownStatus,
 	}
-	// if all kinds of records are off,  disable all marker
+	defer func() {
+		hwlog.RunLog.Infof("exec cmd %v result %v", profilingDomainCmd, result)
+		if MgrProfilingCmd.Load() {
+			notifyMgrSwitchChange(result)
+		}
+	}()
 	if !profilingDomainCmd.DefaultDomainAble {
 		result.DefaultDomain = constant.ProfilingOffStatus
 		if err := DisableMsptiActivity(); err != nil {
 			hwlog.RunLog.Errorf("failed to disable MsptiActivity: %v", err)
 			result.DefaultDomain = constant.ProfilingExpStatus
 		}
+		if MsSubscribed.Load() == true {
+			if err := MsptiUnsubscribe(); err != nil {
+				hwlog.RunLog.Error(err.Error())
+				result.DefaultDomain = constant.ProfilingExpStatus
+			} else {
+				MsSubscribed.Store(false)
+			}
+		}
 	} else {
-		// any kind of domain is on, need to enable marker, FP/dataloader/ckpt/step will be enabled
+		if MsSubscribed.Load() == false {
+			if err := MsptiSubscribe(); err != nil {
+				hwlog.RunLog.Error(err.Error())
+				result.DefaultDomain = constant.ProfilingExpStatus
+				return
+			}
+			MsSubscribed.Store(true)
+		}
 		result.DefaultDomain = constant.ProfilingOnStatus
 		if err := EnableMsptiMarkerActivity(); err != nil {
 			result.DefaultDomain = constant.ProfilingExpStatus
@@ -146,15 +169,9 @@ func changeProfileSwitchStatus(profilingDomainCmd constant.ProfilingDomainCmd) {
 	} else {
 		result.CommDomain = constant.ProfilingOnStatus
 	}
-	// only change status of communication dynamically
-	if err := EnableMarkerDomain(constant.CommunicationDomainName,
-		profilingDomainCmd.CommDomainAble); err != nil {
+	if err := EnableMarkerDomain(constant.CommunicationDomainName, profilingDomainCmd.CommDomainAble); err != nil {
 		result.CommDomain = constant.ProfilingExpStatus
 		hwlog.RunLog.Errorf("failed to change communication marker domain status, err: %v", err)
-	}
-	hwlog.RunLog.Infof("exec cmd %v result %v", profilingDomainCmd, result)
-	if MgrProfilingCmd.Load() {
-		notifyMgrSwitchChange(result)
 	}
 }
 
