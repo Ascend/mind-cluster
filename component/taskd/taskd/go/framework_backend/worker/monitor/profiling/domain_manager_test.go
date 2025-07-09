@@ -204,7 +204,7 @@ func TestChangeProfileSwitchStatusAllOn(t *testing.T) {
 		patches.ApplyFunc(EnableMarkerDomain, func(domainName string, status bool) error {
 			enableMarkerCall = true
 			return nil
-		})
+		}).ApplyFuncReturn(MsptiUnsubscribe, nil).ApplyFuncReturn(MsptiSubscribe, nil)
 
 		// start manage domain
 		changeProfileSwitchStatus(constant.ProfilingDomainCmd{
@@ -240,7 +240,7 @@ func TestChangeProfileSwitchStatusAllOff(t *testing.T) {
 		patches.ApplyFunc(EnableMarkerDomain, func(domainName string, status bool) error {
 			enableMarkerCall = true
 			return nil
-		})
+		}).ApplyFuncReturn(MsptiUnsubscribe, nil).ApplyFuncReturn(MsptiSubscribe, nil)
 
 		// start manage domain
 		changeProfileSwitchStatus(constant.ProfilingDomainCmd{})
@@ -273,7 +273,7 @@ func TestChangeProfileSwitchStatusAnyOff(t *testing.T) {
 		patches.ApplyFunc(EnableMarkerDomain, func(domainName string, status bool) error {
 			enableMarkerCall = true
 			return nil
-		})
+		}).ApplyFuncReturn(MsptiUnsubscribe, nil).ApplyFuncReturn(MsptiSubscribe, nil)
 
 		// start manage domain
 		changeProfileSwitchStatus(constant.ProfilingDomainCmd{DefaultDomainAble: true})
