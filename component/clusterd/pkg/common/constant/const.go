@@ -193,6 +193,8 @@ const (
 	SeparateFaultLevelStr = "Separate"
 	// PreSeparateFault pre-separate fault
 	PreSeparateFault = "PreSeparateFault"
+	// SeparateFault separate fault
+	SeparateFault = "SeparateFault"
 )
 
 // About cm keys

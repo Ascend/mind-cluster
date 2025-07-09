@@ -215,17 +215,17 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 
 // GetStateLevelByFaultLevel get state by level
 func GetStateLevelByFaultLevel(faultLevel string) (string, int) {
-	if faultLevel == "" {
-		return constant.HealthyState, constant.HealthyLevel
-	}
 	switch faultLevel {
 	case constant.NotHandleFault, constant.NotHandleFaultLevelStr:
 		return constant.HealthyState, constant.HealthyLevel
 	case constant.SubHealthFault, constant.PreSeparateFault, constant.PreSeparateFaultLevelStr,
-		constant.SubHealthFaultStrategy, constant.PreSeparateNPU:
+		constant.SubHealthFaultStrategy, constant.PreSeparateNPU, constant.FreeRestartNPU:
 		return constant.SubHealthyState, constant.SubHealthyLevel
-	default:
+	case constant.RestartRequest, constant.RestartBusiness, constant.RestartNPU, constant.SeparateNPU,
+		constant.ManuallySeparateNPU, constant.SeparateFault, constant.SeparateFaultStrategy:
 		return constant.UnHealthyState, constant.UnHealthyLevel
+	default:
+		return constant.HealthyState, constant.HealthyLevel
 	}
 }
 
