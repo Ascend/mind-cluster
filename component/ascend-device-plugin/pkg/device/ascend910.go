@@ -176,9 +176,6 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	resetFaultInfos := make([]*common.DevFaultInfo, 0, len(deviceList))
 	resetRing := make(map[int32]struct{})
 	for _, dev := range deviceList {
-		if _, ok = resetDevMap.Load(dev.LogicID); ok {
-			continue
-		}
 		tempFaultInfo := hnm.getDevFaultInfo(dev.LogicID)
 		if tempFaultInfo == nil {
 			continue
@@ -188,6 +185,9 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			continue
 		}
 		if _, exist := resetRing[idx]; exist {
+			continue
+		}
+		if _, ok = resetDevMap.Load(idx); ok {
 			continue
 		}
 		if canReset, err := hnm.canBeReset(tempFaultInfo); err != nil || !canReset {
@@ -200,6 +200,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		}
 		resetRing[idx] = struct{}{}
 		resetDevs = append(resetDevs, dev)
+		resetDevMap.Store(idx, struct{}{})
 		resetFaultInfos = append(resetFaultInfos, tempFaultInfo)
 		hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 			"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
@@ -207,6 +208,11 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	if len(resetDevs) == 0 {
 		return nil
 	}
+	defer func() {
+		for idx := range resetRing {
+			resetDevMap.Delete(idx)
+		}
+	}()
 	return hnm.tryDeviceReset(classifyDevs, resetDevs, resetFaultInfos)
 }
 
@@ -216,7 +222,6 @@ func (hnm *HwAscend910Manager) tryDeviceReset(classifyDevs map[string][]*common.
 	var wg sync.WaitGroup
 	wg.Add(len(resetDevs))
 	for idx, dev := range resetDevs {
-		resetDevMap.Store(dev.LogicID, struct{}{})
 		go func(idx int, dev *common.NpuDevice) {
 			if err = hnm.startUpHotReset(classifyDevs, resetFaultInfos[idx], dev); err != nil {
 				hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
@@ -226,9 +231,6 @@ func (hnm *HwAscend910Manager) tryDeviceReset(classifyDevs map[string][]*common.
 	}
 	wg.Wait()
 	hnm.hotResetTryOutBand(resetDevs)
-	for _, dev := range resetDevs {
-		resetDevMap.Delete(dev.LogicID)
-	}
 	return err
 }
 
