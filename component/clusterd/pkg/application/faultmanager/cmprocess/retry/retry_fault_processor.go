@@ -263,6 +263,8 @@ func (processor *retryFaultProcessor) addRetryFault(nodeName string,
 	if len(processor.onceRetryDeviceInfo[nodeName]) == 0 {
 		return
 	}
+	hwlog.RunLog.Infof("node %s processor.linkdownSwitch %v", nodeName, processor.linkdownSwitchFault[nodeName])
+	hwlog.RunLog.Infof("node %s processor.linkdownDevice %v", nodeName, processor.linkdownDeviceFault[nodeName])
 	for _, faultInfo := range processor.linkdownDeviceFault {
 		if len(faultInfo) > 0 {
 			processor.hasLinkDown = true
