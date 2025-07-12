@@ -70,6 +70,8 @@ struct dcmi_ecc_info {
     unsigned int total_double_bit_error_cnt;
     unsigned int single_bit_isolated_pages_cnt;
     unsigned int double_bit_isolated_pages_cnt;
+    unsigned int single_bit_next_isolated_pages_cnt;
+    unsigned int double_bit_next_isolated_pages_cnt;
 };
 
 struct dcmi_hbm_info {
