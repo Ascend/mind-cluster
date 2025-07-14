@@ -116,9 +116,6 @@ spec:
             mountPath: /user/restore/reset
           - name: lingqu-log
             mountPath: /var/log/lingqu
-          - name: containerd
-            mountPath: /run/containerd
-            readOnly: true
           - name: data-trace-file-dir
             mountPath: /user/cluster-info/datatrace-config
           - name: localtime
@@ -171,9 +168,6 @@ spec:
           hostPath:
             path: /var/log/lingqu
             type: DirectoryOrCreate
-        - name: containerd
-          hostPath:
-            path: /run/containerd # the path to the directory containing the container runtime's socket file on the node
         - name: localtime
           hostPath:
             path: /etc/localtime

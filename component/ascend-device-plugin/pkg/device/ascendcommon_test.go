@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/containerd/containerd"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1069,8 +1068,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 }
 
 func mockAscendTools() AscendTools {
-	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}, containerdClient: &containerd.Client{}}
+	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`

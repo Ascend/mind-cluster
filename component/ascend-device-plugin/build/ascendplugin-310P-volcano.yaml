@@ -119,9 +119,6 @@ spec:
             mountPath: /tmp
           - name: vnpucfg
             mountPath: /etc/vnpu.cfg
-          - name: containerd
-            mountPath: /run/containerd
-            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
@@ -155,9 +152,6 @@ spec:
           hostPath:
             path: /etc/vnpu.cfg
             type: File
-        - name: containerd
-          hostPath:
-            path: /run/containerd # the path to the directory containing the container runtime's socket file on the node
         - name: localtime
           hostPath:
             path: /etc/localtime

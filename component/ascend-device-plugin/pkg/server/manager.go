@@ -26,7 +26,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerd/containerd"
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -39,7 +38,6 @@ import (
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 )
@@ -77,10 +75,6 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		return nil
 	}
 	device.InitResetInfoMgr(hdm.manager.GetKubeClient())
-	if err := hdm.setContainerdClient(); err != nil {
-		hwlog.RunLog.Warnf("set containerd client failed, "+
-			"unable to get correct container used chip information, err: %v", err)
-	}
 	if err := hdm.checkSupportedProductType(); err != nil {
 		hwlog.RunLog.Errorf("check supported product type failed, err: %v", err)
 		return nil
@@ -272,18 +266,6 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 		return err
 	}
 	hdm.groupDevice = device.ClassifyDevices(hdm.allInfo.AllDevs, hdm.allInfo.AllDevTypes)
-	return nil
-}
-
-func (hdm *HwDevManager) setContainerdClient() error {
-	if !utils.IsExist(common.DefaultContainerdSockPath) {
-		return fmt.Errorf("containerd socket file not exist")
-	}
-	client, err := containerd.New(common.DefaultContainerdSockPath)
-	if err != nil {
-		return err
-	}
-	hdm.manager.SetContainerdClient(client)
 	return nil
 }
 
@@ -878,10 +860,6 @@ func (hdm *HwDevManager) SignCatch(cancel context.CancelFunc) {
 		cancel()
 		hdm.stopAllSever()
 		hdm.manager.GetDmgr().ShutDown()
-		ctrClient := hdm.manager.GetContainerdClient()
-		if ctrClient != nil {
-			ctrClient.Close()
-		}
 		hdm.SwitchDevManager.ShutDownSwitch()
 	}
 }
