@@ -154,7 +154,6 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
 		return fmt.Errorf("checkNodeNPUByTask : %s", err)
 	}
-	sHandle.Nodes[nodeInfo.Name] = vcNode
 	return nil
 }
 
