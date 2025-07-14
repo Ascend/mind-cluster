@@ -249,6 +249,17 @@ func (fNode *FaultNode) isNodeDEnabled(node *plugin.NPUNode) bool {
 	}
 }
 
+// getNodeNPUsByKey get the npu list from node.DeviceInfo
+func (fNode *FaultNode) getL1LinkDownCards() []string {
+	var cards []string
+	for _, fault := range fNode.FaultDeviceList {
+		if fault.FaultCode == linkDownFaultCode && fault.FaultHandling == NotHandleFault {
+			cards = append(cards, fault.NPUName)
+		}
+	}
+	return cards
+}
+
 func (fNode *FaultNode) setNodeDValue(value bool) {
 	fNode.NodeDEnable = value
 }

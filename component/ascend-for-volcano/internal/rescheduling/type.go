@@ -147,8 +147,10 @@ const (
 )
 
 const (
-	taskFaultKey = "fault-type"
-	softwareKey  = "software"
+	taskFaultKey         = "fault-type"
+	softwareKey          = "software"
+	linkDownFaultCode    = "81078603"
+	linkDownFaultTimeout = 20
 )
 
 // ReScheduler object for re-scheduling
@@ -241,6 +243,7 @@ type FaultNode struct {
 	FaultCards              []FaultCard
 	HasSwitchSubHealthFault bool
 	HasCardSubHealthFault   bool
+	LinkDownTime            int64
 }
 
 // SimpleFNodeInfo simple fault node info
@@ -265,6 +268,7 @@ type FaultDeviceList struct {
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
 	Reason             []FaultReasonList
+	FaultTime          int64
 	RelationFault      string
 	IsFaultTask        bool
 	IsFaultRetryEnable bool

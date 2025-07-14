@@ -139,6 +139,12 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		return nil
 	}
 
+	if sHandle.FaultHandle != nil {
+		if err := sHandle.FaultHandle.CheckNodeNPUByTask(taskInfo, &vcNode); err != nil {
+			return err
+		}
+	}
+
 	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {
 		return err
 	}
@@ -148,10 +154,8 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
 		return fmt.Errorf("checkNodeNPUByTask : %s", err)
 	}
-	if sHandle.FaultHandle == nil {
-		return nil
-	}
-	return sHandle.FaultHandle.CheckNodeNPUByTask(taskInfo, vcNode)
+	sHandle.Nodes[nodeInfo.Name] = vcNode
+	return nil
 }
 
 // initNPUNodeByNodeInf init NPU node from node info and cm.

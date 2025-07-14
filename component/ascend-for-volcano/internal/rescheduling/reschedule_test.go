@@ -819,7 +819,7 @@ func TestReSchedulerCheckNodeNPUByTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reScheduler := fakeTestTTReScheduler(tt.fields)
-			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, tt.args.vcNode); !reflect.DeepEqual(err,
+			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, &tt.args.vcNode); !reflect.DeepEqual(err,
 				tt.wantErr) {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -880,7 +880,7 @@ func TestReSchedulerCheckNodeCurNodeIsFault(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reScheduler := fakeTestTTReScheduler(tt.fields)
-			if err := reScheduler.checkNodeCurNodeIsFault(tt.args.vcNode, tt.args.task); (err != nil) != tt.wantErr {
+			if err := reScheduler.checkNodeCurNodeIsFault(&tt.args.vcNode, tt.args.task); (err != nil) != tt.wantErr {
 				t.Errorf("checkNodeCurNodeIsFault() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

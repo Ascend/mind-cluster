@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -320,10 +321,33 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 			reScheduler.updateJobHealthCode(faultJob)
 			faultJob.updateTaskPodUid(jobInfo)
 		}
+		reScheduler.setFaultTaskUseNodeLinkDownTime(faultJob)
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
 	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %#v", reScheduler.FaultJobs)
+}
+
+func (reScheduler *ReScheduler) setFaultTaskUseNodeLinkDownTime(fJob *FaultJob) {
+	for _, fTask := range fJob.FaultTasks {
+		if !fTask.IsFaultTask || fTask.faultType != util.RelationFault {
+			continue
+		}
+		fNode, ok := reScheduler.FaultNodes[fTask.NodeName]
+		if !ok {
+			continue
+		}
+		hasL1LinkDown := false
+		for _, deviceFault := range fNode.FaultDeviceList {
+			if deviceFault.FaultLevel == NotHandleFault && deviceFault.FaultCode == linkDownFaultCode {
+				hasL1LinkDown = true
+			}
+		}
+		if !hasL1LinkDown {
+			continue
+		}
+		fNode.LinkDownTime = fTask.FaultTime
+	}
 }
 
 func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInfo, fJob *FaultJob) {
@@ -501,6 +525,12 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		ssn, reScheduler, &schedulerJob, env); restartErr != nil {
 		klog.V(util.LogErrorLev).Infof("RestartJob %s, err: %s.", schedulerJob.Name, util.SafePrint(restartErr))
 	} else {
+		for i, fTask := range restartFaultJob.FaultTasks {
+			if !fTask.IsFaultTask || fTask.faultType != util.RelationFault {
+				continue
+			}
+			restartFaultJob.FaultTasks[i].FaultTime = time.Now().Unix()
+		}
 		restartFaultJob.recordFaultJobsToLogs()
 		// update rescheduling reason
 		reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
@@ -685,11 +715,13 @@ func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, 
 }
 
 // CheckNodeNPUByTask used in the predicate process of task and node
-func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode plugin.NPUNode) error {
+func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode *plugin.NPUNode) error {
 	klog.V(util.LogDebugLev).Infof("enter rescheduling CheckNodeNPUByTask ...(%s, %s)", task.Name, vcNode.Name)
 	defer klog.V(util.LogDebugLev).Infof("leave rescheduling CheckNodeNPUByTask ...(%s, %s)",
 		task.Name, vcNode.Name)
-
+	if vcNode == nil {
+		return fmt.Errorf("node is not a vc node")
+	}
 	// 1. jobs should not be scheduled to faultNodes
 	if err := reScheduler.checkNodeCurNodeIsFault(vcNode, task); err != nil {
 		return err
@@ -699,7 +731,7 @@ func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode pl
 	return nil
 }
 
-func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, task *api.TaskInfo) error {
+func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, task *api.TaskInfo) error {
 	if reScheduler == nil {
 		return nil
 	}
@@ -721,6 +753,23 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 		return fmt.Errorf("NodePredicate failed, cardSubHealthy=%v and"+
 			"switchSubHealthy=%v, but sub-healthy strategy is %v", fNode.HasCardSubHealthFault,
 			fNode.HasSwitchSubHealthFault, schedulerJob.SubHealthyStrategy)
+	}
+	if fNode.LinkDownTime == 0 {
+		klog.V(util.LogInfoLev).Infof("node %s is not fault node, check success", vcNode.Name)
+		return nil
+	}
+	if time.Now().Unix()-fNode.LinkDownTime < linkDownFaultTimeout {
+		networkUnhealthyCardName := fmt.Sprintf("%s-%s", fNode.NPUName, CardNetworkUnhealthy)
+		k := vcNode.Annotation[networkUnhealthyCardName]
+		l1LinkCards := fNode.getL1LinkDownCards()
+		if len(l1LinkCards) == 0 {
+			return nil
+		}
+		if k == "" {
+			vcNode.Annotation[networkUnhealthyCardName] = strings.Join(l1LinkCards, ",")
+		} else {
+			vcNode.Annotation[networkUnhealthyCardName] = strings.Join(l1LinkCards, ",") + "," + k
+		}
 	}
 	klog.V(util.LogInfoLev).Infof("node %s is not fault node, check success", vcNode.Name)
 	return nil
