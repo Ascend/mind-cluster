@@ -41,11 +41,10 @@ var (
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName  string
-	version    bool
-	enableFdOl bool
-	server     *sv.ClusterInfoMgrServer
-	limiter    = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	BuildName string
+	version   bool
+	server    *sv.ClusterInfoMgrServer
+	limiter   = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -187,7 +186,6 @@ func initK8sServer() error {
 
 func init() {
 	flag.BoolVar(&version, "version", false, "the version of the program")
-	flag.BoolVar(&enableFdOl, "enableFdOl", false, "switch of fd online")
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
