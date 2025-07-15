@@ -88,9 +88,6 @@ spec:
           - name: ascend-dcmi
             mountPath: /usr/local/dcmi
             readOnly: true
-          - name: sys
-            mountPath: /sys
-            readOnly: true
           - name: docker-shim  # delete when only use containerd or isula
             mountPath: /var/run/dockershim.sock
             readOnly: true
@@ -122,9 +119,6 @@ spec:
         - name: ascend-dcmi
           hostPath:
             path: /usr/local/dcmi
-        - name: sys
-          hostPath:
-            path: /sys
         - name: docker-shim # delete when only use containerd or isula
           hostPath:
             path: /var/run/dockershim.sock
