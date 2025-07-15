@@ -32,6 +32,7 @@ package profiling
     #define FUNCTION_NOT_FOUND  -99998
     #define SUCCESS  0
     #define ERROR_UNKNOWN  -99997
+	#define	CALL_FUNC(name,...) if(name==NULL){return FUNCTION_NOT_FOUND;}return name(__VA_ARGS__);
 	// Go functions declared in C to act as callback functions
 	void goBufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords);
 	void goBufferCompleted(uint8_t *buffer, size_t size, size_t validSize);
@@ -47,50 +48,50 @@ package profiling
 	static msptiResult (*cgo_mspti_activity_register_callbacks)(msptiBuffersCallbackRequestFunc funcBufferRequested,
 		msptiBuffersCallbackCompleteFunc funcBufferCompleted);
 	static msptiResult msptiActivityRegisterCallbacksWrapper() {
-		return cgo_mspti_activity_register_callbacks(bufferRequestedCallback, bufferCompletedCallback);
+		CALL_FUNC(cgo_mspti_activity_register_callbacks, bufferRequestedCallback, bufferCompletedCallback);
 	}
 
 	static int (*cgo_mspti_activity_flush_all)(uint32_t flag);
 	static msptiResult mspti_activity_flush_all(uint32_t flag){
-		return cgo_mspti_activity_flush_all(flag);
+		CALL_FUNC(cgo_mspti_activity_flush_all, flag);
 	}
 
     // dcmi
     static int (*cgo_mspti_activity_enable)(msptiActivityKind kind);
     static msptiResult mspti_activity_enable(msptiActivityKind kind){
-		return cgo_mspti_activity_enable(kind);
+		CALL_FUNC(cgo_mspti_activity_enable, kind);
 	}
 
     static int (*cgo_mspti_activity_dis_enable)(msptiActivityKind kind);
     static msptiResult mspti_activity_dis_enable(msptiActivityKind kind){
-		return cgo_mspti_activity_dis_enable(kind);
+		CALL_FUNC(cgo_mspti_activity_dis_enable, kind);
 	}
 
 	static int (*cgo_mspti_activity_get_next_record)(uint8_t *buffer, size_t validBufferSizeBytes,
 		msptiActivity **record);
     static msptiResult mspti_activity_get_next_record(uint8_t *buffer, size_t validBufferSizeBytes,
 		msptiActivity **record){
-		return cgo_mspti_activity_get_next_record(buffer,validBufferSizeBytes,record);
+		CALL_FUNC(cgo_mspti_activity_get_next_record, buffer, validBufferSizeBytes, record);
 	}
 
 	static int (*cgo_mspti_mstx_domain_enable)(const char* domainName);
     static msptiResult mspti_mstx_domain_enable(const char* domainName){
-		return cgo_mspti_mstx_domain_enable(domainName);
+		CALL_FUNC(cgo_mspti_mstx_domain_enable, domainName);
 	}
 
 	static int (*cgo_mspti_mstx_domain_disable)(const char* domainName);
     static msptiResult mspti_mstx_domain_disable(const char* domainName){
-		return cgo_mspti_mstx_domain_disable(domainName);
+		CALL_FUNC(cgo_mspti_mstx_domain_disable, domainName);
 	}
 
 	static int (*cgo_mspti_subscribe)(msptiSubscriberHandle *subscriber, msptiCallbackFunc callback, void* userdata);
 	static msptiResult CgoMsptiSubscribe(){
-		return cgo_mspti_subscribe(&subscriber, NULL, NULL);
+		CALL_FUNC(cgo_mspti_subscribe, &subscriber, NULL, NULL);
 	}
 
 	static int (*cgo_mspti_unsubscribe)(msptiSubscriberHandle subscriber);
 	static msptiResult CgoMsptiUnsubscribe(){
-		return cgo_mspti_unsubscribe(subscriber);
+		CALL_FUNC(cgo_mspti_unsubscribe, subscriber);
 	}
 
 	 // load .so files and functions
