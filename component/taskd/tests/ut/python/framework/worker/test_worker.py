@@ -14,13 +14,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from unittest import TestCase
+from unittest.mock import patch, MagicMock
 
 from taskd.python.framework.worker.worker import Worker
-from taskd.python.cython_api import cython_api
 
+class TestWorker(TestCase):
+    @patch('taskd.python.cython_api.cython_api.lib')
+    def test_init_worker(self, mock_lib):
+        mock_lib.InitWorker = MagicMock(return_value=0)
+        w = Worker(0)
+        w.register_callback = MagicMock()
+        res = w.init_worker(0)
+        self.assertTrue(res)
 
-def test_start_worker():
-    w = Worker(0)
-    assert cython_api.lib is None
-    assert w.start() is False
+    @patch('taskd.python.utils.log.run_log.info')
+    @patch('taskd.python.cython_api.cython_api.lib')
+    @patch('ctypes.CFUNCTYPE')
+    def test_register_callback(self, mock_func, mock_lib, mock_log: MagicMock):
+        mock_lib.RegisterSwitchCallback = MagicMock()
+        w = Worker(0)
+        w.register_callback()
+        mock_log.assert_called_with("Successfully register switch callback")
 
+    @patch('taskd.python.cython_api.cython_api.lib')
+    def test_start_up_monitor(self, mock_lib: MagicMock):
+        w = Worker(0)
+        mock_lib.StartMonitorClient = MagicMock(return_value=0)
+        res = w._start_up_monitor()
+        self.assertTrue(res)
+
+        mock_lib.StartMonitorClient = MagicMock(return_value=1)
+        res = w._start_up_monitor()
+        self.assertFalse(res)
