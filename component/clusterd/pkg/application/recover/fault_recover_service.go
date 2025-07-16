@@ -17,7 +17,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/faultdomain"
-	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
@@ -235,7 +234,7 @@ func (s *FaultRecoverService) serveJobNum() int {
 }
 
 func (s *FaultRecoverService) preRegistry(req *pb.ClientInfo) (common.RespCode, error) {
-	if _, ok := job.GetJobCache(req.JobId); !ok {
+	if ok := podgroup.CheckPodGroupExist(req.JobId); !ok {
 		return common.JobNotExist, fmt.Errorf("jobId=%s not exist, reuse registry", req.JobId)
 	}
 	if s.serveJobNum() >= constant.MaxServeJobs {
