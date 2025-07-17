@@ -45,6 +45,7 @@ var (
 	version   bool
 	server    *sv.ClusterInfoMgrServer
 	limiter   = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	useProxy  bool
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -162,7 +163,7 @@ func initGrpcServer(ctx context.Context) {
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS),
 		grpc.KeepaliveParams(keepAlive)})
-	if err := server.Start(ctx); err != nil {
+	if err := server.Start(ctx, useProxy); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
 }
@@ -195,6 +196,7 @@ func init() {
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup operator logs, range is (0, 30]")
+	flag.BoolVar(&useProxy, "useProxy", false, "use local grpc proxy")
 }
 
 func checkParameters() bool {

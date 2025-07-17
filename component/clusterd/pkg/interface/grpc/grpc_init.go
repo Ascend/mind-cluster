@@ -64,15 +64,18 @@ func isIPValid(ipStr string) error {
 }
 
 // Start the grpc server
-func (server *ClusterInfoMgrServer) Start(ctx context.Context) error {
+func (server *ClusterInfoMgrServer) Start(ctx context.Context, useProxy bool) error {
 	recoverSvc := recover.NewFaultRecoverService(keepAliveInterval, ctx)
 	pubFaultSvc := publicfault.NewPubFaultService(ctx)
 	dataTraceSvc := profiling.NewSwitchManager(ctx)
 	configSvc := config.NewBusinessConfigServer(ctx)
 	faultSvc := fault.NewFaultServer(ctx)
 	jobSvc := jobinfo.NewJobServer(ctx)
-
 	ipStr := os.Getenv("POD_IP")
+	if useProxy {
+		ipStr = "127.0.0.1"
+		hwlog.RunLog.Info("use local proxy")
+	}
 	if err := isIPValid(ipStr); err != nil {
 		return err
 	}
