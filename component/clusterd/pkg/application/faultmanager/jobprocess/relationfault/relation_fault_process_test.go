@@ -792,3 +792,56 @@ func TestUpdateNodeFaultInfoMap(t *testing.T) {
 	})
 
 }
+
+const (
+	fakeFaultTime1 = 500
+	fakeFaultTime2 = 1000
+	fakeFaultTime3 = 2000
+	time1          = 1
+)
+
+func TestFaultJobIsMeetTMOutTriggerFault(t *testing.T) {
+	convey.Convey("Test isMeetTMOutTriggerFault function", t, func() {
+		now := time.Now().UnixMilli()
+		kilo := constant.Kilo
+
+		convey.Convey("Case 1: Should return true when trigger fault time is within allowed range", func() {
+			fJob := &FaultJob{TMOutTriggerFault: []constant.FaultInfo{{FaultUid: "trigger-001", FaultTime: now}}}
+			fault := &constant.FaultInfo{
+				FaultUid: "fault-001", FaultTime: now - int64(fakeFaultTime1*kilo), DealMaxTime: fakeFaultTime2}
+			result := fJob.isMeetTMOutTriggerFault(fault)
+			convey.So(result, convey.ShouldBeTrue)
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Case 2: Should return false when trigger fault time is before fault time", func() {
+			fJob := &FaultJob{TMOutTriggerFault: []constant.FaultInfo{
+				{FaultUid: "trigger-002", FaultTime: now - int64(fakeFaultTime2*kilo)}}}
+			fault := &constant.FaultInfo{FaultUid: "fault-002", FaultTime: now, DealMaxTime: fakeFaultTime2}
+			result := fJob.isMeetTMOutTriggerFault(fault)
+			convey.So(result, convey.ShouldBeFalse)
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("Case 3: Should return false when time difference exceeds DealMaxTime", func() {
+			fJob := &FaultJob{TMOutTriggerFault: []constant.FaultInfo{{FaultUid: "trigger-003", FaultTime: now}}}
+			fault := &constant.FaultInfo{FaultUid: "fault-003", FaultTime: now - int64(fakeFaultTime3*kilo),
+				DealMaxTime: fakeFaultTime2}
+			result := fJob.isMeetTMOutTriggerFault(fault)
+			convey.So(result, convey.ShouldBeFalse)
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("Case 4: Should filter out non-matching triggers and return true", func() {
+			fJob := &FaultJob{TMOutTriggerFault: []constant.FaultInfo{
+				{FaultUid: "trigger-004", FaultTime: now + int64(fakeFaultTime2*kilo)},
+				{FaultUid: "trigger-005", FaultTime: now}}}
+			fault := &constant.FaultInfo{FaultUid: "fault-004", FaultTime: now -
+				int64(fakeFaultTime1*kilo), DealMaxTime: fakeFaultTime2}
+			result := fJob.isMeetTMOutTriggerFault(fault)
+			convey.So(result, convey.ShouldBeTrue)
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 1)
+			convey.So(fJob.TMOutTriggerFault[0].FaultUid, convey.ShouldEqual, "trigger-004")
+		})
+	})
+}

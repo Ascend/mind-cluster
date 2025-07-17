@@ -145,6 +145,7 @@ type FaultJob struct {
 	RelationFaults      []*constant.FaultInfo
 	TriggerFault        []constant.FaultInfo
 	processedFaultInfo  []constant.FaultInfo
+	TMOutTriggerFault   []constant.FaultInfo
 	FaultStrategy       constant.FaultStrategy
 	SeparateNodes       sets.String
 	AllFaultCode        sets.String
@@ -346,6 +347,35 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 		newFault.ExecutedStrategy = constant.SubHealthFaultStrategy
 		fJob.updateNodeFaultInfoMap(&newFault)
 	}
+	if fault.FaultType == constant.DeviceFaultType {
+		fJob.execDeviceFaultTMOut(fault)
+	}
+}
+
+func (fJob *FaultJob) execDeviceFaultTMOut(fault *constant.FaultInfo) {
+	if fJob.isMeetTMOutTriggerFault(fault) {
+		fJob.FaultStrategy.NodeLvList[fault.NodeName] = constant.SeparateFaultStrategy
+		newFault := *fault
+		newFault.ExecutedStrategy = constant.SeparateFaultStrategy
+		hwlog.RunLog.Infof("fault <%s> meet tmout trigger fault, will separate fault pod", fault.FaultUid)
+		fJob.updateNodeFaultInfoMap(&newFault)
+	}
+}
+
+func (fJob *FaultJob) isMeetTMOutTriggerFault(fault *constant.FaultInfo) bool {
+	var tmpTMOutTriggerFault []constant.FaultInfo
+	var isMeet bool
+	for _, tmOutTriggerFault := range fJob.TMOutTriggerFault {
+		if tmOutTriggerFault.FaultTime >= fault.FaultTime &&
+			tmOutTriggerFault.FaultTime-fault.FaultTime <= fault.DealMaxTime*constant.Kilo {
+			isMeet = true
+			hwlog.RunLog.Infof("fault <%s> meet <%s> when time out exec", fault.FaultUid, tmOutTriggerFault.FaultUid)
+			continue
+		}
+		tmpTMOutTriggerFault = append(tmpTMOutTriggerFault, tmOutTriggerFault)
+	}
+	fJob.TMOutTriggerFault = tmpTMOutTriggerFault
+	return isMeet
 }
 
 func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo *constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
@@ -398,6 +428,7 @@ func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *constant.FaultInfo) {
 	}
 	if triggerFaultMap.Has(faultInfo.FaultCode) {
 		if fJob.IsA3Job && faultdomain.IsCqeFault(faultInfo.FaultCode) {
+			fJob.TMOutTriggerFault = append(fJob.TMOutTriggerFault, *faultInfo)
 			return
 		}
 		fJob.TriggerFault = append(fJob.TriggerFault, *faultInfo)
