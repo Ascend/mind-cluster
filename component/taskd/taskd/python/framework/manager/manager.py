@@ -29,10 +29,13 @@ class Manager:
 
     def init_taskd_manager(self, config: dict) -> bool:
         if cython_api.lib is None:
-            run_log.error("the libtaskd.so has not been loaded!")
+            run_log.error("the libtaskd.so has not been loaded")
             return False
         config_str = json.dumps(config).encode('utf-8')
         init_taskd_manager_func = cython_api.lib.InitTaskdManager
+        if init_taskd_manager_func is None:
+            run_log.error("init_taskd_manager: func InitTaskdManager has not been loaded from libtaskd.so")
+            return False
         result = init_taskd_manager_func(config_str)
         if result == 0:
             run_log.info("successfully init taskd manager")
@@ -43,9 +46,12 @@ class Manager:
     def start_taskd_manager(self) -> bool:
         try:
             if cython_api.lib is None:
-                run_log.error("the libtaskd.so has not been loaded!")
+                run_log.error("the libtaskd.so has not been loaded")
                 return False
             start_taskd_manager_func = cython_api.lib.StartTaskdManager
+            if start_taskd_manager_func is None:
+                run_log.error("start_taskd_manager: func StartTaskdManager has not been loaded from libtaskd.so")
+                return False
             result = start_taskd_manager_func()
             if result == 0:
                 run_log.info(f"successfully start taskd manager")

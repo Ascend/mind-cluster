@@ -26,7 +26,7 @@ from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, 
 
 def init_taskd_proxy(config: dict) -> bool:
     if cython_api.lib is None:
-        run_log.error("init_taskd_proxy: the libtaskd.so has not been loaded!")
+        run_log.error("init_taskd_proxy: the libtaskd.so has not been loaded")
         return False
 
     default_values = {
@@ -58,7 +58,7 @@ def init_taskd_proxy(config: dict) -> bool:
     try:
         res = cython_api.lib.InitTaskdProxy(config_json)
         if res != 0:
-            run_log.error("init_taskd_proxy: init_taskd_proxy fail, reason in taskd proxy log!")
+            run_log.error("init_taskd_proxy: init_taskd_proxy fail, reason in taskd proxy log")
             return False
     except Exception as e:
         run_log.error(f"init_taskd_proxy: encounter exception: {e}")
@@ -68,10 +68,13 @@ def init_taskd_proxy(config: dict) -> bool:
 
 def destroy_taskd_proxy() -> bool:
     if cython_api.lib is None:
-        run_log.error("destroy_taskd_proxy: the libtaskd.so has not been loaded!")
+        run_log.error("destroy_taskd_proxy: the libtaskd.so has not been loaded")
         return False
     try:
         destroy_proxy_func = cython_api.lib.DestroyTaskdProxy
+        if destroy_proxy_func is None:
+            run_log.error("destroy_taskd_proxy: func DestroyTaskdProxy has not been loaded from libtaskd.so")
+            return False
         destroy_proxy_func()
     except Exception as e:
         run_log.error(f"destroy_taskd_proxy: encounter exception: {e}")

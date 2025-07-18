@@ -38,9 +38,12 @@ class Worker:
 
     def init_worker(self, upper_limit_of_disk_in_mb: int) -> bool:
         if cython_api.lib is None:
-            run_log.error("the libtaskd.so has not been loaded!")
+            run_log.error("the libtaskd.so has not been loaded")
             return False
         init_taskd_func = cython_api.lib.InitWorker
+        if init_taskd_func is None:
+            run_log.error("init_worker: func InitWorker has not been loaded from libtaskd.so")
+            return False
         node_rank_str = os.getenv('RANK') or os.getenv('MS_NODE_RANK') or '-1'
         try:
             node_rank = int(node_rank_str)
@@ -62,15 +65,18 @@ class Worker:
             cython_api.lib.RegisterSwitchCallback(self._callback)
             run_log.info("Successfully register switch callback")
         else:
-            run_log.error("register switch callback failed!")
+            run_log.error("register switch callback failed")
 
     def _start_up_monitor(self) -> bool:
         try:
             if cython_api.lib is None:
-                run_log.error("the libtaskd.so has not been loaded!")
+                run_log.error("the libtaskd.so has not been loaded")
                 return False
             run_log.info(f"begin cython_api.lib.StartMonitorClient")
             start_monitor_client_func = cython_api.lib.StartMonitorClient
+            if start_monitor_client_func is None:
+                run_log.error("start_up_monitor: func StartMonitorClient has not been loaded from libtaskd.so")
+                return False
             run_log.info(f"end cython_api.lib.StartMonitorClient")
             result = start_monitor_client_func()
             if result == 0:
