@@ -15,13 +15,23 @@ const (
 	jobEventMaxBackupLogs    = 5
 	jobEventMaxLogLineLength = 2048
 	jobEventMaxAge           = 40
+
+	grpcEventLog           = "/var/log/mindx-dl/clusterd/grpc/grpc_event.log"
+	grpcEventMaxBackupLogs = 14
+	// grpcEventMaxLogLineLength to support 256 server
+	grpcEventMaxLogLineLength = 524288
+	grpcEventMaxAge           = 30
 )
 
 var (
 	jobEventHwLogConfig = &hwlog.LogConfig{LogFileName: jobEventLog, MaxBackups: jobEventMaxBackupLogs,
 		MaxLineLength: jobEventMaxLogLineLength, MaxAge: jobEventMaxAge, OnlyToFile: true}
 	// JobEventLog is used to log job event
-	JobEventLog *hwlog.CustomLogger
+	JobEventLog        *hwlog.CustomLogger
+	grpcEventLogConfig = &hwlog.LogConfig{LogFileName: grpcEventLog, MaxBackups: grpcEventMaxBackupLogs,
+		MaxLineLength: grpcEventMaxLogLineLength, MaxAge: grpcEventMaxAge, OnlyToFile: true}
+	// GrpcEventLogger is used to log grpc event
+	GrpcEventLogger *hwlog.CustomLogger
 )
 
 // InitJobEventLogger init JobEventLog
@@ -44,4 +54,14 @@ func RecordLog(role, event, result string) {
 	default:
 		hwlog.RunLog.Error("invalid event result")
 	}
+}
+
+// InitGrpcEventLogger init GrpcEventLog
+func InitGrpcEventLogger(ctx context.Context) error {
+	grpcLog, err := hwlog.NewCustomLogger(grpcEventLogConfig, ctx)
+	if err != nil {
+		return err
+	}
+	GrpcEventLogger = grpcLog
+	return nil
 }
