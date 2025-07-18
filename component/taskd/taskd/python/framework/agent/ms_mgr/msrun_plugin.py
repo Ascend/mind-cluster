@@ -382,7 +382,7 @@ class MSRunPlugin:
             if self.ms_node_rank == "0":
                 run_log.warning("will kill mindio controller")
                 shared_data.shared_data_inst.set_exit_flag(True)
-            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for 10 secs, after kill workers")
+            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for {KILL_INTERVAL} secs, after kill workers")
             time.sleep(KILL_INTERVAL)
             run_log.warning("sleep over, will start")
             self.start_mindspore_workers()
