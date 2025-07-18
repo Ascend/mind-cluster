@@ -195,6 +195,7 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 	r.updateRandIndex(allocatedPods)
+	rtg.DeletePod()
 	errs := &sync.Map{}
 	errCount := int32(0)
 	wg := &sync.WaitGroup{}
