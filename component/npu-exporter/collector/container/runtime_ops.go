@@ -56,7 +56,8 @@ const (
 	// IsulaContainer represents isula container type
 	IsulaContainer = "isula"
 	// DefaultContainer represents default container type
-	DefaultContainer = "docker-containerd"
+	DefaultContainer   = "docker-containerd"
+	excludePermissions = 0002
 )
 
 // CommonContainer wraps some common container attribute of isulad and containerd
@@ -174,10 +175,19 @@ func (operator *RuntimeOperatorTool) initOciClient() error {
 }
 
 func sockCheck(operator *RuntimeOperatorTool) error {
-	if _, err := utils.CheckPath(strings.TrimPrefix(operator.CriEndpoint, unixPre)); err != nil {
+	absPath, err := utils.CheckPath(strings.TrimPrefix(operator.CriEndpoint, unixPre))
+	if err != nil {
 		return err
 	}
-	if _, err := utils.CheckPath(strings.TrimPrefix(operator.OciEndpoint, unixPre)); err != nil {
+	if err := utils.DoCheckOwnerAndPermission(absPath, excludePermissions, 0); err != nil {
+		return err
+	}
+
+	absPath, err = utils.CheckPath(strings.TrimPrefix(operator.OciEndpoint, unixPre))
+	if err != nil {
+		return err
+	}
+	if err := utils.DoCheckOwnerAndPermission(absPath, excludePermissions, 0); err != nil {
 		return err
 	}
 	return nil
