@@ -144,6 +144,28 @@ func UpdateSwitchFaultInfoAndFaultLevel(si *SwitchFaultInfo) {
 	switchFaultCodeLevelToCm = tmpSwitchFaultCodeLevelToCm
 }
 
+// checkL1toL2PlaneDown must be used in SwitchFaultLevelMapLock block
+func checkL1toL2PlaneDown() bool {
+	cnt := make(map[uint]map[uint]struct{})
+	for _, code := range currentSwitchFault {
+		if code.PeerPortDevice != PeerDeviceL2Port || int8(code.Assertion) != common.FaultOccur {
+			continue
+		}
+		if _, ok := cnt[code.SwitchChipId]; !ok {
+			cnt[code.SwitchChipId] = make(map[uint]struct{})
+		}
+		cnt[code.SwitchChipId][code.SwitchPortId] = struct{}{}
+	}
+	allDown := false
+	for chipId, downPorts := range cnt {
+		if len(downPorts) == L1ToL2PlanePortNum {
+			hwlog.RunLog.Warnf("chip %v L1toL2AllDown", chipId)
+			allDown = true
+		}
+	}
+	return allDown
+}
+
 func getSwitchFaultLevelAndNodeStatus() (string, string) {
 	faultLevel, NodeStatus := "", nodeHealthy
 	if len(currentSwitchFault) == 0 {
@@ -162,6 +184,9 @@ func getSwitchFaultLevelAndNodeStatus() (string, string) {
 		if level > maxFaultLevel {
 			maxFaultLevel = level
 		}
+	}
+	if checkL1toL2PlaneDown() {
+		maxFaultLevel = SeparateFaultLevel
 	}
 	SwitchFaultLevelMapLock.Unlock()
 	switch maxFaultLevel {
