@@ -303,3 +303,24 @@ func TestSetSwitchFaultCode(t *testing.T) {
 		convey.So(GetSwitchFaultCode(), convey.ShouldBeNil)
 	})
 }
+
+// TestCheckL1toL2PlaneDown for checkL1toL2PlaneDown
+func TestCheckL1toL2PlaneDown(t *testing.T) {
+	convey.Convey("test checkL1toL2PlaneDown", t, func() {
+		patch := gomonkey.ApplyGlobalVar(&currentSwitchFault, make([]SwitchFaultEvent, 0, GeneralMapSize))
+		defer patch.Reset()
+		event := SwitchFaultEvent{
+			PeerPortDevice: PeerDeviceL2Port,
+			SwitchChipId:   0,
+			SwitchPortId:   0,
+			Assertion:      1,
+		}
+		faults := make([]SwitchFaultEvent, 0, L1ToL2PlanePortNum)
+		for i := 0; i < L1ToL2PlanePortNum; i++ {
+			event.SwitchPortId = uint(i)
+			faults = append(faults, event)
+		}
+		SetSwitchFaultCode(faults)
+		convey.So(checkL1toL2PlaneDown(), convey.ShouldBeTrue)
+	})
+}

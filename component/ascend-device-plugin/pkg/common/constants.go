@@ -905,3 +905,8 @@ const (
 	// WriteEventChanLenLimit upper limit of length of cache event
 	WriteEventChanLenLimit = 100
 )
+
+const (
+	// L1ToL2PlanePortNum l1 switch port number link to l2
+	L1ToL2PlanePortNum = 16
+)
