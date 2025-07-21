@@ -76,13 +76,11 @@ class DLRecoverManager(RecoverManager):
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __init__(self, info: pb.ClientInfo, server_addr: str, secure_conn: bool = True, cert_path: str = ""):
+    def __init__(self, info: pb.ClientInfo, server_addr: str):
         """
         __init__ construct ProcessRecoverDLManager instance
         :param info: client base information
         :param server_addr: server_addr like [domain_name|ip]:port
-        :param secure_conn: 使用安全连接
-        :param cert_path: 证书路径
         :return: None
         """
         super().__init__()
@@ -96,8 +94,6 @@ class DLRecoverManager(RecoverManager):
         }
         self.server_addr = server_addr
         self.lock = threading.Lock()
-        self.secure_conn = secure_conn
-        self.cert_path = cert_path
         self.grpc_channel = None
         self.grpc_stub = None
         self._init_client()
@@ -171,23 +167,9 @@ class DLRecoverManager(RecoverManager):
             (constants.GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1),
             (constants.GRPC_MAX_PINGS_WITHOUT_DATA, 1)
         ]
-        if not self.secure_conn:
-            run_log.warning("using insecure channel is not safe.")
-            self.grpc_channel = grpc.insecure_channel(self.server_addr, options)
-            self.grpc_stub = service.RecoverStub(self.grpc_channel)
-            return
-        try:
-            cert_bytes = safe_get_file_info(self.cert_path).encode()
-            domain_name = CertContentsChecker().check_cert_info(cert_bytes)
-        except Exception as err:
-            run_log.error(f"check cert failed, {err} and set kill flag to end training")
-            tft_destroy_controller()
-            shared_data.shared_data_inst.set_kill_flag(True)
-            raise ValueError from err
-        ssl_credentials = grpc.ssl_channel_credentials(root_certificates=cert_bytes)
-        options.append((constants.GRPC_SSL_TARGET_NAME_OVERRIDE, domain_name))
-        self.grpc_channel = grpc.secure_channel(self.server_addr, ssl_credentials, options)
+        self.grpc_channel = grpc.insecure_channel(self.server_addr, options)
         self.grpc_stub = service.RecoverStub(self.grpc_channel)
+        return
 
     def __listen_signal(self):
         stream = self.grpc_stub.SubscribeProcessManageSignal(self.client_info)
@@ -384,19 +366,14 @@ def init_grpc_recover_manager() -> DLRecoverManager:
     if job_id is None or server_addr is None:
         run_log.error(f"job_id or server_addr is wrong, job_id：{job_id}, server_addr: {server_addr}")
         raise ValueError
+    use_local_proxy = os.getenv(constants.LOCAL_PROXY_ENABLE)
+    if use_local_proxy == "on":
+        run_log.info(f"recover grpc use loca proxy, job_id={job_id}")
+        server_addr = constants.LOCAL_PROXY_IP
     server_addr = server_addr + ":" + constants.GRPC_SERVER_PORT
-    secure_conn = os.getenv(constants.ELASTIC_GRPC_SECURE_CONNECT_PATH)
-    if secure_conn == "on":
-        secure_conn = True
-    else:
-        secure_conn = False
-    cert_path = os.getenv(constants.ELASTIC_GRPC_SECURE_CERTIFICATES_PATH)
-    if cert_path is None:
-        cert_path = ""
     client_info = pb.ClientInfo(jobId=job_id, role="master agent")
-    run_log.info(f"DLRecoverManager init info: job_id：{job_id}, server_addr: {server_addr}"
-                 f"secure_conn：{secure_conn}, cert_path: {cert_path}")
-    return DLRecoverManager(client_info, server_addr, secure_conn, cert_path)
+    run_log.info(f"DLRecoverManager init info: job_id：{job_id}, server_addr: {server_addr}")
+    return DLRecoverManager(client_info, server_addr)
 
 
 def get_recover_manager_instance() -> DLRecoverManager:

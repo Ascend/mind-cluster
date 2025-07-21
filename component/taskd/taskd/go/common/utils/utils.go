@@ -253,11 +253,15 @@ func ProfilingCmdToBizCode(cmd constant.ProfilingDomainCmd) int32 {
 }
 
 func GetClusterdAddr() (string, error) {
+	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)
+	if proxyIp == constant.LocalProxyEnableOn {
+		hwlog.RunLog.Infof("use proxy connect clusterd")
+		return constant.LocalProxyIP + constant.ClusterdPort, nil
+	}
 	ipFromEnv := os.Getenv(constant.MindxServerIp)
 	parsedIP := net.ParseIP(ipFromEnv)
 	if parsedIP == nil {
 		return "", fmt.Errorf("%s is NOT a valid IP address", ipFromEnv)
-
 	}
 	return ipFromEnv + constant.ClusterdPort, nil
 }

@@ -97,6 +97,11 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	if ip == "" {
 		ip = constant.DefaultIP
 	}
+	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)
+	if proxyIp == constant.LocalProxyEnableOn {
+		hwlog.RunLog.Infof("taskd mgr use local proxy")
+		ip = constant.LocalProxyIP
+	}
 	customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
 	if customLogger == nil {
 		return errors.New("manager SetCustomLogger failed"), nil

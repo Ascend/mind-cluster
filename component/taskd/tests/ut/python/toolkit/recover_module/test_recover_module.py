@@ -73,6 +73,7 @@ def set_env():
     os.environ["TTP_PORT"] = "8000"
     os.environ["WORLD_SIZE"] = "16"
     os.environ['POD_IP'] = '1.2.3.4'
+    os.environ['LOCAL_PROXY_ENABLE'] = "on"
 
 
 def del_env():
@@ -257,6 +258,11 @@ class TestRecoverManager(TestCase):
         mock_run_log.assert_called_with("init process recover succeed")
         mock_sleep.assert_not_called()
 
+    def test_init_clusterd_use_proxy(self):
+        from taskd.python.toolkit.recover_module import recover_manager
+        manager = recover_manager.init_grpc_recover_manager()
+        self.assertEqual(manager.server_addr, '127.0.0.1:8899')
+
     @mock.patch('taskd.python.utils.log.logger.run_log.warning')
     @mock.patch('time.sleep')
     def test_init_clusterd_exception(self, mock_sleep, mock_run_log):
@@ -290,38 +296,3 @@ class TestRecoverManager(TestCase):
         with self.assertRaises(Exception):
             manager.register(manager.client_info)
         manager.grpc_stub.Register.assert_called_once_with(manager.client_info)
-
-    @mock.patch('grpc.ssl_channel_credentials')
-    @mock.patch('grpc.secure_channel')
-    @mock.patch('taskd.python.toolkit.validator.file_process.safe_get_file_info')
-    @mock.patch.object(taskd.python.toolkit.validator.cert_check.CertContentsChecker, 'check_cert_info')
-    @mock.patch('taskd.python.utils.log.logger.run_log')
-    def test_init_secure(self, mock_run_log, mock_cert_checker, mock_safe_get_file_info, mock_grpc_secure_channel,
-                         mock_grpc_ssl_channel_credentials):
-        from taskd.python.toolkit.recover_module import DLRecoverManager
-        info = pb.ClientInfo()
-        info.jobId = '123'
-        info.role = 'test'
-        server_addr = 'localhost:8080'
-        cert_path = 'path/to/cert'
-        mock_safe_get_file_info.return_value = 'cert_info'
-        mock_cert_checker.return_value = 'domain_name'
-        DLRecoverManager(info, server_addr, secure_conn=True, cert_path=cert_path)
-        mock_grpc_ssl_channel_credentials.assert_called_once()
-        mock_grpc_secure_channel.assert_called_once()
-
-    @mock.patch('taskd.python.toolkit.validator.file_process.safe_get_file_info')
-    @mock.patch.object(taskd.python.toolkit.validator.cert_check.CertContentsChecker, 'check_cert_info')
-    @mock.patch('taskd.python.utils.log.logger.run_log')
-    def test_init_secure_cert_check_fail(self, mock_run_log, mock_cert_checker, mock_safe_get_file_info):
-        from taskd.python.toolkit.recover_module import DLRecoverManager
-        info = pb.ClientInfo()
-        info.jobId = '123'
-        info.role = 'test'
-        server_addr = 'localhost:8080'
-        cert_path = 'path/to/cert'
-        mock_safe_get_file_info.return_value = 'cert_info'
-        mock_cert_checker.side_effect = Exception('cert check failed')
-        with self.assertRaises(ValueError):
-            DLRecoverManager(info, server_addr, secure_conn=True, cert_path=cert_path)
-            mock_run_log.error.assert_called_once_with("check cert failed, cert check failed")

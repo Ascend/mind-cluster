@@ -22,6 +22,7 @@ from taskd.python.utils.log import run_log
 from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, DEFAULT_PROXY_UPSTREAMPORT, \
      DEFAULT_PRXOY_LISTENPORT, DEFAULT_PROXY_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
      CONFIG_LISTENIP_KEY, CONFIG_UPSTREAMPORT_KEY, CONFIG_LISTENPORT_KEY
+from taskd.python.toolkit.constants import constants
 
 
 def init_taskd_proxy(config: dict) -> bool:
@@ -53,6 +54,10 @@ def init_taskd_proxy(config: dict) -> bool:
         tls_conf=None
     )
 
+    use_local_proxy = os.getenv(constants.LOCAL_PROXY_ENABLE)
+    if use_local_proxy == "on":
+        run_log.info(f"taskd_proxy use local proxy connect mgr")
+        configs.upstream_addr = constants.LOCAL_PROXY_IP + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY)
     run_log.info(f"init_taskd_proxy: configs is {configs}")
     config_json = json.dumps(asdict(configs)).encode('utf-8')
     try:
