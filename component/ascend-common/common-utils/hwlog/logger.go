@@ -47,7 +47,7 @@ const (
 	pathLen               = 2
 	minLogLevel           = -1
 	maxLogLevel           = 3
-	maxEachLineLen        = 2048
+	maxEachLineLen        = 1048576
 	defaultMaxEachLineLen = 256
 )
 
@@ -164,7 +164,7 @@ func validateMaxLineLength(config *LogConfig) error {
 		return nil
 	}
 	if config.MaxLineLength < 0 || config.MaxLineLength > maxEachLineLen {
-		return fmt.Errorf("the max length of each log line should be in the range (0, 1024]")
+		return fmt.Errorf("the max length of each log line should be in the range (0, 1048576]")
 	}
 	return nil
 }

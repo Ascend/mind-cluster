@@ -119,13 +119,8 @@ func main() {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	// init hwlog
-	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return
-	}
-	if err := logs.InitJobEventLogger(ctx); err != nil {
-		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
+	if err := initLogger(ctx); err != nil {
+		fmt.Printf("logger init failed: %v\n", err)
 		return
 	}
 	if !checkParameters() {
@@ -221,4 +216,20 @@ func signalCatch(cancel context.CancelFunc) {
 		}
 		cancel()
 	}
+}
+
+func initLogger(ctx context.Context) error {
+	// init hwlog
+	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
+		return fmt.Errorf("hwlog init failed, error is %v", err)
+	}
+	if err := logs.InitJobEventLogger(ctx); err != nil {
+		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
+		return fmt.Errorf("job event log init failed, error is %v", err)
+	}
+	if err := logs.InitGrpcEventLogger(ctx); err != nil {
+		hwlog.RunLog.Errorf("GrpcEventLog init failed, error is %v", err)
+		return fmt.Errorf("grpc event log init failed, error is %v", err)
+	}
+	return nil
 }

@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/logs"
 	"clusterd/pkg/interface/grpc/config"
 	"clusterd/pkg/interface/grpc/fault"
 	"clusterd/pkg/interface/grpc/profiling"
@@ -124,7 +125,8 @@ func sendDataToClient[T signalType](stream grpcServerStreamType[T], data T, jobI
 	for i := 0; i < retryTimes; i++ {
 		err := sendWithTimeout(stream, data)
 		if err == nil {
-			hwlog.RunLog.Infof("send %s success, jobId=%s, data=%v", dataType, jobId, data)
+			hwlog.RunLog.Infof("send %s success, jobId=%s", dataType, jobId)
+			logs.GrpcEventLogger.Infof("send %s success, jobId=%s, data=%v", dataType, jobId, data)
 			return true, true
 		}
 		if err == io.EOF {
