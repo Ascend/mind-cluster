@@ -557,6 +557,7 @@ func testNonAssociateFault(fJob *FaultJob) {
 				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
 					"fault1": {FaultLevel: "level1"},
 				},
+				ForceAdd: false,
 			},
 		}
 
@@ -631,7 +632,7 @@ func testSwitchAssociateFault(fJob *FaultJob) {
 		switchInfo := &constant.SwitchInfo{
 			SwitchFaultInfo: constant.SwitchFaultInfo{
 				NodeStatus: constant.HealthyState,
-				FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "fault1"}},
+				FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "fault1", ForceAdd: false}},
 				FaultLevel: "level1",
 			}}
 

@@ -329,7 +329,6 @@ func (fJob *FaultJob) clearProcessedAndTimeOutFault() {
 		if preStopTime-fault.FaultTime >= fault.DealMaxTime*constant.Kilo {
 			hwlog.RunLog.Infof("fault code %s is time out, process as default strategy", fault.FaultUid)
 			fJob.addFaultStrategyForTimeOutCode(fault)
-			fJob.ProcessingFaultCode.Delete(fault.FaultUid)
 			continue
 		}
 		networkFaultInfo = append(networkFaultInfo, fault)
@@ -407,6 +406,7 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 					FaultTime:   time.Now().UnixMilli(),
 					DealMaxTime: getFaultCodeDelMaxTime(faultCode),
 					FaultUid:    nodeName + "-" + fault.NPUName + "-" + faultCode,
+					ForceAdd:    fault.ForceAdd,
 				}
 				fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 				fJob.addFaultInfoByCodeType(&tmpFaultInfo)
@@ -417,7 +417,9 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 
 func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *constant.FaultInfo) {
 	if relationFaultTypeMap.Has(faultInfo.FaultCode) {
-		if fJob.ProcessingFaultCode.Has(faultInfo.FaultUid) {
+		// if linkdown fault is timeout, existed in ProcessingFaultCode and need force add in RelationFaults,
+		// when in retry fault process senior
+		if !faultInfo.ForceAdd && fJob.ProcessingFaultCode.Has(faultInfo.FaultUid) {
 			hwlog.RunLog.Debugf("addFaultInfoByCodeType failed by code %s "+
 				"is existed in ProcessingFaultCode", faultInfo.FaultUid)
 			return
@@ -459,6 +461,7 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 				FaultLevel:  switchInfo.FaultLevel,
 				FaultUid: serverList.ServerName + "-" +
 					constant.AllCardId + "-" + faultInfo.AssembledFaultCode,
+				ForceAdd: faultInfo.ForceAdd,
 			}
 			fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 			fJob.addFaultInfoByCodeType(&tmpFaultInfo)

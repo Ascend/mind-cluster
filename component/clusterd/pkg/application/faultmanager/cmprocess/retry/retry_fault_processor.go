@@ -283,12 +283,14 @@ func (processor *retryFaultProcessor) addRetryFault(nodeName string,
 		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add hccl error: %v ", nodeName, deviceName, fault)
 	}
 	if fault, ok := processor.linkdownDeviceFault[nodeName][deviceName]; ok {
+		fault.ForceAdd = true
 		deviceInfo.AddFaultAndFix(fault)
-		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown fault: %v ", nodeName, deviceName, fault)
+		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown error: %v ", nodeName, deviceName, fault)
 	}
 	if fault, ok := processor.linkdownSwitchFault[nodeName]; ok {
+		fault.ForceAdd = true
 		processor.nodeSwitchCmMap[constant.SwitchInfoPrefix+nodeName].AddFaultAndFix(fault)
-		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add switch fault: %v ", nodeName, deviceName, fault)
+		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add switch error: %v ", nodeName, deviceName, fault)
 	}
 	delete(processor.onceRetryDeviceInfo[nodeName], deviceName)
 	delete(processor.onceFaultMap[nodeName], deviceName)

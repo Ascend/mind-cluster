@@ -20,6 +20,7 @@ type DeviceFault struct {
 	FaultHandling        string                       `json:"fault_handling"`
 	FaultCode            string                       `json:"fault_code"`
 	FaultTimeAndLevelMap map[string]FaultTimeAndLevel `json:"fault_time_and_level_map"`
+	ForceAdd             bool                         `json:"-"`
 }
 
 // NodeInfoCM the config map struct of node info
@@ -330,6 +331,7 @@ type FaultInfo struct {
 	FaultTime        int64
 	ExecutedStrategy string
 	DealMaxTime      int64
+	ForceAdd         bool
 }
 
 // FaultDuration fault duration config
@@ -357,6 +359,7 @@ type SimpleSwitchFaultInfo struct {
 	Severity           uint
 	Assertion          uint
 	AlarmRaisedTime    int64
+	ForceAdd           bool `json:"-"`
 }
 
 // ReportRecoverInfo cluster grpc should call back for report uce fault
