@@ -1608,7 +1608,7 @@ func (d *DcManager) DcGetMcuPowerInfo(cardID int32) (float32, error) {
 func (d *DcManager) DcGetProductType(cardID, deviceID int32) (string, error) {
 	cProductType := C.CString(string(make([]byte, productTypeLen)))
 	defer C.free(unsafe.Pointer(cProductType))
-	err := C.dcmi_get_product_type(C.int(cardID), C.int(deviceID), (*C.char)(cProductType), productTypeLen)
+	err := C.dcmi_get_product_type(C.int(cardID), C.int(deviceID), (*C.char)(cProductType), productTypeLen+1)
 	if err != 0 {
 		return "", fmt.Errorf("get product type failed, errCode: %d", int32(err))
 	}
@@ -1939,7 +1939,7 @@ func (d *DcManager) convertPcieBw(pcieBwArr [agentdrvProfDataNum]C.uint) common.
 func (d *DcManager) DcGetDcmiVersion() (string, error) {
 	cDcmiVer := C.CString(string(make([]byte, dcmiVersionLen)))
 	defer C.free(unsafe.Pointer(cDcmiVer))
-	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), dcmiVersionLen); int32(retCode) != common.Success {
+	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), dcmiVersionLen+1); int32(retCode) != common.Success {
 		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
