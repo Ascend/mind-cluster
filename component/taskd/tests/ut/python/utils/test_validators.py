@@ -17,6 +17,7 @@
 import os
 import tempfile
 import unittest
+from pathlib import Path
 
 from taskd.python.utils.validator import Validator, StringValidator, MapValidator, DirectoryValidator, \
     RankSizeValidator, FileValidator, IntValidator, ClassValidator
@@ -128,6 +129,15 @@ class TestValidators(unittest.TestCase):
                         .path_should_exist(is_file=False, msg="can not find the fault ranks config file")
                         .should_not_contains_sensitive_words().with_blacklist().check())
         self.assertFalse(DirectoryValidator(os.path.dirname(__file__)).path_should_not_exist().check().is_valid())
+
+    def test_check_directory_permissions(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        temp_path = Path(temp_dir.name)
+        test_dir = temp_path / "test_dir"
+        test_dir.mkdir()
+        os.chmod(test_dir, 0o777)
+        target_mode = 0o750
+        self.assertFalse(DirectoryValidator(test_dir).check_directory_permissions(target_mode).check().is_valid())
 
     def test_rank_size_check(self):
         self.assertFalse(RankSizeValidator(4096).check_rank_size_valid().check().is_valid())

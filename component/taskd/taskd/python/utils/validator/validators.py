@@ -19,7 +19,7 @@ import os
 from typing import Callable, Any
 from typing import List, Optional, Tuple
 from taskd.python.constants.constants import (MAX_SIZE, MIN_SIZE, MIN_RANK_SIZE, MAX_RANK_SIZE,
-                                              MAX_FILE_NUMS, MIN_DEVICE_NUM, MAX_DEVICE_NUM)
+                                              MAX_FILE_NUMS, MIN_DEVICE_NUM, MAX_DEVICE_NUM, MUSK_PRIVILEGE)
 
 
 class Validator:
@@ -221,6 +221,12 @@ class DirectoryValidator(StringValidator):
             return not any(map(lambda x: x in path, words))
         else:
             return True
+
+    def check_directory_permissions(self, target_mode: int):
+        stat_info = os.stat(self.value)
+        mode = stat_info.st_mode & MUSK_PRIVILEGE
+        self.register_checker(lambda path: mode == target_mode, "permission error")
+        return self
 
     def check_is_not_none(self):
         self.register_checker(lambda path: self.value is not None and len(self.value) > 0,
