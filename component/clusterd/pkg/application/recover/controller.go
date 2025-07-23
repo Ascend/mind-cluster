@@ -595,7 +595,7 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 		constant.NotifyFaultFlushingOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
-		return common.NotifyFinishEvent, common.OperateConfigMapError, nil
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
 	}
 	hwlog.RunLog.Infof("write configmap FaultFlushing success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.NotifyFinishEvent, common.OK, nil

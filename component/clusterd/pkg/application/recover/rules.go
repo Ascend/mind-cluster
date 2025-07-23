@@ -77,6 +77,8 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
 		{Src: common.NotifyWaitFaultFlushingState, Event: common.DumpForFaultEvent,
 			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+		{Src: common.NotifyWaitFaultFlushingState, Event: common.NotifyFailEvent,
+			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
 
 		{Src: common.NotifyStopTrainState, Event: common.NotifySuccessEvent,
 			Dst: common.WaitReportStopCompleteState, Handler: ctl.handleWaitReportStopComplete},

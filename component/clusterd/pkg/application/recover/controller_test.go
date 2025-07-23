@@ -176,7 +176,7 @@ func TestHandleNotifyWaitFaultFlushing(t *testing.T) {
 			result, respCode, err := ctl.handleNotifyWaitFaultFlushing()
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(respCode == common.OperateConfigMapError, convey.ShouldBeTrue)
-			convey.So(result == common.NotifyFinishEvent, convey.ShouldBeTrue)
+			convey.So(result == common.NotifyFailEvent, convey.ShouldBeTrue)
 		})
 	})
 }

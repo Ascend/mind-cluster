@@ -155,6 +155,8 @@ const (
 	NormalFaultType = "1"
 	// HotResetPolicy hot reset policy
 	HotResetPolicy = "reset"
+	// RestartPolicy restart process policy
+	RestartPolicy = "restart"
 )
 
 // FaultLevel string describe
