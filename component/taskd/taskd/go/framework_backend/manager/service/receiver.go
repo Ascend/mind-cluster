@@ -16,7 +16,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 
 	"ascend-common/common-utils/hwlog"
@@ -30,32 +29,25 @@ type MsgReceiver struct {
 }
 
 // ReceiveMsg receive msg from grpc server
-func (mrc *MsgReceiver) ReceiveMsg(mq *storage.MsgQueue, tool *net.NetInstance, ctx context.Context) (
+func (mrc *MsgReceiver) ReceiveMsg(mq *storage.MsgQueue, tool *net.NetInstance) (
 	*common.Message, storage.MsgBody, error) {
-	for {
-		select {
-		case <-ctx.Done():
-			hwlog.RunLog.Debug("Mgr ReceiveMsg exit")
-			return nil, storage.MsgBody{}, nil
-		default:
-			msg := tool.ReceiveMessage()
-			if msg == nil {
-				continue
-			}
-			hwlog.RunLog.Debugf("mgr recv message: %v", msg)
-			var msgBody storage.MsgBody
-			err := json.Unmarshal([]byte(msg.Body), &msgBody)
-			if err != nil {
-				hwlog.RunLog.Errorf("unmarshal failed: %v", err)
-				continue
-			}
-			data := mq.NewMsg(msg.Uuid, msg.BizType, msg.Src, msgBody)
-			err = mq.Enqueue(data)
-			hwlog.RunLog.Debugf("enqueue msg: %v", data)
-			if err != nil {
-				hwlog.RunLog.Errorf("enqueue failed: %v", err)
-				return msg, msgBody, err
-			}
-		}
+	msg := tool.ReceiveMessage()
+	if msg == nil {
+		return nil, storage.MsgBody{}, nil
 	}
+	hwlog.RunLog.Debugf("mgr recv message: %v", msg)
+	var msgBody storage.MsgBody
+	err := json.Unmarshal([]byte(msg.Body), &msgBody)
+	if err != nil {
+		hwlog.RunLog.Errorf("unmarshal failed: %v", err)
+		return nil, storage.MsgBody{}, nil
+	}
+	data := mq.NewMsg(msg.Uuid, msg.BizType, msg.Src, msgBody)
+	err = mq.Enqueue(data)
+	hwlog.RunLog.Debugf("enqueue msg: %v", data)
+	if err != nil {
+		hwlog.RunLog.Errorf("enqueue failed: %v", err)
+		return msg, msgBody, err
+	}
+	return nil, storage.MsgBody{}, nil
 }

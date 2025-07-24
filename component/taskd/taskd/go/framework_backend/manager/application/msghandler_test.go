@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -121,6 +122,43 @@ func TestStartAndInit(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), fiveHundred*time.Millisecond)
 		defer cancel()
 		convey.So(capturePanic(func() { mhd.Start(ctx) }), convey.ShouldBeNil)
+	})
+}
+
+// TestInitManagerGrpc test init manager grpc
+func TestInitManagerGrpc(t *testing.T) {
+	mhd := NewMsgHandler()
+	patch := gomonkey.ApplyFuncReturn(os.Getenv, nil)
+	defer patch.Reset()
+	convey.Convey("Test init manager grpc success", t, func() {
+		customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
+		mockTool, _ := net.InitNetwork(&common.TaskNetConfig{
+			Pos: common.Position{
+				Role:        common.MgrRole,
+				ServerRank:  "0",
+				ProcessRank: "-1",
+			},
+			ListenAddr: constant.DefaultIP + constant.MgrPort,
+		}, customLogger)
+		err, tool := mhd.initManagerGrpc()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(tool, convey.ShouldEqual, mockTool)
+	})
+	convey.Convey("Test init manager grpc set custom logger failed return error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(os.Getenv, constant.LocalProxyEnableOn)
+		defer patch.Reset()
+		mockFunc := gomonkey.ApplyFuncReturn(hwlog.SetCustomLogger, nil)
+		defer mockFunc.Reset()
+		err, tool := mhd.initManagerGrpc()
+		convey.So(err, convey.ShouldEqual, errors.New("manager SetCustomLogger failed"))
+		convey.So(tool, convey.ShouldBeNil)
+	})
+	convey.Convey("Test init manager grpc init net work failed return error", t, func() {
+		mockFunc := gomonkey.ApplyFuncReturn(net.InitNetwork, nil, errors.New("init net work failed"))
+		defer mockFunc.Reset()
+		err, tool := mhd.initManagerGrpc()
+		convey.So(err, convey.ShouldEqual, errors.New("init net work failed"))
+		convey.So(tool, convey.ShouldBeNil)
 	})
 }
 
