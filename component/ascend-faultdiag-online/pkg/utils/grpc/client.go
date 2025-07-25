@@ -20,6 +20,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -47,6 +48,11 @@ type Client struct {
 func (c *Client) connect(host string) error {
 	if c.conn != nil {
 		return nil
+	}
+	// validate the host
+	parsedIp := net.ParseIP(host)
+	if parsedIp == nil {
+		return fmt.Errorf("invalid host: %s, not the ip type", host)
 	}
 	var err error
 	serverAddr := host + constants.GrpcPort

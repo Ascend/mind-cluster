@@ -20,13 +20,14 @@ import (
 	"fmt"
 	"os"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 const (
@@ -58,9 +59,16 @@ func NewClientK8s() (*ClientK8s, error) {
 }
 
 // CreateConfigMap create a configmap
-func (ck *ClientK8s) CreateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+func (ck *ClientK8s) CreateConfigMap(cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 	if cm == nil {
 		return nil, fmt.Errorf("param cm is nil")
+	}
+	cmNum, err := ck.GetConfigMapNum()
+	if err != nil {
+		return nil, err
+	}
+	if cmNum >= constants.MaxConfigMapNum {
+		return nil, fmt.Errorf("config map number: %d reaches the max number: %d", cmNum, constants.MaxConfigMapNum)
 	}
 	newCM, err := ck.ClientSet.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).
 		Create(context.TODO(), cm, metav1.CreateOptions{})
@@ -71,7 +79,7 @@ func (ck *ClientK8s) CreateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 }
 
 // GetConfigMap get config map by name and name space
-func (ck *ClientK8s) GetConfigMap(cmName, cmNamespace string) (*v1.ConfigMap, error) {
+func (ck *ClientK8s) GetConfigMap(cmName, cmNamespace string) (*corev1.ConfigMap, error) {
 	newCM, err := ck.ClientSet.CoreV1().ConfigMaps(cmNamespace).Get(context.TODO(), cmName, metav1.GetOptions{
 		ResourceVersion: "0",
 	})
@@ -82,7 +90,7 @@ func (ck *ClientK8s) GetConfigMap(cmName, cmNamespace string) (*v1.ConfigMap, er
 }
 
 // UpdateConfigMap update config map
-func (ck *ClientK8s) UpdateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+func (ck *ClientK8s) UpdateConfigMap(cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 	if cm == nil {
 		return nil, fmt.Errorf("param cm is nil")
 	}
@@ -96,7 +104,7 @@ func (ck *ClientK8s) UpdateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 }
 
 // CreateOrUpdateConfigMap create config map when config map not found or update config map
-func (ck *ClientK8s) CreateOrUpdateConfigMap(cm *v1.ConfigMap) error {
+func (ck *ClientK8s) CreateOrUpdateConfigMap(cm *corev1.ConfigMap) error {
 	_, err := ck.UpdateConfigMap(cm)
 	if err == nil {
 		return nil
@@ -134,7 +142,7 @@ func (ck *ClientK8s) GetWorkerNodesIPByLabel(labelName, lableValue string) ([]st
 			continue
 		}
 		for _, addr := range node.Status.Addresses {
-			if addr.Type == v1.NodeInternalIP || addr.Type == v1.NodeExternalIP {
+			if addr.Type == corev1.NodeInternalIP || addr.Type == corev1.NodeExternalIP {
 				ips = append(ips, addr.Address)
 			}
 		}
@@ -154,4 +162,16 @@ func (ck *ClientK8s) GetLabels() (map[string]string, error) {
 		return nil, err
 	}
 	return node.Labels, nil
+}
+
+// GetConfigMapNum get the current number of config map, include all namespaces
+func (ck *ClientK8s) GetConfigMapNum() (int, error) {
+	cms, err := ck.ClientSet.CoreV1().ConfigMaps("").List(context.TODO(), metav1.ListOptions{
+		ResourceVersion: "0", // read from cache
+		Limit:           1,   // only need total numbers, no need to get the content
+	})
+	if err != nil {
+		return 0, err
+	}
+	return len(cms.Items), nil
 }

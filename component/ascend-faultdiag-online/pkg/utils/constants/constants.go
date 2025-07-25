@@ -65,4 +65,6 @@ const (
 	PodIP = "POD_IP"
 	// GrpcPort is the port of Grpc server
 	GrpcPort = ":8899"
+	// MaxConfigMapNum the top number of config map size allowed created
+	MaxConfigMapNum = 20000
 )
