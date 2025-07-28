@@ -65,8 +65,6 @@ const (
 
 	checkNodeLabelPolling     = 60 * 60
 	defaultUpdateTimeInterval = 5
-	defaultSuperPodID         = -1
-	defaultServerIndex        = -1
 )
 
 // AscendTools struct definition
@@ -252,7 +250,6 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 // UpdateNodeDeviceInfo update device info
 func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 	updateDeviceInfoFunc func(map[string]string, map[string]string, common.DevStatusSet) error) error {
-	tool.checkAndInitNodeDeviceInfo()
 	waitErr := wait.PollImmediate(common.Interval*time.Second, common.Timeout*time.Second, func() (bool, error) {
 		nodeDeviceInfo := tool.GetKubeClient().GetDeviceInfoCMCache()
 		deviceList := nodeDeviceInfo.DeviceInfo.DeviceList
@@ -299,23 +296,6 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		return true, nil
 	})
 	return waitErr
-}
-
-func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
-	nodeDeviceInfo := tool.GetKubeClient().GetDeviceInfoCMCache()
-	if nodeDeviceInfo == nil {
-		var nodeDeviceData = common.NodeDeviceInfoCache{
-			DeviceInfo: common.NodeDeviceInfo{
-				DeviceList: make(map[string]string, 1),
-				UpdateTime: time.Now().Unix(),
-			},
-			SuperPodID:  defaultSuperPodID,
-			ServerIndex: defaultServerIndex,
-		}
-		nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
-		tool.GetKubeClient().SetNodeDeviceInfoCache(&nodeDeviceData)
-		hwlog.RunLog.Debug("node device info cache is empty, will create a new one")
-	}
 }
 
 // compareDeviceList compare deviceList and newDeviceList are exactly the same without fault_time

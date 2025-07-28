@@ -105,12 +105,20 @@ func QueryJobsFaultInfo(faultLevel string) map[string]constant.JobFaultInfo {
 
 // QueryDeviceInfoToReport query device info to report
 func QueryDeviceInfoToReport() map[string]*constant.DeviceInfo {
-	return cmprocess.DeviceCenter.GetProcessedCm()
+	infos := cmprocess.DeviceCenter.GetProcessedCm()
+	for _, info := range infos {
+		info.UpdateTime = time.Now().Unix()
+	}
+	return infos
 }
 
 // QuerySwitchInfoToReport query switch info to report
 func QuerySwitchInfoToReport() map[string]*constant.SwitchInfo {
-	return cmprocess.SwitchCenter.GetProcessedCm()
+	infos := cmprocess.SwitchCenter.GetProcessedCm()
+	for _, info := range infos {
+		info.UpdateTime = time.Now().Unix()
+	}
+	return infos
 }
 
 // QueryNodeInfoToReport query node info to report

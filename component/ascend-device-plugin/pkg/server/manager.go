@@ -436,9 +436,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 			}
 			// complete the fault codes that cannot be reported by the event subscribe interface
 			hdm.mendSubscribeFaultEvents()
-			if err := hdm.updatePodAnnotation(); err != nil {
-				hwlog.RunLog.Error(err)
-			}
+
 			hdm.updateDeviceUsedInfo(hdm.groupDevice)
 			hdm.notifyToK8s(&initTime)
 
@@ -753,6 +751,9 @@ func (hdm *HwDevManager) useVolcanoNotify() {
 			hwlog.RunLog.Warn("device plugin first reset annotation and config map error")
 		}
 	})
+	if err := hdm.updatePodAnnotation(); err != nil {
+		hwlog.RunLog.Error(err)
+	}
 	hdm.manager.DoWithVolcanoListAndWatch(hdm.groupDevice)
 }
 
