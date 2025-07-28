@@ -332,7 +332,6 @@ func (ki *ClientK8s) AnnotationReset() error {
 	}
 	newNode := curNode.DeepCopy()
 	ki.resetNodeAnnotations(newNode)
-	ki.ResetDeviceInfo()
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = ki.PatchNodeState(curNode, newNode); err == nil {
 			hwlog.RunLog.Infof("reset annotation success")
