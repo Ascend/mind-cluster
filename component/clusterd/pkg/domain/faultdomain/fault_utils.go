@@ -271,7 +271,7 @@ func AdvanceDeviceCmForNodeMapToString(
 			orgDeviceCm[cmName].DeviceList[faultListKey] =
 				util.ObjToString(faultMapToFaultList(advanceCm.FaultDeviceList))
 		}
-
+		orgDeviceCm[cmName].UpdateTime = advanceCm.UpdateTime
 		networkUnhealthyKey := GetNetworkUnhealthyKey(deviceInfo)
 		if networkUnhealthyKey != "" {
 			orgDeviceCm[cmName].DeviceList[networkUnhealthyKey] = strings.Join(advanceCm.NetworkUnhealthy, ",")

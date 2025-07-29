@@ -103,10 +103,13 @@ func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64)
 	for nodeName, nodeFaults := range processor.uceAccompanyFaultQue {
 		faultMap := processor.deviceCmForNodeMap[nodeName]
 		for deviceName, deviceFaultQue := range nodeFaults {
-			newQue, newFaultMap :=
+			newQue, newFaultMap, shouldUpdateTime :=
 				processor.filterFaultDevice(faultMap.FaultDeviceList, currentTime, nodeName, deviceName, deviceFaultQue)
 			nodeFaults[deviceName] = newQue
 			faultMap.FaultDeviceList = newFaultMap
+			if shouldUpdateTime {
+				faultMap.UpdateTime = time.Now().Unix()
+			}
 		}
 		processor.deviceCmForNodeMap[nodeName] = faultMap
 	}
@@ -114,13 +117,15 @@ func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64)
 
 func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 	faultMap map[string][]constant.DeviceFault, currentTime int64, nodeName, deviceName string,
-	deviceFaultQue []constant.DeviceFault) ([]constant.DeviceFault, map[string][]constant.DeviceFault) {
+	deviceFaultQue []constant.DeviceFault) ([]constant.DeviceFault, map[string][]constant.DeviceFault, bool) {
 	newDeviceFaultQue := make([]constant.DeviceFault, 0)
+	shouldUpdateTime := false
 	for _, fault := range deviceFaultQue {
 		uceFaultTime := processor.getDeviceUceFaultTime(nodeName, deviceName)
 		errorMsg := fmt.Sprintf("filterFaultDevice cannot find uce fault time for device %s of node %s",
 			deviceName, nodeName)
 		accompanyFaultTime := faultdomain.GetFaultTime(fault, errorMsg)
+		shouldUpdateTime = true
 		// if is accompanied fault, filter
 		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
 			hwlog.RunLog.Warnf("filter uce accompany fault %s, fault time: %s",
@@ -142,7 +147,7 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 		hwlog.RunLog.Warnf("cannot filter uce accompany like fault %s, uce fault time: %s",
 			util.ObjToString(fault), util.ReadableMsTime(uceFaultTime))
 	}
-	return newDeviceFaultQue, faultMap
+	return newDeviceFaultQue, faultMap, shouldUpdateTime
 }
 
 func (processor *uceAccompanyFaultProcessor) getDeviceUceFaultTime(nodeName, deviceName string) int64 {

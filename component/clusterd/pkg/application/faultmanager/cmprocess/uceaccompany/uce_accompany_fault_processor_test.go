@@ -32,6 +32,8 @@ func TestMain(m *testing.M) {
 // ======= Test uceAccompanyFaultProcessor
 func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 	t.Run("TestUceAccompanyFaultProcessorProcess", func(t *testing.T) {
+		mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+		defer mockTimeUnix.Reset()
 		cmDeviceInfos, expectProcessedDeviceInfos, testFileErr := readObjectFromUceAccompanyProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
@@ -56,6 +58,8 @@ func TestUceAccompanyFaultProcessorProcess(t *testing.T) {
 // ======= Test TestUceAccompanyFaultProcessorProcessE2E
 func TestUceAccompanyFaultProcessorProcessE2E(t *testing.T) {
 	t.Run("TestUceAccompanyFaultProcessorProcessE2E", func(t *testing.T) {
+		mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+		defer mockTimeUnix.Reset()
 		cmDeviceInfos, expectProcessedDeviceInfos, testFileErr := readObjectFromUceAccompanyProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -80,7 +81,7 @@ func (p *pubFaultProcessor) faultJoin(nodeName string) []constant.DeviceFault {
 	for _, dpCMFault := range newFaultList {
 		dpNPUFaultLevelMap[dpCMFault.NPUName] = dpCMFault.FaultLevel
 	}
-
+	modified := false
 	for _, pubFaultCache := range p.pubFaultInfo {
 		// add public fault to fault list
 		pubFaultCache.FaultDevNames = convertNPUIdsToName(pubFaultCache.FaultDevIds, devType)
@@ -98,6 +99,7 @@ func (p *pubFaultProcessor) faultJoin(nodeName string) []constant.DeviceFault {
 						FaultLevel: pubFaultCache.FaultLevel,
 					}},
 			})
+			modified = true
 		}
 
 		for _, pubFaultDev := range pubFaultCache.FaultDevNames {
@@ -113,6 +115,9 @@ func (p *pubFaultProcessor) faultJoin(nodeName string) []constant.DeviceFault {
 		}
 	}
 	p.updateFaultList(newFaultList, faultKey)
+	if modified {
+		p.devCMInfo.UpdateTime = time.Now().Unix()
+	}
 	return newFaultList
 }
 

@@ -121,6 +121,7 @@ func (processor *uceFaultProcessor) processEachNodeUceFaultInfo(
 			if processor.canFilterUceDeviceFaultInfo(uceDevice, currentTime) {
 				hwlog.RunLog.Warn("uceFaultProcessor " + log)
 				deviceInfo.FaultDeviceList = processor.filterUceDeviceFaultInfo(deviceName, deviceInfo.FaultDeviceList)
+				deviceInfo.UpdateTime = time.Now().Unix()
 			} else {
 				hwlog.RunLog.Warn("uceFaultProcessor cannot " + log)
 			}

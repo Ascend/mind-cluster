@@ -318,6 +318,8 @@ func TestUceFaultProcessorGetUceDevicesForUceTolerateJobs(t *testing.T) {
 
 func TestUceFaultProcessorProcessUceFaultInfo(t *testing.T) {
 	t.Run("TestUceFaultProcessorProcessUceFaultInfo", func(t *testing.T) {
+		mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+		defer mockTimeUnix.Reset()
 		cmDeviceInfos, expectProcessedDeviceInfos, _, jobServerInfoMap, _, testFileErr := readObjectFromUceProcessorTestYaml()
 		if testFileErr != nil {
 			t.Errorf("init data failed. %v", testFileErr)
@@ -341,6 +343,8 @@ func TestUceFaultProcessorProcessUceFaultInfo(t *testing.T) {
 
 func TestUceFaultProcessorScenario1(t *testing.T) {
 	t.Run("TestUceFaultProcessorScenario1", func(t *testing.T) {
+		mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+		defer mockTimeUnix.Reset()
 		cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfoMap, reportInfos, testFileErr :=
 			readObjectFromUceScenarioTestYaml()
 		if testFileErr != nil {
@@ -366,6 +370,8 @@ func TestUceFaultProcessorScenario1(t *testing.T) {
 
 func TestUceFaultProcessorScenario2(t *testing.T) {
 	t.Run("TestUceFaultProcessorScenario2", func(t *testing.T) {
+		mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+		defer mockTimeUnix.Reset()
 		cmDeviceInfos, expectProcessedDeviceInfos, jobServerInfoMap, reportInfos, testFileErr :=
 			readObjectFromUceScenarioTestYaml()
 		if testFileErr != nil {
