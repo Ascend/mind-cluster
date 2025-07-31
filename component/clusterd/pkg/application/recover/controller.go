@@ -974,12 +974,6 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 		return ctl.chooseForRetryFail(), nil
 	} else if res.Strategy == constant.ProcessRecoverStrategyName {
 		return ctl.chooseForRecoverFail(), nil
-	} else if res.Strategy == constant.ProcessDumpStrategyName &&
-		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.PtFramework {
-		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
-		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
-		// it goes through the failure recovery state machine again.
-		return constant.ProcessDumpStrategyName, nil
 	}
 	return constant.ProcessExitStrategyName, nil
 }
@@ -993,6 +987,13 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 	}
 	var err error
 	signal.ChangeStrategy, err = ctl.chooseStrategy()
+	if signal.ChangeStrategy == constant.ProcessDumpStrategyName &&
+		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.MsFramework {
+		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
+		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
+		// it goes through the failure recovery state machine again.
+		signal.ChangeStrategy = constant.ProcessExitStrategyName
+	}
 	if err != nil {
 		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
@@ -1166,8 +1167,6 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		}
 		if result.RecoverSuccess {
 			ctl.updateFixResult(result.Strategy, constant.DumpSuccess)
-		} else if result.Code == common.UnRecoverableRetryError && ctl.isSwitchingNic() {
-			return common.SwitchNicFailRecoverEvent, common.OK, nil
 		} else {
 			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
 		}

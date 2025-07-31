@@ -96,9 +96,9 @@ class Worker:
             elif self.framework == "ms":
                 from mindspore.communication.management import _comm_switch_nic
                 switch_func = _comm_switch_nic
-            run_log.info(f"ranks:{ranks}, ops:{ops}")
+            run_log.info(f"rankID:{self.global_rank} ranks:{ranks}, ops:{ops}")
             ret = switch_func(ranks, ops)
-            run_log.info(f"ret:{ret}")
+            run_log.info(f"rankID:{self.global_rank} ret:{ret}")
             return ret
         except Exception as e:
             run_log.error(e)

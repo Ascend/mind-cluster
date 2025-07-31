@@ -45,11 +45,8 @@ func (ctl *EventController) geOMRules() []common.TransRule {
 		{Src: common.WaitSwitchNicFinishedState, Event: common.WaitSwitchNicRecvFaultEvent,
 			Dst: common.NotifyStopTrainState, Handler: ctl.handleNotifyStopTrain},
 		{Src: common.WaitSwitchNicFinishedState, Event: common.ReportTimeoutEvent,
-			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+			Dst: common.NotifyStopTrainState, Handler: ctl.handleNotifyStopTrain},
 		{Src: common.WaitSwitchNicFinishedState, Event: common.SwitchNicFailEvent,
-			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
-
-		{Src: common.CheckRecoverResultState, Event: common.SwitchNicFailRecoverEvent,
 			Dst: common.NotifyStopTrainState, Handler: ctl.handleNotifyStopTrain},
 
 		{Src: common.NotifyContinueTrainState, Event: common.NotifyContinueSuccessEvent,
