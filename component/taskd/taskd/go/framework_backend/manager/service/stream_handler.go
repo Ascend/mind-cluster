@@ -71,14 +71,14 @@ func (s *StreamHandler) Init() error {
 
 // SetStream set a stream in streams
 func (s *StreamHandler) SetStream(stream *infrastructure.Stream) error {
+	s.StreamsLock.Lock()
+	defer s.StreamsLock.Unlock()
 	_, ok := s.Streams[stream.GetName()]
 	if ok {
 		hwlog.RunLog.Errorf("stream %s set failed: conflict stream name", stream.GetName())
 		return fmt.Errorf("stream %s set failed: conflict stream name", stream.GetName())
 	}
-	s.StreamsLock.Lock()
 	s.Streams[stream.GetName()] = stream
-	s.StreamsLock.Unlock()
 	return nil
 }
 
