@@ -137,6 +137,38 @@ func createFile(filePath string) error {
 	return nil
 }
 
+// TestGetDefaultDevices2 for GetDefaultDevices
+func TestGetDefaultDevices2(t *testing.T) {
+	convey.Convey("test TestGetDefaultDevices2", t, func() {
+		mockStat := gomonkey.ApplyFunc(getDavinciManagerPath, func() (string, error) {
+			return HiAIManagerDevice, nil
+		})
+		defer mockStat.Reset()
+		ParamOption = Option{
+			ProductTypes: []string{Atlas200ISoc},
+		}
+		defer func() {
+			ParamOption = Option{}
+		}()
+		convey.Convey("set200SocDefaultDevices return err", func() {
+			patch := gomonkey.ApplyFunc(set200SocDefaultDevices, func() ([]string, error) {
+				return []string{Atlas200ISocVPC}, fmt.Errorf("err")
+			})
+			defer patch.Reset()
+			_, err := GetDefaultDevices(true)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("set200SocDefaultDevices return nil", func() {
+			patch := gomonkey.ApplyFunc(set200SocDefaultDevices, func() ([]string, error) {
+				return []string{Atlas200ISocVPC}, nil
+			})
+			defer patch.Reset()
+			_, err := GetDefaultDevices(true)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
 // TestGetDefaultDevices for GetDefaultDevices
 func TestGetDefaultDevices(t *testing.T) {
 	convey.Convey("pods is nil", t, func() {

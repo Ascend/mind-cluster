@@ -259,6 +259,14 @@ func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 // TestSetNetworkNewFaultAndCacheOnceRecoverFault for test SetNetworkNewFaultAndCacheOnceRecoverFault
 func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 	convey.Convey("test SetNetworkNewFaultAndCacheOnceRecoverFault", t, func() {
+		convey.Convey("device is nil", func() {
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover},
+			}
+			SetNetworkNewFaultAndCacheOnceRecoverFault(0, faultInfos, nil)
+			convey.So(faultInfos, convey.ShouldNotBeNil)
+
+		})
 		convey.Convey("SetNetworkNewFaultAndCacheOnceRecoverFault success", func() {
 			recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
 			logicID := int32(0)
@@ -1927,5 +1935,18 @@ func TestCheckErrorMessage(t *testing.T) {
 		convey.So(CheckErrorMessage(errors.New("contain error code: 8102"), "8102"), convey.ShouldBeTrue)
 		// 02-error msg do not contain target string, should return false
 		convey.So(CheckErrorMessage(errors.New("contain error code: 8102"), "8103"), convey.ShouldBeFalse)
+	})
+}
+
+// TestIsValidSwitchFaultCode for test isValidSwitchFaultCode
+func TestIsValidSwitchFaultCode(t *testing.T) {
+	convey.Convey("test isValidSwitchFaultCode max length", t, func() {
+		code := strings.Repeat("a", MaxLengthOfFaultCode) + "]"
+		ret := isValidSwitchFaultCode(code)
+		convey.So(ret, convey.ShouldEqual, false)
+	})
+	convey.Convey("test isValidSwitchFaultCode don't match format", t, func() {
+		ret := isValidSwitchFaultCode("aaaa")
+		convey.So(ret, convey.ShouldEqual, false)
 	})
 }
