@@ -55,7 +55,7 @@ message ContainerMetadata {
 enum ContainerState {
   CONTAINER_CREATED = 0;
   CONTAINER_RUNNING = 1;
-  CONTAINER_EXITED  = 2;
+  CONTAINER_EXITED = 2;
   CONTAINER_UNKNOWN = 3;
 }
 
