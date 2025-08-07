@@ -17,6 +17,7 @@ package common
 
 import (
 	"testing"
+	"time"
 )
 
 const (
@@ -56,7 +57,7 @@ func TestRecordSendResult(t *testing.T) {
 		t.Errorf("Expected sendResults length 0, but got %d", len(stats.sendResults))
 	}
 
-	for i := 0; i < numInt10; i++ {
+	for i := 0; i <= numInt10; i++ {
 		stats.RecordSendResult(false)
 	}
 	if len(stats.sendResults) != numInt10 {
@@ -81,10 +82,14 @@ func TestGetConsecutiveFailures(t *testing.T) {
 	}
 
 	// Test the case with no failures
-	successStats := NewSendStats(numInt10)
-	for i := 0; i < numInt2; i++ {
-		successStats.RecordSendResult(true)
-	}
+	successStats := &SendStats{
+		sendResults: []sendResult{
+			{
+				sendTime: time.Now(),
+				success:  true,
+			},
+		},
+		recordLen: numInt10}
 	count = successStats.GetConsecutiveFailures()
 	if count != 0 {
 		t.Errorf("Expected consecutive failures count 0 when no failures, but got %d", count)

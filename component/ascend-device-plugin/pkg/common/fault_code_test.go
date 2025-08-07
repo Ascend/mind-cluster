@@ -201,6 +201,14 @@ func TestGetFaultTypeByCode(t *testing.T) {
 			faultTypeCode = FaultTypeCode{RestartRequestCodes: faultCodes}
 			convey.So(GetFaultTypeByCode(faultCodes), convey.ShouldEqual, RestartRequest)
 		})
+		convey.Convey("fault type PreSeparateNPU", func() {
+			faultTypeCode = FaultTypeCode{PreSeparateNPUCodes: faultCodes}
+			convey.So(GetFaultTypeByCode(faultCodes), convey.ShouldEqual, PreSeparateNPU)
+		})
+		convey.Convey("fault type SubHealthFault", func() {
+			faultTypeCode = FaultTypeCode{SubHealthFaultCodes: faultCodes}
+			convey.So(GetFaultTypeByCode(faultCodes), convey.ShouldEqual, SubHealthFault)
+		})
 	})
 }
 
@@ -249,7 +257,7 @@ func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			expectedFaultCodes, expectedFaultMapLen := []int64{0}, 2
 			NetworkFaultCodes = sets.NewInt64()
 			NetworkFaultCodes.Insert(LinkDownFaultCode)
-			SetNewFaultAndCacheOnceRecoverFault(logicID, faultInfos, device)
+			SetNewFaultAndCacheOnceRecoverFault(logicID, faultInfos, device, sets.NewInt64())
 			convey.So(device.FaultCodes, convey.ShouldResemble, expectedFaultCodes)
 			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, expectedFaultMapLen)
 		})
@@ -345,18 +353,18 @@ func TestDelOnceFrequencyFault(t *testing.T) {
 	})
 }
 
-// TestSaveDevFaultInfo for test SaveDevFaultInfo
-func TestSaveDevFaultInfo(t *testing.T) {
-	convey.Convey("test SaveDevFaultInfo", t, func() {
-		convey.Convey("SaveDevFaultInfo success", func() {
+// TestDoSaveDevFaultInfo for test DoSaveDevFaultInfo
+func TestDoSaveDevFaultInfo(t *testing.T) {
+	convey.Convey("test DoSaveDevFaultInfo", t, func() {
+		convey.Convey("DoSaveDevFaultInfo success", func() {
 			expectedNum0 := 0
 			expectedNum1 := 1
 			eventId := int64(1)
 			patch := gomonkey.ApplyGlobalVar(&devFaultInfoMap, make(map[int32][]common.DevFaultInfo, GeneralMapSize))
 			defer patch.Reset()
-			SaveDevFaultInfo(common.DevFaultInfo{})
+			DoSaveDevFaultInfo(common.DevFaultInfo{}, false)
 			convey.So(len(devFaultInfoMap), convey.ShouldEqual, expectedNum0)
-			SaveDevFaultInfo(common.DevFaultInfo{EventID: eventId})
+			DoSaveDevFaultInfo(common.DevFaultInfo{EventID: eventId}, false)
 			convey.So(len(devFaultInfoMap), convey.ShouldEqual, expectedNum1)
 		})
 	})
@@ -1771,13 +1779,33 @@ func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
 			NotHandleFaultCodes: []string{generalFaultCode},
+			SubHealthFaultCodes: []string{generalFaultCode},
+			SeparateFaultCodes:  []string{generalFaultCode},
 		}
 		bytes, err := json.Marshal(switchFileInfo)
 		convey.So(err, convey.ShouldBeNil)
-		err = LoadSwitchFaultCode(bytes)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
-		convey.So(NotHandleFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+		convey.Convey("when switch fault unmarchal failed, should return error", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("failed"))
+			defer mockFunc.Reset()
+			err = LoadSwitchFaultCode(bytes)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("when switch fault is not valid, should filter this fault", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(isValidSwitchFaultCode, false)
+			defer mockFunc.Reset()
+			err = LoadSwitchFaultCode(bytes)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
+			convey.So(len(SeparateFaultCodes) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("when switch fault is valid, should update fault codes slice", func() {
+			err = LoadSwitchFaultCode(bytes)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
+			convey.So(len(SeparateFaultCodes) > 0, convey.ShouldBeTrue)
+			convey.So(NotHandleFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+			convey.So(SeparateFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+		})
 	})
 }
 

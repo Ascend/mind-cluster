@@ -27,6 +27,7 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/fsnotify/fsnotify"
@@ -41,6 +42,18 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 )
+
+type mockFileInfo struct {
+	mode os.FileMode
+	sys  interface{}
+}
+
+func (m *mockFileInfo) Name() string       { return "mock" }
+func (m *mockFileInfo) Size() int64        { return 0 }
+func (m *mockFileInfo) Mode() os.FileMode  { return m.mode }
+func (m *mockFileInfo) ModTime() time.Time { return time.Now() }
+func (m *mockFileInfo) IsDir() bool        { return false }
+func (m *mockFileInfo) Sys() interface{}   { return m.sys }
 
 func init() {
 	hwLogConfig := hwlog.LogConfig{
@@ -64,8 +77,11 @@ func TestSetAscendRuntimeEnv(t *testing.T) {
 	convey.Convey("test SetAscendRuntimeEnv", t, func() {
 		id := 100
 		devices := []int{id}
+		SetAscendRuntimeEnv(devices, "", nil)
+		ParamOption.RealCardType = Ascend310B
 		resp := v1beta1.ContainerAllocateResponse{}
 		SetAscendRuntimeEnv(devices, "", &resp)
+		convey.So(resp.Envs[ascendAllowLinkEnv], convey.ShouldEqual, "True")
 		convey.So(resp.Envs[AscendVisibleDevicesEnv], convey.ShouldEqual, strconv.Itoa(id))
 	})
 }
@@ -353,6 +369,14 @@ func TestFilterPods2(t *testing.T) {
 			res := FilterPods(pods, Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
+		convey.Convey("conditionFunc return false", func() {
+			pods[0].Status = v1.PodStatus{}
+			mockConitionFunc := func(pod *v1.Pod) bool {
+				return false
+			}
+			res := FilterPods(pods, Ascend910, mockConitionFunc)
+			convey.So(res, convey.ShouldBeEmpty)
+		})
 	})
 }
 
@@ -527,16 +551,36 @@ func TestNewSignWatcher(t *testing.T) {
 // TestCheckFileUserSameWithProcess for test CheckFileUserSameWithProcess
 func TestCheckFileUserSameWithProcess(t *testing.T) {
 	convey.Convey("CheckFileUserSameWithProcess", t, func() {
+		var testMode os.FileMode = 0660
 		loggerPath := "/home/test"
 		convey.Convey("user is root", func() {
-			mockGetuid := gomonkey.ApplyFuncReturn(syscall.Getuid, RootUID)
-			defer mockGetuid.Reset()
+			mockFunc := gomonkey.ApplyFuncReturn(os.Getuid, RootUID)
+			defer mockFunc.Reset()
 			convey.So(CheckFileUserSameWithProcess(loggerPath), convey.ShouldBeTrue)
 		})
-		convey.Convey("user is not root", func() {
-			mockGetuid := gomonkey.ApplyFuncReturn(syscall.Getuid, 1)
-			defer mockGetuid.Reset()
+		convey.Convey("user is not root, logger path is unavailable", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(os.Getuid, 1).
+				ApplyFuncReturn(os.Lstat, &mockFileInfo{}, fmt.Errorf("get path stat failed"))
+			defer mockFunc.Reset()
 			convey.So(CheckFileUserSameWithProcess(loggerPath), convey.ShouldBeFalse)
+		})
+		convey.Convey("user is not root, logger file is unavailable", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(os.Getuid, 1).
+				ApplyFuncReturn(os.Lstat, &mockFileInfo{mode: testMode, sys: "invalid-type"}, nil)
+			defer mockFunc.Reset()
+			convey.So(CheckFileUserSameWithProcess(loggerPath), convey.ShouldBeFalse)
+		})
+		convey.Convey("user is not root, logger file stat uid or gid is not equal curUid", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(os.Getuid, 1).
+				ApplyFuncReturn(os.Lstat, &mockFileInfo{mode: testMode, sys: &syscall.Stat_t{Uid: RootUID}}, nil)
+			defer mockFunc.Reset()
+			convey.So(CheckFileUserSameWithProcess(loggerPath), convey.ShouldBeFalse)
+		})
+		convey.Convey("user is not root, both logger file stat uid and gid are equal curUid", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(os.Getuid, 1).
+				ApplyFuncReturn(os.Lstat, &mockFileInfo{mode: testMode, sys: &syscall.Stat_t{Uid: 1, Gid: 1}}, nil)
+			defer mockFunc.Reset()
+			convey.So(CheckFileUserSameWithProcess(loggerPath), convey.ShouldBeTrue)
 		})
 	})
 }

@@ -607,7 +607,7 @@ func faultDevice(deviceInfo *common.NpuDevice) {
 		Assertion:       npuCommon.FaultOccur,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
-	common.SaveDevFaultInfo(faultInfo)
+	common.DoSaveDevFaultInfo(faultInfo, false)
 	hwlog.RunLog.Infof("create non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
 		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
@@ -619,7 +619,7 @@ func recoverDevice(deviceInfo *common.NpuDevice) {
 		Assertion:       npuCommon.FaultRecover,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
-	common.SaveDevFaultInfo(faultInfo)
+	common.DoSaveDevFaultInfo(faultInfo, false)
 	hwlog.RunLog.Infof("recover non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
 		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }

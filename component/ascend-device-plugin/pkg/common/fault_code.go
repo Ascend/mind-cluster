@@ -1005,7 +1005,8 @@ func setNetworkAlarmRaisedTime(device *NpuDevice) {
 }
 
 // SetNewFaultAndCacheOnceRecoverFault set new fault code and cache once recover fault
-func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
+func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice,
+	curFaultCodesMap sets.Int64) {
 	if device == nil {
 		hwlog.RunLog.Error("param device is nil in SetNewFaultAndCacheOnceRecoverFault")
 		return
@@ -1022,6 +1023,11 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 			continue
 		}
 		if faultInfo.Assertion == common.FaultRecover {
+			if curFaultCodesMap.Has(faultInfo.EventID) {
+				hwlog.RunLog.Infof("logicID(%d) curFaultCodesMap:%v contains fault code:%v, skip recover",
+					logicID, curFaultCodesMap, faultInfo.EventID)
+				continue
+			}
 			if Int64Tool.Index(device.FaultCodes, faultInfo.EventID) == -1 {
 				recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 			} else {
@@ -1177,8 +1183,8 @@ func DelOnceFrequencyFault() {
 	recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
 }
 
-// SaveDevFaultInfo save device fault info , subscribe interface call back function
-func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
+// DoSaveDevFaultInfo according to assertion whether delay 1s to save dev fault info
+func DoSaveDevFaultInfo(devFaultInfo common.DevFaultInfo, enableDelay bool) {
 	if !limiter.Allow() {
 		hwlog.RunLog.Warnf("fault callback rate limit overflowed, current fault: %#v will be discard", devFaultInfo)
 		hwlog.RunLog.Warnf("will set current device: %v into init status", devFaultInfo.LogicID)
@@ -1198,9 +1204,19 @@ func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
 		return
 	}
 	faultSeverityMap[devFaultInfo.EventID] = devFaultInfo.Severity
+	if devFaultInfo.Assertion == common.FaultRecover && enableDelay {
+		hwlog.RunLog.Debugf("save recover fault info should delay 1s")
+		time.Sleep(time.Second)
+	}
 	devFaultInfoMapLock.Lock()
 	devFaultInfoMap[devFaultInfo.LogicID] = append(devFaultInfoMap[devFaultInfo.LogicID], devFaultInfo)
 	devFaultInfoMapLock.Unlock()
+}
+
+// SaveDevFaultInfo save device fault info , subscribe interface call back function
+func SaveDevFaultInfo(devFaultInfo common.DevFaultInfo) {
+	// dcmi subscribe fault recover msg  is not synchronized with the fault code query result from dcmi
+	go DoSaveDevFaultInfo(devFaultInfo, true)
 }
 
 // GetAndCleanFaultInfo get device fault info and clean cache

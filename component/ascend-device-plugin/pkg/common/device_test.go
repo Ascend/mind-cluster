@@ -16,12 +16,13 @@
 package common
 
 import (
+	"errors"
 	"fmt"
-	"github.com/agiledragon/gomonkey/v2"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -206,6 +207,14 @@ func TestCheckCardUsageMode(t *testing.T) {
 // TestGetSwitchFaultInfo test for convert fault code into struct
 func TestGetSwitchFaultInfo(t *testing.T) {
 	convey.Convey("test GetSwitchFaultInfo", t, func() {
+		convey.Convey("when card type is not Ascend910A3, return empty result", func() {
+			ParamOption.RealCardType = common.Ascend910
+			convey.So(GetSwitchFaultInfo(), convey.ShouldResemble, SwitchFaultInfo{})
+		})
+		convey.Convey("when EnableSwitchFault is false, return empty result", func() {
+			ParamOption.EnableSwitchFault = false
+			convey.So(GetSwitchFaultInfo(), convey.ShouldResemble, SwitchFaultInfo{})
+		})
 		ParamOption.RealCardType = common.Ascend910A3
 		ParamOption.EnableSwitchFault = true
 		currentSwitchFault = []SwitchFaultEvent{}
@@ -223,8 +232,10 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
+			mockFunc := gomonkey.ApplyFuncReturn(getSimpleSwitchFaultStr, "", errors.New("failed"))
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
+			mockFunc.Reset()
 
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
@@ -235,6 +246,10 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
+
+			switchFaultCodeLevelToCm = map[string]int{generalFaultCode: NotHandleFaultLevel}
+			fault = GetSwitchFaultInfo()
+			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 		})
 	})
 }

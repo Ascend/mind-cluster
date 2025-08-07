@@ -1795,6 +1795,10 @@ func goEventFaultCallBack(event C.struct_dcmi_dms_fault_event) {
 	devFaultInfo := common.DevFaultInfo{
 		EventID:         int64(event.event_id),
 		LogicID:         int32(event.deviceid),
+		ModuleType:      int8(event.node_type),
+		ModuleID:        int8(event.node_id),
+		SubModuleType:   int8(event.sub_node_type),
+		SubModuleID:     int8(event.sub_node_id),
 		Severity:        int8(event.severity),
 		Assertion:       int8(event.assertion),
 		AlarmRaisedTime: time.Now().UnixMilli(),

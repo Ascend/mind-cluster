@@ -1120,9 +1120,23 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 	isFirstFlushFault = false
 }
 
+func (tool *AscendTools) getCurDeviceFaultCode(logicID int32, devFaultInfo []npuCommon.DevFaultInfo) sets.Int64 {
+	if len(devFaultInfo) == 0 {
+		return sets.Int64{}
+	}
+	_, faultCodes, err := tool.dmgr.GetDeviceAllErrorCode(logicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device current fault code by logicID(%d) failed, err: %v", logicID, err)
+		return sets.Int64{}
+	}
+	hwlog.RunLog.Debugf("device(%d) current fault code: %v", logicID, faultCodes)
+	return sets.NewInt64(faultCodes...)
+}
+
 func (tool *AscendTools) flushFaultCodesWithInit(device *common.NpuDevice,
 	devFaultInfoMap map[int32][]npuCommon.DevFaultInfo) {
-	if devFaultInfo, ok := devFaultInfoMap[device.LogicID]; ok {
+	logicID := device.LogicID
+	if devFaultInfo, ok := devFaultInfoMap[logicID]; ok {
 		for _, faultInfo := range devFaultInfo {
 			select {
 			case allFaultInfo <- faultInfo:
@@ -1133,8 +1147,9 @@ func (tool *AscendTools) flushFaultCodesWithInit(device *common.NpuDevice,
 			}
 		}
 	}
-	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
-	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
+	curFaultCodesMap := tool.getCurDeviceFaultCode(logicID, devFaultInfoMap[logicID])
+	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[logicID], device, curFaultCodesMap)
+	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[logicID], device)
 }
 
 func moreThanFiveMin(device *common.NpuDevice) bool {
@@ -1401,7 +1416,7 @@ func (tool *AscendTools) generateCardDropFaultEvents(npuDevice *common.NpuDevice
 		}
 		npuDevice.CardDrop = true
 		hwlog.RunLog.Info("generate card drop occur fault event")
-		common.SaveDevFaultInfo(faultInfo)
+		common.DoSaveDevFaultInfo(faultInfo, false)
 	}
 
 	if npuDevice.CardDrop && !tool.checkCardDropFault(npuDevice.LogicID) {
@@ -1413,7 +1428,7 @@ func (tool *AscendTools) generateCardDropFaultEvents(npuDevice *common.NpuDevice
 		}
 		npuDevice.CardDrop = false
 		hwlog.RunLog.Info("generate card drop recover fault event")
-		common.SaveDevFaultInfo(faultInfo)
+		common.DoSaveDevFaultInfo(faultInfo, false)
 	}
 }
 
@@ -1455,7 +1470,7 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 	chipFaultEvents := common.GetChangedDevFaultInfo(device, device.FaultCodes, chipFaultCodes)
 	for _, chipFaultEvent := range chipFaultEvents {
 		hwlog.RunLog.Info("generate chip fault event based on chip fault cache change")
-		common.SaveDevFaultInfo(chipFaultEvent)
+		common.DoSaveDevFaultInfo(chipFaultEvent, false)
 	}
 }
 
@@ -1487,6 +1502,6 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 	networkFaultEvents := common.GetChangedDevFaultInfo(device, device.NetworkFaultCodes, networkFaultCodes)
 	for _, networkFaultEvent := range networkFaultEvents {
 		hwlog.RunLog.Info("generate network fault event based on network fault cache change")
-		common.SaveDevFaultInfo(networkFaultEvent)
+		common.DoSaveDevFaultInfo(networkFaultEvent, false)
 	}
 }
