@@ -21,6 +21,7 @@ func ConfigCollector(_, newInfo constant.ConfigPingMesh, operator string) {
 func updatePingMeshConfigCM(newConfigInfo constant.ConfigPingMesh) {
 	hwlog.RunLog.Info("ready to update pingmesh config")
 	if isNeedToStop(newConfigInfo) {
+		ConfigPingMeshInst.UpdateConfigData(newConfigInfo)
 		rasNetDetectInst.Update(&constant.NetFaultInfo{NetFault: constant.RasNetDetectOff})
 		fdapi.StopController()
 		return

@@ -229,6 +229,14 @@ func initSuperPodsCM() {
 			})
 			hwlog.RunLog.Errorf("init super pod info cm error, %v", err)
 		}
+		err = handleFileUpdate(superPodDevice.SuperPodID, superPodDevice, checkCode, true)
+		if err != nil {
+			failedTasks = append(failedTasks, task{
+				superPodID: superPodDevice.SuperPodID,
+				operator:   constant.AddOperator,
+			})
+			hwlog.RunLog.Errorf("init super pod file error, %v", err)
+		}
 		time.Sleep(publishInterval)
 	}
 	publishMgr.rwLock.Lock()
@@ -270,7 +278,8 @@ func handleFileUpdate(superPodID string, device *api.SuperPodDevice, checkCode s
 		hwlog.RunLog.Errorf("update super pod device file failed, err=%v, superPodID=%s", err, superPodID)
 		return err
 	}
-	err = saveConfigToFile(superPodID, &rasConfig)
+	cfg := ConfigPingMeshInst.getRasConfigBySuperPodId(superPodID)
+	err = saveConfigToFile(superPodID, cfg)
 	if err != nil {
 		hwlog.RunLog.Errorf("save config to file failed, err=%v, superPodID=%s", err, superPodID)
 		return err
@@ -290,7 +299,11 @@ func handleUpdate(superPodID string, device *api.SuperPodDevice) error {
 		return nil
 	}
 	checkCode := util.MakeDataHash(device)
-	return handleCmUpdate(superPodID, device, checkCode, false)
+	err := handleCmUpdate(superPodID, device, checkCode, false)
+	if err != nil {
+		return err
+	}
+	return handleFileUpdate(superPodID, device, checkCode, false)
 }
 
 func handleCmDelete(superPodID string) error {
@@ -322,7 +335,11 @@ func handleFileDelete(superPodID string) error {
 }
 
 func handleDelete(superPodID string) error {
-	return handleCmDelete(superPodID)
+	err := handleCmDelete(superPodID)
+	if err != nil {
+		return err
+	}
+	return handleFileDelete(superPodID)
 }
 
 type task struct {
@@ -379,14 +396,25 @@ func handleTasks(tasks []task) {
 
 // TickerCheckSuperPodDevice ticker check super pod device modify event
 func TickerCheckSuperPodDevice(ctx context.Context) {
-	initSuperPodsCM()
+	if rasNetDetectInst.CheckIsOn() {
+		initSuperPodsCM()
+	}
 	ticker := time.NewTicker(eventCheckPeriod)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
+			if !rasNetDetectInst.CheckIsOn() {
+				hwlog.RunLog.Debug("ras feature net fault detect is inactive")
+				continue
+			}
+			if !publishMgr.inited.Load() {
+				hwlog.RunLog.Info("cluster super pod device is not initialized, init it")
+				initSuperPodsCM()
+				continue
+			}
 			tasks := getPartTaskAndClean()
-			hwlog.RunLog.Debugf("event length=%d, handleBatch=%d",
+			hwlog.RunLog.Debugf("event-length=%d, handleBatch=%d",
 				len(publishMgr.eventMap), len(tasks))
 			handleTasks(tasks)
 		case <-ctx.Done():

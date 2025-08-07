@@ -8,6 +8,7 @@ package pubfault
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -74,7 +75,7 @@ func RegisterPubFaultServer(s grpc.ServiceRegistrar, srv PubFaultServer) {
 	s.RegisterService(&PubFault_ServiceDesc, srv)
 }
 
-func _PubFault_SendPublicFault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PubFault_SendPublicFault_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(PublicFaultRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -86,7 +87,7 @@ func _PubFault_SendPublicFault_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: PubFault_SendPublicFault_FullMethodName,
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(PubFaultServer).SendPublicFault(ctx, req.(*PublicFaultRequest))
 	}
 	return interceptor(ctx, in, info, handler)

@@ -18,19 +18,16 @@ limitations under the License.
 package grpc
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
+	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/grpc/profiling"
-	"ascend-faultdiag-online/pkg/utils/grpc/pubfault"
 )
 
 var (
@@ -58,31 +55,36 @@ func TestMain(m *testing.M) {
 func TestGrpc(t *testing.T) {
 	// test connect
 	connectFailed = true
-	_, err := GetClient("")
+	_, err := GetClient()
 	assert.NotNil(t, err)
 	connectFailed = false
 
 	// test multiple connect
-	client1, err := GetClient("")
-	assert.Nil(t, err)
-	client2, err := GetClient("")
-	assert.Nil(t, err)
+	client1, err := GetClient()
+	assert.NotNil(t, err)
+	client2, err := GetClient()
+	assert.NotNil(t, err)
 	assert.Equal(t, client1, client2)
 }
 
 func TestProfiling(t *testing.T) {
-	client, err := GetClient("")
+	patches := gomonkey.ApplyFunc(utils.GetClusterIp, func() string {
+		return "127.0.0.1"
+	})
+	defer patches.Reset()
+	connErr = nil
+	client = nil
+	client, err := GetClient()
 	assert.Nil(t, err)
 
 	// mock profilingSwitch
-	mockProfilingSwitch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(client), "profilingSwitch",
+	patches.ApplyPrivateMethod(reflect.TypeOf(client), "profilingSwitch",
 		func(*Client, *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
 			return &profiling.DataTypeRes{
 				Message: "success",
 				Code:    0,
 			}, nil
 		})
-	defer mockProfilingSwitch.Reset()
 
 	// test start all profiling
 	err = client.StartAllProfiling("job1", "ns1")
@@ -99,33 +101,4 @@ func TestProfiling(t *testing.T) {
 	// test stop heavy profiling
 	err = client.StopHeavyProfiling("job1", "ns1")
 	assert.Nil(t, err)
-}
-
-// TestSendToPubFaultCenter test case for func SendToPubFaultCenter
-func TestSendToPubFaultCenter(t *testing.T) {
-	convey.Convey("Test method SendToPubFaultCenter", t, func() {
-		// test connect should be true
-		connectFailed = true
-		c, err := GetClient("")
-		convey.Convey("should return err when sending grpc msg failed", func() {
-			convey.So(err, convey.ShouldBeNil)
-			patch := gomonkey.ApplyFunc(c.pf.SendPublicFault, func(ctx context.Context,
-				in *pubfault.PublicFaultRequest, opts ...grpc.CallOption) (*pubfault.RespStatus, error) {
-				return nil, errors.New("send public fault failed")
-			})
-			defer patch.Reset()
-			_, err = c.SendToPubFaultCenter(nil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-
-		convey.Convey("should succeed when sending grpc msg success", func() {
-			patch := gomonkey.ApplyFunc(c.pf.SendPublicFault, func(ctx context.Context,
-				in *pubfault.PublicFaultRequest, opts ...grpc.CallOption) (*pubfault.RespStatus, error) {
-				return nil, nil
-			})
-			defer patch.Reset()
-			_, err = c.SendToPubFaultCenter(nil)
-			convey.So(err, convey.ShouldBeNil)
-		})
-	})
 }

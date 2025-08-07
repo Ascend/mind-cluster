@@ -67,4 +67,6 @@ const (
 	GrpcPort = ":8899"
 	// MaxConfigMapNum the top number of config map size allowed created
 	MaxConfigMapNum = 20000
+	// RestartInterval is the interval judge that the pod is restarted or not, unit is millionseconds
+	RestartInterval = 2000
 )

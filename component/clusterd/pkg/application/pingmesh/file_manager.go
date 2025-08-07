@@ -40,6 +40,7 @@ const (
 	confFileRetryTime = 3
 	// defaultSize default size of file allowed
 	defaultSize = 100
+	netFaultOff = "off"
 )
 
 // NewCathelperConf new CathelperConf info
@@ -51,6 +52,7 @@ func NewCathelperConf() constant.CathelperConf {
 		PingTimes:        pingTimes,
 		PingInterval:     pingInterval,
 		Period:           period,
+		NetFault:         netFaultOff,
 	}
 }
 
@@ -59,13 +61,12 @@ func saveConfigToFile(superpodID string, conf *constant.CathelperConf) error {
 		hwlog.RunLog.Errorf("config is nil")
 		return fmt.Errorf("config is nil")
 	}
-	rasConfig := NewCathelperConf()
 	path, err := slownet.GetConfigPathForDetect(superpodID)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get config path, err: %v", err)
 		return err
 	}
-	err = writeConfigToFile(&rasConfig, path)
+	err = writeConfigToFile(conf, path)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to save config to file, err: %v", err)
 		return err

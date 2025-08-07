@@ -45,6 +45,16 @@ func init() {
 	}
 }
 
+// UpdateConfigData to update new pingmesh config
+func (cf *ConfigPingMeshCmManager) UpdateConfigData(newInfo constant.ConfigPingMesh) {
+	cf.Lock()
+	cf.configCMInfo = newInfo
+	cf.Unlock()
+	if cf.cacheStatus.Inited {
+		cf.updateConfigFileWhenCmUpdated()
+	}
+}
+
 // UpdateConfig to update new pingmehs config
 func (cf *ConfigPingMeshCmManager) UpdateConfig(newInfo constant.ConfigPingMesh) error {
 	if newInfo == nil {
@@ -57,6 +67,9 @@ func (cf *ConfigPingMeshCmManager) UpdateConfig(newInfo constant.ConfigPingMesh)
 	cf.configCMInfo = newInfo
 	changed = cf.checkConfChanged(oldConfig, newInfo)
 	cf.Unlock()
+	if cf.cacheStatus.Inited {
+		cf.updateConfigFileWhenCmUpdated()
+	}
 	if changed {
 		cf.startOrReloadController()
 	}
@@ -64,6 +77,10 @@ func (cf *ConfigPingMeshCmManager) UpdateConfig(newInfo constant.ConfigPingMesh)
 }
 
 func (cf *ConfigPingMeshCmManager) checkConfChanged(oldInfo, newInfo constant.ConfigPingMesh) bool {
+	if !rasNetDetectInst.CheckIsOn() {
+		hwlog.RunLog.Info("ping mesh config detect is inactive, no need to reload or start controller")
+		return false
+	}
 	changed := false
 	for _, deviceInfo := range superpod.ListClusterDevice() {
 		superPodID := deviceInfo.SuperPodID
@@ -86,6 +103,41 @@ func (cf *ConfigPingMeshCmManager) checkConfChanged(oldInfo, newInfo constant.Co
 		break
 	}
 	return changed
+}
+
+func (cf *ConfigPingMeshCmManager) getRasConfigBySuperPodId(superPodID string) *constant.CathelperConf {
+	cf.RLock()
+	cfgCM, err := getConfigItemBySuperPodId(cf.configCMInfo, superPodID)
+	cf.RUnlock()
+	if err != nil {
+		hwlog.RunLog.Errorf("get config item by super pod id failed, will use default config: %v, err: %v",
+			rasConfig, err)
+		return &rasConfig
+	}
+	cfg := NewCathelperConf()
+	const collectPeriodFactor = 10
+	cfg.Period = cfgCM.TaskInterval * collectPeriodFactor
+	if cfgCM.Activate == constant.RasNetDetectOnStr {
+		cfg.NetFault = constant.RasNetDetectOnStr
+	}
+	return &cfg
+}
+
+func (cf *ConfigPingMeshCmManager) updateConfigFileWhenCmUpdated() {
+	if !rasNetDetectInst.CheckIsOn() {
+		hwlog.RunLog.Info("ping mesh config detect is inactive, no need to reload or start controller")
+		return
+	}
+	for _, deviceInfo := range superpod.ListClusterDevice() {
+		superPodID := deviceInfo.SuperPodID
+		cfg := cf.getRasConfigBySuperPodId(superPodID)
+		err := saveConfigToFile(superPodID, cfg)
+		if err != nil {
+			hwlog.RunLog.Errorf("save config to file failed, err=%v, superPodID=%s", err, superPodID)
+			return
+		}
+		hwlog.RunLog.Infof("update config file successfully, superPodID=%s", superPodID)
+	}
 }
 
 func (cf *ConfigPingMeshCmManager) startOrReloadController() {

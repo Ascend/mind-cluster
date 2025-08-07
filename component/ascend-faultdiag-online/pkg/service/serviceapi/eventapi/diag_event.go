@@ -20,11 +20,11 @@ Package eventapi provides the self-defined api of diag event
 package eventapi
 
 import (
-	"ascend-faultdiag-online/pkg/fdol/api"
-	"ascend-faultdiag-online/pkg/fdol/context/contextdata"
-	"ascend-faultdiag-online/pkg/fdol/context/diagcontext"
-	"ascend-faultdiag-online/pkg/fdol/model"
-	"ascend-faultdiag-online/pkg/model/diagmodel"
+	"ascend-faultdiag-online/pkg/core/api"
+	"ascend-faultdiag-online/pkg/core/context/contextdata"
+	"ascend-faultdiag-online/pkg/core/context/diagcontext"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/core/model/diagmodel"
 )
 
 const apiDiagEvent = "diag"

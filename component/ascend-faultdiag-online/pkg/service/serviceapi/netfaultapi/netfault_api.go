@@ -15,17 +15,6 @@
 // Package netfaultapi for fault network feature
 package netfaultapi
 
-/*
-#cgo linux LDFLAGS: -ldl
-
-#include <stdint.h>
-#include <stdlib.h>
-
-// 声明 Go 导出的回调函数
-extern void netfaultResultCallBack(char* msg);
-
-*/
-import "C"
 import (
 	"crypto/sha256"
 	"encoding/hex"
@@ -35,22 +24,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-faultdiag-online/pkg/fdol/api"
-	"ascend-faultdiag-online/pkg/fdol/context/contextdata"
-	"ascend-faultdiag-online/pkg/fdol/context/diagcontext"
-	"ascend-faultdiag-online/pkg/fdol/model"
-	"ascend-faultdiag-online/pkg/fdol/sohandle"
-	"ascend-faultdiag-online/pkg/global"
-	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
-	"ascend-faultdiag-online/pkg/model/enum"
-	"ascend-faultdiag-online/pkg/model/feature"
-	"ascend-faultdiag-online/pkg/model/feature/netfault"
-	"ascend-faultdiag-online/pkg/utils"
+	"ascend-faultdiag-online/pkg/core/api"
+	"ascend-faultdiag-online/pkg/core/context/contextdata"
+	"ascend-faultdiag-online/pkg/core/context/diagcontext"
+	"ascend-faultdiag-online/pkg/core/funchandler"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/core/model/diagmodel/metricmodel"
+	"ascend-faultdiag-online/pkg/core/model/enum"
+	"ascend-faultdiag-online/pkg/model/netfault"
 	"ascend-faultdiag-online/pkg/utils/constants"
 	"ascend-faultdiag-online/pkg/utils/grpc"
 	"ascend-faultdiag-online/pkg/utils/grpc/pubfault"
@@ -58,19 +43,6 @@ import (
 )
 
 const (
-	apiNetwork       = "netfault"
-	apiController    = "controller"
-	apiStart         = "start"
-	apiStop          = "stop"
-	apiReload        = "reload"
-	registerCallBack = "registerCallBack"
-	name             = "netfault"
-	byteSize         = 1024
-	cluster          = "cluster"
-	inputCommand     = "command"
-	inputTarget      = "target"
-	inputFunc        = "func"
-
 	faultAssertionOnce      = "once"
 	faultTypeNetwork        = "Network"
 	publicFaultVersion      = "1.0"
@@ -93,45 +65,39 @@ var contextData *contextdata.CtxData
 
 // ControllerStart 开启Cluster
 func ControllerStart() *api.Api {
-	return api.BuildApi(apiStart, &feature.Status{}, ControllerStartFunc, nil)
+	return api.BuildApi(string(enum.Start), &model.CommonReqModel{}, ControllerStartFunc, nil)
 }
 
 // ControllerStop 关闭Cluster
 func ControllerStop() *api.Api {
-	return api.BuildApi(apiStop, &feature.Status{}, ControllerStopFunc, nil)
+	return api.BuildApi(string(enum.Stop), &model.CommonReqModel{}, ControllerStopFunc, nil)
 }
 
 // ControllerReload reload Cluster
 func ControllerReload() *api.Api {
-	return api.BuildApi(apiReload, &feature.Status{}, ControllerReloadFunc, nil)
+	return api.BuildApi(string(enum.Reload), &model.CommonReqModel{}, ControllerReloadFunc, nil)
 }
 
 // ControllerStartFunc start controller of cluster
 func ControllerStartFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, model *feature.Status) error {
+	reqCtx *model.RequestContext, reqModel *model.CommonReqModel) error {
 	dContext = diagCtx
 	contextData = ctxData
 
-	handler := ctxData.Framework.SoHandlerMap[name]
+	handler := ctxData.Framework.FuncHandler[enum.NetFault]
 	if handler == nil {
-		err := errors.New("no handler for " + name)
+		err := errors.New("no handler found for " + enum.NetFault)
 		hwlog.RunLog.Errorf("netfault controller start err: %v", err)
 		return err
 	}
 
-	if err := registerCallback(handler); err != nil {
+	if err := registerCallback(handler.ExecuteFunc); err != nil {
 		hwlog.RunLog.Errorf("netfault controller register callback before starting failed, err: %v", err)
 		return err
 	}
 
-	input, err := createJSONInput(apiStart, 0, cluster)
-	if err != nil {
-		hwlog.RunLog.Errorf("netfault controller start err: %v", err)
-		return err
-	}
-	// 定义输出缓冲区
-	output2 := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc([]byte(input), output2)
+	input := createInput(enum.Start, nil, enum.Cluster)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		hwlog.RunLog.Errorf("netfault controller start err: %v", err)
 		return err
@@ -143,21 +109,15 @@ func ControllerStartFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.Diag
 
 // ControllerStopFunc stop controller of cluster
 func ControllerStopFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, model *feature.Status) error {
-	handler := ctxData.Framework.SoHandlerMap[name]
+	reqCtx *model.RequestContext, reqModel *model.CommonReqModel) error {
+	handler := ctxData.Framework.FuncHandler[enum.NetFault]
 	if handler == nil {
-		err := errors.New("no handler for " + name)
+		err := errors.New("no handler for " + enum.NetFault)
 		hwlog.RunLog.Errorf("netfault controller stop err: %v", err)
 		return err
 	}
-	input, err := createJSONInput(apiStop, 0, cluster)
-	if err != nil {
-		hwlog.RunLog.Errorf("netfault controller stop err: %v", err)
-		return err
-	}
-	// 定义输出缓冲区
-	output := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc([]byte(input), output)
+	input := createInput(enum.Stop, nil, enum.Cluster)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		hwlog.RunLog.Errorf("netfault controller stop err: %v", err)
 		return err
@@ -169,29 +129,23 @@ func ControllerStopFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagC
 
 // ControllerReloadFunc reload controller of cluster
 func ControllerReloadFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, model *feature.Status) error {
+	reqCtx *model.RequestContext, reqModel *model.CommonReqModel) error {
 	dContext = diagCtx
 	contextData = ctxData
-	handler := ctxData.Framework.SoHandlerMap[name]
+	handler := ctxData.Framework.FuncHandler[enum.NetFault]
 	if handler == nil {
-		err := errors.New("no handler for " + name)
+		err := errors.New("no handler found for " + enum.NetFault)
 		hwlog.RunLog.Errorf("netfault controller reload err: %v", err)
 		return err
 	}
 
-	if err := registerCallback(handler); err != nil {
+	if err := registerCallback(handler.ExecuteFunc); err != nil {
 		hwlog.RunLog.Errorf("netfault controller register callback before reloading failed, err: %v", err)
 		return err
 	}
 
-	input, err := createJSONInput(apiReload, 0, cluster)
-	if err != nil {
-		hwlog.RunLog.Errorf("netfault controller reload err: %v", err)
-		return err
-	}
-	// 定义输出缓冲区
-	output := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc([]byte(input), output)
+	input := createInput(enum.Reload, nil, enum.Cluster)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		hwlog.RunLog.Errorf("netfault controller reload err: %v", err)
 		return err
@@ -201,17 +155,12 @@ func ControllerReloadFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.Dia
 	return nil
 }
 
-func registerCallback(handler *sohandle.SoHandler) error {
-	if handler == nil {
-		return errors.New("handler is nil")
+func registerCallback(executeFunc funchandler.ExecuteFunc) error {
+	if executeFunc == nil {
+		return errors.New("execute func is nil")
 	}
-	input, err := createJSONInput(registerCallBack, uintptr(unsafe.Pointer(C.netfaultResultCallBack)), cluster)
-	if err != nil {
-		hwlog.RunLog.Errorf("netfault controller start err: %v", err)
-		return err
-	}
-	output := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc([]byte(input), output)
+	input := createInput(enum.Register, netfaultResultCallBack, enum.Cluster)
+	_, err := executeFunc(input)
 	if err != nil {
 		hwlog.RunLog.Errorf("netfault controller start err: %v", err)
 		return err
@@ -220,12 +169,7 @@ func registerCallback(handler *sohandle.SoHandler) error {
 }
 
 // 回调将数据放到ctx中
-//
-//export netfaultResultCallBack
-func netfaultResultCallBack(cMessage *C.char) {
-	message := C.GoString(cMessage)
-	defer C.free(unsafe.Pointer(cMessage))
-
+func netfaultResultCallBack(message string) {
 	if dContext == nil || contextData == nil {
 		hwlog.RunLog.Errorf("netfault result callback err: context is nil")
 		return
@@ -243,7 +187,6 @@ func netfaultResultCallBack(cMessage *C.char) {
 	}
 	parseAndAddMetric(clusterResult, dContext)
 	sendToPubFaultCenter(clusterResult)
-	return
 }
 
 // 解析结果入库到MetricPool
@@ -314,21 +257,17 @@ func sendToPubFaultCenter(clusterResult []netfault.ClusterResult) {
 		hwlog.RunLog.Debugf("fault result is empty, no need send to public fault center")
 		return
 	}
-	if global.GrpcClient == nil {
-		client, err := grpc.GetClient(utils.GetClusterIP())
-		if err != nil {
-			hwlog.RunLog.Errorf("get grpc client failed, err: %v", err)
-			return
-		}
-
-		global.GrpcClient = client
+	grpcClient, err := grpc.GetClient()
+	if err != nil {
+		hwlog.RunLog.Errorf("get grpc client failed, err: %v", err)
+		return
 	}
 	req, err := createPubFault(clusterResult)
 	if err != nil {
 		hwlog.RunLog.Errorf("create public fault failed, err: %v", err)
 		return
 	}
-	res, err := global.GrpcClient.SendToPubFaultCenter(req)
+	res, err := grpcClient.SendToPubFaultCenter(req)
 	if err != nil {
 		hwlog.RunLog.Errorf("send to public fault center failed, err: %v", err)
 		return
@@ -450,16 +389,11 @@ func getInfluence(result *netfault.ClusterResult) []*pubfault.PubFaultInfo {
 	return infoList
 }
 
-// 构造 JSON 输入
-func createJSONInput(command string, funcPtr uintptr, target string) (string, error) {
-	input := map[string]interface{}{
-		inputCommand: command,
-		inputTarget:  target,
+// createInput create a instance of model.Input as the parameter in Execute
+func createInput(command enum.Command, f model.CallbackFunc, target enum.DeployMode) model.Input {
+	return model.Input{
+		Command: command,
+		Func:    f,
+		Target:  target,
 	}
-
-	if funcPtr != 0 {
-		input[inputFunc] = funcPtr
-	}
-	jsonData, err := json.Marshal(input)
-	return string(jsonData), err
 }

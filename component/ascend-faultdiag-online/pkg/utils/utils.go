@@ -23,10 +23,19 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"sync"
+	"time"
+
+	"ascend-faultdiag-online/pkg/utils/constants"
+)
+
+var (
+	mu             sync.Mutex
+	startTimestamp int64 = 0
 )
 
 // ToFloat64 interface转float64
-func ToFloat64(val interface{}, defaultValue float64) float64 {
+func ToFloat64(val any, defaultValue float64) float64 {
 	switch v := val.(type) {
 	case float32:
 		return float64(v)
@@ -46,7 +55,7 @@ func ToFloat64(val interface{}, defaultValue float64) float64 {
 }
 
 // ToString interface转string
-func ToString(val interface{}) string {
+func ToString(val any) string {
 	str, ok := val.(string)
 	if !ok {
 		return ""
@@ -55,7 +64,7 @@ func ToString(val interface{}) string {
 }
 
 // CopyInstance 复制实例
-func CopyInstance(src interface{}) (interface{}, error) {
+func CopyInstance(src any) (any, error) {
 	if src == nil {
 		return nil, fmt.Errorf("src cannot be nil")
 	}
@@ -71,4 +80,25 @@ func CopyInstance(src interface{}) (interface{}, error) {
 	dst := reflect.New(srcValue.Type())
 	dst.Elem().Set(srcValue)
 	return dst.Interface(), nil
+}
+
+// WriteStartInfo write the current timestamp into file
+func WriteStartInfo() {
+	mu.Lock()
+	defer mu.Unlock()
+	if startTimestamp == 0 {
+		startTimestamp = time.Now().UnixMilli()
+	}
+}
+
+// IsRestarted return the pod is restart or not
+func IsRestarted() bool {
+	// check the file, if start time less than 2 seconds, as restarted
+	mu.Lock()
+	defer mu.Unlock()
+	if startTimestamp == 0 {
+		startTimestamp = time.Now().UnixMilli()
+		return false
+	}
+	return time.Now().UnixMilli()-startTimestamp <= constants.RestartInterval
 }
