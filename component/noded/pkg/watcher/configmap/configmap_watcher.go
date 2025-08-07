@@ -34,6 +34,10 @@ const (
 	maxRequeueTimes = 10
 )
 
+var (
+	cmWatcher *configMapWatcher
+)
+
 // Option is a function that configures a configMapWatcher
 type Option func(*configMapWatcher)
 
@@ -68,17 +72,30 @@ func WithNamedHandlers(handlers ...NamedHandler) Option {
 	}
 }
 
+// DoCMWatcherWithOptions does the configmap watcher with options
+func DoCMWatcherWithOptions(options ...Option) {
+	for _, opt := range options {
+		opt(cmWatcher)
+	}
+}
+
+// InitCmWatcher initializes the configmap watcher
+func InitCmWatcher(client *kubeclient.ClientK8s) {
+	cmWatcher = NewWatcher(client)
+}
+
+// GetCmWatcher returns the configmap watcher
+func GetCmWatcher() *configMapWatcher {
+	return cmWatcher
+}
+
 // NewWatcher creates a new configmap watcher
-func NewWatcher(client *kubeclient.ClientK8s, options ...Option) *configMapWatcher {
+func NewWatcher(client *kubeclient.ClientK8s) *configMapWatcher {
 	cw := &configMapWatcher{
 		client:   client,
 		handlers: make(map[string]NamedHandler),
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
-	for _, opt := range options {
-		opt(cw)
-	}
-
 	return cw
 }
 
@@ -95,9 +112,7 @@ type configMapWatcher struct {
 // Init initialize the configmap watcher
 func (cw *configMapWatcher) Init() {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(cw.client.ClientSet, 0,
-		informers.WithNamespace(cw.namespace), informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = cw.labelSelector
-		}))
+		informers.WithNamespace(cw.namespace), informers.WithTweakListOptions(func(options *metav1.ListOptions) {}))
 
 	informerFactory.Core().V1().ConfigMaps().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: func(obj interface{}) bool {

@@ -82,3 +82,10 @@ const (
 	// PubFaultCMLabelKey public fault cm label key
 	PubFaultCMLabelKey = "mc-consumer-publicfault"
 )
+
+const (
+	// PgStatusRunning pg running status
+	PgStatusRunning = "Running"
+	// FaultJobCmName fault job cm name
+	FaultJobCmName = "fault-job-info"
+)

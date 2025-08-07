@@ -879,7 +879,25 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	if !job.GetJobIsExists(ctl.jobInfo.JobId) {
 		return "", common.JobNotExist, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
 	}
+
 	retryFaults, normalFaults := ctl.takeRetryFault2NormalFault()
+	defer func() {
+		if len(retryFaults) > 0 {
+			return
+		}
+		hwlog.RunLog.Infof("jobId=%s force release", ctl.jobInfo.JobId)
+		pods := make(map[string]struct{}, len(ctl.faultPod))
+		for rank := range ctl.faultPod {
+			tmpPod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, rank)
+			pods[tmpPod.Name] = struct{}{}
+		}
+		faultInfos := job.GetJobFaultSdIdAndNodeName(ctl.jobInfo.JobId, pods)
+		if faultInfos == nil {
+			return
+		}
+		kube.CreateOrUpdateSuperPodFaultInfo(ctl.jobInfo.JobId, faultInfos)
+		time.Sleep(constant.JobReportRecoverTimeout)
+	}()
 	// if len(ctl.cacheRetryFault) still bigger than 0 after takeRetryFault2NormalFault
 	// that means job support retry strategy, and it's first time choose strategy case only have uce fault
 	if len(retryFaults) > 0 {
@@ -1393,6 +1411,7 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 			}
 			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
 				constant.ClearOperation)
+			go kube.RecoverFaultJobInfoCm(ctl.jobInfo.JobId)
 			if err != nil {
 				hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s", err, ctl.jobInfo.JobId, ctl.uuid)
 				return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil

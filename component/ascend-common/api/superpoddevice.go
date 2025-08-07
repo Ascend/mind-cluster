@@ -23,3 +23,11 @@ type SuperPodDevice struct {
 	SuperPodID    string
 	NodeDeviceMap map[string]*NodeDevice
 }
+
+// SuperPodFaultInfos super pod fault info
+type SuperPodFaultInfos struct {
+	SdIds      []string
+	NodeNames  []string
+	FaultTimes int64
+	JobId      string `json:"JobId,omitempty"`
+}

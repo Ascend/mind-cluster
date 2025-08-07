@@ -25,12 +25,15 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/control"
+	"nodeD/pkg/device"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring"
 	"nodeD/pkg/monitoring/config"
 	"nodeD/pkg/pingmeshv1"
 	"nodeD/pkg/processmanager"
+	"nodeD/pkg/releaser"
 	"nodeD/pkg/reporter"
+	"nodeD/pkg/watcher/configmap"
 )
 
 const (
@@ -102,6 +105,8 @@ func main() {
 		return
 	}
 	go monitorManager.Run(ctx)
+	go configmap.GetCmWatcher().Watch(ctx.Done())
+
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}
@@ -159,6 +164,11 @@ func createWorkers() error {
 		return err
 	}
 
+	configmap.InitCmWatcher(clientK8s)
+	if err = device.InitDeviceManager(); err != nil {
+		hwlog.RunLog.Errorf("init device manager failed when start, error: %v", err)
+		return err
+	}
 	// init workers
 	controller = control.NewControlManager(clientK8s)
 	monitorManager = monitoring.NewMonitorManager(clientK8s)
@@ -167,7 +177,8 @@ func createWorkers() error {
 		ResultMaxAge: resultMaxAge,
 		KubeClient:   clientK8s,
 	})
-
+	releaser.InitReleaser()
+	configmap.GetCmWatcher().Init()
 	// build the connections between workers
 	monitorManager.SetNextFaultProcessor(controller)
 	controller.SetNextFaultProcessor(reportManager)

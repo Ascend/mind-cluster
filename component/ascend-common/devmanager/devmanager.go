@@ -91,6 +91,8 @@ type DeviceInterface interface {
 	DcStopHccsPingMesh(int32, int32, int, uint) error
 	DcGetHccsPingMeshInfo(int32, int32, int, uint) (*common.HccspingMeshInfo, error)
 	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
+	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
+	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
 }
 
 const (
@@ -1128,4 +1130,33 @@ func (d *DeviceManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, port
 // DcGetHccsPingMeshState get hccs ping mesh state
 func (d *DeviceManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID int, taskID uint) (int, error) {
 	return d.DcMgr.DcGetHccsPingMeshState(cardID, deviceID, portID, taskID)
+}
+
+// DcGetSuperPodStatus get super pod status
+func (d *DeviceManager) DcGetSuperPodStatus(cardID int32, deviceID int32, sdid uint32) (int, error) {
+	var err error
+	var status int
+	for i := 0; i < maxRetries; i++ {
+		if status, err = d.DcMgr.DcGetSuperPodStatus(cardID, deviceID, sdid); err != nil {
+			hwlog.RunLog.Errorf("get super pod status failed, retry %d, cardID: %d, deviceID: %d, "+
+				"sdid: %d, error: %v", i, cardID, deviceID, sdid, err)
+			continue
+		}
+		break
+	}
+	return status, err
+}
+
+// DcSetSuperPodStatus set super pod status
+func (d *DeviceManager) DcSetSuperPodStatus(cardID int32, deviceID int32, sdid, status uint32) error {
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		if err = d.DcMgr.DcSetSuperPodStatus(cardID, deviceID, sdid, status); err != nil {
+			hwlog.RunLog.Errorf("set super pod status failed, retry %d, cardID: %d, deviceID: %d, "+
+				"sdid: %d, status: %d, error: %v", i, cardID, deviceID, sdid, status, err)
+			continue
+		}
+		break
+	}
+	return err
 }

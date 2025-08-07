@@ -270,3 +270,8 @@ const (
 	// HCCLStepRetryTimeout is the timeout for HCCL step retry
 	HCCLStepRetryTimeout = 1000 * 60
 )
+
+const (
+	// CardDropFault is the fault code of card drop fault
+	CardDropFault = "40F84E00"
+)

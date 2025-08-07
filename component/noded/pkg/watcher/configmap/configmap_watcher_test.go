@@ -40,17 +40,10 @@ func TestNewWatcher(t *testing.T) {
 		client := &kubeclient.ClientK8s{
 			ClientSet: fake.NewSimpleClientset(),
 		}
-		options := []Option{
-			WithLabelSector("test-label"),
-			WithNamespace("test-namespace"),
-		}
-
-		watcher := NewWatcher(client, options...)
+		watcher := NewWatcher(client)
 
 		convey.So(watcher, convey.ShouldNotBeNil)
 		convey.So(watcher.client, convey.ShouldEqual, client)
-		convey.So(watcher.labelSelector, convey.ShouldEqual, "test-label")
-		convey.So(watcher.namespace, convey.ShouldEqual, "test-namespace")
 		convey.So(watcher.handlers, convey.ShouldNotBeNil)
 		convey.So(watcher.queue, convey.ShouldNotBeNil)
 	})
@@ -73,15 +66,16 @@ func TestWatch(t *testing.T) {
 	convey.Convey("Test Watch", t, func() {
 		var expected atomic.Int32
 		client := fake.NewSimpleClientset()
-		watcher := NewWatcher(&kubeclient.ClientK8s{
+		InitCmWatcher(&kubeclient.ClientK8s{
 			ClientSet: client,
-		}, WithNamespace("test-namespace"), WithNamedHandlers(NamedHandler{
+		})
+		DoCMWatcherWithOptions(WithNamespace("test-namespace"), WithNamedHandlers(NamedHandler{
 			Name: "test",
 			Handle: func(cm *corev1.ConfigMap) {
 				expected.Add(1)
 			},
 		}))
-		watcher.Init()
+		cmWatcher.Init()
 
 		stopCh := make(chan struct{})
 		cm := &corev1.ConfigMap{}
@@ -89,7 +83,7 @@ func TestWatch(t *testing.T) {
 		cm.Name = "test"
 		_, err := client.CoreV1().ConfigMaps("test-namespace").Create(context.TODO(), cm, metav1.CreateOptions{})
 		convey.So(err, convey.ShouldBeNil)
-		go watcher.Watch(stopCh)
+		go cmWatcher.Watch(stopCh)
 		time.Sleep(time.Second)
 		close(stopCh)
 		convey.So(expected.Load(), convey.ShouldEqual, 1)

@@ -40,6 +40,7 @@ import (
 	"nodeD/pkg/pingmeshv1/resulthandler"
 	"nodeD/pkg/pingmeshv1/types"
 	_ "nodeD/pkg/testtool"
+	"nodeD/pkg/watcher/configmap"
 )
 
 const (
@@ -47,6 +48,7 @@ const (
 )
 
 func TestNewManager(t *testing.T) {
+	configmap.InitCmWatcher(&kubeclient.ClientK8s{ClientSet: fake.NewSimpleClientset()})
 	convey.Convey("Testing New", t, func() {
 		convey.Convey("01-new executor failed, should return nil", func() {
 			config := &Config{
@@ -164,4 +166,54 @@ func createFakeAddrCM(client *fake.Clientset, cmName string) error {
 	_, err = client.CoreV1().ConfigMaps(api.ClusterNS).Create(context.TODO(), cm2,
 		metav1.CreateOptions{})
 	return err
+}
+func TestParseSuperDeviceIDs(t *testing.T) {
+	convey.Convey("Test parseSuperDeviceIDs", t, func() {
+		c := &Manager{
+			executor: &executor.DevManager{SuperPodId: 1},
+			nodeName: "node1",
+		}
+		convey.Convey("01-should return error when key not found", func() {
+			_, err := c.parseSuperDeviceIDs(map[string]string{})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-should return error when json invalid", func() {
+			_, err := c.parseSuperDeviceIDs(map[string]string{superPodCMKey: "invalid"})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("03-should return error when superPodId not match", func() {
+			data := map[string]string{
+				superPodCMKey: `{"superPodID":"2","nodeDeviceMap":{"node1":{}}}`,
+			}
+			_, err := c.parseSuperDeviceIDs(data)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("04-should return error when node not found", func() {
+			data := map[string]string{
+				superPodCMKey: `{"superPodID":"1","nodeDeviceMap":{"node2":{}}}`,
+			}
+			_, err := c.parseSuperDeviceIDs(data)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestParsePingMeshConfig(t *testing.T) {
+	convey.Convey("Test parsePingMeshConfig", t, func() {
+		c := &Manager{executor: &executor.DevManager{SuperPodId: 1}}
+		convey.Convey("01-should use global config when pod config not found", func() {
+			data := map[string]string{globalConfigKey: `{"interval":20}`}
+			result, err := c.parsePingMeshConfig(data)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result.TaskInterval, convey.ShouldEqual, 0)
+		})
+		convey.Convey("02-should return error when config not found", func() {
+			_, err := c.parsePingMeshConfig(map[string]string{})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("03-should return error when json invalid", func() {
+			_, err := c.parsePingMeshConfig(map[string]string{"1": "invalid"})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
 }

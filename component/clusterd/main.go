@@ -89,6 +89,7 @@ func dealPubFault(ctx context.Context) {
 
 func addJobFunc() {
 	kube.AddPodGroupFunc(constant.Job, jobv2.PodGroupCollector)
+
 	kube.AddPodFunc(constant.Job, jobv2.PodCollector)
 	kube.AddACJobFunc(constant.Statistics, statistics.ACJobInfoCollector)
 	kube.AddVCJobFunc(constant.Statistics, statistics.VCJobInfoCollector)

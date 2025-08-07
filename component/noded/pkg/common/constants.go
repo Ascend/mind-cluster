@@ -144,3 +144,17 @@ const (
 	// PluginControlFault plugin control fault
 	PluginControlFault = "fault_monitor"
 )
+
+const (
+	// NormalStatus represents normal device status
+	NormalStatus = 0
+	// AbnormalStatus represents abnormal device status
+	AbnormalStatus = 1
+)
+
+const (
+	// Decimal 10
+	Decimal = 10
+	// Bit32Size 32
+	Bit32Size = 32
+)

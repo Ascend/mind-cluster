@@ -187,15 +187,17 @@ func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]str
 		PodID:        podDev.PodName,
 		PodNameSpace: pod.Namespace,
 		ServerName:   pod.Spec.NodeName,
+		SuperPodId:   podDev.SuperPodId,
 		ServerSN:     getSN(pod.Spec.NodeName, podDev.ServerID, ipSnMap),
 	}
 
 	podDevNum := len(podDev.Devices)
 	for idx, dev := range podDev.Devices {
 		serverDev := constant.Device{
-			DeviceID: dev.DeviceID,
-			DeviceIP: dev.DeviceIP,
-			RankID:   strconv.Itoa(podRank*podDevNum + idx),
+			DeviceID:      dev.DeviceID,
+			DeviceIP:      dev.DeviceIP,
+			RankID:        strconv.Itoa(podRank*podDevNum + idx),
+			SuperDeviceID: dev.SuperDeviceID,
 		}
 		server.DeviceList = append(server.DeviceList, serverDev)
 	}

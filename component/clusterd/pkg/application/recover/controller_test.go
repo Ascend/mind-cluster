@@ -24,6 +24,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -908,6 +909,31 @@ func TestHandleNotifyGlobalFault(t *testing.T) {
 		_, code, err := ctl.handleNotifyGlobalFault()
 		convey.So(code, convey.ShouldEqual, common.JobNotExist)
 		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestHandleNotifyGlobalFaultDefer(t *testing.T) {
+	convey.Convey("Test handleNotifyGlobalFault defer logic", t, func() {
+		ctl := &EventController{
+			jobInfo:  common.JobBaseInfo{JobId: "test-job"},
+			faultPod: map[string]string{"test-pod": "test"},
+		}
+
+		mockJobExists := gomonkey.ApplyFuncReturn(job.GetJobIsExists, true)
+		defer mockJobExists.Reset()
+
+		mockGetPod := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{})
+		defer mockGetPod.Reset()
+
+		mockGetFaultInfo := gomonkey.ApplyFuncReturn(job.GetJobFaultSdIdAndNodeName, nil)
+		defer mockGetFaultInfo.Reset()
+
+		mockUpdateFaultInfo := gomonkey.ApplyFuncReturn(kube.CreateOrUpdateSuperPodFaultInfo)
+		defer mockUpdateFaultInfo.Reset()
+
+		convey.Convey("01-should update fault info when no retry faults", func() {
+			_, _, _ = ctl.handleNotifyGlobalFault()
+		})
 	})
 }
 

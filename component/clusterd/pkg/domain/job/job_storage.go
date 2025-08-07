@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -180,4 +181,38 @@ func GetInstanceJobKey(jobId, namespace, appType string) (string, error) {
 		return "", fmt.Errorf("no %s job found", appType)
 	}
 	return jobKey, nil
+}
+
+// GetJobFaultSdIdAndNodeName get job sdid and node name
+func GetJobFaultSdIdAndNodeName(jobId string, podNames map[string]struct{}) map[int]api.SuperPodFaultInfos {
+	jobInfo, ok := GetJobCache(jobId)
+	if !ok {
+		return nil
+	}
+	superNodes := make(map[int][]string)
+	faultSuperID := make(map[int][]string)
+	for _, serverInfo := range jobInfo.JobRankTable.ServerList {
+		if serverInfo.SuperPodId < 0 {
+			return nil
+		}
+		if _, ok = podNames[serverInfo.PodID]; !ok {
+			superNodes[serverInfo.SuperPodId] = append(superNodes[serverInfo.SuperPodId], serverInfo.ServerName)
+			continue
+		}
+		for _, device := range serverInfo.DeviceList {
+			if device.SuperDeviceID == "" {
+				continue
+			}
+			faultSuperID[serverInfo.SuperPodId] = append(faultSuperID[serverInfo.SuperPodId], device.SuperDeviceID)
+		}
+	}
+	if len(superNodes) == 0 || len(faultSuperID) == 0 {
+		return nil
+	}
+	faultInfo := make(map[int]api.SuperPodFaultInfos)
+	for spId := range faultSuperID {
+		faultInfo[spId] = api.SuperPodFaultInfos{
+			NodeNames: superNodes[spId], SdIds: faultSuperID[spId], FaultTimes: time.Now().Unix(), JobId: jobId}
+	}
+	return faultInfo
 }

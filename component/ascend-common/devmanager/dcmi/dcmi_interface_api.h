@@ -543,6 +543,10 @@ DCMIDLLEXPORT int dcmi_get_hccsping_mesh_info(int card_id, int device_id, int po
 
 DCMIDLLEXPORT int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int port_id, unsigned int task_id, unsigned int *state);
 
+DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status);
+
+DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
+
 #endif
 
 #if defined DCMI_VERSION_1

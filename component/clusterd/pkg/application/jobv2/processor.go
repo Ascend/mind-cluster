@@ -12,6 +12,7 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
+	"clusterd/pkg/interface/kube"
 )
 
 func addJob(jobKey string) {
@@ -141,6 +142,7 @@ func preDeleteJob(jobKey string) {
 		return
 	}
 	job.PreDeleteCmAndCache(jobKey)
+	kube.RecoverFaultJobInfoCm(jobKey)
 }
 
 func deleteJob(joKey string) {
