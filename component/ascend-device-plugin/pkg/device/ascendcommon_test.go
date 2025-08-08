@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/containerd/containerd"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -473,7 +472,8 @@ func TestDoWriteFaultToEvent(t *testing.T) {
 func TestHandleDropCardFaultEvents(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test HandleDropCardFaultEvents", t, func() {
-		mockSaveDevFaultInfo := gomonkey.ApplyFunc(common.SaveDevFaultInfo, func(devFaultInfo npuCommon.DevFaultInfo) {})
+		mockSaveDevFaultInfo := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo,
+			func(devFaultInfo npuCommon.DevFaultInfo, enableDelay bool) {})
 		defer mockSaveDevFaultInfo.Reset()
 		convey.Convey("01-occur fault event, CardDrop should be true", func() {
 			mockCheckCardDropFault := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
@@ -1069,8 +1069,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 }
 
 func mockAscendTools() AscendTools {
-	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
-		dmgr: &devmanager.DeviceManagerMock{}, containerdClient: &containerd.Client{}}
+	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
@@ -1223,5 +1222,32 @@ func TestGetUsedDevices(t *testing.T) {
 				convey.So(result, convey.ShouldEqual, tt.expectedOutput)
 			})
 		}
+	})
+}
+
+func TestGetCurDeviceFaultCode(t *testing.T) {
+	convey.Convey("test getCurDeviceFaultCode", t, func() {
+		tool := mockAscendTools()
+		convey.Convey("when devFaultInfo is empty, should return empty result", func() {
+			res := tool.getCurDeviceFaultCode(0, []npuCommon.DevFaultInfo{})
+			convey.So(res.Len(), convey.ShouldEqual, 0)
+		})
+		devFaultInfo := []npuCommon.DevFaultInfo{
+			{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: common.LinkDownFaultCode},
+		}
+		convey.Convey("when dcmi get device fault code failed, should return empty result", func() {
+			mockMethod := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetDeviceAllErrorCode", int32(0), []int64{}, errors.New("failed"))
+			defer mockMethod.Reset()
+			res := tool.getCurDeviceFaultCode(0, devFaultInfo)
+			convey.So(res.Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when dcmi get device fault code success, should return fault code sets", func() {
+			mockMethod := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetDeviceAllErrorCode", int32(1), []int64{common.LinkDownFaultCode}, nil)
+			defer mockMethod.Reset()
+			res := tool.getCurDeviceFaultCode(0, devFaultInfo)
+			convey.So(res.Len(), convey.ShouldEqual, 1)
+		})
 	})
 }

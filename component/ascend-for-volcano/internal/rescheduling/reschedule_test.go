@@ -51,6 +51,7 @@ const (
 	three           = 3
 	mockJobName1    = "jobName1"
 	mockJobName2    = "jobName2"
+	mockJobName3    = "jobName3"
 	minTestSliceLen = 0
 	maxTestSliceLen = 1000
 )
@@ -104,6 +105,7 @@ func fakeTestFaultNodeCardUnhealthy(nodeName string, allCard []string) *FaultNod
 		NodeDEnable:         true,
 		NodeHealthState:     NodeCardUnhealthy,
 		FaultCards:          faultCards,
+		IsNpuNode:           true,
 	}
 }
 
@@ -120,7 +122,28 @@ func fakeTestFaultNodeNodeUnhealthy(nodeName string) *FaultNode {
 		NodeDEnable:         true,
 		NodeHealthState:     NodeUnhealthy,
 		FaultCards:          faultCards,
+		IsNpuNode:           true,
 	}
+}
+
+func fakeTestFaultNodeHasSubHealthyFault(nodeName string) *FaultNode {
+	fNode := fakeTestFaultNodeNodeHealthy(nodeName)
+	fNode.HasCardSubHealthFault = true
+	fNode.HasSwitchSubHealthFault = true
+	return fNode
+}
+
+func fakeTestFaultNodeLinkDown(nodeName string, linkDownTime int64) *FaultNode {
+	fNode := fakeTestFaultNodeNodeHealthy(nodeName)
+	fNode.LinkDownTime = linkDownTime
+	fNode.FaultDeviceList = []FaultDeviceList{
+		{
+			NPUName:       "Ascend910-0",
+			FaultCode:     linkDownFaultCode,
+			FaultHandling: NotHandleFault,
+		},
+	}
+	return fNode
 }
 
 func fakeTestFaultNodeNodeHealthy(nodeName string) *FaultNode {
@@ -136,6 +159,7 @@ func fakeTestFaultNodeNodeHealthy(nodeName string) *FaultNode {
 		NodeDEnable:         true,
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          faultCards,
+		IsNpuNode:           true,
 	}
 }
 
@@ -152,6 +176,7 @@ func fakeTestFaultNodeNodeHealthyOneCard(nodeName string) *FaultNode {
 		NodeDEnable:         true,
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          faultCards,
+		IsNpuNode:           true,
 	}
 }
 
@@ -165,6 +190,7 @@ func fakeTestFaultTaskFault(name string, namespace string,
 		NodeRankIndex: nodeRankIndex,
 		UseCardName:   []string{"Ascend910-0", "Ascend910-1", "Ascend910-2", "Ascend910-3"},
 		PodCreateTime: int64(createTime),
+		IsNpuTask:     true,
 	}
 }
 
@@ -178,6 +204,7 @@ func fakeTestFaultTaskHealth(name string, namespace string, nodeName string,
 		NodeRankIndex: nodeRankIndex,
 		UseCardName:   []string{"Ascend910-0", "Ascend910-1", "Ascend910-2", "Ascend910-3"},
 		PodCreateTime: int64(createTime),
+		IsNpuTask:     true,
 	}
 }
 
@@ -291,6 +318,7 @@ func fakeCacheNoneFJobReSchedulerAddFaultJobWithSession() *DealReSchedulerCache 
 					*fakeTestFaultCardHealthy("Ascend910-6", "node0"),
 					*fakeTestFaultCardHealthy("Ascend910-7", "node0"),
 				},
+				IsNpuNode: true,
 			},
 		},
 		FaultJobs: map[api.JobID]*FaultJob{},
@@ -308,6 +336,7 @@ func fakeFaultTask2P(ns string, name string, node string, job string, index stri
 		NodeRankIndex: index,
 		UseCardName:   []string{"Ascend910-0", "Ascend910-1"},
 		PodCreateTime: fakeTime,
+		IsNpuTask:     true,
 	}
 	return fTask
 }
@@ -603,6 +632,22 @@ func fakeTestFaultNodeCardNetworkUnhealthyOneCard(nodeName string) *FaultNode {
 		NodeDEnable:         true,
 		NodeHealthState:     NodeCardNetworkUnhealthy,
 		FaultCards:          faultCards,
+		IsNpuNode:           true,
+	}
+}
+
+func fakeTestFaultNodeIsNotNpuNode(nodeName string) *FaultNode {
+	updateTime := test.FakeUpdateTime + 1
+	return &FaultNode{
+		NodeName:            nodeName,
+		NPUName:             "",
+		UpdateTime:          updateTime,
+		UnhealthyNPU:        nil,
+		NetworkUnhealthyNPU: nil,
+		IsFaultNode:         true,
+		NodeDEnable:         true,
+		FaultCards:          nil,
+		IsNpuNode:           false,
 	}
 }
 
@@ -663,12 +708,15 @@ func buildFaultNodeNewFaultCardHandlers() []FaultNodeNewFaultCardHandlersTests {
 			faultNodeNewFaultCardHandlersFaultCard(false, "Ascend910-2", "node0", "Healthy"),
 		},
 	}
-	tests := []FaultNodeNewFaultCardHandlersTests{
-		test1,
-		test2,
-		test3,
+	test4 := FaultNodeNewFaultCardHandlersTests{
+		name:   "04-newFaultCardHandlers()-Not NPU Node",
+		fields: fakeTestFaultNodeIsNotNpuNode("node0"),
+		args: FaultNodeNewFaultCardHandlersArgs{
+			node: fakeNPUNodeWithDeviceInfo("node0"),
+		},
+		want: []FaultCard{},
 	}
-	return tests
+	return []FaultNodeNewFaultCardHandlersTests{test1, test2, test3, test4}
 }
 
 // TestFaultNodeNewFaultCardHandlers test for new fault card handlers
@@ -819,7 +867,7 @@ func TestReSchedulerCheckNodeNPUByTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reScheduler := fakeTestTTReScheduler(tt.fields)
-			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, tt.args.vcNode); !reflect.DeepEqual(err,
+			if err := reScheduler.CheckNodeNPUByTask(tt.args.task, &tt.args.vcNode); !reflect.DeepEqual(err,
 				tt.wantErr) {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -840,47 +888,151 @@ type ReSchedulerCheckNodeCurNodeIsFaultTests struct {
 	wantErr bool
 }
 
-func buildReSchedulerCheckNodeCurNodeIsFaultTests() []ReSchedulerCheckNodeCurNodeIsFaultTests {
-	test1 := ReSchedulerCheckNodeCurNodeIsFaultTests{
-		name: "01-checkNodeCurNodeIsFault()-succeed",
-		fields: TestReScheduler{
-			DealReSchedulerCache: &DealReSchedulerCache{
-				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeNodeUnhealthy("node0")},
-				FaultJobs:  nil,
-			},
+func fakeNodeWithAnnotation(nodeName string, annotation map[string]string) *plugin.NPUNode {
+	return &plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name:       nodeName,
+			Annotation: annotation,
 		},
+	}
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultTests() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	var tests []ReSchedulerCheckNodeCurNodeIsFaultTests
+	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase1()...)
+	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase2()...)
+	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase3()...)
+	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase4()...)
+
+	return tests
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultCase1() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	test1 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name:   "01-checkNodeCurNodeIsFault()-job not in session",
+		fields: TestReScheduler{},
 		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
-			curFJob: &FaultJob{
-				FaultTasks: []FaultTask{
-					{
-						TaskName: "pod0",
-					},
-				},
-			},
-			vcNode: plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Name: "node0",
-				},
-			},
-			task: &api.TaskInfo{
-				Name: "pod0",
-			},
+			task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
 		},
 		wantErr: true,
 	}
-	tests := []ReSchedulerCheckNodeCurNodeIsFaultTests{
-		test1,
+	test2 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "02-checkNodeCurNodeIsFault()-node not in session",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0", map[string]string{}),
+			task:   &api.TaskInfo{Job: test.FakeJobName},
+		},
+		wantErr: true,
 	}
-	return tests
+	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test1, test2}
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultCase2() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	test1 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "01-checkNodeCurNodeIsFault()-node health state is unhealthy",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeNodeUnhealthy("node0")},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0", map[string]string{}),
+			task:   test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+		},
+		wantErr: true,
+	}
+	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test1}
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultCase3() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	test6 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "01-checkNodeCurNodeIsFault()-has subHealthy fault and strategy is not ignore",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeHasSubHealthyFault("node0")},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{SubHealthyStrategy: util.SubHealthyForceExit}}}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0", map[string]string{}),
+			task:   test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+		},
+		wantErr: true,
+	}
+	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test6}
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultCase4() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	scheJobAttr := util.SchedulerJobAttr{NPUJob: &util.NPUJob{SubHealthyStrategy: util.SubHealthyForceExit}}
+	test1 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "01-checkNodeCurNodeIsFault()-link down time is 0",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeLinkDown("node0", 0)},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{
+				test.FakeJobName: {SchedulerJobAttr: scheJobAttr}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0", map[string]string{}),
+			task:   test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+		},
+		wantErr: false,
+	}
+	test2 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "02-checkNodeCurNodeIsFault()-node annotation has no NetworkUnhealthy devices",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeLinkDown("node0", time.Now().Unix())},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{
+				test.FakeJobName: {SchedulerJobAttr: scheJobAttr}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0", map[string]string{}),
+			task:   test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+		},
+		wantErr: false,
+	}
+	test3 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "03-checkNodeCurNodeIsFault()-node annotation has NetworkUnhealthy devices",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeLinkDown("node0", time.Now().Unix())},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{
+				test.FakeJobName: {SchedulerJobAttr: scheJobAttr}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0",
+				map[string]string{util.NPU910CardName + "-" + CardNetworkUnhealthy: "Ascend910-1"}),
+			task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+		},
+		wantErr: false,
+	}
+	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test1, test2, test3}
 }
 
 // TestReSchedulerCheckNodeCurNodeIsFault test for check current node is fault node
 func TestReSchedulerCheckNodeCurNodeIsFault(t *testing.T) {
+	var reScheduler *ReScheduler
+	if err := reScheduler.checkNodeCurNodeIsFault(nil, nil); err != nil {
+		t.Errorf("checkNodeCurNodeIsFault() error = %v, wantErr %v", err, nil)
+	}
 	tests := buildReSchedulerCheckNodeCurNodeIsFaultTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reScheduler := fakeTestTTReScheduler(tt.fields)
-			if err := reScheduler.checkNodeCurNodeIsFault(tt.args.vcNode, tt.args.task); (err != nil) != tt.wantErr {
+			reScheduler = fakeTestTTReScheduler(tt.fields)
+			if err := reScheduler.checkNodeCurNodeIsFault(&tt.args.vcNode, tt.args.task); (err != nil) != tt.wantErr {
 				t.Errorf("checkNodeCurNodeIsFault() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -919,12 +1071,16 @@ func TestGetRunningJobs(t *testing.T) {
 	ssn.Jobs[jobInfo1.UID] = jobInfo1
 	jobInfo2 := mockJobInfo(mockJobName2, test.NPUIndex4)
 	ssn.Jobs[jobInfo2.UID] = jobInfo2
+	jobInfo3 := mockJobInfo(mockJobName3, test.NPUIndex4)
+	ssn.Jobs[jobInfo3.UID] = jobInfo3
 	reScheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
 		jobInfo2.UID: {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}},
+		jobInfo3.UID: {SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUNum: 8}}},
 	}
+	runningJobLen := 2
 	t.Run("01-GetRunningJobs() return nil when no running jobs", func(t *testing.T) {
-		if jobs := reScheduler.GetRunningJobs(ssn); len(jobs) != 0 {
-			t.Errorf("GetRunningJobs() len error = %v， wantErr is 0", len(jobs))
+		if jobs := reScheduler.GetRunningJobs(ssn); len(jobs) != runningJobLen {
+			t.Errorf("GetRunningJobs() len error = %v， wantErr is %d", len(jobs), runningJobLen)
 		}
 	})
 }
@@ -1198,7 +1354,7 @@ func mockFaultDeviceList(index string, faultHandling string) FaultDeviceList {
 }
 
 func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
-	ftask := &FaultTask{UseCardName: []string{"npuName0"}}
+	ftask := &FaultTask{UseCardName: []string{"npuName0"}, IsNpuTask: true}
 	testCases := []struct {
 		name       string
 		fTask      *FaultTask
@@ -1212,7 +1368,8 @@ func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
 			fNode: &FaultNode{
 				FaultDeviceList: []FaultDeviceList{
 					mockFaultDeviceList("0", SubHealthFault),
-				}},
+				},
+				IsNpuNode: true},
 			wantResult: true,
 		},
 		{
@@ -1222,7 +1379,8 @@ func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
 			fNode: &FaultNode{
 				FaultDeviceList: []FaultDeviceList{
 					mockFaultDeviceList("0", NotHandleFault),
-				}},
+				},
+				IsNpuNode: true},
 			wantResult: false,
 		},
 	}
@@ -1249,6 +1407,7 @@ func TestSetTaskCardHealthCode(t *testing.T) {
 			fTask: &FaultTask{
 				IsSoftwareFault: true,
 				NodeName:        "",
+				IsNpuTask:       true,
 			},
 			wantError: true,
 		},
@@ -1261,12 +1420,14 @@ func TestSetTaskCardHealthCode(t *testing.T) {
 						NodeHealthState: NodeUnhealthy,
 						FaultDeviceList: []FaultDeviceList{
 							mockFaultDeviceList("0", NotHandleFault),
-						}},
+						},
+						IsNpuNode: true},
 				},
 			}},
 			fTask: &FaultTask{
 				IsSoftwareFault: true,
 				NodeName:        "nodeName0",
+				IsNpuTask:       true,
 			},
 			wantError: false,
 		},

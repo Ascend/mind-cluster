@@ -110,9 +110,6 @@ spec:
             mountPath: /tmp
           - name: lingqu-log
             mountPath: /var/log/lingqu
-          - name: containerd
-            mountPath: /run/containerd
-            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
@@ -152,9 +149,6 @@ spec:
           hostPath:
             path: /var/log/lingqu
             type: DirectoryOrCreate
-        - name: containerd
-          hostPath:
-            path: /run/containerd # the path to the directory containing the container runtime's socket file on the node
         - name: localtime
           hostPath:
             path: /etc/localtime

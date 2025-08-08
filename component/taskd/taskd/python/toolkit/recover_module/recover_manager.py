@@ -76,13 +76,11 @@ class DLRecoverManager(RecoverManager):
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __init__(self, info: pb.ClientInfo, server_addr: str, secure_conn: bool = True, cert_path: str = ""):
+    def __init__(self, info: pb.ClientInfo, server_addr: str):
         """
         __init__ construct ProcessRecoverDLManager instance
         :param info: client base information
         :param server_addr: server_addr like [domain_name|ip]:port
-        :param secure_conn: 使用安全连接
-        :param cert_path: 证书路径
         :return: None
         """
         super().__init__()
@@ -96,10 +94,9 @@ class DLRecoverManager(RecoverManager):
         }
         self.server_addr = server_addr
         self.lock = threading.Lock()
-        self.secure_conn = secure_conn
-        self.cert_path = cert_path
         self.grpc_channel = None
         self.grpc_stub = None
+        self.register_event = threading.Event()
         self._init_client()
 
     @staticmethod
@@ -125,13 +122,16 @@ class DLRecoverManager(RecoverManager):
         except Exception as e:
             raise e
 
-    def init_clusterd(self):
+    def init_clusterd(self) -> bool:
         while True:
             try:
                 status = self.grpc_stub.Init(self.client_info)
                 if status.code == 0:
                     run_log.info("init process recover succeed")
-                    break
+                    return True
+                if status.code == 403:
+                    run_log.info("ProcessRecoverEnable is off, will no longer init clusterd")
+                    return False
                 time.sleep(constants.SLEEP_GAP)
             except Exception as e:
                 run_log.warning(f"init process recover catch exception:{e}")
@@ -142,6 +142,9 @@ class DLRecoverManager(RecoverManager):
     def start_subscribe(self, frame: str = "pytorch"):
         run_log.info("call start_subscribe")
         i = 1
+        connection_check = threading.Thread(target=self._connection_check)
+        connection_check.daemon = True
+        connection_check.start()
         while True:
             if shared_data.shared_data_inst.get_exit_flag():
                 run_log.info("start_subscribe stop and init controller")
@@ -153,6 +156,7 @@ class DLRecoverManager(RecoverManager):
                 self.init_clusterd()
                 status = self.register(self.client_info)
                 if status.code == 0:
+                    self.register_event.set()
                     i = 1
                 self.__listen_signal()
             except RuntimeError as e:
@@ -161,8 +165,27 @@ class DLRecoverManager(RecoverManager):
                 info = (f"{self.client_info.role} subscribe signal for error: {e.__str__()}, "
                         f"task id is: {self.client_info.jobId}, retry it after a few second")
                 run_log.warning(info)
+                self.register_event.clear()
             time.sleep(min(MAX_CONNECT_GAP, i * BASE_CONNECT_GAP))
             i += 1
+            
+    def _connection_check(self):
+        while True:
+            try:
+                self.grpc_stub.HealthCheck(self.client_info)
+                time.sleep(1)
+                continue
+            except Exception as e:
+                run_log.warning(f"connection_check catch exception:{e}")
+                self.register_event.clear()
+                time.sleep(constants.SLEEP_GAP * constants.WAIT_TIMES)
+                if self.register_event.is_set():
+                    continue
+                self.init_clusterd()
+                rsp = self.register(self.client_info)
+                if rsp.code == 0:
+                    self.register_event.set()
+                    run_log.info("connection_check recover succeed")
 
     def _init_client(self):
         options = [
@@ -171,23 +194,9 @@ class DLRecoverManager(RecoverManager):
             (constants.GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1),
             (constants.GRPC_MAX_PINGS_WITHOUT_DATA, 1)
         ]
-        if not self.secure_conn:
-            run_log.warning("using insecure channel is not safe.")
-            self.grpc_channel = grpc.insecure_channel(self.server_addr, options)
-            self.grpc_stub = service.RecoverStub(self.grpc_channel)
-            return
-        try:
-            cert_bytes = safe_get_file_info(self.cert_path).encode()
-            domain_name = CertContentsChecker().check_cert_info(cert_bytes)
-        except Exception as err:
-            run_log.error(f"check cert failed, {err} and set kill flag to end training")
-            tft_destroy_controller()
-            shared_data.shared_data_inst.set_kill_flag(True)
-            raise ValueError from err
-        ssl_credentials = grpc.ssl_channel_credentials(root_certificates=cert_bytes)
-        options.append((constants.GRPC_SSL_TARGET_NAME_OVERRIDE, domain_name))
-        self.grpc_channel = grpc.secure_channel(self.server_addr, ssl_credentials, options)
+        self.grpc_channel = grpc.insecure_channel(self.server_addr, options)
         self.grpc_stub = service.RecoverStub(self.grpc_channel)
+        return
 
     def __listen_signal(self):
         stream = self.grpc_stub.SubscribeProcessManageSignal(self.client_info)
@@ -334,14 +343,16 @@ def init_grpc_process(frame: str = "pytorch"):
     if not import_flag:
         return
 
+    recover_manager = init_grpc_recover_manager()
+    run_log.info("init_grpc_process start to init process recover")
+    if not recover_manager.init_clusterd():
+        return
+
     os.environ[constants.TORCH_AGENT_START] = "0"
     register_callback_func()
     init_mindio_controller(frame)
 
     register_retry_times = 0
-    recover_manager = init_grpc_recover_manager()
-    run_log.info("init_grpc_process start to init process recover")
-    recover_manager.init_clusterd()
     run_log.info("init_grpc_process start check high_availability_switch")
     time_used = 0
     while True:
@@ -364,6 +375,7 @@ def init_grpc_process(frame: str = "pytorch"):
             rsp = recover_manager.register(recover_manager.client_info)
             if rsp.code == 0:
                 run_log.info("recover_manager.register succeed")
+                recover_manager.register_event.set()
                 break
             else:
                 register_retry_times = register_retry_times + 1
@@ -384,19 +396,14 @@ def init_grpc_recover_manager() -> DLRecoverManager:
     if job_id is None or server_addr is None:
         run_log.error(f"job_id or server_addr is wrong, job_id：{job_id}, server_addr: {server_addr}")
         raise ValueError
+    use_local_proxy = os.getenv(constants.LOCAL_PROXY_ENABLE)
+    if use_local_proxy == "on":
+        run_log.info(f"recover grpc use loca proxy, job_id={job_id}")
+        server_addr = constants.LOCAL_PROXY_IP
     server_addr = server_addr + ":" + constants.GRPC_SERVER_PORT
-    secure_conn = os.getenv(constants.ELASTIC_GRPC_SECURE_CONNECT_PATH)
-    if secure_conn == "on":
-        secure_conn = True
-    else:
-        secure_conn = False
-    cert_path = os.getenv(constants.ELASTIC_GRPC_SECURE_CERTIFICATES_PATH)
-    if cert_path is None:
-        cert_path = ""
     client_info = pb.ClientInfo(jobId=job_id, role="master agent")
-    run_log.info(f"DLRecoverManager init info: job_id：{job_id}, server_addr: {server_addr}"
-                 f"secure_conn：{secure_conn}, cert_path: {cert_path}")
-    return DLRecoverManager(client_info, server_addr, secure_conn, cert_path)
+    run_log.info(f"DLRecoverManager init info: job_id：{job_id}, server_addr: {server_addr}")
+    return DLRecoverManager(client_info, server_addr)
 
 
 def get_recover_manager_instance() -> DLRecoverManager:

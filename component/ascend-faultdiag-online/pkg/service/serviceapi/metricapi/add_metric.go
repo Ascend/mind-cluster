@@ -20,12 +20,12 @@ Package metricapi provides API
 package metricapi
 
 import (
-	"ascend-faultdiag-online/pkg/fdol/api"
-	"ascend-faultdiag-online/pkg/fdol/context/contextdata"
-	"ascend-faultdiag-online/pkg/fdol/context/diagcontext"
-	"ascend-faultdiag-online/pkg/fdol/model"
-	"ascend-faultdiag-online/pkg/model/diagmodel/metricmodel"
-	"ascend-faultdiag-online/pkg/model/enum"
+	"ascend-faultdiag-online/pkg/core/api"
+	"ascend-faultdiag-online/pkg/core/context/contextdata"
+	"ascend-faultdiag-online/pkg/core/context/diagcontext"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/core/model/diagmodel/metricmodel"
+	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 

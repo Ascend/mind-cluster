@@ -155,6 +155,8 @@ const (
 	NormalFaultType = "1"
 	// HotResetPolicy hot reset policy
 	HotResetPolicy = "reset"
+	// RestartPolicy restart process policy
+	RestartPolicy = "restart"
 )
 
 // FaultLevel string describe
@@ -193,6 +195,8 @@ const (
 	SeparateFaultLevelStr = "Separate"
 	// PreSeparateFault pre-separate fault
 	PreSeparateFault = "PreSeparateFault"
+	// SeparateFault separate fault
+	SeparateFault = "SeparateFault"
 )
 
 // About cm keys
@@ -245,4 +249,9 @@ const (
 	Success = "success"
 	Failed  = "failed"
 	Start   = "start"
+)
+
+const (
+	// CardDropFault is the fault code of card drop fault
+	CardDropFault = "40F84E00"
 )

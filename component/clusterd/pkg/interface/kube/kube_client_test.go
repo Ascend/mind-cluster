@@ -6,6 +6,7 @@ package kube
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -296,5 +300,91 @@ func TestGetJobEvent(t *testing.T) {
 		defer p1.Reset()
 		_, err := GetJobEvent(testNS, testName, testJobType)
 		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
+	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' success", t, func() {
+		testJobId := "test-job-id"
+		testCm := &v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      api.FaultJobCmName,
+				Namespace: api.ClusterNS,
+			},
+			Data: map[string]string{
+				testJobId: "test-data",
+			},
+		}
+		p1 := gomonkey.ApplyFuncReturn(GetConfigMap, testCm, nil)
+		defer p1.Reset()
+		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, testCm, nil)
+		defer p2.Reset()
+		RecoverFaultJobInfoCm(testJobId)
+		_, exists := testCm.Data[testJobId]
+		convey.So(exists, convey.ShouldBeFalse)
+	})
+
+	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with GetConfigMap error", t, func() {
+		p1 := gomonkey.ApplyFuncReturn(GetConfigMap, nil, testErr)
+		defer p1.Reset()
+		RecoverFaultJobInfoCm("test-job-id")
+	})
+
+	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with UpdateConfigMap error", t, func() {
+		testJobId := "test-job-id"
+		testCm := &v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      api.FaultJobCmName,
+				Namespace: api.ClusterNS,
+			},
+			Data: map[string]string{
+				testJobId: "test-data",
+			},
+		}
+		p1 := gomonkey.ApplyFuncReturn(GetConfigMap, testCm, nil)
+		defer p1.Reset()
+
+		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, nil, testErr)
+		defer p2.Reset()
+
+		RecoverFaultJobInfoCm(testJobId)
+	})
+}
+
+func TestCreateOrUpdateSuperPodFaultInfo(t *testing.T) {
+	const fakeTime = 123456789
+	convey.Convey("Test CreateOrUpdateSuperPodFaultInfo", t, func() {
+		testJobId := "test-job-id"
+		testFaultInfos := map[int]api.SuperPodFaultInfos{
+			1: {FaultTimes: fakeTime},
+		}
+		convey.Convey("Should update existing configmap failed", func() {
+			testCm := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      api.FaultJobCmName,
+					Namespace: api.ClusterNS,
+				},
+				Data: nil,
+			}
+			patch1 := gomonkey.ApplyFuncReturn(GetConfigMap, testCm, nil)
+			defer patch1.Reset()
+			patch2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, testCm, errors.New("fake error"))
+			defer patch2.Reset()
+			patch3 := gomonkey.ApplyFuncReturn(json.Marshal, []byte(`{}`), nil)
+			defer patch3.Reset()
+			CreateOrUpdateSuperPodFaultInfo(testJobId, testFaultInfos)
+			_, exists := testCm.Data[testJobId]
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+		convey.Convey("Should handle GetConfigMap error", func() {
+			patch1 := gomonkey.ApplyFuncReturn(GetConfigMap, nil, testErr)
+			defer patch1.Reset()
+			patch2 := gomonkey.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {
+				convey.So(format, convey.ShouldContainSubstring, "get configmap fault-job-info err")
+			})
+			defer patch2.Reset()
+
+			CreateOrUpdateSuperPodFaultInfo(testJobId, testFaultInfos)
+		})
 	})
 }

@@ -285,6 +285,8 @@ class MSRunPlugin:
             if details[constants.RANK_STATUS_KEY] not in {constants.RANK_STATUS_OK, constants.RANK_STATUS_NOT_START,
                                                           constants.RANK_STATUS_COMPLETE}:
                 self.rank_status = self.RANK_STATUS_UNHEALTHY
+                run_log.info(f"rank {details[constants.GLOBAL_RANK_ID_KEY]} status is "
+                                f"{details[constants.RANK_STATUS_KEY]}")
                 all_healthy = False
             if details[constants.RANK_STATUS_KEY] not in {constants.RANK_STATUS_COMPLETE}:
                 all_succeed = False
@@ -382,7 +384,7 @@ class MSRunPlugin:
             if self.ms_node_rank == "0":
                 run_log.warning("will kill mindio controller")
                 shared_data.shared_data_inst.set_exit_flag(True)
-            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for 10 secs, after kill workers")
+            run_log.warning(f"nodeRank:{self.ms_node_rank}  will sleep for {KILL_INTERVAL} secs, after kill workers")
             time.sleep(KILL_INTERVAL)
             run_log.warning("sleep over, will start")
             self.start_mindspore_workers()

@@ -33,7 +33,7 @@ framework = None
 def init_taskd_agent(config: dict, cls=None) -> bool:
     global taskd_agent, framework
     if cython_api.lib is None:
-        run_log.error("init_taskd_agent: the libtaskd.so has not been loaded!")
+        run_log.error("init_taskd_agent: the libtaskd.so has not been loaded")
         return False
     framework = config.get(CONFIG_FRAMEWORK_KEY)
     if framework == "PyTorch" and cls is not None:
@@ -63,6 +63,9 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
         )
     log_name = "agent-" + config_values.get(CONFIG_SERVERRANK_KEY) + ".log"
     create_taskd_log_func = cython_api.lib.CreateTaskdLog
+    if create_taskd_log_func is None:
+        run_log.error("init_taskd_agent: func CreateTaskdLog has not been loaded from libtaskd.so")
+        return False
     create_taskd_log_func.restype = ctypes.c_void_p
     logger = create_taskd_log_func(log_name.encode('utf-8'))
     if logger is None:

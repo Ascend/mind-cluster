@@ -61,7 +61,7 @@ type SchedulerPlugin interface {
 // FaultHandler fault handler for job
 type FaultHandler interface {
 	Execute(*ScheduleEnv, *framework.Session) error
-	CheckNodeNPUByTask(*api.TaskInfo, NPUNode) error
+	CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error
 	ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)
 	PreStopAction(*ScheduleEnv) error
 }

@@ -16,43 +16,54 @@
 package netfaultapi
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"ascend-faultdiag-online/pkg/fdol/context/contextdata"
-	"ascend-faultdiag-online/pkg/fdol/context/diagcontext"
-	"ascend-faultdiag-online/pkg/fdol/model"
-	"ascend-faultdiag-online/pkg/fdol/sohandle"
-	"ascend-faultdiag-online/pkg/model/enum"
-	"ascend-faultdiag-online/pkg/model/feature"
-	"ascend-faultdiag-online/pkg/model/feature/netfault"
+	"ascend-common/common-utils/hwlog"
+	"ascend-faultdiag-online/pkg/core/context/contextdata"
+	"ascend-faultdiag-online/pkg/core/context/diagcontext"
+	"ascend-faultdiag-online/pkg/core/funchandler"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/core/model/enum"
+	"ascend-faultdiag-online/pkg/model/netfault"
 )
+
+const logLineLength = 256
+
+func init() {
+	config := hwlog.LogConfig{
+		OnlyToStdout:  true,
+		MaxLineLength: logLineLength,
+	}
+	err := hwlog.InitRunLogger(&config, context.TODO())
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 
 type MockHandler struct {
 	mock.Mock
 }
 
 // ExecuteFunc 模拟 SoHandler 的 ExecuteFunc 方法
-func (m *MockHandler) ExecuteFunc(input []byte, output []byte) (int, error) {
-	args := m.Called(input, output)
+func (m *MockHandler) ExecuteFunc(input model.Input) (int, error) {
+	args := m.Called(input)
 	return args.Int(0), args.Error(1)
 }
 
-func createMockSoHandler(mockHandler *MockHandler) *sohandle.SoHandler {
-	return &sohandle.SoHandler{
-		SoHandle: nil,
-		SoType:   "mock",
-		ExecuteFunc: func(input []byte, output []byte) (int, error) {
-			return mockHandler.ExecuteFunc(input, output)
+func createMockFuncHandler(mockHandler *MockHandler) *funchandler.Handler {
+	return &funchandler.Handler{
+		ExecuteFunc: func(input model.Input) (int, error) {
+			return mockHandler.ExecuteFunc(input)
 		},
 	}
 }
@@ -60,12 +71,12 @@ func createMockSoHandler(mockHandler *MockHandler) *sohandle.SoHandler {
 func createMockCtxData(mockHandler *MockHandler) *contextdata.CtxData {
 	return &contextdata.CtxData{
 		Framework: &contextdata.Framework{
-			Config:       nil, // 如果需要，可以提供具体的配置
-			SoHandlerMap: map[string]*sohandle.SoHandler{"netfault": createMockSoHandler(mockHandler)},
-			ReqQue:       make(chan *model.RequestContext, 10),
-			IsRunning:    true,
-			StopChan:     make(chan struct{}),
-			Logger:       log.New(os.Stdout, "TEST: ", log.LstdFlags),
+			Config:      nil, // 如果需要，可以提供具体的配置
+			FuncHandler: map[string]*funchandler.Handler{enum.NetFault: createMockFuncHandler(mockHandler)},
+			ReqQue:      make(chan *model.RequestContext, 10),
+			IsRunning:   true,
+			StopChan:    make(chan struct{}),
+			Logger:      log.New(os.Stdout, "TEST: ", log.LstdFlags),
 		},
 	}
 }
@@ -88,7 +99,7 @@ func TestControllerStartFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 第二次调用 start
 
 	// 调用方法
-	err := ControllerStartFunc(ctxData, diagCtx, reqCtx, &feature.Status{})
+	err := ControllerStartFunc(ctxData, diagCtx, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.NoError(t, err, "ControllerStartFunc 成功执行")
@@ -117,7 +128,7 @@ func TestControllerStartFuncError(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, errors.New("mock error")).Once()
 
 	// 调用方法
-	err := ControllerStartFunc(ctxData, diagCtx, reqCtx, &feature.Status{})
+	err := ControllerStartFunc(ctxData, diagCtx, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.Error(t, err, "ControllerStartFunc 返回错误")
@@ -145,7 +156,7 @@ func TestControllerStopFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 调用 stop
 
 	// 调用方法
-	err := ControllerStopFunc(ctxData, diagCtx, reqCtx, &feature.Status{})
+	err := ControllerStopFunc(ctxData, diagCtx, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.NoError(t, err, "ControllerStopFunc 成功执行")
@@ -169,10 +180,10 @@ func TestControllerReloadFunc(t *testing.T) {
 	}
 
 	// 模拟 handler 的行为
-	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 调用 reload
+	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Times(2) // 调用 reload
 
 	// 调用方法
-	err := ControllerReloadFunc(ctxData, nil, reqCtx, &feature.Status{})
+	err := ControllerReloadFunc(ctxData, nil, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.NoError(t, err, "ControllerReloadFunc 应该成功执行")
@@ -199,7 +210,7 @@ func TestControllerReloadFuncError(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, errors.New("mock error")).Once() // reload 出错
 
 	// 调用方法
-	err := ControllerReloadFunc(ctxData, nil, reqCtx, &feature.Status{})
+	err := ControllerReloadFunc(ctxData, nil, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.Error(t, err, "ControllerReloadFunc 应该返回错误")
@@ -215,37 +226,18 @@ func TestRegisterCallback(t *testing.T) {
 			err := registerCallback(nil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		convey.Convey("should return err when json marshal failed", func() {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(v any) ([]byte, error) {
-				return nil, errors.New("can not marshal")
-			})
-			defer patch.Reset()
-			handler := &sohandle.SoHandler{}
-			err := registerCallback(handler)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
 		convey.Convey("should return err when ExecuteFunc failed", func() {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(v any) ([]byte, error) {
-				return nil, errors.New("can not marshal")
-			})
-			defer patch.Reset()
-			execFunc := func(input []byte, output []byte) (int, error) {
+			execFunc := func(input model.Input) (int, error) {
 				return 0, errors.New("exec func failed")
 			}
-			handler := &sohandle.SoHandler{ExecuteFunc: execFunc}
-			err := registerCallback(handler)
+			err := registerCallback(execFunc)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("should return err when ExecuteFunc succeed", func() {
-			patch := gomonkey.ApplyFunc(json.Marshal, func(v any) ([]byte, error) {
-				return nil, errors.New("can not marshal")
-			})
-			defer patch.Reset()
-			execFunc := func(input []byte, output []byte) (int, error) {
+			execFunc := func(input model.Input) (int, error) {
 				return 0, nil
 			}
-			handler := &sohandle.SoHandler{ExecuteFunc: execFunc}
-			err := registerCallback(handler)
+			err := registerCallback(execFunc)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})

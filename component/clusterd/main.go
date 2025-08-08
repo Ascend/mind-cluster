@@ -41,11 +41,11 @@ var (
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName  string
-	version    bool
-	enableFdOl bool
-	server     *sv.ClusterInfoMgrServer
-	limiter    = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	BuildName string
+	version   bool
+	server    *sv.ClusterInfoMgrServer
+	limiter   = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
+	useProxy  bool
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -89,6 +89,7 @@ func dealPubFault(ctx context.Context) {
 
 func addJobFunc() {
 	kube.AddPodGroupFunc(constant.Job, jobv2.PodGroupCollector)
+
 	kube.AddPodFunc(constant.Job, jobv2.PodCollector)
 	kube.AddACJobFunc(constant.Statistics, statistics.ACJobInfoCollector)
 	kube.AddVCJobFunc(constant.Statistics, statistics.VCJobInfoCollector)
@@ -119,13 +120,8 @@ func main() {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	// init hwlog
-	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return
-	}
-	if err := logs.InitJobEventLogger(ctx); err != nil {
-		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
+	if err := initLogger(ctx); err != nil {
+		fmt.Printf("logger init failed: %v\n", err)
 		return
 	}
 	if !checkParameters() {
@@ -163,7 +159,7 @@ func initGrpcServer(ctx context.Context) {
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS),
 		grpc.KeepaliveParams(keepAlive)})
-	if err := server.Start(ctx); err != nil {
+	if err := server.Start(ctx, useProxy); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
 }
@@ -187,7 +183,6 @@ func initK8sServer() error {
 
 func init() {
 	flag.BoolVar(&version, "version", false, "the version of the program")
-	flag.BoolVar(&enableFdOl, "enableFdOl", false, "switch of fd online")
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
@@ -197,6 +192,7 @@ func init() {
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup operator logs, range is (0, 30]")
+	flag.BoolVar(&useProxy, "useProxy", false, "use local grpc proxy")
 }
 
 func checkParameters() bool {
@@ -221,4 +217,20 @@ func signalCatch(cancel context.CancelFunc) {
 		}
 		cancel()
 	}
+}
+
+func initLogger(ctx context.Context) error {
+	// init hwlog
+	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
+		return fmt.Errorf("hwlog init failed, error is %v", err)
+	}
+	if err := logs.InitJobEventLogger(ctx); err != nil {
+		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)
+		return fmt.Errorf("job event log init failed, error is %v", err)
+	}
+	if err := logs.InitGrpcEventLogger(ctx); err != nil {
+		hwlog.RunLog.Errorf("GrpcEventLog init failed, error is %v", err)
+		return fmt.Errorf("grpc event log init failed, error is %v", err)
+	}
+	return nil
 }

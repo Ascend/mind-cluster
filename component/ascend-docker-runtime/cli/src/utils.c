@@ -309,6 +309,24 @@ bool CheckExistsFile(const char* filePath, const size_t filePathLen,
     return true;
 }
 
+bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner)
+{
+    if (fp == NULL) {
+        return false;
+    }
+    struct stat st;
+    if (fstat(fileno(fp), &st) != 0) {
+        return false;
+    }
+    if (S_ISREG(st.st_mode) == 0 || st.st_size > maxSize) {
+        return false;
+    }
+    if (!CheckFileOwner(st, checkOwner)) {
+        return false;
+    }
+    return true;
+}
+
 static bool CheckFileSubset(const char* filePath, const size_t filePathLen,
     const size_t maxFileSzieMb)
 {

@@ -20,6 +20,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	commonutils "ascend-common/common-utils/utils"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
@@ -153,6 +154,10 @@ func (r *BaseGenerator) WriteToFile() error {
 			return err
 		}
 		defer f.Close()
+		_, err = commonutils.CheckPath(r.path)
+		if err != nil {
+			return err
+		}
 		rtStr, err := r.ToString()
 		if err != nil {
 			return err
@@ -168,7 +173,7 @@ func (r *BaseGenerator) WriteToFile() error {
 	if err := os.Chmod(r.path, defaultPerm); err != nil {
 		return err
 	}
-	hwlog.RunLog.Infof("write info into file: %s, and change mod to 666 success", r.path)
+	hwlog.RunLog.Infof("write info into file: %s, and change mod to %d success", r.path, defaultPerm)
 	if err := r.writeVersion(); err != nil {
 		hwlog.RunLog.Errorf("failed to write version to file, err: %v", err)
 		return err
@@ -184,6 +189,10 @@ func (r *BaseGenerator) writeVersion() error {
 			return err
 		}
 		defer f.Close()
+		_, err = commonutils.CheckPath(r.path)
+		if err != nil {
+			return err
+		}
 		versionStr := strconv.FormatUint(r.GetTimeStamp(), decimal)
 		if _, err = f.WriteString(versionStr); err != nil {
 			return err

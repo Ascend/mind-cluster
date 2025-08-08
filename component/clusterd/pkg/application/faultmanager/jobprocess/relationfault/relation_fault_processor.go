@@ -145,6 +145,7 @@ type FaultJob struct {
 	RelationFaults      []*constant.FaultInfo
 	TriggerFault        []constant.FaultInfo
 	processedFaultInfo  []constant.FaultInfo
+	TMOutTriggerFault   []constant.FaultInfo
 	FaultStrategy       constant.FaultStrategy
 	SeparateNodes       sets.String
 	AllFaultCode        sets.String
@@ -328,7 +329,6 @@ func (fJob *FaultJob) clearProcessedAndTimeOutFault() {
 		if preStopTime-fault.FaultTime >= fault.DealMaxTime*constant.Kilo {
 			hwlog.RunLog.Infof("fault code %s is time out, process as default strategy", fault.FaultUid)
 			fJob.addFaultStrategyForTimeOutCode(fault)
-			fJob.ProcessingFaultCode.Delete(fault.FaultUid)
 			continue
 		}
 		networkFaultInfo = append(networkFaultInfo, fault)
@@ -346,6 +346,35 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 		newFault.ExecutedStrategy = constant.SubHealthFaultStrategy
 		fJob.updateNodeFaultInfoMap(&newFault)
 	}
+	if fault.FaultType == constant.DeviceFaultType {
+		fJob.execDeviceFaultTMOut(fault)
+	}
+}
+
+func (fJob *FaultJob) execDeviceFaultTMOut(fault *constant.FaultInfo) {
+	if fJob.isMeetTMOutTriggerFault(fault) {
+		fJob.FaultStrategy.NodeLvList[fault.NodeName] = constant.SeparateFaultStrategy
+		newFault := *fault
+		newFault.ExecutedStrategy = constant.SeparateFaultStrategy
+		hwlog.RunLog.Infof("fault <%s> meet tmout trigger fault, will separate fault pod", fault.FaultUid)
+		fJob.updateNodeFaultInfoMap(&newFault)
+	}
+}
+
+func (fJob *FaultJob) isMeetTMOutTriggerFault(fault *constant.FaultInfo) bool {
+	var tmpTMOutTriggerFault []constant.FaultInfo
+	var isMeet bool
+	for _, tmOutTriggerFault := range fJob.TMOutTriggerFault {
+		if tmOutTriggerFault.FaultTime >= fault.FaultTime &&
+			tmOutTriggerFault.FaultTime-fault.FaultTime <= fault.DealMaxTime*constant.Kilo {
+			isMeet = true
+			hwlog.RunLog.Infof("fault <%s> meet <%s> when time out exec", fault.FaultUid, tmOutTriggerFault.FaultUid)
+			continue
+		}
+		tmpTMOutTriggerFault = append(tmpTMOutTriggerFault, tmOutTriggerFault)
+	}
+	fJob.TMOutTriggerFault = tmpTMOutTriggerFault
+	return isMeet
 }
 
 func (fJob *FaultJob) initByDeviceFault(nodeFaultInfo *constant.AdvanceDeviceFaultCm, serverList constant.ServerHccl) {
@@ -377,6 +406,7 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 					FaultTime:   time.Now().UnixMilli(),
 					DealMaxTime: getFaultCodeDelMaxTime(faultCode),
 					FaultUid:    nodeName + "-" + fault.NPUName + "-" + faultCode,
+					ForceAdd:    fault.ForceAdd,
 				}
 				fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 				fJob.addFaultInfoByCodeType(&tmpFaultInfo)
@@ -387,7 +417,9 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 
 func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *constant.FaultInfo) {
 	if relationFaultTypeMap.Has(faultInfo.FaultCode) {
-		if fJob.ProcessingFaultCode.Has(faultInfo.FaultUid) {
+		// if linkdown fault is timeout, existed in ProcessingFaultCode and need force add in RelationFaults,
+		// when in retry fault process senior
+		if !faultInfo.ForceAdd && fJob.ProcessingFaultCode.Has(faultInfo.FaultUid) {
 			hwlog.RunLog.Debugf("addFaultInfoByCodeType failed by code %s "+
 				"is existed in ProcessingFaultCode", faultInfo.FaultUid)
 			return
@@ -398,6 +430,7 @@ func (fJob *FaultJob) addFaultInfoByCodeType(faultInfo *constant.FaultInfo) {
 	}
 	if triggerFaultMap.Has(faultInfo.FaultCode) {
 		if fJob.IsA3Job && faultdomain.IsCqeFault(faultInfo.FaultCode) {
+			fJob.TMOutTriggerFault = append(fJob.TMOutTriggerFault, *faultInfo)
 			return
 		}
 		fJob.TriggerFault = append(fJob.TriggerFault, *faultInfo)
@@ -428,6 +461,7 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 				FaultLevel:  switchInfo.FaultLevel,
 				FaultUid: serverList.ServerName + "-" +
 					constant.AllCardId + "-" + faultInfo.AssembledFaultCode,
+				ForceAdd: faultInfo.ForceAdd,
 			}
 			fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 			fJob.addFaultInfoByCodeType(&tmpFaultInfo)

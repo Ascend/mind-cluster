@@ -78,7 +78,18 @@ class TestAgentMessageManager(unittest.TestCase):
         
         with self.assertRaises(Exception) as context:
             AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        self.assertEqual(str(context.exception), 'init_network_func failed!')
+        self.assertEqual(str(context.exception), 'init_network_func failed')
+
+    @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
+    @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
+    def test_init_network_failure(self, mock_log, mock_cython):
+        self.mock_lib = MagicMock()
+        mock_cython.lib = self.mock_lib
+        self.mock_lib.InitNetwork = None
+
+        with self.assertRaises(Exception) as context:
+            AgentMessageManager(self.network_config, self.mock_queue, self.logger)
+        self.assertEqual(str(context.exception), 'init_network: func InitNetwork has not been loaded from libtaskd.so')
 
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_register_message(self, mock_cython):
@@ -278,7 +289,7 @@ class TestAgentNetworkFunctions(unittest.TestCase):
         mock_manager.register.assert_called_once_with('0')
         mock_manager.receive_message.assert_called_once()
         self.assertEqual(mock_sleep.call_count, 2)
-        mock_log.info.assert_any_call('init message manager success!')
+        mock_log.info.assert_any_call('init message manager success')
 
     @patch('taskd.python.framework.agent.base_agent.agent_network.time.sleep')
     @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
@@ -294,7 +305,7 @@ class TestAgentNetworkFunctions(unittest.TestCase):
         init_message_manager(network_config, mock_queue, mock_logger)
         
         self.assertEqual(mock_sleep.call_count, 61)
-        mock_log.error.assert_called_with('init message manager failed!')
+        mock_log.error.assert_called_with('init message manager failed')
 
 if __name__ == '__main__':
     unittest.main()

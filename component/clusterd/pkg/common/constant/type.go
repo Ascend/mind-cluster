@@ -20,6 +20,7 @@ type DeviceFault struct {
 	FaultHandling        string                       `json:"fault_handling"`
 	FaultCode            string                       `json:"fault_code"`
 	FaultTimeAndLevelMap map[string]FaultTimeAndLevel `json:"fault_time_and_level_map"`
+	ForceAdd             bool                         `json:"-"`
 }
 
 // NodeInfoCM the config map struct of node info
@@ -164,6 +165,7 @@ type RankTable struct {
 type ServerHccl struct {
 	DeviceList   []Device `json:"device"`
 	ServerID     string   `json:"server_id"` // host ip
+	SuperPodId   int      `json:"super_pod_id"`
 	PodID        string   `json:"-"`
 	PodNameSpace string   `json:"-"`
 	ServerName   string   `json:"server_name"` // node name
@@ -172,16 +174,18 @@ type ServerHccl struct {
 
 // Device to hccl with rankId
 type Device struct {
-	DeviceID string `json:"device_id"`
-	DeviceIP string `json:"device_ip"`
-	RankID   string `json:"rank_id"` // rank id
+	DeviceID      string `json:"device_id"`
+	DeviceIP      string `json:"device_ip"`
+	RankID        string `json:"rank_id"` // rank id
+	SuperDeviceID string `json:"super_device_id,omitempty"`
 }
 
 // PodDevice pod annotation device info
 type PodDevice struct {
-	Devices  []Device `json:"devices"`
-	PodName  string   `json:"pod_name"`
-	ServerID string   `json:"server_id"` // host ip
+	Devices    []Device `json:"devices"`
+	PodName    string   `json:"pod_name"`
+	ServerID   string   `json:"server_id"` // host ip
+	SuperPodId int      `json:"super_pod_id"`
 }
 
 // JobServerInfoMap to store job server info
@@ -330,6 +334,7 @@ type FaultInfo struct {
 	FaultTime        int64
 	ExecutedStrategy string
 	DealMaxTime      int64
+	ForceAdd         bool
 }
 
 // FaultDuration fault duration config
@@ -357,6 +362,7 @@ type SimpleSwitchFaultInfo struct {
 	Severity           uint
 	Assertion          uint
 	AlarmRaisedTime    int64
+	ForceAdd           bool `json:"-"`
 }
 
 // ReportRecoverInfo cluster grpc should call back for report uce fault
@@ -411,12 +417,13 @@ type ConfigPingMesh map[string]*HccspingMeshItem
 
 // CathelperConf config info for cathelper
 type CathelperConf struct {
-	SuppressedPeriod int `json:"suppressedPeriod"`
-	NetworkType      int `json:"networkType"`
-	PingType         int `json:"pingType"`
-	PingTimes        int `json:"pingTimes"`
-	PingInterval     int `json:"pingInterval"`
-	Period           int `json:"period"`
+	SuppressedPeriod int    `json:"suppressedPeriod"`
+	NetworkType      int    `json:"networkType"`
+	PingType         int    `json:"pingType"`
+	PingTimes        int    `json:"pingTimes"`
+	PingInterval     int    `json:"pingInterval"`
+	Period           int    `json:"period"`
+	NetFault         string `json:"netFault"`
 }
 
 // CacheStatus cache the status

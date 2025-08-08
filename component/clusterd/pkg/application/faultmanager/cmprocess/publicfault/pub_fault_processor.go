@@ -5,6 +5,7 @@ package publicfault
 
 import (
 	"strconv"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -81,6 +82,7 @@ func (p *pubFaultProcessor) faultJoin() {
 		}
 	}
 	if modified {
+		p.devCMInfo.UpdateTime = time.Now().Unix()
 		faultdomain.SortDataForAdvanceDeviceInfo(p.devCMInfo)
 	}
 }

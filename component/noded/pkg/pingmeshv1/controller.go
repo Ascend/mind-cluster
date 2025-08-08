@@ -38,8 +38,8 @@ import (
 	"nodeD/pkg/pingmeshv1/resulthandler/cmreporter"
 	"nodeD/pkg/pingmeshv1/resulthandler/filewriter"
 	"nodeD/pkg/pingmeshv1/types"
-	"nodeD/pkg/pingmeshv1/watcher"
-	"nodeD/pkg/pingmeshv1/watcher/configmap"
+	"nodeD/pkg/watcher"
+	"nodeD/pkg/watcher/configmap"
 )
 
 // Manager is the controller for pingmeshv1
@@ -67,13 +67,13 @@ func NewManager(config *Config) *Manager {
 		current:  &types.HccspingMeshPolicy{},
 	}
 	c.policyFactory = policygenerator.NewFactory().Register(fullmesh.Rule, fullmesh.New(c.nodeName))
-	c.initWatcher(config)
+	c.initWatcher()
 	c.initHandler(config)
 	c.executor.SetResultHandler(c.handler.Receive)
 	return c
 }
 
-func (c *Manager) initWatcher(config *Config) {
+func (c *Manager) initWatcher() {
 	var opts []configmap.Option
 	opts = append(opts, configmap.WithNamespace(api.ClusterNS))
 	opts = append(opts, configmap.WithLabelSector(fmt.Sprintf("%s=%s", consts.PingMeshConfigLabelKey,
@@ -82,9 +82,7 @@ func (c *Manager) initWatcher(config *Config) {
 		configmap.NamedHandler{Name: c.ipCmName, Handle: c.handleClusterAddress},
 		configmap.NamedHandler{Name: consts.PingMeshConfigCm, Handle: c.handleUserConfig},
 	))
-	w := configmap.NewWatcher(config.KubeClient, opts...)
-	w.Init()
-	c.watcher = w
+	configmap.DoCMWatcherWithOptions(opts...)
 }
 
 func (c *Manager) initHandler(config *Config) {
@@ -113,7 +111,6 @@ func (c *Manager) initHandler(config *Config) {
 
 // Run start the pingmeshv1 controller
 func (c *Manager) Run(ctx context.Context) {
-	go c.watcher.Watch(ctx.Done())
 	go c.handler.Handle(ctx.Done())
 	go c.executor.Start(ctx.Done())
 }

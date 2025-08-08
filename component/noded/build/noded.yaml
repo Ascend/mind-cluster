@@ -58,11 +58,11 @@ spec:
           image: noded:v6.0.RC1
           resources:
             requests:
-              memory: 300Mi
-              cpu: 500m
+              memory: 10Gi
+              cpu: 5000m
             limits:
-              memory: 300Mi
-              cpu: 500m
+              memory: 10Gi
+              cpu: 5000m
           env:
             - name: NODE_NAME
               valueFrom:

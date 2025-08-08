@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -97,7 +98,7 @@ func (reScheduler *ReScheduler) GetRunningJobs(ssn *framework.Session) map[api.J
 			continue
 		}
 		// req type is not current card type
-		if schedulerJob.ReqNPUNum == 0 {
+		if schedulerJob.ReqNPUNum == 0 && schedulerJob.NPUJob.IsNPUJob() {
 			klog.V(util.LogWarningLev).Infof("job %s requires npu %d is illegal, skip",
 				schedulerJob.Name, schedulerJob.ReqNPUNum)
 			continue
@@ -145,7 +146,7 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	}
 	faultJob.setIsSubHealthFault()
 	klog.V(util.LogDebugLev).Infof("job %s fault types: %v", faultJob.JobName, faultJob.FaultTypes)
-	if npuName == util.NPU910CardName { // 5. update JobRankIds of fault cards
+	if npuName == util.NPU910CardName || !npuJob.IsNPUJob() { // 5. update JobRankIds of fault cards
 		_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
 		if !ok {
 			if reScheduler.JobRemainRetryTimes == nil {
@@ -320,10 +321,33 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 			reScheduler.updateJobHealthCode(faultJob)
 			faultJob.updateTaskPodUid(jobInfo)
 		}
+		reScheduler.setFaultTaskUseNodeLinkDownTime(faultJob)
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
 	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %#v", reScheduler.FaultJobs)
+}
+
+func (reScheduler *ReScheduler) setFaultTaskUseNodeLinkDownTime(fJob *FaultJob) {
+	for _, fTask := range fJob.FaultTasks {
+		if !fTask.IsFaultTask || fTask.faultType != util.RelationFault {
+			continue
+		}
+		fNode, ok := reScheduler.FaultNodes[fTask.NodeName]
+		if !ok {
+			continue
+		}
+		hasL1LinkDown := false
+		for _, deviceFault := range fNode.FaultDeviceList {
+			if deviceFault.FaultLevel == NotHandleFault && deviceFault.FaultCode == linkDownFaultCode {
+				hasL1LinkDown = true
+			}
+		}
+		if !hasL1LinkDown {
+			continue
+		}
+		fNode.LinkDownTime = fTask.FaultTime
+	}
 }
 
 func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInfo, fJob *FaultJob) {
@@ -417,14 +441,19 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 	tmpFaultNodes := make(map[string]*FaultNode, len(reScheduler.Nodes))
 	for name, npuNode := range reScheduler.Nodes {
 		klog.V(util.LogDebugLev).Infof("Adding node %s to reScheduler cache", name)
-		chipKind, nameErr := npuNode.GetChipKindFromNpuNode()
-		if nameErr != nil {
-			klog.V(util.LogDebugLev).Infof("get chip name err by err:%s", nameErr)
-			continue
+		hasNpuRes := util.IsMapHasNPUResource(npuNode.Capability, util.HwPreName)
+		npuName := ""
+		if hasNpuRes {
+			chipKind, nameErr := npuNode.GetChipKindFromNpuNode()
+			if nameErr != nil {
+				klog.V(util.LogDebugLev).Infof("get chip name err by err:%s", nameErr)
+				continue
+			}
+			npuName = util.HwPreName + chipKind
 		}
-		npuName := util.HwPreName + chipKind
 		// 0. Initialise faultNode
 		faultNode := newFaultNodeDefault(npuNode.Name, nowTime)
+		faultNode.IsNpuNode = hasNpuRes
 		faultNode.NPUName = npuName
 		faultNode.SuperPodID = npuNode.SuperPodID
 		faultNode.updateFaultNodesFromDeviceInfo(&npuNode)
@@ -501,6 +530,12 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		ssn, reScheduler, &schedulerJob, env); restartErr != nil {
 		klog.V(util.LogErrorLev).Infof("RestartJob %s, err: %s.", schedulerJob.Name, util.SafePrint(restartErr))
 	} else {
+		for i, fTask := range restartFaultJob.FaultTasks {
+			if !fTask.IsFaultTask || fTask.faultType != util.RelationFault {
+				continue
+			}
+			restartFaultJob.FaultTasks[i].FaultTime = time.Now().Unix()
+		}
 		restartFaultJob.recordFaultJobsToLogs()
 		// update rescheduling reason
 		reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
@@ -685,11 +720,13 @@ func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, 
 }
 
 // CheckNodeNPUByTask used in the predicate process of task and node
-func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode plugin.NPUNode) error {
+func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode *plugin.NPUNode) error {
 	klog.V(util.LogDebugLev).Infof("enter rescheduling CheckNodeNPUByTask ...(%s, %s)", task.Name, vcNode.Name)
 	defer klog.V(util.LogDebugLev).Infof("leave rescheduling CheckNodeNPUByTask ...(%s, %s)",
 		task.Name, vcNode.Name)
-
+	if vcNode == nil {
+		return fmt.Errorf("node is not a vc node")
+	}
 	// 1. jobs should not be scheduled to faultNodes
 	if err := reScheduler.checkNodeCurNodeIsFault(vcNode, task); err != nil {
 		return err
@@ -699,7 +736,7 @@ func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode pl
 	return nil
 }
 
-func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, task *api.TaskInfo) error {
+func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, task *api.TaskInfo) error {
 	if reScheduler == nil {
 		return nil
 	}
@@ -715,12 +752,28 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode plugin.NPUNode, t
 	if fNode.NodeHealthState == NodeUnhealthy {
 		return fmt.Errorf("node is unhealthy")
 	}
-
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,
 		fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {
 		return fmt.Errorf("NodePredicate failed, cardSubHealthy=%v and"+
 			"switchSubHealthy=%v, but sub-healthy strategy is %v", fNode.HasCardSubHealthFault,
 			fNode.HasSwitchSubHealthFault, schedulerJob.SubHealthyStrategy)
+	}
+	if fNode.LinkDownTime == 0 {
+		klog.V(util.LogInfoLev).Infof("node %s is not fault node, check success", vcNode.Name)
+		return nil
+	}
+	if time.Now().Unix()-fNode.LinkDownTime < linkDownFaultTimeout {
+		networkUnhealthyCardName := fmt.Sprintf("%s-%s", fNode.NPUName, CardNetworkUnhealthy)
+		k := vcNode.Annotation[networkUnhealthyCardName]
+		l1LinkCards := fNode.getL1LinkDownCards()
+		if len(l1LinkCards) == 0 {
+			return nil
+		}
+		if k == "" {
+			vcNode.Annotation[networkUnhealthyCardName] = strings.Join(l1LinkCards, ",")
+		} else {
+			vcNode.Annotation[networkUnhealthyCardName] = strings.Join(l1LinkCards, ",") + "," + k
+		}
 	}
 	klog.V(util.LogInfoLev).Infof("node %s is not fault node, check success", vcNode.Name)
 	return nil
@@ -754,7 +807,7 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 		if fNode.NodeName != fTask.NodeName {
 			continue
 		}
-		if fNode.NodeHealthState == NodeUnhealthy {
+		if fNode.NodeHealthState == NodeUnhealthy && fNode.IsNpuNode {
 			var reason FaultReasonList
 			reason.NodeName = fNode.NodeName
 			reason.FaultType = NodeUnhealthy

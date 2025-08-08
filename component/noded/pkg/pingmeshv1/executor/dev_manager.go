@@ -20,6 +20,7 @@ Package executor is using for execute hccsping mesh
 package executor
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -29,6 +30,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	"nodeD/pkg/device"
 	"nodeD/pkg/pingmeshv1/types"
 )
 
@@ -53,11 +55,10 @@ type DevManager struct {
 
 // New create new device manager
 func New() (*DevManager, error) {
-	dm, err := devmanager.GetDeviceManager()
-	if err != nil {
-		return nil, err
+	dm := device.GetDeviceManager()
+	if dm == nil {
+		return nil, errors.New("device manager is nil")
 	}
-
 	chips, err := dm.GetChipBaseInfos()
 	if err != nil {
 		return nil, err

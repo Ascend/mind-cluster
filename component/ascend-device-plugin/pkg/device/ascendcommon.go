@@ -27,7 +27,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerd/containerd"
 	"golang.org/x/time/rate"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,21 +64,22 @@ const (
 
 	checkNodeLabelPolling     = 60 * 60
 	defaultUpdateTimeInterval = 5
+	defaultSuperPodID         = -1
+	defaultServerIndex        = -1
 )
 
 // AscendTools struct definition
 type AscendTools struct {
-	client           *kubeclient.ClientK8s
-	containerdClient *containerd.Client
-	dmgr             devmanager.DeviceInterface
-	name             string
-	deviceUsage      string
-	unHealthyKey     string
-	devCount         int32
-	healthDevice     sets.String
-	boardId          uint32
-	superPodID       int32
-	serverIndex      int32
+	client       *kubeclient.ClientK8s
+	dmgr         devmanager.DeviceInterface
+	name         string
+	deviceUsage  string
+	unHealthyKey string
+	devCount     int32
+	healthDevice sets.String
+	boardId      uint32
+	superPodID   int32
+	serverIndex  int32
 	// record map[device_logic_id]inresetting to show
 	cardInResetMap  map[int32]bool
 	cardInResetLock sync.Mutex
@@ -104,8 +104,6 @@ type DevManager interface {
 	GetName() string
 	SetKubeClient(*kubeclient.ClientK8s)
 	GetKubeClient() *kubeclient.ClientK8s
-	SetContainerdClient(*containerd.Client)
-	GetContainerdClient() *containerd.Client
 	UpdateHealth(map[string][]*common.NpuDevice, []*common.NpuDevice, string)
 	GetChange(map[string][]*common.NpuDevice, map[string][]*common.NpuDevice) map[string]bool
 	AddPodAnnotation(*common.PodDeviceInfo, string, string, []common.NpuDevice) error
@@ -152,16 +150,6 @@ func (tool *AscendTools) SetKubeClient(client *kubeclient.ClientK8s) {
 // GetKubeClient get ClientK8s
 func (tool *AscendTools) GetKubeClient() *kubeclient.ClientK8s {
 	return tool.client
-}
-
-// SetContainerdClient set containerd Client
-func (tool *AscendTools) SetContainerdClient(client *containerd.Client) {
-	tool.containerdClient = client
-}
-
-// GetContainerdClient get containerd Client
-func (tool *AscendTools) GetContainerdClient() *containerd.Client {
-	return tool.containerdClient
 }
 
 // GetChipAICore get ai core
@@ -251,6 +239,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 // UpdateNodeDeviceInfo update device info
 func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 	updateDeviceInfoFunc func(map[string]string, map[string]string, common.DevStatusSet) error) error {
+	tool.checkAndInitNodeDeviceInfo()
 	waitErr := wait.PollImmediate(common.Interval*time.Second, common.Timeout*time.Second, func() (bool, error) {
 		nodeDeviceInfo := tool.GetKubeClient().GetDeviceInfoCMCache()
 		deviceList := nodeDeviceInfo.DeviceInfo.DeviceList
@@ -297,6 +286,23 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		return true, nil
 	})
 	return waitErr
+}
+
+func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
+	nodeDeviceInfo := tool.GetKubeClient().GetDeviceInfoCMCache()
+	if nodeDeviceInfo == nil {
+		var nodeDeviceData = common.NodeDeviceInfoCache{
+			DeviceInfo: common.NodeDeviceInfo{
+				DeviceList: make(map[string]string, 1),
+				UpdateTime: time.Now().Unix(),
+			},
+			SuperPodID:  defaultSuperPodID,
+			ServerIndex: defaultServerIndex,
+		}
+		nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
+		tool.GetKubeClient().SetNodeDeviceInfoCache(&nodeDeviceData)
+		hwlog.RunLog.Debug("node device info cache is empty, will create a new one")
+	}
 }
 
 // compareDeviceList compare deviceList and newDeviceList are exactly the same without fault_time
@@ -1114,9 +1120,23 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 	isFirstFlushFault = false
 }
 
+func (tool *AscendTools) getCurDeviceFaultCode(logicID int32, devFaultInfo []npuCommon.DevFaultInfo) sets.Int64 {
+	if len(devFaultInfo) == 0 {
+		return sets.Int64{}
+	}
+	_, faultCodes, err := tool.dmgr.GetDeviceAllErrorCode(logicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device current fault code by logicID(%d) failed, err: %v", logicID, err)
+		return sets.Int64{}
+	}
+	hwlog.RunLog.Debugf("device(%d) current fault code: %v", logicID, faultCodes)
+	return sets.NewInt64(faultCodes...)
+}
+
 func (tool *AscendTools) flushFaultCodesWithInit(device *common.NpuDevice,
 	devFaultInfoMap map[int32][]npuCommon.DevFaultInfo) {
-	if devFaultInfo, ok := devFaultInfoMap[device.LogicID]; ok {
+	logicID := device.LogicID
+	if devFaultInfo, ok := devFaultInfoMap[logicID]; ok {
 		for _, faultInfo := range devFaultInfo {
 			select {
 			case allFaultInfo <- faultInfo:
@@ -1127,8 +1147,9 @@ func (tool *AscendTools) flushFaultCodesWithInit(device *common.NpuDevice,
 			}
 		}
 	}
-	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
-	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[device.LogicID], device)
+	curFaultCodesMap := tool.getCurDeviceFaultCode(logicID, devFaultInfoMap[logicID])
+	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[logicID], device, curFaultCodesMap)
+	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, devFaultInfoMap[logicID], device)
 }
 
 func moreThanFiveMin(device *common.NpuDevice) bool {
@@ -1395,7 +1416,7 @@ func (tool *AscendTools) generateCardDropFaultEvents(npuDevice *common.NpuDevice
 		}
 		npuDevice.CardDrop = true
 		hwlog.RunLog.Info("generate card drop occur fault event")
-		common.SaveDevFaultInfo(faultInfo)
+		common.DoSaveDevFaultInfo(faultInfo, false)
 	}
 
 	if npuDevice.CardDrop && !tool.checkCardDropFault(npuDevice.LogicID) {
@@ -1407,7 +1428,7 @@ func (tool *AscendTools) generateCardDropFaultEvents(npuDevice *common.NpuDevice
 		}
 		npuDevice.CardDrop = false
 		hwlog.RunLog.Info("generate card drop recover fault event")
-		common.SaveDevFaultInfo(faultInfo)
+		common.DoSaveDevFaultInfo(faultInfo, false)
 	}
 }
 
@@ -1449,7 +1470,7 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 	chipFaultEvents := common.GetChangedDevFaultInfo(device, device.FaultCodes, chipFaultCodes)
 	for _, chipFaultEvent := range chipFaultEvents {
 		hwlog.RunLog.Info("generate chip fault event based on chip fault cache change")
-		common.SaveDevFaultInfo(chipFaultEvent)
+		common.DoSaveDevFaultInfo(chipFaultEvent, false)
 	}
 }
 
@@ -1481,6 +1502,6 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 	networkFaultEvents := common.GetChangedDevFaultInfo(device, device.NetworkFaultCodes, networkFaultCodes)
 	for _, networkFaultEvent := range networkFaultEvents {
 		hwlog.RunLog.Info("generate network fault event based on network fault cache change")
-		common.SaveDevFaultInfo(networkFaultEvent)
+		common.DoSaveDevFaultInfo(networkFaultEvent, false)
 	}
 }

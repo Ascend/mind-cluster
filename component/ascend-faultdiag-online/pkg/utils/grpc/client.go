@@ -20,6 +20,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
+	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/constants"
 	"ascend-faultdiag-online/pkg/utils/grpc/profiling"
 	"ascend-faultdiag-online/pkg/utils/grpc/pubfault"
@@ -47,6 +49,11 @@ type Client struct {
 func (c *Client) connect(host string) error {
 	if c.conn != nil {
 		return nil
+	}
+	// validate the host
+	parsedIp := net.ParseIP(host)
+	if parsedIp == nil {
+		return fmt.Errorf("invalid host: %s, not the ip type", host)
 	}
 	var err error
 	serverAddr := host + constants.GrpcPort
@@ -167,16 +174,16 @@ func (c *Client) SendToPubFaultCenter(data *pubfault.PublicFaultRequest) (*pubfa
 }
 
 var (
-	once   sync.Once
-	client *Client
+	connErr error
+	once    sync.Once
+	client  *Client
 )
 
 // GetClient returns a singleton instance of client
-func GetClient(host string) (*Client, error) {
-	var err error
+func GetClient() (*Client, error) {
 	once.Do(func() {
 		client = &Client{}
-		err = client.connect(host)
+		connErr = client.connect(utils.GetClusterIp())
 	})
-	return client, err
+	return client, connErr
 }

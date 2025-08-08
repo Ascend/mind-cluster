@@ -120,7 +120,7 @@ func (nJob *NPUJob) IsNPUJob() bool {
 
 // GetSchedulingTaskNum get the num of scheduling task
 func (nJob *NPUJob) GetSchedulingTaskNum() int {
-	if nJob == nil || !nJob.IsNPUJob() {
+	if nJob == nil {
 		return 0
 	}
 	schedulingTaskNum := 0

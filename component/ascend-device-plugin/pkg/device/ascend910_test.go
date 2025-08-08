@@ -225,27 +225,21 @@ func TestHotResetHandler(t *testing.T) {
 		manager.hotResetManager = &HotResetTools{
 			globalDevFaultInfo: mockDevFaultInfoL4(),
 		}
-		isHotResetOn = false
 		err := manager.hotResetHandler(mockGroupDevice())
-		convey.So(isHotResetOn, convey.ShouldBeFalse)
 		convey.So(err, convey.ShouldBeNil)
 
 		// have L5 error, device busy, reset should be down
 		manager.hotResetManager = &HotResetTools{
 			globalDevFaultInfo: mockDevFaultInfoL5(),
 		}
-		isHotResetOn = false
 		err = manager.hotResetHandler(mockGroupDevice())
-		convey.So(isHotResetOn, convey.ShouldBeFalse)
 		convey.So(err, convey.ShouldBeNil)
 
 		// no L4 L5 error, device busy, reset should be down
 		manager.hotResetManager = &HotResetTools{
 			globalDevFaultInfo: mockDevFaultInfoNoL4L5(),
 		}
-		isHotResetOn = false
 		err = manager.hotResetHandler(mockGroupDevice())
-		convey.So(isHotResetOn, convey.ShouldBeFalse)
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -510,7 +504,6 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 		common.ParamOption.RealCardType = common.Ascend910B
 
 		// no reset device situation
-		isHotResetOn = false
 		err := manager.setAllDevUnhealthyOnRing(devList)
 		for i := 0; i < 8; i++ {
 			convey.So(devStatusList[i].Health, convey.ShouldEqual, v1beta1.Healthy)
@@ -521,7 +514,6 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 		// is doing hot reset situation
 		convey.So(inResetDev, convey.ShouldEqual, -1)
 		inResetDev = 0
-		isHotResetOn = true
 		err = manager.setAllDevUnhealthyOnRing(devList)
 		for i := 0; i < 8; i++ {
 			convey.So(devStatusList[i].NetworkHealth, convey.ShouldEqual, v1beta1.Unhealthy)
@@ -534,7 +526,6 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 					return nil
 				})
 			defer patch1.Reset()
-			isHotResetOn = false
 			err := manager.setAllDevUnhealthyOnRing(devList)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -661,8 +652,7 @@ func TestProcessAllTask(t *testing.T) {
 			ApplyPrivateMethod(&HwAscend910Manager{}, "runProcessTask",
 				func(*HwAscend910Manager, string, int, *common.TaskResetInfo, map[string][]*common.NpuDevice) error {
 					return nil
-				}).
-			ApplyGlobalVar(&isHotResetOn, false)
+				})
 		defer patch.Reset()
 		manager.hotResetManager = &HotResetTools{
 			allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{
@@ -1922,8 +1912,6 @@ func TestPolicyLevelHandle(t *testing.T) {
 			convey.So(handle, convey.ShouldBeFalse)
 		})
 		convey.Convey("02-policy level is 5,should return false", func() {
-			mockVar := gomonkey.ApplyGlobalVar(&isHotResetOn, false)
-			defer mockVar.Reset()
 			handle := policyLevelHandle("", taskName, common.ResetErrorLevel)
 			convey.So(handle, convey.ShouldBeFalse)
 		})
@@ -3085,4 +3073,53 @@ func TestGetDevFaultInfo(t *testing.T) {
 			convey.So(result, convey.ShouldResemble, tt.expectedResult)
 		})
 	}
+}
+
+func TestTryDeviceReset(t *testing.T) {
+	convey.Convey("Test tryDeviceReset", t, func() {
+		manager := NewHwAscend910Manager()
+		resetDevs := []*common.NpuDevice{{LogicID: 0}, {LogicID: 1}}
+
+		convey.Convey("when all devices reset successfully", func() {
+			patches := gomonkey.ApplyPrivateMethod(manager, "startUpHotReset", func(_ *HwAscend910Manager,
+				_ map[string][]*common.NpuDevice, _ *common.DevFaultInfo, _ *common.NpuDevice) error {
+				return nil
+			})
+			defer patches.Reset()
+			var wg sync.WaitGroup
+			wg.Add(len(resetDevs))
+			for _, dev := range resetDevs {
+				go func(d *common.NpuDevice) {
+					defer wg.Done()
+					_ = manager.tryDeviceReset(nil, []*common.NpuDevice{d}, make([]*common.DevFaultInfo, 1))
+				}(dev)
+			}
+			wg.Wait()
+			_, exists := resetDevMap.Load(0)
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("when reset partially fails", func() {
+			patches := gomonkey.ApplyPrivateMethod(
+				manager, "startUpHotReset", func(_ *HwAscend910Manager,
+					_ map[string][]*common.NpuDevice, _ *common.DevFaultInfo, dev *common.NpuDevice) error {
+					if dev.LogicID == 0 {
+						return errors.New("mock error")
+					}
+					return nil
+				})
+			defer patches.Reset()
+			var wg sync.WaitGroup
+			wg.Add(len(resetDevs))
+			for _, dev := range resetDevs {
+				go func(d *common.NpuDevice) {
+					defer wg.Done()
+					_ = manager.tryDeviceReset(nil, []*common.NpuDevice{d}, make([]*common.DevFaultInfo, 1))
+				}(dev)
+			}
+			wg.Wait()
+			_, exists := resetDevMap.Load(1)
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+	})
 }

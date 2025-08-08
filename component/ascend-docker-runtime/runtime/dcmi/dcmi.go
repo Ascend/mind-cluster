@@ -245,7 +245,7 @@ func (w *NpuWorker) GetProductType(cardID, deviceID int32) (string, error) {
 	cProductType := C.CString(string(make([]byte, productTypeLen)))
 	defer C.free(unsafe.Pointer(cProductType))
 	if err := C.DcmiGetProductType(C.int(cardID), C.int(deviceID),
-		(*C.char)(cProductType), productTypeLen); err != 0 {
+		(*C.char)(cProductType), productTypeLen+1); err != 0 {
 		if err == notSupportCode {
 			// device which does not support querying product, such as Ascend 910A/B
 			return "not support", nil

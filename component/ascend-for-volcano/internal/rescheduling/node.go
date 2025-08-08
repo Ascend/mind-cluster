@@ -34,6 +34,9 @@ import (
 func (fNode *FaultNode) createFaultCardHandlers(node *plugin.NPUNode) []FaultCard {
 	klog.V(util.LogInfoLev).Infof("create new fault card handlers for node %s", node.Name)
 	faultCards := make([]FaultCard, 0)
+	if !fNode.IsNpuNode {
+		return faultCards
+	}
 	allCards, err := fNode.getAllNPUCardsFromDeviceInfo(node)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("get all fault card info for node %s, err %v", node.Name, err.Error())
@@ -115,6 +118,10 @@ func (fCard *FaultCard) isCardNetworkUnhealthy(networkUnhealthyList []string) bo
 }
 
 func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
+	if !fNode.IsNpuNode {
+		klog.V(util.LogDebugLev).Infof("not npu node: %s", fNode.NodeName)
+		return
+	}
 	klog.V(util.LogInfoLev).Infof("update information from device info for node %s", node.Name)
 	tmpUnhealthyNPUs, err := fNode.getUnhealthyCardsFromDeviceInfo(node)
 	if err != nil {
@@ -247,6 +254,17 @@ func (fNode *FaultNode) isNodeDEnabled(node *plugin.NPUNode) bool {
 		klog.V(util.LogErrorLev).Infof("isEnableFaultNode not support %s.", value)
 		return false
 	}
+}
+
+// getL1LinkDownCards get the l1 link down npu list from node.DeviceInfo
+func (fNode *FaultNode) getL1LinkDownCards() []string {
+	var cards []string
+	for _, fault := range fNode.FaultDeviceList {
+		if fault.FaultCode == linkDownFaultCode && fault.FaultHandling == NotHandleFault {
+			cards = append(cards, fault.NPUName)
+		}
+	}
+	return cards
 }
 
 func (fNode *FaultNode) setNodeDValue(value bool) {

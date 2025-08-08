@@ -706,7 +706,7 @@ func TestAddDeviceToSpec0(t *testing.T) {
 		},
 	}
 
-	err := addDeviceToSpec(&spec, devPath, notRenameDeviceType)
+	err := addDeviceToSpec(&spec, devPath, devPath)
 	assert.Nil(t, err)
 	assert.Contains(t, spec.Linux.Devices[0].Path, devPath)
 }
@@ -733,21 +733,27 @@ func TestAddDeviceToSpecPatch1(t *testing.T) {
 			Minor: 0,
 		}, nil)
 		defer patches.Reset()
-		convey.Convey("02-virtualDavinciName case, vDeviceNumber len error, should return error", func() {
-			convey.So(addDeviceToSpec(&testSp, "", virtualDavinciName), convey.ShouldBeError)
+		convey.Convey("02-virtualDavinciName success, should return nil", func() {
+			dContainerPath, err := getMountPath("0", virtualDavinciName)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(addDeviceToSpec(&testSp, "0", dContainerPath), convey.ShouldBeNil)
 		})
-		convey.Convey("03-virtualDavinciName success, should return nil", func() {
-			convey.So(addDeviceToSpec(&testSp, "0", virtualDavinciName), convey.ShouldBeNil)
+		convey.Convey("03-davinciManagerDocker success, should return nil", func() {
+			dContainerPath, err := getMountPath("0", davinciManagerDocker)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(addDeviceToSpec(&testSp, "", dContainerPath), convey.ShouldBeNil)
 		})
-		convey.Convey("04-davinciManagerDocker success, should return nil", func() {
-			convey.So(addDeviceToSpec(&testSp, "", davinciManagerDocker), convey.ShouldBeNil)
+		convey.Convey("04-notRenamePath success, should return nil", func() {
+			dPath := devicePath + dvppCmdList
+			convey.So(addDeviceToSpec(&testSp, dPath, dPath), convey.ShouldBeNil)
 		})
 	})
 }
 
 // TestAddAscend310BManagerDevice tests the function addAscend310BManagerDevice
 func TestAddAscend310BManagerDevice(t *testing.T) {
-	statStub := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dPath string, deviceType string) error {
+	statStub := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dHostPath string,
+		dContainerPath string) error {
 		return nil
 	})
 	defer statStub.Reset()
@@ -770,6 +776,39 @@ func TestAddAscend310BManagerDevice(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// TestGetMountPath tests the function getMountPath
+func TestGetMountPath(t *testing.T) {
+	convey.Convey("test getMountPath", t, func() {
+		convey.Convey("test virtualDavinciName device type success", func() {
+			testPath := "0"
+			expectPath := devicePath + davinciName + testPath
+			dContainerPath, err := getMountPath(testPath, virtualDavinciName)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dContainerPath, convey.ShouldEqual, expectPath)
+		})
+		convey.Convey("test virtualDavinciName device type error", func() {
+			testPath := "0a0"
+			dContainerPath, err := getMountPath(testPath, virtualDavinciName)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(dContainerPath, convey.ShouldEqual, "")
+		})
+		convey.Convey("test davinciManagerDocker device type success", func() {
+			testPath := ""
+			expectPath := devicePath + davinciManager
+			dContainerPath, err := getMountPath(testPath, davinciManagerDocker)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dContainerPath, convey.ShouldEqual, expectPath)
+		})
+		convey.Convey("test default device type success", func() {
+			testPath := ""
+			expectPath := testPath
+			dContainerPath, err := getMountPath(testPath, "")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dContainerPath, convey.ShouldEqual, expectPath)
+		})
+	})
+}
+
 // TestAddAscend310BManagerDevicePatch1 tests the function addAscend310BManagerDevice
 func TestAddAscend310BManagerDevicePatch1(t *testing.T) {
 	convey.Convey("test addAscend310BManagerDevice patch1", t, func() {
@@ -790,7 +829,8 @@ func TestAddAscend310BManagerDevicePatch1(t *testing.T) {
 
 // TestAddCommonManagerDevice tests the function addCommonManagerDevice
 func TestAddCommonManagerDevice(t *testing.T) {
-	statStub := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dPath string, deviceType string) error {
+	statStub := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dHostPath string,
+		dContainerPath string) error {
 		return nil
 	})
 	defer statStub.Reset()

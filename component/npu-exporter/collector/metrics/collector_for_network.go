@@ -168,7 +168,6 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 		newNetInfo.BandwidthInfo = nil
 		logErrMetricsWithLimit(colcommon.DomainForBandwidth, phyID, err)
 	}
-
 	if linkUpNum, err := hccn.GetNPULinkUpNum(phyID); err == nil {
 		newNetInfo.LinkStatInfo = &common.LinkStatInfo{}
 		newNetInfo.LinkStatInfo.LinkUPNum = float64(linkUpNum)

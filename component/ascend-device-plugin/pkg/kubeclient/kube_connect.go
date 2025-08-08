@@ -123,7 +123,11 @@ func (ki *ClientK8s) getPodsByKltPort() (*v1.PodList, error) {
 		hwlog.RunLog.Errorf("send kubelet http request failed: %v", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			hwlog.RunLog.Errorf("close response body failed, err: %v", err)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("get kubelet http response failed, resp status code: %v is not %v",
 			resp.StatusCode, http.StatusOK)

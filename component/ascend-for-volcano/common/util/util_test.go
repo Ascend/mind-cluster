@@ -995,3 +995,32 @@ func TestGetRecoveringDevInfo(t *testing.T) {
 		}
 	})
 }
+
+func TestIsNPUTask(t *testing.T) {
+	tests := []struct {
+		name     string
+		taskInfo *api.TaskInfo
+		want     bool
+	}{
+		{
+			name: "01 test func IsNPUTask, npu resource available",
+			taskInfo: &api.TaskInfo{
+				Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{NPU910CardName: 8}},
+			},
+			want: true,
+		},
+		{
+			name:     "02 test func IsNPUTask, no npu resource available",
+			taskInfo: &api.TaskInfo{Resreq: &api.Resource{}},
+			want:     false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isNpuTask := IsNPUTask(tt.taskInfo)
+			if !(isNpuTask == tt.want) {
+				t.Errorf("is npu task = %v, want %v", isNpuTask, tt.want)
+			}
+		})
+	}
+}

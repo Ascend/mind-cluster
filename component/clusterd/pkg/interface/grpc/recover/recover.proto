@@ -100,4 +100,5 @@ service Recover {
   rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse) {}
   rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
   rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
+  rpc HealthCheck(ClientInfo) returns (Status) {}
 }

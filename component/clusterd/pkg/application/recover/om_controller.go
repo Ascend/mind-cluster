@@ -96,6 +96,7 @@ func (ctl *EventController) handleSwitchNicFinish() (string, common.RespCode, er
 }
 
 func (ctl *EventController) handleWaitSwitchNicFinish() (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("jobId=%s, wait switch nic finish....", ctl.jobInfo.JobId)
 	ctx, ch := ctl.getCtxAndResultChan()
 	if ch == nil {
 		hwlog.RunLog.Infof("jobId=%s, reportChan is nil", ctl.jobInfo.JobId)

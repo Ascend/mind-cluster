@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -109,7 +110,39 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	controller.healthState = faultInfo.HealthyState
 	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
 
+	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
 	controller.addEvent(common.FaultOccurEvent)
+}
+
+func dealWithForceRelease(controller *EventController, faultInfo constant.JobFaultInfo, grpcFormatFaults []*pb.FaultRank) {
+	if len(grpcFormatFaults) == 0 {
+		return
+	}
+	faultNodes, ok := isNeedForceReleaseFault(faultInfo)
+	if !ok {
+		return
+	}
+	hwlog.RunLog.Infof("jobId=%s force release", controller.jobInfo.JobId)
+	faultInfos := job.GetJobFaultSdIdAndNodeName(controller.jobInfo.JobId, faultNodes)
+	if faultInfos == nil {
+		return
+	}
+	kube.CreateOrUpdateSuperPodFaultInfo(controller.jobInfo.JobId, faultInfos)
+	time.Sleep(constant.ReleaseTimeOut)
+}
+
+func isNeedForceReleaseFault(faultInfo constant.JobFaultInfo) (map[string]struct{}, bool) {
+	faultNodes := make(map[string]struct{})
+	for _, faultDevice := range faultInfo.FaultDevice {
+		if strings.Contains(faultDevice.FaultCode, constant.CardDropFault) ||
+			faultDevice.DeviceType == constant.FaultTypeNode || faultDevice.DeviceType == constant.SwitchFaultType {
+			faultNodes[faultDevice.ServerName] = struct{}{}
+		}
+	}
+	if len(faultNodes) == 0 {
+		return faultNodes, false
+	}
+	return faultNodes, true
 }
 
 func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []constant.JobFaultInfo) {
@@ -235,7 +268,7 @@ func (s *FaultRecoverService) serveJobNum() int {
 }
 
 func (s *FaultRecoverService) preRegistry(req *pb.ClientInfo) (common.RespCode, error) {
-	if _, ok := job.GetJobCache(req.JobId); !ok {
+	if ok := podgroup.CheckPodGroupExist(req.JobId); !ok {
 		return common.JobNotExist, fmt.Errorf("jobId=%s not exist, reuse registry", req.JobId)
 	}
 	if s.serveJobNum() >= constant.MaxServeJobs {
@@ -455,4 +488,13 @@ func getFaultReason(faults []*pb.FaultRank) string {
 		return retryFaultValue
 	}
 	return normalFaultValue
+}
+
+// HealthCheck report connection health check
+func (s *FaultRecoverService) HealthCheck(ctx context.Context, request *pb.ClientInfo) (*pb.Status, error) {
+	hwlog.RunLog.Debugf("receive HeathCheck from client, jobId: %s", request.JobId)
+	return &pb.Status{
+		Code: int32(common.OK),
+		Info: fmt.Sprintf("jobId=%s, receive HeathCheck", request.JobId),
+	}, nil
 }

@@ -322,6 +322,16 @@ unsigned int *state){
 		CALL_FUNC(dcmi_get_hccsping_mesh_state,card_id,device_id,port_id,task_id,state)
 }
 
+	static int (*dcmi_get_spod_node_status_func)(int card_id, int device_id, unsigned int sdid, unsigned int *status);
+	int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status){
+		CALL_FUNC(dcmi_get_spod_node_status,card_id,device_id,sdid,status)
+	}
+
+	static int (*dcmi_set_spod_node_status_func)(int card_id, int device_id, unsigned int sdid, unsigned int status);
+	int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status){
+		CALL_FUNC(dcmi_set_spod_node_status,card_id,device_id,sdid,status)
+	}
+
    // load .so files and functions
    static int dcmiInit_dl(const char* dcmiLibPath){
    	if (dcmiLibPath == NULL) {
@@ -436,6 +446,10 @@ unsigned int *state){
 
 	dcmi_get_hccsping_mesh_state_func = dlsym(dcmiHandle,"dcmi_get_hccsping_mesh_state");
 
+	dcmi_get_spod_node_status_func = dlsym(dcmiHandle,"dcmi_get_spod_node_status");
+
+	dcmi_set_spod_node_status_func = dlsym(dcmiHandle,"dcmi_set_spod_node_status");
+
    	return SUCCESS;
    }
 
@@ -535,6 +549,8 @@ type DcDriverInterface interface {
 	DcStopHccsPingMesh(int32, int32, int, uint) error
 	DcGetHccsPingMeshInfo(int32, int32, int, uint) (*common.HccspingMeshInfo, error)
 	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
+	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
+	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
 }
 
 const (
@@ -1608,7 +1624,7 @@ func (d *DcManager) DcGetMcuPowerInfo(cardID int32) (float32, error) {
 func (d *DcManager) DcGetProductType(cardID, deviceID int32) (string, error) {
 	cProductType := C.CString(string(make([]byte, productTypeLen)))
 	defer C.free(unsafe.Pointer(cProductType))
-	err := C.dcmi_get_product_type(C.int(cardID), C.int(deviceID), (*C.char)(cProductType), productTypeLen)
+	err := C.dcmi_get_product_type(C.int(cardID), C.int(deviceID), (*C.char)(cProductType), productTypeLen+1)
 	if err != 0 {
 		return "", fmt.Errorf("get product type failed, errCode: %d", int32(err))
 	}
@@ -1779,6 +1795,10 @@ func goEventFaultCallBack(event C.struct_dcmi_dms_fault_event) {
 	devFaultInfo := common.DevFaultInfo{
 		EventID:         int64(event.event_id),
 		LogicID:         int32(event.deviceid),
+		ModuleType:      int8(event.node_type),
+		ModuleID:        int8(event.node_id),
+		SubModuleType:   int8(event.sub_node_type),
+		SubModuleID:     int8(event.sub_node_id),
 		Severity:        int8(event.severity),
 		Assertion:       int8(event.assertion),
 		AlarmRaisedTime: time.Now().UnixMilli(),
@@ -1939,7 +1959,7 @@ func (d *DcManager) convertPcieBw(pcieBwArr [agentdrvProfDataNum]C.uint) common.
 func (d *DcManager) DcGetDcmiVersion() (string, error) {
 	cDcmiVer := C.CString(string(make([]byte, dcmiVersionLen)))
 	defer C.free(unsafe.Pointer(cDcmiVer))
-	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), dcmiVersionLen); int32(retCode) != common.Success {
+	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), dcmiVersionLen+1); int32(retCode) != common.Success {
 		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
@@ -2107,4 +2127,29 @@ func buildDcmiErr(cardID, deviceID int32, msg string, errCode C.int) error {
 	}
 	return fmt.Errorf("cardID(%d),deviceID(%d):get %s info failed,error code: %v,error desc: %v",
 		cardID, deviceID, msg, errCode, errDesc)
+}
+
+// DcGetSuperPodStatus get super pod status
+func (d *DcManager) DcGetSuperPodStatus(cardID, deviceID int32, sdid uint32) (int, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return 0, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	var status C.uint
+	if retCode := C.dcmi_get_spod_node_status(C.int(cardID), C.int(deviceID),
+		C.unsigned(sdid), &status); int32(retCode) != common.Success {
+		return 0, buildDcmiErr(cardID, deviceID, "GetSuperPodStatus", retCode)
+	}
+	return int(status), nil
+}
+
+// DcSetSuperPodStatus set super pod status
+func (d *DcManager) DcSetSuperPodStatus(cardID, deviceID int32, sdid, status uint32) error {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if retCode := C.dcmi_set_spod_node_status(C.int(cardID), C.int(deviceID),
+		C.uint(sdid), C.uint(status)); int32(retCode) != common.Success {
+		return buildDcmiErr(cardID, deviceID, "DcSetSuperPodStatus", retCode)
+	}
+	return nil
 }

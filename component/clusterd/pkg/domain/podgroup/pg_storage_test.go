@@ -61,3 +61,16 @@ func getDemoPodGroup(pgName, nameSpace, jobUid string) *v1beta1.PodGroup {
 	}
 	return podGroupInfo
 }
+
+func TestCheckPodGroupExist(t *testing.T) {
+	convey.Convey("Test CheckPodGroupExist function", t, func() {
+		convey.Convey("When PodGroup exists, should return true", func() {
+			pg := getDemoPodGroup("test-pg", "test-namespace", "test-job-key")
+			SavePodGroup(pg)
+			defer DeletePodGroup(pg)
+
+			exists := CheckPodGroupExist(GetJobKeyByPG(pg))
+			convey.So(exists, convey.ShouldBeTrue)
+		})
+	})
+}

@@ -201,6 +201,7 @@ func WriteResetInfoToCM(taskName, namespace string,
 	newTaskInfo, err := setNewTaskInfo(oldTaskInfo, faultRankList, restartFaultProcess, operation)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to set new task info, err: %v", err)
+		return nil, err
 	}
 	checkCode := util.MakeDataHash(newTaskInfo)
 	var data []byte
@@ -221,7 +222,7 @@ func WriteResetInfoToCM(taskName, namespace string,
 func setNewTaskInfo(oldTaskResetInfo TaskResetInfo,
 	faultRankList []string, restartFaultProcess bool, operation string) (TaskResetInfo, error) {
 	for _, rank := range oldTaskResetInfo.RankList {
-		if rank.Policy == constant.HotResetPolicy {
+		if rank.Policy == constant.HotResetPolicy || rank.Policy == constant.RestartPolicy {
 			return TaskResetInfo{}, errors.New("hotReset=1 is not compatible with process-recover")
 		}
 	}

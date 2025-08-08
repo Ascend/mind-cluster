@@ -287,7 +287,7 @@ func buildIsNormalJobNeedRestartTestCases() []isNormalJobNeedRestartTestCase {
 		},
 		{
 			name:    "02-IsNormalJobNeedRestart return true when IsSoftwareFault is true",
-			fJob:    &FaultJob{FaultTasks: []FaultTask{{IsSoftwareFault: true}}},
+			fJob:    &FaultJob{FaultTasks: []FaultTask{{IsSoftwareFault: true, IsNpuTask: true}}},
 			wantRes: true,
 		},
 		{
@@ -296,6 +296,7 @@ func buildIsNormalJobNeedRestartTestCases() []isNormalJobNeedRestartTestCase {
 				Reason: []FaultReasonList{
 					{FaultDeviceList: FaultDeviceList{FaultHandling: PreSeparateNPU}},
 				},
+				IsNpuTask: true,
 			}}},
 			wantRes: true,
 		},
@@ -327,6 +328,7 @@ func TestIsJobGraceDeleteSuccess(t *testing.T) {
 		IsFaultTask: true,
 		TaskUID:     mockTaskUID,
 		UseCardName: []string{mockCardName1, mockCardName2},
+		IsNpuTask:   true,
 	}}}
 	jobInfo := test.FakeNormalTestJob(mockJobName, util.NPUIndex2)
 	t.Run("01-isJobGraceDeleteSuccess return true when jobInfo.Tasks is nil", func(t *testing.T) {
@@ -645,6 +647,7 @@ func mockFaultJobWithTasks() *FaultJob {
 				IsFaultTask: true,
 				TaskUID:     mockTaskUID,
 				UseCardName: []string{mockCardName1, mockCardName2},
+				IsNpuTask:   true,
 			},
 		}}
 }

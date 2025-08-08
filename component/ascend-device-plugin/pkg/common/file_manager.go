@@ -35,7 +35,11 @@ func WriteToFile(info, path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if err = f.Close(); err != nil {
+			hwlog.RunLog.Errorf("close file failed, err: %v", err)
+		}
+	}()
 	_, err = f.WriteString(info)
 	return err
 }

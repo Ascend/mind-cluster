@@ -19,59 +19,18 @@ Package slownodeapi provides API
 */
 package slownodeapi
 
-/*
-#cgo linux LDFLAGS: -ldl
-
-#include <stdint.h>
-#include <stdlib.h>
-
-// 声明 Go 导出的回调函数
-extern void slowNodeAlgoResultCallBack(char* msg);
-extern void slowNodeDataParseResultCallback(char* msg);
-extern void slowNodeMergeParalleGroupInfoResultCallback(char* msg);
-*/
-import "C"
 import (
-	"encoding/json"
 	"fmt"
-	"unsafe"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-faultdiag-online/pkg/fdol/api"
-	"ascend-faultdiag-online/pkg/fdol/context/contextdata"
-	"ascend-faultdiag-online/pkg/fdol/context/diagcontext"
-	"ascend-faultdiag-online/pkg/fdol/model"
-	"ascend-faultdiag-online/pkg/model/enum"
-	"ascend-faultdiag-online/pkg/model/feature/slownode"
-)
-
-const (
-	start    = "start"
-	stop     = "stop"
-	reload   = "reload"
-	name     = "slownode"
-	byteSize = 1024
-	filemode = 0644
-	// SlowCalculateRanks 慢计算卡
-	SlowCalculateRanks = "SlowCalculateRanks"
-	// SlowCommunicationDomains 慢通信域
-	SlowCommunicationDomains = "SlowCommunicationDomains"
-	// SlowCommunicationRanks  慢通信卡
-	SlowCommunicationRanks = "SlowCommunicationRanks"
-	// SlowHostNodes hosts侧慢卡
-	SlowHostNodes = "SlowHostNodes"
-	// SlowIORanks 慢IO卡
-	SlowIORanks = "SlowIORanks"
-	// DegradationLevel 劣化百分点
-	DegradationLevel = "DegradationLevel"
-	// IsSlow 是否存在慢节点
-	IsSlow = "IsSlow"
-
-	maxDegradationCount int = 5
-
-	// slow node report
-	slowNodeFaultCode         = "110001010"
-	slowNodeRecoveryFaultCode = "100001011"
+	"ascend-faultdiag-online/pkg/core/api"
+	"ascend-faultdiag-online/pkg/core/context/contextdata"
+	"ascend-faultdiag-online/pkg/core/context/diagcontext"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/core/model/enum"
+	"ascend-faultdiag-online/pkg/model/slownode"
+	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/cluster"
+	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/node"
 )
 
 var dContext *diagcontext.DiagContext
@@ -79,80 +38,69 @@ var contextData *contextdata.CtxData
 
 // ClusterStart 开启Cluster
 func ClusterStart() *api.Api {
-	return api.BuildApi(start, &slownode.SlowNodeInput{}, ClusterStartFunc, nil)
+	return api.BuildApi(string(enum.Start), &slownode.ReqInput{}, ClusterStartFunc, nil)
 }
 
 // ClusterStop 关闭Cluster
 func ClusterStop() *api.Api {
-	return api.BuildApi(stop, &slownode.SlowNodeInput{}, ClusterStopFunc, nil)
+	return api.BuildApi(string(enum.Stop), &slownode.ReqInput{}, ClusterStopFunc, nil)
 }
 
 // ClusterReload reload Cluster
 func ClusterReload() *api.Api {
-	return api.BuildApi(reload, &slownode.SlowNodeInput{}, ClusterReloadFunc, nil)
+	return api.BuildApi(string(enum.Reload), &slownode.ReqInput{}, ClusterReloadFunc, nil)
 }
 
 // NodeStart 开启Node
 func NodeStart() *api.Api {
-	return api.BuildApi(start, &slownode.SlowNodeInput{}, NodeStartFunc, nil)
+	return api.BuildApi(string(enum.Start), &slownode.ReqInput{}, NodeStartFunc, nil)
 }
 
 // NodeStop 关闭Node
 func NodeStop() *api.Api {
-	return api.BuildApi(stop, &slownode.SlowNodeInput{}, NodeStopFunc, nil)
+	return api.BuildApi(string(enum.Stop), &slownode.ReqInput{}, NodeStopFunc, nil)
 }
 
 // NodeReload reload Node
 func NodeReload() *api.Api {
-	return api.BuildApi(reload, &slownode.SlowNodeInput{}, NodeReloadFunc, nil)
+	return api.BuildApi(string(enum.Reload), &slownode.ReqInput{}, NodeReloadFunc, nil)
 }
 
 func startFunc(
 	ctxData *contextdata.CtxData,
 	diagCtx *diagcontext.DiagContext,
 	reqCtx *model.RequestContext,
-	inputModel *slownode.SlowNodeInput,
+	inputModel *slownode.ReqInput,
 	target enum.DeployMode,
 ) error {
 	dContext = diagCtx
 	contextData = ctxData
-	handler := ctxData.Framework.SoHandlerMap[name]
+	handler := ctxData.Framework.FuncHandler[enum.SlowNode]
 	if handler == nil {
-		return fmt.Errorf("start failed: no handler for %s", name)
+		return fmt.Errorf("start failed: no handler for %s", enum.SlowNode)
 	}
 
 	eventType := inputModel.EventType
-	funcUintPtr := uintptr(unsafe.Pointer(C.slowNodeAlgoResultCallBack))
+	callbackFunc := algoResultCallBack
 
 	if eventType == enum.DataParse {
 		if target == enum.Cluster {
-			funcUintPtr = uintptr(unsafe.Pointer(C.slowNodeMergeParalleGroupInfoResultCallback))
+			callbackFunc = mergeParalleGroupInfoResultCallback
 		} else {
-			funcUintPtr = uintptr(unsafe.Pointer(C.slowNodeDataParseResultCallback))
+			callbackFunc = dataParseResultCallback
 		}
 	}
 
-	inputBytes, err := createJsonInput(enum.Register, funcUintPtr, target, inputModel)
-	if err != nil {
-		return err
-	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]register %s req data: %s", inputModel.EventType, string(inputBytes))
+	input := createInput(enum.Register, callbackFunc, target, inputModel)
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]register %s req data: %+v", inputModel.EventType, input)
 
-	// 定义输出缓冲区
-	output1 := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc(inputBytes, output1)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		return err
 	}
-	inputBytes, err = createJsonInput(enum.Start, 0, target, inputModel)
-	if err != nil {
-		return err
-	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]start %s req data: %s", inputModel.EventType, string(inputBytes))
-
-	// 定义输出缓冲区
-	output2 := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc(inputBytes, output2)
+	input = createInput(enum.Start, nil, target, inputModel)
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]start %s req data: %+v", inputModel.EventType, input)
+	_, err = handler.ExecuteFunc(input)
 	if err != nil {
 		return err
 	}
@@ -164,22 +112,17 @@ func startFunc(
 func stopFunc(
 	ctxData *contextdata.CtxData,
 	reqCtx *model.RequestContext,
-	inputModel *slownode.SlowNodeInput,
+	inputModel *slownode.ReqInput,
 	target enum.DeployMode,
 ) error {
-	handler := ctxData.Framework.SoHandlerMap[name]
+	handler := ctxData.Framework.FuncHandler[enum.SlowNode]
 	if handler == nil {
-		return fmt.Errorf("start failed: no handler for %s", name)
+		return fmt.Errorf("start failed: no handler for %s", enum.SlowNode)
 	}
 
-	inputBytes, err := createJsonInput(enum.Stop, 0, target, inputModel)
-	if err != nil {
-		return err
-	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]stop %s req data: %s", inputModel.EventType, string(inputBytes))
-	// 定义输出缓冲区
-	output := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc(inputBytes, output)
+	input := createInput(enum.Stop, nil, target, inputModel)
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]stop %s req data: %+v", inputModel.EventType, input)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		return err
 	}
@@ -192,23 +135,19 @@ func reloadFunc(
 	ctxData *contextdata.CtxData,
 	diagCtx *diagcontext.DiagContext,
 	reqCtx *model.RequestContext,
-	inputModel *slownode.SlowNodeInput,
+	inputModel *slownode.ReqInput,
 	target enum.DeployMode,
 ) error {
 	dContext = diagCtx
 	contextData = ctxData
-	handler := ctxData.Framework.SoHandlerMap[name]
+	handler := ctxData.Framework.FuncHandler[enum.SlowNode]
 	if handler == nil {
-		return fmt.Errorf("start failed: no handler for %s", name)
+		return fmt.Errorf("start failed: no handler for %s", enum.SlowNode)
 	}
-	inputBytes, err := createJsonInput(enum.Reload, 0, target, inputModel)
-	if err != nil {
-		return err
-	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]reload %s req data: %s", inputModel.EventType, string(inputBytes))
-	// 定义输出缓冲区
-	output := make([]byte, byteSize)
-	_, err = handler.ExecuteFunc(inputBytes, output)
+	input := createInput(enum.Reload, nil, target, inputModel)
+
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]reload %s req data: %+v", inputModel.EventType, input)
+	_, err := handler.ExecuteFunc(input)
 	if err != nil {
 		return err
 	}
@@ -219,135 +158,100 @@ func reloadFunc(
 
 // ClusterStartFunc /start api对应方法，启动算法
 func ClusterStartFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return startFunc(ctxData, diagCtx, reqCtx, inputModel, enum.Cluster)
 }
 
 // ClusterStopFunc /stop api对应方法，停止算法
 func ClusterStopFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return stopFunc(ctxData, reqCtx, inputModel, enum.Cluster)
 }
 
 // ClusterReloadFunc /reload api对应方法，reload算法
 func ClusterReloadFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return reloadFunc(ctxData, diagCtx, reqCtx, inputModel, enum.Cluster)
 }
 
 // NodeStartFunc /start api对应方法，启动算法
 func NodeStartFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return startFunc(ctxData, diagCtx, reqCtx, inputModel, enum.Node)
 }
 
 // NodeStopFunc /stop api对应方法，停止算法
 func NodeStopFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return stopFunc(ctxData, reqCtx, inputModel, enum.Node)
 }
 
 // NodeReloadFunc /reload api对应方法，reload算法
 func NodeReloadFunc(ctxData *contextdata.CtxData, diagCtx *diagcontext.DiagContext,
-	reqCtx *model.RequestContext, inputModel *slownode.SlowNodeInput) error {
+	reqCtx *model.RequestContext, inputModel *slownode.ReqInput) error {
 	return reloadFunc(ctxData, diagCtx, reqCtx, inputModel, enum.Node)
 }
 
-// 回调将数据放到ctx中
-//
-//export slowNodeAlgoResultCallBack
-func slowNodeAlgoResultCallBack(cMessage *C.char) {
-	message := C.GoString(cMessage)
-	defer C.free(unsafe.Pointer(cMessage))
-
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the slow node algo callback data: %v",
-		contextData.Framework.Config.Mode, message)
-	if dContext == nil {
+// algoResultCallBack process the callback data of algo result
+func algoResultCallBack(message string) {
+	if dContext == nil || contextData == nil {
 		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]process slow node algo callback failed: context is nil")
 		return
 	}
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the slow node algo callback data: %v",
+		contextData.Framework.Config.Mode, message)
+
 	if contextData.Framework.Config.Mode == enum.Cluster {
-		clusterProcessSlowNodeAlgoCallback(message)
+		cluster.AlgoCallbackProcessor(message)
 	} else {
-		nodeProcessSlowNodeAlgoCallback(message)
+		node.AlgoCallbackProcessor(message)
 	}
 }
 
-// slowNodeDataParseResultCallback the callback func for slow node data parse.
-//
-//export slowNodeDataParseResultCallback
-func slowNodeDataParseResultCallback(cMessage *C.char) {
-	message := C.GoString(cMessage)
-	defer C.free(unsafe.Pointer(cMessage))
-
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the data parse callback data: %v",
-		contextData.Framework.Config.Mode, message)
-	if dContext == nil {
+// dataParseResultCallback the callback func for slow node data parse.
+func dataParseResultCallback(message string) {
+	if dContext == nil || contextData == nil {
 		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]process data parse result callback data failed: context is nil")
 		return
 	}
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the data parse callback data: %s",
+		contextData.Framework.Config.Mode, message)
 	// only fd-on running in the node will trigger this callback
 	// we don't need to determine the target is cluster or node
-	nodeProcessDataParseCallback(message)
+	node.DataParseCallbackProcessor(message)
 }
 
-// slowNodeMergeParalleGroupInfoResultCallback the callback func for slow node merge parallel group info.
-//
-//export slowNodeMergeParalleGroupInfoResultCallback
-func slowNodeMergeParalleGroupInfoResultCallback(cMessage *C.char) {
-	message := C.GoString(cMessage)
-	defer C.free(unsafe.Pointer(cMessage))
-
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the merge parallel group info callback data: %s",
-		contextData.Framework.Config.Mode, message)
-	if dContext == nil {
+// mergeParalleGroupInfoResultCallback the callback func for slow node merge parallel group info.
+func mergeParalleGroupInfoResultCallback(message string) {
+	if dContext == nil || contextData == nil {
 		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]process merge parallel group info callback data failed: context is nil")
 		return
 	}
-	clusterProcessParallelGroupInfoCallback(message)
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]%v: got the merge parallel group info callback data: %s",
+		contextData.Framework.Config.Mode, message)
+	cluster.ParallelGroupInfoCallbackProcessor(message)
 }
 
-// createJsonInput create a []byte as input data of a param of execute
-func createJsonInput(
+// createInput create a model.Input as input data of a param of execute
+func createInput(
 	command enum.Command,
-	funcPtr uintptr,
+	f model.CallbackFunc,
 	target enum.DeployMode,
-	model *slownode.SlowNodeInput,
-) ([]byte, error) {
-	input := slownode.Input{
+	inputModel *slownode.ReqInput,
+) model.Input {
+	input := model.Input{
 		Command:   command,
 		Target:    target,
-		Func:      uint(funcPtr),
+		Func:      f,
 		EventType: enum.SlowNodeAlgo,
 	}
-	if model == nil {
-		return json.Marshal(input)
+	if inputModel == nil {
+		return input
 	}
-	input.EventType = model.EventType
-	input.Model = model.SlowNodeAlgoInput
+	input.EventType = inputModel.EventType
+	input.Model = inputModel.AlgoInput
 	if input.EventType == enum.DataParse {
-		input.Model = model.DataParseInput
+		input.Model = inputModel.DataParseInput
 	}
-	return json.Marshal(input)
-}
-
-func convertMaptoStruct[T slownode.NodeSlowNodeAlgoResult | slownode.ClusterSlowNodeAlgoResult](
-	data map[string]map[string]any, target *T) error {
-	if len(data) == 0 {
-		return fmt.Errorf("callback data is empty: %s", data)
-	}
-	for _, v := range data {
-		if len(v) == 0 {
-			return fmt.Errorf("callback data is empty: %s", data)
-		}
-		for _, result := range v {
-			dataBytes, err := json.Marshal(result)
-			if err != nil {
-				return err
-			}
-			err = json.Unmarshal(dataBytes, target)
-			return err
-		}
-	}
-	return nil
+	return input
 }

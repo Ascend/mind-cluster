@@ -187,6 +187,10 @@ type VirtualDevInfo struct {
 type DevFaultInfo struct {
 	EventID         int64
 	LogicID         int32
+	ModuleType      int8 // ModuleType prototype is dcmi node_type
+	ModuleID        int8 // ModuleID prototype is dcmi node_id
+	SubModuleType   int8 // SubModuleType prototype is dcmi sub_node_type
+	SubModuleID     int8 // SubModuleID prototype is dcmi sub_node_id
 	Severity        int8
 	Assertion       int8
 	AlarmRaisedTime int64

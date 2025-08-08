@@ -17,6 +17,7 @@
 
 #include <stdbool.h>
 #include <sys/types.h>
+#include <stdio.h>
 #include "basic.h"
 
 char *FormatLogMessage(char *format, ...);
@@ -33,6 +34,7 @@ bool CheckExternalFile(const char* filePath, const size_t filePathLen,
 bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen);
 bool CheckExistsFile(const char* filePath, const size_t filePathLen,
     const size_t maxFileSzieMb, const bool checkWgroup);
+bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner);
 bool GetAllowLink(void);
 void SetAllowLink(bool value);
 #endif

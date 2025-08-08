@@ -211,5 +211,5 @@ func (o *OmPlugin) initPluginStatus(shot storage.SnapShot) {
 		o.resetPluginStatus()
 	})
 	hwlog.RunLog.Infof("recv new option, workerstate: %v, jobID: %v, uuid:%v", o.workerStatus, o.jobID, o.uuid)
-	hwlog.RunLog.Infof("Profiling PullMsg: %s", utils.ObjToString(o.pullMsg))
+	hwlog.RunLog.Infof("Switch PullMsg: %s", utils.ObjToString(o.pullMsg))
 }

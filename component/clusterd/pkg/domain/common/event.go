@@ -93,8 +93,6 @@ const (
 	ContinueTrainFailEvent = "continueTrainFail"
 	// WaitSwitchNicRecvFaultEvent wait switch nic and receive fault
 	WaitSwitchNicRecvFaultEvent = "waitSwitchNicRecvFault"
-	// SwitchNicFailRecoverEvent switch nic fail recover
-	SwitchNicFailRecoverEvent = "switchNicFailRecover"
 	// SwitchNicFailEvent switch nic fail
 	SwitchNicFailEvent = "switchNicFail"
 

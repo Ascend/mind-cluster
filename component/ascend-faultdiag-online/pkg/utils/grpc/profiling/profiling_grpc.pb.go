@@ -8,6 +8,7 @@ package profiling
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -89,7 +90,7 @@ func RegisterTrainingDataTraceServer(s grpc.ServiceRegistrar, srv TrainingDataTr
 	s.RegisterService(&TrainingDataTrace_ServiceDesc, srv)
 }
 
-func _TrainingDataTrace_ModifyTrainingDataTraceSwitch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TrainingDataTrace_ModifyTrainingDataTraceSwitch_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(DataTypeReq)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -101,13 +102,13 @@ func _TrainingDataTrace_ModifyTrainingDataTraceSwitch_Handler(srv interface{}, c
 		Server:     srv,
 		FullMethod: TrainingDataTrace_ModifyTrainingDataTraceSwitch_FullMethodName,
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(TrainingDataTraceServer).ModifyTrainingDataTraceSwitch(ctx, req.(*DataTypeReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TrainingDataTrace_GetTrainingDataTraceSwitch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TrainingDataTrace_GetTrainingDataTraceSwitch_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(DataStatusReq)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -119,7 +120,7 @@ func _TrainingDataTrace_GetTrainingDataTraceSwitch_Handler(srv interface{}, ctx 
 		Server:     srv,
 		FullMethod: TrainingDataTrace_GetTrainingDataTraceSwitch_FullMethodName,
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(TrainingDataTraceServer).GetTrainingDataTraceSwitch(ctx, req.(*DataStatusReq))
 	}
 	return interceptor(ctx, in, info, handler)

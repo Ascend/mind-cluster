@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/containerd/containerd"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -560,38 +559,6 @@ func TestCheckDeviceStatus(t *testing.T) {
 			}
 			_, isChange := checkDeviceStatus(failDevs, allInfo)
 			convey.So(isChange, convey.ShouldBeTrue)
-		})
-	})
-}
-
-// TestSetContainerdClient for test setContainerdClient
-func TestSetContainerdClient(t *testing.T) {
-	convey.Convey("test setContainerdClient", t, func() {
-		hdm := &HwDevManager{
-			manager: device.NewHwAscend310Manager(),
-			allInfo: common.NpuAllInfo{
-				AllDevs: []common.NpuDevice{{LogicID: 0}},
-			},
-		}
-		convey.Convey("when not exist containerd sock file, result return err", func() {
-			mock := gomonkey.ApplyFuncReturn(utils.IsExist, false)
-			defer mock.Reset()
-			err := hdm.setContainerdClient()
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("when containerd client create failed, result return err", func() {
-			mock := gomonkey.ApplyFuncReturn(utils.IsExist, true).
-				ApplyFuncReturn(containerd.New, nil, fmt.Errorf("test error"))
-			defer mock.Reset()
-			err := hdm.setContainerdClient()
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("when containerd client create success, return error is nil", func() {
-			mock := gomonkey.ApplyFuncReturn(utils.IsExist, true).
-				ApplyFuncReturn(containerd.New, &containerd.Client{}, nil)
-			defer mock.Reset()
-			err := hdm.setContainerdClient()
-			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }

@@ -218,6 +218,12 @@ func GetDefaultDevices(getFdFlag bool) ([]string, error) {
 		setDeviceByPathWhen200RC(&defaultDevices)
 	}
 
+	if _, err := os.Stat(DvppCmdlistDevice); err != nil {
+		hwlog.RunLog.Warnf("device %s not exist", DvppCmdlistDevice)
+	} else {
+		defaultDevices = append(defaultDevices, DvppCmdlistDevice)
+	}
+
 	var productType string
 	if len(ParamOption.ProductTypes) == 1 {
 		productType = ParamOption.ProductTypes[0]
@@ -285,7 +291,6 @@ func set200SocDefaultDevices() ([]string, error) {
 
 func set310BDefaultDevices() []string {
 	var a310BDefaultDevices = []string{
-		Atlas310BDvppCmdlist,
 		Atlas310BPngd,
 		Atlas310BVenc,
 		HiAi200RCUpgrade,

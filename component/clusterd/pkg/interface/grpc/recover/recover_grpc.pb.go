@@ -30,6 +30,7 @@ const (
 	Recover_SubscribeSwitchNicSignal_FullMethodName     = "/Recover/SubscribeSwitchNicSignal"
 	Recover_SubscribeNotifySwitch_FullMethodName        = "/Recover/SubscribeNotifySwitch"
 	Recover_ReplySwitchNicResult_FullMethodName         = "/Recover/ReplySwitchNicResult"
+	Recover_HealthCheck_FullMethodName                  = "/Recover/HealthCheck"
 )
 
 // RecoverClient is the client API for Recover service.
@@ -47,6 +48,7 @@ type RecoverClient interface {
 	SubscribeSwitchNicSignal(ctx context.Context, in *SwitchNicRequest, opts ...grpc.CallOption) (Recover_SubscribeSwitchNicSignalClient, error)
 	SubscribeNotifySwitch(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Recover_SubscribeNotifySwitchClient, error)
 	ReplySwitchNicResult(ctx context.Context, in *SwitchResult, opts ...grpc.CallOption) (*Status, error)
+	HealthCheck(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error)
 }
 
 type recoverClient struct {
@@ -225,6 +227,15 @@ func (c *recoverClient) ReplySwitchNicResult(ctx context.Context, in *SwitchResu
 	return out, nil
 }
 
+func (c *recoverClient) HealthCheck(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, Recover_HealthCheck_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecoverServer is the server API for Recover service.
 // All implementations must embed UnimplementedRecoverServer
 // for forward compatibility
@@ -240,6 +251,7 @@ type RecoverServer interface {
 	SubscribeSwitchNicSignal(*SwitchNicRequest, Recover_SubscribeSwitchNicSignalServer) error
 	SubscribeNotifySwitch(*ClientInfo, Recover_SubscribeNotifySwitchServer) error
 	ReplySwitchNicResult(context.Context, *SwitchResult) (*Status, error)
+	HealthCheck(context.Context, *ClientInfo) (*Status, error)
 	mustEmbedUnimplementedRecoverServer()
 }
 
@@ -279,6 +291,9 @@ func (UnimplementedRecoverServer) SubscribeNotifySwitch(*ClientInfo, Recover_Sub
 }
 func (UnimplementedRecoverServer) ReplySwitchNicResult(context.Context, *SwitchResult) (*Status, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReplySwitchNicResult not implemented")
+}
+func (UnimplementedRecoverServer) HealthCheck(context.Context, *ClientInfo) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedRecoverServer) mustEmbedUnimplementedRecoverServer() {}
 
@@ -500,6 +515,24 @@ func _Recover_ReplySwitchNicResult_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Recover_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecoverServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Recover_HealthCheck_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecoverServer).HealthCheck(ctx, req.(*ClientInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Recover_ServiceDesc is the grpc.ServiceDesc for Recover service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -538,6 +571,10 @@ var Recover_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReplySwitchNicResult",
 			Handler:    _Recover_ReplySwitchNicResult_Handler,
+		},
+		{
+			MethodName: "HealthCheck",
+			Handler:    _Recover_HealthCheck_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -290,3 +290,32 @@ func TestInstanceJobKey(t *testing.T) {
 		})
 	})
 }
+
+func TestGetJobFaultSdIdAndNodeName(t *testing.T) {
+	convey.Convey("Test GetJobFaultSdIdAndNodeName", t, func() {
+		testJobId := "test-job-id"
+		testPodNames := map[string]struct{}{"pod1": {}}
+		convey.Convey("Should return nil when job not in cache", func() {
+			result := GetJobFaultSdIdAndNodeName(testJobId, testPodNames)
+			convey.So(result, convey.ShouldBeNil)
+		})
+		convey.Convey("Should return fault info when nt valid", func() {
+			jobInfo := constant.JobInfo{
+				JobRankTable: constant.RankTable{
+					ServerList: []constant.ServerHccl{{
+						PodID:      "pod1",
+						SuperPodId: 0,
+						ServerName: "node1",
+						DeviceList: []constant.Device{{
+							SuperDeviceID: "sd1",
+						}},
+					}},
+				},
+			}
+			SaveJobCache(testJobId, jobInfo)
+			defer DeleteJobCache(testJobId)
+			result := GetJobFaultSdIdAndNodeName(testJobId, testPodNames)
+			convey.So(result, convey.ShouldBeNil)
+		})
+	})
+}

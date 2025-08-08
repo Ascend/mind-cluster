@@ -270,3 +270,8 @@ const (
 	// HCCLStepRetryTimeout is the timeout for HCCL step retry
 	HCCLStepRetryTimeout = 1000 * 60
 )
+
+const (
+	// ReleaseTimeOut release timeout
+	ReleaseTimeOut = 10 * time.Second
+)

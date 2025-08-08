@@ -23,14 +23,18 @@ import (
 	"syscall"
 
 	"ascend-common/common-utils/hwlog"
+	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
 	"nodeD/pkg/control"
+	"nodeD/pkg/device"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring"
 	"nodeD/pkg/monitoring/config"
-	"nodeD/pkg/pingmeshv1"
+	"nodeD/pkg/pingmesh"
 	"nodeD/pkg/processmanager"
+	"nodeD/pkg/releaser"
 	"nodeD/pkg/reporter"
+	"nodeD/pkg/watcher/configmap"
 )
 
 const (
@@ -61,7 +65,7 @@ var (
 	configManager   = &config.FaultConfigurator{}
 	monitorManager  = &monitoring.MonitorManager{}
 	reportManager   = &reporter.ReportManager{}
-	pingmeshManager *pingmeshv1.Manager
+	pingmeshManager *pingmesh.Manager
 	version         bool
 	// BuildVersion build version
 	BuildVersion string
@@ -102,9 +106,12 @@ func main() {
 		return
 	}
 	go monitorManager.Run(ctx)
+	go configmap.GetCmWatcher().Watch(ctx.Done())
+
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}
+	fdol.StartFDOnline(fdConfigPath, []string{"slowNode"}, "node")
 	signalCatch(cancel)
 }
 
@@ -123,7 +130,7 @@ func init() {
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup operation logs, range is (0, 30]")
-	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmeshv1.DefaultResultMaxAge,
+	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmesh.DefaultResultMaxAge,
 		"Maximum number of days for backup run pingmesh result files, range [7, 700] days")
 }
 
@@ -136,9 +143,9 @@ func checkParameters() bool {
 		hwlog.RunLog.Errorf("monitor period %d out of range [60,600]", monitorPeriod)
 		return false
 	}
-	if resultMaxAge < pingmeshv1.MinResultMaxAge || resultMaxAge > pingmeshv1.MaxResultMaxAge {
-		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmeshv1.MinResultMaxAge,
-			pingmeshv1.MaxResultMaxAge)
+	if resultMaxAge < pingmesh.MinResultMaxAge || resultMaxAge > pingmesh.MaxResultMaxAge {
+		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmesh.MinResultMaxAge,
+			pingmesh.MaxResultMaxAge)
 		return false
 	}
 	return true
@@ -159,15 +166,21 @@ func createWorkers() error {
 		return err
 	}
 
+	configmap.InitCmWatcher(clientK8s)
+	if err = device.InitDeviceManager(); err != nil {
+		hwlog.RunLog.Errorf("init device manager failed when start, error: %v", err)
+		return err
+	}
 	// init workers
 	controller = control.NewControlManager(clientK8s)
 	monitorManager = monitoring.NewMonitorManager(clientK8s)
 	reportManager = reporter.NewReporterManager(clientK8s)
-	pingmeshManager = pingmeshv1.NewManager(&pingmeshv1.Config{
+	pingmeshManager = pingmesh.NewManager(&pingmesh.Config{
 		ResultMaxAge: resultMaxAge,
 		KubeClient:   clientK8s,
 	})
-
+	releaser.InitReleaser()
+	configmap.GetCmWatcher().Init()
 	// build the connections between workers
 	monitorManager.SetNextFaultProcessor(controller)
 	controller.SetNextFaultProcessor(reportManager)

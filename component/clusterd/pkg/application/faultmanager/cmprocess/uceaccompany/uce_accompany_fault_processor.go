@@ -148,6 +148,7 @@ func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
 			fault, nodeName, util.ReadableMsTime(uceFaultTime))
 	}
 	if modified {
+		deviceFaultCm.UpdateTime = time.Now().Unix()
 		faultdomain.SortDataForAdvanceDeviceInfo(deviceFaultCm)
 	}
 	return newDeviceFaultQue

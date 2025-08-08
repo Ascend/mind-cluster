@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import sys
+from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH, LOG_MAX_LINE_LENGTH, LOG_DATE_FORMAT,
@@ -27,7 +28,7 @@ from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH, LOG_MAX_LIN
                                               LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BACKUP_PATTERN,
                                               TASKD_LOG_STDOUT, TASKD_LOG_PATH, TASKD_FILE_LOG_LEVEL,
                                               TASKD_STD_LOG_LEVEL)
-from taskd.python.utils.validator import FileValidator
+from taskd.python.utils.validator import FileValidator, DirectoryValidator
 
 
 class MaxLengthFormatter(logging.Formatter):
@@ -149,6 +150,10 @@ class LogConfig:
                 os.makedirs(log_path, mode=LOG_DIR_PRIVILEGE, exist_ok=True)
             except FileExistsError:
                 pass
+        if Path(log_path).is_symlink():
+            raise Exception("taskd log path should not be a soft link")
+        if not DirectoryValidator(log_path).check_directory_permissions(LOG_DIR_PRIVILEGE).check().is_valid():
+            raise Exception(f"taskd log path permission is not {oct(LOG_DIR_PRIVILEGE)}")
         log_file = os.path.join(log_path, LOG_DEFAULT_FILE_NAME)
         if not os.path.exists(log_file):
             try:

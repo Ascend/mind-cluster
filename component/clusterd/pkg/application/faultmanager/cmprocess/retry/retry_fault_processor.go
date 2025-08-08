@@ -232,6 +232,7 @@ func (processor *retryFaultProcessor) processEachNodeRetryFaultInfo(
 				} else if retryDevice.FaultDetail[constant.DeviceRetryFault].FaultType == constant.HcclFaultType {
 					hwlog.RunLog.Warn("retryProcessor cannot filter retry " + fullLog)
 					processor.addRetryFault(nodeName, deviceInfo, deviceName)
+					modified = true
 				} else {
 					hwlog.RunLog.Warn("retryProcessor cannot filter retry " + fullLog)
 				}
@@ -253,6 +254,7 @@ func (processor *retryFaultProcessor) processEachNodeRetryFaultInfo(
 		}
 	}
 	if modified {
+		deviceInfo.UpdateTime = time.Now().Unix()
 		faultdomain.SortDataForAdvanceDeviceInfo(deviceInfo)
 	}
 	return deviceInfo
@@ -263,6 +265,8 @@ func (processor *retryFaultProcessor) addRetryFault(nodeName string,
 	if len(processor.onceRetryDeviceInfo[nodeName]) == 0 {
 		return
 	}
+	hwlog.RunLog.Infof("node %s processor.linkdownSwitch %v", nodeName, processor.linkdownSwitchFault[nodeName])
+	hwlog.RunLog.Infof("node %s processor.linkdownDevice %v", nodeName, processor.linkdownDeviceFault[nodeName])
 	for _, faultInfo := range processor.linkdownDeviceFault {
 		if len(faultInfo) > 0 {
 			processor.hasLinkDown = true
@@ -281,12 +285,14 @@ func (processor *retryFaultProcessor) addRetryFault(nodeName string,
 		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add hccl error: %v ", nodeName, deviceName, fault)
 	}
 	if fault, ok := processor.linkdownDeviceFault[nodeName][deviceName]; ok {
+		fault.ForceAdd = true
 		deviceInfo.AddFaultAndFix(fault)
-		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown fault: %v ", nodeName, deviceName, fault)
+		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add linkdown error: %v ", nodeName, deviceName, fault)
 	}
 	if fault, ok := processor.linkdownSwitchFault[nodeName]; ok {
+		fault.ForceAdd = true
 		processor.nodeSwitchCmMap[constant.SwitchInfoPrefix+nodeName].AddFaultAndFix(fault)
-		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add switch fault: %v ", nodeName, deviceName, fault)
+		hwlog.RunLog.Warnf("nodeName :%v deviceName: %v, add switch error: %v ", nodeName, deviceName, fault)
 	}
 	delete(processor.onceRetryDeviceInfo[nodeName], deviceName)
 	delete(processor.onceFaultMap[nodeName], deviceName)

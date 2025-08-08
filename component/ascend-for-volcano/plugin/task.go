@@ -94,7 +94,7 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 
 // isTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
 func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
-	if !isNPUTask(task) {
+	if !util.IsNPUTask(task) {
 		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
 		return false
 	}
@@ -159,15 +159,4 @@ func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {
 		}
 	}
 	task.Pod.Status.Conditions = append(task.Pod.Status.Conditions, condition)
-}
-
-// isNPUTask to judge the task either is NPU task or not.
-func isNPUTask(nT *api.TaskInfo) bool {
-	for k := range nT.Resreq.ScalarResources {
-		// must contain "huawei.com/"
-		if strings.Contains(string(k), util.HwPreName) {
-			return true
-		}
-	}
-	return false
 }

@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -156,7 +156,7 @@ func (c *Manager) updateConfig() {
 				break
 			}
 			dstAddrs := gen.Generate(c.current.Address)
-			if dstAddrs != nil {
+			if len(dstAddrs) > 0 {
 				c.current.DestAddr = dstAddrs
 				c.current.DestAddrMap = gen.GetDestAddrMap()
 				hwlog.RunLog.Infof("generate dstAddrs from policyFactory success")

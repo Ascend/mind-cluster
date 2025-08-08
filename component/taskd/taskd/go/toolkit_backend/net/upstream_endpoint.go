@@ -246,7 +246,11 @@ func (up *upStreamEndpoint) join() error {
 	up.mu.Unlock()
 	ack, err := up.upStreamClient.Register(context.Background(),
 		common.RegisterReqFrame(&up.netInstance.config.Pos))
-	if err != nil || ack.Code != 0 {
+	if err != nil || ack == nil || ack.Code != 0 {
+		if ack == nil {
+			up.netInstance.netlogger.Error("register ack is nil")
+			return errors.New("register ack is nil")
+		}
 		up.netInstance.netlogger.Errorf("join task network error on register, err=%v, code=%d, role=%s, srvRank=%s, processRank=%s",
 			err, ack.Code, up.netInstance.config.Pos.Role, up.netInstance.config.Pos.ServerRank, up.netInstance.config.Pos.ProcessRank)
 		return fmt.Errorf("join task network error on register, err=%v, code=%d", err, ack.Code)

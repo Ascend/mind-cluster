@@ -32,13 +32,14 @@ import (
 
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	"nodeD/pkg/device"
 	"nodeD/pkg/pingmeshv1/types"
 	_ "nodeD/pkg/testtool"
 )
 
-func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(devmanager.GetDeviceManager, func() (*devmanager.DeviceManager, error) {
-		return m, err
+func patchGetDeviceManager(m *devmanager.DeviceManager) *gomonkey.Patches {
+	return gomonkey.ApplyFunc(device.GetDeviceManager, func() *devmanager.DeviceManager {
+		return m
 	})
 }
 
@@ -66,12 +67,12 @@ func patchGetSuperPodInfo(spInfo common.CgoSuperPodInfo, err error) *gomonkey.Pa
 func TestNew(t *testing.T) {
 	convey.Convey("Testing New", t, func() {
 		convey.Convey("01-GetDeviceManager failed should return error", func() {
-			patch := patchGetDeviceManager(nil, errors.New("getDeviceManager failed"))
+			patch := patchGetDeviceManager(nil)
 			defer patch.Reset()
 			_, err := New()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patch := patchGetDeviceManager(nil, nil)
+		patch := patchGetDeviceManager(&devmanager.DeviceManager{})
 		defer patch.Reset()
 		convey.Convey("02-GetChipBaseInfos failed should return error", func() {
 			patch1 := patchGetChipBaseInfos(nil, errors.New("getChipBaseInfos failed"))

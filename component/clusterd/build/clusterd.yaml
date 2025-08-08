@@ -24,9 +24,6 @@ rules:
   - apiGroups: [""]
     resources: ["nodes/status"]
     verbs: ["get", "patch"]
-  - apiGroups: ["coordination.k8s.io"]
-    resources: ["leases"]
-    verbs: ["get", "list", "watch", "delete", "create", "update"]
   - apiGroups: ["batch.volcano.sh"]
     resources: ["jobs"]
     verbs: ["get", "list", "watch", "update", "delete"]
@@ -55,12 +52,6 @@ roleRef:
   kind: ClusterRole
   name: pods-clusterd-role
   apiGroup: rbac.authorization.k8s.io
----
-apiVersion: coordination.k8s.io/v1
-kind: Lease
-metadata:
-  namespace: mindx-dl
-  name: cluster-info-collector
 ---
 apiVersion: apps/v1
 kind: Deployment

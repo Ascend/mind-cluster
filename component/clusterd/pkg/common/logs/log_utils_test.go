@@ -118,3 +118,26 @@ func getLastLine(t *testing.T) string {
 	}
 	return lastLine
 }
+
+func TestInitGrpcEventLogger(t *testing.T) {
+	convey.Convey("test InitGrpcEventLogger failed, NewCustomLogger error", t, func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		p1 := gomonkey.ApplyFuncReturn(hwlog.NewCustomLogger, nil, errTest)
+		defer p1.Reset()
+		err := InitGrpcEventLogger(ctx)
+		convey.So(err, convey.ShouldResemble, errTest)
+		convey.So(GrpcEventLogger, convey.ShouldBeNil)
+	})
+
+	convey.Convey("test InitGrpcEventLogger success", t, func() {
+		mockCustomLog := &hwlog.CustomLogger{}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		p2 := gomonkey.ApplyFuncReturn(hwlog.NewCustomLogger, mockCustomLog, nil)
+		defer p2.Reset()
+		err := InitGrpcEventLogger(ctx)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(GrpcEventLogger, convey.ShouldResemble, mockCustomLog)
+	})
+}

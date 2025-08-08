@@ -105,6 +105,7 @@ func (d *DevManager) UpdateConfig(config *types.HccspingMeshPolicy) {
 
 // SetResultHandler set result handler
 func (d *DevManager) SetResultHandler(handler func(result *types.HccspingMeshResult)) {
+
 	d.resultHandler = handler
 }
 
@@ -123,6 +124,7 @@ func (d *DevManager) Start(stopCh <-chan struct{}) {
 			return
 		case cmd := <-d.commandChan:
 			hwlog.RunLog.Infof("executor receive cmd, activate: %v, uid: %s", cmd.Config.Activate, cmd.UID)
+			hwlog.RunLog.Infof("------------------------------, cmd: %+v", d.currentPolicy)
 			// need stop collect goroutine and wait the goroutine done
 			if currentStop != nil {
 				close(currentStop)
@@ -134,6 +136,7 @@ func (d *DevManager) Start(stopCh <-chan struct{}) {
 				continue
 			}
 			d.currentPolicy = cmd
+			hwlog.RunLog.Infof("------------------------------, d.currentPolicy: %+v", d.currentPolicy)
 			d.startHccspingMesh()
 			currentStop = make(chan struct{})
 			d.wg.Add(1)
@@ -143,13 +146,16 @@ func (d *DevManager) Start(stopCh <-chan struct{}) {
 }
 
 func (d *DevManager) startHccspingMesh() {
+	hwlog.RunLog.Infof("------------------------------, startHccspingMesh: %+v", d.currentPolicy.DestAddr)
 	for physicID, addrs := range d.currentPolicy.DestAddr {
 		chip, ok := d.chips[physicID]
 		if !ok {
 			continue
 		}
 
+		hwlog.RunLog.Infof("------------------------------, addrs: %+v", addrs)
 		for taskID := range addrs {
+
 			hwlog.RunLog.Infof("execute starting hccspingmesh, cardID: %d, deviceID: %d, taskID: %d, "+
 				"destination address: %v", chip.CardID, chip.DeviceID, taskID, addrs[taskID])
 			if err := d.devManager.DcStartHccsPingMesh(chip.CardID, chip.DeviceID, 0, common.HccspingMeshOperate{

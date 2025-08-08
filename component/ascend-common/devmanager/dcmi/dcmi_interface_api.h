@@ -70,6 +70,8 @@ struct dcmi_ecc_info {
     unsigned int total_double_bit_error_cnt;
     unsigned int single_bit_isolated_pages_cnt;
     unsigned int double_bit_isolated_pages_cnt;
+    unsigned int single_bit_next_isolated_pages_cnt;
+    unsigned int double_bit_next_isolated_pages_cnt;
 };
 
 struct dcmi_hbm_info {
@@ -540,6 +542,10 @@ DCMIDLLEXPORT int dcmi_stop_hccsping_mesh(int card_id, int device_id, int port_i
 DCMIDLLEXPORT int dcmi_get_hccsping_mesh_info(int card_id, int device_id, int port_id, unsigned int task_id, struct dcmi_hccsping_mesh_info *hccsping_mesh_reply);
 
 DCMIDLLEXPORT int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int port_id, unsigned int task_id, unsigned int *state);
+
+DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status);
+
+DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
 
 #endif
 

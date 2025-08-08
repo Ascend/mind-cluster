@@ -179,9 +179,6 @@ const (
 	SecondMagnification = 1000
 	// SecondMagnificationFloat is second-level unit magnification float
 	SecondMagnificationFloat = 1000.0
-
-	// DefaultContainerdSockPath is the default containerd sock path
-	DefaultContainerdSockPath = "/run/containerd/containerd.sock"
 )
 
 const (
@@ -447,8 +444,8 @@ const (
 )
 
 const (
-	// Atlas310BDvppCmdlist is dvpp_cmdlist
-	Atlas310BDvppCmdlist = "/dev/dvpp_cmdlist"
+	// DvppCmdlistDevice is dvpp_cmdlist
+	DvppCmdlistDevice = "/dev/dvpp_cmdlist"
 	// Atlas310BPngd is pngd
 	Atlas310BPngd = "/dev/pngd"
 	// Atlas310BVenc is venc
@@ -907,4 +904,9 @@ const (
 	FaultCallBackRateLimit = 1000
 	// WriteEventChanLenLimit upper limit of length of cache event
 	WriteEventChanLenLimit = 100
+)
+
+const (
+	// L1ToL2PlanePortNum l1 switch port number link to l2
+	L1ToL2PlanePortNum = 16
 )

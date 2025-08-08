@@ -59,6 +59,11 @@ class RecoverStub(object):
                 request_serializer=recover__pb2.SwitchNicRequest.SerializeToString,
                 response_deserializer=recover__pb2.SwitchNicResponse.FromString,
                 )
+        self.HealthCheck = channel.unary_unary(
+                '/Recover/HealthCheck',
+                request_serializer=recover__pb2.ClientInfo.SerializeToString,
+                response_deserializer=recover__pb2.Status.FromString,
+                )
 
 
 class RecoverServicer(object):
@@ -118,6 +123,12 @@ class RecoverServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def HealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_RecoverServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -165,6 +176,11 @@ def add_RecoverServicer_to_server(servicer, server):
                     servicer.SubscribeSwitchNicSignal,
                     request_deserializer=recover__pb2.SwitchNicRequest.FromString,
                     response_serializer=recover__pb2.SwitchNicResponse.SerializeToString,
+            ),
+            'HealthCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.HealthCheck,
+                    request_deserializer=recover__pb2.ClientInfo.FromString,
+                    response_serializer=recover__pb2.Status.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -326,5 +342,22 @@ class Recover(object):
         return grpc.experimental.unary_stream(request, target, '/Recover/SubscribeSwitchNicSignal',
             recover__pb2.SwitchNicRequest.SerializeToString,
             recover__pb2.SwitchNicResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def HealthCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Recover/HealthCheck',
+            recover__pb2.ClientInfo.SerializeToString,
+            recover__pb2.Status.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

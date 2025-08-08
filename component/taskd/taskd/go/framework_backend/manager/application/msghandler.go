@@ -97,6 +97,11 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	if ip == "" {
 		ip = constant.DefaultIP
 	}
+	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)
+	if proxyIp == constant.LocalProxyEnableOn {
+		hwlog.RunLog.Infof("taskd mgr use local proxy")
+		ip = constant.LocalProxyIP
+	}
 	customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
 	if customLogger == nil {
 		return errors.New("manager SetCustomLogger failed"), nil
@@ -163,11 +168,18 @@ func (mhd *MsgHandler) receiver(tool *net.NetInstance, ctx context.Context) {
 }
 
 func (mhd *MsgHandler) receiveGoroutine(tool *net.NetInstance, ctx context.Context) {
-	msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool, ctx)
-	if err != nil {
-		hwlog.RunLog.Errorf("receive msg enqueue failed: %v", err)
-		mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
-		mhd.receiveGoroutine(tool, ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Debug("Mgr ReceiveMsg exit")
+			break
+		default:
+			msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool)
+			if err != nil {
+				hwlog.RunLog.Errorf("receive msg enqueue failed: %v", err)
+				mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
+			}
+		}
 	}
 }
 

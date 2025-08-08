@@ -16,12 +16,13 @@
 package common
 
 import (
+	"errors"
 	"fmt"
-	"github.com/agiledragon/gomonkey/v2"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -206,6 +207,14 @@ func TestCheckCardUsageMode(t *testing.T) {
 // TestGetSwitchFaultInfo test for convert fault code into struct
 func TestGetSwitchFaultInfo(t *testing.T) {
 	convey.Convey("test GetSwitchFaultInfo", t, func() {
+		convey.Convey("when card type is not Ascend910A3, return empty result", func() {
+			ParamOption.RealCardType = common.Ascend910
+			convey.So(GetSwitchFaultInfo(), convey.ShouldResemble, SwitchFaultInfo{})
+		})
+		convey.Convey("when EnableSwitchFault is false, return empty result", func() {
+			ParamOption.EnableSwitchFault = false
+			convey.So(GetSwitchFaultInfo(), convey.ShouldResemble, SwitchFaultInfo{})
+		})
 		ParamOption.RealCardType = common.Ascend910A3
 		ParamOption.EnableSwitchFault = true
 		currentSwitchFault = []SwitchFaultEvent{}
@@ -223,8 +232,10 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			currentSwitchFault = append(currentSwitchFault, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
+			mockFunc := gomonkey.ApplyFuncReturn(getSimpleSwitchFaultStr, "", errors.New("failed"))
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
+			mockFunc.Reset()
 
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
@@ -235,6 +246,10 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
+
+			switchFaultCodeLevelToCm = map[string]int{generalFaultCode: NotHandleFaultLevel}
+			fault = GetSwitchFaultInfo()
+			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
 		})
 	})
 }
@@ -301,5 +316,26 @@ func TestSetSwitchFaultCode(t *testing.T) {
 		defer patch.Reset()
 		SetSwitchFaultCode(nil)
 		convey.So(GetSwitchFaultCode(), convey.ShouldBeNil)
+	})
+}
+
+// TestCheckL1toL2PlaneDown for checkL1toL2PlaneDown
+func TestCheckL1toL2PlaneDown(t *testing.T) {
+	convey.Convey("test checkL1toL2PlaneDown", t, func() {
+		patch := gomonkey.ApplyGlobalVar(&currentSwitchFault, make([]SwitchFaultEvent, 0, GeneralMapSize))
+		defer patch.Reset()
+		event := SwitchFaultEvent{
+			PeerPortDevice: PeerDeviceL2Port,
+			SwitchChipId:   0,
+			SwitchPortId:   0,
+			Assertion:      1,
+		}
+		faults := make([]SwitchFaultEvent, 0, L1ToL2PlanePortNum)
+		for i := 0; i < L1ToL2PlanePortNum; i++ {
+			event.SwitchPortId = uint(i)
+			faults = append(faults, event)
+		}
+		SetSwitchFaultCode(faults)
+		convey.So(checkL1toL2PlaneDown(), convey.ShouldBeTrue)
 	})
 }

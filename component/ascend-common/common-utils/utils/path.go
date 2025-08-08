@@ -214,6 +214,22 @@ func CheckOwnerAndPermission(verifyPath string, mode os.FileMode, uid uint32) (s
 	return resoledPath, nil
 }
 
+// DoCheckOwnerAndPermission check path owner and permission
+func DoCheckOwnerAndPermission(path string, mode os.FileMode, uid uint32) error {
+	if !IsExist(path) {
+		return nil
+	}
+	pathInfo, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("stat failed %v", err)
+	}
+	stat, ok := pathInfo.Sys().(*syscall.Stat_t)
+	if !ok || stat.Uid != uid || !CheckMode(pathInfo.Mode(), mode) {
+		return fmt.Errorf("check uid or mode failed : %v", path)
+	}
+	return nil
+}
+
 func checkAbsPath(libPath string) (string, error) {
 	absLibPath, err := CheckOwnerAndPermission(libPath, DefaultWriteFileMode, rootUID)
 	if err != nil {

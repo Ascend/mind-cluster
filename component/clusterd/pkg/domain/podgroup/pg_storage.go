@@ -55,3 +55,11 @@ func GetPodGroup(jobKey string) v1beta1.PodGroup {
 	defer pgManager.pgMapMutex.RUnlock()
 	return pgManager.pgMap[jobKey]
 }
+
+// CheckPodGroupExist check podGroup with lock, Please do not add time-consuming code
+func CheckPodGroupExist(jobKey string) bool {
+	pgManager.pgMapMutex.RLock()
+	_, exist := pgManager.pgMap[jobKey]
+	pgManager.pgMapMutex.RUnlock()
+	return exist
+}

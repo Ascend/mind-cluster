@@ -22,8 +22,10 @@ build_version=${BUILD_VERSION}
 output_name="libtaskd.so"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
-  #cut the chars after ':' and add char 'v', the final example is v3.0.0
-  build_version="v"${line#*=}
+  # cut the chars after '=' and add char 'v', the final example is v3.0.0
+  # change for pep 440 specification
+  temp=${line#*=}
+  build_version="v${temp//.SPC/+SPC}"
 fi
 
 arch=$(arch 2>&1)

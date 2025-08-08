@@ -353,3 +353,7 @@ func (d *DeviceManagerMock) RescanSoc(cardID, deviceID int32) error {
 func (d *DeviceManagerMock) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	return nil, nil
 }
+
+func (d *DeviceManagerMock) DcGetSuperPodStatus(int32, int32, uint32) (int, error) { return 0, nil }
+
+func (d *DeviceManagerMock) DcSetSuperPodStatus(int32, int32, uint32, uint32) error { return nil }

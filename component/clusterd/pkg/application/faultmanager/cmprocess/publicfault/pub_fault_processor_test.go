@@ -6,7 +6,9 @@ package publicfault
 import (
 	"sort"
 	"testing"
+	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/hwlog"
@@ -79,6 +81,8 @@ func testNodeNameInvalid() {
 }
 
 func testDiff() {
+	mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+	defer mockTimeUnix.Reset()
 	resetFaultCache()
 	publicfault.PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
 	content := constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]{
@@ -94,6 +98,8 @@ func testDiff() {
 }
 
 func testCommon() {
+	mockTimeUnix := gomonkey.ApplyMethodReturn(time.Time{}, "Unix", int64(0))
+	defer mockTimeUnix.Reset()
 	resetFaultCache()
 	const card5 = 5
 	testCacheData.FaultDevIds = []int32{0, card5}

@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -166,5 +168,65 @@ func TestGetDriverLibPath(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 
+	})
+}
+
+type mockFileInfo struct {
+	mode os.FileMode
+	sys  interface{}
+}
+
+func (m *mockFileInfo) Name() string       { return "mock" }
+func (m *mockFileInfo) Size() int64        { return 0 }
+func (m *mockFileInfo) Mode() os.FileMode  { return m.mode }
+func (m *mockFileInfo) ModTime() time.Time { return time.Now() }
+func (m *mockFileInfo) IsDir() bool        { return false }
+func (m *mockFileInfo) Sys() interface{}   { return m.sys }
+
+func TestDoCheckOwnerAndPermission(t *testing.T) {
+	var testPath = "/test"
+	var testMode os.FileMode = 0660
+	var excludePermissions os.FileMode = 0002
+	patch := gomonkey.NewPatches()
+	defer patch.Reset()
+	convey.Convey("should return nil when path is not exist", t, func() {
+		patch.ApplyFuncReturn(IsExist, false)
+		defer patch.Reset()
+		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
+		convey.So(err, convey.ShouldBeNil)
+	})
+
+	patch.ApplyFuncReturn(IsExist, true)
+	convey.Convey("should return err when stat failed", t, func() {
+		patch.ApplyFuncReturn(os.Stat, nil, os.ErrNotExist)
+		defer patch.Reset()
+		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "stat failed")
+	})
+
+	convey.Convey("should return err when get uid failed", t, func() {
+		patch.ApplyFuncReturn(os.Stat, &mockFileInfo{mode: testMode, sys: "invalid-type"}, nil)
+		defer patch.Reset()
+
+		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "check uid or mode failed")
+	})
+
+	convey.Convey("should return err when permission check failure", t, func() {
+		patch.ApplyFuncReturn(os.Stat, &mockFileInfo{mode: testMode, sys: &syscall.Stat_t{Uid: rootUID}}, nil)
+		patch.ApplyFuncReturn(CheckMode, false)
+		defer patch.Reset()
+		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "check uid or mode failed")
+	})
+
+	convey.Convey("should return nil where all checks pass", t, func() {
+		patch.ApplyFuncReturn(os.Stat, &mockFileInfo{mode: testMode, sys: &syscall.Stat_t{Uid: rootUID}}, nil)
+		patch.ApplyFuncReturn(CheckMode, true)
+		defer patch.Reset()
+		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }

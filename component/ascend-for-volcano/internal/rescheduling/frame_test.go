@@ -56,6 +56,7 @@ func fakeReSchedulerFaultTask(isFault bool, paras []string, podCreateTime int64)
 		NodeRankIndex: rankIndex,
 		UseCardName:   []string{"Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"},
 		PodCreateTime: podCreateTime,
+		IsNpuTask:     true,
 	}
 	return faultTask
 }

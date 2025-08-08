@@ -147,7 +147,8 @@ int LogLoop(const char* filename)
     return ret;
 }
 
-static void WriteLogInfo(const char* path, size_t pathLen, const char* buffer, const unsigned bufferSize)
+static void WriteLogInfo(const char* path, const long maxSize, size_t pathLen, const char* buffer,
+const unsigned bufferSize)
 {
     if (path == NULL) {
         return;
@@ -156,6 +157,10 @@ static void WriteLogInfo(const char* path, size_t pathLen, const char* buffer, c
     int ret = 0;
     fp = fopen(path, "a+");
     if (fp != NULL) {
+        if (!CheckOpenedFile(fp, maxSize, true)) {
+            fclose(fp);
+            return;
+        }
         char now[TEMP_BUFFER] = {0};
         ret = GetCurrentLocalTime(now, sizeof(now) / sizeof(char));
         if (ret < 0) {
@@ -201,7 +206,7 @@ static void LogFileProcess(const char* filename, const long maxSize, const char*
     if (!CheckExistsFile(path, strlen(path), 0, false)) {
         return;
     }
-    WriteLogInfo(path, PATH_MAX + 1, buffer, bufferSize);
+    WriteLogInfo(path, maxSize, PATH_MAX + 1, buffer, bufferSize);
 }
 
 static void WriteLogFile(const char* filename, long maxSize, const char* buffer, unsigned bufferSize)

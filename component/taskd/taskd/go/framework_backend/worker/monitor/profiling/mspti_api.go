@@ -25,11 +25,14 @@ package profiling
     #include <stdio.h>
 	#include <pthread.h>
 	#include "mspti_activity.h"
+	#include "mspti_callback.h"
 	static void *dcmiHandle;
+	static msptiSubscriberHandle subscriber;
     #define SO_NOT_FOUND  -99999
     #define FUNCTION_NOT_FOUND  -99998
     #define SUCCESS  0
     #define ERROR_UNKNOWN  -99997
+	#define	CALL_FUNC(name,...) if(name==NULL){return FUNCTION_NOT_FOUND;}return name(__VA_ARGS__);
 	// Go functions declared in C to act as callback functions
 	void goBufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords);
 	void goBufferCompleted(uint8_t *buffer, size_t size, size_t validSize);
@@ -45,40 +48,50 @@ package profiling
 	static msptiResult (*cgo_mspti_activity_register_callbacks)(msptiBuffersCallbackRequestFunc funcBufferRequested,
 		msptiBuffersCallbackCompleteFunc funcBufferCompleted);
 	static msptiResult msptiActivityRegisterCallbacksWrapper() {
-		return cgo_mspti_activity_register_callbacks(bufferRequestedCallback, bufferCompletedCallback);
+		CALL_FUNC(cgo_mspti_activity_register_callbacks, bufferRequestedCallback, bufferCompletedCallback);
 	}
 
 	static int (*cgo_mspti_activity_flush_all)(uint32_t flag);
 	static msptiResult mspti_activity_flush_all(uint32_t flag){
-		return cgo_mspti_activity_flush_all(flag);
+		CALL_FUNC(cgo_mspti_activity_flush_all, flag);
 	}
 
     // dcmi
     static int (*cgo_mspti_activity_enable)(msptiActivityKind kind);
     static msptiResult mspti_activity_enable(msptiActivityKind kind){
-		return cgo_mspti_activity_enable(kind);
+		CALL_FUNC(cgo_mspti_activity_enable, kind);
 	}
 
     static int (*cgo_mspti_activity_dis_enable)(msptiActivityKind kind);
     static msptiResult mspti_activity_dis_enable(msptiActivityKind kind){
-		return cgo_mspti_activity_dis_enable(kind);
+		CALL_FUNC(cgo_mspti_activity_dis_enable, kind);
 	}
 
 	static int (*cgo_mspti_activity_get_next_record)(uint8_t *buffer, size_t validBufferSizeBytes,
 		msptiActivity **record);
     static msptiResult mspti_activity_get_next_record(uint8_t *buffer, size_t validBufferSizeBytes,
 		msptiActivity **record){
-		return cgo_mspti_activity_get_next_record(buffer,validBufferSizeBytes,record);
+		CALL_FUNC(cgo_mspti_activity_get_next_record, buffer, validBufferSizeBytes, record);
 	}
 
 	static int (*cgo_mspti_mstx_domain_enable)(const char* domainName);
     static msptiResult mspti_mstx_domain_enable(const char* domainName){
-		return cgo_mspti_mstx_domain_enable(domainName);
+		CALL_FUNC(cgo_mspti_mstx_domain_enable, domainName);
 	}
 
 	static int (*cgo_mspti_mstx_domain_disable)(const char* domainName);
     static msptiResult mspti_mstx_domain_disable(const char* domainName){
-		return cgo_mspti_mstx_domain_disable(domainName);
+		CALL_FUNC(cgo_mspti_mstx_domain_disable, domainName);
+	}
+
+	static int (*cgo_mspti_subscribe)(msptiSubscriberHandle *subscriber, msptiCallbackFunc callback, void* userdata);
+	static msptiResult CgoMsptiSubscribe(){
+		CALL_FUNC(cgo_mspti_subscribe, &subscriber, NULL, NULL);
+	}
+
+	static int (*cgo_mspti_unsubscribe)(msptiSubscriberHandle subscriber);
+	static msptiResult CgoMsptiUnsubscribe(){
+		CALL_FUNC(cgo_mspti_unsubscribe, subscriber);
 	}
 
 	 // load .so files and functions
@@ -101,6 +114,8 @@ package profiling
 		cgo_mspti_activity_flush_all = dlsym(dcmiHandle,"msptiActivityFlushAll");
 		cgo_mspti_mstx_domain_enable = dlsym(dcmiHandle,"msptiActivityEnableMarkerDomain");
 		cgo_mspti_mstx_domain_disable = dlsym(dcmiHandle,"msptiActivityDisableMarkerDomain");
+		cgo_mspti_subscribe = dlsym(dcmiHandle,"msptiSubscribe");
+		cgo_mspti_unsubscribe = dlsym(dcmiHandle,"msptiUnsubscribe");
 		return SUCCESS;
 	}
 
@@ -256,6 +271,24 @@ func DisableMsptiActivity() error {
 		return fmt.Errorf("failed to enable profiling api data, error code: %d", int32(retCode))
 	}
 	hwlog.RunLog.Infof("rank:%v successfully disabled profiling", GlobalRankId)
+	return nil
+}
+
+// MsptiSubscribe subscribe ms light profiling
+func MsptiSubscribe() error {
+	if retCode := C.CgoMsptiSubscribe(); retCode != C.SUCCESS {
+		return fmt.Errorf("failed to subscribe mspti, err code: %d", int32(retCode))
+	}
+	hwlog.RunLog.Infof("rank:%v successfully subscribe mspti", GlobalRankId)
+	return nil
+}
+
+// MsptiUnsubscribe unsubscribe ms light profiling
+func MsptiUnsubscribe() error {
+	if retCode := C.CgoMsptiUnsubscribe(); retCode != C.SUCCESS {
+		return fmt.Errorf("failed to unsubscribe mspti, err code: %d", int32(retCode))
+	}
+	hwlog.RunLog.Infof("rank:%v successfully unsubscribe mspti", GlobalRankId)
 	return nil
 }
 

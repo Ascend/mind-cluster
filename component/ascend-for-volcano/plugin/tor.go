@@ -266,6 +266,9 @@ func (tl *TorList) initTorShareStatus(jobs map[api.JobID]SchedulerJob) {
 			continue
 		}
 		for _, task := range job.Tasks {
+			if !task.IsNPUTask() {
+				continue
+			}
 			if tor, ok := tl.torMaps[tl.torIpMap[task.NodeName]]; ok {
 				tor.setTorIsSharedTor(task.Annotation[isSharedTor])
 				tor.setTorIsHealthy(task.Annotation[isHealthy])

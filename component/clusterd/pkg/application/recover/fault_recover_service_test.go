@@ -647,3 +647,22 @@ func TestGetFaultReason(t *testing.T) {
 		convey.So(getFaultReason(faults3), convey.ShouldEqual, retryFaultValue)
 	})
 }
+
+func TestFaultRecoverServiceHealthCheck(t *testing.T) {
+	convey.Convey("Test FaultRecoverService HealthCheck", t, func() {
+		s := fakeService()
+		info := fakeClientInfo()
+		ctx := context.Background()
+
+		convey.Convey("case: receive healthcheck", func() {
+			ctl := NewEventController(fakeCommonBaseInfo(), keepAliveSecond, ctx)
+			s.eventCtl[info.JobId] = ctl
+
+			resp, err := s.HealthCheck(ctx, info)
+
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(resp, convey.ShouldNotBeNil)
+			convey.So(resp.Code, convey.ShouldEqual, int32(common.OK))
+		})
+	})
+}

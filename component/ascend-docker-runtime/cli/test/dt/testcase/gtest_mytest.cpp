@@ -77,6 +77,7 @@ extern "C" bool CheckExternalFile(const char* filePath, const size_t filePathLen
 extern "C" int LogLoop(const char* filename);
 extern "C" void Logger(const char *msg, int level, int screen);
 extern "C" int EnterNsByPath(const char *path, int nsType);
+extern "C" bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner);
 
 struct MountList
 {
@@ -845,4 +846,45 @@ TEST_F(Test_Fhho, IsVirtualOne)
     ParseRuntimeOptions(options);
     bool ret = IsVirtual();
     EXPECT_EQ(false, ret);
+}
+
+FILE* CreateTempFile(const char* content, size_t size) {
+    char filename[] = "/tmp/test_XXXXXX";
+    int fd = mkstemp(filename);
+    if (fd == -1) return NULL;
+
+    if (write(fd, content, size) != (ssize_t)size) {
+        close(fd);
+        return NULL;
+    }
+    lseek(fd, 0, SEEK_SET);
+    return fdopen(fd, "r+");
+}
+
+TEST_F(Test_Fhho, CheckOpenedFileOne) {
+    EXPECT_FALSE(CheckOpenedFile(NULL, BUF_SIZE, false));
+}
+
+TEST_F(Test_Fhho, CheckOpenedFileTwo) {
+    const long maxSize = 5;
+    FILE* fp = CreateTempFile("1234567890", 10);
+    EXPECT_FALSE(CheckOpenedFile(fp, maxSize, false));
+    if (fp) {
+        char filename[256];
+        snprintf(filename, sizeof(filename), "/proc/self/fd/%d", fileno(fp));
+        fclose(fp);
+        unlink(filename);
+    }
+}
+
+TEST_F(Test_Fhho, CheckOpenedFileThree) {
+    const long maxSize = 1024;
+    FILE* fp = CreateTempFile("test", 4);
+    EXPECT_TRUE(CheckOpenedFile(fp, maxSize, false));
+    if (fp) {
+        char filename[256];
+        snprintf(filename, sizeof(filename), "/proc/self/fd/%d", fileno(fp));
+        fclose(fp);
+        unlink(filename);
+    }
 }

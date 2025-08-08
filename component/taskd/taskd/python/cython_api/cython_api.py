@@ -24,6 +24,6 @@ try:
     lib_path = os.path.join(os.path.dirname(__file__), LIB_SO_PATH, LIB_SO_NAME)
     lib = ctypes.CDLL(lib_path, mode=mode)
     run_log.info(f"{LIB_SO_NAME} loaded successfully")
-except OSError as e:
+except Exception as e:
     lib = None
     run_log.info(f"{LIB_SO_NAME} loaded failed： {e}")

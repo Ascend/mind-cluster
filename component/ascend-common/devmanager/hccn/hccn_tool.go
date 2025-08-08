@@ -16,7 +16,6 @@
 package hccn
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,6 +23,7 @@ import (
 	"strings"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager/common"
 )
@@ -51,6 +51,8 @@ const (
 	naValue    = "NA"
 	notSupport = "not supported"
 	unknownStr = "Unknown!"
+
+	limitSize = 1024 * 1024
 )
 
 func getInfoFromHccnTool(args ...string) (string, error) {
@@ -58,20 +60,20 @@ func getInfoFromHccnTool(args ...string) (string, error) {
 	if _, err := utils.CheckPath(hccnTool); err != nil {
 		return "", err
 	}
-	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(hccnTool, args...)
 	cmd.Env = []string{
 		"PATH=" + os.Getenv("PATH"),
 		utils.LdLibPath + "=" + os.Getenv(utils.LdLibPath),
 	}
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	limitStdout := limiter.NewLimitedWriter(limitSize)
+	cmd.Stdout = limitStdout
+	cmd.Stderr = limiter.NewLimitedWriter(limitSize)
 	err := cmd.Run()
 	if err != nil {
 		return "", err
 	}
 
-	return string(stdout.Bytes()), nil
+	return string(limitStdout.GetBufferBytes()), nil
 }
 
 // GetNPULinkStatus exec "hccn_tool -i * -link -g" to get link status

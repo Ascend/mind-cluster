@@ -110,6 +110,9 @@ func doSwitchNic(ranks []int, ops []bool) (string, error) {
 	if switchNicCallback == nil {
 		return constant.SwitchFail, fmt.Errorf("switchNicCallback is nil")
 	}
+	if len(ranks) != len(ops) {
+		return constant.SwitchFail, fmt.Errorf("ranks and ops length not match")
+	}
 	cRanks := make([]C.int, len(ranks))
 	for i, r := range ranks {
 		cRanks[i] = C.int(r)

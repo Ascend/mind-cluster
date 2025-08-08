@@ -89,9 +89,6 @@ spec:
           - name: libyaml
             mountPath: /usr/lib64/libyaml-0.so.2
             readOnly: true
-          - name: sys
-            mountPath: /sys
-            readOnly: true
           - name: docker-shim  # delete when only use containerd
             mountPath: /run/dockershim.sock
             readOnly: true
@@ -136,9 +133,6 @@ spec:
         - name: ascend-dcmi
           hostPath:
             path: /usr/local/dcmi
-        - name: sys
-          hostPath:
-            path: /sys
         - name: docker-shim # delete when only use containerd
           hostPath:
             path: /run/dockershim.sock

@@ -169,7 +169,7 @@ func getJobLabelFromVcJob(job *api.JobInfo) map[string]string {
 func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
 	if vcJob == nil || vcJob.TotalRequest == nil {
 		klog.V(util.LogInfoLev).Infof("GetVCJobReqNPUTypeFromJobInfo nil job's parameter.")
-		return "", 0.0, errors.New("nil parameter")
+		return "", 0, errors.New("nil parameter")
 	}
 
 	vcMinResource := getVcjobMinResource(vcJob)
@@ -180,7 +180,7 @@ func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
 		}
 	}
 	klog.V(util.LogDebugLev).Infof("GetVCJobReqNPUTypeFromJobInfo %+v.", vcMinResource.ScalarResources)
-	return "", 0.0, errors.New("nil NPU")
+	return "", 0, nil
 }
 
 func getVcjobMinResource(job *api.JobInfo) *api.Resource {
@@ -241,7 +241,9 @@ func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 		return
 	}
 
-	sJob.policyHandler = sHandle.PolicyBuilder()
+	if sJob.ReqNPUNum > 0 {
+		sJob.policyHandler = sHandle.PolicyBuilder()
+	}
 }
 
 // isJobInitial Determine if the task is ready.
@@ -727,6 +729,9 @@ func (sJob *SchedulerJob) checkNodeNum(taskInfo *api.TaskInfo, vcNode NPUNode) e
 
 // isJobSupportByPlugin judge job whether has it's plugin.
 func (sJob SchedulerJob) isJobSupportByPlugin() bool {
+	if sJob.ReqNPUNum <= 0 {
+		return true
+	}
 	name := sJob.GetPluginNameByReq()
 	if name == "" {
 		return false

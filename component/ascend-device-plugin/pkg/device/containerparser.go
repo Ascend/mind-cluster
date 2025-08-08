@@ -212,8 +212,7 @@ func getNPUMajorID() ([]string, error) {
 		return majorID, err
 	}
 	defer func() {
-		err = f.Close()
-		if err != nil {
+		if err = f.Close(); err != nil {
 			hwlog.RunLog.Error(err)
 		}
 	}()

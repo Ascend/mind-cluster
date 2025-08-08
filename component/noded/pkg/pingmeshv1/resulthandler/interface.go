@@ -75,10 +75,12 @@ func (h *aggregatedHandler) Handle(stop <-chan struct{}) {
 			}
 			infos, ok := obj.(*types.HccspingMeshResult)
 			if !ok {
-				hwlog.RunLog.Errorf("receive invalid pingmeshv1 info")
+				hwlog.RunLog.Error("receive invalid pingmeshv1 info")
+				h.resultQueue.Done(obj)
 				return
 			}
 			h.handlePingMeshInfo(infos)
+			h.resultQueue.Done(obj)
 		}
 	}
 }

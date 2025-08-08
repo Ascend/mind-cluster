@@ -290,3 +290,12 @@ const (
 	// SwitchFail value of switch fail
 	SwitchFail = "switchFail"
 )
+
+const (
+	// LocalProxyIP local proxy ip
+	LocalProxyIP = "127.0.0.1"
+	// LocalProxyEnableEnv whether enable local proxy
+	LocalProxyEnableEnv = "LOCAL_PROXY_ENABLE"
+	// LocalProxyEnableOn local proxy enable value
+	LocalProxyEnableOn = "on"
+)

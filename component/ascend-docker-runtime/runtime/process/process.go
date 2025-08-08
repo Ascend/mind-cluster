@@ -88,7 +88,6 @@ const (
 	virtualDavinciName   = "vdavinci"
 	davinciManager       = "davinci_manager"
 	davinciManagerDocker = "davinci_manager_docker"
-	notRenameDeviceType  = ""
 	devmmSvm             = "devmm_svm"
 	hisiHdc              = "hisi_hdc"
 	svm0                 = "svm0"
@@ -405,24 +404,28 @@ func getValueByDeviceKey(data []string) string {
 	return res
 }
 
-func addDeviceToSpec(spec *specs.Spec, dPath string, deviceType string) error {
-	device, err := oci.DeviceFromPath(dPath)
-	if err != nil {
-		return fmt.Errorf("failed to get %s info : %#v", dPath, err)
-	}
-
+func getMountPath(dHostPath string, deviceType string) (string, error) {
 	switch deviceType {
 	case virtualDavinciName:
-		vDeviceNumber := regexp.MustCompile("[0-9]+").FindAllString(dPath, -1)
+		vDeviceNumber := regexp.MustCompile("[0-9]+").FindAllString(dHostPath, -1)
 		if len(vDeviceNumber) != 1 {
-			return fmt.Errorf("invalid vdavinci path: %s", dPath)
+			return "", fmt.Errorf("invalid vdavinci path: %s", dHostPath)
 		}
-		device.Path = devicePath + davinciName + vDeviceNumber[0]
+		return devicePath + davinciName + vDeviceNumber[0], nil
 	case davinciManagerDocker:
-		device.Path = devicePath + davinciManager
+		return devicePath + davinciManager, nil
 	default: // do nothing
-
+		return dHostPath, nil
 	}
+}
+
+func addDeviceToSpec(spec *specs.Spec, dHostPath string, dContainerPath string) error {
+	device, err := oci.DeviceFromPath(dHostPath)
+	if err != nil {
+		return fmt.Errorf("failed to get %s info : %v", dHostPath, err)
+	}
+
+	device.Path = dContainerPath
 
 	spec.Linux.Devices = append(spec.Linux.Devices, *device)
 	newDeviceCgroup := specs.LinuxDeviceCgroup{
@@ -446,7 +449,6 @@ func addAscend310BManagerDevice(spec *specs.Spec) error {
 		vpc,
 		pngd,
 		venc,
-		dvppCmdList,
 		logDrv,
 		acodec,
 		ai,
@@ -457,20 +459,24 @@ func addAscend310BManagerDevice(spec *specs.Spec) error {
 
 	for _, device := range Ascend310BManageDevices {
 		dPath := devicePath + device
-		if err := addDeviceToSpec(spec, dPath, notRenameDeviceType); err != nil {
-			hwlog.RunLog.Warnf("failed to add %s to spec : %#v", dPath, err)
+		if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
+			hwlog.RunLog.Warnf("failed to add %s to spec : %v", dPath, err)
 		}
 	}
 
 	davinciManagerPath := devicePath + davinciManagerDocker
 	if _, err := os.Stat(davinciManagerPath); err != nil {
-		hwlog.RunLog.Warnf("failed to get davinci manager docker, err: %#v", err)
+		hwlog.RunLog.Warnf("failed to get davinci manager docker, err: %v", err)
 		davinciManagerPath = devicePath + davinciManager
 		if _, err := os.Stat(davinciManagerPath); err != nil {
-			return fmt.Errorf("failed to get davinci manager, err: %#v", err)
+			return fmt.Errorf("failed to get davinci manager, err: %v", err)
 		}
 	}
-	return addDeviceToSpec(spec, davinciManagerPath, davinciManagerDocker)
+	dContainerPath, err := getMountPath(davinciManagerPath, davinciManagerDocker)
+	if err != nil {
+		return fmt.Errorf("failed to get virtual davinci name : %v", err)
+	}
+	return addDeviceToSpec(spec, davinciManagerPath, dContainerPath)
 }
 
 func addCommonManagerDevice(spec *specs.Spec) error {
@@ -481,8 +487,8 @@ func addCommonManagerDevice(spec *specs.Spec) error {
 
 	for _, device := range commonManagerDevices {
 		dPath := devicePath + device
-		if err := addDeviceToSpec(spec, dPath, notRenameDeviceType); err != nil {
-			return fmt.Errorf("failed to add common manage device to spec : %#v", err)
+		if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
+			return fmt.Errorf("failed to add common manage device to spec : %v", err)
 		}
 	}
 
@@ -492,21 +498,27 @@ func addCommonManagerDevice(spec *specs.Spec) error {
 func addManagerDevice(spec *specs.Spec) error {
 	chipName, err := dcmi.GetChipName()
 	if err != nil {
-		return fmt.Errorf("get chip name error: %#v", err)
+		return fmt.Errorf("get chip name error: %v", err)
 	}
 	devType := GetDeviceTypeByChipName(chipName)
 	hwlog.RunLog.Infof("device type is: %s", devType)
+	if devType != "" {
+		dPath := devicePath + dvppCmdList
+		if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
+			hwlog.RunLog.Warnf("failed to add dvpp_cmdlist to spec : %v", err)
+		}
+	}
 	if devType == Ascend310B {
 		return addAscend310BManagerDevice(spec)
 	}
-
-	if err := addDeviceToSpec(spec, devicePath+davinciManager, notRenameDeviceType); err != nil {
-		return fmt.Errorf("add davinci_manager to spec error: %#v", err)
+	dPath := devicePath + davinciManager
+	if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
+		return fmt.Errorf("add davinci_manager to spec error: %v", err)
 	}
 
 	productType, err := dcmi.GetProductType(&dcmi.NpuWorker{})
 	if err != nil {
-		return fmt.Errorf("parse product type error: %#v", err)
+		return fmt.Errorf("parse product type error: %v", err)
 	}
 	hwlog.RunLog.Infof("product type is %s", productType)
 
@@ -515,7 +527,7 @@ func addManagerDevice(spec *specs.Spec) error {
 	case Atlas200ISoc, Atlas200:
 	default:
 		if err = addCommonManagerDevice(spec); err != nil {
-			return fmt.Errorf("add common manage device error: %#v", err)
+			return fmt.Errorf("add common manage device error: %v", err)
 		}
 	}
 
@@ -551,7 +563,11 @@ func addDevice(spec *specs.Spec, deviceIdList []int) error {
 	}
 	for _, deviceId := range deviceIdList {
 		dPath := devicePath + deviceName + strconv.Itoa(deviceId)
-		if err := addDeviceToSpec(spec, dPath, deviceName); err != nil {
+		dContainerPath, err := getMountPath(dPath, deviceName)
+		if err != nil {
+			return fmt.Errorf("failed to get virtual davinci name : %v", err)
+		}
+		if err := addDeviceToSpec(spec, dPath, dContainerPath); err != nil {
 			return fmt.Errorf("failed to add davinci device to spec: %v", err)
 		}
 	}

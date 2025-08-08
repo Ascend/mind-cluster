@@ -17,8 +17,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -41,9 +42,7 @@ const fiveHundred = 500
 
 // TestReceiveMsg test receive message
 func TestReceiveMsg(t *testing.T) {
-	hwLogConfig := hwlog.LogConfig{
-		OnlyToStdout: true,
-	}
+	hwLogConfig := hwlog.LogConfig{OnlyToStdout: true}
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 	customLog := hwlog.SetCustomLogger(hwlog.RunLog)
 	mrc := &MsgReceiver{}
@@ -54,17 +53,37 @@ func TestReceiveMsg(t *testing.T) {
 	mockMsg := &common.Message{Uuid: "test_uuid", BizType: "test_biz_type", Src: workerPos,
 		Dst: workerPos, Body: utils.ObjToString(&storage.MsgBody{})}
 	patch := gomonkey.ApplyMethod(tool, "ReceiveMessage", func(*net.NetInstance) *common.Message {
-		defer func() {
-			mockMsg = nil
-		}()
+		defer func() { mockMsg = nil }()
 		return mockMsg
 	})
 	defer patch.Reset()
-	convey.Convey("TestReceiveMsg test enqueue success wait exit return nil", t, func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
-		defer cancel()
-		testReturn := &testReturn{}
-		testReturn.msg, testReturn.msgBody, testReturn.err = mrc.ReceiveMsg(mq, tool, ctx)
+	testReturn := &testReturn{}
+	convey.Convey("TestReceiveMsg test enqueue failed return error", t, func() {
+		mq := &storage.MsgQueue{Queue: make([]storage.BaseMessage, constant.MaxMsgQueueLength)}
+		testReturn.msg, testReturn.msgBody, testReturn.err = mrc.ReceiveMsg(mq, tool)
+		convey.So(testReturn.msg, convey.ShouldEqual, &common.Message{Uuid: "test_uuid", BizType: "test_biz_type",
+			Src: workerPos, Dst: workerPos, Body: utils.ObjToString(&storage.MsgBody{})})
+		convey.So(testReturn.msgBody, convey.ShouldResemble, storage.MsgBody{})
+		convey.So(testReturn.err, convey.ShouldEqual, fmt.Errorf("message queue is full"))
+	})
+	convey.Convey("TestReceiveMsg test receive message failed log error return nil", t, func() {
+		patch := gomonkey.ApplyMethodReturn(tool, "ReceiveMessage", nil)
+		defer patch.Reset()
+		testReturn.msg, testReturn.msgBody, testReturn.err = mrc.ReceiveMsg(mq, tool)
+		convey.So(testReturn.msg, convey.ShouldBeNil)
+		convey.So(testReturn.msgBody, convey.ShouldResemble, storage.MsgBody{})
+		convey.So(testReturn.err, convey.ShouldBeNil)
+	})
+	convey.Convey("TestReceiveMsg test unmarshal failed log error return nil", t, func() {
+		mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, fmt.Errorf("test error"))
+		defer mockUnmarshal.Reset()
+		testReturn.msg, testReturn.msgBody, testReturn.err = mrc.ReceiveMsg(mq, tool)
+		convey.So(testReturn.msg, convey.ShouldBeNil)
+		convey.So(testReturn.msgBody, convey.ShouldResemble, storage.MsgBody{})
+		convey.So(testReturn.err, convey.ShouldBeNil)
+	})
+	convey.Convey("TestReceiveMsg test enqueue success return nil", t, func() {
+		testReturn.msg, testReturn.msgBody, testReturn.err = mrc.ReceiveMsg(mq, tool)
 		convey.So(testReturn.msg, convey.ShouldBeNil)
 		convey.So(testReturn.msgBody, convey.ShouldResemble, storage.MsgBody{})
 		convey.So(testReturn.err, convey.ShouldBeNil)

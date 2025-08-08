@@ -673,7 +673,7 @@ func buildInitTest() []initTest {
 			name:    "02-init plugin not register test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
 			args:    initArgs{vcJob: tJob},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	return tests

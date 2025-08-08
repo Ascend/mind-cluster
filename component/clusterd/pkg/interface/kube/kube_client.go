@@ -17,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
@@ -167,4 +168,73 @@ func GetJobEvent(namespace, name, jobType string) (*v1.EventList, error) {
 		return nil, err
 	}
 	return events, nil
+}
+
+// CreateOrUpdateSuperPodFaultInfo create or update fault job info configmap
+func CreateOrUpdateSuperPodFaultInfo(jobId string, faultInfos map[int]api.SuperPodFaultInfos) {
+	for i := 0; i < constant.RetryTime; i++ {
+		cm, getErr := GetConfigMap(api.FaultJobCmName, api.ClusterNS)
+		if getErr != nil && !errors.IsNotFound(getErr) {
+			hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+			time.Sleep(time.Second * time.Duration(i))
+			continue
+		}
+		if cm != nil && cm.Data == nil {
+			cm = &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      api.FaultJobCmName,
+					Namespace: api.ClusterNS,
+				},
+				Data: map[string]string{},
+			}
+		}
+		faultData, err := json.Marshal(faultInfos)
+		if err != nil {
+			hwlog.RunLog.Errorf("marshal fault info failed, err:%v", err)
+			return
+		}
+		cm.Data[jobId] = string(faultData)
+		if getErr != nil && errors.IsNotFound(getErr) {
+			if _, createErr := CreateConfigMap(cm); createErr != nil {
+				hwlog.RunLog.Errorf("create configmap fault-job-info err:%v", createErr)
+			}
+			return
+		}
+		if _, updateErr := UpdateConfigMap(cm); updateErr != nil {
+			hwlog.RunLog.Errorf("update configmap fault-job-info err:%v", updateErr)
+			time.Sleep(time.Second * time.Duration(i))
+			continue
+		}
+		return
+	}
+}
+
+// RecoverFaultJobInfoCm update cm
+func RecoverFaultJobInfoCm(jobId string) {
+	if k8sClient == nil || k8sClient.ClientSet == nil {
+		return
+	}
+	time.Sleep(constant.ReleaseTimeOut)
+	for i := 0; i < constant.RetryTime; i++ {
+		cm, getErr := GetConfigMap(api.FaultJobCmName, api.ClusterNS)
+		if getErr != nil {
+			if errors.IsNotFound(getErr) {
+				hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+				return
+			}
+			hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+			continue
+		}
+		if _, ok := cm.Data[jobId]; !ok {
+			hwlog.RunLog.Errorf("configmap fault-job-info not found jobId:%s", jobId)
+			return
+		}
+		delete(cm.Data, jobId)
+		if _, updateErr := UpdateConfigMap(cm); updateErr != nil {
+			hwlog.RunLog.Errorf("update configmap fault-job-info err:%v", updateErr)
+			time.Sleep(time.Second)
+		}
+		hwlog.RunLog.Infof("delete jobId:%s from configmap fault-job-info success", jobId)
+		return
+	}
 }

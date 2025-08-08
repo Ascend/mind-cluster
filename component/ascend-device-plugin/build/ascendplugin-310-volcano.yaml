@@ -108,9 +108,6 @@ spec:
             mountPath: /var/log/mindx-dl/devicePlugin
           - name: tmp
             mountPath: /tmp
-          - name: containerd
-            mountPath: /run/containerd
-            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
@@ -140,9 +137,6 @@ spec:
         - name: tmp
           hostPath:
             path: /tmp
-        - name: containerd
-          hostPath:
-            path: /run/containerd # the path to the directory containing the container runtime's socket file on the node
         - name: localtime
           hostPath:
             path: /etc/localtime

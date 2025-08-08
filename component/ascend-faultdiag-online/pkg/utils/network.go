@@ -26,8 +26,8 @@ import (
 	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
-// GetNodeIP get the ip address of node pod
-func GetNodeIP() (string, error) {
+// GetNodeIp get the ip address of node pod
+func GetNodeIp() (string, error) {
 	// 获取环境变量 XDL_IP
 	xdlIp := os.Getenv(constants.XdlIpField)
 	// 如果环境变量存在，直接返回
@@ -36,7 +36,7 @@ func GetNodeIP() (string, error) {
 	}
 
 	// 如果没有环境变量，输出警告并调用 GetLocalIP 获取本地 IP
-	hwlog.RunLog.Warnf("%v environment variable not set.", constants.XdlIpField)
+	hwlog.RunLog.Warnf("%v environment variable not set", constants.XdlIpField)
 	// 获取本地所有网络接口的地址
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -56,8 +56,8 @@ func GetNodeIP() (string, error) {
 	return "", fmt.Errorf("no valid IP address found")
 }
 
-// GetClusterIP get the ip address of cluster pod
-func GetClusterIP() string {
+// GetClusterIp get the ip address of cluster pod
+func GetClusterIp() string {
 	podIP := os.Getenv(constants.PodIP)
 	return podIP
 }

@@ -26,7 +26,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerd/containerd"
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -39,7 +38,6 @@ import (
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 )
@@ -77,10 +75,6 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		return nil
 	}
 	device.InitResetInfoMgr(hdm.manager.GetKubeClient())
-	if err := hdm.setContainerdClient(); err != nil {
-		hwlog.RunLog.Warnf("set containerd client failed, "+
-			"unable to get correct container used chip information, err: %v", err)
-	}
 	if err := hdm.checkSupportedProductType(); err != nil {
 		hwlog.RunLog.Errorf("check supported product type failed, err: %v", err)
 		return nil
@@ -275,18 +269,6 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 	return nil
 }
 
-func (hdm *HwDevManager) setContainerdClient() error {
-	if !utils.IsExist(common.DefaultContainerdSockPath) {
-		return fmt.Errorf("containerd socket file not exist")
-	}
-	client, err := containerd.New(common.DefaultContainerdSockPath)
-	if err != nil {
-		return err
-	}
-	hdm.manager.SetContainerdClient(client)
-	return nil
-}
-
 func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 	result := common.SuperPodInfo{
 		ScaleType:  common.ScaleTypeAbnormal,
@@ -426,6 +408,9 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 
 	// complete the fault codes that cannot be reported by the event subscribe interface
 	hdm.mendSubscribeFaultEvents()
+	if err := hdm.updatePodAnnotation(); err != nil {
+		hwlog.RunLog.Error(err)
+	}
 	hdm.updateDeviceUsedInfo(hdm.groupDevice)
 	hdm.notifyToK8s(ctx, initTime)
 
@@ -622,7 +607,7 @@ func faultDevice(deviceInfo *common.NpuDevice) {
 		Assertion:       npuCommon.FaultOccur,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
-	common.SaveDevFaultInfo(faultInfo)
+	common.DoSaveDevFaultInfo(faultInfo, false)
 	hwlog.RunLog.Infof("create non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
 		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
@@ -634,7 +619,7 @@ func recoverDevice(deviceInfo *common.NpuDevice) {
 		Assertion:       npuCommon.FaultRecover,
 		AlarmRaisedTime: time.Now().UnixMilli(),
 	}
-	common.SaveDevFaultInfo(faultInfo)
+	common.DoSaveDevFaultInfo(faultInfo, false)
 	hwlog.RunLog.Infof("recover non-K8s abnormal occupy chip fault, device logicID:%v, fault code:%v",
 		deviceInfo.LogicID, strconv.FormatInt(faultInfo.EventID, common.Hex))
 }
@@ -855,9 +840,6 @@ func (hdm *HwDevManager) useVolcanoNotify() {
 			hwlog.RunLog.Warn("device plugin first reset annotation and config map error")
 		}
 	})
-	if err := hdm.updatePodAnnotation(); err != nil {
-		hwlog.RunLog.Error(err)
-	}
 	hdm.manager.DoWithVolcanoListAndWatch(hdm.groupDevice)
 }
 
@@ -878,10 +860,6 @@ func (hdm *HwDevManager) SignCatch(cancel context.CancelFunc) {
 		cancel()
 		hdm.stopAllSever()
 		hdm.manager.GetDmgr().ShutDown()
-		ctrClient := hdm.manager.GetContainerdClient()
-		if ctrClient != nil {
-			ctrClient.Close()
-		}
 		hdm.SwitchDevManager.ShutDownSwitch()
 	}
 }

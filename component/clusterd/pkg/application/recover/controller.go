@@ -511,7 +511,7 @@ func (ctl *EventController) selectSendChannel(ctx context.Context, sendChan chan
 		hwlog.RunLog.Infof("context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
 		return true
 	case <-stream.Context().Done():
-		ctl.reset(true)
+		ctl.reset(false)
 		hwlog.RunLog.Infof("stream context done, jobId=%s break listen sendChan", ctl.jobInfo.JobId)
 		return true
 	case signal, ok := <-sendChan:
@@ -595,7 +595,7 @@ func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.Resp
 		constant.NotifyFaultFlushingOperation)
 	if err != nil {
 		hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
-		return common.NotifyFinishEvent, common.OperateConfigMapError, nil
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
 	}
 	hwlog.RunLog.Infof("write configmap FaultFlushing success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	return common.NotifyFinishEvent, common.OK, nil
@@ -879,6 +879,7 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	if !job.GetJobIsExists(ctl.jobInfo.JobId) {
 		return "", common.JobNotExist, fmt.Errorf("jobId=%s not exist", ctl.jobInfo.JobId)
 	}
+
 	retryFaults, normalFaults := ctl.takeRetryFault2NormalFault()
 	// if len(ctl.cacheRetryFault) still bigger than 0 after takeRetryFault2NormalFault
 	// that means job support retry strategy, and it's first time choose strategy case only have uce fault
@@ -974,12 +975,6 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 		return ctl.chooseForRetryFail(), nil
 	} else if res.Strategy == constant.ProcessRecoverStrategyName {
 		return ctl.chooseForRecoverFail(), nil
-	} else if res.Strategy == constant.ProcessDumpStrategyName &&
-		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.PtFramework {
-		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
-		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
-		// it goes through the failure recovery state machine again.
-		return constant.ProcessDumpStrategyName, nil
 	}
 	return constant.ProcessExitStrategyName, nil
 }
@@ -993,6 +988,13 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 	}
 	var err error
 	signal.ChangeStrategy, err = ctl.chooseStrategy()
+	if signal.ChangeStrategy == constant.ProcessDumpStrategyName &&
+		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.MsFramework {
+		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
+		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
+		// it goes through the failure recovery state machine again.
+		signal.ChangeStrategy = constant.ProcessExitStrategyName
+	}
 	if err != nil {
 		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
@@ -1154,6 +1156,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 	case constant.ProcessRecoverStrategyName:
 		if result.RecoverSuccess {
+			go kube.RecoverFaultJobInfoCm(ctl.jobInfo.JobId)
 			ctl.updateFixResult(result.Strategy, constant.RecoverSuccess)
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
@@ -1166,8 +1169,6 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		}
 		if result.RecoverSuccess {
 			ctl.updateFixResult(result.Strategy, constant.DumpSuccess)
-		} else if result.Code == common.UnRecoverableRetryError && ctl.isSwitchingNic() {
-			return common.SwitchNicFailRecoverEvent, common.OK, nil
 		} else {
 			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
 		}

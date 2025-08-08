@@ -32,7 +32,7 @@ class TestManager(unittest.TestCase):
         cython_api.lib = None
         result = self.manager.init_taskd_manager(self.config)
         self.assertFalse(result)
-        mock_error.assert_called_once_with("the libtaskd.so has not been loaded!")
+        mock_error.assert_called_once_with("the libtaskd.so has not been loaded")
 
     @patch.object(run_log, 'error')
     @patch.object(run_log, 'info')
@@ -70,7 +70,7 @@ class TestManager(unittest.TestCase):
         cython_api.lib = None
         result = self.manager.start_taskd_manager()
         self.assertFalse(result)
-        mock_error.assert_called_once_with("the libtaskd.so has not been loaded!")
+        mock_error.assert_called_once_with("the libtaskd.so has not been loaded")
 
     @patch.object(run_log, 'error')
     @patch.object(run_log, 'info')

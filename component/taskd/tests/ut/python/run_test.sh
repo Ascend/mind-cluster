@@ -16,13 +16,14 @@ set -e
 CUR_PATH=$(cd "$(dirname $0)" || exit; pwd)
 TEST_MODULE=("framework")
 TOP_DIR=$(realpath "${CUR_PATH}"/../../..)
-export PYTHONPATH="${TOP_DIR}:${PYTHONPATH}"
+export PYTHONPATH="${TOP_DIR}:${CUR_PATH}:${PYTHONPATH}"
 PYTHON_PKG=${TOP_DIR}/taskd/python
 OUTPUT_DIR="${TOP_DIR}"/test/ut/python
 TEMP_DIR=${TOP_DIR}/tests/ut/python/test
 
 function unit_test() {
-    python3 -m pytest --cov=${PYTHON_PKG} --cov-report=html --cov-report=xml --junit-xml=${TEMP_DIR}/test.xml \
+    python3 -m pytest --cov=${PYTHON_PKG} --cov-report=html --cov-report=xml \
+    --cov-config=${CUR_PATH}/.coveragerc --junit-xml=${TEMP_DIR}/test.xml \
     --html=${TEMP_DIR}/api.html --self-contained-html --durations=5 -vv --cov-branch
     RET=$?
     if [ ${RET} -ne 0 ]; then
