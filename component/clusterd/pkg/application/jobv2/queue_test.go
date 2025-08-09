@@ -183,3 +183,130 @@ func TestPodGroupMessage(t *testing.T) {
 		})
 	})
 }
+
+func TestChecker(t *testing.T) {
+	convey.Convey("Checker function test suite", t, func() {
+		testContextCancelation()
+		testHourTimerTrigger()
+		testCheckQueueBlockTrueCase()
+		testMinuteTimerTrigger()
+	})
+}
+
+func testContextCancelation() {
+	convey.Convey("Should exit when context is canceled", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		hourCh := make(chan time.Time, 1)
+		minuteCh := make(chan time.Time, 1)
+		patches := gomonkey.NewPatches()
+		patches.ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker {
+			if d == time.Hour {
+				return &time.Ticker{C: hourCh}
+			}
+			return &time.Ticker{C: minuteCh}
+		})
+		defer patches.Reset()
+
+		exit := false
+		go func() {
+			Checker(ctx)
+			exit = true
+		}()
+
+		cancel()
+		time.Sleep(time.Second)
+		convey.ShouldBeTrue(exit)
+	})
+}
+
+func testHourTimerTrigger() {
+	convey.Convey("Should execute hour logic when hour timer triggers", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		hourCh := make(chan time.Time, 1)
+		patches := gomonkey.NewPatches()
+		patches.ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker {
+			if d == time.Hour {
+				return &time.Ticker{C: hourCh}
+			}
+			return &time.Ticker{C: make(chan time.Time)}
+		})
+		defer patches.Reset()
+
+		checkCalled := false
+		addUpdateCalled := false
+		patches.ApplyFunc(checkQueueBlock, func() bool {
+			checkCalled = true
+			return false
+		})
+		patches.ApplyFunc(addUpdateMessageIfOutdated, func() {
+			addUpdateCalled = true
+		})
+
+		go Checker(ctx)
+		hourCh <- time.Now()
+		time.Sleep(time.Second)
+
+		convey.So(checkCalled, convey.ShouldBeTrue)
+		convey.So(addUpdateCalled, convey.ShouldBeTrue)
+	})
+}
+
+func testCheckQueueBlockTrueCase() {
+	convey.Convey("Should not call addUpdate when checkQueueBlock returns true", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		hourCh := make(chan time.Time, 1)
+		patches := gomonkey.NewPatches()
+		patches.ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker {
+			return &time.Ticker{C: hourCh}
+		})
+		defer patches.Reset()
+
+		addUpdateCalled := false
+		patches.ApplyFunc(checkQueueBlock, func() bool {
+			return true
+		})
+		patches.ApplyFunc(addUpdateMessageIfOutdated, func() {
+			addUpdateCalled = true
+		})
+
+		go Checker(ctx)
+		hourCh <- time.Now()
+		time.Sleep(time.Second)
+
+		convey.So(addUpdateCalled, convey.ShouldBeFalse)
+	})
+}
+
+func testMinuteTimerTrigger() {
+	convey.Convey("Should call preDeleteToDelete when minute timer triggers", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		minuteCh := make(chan time.Time, 1)
+		patches := gomonkey.NewPatches()
+		patches.ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker {
+			if d == time.Minute {
+				return &time.Ticker{C: minuteCh}
+			}
+			return &time.Ticker{C: make(chan time.Time)}
+		})
+		defer patches.Reset()
+
+		preDeleteCalled := false
+		patches.ApplyFunc(preDeleteToDelete, func() {
+			preDeleteCalled = true
+		})
+
+		go Checker(ctx)
+		minuteCh <- time.Now()
+		time.Sleep(time.Second)
+
+		convey.So(preDeleteCalled, convey.ShouldBeTrue)
+	})
+}

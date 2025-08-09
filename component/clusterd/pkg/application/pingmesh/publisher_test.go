@@ -5,11 +5,13 @@ package pingmesh
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
@@ -241,5 +243,86 @@ func TestTickerCheckSuperPodDevice(t *testing.T) {
 		go TickerCheckSuperPodDevice(ctx)
 		time.Sleep(time.Second)
 		convey.So(true, convey.ShouldBeTrue)
+	})
+}
+
+func TestUpdateSuperPodDeviceFile(t *testing.T) {
+	convey.Convey("Test superPodDeviceFile", t, func() {
+		convey.Convey("case 1: device is nil. expect return nil", func() {
+			convey.ShouldBeNil(updateSuperPodDeviceFile(nil, "", false))
+		})
+		spd := &api.SuperPodDevice{
+			Version:       "test_version",
+			SuperPodID:    "test_id",
+			NodeDeviceMap: nil,
+		}
+		convey.Convey("case 2: writeJsonData failed. expect return err", func() {
+			patches := gomonkey.ApplyFuncReturn(writeJsonDataByteToFile, fmt.Errorf("fake error"))
+			defer patches.Reset()
+			convey.ShouldNotBeNil(updateSuperPodDeviceFile(spd, "", false))
+		})
+		convey.Convey("case 3: writeJsonData success. expect return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(writeJsonDataByteToFile, nil)
+			defer patches.Reset()
+			convey.ShouldBeNil(updateSuperPodDeviceFile(spd, "", false))
+		})
+	})
+}
+
+func TestHandleFileUpdate(t *testing.T) {
+	convey.Convey("Test handleFileUpdate", t, func() {
+		publishMgr.filePublishLogMap[testSuperPodID] = &publishLog{
+			publishKey:   testSuperPodID,
+			preCheckCode: testCheckCode,
+		}
+		convey.Convey("case 1: super pod id exist and content not change."+
+			"expect return nil", func() {
+			convey.ShouldBeNil(handleFileUpdate(testSuperPodID, nil, testCheckCode, false))
+		})
+		convey.Convey("case 2: updateSuperPodDeviceFile failed. expect return err", func() {
+			patches := gomonkey.ApplyFuncReturn(updateSuperPodDeviceFile, fmt.Errorf(""))
+			defer patches.Reset()
+			convey.ShouldNotBeNil(handleFileUpdate(testSuperPodID, nil, testCheckCode+testCheckCode, false))
+		})
+		convey.Convey("case 3: updateSuperPodDeviceFile failed. expect return err", func() {
+			patches := gomonkey.ApplyFuncReturn(updateSuperPodDeviceFile, nil).
+				ApplyFuncReturn(saveConfigToFile, fmt.Errorf(""))
+			defer patches.Reset()
+			convey.ShouldNotBeNil(handleFileUpdate(testSuperPodID, nil, testCheckCode+testCheckCode, false))
+		})
+		convey.Convey("case 4: file update success. expect return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(updateSuperPodDeviceFile, nil).
+				ApplyFuncReturn(saveConfigToFile, nil)
+			defer patches.Reset()
+			convey.ShouldNotBeNil(handleFileUpdate(testSuperPodID, nil, testCheckCode+testCheckCode, false))
+			convey.ShouldEqual(publishMgr.filePublishLogMap[testSuperPodID].preCheckCode, testCheckCode+testCheckCode)
+		})
+	})
+}
+
+func TestHandleCmDelete(t *testing.T) {
+	convey.Convey("Test handleCmDelete", t, func() {
+		convey.Convey("case 1: DeleteConfigMap failed. expect return err when err is NotFound err", func() {
+			patch := gomonkey.ApplyFuncReturn(kube.DeleteConfigMap, fmt.Errorf(""))
+			defer patch.Reset()
+			convey.ShouldNotBeNil(handleCmDelete(testSuperPodID))
+			patch.ApplyFuncReturn(errors.IsNotFound, true)
+			convey.ShouldBeNil(handleCmDelete(testSuperPodID))
+		})
+	})
+}
+
+func TestHandleFileDelete(t *testing.T) {
+	convey.Convey("Test handleFileDelete", t, func() {
+		convey.Convey("case 1: deleteSuperPodFile failed. expect return err", func() {
+			patch := gomonkey.ApplyFuncReturn(deleteSuperPodFile, fmt.Errorf("fake error"))
+			defer patch.Reset()
+			convey.ShouldNotBeNil(handleFileDelete(testSuperPodID))
+		})
+		convey.Convey("case 2: deleteSuperPodFile success. expect return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(deleteSuperPodFile, nil)
+			defer patch.Reset()
+			convey.ShouldBeNil(handleFileDelete(testSuperPodID))
+		})
 	})
 }
