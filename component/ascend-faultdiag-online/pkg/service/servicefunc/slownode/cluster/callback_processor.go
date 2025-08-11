@@ -147,7 +147,7 @@ func reportSlowNode(ctx *slownodejob.JobContext, result *slownode.ClusterAlgoRes
 			FaultId:       ctx.Job.JobId,
 			FaultType:     "Node",
 			FaultCode:     fc,
-			FaultTime:     time.Now().Unix(),
+			FaultTime:     time.Now().UnixMilli(),
 			Assertion:     "once",
 			FaultLocation: map[string]string{},
 			Influence: []*pubfault.PubFaultInfo{

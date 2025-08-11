@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/constants"
 	"ascend-faultdiag-online/pkg/utils/grpc/profiling"
@@ -35,8 +36,10 @@ import (
 )
 
 const (
-	on  = "on"
-	off = "off"
+	on        = "on"
+	off       = "off"
+	maxRetry  = 20
+	sleepTime = 3 * time.Second
 )
 
 // Client is a grpc client struct
@@ -143,9 +146,20 @@ func (c *Client) StopHeavyProfiling(name, namespace string) error {
 
 // profilingSwitch is a switch for profiling
 func (c *Client) profilingSwitch(data *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
-	ctx := context.Background()
-	res, err := c.tc.ModifyTrainingDataTraceSwitch(ctx, data)
-	return res, err
+	var res *profiling.DataTypeRes
+	var err error
+	for count := 0; count < maxRetry; count++ {
+		res, err = c.tc.ModifyTrainingDataTraceSwitch(context.Background(), data)
+		if err == nil {
+			return res, nil
+		}
+		if count < maxRetry-1 {
+			hwlog.RunLog.Warnf("[FD-OL]call grpc failed: %v, retry: %d/%d", err, count+1, maxRetry)
+			time.Sleep(sleepTime)
+		}
+	}
+	hwlog.RunLog.Errorf("[FD-OL]reached the max try: %d, and got err: %v", maxRetry, err)
+	return nil, err
 }
 
 // ReportFault report fault to clusterd
@@ -164,13 +178,20 @@ func (c *Client) ReportFault(faults []*pubfault.Fault) error {
 
 // SendToPubFaultCenter send fault to public fault center
 func (c *Client) SendToPubFaultCenter(data *pubfault.PublicFaultRequest) (*pubfault.RespStatus, error) {
-	ctx := context.Background()
-
-	res, err := c.pf.SendPublicFault(ctx, data)
-	if err != nil {
-		return res, err
+	var res *pubfault.RespStatus
+	var err error
+	for count := 0; count < maxRetry; count++ {
+		res, err = c.pf.SendPublicFault(context.Background(), data)
+		if err == nil {
+			return res, nil
+		}
+		if count < maxRetry-1 {
+			hwlog.RunLog.Warnf("[FD-OL]call grpc failed: %v, retry: %d/%d", err, count+1, maxRetry)
+			time.Sleep(sleepTime)
+		}
 	}
-	return res, nil
+	hwlog.RunLog.Errorf("[FD-OL]reached the max try: %d, and got err: %v", maxRetry, err)
+	return nil, err
 }
 
 var (
