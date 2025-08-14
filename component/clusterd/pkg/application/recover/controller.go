@@ -71,7 +71,14 @@ type EventController struct {
 	reportStatusChan          chan *pb.RecoverStatusRequest
 	scheduleResultChan        chan bool
 	isChanClosed              bool
+	jobCanceled               bool
 	lock                      sync.RWMutex
+}
+
+func catchException() {
+	if err := recover(); err != nil {
+		hwlog.RunLog.Warnf("catch exception: %v", err)
+	}
 }
 
 // NewEventController return pointer of EventController
@@ -174,6 +181,7 @@ func (ctl *EventController) reset(stop bool) {
 		ctl.isChanClosed = true
 	}
 	if stop {
+		ctl.jobCanceled = true
 		return
 	}
 	ctl.initControllerChan()
@@ -233,12 +241,23 @@ func (ctl *EventController) selectKeepAlive(ctx context.Context, sendChan chan *
 			JobId:      ctl.jobInfo.JobId,
 			SignalType: constant.KeepAliveSignalType,
 		}
-		select {
-		case sendChan <- signal:
-			return false
-		case <-ctx.Done():
-			return true
-		}
+
+		var sendResult bool
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					sendResult = true
+				}
+			}()
+			select {
+			case sendChan <- signal:
+				sendResult = false
+			case <-ctx.Done():
+				sendResult = true
+			}
+		}()
+
+		return sendResult
 	}
 }
 
@@ -401,6 +420,7 @@ func (ctl *EventController) addEvent(event string) {
 		hwlog.RunLog.Errorf("jobId=%s, event chan is nil", ctl.jobInfo.JobId)
 		return
 	}
+	defer catchException()
 	select {
 	case <-ctx.Done():
 		hwlog.RunLog.Warnf("event add fail, controller context canceled, jobId=%s, uuid=%s, event=%s",
@@ -473,6 +493,7 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 	}
 	if err != nil {
 		if ctl.isSwitchingNic() {
+			defer catchException()
 			ctl.switchNicResponse <- &pb.SwitchNicResponse{
 				Msg:   "switch nic failed, send signal failed",
 				JobID: ctl.jobInfo.JobId,
@@ -547,6 +568,7 @@ func (ctl *EventController) signalEnqueue(signal *pb.ProcessManageSignal) (strin
 		hwlog.RunLog.Errorf("jobId=%s, sendChan is nil", ctl.jobInfo.JobId)
 		return "", common.SignalQueueBusy, errors.New("sendChan is nil")
 	}
+	defer catchException()
 	select {
 	case sendChan <- signal:
 		hwlog.RunLog.Infof("signal enqueue, jobId=%s, uuid=%s, signalType=%s, strategy=%s, faults=%s",
@@ -1250,6 +1272,7 @@ func (ctl *EventController) handleKillJob() (string, common.RespCode, error) {
 		FaultRanks:     nil,
 		ChangeStrategy: "",
 	}
+	defer catchException()
 	select {
 	case sendChan <- signal:
 		hwlog.RunLog.Infof("kill master signal enqueue, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
@@ -1307,6 +1330,7 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 		hwlog.RunLog.Warnf("resultCh is nil, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 		return
 	}
+	defer catchException()
 	select {
 	case ch <- pgRunning:
 		hwlog.RunLog.Infof("schedule result enqueue success, jobId=%s, value=%s",
@@ -1321,6 +1345,9 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 func (ctl *EventController) listenScheduleResult() {
 	pgRunning := false
 	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
+		if ctl.jobCanceled {
+			return
+		}
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Infof("check pg running %d times", i)
 		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {

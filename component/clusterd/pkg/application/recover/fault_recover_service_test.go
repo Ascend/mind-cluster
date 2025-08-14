@@ -666,3 +666,18 @@ func TestFaultRecoverServiceHealthCheck(t *testing.T) {
 		})
 	})
 }
+
+func TestCatchAndSetExceptionInfo_Panic(t *testing.T) {
+	ctl := &EventController{}
+	var code int32 = int32(common.OK)
+	var info string = "original info"
+
+	func() {
+		defer catchAndSetExceptionInfo(&code, &info, ctl)
+		panic("channel closed")
+	}()
+
+	if code != int32(common.ServerInnerError) {
+		t.Errorf("expect code is %d，actual is %d", common.ServerInnerError, code)
+	}
+}
