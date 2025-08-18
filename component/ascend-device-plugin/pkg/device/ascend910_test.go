@@ -3123,3 +3123,51 @@ func TestTryDeviceReset(t *testing.T) {
 		})
 	})
 }
+
+// TestCheckFaultIsExist tests the checkFaultIsExist function
+func TestCheckFaultIsExist(t *testing.T) {
+	manager := createFake910Manager()
+	manager.hotResetManager = &HotResetTools{}
+
+	convey.Convey("Test checkFaultIsExist", t, func() {
+		convey.Convey("01-no ascend 910 device, should return true", func() {
+			classifyDevs := map[string][]*common.NpuDevice{}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("02-get reset index failed, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return -1, testErr
+				})
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					{LogicID: 0},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{LogicID: 0})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("03-fault device exists in the same ring, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return 0, nil
+				})
+			defer patch.Reset()
+			patch.ApplyMethodReturn(manager.hotResetManager, "GetGlobalDevFaultInfo", &common.DevFaultInfo{}, nil)
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					{LogicID: 0},
+					{LogicID: 1},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{LogicID: 0})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+	})
+}

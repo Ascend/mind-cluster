@@ -422,6 +422,10 @@ func (hnm *HwAscend910Manager) handleResetProcess(classifyDevs map[string][]*com
 		common.ParamOption.RealCardType == common.Ascend910A3 {
 		hwlog.RunLog.Infof("sleep before hotReset case hotReset=2, devInfo=%v", devInfo)
 		time.Sleep(common.SleepMinutesForA3Reset * time.Minute)
+		if !hnm.checkFaultIsExist(classifyDevs, npuDev) {
+			hwlog.RunLog.Infof("device id <%v> fault is not exist, stop reset device", npuDev.LogicID)
+			return
+		}
 	}
 	if err := hnm.execHotReset(devInfo); err != nil {
 		hwlog.RunLog.Errorf("execute hot reset failed, err %v", err)
@@ -437,6 +441,39 @@ func (hnm *HwAscend910Manager) handleResetProcess(classifyDevs map[string][]*com
 		return
 	}
 	common.SetDeviceInit(devInfo.LogicId)
+}
+
+func (hnm *HwAscend910Manager) checkFaultIsExist(classifyDevs map[string][]*common.NpuDevice, npuDev *common.NpuDevice) bool {
+	devList, ok := classifyDevs[common.Ascend910]
+	if !ok {
+		hwlog.RunLog.Error("no ascend 910 device, upgrade hot reset error fail")
+		// get error consider fault exist
+		return true
+	}
+	resetIdx, err := hnm.getResetIndex(npuDev)
+	if err != nil {
+		hwlog.RunLog.Errorf("get reset index failed, err: %v", err)
+		// get error consider fault exist
+		return true
+	}
+	for _, dev := range devList {
+		idx, err := hnm.getResetIndex(dev)
+		if err != nil || idx != resetIdx {
+			continue
+		}
+		tempFaultInfo := hnm.getDevFaultInfo(dev.LogicID)
+		if tempFaultInfo != nil {
+			return true
+		}
+	}
+	cardId, deviceId, err := hnm.GetDmgr().GetCardIDDeviceID(npuDev.LogicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get reset device card id and device id, err %v", err)
+		// get error consider fault exist
+		return true
+	}
+	FreeBusyDev(cardId, deviceId)
+	return false
 }
 
 func (hnm *HwAscend910Manager) upgradeHotResetError(classifyDevs map[string][]*common.NpuDevice,
