@@ -410,6 +410,9 @@ func CheckPodNameOrSpace(checkItem, podParam string, maxLength int) error {
 
 // IsNPUTask to judge the task either is NPU task or not.
 func IsNPUTask(nT *api.TaskInfo) bool {
+	if nT == nil || nT.Resreq == nil {
+		return false
+	}
 	for k := range nT.Resreq.ScalarResources {
 		// must contain "huawei.com/"
 		if strings.Contains(string(k), HwPreName) {
