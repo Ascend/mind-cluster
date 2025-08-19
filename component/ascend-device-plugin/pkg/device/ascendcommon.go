@@ -271,21 +271,30 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and " +
 				"timeDiff less than 5 minutes, no need to update")
+
 			return true, nil
+		}
+		if manuallySeparateNPU != "" {
+			hwlog.RunLog.Infof("get ManuallySeparateNPU from configMap, ManuallySeparateNPU:[%v] are unhealthy",
+				manuallySeparateNPU)
 		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
 			return false, nil
 		}
-		tool.lastUpdateTimeStamp = time.Now()
-		tool.lastManuallySeparateNPU = manuallySeparateNPU
-		tool.lastSwitchFaultInfo = switchFaultInfo
+		tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo)
 		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
 			tool.lastUpdateTimeStamp.Format(time.RFC3339))
 		return true, nil
 	})
 	return waitErr
+}
+
+func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo) {
+	tool.lastUpdateTimeStamp = time.Now()
+	tool.lastManuallySeparateNPU = manuallySeparateNPU
+	tool.lastSwitchFaultInfo = switchFaultInfo
 }
 
 func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
