@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -44,6 +45,234 @@ func init() {
 	if err := hwlog.InitRunLogger(&logConfig, ctx); err != nil {
 		fmt.Printf("hwlog init failed, error is %v", err)
 	}
+}
+
+func TestCheckPath01(t *testing.T) {
+	convey.Convey("test CheckPath", t, func() {
+		convey.Convey("01-string check fail, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, false)
+			defer patches.Reset()
+			err := CheckPath("", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "invalid path")
+		})
+
+		convey.Convey("02-path contains .., should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true)
+			defer patches.Reset()
+			err := CheckPath("/some/../path", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "err path")
+		})
+
+		convey.Convey("03-get abs path error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "", testError)
+			defer patches.Reset()
+			err := CheckPath("/valid/path", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "get abs path failed")
+		})
+
+		convey.Convey("04-path too long, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "/valid/path", nil).
+				ApplyFuncReturn(filepath.Base, strings.Repeat("a", DefaultStringSize+1))
+			defer patches.Reset()
+			err := CheckPath("/valid/path", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "path too long")
+		})
+
+		convey.Convey("05-eval symlinks error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "/valid/path", nil).
+				ApplyFuncReturn(filepath.Base, "path").
+				ApplyFuncReturn(filepath.EvalSymlinks, "", testError)
+			defer patches.Reset()
+			err := CheckPath("/valid/path", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "symlinks or not existed")
+		})
+	})
+}
+
+func TestCheckPath02(t *testing.T) {
+	convey.Convey("test CheckPath", t, func() {
+		convey.Convey("06-symlink not allowed but path is symlink, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "/valid/path", nil).
+				ApplyFuncReturn(filepath.Base, "path").
+				ApplyFuncReturn(filepath.EvalSymlinks, "/different/path", nil)
+			defer patches.Reset()
+			err := CheckPath("/valid/path", false)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "symlinks or not existed")
+		})
+
+		convey.Convey("07-symlink not allowed and path is not symlink, should return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "/valid/path", nil).
+				ApplyFuncReturn(filepath.Base, "path").
+				ApplyFuncReturn(filepath.EvalSymlinks, "/valid/path", nil)
+			defer patches.Reset()
+			err := CheckPath("/valid/path", false)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("08-symlink allowed and path is symlink, should return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(StringChecker, true).
+				ApplyFuncReturn(filepath.Abs, "/symlink/path", nil).
+				ApplyFuncReturn(filepath.Base, "path").
+				ApplyFuncReturn(filepath.EvalSymlinks, "/real/path", nil)
+			defer patches.Reset()
+			err := CheckPath("/symlink/path", true)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestCheckFileInfo01(t *testing.T) {
+	convey.Convey("test CheckFileInfo", t, func() {
+		tmpDir, filePath, err := createTestFile(t, "test_file.txt")
+		if err != nil {
+			t.Fatalf("create file failed %q: %s", filePath, err)
+		}
+		defer removeTmpDir(t, tmpDir)
+		file, err := os.Open(filePath)
+		convey.So(err, convey.ShouldBeNil)
+
+		dir, err := os.Open(tmpDir)
+		convey.So(err, convey.ShouldBeNil)
+
+		defer file.Close()
+		const validSize, invalidSize, tooBigSize = 10, -1, 1000000
+		convey.Convey("01-get file stat error, should return error", func() {
+			patch := gomonkey.ApplyMethodReturn(new(os.File), "Stat", nil, errors.New("stat error"))
+			defer patch.Reset()
+			err := CheckFileInfo(file, validSize)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "invalid file")
+		})
+
+		convey.Convey("02-not regular file, should return error", func() {
+			err := CheckFileInfo(dir, validSize)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "invalid regular file")
+		})
+
+		convey.Convey("03-size too large, should return error", func() {
+			err := CheckFileInfo(file, invalidSize)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "invalid size")
+		})
+
+		convey.Convey("05-size too large, should return error", func() {
+			err := CheckFileInfo(file, tooBigSize)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "invalid size")
+		})
+	})
+}
+
+// TestCheckFileInfo 测试 CheckFileInfo 函数的各种情况
+func TestCheckFileInfo02(t *testing.T) {
+	convey.Convey("test CheckFileInfo", t, func() {
+		tmpDir, filePath, err := createTestFile(t, "test_file.txt")
+		if err != nil {
+			t.Fatalf("create file failed %q: %s", filePath, err)
+		}
+		defer removeTmpDir(t, tmpDir)
+		file, err := os.Open(filePath)
+		convey.So(err, convey.ShouldBeNil)
+		defer func() {
+			err := file.Close()
+			convey.So(err, convey.ShouldBeNil)
+		}()
+		stat, err := file.Stat()
+		convey.So(err, convey.ShouldBeNil)
+		convey.Convey("06-permission length not right, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat.Mode().Perm(), "String", "wrong_length_perm")
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "permission not right")
+		})
+		convey.Convey("07-write permission not right for group, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat.Mode().Perm(), "String", "-rw-rw-r--")
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "write permission not right")
+		})
+		convey.Convey("08-write permission not right for other, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat.Mode().Perm(), "String", "-rw-r--rw-")
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "write permission not right")
+		})
+		convey.Convey("09-can not get stat, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat, "Sys", "not_stat_t")
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "can not get stat")
+		})
+	})
+}
+
+func TestCheckFileInfo03(t *testing.T) {
+	convey.Convey("test CheckFileInfo", t, func() {
+		tmpDir, filePath, err := createTestFile(t, "test_file.txt")
+		if err != nil {
+			t.Fatalf("create file failed %q: %s", filePath, err)
+		}
+		defer removeTmpDir(t, tmpDir)
+		file, err := os.Open(filePath)
+		convey.So(err, convey.ShouldBeNil)
+
+		defer func() {
+			err := file.Close()
+			convey.So(err, convey.ShouldBeNil)
+		}()
+
+		const expectedUid, actualUid = 9999, 1000
+		stat, err := file.Stat()
+		convey.So(err, convey.ShouldBeNil)
+		convey.Convey("10-owner not right, should return error", func() {
+			mockStat := &syscall.Stat_t{Uid: expectedUid}
+			patches := gomonkey.ApplyMethodReturn(stat, "Sys", mockStat).
+				ApplyFuncReturn(os.Getuid, actualUid)
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "owner not right")
+		})
+		convey.Convey("11-setuid not allowed, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat, "Mode", os.ModeSetuid)
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "setuid not allowed")
+		})
+		convey.Convey("12-setgid not allowed, should return error", func() {
+			patches := gomonkey.ApplyMethodReturn(stat, "Mode", os.ModeSetgid)
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "setgid not allowed")
+		})
+		convey.Convey("13-valid file, should return nil", func() {
+			mockStat := &syscall.Stat_t{Uid: 0}
+			patches := gomonkey.ApplyMethodReturn(stat, "Sys", mockStat).
+				ApplyMethodReturn(stat.Mode().Perm(), "String", "-rw-r--r--").
+				ApplyMethodReturn(stat, "Mode", os.FileMode(0))
+			defer patches.Reset()
+			err := CheckFileInfo(file, 1)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }
 
 func TestNormalFileCheckRegularFile(t *testing.T) {

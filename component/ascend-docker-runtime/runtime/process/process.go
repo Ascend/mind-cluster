@@ -18,6 +18,7 @@ package process
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -535,6 +536,9 @@ func addManagerDevice(spec *specs.Spec) error {
 }
 
 func checkVisibleDevice(spec *specs.Spec) ([]int, error) {
+	if spec.Process == nil {
+		return nil, errors.New("empty process info")
+	}
 	visibleDevices := getValueByDeviceKey(spec.Process.Env)
 	if visibleDevices == "" || visibleDevices == void {
 		return nil, nil
@@ -616,6 +620,10 @@ func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdLi
 }
 
 func modifySpecFile(path string) error {
+	if err := mindxcheckutils.CheckPath(path, true); err != nil {
+		hwlog.RunLog.Error(err)
+		return err
+	}
 	spec, err := readSpecFile(path)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to read spec file, error: %v", err)
@@ -641,8 +649,8 @@ func readSpecFile(path string) (*specs.Spec, error) {
 		return nil, fmt.Errorf("cannot open oci spec file %s: %v", path, err)
 	}
 	defer jsonFile.Close()
-	if _, err = mindxcheckutils.RealFileChecker(path, false, true,
-		mindxcheckutils.DefaultSize); err != nil {
+	if err = mindxcheckutils.CheckFileInfo(jsonFile, mindxcheckutils.DefaultSize); err != nil {
+		hwlog.RunLog.Error(err)
 		return nil, err
 	}
 	jsonContent, err := ioutil.ReadAll(jsonFile)
@@ -683,11 +691,10 @@ func writeSpecFile(path string, spec *specs.Spec) error {
 		return fmt.Errorf("cannot reopen spec file %s: %v", path, err)
 	}
 	defer jsonFile.Close()
-	if _, err = mindxcheckutils.RealFileChecker(path, false, true,
-		mindxcheckutils.DefaultSize); err != nil {
+	if err = mindxcheckutils.CheckFileInfo(jsonFile, mindxcheckutils.DefaultSize); err != nil {
+		hwlog.RunLog.Error(err)
 		return err
 	}
-
 	jsonOutput, err := json.Marshal(spec)
 	if err != nil {
 		return fmt.Errorf("failed to marshal OCI spec file: %v", err)
