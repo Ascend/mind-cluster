@@ -89,3 +89,71 @@ const (
 	// FaultJobCmName fault job cm name
 	FaultJobCmName = "fault-job-info"
 )
+
+const (
+	// PodScheduleLabel pod schedule label
+	PodScheduleLabel = "pod-rescheduling"
+	// ProcessScheduleLabel process schedule label
+	ProcessScheduleLabel = "process-recover-enable"
+	// RecoverStrategyKey recover strategy key in job annotation
+	RecoverStrategyKey = "recover-strategy"
+)
+
+// process schedule strategy
+const (
+	// RecoverStrategy recover strategy
+	RecoverStrategy = "recover"
+	// RetryStrategy retry strategy
+	RetryStrategy = "retry"
+	// InPlaceStrategy recover in place strategy
+	InPlaceStrategy = "recover-in-place"
+	// DumpStrategy dump strategy
+	DumpStrategy = "dump"
+	// ExitStrategy exit strategy
+	ExitStrategy = "exit"
+)
+
+// process schedule common env
+const (
+	// ProcessRecoverEnv process recover env
+	ProcessRecoverEnv = "PROCESS_RECOVER"
+	// ElasticRecoverEnv elastic process recover env
+	ElasticRecoverEnv = "ELASTIC_PROCESS_RECOVER_ENABLE"
+	// EnableRestartEnv enable restart env
+	EnableRestartEnv = "ENABLE_RESTART_FAULT_PROCESS"
+)
+
+// process schedule pytorch env
+const (
+	// HighAvailableEnv high available env
+	HighAvailableEnv = "HIGH_AVAILABILITY"
+)
+
+// process schedule ms env
+const (
+	// MsRecoverEnv ms recover env
+	MsRecoverEnv = "MS_ENABLE_TFT"
+	// EnableMS enable ms
+	EnableMS = "MINDIO_FOR_MINDSPORE"
+	// MsDumpStrategy ms dump strategy
+	MsDumpStrategy = "TTP:1"
+	// MsUceStrategy ms uce strategy
+	MsUceStrategy = "UCE:1"
+	// MsArfStrategy ms arf strategy
+	MsArfStrategy = "ARF:1"
+	// MsHcceStrategy ms hcce strategy
+	MsHcceStrategy = "HCCE:1"
+	// MsRscStrategy ms rsc strategy
+	MsRscStrategy = "RSC:1"
+)
+
+const (
+	//EnableFunc Enable Func
+	EnableFunc = "on"
+	// EnableFlag enable flag
+	EnableFlag = "1"
+	// PytorchFramework framework
+	PytorchFramework = "pytorch"
+	// MindSporeFramework framework
+	MindSporeFramework = "mindspore"
+)

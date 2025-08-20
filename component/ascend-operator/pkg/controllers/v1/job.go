@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
@@ -384,6 +385,7 @@ func (r *ASJobReconciler) createPodGroup(job metav1.Object, pgSpec v1beta1.PodGr
 		},
 		Spec: pgSpec,
 	}
+	addPgProcessRecoverLabel(createPodGroup)
 	createdPodGroup, err := r.VolcanoClientSet.SchedulingV1beta1().PodGroups(job.GetNamespace()).Create(context.TODO(),
 		createPodGroup, metav1.CreateOptions{})
 	if err != nil {
@@ -417,4 +419,38 @@ func (r *ASJobReconciler) DeletePodGroup(job metav1.Object) error {
 		return fmt.Errorf("unable to delete PodGroup: %v", err)
 	}
 	return nil
+}
+
+func addPgProcessRecoverLabel(pg *v1beta1.PodGroup) {
+	if pg == nil || pg.Labels == nil {
+		return
+	}
+	if isProcessRecoverJob(pg) {
+		pg.Labels[api.ProcessScheduleLabel] = api.EnableFunc
+	}
+}
+
+func isProcessRecoverJob(job metav1.Object) bool {
+	_, ok := job.GetAnnotations()[api.RecoverStrategyKey]
+	return ok
+}
+
+func getJobRecoverStrategy(ascendJob *mindxdlv1.AscendJob) string {
+	if ascendJob == nil {
+		return ""
+	}
+	if k, ok := ascendJob.Annotations[api.RecoverStrategyKey]; ok {
+		return k
+	}
+	return ""
+}
+
+func isPodScheduleStrategy(ascendJob *mindxdlv1.AscendJob) bool {
+	if ascendJob == nil {
+		return false
+	}
+	if k, ok := ascendJob.Labels[api.PodScheduleLabel]; ok {
+		return k == api.EnableFunc
+	}
+	return false
 }

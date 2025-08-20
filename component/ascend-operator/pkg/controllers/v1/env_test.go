@@ -16,6 +16,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -285,5 +286,63 @@ func fakeRefEnv(name string, downwardAPI string) corev1.EnvVar {
 				FieldPath: downwardAPI,
 			},
 		},
+	}
+}
+
+func TestAddProcessRecoverEnv(t *testing.T) {
+	convey.Convey("when job has empty recover strategy annotation", t, func() {
+		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{api.RecoverStrategyKey: ""}}}}
+		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
+			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
+		convey.So(len(pod.Spec.Containers[0].Env), convey.ShouldEqual, 0)
+	})
+
+	convey.Convey("when job has recover strategy annotation with single strategy - MindSpore", t, func() {
+		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
+		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
+			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
+		expectedEnv := map[string]string{
+			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
+			api.MsRecoverEnv: `'{` + api.MsArfStrategy + `}'`, api.EnableMS: api.EnableFlag,
+		}
+		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
+	})
+
+	convey.Convey("when job has recover strategy annotation with single strategy - PyTorch", t, func() {
+		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
+		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
+			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+		addProcessRecoverEnv(pi, pod, 0, api.PytorchFramework)
+		expectedEnv := map[string]string{
+			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
+			api.HighAvailableEnv: api.RecoverStrategy}
+		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
+	})
+	convey.Convey("when job has recover strategy annotation with multiple strategies - MindSpore", t, func() {
+		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+			api.RecoverStrategyKey: api.RecoverStrategy + "," + api.RetryStrategy}}}}
+		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
+			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
+		expectedEnv := map[string]string{
+			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
+			api.MsRecoverEnv: `'{` + api.MsArfStrategy + "," +
+				api.MsUceStrategy + "," + api.MsHcceStrategy + `}'`, api.EnableMS: api.EnableFlag}
+		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
+	})
+}
+
+func checkEnvVars(t *testing.T, envVars []corev1.EnvVar, expectedEnv map[string]string) {
+	actualEnv := make(map[string]string)
+	for _, envVar := range envVars {
+		actualEnv[envVar.Name] = envVar.Value
+	}
+	if len(actualEnv) != len(expectedEnv) {
+		t.Errorf("Expected env vars: %v, but got: %v", expectedEnv, actualEnv)
 	}
 }

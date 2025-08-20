@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	_ "ascend-operator/pkg/testtool"
@@ -619,5 +620,113 @@ func TestSyncPodGroup(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(pg, convey.ShouldResemble, fakePodGroup)
 		})
+	})
+}
+
+func TestIsProcessRecoverJob(t *testing.T) {
+	convey.Convey("isProcessRecoverJob", t, func() {
+		convey.Convey("01-job has recover strategy annotation, should return true", func() {
+			job := &mindxdlv1.AscendJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{api.RecoverStrategyKey: "some-strategy"},
+				},
+			}
+			result := isProcessRecoverJob(job)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("02-job does not have recover strategy annotation, should return false", func() {
+			job := &mindxdlv1.AscendJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+				},
+			}
+			result := isProcessRecoverJob(job)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("03-job has nil annotations, should return false", func() {
+			job := &mindxdlv1.AscendJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: nil,
+				},
+			}
+			result := isProcessRecoverJob(job)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestGetJobRecoverStrategy test getJobRecoverStrategy
+func TestGetJobRecoverStrategy(t *testing.T) {
+	convey.Convey("getJobRecoverStrategy", t, func() {
+		convey.Convey("01-ascendJob is nil, should return empty string", func() {
+			result := getJobRecoverStrategy(nil)
+			convey.So(result, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("02-ascendJob has recover strategy annotation, should return the strategy", func() {
+			expectedStrategy := "some-strategy"
+			ascendJob := &mindxdlv1.AscendJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						api.RecoverStrategyKey: expectedStrategy,
+					},
+				},
+			}
+			result := getJobRecoverStrategy(ascendJob)
+			convey.So(result, convey.ShouldEqual, expectedStrategy)
+		})
+
+		convey.Convey("03-ascendJob does not have recover strategy annotation, should return empty string", func() {
+			ascendJob := &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
+			result := getJobRecoverStrategy(ascendJob)
+			convey.So(result, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("04-ascendJob has nil annotations, should return empty string", func() {
+			ascendJob := &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: nil}}
+			result := getJobRecoverStrategy(ascendJob)
+			convey.So(result, convey.ShouldEqual, "")
+		})
+	})
+}
+
+// TestIsPodScheduleStrategy test isPodScheduleStrategy
+func TestIsPodScheduleStrategy(t *testing.T) {
+	convey.Convey("01-ascendJob is nil, should return false", t, func() {
+		result := isPodScheduleStrategy(nil)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+	convey.Convey("02-ascendJob has pod schedule label with enable value, should return true", t, func() {
+		ascendJob := &mindxdlv1.AscendJob{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{api.PodScheduleLabel: "on"}}}
+		result := isPodScheduleStrategy(ascendJob)
+		convey.So(result, convey.ShouldBeTrue)
+	})
+
+	convey.Convey("03-ascendJob has pod schedule label with disable value, should return false", t, func() {
+		ascendJob := &mindxdlv1.AscendJob{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{api.PodScheduleLabel: "disable"}},
+		}
+		result := isPodScheduleStrategy(ascendJob)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+
+	convey.Convey("04-ascendJob does not have pod schedule label, should return false", t, func() {
+		ascendJob := &mindxdlv1.AscendJob{
+			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
+		result := isPodScheduleStrategy(ascendJob)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+
+	convey.Convey("05-ascendJob has nil labels, should return false", t, func() {
+		ascendJob := &mindxdlv1.AscendJob{
+			ObjectMeta: metav1.ObjectMeta{Labels: nil},
+		}
+		result := isPodScheduleStrategy(ascendJob)
+		convey.So(result, convey.ShouldBeFalse)
 	})
 }
