@@ -206,6 +206,9 @@ const (
 	// A300IA2BoardId board id of A300I A2 and 910proB
 	A300IA2BoardId = 0x28
 
+	// A300IA2GB64BoardId board id of A300I A2 64GB
+	A300IA2GB64BoardId = 0x29
+
 	// A900A3SuperPodBin1BoardId board id of A900/A9000 A3 SuperPod Bin1
 	A900A3SuperPodBin1BoardId = 0xb0
 

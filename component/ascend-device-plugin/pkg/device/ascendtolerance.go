@@ -127,7 +127,8 @@ func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 		resetDevNumOnce = common.Ascend910RingsNum
 	case common.Ascend910B:
 		if devUsage == common.Infer {
-			if boardId == common.A300IA2BoardId || boardId == common.A800IA2NoneHccsBoardId || boardId == common.
+			if boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
+				boardId == common.A800IA2NoneHccsBoardId || boardId == common.
 				A800IA2NoneHccsBoardIdOld {
 				return common.Ascend910BRingsNumInfer
 			}

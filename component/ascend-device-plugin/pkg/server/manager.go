@@ -217,7 +217,7 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 
 	if common.ParamOption.RealCardType == common.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
 		// only auto label 300IA2 with910B card
-		if boardInfo.BoardId == common.A300IA2BoardId {
+		if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
 			newLabelMap[common.AcceleratorTypeKey] = common.A300IA2Label
 		}
 	}
@@ -700,15 +700,15 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 
 	// A800IA2 server, node labeled with server-usage=infer
 	if usage == common.Infer {
-		// server without hccs is 0x33 or 0x3c
-		if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld {
+		// server without hccs is 0x33 or 0x3c, 0x28, 0x29
+		if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld ||
+			boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId {
 			hdm.ResetWithoutHccsServer(devType, devices, prClient)
 			return
 		}
 		hdm.ResetHccsServer(devType, devices, prClient)
 		return
 	}
-
 	for _, device := range devices {
 		if device.Health == v1beta1.Healthy {
 			continue
