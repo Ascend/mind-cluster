@@ -509,7 +509,6 @@ func setIndicators(faultPath []any, rootCauseAlarm map[string]any) {
 	var minLoss = math.MaxFloat64
 	var timeStamp int64
 	var taskId string
-
 	for i := 0; i < len(faultPath); i++ {
 		curPath, ok1 := faultPath[i].(map[string]any)
 		tmpMinDelay, ok2 := curPath[minDelayConstant].(float64)

@@ -309,6 +309,11 @@ func setLayerPort(infoStr []string) string {
 		curLayerStr := strings.ReplaceAll(infoStr[i], ":0", "")
 		childLayerStr := strings.ReplaceAll(infoStr[i+1], ":0", "")
 		childLayerInfoArr := strings.Split(childLayerStr, dotIntervalChar)
+		var minLength = 2
+		if len(childLayerInfoArr) < minLength {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr is less than: %d", minLength)
+			return ""
+		}
 
 		// 获取有实际意义的目标层级字符串
 		var targetStr string
