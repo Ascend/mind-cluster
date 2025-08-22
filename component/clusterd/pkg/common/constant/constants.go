@@ -49,7 +49,7 @@ const (
 	// AscendJobRefKind reference kind is AscendJob
 	AscendJobRefKind = "AscendJob"
 	// MaxSupportNodeNum max support node num
-	MaxSupportNodeNum = 5000
+	MaxSupportNodeNum = 16000
 	// MaxSupportJobNum max support job num
 	MaxSupportJobNum = 10000
 	// MaxCmQueueLen max cm queue len support

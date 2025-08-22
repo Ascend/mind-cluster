@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"k8s.io/api/core/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -853,6 +854,178 @@ func TestIsDelayingJob(t *testing.T) {
 			result := tp.isDelayingJob(tt.fJob, tt.nodes)
 			if result != tt.expected {
 				t.Errorf("isDelayingJob() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func new910SuperPod(name string) *module910SuperPod {
+	m := &module910SuperPod{}
+	m.SetPluginName(name)
+	m.SetAnnoName(util.NPU910CardName)
+	m.SetAnnoPreVal(util.NPU910CardNamePre)
+	m.SetMaxNodeNPUNum(ascend910a3.NodeNPUNumber)
+	m.SetMaxCardNPUNum(ascend910a3.DieNPUNumber)
+	m.SetIsNetworkFaultAttention(true)
+	m.NetUnhealthyKey = ascend910a3.NetworkUnhealthyNPU
+	m.nodeVPodId = map[string]string{}
+	return m
+}
+
+// TestScoreNodeBatchForReadyJob test of scoreNodeBatchForReadyJob
+func TestScoreNodeBatchForReadyJob(t *testing.T) {
+	plg := new910SuperPod(SchedulerName)
+	plg.Name = "job1"
+	plg.SchedulerJobAttr = util.SchedulerJobAttr{
+		ComJob: util.ComJob{},
+		NPUJob: &util.NPUJob{},
+	}
+	plg.ScheduleEnv = plugin.ScheduleEnv{}
+	type args struct {
+		task *api.TaskInfo
+		job  *plugin.SchedulerJob
+		sMap map[string]float64
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "01-scoreNodeBatchForReadyJob invalid argument",
+			args: args{},
+		},
+		{
+			name: "02-scoreNodeBatchForReadyJob rankIdMap empty",
+			args: args{
+				task: test.FakeNormalTestTask("pod1", "node1", "acjob"),
+				job:  &plugin.SchedulerJob{},
+				sMap: map[string]float64{"node1": 0},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plg.scoreNodeBatchForReadyJob(tt.args.task, tt.args.job, tt.args.sMap)
+		})
+	}
+}
+
+const (
+	batchScoreNpuTask4 = 4
+	batchScoreRank0    = 0
+)
+
+func createObtainBatchScoreRankTaskInfo(jobId, rankId, spec string) *api.TaskInfo {
+	task := test.FakeNormalTestTask("pod1", "node1", "acjob")
+	task.Job = api.JobID(jobId)
+	task.Pod.Annotations[plugin.PodRankIndexKey] = rankId
+	task.Pod.Annotations[taskSpec] = spec
+	return task
+}
+
+func createBatchScoreNPUTasks(n int) map[api.TaskID]util.NPUTask {
+	tasks := make(map[api.TaskID]util.NPUTask, n)
+	for i := 0; i < n; i++ {
+		spec := workerSpec
+		if batchScoreRank0 == i {
+			spec = schedulerSpec
+		}
+		tasks[api.TaskID(strconv.Itoa(i))] = util.NPUTask{
+			Name:       "task" + strconv.Itoa(i),
+			ReqNPUName: util.NPU910CardName,
+			Annotation: map[string]string{
+				plugin.PodRankIndexKey: strconv.Itoa(i),
+				taskSpec:               spec,
+			},
+			PodStatus: v1.PodPending,
+		}
+	}
+	return tasks
+}
+
+func fakeSchedulerJobEmptyTask(jobName, namespace string) *plugin.SchedulerJob {
+	job := &plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{
+				Name:      api.JobID(jobName),
+				NameSpace: namespace,
+				Selector:  map[string]string{},
+				Label:     map[string]string{},
+			},
+			NPUJob: &util.NPUJob{
+				ReqNPUName: util.NPU910CardName,
+				ReqNPUNum:  0,
+				Tasks:      make(map[api.TaskID]util.NPUTask),
+			},
+		},
+	}
+	return job
+}
+
+type obtainBatchScoreRankArgs struct {
+	task *api.TaskInfo
+	job  *plugin.SchedulerJob
+}
+
+type obtainBatchScoreRankTest struct {
+	name string
+	args obtainBatchScoreRankArgs
+	want map[int]struct{}
+}
+
+func getObtainBatchScoreRankTestCases(jobId string) []obtainBatchScoreRankTest {
+	schedulerJob := fakeSchedulerJobEmptyTask(jobId, "")
+	schedulerJob.Tasks = createBatchScoreNPUTasks(batchScoreNpuTask4)
+	taskInfoWithoutSpecAnno := createObtainBatchScoreRankTaskInfo(jobId, "1", schedulerSpec)
+	delete(taskInfoWithoutSpecAnno.Pod.Annotations, taskSpec)
+	tests := []obtainBatchScoreRankTest{
+		{
+			name: "01-obtainBatchScoreRank invalid argument",
+			args: obtainBatchScoreRankArgs{},
+			want: nil,
+		},
+		{
+			name: "02-obtainBatchScoreRank spec not exist",
+			args: obtainBatchScoreRankArgs{
+				task: taskInfoWithoutSpecAnno,
+				job:  schedulerJob,
+			},
+			want: nil,
+		},
+		{
+			name: "03-obtainBatchScoreRank spec " + schedulerSpec,
+			args: obtainBatchScoreRankArgs{
+				task: createObtainBatchScoreRankTaskInfo(jobId, "1", schedulerSpec),
+				job:  schedulerJob,
+			},
+			want: map[int]struct{}{0: {}},
+		},
+		{
+			name: "04-obtainBatchScoreRank spec " + workerSpec,
+			args: obtainBatchScoreRankArgs{
+				task: createObtainBatchScoreRankTaskInfo(jobId, "1", workerSpec),
+				job:  schedulerJob,
+			},
+			want: map[int]struct{}{1: {}, 2: {}, 3: {}},
+		},
+	}
+	return tests
+}
+
+// TestObtainBatchScoreRank test of obtainBatchScoreRank
+func TestObtainBatchScoreRank(t *testing.T) {
+	jobId := "job1"
+	plg := new910SuperPod(SchedulerName)
+	plg.Name = api.JobID(jobId)
+	plg.SchedulerJobAttr = util.SchedulerJobAttr{
+		ComJob: util.ComJob{},
+		NPUJob: &util.NPUJob{},
+	}
+	plg.ScheduleEnv = plugin.ScheduleEnv{}
+	for _, tt := range getObtainBatchScoreRankTestCases(jobId) {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := plg.obtainBatchScoreRank(tt.args.task, tt.args.job); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("obtainBatchScoreRank() = %v, want %v", got, tt.want)
 			}
 		})
 	}

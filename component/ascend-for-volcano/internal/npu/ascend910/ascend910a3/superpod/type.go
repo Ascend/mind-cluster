@@ -41,6 +41,7 @@ const (
 	scoreForNode               = 100000000
 	taskSpec                   = "volcano.sh/task-spec"
 	schedulerSpec              = "scheduler"
+	workerSpec                 = "worker"
 	delayingTime               = 10
 )
 

@@ -446,6 +446,63 @@ func isContain(target string, strArray []string) bool {
 	return false
 }
 
+// TaskOrderFn Sort the selected tasks.
+func (sHandle *ScheduleHandler) TaskOrderFn(InterfaceA interface{}, InterfaceB interface{}) int {
+	taskInfoA, ok := InterfaceA.(*api.TaskInfo)
+	if !ok {
+		klog.V(util.LogDebugLev).Info("TaskOrderFn failed, object is not a TaskInfo")
+		return taskOrderSamePriority
+	}
+	taskInfoB, ok := InterfaceB.(*api.TaskInfo)
+	if !ok {
+		klog.V(util.LogDebugLev).Info("TaskOrderFn failed, object is not a TaskInfo")
+		return taskOrderSamePriority
+	}
+
+	job, ok := sHandle.Jobs[taskInfoA.Job]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("TaskOrderFn (%s/%s): job is not exist", taskInfoA.Namespace, taskInfoA.Name)
+		return taskOrderSamePriority
+	}
+	podGroupEnable, exist := job.Label[PodGroupScheduleKey]
+	if !exist || podGroupEnable != PodGroupScheduleValue {
+		return taskOrderSamePriority
+	}
+	rRankId, err := sHandle.obtainTaskRankId(taskInfoB)
+	if err != nil {
+		return taskOrderSamePriority
+	}
+	lRankId, err := sHandle.obtainTaskRankId(taskInfoA)
+	if err != nil {
+		return taskOrderSamePriority
+	}
+
+	if lRankId < rRankId {
+		return taskOrderHighPriority
+	}
+	return taskOrderLowPriority
+}
+
+func (sHandle *ScheduleHandler) obtainTaskRankId(task *api.TaskInfo) (int, error) {
+	if task == nil {
+		klog.V(util.LogDebugLev).Infof("obtainTaskRankId failed: %s.", util.ArgumentError)
+		return 0, errors.New(util.ArgumentError)
+	}
+	rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("obtainTaskRankId task(%s/%s): rankIndex not exist",
+			task.Namespace, task.Name)
+		return 0, errors.New(util.RankIdNotExistError)
+	}
+	rankId, err := strconv.Atoi(rankIndex)
+	if err != nil {
+		klog.V(util.LogDebugLev).Infof("obtainTaskRankId task(%s/%s): rankIndex(%s) is not int",
+			task.Namespace, task.Name, rankIndex)
+		return 0, errors.New(util.ArgumentError)
+	}
+	return rankId, nil
+}
+
 // BatchNodeOrderFn Score the selected nodes.
 func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	nodes []*api.NodeInfo) (map[string]float64, error) {

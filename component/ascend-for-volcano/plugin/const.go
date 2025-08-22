@@ -55,6 +55,16 @@ const (
 	PodRankIndexKey = "hccl/rankIndex"
 	// ReplicaSetType replicaset type
 	ReplicaSetType = "ReplicaSet"
+	// PodGroupScheduleKey podgroup schedule the enable key
+	PodGroupScheduleKey = "podgroup-sched-enable"
+	// PodGroupScheduleValue podgroup schedule the enable value
+	PodGroupScheduleValue = "true"
+)
+
+const (
+	taskOrderHighPriority = -1
+	taskOrderLowPriority  = 1
+	taskOrderSamePriority = 0
 )
 
 const (

@@ -187,6 +187,10 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 
 	defer func() {
 		if *job.JobReadyTag {
+			if podGroupEnable, exist := job.Label[plugin.PodGroupScheduleKey]; exist && podGroupEnable == plugin.PodGroupScheduleValue {
+				tp.scoreNodeBatchForReadyJob(task, &job, sMap)
+				return
+			}
 			tp.scoreNodeForReadyJob(task, job, sMap)
 		}
 	}()
@@ -219,6 +223,83 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 		}
 	}
 	return nil
+}
+
+func (tp *module910SuperPod) scoreNodeBatchForReadyJob(task *api.TaskInfo, job *plugin.SchedulerJob,
+	sMap map[string]float64) {
+	if task == nil || job == nil || len(sMap) == 0 || tp.spBlock == 0 {
+		klog.V(util.LogErrorLev).Infof("scoreNodeBatchForReadyJob %s", errors.New(util.ArgumentError))
+		return
+	}
+	rankIdMap := tp.obtainBatchScoreRank(task, job)
+	if len(rankIdMap) == 0 {
+		klog.V(util.LogErrorLev).Infof("%s scoreNodeBatchForReadyJob %s: rankIdMap empty",
+			tp.GetPluginName(), task.Name)
+		*job.JobReadyTag = false
+		return
+	}
+	for rankId := range rankIdMap {
+		superPodRank := rankId / tp.spBlock
+		localRank := rankId % tp.spBlock
+		klog.V(util.LogInfoLev).Infof("superPodRank: %d, localRank: %d", superPodRank, localRank)
+		superPodRankIndex := strconv.Itoa(superPodRank)
+		if localRank >= len(job.SuperPods[superPodRankIndex]) {
+			klog.V(util.LogErrorLev).Infof("superPodRank: %d, localRank: %d out of rank", superPodRank, localRank)
+			*job.JobReadyTag = false
+			break
+		}
+		spn := job.SuperPods[superPodRankIndex][localRank]
+		if _, ok := sMap[spn.Name]; !ok {
+			klog.V(util.LogErrorLev).Infof("%s scoreNodeBatchForReadyJob %s: node<%s> not in sMap, select fail",
+				tp.GetPluginName(), task.Name, spn.Name)
+			*job.JobReadyTag = false
+			break
+		}
+		klog.V(util.LogInfoLev).Infof("%s scoreNodeBatchForReadyJob %s: node<%s/%s> is exist in "+
+			"SuperPodID: %d, select success", tp.GetPluginName(), task.Name, spn.Name, superPodRankIndex,
+			spn.SuperPodID)
+		sMap[spn.Name] = float64(scoreForNode - rankId)
+	}
+}
+
+func (tp *module910SuperPod) obtainBatchScoreRank(task *api.TaskInfo, job *plugin.SchedulerJob) map[int]struct{} {
+	if task == nil || job == nil {
+		klog.V(util.LogErrorLev).Infof("obtainBatchScoreRank %s", errors.New(util.ArgumentError))
+		return nil
+	}
+	spec, ok := task.Pod.Annotations[taskSpec]
+	if !ok {
+		klog.V(util.LogErrorLev).Infof("obtainBatchScoreRank %s: (%s/%s) obtain taskSpec fail, skip",
+			tp.GetPluginName(), task.Namespace, task.Name)
+		return nil
+	}
+	klog.V(util.LogInfoLev).Infof("obtainOriginalRankIdMap job (%s/%s), len(job.Tasks) %d",
+		job.NameSpace, job.Name, len(job.Tasks))
+	m := make(map[int]struct{}, len(job.Tasks))
+	for _, task := range job.Tasks {
+		if !task.IsNPUTask() || task.Annotation[taskSpec] != spec {
+			continue
+		}
+		if task.PodStatus != v1.PodPending {
+			continue
+		}
+		rankIndex, ok := task.Annotation[plugin.PodRankIndexKey]
+		if !ok {
+			klog.V(util.LogWarningLev).Infof("obtainBatchScoreRank (%s/%s): rankIndex is not exist",
+				task.NameSpace, task.Name)
+			continue
+		}
+		rank, err := strconv.Atoi(rankIndex)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("obtainBatchScoreRank (%s/%s): rankIndex is not int",
+				task.NameSpace, task.Name)
+			continue
+		}
+		m[rank] = struct{}{}
+	}
+	klog.V(util.LogInfoLev).Infof("obtainBatchScoreRank job (%s/%s), len(rankMap) %d",
+		job.NameSpace, job.Name, len(m))
+	return m
 }
 
 func (tp *module910SuperPod) scoreNodeForReadyJob(task *api.TaskInfo, job plugin.SchedulerJob,
