@@ -62,7 +62,7 @@ func TestStorage(t *testing.T) {
 		convey.So(ok, convey.ShouldBeFalse)
 		convey.So(res, convey.ShouldBeNil)
 		// clear
-		storage.Clear()
+		storage.Delete(key)
 		// load the existed key
 		res, ok = storage.Load(key)
 		convey.So(ok, convey.ShouldBeFalse)

@@ -182,11 +182,11 @@ type ApiRes struct {
 // Server is a struct for cm data in job-summary
 type Server struct {
 	// Sn is the serial number of the server
-	Sn string `json:"sn"`
+	Sn string
 	// Ip is the ip address of the server
-	Ip string `json:"ip"`
+	Ip string
 	// RankIds is the rank ids of the server, e.g. ["0", "1", "2"]
-	RankIds []string `json:"rankIds"`
+	RankIds []string
 }
 
 // JobSummary is a struct for cm data in job-summary

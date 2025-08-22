@@ -48,3 +48,35 @@ type JobSummary struct {
 	// Operator add/delete
 	Operator string
 }
+
+// RescheduleReason the reason why training job reschedule
+type RescheduleReason struct {
+	// RescheduleReason the reason why training job reschedule
+	RescheduleReason string `jons:"RescheduleReason"`
+	// PodName the pod name of training job in
+	PodName string `json:"PodName"`
+	// NodeName the node name of training job in
+	NodeName string `json:"NodeName"`
+	// NodeRankIndex the rank index of the node
+	NodeRankIndex string `json:"NodeRankIndex"`
+}
+
+// RescheduleRecords the record struct of reschedule
+type RescheduleRecords struct {
+	// LogFileFormatTime log file format time
+	LogFileFormatTime string `json:"LogFileFormatTime"`
+	// RescheduleTimeStamp reschedule timestamp
+	RescheduleTimeStamp int64 `json:"RescheduleTimeStamp"`
+	// ReasonOfTask reason why training job reschedule
+	ReasonOfTask []RescheduleReason `json:"ReasonOfTask"`
+}
+
+// RescheduleData the reschedule data struct for training job
+type RescheduleData struct {
+	// JobId including namespace/jobName-jobId
+	JobId string `json:"jobID"` // sample:default/default-test-mindspore-f4121ec4-590e-4cdc-a422-ac256b898659
+	// TotalRescheduleTimes the total reschedule count
+	TotalRescheduleTimes int `json:"TotalRescheduleTimes"`
+	// RescheduleRecords the records of reschedule
+	RescheduleRecords []RescheduleRecords `json:"RescheduleRecords"`
+}

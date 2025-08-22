@@ -36,6 +36,7 @@ import (
 	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/grpc/job"
 	"ascend-faultdiag-online/pkg/utils/grpc/profiling"
+	"ascend-faultdiag-online/pkg/utils/grpc/pubfault"
 )
 
 var (
@@ -72,6 +73,48 @@ func TestMain(m *testing.M) {
 
 	// Exit with the test result code
 	fmt.Printf("exit_code = %v\n", code)
+}
+
+func TestConnect(t *testing.T) {
+	var validIp = "127.0.0.1"
+	var invalidIp = "0000"
+	convey.Convey("test connect", t, func() {
+		// c.conn is not nil
+		c := &Client{}
+		c.conn = &grpc.ClientConn{}
+		err := c.connect(validIp)
+		convey.So(err, convey.ShouldBeNil)
+		c.conn = nil
+		// invalid ip
+		err = c.connect(invalidIp)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid host")
+		// dial faild
+		connectFailed = true
+		err = c.connect(validIp)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "failed to connect to grpc server")
+		// success
+		connectFailed = false
+		err = c.connect(validIp)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestClose(t *testing.T) {
+	c := &Client{}
+	patch := gomonkey.ApplyMethod(reflect.TypeOf(&grpc.ClientConn{}), "Close", func(*grpc.ClientConn) error {
+		c.conn = nil
+		return nil
+	})
+	defer patch.Reset()
+	convey.Convey("test Close", t, func() {
+		convey.So(c.conn, convey.ShouldBeNil)
+		// conn is nil
+		c.Close()
+		convey.So(c.conn, convey.ShouldBeNil)
+		c.conn = &grpc.ClientConn{}
+		c.Close()
+		convey.So(c.conn, convey.ShouldBeNil)
+	})
 }
 
 func TestGrpc(t *testing.T) {
@@ -123,6 +166,40 @@ func TestProfiling(t *testing.T) {
 	// test stop heavy profiling
 	err = client.StopHeavyProfiling("job1", "ns1")
 	assert.Nil(t, err)
+}
+
+func TestProfilingSwitch(t *testing.T) {
+	var c = &Client{conn: &grpc.ClientConn{}}
+	c.tc = profiling.NewTrainingDataTraceClient(c.conn)
+	patch := gomonkey.ApplyMethodFunc(
+		reflect.TypeOf(c.tc),
+		"ModifyTrainingDataTraceSwitch",
+		func(context.Context, *profiling.DataTypeReq, ...grpc.CallOption) (*profiling.DataTypeRes, error) {
+			return &profiling.DataTypeRes{}, nil
+		},
+	)
+	defer patch.Reset()
+	convey.Convey("test profilingSwitch", t, func() {
+		_, err := c.profilingSwitch(&profiling.DataTypeReq{})
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestReportFault(t *testing.T) {
+	var c = &Client{conn: &grpc.ClientConn{}}
+	c.pf = pubfault.NewPubFaultClient(c.conn)
+	patch := gomonkey.ApplyMethodFunc(
+		reflect.TypeOf(c.pf),
+		"SendPublicFault",
+		func(context.Context, *pubfault.PublicFaultRequest, ...grpc.CallOption) (*pubfault.RespStatus, error) {
+			return &pubfault.RespStatus{}, nil
+		},
+	)
+	defer patch.Reset()
+	convey.Convey("test ReportFault", t, func() {
+		err := c.ReportFault([]*pubfault.Fault{})
+		convey.So(err, convey.ShouldBeNil)
+	})
 }
 
 func TestRegisterJobSummary(t *testing.T) {

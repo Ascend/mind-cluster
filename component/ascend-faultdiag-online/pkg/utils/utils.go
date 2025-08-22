@@ -134,7 +134,7 @@ func Retry[T any](f func() (T, error), cg *RetryConfig) (T, error) {
 		return res, errors.New("retry failed: func is nil")
 	}
 	if cg.RetryCount > maxRetryCount || cg.SleepTime.Milliseconds() < minSleepTime.Milliseconds() {
-		return res, fmt.Errorf("config check failed: execced the max retry count: %d or less than min sleep time: %v",
+		return res, fmt.Errorf("config check failed: excced the max retry count: %d or less than min sleep time: %v",
 			maxRetryCount, minSleepTime)
 	}
 	var err error

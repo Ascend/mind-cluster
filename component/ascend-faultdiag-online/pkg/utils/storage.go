@@ -45,6 +45,10 @@ func (s *Storage[T]) Load(key string) (T, bool) {
 	return res, ok
 }
 
+func (s *Storage[T]) Delete(key string) {
+	s.data.Delete(key)
+}
+
 // NewStorage got a new storage instance
 func NewStorage[T any]() *Storage[T] {
 	return &Storage[T]{}

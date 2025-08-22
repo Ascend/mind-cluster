@@ -63,8 +63,7 @@ func (d *Controller) request(command enum.Command) error {
 	if err != nil {
 		return err
 	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]job(name=%s, namespace=%s) %s data parse, confJson: %s",
-		d.ctx.Job.JobName, d.ctx.Job.Namespace, command, string(confJson))
+	hwlog.RunLog.Infof("%v %s data parse, confJson: %s", d.ctx.LogPrefix(), command, string(confJson))
 	apiPath := fmt.Sprintf("feature/slownode/%s/%s", d.ctx.Deployment, command)
 	resp, err := context.FdCtx.Request(apiPath, string(confJson))
 	if err != nil {
@@ -77,24 +76,21 @@ func (d *Controller) request(command enum.Command) error {
 	if res.Status != enum.Success {
 		return errors.New(res.Msg)
 	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]job(name=%s, namespace=%s) %s data parse success, resp: %s",
-		d.ctx.Job.JobName, d.ctx.Job.Namespace, command, resp)
+	hwlog.RunLog.Infof("%v %s data parse success, resp: %s", d.ctx.LogPrefix(), command, resp)
 	return nil
 }
 
 // Start start the data parse
 func (d *Controller) Start() {
 	if err := d.request(enum.Start); err != nil {
-		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]job(name=%s, jobId=%s) started data parse failed: %v",
-			d.ctx.Job.JobName, d.ctx.Job.JobId, err)
+		hwlog.RunLog.Errorf("%v started data parse failed: %v", d.ctx.LogPrefix(), err)
 	}
 }
 
 // Stop stop the data parse
 func (d *Controller) Stop() {
 	if err := d.request(enum.Stop); err != nil {
-		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]job(name=%s, jobId=%s) stopped data parse failed: %v",
-			d.ctx.Job.JobName, d.ctx.Job.JobId, err)
+		hwlog.RunLog.Errorf("%v stopped data parse failed: %v", d.ctx.LogPrefix(), err)
 	}
 }
 
@@ -103,31 +99,28 @@ func (d *Controller) Stop() {
 // only occurs in cluster
 func (d *Controller) MergeParallelGroupInfoWatcher() {
 	go func() {
-		logPrefix := fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, jobId=%s)", d.ctx.Job.JobName, d.ctx.Job.JobId)
-		hwlog.RunLog.Infof("%s started watching merge parallel group info signal", logPrefix)
+		hwlog.RunLog.Infof("%s started watching merge parallel group info signal, timeout: %d",
+			d.ctx.LogPrefix(), context.FdCtx.Config.AllNodesReportTimeout)
 		select {
 		case <-d.ctx.MergeParallelGroupInfoSignal:
-			d.handleMergeSignal(logPrefix, "received signal")
+			d.handleMergeSignal("received signal")
 		case <-time.After(time.Duration(context.FdCtx.Config.AllNodesReportTimeout) * time.Second):
-			d.handleMergeSignal(
-				logPrefix,
-				fmt.Sprintf("timeout after %d seconds", context.FdCtx.Config.AllNodesReportTimeout),
-			)
+			d.handleMergeSignal(fmt.Sprintf("timeout after %d seconds", context.FdCtx.Config.AllNodesReportTimeout))
 		case _, ok := <-d.ctx.StopChan:
 			if !ok {
-				hwlog.RunLog.Infof("%s stopped, exiting merge signal watcher", logPrefix)
+				hwlog.RunLog.Infof("%s stopped, exiting merge signal watcher", d.ctx.LogPrefix())
 				return
 			}
 		}
 	}()
 }
 
-func (d *Controller) handleMergeSignal(logPrefix, triggerReason string) {
+func (d *Controller) handleMergeSignal(triggerReason string) {
 	hwlog.RunLog.Infof("%s %s, merging parallel group info (reported nodes: %v)",
-		logPrefix, triggerReason, d.ctx.GetReportedNodeIps())
+		d.ctx.LogPrefix(), triggerReason, d.ctx.GetReportedNodeIps())
 
 	d.ctx.AddStep() // Advance cluster step (e.g., from 1 to 2)
 	d.ctx.StopHeavyProfiling()
 	d.Start()
-	hwlog.RunLog.Infof("%s merge succeeded, exiting watcher", logPrefix)
+	hwlog.RunLog.Infof("%s merge succeeded, exiting watcher", d.ctx.LogPrefix())
 }

@@ -28,31 +28,23 @@ import (
 
 // GetNodeIp get the ip address of node pod
 func GetNodeIp() (string, error) {
-	// 获取环境变量 XDL_IP
 	xdlIp := os.Getenv(constants.XdlIpField)
-	// 如果环境变量存在，直接返回
 	if xdlIp != "" {
 		return xdlIp, nil
 	}
 
-	// 如果没有环境变量，输出警告并调用 GetLocalIP 获取本地 IP
-	hwlog.RunLog.Warnf("%v environment variable not set", constants.XdlIpField)
-	// 获取本地所有网络接口的地址
+	// no env, output the warn log and get local ip
+	hwlog.RunLog.Warnf("[FD-OL]%v environment variable not set", constants.XdlIpField)
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "", err
 	}
-
-	// 遍历所有地址，查找 IPv4 地址
 	for _, addr := range addrs {
-		// 检查是否为 IP 地址，并且是否为 IPv4 地址
+		// check the ip address is valid or not
 		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-			// 返回第一个找到的非 loopback 的 IPv4 地址
 			return ipNet.IP.String(), nil
 		}
 	}
-
-	// 如果没有找到有效的 IPv4 地址，返回错误
 	return "", fmt.Errorf("no valid IP address found")
 }
 

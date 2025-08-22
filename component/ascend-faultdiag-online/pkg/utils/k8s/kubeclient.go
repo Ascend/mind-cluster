@@ -88,17 +88,6 @@ func (c *Client) CreateConfigMap(cm *corev1.ConfigMap) (*corev1.ConfigMap, error
 	return newCM, nil
 }
 
-// GetConfigMap get config map by name and name space
-func (c *Client) GetConfigMap(cmName, cmNamespace string) (*corev1.ConfigMap, error) {
-	newCM, err := c.ClientSet.CoreV1().ConfigMaps(cmNamespace).Get(context.TODO(), cmName, metav1.GetOptions{
-		ResourceVersion: "0",
-	})
-	if err != nil {
-		return nil, err
-	}
-	return newCM, nil
-}
-
 // UpdateConfigMap update config map
 func (c *Client) UpdateConfigMap(cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 	if cm == nil {

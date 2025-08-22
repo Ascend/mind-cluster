@@ -43,6 +43,8 @@ type cluster struct {
 	IsDegradation bool
 	// NodeReportSignal node report signal
 	NodeReportSignal chan struct{}
+	// rescheduleCount the reschedule count of training job
+	rescheduleCount int
 }
 
 // AddAlgoRecord add the slow node algo result in JobContext
@@ -91,6 +93,20 @@ func (c *cluster) TriggerMerge() {
 	}
 }
 
+// GetRescheduleCount get the reschedule count of the training job
+func (c *cluster) GetRescheduleCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.rescheduleCount
+}
+
+// SetRescheduleCount set the reschedule count of the training job
+func (c *cluster) SetRescheduleCount(count int) {
+	c.mu.Lock()
+	c.rescheduleCount = count
+	defer c.mu.Unlock()
+}
+
 type node struct {
 	// RealRankId realRankIds parsed in data parse
 	RealRankIds []string
@@ -117,10 +133,7 @@ type JobContext struct {
 }
 
 // NewSlowNode returns a new SlowNode object
-func NewJobContext(
-	job *slownode.Job,
-	deployment enum.DeployMode,
-) *JobContext {
+func NewJobContext(job *slownode.Job, deployment enum.DeployMode) *JobContext {
 	if job == nil {
 		hwlog.RunLog.Error("[FD-OL SLOWNODE]create slow node JobContext failed: job is nil")
 		return nil
@@ -195,7 +208,8 @@ func (ctx *JobContext) IsStartedHeavyProfiling() bool {
 }
 
 func (ctx *JobContext) LogPrefix() string {
-	return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, jobId=%s)", ctx.Job.JobName, ctx.Job.JobId)
+	return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, namespace=%v, jobId=%s)",
+		ctx.Job.JobName, ctx.Job.Namespace, ctx.Job.JobId)
 }
 
 // StartAllProfiling start all the profiling
