@@ -12,7 +12,7 @@
 
 - 本仓库代码中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布前，这些分支不应被应用于任何生产环境或者依赖关键业务的项目中。请务必使用我们的正式发行版本，以确保代码的稳定性和安全性。
   使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
-- 正式版本请参考release版本 <https://gitee.com/ascend/mind-cluster/releases>
+- 正式版本请参考release版本 <https://gitcode.com/ascend/mind-cluster/releases>
 
 
 # 介绍
@@ -66,12 +66,11 @@
 该仓库融合不同组件内容。6.0.0之前的版本见各组件仓库：
 | 组件         | 链接                                     |  说明   |
 |------------|----------------------------------| -|
-| NodeD       |  https://gitee.com/ascend/ascend-noded   | -|
-| HCCL-Controller |  https://gitee.com/ascend/ascend-hccl-controller   |此组件功能已被Ascend-Operator收编，不建议使用|
-| Ascend-Device-Plugin |  https://gitee.com/ascend/ascend-device-plugin   |-|
-| NPU-Exporter |  https://gitee.com/ascend/ascend-npu-exporter   |-|
-| Ascend-for-Volcano |  https://gitee.com/ascend/ascend-for-volcano   |-|
-| Ascend-Docker-Runtime |  https://gitee.com/ascend/ascend-docker-runtime  |-|
+| NodeD       |  https://gitcode.com/ascend/ascend-noded   | -|
+| Ascend-Device-Plugin |  https://gitcode.com/ascend/ascend-device-plugin   |-|
+| NPU-Exporter |  https://gitcode.com/ascend/ascend-npu-exporter   |-|
+| Ascend-for-Volcano |  https://gitcode.com/ascend/ascend-for-volcano   |-|
+| Ascend-Docker-Runtime |  https://gitcode.com/ascend/ascend-docker-runtime  |-|
 
 6.0.0及之后版本发布如下：
 | 版本         | 发布日期      | 修改说明         |
