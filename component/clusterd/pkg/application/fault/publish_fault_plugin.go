@@ -25,7 +25,7 @@ func (s *FaultServer) checkFaultFromFaultCenter() {
 			return
 		case allJobFaultInfo, ok := <-s.faultCh:
 			if !ok {
-				hwlog.RunLog.Info("faultCh has been closed.")
+				hwlog.RunLog.Info("faultCh has been closed")
 				return
 			}
 			hwlog.RunLog.Debugf("global fault info: %v", allJobFaultInfo)
