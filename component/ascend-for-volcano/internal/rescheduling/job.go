@@ -283,6 +283,7 @@ func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, kube
 		deleteJobSync.Add(1)
 		if i+singleThreadDeletePodNum > len(waitDeleteTask) {
 			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:], kubeClient, &deleteJobSync)
+			continue
 		}
 		go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], kubeClient, &deleteJobSync)
 	}
