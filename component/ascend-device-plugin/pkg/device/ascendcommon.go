@@ -1238,17 +1238,19 @@ func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 		hwlog.RunLog.Errorf("failed to get node %s info, err: %s", tool.client.NodeName, err.Error())
 		return fmt.Errorf("failed to get node info")
 	}
-	// A800IA2 with has to label the node as server-usage:infer to divide with A800T
-	if serverUsage, ok := node.Labels[common.ServerUsageLabelKey]; ok && serverUsage == common.Infer {
-		tool.deviceUsage = common.Infer
-		return nil
-	}
 
 	boardId, err := tool.GetServerBoardId(devLogicID)
 	if err != nil {
 		hwlog.RunLog.Errorf("%v", err)
 		return fmt.Errorf("set device usage error")
 	}
+
+	// A800IA2 with has to label the node as server-usage:infer to divide with A800T
+	if serverUsage, ok := node.Labels[common.ServerUsageLabelKey]; ok && serverUsage == common.Infer {
+		tool.deviceUsage = common.Infer
+		return nil
+	}
+
 	// A800IA2 without hccs can be auto set usage as infer
 	if devType == common.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
 		boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
