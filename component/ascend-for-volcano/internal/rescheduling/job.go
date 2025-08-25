@@ -311,6 +311,7 @@ func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, ssn 
 		deleteJobSync.Add(1)
 		if i+singleThreadDeletePodNum > len(waitDeleteTask) {
 			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:], ssn, &deleteJobSync)
+			continue
 		}
 		go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], ssn, &deleteJobSync)
 	}
