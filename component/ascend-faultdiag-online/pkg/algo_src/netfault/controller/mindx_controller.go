@@ -46,7 +46,7 @@ func Stop() {
 
 // RegisterDetectionCallback register detect callback
 func RegisterDetectionCallback(callback model.CallbackFunc) {
-	if callbackFunc == nil {
+	if callback == nil {
 		return
 	}
 	callbackFunc = callback
