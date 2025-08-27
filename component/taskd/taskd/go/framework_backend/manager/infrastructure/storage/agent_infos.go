@@ -53,13 +53,17 @@ func (a *AgentInfos) registerAgent(agentName string, agentInfo *AgentInfo) error
 }
 
 func (a *AgentInfos) getAgent(agentName string) (*AgentInfo, error) {
+	a.RWMutex.RLock()
 	if agent, exists := a.Agents[agentName]; exists {
-		return agent.getAgent()
+		agentInfo := agent.getAgent()
+		a.RWMutex.RUnlock()
+		return agentInfo, nil
 	}
+	a.RWMutex.RUnlock()
 	return nil, fmt.Errorf("agent name is unregistered : %v", agentName)
 }
 
-func (a *AgentInfo) getAgent() (*AgentInfo, error) {
+func (a *AgentInfo) getAgent() *AgentInfo {
 	a.RWMutex.RLock()
 	defer a.RWMutex.RUnlock()
 	return &AgentInfo{
@@ -71,12 +75,12 @@ func (a *AgentInfo) getAgent() (*AgentInfo, error) {
 		FaultInfo: a.FaultInfo,
 		Pos:       a.Pos,
 		RWMutex:   sync.RWMutex{},
-	}, nil
+	}
 }
 
 func (a *AgentInfos) updateAgent(agentName string, newAgent *AgentInfo) error {
-	a.Agents[agentName].RWMutex.Lock()
-	defer a.Agents[agentName].RWMutex.Unlock()
+	a.RWMutex.Lock()
+	defer a.RWMutex.Unlock()
 	a.Agents[agentName] = &AgentInfo{
 		Config:    newAgent.Config,
 		Actions:   newAgent.Actions,

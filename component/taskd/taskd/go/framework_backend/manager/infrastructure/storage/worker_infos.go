@@ -53,13 +53,17 @@ func (w *WorkerInfos) registerWorker(workerName string, workerInfo *WorkerInfo) 
 }
 
 func (w *WorkerInfos) getWorker(workerName string) (*WorkerInfo, error) {
+	w.RWMutex.RLock()
 	if worker, exists := w.Workers[workerName]; exists {
-		return worker.getWorker()
+		workerInfo := worker.getWorker()
+		w.RWMutex.RUnlock()
+		return workerInfo, nil
 	}
+	w.RWMutex.RUnlock()
 	return nil, fmt.Errorf("worker name is unregistered : %v", workerName)
 }
 
-func (w *WorkerInfo) getWorker() (*WorkerInfo, error) {
+func (w *WorkerInfo) getWorker() *WorkerInfo {
 	w.RWMutex.RLock()
 	defer w.RWMutex.RUnlock()
 	return &WorkerInfo{
@@ -71,12 +75,12 @@ func (w *WorkerInfo) getWorker() (*WorkerInfo, error) {
 		FaultInfo:  w.FaultInfo,
 		Pos:        w.Pos,
 		RWMutex:    sync.RWMutex{},
-	}, nil
+	}
 }
 
 func (w *WorkerInfos) updateWorker(workerName string, newWorker *WorkerInfo) error {
-	w.Workers[workerName].RWMutex.Lock()
-	defer w.Workers[workerName].RWMutex.Unlock()
+	w.RWMutex.Lock()
+	defer w.RWMutex.Unlock()
 	w.Workers[workerName] = &WorkerInfo{
 		Config:     newWorker.Config,
 		Actions:    newWorker.Actions,
