@@ -59,13 +59,17 @@ func (c *ClusterInfos) registerCluster(clusterName string) *ClusterInfo {
 }
 
 func (c *ClusterInfos) getCluster(clusterName string) (*ClusterInfo, error) {
+	c.RWMutex.RLock()
 	if cluster, exists := c.Clusters[clusterName]; exists {
-		return cluster.getCluster()
+		clusterInfo := cluster.getCluster()
+		c.RWMutex.RUnlock()
+		return clusterInfo, nil
 	}
+	c.RWMutex.RUnlock()
 	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
 }
 
-func (c *ClusterInfo) getCluster() (*ClusterInfo, error) {
+func (c *ClusterInfo) getCluster() *ClusterInfo {
 	c.RWMutex.RLock()
 	defer c.RWMutex.RUnlock()
 	return &ClusterInfo{
@@ -75,7 +79,7 @@ func (c *ClusterInfo) getCluster() (*ClusterInfo, error) {
 		FaultInfo: c.FaultInfo,
 		Pos:       c.Pos,
 		RWMutex:   sync.RWMutex{},
-	}, nil
+	}
 }
 
 func (c *ClusterInfos) updateCluster(clusterName string, newCluster *ClusterInfo) error {
