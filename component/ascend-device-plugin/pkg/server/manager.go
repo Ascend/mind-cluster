@@ -691,6 +691,10 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		hwlog.RunLog.Error("invalid params")
 		return
 	}
+	if common.ParamOption.RealCardType == common.Ascend910A3 {
+		hdm.ResetServerForA3(devType, devices, prClient)
+		return
+	}
 
 	usage, boardId, err := hdm.getServerUsageAndBoardId()
 	if err != nil {
@@ -716,7 +720,7 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		if !hdm.isPodRemove(devType, device, prClient) {
 			continue
 		}
-		hdm.hotReset(device)
+		hdm.hotReset(device, []*common.NpuDevice{device})
 	}
 }
 
@@ -747,9 +751,8 @@ func (hdm *HwDevManager) ResetWithoutHccsServer(devType string, devices []*commo
 		resetFailedTimes := hdm.manager.GetResetFailedTimes(device.LogicID)
 		if device.Health != v1beta1.Healthy && !inReset && resetFailedTimes < common.MaxResetTimes &&
 			hdm.isPodRemove(devType, device, prClient) {
-			hdm.manager.SetCardsInResetting(device.LogicID, true)
 			// to avoid blocking for minutes
-			go hdm.hotReset(device)
+			go hdm.hotReset(device, []*common.NpuDevice{device})
 		}
 	}
 }
@@ -783,13 +786,57 @@ func (hdm *HwDevManager) ResetHccsServer(devType string, devices []*common.NpuDe
 	}
 
 	if needReset && freeDeviceNum == common.Ascend910BRingsNumTrain {
-		hdm.manager.SetCardsInResetting(common.FirstDevice, true)
 		if common.FirstDevice >= len(devices) {
 			hwlog.RunLog.Errorf("index out of range: giving devices index %d, "+
 				"real length %d", common.FirstDevice, len(devices))
 			return
 		}
-		hdm.hotReset(devices[common.FirstDevice])
+		hdm.hotReset(devices[common.FirstDevice], devices)
+	}
+}
+
+// ResetServerForA3 reset server device for a3
+func (hdm *HwDevManager) ResetServerForA3(devType string, devices []*common.NpuDevice, prClient *PodResource) {
+	coverIdSet := sets.NewInt32()
+	for _, npuDevice := range devices {
+		if npuDevice.Health == v1beta1.Healthy || coverIdSet.Has(npuDevice.LogicID) {
+			continue
+		}
+		cardID, deviceID, err := hdm.manager.GetDmgr().GetCardIDDeviceID(npuDevice.LogicID)
+		if err != nil {
+			hwlog.RunLog.Errorf("get card id and device id failed, logic id: %d err: %v",
+				npuDevice.LogicID, err)
+			continue
+		}
+		logicIDs, err := hdm.manager.GetAssociatedLogicIDs(npuDevice.LogicID, cardID, deviceID)
+		if err != nil || len(logicIDs) == 0 {
+			hwlog.RunLog.Errorf("invalid associated logic id list %v, err: %v", logicIDs, err)
+			continue
+		}
+		idSet := sets.NewInt32(logicIDs...)
+		deviceList := make([]*common.NpuDevice, 0, len(logicIDs))
+		freeDeviceNum := 0
+		for _, dev := range devices {
+			if !idSet.Has(dev.LogicID) {
+				continue
+			}
+			deviceList = append(deviceList, dev)
+			inReset := hdm.manager.GetIfCardsInResetting(dev.LogicID)
+			resetFailedTimes := hdm.manager.GetResetFailedTimes(dev.LogicID)
+			podRemoved := hdm.isPodRemove(devType, dev, prClient)
+			if inReset || resetFailedTimes >= common.MaxResetTimes || !podRemoved {
+				hwlog.RunLog.Infof("device %v cant reset, inReset: %v, resetFailedTimes: %v, podRemoved: %v",
+					dev.DeviceName, inReset, resetFailedTimes, podRemoved)
+				break
+			}
+			freeDeviceNum++
+		}
+		if freeDeviceNum == len(logicIDs) {
+			hwlog.RunLog.Infof("start reset device, logic id list %v", logicIDs)
+			// to avoid blocking for minutes
+			go hdm.hotReset(npuDevice, deviceList)
+		}
+		coverIdSet.Insert(logicIDs...)
 	}
 }
 
@@ -805,7 +852,7 @@ func (hdm *HwDevManager) resetDuoCard(devType string, devices []*common.NpuDevic
 		if !hdm.isDuoRemove(devType, deviceChip, prClient) {
 			continue
 		}
-		hdm.hotReset(deviceChip[0])
+		hdm.hotReset(deviceChip[0], deviceChip)
 	}
 }
 
@@ -1072,22 +1119,31 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 	return nil
 }
 
-func (hdm *HwDevManager) hotReset(device *common.NpuDevice) {
+func (hdm *HwDevManager) hotReset(device *common.NpuDevice, devices []*common.NpuDevice) {
 	hwlog.RunLog.Infof("will start to reset device %s", device.DeviceName)
+	hdm.manager.SetCardsInResetting(device.LogicID, true)
 	var isResetExec = false
+	successResetDevList := sets.NewInt32()
 	if err := wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		if err := hdm.execResetChip(device.LogicID, &isResetExec); err != nil {
 			hwlog.RunLog.Errorf("get device boot status failed, err: %v", err)
 			return false, err
 		}
-		bootState, err := hdm.manager.GetDmgr().GetDeviceBootStatus(device.LogicID)
-		if err != nil {
-			hwlog.RunLog.Errorf("get device boot status failed, err: %v", err)
-			return false, err
-		}
-		if bootState != common.BootStartFinish {
-			hwlog.RunLog.Warnf("device bootState(%d), starting...", bootState)
-			return false, nil
+		// check all device state that hot reset together
+		for _, dev := range devices {
+			if successResetDevList.Has(dev.LogicID) {
+				continue
+			}
+			bootState, err := hdm.manager.GetDmgr().GetDeviceBootStatus(dev.LogicID)
+			if err != nil {
+				hwlog.RunLog.Errorf("get device %v boot status failed, err: %v", dev.LogicID, err)
+				return false, err
+			}
+			if bootState != common.BootStartFinish {
+				hwlog.RunLog.Warnf("device %v bootState(%d), starting...", dev.LogicID, bootState)
+				return false, nil
+			}
+			successResetDevList.Insert(dev.LogicID)
 		}
 		common.SetDeviceInit(device.LogicID)
 		return true, nil

@@ -357,7 +357,7 @@ func (hnm *HwAscend910Manager) setUnhealthyForA3(devStatusList []*common.NpuDevi
 		return fmt.Errorf("invalid in reset dev id %v", inResetDev)
 	}
 	dev := devStatusList[inResetDev]
-	logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
+	logicIdArr, err := hnm.GetAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
 	if err != nil {
 		return err
 	}
@@ -374,7 +374,7 @@ func (hnm *HwAscend910Manager) setUnhealthyForA3(devStatusList []*common.NpuDevi
 	return nil
 }
 
-func (hnm *HwAscend910Manager) getAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
+func (hnm *HwAscend910Manager) GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
 	associatedCardID, err := hnm.GetDmgr().GetBrotherCardID(cardID, deviceID)
 	if err != nil {
 		hwlog.RunLog.Debugf("get brother card failed, cardID %v deviceID %v, err: %v",
@@ -606,7 +606,7 @@ func (hnm *HwAscend910Manager) canA3BeReset(dev *common.DevFaultInfo) bool {
 		hwlog.RunLog.Errorf("get cardID deviceID by logicID %v faild: %v", dev.LogicId, err)
 		return false
 	}
-	logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicId, cardID, deviceID)
+	logicIdArr, err := hnm.GetAssociatedLogicIDs(dev.LogicId, cardID, deviceID)
 	if err != nil {
 		return false
 	}
@@ -1093,7 +1093,7 @@ func (hnm *HwAscend910Manager) filterDevStatusForA3(devStatusList []*common.NpuD
 		if _, exist := devToBeSet[dev.LogicID]; exist {
 			continue
 		}
-		logicIdArr, err := hnm.getAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
+		logicIdArr, err := hnm.GetAssociatedLogicIDs(dev.LogicID, dev.CardID, dev.DeviceID)
 		if err != nil {
 			return err
 		}
@@ -1583,7 +1583,7 @@ func (hnm *HwAscend910Manager) getA3LogicMapByAssociation(devFaultInfoList []*co
 			hwlog.RunLog.Errorf("get cardID deviceID by logicID %v failed: %v", devFault.LogicId, err)
 			return nil, err
 		}
-		logicIDs, err := hnm.getAssociatedLogicIDs(devFault.LogicId, cardID, deviceID)
+		logicIDs, err := hnm.GetAssociatedLogicIDs(devFault.LogicId, cardID, deviceID)
 		if err != nil {
 			return nil, err
 		}
@@ -1797,7 +1797,7 @@ func (hnm *HwAscend910Manager) getResetIndexForA3(logicID int32) (int32, error) 
 		hwlog.RunLog.Errorf("get cardID deviceID by logicID %v failed: %v", logicID, err)
 		return errorId, err
 	}
-	logicIDs, err := hnm.getAssociatedLogicIDs(logicID, cardID, deviceID)
+	logicIDs, err := hnm.GetAssociatedLogicIDs(logicID, cardID, deviceID)
 	if err != nil {
 		return errorId, err
 	}

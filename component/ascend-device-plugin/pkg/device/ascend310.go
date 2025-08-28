@@ -105,3 +105,8 @@ func (hnm *HwAscend310Manager) updateDeviceInfo(_, newDeviceInfo map[string]stri
 func (hnm *HwAscend310Manager) GraceTolerance(context.Context, map[string][]*common.NpuDevice) {
 	return
 }
+
+// GetAssociatedLogicIDs get associated logic id list, not supported currently
+func (hnm *HwAscend310Manager) GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
+	return nil, nil
+}

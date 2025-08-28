@@ -130,6 +130,7 @@ type DevManager interface {
 	GetUsedChips() sets.String
 	GetDeviceIP(deviceType string, phyID int) (string, error)
 	WriteFaultToEvent(ctx context.Context)
+	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 }
 
 // SetDmgr set devmanager
