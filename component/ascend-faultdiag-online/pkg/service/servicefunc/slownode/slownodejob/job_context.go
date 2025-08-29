@@ -43,6 +43,8 @@ type cluster struct {
 	IsDegradation bool
 	// NodeReportSignal node report signal
 	NodeReportSignal chan struct{}
+	// rescheduleCount the reschedule count of training job
+	rescheduleCount int
 }
 
 // AddAlgoRecord add the slow node algo result in JobContext
@@ -91,6 +93,20 @@ func (c *cluster) TriggerMerge() {
 	}
 }
 
+// GetRescheduleCount get the reschedule count of the training job
+func (c *cluster) GetRescheduleCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.rescheduleCount
+}
+
+// SetRescheduleCount set the reschedule count of the training job
+func (c *cluster) SetRescheduleCount(count int) {
+	c.mu.Lock()
+	c.rescheduleCount = count
+	defer c.mu.Unlock()
+}
+
 type node struct {
 	// RealRankId realRankIds parsed in data parse
 	RealRankIds []string
@@ -117,10 +133,7 @@ type JobContext struct {
 }
 
 // NewSlowNode returns a new SlowNode object
-func NewJobContext(
-	job *slownode.Job,
-	deployment enum.DeployMode,
-) *JobContext {
+func NewJobContext(job *slownode.Job, deployment enum.DeployMode) *JobContext {
 	if job == nil {
 		hwlog.RunLog.Error("[FD-OL SLOWNODE]create slow node JobContext failed: job is nil")
 		return nil
@@ -194,22 +207,23 @@ func (ctx *JobContext) IsStartedHeavyProfiling() bool {
 	return ctx.isStartedHeavyProfiling
 }
 
-func (ctx *JobContext) logPrefix() string {
-	return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, jobId=%s)", ctx.Job.JobName, ctx.Job.JobId)
+func (ctx *JobContext) LogPrefix() string {
+	return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, namespace=%v, jobId=%s)",
+		ctx.Job.JobName, ctx.Job.Namespace, ctx.Job.JobId)
 }
 
 // StartAllProfiling start all the profiling
 func (ctx *JobContext) StartAllProfiling() {
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.LogPrefix(), err)
 		return
 	}
 	if err := grpcClient.StartAllProfiling(ctx.Job.JobName, ctx.Job.Namespace); err != nil {
-		hwlog.RunLog.Errorf("%s started all profiling failed: %s", ctx.logPrefix(), err.Error())
+		hwlog.RunLog.Errorf("%s started all profiling failed: %s", ctx.LogPrefix(), err.Error())
 		return
 	}
-	hwlog.RunLog.Infof("%s started all profiling successfully", ctx.logPrefix())
+	hwlog.RunLog.Infof("%s started all profiling successfully", ctx.LogPrefix())
 	// step from 0 to 1
 	ctx.AddStep()
 }
@@ -218,28 +232,28 @@ func (ctx *JobContext) StartAllProfiling() {
 func (ctx *JobContext) StopAllProfiling() {
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.LogPrefix(), err)
 		return
 	}
 	if err := grpcClient.StopAllProfiling(ctx.Job.JobName, ctx.Job.Namespace); err != nil {
-		hwlog.RunLog.Errorf("%s stopped all profiling failed: %s", ctx.logPrefix(), err.Error())
+		hwlog.RunLog.Errorf("%s stopped all profiling failed: %s", ctx.LogPrefix(), err.Error())
 		return
 	}
-	hwlog.RunLog.Infof("%s stopped all profiling successfully", ctx.logPrefix())
+	hwlog.RunLog.Infof("%s stopped all profiling successfully", ctx.LogPrefix())
 }
 
 // StartHeavyProfiling start the heavy profiling
 func (ctx *JobContext) StartHeavyProfiling() {
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.LogPrefix(), err)
 		return
 	}
 	if err := grpcClient.StartHeavyProfiling(ctx.Job.JobName, ctx.Job.Namespace); err != nil {
-		hwlog.RunLog.Errorf("%s) started heavy profiling failed: %s", ctx.logPrefix(), err.Error())
+		hwlog.RunLog.Errorf("%s) started heavy profiling failed: %s", ctx.LogPrefix(), err.Error())
 		return
 	}
-	hwlog.RunLog.Infof("%s started heavy profiling successfully", ctx.logPrefix())
+	hwlog.RunLog.Infof("%s started heavy profiling successfully", ctx.LogPrefix())
 	ctx.mu.Lock()
 	defer ctx.mu.Unlock()
 	ctx.isStartedHeavyProfiling = true
@@ -249,14 +263,14 @@ func (ctx *JobContext) StartHeavyProfiling() {
 func (ctx *JobContext) StopHeavyProfiling() {
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.LogPrefix(), err)
 		return
 	}
 	if err := grpcClient.StopHeavyProfiling(ctx.Job.JobName, ctx.Job.Namespace); err != nil {
-		hwlog.RunLog.Errorf("%s stopped heavy profiling failed: %s", ctx.logPrefix(), err.Error())
+		hwlog.RunLog.Errorf("%s stopped heavy profiling failed: %s", ctx.LogPrefix(), err.Error())
 		return
 	}
-	hwlog.RunLog.Infof("%s stopped heavy profiling successfully", ctx.logPrefix())
+	hwlog.RunLog.Infof("%s stopped heavy profiling successfully", ctx.LogPrefix())
 	ctx.mu.Lock()
 	defer ctx.mu.Unlock()
 	ctx.isStartedHeavyProfiling = false
@@ -276,19 +290,19 @@ func (ctx *JobContext) Update(job *slownode.Job) {
 func (ctx *JobContext) RemoveAllCM() {
 	k8sClient, err := k8s.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got k8s client failed: %v", ctx.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got k8s client failed: %v", ctx.LogPrefix(), err)
 		return
 	}
 	ctx.AllCMNames.Range(func(key, value any) bool {
 		cmName, ok := key.(string)
 		if !ok {
 			hwlog.RunLog.Errorf(
-				"%s deleted cm: %s failed: key is not a string type", ctx.logPrefix(), cmName)
+				"%s deleted cm: %s failed: key is not a string type", ctx.LogPrefix(), cmName)
 		}
 		if err := k8sClient.DeleteConfigMap(cmName, ctx.Job.Namespace); err != nil {
-			hwlog.RunLog.Errorf("%s deleted cm: %s failed: %s", ctx.logPrefix(), cmName, err)
+			hwlog.RunLog.Errorf("%s deleted cm: %s failed: %s", ctx.LogPrefix(), cmName, err)
 		} else {
-			hwlog.RunLog.Infof("%s deleted cm: %s successfully", ctx.logPrefix(), cmName)
+			hwlog.RunLog.Infof("%s deleted cm: %s successfully", ctx.LogPrefix(), cmName)
 		}
 		return true
 	})

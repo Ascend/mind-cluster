@@ -488,8 +488,10 @@ const (
 	CenterScene = "center"
 	// EdgeScene deploy the device-plugin component on the edge side
 	EdgeScene = "edge"
-	// A300IA2BoardId board id of A300I A2
+	// A300IA2BoardId board id of A300I A2 32GB
 	A300IA2BoardId = 0x28
+	// A300IA2GB64BoardId board id of A300I A2 64GB
+	A300IA2GB64BoardId = 0x29
 	// A800IA2NoneHccsBoardIdOld is the boardid of a800i a2 device,0x33 is server without hccs
 	A800IA2NoneHccsBoardIdOld = 0x33
 	// A800IA2NoneHccsBoardId 0x33 changed to 0x3c , and compatible with the old boardId ,since 2024.9.4

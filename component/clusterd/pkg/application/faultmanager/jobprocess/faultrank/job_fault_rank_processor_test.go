@@ -510,6 +510,7 @@ func testGetFaultDeviceInfoByRelationFault2(server *constant.ServerHccl) {
 		convey.So(faultList, convey.ShouldResemble, wantFaultList)
 	})
 }
+
 func testGetFaultDeviceInfoByRelationFault3(server *constant.ServerHccl) {
 	convey.Convey("invalid fault type, should not add to fault list", func() {
 		relationFault := []*constant.FaultInfo{
@@ -524,5 +525,31 @@ func testGetFaultDeviceInfoByRelationFault3(server *constant.ServerHccl) {
 		defer patches.Reset()
 		faultList := getFaultDeviceInfoByRelationFault("", "", server)
 		convey.So(faultList, convey.ShouldResemble, wantFaultList)
+	})
+}
+
+func TestFindFaultDeviceListForEmptyServerList(t *testing.T) {
+	convey.Convey("Test findFaultDeviceListForEmptyServerList", t, func() {
+		severs := map[string]constant.ServerHccl{
+			"nodeName": {ServerName: "nodeName", ServerSN: "nodeSN", ServerID: "nodeID"},
+		}
+		patch := gomonkey.ApplyFuncReturn(pod.ConstructServersByJobKey, severs).
+			ApplyFuncReturn(kube.GetNode, &v1.Node{Status: v1.NodeStatus{
+				Conditions: []v1.NodeCondition{{Type: v1.NodeReady, Status: v1.ConditionFalse}}}})
+		defer patch.Reset()
+		processor := &jobRankFaultInfoProcessor{}
+		nodeInfo := &constant.NodeInfo{
+			NodeInfoNoName: constant.NodeInfoNoName{FaultDevList: []*constant.FaultDev{
+				{DeviceType: "CPU", DeviceId: 0, FaultCode: []string{"code1", "code2"},
+					FaultLevel: constant.PreSeparateFault},
+			}}}
+		ret := processor.findFaultDeviceListForEmptyServerList("job1",
+			map[string]*constant.NodeInfo{"nodeName": nodeInfo})
+		convey.ShouldResemble(ret, []constant.FaultDevice{
+			{ServerName: "nodeName", ServerSN: "nodeSN", ServerId: "nodeID", DeviceId: "0",
+				FaultCode: "code1,code2", FaultLevel: constant.PreSeparateFault, DeviceType: "CPU"},
+			{ServerName: "nodeName", ServerSN: "nodeSN", ServerId: "nodeID", DeviceId: constant.EmptyDeviceId,
+				FaultCode: "", FaultLevel: constant.SeparateNPU, DeviceType: constant.FaultTypeNode},
+		})
 	})
 }

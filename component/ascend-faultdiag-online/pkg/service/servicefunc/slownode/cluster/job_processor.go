@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -30,11 +31,14 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/core/context"
 	"ascend-faultdiag-online/pkg/core/model/enum"
+	"ascend-faultdiag-online/pkg/model"
 	"ascend-faultdiag-online/pkg/model/slownode"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/algo"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/constants"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
+	"ascend-faultdiag-online/pkg/utils"
 	globalConstants "ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/grpc"
 	"ascend-faultdiag-online/pkg/utils/k8s"
 )
 
@@ -44,8 +48,13 @@ const (
 	// slowNodeOff stop slow node feature
 	slowNodeOff = 0
 
-	jobSummaryPrefix = "job-summary-"
+	rescheduleNamespace  = "mindx-dl"
+	rescheduleCmName     = "job-reschedule-reason"
+	rescheduleRecordsKey = "recent-reschedule-records"
 )
+
+var jobSummaryWatcher = utils.NewStorage[string]()
+var rescheduleWatcher = utils.NewStorage[string]()
 
 type jobProcessor struct {
 	ctx *slownodejob.JobContext
@@ -54,8 +63,7 @@ type jobProcessor struct {
 
 func (j *jobProcessor) logPrefix() string {
 	if j.ctx != nil {
-		return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, namespace=%s, jobId=%s)",
-			j.ctx.Job.JobName, j.ctx.Job.Namespace, j.ctx.Job.JobId)
+		return j.ctx.LogPrefix()
 	}
 	return fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, namespace=%s, jobId=%s)",
 		j.job.JobName, j.job.Namespace, j.job.JobId)
@@ -68,11 +76,20 @@ func (j *jobProcessor) add() {
 		hwlog.RunLog.Warnf("%s has been existed in ctxMap, ignore it", j.logPrefix())
 		return // already exists, no need to create a new one
 	}
-	// start to watch the job summary cm
-	cmName := jobSummaryPrefix + j.job.JobName
 	ctx := slownodejob.NewJobContext(j.job, enum.Cluster)
 	slownodejob.GetJobCtxMap().Insert(j.job.KeyGenerator(), ctx)
-	GetConfigMapWatcher().WatchConfigMap(j.job.Namespace, cmName)
+	// start to real-time watch the job-summary
+	grpcClient, err := grpc.GetClient()
+	if err != nil {
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
+		return
+	}
+	registerId, err := grpcClient.SubscribeJobSummary(ctx.Job.JobName, ctx.Job.Namespace, jobSummaryProcessor)
+	if err != nil {
+		hwlog.RunLog.Errorf("%s started to watch the job summary failed: %v", j.logPrefix(), err)
+		return
+	}
+	jobSummaryWatcher.Store(j.job.KeyGenerator(), registerId)
 }
 
 func (j *jobProcessor) update() {
@@ -103,10 +120,19 @@ func (j *jobProcessor) delete() {
 	}
 	j.ctx = ctx
 	j.stop()
-	cmName := jobSummaryPrefix + j.job.JobName
-	GetConfigMapWatcher().StopWatching(j.job.Namespace, cmName)
-	var key = fmt.Sprintf("%s/%s", j.job.Namespace, j.job.JobName)
-	slownodejob.GetJobCtxMap().Delete(key)
+	grpcClient, err := grpc.GetClient()
+	if err != nil {
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
+		return
+	}
+	registerId, ok := jobSummaryWatcher.Load(j.job.KeyGenerator())
+	if !ok {
+		hwlog.RunLog.Warnf("%s could not got job summary watcher id", j.logPrefix())
+		return
+	}
+	grpcClient.UnsubscribeJobSummary(registerId)
+	jobSummaryWatcher.Delete(j.job.KeyGenerator())
+	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 }
 
 func (j *jobProcessor) start() {
@@ -134,6 +160,7 @@ func (j *jobProcessor) start() {
 		hwlog.RunLog.Errorf("%s created or updated cm feaild: %v", j.logPrefix(), err)
 		return
 	}
+	j.startRescheduleWatcher()
 	j.ctx.StartAllProfiling()
 	j.waitNodeReport()
 }
@@ -147,9 +174,14 @@ func (j *jobProcessor) stop() {
 		return
 	}
 	j.ctx.RemoveAllCM()
-	j.ctx.StopAllProfiling()
+	if j.ctx.TrainingJobStatus != enum.IsCompleted {
+		// training job is complete, operate the profiling will cause error
+		j.ctx.StopAllProfiling()
+	}
 	algo.NewController(j.ctx).Stop()
 	j.ctx.Stop()
+	j.stopRescheduleWatcher()
+	rescheduleWatcher.Delete(j.job.KeyGenerator())
 	jobOnceMap.Delete(j.ctx.Job.JobId)
 	j.removeData()
 }
@@ -243,6 +275,56 @@ func (j *jobProcessor) waitNodeReport() {
 			return
 		}
 	}()
+}
+
+func (j *jobProcessor) startRescheduleWatcher() {
+	var cmWatcher = k8s.GetCmWatcher()
+	registerId := cmWatcher.Subscribe(rescheduleNamespace, rescheduleCmName, j.rescheduleProcessor)
+	rescheduleWatcher.Store(j.job.KeyGenerator(), registerId)
+}
+
+func (j *jobProcessor) rescheduleProcessor(oldCm, newCm *corev1.ConfigMap, op watch.EventType) {
+	if op != watch.Added && op != watch.Modified {
+		return
+	}
+	hwlog.RunLog.Infof("%v got reschedule data: %v", j.logPrefix(), newCm)
+	// the format of rescheduleRecordsKey, refer to:
+	// https://www.hiascend.com/document/detail/zh/mindcluster/71RC1/clustersched/dlug/dl_resume_060.html
+	// convert configMap to map[string]any
+	var data map[string]model.RescheduleData
+	records, exists := newCm.Data[rescheduleRecordsKey]
+	if !exists || records == "" {
+		hwlog.RunLog.Warnf("%v %v not in cm data: %+v or records is empty",
+			j.logPrefix(), rescheduleRecordsKey, newCm.Data)
+		return
+	}
+	if err := json.Unmarshal([]byte(records), &data); err != nil {
+		hwlog.RunLog.Errorf("%v convert reschedule-records: %s to map[string]any failed: %v",
+			j.logPrefix(), records, err)
+		return
+	}
+	for _, rescheduleData := range data {
+		if strings.HasSuffix(rescheduleData.JobId, j.ctx.Job.JobId) {
+			if rescheduleData.TotalRescheduleTimes != j.ctx.GetRescheduleCount() {
+				hwlog.RunLog.Infof("%v detected the TotalRescheduleTimes: %d changed(local count: %d), "+
+					"stop and start slow node detection",
+					j.logPrefix(), rescheduleData.TotalRescheduleTimes, j.ctx.GetRescheduleCount())
+				j.ctx.SetRescheduleCount(rescheduleData.TotalRescheduleTimes)
+				j.stop()
+				j.start()
+			}
+			return
+		}
+	}
+}
+
+func (j *jobProcessor) stopRescheduleWatcher() {
+	registerId, exists := rescheduleWatcher.Load(j.job.KeyGenerator())
+	if !exists {
+		return
+	}
+	var cmWatcher = k8s.GetCmWatcher()
+	cmWatcher.Unsubscribe(rescheduleNamespace, rescheduleCmName, registerId)
 }
 
 // JobProcessor store the slow node feat config into the confMap in cluster

@@ -118,6 +118,7 @@ type ASJobReconciler struct {
 	versions      map[types.UID]int32
 	backoffLimits map[types.UID]int32
 	rtGenerators  map[types.UID]generator.RankTableGenerator
+	batchMgr      batchCreateManager
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to

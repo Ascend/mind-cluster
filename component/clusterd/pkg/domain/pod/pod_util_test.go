@@ -8,12 +8,15 @@ package pod
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/node"
 )
 
 const (
@@ -252,6 +255,36 @@ func TestGetPGByPod(t *testing.T) {
 			convey.So(jobName, convey.ShouldEqual, jobName1)
 			convey.So(pgName, convey.ShouldEqual, pgName1)
 			convey.So(namespace, convey.ShouldEqual, podNameSpace1)
+		})
+	})
+}
+
+func TestConstructServersByJobKey(t *testing.T) {
+	convey.Convey("test ConstructServersByJobKey", t, func() {
+		fakePod1 := v1.Pod{
+			Spec:   v1.PodSpec{NodeName: ""},
+			Status: v1.PodStatus{},
+		}
+		fakePod2 := v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: podName1, Namespace: podNameSpace1},
+			Spec:       v1.PodSpec{NodeName: nodeName1},
+			Status:     v1.PodStatus{},
+		}
+		podMap := map[string]v1.Pod{podName1: fakePod1, podName2: fakePod2}
+		mockGetPodByJobId := gomonkey.ApplyFunc(GetPodByJobId, func(string) map[string]v1.Pod {
+			return podMap
+		}).ApplyFuncReturn(node.GetNodeIpByName, nodeIp1).
+			ApplyFuncReturn(node.GetNodeSNByName, nodeSn1)
+		defer mockGetPodByJobId.Reset()
+		ret := ConstructServersByJobKey(jobName1)
+		convey.ShouldResemble(ret, map[string]constant.ServerHccl{
+			nodeName1: {
+				ServerID:     nodeIp1,
+				PodID:        podName1,
+				PodNameSpace: podNameSpace1,
+				ServerName:   nodeName1,
+				ServerSN:     nodeSn1,
+			},
 		})
 	})
 }

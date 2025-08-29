@@ -236,6 +236,8 @@ const (
 	NodeNotMeetTopologyWarning = "the npus on this node don't satisfy the schedulable topology"
 	// ArgumentError argument nil error.
 	ArgumentError = "invalid argument"
+	// RankIdNotExistError rank id does not exist
+	RankIdNotExistError = "rank id does not exist"
 	// JobKindKey for define the Job kind:ascend-310P, ascend-910
 	JobKindKey = "ring-controller.atlas"
 	// JobKind910Value in ring-controller.atlas.

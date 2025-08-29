@@ -903,6 +903,7 @@ func buildReSchedulerCheckNodeCurNodeIsFaultTests() []ReSchedulerCheckNodeCurNod
 	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase2()...)
 	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase3()...)
 	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase4()...)
+	tests = append(tests, buildReSchedulerCheckNodeCurNodeIsFaultCase5()...)
 
 	return tests
 }
@@ -1020,6 +1021,25 @@ func buildReSchedulerCheckNodeCurNodeIsFaultCase4() []ReSchedulerCheckNodeCurNod
 		wantErr: false,
 	}
 	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test1, test2, test3}
+}
+
+func buildReSchedulerCheckNodeCurNodeIsFaultCase5() []ReSchedulerCheckNodeCurNodeIsFaultTests {
+	test6 := ReSchedulerCheckNodeCurNodeIsFaultTests{
+		name: "01-checkNodeCurNodeIsFault()-node status is PreSeparateFault",
+		fields: TestReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				FaultNodes: map[string]*FaultNode{"node0": fakeTestFaultNodeHasSubHealthyFault("node0")},
+			},
+			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {}},
+		},
+		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
+			vcNode: *fakeNodeWithAnnotation("node0",
+				map[string]string{util.NodedNodeHealtyStatuskey: util.PreSeparateFaultCode}),
+			task: &api.TaskInfo{Job: test.FakeJobName},
+		},
+		wantErr: true,
+	}
+	return []ReSchedulerCheckNodeCurNodeIsFaultTests{test6}
 }
 
 // TestReSchedulerCheckNodeCurNodeIsFault test for check current node is fault node

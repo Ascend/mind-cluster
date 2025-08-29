@@ -130,6 +130,7 @@ type DevManager interface {
 	GetUsedChips() sets.String
 	GetDeviceIP(deviceType string, phyID int) (string, error)
 	WriteFaultToEvent(ctx context.Context)
+	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 }
 
 // SetDmgr set devmanager
@@ -271,21 +272,30 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and " +
 				"timeDiff less than 5 minutes, no need to update")
+
 			return true, nil
+		}
+		if manuallySeparateNPU != "" {
+			hwlog.RunLog.Infof("get ManuallySeparateNPU from configMap, ManuallySeparateNPU:[%v] are unhealthy",
+				manuallySeparateNPU)
 		}
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
 			return false, nil
 		}
-		tool.lastUpdateTimeStamp = time.Now()
-		tool.lastManuallySeparateNPU = manuallySeparateNPU
-		tool.lastSwitchFaultInfo = switchFaultInfo
+		tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo)
 		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
 			tool.lastUpdateTimeStamp.Format(time.RFC3339))
 		return true, nil
 	})
 	return waitErr
+}
+
+func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo) {
+	tool.lastUpdateTimeStamp = time.Now()
+	tool.lastManuallySeparateNPU = manuallySeparateNPU
+	tool.lastSwitchFaultInfo = switchFaultInfo
 }
 
 func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
@@ -1229,19 +1239,21 @@ func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 		hwlog.RunLog.Errorf("failed to get node %s info, err: %s", tool.client.NodeName, err.Error())
 		return fmt.Errorf("failed to get node info")
 	}
-	// A800IA2 with has to label the node as server-usage:infer to divide with A800T
-	if serverUsage, ok := node.Labels[common.ServerUsageLabelKey]; ok && serverUsage == common.Infer {
-		tool.deviceUsage = common.Infer
-		return nil
-	}
 
 	boardId, err := tool.GetServerBoardId(devLogicID)
 	if err != nil {
 		hwlog.RunLog.Errorf("%v", err)
 		return fmt.Errorf("set device usage error")
 	}
+
+	// A800IA2 with has to label the node as server-usage:infer to divide with A800T
+	if serverUsage, ok := node.Labels[common.ServerUsageLabelKey]; ok && serverUsage == common.Infer {
+		tool.deviceUsage = common.Infer
+		return nil
+	}
+
 	// A800IA2 without hccs can be auto set usage as infer
-	if devType == common.Ascend910B && (boardId == common.A300IA2BoardId ||
+	if devType == common.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
 		boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
 		tool.deviceUsage = common.Infer
 		return nil

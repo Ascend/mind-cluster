@@ -872,18 +872,19 @@ func TestHotReset(t *testing.T) {
 	npuDevice := &common.NpuDevice{DeviceName: "name", LogicID: 0}
 	convey.Convey("Test hotReset", t, func() {
 		patch := gomonkey.ApplyMethod(hdm.manager, "SetCardsInResetting",
-			func(_ *device.HwAscend310Manager, _ int32, _ bool) {}).ApplyMethod(hdm.manager, "SetResetFailedTimes",
-			func(_ *device.HwAscend310Manager, _ int32, _ int) {})
+			func(_ *device.HwAscend310Manager, _ int32, _ bool) {}).
+			ApplyMethod(hdm.manager, "SetResetFailedTimes",
+				func(_ *device.HwAscend310Manager, _ int32, _ int) {})
 		defer patch.Reset()
 		convey.Convey("When PollImmediate error log warn and return", func() {
 			mockPollImmediate := gomonkey.ApplyFuncReturn(wait.PollImmediate, errors.New("error"))
 			defer mockPollImmediate.Reset()
-			hdm.hotReset(npuDevice)
+			hdm.hotReset(npuDevice, []*common.NpuDevice{npuDevice})
 		})
 		mockPollImmediate := gomonkey.ApplyFuncReturn(wait.PollImmediate, nil)
 		defer mockPollImmediate.Reset()
 		convey.Convey("When PollImmediate return nil   hot rest success", func() {
-			hdm.hotReset(npuDevice)
+			hdm.hotReset(npuDevice, []*common.NpuDevice{npuDevice})
 		})
 	})
 }
@@ -895,6 +896,13 @@ func TestResetCommonInferCard(t *testing.T) {
 	devices := []*common.NpuDevice{{DeviceName: "device1", Health: v1beta1.Healthy},
 		{DeviceName: "device2", Health: v1beta1.Unhealthy}}
 	convey.Convey("Test resetCommonInferCard", t, func() {
+		convey.Convey("card type is A3", func() {
+			patch := gomonkey.ApplyGlobalVar(&common.ParamOption.RealCardType, common.Ascend910A3)
+			defer patch.Reset()
+			npuDeviceList := []*common.NpuDevice{{LogicID: 0, Health: v1beta1.Healthy}}
+			hdm.resetCommonInferCard("devType", npuDeviceList, nil)
+			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
+		})
 		convey.Convey("When hdm is nil or allInfo.AllDevs is empty, log error and return", func() {
 			tmpAllDevs := hdm.allInfo.AllDevs
 			hdm.allInfo.AllDevs = []common.NpuDevice{}
@@ -930,6 +938,47 @@ func TestResetCommonInferCard(t *testing.T) {
 			defer patch1.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
+	})
+}
+
+func TestResetServerForA3(t *testing.T) {
+	hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+	convey.Convey("Test ResetServerForA3", t, func() {
+		logicList := []int32{0, 1, 8, 9}
+		npuDevices := []*common.NpuDevice{
+			{LogicID: 9}, {LogicID: 8, Health: v1beta1.Healthy}, {LogicID: 1}, {LogicID: 0}}
+		sleepTime := 300
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{}).
+			ApplyMethod(hdm.manager, "GetAssociatedLogicIDs",
+				func(_ *device.HwAscend910Manager, _, _, _ int32) ([]int32, error) {
+					return logicList, nil
+				}).
+			ApplyFuncReturn(wait.PollImmediate, nil)
+
+		defer patch.Reset()
+		convey.Convey("get card id device id failed, should not reset device", func() {
+			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID",
+				int32(0), int32(0), errors.New("getCardIDDeviceID error"))
+			hdm.ResetServerForA3("devType", npuDevices, nil)
+			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
+		})
+		convey.Convey("get logic id list success and pod already remove, should reset device", func() {
+			hdm.manager.SetCardsInResetting(0, false)
+			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0), nil).
+				ApplyPrivateMethod(hdm, "isPodRemove",
+					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return true })
+			hdm.ResetServerForA3("devType", npuDevices, nil)
+			convey.ShouldBeTrue(hdm.manager.GetIfCardsInResetting(0))
+		})
+		convey.Convey("pod not remove, should not reset device", func() {
+			hdm.manager.SetCardsInResetting(0, false)
+			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0), nil).
+				ApplyPrivateMethod(hdm, "isPodRemove",
+					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return false })
+			hdm.ResetServerForA3("devType", npuDevices, nil)
+			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
+		})
+		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
 	})
 }
 

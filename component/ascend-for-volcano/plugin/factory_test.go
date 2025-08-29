@@ -21,6 +21,7 @@ package plugin
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -681,4 +682,231 @@ func TestGetGraceDeleteTime(t *testing.T) {
 			}
 		})
 	}
+}
+
+type taskOrderFnArgs struct {
+	l interface{}
+	r interface{}
+}
+type taskOrderFnTest struct {
+	name   string
+	fields fields
+	args   taskOrderFnArgs
+	want   int
+}
+
+func createTaskOrderFnTask(jobId string, taskNum int) []*api.TaskInfo {
+	tTask := test.FakeNormalTestTasks(taskNum)
+	for index, task := range tTask {
+		task.Job = api.JobID(jobId)
+		task.Pod.Annotations[PodRankIndexKey] = strconv.Itoa(index)
+	}
+	return tTask
+}
+
+func buildTaskOrderFnTest() []taskOrderFnTest {
+	jobIdStr := "job1"
+	tTask := createTaskOrderFnTask(jobIdStr, util.NPUIndex2)
+	var tests []taskOrderFnTest
+	tests = append(tests, createTaskOrderFnCasesOfTaskNil()...)
+	tests = append(tests, createTaskOrderFnCasesOfJobNotExist(tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
+	tests = append(tests, createTaskOrderFnCasesOfPodGroupLabelNotExist(jobIdStr,
+		tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
+	tests = append(tests, createTaskOrderFnCasesOfCompareTask(jobIdStr,
+		tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
+	return tests
+}
+
+func createTaskOrderFnCasesOfTaskNil() []taskOrderFnTest {
+	return []taskOrderFnTest{
+		{
+			name: "01-TaskOrderFn nil task",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: nil, r: nil},
+			want: 0,
+		},
+		{
+			name: "02-TaskOrderFn right value nil task",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: &api.TaskInfo{}, r: nil},
+			want: 0,
+		},
+	}
+}
+
+func createTaskOrderFnCasesOfJobNotExist(task1, task2 *api.TaskInfo) []taskOrderFnTest {
+	return []taskOrderFnTest{
+		{
+			name: "03-TaskOrderFn job not exist",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: NewClusterCache(),
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: 0,
+		},
+	}
+}
+
+func createTaskOrderFnCasesOfPodGroupLabelNotExist(jobIdStr string, task1, task2 *api.TaskInfo) []taskOrderFnTest {
+	jobId := api.JobID(jobIdStr)
+	schedulerJob := fakeSchedulerJobEmptyTask(jobIdStr, "")
+	clusterCache := NewClusterCache()
+	clusterCache.Jobs = map[api.JobID]SchedulerJob{jobId: schedulerJob}
+
+	return []taskOrderFnTest{
+		{
+			name: "04-TaskOrderFn job podgroup label not exist",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: clusterCache,
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: 0,
+		},
+	}
+}
+
+func createTaskOrderFnCasesOfCompareTask(jobIdStr string, task1, task2 *api.TaskInfo) []taskOrderFnTest {
+	jobId := api.JobID(jobIdStr)
+	schedulerJob := fakeSchedulerJobEmptyTask(jobIdStr, "")
+	schedulerJob.Label[PodGroupScheduleKey] = PodGroupScheduleValue
+	clusterCache := NewClusterCache()
+	clusterCache.Jobs = map[api.JobID]SchedulerJob{jobId: schedulerJob}
+	return []taskOrderFnTest{
+		{
+			name: "05-TaskOrderFn job l < r",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: clusterCache,
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: -1,
+		},
+		{
+			name: "06-TaskOrderFn job l > r",
+			fields: fields{
+				NPUPlugins: map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: clusterCache,
+					FrameAttr:    VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: task2, r: task1},
+			want: 1,
+		},
+	}
+}
+
+// TestTaskOrderFn test of TaskOrderFn
+func TestTaskOrderFn(t *testing.T) {
+	tests := buildTaskOrderFnTest()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sHandle := &ScheduleHandler{
+				NPUPlugins:  tt.fields.NPUPlugins,
+				ScheduleEnv: tt.fields.ScheduleEnv,
+			}
+			if got := sHandle.TaskOrderFn(tt.args.l, tt.args.r); got != tt.want {
+				t.Errorf("TaskOrderFn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func fakeSchedulerJobEmptyTask(jobName, namespace string) SchedulerJob {
+	job := SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{
+				Name:      api.JobID(jobName),
+				NameSpace: namespace,
+				Selector:  map[string]string{},
+				Label:     map[string]string{},
+			},
+			NPUJob: &util.NPUJob{
+				ReqNPUName: util.NPU910CardName,
+				ReqNPUNum:  0,
+				Tasks:      make(map[api.TaskID]util.NPUTask),
+			},
+		},
+	}
+	return job
+}
+
+type taskRankIDFnArgs struct {
+	task *api.TaskInfo
+}
+type taskRankIdFnTest struct {
+	name    string
+	fields  fields
+	args    taskRankIDFnArgs
+	want    int
+	wantErr bool
+}
+
+func buildObtainTaskRankIdCases() []taskRankIdFnTest {
+	task1 := test.FakeNormalTestTask("pod1", "node1", "acjob")
+	delete(task1.Pod.Annotations, PodRankIndexKey)
+	task2 := test.FakeNormalTestTask("pod1", "node1", "acjob")
+	task2.Pod.Annotations[PodRankIndexKey] = ""
+
+	return []taskRankIdFnTest{
+		{
+			name:    "01-obtainTaskRankId, task is nil",
+			args:    taskRankIDFnArgs{task: nil},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "02-obtainTaskRankId, pod annotation not exist",
+			args:    taskRankIDFnArgs{task: task1},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:    "03-obtainTaskRankId, pod annotation not int",
+			args:    taskRankIDFnArgs{task: task2},
+			want:    0,
+			wantErr: true,
+		},
+	}
+}
+
+// TestObtainTaskRankId test obtainTaskRankId
+func TestObtainTaskRankId(t *testing.T) {
+	tests := buildObtainTaskRankIdCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sHandle := &ScheduleHandler{
+				NPUPlugins:  map[string]sets.Empty{},
+				ScheduleEnv: ScheduleEnv{ClusterCache: NewClusterCache(), FrameAttr: VolcanoFrame{}},
+			}
+			res, err := sHandle.obtainTaskRankId(tt.args.task)
+			if res != tt.want || (err != nil) != tt.wantErr {
+				t.Errorf("TaskOrderFn() = %v, want %v", res, tt.want)
+			}
+		})
+	}
+
 }

@@ -888,7 +888,8 @@ func (d *DeviceManager) SetIsTrainingCard() error {
 		}
 	}
 
-	if devType == common.Ascend910B && boardInfo.BoardId == common.A300IA2BoardId {
+	if devType == common.Ascend910B &&
+		(boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId) {
 		d.isTrainingCard = false
 		return nil
 	}

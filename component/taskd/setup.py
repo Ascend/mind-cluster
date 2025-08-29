@@ -83,7 +83,7 @@ setup(
     name='taskd',
     version=version,
     license='Apache 2.0',
-    url="https://gitee.com/ascend/mind-cluster",
+    url="https://gitcode.com/ascend/mind-cluster",
     platforms=['linux', ],
     description='Ascend MindCluster taskd is a new library for training management',
     python_requires='>=3.7',

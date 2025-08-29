@@ -284,12 +284,10 @@ func cropNaStr(s string) string {
 // 设置每个层级的网口信息
 func setLayerPort(infoStr []string) string {
 	infoLayerNum := len(infoStr)
-
 	finalArr := make([]string, 0)
 	for i := 0; i < infoLayerNum-1; i++ {
 		if strings.Contains(infoStr[i+1], nSlotConstant) {
 			npuLayerArr := strings.Split(infoStr[infoLayerNum-1], dotIntervalChar)
-
 			part := strings.Split(npuLayerArr[0], normalIntervalChar)
 			if len(part) != baseSegmentNum {
 				return ""
@@ -300,33 +298,36 @@ func setLayerPort(infoStr []string) string {
 			finalArr = append(finalArr, strings.Join(npuLayerArr[1:], ".")) // 兼容ip和非ip的组装
 			break
 		}
-
 		if strings.Contains(infoStr[i], roceSwitchConstant) {
 			finalArr = append(finalArr, infoStr[i])
 			continue
 		}
-
 		curLayerStr := strings.ReplaceAll(infoStr[i], ":0", "")
 		childLayerStr := strings.ReplaceAll(infoStr[i+1], ":0", "")
 		childLayerInfoArr := strings.Split(childLayerStr, dotIntervalChar)
-
+		if len(childLayerInfoArr) == 0 {
+			hwlog.RunLog.Error("[NETFAULT ALGO]the length of childLayerInfoArr is 0")
+			return ""
+		}
 		// 获取有实际意义的目标层级字符串
 		var targetStr string
 		if childLayerInfoArr[0] != "NA" {
 			targetStr = childLayerInfoArr[0]
 		} else {
+			var minLength = 2
+			if len(childLayerInfoArr) < minLength {
+				hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr is less than: %d", minLength)
+				return ""
+			}
 			targetStr = childLayerInfoArr[1]
 		}
-
 		part := strings.Split(targetStr, normalIntervalChar)
 		if len(part) != baseSegmentNum {
 			return ""
 		}
-
 		curLayerStr = curLayerStr + portIntervalChar + part[1]
 		finalArr = append(finalArr, curLayerStr)
 	}
-
 	result := strings.Join(finalArr, "#")
 	return result
 }
@@ -632,7 +633,9 @@ func (nd *NetDetect) sortIpList(ipList []string) {
 	sort.Slice(toSort, func(i, j int) bool {
 		return toSort[i].number < toSort[j].number
 	})
-
+	if len(toSort) != len(ipList) {
+		return
+	}
 	// write back the data to ipList
 	for i, item := range toSort {
 		ipList[i] = item.ip

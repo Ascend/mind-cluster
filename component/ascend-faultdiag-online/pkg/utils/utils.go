@@ -20,18 +20,27 @@ Package utils 提供了一些工具函数
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 var (
 	mu             sync.Mutex
 	startTimestamp int64 = 0
+)
+
+const (
+	defaultRetryCount = 20
+	defaultSleepTime  = 3 * time.Second
+	maxRetryCount     = 100
+	minSleepTime      = 10 * time.Millisecond
 )
 
 // ToFloat64 interface转float64
@@ -101,4 +110,44 @@ func IsRestarted() bool {
 		return false
 	}
 	return time.Now().UnixMilli()-startTimestamp <= constants.RestartInterval
+}
+
+// RetryConfig is a config for Retry function
+type RetryConfig struct {
+	// RetryCount is the max retry count
+	RetryCount int
+	// SleepTime is the time that retry wait for each calling
+	SleepTime time.Duration
+}
+
+// Retry is a common function to retry calling the provide f, default cg retryCount: 20, sleepTime: 3s
+func Retry[T any](f func() (T, error), cg *RetryConfig) (T, error) {
+	if cg == nil {
+		// using default config
+		cg = &RetryConfig{
+			RetryCount: defaultRetryCount,
+			SleepTime:  defaultSleepTime,
+		}
+	}
+	var res T
+	if f == nil {
+		return res, errors.New("retry failed: func is nil")
+	}
+	if cg.RetryCount > maxRetryCount || cg.SleepTime.Milliseconds() < minSleepTime.Milliseconds() {
+		return res, fmt.Errorf("config check failed: excced the max retry count: %d or less than min sleep time: %v",
+			maxRetryCount, minSleepTime)
+	}
+	var err error
+	for count := 0; count < cg.RetryCount; count++ {
+		res, err = f()
+		if err == nil {
+			return res, nil
+		}
+		if count < cg.RetryCount-1 {
+			hwlog.RunLog.Warnf("[FD-OL]call failed: %v, retry: %d/%d", err, count+1, cg.RetryCount)
+			time.Sleep(cg.SleepTime)
+		}
+	}
+	hwlog.RunLog.Errorf("[FD-OL]reached the max try: %d, and got err: %v", cg.RetryCount, err)
+	return res, err
 }

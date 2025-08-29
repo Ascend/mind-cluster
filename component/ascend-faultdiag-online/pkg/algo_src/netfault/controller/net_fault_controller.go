@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/algo"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/controllerflags"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/policy"
@@ -94,6 +95,16 @@ func writeNetFaultResult(result []byte, superPodPath string, curDetectionCount i
 		return
 	}
 	defer file.Close()
+	// check the symlink
+	isSoftlink, err := utils.IsSoftlink(filePath)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]check file: %s is softlink or not failed: %v", filePath, err)
+		return
+	}
+	if isSoftlink {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]file: %s is symlink, unsupported", filePath)
+		return
+	}
 	now := time.Now()
 	year := now.Year()
 	month := now.Month()
@@ -300,8 +311,8 @@ func loopCsvCallDetection(param detectionParam) {
 /* return super pod ids and directory paths */
 func getSuperPodDirInfo(clusterPath string) ([]int, []string) {
 	/* traverse below cluster directory named super-pod-i dir*/
-	var superPodIds []int
-	var superPodPaths []string
+	var superPodIds []int = nil
+	var superPodPaths []string = nil
 	regexFileName := regexp.MustCompile(pattern)
 	err := filepath.Walk(clusterPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

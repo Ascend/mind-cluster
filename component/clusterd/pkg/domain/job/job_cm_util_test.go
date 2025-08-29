@@ -8,6 +8,7 @@ package job
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -17,6 +18,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -160,5 +162,53 @@ func TestGetDefaultLabel(t *testing.T) {
 		labels := getDefaultLabel()
 		convey.So(labels[api.AtlasTaskLabel], convey.ShouldEqual, val910)
 		convey.So(labels[configmapLabel], convey.ShouldEqual, "true")
+	})
+}
+
+func TestRefreshFaultJobInfoCmData(t *testing.T) {
+	convey.Convey("test refreshFaultJobInfoCmData", t, func() {
+		// Initialize jobSummaryMap for testing
+		originalJobSummaryMap := jobSummaryMap
+		jobSummaryMap = sync.Map{}
+		defer func() { jobSummaryMap = originalJobSummaryMap }()
+
+		convey.Convey("when jobSummaryMap is empty, all data should be filtered out", func() {
+			inputData := map[string]string{
+				"job-uid-1": "job-data-1",
+				"job-uid-2": "job-data-2",
+			}
+			result := refreshFaultJobInfoCmData(inputData)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when jobSummaryMap contains some jobUids, only matching data should be retained", func() {
+			// Populate jobSummaryMap with some jobUids
+			jobSummaryMap.Store("job-uid-1", constant.JobInfo{})
+			jobSummaryMap.Store("job-uid-3", constant.JobInfo{})
+			inputData := map[string]string{
+				"job-uid-1": "job-data-1",
+				"job-uid-2": "job-data-2",
+				"job-uid-3": "job-data-3",
+				"job-uid-4": "job-data-4",
+			}
+			expectedResult := map[string]string{
+				"job-uid-1": "job-data-1",
+				"job-uid-3": "job-data-3",
+			}
+			result := refreshFaultJobInfoCmData(inputData)
+			convey.So(result, convey.ShouldResemble, expectedResult)
+		})
+
+		convey.Convey("when jobSummaryMap contains all jobUids, all data should be retained", func() {
+			// Populate jobSummaryMap with all jobUids
+			jobSummaryMap.Store("job-uid-1", constant.JobInfo{})
+			jobSummaryMap.Store("job-uid-2", constant.JobInfo{})
+			inputData := map[string]string{
+				"job-uid-1": "job-data-1",
+				"job-uid-2": "job-data-2",
+			}
+			result := refreshFaultJobInfoCmData(inputData)
+			convey.So(result, convey.ShouldResemble, inputData)
+		})
 	})
 }

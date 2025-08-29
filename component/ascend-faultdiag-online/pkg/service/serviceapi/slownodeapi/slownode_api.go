@@ -33,8 +33,8 @@ import (
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/node"
 )
 
-var dContext *diagcontext.DiagContext
-var contextData *contextdata.CtxData
+var dContext *diagcontext.DiagContext = nil
+var contextData *contextdata.CtxData = nil
 
 // ClusterStart 开启Cluster
 func ClusterStart() *api.Api {

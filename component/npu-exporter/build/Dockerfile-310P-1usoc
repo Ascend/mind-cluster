@@ -18,3 +18,10 @@ RUN chown root:root /usr/local/bin/npu-exporter  &&\
     chmod 500 /usr/local/bin/npu-exporter &&\
     echo 'umask 027' >> /etc/profile && \
     echo 'source /etc/profile' >> ~/.bashrc
+
+RUN ln -s /lib /lib64 2>&1 >> /dev/null &&\
+    mkdir -m 750 /var/driver -m 750 /var/dmp -m 750 /usr/slog -p -m 750 /home/drv/hdc_ppc &&\
+    chown HwDmUser:HwDmUser /var/dmp &&\
+    chown HwHiAiUser:HwHiAiUser /var/driver &&\
+    chown HwHiAiUser:HwHiAiUser /home/drv/hdc_ppc &&\
+    chown HwHiAiUser:HwHiAiUser /usr/slog

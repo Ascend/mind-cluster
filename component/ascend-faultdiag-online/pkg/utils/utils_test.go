@@ -19,13 +19,10 @@ package utils
 
 import (
 	"context"
-	"fmt"
-	"net"
-	"os"
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
@@ -152,151 +149,6 @@ func init() {
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 }
 
-const (
-	loopbackIp = "127.0.0.1"
-	mockEnvIp  = "192.168.1.100"
-	mockNetIp  = "192.168.1.101"
-	mockMask8  = 8
-	mockMask24 = 24
-	mockMask32 = 32
-)
-
-// TestGetNodeIpExistAndIpValid测试GetNodeIp函数环境变量存在且net.InterfaceAddrds返回值有效
-func TestGetNodeIpExistAndIpValid(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		if key == constants.XdlIpField {
-			return mockEnvIp
-		}
-		return ""
-	})
-
-	ip, err := GetNodeIp()
-	assert.NoError(t, err)
-	assert.Equal(t, mockEnvIp, ip)
-
-	// 打桩net.InterfaceAddrs返回值有效
-	patch.ApplyFunc(net.InterfaceAddrs, func() ([]net.Addr, error) {
-		return []net.Addr{
-			&net.IPNet{IP: net.ParseIP(loopbackIp), Mask: net.CIDRMask(mockMask8, mockMask32)},
-			&net.IPNet{IP: net.ParseIP(mockNetIp), Mask: net.CIDRMask(mockMask24, mockMask32)},
-		}, nil
-	})
-
-	ip, err = GetNodeIp()
-	assert.NoError(t, err)
-	assert.Equal(t, mockEnvIp, ip)
-}
-
-// TestGetNodeIpNotExistAndIpValid测试GetNodeIp函数环境变量不存在且net.InterfaceAddrds返回值有效
-func TestGetNodeIpNotExistAndIpValid(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量不存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		return ""
-	})
-
-	// 打桩net.InterfaceAddrs返回值有效
-	patch.ApplyFunc(net.InterfaceAddrs, func() ([]net.Addr, error) {
-		return []net.Addr{
-			&net.IPNet{IP: net.ParseIP(loopbackIp), Mask: net.CIDRMask(mockMask8, mockMask32)},
-			&net.IPNet{IP: net.ParseIP(mockNetIp), Mask: net.CIDRMask(mockMask24, mockMask32)},
-		}, nil
-	})
-
-	ip, err := GetNodeIp()
-	assert.Equal(t, err, nil)
-	assert.Equal(t, mockNetIp, ip)
-}
-
-// TestGetNodeIpExistAndInterfaceErr测试GetNodeIp函数环境变量不存在且net.InterfaceAddrds返回值无效
-func TestGetNodeIpExistAndInterfaceErr(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		return ""
-	})
-
-	// 打桩net.InterfaceAddrs返回值无效
-	patch.ApplyFunc(net.InterfaceAddrs, func() ([]net.Addr, error) {
-		return []net.Addr{
-			&net.IPNet{IP: net.ParseIP(loopbackIp), Mask: net.CIDRMask(mockMask8, mockMask32)},
-		}, fmt.Errorf("no valid IP")
-	})
-
-	ip, err := GetNodeIp()
-	assert.Error(t, err)
-	assert.Equal(t, "", ip)
-	assert.Contains(t, err.Error(), "no valid IP")
-}
-
-// TestGetNodeIpExistAndIpInvalid测试GetNodeIp函数环境变量不存在且net.InterfaceAddrds返回值无效
-func TestGetNodeIpExistAndIpInvalid(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		return ""
-	})
-
-	// 打桩net.InterfaceAddrs返回值无效
-	patch.ApplyFunc(net.InterfaceAddrs, func() ([]net.Addr, error) {
-		return []net.Addr{
-			&net.IPNet{IP: net.ParseIP(loopbackIp), Mask: net.CIDRMask(mockMask8, mockMask32)},
-		}, nil
-	})
-
-	ip, err := GetNodeIp()
-	assert.Error(t, err)
-	assert.Equal(t, "", ip)
-	assert.Contains(t, err.Error(), "no valid IP address found")
-}
-
-// TestGetClusterIpWithEnvExist测试GetCluserIP函数环境变量存在
-func TestGetClusterIpWithEnvExist(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		if key == constants.PodIP {
-			return mockEnvIp
-		}
-		return ""
-	})
-
-	ip := GetClusterIp()
-	assert.Equal(t, mockEnvIp, ip)
-}
-
-// TestGetClusterIpWithEnvExist测试GetCluserIP函数环境变量不存在
-func TestGetClusterIpWithEnvNotExist(t *testing.T) {
-	// 打桩os.Getenv返回值
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-
-	// 测试环境变量存在的情况
-	patch.ApplyFunc(os.Getenv, func(key string) string {
-		return ""
-	})
-
-	ip := GetClusterIp()
-	assert.Equal(t, "", ip)
-}
-
 func TestWriteAndReadUniqueId(t *testing.T) {
 	convey.Convey("test write and isRestarted", t, func() {
 		// no file, no restarted
@@ -308,5 +160,39 @@ func TestWriteAndReadUniqueId(t *testing.T) {
 		// wait the restartInterval
 		time.Sleep(constants.RestartInterval * time.Millisecond)
 		convey.So(IsRestarted(), convey.ShouldBeFalse)
+	})
+}
+
+func TestRetry(t *testing.T) {
+	convey.Convey("test Retry", t, func() {
+		// simulate all failed
+		var f = func() (int, error) {
+			return -1, errors.New("call f failed")
+		}
+		var count = 2
+		var sleepTime = time.Second
+		res, err := Retry(f, &RetryConfig{RetryCount: count, SleepTime: sleepTime})
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(res, convey.ShouldEqual, -1)
+		// test invalid parameters
+		sleepTime = time.Millisecond
+		_, err = Retry(f, &RetryConfig{RetryCount: count, SleepTime: sleepTime})
+		convey.So(err.Error(), convey.ShouldContainSubstring, "less than min sleep time")
+		sleepTime = time.Second
+		count = maxRetryCount + 1
+		_, err = Retry(f, &RetryConfig{RetryCount: count, SleepTime: sleepTime})
+		convey.So(err.Error(), convey.ShouldContainSubstring, "excced the max retry count")
+		// nil func
+		f = nil
+		_, err = Retry(f, &RetryConfig{RetryCount: count, SleepTime: sleepTime})
+		convey.So(err.Error(), convey.ShouldContainSubstring, "retry failed: func is nil")
+
+		// default cg
+		f = func() (int, error) {
+			return 0, nil
+		}
+		res, err = Retry(f, nil)
+		convey.So(res, convey.ShouldEqual, 0)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }

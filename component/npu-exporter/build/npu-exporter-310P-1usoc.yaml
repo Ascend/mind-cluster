@@ -68,6 +68,7 @@ spec:
         # pair firstly
         securityContext:
           privileged: true
+          readOnlyRootFilesystem: true
           runAsUser: 0
           runAsGroup: 0
         ports:

@@ -70,7 +70,8 @@ func getCurWorkInfo(npuNetplaneInfo map[string][]string, workInfo *NodeDevice) m
 	}
 
 	for id, sdIdStr := range workInfo.DeviceMap {
-		npuNetplaneInfoStr := fmt.Sprintf("L2:0#Work-%s:0#work-%s.NSlot-0:0#NPU%s-%s:0",
+		// A3场景worker抽象成rock用于适配算法解析
+		npuNetplaneInfoStr := fmt.Sprintf("L2:0#Rack-%s:0#rack-%s.NSlot-0:0#NPU%s-%s:0",
 			workInfo.ServerID, workInfo.ServerID, id, sdIdStr)
 		npuNetplaneInfo[netPlane0Constant] = append(npuNetplaneInfo[netPlane0Constant], npuNetplaneInfoStr)
 	}

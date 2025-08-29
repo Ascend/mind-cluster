@@ -1,5 +1,0 @@
-mode: cluster
-log_level: info
-queue_size: 10
-node_report_timeout: 7200  # wait for the first node report timeout, unit: second
-all_nodes_report_timeout: 1200 # wait for all nodes report timeout, unit: second

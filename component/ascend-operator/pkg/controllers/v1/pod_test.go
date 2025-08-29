@@ -883,3 +883,49 @@ func TestSetRestartPolicy(t *testing.T) {
 		})
 	})
 }
+
+// TestBatchCreatePods test the function of batchCreatePods
+func TestBatchCreatePods(t *testing.T) {
+	convey.Convey("batch create pod", t, func() {
+		rc := newCommonReconciler()
+		info := newCommonPodInfo()
+		specs := newReplicaSpecs()
+		convey.Convey("01-batch create pods success", func() {
+			patch := gomonkey.ApplyPrivateMethod(rc, "getPodsSlice", func(pods []*podInfo,
+				replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) ([]corev1.PodList, error) {
+				return []corev1.PodList{}, nil
+			})
+			defer patch.Reset()
+			err := rc.batchCreatePods([]*podInfo{info}, specs, info.job)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestGetPodsSlice test the function of getPodsSlice
+func TestGetPodsSlice(t *testing.T) {
+	convey.Convey("get pods slice", t, func() {
+		rc := newCommonReconciler()
+		info := newCommonPodInfo()
+		specs := newReplicaSpecs()
+		convey.Convey("01-get slice success", func() {
+			patch := gomonkey.ApplyPrivateMethod(rc, "createPodSpec", func(pi *podInfo,
+				replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) (*corev1.PodTemplateSpec, error) {
+				return &corev1.PodTemplateSpec{}, nil
+			})
+			defer patch.Reset()
+			_, err := rc.getPodsSlice([]*podInfo{info}, specs)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("02-create podSpec fail", func() {
+			patch := gomonkey.ApplyPrivateMethod(rc, "createPodSpec", func(pi *podInfo,
+				replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) (*corev1.PodTemplateSpec, error) {
+				return nil, errors.New("")
+			})
+			defer patch.Reset()
+			_, err := rc.getPodsSlice([]*podInfo{info}, specs)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}

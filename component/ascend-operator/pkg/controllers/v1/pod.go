@@ -40,6 +40,7 @@ import (
 	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"ascend-common/api"
@@ -326,6 +327,13 @@ func (r *ASJobReconciler) createPods(pods []*podInfo, replicas map[commonv1.Repl
 	if !r.scaler.CanCreatePod(job) {
 		return fmt.Errorf("job %s/%s can't create pod, try later", job.Namespace, job.Name)
 	}
+	if r.batchMgr.tryBatchCreate() {
+		if r.batchCreatePods(pods, replicas, job) == nil {
+			return nil
+		}
+		r.batchMgr.updateUnavailableStatus()
+	}
+	hwlog.RunLog.Info("the batch creation interface from k8s api-server is unavailable, start create pod singly")
 
 	appendMutex := sync.RWMutex{}
 	var createErr []error
@@ -351,6 +359,86 @@ func (r *ASJobReconciler) createPods(pods []*podInfo, replicas map[commonv1.Repl
 	if len(createErr) > 0 {
 		return fmt.Errorf("failed to create pods: %v", createErr)
 	}
+	return nil
+}
+
+// getPodsSlice split pods to default batches
+func (r *ASJobReconciler) getPodsSlice(pods []*podInfo,
+	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) ([]corev1.PodList, error) {
+	batches := len(pods) / batchCreatePodsDefaultSize
+	if len(pods)%batchCreatePodsDefaultSize != 0 {
+		batches += 1
+	}
+	var podCollections = make([]corev1.PodList, batches)
+	var podIdx = 0
+	for locate := 0; locate < batches; locate++ {
+		podCollections[locate].TypeMeta = metav1.TypeMeta{
+			Kind:       "PodLists",
+			APIVersion: "v1",
+		}
+		for ; podIdx < batchCreatePodsDefaultSize*(locate+1) && podIdx < len(pods); podIdx++ {
+			template, err := r.createPodSpec(pods[podIdx], replicas)
+			if err != nil {
+				return nil, err
+			}
+			controllerRef := r.GenOwnerReference(pods[podIdx].job)
+			pod := corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:      template.Labels,
+					Annotations: template.Annotations,
+					Name:        template.Name,
+					Namespace:   pods[podIdx].job.Namespace,
+					Finalizers:  template.Finalizers,
+				},
+			}
+			pod.OwnerReferences = append(pod.OwnerReferences, *controllerRef)
+			pod.Spec = template.Spec
+			podCollections[locate].Items = append(podCollections[locate].Items, pod)
+		}
+	}
+	return podCollections, nil
+}
+
+func (r *ASJobReconciler) batchCreatePods(pods []*podInfo, replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
+	job *mindxdlv1.AscendJob) error {
+	if job == nil {
+		hwlog.RunLog.Error("batchCreatePods error: job is nil")
+		return errors.New("batchCreatePods job error: is nil")
+	}
+	appendMutex := sync.RWMutex{}
+	var createErr []error
+	appendErr := func(err error) {
+		appendMutex.Lock()
+		defer appendMutex.Unlock()
+		createErr = append(createErr, err)
+	}
+	podCollections, err := r.getPodsSlice(pods, replicas)
+	if err != nil {
+		hwlog.RunLog.Errorf("batchCreatePods get pod slice error: %v, jobName=%v", err, job.Name)
+		return err
+	}
+	wg := sync.WaitGroup{}
+
+	wg.Add(len(podCollections))
+	start := time.Now()
+	for locate := range podCollections {
+		go func(batchIndex int) {
+			defer wg.Done()
+			podList := podCollections[batchIndex]
+			hwlog.RunLog.Infof("start collectionCreate, batchIndex=%d, batchSize=%d", batchIndex, len(podList.Items))
+			request := r.JobController.KubeClientSet.CoreV1().RESTClient().Post().Namespace(job.Namespace).
+				Resource("pods").Param(batchCreateParam, "true")
+			if err := request.Body(&podList).Do(context.TODO()).Error(); err != nil {
+				hwlog.RunLog.Errorf("batchCreatePods collectionCreate error: %v", err)
+				appendErr(err)
+			}
+		}(locate)
+	}
+	wg.Wait()
+	if len(createErr) != 0 {
+		return fmt.Errorf("batchCreatePods request error: %v", createErr)
+	}
+	hwlog.RunLog.Infof("batchCreatePods successfully, total used time: %v", time.Since(start))
 	return nil
 }
 

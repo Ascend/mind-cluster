@@ -207,6 +207,7 @@ func ReceiveMessageC(toolPtr uintptr) unsafe.Pointer {
 	rw.RLock()
 	tool, ok := netLifeCtl[toolPtr]
 	if !ok {
+		rw.RUnlock()
 		return unsafe.Pointer(nil)
 	}
 	rw.RUnlock()

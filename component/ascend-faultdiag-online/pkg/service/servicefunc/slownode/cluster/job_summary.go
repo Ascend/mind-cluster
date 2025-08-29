@@ -16,15 +16,11 @@
 package cluster
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/watch"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/core/model/enum"
+	"ascend-faultdiag-online/pkg/model"
 	"ascend-faultdiag-online/pkg/model/slownode"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/common"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
@@ -32,19 +28,12 @@ import (
 
 const (
 	// some keys relevent to the job_summary
-	keyJobId     = "job_id"
-	keyJobName   = "job_name"
-	keyJobStatus = "job_status"
-	keyHccl      = "hccl.json"
+	add = "add"
+	del = "delete"
 )
 
-func processJobSummaryData(data any, operator watch.EventType) {
-	var jobSummary, err = convertCMToJobSummary(data)
-	if err != nil {
-		hwlog.RunLog.Infof("[FD-OL SLOWNODE]convert cm data: %v to job summary failed: %v", data, err)
-		return
-	}
-	hwlog.RunLog.Infof("[FD-OL SLOWNODE]got job summary data, operator: %s, data: %+v", operator, jobSummary)
+func jobSummaryProcessor(jobSummary *model.JobSummary) {
+	hwlog.RunLog.Infof("[FD-OL SLOWNODE]got job summary data, operator: %s, data: %+v", jobSummary.Operator, jobSummary)
 	// query context from local contextMap
 	var key = fmt.Sprintf("%s/%s", jobSummary.Namespace, jobSummary.JobName)
 	ctx, ok := slownodejob.GetJobCtxMap().Get(key)
@@ -60,118 +49,74 @@ func processJobSummaryData(data any, operator watch.EventType) {
 	}
 	ctx.UpdateTrainingJobStatus(jobSummary.JobStatus)
 	var j = jobProcessor{ctx: ctx, job: ctx.Job}
-	switch operator {
-	case watch.Added:
-		ctx.Update(&slownode.Job{
-			SlowNode: ctx.Job.SlowNode,
-			Servers:  jobSummary.Servers,
-		})
-		if jobSummary.JobStatus == enum.IsRunning {
-			// case 1: no jobId in ctx, update it -> start slow node job
-			hwlog.RunLog.Infof(
-				"[FD-OL SLOWNODE]training job status is %s, starting slow node job(name=%s, jobId=%s)",
-				enum.IsRunning, jobSummary.JobName, jobSummary.JobId)
-			j.start()
-		}
-	case watch.Modified:
-		processJobSummaryUpdate(ctx, jobSummary)
-	case watch.Deleted:
-		hwlog.RunLog.Infof("[FD-OL SLOWNODE]job summary is deleted, stopping slow node job(name= %s, jobId= %s)",
-			jobSummary.JobName, jobSummary.JobId)
-		j.stop()
-	default:
-		return
-	}
-}
-
-func processJobSummaryUpdate(ctx *slownodejob.JobContext, jobSummary *slownode.JobSummary) {
-	logPrefix := fmt.Sprintf("[FD-OL SLOWNODE]job(name=%s, jobId=%s)", jobSummary.JobName, jobSummary.JobId)
-	var newJob = &slownode.Job{
-		SlowNode: ctx.Job.SlowNode,
-		Servers:  jobSummary.Servers,
-	}
-	var j = jobProcessor{ctx: ctx, job: ctx.Job}
-	switch jobSummary.JobStatus {
-	case enum.IsPending:
-		hwlog.RunLog.Infof("%s detected training job is pending", logPrefix)
-		// case: job_status is pending -> update and stop
-		ctx.Update(newJob)
-		j.stop()
-	case enum.IsFailed:
-		hwlog.RunLog.Infof("%s detected training job is failed, stop job", logPrefix)
-		// case: job_status is failed -> stop job
-		j.stop()
-	case enum.IsRunning:
-		if !ctx.IsRunning() {
-			hwlog.RunLog.Infof("%s detected training job is running, but job is not running", logPrefix)
-			// case: job_status is running, job is not running -> update job, start depends on SlowNode
-			ctx.Update(newJob)
-			j.start()
-			return
-		}
-		// case: job_status is running, job is running, rankIds changes -> stop then start job
-		if !common.AreServersEqual(ctx.Job.Servers, jobSummary.Servers) {
-			hwlog.RunLog.Infof("%s detected training job is running, rankIds changed, stop then start job", logPrefix)
-			ctx.Update(newJob)
-			j.stop()
-			j.start()
-		}
-	// case: job_status is complete -> delete job
-	case enum.IsCompleted:
-		hwlog.RunLog.Infof("%s detected training job is complete, delete job", logPrefix)
+	switch jobSummary.Operator {
+	case add:
+		jobStatusProcessor(ctx, jobSummary)
+	case del:
+		hwlog.RunLog.Infof("%s job summary is deleted, stopping slow node job", ctx.LogPrefix())
 		j.delete()
 	default:
 		return
 	}
 }
 
-// convertCMToJobSummary convert config map data to job summary
-func convertCMToJobSummary(data any) (*slownode.JobSummary, error) {
-	cm, ok := data.(*corev1.ConfigMap)
-	if !ok {
-		return nil, errors.New("convert to ConfigMap object failed")
-	}
-	var jobSummary = &slownode.JobSummary{Namespace: cm.Namespace}
-	errMsg := fmt.Sprintf("ConfigMap %s/%s does not contain", cm.Namespace, cm.Name)
-	if cm.Data[keyJobId] == "" {
-		return jobSummary, fmt.Errorf("%s %s", errMsg, keyJobId)
-	}
-	jobSummary.JobId = cm.Data[keyJobId]
-	if cm.Data[keyJobName] == "" {
-		return jobSummary, fmt.Errorf("%s %s", errMsg, keyJobName)
-	}
-	jobSummary.JobName = cm.Data[keyJobName]
-	if cm.Data[keyJobStatus] == "" {
-		return jobSummary, fmt.Errorf("%s %s", errMsg, keyJobStatus)
-	}
-	jobSummary.JobStatus = cm.Data[keyJobStatus]
-	if cm.Data[keyHccl] == "" {
-		return jobSummary, fmt.Errorf("%s %s", errMsg, keyHccl)
-	}
-	// Unmarshal the HCCL data
-	var hcclData = struct {
-		ServerList []struct {
-			ServerId string `json:"server_id"`
-			ServerSn string `json:"server_sn"`
-			Device   []struct {
-				RankId string `json:"rank_id"`
-			} `json:"device"`
-		} `json:"server_list"`
-	}{}
-	if err := json.Unmarshal([]byte(cm.Data[keyHccl]), &hcclData); err != nil {
-		return jobSummary, fmt.Errorf("failed to unmarshal HCCL data: %v", err)
-	}
-	jobSummary.Servers = make([]slownode.Server, len(hcclData.ServerList))
-	for i, server := range hcclData.ServerList {
+func serversGenerator(hcclJson model.HcclJson) []slownode.Server {
+	servers := make([]slownode.Server, len(hcclJson.ServerList))
+	for i, server := range hcclJson.ServerList {
 		var rankIds = make([]string, len(server.Device))
 		for j, device := range server.Device {
 			rankIds[j] = device.RankId
 		}
-		jobSummary.Servers[i] = slownode.Server{
+		servers[i] = slownode.Server{
 			Sn:      server.ServerSn,
 			Ip:      server.ServerId,
 			RankIds: rankIds,
 		}
 	}
-	return jobSummary, nil
+	return servers
+}
+
+func jobStatusProcessor(ctx *slownodejob.JobContext, jobSummary *model.JobSummary) {
+	servers := serversGenerator(jobSummary.HcclJson)
+	var newJob = &slownode.Job{
+		SlowNode: ctx.Job.SlowNode,
+		Servers:  servers,
+	}
+	if len(ctx.Job.Servers) == 0 {
+		ctx.Update(newJob)
+	}
+	var j = jobProcessor{ctx: ctx, job: ctx.Job}
+	switch jobSummary.JobStatus {
+	case enum.IsPending:
+		hwlog.RunLog.Infof("%s detected training job is pending", ctx.LogPrefix())
+		// case: job_status is pending -> update and stop
+		ctx.Update(newJob)
+		j.stop()
+	case enum.IsFailed:
+		hwlog.RunLog.Infof("%s detected training job is failed, stop job", ctx.LogPrefix())
+		// case: job_status is failed -> stop job
+		j.stop()
+	case enum.IsRunning:
+		if !ctx.IsRunning() {
+			hwlog.RunLog.Infof("%s detected training job is running, but job is not running", ctx.LogPrefix())
+			// case: job_status is running, job is not running -> update job, start depends on SlowNode
+			ctx.Update(newJob)
+			j.start()
+			return
+		}
+		// case: job_status is running, job is running, rankIds changes -> stop then start job
+		if !common.AreServersEqual(ctx.Job.Servers, servers) {
+			hwlog.RunLog.Infof("%s detected training job is running, rankIds changed, stop then start job",
+				ctx.LogPrefix())
+			ctx.Update(newJob)
+			j.stop()
+			j.start()
+		}
+	// case: job_status is complete -> delete job
+	case enum.IsCompleted:
+		hwlog.RunLog.Infof("%s detected training job is complete, delete job", ctx.LogPrefix())
+		j.delete()
+	default:
+		return
+	}
 }

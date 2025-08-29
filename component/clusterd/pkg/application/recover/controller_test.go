@@ -2993,3 +2993,19 @@ func TestWaitNormalFaultRecovery(t *testing.T) {
 		})
 	})
 }
+
+func TestCatchException(t *testing.T) {
+	convey.Convey("Testing catchException ", t, func() {
+		recovered := false
+
+		func() {
+			defer catchException()
+			defer func() { recovered = true }()
+			panic("test error")
+		}()
+
+		if !recovered {
+			t.Error("not catch exception")
+		}
+	})
+}

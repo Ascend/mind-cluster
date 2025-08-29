@@ -136,7 +136,12 @@ func (c *Controller) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plu
 		return nil
 	}
 	for _, handler := range c.PolicyHandler {
-		node = *handler.UseAnnotation(task, node)
+		newNode := handler.UseAnnotation(task, node)
+		if newNode == nil {
+			klog.V(util.LogErrorLev).Infof("node<%s> from UseAnnotation is nil", node.Name)
+			continue
+		}
+		node = *newNode
 	}
 	return &node
 }

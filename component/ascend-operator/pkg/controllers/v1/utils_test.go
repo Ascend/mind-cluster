@@ -373,3 +373,14 @@ func TestGetJobRequiredNpu(t *testing.T) {
 		})
 	})
 }
+
+func TestBatchCreateManager(t *testing.T) {
+	convey.Convey("batchCreateManager", t, func() {
+		manager := batchCreateManager{}
+		convey.So(manager.tryBatchCreate(), convey.ShouldBeTrue)
+		manager.updateUnavailableStatus()
+		convey.So(manager.tryBatchCreate(), convey.ShouldBeFalse)
+		manager.lastFailureTime = manager.lastFailureTime.Add(-1 * defaultBatchCreateFailInterval)
+		convey.So(manager.tryBatchCreate(), convey.ShouldBeTrue)
+	})
+}

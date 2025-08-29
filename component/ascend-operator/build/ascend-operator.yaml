@@ -87,7 +87,7 @@ rules:
     verbs: [ "create", "patch", "list", "watch", "delete" ]
   - apiGroups: [ "" ]
     resources: [ "pods" ]
-    verbs: [ "create", "list", "watch", "delete", "get"]
+    verbs: [ "create", "list", "watch", "delete", "get", "collectionCreate"]
   - apiGroups: [ "" ]
     resources: [ "services" ]
     verbs: [ "create", "list", "watch", "delete", "get" ]

@@ -62,6 +62,14 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	return s
 }
 
+func catchAndSetExceptionInfo(code *int32, info *string, ctl *EventController) {
+	if r := recover(); r != nil {
+		*code = int32(common.ServerInnerError)
+		*info = fmt.Sprintf("jobId=%s, uuid=%s, chan closed",
+			ctl.jobInfo.JobId, ctl.uuid)
+	}
+}
+
 func (s *FaultRecoverService) getController(jobId string) (*EventController, bool) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -355,12 +363,15 @@ func (s *FaultRecoverService) ReportStopComplete(ctx context.Context,
 			Info: fmt.Sprintf("jobId=%s not registed", request.JobId),
 		}, nil
 	}
-	controller.reportStopCompleteChan <- request
-	return &pb.Status{
-		Code: int32(common.OK),
-		Info: fmt.Sprintf("jobId=%s, uuid=%s, receive ReportStopComplete",
-			controller.jobInfo.JobId, controller.uuid),
-	}, nil
+	code := int32(common.OK)
+	info := fmt.Sprintf("jobId=%s, uuid=%s, receive ReportStopComplete",
+		controller.jobInfo.JobId, controller.uuid)
+	func() {
+		defer catchAndSetExceptionInfo(&code, &info, controller)
+		controller.reportStopCompleteChan <- request
+	}()
+
+	return &pb.Status{Code: code, Info: info}, nil
 }
 
 // ReportRecoverStrategy report supported recover strategy to ClusterD
@@ -376,12 +387,16 @@ func (s *FaultRecoverService) ReportRecoverStrategy(ctx context.Context,
 			Info: fmt.Sprintf("jobId=%s not registed", request.JobId),
 		}, nil
 	}
-	controller.reportRecoverStrategyChan <- request
-	return &pb.Status{
-		Code: int32(common.OK),
-		Info: fmt.Sprintf("jobId=%s, uuid=%s, receive ReportRecoverStrategy",
-			controller.jobInfo.JobId, controller.uuid),
-	}, nil
+
+	code := int32(common.OK)
+	info := fmt.Sprintf("jobId=%s, uuid=%s, receive ReportRecoverStrategy",
+		controller.jobInfo.JobId, controller.uuid)
+	func() {
+		defer catchAndSetExceptionInfo(&code, &info, controller)
+		controller.reportRecoverStrategyChan <- request
+	}()
+
+	return &pb.Status{Code: code, Info: info}, nil
 }
 
 // ReportRecoverStatus report recover result
@@ -397,12 +412,16 @@ func (s *FaultRecoverService) ReportRecoverStatus(ctx context.Context,
 			Info: fmt.Sprintf("jobId=%s not registed", request.JobId),
 		}, nil
 	}
-	controller.reportStatusChan <- request
-	return &pb.Status{
-		Code: int32(common.OK),
-		Info: fmt.Sprintf("jobId=%s, uuid=%s, receive ReportRecoverStatus",
-			controller.jobInfo.JobId, controller.uuid),
-	}, nil
+
+	code := int32(common.OK)
+	info := fmt.Sprintf("jobId=%s, uuid=%s, receive ReportRecoverStatus",
+		controller.jobInfo.JobId, controller.uuid)
+	func() {
+		defer catchAndSetExceptionInfo(&code, &info, controller)
+		controller.reportStatusChan <- request
+	}()
+
+	return &pb.Status{Code: code, Info: info}, nil
 }
 
 func giveSoftFault2FaultCenter(jobId string, faults []*pb.FaultRank) {

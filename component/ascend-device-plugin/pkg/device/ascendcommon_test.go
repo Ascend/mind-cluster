@@ -398,12 +398,18 @@ func TestSetDeviceUsage(t *testing.T) {
 			defer mockGetServerBoardIdMethod.Reset()
 			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldNotBeNil)
 		})
-		convey.Convey("04-get board success, should return nil", func() {
+		convey.Convey("get board success", func() {
 			boardID := uint32(0x3c)
-			mockGetServerBoardIdMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)),
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)),
 				"GetServerBoardId", func(_ *AscendTools, devLogicID int32) (uint32, error) { return boardID, nil })
-			defer mockGetServerBoardIdMethod.Reset()
-			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
+			defer patch.Reset()
+			convey.Convey("04-devType is not Ascend910B, should return nil", func() {
+				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
+			})
+			convey.Convey("05-devType is Ascend910B, should return nil", func() {
+				patch.ApplyMethodReturn(tool.dmgr, "GetDevType", common.Ascend910B)
+				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
+			})
 		})
 	})
 }

@@ -363,6 +363,7 @@ func (de *downStreamEndpoint) uniCast(msg *proto.Message) (*proto.Ack, error) {
 		de.netInstance.netlogger.Errorf("next hop not found in route table, msgid=%s, role=%s, srvRank=%s, processRank=%s",
 			msg.Header.Uuid, de.netInstance.config.Pos.Role, de.netInstance.config.Pos.ServerRank,
 			de.netInstance.config.Pos.ProcessRank)
+		de.rwLock.RUnlock()
 		return common.AckFrame(msg.Header.Uuid, common.NoRoute, &de.netInstance.config.Pos),
 			errors.New("no route")
 	}

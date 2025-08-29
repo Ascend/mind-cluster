@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	cmWatcher *configMapWatcher
+	cmWatcher *configMapWatcher = nil
 )
 
 // Option is a function that configures a configMapWatcher

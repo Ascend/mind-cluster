@@ -185,7 +185,7 @@ func siftFromPinglistA3(NodeDevMap map[string]string, superPodPingList map[strin
 		hwlog.RunLog.Errorf("get pingList failed")
 		return
 	}
-	var resPingList []PingInfo
+	var resPingList []PingInfo = nil
 	for phyID, superDeviceId := range NodeDevMap {
 		if len(superDeviceId) == 0 {
 			hwlog.RunLog.Errorf("get superDeviceId failed")

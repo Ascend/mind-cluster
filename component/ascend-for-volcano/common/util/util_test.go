@@ -1014,6 +1014,11 @@ func TestIsNPUTask(t *testing.T) {
 			taskInfo: &api.TaskInfo{Resreq: &api.Resource{}},
 			want:     false,
 		},
+		{
+			name:     "03 test func IsNPUTask, task is nil",
+			taskInfo: nil,
+			want:     false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

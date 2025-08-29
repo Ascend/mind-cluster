@@ -12,6 +12,7 @@ import (
 	"clusterd/pkg/domain/epranktable"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
+	"clusterd/pkg/interface/kube"
 )
 
 // PodGroupCollector collector podGroup info
@@ -20,6 +21,7 @@ func PodGroupCollector(oldPGInfo, newPGInfo *v1beta1.PodGroup, operator string) 
 	case constant.AddOperator, constant.UpdateOperator:
 		podgroup.SavePodGroup(newPGInfo)
 	case constant.DeleteOperator:
+		kube.RecoverFaultJobInfoCm(podgroup.GetJobKeyByPG(newPGInfo))
 		podgroup.DeletePodGroup(newPGInfo)
 	default:
 		hwlog.RunLog.Debugf("error operator: %s", operator)

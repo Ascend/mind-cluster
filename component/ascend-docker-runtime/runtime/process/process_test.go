@@ -55,6 +55,7 @@ const (
 	configPath                           = "./test/config.json"
 	chipName                             = "910"
 	testStr                              = "test"
+	writeAt                              = 2
 )
 
 var (
@@ -393,6 +394,124 @@ func TestModifySpecFilePatch4(t *testing.T) {
 			defer patch.Reset()
 			err := modifySpecFile("")
 			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+func TestReadSpecFile(t *testing.T) {
+	convey.Convey("test ReadSpecFil", t, func() {
+		convey.Convey("01-get file stat error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Stat, nil, testError)
+			defer patch.Reset()
+			_, err := readSpecFile("")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("02-open file error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.OpenFile, nil, testError)
+			defer patch.Reset()
+			_, err := readSpecFile("/valid/path")
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch1 := gomonkey.ApplyFuncReturn(os.OpenFile, os.File{}, nil)
+		defer patch1.Reset()
+		convey.Convey("03-check file error, should return error", func() {
+			patch := patch1.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, testError)
+			defer patch.Reset()
+			_, err := readSpecFile("/valid/path")
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch2 := patch1.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil)
+		defer patch2.Reset()
+		convey.Convey("04-read file error, should return error", func() {
+			patch := patch2.ApplyFuncReturn(os.ReadFile, nil, testError)
+			defer patch.Reset()
+			_, err := readSpecFile("/valid/path")
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch3 := patch2.ApplyFuncReturn(os.ReadFile, []byte("invalid json"), nil)
+		defer patch3.Reset()
+		convey.Convey("05-unmarshal error, should return error", func() {
+			patch := patch3.ApplyFuncReturn(json.Unmarshal, testError)
+			defer patch.Reset()
+			_, err := readSpecFile("/valid/path")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("06-os.OpenFile error, should return error", func() {
+			patch := patch3.ApplyFuncReturn(json.Unmarshal, nil)
+			defer patch.Reset()
+			_, err := readSpecFile("/valid/path")
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestProcessDevicesAndHooks(t *testing.T) {
+	convey.Convey("test processDevicesAndHooks", t, func() {
+		convey.Convey("02-spec without ASCEND_VISIBLE_DEVICES, should return error", func() {
+			spec := &specs.Spec{}
+			err := processDevicesAndHooks(spec)
+			convey.So(err, convey.ShouldBeError)
+		})
+
+		convey.Convey("02-spec with  ASCEND_VISIBLE_DEVICES, should return nil", func() {
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{"ASCEND_VISIBLE_DEVICES=0"},
+				},
+			}
+			err := processDevicesAndHooks(spec)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestWriteSpecFile tests the function writeSpecFile
+func TestWriteSpecFile(t *testing.T) {
+	convey.Convey("test writeSpecFile", t, func() {
+		testSpec := &specs.Spec{Version: "1.0.2"}
+		path := "test_spec.json"
+		defer os.Remove(path)
+		convey.Convey("01-open file error, should return error", func() {
+			err := writeSpecFile("/invalid/path", &specs.Spec{})
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch := gomonkey.ApplyFuncReturn(os.OpenFile, &os.File{}, nil)
+		defer patch.Reset()
+		convey.Convey("02-check file info error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, testError)
+			defer patch.Reset()
+			err := writeSpecFile(path, testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch1 := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil)
+		defer patch1.Reset()
+		convey.Convey("03-marshal error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, testError)
+			defer patch.Reset()
+			err := writeSpecFile(path, testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch2 := gomonkey.ApplyFuncReturn(json.Marshal, []byte("{}"), nil)
+		defer patch2.Reset()
+		convey.Convey("04-truncate error, should return error", func() {
+			patch := gomonkey.ApplyMethodReturn(new(os.File), "Truncate", testError)
+			defer patch.Reset()
+			err := writeSpecFile(path, testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+		patch3 := gomonkey.ApplyMethodReturn(new(os.File), "Truncate", nil)
+		defer patch3.Reset()
+		convey.Convey("05-write error, should return error", func() {
+			patch := gomonkey.ApplyMethodReturn(new(os.File), "WriteAt", 0, testError)
+			defer patch.Reset()
+			err := writeSpecFile(path, testSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("06-success, should return nil", func() {
+			patch := gomonkey.ApplyMethodReturn(new(os.File), "WriteAt", writeAt, nil)
+			defer patch.Reset()
+			err := writeSpecFile(path, testSpec)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }

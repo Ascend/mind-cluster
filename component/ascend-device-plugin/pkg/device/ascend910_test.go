@@ -354,16 +354,16 @@ func TestCanA3BeReset(t *testing.T) {
 			int32(id1), int32(id1), nil)
 		defer patch.Reset()
 		convey.Convey("02-get associated card error, should return false", func() {
-			patch1 := gomonkey.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1 := gomonkey.ApplyMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return nil, testErr
 				})
 			defer patch1.Reset()
 			ret := manager.canA3BeReset(dev)
 			convey.So(ret, convey.ShouldBeFalse)
 		})
-		patch.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-			func(logicID, cardID, deviceID int32) ([]int32, error) {
+		patch.ApplyMethod(manager, "GetAssociatedLogicIDs",
+			func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 				return []int32{id1}, nil
 			})
 		convey.Convey("03-get pod list failed, should return false", func() {
@@ -398,8 +398,8 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
 			int32(id1), int32(id1), nil)
 		defer patch.Reset()
-		patch.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-			func(logicID, cardID, deviceID int32) ([]int32, error) {
+		patch.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+			func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 				return []int32{id1}, nil
 			})
 		patch.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodList", nil, nil)
@@ -543,8 +543,8 @@ func TestSetUnhealthyForA3(t *testing.T) {
 		inResetDev = int32(id1)
 		convey.Convey("02-get associated card error, should return error", func() {
 			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)
-			patch1.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return nil, testErr
 				})
 			defer patch1.Reset()
@@ -552,8 +552,8 @@ func TestSetUnhealthyForA3(t *testing.T) {
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("03-success, should return nil", func() {
-			patch1 := gomonkey.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return []int32{logicID}, nil
 				})
 			defer patch1.Reset()
@@ -563,16 +563,16 @@ func TestSetUnhealthyForA3(t *testing.T) {
 	})
 }
 
-// TestGetAssociatedLogicIDs test the function getAssociatedLogicIDs
+// TestGetAssociatedLogicIDs test the function GetAssociatedLogicIDs
 func TestGetAssociatedLogicIDs(t *testing.T) {
 	manager := createFake910Manager()
 	const id1int32 = int32(id1)
-	convey.Convey("test getAssociatedLogicIDs", t, func() {
+	convey.Convey("test GetAssociatedLogicIDs", t, func() {
 		convey.Convey("01-get brother card error, should return error", func() {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
 				id1int32, testErr)
 			defer patch1.Reset()
-			_, err := manager.getAssociatedLogicIDs(id1int32, id1int32, id1int32)
+			_, err := manager.GetAssociatedLogicIDs(id1int32, id1int32, id1int32)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
@@ -582,13 +582,13 @@ func TestGetAssociatedLogicIDs(t *testing.T) {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
 				id1int32, testErr)
 			defer patch1.Reset()
-			_, err := manager.getAssociatedLogicIDs(id1int32, id1int32, id1int32)
+			_, err := manager.GetAssociatedLogicIDs(id1int32, id1int32, id1int32)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
 			id1int32, nil)
 		convey.Convey("03-success, should return nil", func() {
-			_, err := manager.getAssociatedLogicIDs(id1int32, id1int32, id1int32)
+			_, err := manager.GetAssociatedLogicIDs(id1int32, id1int32, id1int32)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -1029,16 +1029,16 @@ func TestGetA3LogicMapByAssociation(t *testing.T) {
 			int32(id1), int32(id1), nil)
 		defer patch.Reset()
 		convey.Convey("03-get associated card failed, should return error", func() {
-			patch1 := gomonkey.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1 := gomonkey.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return nil, testErr
 				})
 			defer patch1.Reset()
 			_, err := manager.getA3LogicMapByAssociation(devs)
 			convey.So(err, convey.ShouldBeError)
 		})
-		patch.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-			func(logicID, cardID, deviceID int32) ([]int32, error) {
+		patch.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+			func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 				return []int32{int32(id1)}, nil
 			})
 		convey.Convey("04-success, should return nil", func() {
@@ -1465,7 +1465,7 @@ func TestGetResetIndexForA3(t *testing.T) {
 			int32(id1), int32(id1), nil)
 		defer patch.Reset()
 		convey.Convey("02-get card id device id failed, should return error", func() {
-			patch1 := gomonkey.ApplyFuncReturn((*HwAscend910Manager).getAssociatedLogicIDs, []int32{}, nil)
+			patch1 := gomonkey.ApplyFuncReturn((*HwAscend910Manager).GetAssociatedLogicIDs, []int32{}, nil)
 			defer patch1.Reset()
 			retId, err := manager.getResetIndexForA3(chipPhyID0)
 			convey.So(err.Error(), convey.ShouldEqual, "sort logic ids failed, logic ids [], sorted ids []")
@@ -1473,7 +1473,7 @@ func TestGetResetIndexForA3(t *testing.T) {
 		})
 
 		convey.Convey("03-get reset index success, should return nil", func() {
-			patch1 := gomonkey.ApplyFuncReturn((*HwAscend910Manager).getAssociatedLogicIDs, []int32{id1, id2, id3}, nil)
+			patch1 := gomonkey.ApplyFuncReturn((*HwAscend910Manager).GetAssociatedLogicIDs, []int32{id1, id2, id3}, nil)
 			defer patch1.Reset()
 			retId, err := manager.getResetIndexForA3(chipPhyID0)
 			convey.So(err, convey.ShouldBeNil)
@@ -1956,30 +1956,35 @@ func TestRunProcessTask(t *testing.T) {
 		ApplyPrivateMethod(&HwAscend910Manager{}, "resetProcess",
 			func(*HwAscend910Manager, string, *common.TaskResetInfo, map[string][]*common.NpuDevice) { return })
 	defer mockFunc.Reset()
+	const sleepTime = 50 * time.Millisecond
 	convey.Convey("test runProcessTask", t, func() {
 		resetInfo := &common.TaskResetInfo{RankList: make([]*common.TaskDevInfo, 0)}
 		convey.Convey("01-policy level is 2, call restartRequestProcess, should return nil", func() {
 			manager := createFake910Manager()
 			manager.hotResetManager = &HotResetTools{}
 			err := manager.runProcessTask(taskName, common.RestartRequestErrorLevel, resetInfo, nil)
+			time.Sleep(sleepTime)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("02-policy level is 3, call restartProcess, should return nil", func() {
 			manager := createFake910Manager()
 			manager.hotResetManager = &HotResetTools{}
 			err := manager.runProcessTask(taskName, common.RestartErrorLevel, resetInfo, nil)
+			time.Sleep(sleepTime)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("03-policy level is 5, call resetProcess, should return nil", func() {
 			manager := createFake910Manager()
 			manager.hotResetManager = &HotResetTools{}
 			err := manager.runProcessTask(taskName, common.ResetErrorLevel, resetInfo, nil)
+			time.Sleep(sleepTime)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("04-policy level is 6, call resetProcess, should return nil", func() {
 			manager := createFake910Manager()
 			manager.hotResetManager = &HotResetTools{}
 			err := manager.runProcessTask(taskName, common.IsolateErrorLevel, resetInfo, nil)
+			time.Sleep(sleepTime)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -2601,7 +2606,7 @@ func TestCanResetDevice(t *testing.T) {
 // TestExecOutBandReset test the function execOutBandReset
 func TestExecOutBandReset(t *testing.T) {
 	manager := createFake910Manager()
-	const testCardID, testDeviceID = 0, 0
+	const testCardID, testDeviceID, sleepTime = 0, 0, 50 * time.Millisecond
 	convey.Convey("test execOutBandReset", t, func() {
 		patch := gomonkey.ApplyPrivateMethod(manager, "updateResetInfo",
 			func(_ *HwAscend910Manager, failDevs, sucDevs []ResetDevice) {
@@ -2642,6 +2647,7 @@ func TestExecOutBandReset(t *testing.T) {
 			}, []ResetDevice{})
 			convey.So(err, convey.ShouldBeNil)
 		})
+		time.Sleep(sleepTime)
 	})
 }
 
@@ -2890,8 +2896,8 @@ func TestFilterDevStatusForA3(t *testing.T) {
 	convey.Convey("test TestFilterDevStatusForA3", t, func() {
 		convey.Convey("01-get associated card error, should return error", func() {
 			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
-			patch1.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return []int32{id1}, testErr
 				})
 			defer patch1.Reset()
@@ -2900,8 +2906,8 @@ func TestFilterDevStatusForA3(t *testing.T) {
 		})
 		convey.Convey("02-success, should return nil", func() {
 			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
-			patch1.ApplyPrivateMethod(manager, "getAssociatedLogicIDs",
-				func(logicID, cardID, deviceID int32) ([]int32, error) {
+			patch1.ApplyPrivateMethod(manager, "GetAssociatedLogicIDs",
+				func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 					return []int32{id1}, nil
 				})
 			defer patch1.Reset()
@@ -3121,5 +3127,53 @@ func TestTryDeviceReset(t *testing.T) {
 			_, exists := resetDevMap.Load(1)
 			convey.So(exists, convey.ShouldBeFalse)
 		})
+	})
+}
+
+// TestCheckFaultIsExist tests the checkFaultIsExist function
+func TestCheckFaultIsExist(t *testing.T) {
+	manager := createFake910Manager()
+	manager.hotResetManager = &HotResetTools{}
+
+	convey.Convey("Test checkFaultIsExist", t, func() {
+		convey.Convey("01-no ascend 910 device, should return true", func() {
+			classifyDevs := map[string][]*common.NpuDevice{}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("02-get reset index failed, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return -1, testErr
+				})
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					{LogicID: 0},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{LogicID: 0})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("03-fault device exists in the same ring, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return 0, nil
+				})
+			defer patch.Reset()
+			patch.ApplyMethodReturn(manager.hotResetManager, "GetGlobalDevFaultInfo", &common.DevFaultInfo{}, nil)
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				common.Ascend910: {
+					{LogicID: 0},
+					{LogicID: 1},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, &common.NpuDevice{LogicID: 0})
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
 	})
 }

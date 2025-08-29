@@ -515,7 +515,7 @@ func getStepTimeHistoryData(records [][]string,
 	conf config.AlgoInputConfig,
 	npuId int,
 	curDetectedStepIndex int) []float64 {
-	var historyData []float64
+	var historyData []float64 = nil
 	/* 覆盖但数量不够情况 */
 	if !(curDetectedStepIndex == -1) && (len(records)-1 < conf.NconsecAnomaliesSignifySlow) {
 		return []float64{}

@@ -52,7 +52,7 @@ type JobServer struct {
 }
 
 func init() {
-	clientWhiteList = map[string]bool{"CCAgent": true, "DefaultUser1": true, "DefaultUser2": true}
+	clientWhiteList = map[string]bool{"CCAgent": true, "DefaultUser1": true, "DefaultUser2": true, "FdAgent": true}
 }
 
 // NewJobServer create a new job info server

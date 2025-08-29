@@ -15,6 +15,7 @@ import (
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -24,6 +25,7 @@ import (
 
 const (
 	logEnvPattern = "set pod<%s> env: %v"
+
 	taskIDEnvKey  = "MINDX_TASK_ID"
 	appTypeEnvKey = "APP_TYPE"
 )
@@ -142,6 +144,7 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 			addEnvValue(podTemplate, msRole, msRoleMap[pi.rtype], i)
 
 			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
+			addProcessRecoverEnv(pi, podTemplate, i, api.MindSporeFramework)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -162,6 +165,7 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 			addEnvValue(podTemplate, ptMasterAddr, pi.ip, i)
 			addEnvValue(podTemplate, ptMasterPort, pi.port, i)
 			addEnvValue(podTemplate, ptRank, strconv.Itoa(pi.rank), i)
+			addProcessRecoverEnv(pi, podTemplate, i, api.PytorchFramework)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -221,4 +225,103 @@ func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 			break
 		}
 	}
+}
+
+func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {
+	strategies := getJobRecoverStrategy(pi.job)
+	if strategies == "" {
+		return
+	}
+	env := make(map[string]string)
+	trainEnv := make(sets.String)
+	for _, strategy := range strings.Split(strategies, ",") {
+		addEnvByStrategy(env, trainEnv, strategy, framework)
+	}
+	if framework == api.PytorchFramework {
+		env[api.HighAvailableEnv] = strings.Join(trainEnv.List(), ",")
+	}
+	if framework == api.MindSporeFramework {
+		if isPodScheduleStrategy(pi.job) {
+			trainEnv.Insert(api.MsRscStrategy)
+		}
+		env[api.MsRecoverEnv] = `'{` + strings.Join(trainEnv.List(), ",") + `}'`
+		env[api.EnableMS] = api.EnableFlag
+	}
+	for k, v := range env {
+		addEnvValue(pod, k, v, containerIndex)
+	}
+	hwlog.RunLog.Infof("set process reschedule pod<%s> env: %v", pod.Name, env)
+}
+
+func addEnvByStrategy(env map[string]string, trainEnv sets.String, strategy string, framework string) {
+	switch strategy {
+	case api.RecoverStrategy:
+		addRecoverEnv(env, trainEnv, framework)
+	case api.RetryStrategy:
+		addRetryEnv(env, trainEnv, framework)
+	case api.DumpStrategy:
+		addDumpEnv(env, trainEnv, framework)
+	case api.InPlaceStrategy:
+		addRecoverInPlaceEnv(env, trainEnv, framework)
+	default:
+		return
+	}
+}
+
+func addRecoverEnv(env map[string]string, trainEnv sets.String, framework string) {
+	if env == nil || trainEnv == nil {
+		return
+	}
+	if framework == api.PytorchFramework {
+		trainEnv.Insert(api.RecoverStrategy)
+	}
+	if framework == api.MindSporeFramework {
+		trainEnv.Insert(api.MsArfStrategy)
+	}
+	env[api.ProcessRecoverEnv] = api.EnableFunc
+	env[api.ElasticRecoverEnv] = api.EnableFlag
+}
+
+func addRetryEnv(env map[string]string, trainEnv sets.String, framework string) {
+	if env == nil || trainEnv == nil {
+		return
+	}
+	if framework == api.PytorchFramework {
+		trainEnv.Insert(api.RetryStrategy)
+	}
+	if framework == api.MindSporeFramework {
+		trainEnv.Insert(api.MsUceStrategy)
+		trainEnv.Insert(api.MsHcceStrategy)
+	}
+	env[api.ProcessRecoverEnv] = api.EnableFunc
+	env[api.ElasticRecoverEnv] = api.EnableFlag
+}
+
+func addRecoverInPlaceEnv(env map[string]string, trainEnv sets.String, framework string) {
+	if env == nil || trainEnv == nil {
+		return
+	}
+	if framework == api.PytorchFramework {
+		trainEnv.Insert(api.RecoverStrategy)
+	}
+	if framework == api.MindSporeFramework {
+		trainEnv.Insert(api.MsArfStrategy)
+	}
+	env[api.ProcessRecoverEnv] = api.EnableFunc
+	env[api.EnableRestartEnv] = api.EnableFunc
+	env[api.ElasticRecoverEnv] = api.EnableFlag
+}
+
+func addDumpEnv(env map[string]string, trainEnv sets.String, framework string) {
+	if env == nil || trainEnv == nil {
+		return
+	}
+	if framework == api.PytorchFramework {
+		trainEnv.Insert(api.DumpStrategy)
+	}
+	if framework == api.MindSporeFramework {
+		trainEnv.Insert(api.MsDumpStrategy)
+	}
+	env[api.ElasticRecoverEnv] = api.EnableFlag
+	env[api.ProcessRecoverEnv] = api.EnableFunc
 }

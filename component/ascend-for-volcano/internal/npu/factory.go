@@ -87,7 +87,7 @@ func initCard310PFactory() {
 func initCard910Factory() {
 	card910Factory[card910x2Name] = func() base.AscendHandler {
 		return base.New(util.NPU910CardName,
-			base.WithAnnoPreVal(util.NPU910CardNamePre), base.WithMaxNodeNum(util.NPUIndex2))
+			base.WithAnnoPreVal(util.NPU910CardNamePre), base.WithMaxNodeNum(util.NPUIndex8))
 	}
 	card910Factory[module910bx8Name] = func() base.AscendHandler {
 		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),

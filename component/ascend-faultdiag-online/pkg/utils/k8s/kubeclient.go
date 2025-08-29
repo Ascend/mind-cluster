@@ -40,7 +40,7 @@ const (
 var (
 	err    error
 	once   sync.Once
-	client *Client
+	client *Client = nil
 )
 
 // Client k8s client include node name and node info name
@@ -82,17 +82,6 @@ func (c *Client) CreateConfigMap(cm *corev1.ConfigMap) (*corev1.ConfigMap, error
 	}
 	newCM, err := c.ClientSet.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).
 		Create(context.TODO(), cm, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return newCM, nil
-}
-
-// GetConfigMap get config map by name and name space
-func (c *Client) GetConfigMap(cmName, cmNamespace string) (*corev1.ConfigMap, error) {
-	newCM, err := c.ClientSet.CoreV1().ConfigMaps(cmNamespace).Get(context.TODO(), cmName, metav1.GetOptions{
-		ResourceVersion: "0",
-	})
 	if err != nil {
 		return nil, err
 	}

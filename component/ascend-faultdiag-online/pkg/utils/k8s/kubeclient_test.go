@@ -123,7 +123,6 @@ func TestClientK8s(t *testing.T) {
 		ClientSet: fake.NewSimpleClientset(),
 	}
 	convey.Convey("test ClientK8s method 'CreateConfigMap'", t, testCreateConfigMap)
-	convey.Convey("test ClientK8s method 'GetConfigMap'", t, testGetConfigMap)
 	convey.Convey("test ClientK8s method 'UpdateConfigMap'", t, testUpdateConfigMap)
 	convey.Convey("test ClientK8s method 'CreateOrUpdateConfigMap'", t, testCreateOrUpdateCM)
 }
@@ -133,14 +132,6 @@ func testCreateConfigMap() {
 		panic("testK8sClient is nil")
 	}
 	_, err := testK8sClient.CreateConfigMap(&corev1.ConfigMap{})
-	convey.So(err, convey.ShouldBeNil)
-}
-
-func testGetConfigMap() {
-	if testK8sClient == nil {
-		panic("testK8sClient is nil")
-	}
-	_, err := testK8sClient.GetConfigMap("", "")
 	convey.So(err, convey.ShouldBeNil)
 }
 

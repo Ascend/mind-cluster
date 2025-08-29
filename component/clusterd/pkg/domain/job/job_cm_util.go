@@ -4,6 +4,7 @@
 package job
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -152,4 +153,51 @@ func getDefaultLabel() map[string]string {
 	label[api.AtlasTaskLabel] = val910
 	label[configmapLabel] = "true"
 	return label
+}
+
+func refreshFaultJobInfo() {
+	for i := 0; i < constant.RetryTime; i++ {
+		cm, getErr := kube.GetConfigMap(api.FaultJobCmName, api.ClusterNS)
+		if getErr != nil {
+			if errors.IsNotFound(getErr) {
+				hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+				return
+			}
+			hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+			continue
+		}
+		cm.Data = refreshFaultJobInfoCmData(cm.Data)
+		if _, updateErr := kube.UpdateConfigMap(cm); updateErr != nil {
+			hwlog.RunLog.Errorf("update configmap fault-job-info err:%v", updateErr)
+			time.Sleep(time.Second)
+			continue
+		}
+		return
+	}
+}
+
+// RefreshFaultJobInfo refresh configmap fault-job-info
+func RefreshFaultJobInfo(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Info("job RefreshFaultJobInfo stop work")
+			return
+		default:
+			refreshFaultJobInfo()
+			time.Sleep(time.Hour)
+		}
+	}
+}
+
+// refreshFaultJobInfoCmData  refresh configmap fault-job-info data
+func refreshFaultJobInfoCmData(datas map[string]string) map[string]string {
+	newData := make(map[string]string)
+	for jobUid, data := range datas {
+		if _, ok := jobSummaryMap.Load(jobUid); !ok {
+			continue
+		}
+		newData[jobUid] = data
+	}
+	return newData
 }

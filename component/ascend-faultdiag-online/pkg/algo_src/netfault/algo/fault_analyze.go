@@ -137,12 +137,12 @@ func (nd *NetDetect) formatLayer(item map[string]any) {
 		return
 	}
 
-	fromLayer := nd.findFullLayerPath(srcAddr)
+	fromLayer := nd.findFullLayerPath(nd.curNpuInfo[srcAddr].RackName + ":" + srcAddr)
 	if fromLayer != "" {
 		item[fromLayerConstant] = fromLayer
 	}
 
-	toLayer := nd.findFullLayerPath(dstAddr)
+	toLayer := nd.findFullLayerPath(nd.curNpuInfo[dstAddr].RackName + ":" + dstAddr)
 	if toLayer != "" {
 		item[toLayerConstant] = toLayer
 	}
@@ -389,6 +389,30 @@ func getIndicators(input []map[string]any, path map[string]any) (float64, float6
 	return lossIndicator, delayIndicator
 }
 
+func isDuplicatedLinkCurDetectionPeriod(uniqueLinkPaths []interface{}, curLinkPath map[string]interface{}) bool {
+	for i := 0; i < len(uniqueLinkPaths); i++ {
+		path, ok := uniqueLinkPaths[i].(map[string]interface{})
+		if !ok {
+			hwlog.RunLog.Warn("[ALGO] transfer fault link obj failed!")
+			continue
+		}
+		src, ok1 := path[srcAddrConstant].(string)
+		dst, ok2 := path[dstAddrConstant].(string)
+		curSrc, ok3 := curLinkPath[srcAddrConstant].(string)
+		curDst, ok4 := curLinkPath[dstAddrConstant].(string)
+		if !ok1 || !ok2 || !ok3 || !ok4 {
+			hwlog.RunLog.Warn("[ALGO] transfer fault link address string failed!")
+			continue
+		}
+		if src != curSrc || dst != curDst {
+			continue
+		}
+		hwlog.RunLog.Infof("[ALGO] remove duplicated link path, src: %v, dst: %v", src, dst)
+		return true
+	}
+	return false
+}
+
 // 组合异常路径
 func (nd *NetDetect) diffFaultPathList(faultPathList []any, detectType string) ([]any, []any) {
 	npuDireAlarmList := make([]any, 0)
@@ -404,7 +428,12 @@ func (nd *NetDetect) diffFaultPathList(faultPathList []any, detectType string) (
 
 		// 挑选出npu直连的异常路径（npu直连的没有完整路径，只有ip->ip，因此单独拿出来进行分析）
 		if !containsKey(path, fromLayerConstant) || !containsKey(path, toLayerConstant) {
-			npuDireAlarmList = append(npuDireAlarmList, path)
+			if !isDuplicatedLinkCurDetectionPeriod(npuDireAlarmList, path) {
+				npuDireAlarmList = append(npuDireAlarmList, path)
+			}
+			continue
+		}
+		if isDuplicatedLinkCurDetectionPeriod(otherAlarmList, path) {
 			continue
 		}
 
@@ -430,7 +459,9 @@ func (nd *NetDetect) diffFaultPathList(faultPathList []any, detectType string) (
 				layerNum++
 			}
 		}
-
+		if nd.curNpuType == a3NpuTypeConstant && layerNum == 0 {
+			layerNum++
+		}
 		info := fmt.Sprintf("%s%s%d%s%s", layerConstant, objectIntervalChar, layerNum, portIntervalChar, srcNodes[layerNum])
 		path[informationConstant] = info
 		otherAlarmList = append(otherAlarmList, path)
@@ -504,12 +535,11 @@ func setIndicators(faultPath []any, rootCauseAlarm map[string]any) {
 		return
 	}
 
-	var maxLoss, maxDelay, sumLoss, sumDelay float64
+	var maxLoss, maxDelay, sumLoss, sumDelay float64 = 0, 0, 0, 0
 	var minDelay = math.MaxFloat64
 	var minLoss = math.MaxFloat64
-	var timeStamp int64
+	var timeStamp int64 = 0
 	var taskId string
-
 	for i := 0; i < len(faultPath); i++ {
 		curPath, ok1 := faultPath[i].(map[string]any)
 		tmpMinDelay, ok2 := curPath[minDelayConstant].(float64)
@@ -931,6 +961,40 @@ func setNpuFaultAlarm(rootCauseObj string, rootCauseAlarm map[string]any) {
 	rootCauseAlarm[levelConstant] = majorType
 }
 
+func (nd *NetDetect) setSrcAndDstForA3(rootCauseAlarm map[string]interface{}, rootCauseObj string, setSrc bool,
+	setDst bool) {
+	if rootCauseAlarm == nil {
+		return
+	}
+	// A3场景是一个worker抽象成一个rack，所以这里rack级根因在A3场景下应该为npu卡上行到节点worker故障
+	splitFirstSlice := strings.Split(rootCauseObj, "-") // 取出worker id
+	if len(splitFirstSlice) != baseSegmentNum {
+		hwlog.RunLog.Errorf("[ALGO] error split woker name: %s", rootCauseObj)
+		return
+	}
+	// A3上升到worker情况
+	if strings.Contains(splitFirstSlice[1], ":") {
+		splitSecondSlice := strings.Split(splitFirstSlice[1], ":")
+		if len(splitSecondSlice) != baseSegmentNum {
+			hwlog.RunLog.Errorf("[ALGO] error split woker name: %s, %s", splitFirstSlice[1], rootCauseObj)
+			return
+		}
+		splitFirstSlice[1] = splitSecondSlice[0]
+	}
+	if workerName, exit := nd.curServerIdMap[splitFirstSlice[1]]; exit {
+		if setDst {
+			rootCauseAlarm[dstIdConstant] = workerName
+			rootCauseAlarm[dstTypeConstant] = workNodeType
+		}
+		if setSrc {
+			rootCauseAlarm[srcIdConstant] = workerName
+			rootCauseAlarm[srcTypeConstant] = workNodeType
+		}
+	} else {
+		hwlog.RunLog.Errorf("[ALGO] error to get worker name: %s form map: %v", rootCauseObj, nd.curServerIdMap)
+	}
+}
+
 // 框里交换机故障
 func (nd *NetDetect) setRackFaultAlarm(rootCauseObj string, rootCauseAlarm map[string]any, netplane string) {
 	if rootCauseAlarm == nil {
@@ -943,6 +1007,7 @@ func (nd *NetDetect) setRackFaultAlarm(rootCauseObj string, rootCauseAlarm map[s
 		if len(npuRackList) != baseSegmentNum {
 			return
 		}
+		// A3场景下Rack-i:Sdid而非npu物理ID，Sdid是一个string
 		npuNumber, err := strconv.Atoi(npuRackList[1])
 		if err != nil {
 			return
@@ -952,15 +1017,23 @@ func (nd *NetDetect) setRackFaultAlarm(rootCauseObj string, rootCauseAlarm map[s
 		srcId := nd.findPingObjByNpuNumber(rackName, npuNumber, netplane)
 		rootCauseAlarm[srcIdConstant] = srcId
 		rootCauseAlarm[srcTypeConstant] = npuType
-		rootCauseAlarm[dstIdConstant] = npuRackList[0]
-		rootCauseAlarm[dstTypeConstant] = rackNetplaneType
+		if nd.curNpuType == a3NpuTypeConstant {
+			nd.setSrcAndDstForA3(rootCauseAlarm, rootCauseObj, false, true)
+		} else {
+			rootCauseAlarm[dstIdConstant] = npuRackList[0]
+			rootCauseAlarm[dstTypeConstant] = rackNetplaneType
+		}
 		rootCauseAlarm[levelConstant] = minorType
 	} else {
 		// 框里交换机本身故障
-		rootCauseAlarm[srcIdConstant] = rootCauseObj
-		rootCauseAlarm[srcTypeConstant] = rackNetplaneType
-		rootCauseAlarm[dstIdConstant] = rootCauseObj
-		rootCauseAlarm[dstTypeConstant] = rackNetplaneType
+		if nd.curNpuType == a3NpuTypeConstant {
+			nd.setSrcAndDstForA3(rootCauseAlarm, rootCauseObj, true, true)
+		} else {
+			rootCauseAlarm[srcIdConstant] = rootCauseObj
+			rootCauseAlarm[dstIdConstant] = rootCauseObj
+			rootCauseAlarm[srcTypeConstant] = rackNetplaneType
+			rootCauseAlarm[dstTypeConstant] = rackNetplaneType
+		}
 		rootCauseAlarm[levelConstant] = criticalType
 	}
 }
@@ -1564,7 +1637,18 @@ func (nd *NetDetect) findPingObjByNpuNumber(rackName string, npuNumber int, netp
 	}
 
 	for pingObj, npuInfo := range nd.curNpuInfo {
-		if npuInfo.RackName == rackName && npuInfo.NpuNumber == npuNumber && npuInfo.NetPlaneId == netplane {
+		if nd.curNpuType == a3NpuTypeConstant {
+			npuSdId, err := strconv.Atoi(npuInfo.IP)
+			if err != nil {
+				hwlog.RunLog.Errorf("[ALGO] string to int failed: %v", err)
+				return ""
+			}
+			if npuInfo.RackName == rackName && npuSdId == npuNumber && npuInfo.NetPlaneId == netplane {
+				return pingObj
+			}
+		}
+		if nd.curNpuType != a3NpuTypeConstant &&
+			npuInfo.RackName == rackName && npuInfo.NpuNumber == npuNumber && npuInfo.NetPlaneId == netplane {
 			return pingObj
 		}
 	}

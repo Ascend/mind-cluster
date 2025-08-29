@@ -335,3 +335,24 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 	hwlog.RunLog.Errorf("job(uid=%s) relative pods is empty, get pgName, jobName failed", jobKey)
 	return
 }
+
+// ConstructServersByJobKey Construct server hccl list by job key
+func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
+	podMap := GetPodByJobId(jobKey)
+	servers := make(map[string]constant.ServerHccl, len(podMap))
+	for _, pod := range podMap {
+		if pod.Spec.NodeName == "" {
+			hwlog.RunLog.Warnf("job: %s server pod %s is not scheduled", jobKey, pod.Name)
+			return nil
+		}
+		nodeName := pod.Spec.NodeName
+		servers[nodeName] = constant.ServerHccl{
+			ServerID:     node.GetNodeIpByName(nodeName),
+			PodID:        pod.Name,
+			PodNameSpace: pod.Namespace,
+			ServerName:   nodeName,
+			ServerSN:     node.GetNodeSNByName(nodeName),
+		}
+	}
+	return servers
+}

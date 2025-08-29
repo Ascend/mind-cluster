@@ -106,6 +106,14 @@ const (
 )
 
 const (
+	// default min member number of replica
+	defaultMinMember = 1
+	// batch create pods parameter for k8s api-server
+	batchCreateParam = "collectionCreate"
+	// batch create pods default size
+	batchCreatePodsDefaultSize = 1000
+	// batch create default interval
+	defaultBatchCreateFailInterval = time.Hour
 	// unsetBackoffLimits default Re-scheduling Times of job, it stands for Unlimited.
 	unsetBackoffLimits = -1
 	// podVersionLabel version of the current pod, if the value is 0, the pod is created for the first time.

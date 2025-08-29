@@ -24,6 +24,7 @@ func init() {
 
 const (
 	podName1               = "pod1"
+	podName2               = "pod2"
 	podNameSpace1          = "default"
 	podUid1                = "123"
 	defaultPodRankIndexKey = "0"
@@ -38,6 +39,10 @@ const (
 	vcJobKey = "job"
 	pgName1  = "pg1"
 	sharedIp = "127.0.0.1"
+
+	nodeName1 = "node1"
+	nodeIp1   = "192.168.1.1"
+	nodeSn1   = "sn1"
 )
 
 func TestSavePod(t *testing.T) {

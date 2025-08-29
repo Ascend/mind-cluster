@@ -199,6 +199,6 @@ func testHandleMergeSignal(ctx *slownodejob.JobContext) {
 	convey.Convey("test handleMergeSignal", func() {
 		patch := gomonkey.ApplyMethod(reflect.TypeOf(ctx), "StopHeavyProfiling", func(*slownodejob.JobContext) {})
 		defer patch.Reset()
-		NewController(ctx).handleMergeSignal("", "")
+		NewController(ctx).handleMergeSignal("")
 	})
 }

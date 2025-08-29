@@ -27,6 +27,7 @@ import (
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/epranktable"
+	"clusterd/pkg/domain/job"
 	sv "clusterd/pkg/interface/grpc"
 	"clusterd/pkg/interface/kube"
 )
@@ -136,6 +137,7 @@ func main() {
 	faultmanager.GlobalFaultProcessCenter.Work(ctx)
 	startInformer(ctx)
 	initStatisticModule(ctx)
+	go job.RefreshFaultJobInfo(ctx)
 	signalCatch(cancel)
 }
 

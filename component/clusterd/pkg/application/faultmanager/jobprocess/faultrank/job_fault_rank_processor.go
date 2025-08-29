@@ -250,6 +250,11 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 		hwlog.RunLog.Debugf("serverList: %d", len(serverList))
 		faultList, nodeStatusList, faultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
 			allConfigmap.NodeCm, allConfigmap.SwitchCm, allConfigmap.DeviceCm, jobId)
+		// serverList for tasks that do not require NPU resources is empty,
+		// and it needs to be actively constructed to generate job fault device list
+		if len(serverList) == 0 {
+			faultDeviceList = processor.findFaultDeviceListForEmptyServerList(jobId, allConfigmap.NodeCm)
+		}
 		jobFaultInfo.FaultList = faultList
 		if len(jobFaultInfo.FaultList) > 0 {
 			hwlog.RunLog.Debugf("jobFaultInfo: %#v", jobFaultInfo)
@@ -263,6 +268,22 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 	}
 	processor.setJobFaultRankInfos(jobFaultInfos)
 	return nil
+}
+
+func (processor *jobRankFaultInfoProcessor) findFaultDeviceListForEmptyServerList(jobId string,
+	nodeInfos map[string]*constant.NodeInfo) []constant.FaultDevice {
+	podServerList := pod.ConstructServersByJobKey(jobId)
+	faultDeviceList := make([]constant.FaultDevice, 0)
+	for nodeName, server := range podServerList {
+		nodeInfo := nodeInfos[constant.NodeInfoPrefix+nodeName]
+		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByNodeInfo(&server, nodeInfo)...)
+		node := kube.GetNode(nodeName)
+		if node == nil || !faultdomain.IsNodeReady(node) {
+			faultDeviceList = append(faultDeviceList, convertToFaultDevice(&server, "",
+				constant.SeparateNPU, constant.EmptyDeviceId, constant.FaultTypeNode))
+		}
+	}
+	return faultDeviceList
 }
 
 func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(

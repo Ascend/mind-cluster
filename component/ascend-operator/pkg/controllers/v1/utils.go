@@ -23,6 +23,8 @@ package v1
 import (
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -290,4 +292,23 @@ func getJobRequiredNpu(job *mindxdlv1.AscendJob) int {
 		}
 	}
 	return requiredNpu
+}
+
+type batchCreateManager struct {
+	stateMutex      sync.RWMutex
+	lastFailureTime time.Time
+	failedFlag      bool
+}
+
+func (bcm *batchCreateManager) tryBatchCreate() bool {
+	bcm.stateMutex.Lock()
+	defer bcm.stateMutex.Unlock()
+	return !bcm.failedFlag || time.Since(bcm.lastFailureTime) > defaultBatchCreateFailInterval
+}
+
+func (bcm *batchCreateManager) updateUnavailableStatus() {
+	bcm.stateMutex.Lock()
+	defer bcm.stateMutex.Unlock()
+	bcm.failedFlag = true
+	bcm.lastFailureTime = time.Now()
 }

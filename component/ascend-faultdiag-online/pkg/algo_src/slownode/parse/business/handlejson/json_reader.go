@@ -34,6 +34,7 @@ import (
 var regexpFile = regexp.MustCompile(`^\d{10}$`)
 
 const pollWaitTime = 2 * time.Second
+const maxFilesCount = 100000
 
 // StartReadJson 读取json数据
 func StartReadJson(snpRankCtx *context.SnpRankContext, parseCtx *ParseFileContext, stopFlag chan struct{},
@@ -125,8 +126,13 @@ func matchAndSortProfiles(rankDir string) ([]string, error) {
 		return nil, fmt.Errorf("failed to read the file: %v", err)
 	}
 
-	var matchedFiles []string
+	var count = 0
+	var matchedFiles []string = nil
 	for _, file := range files {
+		count += 1
+		if count >= maxFilesCount {
+			return matchedFiles, fmt.Errorf("reached the max files count: %d", maxFilesCount)
+		}
 		// 跳过内层目录遍历
 		if file.IsDir() {
 			continue

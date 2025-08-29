@@ -91,11 +91,11 @@ func profilingDataProcessor(ctx *slownodejob.JobContext, result *slownode.Cluste
 			// this means the degradation is recovery after the heavy profiling
 			hwlog.RunLog.Infof("%s detected node is not degradation, set the sign of degradation is false", logPrefix)
 			ctx.IsDegradation = false
+			reportSlowNode(ctx, result)
 		}
 		if ctx.IsStartedHeavyProfiling() {
 			// this means algo result is not slow during the heavy profiling
 			hwlog.RunLog.Infof("%s detected node is not degradation, stop heavy profiling", logPrefix)
-			reportSlowNode(ctx, result)
 			ctx.StopHeavyProfiling()
 		}
 		return
@@ -147,7 +147,7 @@ func reportSlowNode(ctx *slownodejob.JobContext, result *slownode.ClusterAlgoRes
 			FaultId:       ctx.Job.JobId,
 			FaultType:     "Node",
 			FaultCode:     fc,
-			FaultTime:     time.Now().Unix(),
+			FaultTime:     time.Now().UnixMilli(),
 			Assertion:     "once",
 			FaultLocation: map[string]string{},
 			Influence: []*pubfault.PubFaultInfo{

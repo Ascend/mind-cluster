@@ -43,9 +43,82 @@ const (
 	runLogFileMode    os.FileMode = 0750
 	maxFileNum                    = 32
 	getStatErr                    = "failed to get file stat, error: %v"
+	groupWriteIndex               = 5
+	otherWriteIndex               = 8
+	permLength                    = 10
 )
 
 var logPrefix = ""
+
+// CheckPath check if a path is safe to use
+func CheckPath(path string, allowLink bool) error {
+	if !StringChecker(path, 0, DefaultPathSize, DefaultWhiteList) {
+		return fmt.Errorf("invalid path")
+	}
+
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("err path %v", path)
+	}
+	filePath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("get abs path failed %v", err)
+	}
+	if len(filepath.Base(filePath)) > DefaultStringSize {
+		return fmt.Errorf("path too long: %s", path)
+	}
+	realPath, err := filepath.EvalSymlinks(filePath)
+	if err != nil || (realPath != filePath && !allowLink) {
+		return fmt.Errorf("symlinks or not existed, failed %v, %v, %v, %v", filePath, err, realPath, allowLink)
+	}
+	return nil
+}
+
+// CheckFileInfo check file info
+func CheckFileInfo(fileInfo *os.File, size int) error {
+	fileStat, err := fileInfo.Stat()
+	if err != nil {
+		return fmt.Errorf("invalid file")
+	}
+
+	if !fileStat.Mode().IsRegular() {
+		return fmt.Errorf("invalid regular file")
+	}
+	if size > maxAllowFileSize || size < 0 {
+		return fmt.Errorf("invalid size")
+	}
+	if fileStat.Size() > int64(size)*int64(oneMegabytes) {
+		return fmt.Errorf("size too large")
+	}
+	perm := fileStat.Mode().Perm().String()
+	if len(perm) != permLength {
+		return fmt.Errorf("permission not right %v %v", fileInfo.Name(), perm)
+	}
+	for index, char := range perm {
+		switch index {
+		case groupWriteIndex, otherWriteIndex:
+			if char == 'w' {
+				return fmt.Errorf("write permission not right %v %v", fileInfo.Name(), perm)
+			}
+		default:
+		}
+	}
+	stat, ok := fileStat.Sys().(*syscall.Stat_t)
+	if !ok {
+		return fmt.Errorf("can not get stat %v", fileInfo.Name())
+	}
+	uid := int(stat.Uid)
+	if !(uid == 0 || uid == os.Getuid()) {
+		return fmt.Errorf("owner not right %v %v", fileInfo.Name(), uid)
+	}
+
+	if fileStat.Mode()&os.ModeSetuid != 0 {
+		return fmt.Errorf("setuid not allowed %v", fileInfo.Name())
+	}
+	if fileStat.Mode()&os.ModeSetgid != 0 {
+		return fmt.Errorf("setgid not allowed %v", fileInfo.Name())
+	}
+	return nil
+}
 
 // RealFileChecker check if a file is safe to use
 func RealFileChecker(path string, checkParent, allowLink bool, size int) (string, error) {

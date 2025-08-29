@@ -514,7 +514,9 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		}
 	}
 	if sJob.policyHandler == nil {
-		klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by job<%s> policyHandler is nil.", PluginName, sJob.Name)
+		if sJob.NPUJob != nil && sJob.NPUJob.IsNPUJob() {
+			klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by job<%s> policyHandler is nil.", PluginName, sJob.Name)
+		}
 		return nil
 	}
 	if result := sJob.policyHandler.ValidNPUJob(); result != nil {
@@ -527,12 +529,6 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 
 // PreCheckNodePredicate PreCheck Predicate nodes.
 func (sJob SchedulerJob) preCheckNodePredicate(taskInfo *api.TaskInfo, vcNode NPUNode) error {
-	nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodedNodeHealtyStatuskey]
-	if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode {
-		klog.V(util.LogDebugLev).Infof("NodePredicate %s failed, cause node is %s.", vcNode.Name,
-			nodeHealthyStatusByNodeD)
-		return fmt.Errorf("node is %s, due to nodeD reported node status", nodeHealthyStatusByNodeD)
-	}
 	if err := vcNode.checkNPUResourceStable(sJob); err != nil {
 		return err
 	}
