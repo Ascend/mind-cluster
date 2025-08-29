@@ -143,10 +143,13 @@ func (c *HbmCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{
 
 		doUpdateTelegrafWithValidateNum(fieldMap, descHbmUtilization, float64(cache.hbmUtilization), "")
 
-		doUpdateTelegraf(fieldMap, descHbmUsedMemory, extInfo.Usage, "")
-		doUpdateTelegraf(fieldMap, descHbmTotalMemory, extInfo.MemorySize, "")
-		doUpdateTelegraf(fieldMap, descHbmTemperature, extInfo.Temp, "")
-		doUpdateTelegraf(fieldMap, descHbmBWUtil, extInfo.BandWidthUtilRate, "")
+		hbmInfo := extInfo.HbmInfo
+		if hbmInfo != nil {
+			doUpdateTelegraf(fieldMap, descHbmUsedMemory, hbmInfo.Usage, "")
+			doUpdateTelegraf(fieldMap, descHbmTotalMemory, hbmInfo.MemorySize, "")
+			doUpdateTelegraf(fieldMap, descHbmTemperature, hbmInfo.Temp, "")
+			doUpdateTelegraf(fieldMap, descHbmBWUtil, hbmInfo.BandWidthUtilRate, "")
+		}
 
 		eccInfo := extInfo.ECCInfo
 		if eccInfo != nil {
@@ -201,7 +204,7 @@ func updateHbmEccInfo(ch chan<- prometheus.Metric, eccInfo *common.ECCInfo, time
 func (c *HbmCollector) updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []string,
 	containerMap map[int32]container.DevicesInfo, chipWithVnpu colcommon.HuaWeiAIChip) {
 	hbmInfo := cache.extInfo
-	if hbmInfo == nil {
+	if hbmInfo == nil || hbmInfo.HbmInfo == nil {
 		return
 	}
 	timestamp := cache.timestamp
