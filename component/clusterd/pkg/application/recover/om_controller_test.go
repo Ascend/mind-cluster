@@ -762,11 +762,9 @@ func TestSelectNotifySwitchNicClosed(t *testing.T) {
 
 func TestReplyOMResponse(t *testing.T) {
 	convey.Convey("replyOMResponse, reply stress test", t, func() {
-		ctl := &EventController{
-			jobInfo: common.JobBaseInfo{
-				JobId: "testJobId",
-			},
-		}
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 		ctl.setStressTestParam(common.StressTestParam{
 			"node": make(map[string][]int64),
 		})
@@ -775,11 +773,9 @@ func TestReplyOMResponse(t *testing.T) {
 		convey.So(msg, convey.ShouldEqual, "test")
 	})
 	convey.Convey("replyOMResponse, reply switch nic", t, func() {
-		ctl := &EventController{
-			jobInfo: common.JobBaseInfo{
-				JobId: "testJobId",
-			},
-		}
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 		ctl.setSwitchNicParam([]string{"test"}, []bool{true})
 		ctl.replyOMResponse("test")
 		msg := <-ctl.switchNicResponse
