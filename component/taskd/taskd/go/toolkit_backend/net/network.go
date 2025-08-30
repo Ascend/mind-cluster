@@ -36,7 +36,7 @@ const (
 )
 
 // limiter limits the QPS of the network.
-var limiter = rate.NewLimiter(rate.Every(time.Second), common.GrpcQps)
+var limiter = rate.NewLimiter(rate.Limit(common.GrpcQps), common.GrpcQps)
 
 // NetInstance represents the network netIns.
 type NetInstance struct {
