@@ -759,3 +759,52 @@ func TestSelectNotifySwitchNicClosed(t *testing.T) {
 		convey.So(res, convey.ShouldBeTrue)
 	})
 }
+
+func TestReplyOMResponse(t *testing.T) {
+	convey.Convey("replyOMResponse, reply stress test", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		ctl.setStressTestParam(common.StressTestParam{
+			"node": make(map[string][]int64),
+		})
+		ctl.replyOMResponse("test")
+		msg := <-ctl.stressTestResponse
+		convey.So(msg, convey.ShouldEqual, "test")
+	})
+	convey.Convey("replyOMResponse, reply switch nic", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		ctl.setSwitchNicParam([]string{"test"}, []bool{true})
+		ctl.replyOMResponse("test")
+		msg := <-ctl.switchNicResponse
+		convey.So(msg, convey.ShouldEqual, "test")
+	})
+}
+
+func TestSetStressTestParam(t *testing.T) {
+	t.Run("set param success ", func(t *testing.T) {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		ctl.setStressTestParam(common.StressTestParam{
+			"node": make(map[string][]int64),
+		})
+		assert.Equal(t, 1, len(ctl.stressTestParam))
+	})
+}
+
+func TestIsStressTest(t *testing.T) {
+	t.Run("is not stress test ", func(t *testing.T) {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		res := ctl.isStressTest()
+		assert.Equal(t, false, res)
+	})
+}
