@@ -228,6 +228,8 @@ const (
 	EmptyDeviceId = "-1"
 	// FormatBase The base number used to convert int to string
 	FormatBase = 10
+	// DefaultJobId default job id for cluster dimension
+	DefaultJobId = "-1"
 )
 
 // ras feature const

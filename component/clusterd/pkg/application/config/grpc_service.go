@@ -65,7 +65,7 @@ func (c *BusinessConfigServer) rankTableChange(jobId, data string) (bool, error)
 		JobId:     jobId,
 		RankTable: data,
 	}
-	if isSaved := publisher.SaveData(rankTable); !isSaved {
+	if isSaved := publisher.SaveData(jobId, rankTable); !isSaved {
 		return true, errors.New("save data failed")
 	}
 	return false, nil
@@ -107,7 +107,8 @@ func (c *BusinessConfigServer) preemptPublisher(jobId string) *ConfigPublisher[*
 	if ok && publisher != nil {
 		publisher.Stop()
 	}
-	newPublisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx, constant.RankTableDataType, nil)
+	newPublisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx,
+		constant.RankTableDataType, nil)
 	c.configPublisher[jobId] = newPublisher
 	return newPublisher
 }
@@ -132,6 +133,7 @@ func (c *BusinessConfigServer) deletePublisher(jobId string, createTime time.Tim
 func (c *BusinessConfigServer) addPublisher(jobId string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	publisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx, constant.RankTableDataType, nil)
+	publisher := NewConfigPublisher[*config.RankTableStream](jobId, c.serviceCtx,
+		constant.RankTableDataType, nil)
 	c.configPublisher[jobId] = publisher
 }

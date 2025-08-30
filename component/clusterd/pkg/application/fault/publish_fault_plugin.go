@@ -53,35 +53,70 @@ func (s *FaultServer) checkPublishFault(allJobFaultInfo map[string]constant.JobF
 		}
 	}
 	s.dealWithFaultInfoForMergedJob(jobFaultMap)
+	s.dealWithFaultInfoForClusterJob(jobFaultMap)
+}
+
+func (s *FaultServer) dealWithFaultInfoForClusterJob(jobFaultDeviceMap map[string][]constant.FaultDevice) {
+	publisherList := s.getPublisherListByJobId(constant.DefaultJobId)
+	for _, publisher := range publisherList {
+		s.dealWithFaultInfoForEachClusterJob(jobFaultDeviceMap, publisher)
+	}
+}
+
+func (s *FaultServer) dealWithFaultInfoForEachClusterJob(jobFaultDeviceMap map[string][]constant.FaultDevice,
+	clusterPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
+	if clusterPublisher == nil || !clusterPublisher.IsSubscribed() {
+		return
+	}
+	// job fault occur, send a fault occur msg to the client
+	for jobId, faultInfo := range jobFaultDeviceMap {
+		if _, ok := job.GetJobCache(jobId); !ok {
+			continue
+		}
+		s.publishFaultInfoForMergedJob(constant.DefaultJobId, jobId, faultInfo, clusterPublisher)
+	}
+	deletedJob := make([]string, 0)
+	// job fault recover, send a fault recover msg to the client
+	for _, jobId := range clusterPublisher.GetAllSentJobIdList() {
+		// filter job that already send fault msg to the client
+		if _, ok := jobFaultDeviceMap[jobId]; ok {
+			continue
+		}
+		// filter job that already be deleted
+		if _, ok := job.GetJobCache(jobId); !ok {
+			deletedJob = append(deletedJob, jobId)
+			continue
+		}
+		s.publishFaultInfoForMergedJob(constant.DefaultJobId, jobId, nil, clusterPublisher)
+	}
+	if len(deletedJob) > 0 {
+		clusterPublisher.ClearDeletedJobIdList(deletedJob)
+		hwlog.RunLog.Infof("cluster fault publisher delete job key: %v", deletedJob)
+	}
 }
 
 func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string][]constant.FaultDevice) {
-	jobPublisherMap := make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal], s.serveJobNum())
-	s.lock.Lock()
-	for targetJobId, faultPublisher := range s.faultPublisher {
+	jobPublisherList := s.getAllPublisherList()
+	wg := &sync.WaitGroup{}
+	for _, faultPublisher := range jobPublisherList {
+		targetJobId := faultPublisher.GetJobId()
 		if faultPublisher == nil || !faultPublisher.IsSubscribed() {
 			hwlog.RunLog.Debugf("jobId=%s not registered or subscribe fault service", targetJobId)
 			continue
 		}
-		jobPublisherMap[targetJobId] = faultPublisher
-	}
-	s.lock.Unlock()
-
-	wg := &sync.WaitGroup{}
-	for targetJobId, faultPublisher := range jobPublisherMap {
 		faultInfo, ok := jobFaultDeviceMap[targetJobId]
 		if ok {
 			// fault occur and job has been subscribed,  send a fault occur msg to the client
 			wg.Add(1)
-			go func(targetJobId string, faultInfo []constant.FaultDevice,
+			go func(jobId string, faultInfo []constant.FaultDevice,
 				faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
 				defer wg.Done()
-				s.publishFaultInfoForMergedJob(targetJobId, faultInfo, faultPublisher)
+				s.publishFaultInfoForMergedJob(jobId, jobId, faultInfo, faultPublisher)
 			}(targetJobId, faultInfo, faultPublisher)
 			continue
 		}
 
-		data := faultPublisher.GetSentData()
+		data := faultPublisher.GetSentData(targetJobId)
 		if data == nil || data.SignalType == constant.SignalTypeNormal {
 			continue
 		}
@@ -89,7 +124,7 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 		wg.Add(1)
 		go func(jobId string, faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
 			defer wg.Done()
-			faultPublisher.SaveData(&fault.FaultMsgSignal{
+			faultPublisher.SaveData(jobId, &fault.FaultMsgSignal{
 				Uuid:       string(uuid.NewUUID()),
 				JobId:      jobId,
 				SignalType: constant.SignalTypeNormal,
@@ -99,27 +134,26 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 	wg.Wait()
 }
 
-func (s *FaultServer) publishFaultInfoForMergedJob(targetJobId string, faultList []constant.FaultDevice,
+func (s *FaultServer) publishFaultInfoForMergedJob(pubJobId, faultJobId string, faultList []constant.FaultDevice,
 	faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
-	msg := faultDeviceToSortedFaultMsgSignal(targetJobId, faultList)
-	msg.Uuid = string(uuid.NewUUID())
-	sentData := faultPublisher.GetSentData()
-	hwlog.RunLog.Debugf("jobId=%s generate fault msg=%v", targetJobId, msg)
-	hwlog.RunLog.Debugf("jobId=%s sent fault msg=%v", targetJobId, sentData)
+	msg := faultDeviceToSortedFaultMsgSignal(faultJobId, faultList)
+	sentData := faultPublisher.GetSentData(faultJobId)
+	hwlog.RunLog.Debugf("jobId=%s generate fault msg=%v", pubJobId, msg)
+	hwlog.RunLog.Debugf("jobId=%s sent fault msg=%v", pubJobId, sentData)
 	if compareFaultMsg(msg, sentData) {
-		hwlog.RunLog.Debugf("jobId=%s fault msg is equal, data=%v sentData=%v", targetJobId, msg, sentData)
+		hwlog.RunLog.Debugf("jobId=%s fault msg is equal, data=%v sentData=%v", pubJobId, msg, sentData)
 		return
 	}
-	saved := faultPublisher.SaveData(msg)
+	saved := faultPublisher.SaveData(faultJobId, msg)
 	if !saved {
-		hwlog.RunLog.Errorf("jobId=%v save fault msg failed, SignalType=%s", targetJobId, msg.SignalType)
+		hwlog.RunLog.Errorf("jobId=%v save fault msg failed, SignalType=%s", pubJobId, msg.SignalType)
 		return
 	}
-	hwlog.RunLog.Infof("jobId=%v save fault msg success, SignalType=%s", targetJobId, msg.SignalType)
+	hwlog.RunLog.Infof("jobId=%v save fault msg success, SignalType=%s", pubJobId, msg.SignalType)
 }
 
 func faultDeviceToSortedFaultMsgSignal(targetJobId string, faultList []constant.FaultDevice) *fault.FaultMsgSignal {
-	msg := &fault.FaultMsgSignal{}
+	msg := &fault.FaultMsgSignal{Uuid: string(uuid.NewUUID())}
 	msg.JobId = targetJobId
 	if len(faultList) == 0 {
 		msg.SignalType = constant.SignalTypeNormal

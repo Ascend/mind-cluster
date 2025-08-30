@@ -139,7 +139,7 @@ func (ps *SwitchManager) publish(jobId string, info *profiling.ProfilingSwitch) 
 			ProfilingSwitch: info,
 			Code:            OK,
 		}
-		ok := publisher.SaveData(&updateMsg)
+		ok := publisher.SaveData(jobId, &updateMsg)
 		if !ok {
 			return fmt.Errorf("send update profiling switch %v for job %v fail", info, jobId)
 		}

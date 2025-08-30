@@ -17,6 +17,8 @@ package config
 
 import (
 	"context"
+	"errors"
+	"sort"
 	"testing"
 	"time"
 
@@ -65,7 +67,9 @@ func TestSelectChanAndContext(t *testing.T) {
 				RankTable: rankTable,
 			}
 			publisher := fakePublisher()
-			publisher.sendChan <- table
+			publisher.sendChan <- &jobDataForChan[*config.RankTableStream]{
+				jobId: job1, data: table,
+			}
 			ret := publisher.
 				selectChanAndContext(&mockConfigSubscribeRankTableServer{})
 			convey.So(ret, convey.ShouldBeTrue)
@@ -81,14 +85,13 @@ func TestSendRankTable(t *testing.T) {
 			RankTable: rankTable,
 		}
 		convey.Convey("01-send data to client success", func() {
-			patch := gomonkey.ApplyMethodReturn(&mockConfigSubscribeRankTableServer{}, "Send", nil)
-			defer patch.Reset()
 			isSent, _ := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
 				job1, constant.RankTableDataType)
 			convey.So(isSent, convey.ShouldBeTrue)
 		})
 		convey.Convey("02-send data to client failed", func() {
-			patch := gomonkey.ApplyFuncReturn(time.Sleep)
+			patch := gomonkey.ApplyFuncReturn(time.Sleep).
+				ApplyMethodReturn(&mockConfigSubscribeRankTableServer{}, "Send", errors.New("fake err"))
 			defer patch.Reset()
 			isSent, _ := sendDataToClient[*config.RankTableStream](&mockConfigSubscribeRankTableServer{}, table,
 				job1, constant.RankTableDataType)
@@ -107,12 +110,12 @@ func TestSaveData(t *testing.T) {
 		convey.Convey("01-send on closed channel, should return false", func() {
 			publisher := fakePublisher()
 			close(publisher.sendChan)
-			ret := publisher.SaveData(data)
+			ret := publisher.SaveData(job1, data)
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		convey.Convey("02-send success, should return true", func() {
 			publisher := fakePublisher()
-			ret := publisher.SaveData(data)
+			ret := publisher.SaveData(job1, data)
 			convey.So(ret, convey.ShouldBeTrue)
 		})
 	})
@@ -124,9 +127,11 @@ func TestStop(t *testing.T) {
 		publisher := fakePublisher()
 		publisher.Stop()
 		stopFunc := func() {
-			publisher.sendChan <- &config.RankTableStream{
-				JobId:     job1,
-				RankTable: rankTable,
+			publisher.sendChan <- &jobDataForChan[*config.RankTableStream]{
+				jobId: job1, data: &config.RankTableStream{
+					JobId:     job1,
+					RankTable: rankTable,
+				},
 			}
 		}
 		publisher.Stop()
@@ -148,8 +153,8 @@ func TestSetAndGetData(t *testing.T) {
 	convey.Convey("test setSentData and GetSentData", t, func() {
 		publisher := fakePublisher()
 		data := &config.RankTableStream{JobId: job1, RankTable: rankTable}
-		publisher.SetSentData(data)
-		convey.So(publisher.GetSentData(), convey.ShouldResemble,
+		publisher.SetSentData(job1, data)
+		convey.So(publisher.GetSentData(job1), convey.ShouldResemble,
 			&config.RankTableStream{JobId: job1, RankTable: rankTable})
 	})
 }
@@ -158,5 +163,21 @@ func TestGetCreateTime(t *testing.T) {
 	publisher := fakePublisher()
 	convey.Convey("test getCreateTime", t, func() {
 		convey.So(publisher.GetCreateTime().Before(time.Now()), convey.ShouldBeTrue)
+	})
+}
+
+func TestGetAllSentJobIdListAndClearDeletedJobIdList(t *testing.T) {
+	publisher := fakePublisher()
+	publisher.SaveData(job1, &config.RankTableStream{})
+	publisher.SaveData(job2, &config.RankTableStream{})
+	convey.Convey("test GetAllSentJobIdList", t, func() {
+		ret := publisher.GetAllSentJobIdList()
+		sort.Strings(ret)
+		convey.ShouldResemble(ret, []string{job1, job2})
+	})
+	convey.Convey("test ClearDeletedJobIdList", t, func() {
+		publisher.ClearDeletedJobIdList([]string{job1})
+		ret := publisher.GetAllSentJobIdList()
+		convey.ShouldResemble(ret, []string{job2})
 	})
 }

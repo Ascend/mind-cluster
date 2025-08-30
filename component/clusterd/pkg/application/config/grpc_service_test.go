@@ -37,6 +37,7 @@ const (
 	job1      = "job1"
 	job2      = "job2"
 	rankTable = "rankTable"
+	sleepTime = 100 * time.Millisecond
 )
 
 func fakeService() *BusinessConfigServer {
@@ -58,14 +59,16 @@ func TestRankTableChange(t *testing.T) {
 			service.addPublisher(job1)
 			publisher, _ := service.getPublisher(job1)
 			publisher.SetSubscribe(true)
+			go publisher.ListenDataChange(&mockConfigSubscribeRankTableServer{})
+			defer publisher.Stop()
 			resent, err := service.rankTableChange(job1, rankTable)
+			time.Sleep(sleepTime)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resent, convey.ShouldBeFalse)
 			publisher, _ = service.getPublisher(job1)
-			data, ok := <-publisher.sendChan
-			convey.So(ok, convey.ShouldBeTrue)
+			data := publisher.GetSentData(job1)
+			convey.ShouldNotBeNil(data)
 			convey.So(data.RankTable, convey.ShouldEqual, rankTable)
-			close(publisher.sendChan)
 		})
 	})
 }
@@ -90,7 +93,6 @@ func TestRegister(t *testing.T) {
 }
 
 func TestSubscribeRankTable(t *testing.T) {
-	const sleepTime = 100 * time.Millisecond
 	convey.Convey("test rankTableChange", t, func() {
 		req := &config.ClientInfo{
 			JobId: job1,
@@ -180,7 +182,7 @@ type mockConfigSubscribeRankTableServer struct {
 }
 
 func (x *mockConfigSubscribeRankTableServer) Send(m *config.RankTableStream) error {
-	return errors.New("send failed")
+	return nil
 }
 
 func (x *mockConfigSubscribeRankTableServer) Context() context.Context {

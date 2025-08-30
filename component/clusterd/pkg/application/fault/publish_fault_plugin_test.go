@@ -12,6 +12,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
@@ -21,6 +22,9 @@ import (
 const (
 	fakeJobID1 = "fakeJobId1"
 	fakeJobID2 = "fakeJobId2"
+	fakeJobID3 = "fakeJobId3"
+	fakeJobID4 = "fakeJobId4"
+	fakeRole1  = "fakeRole1"
 )
 
 func getMockFaultDeviceListForTest() []constant.FaultDevice {
@@ -108,16 +112,19 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 	}
 	convey.Convey("faultList is empty, should convert to normal msg", t, func() {
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, nil)
+		msg.Uuid = ""
 		convey.So(msg, convey.ShouldResemble, normalMsg)
 	})
 	convey.Convey("faultList includes not only L1 faults , should convert to fault msg", t, func() {
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, getMockFaultDeviceListForTest())
+		msg.Uuid = ""
 		convey.So(msg, convey.ShouldResemble, getMockFaultMsgForTest())
 	})
 	convey.Convey("faultList includes only L1 faults, should convert to normal msg", t, func() {
 		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
+		msg.Uuid = ""
 		convey.So(msg, convey.ShouldResemble, normalMsgWithFaultInfo)
 	})
 	convey.Convey("faultList includes only L1 faults, nodeInfo is nil,"+
@@ -127,6 +134,7 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
+		msg.Uuid = ""
 		convey.So(msg, convey.ShouldResemble, normalMsg)
 	})
 }
@@ -160,41 +168,96 @@ func TestCheckPublishFault(t *testing.T) {
 		fakeJobID2: {FaultDevice: getMockFaultDeviceListForTest1()},
 	}
 	service := fakeFaultService()
-	service.addPublisher(fakeJobID1)
-	faultPublisher, ok := service.getPublisher(fakeJobID1)
+	service.addPublisher(fakeJobID1, fakeRole1)
+	faultPublisher, ok := service.getPublisher(fakeJobID1, fakeRole1)
 	if !ok {
 		t.Error("get faultPublisher fail")
 		return
 	}
 	faultPublisher.SetSubscribe(true)
-	sendChan := faultPublisher.GetSentChan()
+	go faultPublisher.ListenDataChange(&mockFaultSubscribeRankTableServer{})
+	defer faultPublisher.Stop()
 
-	var data *fault.FaultMsgSignal = nil
 	convey.Convey("occur fault, should send fault msg", t, func() {
 		service.checkPublishFault(allJobFaultInfo)
-		convey.So(len(sendChan), convey.ShouldEqual, 1)
-		data = <-sendChan
-		convey.So(compareFaultMsg(data, getMockFaultMsgForTest1()), convey.ShouldBeTrue)
+		time.Sleep(sleepTime)
+		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest1()))
 	})
 	convey.Convey("occur not change, should not send fault msg", t, func() {
-		faultPublisher.SetSentData(data)
+		faultPublisher.SetSentData(fakeJobID1, faultPublisher.GetSentData(fakeJobID1))
 		service.checkPublishFault(allJobFaultInfo)
-		convey.So(len(sendChan), convey.ShouldEqual, 0)
+		time.Sleep(sleepTime)
+		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest1()))
 	})
 	convey.Convey("fault recover, should send fault recover msg", t, func() {
-		faultPublisher.SetSentData(data)
+		faultPublisher.SetSentData(fakeJobID1, faultPublisher.GetSentData(fakeJobID1))
 		service.checkPublishFault(nil)
-		convey.So(len(sendChan), convey.ShouldEqual, 1)
-		data = <-sendChan
-		convey.So(compareFaultMsg(data, &fault.FaultMsgSignal{
+		time.Sleep(sleepTime)
+		convey.So(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), &fault.FaultMsgSignal{
 			JobId:      fakeJobID1,
 			SignalType: constant.SignalTypeNormal,
 		}), convey.ShouldBeTrue)
 	})
 	convey.Convey("fault recover and already sent to the client, should not send fault recover msg", t, func() {
-		faultPublisher.SetSentData(data)
+		faultPublisher.SetSentData(fakeJobID1, faultPublisher.GetSentData(fakeJobID1))
 		service.checkPublishFault(nil)
-		convey.So(len(sendChan), convey.ShouldEqual, 0)
+		time.Sleep(sleepTime)
+		convey.So(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), &fault.FaultMsgSignal{
+			JobId:      fakeJobID1,
+			SignalType: constant.SignalTypeNormal,
+		}), convey.ShouldBeTrue)
+	})
+}
+
+// TestDealWithFaultInfoForClusterJob for test dealWithFaultInfoForClusterJob
+func TestDealWithFaultInfoForClusterJob(t *testing.T) {
+	patch := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		if jobKey == fakeJobID1 || jobKey == fakeJobID2 {
+			return constant.JobInfo{}, true
+		}
+		return constant.JobInfo{}, false
+	})
+	defer patch.Reset()
+	service := fakeFaultService()
+	convey.Convey("publisher is nil, do not sent fault info", t, func() {
+		service.dealWithFaultInfoForClusterJob(nil)
+		convey.ShouldBeNil(service.getPublisher(constant.DefaultJobId, fakeRole1))
+	})
+	service.addPublisher(constant.DefaultJobId, fakeRole1)
+	publisher, ok := service.getPublisher(constant.DefaultJobId, fakeRole1)
+	if !ok {
+		t.Error("get faultPublisher fail")
+		return
+	}
+	publisher.SetSubscribe(true)
+	go publisher.ListenDataChange(&mockFaultSubscribeRankTableServer{})
+	defer publisher.Stop()
+	jobFaultDeviceMap := map[string][]constant.FaultDevice{
+		fakeJobID1: getMockFaultDeviceListForTest1(),
+		fakeJobID3: getMockFaultDeviceListForTest1(),
+	}
+	convey.Convey("job fault occur, only send msg to client", t, func() {
+		service.dealWithFaultInfoForClusterJob(jobFaultDeviceMap)
+		time.Sleep(sleepTime)
+		convey.ShouldBeTrue(compareFaultMsg(publisher.GetSentData(fakeJobID1), getMockFaultMsgForTest1()))
+		convey.ShouldBeNil(publisher.GetSentData(fakeJobID2))
+	})
+	jobFaultDeviceMap = map[string][]constant.FaultDevice{
+		fakeJobID2: getMockFaultDeviceListForTest1(),
+		fakeJobID3: getMockFaultDeviceListForTest1(),
+	}
+	convey.Convey("normal job has fault, fault job recover, should send msg", t, func() {
+		publisher.SetSentData(fakeJobID3, &fault.FaultMsgSignal{})
+		publisher.SetSentData(fakeJobID4, &fault.FaultMsgSignal{})
+		service.dealWithFaultInfoForClusterJob(jobFaultDeviceMap)
+		time.Sleep(sleepTime)
+		convey.ShouldBeTrue(compareFaultMsg(publisher.GetSentData(fakeJobID1), &fault.FaultMsgSignal{
+			JobId:      fakeJobID1,
+			SignalType: constant.SignalTypeNormal,
+		}))
+		convey.ShouldBeTrue(compareFaultMsg(publisher.GetSentData(fakeJobID2), getMockFaultMsgForTest1()))
+		convey.ShouldBeNil(publisher.GetSentData(fakeJobID3))
+		convey.ShouldBeNil(publisher.GetSentData(fakeJobID4))
 	})
 }
 
@@ -327,4 +390,16 @@ func TestCompareFaultMsg(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+type mockFaultSubscribeRankTableServer struct {
+	grpc.ServerStream
+}
+
+func (x *mockFaultSubscribeRankTableServer) Send(m *fault.FaultMsgSignal) error {
+	return nil
+}
+
+func (x *mockFaultSubscribeRankTableServer) Context() context.Context {
+	return context.Background()
 }

@@ -1,3 +1,6 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+
+// Package fault a series of controller test function
 package fault
 
 import (
@@ -17,6 +20,7 @@ import (
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/logs"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
@@ -24,7 +28,9 @@ import (
 )
 
 func init() {
-	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+	ctx := context.Background()
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, ctx)
+	logs.InitGrpcEventLogger(ctx)
 }
 
 const (
@@ -36,7 +42,7 @@ const (
 func fakeFaultService() *FaultServer {
 	return &FaultServer{
 		serviceCtx:     context.Background(),
-		faultPublisher: make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]),
+		faultPublisher: make(map[string]map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]),
 		lock:           sync.RWMutex{},
 		limiter:        util.NewAdvancedRateLimiter(defaultTokenRate, defaultBurst, defaultMaxQueueLen),
 	}
@@ -55,7 +61,7 @@ func TestRegister(t *testing.T) {
 		})
 		convey.Convey("register multi-instance failed, should return 402 code and error", func() {
 			service := fakeFaultService()
-			req := &fault.ClientInfo{JobId: "testFaultJobId", Role: ""}
+			req := &fault.ClientInfo{JobId: "testFaultJobId", Role: "role"}
 			status, err := service.Register(nil, req)
 			convey.So(status.Code, convey.ShouldEqual, common.JobNotExist)
 			convey.So(err, convey.ShouldNotBeNil)
@@ -74,19 +80,19 @@ func TestRegister(t *testing.T) {
 func TestSubscribeFaultMsgSignal(t *testing.T) {
 	req := &fault.ClientInfo{
 		JobId: fakeJobID1,
-		Role:  "",
+		Role:  fakeRole1,
 	}
 	convey.Convey("controller not exist, should return error", t, func() {
 		service := fakeFaultService()
 		err := service.SubscribeFaultMsgSignal(req, nil)
-		convey.So(err, convey.ShouldResemble, errors.New("jobId=fakeJobId1 not registered, role="))
+		convey.So(err, convey.ShouldResemble, errors.New("jobId=fakeJobId1 not registered, role=fakeRole1"))
 	})
 	convey.Convey("subscribe rank table service success, should return nil", t, func() {
 		service := fakeFaultService()
-		service.addPublisher(fakeJobID1)
+		service.addPublisher(fakeJobID1, fakeRole1)
 		go func() {
 			for {
-				publisher, ok := service.getPublisher(fakeJobID1)
+				publisher, ok := service.getPublisher(fakeJobID1, fakeRole1)
 				if ok && publisher.IsSubscribed() {
 					publisher.Stop()
 					break
@@ -190,9 +196,9 @@ func TestGetFaultMsgSignal(t *testing.T) {
 func TestAddAndGetFaultPublisher(t *testing.T) {
 	convey.Convey("Test addFaultPublisher and GetFaultPublisher success", t, func() {
 		service := fakeFaultService()
-		service.addPublisher(fakeJobID1)
+		service.addPublisher(fakeJobID1, fakeRole1)
 
-		publisher, ok := service.getPublisher(fakeJobID1)
+		publisher, ok := service.getPublisher(fakeJobID1, fakeRole1)
 		convey.So(ok, convey.ShouldBeTrue)
 		convey.So(publisher, convey.ShouldNotBeNil)
 	})
@@ -202,13 +208,39 @@ func TestAddAndGetFaultPublisher(t *testing.T) {
 func TestPreemptPublisher(t *testing.T) {
 	convey.Convey("test preemptPublisher", t, func() {
 		service := fakeFaultService()
-		service.addPublisher(fakeJobID1)
-		publisher, _ := service.getPublisher(fakeJobID1)
+		service.addPublisher(fakeJobID1, fakeRole1)
+		publisher, _ := service.getPublisher(fakeJobID1, fakeRole1)
 		convey.Convey("01-publisher already exist, should preempt old publisher", func() {
-			newPublisher := service.preemptPublisher(fakeJobID1)
+			newPublisher := service.preemptPublisher(fakeJobID1, fakeRole1)
 			convey.So(newPublisher, convey.ShouldNotBeNil)
 			convey.So(newPublisher.GetCreateTime().After(publisher.GetCreateTime()), convey.ShouldBeTrue)
 		})
+	})
+}
+
+func TestGetPublisherList(t *testing.T) {
+	convey.Convey("test getPublisherListByJobId and getAllPublisherList", t, func() {
+		service := fakeFaultService()
+		service.addPublisher(fakeJobID1, fakeRole1)
+		publisherList := service.getPublisherListByJobId(fakeJobID1)
+		allPublisherList := service.getAllPublisherList()
+		convey.ShouldResemble(publisherList, allPublisherList)
+		publisherList = service.getPublisherListByJobId(fakeJobID2)
+		convey.ShouldBeTrue(len(publisherList) == 0)
+	})
+}
+
+func TestDeletePublisher(t *testing.T) {
+	convey.Convey("test deletePublisher", t, func() {
+		service := fakeFaultService()
+		service.addPublisher(fakeJobID1, fakeRole1)
+		publisher, _ := service.getPublisher(fakeJobID1, fakeRole1)
+		service.deletePublisher(fakeJobID2, fakeRole1, time.Now())
+		convey.ShouldBeFalse(len(service.faultPublisher) == 0)
+		service.deletePublisher(fakeJobID1, "role", time.Now())
+		convey.ShouldBeFalse(len(service.faultPublisher) == 0)
+		service.deletePublisher(fakeJobID1, fakeRole1, publisher.GetCreateTime())
+		convey.ShouldBeTrue(len(service.faultPublisher) == 0)
 	})
 }
 

@@ -53,8 +53,9 @@ var chinesePattern = regexp.MustCompile(`[\x{4e00}-\x{9fa5}]`)
 
 // FaultServer fault server
 type FaultServer struct {
-	serviceCtx     context.Context
-	faultPublisher map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]
+	serviceCtx context.Context
+	// jobId -> role -> publisher
+	faultPublisher map[string]map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]
 	lock           sync.RWMutex
 	fault.UnimplementedFaultServer
 	faultCh chan map[string]constant.JobFaultInfo
@@ -65,7 +66,7 @@ type FaultServer struct {
 func NewFaultServer(ctx context.Context) *FaultServer {
 	server := &FaultServer{
 		serviceCtx:     ctx,
-		faultPublisher: make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]),
+		faultPublisher: make(map[string]map[string]*config.ConfigPublisher[*fault.FaultMsgSignal]),
 		lock:           sync.RWMutex{},
 		faultCh:        make(chan map[string]constant.JobFaultInfo, jobFaultInfoChanCache),
 		limiter:        util.NewAdvancedRateLimiter(defaultTokenRate, defaultBurst, defaultMaxQueueLen),
@@ -79,9 +80,16 @@ func NewFaultServer(ctx context.Context) *FaultServer {
 
 // Register is task register service
 func (s *FaultServer) Register(ctx context.Context, req *fault.ClientInfo) (*fault.Status, error) {
+	if req == nil || req.Role == "" {
+		hwlog.RunLog.Errorf("Register failed, request: %v", req)
+		return nil, errors.New("request is nil or role is empty")
+	}
+	if req.JobId == "" {
+		req.JobId = constant.DefaultJobId
+	}
 	hwlog.RunLog.Infof("fault service receive Register request, jobId=%s, role=%s",
 		req.JobId, req.Role)
-	publisher, ok := s.getPublisher(req.JobId)
+	publisher, ok := s.getPublisher(req.JobId, req.Role)
 	if !ok || publisher == nil {
 		code, err := s.preRegistry(req)
 		if err != nil {
@@ -89,20 +97,22 @@ func (s *FaultServer) Register(ctx context.Context, req *fault.ClientInfo) (*fau
 			return &fault.Status{Code: int32(code), Info: err.Error()}, err
 		}
 	}
-	s.preemptPublisher(req.JobId)
+	s.preemptPublisher(req.JobId, req.Role)
 	return &fault.Status{Code: int32(common.OK), Info: "register success"}, nil
 }
 
 func (s *FaultServer) preRegistry(req *fault.ClientInfo) (common.RespCode, error) {
-	_, ok := job.GetJobCache(req.JobId)
-	_, err := job.GetNamespaceByJobIdAndAppType(req.JobId, req.Role)
-	if !ok && err != nil {
-		hwlog.RunLog.Errorf("jobId=%s not exist and is not multi-instance job", req.JobId)
-		return common.JobNotExist, fmt.Errorf("jobId=%s not exist and is not multi-instance", req.JobId)
-	}
 	if s.serveJobNum() >= constant.MaxServeJobs {
 		return common.OutOfMaxServeJobs,
 			fmt.Errorf("jobId=%s out of max serve jobs", req.JobId)
+	}
+	if req.JobId != constant.DefaultJobId {
+		_, ok := job.GetJobCache(req.JobId)
+		_, err := job.GetNamespaceByJobIdAndAppType(req.JobId, req.Role)
+		if !ok && err != nil {
+			hwlog.RunLog.Errorf("jobId=%s not exist and is not multi-instance job", req.JobId)
+			return common.JobNotExist, fmt.Errorf("jobId=%s not exist and is not multi-instance", req.JobId)
+		}
 	}
 	return common.OK, nil
 }
@@ -116,6 +126,10 @@ func (s *FaultServer) serveJobNum() int {
 // SubscribeFaultMsgSignal subscribe fault message signal from ClusterD
 func (s *FaultServer) SubscribeFaultMsgSignal(request *fault.ClientInfo,
 	stream fault.Fault_SubscribeFaultMsgSignalServer) error {
+	if request == nil || request.Role == "" {
+		hwlog.RunLog.Errorf("Register failed, request: %v", request)
+		return errors.New("request is nil or role is empty")
+	}
 	event := "subscribe fault msg signal"
 	logs.RecordLog(request.Role, event, constant.Start)
 	res := constant.Failed
@@ -123,15 +137,18 @@ func (s *FaultServer) SubscribeFaultMsgSignal(request *fault.ClientInfo,
 		logs.RecordLog(request.Role, event, res)
 	}()
 
+	if request.JobId == "" {
+		request.JobId = constant.DefaultJobId
+	}
 	requestInfo := fmt.Sprintf("jobId=%s, role=%s", request.JobId, request.Role)
 	hwlog.RunLog.Infof("receive Subscribe fault message signal request, %s", requestInfo)
-	faultPublisher, exist := s.getPublisher(request.JobId)
+	faultPublisher, exist := s.getPublisher(request.JobId, request.Role)
 	if !exist || faultPublisher == nil {
 		hwlog.RunLog.Warnf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 		return fmt.Errorf("jobId=%s not registered, role=%s", request.JobId, request.Role)
 	}
 	faultPublisher.ListenDataChange(stream)
-	s.deletePublisher(request.JobId, faultPublisher.GetCreateTime())
+	s.deletePublisher(request.JobId, request.Role, faultPublisher.GetCreateTime())
 	hwlog.RunLog.Infof("jobId=%s stop subscribe fault message signal, createTime=%v",
 		request.JobId, faultPublisher.GetCreateTime().UnixNano())
 	res = constant.Success
@@ -188,7 +205,6 @@ func (s *FaultServer) GetFaultMsgSignal(ctx context.Context, request *fault.Clie
 		}, nil
 	}
 	faultMsg := faultDeviceToSortedFaultMsgSignal(jobId, faultInfo.FaultDevice)
-	faultMsg.Uuid = string(uuid.NewUUID())
 	res = constant.Success
 	return &fault.FaultQueryResult{
 		Code:        int32(common.SuccessCode),
@@ -202,7 +218,7 @@ func (s *FaultServer) getClusterFaultInfo() *fault.FaultQueryResult {
 	sort.Slice(faultMsg.NodeFaultInfo, func(i, j int) bool {
 		return faultMsg.NodeFaultInfo[i].NodeIP < faultMsg.NodeFaultInfo[j].NodeIP
 	})
-	faultMsg.JobId = "-1"
+	faultMsg.JobId = constant.DefaultJobId
 	faultMsg.Uuid = string(uuid.NewUUID())
 	return &fault.FaultQueryResult{
 		Code:        int32(common.SuccessCode),
@@ -211,40 +227,84 @@ func (s *FaultServer) getClusterFaultInfo() *fault.FaultQueryResult {
 	}
 }
 
-func (s *FaultServer) preemptPublisher(jobId string) *config.ConfigPublisher[*fault.FaultMsgSignal] {
+func (s *FaultServer) preemptPublisher(jobId, role string) *config.ConfigPublisher[*fault.FaultMsgSignal] {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	publisher, ok := s.faultPublisher[jobId]
+	roleMap, ok := s.faultPublisher[jobId]
+	if !ok || roleMap == nil {
+		roleMap = make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal])
+	}
+	publisher, ok := roleMap[role]
 	if ok && publisher != nil {
 		publisher.Stop()
 	}
-	newPublisher := config.NewConfigPublisher[*fault.FaultMsgSignal](jobId,
-		s.serviceCtx, constant.FaultMsgDataType, compareFaultMsg)
-	s.faultPublisher[jobId] = newPublisher
+	newPublisher := config.NewConfigPublisher[*fault.FaultMsgSignal](jobId, s.serviceCtx,
+		constant.FaultMsgDataType, compareFaultMsg)
+	roleMap[role] = newPublisher
+	s.faultPublisher[jobId] = roleMap
 	return newPublisher
 }
 
-func (s *FaultServer) getPublisher(jobId string) (*config.ConfigPublisher[*fault.FaultMsgSignal], bool) {
+func (s *FaultServer) getPublisher(jobId, role string) (*config.ConfigPublisher[*fault.FaultMsgSignal], bool) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	publisher, ok := s.faultPublisher[jobId]
+	roleMap, ok := s.faultPublisher[jobId]
+	if !ok || roleMap == nil {
+		return nil, false
+	}
+	publisher, ok := roleMap[role]
 	return publisher, ok
 }
 
-func (s *FaultServer) deletePublisher(jobId string, createTime time.Time) {
+func (s *FaultServer) getPublisherListByJobId(jobId string) []*config.ConfigPublisher[*fault.FaultMsgSignal] {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	roleMap := s.faultPublisher[jobId]
+	publisherList := make([]*config.ConfigPublisher[*fault.FaultMsgSignal], 0, len(roleMap))
+	for _, publisher := range roleMap {
+		publisherList = append(publisherList, publisher)
+	}
+	return publisherList
+}
+
+func (s *FaultServer) getAllPublisherList() []*config.ConfigPublisher[*fault.FaultMsgSignal] {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	publisherList := make([]*config.ConfigPublisher[*fault.FaultMsgSignal], 0, len(s.faultPublisher))
+	for _, roleMap := range s.faultPublisher {
+		for _, publisher := range roleMap {
+			publisherList = append(publisherList, publisher)
+		}
+	}
+	return publisherList
+}
+
+func (s *FaultServer) deletePublisher(jobId, role string, createTime time.Time) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	publisher, ok := s.faultPublisher[jobId]
+	roleMap, ok := s.faultPublisher[jobId]
+	if !ok || roleMap == nil {
+		return
+	}
+	publisher, ok := roleMap[role]
 	if !ok || publisher == nil || !createTime.Equal(publisher.GetCreateTime()) {
 		return
 	}
-	delete(s.faultPublisher, jobId)
+	delete(roleMap, role)
+	if len(roleMap) == 0 {
+		delete(s.faultPublisher, jobId)
+	}
 }
 
-func (s *FaultServer) addPublisher(jobId string) {
+func (s *FaultServer) addPublisher(jobId, role string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	publisher := config.NewConfigPublisher[*fault.FaultMsgSignal](jobId,
-		s.serviceCtx, constant.FaultMsgDataType, compareFaultMsg)
-	s.faultPublisher[jobId] = publisher
+	publisher := config.NewConfigPublisher[*fault.FaultMsgSignal](jobId, s.serviceCtx,
+		constant.FaultMsgDataType, compareFaultMsg)
+	roleMap, ok := s.faultPublisher[jobId]
+	if !ok || roleMap == nil {
+		roleMap = make(map[string]*config.ConfigPublisher[*fault.FaultMsgSignal])
+	}
+	roleMap[role] = publisher
+	s.faultPublisher[jobId] = roleMap
 }

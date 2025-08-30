@@ -47,12 +47,19 @@ type grpcServerStreamType[T signalType] interface {
 	grpc.ServerStream
 }
 
+// jobDataForChan job data for chan
+type jobDataForChan[T signalType] struct {
+	jobId string
+	data  T
+}
+
 // ConfigPublisher save data and send it to the client
 type ConfigPublisher[T signalType] struct {
 	jobId          string
+	role           string
 	dataType       string
-	sendChan       chan T
-	sentData       T
+	sendChan       chan *jobDataForChan[T]
+	sentData       map[string]T
 	subscribe      bool
 	compareFunc    func(T, T) bool
 	ctxContext     context.Context
@@ -69,8 +76,8 @@ func NewConfigPublisher[T signalType](jobId string, serviceCtx context.Context, 
 	publisher := &ConfigPublisher[T]{
 		jobId:          jobId,
 		dataType:       dataType,
-		sendChan:       make(chan T, chanBufferSize),
-		sentData:       nil,
+		sendChan:       make(chan *jobDataForChan[T], chanBufferSize),
+		sentData:       make(map[string]T),
 		subscribe:      false,
 		compareFunc:    compareFunc,
 		serviceContext: serviceCtx,
@@ -104,12 +111,12 @@ func (c *ConfigPublisher[T]) selectChanAndContext(stream grpcServerStreamType[T]
 		return false
 	case data, ok := <-c.sendChan:
 		if ok {
-			if c.compareFunc != nil && c.compareFunc(data, c.sentData) {
+			if data == nil || (c.compareFunc != nil && c.compareFunc(data.data, c.GetSentData(data.jobId))) {
 				return true
 			}
-			sendSuccess, stillListen := sendDataToClient(stream, data, c.jobId, c.dataType)
+			sendSuccess, stillListen := sendDataToClient(stream, data.data, c.jobId, c.dataType)
 			if sendSuccess {
-				c.SetSentData(data)
+				c.SetSentData(data.jobId, data.data)
 			}
 			return stillListen
 		} else {
@@ -166,7 +173,7 @@ func sendWithTimeout[T signalType](stream grpcServerStreamType[T], data T) error
 }
 
 // SaveData save data to sendChan
-func (c *ConfigPublisher[T]) SaveData(data T) bool {
+func (c *ConfigPublisher[T]) SaveData(jobId string, data T) bool {
 	saved := true
 	defer func() {
 		if r := recover(); r != nil {
@@ -178,7 +185,7 @@ func (c *ConfigPublisher[T]) SaveData(data T) bool {
 		hwlog.RunLog.Warnf("sendChan is full, do not send %s jobId=%s", c.dataType, c.jobId)
 		return false
 	}
-	c.sendChan <- data
+	c.sendChan <- &jobDataForChan[T]{jobId: jobId, data: data}
 	return saved
 }
 
@@ -211,26 +218,55 @@ func (c *ConfigPublisher[T]) IsSubscribed() bool {
 }
 
 // SetSentData store successfully sent data
-func (c *ConfigPublisher[T]) SetSentData(data T) {
+func (c *ConfigPublisher[T]) SetSentData(jobId string, data T) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.sentData = data
+	c.sentData[jobId] = data
 }
 
 // GetSentData return the latest successfully sent data
-func (c *ConfigPublisher[T]) GetSentData() T {
+func (c *ConfigPublisher[T]) GetSentData(jobId string) T {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	return c.sentData
+	return c.sentData[jobId]
+}
+
+// GetAllSentJobIdList get all sent job id list
+func (c *ConfigPublisher[T]) GetAllSentJobIdList() []string {
+	jobIdList := make([]string, 0, len(c.sentData))
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	for jobId, _ := range c.sentData {
+		jobIdList = append(jobIdList, jobId)
+	}
+	return jobIdList
+}
+
+// ClearDeletedJobIdList clear job key that already be deleted
+func (c *ConfigPublisher[T]) ClearDeletedJobIdList(jobKeyList []string) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	for _, jobId := range jobKeyList {
+		delete(c.sentData, jobId)
+	}
 }
 
 // GetSentChan return sendChan
-func (c *ConfigPublisher[T]) GetSentChan() chan T {
+func (c *ConfigPublisher[T]) GetSentChan() chan *jobDataForChan[T] {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return c.sendChan
 }
 
+// GetCreateTime return publisher create time
 func (c *ConfigPublisher[T]) GetCreateTime() time.Time {
 	return c.createTime
+}
+
+// GetJobId return job id
+func (c *ConfigPublisher[T]) GetJobId() string {
+	if c == nil {
+		return ""
+	}
+	return c.jobId
 }
