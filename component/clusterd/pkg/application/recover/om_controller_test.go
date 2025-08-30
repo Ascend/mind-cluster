@@ -844,3 +844,77 @@ func TestListenStressTestNotifyChannel(t *testing.T) {
 
 	})
 }
+
+func TestSelectNotifyStressTestNil(t *testing.T) {
+	convey.Convey("Test chan when sendChan is nil", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifyStressTestSender{}
+		res := ctl.selectNotifyStressTest(context.Background(), nil, stream)
+		convey.ShouldBeTrue(res)
+	})
+}
+
+func TestSelectNotifyStressTestContextDone(t *testing.T) {
+	convey.Convey("Test chan when context is done", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifyStressTestSender{}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		sendChan := make(chan *pb.StressTestRankParams)
+		res := ctl.selectNotifyStressTest(ctx, sendChan, stream)
+		convey.ShouldBeTrue(res)
+	})
+}
+
+func TestSelectNotifyStressTestReceiveSignal(t *testing.T) {
+	convey.Convey("Test chan when receive signal from sendChan", t, func() {
+		jobID := "testJobId"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobID,
+			},
+		}
+		var rules []common.TransRule = ctl.getBaseRules()
+		ctl.state = common.NewStateMachine(common.InitState, rules)
+		stream := &notifyStressTestSender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.StressTestRankParams, 1)
+		signal := &pb.StressTestRankParams{JobId: jobID}
+		sendChan <- signal
+		called := false
+		patchSendRetry := gomonkey.ApplyFunc(common.NotifyStressTestSendRetry,
+			func(stream pb.Recover_SubscribeNotifyExecStressTestServer, signal *pb.StressTestRankParams, retryTimes int) error {
+				called = true
+				return nil
+			})
+		defer patchSendRetry.Reset()
+		ctl.selectNotifyStressTest(ctx, sendChan, stream)
+		convey.ShouldBeTrue(called)
+	})
+}
+
+func TestSelectNotifyStressTestClosed(t *testing.T) {
+	convey.Convey("Test Chan when sendChan is closed", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "testJobId",
+			},
+		}
+		stream := &notifyStressTestSender{}
+		ctx := context.Background()
+		sendChan := make(chan *pb.StressTestRankParams, 1)
+		close(sendChan)
+		res := ctl.selectNotifyStressTest(ctx, sendChan, stream)
+		_, ok := <-sendChan
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(res, convey.ShouldBeTrue)
+	})
+}
