@@ -918,3 +918,56 @@ func TestSelectNotifyStressTestClosed(t *testing.T) {
 		convey.So(res, convey.ShouldBeTrue)
 	})
 }
+
+func TestSetStressTestResult(t *testing.T) {
+	convey.Convey("Test setStressTestResult ok", t, func() {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		ctl.setStressTestResult(&pb.StressTestResult{
+			JobId: jobInfo.JobId,
+		})
+		ret := <-ctl.stressTestResult
+		convey.So(ret.JobId, convey.ShouldEqual, jobInfo.JobId)
+	})
+}
+
+func TestGetCtxAndStressTestResponseChan(t *testing.T) {
+	convey.Convey("Testing getCtxAndStressTestResponseChan, ok", t, func() {
+		jobInfo := newJobInfoWithStrategy(nil)
+		serviceCtx := context.Background()
+		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		ctx, ch := ctl.getCtxAndStressTestResponseChan()
+		convey.So(ctx, convey.ShouldNotBeNil)
+		convey.So(ch, convey.ShouldNotBeNil)
+	})
+}
+
+func TestListenStressTestChannel(t *testing.T) {
+	convey.Convey("Test listenStressTestChannel", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		sendChan := make(chan *pb.StressTestResult, 1)
+		patches.ApplyPrivateMethod(ctl, "getCtxAndStressTestResponseChan",
+			func() (context.Context, chan *pb.StressTestResult) {
+				return ctx, sendChan
+			})
+		patches.ApplyPrivateMethod(ctl, "reset", func() {})
+		patches.ApplyPrivateMethod(ctl, "selectSendStressTestResponseChan", func(_ context.Context, _ chan *pb.StressTestResponse,
+			_ pb.Recover_SubscribeStressTestResponseServer) {
+			return
+		})
+
+		stream := &stressTestSender{}
+		ctl.listenStressTestChannel(stream)
+		convey.So(true, convey.ShouldBeTrue)
+
+	})
+}
