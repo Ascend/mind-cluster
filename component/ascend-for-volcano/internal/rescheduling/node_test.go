@@ -99,7 +99,7 @@ func buildSetNodeHealthyByNodeDTestCases() []faultSetNodeHealthyByNodeDTests {
 	addFakeNodeLabel(fakeNode0, nodeDEnableKey, nodeDEnableOffValue)
 	addFakeNodeLabel(fakeNode1, nodeDEnableKey, nodeDEnableOnValue)
 	addFakeNodeLabel(fakeNode2, nodeDEnableKey, nodeDEnableOnValue)
-	addFakeNodeAnnotation(fakeNode2, util.NodedNodeHealtyStatuskey, util.NodeUnHealthyByNodeD)
+	addFakeNodeAnnotation(fakeNode2, util.NodeHealthyStatusKey, util.NodeUnHealthy)
 	test1 := faultSetNodeHealthyByNodeDTests{
 		name:   "nodeDEnable is off, skip set node healthy",
 		fields: *fakeTestFaultNodeNodeHealthy("node0"),

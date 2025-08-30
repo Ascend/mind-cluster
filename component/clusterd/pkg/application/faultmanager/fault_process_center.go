@@ -10,6 +10,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess"
+	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
 	"clusterd/pkg/application/faultmanager/jobprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/application/publicfault"
@@ -151,4 +152,9 @@ func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, opera
 // RegisterForJobFaultRank register for job fault info
 func RegisterForJobFaultRank(ch chan map[string]constant.JobFaultInfo, src string) error {
 	return jobprocess.FaultJobCenter.Register(ch, src)
+}
+
+// FilterStressTestFault filter stress test fault
+func FilterStressTestFault(jobID string, nodes []string, val bool) {
+	stresstest.StressTestProcessor.SetFilterAicFault(jobID, nodes, val)
 }

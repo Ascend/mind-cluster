@@ -6,6 +6,7 @@ package cmprocess
 import (
 	"clusterd/pkg/application/faultmanager/cmprocess/publicfault"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
+	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
 	"clusterd/pkg/application/faultmanager/cmprocess/uceaccompany"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
@@ -29,5 +30,6 @@ func init() {
 		publicfault.PubFaultProcessor,
 		uceaccompany.UceAccompanyProcessor, // this processor filter the uce accompany faults, before processorForUceFault
 		retry.RetryProcessor,               // this processor filter the uce faults.
+		stresstest.StressTestProcessor,     // this processor filter the stress test faults.
 	})
 }

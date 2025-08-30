@@ -191,7 +191,7 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 	}
 	fNode.setNodeDValue(true)
 	// 2. to judge if noded has reported node unhealthy
-	healthyStatus, ok := node.Annotation[util.NodedNodeHealtyStatuskey]
+	healthyStatus, ok := node.Annotation[util.NodeHealthyStatusKey]
 	if !ok {
 		// 2 reason:
 		// if haven't got the healthy status reported by noded, will not set node status to unhealthy;
@@ -199,7 +199,7 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 		klog.V(util.LogInfoLev).Infof("failed to obtain node[%s] healthy status from noded configmap", node.Name)
 		return
 	}
-	if healthyStatus == util.NodeUnHealthyByNodeD {
+	if healthyStatus == util.NodeUnHealthy {
 		fNode.setIsFaultNodeValue(true)
 		fNode.setNodeHealthStateValue(NodeUnhealthy)
 		klog.V(util.LogInfoLev).Infof("Node[%s] has received unhealthy status from noded", node.Name)
@@ -209,7 +209,7 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 func (fNode *FaultNode) setNodeHealthyBySwitch(node *plugin.NPUNode) {
 	// 1. to judge if switch has reported node unhealthy
 	healthyStatus, ok := node.Annotation[util.SwitchNodeHealtyStatuskey]
-	if !ok || healthyStatus != util.NodeUnHealthyByNodeD {
+	if !ok || healthyStatus != util.NodeUnHealthy {
 		// if haven't got the healthy status reported by switch, will not set node status to unhealthy
 		return
 	}

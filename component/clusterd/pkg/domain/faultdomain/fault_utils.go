@@ -426,6 +426,12 @@ func GetRetryCodeByFaultType(faultType string) string {
 	return faultCode
 }
 
+// IsStressTestFault check faultCode is stress test fault
+func IsStressTestFault(faultCode string) bool {
+	return strings.Contains(faultCode, constant.StressTestHighLevelCode) ||
+		strings.Contains(faultCode, constant.StressTestLowLevelCode)
+}
+
 // IsCqeFault check faultCode is cqe fault
 func IsCqeFault(faultCode string) bool {
 	return strings.Contains(faultCode, constant.DevCqeFaultCode) ||

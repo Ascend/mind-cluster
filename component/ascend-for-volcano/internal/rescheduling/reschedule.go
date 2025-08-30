@@ -752,7 +752,7 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 	if fNode.NodeHealthState == NodeUnhealthy {
 		return fmt.Errorf("node is unhealthy")
 	}
-	nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodedNodeHealtyStatuskey]
+	nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodeHealthyStatusKey]
 	if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode {
 		return fmt.Errorf("node %s health status is %s", vcNode.Name, nodeHealthyStatusByNodeD)
 	}

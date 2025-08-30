@@ -238,3 +238,31 @@ func RecoverFaultJobInfoCm(jobId string) {
 		return
 	}
 }
+
+// PatchNodeAnnotation path node annotation
+func PatchNodeAnnotation(nodeName string, annotations map[string]string) (*v1.Node, error) {
+	annotationStr, err := json.Marshal(annotations)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal annotations failed when patch node, err is %v", err)
+		return nil, err
+	}
+
+	patchBody := fmt.Sprintf(annotationsFormat, annotationStr)
+	return k8sClient.ClientSet.CoreV1().Nodes().Patch(context.TODO(),
+		nodeName,
+		types.MergePatchType,
+		[]byte(patchBody),
+		metav1.PatchOptions{})
+}
+
+// RetryPatchNodeAnnotation retry patch Node annotation
+func RetryPatchNodeAnnotation(nodeName string, retryTimes int, annotations map[string]string) error {
+	_, err := PatchNodeAnnotation(nodeName, annotations)
+	retry := 0
+	for err != nil && retry < retryTimes-1 {
+		retry++
+		time.Sleep(time.Second * time.Duration(retry))
+		_, err = PatchNodeAnnotation(nodeName, annotations)
+	}
+	return err
+}

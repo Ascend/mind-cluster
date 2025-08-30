@@ -428,6 +428,11 @@ func TestFaultCodeJudge(t *testing.T) {
 			t.Error("TestFaultCodeJudgeUceFault fail")
 		}
 	})
+	t.Run("TestFaultCodeJudgeIsStressTestFault", func(t *testing.T) {
+		if got := IsStressTestFault(constant.StressTestHighLevelCode); got == false {
+			t.Error("TestFaultCodeJudgeIsStressTestFault fail")
+		}
+	})
 }
 
 // TestGetAdvanceDeviceCmForNodeMap should get AdvanceDeviceCm

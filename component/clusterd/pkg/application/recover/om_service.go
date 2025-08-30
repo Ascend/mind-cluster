@@ -16,12 +16,17 @@ import (
 	"clusterd/pkg/interface/grpc/recover"
 )
 
+var (
+	// 0: aic, 1: p2p
+	stressOps = []int64{0, 1}
+)
+
 // SwitchNicTrack Switch the track of the specified nic
 func (s *FaultRecoverService) SwitchNicTrack(ctx context.Context, nics *pb.SwitchNics) (*pb.Status, error) {
 	if ok, msg := s.checkNicsParam(nics); !ok {
 		hwlog.RunLog.Errorf("check param failed: %s", msg)
 		return &pb.Status{
-			Code: int32(common.NicParamInvalid),
+			Code: int32(common.OMParamInvalid),
 			Info: msg,
 		}, nil
 	}
@@ -29,7 +34,7 @@ func (s *FaultRecoverService) SwitchNicTrack(ctx context.Context, nics *pb.Switc
 	if !ctl.canDoSwitchingNic() {
 		hwlog.RunLog.Errorf("jobId=%s nic is swtiching, or job recovering", nics.JobID)
 		return &pb.Status{
-			Code: int32(common.NicIsSwitching),
+			Code: int32(common.OMIsRunning),
 			Info: fmt.Sprintf("jobId=%s nic is swtiching, or job recovering", nics.JobID),
 		}, nil
 	}
@@ -73,10 +78,10 @@ func (s *FaultRecoverService) SubscribeNotifySwitch(req *pb.ClientInfo, stream p
 	return nil
 }
 
-// ReplySwitchNicResult notify worker switch nic
+// ReplySwitchNicResult reply worker switch nic result
 func (s *FaultRecoverService) ReplySwitchNicResult(ctx context.Context, res *pb.SwitchResult) (*pb.Status, error) {
 	if res == nil {
-		return &pb.Status{Code: int32(common.NicParamInvalid), Info: "request is nil"}, nil
+		return &pb.Status{Code: int32(common.OMParamInvalid), Info: "request is nil"}, nil
 	}
 	controller, exist := s.getController(res.JobId)
 	if !exist {
@@ -104,7 +109,7 @@ func (s *FaultRecoverService) checkNicsParam(nics *pb.SwitchNics) (bool, string)
 	if jobInfo.Status != job.StatusJobRunning {
 		return false, fmt.Sprintf("job:%s is not running", nics.JobID)
 	}
-	jobServerMap := s.getNodeDeviceMap(jobInfo.PreServerList)
+	jobServerMap := s.getNodeDeviceMap(jobInfo.JobRankTable.ServerList)
 	deviceInfos := faultmanager.QueryDeviceInfoToReport()
 	for node, devs := range nics.NicOps {
 		if _, ok := jobServerMap[node]; !ok {
@@ -151,9 +156,15 @@ func (s *FaultRecoverService) getNodeDeviceMap(serverList []constant.ServerHccl)
 }
 
 func (s *FaultRecoverService) getGlobalRankIDAndOp(nics *pb.SwitchNics) ([]string, []bool) {
-	jobInfo, _ := job.GetJobCache(nics.JobID)
+	globalRankIDs := make([]string, 0)
+	globalOps := make([]bool, 0)
+	jobInfo, ok := job.GetJobCache(nics.JobID)
+	if !ok {
+		hwlog.RunLog.Errorf("get job cache failed, jobId=%s", nics.JobID)
+		return globalRankIDs, globalOps
+	}
 	serverMap := make(map[string]map[string]string)
-	for _, server := range jobInfo.PreServerList {
+	for _, server := range jobInfo.JobRankTable.ServerList {
 		devs := make(map[string]string)
 		for _, dev := range server.DeviceList {
 			devs[dev.DeviceID] = dev.RankID
@@ -161,8 +172,6 @@ func (s *FaultRecoverService) getGlobalRankIDAndOp(nics *pb.SwitchNics) ([]strin
 		serverMap[server.ServerName] = devs
 	}
 
-	globalRankIDs := make([]string, 0)
-	globalOps := make([]bool, 0)
 	for node, devs := range nics.NicOps {
 		for _, dev := range devs.Dev {
 			globalRankIDs = append(globalRankIDs, serverMap[node][dev])

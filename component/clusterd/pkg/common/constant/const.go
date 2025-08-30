@@ -224,6 +224,8 @@ const (
 	InvalidSuperPodIndex = -2
 	// PatchPodTimes patch pod retry times
 	PatchPodTimes = 3
+	// PatchNodeTimes patch node retry times
+	PatchNodeTimes = 3
 	// AllCardId all card id
 	AllCardId = "FF"
 	// SwitchFaultType is switchFault
@@ -254,4 +256,21 @@ const (
 const (
 	// CardDropFault is the fault code of card drop fault
 	CardDropFault = "40F84E00"
+)
+
+const (
+	// NodeHealthyStatusKey node healthy status key
+	NodeHealthyStatusKey = "NodeHealthyStatus"
+	// NodeUnHealthy in this case pod will be rescheduling
+	NodeUnHealthy = "UnHealthy"
+	// StressTestOK stress test ok
+	StressTestOK = "0"
+	// StressTestExecFail stress test exec fail
+	StressTestExecFail = "1"
+	// StressTestFindFault stress test find fault
+	StressTestFindFault = "2"
+	// StressTestTimeout value of stress test timeout
+	StressTestTimeout = "3"
+	// StressTestVolRecoverFail voltage recovery failed
+	StressTestVolRecoverFail = "4"
 )

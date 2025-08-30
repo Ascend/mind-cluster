@@ -20,7 +20,7 @@ rules:
     verbs: ["get", "create", "update", "list", "watch", "delete", "patch"]
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "patch", "watch"]
   - apiGroups: [""]
     resources: ["nodes/status"]
     verbs: ["get", "patch"]

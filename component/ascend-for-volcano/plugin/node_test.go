@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -171,7 +172,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 					Nodes: map[string]NPUNode{"haha": {
 						CommonNode: CommonNode{
 							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
-							Annotation: map[string]string{util.NodedNodeHealtyStatuskey: util.PreSeparateFaultCode},
+							Annotation: map[string]string{util.NodeHealthyStatusKey: util.PreSeparateFaultCode},
 						}}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
 			wantErr: true,
@@ -304,6 +305,28 @@ func buildUpdateNPUNodeDeviceInfosTest() []updateNPUNodeDeviceInfosTest {
 			}},
 		},
 	}
+}
+
+func TestSyncAnnotation(t *testing.T) {
+	t.Run("test syncAnnotation, node unhealth", func(t *testing.T) {
+		cNode := NPUNode{CommonNode: CommonNode{}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						util.NodeHealthyStatusKey: util.NodeUnHealthy,
+					},
+				},
+			},
+		}
+		nodeInfo := k8s.NodeDNodeInfo{}
+		switchInfo := k8s.SwitchFaultInfo{}
+		cNode.syncAnnotation(nodeNew, nodeInfo, switchInfo)
+		if len(nodeNew.Node.Annotations)+1 != len(cNode.Annotation) {
+			t.Errorf("syncAnnotation is not equal")
+		}
+
+	})
 }
 
 func TestUpdateNPUNodeDeviceInfos(t *testing.T) {

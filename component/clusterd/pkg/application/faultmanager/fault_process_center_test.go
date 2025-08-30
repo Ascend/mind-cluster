@@ -10,6 +10,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/collector"
@@ -58,6 +59,16 @@ func TestQueryJobsFaultInfo(t *testing.T) {
 		jobsFaultInfo := QueryJobsFaultInfo([]string{constant.NotHandleFault})
 		if len(jobsFaultInfo) != 1 {
 			t.Error("TestQueryJobsFaultInfo fail")
+		}
+	})
+}
+
+func TestFilterStressTestFault(t *testing.T) {
+	t.Run("TestFilterStressTestFault, set filter ok", func(t *testing.T) {
+		FilterStressTestFault("job", []string{"node"}, true)
+		defer FilterStressTestFault("job", []string{"node"}, false)
+		if stresstest.StressTestProcessor == nil {
+			t.Error("TestFilterStressTestFault fail")
 		}
 	})
 }

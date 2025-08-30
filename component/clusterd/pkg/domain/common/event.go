@@ -85,17 +85,31 @@ const (
 	// WaitHCCLRoutingConvergenceFail wait hccl routing convergence fail
 	WaitHCCLRoutingConvergenceFail = "waitHCCLRoutingConvergenceFail"
 
-	// StartSwitchNic start switch nic
-	StartSwitchNic = "startSwitchNic"
 	// ProcessPauseFailEvent process not ready
 	ProcessPauseFailEvent = "processPauseFail"
 	// ContinueTrainFailEvent continue train fail event
 	ContinueTrainFailEvent = "continueTrainFail"
+
+	// StartSwitchNic start switch nic
+	StartSwitchNic = "startSwitchNic"
 	// WaitSwitchNicRecvFaultEvent wait switch nic and receive fault
 	WaitSwitchNicRecvFaultEvent = "waitSwitchNicRecvFault"
 	// SwitchNicFailEvent switch nic fail
 	SwitchNicFailEvent = "switchNicFail"
+	// SwitchNicRecvPauseEvent receive pause event before switch nic
+	SwitchNicRecvPauseEvent = "switchNicRecvPause"
+	// SwitchNicRecvContinueEvent receive continue event after switch nic
+	SwitchNicRecvContinueEvent = "switchNicRecvContinue"
 
 	// KillPodAfterRestartProcessEvent kill pod when cant not restart process
 	KillPodAfterRestartProcessEvent = "KillPodAfterRestartProcessEvent"
+
+	// StartStressTest start stress test
+	StartStressTest = "startStressTest"
+	// StressTestRecvPauseEvent receive pause event before stress test
+	StressTestRecvPauseEvent = "stressTestRecvPause"
+	// StressTestFailEvent stress test fail
+	StressTestFailEvent = "stressTestFail"
+	// StressTestRecvContinueEvent receive continue event after stress test
+	StressTestRecvContinueEvent = "stressTestRecvContinue"
 )

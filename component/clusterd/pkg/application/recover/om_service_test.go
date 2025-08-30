@@ -35,7 +35,7 @@ func TestSwitchNicErrorParam(t *testing.T) {
 	t.Run("switch nic, error param", func(t *testing.T) {
 		s := fakeService()
 		res, _ := s.SwitchNicTrack(ctx, nil)
-		assert.Equal(t, int32(common.NicParamInvalid), res.Code)
+		assert.Equal(t, int32(common.OMParamInvalid), res.Code)
 	})
 }
 
@@ -68,7 +68,7 @@ func TestSwitchNicCanNotDoSwitch(t *testing.T) {
 			NicOps: map[string]*pb.DeviceList{
 				nodeName: {Dev: []string{deviceID}, Op: []bool{true}}},
 		})
-		assert.Equal(t, int32(common.NicIsSwitching), res.Code)
+		assert.Equal(t, int32(common.OMIsRunning), res.Code)
 	})
 }
 
@@ -152,8 +152,10 @@ func TestCheckNicsParam(t *testing.T) {
 	deviceID := "device"
 	rankID := "1"
 	job.SaveJobCache(jobID, constant.JobInfo{
-		PreServerList: []constant.ServerHccl{
-			{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
+		JobRankTable: constant.RankTable{
+			ServerList: []constant.ServerHccl{
+				{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
+		},
 		Status: job.StatusJobRunning,
 	})
 	defer job.DeleteJobCache(jobID)
@@ -193,8 +195,10 @@ func TestCheckNicsParamOK(t *testing.T) {
 	deviceID := "device"
 	rankID := "1"
 	job.SaveJobCache(jobID, constant.JobInfo{
-		PreServerList: []constant.ServerHccl{
-			{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
+		JobRankTable: constant.RankTable{
+			ServerList: []constant.ServerHccl{
+				{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
+		},
 		Status: job.StatusJobRunning,
 	})
 	defer job.DeleteJobCache(jobID)
@@ -277,8 +281,9 @@ func TestGetGlobalRankIDAndOp(t *testing.T) {
 		deviceID := "device"
 		rankID := "1"
 		job.SaveJobCache(jobID, constant.JobInfo{
-			PreServerList: []constant.ServerHccl{
-				{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
 			},
 			Status: job.StatusJobRunning,
 		})
@@ -304,7 +309,7 @@ func TestReplySwitchNicResult(t *testing.T) {
 	t.Run("req is nil", func(t *testing.T) {
 		s := fakeService()
 		res, _ := s.ReplySwitchNicResult(ctx, nil)
-		assert.Equal(t, int32(common.NicParamInvalid), res.Code)
+		assert.Equal(t, int32(common.OMParamInvalid), res.Code)
 	})
 	t.Run("not register", func(t *testing.T) {
 		s := fakeService()

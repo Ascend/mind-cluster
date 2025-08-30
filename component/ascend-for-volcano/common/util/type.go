@@ -173,15 +173,15 @@ const (
 	NodeDCmInfoNamePrefix = "mindx-dl-nodeinfo-"
 	// SwitchCmInfoNamePrefix is the prefix for switch fault configmap
 	SwitchCmInfoNamePrefix = "mindx-dl-switchinfo-"
-	// NodedNodeHealtyStatuskey  is the key of node healthy status from configmap data of noded
-	NodedNodeHealtyStatuskey = "nodedNodeHealtyStatus"
+	// NodeHealthyStatusKey  is the key of node healthy status from configmap data of noded and clusterD
+	NodeHealthyStatusKey = "NodeHealthyStatus"
 	// NodeSubHealthy means there is some fault on the node which is reported by nodeD, but will not immediately
 	// make node unhealthy, this status will prevent new task schduled on this node and reschedule will not consider
 	// this node
 	NodeSubHealthy = "SubHealthy"
-	// NodeUnHealthyByNodeD is the node unhealthy status reported by nodeD configmap,
+	// NodeUnHealthy is the node unhealthy status reported by nodeD configmap, switch info CM and clusterD,
 	// in this case pod will be rescheduling
-	NodeUnHealthyByNodeD = "UnHealthy"
+	NodeUnHealthy = "UnHealthy"
 	// NodeHealthyByNodeD is the node healthy status reported by nodeD configmap
 	NodeHealthyByNodeD = "Healthy"
 	// NodeDEnableKey indicates if the label has been set

@@ -38,12 +38,10 @@ const (
 	InvalidReqParam = 409
 	// InvalidReqRate invalid request rate
 	InvalidReqRate = 410
-	// NicIsSwitching nic is switching
-	NicIsSwitching RespCode = 411
-	// SwitchNicFail switch nic failed
-	SwitchNicFail = 412
-	// NicParamInvalid nic is invalid
-	NicParamInvalid RespCode = 413
+	// OMIsRunning om is running
+	OMIsRunning RespCode = 411
+	// OMParamInvalid param is invalid
+	OMParamInvalid RespCode = 413
 	// UnRecoverTrainError unrecoverable training errors
 	UnRecoverTrainError = 499
 	// RateLimitedCode limit rate

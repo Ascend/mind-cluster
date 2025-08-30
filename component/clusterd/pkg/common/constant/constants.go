@@ -73,6 +73,8 @@ const (
 	DevCqeFaultCode         = "8C1F8608"
 	HostCqeFaultCode        = "4C1F8608"
 	HcclRetryFaultCode      = "8C1F860B"
+	StressTestHighLevelCode = "80818C05"
+	StressTestLowLevelCode  = "80818C06"
 )
 
 // fault processor const

@@ -1034,7 +1034,7 @@ func buildReSchedulerCheckNodeCurNodeIsFaultCase5() []ReSchedulerCheckNodeCurNod
 		},
 		args: ReSchedulerCheckNodeCurNodeIsFaultArgs{
 			vcNode: *fakeNodeWithAnnotation("node0",
-				map[string]string{util.NodedNodeHealtyStatuskey: util.PreSeparateFaultCode}),
+				map[string]string{util.NodeHealthyStatusKey: util.PreSeparateFaultCode}),
 			task: &api.TaskInfo{Job: test.FakeJobName},
 		},
 		wantErr: true,
