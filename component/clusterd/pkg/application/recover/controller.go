@@ -517,7 +517,7 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 	}
 	if err != nil {
 		defer catchException()
-		ctl.replyOMResponse("switch nic failed, send signal failed")
+		ctl.replyOMResponse("om failed, send signal failed")
 		ctl.addEvent(common.NotifyFailEvent)
 		return
 	}

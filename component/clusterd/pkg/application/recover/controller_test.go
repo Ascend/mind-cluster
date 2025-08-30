@@ -1765,7 +1765,7 @@ func testErrorSwitchNicCase(ctl *EventController) {
 		ctl.switchNicResponse = make(chan *pb.SwitchNicResponse, 1)
 		ctl.handleSendResult(signal, errors.New("test error"))
 		res := <-ctl.switchNicResponse
-		convey.So(res.Msg, convey.ShouldEqual, "switch nic failed, send signal failed")
+		convey.So(res.Msg, convey.ShouldEqual, "om failed, send signal failed")
 		convey.So(addedEvent, convey.ShouldEqual, common.NotifyFailEvent)
 	})
 }
