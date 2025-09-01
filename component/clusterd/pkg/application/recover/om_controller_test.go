@@ -1137,7 +1137,7 @@ func TestStressTestSignalEnqueue(t *testing.T) {
 		jobInfo := newJobInfoWithStrategy(nil)
 		ctx, cancel := context.WithCancel(context.Background())
 		ctl := NewEventController(jobInfo, keepAliveSeconds, ctx)
-		paramChan := make(chan *pb.StressTestRankParams, 1)
+		paramChan := make(chan *pb.StressTestRankParams)
 		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStressTestNotifyChan", func() (context.Context, chan *pb.StressTestRankParams) {
 			return ctx, paramChan
 		})
