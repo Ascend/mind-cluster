@@ -25,11 +25,6 @@ const (
 	MsLocalWorkerEnv = "MS_LOCAL_WORKER"
 )
 
-// NPU
-const (
-	ResourceNamePrefix = "huawei.com/"
-)
-
 // NameSpace
 const (
 	DLNamespace = "mindx-dl"
@@ -52,8 +47,6 @@ const (
 const (
 	// PodUsedHardwareTypeAnno annotation value is the hardware type that real used in pod
 	PodUsedHardwareTypeAnno = "mind-cluster/hardware-type"
-	// Pod910DeviceAnno annotation value is for generating 910 hccl rank table
-	Pod910DeviceAnno = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// PodRankIndexAnno annotation value is rank index of the pod
 	PodRankIndexAnno = "hccl/rankIndex"
 	// SuperPodIDAnno annotation key of the super pod id
