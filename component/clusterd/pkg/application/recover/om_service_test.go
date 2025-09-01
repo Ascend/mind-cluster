@@ -192,6 +192,29 @@ func TestCheckNicsParam(t *testing.T) {
 	})
 }
 
+func TestCheckNicsParamJobNotRunning(t *testing.T) {
+	jobID := "jobID"
+	nodeName := "nodeName"
+	deviceID := "device"
+	rankID := "1"
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobPending,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
+				},
+			},
+		}, true
+	})
+	defer patches.Reset()
+	t.Run("job is not running", func(t *testing.T) {
+		s := fakeService()
+		ok, _ := s.checkNicsParam(&pb.SwitchNics{JobID: jobID})
+		assert.False(t, ok)
+	})
+}
+
 func TestCheckNicsParamOK(t *testing.T) {
 	jobID := "jobID"
 	nodeName := "nodeName"
@@ -202,15 +225,7 @@ func TestCheckNicsParamOK(t *testing.T) {
 			Status: job.StatusJobRunning,
 			JobRankTable: constant.RankTable{
 				ServerList: []constant.ServerHccl{
-					{
-						ServerName: nodeName,
-						DeviceList: []constant.Device{
-							{
-								DeviceID: deviceID,
-								RankID:   rankID,
-							},
-						},
-					},
+					{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
 				},
 			},
 		}, true
@@ -299,15 +314,7 @@ func TestGetGlobalRankIDAndOp(t *testing.T) {
 				Status: job.StatusJobRunning,
 				JobRankTable: constant.RankTable{
 					ServerList: []constant.ServerHccl{
-						{
-							ServerName: nodeName,
-							DeviceList: []constant.Device{
-								{
-									DeviceID: deviceID,
-									RankID:   rankID,
-								},
-							},
-						},
+						{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
 					},
 				},
 			}, true
@@ -359,7 +366,6 @@ func TestStressTestOperation(t *testing.T) {
 	nodeName := "nodeName"
 	deviceID := "device"
 	rankID := "1"
-	defer patches.Reset()
 	t.Run("stress test, error param", func(t *testing.T) {
 		s := fakeService()
 		res, _ := s.StressTest(ctx, nil)
@@ -373,6 +379,7 @@ func TestStressTestOperation(t *testing.T) {
 		patches.ApplyPrivateMethod(&EventController{}, "canDoStressTest", func(*FaultRecoverService) bool {
 			return false
 		})
+		defer patches.Reset()
 		s.eventCtl[jobID] = &EventController{state: common.NewStateMachine(common.InitState, nil)}
 		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID})
 		assert.Equal(t, int32(common.OMIsRunning), res.Code)
@@ -391,6 +398,7 @@ func TestStressTestOperation(t *testing.T) {
 		patches.ApplyPrivateMethod(s, "checkStressTestParam", func(params *pb.StressTestParam) (bool, string) {
 			return true, ""
 		})
+		defer patches.Reset()
 		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID, StressParam: map[string]*pb.StressOpList{
 			nodeName: {Ops: []int64{0}}}})
 		assert.Equal(t, int32(common.OK), res.Code)
@@ -486,12 +494,7 @@ func TestGetNodeRankOpsMap(t *testing.T) {
 				ServerList: []constant.ServerHccl{
 					{
 						ServerName: nodeName,
-						DeviceList: []constant.Device{
-							{
-								DeviceID: deviceID,
-								RankID:   rankID,
-							},
-						},
+						DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
 					},
 				},
 			},
