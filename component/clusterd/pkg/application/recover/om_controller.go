@@ -11,9 +11,13 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/recover"
+	"clusterd/pkg/interface/kube"
 )
 
 const (
@@ -333,11 +337,40 @@ func (ctl *EventController) getStressTestParam() common.StressTestParam {
 }
 
 func (ctl *EventController) notifyStressTest() (string, common.RespCode, error) {
-	return "", common.OK, nil
+	stressTestParam := ctl.getStressTestParam()
+	rankOps := make(map[string]*pb.StressOpList)
+	for _, p := range stressTestParam {
+		for rankID, ops := range p {
+			rankOps[rankID] = &pb.StressOpList{
+				Ops: ops,
+			}
+		}
+	}
+	signal := &pb.StressTestRankParams{
+		StressParam: rankOps,
+		JobId:       ctl.jobInfo.JobId,
+	}
+	return ctl.stressTestSignalEnqueue(signal)
 }
 
 func (ctl *EventController) stressTestSignalEnqueue(signal *pb.StressTestRankParams) (string, common.RespCode, error) {
-	return "", common.OK, nil
+	ctx, sendChan := ctl.getCtxAndStressTestNotifyChan()
+	if sendChan == nil {
+		hwlog.RunLog.Errorf("jobId=%s, sendChan is nil", ctl.jobInfo.JobId)
+		return "", common.SignalQueueBusy, errors.New("sendChan is nil")
+	}
+	select {
+	case sendChan <- signal:
+		hwlog.RunLog.Infof("signal enqueue, jobId=%s, params=%v", signal.JobId, signal.StressParam)
+		return "", common.OK, nil
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		return "", common.ControllerEventCancel, nil
+	case <-time.After(time.Second):
+		info := fmt.Sprintf("add signal time-out for jobId=%s, program may running in chaos", signal.JobId)
+		hwlog.RunLog.Errorf("signal: %v enqueue time-out, %s", signal, info)
+		return "", common.SignalQueueBusy, errors.New(info)
+	}
 }
 
 func (ctl *EventController) getCtxAndStressTestNotifyChan() (context.Context, chan *pb.StressTestRankParams) {
@@ -388,20 +421,129 @@ func (ctl *EventController) selectNotifyStressTest(ctx context.Context, sendChan
 
 func (ctl *EventController) waitStressTestFinishRecvFault(ctx context.Context,
 	rch chan *pb.StressTestResult) (string, common.RespCode, error) {
-	return "", common.OK, nil
+	hwlog.RunLog.Warnf("recv fault, when stressing test, jobId=%s", ctl.jobInfo.JobId)
+	ctl.replyOMResponse("recv fault, when stressing test")
+	select {
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		return "", common.ControllerEventCancel, nil
+	case req := <-rch:
+		_, msg := ctl.parseStressTestResult(req)
+		ctl.replyOMResponse(msg)
+		hwlog.RunLog.Warnf("stress test failed, start recover..., jobId=%s", ctl.jobInfo.JobId)
+		return common.StressTestFailEvent, common.ClientError, nil
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
+		hwlog.RunLog.Errorf("wait report stress test timeout, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		ctl.replyOMResponse("stress test failed, report stress test timeout")
+		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
+	}
 }
 
 func (ctl *EventController) handleWaitStressTestFinish() (string, common.RespCode, error) {
-	return "", common.OK, nil
+	hwlog.RunLog.Infof("jobId=%s, wait stress test finish....", ctl.jobInfo.JobId)
+	nodes := make([]string, 0)
+	for node, _ := range ctl.getStressTestParam() {
+		nodes = append(nodes, node)
+	}
+	faultmanager.FilterStressTestFault(ctl.jobInfo.JobId, nodes, true)
+	defer faultmanager.FilterStressTestFault(ctl.jobInfo.JobId, nodes, false)
+	cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
+		constant.NotifyFaultFlushingOperation)
+	if err != nil {
+		hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
+	} else {
+		hwlog.RunLog.Infof("write configmap FaultFlushing success, %s", cm.Data[constant.ResetInfoCMDataKey])
+	}
+	ctx, ch := ctl.getCtxAndResultChan()
+	if ch == nil {
+		hwlog.RunLog.Infof("jobId=%s, reportChan is nil", ctl.jobInfo.JobId)
+		ctl.replyOMResponse("stress test failed, job service not ready")
+		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, reportChan is nil", ctl.jobInfo.JobId)
+	}
+	ctx, rch := ctl.getCtxAndStressTestResultChan()
+	if rch == nil {
+		hwlog.RunLog.Infof("jobId=%s, resultChan is nil", ctl.jobInfo.JobId)
+		ctl.replyOMResponse("stress test failed, job service not ready")
+		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, reportChan is nil", ctl.jobInfo.JobId)
+	}
+	return ctl.waitStressTestDone(ctx, rch, ch)
 }
 
 func (ctl *EventController) waitStressTestDone(ctx context.Context, rch chan *pb.StressTestResult,
 	ch chan *pb.RecoverStatusRequest) (string, common.RespCode, error) {
+	select {
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		ctl.replyOMResponse("stress test failed, job service not ready")
+		return "", common.ControllerEventCancel, nil
+	case req := <-rch:
+		if _, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
+			false, constant.ClearOperation); err != nil {
+			hwlog.RunLog.Errorf("notify agent faultFlushing error, err=%v", err)
+		}
+		ok, msg := ctl.parseStressTestResult(req)
+		if !ok {
+			ctl.replyOMResponse(msg)
+			return common.StressTestFailEvent, common.ClientError, nil
+		}
+		ctl.replyOMResponse(msg)
+		return common.ReceiveReportEvent, common.OK, nil
+	case req := <-ch:
+		if req.Status.Code == common.UnRecoverableRetryError {
+			return ctl.waitStressTestFinishRecvFault(ctx, rch)
+		}
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
+		hwlog.RunLog.Errorf("wait report stress test timeout, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		ctl.replyOMResponse("stress test failed, report stress test timeout")
+		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
+	}
 	return "", common.OK, nil
 }
 
 func (ctl *EventController) parseStressTestResult(result *pb.StressTestResult) (bool, string) {
-	return true, ""
+	hwlog.RunLog.Infof("jobId=%s, StressTestResult is %v", result.JobId, result.StressResult)
+	jobInfo, ok := job.GetJobCache(result.JobId)
+	if !ok {
+		hwlog.RunLog.Errorf("get job cache failed, jobId=%s", result.JobId)
+		return false, fmt.Sprintf("get job cache failed, jobId=%s", result.JobId)
+	}
+	rankNodeMap := make(map[string]string) // rank -> node
+	rankDevMap := make(map[string]string)  // rank -> dev
+	for _, server := range jobInfo.JobRankTable.ServerList {
+		for _, dev := range server.DeviceList {
+			rankNodeMap[dev.RankID] = server.ServerName
+			rankDevMap[dev.RankID] = dev.DeviceID
+		}
+	}
+	hwlog.RunLog.Infof("jobId=%s, , rankNodeMap is %v", result.JobId, rankNodeMap)
+	nodeRankResultMap := make(map[string]map[string]*pb.StressTestRankResult) // node -> rank -> msg
+	faultRank := make([]*pb.FaultRank, 0)
+	for rankID, opResult := range result.StressResult {
+		nodeName := rankNodeMap[rankID]
+		if _, ok := nodeRankResultMap[nodeName]; !ok {
+			nodeRankResultMap[nodeName] = make(map[string]*pb.StressTestRankResult)
+		}
+		devID := rankDevMap[rankID]
+		nodeRankResultMap[nodeName][devID] = opResult
+		for _, res := range opResult.RankResult {
+			if res.Code == constant.StressTestFindFault {
+				ctl.isolateNodes.Insert(nodeName)
+			}
+			if res.Code == constant.StressTestTimeout || res.Code == constant.StressTestVolRecoverFail {
+				faultRank = append(faultRank, &pb.FaultRank{RankId: rankID, FaultType: constant.NormalFaultType})
+			}
+		}
+	}
+	ctl.saveCacheFault(faultRank)
+	retStr := util.ObjToString(nodeRankResultMap)
+	hwlog.RunLog.Infof("jobId=%s, isolateNode:%v result:%v", result.JobId, ctl.isolateNodes, retStr)
+	if len(ctl.isolateNodes) > 0 {
+		return false, fmt.Sprintf("stress test find fault, isolate node:%v,result:%v", ctl.isolateNodes, retStr)
+	}
+	if len(faultRank) > 0 {
+		return false, fmt.Sprintf("stress test timeout fault, faultRank:%v,result:%v", faultRank, retStr)
+	}
+	return true, fmt.Sprintf("stress test finish, result:%v", retStr)
 }
 
 func (ctl *EventController) setStressTestResult(result *pb.StressTestResult) {
@@ -421,7 +563,41 @@ func (ctl *EventController) getCtxAndStressTestResponseChan() (context.Context, 
 }
 
 func (ctl *EventController) handleStressTestFail() (string, common.RespCode, error) {
-	return "", common.OK, nil
+	jobInfo, ok := job.GetJobCache(ctl.jobInfo.JobId)
+	if !ok {
+		hwlog.RunLog.Errorf("get job cache failed, jobId=%s", ctl.jobInfo.JobId)
+		return "", common.ServerInnerError, fmt.Errorf("get job cache failed, jobId=%s", ctl.jobInfo.JobId)
+	}
+	nodeRankMap := make(map[string][]string)
+	for _, server := range jobInfo.JobRankTable.ServerList {
+		ranks := make([]string, 0)
+		for _, dev := range server.DeviceList {
+			ranks = append(ranks, dev.RankID)
+		}
+		nodeRankMap[server.ServerName] = ranks
+	}
+	faultRank := make([]*pb.FaultRank, 0)
+	for node := range ctl.isolateNodes {
+		for _, rank := range nodeRankMap[node] {
+			faultRank = append(faultRank, &pb.FaultRank{RankId: rank, FaultType: constant.NormalFaultType})
+		}
+		labels := map[string]string{constant.NodeHealthyStatusKey: constant.NodeUnHealthy}
+		err := kube.RetryPatchNodeAnnotation(node, constant.PatchNodeTimes, labels)
+		if err != nil {
+			hwlog.RunLog.Errorf("patch node:%s failed: %v", node, err)
+		}
+	}
+	ctl.saveCacheFault(faultRank)
+	ctl.uuid = common.NewEventId(randomLen)
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     constant.StopTrainSignalType,
+		Actions:        stopTrainActions,
+		ChangeStrategy: "",
+	}
+	signal.FaultRanks = append(ctl.cacheRetryFault, ctl.cacheNormalFault...)
+	return ctl.signalEnqueue(signal)
 }
 
 func (ctl *EventController) handleStressTestFinish() (string, common.RespCode, error) {
