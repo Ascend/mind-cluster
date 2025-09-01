@@ -177,19 +177,6 @@ func TestCheckNicsParam(t *testing.T) {
 		ok, _ := s.checkNicsParam(&pb.SwitchNics{JobID: jobID})
 		assert.False(t, ok)
 	})
-	t.Run("job is not running", func(t *testing.T) {
-		s := fakeService()
-		s.eventCtl[jobID] = &EventController{}
-		jobInfo, _ := job.GetJobCache(jobID)
-		jobInfo.Status = job.StatusJobPending
-		job.SaveJobCache(jobID, jobInfo)
-		ok, _ := s.checkNicsParam(&pb.SwitchNics{JobID: jobID})
-		assert.False(t, ok)
-		defer func() {
-			jobInfo.Status = job.StatusJobRunning
-			job.SaveJobCache(jobID, jobInfo)
-		}()
-	})
 }
 
 func TestCheckNicsParamJobNotRunning(t *testing.T) {
@@ -491,11 +478,8 @@ func TestGetNodeRankOpsMap(t *testing.T) {
 		return constant.JobInfo{
 			Status: job.StatusJobRunning,
 			JobRankTable: constant.RankTable{
-				ServerList: []constant.ServerHccl{
-					{
-						ServerName: nodeName,
-						DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
-					},
+				ServerList: []constant.ServerHccl{{
+					ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
 				},
 			},
 		}, true
