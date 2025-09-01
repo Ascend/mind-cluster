@@ -480,7 +480,6 @@ func (ctl *EventController) waitStressTestDone(ctx context.Context, rch chan *pb
 	select {
 	case <-ctx.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		ctl.replyOMResponse("stress test failed, job service not ready")
 		return "", common.ControllerEventCancel, nil
 	case req := <-rch:
 		if _, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil,
