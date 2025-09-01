@@ -348,3 +348,143 @@ func TestReplySwitchNicResult(t *testing.T) {
 		assert.Equal(t, int32(common.OK), res.Code)
 	})
 }
+
+func TestStressTestErrorParam(t *testing.T) {
+	ctx := context.Background()
+	t.Run("stress test, error param", func(t *testing.T) {
+		s := fakeService()
+		res, _ := s.StressTest(ctx, nil)
+		assert.Equal(t, int32(common.OMParamInvalid), res.Code)
+	})
+}
+
+func TestStressTestCanNotDoStressTest(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	ctx := context.Background()
+	jobID := "jobID"
+	t.Run("can not do stress test", func(t *testing.T) {
+		s := fakeService()
+		patches.ApplyPrivateMethod(s, "checkStressTestParam", func(params *pb.StressTestParam) (bool, string) {
+			return true, ""
+		})
+		patches.ApplyPrivateMethod(&EventController{}, "canDoStressTest", func(*FaultRecoverService) bool {
+			return false
+		})
+		s.eventCtl[jobID] = &EventController{state: common.NewStateMachine(common.InitState, nil)}
+		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID})
+		assert.Equal(t, int32(common.OMIsRunning), res.Code)
+	})
+}
+
+func TestStressTestOperationSuccess(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	ctx := context.Background()
+	jobID := "jobID"
+	nodeName := "nodeName"
+	deviceID := "device"
+	rankID := "1"
+	patches.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobRunning,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{
+						ServerName: nodeName,
+						DeviceList: []constant.Device{
+							{
+								DeviceID: deviceID,
+								RankID:   rankID,
+							},
+						},
+					},
+				},
+			},
+		}, true
+	})
+	defer patches.Reset()
+	t.Run("stress test operation success", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{state: common.NewStateMachine(common.InitState, nil)}
+		patches.ApplyPrivateMethod(s, "checkStressTestParam", func(params *pb.StressTestParam) (bool, string) {
+			return true, ""
+		})
+		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID, StressParam: map[string]*pb.StressOpList{
+			nodeName: {
+				Ops: []int64{0},
+			},
+		}})
+		assert.Equal(t, int32(common.OK), res.Code)
+	})
+}
+
+func TestSubscribeNotifyStressTest(t *testing.T) {
+	info := &pb.ClientInfo{
+		JobId: "jobID",
+	}
+	t.Run("case job not registered", func(t *testing.T) {
+		s := fakeService()
+		err := s.SubscribeNotifyExecStressTest(info, nil)
+		assert.Error(t, err)
+	})
+	t.Run("case job registered", func(t *testing.T) {
+		s := fakeService()
+		patch := gomonkey.ApplyPrivateMethod(&EventController{}, "listenStressTestNotifyChannel",
+			func(stream pb.Recover_SubscribeNotifyExecStressTestServer) {
+				return
+			})
+		defer patch.Reset()
+		s.eventCtl[info.JobId] = &EventController{}
+		err := s.SubscribeNotifyExecStressTest(info, nil)
+		assert.Nil(t, err)
+	})
+}
+
+func TestReplyStressTestResult(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	ctx := context.Background()
+	jobID := "jobID"
+
+	defer patches.Reset()
+	t.Run("req is nil", func(t *testing.T) {
+		s := fakeService()
+		res, _ := s.ReplyStressTestResult(ctx, nil)
+		assert.Equal(t, int32(common.OMParamInvalid), res.Code)
+	})
+	t.Run("not register", func(t *testing.T) {
+		s := fakeService()
+		res, _ := s.ReplyStressTestResult(ctx, &pb.StressTestResult{JobId: ""})
+		assert.Equal(t, int32(common.UnRegistry), res.Code)
+	})
+	t.Run("reply success", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{}
+		patches.ApplyPrivateMethod(&EventController{}, "setStressTestResult", func(result *pb.StressTestResult) {
+			return
+		})
+		res, _ := s.ReplyStressTestResult(ctx, &pb.StressTestResult{JobId: jobID})
+		assert.Equal(t, int32(common.OK), res.Code)
+	})
+}
+
+func TestSubscribeStressTestResponse(t *testing.T) {
+	info := &pb.StressTestRequest{
+		JobID: "jobID",
+	}
+	t.Run("case job not registered", func(t *testing.T) {
+		s := fakeService()
+		err := s.SubscribeStressTestResponse(info, nil)
+		assert.Error(t, err)
+	})
+	t.Run("case job registered", func(t *testing.T) {
+		s := fakeService()
+		patch := gomonkey.ApplyPrivateMethod(&EventController{}, "listenStressTestChannel",
+			func(stream pb.Recover_SubscribeStressTestResponseServer) {
+				return
+			})
+		defer patch.Reset()
+		s.eventCtl[info.JobID] = &EventController{}
+		s.eventCtl[info.JobID].globalSwitchRankIDs = []string{"1"}
+		err := s.SubscribeStressTestResponse(info, nil)
+		assert.Nil(t, err)
+	})
+}
