@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/sets"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api/ascend-operator/apis/batch/v1"
 	"ascend-common/common-utils/hwlog"
@@ -1648,27 +1648,7 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 
 func (ctl *EventController) handleDecideDumpStrategy() (string, common.RespCode, error) {
 	ctl.appendStrategy(constant.ProcessDumpStrategyName)
-	ctx, resultCh := ctl.getCtxAndResultChan()
-	if resultCh == nil {
-		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-	}
-	select {
-	case req, ok := <-resultCh:
-		if !ok {
-			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-			return "", common.OK, nil
-		}
-		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
-		ctl.appendRecoverResult(req)
-		return common.ReceiveReportEvent, common.OK, nil
-	case <-ctx.Done():
-		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
-		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
-		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
-	}
+	return ctl.waitReportStatus()
 }
 
 func (ctl *EventController) handleDecideExitStrategy() (string, common.RespCode, error) {
@@ -1783,6 +1763,10 @@ func (ctl *EventController) handleNotifyScaleInStrategy() (string, common.RespCo
 
 func (ctl *EventController) handleWaitReportScaleInIsolateRanksStatus() (string, common.RespCode, error) {
 	ctl.appendStrategy(constant.ScaleInStrategyName)
+	return ctl.waitReportStatus()
+}
+
+func (ctl *EventController) waitReportStatus() (string, common.RespCode, error) {
 	ctx, resultCh := ctl.getCtxAndResultChan()
 	if resultCh == nil {
 		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
@@ -1807,27 +1791,7 @@ func (ctl *EventController) handleWaitReportScaleInIsolateRanksStatus() (string,
 }
 
 func (ctl *EventController) handleWaitReportScaleInStatus() (string, common.RespCode, error) {
-	ctx, resultCh := ctl.getCtxAndResultChan()
-	if resultCh == nil {
-		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-	}
-	select {
-	case req, ok := <-resultCh:
-		if !ok {
-			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-			return "", common.OK, nil
-		}
-		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
-		ctl.appendRecoverResult(req)
-		return common.ReceiveReportEvent, common.OK, nil
-	case <-ctx.Done():
-		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
-		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
-		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
-	}
+	return ctl.waitReportStatus()
 }
 
 func (ctl *EventController) handleScaleInRunningState() (string, common.RespCode, error) {
@@ -1876,27 +1840,7 @@ func (ctl *EventController) handleScaleInRunningState() (string, common.RespCode
 
 func (ctl *EventController) handleWaitReportScaleOutStatusState() (string, common.RespCode, error) {
 	ctl.appendStrategy(constant.ScaleOutStrategyName)
-	ctx, resultCh := ctl.getCtxAndResultChan()
-	if resultCh == nil {
-		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
-	}
-	select {
-	case req, ok := <-resultCh:
-		if !ok {
-			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-			return "", common.OK, nil
-		}
-		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
-		ctl.appendRecoverResult(req)
-		return common.ReceiveReportEvent, common.OK, nil
-	case <-ctx.Done():
-		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
-		return "", common.ControllerEventCancel, nil
-	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
-		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
-		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
-	}
+	return ctl.waitReportStatus()
 }
 
 func (ctl *EventController) whetherHasEnoughResource() bool {

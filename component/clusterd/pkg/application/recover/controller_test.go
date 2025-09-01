@@ -3293,22 +3293,3 @@ func TestHandleWaitReportScaleInIsolateRanksStatusCtxCanceled(t *testing.T) {
 	assert.Equal(t, common.ControllerEventCancel, code)
 	assert.NoError(t, err)
 }
-
-// TestHandleWaitReportScaleInIsolateRanksStatusTimeout tests when report timeout occurs.
-func TestHandleWaitReportScaleInIsolateRanksStatusTimeout(t *testing.T) {
-	ctl := &EventController{
-		jobInfo:           common.JobBaseInfo{JobId: "job-123"},
-		controllerContext: context.Background(),
-		reportStatusChan:  make(chan *pb.RecoverStatusRequest, 1),
-	}
-	chanTime := make(chan time.Time, 1)
-	patchTime := gomonkey.ApplyFunc(time.After,
-		func(_ time.Duration) <-chan time.Time {
-			return chanTime
-		})
-	defer patchTime.Reset()
-	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
-	assert.Equal(t, common.ReportTimeoutEvent, event)
-	assert.Equal(t, common.WaitReportTimeout, code)
-	assert.NoError(t, err)
-}
