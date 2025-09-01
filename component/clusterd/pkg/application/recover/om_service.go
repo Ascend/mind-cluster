@@ -194,8 +194,10 @@ func (s *FaultRecoverService) StressTest(ctx context.Context, params *pb.StressT
 		}, nil
 	}
 	ctl, _ := s.getController(params.JobID)
+	hwlog.RunLog.Errorf("-------------jobId=%s ,ctl.canDoStressTest(): %t", params.JobID, ctl.canDoStressTest())
 	if !ctl.canDoStressTest() {
 		hwlog.RunLog.Errorf("jobId=%s ,state: %s", params.JobID, ctl.state.GetState())
+		hwlog.RunLog.Errorf("jobId=%s ,ctl.canDoStressTest(): %t", params.JobID, ctl.canDoStressTest())
 		hwlog.RunLog.Errorf("jobId=%s om is running, or job recovering", params.JobID)
 		return &pb.Status{
 			Code: int32(common.OMIsRunning),

@@ -151,14 +151,17 @@ func TestCheckNicsParam(t *testing.T) {
 	nodeName := "nodeName"
 	deviceID := "device"
 	rankID := "1"
-	job.SaveJobCache(jobID, constant.JobInfo{
-		JobRankTable: constant.RankTable{
-			ServerList: []constant.ServerHccl{
-				{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
-		},
-		Status: job.StatusJobRunning,
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobRunning,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}},
+				},
+			},
+		}, true
 	})
-	defer job.DeleteJobCache(jobID)
+	defer patches.Reset()
 	t.Run("nics is nil", func(t *testing.T) {
 		s := fakeService()
 		ok, _ := s.checkNicsParam(nil)
@@ -380,7 +383,7 @@ func TestStressTestOperationSuccess(t *testing.T) {
 	t.Run("stress test operation success", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		ctx := context.Background()
-		jobID := "jobID"
+		jobID := "testJob"
 		nodeName := "nodeName"
 		deviceID := "device"
 		rankID := "1"
@@ -391,12 +394,7 @@ func TestStressTestOperationSuccess(t *testing.T) {
 					ServerList: []constant.ServerHccl{
 						{
 							ServerName: nodeName,
-							DeviceList: []constant.Device{
-								{
-									DeviceID: deviceID,
-									RankID:   rankID,
-								},
-							},
+							DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
 						},
 					},
 				},
@@ -534,12 +532,100 @@ func TestGetNodeRankOpsMap(t *testing.T) {
 		param := &pb.StressTestParam{
 			JobID: jobID,
 			StressParam: map[string]*pb.StressOpList{
-				nodeName: {
-					Ops: []int64{0},
-				},
+				nodeName: {Ops: []int64{0}},
 			},
 		}
 		nodeRankMap := s.getNodeRankOpsMap(param)
 		assert.Equal(t, 1, len(nodeRankMap))
+	})
+}
+
+func TestCheckStressTestParam(t *testing.T) {
+	jobID := "jobID"
+	nodeName := "nodeName"
+	deviceID := "device"
+	rankID := "1"
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobRunning,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{
+						ServerName: nodeName,
+						DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
+					},
+				},
+			},
+		}, true
+	})
+	defer patches.Reset()
+	t.Run("param is nil", func(t *testing.T) {
+		s := fakeService()
+		ok, _ := s.checkStressTestParam(nil)
+		assert.False(t, ok)
+	})
+	t.Run("job is not exist", func(t *testing.T) {
+		s := fakeService()
+		ok, _ := s.checkStressTestParam(&pb.StressTestParam{JobID: jobID + "1"})
+		assert.False(t, ok)
+	})
+	t.Run("job is not registered", func(t *testing.T) {
+		s := fakeService()
+		ok, _ := s.checkStressTestParam(&pb.StressTestParam{JobID: jobID})
+		assert.False(t, ok)
+	})
+	t.Run("job is not running", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{}
+		jobInfo, _ := job.GetJobCache(jobID)
+		jobInfo.Status = job.StatusJobPending
+		job.SaveJobCache(jobID, jobInfo)
+		ok, _ := s.checkStressTestParam(&pb.StressTestParam{JobID: jobID})
+		assert.False(t, ok)
+		defer func() {
+			jobInfo.Status = job.StatusJobRunning
+			job.SaveJobCache(jobID, jobInfo)
+		}()
+	})
+}
+
+func TestCheckStressTestParamOK(t *testing.T) {
+	jobID := "jobID"
+	nodeName := "nodeName"
+	deviceID := "device"
+	rankID := "1"
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobRunning,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{
+						ServerName: nodeName,
+						DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
+					},
+				},
+			},
+		}, true
+	})
+	defer patches.Reset()
+	t.Run("check param ok, AllNodeOps is not empty", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{}
+		ok, _ := s.checkStressTestParam(&pb.StressTestParam{
+			JobID:       jobID,
+			AllNodesOps: []int64{0},
+		})
+		assert.True(t, ok)
+	})
+	t.Run("check param ok, StressParam is not empty", func(t *testing.T) {
+		s := fakeService()
+		s.eventCtl[jobID] = &EventController{}
+		ok, _ := s.checkStressTestParam(&pb.StressTestParam{
+			JobID: jobID,
+			StressParam: map[string]*pb.StressOpList{
+				nodeName: {Ops: []int64{0}},
+			},
+		})
+		assert.True(t, ok)
 	})
 }
