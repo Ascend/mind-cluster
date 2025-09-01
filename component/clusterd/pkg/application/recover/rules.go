@@ -225,6 +225,63 @@ func (ctl *EventController) getAfterRules() []common.TransRule {
 	}
 }
 
+func (ctl *EventController) getDPScaleStrategyRules() []common.TransRule {
+	return []common.TransRule{
+		{Src: common.NotifyDecidedStrategyState, Event: common.NotifyScaleInStrategySuccessEvent,
+			Dst: common.WaitReportScaleInIsolateRanksState, Handler: ctl.handleWaitReportScaleInIsolateRanksStatus},
+
+		{Src: common.WaitReportProcessRecoverStatusState, Event: common.NeedTryScaleInStrategyEvent,
+			Dst: common.NotifyScaleInStrategyState, Handler: ctl.handleNotifyScaleInStrategy},
+
+		{Src: common.NotifyScaleInStrategyState, Event: common.NotifyScaleInStrategySuccessEvent,
+			Dst: common.WaitReportScaleInIsolateRanksState, Handler: ctl.handleWaitReportScaleInIsolateRanksStatus},
+		{Src: common.NotifyScaleInStrategyState, Event: common.NotifyFailEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+
+		{Src: common.WaitReportScaleInIsolateRanksState, Event: common.ReceiveReportEvent,
+			Dst: common.CheckReportScaleInIsolateRanksState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportScaleInIsolateRanksState, Event: common.ReportTimeoutEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+
+		{Src: common.CheckReportScaleInIsolateRanksState, Event: common.NotifyFailEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+		{Src: common.CheckReportScaleInIsolateRanksState, Event: common.NotifyFaultNodesExitSuccessEvent,
+			Dst: common.WaitReportScaleInStatusState, Handler: ctl.handleWaitReportScaleInStatus},
+
+		{Src: common.WaitReportScaleInStatusState, Event: common.ReceiveReportEvent,
+			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportScaleInStatusState, Event: common.ReportTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+
+		{Src: common.CheckRecoverResultState, Event: common.NotifyFailEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+		{Src: common.CheckRecoverResultState, Event: common.NotifyFaultNodesExitSuccessEvent,
+			Dst: common.WaitReportScaleInStatusState, Handler: ctl.handleWaitReportScaleInStatus},
+		{Src: common.CheckRecoverResultState, Event: common.ScaleInSuccessEvent,
+			Dst: common.ScaleInRunningState, Handler: ctl.handleScaleInRunningState},
+		{Src: common.CheckRecoverResultState, Event: common.ScaleOutSuccessEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+
+		{Src: common.ScaleInRunningState, Event: common.NotifyScaleOutStrategySuccessEvent,
+			Dst: common.WaitReportScaleOutStatusState, Handler: ctl.handleWaitReportScaleOutStatusState},
+		{Src: common.WaitReportScaleOutStatusState, Event: common.NotifyScaleOutStrategySuccessEvent,
+			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
+		{Src: common.WaitReportScaleOutStatusState, Event: common.ReportTimeoutEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+		{Src: common.CheckRecoverResultState, Event: common.ScaleOutSuccessEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+		{Src: common.CheckRecoverResultState, Event: common.RecoverFailEvent,
+			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
+
+		{Src: common.ScaleInRunningState, Event: common.ReceiveReportEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+		{Src: common.ScaleInRunningState, Event: common.FinishEvent,
+			Dst: common.InitState, Handler: ctl.handleFinish},
+		{Src: common.ScaleInRunningState, Event: common.NotifyFailEvent,
+			Dst: common.ScaleInRunningState, Handler: ctl.handleScaleInRunningState},
+	}
+}
+
 func (ctl *EventController) getBaseRules() []common.TransRule {
 	var rules []common.TransRule
 	rules = append(rules, ctl.getPreRules()...)
@@ -234,5 +291,6 @@ func (ctl *EventController) getBaseRules() []common.TransRule {
 	rules = append(rules, ctl.getOMRules()...)
 	rules = append(rules, ctl.getSwitchNicRules()...)
 	rules = append(rules, ctl.getStressTestRules()...)
+	rules = append(rules, ctl.getDPScaleStrategyRules()...)
 	return rules
 }

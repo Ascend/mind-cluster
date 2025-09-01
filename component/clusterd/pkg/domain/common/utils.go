@@ -34,8 +34,9 @@ var (
 		constant.ProcessRetryStrategyName:          1,
 		constant.ProcessRecoverInPlaceStrategyName: 2,
 		constant.ProcessRecoverStrategyName:        3,
-		constant.ProcessDumpStrategyName:           4,
-		constant.ProcessExitStrategyName:           5,
+		constant.ElasticTrainingStrategyName:       4,
+		constant.ProcessDumpStrategyName:           5,
+		constant.ProcessExitStrategyName:           6,
 	}
 )
 
@@ -111,6 +112,15 @@ func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error)
 		if StrategySupported(strategy) {
 			config.MindXConfigStrategies = append(config.MindXConfigStrategies, strategy)
 		}
+	}
+	if pg.Labels != nil &&
+		(pg.Labels[constant.JobReschedulingStrategyKey] == constant.JobReschedulingStrategyGraceValue ||
+			pg.Labels[constant.JobReschedulingStrategyKey] == constant.JobReschedulingStrategyForceValue) {
+		config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.JobReschedulingStrategyName)
+	}
+	if pg.Labels != nil &&
+		pg.Labels[constant.PodReschedulingStrategyKey] == constant.PodReschedulingStrategyOpenValue {
+		config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.PodReschedulingStrategyName)
 	}
 	config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.ProcessExitStrategyName)
 	config.MindXConfigStrategies = util.RemoveSliceDuplicateElement(config.MindXConfigStrategies)
@@ -376,6 +386,46 @@ func GetPodMap(jobId string, rankList []string) (map[string]string, error) {
 	return podMap, nil
 }
 
+// GetPodRanks return a dict, key is fault pod rank, value ""
+func GetPodRanks(jobId string, rankList []string) (map[string]string, error) {
+	podMap := make(map[string]string)
+	devicePerNode := pod.GetPodDeviceNumByJobId(jobId)
+	if devicePerNode <= 0 {
+		hwlog.RunLog.Errorf("get device num per pod failed, jobId: %s", jobId)
+		return nil, fmt.Errorf("get device num per pod failed, jobId: %s", jobId)
+	}
+	for _, rank := range rankList {
+		faultRank, err := strconv.Atoi(rank)
+		if err != nil {
+			hwlog.RunLog.Warnf("parse pod rank failed, err is %v", err)
+			continue
+		}
+		faultPodRank := faultRank / devicePerNode
+		podRank := strconv.Itoa(faultPodRank)
+		podMap[podRank] = ""
+	}
+	return podMap, nil
+}
+
+// GetPodVersion return a dict, key is fault pod rank, value is pod version, only support acjob
+func GetPodVersion(jobId string, podRankList map[string]string) map[string]string {
+	podMap := make(map[string]string)
+	for podRank, _ := range podRankList {
+		pod := pod.GetPodByRankIndex(jobId, podRank)
+		if pod.Name == "" {
+			hwlog.RunLog.Warnf("discard nil pod, jobId=%s", jobId)
+			continue
+		}
+		version, ok := pod.Labels[constant.PodVersion]
+		if !ok || version == "" {
+			hwlog.RunLog.Warnf("get pod version failed jobId=%s", jobId)
+			continue
+		}
+		podMap[podRank] = version
+	}
+	return podMap
+}
+
 func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[string]string,
 	faultReason string) (map[string]string, error) {
 	if labeledMap == nil {
@@ -484,4 +534,41 @@ func CalculateStringDivInt(dividendStr string, divisor int) int {
 		return constant.InvalidResult
 	}
 	return dividend / divisor
+}
+
+// GetNodeRankIdsByRankIds returns the job's node rank id list by global rank id list
+func GetNodeRankIdsByRankIds(jobId string, rankIds []string) ([]string, error) {
+	nodeRankIds := make([]string, 0)
+	if len(rankIds) == 0 {
+		return nodeRankIds, nil
+	}
+	faultPod, err := GetPodRanks(jobId, rankIds)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", jobId, err)
+		return nodeRankIds, err
+	}
+	for nodeRankId, _ := range faultPod {
+		nodeRankIds = append(nodeRankIds, nodeRankId)
+	}
+	return nodeRankIds, nil
+}
+
+// RemoveDuplicateNodeRanks remove duplicate node rank ids
+func RemoveDuplicateNodeRanks(nodeRankIds []string, oldPods map[string]string) []string {
+	newNodeRankIds := make([]string, 0)
+	for _, nodeRankId := range nodeRankIds {
+		if _, ok := oldPods[nodeRankId]; !ok {
+			newNodeRankIds = append(newNodeRankIds, nodeRankId)
+		}
+	}
+	return newNodeRankIds
+}
+
+// GetNodeRankIdsByFaultRanks returns the job's node rank id list by global fault rank list
+func GetNodeRankIdsByFaultRanks(jobId string, faultRanks []*pb.FaultRank) ([]string, error) {
+	rankIds := make([]string, 0)
+	for _, faultRank := range faultRanks {
+		rankIds = append(rankIds, faultRank.RankId)
+	}
+	return GetNodeRankIdsByRankIds(jobId, rankIds)
 }

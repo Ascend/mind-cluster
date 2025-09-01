@@ -7,6 +7,8 @@ package podgroup
 
 import (
 	"errors"
+	apiv1 "github.com/kubeflow/common/pkg/apis/common/v1"
+	corev1 "k8s.io/api/core/v1"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -208,4 +210,78 @@ func TestGetOwnerRefByPG(t *testing.T) {
 			convey.So(err, convey.ShouldResemble, expErr)
 		})
 	})
+}
+
+func TestIsSucceeded(t *testing.T) {
+	type args struct {
+		status apiv1.JobStatus
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "succeed",
+			args: args{
+				status: apiv1.JobStatus{
+					Conditions: []apiv1.JobCondition{{Type: apiv1.JobSucceeded, Status: corev1.ConditionTrue}},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not succeed",
+			args: args{
+				status: apiv1.JobStatus{
+					Conditions: []apiv1.JobCondition{{Type: apiv1.JobFailed}},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsSucceeded(tt.args.status); got != tt.want {
+				t.Errorf("IsSucceeded() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsFailed(t *testing.T) {
+	type args struct {
+		status apiv1.JobStatus
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "not failed",
+			args: args{
+				status: apiv1.JobStatus{
+					Conditions: []apiv1.JobCondition{{Type: apiv1.JobSucceeded}},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "failed",
+			args: args{
+				status: apiv1.JobStatus{
+					Conditions: []apiv1.JobCondition{{Type: apiv1.JobFailed, Status: corev1.ConditionTrue}},
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsFailed(tt.args.status); got != tt.want {
+				t.Errorf("IsSucceeded() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

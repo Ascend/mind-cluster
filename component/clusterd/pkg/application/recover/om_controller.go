@@ -80,7 +80,13 @@ func (ctl *EventController) notifyContinueTrain() (string, common.RespCode, erro
 		JobId:          ctl.jobInfo.JobId,
 		SignalType:     constant.ChangeStrategySignalType,
 		Actions:        changeStrategyActions,
+		FaultRanks:     ctl.cacheNormalFault,
 		ChangeStrategy: constant.ProcessContinueTrain,
+	}
+	var err error
+	signal.NodeRankIds, err = common.GetNodeRankIdsByFaultRanks(ctl.jobInfo.JobId, signal.FaultRanks)
+	if err != nil {
+		hwlog.RunLog.Warnf("jobId=%s, GetNodeRankIdsByFaultRanks err:%v", ctl.jobInfo.JobId, err)
 	}
 	return ctl.signalEnqueue(signal)
 }

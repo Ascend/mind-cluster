@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api/ascend-operator/apis/batch/v1"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
@@ -22,6 +24,7 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
+	"clusterd/pkg/domain/statistics"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -35,11 +38,20 @@ const (
 )
 
 var (
-	saveAndExitActions    = []string{"save_and_exit"}
-	stopTrainActions      = []string{"stop_train"}
-	pauseTrainActions     = []string{"pause_train"}
-	globalFaultActions    = []string{"on_global_rank"}
-	changeStrategyActions = []string{"change_strategy"}
+	saveAndExitActions            = []string{"save_and_exit"}
+	stopTrainActions              = []string{"stop_train"}
+	pauseTrainActions             = []string{"pause_train"}
+	globalFaultActions            = []string{"on_global_rank"}
+	changeStrategyActions         = []string{"change_strategy"}
+	notifyStrategySuccessEventMap = map[string]string{
+		constant.ProcessRetryStrategyName:   common.NotifyRetrySuccessEvent,
+		constant.ProcessRecoverStrategyName: common.NotifyRecoverSuccessEvent,
+		constant.ProcessDumpStrategyName:    common.NotifyDumpSuccessEvent,
+		constant.ProcessExitStrategyName:    common.NotifyExitSuccessEvent,
+		constant.ProcessContinueTrain:       common.NotifyContinueSuccessEvent,
+		constant.ScaleInStrategyName:        common.NotifyScaleInStrategySuccessEvent,
+		constant.ScaleOutStrategyName:       common.NotifyScaleOutStrategySuccessEvent,
+	}
 )
 
 // EventController is recover event controller
@@ -48,6 +60,7 @@ type EventController struct {
 	faultFlushing             bool
 	keepAliveSecond           int
 	uuid                      string
+	faultPodVersion           map[string]string
 	faultPod                  map[string]string
 	events                    chan string
 	latestStrategy            []string
@@ -96,6 +109,7 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		keepAliveSecond:           keepAlive,
 		uuid:                      "",
 		faultPod:                  make(map[string]string),
+		faultPodVersion:           make(map[string]string),
 		events:                    make(chan string, eventChanLength),
 		latestStrategy:            []string{},
 		latestRecoverResult:       []*pb.RecoverStatusRequest{},
@@ -144,9 +158,13 @@ func (ctl *EventController) GetFaultPod() map[string]string {
 func (ctl *EventController) mergeFaultPod(faultPod map[string]string) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
+	faultPodVersion := common.GetPodVersion(ctl.jobInfo.JobId, faultPod)
 	for podRank, podId := range faultPod {
 		if _, ok := ctl.faultPod[podRank]; !ok {
 			ctl.faultPod[podRank] = podId
+		}
+		if _, ok := ctl.faultPodVersion[podRank]; !ok {
+			ctl.faultPodVersion[podRank] = faultPodVersion[podRank]
 		}
 	}
 }
@@ -188,6 +206,7 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.uuid = ""
 	ctl.latestStrategy = ctl.latestStrategy[:0]
 	ctl.faultPod = make(map[string]string)
+	ctl.faultPodVersion = make(map[string]string)
 	if !ctl.isChanClosed {
 		ctl.closeControllerChan()
 		ctl.isChanClosed = true
@@ -358,6 +377,34 @@ func (ctl *EventController) supportTargetRecoverStrategy(recoverStrategy string)
 	return false
 }
 
+func (ctl *EventController) supportTargetStrategy(recoverStrategy string) bool {
+	if !ctl.configTargetStrategy(recoverStrategy) {
+		return false
+	}
+	agentSupport := false
+	if recoverStrategy == constant.ElasticTrainingStrategyName {
+		recoverStrategy = constant.ScaleInStrategyName
+	}
+	for _, strategy := range ctl.agentReportStrategies {
+		if strategy == recoverStrategy {
+			agentSupport = true
+			break
+		}
+	}
+	return agentSupport
+}
+
+func (ctl *EventController) configTargetStrategy(recoverStrategy string) bool {
+	configed := false
+	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
+		if strategy == recoverStrategy {
+			configed = true
+			break
+		}
+	}
+	return configed
+}
+
 func (ctl *EventController) supportRestartProcessStrategy() bool {
 	return ctl.restartFaultProcess && ctl.supportTargetRecoverStrategy(constant.ProcessRecoverInPlaceStrategyName)
 }
@@ -521,20 +568,16 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 		ctl.addEvent(common.NotifyFailEvent)
 		return
 	}
+	if signal.SignalType == constant.FaultNodesExitSignalType {
+		ctl.addEvent(common.NotifyFaultNodesExitSuccessEvent)
+		return
+	}
 	if signal.SignalType != constant.ChangeStrategySignalType {
 		ctl.addEvent(common.NotifySuccessEvent)
 		return
 	}
-	if signal.ChangeStrategy == constant.ProcessRetryStrategyName {
-		ctl.addEvent(common.NotifyRetrySuccessEvent)
-	} else if signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
-		ctl.addEvent(common.NotifyRecoverSuccessEvent)
-	} else if signal.ChangeStrategy == constant.ProcessDumpStrategyName {
-		ctl.addEvent(common.NotifyDumpSuccessEvent)
-	} else if signal.ChangeStrategy == constant.ProcessExitStrategyName {
-		ctl.addEvent(common.NotifyExitSuccessEvent)
-	} else if signal.ChangeStrategy == constant.ProcessContinueTrain {
-		ctl.addEvent(common.NotifyContinueSuccessEvent)
+	if event, ok := notifyStrategySuccessEventMap[signal.ChangeStrategy]; ok {
+		ctl.addEvent(event)
 	} else {
 		hwlog.RunLog.Errorf("unsupported strategy=%s, jobId=%s",
 			signal.ChangeStrategy, signal.JobId)
@@ -814,44 +857,58 @@ func (ctl *EventController) notifyFaultForRetryFaultCase(retryFaults,
 	normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
 	hwlog.RunLog.Infof("jobId=%s enter notifyFaultForRetryFaultCase function", ctl.jobInfo.JobId)
 	signal := &pb.ProcessManageSignal{
-		Uuid:           ctl.uuid,
-		JobId:          ctl.jobInfo.JobId,
-		SignalType:     constant.GlobalFaultSignalType,
-		Actions:        globalFaultActions,
-		ChangeStrategy: "",
+		Uuid:       ctl.uuid,
+		JobId:      ctl.jobInfo.JobId,
+		SignalType: constant.GlobalFaultSignalType,
+		Actions:    globalFaultActions,
 	}
 	if ctl.jobInfo.PlatFormMode {
-		allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(retryFaults)
-		if err != nil {
-			hwlog.RunLog.Errorf("interacte with plat error, err=%v", err)
-			return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
-				common.WriteConfirmFaultOrWaitPlatResultFault, nil
-		}
-		hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
-		if !common.IsRetryFault(allFaults) {
-			retryFaults = retryFaults[:0]
-			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
-			normalFaults = allFaults
-			ctl.setCacheFault(retryFaults, normalFaults)
+		return ctl.notifyFaultForRetryFaultCasePlatFormMode(signal, retryFaults, normalFaults)
+	}
+	hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
+	signal.FaultRanks = retryFaults
+	signal = ctl.notifyHCCLRoutingTimeout(signal)
+	return ctl.signalEnqueue(signal)
+}
 
-			faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
-			if err != nil {
-				hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
-				return "", common.ServerInnerError, err
-			}
-			ctl.mergeFaultPod(faultPod)
-			cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-				allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
-			if err != nil {
-				hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
-				return common.NotifyFailEvent, common.OperateConfigMapError, nil
-			}
-			signal.FaultRanks = normalFaults
-			hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
-		} else {
-			hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
-			signal.FaultRanks = retryFaults
+func (ctl *EventController) notifyFaultForRetryFaultCasePlatFormMode(signal *pb.ProcessManageSignal, retryFaults,
+	normalFaults []*pb.FaultRank) (string, common.RespCode, error) {
+	allFaults, err := ctl.writeConfirmFaultAndWaitPlatResultFault(retryFaults)
+	if err != nil {
+		hwlog.RunLog.Errorf("interacte with plat error, err=%v", err)
+		return common.WriteConfirmFaultOrWaitResultFaultTimeoutEvent,
+			common.WriteConfirmFaultOrWaitPlatResultFault, nil
+	}
+	hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
+	if !common.IsRetryFault(allFaults) {
+		retryFaults = retryFaults[:0]
+		allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
+		normalFaults = allFaults
+		ctl.setCacheFault(retryFaults, normalFaults)
+		faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+			return "", common.ServerInnerError, err
 		}
+		ctl.mergeFaultPod(faultPod)
+		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
+		if err != nil {
+			hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
+		signal.FaultRanks = normalFaults
+		signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
+		if !ctl.restartFaultProcess {
+			signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
+		} else {
+			signal.Actions = append(signal.Actions, constant.FaultNodesRestartAction)
+		}
+		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 	} else {
 		hwlog.RunLog.Infof("jobId=%s, uce error case", ctl.jobInfo.JobId)
 		signal.FaultRanks = retryFaults
@@ -880,6 +937,14 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 		hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
 	}
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     constant.GlobalFaultSignalType,
+		Actions:        globalFaultActions,
+		ChangeStrategy: "",
+	}
+	signal.FaultRanks = append(signal.FaultRanks, allFaults...)
 	if !ctl.restartFaultProcess {
 		hwlog.RunLog.Infof("jobId=%s write reset json, restartFaultProcess: %v, faultRanks: %v",
 			ctl.jobInfo.JobId, ctl.restartFaultProcess, allFaultRanks)
@@ -890,15 +955,13 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 			return common.NotifyFailEvent, common.OperateConfigMapError, nil
 		}
 		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
+		signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
+		signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
 	}
-	signal := &pb.ProcessManageSignal{
-		Uuid:           ctl.uuid,
-		JobId:          ctl.jobInfo.JobId,
-		SignalType:     constant.GlobalFaultSignalType,
-		Actions:        globalFaultActions,
-		ChangeStrategy: "",
-	}
-	signal.FaultRanks = append(signal.FaultRanks, allFaults...)
 	return ctl.signalEnqueue(signal)
 }
 
@@ -940,7 +1003,8 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 }
 
 func (ctl *EventController) firstChooseStrategy() string {
-	hwlog.RunLog.Infof("first choose strategy, jobId=%s", ctl.jobInfo.JobId)
+	hwlog.RunLog.Infof("first choose strategy, jobId=%s, configed: %v, reported: %v", ctl.jobInfo.JobId,
+		ctl.jobInfo.MindXConfigStrategies, ctl.agentReportStrategies)
 	if ctl.supportRetryStrategy() && len(ctl.cacheNormalFault) <= 0 {
 		return constant.ProcessRetryStrategyName
 	}
@@ -954,10 +1018,29 @@ func (ctl *EventController) chooseForRestartProcessFail() string {
 	if ctl.supportRecoverStrategy() {
 		return constant.ProcessRecoverStrategyName
 	}
+	if ctl.canChooseScaleInStrategy() {
+		return constant.ScaleInStrategyName
+	}
 	if ctl.supportDumpStrategy() {
 		return constant.ProcessDumpStrategyName
 	}
 	return constant.ProcessExitStrategyName
+}
+
+func (ctl *EventController) canChooseScaleInStrategy() bool {
+	if _, ok := ctl.faultPod["0"]; ok {
+		return false
+	}
+	if ctl.supportTargetStrategy(constant.ElasticTrainingStrategyName) && !ctl.configTargetStrategy(
+		constant.JobReschedulingStrategyName) && !ctl.configTargetStrategy(
+		constant.PodReschedulingStrategyName) {
+		return true
+	} else if ctl.supportTargetStrategy(constant.ElasticTrainingStrategyName) && (ctl.configTargetStrategy(
+		constant.JobReschedulingStrategyName) || ctl.configTargetStrategy(
+		constant.PodReschedulingStrategyName)) && !ctl.whetherHasEnoughResource() {
+		return true
+	}
+	return false
 }
 
 func (ctl *EventController) chooseForRetryFail() string {
@@ -966,6 +1049,9 @@ func (ctl *EventController) chooseForRetryFail() string {
 	}
 	if ctl.supportRecoverStrategy() {
 		return constant.ProcessRecoverStrategyName
+	}
+	if ctl.canChooseScaleInStrategy() {
+		return constant.ScaleInStrategyName
 	}
 	if ctl.supportDumpStrategy() {
 		return constant.ProcessDumpStrategyName
@@ -1014,7 +1100,8 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 	res := ctl.latestRecoverResult[n-1]
 	if res.Strategy == constant.ProcessRetryStrategyName {
 		return ctl.chooseForRetryFail(), nil
-	} else if res.Strategy == constant.ProcessRecoverStrategyName {
+	} else if res.Strategy == constant.ProcessRecoverStrategyName || res.Strategy == constant.ScaleInStrategyName ||
+		res.Strategy == constant.ScaleOutStrategyName {
 		return ctl.chooseForRecoverFail(), nil
 	}
 	return constant.ProcessExitStrategyName, nil
@@ -1026,19 +1113,25 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 		JobId:      ctl.jobInfo.JobId,
 		SignalType: constant.ChangeStrategySignalType,
 		Actions:    changeStrategyActions,
+		FaultRanks: ctl.cacheNormalFault,
 	}
 	var err error
 	signal.ChangeStrategy, err = ctl.chooseStrategy()
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, chooseStrategy err:%v", ctl.jobInfo.JobId, err)
+		return "", common.ServerInnerError, err
+	}
+	return ctl.handleDecidedStrategyAfterChoose(signal)
+}
+
+func (ctl *EventController) handleDecidedStrategyAfterChoose(signal *pb.ProcessManageSignal) (string,
+	common.RespCode, error) {
 	if signal.ChangeStrategy == constant.ProcessDumpStrategyName &&
 		ctl.isSwitchingNic() && ctl.jobInfo.Framework == constant.MsFramework {
 		// In order to correctly switch from the state machine of mindIO to the state machine for failure recovery,
 		// after the switch nic failed, need to notify the dump first. After mindIO fails to return dump,
 		// it goes through the failure recovery state machine again.
 		signal.ChangeStrategy = constant.ProcessExitStrategyName
-	}
-	if err != nil {
-		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
-		return "", common.ServerInnerError, err
 	}
 	if ctl.jobInfo.PlatFormMode && signal.ChangeStrategy == constant.ProcessRecoverStrategyName {
 		hwlog.RunLog.Infof("start wait plat rankTable ready, jobId=%s, pgName=%s",
@@ -1065,6 +1158,17 @@ func (ctl *EventController) handleNotifyDecidedStrategy() (string, common.RespCo
 		return ctl.handleRestartFaultProcess(signal)
 	}
 	hwlog.RunLog.Infof("jobId=%s, choose strategy:%s", ctl.jobInfo.JobId, signal.ChangeStrategy)
+	if signal.ChangeStrategy == constant.ScaleInStrategyName {
+		signal.ExtraParams = `{"scale-in-strategy": "DP"}`
+	} else if signal.ChangeStrategy == constant.ProcessRetryStrategyName {
+		signal.FaultRanks = ctl.cacheRetryFault
+	}
+	var err error
+	signal.NodeRankIds, err = common.GetNodeRankIdsByFaultRanks(ctl.jobInfo.JobId, signal.FaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByFaultRanks err:%v", ctl.jobInfo.JobId, err)
+		return "", common.ServerInnerError, err
+	}
 	return ctl.signalEnqueue(signal)
 }
 
@@ -1073,7 +1177,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 	hwlog.RunLog.Infof("jobId:%s, enter handleRestartFaultProcess func, choose strategy:%s",
 		ctl.jobInfo.JobId, signal.ChangeStrategy)
 	if signal.ChangeStrategy == constant.ProcessRecoverInPlaceStrategyName {
-		_, allFaultRanks, err := ctl.updateCacheFaultAndPod()
+		allFaults, allFaultRanks, err := ctl.updateCacheFaultAndPod()
 		if err != nil {
 			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 			return "", common.ServerInnerError, err
@@ -1088,6 +1192,13 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 		}
 		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
 		signal.ChangeStrategy = constant.ProcessRecoverStrategyName
+		signal.Actions = append(signal.Actions, constant.FaultNodesRestartAction)
+		signal.FaultRanks = allFaults
+		signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
+			return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		}
 	} else if signal.ChangeStrategy != constant.ProcessRetryStrategyName {
 		hwlog.RunLog.Warnf("choose strategy: %s, not restart fault process", signal.ChangeStrategy)
 		ctl.restartFaultProcess = false
@@ -1138,13 +1249,16 @@ func (ctl *EventController) extractRecoverResult() (common.RecoverResult, error)
 			RecoverSuccess: true,
 		}, nil
 	}
-	strategy := latestResult[n-1].Strategy
-	code := latestResult[n-1].Status.Code
-	recoverSuccess := latestResult[n-1].Status.Code == int32(common.OK)
+
+	lengthResult := len(latestResult)
+	strategy := latestResult[lengthResult-1].Strategy
+	code := latestResult[lengthResult-1].Status.Code
+	recoverSuccess := latestResult[lengthResult-1].Status.Code == int32(common.OK)
 	return common.RecoverResult{
 		Strategy:       strategy,
 		Code:           common.RespCode(code),
 		RecoverSuccess: recoverSuccess,
+		IsolateRankIds: latestResult[lengthResult-1].IsolateRankIds,
 	}, nil
 }
 
@@ -1180,6 +1294,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 	if err != nil {
 		return "", result.Code, err
 	}
+	hwlog.RunLog.Infof("handleCheckRecoverResult result: %+v", result)
 	switch result.Strategy {
 	case constant.ProcessRetryStrategyName:
 		if result.RecoverSuccess {
@@ -1203,6 +1318,8 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		}
 		ctl.updateFixResult(result.Strategy, constant.RecoverFailed)
 		return common.RecoverFailEvent, common.ClientError, nil
+	case constant.ScaleInStrategyName, constant.ScaleOutStrategyName:
+		return ctl.handleCheckScaleStrategyRecoverResult(result)
 	case constant.ProcessDumpStrategyName, constant.ProcessExitStrategyName:
 		if result.Strategy == constant.ProcessExitStrategyName {
 			ctl.updateFixResult(result.Strategy, constant.ExitCompleted)
@@ -1214,6 +1331,51 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
 		}
 		return common.CheckResultFinishEvent, common.OK, nil
+	default:
+		return "", common.ServerInnerError, fmt.Errorf("unexpected case, strategy=%s "+
+			"not support, jobId=%s", result.Strategy, ctl.jobInfo.JobId)
+	}
+}
+
+func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.RecoverResult) (string, common.RespCode, error) {
+	switch result.Strategy {
+	case constant.ScaleInStrategyName:
+		if !result.RecoverSuccess && result.Code == common.ExitIsolateRanksCode {
+			hwlog.RunLog.Infof("job[%s] need notify isolate nodes to exit, ranks: %v",
+				ctl.jobInfo.JobId, result.IsolateRankIds)
+			signal := &pb.ProcessManageSignal{
+				Uuid:       ctl.uuid,
+				JobId:      ctl.jobInfo.JobId,
+				SignalType: constant.FaultNodesExitSignalType,
+				Actions:    []string{constant.FaultNodesExitAction},
+			}
+			nodeRankIds, err := common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, result.IsolateRankIds)
+			if err != nil {
+				hwlog.RunLog.Errorf("get node rank ids failed, err:%v", err)
+				return common.NotifyFailEvent, common.ClientError, nil
+			}
+			nodeRankIds = common.RemoveDuplicateNodeRanks(nodeRankIds, ctl.faultPod)
+			signal.NodeRankIds = nodeRankIds
+			_, respCode, err := ctl.signalEnqueue(signal)
+			if err != nil || respCode != common.OK {
+				hwlog.RunLog.Errorf("failed to signalEnqueue, signal: %v, error:%v", signal, err)
+				return common.NotifyFailEvent, common.ClientError, nil
+			}
+			return "", common.OK, nil
+		}
+		if result.RecoverSuccess {
+			hwlog.RunLog.Infof("job[%s] scale-in successfully", ctl.jobInfo.JobId)
+			return common.ScaleInSuccessEvent, common.OK, nil
+		}
+		hwlog.RunLog.Infof("job[%s] scale-in failed", ctl.jobInfo.JobId)
+		return common.RecoverFailEvent, common.ClientError, nil
+	case constant.ScaleOutStrategyName:
+		if result.RecoverSuccess {
+			hwlog.RunLog.Infof("job[%s] scale-out successfully", ctl.jobInfo.JobId)
+			return common.ScaleOutSuccessEvent, common.OK, nil
+		}
+		hwlog.RunLog.Infof("job[%s] scale-out failed", ctl.jobInfo.JobId)
+		return common.RecoverFailEvent, common.ClientError, nil
 	default:
 		return "", common.ServerInnerError, fmt.Errorf("unexpected case, strategy=%s "+
 			"not support, jobId=%s", result.Strategy, ctl.jobInfo.JobId)
@@ -1362,16 +1524,39 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 }
 
 func (ctl *EventController) listenScheduleResult() {
+	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeout
+	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
+	if pgInfo.Annotations != nil && pgInfo.Annotations[constant.WaitRescheduleTimeoutKey] != "" {
+		if timeout, err := strconv.Atoi(pgInfo.Annotations[constant.WaitRescheduleTimeoutKey]); err == nil {
+			podReschedulingTimeout = timeout
+		} else {
+			hwlog.RunLog.Warnf("failed to convert wait_reschedule_timeout to int, value is %s", pgInfo.Annotations[constant.WaitRescheduleTimeoutKey])
+		}
+	}
 	pgRunning := false
-	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
+	timeoutTime := time.NewTimer(time.Second * time.Duration(podReschedulingTimeout))
+	defer timeoutTime.Stop()
+	for {
 		if ctl.jobCanceled {
 			return
 		}
+		if len(ctl.latestStrategy) > 0 && ctl.latestStrategy[len(ctl.latestStrategy)-1] == constant.
+			ScaleInStrategyName {
+			hwlog.RunLog.Infof("job[%s] has choose elastic training, "+
+				"not need to continue listen reschedule result", ctl.jobInfo.JobName)
+			return
+		}
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
-		hwlog.RunLog.Infof("check pg running %d times", i)
-		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
-			pgRunning = true
+		select {
+		case <-timeoutTime.C:
+			hwlog.RunLog.Infof("job[%s] reschedule failed", ctl.jobInfo.JobId)
 			break
+		default:
+			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
+				hwlog.RunLog.Infof("job[%s] reschedule success", ctl.jobInfo.JobId)
+				pgRunning = true
+				break
+			}
 		}
 	}
 	ctl.pgStatusEnqueue(pgRunning)
@@ -1436,8 +1621,10 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 				hwlog.RunLog.Warnf("scheduleCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
 				return "", common.OK, nil
 			}
-			if !scheduleSuccess {
+			if !scheduleSuccess && !ctl.supportTargetRecoverStrategy(constant.ScaleInStrategyName) {
 				return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
+			} else if !scheduleSuccess && ctl.supportTargetRecoverStrategy(constant.ScaleInStrategyName) {
+				return common.NeedTryScaleInStrategyEvent, common.ScheduleTimeout, nil
 			}
 			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
 				constant.ClearOperation)
@@ -1571,6 +1758,185 @@ func (ctl *EventController) shouldWaitHcclRoutingConvergence() bool {
 	for _, fault := range ctl.cacheRetryFault {
 		if fault.FaultType == constant.HcclFaultType {
 			return true
+		}
+	}
+	return false
+}
+
+func (ctl *EventController) handleNotifyScaleInStrategy() (string, common.RespCode, error) {
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     constant.ChangeStrategySignalType,
+		Actions:        changeStrategyActions,
+		ChangeStrategy: constant.ScaleInStrategyName,
+		FaultRanks:     ctl.cacheNormalFault,
+		ExtraParams:    `{"scale-in-strategy": "DP"}`,
+	}
+	var err error
+	signal.NodeRankIds, err = common.GetNodeRankIdsByFaultRanks(ctl.jobInfo.JobId, signal.FaultRanks)
+	if err != nil {
+		hwlog.RunLog.Warnf("jobId=%s, GetNodeRankIdsByFaultRanks err:%v", ctl.jobInfo.JobId, err)
+	}
+	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) handleWaitReportScaleInIsolateRanksStatus() (string, common.RespCode, error) {
+	ctl.appendStrategy(constant.ScaleInStrategyName)
+	ctx, resultCh := ctl.getCtxAndResultChan()
+	if resultCh == nil {
+		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+	}
+	select {
+	case req, ok := <-resultCh:
+		if !ok {
+			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+			return "", common.OK, nil
+		}
+		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
+		ctl.appendRecoverResult(req)
+		return common.ReceiveReportEvent, common.OK, nil
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		return "", common.ControllerEventCancel, nil
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
+		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
+		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
+	}
+}
+
+func (ctl *EventController) handleWaitReportScaleInStatus() (string, common.RespCode, error) {
+	ctx, resultCh := ctl.getCtxAndResultChan()
+	if resultCh == nil {
+		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+	}
+	select {
+	case req, ok := <-resultCh:
+		if !ok {
+			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+			return "", common.OK, nil
+		}
+		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
+		ctl.appendRecoverResult(req)
+		return common.ReceiveReportEvent, common.OK, nil
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		return "", common.ControllerEventCancel, nil
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
+		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
+		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
+	}
+}
+
+func (ctl *EventController) handleScaleInRunningState() (string, common.RespCode, error) {
+	go func() {
+		for {
+			time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
+			hwlog.RunLog.Debugf("check job[%s] pg running and job completed", ctl.jobInfo.JobId)
+			jobObject := statistics.GetJob(ctl.jobInfo.JobId)
+			if jobObject == nil {
+				ctl.addEvent(common.FinishEvent)
+				return
+			}
+			if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (podgroup.IsSucceeded(acJobInfo.
+				Status) || podgroup.IsFailed(acJobInfo.Status)) {
+				hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId, podgroup.IsSucceeded(acJobInfo.
+					Status))
+				ctl.addEvent(common.FinishEvent)
+				return
+			}
+			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
+				break
+			}
+		}
+		signal := &pb.ProcessManageSignal{
+			Uuid:           ctl.uuid,
+			JobId:          ctl.jobInfo.JobId,
+			SignalType:     constant.ChangeStrategySignalType,
+			Actions:        changeStrategyActions,
+			ChangeStrategy: constant.ScaleOutStrategyName,
+			FaultRanks:     ctl.cacheNormalFault,
+			ExtraParams:    `{"scale-out-strategy": "DP"}`,
+		}
+		var err error
+		signal.NodeRankIds, err = common.GetNodeRankIdsByFaultRanks(ctl.jobInfo.JobId, signal.FaultRanks)
+		if err != nil {
+			hwlog.RunLog.Warnf("jobId=%s, GetNodeRankIdsByFaultRanks err:%v", ctl.jobInfo.JobId, err)
+		}
+		_, respCode, err := ctl.signalEnqueue(signal)
+		if err != nil || respCode != common.OK {
+			hwlog.RunLog.Warnf("failed to send scale-out signal, error: %v", err)
+			ctl.addEvent(common.NotifyFailEvent)
+		}
+	}()
+	return "", common.OK, nil
+}
+
+func (ctl *EventController) handleWaitReportScaleOutStatusState() (string, common.RespCode, error) {
+	ctl.appendStrategy(constant.ScaleOutStrategyName)
+	ctx, resultCh := ctl.getCtxAndResultChan()
+	if resultCh == nil {
+		hwlog.RunLog.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+		return "", common.ServerInnerError, fmt.Errorf("jobId=%s, resultCh is nil", ctl.jobInfo.JobId)
+	}
+	select {
+	case req, ok := <-resultCh:
+		if !ok {
+			hwlog.RunLog.Warnf("resultCh closed, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+			return "", common.OK, nil
+		}
+		hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
+		ctl.appendRecoverResult(req)
+		return common.ReceiveReportEvent, common.OK, nil
+	case <-ctx.Done():
+		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
+		return "", common.ControllerEventCancel, nil
+	case <-time.After(time.Duration(reportTimeoutMinutes) * time.Minute):
+		hwlog.RunLog.Errorf("%s timeout, jobId=%s", ctl.state.GetState(), ctl.jobInfo.JobId)
+		return common.ReportTimeoutEvent, common.WaitReportTimeout, nil
+	}
+}
+
+func (ctl *EventController) whetherHasEnoughResource() bool {
+	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeoutBeforeDeployStrategy
+	podInfo := pod.GetPodByRankIndex(ctl.jobInfo.JobId, constant.RankZeroNodeId)
+	envValue := pod.GetEnvByPod(map[string]corev1.Pod{podInfo.Name: podInfo}, constant.MindIOWaitTimeKey)
+	waitTimeInt, err := strconv.Atoi(envValue)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed  to convert str to int, error: %v", err)
+	} else if err == nil && waitTimeInt >= constant.DifferenceTime && waitTimeInt <= constant.MindIOWaitTimeMax {
+		podReschedulingTimeout = waitTimeInt - constant.DifferenceTime
+	}
+	hwlog.RunLog.Infof("job %s will wait %v seconds to check the fault pod reschedule result", ctl.jobInfo.JobId,
+		podReschedulingTimeout)
+	timeoutTime := time.NewTimer(time.Second * time.Duration(podReschedulingTimeout))
+	defer timeoutTime.Stop()
+	for {
+		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
+		select {
+		case <-timeoutTime.C:
+			hwlog.RunLog.Infof("job[%s] reschedule failed", ctl.jobInfo.JobId)
+			return false
+		default:
+			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
+				hwlog.RunLog.Infof("job[%s] reschedule success", ctl.jobInfo.JobId)
+				return true
+			}
+		}
+	}
+}
+
+func (ctl *EventController) checkWhetherPodVersionChanged() bool {
+	for podRank, version := range ctl.faultPodVersion {
+		pod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, podRank)
+		if pod.Name == "" {
+			continue
+		}
+		currentVersion, ok := pod.Labels[constant.PodVersion]
+		if ok {
+			return currentVersion != version
 		}
 	}
 	return false

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"strings"
 
+	apiv1 "github.com/kubeflow/common/pkg/apis/common/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -149,4 +151,23 @@ func GetResourceType(info *v1beta1.PodGroup) string {
 	}
 	hwlog.RunLog.Warnf("GetResourceType failed for pg %s", info.GetName())
 	return constant.UnknownResourceType
+}
+
+// IsSucceeded checks whether the job is succeeded
+func IsSucceeded(status apiv1.JobStatus) bool {
+	return hasCondition(status, apiv1.JobSucceeded)
+}
+
+// IsFailed checks whether the job is failed
+func IsFailed(status apiv1.JobStatus) bool {
+	return hasCondition(status, apiv1.JobFailed)
+}
+
+func hasCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) bool {
+	for _, condition := range status.Conditions {
+		if condition.Type == condType && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }

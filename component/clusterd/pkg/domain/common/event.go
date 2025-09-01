@@ -112,4 +112,17 @@ const (
 	StressTestFailEvent = "stressTestFail"
 	// StressTestRecvContinueEvent receive continue event after stress test
 	StressTestRecvContinueEvent = "stressTestRecvContinue"
+
+	// NotifyScaleInStrategySuccessEvent notify scale-in strategy success
+	NotifyScaleInStrategySuccessEvent = "notifyScaleInStrategySuccessEvent"
+	// ScaleInSuccessEvent scale-in success
+	ScaleInSuccessEvent = "scaleInSuccess"
+	// ScaleOutSuccessEvent scale-out success
+	ScaleOutSuccessEvent = "scaleOutSuccess"
+	// NeedTryScaleInStrategyEvent try to change strategy to scale-in
+	NeedTryScaleInStrategyEvent = "needTryScaleStrategyInEvent"
+	// NotifyScaleOutStrategySuccessEvent notify scale-out strategy success
+	NotifyScaleOutStrategySuccessEvent = "notifyScaleOutStrategySuccessEvent"
+	// NotifyFaultNodesExitSuccessEvent notify fault nodes to exit successfully
+	NotifyFaultNodesExitSuccessEvent = "notifyFaultNodesExitSuccessEvent"
 )

@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -326,7 +328,8 @@ func TestShouldDumpWhenOccurFault(t *testing.T) {
 
 func TestUpdateCacheFaultAndPod(t *testing.T) {
 	ctl := EventController{
-		faultPod: map[string]string{},
+		faultPod:        map[string]string{},
+		faultPodVersion: make(map[string]string),
 	}
 	convey.Convey("updateCacheFaultAndPod", t, func() {
 		faultRank := []*pb.FaultRank{{RankId: "1", FaultType: constant.NormalFaultType}}
@@ -968,6 +971,8 @@ func TestHandleNotifyDecidedStrategy(t *testing.T) {
 	convey.Convey("Testing handleNotifyDecidedStrategy", t, func() {
 		jobInfo := newJobInfoWithStrategy(nil)
 		serviceCtx := context.Background()
+		mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByFaultRanks, []string{}, nil)
+		defer mockGetNodeRankIdsByFaultRanks.Reset()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 		_, code, err := ctl.handleNotifyDecidedStrategy()
 		convey.So(code, convey.ShouldEqual, common.OK)
@@ -1597,8 +1602,9 @@ func TestNotifyFaultForUceFaultCase(t *testing.T) {
 				Namespace:     "test-namespace",
 				RecoverConfig: common.RecoverConfig{PlatFormMode: true},
 			},
-			faultPod: make(map[string]string),
-			uuid:     "test-uuid",
+			faultPod:        make(map[string]string),
+			faultPodVersion: make(map[string]string),
+			uuid:            "test-uuid",
 		}
 
 		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
@@ -1630,6 +1636,8 @@ func testPlatformModeWriteConfirmFaultError(ctl *EventController) {
 
 func testPlatformModeNonUceFault(ctl *EventController) {
 	convey.Convey("When platform mode and non-UCE fault", func() {
+		mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByRankIds, []string{}, nil)
+		defer mockGetNodeRankIdsByFaultRanks.Reset()
 		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
 			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
 				return []*pb.FaultRank{{RankId: "rank1"}}, nil
@@ -1932,6 +1940,8 @@ func testPlatformModeWriteConfirmNormalFaultError(ctl *EventController) {
 
 func testPlatformModeSuccess(ctl *EventController) {
 	convey.Convey("When platform mode and all operations succeed", func() {
+		mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByRankIds, []string{}, nil)
+		defer mockGetNodeRankIdsByFaultRanks.Reset()
 		ctl.jobInfo.PlatFormMode = true
 		patches := gomonkey.ApplyPrivateMethod(ctl, "writeConfirmFaultAndWaitPlatResultFault",
 			func(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
@@ -1960,6 +1970,8 @@ func testPlatformModeSuccess(ctl *EventController) {
 
 func testNonPlatformModeSuccess(ctl *EventController) {
 	convey.Convey("When non-platform mode and all operations succeed", func() {
+		mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByRankIds, []string{}, nil)
+		defer mockGetNodeRankIdsByFaultRanks.Reset()
 		ctl.jobInfo.PlatFormMode = false
 		patches := gomonkey.ApplyPrivateMethod(ctl, "updateCacheFaultAndPod",
 			func() ([]*pb.FaultRank, []string, error) {
@@ -2968,6 +2980,8 @@ func TestHandleRestartFaultProcess(t *testing.T) {
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 
+		mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByRankIds, []string{}, nil)
+		defer mockGetNodeRankIdsByFaultRanks.Reset()
 		patches := gomonkey.ApplyFunc(ctl.signalEnqueue,
 			func(signal *pb.ProcessManageSignal) (string, common.RespCode, error) {
 				return "", common.OK, nil
@@ -3035,4 +3049,266 @@ func TestCatchException(t *testing.T) {
 			t.Error("not catch exception")
 		}
 	})
+}
+
+func TestSupportTargetStrategy(t *testing.T) {
+	convey.Convey("MindXConfigStrategies and agentReportStrategies contain recover strategy", t, func() {
+		jobInfo := newJobInfoWithStrategy([]string{
+			constant.ProcessRecoverStrategyName,
+			constant.ProcessDumpStrategyName})
+		ctl := &EventController{
+			jobInfo:               jobInfo,
+			agentReportStrategies: []string{constant.ProcessRecoverStrategyName},
+		}
+		hasRecover := ctl.supportTargetStrategy(constant.ProcessRecoverStrategyName)
+		convey.So(hasRecover, convey.ShouldBeTrue)
+
+		ctl.platStrategy = constant.ProcessRecoverStrategyName
+		hasRecover = ctl.supportTargetStrategy(constant.ProcessRetryStrategyName)
+		convey.So(hasRecover, convey.ShouldBeFalse)
+
+		ctl.platStrategy = constant.ProcessRecoverStrategyName
+		hasRecover = ctl.supportTargetStrategy(constant.ProcessDumpStrategyName)
+		convey.So(hasRecover, convey.ShouldBeFalse)
+	})
+}
+
+func TestEventController_supportTargetStrategy(t *testing.T) {
+	type fields struct {
+		jobInfo               common.JobBaseInfo
+		agentReportStrategies []string
+	}
+	type args struct {
+		recoverStrategy string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "case 1: not config",
+			fields: fields{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{
+						MindXConfigStrategies: []string{"recover"}}}},
+			args: args{recoverStrategy: "retry"},
+			want: false},
+		{
+			name: "case 2: not report",
+			fields: fields{
+				agentReportStrategies: []string{"retry"},
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{
+						MindXConfigStrategies: []string{"recover"}}}},
+			args: args{recoverStrategy: "recover"},
+			want: false},
+		{
+			name: "case 3: config and report",
+			fields: fields{
+				agentReportStrategies: []string{"recover"},
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{
+						MindXConfigStrategies: []string{"recover"}}}},
+			args: args{recoverStrategy: "recover"},
+			want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctl := &EventController{
+				jobInfo:               tt.fields.jobInfo,
+				agentReportStrategies: tt.fields.agentReportStrategies}
+			assert.Equalf(t, tt.want, ctl.supportTargetStrategy(tt.args.recoverStrategy), "supportTargetStrategy(%v)", tt.args.recoverStrategy)
+		})
+	}
+}
+
+func newTestEventController(jobID string) *EventController {
+	return &EventController{
+		jobInfo:  common.JobBaseInfo{JobId: jobID},
+		faultPod: make(map[string]string),
+	}
+}
+
+func TestHandleCheckScaleStrategyRecoverResultScaleInExitIsolateSuccess(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy:       constant.ScaleInStrategyName,
+		RecoverSuccess: false,
+		Code:           common.ExitIsolateRanksCode,
+		IsolateRankIds: []string{"rank-1", "rank-2"},
+	}
+	ctl.signalChan = make(chan *pb.ProcessManageSignal, 1)
+	patches := gomonkey.ApplyFunc(common.GetNodeRankIdsByRankIds,
+		func(_ string, _ []string) ([]string, error) {
+			return []string{"1", "2"}, nil
+		})
+	defer patches.Reset()
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Empty(t, event)
+	assert.Equal(t, common.OK, code)
+	assert.NoError(t, err)
+}
+
+func TestHandleCheckScaleStrategyRecoverResultScaleInGetNodeRankIdsFail(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy:       constant.ScaleInStrategyName,
+		RecoverSuccess: false,
+		Code:           common.ExitIsolateRanksCode,
+		IsolateRankIds: []string{"rank-1", "rank-2"},
+	}
+
+	patches := gomonkey.ApplyFunc(common.GetNodeRankIdsByRankIds,
+		func(_ string, _ []string) ([]string, error) {
+			return nil, fmt.Errorf("test error")
+		})
+	defer patches.Reset()
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Equal(t, common.NotifyFailEvent, event)
+	assert.Equal(t, common.ClientError, code)
+	assert.NoError(t, err)
+}
+
+func TestHandleCheckScaleStrategyRecoverResultScaleInSignalEnqueueFail(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy:       constant.ScaleInStrategyName,
+		RecoverSuccess: false,
+		Code:           common.ExitIsolateRanksCode,
+		IsolateRankIds: []string{"1", "2"},
+	}
+
+	patches := gomonkey.ApplyFunc(common.GetNodeRankIdsByRankIds,
+		func(_ string, _ []string) ([]string, error) {
+			return []string{"1", "2"}, nil
+		})
+	defer patches.Reset()
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Equal(t, common.NotifyFailEvent, event)
+	assert.Equal(t, common.ClientError, code)
+	assert.NoError(t, err)
+}
+
+func TestHandleCheckScaleStrategyRecoverResultScaleInRecoverSuccess(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy:       constant.ScaleInStrategyName,
+		RecoverSuccess: true,
+	}
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Equal(t, common.ScaleInSuccessEvent, event)
+	assert.Equal(t, common.OK, code)
+	assert.NoError(t, err)
+}
+
+func TestHandleCheckScaleStrategyRecoverResultScaleOutRecoverFail(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy:       constant.ScaleOutStrategyName,
+		RecoverSuccess: false,
+	}
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Equal(t, common.RecoverFailEvent, event)
+	assert.Equal(t, common.ClientError, code)
+	assert.NoError(t, err)
+}
+
+func TestHandleCheckScaleStrategyRecoverResultUnknownStrategy(t *testing.T) {
+	ctl := newTestEventController("job-123")
+	result := common.RecoverResult{
+		Strategy: "unknown-strategy",
+	}
+
+	event, code, err := ctl.handleCheckScaleStrategyRecoverResult(result)
+
+	assert.Empty(t, event)
+	assert.Equal(t, common.ServerInnerError, code)
+	assert.True(t, strings.Contains(err.Error(), "not support"))
+}
+
+// TestHandleWaitReportScaleInIsolateRanksStatusResultChanNil tests when resultCh is nil.
+func TestHandleWaitReportScaleInIsolateRanksStatusResultChanNil(t *testing.T) {
+	ctl := &EventController{jobInfo: common.JobBaseInfo{JobId: "job-123"}}
+	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
+	assert.Empty(t, event)
+	assert.Equal(t, common.ServerInnerError, code)
+	assert.Contains(t, err.Error(), "resultCh is nil")
+}
+
+// TestHandleWaitReportScaleInIsolateRanksStatusResultChanClosed tests when resultCh is closed.
+func TestHandleWaitReportScaleInIsolateRanksStatusResultChanClosed(t *testing.T) {
+	ctl := &EventController{
+		jobInfo:           common.JobBaseInfo{JobId: "job-123"},
+		controllerContext: context.Background()}
+	resultCh := make(chan *pb.RecoverStatusRequest)
+	close(resultCh) // Close channel before test
+	ctl.reportStatusChan = resultCh
+	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
+	assert.Empty(t, event)
+	assert.Equal(t, common.OK, code)
+	assert.NoError(t, err)
+}
+
+// TestHandleWaitReportScaleInIsolateRanksStatusReceiveRequest tests normal request reception.
+func TestHandleWaitReportScaleInIsolateRanksStatusReceiveRequest(t *testing.T) {
+	ctl := &EventController{
+		jobInfo:           common.JobBaseInfo{JobId: "job-123"},
+		controllerContext: context.Background(),
+		state:             &common.StateMachine{},
+	}
+	resultCh := make(chan *pb.RecoverStatusRequest, 1)
+	req := &pb.RecoverStatusRequest{Strategy: constant.ScaleInStrategyName, Status: &pb.Status{Code: 0}}
+	resultCh <- req // Send test request
+	ctl.reportStatusChan = resultCh
+	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
+	assert.Equal(t, common.ReceiveReportEvent, event)
+	assert.Equal(t, common.OK, code)
+	assert.NoError(t, err)
+}
+
+// TestHandleWaitReportScaleInIsolateRanksStatusCtxCanceled tests when context is canceled.
+func TestHandleWaitReportScaleInIsolateRanksStatusCtxCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel context immediately
+
+	ctl := &EventController{
+		jobInfo:           common.JobBaseInfo{JobId: "job-123"},
+		controllerContext: ctx,
+		reportStatusChan:  make(chan *pb.RecoverStatusRequest, 1),
+	}
+	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
+	assert.Empty(t, event)
+	assert.Equal(t, common.ControllerEventCancel, code)
+	assert.NoError(t, err)
+}
+
+// TestHandleWaitReportScaleInIsolateRanksStatusTimeout tests when report timeout occurs.
+func TestHandleWaitReportScaleInIsolateRanksStatusTimeout(t *testing.T) {
+	ctl := &EventController{
+		jobInfo:           common.JobBaseInfo{JobId: "job-123"},
+		controllerContext: context.Background(),
+		reportStatusChan:  make(chan *pb.RecoverStatusRequest, 1),
+	}
+	chanTime := make(chan time.Time, 1)
+	patchTime := gomonkey.ApplyFunc(time.After,
+		func(_ time.Duration) <-chan time.Time {
+			return chanTime
+		})
+	defer patchTime.Reset()
+	event, code, err := ctl.handleWaitReportScaleInIsolateRanksStatus()
+	assert.Equal(t, common.ReportTimeoutEvent, event)
+	assert.Equal(t, common.WaitReportTimeout, code)
+	assert.NoError(t, err)
 }
