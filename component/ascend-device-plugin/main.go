@@ -22,10 +22,8 @@ import (
 	"os"
 
 	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/device/deviceswitch"
-	"Ascend-device-plugin/pkg/server"
+	"Ascend-device-plugin/pkg/next/devicefactory"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager"
 )
 
 const (
@@ -193,41 +191,13 @@ func main() {
 	hwlog.RunLog.Infof("ascend device plugin starting and the version is %s", BuildVersion)
 	hwlog.RunLog.Infof("ascend device plugin starting scene is %s", BuildScene)
 	setParameters()
-	hdm, err := InitFunction()
+	hdm, err := devicefactory.InitFunction()
 	if err != nil {
 		return
 	}
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
 	hdm.SignCatch(cancel)
-}
-
-// InitFunction init function
-func InitFunction() (*server.HwDevManager, error) {
-	devM, err := devmanager.AutoInit("")
-	if err != nil {
-		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
-		return nil, err
-	}
-	hdm := server.NewHwDevManager(devM)
-	if hdm == nil {
-		hwlog.RunLog.Error("init device manager failed")
-		return nil, fmt.Errorf("init device manager failed")
-	}
-	hwlog.RunLog.Info("init device manager success")
-	common.ParamOption.EnableSwitchFault = true
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		switchDevMgr := deviceswitch.NewSwitchDevManager()
-		if err := switchDevMgr.InitSwitchDev(); err != nil {
-			hwlog.RunLog.Warnf("failed to init switch switch device manager, will not deal with switch fault, "+
-				"err: %s", err.Error())
-			common.ParamOption.EnableSwitchFault = false
-			// will not return err, to ensure dp keep running while switch is not reachable
-			return hdm, nil
-		}
-		hdm.SwitchDevManager = switchDevMgr
-	}
-	return hdm, nil
 }
 
 func setParameters() {
