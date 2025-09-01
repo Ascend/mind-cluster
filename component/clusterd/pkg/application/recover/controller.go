@@ -1526,10 +1526,10 @@ func (ctl *EventController) listenScheduleResult() {
 			hwlog.RunLog.Warnf("failed to convert wait_reschedule_timeout to int, value is %s", pgInfo.Annotations[constant.WaitRescheduleTimeoutKey])
 		}
 	}
-	pgRunning := false
-	timeoutTime := time.NewTimer(time.Second * time.Duration(podReschedulingTimeout))
-	defer timeoutTime.Stop()
-	for {
+	pgRunning := true
+	start := time.Now().Unix()
+	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherPodChanged() {
+		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if ctl.jobCanceled {
 			return
 		}
@@ -1539,17 +1539,9 @@ func (ctl *EventController) listenScheduleResult() {
 				"not need to continue listen reschedule result", ctl.jobInfo.JobName)
 			return
 		}
-		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
-		select {
-		case <-timeoutTime.C:
-			hwlog.RunLog.Infof("job[%s] reschedule failed", ctl.jobInfo.JobId)
+		if time.Now().Unix()-start > int64(podReschedulingTimeout) {
+			pgRunning = false
 			break
-		default:
-			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodChanged() {
-				hwlog.RunLog.Infof("job[%s] reschedule success", ctl.jobInfo.JobId)
-				pgRunning = true
-				break
-			}
 		}
 	}
 	ctl.pgStatusEnqueue(pgRunning)
