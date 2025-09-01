@@ -352,19 +352,19 @@ func TestReplySwitchNicResult(t *testing.T) {
 	})
 }
 
-func TestStressTestErrorParam(t *testing.T) {
+func TestStressTestOperation(t *testing.T) {
+	patches := gomonkey.NewPatches()
 	ctx := context.Background()
+	jobID := "testJob"
+	nodeName := "nodeName"
+	deviceID := "device"
+	rankID := "1"
+	defer patches.Reset()
 	t.Run("stress test, error param", func(t *testing.T) {
 		s := fakeService()
 		res, _ := s.StressTest(ctx, nil)
 		assert.Equal(t, int32(common.OMParamInvalid), res.Code)
 	})
-}
-
-func TestStressTestCanNotDoStressTest(t *testing.T) {
-	patches := gomonkey.NewPatches()
-	ctx := context.Background()
-	jobID := "jobID"
 	t.Run("can not do stress test", func(t *testing.T) {
 		s := fakeService()
 		patches.ApplyPrivateMethod(s, "checkStressTestParam", func(params *pb.StressTestParam) (bool, string) {
@@ -377,40 +377,22 @@ func TestStressTestCanNotDoStressTest(t *testing.T) {
 		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID})
 		assert.Equal(t, int32(common.OMIsRunning), res.Code)
 	})
-}
-
-func TestStressTestOperationSuccess(t *testing.T) {
 	t.Run("stress test operation success", func(t *testing.T) {
-		patches := gomonkey.NewPatches()
-		ctx := context.Background()
-		jobID := "testJob"
-		nodeName := "nodeName"
-		deviceID := "device"
-		rankID := "1"
 		patches.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
 			return constant.JobInfo{
 				Status: job.StatusJobRunning,
 				JobRankTable: constant.RankTable{
-					ServerList: []constant.ServerHccl{
-						{
-							ServerName: nodeName,
-							DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}},
-						},
-					},
-				},
-			}, true
+					ServerList: []constant.ServerHccl{{
+						ServerName: nodeName,
+						DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}}}}, true
 		})
-		defer patches.Reset()
 		s := fakeService()
 		s.eventCtl[jobID] = &EventController{state: common.NewStateMachine(common.InitState, nil)}
 		patches.ApplyPrivateMethod(s, "checkStressTestParam", func(params *pb.StressTestParam) (bool, string) {
 			return true, ""
 		})
 		res, _ := s.StressTest(ctx, &pb.StressTestParam{JobID: jobID, StressParam: map[string]*pb.StressOpList{
-			nodeName: {
-				Ops: []int64{0},
-			},
-		}})
+			nodeName: {Ops: []int64{0}}}})
 		assert.Equal(t, int32(common.OK), res.Code)
 	})
 }
