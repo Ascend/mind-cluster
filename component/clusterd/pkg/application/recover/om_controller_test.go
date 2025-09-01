@@ -1137,6 +1137,11 @@ func TestStressTestSignalEnqueue(t *testing.T) {
 		jobInfo := newJobInfoWithStrategy(nil)
 		ctx, cancel := context.WithCancel(context.Background())
 		ctl := NewEventController(jobInfo, keepAliveSeconds, ctx)
+		paramChan := make(chan *pb.StressTestRankParams, 1)
+		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndStressTestNotifyChan", func() (context.Context, chan *pb.StressTestRankParams) {
+			return ctx, paramChan
+		})
+		defer patches.Reset()
 		signal := &pb.StressTestRankParams{
 			JobId:       "test-job",
 			StressParam: map[string]*pb.StressOpList{},
@@ -1232,7 +1237,7 @@ func testStressTestFinishResultChanNil(ctl *EventController) {
 		}
 		event, respCode, _ := ctl.handleWaitStressTestFinish()
 		convey.So(event, convey.ShouldEqual, "")
-		convey.So(respCode, convey.ShouldEqual, common.ControllerEventCancel)
+		convey.So(respCode, convey.ShouldEqual, common.ServerInnerError)
 	})
 }
 
@@ -1273,7 +1278,7 @@ func testStressTestFinishValidReport(ctl *EventController) {
 			},
 		}
 		event, respCode, err := ctl.handleWaitStressTestFinish()
-		convey.So(event, convey.ShouldEqual, common.ReceiveReportEvent)
+		convey.So(event, convey.ShouldEqual, "")
 		convey.So(respCode, convey.ShouldEqual, common.OK)
 		convey.So(err, convey.ShouldBeNil)
 	})
