@@ -44,12 +44,12 @@ func TestGetRules(t *testing.T) {
 			baseRules := ctl.getStressTestRules()
 			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
 		})
-		convey.Convey("06-test geSwitchNicRules, should return slice", func() {
-			baseRules := ctl.geSwitchNicRules()
+		convey.Convey("06-test getSwitchNicRules, should return slice", func() {
+			baseRules := ctl.getSwitchNicRules()
 			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
 		})
-		convey.Convey("07-test geStressTestRules, should return slice", func() {
-			baseRules := ctl.geStressTestRules()
+		convey.Convey("07-test getStressTestRules, should return slice", func() {
+			baseRules := ctl.getStressTestRules()
 			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
 		})
 	})
