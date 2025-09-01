@@ -60,7 +60,6 @@ type EventController struct {
 	faultFlushing             bool
 	keepAliveSecond           int
 	uuid                      string
-	faultPodVersion           map[string]string
 	faultPod                  map[string]string
 	events                    chan string
 	latestStrategy            []string
@@ -109,7 +108,6 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		keepAliveSecond:           keepAlive,
 		uuid:                      "",
 		faultPod:                  make(map[string]string),
-		faultPodVersion:           make(map[string]string),
 		events:                    make(chan string, eventChanLength),
 		latestStrategy:            []string{},
 		latestRecoverResult:       []*pb.RecoverStatusRequest{},
@@ -158,13 +156,9 @@ func (ctl *EventController) GetFaultPod() map[string]string {
 func (ctl *EventController) mergeFaultPod(faultPod map[string]string) {
 	ctl.lock.Lock()
 	defer ctl.lock.Unlock()
-	faultPodVersion := common.GetPodVersion(ctl.jobInfo.JobId, faultPod)
 	for podRank, podId := range faultPod {
 		if _, ok := ctl.faultPod[podRank]; !ok {
 			ctl.faultPod[podRank] = podId
-		}
-		if _, ok := ctl.faultPodVersion[podRank]; !ok {
-			ctl.faultPodVersion[podRank] = faultPodVersion[podRank]
 		}
 	}
 }
@@ -206,7 +200,6 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.uuid = ""
 	ctl.latestStrategy = ctl.latestStrategy[:0]
 	ctl.faultPod = make(map[string]string)
-	ctl.faultPodVersion = make(map[string]string)
 	if !ctl.isChanClosed {
 		ctl.closeControllerChan()
 		ctl.isChanClosed = true
@@ -1552,7 +1545,7 @@ func (ctl *EventController) listenScheduleResult() {
 			hwlog.RunLog.Infof("job[%s] reschedule failed", ctl.jobInfo.JobId)
 			break
 		default:
-			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
+			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodChanged() {
 				hwlog.RunLog.Infof("job[%s] reschedule success", ctl.jobInfo.JobId)
 				pgRunning = true
 				break
@@ -1815,7 +1808,7 @@ func (ctl *EventController) waitScaleOut() {
 			ctl.addEvent(common.FinishEvent)
 			return
 		}
-		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
+		if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodChanged() {
 			break
 		}
 	}
@@ -1857,33 +1850,23 @@ func (ctl *EventController) whetherHasEnoughResource() bool {
 	}
 	hwlog.RunLog.Infof("job %s will wait %v seconds to check the fault pod reschedule result", ctl.jobInfo.JobId,
 		podReschedulingTimeout)
-	timeoutTime := time.NewTimer(time.Second * time.Duration(podReschedulingTimeout))
-	defer timeoutTime.Stop()
-	for {
+	start := time.Now().Unix()
+	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherPodChanged() {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
-		select {
-		case <-timeoutTime.C:
-			hwlog.RunLog.Infof("job[%s] reschedule failed", ctl.jobInfo.JobId)
+		if time.Now().Unix()-start > int64(podReschedulingTimeout) {
 			return false
-		default:
-			if podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) && ctl.checkWhetherPodVersionChanged() {
-				hwlog.RunLog.Infof("job[%s] reschedule success", ctl.jobInfo.JobId)
-				return true
-			}
 		}
 	}
+	return true
 }
 
-func (ctl *EventController) checkWhetherPodVersionChanged() bool {
-	for podRank, version := range ctl.faultPodVersion {
+func (ctl *EventController) checkWhetherPodChanged() bool {
+	for podRank, podId := range ctl.faultPod {
 		pod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, podRank)
 		if pod.Name == "" {
 			continue
 		}
-		currentVersion, ok := pod.Labels[constant.PodVersion]
-		if ok {
-			return currentVersion != version
-		}
+		return podId != string(pod.UID)
 	}
 	return false
 }

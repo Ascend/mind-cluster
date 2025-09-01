@@ -329,8 +329,7 @@ func TestShouldDumpWhenOccurFault(t *testing.T) {
 
 func TestUpdateCacheFaultAndPod(t *testing.T) {
 	ctl := EventController{
-		faultPod:        map[string]string{},
-		faultPodVersion: make(map[string]string),
+		faultPod: map[string]string{},
 	}
 	convey.Convey("updateCacheFaultAndPod", t, func() {
 		faultRank := []*pb.FaultRank{{RankId: "1", FaultType: constant.NormalFaultType}}
@@ -1624,9 +1623,8 @@ func TestNotifyFaultForUceFaultCase(t *testing.T) {
 				Namespace:     "test-namespace",
 				RecoverConfig: common.RecoverConfig{PlatFormMode: true},
 			},
-			faultPod:        make(map[string]string),
-			faultPodVersion: make(map[string]string),
-			uuid:            "test-uuid",
+			faultPod: make(map[string]string),
+			uuid:     "test-uuid",
 		}
 
 		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
@@ -3403,37 +3401,35 @@ func TestEventControllerHandleNotifyScaleInStrategy(t *testing.T) {
 func TestCheckWhetherPodVersionChangedFalse(t *testing.T) {
 	ctl := &EventController{
 		jobInfo: common.JobBaseInfo{JobId: "job-123"},
-		faultPodVersion: map[string]string{
-			"1": "1",
-		},
-	}
-	mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "job-123",
-			Labels: make(map[string]string),
-		},
-	})
-	defer mockGetNodeRankIdsByFaultRanks.Reset()
-	result := ctl.checkWhetherPodVersionChanged()
-	assert.Equal(t, false, result)
-}
-
-func TestCheckWhetherPodVersionChangedTrue(t *testing.T) {
-	ctl := &EventController{
-		jobInfo: common.JobBaseInfo{JobId: "job-123"},
-		faultPodVersion: map[string]string{
+		faultPod: map[string]string{
 			"1": "1",
 		},
 	}
 	mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "job-123",
-			Labels: map[string]string{
-				constant.PodVersion: "2",
-			},
+			UID:  "1",
 		},
 	})
 	defer mockGetNodeRankIdsByFaultRanks.Reset()
-	result := ctl.checkWhetherPodVersionChanged()
+	result := ctl.checkWhetherPodChanged()
+	assert.Equal(t, false, result)
+}
+
+func TestCheckWhetherPodVersionChangedTrue(t *testing.T) {
+	ctl := &EventController{
+		jobInfo: common.JobBaseInfo{JobId: "job-123"},
+		faultPod: map[string]string{
+			"1": "1",
+		},
+	}
+	mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "job-123",
+			UID:  "2",
+		},
+	})
+	defer mockGetNodeRankIdsByFaultRanks.Reset()
+	result := ctl.checkWhetherPodChanged()
 	assert.Equal(t, true, result)
 }
