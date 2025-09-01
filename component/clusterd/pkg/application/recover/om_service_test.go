@@ -194,14 +194,25 @@ func TestCheckNicsParamOK(t *testing.T) {
 	nodeName := "nodeName"
 	deviceID := "device"
 	rankID := "1"
-	job.SaveJobCache(jobID, constant.JobInfo{
-		JobRankTable: constant.RankTable{
-			ServerList: []constant.ServerHccl{
-				{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
-		},
-		Status: job.StatusJobRunning,
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			Status: job.StatusJobRunning,
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{
+						ServerName: nodeName,
+						DeviceList: []constant.Device{
+							{
+								DeviceID: deviceID,
+								RankID:   rankID,
+							},
+						},
+					},
+				},
+			},
+		}, true
 	})
-	defer job.DeleteJobCache(jobID)
+	defer patches.Reset()
 	t.Run("check param ok", func(t *testing.T) {
 		patch := gomonkey.ApplyFunc(faultmanager.QueryDeviceInfoToReport,
 			func() map[string]*constant.AdvanceDeviceFaultCm {
@@ -280,14 +291,25 @@ func TestGetGlobalRankIDAndOp(t *testing.T) {
 		nodeName := "nodeName"
 		deviceID := "device"
 		rankID := "1"
-		job.SaveJobCache(jobID, constant.JobInfo{
-			JobRankTable: constant.RankTable{
-				ServerList: []constant.ServerHccl{
-					{ServerName: nodeName, DeviceList: []constant.Device{{DeviceID: deviceID, RankID: rankID}}}},
-			},
-			Status: job.StatusJobRunning,
+		patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+			return constant.JobInfo{
+				Status: job.StatusJobRunning,
+				JobRankTable: constant.RankTable{
+					ServerList: []constant.ServerHccl{
+						{
+							ServerName: nodeName,
+							DeviceList: []constant.Device{
+								{
+									DeviceID: deviceID,
+									RankID:   rankID,
+								},
+							},
+						},
+					},
+				},
+			}, true
 		})
-		defer job.DeleteJobCache(jobID)
+		defer patches.Reset()
 		s := fakeService()
 		globalRankIDs, globalOps := s.getGlobalRankIDAndOp(&pb.SwitchNics{
 			JobID: jobID,
