@@ -24,10 +24,6 @@ const (
 	stressTestTimeout = 15 * 60 // seconds
 )
 
-const (
-	stressTestTimeout = 15 * 60 // seconds
-)
-
 func (ctl *EventController) handleNotifyPauseTrain() (string, common.RespCode, error) {
 	ctl.uuid = common.NewEventId(randomLen)
 	signal := &pb.ProcessManageSignal{
