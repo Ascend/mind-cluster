@@ -11,11 +11,15 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/recover"
+	"clusterd/pkg/interface/kube"
 )
 
 func TestCanDoSwitchingNic(t *testing.T) {
@@ -1180,11 +1184,9 @@ func testStressTestFinishReportChanNil(ctl *EventController) {
 
 func testStressTestFinishResultChanNil(ctl *EventController) {
 	convey.Convey("When ResultChan is nil", func() {
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
 		patches := gomonkey.ApplyPrivateMethod(ctl, "getCtxAndResultChan",
 			func() (context.Context, chan *pb.RecoverStatusRequest) {
-				return ctx, make(chan *pb.RecoverStatusRequest, 1)
+				return context.Background(), make(chan *pb.RecoverStatusRequest, 1)
 			})
 		defer patches.Reset()
 		defer func() {
@@ -1263,11 +1265,90 @@ func TestWaitStressTestDone(t *testing.T) {
 		defer patches.Reset()
 
 		testWaitStressTestDoneCancel(ctl)
+		testWaitStressTestRecoverChan(ctl)
+		testWaitStressTestResultrChanFalse(ctl)
+		testWaitStressTestResultrChanTrue(ctl)
 	})
 }
 
 func testWaitStressTestDoneCancel(ctl *EventController) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	resultChan := make(chan *pb.StressTestResult, 1)
+	recoverChan := make(chan *pb.RecoverStatusRequest, 1)
+	defer func() {
+		close(resultChan)
+		close(recoverChan)
+	}()
+	event, respCode, err := ctl.waitStressTestDone(ctx, resultChan, recoverChan)
+	convey.So(event, convey.ShouldEqual, common.ControllerEventCancel)
+	convey.So(respCode, convey.ShouldEqual, "")
+	convey.So(err, convey.ShouldBeNil)
+}
 
+func testWaitStressTestRecoverChan(ctl *EventController) {
+	resultChan := make(chan *pb.StressTestResult, 1)
+	recoverChan := make(chan *pb.RecoverStatusRequest, 1)
+	patches := gomonkey.ApplyPrivateMethod(ctl, "waitStressTestFinishRecvFault",
+		func(ctx context.Context, rch chan *pb.StressTestResult) (string, common.RespCode, error) {
+			return "", common.OK, nil
+		})
+	defer patches.Reset()
+	defer func() {
+		close(resultChan)
+		close(recoverChan)
+	}()
+	recoverChan <- &pb.RecoverStatusRequest{
+		Status: &pb.Status{
+			Code: common.UnRecoverableRetryError,
+		},
+	}
+	event, respCode, err := ctl.waitStressTestDone(context.Background(), resultChan, recoverChan)
+	convey.So(event, convey.ShouldEqual, common.OK)
+	convey.So(respCode, convey.ShouldEqual, "")
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testWaitStressTestResultrChanFalse(ctl *EventController) {
+	resultChan := make(chan *pb.StressTestResult, 1)
+	recoverChan := make(chan *pb.RecoverStatusRequest, 1)
+	patches := gomonkey.ApplyPrivateMethod(ctl, "parseStressTestResult",
+		func(result *pb.StressTestResult) (bool, string) {
+			return false, "failed"
+		}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+		operator string) (*v1.ConfigMap, error) {
+		return &v1.ConfigMap{}, nil
+	})
+	defer patches.Reset()
+	defer func() {
+		close(resultChan)
+		close(recoverChan)
+	}()
+	resultChan <- &pb.StressTestResult{}
+	event, _, err := ctl.waitStressTestDone(context.Background(), resultChan, recoverChan)
+	convey.So(event, convey.ShouldEqual, common.StressTestFailEvent)
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testWaitStressTestResultrChanTrue(ctl *EventController) {
+	resultChan := make(chan *pb.StressTestResult, 1)
+	recoverChan := make(chan *pb.RecoverStatusRequest, 1)
+	patches := gomonkey.ApplyPrivateMethod(ctl, "parseStressTestResult",
+		func(result *pb.StressTestResult) (bool, string) {
+			return true, ""
+		}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+		operator string) (*v1.ConfigMap, error) {
+		return &v1.ConfigMap{}, nil
+	})
+	defer patches.Reset()
+	defer func() {
+		close(resultChan)
+		close(recoverChan)
+	}()
+	resultChan <- &pb.StressTestResult{}
+	event, _, err := ctl.waitStressTestDone(context.Background(), resultChan, recoverChan)
+	convey.So(event, convey.ShouldEqual, common.ReceiveReportEvent)
+	convey.So(err, convey.ShouldBeNil)
 }
 
 func TestWaitStressTestFinishRecvFault(t *testing.T) {
@@ -1276,27 +1357,93 @@ func TestWaitStressTestFinishRecvFault(t *testing.T) {
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
 
-		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
-		defer patches.Reset()
-
-		testWaitStressTestDoneCancel(ctl)
+		testWaitStressTestFinishRecvFaultCancel(ctl)
+		testWaitStressTestFinishRecvFault(ctl)
 	})
 }
 
+func testWaitStressTestFinishRecvFaultCancel(ctl *EventController) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	resultChan := make(chan *pb.StressTestResult, 1)
+	defer func() {
+		close(resultChan)
+	}()
+	event, respCode, err := ctl.waitStressTestFinishRecvFault(ctx, resultChan)
+	convey.So(event, convey.ShouldEqual, common.ControllerEventCancel)
+	convey.So(respCode, convey.ShouldEqual, "")
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testWaitStressTestFinishRecvFault(ctl *EventController) {
+	resultChan := make(chan *pb.StressTestResult, 1)
+	patches := gomonkey.ApplyPrivateMethod(ctl, "parseStressTestResult",
+		func(result *pb.StressTestResult) (bool, string) {
+			return false, "failed"
+		})
+	defer patches.Reset()
+	defer func() {
+		close(resultChan)
+	}()
+	resultChan <- &pb.StressTestResult{}
+	event, _, err := ctl.waitStressTestFinishRecvFault(context.Background(), resultChan)
+	convey.So(event, convey.ShouldEqual, common.StressTestFailEvent)
+	convey.So(err, convey.ShouldBeNil)
+}
+
 func TestParseStressTestResult(t *testing.T) {
-	convey.Convey("Test parseStressTestResult", t, func() {
-		jobInfo := newJobInfoWithStrategy(nil)
-		serviceCtx := context.Background()
-		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
-
-		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
-		defer patches.Reset()
-
-		testWaitStressTestDoneCancel(ctl)
+	jobInfo := newJobInfoWithStrategy(nil)
+	serviceCtx := context.Background()
+	ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+	patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+		return constant.JobInfo{
+			JobRankTable: constant.RankTable{
+				ServerList: []constant.ServerHccl{
+					{
+						ServerName: "node",
+						DeviceList: []constant.Device{
+							{
+								DeviceID: "1",
+								RankID:   "1",
+							},
+						},
+					},
+				},
+			},
+		}, true
+	}).ApplyPrivateMethod(ctl, "saveCacheFault", func(faults []*pb.FaultRank) {})
+	defer patches.Reset()
+	convey.Convey("Test parseStressTestResult, has fault", t, func() {
+		result := &pb.StressTestResult{
+			StressResult: map[string]*pb.StressTestRankResult{
+				"1": {
+					RankResult: map[string]*pb.StressTestOpResult{
+						"1": {
+							Code:   "2",
+							Result: "fault",
+						},
+					},
+				},
+			},
+		}
+		ok, _ := ctl.parseStressTestResult(result)
+		convey.ShouldBeFalse(ok)
+	})
+	convey.Convey("Test parseStressTestResult, no fault", t, func() {
+		result := &pb.StressTestResult{
+			StressResult: map[string]*pb.StressTestRankResult{
+				"1": {
+					RankResult: map[string]*pb.StressTestOpResult{
+						"1": {
+							Code:   "0",
+							Result: "ok",
+						},
+					},
+				},
+			},
+		}
+		ok, _ := ctl.parseStressTestResult(result)
+		convey.ShouldBeTrue(ok)
 	})
 }
 
@@ -1305,12 +1452,32 @@ func TestHandleStressTestFail(t *testing.T) {
 		jobInfo := newJobInfoWithStrategy(nil)
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
-
-		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {}).
-			ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+		patches := gomonkey.ApplyFunc(job.GetJobCache, func(jobKey string) (constant.JobInfo, bool) {
+			return constant.JobInfo{
+				JobRankTable: constant.RankTable{
+					ServerList: []constant.ServerHccl{
+						{
+							ServerName: "node",
+							DeviceList: []constant.Device{
+								{
+									DeviceID: "1",
+									RankID:   "1",
+								},
+							},
+						},
+					},
+				},
+			}, true
+		}).ApplyPrivateMethod(ctl, "signalEnqueue", func(signal *pb.ProcessManageSignal) (string, common.RespCode, error) {
+			return "", common.OK, nil
+		}).ApplyPrivateMethod(ctl, "saveCacheFault", func(faults []*pb.FaultRank) {}).
+			ApplyFunc(kube.RetryPatchNodeAnnotation, func(nodeName string, annotations map[string]string) error {
+				return nil
+			})
 		defer patches.Reset()
-
-		testWaitStressTestDoneCancel(ctl)
+		ctl.isolateNodes.Insert("node")
+		_, respCode, err := ctl.handleStressTestFail()
+		convey.So(respCode, convey.ShouldEqual, common.OK)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
