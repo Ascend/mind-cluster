@@ -1335,8 +1335,8 @@ func testWaitStressTestRecoverChan(ctl *EventController) {
 		},
 	}
 	event, respCode, err := ctl.waitStressTestDone(context.Background(), resultChan, recoverChan)
-	convey.So(event, convey.ShouldEqual, common.OK)
-	convey.So(respCode, convey.ShouldEqual, "")
+	convey.So(event, convey.ShouldEqual, "")
+	convey.So(respCode, convey.ShouldEqual, common.OK)
 	convey.So(err, convey.ShouldBeNil)
 }
 
