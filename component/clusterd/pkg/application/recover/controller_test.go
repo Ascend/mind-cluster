@@ -3293,3 +3293,54 @@ func TestHandleWaitReportScaleInIsolateRanksStatusCtxCanceled(t *testing.T) {
 	assert.Equal(t, common.ControllerEventCancel, code)
 	assert.NoError(t, err)
 }
+
+func TestEventControllerCanChooseScaleInStrategy(t *testing.T) {
+	type fields struct {
+		jobInfo               common.JobBaseInfo
+		agentReportStrategies []string
+		faultPod              map[string]string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "return true",
+			fields: fields{
+				faultPod: map[string]string{},
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{
+						MindXConfigStrategies: []string{constant.ElasticTrainingStrategyName},
+					},
+				},
+				agentReportStrategies: []string{constant.ScaleInStrategyName},
+			},
+			want: true,
+		},
+		{
+			name: "not config return false",
+			fields: fields{
+				faultPod: map[string]string{},
+			},
+			want: false,
+		},
+		{
+			name: "rank 0 return false",
+			fields: fields{
+				faultPod: map[string]string{"0": ""},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctl := &EventController{
+				jobInfo:               tt.fields.jobInfo,
+				faultPod:              tt.fields.faultPod,
+				agentReportStrategies: tt.fields.agentReportStrategies,
+			}
+			assert.Equalf(t, tt.want, ctl.canChooseScaleInStrategy(), "canChooseScaleInStrategy()")
+		})
+	}
+}

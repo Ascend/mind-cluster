@@ -1028,7 +1028,7 @@ func (ctl *EventController) chooseForRestartProcessFail() string {
 }
 
 func (ctl *EventController) canChooseScaleInStrategy() bool {
-	if _, ok := ctl.faultPod["0"]; ok {
+	if _, ok := ctl.faultPod[constant.RankZeroNodeId]; ok {
 		return false
 	}
 	if ctl.supportTargetStrategy(constant.ElasticTrainingStrategyName) && !ctl.configTargetStrategy(
