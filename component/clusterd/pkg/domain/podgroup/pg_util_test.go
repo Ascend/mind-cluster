@@ -7,11 +7,11 @@ package podgroup
 
 import (
 	"errors"
-	apiv1 "github.com/kubeflow/common/pkg/apis/common/v1"
-	corev1 "k8s.io/api/core/v1"
 	"testing"
 
+	apiv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/smartystreets/goconvey/convey"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
