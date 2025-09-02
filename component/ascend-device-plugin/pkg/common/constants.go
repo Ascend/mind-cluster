@@ -74,7 +74,7 @@ const (
 	// DescriptionKey for deviceinfo configmap Description key
 	DescriptionKey = "Description"
 	// DescriptionValue for deviceinfo configmap Description value
-	DescriptionValue = "The field[huawei.com/xxx] is sunset. Volcano has the ability to maintain the usage status of " +
+	DescriptionValue = "The field[xxx.com/xxx] is sunset. Volcano has the ability to maintain the usage status of " +
 		"chips on its own, and can temporarily use this field by configuring the Volcano parameter 'self-maintain-available-card'"
 	// SlowNodeNoticeCMName the name for slow node notice configmap
 	SlowNodeNoticeCMName = "steptime-dtpgroup"
@@ -140,12 +140,6 @@ const (
 
 	// SocketChmod socket file mode
 	SocketChmod = 0600
-	// RunMode310 for 310 chip
-	RunMode310 = "ascend310"
-	// RunMode910 for 910 chip
-	RunMode910 = "ascend910"
-	// RunMode310P for 310P chip
-	RunMode310P = "ascend310P"
 
 	// AMPMode for AMP chip work mode
 	AMPMode = "AMP"
@@ -182,30 +176,27 @@ const (
 const (
 	// DistributedJob annotation indicates that the job is distributed
 	DistributedJob = "distributed-job"
-	// Ascend310P 310p
-	Ascend310P = "Ascend310P"
+
 	// Ascend310PV 310P-V
-	Ascend310PV = Ascend310P + "-V"
+	Ascend310PV = api.Ascend310P + "-V"
 	// Ascend310PVPro 310P-VPro
-	Ascend310PVPro = Ascend310P + "-VPro"
+	Ascend310PVPro = api.Ascend310P + "-VPro"
 	// Ascend310PIPro 310P-IPro
-	Ascend310PIPro = Ascend310P + "-IPro"
+	Ascend310PIPro = api.Ascend310P + "-IPro"
 	// Ascend310Pc1 Ascend310P 1 core
-	Ascend310Pc1 = Ascend310P + "-" + Core1
+	Ascend310Pc1 = api.Ascend310P + "-" + Core1
 	// Ascend310Pc2 Ascend310P 2 core
-	Ascend310Pc2 = Ascend310P + "-" + Core2
+	Ascend310Pc2 = api.Ascend310P + "-" + Core2
 	// Ascend310Pc4 Ascend310P 4 core
-	Ascend310Pc4 = Ascend310P + "-" + Core4
+	Ascend310Pc4 = api.Ascend310P + "-" + Core4
 	// Ascend310Pc4Cpu3 Ascend310P 4core 3cpu
-	Ascend310Pc4Cpu3 = Ascend310P + "-" + Core4Cpu3
+	Ascend310Pc4Cpu3 = api.Ascend310P + "-" + Core4Cpu3
 	// Ascend310Pc2Cpu1 Ascend310P 2core 1cpu
-	Ascend310Pc2Cpu1 = Ascend310P + "-" + Core2Cpu1
+	Ascend310Pc2Cpu1 = api.Ascend310P + "-" + Core2Cpu1
 	// Ascend310Pc4Cpu4Dvpp Ascend310P 4core 4cpu dvpp
-	Ascend310Pc4Cpu4Dvpp = Ascend310P + "-" + Core4Cpu4Dvpp
+	Ascend310Pc4Cpu4Dvpp = api.Ascend310P + "-" + Core4Cpu4Dvpp
 	// Ascend310Pc4Cpu3Ndvpp Ascend310P 4core 3cpu ndvpp
-	Ascend310Pc4Cpu3Ndvpp = Ascend310P + "-" + Core4Cpu3Ndvpp
-	// HuaweiAscend310P with prefix
-	HuaweiAscend310P = api.ResourceNamePrefix + Ascend310P
+	Ascend310Pc4Cpu3Ndvpp = api.Ascend310P + "-" + Core4Cpu3Ndvpp
 
 	// Ascend910vir2  Ascend910 2core
 	Ascend910vir2 = api.Ascend910 + "-" + Core2
@@ -240,20 +231,8 @@ const (
 	// HuaweiAscend910 with prefix
 	HuaweiAscend910 = api.ResourceNamePrefix + api.Ascend910
 
-	// Ascend310 310
-	Ascend310 = "Ascend310"
-	// Ascend310B 310B chip
-	Ascend310B = "Ascend310B"
-	// HuaweiAscend310 with prefix
-	HuaweiAscend310 = api.ResourceNamePrefix + Ascend310
 	// AscendfdPrefix use in fd
 	AscendfdPrefix = "davinci-mini"
-
-	// Ascend910B ascend 910B chip
-	Ascend910B = "Ascend910B"
-
-	// Ascend910A3 ascend 910A3 chip
-	Ascend910A3 = "Ascend910A3"
 
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
 	HuaweiNetworkUnHealthAscend910 = api.ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
@@ -262,9 +241,9 @@ const (
 	// HuaweiRecoveringAscend910 recovering
 	HuaweiRecoveringAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Recovering"
 	// HuaweiUnHealthAscend310P 310p unhealthy
-	HuaweiUnHealthAscend310P = api.ResourceNamePrefix + Ascend310P + "-Unhealthy"
+	HuaweiUnHealthAscend310P = api.HuaweiAscend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
-	HuaweiUnHealthAscend310 = api.ResourceNamePrefix + Ascend310 + "-Unhealthy"
+	HuaweiUnHealthAscend310 = api.HuaweiAscend310 + "-Unhealthy"
 	// HuaweiNetworkRecoverAscend910 910 network recover
 	HuaweiNetworkRecoverAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-NetworkRecover"
 	// HuaweiRecoverAscend910 910 recover
@@ -273,9 +252,9 @@ const (
 	// HuaweiFaultCodeAscend910 910 fault code
 	HuaweiFaultCodeAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Fault"
 	// HuaweiFaultCodeAscend310P 310p fault code
-	HuaweiFaultCodeAscend310P = api.ResourceNamePrefix + Ascend310P + "-Fault"
+	HuaweiFaultCodeAscend310P = api.HuaweiAscend310P + "-Fault"
 	// HuaweiFaultCodeAscend310 310 fault code
-	HuaweiFaultCodeAscend310 = api.ResourceNamePrefix + Ascend310 + "-Fault"
+	HuaweiFaultCodeAscend310 = api.HuaweiAscend310P + "-Fault"
 
 	// AiCoreResourceName resource name for virtual device
 	AiCoreResourceName = "npu-core"

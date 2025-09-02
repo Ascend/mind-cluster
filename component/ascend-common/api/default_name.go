@@ -11,9 +11,6 @@ const (
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
 
-	// Ascend910Lowercase for 910 chip Lowercase
-	Ascend910Lowercase = "ascend910"
-
 	// PodAnnotationAscendReal pod annotation ascend real
 	PodAnnotationAscendReal = "huawei.com/AscendReal"
 )
@@ -22,12 +19,20 @@ const (
 const (
 	// Ascend910 for 910 chip
 	Ascend910 = "Ascend910"
+	// Ascend910Lowercase for 910 chip lowercase
+	Ascend910Lowercase = "ascend910"
+	// Ascend910APattern regular expression for 910A
+	Ascend910APattern = `^910`
+	// HuaweiAscend910 ascend 910 chip with prefix
+	HuaweiAscend910 = "huawei.com/Ascend910"
 )
 
 // common 910 A2
 const (
 	// Ascend910B ascend 910B chip
 	Ascend910B = "Ascend910B"
+	// Ascend910BPattern regular expression for 910B
+	Ascend910BPattern = `^910B\d{1}`
 )
 
 // common 910 A3
@@ -40,8 +45,12 @@ const (
 const (
 	// Ascend310 ascend 310 chip
 	Ascend310 = "Ascend310"
+	// Ascend310Lowercase ascend 310 chip lowercase
+	Ascend310Lowercase = "ascend310"
 	// Ascend310No 310 chip number
 	Ascend310No = "310"
+	// HuaweiAscend310 ascend 310 chip with prefix
+	HuaweiAscend310 = "huawei.com/Ascend310"
 )
 
 // common 310B
@@ -56,8 +65,12 @@ const (
 const (
 	// Ascend310P ascend 310P chip
 	Ascend310P = "Ascend310P"
+	// Ascend310PLowercase ascend 310P chip lowercase
+	Ascend310PLowercase = "ascend310P"
 	// Ascend310PNo 310P chip number
 	Ascend310PNo = "310P"
+	// HuaweiAscend310P ascend 310P chip with prefix
+	HuaweiAscend310P = "huawei.com/Ascend310P"
 )
 
 // device plugin

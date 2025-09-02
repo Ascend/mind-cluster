@@ -267,12 +267,12 @@ func TestHotResetTryOutBand(t *testing.T) {
 			return nil
 		})
 		convey.Convey("01-not A3, flag should be false", func() {
-			common.ParamOption.RealCardType = common.Ascend910B
+			common.ParamOption.RealCardType = api.Ascend910B
 			manager.hotResetTryOutBand(devs)
 			convey.So(flag, convey.ShouldBeFalse)
 		})
 		convey.Convey("02-A3, flag should be true", func() {
-			common.ParamOption.RealCardType = common.Ascend910A3
+			common.ParamOption.RealCardType = api.Ascend910A3
 			manager.hotResetTryOutBand(devs)
 			convey.So(flag, convey.ShouldBeTrue)
 		})
@@ -303,7 +303,7 @@ func TestCanBeReset(t *testing.T) {
 	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
 	convey.Convey("exec ut function canBeReset", t, func() {
 		convey.Convey("A3 device can reset, should return true", func() {
-			common.ParamOption.RealCardType = common.Ascend910A3
+			common.ParamOption.RealCardType = api.Ascend910A3
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "canA3BeReset",
 				func(dev *common.DevFaultInfo) bool {
 					return true
@@ -315,7 +315,7 @@ func TestCanBeReset(t *testing.T) {
 			_, err := manager.canBeReset(mockSingleDevFaultInfo())
 			convey.So(err, convey.ShouldBeNil)
 		})
-		common.ParamOption.RealCardType = common.Ascend910B
+		common.ParamOption.RealCardType = api.Ascend910B
 		// empty situation
 		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodList",
 			func(_ *kubeclient.ClientK8s) (*v1.PodList, error) {
@@ -471,7 +471,7 @@ func TestExecHotReset(t *testing.T) {
 	manager := createFake910Manager()
 	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
 	devInfo := mockSingleDevFaultInfo()
-	common.ParamOption.RealCardType = common.Ascend910B
+	common.ParamOption.RealCardType = api.Ascend910B
 	convey.Convey("exec ut function execHotReset", t, func() {
 		mockIsShouldCheckNet := gomonkey.ApplyFunc((*HwAscend910Manager).isShouldCheckNet,
 			func(_ *HwAscend910Manager, logicID int32) bool {
@@ -501,7 +501,7 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 			resetDevNumOnce: 8,
 		}
 		inResetDev = -1
-		common.ParamOption.RealCardType = common.Ascend910B
+		common.ParamOption.RealCardType = api.Ascend910B
 
 		// no reset device situation
 		err := manager.setAllDevUnhealthyOnRing(devList)
@@ -520,7 +520,7 @@ func TestSetAllDevUnhealthyOnRing(t *testing.T) {
 		}
 		convey.So(err, convey.ShouldBeNil)
 		convey.Convey("A3 device success, should return nil", func() {
-			common.ParamOption.RealCardType = common.Ascend910A3
+			common.ParamOption.RealCardType = api.Ascend910A3
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "setUnhealthyForA3",
 				func(devStatusList []*common.NpuDevice) error {
 					return nil
@@ -614,7 +614,7 @@ func TestTryResetDevice(t *testing.T) {
 func TestIsRingResetComplete(t *testing.T) {
 	manager := createFake910Manager()
 	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
-	common.ParamOption.RealCardType = common.Ascend910B
+	common.ParamOption.RealCardType = api.Ascend910B
 	var logicID int32 = 0
 	convey.Convey("exec ut function isRingResetComplete", t, func() {
 		// after change mockBootStartFinish value in npu-exporter we could delete mockHotResetComplete
@@ -1013,11 +1013,11 @@ func TestGetA3LogicMapByAssociation(t *testing.T) {
 			{DevFaultInfo: common.DevFaultInfo{LogicId: int32(id1)}},
 		}
 		convey.Convey("01-not A3, should return error", func() {
-			common.ParamOption.RealCardType = common.Ascend910B
+			common.ParamOption.RealCardType = api.Ascend910B
 			_, err := manager.getA3LogicMapByAssociation(devs)
 			convey.So(err, convey.ShouldBeError)
 		})
-		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.RealCardType = api.Ascend910A3
 		convey.Convey("02-get cardId failed, should return error", func() {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
 				int32(id1), int32(id1), testErr)
@@ -2554,11 +2554,11 @@ func TestGetNeedResetDevMapForA3(t *testing.T) {
 	}
 	convey.Convey("test getNeedResetDevMapForA3", t, func() {
 		convey.Convey("01-not A3, should return error", func() {
-			common.ParamOption.RealCardType = common.Ascend910B
+			common.ParamOption.RealCardType = api.Ascend910B
 			_, err := manager.getNeedResetDevMapForA3(devs)
 			convey.So(err, convey.ShouldBeError)
 		})
-		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.RealCardType = api.Ascend910A3
 		convey.Convey("02-get index error, should return error", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "getResetIndexForA3",
 				func(_ *HwAscend910Manager, logicID int32) (int32, error) {
@@ -2621,7 +2621,7 @@ func TestExecOutBandReset(t *testing.T) {
 					return devs, nil
 				})
 		defer patch.Reset()
-		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.RealCardType = api.Ascend910A3
 		convey.Convey("01-reset error, should return error", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "resetDeviceOutBand",
 				func(_ *HwAscend910Manager, cardId, deviceId int32) error {
@@ -2672,12 +2672,12 @@ func TestUpdateResetInfo(t *testing.T) {
 			})
 		defer patch.Reset()
 		convey.Convey("01-A3 device, should append to third party", func() {
-			common.ParamOption.RealCardType = common.Ascend910A3
+			common.ParamOption.RealCardType = api.Ascend910A3
 			manager.updateResetInfo(testDevs, []ResetDevice{})
 			convey.So(ri.ThirdPartyResetDevs, convey.ShouldResemble, testDevs)
 		})
 		convey.Convey("02-not A3, should append to manual devices", func() {
-			common.ParamOption.RealCardType = common.Ascend910B
+			common.ParamOption.RealCardType = api.Ascend910B
 			manager.updateResetInfo(testDevs, []ResetDevice{})
 			convey.So(ri.ManualResetDevs, convey.ShouldResemble, testDevs)
 		})
@@ -2923,7 +2923,7 @@ func TestFillResetDevs(t *testing.T) {
 	devs := []ResetDevice{
 		{LogicID: id1, PhyID: id1},
 	}
-	common.ParamOption.RealCardType = common.Ascend910A3
+	common.ParamOption.RealCardType = api.Ascend910A3
 	convey.Convey("test fillResetDevs", t, func() {
 		convey.Convey("01-get npu error, should return err", func() {
 			patch1 := gomonkey.ApplyMethodReturn(manager, "GetNPUs",

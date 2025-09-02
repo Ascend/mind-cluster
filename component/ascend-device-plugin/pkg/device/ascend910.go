@@ -247,7 +247,7 @@ func (hnm *HwAscend910Manager) getDevFaultInfo(logicID int32) *common.DevFaultIn
 }
 
 func (hnm *HwAscend910Manager) getResetIndex(dev *common.NpuDevice) (int32, error) {
-	if common.ParamOption.RealCardType == common.Ascend910A3 {
+	if common.ParamOption.RealCardType == api.Ascend910A3 {
 		if idx, err := hnm.getResetIndexForA3(dev.LogicID); err == nil {
 			return idx, nil
 		}
@@ -276,7 +276,7 @@ func (hnm *HwAscend910Manager) hotResetTryOutBand(devs []*common.NpuDevice) {
 		}
 		allDevs = append(allDevs, npuDevToResetDev(*dev))
 	}
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
+	if common.ParamOption.RealCardType != api.Ascend910A3 {
 		hnm.updateResetInfo(failDevs, sucDevs)
 		return
 	}
@@ -331,7 +331,7 @@ func (hnm *HwAscend910Manager) setAllDevUnhealthyOnRing(classifyDevs map[string]
 		hwlog.RunLog.Debug("should not set device to unhealthy")
 		return nil
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 &&
+	if common.ParamOption.RealCardType == api.Ascend910A3 &&
 		hnm.setUnhealthyForA3(devStatusList) == nil {
 		return nil
 	}
@@ -419,7 +419,7 @@ func (hnm *HwAscend910Manager) handleResetProcess(classifyDevs map[string][]*com
 		inResetDev = -1
 	}()
 	if common.ParamOption.HotReset == common.HotResetTrainOffLine &&
-		common.ParamOption.RealCardType == common.Ascend910A3 {
+		common.ParamOption.RealCardType == api.Ascend910A3 {
 		hwlog.RunLog.Infof("sleep before hotReset case hotReset=2, devInfo=%v", devInfo)
 		time.Sleep(common.SleepMinutesForA3Reset * time.Minute)
 		if !hnm.checkFaultIsExist(classifyDevs, npuDev) {
@@ -570,7 +570,7 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 	if !hnm.canResetDeviceByLogicID(dev.LogicId) {
 		return false, nil
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 &&
+	if common.ParamOption.RealCardType == api.Ascend910A3 &&
 		hnm.canA3BeReset(dev) {
 		return true, nil
 	}
@@ -919,7 +919,7 @@ func (hnm *HwAscend910Manager) setTaskDevInfoCache() error {
 			continue
 		}
 		rankIndex, ok := pod.Annotations[api.PodRankIndexAnno]
-		if common.ParamOption.RealCardType == common.Ascend910B && hnm.GetDeviceUsage() == common.Infer {
+		if common.ParamOption.RealCardType == api.Ascend910B && hnm.GetDeviceUsage() == common.Infer {
 			rankIndex = common.InferRankIndex
 		} else {
 			if !ok {
@@ -1052,7 +1052,7 @@ func (hnm *HwAscend910Manager) filterDevStatus(classifyDevs map[string][]*common
 	if !ok {
 		return fmt.Errorf("no ascend 910 device needed filter")
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 &&
+	if common.ParamOption.RealCardType == api.Ascend910A3 &&
 		hnm.filterDevStatusForA3(devStatusList) == nil {
 		return nil
 	}
@@ -1573,7 +1573,7 @@ func (hnm *HwAscend910Manager) updateResetCMStatusToIsolate(taskName string,
 
 func (hnm *HwAscend910Manager) getA3LogicMapByAssociation(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32,
 	error) {
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
+	if common.ParamOption.RealCardType != api.Ascend910A3 {
 		return nil, fmt.Errorf("only support A3")
 	}
 	ret := make(map[int32]int32)
@@ -1767,7 +1767,7 @@ func (hnm *HwAscend910Manager) refreshDevFaultInfo(devFaultInfo []*common.TaskDe
 
 func (hnm *HwAscend910Manager) getNeedResetDevMapForA3(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32,
 	error) {
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
+	if common.ParamOption.RealCardType != api.Ascend910A3 {
 		return nil, fmt.Errorf("not A3 device")
 	}
 	needResetDevMap := make(map[int32]int32, len(devFaultInfoList))
@@ -1914,7 +1914,7 @@ func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
 		return nil
 	}
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
+	if common.ParamOption.RealCardType != api.Ascend910A3 {
 		hwlog.RunLog.Info("out band reset only support A3")
 		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
 		return errList[0]
@@ -2007,7 +2007,7 @@ func (hnm *HwAscend910Manager) fillResetDevs(devs []ResetDevice) ([]ResetDevice,
 				devCopy[i].LogicID, devCopy[i].CardId, devCopy[i].DeviceId)
 		}
 		devCopy[i].AssociatedCardId = errorId
-		if common.ParamOption.RealCardType != common.Ascend910A3 {
+		if common.ParamOption.RealCardType != api.Ascend910A3 {
 			continue
 		}
 		associatedCardId, err := hnm.GetDmgr().GetBrotherCardID(devCopy[i].CardId, devCopy[i].DeviceId)
@@ -2030,7 +2030,7 @@ func (hnm *HwAscend910Manager) updateResetInfo(failDevs, sucDevs []ResetDevice) 
 		hwlog.RunLog.Errorf("fail to complement device info, wait manually reset, err: %v", err)
 		return
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 {
+	if common.ParamOption.RealCardType == api.Ascend910A3 {
 		resetInfo.ThirdPartyResetDevs = append(resetInfo.ThirdPartyResetDevs, filledFailDevs...)
 	} else {
 		resetInfo.ManualResetDevs = append(resetInfo.ManualResetDevs, filledFailDevs...)

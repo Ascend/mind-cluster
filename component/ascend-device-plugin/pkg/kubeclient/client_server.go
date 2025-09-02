@@ -200,7 +200,7 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 			Labels:    map[string]string{api.CIMCMLabelKey: common.CmConsumerValue},
 		},
 	}
-	if common.ParamOption.RealCardType != common.Ascend910A3 {
+	if common.ParamOption.RealCardType != api.Ascend910A3 {
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,

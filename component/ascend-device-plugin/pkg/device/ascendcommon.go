@@ -879,7 +879,7 @@ func setHealthyIfDuoCard(groupDevice map[string][]*common.NpuDevice) {
 		hwlog.RunLog.Debugf("not open infer device hot reset function, it's %d", common.ParamOption.HotReset)
 		return
 	}
-	ascend310PDevices, ok := groupDevice[common.Ascend310P]
+	ascend310PDevices, ok := groupDevice[api.Ascend310P]
 	if !ok {
 		hwlog.RunLog.Debugf("not found 310P devices")
 		return
@@ -1219,7 +1219,7 @@ func (tool *AscendTools) assembleShareModeDevices(davinCiDev common.DavinCiDev, 
 // SetDeviceUsage set usage of device according to board info
 func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 	devType := tool.dmgr.GetDevType()
-	if strings.HasPrefix(devType, common.Ascend310) {
+	if strings.HasPrefix(devType, api.Ascend310) {
 		tool.deviceUsage = common.Infer
 		return nil
 	}
@@ -1243,7 +1243,7 @@ func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 	}
 
 	// A800IA2 without hccs can be auto set usage as infer
-	if devType == common.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
+	if devType == api.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
 		boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
 		tool.deviceUsage = common.Infer
 		return nil

@@ -100,7 +100,7 @@ func GetDeviceID(deviceName string, ascendRuntimeOptions string) (int, int, erro
 
 // GetSwitchFaultInfo GetSwitch Fault Info by CurrentSwitchFault and fault config of switch
 func GetSwitchFaultInfo() SwitchFaultInfo {
-	if ParamOption.RealCardType != common.Ascend910A3 || !ParamOption.EnableSwitchFault {
+	if ParamOption.RealCardType != api.Ascend910A3 || !ParamOption.EnableSwitchFault {
 		return SwitchFaultInfo{}
 	}
 
@@ -273,7 +273,7 @@ func GetDeviceListID(devices []string, ascendRuntimeOptions string) (map[int]int
 // ShareDev open the share dev function
 func ShareDev() bool {
 	return ParamOption.ShareCount > 1 &&
-		(ParamOption.RealCardType == Ascend310B || ParamOption.RealCardType == Ascend310P)
+		(ParamOption.RealCardType == api.Ascend310B || ParamOption.RealCardType == api.Ascend310P)
 }
 
 // IsVirtualDev used to judge whether a physical device or a virtual device

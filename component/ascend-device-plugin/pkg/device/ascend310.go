@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -32,7 +33,7 @@ type HwAscend310Manager struct {
 
 // NewHwAscend310Manager used to create ascend 310 manager
 func NewHwAscend310Manager() *HwAscend310Manager {
-	name := common.Ascend310
+	name := api.Ascend310
 	if common.ParamOption.GetFdFlag {
 		name = common.AscendfdPrefix
 	}
@@ -90,7 +91,7 @@ func (hnm *HwAscend310Manager) updateDeviceInfo(_, newDeviceInfo map[string]stri
 	if newDeviceInfo == nil {
 		return fmt.Errorf("invalid new device info")
 	}
-	newDeviceInfo[common.HuaweiAscend310] = common.ToString(devStatusSet.FreeHealthyDevice[hnm.name],
+	newDeviceInfo[api.HuaweiAscend310] = common.ToString(devStatusSet.FreeHealthyDevice[hnm.name],
 		common.CommaSepDev)
 	newDeviceInfo[hnm.unHealthyKey] = common.ToString(devStatusSet.UnHealthyDevice, common.CommaSepDev)
 	var data []byte

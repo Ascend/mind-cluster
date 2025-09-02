@@ -93,19 +93,19 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 
 func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error {
 	devType := dmgr.GetDevType()
-	if !common.ParamOption.PresetVDevice && devType != common.Ascend310P && devType != common.Ascend910B {
+	if !common.ParamOption.PresetVDevice && devType != api.Ascend310P && devType != api.Ascend910B {
 		return fmt.Errorf("only 310p and 910b support to set presetVirtualDevice false")
 	}
 	switch devType {
-	case common.Ascend310, common.Ascend310B:
-		hdm.RunMode = common.Ascend310
+	case api.Ascend310, api.Ascend310B:
+		hdm.RunMode = api.Ascend310
 		hdm.manager = device.NewHwAscend310Manager()
-	case api.Ascend910, common.Ascend910B, common.Ascend910A3:
+	case api.Ascend910, api.Ascend910B, api.Ascend910A3:
 		hdm.RunMode = api.Ascend910
 		hdm.manager = device.NewHwAscend910Manager()
 		hdm.WorkMode = dmgr.GetNpuWorkMode()
-	case common.Ascend310P:
-		hdm.RunMode = common.Ascend310P
+	case api.Ascend310P:
+		hdm.RunMode = api.Ascend310P
 		hdm.manager = device.NewHwAscend310PManager()
 	default:
 		hwlog.RunLog.Error("found an unsupported device type")
@@ -215,7 +215,7 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 		}
 	}
 
-	if common.ParamOption.RealCardType == common.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
+	if common.ParamOption.RealCardType == api.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
 		// only auto label 300IA2 with910B card
 		if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
 			newLabelMap[common.AcceleratorTypeKey] = common.A300IA2Label
@@ -427,7 +427,7 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	hwlog.RunLog.Info("starting the listen device")
 	hdm.subscribeFaultEvent()
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
+	if common.ParamOption.RealCardType == api.Ascend910A3 && common.ParamOption.EnableSwitchFault {
 		// will set a goroutine to query all switch faults every 5 min
 		go hdm.SwitchDevManager.GetSwitchFaultCodeByInterval(ctx, time.Second*common.GetSwitchFaultCodeInterval)
 	}
@@ -691,7 +691,7 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		hwlog.RunLog.Error("invalid params")
 		return
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 {
+	if common.ParamOption.RealCardType == api.Ascend910A3 {
 		hdm.ResetServerForA3(devType, devices, prClient)
 		return
 	}
@@ -1205,7 +1205,7 @@ func (hdm *HwDevManager) subscribeFaultEvent() {
 }
 
 func (hdm *HwDevManager) subscribeSwitchFaultEvent() {
-	if common.ParamOption.RealCardType != common.Ascend910A3 || !common.ParamOption.EnableSwitchFault {
+	if common.ParamOption.RealCardType != api.Ascend910A3 || !common.ParamOption.EnableSwitchFault {
 		return
 	}
 	for i := 0; i < common.GeneralSubscribeTime; i++ {
@@ -1304,7 +1304,7 @@ func updateFaultConfigFromCm(configMap *v1.ConfigMap) {
 	hwlog.RunLog.Infof("detect '%s' configmap changed", common.FaultCodeCMName)
 	resourceVersion = configMap.ResourceVersion
 	loadFaultCode(configMap)
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
+	if common.ParamOption.RealCardType == api.Ascend910A3 && common.ParamOption.EnableSwitchFault {
 		loadSwitchFaultCode(configMap)
 		deviceswitch.UpdateSwitchFaultLevel()
 	}
@@ -1319,7 +1319,7 @@ func initFaultInfoFromFile() {
 	if err := common.LoadFaultCustomizationFromFile(); err != nil {
 		hwlog.RunLog.Errorf("load fault customization from file failed, err: %v", err)
 	}
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
+	if common.ParamOption.RealCardType == api.Ascend910A3 && common.ParamOption.EnableSwitchFault {
 		if err := common.LoadSwitchFaultCodeFromFile(); err != nil {
 			hwlog.RunLog.Errorf("load switch fault code from file failed, err: %v", err)
 			return

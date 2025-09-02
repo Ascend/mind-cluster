@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	reg910A = regexp.MustCompile(Pattern910A)
-	reg910B = regexp.MustCompile(Pattern910B)
+	reg910A = regexp.MustCompile(api.Ascend910APattern)
+	reg910B = regexp.MustCompile(api.Ascend910BPattern)
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -221,12 +221,6 @@ func SetHccsBWProfilingTime(hccsbwProfilingTime int) {
 	HccsBWProfilingTime = hccsbwProfilingTime
 }
 
-// Is910BChip current chip is 910B or not
-func Is910BChip(chipName string) bool {
-	reg910B := regexp.MustCompile(Pattern910B)
-	return reg910B.MatchString(chipName)
-}
-
 // DeepCopyChipInfo copy chip info deeply
 func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 	if chipInfo == nil {
@@ -237,20 +231,6 @@ func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 		Type:    chipInfo.Type,
 		Name:    chipInfo.Name,
 		Version: chipInfo.Version,
-	}
-}
-
-// DeepCopyBoardInfo copy board info deeply
-func DeepCopyBoardInfo(boardInfo *BoardInfo) *BoardInfo {
-	if boardInfo == nil {
-		return nil
-	}
-
-	return &BoardInfo{
-		BoardId: boardInfo.BoardId,
-		PcbId:   boardInfo.PcbId,
-		BomId:   boardInfo.BomId,
-		SlotId:  boardInfo.SlotId,
 	}
 }
 

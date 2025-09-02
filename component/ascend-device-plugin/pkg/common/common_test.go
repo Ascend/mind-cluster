@@ -40,7 +40,6 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager/common"
 )
 
 type mockFileInfo struct {
@@ -78,7 +77,7 @@ func TestSetAscendRuntimeEnv(t *testing.T) {
 		id := 100
 		devices := []int{id}
 		SetAscendRuntimeEnv(devices, "", nil)
-		ParamOption.RealCardType = Ascend310B
+		ParamOption.RealCardType = api.Ascend310B
 		resp := v1beta1.ContainerAllocateResponse{}
 		SetAscendRuntimeEnv(devices, "", &resp)
 		convey.So(resp.Envs[ascendAllowLinkEnv], convey.ShouldEqual, "True")
@@ -615,33 +614,33 @@ func TestInt32Join(t *testing.T) {
 func TestGetDeviceRunMode(t *testing.T) {
 	convey.Convey("test GetDeviceRunMode", t, func() {
 		convey.Convey("device mode is Ascend310", func() {
-			ParamOption.RealCardType = common.Ascend310
+			ParamOption.RealCardType = api.Ascend310
 			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend310)
+			convey.So(ret, convey.ShouldEqual, api.Ascend310)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("device mode is Ascend910, when card real type is Ascend910", func() {
-			ParamOption.RealCardType = common.Ascend910
+			ParamOption.RealCardType = api.Ascend910
 			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend910)
+			convey.So(ret, convey.ShouldEqual, api.Ascend910)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("device mode is Ascend910, when card real type is Ascend910B", func() {
-			ParamOption.RealCardType = common.Ascend910B
+			ParamOption.RealCardType = api.Ascend910B
 			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend910)
+			convey.So(ret, convey.ShouldEqual, api.Ascend910)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("device mode is Ascend910, when card real type is Atlas A3", func() {
-			ParamOption.RealCardType = common.Ascend910A3
+			ParamOption.RealCardType = api.Ascend910A3
 			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend910)
+			convey.So(ret, convey.ShouldEqual, api.Ascend910)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("device mode is Ascend310P", func() {
-			ParamOption.RealCardType = common.Ascend310P
+			ParamOption.RealCardType = api.Ascend310P
 			ret, err := GetDeviceRunMode()
-			convey.So(ret, convey.ShouldEqual, common.Ascend310P)
+			convey.So(ret, convey.ShouldEqual, api.Ascend310P)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("device mode is invalid", func() {
@@ -656,10 +655,10 @@ func TestGetDeviceRunMode(t *testing.T) {
 func TestCheckDeviceName(t *testing.T) {
 	convey.Convey("test CheckDeviceName", t, func() {
 		convey.Convey("device name is valid", func() {
-			convey.So(CheckDeviceName("Ascend910-0", common.Ascend910), convey.ShouldBeTrue)
+			convey.So(CheckDeviceName(api.Ascend910+"-0", api.Ascend910), convey.ShouldBeTrue)
 		})
 		convey.Convey("device name is invalid", func() {
-			convey.So(CheckDeviceName("", common.Ascend910), convey.ShouldBeFalse)
+			convey.So(CheckDeviceName("", api.Ascend910), convey.ShouldBeFalse)
 		})
 	})
 }
