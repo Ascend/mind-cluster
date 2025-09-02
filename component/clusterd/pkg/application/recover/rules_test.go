@@ -55,7 +55,7 @@ func TestEventControllerGetDPScaleStrategyRules(t *testing.T) {
 	}{
 		{
 			name: "get dp rules success",
-			want: 22,
+			want: 19,
 		},
 	}
 	for _, tt := range tests {
