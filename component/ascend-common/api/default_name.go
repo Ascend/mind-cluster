@@ -10,6 +10,12 @@ const (
 
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
+
+	// Ascend910Lowercase for 910 chip Lowercase
+	Ascend910Lowercase = "ascend910"
+
+	// PodAnnotationAscendReal pod annotation ascend real
+	PodAnnotationAscendReal = "huawei.com/AscendReal"
 )
 
 // common 910
