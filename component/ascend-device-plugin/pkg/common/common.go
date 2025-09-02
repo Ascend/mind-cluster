@@ -43,14 +43,14 @@ import (
 
 var (
 	dpRegexp = map[string]*regexp.Regexp{
-		"nodeName":    regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
-		"namespace":   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
-		"fullPodName": regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
-		"vir910":      regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c"),
-		"vir310p":     regexp.MustCompile("Ascend310P-(1|2|4)c"),
-		"ascend910":   regexp.MustCompile(`^Ascend910-\d+`),
-		"ascend310":   regexp.MustCompile(`^Ascend310-\d+`),
-		"ascend310P":  regexp.MustCompile(`^Ascend310P-\d+`),
+		"nodeName":             regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+		"namespace":            regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
+		"fullPodName":          regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+		"vir910":               regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c"),
+		"vir310p":              regexp.MustCompile("Ascend310P-(1|2|4)c"),
+		api.Ascend910Lowercase: regexp.MustCompile(`^Ascend910-\d+`),
+		"ascend310":            regexp.MustCompile(`^Ascend310-\d+`),
+		"ascend310P":           regexp.MustCompile(`^Ascend310P-\d+`),
 	}
 	// updateTriggerChan is a channel to trigger device info update
 	updateTriggerChan = make(chan struct{}, 1)

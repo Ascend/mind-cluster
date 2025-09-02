@@ -125,17 +125,17 @@ func TestMapDeepCopy(t *testing.T) {
 func TestGetDeviceFromPodAnnotation(t *testing.T) {
 	convey.Convey("test GetDeviceFromPodAnnotation", t, func() {
 		convey.Convey("input invalid pod", func() {
-			_, err := GetDeviceFromPodAnnotation(nil, Ascend910)
+			_, err := GetDeviceFromPodAnnotation(nil, api.Ascend910)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("annotationTag not exist", func() {
-			_, err := GetDeviceFromPodAnnotation(&v1.Pod{}, Ascend910)
+			_, err := GetDeviceFromPodAnnotation(&v1.Pod{}, api.Ascend910)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("annotationTag exist", func() {
 			pod := v1.Pod{}
-			pod.Annotations = map[string]string{api.ResourceNamePrefix + Ascend910: "Ascend910-0"}
-			_, err := GetDeviceFromPodAnnotation(&pod, Ascend910)
+			pod.Annotations = map[string]string{api.ResourceNamePrefix + api.Ascend910: "Ascend910-0"}
+			_, err := GetDeviceFromPodAnnotation(&pod, api.Ascend910)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -288,13 +288,13 @@ func TestFilterPods1(t *testing.T) {
 	convey.Convey("test FilterPods part1", t, func() {
 		convey.Convey("The number of container exceeds the upper limit", func() {
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: make([]v1.Container, MaxContainerLimit+1)}}}
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("annotationTag not exist", func() {
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
 				ResourceRequirements{Limits: v1.ResourceList{}}}}}}}
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("annotationTag exist, device is virtual", func() {
@@ -315,8 +315,8 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-					ResourceList{api.ResourceNamePrefix + Ascend910: *limits}}}}}}}
-			res := FilterPods(pods, Ascend910, nil)
+					ResourceList{api.ResourceNamePrefix + api.Ascend910: *limits}}}}}}}
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("had assigned flag", func() {
@@ -328,7 +328,7 @@ func TestFilterPods1(t *testing.T) {
 						Annotations: map[string]string{PodPredicateTime: "1", HuaweiAscend910: "Ascend910-1"}},
 				},
 			}
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(len(res), convey.ShouldEqual, 1)
 		})
 	})
@@ -348,25 +348,25 @@ func TestFilterPods2(t *testing.T) {
 			},
 		}
 		convey.Convey("DeletionTimestamp is not nil", func() {
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		pods[0].DeletionTimestamp = nil
 		convey.Convey("The number of container status exceeds the upper limit", func() {
 			pods[0].Status.ContainerStatuses = make([]v1.ContainerStatus, 1)
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("Waiting.Message is not nil", func() {
 			pods[0].Status.ContainerStatuses = []v1.ContainerStatus{{State: v1.ContainerState{Waiting: &v1.
 				ContainerStateWaiting{Message: "PreStartContainer check failed"}}}}
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("pod.Status.Reason is UnexpectedAdmissionError", func() {
 			pods[0].Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{},
 				Reason: "UnexpectedAdmissionError"}
-			res := FilterPods(pods, Ascend910, nil)
+			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("conditionFunc return false", func() {
@@ -374,7 +374,7 @@ func TestFilterPods2(t *testing.T) {
 			mockConitionFunc := func(pod *v1.Pod) bool {
 				return false
 			}
-			res := FilterPods(pods, Ascend910, mockConitionFunc)
+			res := FilterPods(pods, api.Ascend910, mockConitionFunc)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 	})

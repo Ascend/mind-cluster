@@ -168,7 +168,7 @@ type Option struct {
 // GetAllDeviceInfoTypeList Get All Device Info Type List
 func GetAllDeviceInfoTypeList() map[string]struct{} {
 	return map[string]struct{}{HuaweiUnHealthAscend910: {}, HuaweiNetworkUnHealthAscend910: {},
-		api.ResourceNamePrefix + Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
+		api.ResourceNamePrefix + api.Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
 		api.ResourceNamePrefix + Ascend910vir4: {}, api.ResourceNamePrefix + Ascend910vir8: {},
 		api.ResourceNamePrefix + Ascend910vir16: {}, api.ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},
 		api.ResourceNamePrefix + Ascend910vir5Cpu1Gb16: {}, api.ResourceNamePrefix + Ascend910vir6Cpu1Gb16: {},
@@ -280,7 +280,7 @@ func Get310PProductType() map[string]string {
 // HasOnChipMemory check if card has on-chip-memory
 func HasOnChipMemory() bool {
 	return ParamOption.RealCardType == Ascend910B ||
-		ParamOption.RealCardType == Ascend910 ||
+		ParamOption.RealCardType == api.Ascend910 ||
 		ParamOption.RealCardType == Ascend910A3
 }
 

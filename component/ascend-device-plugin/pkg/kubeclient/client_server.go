@@ -352,7 +352,7 @@ func (ki *ClientK8s) GetPodsUsedNpuByCommon() sets.String {
 	podList := ki.GetActivePodListCache()
 	var useNpu = make([]string, 0)
 	for _, pod := range podList {
-		tmpNpu, ok := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
+		tmpNpu, ok := pod.Annotations[api.PodAnnotationAscendReal]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
 		}
@@ -389,7 +389,7 @@ func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
 		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
 			continue
 		}
-		realAllocTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+		realAllocTag := fmt.Sprintf("%s", api.PodAnnotationAscendReal)
 		tmpNPU, ok := pod.Annotations[realAllocTag]
 		if !ok || len(tmpNPU) == 0 || len(tmpNPU) > common.PodAnnotationMaxLength {
 			continue

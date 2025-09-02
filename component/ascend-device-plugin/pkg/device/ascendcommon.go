@@ -450,7 +450,7 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	podList := tool.client.GetActivePodListCache()
 	usedDevice := sets.String{}
 	for _, pod := range podList {
-		realDevice, exist := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
+		realDevice, exist := pod.Annotations[api.PodAnnotationAscendReal]
 		if !exist {
 			continue
 		}
@@ -787,7 +787,7 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 		annoValue string
 	}{
 		{annoKey: api.ResourceNamePrefix + common.Pod2kl, annoValue: strings.Join(podDev.KltDevice, common.CommaSepDev)},
-		{annoKey: api.ResourceNamePrefix + common.PodRealAlloc, annoValue: allUsedDev},
+		{annoKey: api.PodAnnotationAscendReal, annoValue: allUsedDev},
 		{annoKey: fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType), annoValue: allUsedDev},
 	}
 	annotation := make(map[string]string)
@@ -805,7 +805,7 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 			}
 		}
 	}
-	if tool.name == common.Ascend910 || common.IsContainAll300IDuo() {
+	if tool.name == api.Ascend910 || common.IsContainAll300IDuo() {
 		config, err := tool.getConfigAnno(podDev, deviceType, serverID, allDevices)
 		if err == nil {
 			if podDev.Pod.Annotations[api.Pod910DeviceAnno] != config {
@@ -948,7 +948,7 @@ func (tool *AscendTools) isNetworkHealthy(device *common.NpuDevice) string {
 func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 	podList := tool.client.GetActivePodListCache()
 	for _, pod := range podList {
-		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.Ascend910)
 		tmpNpu, ok := pod.Annotations[annotationTag]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
@@ -1112,7 +1112,7 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 			tool.flushFaultCodesWithInit(device, devFaultInfoMap)
 			common.CountFaultDuration(device, devFaultInfoMap)
 			device.Health = tool.isHealthy(device)
-			if runMode == common.Ascend910 {
+			if runMode == api.Ascend910 {
 				device.NetworkHealth = tool.isNetworkHealthy(device)
 			}
 		}

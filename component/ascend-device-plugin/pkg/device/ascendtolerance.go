@@ -16,6 +16,7 @@
 package device
 
 import (
+	"ascend-common/api"
 	"context"
 	"errors"
 	"fmt"
@@ -123,7 +124,7 @@ func NewHotResetManager(devUsage string, deviceNum int, boardId uint32) HotReset
 func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 	var resetDevNumOnce int
 	switch common.ParamOption.RealCardType {
-	case common.Ascend910:
+	case api.Ascend910:
 		resetDevNumOnce = common.Ascend910RingsNum
 	case common.Ascend910B:
 		if devUsage == common.Infer {

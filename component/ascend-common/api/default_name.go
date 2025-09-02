@@ -12,7 +12,13 @@ const (
 	ResourceNamePrefix = "huawei.com/"
 
 	// Ascend910 for 910 chip
-	Ascend910 = "ascend910"
+	Ascend910 = "Ascend910"
+
+	// Ascend910Lowercase for 910 chip Lowercase
+	Ascend910Lowercase = "ascend910"
+
+	// PodAnnotationAscendReal pod annotation ascend real
+	PodAnnotationAscendReal = "huawei.com/AscendReal"
 )
 
 // device plugin

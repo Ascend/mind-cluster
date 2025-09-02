@@ -136,7 +136,7 @@ func TestGetPodsUsedNpuByCommon(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetPodsUsedNpu init kubernetes failed")
 	}
-	podList := getMockPodList(api.ResourceNamePrefix+common.PodRealAlloc, npuChip310PhyID0)
+	podList := getMockPodList(api.PodAnnotationAscendReal, npuChip310PhyID0)
 	convey.Convey("get used npu on pods without get pod list", t, func() {
 		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetActivePodListCache",
 			func(_ *ClientK8s) []v1.Pod {
@@ -348,7 +348,7 @@ func TestGetDeviceInfoManuallySeparateNPUData(t *testing.T) {
 			api.KubeNS)
 		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
-	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, common.Ascend910, nil)
+	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, api.Ascend910, nil)
 	defer mockGetDeviceRunMode.Reset()
 	convey.Convey("failed when npu cache is empty", t, func() { npuCacheIsEmpty(utKubeClient) })
 	convey.Convey("manuallySeparateNPU will be ignored", t, func() {
@@ -638,7 +638,7 @@ type getPodsUsedNPUByKltTest struct {
 }
 
 func mockAnnosWithTooLongVal() map[string]string {
-	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	annoKey := fmt.Sprintf("%s", api.PodAnnotationAscendReal)
 	longValue := make([]string, common.PodAnnotationMaxLength+1)
 	for i := range longValue {
 		longValue[i] = fmt.Sprintf("Ascend910-%d", i)
@@ -687,7 +687,7 @@ func buildErrorHandlingTests() []getPodsUsedNPUByKltTest {
 }
 
 func buildAnnotationTests() []getPodsUsedNPUByKltTest {
-	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	annoKey := fmt.Sprintf("%s", api.PodAnnotationAscendReal)
 	const expectedLen = 2
 	return []getPodsUsedNPUByKltTest{
 		{

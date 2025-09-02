@@ -156,10 +156,10 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 func TestIsDeviceStatusChange(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test IsDeviceStatusChange true", t, func() {
-		devices := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		devices := map[string][]*common.NpuDevice{api.Ascend910: {{Health: v1beta1.Healthy}}}
 		aiCoreDevice := []*common.NpuDevice{{Health: v1beta1.Healthy}}
 		oldDevice := deepCopyGroupDevice(devices)
-		tool.UpdateHealth(devices, aiCoreDevice, common.Ascend910)
+		tool.UpdateHealth(devices, aiCoreDevice, api.Ascend910)
 		res := tool.GetChange(devices, oldDevice)
 		convey.So(res, convey.ShouldNotBeNil)
 	})
@@ -178,7 +178,7 @@ func TestIsDeviceStatusChange(t *testing.T) {
 // TestSetAICoreHealthyIfVNpu for test setAICoreHealthyIfVNpu
 func TestSetAICoreHealthyIfVNpu(t *testing.T) {
 	convey.Convey("test setAICoreHealthyIfVNpu", t, func() {
-		groupDevices := map[string][]*common.NpuDevice{common.Ascend910: {{LogicID: 1, Health: v1beta1.Healthy}}}
+		groupDevices := map[string][]*common.NpuDevice{api.Ascend910: {{LogicID: 1, Health: v1beta1.Healthy}}}
 		aiCoreDevs := []*common.NpuDevice{{LogicID: 1, Health: v1beta1.Unhealthy}}
 		convey.Convey("01-presetVDevice is false, not update aiCoreDevs", func() {
 			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{PresetVDevice: false})
@@ -596,7 +596,7 @@ func TestHandleLostNetworkFaultEvents(t *testing.T) {
 // TestAssembleVirtualDevices testAssembleVirtualDevices
 func TestAssembleVirtualDevices(t *testing.T) {
 	convey.Convey("test assembleVirtualDevices", t, func() {
-		tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
+		tool := AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{},
 			dmgr: &devmanager.DeviceManagerMock{}}
 
 		var device []common.NpuDevice
@@ -634,7 +634,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910},
+				RealDevice: []string{api.Ascend910},
 			}, common.Ascend910vir2, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -689,8 +689,8 @@ func TestAddPodAnnotation2(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("GetDeviceIPAddress ok", func() {
@@ -703,8 +703,8 @@ func TestAddPodAnnotation2(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -729,17 +729,17 @@ func TestAddPodAnnotation3(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("ParseInt failed", func() {
-			tool.name = common.Ascend910
+			tool.name = api.Ascend910
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-a"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-a"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -1011,7 +1011,7 @@ func TestGetResetInfoData(t *testing.T) {
 func TestNpuIsUsedNow(t *testing.T) {
 	convey.Convey("test npuIsUsedNow", t, func() {
 		tool := mockAscendTools()
-		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.Ascend910)
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{annotationTag: ""}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},
@@ -1032,7 +1032,7 @@ func TestNpuIsUsedNow(t *testing.T) {
 func TestGetRealUsedDevices(t *testing.T) {
 	convey.Convey("test getRealUsedDevices", t, func() {
 		tool := mockAscendTools()
-		annotationTag := api.ResourceNamePrefix + common.PodRealAlloc
+		annotationTag := api.PodAnnotationAscendReal
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{"test tag": "device3"}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},
@@ -1063,7 +1063,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 			mockGroupDevsByStatus.Reset()
 			mockGetPodsUsedNpu.Reset()
 		}()
-		mockClassifyDevs := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		mockClassifyDevs := map[string][]*common.NpuDevice{api.Ascend910: {{Health: v1beta1.Healthy}}}
 		common.ParamOption.PresetVDevice = true
 		res := tool.getDevStatesDevSet(mockClassifyDevs)
 		convey.So(len(res.FreeHealthyDevice), convey.ShouldEqual, 1)
@@ -1075,7 +1075,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 }
 
 func mockAscendTools() AscendTools {
-	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
+	return AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
