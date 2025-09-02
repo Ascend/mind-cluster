@@ -10,25 +10,48 @@ const (
 
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
+)
 
+// common 910
+const (
 	// Ascend910 for 910 chip
 	Ascend910 = "Ascend910"
+)
+
+// common 910 A2
+const (
 	// Ascend910B ascend 910B chip
 	Ascend910B = "Ascend910B"
-	// Ascend910A3 ascend 910A3 chip
+)
+
+// common 910 A3
+const (
+	// Ascend910A3 ascend Ascend910A3 chip
 	Ascend910A3 = "Ascend910A3"
+)
+
+// common 310
+const (
 	// Ascend310 ascend 310 chip
 	Ascend310 = "Ascend310"
-	// Ascend310P ascend 310P chip
-	Ascend310P = "Ascend310P"
+	// Ascend310No 310 chip number
+	Ascend310No = "310"
+)
+
+// common 310B
+const (
 	// Ascend310B ascend 310B chip
 	Ascend310B = "Ascend310B"
-	//ChipName310P chip name 310P
-	ChipName310P = "310P"
-	//ChipName310B chip name 310B
-	ChipName310B = "310B"
-	//ChipName310 chip name 310
-	ChipName310 = "310"
+	// Ascend310BNo 310B chip number
+	Ascend310BNo = "310B"
+)
+
+// common 310P
+const (
+	// Ascend310P ascend 310P chip
+	Ascend310P = "Ascend310P"
+	// Ascend310PNo 310P chip number
+	Ascend310PNo = "310P"
 )
 
 // device plugin

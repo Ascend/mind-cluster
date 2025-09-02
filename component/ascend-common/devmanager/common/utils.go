@@ -138,13 +138,13 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, api.ChipName310P) {
+	if strings.Contains(chipName, api.Ascend310PNo) {
 		return api.Ascend310P
 	}
-	if strings.Contains(chipName, api.ChipName310B) {
+	if strings.Contains(chipName, api.Ascend310BNo) {
 		return api.Ascend310B
 	}
-	if strings.Contains(chipName, api.ChipName310) {
+	if strings.Contains(chipName, api.Ascend310No) {
 		return api.Ascend310
 	}
 	if reg910B.MatchString(chipName) {
