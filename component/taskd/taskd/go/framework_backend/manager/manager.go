@@ -168,16 +168,17 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 
 	go m.subscribeProfiling(conn, 0)
 	go m.subscribeSwitchNic(conn)
+	go m.subscribeStressTest(conn)
 }
 
-func (m *BaseManager) subscribeSwitchNic(conn *grpc.ClientConn) {
+func (m *BaseManager) subscribeStressTest(conn *grpc.ClientConn) {
 	client := pb.NewRecoverClient(conn)
 	clientInfo := &pb.ClientInfo{
 		JobId: m.JobId,
 		Role:  roleTaskd,
 	}
 	for {
-		exit, wTime := m.listenSignal(client, clientInfo, waitGapTime)
+		exit, wTime := m.listenStressTestSignal(client, clientInfo, waitGapTime)
 		if exit {
 			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
 			break
@@ -189,7 +190,86 @@ func (m *BaseManager) subscribeSwitchNic(conn *grpc.ClientConn) {
 	}
 }
 
-func (m *BaseManager) listenSignal(client pb.RecoverClient, clientInfo *pb.ClientInfo, wTime int) (bool, int) {
+func (m *BaseManager) listenStressTestSignal(client pb.RecoverClient, clientInfo *pb.ClientInfo, wTime int) (bool, int) {
+	stream, err := client.SubscribeNotifyExecStressTest(m.svcCtx, clientInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("register Clusterd notify stress test fail, err: %v", err)
+		return false, wTime + waitGapTime
+	}
+	for {
+		select {
+		case <-m.svcCtx.Done():
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			return true, 0
+		case <-stream.Context().Done():
+			hwlog.RunLog.Debug("server stream abnormal interruption, register again")
+			return false, wTime + waitGapTime
+		default:
+			responseMsg, recvErr := stream.Recv()
+			if recvErr == io.EOF {
+				hwlog.RunLog.Info("stream EOF, register again")
+				return false, waitGapTime
+			}
+			if recvErr != nil {
+				hwlog.RunLog.Debug(recvErr)
+				continue
+			}
+			hwlog.RunLog.Infof("receive stress test info: %v", responseMsg)
+			m.enqueueStressTest(responseMsg)
+		}
+	}
+}
+
+func (m *BaseManager) enqueueStressTest(stressParam *pb.StressTestRankParams) {
+	rankOpStr := utils.ObjToString(stressParam.StressParam)
+	msg := map[string]string{
+		constant.StressTestRankOPStr: rankOpStr,
+		constant.StressTestJobID:     m.JobId,
+	}
+	message := storage.BaseMessage{
+		Header: storage.MsgHeader{
+			BizType: "default",
+			Uuid:    uuid.New().String(),
+			Src: &common.Position{
+				Role:       constant.ClusterRole,
+				ServerRank: constant.ClusterDRank,
+			},
+			Timestamp: time.Now(),
+		},
+		Body: storage.MsgBody{
+			MsgType:   constant.Action,
+			Code:      constant.StressTestCode,
+			Extension: msg,
+		},
+	}
+	err := m.MsgHd.MsgQueue.Enqueue(message)
+	if err != nil {
+		hwlog.RunLog.Errorf("enqueue stress test msg err %v", err)
+		return
+	}
+	hwlog.RunLog.Infof("enqueue stress test msg %v", msg)
+}
+
+func (m *BaseManager) subscribeSwitchNic(conn *grpc.ClientConn) {
+	client := pb.NewRecoverClient(conn)
+	clientInfo := &pb.ClientInfo{
+		JobId: m.JobId,
+		Role:  roleTaskd,
+	}
+	for {
+		exit, wTime := m.listenSwitchNicSignal(client, clientInfo, waitGapTime)
+		if exit {
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			break
+		}
+		time.Sleep(time.Duration(wTime) * time.Second)
+		if wTime > maxWaitTime {
+			wTime = 1
+		}
+	}
+}
+
+func (m *BaseManager) listenSwitchNicSignal(client pb.RecoverClient, clientInfo *pb.ClientInfo, wTime int) (bool, int) {
 	stream, err := client.SubscribeNotifySwitch(m.svcCtx, clientInfo)
 	if err != nil {
 		hwlog.RunLog.Errorf("register Clusterd notify switch fail, err: %v", err)
@@ -201,7 +281,7 @@ func (m *BaseManager) listenSignal(client pb.RecoverClient, clientInfo *pb.Clien
 			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
 			return true, 0
 		case <-stream.Context().Done():
-			hwlog.RunLog.Error("server stream abnormal interruption, register again")
+			hwlog.RunLog.Debug("server stream abnormal interruption, register again")
 			return false, wTime + waitGapTime
 		default:
 			responseMsg, recvErr := stream.Recv()
@@ -210,7 +290,7 @@ func (m *BaseManager) listenSignal(client pb.RecoverClient, clientInfo *pb.Clien
 				return false, waitGapTime
 			}
 			if recvErr != nil {
-				hwlog.RunLog.Error(recvErr)
+				hwlog.RunLog.Debug(recvErr)
 				continue
 			}
 			hwlog.RunLog.Infof("receive switch nic info: %v", responseMsg)

@@ -183,3 +183,171 @@ func (s *FaultRecoverService) getGlobalRankIDAndOp(nics *pb.SwitchNics) ([]strin
 	}
 	return globalRankIDs, globalOps
 }
+
+// StressTest stress test of the specified node
+func (s *FaultRecoverService) StressTest(ctx context.Context, params *pb.StressTestParam) (*pb.Status, error) {
+	if ok, msg := s.checkStressTestParam(params); !ok {
+		hwlog.RunLog.Errorf("check param failed: %s", msg)
+		return &pb.Status{
+			Code: int32(common.OMParamInvalid),
+			Info: msg,
+		}, nil
+	}
+	ctl, _ := s.getController(params.JobID)
+	if !ctl.canDoStressTest() {
+		hwlog.RunLog.Errorf("jobId=%s om is running, or job recovering", params.JobID)
+		return &pb.Status{
+			Code: int32(common.OMIsRunning),
+			Info: fmt.Sprintf("jobId=%s om is running, or job recovering", params.JobID),
+		}, nil
+	}
+	globalRankIDs := s.getNodeRankOpsMap(params)
+	ctl.setStressTestParam(globalRankIDs)
+	ctl.addEvent(common.StartStressTest)
+	hwlog.RunLog.Infof("jobId=%s stress test param: %v, global ranks: %v", params.JobID, params, globalRankIDs)
+	return &pb.Status{Code: int32(common.OK), Info: "stress test operation was successfully distributed"}, nil
+}
+
+// SubscribeNotifyExecStressTest notify worker stress test
+func (s *FaultRecoverService) SubscribeNotifyExecStressTest(req *pb.ClientInfo, stream pb.Recover_SubscribeNotifyExecStressTestServer) error {
+	if req == nil {
+		return fmt.Errorf("request is nil")
+	}
+	controller, exist := s.getController(req.JobId)
+	if !exist {
+		hwlog.RunLog.Debugf("jobId=%s not registed, wait job running", req.JobId)
+		return fmt.Errorf("jobId=%s not registed, please wait agent register", req.JobId)
+	}
+	hwlog.RunLog.Infof("receive Subscribe notify stress test signal request, jobID: %s", req.JobId)
+	controller.listenStressTestNotifyChannel(stream)
+	return nil
+}
+
+// ReplyStressTestResult reply worker stress test result
+func (s *FaultRecoverService) ReplyStressTestResult(ctx context.Context, res *pb.StressTestResult) (*pb.Status, error) {
+	if res == nil {
+		return &pb.Status{Code: int32(common.OMParamInvalid), Info: "request is nil"}, nil
+	}
+	controller, exist := s.getController(res.JobId)
+	if !exist {
+		hwlog.RunLog.Errorf("jobId=%s not registed", res.JobId)
+		return &pb.Status{
+			Code: int32(common.UnRegistry),
+			Info: fmt.Sprintf("jobId=%s not registed", res.JobId)}, nil
+	}
+	controller.setStressTestResult(res)
+	hwlog.RunLog.Infof("jobId=%s stress test result: %v", res.JobId, res.StressResult)
+	return &pb.Status{Code: int32(common.OK), Info: "reply success"}, nil
+}
+
+// SubscribeStressTestResponse return the result of stress test
+func (s *FaultRecoverService) SubscribeStressTestResponse(req *pb.StressTestRequest,
+	stream pb.Recover_SubscribeStressTestResponseServer) error {
+	if req == nil {
+		return fmt.Errorf("request is nil")
+	}
+	hwlog.RunLog.Infof("receive Subscribe signal request, jobID: %s", req.JobID)
+	controller, exist := s.getController(req.JobID)
+	if !exist {
+		return fmt.Errorf("jobId=%s not registed", req.JobID)
+	}
+	if !controller.isStressTest() {
+		return fmt.Errorf("jobId=%s is not stress test", req.JobID)
+	}
+	controller.listenStressTestChannel(stream)
+	return nil
+}
+
+func (s *FaultRecoverService) getNodeRankOpsMap(param *pb.StressTestParam) common.StressTestParam {
+	nodeRankOpsMap := make(common.StressTestParam)
+	jobInfo, ok := job.GetJobCache(param.JobID)
+	if !ok {
+		hwlog.RunLog.Errorf("get job cache failed, jobId=%s", param.JobID)
+		return nil
+	}
+	nodeRankMap := s.getNodeRankMap(jobInfo.JobRankTable.ServerList)
+	if len(param.AllNodesOps) != 0 {
+		for node, ranks := range nodeRankMap {
+			nodeRankOpsMap[node] = make(map[string][]int64, len(ranks))
+			for _, rank := range ranks {
+				nodeRankOpsMap[node][rank] = param.AllNodesOps
+			}
+		}
+		return nodeRankOpsMap
+	}
+	for nodeName, _ := range param.StressParam {
+		nodeRankOpsMap[nodeName] = map[string][]int64{}
+		for _, rank := range nodeRankMap[nodeName] {
+			nodeRankOpsMap[nodeName][rank] = param.StressParam[nodeName].Ops
+		}
+	}
+	return nodeRankOpsMap
+}
+
+func (s *FaultRecoverService) checkStressTestParam(params *pb.StressTestParam) (bool, string) {
+	if params == nil {
+		return false, "param is nil"
+	}
+	jobInfo, ok := job.GetJobCache(params.JobID)
+	if !ok {
+		return false, fmt.Sprintf("job:%s not exist", params.JobID)
+	}
+	if !s.registered(params.JobID) {
+		return false, fmt.Sprintf("job:%s is not registered", params.JobID)
+	}
+	if len(params.AllNodesOps) != 0 {
+		if ok, msg := s.validateStressTestOps(params.AllNodesOps, "AllNodes"); !ok {
+			return false, msg
+		}
+		return true, ""
+	}
+	jobServerMap := s.getNodeRankMap(jobInfo.JobRankTable.ServerList)
+	if len(params.StressParam) == 0 {
+		return false, "stress test node is nil"
+	}
+	for node, ops := range params.StressParam {
+		if ops == nil {
+			return false, fmt.Sprintf("node:%s stress test ops is nil", node)
+		}
+		if len(ops.Ops) == 0 {
+			return false, fmt.Sprintf("node:%s stress test ops is 0", node)
+		}
+		if _, ok := jobServerMap[node]; !ok {
+			return false, fmt.Sprintf("node:%s not exist in job:%s", node, params.JobID)
+		}
+		if ok, msg := s.validateStressTestOps(ops.Ops, node); !ok {
+			return false, msg
+		}
+	}
+	return true, ""
+}
+
+func (s *FaultRecoverService) validateStressTestOps(ops []int64, node string) (bool, string) {
+	opMap := make(map[int64]struct{})
+	for _, op := range ops {
+		opMap[op] = struct{}{}
+		if !slices.Contains(stressOps, op) {
+			return false, fmt.Sprintf("op:%v not exist in support operation:%v", op, stressOps)
+		}
+	}
+	if len(opMap) != len(ops) {
+		return false, fmt.Sprintf("node:%s stress test ops should not repeat", node)
+	}
+	return true, ""
+}
+
+func (ctl *EventController) canDoStressTest() bool {
+	return ctl.state.GetState() == common.InitState
+}
+
+func (s *FaultRecoverService) getNodeRankMap(serverList []constant.ServerHccl) map[string][]string {
+	serverMap := make(map[string][]string)
+	for _, server := range serverList {
+		ranks := make([]string, 0)
+		for _, dev := range server.DeviceList {
+			ranks = append(ranks, dev.RankID)
+		}
+		serverMap[server.ServerName] = ranks
+	}
+	return serverMap
+}

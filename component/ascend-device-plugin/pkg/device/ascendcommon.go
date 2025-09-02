@@ -186,11 +186,6 @@ func (tool *AscendTools) convertLogicIDsToDeviceNames(logicIds []int32) string {
 }
 
 func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
-	deviceRunMode, err := common.GetDeviceRunMode()
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to get device run mode, error: %v", err)
-		return ""
-	}
 	if manuallyFaultCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.
 		ManuallySeparateNpuAll); len(manuallyFaultCache) == 0 {
 		hwlog.RunLog.Debug("manually separate npu cache is empty, no need to handle manually separate npu " +
@@ -199,8 +194,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 	}
 	logicIDsHandledFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuHandled)
 	deviceInfoName := tool.client.DeviceInfoName
-	physicIDsFromDeviceInfo := tool.client.
-		GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
+	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
 	for _, logicId := range logicIDsHandledFromCache {
 		physicId, err := tool.GetDmgr().GetPhysicIDFromLogicID(logicId)
 		if err != nil {
@@ -208,11 +202,9 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 			common.DeleteManuallyFaultInfo(logicId)
 			continue
 		}
-		deviceName := fmt.Sprintf("%s-%d", deviceRunMode, physicId)
-
 		if !common.Int32Tool.Contains(physicIDsFromDeviceInfo, physicId) {
-			hwlog.RunLog.Infof("%s is not in ManuallySeparateNPU of device info configmap, will be removed in "+
-				"cache", deviceName)
+			hwlog.RunLog.Infof("card %d is not in ManuallySeparateNPU of device info configmap, "+
+				"will be removed in cache", physicId)
 			common.DeleteManuallyFaultInfo(logicId)
 		}
 	}
@@ -226,10 +218,9 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
 			continue
 		}
-		deviceName := fmt.Sprintf("%s-%d", deviceRunMode, physicId)
 		if !common.Int32Tool.Contains(logicIDsAllFromCache, logicId) {
-			hwlog.RunLog.Infof("cache does not contain %v, %v will be removed in ManuallySeparateNPU field "+
-				"of device info configmap", deviceName, deviceName)
+			hwlog.RunLog.Infof("cache does not contain card %d, card %d will be removed in ManuallySeparateNPU field "+
+				"of device info configmap", physicId, physicId)
 		}
 	}
 	common.SetManuallyFaultNPUHandled()
@@ -353,7 +344,6 @@ func (tool *AscendTools) delVirDevInfo(newDeviceList map[string]string) {
 
 func (tool *AscendTools) assembleNpuDeviceStruct(deviType, deviceName string,
 	davinCiDev common.DavinCiDev) common.NpuDevice {
-	hwlog.RunLog.Debugf("Found Huawei Ascend, deviceType: %s, deviceName: %s", deviType, deviceName)
 	return common.NpuDevice{
 		DevType:       deviType,
 		DeviceName:    deviceName,

@@ -125,6 +125,7 @@ const (
 	FaultRankCode                = 202
 	ExitAgentCode                = 203
 	SwitchNicCode                = 204
+	StressTestCode               = 205
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -146,7 +147,11 @@ const (
 	KeepAlive         = "KEEP_ALIVE"
 	ReportRestartTime = "REPORT_RESTART_TIME"
 	Exit              = "EXIT"
-	SwitchNic         = "SWITCH_NIC"
+)
+
+const (
+	SwitchNic  = "SWITCH_NIC"
+	StressTest = "STRESS_TEST"
 )
 
 // All num const must be defined here
@@ -273,10 +278,10 @@ const (
 )
 
 const (
-	// OMPluginName name of OMPlugin
-	OMPluginName = "OmPlugin"
-	// OMStreamName name of OMStream
-	OMStreamName = "OmStream"
+	// OMSwitchNicPluginName name of OMSwitchNicPlugin
+	OMSwitchNicPluginName = "OMSwitchNicPlugin"
+	// OMSwitchNicStreamName name of OMStream
+	OMSwitchNicStreamName = "OMSwitchNicStream"
 	// GlobalRankKey key of global ranks
 	GlobalRankKey = "globalRankIDs"
 	// GlobalOpKey key of global ops
@@ -298,4 +303,27 @@ const (
 	LocalProxyEnableEnv = "LOCAL_PROXY_ENABLE"
 	// LocalProxyEnableOn local proxy enable value
 	LocalProxyEnableOn = "on"
+)
+
+const (
+	// OMStressTestPluginName name of OMStressTestPlugin
+	OMStressTestPluginName = "OMStressTestPlugin"
+	// OMStressTestStreamName name of OMStream
+	OMStressTestStreamName = "OMStressTestStream"
+	// StressTestRankOPStr key of stress test rank op str
+	StressTestRankOPStr = "StressTestRankOPStr"
+	// StressTestUUID key of stress test uuid
+	StressTestUUID = "stressTestUUID"
+	// StressTestJobID key of stress test job id
+	StressTestJobID = "stressTestJobID"
+	// StressTestOK value of stress test ok
+	StressTestOK = "0"
+	// StressTestExecFail value of stress test exec fail
+	StressTestExecFail = "1"
+	// StressTestFindFault value of stress test find fault
+	StressTestFindFault = "2"
+	// StressTestTimeout value of stress test timeout
+	StressTestTimeout = "3"
+	// StressTestVolRecoverFail voltage recovery failed
+	StressTestVolRecoverFail = "4"
 )

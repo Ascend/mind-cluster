@@ -63,7 +63,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 		}
 		if common.ParamOption.Use310PMixedInsert {
 			if err = hnm.assemble310PMixedPhyDevices(davinCiDev, &allDevices, &allDeviceTypes); err != nil {
-				hwlog.RunLog.Errorf("assemble 310P mixed phy devices failed: %v", err)
+				hwlog.RunLog.Errorf("assemble mixed phy devices failed: %v", err)
 			}
 			continue
 		}

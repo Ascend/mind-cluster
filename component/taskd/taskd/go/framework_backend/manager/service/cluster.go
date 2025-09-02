@@ -54,6 +54,10 @@ func (mpc *MsgProcessor) clusterAction(data storage.BaseMessage, clusterInfo *st
 		clusterInfo.Command[constant.GlobalOpKey] = data.Body.Extension[constant.GlobalOpKey]
 		clusterInfo.Command[constant.SwitchNicUUID] = data.Header.Uuid
 		clusterInfo.Command[constant.SwitchJobID] = data.Body.Extension[constant.SwitchJobID]
+	case constant.StressTestCode:
+		clusterInfo.Command[constant.StressTestRankOPStr] = data.Body.Extension[constant.StressTestRankOPStr]
+		clusterInfo.Command[constant.StressTestUUID] = data.Header.Uuid
+		clusterInfo.Command[constant.StressTestJobID] = data.Body.Extension[constant.StressTestJobID]
 	default:
 		defaultDomainCmd, commDomainCmd, err := profilingCmd(data.Body.Code)
 		if err != nil {

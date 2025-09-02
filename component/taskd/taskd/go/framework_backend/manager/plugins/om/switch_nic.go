@@ -18,14 +18,8 @@ import (
 	"taskd/framework_backend/manager/infrastructure/storage"
 )
 
-const (
-	maxRegRetryTime  = 60
-	firstRetryTIme   = 0
-	switchNicTimeout = 120
-)
-
-// OmPlugin Profiling Plugin
-type OmPlugin struct {
+// SwitchNicPlugin SwitchNic Plugin
+type SwitchNicPlugin struct {
 	pullMsg      []infrastructure.Msg
 	workerStatus map[string]string
 	uuid         string
@@ -34,12 +28,12 @@ type OmPlugin struct {
 }
 
 // Name get pluginName
-func (o *OmPlugin) Name() string {
-	return constant.OMPluginName
+func (o *SwitchNicPlugin) Name() string {
+	return constant.OMSwitchNicPluginName
 }
 
 // Predicate return the stream request
-func (o *OmPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
+func (o *SwitchNicPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	clusterInfo, ok := shot.ClusterInfos.Clusters[constant.ClusterDRank]
 	if !ok {
 		return infrastructure.PredicateResult{PluginName: o.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
@@ -57,14 +51,14 @@ func (o *OmPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 		o.updateWorkerStatus(shot)
 		return infrastructure.PredicateResult{
 			PluginName: o.Name(), CandidateStatus: constant.CandidateStatus, PredicateStream: map[string]string{
-				constant.OMStreamName: ""}}, nil
+				constant.OMSwitchNicStreamName: ""}}, nil
 	}
 	// accept new switch nic
 	if uuid != o.uuid {
 		o.initPluginStatus(shot)
 		return infrastructure.PredicateResult{
 			PluginName: o.Name(), CandidateStatus: constant.CandidateStatus, PredicateStream: map[string]string{
-				constant.OMStreamName: ""}}, nil
+				constant.OMSwitchNicStreamName: ""}}, nil
 	}
 	// waiting new switch nic
 	return infrastructure.PredicateResult{
@@ -72,12 +66,12 @@ func (o *OmPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 }
 
 // Release give up token in a stream
-func (o *OmPlugin) Release() error {
+func (o *SwitchNicPlugin) Release() error {
 	return nil
 }
 
 // Handle business process
-func (o *OmPlugin) Handle() (infrastructure.HandleResult, error) {
+func (o *SwitchNicPlugin) Handle() (infrastructure.HandleResult, error) {
 	if len(o.workerStatus) == 0 {
 		hwlog.RunLog.Error("worker status is empty")
 		o.replyToClusterD(firstRetryTIme, false)
@@ -115,7 +109,7 @@ func (o *OmPlugin) Handle() (infrastructure.HandleResult, error) {
 	}, nil
 }
 
-func (o *OmPlugin) replyToClusterD(retryTime time.Duration, result bool) {
+func (o *SwitchNicPlugin) replyToClusterD(retryTime time.Duration, result bool) {
 	if retryTime >= maxRegRetryTime {
 		hwlog.RunLog.Error("init clusterd connect meet max retry time")
 		return
@@ -140,15 +134,15 @@ func (o *OmPlugin) replyToClusterD(retryTime time.Duration, result bool) {
 }
 
 // PullMsg return Msg
-func (o *OmPlugin) PullMsg() ([]infrastructure.Msg, error) {
+func (o *SwitchNicPlugin) PullMsg() ([]infrastructure.Msg, error) {
 	res := o.pullMsg
 	o.pullMsg = make([]infrastructure.Msg, 0)
 	return res, nil
 }
 
-// NewOmPlugin return New ProfilingPlugin
-func NewOmPlugin() infrastructure.ManagerPlugin {
-	plugin := &OmPlugin{
+// NewOmSwitchNicPlugin return New SwitchNicPlugin
+func NewOmSwitchNicPlugin() infrastructure.ManagerPlugin {
+	plugin := &SwitchNicPlugin{
 		pullMsg:      make([]infrastructure.Msg, 0),
 		uuid:         "",
 		jobID:        "",
@@ -157,7 +151,7 @@ func NewOmPlugin() infrastructure.ManagerPlugin {
 	return plugin
 }
 
-func (o *OmPlugin) getAllWorkerName() []string {
+func (o *SwitchNicPlugin) getAllWorkerName() []string {
 	names := make([]string, 0, len(o.workerStatus))
 	for name, _ := range o.workerStatus {
 		names = append(names, name)
@@ -165,7 +159,7 @@ func (o *OmPlugin) getAllWorkerName() []string {
 	return names
 }
 
-func (o *OmPlugin) updateWorkerStatus(shot storage.SnapShot) {
+func (o *SwitchNicPlugin) updateWorkerStatus(shot storage.SnapShot) {
 	for name, info := range shot.WorkerInfos.Workers {
 		if info.Status[constant.SwitchNicUUID] != o.uuid {
 			continue
@@ -175,16 +169,15 @@ func (o *OmPlugin) updateWorkerStatus(shot storage.SnapShot) {
 	hwlog.RunLog.Debugf("update worker status: %v", o.workerStatus)
 }
 
-func (o *OmPlugin) resetPluginStatus() {
+func (o *SwitchNicPlugin) resetPluginStatus() {
 	o.workerStatus = make(map[string]string)
 	if o.timer != nil {
 		o.timer.Stop()
 	}
 	o.timer = nil
-
 }
 
-func (o *OmPlugin) initPluginStatus(shot storage.SnapShot) {
+func (o *SwitchNicPlugin) initPluginStatus(shot storage.SnapShot) {
 	for workerName, _ := range shot.WorkerInfos.Workers {
 		o.workerStatus[workerName] = ""
 	}
@@ -194,7 +187,8 @@ func (o *OmPlugin) initPluginStatus(shot storage.SnapShot) {
 	o.pullMsg = append(o.pullMsg, infrastructure.Msg{
 		Receiver: o.getAllWorkerName(),
 		Body: storage.MsgBody{
-			MsgType: constant.SwitchNic,
+			MsgType: constant.Action,
+			Code:    constant.SwitchNicCode,
 			Extension: map[string]string{
 				constant.GlobalRankKey: clusterInfo.Command[constant.GlobalRankKey],
 				constant.GlobalOpKey:   clusterInfo.Command[constant.GlobalOpKey],

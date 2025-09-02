@@ -248,7 +248,7 @@ func getDavinciManagerPath() (string, error) {
 		if _, err := os.Stat(HiAIManagerDeviceDocker); err == nil {
 			return HiAIManagerDeviceDocker, nil
 		}
-		hwlog.RunLog.Warn("get davinci manager docker failed")
+		hwlog.RunLog.Warn("get npu manager docker failed")
 	}
 	if _, err := os.Stat(HiAIManagerDevice); err != nil {
 		return "", err

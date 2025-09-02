@@ -129,7 +129,7 @@ func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs 
 	hotResetManagerInitOnce.Do(func() {
 		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[common.Ascend910]), hnm.boardId)
 		if hnm.hotResetManager == nil {
-			hwlog.RunLog.Errorf("hot reset manager is nil, devType: %s", common.ParamOption.RealCardType)
+			hwlog.RunLog.Error("hot reset manager is nil")
 			return
 		}
 		hnm.hotResetManager.SyncResetCM(ctx, hnm.GetKubeClient())
@@ -706,6 +706,7 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 	if common.ParamOption.AutoStowingDevs {
 		return nil
 	}
+	// plan to sunset 709~718
 	curNode, err := hnm.getRecoverLabelFromNodeSets(&nodeFmtDevRecover, &nodeFmtDevNetRecover)
 	if err != nil {
 		return err

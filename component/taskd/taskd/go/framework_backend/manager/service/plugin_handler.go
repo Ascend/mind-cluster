@@ -42,15 +42,16 @@ type PluginHandler struct {
 
 // Init register all plugin
 func (p *PluginHandler) Init() error {
-	profilingPlugin := faultdig.NewProfilingPlugin()
-	if err := p.Register(profilingPlugin.Name(), profilingPlugin); err != nil {
-		hwlog.RunLog.Errorf("register plugin %s failed!", profilingPlugin.Name())
-		return fmt.Errorf("register plugin %s failed", profilingPlugin.Name())
+	pluginList := []infrastructure.ManagerPlugin{
+		faultdig.NewProfilingPlugin(),
+		om.NewOmSwitchNicPlugin(),
+		om.NewOmStressTestPlugin(),
 	}
-	omPlugin := om.NewOmPlugin()
-	if err := p.Register(omPlugin.Name(), omPlugin); err != nil {
-		hwlog.RunLog.Errorf("register plugin %s failed!", omPlugin.Name())
-		return fmt.Errorf("register plugin %s failed", omPlugin.Name())
+	for _, plugin := range pluginList {
+		if err := p.Register(plugin.Name(), plugin); err != nil {
+			hwlog.RunLog.Errorf("register plugin %s failed!", plugin.Name())
+			return fmt.Errorf("register plugin %s failed", plugin.Name())
+		}
 	}
 	return nil
 }

@@ -40,6 +40,10 @@ func (mpc *MsgProcessor) workerHandler(dataPool *storage.DataPool, data storage.
 			workerInfo.Status[constant.SwitchNic] = data.Body.Message
 			workerInfo.Status[constant.SwitchNicUUID] = data.Body.Extension[constant.SwitchNicUUID]
 			return nil
+		} else if data.Body.Code == constant.StressTestCode {
+			workerInfo.Status[constant.StressTest] = data.Body.Message
+			workerInfo.Status[constant.StressTestUUID] = data.Body.Extension[constant.StressTestUUID]
+			return nil
 		}
 	case constant.STATUS:
 		err := mpc.workerStatus(data, workerInfo)
