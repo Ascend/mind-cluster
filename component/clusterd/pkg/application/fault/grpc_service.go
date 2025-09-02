@@ -37,6 +37,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
+	common2 "clusterd/pkg/interface/common"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
@@ -74,8 +75,15 @@ func NewFaultServer(ctx context.Context) *FaultServer {
 	if err := faultmanager.RegisterForJobFaultRank(server.faultCh, reflect.TypeOf(server).Name()); err != nil {
 		hwlog.RunLog.Error("RegisterForJobFaultRank fail")
 	}
+	common2.SetPublisher(server)
 	go server.checkFaultFromFaultCenter()
 	return server
+}
+
+// IsSubscribed return job whether subscribe fault message signal from ClusterD
+func (s *FaultServer) IsSubscribed(jobId, role string) bool {
+	publisher, ok := s.getPublisher(jobId, role)
+	return ok && publisher != nil && publisher.IsSubscribed()
 }
 
 // Register is task register service

@@ -10,6 +10,8 @@ const (
 
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
+	// PodRealAlloc pod annotation key, means pod real mount device
+	PodRealAlloc = "AscendReal"
 
 	// PodAnnotationAscendReal pod annotation ascend real
 	PodAnnotationAscendReal = "huawei.com/AscendReal"

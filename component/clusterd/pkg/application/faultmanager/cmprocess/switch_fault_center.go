@@ -4,6 +4,7 @@
 package cmprocess
 
 import (
+	"clusterd/pkg/application/faultmanager/cmprocess/l2fault"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
@@ -18,6 +19,7 @@ func init() {
 		baseFaultCenter: newBaseFaultCenter(manager, constant.SwitchProcessType),
 	}
 	SwitchCenter.addProcessors([]constant.FaultProcessor{
+		l2fault.L2FaultProcessor,
 		retry.RetryProcessor,
 	})
 }

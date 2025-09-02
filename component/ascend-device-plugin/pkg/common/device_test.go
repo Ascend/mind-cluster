@@ -235,21 +235,25 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			mockFunc := gomonkey.ApplyFuncReturn(getSimpleSwitchFaultStr, "", errors.New("failed"))
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
+			convey.So(len(fault.FaultTimeAndLevelMap) == 0, convey.ShouldBeTrue)
 			mockFunc.Reset()
 
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: PreSeparateFaultLevel}
 			switchFaultCodeLevelToCm = map[string]int{}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == PreSeparateFaultLevelStr, convey.ShouldBeTrue)
+			convey.So(len(fault.FaultTimeAndLevelMap) == 1, convey.ShouldBeTrue)
 
 			switchFaultCodeLevelToCm = map[string]int{}
 			SwitchFaultLevelMap = map[string]int{generalFaultCode: SeparateFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
+			convey.So(len(fault.FaultTimeAndLevelMap) == 1, convey.ShouldBeTrue)
 
 			switchFaultCodeLevelToCm = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			fault = GetSwitchFaultInfo()
 			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
+			convey.So(len(fault.FaultTimeAndLevelMap) == 1, convey.ShouldBeTrue)
 		})
 	})
 }
@@ -338,4 +342,24 @@ func TestCheckL1toL2PlaneDown(t *testing.T) {
 		SetSwitchFaultCode(faults)
 		convey.So(checkL1toL2PlaneDown(), convey.ShouldBeTrue)
 	})
+}
+
+// TestConvertToSwitchLevelStr for test convertToSwitchLevelStr
+func TestConvertToSwitchLevelStr(t *testing.T) {
+	testCases := map[int]string{
+		NotHandleFaultLevel:   NotHandleFaultLevelStr,
+		ResetErrorLevel:       RestartRequestFaultLevelStr,
+		PreSeparateFaultLevel: PreSeparateFaultLevelStr,
+		SeparateFaultLevel:    SeparateFaultLevelStr,
+		-1:                    NotHandleFaultLevelStr,
+	}
+
+	for input, expected := range testCases {
+		t.Run("convertToSwitchLevelStr Level_"+string(rune(input)), func(t *testing.T) {
+			result := convertToSwitchLevelStr(input)
+			if result != expected {
+				t.Errorf("For input %d: got %s, want %s", input, result, expected)
+			}
+		})
+	}
 }

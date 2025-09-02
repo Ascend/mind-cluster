@@ -96,9 +96,9 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		JobId:      fakeJobID1,
 		SignalType: constant.SignalTypeNormal,
 	}
-	normalMsgWithFaultInfo := &fault.FaultMsgSignal{
+	faultMsgWithFaultInfo := &fault.FaultMsgSignal{
 		JobId:      fakeJobID1,
-		SignalType: constant.SignalTypeNormal,
+		SignalType: constant.SignalTypeFault,
 		NodeFaultInfo: []*fault.NodeFaultInfo{
 			{
 				NodeName:   "node3",
@@ -120,12 +120,12 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		msg.Uuid = ""
 		convey.So(msg, convey.ShouldResemble, getMockFaultMsgForTest())
 	})
-	convey.Convey("faultList includes only L1 faults, should convert to normal msg", t, func() {
+	convey.Convey("faultList includes only L1 faults, should convert to fault msg", t, func() {
 		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
 		msg.Uuid = ""
-		convey.So(msg, convey.ShouldResemble, normalMsgWithFaultInfo)
+		convey.So(msg, convey.ShouldResemble, faultMsgWithFaultInfo)
 	})
 	convey.Convey("faultList includes only L1 faults, nodeInfo is nil,"+
 		"should convert to normal msg", t, func() {
@@ -326,13 +326,13 @@ func buildFaultMsgTestCases1() []FaultMsgTestCase {
 			name:     "TC02 - This nil, Other is Normal",
 			this:     nil,
 			other:    newFaultMsg(constant.SignalTypeNormal, "", nil),
-			expected: true,
+			expected: false,
 		},
 		{
 			name:     "TC03 - This is Normal, Other nil",
 			this:     newFaultMsg(constant.SignalTypeNormal, "", nil),
 			other:    nil,
-			expected: true,
+			expected: false,
 		},
 		{
 			name:     "TC04 - Both are Normal",

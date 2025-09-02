@@ -1774,11 +1774,33 @@ func TestGetFrequencyFaultCodes(t *testing.T) {
 	})
 }
 
+// TestLoadVaildSwitchFaultCode for test loadVaildSwitchFaultCode
+func TestLoadVaildSwitchFaultCode(t *testing.T) {
+	convey.Convey("test loadVaildSwitchFaultCode", t, func() {
+		switchFileInfo := SwitchFaultFileInfo{
+			NotHandleFaultCodes: []string{generalFaultCode},
+		}
+		convey.Convey("when switch fault is invalid, should not load switch fault code", func() {
+			mockFunc := gomonkey.ApplyFuncReturn(isValidSwitchFaultCode, false)
+			defer mockFunc.Reset()
+			loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
+				"NotHandleFaultCodes")
+			convey.So(len(NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("when switch fault is valid, should load switch fault code", func() {
+			loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
+				"NotHandleFaultCodes")
+			convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
+		})
+	})
+}
+
 // TestLoadSwitchFaultCode  Test LoadSwitchFaultCode
 func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
 			NotHandleFaultCodes: []string{generalFaultCode},
+			RestartRequestCodes: []string{generalFaultCode},
 			SubHealthFaultCodes: []string{generalFaultCode},
 			SeparateFaultCodes:  []string{generalFaultCode},
 		}
@@ -1796,15 +1818,21 @@ func TestLoadSwitchFaultCode(t *testing.T) {
 			err = LoadSwitchFaultCode(bytes)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
+			convey.So(len(RestartRequestCodes) == 0, convey.ShouldBeTrue)
 			convey.So(len(SeparateFaultCodes) == 0, convey.ShouldBeTrue)
+			convey.So(len(PreSeparateFaultCodes) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("when switch fault is valid, should update fault codes slice", func() {
 			err = LoadSwitchFaultCode(bytes)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
+			convey.So(len(RestartRequestCodes) > 0, convey.ShouldBeTrue)
 			convey.So(len(SeparateFaultCodes) > 0, convey.ShouldBeTrue)
+			convey.So(len(PreSeparateFaultCodes) > 0, convey.ShouldBeTrue)
 			convey.So(NotHandleFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+			convey.So(RestartRequestCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 			convey.So(SeparateFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+			convey.So(PreSeparateFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 		})
 	})
 }

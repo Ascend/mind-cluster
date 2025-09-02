@@ -34,12 +34,16 @@ import (
 const (
 	// NotHandleFaultLevel NotHandle Fault Level
 	NotHandleFaultLevel = 0
+	// RestartRequestFaultLevel RestartRequest Fault Level
+	RestartRequestFaultLevel = 1
 	// PreSeparateFaultLevel PreSeparate Fault Level
-	PreSeparateFaultLevel = 1
+	PreSeparateFaultLevel = 2
 	// SeparateFaultLevel Separate Fault Level
-	SeparateFaultLevel = 2
+	SeparateFaultLevel = 3
 	// NotHandleFaultLevelStr NotHandle Fault Level Str
 	NotHandleFaultLevelStr = "NotHandle"
+	// RestartRequestFaultLevelStr RestartRequest Fault Level Str
+	RestartRequestFaultLevelStr = "RestartRequest"
 	// PreSeparateFaultLevelStr PreSeparate Fault Level Str
 	PreSeparateFaultLevelStr = "PreSeparate"
 	// SeparateFaultLevelStr Separate Fault Level Str
@@ -111,6 +115,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 
 	reportFaultCodes := make([]string, 0)
 	tmpFaultCodeLevelMap := make(map[string]int)
+	tmpFaultTimeAndLevelMap := make(map[string]FaultTimeAndLevel)
 	for _, faultInfo := range GetSwitchFaultCode() {
 		if _, ok := SwitchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
 			hwlog.RunLog.Warnf("received unregisterd faultCode:%s, will not report", faultInfo.AssembledFaultCode)
@@ -125,13 +130,18 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]
 		}
 		reportFaultCodes = append(reportFaultCodes, faultStr)
+		tmpFaultTimeAndLevelMap[faultInfo.AssembledFaultCode] = FaultTimeAndLevel{
+			FaultTime:  faultInfo.AlarmRaisedTime,
+			FaultLevel: convertToSwitchLevelStr(SwitchFaultLevelMap[faultInfo.AssembledFaultCode]),
+		}
 	}
 	switchFaultCodeLevelToCm = tmpFaultCodeLevelMap
 	return SwitchFaultInfo{
-		FaultCode:  reportFaultCodes,
-		FaultLevel: faultLevel,
-		UpdateTime: time.Now().Unix(),
-		NodeStatus: NodeStatus,
+		FaultCode:            reportFaultCodes,
+		FaultLevel:           faultLevel,
+		UpdateTime:           time.Now().Unix(),
+		NodeStatus:           NodeStatus,
+		FaultTimeAndLevelMap: tmpFaultTimeAndLevelMap,
 	}
 }
 
@@ -193,6 +203,8 @@ func getSwitchFaultLevelAndNodeStatus() (string, string) {
 	switch maxFaultLevel {
 	case NotHandleFaultLevel:
 		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
+	case RestartRequestFaultLevel:
+		faultLevel, NodeStatus = RestartRequestFaultLevelStr, nodeSubHealthy
 	case PreSeparateFaultLevel:
 		faultLevel, NodeStatus = PreSeparateFaultLevelStr, nodeSubHealthy
 	case SeparateFaultLevel:
@@ -442,4 +454,21 @@ func DeepEqualSwitchFaultInfo(this, other SwitchFaultInfo) bool {
 		return false
 	}
 	return true
+}
+
+func convertToSwitchLevelStr(level int) string {
+	faultLevelStr := ""
+	switch level {
+	case NotHandleFaultLevel:
+		faultLevelStr = NotHandleFaultLevelStr
+	case ResetErrorLevel:
+		faultLevelStr = RestartRequestFaultLevelStr
+	case PreSeparateFaultLevel:
+		faultLevelStr = PreSeparateFaultLevelStr
+	case SeparateFaultLevel:
+		faultLevelStr = SeparateFaultLevelStr
+	default:
+		faultLevelStr = NotHandleFaultLevelStr
+	}
+	return faultLevelStr
 }
