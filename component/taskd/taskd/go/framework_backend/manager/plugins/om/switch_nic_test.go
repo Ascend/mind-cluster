@@ -21,9 +21,9 @@ func TestOmPluginName(t *testing.T) {
 	t.Run("get plugin name after get init plugin", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := NewOmPlugin()
+		plugin := NewOmSwitchNicPlugin()
 		assert.NotNil(t, plugin)
-		assert.Equal(t, constant.OMPluginName, plugin.Name())
+		assert.Equal(t, constant.OMSwitchNicPluginName, plugin.Name())
 	})
 }
 
@@ -31,7 +31,7 @@ func TestGetAllWorkerName(t *testing.T) {
 	t.Run("Get worker name ok, after get init plugin", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -49,7 +49,7 @@ func TestUpdateWorkerStatus(t *testing.T) {
 	t.Run("update WorkerStatus switch result correct, after recv shot ", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -84,7 +84,7 @@ func TestInitPluginStatus(t *testing.T) {
 	t.Run("initPluginStatus ok", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -131,7 +131,7 @@ func TestPullMsg(t *testing.T) {
 	t.Run("Pull plugin msg success", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -148,7 +148,7 @@ func TestReplyToClusterDGetaddrFailed(t *testing.T) {
 	t.Run("get addr failed, GetClusterdAddr will be execute", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -164,14 +164,33 @@ func TestReplyToClusterDGetaddrFailed(t *testing.T) {
 	})
 }
 
+func TestHandleWorkerStatusEmpty(t *testing.T) {
+	t.Run("Handle show in worker status is empty, skip", func(t *testing.T) {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+			return
+		})
+		plugin := &SwitchNicPlugin{
+			pullMsg:      make([]infrastructure.Msg, 0),
+			uuid:         "",
+			jobID:        "",
+			workerStatus: make(map[string]string),
+		}
+		res, err := plugin.Handle()
+		assert.Nil(t, err)
+		assert.Equal(t, constant.HandleStageFinal, res.Stage)
+	})
+}
+
 func TestHandleOK(t *testing.T) {
 	t.Run("Handle show in switch ok senior, update worker status", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		patches.ApplyPrivateMethod(&OmPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
 			return
 		})
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -191,10 +210,10 @@ func TestHandleFAIL(t *testing.T) {
 	t.Run("Handle switch result in switch failed senior", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		patches.ApplyPrivateMethod(&OmPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
 			return
 		})
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -214,7 +233,7 @@ func TestPredicateGetParamFailed(t *testing.T) {
 	t.Run("get param failed", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg: make([]infrastructure.Msg, 0),
 			uuid:    "",
 			jobID:   "",
@@ -251,10 +270,10 @@ func TestPredicateSwitchingNic(t *testing.T) {
 		ranks := "ranks"
 		ops := "ops"
 		jobid := "jobid"
-		patches.ApplyPrivateMethod(&OmPlugin{}, "updateWorkerStatus", func(shot storage.SnapShot) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "updateWorkerStatus", func(shot storage.SnapShot) {
 			return
 		})
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg: make([]infrastructure.Msg, 0),
 			uuid:    uuid,
 			jobID:   "",
@@ -290,10 +309,10 @@ func TestPredicateNewSwitchNic(t *testing.T) {
 		ranks := "ranks"
 		ops := "ops"
 		jobid := "jobid"
-		patches.ApplyPrivateMethod(&OmPlugin{}, "initPluginStatus", func(shot storage.SnapShot) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "initPluginStatus", func(shot storage.SnapShot) {
 			return
 		})
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
@@ -325,10 +344,10 @@ func TestPredicateOtherScenarios(t *testing.T) {
 		defer patches.Reset()
 		uuid := "uuid"
 
-		patches.ApplyPrivateMethod(&OmPlugin{}, "updateWorkerStatus", func(shot storage.SnapShot) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "updateWorkerStatus", func(shot storage.SnapShot) {
 			return
 		})
-		plugin := &OmPlugin{
+		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         uuid,
 			jobID:        "",
@@ -352,5 +371,13 @@ func TestPredicateOtherScenarios(t *testing.T) {
 		res, err := plugin.Predicate(shot)
 		assert.Nil(t, err)
 		assert.Equal(t, constant.UnselectStatus, res.CandidateStatus)
+	})
+}
+
+func TestSwitchNecRelease(t *testing.T) {
+	t.Run("test release plugin", func(t *testing.T) {
+		plugin := NewOmSwitchNicPlugin()
+		err := plugin.Release()
+		assert.Nil(t, err)
 	})
 }
