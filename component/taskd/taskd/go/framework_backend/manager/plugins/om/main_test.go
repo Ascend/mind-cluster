@@ -23,7 +23,6 @@ func TestMain(m *testing.M) {
 func initLog() error {
 	logConfig := &hwlog.LogConfig{
 		OnlyToStdout: true,
-		LogLevel:     1,
 	}
 	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
 		fmt.Printf("init hwlog failed, %v\n", err)
