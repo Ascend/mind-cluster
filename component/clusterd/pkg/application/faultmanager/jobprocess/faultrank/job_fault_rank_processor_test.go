@@ -361,8 +361,8 @@ func TestGetFaultDeviceInfo(t *testing.T) {
 
 func testGetFautDeviceInfoByFaultRank(server *constant.ServerHccl, nodeSN string) {
 	convey.Convey("Test getFautDeviceInfoByFaultRank", func() {
-		faultRankList := []constant.FaultRank{
-			{FaultCode: "code1", FaultLevel: constant.RestartBusiness, DeviceId: "0"},
+		faultRankList := []constant.FaultRank{{
+			FaultCode: "code1", FaultLevel: constant.RestartBusiness, DeviceId: "0"},
 		}
 		faultDeviceList := getFautDeviceInfoByFaultRank(server, faultRankList)
 		convey.So(faultDeviceList, convey.ShouldHaveLength, 1)
@@ -404,10 +404,10 @@ func testGetFaultDeviceInfoBySwitchInfo(server *constant.ServerHccl, nodeSN stri
 		faultDeviceList := getFaultDeviceInfoBySwitchInfo(server, switchInfo)
 		convey.So(faultDeviceList, convey.ShouldResemble, []constant.FaultDevice{
 			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: constant.EmptyDeviceId,
-				FaultCode:  "code1",
+				FaultCode: "code1", SwitchChipId: "0", SwitchPortId: "0", SwitchFaultTime: "0",
 				FaultLevel: constant.PreSeparateFaultLevelStr, DeviceType: constant.FaultTypeSwitch},
 			{ServerName: nodeName, ServerSN: nodeSN, ServerId: "1", DeviceId: constant.EmptyDeviceId,
-				FaultCode:  "code2",
+				FaultCode: "code2", SwitchChipId: "0", SwitchPortId: "0", SwitchFaultTime: "0",
 				FaultLevel: constant.PreSeparateFaultLevelStr, DeviceType: constant.FaultTypeSwitch},
 		})
 	})

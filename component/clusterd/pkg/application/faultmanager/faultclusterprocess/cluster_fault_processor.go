@@ -190,12 +190,20 @@ func getSwitchFaultInfo(switchInfo *constant.SwitchInfo) []*fault.DeviceFaultInf
 		DeviceId:   constant.EmptyDeviceId,
 		DeviceType: constant.FaultTypeSwitch,
 	}
-	faultCodes := make([]string, 0)
+	faultCodes := make([]string, 0, len(switchInfo.SwitchFaultInfo.FaultInfo))
+	switchFaultInfos := make([]*fault.SwitchFaultInfo, 0, len(switchInfo.SwitchFaultInfo.FaultInfo))
 	for _, device := range switchInfo.SwitchFaultInfo.FaultInfo {
 		faultCodes = append(faultCodes, device.AssembledFaultCode)
+		switchFaultInfos = append(switchFaultInfos, &fault.SwitchFaultInfo{
+			FaultCode:    device.AssembledFaultCode,
+			SwitchChipId: strconv.FormatUint(uint64(device.SwitchChipId), constant.FormatBase),
+			SwitchPortId: strconv.FormatUint(uint64(device.SwitchPortId), constant.FormatBase),
+			FaultTime:    strconv.FormatInt(device.AlarmRaisedTime, constant.FormatBase),
+		})
 	}
 	allFault.FaultCodes = faultCodes
 	allFault.FaultLevel = switchInfo.NodeStatus
+	allFault.SwitchFaultInfos = switchFaultInfos
 	return []*fault.DeviceFaultInfo{&allFault}
 }
 
@@ -226,7 +234,7 @@ func getNpuDeviceFaultInfo(deviceCm *constant.AdvanceDeviceFaultCm) []*fault.Dev
 
 func getDeviceFaultInfo(deviceFaults []constant.DeviceFault) ([]string, string) {
 	maxFaultLevel := constant.HealthyState
-	faultCode := make([]string, 0)
+	faultCode := make([]string, 0, len(deviceFaults))
 	for _, faultMsg := range deviceFaults {
 		faultCode = append(faultCode, faultMsg.FaultCode)
 		faultLevel, ok := faultLevelMap[faultMsg.FaultLevel]

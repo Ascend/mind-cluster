@@ -5,11 +5,14 @@ package job
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/jobinfo"
 	"clusterd/pkg/common/constant"
@@ -269,4 +272,41 @@ func FlushLastUpdateTime(jobKey string) {
 	}
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	SaveJobCache(jobKey, jobInfo)
+}
+
+// IsInferenceJob check inference job
+func IsInferenceJob(podInfo v1.Pod) bool {
+	return podInfo.Labels != nil && podInfo.Labels[constant.MindIeJobIdLabelKey] != "" &&
+		podInfo.Labels[constant.MindIeAppTypeLabelKey] != ""
+}
+
+// GetInferenceJobIdByNodeName get inference job id by node name
+func GetInferenceJobIdByNodeName(nodeName string) string {
+	allJob := GetAllJobCache()
+	for jobKey := range allJob {
+		podsInJob := pod.GetPodByJobId(jobKey)
+		for _, pod := range podsInJob {
+			if pod.Spec.NodeName == nodeName && IsInferenceJob(pod) {
+				return jobKey
+			}
+		}
+	}
+	return ""
+}
+
+// IsJobUsedDevice check job used device
+func IsJobUsedDevice(jobKey string, deviceName string) bool {
+	podsInJob := pod.GetPodByJobId(jobKey)
+	for _, pod := range podsInJob {
+		podUsedDevice := sets.String{}
+		realDevice, exist := pod.Annotations[api.PodAnnotationAscendReal]
+		if !exist {
+			continue
+		}
+		podUsedDevice = podUsedDevice.Insert(strings.Split(realDevice, constant.Comma)...)
+		if podUsedDevice.Has(deviceName) {
+			return true
+		}
+	}
+	return false
 }

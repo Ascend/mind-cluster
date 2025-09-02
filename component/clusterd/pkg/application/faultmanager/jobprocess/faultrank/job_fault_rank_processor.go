@@ -393,8 +393,12 @@ func getFaultDeviceInfoBySwitchInfo(server *constant.ServerHccl,
 	}
 	faultList := make([]constant.FaultDevice, 0)
 	for _, faultInfo := range switchInfo.SwitchFaultInfo.FaultInfo {
-		faultList = append(faultList, convertToFaultDevice(server, faultInfo.AssembledFaultCode,
-			switchInfo.SwitchFaultInfo.FaultLevel, constant.EmptyDeviceId, constant.FaultTypeSwitch))
+		faultDev := convertToFaultDevice(server, faultInfo.AssembledFaultCode,
+			switchInfo.SwitchFaultInfo.FaultLevel, constant.EmptyDeviceId, constant.FaultTypeSwitch)
+		faultDev.SwitchChipId = strconv.Itoa(int(faultInfo.SwitchChipId))
+		faultDev.SwitchPortId = strconv.Itoa(int(faultInfo.SwitchPortId))
+		faultDev.SwitchFaultTime = strconv.FormatInt(faultInfo.AlarmRaisedTime, constant.FormatBase)
+		faultList = append(faultList, faultDev)
 	}
 	return faultList
 }

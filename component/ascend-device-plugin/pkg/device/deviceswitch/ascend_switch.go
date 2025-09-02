@@ -112,6 +112,9 @@ func UpdateSwitchFaultLevel() {
 	for _, code := range common.NotHandleFaultCodes {
 		common.SwitchFaultLevelMap[code] = common.NotHandleFaultLevel
 	}
+	for _, code := range common.RestartRequestCodes {
+		common.SwitchFaultLevelMap[code] = common.RestartRequestFaultLevel
+	}
 	for _, code := range common.PreSeparateFaultCodes {
 		common.SwitchFaultLevelMap[code] = common.PreSeparateFaultLevel
 	}

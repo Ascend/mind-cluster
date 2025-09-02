@@ -206,7 +206,7 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 		convey.So(faults, convey.ShouldBeNil)
 	})
 
-	convey.Convey("Test with switch fault, with switch fault input,got switch faults", t, func() {
+	convey.Convey("Test with switch fault, with switch fault input, got switch faults", t, func() {
 		switchInfo := &constant.SwitchInfo{
 			SwitchFaultInfo: constant.SwitchFaultInfo{
 				NodeStatus: constant.PreSeparateFault,
@@ -215,6 +215,8 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 		}
 		faults := getSwitchFaultInfo(switchInfo)
 		convey.So(faults[0].FaultCodes[0], convey.ShouldEqual, "SW001")
+		convey.So(faults[0].SwitchFaultInfos[0].SwitchChipId, convey.ShouldEqual, "0")
+		convey.So(faults[0].SwitchFaultInfos[0].SwitchPortId, convey.ShouldEqual, "0")
 	})
 }
 

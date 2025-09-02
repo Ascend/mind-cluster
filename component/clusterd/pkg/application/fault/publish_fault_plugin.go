@@ -42,14 +42,14 @@ func (s *FaultServer) checkPublishFault(allJobFaultInfo map[string]constant.JobF
 			hwlog.RunLog.Errorf("jobId=%s jobInfo is not found", jobId)
 			continue
 		}
-		filterList := filterFault(jobFaultInfo.FaultDevice)
-		if len(filterList) == 0 {
+		if len(jobFaultInfo.FaultDevice) == 0 {
 			continue
 		}
-		jobFaultMap[jobId] = append(jobFaultMap[jobId], filterList...)
+		jobFaultMap[jobId] = append(jobFaultMap[jobId], jobFaultInfo.FaultDevice...)
 
 		if len(jobInfo.MultiInstanceJobId) > 0 {
-			jobFaultMap[jobInfo.MultiInstanceJobId] = append(jobFaultMap[jobInfo.MultiInstanceJobId], filterList...)
+			jobFaultMap[jobInfo.MultiInstanceJobId] = append(jobFaultMap[jobInfo.MultiInstanceJobId],
+				jobFaultInfo.FaultDevice...)
 		}
 	}
 	s.dealWithFaultInfoForMergedJob(jobFaultMap)
@@ -124,11 +124,7 @@ func (s *FaultServer) dealWithFaultInfoForMergedJob(jobFaultDeviceMap map[string
 		wg.Add(1)
 		go func(jobId string, faultPublisher *config.ConfigPublisher[*fault.FaultMsgSignal]) {
 			defer wg.Done()
-			faultPublisher.SaveData(jobId, &fault.FaultMsgSignal{
-				Uuid:       string(uuid.NewUUID()),
-				JobId:      jobId,
-				SignalType: constant.SignalTypeNormal,
-			})
+			s.publishFaultInfoForMergedJob(jobId, jobId, nil, faultPublisher)
 		}(targetJobId, faultPublisher)
 	}
 	wg.Wait()
@@ -155,6 +151,7 @@ func (s *FaultServer) publishFaultInfoForMergedJob(pubJobId, faultJobId string, 
 func faultDeviceToSortedFaultMsgSignal(targetJobId string, faultList []constant.FaultDevice) *fault.FaultMsgSignal {
 	msg := &fault.FaultMsgSignal{Uuid: string(uuid.NewUUID())}
 	msg.JobId = targetJobId
+	msg.SignalType = constant.SignalTypeFault
 	if len(faultList) == 0 {
 		msg.SignalType = constant.SignalTypeNormal
 		return msg
@@ -170,14 +167,8 @@ func faultDeviceToSortedFaultMsgSignal(targetJobId string, faultList []constant.
 		}
 	}
 	if len(msg.NodeFaultInfo) == 0 {
-		return &fault.FaultMsgSignal{JobId: targetJobId, SignalType: constant.SignalTypeNormal}
-	}
-	msg.SignalType = constant.SignalTypeNormal
-	for _, nodeFaultInfo := range msg.NodeFaultInfo {
-		if nodeFaultInfo.FaultLevel != constant.HealthyState {
-			msg.SignalType = constant.SignalTypeFault
-			break
-		}
+		msg.SignalType = constant.SignalTypeNormal
+		return msg
 	}
 	sort.Slice(msg.NodeFaultInfo, func(i, j int) bool {
 		return msg.NodeFaultInfo[i].NodeIP < msg.NodeFaultInfo[j].NodeIP
@@ -237,6 +228,14 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 		}
 		if faultInfo.FaultCode != "" {
 			info.FaultCodes = append(info.FaultCodes, faultInfo.FaultCode)
+			if faultInfo.SwitchChipId != "" && faultInfo.SwitchPortId != "" && faultInfo.SwitchFaultTime != "" {
+				info.SwitchFaultInfos = append(info.SwitchFaultInfos, &fault.SwitchFaultInfo{
+					FaultCode:    faultInfo.FaultCode,
+					SwitchChipId: faultInfo.SwitchChipId,
+					SwitchPortId: faultInfo.SwitchPortId,
+					FaultTime:    faultInfo.SwitchFaultTime,
+				})
+			}
 		}
 	}
 	info.FaultLevel = getStateByLevel(maxLevel)
@@ -278,14 +277,8 @@ func compareFaultMsg(this, other *fault.FaultMsgSignal) bool {
 	if this == nil && other == nil {
 		return true
 	}
-	if this == nil {
-		return other.SignalType == constant.SignalTypeNormal
-	}
-	if other == nil {
-		return this.SignalType == constant.SignalTypeNormal
-	}
-	if this.SignalType == constant.SignalTypeNormal && other.SignalType == constant.SignalTypeNormal {
-		return true
+	if this == nil || other == nil {
+		return false
 	}
 	if this.SignalType != other.SignalType || this.JobId != other.JobId ||
 		len(this.NodeFaultInfo) != len(other.NodeFaultInfo) {

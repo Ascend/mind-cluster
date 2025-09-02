@@ -41,10 +41,11 @@ func ParseSwitchInfoCM(obj interface{}) (*constant.SwitchInfo, error) {
 	nodeName := strings.TrimPrefix(switchCm.Name, constant.DeviceInfoPrefix)
 	node := constant.SwitchInfo{
 		SwitchFaultInfo: constant.SwitchFaultInfo{
-			FaultInfo:  faultInfo,
-			FaultLevel: switchInfoCM.FaultLevel,
-			UpdateTime: switchInfoCM.UpdateTime,
-			NodeStatus: switchInfoCM.NodeStatus,
+			FaultInfo:            faultInfo,
+			FaultLevel:           switchInfoCM.FaultLevel,
+			UpdateTime:           switchInfoCM.UpdateTime,
+			NodeStatus:           switchInfoCM.NodeStatus,
+			FaultTimeAndLevelMap: switchInfoCM.FaultTimeAndLevelMap,
 		},
 		CmName: constant.SwitchInfoPrefix + nodeName,
 	}
@@ -119,10 +120,11 @@ func getReportSwitchInfo(switchInfoMap map[string]*constant.SwitchInfo) map[stri
 		}
 		reportSwitchInfo[k] = &constant.SwitchInfoFromCM{
 			SwitchFaultInfoFromCm: constant.SwitchFaultInfoFromCm{
-				FaultCode:  reportFaultCodes,
-				FaultLevel: v.FaultLevel,
-				UpdateTime: v.UpdateTime,
-				NodeStatus: v.NodeStatus,
+				FaultCode:            reportFaultCodes,
+				FaultLevel:           v.FaultLevel,
+				UpdateTime:           v.UpdateTime,
+				NodeStatus:           v.NodeStatus,
+				FaultTimeAndLevelMap: v.FaultTimeAndLevelMap,
 			},
 			CmName: v.CmName,
 		}

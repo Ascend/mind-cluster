@@ -16,13 +16,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
 )
 
 const (
-	vcJobKey = "job"
-
+	vcJobKey      = "job"
+	nodeName1     = "node1"
 	podName1      = "pod1"
 	podName2      = "pod2"
 	podNameSpace1 = "default"
@@ -32,6 +33,11 @@ const (
 	pgMinMember2    = 2
 	pgMinMember2Str = "2"
 	masterIp        = "127.0.0.1"
+	mindIeJobId     = "mindie-ms"
+
+	npuName1 = "Ascend910-1"
+	npuName2 = "Ascend910-2"
+	npuName3 = "Ascend910-3"
 )
 
 func TestPreDeleteCmAndCache(t *testing.T) {
@@ -370,5 +376,54 @@ func TestFlushLastUpdateTime(t *testing.T) {
 			convey.So(ok, convey.ShouldBeTrue)
 			convey.So(jonInfo.LastUpdatedCmTime, convey.ShouldNotBeZeroValue)
 		})
+	})
+}
+
+func TestIsInferenceJob(t *testing.T) {
+	convey.Convey("test IsInferenceJob", t, func() {
+		podInfo := getDemoPod(jobName1, jobNameSpace, podUid1)
+		convey.Convey("when job is not inference job, return false", func() {
+			convey.So(IsInferenceJob(*podInfo), convey.ShouldBeFalse)
+		})
+		convey.Convey("when job is inference job, return true", func() {
+			podInfo.Labels = map[string]string{}
+			podInfo.Labels[constant.MindIeJobIdLabelKey] = mindIeJobId
+			podInfo.Labels[constant.MindIeAppTypeLabelKey] = constant.ServerAppType
+			convey.So(IsInferenceJob(*podInfo), convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestGetInferenceJobIdByNodeName(t *testing.T) {
+	convey.Convey("test GetInferenceJobIdByNodeName", t, func() {
+		convey.Convey("if there is an inference job on the current node, return inference jobId", func() {
+			demoPod := getDemoPod(jobName1, jobNameSpace, podUid1)
+			demoPod.Spec = v1.PodSpec{NodeName: nodeName1}
+			patch := gomonkey.ApplyFuncReturn(GetAllJobCache, map[string]constant.JobInfo{
+				jobUid1: getDemoJob(jobName1, jobNameSpace, jobUid1),
+			}).ApplyFuncReturn(pod.GetPodByJobId, map[string]v1.Pod{
+				podUid1: *demoPod,
+			}).ApplyFuncReturn(IsInferenceJob, true)
+			defer patch.Reset()
+			convey.So(GetInferenceJobIdByNodeName(nodeName1), convey.ShouldNotBeEmpty)
+		})
+		convey.Convey("if there is no inference job on the current node, return inference jobId", func() {
+			convey.So(GetInferenceJobIdByNodeName(nodeName1), convey.ShouldBeEmpty)
+		})
+	})
+}
+
+func TestIsJobUsedDevice(t *testing.T) {
+	convey.Convey("test IsJobUsedDevice", t, func() {
+		demoPod := getDemoPod(jobName1, jobNameSpace, podUid1)
+		demoPod.Annotations = map[string]string{
+			api.PodAnnotationAscendReal: npuName1 + constant.Comma + npuName2,
+		}
+		patch := gomonkey.ApplyFuncReturn(pod.GetPodByJobId, map[string]v1.Pod{
+			podUid1: *demoPod,
+		})
+		defer patch.Reset()
+		convey.So(IsJobUsedDevice(jobUid1, npuName1), convey.ShouldBeTrue)
+		convey.So(IsJobUsedDevice(jobUid1, npuName3), convey.ShouldBeFalse)
 	})
 }

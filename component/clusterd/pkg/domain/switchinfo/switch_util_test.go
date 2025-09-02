@@ -45,10 +45,11 @@ func TestParseSwitchInfoCM(t *testing.T) {
 		_, err = ParseSwitchInfoCM(&config)
 		convey.So(err, convey.ShouldNotBeNil)
 		swit := constant.SwitchFaultInfo{
-			FaultInfo:  []constant.SimpleSwitchFaultInfo{},
-			FaultLevel: "FaultLevel",
-			UpdateTime: 0,
-			NodeStatus: "Healthy",
+			FaultInfo:            []constant.SimpleSwitchFaultInfo{},
+			FaultLevel:           "FaultLevel",
+			UpdateTime:           0,
+			NodeStatus:           "Healthy",
+			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{},
 		}
 		bytes, err := json.Marshal(swit)
 		convey.So(err, convey.ShouldBeNil)
@@ -102,13 +103,16 @@ func TestGetSafeData(t *testing.T) {
 
 func TestGetReportSwitchInfo(t *testing.T) {
 	convey.Convey("Test getReportSwitchInfo", t, func() {
-		switchInof := constant.SimpleSwitchFaultInfo{AssembledFaultCode: "code1"}
-		data, err := json.Marshal(switchInof)
+		switchInfo := constant.SimpleSwitchFaultInfo{AssembledFaultCode: "code1"}
+		data, err := json.Marshal(switchInfo)
 		convey.So(err, convey.ShouldBeNil)
-		map1 := map[string]*constant.SwitchInfoFromCM{"job1": {SwitchFaultInfoFromCm: constant.SwitchFaultInfoFromCm{
-			FaultCode: []string{string(data)}}}}
+		map1 := map[string]*constant.SwitchInfoFromCM{"job1": {
+			SwitchFaultInfoFromCm: constant.SwitchFaultInfoFromCm{
+				FaultCode:            []string{string(data)},
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{"code1": {}}}}}
 		map2 := map[string]*constant.SwitchInfo{"job1": {SwitchFaultInfo: constant.SwitchFaultInfo{
-			FaultInfo: []constant.SimpleSwitchFaultInfo{switchInof}}}}
+			FaultInfo:            []constant.SimpleSwitchFaultInfo{switchInfo},
+			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{"code1": {}}}}}
 		map3 := getReportSwitchInfo(map2)
 		convey.So(util.ObjToString(map3) == util.ObjToString(map1), convey.ShouldBeTrue)
 	})

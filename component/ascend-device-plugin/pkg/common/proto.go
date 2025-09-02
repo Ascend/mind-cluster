@@ -68,10 +68,11 @@ type SwitchFaultEvent struct {
 
 // SwitchFaultInfo Switch Fault Info
 type SwitchFaultInfo struct {
-	FaultCode  []string
-	FaultLevel string
-	UpdateTime int64
-	NodeStatus string
+	FaultCode            []string
+	FaultLevel           string
+	UpdateTime           int64
+	NodeStatus           string
+	FaultTimeAndLevelMap map[string]FaultTimeAndLevel
 }
 
 // NodeDeviceInfo record node NPU device information. Will be solidified into cm.
