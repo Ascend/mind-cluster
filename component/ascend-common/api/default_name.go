@@ -51,4 +51,6 @@ const (
 	Prefix = "npu_chip_info_hccs_statistic_info_"
 	// BwPrefix pre bandwidth info
 	BwPrefix = "npu_chip_info_hccs_bandwidth_info_"
+	// AscendDeviceInfo
+	AscendDeviceInfo = "ASCEND_VISIBLE_DEVICES"
 )
