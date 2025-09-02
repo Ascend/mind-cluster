@@ -322,8 +322,6 @@ const (
 	MindIOWaitTimeMax = 3600
 	// DifferenceTime is the difference with timeout env
 	DifferenceTime = 10
-	// PodVersion label key
-	PodVersion = "version"
 	// RankZeroNodeId is "0"
 	RankZeroNodeId = "0"
 )

@@ -117,8 +117,7 @@ func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error)
 		pg.Labels[constant.JobReschedulingStrategyKey] == constant.JobReschedulingStrategyForceValue {
 		config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.JobReschedulingStrategyName)
 	}
-	if pg.Labels != nil &&
-		pg.Labels[constant.PodReschedulingStrategyKey] == constant.PodReschedulingStrategyOpenValue {
+	if pg.Labels[constant.PodReschedulingStrategyKey] == constant.PodReschedulingStrategyOpenValue {
 		config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.PodReschedulingStrategyName)
 	}
 	config.MindXConfigStrategies = append(config.MindXConfigStrategies, constant.ProcessExitStrategyName)
@@ -514,25 +513,6 @@ func GetPodRanks(jobId string, rankList []string) (map[string]struct{}, error) {
 		podMap[podRank] = struct{}{}
 	}
 	return podMap, nil
-}
-
-// GetPodVersion return a dict, key is fault pod rank, value is pod version, only support acjob
-func GetPodVersion(jobId string, podRankList map[string]string) map[string]string {
-	podMap := make(map[string]string)
-	for podRank, _ := range podRankList {
-		pod := pod.GetPodByRankIndex(jobId, podRank)
-		if pod.Name == "" {
-			hwlog.RunLog.Warnf("discard nil pod, jobId=%s", jobId)
-			continue
-		}
-		version, ok := pod.Labels[constant.PodVersion]
-		if !ok || version == "" {
-			hwlog.RunLog.Warnf("get pod version failed jobId=%s", jobId)
-			continue
-		}
-		podMap[podRank] = version
-	}
-	return podMap
 }
 
 // GetNodeRankIdsByRankIds returns the job's node rank id list by global rank id list

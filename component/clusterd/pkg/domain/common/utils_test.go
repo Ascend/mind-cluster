@@ -924,39 +924,6 @@ func TestGetPodRanks(t *testing.T) {
 	}
 }
 
-func TestGetPodVersion(t *testing.T) {
-	result := v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		Name:   "aaa",
-		Labels: map[string]string{constant.PodVersion: "1"},
-	}}
-	mockGetPodByRankIndex := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, result)
-	defer mockGetPodByRankIndex.Reset()
-	type args struct {
-		jobId       string
-		podRankList map[string]string
-	}
-	tests := []struct {
-		name string
-		args args
-		want map[string]string
-	}{
-		{
-			name: "get pod version",
-			args: args{
-				podRankList: map[string]string{"1": ""},
-			},
-			want: map[string]string{"1": "1"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetPodVersion(tt.args.jobId, tt.args.podRankList); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetPodVersion() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGetNodeRankIdsByRankIdsSuccess(t *testing.T) {
 	// Mock GetPodRanks to return sample data
 	patch := gomonkey.ApplyFunc(GetPodRanks,

@@ -116,9 +116,9 @@ const (
 	// NotifyScaleInStrategySuccessEvent notify scale-in strategy success
 	NotifyScaleInStrategySuccessEvent = "notifyScaleInStrategySuccessEvent"
 	// ScaleInSuccessEvent scale-in success
-	ScaleInSuccessEvent = "scaleInSuccess"
+	ScaleInSuccessEvent = "scaleInSuccessEvent"
 	// ScaleOutSuccessEvent scale-out success
-	ScaleOutSuccessEvent = "scaleOutSuccess"
+	ScaleOutSuccessEvent = "scaleOutSuccessEvent"
 	// NeedTryScaleInStrategyEvent try to change strategy to scale-in
 	NeedTryScaleInStrategyEvent = "needTryScaleStrategyInEvent"
 	// NotifyScaleOutStrategySuccessEvent notify scale-out strategy success

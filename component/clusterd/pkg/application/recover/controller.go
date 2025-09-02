@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	k8s_util "github.com/kubeflow/common/pkg/util"
+	kubeflowutil "github.com/kubeflow/common/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -1792,9 +1792,9 @@ func (ctl *EventController) waitScaleOut() {
 			ctl.addEvent(common.FinishEvent)
 			return
 		}
-		if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (k8s_util.IsSucceeded(acJobInfo.
-			Status) || k8s_util.IsFailed(acJobInfo.Status)) {
-			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId, k8s_util.IsSucceeded(acJobInfo.
+		if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (kubeflowutil.IsSucceeded(acJobInfo.
+			Status) || kubeflowutil.IsFailed(acJobInfo.Status)) {
+			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId, kubeflowutil.IsSucceeded(acJobInfo.
 				Status))
 			ctl.addEvent(common.FinishEvent)
 			return

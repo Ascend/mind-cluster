@@ -253,10 +253,6 @@ func (ctl *EventController) getDPScaleStrategyRules() []common.TransRule {
 		{Src: common.WaitReportScaleInStatusState, Event: common.ReportTimeoutEvent,
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 
-		{Src: common.CheckRecoverResultState, Event: common.NotifyFailEvent,
-			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
-		{Src: common.CheckRecoverResultState, Event: common.NotifyFaultNodesExitSuccessEvent,
-			Dst: common.WaitReportScaleInStatusState, Handler: ctl.handleWaitReportScaleInStatus},
 		{Src: common.CheckRecoverResultState, Event: common.ScaleInSuccessEvent,
 			Dst: common.ScaleInRunningState, Handler: ctl.handleScaleInRunningState},
 		{Src: common.CheckRecoverResultState, Event: common.ScaleOutSuccessEvent,
@@ -270,10 +266,8 @@ func (ctl *EventController) getDPScaleStrategyRules() []common.TransRule {
 			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 		{Src: common.CheckRecoverResultState, Event: common.ScaleOutSuccessEvent,
 			Dst: common.InitState, Handler: ctl.handleFinish},
-		{Src: common.CheckRecoverResultState, Event: common.RecoverFailEvent,
-			Dst: common.FaultClearState, Handler: ctl.handleFaultClear},
 
-		{Src: common.ScaleInRunningState, Event: common.ReceiveReportEvent,
+		{Src: common.ScaleInRunningState, Event: common.FaultOccurEvent,
 			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
 		{Src: common.ScaleInRunningState, Event: common.FinishEvent,
 			Dst: common.InitState, Handler: ctl.handleFinish},
