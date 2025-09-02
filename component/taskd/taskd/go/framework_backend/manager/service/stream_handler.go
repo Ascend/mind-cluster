@@ -55,16 +55,20 @@ func NewStreamHandler() *StreamHandler {
 func (s *StreamHandler) Init() error {
 	profilingCollectStream := infrastructure.NewStream(
 		constant.ProfilingStream, map[string]int{constant.ProfilingPluginName: 1})
-	if err := s.SetStream(profilingCollectStream); err != nil {
-		hwlog.RunLog.Errorf("init stream handler failed: set stream %s failed",
-			profilingCollectStream.GetName())
-		return err
+	OmSwitchNicStream := infrastructure.NewStream(constant.OMSwitchNicStreamName,
+		map[string]int{constant.OMSwitchNicPluginName: 1})
+	OmStressTestStream := infrastructure.NewStream(constant.OMStressTestStreamName,
+		map[string]int{constant.OMStressTestPluginName: 1})
+	streamList := []*infrastructure.Stream{
+		profilingCollectStream,
+		OmStressTestStream,
+		OmSwitchNicStream,
 	}
-	OmStream := infrastructure.NewStream(constant.OMStreamName, map[string]int{constant.OMPluginName: 1})
-	if err := s.SetStream(OmStream); err != nil {
-		hwlog.RunLog.Errorf("init stream handler failed: set stream %s failed",
-			OmStream.GetName())
-		return err
+	for _, stream := range streamList {
+		if err := s.SetStream(stream); err != nil {
+			hwlog.RunLog.Errorf("init stream handler failed: set stream %s failed", stream.GetName())
+			return err
+		}
 	}
 	return nil
 }

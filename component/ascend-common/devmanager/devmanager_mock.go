@@ -16,6 +16,7 @@
 package devmanager
 
 import (
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
@@ -56,7 +57,7 @@ func (d *DeviceManagerMock) ShutDown() error {
 
 // GetDevType return mock type
 func (d *DeviceManagerMock) GetDevType() string {
-	return common.Ascend910
+	return api.Ascend910
 }
 
 // GetDeviceCount get npu device count
@@ -175,7 +176,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 

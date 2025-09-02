@@ -30,7 +30,6 @@ func (tool *AscendTools) GetUsedChips() sets.String {
 	procUsedChips := tool.getChipsUsedByProcess()
 	containerUsedChips := tool.getChipsUsedByContainerd()
 	usedChips := procUsedChips.Union(containerUsedChips)
-	hwlog.RunLog.Debugf("get used chips: %v", usedChips)
 	return usedChips
 }
 

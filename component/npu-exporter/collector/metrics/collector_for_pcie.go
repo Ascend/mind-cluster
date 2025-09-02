@@ -20,6 +20,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -61,7 +62,7 @@ var (
 )
 var (
 	supportedPcieDevices = map[string]bool{
-		common.Ascend910B: true,
+		api.Ascend910B: true,
 	}
 )
 

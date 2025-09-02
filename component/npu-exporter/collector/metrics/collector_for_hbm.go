@@ -20,6 +20,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -52,9 +53,9 @@ var (
 
 var (
 	supportedHbmDevices = map[string]bool{
-		common.Ascend910:   true,
-		common.Ascend910B:  true,
-		common.Ascend910A3: true,
+		api.Ascend910:   true,
+		api.Ascend910B:  true,
+		api.Ascend910A3: true,
 	}
 )
 

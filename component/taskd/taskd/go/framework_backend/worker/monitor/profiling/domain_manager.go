@@ -49,12 +49,6 @@ var NetTool *net.NetInstance
 // MgrProfilingCmd from worker
 var MgrProfilingCmd atomic.Bool
 
-// GlobalRank of this work
-var GlobalRank int
-
-// NodeRank of this work
-var NodeRank int
-
 // CmdChan for SwitchProfiling
 var CmdChan chan constant.ProfilingDomainCmd
 

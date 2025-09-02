@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -38,7 +39,7 @@ const (
 	DefaultStringSize = 256
 	// DefaultPathSize default string max length
 	DefaultPathSize               = 4096
-	runLogDir                     = "/var/log/ascend-docker-runtime/"
+	runLogDir                     = api.RunTimeLogDir
 	backupLogFileMode os.FileMode = 0400
 	runLogFileMode    os.FileMode = 0750
 	maxFileNum                    = 32

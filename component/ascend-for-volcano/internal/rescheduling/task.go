@@ -57,6 +57,13 @@ func (fTask *FaultTask) getTaskHealthStateBySubHealth(subHealthyStrategy string)
 	if subHealthyStrategy == util.SubHealthyIgnore || !fTask.HasSubHealthFault {
 		return false, PodHealthy
 	}
+	if subHealthyStrategy == util.SubHealthyHotSwitch {
+		needVolcanoOpe, exists := fTask.Annotations[util.NeedVolcanoOpeKey]
+		if !exists || needVolcanoOpe != util.OpeTypeDelete {
+			return false, PodHealthy
+		}
+		klog.V(util.LogInfoLev).Infof("fTask wait to be deleted :%s, %v", fTask.TaskName, fTask.Reason)
+	}
 	return true, SubHealthFault
 }
 
@@ -138,6 +145,7 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 		PodCreateTime:      task.Pod.CreationTimestamp.Unix(),
 		faultType:          NodeHealthy,
 		IsNpuTask:          util.IsNPUTask(task),
+		Annotations:        task.Pod.Annotations,
 	}
 	if faultTask.NodeName == "" {
 		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.UID][task.Name]

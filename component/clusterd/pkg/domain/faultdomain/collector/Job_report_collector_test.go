@@ -10,6 +10,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain"
@@ -21,7 +22,7 @@ const (
 	NodeName   = "Node"
 	RankId     = "0"
 	DeviceId   = "0"
-	DeviceName = constant.Ascend910 + "-" + DeviceId
+	DeviceName = api.Ascend910 + "-" + DeviceId
 )
 
 func TestMain(m *testing.M) {
@@ -69,7 +70,7 @@ func TestJobReportInfoCollectorGetInfo(t *testing.T) {
 			func() constant.JobServerInfoMap {
 				return constant.JobServerInfoMap{
 					ResourceType: map[string]string{
-						JobId: constant.Ascend910,
+						JobId: api.Ascend910,
 					},
 				}
 			})

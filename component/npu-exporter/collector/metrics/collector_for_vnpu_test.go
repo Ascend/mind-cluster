@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
@@ -38,7 +39,7 @@ const (
 func TestVnpuCollectorIsSupported(t *testing.T) {
 	n := mockNewNpuCollector()
 	cases := []testCase{
-		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, common.Ascend310P, true),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, api.Ascend310P, true),
 		buildTestCase("VnpuCollector: testIsSupported on other type", &VnpuCollector{}, "OTHER", false),
 	}
 

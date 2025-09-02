@@ -117,7 +117,7 @@ func TestConvertLogicIDsToDeviceNames(t *testing.T) {
 		})
 		convey.Convey("02-convert logic ids to device names success, should return Ascend910-1", func() {
 			tool := mockAscendTools()
-			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: common.Ascend910A3})
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A3})
 			defer mockOption.Reset()
 			logicIds := []int32{3}
 			convey.So(tool.convertLogicIDsToDeviceNames(logicIds), convey.ShouldEqual, "Ascend910-1")
@@ -133,7 +133,7 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, "")
 		})
 		tool := mockAscendTools()
-		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: common.Ascend910A3})
+		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A3})
 		defer mockOption.Reset()
 		convey.Convey("02-manually fault cache is empty, should return empty string", func() {
 			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, "")
@@ -156,20 +156,20 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 func TestIsDeviceStatusChange(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test IsDeviceStatusChange true", t, func() {
-		devices := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		devices := map[string][]*common.NpuDevice{api.Ascend910: {{Health: v1beta1.Healthy}}}
 		aiCoreDevice := []*common.NpuDevice{{Health: v1beta1.Healthy}}
 		oldDevice := deepCopyGroupDevice(devices)
-		tool.UpdateHealth(devices, aiCoreDevice, common.Ascend910)
+		tool.UpdateHealth(devices, aiCoreDevice, api.Ascend910)
 		res := tool.GetChange(devices, oldDevice)
 		convey.So(res, convey.ShouldNotBeNil)
 	})
-	tool = AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool = AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMockErr{}}
 	convey.Convey("test IsDeviceStatusChange which chip is unhealthy ", t, func() {
-		devices := map[string][]*common.NpuDevice{common.Ascend310P: {{Health: v1beta1.Unhealthy}}}
+		devices := map[string][]*common.NpuDevice{api.Ascend310P: {{Health: v1beta1.Unhealthy}}}
 		aiCoreDevice := []*common.NpuDevice{{Health: v1beta1.Unhealthy}}
 		oldDevice := deepCopyGroupDevice(devices)
-		tool.UpdateHealth(devices, aiCoreDevice, common.Ascend310P)
+		tool.UpdateHealth(devices, aiCoreDevice, api.Ascend310P)
 		res := tool.GetChange(devices, oldDevice)
 		convey.So(res, convey.ShouldNotBeNil)
 	})
@@ -178,7 +178,7 @@ func TestIsDeviceStatusChange(t *testing.T) {
 // TestSetAICoreHealthyIfVNpu for test setAICoreHealthyIfVNpu
 func TestSetAICoreHealthyIfVNpu(t *testing.T) {
 	convey.Convey("test setAICoreHealthyIfVNpu", t, func() {
-		groupDevices := map[string][]*common.NpuDevice{common.Ascend910: {{LogicID: 1, Health: v1beta1.Healthy}}}
+		groupDevices := map[string][]*common.NpuDevice{api.Ascend910: {{LogicID: 1, Health: v1beta1.Healthy}}}
 		aiCoreDevs := []*common.NpuDevice{{LogicID: 1, Health: v1beta1.Unhealthy}}
 		convey.Convey("01-presetVDevice is false, not update aiCoreDevs", func() {
 			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{PresetVDevice: false})
@@ -220,10 +220,10 @@ func TestSetHealthyIfDuoCard(t *testing.T) {
 				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetInfer})
 			defer mockOption.Reset()
 			groupDevices := map[string][]*common.NpuDevice{
-				common.Ascend310P: {{CardID: 0, Health: v1beta1.Healthy}, {CardID: 0, Health: v1beta1.Unhealthy}},
+				api.Ascend310P: {{CardID: 0, Health: v1beta1.Healthy}, {CardID: 0, Health: v1beta1.Unhealthy}},
 			}
 			setHealthyIfDuoCard(groupDevices)
-			convey.So(groupDevices[common.Ascend310P][0].Health == v1beta1.Healthy, convey.ShouldBeFalse)
+			convey.So(groupDevices[api.Ascend310P][0].Health == v1beta1.Healthy, convey.ShouldBeFalse)
 		})
 	})
 }
@@ -407,7 +407,7 @@ func TestSetDeviceUsage(t *testing.T) {
 				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
 			})
 			convey.Convey("05-devType is Ascend910B, should return nil", func() {
-				patch.ApplyMethodReturn(tool.dmgr, "GetDevType", common.Ascend910B)
+				patch.ApplyMethodReturn(tool.dmgr, "GetDevType", api.Ascend910B)
 				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
 			})
 		})
@@ -596,7 +596,7 @@ func TestHandleLostNetworkFaultEvents(t *testing.T) {
 // TestAssembleVirtualDevices testAssembleVirtualDevices
 func TestAssembleVirtualDevices(t *testing.T) {
 	convey.Convey("test assembleVirtualDevices", t, func() {
-		tool := AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{},
+		tool := AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{},
 			dmgr: &devmanager.DeviceManagerMock{}}
 
 		var device []common.NpuDevice
@@ -634,7 +634,7 @@ func TestAddPodAnnotation1(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910},
+				RealDevice: []string{api.Ascend910},
 			}, common.Ascend910vir2, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -645,12 +645,12 @@ func TestAddPodAnnotation1(t *testing.T) {
 			})
 		defer mockTryUpdatePodAnnotation.Reset()
 		convey.Convey("physical device 310P", func() {
-			tool.name = common.Ascend310P
+			tool.name = api.Ascend310P
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend310P + "-0"},
-			}, common.Ascend310P, "", nil)
+				RealDevice: []string{api.Ascend310P + "-0"},
+			}, api.Ascend310P, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("virtual device", func() {
@@ -689,8 +689,8 @@ func TestAddPodAnnotation2(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("GetDeviceIPAddress ok", func() {
@@ -703,8 +703,8 @@ func TestAddPodAnnotation2(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -729,17 +729,17 @@ func TestAddPodAnnotation3(t *testing.T) {
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-0"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-0"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("ParseInt failed", func() {
-			tool.name = common.Ascend910
+			tool.name = api.Ascend910
 			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
 				Pod:        v1.Pod{},
 				KltDevice:  nil,
-				RealDevice: []string{common.Ascend910 + "-a"},
-			}, common.Ascend910, "", nil)
+				RealDevice: []string{api.Ascend910 + "-a"},
+			}, api.Ascend910, "", nil)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -747,7 +747,7 @@ func TestAddPodAnnotation3(t *testing.T) {
 
 // TestCreateVirtualDevice testCreateVirtualDevice
 func TestCreateVirtualDevice(t *testing.T) {
-	tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
 	convey.Convey("test CreateVirtualDevice", t, func() {
 		convey.Convey("CreateVirtualDevice success", func() {
@@ -770,7 +770,7 @@ func TestCreateVirtualDevice(t *testing.T) {
 
 // TestDestroyVirtualDevice testDestroyVirtualDevice
 func TestDestroyVirtualDevice(t *testing.T) {
-	tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
 	convey.Convey("test DestroyVirtualDevice", t, func() {
 		convey.Convey("DestroyVirtualDevice success", func() {
@@ -792,7 +792,7 @@ func TestDestroyVirtualDevice(t *testing.T) {
 
 // TestGetChipAiCoreCount testGetChipAiCoreCount
 func TestGetChipAiCoreCount(t *testing.T) {
-	tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
 	res := getVirtualDevInfo(aiCoreNum)
 	mockLogicIDs := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
@@ -838,7 +838,7 @@ func getVirtualDevInfo(aic float32) npuCommon.VirtualDevInfo {
 
 // TestAppendVGroupInfo testAppendVGroupInfo
 func TestAppendVGroupInfo(t *testing.T) {
-	tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
 	res := getVirtualDevInfo(aiCoreCount)
 	convey.Convey("test AppendVGroupInfo", t, func() {
@@ -865,7 +865,7 @@ func TestAppendVGroupInfo(t *testing.T) {
 
 // TestCheckDeviceTypeLabel testCheckDeviceTypeLabel
 func TestCheckDeviceTypeLabel(t *testing.T) {
-	tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+	tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 		dmgr: &devmanager.DeviceManagerMock{}}
 	node := getMockNode()
 	convey.Convey("test CheckDeviceTypeLabel", t, func() {
@@ -908,7 +908,7 @@ func getMockNode() *v1.Node {
 // TestAssemble310PMixedPhyDevices test assemble310PMixedPhyDevices
 func TestAssemble310PMixedPhyDevices(t *testing.T) {
 	convey.Convey("test assembleVirtualDevices", t, func() {
-		tool := AscendTools{name: common.Ascend310P, client: &kubeclient.ClientK8s{},
+		tool := AscendTools{name: api.Ascend310P, client: &kubeclient.ClientK8s{},
 			dmgr: &devmanager.DeviceManagerMock{}}
 		var device []common.NpuDevice
 		var deivceType []string
@@ -1011,7 +1011,7 @@ func TestGetResetInfoData(t *testing.T) {
 func TestNpuIsUsedNow(t *testing.T) {
 	convey.Convey("test npuIsUsedNow", t, func() {
 		tool := mockAscendTools()
-		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.Ascend910)
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{annotationTag: ""}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},
@@ -1032,7 +1032,7 @@ func TestNpuIsUsedNow(t *testing.T) {
 func TestGetRealUsedDevices(t *testing.T) {
 	convey.Convey("test getRealUsedDevices", t, func() {
 		tool := mockAscendTools()
-		annotationTag := api.ResourceNamePrefix + common.PodRealAlloc
+		annotationTag := api.PodAnnotationAscendReal
 		pods := []v1.Pod{
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod1", Annotations: map[string]string{"test tag": "device3"}}},
 			{ObjectMeta: metav1.ObjectMeta{Name: "mock pod2", Annotations: map[string]string{annotationTag: "device1,device2"}}},
@@ -1063,7 +1063,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 			mockGroupDevsByStatus.Reset()
 			mockGetPodsUsedNpu.Reset()
 		}()
-		mockClassifyDevs := map[string][]*common.NpuDevice{common.Ascend910: {{Health: v1beta1.Healthy}}}
+		mockClassifyDevs := map[string][]*common.NpuDevice{api.Ascend910: {{Health: v1beta1.Healthy}}}
 		common.ParamOption.PresetVDevice = true
 		res := tool.getDevStatesDevSet(mockClassifyDevs)
 		convey.So(len(res.FreeHealthyDevice), convey.ShouldEqual, 1)
@@ -1075,7 +1075,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 }
 
 func mockAscendTools() AscendTools {
-	return AscendTools{name: common.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
+	return AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
 
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`

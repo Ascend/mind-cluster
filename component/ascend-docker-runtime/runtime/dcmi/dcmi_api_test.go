@@ -23,6 +23,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/opencontainers/runtime-spec/specs-go"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -93,7 +94,7 @@ func TestCreateVDevice(t *testing.T) {
 	}
 
 	// no npu assigin for split
-	spec.Process.Env = []string{"ASCEND_VNPU_SPECS=vir04"}
+	spec.Process.Env = []string{api.AscendVnpuSpescEnv + "=vir04"}
 	vdevice, err = CreateVDevice(&mockWorker{}, &spec, deviceIdList)
 	if err == nil {
 		t.Fatalf("%v %v", vdevice, err)
@@ -101,7 +102,7 @@ func TestCreateVDevice(t *testing.T) {
 
 	// split ok
 	deviceIdList = []int{0}
-	spec.Process.Env = []string{"ASCEND_VNPU_SPECS=vir04", "ASCEND_VISIBLE_DEVICES=0"}
+	spec.Process.Env = []string{api.AscendVnpuSpescEnv + "=vir04", api.AscendVisibleDevicesEnv + "=0"}
 	vdevice, err = CreateVDevice(&mockWorker{}, &spec, deviceIdList)
 	if err != nil {
 		t.Fatalf("%v %v", vdevice, err)

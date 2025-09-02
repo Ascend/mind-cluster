@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
@@ -36,13 +37,11 @@ import (
 )
 
 const (
-	namespaceMoby     = "moby"   // Docker
-	namespaceK8s      = "k8s.io" // CRI + Containerd
-	sliceLen8         = 8
-	ascendDeviceInfo  = "ASCEND_VISIBLE_DEVICES"
-	ascendEnvPart     = 2
-	charDevice        = "c"
-	devicePathPattern = `^/dev/davinci\d+$`
+	namespaceMoby = "moby"   // Docker
+	namespaceK8s  = "k8s.io" // CRI + Containerd
+	sliceLen8     = 8
+	ascendEnvPart = 2
+	charDevice    = "c"
 
 	minus                            = "-"
 	comma                            = ","
@@ -201,7 +200,7 @@ func (dp *DevicesParser) parseDevicesInContainerd(ctx context.Context, c *Common
 	envs := spec.Process.Env
 	for i := len(envs) - 1; i >= 0; i-- {
 		e := envs[i]
-		if strings.Contains(e, ascendDeviceInfo) {
+		if strings.Contains(e, api.AscendDeviceInfo) {
 			deviceInfo, err = dp.getDevicesWithAscendRuntime(e, c)
 			return err
 		}
@@ -237,7 +236,7 @@ func (dp *DevicesParser) getDevicesWithAscendRuntime(ascendDevEnv string, c *Com
 	logger.Debugf("get device info by env (%s) in %s", ascendDevEnv, c.Id)
 	devInfo := strings.Split(ascendDevEnv, "=")
 	if len(devInfo) != ascendEnvPart {
-		return DevicesInfo{}, fmt.Errorf("an invalid %s env(%s)", ascendDeviceInfo, ascendDevEnv)
+		return DevicesInfo{}, fmt.Errorf("an invalid %s env(%s)", api.AscendDeviceInfo, ascendDevEnv)
 	}
 	devicesIDs := dp.parseDiffEnvFmt(devInfo[1], c.Id)
 	if len(devicesIDs) == 0 {
@@ -276,7 +275,7 @@ func (dp *DevicesParser) getDeviceIDsByCommaStyle(devices, containerID string) [
 		id, err := strconv.Atoi(devID)
 		if err != nil {
 			logger.Errorf("container (%s) has an invalid device ID (%v) in %s, error is %s", containerID,
-				devID, ascendDeviceInfo, err)
+				devID, api.AscendDeviceInfo, err)
 			continue
 		}
 		devicesIDs = append(devicesIDs, id)
@@ -290,12 +289,12 @@ func (dp *DevicesParser) getDeviceIDsByAscendStyle(devices, containerID string) 
 	for _, subDevice := range devList {
 		deviceName := strings.Split(subDevice, minus)
 		if len(deviceName) != ascendEnvPart {
-			logger.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, nil))
+			logger.Errorf(envErrDescribe(containerID, "", api.AscendDeviceInfo, nil))
 			continue
 		}
 		id, err := strconv.Atoi(deviceName[1])
 		if err != nil {
-			logger.Errorf(envErrDescribe(containerID, deviceName[1], ascendDeviceInfo, err))
+			logger.Errorf(envErrDescribe(containerID, deviceName[1], api.AscendDeviceInfo, err))
 			continue
 		}
 		deviceIDs = append(deviceIDs, id)
@@ -307,26 +306,26 @@ func (dp *DevicesParser) getDeviceIDsByMinusStyle(devices, containerID string) [
 	deviceIDs := make([]int, 0)
 	devIDRange := strings.Split(devices, minus)
 	if len(devIDRange) != ascendEnvPart {
-		logger.Errorf(envErrDescribe(containerID, "range", ascendDeviceInfo, nil))
+		logger.Errorf(envErrDescribe(containerID, "range", api.AscendDeviceInfo, nil))
 		return deviceIDs
 	}
 	minDevID, err := strconv.Atoi(devIDRange[0])
 	if err != nil {
-		logger.Errorf(envErrDescribe(containerID, devIDRange[0], ascendDeviceInfo, err))
+		logger.Errorf(envErrDescribe(containerID, devIDRange[0], api.AscendDeviceInfo, err))
 		return deviceIDs
 	}
 	maxDevID, err := strconv.Atoi(devIDRange[1])
 	if err != nil {
-		logger.Errorf(envErrDescribe(containerID, devIDRange[1], ascendDeviceInfo, err))
+		logger.Errorf(envErrDescribe(containerID, devIDRange[1], api.AscendDeviceInfo, err))
 		return deviceIDs
 	}
 	if minDevID > maxDevID {
 		logger.Errorf(envErrDescribe(containerID, "",
-			ascendDeviceInfo, errors.New("min id bigger than max id")))
+			api.AscendDeviceInfo, errors.New("min id bigger than max id")))
 		return deviceIDs
 	}
 	if maxDevID > math.MaxInt16 {
-		logger.Errorf(envErrDescribe(containerID, "", ascendDeviceInfo, errors.New("max id invalid")))
+		logger.Errorf(envErrDescribe(containerID, "", api.AscendDeviceInfo, errors.New("max id invalid")))
 		return deviceIDs
 	}
 	for deviceID := minDevID; deviceID <= maxDevID; deviceID++ {
@@ -395,7 +394,7 @@ func (dp *DevicesParser) parseDeviceInIsula(ctx context.Context, c *CommonContai
 	envs := containerInfo.Config.Env
 	for i := len(envs) - 1; i >= 0; i-- {
 		e := envs[i]
-		if strings.Contains(e, ascendDeviceInfo) {
+		if strings.Contains(e, api.AscendDeviceInfo) {
 			deviceInfo, err = dp.getDevicesWithAscendRuntime(e, c)
 			return err
 		}
@@ -604,7 +603,7 @@ func filterNPUDevicesInIsula(containerInfo isula.ContainerJson) ([]int, error) {
 	devIDs := make([]int, 0, sliceLen8)
 	devices := containerInfo.HostConfig.Devices
 	for _, dev := range devices {
-		Id, err := getDevIdFromPath(devicePathPattern, dev.PathInContainer)
+		Id, err := getDevIdFromPath(api.DevicePathPattern, dev.PathInContainer)
 		if err != nil {
 			logger.Warn(err)
 			continue

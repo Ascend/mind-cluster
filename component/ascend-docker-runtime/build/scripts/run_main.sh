@@ -15,18 +15,20 @@
 # limitations under the License.
 # ============================================================================
 
+RT_LOWER_CASE="ascend-docker-runtime"
+RT_FIRST_CASE="Ascend-docker-runtime"
 
 args=($@)
 start_arg="${args[0]}"
 start_script=${start_arg#*--}
 
-ASCEND_RUNTIME_CONFIG_DIR=/etc/ascend-docker-runtime.d
+ASCEND_RUNTIME_CONFIG_DIR=/etc/${RT_LOWER_CASE}.d
 DOCKER_CONFIG_DIR=/etc/docker
 CONTAINERD_CONFIG_DIR=/etc/containerd
 CONFIG_FILE_PATH=""
 INSTALL_SCENE=docker
 INSTALL_PATH=/usr/local/Ascend/Ascend-Docker-Runtime
-readonly INSTALL_LOG_DIR=/var/log/ascend-docker-runtime
+readonly INSTALL_LOG_DIR=/var/log/${RT_LOWER_CASE}
 readonly INSTALL_LOG_PATH=${INSTALL_LOG_DIR}/installer.log
 readonly INSTALL_LOG_PATH_BAK=${INSTALL_LOG_DIR}/installer_bak.log
 readonly LOG_SIZE_THRESHOLD=$((20*1024*1024))
@@ -66,7 +68,7 @@ function log {
         ip="localhost"
     fi
     echo "$1 $2"
-    echo "$1 [$(date +'%Y/%m/%d %H:%M:%S')] [uid: ${UID}] [${ip}] [Ascend-Docker-Runtime] $2" >> ${INSTALL_LOG_PATH}
+    echo "$1 [$(date +'%Y/%m/%d %H:%M:%S')] [uid: ${UID}] [${ip}] [${RT_LOWER_CASE}] $2" >> ${INSTALL_LOG_PATH}
 }
 
 function check_path {
@@ -126,31 +128,30 @@ function check_path_permission {
 }
 
 function print_version {
-    echo "Ascend-docker-runtime version: ${PACKAGE_VERSION}"
+    echo "${RT_LOWER_CASE} version: ${PACKAGE_VERSION}"
 }
 
 function print_help {
     echo "Error input
-Usage: ./Ascend-docker-runtime_${PACKAGE_VERSION}_linux-$(uname -m).run [options]
+Usage: ./${RT_FIRST_CASE}_${PACKAGE_VERSION}_linux-$(uname -m).run [options]
 Options:
   --help | -h                   Print this message
   --check|--info|--list|--quiet|--tar|
-                                These parameters are meaningless for Ascend-docker-runtime and
+                                These parameters are meaningless for ${RT_FIRST_CASE} and
                                 will be discarded in the future
   --install                     Install into this system
-  --install-path                Specify the installation path (default: /usr/local/Ascend/Ascend-Docker-Runtime),
-                                which must be absolute path
-  --uninstall                   Uninstall the installed ascend-docker-runtime tool
-  --upgrade                     Upgrade the installed ascend-docker-runtime tool
+  --install-path                Specify the installation path, which must be absolute path
+  --uninstall                   Uninstall the installed ${RT_FIRST_CASE} tool
+  --upgrade                     Upgrade the installed ${RT_FIRST_CASE} tool
   --install-type=<type>         Only A500, A500A2, A200ISoC, A200IA2 and A200 need to specify
-                                the installation type of Ascend-docker-runtime
+                                the installation type of ${RT_FIRST_CASE}
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
                                 MUST use with --install or --uninstall
                                 Do not use with --install-scene
                                 [Deprecated] This parameter will be removed in future versions.
                                 Please use --install-scene=isula instead
-  --version                     Query Ascend-docker-runtime version
+  --version                     Query ${RT_FIRST_CASE} version
   --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
@@ -177,7 +178,7 @@ function save_install_args() {
       echo -e "arch=$(uname -m)"
       echo -e "os=linux"
       echo -e "path=${INSTALL_PATH}"
-      echo -e "build=Ascend-docker-runtime_${PACKAGE_VERSION}-$(uname -m)"
+      echo -e "build=${RT_FIRST_CASE}_${PACKAGE_VERSION}-$(uname -m)"
       echo -e "a500=${a500}"
       echo -e "a500a2=${a500a2}"
       echo -e "a200=${a200}"
@@ -211,7 +212,7 @@ function add_so() {
 
 function install()
 {
-    echo "[INFO] installing ascend docker runtime"
+    echo "[INFO] installing ${RT_LOWER_CASE}"
     check_platform
     if [[ $? != 0 ]]; then
         log "[ERROR]" "install failed, run package and os not matched in arch"
@@ -341,15 +342,15 @@ function install()
     chmod 600 ${DST}
 
     save_install_args
-    echo "[INFO] Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
-    echo "[INFO] The version of Ascend Docker Runtime is: ${PACKAGE_VERSION}"
+    echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
+    echo "[INFO] The version of ${RT_LOWER_CASE} is: ${PACKAGE_VERSION}"
     echo '[INFO] please reboot daemon and container engine to take effect'
-    log "[INFO]" "Ascend Docker Runtime install success"
+    log "[INFO]" "${RT_LOWER_CASE} install success"
 }
 
 function uninstall()
 {
-    echo "[INFO] uninstalling ascend docker runtime ${PACKAGE_VERSION}"
+    echo "[INFO] uninstalling ${RT_LOWER_CASE} ${PACKAGE_VERSION}"
 
     if [ ! -d "${INSTALL_PATH}" ]; then
         log "[WARNING]" "uninstall skipping, the specified install path does not exist"
@@ -368,12 +369,12 @@ function uninstall()
         exit 1
     fi
 
-    log "[INFO]" "Ascend Docker Runtime uninstall success"
+    log "[INFO]" "${RT_LOWER_CASE} uninstall success"
 }
 
 function upgrade()
 {
-    echo "[INFO] upgrading ascend docker runtime"
+    echo "[INFO] upgrading ${RT_LOWER_CASE}"
     check_platform
     if [[ $? != 0 ]]; then
         log "[ERROR]" "upgrade failed, run package and os not matched in arch"
@@ -448,10 +449,10 @@ function upgrade()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
-    echo "[INFO] Ascend Docker Runtime has been installed in: ${INSTALL_PATH}"
-    echo '[INFO] upgrade ascend docker runtime success'
-    echo "[INFO] The version of Ascend Docker Runtime is: v${PACKAGE_VERSION}"
-    log "[INFO]" "Ascend Docker Runtime upgrade success"
+    echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
+    echo "[INFO] upgrade ${RT_LOWER_CASE} success"
+    echo "[INFO] The version of ${RT_LOWER_CASE} is: v${PACKAGE_VERSION}"
+    log "[INFO]" "${RT_LOWER_CASE} upgrade success"
 }
 INSTALL_SCENE_FLAG=n
 CONFIG_FILE_PATH_FLAG=n

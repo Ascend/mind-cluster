@@ -663,7 +663,7 @@ func TestRemoveDuplication(t *testing.T) {
 
 // TestAddEnvToDevicePlugin0 tests the function addAscendDockerEnv
 func TestAddEnvToDevicePlugin0(t *testing.T) {
-	devicePluginHostName := devicePlugin + "pf2i6r"
+	devicePluginHostName := "pf2i6r"
 	spec := specs.Spec{
 		Process: &specs.Process{
 			Env: []string{strKubeDNSPort53UDPPort,

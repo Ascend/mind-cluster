@@ -11,6 +11,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
@@ -493,7 +494,7 @@ func testGetFaultDeviceInfoByRelationFault1(server *constant.ServerHccl) {
 func testGetFaultDeviceInfoByRelationFault2(server *constant.ServerHccl) {
 	convey.Convey("device type relation fault,should add to fault list", func() {
 		relationFault := []*constant.FaultInfo{
-			{FaultType: constant.DeviceFaultType, NPUName: constant.AscendDevPrefix + "1",
+			{FaultType: constant.DeviceFaultType, NPUName: api.Ascend910MinuxPrefix + "1",
 				FaultCode: "81078603", ExecutedStrategy: constant.SubHealthFaultStrategy},
 		}
 		wantFaultList := []constant.FaultDevice{
@@ -514,7 +515,7 @@ func testGetFaultDeviceInfoByRelationFault2(server *constant.ServerHccl) {
 func testGetFaultDeviceInfoByRelationFault3(server *constant.ServerHccl) {
 	convey.Convey("invalid fault type, should not add to fault list", func() {
 		relationFault := []*constant.FaultInfo{
-			{FaultType: "", NPUName: constant.AscendDevPrefix + "1",
+			{FaultType: "", NPUName: api.Ascend910MinuxPrefix + "1",
 				FaultCode: "81078603", ExecutedStrategy: constant.SubHealthFaultStrategy},
 		}
 		wantFaultList := make([]constant.FaultDevice, 0)

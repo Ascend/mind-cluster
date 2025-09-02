@@ -15,8 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/common/constant"
 )
 
 func init() {
@@ -29,7 +29,7 @@ const (
 	jobUid1      = "123"
 	vcJobKey     = "job"
 	ptFrameWork  = "pytorch"
-	ResourceName = "huawei/" + constant.Ascend910
+	ResourceName = api.ResourceNamePrefix + api.Ascend910
 )
 
 func TestSavePodGroup(t *testing.T) {

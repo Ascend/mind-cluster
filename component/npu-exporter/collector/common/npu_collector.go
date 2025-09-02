@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/cache"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
@@ -277,7 +278,7 @@ func setPCIeBusInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaW
 }
 
 func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipInfo *HuaWeiAIChip) {
-	if dmgr.GetDevType() != common.Ascend310P {
+	if dmgr.GetDevType() != api.Ascend310P {
 		return
 	}
 	vDevInfos, err := dmgr.GetVirtualDeviceInfo(logicID)
@@ -297,7 +298,7 @@ func GetChipListWithVNPU(n *NpuCollector) []HuaWeiAIChip {
 	chips := getChipListCache(n)
 
 	for _, chipInfo := range chips {
-		isNeedHandleVnpu := n.Dmgr.GetDevType() == common.Ascend310P && chipInfo.VDevInfos != nil &&
+		isNeedHandleVnpu := n.Dmgr.GetDevType() == api.Ascend310P && chipInfo.VDevInfos != nil &&
 			len(chipInfo.VDevInfos.VDevActivityInfo) > 0
 
 		if !isNeedHandleVnpu {

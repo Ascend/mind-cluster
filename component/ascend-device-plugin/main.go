@@ -22,10 +22,9 @@ import (
 	"os"
 
 	"Ascend-device-plugin/pkg/common"
-	"Ascend-device-plugin/pkg/device/deviceswitch"
-	"Ascend-device-plugin/pkg/server"
+	"Ascend-device-plugin/pkg/next/devicefactory"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager"
 )
 
 const (
@@ -71,8 +70,8 @@ var (
 		"Maximum number of backup log files, range is (0, 30]")
 	presetVirtualDevice = flag.Bool("presetVirtualDevice", true, "Open the static of "+
 		"computing power splitting function, only support Ascend910 and Ascend310P")
-	use310PMixedInsert = flag.Bool("use310PMixedInsert", false, "Whether to use mixed insert "+
-		"ascend310P-V, ascend310P-VPro, ascend310P-IPro card mode")
+	use310PMixedInsert = flag.Bool(api.Use310PMixedInsert, false, "Whether to use mixed insert "+
+		api.Ascend310PMix+" card mode")
 	hotReset = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, "+
 		"1-train-online, 2-train-offline")
 	shareDevCount = flag.Uint("shareDevCount", 1, "share device function, enable the func by setting "+
@@ -115,7 +114,7 @@ func initLogModule(ctx context.Context) error {
 		MaxLineLength: maxLogLineLength,
 	}
 	if err := hwlog.InitRunLogger(&hwLogConfig, ctx); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
+		fmt.Printf("log init failed, error is %v\n", err)
 		return err
 	}
 	return nil
@@ -131,11 +130,11 @@ func checkParam() bool {
 		return false
 	}
 	if *use310PMixedInsert && *volcanoType {
-		hwlog.RunLog.Error("use310PMixedInsert is true, volcanoType should be false")
+		hwlog.RunLog.Errorf("%s is true, volcanoType should be false", api.Use310PMixedInsert)
 		return false
 	}
 	if *use310PMixedInsert && *shareDevCount > 1 {
-		hwlog.RunLog.Error("use310PMixedInsert is true, shareDevCount should be 1")
+		hwlog.RunLog.Errorf("%s is true, shareDevCount should be 1", api.Use310PMixedInsert)
 		return false
 	}
 	if !(*presetVirtualDevice) && *shareDevCount > 1 {
@@ -190,44 +189,16 @@ func main() {
 	if !checkParam() {
 		return
 	}
-	hwlog.RunLog.Infof("ascend device plugin starting and the version is %s", BuildVersion)
-	hwlog.RunLog.Infof("ascend device plugin starting scene is %s", BuildScene)
+	hwlog.RunLog.Infof("device plugin starting and the version is %s", BuildVersion)
+	hwlog.RunLog.Infof("device plugin starting scene is %s", BuildScene)
 	setParameters()
-	hdm, err := InitFunction()
+	hdm, err := devicefactory.InitFunction()
 	if err != nil {
 		return
 	}
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
 	hdm.SignCatch(cancel)
-}
-
-// InitFunction init function
-func InitFunction() (*server.HwDevManager, error) {
-	devM, err := devmanager.AutoInit("")
-	if err != nil {
-		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
-		return nil, err
-	}
-	hdm := server.NewHwDevManager(devM)
-	if hdm == nil {
-		hwlog.RunLog.Error("init device manager failed")
-		return nil, fmt.Errorf("init device manager failed")
-	}
-	hwlog.RunLog.Info("init device manager success")
-	common.ParamOption.EnableSwitchFault = true
-	if common.ParamOption.RealCardType == common.Ascend910A3 && common.ParamOption.EnableSwitchFault {
-		switchDevMgr := deviceswitch.NewSwitchDevManager()
-		if err := switchDevMgr.InitSwitchDev(); err != nil {
-			hwlog.RunLog.Warnf("failed to init switch switch device manager, will not deal with switch fault, "+
-				"err: %s", err.Error())
-			common.ParamOption.EnableSwitchFault = false
-			// will not return err, to ensure dp keep running while switch is not reachable
-			return hdm, nil
-		}
-		hdm.SwitchDevManager = switchDevMgr
-	}
-	return hdm, nil
 }
 
 func setParameters() {
@@ -255,17 +226,16 @@ func setUseAscendDocker() {
 	ascendDocker := os.Getenv("ASCEND_DOCKER_RUNTIME")
 	if ascendDocker != "True" {
 		*useAscendDocker = false
-		hwlog.RunLog.Debugf("get ASCEND_DOCKER_RUNTIME from env is: %#v", ascendDocker)
+		hwlog.RunLog.Debugf("get docker runtime from env is: %#v", ascendDocker)
 	}
 	if common.ParamOption.Use310PMixedInsert {
 		*useAscendDocker = false
-		hwlog.RunLog.Debugf("310P mixed insert mode do not use ascend docker")
+		hwlog.RunLog.Debugf("mixed insert mode do not use npu docker")
 	}
 	if len(common.ParamOption.ProductTypes) == 1 && common.ParamOption.ProductTypes[0] == common.Atlas200ISoc {
 		*useAscendDocker = false
-		hwlog.RunLog.Debugf("your device-type is: %v", common.Atlas200ISoc)
 	}
 
 	common.ParamOption.UseAscendDocker = *useAscendDocker
-	hwlog.RunLog.Infof("device-plugin set ascend docker as: %v", *useAscendDocker)
+	hwlog.RunLog.Infof("device-plugin set npu docker as: %v", *useAscendDocker)
 }

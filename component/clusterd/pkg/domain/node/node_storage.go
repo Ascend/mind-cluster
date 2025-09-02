@@ -13,7 +13,6 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 )
 
@@ -159,7 +158,7 @@ func getNodeDevice(baseDevInfos map[string]*api.NpuBaseInfo, nodeName, devType, 
 		DeviceMap:  make(map[string]string, len(baseDevInfos)),
 	}
 	for device, info := range baseDevInfos {
-		physicID := strings.TrimPrefix(device, constant.AscendDevPrefix)
+		physicID := strings.TrimPrefix(device, api.Ascend910MinuxPrefix)
 		_, err := strconv.Atoi(physicID)
 		if err != nil {
 			hwlog.RunLog.Warnf("illegal device name, deviceName=%s, nodeName=%s",

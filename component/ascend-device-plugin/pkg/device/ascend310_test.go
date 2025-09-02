@@ -24,6 +24,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 )
@@ -52,9 +53,9 @@ func TestHwAscend310ManagerGetNPUs(t *testing.T) {
 			manager := createFake310Manager(false, false)
 			allInfo, err := manager.GetNPUs()
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(allInfo.AllDevTypes[0], convey.ShouldEqual, common.Ascend310)
+			convey.So(allInfo.AllDevTypes[0], convey.ShouldEqual, api.Ascend310)
 			convey.So(allInfo.AllDevs[0].DeviceName, convey.ShouldEqual,
-				fmt.Sprintf("%s-%d", common.Ascend310, allInfo.AllDevs[0].PhyID))
+				fmt.Sprintf("%s-%d", api.Ascend310, allInfo.AllDevs[0].PhyID))
 		})
 		convey.Convey("310 get npu use fd", func() {
 			manager := createFake310Manager(true, false)
@@ -76,7 +77,7 @@ func TestDoWithVolcanoListAndWatch310(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		groupDevice := ClassifyDevices(allInfo.AllDevs, allInfo.AllDevTypes)
 		mockGetPodsUsedNpu := mockGetPodsUsedNpuByCommon()
-		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{common.Ascend310: "Ascend310-1"})
+		mockGetConfigMap := mockGetDeviceInfoCMCache(map[string]string{api.Ascend310: api.Ascend310 + "-1"})
 		mockCreateConfigMap := mockWriteDeviceInfoDataIntoCM()
 		defer func() {
 			mockGetPodsUsedNpu.Reset()

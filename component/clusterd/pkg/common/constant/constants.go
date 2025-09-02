@@ -46,8 +46,6 @@ const (
 	CheckFaultGapSecond = 10
 	// JobRefKind reference kind is Job
 	JobRefKind = "Job"
-	// AscendJobRefKind reference kind is AscendJob
-	AscendJobRefKind = "AscendJob"
 	// MaxSupportNodeNum max support node num
 	MaxSupportNodeNum = 16000
 	// MaxSupportJobNum max support job num
@@ -138,11 +136,6 @@ const (
 	PubFaultCodeFileName      = "publicFaultConfiguration.json"
 	PubFaultCustomizationPath = "/user1/mindx-dl/clusterd/publicCustomization.json"
 	PubFaultCustomizationName = "publicCustomization.json"
-)
-
-const (
-	// NPUPreName npu pre name
-	NPUPreName = "huawei.com/Ascend"
 )
 
 // jobStc notify msg

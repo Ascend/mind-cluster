@@ -161,7 +161,7 @@ func buildValidNPUJobTestCase01() []validNPUJobTestCase {
 			WantErr: &api.ValidateResult{
 				Pass:    false,
 				Reason:  "task req npu num is invalid",
-				Message: "job<vcjob/job02> req npu num<65> is invalid",
+				Message: "job<vcjob/job02>-task<pod0> req npu num<65> is invalid",
 			},
 		},
 		{
@@ -629,4 +629,79 @@ func fakeBaseInfo() string {
 		return ""
 	}
 	return string(str)
+}
+
+const (
+	cardNUm65 = 65
+	cardNUm2  = 2
+)
+
+type testCases struct {
+	name     string
+	handler  *NPUHandler
+	expected *api.ValidateResult
+}
+
+func buildTestCases(name string, handler *NPUHandler, expected *api.ValidateResult) testCases {
+	return testCases{
+		name:     name,
+		handler:  handler,
+		expected: expected,
+	}
+}
+
+func buildNpuJob(reqNPUName string, reqNPUNum int) *util.NPUJob {
+	return &util.NPUJob{
+		ReqNPUName: reqNPUName,
+		ReqNPUNum:  reqNPUNum,
+		Tasks: map[api.TaskID]util.NPUTask{
+			"task1": {Name: "task1", ReqNPUName: reqNPUName, ReqNPUNum: reqNPUNum},
+		},
+	}
+}
+
+func TestValidNPUJobSimple(t *testing.T) {
+	tests := []testCases{
+		buildTestCases("nil handler", nil,
+			&api.ValidateResult{Pass: false, Reason: util.ArgumentError, Message: util.ArgumentError}),
+		buildTestCases("valid npu job with no npu tasks", &NPUHandler{
+			SchedulerJobAttr: util.SchedulerJobAttr{ComJob: util.ComJob{Name: "test-job"},
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName, ReqNPUNum: 2, Tasks: map[api.TaskID]util.NPUTask{}},
+			}, MaxNodeNPUNum: 64}, nil),
+		buildTestCases("valid npu job with valid npu task", &NPUHandler{
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				ComJob: util.ComJob{Name: "test-job"},
+				NPUJob: buildNpuJob(util.NPU910CardName, cardNUm2),
+			}, MaxNodeNPUNum: 64}, nil),
+		buildTestCases("invalid npu job - request zero npu", &NPUHandler{
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				ComJob: util.ComJob{Name: "test-job"},
+				NPUJob: buildNpuJob(util.NPU910CardName, 0),
+			}, MaxNodeNPUNum: 64}, &api.ValidateResult{
+			Pass: false, Reason: "task req npu num is invalid",
+			Message: "job<test-job>-task<task1> req npu num<0> is invalid",
+		}),
+		buildTestCases("invalid npu job - request too many npu", &NPUHandler{
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				ComJob: util.ComJob{Name: "test-job"},
+				NPUJob: buildNpuJob(util.NPU910CardName, cardNUm65),
+			}, MaxNodeNPUNum: 64}, &api.ValidateResult{
+			Pass: false, Reason: "task req npu num is invalid",
+			Message: "job<test-job>-task<task1> req npu num<65> is invalid",
+		}),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result *api.ValidateResult
+			if tt.handler != nil {
+				result = tt.handler.ValidNPUJob()
+			} else {
+				var nilHandler *NPUHandler
+				result = nilHandler.ValidNPUJob()
+			}
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("ValidNPUJob() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
 }

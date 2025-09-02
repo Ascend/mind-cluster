@@ -21,12 +21,13 @@ import (
 	"regexp"
 	"strings"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
 var (
-	reg910A = regexp.MustCompile(Pattern910A)
-	reg910B = regexp.MustCompile(Pattern910B)
+	reg910A = regexp.MustCompile(api.Ascend910APattern)
+	reg910B = regexp.MustCompile(api.Ascend910BPattern)
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -137,20 +138,20 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, "310P") {
-		return Ascend310P
+	if strings.Contains(chipName, api.Ascend310PNo) {
+		return api.Ascend310P
 	}
-	if strings.Contains(chipName, "310B") {
-		return Ascend310B
+	if strings.Contains(chipName, api.Ascend310BNo) {
+		return api.Ascend310B
 	}
-	if strings.Contains(chipName, "310") {
-		return Ascend310
+	if strings.Contains(chipName, api.Ascend310No) {
+		return api.Ascend310
 	}
 	if reg910B.MatchString(chipName) {
-		return Ascend910B
+		return api.Ascend910B
 	}
 	if reg910A.MatchString(chipName) {
-		return Ascend910
+		return api.Ascend910
 	}
 	return ""
 }
@@ -175,11 +176,11 @@ func get310PTemplateNameList() map[string]struct{} {
 func IsValidTemplateName(devType, templateName string) bool {
 	isTemplateNameValid := false
 	switch devType {
-	case Ascend310P:
+	case api.Ascend310P:
 		_, isTemplateNameValid = get310PTemplateNameList()[templateName]
-	case Ascend910:
+	case api.Ascend910:
 		_, isTemplateNameValid = get910TemplateNameList()[templateName]
-	case Ascend910B:
+	case api.Ascend910B:
 		_, isTemplateNameValid = get910BTemplateNameList()[templateName]
 	default:
 	}
@@ -220,12 +221,6 @@ func SetHccsBWProfilingTime(hccsbwProfilingTime int) {
 	HccsBWProfilingTime = hccsbwProfilingTime
 }
 
-// Is910BChip current chip is 910B or not
-func Is910BChip(chipName string) bool {
-	reg910B := regexp.MustCompile(Pattern910B)
-	return reg910B.MatchString(chipName)
-}
-
 // DeepCopyChipInfo copy chip info deeply
 func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 	if chipInfo == nil {
@@ -236,20 +231,6 @@ func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 		Type:    chipInfo.Type,
 		Name:    chipInfo.Name,
 		Version: chipInfo.Version,
-	}
-}
-
-// DeepCopyBoardInfo copy board info deeply
-func DeepCopyBoardInfo(boardInfo *BoardInfo) *BoardInfo {
-	if boardInfo == nil {
-		return nil
-	}
-
-	return &BoardInfo{
-		BoardId: boardInfo.BoardId,
-		PcbId:   boardInfo.PcbId,
-		BomId:   boardInfo.BomId,
-		SlotId:  boardInfo.SlotId,
 	}
 }
 
@@ -513,7 +494,7 @@ func deepCopySlice(slice interface{}) interface{} {
 func GetDevType(chipName string, boardId uint32) string {
 	var devType string
 	if Is910A3Chip(boardId) {
-		devType = Ascend910A3
+		devType = api.Ascend910A3
 	} else {
 		devType = GetDeviceTypeByChipName(chipName)
 	}

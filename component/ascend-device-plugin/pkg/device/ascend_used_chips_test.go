@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 )
 
 // TestGetUseChips for test GetUsedChips
@@ -115,7 +116,7 @@ func TestGetDeviceWithoutAscendRuntime(t *testing.T) {
 			patch := gomonkey.ApplyFuncReturn(getContainerValidSpec, spec, nil).
 				ApplyFuncReturn(npuMajor, []string{"3"})
 			defer patch.Reset()
-			dev4 := fmt.Sprintf("%s-%d", common.Ascend910, 0)
+			dev4 := fmt.Sprintf("%s-%d", api.Ascend910, 0)
 			chips := tool.getDeviceWithoutAscendRuntime(MockContainer{}, nil)
 			convey.So(chips, convey.ShouldResemble, sets.NewString(dev4))
 		})

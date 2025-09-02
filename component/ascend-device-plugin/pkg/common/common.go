@@ -38,19 +38,18 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager/common"
 )
 
 var (
 	dpRegexp = map[string]*regexp.Regexp{
-		"nodeName":    regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
-		"namespace":   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
-		"fullPodName": regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
-		"vir910":      regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c"),
-		"vir310p":     regexp.MustCompile("Ascend310P-(1|2|4)c"),
-		"ascend910":   regexp.MustCompile(`^Ascend910-\d+`),
-		"ascend310":   regexp.MustCompile(`^Ascend310-\d+`),
-		"ascend310P":  regexp.MustCompile(`^Ascend310P-\d+`),
+		"nodeName":             regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+		"namespace":            regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
+		"fullPodName":          regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
+		"vir910":               regexp.MustCompile("Ascend910-([2-6]|8|10|12|16)c"),
+		"vir310p":              regexp.MustCompile("Ascend310P-(1|2|4)c"),
+		api.Ascend910Lowercase: regexp.MustCompile(`^Ascend910-\d+`),
+		"ascend310":            regexp.MustCompile(`^Ascend310-\d+`),
+		"ascend310P":           regexp.MustCompile(`^Ascend310P-\d+`),
 	}
 	// updateTriggerChan is a channel to trigger device info update
 	updateTriggerChan = make(chan struct{}, 1)
@@ -97,7 +96,7 @@ func SetAscendRuntimeEnv(devices []int, ascendRuntimeOptions string, resp *v1bet
 	}
 	(*resp).Envs[AscendVisibleDevicesEnv] = strings.Join(deviceStr, ",")
 	(*resp).Envs[ascendRuntimeOptionsEnv] = ascendRuntimeOptions
-	if ParamOption.RealCardType == Ascend310B {
+	if ParamOption.RealCardType == api.Ascend310B {
 		(*resp).Envs[ascendAllowLinkEnv] = "True"
 	}
 	// npu dynamic cut, dp write the env which job use npu num to container instead of ascend-operator
@@ -236,7 +235,7 @@ func GetDefaultDevices(getFdFlag bool) ([]string, error) {
 		}
 		defaultDevices = append(defaultDevices, socDefaultDevices...)
 	}
-	if ParamOption.RealCardType == Ascend310B {
+	if ParamOption.RealCardType == api.Ascend310B {
 		a310BDefaultDevices := set310BDefaultDevices()
 		defaultDevices = append(defaultDevices, a310BDefaultDevices...)
 	}
@@ -244,11 +243,11 @@ func GetDefaultDevices(getFdFlag bool) ([]string, error) {
 }
 
 func getDavinciManagerPath() (string, error) {
-	if ParamOption.RealCardType == Ascend310B {
+	if ParamOption.RealCardType == api.Ascend310B {
 		if _, err := os.Stat(HiAIManagerDeviceDocker); err == nil {
 			return HiAIManagerDeviceDocker, nil
 		}
-		hwlog.RunLog.Warn("get davinci manager docker failed")
+		hwlog.RunLog.Warn("get npu manager docker failed")
 	}
 	if _, err := os.Stat(HiAIManagerDevice); err != nil {
 		return "", err
@@ -443,9 +442,9 @@ func CheckDeviceName(deviceName, deviceRunMode string) bool {
 	patternMap := GetPattern()
 
 	runModeRegexpMap := map[string]string{
-		common.Ascend910:  RunMode910,
-		common.Ascend310:  RunMode310,
-		common.Ascend310P: RunMode310P,
+		api.Ascend910:  api.Ascend910Lowercase,
+		api.Ascend310:  api.Ascend310Lowercase,
+		api.Ascend310P: api.Ascend310PLowercase,
 	}
 
 	pattern := patternMap[runModeRegexpMap[deviceRunMode]]
@@ -613,12 +612,12 @@ func GetDeviceRunMode() (string, error) {
 	devType := ParamOption.RealCardType
 
 	switch devType {
-	case common.Ascend310, common.Ascend310B:
-		return common.Ascend310, nil
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
-		return common.Ascend910, nil
-	case common.Ascend310P:
-		return common.Ascend310P, nil
+	case api.Ascend310, api.Ascend310B:
+		return api.Ascend310, nil
+	case api.Ascend910, api.Ascend910B, api.Ascend910A3:
+		return api.Ascend910, nil
+	case api.Ascend310P:
+		return api.Ascend310P, nil
 	default:
 		hwlog.RunLog.Errorf("found an unsupported device type %s", devType)
 		return "", fmt.Errorf("%v is a unsupported device type", devType)

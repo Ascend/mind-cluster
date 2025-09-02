@@ -18,6 +18,7 @@ package devmanager
 import (
 	"errors"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
@@ -62,7 +63,7 @@ func (d *DeviceManagerMockErr) ShutDown() error {
 
 // GetDevType return mock type
 func (d *DeviceManagerMockErr) GetDevType() string {
-	return common.Ascend910
+	return api.Ascend910
 }
 
 // GetDeviceCount get npu device count

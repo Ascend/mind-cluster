@@ -23,7 +23,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/devmanager/common"
+	"ascend-common/api"
 )
 
 // TestCopyMap test copyMap
@@ -81,12 +81,12 @@ func TestPreCollect(t *testing.T) {
 		deviceType string
 		expected   bool
 	}{
-		{name: "TestPreCollect_" + common.Ascend910,
-			deviceType: common.Ascend910,
+		{name: "TestPreCollect_" + api.Ascend910,
+			deviceType: api.Ascend910,
 			expected:   true,
 		},
-		{name: "TestPreCollect_" + common.Ascend310,
-			deviceType: common.Ascend310,
+		{name: "TestPreCollect_" + api.Ascend310,
+			deviceType: api.Ascend310,
 			expected:   false,
 		},
 	}

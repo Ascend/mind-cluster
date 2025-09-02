@@ -31,6 +31,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -139,28 +140,28 @@ func newTestHotResetManager(deviceType string, model string) HotResetManager {
 func TestGetChipCountOnRing(t *testing.T) {
 	convey.Convey("test GetChipCountOnRing", t, func() {
 		convey.Convey("test 910 chip count on ring success", func() {
-			ascend910HotResetManager := newTestHotResetManager(common.Ascend910, common.Train)
+			ascend910HotResetManager := newTestHotResetManager(api.Ascend910, common.Train)
 			convey.So(ascend910HotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910HotResetManager.GetResetDevNumOnce()
 			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910RingsNum)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910B train chip count on ring success", func() {
-			ascend910BTrainHotResetManager := newTestHotResetManager(common.Ascend910B, common.Train)
+			ascend910BTrainHotResetManager := newTestHotResetManager(api.Ascend910B, common.Train)
 			convey.So(ascend910BTrainHotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910BTrainHotResetManager.GetResetDevNumOnce()
 			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumTrain)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910B Infer chip count on ring success", func() {
-			ascend910BInferHotResetManager := newTestHotResetManager(common.Ascend910B, common.Infer)
+			ascend910BInferHotResetManager := newTestHotResetManager(api.Ascend910B, common.Infer)
 			convey.So(ascend910BInferHotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910BInferHotResetManager.GetResetDevNumOnce()
 			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910BRingsNumTrain)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test 910A3 chip count on ring success", func() {
-			ascend910A3HotResetManager := newTestHotResetManager(common.Ascend910A3, common.Train)
+			ascend910A3HotResetManager := newTestHotResetManager(api.Ascend910A3, common.Train)
 			convey.So(ascend910A3HotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910A3HotResetManager.GetResetDevNumOnce()
 			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910A3RingsNum)

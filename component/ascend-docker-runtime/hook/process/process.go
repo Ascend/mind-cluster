@@ -31,20 +31,21 @@ import (
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
 const (
-	runLogPath             = "/var/log/ascend-docker-runtime/hook-run.log"
-	ascendRuntimeOptions   = "ASCEND_RUNTIME_OPTIONS"
-	ascendRuntimeMounts    = "ASCEND_RUNTIME_MOUNTS"
-	ascendVisibleDevices   = "ASCEND_VISIBLE_DEVICES"
-	ascendAllowLink        = "ASCEND_ALLOW_LINK"
+	runLogPath             = api.HookRunLogPath
+	ascendRuntimeOptions   = api.AscendRuntimeOptionsEnv
+	ascendRuntimeMounts    = api.AscendRuntimeMountsEnv
+	ascendVisibleDevices   = api.AscendVisibleDevicesEnv
+	ascendAllowLink        = api.AscendAllowLinkEnv
 	ascendDockerCli        = "ascend-docker-cli"
 	defaultAscendDockerCli = "/usr/local/bin/ascend-docker-cli"
-	configDir              = "/etc/ascend-docker-runtime.d"
+	configDir              = api.RunTimeDConfigPath
 	baseConfig             = "base"
 	configFileSuffix       = "list"
 
@@ -85,7 +86,7 @@ func InitLogModule(ctx context.Context) error {
 		FileMaxSize: fileMaxSize,
 	}
 	if err := hwlog.InitRunLogger(&runLogConfig, ctx); err != nil {
-		fmt.Printf("hwlog init failed, error is %v", err)
+		fmt.Printf("log init failed, error is %v", err)
 		return err
 	}
 	return nil
@@ -128,14 +129,16 @@ func parseRuntimeOptions(runtimeOptions string) ([]string, error) {
 	}
 	const maxLength = 128
 	if len(runtimeOptions) > maxLength {
-		hwlog.RunLog.Errorf("length of ASCEND_RUNTIME_OPTIONS value is invalid, its length: %v", len(runtimeOptions))
+		hwlog.RunLog.Errorf("length of %v value is invalid, its length: %v",
+			api.AscendRuntimeOptionsEnv, len(runtimeOptions))
 		return nil, fmt.Errorf("invalid runtime option, the length exceeds 128 characters")
 	}
 
 	for _, option := range strings.Split(runtimeOptions, ",") {
 		option = strings.TrimSpace(option)
 		if !isRuntimeOptionValid(option) {
-			hwlog.RunLog.Errorf("value of ASCEND_RUNTIME_OPTIONS is not in valid option list, value: %v", option)
+			hwlog.RunLog.Errorf("value of %v is not in valid option list, value: %v",
+				api.AscendRuntimeOptionsEnv, option)
 			return nil, fmt.Errorf("invalid runtime option of invalid input value")
 		}
 
@@ -295,7 +298,7 @@ func readConfigsOfDir(dir string, configs []string) ([]string, []string, error) 
 	}
 
 	if !fileInfo.Mode().IsDir() {
-		return nil, nil, fmt.Errorf("%s should be a dir for ascend docker runtime, but now it is not", dir)
+		return nil, nil, fmt.Errorf("%s should be a dir for docker runtime, but now it is not", dir)
 	}
 
 	fileMountList := make([]string, 0)
@@ -358,12 +361,12 @@ func DoPrestartHook() error {
 
 	currentExecPath, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("cannot get the path of ascend-docker-hook: %#v", err)
+		return fmt.Errorf("cannot get the path of docker-hook: %#v", err)
 	}
 
 	cliPath := path.Join(path.Dir(currentExecPath), ascendDockerCliName)
 	if _, err = os.Stat(cliPath); err != nil {
-		return fmt.Errorf("cannot find ascend-docker-cli executable file at %s: %#v", cliPath, err)
+		return fmt.Errorf("cannot find docker-cli executable file at %s: %#v", cliPath, err)
 	}
 	if _, err := mindxcheckutils.RealFileChecker(cliPath, true, false, mindxcheckutils.DefaultSize); err != nil {
 		return err
@@ -372,12 +375,12 @@ func DoPrestartHook() error {
 	if len(parsedOptions) > 0 {
 		args = append(args, "--options", strings.Join(parsedOptions, ","))
 	}
-	hwlog.RunLog.Info("ascend docker hook success, will start cli")
+	hwlog.RunLog.Info("docker hook success, will start cli")
 	if err := mindxcheckutils.ChangeRuntimeLogMode("hook-run-"); err != nil {
 		return err
 	}
 	if err := doExec(cliPath, args, os.Environ()); err != nil {
-		return fmt.Errorf("failed to exec ascend-docker-cli %v: %v", args, err)
+		return fmt.Errorf("failed to exec docker-cli %v: %v", args, err)
 	}
 	return nil
 }

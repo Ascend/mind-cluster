@@ -186,11 +186,6 @@ func (tool *AscendTools) convertLogicIDsToDeviceNames(logicIds []int32) string {
 }
 
 func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
-	deviceRunMode, err := common.GetDeviceRunMode()
-	if err != nil {
-		hwlog.RunLog.Warnf("failed to get device run mode, error: %v", err)
-		return ""
-	}
 	if manuallyFaultCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.
 		ManuallySeparateNpuAll); len(manuallyFaultCache) == 0 {
 		hwlog.RunLog.Debug("manually separate npu cache is empty, no need to handle manually separate npu " +
@@ -199,8 +194,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 	}
 	logicIDsHandledFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuHandled)
 	deviceInfoName := tool.client.DeviceInfoName
-	physicIDsFromDeviceInfo := tool.client.
-		GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
+	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
 	for _, logicId := range logicIDsHandledFromCache {
 		physicId, err := tool.GetDmgr().GetPhysicIDFromLogicID(logicId)
 		if err != nil {
@@ -208,11 +202,9 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 			common.DeleteManuallyFaultInfo(logicId)
 			continue
 		}
-		deviceName := fmt.Sprintf("%s-%d", deviceRunMode, physicId)
-
 		if !common.Int32Tool.Contains(physicIDsFromDeviceInfo, physicId) {
-			hwlog.RunLog.Infof("%s is not in ManuallySeparateNPU of device info configmap, will be removed in "+
-				"cache", deviceName)
+			hwlog.RunLog.Infof("card %d is not in ManuallySeparateNPU of device info configmap, "+
+				"will be removed in cache", physicId)
 			common.DeleteManuallyFaultInfo(logicId)
 		}
 	}
@@ -226,10 +218,9 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
 			continue
 		}
-		deviceName := fmt.Sprintf("%s-%d", deviceRunMode, physicId)
 		if !common.Int32Tool.Contains(logicIDsAllFromCache, logicId) {
-			hwlog.RunLog.Infof("cache does not contain %v, %v will be removed in ManuallySeparateNPU field "+
-				"of device info configmap", deviceName, deviceName)
+			hwlog.RunLog.Infof("cache does not contain card %d, card %d will be removed in ManuallySeparateNPU field "+
+				"of device info configmap", physicId, physicId)
 		}
 	}
 	common.SetManuallyFaultNPUHandled()
@@ -353,7 +344,6 @@ func (tool *AscendTools) delVirDevInfo(newDeviceList map[string]string) {
 
 func (tool *AscendTools) assembleNpuDeviceStruct(deviType, deviceName string,
 	davinCiDev common.DavinCiDev) common.NpuDevice {
-	hwlog.RunLog.Debugf("Found Huawei Ascend, deviceType: %s, deviceName: %s", deviType, deviceName)
 	return common.NpuDevice{
 		DevType:       deviType,
 		DeviceName:    deviceName,
@@ -460,7 +450,7 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	podList := tool.client.GetActivePodListCache()
 	usedDevice := sets.String{}
 	for _, pod := range podList {
-		realDevice, exist := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
+		realDevice, exist := pod.Annotations[api.PodAnnotationAscendReal]
 		if !exist {
 			continue
 		}
@@ -797,7 +787,7 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 		annoValue string
 	}{
 		{annoKey: api.ResourceNamePrefix + common.Pod2kl, annoValue: strings.Join(podDev.KltDevice, common.CommaSepDev)},
-		{annoKey: api.ResourceNamePrefix + common.PodRealAlloc, annoValue: allUsedDev},
+		{annoKey: api.PodAnnotationAscendReal, annoValue: allUsedDev},
 		{annoKey: fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType), annoValue: allUsedDev},
 	}
 	annotation := make(map[string]string)
@@ -815,7 +805,7 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 			}
 		}
 	}
-	if tool.name == common.Ascend910 || common.IsContainAll300IDuo() {
+	if tool.name == api.Ascend910 || common.IsContainAll300IDuo() {
 		config, err := tool.getConfigAnno(podDev, deviceType, serverID, allDevices)
 		if err == nil {
 			if podDev.Pod.Annotations[api.Pod910DeviceAnno] != config {
@@ -889,7 +879,7 @@ func setHealthyIfDuoCard(groupDevice map[string][]*common.NpuDevice) {
 		hwlog.RunLog.Debugf("not open infer device hot reset function, it's %d", common.ParamOption.HotReset)
 		return
 	}
-	ascend310PDevices, ok := groupDevice[common.Ascend310P]
+	ascend310PDevices, ok := groupDevice[api.Ascend310P]
 	if !ok {
 		hwlog.RunLog.Debugf("not found 310P devices")
 		return
@@ -958,7 +948,7 @@ func (tool *AscendTools) isNetworkHealthy(device *common.NpuDevice) string {
 func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 	podList := tool.client.GetActivePodListCache()
 	for _, pod := range podList {
-		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.Ascend910)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.Ascend910)
 		tmpNpu, ok := pod.Annotations[annotationTag]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
@@ -1122,7 +1112,7 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 			tool.flushFaultCodesWithInit(device, devFaultInfoMap)
 			common.CountFaultDuration(device, devFaultInfoMap)
 			device.Health = tool.isHealthy(device)
-			if runMode == common.Ascend910 {
+			if runMode == api.Ascend910 {
 				device.NetworkHealth = tool.isNetworkHealthy(device)
 			}
 		}
@@ -1229,7 +1219,7 @@ func (tool *AscendTools) assembleShareModeDevices(davinCiDev common.DavinCiDev, 
 // SetDeviceUsage set usage of device according to board info
 func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 	devType := tool.dmgr.GetDevType()
-	if strings.HasPrefix(devType, common.Ascend310) {
+	if strings.HasPrefix(devType, api.Ascend310) {
 		tool.deviceUsage = common.Infer
 		return nil
 	}
@@ -1253,7 +1243,7 @@ func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
 	}
 
 	// A800IA2 without hccs can be auto set usage as infer
-	if devType == common.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
+	if devType == api.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
 		boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
 		tool.deviceUsage = common.Infer
 		return nil

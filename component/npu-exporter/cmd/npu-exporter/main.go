@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-common/devmanager"
@@ -97,7 +98,6 @@ const (
 	telegrafPlatform           = "Telegraf"
 	pollIntervalStr            = "poll_interval"
 	platformStr                = "platform"
-	hccsBWProfilingTimeStr     = "hccsBWProfilingTime"
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
 )
@@ -366,8 +366,8 @@ func init() {
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
 	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
 		"config pcie bandwidth profiling time, range is [1, 2000]")
-	flag.IntVar(&hccsBWProfilingTime, hccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
-		"config hccs bandwidth profiling time, range is [1, 1000]")
+	flag.IntVar(&hccsBWProfilingTime, api.HccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
+		"config "+api.Hccs+" bandwidth profiling time, range is [1, 1000]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -426,9 +426,9 @@ func paramValidInTelegraf() error {
 
 	// store the preset parameter names in the map
 	presetParamsMap := map[string]bool{
-		platformStr:            true,
-		pollIntervalStr:        true,
-		hccsBWProfilingTimeStr: true,
+		platformStr:                true,
+		pollIntervalStr:            true,
+		api.HccsBWProfilingTimeStr: true,
 	}
 
 	if len(cmdLine) > len(presetParamsMap) {
@@ -450,7 +450,7 @@ func paramValidInTelegraf() error {
 	}
 
 	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
-		return errors.New("hccsBWProfilingTime range error")
+		return errors.New(api.Hccs + "BWProfilingTime range error")
 	}
 	return nil
 }

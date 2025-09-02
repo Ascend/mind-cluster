@@ -284,6 +284,7 @@ type FaultTask struct {
 	PodCreateTime      int64
 	faultType          string
 	IsNpuTask          bool
+	Annotations        map[string]string
 }
 
 // miniFaultTask struct for print fTask important infos to logs

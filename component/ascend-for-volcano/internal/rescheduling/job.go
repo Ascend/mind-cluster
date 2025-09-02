@@ -137,7 +137,7 @@ func (fJob *FaultJob) deleteJobWithSubHealthyLabels(ssn *framework.Session, resc
 	schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) error {
 	klog.V(util.LogWarningLev).Infof("delete job %s subHealthyStrategy %s", fJob.JobName,
 		fJob.SubHealthyStrategy)
-	if fJob.SubHealthyStrategy == util.SubHealthyForceExit {
+	if fJob.SubHealthyStrategy == util.SubHealthyForceExit || fJob.SubHealthyStrategy == util.SubHealthyHotSwitch {
 		return fJob.ForceDeleteJob(schedulerJob, env)
 	}
 	if !fJob.IsProcessReschedulingJob(schedulerJob) {
@@ -638,8 +638,7 @@ func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
 		FaultRetryTimes:   faultRetryTimeOfJob(job),
 	}
 	subHealthyStrategy, exist := job.PodGroup.Labels[util.SubHealthyStrategyLabel]
-	if !exist || !util.CheckStrInSlice(subHealthyStrategy,
-		[]string{util.SubHealthyIgnore, util.SubHealthyGraceExit, util.SubHealthyForceExit}) {
+	if !exist || !util.IsStrategyInSubHealthyStrategs(subHealthyStrategy) {
 		subHealthyStrategy = util.SubHealthyIgnore
 	}
 	faultJob.SubHealthyStrategy = subHealthyStrategy

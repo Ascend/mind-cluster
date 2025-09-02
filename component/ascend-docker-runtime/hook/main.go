@@ -22,13 +22,14 @@ import (
 	"os"
 	"strings"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/hook/process"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
 const (
-	loggingPrefix = "ascend-docker-hook"
+	loggingPrefix = api.AscendDockerHook
 )
 
 func main() {
@@ -53,14 +54,14 @@ func main() {
 		}
 	}()
 
-	hwlog.RunLog.Infof("%v ascend docker hook starting, try to setup container", logPrefixWords)
+	hwlog.RunLog.Infof("%v docker hook starting, try to setup container", logPrefixWords)
 	if !mindxcheckutils.StringChecker(strings.Join(os.Args, " "), 0,
 		process.MaxCommandLength, mindxcheckutils.DefaultWhiteList+" ") {
-		hwlog.RunLog.Errorf("%v ascend docker hook failed", logPrefixWords)
+		hwlog.RunLog.Errorf("%v docker hook failed", logPrefixWords)
 		log.Fatal("command error")
 	}
 	if err := process.DoPrestartHook(); err != nil {
-		hwlog.RunLog.Errorf("%v ascend docker hook failed: %#v", logPrefixWords, err)
+		hwlog.RunLog.Errorf("%v docker hook failed: %#v", logPrefixWords, err)
 		log.Fatal(fmt.Errorf("failed in runtime.doProcess: %#v", err))
 	}
 }

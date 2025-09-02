@@ -18,6 +18,7 @@ package devmanager
 import (
 	"errors"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 )
 
@@ -28,7 +29,7 @@ type DeviceManager910A3MockErr struct {
 
 // GetDevType return mock type
 func (d *DeviceManager910A3MockErr) GetDevType() string {
-	return common.Ascend910A3
+	return api.Ascend910A3
 }
 
 // GetHccsStatisticInfo get hccs statistic info

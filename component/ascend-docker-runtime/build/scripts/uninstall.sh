@@ -15,12 +15,13 @@
 # limitations under the License.
 # ============================================================================
 
+RT_LOWER_CASE="ascend-docker-runtime"
 
-readonly INSTALL_LOG_DIR=/var/log/ascend-docker-runtime
+readonly INSTALL_LOG_DIR=/var/log/${RT_LOWER_CASE}
 readonly INSTALL_LOG_PATH=${INSTALL_LOG_DIR}/installer.log
 readonly INSTALL_LOG_PATH_BAK=${INSTALL_LOG_DIR}/installer_bak.log
 readonly LOG_SIZE_THRESHOLD=$((20*1024*1024))
-readonly ASCEND_RUNTIME_CONFIG_DIR=/etc/ascend-docker-runtime.d
+readonly ASCEND_RUNTIME_CONFIG_DIR=/etc/${RT_LOWER_CASE}.d
 
 function check_log {
     if [[ ! -d ${INSTALL_LOG_DIR} ]]; then
@@ -54,7 +55,7 @@ function log {
         ip="localhost"
     fi
     echo "$1 $2"
-    echo "$1 [$(date +'%Y/%m/%d %H:%M:%S')] [uid: ${UID}] [${ip}] [Ascend-Docker-Runtime] $2" >> ${INSTALL_LOG_PATH}
+    echo "$1 [$(date +'%Y/%m/%d %H:%M:%S')] [uid: ${UID}] [${ip}] [${RT_LOWER_CASE}] $2" >> ${INSTALL_LOG_PATH}
 }
 
 function check_path {

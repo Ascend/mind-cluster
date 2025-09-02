@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
@@ -165,7 +166,7 @@ type DeviceManager struct {
 	// DcMgr for common dev manager
 	DcMgr dcmi.DcDriverInterface
 	// DevType the value is the same as the device type corresponding to the DcMgr variable.
-	// Options: common.Ascend310,common.Ascend310P,common.Ascend910
+	// Options: api.Ascend310,api.Ascend310P,api.Ascend910
 	DevType string
 	// ProductTypes product type in server, multi type will be in 310P mix scene
 	ProductTypes []string
@@ -205,11 +206,11 @@ func AutoInit(dType string) (*DeviceManager, error) {
 	var devType = common.GetDevType(chipInfo.Name, boardInfo.BoardId)
 
 	switch devType {
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
+	case api.Ascend910, api.Ascend910B, api.Ascend910A3:
 		devMgr.DcMgr = &A910Manager{}
-	case common.Ascend310P:
+	case api.Ascend310P:
 		devMgr.DcMgr = &A310PManager{}
-	case common.Ascend310, common.Ascend310B:
+	case api.Ascend310, api.Ascend310B:
 		devMgr.DcMgr = &A310Manager{}
 	default:
 		return nil, fmt.Errorf("unsupport device type (%s)", devType)
@@ -505,7 +506,7 @@ func (d *DeviceManager) GetDeviceMemoryInfo(logicID int32) (*common.MemoryInfo, 
 	}
 
 	// 910B and 910A3 don't have DDR module. Therefore, DDR information cannot be queried.
-	if d.DevType == common.Ascend910B || d.DevType == common.Ascend910A3 {
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 {
 		hwlog.RunLog.Debugf("%v doesn't have DDR module. Therefore, DDR information cannot be queried", d.DevType)
 		return nil, nil
 	}
@@ -686,7 +687,7 @@ func (d *DeviceManager) GetAllProductType() ([]string, error) {
 
 // GetNpuWorkMode get work mode of NPU
 func (d *DeviceManager) GetNpuWorkMode() string {
-	if d.DevType == common.Ascend910B || d.DevType == common.Ascend910A3 {
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 {
 		hwlog.RunLog.Warnf("only AMP mode is available on %s", d.DevType)
 		return common.AMPMode
 	}
@@ -853,7 +854,7 @@ func (d *DeviceManager) GetPCIEBandwidth(logicID int32, profilingTime int) (comm
 // SetIsTrainingCard identifies whether it is a training card according to the usage of card
 func (d *DeviceManager) SetIsTrainingCard() error {
 	devType := d.GetDevType()
-	if strings.HasPrefix(devType, common.Ascend310) {
+	if strings.HasPrefix(devType, api.Ascend310) {
 		d.isTrainingCard = false
 		return nil
 	}
@@ -888,7 +889,7 @@ func (d *DeviceManager) SetIsTrainingCard() error {
 		}
 	}
 
-	if devType == common.Ascend910B &&
+	if devType == api.Ascend910B &&
 		(boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId) {
 		d.isTrainingCard = false
 		return nil

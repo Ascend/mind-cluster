@@ -224,7 +224,7 @@ func signalCatch(cancel context.CancelFunc) {
 func initLogger(ctx context.Context) error {
 	// init hwlog
 	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
-		return fmt.Errorf("hwlog init failed, error is %v", err)
+		return fmt.Errorf("log init failed, error is %v", err)
 	}
 	if err := logs.InitJobEventLogger(ctx); err != nil {
 		hwlog.RunLog.Errorf("JobEventLog init failed, error is %v", err)

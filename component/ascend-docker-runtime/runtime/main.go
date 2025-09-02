@@ -48,7 +48,7 @@ func main() {
 	}()
 	if !mindxcheckutils.StringChecker(strings.Join(os.Args, " "), 0,
 		process.MaxCommandLength, mindxcheckutils.DefaultWhiteList+" ") {
-		hwlog.RunLog.Errorf("%v ascend docker runtime args check failed", logPrefixWords)
+		hwlog.RunLog.Errorf("%v docker runtime args check failed", logPrefixWords)
 		log.Fatal("command error")
 	}
 	if err = process.DoProcess(); err != nil {

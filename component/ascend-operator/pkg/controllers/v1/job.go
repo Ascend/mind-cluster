@@ -208,7 +208,8 @@ func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.AscendJob, status *comm
 			message:  fmt.Sprintf("AscendJob %s/%s is running.", job.Namespace, job.Name),
 		})
 	}
-	if getTotalReplicas(job) == status.Succeeded {
+	// when elastic-training, only have pending and succeed pods
+	if getTotalReplicas(job) == status.Succeeded || (status.Succeeded > 0 && status.Active == 0) {
 		return updateFunc(&conditionInfo{
 			condType: commonv1.JobSucceeded,
 			reason:   util.JobRunningReason,
@@ -316,7 +317,32 @@ func (r *ASJobReconciler) isPodGroupSynced(ji *jobInfo) bool {
 	return true
 }
 
+func (r *ASJobReconciler) deletePendingPods(ji *jobInfo) error {
+	if ji == nil {
+		return nil
+	}
+	for _, pod := range ji.pods {
+		if pod == nil {
+			hwlog.RunLog.Warn("found nil pod in list")
+			continue
+		}
+		if pod.Status.Phase != corev1.PodPending {
+			continue
+		}
+		hwlog.RunLog.Infof("will delete pod %s/%s", pod.Namespace, pod.Name)
+		err := r.Delete(context.Background(), pod)
+		if err != nil {
+			hwlog.RunLog.Errorf("delete pod %s/%s failed: %v", pod.Namespace, pod.Name, err)
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *ASJobReconciler) handleFinishedJob(ji *jobInfo, needUpdateCond bool, cond conditionInfo) error {
+	if err := r.deletePendingPods(ji); err != nil {
+		return err
+	}
 	// If the Job is succeed or failed, delete all pods and services.
 	if err := r.DeletePodsAndServices(ji.runPolicy, ji.job, ji.pods); err != nil {
 		hwlog.RunLog.Errorf("job<%s> delete pods and services failed, err: %s", ji.name, err)

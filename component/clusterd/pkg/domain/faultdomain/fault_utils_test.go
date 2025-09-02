@@ -13,6 +13,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -27,7 +28,7 @@ const (
 	deviceId                   = "0"
 	rankID                     = "8"
 	cmName                     = "mindx-dl-deviceinfo-" + nodeName
-	deviceName                 = constant.Ascend910 + "-" + deviceId
+	deviceName                 = api.Ascend910 + "-" + deviceId
 	originalDeviceFaultCodeCnt = 2
 )
 

@@ -14,8 +14,6 @@ const (
 	Statistics = "statistics"
 	// FaultRecover business type FaultRecover
 	FaultRecover = "fault-recover"
-	// AscendDevPrefix name prefix
-	AscendDevPrefix = "Ascend910-"
 	// JobNodeHealthyType is node healthy type
 	JobNodeHealthyType = "node"
 	// JobDeviceHealthyType is device healthy type

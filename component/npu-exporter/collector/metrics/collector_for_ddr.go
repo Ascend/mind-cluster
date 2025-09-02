@@ -20,6 +20,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -32,8 +33,8 @@ var (
 	descUsedMemory  = colcommon.BuildDesc("npu_chip_info_used_memory", "the npu used memory")
 
 	notSupportedDdrDevices = map[string]bool{
-		common.Ascend910B:  true,
-		common.Ascend910A3: true,
+		api.Ascend910B:  true,
+		api.Ascend910A3: true,
 	}
 )
 

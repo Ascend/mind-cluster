@@ -34,13 +34,14 @@ import (
 	"github.com/containerd/containerd/oci"
 	"github.com/opencontainers/runtime-spec/specs-go"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/dcmi"
 )
 
 const (
-	runLogPath          = "/var/log/ascend-docker-runtime/runtime-run.log"
+	runLogPath          = api.RunTimeRunLogPath
 	hookDefaultFilePath = "/usr/local/bin/ascend-docker-hook"
 	// MaxCommandLength is the max length of command.
 	MaxCommandLength = 65535
@@ -53,10 +54,9 @@ const (
 	borderNum        = 2
 
 	// ENV for device-plugin to identify ascend-docker-runtime
-	useAscendDocker      = "ASCEND_DOCKER_RUNTIME=True"
-	devicePlugin         = "ascend-device-plugin"
-	ascendVisibleDevices = "ASCEND_VISIBLE_DEVICES"
-	ascendRuntimeOptions = "ASCEND_RUNTIME_OPTIONS"
+	useAscendDocker      = api.AscendDockerRuntimeEnv + "=True"
+	ascendVisibleDevices = api.AscendVisibleDevicesEnv
+	ascendRuntimeOptions = api.AscendRuntimeOptionsEnv
 
 	// void indicates that the NPU card does not need to be mounted
 	void = "void"
@@ -67,6 +67,8 @@ var (
 	hookDefaultFile = hookDefaultFilePath
 	dockerRuncName  = dockerRuncFile
 	runcName        = runcFile
+	deviceRegx      = fmt.Sprintf(`^%s(%s|%s|%s|%s)-(\d+)$`, api.Ascend, api.Ascend910No,
+		api.Ascend310BNo, api.Ascend310PNo, api.Ascend310No)
 )
 
 const (
@@ -75,14 +77,14 @@ const (
 	// Atlas200 Product name
 	Atlas200 = "Atlas 200 Model 3000"
 	// Ascend310 ascend 310 chip
-	Ascend310 = "Ascend310"
+	Ascend310 = api.Ascend310
 	// Ascend310P ascend 310P chip
-	Ascend310P = "Ascend310P"
+	Ascend310P = api.Ascend310P
 	// Ascend310B ascend 310B chip
-	Ascend310B = "Ascend310B"
+	Ascend310B = api.Ascend310B
 	// Ascend910 ascend 910 chip
-	Ascend910 = "Ascend910"
-	ascend    = "Ascend"
+	Ascend910 = api.Ascend910
+	ascend    = api.Ascend
 
 	devicePath           = "/dev/"
 	davinciName          = "davinci"
@@ -115,16 +117,16 @@ type args struct {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, "310B") {
+	if strings.Contains(chipName, api.Ascend310BNo) {
 		return Ascend310B
 	}
-	if strings.Contains(chipName, "310P") {
+	if strings.Contains(chipName, api.Ascend310PNo) {
 		return Ascend310P
 	}
-	if strings.Contains(chipName, "310") {
+	if strings.Contains(chipName, api.Ascend310No) {
 		return Ascend310
 	}
-	if strings.Contains(chipName, "910") {
+	if strings.Contains(chipName, api.Ascend910No) {
 		return Ascend910
 	}
 	return ""
@@ -206,7 +208,7 @@ func addHook(spec *specs.Spec, deviceIdList *[]int) error {
 	}
 	currentExecPath, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("cannot get the path of ascend-docker-runtime: %v", err)
+		return fmt.Errorf("cannot get the path of docker-runtime: %v", err)
 	}
 
 	hookCliPath = path.Join(path.Dir(currentExecPath), hookCli)
@@ -214,7 +216,7 @@ func addHook(spec *specs.Spec, deviceIdList *[]int) error {
 		return err
 	}
 	if _, err = os.Stat(hookCliPath); err != nil {
-		return fmt.Errorf("cannot find ascend-docker-hook executable file at %s: %v", hookCliPath, err)
+		return fmt.Errorf("cannot find docker-hook executable file at %s: %v", hookCliPath, err)
 	}
 
 	if spec.Hooks == nil {
@@ -281,7 +283,7 @@ func parseDevices(visibleDevices string) ([]int, error) {
 	for _, value := range strings.Split(visibleDevices, ",") {
 		deviceFromValue, err := getDeviceListFromVisibleValue(value)
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to get devices from ASCEND_VISIBLE_DEVICE value, error: %v", err)
+			hwlog.RunLog.Errorf("failed to get devices from %v value, error: %v", api.AscendVisibleDevicesEnv, err)
 			return nil, err
 		}
 		devices = append(devices, deviceFromValue...)
@@ -338,7 +340,7 @@ func parseAscendDevices(visibleDevices string) ([]int, error) {
 	chipType := ""
 
 	for _, d := range devicesList {
-		matchGroups := regexp.MustCompile(`^Ascend(910|310|310B|310P)-(\d+)$`).FindStringSubmatch(strings.TrimSpace(d))
+		matchGroups := regexp.MustCompile(deviceRegx).FindStringSubmatch(strings.TrimSpace(d))
 		if matchGroups == nil {
 			return nil, fmt.Errorf("invalid device format: %s", d)
 		}
@@ -400,7 +402,8 @@ func getValueByDeviceKey(data []string) string {
 		}
 	}
 	if res == "" {
-		hwlog.RunLog.Error("ASCEND_VISIBLE_DEVICES env variable is empty, will not mount any ascend device")
+		hwlog.RunLog.Errorf("%v env variable is empty, will not mount any ascend device",
+			api.AscendVisibleDevicesEnv)
 	}
 	return res
 }
@@ -606,7 +609,7 @@ func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdLi
 		newEnv = append(newEnv, line)
 	}
 	if needAddVirtualFlag {
-		newEnv = append(newEnv, fmt.Sprintf("ASCEND_RUNTIME_OPTIONS=VIRTUAL"))
+		newEnv = append(newEnv, fmt.Sprintf(api.AscendRuntimeOptionsEnv+"=VIRTUAL"))
 	}
 	spec.Process.Env = newEnv
 	if currentExecPath, err := os.Executable(); err == nil {
@@ -669,7 +672,7 @@ func readSpecFile(path string) (*specs.Spec, error) {
 func processDevicesAndHooks(spec *specs.Spec) error {
 	devices, err := checkVisibleDevice(spec)
 	if err != nil {
-		return fmt.Errorf("failed to check ASCEND_VISIBLE_DEVICES parameter, err: %v", err)
+		return fmt.Errorf("failed to check %v parameter, err: %v", api.AscendVisibleDevicesEnv, err)
 	}
 
 	if len(devices) != 0 {

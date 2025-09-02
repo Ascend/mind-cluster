@@ -35,13 +35,14 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
+	"ascend-common/api"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
 const (
 	pidSample                              = 123
 	fileMode0600               os.FileMode = 0600
-	ascendVisibleDeviceTestStr             = "ASCEND_VISIBLE_DEVICES=0-3,5,7"
+	ascendVisibleDeviceTestStr             = api.AscendVisibleDevicesEnv + "=0-3,5,7"
 	configFile                             = "config.json"
 	strRepeatTimes                         = 129
 	testStr                                = "test"
@@ -63,7 +64,7 @@ func TestDoPrestartHookCase2(t *testing.T) {
 	conCfg := containerConfig{
 		Pid:    pidSample,
 		Rootfs: ".",
-		Env:    []string{"ASCEND_VISIBLE_DEVICES=0l-3,5,7"},
+		Env:    []string{api.AscendVisibleDevicesEnv + "=0l-3,5,7"},
 	}
 	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
 	defer stub.Reset()
@@ -90,8 +91,8 @@ func TestDoPrestartHookCase4(t *testing.T) {
 		Pid:    pidSample,
 		Rootfs: ".",
 		Env: []string{
-			"ASCEND_VISIBLE_DEVICES=0",
-			"ASCEND_RUNTIME_OPTIONS=VIRTUAL,NODRV",
+			api.AscendVisibleDevicesEnv + "=0",
+			api.AscendRuntimeOptionsEnv + "=VIRTUAL,NODRV",
 		},
 	}
 	err := InitLogModule(context.Background())
@@ -208,7 +209,7 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 // TestGetValueByKeyCase1 test the function getValueByKey
 func TestGetValueByKeyCase1(t *testing.T) {
 	data := []string{ascendVisibleDeviceTestStr}
-	word := "ASCEND_VISIBLE_DEVICES"
+	word := api.AscendVisibleDevicesEnv
 	expectVal := "0-3,5,7"
 	actualVal := getValueByKey(data, word)
 	if actualVal != expectVal {
@@ -218,8 +219,8 @@ func TestGetValueByKeyCase1(t *testing.T) {
 
 // TestGetValueByKeyCase2 test the function getValueByKey
 func TestGetValueByKeyCase2(t *testing.T) {
-	data := []string{"ASCEND_VISIBLE_DEVICES"}
-	word := "ASCEND_VISIBLE_DEVICES"
+	data := []string{api.AscendVisibleDevicesEnv}
+	word := api.AscendVisibleDevicesEnv
 	expectVal := ""
 	defer func() {
 		if err := recover(); err != nil {
@@ -448,7 +449,7 @@ func TestDoPrestartHook(t *testing.T) {
 	conCfg := containerConfig{
 		Pid:    pidSample,
 		Rootfs: ".",
-		Env:    []string{"ASCEND_VISIBLE_DEVICES=0-3,5,7", "ASCEND_RUNTIME_MOUNTS=a"},
+		Env:    []string{api.AscendVisibleDevicesEnv + "=0-3,5,7", api.AscendRuntimeMountsEnv + "=a"},
 	}
 	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
 	defer stub.Reset()

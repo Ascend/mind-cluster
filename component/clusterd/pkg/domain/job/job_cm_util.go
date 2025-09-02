@@ -34,7 +34,7 @@ const (
 	cmCutNumKey       = "total"
 	jobStatus         = "job_status"
 	addTime           = "time"
-	val910            = "ascend-910"
+	val910            = api.Ascend910MinuxCase
 	ptFramework       = "pytorch"
 	torIpTag          = "sharedTorIp"
 	masterAddrKey     = "masterAddr"

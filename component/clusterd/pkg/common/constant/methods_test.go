@@ -8,6 +8,7 @@ import (
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/util"
 )
@@ -172,7 +173,7 @@ func TestAdvanceDeviceFaultCmDelFaultAndFix(t *testing.T) {
 func TestAdvanceDeviceFaultCmIsSame(t *testing.T) {
 	convey.Convey("two cm should be same", t, func() {
 		cm1 := &AdvanceDeviceFaultCm{
-			DeviceType:  Ascend910,
+			DeviceType:  api.Ascend910,
 			CmName:      "xxx",
 			SuperPodID:  0,
 			ServerIndex: 0,

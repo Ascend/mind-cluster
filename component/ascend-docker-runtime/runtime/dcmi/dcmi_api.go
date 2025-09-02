@@ -21,6 +21,7 @@ import (
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -91,7 +92,7 @@ func extractVpuParam(spec *specs.Spec) (string, error) {
 		if len(words) != LENGTH {
 			continue
 		}
-		if strings.TrimSpace(words[0]) == "ASCEND_VNPU_SPECS" {
+		if strings.TrimSpace(words[0]) == api.AscendVnpuSpescEnv {
 			if split, ok := allowSplit[words[1]]; ok && split != "" {
 				return split, nil
 			}

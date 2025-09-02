@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -34,7 +35,7 @@ type HwAscend310PManager struct {
 func NewHwAscend310PManager() *HwAscend310PManager {
 	return &HwAscend310PManager{
 		AscendTools: AscendTools{
-			name:                      common.Ascend310P,
+			name:                      api.Ascend310P,
 			unHealthyKey:              common.HuaweiUnHealthAscend310P,
 			devCount:                  common.MaxDevicesNum,
 			cardInResetMap:            make(map[int32]bool, common.GeneralMapSize),
@@ -63,7 +64,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 		}
 		if common.ParamOption.Use310PMixedInsert {
 			if err = hnm.assemble310PMixedPhyDevices(davinCiDev, &allDevices, &allDeviceTypes); err != nil {
-				hwlog.RunLog.Errorf("assemble 310P mixed phy devices failed: %v", err)
+				hwlog.RunLog.Errorf("assemble mixed phy devices failed: %v", err)
 			}
 			continue
 		}
@@ -108,7 +109,7 @@ func (hnm *HwAscend310PManager) updateDeviceInfo(_, newDevInfo map[string]string
 	if newDevInfo == nil {
 		return fmt.Errorf("invalid new device info")
 	}
-	newDevInfo[common.HuaweiAscend310P] = common.ToString(devStatusSet.FreeHealthyDevice[hnm.name],
+	newDevInfo[api.HuaweiAscend310P] = common.ToString(devStatusSet.FreeHealthyDevice[hnm.name],
 		common.CommaSepDev)
 	newDevInfo[hnm.unHealthyKey] = common.ToString(devStatusSet.UnHealthyDevice, common.CommaSepDev)
 	var data []byte

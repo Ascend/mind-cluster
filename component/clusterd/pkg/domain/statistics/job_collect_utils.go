@@ -6,6 +6,7 @@ package statistics
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
@@ -35,7 +37,7 @@ const (
 	// InitVersion is the initial version of job statistic data.
 	InitVersion = 0
 
-	acJobType = "AscendJob"
+	acJobType = api.AscendJob
 
 	acJobCreateTimeout = 5
 	pgCreateTimeout    = 5
@@ -410,7 +412,7 @@ func (j *JobStcMgr) getPGCreateTimeoutReason(jobKey string) {
 	}
 	events, err := kube.GetJobEvent(jobStc.Namespace, jobStc.Name, acJobType)
 	if err != nil || len(events.Items) == 0 {
-		jobStc.ScheduleFailReason = "unknown reason, check AscendJob event manually"
+		jobStc.ScheduleFailReason = fmt.Sprintf("unknown reason, check %v event manually", api.AscendJob)
 		j.data.JobStatistic[jobKey] = jobStc
 		j.version++
 		return
@@ -438,7 +440,8 @@ func (j *JobStcMgr) getACJobCreateTimeoutReason(jobKey string) {
 	if getIntValue(jobStc.ScheduleProcess) >= getIntValue(jobCreated) {
 		return
 	}
-	jobStc.ScheduleFailReason = "the acJob status is empty, it may be that the ascend-Operator has not processed it"
+	jobStc.ScheduleFailReason =
+		fmt.Sprintf("the acJob status is empty, it may be that the %v has not processed it", api.AscendOperator)
 	j.data.JobStatistic[jobKey] = jobStc
 	j.version++
 	hwlog.RunLog.Debugf("update Job statistic: %v", jobStc)

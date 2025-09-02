@@ -23,6 +23,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -196,7 +197,7 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 }
 
 func collectPower(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	if dmgr.GetDevType() == common.Ascend310P {
+	if dmgr.GetDevType() == api.Ascend310P {
 		cardPower, err := dmgr.GetMcuPowerInfo(chip.chip.CardId)
 		handleErr(err, colcommon.DomainForMcuPower, chip.chip.CardId)
 		// Ascend310P use cardPower to replace chipPower

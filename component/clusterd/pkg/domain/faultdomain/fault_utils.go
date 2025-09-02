@@ -159,18 +159,18 @@ func getRecoveringDevList(devInfo *constant.DeviceInfo) []string {
 // GetDeviceType get device type from device info
 func GetDeviceType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
-		if strings.Contains(key, constant.Ascend910) {
-			return constant.Ascend910
+		if strings.Contains(key, api.Ascend910) {
+			return api.Ascend910
 		}
-		if strings.Contains(key, constant.Ascend310P) {
-			return constant.Ascend310P
+		if strings.Contains(key, api.Ascend310P) {
+			return api.Ascend310P
 		}
-		if strings.Contains(key, constant.Ascend310) {
-			return constant.Ascend310
+		if strings.Contains(key, api.Ascend310) {
+			return api.Ascend310
 		}
 	}
 	hwlog.RunLog.Warn("cannot decide server type")
-	return constant.Ascend910
+	return api.Ascend910
 }
 
 // device plugin may merge multiple fault codes in one string

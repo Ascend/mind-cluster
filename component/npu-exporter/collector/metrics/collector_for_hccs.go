@@ -21,6 +21,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
@@ -38,8 +39,8 @@ var (
 	hccsBWTotalRx       *prometheus.Desc = nil
 
 	supportedHccsDevices = map[string]bool{
-		common.Ascend910B:  true,
-		common.Ascend910A3: true,
+		api.Ascend910B:  true,
+		api.Ascend910A3: true,
 	}
 )
 
@@ -47,27 +48,29 @@ const (
 	// MaxHccsNum max hccs num
 	MaxHccsNum int = 8
 	// hccs info begin index, 1 or 2
-	num1     = 1
-	num2     = 2
-	prefix   = "npu_chip_info_hccs_statistic_info_"
-	bwPrefix = "npu_chip_info_hccs_bandwidth_info_"
+	num1 = 1
+	num2 = 2
 )
 
 // init add descs in init method
 func init() {
 	for i := 0; i < MaxHccsNum; i++ {
 		index := strconv.Itoa(i)
-		colcommon.BuildDescSlice(&hccsTxDescs, prefix+"tx_cnt_"+index, "transmitted message count for hccs "+index)
-		colcommon.BuildDescSlice(&hccsRxDescs, prefix+"rx_cnt_"+index, "received message count for hccs "+index)
-		colcommon.BuildDescSlice(&hccsErrDescs, prefix+"crc_err_cnt_"+index, "crc error count for hccs "+index)
-		colcommon.BuildDescSlice(&hccsBWTxDescs, bwPrefix+"tx_"+index,
-			"single-link transmission data bandwidth for hccs "+index)
-		colcommon.BuildDescSlice(&hccsBWRxDescs, bwPrefix+"rx_"+index,
-			"single-link receive data bandwidth for hccs "+index)
+		colcommon.BuildDescSlice(&hccsTxDescs, api.Prefix+"tx_cnt_"+index,
+			"transmitted message count for "+api.Hccs+" "+index)
+		colcommon.BuildDescSlice(&hccsRxDescs, api.Prefix+"rx_cnt_"+index,
+			"received message count for "+api.Hccs+" "+index)
+		colcommon.BuildDescSlice(&hccsErrDescs, api.Prefix+"crc_err_cnt_"+index,
+			"crc error count for "+api.Hccs+" "+index)
+		colcommon.BuildDescSlice(&hccsBWTxDescs, api.BwPrefix+"tx_"+index,
+			"single-link transmission data bandwidth for "+api.Hccs+" "+index)
+		colcommon.BuildDescSlice(&hccsBWRxDescs, api.BwPrefix+"rx_"+index,
+			"single-link receive data bandwidth for "+api.Hccs+" "+index)
 	}
-	hccsBWProfilingTime = colcommon.BuildDesc(bwPrefix+"profiling_time", "sampling interval for hccs bandwidth")
-	hccsBWTotalTx = colcommon.BuildDesc(bwPrefix+"total_tx", "total sent data bandwidth")
-	hccsBWTotalRx = colcommon.BuildDesc(bwPrefix+"total_rx", "total received data bandwidth")
+	hccsBWProfilingTime = colcommon.BuildDesc(api.BwPrefix+"profiling_time",
+		"sampling interval for "+api.Hccs+" bandwidth")
+	hccsBWTotalTx = colcommon.BuildDesc(api.BwPrefix+"total_tx", "total sent data bandwidth")
+	hccsBWTotalRx = colcommon.BuildDesc(api.BwPrefix+"total_rx", "total received data bandwidth")
 }
 
 type hccsCache struct {
@@ -89,8 +92,7 @@ type HccsCollector struct {
 // IsSupported judge whether the collector is supported
 func (c *HccsCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := supportedHccsDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
-		"only 910B or 910A3 supports hccs info")
+	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 
@@ -143,7 +145,7 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 	}
 	chipOne := chipList[0]
 	devType := n.Dmgr.GetDevType()
-	if devType == common.Ascend910B || common.IsA900A3SuperPod(chipOne.MainBoardId) ||
+	if devType == api.Ascend910B || common.IsA900A3SuperPod(chipOne.MainBoardId) ||
 		common.Is800IA3Chip(chipOne.MainBoardId) {
 		// A2 or A900A3 SuperPod or 800IA3 begin at 1st bit
 		c.hccsBeginIndex = num1
@@ -151,7 +153,7 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 		// A9000A3SuperPod begin at 2nd bit
 		c.hccsBeginIndex = num2
 	} else {
-		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: "hccs", ID: "0"},
+		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: api.Hccs, ID: "0"},
 			"not support main board id:%d", chipOne.MainBoardId)
 	}
 }
@@ -175,7 +177,7 @@ func promUpdateHccsBwInfo(ch chan<- prometheus.Metric, cache hccsCache, c *HccsC
 		return
 	}
 	if c.hccsBeginIndex < 0 {
-		logger.Errorf("invalid hccsBeginIndex %v", c.hccsBeginIndex)
+		logger.Errorf("invalid %sBeginIndex %v", api.Hccs, c.hccsBeginIndex)
 		return
 	}
 	for i := c.hccsBeginIndex; i < MaxHccsNum; i++ {
@@ -195,7 +197,7 @@ func promUpdateHccsStatisticInfo(ch chan<- prometheus.Metric, cache hccsCache, c
 		return
 	}
 	if c.hccsBeginIndex < 0 {
-		logger.Errorf("invalid hccsBeginIndex %v", c.hccsBeginIndex)
+		logger.Errorf("invalid %sBeginIndex %v", api.Hccs, c.hccsBeginIndex)
 		return
 	}
 	for i := c.hccsBeginIndex; i < MaxHccsNum; i++ {

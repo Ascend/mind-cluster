@@ -25,10 +25,10 @@ import (
 	"github.com/influxdata/telegraf"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
-	"ascend-common/devmanager/common"
-	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/collector/metrics"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -47,19 +47,19 @@ func init() {
 }
 
 func initChain() {
-	colcommon.ChainForSingleGoroutine = []colcommon.MetricsCollector{
+	common.ChainForSingleGoroutine = []common.MetricsCollector{
 		&metrics.VersionCollector{},
 	}
 }
 
-func mockNewNpuCollector() *colcommon.NpuCollector {
+func mockNewNpuCollector() *common.NpuCollector {
 	tc := newNpuCollectorTestCase{
 		cacheTime:    time.Duration(num5),
 		updateTime:   time.Duration(num5),
 		deviceParser: &container.DevicesParser{},
 		dmgr:         &devmanager.DeviceManager{},
 	}
-	c := colcommon.NewNpuCollector(tc.cacheTime, tc.updateTime, tc.deviceParser, tc.dmgr)
+	c := common.NewNpuCollector(tc.cacheTime, tc.updateTime, tc.deviceParser, tc.dmgr)
 	return c
 }
 
@@ -70,13 +70,13 @@ func TestGather(t *testing.T) {
 		deviceType  string
 		expectedTag string
 	}{
-		{name: common.Ascend910A3,
-			deviceType:  common.Ascend910A3,
-			expectedTag: common.Ascend910,
+		{name: api.Ascend910A3,
+			deviceType:  api.Ascend910A3,
+			expectedTag: api.Ascend910,
 		},
-		{name: common.Ascend310P,
-			deviceType:  common.Ascend310P,
-			expectedTag: common.Ascend310P,
+		{name: api.Ascend310P,
+			deviceType:  api.Ascend310P,
+			expectedTag: api.Ascend310P,
 		},
 	}
 	npu := &WatchNPU{
@@ -90,13 +90,13 @@ func TestGather(t *testing.T) {
 			defer patches.Reset()
 
 			patches.ApplyMethodReturn(npu.collector.Dmgr, "GetDevType", tt.deviceType)
-			patches.ApplyFuncReturn(colcommon.GetContainerNPUInfo, nil)
-			patches.ApplyFuncReturn(colcommon.GetChipListWithVNPU, nil)
-			patches.ApplyMethodReturn(colcommon.ChainForSingleGoroutine[0], "UpdateTelegraf",
+			patches.ApplyFuncReturn(common.GetContainerNPUInfo, nil)
+			patches.ApplyFuncReturn(common.GetChipListWithVNPU, nil)
+			patches.ApplyMethodReturn(common.ChainForSingleGoroutine[0], "UpdateTelegraf",
 				map[string]map[string]interface{}{
-					colcommon.GeneralDevTagKey: {"npu_exporter_version_info": "7.0.0"},
-					"0":                        {"npu_chip_info_power": "1"},
-					"1_100":                    {"npu_chip_info_voltage": "1"},
+					common.GeneralDevTagKey: {"npu_exporter_version_info": "7.0.0"},
+					"0":                     {"npu_chip_info_power": "1"},
+					"1_100":                 {"npu_chip_info_voltage": "1"},
 				})
 
 			err := npu.Gather(acc)
@@ -110,7 +110,7 @@ func TestGather(t *testing.T) {
 func TestGatherChain(t *testing.T) {
 	npu := &WatchNPU{}
 	fieldsMap := make(map[string]map[string]interface{})
-	chain := []colcommon.MetricsCollector{&metrics.VersionCollector{}}
+	chain := []common.MetricsCollector{&metrics.VersionCollector{}}
 
 	convey.Convey("TestGatherChain", t, func() {
 		result := npu.gatherChain(fieldsMap, chain, nil, nil)

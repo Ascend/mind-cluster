@@ -21,6 +21,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
@@ -36,7 +37,7 @@ var (
 
 var (
 	supportedVnpuDevices = map[string]bool{
-		common.Ascend310P: true,
+		api.Ascend310P: true,
 	}
 )
 

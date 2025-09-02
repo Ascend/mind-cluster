@@ -168,15 +168,15 @@ type Option struct {
 // GetAllDeviceInfoTypeList Get All Device Info Type List
 func GetAllDeviceInfoTypeList() map[string]struct{} {
 	return map[string]struct{}{HuaweiUnHealthAscend910: {}, HuaweiNetworkUnHealthAscend910: {},
-		api.ResourceNamePrefix + Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
+		api.ResourceNamePrefix + api.Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
 		api.ResourceNamePrefix + Ascend910vir4: {}, api.ResourceNamePrefix + Ascend910vir8: {},
 		api.ResourceNamePrefix + Ascend910vir16: {}, api.ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},
 		api.ResourceNamePrefix + Ascend910vir5Cpu1Gb16: {}, api.ResourceNamePrefix + Ascend910vir6Cpu1Gb16: {},
 		api.ResourceNamePrefix + Ascend910vir10Cpu3Gb16: {}, api.ResourceNamePrefix + Ascend910vir3Cpu1Gb8: {},
 		api.ResourceNamePrefix + Ascend910vir10Cpu3Gb16Ndvpp: {}, api.ResourceNamePrefix + Ascend910vir10Cpu3Gb32: {},
 		api.ResourceNamePrefix + Ascend910vir10Cpu4Gb16Dvpp: {},
-		api.ResourceNamePrefix + Ascend910vir12Cpu3Gb32:     {}, api.ResourceNamePrefix + Ascend310: {},
-		api.ResourceNamePrefix + Ascend310P: {}, api.ResourceNamePrefix + Ascend310Pc1: {},
+		api.ResourceNamePrefix + Ascend910vir12Cpu3Gb32:     {}, api.ResourceNamePrefix + api.Ascend310: {},
+		api.ResourceNamePrefix + api.Ascend310P: {}, api.ResourceNamePrefix + Ascend310Pc1: {},
 		api.ResourceNamePrefix + Ascend310Pc2: {}, api.ResourceNamePrefix + Ascend310Pc4: {},
 		api.ResourceNamePrefix + Ascend310Pc2Cpu1: {}, api.ResourceNamePrefix + Ascend310Pc4Cpu3: {},
 		api.ResourceNamePrefix + Ascend310Pc4Cpu3Ndvpp: {}, api.ResourceNamePrefix + Ascend310Pc4Cpu4Dvpp: {},
@@ -279,9 +279,9 @@ func Get310PProductType() map[string]string {
 
 // HasOnChipMemory check if card has on-chip-memory
 func HasOnChipMemory() bool {
-	return ParamOption.RealCardType == Ascend910B ||
-		ParamOption.RealCardType == Ascend910 ||
-		ParamOption.RealCardType == Ascend910A3
+	return ParamOption.RealCardType == api.Ascend910B ||
+		ParamOption.RealCardType == api.Ascend910 ||
+		ParamOption.RealCardType == api.Ascend910A3
 }
 
 // PodDeviceInfo define device info of pod, include kubelet allocate and real allocate device

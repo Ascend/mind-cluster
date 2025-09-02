@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 )
 
@@ -162,7 +163,7 @@ func TestGetResourceType(t *testing.T) {
 	convey.Convey("test TestGetResourceType success", t, func() {
 		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
 		resourceType := GetResourceType(pgDemo1)
-		convey.So(resourceType, convey.ShouldEqual, constant.Ascend910)
+		convey.So(resourceType, convey.ShouldEqual, api.Ascend910)
 	})
 }
 

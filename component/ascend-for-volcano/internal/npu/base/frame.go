@@ -104,14 +104,19 @@ func (tp *NPUHandler) ValidNPUJob() *api.ValidateResult {
 		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
 	}
 	klog.V(util.LogDebugLev).Infof("%s ValidNPUJob job(%s).", tp.GetPluginName(), tp.Name)
-	taskNPU := tp.ReqNPUNum / tp.NPUTaskNum
-	if taskNPU < 1 || taskNPU > tp.MaxNodeNPUNum || !tp.IsVaildNpuNum(taskNPU) {
-		err := fmt.Errorf("job<%s> req npu num<%d> is invalid", tp.Name, taskNPU)
-		klog.V(util.LogErrorLev).Infof("%s ValidNPUJob err: %s", tp.GetPluginName(), err.Error())
-		return &api.ValidateResult{
-			Pass:    false,
-			Reason:  "task req npu num is invalid",
-			Message: err.Error(),
+	for _, task := range tp.Tasks {
+		if !task.IsNPUTask() {
+			continue
+		}
+		taskNPU := task.ReqNPUNum
+		if taskNPU < 1 || taskNPU > tp.MaxNodeNPUNum || !tp.IsVaildNpuNum(taskNPU) {
+			err := fmt.Errorf("job<%s>-task<%s> req npu num<%d> is invalid", tp.Name, task.Name, taskNPU)
+			klog.V(util.LogErrorLev).Infof("%s ValidNPUJob err: %s", tp.GetPluginName(), err.Error())
+			return &api.ValidateResult{
+				Pass:    false,
+				Reason:  "task req npu num is invalid",
+				Message: err.Error(),
+			}
 		}
 	}
 	return nil

@@ -310,7 +310,7 @@ func NewHbmFaultManager() *HbmFaultManager {
 
 func (h *HbmFaultManager) updateHbmOccurTime(faultInfo common.DevFaultInfo) {
 	h.HbmOccurTimeCache[faultInfo.LogicID] = faultInfo.AlarmRaisedTime
-	hwlog.RunLog.Debugf("hbm fault occur, device %d update occur time: %d",
+	hwlog.RunLog.Debugf("npu memory fault occur, device %d update occur time: %d",
 		faultInfo.LogicID, h.HbmOccurTimeCache[faultInfo.LogicID])
 }
 
@@ -340,8 +340,8 @@ func (h *HbmFaultManager) aicFaultEventOutQue(logicId int32) []common.DevFaultIn
 		// The fault aic error occurring ten seconds before and after the occurrence of hbm error should be deleted,
 		if Int64Tool.Abs(h.HbmOccurTimeCache[logicId], faultEventQue[i].AlarmRaisedTime) <
 			AssociatedFaultDiagnosisTime*TimeMilliseconds {
-			hwlog.RunLog.Infof("device %d delete event in fault event que, aic event time %d hbm event time %d",
-				logicId, faultEventQue[i].AlarmRaisedTime, h.HbmOccurTimeCache[logicId])
+			hwlog.RunLog.Infof("device %d delete event in fault event que, aic event time %d ,"+
+				"npu memory event time %d", logicId, faultEventQue[i].AlarmRaisedTime, h.HbmOccurTimeCache[logicId])
 			continue
 		}
 		// aic error should report if hbm error does not occur within ten seconds,

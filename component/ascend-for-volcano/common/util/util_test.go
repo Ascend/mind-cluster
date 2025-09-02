@@ -1029,3 +1029,30 @@ func TestIsNPUTask(t *testing.T) {
 		})
 	}
 }
+
+func TestIsStrategyInSubHealthyStrategse(t *testing.T) {
+	tests := []struct {
+		name     string
+		strategy string
+		want     bool
+	}{
+		{
+			name:     "01 test func IsStrategyInSubHealthyStrategse, strategy is in sub healthy strategies",
+			strategy: SubHealthyIgnore,
+			want:     true,
+		},
+		{
+			name:     "02 test func IsStrategyInSubHealthyStrategse, strategy is not in sub healthy strategies",
+			strategy: "otherStrategy",
+			want:     false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isStrategyInSubHealthyStrategse := IsStrategyInSubHealthyStrategs(tt.strategy)
+			if !(isStrategyInSubHealthyStrategse == tt.want) {
+				t.Errorf("is strategy in sub healthy strategies = %v, want %v", isStrategyInSubHealthyStrategse, tt.want)
+			}
+		})
+	}
+}

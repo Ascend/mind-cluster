@@ -16,7 +16,7 @@
 package devmanager
 
 import (
-	"ascend-common/devmanager/common"
+	"ascend-common/api"
 )
 
 // DeviceManager910A3Mock common device manager mock for Ascend910A3
@@ -26,5 +26,5 @@ type DeviceManager910A3Mock struct {
 
 // GetDevType return mock type
 func (d *DeviceManager910A3Mock) GetDevType() string {
-	return common.Ascend910A3
+	return api.Ascend910A3
 }

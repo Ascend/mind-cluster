@@ -163,6 +163,8 @@ const (
 	SubHealthyGraceExit = "graceExit"
 	// SubHealthyForceExit don't use sub-healthy node and force exit
 	SubHealthyForceExit = "forceExit"
+	// SubHealthyHotSwitch strategy name of hot switch
+	SubHealthyHotSwitch = "hotSwitch"
 	// DevInfoNameSpace device-plugin install Namespace
 	DevInfoNameSpace = "kube-system"
 	// MindXDlNameSpace mindx dl Namespace
@@ -364,11 +366,22 @@ const (
 	MaxDevicesNum = 100
 )
 
+// HotSwitch
+const (
+	// NeedVolcanoOpeKey for volcano
+	NeedVolcanoOpeKey = "needVolcanoOpe"
+	// OpeTypeDelete operation type delete
+	OpeTypeDelete = "delete"
+)
+
 var (
 	podRegexp = map[string]*regexp.Regexp{
 		Namespace: regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`),
 		PodName:   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
 	}
+
+	// subHealthyStrategs subHealthy Strategs
+	subHealthyStrategs = []string{SubHealthyIgnore, SubHealthyGraceExit, SubHealthyForceExit, SubHealthyHotSwitch}
 )
 
 // VTemplate for vNode resource

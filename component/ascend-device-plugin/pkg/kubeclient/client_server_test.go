@@ -136,7 +136,7 @@ func TestGetPodsUsedNpuByCommon(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetPodsUsedNpu init kubernetes failed")
 	}
-	podList := getMockPodList(api.ResourceNamePrefix+common.PodRealAlloc, npuChip310PhyID0)
+	podList := getMockPodList(api.PodAnnotationAscendReal, npuChip310PhyID0)
 	convey.Convey("get used npu on pods without get pod list", t, func() {
 		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetActivePodListCache",
 			func(_ *ClientK8s) []v1.Pod {
@@ -163,8 +163,8 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestWriteDeviceInfoDataIntoCM init kubernetes failed")
 	}
-	updateCM := getMockCreateCM(common.HuaweiAscend310P, npuChip310PPhyID0)
-	deviceInfo := getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0)
+	updateCM := getMockCreateCM(api.HuaweiAscend310P, npuChip310PPhyID0)
+	deviceInfo := getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0)
 	mockCreateCM, mockUpdateCM := mockCMOpr(updateCM)
 	defer resetMock(mockCreateCM, mockUpdateCM)
 	convey.Convey("write device info (cm) when marshal node device data failed", t, func() {
@@ -175,7 +175,7 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 	})
 	convey.Convey("write device info (cm) when real card type is Ascend910A3", t, func() {
 		mockRealCardType := common.ParamOption.RealCardType
-		common.ParamOption.RealCardType = common.Ascend910A3
+		common.ParamOption.RealCardType = api.Ascend910A3
 		_, err := utKubeClient.WriteDeviceInfoDataIntoCM(deviceInfo, "", common.SwitchFaultInfo{}, -1, -1)
 		common.ParamOption.RealCardType = mockRealCardType
 		convey.So(err, convey.ShouldEqual, nil)
@@ -248,7 +248,7 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 		t.Fatal("TestTryUpdatePodAnnotation init kubernetes failed")
 	}
 	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
-	annotation := getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0)
+	annotation := getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0)
 	defer testPod.Reset()
 	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
 		func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
@@ -303,11 +303,11 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 		})
 	defer mockPatchPod.Reset()
 	convey.Convey("try update pod annotation when get pod is nil", t, func() {
-		err := utKubeClient.TryUpdatePodCacheAnnotation(nil, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		err := utKubeClient.TryUpdatePodCacheAnnotation(nil, getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
 	})
 	convey.Convey("try update pod annotation when update pod annotation in api server failed", t, func() {
-		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err.Error(), convey.ShouldEqual, "patch pod annotation failed, exceeded max number of retries")
 	})
 	mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "TryUpdatePodAnnotation",
@@ -320,12 +320,12 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 				updateTime: time.Now(),
 			},
 		}
-		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err, convey.ShouldBeNil)
 		podCache = make(map[types.UID]*podInfo)
 	})
 	convey.Convey("try update pod annotation when no pod found in cache", t, func() {
-		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(common.HuaweiAscend310P, npuChip310PPhyID0))
+		err := utKubeClient.TryUpdatePodCacheAnnotation(testPod, getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0))
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -348,7 +348,7 @@ func TestGetDeviceInfoManuallySeparateNPUData(t *testing.T) {
 			api.KubeNS)
 		convey.So(phyIDs, convey.ShouldResemble, make([]int32, 0))
 	})
-	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, common.Ascend910, nil)
+	mockGetDeviceRunMode := gomonkey.ApplyFuncReturn(common.GetDeviceRunMode, api.Ascend910, nil)
 	defer mockGetDeviceRunMode.Reset()
 	convey.Convey("failed when npu cache is empty", t, func() { npuCacheIsEmpty(utKubeClient) })
 	convey.Convey("manuallySeparateNPU will be ignored", t, func() {
@@ -527,7 +527,7 @@ func getPodUTTwo(annotations map[string]string) v1.Pod {
 
 func getPodUTThree() v1.Pod {
 	annotations := make(map[string]string, 1)
-	annotations[common.HuaweiAscend310] = ""
+	annotations[api.HuaweiAscend310] = ""
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "mindx-ut-3",
@@ -638,7 +638,7 @@ type getPodsUsedNPUByKltTest struct {
 }
 
 func mockAnnosWithTooLongVal() map[string]string {
-	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	annoKey := fmt.Sprintf("%s", api.PodAnnotationAscendReal)
 	longValue := make([]string, common.PodAnnotationMaxLength+1)
 	for i := range longValue {
 		longValue[i] = fmt.Sprintf("Ascend910-%d", i)
@@ -687,7 +687,7 @@ func buildErrorHandlingTests() []getPodsUsedNPUByKltTest {
 }
 
 func buildAnnotationTests() []getPodsUsedNPUByKltTest {
-	annoKey := fmt.Sprintf("%s%s", api.ResourceNamePrefix, common.PodRealAlloc)
+	annoKey := fmt.Sprintf("%s", api.PodAnnotationAscendReal)
 	const expectedLen = 2
 	return []getPodsUsedNPUByKltTest{
 		{

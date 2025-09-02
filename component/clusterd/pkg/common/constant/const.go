@@ -235,9 +235,6 @@ const (
 
 // support device type
 const (
-	Ascend910           = "Ascend910"
-	Ascend310P          = "Ascend310P"
-	Ascend310           = "Ascend310"
 	UnknownResourceType = "unknown"
 )
 

@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/install/process"
 	"ascend-docker-runtime/mindxcheckutils"
@@ -49,7 +50,7 @@ const noDefaultTemplate = `{
 
 const (
 	maxCommandLength         = 65535
-	logPath                  = "/var/log/ascend-docker-runtime/install-helper-run.log"
+	logPath                  = api.InstallHelperRunLogPath
 	minCommandLength         = 2
 	installSceneIndexFromEnd = 2
 )
@@ -74,7 +75,7 @@ func main() {
 	}
 
 	const helpMessage = "\tadd <config file path> <new config file path> " +
-		"<ascend-docker-runtime path> <whether reserve default> <docker or containerd> <cgroup info>\n" +
+		"<docker-runtime path> <whether reserve default> <docker or containerd> <cgroup info>\n" +
 		"\t rm <config file path> <new config file path> <docker or containerd> <whether reserve default>" +
 		" <docker or containerd> <cgroup info>\n" + "\t -h help command"
 	helpFlag := flag.Bool("h", false, helpMessage)
@@ -88,7 +89,6 @@ func main() {
 		log.Fatalf("error param")
 	}
 	var behavior string
-	hwlog.RunLog.Infof("command: %v", command)
 	if len(command) < minCommandLength {
 		log.Fatalf("error param")
 	}

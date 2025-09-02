@@ -421,3 +421,8 @@ func IsNPUTask(nT *api.TaskInfo) bool {
 	}
 	return false
 }
+
+// IsStrategyInSubHealthyStrategs to judge the subHealthyStrategy is in subHealthyStrategs or not.
+func IsStrategyInSubHealthyStrategs(subHealthyStrategy string) bool {
+	return CheckStrInSlice(subHealthyStrategy, subHealthyStrategs)
+}

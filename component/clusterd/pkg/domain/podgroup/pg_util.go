@@ -11,6 +11,7 @@ import (
 	"k8s.io/utils/strings/slices"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
@@ -137,14 +138,14 @@ func GetResourceType(info *v1beta1.PodGroup) string {
 		return ""
 	}
 	for key, _ := range info.Spec.MinResources.DeepCopy() {
-		if strings.Contains(string(key), constant.Ascend910) {
-			return constant.Ascend910
+		if strings.Contains(string(key), api.Ascend910) {
+			return api.Ascend910
 		}
-		if strings.Contains(string(key), constant.Ascend310) {
-			return constant.Ascend310
+		if strings.Contains(string(key), api.Ascend310) {
+			return api.Ascend310
 		}
-		if strings.Contains(string(key), constant.Ascend310P) {
-			return constant.Ascend310P
+		if strings.Contains(string(key), api.Ascend310P) {
+			return api.Ascend310P
 		}
 	}
 	hwlog.RunLog.Warnf("GetResourceType failed for pg %s", info.GetName())
