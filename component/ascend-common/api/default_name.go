@@ -23,6 +23,12 @@ const (
 	Ascend310P = "Ascend310P"
 	// Ascend310B ascend 310B chip
 	Ascend310B = "Ascend310B"
+	//ChipName310P chip name 310P
+	ChipName310P = "310P"
+	//ChipName310B chip name 310B
+	ChipName310B = "310B"
+	//ChipName310 chip name 310
+	ChipName310 = "310"
 )
 
 // device plugin
