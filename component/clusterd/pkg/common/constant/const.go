@@ -1,6 +1,6 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
 
-// Package common is grpc common types and functions
+// Package constant is grpc common types and functions
 package constant
 
 // process signal type
@@ -17,6 +17,8 @@ const (
 	SaveAndExitSignalType = "saveAndExit"
 	// KeepAliveSignalType keep alive signal type
 	KeepAliveSignalType = "keep-alive"
+	// FaultNodesExitSignalType fault nodes exit signal type
+	FaultNodesExitSignalType = "faultNodesExit"
 )
 
 // recover strategy name
@@ -35,6 +37,26 @@ const (
 	ProcessExitStrategyName = "exit"
 	// ProcessContinueTrain continue train
 	ProcessContinueTrain = "continue"
+	// ElasticTrainingStrategyName strategy name of elastic-training
+	ElasticTrainingStrategyName = "elastic-training"
+	// ScaleInStrategyName strategy name of DP level scale-in training
+	ScaleInStrategyName = "downgrade"
+	// ScaleOutStrategyName strategy name of DP level scale-out recover training
+	ScaleOutStrategyName = "upgrade"
+	// JobReschedulingStrategyName is the name of job level rescheduling
+	JobReschedulingStrategyName = "job-rescheduling"
+	// JobReschedulingStrategyKey the key of job rescheduling strategy
+	JobReschedulingStrategyKey = "fault-scheduling"
+	// JobReschedulingStrategyGraceValue one of job rescheduling strategies' value
+	JobReschedulingStrategyGraceValue = "grace"
+	// JobReschedulingStrategyForceValue one of job rescheduling strategies' value
+	JobReschedulingStrategyForceValue = "force"
+	// PodReschedulingStrategyName is the name of pod level rescheduling
+	PodReschedulingStrategyName = "pod-rescheduling"
+	// PodReschedulingStrategyKey is the key of pod level rescheduling label
+	PodReschedulingStrategyKey = "pod-rescheduling"
+	// PodReschedulingStrategyOpenValue is the value of pod level rescheduling label that stands open
+	PodReschedulingStrategyOpenValue = "on"
 )
 
 const (
@@ -270,4 +292,33 @@ const (
 	StressTestTimeout = "3"
 	// StressTestVolRecoverFail voltage recovery failed
 	StressTestVolRecoverFail = "4"
+)
+
+const (
+	// FaultNodesExitAction action to notify fault nodes to exit
+	FaultNodesExitAction = "fault_nodes_exit"
+	// FaultNodesRestartAction action to notify fault nodes to restart
+	FaultNodesRestartAction = "fault_nodes_restart"
+	// OnGlobalRankAction on_global_rank action
+	OnGlobalRankAction = "on_global_rank"
+	// StopAction stop_train action
+	StopAction = "stop_train"
+	// ChangeStrategyAction change_strategy action
+	ChangeStrategyAction = "change_strategy"
+	// DefaultWaitRescheduleTimeout default reschedule timeout before executing arf or dp scale-in strategy
+	// (Unit: second)
+	DefaultWaitRescheduleTimeout = 270
+	// WaitRescheduleTimeoutKey is the key of WaitRescheduleTimeout
+	WaitRescheduleTimeoutKey = "wait-reschedule-timeout"
+	// DefaultWaitRescheduleTimeoutBeforeDeployStrategy is the waiting pod reschedule timeout when ARF is closed but
+	// scale-train and pod/job reschedule strategy is open
+	DefaultWaitRescheduleTimeoutBeforeDeployStrategy = 20
+	// MindIOWaitTimeKey is the key of wait time before deploy strategy
+	MindIOWaitTimeKey = "MINDIO_WAIT_MINDX_TIME"
+	// MindIOWaitTimeMax is the max wait time (Unit: second)
+	MindIOWaitTimeMax = 3600
+	// DifferenceTime is the difference with timeout env
+	DifferenceTime = 10
+	// RankZeroNodeId is "0"
+	RankZeroNodeId = "0"
 )

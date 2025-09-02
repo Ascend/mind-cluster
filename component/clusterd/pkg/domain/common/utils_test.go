@@ -7,10 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -884,4 +886,112 @@ func TestCanRestartFaultProcess(t *testing.T) {
 			convey.So(CanRestartFaultProcess("", faultRank), convey.ShouldBeFalse)
 		})
 	})
+}
+
+func TestGetPodRanks(t *testing.T) {
+	mockGetPodDeviceNumByJobId := gomonkey.ApplyFuncReturn(pod.GetPodDeviceNumByJobId, 1)
+	defer mockGetPodDeviceNumByJobId.Reset()
+	type args struct {
+		jobId    string
+		rankList []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string]struct{}
+		wantErr bool
+	}{
+		{
+			name: "case: valid and not valid args",
+			args: args{
+				rankList: []string{"a", "1"},
+			},
+			want:    map[string]struct{}{"1": {}},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetPodRanks(tt.args.jobId, tt.args.rankList)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPodRanks() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPodRanks() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetNodeRankIdsByRankIdsSuccess(t *testing.T) {
+	// Mock GetPodRanks to return sample data
+	patch := gomonkey.ApplyFunc(GetPodRanks,
+		func(_ string, _ []string) (map[string]struct{}, error) {
+			return map[string]struct{}{"node-1": {}, "node-2": {}}, nil
+		})
+	defer patch.Reset()
+
+	nodeRanks, err := GetNodeRankIdsByRankIds("job-123", []string{"rank-1", "rank-2"})
+
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, []string{"node-1", "node-2"}, nodeRanks)
+}
+
+func TestGetNodeRankIdsByRankIdsFail(t *testing.T) {
+	// Mock GetPodRanks to return error
+	patch := gomonkey.ApplyFunc(GetPodRanks,
+		func(_ string, _ []string) (map[string]struct{}, error) {
+			return nil, errors.New("db_error")
+		})
+	defer patch.Reset()
+
+	nodeRanks, err := GetNodeRankIdsByRankIds("job-123", []string{"rank-1"})
+
+	assert.Error(t, err)
+	assert.Empty(t, nodeRanks)
+}
+
+func TestRemoveDuplicateNodeRanksWithDuplicates(t *testing.T) {
+	nodeRanks := []string{"node-1", "node-2", "node-3"}
+	oldPods := map[string]string{"node-2": "rank-2"}
+	result := RemoveDuplicateNodeRanks(nodeRanks, oldPods)
+	assert.ElementsMatch(t, []string{"node-1", "node-3"}, result)
+}
+
+func TestRemoveDuplicateNodeRanksNoDuplicates(t *testing.T) {
+	nodeRanks := []string{"node-1", "node-2"}
+	oldPods := map[string]string{"node-3": "rank-3"}
+	result := RemoveDuplicateNodeRanks(nodeRanks, oldPods)
+	assert.Equal(t, nodeRanks, result)
+}
+
+func TestRemoveDuplicateNodeRanksEmptyOldPods(t *testing.T) {
+	nodeRanks := []string{"node-1", "node-2"}
+	oldPods := map[string]string{}
+	result := RemoveDuplicateNodeRanks(nodeRanks, oldPods)
+	assert.Equal(t, nodeRanks, result)
+}
+
+func TestGetNodeRankIdsByFaultRanksNormal(t *testing.T) {
+	// Mock GetNodeRankIdsByRankIds to return fixed result
+	patch := gomonkey.ApplyFunc(GetNodeRankIdsByRankIds,
+		func(_ string, rankIDs []string) ([]string, error) {
+			assert.ElementsMatch(t, []string{"rank-1", "rank-2"}, rankIDs)
+			return []string{"node-1", "node-2"}, nil
+		})
+	defer patch.Reset()
+	faultRanks := []*pb.FaultRank{
+		{RankId: "rank-1"},
+		{RankId: "rank-2"},
+	}
+	nodeRanks, err := GetNodeRankIdsByFaultRanks("job-123", faultRanks)
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, []string{"node-1", "node-2"}, nodeRanks)
+}
+
+func TestGetNodeRankIdsByFaultRanksEmpty(t *testing.T) {
+	nodeRanks, err := GetNodeRankIdsByFaultRanks("job-123", []*pb.FaultRank{})
+	assert.NoError(t, err)
+	assert.Empty(t, nodeRanks)
 }

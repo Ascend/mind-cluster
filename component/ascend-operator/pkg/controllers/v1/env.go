@@ -263,6 +263,8 @@ func addEnvByStrategy(env map[string]string, trainEnv sets.String, strategy stri
 		addDumpEnv(env, trainEnv, framework)
 	case api.InPlaceStrategy:
 		addRecoverInPlaceEnv(env, trainEnv, framework)
+	case api.ElasticTraining:
+		addElasticTrainingEnv(env, trainEnv, framework)
 	default:
 		return
 	}
@@ -324,4 +326,16 @@ func addDumpEnv(env map[string]string, trainEnv sets.String, framework string) {
 	}
 	env[api.ElasticRecoverEnv] = api.EnableFlag
 	env[api.ProcessRecoverEnv] = api.EnableFunc
+}
+
+func addElasticTrainingEnv(env map[string]string, trainEnv sets.String, framework string) {
+	if env == nil || trainEnv == nil {
+		hwlog.RunLog.Warnf("env or trainEnv is nil, env: %v, trainEnv: %v", env, trainEnv)
+		return
+	}
+	if framework != api.PytorchFramework {
+		hwlog.RunLog.Warn("elastic-training strategy only support pytorch framework")
+		return
+	}
+	trainEnv.Insert(api.ElasticTraining)
 }

@@ -104,6 +104,8 @@ const (
 	DumpStrategy = "dump"
 	// ExitStrategy exit strategy
 	ExitStrategy = "exit"
+	// ElasticTraining elastic-training strategy
+	ElasticTraining = "elastic-training"
 )
 
 // process schedule common env

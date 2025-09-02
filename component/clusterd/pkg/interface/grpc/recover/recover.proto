@@ -26,6 +26,8 @@ message ProcessManageSignal {
   repeated FaultRank faultRanks = 5;
   string changeStrategy = 6;
   int64 timeout = 7;
+  repeated string nodeRankIds = 8;
+  string extraParams = 9;
 }
 
 message StopCompleteRequest {
@@ -44,6 +46,7 @@ message RecoverStatusRequest{
   string jobId = 1;
   Status status = 2;
   string strategy = 3;
+  repeated string isolateRankIds = 4;
 }
 
 message ProcessFaultRequest{

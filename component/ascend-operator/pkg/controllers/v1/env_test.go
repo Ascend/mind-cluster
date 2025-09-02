@@ -17,10 +17,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	_ "ascend-operator/pkg/testtool"
 )
 
 const (
@@ -344,5 +344,45 @@ func checkEnvVars(t *testing.T, envVars []corev1.EnvVar, expectedEnv map[string]
 	}
 	if len(actualEnv) != len(expectedEnv) {
 		t.Errorf("Expected env vars: %v, but got: %v", expectedEnv, actualEnv)
+	}
+}
+
+func TestAddElasticTrainingEnv(t *testing.T) {
+	type args struct {
+		env       map[string]string
+		trainEnv  sets.String
+		framework string
+	}
+	tests := []struct {
+		name string
+		args args
+		want sets.String
+	}{
+		{
+			name: "pytorch add success",
+			args: args{
+				env:       make(map[string]string),
+				trainEnv:  make(sets.String),
+				framework: api.PytorchFramework,
+			},
+			want: sets.String{api.ElasticTraining: sets.Empty{}},
+		},
+		{
+			name: "no pytorch add failed",
+			args: args{
+				env:       make(map[string]string),
+				trainEnv:  make(sets.String),
+				framework: api.MindSporeFramework,
+			},
+			want: sets.String{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			addElasticTrainingEnv(tt.args.env, tt.args.trainEnv, tt.args.framework)
+			if tt.args.trainEnv.Len() != tt.want.Len() {
+				t.Errorf("get %v, want %v", tt.args.trainEnv.List(), api.ElasticTraining)
+			}
+		})
 	}
 }

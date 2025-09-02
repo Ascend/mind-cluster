@@ -9,7 +9,9 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"context"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -18,15 +20,16 @@ import (
 	"github.com/kubeflow/common/pkg/controller.v1/common"
 	"github.com/kubeflow/common/pkg/util"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	_ "ascend-operator/pkg/testtool"
 )
 
 var (
@@ -731,4 +734,91 @@ func TestIsPodScheduleStrategy(t *testing.T) {
 		result := isPodScheduleStrategy(ascendJob)
 		convey.So(result, convey.ShouldBeFalse)
 	})
+}
+
+func TestASJobReconcilerDeletePendingPodsNilJobInfo(t *testing.T) {
+	r := &ASJobReconciler{}
+	err := r.deletePendingPods(nil)
+	assert.NoError(t, err)
+	ji := &jobInfo{
+		pods: []*corev1.Pod{nil},
+	}
+	err = r.deletePendingPods(ji)
+	assert.NoError(t, err)
+}
+
+func TestASJobReconcilerDeletePendingPodsNoPendingPods(t *testing.T) {
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+		},
+	}
+	ji := &jobInfo{
+		pods: []*corev1.Pod{pod},
+	}
+	r := &ASJobReconciler{}
+	err := r.deletePendingPods(ji)
+	assert.NoError(t, err)
+}
+
+type mockClient struct {
+	client.Client
+}
+
+func TestASJobReconcilerDeletePendingPodsSuccessfulDelete(t *testing.T) {
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodPending,
+		},
+	}
+	ji := &jobInfo{
+		pods: []*corev1.Pod{pod},
+	}
+	r := &ASJobReconciler{
+		Client: mockClient{},
+	}
+
+	patches := gomonkey.ApplyMethod(reflect.TypeOf(&mockClient{}), "Delete", func(_ *mockClient, ctx context.Context,
+		obj client.Object, opts ...client.DeleteOption) error {
+		return nil
+	})
+	defer patches.Reset()
+	err := r.deletePendingPods(ji)
+	assert.NoError(t, err)
+}
+
+func TestASJobReconcilerDeletePendingPodsDeleteFailure(t *testing.T) {
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodPending,
+		},
+	}
+	ji := &jobInfo{
+		pods: []*corev1.Pod{pod},
+	}
+	r := &ASJobReconciler{
+		Client: mockClient{},
+	}
+	expectedErr := assert.AnError
+	patches := gomonkey.ApplyMethod(reflect.TypeOf(&mockClient{}), "Delete", func(_ *mockClient, ctx context.Context,
+		obj client.Object, opts ...client.DeleteOption) error {
+		return expectedErr
+	})
+	defer patches.Reset()
+
+	err := r.deletePendingPods(ji)
+	assert.Error(t, err)
+	assert.Equal(t, expectedErr, err)
 }
