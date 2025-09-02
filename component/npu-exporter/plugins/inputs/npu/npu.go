@@ -23,7 +23,7 @@ import (
 	"github.com/influxdata/telegraf/plugins/inputs"
 
 	"ascend-common/api"
-	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
@@ -37,7 +37,7 @@ const (
 
 // WatchNPU npu watch struct
 type WatchNPU struct {
-	collector *colcommon.NpuCollector
+	collector *common.NpuCollector
 }
 
 // SampleConfig used to return sampleConfig
@@ -60,17 +60,17 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 	}
 	logger.DynamicConfigure(logger.Config{Acc: acc})
 
-	containerMap := colcommon.GetContainerNPUInfo(npu.collector)
-	chips := colcommon.GetChipListWithVNPU(npu.collector)
+	containerMap := common.GetContainerNPUInfo(npu.collector)
+	chips := common.GetChipListWithVNPU(npu.collector)
 
-	fieldsMap = npu.gatherChain(fieldsMap, colcommon.ChainForSingleGoroutine, containerMap, chips)
-	fieldsMap = npu.gatherChain(fieldsMap, colcommon.ChainForMultiGoroutine, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForSingleGoroutine, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForMultiGoroutine, containerMap, chips)
 
-	generalFields := fieldsMap[colcommon.GeneralDevTagKey]
+	generalFields := fieldsMap[common.GeneralDevTagKey]
 	acc.AddFields(devName, generalFields, map[string]string{"device": devTagValue})
 
 	// after the report is completed, deleted to avoid repeated reporting in the for loop
-	delete(fieldsMap, colcommon.GeneralDevTagKey)
+	delete(fieldsMap, common.GeneralDevTagKey)
 	for key, fields := range fieldsMap {
 
 		ids := strings.Split(key, "_")
@@ -85,8 +85,8 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 	return nil
 }
 
-func (npu *WatchNPU) gatherChain(fieldsMap map[string]map[string]interface{}, chain []colcommon.MetricsCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (npu *WatchNPU) gatherChain(fieldsMap map[string]map[string]interface{}, chain []common.MetricsCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	for _, collector := range chain {
 		fieldsMap = collector.UpdateTelegraf(fieldsMap, npu.collector, containerMap, chips)
@@ -97,7 +97,7 @@ func (npu *WatchNPU) gatherChain(fieldsMap map[string]map[string]interface{}, ch
 func init() {
 	inputs.Add("npu", func() telegraf.Input {
 		return &WatchNPU{
-			collector: colcommon.Collector,
+			collector: common.Collector,
 		}
 	})
 }
