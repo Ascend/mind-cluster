@@ -98,7 +98,6 @@ const (
 	telegrafPlatform           = "Telegraf"
 	pollIntervalStr            = "poll_interval"
 	platformStr                = "platform"
-	hccsBWProfilingTimeStr     = "hccsBWProfilingTime"
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
 )
@@ -368,7 +367,7 @@ func init() {
 	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
 		"config pcie bandwidth profiling time, range is [1, 2000]")
 	flag.IntVar(&hccsBWProfilingTime, api.HccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
-		"config hccs bandwidth profiling time, range is [1, 1000]")
+		"config "+api.Hccs+" bandwidth profiling time, range is [1, 1000]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -451,7 +450,7 @@ func paramValidInTelegraf() error {
 	}
 
 	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
-		return errors.New("hccsBWProfilingTime range error")
+		return errors.New(api.Hccs + "BWProfilingTime range error")
 	}
 	return nil
 }
