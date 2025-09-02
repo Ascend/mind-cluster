@@ -25,31 +25,33 @@ import (
 	"taskd/toolkit_backend/net/common"
 )
 
-// NetTool worker net tool
-var NetTool *net.NetInstance
+// SwitchNicNetTool worker net tool
+var SwitchNicNetTool *net.NetInstance
 
-// SwitchNicCallback switch callback func
+// switchNicCallback switch callback func
 var switchNicCallback C.callbackfunc
 
-func RegisterCallback(ptr uintptr) {
+// RegisterSwitchNicCallback register switch callback func
+func RegisterSwitchNicCallback(ptr uintptr) {
 	switchNicCallback = (C.callbackfunc)(unsafe.Pointer(ptr))
 }
 
-func ProcessMsg(globalRank int, msg *common.Message) {
+// SwitchNicProcessMsg process switch nic msg
+func SwitchNicProcessMsg(msg *common.Message) {
 	if msg == nil {
 		hwlog.RunLog.Error("msg is nil")
 		return
 	}
 	body, err := utils.StringToObj[storage.MsgBody](msg.Body)
 	if err != nil {
-		err = fmt.Errorf("get msgBody err: %v, msgBody is %v", err, body)
+		hwlog.RunLog.Errorf("get msgBody err: %v, msgBody is %v", err, body)
 		return
 	}
 	uid := body.Extension[constant.SwitchNicUUID]
 	rankStr := body.Extension[constant.GlobalRankKey]
 	opStr := body.Extension[constant.GlobalOpKey]
 	if uid == "" || rankStr == "" || opStr == "" {
-		hwlog.RunLog.Errorf("failed to get param, uid: %v, rankStr: %v, opStr: %v", uid, rankStr, opStr)
+		hwlog.RunLog.Debugf("failed to get param, uid: %v, rankStr: %v, opStr: %v, skip", uid, rankStr, opStr)
 		return
 	}
 	var ranks []string
@@ -78,12 +80,12 @@ func ProcessMsg(globalRank int, msg *common.Message) {
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to do switch nic, err: %v", err)
 	}
-	notifyResult(result, uid)
+	notifySwitchNicResult(result, uid)
 }
 
-func notifyResult(result, uid string) {
-	if NetTool == nil {
-		hwlog.RunLog.Error("NetTool for worker is nil")
+func notifySwitchNicResult(result, uid string) {
+	if SwitchNicNetTool == nil {
+		hwlog.RunLog.Error("SwitchNicNetTool for worker is nil")
 		return
 	}
 	msg := storage.MsgBody{
@@ -94,7 +96,7 @@ func notifyResult(result, uid string) {
 			constant.SwitchNicUUID: uid,
 		},
 	}
-	_, err := NetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
+	_, err := SwitchNicNetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
 		Role:       common.MgrRole,
 		ServerRank: "0",
 	})

@@ -115,7 +115,10 @@ func TestRegisterAndLoopRecv(t *testing.T) {
 		called = true
 		return
 	})
-	patches.ApplyFunc(om.ProcessMsg, func(globalRank int, msg *common.Message) {
+	patches.ApplyFunc(om.SwitchNicProcessMsg, func(msg *common.Message) {
+		return
+	})
+	patches.ApplyFunc(om.StressTestProcessMsg, func(msg *common.Message) {
 		return
 	})
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
