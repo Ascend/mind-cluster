@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 )
 
 // TestPluginServerGetRestartFlag Test PluginServer GetRestartFlag()
@@ -71,7 +72,7 @@ func TestPluginServerStartPart1(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)
@@ -95,7 +96,7 @@ func TestPluginServerStartPart1(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)
@@ -132,7 +133,7 @@ func TestPluginServerStartPart2(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)
@@ -169,7 +170,7 @@ func TestPluginServerStartPart3(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)
@@ -211,7 +212,7 @@ func TestPluginServerStartPart4(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)
@@ -268,7 +269,7 @@ func TestPluginServerStartPart5(t *testing.T) {
 		ps := &PluginServer{
 			isRunning:  common.NewAtomicBool(false),
 			grpcServer: grpc.NewServer(),
-			deviceType: common.Ascend910}
+			deviceType: api.Ascend910}
 
 		socketWatcher, err := common.NewFileWatch()
 		convey.So(err, convey.ShouldBeNil)

@@ -539,7 +539,7 @@ func TestCheckDeviceStatus(t *testing.T) {
 			})
 			defer patch.Reset()
 			allInfo := map[string][]*common.NpuDevice{
-				common.Ascend910: {
+				api.Ascend910: {
 					&common.NpuDevice{
 						PhyID:  int32(id1),
 						Health: v1beta1.Healthy,
@@ -594,7 +594,7 @@ func TestFlattenMap(t *testing.T) {
 	const id = 0
 	const targetLen = 2
 	m := map[string][]*common.NpuDevice{
-		common.Ascend910: {
+		api.Ascend910: {
 			&common.NpuDevice{
 				PhyID:  int32(id),
 				Health: v1beta1.Healthy,
@@ -633,9 +633,9 @@ func TestIsSupportGraceTolerance(t *testing.T) {
 		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
 	})
 
-	hdm.RunMode = common.Ascend910
+	hdm.RunMode = api.Ascend910
 	tmpRealCardType := common.ParamOption.RealCardType
-	common.ParamOption.RealCardType = common.Ascend910
+	common.ParamOption.RealCardType = api.Ascend910
 	convey.Convey("test isSupportGraceTolerance when SMP chip mode is not for Ascend910", t, func() {
 		hdm.WorkMode = common.AMPMode
 		hdm.isSupportGraceTolerance()
@@ -817,7 +817,7 @@ func TestResetHccsServer(t *testing.T) {
 
 // TestSubscribeNpuFaultEvent tests the subscribeNpuFaultEvent function.
 func TestSubscribeNpuFaultEvent(t *testing.T) {
-	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: common.Ascend910}
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: api.Ascend910}
 	convey.Convey("Test subscribeNpuFaultEvent", t, func() {
 		convey.Convey("When LoadFaultCodeFromFile fails, set SubscribeFailed and log error", func() {
 			patch := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
@@ -832,7 +832,7 @@ func TestSubscribeNpuFaultEvent(t *testing.T) {
 			hdm.RunMode = "otherMode"
 			hdm.subscribeNpuFaultEvent()
 			convey.So(common.SubscribeFailed, convey.ShouldBeTrue)
-			hdm.RunMode = common.Ascend910
+			hdm.RunMode = api.Ascend910
 		})
 		mockDmgr := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
 		defer mockDmgr.Reset()
@@ -868,7 +868,7 @@ func TestSubscribeNpuFaultEvent(t *testing.T) {
 
 // TestHotReset tests the hotReset function.
 func TestHotReset(t *testing.T) {
-	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: common.Ascend910}
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}, RunMode: api.Ascend910}
 	npuDevice := &common.NpuDevice{DeviceName: "name", LogicID: 0}
 	convey.Convey("Test hotReset", t, func() {
 		patch := gomonkey.ApplyMethod(hdm.manager, "SetCardsInResetting",
@@ -1540,7 +1540,7 @@ func TestUpdateDeviceUsedInfo(t *testing.T) {
 			defer mockGetPodsUsedNPUByKlt.Reset()
 			defer mockGetClient.Reset()
 			groupDevice := map[string][]*common.NpuDevice{
-				common.Ascend910: {
+				api.Ascend910: {
 					&common.NpuDevice{
 						DeviceName: "Ascend910-0",
 						NotPodUsed: false,
@@ -1552,6 +1552,6 @@ func TestUpdateDeviceUsedInfo(t *testing.T) {
 				},
 			}
 			hdm.updateDeviceUsedInfo(groupDevice)
-			convey.So(groupDevice[common.Ascend910][0].NotPodUsed, convey.ShouldBeTrue)
+			convey.So(groupDevice[api.Ascend910][0].NotPodUsed, convey.ShouldBeTrue)
 		})
 }

@@ -605,7 +605,7 @@ func (ps *PluginServer) GetRealAllocateDevices(pod v1.Pod, kltAllocate []string)
 		return realDeviceList, nil
 	}
 	hwlog.RunLog.Warnf("get real allocate devices err: %v", err)
-	realDevice, exist := pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
+	realDevice, exist := pod.Annotations[api.PodAnnotationAscendReal]
 	if exist {
 		realDeviceList = strings.Split(realDevice, common.CommaSepDev)
 		ps.updateAllocMap(realDeviceList, kltAllocate)

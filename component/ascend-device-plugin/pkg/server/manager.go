@@ -100,8 +100,8 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	case common.Ascend310, common.Ascend310B:
 		hdm.RunMode = common.Ascend310
 		hdm.manager = device.NewHwAscend310Manager()
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
-		hdm.RunMode = common.Ascend910
+	case api.Ascend910, common.Ascend910B, common.Ascend910A3:
+		hdm.RunMode = api.Ascend910
 		hdm.manager = device.NewHwAscend910Manager()
 		hdm.WorkMode = dmgr.GetNpuWorkMode()
 	case common.Ascend310P:
@@ -1025,7 +1025,7 @@ func (hdm *HwDevManager) updatePodAnnotation() error {
 	}
 	for _, devType := range hdm.allInfo.AllDevTypes {
 		// for 310P vnpu no need update
-		if common.IsVirtualDev(devType) && !strings.HasPrefix(devType, common.Ascend910) {
+		if common.IsVirtualDev(devType) && !strings.HasPrefix(devType, api.Ascend910) {
 			continue
 		}
 		if err := hdm.updateSpecTypePodAnnotation(devType, serverID); err != nil {
@@ -1092,7 +1092,7 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 	}
 	for _, deviceInfo := range podDeviceInfo {
 		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
-		_, existRealAlloc := deviceInfo.Pod.Annotations[api.ResourceNamePrefix+common.PodRealAlloc]
+		_, existRealAlloc := deviceInfo.Pod.Annotations[api.PodAnnotationAscendReal]
 		if existRealAlloc {
 			continue
 		}
@@ -1226,7 +1226,7 @@ func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 		hwlog.RunLog.Errorf("load faultCode.json failed, the subscribe way is closed, err: %v", err)
 		return
 	}
-	if hdm.RunMode != common.Ascend910 {
+	if hdm.RunMode != api.Ascend910 {
 		hwlog.RunLog.Debug("subscribe mode only support 910 now")
 		common.SubscribeFailed = true
 		return
@@ -1260,11 +1260,11 @@ func (hdm *HwDevManager) isSupportGraceTolerance() {
 		return
 	}
 
-	if hdm.RunMode != common.Ascend910 {
+	if hdm.RunMode != api.Ascend910 {
 		hwlog.RunLog.Debugf("grace tolerance only support training chip")
 		return
 	}
-	if common.ParamOption.RealCardType == common.Ascend910 && hdm.WorkMode != common.SMPMode {
+	if common.ParamOption.RealCardType == api.Ascend910 && hdm.WorkMode != common.SMPMode {
 		hwlog.RunLog.Debug("grace tolerance only support SMP chip mode for 910")
 		return
 	}

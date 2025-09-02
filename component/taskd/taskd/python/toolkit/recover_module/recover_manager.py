@@ -251,8 +251,10 @@ class DLRecoverManager(RecoverManager):
             elif action == 'stop_train':
                 func(arg.fault_ranks, constants.STOP_TRAIN_ABORT)
             elif action == 'pause_train':
-                timeout = self._get_hccl_switch_nic_timeout()
-                run_log.info(f"will switch nic, timeout={timeout}")
+                timeout = arg.timeout
+                if timeout == 0:
+                    timeout = self._get_hccl_switch_nic_timeout()
+                run_log.info(f"will pause train, timeout={timeout}")
                 func(arg.fault_ranks, constants.STOP_TRAIN_PAUSE, timeout)
             elif action == 'on_global_rank':
                 if arg.timeout == 0:

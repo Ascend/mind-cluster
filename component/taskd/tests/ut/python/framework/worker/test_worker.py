@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import os
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
@@ -23,7 +24,8 @@ class TestWorker(TestCase):
     @patch('taskd.python.cython_api.cython_api.lib')
     def test_init_worker(self, mock_lib):
         mock_lib.InitWorker = MagicMock(return_value=0)
-        w = Worker(0)
+        os.environ["MS_NODE_RANK"] = "0"
+        w = Worker(0, "ms")
         w.register_callback = MagicMock()
         res = w.init_worker(0)
         self.assertTrue(res)
@@ -33,9 +35,10 @@ class TestWorker(TestCase):
     @patch('ctypes.CFUNCTYPE')
     def test_register_callback(self, mock_func, mock_lib, mock_log: MagicMock):
         mock_lib.RegisterSwitchCallback = MagicMock()
+        mock_lib.RegisterStressTestCallback = MagicMock()
         w = Worker(0)
         w.register_callback()
-        mock_log.assert_called_with("Successfully register switch callback")
+        mock_log.assert_called_with("Successfully register callback func")
 
     @patch('taskd.python.cython_api.cython_api.lib')
     def test_start_up_monitor(self, mock_lib: MagicMock):

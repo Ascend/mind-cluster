@@ -53,7 +53,7 @@ class MSRunPlugin:
     def __init__(self):
         # This time is the interval time of the infinite loop.
         self.all_rank_succeed = False
-        self.monitor_interval = 5
+        self.monitor_interval = 1
         # Use a string to mark the health status of all global ranks to determine
         # whether it is necessary to kill the processes.
         self.rank_status = ""

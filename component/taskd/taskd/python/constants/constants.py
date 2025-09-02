@@ -78,3 +78,14 @@ GROUP_RANK_KEY = "group_rank"
 GLOBAL_RANKS_KEY = "global_ranks"
 DEFAULT_GROUP = "default_group"
 GROUP_BASE_DIR_ENV = "GROUP_BASE_DIR"
+
+# stress test result
+StressTestInit = -1
+StressTestOK = 0
+StressTestExecFail = 1
+StressTestFindFault = 2
+StressTestTimeout = 3
+StressTestVolRecoverFail = 4
+
+AicStressTestTimeout = 300
+P2PStressTestTimeout = 600

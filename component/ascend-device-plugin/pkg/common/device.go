@@ -318,7 +318,9 @@ func deviceInfoToSets(deviceInfo []string) sets.String {
 	// pattern no need to defined as global variable, only used here
 	deviceSets := sets.String{}
 	for _, device := range deviceInfo {
-		if match := GetPattern()[api.Ascend910].MatchString(device); !match {
+
+		GetPattern()["ascend910"].MatchString(device)
+		if match := GetPattern()[api.Ascend910Lowercase].MatchString(device); !match {
 			hwlog.RunLog.Warnf("device %s is illegal", device)
 			continue
 		}

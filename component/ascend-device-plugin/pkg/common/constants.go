@@ -93,8 +93,6 @@ const (
 	PodPredicateTime = "predicate-time"
 	// Pod2kl pod annotation key, means kubelet allocate device
 	Pod2kl = "kltDev"
-	// PodRealAlloc pod annotation key, means pod real mount device
-	PodRealAlloc = "AscendReal"
 	// SuperPodIDKey super node id
 	SuperPodIDKey = "superPodID"
 	// ChipNameLabel label value is card type, eg. 910A
@@ -209,40 +207,38 @@ const (
 	// HuaweiAscend310P with prefix
 	HuaweiAscend310P = api.ResourceNamePrefix + Ascend310P
 
-	// Ascend910 910
-	Ascend910 = "Ascend910"
 	// Ascend910vir2  Ascend910 2core
-	Ascend910vir2 = Ascend910 + "-" + Core2
+	Ascend910vir2 = api.Ascend910 + "-" + Core2
 	// Ascend910vir4 Ascend910 4core
-	Ascend910vir4 = Ascend910 + "-" + Core4
+	Ascend910vir4 = api.Ascend910 + "-" + Core4
 	// Ascend910vir8 Ascend910 8core
-	Ascend910vir8 = Ascend910 + "-" + Core8
+	Ascend910vir8 = api.Ascend910 + "-" + Core8
 	// Ascend910vir16 Ascend910 16core
-	Ascend910vir16 = Ascend910 + "-" + Core16
+	Ascend910vir16 = api.Ascend910 + "-" + Core16
 	// Ascend910vir5Cpu1Gb8 Ascend910 5core 1cpu 8 Gb memory
-	Ascend910vir5Cpu1Gb8 = Ascend910 + "-" + Core5Cpu1Gb8
+	Ascend910vir5Cpu1Gb8 = api.Ascend910 + "-" + Core5Cpu1Gb8
 	// Ascend910vir5Cpu1Gb16 Ascend910 5core 1cpu 16Gb memory
-	Ascend910vir5Cpu1Gb16 = Ascend910 + "-" + Core5Cpu1Gb16
+	Ascend910vir5Cpu1Gb16 = api.Ascend910 + "-" + Core5Cpu1Gb16
 	// Ascend910vir6Cpu1Gb16 Ascend910 6core 1cpu 16Gb memory
-	Ascend910vir6Cpu1Gb16 = Ascend910 + "-" + Core6Cpu1Gb16
+	Ascend910vir6Cpu1Gb16 = api.Ascend910 + "-" + Core6Cpu1Gb16
 	// Ascend910vir10Cpu3Gb16 Ascend910 10core 3cpu 16Gb memory
-	Ascend910vir10Cpu3Gb16 = Ascend910 + "-" + Core10Cpu3Gb16
+	Ascend910vir10Cpu3Gb16 = api.Ascend910 + "-" + Core10Cpu3Gb16
 
 	// Ascend910vir10Cpu3Gb16Ndvpp Ascend910 10core 3cpu 16Gb memory ndvpp
-	Ascend910vir10Cpu3Gb16Ndvpp = Ascend910 + "-" + Core10Cpu3Gb16Ndvpp
+	Ascend910vir10Cpu3Gb16Ndvpp = api.Ascend910 + "-" + Core10Cpu3Gb16Ndvpp
 	// Ascend910vir10Cpu3Gb32 Ascend910 10core 3cpu 32Gb memory
-	Ascend910vir10Cpu3Gb32 = Ascend910 + "-" + Core10Cpu3Gb32
+	Ascend910vir10Cpu3Gb32 = api.Ascend910 + "-" + Core10Cpu3Gb32
 	// Ascend910vir10Cpu4Gb16Dvpp Ascend910 10core 4cpu 16Gb memory dvpp
-	Ascend910vir10Cpu4Gb16Dvpp = Ascend910 + "-" + Core10Cpu4Gb16Dvpp
+	Ascend910vir10Cpu4Gb16Dvpp = api.Ascend910 + "-" + Core10Cpu4Gb16Dvpp
 
 	// Ascend910vir12Cpu3Gb32 Ascend910 12core 3cpu 32Gb memory
-	Ascend910vir12Cpu3Gb32 = Ascend910 + "-" + Core12Cpu3Gb32
+	Ascend910vir12Cpu3Gb32 = api.Ascend910 + "-" + Core12Cpu3Gb32
 
 	// Ascend910vir3Cpu1Gb8 Ascend910 3core 1cpu 8Gb memory
-	Ascend910vir3Cpu1Gb8 = Ascend910 + "-" + Core3Cpu1Gb8
+	Ascend910vir3Cpu1Gb8 = api.Ascend910 + "-" + Core3Cpu1Gb8
 
 	// HuaweiAscend910 with prefix
-	HuaweiAscend910 = api.ResourceNamePrefix + Ascend910
+	HuaweiAscend910 = api.ResourceNamePrefix + api.Ascend910
 
 	// Ascend310 310
 	Ascend310 = "Ascend310"
@@ -262,20 +258,20 @@ const (
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
 	HuaweiNetworkUnHealthAscend910 = api.ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
 	// HuaweiUnHealthAscend910 unhealthy
-	HuaweiUnHealthAscend910 = api.ResourceNamePrefix + Ascend910 + "-Unhealthy"
+	HuaweiUnHealthAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Unhealthy"
 	// HuaweiRecoveringAscend910 recovering
-	HuaweiRecoveringAscend910 = api.ResourceNamePrefix + Ascend910 + "-Recovering"
+	HuaweiRecoveringAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Recovering"
 	// HuaweiUnHealthAscend310P 310p unhealthy
 	HuaweiUnHealthAscend310P = api.ResourceNamePrefix + Ascend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
 	HuaweiUnHealthAscend310 = api.ResourceNamePrefix + Ascend310 + "-Unhealthy"
 	// HuaweiNetworkRecoverAscend910 910 network recover
-	HuaweiNetworkRecoverAscend910 = api.ResourceNamePrefix + Ascend910 + "-NetworkRecover"
+	HuaweiNetworkRecoverAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-NetworkRecover"
 	// HuaweiRecoverAscend910 910 recover
-	HuaweiRecoverAscend910 = api.ResourceNamePrefix + Ascend910 + "-Recover"
+	HuaweiRecoverAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Recover"
 
 	// HuaweiFaultCodeAscend910 910 fault code
-	HuaweiFaultCodeAscend910 = api.ResourceNamePrefix + Ascend910 + "-Fault"
+	HuaweiFaultCodeAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Fault"
 	// HuaweiFaultCodeAscend310P 310p fault code
 	HuaweiFaultCodeAscend310P = api.ResourceNamePrefix + Ascend310P + "-Fault"
 	// HuaweiFaultCodeAscend310 310 fault code
