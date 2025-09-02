@@ -38,7 +38,6 @@ import (
 	"taskd/framework_backend/manager"
 	"taskd/framework_backend/proxy"
 	"taskd/framework_backend/worker"
-	"taskd/framework_backend/worker/monitor/profiling"
 	"taskd/framework_backend/worker/om"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
@@ -55,7 +54,14 @@ var loggerLifeCtl = make(map[uintptr]*hwlog.CustomLogger)
 //
 //export RegisterSwitchCallback
 func RegisterSwitchCallback(cb uintptr) {
-	om.RegisterCallback(cb)
+	om.RegisterSwitchNicCallback(cb)
+}
+
+// RegisterStressTestCallback register stress test callback, is called by worker
+//
+//export RegisterStressTestCallback
+func RegisterStressTestCallback(cb uintptr) {
+	om.RegisterStressTestCallback(cb)
 }
 
 // InitWorker to init worker, should be called by python api,
@@ -96,7 +102,7 @@ func StartMonitorClient() C.int {
 				" function is disabled: %v\n", time.Now(), r)
 		}
 	}()
-	hwlog.RunLog.Infof("rank %d will start its client", profiling.GlobalRankId)
+	hwlog.RunLog.Infof("rank %d will start its client", worker.GlobalRank)
 	go worker.StartMonitor(ctx)
 	return C.int(0)
 }

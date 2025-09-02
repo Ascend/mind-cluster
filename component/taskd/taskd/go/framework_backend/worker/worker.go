@@ -35,6 +35,9 @@ import (
 
 var netTool = &net.NetInstance{}
 
+// GlobalRank of this work
+var GlobalRank int
+
 const (
 	waitInitMsptiTimeout = 180 * time.Second
 	maxRegisterTime      = 10
@@ -53,6 +56,7 @@ func init() {
 
 // InitMonitor to init taskd monitor,
 func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) {
+	GlobalRank = globalRank
 	profiling.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
 	profiling.GlobalRankId = globalRank
 
@@ -70,8 +74,6 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 // InitNetwork register worker to manager
 func InitNetwork(globalRank, nodeRank int) {
 	hwlog.RunLog.Infof("worker %d noderank %d init network begin", globalRank, nodeRank)
-	profiling.GlobalRank = globalRank
-	profiling.NodeRank = nodeRank
 	addr := constant.DefaultIP + constant.ProxyPort
 	var err error
 	customLogger := hwlog.SetCustomLogger(hwlog.RunLog)
@@ -100,7 +102,8 @@ func InitNetwork(globalRank, nodeRank int) {
 	}
 	hwlog.RunLog.Infof("worker %d init network end", globalRank)
 	profiling.NetTool = netTool
-	om.NetTool = netTool
+	om.SwitchNicNetTool = netTool
+	om.StressTestNetTool = netTool
 	netToolInitNotify()
 }
 
@@ -149,27 +152,28 @@ func registerAndLoopRecv(ctx context.Context) {
 			ServerRank: "0",
 		})
 		if err != nil {
-			hwlog.RunLog.Errorf("worker %d register manager err: %v", profiling.GlobalRank, err)
+			hwlog.RunLog.Errorf("worker %d register manager err: %v", GlobalRank, err)
 			continue
 		}
 		registerSucc = true
 		break
 	}
 	if !registerSucc {
-		hwlog.RunLog.Errorf("worker  %d register manager meet max times %d", profiling.GlobalRank, maxRegisterTime)
+		hwlog.RunLog.Errorf("worker  %d register manager meet max times %d", GlobalRank, maxRegisterTime)
 		return
 	}
-	hwlog.RunLog.Infof("worker %d register manager success, begin recv msg", profiling.GlobalRank)
+	hwlog.RunLog.Infof("worker %d register manager success, begin recv msg", GlobalRank)
 	profiling.MgrProfilingCmd.Store(true)
 	for {
 		select {
 		case <-ctx.Done():
-			hwlog.RunLog.Errorf("worker %d exit", profiling.GlobalRank)
+			hwlog.RunLog.Errorf("worker %d exit", GlobalRank)
 			return
 		default:
 			msg := netTool.ReceiveMessage()
-			om.ProcessMsg(profiling.GlobalRank, msg)
-			profiling.ProcessMsg(profiling.GlobalRank, msg)
+			om.SwitchNicProcessMsg(msg)
+			om.StressTestProcessMsg(msg)
+			profiling.ProcessMsg(GlobalRank, msg)
 		}
 	}
 }
@@ -183,8 +187,9 @@ func StartMonitor(ctx context.Context) {
 		hwlog.RunLog.Errorf("cannot StartMonitor, err: %v", err)
 		return
 	}
-	go profiling.ManageSaveProfiling(ctx)
 	go registerAndLoopRecv(ctx)
+	go om.HandleStressTestMsg(ctx, GlobalRank)
+	go profiling.ManageSaveProfiling(ctx)
 	go profiling.ManageDomainEnableStatus(ctx)
 	go profiling.ManageProfilingDiskUsage(constant.ProfilingBaseDir, ctx)
 	profiling.ProfileTaskQueue = profiling.NewTaskQueue(ctx)
