@@ -11,6 +11,8 @@ const (
 	OK RespCode = 0
 	// SuccessCode when query is fine
 	SuccessCode RespCode = 200
+	// ExitIsolateRanksCode stands need to notify isolate ranks to exit
+	ExitIsolateRanksCode RespCode = 201
 
 	/*
 		4xx is client error which is not retryable

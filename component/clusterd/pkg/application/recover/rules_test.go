@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRules(t *testing.T) {
@@ -45,4 +46,22 @@ func TestGetRules(t *testing.T) {
 			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
 		})
 	})
+}
+
+func TestEventControllerGetDPScaleStrategyRules(t *testing.T) {
+	tests := []struct {
+		name string
+		want int
+	}{
+		{
+			name: "get dp rules success",
+			want: 19,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctl := &EventController{}
+			assert.Equalf(t, tt.want, len(ctl.getDPScaleStrategyRules()), "getDPScaleStrategyRules()")
+		})
+	}
 }

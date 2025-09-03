@@ -94,4 +94,19 @@ const (
 
 	// NotifyContinueTrainState notify process continue train
 	NotifyContinueTrainState = "NotifyContinueTrainState"
+
+	// NotifyScaleInStrategyState notify scale-in strategy
+	NotifyScaleInStrategyState = "NotifyScaleInStrategyState"
+
+	// WaitReportScaleInIsolateRanksState wait report scale-in isolate ranks status
+	WaitReportScaleInIsolateRanksState = "WaitReportScaleInIsolateRanksState"
+	// CheckReportScaleInIsolateRanksState check report scale-in isolate ranks status
+	CheckReportScaleInIsolateRanksState = "CheckReportScaleInIsolateRanksState"
+	// WaitReportScaleInStatusState wait report scale-in strategy status
+	WaitReportScaleInStatusState = "WaitReportScaleInStatusState"
+	// WaitReportScaleOutStatusState wait report scale-out strategy status
+	WaitReportScaleOutStatusState = "WaitReportScaleOutStatusState"
+
+	// ScaleInRunningState scale-in running state
+	ScaleInRunningState = "ScaleRunningState"
 )

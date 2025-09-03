@@ -61,6 +61,7 @@ type RecoverResult struct {
 	Strategy       string
 	Code           RespCode
 	RecoverSuccess bool
+	IsolateRankIds []string
 }
 
 // StressTestParam node -> rank -> ops
