@@ -1030,3 +1030,86 @@ func TestObtainBatchScoreRank(t *testing.T) {
 		})
 	}
 }
+
+func TestIfPodLevelRescheduling(t *testing.T) {
+	tests := []struct {
+		name string
+		fJob *rescheduling.FaultJob
+		want bool
+	}{
+		{
+			name: "01-ifPodLevelRescheduling job not exist",
+			fJob: &rescheduling.FaultJob{
+				JobUID: "job1",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{}
+			if got := tp.ifPodLevelRescheduling(tt.fJob); got != tt.want {
+				t.Errorf("ifPodLevelRescheduling() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type useAnnotationTestCase struct {
+	Task     *api.TaskInfo
+	WantNode *plugin.NPUNode
+	Name     string
+	Node     plugin.NPUNode
+	PodAnno  string
+	Attr     util.SchedulerJobAttr
+}
+
+func buildUseAnnotationTestCases01() []useAnnotationTestCase {
+	networkUnhealthyNPU := util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
+	return []useAnnotationTestCase{
+		{
+			Name: "01-UseAnnotation task will select the npu which is the only one on the ring",
+			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
+			Node: plugin.NPUNode{
+				CommonNode: plugin.CommonNode{
+					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-4,Ascend910-5",
+						networkUnhealthyNPU: ""},
+				},
+			},
+			PodAnno: "Ascend910-0",
+			WantNode: &plugin.NPUNode{
+				CommonNode: plugin.CommonNode{
+					Annotation: map[string]string{util.NPU910CardName: "Ascend910-4,Ascend910-5",
+						networkUnhealthyNPU: ""},
+				},
+			},
+		},
+	}
+}
+
+func TestUseAnnotation(t *testing.T) {
+	npu := New(SchedulerName)
+	tp, ok := npu.(*module910SuperPod)
+	if !ok {
+		return
+	}
+	tp.spBlock = util.NPUIndex8
+	job := test.FakeNormalTestJob("job", 1)
+	test.SetFakeJobResRequest(job, util.NPU910CardName, "1")
+	attr := test2.FakeSchedulerJobAttrByJob(job)
+	tp.SetSchedulerAttr(attr)
+	env := plugin.ScheduleEnv{
+		ClusterCache: plugin.ClusterCache{
+			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr}}},
+	}
+	tp.SetSchedulerEnv(env)
+	testCases := buildUseAnnotationTestCases01()
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			node := tp.UseAnnotation(tt.Task, tt.Node)
+			if (tt.Task == nil || tt.Node.Annotation == nil) || !reflect.DeepEqual(node, tt.WantNode) {
+				t.Errorf("UseAnnotation() node: %v, wantNode: %v", node, tt.WantNode)
+			}
+		})
+	}
+}

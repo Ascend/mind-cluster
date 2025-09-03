@@ -20,6 +20,7 @@ Package module910x8 is using for HuaWei Ascend pin affinity schedule.
 package module910x8
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -31,14 +32,14 @@ type module910x8 struct {
 
 const (
 	// SchedulerName module910x8 plugin name
-	SchedulerName = "huawei.com/Ascend910module"
+	SchedulerName = util.HwPreName + util.Ascend910 + "module"
 	npuIndex2     = 2
 	npuIndex3     = 3
 	npuNumPerHccs = 4
 	nodeNPUNumber = 8
 	nodeWeight    = 8.0
 
-	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
+	networkUnhealthyNPU = util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
 )
 
 type selectNodeInf struct {

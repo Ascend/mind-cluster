@@ -20,6 +20,7 @@ Package superpod is using for HuaWei Atlas 900 A3 SuperPod affinity schedule.
 package superpod
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -32,7 +33,7 @@ type module910SuperPod struct {
 
 const (
 	// SchedulerName name of scheduler
-	SchedulerName = "huawei.com/Ascend910super-pod"
+	SchedulerName = util.HwPreName + util.Ascend910 + "super-pod"
 	// SuperPodAnnoKey annotation key of super pod
 	SuperPodAnnoKey            = "sp-block"
 	jobCheckFailedReason       = "npu num is invalid"

@@ -54,6 +54,15 @@ func (mpc *MsgProcessor) clusterAction(data storage.BaseMessage, clusterInfo *st
 		clusterInfo.Command[constant.GlobalOpKey] = data.Body.Extension[constant.GlobalOpKey]
 		clusterInfo.Command[constant.SwitchNicUUID] = data.Header.Uuid
 		clusterInfo.Command[constant.SwitchJobID] = data.Body.Extension[constant.SwitchJobID]
+	case constant.ProcessManageRecoverSignal:
+		clusterInfo.Command[constant.Uuid] = data.Body.Extension[constant.Uuid]
+		clusterInfo.Command[constant.SignalType] = data.Body.Extension[constant.SignalType]
+		clusterInfo.Command[constant.Actions] = data.Body.Extension[constant.Actions]
+		clusterInfo.Command[constant.FaultRanks] = data.Body.Extension[constant.FaultRanks]
+		clusterInfo.Command[constant.ChangeStrategy] = data.Body.Extension[constant.ChangeStrategy]
+		clusterInfo.Command[constant.Timeout] = data.Body.Extension[constant.Timeout]
+		clusterInfo.Command[constant.NodeRankIds] = data.Body.Extension[constant.NodeRankIds]
+		clusterInfo.Command[constant.ExtraParams] = data.Body.Extension[constant.ExtraParams]
 	case constant.StressTestCode:
 		clusterInfo.Command[constant.StressTestRankOPStr] = data.Body.Extension[constant.StressTestRankOPStr]
 		clusterInfo.Command[constant.StressTestUUID] = data.Header.Uuid

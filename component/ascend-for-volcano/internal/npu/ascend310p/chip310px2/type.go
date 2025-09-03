@@ -20,6 +20,7 @@ Package chip310px2 is using for HuaWei 300I Duo Ascend pin affinity schedule.
 package chip310px2
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -50,7 +51,7 @@ const (
 	affScore16
 
 	// SchedulerName chip310p plugin name
-	SchedulerName  = "huawei.com/Ascend310Pduochip"
+	SchedulerName  = util.HwPreName + util.Ascend310P + "duochip"
 	maxNodeNPUNum  = 16
 	maxCardNPUNum  = 2
 	constNPUWeight = 8.0

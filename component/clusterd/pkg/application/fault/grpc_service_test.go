@@ -48,6 +48,21 @@ func fakeFaultService() *FaultServer {
 	}
 }
 
+func TestIsSubscribed(t *testing.T) {
+	convey.Convey("Test IsSubscribed", t, func() {
+		service := fakeFaultService()
+		service.addPublisher(fakeJobID1, fakeRole1)
+		faultPublisher, ok := service.getPublisher(fakeJobID1, fakeRole1)
+		if !ok {
+			t.Error("get faultPublisher fail")
+			return
+		}
+		faultPublisher.SetSubscribe(true)
+		convey.So(service.IsSubscribed(fakeJobID1, fakeRole1), convey.ShouldBeTrue)
+		convey.So(service.IsSubscribed(fakeJobID1, ""), convey.ShouldBeFalse)
+	})
+}
+
 func TestRegister(t *testing.T) {
 	jobInfo := constant.JobInfo{MultiInstanceJobId: "testFaultJobId", AppType: "app", NameSpace: "ns"}
 	job.SaveJobCache("job1", jobInfo)

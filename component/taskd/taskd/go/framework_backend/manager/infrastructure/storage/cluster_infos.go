@@ -94,3 +94,11 @@ func (c *ClusterInfos) updateCluster(clusterName string, newCluster *ClusterInfo
 	}
 	return nil
 }
+
+// GetCluster get the cluster info by cluster name
+func (c *ClusterInfos) GetCluster(clusterName string) (*ClusterInfo, error) {
+	if cluster, exists := c.Clusters[clusterName]; exists {
+		return cluster, nil
+	}
+	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
+}

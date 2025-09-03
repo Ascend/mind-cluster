@@ -31,22 +31,22 @@ import (
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/controllers/v1"
 )
 
 const (
-	defaultLogFileName = "/var/log/mindx-dl/ascend-operator/ascend-operator.log"
-	defaultQPS         = 50.0
-	defaultBurst       = 100
-	maxQPS             = 10000.0
-	maxBurst           = 10000
+	defaultQPS   = 50.0
+	defaultBurst = 100
+	maxQPS       = 10000.0
+	maxBurst     = 10000
 )
 
 var (
 	runtimeScheme        = runtime.NewScheme()
-	hwLogConfig          = &hwlog.LogConfig{LogFileName: defaultLogFileName}
+	hwLogConfig          = &hwlog.LogConfig{LogFileName: api.OperatorLogFilePath}
 	version              bool
 	enableGangScheduling bool
 	// BuildVersion is the version of build package
@@ -73,7 +73,7 @@ func main() {
 		"Maximum number of days for backup log files")
 	flag.BoolVar(&hwLogConfig.IsCompress, "isCompress", false,
 		"Whether backup files need to be compressed (default false)")
-	flag.StringVar(&hwLogConfig.LogFileName, "logFile", defaultLogFileName, "Log file path")
+	flag.StringVar(&hwLogConfig.LogFileName, "logFile", api.OperatorLogFilePath, "Log file path")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup log files")
 	flag.BoolVar(&enableGangScheduling, "enableGangScheduling", true,
@@ -86,16 +86,16 @@ func main() {
 	flag.Parse()
 
 	if version {
-		fmt.Printf("ascend-operator version: %s\n", BuildVersion)
+		fmt.Printf("%s version: %s\n", api.OperatorName, BuildVersion)
 		return
 	}
 
 	if err := hwlog.InitRunLogger(hwLogConfig, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
+		fmt.Printf("%s init failed, error is %v\n", api.LogModuleName, err)
 		return
 	}
 
-	hwlog.RunLog.Infof("ascend-operator starting and the version is %s", BuildVersion)
+	hwlog.RunLog.Infof("operator starting and the version is %s", BuildVersion)
 	mgr, err := ctrl.NewManager(initKubeConfig(), ctrl.Options{
 		Scheme:             runtimeScheme,
 		MetricsBindAddress: "0",
@@ -107,7 +107,7 @@ func main() {
 	}
 
 	if err = v1.NewReconciler(mgr, enableGangScheduling).SetupWithManager(mgr); err != nil {
-		hwlog.RunLog.Errorf("unable to create ascend-controller err: %s", err)
+		hwlog.RunLog.Errorf("unable to create operator-controller err: %s", err)
 		return
 	}
 

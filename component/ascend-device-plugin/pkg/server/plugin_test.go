@@ -40,25 +40,25 @@ import (
 
 var (
 	devices = []*common.NpuDevice{
-		{DevType: api.Ascend910, DeviceName: "Ascend910-0", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-1", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-2", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-3", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-4", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-5", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-6", Health: "Healthy"},
-		{DevType: api.Ascend910, DeviceName: "Ascend910-7", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-0", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-1", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-2", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-3", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-4", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-5", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-6", Health: "Healthy"},
+		{DevType: api.Ascend910, DeviceName: api.Ascend910 + "-7", Health: "Healthy"},
 	}
 	mockPods = []v1.Pod{
 		{ObjectMeta: metav1.ObjectMeta{Name: "test1", Namespace: "test1"}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test2", Namespace: "test2",
 			Annotations: map[string]string{common.PodPredicateTime: "abcdef"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3", Annotations: map[string]string{common.
-			PodPredicateTime: "1", common.HuaweiAscend910: "Ascend910-1"}}},
+			PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test4", Namespace: "test4", Annotations: map[string]string{common.
-			PodPredicateTime: "4", common.HuaweiAscend910: "Ascend910-2"}}},
+			PodPredicateTime: "4", api.HuaweiAscend910: api.Ascend910 + "-2"}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
-			PodPredicateTime: "5", api.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}},
+			PodPredicateTime: "5", api.ResourceNamePrefix + common.Ascend910vir2: api.Ascend910 + "-2c-180-3"}}},
 	}
 	fakeErr = errors.New("fake error")
 )
@@ -252,7 +252,7 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 			ps.deepCopyDevice(devices)
 			deviceID := "1"
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-" + deviceID}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -349,7 +349,7 @@ func TestAllocateWithVolcano2(t *testing.T) {
 		convey.Convey("TryUpdatePodAnnotation failed", func() {
 			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 				Annotations: map[string]string{common.PodPredicateTime: "5",
-					common.HuaweiAscend910: "Ascend910-0"}}}}
+					api.HuaweiAscend910: api.Ascend910 + "-0"}}}}
 			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
 			mockUpdatePod := mockTryUpdatePodAnnotation(fmt.Errorf("err"))
@@ -390,7 +390,7 @@ func TestAllocateWithVolcano3(t *testing.T) {
 		convey.Convey("with volcano GetDeviceListID failed", func() {
 			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 				Annotations: map[string]string{common.PodPredicateTime: "5",
-					common.HuaweiAscend910: "Ascend910"}}}}
+					api.HuaweiAscend910: api.Ascend910}}}}
 			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
 			_, err := ps.Allocate(context.Background(), &requests)

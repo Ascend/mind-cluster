@@ -28,8 +28,6 @@ const (
 	FailedDeleteJobReason = "FailedDeleteJob"
 	// SuccessfulDeleteJobReason is added in an ascendjob when it is deleted successful.
 	SuccessfulDeleteJobReason = "SuccessfulDeleteJob"
-	// controllerName is the name of controller,used in log.
-	controllerName = "ascendjob-controller"
 	// volcanoTaskSpecKey volcano.sh/task-spec key used in pod annotation when EnableGangScheduling is true
 	volcanoTaskSpecKey = "volcano.sh/task-spec"
 	// gangSchedulerName gang scheduler name.
@@ -51,7 +49,6 @@ const (
 
 	cmRetryTime      = 3
 	configmapPrefix  = "rings-config-"
-	acjobKind        = "AscendJob"
 	vcjobKind        = "Job"
 	vcjobLabelKey    = "volcano.sh/job-name"
 	deployKind       = "Deployment"
@@ -90,8 +87,6 @@ const (
 
 	// hcclSuperPodLogicId is the logic id of the superpod, ascend container env name
 	hcclSuperPodLogicId = "HCCL_LOGIC_SUPERPOD_ID"
-	// ascendVisibleDevicesEnv represents the env of ASCEND_VISIBLE_DEVICES
-	ascendVisibleDevicesEnv = "ASCEND_VISIBLE_DEVICES"
 )
 
 const (
@@ -127,15 +122,6 @@ const (
 	labelFaultRetryTimes = "fault-retry-times"
 	// maxReplicas
 	maxReplicas = 15000
-)
-
-const (
-	// NPU310CardName represents the name for 310 npu resource.
-	NPU310CardName = "huawei.com/Ascend310"
-	// NPU310PCardName represents the name for 310P npu resource.
-	NPU310PCardName = "huawei.com/Ascend310P"
-	// NPU910CardName represents the name for 910 npu resource.
-	NPU910CardName = "huawei.com/Ascend910"
 )
 
 const (

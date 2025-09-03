@@ -44,6 +44,6 @@ echo -e "[INFO]\t $(date +"%F %T:%N")\t start dmp_daemon server in background"
 su - HwDmUser -c "export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/:/usr/lib64 && /var/dmp_daemon -I -M -U 8087 &"
 
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
-echo -e "[INFO]\t $(date +"%F %T:%N")\t start ascend device plugin server"
+echo -e "[INFO]\t $(date +"%F %T:%N")\t start device plugin server"
 /usr/local/bin/device-plugin -useAscendDocker=false -volcanoType=true -presetVirtualDevice=true -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0
 

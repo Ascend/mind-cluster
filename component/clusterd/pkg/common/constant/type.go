@@ -65,10 +65,11 @@ type SwitchInfo struct {
 
 // SwitchFaultInfo switch info detail
 type SwitchFaultInfo struct {
-	FaultInfo  []SimpleSwitchFaultInfo
-	FaultLevel string
-	UpdateTime int64
-	NodeStatus string
+	FaultInfo            []SimpleSwitchFaultInfo
+	FaultLevel           string
+	UpdateTime           int64
+	NodeStatus           string
+	FaultTimeAndLevelMap map[string]FaultTimeAndLevel
 }
 
 type SwitchInfoFromCM struct {
@@ -78,10 +79,11 @@ type SwitchInfoFromCM struct {
 
 // SwitchFaultInfoFromCm switch info detail from cm
 type SwitchFaultInfoFromCm struct {
-	FaultCode  []string
-	FaultLevel string
-	UpdateTime int64
-	NodeStatus string
+	FaultCode            []string
+	FaultLevel           string
+	UpdateTime           int64
+	NodeStatus           string
+	FaultTimeAndLevelMap map[string]FaultTimeAndLevel
 }
 
 // DeviceInfoCM record node NPU device information
@@ -302,13 +304,16 @@ type JobFaultInfo struct {
 
 // FaultDevice fault device  info
 type FaultDevice struct {
-	ServerName string
-	ServerSN   string
-	ServerId   string
-	DeviceId   string
-	FaultCode  string
-	FaultLevel string
-	DeviceType string
+	ServerName      string
+	ServerSN        string
+	ServerId        string
+	DeviceId        string
+	FaultCode       string
+	FaultLevel      string
+	DeviceType      string
+	SwitchChipId    string
+	SwitchPortId    string
+	SwitchFaultTime string
 }
 
 // FaultStrategy fault strategies

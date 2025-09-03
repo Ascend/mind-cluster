@@ -81,10 +81,10 @@ func (tp *VirtualNPU) getEnvTemplate(env *plugin.ScheduleEnv) string {
 		if node.VNode.ChipKind == "" {
 			continue
 		}
-		if node.VNode.ChipKind == plugin.Ascend310P {
+		if node.VNode.ChipKind == util.Ascend310P {
 			return node.VNode.ChipKind
 		}
-		if node.VNode.ChipKind == plugin.Ascend910 {
+		if node.VNode.ChipKind == util.Ascend910 {
 			return node.VNode.ChipType
 		}
 	}

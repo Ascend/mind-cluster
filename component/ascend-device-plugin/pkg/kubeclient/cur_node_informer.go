@@ -24,6 +24,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"Ascend-device-plugin/pkg/common"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -64,6 +65,6 @@ func checkPod(obj interface{}) bool {
 	if !ok {
 		return false
 	}
-	_, exist := pod.Annotations[common.HuaweiAscend910]
+	_, exist := pod.Annotations[api.HuaweiAscend910]
 	return exist
 }

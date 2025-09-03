@@ -68,7 +68,7 @@ func (r *ASJobReconciler) ReconcilePods(
 
 	ascendJob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return fmt.Errorf("%v is not a type of AscendJob", ascendJob)
+		return fmt.Errorf("%v is not a type of Job", ascendJob)
 	}
 
 	// Convert ReplicaType to lower string.
@@ -464,12 +464,12 @@ func (r *ASJobReconciler) checkPodStatus(pi *podInfo, pod *corev1.Pod, jobStatus
 
 			// with common library framework, we have to handle restart status here
 			// or we won't know which replica has been restarted in updateJobStatus after reconciling all replicas
-			msg := fmt.Sprintf("AscendJob %s is restarting because %s replica(s) failed.",
+			msg := fmt.Sprintf("Job %s is restarting because %s replica(s) failed.",
 				pi.job.Name, pi.rtype)
 			r.Recorder.Event(pi.job, corev1.EventTypeWarning, jobRestartingReason, msg)
 			err := commonutil.UpdateJobConditions(jobStatus, commonv1.JobRestarting, jobRestartingReason, msg)
 			if err != nil {
-				hwlog.RunLog.Errorf("Append ascendJob<%s> condition error: %v", pi.job.Name, err)
+				hwlog.RunLog.Errorf("Append Job<%s> condition error: %v", pi.job.Name, err)
 				return err
 			}
 		}
@@ -499,7 +499,7 @@ func (r *ASJobReconciler) createNewPod(pi *podInfo, replicas map[commonv1.Replic
 		return nil
 	} else if err != nil {
 		// Decrement the expected number of creates because the informer won't observe this pod
-		hwlog.RunLog.Debugf("Failed creation, decrementing expectations for ascendjob %s/%s",
+		hwlog.RunLog.Debugf("Failed creation, decrementing expectations for Job %s/%s",
 			job.Namespace, job.Name)
 		return err
 	}
@@ -554,7 +554,7 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 
 func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) error {
 	if mindxdlutils.IsMindIEEPJob(pi.job) {
-		hwlog.RunLog.Debugf("Set mindIEEP AscendJob<%s-%s> env", pi.job.Namespace, pi.job.Name)
+		hwlog.RunLog.Debugf("Set mindIEEP Job<%s-%s> env", pi.job.Namespace, pi.job.Name)
 		r.setInferEnv(pi, podTemplate)
 		return nil
 	}
@@ -562,7 +562,7 @@ func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpe
 		pi.rtype == mindxdlv1.ReplicaTypeWorker {
 		return nil
 	}
-	hwlog.RunLog.Debugf("Set AscendJob<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)
+	hwlog.RunLog.Debugf("Set Job<%s-%s> framework<%s> env start", pi.job.Namespace, pi.job.Name, pi.frame)
 	r.setCommonEnv(pi, podTemplate)
 	if pi.ctReq == 0 {
 		return nil

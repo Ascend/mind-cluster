@@ -91,7 +91,9 @@ var (
 	faultTypeCode = FaultTypeCode{}
 	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
-	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L2-L3
+	// RestartRequestCodes contains all fault code that believed to be RestartRequest, in this case is L2
+	RestartRequestCodes = make([]string, 0, GeneralMapSize)
+	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L3
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// SeparateFaultCodes contains all fault code that believed to be Separate, in this case is L4-L5
 	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
@@ -193,6 +195,7 @@ type faultFileInfo struct {
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
 type SwitchFaultFileInfo struct {
 	NotHandleFaultCodes []string
+	RestartRequestCodes []string
 	SubHealthFaultCodes []string
 	ResetFaultCodes     []string
 	SeparateFaultCodes  []string
@@ -491,43 +494,32 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 	return nil
 }
 
+func loadVaildSwitchFaultCode(codes []string, target *[]string, codeType string) {
+	for _, code := range codes {
+		if !isValidSwitchFaultCode(code) {
+			hwlog.RunLog.Warnf("failed to parse %s faultCode:%v, will ignore it,"+
+				" please check if its format, such as: [0x00f1ff09,155914,cpu,na]", codeType, code)
+			continue
+		}
+		*target = append(*target, code)
+	}
+}
+
 // LoadSwitchFaultCode Load SwitchFault Code from bytes of config file or configmap
 func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 	var switchFileInfo SwitchFaultFileInfo
 	if err := json.Unmarshal(switchFaultCodeByte, &switchFileInfo); err != nil {
-		return fmt.Errorf("failed to unmarsha switch fault code, err: %s", err.Error())
+		return fmt.Errorf("failed to unmarshal switch fault code, err: %s", err.Error())
 	}
-
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
+	RestartRequestCodes = make([]string, 0, GeneralMapSize)
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
-	invalidFormatInfo := "failed to parse %s faultCode:%v, will ignore it," +
-		" please check if its format, such as: [0x00f1ff09,155914,cpu,na]"
-	for _, code := range switchFileInfo.NotHandleFaultCodes {
-		if !isValidSwitchFaultCode(code) {
-			hwlog.RunLog.Warnf(invalidFormatInfo, "NotHandleFaultCodes", code)
-			continue
-		}
-		NotHandleFaultCodes = append(NotHandleFaultCodes, code)
-	}
-
-	for _, code := range switchFileInfo.SubHealthFaultCodes {
-		if !isValidSwitchFaultCode(code) {
-			hwlog.RunLog.Warnf(invalidFormatInfo, "SubHealthFaultCodes", code)
-			continue
-		}
-		PreSeparateFaultCodes = append(PreSeparateFaultCodes, code)
-	}
-
+	loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes, "NotHandleFaultCodes")
+	loadVaildSwitchFaultCode(switchFileInfo.RestartRequestCodes, &RestartRequestCodes, "RestartRequestCodes")
+	loadVaildSwitchFaultCode(switchFileInfo.SubHealthFaultCodes, &PreSeparateFaultCodes, "SubHealthFaultCodes")
 	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
-	for _, code := range switchFileInfo.SeparateFaultCodes {
-		if !isValidSwitchFaultCode(code) {
-			hwlog.RunLog.Warnf(invalidFormatInfo, "SeparateFaultCodes", code)
-			continue
-		}
-		SeparateFaultCodes = append(SeparateFaultCodes, code)
-	}
-
+	loadVaildSwitchFaultCode(switchFileInfo.SeparateFaultCodes, &SeparateFaultCodes, "SeparateFaultCodes")
 	return nil
 }
 

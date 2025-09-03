@@ -20,6 +20,7 @@ Package chip310x4 is using for HuaWei 310 Ascend pin affinity schedule.
 package chip310x4
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -29,7 +30,7 @@ type chip310x4 struct {
 
 const (
 	// SchedulerName chip310 plugin name
-	SchedulerName = "huawei.com/Ascend310chip"
+	SchedulerName = util.HwPreName + util.Ascend310 + "chip"
 	maxNodeNPUNum = 64
 	maxCardNPUNum = 4
 )

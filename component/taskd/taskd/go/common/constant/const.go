@@ -126,6 +126,10 @@ const (
 	ExitAgentCode                = 203
 	SwitchNicCode                = 204
 	StressTestCode               = 205
+	ProcessManageRecoverSignal   = 206
+	ProcessManageKeepAliveSignal = 207
+	RestartAgentCode             = 208
+	RestartWorkersCode           = 209
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -273,8 +277,20 @@ const (
 
 // StreamName and PluginName
 const (
-	ProfilingStream     = "ProfilingCollect"
-	ProfilingPluginName = "ProfilingPlugin"
+	ProfilingStream                = "ProfilingCollect"
+	ResumeTrainingAfterFaultStream = "ResumeTrainingAfterFaultStream"
+
+	ProfilingPluginName       = "ProfilingPlugin"
+	StopTrainPluginName       = "StopTrainPlugin"
+	ARFPluginName             = "ARFPlugin"
+	ElasticTrainingPluginName = "ElasticTrainingPlugin"
+)
+
+// Plugin priority
+const (
+	Priority1 = iota + 1
+	Priority2
+	Priority3
 )
 
 const (
@@ -294,6 +310,23 @@ const (
 	SwitchOK = "switchOK"
 	// SwitchFail value of switch fail
 	SwitchFail = "switchFail"
+
+	// SignalType key of SignalType
+	SignalType = "SignalType"
+	// Actions key of Actions
+	Actions = "Actions"
+	// FaultRanks key of FaultRanks
+	FaultRanks = "FaultRanks"
+	// ChangeStrategy key of ChangeStrategy
+	ChangeStrategy = "ChangeStrategy"
+	// Timeout key of Timeout
+	Timeout = "Timeout"
+	// NodeRankIds key of NodeRankIds
+	NodeRankIds = "NodeRankIds"
+	// ExtraParams key of ExtraParams
+	ExtraParams = "ExtraParams"
+	// Uuid key of Uuid
+	Uuid = "Uuid"
 )
 
 const (
@@ -306,6 +339,10 @@ const (
 )
 
 const (
+	// StopTrainAction stop train signal action
+	StopTrainAction = "stop_train"
+	// ControllerName is name of controller
+	ControllerName = "controller"
 	// OMStressTestPluginName name of OMStressTestPlugin
 	OMStressTestPluginName = "OMStressTestPlugin"
 	// OMStressTestStreamName name of OMStream

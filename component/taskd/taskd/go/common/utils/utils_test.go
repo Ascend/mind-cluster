@@ -19,12 +19,15 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
 )
 
@@ -34,6 +37,10 @@ const (
 	anyCorrectIp = "127.0.0.1"
 	anfWrongIp   = "abc.aaa.333.1111.44"
 )
+
+func init() {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, nil)
+}
 
 func TestGetProfilingSwitchValidJson(t *testing.T) {
 	t.Run("valid json content", func(t *testing.T) {
@@ -146,4 +153,34 @@ func TestGetClusterdAddr(t *testing.T) {
 	})
 	addr, err = GetClusterdAddr()
 	convey.ShouldBeNil(err)
+}
+
+func TestGetFaultRanksMapByList(t *testing.T) {
+	type args struct {
+		faultRanks []*pb.FaultRank
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[int]int
+	}{
+		{
+			name: "get fault ranks map by list",
+			args: args{
+				faultRanks: []*pb.FaultRank{
+					{RankId: "a"},
+					{RankId: "1", FaultType: "a"},
+					{RankId: "2", FaultType: "2"},
+				},
+			},
+			want: map[int]int{2: 2},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetFaultRanksMapByList(tt.args.faultRanks); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetFaultRanksMapByList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

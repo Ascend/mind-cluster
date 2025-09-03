@@ -50,10 +50,10 @@ const (
 
 var (
 	fdFlag          = flag.Bool("fdFlag", false, "Whether to use fd system to manage device (default false)")
-	useAscendDocker = flag.Bool("useAscendDocker", true, "Whether to use ascend docker. "+
+	useAscendDocker = flag.Bool(api.UseAscendDocker, true, "Whether to use npu docker. "+
 		"This parameter will be deprecated in future versions")
 	volcanoType = flag.Bool("volcanoType", false,
-		"Specifies whether to use volcano for scheduling when the chip type is Ascend310 or Ascend910 (default false)")
+		"Specifies whether to use volcano for scheduling ")
 	version     = flag.Bool("version", false, "Output version information")
 	edgeLogFile = flag.String("edgeLogFile", "/var/alog/AtlasEdge_log/devicePlugin.log",
 		"Log file path in edge scene")
@@ -69,7 +69,7 @@ var (
 	logMaxBackups = flag.Int("maxBackups", common.MaxBackups,
 		"Maximum number of backup log files, range is (0, 30]")
 	presetVirtualDevice = flag.Bool("presetVirtualDevice", true, "Open the static of "+
-		"computing power splitting function, only support Ascend910 and Ascend310P")
+		"computing power splitting function, only support "+api.Ascend910+" and "+api.Ascend310P)
 	use310PMixedInsert = flag.Bool(api.Use310PMixedInsert, false, "Whether to use mixed insert "+
 		api.Ascend310PMix+" card mode")
 	hotReset = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, "+

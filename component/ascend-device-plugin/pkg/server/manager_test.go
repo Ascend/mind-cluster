@@ -252,7 +252,7 @@ func TestGetNewNodeLabel(t *testing.T) {
 		mockIsContainAll300IDuo := gomonkey.ApplyFuncReturn(common.IsContainAll300IDuo, true)
 		defer mockIsContainAll300IDuo.Reset()
 		labelMap, err := hdm.getNewNodeLabel(testNode)
-		convey.So(labelMap, convey.ShouldResemble, map[string]string{common.InferCardKey: common.A300IDuoLabel,
+		convey.So(labelMap, convey.ShouldResemble, map[string]string{common.InferCardKey: api.A300IDuoLabel,
 			common.ChipNameLabel: "testName", api.NPUChipMemoryLabel: "0G"})
 		convey.So(err, convey.ShouldBeNil)
 	})
@@ -414,10 +414,10 @@ func TestNotifyToK8s(t *testing.T) {
 
 func getMockPod() v1.Pod {
 	limitValue := v1.ResourceList{
-		common.HuaweiAscend910: *resource.NewQuantity(rqtTaskNum, resource.BinarySI),
+		api.HuaweiAscend910: *resource.NewQuantity(rqtTaskNum, resource.BinarySI),
 	}
 	annotation := map[string]string{
-		common.HuaweiAscend910: "0-vir01",
+		api.HuaweiAscend910: "0-vir01",
 	}
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

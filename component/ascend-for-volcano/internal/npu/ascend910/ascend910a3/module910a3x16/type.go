@@ -20,6 +20,7 @@ Package module910a3x16 is using for A3 x16 affinity schedule.
 package module910a3x16
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
 )
 
@@ -29,5 +30,5 @@ type module910a3x16 struct {
 
 const (
 	// SchedulerName name of scheduler for a3x16
-	SchedulerName = "huawei.com/Ascend910module-a3-16"
+	SchedulerName = util.HwPreName + util.Ascend910 + "module-a3-16"
 )

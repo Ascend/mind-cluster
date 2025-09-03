@@ -40,16 +40,20 @@ func TestUpdateSwitchFaultLevel(t *testing.T) {
 	convey.Convey("test UpdateSwitchFaultLevel", t, func() {
 		// 01-update common.SwitchFaultLevelMap success
 		notHandleCode := "[0x00f1ff09,155913,cpu,na]"
+		restartRequestCode := "[0x00f103b0,155649,na,NoneExist]"
 		preSeparateCode := "[0x00f103b0,155907,na,na]"
 		separateCode := "[0x00f103b0,155649,na,na]"
 		mockNotHandleCodes := gomonkey.ApplyGlobalVar(&common.NotHandleFaultCodes, []string{notHandleCode})
 		defer mockNotHandleCodes.Reset()
+		mockRestartRequestCodes := gomonkey.ApplyGlobalVar(&common.RestartRequestCodes, []string{restartRequestCode})
+		defer mockRestartRequestCodes.Reset()
 		mockPreseparateCodes := gomonkey.ApplyGlobalVar(&common.PreSeparateFaultCodes, []string{preSeparateCode})
 		defer mockPreseparateCodes.Reset()
 		mockSeparateCodes := gomonkey.ApplyGlobalVar(&common.SeparateFaultCodes, []string{separateCode})
 		defer mockSeparateCodes.Reset()
 		UpdateSwitchFaultLevel()
 		convey.So(common.SwitchFaultLevelMap[notHandleCode], convey.ShouldEqual, common.NotHandleFaultLevel)
+		convey.So(common.SwitchFaultLevelMap[restartRequestCode], convey.ShouldEqual, common.RestartRequestFaultLevel)
 		convey.So(common.SwitchFaultLevelMap[preSeparateCode], convey.ShouldEqual, common.PreSeparateFaultLevel)
 		convey.So(common.SwitchFaultLevelMap[separateCode], convey.ShouldEqual, common.SeparateFaultLevel)
 	})

@@ -46,9 +46,9 @@ const (
 		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
 		"opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
 
-	npuChip310PhyID0  = "Ascend310-0"
-	npuChip910PhyID0  = "Ascend910-0"
-	npuChip310PPhyID0 = "Ascend310P-0"
+	npuChip310PhyID0  = api.Ascend310 + "-0"
+	npuChip910PhyID0  = api.Ascend910 + "-0"
+	npuChip310PPhyID0 = api.Ascend310P + "-0"
 )
 
 func init() {
@@ -108,7 +108,7 @@ func TestGetNodeServerID(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestGetNodeServerID init kubernetes failed")
 	}
-	node := getMockNode(common.HuaweiAscend910, npuChip910PhyID0)
+	node := getMockNode(api.HuaweiAscend910, npuChip910PhyID0)
 	convey.Convey("get node server id without get node", t, func() {
 		mockNode := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetNode",
 			func(_ *ClientK8s) (*v1.Node, error) {
@@ -207,7 +207,7 @@ func TestWriteResetInfoDataIntoCM(t *testing.T) {
 	}
 	oldCM := getMockCreateCM(common.ResetInfoCMDataKey, common.ResetInfoCMNamePrefix+"node")
 	defer oldCM.Reset()
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	defer testPod.Reset()
 	testTaskResetInfo := getTaskResetInfo()
 	mockGetCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "GetConfigMap",
@@ -247,7 +247,7 @@ func TestTryUpdatePodAnnotation(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestTryUpdatePodAnnotation init kubernetes failed")
 	}
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	annotation := getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0)
 	defer testPod.Reset()
 	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
@@ -296,7 +296,7 @@ func TestTryUpdatePodCacheAnnotation(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestTryUpdatePodCacheAnnotation init kubernetes failed")
 	}
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
 		func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
 			return nil, fmt.Errorf("test function errors")
@@ -436,7 +436,7 @@ func getMockPod(ascendType, ascendValue string) *v1.Pod {
 			Containers: []v1.Container{
 				{Resources: v1.ResourceRequirements{
 					Limits: v1.ResourceList{
-						common.HuaweiAscend910: resource.Quantity{},
+						api.HuaweiAscend910: resource.Quantity{},
 					},
 				}},
 			},
@@ -612,7 +612,7 @@ func resetMock(resetMockList ...*gomonkey.Patches) {
 }
 
 func annotationResetMock(devErr, stateErr, nodeErr error) (*gomonkey.Patches, *gomonkey.Patches, *gomonkey.Patches) {
-	node := getMockNode(common.HuaweiAscend910, npuChip910PhyID0)
+	node := getMockNode(api.HuaweiAscend910, npuChip910PhyID0)
 	mockWrite := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "WriteDeviceInfoDataIntoCM",
 		func(_ *ClientK8s, _ map[string]string, _ string, _ common.SwitchFaultInfo, _, _ int32) (
 			*common.NodeDeviceInfoCache, error) {

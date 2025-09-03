@@ -34,6 +34,13 @@ message NodeFaultInfo {
   repeated DeviceFaultInfo faultDevice = 5;
 }
 
+message SwitchFaultInfo {
+  string faultCode = 1;
+  string switchChipId = 2;
+  string switchPortId = 3;
+  string faultTime = 4;
+}
+
 message DeviceFaultInfo {
   string deviceId = 1;
   string deviceType = 2;
@@ -41,6 +48,7 @@ message DeviceFaultInfo {
   string faultLevel = 4;
   repeated string faultType = 5;
   repeated string faultReason = 6;
+  repeated SwitchFaultInfo switchFaultInfos = 7;
 }
 
 service Fault {

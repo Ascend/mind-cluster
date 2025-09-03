@@ -50,9 +50,9 @@ func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bo
 		return false
 	}
 	nonVirtualResources := map[corev1.ResourceName]struct{}{
-		NPU310CardName:  {},
-		NPU310PCardName: {},
-		NPU910CardName:  {},
+		api.HuaweiAscend310:  {},
+		api.HuaweiAscend310P: {},
+		api.HuaweiAscend910:  {},
 	}
 	for name := range *requests {
 		if _, ok := nonVirtualResources[name]; !ok {
@@ -65,7 +65,7 @@ func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bo
 
 func (r *ASJobReconciler) setInferEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name != mindxdlv1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name != api.DefaultContainerName {
 			continue
 		}
 		if len(podTemplate.Spec.Containers[i].Env) == 0 {
@@ -80,7 +80,7 @@ func (r *ASJobReconciler) setInferEnv(pi *podInfo, podTemplate *corev1.PodTempla
 
 func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name == mindxdlv1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name == api.DefaultContainerName {
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
@@ -100,7 +100,7 @@ func (r *ASJobReconciler) setAscendVisibleDevicesEnv(container *corev1.Container
 	for resourceAnnoKey := range container.Resources.Requests {
 		if strings.Contains(string(resourceAnnoKey), api.ResourceNamePrefix) {
 			container.Env = append(container.Env, corev1.EnvVar{
-				Name: ascendVisibleDevicesEnv,
+				Name: api.AscendVisibleDevicesEnv,
 				ValueFrom: &corev1.EnvVarSource{
 					FieldRef: &corev1.ObjectFieldSelector{
 						FieldPath: fmt.Sprintf("metadata.annotations['%s']", resourceAnnoKey),
@@ -118,7 +118,7 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 		mindxdlv1.ReplicaTypeWorker:             msWorkerRole,
 	}
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name == mindxdlv1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name == api.DefaultContainerName {
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
@@ -152,7 +152,7 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 
 func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name == mindxdlv1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name == api.DefaultContainerName {
 
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
@@ -173,7 +173,7 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 
 func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpec) {
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name == mindxdlv1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name == api.DefaultContainerName {
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}

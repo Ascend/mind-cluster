@@ -322,9 +322,10 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-					ResourceList{HuaweiAscend910: *limits}}}}},
+					ResourceList{api.HuaweiAscend910: *limits}}}}},
 					ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
-						Annotations: map[string]string{PodPredicateTime: "1", HuaweiAscend910: "Ascend910-1"}},
+						Annotations: map[string]string{
+							PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"}},
 				},
 			}
 			res := FilterPods(pods, api.Ascend910, nil)
@@ -338,9 +339,10 @@ func TestFilterPods2(t *testing.T) {
 		limits := resource.NewQuantity(1, resource.DecimalExponent)
 		pods := []v1.Pod{
 			{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-				ResourceList{HuaweiAscend910: *limits}}}}},
+				ResourceList{api.HuaweiAscend910: *limits}}}}},
 				ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
-					Annotations:       map[string]string{PodPredicateTime: "1", HuaweiAscend910: "Ascend910-1"},
+					Annotations: map[string]string{
+						PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"},
 					DeletionTimestamp: &metav1.Time{}},
 				Status: v1.PodStatus{ContainerStatuses: make([]v1.ContainerStatus, 1),
 					Reason: "UnexpectedAdmissionError"},

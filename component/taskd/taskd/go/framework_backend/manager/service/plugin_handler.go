@@ -23,6 +23,7 @@ import (
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/faultdig"
 	"taskd/framework_backend/manager/plugins/om"
+	"taskd/framework_backend/manager/plugins/stoptrain"
 )
 
 // PluginHandlerInterface define the interface of plugin handler
@@ -42,16 +43,15 @@ type PluginHandler struct {
 
 // Init register all plugin
 func (p *PluginHandler) Init() error {
-	pluginList := []infrastructure.ManagerPlugin{
+	plugins := []infrastructure.ManagerPlugin{
 		faultdig.NewProfilingPlugin(),
 		om.NewOmSwitchNicPlugin(),
 		om.NewOmStressTestPlugin(),
+		stoptrain.New(),
 	}
-	for _, plugin := range pluginList {
-		if err := p.Register(plugin.Name(), plugin); err != nil {
-			hwlog.RunLog.Errorf("register plugin %s failed!", plugin.Name())
-			return fmt.Errorf("register plugin %s failed", plugin.Name())
-		}
+	if err := p.RegisterPlugins(plugins); err != nil {
+		hwlog.RunLog.Errorf("register plugins failed, error: %v", err)
+		return err
 	}
 	return nil
 }
@@ -78,6 +78,17 @@ func (p *PluginHandler) Register(pluginName string, plugin infrastructure.Manage
 		return fmt.Errorf("register failed: plugin %s has already register", pluginName)
 	}
 	p.Plugins[pluginName] = plugin
+	return nil
+}
+
+// RegisterPlugins register plugins in batches
+func (p *PluginHandler) RegisterPlugins(plugins []infrastructure.ManagerPlugin) error {
+	for _, plugin := range plugins {
+		if err := p.Register(plugin.Name(), plugin); err != nil {
+			hwlog.RunLog.Errorf("register plugin %s failed!", plugin.Name())
+			return err
+		}
+	}
 	return nil
 }
 

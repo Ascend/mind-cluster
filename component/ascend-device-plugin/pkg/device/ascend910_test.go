@@ -839,10 +839,10 @@ func mockUpdateCM() *gomonkey.Patches {
 
 func mockGetAllPodList() *v1.PodList {
 	annotationHalfRing := map[string]string{
-		common.HuaweiAscend910: "Ascend910-0,Ascend910-1",
+		api.HuaweiAscend910: api.Ascend910 + "-0," + api.Ascend910 + "-1",
 	}
 	annotationEmpty := map[string]string{
-		common.HuaweiAscend910: "",
+		api.HuaweiAscend910: "",
 	}
 	annotationErr := map[string]string{}
 	annotationErrRank := map[string]string{
@@ -851,7 +851,8 @@ func mockGetAllPodList() *v1.PodList {
 	annotationSuccess := map[string]string{
 		common.ResetTaskNameKey: "task1",
 		api.PodRankIndexAnno:    "1",
-		common.HuaweiAscend910:  "Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7",
+		api.HuaweiAscend910: api.Ascend910 + "-4," + api.Ascend910 +
+			"-5," + api.Ascend910 + "-6," + api.Ascend910 + "-7",
 	}
 	return &v1.PodList{
 		Items: []v1.Pod{
@@ -866,7 +867,7 @@ func mockGetAllPodList() *v1.PodList {
 
 func mockOneEmptyPodList() *v1.PodList {
 	annotationEmpty := map[string]string{
-		common.HuaweiAscend910: "",
+		api.HuaweiAscend910: "",
 	}
 	return &v1.PodList{
 		Items: []v1.Pod{
@@ -1672,14 +1673,14 @@ func TestUpdateUpgradeErrorInfo(t *testing.T) {
 
 func mockSetTaskDevInfoCacheFuncData1() []v1.Pod {
 	annotationDevError := map[string]string{
-		common.HuaweiAscend910: "Ascend910#4,Ascend910#5,Ascend910#6",
+		api.HuaweiAscend910: "A1N0#4,A1N0#5,A1N0#6",
 	}
 	annotationSuccess := map[string]string{
-		common.HuaweiAscend910: "Ascend910-4,Ascend910-5,Ascend910-6",
+		api.HuaweiAscend910: api.Ascend910 + "-4," + api.Ascend910 + "-5," + api.Ascend910 + "-6",
 	}
 	annotationSuccess1 := map[string]string{
-		common.HuaweiAscend910: "Ascend910-4,Ascend910-5,Ascend910-6",
-		api.PodRankIndexAnno:   "2",
+		api.HuaweiAscend910:  api.Ascend910 + "-4," + api.Ascend910 + "-5," + api.Ascend910 + "-6",
+		api.PodRankIndexAnno: "2",
 	}
 	labelSuccess := map[string]string{
 		common.ResetTaskNameKey: "task1",
@@ -1695,8 +1696,8 @@ func mockSetTaskDevInfoCacheFuncData1() []v1.Pod {
 
 func mockSetTaskDevInfoCacheFuncData2() []v1.Pod {
 	annotationError := map[string]string{
-		common.HuaweiAscend910: "Ascend910-4,Ascend910-5,Ascend910-6",
-		api.PodRankIndexAnno:   "1.2",
+		api.HuaweiAscend910:  api.Ascend910 + "-4," + api.Ascend910 + "-5," + api.Ascend910 + "-6",
+		api.PodRankIndexAnno: "1.2",
 	}
 	labelSuccess := map[string]string{
 		common.ResetTaskNameKey: "task1",

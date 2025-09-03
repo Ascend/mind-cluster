@@ -12,6 +12,8 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"ascend-common/api"
 )
 
 func TestInt32(t *testing.T) {
@@ -24,12 +26,12 @@ func TestSetDefaultPort(t *testing.T) {
 	convey.Convey("TestSetDefaultPort", t, func() {
 		spec := &v1.PodSpec{}
 		spec.Containers = []v1.Container{{
-			Name:  DefaultContainerName,
+			Name:  api.DefaultContainerName,
 			Ports: []v1.ContainerPort{},
 		}}
 		setDefaultPort(spec)
 		convey.So(spec.Containers[0].Ports[0].ContainerPort, convey.ShouldEqual, DefaultPort)
-		convey.So(spec.Containers[0].Ports[0].Name, convey.ShouldEqual, DefaultPortName)
+		convey.So(spec.Containers[0].Ports[0].Name, convey.ShouldEqual, api.DefaultPortName)
 	})
 }
 
@@ -78,7 +80,7 @@ func TestSetDefaultsAscendJob(t *testing.T) {
 					{
 						Ports: []v1.ContainerPort{
 							{
-								Name: DefaultPortName,
+								Name: api.DefaultPortName,
 							},
 						},
 					},

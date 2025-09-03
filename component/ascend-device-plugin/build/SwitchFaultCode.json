@@ -8,7 +8,6 @@
     "[0x00f103b6,155908,na,na]","[0x00f10509,132332,cpu,na]","[0x00f1ff06,155910,na,na]","[0x00f10509,132332,npu,na]",
     "[0x00f10509,132333,cpu,na]","[0x00f10509,132333,npu,na]","[0x00f1ff06,132134,na,na]","[0x00f1ff06,155911,na,na]"
   ],
-  "ResetFaultCodes": [],
   "SeparateFaultCodes": [
     "[0x00f103b0,155907,na,na]","[0x00f103b0,155649,na,na]", "[0x00f103b0,155904,na,na]","[0x00f103b6,155909,na,na]",
     "[0x00f1fef5,155912,cpu,na]","[0x00f1fef5,155912,npu,na]","[0x00f1fef5,155914,cpu,na]","[0x00f1fef5,155914,npu,na]",

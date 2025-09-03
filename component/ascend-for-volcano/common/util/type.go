@@ -100,18 +100,12 @@ const (
 	MaxSliceNum = 128
 	// NPUHexKilo for const 1000,volcano frame used.
 	NPUHexKilo = 1000
-	// HwPreName pre name
-	HwPreName = "huawei.com/"
 	// Accelerator for custom tag.
 	Accelerator = "accelerator"
 	// CMInitParamKey init param key in scheduler configmap
 	CMInitParamKey = "init-params"
 	// AcceleratorType for selector.
 	AcceleratorType = "accelerator-type"
-	// Module910bx16AcceleratorType for module mode.
-	Module910bx16AcceleratorType = "module-910b-16"
-	// Module910bx8AcceleratorType for module mode.
-	Module910bx8AcceleratorType = "module-910b-8"
 	// ModuleA3x16AcceleratorType for module mode.
 	ModuleA3x16AcceleratorType = "module-a3-16"
 	// ModuleAcceleratorType for module mode.
@@ -120,32 +114,6 @@ const (
 	ServerType = "servertype"
 	// ServerTypeDual dual card
 	ServerTypeDual = "dual"
-
-	// NPU910CardName for judge 910 npu resource.
-	NPU910CardName = "huawei.com/Ascend910"
-	// NPU910CardNamePre for getting card number.
-	NPU910CardNamePre = "Ascend910-"
-	// NPU310PCardName for judge 310P npu resource.
-	NPU310PCardName = "huawei.com/Ascend310P"
-	// NPU310CardName for judge 310 npu resource.
-	NPU310CardName = "huawei.com/Ascend310"
-	// NPU310CardNamePre for getting card number.
-	NPU310CardNamePre = "Ascend310-"
-	// NPU310PCardNamePre for getting card number.
-	NPU310PCardNamePre = "Ascend310P-"
-	// AscendNPUPodRealUse for NPU pod real use cards.
-	AscendNPUPodRealUse = "huawei.com/AscendReal"
-	// AscendNPUCore for NPU core num, like 56; Records the chip name that the scheduler assigns to the pod.
-	AscendNPUCore = "huawei.com/npu-core"
-	// Ascend910bName for judge Ascend910b npu resource.
-	Ascend910bName = "huawei.com/Ascend910b"
-
-	// Ascend310P device type 310P
-	Ascend310P = "Ascend310P"
-	// Ascend310 device type 310
-	Ascend310 = "Ascend310"
-	// Ascend910 device type 910
-	Ascend910 = "Ascend910"
 
 	// SegmentEnable for VNPU segment enable flag. Default is "false".
 	SegmentEnable = "presetVirtualDevice"
@@ -230,8 +198,6 @@ const (
 	// ClusterSwitchInfo the name of cluster switch info configmap
 	ClusterSwitchInfo = "cluster-info-switch-"
 
-	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
-	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// PodPredicateTime set pod PodPredicateTime for using by device-plugin.
 	PodPredicateTime = "predicate-time"
 	// NodeNotMeetTopologyWarning node not satisfy the schedulable topology warning.
@@ -242,14 +208,6 @@ const (
 	RankIdNotExistError = "rank id does not exist"
 	// JobKindKey for define the Job kind:ascend-310P, ascend-910
 	JobKindKey = "ring-controller.atlas"
-	// JobKind910Value in ring-controller.atlas.
-	JobKind910Value = "ascend-910"
-	// JobKind310Value in ring-controller.atlas.
-	JobKind310Value = "ascend-310"
-	// JobKind310PValue 310p ring controller name
-	JobKind310PValue = "ascend-310P"
-	// JobKind910BValue 910B ring controller name
-	JobKind910BValue = "ascend-910b"
 	// DistributedJobKey flag for distributed job
 	DistributedJobKey = "distributed-job"
 	// DistributedJobValue indicate distributed job

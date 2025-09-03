@@ -682,7 +682,7 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 	newNetRecoverSets, newNetUHDevSets := hnm.getNewNetworkRecoverDev(devStatusSet.NetUnHealthyDevice,
 		common.ConvertDevListToSets(oldDevInfo[common.HuaweiNetworkUnHealthAscend910], common.CommaSepDev),
 		nodeFmtDevNetRecover)
-	newDevInfo[common.HuaweiAscend910] = newAscend910
+	newDevInfo[api.HuaweiAscend910] = newAscend910
 	newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.RecoveringDevices, common.CommaSepDev)
 	// hnm.isNeedBlockAllDevice: server is A800IA2 with hccs and there are fault devices or is already in resetting,
 	// no more pod should be scheduled to this node cause all npu resetting is on the way
@@ -691,7 +691,7 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 		hnm.GetResetFailedTimes(common.FirstDevice) <= common.MaxResetTimes &&
 		hnm.isNeedBlockAllDevice(devStatusSet.DeviceFault) {
 
-		newDevInfo[common.HuaweiAscend910] = ""
+		newDevInfo[api.HuaweiAscend910] = ""
 		newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.AllDevices, common.CommaSepDev)
 		hwlog.RunLog.Warnf("all device on node have been cleared, due to resetting all devices in process")
 	}
@@ -902,7 +902,7 @@ func (hnm *HwAscend910Manager) setTaskDevInfoCache() error {
 	newTaskPodCache := make(map[string]v1.Pod)
 	taskListUsedDevice := make(map[string]struct{})
 	for _, pod := range podList {
-		tmpNpu, ok := pod.Annotations[common.HuaweiAscend910]
+		tmpNpu, ok := pod.Annotations[api.HuaweiAscend910]
 		if !ok || len(tmpNpu) == 0 || len(tmpNpu) > common.PodAnnotationMaxLength {
 			continue
 		}

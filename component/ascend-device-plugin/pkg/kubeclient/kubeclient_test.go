@@ -143,7 +143,7 @@ func TestGetPod(t *testing.T) {
 		convey.So(pod, convey.ShouldBeNil)
 		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
 	})
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	convey.Convey("test get pod success", t, func() {
 		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Get",
 			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
@@ -160,7 +160,7 @@ func TestUpdatePod(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestUpdatePod init kubernetes failed")
 	}
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	convey.Convey("test update pod success", t, func() {
 		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Update",
 			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
@@ -177,7 +177,7 @@ func TestPatchPod(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestPatchPod init kubernetes failed")
 	}
-	testPod := getMockPod(common.HuaweiAscend910, npuChip910PhyID0)
+	testPod := getMockPod(api.HuaweiAscend910, npuChip910PhyID0)
 	convey.Convey("test patch pod information success", t, func() {
 		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Patch",
 			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
@@ -475,9 +475,9 @@ func TestResourceEventHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestResourceEventHandler init kubernetes failed")
 	}
-	testObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "test"}}}
+	testObj := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{api.HuaweiAscend910: "test"}}}
 	testOldObj := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.HuaweiAscend910: "testOld"}}}
+		ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{api.HuaweiAscend910: "testOld"}}}
 	client.Queue = workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	convey.Convey("test handle the configmap resource event when resource type is pod", t, func() {
 		mockDeepEqual := gomonkey.ApplyFuncReturn(reflect.DeepEqual, false)

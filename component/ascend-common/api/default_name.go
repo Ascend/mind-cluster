@@ -10,6 +10,8 @@ const (
 
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
+	// PodRealAlloc pod annotation key, means pod real mount device
+	PodRealAlloc = "AscendReal"
 
 	// PodAnnotationAscendReal pod annotation ascend real
 	PodAnnotationAscendReal = "huawei.com/AscendReal"
@@ -93,6 +95,12 @@ const (
 	Use310PMixedInsert = "use310PMixedInsert"
 	// Ascend310PMix dp use310PMixedInsert parameter usage
 	Ascend310PMix = "ascend310P-V, ascend310P-VPro, ascend310P-IPro"
+	// A300IA2Label the value of the A300I A2 node label
+	A300IA2Label = "card-910b-infer"
+	// A300IDuoLabel the value of the A300I Duo node label
+	A300IDuoLabel = "card-300i-duo"
+	//UseAscendDocker UseAscendDocker parameter
+	UseAscendDocker = "useAscendDocker"
 )
 
 // docker runtime
@@ -146,4 +154,21 @@ const (
 	BwPrefix = "npu_chip_info_hccs_bandwidth_info_"
 	// AscendDeviceInfo
 	AscendDeviceInfo = "ASCEND_VISIBLE_DEVICES"
+)
+
+const (
+	// AscendJobKind is the kind name
+	AscendJobKind = "AscendJob"
+	// DefaultContainerName the default container name for AscendJob.
+	DefaultContainerName = "ascend"
+	// DefaultPortName is name of the port used to communicate between other process.
+	DefaultPortName = "ascendjob-port"
+	// ControllerName is the name of controller,used in log.
+	ControllerName = "ascendjob-controller"
+	// OperatorName name of operator
+	OperatorName = "ascend-operator"
+	// LogModuleName name of log module
+	LogModuleName = "hwlog"
+	// OperatorLogFilePath Operator log file name
+	OperatorLogFilePath = "/var/log/mindx-dl/ascend-operator/ascend-operator.log"
 )

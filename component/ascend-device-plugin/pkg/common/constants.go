@@ -228,29 +228,26 @@ const (
 	// Ascend910vir3Cpu1Gb8 Ascend910 3core 1cpu 8Gb memory
 	Ascend910vir3Cpu1Gb8 = api.Ascend910 + "-" + Core3Cpu1Gb8
 
-	// HuaweiAscend910 with prefix
-	HuaweiAscend910 = api.ResourceNamePrefix + api.Ascend910
-
 	// AscendfdPrefix use in fd
 	AscendfdPrefix = "davinci-mini"
 
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
-	HuaweiNetworkUnHealthAscend910 = api.ResourceNamePrefix + "Ascend910-NetworkUnhealthy"
+	HuaweiNetworkUnHealthAscend910 = api.HuaweiAscend910 + "-NetworkUnhealthy"
 	// HuaweiUnHealthAscend910 unhealthy
-	HuaweiUnHealthAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Unhealthy"
+	HuaweiUnHealthAscend910 = api.HuaweiAscend910 + "-Unhealthy"
 	// HuaweiRecoveringAscend910 recovering
-	HuaweiRecoveringAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Recovering"
+	HuaweiRecoveringAscend910 = api.HuaweiAscend910 + "-Recovering"
 	// HuaweiUnHealthAscend310P 310p unhealthy
 	HuaweiUnHealthAscend310P = api.HuaweiAscend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
 	HuaweiUnHealthAscend310 = api.HuaweiAscend310 + "-Unhealthy"
 	// HuaweiNetworkRecoverAscend910 910 network recover
-	HuaweiNetworkRecoverAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-NetworkRecover"
+	HuaweiNetworkRecoverAscend910 = api.HuaweiAscend910 + "-NetworkRecover"
 	// HuaweiRecoverAscend910 910 recover
-	HuaweiRecoverAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Recover"
+	HuaweiRecoverAscend910 = api.HuaweiAscend910 + "-Recover"
 
 	// HuaweiFaultCodeAscend910 910 fault code
-	HuaweiFaultCodeAscend910 = api.ResourceNamePrefix + api.Ascend910 + "-Fault"
+	HuaweiFaultCodeAscend910 = api.HuaweiAscend910 + "-Fault"
 	// HuaweiFaultCodeAscend310P 310p fault code
 	HuaweiFaultCodeAscend310P = api.HuaweiAscend310P + "-Fault"
 	// HuaweiFaultCodeAscend310 310 fault code
@@ -365,15 +362,11 @@ const (
 	ServerTypeLabelKey = "servertype"
 	// AcceleratorTypeKey the node label key of accelerator type
 	AcceleratorTypeKey = "accelerator-type"
-	// A300IA2Label the value of the A300I A2 node label
-	A300IA2Label = "card-910b-infer"
 	// ServerUsageLabelKey is to indicate the usage of server
 	// is infer or training, currently only related to A800IA2 infer server
 	ServerUsageLabelKey = "server-usage"
 	// InferCardKey the node label key of infer card
 	InferCardKey = "infer-card-type"
-	// A300IDuoLabel the value of the A300I Duo node label
-	A300IDuoLabel = "card-300i-duo"
 )
 
 const (

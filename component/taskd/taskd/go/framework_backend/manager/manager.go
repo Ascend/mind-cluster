@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	clusterd_constant "clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
@@ -166,6 +168,7 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 		return
 	}
 
+	go m.subscribeProcessManageSignal(conn)
 	go m.subscribeProfiling(conn, 0)
 	go m.subscribeSwitchNic(conn)
 	go m.subscribeStressTest(conn)
@@ -437,4 +440,102 @@ func convertProfilingMsg(profilingSwitchData *profiling.ProfilingSwitch) constan
 		DataLoader:            profilingSwitchData.DataLoader,
 	}
 	return profilingSwitch
+}
+
+func (m *BaseManager) subscribeProcessManageSignal(conn *grpc.ClientConn) {
+	recoverClient := pb.NewRecoverClient(conn)
+	clientInfo := &pb.ClientInfo{
+		JobId: m.JobId,
+		Role:  roleTaskd,
+	}
+	status, err := recoverClient.Init(m.svcCtx, clientInfo)
+	if err != nil || status.Code != common.OK {
+		hwlog.RunLog.Errorf("request Init failed, error: %v, response: %v", err, status)
+		return
+	}
+	for {
+		exit := m.startSubscribe(recoverClient, clientInfo)
+		if exit {
+			hwlog.RunLog.Error("taskd exit, stop subscribe clusterd fault info")
+			return
+		}
+	}
+}
+
+func (m *BaseManager) startSubscribe(recoverClient pb.RecoverClient, clientInfo *pb.ClientInfo) bool {
+	status, err := recoverClient.Register(m.svcCtx, clientInfo)
+	if err != nil || status.Code != common.OK {
+		hwlog.RunLog.Errorf("request Register failed, error: %v, response: %v", err, status)
+		return false
+	}
+	stream, err := recoverClient.SubscribeProcessManageSignal(m.svcCtx, clientInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("request SubscribeProcessManageSignal failed, error: %v", err)
+		return false
+	}
+	for {
+		select {
+		case <-m.svcCtx.Done():
+			hwlog.RunLog.Info("taskd exit, stop subscribe clusterd fault info")
+			return true
+		case <-stream.Context().Done():
+			hwlog.RunLog.Info("client stream exit, stop subscribe process info and re-register")
+			return false
+		default:
+			responseMsg, recvErr := stream.Recv()
+			if recvErr == io.EOF {
+				hwlog.RunLog.Info("process client stream exit, stop subscribe clusterd fault info and re-register")
+				return false
+			}
+			if recvErr != nil {
+				hwlog.RunLog.Error(recvErr)
+				return false
+			}
+			hwlog.RunLog.Infof("receive manage signal info: %v", responseMsg)
+			m.enqueueProcessManageSignal(responseMsg, constant.ClusterDRank)
+		}
+	}
+}
+
+func (m *BaseManager) enqueueProcessManageSignal(processManageSignal *pb.ProcessManageSignal, serverRank string) {
+	action := constant.KeepAlive
+	code := constant.ProcessManageKeepAliveSignal
+	var params map[string]string
+	if processManageSignal.SignalType != clusterd_constant.KeepAliveSignalType {
+		action = constant.Action
+		code = constant.ProcessManageRecoverSignal
+		params = map[string]string{
+			constant.Uuid:           processManageSignal.Uuid,
+			constant.SignalType:     processManageSignal.SignalType,
+			constant.Actions:        utils.ObjToString(processManageSignal.Actions),
+			constant.FaultRanks:     utils.ObjToString(utils.GetFaultRanksMapByList(processManageSignal.FaultRanks)),
+			constant.ChangeStrategy: processManageSignal.ChangeStrategy,
+			constant.Timeout:        strconv.FormatInt(processManageSignal.Timeout, constant.TenBase),
+			constant.NodeRankIds:    utils.ObjToString(processManageSignal.NodeRankIds),
+			constant.ExtraParams:    processManageSignal.ExtraParams,
+		}
+	}
+
+	message := storage.BaseMessage{
+		Header: storage.MsgHeader{
+			BizType: "default",
+			Uuid:    uuid.New().String(),
+			Src: &common.Position{
+				Role:       constant.ClusterRole,
+				ServerRank: serverRank,
+			},
+			Timestamp: time.Now(),
+		},
+		Body: storage.MsgBody{
+			MsgType:   action,
+			Code:      int32(code),
+			Extension: params,
+		},
+	}
+	err := m.MsgHd.MsgQueue.Enqueue(message)
+	if err != nil {
+		hwlog.RunLog.Errorf("enqueue process manage signal %v error %v", processManageSignal, err)
+		return
+	}
+	hwlog.RunLog.Infof("enqueue process manage signal successfully, signal: %v", processManageSignal)
 }
