@@ -133,8 +133,11 @@ func GetRecoverBaseInfo(name, namespace string) (RecoverConfig, RespCode, error)
 	if !ok {
 		hwlog.RunLog.Debugf("can not find subHealthyStrategy label")
 		config.GraceExit = false
+		config.HotSwitch = false
 	}
+	config.SubHealthyStrategy = strategy
 	config.GraceExit = strategy == constant.SubHealthyGraceExit
+	config.HotSwitch = strategy == constant.SubHealthyHotSwitch
 	return config, OK, nil
 }
 

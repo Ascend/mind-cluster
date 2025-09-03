@@ -9,6 +9,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
@@ -48,7 +49,8 @@ func updateJob(jobKey string) {
 	}
 	podsInJob := pod.GetPodByJobId(jobKey)
 	isPreDelete, status := getStatusByCache(pg, podsInJob, jobInfo)
-	if ok && jobInfo.Status == status && jobInfo.IsPreDelete == isPreDelete {
+	podsInJob, needRebuildJobSummary := preHandlePods(podsInJob)
+	if !needRebuildJobSummary && ok && jobInfo.Status == status && jobInfo.IsPreDelete == isPreDelete {
 		hwlog.RunLog.Debugf("the job %s cache is consistent with pod and podGroup cache", jobInfo.Name)
 		return
 	}
@@ -67,13 +69,35 @@ func updateJob(jobKey string) {
 		return
 	}
 	// update job to running or completed or failed
-	if jobInfo.Status != status {
+	if needRebuildJobSummary || jobInfo.Status != status {
 		job.UpdateCmAndCache(status, jobInfo, pg, podsInJob)
 		return
 	}
 	hwlog.RunLog.Warnf("this logic branch is unreachable, there must have been some issues with the code."+
 		"isPreDelete: %v, status: %s, job name: %s, job.isPreDelete: %v, job.status: %s",
 		isPreDelete, status, jobInfo.Name, jobInfo.IsPreDelete, jobInfo.Status)
+}
+func preHandlePods(podsInJob map[string]v1.Pod) (map[string]v1.Pod, bool) {
+	res := make(map[string]v1.Pod)
+	newPodsMap := new(map[string]v1.Pod)
+	err := util.DeepCopy(newPodsMap, podsInJob)
+	if err != nil {
+		hwlog.RunLog.Errorf("deep copy podsInJob failed, err: %v", err)
+		return podsInJob, true
+	}
+	needRebuild := false
+	for _, p := range *newPodsMap {
+		// in hotswitch scene, when fault pod has not been deleted, backup pod should not participate build jobSummaryInfo
+		// after fault pod deleted , backup pod should participate build jobSummaryInfo
+		if pod.IsBackupPodAfterSourcePodDeleted(p.Name) {
+			pod.DeleteFromBackupPodsMaps(p.Name)
+			needRebuild = true
+		} else if pod.IsNewPodForHotSwitch(&p) {
+			continue
+		}
+		res[string(p.UID)] = p
+	}
+	return res, needRebuild
 }
 
 func getStatusByCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, jobInfo constant.JobInfo) (bool, string) {

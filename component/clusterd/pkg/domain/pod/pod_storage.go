@@ -22,7 +22,13 @@ const (
 	initJobNum = 100
 )
 
-var podManager Manager
+var (
+	podManager                      Manager
+	runningEventChan                = make(chan *v1.Pod, constant.MaxEventChanLen)
+	deletedEventChan                = make(chan *v1.Pod, constant.MaxEventChanLen)
+	hotSwitchStatusMap              = &sync.Map{}
+	backupPodsAfterSourcePodDeleted = &sync.Map{}
+)
 
 // Manager use for pod data manager
 type Manager struct {
@@ -40,18 +46,28 @@ func init() {
 // SavePod save pod with lock, Please do not add time-consuming code
 func SavePod(podInfo *v1.Pod) {
 	podManager.podMapMutex.Lock()
-	defer podManager.podMapMutex.Unlock()
 	if len(podManager.podMap) > maxPodNum {
 		hwlog.RunLog.Errorf("podMap length will exceed %d, pod namespace=%s, name=%s save failed",
 			maxPodNum, podInfo.Namespace, podInfo.Name)
 		return
 	}
-	podManager.podMap[GetPodKey(podInfo)] = *podInfo
+
+	podKey := GetPodKey(podInfo)
 	jobKey := GetJobKeyByPod(podInfo)
+	podManager.podMap[podKey] = *podInfo
 	if podManager.jobPodMap[jobKey] == nil {
 		podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
 	}
-	podManager.jobPodMap[jobKey][GetPodKey(podInfo)] = *podInfo
+	podManager.jobPodMap[jobKey][podKey] = *podInfo
+	podManager.podMapMutex.Unlock()
+
+	if IsNewPodForHotSwitch(podInfo) {
+		if !hasHandled(podKey) && podInfo.Status.Phase == v1.PodRunning {
+			hwlog.RunLog.Infof("hotswitch new pod running, jobKey=%s, podName=%s", jobKey, podInfo.Name)
+			runningEventChan <- podInfo
+			hotSwitchStatusMap.Store(podKey, struct{}{})
+		}
+	}
 }
 
 // DeletePod delete pod with lock, Please do not add time-consuming code
@@ -66,6 +82,16 @@ func DeletePod(podInfo *v1.Pod) {
 		}
 	}
 	podManager.podMapMutex.Unlock()
+	value, exists := podInfo.Annotations[api.InHotSwitchFlowKey]
+	if exists && value == api.InHotSwitchFlowValue {
+		hwlog.RunLog.Infof("hotswitch pod deleted, jobKey=%s, podName=%s, phase:%s", jobKey, podInfo.Name, podInfo.Status.Phase)
+		deletedEventChan <- podInfo
+		// fault pod deleted, genn job summary info again
+		backupNewPodName, ok := podInfo.Annotations[api.BackupNewPodNameKey]
+		if ok {
+			backupPodsAfterSourcePodDeleted.Store(backupNewPodName, struct{}{})
+		}
+	}
 }
 
 // GetPodByJobId get pod by jobId
@@ -79,6 +105,33 @@ func GetPodByJobId(jobKey string) map[string]v1.Pod {
 		hwlog.RunLog.Errorf("copy podMap failed, err：%v", err)
 	}
 	return *newPodMap
+}
+
+// GetPodByPodId get pod by podid
+func GetPodByPodId(podId string) (v1.Pod, bool) {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+	pod, exist := podManager.podMap[podId]
+	if !exist {
+		hwlog.RunLog.Errorf("pod %s is not exist in pod storage", podId)
+		return v1.Pod{}, false
+	}
+	return pod, true
+}
+
+// GetPodByJobIdAndPodName get pod by jobId and pod name
+func GetPodByJobIdAndPodName(jobKey, podName string) (v1.Pod, bool) {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+	localPodMap := podManager.jobPodMap[jobKey]
+
+	for _, pod := range localPodMap {
+		if pod.Name == podName {
+			return pod, true
+		}
+	}
+	hwlog.RunLog.Errorf("pod %s is not exist in pod storage", podName)
+	return v1.Pod{}, false
 }
 
 // GetSimplePodByJobId get pod by jobId
@@ -96,4 +149,37 @@ func GetSimplePodByJobId(jobKey string) map[string]*constant.SimplePodInfo {
 		}
 	}
 	return result
+}
+
+// GetRunningEventChan get running event chan
+func GetRunningEventChan() chan *v1.Pod {
+	return runningEventChan
+}
+
+// GetDeletedEventChan get deleted event chan
+func GetDeletedEventChan() chan *v1.Pod {
+	return deletedEventChan
+}
+
+func IsNewPodForHotSwitch(pod *v1.Pod) bool {
+	value, exists := pod.Annotations[api.PodTypeKey]
+	return exists && value == api.PodTypeBackup
+}
+
+func hasHandled(podKey string) bool {
+	_, exists := hotSwitchStatusMap.Load(podKey)
+	return exists
+}
+
+// IsBackupPodAfterSourcePodDeleted check if backup pod deleted
+func IsBackupPodAfterSourcePodDeleted(name string) bool {
+	if _, exist := backupPodsAfterSourcePodDeleted.Load(name); exist {
+		return true
+	}
+	return false
+}
+
+// DeleteFromBackupPodsMaps delete backup pod from map
+func DeleteFromBackupPodsMaps(name string) {
+	backupPodsAfterSourcePodDeleted.Delete(name)
 }

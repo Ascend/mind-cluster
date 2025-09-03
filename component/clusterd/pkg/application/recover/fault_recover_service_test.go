@@ -12,6 +12,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
@@ -679,5 +680,167 @@ func TestCatchAndSetExceptionInfo_Panic(t *testing.T) {
 
 	if code != int32(common.ServerInnerError) {
 		t.Errorf("expect code is %d，actual is %d", common.ServerInnerError, code)
+	}
+}
+
+func TestHandleSubHealthyFault(t *testing.T) {
+	convey.Convey("Test handleSubHealthyFault", t, func() {
+		// 准备测试数据
+		ctl := &EventController{jobInfo: common.JobBaseInfo{JobId: "test-job-id"}}
+		faults := []*pb.FaultRank{{RankId: "test-rank"}}
+		convey.Convey("master node fault exists", func() {
+			patch := gomonkey.NewPatches()
+			defer patch.Reset()
+			events := make([]string, 0)
+			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
+				events = append(events, event)
+			})
+			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{
+				api.MasterPodRank: "mock",
+			})
+
+			handleSubHealthyFault(ctl, faults)
+			convey.So(len(events), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("no master node fault", func() {
+			patch := gomonkey.NewPatches()
+			defer patch.Reset()
+			events := make([]string, 0)
+			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
+				events = append(events, event)
+			})
+			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{})
+
+			handleSubHealthyFault(ctl, faults)
+			convey.So(len(events), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("no faults", func() {
+			patch := gomonkey.NewPatches()
+			defer patch.Reset()
+			events := make([]string, 0)
+			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
+				events = append(events, event)
+			})
+			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{})
+			handleSubHealthyFault(ctl, []*pb.FaultRank{})
+			convey.So(len(events), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+type testSubHealthyCase struct {
+	name                    string
+	controller              *EventController
+	faultInfo               constant.JobFaultInfo
+	mockFramework           string
+	mockFaultPods           map[string]string
+	mockOnlySupportDump     bool
+	expectedResult          bool
+	expectHotSwitchDisabled bool
+}
+
+func buildTestCases1() []testSubHealthyCase {
+	return []testSubHealthyCase{
+		{name: "not sub healthy state",
+			controller:              &EventController{jobInfo: common.JobBaseInfo{}},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.UnHealthyState},
+			expectedResult:          false,
+			expectHotSwitchDisabled: false,
+		}, {name: "hotswitch with non-pytorch framework",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: "tensorflow"},
+			},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			expectedResult:          true,
+			expectHotSwitchDisabled: true,
+		}, {name: "hotswitch with pytorch framework and too many fault pods",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
+				},
+			},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			mockFaultPods: map[string]string{
+				"0": "uid0", "1": "uid1", "2": "uid2", "3": "uid3", "4": "uid4",
+				"5": "uid5", "6": "uid6", "7": "uid7", "8": "uid8", "9": "uid9",
+				"10": "uid10",
+			},
+			expectedResult:          true,
+			expectHotSwitchDisabled: true,
+		}, {
+			name: "hotswitch with pytorch framework and normal fault pods count",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
+				},
+			},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			mockFaultPods:           map[string]string{"0": "uid0", "1": "uid1", "2": "uid2"},
+			expectedResult:          false,
+			expectHotSwitchDisabled: false,
+		},
+	}
+}
+
+func buildTestCases2() []testSubHealthyCase {
+	return []testSubHealthyCase{
+		{name: "sub healthy without hotswitch and graceExit false",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: false},
+					Framework:     constant.PtFramework,
+				},
+			},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			expectedResult:          true,
+			expectHotSwitchDisabled: false,
+		}, {name: "sub healthy without hotswitch, graceExit true and not only dump strategy",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true},
+					Framework:     constant.PtFramework,
+				},
+			},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			mockOnlySupportDump:     false,
+			expectedResult:          true,
+			expectHotSwitchDisabled: false,
+		}, {name: "sub healthy without hotswitch, graceExit true and only dump strategy",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true},
+					Framework:     constant.PtFramework,
+				},
+			},
+			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			mockOnlySupportDump:     true,
+			expectedResult:          false,
+			expectHotSwitchDisabled: false,
+		},
+	}
+}
+
+func TestSkipHandleSubHealthyFaults(t *testing.T) {
+	var tests []testSubHealthyCase
+	tests = append(tests, buildTestCases1()...)
+	tests = append(tests, buildTestCases2()...)
+
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			patch := gomonkey.NewPatches()
+			defer patch.Reset()
+			patch.ApplyMethodReturn(tt.controller, "GetFaultPod", tt.mockFaultPods)
+			patch.ApplyPrivateMethod(tt.controller, "onlySupportDumpStrategy", func() bool {
+				return tt.mockOnlySupportDump
+			})
+			result := (&FaultRecoverService{}).skipHandleSubHealthyFaults(tt.controller, tt.faultInfo)
+			convey.So(result, convey.ShouldEqual, tt.expectedResult)
+			if tt.expectHotSwitchDisabled {
+				convey.So(tt.controller.jobInfo.HotSwitch, convey.ShouldBeFalse)
+				convey.So(tt.controller.jobInfo.SubHealthyStrategy, convey.ShouldEqual, constant.SubHealthyIngore)
+			}
+		})
 	}
 }

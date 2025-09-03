@@ -247,7 +247,7 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 			FaultList:    make([]constant.FaultRank, 0),
 			HealthyState: constant.HealthyState,
 		}
-		hwlog.RunLog.Debugf("serverList: %d", len(serverList))
+		hwlog.RunLog.Debugf("jobId:%s,serverList: %d", jobId, len(serverList))
 		faultList, nodeStatusList, faultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
 			allConfigmap.NodeCm, allConfigmap.SwitchCm, allConfigmap.DeviceCm, jobId)
 		// serverList for tasks that do not require NPU resources is empty,

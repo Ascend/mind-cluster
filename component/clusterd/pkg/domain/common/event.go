@@ -125,4 +125,21 @@ const (
 	NotifyScaleOutStrategySuccessEvent = "notifyScaleOutStrategySuccessEvent"
 	// NotifyFaultNodesExitSuccessEvent notify fault nodes to exit successfully
 	NotifyFaultNodesExitSuccessEvent = "notifyFaultNodesExitSuccessEvent"
+
+	// BeginHotSwitchEvent begin hotswitch
+	BeginHotSwitchEvent = "BeginHotSwitchEvent"
+	// NewPodTimeoutEvent new pod time out
+	NewPodTimeoutEvent = "NewPodTimeoutEvent"
+	// NewPodRunningEvent new pod running
+	NewPodRunningEvent = "NewPodRunningEvent"
+	// MigrationEvent migration event
+	MigrationEvent = "MigrationEvent"
+	// ExitEvent exit event
+	ExitEvent = "ExitEvent"
+	// OldPodDeletedEvent old pod deleted
+	OldPodDeletedEvent = "OldPodDeletedEvent"
+	// RestartSuccessEvent restart success
+	RestartSuccessEvent = "RestartSuccessEvent"
+	// RestartFaildEvent restart faild
+	RestartFaildEvent = "RestartFaildEvent"
 )

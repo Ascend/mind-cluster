@@ -93,6 +93,60 @@ func (ctl *EventController) getOMRules() []common.TransRule {
 	}
 }
 
+func (ctl *EventController) getHotSwitchRules() []common.TransRule {
+	return []common.TransRule{
+		{Src: common.InitState, Event: common.BeginHotSwitchEvent,
+			Dst: common.NotifyPrepareHotSwitchState, Handler: ctl.notifyPrepareHotSwitch},
+
+		{Src: common.NotifyPrepareHotSwitchState, Event: common.NotifySuccessEvent,
+			Dst: common.WaitNewPodState, Handler: ctl.notifyCreateNewPod},
+		{Src: common.NotifyPrepareHotSwitchState, Event: common.NotifyFailEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenFailed},
+
+		{Src: common.WaitNewPodState, Event: common.NewPodRunningEvent,
+			Dst: common.WaitNotifyPodRunningResultState, Handler: ctl.notifyNewPodRunningHandler},
+		{Src: common.WaitNewPodState, Event: common.NewPodTimeoutEvent,
+			Dst: common.WaitNotifyPodFailedResultState, Handler: ctl.notifyNewPodFailedHandler},
+
+		{Src: common.WaitNotifyPodFailedResultState, Event: common.NotifySuccessEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenFailed},
+		{Src: common.WaitNotifyPodFailedResultState, Event: common.NotifyFailEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenFailed},
+
+		{Src: common.WaitNotifyPodRunningResultState, Event: common.NotifySuccessEvent,
+			Dst: common.WaitReportPauseResultState, Handler: ctl.waitReportPauseTrainResult},
+		{Src: common.WaitNotifyPodRunningResultState, Event: common.NotifyFailEvent,
+			Dst: common.WaitReportPauseResultState, Handler: ctl.waitReportPauseTrainResult},
+
+		{Src: common.WaitReportPauseResultState, Event: common.ReportTimeoutEvent,
+			Dst: common.NotifyStopJobState, Handler: ctl.notifyStopJob},
+		{Src: common.WaitReportPauseResultState, Event: common.ExitEvent,
+			Dst: common.NotifyStopJobState, Handler: ctl.notifyStopJob},
+		{Src: common.WaitReportPauseResultState, Event: common.MigrationEvent,
+			Dst: common.WaitOldPodDeletedState, Handler: ctl.notifyDeleteOldPod},
+
+		{Src: common.NotifyStopJobState, Event: common.NotifySuccessEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenFailed},
+		{Src: common.NotifyStopJobState, Event: common.NotifyFailEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenFailed},
+
+		{Src: common.WaitOldPodDeletedState, Event: common.OldPodDeletedEvent,
+			Dst: common.WaitNotifyRestartTrainResultState, Handler: ctl.notifyRestartTrain},
+
+		{Src: common.WaitNotifyRestartTrainResultState, Event: common.NotifySuccessEvent,
+			Dst: common.WaitReportRestartTrainResultState, Handler: ctl.handleWaitReportRestartTrainStatus},
+		{Src: common.WaitNotifyRestartTrainResultState, Event: common.NotifyFailEvent,
+			Dst: common.NotifyStopJobState, Handler: ctl.notifyStopJob},
+
+		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartSuccessEvent,
+			Dst: common.InitState, Handler: ctl.cleanStateWhenSuccess},
+		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartFaildEvent,
+			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+		{Src: common.WaitReportRestartTrainResultState, Event: common.ReportTimeoutEvent,
+			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+	}
+}
+
 func (ctl *EventController) getPreRules() []common.TransRule {
 	return []common.TransRule{
 		{Src: common.InitState, Event: common.FaultOccurEvent,
@@ -286,5 +340,6 @@ func (ctl *EventController) getBaseRules() []common.TransRule {
 	rules = append(rules, ctl.getSwitchNicRules()...)
 	rules = append(rules, ctl.getStressTestRules()...)
 	rules = append(rules, ctl.getDPScaleStrategyRules()...)
+	rules = append(rules, ctl.getHotSwitchRules()...)
 	return rules
 }

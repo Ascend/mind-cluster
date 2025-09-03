@@ -11,14 +11,17 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
@@ -37,6 +40,7 @@ type FaultRecoverService struct {
 	initJob           map[string]common.JobBaseInfo
 	lock              sync.RWMutex
 	faultCh           chan map[string]constant.JobFaultInfo
+	podEventCh        chan *v1.Pod
 	pb.UnimplementedRecoverServer
 }
 
@@ -48,7 +52,7 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.eventCtl = make(map[string]*EventController)
 	s.initJob = make(map[string]common.JobBaseInfo)
 	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
-	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(s).Name()); err != nil {
+	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(*s).Name()); err != nil {
 		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
 	}
 	// delete EventController cache added by register interface according delete event of podGroup when job is deleted.
@@ -59,6 +63,7 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 		s.DeleteJob(podgroup.GetJobKeyByPG(pg))
 	})
 	go s.checkFaultFromFaultCenter()
+	go s.podStatusMonitor()
 	return s
 }
 
@@ -68,6 +73,48 @@ func catchAndSetExceptionInfo(code *int32, info *string, ctl *EventController) {
 		*info = fmt.Sprintf("jobId=%s, uuid=%s, chan closed",
 			ctl.jobInfo.JobId, ctl.uuid)
 	}
+}
+
+func (s *FaultRecoverService) podStatusMonitor() {
+	for {
+		select {
+		case <-s.serviceCtx.Done():
+			return
+		case podInfo := <-pod.GetRunningEventChan():
+			ctl := s.getControllerByPod(podInfo)
+			if ctl == nil {
+				continue
+			}
+			hwlog.RunLog.Infof("get running pod info from pod informmer =%v", podInfo.Name)
+			ctl.currentHotSwitchBackupPodId = string(podInfo.UID)
+			// use to cancel pod timeout monitor
+			ctl.ChangePodStatus(v1.PodRunning)
+		case podInfo := <-pod.GetDeletedEventChan():
+			ctl := s.getControllerByPod(podInfo)
+			if ctl == nil {
+				continue
+			}
+			status, exists := podInfo.Annotations[api.PodTypeKey]
+			if exists && status == api.PodTypeBackup {
+				// new pod deleted
+				hwlog.RunLog.Infof("new pod %s has been deleted", podInfo.Name)
+			} else {
+				// old pod deleted
+				hwlog.RunLog.Infof("old pod %s has been deleted", podInfo.Name)
+				ctl.addEvent(common.OldPodDeletedEvent)
+			}
+		}
+	}
+}
+
+func (s *FaultRecoverService) getControllerByPod(podInfo *v1.Pod) *EventController {
+	jobId := pod.GetJobKeyByPod(podInfo)
+	ctl, exist := s.getController(jobId)
+	if !exist || ctl == nil {
+		hwlog.RunLog.Errorf("jobId=%s not exist", jobId)
+		return nil
+	}
+	return ctl
 }
 
 func (s *FaultRecoverService) getController(jobId string) (*EventController, bool) {
@@ -84,16 +131,18 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		return
 	}
 	hwlog.RunLog.Infof("get fault info from fault center=%v", faultInfo)
-	if faultInfo.HealthyState == constant.SubHealthyState &&
-		(!controller.jobInfo.GraceExit || !controller.onlySupportDumpStrategy()) {
-		hwlog.RunLog.Infof("jobId=%s skip handle subHealthy faults", faultInfo.JobId)
+	if s.skipHandleSubHealthyFaults(controller, faultInfo) {
+		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId,
+			"jobId=%s skip handle subHealthy faults", faultInfo.JobId)
 		return
 	}
+	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId)
+
 	var grpcFormatFaults []*pb.FaultRank = nil
+	subHealthyHotSwitch := faultInfo.HealthyState == constant.SubHealthyState && controller.jobInfo.HotSwitch
 	for _, info := range faultInfo.FaultList {
 		if info.PodUid == "" || info.PodRank == "" {
-			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s",
-				info.PodUid, info.PodRank)
+			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s", info.PodUid, info.PodRank)
 			continue
 		}
 		faultPod := make(map[string]string)
@@ -117,9 +166,28 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
 	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
-
 	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
+	if subHealthyHotSwitch {
+		handleSubHealthyFault(controller, grpcFormatFaults)
+		return
+	}
 	controller.addEvent(common.FaultOccurEvent)
+}
+
+func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank) {
+	faultPods := ctl.GetFaultPod()
+	if _, exists := faultPods[api.MasterPodRank]; exists {
+		// log max 3 times
+		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, ctl.jobInfo.JobId+api.MasterPodRank,
+			"fault occour on master node, skip this fault, podRank: %v,faults: %v", api.MasterPodRank, faults)
+		return
+	}
+	hwlog.ResetErrCnt(constant.SubHealthyState, ctl.jobInfo.JobId+api.MasterPodRank)
+
+	if len(faults) > 0 {
+		hwlog.RunLog.Infof("begin hotswitch flow,jobId: %v", ctl.jobInfo.JobId)
+		ctl.addEvent(common.BeginHotSwitchEvent)
+	}
 }
 
 func dealWithForceRelease(controller *EventController, faultInfo constant.JobFaultInfo, grpcFormatFaults []*pb.FaultRank) {
@@ -151,6 +219,53 @@ func isNeedForceReleaseFault(faultInfo constant.JobFaultInfo) (map[string]struct
 		return faultNodes, false
 	}
 	return faultNodes, true
+}
+
+func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,
+	faultInfo constant.JobFaultInfo) bool {
+	// not sub health fault, cannot be skipped
+	if faultInfo.HealthyState != constant.SubHealthyState {
+		return false
+	}
+	// hotswitch and pytorch scene，cannot be skipped
+	if ctl.jobInfo.HotSwitch {
+		if ctl.jobInfo.Framework != constant.PtFramework {
+			hwlog.RunLog.Warnf("subhealthy hotswitch only support pytorch framework,current framework is:%v ", ctl.jobInfo.Framework)
+			ctl.jobInfo.HotSwitch = false
+			ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
+			return true
+		}
+
+		const maxFaultPodLen = 10
+		faultPods := ctl.GetFaultPod()
+		if len(faultPods) > maxFaultPodLen {
+			hwlog.RunLog.Warnf("too much fault pods,change subhealthy strategy to ignore,fault pods len: %v", len(faultPods))
+			ctl.jobInfo.HotSwitch = false
+			ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
+			return true
+		}
+		return false
+	}
+	// sub health and not hotswitch scene , if graceExit is false, skip
+	if !ctl.jobInfo.GraceExit {
+		return true
+	}
+	// sub health and not hotswitch scene , if not onlyDump strategy, skip
+	if !ctl.onlySupportDumpStrategy() {
+		return true
+	}
+	return false
+}
+
+func isMasterSubhealthHotSwitchFault(subHealthyHotSwitch bool, info constant.FaultRank) bool {
+	if subHealthyHotSwitch && info.PodRank == api.MasterPodRank {
+		// log max 3 times
+		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, info.PodRank,
+			"fault occour on master node,skip this fault, podRank: %v,rankId: %v", info.PodRank, info.RankId)
+		return true
+	}
+	hwlog.ResetErrCnt(constant.SubHealthyState, info.PodRank)
+	return false
 }
 
 func (s *FaultRecoverService) dealWithJobFaultInfo(jobFaultInfoList []constant.JobFaultInfo) {

@@ -44,6 +44,9 @@ var (
 	pauseTrainActions             = []string{"pause_train"}
 	globalFaultActions            = []string{"on_global_rank"}
 	changeStrategyActions         = []string{"change_strategy"}
+	hotSwitchActions              = []string{"hot switch"}
+	stopHotSwitchActions          = []string{"stop switch"}
+	newPodRunningActions          = []string{"new pod running"}
 	notifyStrategySuccessEventMap = map[string]string{
 		constant.ProcessRetryStrategyName:   common.NotifyRetrySuccessEvent,
 		constant.ProcessRecoverStrategyName: common.NotifyRecoverSuccessEvent,
@@ -52,47 +55,51 @@ var (
 		constant.ProcessContinueTrain:       common.NotifyContinueSuccessEvent,
 		constant.ScaleInStrategyName:        common.NotifyScaleInStrategySuccessEvent,
 		constant.ScaleOutStrategyName:       common.NotifyScaleOutStrategySuccessEvent,
+		constant.ProcessMigration:           common.NotifySuccessEvent,
 	}
 )
 
 // EventController is recover event controller
 type EventController struct {
-	jobInfo                   common.JobBaseInfo
-	faultFlushing             bool
-	keepAliveSecond           int
-	uuid                      string
-	faultPod                  map[string]string
-	events                    chan string
-	latestStrategy            []string
-	latestRecoverResult       []*pb.RecoverStatusRequest
-	agentReportStrategies     []string
-	platStrategy              string
-	signalChan                chan *pb.ProcessManageSignal
-	cacheNormalFault          []*pb.FaultRank
-	cacheRetryFault           []*pb.FaultRank
-	healthState               string
-	globalSwitchRankIDs       []string
-	globalOps                 []bool
-	switchNicResponse         chan *pb.SwitchNicResponse
-	switchRankList            chan *pb.SwitchRankList
-	switchRankResult          chan *pb.SwitchResult
-	stressTestNotifyChan      chan *pb.StressTestRankParams
-	restartFaultProcess       bool
-	controllerContext         context.Context
-	ctxCancelFunc             context.CancelFunc
-	serviceContext            context.Context
-	state                     *common.StateMachine
-	reportStopCompleteChan    chan *pb.StopCompleteRequest
-	reportRecoverStrategyChan chan *pb.RecoverStrategyRequest
-	reportStatusChan          chan *pb.RecoverStatusRequest
-	scheduleResultChan        chan bool
-	isChanClosed              bool
-	jobCanceled               bool
-	lock                      sync.RWMutex
-	stressTestParam           common.StressTestParam
-	stressTestResponse        chan *pb.StressTestResponse
-	stressTestResult          chan *pb.StressTestResult
-	isolateNodes              sets.String
+	jobInfo                     common.JobBaseInfo
+	faultFlushing               bool
+	keepAliveSecond             int
+	uuid                        string
+	faultPod                    map[string]string
+	events                      chan string
+	latestStrategy              []string
+	latestRecoverResult         []*pb.RecoverStatusRequest
+	agentReportStrategies       []string
+	platStrategy                string
+	signalChan                  chan *pb.ProcessManageSignal
+	cacheNormalFault            []*pb.FaultRank
+	cacheRetryFault             []*pb.FaultRank
+	healthState                 string
+	globalSwitchRankIDs         []string
+	globalOps                   []bool
+	switchNicResponse           chan *pb.SwitchNicResponse
+	switchRankList              chan *pb.SwitchRankList
+	switchRankResult            chan *pb.SwitchResult
+	stressTestNotifyChan        chan *pb.StressTestRankParams
+	restartFaultProcess         bool
+	controllerContext           context.Context
+	ctxCancelFunc               context.CancelFunc
+	serviceContext              context.Context
+	state                       *common.StateMachine
+	reportStopCompleteChan      chan *pb.StopCompleteRequest
+	reportRecoverStrategyChan   chan *pb.RecoverStrategyRequest
+	reportStatusChan            chan *pb.RecoverStatusRequest
+	scheduleResultChan          chan bool
+	isChanClosed                bool
+	jobCanceled                 bool
+	lock                        sync.RWMutex
+	stressTestParam             common.StressTestParam
+	stressTestResponse          chan *pb.StressTestResponse
+	stressTestResult            chan *pb.StressTestResult
+	isolateNodes                sets.String
+	newPodStatusMonitorChan     chan corev1.PodPhase
+	currentHotSwitchFaultPodId  string
+	currentHotSwitchBackupPodId string
 }
 
 func catchException() {
@@ -104,38 +111,41 @@ func catchException() {
 // NewEventController return pointer of EventController
 func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx context.Context) *EventController {
 	ctl := &EventController{
-		jobInfo:                   jobInfo,
-		faultFlushing:             false,
-		keepAliveSecond:           keepAlive,
-		uuid:                      "",
-		faultPod:                  make(map[string]string),
-		events:                    make(chan string, eventChanLength),
-		latestStrategy:            []string{},
-		latestRecoverResult:       []*pb.RecoverStatusRequest{},
-		agentReportStrategies:     []string{},
-		platStrategy:              "",
-		signalChan:                make(chan *pb.ProcessManageSignal, 1),
-		reportStopCompleteChan:    make(chan *pb.StopCompleteRequest, 1),
-		reportRecoverStrategyChan: make(chan *pb.RecoverStrategyRequest, 1),
-		reportStatusChan:          make(chan *pb.RecoverStatusRequest, 1),
-		scheduleResultChan:        make(chan bool, 1),
-		cacheNormalFault:          []*pb.FaultRank{},
-		cacheRetryFault:           []*pb.FaultRank{},
-		healthState:               constant.HealthyState,
-		globalSwitchRankIDs:       []string{},
-		globalOps:                 []bool{},
-		switchNicResponse:         make(chan *pb.SwitchNicResponse, eventChanLength),
-		switchRankList:            make(chan *pb.SwitchRankList, 1),
-		switchRankResult:          make(chan *pb.SwitchResult, 1),
-		stressTestNotifyChan:      make(chan *pb.StressTestRankParams, 1),
-		restartFaultProcess:       false,
-		isChanClosed:              false,
-		serviceContext:            serviceCtx,
-		lock:                      sync.RWMutex{},
-		stressTestParam:           make(common.StressTestParam),
-		stressTestResponse:        make(chan *pb.StressTestResponse, eventChanLength),
-		stressTestResult:          make(chan *pb.StressTestResult, 1),
-		isolateNodes:              make(sets.String),
+		jobInfo:                     jobInfo,
+		faultFlushing:               false,
+		keepAliveSecond:             keepAlive,
+		uuid:                        "",
+		faultPod:                    make(map[string]string),
+		events:                      make(chan string, eventChanLength),
+		latestStrategy:              []string{},
+		latestRecoverResult:         []*pb.RecoverStatusRequest{},
+		agentReportStrategies:       []string{},
+		platStrategy:                "",
+		signalChan:                  make(chan *pb.ProcessManageSignal, 1),
+		reportStopCompleteChan:      make(chan *pb.StopCompleteRequest, 1),
+		reportRecoverStrategyChan:   make(chan *pb.RecoverStrategyRequest, 1),
+		reportStatusChan:            make(chan *pb.RecoverStatusRequest, 1),
+		scheduleResultChan:          make(chan bool, 1),
+		cacheNormalFault:            []*pb.FaultRank{},
+		cacheRetryFault:             []*pb.FaultRank{},
+		healthState:                 constant.HealthyState,
+		globalSwitchRankIDs:         []string{},
+		globalOps:                   []bool{},
+		switchNicResponse:           make(chan *pb.SwitchNicResponse, eventChanLength),
+		switchRankList:              make(chan *pb.SwitchRankList, 1),
+		switchRankResult:            make(chan *pb.SwitchResult, 1),
+		stressTestNotifyChan:        make(chan *pb.StressTestRankParams, 1),
+		restartFaultProcess:         false,
+		isChanClosed:                false,
+		serviceContext:              serviceCtx,
+		lock:                        sync.RWMutex{},
+		stressTestParam:             make(common.StressTestParam),
+		stressTestResponse:          make(chan *pb.StressTestResponse, eventChanLength),
+		stressTestResult:            make(chan *pb.StressTestResult, 1),
+		isolateNodes:                make(sets.String),
+		newPodStatusMonitorChan:     make(chan corev1.PodPhase, 1),
+		currentHotSwitchFaultPodId:  "",
+		currentHotSwitchBackupPodId: "",
 	}
 	var rules []common.TransRule = ctl.getBaseRules()
 	ctl.state = common.NewStateMachine(common.InitState, rules)
@@ -217,6 +227,8 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.state.Reset()
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	ctl.isChanClosed = false
+	ctl.currentHotSwitchFaultPodId = ""
+	ctl.currentHotSwitchBackupPodId = ""
 	go ctl.listenEvent()
 	go ctl.keepAlive()
 }
@@ -232,6 +244,7 @@ func (ctl *EventController) initControllerChan() {
 	ctl.reportStopCompleteChan = make(chan *pb.StopCompleteRequest, 1)
 	ctl.reportRecoverStrategyChan = make(chan *pb.RecoverStrategyRequest, 1)
 	ctl.reportStatusChan = make(chan *pb.RecoverStatusRequest, 1)
+	ctl.newPodStatusMonitorChan = make(chan corev1.PodPhase, 1)
 	ctl.scheduleResultChan = make(chan bool, 1)
 	ctl.switchNicResponse = make(chan *pb.SwitchNicResponse, eventChanLength)
 	ctl.switchRankList = make(chan *pb.SwitchRankList, 1)
@@ -256,6 +269,7 @@ func (ctl *EventController) closeControllerChan() {
 	close(ctl.reportStopCompleteChan)
 	close(ctl.reportRecoverStrategyChan)
 	close(ctl.reportStatusChan)
+	close(ctl.newPodStatusMonitorChan)
 	close(ctl.scheduleResultChan)
 	close(ctl.switchNicResponse)
 	close(ctl.switchRankList)
@@ -1566,6 +1580,12 @@ func (ctl *EventController) getCtxAndResultChan() (context.Context, chan *pb.Rec
 	return ctl.controllerContext, ctl.reportStatusChan
 }
 
+func (ctl *EventController) getCtxAndNewStatusMonitorChan() (context.Context, chan corev1.PodPhase) {
+	ctl.lock.RLock()
+	defer ctl.lock.RUnlock()
+	return ctl.controllerContext, ctl.newPodStatusMonitorChan
+}
+
 func (ctl *EventController) handleDecideRetryStrategy() (string, common.RespCode, error) {
 	ctl.appendStrategy(constant.ProcessRetryStrategyName)
 	ctx, ch := ctl.getCtxAndResultChan()
@@ -1862,4 +1882,13 @@ func (ctl *EventController) checkWhetherPodChanged() bool {
 		return podId != string(pod.UID)
 	}
 	return false
+}
+
+func (ctl *EventController) ChangePodStatus(status corev1.PodPhase) {
+	_, newPodMonitorChan := ctl.getCtxAndNewStatusMonitorChan()
+	if newPodMonitorChan == nil {
+		hwlog.RunLog.Warnf("newPodMonitorChan is nil")
+		return
+	}
+	newPodMonitorChan <- status
 }

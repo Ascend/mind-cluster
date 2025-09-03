@@ -114,14 +114,45 @@ func RetryPatchPodLabels(podName, podNamespace string, retryTimes int, labels ma
 	return err
 }
 
+// RetryPatchPodAnnotations retry patch pod annotations
+func RetryPatchPodAnnotations(podName, podNamespace string, retryTimes int, labels map[string]string) error {
+	_, err := PatchPodAnnotation(podName, podNamespace, labels)
+	retry := 0
+	for err != nil && retry < retryTimes {
+		retry++
+		time.Sleep(time.Second * time.Duration(retry))
+		_, err = PatchPodAnnotation(podName, podNamespace, labels)
+	}
+	return err
+}
+
 // PatchPodLabel path pod label
 func PatchPodLabel(podName, podNamespace string, labels map[string]string) (*v1.Pod, error) {
-	labelStr, err := json.Marshal(labels)
+	return patchPod("label", podName, podNamespace, labels)
+}
+
+// PatchPodAnnotation path pod annotation
+func PatchPodAnnotation(podName, podNamespace string, labels map[string]string) (*v1.Pod, error) {
+	return patchPod("annnotation", podName, podNamespace, labels)
+}
+
+// patchPod path pod where given format
+func patchPod(patchType, podName, podNamespace string, data map[string]string) (*v1.Pod, error) {
+	labelStr, err := json.Marshal(data)
 	if err != nil {
-		hwlog.RunLog.Errorf("marshal labels failed when path pod, err is %v", err)
+		hwlog.RunLog.Errorf("marshal data failed when path pod, err is %v", err)
 		return nil, err
 	}
-	patchBody := fmt.Sprintf(labelsFormat, labelStr)
+
+	var patchBody string
+	if patchType == "label" {
+		patchBody = fmt.Sprintf(labelsFormat, labelStr)
+	} else if patchType == "annnotation" {
+		patchBody = fmt.Sprintf(annotationsFormat, labelStr)
+	} else {
+		return nil, fmt.Errorf("patchType is error")
+	}
+
 	return k8sClient.ClientSet.CoreV1().Pods(podNamespace).Patch(context.TODO(),
 		podName, types.MergePatchType, []byte(patchBody), metav1.PatchOptions{})
 }
@@ -265,4 +296,40 @@ func RetryPatchNodeAnnotation(nodeName string, retryTimes int, annotations map[s
 		_, err = PatchNodeAnnotation(nodeName, annotations)
 	}
 	return err
+}
+
+// DeletePodAnnotation delete pod annotations
+func DeletePodAnnotation(namespace, podName string, keysToDelete []string) error {
+	var lastErr error
+	for i := 0; i < constant.PatchPodTimes; i++ {
+		patchData := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"annotations": map[string]interface{}{},
+			},
+		}
+		for _, key := range keysToDelete {
+			patchData["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[key] = nil
+		}
+		patchBytes, err := json.Marshal(patchData)
+		if err != nil {
+			hwlog.RunLog.Errorf("marshal patch data failed, attempt=%d, err=%v", i+1, err)
+			return err
+		}
+		_, err = k8sClient.ClientSet.CoreV1().Pods(namespace).Patch(
+			context.TODO(), podName, types.MergePatchType, patchBytes, metav1.PatchOptions{})
+		if err == nil {
+			hwlog.RunLog.Infof("delete annotation success, namespace=%s, pod=%s, keys=%v",
+				namespace, podName, keysToDelete)
+			return nil
+		}
+		lastErr = err
+		hwlog.RunLog.Warnf("delete pod annotation failed, attempt=%d, namespace=%s, pod=%s, keys=%v, err=%v",
+			i+1, namespace, podName, keysToDelete, err)
+		if i < constant.PatchPodTimes-1 {
+			time.Sleep(time.Second * time.Duration(i+1))
+		}
+	}
+	hwlog.RunLog.Errorf("delete pod annotation failed after 3 attempts, namespace=%s, pod=%s, keys=%v, lastErr=%v",
+		namespace, podName, keysToDelete, lastErr)
+	return lastErr
 }

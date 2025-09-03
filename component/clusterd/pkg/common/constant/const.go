@@ -19,6 +19,8 @@ const (
 	KeepAliveSignalType = "keep-alive"
 	// FaultNodesExitSignalType fault nodes exit signal type
 	FaultNodesExitSignalType = "faultNodesExit"
+	// HotSwitchSignalType hot switch
+	HotSwitchSignalType = "hot-switch"
 )
 
 // recover strategy name
@@ -57,6 +59,8 @@ const (
 	PodReschedulingStrategyKey = "pod-rescheduling"
 	// PodReschedulingStrategyOpenValue is the value of pod level rescheduling label that stands open
 	PodReschedulingStrategyOpenValue = "on"
+	// ProcessMigration	migration , strategy used in hotswitch flow
+	ProcessMigration = "migration"
 )
 
 const (
@@ -64,6 +68,10 @@ const (
 	SubHealthyStrategy = "subHealthyStrategy"
 	// SubHealthyGraceExit strategy name of grace exit
 	SubHealthyGraceExit = "graceExit"
+	// SubHealthyIngore strategy name of ignore
+	SubHealthyIngore = "ignore"
+	// SubHealthyHotSwitch strategy name of hot switch
+	SubHealthyHotSwitch = "hotSwitch"
 	// HealthyState state of Healthy
 	HealthyState = "Healthy"
 	// UnHealthyState state of unHealthy
@@ -155,6 +163,8 @@ const (
 	DumpFailed = "dump-failed"
 	// ExitCompleted exit strategy finish
 	ExitCompleted = "exit-completed"
+	// MaxEventChanLen max event chan len
+	MaxEventChanLen = 100
 )
 
 const (

@@ -43,7 +43,9 @@ type RecoverConfig struct {
 	ProcessRecoverEnable  bool
 	MindXConfigStrategies []string
 	PlatFormMode          bool
+	SubHealthyStrategy    string
 	GraceExit             bool
+	HotSwitch             bool
 }
 
 // JobBaseInfo job base info

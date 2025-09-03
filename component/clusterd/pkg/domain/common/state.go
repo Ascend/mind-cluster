@@ -109,4 +109,23 @@ const (
 
 	// ScaleInRunningState scale-in running state
 	ScaleInRunningState = "ScaleRunningState"
+
+	// NotifyPrepareHotSwitchState notify process controller prepare hot switch
+	NotifyPrepareHotSwitchState = "notifyPrepareHotSwitchState"
+	// WaitNewPodState wait new pod ready
+	WaitNewPodState = "WaitNewPodState"
+	// WaitNotifyPodFailedResultState wait notify pod failed result
+	WaitNotifyPodFailedResultState = "WaitNotifyPodFailedResultState"
+	// WaitNotifyPodRunningResultState wait notify pod running result
+	WaitNotifyPodRunningResultState = "WaitNotifyPodRunningResultState"
+	// WaitReportPauseResultState waits for the pause operation result report
+	WaitReportPauseResultState = "WaitReportPauseResultState"
+	// WaitOldPodDeletedState waits for the old Pod to be deleted
+	WaitOldPodDeletedState = "WaitOldPodDeletedState"
+	// WaitNotifyRestartTrainResultState waits for restart training notification result
+	WaitNotifyRestartTrainResultState = "WaitNotifyRestartTrainResultState"
+	// NotifyStopJobState notifies to stop the job
+	NotifyStopJobState = "NotifyStopJobState"
+	// WaitReportRestartTrainResultState waits for restart training result report
+	WaitReportRestartTrainResultState = "WaitReportRestartTrainResultState"
 )

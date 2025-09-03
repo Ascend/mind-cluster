@@ -45,6 +45,10 @@ func TestGetRules(t *testing.T) {
 			baseRules := ctl.getStressTestRules()
 			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
 		})
+		convey.Convey("08-test getHotSwitchRules, should return slice", func() {
+			baseRules := ctl.getHotSwitchRules()
+			convey.So(len(baseRules) > 0, convey.ShouldBeTrue)
+		})
 	})
 }
 
