@@ -226,16 +226,16 @@ func buildNPUNodeGetNewNPUNodeAnnotationTest() []nPUNodeGetNewNPUNodeAnnotationT
 			name:            "02-GetNewNPUNodeAnnotation return error when npuNode annotation is empty",
 			npuNode:         &NPUNode{},
 			usedTop:         []int{0},
-			resourceName:    Ascend910,
+			resourceName:    util.Ascend910,
 			resourceNamePre: util.NPU910CardNamePre,
 			wantErr:         true,
 		},
 		{
 			name: "03-GetNewNPUNodeAnnotation return empty when npuNode annotation is empty",
 			npuNode: &NPUNode{CommonNode: CommonNode{
-				Annotation: map[string]string{Ascend910: ""}}},
+				Annotation: map[string]string{util.Ascend910: ""}}},
 			usedTop:         []int{0},
-			resourceName:    Ascend910,
+			resourceName:    util.Ascend910,
 			resourceNamePre: util.NPU910CardNamePre,
 			want:            "",
 			wantErr:         false,
@@ -243,9 +243,9 @@ func buildNPUNodeGetNewNPUNodeAnnotationTest() []nPUNodeGetNewNPUNodeAnnotationT
 		{
 			name: "04-GetNewNPUNodeAnnotation return error when string to int error",
 			npuNode: &NPUNode{CommonNode: CommonNode{
-				Annotation: map[string]string{Ascend910: "Ascend910-s"}}},
+				Annotation: map[string]string{util.Ascend910: "Ascend910-s"}}},
 			usedTop:         []int{0},
-			resourceName:    Ascend910,
+			resourceName:    util.Ascend910,
 			resourceNamePre: util.NPU910CardNamePre,
 			want:            "",
 			wantErr:         true,
@@ -253,9 +253,9 @@ func buildNPUNodeGetNewNPUNodeAnnotationTest() []nPUNodeGetNewNPUNodeAnnotationT
 		{
 			name: "05-GetNewNPUNodeAnnotation return Ascend910-1 when get npu node annotation",
 			npuNode: &NPUNode{CommonNode: CommonNode{
-				Annotation: map[string]string{Ascend910: "Ascend910-0,Ascend910-1"}}},
+				Annotation: map[string]string{util.Ascend910: "Ascend910-0,Ascend910-1"}}},
 			usedTop:         []int{0},
-			resourceName:    Ascend910,
+			resourceName:    util.Ascend910,
 			resourceNamePre: util.NPU910CardNamePre,
 			want:            "Ascend910-1",
 			wantErr:         false,

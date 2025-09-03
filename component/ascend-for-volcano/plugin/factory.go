@@ -166,7 +166,7 @@ func getPodGroupOwnerRef(pg scheduling.PodGroup) metav1.OwnerReference {
 // getJobTemplate get template of all possible segmentation jobs
 func (sHandle *ScheduleHandler) getJobTemplate() map[string]map[string]util.VResource {
 	jobTemplate := map[string]map[string]util.VResource{
-		Ascend310P: {
+		util.Ascend310P: {
 			VNPUTempVir01:        {Aicore: 1, Aicpu: 1, DVPP: AscendDVPPEnabledNull},
 			VNPUTempVir02:        {Aicore: util.NPUIndex2, Aicpu: util.NPUIndex2, DVPP: AscendDVPPEnabledNull},
 			VNPUTempVir02C1:      {Aicore: util.NPUIndex2, Aicpu: 1, DVPP: AscendDVPPEnabledNull},
@@ -175,7 +175,7 @@ func (sHandle *ScheduleHandler) getJobTemplate() map[string]map[string]util.VRes
 			VNPUTempVir04C3NDVPP: {Aicore: util.NPUIndex4, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledOff},
 			VNPUTempVir04C4cDVPP: {Aicore: util.NPUIndex4, Aicpu: util.NPUIndex4, DVPP: AscendDVPPEnabledOn},
 		},
-		Ascend910: {
+		util.Ascend910: {
 			VNPUTempVir02: {Aicore: util.NPUIndex2, Aicpu: 1, DVPP: AscendDVPPEnabledNull},
 			VNPUTempVir04: {Aicore: util.NPUIndex4, Aicpu: 1, DVPP: AscendDVPPEnabledNull},
 			VNPUTempVir08: {Aicore: util.NPUIndex8, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},

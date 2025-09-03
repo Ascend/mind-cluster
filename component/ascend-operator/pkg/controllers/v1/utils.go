@@ -38,7 +38,7 @@ func getContainerExitCode(pod *corev1.Pod) int32 {
 	var exitCode int32 = 0xbeef // magic number
 	for _, status := range pod.Status.ContainerStatuses {
 		state := status.State
-		if status.Name == mindxdlv1.DefaultContainerName && state.Terminated != nil {
+		if status.Name == api.DefaultContainerName && state.Terminated != nil {
 			exitCode = state.Terminated.ExitCode
 		}
 	}
@@ -110,7 +110,7 @@ func getNpuReqInfoPerPod(job *mindxdlv1.AscendJob) (string, int) {
 	}
 
 	for _, ct := range npuWorker.Template.Spec.Containers {
-		if ct.Name == mindxdlv1.DefaultContainerName {
+		if ct.Name == api.DefaultContainerName {
 			return getContainerNPUResourceNameAndReq(ct)
 		}
 	}
@@ -254,7 +254,7 @@ func checkNonWorkerRplMountChips(ji *jobInfo) bool {
 
 func checkContainersResourceReq(containers []corev1.Container) bool {
 	for _, container := range containers {
-		if container.Name == mindxdlv1.DefaultContainerName {
+		if container.Name == api.DefaultContainerName {
 			rNum := getContainerResourceReq(container)
 			if rNum > 0 {
 				return true

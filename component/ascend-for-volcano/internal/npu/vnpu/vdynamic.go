@@ -101,7 +101,7 @@ func (tp *VirtualNPU) CheckNodeNPUByDyTask(task *api.TaskInfo, node plugin.NPUNo
 	}
 	if node.IsNodeNotMeetRes(taskResReq) {
 		// if node resource not enough, reduce task aiCPU
-		if node.ChipKind == plugin.Ascend310P && tp.taskAICPUCanBeDowngrade(taskResReq) {
+		if node.ChipKind == util.Ascend310P && tp.taskAICPUCanBeDowngrade(taskResReq) {
 			klog.V(util.LogInfoLev).Infof("dynamic vnpu task<%s> resource not enough, downgrade cpu", task.Name)
 			tp.DowngradeCache[task.Name] = append(tp.DowngradeCache[task.Name], node.Name)
 			return tp.CheckNodeNPUByDyTask(task, node, tp.downgradeTaskAICPU(taskResReq))

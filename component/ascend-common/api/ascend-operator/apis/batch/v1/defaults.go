@@ -24,6 +24,8 @@ import (
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"ascend-common/api"
 )
 
 // Int32 is a helper routine that allocates a new int32 value
@@ -41,7 +43,7 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 func setDefaultPort(spec *v1.PodSpec) {
 	index := 0
 	for i, container := range spec.Containers {
-		if container.Name == DefaultContainerName {
+		if container.Name == api.DefaultContainerName {
 			index = i
 			break
 
@@ -49,14 +51,14 @@ func setDefaultPort(spec *v1.PodSpec) {
 	}
 	hasASJobPort := false
 	for _, port := range spec.Containers[index].Ports {
-		if port.Name == DefaultPortName {
+		if port.Name == api.DefaultPortName {
 			hasASJobPort = true
 			break
 		}
 	}
 	if !hasASJobPort {
 		spec.Containers[index].Ports = append(spec.Containers[index].Ports, v1.ContainerPort{
-			Name:          DefaultPortName,
+			Name:          api.DefaultPortName,
 			ContainerPort: DefaultPort,
 		})
 	}
@@ -129,7 +131,7 @@ func GetJobFramework(job *AscendJob) (string, error) {
 	}
 	frame, ok := job.Labels[FrameworkKey]
 	if !ok {
-		return "", fmt.Errorf("ascendJob<%s-%s> label framework is not set", job.Namespace, job.Name)
+		return "", fmt.Errorf("job<%s-%s> label framework is not set", job.Namespace, job.Name)
 	}
 	return frame, nil
 }

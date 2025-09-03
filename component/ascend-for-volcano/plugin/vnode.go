@@ -57,7 +57,7 @@ func initTemplate() []util.VTemplate {
 		return nodeTemplate
 	}
 	nodeTemplate[0] = util.VTemplate{
-		ChipKind: Ascend310P,
+		ChipKind: util.Ascend310P,
 		AICore:   util.NPUIndex8,
 		AICPU:    util.NPUIndex7,
 	}
@@ -87,7 +87,7 @@ func initTemplate() []util.VTemplate {
 		AICPU:    util.CpuNum6,
 	}
 	nodeTemplate[util.NPUIndex6] = util.VTemplate{
-		ChipKind: Ascend310P,
+		ChipKind: util.Ascend310P,
 		AICore:   util.CoreNum10,
 		AICPU:    util.NPUIndex7,
 	}
@@ -349,7 +349,7 @@ func (vNode *VNode) getPodUsedRes(pod *v1.Pod, taskTemplate map[string]map[strin
 		klog.V(util.LogErrorLev).Infof("getPodUsedRes get pod<%s> %s format error", pod.Name, realStr)
 		return nil
 	}
-	if vNode.ChipKind == Ascend310P {
+	if vNode.ChipKind == util.Ascend310P {
 		return getResourceFromTemplate(vNode.ChipKind, ascendRealSplit[1], taskTemplate)
 	}
 	return getResourceFromTemplate(vNode.ChipType, ascendRealSplit[1], taskTemplate)
@@ -550,8 +550,8 @@ func (vChip *VChip) isChipResourceEnough(vRes util.VResource) bool {
 
 // isChipVGroupValid check if vGroup is valid
 func (vChip *VChip) isChipVGroupValid(vRes util.VResource) bool {
-	if vChip.Kind != Ascend310P {
-		klog.V(util.LogDebugLev).Infof("not %s task, no need to check vGroup", Ascend310P)
+	if vChip.Kind != util.Ascend310P {
+		klog.V(util.LogDebugLev).Infof("not %s task, no need to check vGroup", util.Ascend310P)
 		return true
 	}
 

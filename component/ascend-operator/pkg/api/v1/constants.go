@@ -12,17 +12,6 @@ const (
 	// FrameworkKey the key of the laebl
 	FrameworkKey = "framework"
 
-	// Kind is the kind name
-	Kind = "AscendJob"
-	// Plural is the Plural for AscendJob.
-	Plural = "ascendjobs"
-	// Singular is the singular for AscendJob.
-	Singular = "ascendjob"
-
-	// DefaultContainerName the default container name for AscendJob.
-	DefaultContainerName = "ascend"
-	// DefaultPortName is name of the port used to communicate between other process.
-	DefaultPortName = "ascendjob-port"
 	// DefaultPort is default value of the port.
 	DefaultPort = 2222
 

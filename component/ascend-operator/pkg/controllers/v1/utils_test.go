@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	_ "ascend-operator/pkg/testtool"
 )
@@ -38,14 +39,14 @@ func TestGetContainerExitCode(t *testing.T) {
 		})
 		convey.Convey("pod's default container state is not terminate, should return 0xbeef", func() {
 			pod.Status.ContainerStatuses[0] = corev1.ContainerStatus{
-				Name: mindxdlv1.DefaultContainerName,
+				Name: api.DefaultContainerName,
 			}
 			code := getContainerExitCode(pod)
 			convey.So(code, convey.ShouldEqual, expectCode)
 		})
 		convey.Convey("pod's default container state is terminate, should return exit code", func() {
 			pod.Status.ContainerStatuses[0] = corev1.ContainerStatus{
-				Name: mindxdlv1.DefaultContainerName,
+				Name: api.DefaultContainerName,
 				State: corev1.ContainerState{
 					Terminated: &corev1.ContainerStateTerminated{
 						ExitCode: 1,
@@ -184,7 +185,7 @@ func TestGetNpuReqPerPod(t *testing.T) {
 		convey.Convey("02-job with npu worker should return corresponding npu num", func() {
 			workerSpec := newCommonSpec()
 			ct := newCommonContainer()
-			ct.Name = mindxdlv1.DefaultContainerName
+			ct.Name = api.DefaultContainerName
 			workerSpec.Template.Spec.Containers[0] = ct
 			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				mindxdlv1.ReplicaTypeWorker: workerSpec,
@@ -276,7 +277,7 @@ func mockRplsWithNPU() map[commonv1.ReplicaType]*commonv1.ReplicaSpec {
 		mindxdlv1.MindSporeReplicaTypeScheduler: {
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{
-				Name: mindxdlv1.DefaultContainerName,
+				Name: api.DefaultContainerName,
 				Resources: corev1.ResourceRequirements{
 					Limits:   quantityMap,
 					Requests: quantityMap,
@@ -286,7 +287,7 @@ func mockRplsWithNPU() map[commonv1.ReplicaType]*commonv1.ReplicaSpec {
 		mindxdlv1.ReplicaTypeWorker: {
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{
-				Name: mindxdlv1.DefaultContainerName,
+				Name: api.DefaultContainerName,
 				Resources: corev1.ResourceRequirements{
 					Limits:   quantityMap,
 					Requests: quantityMap,

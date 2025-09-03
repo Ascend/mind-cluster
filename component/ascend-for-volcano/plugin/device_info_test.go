@@ -66,24 +66,24 @@ func TestGetResourceFromTemplate(t *testing.T) {
 	}{
 		{
 			name:           "01-getResourceFromTemplate return nil when not exist ascend310p vnpu template",
-			nodeType:       Ascend310P,
+			nodeType:       util.Ascend310P,
 			templateString: "",
 			taskTemplate:   map[string]map[string]util.VResource{},
 			want:           nil,
 		},
 		{
 			name:           "02-getResourceFromTemplate return nil when not exist ascend310p vnpu template",
-			nodeType:       Ascend310P,
-			templateString: Ascend310P,
-			taskTemplate:   map[string]map[string]util.VResource{Ascend310P: {}},
+			nodeType:       util.Ascend310P,
+			templateString: util.Ascend310P,
+			taskTemplate:   map[string]map[string]util.VResource{util.Ascend310P: {}},
 			want:           nil,
 		},
 		{
 			name:           "03-getResourceFromTemplate return nil when not exist ascend310p vnpu template",
-			nodeType:       Ascend310P,
+			nodeType:       util.Ascend310P,
 			templateString: AscendVNPUDVPP,
 			taskTemplate: map[string]map[string]util.VResource{
-				Ascend310P: {AscendVNPUDVPP: {Aicore: 1, Aicpu: 1, DVPP: "0"}}},
+				util.Ascend310P: {AscendVNPUDVPP: {Aicore: 1, Aicpu: 1, DVPP: "0"}}},
 			want: &util.VResource{Aicore: 1, Aicpu: 1, DVPP: "0"},
 		},
 	}
@@ -98,12 +98,12 @@ func TestGetResourceFromTemplate(t *testing.T) {
 }
 
 const (
-	fakeCardName01       = Ascend310P + "-0"
-	fakeCardName02       = Ascend310P + "-0-vir04"
-	fakeCardName03       = Ascend310P + "-1c-400-3_0"
-	fakePhysicCardName03 = Ascend310P + "-3"
-	fakeCardName04       = Ascend310P + "-1c-400-3"
-	fakeCardName05       = Ascend310P + "-s"
+	fakeCardName01       = util.Ascend310P + "-0"
+	fakeCardName02       = util.Ascend310P + "-0-vir04"
+	fakeCardName03       = util.Ascend310P + "-1c-400-3_0"
+	fakePhysicCardName03 = util.Ascend310P + "-3"
+	fakeCardName04       = util.Ascend310P + "-1c-400-3"
+	fakeCardName05       = util.Ascend310P + "-s"
 )
 
 func TestIsPodWholeCardFromAscendReal(t *testing.T) {
@@ -119,7 +119,7 @@ func TestIsPodWholeCardFromAscendReal(t *testing.T) {
 		},
 		{
 			name:         "02-isPodWholeCardFromAscendReal return false when card is not whole card",
-			realCardName: Ascend310P,
+			realCardName: util.Ascend310P,
 			want:         false,
 		},
 		{
@@ -188,7 +188,7 @@ func TestGetVNPUCardIDFromAscendCore(t *testing.T) {
 		},
 		{
 			name:        "02-getVNPUCardIDFromAscendCore return error when card is wrong",
-			coreNameStr: Ascend310P,
+			coreNameStr: util.Ascend310P,
 			want:        0,
 			wantErr:     true,
 		},
@@ -222,7 +222,7 @@ func TestGetWholeCardIDFromAscendReal(t *testing.T) {
 	}{
 		{
 			name:        "01-getWholeCardIDFromAscendReal return error when card is wrong",
-			cardNameStr: Ascend310P,
+			cardNameStr: util.Ascend310P,
 			want:        util.ErrorInt,
 			wantErr:     true,
 		},
@@ -280,7 +280,7 @@ func buildCardPhysicsIDFromAscendCoreParam() []cardPhysicsIDFromAscendCoreParam 
 		{
 			name: "04-getCardPhysicsIDFromAscendCore return error when card name is wrong",
 			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{util.AscendNPUCore: Ascend910}}},
+				Annotations: map[string]string{util.AscendNPUCore: util.Ascend910}}},
 			isWholeCard: false, want: []int{}, wantErr: true,
 		},
 		{

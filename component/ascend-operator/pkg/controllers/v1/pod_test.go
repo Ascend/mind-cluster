@@ -52,7 +52,7 @@ func TestReconcilePods(t *testing.T) {
 		convey.Convey("02-not ascendJob should return err", func() {
 			pod := &corev1.Pod{}
 			err := rc.ReconcilePods(pod, jobStatus, pods, rtype, spec, replicas)
-			convey.So(err, convey.ShouldResemble, errors.New("<nil> is not a type of AscendJob"))
+			convey.So(err, convey.ShouldResemble, errors.New("<nil> is not a type of Job"))
 		})
 		convey.Convey("03-get job framework failed should return err", func() {
 			err := rc.ReconcilePods(job, jobStatus, pods, rtype, spec, replicas)

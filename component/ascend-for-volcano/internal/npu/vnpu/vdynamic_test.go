@@ -79,7 +79,7 @@ func mockVNode() plugin.VNode {
 				FreeRes: util.VResource{Aicore: util.NPUIndex8, Aicpu: util.NPUIndex8},
 				Name:    Ascend910Card},
 		},
-		ChipKind:         plugin.Ascend910,
+		ChipKind:         util.Ascend910,
 		UnhealthyChipIds: map[int]struct{}{},
 		ServerType:       Ascend910Card,
 		TotalChipNum:     util.NPUIndex8,
@@ -147,7 +147,7 @@ func buildCheckNodeNPUByDyTaskTestCase05() vNPUTestCase {
 
 func buildCheckNodeNPUByDyTaskTestCase06() vNPUTestCase {
 	node := mockNode()
-	node.ChipKind = plugin.Ascend310P
+	node.ChipKind = util.Ascend310P
 	return vNPUTestCase{
 		name:   "06 will return error when node.ChipKind is plugin.Ascend310P",
 		fields: mockVNPUTaskFields(),

@@ -20,6 +20,7 @@ Package ascend910a3 is using for A3 affinity schedule.
 package ascend910a3
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -34,7 +35,7 @@ const (
 	// NodeNPUNumber is the number of NPU chips in a node, a3 is 16.
 	NodeNPUNumber = 16
 	// NetworkUnhealthyNPU is the key of the network unhealthy NPU, will get result from node annotation.
-	NetworkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
+	NetworkUnhealthyNPU = util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
 	// DieNPUNumber is the number of NPU chips in whole NPU, a3 is 2.
 	DieNPUNumber = 2
 
