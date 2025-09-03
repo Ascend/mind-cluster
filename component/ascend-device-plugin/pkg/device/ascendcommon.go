@@ -38,6 +38,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
@@ -244,7 +245,6 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		manuallySeparateNPU := tool.handleManuallySeparateNPUFaultInfo()
 		// if subscribe failed, will use get interface
 		if common.SwitchSubscribeFailed && common.ParamOption.EnableSwitchFault {
-			var err error
 			newFaults, err := deviceswitch.GetSwitchFaults()
 			common.SetSwitchFaultCode(newFaults)
 			if err != nil {
@@ -259,17 +259,15 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
 			manuallySeparateNPU == tool.lastManuallySeparateNPU
 		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
-		hwlog.RunLog.Debugf("dataSame is %v, timeDiff is %v", dataSame, timeDiff)
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
-			hwlog.RunLog.Debug("device info is not changed and " +
-				"timeDiff less than 5 minutes, no need to update")
-
+			hwlog.RunLog.Debug("device info is not changed and timeDiff less than 5 minutes, no need to update")
 			return true, nil
 		}
 		if manuallySeparateNPU != "" {
-			hwlog.RunLog.Infof("get ManuallySeparateNPU from configMap, ManuallySeparateNPU:[%v] are unhealthy",
-				manuallySeparateNPU)
+			hwlog.RunLog.Infof("configmap/ManuallySeparateNPU:[%v] are unhealthy", manuallySeparateNPU)
 		}
+		newDeviceList, manuallySeparateNPU = customname.ReplaceDeviceInfoPublicName(tool.name,
+			newDeviceList, manuallySeparateNPU)
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
 			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
@@ -819,7 +817,8 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 		hwlog.RunLog.Debug("annotation do not need to be updated")
 		return nil
 	}
-	if err := tool.client.TryUpdatePodAnnotation(&podDev.Pod, annotation); err != nil {
+	newAnnotation := customname.ReplacePodAnnotation(tool.name, annotation)
+	if err := tool.client.TryUpdatePodAnnotation(&podDev.Pod, newAnnotation); err != nil {
 		hwlog.RunLog.Errorf("correct pod[%s:%s] annotation failed, error: %v", podDev.Pod.Namespace, podDev.Pod.Name, err)
 		return err
 	}

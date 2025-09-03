@@ -60,15 +60,23 @@ type Config struct {
 	ProcPerNode int `json:"proc_per_node"`
 	// PluginDir indicate the plugin dir
 	PluginDir string `json:"plugin_dir"`
+	// FaultRecover indicate the fault recover strategy
+	FaultRecover string `json:"fault_recover"`
 	// ClusterInfos indicate the information of cluster
 	ClusterInfos []ClusterInfo `json:"cluster_infos"`
 }
 
+var managerInstance *BaseManager
+
 // NewTaskDManager return taskd manager instance
 func NewTaskDManager(config Config) *BaseManager {
-	return &BaseManager{
+	if managerInstance != nil {
+		return managerInstance
+	}
+	managerInstance = &BaseManager{
 		Config: config,
 	}
+	return managerInstance
 }
 
 // BaseManager the class taskd manager backend
@@ -443,6 +451,7 @@ func convertProfilingMsg(profilingSwitchData *profiling.ProfilingSwitch) constan
 }
 
 func (m *BaseManager) subscribeProcessManageSignal(conn *grpc.ClientConn) {
+	m.updateFaultRecover()
 	recoverClient := pb.NewRecoverClient(conn)
 	clientInfo := &pb.ClientInfo{
 		JobId: m.JobId,
@@ -538,4 +547,151 @@ func (m *BaseManager) enqueueProcessManageSignal(processManageSignal *pb.Process
 		return
 	}
 	hwlog.RunLog.Infof("enqueue process manage signal successfully, signal: %v", processManageSignal)
+}
+func (m *BaseManager) updateFaultRecover() {
+	message := storage.BaseMessage{
+		Header: storage.MsgHeader{
+			BizType: "default",
+			Uuid:    uuid.New().String(),
+			Src: &common.Position{
+				Role:       common.MgrRole,
+				ServerRank: "0",
+			},
+			Timestamp: time.Now(),
+		},
+		Body: storage.MsgBody{
+			MsgType: constant.Action,
+			Code:    constant.FaultRecoverCode,
+			Message: m.FaultRecover,
+		},
+	}
+	err := m.MsgHd.MsgQueue.Enqueue(message)
+	if err != nil {
+		hwlog.RunLog.Infof("updateFaultRecover err, message %v error %v", message, err)
+		return
+	}
+	hwlog.RunLog.Infof("updateFaultRecover, message %v", message)
+}
+
+// ReportControllerInfoToClusterd report controller info to clusterd
+func ReportControllerInfoToClusterd(message *constant.ControllerMessage) bool {
+	addr, err := utils.GetClusterdAddr()
+	if err != nil {
+		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
+		return false
+	}
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
+		return false
+	}
+	client := pb.NewRecoverClient(conn)
+	sendTimes := 0
+	for sendTimes <= constant.MaxSendTimes {
+		var success bool
+		switch message.Action {
+		case constant.RecoverStatus:
+			success = reportRecoverStatus(message, client)
+		case constant.ProcessFault:
+			success = reportProcessFault(message, client)
+		case constant.RecoverStrategy:
+			success = reportRecoverStrategy(message, client)
+		case constant.StopComplete:
+			success = reportStopComplete(message, client)
+		default:
+			hwlog.RunLog.Errorf("unknown action %v", message.Action)
+			return false
+		}
+		if success {
+			return true
+		}
+		sendTimes++
+	}
+	hwlog.RunLog.Errorf("send message to clusterd failed, max send times: %v", constant.MaxSendTimes)
+	return false
+}
+
+func reportRecoverStatus(message *constant.ControllerMessage, client pb.RecoverClient) bool {
+	hwlog.RunLog.Infof("send recover status to clusterd, msg: %v, fault ranks: %v", message.Msg, message.FaultRanks)
+	status := &pb.Status{Code: int32(message.Code), Info: message.Msg}
+	faultRanks := make([]string, 0)
+	for key, _ := range message.FaultRanks {
+		faultRanks = append(faultRanks, strconv.Itoa(key))
+	}
+	_, err := client.ReportRecoverStatus(managerInstance.svcCtx, &pb.RecoverStatusRequest{
+		IsolateRankIds: faultRanks,
+		JobId:          managerInstance.JobId,
+		Status:         status,
+		Strategy:       message.Strategy,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("report recover status to clusterd failed, error: %v", err)
+		return false
+	}
+	return true
+}
+
+func reportProcessFault(message *constant.ControllerMessage, client pb.RecoverClient) bool {
+	hwlog.RunLog.Infof("send process fault to clusterd, fault ranks: %v", message.FaultRanks)
+	faultRanks := make([]*pb.FaultRank, 0)
+	for rankId, faultType := range message.FaultRanks {
+		faultRanks = append(faultRanks, &pb.FaultRank{
+			RankId:    strconv.Itoa(rankId),
+			FaultType: strconv.Itoa(faultType),
+		})
+	}
+	_, err := client.ReportProcessFault(managerInstance.svcCtx, &pb.ProcessFaultRequest{
+		JobId:      managerInstance.JobId,
+		FaultRanks: faultRanks,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("report process fault to clusterd failed, error: %v", err)
+		return false
+	}
+	return true
+}
+
+func reportRecoverStrategy(message *constant.ControllerMessage, client pb.RecoverClient) bool {
+	hwlog.RunLog.Infof("send recover strategy to clusterd, strategies: %v, fault rank: %v",
+		message.StrategyList, message.FaultRanks)
+	faultRanks := make([]*pb.FaultRank, 0)
+	for rankId, faultType := range message.FaultRanks {
+		faultRanks = append(faultRanks, &pb.FaultRank{
+			RankId:    strconv.Itoa(rankId),
+			FaultType: strconv.Itoa(faultType),
+		})
+	}
+	_, err := client.ReportRecoverStrategy(managerInstance.svcCtx, &pb.RecoverStrategyRequest{
+		JobId:      managerInstance.JobId,
+		Strategies: message.StrategyList,
+		FaultRanks: faultRanks,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("report recover strategy to clusterd failed, error: %v", err)
+		return false
+	}
+	return true
+}
+
+func reportStopComplete(message *constant.ControllerMessage, client pb.RecoverClient) bool {
+	hwlog.RunLog.Infof("send stop complete to clusterd, msg: %v, fault ranks: %v",
+		message.Msg, message.FaultRanks)
+	status := &pb.Status{Code: int32(message.Code), Info: message.Msg}
+	faultRanks := make([]*pb.FaultRank, 0)
+	for rankId, faultType := range message.FaultRanks {
+		faultRanks = append(faultRanks, &pb.FaultRank{
+			RankId:    strconv.Itoa(rankId),
+			FaultType: strconv.Itoa(faultType),
+		})
+	}
+	_, err := client.ReportStopComplete(managerInstance.svcCtx, &pb.StopCompleteRequest{
+		JobId:      managerInstance.JobId,
+		Status:     status,
+		FaultRanks: faultRanks,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("report stop complete to clusterd failed, error: %v", err)
+		return false
+	}
+	return true
 }

@@ -19,8 +19,9 @@ import queue
 
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.base_agent.agent_network import init_network_client
-from taskd.python.framework.agent.base_agent.base_agent import BaseAgent, REPORT_CODE
+from taskd.python.framework.agent.base_agent.base_agent import BaseAgent
 from taskd.python.framework.common.type import AgentReportInfo
+from taskd.python.toolkit.constants import constants
 try:
     from torch.distributed.elastic.agent.server.api import WorkerState, RunResult
 except ImportError:
@@ -41,11 +42,11 @@ class PtAgent(BaseAgent):
         self.local_world_size = cls._worker_group.spec.local_world_size
         self.network_config = network_config
         self.command_map = {
-            'START': self.initialize_workers,
-            'STOP': self.stop_workers,
-            'EXIT': self.exit_agent,
-            'RESTART': self.restart_workers,
-            'GRACE_EXIT': self.grace_exit,
+            constants.STARTAGENTCODE: self.initialize_workers,
+            constants.STOPAGENTCODE: self.stop_workers,
+            constants.EXITAGENTCODE: self.exit_agent,
+            constants.RESTARTAGENTCODE: self.restart_workers,
+            constants.GRACEEXITAGENTCODE: self.grace_exit,
         }
         self.logger = logger
 
@@ -91,31 +92,39 @@ class PtAgent(BaseAgent):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
             return
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
-        self.send_message_to_manager('STATUS', REPORT_CODE, report_info)
+        self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info)
         self.local_fault_rank = fault_ranks
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
         return
 
     def initialize_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, restart time is {msg.extension},'
+        run_log.info(f'receive {msg.code} command, restart time is {msg.message},'
                      f' start to initialize workers')
-        self.pt_instance._remaining_restarts = int(msg.extension)
+        if int(msg.message) < 0:
+            run_log.warning("initialize_workers restart times is negative, exit agent")
+            exit(1)
+        self.pt_instance._remaining_restarts = int(msg.message)
         self._func_map.get('START_ALL_WORKER')(self.worker_group)
 
     def stop_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to stop workers')
+        run_log.info(f'receive {msg.code} command, start to stop workers')
         self._func_map.get('KILL_WORKER')(self.worker_group)
         self.worker_group.state = WorkerState.STOPPED
 
     def exit_agent(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to exit agent')
+        run_log.info(f'receive {msg.code} command, start to exit agent')
         self._func_map.get('KILL_WORKER')(self.worker_group)
-        self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo())
+        self.send_message_to_manager('STATUS', constants.REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to restart workers, restart time is {msg.extension}')
-        self.pt_instance._remaining_restarts = int(msg.extension)
+        run_log.info(f'receive {msg.code} command, start to restart workers, restart time is {msg.message}')
+        self.pt_instance._remaining_restarts = int(msg.message)
+
         self._func_map.get('KILL_WORKER')(self.worker_group)
+        if int(msg.message) < 0:
+            run_log.warning("restart times is negative, exit agent")
+            exit(1)
         self.worker_group.state = WorkerState.STOPPED
         self._func_map.get('START_ALL_WORKER')(self.worker_group)
+        self.local_fault_rank = []

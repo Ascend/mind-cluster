@@ -102,26 +102,27 @@ func TestGenLabels(t *testing.T) {
 		})
 		convey.Convey("02-job which is AscendJob should return right labels", func() {
 			expected := map[string]string{commonv1.JobNameLabel: job.Name}
+			job.APIVersion = acJobApiversion
 			label, err := genLabels(job, job.Name)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(label, convey.ShouldResemble, expected)
 		})
 		convey.Convey("03-job which is deploy should return right labels", func() {
 			expected := map[string]string{deployLabelKey: job.Name}
-			job.Kind = deployKind
+			job.APIVersion = deployApiversion
 			label, err := genLabels(job, job.Name)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(label, convey.ShouldResemble, expected)
 		})
 		convey.Convey("04-job which is vcjob should return right labels", func() {
 			expected := map[string]string{vcjobLabelKey: job.Name}
-			job.Kind = vcjobKind
+			job.APIVersion = vcjobApiVersion
 			label, err := genLabels(job, job.Name)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(label, convey.ShouldResemble, expected)
 		})
 		convey.Convey("05-job which is ptjob should return right labels", func() {
-			job.Kind = "ptjob"
+			job.APIVersion = "ptjob"
 			_, err := genLabels(job, job.Name)
 			convey.So(err, convey.ShouldNotBeNil)
 		})

@@ -33,6 +33,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
@@ -189,7 +190,8 @@ func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 			}
 			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s, NotPodUsed: %v",
 				device.DeviceName, device.Health, device.NotPodUsed)
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: device.DeviceName, Health: device.Health})
+			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, device.DeviceName)
+			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
 		}
 	} else if common.ParamOption.UseVolcanoType && !common.IsVirtualDev(ps.deviceType) {
 		vol2kltMap := ps.generateAllDeviceMap()
@@ -201,13 +203,15 @@ func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 			}
 			hwlog.RunLog.Infof("ListAndWatch resp devices: inner device: %s %s, real device: %s %s, "+
 				"NotPodUsed: %v", d, device.Health, device.DeviceName, device.Health, device.NotPodUsed)
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: d, Health: device.Health})
+			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, d)
+			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
 		}
 	} else {
 		for _, device := range ps.cachedDevices {
 			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s, NotPodUsed: %v",
 				device.DeviceName, device.Health, device.NotPodUsed)
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: device.DeviceName, Health: device.Health})
+			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, device.DeviceName)
+			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
 		}
 	}
 	hwlog.RunLog.Debugf("response to kubelet resp.devices len: %+v", len(resp.Devices))
@@ -348,7 +352,8 @@ func (ps *PluginServer) checkAllocateRequest(requests *v1beta1.AllocateRequest) 
 		if len(rqt.DevicesIDs) > common.MaxDevicesNum*common.MinAICoreNum {
 			return fmt.Errorf("the devices can't bigger than %d", common.MaxDevicesNum)
 		}
-		for _, deviceName := range rqt.DevicesIDs {
+		allocateDevices := customname.ReplaceDeviceInnerName(ps.deviceType, rqt.DevicesIDs)
+		for _, deviceName := range allocateDevices {
 			if len(deviceName) > common.MaxDeviceNameLen {
 				return fmt.Errorf("length of device name %d is invalid", len(deviceName))
 			}
@@ -868,7 +873,7 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 	resps := new(v1beta1.AllocateResponse)
 	for _, rqt := range requests.ContainerRequests {
 		var err error
-		allocateDevices := rqt.DevicesIDs
+		allocateDevices := customname.ReplaceDeviceInnerName(ps.deviceType, rqt.DevicesIDs)
 		if !common.ParamOption.PresetVDevice {
 			hwlog.RunLog.Infof("request num: %d", len(rqt.DevicesIDs))
 		} else {

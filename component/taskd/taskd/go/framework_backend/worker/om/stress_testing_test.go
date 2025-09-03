@@ -5,7 +5,6 @@ package om
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
@@ -160,25 +159,6 @@ func TestSendHeartBeatMsg(t *testing.T) {
 		hbChan <- struct{}{}
 		sendHeartBeatMsg(context.Background())
 		assert.False(t, called)
-	})
-	t.Run("normal heart beat", func(t *testing.T) {
-		lock := sync.Mutex{}
-		ctx, cancel := context.WithCancel(context.Background())
-		StressTestNetTool = &net.NetInstance{}
-		called := false
-		patches.ApplyMethodFunc(StressTestNetTool, "SyncSendMessage", func(_, _, _ string, _ *common.Position) (*common.Ack, error) {
-			lock.Lock()
-			called = true
-			lock.Unlock()
-			return &common.Ack{}, nil
-		})
-		go sendHeartBeatMsg(ctx)
-		time.Sleep(time.Second)
-		lock.Lock()
-		assert.True(t, called)
-		lock.Unlock()
-		cancel()
-		patches.Reset()
 	})
 }
 

@@ -36,6 +36,7 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
@@ -176,7 +177,8 @@ func (hdm *HwDevManager) updateNode() error {
 		return err
 	}
 	hdm.baseNPUInfo = hdm.getNpuBaseInfo()
-	newNode.Annotations[api.BaseDevInfoAnno] = string(mashaledNpuInfo)
+	newMashaledNpuInfo := customname.ReplaceDevicePublicName(hdm.RunMode, string(mashaledNpuInfo))
+	newNode.Annotations[api.BaseDevInfoAnno] = newMashaledNpuInfo
 	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	newNode.Annotations[serverIndexKey] = strconv.Itoa(int(hdm.getSuperPodInfo().ServerId))
 	newNode.Annotations[serverTypeKey] = getDevType(common.ParamOption.RealCardType)
@@ -197,8 +199,10 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 		return nil, err
 	}
 	if _, ok := node.Labels[common.ServerTypeLabelKey]; !ok {
-		newLabelMap[common.ServerTypeLabelKey] = common.ParamOption.RealCardType +
-			common.MiddelLine + strconv.Itoa(int(common.ParamOption.AiCoreCount))
+		cardType := common.ParamOption.RealCardType + common.MiddelLine +
+			strconv.Itoa(int(common.ParamOption.AiCoreCount))
+		newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
+
 	}
 	boardInfo, err := hdm.manager.GetDmgr().GetBoardInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {

@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
@@ -104,16 +103,16 @@ func genLabels(jobObj interface{}, jobName string) (map[string]string, error) {
 		hwlog.RunLog.Error("job not found")
 		return map[string]string{}, fmt.Errorf("job not found")
 	}
-	switch acjob.Kind {
-	case api.AscendJobKind:
+	switch acjob.APIVersion {
+	case acJobApiversion:
 		return map[string]string{
 			commonv1.JobNameLabel: jobName,
 		}, nil
-	case vcjobKind:
+	case vcjobApiVersion:
 		return map[string]string{
 			vcjobLabelKey: jobName,
 		}, nil
-	case deployKind:
+	case deployApiversion:
 		return map[string]string{
 			deployLabelKey: jobName,
 		}, nil

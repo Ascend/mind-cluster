@@ -1,0 +1,13 @@
+[
+  {
+    "ResourceType": "",
+    "DevicePublicType": "",
+    "DevicePublicNamePre": "",
+    "PodConfigurationName": "" ,
+
+    "_example_ResourceType" : "device type identifier, values: Ascend910、Ascend310、Ascend310P",
+    "_example_DevicePublicType" : "externally displayed device type, example：huawei.com/Ascend910",
+    "_example_DevicePublicNamePre" : "Externally displayed device name prefix,example：Ascend910-",
+    "_example_PodConfigurationName": "only Ascend910 support，example: ascend.kubectl.kubernetes.io/ascend-910-configuration"
+  }
+]

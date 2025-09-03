@@ -19,13 +19,14 @@ import (
 	"fmt"
 
 	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"Ascend-device-plugin/pkg/server"
 	"ascend-common/common-utils/hwlog"
 )
 
 // InitFunction init function
 func InitFunction() (*server.HwDevManager, error) {
-	initPublicNameConfig()
+	customname.InitPublicNameConfig()
 	devM, switchDevM, err := initDevManager()
 	if err != nil {
 		hwlog.RunLog.Errorf("init dev manager failed, err: %v", err)

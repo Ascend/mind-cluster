@@ -1519,7 +1519,9 @@ func (ctl *EventController) listenScheduleResult() {
 	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeout
 	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
 	if pgInfo.Annotations != nil && pgInfo.Annotations[constant.WaitRescheduleTimeoutKey] != "" {
-		if timeout, err := strconv.Atoi(pgInfo.Annotations[constant.WaitRescheduleTimeoutKey]); err == nil {
+		if timeout, err := strconv.Atoi(pgInfo.Annotations[constant.
+			WaitRescheduleTimeoutKey]); err == nil && timeout <= constant.
+			DefaultWaitRescheduleTimeout && timeout >= constant.MinWaitRescheduleTimeout {
 			podReschedulingTimeout = timeout
 		} else {
 			hwlog.RunLog.Warnf("failed to convert wait_reschedule_timeout to int, value is %s", pgInfo.Annotations[constant.WaitRescheduleTimeoutKey])

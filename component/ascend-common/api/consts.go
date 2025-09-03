@@ -51,6 +51,33 @@ const (
 	PodRankIndexAnno = "hccl/rankIndex"
 	// SuperPodIDAnno annotation key of the super pod id
 	SuperPodIDAnno = "super-pod-id"
+
+	// Hotswitch Annotations
+
+	// InHotSwitchFlowKey in hot switch flow key
+	InHotSwitchFlowKey = "inHotSwitchFlow"
+	// InHotSwitchFlowValue in hot switch flow true
+	InHotSwitchFlowValue = "true"
+	// BackupNewPodNameKey backup new pod name key
+	BackupNewPodNameKey = "backupNewPodName"
+	// BackupSourcePodNameKey backup source pod name key
+	BackupSourcePodNameKey = "backupSourcePodName"
+	// NeedOperatorOpeKey need operator ope key
+	NeedOperatorOpeKey = "needOperatorOpe"
+	// NeedVolcanoOpeKey need volcano ope key
+	NeedVolcanoOpeKey = "needVolcanoOpe"
+	// OpeTypeDelete ope type delete
+	OpeTypeDelete = "delete"
+	// OpeTypeCreate ope type create
+	OpeTypeCreate = "create"
+	// PodTypeKey pod type key
+	PodTypeKey = "podType"
+	// PodTypeBackup pod type backup
+	PodTypeBackup = "backup"
+	// DefaultRetryTimes default retry times
+	DefaultRetryTimes = 3
+	// MasterPodRank master pod rank
+	MasterPodRank = "0"
 )
 
 // PodGroup

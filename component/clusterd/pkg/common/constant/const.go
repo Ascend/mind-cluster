@@ -308,6 +308,8 @@ const (
 	// DefaultWaitRescheduleTimeout default reschedule timeout before executing arf or dp scale-in strategy
 	// (Unit: second)
 	DefaultWaitRescheduleTimeout = 270
+	// MinWaitRescheduleTimeout min reschedule timeout before executing arf or dp scale-in strategy (Unit: second)
+	MinWaitRescheduleTimeout = 30
 	// WaitRescheduleTimeoutKey is the key of WaitRescheduleTimeout
 	WaitRescheduleTimeoutKey = "wait-reschedule-timeout"
 	// DefaultWaitRescheduleTimeoutBeforeDeployStrategy is the waiting pod reschedule timeout when ARF is closed but

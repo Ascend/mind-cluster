@@ -138,7 +138,7 @@ func (r *ASJobReconciler) reconcilePods(pi *podInfo, pods []*corev1.Pod, jobStat
 			podToCreate = append(podToCreate, p)
 		} else {
 			hwlog.RunLog.Debugf("Need to check pod: %s-%d", pi.rtype, index)
-			if err := r.checkExistPod(pi, index, podSlice[0], jobStatus); err != nil {
+			if err := r.checkExistPod(pi, index, podSlice[0], jobStatus, replicas); err != nil {
 				return err
 			}
 		}
@@ -305,17 +305,85 @@ func (r *ASJobReconciler) tryWriteCm(jobName, namespace string, uid types.UID) e
 	return err
 }
 
-func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus) error {
+func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod, jobStatus *commonv1.JobStatus,
+	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
 	// check if the index is in the valid range, if not, we should kill the pod
 	if index < 0 || index >= int(*pi.spec.Replicas) {
 		if err := r.PodControl.DeletePod(pod.Namespace, pod.Name, pi.job); err != nil {
 			return err
 		}
 	}
+	err := r.handleHotSwitch(pi, pod, replicas)
+	if err != nil {
+		return err
+	}
+
 	if err := r.checkPodStatus(pi, pod, jobStatus); err != nil {
 		return err
 	}
 	updateJobReplicaStatuses(jobStatus, pi.rtype, pod)
+	return nil
+}
+
+func (r *ASJobReconciler) handleHotSwitch(pi *podInfo, pod *corev1.Pod,
+	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+	if r == nil {
+		return errors.New("nil pointer")
+	}
+	annotations := pod.GetAnnotations()
+	if needOperatorOpe, ok := annotations[api.NeedOperatorOpeKey]; !ok || needOperatorOpe != api.OpeTypeCreate {
+		return nil
+	}
+	if err := r.createHotSwitchPod(pod, pi, replicas); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ASJobReconciler) createHotSwitchPod(oldPod *corev1.Pod, pi *podInfo,
+	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+	if r == nil {
+		return errors.New("nil pointer")
+	}
+
+	const needLen = 4
+	uid := fmt.Sprintf("%d", time.Now().UnixNano())
+	newPodName := fmt.Sprintf("%s-hot-%s", oldPod.Name, uid[len(uid)-needLen:])
+	pi.backupPodName = newPodName
+
+	err := r.createNewPod(pi, replicas)
+	if err != nil {
+		hwlog.RunLog.Errorf("create hotswitch pod failed, err: %v", err)
+		return err
+	}
+
+	newPod := &corev1.Pod{}
+	if err := r.Get(context.TODO(), types.NamespacedName{Namespace: oldPod.Namespace, Name: newPodName}, newPod); err != nil {
+		hwlog.RunLog.Errorf("hotswitch: get new pod[%s] err: %v", newPodName, err)
+		return fmt.Errorf("hotswitch: get new pod[%s] err: %v", newPodName, err)
+	}
+
+	// add annotations
+	newPod.Annotations[api.InHotSwitchFlowKey] = api.InHotSwitchFlowValue
+	newPod.Annotations[api.PodTypeKey] = api.PodTypeBackup
+	newPod.Annotations[api.BackupSourcePodNameKey] = oldPod.Name
+
+	if err := r.Update(context.TODO(), newPod); err != nil {
+		hwlog.RunLog.Errorf("update hotswitch backup pod %s/%s failed,err:%v", newPod.Namespace, newPod.Name, err)
+		return err
+	}
+	hwlog.RunLog.Infof("update hotswitch backup pod %s/%s success", newPod.Namespace, newPod.Name)
+
+	// update old pod annotations
+	delete(oldPod.Annotations, api.NeedOperatorOpeKey)
+	oldPod.Annotations[api.BackupNewPodNameKey] = newPodName
+
+	err = r.Update(context.TODO(), oldPod)
+	if err != nil {
+		hwlog.RunLog.Errorf("update hotswitch old pod %s/%s annotations failed,err:%v", oldPod.Namespace, oldPod.Name, err)
+		return err
+	}
+	hwlog.RunLog.Infof("update hotswitch old pod %s/%s annotations success", oldPod.Namespace, oldPod.Name)
 	return nil
 }
 
@@ -477,8 +545,7 @@ func (r *ASJobReconciler) checkPodStatus(pi *podInfo, pod *corev1.Pod, jobStatus
 	return nil
 }
 
-func (r *ASJobReconciler) createNewPod(pi *podInfo, replicas map[commonv1.ReplicaType]*commonv1.
-	ReplicaSpec) error {
+func (r *ASJobReconciler) createNewPod(pi *podInfo, replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
 	if r == nil {
 		return errors.New("nil pointer")
 	}
@@ -529,6 +596,9 @@ func (r *ASJobReconciler) createPodSpec(pi *podInfo,
 	}
 	// Set name for the template.
 	podTemplate.Name = common.GenGeneralName(job.Name, strings.ToLower(string(pi.rtype)), indexStr)
+	if pi.backupPodName != "" {
+		podTemplate.Name = pi.backupPodName
+	}
 
 	err := r.setEnv(pi, podTemplate)
 	if err != nil {
@@ -624,6 +694,11 @@ func (r *ASJobReconciler) GetPodSlices(pods []*corev1.Pod, replicas int) [][]*co
 		}
 		if index < 0 || index >= replicas {
 			hwlog.RunLog.Warnf("The label index is not expected: %d, pod: %s/%s", index, pod.Namespace, pod.Name)
+			continue
+		}
+		if status, ok := pod.Annotations[api.PodTypeKey]; ok && status == api.PodTypeBackup {
+			hwlog.RunLog.Warnf("pod is in hot switch flow,ignore when get pod slices, index: %d, pod: %s/%s",
+				index, pod.Namespace, pod.Name)
 			continue
 		}
 

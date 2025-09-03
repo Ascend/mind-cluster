@@ -33,7 +33,7 @@ import (
 
 const (
 	// PluginName the HuaWei NPU 's plugin name.
-	PluginName = "huaweiNPU"
+	PluginName = "NPU"
 
 	objectNilError = "object or argument is nil"
 	podRankIndex   = "hccl/rankIndex"

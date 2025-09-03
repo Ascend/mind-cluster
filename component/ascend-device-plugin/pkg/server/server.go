@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
@@ -141,10 +142,11 @@ func (ps *PluginServer) register() error {
 	}()
 
 	client := v1beta1.NewRegistrationClient(conn)
+	resourceName := customname.ReplaceDevicePublicType(ps.deviceType, api.ResourceNamePrefix+ps.deviceType)
 	reqt := &v1beta1.RegisterRequest{
 		Version:      v1beta1.Version,
 		Endpoint:     fmt.Sprintf("%s.sock", ps.deviceType),
-		ResourceName: api.ResourceNamePrefix + ps.deviceType,
+		ResourceName: resourceName,
 	}
 	if _, err = client.Register(context.Background(), reqt); err != nil {
 		return fmt.Errorf("register to kubelet fail: %v", err)

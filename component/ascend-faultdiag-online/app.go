@@ -16,6 +16,8 @@
 package ascendfaultdiagonline
 
 import (
+	"path"
+
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/core/context"
 	"ascend-faultdiag-online/pkg/core/model/enum"
@@ -31,8 +33,8 @@ var appFunc = map[string]func(enum.DeployMode){
 
 // StartFDOnline is the start func for fd online
 func StartFDOnline(fdConfigPath string, apps []string, target enum.DeployMode) {
-	hwlog.RunLog.Infof("[FD-OL]received start FD-OL request, fdConfigPath is: %s, enabled apps: %s, and target is: %s",
-		fdConfigPath, apps, target)
+	hwlog.RunLog.Infof("[FD-OL]received start FD-OL request, fdConfig file is: %s, enabled apps: %s, and target is: %s",
+		path.Base(fdConfigPath), apps, target)
 	fdCtx, err := context.NewFaultDiagContext(fdConfigPath)
 	if err != nil {
 		hwlog.RunLog.Errorf("[FD-OL]created fd context failed: %v", err)

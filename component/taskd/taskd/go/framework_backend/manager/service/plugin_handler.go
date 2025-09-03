@@ -21,6 +21,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/framework_backend/manager/plugins/elastictraining"
 	"taskd/framework_backend/manager/plugins/faultdig"
 	"taskd/framework_backend/manager/plugins/om"
 	"taskd/framework_backend/manager/plugins/stoptrain"
@@ -48,6 +49,7 @@ func (p *PluginHandler) Init() error {
 		om.NewOmSwitchNicPlugin(),
 		om.NewOmStressTestPlugin(),
 		stoptrain.New(),
+		elastictraining.New(),
 	}
 	if err := p.RegisterPlugins(plugins); err != nil {
 		hwlog.RunLog.Errorf("register plugins failed, error: %v", err)

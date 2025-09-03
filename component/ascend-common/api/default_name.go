@@ -67,6 +67,8 @@ const (
 	Ascend310No = "310"
 	// HuaweiAscend310 ascend 310 chip with prefix
 	HuaweiAscend310 = "huawei.com/Ascend310"
+	// Ascend310MinuxPrefix name prefix of ascend 310 chip
+	Ascend310MinuxPrefix = "Ascend310-"
 )
 
 // common 310B
@@ -87,6 +89,8 @@ const (
 	Ascend310PNo = "310P"
 	// HuaweiAscend310P ascend 310P chip with prefix
 	HuaweiAscend310P = "huawei.com/Ascend310P"
+	// Ascend310PMinuxPrefix name prefix of ascend 310P chip
+	Ascend310PMinuxPrefix = "Ascend310P-"
 )
 
 // device plugin

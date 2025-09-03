@@ -36,6 +36,7 @@ import (
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager"
+	"taskd/framework_backend/manager/application"
 	"taskd/framework_backend/proxy"
 	"taskd/framework_backend/worker"
 	"taskd/framework_backend/worker/om"
@@ -291,6 +292,26 @@ func CreateTaskdLog(logName *C.char) uintptr {
 	loggerLifeCtl[loggerPtr] = logger
 	logLock.Unlock()
 	return loggerPtr
+}
+
+//export SendMessageToBackend
+func SendMessageToBackend(msgJSON *C.char) C.int {
+	msg := C.GoString(msgJSON)
+	var goMessage constant.ControllerMessage
+	err := json.Unmarshal([]byte(msg), &goMessage)
+	if err != nil {
+		return C.int(-1)
+	}
+	res := manager.ReportControllerInfoToClusterd(&goMessage)
+	if res != true {
+		return C.int(1)
+	}
+	return C.int(0)
+}
+
+//export RegisterBackendCallback
+func RegisterBackendCallback(cb uintptr) {
+	application.RegisterControllerCallback(cb)
 }
 
 func main() {

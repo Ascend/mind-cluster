@@ -190,10 +190,10 @@ func (o *StressTestPlugin) updateWorkerStatus(shot storage.SnapShot) {
 		if st, ok := o.workerStatus[name]; !ok || len(st.RankResult) != 0 {
 			continue
 		}
-		if info.Status[constant.StressTestUUID] != o.uuid {
+		if !o.handleWorkerHeartbeat(name, info) {
 			continue
 		}
-		if !o.handleWorkerHeartbeat(name, info) {
+		if info.Status[constant.StressTestUUID] != o.uuid {
 			continue
 		}
 		rankResultStr := info.Status[constant.StressTest]

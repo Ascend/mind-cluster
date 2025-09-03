@@ -10,6 +10,7 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -267,7 +268,8 @@ func newCommonContainer() corev1.Container {
 func newCommonAscendJob() *mindxdlv1.AscendJob {
 	return &mindxdlv1.AscendJob{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "AscendJob",
+			Kind:       "AscendJob",
+			APIVersion: acJobApiversion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "ascendjob-test",
@@ -612,5 +614,80 @@ func TestOnOwnerCreateFunc(t *testing.T) {
 			res := fn(event.CreateEvent{Object: job})
 			convey.So(res, convey.ShouldEqual, false)
 		})
+	})
+}
+
+// TestHandleNewPodDeleted test handleNewPodDeleted function
+func TestHandleNewPodDeleted1(t *testing.T) {
+	convey.Convey("01-reconciler is nil should log error and return", t, func() {
+		var r *ASJobReconciler
+		handleNewPodDeleted(&corev1.Pod{}, r)
+		convey.So(true, convey.ShouldBeTrue)
+	})
+
+	convey.Convey("02-get old pod failed should log error and return", t, func() {
+		r := newCommonReconciler()
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        "test-pod",
+				Namespace:   "default",
+				Annotations: map[string]string{api.BackupSourcePodNameKey: "old-pod"},
+			},
+		}
+		patch := gomonkey.ApplyMethodReturn(r.Client, "Get", errors.New("get pod failed"))
+		defer patch.Reset()
+		handleNewPodDeleted(pod, r)
+		convey.So(true, convey.ShouldBeTrue)
+	})
+
+	convey.Convey("03-update old pod failed should log error and return", t, func() {
+		r := newCommonReconciler()
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        "test-pod",
+				Namespace:   "default",
+				Annotations: map[string]string{api.BackupSourcePodNameKey: "old-pod"},
+			},
+		}
+		patch := gomonkey.NewPatches()
+		defer patch.Reset()
+		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object) error {
+			obj.SetAnnotations(map[string]string{
+				api.InHotSwitchFlowKey:  api.InHotSwitchFlowValue,
+				api.BackupNewPodNameKey: "test-pod",
+			})
+			return nil
+		}).ApplyMethodReturn(r.Client, "Update", errors.New("update pod failed"))
+
+		handleNewPodDeleted(pod, r)
+		convey.So(true, convey.ShouldBeTrue)
+	})
+}
+
+func TestHandleNewPodDeleted2(t *testing.T) {
+	convey.Convey("04-handle new pod deleted success", t, func() {
+		r := newCommonReconciler()
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-pod",
+				Namespace: "default",
+				Annotations: map[string]string{
+					api.BackupSourcePodNameKey: "old-pod",
+				},
+			},
+		}
+
+		patch := gomonkey.NewPatches()
+		defer patch.Reset()
+		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object) error {
+			obj.SetAnnotations(map[string]string{
+				api.InHotSwitchFlowKey:  api.InHotSwitchFlowValue,
+				api.BackupNewPodNameKey: "test-pod",
+			})
+			return nil
+		}).ApplyMethodReturn(r.Client, "Update", nil)
+
+		handleNewPodDeleted(pod, r)
+		convey.So(true, convey.ShouldBeTrue)
 	})
 }

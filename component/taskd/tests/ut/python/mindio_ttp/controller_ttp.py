@@ -28,3 +28,47 @@ def tft_destroy_controller(*args):
 
 def tft_query_high_availability_switch(*args) -> bool:
     return True
+
+
+class logger:
+    def info(self, *args):
+        pass
+
+    def debug(self, *args):
+        pass
+
+    def warning(self, *args):
+        pass
+
+    def error(self, *args):
+        pass
+
+
+class ttp_logger_class:
+    def __init__(self):
+        self.LOGGER = logger()
+
+
+ttp_logger = ttp_logger_class()
+
+
+class logger:
+    def info(self, *args):
+        pass
+
+    def debug(self, *args):
+        pass
+
+    def warning(self, *args):
+        pass
+
+    def error(self, *args):
+        pass
+
+
+class ttp_logger_class:
+    def __init__(self):
+        self.LOGGER = logger()
+
+
+ttp_logger = ttp_logger_class()

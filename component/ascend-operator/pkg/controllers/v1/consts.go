@@ -130,3 +130,9 @@ const (
 	workQueueQps       = 10
 	workQueueBurst     = 100
 )
+
+const (
+	vcjobApiVersion  = "batch.volcano.sh/v1alpha1"
+	deployApiversion = "apps/v1"
+	acJobApiversion  = "mindxdl.gitee.com/v1"
+)
