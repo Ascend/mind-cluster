@@ -27,6 +27,7 @@ from taskd.python.utils.log import run_log
 from taskd.python.cython_api import cython_api
 from taskd.python.framework.common.type import MsgBody, MessageInfo, Position, DEFAULT_BIZTYPE
 from taskd.python.toolkit.constants.constants import SEND_RETRY_TIMES
+from taskd.python.toolkit.constants import constants
 
 
 class AgentMessageManager():
@@ -48,7 +49,7 @@ class AgentMessageManager():
             run_log.error("msg_queue is None")
             raise Exception("msg_queue is None")
         self.lib = cython_api.lib
-        self.rank = None
+        self.rank = int(network_config.pos.server_rank)
         self.msg_queue = msg_queue
         self._network_instance = None
         self._init_network(network_config, logger)
@@ -78,12 +79,12 @@ class AgentMessageManager():
         run_log.info(f"agent register: {msg}")
         self.send_message(msg)
 
-    def send_message(self, message: MessageInfo):
+    def send_message(self, message: MessageInfo, code: int = 0):
         """
         Send message to taskd manager.
         """
-        run_log.debug(f"agent send message: {message}")
         msg_json = json.dumps(asdict(message)).encode('utf-8')
+        self.lib.DestroyNetTool.argtypes = [ctypes.c_void_p]
         send_times = 0
         self.lib.SyncSendMessage.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
         self.lib.SyncSendMessage.restype = ctypes.c_int
@@ -93,7 +94,11 @@ class AgentMessageManager():
                 break
             result = self.lib.SyncSendMessage(self._network_instance, msg_json)
             if result == 0:
-                run_log.info(f"agent send message success, msg: {message.uuid}")
+                if code != 0:
+                    run_log.info(f"agent send message success, msg: {message.uuid} code: {code}")
+                if code == constants.EXITAGENTCODE:
+                    run_log.info(f"agent send exit message, msg: {message.uuid}")
+                    self.lib.DestroyNetTool(self._network_instance)
                 break
             run_log.warning(f"agent send message failed, result: {result}")
             send_times += 1
@@ -103,9 +108,11 @@ class AgentMessageManager():
         """
         Receive message from taskd manager.
         """
+        self.lib.ReceiveMessageC.argtypes = [ctypes.c_void_p]
+        self.lib.ReceiveMessageC.restype = ctypes.c_void_p
+        self.lib.FreeCMemory.argtypes = [ctypes.c_void_p]
+        self.lib.FreeCMemory.restype = None
         while True:
-            self.lib.ReceiveMessageC.argtypes = [ctypes.c_void_p]
-            self.lib.ReceiveMessageC.restype = ctypes.c_void_p
             msg_ptr = self.lib.ReceiveMessageC(self._network_instance)
             if msg_ptr is None:
                 continue
@@ -117,9 +124,6 @@ class AgentMessageManager():
                 continue
             self.msg_queue.put(msg)
             self.lib.FreeCMemory(msg_ptr)
-            if msg.msg_type == "exit":
-                self.lib.DestroyNetwork(self._network_instance)
-                return
 
     def get_network_instance(self):
         """
@@ -205,7 +209,7 @@ def get_message_manager() -> AgentMessageManager:
     return AgentMessageManager.instance
 
 
-def network_send_message(msg: MessageInfo):
+def network_send_message(msg: MessageInfo, code: int = 0):
     """
     Send message to taskd manager.
     """
@@ -213,7 +217,7 @@ def network_send_message(msg: MessageInfo):
     if msg_manager.get_network_instance() is None:
         run_log.warning("network instance is None")
         return
-    msg_manager.send_message(msg)
+    msg_manager.send_message(msg, code)
 
 
 def get_msg_network_instance():

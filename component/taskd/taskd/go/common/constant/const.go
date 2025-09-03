@@ -121,6 +121,7 @@ const (
 // All MsgBody's Code must be defined here
 const (
 	RegisterCode                 = 101
+	FaultRecoverCode             = 102
 	RestartTimeCode              = 201
 	FaultRankCode                = 202
 	ExitAgentCode                = 203
@@ -130,6 +131,7 @@ const (
 	ProcessManageKeepAliveSignal = 207
 	RestartAgentCode             = 208
 	RestartWorkersCode           = 209
+	StartAgentCode               = 210
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -363,4 +365,31 @@ const (
 	StressTestTimeout = "3"
 	// StressTestVolRecoverFail voltage recovery failed
 	StressTestVolRecoverFail = "4"
+)
+
+const (
+	// StopComplete controller report stop complete
+	StopComplete = "stop_complete"
+	// RecoverStrategy controller report recover strategy
+	RecoverStrategy = "recover_strategy"
+	// RecoverStatus controller report recover status
+	RecoverStatus = "recover_status"
+	// ProcessFault controller report process fault
+	ProcessFault = "process_fault"
+	// MaxSendTimes is max send retry time
+	MaxSendTimes = 3
+	// JobReschedulingPluginName name of job rescheduling plugin
+	JobReschedulingPluginName = "JobReschedulingPlugin"
+	// PodReschedulingPluginName name of pod rescheduling plugin
+	PodReschedulingPluginName = "PodReschedulingPlugin"
+	// RecoverPluginName is recover plugin name
+	RecoverPluginName = "recoverPlugin"
+	// SingalKillMaster singal kill master
+	SingalKillMaster = "killMaster"
+	// RestartController restart controller
+	RestartController = "restart_controller"
+	// DestroyController destroy controller
+	DestroyController = "destroy_controller"
+	// SaveAndExit save and exit
+	SaveAndExit = "save_and_exit"
 )

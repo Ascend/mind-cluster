@@ -15,15 +15,24 @@
 // Package application for taskd manager application
 package application
 
+/*
+#include <stdlib.h>
+typedef int (*controllerCallback)(char* data);
+static int callBackFunc(controllerCallback cb, char* data) { return cb(data); }
+*/
+import "C"
+
 import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"unsafe"
 
 	"github.com/google/uuid"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
+	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/service"
@@ -35,6 +44,13 @@ type BusinessStreamProcessor struct {
 	MsgHandler    MsgHandlerInterface
 	PluginHandler service.PluginHandlerInterface
 	StreamHandler service.StreamHandlerInterface
+}
+
+var controllerCallbackFunc C.controllerCallback
+
+// RegisterControllerCallback register controller callback
+func RegisterControllerCallback(ptr uintptr) {
+	controllerCallbackFunc = (C.controllerCallback)(unsafe.Pointer(ptr))
 }
 
 // NewBusinessStreamProcessor return a business stream handler
@@ -145,6 +161,10 @@ func (b *BusinessStreamProcessor) DistributeMsg(msgs []infrastructure.Msg) error
 				b.DistributedMsgToMgr(msg)
 				continue
 			}
+			if receiver == constant.ControllerName {
+				b.distributedToController(msg)
+				continue
+			}
 			sendMsg, err := json.Marshal(msg.Body)
 			if err != nil {
 				hwlog.RunLog.Errorf("business handler send msg marshal failed, err: %v", err)
@@ -187,4 +207,42 @@ func (b *BusinessStreamProcessor) DistributedMsgToOthers(receiver string, sendMs
 	}
 	b.MsgHandler.SendMsgUseGrpc(constant.DefaultDomainName, string(sendMsg), dst)
 	hwlog.RunLog.Debugf("business handler send msg %s to others", string(sendMsg))
+}
+
+func (b *BusinessStreamProcessor) distributedToController(msg infrastructure.Msg) {
+	if controllerCallbackFunc == nil {
+		hwlog.RunLog.Errorf("controller callback is nil")
+		return
+	}
+	actions, err := utils.StringToObj[[]string](msg.Body.Extension[constant.Actions])
+	if err != nil {
+		hwlog.RunLog.Errorf("unmarshal actions failed: %s", err.Error())
+		return
+	}
+	faultRanks, err := utils.StringToObj[map[int]int](msg.Body.Extension[constant.FaultRanks])
+	if err != nil {
+		hwlog.RunLog.Warnf("unmarshal faultRanks failed: %s", err.Error())
+		faultRanks = make(map[int]int)
+	}
+	strategy := msg.Body.Extension[constant.ChangeStrategy]
+	params := msg.Body.Extension[constant.ExtraParams]
+	message := &constant.ControllerMessage{
+		Actions:    actions,
+		FaultRanks: faultRanks,
+		Strategy:   strategy,
+		Params:     params,
+	}
+	msgJSON, err := json.Marshal(message)
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal msg failed, err: %v", err)
+		return
+	}
+	msgCStr := C.CString(string(msgJSON))
+	defer C.free(unsafe.Pointer(msgCStr))
+	res := C.callBackFunc(controllerCallbackFunc, msgCStr)
+	if res != 0 {
+		hwlog.RunLog.Errorf("controller callback failed, err: %v", res)
+		return
+	}
+	hwlog.RunLog.Infof("controller callback success, message: %v", message)
 }

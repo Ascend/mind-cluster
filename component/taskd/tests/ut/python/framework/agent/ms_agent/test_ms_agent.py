@@ -19,7 +19,6 @@ import os
 import time
 from unittest.mock import patch, MagicMock, call
 from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
-from taskd.python.framework.agent.base_agent.base_agent import REPORT_CODE
 from taskd.python.toolkit.constants import constants
 from taskd.python.framework.common.type import AgentReportInfo
 
@@ -120,7 +119,7 @@ class TestMsAgent(unittest.TestCase):
         self.agent.report_fault_rank(fault_ranks)
         
         mock_check_new.assert_called_once_with(fault_ranks)
-        mock_send.assert_called_once_with('STATUS', REPORT_CODE, AgentReportInfo(fault_ranks=fault_ranks))
+        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=fault_ranks))
         self.assertEqual(self.agent.local_fault_rank, fault_ranks)
 
     @patch.object(MsAgent, 'check_new_fault')
