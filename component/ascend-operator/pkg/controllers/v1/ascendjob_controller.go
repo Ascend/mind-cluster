@@ -66,6 +66,7 @@ import (
 	"ascend-operator/pkg/controllers/scaling"
 	"ascend-operator/pkg/ranktable"
 	"ascend-operator/pkg/ranktable/generator"
+	"ascend-operator/pkg/ranktable/utils"
 )
 
 // NewReconciler new reconciler for AscendJob
@@ -243,19 +244,21 @@ func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller,
 		return err
 	}
 	resourceOptions := []*resourceOption{
-		{kind: &source.Kind{Type: &corev1.Pod{}}, predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc()}},
+		{kind: &source.Kind{Type: &corev1.Pod{}}, predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc(), UpdateFunc: r.onPodUpdateFunc()}},
 		{kind: &source.Kind{Type: &corev1.Service{}}},
 	}
 
 	if r.Config.EnableGangScheduling {
-		_, mapErr := mgr.GetRESTMapper().RESTMapping(schema.GroupKind{Group: v1beta1.SchemeGroupVersion.Group,
-			Kind: "PodGroup"},
-			v1beta1.SchemeGroupVersion.Version)
+		_, mapErr := mgr.GetRESTMapper().RESTMapping(schema.GroupKind{
+			Group: v1beta1.SchemeGroupVersion.Group,
+			Kind:  "PodGroup"}, v1beta1.SchemeGroupVersion.Version)
+
 		if mapErr != nil {
 			hwlog.RunLog.Errorf("enableGangScheduling is true, but PodGroup is not in cluster")
 			return mapErr
 		}
-		resourceOptions = append(resourceOptions, &resourceOption{kind: &source.Kind{Type: &v1beta1.PodGroup{}}})
+		resourceOptions = append(resourceOptions, &resourceOption{
+			kind: &source.Kind{Type: &v1beta1.PodGroup{}}})
 	}
 
 	for _, src := range resourceOptions {
@@ -420,8 +423,84 @@ func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 		if ok && int32(versionNumber) == currentVersion {
 			r.versions[controllerRef.UID]++
 		}
+		r.handleHotswitchPodDelete(e)
 		return true
 	}
+}
+
+func (r *ASJobReconciler) handleHotswitchPodDelete(e event.DeleteEvent) {
+	pod, ok := e.Object.(*corev1.Pod)
+	if !ok {
+		return
+	}
+	if pod.Annotations[api.PodTypeKey] == api.PodTypeBackup {
+		handleNewPodDeleted(pod, r)
+	} else if pod.Annotations[api.InHotSwitchFlowKey] == api.InHotSwitchFlowValue {
+		handleOldPodDeleted(pod, r)
+	}
+}
+
+func handleOldPodDeleted(pod *v1.Pod, r *ASJobReconciler) {
+	if r == nil {
+		hwlog.RunLog.Errorf("hotswitch: reconciler is nil")
+		return
+	}
+	hwlog.RunLog.Infof("hotswitch: old pod deleted,podName: %s", pod.Name)
+	newPodName := pod.Annotations[api.BackupNewPodNameKey]
+	ctx := context.TODO()
+	newPod := &v1.Pod{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: pod.Namespace, Name: newPodName}, newPod); err != nil {
+		hwlog.RunLog.Errorf("hotswitch: could not find newPod: %s", newPod.Name)
+		return
+	}
+
+	delete(newPod.Annotations, api.PodTypeKey)
+	delete(newPod.Annotations, api.BackupSourcePodNameKey)
+	err := r.Update(ctx, newPod)
+	if err != nil {
+		hwlog.RunLog.Errorf("hotswitch: delete annotations[podType、backupSourcePodName] failed, pod: %s/%s,err:%v",
+			newPod.Namespace, newPod.Name, err)
+		return
+	}
+	hwlog.RunLog.Infof("hotswitch: delete annotations[podType、backupSourcePodName] success, pod: %s/%s",
+		newPod.Namespace, newPod.Name)
+
+	// genn ranktable again in hotswitch scene
+	jobId := getJobKeyByPod(pod)
+	rtg, ok := r.rtGenerators[jobId]
+	if !ok {
+		hwlog.RunLog.Warnf("rank table generator not found for job %s", jobId)
+		return
+	}
+	rtg.SetStatus(utils.InitialRTStatus)
+	rtg.SetFileStatus(utils.InitialRTStatus)
+	rtg.SetConfigmapStatus(utils.InitialRTStatus)
+}
+
+func handleNewPodDeleted(pod *v1.Pod, r *ASJobReconciler) {
+	if r == nil {
+		hwlog.RunLog.Errorf("hotswitch: reconciler is nil")
+		return
+	}
+	ctx := context.TODO()
+	hwlog.RunLog.Infof("hotswitch: new pod deleted,podName: %s", pod.Name)
+	oldPodName := pod.Annotations[api.BackupSourcePodNameKey]
+	oldPod := &v1.Pod{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: pod.Namespace, Name: oldPodName}, oldPod); err != nil {
+		hwlog.RunLog.Errorf("hotswitch: get old pod err: %s", oldPodName)
+		return
+	}
+
+	delete(oldPod.Annotations, api.InHotSwitchFlowKey)
+	delete(oldPod.Annotations, api.BackupNewPodNameKey)
+	err := r.Update(ctx, oldPod)
+	if err != nil {
+		hwlog.RunLog.Errorf("hotswitch: delete annotations[inHotSwitchFlow、backupNewPodName] failed, pod: %s/%s,err:%v",
+			oldPod.Namespace, oldPod.Name, err)
+		return
+	}
+	hwlog.RunLog.Infof("hotswitch: delete annotations[inHotSwitchFlow、backupNewPodName] success, pod: %s/%s",
+		oldPod.Namespace, oldPod.Name)
 }
 
 // ControllerName get controller name
@@ -592,4 +671,69 @@ func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid type
 		return err
 	}
 	return nil
+}
+
+func (r *ASJobReconciler) onPodUpdateFunc() func(event.UpdateEvent) bool {
+	return func(e event.UpdateEvent) bool {
+		oldPod, oldPodOk := e.ObjectOld.(*corev1.Pod)
+		if !oldPodOk {
+			hwlog.RunLog.Errorf("objectOld unable to convert object to Pod:%v", e.ObjectOld)
+			return false
+		}
+		newPod, newPodOk := e.ObjectNew.(*corev1.Pod)
+		if !newPodOk {
+			hwlog.RunLog.Errorf("objectNew unable to convert object to Pod:%v", e.ObjectNew)
+			return false
+		}
+		if newPod.Annotations[api.NeedOperatorOpeKey] == api.OpeTypeCreate &&
+			oldPod.Annotations[api.NeedOperatorOpeKey] != api.OpeTypeCreate {
+			hwlog.RunLog.Infof("detected needOperatorOpe[create],will create backup pod based on pod %v", newPod.Name)
+			return true
+		}
+		if newPod.Annotations[api.NeedOperatorOpeKey] == api.OpeTypeDelete {
+			hwlog.RunLog.Infof("detected needOperatorOpe[delete],will delete pod %v", newPod.Name)
+			r.deletePod(newPod)
+			return true
+		}
+		return false
+	}
+}
+
+func (r *ASJobReconciler) deletePod(pod *corev1.Pod) {
+	const timeout = 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	deletePolicy := metav1.DeletePropagationBackground
+	gracePeriod := int64(0) // force kill pod
+	deleteOptions := &client.DeleteOptions{
+		PropagationPolicy:  &deletePolicy,
+		GracePeriodSeconds: &gracePeriod,
+	}
+
+	if err := r.Delete(ctx, pod, deleteOptions); err != nil {
+		if !k8serr.IsNotFound(err) {
+			hwlog.RunLog.Errorf("failed to force delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
+		} else {
+			hwlog.RunLog.Infof("pod %s/%s not found, might be already deleted", pod.Namespace, pod.Name)
+		}
+		return
+	}
+	hwlog.RunLog.Infof("successfully force deleted pod %s/%s", pod.Namespace, pod.Name)
+
+}
+
+// getJobKeyByPod get job unique key by pod
+func getJobKeyByPod(info *v1.Pod) types.UID {
+	if info == nil {
+		hwlog.RunLog.Errorf("serious error, get unique key failed, pod is nil")
+		return ""
+	}
+	for _, owner := range info.GetOwnerReferences() {
+		if owner.Controller != nil && *owner.Controller {
+			return owner.UID
+		}
+	}
+	hwlog.RunLog.Error("serious error, get unique key failed, pod don't have controller")
+	return ""
 }

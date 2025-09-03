@@ -203,6 +203,7 @@ type podInfo struct {
 	ctReq           int
 	npuReplicas     int
 	rank            int
+	backupPodName   string
 }
 
 func (pi *podInfo) DeepCopy() *podInfo {

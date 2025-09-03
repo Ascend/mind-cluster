@@ -9,9 +9,11 @@ Package controllers is using for reconcile AscendJob.
 package v1
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -21,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -28,6 +31,12 @@ import (
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 	_ "ascend-operator/pkg/testtool"
+)
+
+const (
+	num2 = 2
+	num1 = 1
+	num6 = 6
 )
 
 // TestReconcilePods test ReconcilePods function
@@ -928,4 +937,245 @@ func TestGetPodsSlice(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
+}
+
+type testCase struct {
+	name     string
+	input    []*corev1.Pod
+	replicas int
+	check    func(result [][]*corev1.Pod)
+}
+
+func buildTestCase(name string, replicas int, pods []*corev1.Pod, check func(result [][]*corev1.Pod)) testCase {
+	return testCase{
+		name:     name,
+		input:    pods,
+		replicas: replicas,
+		check:    check,
+	}
+
+}
+
+// TestGetPodSlices test GetPodSlices function
+func TestGetPodSlices(t *testing.T) {
+	convey.Convey("01-nil reconciler should return nil", t, func() {
+		var r *ASJobReconciler
+		result := r.GetPodSlices([]*corev1.Pod{}, 0)
+		convey.So(result, convey.ShouldBeNil)
+	})
+
+	rc := newCommonReconciler()
+	testCases := buildTestCasesd()
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			result := rc.GetPodSlices(tc.input, tc.replicas)
+			tc.check(result)
+		})
+	}
+}
+
+func buildTestCasesd() []testCase {
+	return []testCase{
+		buildTestCase("02-normal case with valid pods", num2, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "0"}}},
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "1"}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, num2)
+			convey.So(len(result[0]), convey.ShouldEqual, num1)
+			convey.So(len(result[1]), convey.ShouldEqual, num1)
+		}),
+		buildTestCase("03-pod with invalid index label should be ignored", num1, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "invalid"}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, num1)
+			convey.So(len(result[0]), convey.ShouldEqual, 0)
+		}),
+		buildTestCase("04-pod with out of range index should be ignored", num1, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "5"}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, num6)
+			convey.So(len(result[0]), convey.ShouldEqual, 0)
+		}),
+		buildTestCase("05-pod in hot switch flow should be ignored", num1, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "0"},
+				Annotations: map[string]string{api.PodTypeKey: api.PodTypeBackup}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, num1)
+			convey.So(len(result[0]), convey.ShouldEqual, 0)
+		}),
+		buildTestCase("06-replicas is 0 should return empty slice", 0, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "0"}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, 0)
+		}),
+		buildTestCase("07-multiple pods with same index should be in same slice", 1, []*corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "0"}}},
+			{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{commonv1.ReplicaIndexLabel: "0"}}},
+		}, func(result [][]*corev1.Pod) {
+			convey.So(len(result), convey.ShouldEqual, num1)
+			convey.So(len(result[0]), convey.ShouldEqual, num2)
+		}),
+	}
+}
+
+func TestHandleHotSwitch(t *testing.T) {
+	convey.Convey("Test handleHotSwitch", t, func() {
+		rc := newCommonReconciler()
+		pi := newCommonPodInfo()
+		pod := &corev1.Pod{}
+		replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
+
+		convey.Convey("01-nil reconciler should return error", func() {
+			var r *ASJobReconciler
+			err := r.handleHotSwitch(pi, pod, replicas)
+			convey.So(err, convey.ShouldResemble, errors.New("nil pointer"))
+		})
+		convey.Convey("02-pod without NeedOperatorOpeKey annotation should return nil", func() {
+			err := rc.handleHotSwitch(pi, pod, replicas)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("03-pod with NeedOperatorOpeKey not equal to create should return nil", func() {
+			pod.Annotations = map[string]string{api.NeedOperatorOpeKey: "other"}
+			err := rc.handleHotSwitch(pi, pod, replicas)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("04-createHotSwitchPod failed should return error", func() {
+			pod.Annotations = map[string]string{api.NeedOperatorOpeKey: api.OpeTypeCreate}
+			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(rc), "createHotSwitchPod",
+				func(_ *ASJobReconciler, _ *corev1.Pod, _ *podInfo,
+					_ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+					return errors.New("create hot switch pod failed")
+				})
+			defer patch.Reset()
+			err := rc.handleHotSwitch(pi, pod, replicas)
+			convey.So(err, convey.ShouldResemble, errors.New("create hot switch pod failed"))
+		})
+		convey.Convey("05-handle hot switch success should return nil", func() {
+			pod.Annotations = map[string]string{api.NeedOperatorOpeKey: api.OpeTypeCreate}
+			patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(rc), "createHotSwitchPod",
+				func(_ *ASJobReconciler, _ *corev1.Pod, _ *podInfo,
+					_ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+					return nil
+				})
+			defer patch.Reset()
+			err := rc.handleHotSwitch(pi, pod, replicas)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+type testHotSwitchCase struct {
+	name       string
+	setupMocks func(*gomonkey.Patches, *ASJobReconciler)
+	wantErr    bool
+}
+
+func buildTestHotSwitchCases() []testHotSwitchCase {
+	return []testHotSwitchCase{
+		{name: "01-nil reconciler should return error",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) { mockCreateNewPodReturnNil(p, r) },
+			wantErr:    true,
+		}, {
+			name: "02-createNewPod failed should return error",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
+				p.ApplyPrivateMethod(r, "createNewPod", func(*podInfo, map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+					return errors.New("create pod failed")
+				})
+			},
+			wantErr: true,
+		}, {
+			name: "03-get new pod failed should return error",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
+				mockCreateNewPodReturnNil(p, r).ApplyMethodReturn(r.Client, "Get", errors.New("get pod failed"))
+			},
+			wantErr: true,
+		}, {
+			name: "04-update new pod failed should return error",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
+				mockCreateNewPodReturnNil(p, r)
+				mockGetReturnNil(p, r).ApplyMethodReturn(r.Client, "Update", errors.New("update pod failed"))
+			},
+			wantErr: true,
+		}, {
+			name: "05-update old pod failed should return error",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
+				firstCall := true
+				mockCreateNewPodReturnNil(p, r)
+				mockGetReturnNil(p, r).ApplyMethodFunc(r.Client, "Update",
+					func(_ context.Context, _ client.Object, _ ...client.UpdateOption) error {
+						if firstCall {
+							firstCall = false
+							return nil
+						}
+						return errors.New("update old pod failed")
+					})
+			},
+			wantErr: true,
+		}, {
+			name: "06-create hot switch pod success",
+			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
+				mockCreateNewPodReturnNil(p, r)
+				mockGetReturnNil(p, r).ApplyMethodReturn(r.Client, "Update", nil)
+			},
+			wantErr: false,
+		},
+	}
+}
+func TestCreateHotSwitchPod(t *testing.T) {
+	tests := buildTestHotSwitchCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			convey.Convey(tt.name, t, func() {
+				patch := gomonkey.NewPatches()
+				defer patch.Reset()
+
+				var r *ASJobReconciler
+				if tt.name != "01-nil reconciler should return error" {
+					r = newCommonReconciler()
+				}
+				if tt.setupMocks != nil {
+					tt.setupMocks(patch, r)
+				}
+
+				oldPod := buildOldPod()
+				pi := newCommonPodInfo()
+				replicas := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
+
+				err := r.createHotSwitchPod(oldPod, pi, replicas)
+
+				if tt.wantErr {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+			})
+		})
+	}
+}
+
+func mockGetReturnNil(p *gomonkey.Patches, r *ASJobReconciler) *gomonkey.Patches {
+	return p.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object) error {
+		obj.SetAnnotations(map[string]string{})
+		return nil
+	})
+}
+
+func mockCreateNewPodReturnNil(p *gomonkey.Patches, r *ASJobReconciler) *gomonkey.Patches {
+	return p.ApplyPrivateMethod(r, "createNewPod", func(*podInfo, map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+		return nil
+	})
+}
+
+func buildOldPod() *corev1.Pod {
+	oldPod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+			Annotations: map[string]string{
+				api.NeedOperatorOpeKey: api.OpeTypeCreate,
+			},
+		},
+	}
+	return oldPod
 }
