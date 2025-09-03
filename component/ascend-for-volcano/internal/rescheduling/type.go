@@ -22,6 +22,7 @@ package rescheduling
 import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -116,7 +117,7 @@ const (
 	// JobRecovery Name of cm for recovery
 	JobRecovery = "job-recovery"
 	// DeviceFaultCmKey the key of DeviceFault info
-	DeviceFaultCmKey = "huawei.com/Ascend910-Fault"
+	DeviceFaultCmKey = util.HwPreName + util.Ascend910 + "-Fault"
 	// PodFailed the state of failed pod
 	PodFailed = "pod-failed"
 	// PodHealthy the state of healthy pod

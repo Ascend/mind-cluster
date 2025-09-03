@@ -46,8 +46,6 @@ var (
 )
 
 const (
-	// accelerator310Key accelerator key of old infer card
-	accelerator310Key     = "npu-310-strategy"
 	chipAcceleratorValue  = "chip"
 	cardAcceleratorValue  = "card"
 	card310pMaxNodeNPUNum = 64
@@ -59,9 +57,9 @@ const (
 )
 
 const (
-	card910x2Name    = "huawei.com/Ascend910card"
-	half910x4Name    = "huawei.com/Ascend910half"
-	module910bx8Name = "huawei.com/Ascend910module-910b-8"
+	card910x2Name    = util.HwPreName + util.Ascend910 + "card"
+	half910x4Name    = util.HwPreName + util.Ascend910 + "half"
+	module910bx8Name = util.HwPreName + util.Ascend910 + util.Module910bx8AcceleratorType
 )
 
 func init() {
@@ -126,7 +124,7 @@ func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plug
 }
 
 func init310CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPluginNeed, bool) {
-	v, ok := attr.Label[accelerator310Key]
+	v, ok := attr.Label[util.Accelerator310Key]
 	if !ok {
 		v = chipAcceleratorValue
 	}
@@ -184,7 +182,7 @@ func get310PCardHandlerName(attr util.SchedulerJobAttr) string {
 		klog.V(util.LogInfoLev).Info("is 300I duo")
 		duo = duoKeyLabel
 	}
-	v, ok := attr.Label[accelerator310Key]
+	v, ok := attr.Label[util.Accelerator310Key]
 	if !ok {
 		v = chipAcceleratorValue
 	}

@@ -21,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
@@ -36,7 +37,7 @@ func TestGetServiceIpAndPort(t *testing.T) {
 			Spec: corev1.ServiceSpec{Ports: make([]corev1.ServicePort, 1), ClusterIP: fakeSvcClusterIP},
 		}
 		defaultPort := corev1.ServicePort{
-			Name: mindxdlv1.DefaultPortName,
+			Name: api.DefaultPortName,
 			Port: mindxdlv1.DefaultPort,
 		}
 		convey.Convey("01-service with no port should return empty ip and port", func() {
@@ -179,7 +180,7 @@ func TestGetMngSvcIpAndPortNormal(t *testing.T) {
 						Spec: corev1.ServiceSpec{
 							Ports: []corev1.ServicePort{{
 								Port: 2222,
-								Name: mindxdlv1.DefaultPortName,
+								Name: api.DefaultPortName,
 							}},
 							ClusterIP: fakeSvcClusterIP,
 						},
@@ -277,11 +278,11 @@ func TestGenServicePorts(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("01-spec with default container will return correct ports", func() {
-			container.Name = mindxdlv1.DefaultContainerName
+			container.Name = api.DefaultContainerName
 			spec.Template.Spec.Containers[0] = container
 			expectedPorts := []corev1.ServicePort{
 				{
-					Name: mindxdlv1.DefaultPortName,
+					Name: api.DefaultPortName,
 					Port: fakePort,
 				},
 			}
@@ -300,7 +301,7 @@ func TestGenService(t *testing.T) {
 		fakeType := "Master"
 		spec := newCommonSpec()
 		container := newCommonContainer()
-		container.Name = mindxdlv1.DefaultContainerName
+		container.Name = api.DefaultContainerName
 		spec.Template.Spec.Containers[0] = container
 		convey.Convey("01-genServicePorts failed will return error", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "genServicePorts",
@@ -317,7 +318,7 @@ func TestGenService(t *testing.T) {
 				func(_ *commonv1.ReplicaSpec) ([]corev1.ServicePort, error) {
 					return []corev1.ServicePort{
 						{
-							Name: mindxdlv1.DefaultPortName,
+							Name: api.DefaultPortName,
 							Port: fakePort,
 						},
 					}, nil

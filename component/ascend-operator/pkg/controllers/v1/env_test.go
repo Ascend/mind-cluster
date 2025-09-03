@@ -78,7 +78,7 @@ func TestSetInferEnv(t *testing.T) {
 			convey.ShouldBeNil(podTemp.Spec.Containers[0].Env)
 		})
 		podTemp.Spec.Containers[0] = corev1.Container{
-			Name: mindxdlv1.DefaultContainerName,
+			Name: api.DefaultContainerName,
 		}
 		convey.Convey("02-rType is worker, scheduler host equal ei.ip", func() {
 			ei.job.SetLabels(map[string]string{
@@ -101,7 +101,7 @@ func fakeExpectEnvsForSetCommonEnv02() []corev1.EnvVar {
 
 func fakeExpectEnvsForSetCommonEnv03() []corev1.EnvVar {
 	return []corev1.EnvVar{
-		fakeRefEnv(ascendVisibleDevicesEnv, ascend910DownwardAPI),
+		fakeRefEnv(api.AscendVisibleDevicesEnv, ascend910DownwardAPI),
 		{Name: taskIDEnvKey, Value: fakeTaskID},
 		{Name: mindxServerIPEnv, Value: ""},
 		{Name: hostNetwork, Value: fakeHostNetwork},
@@ -121,7 +121,7 @@ func TestSetCommonEnv(t *testing.T) {
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
 		})
 		podTemp.Spec.Containers[0] = corev1.Container{
-			Name: mindxdlv1.DefaultContainerName,
+			Name: api.DefaultContainerName,
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					ascend910vir2c: resource.MustParse(chipsPerNode),
@@ -172,7 +172,7 @@ func TestSetMindSporeEnv(t *testing.T) {
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
 		})
 		podTemp.Spec.Containers[0] = corev1.Container{
-			Name: mindxdlv1.DefaultContainerName,
+			Name: api.DefaultContainerName,
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					ascend910: resource.MustParse(chipsPerNode),
@@ -217,7 +217,7 @@ func TestSetPytorchEnv(t *testing.T) {
 			convey.ShouldBeNil(podTemp.Spec.Containers[0].Env)
 		})
 		podTemp.Spec.Containers[0] = corev1.Container{
-			Name: mindxdlv1.DefaultContainerName,
+			Name: api.DefaultContainerName,
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					ascend910: resource.MustParse(chipsPerNode),
@@ -258,7 +258,7 @@ func TestSetTensorflowEnv(t *testing.T) {
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldBeNil)
 		})
 		podTemp.Spec.Containers[0] = corev1.Container{
-			Name: mindxdlv1.DefaultContainerName,
+			Name: api.DefaultContainerName,
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					ascend910: resource.MustParse(chipsPerNode),
@@ -294,7 +294,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: ""}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
-			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		convey.So(len(pod.Spec.Containers[0].Env), convey.ShouldEqual, 0)
 	})
@@ -303,7 +303,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
-			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
@@ -316,7 +316,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
-			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
 		addProcessRecoverEnv(pi, pod, 0, api.PytorchFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
@@ -327,7 +327,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
 			api.RecoverStrategyKey: api.RecoverStrategy + "," + api.RetryStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
-			{Name: mindxdlv1.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,

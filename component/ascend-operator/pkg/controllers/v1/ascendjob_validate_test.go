@@ -20,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	_ "ascend-operator/pkg/testtool"
 )
@@ -201,7 +202,7 @@ func TestJobTotalRequest(t *testing.T) {
 					Replicas: &replicas,
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{{Name: mindxdlv1.DefaultContainerName}},
+							Containers: []corev1.Container{{Name: api.DefaultContainerName}},
 						},
 					},
 				},
@@ -295,7 +296,7 @@ func TestCheckReplicaSpecs02(t *testing.T) {
 		spec.Replicas = newReplicas(1)
 		ct := newCommonContainer()
 		ct.Image = "xxx"
-		ct.Name = mindxdlv1.DefaultContainerName
+		ct.Name = api.DefaultContainerName
 		convey.Convey("06-pytorch  without leader replicas should return error", func() {
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
@@ -313,7 +314,7 @@ func TestCheckReplicaSpecs03(t *testing.T) {
 		specs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
 		ct := newCommonContainer()
 		ct.Image = "xxx"
-		ct.Name = mindxdlv1.DefaultContainerName
+		ct.Name = api.DefaultContainerName
 		spec.Template.Spec.Containers[0] = ct
 		specs[mindxdlv1.ReplicaTypeWorker] = spec
 		frame := mindxdlv1.MindSporeFrameworkName
@@ -350,7 +351,7 @@ func TestValidateContainer(t *testing.T) {
 			convey.So(err, convey.ShouldResemble, &validateError{
 				reason: "ContainerError",
 				message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-					mindxdlv1.DefaultContainerName, rtype),
+					api.DefaultContainerName, rtype),
 			})
 		})
 		convey.Convey("02-container without setting image should return nil", func() {
@@ -369,7 +370,7 @@ func TestValidateContainer(t *testing.T) {
 			convey.So(err, convey.ShouldResemble, &validateError{
 				reason: "ContainerError",
 				message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-					mindxdlv1.DefaultContainerName, rtype),
+					api.DefaultContainerName, rtype),
 			})
 		})
 	})
@@ -474,7 +475,7 @@ func TestGetReplicaSpecRequestRes(t *testing.T) {
 			convey.So(res, convey.ShouldEqual, 0)
 		})
 		convey.Convey("03-spec with default container should return 1 npu", func() {
-			container.Name = mindxdlv1.DefaultContainerName
+			container.Name = api.DefaultContainerName
 			spec.Template.Spec.Containers[0] = container
 			res := getReplicaSpecRequestRes(spec)
 			convey.So(res, convey.ShouldEqual, 1)

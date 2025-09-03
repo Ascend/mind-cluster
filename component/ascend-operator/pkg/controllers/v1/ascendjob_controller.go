@@ -74,7 +74,7 @@ func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconci
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		apiReader:     mgr.GetAPIReader(),
-		recorder:      mgr.GetEventRecorderFor(controllerName),
+		recorder:      mgr.GetEventRecorderFor(api.ControllerName),
 		versions:      make(map[types.UID]int32),
 		backoffLimits: make(map[types.UID]int32),
 		rtGenerators:  make(map[types.UID]generator.RankTableGenerator),
@@ -137,15 +137,15 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	ascendjob := &mindxdlv1.AscendJob{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
-			hwlog.RunLog.Debugf("unable to fetch AscendJob<%s>, err: %s", req.NamespacedName, err)
+			hwlog.RunLog.Debugf("unable to fetch Job<%s>, err: %s", req.NamespacedName, err)
 		} else {
-			hwlog.RunLog.Errorf("unable to fetch AscendJob<%s>, err: %s", req.NamespacedName, err)
+			hwlog.RunLog.Errorf("unable to fetch Job<%s>, err: %s", req.NamespacedName, err)
 		}
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	if err := r.validateJob(ascendjob); err != nil {
-		hwlog.RunLog.Errorf("AscendJob<%s> failed validation, err: %v", req.NamespacedName, err)
+		hwlog.RunLog.Errorf("Job<%s> failed validation, err: %v", req.NamespacedName, err)
 		return ctrl.Result{}, r.UpdateJobStatusInApiServer(ascendjob, &ascendjob.Status)
 	}
 
@@ -165,7 +165,7 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if k8serr.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
 		}
-		hwlog.RunLog.Warnf("Reconcile AscendJob<%s> failed err: %s", req.NamespacedName, err)
+		hwlog.RunLog.Warnf("Reconcile Job<%s> failed err: %s", req.NamespacedName, err)
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
@@ -336,7 +336,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 		if !ok {
 			return true
 		}
-		msg := fmt.Sprintf("AscendJob %s is create.", e.Object.GetName())
+		msg := fmt.Sprintf("Job %s is create.", e.Object.GetName())
 		hwlog.RunLog.Info(msg)
 		err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "AscendCreated", msg)
 		if err != nil {
@@ -353,7 +353,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 		}
 		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
 			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
-			hwlog.RunLog.Infof("create rtGenerator for frame %s ascendJob %s", frame, ascendJob.Name)
+			hwlog.RunLog.Infof("create rtGenerator for frame %s Job %s", frame, ascendJob.Name)
 		}
 		return true
 	}
@@ -387,7 +387,7 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 		if !ok {
 			return false
 		}
-		msg := fmt.Sprintf("AscendJob %s is deleted.", e.Object.GetName())
+		msg := fmt.Sprintf("Job %s is deleted.", e.Object.GetName())
 		hwlog.RunLog.Info(msg)
 		delete(r.versions, ascendJob.UID)
 		delete(r.backoffLimits, ascendJob.UID)
@@ -426,12 +426,12 @@ func (r *ASJobReconciler) onPodDeleteFunc() func(event.DeleteEvent) bool {
 
 // ControllerName get controller name
 func (r *ASJobReconciler) ControllerName() string {
-	return controllerName
+	return api.ControllerName
 }
 
 // GetAPIGroupVersionKind get api group version kind
 func (r *ASJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return mindxdlv1.GroupVersion.WithKind(mindxdlv1.Kind)
+	return mindxdlv1.GroupVersion.WithKind(api.AscendJobKind)
 }
 
 // GetAPIGroupVersion get api group version
@@ -460,9 +460,9 @@ func (r *ASJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Ob
 	err := r.apiReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			hwlog.RunLog.Warnf("AscendJob<%s/%s> not found, err: %s", namespace, name, err)
+			hwlog.RunLog.Warnf("Job<%s/%s> not found, err: %s", namespace, name, err)
 		} else {
-			hwlog.RunLog.Errorf("failed to get AscendJob<%s/%s> from api-server. err: %s", namespace, name, err)
+			hwlog.RunLog.Errorf("failed to get Job<%s/%s> from api-server. err: %s", namespace, name, err)
 		}
 		return nil, err
 	}
@@ -473,7 +473,7 @@ func (r *ASJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Ob
 func (r *ASJobReconciler) DeleteJob(job interface{}) error {
 	ascendjob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return fmt.Errorf("%v is not a type of AscendJob", ascendjob)
+		return fmt.Errorf("%v is not a type of Job", ascendjob)
 	}
 
 	if err := r.Delete(context.Background(), ascendjob); err != nil {
@@ -494,11 +494,11 @@ func (r *ASJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus 
 	}
 	ascendjob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return fmt.Errorf("%v is not a type of AscendJob", ascendjob)
+		return fmt.Errorf("%v is not a type of Job", ascendjob)
 	}
 	startTime := time.Now()
 	defer func() {
-		hwlog.RunLog.Infof("Finished updating AscendJob Status %q (%v)",
+		hwlog.RunLog.Infof("Finished updating Job Status %q (%v)",
 			ascendjob.Name, time.Since(startTime))
 	}()
 
@@ -516,12 +516,12 @@ func (r *ASJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.Po
 
 // GetDefaultContainerName Get default container name
 func (r *ASJobReconciler) GetDefaultContainerName() string {
-	return mindxdlv1.DefaultContainerName
+	return api.DefaultContainerName
 }
 
 // GetDefaultContainerPortName get default container port name
 func (r *ASJobReconciler) GetDefaultContainerPortName() string {
-	return mindxdlv1.DefaultPortName
+	return api.DefaultPortName
 }
 
 // IsMasterRole check whether the role is master

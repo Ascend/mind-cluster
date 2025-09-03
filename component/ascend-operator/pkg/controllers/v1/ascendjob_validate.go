@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
@@ -192,7 +193,7 @@ func validateContainer(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *
 					rType),
 			}
 		}
-		if container.Name != mindxdlv1.DefaultContainerName {
+		if container.Name != api.DefaultContainerName {
 			continue
 		}
 		hasDefaultContainer = true
@@ -205,7 +206,7 @@ func validateContainer(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *
 	return &validateError{
 		reason: "ContainerError",
 		message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-			mindxdlv1.DefaultContainerName, rType),
+			api.DefaultContainerName, rType),
 	}
 }
 
@@ -267,7 +268,7 @@ func jobTotalRequest(specs map[commonv1.ReplicaType]*commonv1.ReplicaSpec) int {
 
 func getReplicaSpecRequestRes(spec *commonv1.ReplicaSpec) int {
 	for _, container := range spec.Template.Spec.Containers {
-		if container.Name != mindxdlv1.DefaultContainerName {
+		if container.Name != api.DefaultContainerName {
 			continue
 		}
 		return getContainerResourceReq(container)

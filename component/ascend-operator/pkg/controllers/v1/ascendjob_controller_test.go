@@ -249,7 +249,7 @@ func newCommonContainer() corev1.Container {
 		Name: "test",
 		Ports: []corev1.ContainerPort{
 			{
-				Name:          mindxdlv1.DefaultPortName,
+				Name:          api.DefaultPortName,
 				ContainerPort: fakePort,
 			},
 		},
@@ -554,7 +554,7 @@ func TestOnPodDeleteFunc(t *testing.T) {
 		convey.Convey("05-pod with valid version labels should return true", func() {
 			pod.OwnerReferences = []metav1.OwnerReference{metav1.OwnerReference{
 				APIVersion: mindxdlv1.GroupVersion.String(),
-				Kind:       mindxdlv1.Kind,
+				Kind:       api.AscendJobKind,
 				Name:       "fake-job",
 				UID:        job.UID,
 				Controller: &trueValue,

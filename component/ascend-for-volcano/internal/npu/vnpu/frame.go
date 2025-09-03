@@ -64,7 +64,7 @@ func (tp *VirtualNPU) GetTaskResource(task *api.TaskInfo, node plugin.NPUNode) (
 	cpuLevel := tp.getVTaskLevel(task)
 
 	virTemplate := getResTemplateFromTaskSettingAndChipType(coreNum, dvpp, node.ChipType)
-	if node.ChipKind == plugin.Ascend310P {
+	if node.ChipKind == util.Ascend310P {
 		virTemplate = getResTemplateFromTaskSetting(coreNum, cpuLevel, dvpp)
 	}
 	if virTemplate == "" {

@@ -20,6 +20,7 @@ Package card310px2 is using for HuaWei 300I Duo Ascend pin affinity schedule.
 package card310px2
 
 import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -36,7 +37,7 @@ const (
 	affScore4
 
 	// SchedulerName card310px2 plugin name
-	SchedulerName  = "huawei.com/Ascend310Pduocard"
+	SchedulerName  = util.HwPreName + util.Ascend310P + "duocard"
 	maxNodeNPUNum  = 32
 	maxCardNPUNum  = 2
 	constNPUWeight = 8.0

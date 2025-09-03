@@ -155,3 +155,20 @@ const (
 	// AscendDeviceInfo
 	AscendDeviceInfo = "ASCEND_VISIBLE_DEVICES"
 )
+
+const (
+	// AscendJobKind is the kind name
+	AscendJobKind = "AscendJob"
+	// DefaultContainerName the default container name for AscendJob.
+	DefaultContainerName = "ascend"
+	// DefaultPortName is name of the port used to communicate between other process.
+	DefaultPortName = "ascendjob-port"
+	// ControllerName is the name of controller,used in log.
+	ControllerName = "ascendjob-controller"
+	// OperatorName name of operator
+	OperatorName = "ascend-operator"
+	// LogModuleName name of log module
+	LogModuleName = "hwlog"
+	// OperatorLogFilePath Operator log file name
+	OperatorLogFilePath = "/var/log/mindx-dl/ascend-operator/ascend-operator.log"
+)

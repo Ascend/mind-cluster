@@ -39,7 +39,7 @@ import (
 const (
 	fakeNodeName = "node0"
 	annoCards    = "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
-	unhealthyNPU = "huawei.com/Ascend910-Unhealthy"
+	unhealthyNPU = util.HwPreName + util.Ascend910 + "-Unhealthy"
 )
 
 // FakeSchedulerJobAttrByJob fake scheduler attr by job

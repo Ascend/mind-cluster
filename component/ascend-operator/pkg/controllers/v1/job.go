@@ -44,7 +44,7 @@ func (r *ASJobReconciler) ReconcileJobs(
 	if r == nil {
 		return errors.New("nil pointer")
 	}
-	hwlog.RunLog.Debugf("start reconcile AscendJob, job status: %v, runpolicy: %v", jobStatus, runPolicy)
+	hwlog.RunLog.Debugf("start reconcile Job, job status: %v, runpolicy: %v", jobStatus, runPolicy)
 	ji, err := r.newJobInfo(job, replicas, &jobStatus, runPolicy)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (r *ASJobReconciler) UpdateJobStatus(
 
 	ascendJob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return fmt.Errorf("%v is not a type of AscendJob", ascendJob)
+		return fmt.Errorf("%v is not a type of Job", ascendJob)
 	}
 	if jobStatus.StartTime == nil {
 		now := metav1.Now()
@@ -140,7 +140,7 @@ func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatu
 	var ci = &conditionInfo{
 		condType: commonv1.JobFailed,
 		reason:   util.JobFailedReason,
-		message: fmt.Sprintf("AscendJob <%s/%s> has failed because has pod failed.", job.Namespace,
+		message: fmt.Sprintf("Job <%s/%s> has failed because has pod failed.", job.Namespace,
 			job.Name),
 	}
 
@@ -151,14 +151,14 @@ func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatu
 	if rt, err := r.getJobRemainRetryTimes(job); err != nil {
 		return ci
 	} else if rt < 1 {
-		ci.message = fmt.Sprintf("AscendJob <%s/%s> has failed because pod failed and remain retry times is 0.",
+		ci.message = fmt.Sprintf("Job <%s/%s> has failed because pod failed and remain retry times is 0.",
 			job.Namespace, job.Name)
 		return ci
 	} else {
 		return &conditionInfo{
 			condType: commonv1.JobRestarting,
 			reason:   util.JobRestartingReason,
-			message: fmt.Sprintf("AscendJob <%s/%s> is unconditional retry job and remain retry times is <%d>.",
+			message: fmt.Sprintf("Job <%s/%s> is unconditional retry job and remain retry times is <%d>.",
 				job.Namespace, job.Name, rt),
 		}
 	}
@@ -181,10 +181,10 @@ func (r *ASJobReconciler) updateSpecStatus(ascendJob *mindxdlv1.AscendJob,
 		}
 
 		r.recorder.Event(ascendJob, corev1.EventTypeNormal, ci.reason, ci.message)
-		hwlog.RunLog.Infof("Append ascendJob<%s/%s> condition: %#v", ascendJob.Namespace, ascendJob.Name, ci)
+		hwlog.RunLog.Infof("Append Job<%s/%s> condition: %#v", ascendJob.Namespace, ascendJob.Name, ci)
 		err := util.UpdateJobConditions(jobStatus, ci.condType, ci.reason, ci.message)
 		if err != nil {
-			hwlog.RunLog.Errorf("Append ascendJob<%s-%s> condition err: %v",
+			hwlog.RunLog.Errorf("Append Job<%s-%s> condition err: %v",
 				ascendJob.Namespace, ascendJob.Name, err)
 			return err
 		}
@@ -205,7 +205,7 @@ func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.AscendJob, status *comm
 		return updateFunc(&conditionInfo{
 			condType: commonv1.JobRunning,
 			reason:   util.JobRunningReason,
-			message:  fmt.Sprintf("AscendJob %s/%s is running.", job.Namespace, job.Name),
+			message:  fmt.Sprintf("Job %s/%s is running.", job.Namespace, job.Name),
 		})
 	}
 	// when elastic-training, only have pending and succeed pods
@@ -213,7 +213,7 @@ func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.AscendJob, status *comm
 		return updateFunc(&conditionInfo{
 			condType: commonv1.JobSucceeded,
 			reason:   util.JobRunningReason,
-			message:  fmt.Sprintf("AscendJob<%s-%s> successfully completed.", job.Namespace, job.Name),
+			message:  fmt.Sprintf("Job<%s-%s> successfully completed.", job.Namespace, job.Name),
 		})
 	}
 	return nil
@@ -225,13 +225,13 @@ func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
 	st := &commonv1.ReplicaStatus{}
 	for rtype, spec := range replicas {
 		status := jobStatus.ReplicaStatuses[rtype]
-		hwlog.RunLog.Infof("AscendJob=%s/%s, ReplicaType=%s expected=%d, running=%d, failed=%d",
+		hwlog.RunLog.Infof("Job=%s/%s, ReplicaType=%s expected=%d, running=%d, failed=%d",
 			ascendJob.Namespace, ascendJob.Name, rtype, *(spec.Replicas)-status.Succeeded, status.Active, status.Failed)
 		st.Succeeded += status.Succeeded
 		st.Active += status.Active
 		st.Failed += status.Failed
 	}
-	hwlog.RunLog.Infof("count ascendJob<%s/%s> status<%#v>", ascendJob.Namespace, ascendJob.Name, st)
+	hwlog.RunLog.Infof("count Job<%s/%s> status<%#v>", ascendJob.Namespace, ascendJob.Name, st)
 	return st
 }
 

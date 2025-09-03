@@ -142,7 +142,7 @@ func getServiceIpAndPort(service *corev1.Service) (string, string) {
 	}
 	schedulerPort := ""
 	for _, port := range service.Spec.Ports {
-		if port.Name == mindxdlv1.DefaultPortName {
+		if port.Name == api.DefaultPortName {
 			schedulerPort = strconv.Itoa(int(port.Port))
 			break
 		}

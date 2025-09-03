@@ -20,6 +20,8 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 
 package plugin
 
+import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+
 const (
 	// TorNodeCMName the Name of tor info configmap
 	TorNodeCMName = "basic-tor-node-cm"
@@ -84,18 +86,17 @@ const (
 )
 
 const (
-	chipKind    = "910"
 	chipTypeKey = "node.kubernetes.io/npu.chip.name"
 	// ChipTypeB1 chip type 910B1
-	ChipTypeB1 = chipKind + "B1"
+	ChipTypeB1 = util.ChipKind + "B1"
 	// ChipTypeB2C chip type 910B2C
-	ChipTypeB2C = chipKind + "B2C"
+	ChipTypeB2C = util.ChipKind + "B2C"
 	// ChipTypeB2 chip type 910 B2
-	ChipTypeB2 = chipKind + "B2"
+	ChipTypeB2 = util.ChipKind + "B2"
 	// ChipTypeB3 chip type 910B3
-	ChipTypeB3 = chipKind + "B3"
+	ChipTypeB3 = util.ChipKind + "B3"
 	// ChipTypeB4 chip type 910B4
-	ChipTypeB4 = chipKind + "B4"
+	ChipTypeB4 = util.ChipKind + "B4"
 )
 
 // the temp of 910B1/910B2C
