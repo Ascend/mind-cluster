@@ -172,13 +172,13 @@ func TestSendHeartBeatMsg(t *testing.T) {
 			lock.Unlock()
 			return &common.Ack{}, nil
 		})
-		defer patches.Reset()
 		go sendHeartBeatMsg(ctx)
 		time.Sleep(time.Second)
 		lock.Lock()
 		assert.True(t, called)
 		lock.Unlock()
 		cancel()
+		patches.Reset()
 	})
 }
 

@@ -206,7 +206,7 @@ func TestPullMsgPluginError(t *testing.T) {
 	assert.Equal(t, []infrastructure.Msg{}, msgs)
 }
 
-func TestInit_Success(t *testing.T) {
+func TestInitSuccess(t *testing.T) {
 	handler := NewPluginHandler()
 	err := handler.Init()
 	assert.NoError(t, err)

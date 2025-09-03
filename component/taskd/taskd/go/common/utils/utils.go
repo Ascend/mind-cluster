@@ -26,6 +26,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
 )
 
@@ -251,7 +252,7 @@ func ProfilingCmdToBizCode(cmd constant.ProfilingDomainCmd) int32 {
 	return constant.ProfilingAllCloseCmdCode
 }
 
-// GetClusterdAddr get clusterD svc host
+// GetClusterdAddr get ClusterD addr
 func GetClusterdAddr() (string, error) {
 	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)
 	if proxyIp == constant.LocalProxyEnableOn {
@@ -263,4 +264,23 @@ func GetClusterdAddr() (string, error) {
 		return "", err
 	}
 	return ipFromEnv + constant.ClusterdPort, nil
+}
+
+// GetFaultRanksMapByList get fault rank map by list
+func GetFaultRanksMapByList(faultRanks []*pb.FaultRank) map[int]int {
+	ranksMap := make(map[int]int)
+	for _, faultRank := range faultRanks {
+		rankIdInt, err := strconv.Atoi(faultRank.RankId)
+		if err != nil {
+			hwlog.RunLog.Warnf("convert rankId %s to int failed", faultRank.RankId)
+			continue
+		}
+		typeInt, err := strconv.Atoi(faultRank.FaultType)
+		if err != nil {
+			hwlog.RunLog.Warnf("convert type %s to int failed", faultRank.FaultType)
+			continue
+		}
+		ranksMap[rankIdInt] = typeInt
+	}
+	return ranksMap
 }
