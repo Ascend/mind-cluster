@@ -1527,7 +1527,7 @@ func (ctl *EventController) listenScheduleResult() {
 	}
 	pgRunning := true
 	start := time.Now().Unix()
-	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherPodChanged() {
+	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if ctl.jobCanceled {
 			return
