@@ -83,7 +83,7 @@ func shouldReportFault(level string, faultTime int64, jobId string, deviceName s
 	}
 
 	if jobId == "" {
-		hwlog.RunLog.Debugf("mindie job does not exist, report fault")
+		hwlog.RunLog.Debugf("mindie job does not exist, report fault:%s", faultCode)
 		return true
 	}
 
@@ -100,7 +100,7 @@ func shouldReportFault(level string, faultTime int64, jobId string, deviceName s
 	}
 
 	hwlog.RunLog.Infof("L2 fault during less than 10s, mindie job: %s has subscribed grpc interface and "+
-		"using fault npu: %s, should report fault: %s", jobId, deviceName, faultCode)
+		"using fault npu: %s, should not report fault: %s", jobId, deviceName, faultCode)
 	return false
 }
 
