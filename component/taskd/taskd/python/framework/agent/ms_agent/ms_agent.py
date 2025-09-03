@@ -21,7 +21,7 @@ from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid
 from taskd.python.toolkit.constants import constants
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.base_agent.agent_network import init_network_client
-from taskd.python.framework.agent.base_agent.base_agent import BaseAgent, REPORT_CODE
+from taskd.python.framework.agent.base_agent.base_agent import BaseAgent
 from taskd.python.framework.common.type import AgentReportInfo
 
 
@@ -116,7 +116,7 @@ class MsAgent(BaseAgent):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
             return
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
-        self.send_message_to_manager('STATUS', REPORT_CODE, report_info)
+        self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info)
         self.local_fault_rank = fault_ranks
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
         return
@@ -133,7 +133,7 @@ class MsAgent(BaseAgent):
     def exit_agent(self, msg):
         run_log.info(f'receive {msg.msg_type} command, start to exit agent')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
-        self.send_message_to_manager('STATUS', REPORT_CODE, AgentReportInfo())
+        self.send_message_to_manager('STATUS', constants.REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):

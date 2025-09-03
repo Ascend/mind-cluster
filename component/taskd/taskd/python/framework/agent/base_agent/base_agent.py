@@ -25,6 +25,8 @@ from taskd.python.toolkit.fault_checker.fault_check import grace_exit_pids, stop
 from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message, \
     get_msg_network_instance
 from taskd.python.framework.common.type import MsgBody, MessageInfo
+from taskd.python.toolkit.constants import constants
+
 
 
 DEFAULT_DST = {
@@ -34,7 +36,6 @@ DEFAULT_DST = {
 }
 
 
-REPORT_CODE = 601
 DEFAULT_MSG_TYPE = "DEFAULT"
 STATUS_MSG_TYPE = "STATUS"
         
@@ -76,12 +77,12 @@ class BaseAgent:
         raise NotImplementedError
 
     def handle_message(self):
-        try:
-            item = self.msg_queue.get_nowait()
-        except queue.Empty:
-            run_log.debug('msg_queue is empty')
-            return
-        self.command_map.get(item.MsgType)(item)
+        while not self.msg_queue.empty():    
+            try:
+                item = self.msg_queue.get_nowait()
+            except queue.Empty:
+                return
+            self.command_map.get(item.code)(item)
 
     def grace_exit(self, msg):
         run_log.info(f'receive {msg.msg_type} command, start to grace exit workers')
@@ -94,7 +95,10 @@ class BaseAgent:
             
     
     def send_message_to_manager(self, command, code, report_info):
-        report_json = json.dumps(asdict(report_info))
+        if isinstance(report_info, str):
+            report_json = report_info
+        else:
+            report_json = json.dumps(asdict(report_info))
         msg_body = MsgBody(
             msg_type=command,
             code=code,
@@ -108,12 +112,12 @@ class BaseAgent:
             dst=DEFAULT_DST,
             body=body_json
         )
-        network_send_message(msg_info)
+        network_send_message(msg_info, code)
             
     def check_network(self):
         time_cost = 0
         while True:
-            if time_cost > 60:
+            if time_cost > constants.INIT_NETWORK_TIMEOUT:
                 run_log.error('waiting for message manager timeout')
                 raise ValueError("failed to initialized agent network, initialization message_manager timeout")
             if get_msg_network_instance() is None:

@@ -23,6 +23,7 @@ from venv import logger
 from taskd.python.framework.agent.base_agent.agent_network import AgentMessageManager, init_network_client, init_message_manager, get_message_manager
 from taskd.python.framework.common.type import MsgBody, MessageInfo, Position, DEFAULT_BIZTYPE, NetworkConfig
 from taskd.python.toolkit.constants.constants import SEND_RETRY_TIMES
+from taskd.python.toolkit.constants import constants
 
 class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
@@ -120,10 +121,9 @@ class TestAgentMessageManager(unittest.TestCase):
                               body='{}')
         self.mock_lib.SyncSendMessage.return_value = 0
         
-        agent.send_message(test_msg)
+        agent.send_message(test_msg, 1)
         
         self.mock_lib.SyncSendMessage.assert_called_once()
-        mock_log.info.assert_any_call(f'agent send message success, msg: {test_msg.uuid}')
         mock_sleep.assert_not_called()
 
     @patch('taskd.python.framework.agent.base_agent.agent_network.time.sleep')
@@ -214,49 +214,34 @@ class TestAgentMessageManager(unittest.TestCase):
         exit_msg = json.dumps({
             "body": json.dumps({
                 "msg_type": "exit",
-                "code": 0,
+                "code": constants.EXITAGENTCODE,
                 "message": "",
                 "extension": {}
             })
         }).encode('utf-8')
-        
-        test_buffer = ctypes.create_string_buffer(test_msg)
+
         exit_buffer = ctypes.create_string_buffer(exit_msg)
         
         self.mock_lib.ReceiveMessageC.side_effect = [
-            test_buffer,
             exit_buffer,
-            None
+            RuntimeError()
         ]
         agent._parse_msg = MagicMock(side_effect=[
-            MsgBody(msg_type="TEST", code=200, message="", extension={}),
             MsgBody(msg_type="exit", code=0, message="", extension={})
         ])
+        try:
+            agent.receive_message()
+        except Exception as e:
+            logger.error(f"receive message failed: {e}")
+            pass
         
-        agent.receive_message()
-        
-        self.assertEqual(self.mock_queue.put.call_count, 2)
+        self.assertEqual(self.mock_queue.put.call_count, 1)
         self.mock_queue.put.assert_has_calls([
-            call(MsgBody(msg_type="TEST", code=200, message="", extension={})),
             call(MsgBody(msg_type="exit", code=0, message="", extension={}))
         ])
-        
-        self.mock_lib.FreeCMemory.assert_any_call(test_buffer)
+
         self.mock_lib.FreeCMemory.assert_any_call(exit_buffer)
-        self.mock_lib.DestroyNetwork.assert_called_once_with(agent.get_network_instance())
-        
-    @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
-    def test_receive_exit_message(self, mock_cython):
-        mock_cython.lib = self.mock_lib
-        
-        agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        exit_msg = MsgBody(msg_type="exit", code=0, message="", extension={})
-        agent._parse_msg = MagicMock(return_value=exit_msg)
-        self.mock_lib.ReceiveMessageC.return_value = ctypes.create_string_buffer(b'{"Body": {}}')
-        
-        agent.receive_message()
-        
-        self.mock_lib.DestroyNetwork.assert_called_once_with(agent.get_network_instance())
+
 
 class TestAgentNetworkFunctions(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.threading.Thread')

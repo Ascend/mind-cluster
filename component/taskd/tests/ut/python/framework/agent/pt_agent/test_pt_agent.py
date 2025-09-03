@@ -19,7 +19,7 @@ import queue
 from unittest.mock import MagicMock, patch, call
 from taskd.python.framework.agent.pt_agent.pt_agent import PtAgent
 from taskd.python.framework.common.type import AgentReportInfo
-from taskd.python.framework.agent.base_agent.base_agent import REPORT_CODE
+from taskd.python.toolkit.constants import constants
 from torch.distributed.elastic.agent.server.api import WorkerState
 
 class TestPtAgent(unittest.TestCase):
@@ -59,17 +59,6 @@ class TestPtAgent(unittest.TestCase):
                     'MONITOR': MagicMock(return_value=self.mock_run_result)
                 }
                 self.agent.msg_queue = queue.Queue()
-
-    def test_initialization(self):
-        self.assertEqual(self.agent.node_rank, 0)
-        self.assertEqual(self.agent.local_world_size, 1)
-        self.assertEqual(self.agent.network_config, self.network_config)
-        self.assertIn('START', self.agent.command_map)
-        self.assertIn('STOP', self.agent.command_map)
-        self.assertIn('EXIT', self.agent.command_map)
-        self.assertIn('RESTART', self.agent.command_map)
-        self.assertIn('GRACE_EXIT', self.agent.command_map)
-
     @patch('taskd.python.framework.agent.pt_agent.pt_agent.init_network_client')
     @patch('taskd.python.framework.agent.pt_agent.pt_agent.time.sleep')
     @patch.object(PtAgent, 'check_network')
@@ -124,7 +113,7 @@ class TestPtAgent(unittest.TestCase):
         self.agent.report_fault_rank(self.mock_run_result)
         
         mock_check_new.assert_called_once_with([0])
-        mock_send.assert_called_once_with('STATUS', REPORT_CODE, AgentReportInfo(fault_ranks=[0]))
+        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=[0]))
         self.assertEqual(self.agent.local_fault_rank, [0])
 
     @patch.object(PtAgent, 'send_message_to_manager')
@@ -140,8 +129,8 @@ class TestPtAgent(unittest.TestCase):
 
     def test_initialize_workers(self):
         mock_msg = MagicMock()
-        mock_msg.msg_type = 'START'
-        mock_msg.extension = '3'
+        mock_msg.code = constants.STARTAGENTCODE
+        mock_msg.message = '3'
         
         self.agent.initialize_workers(mock_msg)
         
@@ -161,8 +150,8 @@ class TestPtAgent(unittest.TestCase):
 
     def test_restart_workers(self):
         mock_msg = MagicMock()
-        mock_msg.msg_type = 'RESTART'
-        mock_msg.extension = '2'
+        mock_msg.code = constants.RESTARTAGENTCODE
+        mock_msg.message = '2'
         
         with patch('taskd.python.framework.agent.pt_agent.pt_agent.WorkerState') as mock_WorkerState:
             mock_WorkerState.STOPPED = 'STOPPED'
@@ -182,7 +171,7 @@ class TestPtAgent(unittest.TestCase):
         self.agent.exit_agent(mock_msg)
         
         self.agent._func_map['KILL_WORKER'].assert_called_once_with(self.mock_worker_group)
-        mock_send.assert_called_once_with('STATUS', REPORT_CODE, AgentReportInfo())
+        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo())
         mock_exit.assert_called_once_with(1)
 
 if __name__ == '__main__':

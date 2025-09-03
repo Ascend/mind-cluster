@@ -45,3 +45,23 @@ type ProfilingSwitch struct {
 type ProfilingWorkerState struct {
 	state string
 }
+
+// ControllerMessage define the message from controller
+type ControllerMessage struct {
+	// Actions indicate the action from clusterd
+	Actions []string `json:"actions,omitempty"`
+	// Action indicate the action from controller
+	Action string `json:"action,omitempty"`
+	// Code indicate the controller return code
+	Code int `json:"code,omitempty"`
+	// msg indicate the controller return message
+	Msg string `json:"msg,omitempty"`
+	// Strategy indicate the clusterd stratege
+	Strategy string `json:"strategy,omitempty"`
+	// Strategy_list indicate the controller strategies
+	StrategyList []string `json:"strategy_list,omitempty"`
+	// Fault_ranks indicate the fault ranks infomation
+	FaultRanks map[int]int `json:"fault_ranks,omitempty"`
+	// Params indicate the controller params
+	Params string `json:"params,omitempty"`
+}

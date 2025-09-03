@@ -70,16 +70,11 @@ class TestBaseAgent(unittest.TestCase):
         self.assertFalse(self.agent.check_new_fault([1, 2]))
         self.assertFalse(self.agent.check_new_fault([2, 1]))
 
-    def test_handle_message_with_empty_queue(self):
-        with patch('taskd.python.utils.log.run_log.debug') as mock_debug:
-            self.agent.handle_message()
-            mock_debug.assert_called_once_with('msg_queue is empty')
-
     def test_handle_message_with_valid_command(self):
         mock_command_func = MagicMock()
         self.agent.command_map = {"TEST_COMMAND": mock_command_func}
         test_msg = MagicMock()
-        test_msg.MsgType = "TEST_COMMAND"
+        test_msg.code = "TEST_COMMAND"
         self.agent.msg_queue.put(test_msg)
 
         self.agent.handle_message()

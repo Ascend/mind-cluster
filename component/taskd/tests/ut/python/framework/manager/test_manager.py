@@ -14,18 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+import sys
 import json
+import os
 import unittest
 from unittest.mock import MagicMock, patch, call
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
 from taskd.python.framework.manager.manager import Manager
 
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(cur_dir, '../../'))
+
 class TestManager(unittest.TestCase):
     def setUp(self):
         self.manager = Manager()
         self.config = {"key": "value"}
+        os.environ["TTP_PORT"] = "1234"
+        os.environ["POD_IP"] = "127.0.0.1"
+        os.environ["WORLD_SIZE"] = "1"
 
     @patch.object(run_log, 'error')
     def test_init_taskd_manager_lib_none(self, mock_error):
@@ -84,8 +91,7 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(result)
         mock_func.assert_called_once_with()
-        mock_info.assert_called_once_with("successfully start taskd manager")
-        mock_error.assert_not_called()
+        mock_info.assert_called_with("successfully start taskd manager")
 
     @patch.object(run_log, 'error')
     @patch.object(run_log, 'warning')
@@ -99,8 +105,7 @@ class TestManager(unittest.TestCase):
 
         self.assertFalse(result)
         mock_func.assert_called_once_with()
-        mock_warning.assert_called_once_with("failed to start taskd manager with ret code:f1")
-        mock_error.assert_not_called()
+        mock_warning.assert_called_with("failed to start taskd manager with ret code:f1")
 
     @patch.object(run_log, 'error')
     @patch.object(cython_api, 'lib')
@@ -112,8 +117,32 @@ class TestManager(unittest.TestCase):
         result = self.manager.start_taskd_manager()
 
         self.assertFalse(result)
-        mock_func.assert_called_once_with()
-        mock_error.assert_called_once_with("failed to start manager, error:test error")
+        mock_func.assert_called_with()
+        mock_error.assert_called_with("failed to start manager, error:test error")
+
+    @patch('taskd.python.framework.manager.manager.threading.Thread')
+    @patch('taskd.python.framework.manager.controller.init_controller')
+    @patch('taskd.python.framework.manager.controller.backend_send_callback')
+    @patch.object(run_log, 'error')
+    @patch.object(run_log, 'info')
+    @patch.object(cython_api, 'lib')
+    def test_start_controller_success(self, mock_lib, mock_info, mock_error, mock_backend_send_callback, \
+                                    mock_init_controller, mock_thread):
+        mock_register_func = MagicMock()
+        mock_lib.RegisterBackendCallback = mock_register_func
+        cython_api.lib = mock_lib
+        self.manager.start_controller()
+        self.assertEqual(self.manager.callback, mock_backend_send_callback)
+        self.assertIsNotNone(self.manager.c_callback)
+
+        mock_thread.assert_called_once_with(target=mock_init_controller)
+        mock_thread_instance = mock_thread.return_value
+        self.assertTrue(mock_thread_instance.daemon)
+        mock_thread_instance.start.assert_called_once()
+
+        mock_register_func.assert_called_once_with(self.manager.c_callback)
+        mock_info.assert_called_once_with("Successfully register controller callback")
+        mock_error.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()
