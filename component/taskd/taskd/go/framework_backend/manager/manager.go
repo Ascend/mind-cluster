@@ -62,6 +62,8 @@ type Config struct {
 	PluginDir string `json:"plugin_dir"`
 	// FaultRecover indicate the fault recover strategy
 	FaultRecover string `json:"fault_recover"`
+	// TaskDEnable indicate the taskd process enable
+	TaskDEnable string `json:"taskd_enable"`
 	// ClusterInfos indicate the information of cluster
 	ClusterInfos []ClusterInfo `json:"cluster_infos"`
 }
@@ -176,7 +178,10 @@ func (m *BaseManager) registerClusterD(retryTime time.Duration) {
 		return
 	}
 
-	go m.subscribeProcessManageSignal(conn)
+	if m.TaskDEnable == "on" {
+		go m.subscribeProcessManageSignal(conn)
+	}
+
 	go m.subscribeProfiling(conn, 0)
 	go m.subscribeSwitchNic(conn)
 	go m.subscribeStressTest(conn)

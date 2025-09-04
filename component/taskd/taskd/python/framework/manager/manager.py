@@ -35,9 +35,11 @@ class Manager:
         self.config = {}
 
     def init_taskd_manager(self, config: dict) -> bool:
+        if os.getenv(constants.PROCESS_RECOVER) == constants.SWITCH_ON:
+            config[constants.FAULT_RECOVER] = constants.SWITCH_ON
+        if os.getenv(constants.TASKD_PROCESS_ENABLE) == constants.SWITCH_ON:
+            config[constants.TASKD_ENABLE] = constants.SWITCH_ON
         self.config = config
-        if os.getenv(constants.PROCESS_RECOVER) == "on":
-            config[constants.FAULT_RECOVER] = "on"
         if cython_api.lib is None:
             run_log.error("the libtaskd.so has not been loaded")
             return False
@@ -62,7 +64,8 @@ class Manager:
             if start_taskd_manager_func is None:
                 run_log.error("start_taskd_manager: func StartTaskdManager has not been loaded from libtaskd.so")
                 return False
-            self.start_controller()
+            if self.config.get(constants.TASKD_ENABLE) == constants.SWITCH_ON:
+                self.start_controller()
             result = start_taskd_manager_func()
             if result == 0:
                 run_log.info(f"successfully start taskd manager")
