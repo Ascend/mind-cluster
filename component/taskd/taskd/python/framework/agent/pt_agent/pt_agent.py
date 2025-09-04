@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import json
 import time
 import queue
+from typing import Dict
 
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.base_agent.agent_network import init_network_client
@@ -23,11 +25,14 @@ from taskd.python.framework.agent.base_agent.base_agent import BaseAgent
 from taskd.python.framework.common.type import AgentReportInfo
 from taskd.python.toolkit.constants import constants
 try:
-    from torch.distributed.elastic.agent.server.api import WorkerState, RunResult
+    from torch.distributed.elastic.agent.server.api import WorkerState, RunResult, WorkerGroup
+    from torch.distributed.elastic.multiprocessing import PContext
 except ImportError:
     run_log.debug("torch not installed, please install torch to use pt_agent")
     WorkerState = None
     RunResult = None
+    PContext = None
+    WorkerGroup = None
 
 
 class PtAgent(BaseAgent):
@@ -47,6 +52,7 @@ class PtAgent(BaseAgent):
             constants.EXITAGENTCODE: self.exit_agent,
             constants.RESTARTAGENTCODE: self.restart_workers,
             constants.GRACEEXITAGENTCODE: self.grace_exit,
+            constants.RESTARTWORKERCODE: self.recover_in_place,
         }
         self.logger = logger
 
@@ -56,7 +62,7 @@ class PtAgent(BaseAgent):
         spec = self.worker_group.spec
         role = spec.role
         run_log.info("[%s] starting workers for entrypoint: %s", role, spec.get_entrypoint_name())
-        self._func_map.get('START_ALL_WORKER')(self.worker_group)
+        self.start_worker()
         self.update_agent_info()
         monitor_interval = spec.monitor_interval
 
@@ -128,3 +134,56 @@ class PtAgent(BaseAgent):
         self.worker_group.state = WorkerState.STOPPED
         self._func_map.get('START_ALL_WORKER')(self.worker_group)
         self.local_fault_rank = []
+
+    def recover_in_place(self, msg):
+        run_log.info(f'receive {msg.code} command, start to recover in place')
+        fault_ranks = json.loads(msg.message)
+        if fault_ranks is None:
+            run_log.error("fault_ranks is None")
+            return
+        try:
+            int_fault_ranks = [int(rank) for rank in fault_ranks]
+        except ValueError as e:
+            run_log.error(f"Convert fault_ranks to int failed: {e}")
+            return
+        run_log.info(f"fault_ranks is {int_fault_ranks}")
+        fault_workers = get_fault_workers(self.pt_instance._worker_group, int_fault_ranks)
+        self._func_map.get('RESTART')(fault_workers)
+        self.local_fault_rank = []
+
+    def start_worker(self):
+        time_use = 0
+        self.send_message_to_manager('STATUS', constants.RESTARTTIMESCODE,
+                                     str(self.pt_instance._remaining_restarts))
+        run_log.info(f"agent {self.node_rank} start worker, restart times is {self.pt_instance._remaining_restarts}")
+        while True:
+            try:
+                item = self.msg_queue.get_nowait()
+                if item.code == constants.STARTAGENTCODE:
+                    self.command_map.get(item.code)(item)
+                    break
+            except queue.Empty:
+                run_log.debug('msg_queue is empty')
+            time.sleep(1)
+            if time_use > constants.INIT_TIMEOUT:
+                raise RuntimeError("start_worker timeout")
+
+
+def get_pids(p_context_dict: Dict[int, PContext]) -> Dict[int, int]:
+    worker_ids: Dict[int, int] = {}
+    if len(p_context_dict) <= 0:
+        return worker_ids
+    for local_rank, pcontext in p_context_dict.items():
+        new_dict = {local_rank: v for v in pcontext.pids().values()}
+        worker_ids.update(new_dict)
+    return worker_ids
+
+
+def get_fault_workers(wg: WorkerGroup, global_rank: list) -> WorkerGroup:
+    new_wg = WorkerGroup(wg.spec)
+    new_wg.store = wg.store
+    new_wg.workers = {w for w in wg.workers if w.global_rank in global_rank}
+    new_wg.state = wg.state
+    new_wg.group_rank = wg.group_rank
+    new_wg.group_world_size = wg.group_world_size
+    return new_wg

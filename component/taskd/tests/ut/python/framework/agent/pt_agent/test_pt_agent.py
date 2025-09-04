@@ -59,6 +59,8 @@ class TestPtAgent(unittest.TestCase):
                     'MONITOR': MagicMock(return_value=self.mock_run_result)
                 }
                 self.agent.msg_queue = queue.Queue()
+                self.agent.start_worker = MagicMock()
+
     @patch('taskd.python.framework.agent.pt_agent.pt_agent.init_network_client')
     @patch('taskd.python.framework.agent.pt_agent.pt_agent.time.sleep')
     @patch.object(PtAgent, 'check_network')
@@ -73,7 +75,6 @@ class TestPtAgent(unittest.TestCase):
             
             mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue, self.logger)
             mock_check_net.assert_called_once()
-            self.agent._func_map['START_ALL_WORKER'].assert_called_once_with(self.mock_worker_group)
             mock_send.assert_has_calls([call('KEEP_ALIVE', 0, AgentReportInfo())])
             mock_handle.assert_called_once()
             mock_sleep.assert_called_once_with(1)
