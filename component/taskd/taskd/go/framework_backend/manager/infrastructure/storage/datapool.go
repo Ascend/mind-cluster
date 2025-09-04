@@ -36,6 +36,7 @@ type SnapShot struct {
 	AgentInfos   *AgentInfos
 	WorkerInfos  *WorkerInfos
 	ClusterInfos *ClusterInfos
+	MgrInfos     *MgrInfo
 }
 
 // MsgQueue the queue store message
@@ -167,6 +168,20 @@ func (d *DataPool) GetSnapShot() (*SnapShot, error) {
 	return d.Snapshot.deepCopy()
 }
 
+// UpdateMgr update mgr info in the data pool
+func (d *DataPool) UpdateMgr(mgrInfo *MgrInfo) error {
+	if d == nil || d.Snapshot == nil || d.Snapshot.MgrInfos == nil || d.Snapshot.MgrInfos.Status == nil {
+		return fmt.Errorf("mgr is not initialized")
+	}
+	err := d.Snapshot.MgrInfos.updateMgr(mgrInfo)
+	return err
+}
+
+// GetMgr return mgr info about mgr name
+func (d *DataPool) GetMgr() (*MgrInfo, error) {
+	return d.Snapshot.MgrInfos.getMgrInfo()
+}
+
 func (s *SnapShot) deepCopy() (*SnapShot, error) {
 	if s == nil {
 		return nil, fmt.Errorf("snapshot is null")
@@ -180,6 +195,9 @@ func (s *SnapShot) deepCopy() (*SnapShot, error) {
 	}
 	if s.ClusterInfos != nil {
 		clone.ClusterInfos = deepCopyCluster(s.ClusterInfos)
+	}
+	if s.MgrInfos != nil {
+		clone.MgrInfos = deepCopyMgr(s.MgrInfos)
 	}
 	return clone, nil
 }
@@ -280,5 +298,13 @@ func deepCopyCluster(clusterInfos *ClusterInfos) *ClusterInfos {
 		}
 		clone.Clusters[k] = cloneCluster
 	}
+	return clone
+}
+
+func deepCopyMgr(mgrInfos *MgrInfo) *MgrInfo {
+	clone := &MgrInfo{
+		Status: make(map[string]string, len(mgrInfos.Status)),
+	}
+	clone.Status = utils.CopyStringMap(mgrInfos.Status)
 	return clone
 }

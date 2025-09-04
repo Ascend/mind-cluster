@@ -23,7 +23,10 @@ import (
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/elastictraining"
 	"taskd/framework_backend/manager/plugins/faultdig"
+	"taskd/framework_backend/manager/plugins/job"
 	"taskd/framework_backend/manager/plugins/om"
+	"taskd/framework_backend/manager/plugins/pod"
+	"taskd/framework_backend/manager/plugins/recover"
 	"taskd/framework_backend/manager/plugins/stoptrain"
 )
 
@@ -50,6 +53,9 @@ func (p *PluginHandler) Init() error {
 		om.NewOmStressTestPlugin(),
 		stoptrain.New(),
 		elastictraining.New(),
+		jobrescheduling.NewJobReschedulingPlugin(),
+		podrescheduling.NewPodReschedulingPlugin(),
+		recoveplugin.NewRecoverPlugin(),
 	}
 	if err := p.RegisterPlugins(plugins); err != nil {
 		hwlog.RunLog.Errorf("register plugins failed, error: %v", err)

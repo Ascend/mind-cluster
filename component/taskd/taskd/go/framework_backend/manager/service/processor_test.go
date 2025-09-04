@@ -28,11 +28,6 @@ import (
 func TestMsgProcessor(t *testing.T) {
 	mpc := &MsgProcessor{}
 	dp := newDataPool()
-	convey.Convey("TestMsgProcessor msg processor handler success return nil", t, func() {
-		msg := createBaseMessage(&common.Position{Role: common.MgrRole, ServerRank: "0"}, "", 0, "")
-		err := mpc.MsgProcessor(dp, msg)
-		convey.So(err, convey.ShouldBeNil)
-	})
 	convey.Convey("TestMsgProcessor msg role default return error", t, func() {
 		msg := createBaseMessage(&common.Position{Role: "default", ServerRank: "0"}, "", 0, "")
 		err := mpc.MsgProcessor(dp, msg)

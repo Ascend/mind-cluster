@@ -568,6 +568,9 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 		ctl.addEvent(common.FinishEvent)
 		return
 	}
+	if signal.ExtraParams == constant.DumpExit {
+		return
+	}
 	if err != nil {
 		defer catchException()
 		ctl.replyOMResponse("om failed, send signal failed")
@@ -716,6 +719,9 @@ func (ctl *EventController) handleNotifyStopTrain() (string, common.RespCode, er
 }
 
 func (ctl *EventController) handleNotifyDump() (string, common.RespCode, error) {
+	if ctl.uuid == "" {
+		ctl.uuid = common.NewEventId(randomLen)
+	}
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
@@ -727,6 +733,11 @@ func (ctl *EventController) handleNotifyDump() (string, common.RespCode, error) 
 	if err != nil {
 		hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
+	}
+	signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
 	}
 	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 		allFaultRanks, false, constant.NotifyFaultListOperation)
@@ -1197,6 +1208,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 			return common.NotifyFailEvent, common.OperateConfigMapError, nil
 		}
 		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
+		signal.ExtraParams = constant.ProcessRecoverInPlaceStrategyName
 		signal.ChangeStrategy = constant.ProcessRecoverStrategyName
 		signal.Actions = append(signal.Actions, constant.FaultNodesRestartAction)
 		signal.FaultRanks = allFaults
@@ -1683,6 +1695,29 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     constant.ChangeStrategySignalType,
+		Actions:        changeStrategyActions,
+		ChangeStrategy: constant.ProcessExitStrategyName,
+		ExtraParams:    constant.DumpExit,
+	}
+	_, allFaultRanks, updateErr := ctl.updateCacheFaultAndPod()
+	if updateErr != nil {
+		hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, updateErr)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	}
+	signal.NodeRankIds, updateErr = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+	if updateErr != nil {
+		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, updateErr)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	}
+	_, respCode, enqueueErr := ctl.signalEnqueue(signal)
+	if enqueueErr != nil || respCode != common.OK {
+		hwlog.RunLog.Errorf("failed to signalEnqueue, signal: %v, error:%v", signal, enqueueErr)
+		return common.NotifyFailEvent, common.ClientError, nil
+	}
 	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
 		constant.RestartAllProcessOperation)
 	if err != nil {

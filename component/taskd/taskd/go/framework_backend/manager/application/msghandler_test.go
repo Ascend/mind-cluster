@@ -100,6 +100,10 @@ func TestNewMsgHandler(t *testing.T) {
 						AllStatus: map[string]string{},
 						RWMutex:   sync.RWMutex{},
 					},
+					MgrInfos: &storage.MgrInfo{
+						Status:  map[string]string{},
+						RWMutex: sync.RWMutex{},
+					},
 				},
 				RWMutex: sync.RWMutex{},
 			},

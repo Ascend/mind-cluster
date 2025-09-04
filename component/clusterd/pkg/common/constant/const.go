@@ -165,6 +165,8 @@ const (
 	ExitCompleted = "exit-completed"
 	// MaxEventChanLen max event chan len
 	MaxEventChanLen = 100
+	// DumpExit dump exit
+	DumpExit = "dump_exit"
 )
 
 const (

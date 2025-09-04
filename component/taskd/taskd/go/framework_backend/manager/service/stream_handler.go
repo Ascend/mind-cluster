@@ -63,8 +63,10 @@ func (s *StreamHandler) Init() error {
 		constant.ResumeTrainingAfterFaultStream,
 		map[string]int{
 			constant.StopTrainPluginName:       constant.Priority1,
-			constant.ARFPluginName:             constant.Priority2,
+			constant.RecoverPluginName:         constant.Priority2,
 			constant.ElasticTrainingPluginName: constant.Priority3,
+			constant.PodReschedulingPluginName: constant.Priority4,
+			constant.JobReschedulingPluginName: constant.Priority5,
 		})
 	streamList := []*infrastructure.Stream{
 		profilingCollectStream,

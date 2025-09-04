@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
@@ -72,6 +73,10 @@ func NewMsgHandler() *MsgHandler {
 					Clusters:  map[string]*storage.ClusterInfo{},
 					AllStatus: map[string]string{},
 					RWMutex:   sync.RWMutex{},
+				},
+				MgrInfos: &storage.MgrInfo{
+					Status:  map[string]string{},
+					RWMutex: sync.RWMutex{},
 				},
 			},
 			RWMutex: sync.RWMutex{},
@@ -157,8 +162,54 @@ func (mhd *MsgHandler) processOne(ctx context.Context) {
 			if err != nil {
 				hwlog.RunLog.Error(err)
 			}
+			if msg.Header.Src.Role == common.AgentRole && msg.Body.Code == constant.RestartTimeCode {
+				mhd.responseAgentRestartTimes(msg)
+			}
 		}
 	}
+}
+
+func (mhd *MsgHandler) responseAgentRestartTimes(msg storage.BaseMessage) {
+	mgrInfo, err := mhd.DataPool.GetMgr()
+	if mgrInfo == nil {
+		hwlog.RunLog.Error("responseAgentRestartTimes: failed to get manager info, mgrInfo is nil")
+		return
+	}
+	if err != nil {
+		hwlog.RunLog.Errorf("responseAgentRestartTimes: failed to get manager info, err: %v", err)
+		return
+	}
+	mgrRestartTimes := 0
+	if restartTimeStr, exists := mgrInfo.Status[constant.ReportRestartTime]; exists && restartTimeStr != "" {
+		var parseErr error
+		mgrRestartTimes, parseErr = strconv.Atoi(restartTimeStr)
+		if parseErr != nil {
+			hwlog.RunLog.Errorf("responseAgentRestartTimes: failed to parse manager restart times '%s', err: %v", restartTimeStr, parseErr)
+		}
+	} else {
+		hwlog.RunLog.Info("responseAgentRestartTimes: manager restart time not found or empty, using default value 0")
+	}
+	agentRestartTimes := 0
+	if msg.Body.Message != "" {
+		hwlog.RunLog.Infof("responseAgentRestartTimes: received agent restart times message '%s'", msg.Body.Message)
+		var parseErr error
+		agentRestartTimes, parseErr = strconv.Atoi(msg.Body.Message)
+		if parseErr != nil {
+			hwlog.RunLog.Errorf("responseAgentRestartTimes: failed to parse agent restart times '%s', err: %v", msg.Body.Message, parseErr)
+		}
+	}
+	restartTimes := mgrRestartTimes
+	if mgrRestartTimes == 0 {
+		restartTimes = agentRestartTimes
+		hwlog.RunLog.Debugf("responseAgentRestartTimes: using agent restart times %d as manager restart times is 0", agentRestartTimes)
+	}
+	msgBody := storage.MsgBody{
+		MsgType: constant.Action,
+		Code:    constant.StartAgentCode,
+		Message: strconv.Itoa(restartTimes),
+	}
+	hwlog.RunLog.Infof("responseAgentRestartTimes: sending response with restart times %d", restartTimes)
+	mhd.SendMsgUseGrpc(msg.Header.BizType, utils.ObjToString(msgBody), msg.Header.Src)
 }
 
 func (mhd *MsgHandler) receiver(tool *net.NetInstance, ctx context.Context) {

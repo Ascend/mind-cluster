@@ -118,6 +118,8 @@ func TestHandleNotifyDump(t *testing.T) {
 				Namespace: "test-namespace",
 			},
 		}
+		mockFunc3 := gomonkey.ApplyFuncReturn(common.GetNodeRankIdsByRankIds, []string{"1", "2"}, nil)
+		defer mockFunc3.Reset()
 		convey.Convey("01-update cache fault and pod fail, should return err", func() {
 			mockFunc := gomonkey.ApplyPrivateMethod(&EventController{}, "updateCacheFaultAndPod",
 				func() ([]*pb.FaultRank, []string, error) { return nil, nil, errors.New("mock error") })
@@ -1162,7 +1164,19 @@ func TestHandleRestartAllProcess(t *testing.T) {
 			func(jobName, namespace string, faultRanks []string,
 				restartProcess bool, operation string) (*v1.ConfigMap, error) {
 				return &v1.ConfigMap{}, nil
-			})
+			}).
+			ApplyPrivateMethod(ctl, "updateCacheFaultAndPod",
+				func() ([]*pb.FaultRank, []string, error) {
+					return []*pb.FaultRank{{RankId: "rank1"}}, []string{"rank1"}, nil
+				}).
+			ApplyFunc(common.GetNodeRankIdsByRankIds, func(jobId string, rankIds []string) (
+				[]string, error) {
+				return nil, nil
+			}).
+			ApplyPrivateMethod(ctl, "signalEnqueue",
+				func(signal *pb.ProcessManageSignal) (string, common.RespCode, error) {
+					return "", common.OK, nil
+				})
 		defer patches.Reset()
 
 		event, code, err := ctl.handleRestartAllProcess()

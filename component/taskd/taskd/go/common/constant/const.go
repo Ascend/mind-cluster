@@ -153,6 +153,7 @@ const (
 	KeepAlive         = "KEEP_ALIVE"
 	ReportRestartTime = "REPORT_RESTART_TIME"
 	Exit              = "EXIT"
+	FaultRecover      = "FAULT_RECOVER"
 )
 
 const (
@@ -293,6 +294,8 @@ const (
 	Priority1 = iota + 1
 	Priority2
 	Priority3
+	Priority4
+	Priority5
 )
 
 const (

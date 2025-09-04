@@ -16,9 +16,32 @@
 package service
 
 import (
+	"fmt"
+
+	"ascend-common/common-utils/hwlog"
+	"taskd/common/constant"
 	"taskd/framework_backend/manager/infrastructure/storage"
 )
 
 func (mpc *MsgProcessor) managerHandler(dataPool *storage.DataPool, msg storage.BaseMessage) error {
-	return nil
+	hwlog.RunLog.Infof("managerHandler, msg: %v", msg)
+	mgrInfo, err := dataPool.GetMgr()
+	if err != nil {
+		return err
+	}
+	switch msg.Body.MsgType {
+	case constant.Action:
+		if msg.Body.Code == constant.RestartTimeCode {
+			mgrInfo.Status[constant.ReportRestartTime] = msg.Body.Message
+			return nil
+		}
+		if msg.Body.Code == constant.FaultRecoverCode {
+			mgrInfo.Status[constant.FaultRecover] = msg.Body.Message
+		}
+
+	default:
+		return fmt.Errorf("unknown message type: %v", msg.Body.MsgType)
+	}
+	err = dataPool.UpdateMgr(mgrInfo)
+	return err
 }
