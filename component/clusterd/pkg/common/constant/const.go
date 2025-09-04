@@ -127,6 +127,8 @@ const (
 	CheckPGRunningRetryTimes = 54
 	// SleepSecondBeforeCheckPGRunning check pg state interval
 	SleepSecondBeforeCheckPGRunning = 5
+	// WaitAgentGetFaultRank wait agent get fault rank interval
+	WaitAgentGetFaultRank = 5
 	// WriteResetInfoRetryTimes retry set reset configmap
 	WriteResetInfoRetryTimes = 3
 	// WaitProcessRestart sleep 60 second
