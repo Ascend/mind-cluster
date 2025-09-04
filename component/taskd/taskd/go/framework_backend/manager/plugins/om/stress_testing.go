@@ -158,9 +158,9 @@ func (o *StressTestPlugin) getWorkerName() []string {
 }
 
 func (o *StressTestPlugin) handleWorkerHeartbeat(name string, info *storage.WorkerInfo) bool {
+	hwlog.RunLog.Debugf("name: worker:%s  o.heartbeat[name]: %v, info:%v", name, o.heartbeat[name], info.HeartBeat)
 	heartbeat := o.heartbeat[name]
 	if info.HeartBeat.Unix() != heartbeat.heartbeat {
-		hwlog.RunLog.Debugf("name: worker:%s  heartbeat: %v", name, heartbeat)
 		heartbeat.heartbeat = info.HeartBeat.Unix()
 		heartbeat.dropTime = 0
 		o.heartbeat[name] = heartbeat
