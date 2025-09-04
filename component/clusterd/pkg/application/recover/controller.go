@@ -1644,6 +1644,9 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 			} else if !scheduleSuccess && ctl.supportTargetStrategy(constant.ElasticTrainingStrategyName) {
 				return common.NeedTryScaleInStrategyEvent, common.ScheduleTimeout, nil
 			}
+			if ctl.restartFaultProcess {
+				time.Sleep(time.Second * constant.WaitAgentGetFaultRank)
+			}
 			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
 				constant.ClearOperation)
 			if err != nil {
