@@ -18,6 +18,7 @@ import (
 )
 
 func (ctl *EventController) notifyPrepareHotSwitch() (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("begin hotswitch flow, jobId: %v", ctl.jobInfo.JobId)
 	hwlog.RunLog.Infof("hotswitch flow, jobId: %v, enter into notifyPrepareHotSwitch", ctl.jobInfo.JobId)
 	// mark all ranks in same pod/node as fault in hotswitch scenario
 	allFaults, _ := ctl.normalFaultAssociateSameNodeRank()

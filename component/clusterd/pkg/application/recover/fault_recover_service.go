@@ -185,7 +185,6 @@ func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank) {
 	hwlog.ResetErrCnt(constant.SubHealthyState, ctl.jobInfo.JobId+api.MasterPodRank)
 
 	if len(faults) > 0 {
-		hwlog.RunLog.Infof("begin hotswitch flow,jobId: %v", ctl.jobInfo.JobId)
 		ctl.addEvent(common.BeginHotSwitchEvent)
 	}
 }
