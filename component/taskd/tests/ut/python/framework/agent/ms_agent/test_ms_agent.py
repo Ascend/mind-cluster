@@ -30,7 +30,8 @@ class TestMsAgent(unittest.TestCase):
         self.agent._func_map = {
             'KILL_WORKER': MagicMock(),
             'START_ALL_WORKER': MagicMock(),
-            'MONITOR': MagicMock()
+            'MONITOR': MagicMock(),
+            'START_WORKER_LIST': MagicMock()
         }
         self.agent.msg_queue = MagicMock()
         self.agent.local_fault_rank = []
@@ -41,9 +42,12 @@ class TestMsAgent(unittest.TestCase):
         agent = MsAgent(self.network_config, self.logger)
         
         self.assertEqual(agent.network_config, self.network_config)
-        self.assertEqual(agent.monitor_interval, 5)
+        self.assertEqual(agent.monitor_interval, 1)
         self.assertEqual(agent.node_rank, '0')
-        self.assertEqual(agent.command_map.keys(), {'START', 'STOP', 'EXIT', 'RESTART', 'GRACE_EXIT'})
+        self.assertEqual(agent.command_map.keys(), {
+                         constants.STARTAGENTCODE, 'STOP', constants.EXITAGENTCODE,
+                         constants.RESTARTAGENTCODE, 'GRACE_EXIT',
+                         constants.RESTARTWORKERCODE})
 
     @patch('taskd.python.framework.agent.ms_agent.ms_agent.calculate_global_rank')
     @patch('taskd.python.framework.agent.ms_agent.ms_agent.init_network_client')
@@ -67,16 +71,15 @@ class TestMsAgent(unittest.TestCase):
         with patch.object(MsAgent, 'send_message_to_manager', side_effect=[None, Exception('Break loop')]):
             with self.assertRaises(Exception):
                 self.agent.start()
-        
+
         mock_calc_rank.assert_called_once()
         mock_init_net.assert_called_once_with(self.network_config, self.agent.msg_queue, self.logger)
         mock_check_net.assert_called_once()
         self.agent._func_map['START_ALL_WORKER'].assert_called_once()
         
-        mock_sleep.assert_called_once_with(5)
+        mock_sleep.assert_called_once_with(1)
         mock_handle.assert_called_once()
         mock_update.assert_called_once()
-        mock_report.assert_called_once_with([])
 
     def test_update_rank_status_all_healthy(self):
         rank_status = {

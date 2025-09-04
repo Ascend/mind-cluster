@@ -16,8 +16,11 @@
 # ==============================================================================
 import os
 import time
+import json
+import queue
 
-from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank
+from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank, \
+    calculate_local_rank_by_global_rank
 from taskd.python.toolkit.constants import constants
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.base_agent.agent_network import init_network_client
@@ -42,25 +45,30 @@ class MsAgent(BaseAgent):
     def __init__(self, network_config, logger):
         super().__init__()
         self.all_rank_succeed = False
-        self.monitor_interval = 5
+        self.monitor_interval = 1
         self.node_rank = os.getenv("MS_NODE_RANK")
         self.rank_pids = []
         self.node_global_rank_ids = []
         self.network_config = network_config
         self.command_map = {
-            'START': self.initialize_workers,
+            constants.STARTAGENTCODE: self.initialize_workers,
             'STOP': self.stop_workers,
-            'EXIT': self.exit_agent,
-            'RESTART': self.restart_workers,
+            constants.EXITAGENTCODE: self.exit_agent,
+            constants.RESTARTAGENTCODE: self.restart_workers,
             'GRACE_EXIT': self.grace_exit,
+            constants.RESTARTWORKERCODE: self.recover_in_place,
         }
         self.logger = logger
+        self.rank_status = ''
+        self.local_rank_to_pid = {}
 
     def start(self):
-        kill_worker_func = self._func_map.get('KILL_WORKER')
-        start_worker_func = self._func_map.get('START_ALL_WORKER')
-        monitor_func = self._func_map.get('MONITOR')
-        if kill_worker_func is None or start_worker_func is None or monitor_func is None:
+        kill_worker_func = self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)
+        start_worker_func = self._func_map.get(constants.START_ALL_WORKER_CALLBACK_NAME)
+        monitor_func = self._func_map.get(constants.MONITOR_CALLBACK_NAME)
+        start_single_worker_func = self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)
+        if (kill_worker_func is None or start_worker_func is None or monitor_func is None or
+                start_single_worker_func is None):
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")
         self.node_global_rank_ids = calculate_global_rank()
         init_network_client(self.network_config, self.msg_queue, self.logger)
@@ -78,9 +86,9 @@ class MsAgent(BaseAgent):
                 run_log.warning(f"monitor not return a valid result, but {ms_proc_status}")
                 continue
             fault_ranks = self.update_rank_status(ms_proc_status)
-            self.report_fault_rank(fault_ranks)
-
-
+            if self.rank_status == self.RANK_STATUS_UNHEALTHY:
+                run_log.info(f"status unhealthy, {ms_proc_status}")
+                self.report_fault_rank(fault_ranks)
 
     def update_rank_status(self, rank_status_dict: dict) -> list:
         """
@@ -92,6 +100,7 @@ class MsAgent(BaseAgent):
         rank_pids = []
         local_rank_ids = []
         fault_ranks = []
+        local_rank_to_pid = {}
         for key, details in rank_status_dict.items():
             # if process is in ok, not start yet[msrun taken over by taskd, monitor maybe called before training],
             # sleeping[during process recover]
@@ -104,9 +113,11 @@ class MsAgent(BaseAgent):
                 all_succeed = False
             rank_pids.append(details[constants.RANK_PID_KEY])
             local_rank_ids.append(details[constants.GLOBAL_RANK_ID_KEY])
+            local_rank_to_pid[details[constants.GLOBAL_RANK_ID_KEY]] = details[constants.RANK_PID_KEY]
         self.rank_pids = rank_pids
         self.node_global_rank_ids = local_rank_ids
         self.all_rank_succeed = all_succeed
+        self.local_rank_to_pid = local_rank_to_pid
         if all_healthy:
             self.rank_status = self.RANK_STATUS_HEALTHY
         return fault_ranks
@@ -121,22 +132,59 @@ class MsAgent(BaseAgent):
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
         return
 
-
     def initialize_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to initialize workers')
+        run_log.info(f'receive {msg.code} command, start to initialize workers')
         self._func_map.get('START_ALL_WORKER')()
 
     def stop_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to stop workers')
+        run_log.info(f'receive {msg.code} command, start to stop workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
 
     def exit_agent(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to exit agent')
+        run_log.info(f'receive {msg.code} command, start to exit agent')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
         self.send_message_to_manager('STATUS', constants.REPORT_CODE, AgentReportInfo())
         exit(1)
 
     def restart_workers(self, msg):
-        run_log.info(f'receive {msg.msg_type} command, start to restart workers')
+        run_log.info(f'receive {msg.code} command, start to restart workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
         self._func_map.get('START_ALL_WORKER')()
+        self.local_fault_rank = []
+        
+    def recover_in_place(self, msg):
+        run_log.info(f'receive {msg.code} command, start to recover in place')
+        fault_ranks = json.loads(msg.message)
+        if fault_ranks is None:
+            run_log.error("fault_ranks is None")
+            return
+        try:
+            int_fault_ranks = [int(rank) for rank in fault_ranks]
+        except ValueError as e:
+            run_log.error(f"Convert fault_ranks to int failed: {e}")
+            return
+        run_log.info(f"message fault_ranks is {int_fault_ranks}")
+        local_fault_ranks = self.get_fault_local_ranks(int_fault_ranks)
+        run_log.info(f"local fault_ranks is {local_fault_ranks}")
+        fault_pid_list = self.get_fault_pids(local_fault_ranks)
+        if len(fault_pid_list) > 0:
+            run_log.info(f"nodeRank:{self.node_rank} restart part workers, pid:{fault_pid_list}")
+            restart_local_rank = calculate_local_rank_by_global_rank(local_fault_ranks)
+            self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
+            self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)(restart_local_rank)
+            self.local_fault_rank = []
+
+    def get_fault_pids(self, local_ranks):
+        pid_list = []
+        for local_rank in local_ranks:
+            if local_rank in self.local_rank_to_pid:
+                pid = self.local_rank_to_pid.get(local_rank)
+                pid_list.append(pid)
+        return pid_list
+
+    def get_fault_local_ranks(self, fault_ranks):
+        fault_local_ranks = []
+        for fault_rank in fault_ranks:
+            if fault_rank in self.node_global_rank_ids:
+                fault_local_ranks.append(fault_rank)
+        return fault_local_ranks
