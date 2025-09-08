@@ -12,8 +12,8 @@ def unwrap_model(model):
     pass
 
 
-def calc_params_l2_norm():
-    pass
+def calc_params_l2_norm(model):
+    return 1
 
 
 class test_optimizer():
@@ -21,11 +21,13 @@ class test_optimizer():
     def numpy():
         return array.array('i', [1, 2, 3])
 
+    @staticmethod
+    def item():
+        return 1
+
     def send_optim_param_state(self, dest_rank, group, optim_idx):
         pass
 
-    def item(self):
-        pass
 
     def cpu(self):
         return self

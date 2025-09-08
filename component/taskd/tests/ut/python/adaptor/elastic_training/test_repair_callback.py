@@ -59,7 +59,7 @@ class TestSendRankRepair(unittest.TestCase):
         args = send_or_recieve_rank_repair_args(src_ranks=src_ranks, dest_ranks=dest_ranks, rank_list=rank_list,
                                                 optim_idxs=optim_idxs)
         from megatron.training.utils import test_optimizer
-        train_args = [test_optimizer()]
+        train_args = [test_optimizer(), test_optimizer()]
         repair_callback.send_rank_repair(args, train_args, 0)
         assert mock_convert_log.called
 

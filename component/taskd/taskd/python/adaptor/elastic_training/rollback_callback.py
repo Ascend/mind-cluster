@@ -164,32 +164,3 @@ def gather_model_params_from_optimizer(optimizer, step):
 
     optimizer.sync_gather_all_model_params(force_sync=True)
     ttp_logger.LOGGER.info(f'rank:{args.rank} successfully gather and rollback at iteration {step}')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

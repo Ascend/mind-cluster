@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (c) 2025, Huawei Technologies Co., Ltd. All rights reserved.
+from dataclasses import dataclass
+
+
+@dataclass
 class LogArgs:
-    pass
+    losses_reduced_ = [1, 1]
+    grad_norm_ = [1, 1]
+    num_zeros_in_grad_ = 0
 
 
 def get_build_data_args():
-    return None
+    return None, None, None
 
 
 def unset_memory_ckpt():
@@ -17,8 +23,8 @@ def set_load_ckpt():
     pass
 
 
-def average_losses_across_microbatches():
-    pass
+def average_losses_across_microbatches(losses_reduced_):
+    return [1, 1]
 
 
 def get_load_ckpt():

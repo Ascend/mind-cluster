@@ -5,9 +5,9 @@ def setup_model_and_optimizer(*args, **kwargs):
     return [0], None, None
 
 
-def build_train_valid_test_data_iterators():
-    pass
+def build_train_valid_test_data_iterators(train_valid_test_datasets_provider_):
+    return [0, 1, 2]
 
 
-def training_log():
+def training_log(*args):
     pass
