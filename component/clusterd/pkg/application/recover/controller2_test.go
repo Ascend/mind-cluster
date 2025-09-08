@@ -19,12 +19,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -1426,4 +1428,58 @@ func TestCheckWhetherPodVersionChangedTrue(t *testing.T) {
 	defer mockGetNodeRankIdsByFaultRanks.Reset()
 	result := ctl.checkWhetherPodChanged()
 	assert.Equal(t, true, result)
+}
+
+// TestListenScheduleResultMain tests main flow of listenScheduleResult
+func TestListenScheduleResultMain(t *testing.T) {
+	convey.Convey("Test listenScheduleResult main flow", t, func() {
+		loggerPatch := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		loggerPatch.ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {})
+		defer loggerPatch.Reset()
+
+		testNotSupportStrategy(t)
+		testSupportStrategyAndRunning(t)
+	})
+}
+
+func testNotSupportStrategy(t *testing.T) {
+	convey.Convey("01-job does not support recover or recover-in-place strategy", func() {
+		ctl := &EventController{
+			jobInfo:            common.JobBaseInfo{JobId: "test-job-id"},
+			scheduleResultChan: make(chan bool, 1),
+		}
+
+		mockConfigTargetStrategy := gomonkey.ApplyPrivateMethod(
+			reflect.TypeOf(ctl),
+			"configTargetStrategy",
+			func(_ *EventController, _ string) bool { return false },
+		)
+		defer mockConfigTargetStrategy.Reset()
+
+		ctl.listenScheduleResult()
+		convey.So(len(ctl.scheduleResultChan), convey.ShouldEqual, 0)
+	})
+}
+
+func testSupportStrategyAndRunning(t *testing.T) {
+	convey.Convey("02-job supports recover strategy and pg is running", func() {
+		ctl := &EventController{
+			controllerContext:   context.Background(),
+			restartFaultProcess: true,
+			jobInfo: common.JobBaseInfo{
+				JobId: "test-job-id",
+				RecoverConfig: common.RecoverConfig{
+					MindXConfigStrategies: []string{constant.ProcessRecoverStrategyName},
+				},
+			},
+			scheduleResultChan: make(chan bool, 1),
+		}
+		gomonkey.ApplyFuncReturn(podgroup.GetPodGroup,
+			v1beta1.PodGroup{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}})
+		gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, true)
+
+		ctl.listenScheduleResult()
+		convey.So(len(ctl.scheduleResultChan), convey.ShouldEqual, 1)
+		convey.So(<-ctl.scheduleResultChan, convey.ShouldBeTrue)
+	})
 }
