@@ -337,6 +337,20 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 	})
 }
 
+func TestAddProcessRecoverEnv2(t *testing.T) {
+	convey.Convey("when job has exit strategy annotation with single strategy - PyTorch", t, func() {
+		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{api.RecoverStrategyKey: api.ExitStrategy}}}}
+		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
+			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
+		addProcessRecoverEnv(pi, pod, 0, api.PytorchFramework)
+		expectedEnv := map[string]string{
+			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
+			api.HighAvailableEnv: api.RecoverStrategy}
+		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
+	})
+}
+
 func checkEnvVars(t *testing.T, envVars []corev1.EnvVar, expectedEnv map[string]string) {
 	actualEnv := make(map[string]string)
 	for _, envVar := range envVars {
@@ -385,4 +399,34 @@ func TestAddElasticTrainingEnv(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestAddMSPodScheduleEnv test addMSPodScheduleEnv
+func TestAddMSPodScheduleEnv(t *testing.T) {
+	convey.Convey("addMSPodScheduleEnv", t, func() {
+		pi := newCommonPodInfo()
+		podTemp := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+			Containers: make([]corev1.Container, 1),
+		}}
+		convey.Convey("01-pod schedule strategy is enabled, env should be added", func() {
+			pi.job.SetLabels(map[string]string{api.PodScheduleLabel: api.EnableFunc})
+			podTemp.Spec.Containers[0] = corev1.Container{
+				Name: api.DefaultContainerName,
+				Env:  make([]corev1.EnvVar, 0),
+			}
+			addMSPodScheduleEnv(pi, podTemp, 0)
+			convey.So(len(podTemp.Spec.Containers[0].Env), convey.ShouldEqual, 1)
+			convey.So(podTemp.Spec.Containers[0].Env[0].Name, convey.ShouldEqual, api.MsRecoverEnv)
+			convey.So(podTemp.Spec.Containers[0].Env[0].Value, convey.ShouldEqual, `'{`+api.MsRscStrategy+`}'`)
+		})
+		convey.Convey("02-pod schedule strategy is disabled, env should not be added", func() {
+			pi.job.SetLabels(map[string]string{api.PodScheduleLabel: "off"})
+			podTemp.Spec.Containers[0] = corev1.Container{
+				Name: api.DefaultContainerName,
+				Env:  make([]corev1.EnvVar, 0),
+			}
+			addMSPodScheduleEnv(pi, podTemp, 0)
+			convey.So(len(podTemp.Spec.Containers[0].Env), convey.ShouldEqual, 0)
+		})
+	})
 }

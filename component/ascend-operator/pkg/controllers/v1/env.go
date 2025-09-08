@@ -145,6 +145,7 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 
 			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
 			addProcessRecoverEnv(pi, podTemplate, i, api.MindSporeFramework)
+			addMSPodScheduleEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -227,6 +228,13 @@ func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 	}
 }
 
+func addMSPodScheduleEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int) {
+	if !isPodScheduleStrategy(pi.job) {
+		return
+	}
+	addEnvValue(pod, api.MsRecoverEnv, `'{`+api.MsRscStrategy+`}'`, containerIndex)
+}
+
 func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {
 	strategies := getJobRecoverStrategy(pi.job)
 	if strategies == "" {
@@ -263,6 +271,8 @@ func addEnvByStrategy(env map[string]string, trainEnv sets.String, strategy stri
 		addDumpEnv(env, trainEnv, framework)
 	case api.InPlaceStrategy:
 		addRecoverInPlaceEnv(env, trainEnv, framework)
+	case api.ExitStrategy:
+		addRecoverEnv(env, trainEnv, framework)
 	case api.ElasticTraining:
 		addElasticTrainingEnv(env, trainEnv, framework)
 	default:
