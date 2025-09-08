@@ -149,7 +149,9 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		faultPod := make(map[string]string)
 		faultPod[info.PodRank] = info.PodUid
 		_, ok := controller.faultPod[info.PodRank]
-		if controller.state.GetState() != common.InitState && controller.state.GetState() != common.ScaleInRunningState && ok {
+		lastestStrategies, _ := controller.getStrategyResult()
+		if len(lastestStrategies) > 0 &&
+			lastestStrategies[len(lastestStrategies)-1] == constant.ScaleInStrategyName && ok {
 			hwlog.RunLog.Debugf("job %s fault pod has deal", controller.jobInfo.JobId)
 			continue
 		}

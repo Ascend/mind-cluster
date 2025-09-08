@@ -1389,6 +1389,9 @@ func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.
 				return common.NotifyFailEvent, common.ClientError, nil
 			}
 			nodeRankIds = common.RemoveDuplicateNodeRanks(nodeRankIds, ctl.faultPod)
+			for _, nodeRankId := range nodeRankIds {
+				ctl.faultPod[nodeRankId] = ctl.prePod[nodeRankId]
+			}
 			signal.NodeRankIds = nodeRankIds
 			_, respCode, err := ctl.signalEnqueue(signal)
 			if err != nil || respCode != common.OK {
