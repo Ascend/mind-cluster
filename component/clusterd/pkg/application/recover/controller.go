@@ -1558,6 +1558,11 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 }
 
 func (ctl *EventController) listenScheduleResult() {
+	if !ctl.supportRestartProcessStrategy() && !ctl.supportRecoverStrategy() {
+		hwlog.RunLog.Infof("job %s does not support recover or recover-in-place strategy, "+
+			"not need to listen schedule result", ctl.jobInfo.JobId)
+		return
+	}
 	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeout
 	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
 	if pgInfo.Annotations != nil && pgInfo.Annotations[constant.WaitRescheduleTimeoutKey] != "" {
