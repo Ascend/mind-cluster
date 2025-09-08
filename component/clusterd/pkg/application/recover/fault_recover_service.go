@@ -137,10 +137,26 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		return
 	}
 	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId)
-
-	var grpcFormatFaults []*pb.FaultRank = nil
 	subHealthyHotSwitch := faultInfo.HealthyState == constant.SubHealthyState && controller.jobInfo.HotSwitch
-	hasNewFaultPod := false
+	grpcFormatFaults := s.getGrpcFormatFaults(faultInfo, controller)
+	if len(grpcFormatFaults) == 0 {
+		return
+	}
+	hwlog.RunLog.Infof("jobId=%s, fault center fault info change format to grpcFormat, faults=%s",
+		controller.jobInfo.JobId, common.Faults2String(grpcFormatFaults))
+	controller.saveCacheFault(grpcFormatFaults)
+	controller.healthState = faultInfo.HealthyState
+	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
+	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
+	if subHealthyHotSwitch {
+		handleSubHealthyFault(controller, grpcFormatFaults)
+		return
+	}
+	controller.addEvent(common.FaultOccurEvent)
+}
+
+func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInfo, controller *EventController) []*pb.FaultRank {
+	grpcFormatFaults := make([]*pb.FaultRank, 0)
 	for _, info := range faultInfo.FaultList {
 		if info.PodUid == "" || info.PodRank == "" {
 			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s", info.PodUid, info.PodRank)
@@ -155,7 +171,6 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 			hwlog.RunLog.Debugf("job %s fault pod has deal", controller.jobInfo.JobId)
 			continue
 		}
-		hasNewFaultPod = true
 		controller.mergeFaultPod(faultPod)
 		hwlog.RunLog.Debugf("mergeFaultPod: %v", faultPod)
 		fault := &pb.FaultRank{
@@ -170,20 +185,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
 	}
-	if !hasNewFaultPod {
-		return
-	}
-	hwlog.RunLog.Infof("jobId=%s, fault center fault info change format to grpcFormat, faults=%s",
-		controller.jobInfo.JobId, common.Faults2String(grpcFormatFaults))
-	controller.saveCacheFault(grpcFormatFaults)
-	controller.healthState = faultInfo.HealthyState
-	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
-	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
-	if subHealthyHotSwitch {
-		handleSubHealthyFault(controller, grpcFormatFaults)
-		return
-	}
-	controller.addEvent(common.FaultOccurEvent)
+	return grpcFormatFaults
 }
 
 func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank) {
