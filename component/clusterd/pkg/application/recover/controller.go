@@ -1929,14 +1929,15 @@ func (ctl *EventController) whetherHasEnoughResource() bool {
 	}
 	hwlog.RunLog.Infof("job %s will wait %v seconds to check the fault pod reschedule result", ctl.jobInfo.JobId,
 		podReschedulingTimeout)
-	start := time.Now().Unix()
-	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherPodChanged() {
-		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
-		if time.Now().Unix()-start > int64(podReschedulingTimeout) {
-			return false
-		}
-	}
-	return true
+	return false
+	//start := time.Now().Unix()
+	//for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherPodChanged() {
+	//	time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
+	//	if time.Now().Unix()-start > int64(podReschedulingTimeout) {
+	//		return false
+	//	}
+	//}
+	//return true
 }
 
 func (ctl *EventController) checkWhetherPodChanged() bool {
