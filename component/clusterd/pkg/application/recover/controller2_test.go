@@ -1474,8 +1474,6 @@ func testSupportStrategyAndRunning(t *testing.T) {
 			},
 			scheduleResultChan: make(chan bool, 1),
 		}
-		gomonkey.ApplyFuncReturn(podgroup.GetPodGroup,
-			v1beta1.PodGroup{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}})
 		gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, true)
 
 		ctl.listenScheduleResult()
