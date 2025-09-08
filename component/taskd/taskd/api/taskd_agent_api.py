@@ -21,8 +21,6 @@ import threading
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
 from taskd.api.taskd_proxy_api import init_taskd_proxy
-from taskd.python.framework.agent.pt_agent.pt_agent import PtAgent
-from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
 from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, \
      DEFAULT_AGENT_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
      CONFIG_UPSTREAMPORT_KEY, CONFIG_FRAMEWORK_KEY, DEFAULT_AGENT_UPSTREAMPORT
@@ -75,8 +73,10 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
         return False
     run_log.info(f"init_taskd_agent: network configs is {network_config}")
     if framework == "PyTorch" and cls is not None:
+        from taskd.python.framework.agent.pt_agent.pt_agent import PtAgent
         taskd_agent = PtAgent(cls, network_config, logger)
     if framework == "MindSpore":
+        from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
         proxy = threading.Thread(target=init_taskd_proxy, args=({CONFIG_UPSTREAMIP_KEY: os.getenv("MS_SCHED_HOST", LOCAL_HOST),
                                                                  CONFIG_SERVERRANK_KEY: os.getenv("MS_NODE_RANK", DEFAULT_SERVERRANK)},))
         proxy.daemon = True
