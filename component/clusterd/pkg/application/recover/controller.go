@@ -1558,7 +1558,8 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 }
 
 func (ctl *EventController) listenScheduleResult() {
-	if !ctl.supportRestartProcessStrategy() && !ctl.supportRecoverStrategy() {
+	if !(ctl.restartFaultProcess && ctl.configTargetStrategy(constant.ProcessRecoverInPlaceStrategyName)) &&
+		!ctl.configTargetStrategy(constant.ProcessRecoverStrategyName) {
 		hwlog.RunLog.Infof("job %s does not support recover or recover-in-place strategy, "+
 			"not need to listen schedule result", ctl.jobInfo.JobId)
 		return
