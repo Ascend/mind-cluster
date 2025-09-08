@@ -52,7 +52,8 @@ func (tp *Base910A3) CheckReqNPUEqualNodeNPU() *api.ValidateResult {
 			continue
 		}
 
-		if task.ReqNPUNum == 0 && task.Annotation[taskSpec] == schedulerSpec {
+		if task.ReqNPUNum == 0 &&
+			(task.Annotation[taskSpec] == schedulerSpec || task.Annotation[skipAscendPlugin] == skipEnabled) {
 			continue
 		}
 		return &api.ValidateResult{

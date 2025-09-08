@@ -44,4 +44,8 @@ const (
 
 	taskSpec      = "volcano.sh/task-spec"
 	schedulerSpec = "scheduler"
+
+	// if the annotation value of skipAscendPlugin is enabled, will skip the ascend plugin.
+	skipAscendPlugin = "huawei.com/skip-ascend-plugin"
+	skipEnabled      = "enabled"
 )
