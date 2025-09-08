@@ -15,6 +15,10 @@
 # limitations under the License.
 # ============================================================================
 
+
+RT_LOWER_CASE="ascend-docker-runtime"
+RT_FIRST_CASE="Ascend-docker-runtime"
+
 set -ex
 
 ROOT=$(cd $(dirname $0); pwd)/..
@@ -48,7 +52,7 @@ HOOKSRCDIR=${HOOKSRCPATH%/${HOOKSRCNAME}}
 RUNTIMESRCPATH=$(find ${RUNTIMEDIR} -name "${RUNTIMESRCNAME}")
 RUNTIMESRCDIR=${RUNTIMESRCPATH%/${RUNTIMESRCNAME}}
 
-PACKAGENAME="Ascend-docker-runtime"
+PACKAGENAME=${RT_FIRST_CASE}
 
 VERSION="6.0.0"
 version_file="${ROOT}"/service_config.ini
@@ -142,7 +146,7 @@ function copy_file_output()
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
     /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
     bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
-    --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ascend-docker-runtime ./run_main.sh
+    --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ${RT_LOWER_CASE} ./run_main.sh
     mv ${RUN_PKG_NAME} ${OUTPUT}
     chmod 550 ${OUTPUT}/${RUN_PKG_NAME}
 }

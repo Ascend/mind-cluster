@@ -8,7 +8,7 @@ ORIG_UMASK=\`umask\`
 
 RT_LOWER_CASE="ascend-docker-runtime"
 
-readonly INSTALL_LOG_DIR=/var/log/${RT_LOWER_CASE}
+readonly INSTALL_LOG_DIR=/var/log/\${RT_LOWER_CASE}
 readonly INSTALL_LOG_PATH=\${INSTALL_LOG_DIR}/installer.log
 readonly INSTALL_LOG_PATH_BAK=\${INSTALL_LOG_DIR}/installer_bak.log
 readonly LOG_SIZE_THRESHOLD=\$((20*1024*1024))
@@ -40,7 +40,7 @@ log()
     if [ "\${ip}" = "" ]; then
         ip="localhost"
     fi
-    echo "\$1 [\$(date +'%Y/%m/%d %H:%M:%S')] [uid: \${UID}] [\${ip}] [${RT_LOWER_CASE}] \$2" >> \${INSTALL_LOG_PATH}
+    echo "\$1 [\$(date +'%Y/%m/%d %H:%M:%S')] [uid: \${UID}] [\${ip}] [\${RT_LOWER_CASE}] \$2" >> \${INSTALL_LOG_PATH}
 }
 
 check_log
@@ -206,7 +206,7 @@ MS_Help()
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar    These parameters are meaningless for ${RT_LOWER_CASE} and
+  --check|--info|--list|--quiet|--tar    These parameters are meaningless for \${RT_LOWER_CASE} and
                                 will be discarded in the future
 \${helpheader}
 EOH
@@ -219,7 +219,7 @@ Error input
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar    These parameters are meaningless for ${RT_LOWER_CASE} and
+  --check|--info|--list|--quiet|--tar    These parameters are meaningless for \${RT_LOWER_CASE} and
                                 will be discarded in the future
 \${helpheader}
 EOH
@@ -406,12 +406,12 @@ do
 	exit 0
 	;;
     --info)
-      echo "[WARNING]: --info is meaningless for ${RT_LOWER_CASE} and will be discarded in the future"
-      echo "${RT_LOWER_CASE} pkg"
+      echo "[WARNING]: --info is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
+      echo "\${RT_LOWER_CASE} pkg"
       exit 0
       ;;
     --list)
-      echo "[WARNING]: --list is meaningless for ${RT_LOWER_CASE} and will be discarded in the future"
+      echo "[WARNING]: --list is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
       echo "
   ascend-docker-cli
   ascend-docker-destroy
@@ -432,11 +432,11 @@ do
       exit 0
       ;;
     --quiet)
-      echo "[WARNING]: --quiet is meaningless for ${RT_LOWER_CASE} and will be discarded in the future"
+      echo "[WARNING]: --quiet is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
       shift
       ;;
     --tar)
-      echo "[WARNING]: --tar is meaningless for ${RT_LOWER_CASE} and will be discarded in the future"
+      echo "[WARNING]: --tar is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
       offset=\`head -n "\$skip" "\$0" | wc -c | sed "s/ //g"\`
       arg1="\$2"
         shift 2 || { MS_Help; exit 1; }
@@ -453,7 +453,7 @@ do
       exit 0
       ;;
     --check)
-    echo "[WARNING]: --check is meaningless for ${RT_LOWER_CASE} and will be discarded in the future"
+    echo "[WARNING]: --check is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
 	MS_Check "\$0" y
     exit 0
   shift
