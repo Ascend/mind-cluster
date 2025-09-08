@@ -32,8 +32,10 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 	convey.Convey("Test notifyFaultInfoForJob", t, func() {
 		svr := &FaultRecoverService{
 			eventCtl: map[string]*EventController{
-				fakeJobID1: {jobInfo: common.JobBaseInfo{
-					RecoverConfig: common.RecoverConfig{GraceExit: false}},
+				fakeJobID1: {
+					faultPod: map[string]string{},
+					jobInfo: common.JobBaseInfo{
+						RecoverConfig: common.RecoverConfig{GraceExit: false}},
 				},
 			},
 		}
@@ -58,8 +60,8 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 				JobId:        mockJob,
 				HealthyState: constant.UnHealthyState,
 				FaultList: []constant.FaultRank{
-					{RankId: "1", DoStepRetry: false},
-					{RankId: "2", DoStepRetry: true},
+					{RankId: "1", DoStepRetry: false, PodRank: "1", PodUid: "111"},
+					{RankId: "2", DoStepRetry: true, PodRank: "2", PodUid: "222"},
 				},
 			}
 			mockFunc := gomonkey.ApplyPrivateMethod(&EventController{}, "addEvent",
