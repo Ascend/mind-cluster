@@ -61,7 +61,7 @@ func (s *elasticTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure
 	}
 	err := s.getSignalInfo()
 	if err != nil {
-		hwlog.RunLog.Errorf("getSignalInfo error: %v", err)
+		hwlog.RunLog.Debugf("getSignalInfo error: %v", err)
 		return infrastructure.PredicateResult{PluginName: s.Name(), CandidateStatus: constant.UnselectStatus}, nil
 	}
 	if s.signalInfo.SignalType == clusterdconstant.ChangeStrategySignalType && (s.signalInfo.
@@ -130,7 +130,7 @@ func (s *elasticTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
 func (s *elasticTrainingPlugin) getSignalInfo() error {
 	clusterInfo, err := s.shot.ClusterInfos.GetCluster(constant.ClusterDRank)
 	if err != nil {
-		hwlog.RunLog.Errorf("Get clusterD info failed: %s", err.Error())
+		hwlog.RunLog.Debugf("Get clusterD info failed: %s", err.Error())
 		return err
 	}
 	if clusterInfo == nil {
