@@ -231,6 +231,7 @@ func (sHandle *ScheduleHandler) initStaticParameters(configs map[string]string) 
 		sHandle.FrameAttr.NslbVersion = getNslbVersion(configs)
 		sHandle.FrameAttr.SharedTorNum = getShardTorNum(configs)
 		sHandle.FrameAttr.UseClusterD = getUseClusterDConfig(configs)
+		sHandle.FrameAttr.ForceEnqueue = getForceEnqueueConfig(configs)
 		sHandle.FrameAttr.SelfMaintainAvailCard = getSelfMaintainAvailCard(configs)
 		klog.V(util.LogWarningLev).Info("param nslbVersion, sharedTorNum, useClusterInfoManager and self-maintain-mount-card " +
 			"init success. can not change them and it will not be changed during normal operation of the volcano")
@@ -656,6 +657,15 @@ func getUseClusterDConfig(conf map[string]string) bool {
 		return true
 	}
 	return useClusterInfoManager == "true"
+}
+
+func getForceEnqueueConfig(conf map[string]string) bool {
+	forceEnqueue, ok := conf[util.ForceEnqueue]
+	if !ok {
+		klog.V(util.LogDebugLev).Info("forceEnqueue doesn't exist in config, set as true.")
+		return true
+	}
+	return forceEnqueue == "true"
 }
 
 // getSelfMaintainAvailCard check volcano self maintain available card by config, default true

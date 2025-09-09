@@ -120,6 +120,8 @@ const (
 
 	// UseClusterInfoManager for use cluster info manager, default is true
 	UseClusterInfoManager = "useClusterInfoManager"
+	// ForceEnqueue for force enqueue when npu num in cluster is meet job required , default is true
+	ForceEnqueue = "forceEnqueue"
 	// SelfMaintainAvailCard for volcano self maintain available card, default is true
 	SelfMaintainAvailCard = "self-maintain-available-card"
 

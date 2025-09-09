@@ -20,10 +20,16 @@ Package main is using for HuaWei Ascend pin affinity schedule.
 package main
 
 import (
+	"strconv"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
@@ -159,6 +165,129 @@ func buildOnSessionCloseTestCases() []onSessionCloseTest {
 	return tests
 }
 
+type jobEnqueueableTestCase struct {
+	name           string
+	mocks          func() *gomonkey.Patches
+	job            interface{}
+	plugin         *huaweiNPUPlugin
+	expectedResult int
+}
+
+func buildJobEnqueueableTestCases01() []jobEnqueueableTestCase {
+	mockJobInfo := &api.JobInfo{
+		Name: "test-job",
+	}
+	mockPlugin := &huaweiNPUPlugin{
+		Scheduler: &plugin.ScheduleHandler{
+			NPUPlugins: sets.NewString(),
+		},
+	}
+	tests := []jobEnqueueableTestCase{
+		{
+			name: "01-when npu-plusgins is bil should return skip",
+			job:  mockJobInfo,
+			plugin: &huaweiNPUPlugin{
+				Scheduler: &plugin.ScheduleHandler{},
+			},
+			expectedResult: util.JobEnqueueSkip,
+		},
+		{
+			name:           "02-when job is not api.JobInfo should return skip",
+			job:            "not-a-job-info",
+			plugin:         mockPlugin,
+			expectedResult: util.JobEnqueueSkip,
+		},
+		{
+			name: "03-when req npu name is not in supported should return skip",
+			mocks: func() *gomonkey.Patches {
+				return gomonkey.ApplyFunc(plugin.GetVCJobReqNPUTypeFromJobInfo,
+					func(job *api.JobInfo) (string, int, error) {
+						return "non-existent-npu", 2, nil
+					})
+			},
+			job:            mockJobInfo,
+			plugin:         mockPlugin,
+			expectedResult: util.JobEnqueueSkip,
+		},
+	}
+	return tests
+}
+
+func patchWithArgs(jobNpu, clusterNpu int) *gomonkey.Patches {
+	return gomonkey.ApplyFunc(plugin.GetVCJobReqNPUTypeFromJobInfo, func(job *api.JobInfo) (string,
+		int, error) {
+		return "available-npu", jobNpu, nil
+	}).ApplyFunc(getNpuNum, func(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int {
+		return clusterNpu
+	})
+}
+
+func buildJobEnqueueableTestCases02() []jobEnqueueableTestCase {
+	mockJobInfo := &api.JobInfo{
+		Name: "test-job",
+	}
+
+	tests := []jobEnqueueableTestCase{
+		{
+			name:  "04-when req npu num is not satisfied should return not-enqueue",
+			mocks: func() *gomonkey.Patches { return patchWithArgs(5, 2) },
+			job:   mockJobInfo,
+			plugin: &huaweiNPUPlugin{
+				Scheduler: &plugin.ScheduleHandler{
+					NPUPlugins: sets.NewString("available-npu"),
+				},
+			},
+			expectedResult: util.JobNotEnqueue,
+		},
+		{
+			name:  "05-when req npu num is satisfied and enqueue is force should return enqueue",
+			mocks: func() *gomonkey.Patches { return patchWithArgs(2, 5) },
+			job:   mockJobInfo,
+			plugin: func() *huaweiNPUPlugin {
+				plg := &huaweiNPUPlugin{
+					Scheduler: &plugin.ScheduleHandler{
+						NPUPlugins: sets.NewString("available-npu"),
+					},
+				}
+				plg.Scheduler.FrameAttr.ForceEnqueue = true
+				return plg
+			}(),
+			expectedResult: util.JobEnqueue,
+		},
+		{
+			name:  "06-when req npu num is satisfied and enqueue is not force should return skip",
+			mocks: func() *gomonkey.Patches { return patchWithArgs(2, 5) },
+			job:   mockJobInfo,
+			plugin: func() *huaweiNPUPlugin {
+				plg := &huaweiNPUPlugin{
+					Scheduler: &plugin.ScheduleHandler{
+						NPUPlugins: sets.NewString("available-npu"),
+					},
+				}
+				plg.Scheduler.FrameAttr.ForceEnqueue = false
+				return plg
+			}(),
+			expectedResult: util.JobEnqueueSkip,
+		},
+	}
+	return tests
+}
+
+func TestJobEnqueueable(t *testing.T) {
+	tests := append(buildJobEnqueueableTestCases01(), buildJobEnqueueableTestCases02()...)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mocks != nil {
+				patch := tt.mocks()
+				defer patch.Reset()
+			}
+			if result := jobEnqueueable(tt.job, &framework.Session{}, tt.plugin); result != tt.expectedResult {
+				t.Errorf("jobEnqueueable() = %v, want %v", result, tt.expectedResult)
+			}
+		})
+	}
+}
+
 func TestOnSessionClose(t *testing.T) {
 	tests := buildOnSessionCloseTestCases()
 	for _, tt := range tests {
@@ -169,5 +298,110 @@ func TestOnSessionClose(t *testing.T) {
 			}
 			tp.OnSessionClose(tt.args.ssn)
 		})
+	}
+}
+
+func newNPUNode(name string, anno, idle int) plugin.NPUNode {
+	return plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: name,
+			Idle: map[v1.ResourceName]float64{
+				"huawei.com/Ascend910": float64(idle * 1000),
+			},
+			Annotation: map[string]string{
+				"huawei.com/Ascend910": func() string {
+					annoStr := ""
+					for i := 0; i < anno; i++ {
+						annoStr += strconv.Itoa(i)
+						if i < anno-1 {
+							annoStr += ","
+						}
+					}
+					return annoStr
+				}(),
+			},
+		},
+	}
+}
+
+// TestGetNpuNum tests the getNpuNum function
+func TestGetNpuNum(t *testing.T) {
+	ssn := &framework.Session{
+		Nodes: map[string]*api.NodeInfo{
+			"node1": {Name: "node1"},
+			"node2": {Name: "node2"},
+			"node3": {Name: "node3"},
+			"node4": {Name: "node4"},
+		},
+	}
+	node1 := newNPUNode("node1", 4, 4)
+	node3 := newNPUNode("node3", 1, 2)
+	node4 := newNPUNode("node4", 0, 0)
+	plg := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+	plg.Scheduler.Nodes = map[string]plugin.NPUNode{
+		"node1": node1,
+		"node3": node3,
+		"node4": node4,
+	}
+	expectedResult := 4
+	t.Run("test GetNpuNum", func(t *testing.T) {
+		if result := getNpuNum(ssn, plg, "huawei.com/Ascend910"); result != expectedResult {
+			t.Errorf("getNpuNum() = %v, want %v", result, expectedResult)
+		}
+	})
+}
+
+func boolPointer(b bool) *bool {
+	return &b
+}
+func TestJobPipelined(t *testing.T) {
+	testCases := []struct {
+		name string
+		job  interface{}
+		plg  *huaweiNPUPlugin
+		want int
+	}{
+		{
+			name: "01-job is not *api.JobInfo should return reject",
+			job:  &api.TaskInfo{},
+			plg:  &huaweiNPUPlugin{},
+			want: util.Reject,
+		},
+		{
+			name: "02-job is not in cache should return abstain",
+			job:  &api.JobInfo{UID: "test-job-uid"},
+			plg:  &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}},
+			want: util.Abstain,
+		},
+		{
+			name: "03-job is not ready return reject",
+			job:  &api.JobInfo{UID: "test-job-uid"},
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {JobReadyTag: boolPointer(false)},
+				}
+				return p
+			}(),
+			want: util.Reject,
+		},
+		{
+			name: "04-job is ready should return abstain",
+			job:  &api.JobInfo{UID: "test-job-uid"},
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {JobReadyTag: boolPointer(true)},
+				}
+				return p
+			}(),
+			want: util.Abstain,
+		},
+	}
+	for _, tc := range testCases {
+		got := jobPipelined(tc.job, tc.plg)
+		if got != tc.want {
+			t.Errorf("jobEnqueueable(%v, %v) = %v, want %v", tc.job, tc.plg, got, tc.want)
+		}
 	}
 }

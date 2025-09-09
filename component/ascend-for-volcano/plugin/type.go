@@ -149,6 +149,7 @@ type StaticParameters struct {
 	NslbVersion           string
 	SharedTorNum          int
 	IsFirstSession        *bool // scheduler first session message is unreliable
+	ForceEnqueue          bool
 }
 
 // DynamicParameters volcano scheduler dynamic parameters

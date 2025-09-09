@@ -80,19 +80,29 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 		return
 	}
 	// check job npu resource, if illegal return failed
-	addJobValidFn(ssn, tp)
+	ssn.AddJobValidFn(tp.Name(), func(obj interface{}) *api.ValidateResult {
+		return tp.Scheduler.JobValid(obj)
+	})
 	// if node not meet the task require, the task will be failed. so need to intercept in advance
 	addPredicateFn(ssn, tp)
 
-	addJobPipelinedFn(ssn, tp)
+	ssn.AddJobPipelinedFn(tp.Name(), func(obj interface{}) int {
+		return jobPipelined(obj, tp)
+	})
 
 	addBatchNodeOrderFn(ssn, tp)
 
-	addJobReadyFn(ssn, tp)
+	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
+		return jobReady(obj, tp)
+	})
 
-	addJobEnqueueableFn(ssn, tp)
+	ssn.AddJobEnqueueableFn(tp.Name(), func(job interface{}) int {
+		return jobEnqueueable(job, ssn, tp)
+	})
 
-	addTaskOrderFn(ssn, tp)
+	ssn.AddTaskOrderFn(tp.Name(), func(l interface{}, r interface{}) int {
+		return tp.Scheduler.TaskOrderFn(l, r)
+	})
 	// Register event handlers to update task info in PodLister & nodeMap
 	// for support Concurrency
 	addEventHandler(ssn, tp)
@@ -123,13 +133,6 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 	tp.Scheduler.BeforeCloseHandler()
 }
 
-func addJobValidFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	// check job npu resource, if illegal return failed
-	ssn.AddJobValidFn(tp.Name(), func(obj interface{}) *api.ValidateResult {
-		return tp.Scheduler.JobValid(obj)
-	})
-}
-
 func addPredicateFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	// check job npu resource, if illegal return failed
 	ssn.AddPredicateFn(tp.Name(), func(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
@@ -147,24 +150,21 @@ func addPredicateFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	})
 }
 
-func addJobPipelinedFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	// check job npu resource, if illegal return failed
-	ssn.AddJobPipelinedFn(tp.Name(), func(obj interface{}) int {
-		ji, ok := obj.(*api.JobInfo)
-		if !ok {
-			klog.V(util.LogErrorLev).Info("obj assertion failed.")
-			return util.Reject
-		}
-
-		job, ok := tp.Scheduler.Jobs[ji.UID]
-		if !ok {
-			return util.Abstain
-		}
-		if *job.JobReadyTag {
-			return util.Abstain
-		}
+func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
+	ji, ok := obj.(*api.JobInfo)
+	if !ok {
+		klog.V(util.LogErrorLev).Info("obj assertion failed.")
 		return util.Reject
-	})
+	}
+
+	job, ok := tp.Scheduler.Jobs[ji.UID]
+	if !ok {
+		return util.Abstain
+	}
+	if *job.JobReadyTag {
+		return util.Abstain
+	}
+	return util.Reject
 }
 
 func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
@@ -179,19 +179,17 @@ func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	})
 }
 
-func addJobReadyFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
-		ji, ok := obj.(*api.JobInfo)
-		if !ok {
-			klog.V(util.LogErrorLev).Info("obj assertion failed.")
-			return false
-		}
-		job, ok := tp.Scheduler.Jobs[ji.UID]
-		if !ok {
-			return true
-		}
-		return *job.JobReadyTag
-	})
+func jobReady(obj interface{}, tp *huaweiNPUPlugin) bool {
+	ji, ok := obj.(*api.JobInfo)
+	if !ok {
+		klog.V(util.LogErrorLev).Info("obj assertion failed.")
+		return false
+	}
+	job, ok := tp.Scheduler.Jobs[ji.UID]
+	if !ok {
+		return true
+	}
+	return *job.JobReadyTag
 }
 
 func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
@@ -213,36 +211,31 @@ func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	})
 }
 
-func addJobEnqueueableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddJobEnqueueableFn(tp.Name(), func(job interface{}) int {
-		if tp.Scheduler.NPUPlugins == nil {
-			klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn : %s", util.ArgumentError)
-			return util.JobEnqueueSkip
-		}
-		vcjob, ok := job.(*api.JobInfo)
-		if !ok {
-			return util.JobEnqueueSkip
-		}
-		npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
-		if !tp.Scheduler.NPUPlugins.Has(npuName) {
-			return util.JobEnqueueSkip
-		}
-		tNpuNum := getNpuNum(ssn, tp, npuName)
-		if tNpuNum < rNpuNum {
-			klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue failed, require npu num is %v "+
-				"but cluster npu num is %v", vcjob.Name, rNpuNum, tNpuNum)
-			return util.JobNotEnqueue
-		}
+func jobEnqueueable(job interface{}, ssn *framework.Session, tp *huaweiNPUPlugin) int {
+	if tp.Scheduler.NPUPlugins == nil {
+		klog.V(util.LogErrorLev).Infof("AddJobEnqueueableFn : %s", util.ArgumentError)
+		return util.JobEnqueueSkip
+	}
+	vcjob, ok := job.(*api.JobInfo)
+	if !ok {
+		return util.JobEnqueueSkip
+	}
+	npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
+	if !tp.Scheduler.NPUPlugins.Has(npuName) {
+		return util.JobEnqueueSkip
+	}
+	tNpuNum := getNpuNum(ssn, tp, npuName)
+	if tNpuNum < rNpuNum {
+		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue failed, require npu num is %v "+
+			"but cluster npu num is %v", vcjob.Name, rNpuNum, tNpuNum)
+		return util.JobNotEnqueue
+	}
+	if tp.Scheduler.FrameAttr.ForceEnqueue {
 		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue success will start schedule, require npu num is <%v> "+
 			"and cluster npu num is <%v>.", vcjob.Name, rNpuNum, tNpuNum)
 		return util.JobEnqueue
-	})
-}
-
-func addTaskOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
-	ssn.AddTaskOrderFn(tp.Name(), func(l interface{}, r interface{}) int {
-		return tp.Scheduler.TaskOrderFn(l, r)
-	})
+	}
+	return util.JobEnqueueSkip
 }
 
 func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int {

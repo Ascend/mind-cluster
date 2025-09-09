@@ -316,6 +316,54 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 	}
 }
 
+func TestGetForceEnqueueConfig(t *testing.T) {
+	tests := []struct {
+		name     string
+		conf     map[string]string
+		expected bool
+	}{
+		{
+			name:     "01-when config is empty should return true",
+			conf:     map[string]string{},
+			expected: true,
+		},
+		{
+			name:     "02-when forceEnqueue key not in config should return true",
+			conf:     map[string]string{"other_key": "value"},
+			expected: true,
+		},
+		{
+			name:     "03-when the value of forceEnqueue key in config is true should return true",
+			conf:     map[string]string{util.ForceEnqueue: "true"},
+			expected: true,
+		},
+		{
+			name:     "04-when the value of forceEnqueue key in config is false should return false",
+			conf:     map[string]string{util.ForceEnqueue: "false"},
+			expected: false,
+		},
+		{
+			name:     "05-when the value of forceEnqueue key in config is not true should return false",
+			conf:     map[string]string{util.ForceEnqueue: "1"},
+			expected: false,
+		},
+		{
+			name:     "06-when the value of forceEnqueue key in config is empty string should return false",
+			conf:     map[string]string{util.ForceEnqueue: ""},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getForceEnqueueConfig(tt.conf)
+			if result != tt.expected {
+				t.Errorf("getForceEnqueueConfig() = %v, expected %v", result, tt.expected)
+			}
+		})
+	}
+}
+
 func getDefaultVolcanoFrameCasesOfReserveNodesValueMoreError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
