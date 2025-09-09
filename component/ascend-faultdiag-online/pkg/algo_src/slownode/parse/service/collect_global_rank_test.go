@@ -16,7 +16,9 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -155,4 +157,36 @@ func mockFunc(
 		return &model.Duration{Dur: 111}, nil
 	})
 	return patches
+}
+
+func TestReadParallelGroupInfo(t *testing.T) {
+	data := map[string]*model.OpGroupInfo{
+		"group_name_136": {
+			GroupName:   "pp",
+			GroupRank:   0,
+			GlobalRanks: []int64{1, 2},
+		},
+		"group_name_137": {
+			GroupName:   "tp",
+			GroupRank:   1,
+			GlobalRanks: []int64{5, 6, 7},
+		},
+	}
+	// creating a temporary json file
+	tmpFile, err := os.CreateTemp("", "parallel_group.json")
+	assert.NoError(t, err)
+
+	// encode to JSON and write to a file
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
+	assert.NoError(t, err)
+
+	_, err = tmpFile.Write(jsonBytes)
+	assert.NoError(t, err)
+	err = tmpFile.Close()
+	assert.NoError(t, err)
+
+	infoMap, err := readParallelGroupInfo(tmpFile.Name())
+	assert.NoError(t, err)
+	assert.Equal(t, infoMap, data)
+
 }
