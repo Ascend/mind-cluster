@@ -118,7 +118,9 @@ func (s *elasticTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
 		return nil, nil
 	}
 	msgs := make([]infrastructure.Msg, 0)
-	if s.signalInfo.SignalType == clusterdconstant.ChangeStrategySignalType || s.signalInfo.
+	if (s.signalInfo.SignalType == clusterdconstant.ChangeStrategySignalType && (s.signalInfo.
+		ChangeStrategy == clusterdconstant.ScaleInStrategyName || s.signalInfo.
+		ChangeStrategy == clusterdconstant.ScaleOutStrategyName)) || s.signalInfo.
 		SignalType == clusterdconstant.FaultNodesExitSignalType {
 		msgs = append(msgs, s.signalInfo.GetMsgs()...)
 	}

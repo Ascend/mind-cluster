@@ -301,6 +301,8 @@ func (ctl *EventController) getDPScaleStrategyRules() []common.TransRule {
 			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
 		{Src: common.CheckReportScaleInIsolateRanksState, Event: common.NotifyFaultNodesExitSuccessEvent,
 			Dst: common.WaitReportScaleInStatusState, Handler: ctl.handleWaitReportScaleInStatus},
+		{Src: common.CheckReportScaleInIsolateRanksState, Event: common.RecoverFailEvent,
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
 
 		{Src: common.WaitReportScaleInStatusState, Event: common.ReceiveReportEvent,
 			Dst: common.CheckRecoverResultState, Handler: ctl.handleCheckRecoverResult},
