@@ -146,6 +146,9 @@ func calDynamicThresholds(samePaths []map[string]any, faultType string) float64 
 			values = append(values, v)
 		}
 	}
+	if len(values) == 0 {
+		return 0.0
+	}
 
 	// 计算均值（单次遍历）
 	avg, variance := 0.0, 0.0
