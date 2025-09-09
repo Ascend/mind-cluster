@@ -121,6 +121,11 @@ func RemoveAllFile(filePaths []string) error {
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			continue
 		}
+		if isSymbolicLink, err := IsSymbolicLink(filePath); err != nil {
+			return fmt.Errorf("failed to check symlink: %v, file path: %s", err, filePath)
+		} else if isSymbolicLink {
+			return fmt.Errorf("symlink is a symlink, file path: %s", filePath)
+		}
 		if err := os.Remove(filePath); err != nil {
 			return fmt.Errorf("failed to remove %s: %v", filePath, err)
 		}

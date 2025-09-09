@@ -46,13 +46,17 @@ func HomogenizationComparisonFunc(
 	nConsecAnomalies := sndConfig.NconsecAnomaliesSignifySlow
 	/* 判断是否分为两个类的距离阈值 */
 	clusterMeanDistance := sndConfig.ClusterMeanDistance
-	if alignedData == nil || len(alignedData) == 0 {
+	if len(alignedData) == 0 {
 		hwlog.RunLog.Error("[SLOWNODE ALGO]alignedData is nil or empty")
 		return oneTpAbnormalGlobalRanks
 	}
-	if len(alignedData[0]) < nConsecAnomalies {
-		hwlog.RunLog.Warn("[SLOWNODE ALGO]data is not enough for detection")
-		return oneTpAbnormalGlobalRanks
+
+	for i, zpData := range alignedData {
+		if len(zpData) < nConsecAnomalies {
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]data at index %d is not enough for detection, length: %d, required: %d",
+				i, len(zpData), nConsecAnomalies)
+			return oneTpAbnormalGlobalRanks
+		}
 	}
 	var alignedNCData [][]float64
 	/* 只取最后几个连续的数据进行聚类 */

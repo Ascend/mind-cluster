@@ -24,6 +24,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	fileutils "ascend-faultdiag-online/pkg/algo_src/slownode/parse/utils"
 )
 
 // getNodeRanksFromRanktable 解析ranktable文件，构架ip2Ranks字典，根据本节点IP地址读取Ranks（IP从环境变量中读取）
@@ -32,6 +33,13 @@ func getNodeRanksFromRanktable(rankTablePath string) []int {
 	_, err := os.Stat(rankTablePath)
 	if err != nil {
 		hwlog.RunLog.Error("ranktable is not exist")
+		return []int{}
+	}
+	if IsSymbolicLink, err := fileutils.IsSymbolicLink(rankTablePath); err != nil {
+		hwlog.RunLog.Errorf("check ranktable: %s is symbolic link failed: %v", rankTablePath, err)
+		return []int{}
+	} else if IsSymbolicLink {
+		hwlog.RunLog.Errorf("ranktable: %s is symbolic link, not allowed", rankTablePath)
 		return []int{}
 	}
 

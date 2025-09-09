@@ -30,6 +30,11 @@ func ReadLinesFromOffset(filePath string, startOffset int64) ([]string, int64, e
 	if err := FileValidator(filePath); err != nil {
 		return nil, startOffset, err
 	}
+	if isSymbolicLink, err := IsSymbolicLink(filePath); err != nil {
+		return nil, startOffset, fmt.Errorf("failed to check symlink: %v, file path: %s", err, filePath)
+	} else if isSymbolicLink {
+		return nil, startOffset, fmt.Errorf("symlink is a symlink, file path: %s", filePath)
+	}
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, startOffset, err

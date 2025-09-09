@@ -16,6 +16,7 @@
 package csvtool
 
 import (
+	"ascend-common/common-utils/hwlog"
 	"encoding/csv"
 	"os"
 	"sync"
@@ -71,38 +72,54 @@ func NewCSVHandler(filePath string, mode enum.FileMode, perm os.FileMode) (*CSVH
 
 // WriteRow 写入单行 CSV 数据（自动加锁）
 func (ch *CSVHandler) WriteRow(record []string) error {
+	var err error
 	ch.openFile.mu.Lock()
-	defer ch.openFile.mu.Unlock()
+	defer func(err error) {
+		if err != nil {
+			if closeErro := ch.Close(); closeErro != nil {
+				hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+			}
+		}
+		ch.openFile.mu.Unlock()
+	}(err)
 
 	if ch.mode == enum.WriteMode {
 		// 移动到文件开头并清空内容
-		if _, err := ch.openFile.file.Seek(0, 0); err != nil {
+		if _, err = ch.openFile.file.Seek(0, 0); err != nil {
 			return err
 		}
-		if err := ch.openFile.file.Truncate(0); err != nil {
+		if err = ch.openFile.file.Truncate(0); err != nil {
 			return err
 		}
 	}
-
-	return ch.openFile.writer.Write(record)
+	err = ch.openFile.writer.Write(record)
+	return err
 }
 
 // WriteAll 写入多行 CSV 数据（原子操作）
 func (ch *CSVHandler) WriteAll(records [][]string) error {
+	var err error
 	ch.openFile.mu.Lock()
-	defer ch.openFile.mu.Unlock()
+	defer func(err error) {
+		if err != nil {
+			if closeErro := ch.Close(); closeErro != nil {
+				hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+			}
+		}
+		ch.openFile.mu.Unlock()
+	}(err)
 
 	if ch.mode == enum.WriteMode {
 		// 移动到文件开头并清空内容
-		if _, err := ch.openFile.file.Seek(0, 0); err != nil {
+		if _, err = ch.openFile.file.Seek(0, 0); err != nil {
 			return err
 		}
-		if err := ch.openFile.file.Truncate(0); err != nil {
+		if err = ch.openFile.file.Truncate(0); err != nil {
 			return err
 		}
 	}
-
-	return ch.openFile.writer.WriteAll(records)
+	err = ch.openFile.writer.WriteAll(records)
+	return err
 }
 
 // Flush 强制刷盘（确保数据写入磁盘）
@@ -111,7 +128,13 @@ func (ch *CSVHandler) Flush() error {
 	defer ch.openFile.mu.Unlock()
 
 	ch.openFile.writer.Flush()
-	return ch.openFile.writer.Error()
+	if err := ch.openFile.writer.Error(); err != nil {
+		if closeErro := ch.Close(); closeErro != nil {
+			hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+		}
+		return err
+	}
+	return nil
 }
 
 // Close 关闭文件（自动 Flush）
