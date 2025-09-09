@@ -1389,6 +1389,9 @@ func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.
 				return common.NotifyFailEvent, common.ClientError, nil
 			}
 			nodeRankIds = common.RemoveDuplicateNodeRanks(nodeRankIds, ctl.faultPod)
+			for _, nodeRankId := range nodeRankIds {
+				ctl.faultPod[nodeRankId] = ctl.prePod[nodeRankId]
+			}
 			signal.NodeRankIds = nodeRankIds
 			_, respCode, err := ctl.signalEnqueue(signal)
 			if err != nil || respCode != common.OK {
@@ -1558,6 +1561,12 @@ func (ctl *EventController) pgStatusEnqueue(pgRunning bool) {
 }
 
 func (ctl *EventController) listenScheduleResult() {
+	if !(ctl.restartFaultProcess && ctl.configTargetStrategy(constant.ProcessRecoverInPlaceStrategyName)) &&
+		!ctl.configTargetStrategy(constant.ProcessRecoverStrategyName) {
+		hwlog.RunLog.Infof("job %s does not support recover or recover-in-place strategy, "+
+			"not need to listen schedule result", ctl.jobInfo.JobId)
+		return
+	}
 	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeout
 	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
 	if pgInfo.Annotations != nil && pgInfo.Annotations[constant.WaitRescheduleTimeoutKey] != "" {
@@ -1571,6 +1580,7 @@ func (ctl *EventController) listenScheduleResult() {
 	}
 	pgRunning := true
 	start := time.Now().Unix()
+	hwlog.RunLog.Infof("job %s begin listenScheduleResult, timeout: %v", ctl.jobInfo.JobId, podReschedulingTimeout)
 	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) ||
 		(!ctl.restartFaultProcess && !ctl.checkWhetherPodChanged()) {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
