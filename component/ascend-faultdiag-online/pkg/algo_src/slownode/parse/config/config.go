@@ -17,11 +17,6 @@ Package config provides some funcs relevant to the config
 */
 package config
 
-import (
-	"encoding/json"
-	"os"
-)
-
 // SlowNodeParserConfig 慢节点清洗配置
 type SlowNodeParserConfig struct {
 	RankDir                    string `json:"rank_dir"`                             // rank文件位置
@@ -31,17 +26,4 @@ type SlowNodeParserConfig struct {
 	ParGroupJsonInputFilePath  string `json:"parallel_group_json_input_file_path"`  // parallel_group.json输入路径
 	ParGroupJsonOutputFilePath string `json:"parallel_group_json_output_file_path"` // parallel_group.json输出路径
 	Traffic                    int64  `json:"traffic"`                              // 通信量
-}
-
-// NewSlowNodeParserConfig 慢节点配置构造函数
-func NewSlowNodeParserConfig(configPath string) (*SlowNodeParserConfig, error) {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, err
-	}
-	var config SlowNodeParserConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
 }

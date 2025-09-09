@@ -18,23 +18,8 @@ package service
 import (
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/business/dealdb"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/business/writecsv"
-	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/context"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/context/contextdata"
 )
-
-// SlowNodeParse 慢节点信息清洗
-func SlowNodeParse(configPath string) error {
-	snpContext, err := context.NewSnpContext(configPath)
-	if err != nil {
-		return err
-	}
-
-	if err = ParseData(snpContext.ContextData, 0); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // ParseData 清洗慢节点数据
 func ParseData(ctxData *contextdata.SnpRankContextData, perStepId int64) error {
