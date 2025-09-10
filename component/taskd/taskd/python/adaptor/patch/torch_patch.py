@@ -214,12 +214,19 @@ def patch_monitor_workers(self, worker_group: WorkerGroup) -> RunResult:
             failures=worker_failures,
         )
     else:
-        return RunResult(
-            state=WorkerState.SUCCEEDED,
-            return_values=workers_ret_vals,
-        )
+        return get_success_run_result(worker_group)
 
 
+def get_success_run_result(worker_group: WorkerGroup) -> RunResult:
+    workers_ret_vals = {worker.global_rank: "completed" for worker in worker_group.workers}
+    return RunResult(
+        state=WorkerState.SUCCEEDED,
+        return_values=workers_ret_vals,
+    )
+
+
+# p_context only contain on process,
+# when a failure occur or training end, only one of multiple p_context.wait calls (device num) can get a non-None value
 def context_wait_task(local_rank, p_context, result_dict, lock):
     result = p_context.wait(0)
     with lock:
