@@ -462,11 +462,6 @@ func (m *BaseManager) subscribeProcessManageSignal(conn *grpc.ClientConn) {
 		JobId: m.JobId,
 		Role:  roleTaskd,
 	}
-	status, err := recoverClient.Init(m.svcCtx, clientInfo)
-	if err != nil || status.Code != common.OK {
-		hwlog.RunLog.Errorf("request Init failed, error: %v, response: %v", err, status)
-		return
-	}
 	for {
 		exit := m.startSubscribe(recoverClient, clientInfo)
 		if exit {
@@ -477,7 +472,12 @@ func (m *BaseManager) subscribeProcessManageSignal(conn *grpc.ClientConn) {
 }
 
 func (m *BaseManager) startSubscribe(recoverClient pb.RecoverClient, clientInfo *pb.ClientInfo) bool {
-	status, err := recoverClient.Register(m.svcCtx, clientInfo)
+	status, err := recoverClient.Init(m.svcCtx, clientInfo)
+	if err != nil || status.Code != common.OK {
+		hwlog.RunLog.Errorf("request Init failed, error: %v, response: %v", err, status)
+		return false
+	}
+	status, err = recoverClient.Register(m.svcCtx, clientInfo)
 	if err != nil || status.Code != common.OK {
 		hwlog.RunLog.Errorf("request Register failed, error: %v, response: %v", err, status)
 		return false
