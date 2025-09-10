@@ -30,6 +30,7 @@ import (
 const (
 	normalFaultValue = "software"
 	retryFaultValue  = "retry-fault"
+	maxFaultPodLen   = 10
 )
 
 // FaultRecoverService is a service for fault recover
@@ -138,7 +139,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	}
 	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId)
 	subHealthyHotSwitch := faultInfo.HealthyState == constant.SubHealthyState && controller.jobInfo.HotSwitch
-	grpcFormatFaults := s.getGrpcFormatFaults(faultInfo, controller)
+	grpcFormatFaults, isMasterFault := s.getGrpcFormatFaults(faultInfo, controller)
 	if len(grpcFormatFaults) == 0 {
 		hwlog.RunLog.Debugf("job %s has no new faults", faultInfo.JobId)
 		return
@@ -150,18 +151,22 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
 	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
 	if subHealthyHotSwitch {
-		handleSubHealthyFault(controller, grpcFormatFaults)
+		handleSubHealthyFault(controller, grpcFormatFaults, isMasterFault)
 		return
 	}
 	controller.addEvent(common.FaultOccurEvent)
 }
 
-func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInfo, controller *EventController) []*pb.FaultRank {
+func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInfo, controller *EventController) ([]*pb.FaultRank, bool) {
 	grpcFormatFaults := make([]*pb.FaultRank, 0)
+	isMasterFault := false
 	for _, info := range faultInfo.FaultList {
 		if info.PodUid == "" || info.PodRank == "" {
 			hwlog.RunLog.Warnf("invalid pod info, podId=%s, podRank=%s", info.PodUid, info.PodRank)
 			continue
+		}
+		if info.PodRank == api.MasterPodRank {
+			isMasterFault = true
 		}
 		faultPod := make(map[string]string)
 		faultPod[info.PodRank] = info.PodUid
@@ -186,18 +191,26 @@ func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInf
 		}
 		grpcFormatFaults = append(grpcFormatFaults, fault)
 	}
-	return grpcFormatFaults
+	return grpcFormatFaults, isMasterFault
 }
 
-func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank) {
-	faultPods := ctl.GetFaultPod()
-	if _, exists := faultPods[api.MasterPodRank]; exists {
+func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank, isMasterFault bool) {
+	if isMasterFault {
 		// log max 3 times
 		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, ctl.jobInfo.JobId+api.MasterPodRank,
 			"fault occour on master node, skip this fault, podRank: %v,faults: %v", api.MasterPodRank, faults)
 		return
 	}
 	hwlog.ResetErrCnt(constant.SubHealthyState, ctl.jobInfo.JobId+api.MasterPodRank)
+
+	faultPods := ctl.GetFaultPod()
+	if len(faultPods) > maxFaultPodLen {
+		hwlog.RunLog.Warnf("too much fault pods,change subhealthy strategy to ignore, "+
+			"maxFaultPod: %v, current fault pods len: %v", maxFaultPodLen, len(faultPods))
+		ctl.jobInfo.HotSwitch = false
+		ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
+		return
+	}
 
 	if len(faults) > 0 {
 		ctl.addEvent(common.BeginHotSwitchEvent)
@@ -249,15 +262,6 @@ func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,
 			ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
 			return true
 		}
-
-		const maxFaultPodLen = 10
-		faultPods := ctl.GetFaultPod()
-		if len(faultPods) > maxFaultPodLen {
-			hwlog.RunLog.Warnf("too much fault pods,change subhealthy strategy to ignore,fault pods len: %v", len(faultPods))
-			ctl.jobInfo.HotSwitch = false
-			ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
-			return true
-		}
 		return false
 	}
 	// sub health and not hotswitch scene , if graceExit is false, skip
@@ -268,17 +272,6 @@ func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,
 	if !ctl.onlySupportDumpStrategy() {
 		return true
 	}
-	return false
-}
-
-func isMasterSubhealthHotSwitchFault(subHealthyHotSwitch bool, info constant.FaultRank) bool {
-	if subHealthyHotSwitch && info.PodRank == api.MasterPodRank {
-		// log max 3 times
-		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, info.PodRank,
-			"fault occour on master node,skip this fault, podRank: %v,rankId: %v", info.PodRank, info.RankId)
-		return true
-	}
-	hwlog.ResetErrCnt(constant.SubHealthyState, info.PodRank)
 	return false
 }
 

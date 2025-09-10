@@ -12,7 +12,6 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/api"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
@@ -687,7 +686,6 @@ func TestCatchAndSetExceptionInfo_Panic(t *testing.T) {
 
 func TestHandleSubHealthyFault(t *testing.T) {
 	convey.Convey("Test handleSubHealthyFault", t, func() {
-		// 准备测试数据
 		ctl := &EventController{jobInfo: common.JobBaseInfo{JobId: "test-job-id"}}
 		faults := []*pb.FaultRank{{RankId: "test-rank"}}
 		convey.Convey("master node fault exists", func() {
@@ -697,11 +695,7 @@ func TestHandleSubHealthyFault(t *testing.T) {
 			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
 				events = append(events, event)
 			})
-			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{
-				api.MasterPodRank: "mock",
-			})
-
-			handleSubHealthyFault(ctl, faults)
+			handleSubHealthyFault(ctl, faults, true)
 			convey.So(len(events), convey.ShouldEqual, 0)
 		})
 
@@ -712,9 +706,7 @@ func TestHandleSubHealthyFault(t *testing.T) {
 			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
 				events = append(events, event)
 			})
-			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{})
-
-			handleSubHealthyFault(ctl, faults)
+			handleSubHealthyFault(ctl, faults, false)
 			convey.So(len(events), convey.ShouldEqual, 1)
 		})
 
@@ -725,8 +717,7 @@ func TestHandleSubHealthyFault(t *testing.T) {
 			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
 				events = append(events, event)
 			})
-			patch.ApplyMethodReturn(ctl, "GetFaultPod", map[string]string{})
-			handleSubHealthyFault(ctl, []*pb.FaultRank{})
+			handleSubHealthyFault(ctl, []*pb.FaultRank{}, false)
 			convey.So(len(events), convey.ShouldEqual, 0)
 		})
 	})
@@ -737,7 +728,6 @@ type testSubHealthyCase struct {
 	controller              *EventController
 	faultInfo               constant.JobFaultInfo
 	mockFramework           string
-	mockFaultPods           map[string]string
 	mockOnlySupportDump     bool
 	expectedResult          bool
 	expectHotSwitchDisabled bool
@@ -757,20 +747,6 @@ func buildTestCases1() []testSubHealthyCase {
 			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
 			expectedResult:          true,
 			expectHotSwitchDisabled: true,
-		}, {name: "hotswitch with pytorch framework and too many fault pods",
-			controller: &EventController{
-				jobInfo: common.JobBaseInfo{
-					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
-				},
-			},
-			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
-			mockFaultPods: map[string]string{
-				"0": "uid0", "1": "uid1", "2": "uid2", "3": "uid3", "4": "uid4",
-				"5": "uid5", "6": "uid6", "7": "uid7", "8": "uid8", "9": "uid9",
-				"10": "uid10",
-			},
-			expectedResult:          true,
-			expectHotSwitchDisabled: true,
 		}, {
 			name: "hotswitch with pytorch framework and normal fault pods count",
 			controller: &EventController{
@@ -779,7 +755,6 @@ func buildTestCases1() []testSubHealthyCase {
 				},
 			},
 			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
-			mockFaultPods:           map[string]string{"0": "uid0", "1": "uid1", "2": "uid2"},
 			expectedResult:          false,
 			expectHotSwitchDisabled: false,
 		},
@@ -833,7 +808,6 @@ func TestSkipHandleSubHealthyFaults(t *testing.T) {
 		convey.Convey(tt.name, t, func() {
 			patch := gomonkey.NewPatches()
 			defer patch.Reset()
-			patch.ApplyMethodReturn(tt.controller, "GetFaultPod", tt.mockFaultPods)
 			patch.ApplyPrivateMethod(tt.controller, "onlySupportDumpStrategy", func() bool {
 				return tt.mockOnlySupportDump
 			})
