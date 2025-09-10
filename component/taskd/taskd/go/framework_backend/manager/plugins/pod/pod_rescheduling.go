@@ -217,7 +217,7 @@ func (pod *PodReschedulingPlugin) checkFaultrecover(shot storage.SnapShot) bool 
 		return false
 	}
 	if shot.MgrInfos.Status[constant.FaultRecover] == "" {
-		hwlog.RunLog.Info("fault recover status is empty")
+		hwlog.RunLog.Debug("fault recover status is empty")
 		return false
 	}
 	return true
@@ -242,19 +242,19 @@ func (pod *PodReschedulingPlugin) checkExitStrategy(shot storage.SnapShot) (infr
 	pod.firstGetRestartTime(shot)
 	clusterInfo, ok := shot.ClusterInfos.Clusters[constant.ClusterDRank]
 	if !ok {
-		hwlog.RunLog.Info("cluster info not found")
+		hwlog.RunLog.Debug("cluster info not found")
 		return infrastructure.PredicateResult{
 			PluginName: pod.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}
 	clusterUuid := clusterInfo.Command[constant.Uuid]
 	if pod.uuid == clusterUuid {
-		hwlog.RunLog.Info("cluster uuid not change")
+		hwlog.RunLog.Debug("cluster uuid not change")
 		return infrastructure.PredicateResult{
 			PluginName: pod.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}
 
 	if clusterInfo.Command[constant.ChangeStrategy] != clusterd_constant.ProcessExitStrategyName {
-		hwlog.RunLog.Info("change strategy not process exit strategy")
+		hwlog.RunLog.Debug("change strategy not process exit strategy")
 		return infrastructure.PredicateResult{
 			PluginName: pod.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}

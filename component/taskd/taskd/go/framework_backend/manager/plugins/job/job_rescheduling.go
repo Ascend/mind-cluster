@@ -135,7 +135,7 @@ func (job *JobReschedulingPlugin) Predicate(shot storage.SnapShot) (infrastructu
 				}}, nil
 		}
 	}
-	hwlog.RunLog.Info("JobReschedulingPlugin not fault occur")
+	hwlog.RunLog.Debug("JobReschedulingPlugin not fault occur")
 	return infrastructure.PredicateResult{
 		PluginName: job.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 }
@@ -171,7 +171,7 @@ func (job *JobReschedulingPlugin) checkKillMaster(shot storage.SnapShot) bool {
 		return false
 	}
 	if shot.MgrInfos.Status[constant.FaultRecover] == "" {
-		hwlog.RunLog.Info("fault recover status is empty")
+		hwlog.RunLog.Debug("fault recover status is empty")
 		return false
 	}
 	clusterInfo, ok := shot.ClusterInfos.Clusters[constant.ClusterDRank]
