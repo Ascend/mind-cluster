@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/faultdomain"
-	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
@@ -149,7 +147,6 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
 	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
-	dealWithForceRelease(controller, faultInfo, grpcFormatFaults)
 	if subHealthyHotSwitch {
 		handleSubHealthyFault(controller, grpcFormatFaults, isMasterFault)
 		return
@@ -215,37 +212,6 @@ func handleSubHealthyFault(ctl *EventController, faults []*pb.FaultRank, isMaste
 	if len(faults) > 0 {
 		ctl.addEvent(common.BeginHotSwitchEvent)
 	}
-}
-
-func dealWithForceRelease(controller *EventController, faultInfo constant.JobFaultInfo, grpcFormatFaults []*pb.FaultRank) {
-	if len(grpcFormatFaults) == 0 {
-		return
-	}
-	faultNodes, ok := isNeedForceReleaseFault(faultInfo)
-	if !ok {
-		return
-	}
-	hwlog.RunLog.Infof("jobId=%s force release", controller.jobInfo.JobId)
-	faultInfos := job.GetJobFaultSdIdAndNodeName(controller.jobInfo.JobId, faultNodes)
-	if faultInfos == nil {
-		return
-	}
-	kube.CreateOrUpdateSuperPodFaultInfo(controller.jobInfo.JobId, faultInfos)
-	time.Sleep(constant.ReleaseTimeOut)
-}
-
-func isNeedForceReleaseFault(faultInfo constant.JobFaultInfo) (map[string]struct{}, bool) {
-	faultNodes := make(map[string]struct{})
-	for _, faultDevice := range faultInfo.FaultDevice {
-		if strings.Contains(faultDevice.FaultCode, constant.CardDropFault) ||
-			faultDevice.DeviceType == constant.FaultTypeNode || faultDevice.DeviceType == constant.SwitchFaultType {
-			faultNodes[faultDevice.ServerName] = struct{}{}
-		}
-	}
-	if len(faultNodes) == 0 {
-		return faultNodes, false
-	}
-	return faultNodes, true
 }
 
 func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,

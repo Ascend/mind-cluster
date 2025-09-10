@@ -148,6 +148,7 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
+		setUseNodeNames(&jobInfo, podsInJob)
 		initJobShareTorInfo(&jobInfo, podsInJob)
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
@@ -167,6 +168,15 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	if result {
 		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+func setUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
+	if jobInfo.NodeNames == nil {
+		jobInfo.NodeNames = make(map[string]string)
+	}
+	for _, podTemp := range podsInJob {
+		jobInfo.NodeNames[string(podTemp.UID)] = podTemp.Spec.NodeName
 	}
 }
 

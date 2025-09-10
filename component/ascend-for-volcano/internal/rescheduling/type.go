@@ -148,10 +148,12 @@ const (
 )
 
 const (
-	taskFaultKey         = "fault-type"
-	softwareKey          = "software"
-	linkDownFaultCode    = "81078603"
-	linkDownFaultTimeout = 20
+	taskFaultKey           = "fault-type"
+	softwareKey            = "software"
+	linkDownFaultCode      = "81078603"
+	linkDownFaultTimeout   = 20
+	rescheduleInPlaceKey   = "reschedule-in-place"
+	rescheduleInPlaceValue = "true"
 )
 
 // ReScheduler object for re-scheduling

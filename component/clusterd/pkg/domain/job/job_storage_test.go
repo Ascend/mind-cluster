@@ -10,9 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"k8s.io/apimachinery/pkg/util/sets"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/superpod"
 )
 
 const (
@@ -294,7 +298,7 @@ func TestInstanceJobKey(t *testing.T) {
 func TestGetJobFaultSdIdAndNodeName(t *testing.T) {
 	convey.Convey("Test GetJobFaultSdIdAndNodeName", t, func() {
 		testJobId := "test-job-id"
-		testPodNames := map[string]struct{}{"pod1": {}}
+		testPodNames := map[string]string{"0": "pod1"}
 		convey.Convey("Should return nil when job not in cache", func() {
 			result := GetJobFaultSdIdAndNodeName(testJobId, testPodNames)
 			convey.So(result, convey.ShouldBeNil)
@@ -316,6 +320,32 @@ func TestGetJobFaultSdIdAndNodeName(t *testing.T) {
 			defer DeleteJobCache(testJobId)
 			result := GetJobFaultSdIdAndNodeName(testJobId, testPodNames)
 			convey.So(result, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestGetFaultSuperID(t *testing.T) {
+	convey.Convey("Test getFaultSuperID", t, func() {
+		convey.Convey("When there are no fault nodes", func() {
+			faultNodes := sets.NewString()
+			patches := gomonkey.ApplyFunc(superpod.ListClusterDevice, func() []*api.SuperPodDevice {
+				return []*api.SuperPodDevice{}
+			})
+			defer patches.Reset()
+			result := getFaultSuperID(faultNodes)
+			convey.So(result, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("When there are fault nodes but no matching super nodes", func() {
+			faultNodes := sets.NewString("node1", "node2")
+			patches := gomonkey.ApplyFunc(superpod.ListClusterDevice, func() []*api.SuperPodDevice {
+				return []*api.SuperPodDevice{
+					{SuperPodID: "superpod1", NodeDeviceMap: map[string]*api.NodeDevice{
+						"node3": {NodeName: "node3", DeviceMap: map[string]string{"device1": "sdid1"}}}}}
+			})
+			defer patches.Reset()
+			result := getFaultSuperID(faultNodes)
+			convey.So(result, convey.ShouldBeEmpty)
 		})
 	})
 }

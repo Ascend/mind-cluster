@@ -63,6 +63,7 @@ type FaultHandler interface {
 	Execute(*ScheduleEnv, *framework.Session) error
 	CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error
 	ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)
+	UseAnnotation(*api.TaskInfo)
 	PreStopAction(*ScheduleEnv) error
 }
 

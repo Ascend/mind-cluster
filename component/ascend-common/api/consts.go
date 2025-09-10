@@ -179,3 +179,10 @@ const (
 	// MindSporeFramework framework
 	MindSporeFramework = "mindspore"
 )
+
+const (
+	// RescheduleInPlaceKey reschedule in place key
+	RescheduleInPlaceKey = "reschedule-in-place"
+	// RescheduleInPlaceValue reschedule in place value
+	RescheduleInPlaceValue = "true"
+)

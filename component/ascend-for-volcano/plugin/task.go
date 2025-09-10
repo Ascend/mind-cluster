@@ -67,6 +67,9 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		// update node.
 		sHandle.Nodes[nodeName] = *vcNode
 	}
+	if sHandle.FaultHandle != nil {
+		sHandle.FaultHandle.UseAnnotation(task)
+	}
 	klog.V(util.LogDebugLev).Infof("%s %s useAnnotation node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
 }
 

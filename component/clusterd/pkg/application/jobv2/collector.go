@@ -7,6 +7,7 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/epranktable"
@@ -35,6 +36,7 @@ func PodCollector(oldPodInfo, newPodInfo *v1.Pod, operator string) {
 	switch operator {
 	case constant.AddOperator, constant.UpdateOperator:
 		pod.SavePod(newPodInfo)
+		refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo)
 	case constant.DeleteOperator:
 		pod.DeletePod(newPodInfo)
 	default:
@@ -42,6 +44,17 @@ func PodCollector(oldPodInfo, newPodInfo *v1.Pod, operator string) {
 		return
 	}
 	podMessage(oldPodInfo, newPodInfo, operator)
+}
+
+func refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo *v1.Pod) {
+	if oldPodInfo == nil || newPodInfo == nil {
+		return
+	}
+	if oldPodInfo.Annotations[api.RescheduleInPlaceKey] == "" &&
+		newPodInfo.Annotations[api.RescheduleInPlaceKey] == api.RescheduleInPlaceValue {
+		hwlog.RunLog.Infof("refresh cm when pod %s reschedule in place", newPodInfo.Name)
+		go kube.RecoverFaultJobInfoCmWithSync(pod.GetJobKeyByPod(newPodInfo))
+	}
 }
 
 // EpGlobalRankTableMassageCollector collector generate global rank table message

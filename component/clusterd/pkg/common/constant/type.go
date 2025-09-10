@@ -152,7 +152,8 @@ type JobInfo struct {
 	MultiInstanceJobId string
 	// AppType is the app type of acjob
 	// for multi-instance job, the value is controller coordinator or server
-	AppType string
+	AppType   string
+	NodeNames map[string]string
 }
 
 // RankTable rank table info
