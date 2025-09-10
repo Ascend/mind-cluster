@@ -17,6 +17,7 @@ import (
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/kube"
 )
@@ -240,7 +241,10 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 	hwlog.RunLog.Debugf("allConfigmap info: %#v", util.ObjToString(allConfigmap))
 
 	jobFaultInfos := make(map[string]constant.JobFaultInfo)
+	deletedJobFaultDeviceMap := make(map[string][]constant.FaultDevice)
 	jobServerInfoMap := job.GetJobServerInfoMap()
+	delDeviceCm := l2fault.L2FaultCache.GetDeletedDevL2FaultCmForNodeMap()
+	delSwitchCm := l2fault.L2FaultCache.GetDeletedSwitchL2FaultCmForNodeMap()
 	for jobId, serverList := range jobServerInfoMap.InfoMap {
 		jobFaultInfo := constant.JobFaultInfo{
 			JobId:        jobId,
@@ -250,6 +254,7 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 		hwlog.RunLog.Debugf("jobId:%s,serverList: %d", jobId, len(serverList))
 		faultList, nodeStatusList, faultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
 			allConfigmap.NodeCm, allConfigmap.SwitchCm, allConfigmap.DeviceCm, jobId)
+
 		// serverList for tasks that do not require NPU resources is empty,
 		// and it needs to be actively constructed to generate job fault device list
 		if len(serverList) == 0 {
@@ -265,8 +270,15 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 		jobFaultInfo.HealthyState = getHealthState(faultList, nodeStatusList, podStrategiesMap)
 		jobFaultInfo.FaultDevice = faultDeviceList
 		jobFaultInfos[jobId] = jobFaultInfo
+		if len(delDeviceCm) == 0 && len(delSwitchCm) == 0 {
+			continue
+		}
+		_, _, deletedFaultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
+			allConfigmap.NodeCm, delSwitchCm, delDeviceCm, jobId)
+		deletedJobFaultDeviceMap[jobId] = deletedFaultDeviceList
 	}
 	processor.setJobFaultRankInfos(jobFaultInfos)
+	l2fault.L2FaultCache.SetDeletedJobFaultDeviceMap(deletedJobFaultDeviceMap)
 	return nil
 }
 

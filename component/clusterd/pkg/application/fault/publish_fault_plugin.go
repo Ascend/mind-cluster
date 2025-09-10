@@ -15,6 +15,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
@@ -36,20 +37,30 @@ func (s *FaultServer) checkFaultFromFaultCenter() {
 
 func (s *FaultServer) checkPublishFault(allJobFaultInfo map[string]constant.JobFaultInfo) {
 	jobFaultMap := make(map[string][]constant.FaultDevice, len(allJobFaultInfo))
+	deletedJobFaultDeviceMap := l2fault.L2FaultCache.GetDeletedJobFaultDeviceMap()
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		jobInfo, ok := job.GetJobCache(jobId)
 		if !ok {
 			hwlog.RunLog.Errorf("jobId=%s jobInfo is not found", jobId)
 			continue
 		}
-		if len(jobFaultInfo.FaultDevice) == 0 {
+		currentFaults := jobFaultInfo.FaultDevice
+		deletedFaults, hasDeleted := deletedJobFaultDeviceMap[jobId]
+		if len(currentFaults) == 0 && (!hasDeleted || len(deletedFaults) == 0) {
 			continue
 		}
-		jobFaultMap[jobId] = append(jobFaultMap[jobId], jobFaultInfo.FaultDevice...)
-
-		if len(jobInfo.MultiInstanceJobId) > 0 {
-			jobFaultMap[jobInfo.MultiInstanceJobId] = append(jobFaultMap[jobInfo.MultiInstanceJobId],
-				jobFaultInfo.FaultDevice...)
+		jobFaultMap[jobId] = append(jobFaultMap[jobId], currentFaults...)
+		if hasDeleted && len(deletedFaults) > 0 {
+			jobFaultMap[jobId] = append(jobFaultMap[jobId], deletedFaults...)
+			hwlog.RunLog.Debugf("backfilled deleted L2 faults to job %s: %v", jobId, deletedFaults)
+		}
+		if multiJobId := jobInfo.MultiInstanceJobId; len(multiJobId) > 0 {
+			jobFaultMap[multiJobId] = append(jobFaultMap[multiJobId], currentFaults...)
+			if hasDeleted && len(deletedFaults) > 0 {
+				jobFaultMap[multiJobId] = append(jobFaultMap[multiJobId], deletedFaults...)
+				hwlog.RunLog.Debugf("backfilled deleted L2 faults to multi-instance job %s: %v",
+					multiJobId, deletedFaults)
+			}
 		}
 	}
 	s.dealWithFaultInfoForMergedJob(jobFaultMap)
