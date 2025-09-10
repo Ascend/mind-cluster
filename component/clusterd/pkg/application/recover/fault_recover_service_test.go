@@ -684,45 +684,6 @@ func TestCatchAndSetExceptionInfo_Panic(t *testing.T) {
 	}
 }
 
-func TestHandleSubHealthyFault(t *testing.T) {
-	convey.Convey("Test handleSubHealthyFault", t, func() {
-		ctl := &EventController{jobInfo: common.JobBaseInfo{JobId: "test-job-id"}}
-		faults := []*pb.FaultRank{{RankId: "test-rank"}}
-		convey.Convey("master node fault exists", func() {
-			patch := gomonkey.NewPatches()
-			defer patch.Reset()
-			events := make([]string, 0)
-			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
-				events = append(events, event)
-			})
-			handleSubHealthyFault(ctl, faults, true)
-			convey.So(len(events), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("no master node fault", func() {
-			patch := gomonkey.NewPatches()
-			defer patch.Reset()
-			events := make([]string, 0)
-			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
-				events = append(events, event)
-			})
-			handleSubHealthyFault(ctl, faults, false)
-			convey.So(len(events), convey.ShouldEqual, 1)
-		})
-
-		convey.Convey("no faults", func() {
-			patch := gomonkey.NewPatches()
-			defer patch.Reset()
-			events := make([]string, 0)
-			patch.ApplyPrivateMethod(ctl, "addEvent", func(event string) {
-				events = append(events, event)
-			})
-			handleSubHealthyFault(ctl, []*pb.FaultRank{}, false)
-			convey.So(len(events), convey.ShouldEqual, 0)
-		})
-	})
-}
-
 type testSubHealthyCase struct {
 	name                    string
 	controller              *EventController
@@ -748,13 +709,37 @@ func buildTestCases1() []testSubHealthyCase {
 			expectedResult:          true,
 			expectHotSwitchDisabled: true,
 		}, {
+			name: "hotswitch with only master fault",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
+				},
+			},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{
+					{RankId: "0", PodUid: "0", PodRank: "0"}}},
+			expectedResult:          true,
+			expectHotSwitchDisabled: false,
+		}, {
 			name: "hotswitch with pytorch framework and normal fault pods count",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
 					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
 				},
 			},
-			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{{PodUid: "0", PodRank: "0"}, {PodUid: "1", PodRank: "1"}}},
+			expectedResult:          false,
+			expectHotSwitchDisabled: false,
+		}, {
+			name: "hotswitch with pytorch framework and normal fault pods count",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
+				},
+			},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{{PodUid: "0", PodRank: "0"}, {PodUid: "1", PodRank: "1"}}},
 			expectedResult:          false,
 			expectHotSwitchDisabled: false,
 		},
@@ -766,8 +751,7 @@ func buildTestCases2() []testSubHealthyCase {
 		{name: "sub healthy without hotswitch and graceExit false",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
-					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: false},
-					Framework:     constant.PtFramework,
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: false}, Framework: constant.PtFramework,
 				},
 			},
 			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
@@ -776,8 +760,7 @@ func buildTestCases2() []testSubHealthyCase {
 		}, {name: "sub healthy without hotswitch, graceExit true and not only dump strategy",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
-					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true},
-					Framework:     constant.PtFramework,
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true}, Framework: constant.PtFramework,
 				},
 			},
 			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
@@ -787,14 +770,27 @@ func buildTestCases2() []testSubHealthyCase {
 		}, {name: "sub healthy without hotswitch, graceExit true and only dump strategy",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
-					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true},
-					Framework:     constant.PtFramework,
+					RecoverConfig: common.RecoverConfig{HotSwitch: false, GraceExit: true}, Framework: constant.PtFramework,
 				},
 			},
 			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
 			mockOnlySupportDump:     true,
 			expectedResult:          false,
 			expectHotSwitchDisabled: false,
+		}, {
+			name: "hotswitch with too much fault pod ",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
+				},
+			},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{{PodUid: "1", PodRank: "1"}, {PodUid: "2", PodRank: "2"},
+					{PodUid: "3", PodRank: "3"}, {PodUid: "4", PodRank: "4"}, {PodUid: "5", PodRank: "5"},
+					{PodUid: "6", PodRank: "6"}, {PodUid: "7", PodRank: "7"}, {PodUid: "8", PodRank: "8"},
+					{PodUid: "9", PodRank: "9"}, {PodUid: "10", PodRank: "10"}, {PodUid: "11", PodRank: "11"}}},
+			expectedResult:          true,
+			expectHotSwitchDisabled: true,
 		},
 	}
 }
