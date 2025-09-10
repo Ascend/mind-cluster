@@ -16,6 +16,7 @@ import (
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
@@ -146,6 +147,13 @@ func getMockFaultDeviceListForTest1() []constant.FaultDevice {
 	}
 }
 
+func getMockFaultDeviceListForTest2() []constant.FaultDevice {
+	return []constant.FaultDevice{
+		{ServerName: "node2", ServerId: "1", DeviceId: "0", FaultLevel: constant.SeparateNPU,
+			DeviceType: constant.FaultTypeNPU},
+	}
+}
+
 func getMockFaultMsgForTest1() *fault.FaultMsgSignal {
 	return &fault.FaultMsgSignal{
 		JobId:      fakeJobID1,
@@ -159,10 +167,35 @@ func getMockFaultMsgForTest1() *fault.FaultMsgSignal {
 			}}}}
 }
 
+func getMockFaultMsgForTest2() *fault.FaultMsgSignal {
+	return &fault.FaultMsgSignal{
+		JobId:      fakeJobID1,
+		SignalType: constant.SignalTypeFault,
+		NodeFaultInfo: []*fault.NodeFaultInfo{
+			{
+				NodeName:   "node1",
+				NodeIP:     "1",
+				FaultLevel: constant.UnHealthyState,
+				FaultDevice: []*fault.DeviceFaultInfo{
+					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.UnHealthyState},
+				},
+			},
+			{
+				NodeName:   "node2",
+				NodeIP:     "1",
+				FaultLevel: constant.UnHealthyState,
+				FaultDevice: []*fault.DeviceFaultInfo{
+					{DeviceId: "0", DeviceType: constant.FaultTypeNPU, FaultLevel: constant.UnHealthyState},
+				},
+			},
+		}}
+}
+
 // TestCheckPublishFault for test checkPublishFault
 func TestCheckPublishFault(t *testing.T) {
 	patch := gomonkey.ApplyFuncReturn(job.GetJobCache, constant.JobInfo{MultiInstanceJobId: fakeJobID1,
-		AppType: "controller"}, true)
+		AppType: "controller"}, true).ApplyFuncReturn(l2fault.L2FaultCache.GetDeletedJobFaultDeviceMap,
+		map[string][]constant.FaultDevice{fakeJobID2: getMockFaultDeviceListForTest2()})
 	defer patch.Reset()
 	allJobFaultInfo := map[string]constant.JobFaultInfo{
 		fakeJobID2: {FaultDevice: getMockFaultDeviceListForTest1()},
@@ -181,13 +214,13 @@ func TestCheckPublishFault(t *testing.T) {
 	convey.Convey("occur fault, should send fault msg", t, func() {
 		service.checkPublishFault(allJobFaultInfo)
 		time.Sleep(sleepTime)
-		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest1()))
+		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest2()))
 	})
 	convey.Convey("occur not change, should not send fault msg", t, func() {
 		faultPublisher.SetSentData(fakeJobID1, faultPublisher.GetSentData(fakeJobID1))
 		service.checkPublishFault(allJobFaultInfo)
 		time.Sleep(sleepTime)
-		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest1()))
+		convey.ShouldBeTrue(compareFaultMsg(faultPublisher.GetSentData(fakeJobID1), getMockFaultMsgForTest2()))
 	})
 	convey.Convey("fault recover, should send fault recover msg", t, func() {
 		faultPublisher.SetSentData(fakeJobID1, faultPublisher.GetSentData(fakeJobID1))
