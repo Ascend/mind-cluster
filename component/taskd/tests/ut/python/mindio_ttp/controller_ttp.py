@@ -20,8 +20,8 @@ def tft_notify_controller_on_global_rank(*args) -> int:
 def tft_notify_controller_change_strategy(*args) -> int:
     return 0
 
-def tft_register_mindx_callback(*args):
-    return
+def tft_register_mindx_callback(*args) -> int:
+    return 0
 
 def tft_destroy_controller(*args):
     return
