@@ -314,7 +314,7 @@ func RetryPatchNodeAnnotation(nodeName string, retryTimes int, annotations map[s
 
 // DeletePodAnnotation delete pod annotations
 func DeletePodAnnotation(namespace, podName string, keysToDelete []string) error {
-	var lastErr error
+	var lastErr error = nil
 	for i := 0; i < constant.PatchPodTimes; i++ {
 		patchData := map[string]interface{}{
 			"metadata": map[string]interface{}{
