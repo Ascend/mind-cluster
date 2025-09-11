@@ -30,11 +30,13 @@ import (
 func GetNodeIp() (string, error) {
 	xdlIp := os.Getenv(constants.XdlIpField)
 	if xdlIp != "" {
-		return xdlIp, nil
+		if checkIp := net.ParseIP(xdlIp); checkIp != nil && checkIp.To4() != nil {
+			return xdlIp, nil
+		}
 	}
 
 	// no env, output the warn log and get local ip
-	hwlog.RunLog.Warnf("[FD-OL]%v environment variable not set", constants.XdlIpField)
+	hwlog.RunLog.Warnf("[FD-OL]%v environment variable isn't set or isn't a valid IPv4 address", constants.XdlIpField)
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "", err
