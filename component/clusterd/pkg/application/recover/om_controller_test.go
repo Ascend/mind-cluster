@@ -11,6 +11,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/api/core/v1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
@@ -1188,7 +1189,10 @@ func testStressTestFinishReportChanNil(ctl *EventController) {
 			ApplyFunc(faultmanager.FilterStressTestFault, func(jobID string, nodes []string, val bool) {}).
 			ApplyPrivateMethod(ctl, "sendAgentSignal", func(action []string) {
 				return
-			})
+			}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+			operator string) (*v1.ConfigMap, error) {
+			return &v1.ConfigMap{}, nil
+		})
 		defer pat.Reset()
 		defer func() {
 			close(ctl.stressTestResult)
@@ -1223,7 +1227,10 @@ func testStressTestFinishResultChanNil(ctl *EventController) {
 			ApplyFunc(faultmanager.FilterStressTestFault, func(jobID string, nodes []string, val bool) {}).
 			ApplyPrivateMethod(ctl, "sendAgentSignal", func(action []string) {
 				return
-			})
+			}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+			operator string) (*v1.ConfigMap, error) {
+			return &v1.ConfigMap{}, nil
+		})
 		defer pat.Reset()
 		defer func() {
 			close(ctl.stressTestResult)
@@ -1265,7 +1272,10 @@ func testStressTestFinishValidReport(ctl *EventController) {
 			}).
 			ApplyPrivateMethod(ctl, "sendAgentSignal", func(action []string) {
 				return
-			})
+			}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+			operator string) (*v1.ConfigMap, error) {
+			return &v1.ConfigMap{}, nil
+		})
 		defer pat.Reset()
 		defer func() {
 			close(ctl.stressTestResult)
@@ -1345,7 +1355,10 @@ func testWaitStressTestResultrChanFalse(ctl *EventController) {
 	patches := gomonkey.ApplyPrivateMethod(ctl, "parseStressTestResult",
 		func(result *pb.StressTestResult) (bool, string) {
 			return false, "failed"
-		})
+		}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+		operator string) (*v1.ConfigMap, error) {
+		return nil, nil
+	})
 	defer patches.Reset()
 	defer func() {
 		close(resultChan)
@@ -1363,7 +1376,10 @@ func testWaitStressTestResultrChanTrue(ctl *EventController) {
 	patches := gomonkey.ApplyPrivateMethod(ctl, "parseStressTestResult",
 		func(result *pb.StressTestResult) (bool, string) {
 			return true, ""
-		})
+		}).ApplyFunc(common.RetryWriteResetCM, func(taskName, nameSpace string, faultRankList []string, restartFaultProcess bool,
+		operator string) (*v1.ConfigMap, error) {
+		return nil, nil
+	})
 	defer patches.Reset()
 	defer func() {
 		close(resultChan)
