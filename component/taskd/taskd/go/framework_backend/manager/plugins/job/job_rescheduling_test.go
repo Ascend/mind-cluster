@@ -24,7 +24,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/hwlog"
-	clusterd_constant "clusterd/pkg/common/constant"
+	clusterdconstant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -71,7 +71,7 @@ func getSnapshotWithAgent0Fault() storage.SnapShot {
 func getSnapshotWithKillMasterSignal() storage.SnapShot {
 	snapshot := getDemoSnapshot()
 	snapshot.MgrInfos.Status[constant.FaultRecover] = "true"
-	snapshot.ClusterInfos.Clusters[constant.ClusterDRank].Command[constant.SignalType] = clusterd_constant.KillMasterSignalType
+	snapshot.ClusterInfos.Clusters[constant.ClusterDRank].Command[constant.SignalType] = clusterdconstant.KillMasterSignalType
 	return snapshot
 }
 
