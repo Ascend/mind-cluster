@@ -4,7 +4,6 @@
 package om
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -150,7 +149,7 @@ func TestInitStressTestPluginStatus(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		called := false
-		patches.ApplyPrivateMethod(&StressTestPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&StressTestPlugin{}, "replyToClusterDMsg", func(retryTime time.Duration, result bool) {
 			called = true
 			return
 		})
@@ -305,33 +304,20 @@ func TestReplyToCluster(t *testing.T) {
 	patches := gomonkey.NewPatches()
 	ws := make(map[string]*pb.StressTestRankResult)
 	plugin := &StressTestPlugin{workerStatus: ws}
-	t.Run("get addr failed, get clusterd addr failed", func(t *testing.T) {
-		called := false
-		patches.ApplyFunc(utils.GetClusterdAddr, func() (string, error) {
-			called = true
-			return "127.0.0.1", fmt.Errorf("get addr failed")
-		})
-		defer patches.Reset()
-		plugin.replyToClusterD(time.Duration(0), ws)
-		assert.True(t, called)
-	})
 	t.Run("reply to clusterD max times", func(t *testing.T) {
-		called := false
-		patches.ApplyFunc(utils.GetClusterdAddr, func() (string, error) {
-			called = true
-			return "127.0.0.1", nil
-		})
+		defer func() {
+			plugin.pullMsg = make([]infrastructure.Msg, 0)
+		}()
 		defer patches.Reset()
-		var retry int = 60
-		plugin.replyToClusterD(time.Duration(retry), ws)
-		assert.False(t, called)
+		plugin.replyToClusterDMsg(ws)
+		assert.Equal(t, 1, len(plugin.pullMsg))
 	})
 }
 
 func TestStressTestHandle(t *testing.T) {
 	patches := gomonkey.NewPatches()
 	defer patches.Reset()
-	patches.ApplyPrivateMethod(&StressTestPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+	patches.ApplyPrivateMethod(&StressTestPlugin{}, "replyToClusterDMsg", func(retryTime time.Duration, result bool) {
 		return
 	})
 	t.Run("Handle show in worker status is empty, skip", func(t *testing.T) {

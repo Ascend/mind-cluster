@@ -4,11 +4,7 @@
 package om
 
 import (
-	"context"
 	"time"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/recover"
@@ -16,6 +12,7 @@ import (
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/toolkit_backend/net/common"
 )
 
 // SwitchNicPlugin SwitchNic Plugin
@@ -74,7 +71,7 @@ func (o *SwitchNicPlugin) Release() error {
 func (o *SwitchNicPlugin) Handle() (infrastructure.HandleResult, error) {
 	if len(o.workerStatus) == 0 {
 		hwlog.RunLog.Error("worker status is empty")
-		o.replyToClusterD(firstRetryTIme, false)
+		o.replyToClusterDMsg(false)
 		o.resetPluginStatus()
 		return infrastructure.HandleResult{
 			Stage: constant.HandleStageFinal,
@@ -85,7 +82,7 @@ func (o *SwitchNicPlugin) Handle() (infrastructure.HandleResult, error) {
 	for workerName, status := range o.workerStatus {
 		if status == constant.SwitchFail {
 			hwlog.RunLog.Infof("rank %s switch failed", workerName)
-			o.replyToClusterD(firstRetryTIme, false)
+			o.replyToClusterDMsg(false)
 			o.resetPluginStatus()
 			return infrastructure.HandleResult{
 				Stage: constant.HandleStageFinal,
@@ -98,7 +95,7 @@ func (o *SwitchNicPlugin) Handle() (infrastructure.HandleResult, error) {
 	}
 	if num == len(o.workerStatus) {
 		hwlog.RunLog.Infof("all rank switch success")
-		o.replyToClusterD(firstRetryTIme, true)
+		o.replyToClusterDMsg(true)
 		o.resetPluginStatus()
 		return infrastructure.HandleResult{
 			Stage: constant.HandleStageFinal,
@@ -109,28 +106,18 @@ func (o *SwitchNicPlugin) Handle() (infrastructure.HandleResult, error) {
 	}, nil
 }
 
-func (o *SwitchNicPlugin) replyToClusterD(retryTime time.Duration, result bool) {
-	if retryTime >= maxRegRetryTime {
-		hwlog.RunLog.Error("init clusterd connect meet max retry time")
-		return
-	}
-	time.Sleep(retryTime * time.Second)
-	addr, err := utils.GetClusterdAddr()
-	if err != nil {
-		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
-		return
-	}
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
-		o.replyToClusterD(retryTime+1, result)
-		return
-	}
-	client := pb.NewRecoverClient(conn)
-	_, err = client.ReplySwitchNicResult(context.TODO(), &pb.SwitchResult{Result: result, JobId: o.jobID})
-	if err != nil {
-		hwlog.RunLog.Errorf("reply SwitchNicResult err: %v", err)
-	}
+func (o *SwitchNicPlugin) replyToClusterDMsg(result bool) {
+	resStr := utils.ObjToString(&pb.SwitchResult{Result: result, JobId: o.jobID})
+	o.pullMsg = append(o.pullMsg, infrastructure.Msg{
+		Receiver: []string{common.MgrRole},
+		Body: storage.MsgBody{
+			MsgType: constant.Action,
+			Code:    constant.ReplyToClusterDCode,
+			Extension: map[string]string{
+				constant.SwitchNicResultStr: resStr,
+			},
+		},
+	})
 }
 
 // PullMsg return Msg
@@ -201,7 +188,7 @@ func (o *SwitchNicPlugin) initPluginStatus(shot storage.SnapShot) {
 	}
 	o.timer = time.AfterFunc(switchNicTimeout*time.Minute, func() {
 		hwlog.RunLog.Warn("wait switch timeout, reset plugin status")
-		o.replyToClusterD(firstRetryTIme, false)
+		o.replyToClusterDMsg(false)
 		o.resetPluginStatus()
 	})
 	hwlog.RunLog.Infof("recv new option, workerstate: %v, jobID: %v, uuid:%v", o.workerStatus, o.jobID, o.uuid)
