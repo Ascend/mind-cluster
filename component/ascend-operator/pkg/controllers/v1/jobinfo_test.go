@@ -80,7 +80,7 @@ func TestNewJobInfo02(t *testing.T) {
 		})
 		convey.Convey("05-job which is not AscendJob should return err ", func() {
 			_, err := rc.newJobInfo(&corev1.Pod{}, replicaTypes, jobStatus, runPolicy)
-			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%v> is not of type AscendJob", &corev1.Pod{}))
+			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%v> is not of type Job", &corev1.Pod{}))
 		})
 		convey.Convey("06-job which is not AscendJob should return err ", func() {
 			patch := gomonkey.ApplyFunc(cache.DeletionHandlingMetaNamespaceKeyFunc,

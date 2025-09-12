@@ -341,7 +341,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 		}
 		msg := fmt.Sprintf("Job %s is create.", e.Object.GetName())
 		hwlog.RunLog.Info(msg)
-		err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "AscendCreated", msg)
+		err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "JobCreated", msg)
 		if err != nil {
 			log.Log.Error(err, "append job condition error")
 			return false

@@ -67,7 +67,7 @@ func (r *ASJobReconciler) newJobInfo(
 
 	ascendJob, ok := job.(*mindxdlv1.AscendJob)
 	if !ok {
-		return nil, fmt.Errorf("job<%v> is not of type AscendJob", job)
+		return nil, fmt.Errorf("job<%v> is not of type Job", job)
 	}
 
 	jobKey, err := common.KeyFunc(job)
