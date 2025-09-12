@@ -16,11 +16,22 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
+	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
+)
+
+const (
+	maxRegRetryTime = 10
 )
 
 func (mpc *MsgProcessor) managerHandler(dataPool *storage.DataPool, msg storage.BaseMessage) error {
@@ -42,10 +53,70 @@ func (mpc *MsgProcessor) managerHandler(dataPool *storage.DataPool, msg storage.
 		if msg.Body.Code == constant.FaultRecoverCode {
 			mgrInfo.Status[constant.FaultRecover] = msg.Body.Message
 		}
-
+		if msg.Body.Code == constant.ReplyToClusterDCode {
+			go mpc.replyToClusterD(msg.Body.Extension)
+		}
 	default:
 		return fmt.Errorf("unknown message type: %v", msg.Body.MsgType)
 	}
 	err = dataPool.UpdateMgr(mgrInfo)
+	return err
+}
+
+func (mpc *MsgProcessor) replyToClusterD(result map[string]string) {
+	hwlog.RunLog.Infof("reply to clusterD result: %v", result)
+	addr, err := utils.GetClusterdAddr()
+	if err != nil {
+		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
+		return
+	}
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
+		return
+	}
+	client := pb.NewRecoverClient(conn)
+	if result[constant.StressTestResultStr] != "" {
+		err = mpc.replyStressTestMsg(result[constant.StressTestResultStr], client)
+	}
+	if result[constant.SwitchNicResultStr] != "" {
+		err = mpc.replySwitchNicMsg(result[constant.SwitchNicResultStr], client)
+	}
+	if err != nil {
+		hwlog.RunLog.Errorf("reply result:%v to clusterd err: %v", result, err)
+		return
+	}
+	hwlog.RunLog.Infof("reply to clusterD result success: %v", result)
+}
+
+func (mpc *MsgProcessor) replyStressTestMsg(result string, client pb.RecoverClient) error {
+	rankResult, err := utils.StringToObj[*pb.StressTestResult](result)
+	if err != nil {
+		return fmt.Errorf("parse stress result: %v, err: %v", result, err)
+	}
+	for i := 0; i < maxRegRetryTime; i++ {
+		_, err = client.ReplyStressTestResult(context.TODO(), rankResult)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+		err = fmt.Errorf("reply StressTestResult err: %v", err)
+	}
+	return err
+}
+
+func (mpc *MsgProcessor) replySwitchNicMsg(result string, client pb.RecoverClient) error {
+	rankResult, err := utils.StringToObj[*pb.SwitchResult](result)
+	if err != nil {
+		return fmt.Errorf("parse switch nic resul: %v, err: %v", result, err)
+	}
+	for i := 0; i < maxRegRetryTime; i++ {
+		_, err = client.ReplySwitchNicResult(context.TODO(), rankResult)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+		err = fmt.Errorf("reply SwitchNicResult err: %v", err)
+	}
 	return err
 }

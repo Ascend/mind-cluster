@@ -4,13 +4,9 @@
 package om
 
 import (
-	"context"
 	"strconv"
 	"strings"
 	"time"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/recover"
@@ -85,7 +81,7 @@ func (o *StressTestPlugin) Release() error {
 func (o *StressTestPlugin) Handle() (infrastructure.HandleResult, error) {
 	if len(o.workerStatus) == 0 {
 		hwlog.RunLog.Error("worker status is empty")
-		o.replyToClusterD(firstRetryTIme, o.workerStatus)
+		o.replyToClusterDMsg(o.workerStatus)
 		o.resetPluginStatus()
 		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
 	}
@@ -98,35 +94,25 @@ func (o *StressTestPlugin) Handle() (infrastructure.HandleResult, error) {
 	}
 	if num == len(o.workerStatus) {
 		hwlog.RunLog.Infof("all stress test finish: %v", o.workerStatus)
-		o.replyToClusterD(firstRetryTIme, o.workerStatus)
+		o.replyToClusterDMsg(o.workerStatus)
 		o.resetPluginStatus()
 		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
 	}
 	return infrastructure.HandleResult{Stage: constant.HandleStageProcess}, nil
 }
 
-func (o *StressTestPlugin) replyToClusterD(retryTime time.Duration, result map[string]*pb.StressTestRankResult) {
-	if retryTime >= maxRegRetryTime {
-		hwlog.RunLog.Error("init clusterd connect meet max retry time")
-		return
-	}
-	time.Sleep(retryTime * time.Second)
-	addr, err := utils.GetClusterdAddr()
-	if err != nil {
-		hwlog.RunLog.Errorf("get clusterd address err: %v", err)
-		return
-	}
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
-		o.replyToClusterD(retryTime+1, result)
-		return
-	}
-	client := pb.NewRecoverClient(conn)
-	_, err = client.ReplyStressTestResult(context.TODO(), &pb.StressTestResult{StressResult: result, JobId: o.jobID})
-	if err != nil {
-		hwlog.RunLog.Errorf("reply SwitchNicResult err: %v", err)
-	}
+func (o *StressTestPlugin) replyToClusterDMsg(result map[string]*pb.StressTestRankResult) {
+	resStr := utils.ObjToString(&pb.StressTestResult{StressResult: result, JobId: o.jobID})
+	o.pullMsg = append(o.pullMsg, infrastructure.Msg{
+		Receiver: []string{common.MgrRole},
+		Body: storage.MsgBody{
+			MsgType: constant.Action,
+			Code:    constant.ReplyToClusterDCode,
+			Extension: map[string]string{
+				constant.StressTestResultStr: resStr,
+			},
+		},
+	})
 }
 
 // PullMsg return Msg
@@ -226,7 +212,7 @@ func (o *StressTestPlugin) initPluginStatus(shot storage.SnapShot) {
 	rankOps := clusterInfo.Command[constant.StressTestRankOPStr]
 	rankOpMap, err := utils.StringToObj[map[string]*pb.StressOpList](rankOps)
 	if err != nil {
-		o.replyToClusterD(firstRetryTIme, o.workerStatus)
+		o.replyToClusterDMsg(o.workerStatus)
 		hwlog.RunLog.Errorf("failed to unmarshal err: %v", err)
 		return
 	}
@@ -264,7 +250,7 @@ func (o *StressTestPlugin) initPluginStatus(shot storage.SnapShot) {
 				}
 			}
 		}
-		o.replyToClusterD(firstRetryTIme, o.workerStatus)
+		o.replyToClusterDMsg(o.workerStatus)
 		o.resetPluginStatus()
 	})
 	hwlog.RunLog.Infof("recv new option, workerstate: %v, jobID: %v, uuid:%v", o.workerStatus, o.jobID, o.uuid)

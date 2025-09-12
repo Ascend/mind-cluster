@@ -4,7 +4,6 @@
 package om
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"taskd/common/constant"
-	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 )
@@ -144,23 +142,19 @@ func TestPullMsg(t *testing.T) {
 	})
 }
 
-func TestReplyToClusterDGetaddrFailed(t *testing.T) {
+func TestReplyToClusterDMsg(t *testing.T) {
 	t.Run("get addr failed, GetClusterdAddr will be execute", func(t *testing.T) {
-		patches := gomonkey.NewPatches()
-		defer patches.Reset()
 		plugin := &SwitchNicPlugin{
 			pullMsg:      make([]infrastructure.Msg, 0),
 			uuid:         "",
 			jobID:        "",
 			workerStatus: make(map[string]string),
 		}
-		called := false
-		patches.ApplyFunc(utils.GetClusterdAddr, func() (string, error) {
-			called = true
-			return "127.0.0.1", fmt.Errorf("get addr failed")
-		})
-		plugin.replyToClusterD(time.Duration(0), true)
-		assert.True(t, called)
+		defer func() {
+			plugin.pullMsg = make([]infrastructure.Msg, 0)
+		}()
+		plugin.replyToClusterDMsg(true)
+		assert.Equal(t, 1, len(plugin.pullMsg))
 	})
 }
 
@@ -168,7 +162,7 @@ func TestHandleWorkerStatusEmpty(t *testing.T) {
 	t.Run("Handle show in worker status is empty, skip", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterDMsg", func(retryTime time.Duration, result bool) {
 			return
 		})
 		plugin := &SwitchNicPlugin{
@@ -187,7 +181,7 @@ func TestHandleOK(t *testing.T) {
 	t.Run("Handle show in switch ok senior, update worker status", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterDMsg", func(retryTime time.Duration, result bool) {
 			return
 		})
 		plugin := &SwitchNicPlugin{
@@ -210,7 +204,7 @@ func TestHandleFAIL(t *testing.T) {
 	t.Run("Handle switch result in switch failed senior", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterD", func(retryTime time.Duration, result bool) {
+		patches.ApplyPrivateMethod(&SwitchNicPlugin{}, "replyToClusterDMsg", func(retryTime time.Duration, result bool) {
 			return
 		})
 		plugin := &SwitchNicPlugin{
