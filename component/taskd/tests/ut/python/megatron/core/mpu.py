@@ -26,7 +26,7 @@ def set_virtual_pipeline_model_parallel_rank(rank):
     pass
 
 
-def get_data_parallel_group(with_context_parallel):
+def get_data_parallel_group(with_context_parallel=False):
     return None
 
 

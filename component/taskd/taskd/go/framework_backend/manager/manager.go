@@ -468,6 +468,7 @@ func (m *BaseManager) subscribeProcessManageSignal(conn *grpc.ClientConn) {
 			hwlog.RunLog.Error("taskd exit, stop subscribe clusterd fault info")
 			return
 		}
+		time.Sleep(time.Second)
 	}
 }
 
