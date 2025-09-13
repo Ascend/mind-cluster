@@ -158,9 +158,15 @@ func (s *JobServer) startBroadcasting(ctx context.Context) {
 }
 
 func (s *JobServer) broadcastJobUpdate(jobSignal job.JobSummarySignal) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	var wg sync.WaitGroup
 	wg.Add(len(s.clients))
 	for clientId, ch := range s.clients {
+		if ch == nil || ch.closed {
+			hwlog.RunLog.Debugf("client %s chan may be closed", clientId)
+			continue
+		}
 		select {
 		case ch.clientChan <- jobSignal:
 			hwlog.RunLog.Debugf("broadcasted to client %s", clientId)
