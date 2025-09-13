@@ -12,8 +12,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-var testErr = errors.New("test error")
-
 func TestMain(m *testing.M) {
 	if err := setup(); err != nil {
 		panic(err)

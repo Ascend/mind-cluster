@@ -27,12 +27,8 @@ import (
 const (
 	// DefaultResultMaxAge is the default result max age
 	DefaultResultMaxAge = hwlog.DefaultMinSaveAge
-	// MinResultMaxAge is the minimum result max age
-	MinResultMaxAge = hwlog.DefaultMinSaveAge
-	// MaxResultMaxAge is the maximum result max age
-	MaxResultMaxAge = hwlog.DefaultMaxSaveAge
-	superPodCMKey   = "superPodDevice"
-	globalConfigKey = "global"
+	superPodCMKey       = "superPodDevice"
+	globalConfigKey     = "global"
 )
 
 // Config is the configuration for pingmeshv1

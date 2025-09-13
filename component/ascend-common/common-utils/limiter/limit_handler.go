@@ -37,7 +37,6 @@ const (
 	// DefaultDataLimit  default http body limit size
 	DefaultDataLimit      = 1024 * 1024 * 10
 	defaultMaxConcurrency = 1024
-	second5               = 5
 	maxStringLen          = 20
 	// DefaultCacheSize  default cache size
 	DefaultCacheSize = 1024 * 100

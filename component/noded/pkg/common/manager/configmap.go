@@ -25,9 +25,7 @@ import (
 // ConfigManager manage fault config
 type ConfigManager interface {
 	GetFaultConfig() *common.FaultConfig
-	GetFaultTypeCode() *common.FaultTypeCode
 	SetFaultConfig(*common.FaultConfig)
-	SetFaultTypeCode(*common.FaultTypeCode)
 }
 
 // NewConfigManager create a config manager
@@ -55,17 +53,6 @@ func (c *ConfigTools) GetFaultConfig() *common.FaultConfig {
 	return c.config
 }
 
-// GetFaultTypeCode return fault type code
-func (c *ConfigTools) GetFaultTypeCode() *common.FaultTypeCode {
-	if c.config == nil {
-		hwlog.RunLog.Error("config is nil when get fault type code")
-		return nil
-	}
-	c.configLock.Lock()
-	defer c.configLock.Unlock()
-	return c.config.FaultTypeCode
-}
-
 // SetFaultConfig set the fault config
 func (c *ConfigTools) SetFaultConfig(faultConfig *common.FaultConfig) {
 	if c.config == nil {
@@ -75,15 +62,4 @@ func (c *ConfigTools) SetFaultConfig(faultConfig *common.FaultConfig) {
 	c.configLock.Lock()
 	defer c.configLock.Unlock()
 	common.DeepCopyFaultConfig(c.config, faultConfig)
-}
-
-// SetFaultTypeCode set the fault type code
-func (c *ConfigTools) SetFaultTypeCode(faultTypeCode *common.FaultTypeCode) {
-	if c.config == nil {
-		hwlog.RunLog.Error("config is nil when set fault type code")
-		return
-	}
-	c.configLock.Lock()
-	defer c.configLock.Unlock()
-	common.DeepCopyFaultTypeCode(c.config.FaultTypeCode, faultTypeCode)
 }

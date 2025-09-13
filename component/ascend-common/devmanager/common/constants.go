@@ -61,21 +61,11 @@ var (
 
 // DeviceType for frequency
 var (
-	// MemoryFreq Ascend310 & Ascend310P
-	MemoryFreq = DeviceType{Code: 1, Name: "Memory"}
-	// CtrlCpuFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	CtrlCpuFreq = DeviceType{Code: 2, Name: "CtrlCpu"}
-	// HbmFreq Ascend310 & Ascend910 & Ascend910B
-	HbmFreq = DeviceType{Code: 6, Name: "Hbm"}
 	// AICoreCurrentFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
 	AICoreCurrentFreq = DeviceType{Code: 7, Name: "AICore Current"}
-	// AICoreRatedFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	AICoreRatedFreq = DeviceType{Code: 9, Name: "AICore Rated"}
 )
 
 const (
-	// InvalidVal InvalidVal for NPU Invalid value
-	InvalidVal = 0
 	// Success for interface return code
 	Success = 0
 	// DeviceNotReadyErrCodeStr for dcmi interface device not ready err code string
@@ -97,9 +87,6 @@ const (
 	// ChannelStateOk means out band channel is ok for resetting
 	ChannelStateOk = 1
 
-	// DeviceIPLength length of device ip address
-	DeviceIPLength = 4
-
 	// HiAIMaxCardID max card id for Ascend chip
 	HiAIMaxCardID = math.MaxInt32
 
@@ -119,10 +106,6 @@ const (
 	// DefaultTemperatureWhenQueryFailed when get temperature failed, use this value
 	DefaultTemperatureWhenQueryFailed = -275
 
-	// Ascend310 ascend 310 chip
-	Ascend310 = "Ascend310"
-	// Ascend310B ascend 310B chip
-	Ascend310B = "Ascend310B"
 	// Ascend310P ascend 310P chip
 	Ascend310P = "Ascend310P"
 	// Ascend910 ascend 910 chip
@@ -133,9 +116,6 @@ const (
 	Ascend910A3 = "Ascend910A3"
 	// Atlas200ISoc 200 soc env
 	Atlas200ISoc = "Atlas 200I SoC A1"
-
-	// NeverStopTimeout never stop interface timeout
-	NeverStopTimeout = -1
 
 	// DcmiApiTimeout dcmi interface timeout seconds
 	DcmiApiTimeout = 1
@@ -150,9 +130,6 @@ const (
 	// InvalidID invalid ID
 	InvalidID = 0xffffffff
 
-	// NotSupportMetricValue for not support metric value
-	NotSupportMetricValue = 8255
-
 	// FailedMetricValue for failed metric value
 	FailedMetricValue = -1
 
@@ -166,13 +143,6 @@ const (
 const (
 	// BootStartFinish chip hot reset finish
 	BootStartFinish = 16
-)
-
-const (
-	// Pattern910A regular expression for 910A
-	Pattern910A = `^910`
-	// Pattern910B regular expression for 910B
-	Pattern910B = `^910B\d{1}`
 )
 
 const (

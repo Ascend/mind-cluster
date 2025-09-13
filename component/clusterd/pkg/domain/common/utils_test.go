@@ -569,18 +569,6 @@ func (ms *mockStream) SendHeader(md metadata.MD) error {
 func (ms *mockStream) SetTrailer(md metadata.MD) {
 }
 
-type successSwitchNicSender struct {
-	mockStream
-}
-
-func (s *successSwitchNicSender) Send(signal *pb.SwitchNicResponse) error {
-	return nil
-}
-
-type failSwitchNicSender struct {
-	mockStream
-}
-
 type successNotifySwitchNicSender struct {
 	mockStream
 }
@@ -594,10 +582,6 @@ func (s *successNotifySwitchNicSender) Send(signal *pb.SwitchRankList) error {
 }
 
 func (s *failNotifySwitchNicSender) Send(signal *pb.SwitchRankList) error {
-	return errors.New("fake error")
-}
-
-func (s *failSwitchNicSender) Send(signal *pb.SwitchNicResponse) error {
 	return errors.New("fake error")
 }
 

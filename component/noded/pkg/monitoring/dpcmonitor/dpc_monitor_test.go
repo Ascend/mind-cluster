@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-
 	"os"
 	"strings"
 	"testing"
@@ -178,10 +177,6 @@ func TestReadInstStatus(t *testing.T) {
 }
 
 var _ = common.DpcStatus{}
-
-func mockReadInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
-	return 1, common.DpcStatus{}, nil
-}
 
 func testInvalidPath() {
 	convey.Convey("Test invalid path", func() {

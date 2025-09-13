@@ -23,8 +23,6 @@ import (
 
 const (
 	maskLen = 2
-	// SplitFlag backup file splitflag
-	SplitFlag = "\n</=--*^^||^^--*=/>"
 )
 
 // ReplacePrefix replace string with prefix

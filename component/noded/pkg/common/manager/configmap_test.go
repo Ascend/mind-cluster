@@ -86,29 +86,3 @@ func SliceStrEqual(slice1, slice2 []string) {
 		convey.So(slice1[i], convey.ShouldEqual, slice2[i])
 	}
 }
-
-// TestSetFaultTypeCodes test the function of set fault type codes
-func TestSetFaultTypeCodes(t *testing.T) {
-	convey.Convey("test set fault type codes", t, func() {
-		convey.Convey("config manager set fault type codes", func() {
-			configManager := NewConfigManager()
-			faultTypeCodes := &common.FaultTypeCode{
-				NotHandleFaultCodes:   []string{"00000001"},
-				PreSeparateFaultCodes: []string{"00000002"},
-				SeparateFaultCodes:    []string{"00000003"},
-			}
-			configManager.SetFaultTypeCode(faultTypeCodes)
-			FaultTypeCodesEqual(configManager.GetFaultTypeCode(), faultTypeCodes)
-		})
-		convey.Convey("wrong config manager set fault type codes", func() {
-			configManager := mockWrongConfigManager()
-			faultTypeCodes := &common.FaultTypeCode{
-				NotHandleFaultCodes:   []string{"00000001"},
-				PreSeparateFaultCodes: []string{"00000002"},
-				SeparateFaultCodes:    []string{"00000003"},
-			}
-			configManager.SetFaultTypeCode(faultTypeCodes)
-			convey.So(configManager.GetFaultTypeCode(), convey.ShouldBeNil)
-		})
-	})
-}

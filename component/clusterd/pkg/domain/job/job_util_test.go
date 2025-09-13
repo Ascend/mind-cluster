@@ -33,10 +33,6 @@ const (
 	pgMinMember2Str = "2"
 	masterIp        = "127.0.0.1"
 	mindIeJobId     = "mindie-ms"
-
-	npuName1 = "Ascend910-1"
-	npuName2 = "Ascend910-2"
-	npuName3 = "Ascend910-3"
 )
 
 func TestPreDeleteCmAndCache(t *testing.T) {

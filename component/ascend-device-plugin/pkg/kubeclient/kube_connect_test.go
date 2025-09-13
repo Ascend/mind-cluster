@@ -33,7 +33,6 @@ import (
 
 const (
 	mockHostIP = "127.0.0.1"
-	twoNum     = 2
 )
 
 func TestGetKltPodsURL(t *testing.T) {

@@ -7,11 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agiledragon/gomonkey/v2"
-
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
-	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/collector"
 )
@@ -46,20 +43,6 @@ func TestRegister(t *testing.T) {
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.DeviceProcessType)
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.NodeProcessType)
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.SwitchProcessType)
-	})
-}
-
-func TestQueryJobsFaultInfo(t *testing.T) {
-	t.Run("TestQueryJobsFaultInfo", func(t *testing.T) {
-		patches := gomonkey.ApplyPrivateMethod(faultrank.JobFaultRankProcessor, "GetJobFaultRankInfosFilterLevel",
-			func(faultLevel string) map[string]constant.JobFaultInfo {
-				return map[string]constant.JobFaultInfo{"test": {}}
-			})
-		defer patches.Reset()
-		jobsFaultInfo := QueryJobsFaultInfo([]string{constant.NotHandleFault})
-		if len(jobsFaultInfo) != 1 {
-			t.Error("TestQueryJobsFaultInfo fail")
-		}
 	})
 }
 

@@ -125,12 +125,6 @@ func getKey(domain string, id interface{}) string {
 	return fmt.Sprintf("%d_%s", id, domain)
 }
 
-// IsNeedPrint check whether print the error message,if the error message (domain_id as a unique identifier)
-// has been printed for problemOccurMaxNumbers times, return false
-func IsNeedPrint(domain string, id interface{}) (bool, string) {
-	return IsNeedPrintWithSpecifiedCounts(domain, id, ProblemOccurMaxNumbers)
-}
-
 // IsNeedPrintWithSpecifiedCounts check whether print the error message,
 // if the error message (domain_id as a unique identifier) has been printed
 // for problemOccurMaxNumbers times, return false

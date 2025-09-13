@@ -199,32 +199,6 @@ func GenerateServerGroup0Or1(message *GenerateGlobalRankTableMessage, appType st
 	return serverGroup, nil
 }
 
-// GenerateServerGroup2 generate server group 2
-func GenerateServerGroup2(a2RankTableList []*A2RankTable) *ServerGroup {
-	pdDeployModeServerList := make([]*PdDeployModeServer, len(a2RankTableList))
-	for i, a2RankTable := range a2RankTableList {
-		server := a2RankTable.ServerList[0]
-		pdDeployModeServer := &PdDeployModeServer{
-			DeployServer: a2RankTable.deployServer,
-			ServerID:     server.ServerID,
-			ContainerIP:  server.ContainerIP,
-			DeviceList:   server.DeviceList,
-			HardwareType: server.HardwareType,
-		}
-		// set DeviceLogicalId
-		for logicalId, device := range pdDeployModeServer.DeviceList {
-			device.DeviceLogicalId = fmt.Sprintf("%d", logicalId)
-		}
-		pdDeployModeServerList[i] = pdDeployModeServer
-	}
-	serverGroup2 := &ServerGroup{
-		GroupId:     constant.GroupId2,
-		ServerCount: fmt.Sprintf("%d", len(a2RankTableList)),
-		ServerList:  pdDeployModeServerList,
-	}
-	return serverGroup2
-}
-
 // GenerateServerGroupList generate server group list
 func GenerateServerGroupList(a2RankTableList []*A2RankTable) []*ServerGroup {
 	serverGroupList := make([]*ServerGroup, len(a2RankTableList))

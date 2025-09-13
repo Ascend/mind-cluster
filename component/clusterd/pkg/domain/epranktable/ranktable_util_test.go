@@ -259,16 +259,6 @@ func TestGenerateServerGroup0Or1(t *testing.T) {
 	})
 }
 
-func TestGenerateServerGroup2(t *testing.T) {
-	convey.Convey("test GenerateServerGroup2", t, func() {
-		result := GenerateServerGroup2(a2RankTableList)
-		convey.So(result.GroupId, convey.ShouldEqual, constant.GroupId2)
-		convey.So(result.ServerCount, convey.ShouldEqual, serverCount)
-		convey.So(len(result.ServerList), convey.ShouldEqual, len1)
-		convey.So(result.ServerList[0].ServerID, convey.ShouldEqual, serverId)
-	})
-}
-
 func TestGenerateServerGroupList(t *testing.T) {
 	convey.Convey("test GenerateServerGroupList", t, func() {
 		groupList := GenerateServerGroupList(a2RankTableList)

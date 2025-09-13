@@ -26,10 +26,6 @@ const (
 	PingMeshConfigCm = "pingmesh-config"
 	// IpConfigmapNamePrefix is the prefix of ip configmap name
 	IpConfigmapNamePrefix = "super-pod-"
-	// PingMeshFaultCmPrefix is the label key of ip configmap
-	PingMeshFaultCmPrefix = "pingmesh-fault-"
-	// FaultConfigmapLabelValue is the label value of ip configmap
-	FaultConfigmapLabelValue = "true"
 	// PingMeshConfigLabelKey is the label key of pingmesh configmap
 	PingMeshConfigLabelKey = "app"
 	// PingMeshConfigLabelValue is the label value of pingmesh configmap

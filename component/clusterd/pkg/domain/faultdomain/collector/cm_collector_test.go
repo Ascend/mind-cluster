@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	CmName     = "CmName"
-	CmName2    = "CmName2"
-	UpdateTime = 0
+	CmName  = "CmName"
+	CmName2 = "CmName2"
 )
 
 func resetDeviceCmCollector() {

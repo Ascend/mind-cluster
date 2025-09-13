@@ -720,11 +720,6 @@ func TestSelectNotifySwitchNicContextDone(t *testing.T) {
 	})
 }
 
-func fooSendWithRetry[T any, S common.StreamSender[T]](stream S, signal *T, retryTimes int) error {
-	signal = nil
-	return nil
-}
-
 func TestSelectNotifySwitchNicReceiveSignal(t *testing.T) {
 	convey.Convey("Test chan when receive signal from sendChan", t, func() {
 		jobID := "testJobId"

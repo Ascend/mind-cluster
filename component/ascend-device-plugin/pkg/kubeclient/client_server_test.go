@@ -41,11 +41,6 @@ import (
 )
 
 const (
-	nodeNameValue   = "master"
-	invalidNodeName = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
-		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
-		"opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
-
 	npuChip310PhyID0  = api.Ascend310 + "-0"
 	npuChip910PhyID0  = api.Ascend910 + "-0"
 	npuChip310PPhyID0 = api.Ascend310P + "-0"

@@ -77,27 +77,6 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 	return nil, fmt.Errorf("vcK8sClient is nil")
 }
 
-// RetryUpdatePodGroup call UpdatePod
-func RetryUpdatePodGroup(pg *v1beta1.PodGroup, retryTimes int) (*v1beta1.PodGroup, error) {
-	pg, err := UpdatePodGroup(pg)
-	retry := 0
-	for err != nil && retry < retryTimes {
-		retry++
-		time.Sleep(time.Second * time.Duration(retry))
-		pg, err = UpdatePodGroup(pg)
-	}
-	return pg, err
-}
-
-// UpdatePodGroup update pod group
-func UpdatePodGroup(pg *v1beta1.PodGroup) (*v1beta1.PodGroup, error) {
-	if vcK8sClient != nil {
-		return vcK8sClient.ClientSet.SchedulingV1beta1().PodGroups(pg.ObjectMeta.Namespace).Update(context.TODO(),
-			pg, v1.UpdateOptions{})
-	}
-	return nil, fmt.Errorf("vcK8sClient is nil")
-}
-
 // RetryPatchPodGroupAnnotations retry patch pod group annotations
 func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
 	annotations map[string]string) (*v1beta1.PodGroup, error) {

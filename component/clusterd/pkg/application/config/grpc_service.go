@@ -29,10 +29,6 @@ import (
 	"clusterd/pkg/interface/grpc/config"
 )
 
-const (
-	waitTime = 100 * time.Millisecond
-)
-
 // BusinessConfigServer business config server
 type BusinessConfigServer struct {
 	serviceCtx       context.Context

@@ -82,24 +82,6 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRan
 	return nil
 }
 
-// UpdateRecoverStatus update recover status
-func UpdateRecoverStatus(name, namespace, value string) {
-	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get pg when update UpdateRecoverStatus, err:%v, name:%s", err, name)
-		return
-	}
-	if pg.Annotations == nil {
-		pg.Annotations = make(map[string]string)
-	}
-	pg.Annotations[constant.ProcessRecoverStatusKey] = value
-	_, err = kube.RetryUpdatePodGroup(pg, constant.UpdatePodGroupTimes)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to update pg when UpdateRecoverStatus, err:%v, name:%s", err, name)
-	}
-	hwlog.RunLog.Infof("update name=%s recover status=%s, success", name, value)
-}
-
 func pullProcessResultFault(name, namespace string) ([]*pb.FaultRank, []*pb.FaultRank, error) {
 	pg, err := kube.RetryGetPodGroup(name, namespace, constant.GetPodGroupTimes)
 	if err != nil {

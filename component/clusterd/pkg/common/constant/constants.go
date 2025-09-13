@@ -32,8 +32,6 @@ const (
 
 	// GrpcPort is the grpc port
 	GrpcPort = ":8899"
-	// JobErrCount err count return
-	JobErrCount = 3
 
 	// DefaultNamespace represents the default value of namespace
 	DefaultNamespace = "default"
@@ -42,14 +40,8 @@ const (
 	// NoResourceOnServer represents no resources on the server
 	NoResourceOnServer = "the server could not find the requested resource"
 
-	// CheckFaultGapSecond check fault gap seconds
-	CheckFaultGapSecond = 10
-	// JobRefKind reference kind is Job
-	JobRefKind = "Job"
 	// MaxSupportNodeNum max support node num
 	MaxSupportNodeNum = 16000
-	// MaxSupportJobNum max support job num
-	MaxSupportJobNum = 10000
 	// MaxCmQueueLen max cm queue len support
 	MaxCmQueueLen = 5
 	// DefaultLogLevel default log level
@@ -107,8 +99,6 @@ const (
 	SubHealthFaultStrategy = "SubHealth"
 	// SwitchFault switch fault strategy
 	SwitchFault = "switchFault"
-	// UnHealthy
-	UnHealthy = "UnHealthy"
 )
 
 // public fault assertion
@@ -170,12 +160,8 @@ const (
 	CoordinatorAppType = "mindie-ms-coordinator"
 	// ServerAppType server app type
 	ServerAppType = "mindie-ms-server"
-	// MetaDataName metadata name
-	MetaDataName = "metadata.name"
 	// StatusRankTableCompleted is the complete rankTable status
 	StatusRankTableCompleted = "completed"
-	// RankTableVersion is the rank table version
-	RankTableVersion = "1.0"
 	// MaxRetryTime max retry time
 	MaxRetryTime = 3
 	// QueueInitDelay queue init delay
@@ -190,8 +176,6 @@ const (
 	GroupId2 = "2"
 	// GroupIdOffset group id offset
 	GroupIdOffset = 2
-	// ServerCountGroupId0Or1 server count group id 0 or 1
-	ServerCountGroupId0Or1 = "1"
 )
 
 const (
@@ -239,24 +223,10 @@ const (
 	// RasNetDetectOffStr the string of detect off
 	RasNetDetectOffStr = "off"
 
-	// NewStr the string of new
-	NewStr = "new"
-	// OldStr the string of old
-	OldStr = "old"
-
 	// PingMeshCMNamespace is the namespace of pingmesh configmap
 	PingMeshCMNamespace = "cluster-system"
 	// PingMeshConfigCm is the name of pingmesh configmap
 	PingMeshConfigCm = "pingmesh-config"
-	// PingMeshConfigLabelKey is the label key of pingmesh configmap
-	PingMeshConfigLabelKey = "app"
-	// PingMeshConfigLabelValue is the label value of pingmesh configmap
-	PingMeshConfigLabelValue = "pingmesh"
-
-	// DefaultGroupId the default value of groupId for node
-	DefaultGroupId = -1
-	// OneDayHours the hours of one day is 24
-	OneDayHours = 24
 )
 
 const (

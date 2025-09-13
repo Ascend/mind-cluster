@@ -104,8 +104,6 @@ const (
 )
 
 const (
-	// PgStatusRunning pg running status
-	PgStatusRunning = "Running"
 	// FaultJobCmName fault job cm name
 	FaultJobCmName = "fault-job-info"
 )
