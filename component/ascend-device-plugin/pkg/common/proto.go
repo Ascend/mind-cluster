@@ -282,7 +282,7 @@ func Get310PProductType() map[string]string {
 // HasOnChipMemory check if card has on-chip-memory
 func HasOnChipMemory() bool {
 	return ParamOption.RealCardType == api.Ascend910B ||
-		ParamOption.RealCardType == api.Ascend910 ||
+		ParamOption.RealCardType == api.Ascend910A ||
 		ParamOption.RealCardType == api.Ascend910A3
 }
 

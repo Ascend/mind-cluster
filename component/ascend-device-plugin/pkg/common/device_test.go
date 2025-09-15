@@ -26,6 +26,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"ascend-common/api"
 	"ascend-common/devmanager/common"
 )
 
@@ -215,7 +216,7 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			ParamOption.EnableSwitchFault = false
 			convey.So(GetSwitchFaultInfo(), convey.ShouldResemble, SwitchFaultInfo{})
 		})
-		ParamOption.RealCardType = common.Ascend910A3
+		ParamOption.RealCardType = api.Ascend910A3
 		ParamOption.EnableSwitchFault = true
 		currentSwitchFault = []SwitchFaultEvent{}
 		SwitchFaultLevelMap = map[string]int{}

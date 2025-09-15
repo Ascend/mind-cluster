@@ -230,7 +230,7 @@ func setParameters() {
 
 func setUseAscendDocker() {
 	*useAscendDocker = true
-	ascendDocker := os.Getenv("ASCEND_DOCKER_RUNTIME")
+	ascendDocker := os.Getenv(api.AscendDockerRuntimeEnv)
 	if ascendDocker != "True" {
 		*useAscendDocker = false
 		hwlog.RunLog.Debugf("get docker runtime from env is: %#v", ascendDocker)

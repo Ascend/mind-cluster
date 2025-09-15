@@ -213,7 +213,7 @@ func AutoInit(dType string, resetTimeout int) (*DeviceManager, error) {
 	var devType = common.GetDevType(chipInfo.Name, boardInfo.BoardId)
 
 	switch devType {
-	case api.Ascend910, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
 		devMgr.DcMgr = &A910Manager{}
 	case api.Ascend310P:
 		devMgr.DcMgr = &A310PManager{}

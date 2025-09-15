@@ -29,7 +29,7 @@ import (
 const nameConfigFilePath = "/usr/local/deviceNameCustomization.json"
 
 var deviceTypePattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9./]{9,31}$`)
-var deviceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9]{4,16}$`)
+var deviceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9-]{2,16}$`)
 var podConfigurationPattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9./-]{9,64}$`)
 
 var devNameMap = map[string]DevName{}

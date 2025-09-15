@@ -84,11 +84,11 @@ const (
 
 	runtimeEnvNum = 3
 	// AscendVisibleDevicesEnv visible devices env
-	AscendVisibleDevicesEnv = "ASCEND_VISIBLE_DEVICES"
+	AscendVisibleDevicesEnv = api.AscendVisibleDevicesEnv
 	// ascendRuntimeOptionsEnv virtual runtime option env
-	ascendRuntimeOptionsEnv = "ASCEND_RUNTIME_OPTIONS"
+	ascendRuntimeOptionsEnv = api.AscendRuntimeOptionsEnv
 	// ascendAllowLinkEnv a500a2 need mount softlink
-	ascendAllowLinkEnv = "ASCEND_ALLOW_LINK"
+	ascendAllowLinkEnv = api.AscendAllowLinkEnv
 	// PodPredicateTime pod predicate time
 	PodPredicateTime = "predicate-time"
 	// Pod2kl pod annotation key, means kubelet allocate device

@@ -101,7 +101,7 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	case api.Ascend310, api.Ascend310B:
 		hdm.RunMode = api.Ascend310
 		hdm.manager = device.NewHwAscend310Manager()
-	case api.Ascend910, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
 		hdm.RunMode = api.Ascend910
 		hdm.manager = device.NewHwAscend910Manager()
 		hdm.WorkMode = dmgr.GetNpuWorkMode()
@@ -1268,7 +1268,7 @@ func (hdm *HwDevManager) isSupportGraceTolerance() {
 		hwlog.RunLog.Debugf("grace tolerance only support training chip")
 		return
 	}
-	if common.ParamOption.RealCardType == api.Ascend910 && hdm.WorkMode != common.SMPMode {
+	if common.ParamOption.RealCardType == api.Ascend910A && hdm.WorkMode != common.SMPMode {
 		hwlog.RunLog.Debug("grace tolerance only support SMP chip mode for 910")
 		return
 	}

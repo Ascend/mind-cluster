@@ -33,8 +33,6 @@ const (
 	Ascend910 = "Ascend910"
 	// Ascend910Lowercase for 910 chip lowercase
 	Ascend910Lowercase = "ascend910"
-	// Ascend910APattern regular expression for 910A
-	Ascend910APattern = `^910`
 	// HuaweiAscend910 ascend 910 chip with prefix
 	HuaweiAscend910 = "huawei.com/Ascend910"
 	// Ascend910MinuxPrefix name prefix of ascend 910 chip
@@ -45,12 +43,20 @@ const (
 	Ascend910No = "910"
 )
 
+// common 910 A1
+const (
+	// Ascend910A ascend 910A chip
+	Ascend910A = "Ascend910"
+	// Ascend910APattern regular expression for 910A
+	Ascend910APattern = `^910`
+)
+
 // common 910 A2
 const (
 	// Ascend910B ascend 910B chip
 	Ascend910B = "Ascend910B"
 	// Ascend910BPattern regular expression for 910B
-	Ascend910BPattern = `^910B\d{1}`
+	Ascend910BPattern = `^(910B\d{1}|A2G\d{1})`
 )
 
 // common 910 A3
@@ -89,6 +95,8 @@ const (
 	Ascend310PLowercase = "ascend310P"
 	// Ascend310PNo 310P chip number
 	Ascend310PNo = "310P"
+	// Ascend310PPattern regular expression for 310P
+	Ascend310PPattern = `^(310P\d{0,1}|I2\d{0,1})`
 	// HuaweiAscend310P ascend 310P chip with prefix
 	HuaweiAscend310P = "huawei.com/Ascend310P"
 	// Ascend310PMinuxPrefix name prefix of ascend 310P chip

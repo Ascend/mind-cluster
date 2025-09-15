@@ -28,6 +28,7 @@ import (
 var (
 	reg910A = regexp.MustCompile(api.Ascend910APattern)
 	reg910B = regexp.MustCompile(api.Ascend910BPattern)
+	reg310P = regexp.MustCompile(api.Ascend310PPattern)
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -138,7 +139,7 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, api.Ascend310PNo) {
+	if reg310P.MatchString(chipName) {
 		return api.Ascend310P
 	}
 	if strings.Contains(chipName, api.Ascend310BNo) {
@@ -151,7 +152,7 @@ func GetDeviceTypeByChipName(chipName string) string {
 		return api.Ascend910B
 	}
 	if reg910A.MatchString(chipName) {
-		return api.Ascend910
+		return api.Ascend910A
 	}
 	return ""
 }
@@ -178,7 +179,7 @@ func IsValidTemplateName(devType, templateName string) bool {
 	switch devType {
 	case api.Ascend310P:
 		_, isTemplateNameValid = get310PTemplateNameList()[templateName]
-	case api.Ascend910:
+	case api.Ascend910A:
 		_, isTemplateNameValid = get910TemplateNameList()[templateName]
 	case api.Ascend910B:
 		_, isTemplateNameValid = get910BTemplateNameList()[templateName]
