@@ -202,7 +202,7 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 	var err error
 	var dpcStatus common.DpcStatus
 	text := s.Text()
-	if instMatch := instRegex.FindStringSubmatch(text); instMatch != nil {
+	if instMatch := instRegex.FindStringSubmatch(text); len(instMatch) > dpcInstResultIndex {
 		inst, err = strconv.Atoi(instMatch[dpcInstResultIndex])
 		if err != nil {
 			return 0, common.DpcStatus{}, err

@@ -140,7 +140,7 @@ func (i *IpmiEventMonitor) GetCurrentAlarmFaultEvents() ([]*common.FaultEvent, e
 			break
 		}
 		nextAlarmMsg, err := i.ipmiTool.RawCmd(GetCurrentAlarmReq(eventIndex))
-		if err != nil {
+		if err != nil || len(nextAlarmMsg) < common.EventFieldStartIndex {
 			hwlog.RunLog.Errorf("get another alarm msg from ipmi failed, error: %v", err)
 			return nil, errors.New("get another alarm msg from ipmi failed")
 		}

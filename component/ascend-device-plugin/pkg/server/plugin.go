@@ -463,6 +463,10 @@ func (ps *PluginServer) updateDynamicAllocMap(realAlloc, kltAlloc []string) {
 	}
 	realIdx := 0
 	for kltIdx, id := range kltAlloc {
+		if len(realAlloc) <= realIdx {
+			hwlog.RunLog.Errorf("realAlloc index out of range[%d] with length %d", realIdx, len(realAlloc))
+			break
+		}
 		ps.klt2RealDevMap[id] = realAlloc[realIdx]
 		if ((kltIdx + 1) % int(chipAICore)) == 0 {
 			realIdx++
