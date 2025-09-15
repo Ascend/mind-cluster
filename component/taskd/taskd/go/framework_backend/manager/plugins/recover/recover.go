@@ -75,7 +75,7 @@ func (rp *RecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.Predic
 	rp.resetPluginInfo()
 	clusterInfo, ok := shot.ClusterInfos.Clusters[constant.ClusterDRank]
 	if !ok {
-		hwlog.RunLog.Info("cluster info not found")
+		hwlog.RunLog.Debug("cluster info not found")
 		return infrastructure.PredicateResult{
 			PluginName: rp.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}
