@@ -1588,6 +1588,12 @@ func (ctl *EventController) listenScheduleResult() {
 			"not need to listen schedule result", ctl.jobInfo.JobId)
 		return
 	}
+	if len(ctl.latestStrategy) > 0 && ctl.latestStrategy[len(ctl.latestStrategy)-1] == constant.
+		ScaleInStrategyName {
+		hwlog.RunLog.Infof("job %s has fault again when scale-in running, not need to listen schedule result",
+			ctl.jobInfo.JobId)
+		return
+	}
 	podReschedulingTimeout := constant.DefaultWaitRescheduleTimeout
 	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
 	if pgInfo.Annotations != nil && pgInfo.Annotations[constant.WaitRescheduleTimeoutKey] != "" {

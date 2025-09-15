@@ -35,5 +35,11 @@ class TestTTPElasticTrainingReplicaOptimizer(unittest.TestCase):
         assert mock_save.called
 
 
+    def test_set_dump_args(self):
+        common.update_scale_in_flag(True)
+        TTPElasticTrainingReplicaOptimizer(True).set_dump_args(0, 1, [0, 4])
+        self.assertEqual(False, common.zit_scale_in_running_state())
+
+
 if __name__ == '__main__':
     unittest.main()

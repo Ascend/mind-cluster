@@ -8,6 +8,9 @@ class TTPReplicaOptimizer():
         self.ori_dp_group = None
         self.filename = ''
 
+    def set_dump_args(self, rank, step, ranks_list):
+        pass
+
     def save_parameter_state_impl(self):
         pass
 

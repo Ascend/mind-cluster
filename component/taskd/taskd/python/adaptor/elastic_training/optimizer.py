@@ -26,6 +26,16 @@ from . import common
 
 
 class TTPElasticTrainingReplicaOptimizer(TTPReplicaOptimizer):
+    def set_dump_args(self, rank, step, ranks_list):
+        """
+        In the scale-in running state, if a fault occurs again, it is no longer in the
+        scale-in running state, and the flag 'SCALE_IN_RUNNING_STATE' should be updated to False.
+        """
+        super().set_dump_args(rank, step, ranks_list)
+        ttp_logger.LOGGER.info(f"rank={rank}, step={step}, ranks_list={ranks_list},"
+                               f" update scale in running state to False")
+        common.update_scale_in_flag(False)
+
     def save_parameter_state(self, filename: str):
         if not self.error_dump and common.zit_scale_in_running_state():
             self.save_parameter_state_scale_in_running(filename)

@@ -324,7 +324,7 @@ func (ctl *EventController) getDPScaleStrategyRules() []common.TransRule {
 			Dst: common.InitState, Handler: ctl.handleFinish},
 
 		{Src: common.ScaleInRunningState, Event: common.FaultOccurEvent,
-			Dst: common.NotifyDecidedStrategyState, Handler: ctl.handleNotifyDecidedStrategy},
+			Dst: common.NotifyStopTrainState, Handler: ctl.handleNotifyStopTrain},
 		{Src: common.ScaleInRunningState, Event: common.FinishEvent,
 			Dst: common.InitState, Handler: ctl.handleFinish},
 		{Src: common.ScaleInRunningState, Event: common.NotifyFailEvent,

@@ -1440,6 +1440,7 @@ func TestListenScheduleResultMain(t *testing.T) {
 
 		testNotSupportStrategy(t)
 		testSupportStrategyAndRunning(t)
+		testFaultOccurAgain(t)
 	})
 }
 
@@ -1480,6 +1481,24 @@ func testSupportStrategyAndRunning(t *testing.T) {
 		ctl.listenScheduleResult()
 		convey.So(len(ctl.scheduleResultChan), convey.ShouldEqual, 1)
 		convey.So(<-ctl.scheduleResultChan, convey.ShouldBeTrue)
+	})
+}
+
+func testFaultOccurAgain(t *testing.T) {
+	convey.Convey("03-job fault occurs again in scale-running not listen", func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: "test-job-id",
+				RecoverConfig: common.RecoverConfig{
+					MindXConfigStrategies: []string{constant.ProcessRecoverStrategyName},
+				},
+			},
+			restartFaultProcess: true,
+			scheduleResultChan:  make(chan bool, 1),
+			latestStrategy:      []string{constant.ScaleInStrategyName},
+		}
+		ctl.listenScheduleResult()
+		convey.So(len(ctl.scheduleResultChan), convey.ShouldEqual, 0)
 	})
 }
 
