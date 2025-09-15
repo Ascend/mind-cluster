@@ -108,7 +108,7 @@ func (c *MetricsCollectorAdapter) UpdateTelegraf(fieldsMap map[string]map[string
 
 // PreCollect pre handle before collect
 func (c *MetricsCollectorAdapter) PreCollect(n *NpuCollector, chipList []HuaWeiAIChip) {
-	if strings.Contains(n.Dmgr.GetDevType(), api.Ascend910) {
+	if strings.Contains(n.Dmgr.GetDevType(), api.Ascend910A) {
 		c.Is910Series = true
 	}
 }

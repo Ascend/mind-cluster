@@ -63,11 +63,11 @@ function mv_file() {
   cp "${TOP_DIR}"/build/npu-exporter-310P-1usoc.yaml "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
-  sed -i "s/ascend:.*/alan/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
-  sed -i "s/310p:.*/I2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
-  sed -i "s/310P:.*/I2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
-  sed -i "s/ascend:.*/alan/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
-  sed -i "s/run_for_310P_1usoc.sh:.*/run_for_I2_1usoc.sh/" "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME}
+  sed -i "s/ascend*/alan/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
+  sed -i "s/310p*/i2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/310P*/I2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/ascend*/alan/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/run_for_310P_1usoc.sh*/run_for_I2_1usoc.sh/" "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME}
 
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME} "${TOP_DIR}"/output/${A200ISOC_DOCKER_FILE_NAME_CH}
