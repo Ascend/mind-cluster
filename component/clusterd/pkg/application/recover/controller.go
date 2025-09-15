@@ -1385,6 +1385,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		} else {
 			ctl.updateFixResult(result.Strategy, constant.DumpFailed)
 		}
+		ctl.sendDumpExit()
 		return common.CheckResultFinishEvent, common.OK, nil
 	default:
 		return "", common.ServerInnerError, fmt.Errorf("unexpected case, strategy=%s "+
@@ -1753,6 +1754,17 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 }
 
 func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, error) {
+	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
+		constant.RestartAllProcessOperation)
+	if err != nil {
+		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",
+			err, ctl.jobInfo.JobId, ctl.uuid)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	}
+	return common.NotifySuccessEvent, common.OK, nil
+}
+
+func (ctl *EventController) sendDumpExit() {
 	signal := &pb.ProcessManageSignal{
 		Uuid:           ctl.uuid,
 		JobId:          ctl.jobInfo.JobId,
@@ -1764,26 +1776,18 @@ func (ctl *EventController) handleRestartAllProcess() (string, common.RespCode, 
 	_, allFaultRanks, updateErr := ctl.updateCacheFaultAndPod()
 	if updateErr != nil {
 		hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, updateErr)
-		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		return
 	}
 	signal.NodeRankIds, updateErr = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
 	if updateErr != nil {
 		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, updateErr)
-		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+		return
 	}
 	_, respCode, enqueueErr := ctl.signalEnqueue(signal)
 	if enqueueErr != nil || respCode != common.OK {
 		hwlog.RunLog.Errorf("failed to signalEnqueue, signal: %v, error:%v", signal, enqueueErr)
-		return common.NotifyFailEvent, common.ClientError, nil
+		return
 	}
-	_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
-		constant.RestartAllProcessOperation)
-	if err != nil {
-		hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s",
-			err, ctl.jobInfo.JobId, ctl.uuid)
-		return common.NotifyFailEvent, common.OperateConfigMapError, nil
-	}
-	return common.NotifySuccessEvent, common.OK, nil
 }
 
 func (ctl *EventController) handleWaitRestartAllProcess() (string, common.RespCode, error) {
