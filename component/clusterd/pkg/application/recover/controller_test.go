@@ -109,7 +109,7 @@ func (ms *mockStream) SetTrailer(md metadata.MD) {
 }
 
 func TestHandleNotifyDump(t *testing.T) {
-	convey.Convey("Test handleNotifyDump", t, func() {
+	convey.Convey("Test handleNotifyElagantDump", t, func() {
 		ctl := &EventController{
 			uuid: "test-uuid",
 			jobInfo: common.JobBaseInfo{
@@ -125,7 +125,7 @@ func TestHandleNotifyDump(t *testing.T) {
 				func() ([]*pb.FaultRank, []string, error) { return nil, nil, errors.New("mock error") })
 			defer mockFunc.Reset()
 
-			result, respCode, err := ctl.handleNotifyDump()
+			result, respCode, err := ctl.handleNotifyElagantDump()
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(respCode == common.ServerInnerError, convey.ShouldBeTrue)
 			convey.So(result == "", convey.ShouldBeTrue)
@@ -137,7 +137,7 @@ func TestHandleNotifyDump(t *testing.T) {
 		convey.Convey("02-write reset info fail, should return err", func() {
 			mockFunc1 := gomonkey.ApplyFuncReturn(common.WriteResetInfoToCM, nil, errors.New("mock error1"))
 			defer mockFunc1.Reset()
-			result, respCode, err := ctl.handleNotifyDump()
+			result, respCode, err := ctl.handleNotifyElagantDump()
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(respCode == common.OperateConfigMapError, convey.ShouldBeTrue)
 			convey.So(result == "", convey.ShouldBeTrue)
@@ -149,7 +149,7 @@ func TestHandleNotifyDump(t *testing.T) {
 			mockFunc2 := gomonkey.ApplyPrivateMethod(&EventController{}, "signalEnqueue",
 				func(signal *pb.ProcessManageSignal) (string, common.RespCode, error) { return "", common.OK, nil })
 			defer mockFunc2.Reset()
-			_, respCode, err := ctl.handleNotifyDump()
+			_, respCode, err := ctl.handleNotifyElagantDump()
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(respCode == common.OK, convey.ShouldBeTrue)
 		})

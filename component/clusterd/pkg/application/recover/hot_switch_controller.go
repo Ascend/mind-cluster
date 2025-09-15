@@ -33,6 +33,18 @@ func (ctl *EventController) notifyPrepareHotSwitch() (string, common.RespCode, e
 	return ctl.signalEnqueue(signal)
 }
 
+func (ctl *EventController) notifyDump() (string, common.RespCode, error) {
+	hwlog.RunLog.Infof("hotswitch flow, jobId: %v, enter into notifyDump", ctl.jobInfo.JobId)
+	signal := &pb.ProcessManageSignal{
+		Uuid:           ctl.uuid,
+		JobId:          ctl.jobInfo.JobId,
+		SignalType:     constant.ChangeStrategySignalType,
+		Actions:        changeStrategyActions,
+		ChangeStrategy: constant.ProcessDumpStrategyName,
+	}
+	return ctl.signalEnqueue(signal)
+}
+
 func (ctl *EventController) notifyCreateNewPod() (string, common.RespCode, error) {
 	hwlog.RunLog.Infof("hotswitch flow, jobId: %v, enter into notifyCreateNewPod", ctl.jobInfo.JobId)
 	for podRank, podId := range ctl.GetFaultPod() {
@@ -169,10 +181,12 @@ func (ctl *EventController) waitReportPauseTrainResult() (string, common.RespCod
 			ctl.addEvent(common.ExitEvent)
 			return "", common.OK, nil
 		}
-		if strategies[0] == constant.ProcessMigration {
-			ctl.addEvent(common.MigrationEvent)
-		} else {
+		// sucess: exit migration dump
+		// faild:  exit
+		if len(strategies) == 1 && strategies[0] == constant.ProcessExitStrategyName {
 			ctl.addEvent(common.ExitEvent)
+		} else {
+			ctl.addEvent(common.MigrationEvent)
 		}
 		return "", common.OK, nil
 	case <-ctx.Done():

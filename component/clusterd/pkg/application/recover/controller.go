@@ -740,7 +740,7 @@ func (ctl *EventController) handleNotifyStopTrain() (string, common.RespCode, er
 	return ctl.signalEnqueue(signal)
 }
 
-func (ctl *EventController) handleNotifyDump() (string, common.RespCode, error) {
+func (ctl *EventController) handleNotifyElagantDump() (string, common.RespCode, error) {
 	if ctl.uuid == "" {
 		ctl.uuid = common.NewEventId(randomLen)
 	}

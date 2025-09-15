@@ -172,3 +172,16 @@ func TestNotifyRestartTrain(t *testing.T) {
 	}
 	runSignalTest(t, tests, testFunc, config)
 }
+
+func TestNotifyDumpForHotSwitch(t *testing.T) {
+	tests := buildSignalTestCases("dump", changeStrategyActions, constant.ProcessMigration)
+	config := signalTestConfig{
+		signalType: constant.ChangeStrategySignalType,
+		actions:    changeStrategyActions,
+		strategy:   constant.ProcessDumpStrategyName,
+	}
+	testFunc := func(controller *EventController) (string, common.RespCode, error) {
+		return controller.notifyDump()
+	}
+	runSignalTest(t, tests, testFunc, config)
+}

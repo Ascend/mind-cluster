@@ -141,9 +141,9 @@ func (ctl *EventController) getHotSwitchRules() []common.TransRule {
 		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartSuccessEvent,
 			Dst: common.InitState, Handler: ctl.cleanStateWhenSuccess},
 		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartFaildEvent,
-			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.notifyDump},
 		{Src: common.WaitReportRestartTrainResultState, Event: common.ReportTimeoutEvent,
-			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+			Dst: common.NotifyDecidedStrategyState, Handler: ctl.notifyDump},
 	}
 }
 
@@ -157,7 +157,7 @@ func (ctl *EventController) getPreRules() []common.TransRule {
 		{Src: common.NotifyWaitFaultFlushingState, Event: common.WaitPlatStrategyTimeoutEvent,
 			Dst: common.FaultRetryState, Handler: ctl.handleFaultRetry},
 		{Src: common.NotifyWaitFaultFlushingState, Event: common.DumpForFaultEvent,
-			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyDump},
+			Dst: common.NotifyDumpState, Handler: ctl.handleNotifyElagantDump},
 		{Src: common.NotifyWaitFaultFlushingState, Event: common.NotifyFailEvent,
 			Dst: common.NotifyKillJobState, Handler: ctl.handleKillJob},
 
