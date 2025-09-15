@@ -86,6 +86,9 @@ var (
 		"switch of set slow node notice environment,default false")
 	thirdPartyScanDelay = flag.Int("thirdPartyScanDelay", common.DefaultScanDelay,
 		"delay time(second) before scanning devices reset by third party")
+	deviceResetTimeout = flag.Int(api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"when device-plugin starts, if the number of chips is insufficient, the maximum duration to wait for "+
+			"the driver to report all chips, unit second, range [10, 600]")
 )
 
 var (
@@ -155,7 +158,6 @@ func checkParam() bool {
 		hwlog.RunLog.Error("unSupport build scene, only support edge and center")
 		return false
 	}
-
 	if (*linkdownTimeout) < minLinkdownTimeout || (*linkdownTimeout) > maxLinkdownTimeout {
 		hwlog.RunLog.Warn("linkdown timeout duration out of range")
 		return false
@@ -164,7 +166,11 @@ func checkParam() bool {
 		hwlog.RunLog.Errorf("reset scan delay %v is invalid", *thirdPartyScanDelay)
 		return false
 	}
-
+	if *deviceResetTimeout < api.MinDeviceResetTimeout || *deviceResetTimeout > api.MaxDeviceResetTimeout {
+		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", deviceResetTimeout,
+			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+		return false
+	}
 	return checkShareDevCount()
 }
 
@@ -218,6 +224,7 @@ func setParameters() {
 		CheckCachedPods:     *checkCachedPods,
 		EnableSlowNode:      *enableSlowNode,
 		ThirdPartyScanDelay: *thirdPartyScanDelay,
+		DeviceResetTimeout:  *deviceResetTimeout,
 	}
 }
 

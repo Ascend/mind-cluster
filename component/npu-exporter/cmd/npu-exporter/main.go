@@ -65,6 +65,7 @@ var (
 	profilingTime       int
 	hccsBWProfilingTime int
 	pollInterval        time.Duration
+	deviceResetTimeout  int
 )
 
 const (
@@ -118,7 +119,7 @@ func main() {
 	if err != nil {
 		return
 	}
-	dmgr, err := devmanager.AutoInit("")
+	dmgr, err := devmanager.AutoInit("", deviceResetTimeout)
 	if err != nil {
 		logger.Errorf("new npu collector failed, error is %v", err)
 		return
@@ -302,6 +303,9 @@ func paramValidInPrometheus() error {
 	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
 		return errors.New("hccsBWProfilingTime range error")
 	}
+	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
+		return errors.New("deviceResetTimeout range error")
+	}
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
 		return fmt.Errorf("%s is not support this scene", pollIntervalStr)
@@ -368,6 +372,9 @@ func init() {
 		"config pcie bandwidth profiling time, range is [1, 2000]")
 	flag.IntVar(&hccsBWProfilingTime, api.HccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
 		"config "+api.Hccs+" bandwidth profiling time, range is [1, 1000]")
+	flag.IntVar(&deviceResetTimeout, api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"when npu-exporter starts, if the number of chips is insufficient, the maximum duration to wait for "+
+			"the driver to report all chips, unit second, range [10, 600]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
