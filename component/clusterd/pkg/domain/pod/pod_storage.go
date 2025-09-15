@@ -45,6 +45,10 @@ func init() {
 
 // SavePod save pod with lock, Please do not add time-consuming code
 func SavePod(podInfo *v1.Pod) {
+	if podInfo == nil {
+		hwlog.RunLog.Error("podInfo is nil")
+		return
+	}
 	podManager.podMapMutex.Lock()
 	if len(podManager.podMap) > maxPodNum {
 		hwlog.RunLog.Errorf("podMap length will exceed %d, pod namespace=%s, name=%s save failed",
@@ -72,6 +76,10 @@ func SavePod(podInfo *v1.Pod) {
 
 // DeletePod delete pod with lock, Please do not add time-consuming code
 func DeletePod(podInfo *v1.Pod) {
+	if podInfo == nil {
+		hwlog.RunLog.Error("podInfo is nil")
+		return
+	}
 	podManager.podMapMutex.Lock()
 	delete(podManager.podMap, GetPodKey(podInfo))
 	jobKey := GetJobKeyByPod(podInfo)

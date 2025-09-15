@@ -35,6 +35,10 @@ func init() {
 
 // SaveJob save Job with lock, Please do not add time-consuming code
 func SaveJob(job v1.Object) {
+	if job == nil {
+		hwlog.RunLog.Error("jobInfo is nil")
+		return
+	}
 	jobManager.jobMapMutex.Lock()
 	defer jobManager.jobMapMutex.Unlock()
 	if len(jobManager.jobMap) >= jobManager.maxCapacity {
@@ -52,6 +56,10 @@ func SaveJob(job v1.Object) {
 
 // DeleteJob delete Job with lock, Please do not add time-consuming code
 func DeleteJob(job v1.Object) {
+	if job == nil {
+		hwlog.RunLog.Error("jobInfo is nil")
+		return
+	}
 	jobManager.jobMapMutex.Lock()
 	defer jobManager.jobMapMutex.Unlock()
 	key := string(job.GetUID())

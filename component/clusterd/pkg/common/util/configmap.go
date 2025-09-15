@@ -15,7 +15,7 @@ import (
 func IsNSAndNameMatched(obj interface{}, namespace string, namePrefix string) bool {
 	cm, ok := obj.(*v1.ConfigMap)
 	if !ok {
-		hwlog.RunLog.Errorf("Cannot convert to ConfigMap:%v", obj)
+		hwlog.RunLog.Error("cannot convert to ConfigMap")
 		return false
 	}
 	return cm.Namespace == namespace && strings.HasPrefix(cm.Name, namePrefix)

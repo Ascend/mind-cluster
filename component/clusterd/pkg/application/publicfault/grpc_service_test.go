@@ -56,6 +56,7 @@ func TestSendPublicFault(t *testing.T) {
 		Faults:    []*pubfault.Fault{fault},
 	}
 	convey.Convey("test method 'SendPublicFault' success", t, testSendFault)
+	convey.Convey("test method 'SendPublicFault' failed, req is nil", t, testSendFaultNilReq)
 	convey.Convey("test method 'SendPublicFault' failed, limit error", t, testSendFaultErrLimit)
 	convey.Convey("test method 'SendPublicFault' failed, check error", t, testSendFaultErrCheck)
 }
@@ -67,6 +68,14 @@ func testSendFault() {
 	expInfo := "public fault send successfully"
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(resp.Code, convey.ShouldEqual, int32(common.OK))
+	convey.So(resp.Info, convey.ShouldResemble, expInfo)
+}
+
+func testSendFaultNilReq() {
+	resp, err := pubFaultSvc.SendPublicFault(context.Background(), nil)
+	expInfo := "req is nil"
+	convey.So(err, convey.ShouldBeNil)
+	convey.So(resp.Code, convey.ShouldEqual, int32(common.InvalidReqParam))
 	convey.So(resp.Info, convey.ShouldResemble, expInfo)
 }
 

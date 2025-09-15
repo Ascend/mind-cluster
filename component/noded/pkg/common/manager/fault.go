@@ -109,6 +109,10 @@ func (f *FaultTools) SetNodeStatus(status string) {
 
 // DeepCopyFaultDev deep copy fault device
 func (f *FaultTools) DeepCopyFaultDev(oldFaultDev, newFaultDev *common.FaultDev) {
+	if oldFaultDev == nil || newFaultDev == nil {
+		hwlog.RunLog.Error("oldFaultDev or newFaultDev is nil")
+		return
+	}
 	oldFaultDev.FaultCode = common.CopyStringSlice(newFaultDev.FaultCode)
 	oldFaultDev.DeviceType = strings.Clone(newFaultDev.DeviceType)
 	oldFaultDev.DeviceId = newFaultDev.DeviceId

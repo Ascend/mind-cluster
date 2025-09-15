@@ -86,7 +86,7 @@ func String2Faults(faultStr string) []*pb.FaultRank {
 				FaultType: fs[n-1],
 			})
 		} else {
-			hwlog.RunLog.Warnf("bad format, fault=%s, faultStr=%s", fault, faultStr)
+			hwlog.RunLog.Warn("bad fault format")
 		}
 	}
 	return res

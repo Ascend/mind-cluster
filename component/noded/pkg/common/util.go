@@ -73,6 +73,10 @@ func faultDevListEqual(thisList, otherList []*FaultDev) bool {
 func faultDevListToMap(list []*FaultDev) map[string]*faultDevWithCodeSet {
 	m := make(map[string]*faultDevWithCodeSet, len(list))
 	for _, dev := range list {
+		if dev == nil {
+			hwlog.RunLog.Error("dev is nil")
+			continue
+		}
 		m[dev.DeviceType+"/"+strconv.FormatInt(dev.DeviceId, decimal)] = &faultDevWithCodeSet{
 			FaultDev: dev,
 			codeSet:  sets.NewString(dev.FaultCode...),

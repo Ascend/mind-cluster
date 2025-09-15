@@ -185,6 +185,9 @@ func (c *ConfigPublisher[T]) SaveData(jobId string, data T) bool {
 		hwlog.RunLog.Warnf("sendChan is full, do not send %s jobId=%s", c.dataType, c.jobId)
 		return false
 	}
+	if c.isChanClosed {
+		return false
+	}
 	c.sendChan <- &jobDataForChan[T]{jobId: jobId, data: data}
 	return saved
 }

@@ -22,8 +22,19 @@ func resetDeviceCmCollector() {
 		lastItem: make(map[string]constant.InformerCmItem[*constant.AdvanceDeviceFaultCm]),
 	}
 }
+
 func TestCmInfoCollector(t *testing.T) {
+	testDeviceInfoCollector(t)
+	testNodeCollector(t)
+	testSwitchInfoCollector(t)
+}
+
+func testDeviceInfoCollector(t *testing.T) {
 	t.Run("TestDeviceInfoCollector", func(t *testing.T) {
+		DeviceInfoCollector(nil, nil, constant.AddOperator)
+		if len(DeviceCmCollectBuffer.buffer) != 0 {
+			t.Error("TestDeviceInfoCollector failed, when newDevInfo is nil")
+		}
 		deviceInfo := &constant.DeviceInfo{
 			CmName: CmName,
 		}
@@ -36,7 +47,14 @@ func TestCmInfoCollector(t *testing.T) {
 			t.Error("TestDeviceInfoCollector failed")
 		}
 	})
+}
+
+func testNodeCollector(t *testing.T) {
 	t.Run("TestNodeInfoCollector", func(t *testing.T) {
+		NodeCollector(nil, nil, constant.AddOperator)
+		if len(NodeCmCollectBuffer.buffer) != 0 {
+			t.Error("TestNodeInfoCollector failed, when newNodeInfo is nil")
+		}
 		nodeInfo := &constant.NodeInfo{
 			CmName: CmName,
 		}
@@ -49,7 +67,14 @@ func TestCmInfoCollector(t *testing.T) {
 			t.Error("TestNodeInfoCollector failed")
 		}
 	})
+}
+
+func testSwitchInfoCollector(t *testing.T) {
 	t.Run("TestSwitchInfoCollector", func(t *testing.T) {
+		SwitchInfoCollector(nil, nil, constant.AddOperator)
+		if len(SwitchCmCollectBuffer.buffer) != 0 {
+			t.Error("TestSwitchInfoCollector failed, when newSwitchInfo is nil")
+		}
 		switchInfo := &constant.SwitchInfo{
 			CmName: CmName,
 		}

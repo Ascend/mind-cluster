@@ -16,6 +16,7 @@
 package faultcontrol
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -110,6 +111,10 @@ func testNodeCtlUpdateFaultLevelMap() {
 	}
 
 	defer resetFaultLevelMap()
+	convey.Convey("test method updateFaultLevelMap failed, faultTypeCode is nil", func() {
+		err := nodeController.updateFaultLevelMap(nil)
+		convey.So(err, convey.ShouldResemble, errors.New("fault type code is nil"))
+	})
 	convey.Convey("test method updateFaultLevelMap success", func() {
 		err := nodeController.updateFaultLevelMap(faultTypeCode)
 		convey.So(err, convey.ShouldBeNil)

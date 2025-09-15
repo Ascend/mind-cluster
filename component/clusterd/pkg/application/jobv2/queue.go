@@ -146,7 +146,7 @@ func Handler(ctx context.Context) {
 				jobStcMessage(jobUniqueKey, constant.JobInfoDelete)
 				deleteJob(jobUniqueKey)
 			default:
-				hwlog.RunLog.Errorf("error operator: %s, jobKey: %s", operator, jobUniqueKey)
+				hwlog.RunLog.Errorf("error operator: %s", operator)
 			}
 		}
 	}

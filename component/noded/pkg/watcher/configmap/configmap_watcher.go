@@ -67,6 +67,10 @@ func WithNamedHandlers(handlers ...NamedHandler) Option {
 
 // DoCMWatcherWithOptions does the configmap watcher with options
 func DoCMWatcherWithOptions(options ...Option) {
+	if cmWatcher == nil {
+		hwlog.RunLog.Error("cmWatcher is nil")
+		return
+	}
 	for _, opt := range options {
 		opt(cmWatcher)
 	}

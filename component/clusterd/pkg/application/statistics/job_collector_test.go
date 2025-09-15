@@ -66,6 +66,10 @@ func TestACJobInfoCollector(t *testing.T) {
 		deleteCall = true
 	})
 	patches.ApplyFunc(acJobMessage, func(oldJobInfo, newJobInfo *v1.AscendJob, operator string) {})
+	t.Run("add acJob, new job info is nil", func(t *testing.T) {
+		ACJobInfoCollector(&v1.AscendJob{}, nil, constant.AddOperator)
+		assert.False(t, saveCall)
+	})
 	t.Run("add acJob, save job cache", func(t *testing.T) {
 		ACJobInfoCollector(&v1.AscendJob{}, &v1.AscendJob{}, constant.AddOperator)
 		assert.True(t, saveCall)
@@ -110,16 +114,19 @@ func TestVCJobInfoCollector(t *testing.T) {
 		deleteCall = true
 	})
 	patches.ApplyFunc(vcJobMessage, func(oldJobInfo, newJobInfo *v1alpha1.Job, operator string) {})
-	t.Run("add acJob, save job cache", func(t *testing.T) {
-
+	t.Run("add vcJob, new job info is nil", func(t *testing.T) {
+		VCJobInfoCollector(&v1alpha1.Job{}, nil, constant.AddOperator)
+		assert.False(t, saveCall)
+	})
+	t.Run("add vcJob, save job cache", func(t *testing.T) {
 		VCJobInfoCollector(&v1alpha1.Job{}, &v1alpha1.Job{}, constant.AddOperator)
 		assert.True(t, saveCall)
 	})
-	t.Run("update acJob, save job cache", func(t *testing.T) {
+	t.Run("update vcJob, save job cache", func(t *testing.T) {
 		VCJobInfoCollector(&v1alpha1.Job{}, &v1alpha1.Job{}, constant.UpdateOperator)
 		assert.True(t, saveCall)
 	})
-	t.Run("delete acJob, delete job cache", func(t *testing.T) {
+	t.Run("delete vcJob, delete job cache", func(t *testing.T) {
 		VCJobInfoCollector(&v1alpha1.Job{}, &v1alpha1.Job{}, constant.DeleteOperator)
 		assert.True(t, deleteCall)
 	})

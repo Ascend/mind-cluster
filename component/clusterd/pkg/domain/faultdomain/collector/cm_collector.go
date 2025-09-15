@@ -103,6 +103,10 @@ func informInfoUpdate(newInfo any, whichToInformer int, isAdd bool) {
 
 // DeviceInfoCollector collects device info
 func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator string) {
+	if newDevInfo == nil {
+		hwlog.RunLog.Error("newDevInfo is nil")
+		return
+	}
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		informInfoUpdate(newDevInfo, constant.DeviceProcessType, true)
 	} else if operator == constant.DeleteOperator {
@@ -112,6 +116,10 @@ func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator s
 
 // SwitchInfoCollector collects switchinfo info of 900A3
 func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, operator string) {
+	if newSwitchInfo == nil {
+		hwlog.RunLog.Error("newSwitchInfo is nil")
+		return
+	}
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		informInfoUpdate(newSwitchInfo, constant.SwitchProcessType, true)
 	} else if operator == constant.DeleteOperator {
@@ -121,6 +129,10 @@ func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, oper
 
 // NodeCollector collects node info
 func NodeCollector(oldNodeInfo, newNodeInfo *constant.NodeInfo, operator string) {
+	if newNodeInfo == nil {
+		hwlog.RunLog.Error("newNodeInfo is nil")
+		return
+	}
 	if operator == constant.AddOperator || operator == constant.UpdateOperator {
 		informInfoUpdate(newNodeInfo, constant.NodeProcessType, true)
 	} else if operator == constant.DeleteOperator {

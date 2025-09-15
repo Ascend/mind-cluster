@@ -33,7 +33,13 @@ const (
 )
 
 func TestSavePodGroup(t *testing.T) {
-	convey.Convey("test SavePodGroup, when pg cache is exists, should get podGroup ", t, func() {
+	convey.Convey("test SavePodGroup, when pg info is nil", t, func() {
+		oldLen := len(pgManager.pgMap)
+		SavePodGroup(nil)
+		newLen := len(pgManager.pgMap)
+		convey.So(oldLen, convey.ShouldEqual, newLen)
+	})
+	convey.Convey("test SavePodGroup, when pg cache is exists, should get podGroup", t, func() {
 		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
 		SavePodGroup(pgDemo1)
 		defer DeletePodGroup(pgDemo1)

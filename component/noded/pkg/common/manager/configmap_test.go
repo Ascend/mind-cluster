@@ -39,6 +39,11 @@ func mockWrongConfigManager() ConfigManager {
 // TestSetFaultConfig test the function of set fault config
 func TestSetFaultConfig(t *testing.T) {
 	convey.Convey("test set fault config", t, func() {
+		convey.Convey("fault config is nil", func() {
+			configManager := NewConfigManager()
+			configManager.SetFaultConfig(nil)
+			convey.So(len(configManager.GetFaultConfig().FaultTypeCode.SeparateFaultCodes), convey.ShouldEqual, 0)
+		})
 		convey.Convey("config manager set fault config", func() {
 			configManager := NewConfigManager()
 			faultConfig := &common.FaultConfig{FaultTypeCode: &common.FaultTypeCode{

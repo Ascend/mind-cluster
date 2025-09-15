@@ -55,6 +55,12 @@ func TestSavePod(t *testing.T) {
 			convey.So(len(podMap), convey.ShouldEqual, 1)
 			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 		})
+		convey.Convey("when pod info is nil, cache should remain unchanged", func() {
+			oldLen := len(podManager.podMap)
+			SavePod(nil)
+			newLen := len(podManager.podMap)
+			convey.So(oldLen, convey.ShouldEqual, newLen)
+		})
 	})
 }
 
@@ -67,6 +73,12 @@ func TestDeletePod(t *testing.T) {
 			podMap := GetPodByJobId(jobUid1)
 			convey.So(len(podMap), convey.ShouldEqual, 0)
 			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when pod info is nil, cache should remain unchanged", func() {
+			oldLen := len(podManager.podMap)
+			DeletePod(nil)
+			newLen := len(podManager.podMap)
+			convey.So(oldLen, convey.ShouldEqual, newLen)
 		})
 	})
 }

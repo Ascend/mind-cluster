@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/domain/common"
@@ -27,6 +28,13 @@ func NewPubFaultService(ctx context.Context) *PubFaultService {
 // SendPublicFault send public fault to clusterd
 func (s *PubFaultService) SendPublicFault(ctx context.Context,
 	req *pubfault.PublicFaultRequest) (*pubfault.RespStatus, error) {
+	if req == nil {
+		hwlog.RunLog.Error("receive req SendPublicFault failed, req is nil")
+		return &pubfault.RespStatus{
+			Code: int32(common.InvalidReqParam),
+			Info: "req is nil",
+		}, nil
+	}
 	event := "send public fault"
 	logs.RecordLog(req.Resource, event, constant.Start)
 	res := constant.Failed

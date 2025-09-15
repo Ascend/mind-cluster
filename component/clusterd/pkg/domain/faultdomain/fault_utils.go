@@ -82,6 +82,10 @@ func GetAdvanceFaultForNode[T constant.ConfigMapInterface](cmForNode T) constant
 
 // GetAdvanceDeviceCm return more usable device cm
 func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) *constant.AdvanceDeviceFaultCm {
+	if devInfo == nil {
+		hwlog.RunLog.Error("devInfo is nil")
+		return nil
+	}
 	advanceDeviceCm := &constant.AdvanceDeviceFaultCm{
 		CmName:      devInfo.CmName,
 		SuperPodID:  devInfo.SuperPodID,

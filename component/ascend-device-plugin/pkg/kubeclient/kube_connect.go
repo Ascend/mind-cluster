@@ -143,7 +143,7 @@ func (ki *ClientK8s) getPodsByKltPort() (*v1.PodList, error) {
 	}
 	var podList v1.PodList
 	if err = json.Unmarshal(body, &podList); err != nil {
-		hwlog.RunLog.Errorf("unmarshal kubelet http response failed: %v, response body: %s", err, body)
+		hwlog.RunLog.Errorf("unmarshal kubelet http response failed: %v", err)
 		return nil, err
 	}
 	return &podList, nil

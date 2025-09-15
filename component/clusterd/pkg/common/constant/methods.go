@@ -150,6 +150,7 @@ func (cm *AdvanceDeviceFaultCm) IsSame(another ConfigMapInterface) bool {
 func (cm *AdvanceDeviceFaultCm) GetCmName() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return cm.CmName
 }
@@ -158,6 +159,7 @@ func (cm *AdvanceDeviceFaultCm) GetCmName() string {
 func (cm *AdvanceDeviceFaultCm) GetRecoveringKey() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType + CmRecoveringSuffix
 }
@@ -166,6 +168,7 @@ func (cm *AdvanceDeviceFaultCm) GetRecoveringKey() string {
 func (cm *AdvanceDeviceFaultCm) GetCardUnHealthyKey() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType + CmCardUnhealthySuffix
 }
@@ -174,6 +177,7 @@ func (cm *AdvanceDeviceFaultCm) GetCardUnHealthyKey() string {
 func (cm *AdvanceDeviceFaultCm) GetNetworkUnhealthyKey() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType + CmCardNetworkUnhealthySuffix
 }
@@ -182,6 +186,7 @@ func (cm *AdvanceDeviceFaultCm) GetNetworkUnhealthyKey() string {
 func (cm *AdvanceDeviceFaultCm) GetFaultDeviceListKey() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType + CmFaultListSuffix
 }
@@ -190,22 +195,35 @@ func (cm *AdvanceDeviceFaultCm) GetFaultDeviceListKey() string {
 func (cm *AdvanceDeviceFaultCm) GetAvailableDeviceListKey() string {
 	if cm == nil {
 		hwlog.RunLog.Error("cm is nil")
+		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType
 }
 
 // GetCmName get configmap name of device info
 func (cm *DeviceInfo) GetCmName() string {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return ""
+	}
 	return cm.CmName
 }
 
 // GetCmName get configmap name of switch info
 func (cm *SwitchInfo) GetCmName() string {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return ""
+	}
 	return cm.CmName
 }
 
 // GetCmName get configmap name of node info
 func (cm *NodeInfo) GetCmName() string {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return ""
+	}
 	return cm.CmName
 }
 

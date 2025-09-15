@@ -33,6 +33,10 @@ type cache struct {
 
 // AddPubFaultToCache add new public fault to cache. After adding, notify statistic module
 func (pc *cache) AddPubFaultToCache(newFault *constant.PubFaultCache, nodeName, faultKey string) {
+	if newFault == nil {
+		hwlog.RunLog.Error("newFault is nil")
+		return
+	}
 	const maxPubFaultCacheNum = 50000
 	if pc.GetPubFaultNum() >= maxPubFaultCacheNum {
 		hwlog.RunLog.Errorf("add public fault to cache failed, "+

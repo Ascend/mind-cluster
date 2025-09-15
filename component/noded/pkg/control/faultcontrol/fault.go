@@ -16,6 +16,7 @@
 package faultcontrol
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -119,6 +120,10 @@ func (nc *NodeController) filterNotSupportFaultCodes(faultCodes []string) []stri
 
 // updateFaultLevelMap update fault level map when update config
 func (nc *NodeController) updateFaultLevelMap(faultTypeCode *common.FaultTypeCode) error {
+	if faultTypeCode == nil {
+		hwlog.RunLog.Error("fault type code is nil")
+		return errors.New("fault type code is nil")
+	}
 	newFaultLevelMap := make(map[string]int, 0)
 	for _, notHandleFaultCode := range faultTypeCode.NotHandleFaultCodes {
 		if _, ok := newFaultLevelMap[notHandleFaultCode]; ok {

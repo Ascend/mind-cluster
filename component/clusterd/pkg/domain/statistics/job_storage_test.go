@@ -20,7 +20,13 @@ const (
 )
 
 func TestSaveJob(t *testing.T) {
-	convey.Convey("test SavePod", t, func() {
+	convey.Convey("test SaveJob", t, func() {
+		convey.Convey("when job info is nil, cache should remain unchanged", func() {
+			oldLen := len(jobManager.jobMap)
+			SaveJob(nil)
+			newLen := len(jobManager.jobMap)
+			convey.So(oldLen, convey.ShouldEqual, newLen)
+		})
 		convey.Convey("when pod cache less than maxPodNum, cache should save success", func() {
 			SaveJob(getDemoJob(uid, name, namespace))
 			defer DeleteJob(getDemoJob(uid, name, namespace))
@@ -30,7 +36,13 @@ func TestSaveJob(t *testing.T) {
 }
 
 func TestDeleteJob(t *testing.T) {
-	convey.Convey("test delete Pod", t, func() {
+	convey.Convey("test DeleteJob", t, func() {
+		convey.Convey("when job info is nil, cache should remain unchanged", func() {
+			oldLen := len(jobManager.jobMap)
+			DeleteJob(nil)
+			newLen := len(jobManager.jobMap)
+			convey.So(oldLen, convey.ShouldEqual, newLen)
+		})
 		convey.Convey("when pod cache less than maxPodNum, cache should delete success", func() {
 			SaveJob(getDemoJob(uid, name, namespace))
 			DeleteJob(getDemoJob(uid, name, namespace))

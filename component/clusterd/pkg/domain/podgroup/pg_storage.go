@@ -32,6 +32,10 @@ func init() {
 
 // SavePodGroup save podGroup with lock, Please do not add time-consuming code
 func SavePodGroup(pgInfo *v1beta1.PodGroup) {
+	if pgInfo == nil {
+		hwlog.RunLog.Error("pgInfo is nil")
+		return
+	}
 	pgManager.pgMapMutex.Lock()
 	defer pgManager.pgMapMutex.Unlock()
 	if len(pgManager.pgMap) > maxJobNum {

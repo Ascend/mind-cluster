@@ -99,7 +99,7 @@ func SaveNode(superPodID string, node *api.NodeDevice) {
 		}
 		superPodManager.snMap[superPodID] = superPod
 	}
-	if len(superPod.NodeDeviceMap) > maxNodeNumPerSuperPod {
+	if len(superPod.NodeDeviceMap) >= maxNodeNumPerSuperPod {
 		hwlog.RunLog.Errorf("nodeDeviceMap length will exceed %d, superPodID=%s, nodeName=%s",
 			maxNodeNumPerSuperPod, superPodID, node.NodeName)
 		return

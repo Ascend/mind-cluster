@@ -55,8 +55,8 @@ func (c *ConfigTools) GetFaultConfig() *common.FaultConfig {
 
 // SetFaultConfig set the fault config
 func (c *ConfigTools) SetFaultConfig(faultConfig *common.FaultConfig) {
-	if c.config == nil {
-		hwlog.RunLog.Error("config is nil when set fault config")
+	if c.config == nil || faultConfig == nil {
+		hwlog.RunLog.Error("fault config is nil when set fault config")
 		return
 	}
 	c.configLock.Lock()

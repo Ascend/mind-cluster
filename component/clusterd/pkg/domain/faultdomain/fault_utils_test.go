@@ -303,6 +303,11 @@ func TestGetAdvanceDeviceCm(t *testing.T) {
 		t.Errorf("TestGetAdvanceDeviceCm failed")
 		return
 	}
+	errAdvanceDeviceCm := GetAdvanceDeviceCm(nil)
+	if errAdvanceDeviceCm != nil {
+		t.Errorf("TestGetAdvanceDeviceCm failed, input is nil")
+		return
+	}
 }
 
 // TestValidBusinessUceReportInfo valid business uce report info

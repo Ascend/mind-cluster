@@ -48,7 +48,11 @@ func (baseCenter *baseFaultCenter[T]) Process() {
 			AllConfigmap:    processingCm,
 			UpdateConfigmap: updateOriginalCm,
 		}
-		processingCm = processor.Process(info).(constant.OneConfigmapContent[T]).AllConfigmap
+		cmType, ok := processor.Process(info).(constant.OneConfigmapContent[T])
+		if !ok {
+			continue
+		}
+		processingCm = cmType.AllConfigmap
 	}
 	if baseCenter.setProcessedCm(processingCm) {
 		baseCenter.notifySubscriber()

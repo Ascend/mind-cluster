@@ -47,6 +47,10 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQue() {
 
 func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 	nodeName string, deviceInfo *constant.AdvanceDeviceFaultCm) {
+	if deviceInfo == nil {
+		hwlog.RunLog.Error("deviceInfo is nil")
+		return
+	}
 	if _, ok := processor.uceAccompanyFaultQue[nodeName]; !ok {
 		processor.uceAccompanyFaultQue[nodeName] = make(map[string][]constant.DeviceFault)
 	}

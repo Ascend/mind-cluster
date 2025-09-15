@@ -48,6 +48,12 @@ func TestPubFaultCache(t *testing.T) {
 }
 
 func testAdd() {
+	// input is nil
+	oldLen := len(PubFaultCache.faultCache)
+	PubFaultCache.AddPubFaultToCache(nil, testNodeName1, faultKey1)
+	newLen := len(PubFaultCache.faultCache)
+	convey.So(oldLen, convey.ShouldEqual, newLen)
+
 	// both node and fault not exist
 	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
 	convey.So(len(PubFaultCache.faultCache), convey.ShouldEqual, 1)
