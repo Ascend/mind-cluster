@@ -26,8 +26,9 @@ var (
 
 // Option struct definition
 type Option struct {
-	ReportInterval int
-	MonitorPeriod  int
+	ReportInterval     int
+	MonitorPeriod      int
+	DeviceResetTimeout int // device reset timeout
 }
 
 // FaultProcessor fault processor responsibility chain interface

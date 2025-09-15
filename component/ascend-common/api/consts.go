@@ -184,3 +184,14 @@ const (
 	// RescheduleInPlaceValue reschedule in place value
 	RescheduleInPlaceValue = "true"
 )
+
+const (
+	// DeviceResetTimeout device reset timeout
+	DeviceResetTimeout = "deviceResetTimeout"
+	// DefaultDeviceResetTimeout default device reset timeout is 60 seconds
+	DefaultDeviceResetTimeout = 60
+	// MinDeviceResetTimeout min device reset timeout is 10 seconds
+	MinDeviceResetTimeout = 10
+	// MaxDeviceResetTimeout max device reset timeout is 600 seconds
+	MaxDeviceResetTimeout = 600
+)

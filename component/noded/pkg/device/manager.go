@@ -18,6 +18,7 @@ package device
 import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
+	"nodeD/pkg/common"
 )
 
 var dm *devmanager.DeviceManager
@@ -25,7 +26,7 @@ var dm *devmanager.DeviceManager
 // InitDeviceManager init device manager
 func InitDeviceManager() error {
 	var err error
-	dm, err = devmanager.GetDeviceManager()
+	dm, err = devmanager.GetDeviceManager(common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("init device manager failed:%v", err)
 	}

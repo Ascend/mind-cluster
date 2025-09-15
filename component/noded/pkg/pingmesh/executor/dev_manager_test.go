@@ -37,9 +37,7 @@ import (
 )
 
 func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(devmanager.GetDeviceManager, func() (*devmanager.DeviceManager, error) {
-		return m, err
-	})
+	return gomonkey.ApplyFuncReturn(devmanager.GetDeviceManager, m, err)
 }
 
 func patchGetChipBaseInfos(chips []*common.ChipBaseInfo, err error) *gomonkey.Patches {
