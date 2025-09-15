@@ -263,7 +263,7 @@ func RecoverFaultJobInfoCm(jobId string) {
 		cm, getErr := GetConfigMap(api.FaultJobCmName, api.ClusterNS)
 		if getErr != nil {
 			if errors.IsNotFound(getErr) {
-				hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
+				hwlog.RunLog.Warnf("get configmap fault-job-info err:%v", getErr)
 				return
 			}
 			hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
