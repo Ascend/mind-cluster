@@ -37,7 +37,6 @@ const (
 	networkDetectOK              = uint32(0)
 	networkDetectInit            = uint32(6)
 	synchronizeWaitMagnification = 3
-	podDevStatusAnnotation       = "podDevStatus"
 	updateResetCMFailedPattern   = "failed to update reset cm to recovered status, err: %v"
 	unsetTaskFailedPattern       = "failed to unset task in reset, err: %v"
 	failedToUpdateCmPattern      = "failed to update reset cm to recover failed status, err: %v"

@@ -27,24 +27,19 @@ from . import common
 
 class TTPElasticTrainingReplicaOptimizer(TTPReplicaOptimizer):
     def save_parameter_state(self, filename: str):
+        if not self.error_dump and common.zit_scale_in_running_state():
+            self.save_parameter_state_scale_in_running(filename)
+        else:
+            super().save_parameter_state(filename)
+
+    def save_parameter_state_scale_in_running(self, filename: str):
         cur_rank = torch.distributed.get_rank()
         state_dict = self.save_parameter_state_impl()
         check_ret, err_msg, filename = FileUtils.regular_file_path(filename, '/', False)
         if not check_ret:
             ttp_logger.LOGGER.error(f"rank {cur_rank}: save parameter filename is not valid.")
             raise Exception(f"rank {cur_rank}: save parameter filename is not valid, error: {err_msg}")
-        if self.error_dump:
-            save_rank = self.save_args['rank']
-            if cur_rank == save_rank:
-                torch.save(state_dict, filename)
-                ttp_logger.LOGGER.info(f"error dump rank {cur_rank} save parameters successfully")
-        elif common.zit_scale_in_running_state():
-            scale_in_dp_group = mpu.get_data_parallel_group()
-            if torch.distributed.get_rank(scale_in_dp_group) == 0:
-                torch.save(state_dict, filename)
-                ttp_logger.LOGGER.info(f"rank {cur_rank} save parameters successfully in scale-in training mode")
-        else:
-            if torch.distributed.get_rank(self.ori_dp_group) == 0:
-                torch.save(state_dict, filename)
-                ttp_logger.LOGGER.info(f"normal rank {cur_rank} save parameters successfully")
-
+        scale_in_dp_group = mpu.get_data_parallel_group()
+        if torch.distributed.get_rank(scale_in_dp_group) == 0:
+            torch.save(state_dict, filename)
+            ttp_logger.LOGGER.info(f"rank {cur_rank} save parameters successfully in scale-in training mode")

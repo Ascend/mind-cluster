@@ -9,8 +9,6 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -61,11 +59,6 @@ func mockUpdatePodGroup(pg *v1beta1.PodGroup) (*v1beta1.PodGroup, error) {
 	return &v1beta1.PodGroup{}, nil
 }
 
-func mockPatchPodGroup(name, namespace string, pt types.PatchType,
-	data []byte, opts v1.PatchOptions) (*v1beta1.PodGroup, error) {
-	return &v1beta1.PodGroup{}, nil
-}
-
 func TestInitClientVolcano(t *testing.T) {
 	convey.Convey("Test InitClientVolcano", t, func() {
 		patcher1 := gomonkey.ApplyFunc(clientcmd.BuildConfigFromFlags, mockBuildConfigFromFlags)
@@ -108,20 +101,6 @@ func TestRetryGetPodGroup(t *testing.T) {
 		pg, err := RetryGetPodGroup(name, namespace, retryTimes)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(pg, convey.ShouldNotBeNil)
-	})
-}
-
-func TestRetryUpdatePodGroup(t *testing.T) {
-	convey.Convey("Test RetryUpdatePodGroup", t, func() {
-		pg := &v1beta1.PodGroup{}
-		retryTimes := 3
-
-		patcher := gomonkey.ApplyFunc(UpdatePodGroup, mockUpdatePodGroup)
-		defer patcher.Reset()
-
-		pgResult, err := RetryUpdatePodGroup(pg, retryTimes)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(pgResult, convey.ShouldNotBeNil)
 	})
 }
 

@@ -22,7 +22,6 @@ import (
 
 const (
 	numInt10 = 10
-	numInt2  = 2
 )
 
 // TestNewSendStats tests the NewSendStats function.

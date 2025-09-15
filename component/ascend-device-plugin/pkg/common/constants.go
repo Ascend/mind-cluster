@@ -84,11 +84,11 @@ const (
 
 	runtimeEnvNum = 3
 	// AscendVisibleDevicesEnv visible devices env
-	AscendVisibleDevicesEnv = "ASCEND_VISIBLE_DEVICES"
+	AscendVisibleDevicesEnv = api.AscendVisibleDevicesEnv
 	// ascendRuntimeOptionsEnv virtual runtime option env
-	ascendRuntimeOptionsEnv = "ASCEND_RUNTIME_OPTIONS"
+	ascendRuntimeOptionsEnv = api.AscendRuntimeOptionsEnv
 	// ascendAllowLinkEnv a500a2 need mount softlink
-	ascendAllowLinkEnv = "ASCEND_ALLOW_LINK"
+	ascendAllowLinkEnv = api.AscendAllowLinkEnv
 	// PodPredicateTime pod predicate time
 	PodPredicateTime = "predicate-time"
 	// Pod2kl pod annotation key, means kubelet allocate device
@@ -113,8 +113,6 @@ const (
 	// PerfDumpConfigEnv is an environment variable for slow node step time configmap
 	PerfDumpConfigEnv = "PERF_DUMP_CONFIG"
 
-	// PodResourceSeverKey for pod resource key
-	PodResourceSeverKey = "podResource"
 	// VirtualDev Virtual device tag
 	VirtualDev = "VIRTUAL"
 	// PhyDeviceLen like Ascend910-0 split length is 2
@@ -133,10 +131,6 @@ const (
 	LabelDeviceLen = 2
 	// DefaultDeviceIP device ip address
 	DefaultDeviceIP = "127.0.0.1"
-	// NormalState health state
-	NormalState = uint32(0)
-	// GeneralAlarm health state
-	GeneralAlarm = uint32(1)
 
 	// SocketChmod socket file mode
 	SocketChmod = 0600
@@ -511,10 +505,6 @@ const (
 	RingSum = 2
 	// InferRankIndex indecates the rank index of infer situation (rank index is meaningless in infer situation)
 	InferRankIndex = "-1"
-	// WaitResetEndTime for wait device reset to complete
-	WaitResetEndTime = 120
-	// WaitRetryTime for wait five seconds to reset device again
-	WaitRetryTime = 5
 	// ResetRetryTimes for max retry times when reset failed
 	ResetRetryTimes = 4
 )
@@ -662,16 +652,6 @@ const (
 	MaxFaultFrequencyTimes = 100
 	// MinFaultFrequencyTimes is the min count for the fault occurrence time of fault frequency
 	MinFaultFrequencyTimes = 1
-	// DefaultLinkUpTimeout is the default time for the linkup event
-	DefaultLinkUpTimeout = 60
-	// MinLinkUpTimeout is the min time for the linkup event
-	MinLinkUpTimeout = 1
-	// MaxLinkUpTimeout is the max time for the linkup event
-	MaxLinkUpTimeout = 60
-	// MinLinkDownTimeout is the min time for the linkdown event
-	MinLinkDownTimeout = 1
-	// MaxLinkDownTimeout is the max time for the linkdown event
-	MaxLinkDownTimeout = 30
 	// MaxFaultTimeout is the max time(s) for the fault duration time of fault duration
 	MaxFaultTimeout = 600
 	// MinFaultTimeout is the min time(s) for the fault duration time of fault duration
@@ -715,37 +695,6 @@ const (
 	PeerDeviceL2PortName = "L2"
 	// PeerDeviceNAPortName the name of switch peer device is not valid
 	PeerDeviceNAPortName = "na"
-)
-
-// port level switch fault event types
-const (
-	// PortFaultInvalidPkgEventType Port Fault Invalid Pkg Event Type
-	PortFaultInvalidPkgEventType = 3
-	// PortFaultUnstableEventType Port Fault Unstable Event Type
-	PortFaultUnstableEventType = 4
-	// PortFaultFailEventType Port Fault Fail Event Type
-	PortFaultFailEventType = 5
-	// PortFaultTimeoutLpEventType Port Fault Timeout Lp EventType
-	PortFaultTimeoutLpEventType = 14
-	// PortFaultTimeoutRpEventType Port Fault Timeout Rp EventType
-	PortFaultTimeoutRpEventType = 15
-)
-
-const (
-	// EventTypeOfSwitchPortFault the event type of port down fault
-	EventTypeOfSwitchPortFault = 5
-	// SubTypeOfPortDown the subtype of port down fault
-	SubTypeOfPortDown = 8
-	// SubTypeOfPortLaneReduceHalf the subtype of lane reduce to half
-	SubTypeOfPortLaneReduceHalf = 449
-	// SubTypeOfPortLaneReduceQuarter the subtype of lane reduce to quarter
-	SubTypeOfPortLaneReduceQuarter = 448
-	// FaultIdOfPortLaneReduceHalf  the fault id of lane reduce to half
-	FaultIdOfPortLaneReduceHalf = 132332
-	// FaultIdOfPortLaneReduceQuarter  the fault id of lane reduce to quarter
-	FaultIdOfPortLaneReduceQuarter = 132333
-	// FaultIdOfPortFailOnForwardingChip  the fault id of port failure on the forwarding chip
-	FaultIdOfPortFailOnForwardingChip = 155912
 )
 
 // LogicID list for reset, get id list of ring
@@ -798,16 +747,8 @@ const (
 const (
 	// NPUNormalStatus represents normal status
 	NPUNormalStatus = "normal"
-	// NPUUsedChipStatus represents used chip status
-	NPUUsedChipStatus = "used"
 	// NPUResettingStatus represents resetting status
 	NPUResettingStatus = "resetting"
-	// UpdateAnnotationRetryTimes update annotation retry times
-	UpdateAnnotationRetryTimes = 3
-	// SubHealthyAnnotationKey sub-healthy annotation key on node
-	SubHealthyAnnotationKey = "subHealthy"
-	// FirstUpdateMaxSleepMilliSecond max sleep time before first update node annotation
-	FirstUpdateMaxSleepMilliSecond = 3000
 )
 
 const (

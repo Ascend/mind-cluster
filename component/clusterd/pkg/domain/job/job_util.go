@@ -148,6 +148,7 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
+		setUseNodeNames(&jobInfo, podsInJob)
 		initJobShareTorInfo(&jobInfo, podsInJob)
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
@@ -167,6 +168,15 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 	if result {
 		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+func setUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
+	if jobInfo.NodeNames == nil {
+		jobInfo.NodeNames = make(map[string]string)
+	}
+	for _, podTemp := range podsInJob {
+		jobInfo.NodeNames[string(podTemp.UID)] = podTemp.Spec.NodeName
 	}
 }
 
@@ -274,39 +284,41 @@ func FlushLastUpdateTime(jobKey string) {
 	SaveJobCache(jobKey, jobInfo)
 }
 
-// IsInferenceJob check inference job
-func IsInferenceJob(podInfo v1.Pod) bool {
+// IsMindIeServerPod check pod is mindie server pod
+func IsMindIeServerPod(podInfo v1.Pod) bool {
 	return podInfo.Labels != nil && podInfo.Labels[constant.MindIeJobIdLabelKey] != "" &&
-		podInfo.Labels[constant.MindIeAppTypeLabelKey] != ""
+		podInfo.Labels[constant.MindIeAppTypeLabelKey] == constant.ServerAppType
 }
 
-// GetInferenceJobIdByNodeName get inference job id by node name
-func GetInferenceJobIdByNodeName(nodeName string) string {
+// GetMindIeServerJobAndUsedDeviceInfoMap get mindie server job info map and job used device info map
+func GetMindIeServerJobAndUsedDeviceInfoMap() (map[string]map[string]constant.JobInfo,
+	map[string]map[string]sets.String) {
+	jobInfoMap := make(map[string]map[string]constant.JobInfo)
+	deviceInfoMap := make(map[string]map[string]sets.String)
 	allJob := GetAllJobCache()
-	for jobKey := range allJob {
+	for jobKey, jobInfo := range allJob {
 		podsInJob := pod.GetPodByJobId(jobKey)
-		for _, pod := range podsInJob {
-			if pod.Spec.NodeName == nodeName && IsInferenceJob(pod) {
-				return jobKey
-			}
-		}
-	}
-	return ""
-}
-
-// IsJobUsedDevice check job used device
-func IsJobUsedDevice(jobKey string, deviceName string) bool {
-	podsInJob := pod.GetPodByJobId(jobKey)
-	for _, pod := range podsInJob {
-		podUsedDevice := sets.String{}
-		realDevice, exist := pod.Annotations[api.PodAnnotationAscendReal]
-		if !exist {
+		if len(podsInJob) == 0 {
 			continue
 		}
-		podUsedDevice = podUsedDevice.Insert(strings.Split(realDevice, constant.Comma)...)
-		if podUsedDevice.Has(deviceName) {
-			return true
+		jobUsedDevices := sets.String{}
+		for _, podInfo := range podsInJob {
+			if !IsMindIeServerPod(podInfo) {
+				continue
+			}
+			nodeName := podInfo.Spec.NodeName
+			if _, exists := jobInfoMap[nodeName]; !exists {
+				jobInfoMap[nodeName] = make(map[string]constant.JobInfo)
+				deviceInfoMap[nodeName] = make(map[string]sets.String)
+			}
+			if _, exists := jobInfoMap[nodeName][jobKey]; !exists {
+				jobInfoMap[nodeName][jobKey] = jobInfo
+			}
+			if realDevice, exist := podInfo.Annotations[api.PodAnnotationAscendReal]; exist && realDevice != "" {
+				jobUsedDevices = jobUsedDevices.Insert(strings.Split(realDevice, constant.Comma)...)
+			}
+			deviceInfoMap[nodeName][jobKey] = jobUsedDevices
 		}
 	}
-	return false
+	return jobInfoMap, deviceInfoMap
 }

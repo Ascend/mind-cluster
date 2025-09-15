@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
@@ -1479,5 +1480,57 @@ func testSupportStrategyAndRunning(t *testing.T) {
 		ctl.listenScheduleResult()
 		convey.So(len(ctl.scheduleResultChan), convey.ShouldEqual, 1)
 		convey.So(<-ctl.scheduleResultChan, convey.ShouldBeTrue)
+	})
+}
+
+func TestDealWithForceRelease(t *testing.T) {
+	convey.Convey("Test dealWithForceRelease", t, func() {
+		ctl := &EventController{
+			jobInfo:  common.JobBaseInfo{JobId: "test-job-id"},
+			faultPod: map[string]string{"test-pod": "test-node"},
+		}
+		patches := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {})
+		defer patches.Reset()
+		patches.ApplyFunc(hwlog.RunLog.Warnf, func(format string, args ...interface{}) {})
+		convey.Convey("01-should update fault info when fault info is not nil", func() {
+			mockGetFaultPod := gomonkey.ApplyMethodFunc(reflect.TypeOf(ctl), "GetFaultPod", func() map[string]string {
+				return map[string]string{"test-pod": "test-node"}
+			})
+			defer mockGetFaultPod.Reset()
+			mockGetFaultInfo := gomonkey.ApplyFuncReturn(job.GetJobFaultSdIdAndNodeName, map[int]api.SuperPodFaultInfos{
+				0: {JobId: "test-job-id", SdIds: []string{"sd1"}, NodeNames: []string{"node1"}}})
+			defer mockGetFaultInfo.Reset()
+			mockUpdateFaultInfo := gomonkey.ApplyFuncReturn(kube.CreateOrUpdateSuperPodFaultInfo)
+			defer mockUpdateFaultInfo.Reset()
+			mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+			defer mockSleep.Reset()
+			ctl.dealWithForceRelease()
+		})
+
+		convey.Convey("02-should warn when fault info is nil", func() {
+			mockGetFaultPod := gomonkey.ApplyMethodFunc(reflect.TypeOf(ctl), "GetFaultPod", func() map[string]string {
+				return map[string]string{"test-pod": "test-node"}
+			})
+			defer mockGetFaultPod.Reset()
+			mockGetFaultInfo := gomonkey.ApplyFuncReturn(job.GetJobFaultSdIdAndNodeName, nil)
+			defer mockGetFaultInfo.Reset()
+			ctl.dealWithForceRelease()
+		})
+
+		convey.Convey("03-should handle update fault info error", func() {
+			mockGetFaultPod := gomonkey.ApplyMethodFunc(reflect.TypeOf(ctl), "GetFaultPod", func() map[string]string {
+				return map[string]string{"test-pod": "test-node"}
+			})
+			defer mockGetFaultPod.Reset()
+			mockGetFaultInfo := gomonkey.ApplyFuncReturn(job.GetJobFaultSdIdAndNodeName, map[int]api.SuperPodFaultInfos{
+				0: {JobId: "test-job-id", SdIds: []string{"sd1"}, NodeNames: []string{"node1"}}})
+			defer mockGetFaultInfo.Reset()
+			mockUpdateFaultInfo := gomonkey.ApplyFuncReturn(
+				kube.CreateOrUpdateSuperPodFaultInfo)
+			defer mockUpdateFaultInfo.Reset()
+			mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+			defer mockSleep.Reset()
+			ctl.dealWithForceRelease()
+		})
 	})
 }

@@ -38,9 +38,6 @@ const (
 	productTypeLen = 64
 	dcmiVersionLen = 32
 
-	// vDeviceCreateTemplateNamePrefix prefix of vnpu template name
-	vDeviceCreateTemplateNamePrefix = "vir"
-
 	// MainCmdChipInf main cmd chip inf
 	MainCmdChipInf MainCmd = 12
 	// MainCmdHccs main cmd of hccs

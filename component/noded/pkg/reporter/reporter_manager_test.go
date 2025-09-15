@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/api"
-	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/reporter/cmreporter"
 )
@@ -100,11 +99,4 @@ func setReporters() {
 	}
 	cmReporter := cmreporter.NewConfigMapReporter(testK8sClient)
 	reportManager.reporters = append(reportManager.reporters, cmReporter)
-}
-
-func parseNodeInfoCMData(data string) common.NodeInfoCM {
-	var nodeInfo common.NodeInfoCM
-	err := json.Unmarshal([]byte(data), &nodeInfo)
-	convey.So(err, convey.ShouldBeNil)
-	return nodeInfo
 }

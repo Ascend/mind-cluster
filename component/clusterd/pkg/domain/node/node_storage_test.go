@@ -23,7 +23,6 @@ const (
 	nodeName2     = "node2"
 	superPodIDStr = "0"
 	notExistName  = "node exist node name"
-	notExistIp    = "not exist node ip"
 
 	devName0       = "Ascend910-0"
 	devPhyID0      = "0"

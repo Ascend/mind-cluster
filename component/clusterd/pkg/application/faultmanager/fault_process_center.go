@@ -12,7 +12,6 @@ import (
 	"clusterd/pkg/application/faultmanager/cmprocess"
 	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
 	"clusterd/pkg/application/faultmanager/jobprocess"
-	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/collector"
@@ -104,11 +103,6 @@ func CallbackForReportRetryInfo(infos []constant.ReportRecoverInfo) {
 func CallbackForReportNoRetryInfo(jobId string, reportFaultTime int64) {
 	collector.ReportInfoCollector.ReportNoRetryInfo(jobId, reportFaultTime)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceProcessType)
-}
-
-// QueryJobsFaultInfo query jobs fault rank info, and filter fault below `faultLevel`
-func QueryJobsFaultInfo(faultLevel []string) map[string]constant.JobFaultInfo {
-	return faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(faultLevel)
 }
 
 // QueryDeviceInfoToReport query device info to report

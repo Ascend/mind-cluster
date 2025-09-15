@@ -137,17 +137,17 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 	fNode.setNetworkUnhealthyNPUList(tmpNetworkUnhealthyNPUs)
 	klog.V(util.LogInfoLev).Infof("Network unhealthy cards from device info: %v", tmpUnhealthyNPUs)
 
-	DeviceFaultReason, err := GetNodeDeviceFaultFromDeviceInfo(node)
+	deviceFaultReason, err := fNode.getNodeDeviceFaultFromDeviceInfo(node)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("GetNodeDeviceFaultFromDeviceInfo: %s", util.SafePrint(err))
 	}
-	fNode.setFaultDeviceList(DeviceFaultReason)
+	fNode.setFaultDeviceList(deviceFaultReason)
 	fNode.setNodeHasCardSubHealthFault()
 }
 
-// GetNodeDeviceFaultFromDeviceInfo get device fault from device info
-func GetNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, error) {
-	deviceFaultList, ok := node.Annotation[DeviceFaultCmKey]
+// getNodeDeviceFaultFromDeviceInfo get device fault from device info
+func (fNode *FaultNode) getNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, error) {
+	deviceFaultList, ok := node.Annotation[fNode.NPUName+DeviceFaultCmKeySuffix]
 	if !ok {
 		return nil, fmt.Errorf("getNodeDeviceFaultFromDeviceInfo failed")
 	}

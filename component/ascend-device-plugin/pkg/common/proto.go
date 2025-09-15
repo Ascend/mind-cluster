@@ -164,6 +164,7 @@ type Option struct {
 	CheckCachedPods     bool     // check cached pods periodically
 	EnableSlowNode      bool     // switch of set slow node notice environment
 	ThirdPartyScanDelay int      // delay time (seconds) for scanning devices when third party resetting
+	DeviceResetTimeout  int      // device reset timeout
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List
@@ -281,7 +282,7 @@ func Get310PProductType() map[string]string {
 // HasOnChipMemory check if card has on-chip-memory
 func HasOnChipMemory() bool {
 	return ParamOption.RealCardType == api.Ascend910B ||
-		ParamOption.RealCardType == api.Ascend910 ||
+		ParamOption.RealCardType == api.Ascend910A ||
 		ParamOption.RealCardType == api.Ascend910A3
 }
 

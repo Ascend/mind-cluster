@@ -29,7 +29,6 @@ var (
 	maxTimePerSecond          = 5
 	atLeastReportCycle        = int64(5)
 	currentClusterDeviceCmNum = 0
-	currentClusterNodeCmNum   = 0
 	currentClusterSwitchCmNum = 0
 	initTime                  int64
 	updateChan                = make(chan int, 5)

@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/cache"
 
+	"ascend-common/api"
 	"ascend-common/api/ascend-operator/apis/batch/v1"
 )
 
@@ -61,7 +62,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return nil, errors.New("nil pointer")
 	}
 	switch resource {
-	case v1.SchemeGroupVersion.WithResource("ascendjobs"):
+	case v1.SchemeGroupVersion.WithResource(api.AscendJobsLowerCase):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Batch().V1().Jobs().Informer()}, nil
 	default:
 	}

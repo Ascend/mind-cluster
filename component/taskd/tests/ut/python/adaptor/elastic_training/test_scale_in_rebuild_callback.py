@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2025, Huawei Technologies Co., Ltd. All rights reserved.
 import unittest
-from unittest import mock
 from unittest.mock import patch
 
+import torch
 from megatron.training import args_test
 from mindio_ttp.adaptor import tft_replica_group
+
 from taskd.python.adaptor.elastic_training import common
 from taskd.python.adaptor.elastic_training import scale_in_rebuild_callback
 
@@ -14,14 +15,14 @@ from taskd.python.adaptor.elastic_training import scale_in_rebuild_callback
 class TestScaleInRebuildCallback(unittest.TestCase):
     @patch('megatron.core.rerun_state_machine.destroy_rerun_state_machine')
     @patch('torch.distributed.get_world_size')
-    @patch('torch.distributed.get_process_group_ranks')
     @patch('torch.distributed.new_group')
     @patch('torch.distributed.get_rank')
-    def test_scale_in_rebuild_callback(self, mock_get_rank, mock_new_group, mock_group_ranks,
+    def test_scale_in_rebuild_callback(self, mock_get_rank, mock_new_group,
                                mock_world_size, mock_destroy_rerun_state_machine):
         mock_get_rank.return_value = 0
         mock_world_size.return_value = 16
-        mock_group_ranks = get_process_group_ranks
+        origin_get_process_group_ranks = torch.distributed.get_process_group_ranks
+        torch.distributed.get_process_group_ranks = get_process_group_ranks
         train_args = [[[args_test()], args_test()]]
         params = "{\"scale-in-strategy\": \"DP\"}"
         new_dp_ranks = [0, 4]
@@ -35,6 +36,7 @@ class TestScaleInRebuildCallback(unittest.TestCase):
         args_test.expert_model_parallel_size = 1
         scale_in_rebuild_callback.scale_in_rebuild_callback(new_dp_ranks, new_world_ranks, train_args, params)
         mock_destroy_rerun_state_machine.assert_called()
+        torch.distributed.get_process_group_ranks = origin_get_process_group_ranks
 
     @patch('torch.distributed.new_group')
     @patch('torch.distributed.get_rank')
@@ -59,32 +61,58 @@ class TestScaleInRebuildCallback(unittest.TestCase):
         old_dp = [0, 4, 8, 12]
         new_dp = [0, 4]
         dp_cp_replica_ranks = [0, 4]
-        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(0, old_dp, new_dp,
+        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(0, old_dp,
+                                                                                                   old_dp, new_dp,
                                                                                                  dp_cp_replica_ranks)
         self.assertEqual([2, 3], fault_idxs)
         self.assertEqual([0, 1], fault_local_idxs)
-        self.assertEqual(False, fault_first_group)
-        self.assertEqual(False, common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
+        self.assertFalse(fault_first_group)
+        self.assertFalse(common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
 
         old_dp = [0, 4, 8, 12]
         new_dp = [4, 8, 12]
         dp_cp_replica_ranks = [8, 12]
-        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(8, old_dp, new_dp,
+        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(8, old_dp,
+                                                                                                   old_dp, new_dp,
                                                                                                    dp_cp_replica_ranks)
         self.assertEqual([0], fault_idxs)
         self.assertEqual([0], fault_local_idxs)
-        self.assertEqual(True, fault_first_group)
-        self.assertEqual(False, common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
+        self.assertTrue(fault_first_group)
+        self.assertFalse(common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
 
         old_dp = [0, 4, 8, 12]
         new_dp = [0, 4, 8]
         dp_cp_replica_ranks = [8, 12]
-        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(8, old_dp, new_dp,
+        fault_idxs, fault_local_idxs, fault_first_group = scale_in_rebuild_callback.get_fault_msgs(8, old_dp, old_dp,
+                                                                                                   new_dp,
                                                                                                    dp_cp_replica_ranks)
         self.assertEqual([3], fault_idxs)
         self.assertEqual([1], fault_local_idxs)
-        self.assertEqual(False, fault_first_group)
-        self.assertEqual(True, common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
+        self.assertFalse(fault_first_group)
+        self.assertTrue(common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
+
+    def test_get_ranks_after_change_left(self):
+        dp_cp_replica_ranks_length = 2
+        fault_idxs = [1, 2]
+        old_dp_ranks = [0, 8, 16, 24]
+        changed_old_dp_ranks = scale_in_rebuild_callback.get_ranks_after_change_left(dp_cp_replica_ranks_length,
+                                                                                     fault_idxs,
+                                                                                     old_dp_ranks,
+                                                                                     24)
+        self.assertEqual(changed_old_dp_ranks, [0, 24, 16, 24])
+        self.assertTrue(common.IS_FAULT_REPLICA_RANK)
+
+    @patch('torch.distributed.new_group')
+    @patch('torch.distributed.get_rank')
+    def test_create_new_replica_group_for_changed_left(self, mock_get_rank, mock_new_group):
+        mock_new_group.return_value = 1
+        mock_get_rank.return_value = 24
+        common.IS_FAULT_REPLICA_RANK = False
+        scale_in_rebuild_callback.create_new_replica_group_for_changed_left([0, 24])
+        self.assertEqual(2, mock_new_group.call_count)
+        self.assertEqual(1, tft_replica_group.DP_CP_REPLICA_GROUP)
+        self.assertEqual(1, tft_replica_group.DP_CP_REPLICA_GROUP_GLOO)
+        self.assertFalse(common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP)
 
 
 if __name__ == '__main__':

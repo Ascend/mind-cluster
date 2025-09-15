@@ -62,15 +62,6 @@ func DeepCopy(info *constant.NodeInfo) *constant.NodeInfo {
 	return newNodeInfo
 }
 
-// DeepCopyInfos deep copy NodeInfos
-func DeepCopyInfos(infos map[string]*constant.NodeInfo) map[string]*constant.NodeInfo {
-	res := make(map[string]*constant.NodeInfo)
-	for key, val := range infos {
-		res[key] = DeepCopy(val)
-	}
-	return res
-}
-
 // GetSafeData get data every 2000 NodeInfo
 func GetSafeData(nodeInfos map[string]*constant.NodeInfo) []string {
 	if len(nodeInfos) == 0 {

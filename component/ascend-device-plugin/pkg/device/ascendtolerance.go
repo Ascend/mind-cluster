@@ -124,7 +124,7 @@ func NewHotResetManager(devUsage string, deviceNum int, boardId uint32) HotReset
 func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 	var resetDevNumOnce int
 	switch common.ParamOption.RealCardType {
-	case api.Ascend910:
+	case api.Ascend910A:
 		resetDevNumOnce = common.Ascend910RingsNum
 	case api.Ascend910B:
 		if devUsage == common.Infer {

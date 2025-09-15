@@ -87,7 +87,7 @@ func (rp *RecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.Predic
 	strategy := clusterInfo.Command[constant.ChangeStrategy]
 	if rp.uuid == clusterInfo.Command[constant.Uuid] && strategy == rp.recoverStrategy && !rp.doAction {
 		rp.resetPluginInfo()
-		hwlog.RunLog.Infof("recover strategy not change, uuid:%v strategy:%v", rp.uuid, rp.recoverStrategy)
+		hwlog.RunLog.Debugf("recover strategy not change, uuid:%v strategy:%v", rp.uuid, rp.recoverStrategy)
 		return infrastructure.PredicateResult{
 			PluginName: rp.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}
@@ -99,7 +99,7 @@ func (rp *RecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.Predic
 		rp.recoverStrategy = strategy
 		rp.doAction = true
 	} else {
-		hwlog.RunLog.Infof("recover strategy not in recover/retry/dump/continue, strtegy:%v", strategy)
+		hwlog.RunLog.Debugf("recover strategy not in recover/retry/dump/continue, strtegy:%v", strategy)
 		return infrastructure.PredicateResult{
 			PluginName: rp.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 	}

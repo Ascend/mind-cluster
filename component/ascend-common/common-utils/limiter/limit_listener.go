@@ -59,14 +59,6 @@ func LimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (
 	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
 }
 
-// LargeLimitListener returns a Listener that accepts at most n connections at the same time
-func LargeLimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
-	if totalConnLimit < 0 || totalConnLimit > largeMaxConnection {
-		return nil, errors.New("the parameter of LargeLimitListener totalConnLimit is illegal")
-	}
-	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
-}
-
 type localLimitListener struct {
 	net.Listener
 	buckets     chan struct{}

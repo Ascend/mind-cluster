@@ -16,13 +16,14 @@
 package devicefactory
 
 import (
+	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 )
 
 func initDevManager() (*devmanager.DeviceManager, *deviceswitch.SwitchDevManager, error) {
-	devM, err := devmanager.AutoInit("")
+	devM, err := devmanager.AutoInit("", common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
 		return nil, nil, err

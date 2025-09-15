@@ -24,4 +24,4 @@ chmod +x build.sh && dos2unix build.sh
 source build.sh
 docker_zip_name="${docker_zip_name/Ascend/Alan}"
 
-sed -i 's/ascendjobs/alanjobs/g' "$TOP_DIR"/output/clusterd-*.yaml
+sed -i 's/ascendjobs/jobs/g' "$TOP_DIR"/output/clusterd-*.yaml

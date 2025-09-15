@@ -137,6 +137,7 @@ const (
 	RestartAgentCode             = 208
 	RestartWorkersCode           = 209
 	StartAgentCode               = 210
+	ReplyToClusterDCode          = 211
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -320,6 +321,8 @@ const (
 	SwitchOK = "switchOK"
 	// SwitchFail value of switch fail
 	SwitchFail = "switchFail"
+	// SwitchNicResultStr key of switch test result str
+	SwitchNicResultStr = "SwitchNicResultStr"
 
 	// SignalType key of SignalType
 	SignalType = "SignalType"
@@ -359,6 +362,8 @@ const (
 	OMStressTestStreamName = "OMStressTestStream"
 	// StressTestRankOPStr key of stress test rank op str
 	StressTestRankOPStr = "StressTestRankOPStr"
+	// StressTestResultStr key of stress test result str
+	StressTestResultStr = "StressTestResultStr"
 	// StressTestUUID key of stress test uuid
 	StressTestUUID = "stressTestUUID"
 	// StressTestJobID key of stress test job id

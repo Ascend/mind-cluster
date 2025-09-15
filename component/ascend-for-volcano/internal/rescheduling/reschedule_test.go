@@ -1461,3 +1461,72 @@ func TestSetTaskCardHealthCode(t *testing.T) {
 		})
 	}
 }
+
+func TestReSchedulerUseAnnotation01(t *testing.T) {
+	t.Run("01-UseAnnotation does nothing when reScheduler is nil", func(t *testing.T) {
+		var reScheduler *ReScheduler = nil
+		task := &api.TaskInfo{}
+		reScheduler.UseAnnotation(task)
+	})
+
+	t.Run("02-UseAnnotation does nothing when task is nil", func(t *testing.T) {
+		reScheduler := &ReScheduler{}
+		var task *api.TaskInfo = nil
+		reScheduler.UseAnnotation(task)
+	})
+
+	t.Run("03-UseAnnotation does nothing when task.Job not in reScheduler.Jobs", func(t *testing.T) {
+		reScheduler := &ReScheduler{Jobs: make(map[api.JobID]plugin.SchedulerJob),
+			DealReSchedulerCache: &DealReSchedulerCache{}}
+		reScheduler.FaultJobs = make(map[api.JobID]*FaultJob)
+		task := &api.TaskInfo{Job: "non-existent-job"}
+		reScheduler.UseAnnotation(task)
+	})
+
+	t.Run("04-UseAnnotation does nothing when task.Job not in reScheduler.FaultJobs", func(t *testing.T) {
+		jobID := api.JobID("test-job")
+		reScheduler := &ReScheduler{Jobs: map[api.JobID]plugin.SchedulerJob{jobID: {}},
+			DealReSchedulerCache: &DealReSchedulerCache{}}
+
+		reScheduler.FaultJobs = make(map[api.JobID]*FaultJob)
+		task := &api.TaskInfo{Job: jobID}
+		reScheduler.UseAnnotation(task)
+	})
+}
+
+func TestReSchedulerUseAnnotation02(t *testing.T) {
+	t.Run("05-UseAnnotation does nothing when IsJobSingleRescheduling returns false", func(t *testing.T) {
+		jobID := api.JobID("test-job")
+		vcJob := plugin.SchedulerJob{}
+		fJob := &FaultJob{
+			PendingSessionNum: pendingTimes,
+		}
+		reScheduler := &ReScheduler{Jobs: map[api.JobID]plugin.SchedulerJob{jobID: vcJob},
+			DealReSchedulerCache: &DealReSchedulerCache{}}
+		reScheduler.FaultJobs = map[api.JobID]*FaultJob{jobID: fJob}
+		task := &api.TaskInfo{
+			Job: jobID,
+		}
+		reScheduler.UseAnnotation(task)
+	})
+
+	t.Run("06-UseAnnotation does nothing when no matching FaultTask", func(t *testing.T) {
+		jobID := api.JobID("test-job")
+		vcJob := plugin.SchedulerJob{}
+		vcJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+		fJob := &FaultJob{
+			PendingSessionNum: 0,
+			FaultTasks:        []FaultTask{{TaskName: "other-task", TaskNamespace: "default", NodeName: "node1"}},
+		}
+		reScheduler := &ReScheduler{Jobs: map[api.JobID]plugin.SchedulerJob{jobID: vcJob},
+			DealReSchedulerCache: &DealReSchedulerCache{}}
+		reScheduler.FaultJobs = map[api.JobID]*FaultJob{jobID: fJob}
+		task := &api.TaskInfo{
+			Name:      "test-task",
+			Namespace: "default",
+			Job:       jobID,
+		}
+		task.NodeName = "node2"
+		reScheduler.UseAnnotation(task)
+	})
+}

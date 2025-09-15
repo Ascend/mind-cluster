@@ -705,6 +705,34 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 	return
 }
 
+// UseAnnotation add task annotation is reschedule in place
+func (reScheduler *ReScheduler) UseAnnotation(task *api.TaskInfo) {
+	if reScheduler == nil || task == nil {
+		klog.V(util.LogErrorLev).Infof("UseAnnotation: %s, nil reScheduler or task",
+			util.ArgumentError)
+		return
+	}
+	klog.V(util.LogDebugLev).Infof("enter rescheduling UseAnnotation %s...", task.Name)
+	defer klog.V(util.LogDebugLev).Infof("enter rescheduling UseAnnotation %s...", task.Name)
+	vcJob, ok := reScheduler.Jobs[task.Job]
+	if !ok {
+		return
+	}
+	fJob, ok := reScheduler.FaultJobs[task.Job]
+	if !ok {
+		return
+	}
+	if !fJob.IsJobSingleRescheduling(&vcJob) {
+		return
+	}
+	for _, fTask := range fJob.FaultTasks {
+		if fTask.TaskName == task.Name && fTask.TaskNamespace == task.Namespace && fTask.NodeName == task.NodeName {
+			task.Pod.Annotations[rescheduleInPlaceKey] = rescheduleInPlaceValue
+			return
+		}
+	}
+}
+
 func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, scoreMap map[string]float64) {
 	faultNodeNames := reScheduler.getFaultNodeNameByFaultJob(faultJob)
 	for _, faultNodeName := range faultNodeNames {

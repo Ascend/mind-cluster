@@ -18,6 +18,8 @@ package controller
 import (
 	"os"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/core/model"
 )
 
@@ -31,12 +33,22 @@ var callbackFunc model.CallbackFunc = nil
 
 // Start controller
 func Start() {
-	startController(clusterLevelPath)
+	absPath, err := utils.CheckPath(clusterLevelPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
+		return
+	}
+	startController(absPath)
 }
 
 // Reload controller
 func Reload() {
-	reloadController(clusterLevelPath)
+	absPath, err := utils.CheckPath(clusterLevelPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
+		return
+	}
+	reloadController(absPath)
 }
 
 // Stop controller 仅同步调用

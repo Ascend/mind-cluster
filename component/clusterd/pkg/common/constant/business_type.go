@@ -14,10 +14,6 @@ const (
 	Statistics = "statistics"
 	// FaultRecover business type FaultRecover
 	FaultRecover = "fault-recover"
-	// JobNodeHealthyType is node healthy type
-	JobNodeHealthyType = "node"
-	// JobDeviceHealthyType is device healthy type
-	JobDeviceHealthyType = "device"
 	// EpRankTable business for ep rank table
 	EpRankTable = "epRankTable"
 )

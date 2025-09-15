@@ -12,6 +12,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"k8s.io/apimachinery/pkg/util/sets"
+
+	"clusterd/pkg/domain/superpod"
 )
 
 const (
@@ -184,29 +187,37 @@ func GetInstanceJobKey(jobId, namespace, appType string) (string, error) {
 }
 
 // GetJobFaultSdIdAndNodeName get job sdid and node name
-func GetJobFaultSdIdAndNodeName(jobId string, faultNodes map[string]struct{}) map[int]api.SuperPodFaultInfos {
+func GetJobFaultSdIdAndNodeName(jobId string, faultPods map[string]string) map[int]api.SuperPodFaultInfos {
 	jobInfo, ok := GetJobCache(jobId)
 	if !ok {
 		return nil
 	}
-	superNodes := make(map[int][]string)
-	faultSuperID := make(map[int][]string)
-	for _, serverInfo := range jobInfo.JobRankTable.ServerList {
-		if serverInfo.SuperPodId < 0 {
-			return nil
-		}
-		if _, ok = faultNodes[serverInfo.ServerName]; !ok {
-			superNodes[serverInfo.SuperPodId] = append(superNodes[serverInfo.SuperPodId], serverInfo.ServerName)
+	faultNodes := make(sets.String)
+	for _, podUid := range faultPods {
+		nodeName, ok := jobInfo.NodeNames[podUid]
+		if !ok {
+			hwlog.RunLog.Warnf("no node name for pod %s", podUid)
 			continue
 		}
-		for _, device := range serverInfo.DeviceList {
-			if device.SuperDeviceID == "" {
-				continue
-			}
-			faultSuperID[serverInfo.SuperPodId] = append(faultSuperID[serverInfo.SuperPodId], device.SuperDeviceID)
+		faultNodes.Insert(nodeName)
+	}
+	hwlog.RunLog.Infof("force release %v fault nodes: %v", jobId, faultNodes)
+	superNodes := make(map[int][]string)
+	for _, serverInfo := range jobInfo.PreServerList {
+		if serverInfo.SuperPodId < 0 {
+			hwlog.RunLog.Debugf("force release %s superPodId %v < 0", serverInfo.ServerName, serverInfo.SuperPodId)
+			return nil
+		}
+		if !faultNodes.Has(serverInfo.ServerName) {
+			superNodes[serverInfo.SuperPodId] = append(superNodes[serverInfo.SuperPodId], serverInfo.ServerName)
+			hwlog.RunLog.Infof("force release serverName: %v, superPodId: %v", serverInfo.ServerName,
+				serverInfo.SuperPodId)
+			continue
 		}
 	}
+	faultSuperID := getFaultSuperID(faultNodes)
 	if len(superNodes) == 0 || len(faultSuperID) == 0 {
+		hwlog.RunLog.Warnf("force release no fault superPodId")
 		return nil
 	}
 	faultInfo := make(map[int]api.SuperPodFaultInfos)
@@ -215,4 +226,19 @@ func GetJobFaultSdIdAndNodeName(jobId string, faultNodes map[string]struct{}) ma
 			NodeNames: superNodes[spId], SdIds: faultSuperID[spId], FaultTimes: time.Now().Unix(), JobId: jobId}
 	}
 	return faultInfo
+}
+
+func getFaultSuperID(faultNodes sets.String) map[int][]string {
+	faultSuperID := make(map[int][]string)
+	for superPodID, nodes := range superpod.ListClusterDevice() {
+		for _, node := range nodes.NodeDeviceMap {
+			if !faultNodes.Has(node.NodeName) {
+				continue
+			}
+			for _, sdid := range node.DeviceMap {
+				faultSuperID[superPodID] = append(faultSuperID[superPodID], sdid)
+			}
+		}
+	}
+	return faultSuperID
 }

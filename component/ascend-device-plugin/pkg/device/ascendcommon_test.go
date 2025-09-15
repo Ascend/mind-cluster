@@ -1132,20 +1132,6 @@ func TestAscendToolsGetDeviceFaults(t *testing.T) {
 	})
 }
 
-func mockGetDeviceList(num int32, logicIDs []int32, err error) *gomonkey.Patches {
-	return gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetDeviceList",
-		func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
-			return num, logicIDs, err
-		})
-}
-
-func mockGetDevProcessInfo(devProcessInfo *npuCommon.DevProcessInfo, err error) *gomonkey.Patches {
-	return gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetDevProcessInfo",
-		func(_ *devmanager.DeviceManagerMock, _ int32) (*npuCommon.DevProcessInfo, error) {
-			return devProcessInfo, err
-		})
-}
-
 // TestCompareDeviceList for test compareDeviceList
 func TestCompareDeviceList(t *testing.T) {
 	convey.Convey("test compareDeviceList", t, func() {

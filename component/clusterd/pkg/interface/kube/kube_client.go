@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -21,6 +22,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
+
+var refreshCMIds sync.Map
 
 // CreateConfigMap create configMap here
 func CreateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
@@ -236,8 +239,18 @@ func CreateOrUpdateSuperPodFaultInfo(jobId string, faultInfos map[int]api.SuperP
 			time.Sleep(time.Second * time.Duration(i))
 			continue
 		}
+		refreshCMIds.Store(jobId, struct{}{})
 		return
 	}
+}
+
+// RecoverFaultJobInfoCmWithSync update cm with sync
+func RecoverFaultJobInfoCmWithSync(jobId string) {
+	_, ok := refreshCMIds.Load(jobId)
+	if !ok {
+		time.Sleep(time.Minute)
+	}
+	RecoverFaultJobInfoCm(jobId)
 }
 
 // RecoverFaultJobInfoCm update cm
@@ -266,6 +279,7 @@ func RecoverFaultJobInfoCm(jobId string) {
 			time.Sleep(time.Second)
 		}
 		hwlog.RunLog.Infof("delete jobId:%s from configmap fault-job-info success", jobId)
+		refreshCMIds.Delete(jobId)
 		return
 	}
 }
@@ -300,7 +314,7 @@ func RetryPatchNodeAnnotation(nodeName string, retryTimes int, annotations map[s
 
 // DeletePodAnnotation delete pod annotations
 func DeletePodAnnotation(namespace, podName string, keysToDelete []string) error {
-	var lastErr error
+	var lastErr error = nil
 	for i := 0; i < constant.PatchPodTimes; i++ {
 		patchData := map[string]interface{}{
 			"metadata": map[string]interface{}{

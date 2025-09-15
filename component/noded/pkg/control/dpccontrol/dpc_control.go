@@ -142,7 +142,7 @@ func constructDpcError(errorStatus bool, id string, faultCode string) *pubfault.
 }
 
 func getNodeCardId() []int32 {
-	dm, err := devmanager.GetDeviceManager()
+	dm, err := devmanager.GetDeviceManager(common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("get dev manager failed, err is %v", err)
 		return []int32{int32(0)}

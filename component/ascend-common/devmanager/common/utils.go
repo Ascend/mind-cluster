@@ -28,6 +28,7 @@ import (
 var (
 	reg910A = regexp.MustCompile(api.Ascend910APattern)
 	reg910B = regexp.MustCompile(api.Ascend910BPattern)
+	reg310P = regexp.MustCompile(api.Ascend310PPattern)
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -138,7 +139,7 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, api.Ascend310PNo) {
+	if reg310P.MatchString(chipName) {
 		return api.Ascend310P
 	}
 	if strings.Contains(chipName, api.Ascend310BNo) {
@@ -151,7 +152,7 @@ func GetDeviceTypeByChipName(chipName string) string {
 		return api.Ascend910B
 	}
 	if reg910A.MatchString(chipName) {
-		return api.Ascend910
+		return api.Ascend910A
 	}
 	return ""
 }
@@ -178,7 +179,7 @@ func IsValidTemplateName(devType, templateName string) bool {
 	switch devType {
 	case api.Ascend310P:
 		_, isTemplateNameValid = get310PTemplateNameList()[templateName]
-	case api.Ascend910:
+	case api.Ascend910A:
 		_, isTemplateNameValid = get910TemplateNameList()[templateName]
 	case api.Ascend910B:
 		_, isTemplateNameValid = get910BTemplateNameList()[templateName]
@@ -247,224 +248,6 @@ func DeepCopyVDevActivityInfo(vDevActivityInfo *VDevActivityInfo) *VDevActivityI
 		VDevUsedMem:    vDevActivityInfo.VDevUsedMem,
 		VDevAiCore:     vDevActivityInfo.VDevAiCore,
 		IsVirtualDev:   vDevActivityInfo.IsVirtualDev,
-	}
-}
-
-// DeepCopyPcieBwInfo copy PCIEBwStat deeply
-func DeepCopyPcieBwInfo(pcieBwInfo *PCIEBwStat) *PCIEBwStat {
-	if pcieBwInfo == nil {
-		return nil
-	}
-
-	return &PCIEBwStat{
-		PcieRxPBw:   pcieBwInfo.PcieRxPBw,
-		PcieRxNPBw:  pcieBwInfo.PcieRxNPBw,
-		PcieRxCPLBw: pcieBwInfo.PcieRxCPLBw,
-		PcieTxPBw:   pcieBwInfo.PcieTxPBw,
-		PcieTxNPBw:  pcieBwInfo.PcieTxNPBw,
-		PcieTxCPLBw: pcieBwInfo.PcieTxCPLBw,
-	}
-}
-
-// DeepCopyMemoryInfo copy MemoryInfo deeply
-func DeepCopyMemoryInfo(memoryInfo *MemoryInfo) *MemoryInfo {
-	if memoryInfo == nil {
-		return nil
-	}
-
-	return &MemoryInfo{
-		MemorySize:      memoryInfo.MemorySize,
-		MemoryAvailable: memoryInfo.MemoryAvailable,
-		Frequency:       memoryInfo.Frequency,
-		Utilization:     memoryInfo.Utilization,
-	}
-}
-
-// DeepCopyHbmInfo copy HbmInfo deeply
-func DeepCopyHbmInfo(hbmInfo *HbmInfo) *HbmInfo {
-	if hbmInfo == nil {
-		return nil
-	}
-
-	return &HbmInfo{
-		MemorySize:        hbmInfo.MemorySize,
-		Frequency:         hbmInfo.Frequency,
-		Usage:             hbmInfo.Usage,
-		Temp:              hbmInfo.Temp,
-		BandWidthUtilRate: hbmInfo.BandWidthUtilRate,
-	}
-}
-
-// DeepCopyStatInfo copy StatInfo deeply
-func DeepCopyStatInfo(statInfo *StatInfo) *StatInfo {
-	if statInfo == nil {
-		return nil
-	}
-
-	return &StatInfo{
-		MacRxPauseNum:          statInfo.MacRxPauseNum,
-		MacTxPauseNum:          statInfo.MacTxPauseNum,
-		MacRxPfcPktNum:         statInfo.MacRxPfcPktNum,
-		MacTxPfcPktNum:         statInfo.MacTxPfcPktNum,
-		MacRxBadPktNum:         statInfo.MacRxBadPktNum,
-		MacTxBadPktNum:         statInfo.MacTxBadPktNum,
-		RoceRxAllPktNum:        statInfo.RoceRxAllPktNum,
-		RoceTxAllPktNum:        statInfo.RoceTxAllPktNum,
-		RoceRxErrPktNum:        statInfo.RoceRxErrPktNum,
-		RoceTxErrPktNum:        statInfo.RoceTxErrPktNum,
-		RoceRxCnpPktNum:        statInfo.RoceRxCnpPktNum,
-		RoceTxCnpPktNum:        statInfo.RoceTxCnpPktNum,
-		RoceNewPktRtyNum:       statInfo.RoceNewPktRtyNum,
-		MacTxBadOctNum:         statInfo.MacTxBadOctNum,
-		MacRxBadOctNum:         statInfo.MacRxBadOctNum,
-		RoceUnexpectedAckNum:   statInfo.RoceUnexpectedAckNum,
-		RoceOutOfOrderNum:      statInfo.RoceOutOfOrderNum,
-		RoceVerificationErrNum: statInfo.RoceVerificationErrNum,
-		RoceQpStatusErrNum:     statInfo.RoceQpStatusErrNum,
-		RoceEcnDBNum:           statInfo.RoceEcnDBNum,
-		MacRXFcsErrPktNum:      statInfo.MacRXFcsErrPktNum,
-	}
-}
-
-// DeepCopyOpticalInfo copy OpticalInfo deeply
-func DeepCopyOpticalInfo(opticalInfo *OpticalInfo) *OpticalInfo {
-	if opticalInfo == nil {
-		return nil
-	}
-
-	return &OpticalInfo{
-		OpticalState:    opticalInfo.OpticalState,
-		OpticalTxPower0: opticalInfo.OpticalTxPower0,
-		OpticalTxPower1: opticalInfo.OpticalTxPower1,
-		OpticalTxPower2: opticalInfo.OpticalTxPower2,
-		OpticalTxPower3: opticalInfo.OpticalTxPower3,
-		OpticalRxPower0: opticalInfo.OpticalRxPower0,
-		OpticalRxPower1: opticalInfo.OpticalRxPower1,
-		OpticalRxPower2: opticalInfo.OpticalRxPower2,
-		OpticalRxPower3: opticalInfo.OpticalRxPower3,
-		OpticalVcc:      opticalInfo.OpticalVcc,
-		OpticalTemp:     opticalInfo.OpticalTemp,
-	}
-}
-
-// DeepCopyLinkSpeedInfo copy LinkSpeedInfo deeply
-func DeepCopyLinkSpeedInfo(linkSpeedInfo *LinkSpeedInfo) *LinkSpeedInfo {
-	if linkSpeedInfo == nil {
-		return nil
-	}
-
-	return &LinkSpeedInfo{
-		Speed: linkSpeedInfo.Speed,
-	}
-}
-
-// DeepCopyLinkStatInfo copy LinkStatInfo deeply
-func DeepCopyLinkStatInfo(linkStatInfo *LinkStatInfo) *LinkStatInfo {
-	if linkStatInfo == nil {
-		return nil
-	}
-
-	return &LinkStatInfo{
-		LinkUPNum: linkStatInfo.LinkUPNum,
-	}
-}
-
-// DeepCopyLinkStatusInfo copy LinkStatusInfo deeply
-func DeepCopyLinkStatusInfo(linkStatusInfo *LinkStatusInfo) *LinkStatusInfo {
-	if linkStatusInfo == nil {
-		return nil
-	}
-
-	return &LinkStatusInfo{
-		LinkState: linkStatusInfo.LinkState,
-	}
-}
-
-// DeepCopyBandwidthInfo copy BandwidthInfo deeply
-func DeepCopyBandwidthInfo(bandwidthInfo *BandwidthInfo) *BandwidthInfo {
-	if bandwidthInfo == nil {
-		return nil
-	}
-
-	return &BandwidthInfo{
-		TxValue: bandwidthInfo.TxValue,
-		RxValue: bandwidthInfo.RxValue,
-	}
-}
-
-// DeepCopyDevProcessInfo copy DevProcessInfo deeply
-func DeepCopyDevProcessInfo(devProcessInfo *DevProcessInfo) *DevProcessInfo {
-	if devProcessInfo == nil {
-		return nil
-	}
-
-	devProcArray := make([]DevProcInfo, 0)
-	for _, item := range devProcessInfo.DevProcArray {
-		devProcArray = append(devProcArray, item)
-	}
-	return &DevProcessInfo{
-		DevProcArray: devProcArray,
-		ProcNum:      devProcessInfo.ProcNum,
-	}
-}
-
-// DeepCopyECCInfo copy ECCInfo deeply
-func DeepCopyECCInfo(eccInfo *ECCInfo) *ECCInfo {
-	if eccInfo == nil {
-		return nil
-	}
-
-	return &ECCInfo{
-		EnableFlag:                eccInfo.EnableFlag,
-		SingleBitErrorCnt:         eccInfo.SingleBitErrorCnt,
-		DoubleBitErrorCnt:         eccInfo.DoubleBitErrorCnt,
-		TotalSingleBitErrorCnt:    eccInfo.TotalSingleBitErrorCnt,
-		TotalDoubleBitErrorCnt:    eccInfo.TotalDoubleBitErrorCnt,
-		SingleBitIsolatedPagesCnt: eccInfo.SingleBitIsolatedPagesCnt,
-		DoubleBitIsolatedPagesCnt: eccInfo.DoubleBitIsolatedPagesCnt,
-	}
-}
-
-// DeepCopySioCrcErrStatisticInfo copy SioCrcErrStatisticInfo deeply
-func DeepCopySioCrcErrStatisticInfo(sioInfo *SioCrcErrStatisticInfo) *SioCrcErrStatisticInfo {
-	if sioInfo == nil {
-		return nil
-	}
-
-	return &SioCrcErrStatisticInfo{
-		TxErrCnt: sioInfo.TxErrCnt,
-		RxErrCnt: sioInfo.RxErrCnt,
-		Reserved: sioInfo.Reserved,
-	}
-}
-
-// DeepCopyHccsStatisticInfo copy HccsStatisticInfo deeply
-func DeepCopyHccsStatisticInfo(hccsStatisticInfo *HccsStatisticInfo) *HccsStatisticInfo {
-	if hccsStatisticInfo == nil {
-		return nil
-	}
-
-	return &HccsStatisticInfo{
-		TxCnt:            hccsStatisticInfo.TxCnt,
-		RxCnt:            hccsStatisticInfo.RxCnt,
-		CrcErrCnt:        deepCopySlice(hccsStatisticInfo.CrcErrCnt).([]uint32),
-		retryCnt:         deepCopySlice(hccsStatisticInfo.retryCnt).([]uint32),
-		reservedFieldCnt: deepCopySlice(hccsStatisticInfo.reservedFieldCnt).([]uint32),
-	}
-}
-
-// DeepCopyHccsBandwidthInfo copy HccsStatisticInfo deeply
-func DeepCopyHccsBandwidthInfo(hccsBandwidthInfo *HccsBandwidthInfo) *HccsBandwidthInfo {
-	if hccsBandwidthInfo == nil {
-		return nil
-	}
-
-	return &HccsBandwidthInfo{
-		ProfilingTime: hccsBandwidthInfo.ProfilingTime,
-		TotalTxbw:     hccsBandwidthInfo.TotalTxbw,
-		TotalRxbw:     hccsBandwidthInfo.TotalRxbw,
-		TxBandwidth:   deepCopySlice(hccsBandwidthInfo.TxBandwidth).([]float64),
-		RxBandwidth:   deepCopySlice(hccsBandwidthInfo.RxBandwidth).([]float64),
 	}
 }
 

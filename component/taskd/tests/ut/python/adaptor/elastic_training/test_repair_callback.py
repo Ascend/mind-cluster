@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2025, Huawei Technologies Co., Ltd. All rights reserved.
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 from taskd.python.adaptor.elastic_training import repair_callback
@@ -144,6 +145,54 @@ class TestLoadMemoryCkpt(unittest.TestCase):
         result = repair_callback.save_memory_ckpt(get_args(), get_args(), 1,
                                                   0, 0)
         self.assertIsNotNone(result)
+
+    @patch('taskd.python.adaptor.elastic_training.repair_callback.OptimizerType')
+    @patch('taskd.python.adaptor.elastic_training.repair_callback.RepairType')
+    @patch('taskd.python.adaptor.elastic_training.repair_callback.torch.distributed.get_rank')
+    @patch('taskd.python.adaptor.elastic_training.repair_callback.torch')
+    def test_repair_callback_normal(self, mock_torch, mock_get_rank,
+                                    mock_repair_type, mock_optimizer_type):
+        mock_npu = mock.MagicMock()
+        mock_npu.set_device = mock.MagicMock()
+        mock_torch.npu = mock_npu
+        attention = mock.MagicMock()
+        attention.value = [0]
+        mock_optimizer_type.ATTENTION = attention
+        rt_send = mock.MagicMock()
+        rt_recv = mock.MagicMock()
+        rt_send.value = 'send'
+        rt_recv.value = 'recv'
+        mock_repair_type.RT_SEND = rt_send
+        mock_repair_type.RT_RECV_REPAIR = rt_recv
+        step = 0
+        need_rebuild = False
+        error_ranks = []
+        repair_type = 'repair_type'
+        rank_list = 'rank_list'
+        src = 'src'
+        dst = 'dst'
+        repair_info = {repair_type: 'send', rank_list: [0], src: [0], dst: [0]}
+        train_args = [0]
+        params = "{\"scale-out-strategy\": \"DP\"}"
+        try:
+            repair_callback.repair_callback(step, need_rebuild, error_ranks, repair_info, train_args, params)
+        except Exception as e:
+            self.assertIn("repair step 0 is not valid", str(e))
+        step = 1
+        try:
+            repair_callback.repair_callback(step, need_rebuild, error_ranks, repair_info, train_args, params)
+        except Exception as e:
+            self.assertIn("src rank is not equal to current rank", str(e))
+        repair_info = {repair_type: 'recv', rank_list: [0], src: [0], dst: [0]}
+        try:
+            repair_callback.repair_callback(step, need_rebuild, error_ranks, repair_info, train_args, params)
+        except Exception as e:
+            self.assertIn("dest rank is not equal current rank", str(e))
+        repair_info = {repair_type: 'xxx', rank_list: [0], src: [0], dst: [0]}
+        try:
+            repair_callback.repair_callback(step, need_rebuild, error_ranks, repair_info, train_args, params)
+        except Exception as e:
+            self.assertIn("repair type xxx not supported", str(e))
 
 
 if __name__ == '__main__':

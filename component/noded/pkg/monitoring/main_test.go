@@ -37,13 +37,11 @@ const (
 	faultCode1                = "00000001"
 	faultCode2                = "00000002"
 	waitGoroutineFinishedTime = 100 * time.Millisecond
-	retryInterval             = 4 * time.Second
 )
 
 var (
 	testK8sClient   = &kubeclient.ClientK8s{}
 	currentAlarmReq = []byte{0x30, 0x94, 0xDB, 0x07, 0x00, 0x40, 0x00, 0x00, 0x00, 0x0E, 0xFF}
-	mockErr         = errors.New("test error")
 )
 
 func TestMain(m *testing.M) {

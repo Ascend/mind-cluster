@@ -49,13 +49,6 @@ type NamedHandler struct {
 	Handle handler
 }
 
-// WithLabelSector sets the label selector for the configmap watcher
-func WithLabelSector(labelSelector string) Option {
-	return func(cw *configMapWatcher) {
-		cw.labelSelector = labelSelector
-	}
-}
-
 // WithNamespace sets the namespace for the configmap watcher
 func WithNamespace(namespace string) Option {
 	return func(cw *configMapWatcher) {

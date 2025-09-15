@@ -19,15 +19,6 @@ import (
 	"clusterd/pkg/domain/node"
 )
 
-const (
-	testJobId            = "testJobId"
-	testPodRank          = "0"
-	testIllegalCardRank  = "-1"
-	testDeviceNumPerNode = 8
-	testPodName          = "testPodName"
-	testPodUid           = "testPodUid"
-)
-
 func TestGetJobKeyByPod(t *testing.T) {
 	convey.Convey("test GetJobKeyByPod", t, func() {
 		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)

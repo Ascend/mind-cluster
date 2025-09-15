@@ -169,7 +169,7 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 	handlerName := get310PCardHandlerName(attr)
 	handlerFunc, ok := card310pFactory[handlerName]
 	if !ok {
-		klog.V(util.LogWarningLev).Infof("Handler %s not found in card310p Factory", handlerName)
+		klog.V(util.LogWarningLev).Infof("Handler %s not found in Factory", handlerName)
 		return base.New(util.NPU310PCardName,
 			base.WithAnnoPreVal(util.NPU310PCardNamePre), base.WithMaxNodeNum(card310pMaxNodeNPUNum)), true
 	}
