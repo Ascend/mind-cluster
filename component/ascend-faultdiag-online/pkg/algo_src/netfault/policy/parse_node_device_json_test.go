@@ -54,10 +54,10 @@ func TestParseNodeDevice(t *testing.T) {
 			_, npuNetPlaneInfo := parseNodeDeviceMap(nodeDeviceMap)
 			expectNpuNetPlaneInfo := map[string][]string{
 				"netplane_0": {
-					"L2:0#Work-0:0#work-0.NSlot-0:0#NPU0-1:0",
-					"L2:0#Work-0:0#work-0.NSlot-0:0#NPU1-2:0",
-					"L2:0#Work-1:0#work-1.NSlot-0:0#NPU0-3:0",
-					"L2:0#Work-1:0#work-1.NSlot-0:0#NPU1-4:0",
+					"L2:0#Rack-0:0#rack-0.NSlot-0:0#NPU0-1:0",
+					"L2:0#Rack-0:0#rack-0.NSlot-0:0#NPU1-2:0",
+					"L2:0#Rack-1:0#rack-1.NSlot-0:0#NPU0-3:0",
+					"L2:0#Rack-1:0#rack-1.NSlot-0:0#NPU1-4:0",
 				},
 			}
 			convey.So(sortStringMap(npuNetPlaneInfo), convey.ShouldResemble, sortStringMap(expectNpuNetPlaneInfo))
@@ -103,8 +103,8 @@ func TestGetCurWorkInfo(t *testing.T) {
 			}
 			exepectNetPlaneInfo := map[string][]string{
 				"netplane_0": {
-					"L2:0#Work-1:0#work-1.NSlot-0:0#NPU0-1:0",
-					"L2:0#Work-1:0#work-1.NSlot-0:0#NPU1-2:0",
+					"L2:0#Rack-1:0#rack-1.NSlot-0:0#NPU0-1:0",
+					"L2:0#Rack-1:0#rack-1.NSlot-0:0#NPU1-2:0",
 				},
 			}
 			npuNetPlaneInfo := getCurWorkInfo(map[string][]string{}, workInfo)

@@ -19,31 +19,23 @@ package policy
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"os"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 )
 
 const maxRetryTime = 180
 
 // readConfigMap transform json to map[string]any
 func readConfigMap(configMapPath string) *SuperPodInfo {
-	file, err := os.Open(configMapPath)
+	jsonData, err := utils.LoadFile(configMapPath)
 	if err != nil {
-		hwlog.RunLog.Errorf("read config map err: %v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]read config map err: %v", err)
 		return nil
 	}
-	defer file.Close()
-	jsonData, err := ioutil.ReadAll(file)
-	if err != nil {
-		hwlog.RunLog.Errorf("read config map err: %v", err)
-		return nil
-	}
-
 	var configMap SuperPodInfo
 	if err := json.Unmarshal(jsonData, &configMap); err != nil {
-		hwlog.RunLog.Errorf("read config map err: %v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]read config map err: %v", err)
 		return nil
 	}
 	return &configMap
