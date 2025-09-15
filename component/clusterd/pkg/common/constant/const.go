@@ -184,6 +184,10 @@ const (
 	MaxServeJobs = 10000
 	// QpsLimit max qps for grpc service
 	QpsLimit = 1000
+	// RecoverGrpcProbe grpc probe of Recover service
+	RecoverGrpcProbe = "/Recover/HealthCheck"
+	// BusinessGrpcReq business grpc request for all service
+	BusinessGrpcReq = "BusinessGrpcReq"
 )
 
 const (
