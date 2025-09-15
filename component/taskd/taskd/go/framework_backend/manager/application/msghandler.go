@@ -25,9 +25,10 @@ import (
 	"github.com/google/uuid"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	clusterdconstant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
-	"taskd/common/utils"
+	taskdutils "taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/service"
 	"taskd/toolkit_backend/net"
@@ -102,6 +103,9 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	ip := os.Getenv("POD_IP")
 	if ip == "" {
 		ip = constant.DefaultIP
+	}
+	if err := utils.IsHostValid(ip); err != nil {
+		return err, nil
 	}
 	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)
 	if proxyIp == constant.LocalProxyEnableOn {
@@ -213,7 +217,7 @@ func (mhd *MsgHandler) responseAgentRestartTimes(msg storage.BaseMessage) {
 		Message: strconv.Itoa(restartTimes),
 	}
 	hwlog.RunLog.Infof("responseAgentRestartTimes: sending response with restart times %d", restartTimes)
-	mhd.SendMsgUseGrpc(msg.Header.BizType, utils.ObjToString(msgBody), msg.Header.Src)
+	mhd.SendMsgUseGrpc(msg.Header.BizType, taskdutils.ObjToString(msgBody), msg.Header.Src)
 }
 
 func (mhd *MsgHandler) shouldStartAgent(msg storage.BaseMessage, mgrInfo *storage.MgrInfo) bool {
@@ -248,7 +252,7 @@ func (mhd *MsgHandler) receiveGoroutine(tool *net.NetInstance, ctx context.Conte
 			msg, msgBody, err := mhd.Receiver.ReceiveMsg(mhd.MsgQueue, tool)
 			if err != nil {
 				hwlog.RunLog.Errorf("receive msg enqueue failed: %v", err)
-				mhd.SendMsgUseGrpc(msg.BizType, utils.ObjToString(msgBody), msg.Src)
+				mhd.SendMsgUseGrpc(msg.BizType, taskdutils.ObjToString(msgBody), msg.Src)
 			}
 		}
 	}

@@ -148,8 +148,15 @@ func TestInitManagerGrpc(t *testing.T) {
 		convey.So(err, convey.ShouldNotBeNil)
 		convey.So(tool, convey.ShouldEqual, mockTool)
 	})
-	convey.Convey("Test init manager grpc set custom logger failed return error", t, func() {
+	convey.Convey("Test init manager grpc check ip valid failed return error", t, func() {
 		patch := gomonkey.ApplyFuncReturn(os.Getenv, constant.LocalProxyEnableOn)
+		defer patch.Reset()
+		err, tool := mhd.initManagerGrpc()
+		convey.So(err, convey.ShouldEqual, errors.New("domain does not match allowed regex"))
+		convey.So(tool, convey.ShouldBeNil)
+	})
+	convey.Convey("Test init manager grpc set custom logger failed return error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(os.Getenv, constant.DefaultIP)
 		defer patch.Reset()
 		mockFunc := gomonkey.ApplyFuncReturn(hwlog.SetCustomLogger, nil)
 		defer mockFunc.Reset()
