@@ -42,17 +42,25 @@ var (
 	// BuildVersion build version
 	BuildVersion string
 	// BuildName build name
-	BuildName string
-	version   bool
-	server    *sv.ClusterInfoMgrServer
-	limiter   = rate.NewLimiter(rate.Every(time.Second), constant.QpsLimit)
-	useProxy  bool
+	BuildName  string
+	version    bool
+	server     *sv.ClusterInfoMgrServer
+	limiterMap = map[string]*rate.Limiter{
+		constant.RecoverGrpcProbe: rate.NewLimiter(rate.Every(time.Second/constant.MaxServeJobs), constant.MaxServeJobs),
+		constant.BusinessGrpcReq:  rate.NewLimiter(rate.Every(time.Second/constant.QpsLimit), constant.QpsLimit),
+	}
+	useProxy bool
 )
 
 func limitQPS(ctx context.Context, req interface{},
 	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	limiter, ok := limiterMap[info.FullMethod]
+	if !ok {
+		limiter = limiterMap[constant.BusinessGrpcReq]
+	}
 	if !limiter.Allow() {
-		hwlog.RunLog.Errorf("qps exceeded, method=%s", info.FullMethod)
+		hwlog.RunLog.Errorf("qps exceeded, method=%s, limit=%.1f, burst=%d, tokens=%.2f", info.FullMethod,
+			limiter.Limit(), limiter.Burst(), limiter.Tokens())
 		return nil, fmt.Errorf("qps exceeded, method=%s", info.FullMethod)
 	}
 	return handler(ctx, req)
