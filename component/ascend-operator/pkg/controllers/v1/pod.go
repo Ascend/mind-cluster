@@ -313,6 +313,7 @@ func (r *ASJobReconciler) checkExistPod(pi *podInfo, index int, pod *corev1.Pod,
 			return err
 		}
 	}
+	pi.index = index
 	err := r.handleHotSwitch(pi, pod, replicas)
 	if err != nil {
 		return err
