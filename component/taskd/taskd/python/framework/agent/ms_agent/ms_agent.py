@@ -165,6 +165,9 @@ class MsAgent(BaseAgent):
     def restart_workers(self, msg):
         run_log.info(f'receive {msg.code} command, start to restart workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
+        run_log.warning(f"nodeRank:{self.node_rank}"
+                        f"will sleep for {constants.KILL_INTERVAL} secs, after kill workers to restart")
+        time.sleep(constants.KILL_INTERVAL)
         self._func_map.get('START_ALL_WORKER')()
         self.local_fault_rank = []
         
