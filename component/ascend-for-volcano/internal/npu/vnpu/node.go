@@ -30,7 +30,7 @@ func (vNodes vNodesList) Len() int {
 
 // Less for order.
 func (vNodes vNodesList) Less(i, j int) bool {
-	if i > vNodes.Len() || j > vNodes.Len() {
+	if i >= vNodes.Len() || j >= vNodes.Len() {
 		return false
 	}
 	iIdleAiCore, ok := vNodes[i].Idle.ScalarResources[util.AscendNPUCore]

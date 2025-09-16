@@ -57,6 +57,9 @@ func (tp *module910SuperPod) selectSuperPodForMindIEJob(task *api.TaskInfo, node
 	superPodMap := tp.buildSuperPodGroups(nodes)
 
 	totalVSP, unFit := tp.filterAndCount(superPodMap)
+	if tp.spBlock <= 0 {
+		return nil, fmt.Errorf("invalid spBlock %d", tp.spBlock)
+	}
 	totalRequiredSuperPod := tp.NPUTaskNum / tp.spBlock
 
 	if totalVSP < totalRequiredSuperPod {
