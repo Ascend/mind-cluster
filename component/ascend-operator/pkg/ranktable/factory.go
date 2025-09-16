@@ -19,7 +19,7 @@ import (
 // NewGenerator create ranktable generator
 func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
 	if job == nil {
-		return nil
+		return ranktablev1.New(job)
 	}
 	if _, ok := job.Annotations[utils.AnnoKeyOfSuperPod]; ok {
 		hwlog.RunLog.Info("sp-block is exist, use ranktable v1_2")

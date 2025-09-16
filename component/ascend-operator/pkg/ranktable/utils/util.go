@@ -28,7 +28,11 @@ const (
 
 // GenRankTableDir generate rank table dir
 func GenRankTableDir(job *mindxdlv1.AscendJob) string {
-	if job == nil || !hasRankTableVolume(job) {
+	if job == nil {
+		hwlog.RunLog.Info("job ranktable file path is not set")
+		return ""
+	}
+	if !hasRankTableVolume(job) {
 		hwlog.RunLog.Infof("job<%s/%s>ranktable file path is not set", job.Namespace, job.Name)
 		return ""
 	}
