@@ -141,9 +141,9 @@ func (ctl *EventController) getHotSwitchRules() []common.TransRule {
 		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartSuccessEvent,
 			Dst: common.InitState, Handler: ctl.cleanStateWhenSuccess},
 		{Src: common.WaitReportRestartTrainResultState, Event: common.RestartFaildEvent,
-			Dst: common.NotifyDecidedStrategyState, Handler: ctl.notifyDump},
+			Dst: common.NotifyStopJobState, Handler: ctl.notifyStopJob},
 		{Src: common.WaitReportRestartTrainResultState, Event: common.ReportTimeoutEvent,
-			Dst: common.NotifyDecidedStrategyState, Handler: ctl.notifyDump},
+			Dst: common.NotifyStopJobState, Handler: ctl.notifyStopJob},
 	}
 }
 
