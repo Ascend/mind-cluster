@@ -93,7 +93,6 @@ func editContainerdConfig(srcFilePath, runtimeFilePath, destFilePath, action, cg
 		runtimeType := v1DefaultRuncRuntimeType
 		if action == addCommand {
 			runtimeValue = runtimeFilePath
-			runtimeType = v1RuntimeType
 		}
 		err := changeCgroupV1Config(&cfg, runtimeValue, runtimeType)
 		if err != nil {
