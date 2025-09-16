@@ -79,7 +79,7 @@ func (j *jobs) Create(ctx context.Context, job *v1.AscendJob, opts metav1.Create
 
 func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
 	error) {
-	if j == nil {
+	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
 	result := &v1.AscendJob{}
@@ -96,7 +96,7 @@ func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.Update
 
 func (j *jobs) UpdateStatus(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
 	error) {
-	if j == nil {
+	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
 	result := &v1.AscendJob{}

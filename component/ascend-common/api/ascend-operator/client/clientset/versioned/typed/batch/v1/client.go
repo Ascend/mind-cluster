@@ -19,6 +19,7 @@ limitations under the License.
 package v1
 
 import (
+	"errors"
 	"net/http"
 
 	"k8s.io/client-go/rest"
@@ -59,6 +60,9 @@ func (c *BatchV1Client) RESTClient() rest.Interface {
 // NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
 // where httpClient was generated with rest.HTTPClientFor(c).
 func NewForConfig(c *rest.Config) (*BatchV1Client, error) {
+	if c == nil {
+		return nil, errors.New(nilPointError)
+	}
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -86,6 +90,9 @@ func setConfigDefaults(config *rest.Config) error {
 // NewForConfigAndClient creates a new BatchV1alpha1Client for the given config and http client.
 // Note the http client provided takes precedence over the configured transport values.
 func NewForConfigAndClient(c *rest.Config, h *http.Client) (*BatchV1Client, error) {
+	if c == nil || h == nil {
+		return nil, errors.New(nilPointError)
+	}
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err

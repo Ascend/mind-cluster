@@ -28,7 +28,7 @@ const (
 
 // GenRankTableDir generate rank table dir
 func GenRankTableDir(job *mindxdlv1.AscendJob) string {
-	if !hasRankTableVolume(job) {
+	if job == nil || !hasRankTableVolume(job) {
 		hwlog.RunLog.Infof("job<%s/%s>ranktable file path is not set", job.Namespace, job.Name)
 		return ""
 	}
@@ -72,7 +72,7 @@ func hasRankTableVolume(job *mindxdlv1.AscendJob) bool {
 
 // PodHasAllocated check if pod has allocated device
 func PodHasAllocated(pod *corev1.Pod) bool {
-	if pod.GetDeletionTimestamp() != nil {
+	if pod == nil || pod.GetDeletionTimestamp() != nil {
 		return false
 	}
 	if !podUseNpu(pod) {
@@ -86,6 +86,9 @@ func PodHasAllocated(pod *corev1.Pod) bool {
 }
 
 func podUseNpu(pod *corev1.Pod) bool {
+	if pod == nil {
+		return false
+	}
 	for _, container := range pod.Spec.Containers {
 		for resName, resVal := range container.Resources.Requests {
 			resValNum, ok := resVal.AsInt64()

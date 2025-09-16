@@ -79,6 +79,9 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // If config's RateLimiter is not set and QPS and Burst are acceptable,
 // NewForConfigAndClient will generate a rate-limiter in configShallowCopy.
 func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset, error) {
+	if c == nil || httpClient == nil {
+		return nil, fmt.Errorf("nil pointer")
+	}
 	configShallowCopy := *c
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
 		if configShallowCopy.Burst <= 0 {

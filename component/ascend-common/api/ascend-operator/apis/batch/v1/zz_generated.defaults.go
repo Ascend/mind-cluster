@@ -43,6 +43,9 @@ func SetObjectDefaults_AscendJob(in *AscendJob) {
 }
 
 func SetObjectDefaults_AscendJobList(in *AscendJobList) {
+	if in == nil {
+		return
+	}
 	for i := range in.Items {
 		a := &in.Items[i]
 		SetObjectDefaults_AscendJob(a)
