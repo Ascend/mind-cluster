@@ -79,7 +79,7 @@ func (asTask *NPUTask) DeleteRealPodByTask(ssn *framework.Session, waitTime int6
 		klog.V(LogErrorLev).Infof("DeleteRealPodByTask failed: %s.", ArgumentError)
 		return fmt.Errorf(ArgumentError)
 	}
-	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, asTask.Name)
+	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, asTask.Name, asTask.NameSpace)
 	if getErr != nil {
 		klog.V(LogErrorLev).Infof("%s GetTaskInfoByNameFromSSN: %s", asTask.Name, SafePrint(getErr))
 	}
@@ -115,7 +115,7 @@ func (asTask *NPUTask) EvictJobByTask(ssn *framework.Session, reason string, tas
 		klog.V(LogErrorLev).Infof("EvictJobByTask failed: %s.", ArgumentError)
 		return fmt.Errorf(ArgumentError)
 	}
-	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, taskName)
+	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, taskName, asTask.NameSpace)
 	if getErr != nil {
 		klog.V(LogErrorLev).Infof("%s GetTaskInfoByNameFromSSN: %s", taskName, SafePrint(getErr))
 	}
@@ -159,7 +159,7 @@ func (asTask *NPUTask) UpdatePodPendingReason(taskInfo *api.TaskInfo, reasonTmp 
 }
 
 // GetTaskInfoByNameFromSSN get corresponding api.TaskInfo object by given taskName
-func GetTaskInfoByNameFromSSN(ssn *framework.Session, taskName string) (*api.TaskInfo, error) {
+func GetTaskInfoByNameFromSSN(ssn *framework.Session, taskName, taskNamespace string) (*api.TaskInfo, error) {
 	if ssn == nil {
 		klog.V(LogErrorLev).Infof("UpdatePodPendingReason failed: %s.", ArgumentError)
 		return nil, fmt.Errorf(ArgumentError)
@@ -170,7 +170,7 @@ func GetTaskInfoByNameFromSSN(ssn *framework.Session, taskName string) (*api.Tas
 	}
 	for _, jobInfo := range ssn.Jobs {
 		for _, taskInfo := range jobInfo.Tasks {
-			if taskName == taskInfo.Name {
+			if taskName == taskInfo.Name && taskNamespace == taskInfo.Namespace {
 				return taskInfo, nil
 			}
 		}
