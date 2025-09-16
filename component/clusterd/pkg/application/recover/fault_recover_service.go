@@ -563,7 +563,7 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 	}
 	controller.saveCacheFault(request.FaultRanks)
 	var err error
-	faultReason := getFaultReason(request.FaultRanks)
+	faultReason := getFaultReason(append(controller.cacheRetryFault, controller.cacheNormalFault...))
 	faultPod, err := common.LabelFaultPod(request.JobId,
 		common.Faults2Ranks(request.FaultRanks), controller.GetFaultPod(), faultReason)
 	controller.mergeFaultPod(faultPod)
