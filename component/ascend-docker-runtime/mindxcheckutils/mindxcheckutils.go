@@ -57,7 +57,7 @@ func CheckPath(path string, allowLink bool) error {
 		return fmt.Errorf("invalid path")
 	}
 
-	if strings.Contains(path, "..") {
+	if strings.Contains(path, "..") || strings.Contains(path, "./") {
 		return fmt.Errorf("err path %v", path)
 	}
 	filePath, err := filepath.Abs(path)
@@ -195,7 +195,7 @@ func FileChecker(path string, allowDir, checkParent, allowLink bool, deep int) (
 	if deep > maxDepth {
 		return false, fmt.Errorf("over maxDepth %v", maxDepth)
 	}
-	if strings.Contains(path, "..") {
+	if strings.Contains(path, "..") || strings.Contains(path, "./") {
 		return false, fmt.Errorf("err path %v", path)
 	}
 	filePath, err := filepath.Abs(path)
