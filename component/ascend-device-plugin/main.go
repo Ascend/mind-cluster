@@ -167,7 +167,7 @@ func checkParam() bool {
 		return false
 	}
 	if *deviceResetTimeout < api.MinDeviceResetTimeout || *deviceResetTimeout > api.MaxDeviceResetTimeout {
-		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", deviceResetTimeout,
+		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", *deviceResetTimeout,
 			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
 		return false
 	}
