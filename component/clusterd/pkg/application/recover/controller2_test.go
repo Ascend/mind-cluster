@@ -13,13 +13,16 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	apiv1 "github.com/kubeflow/common/pkg/apis/common/v1"
+	"github.com/kubeflow/common/pkg/util"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
+	batchv1 "ascend-common/api/ascend-operator/apis/batch/v1"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
@@ -28,6 +31,7 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
+	"clusterd/pkg/domain/statistics"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -1551,5 +1555,66 @@ func TestDealWithForceRelease(t *testing.T) {
 			defer mockSleep.Reset()
 			ctl.dealWithForceRelease()
 		})
+	})
+}
+
+func TestWaitScaleOutStateNotScaleInRunningState(t *testing.T) {
+	convey.Convey("Test waitScaleOut when state is not ScaleInRunningState", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+			state:   common.NewStateMachine("NotScaleInRunningState", []common.TransRule{}),
+		}
+		timePatch := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer timePatch.Reset()
+		ctl.waitScaleOut()
+		convey.So(true, convey.ShouldBeTrue)
+	})
+}
+
+func TestWaitScaleOutJobObjectNil(t *testing.T) {
+	convey.Convey("Test waitScaleOut when job object is nil", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+			state: common.NewStateMachine(common.ScaleInRunningState, []common.TransRule{
+				{Src: common.ScaleInRunningState, Event: common.FinishEvent,
+					Dst: common.InitState, Handler: func() (nextEvent string, code common.RespCode, err error) {
+						return "", 0, err
+					}},
+			}),
+			events:            make(chan string, 1),
+			controllerContext: context.Background(),
+		}
+		patches := gomonkey.ApplyFunc(statistics.GetJob, func(jobId string) metav1.Object { return nil }).
+			ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer patches.Reset()
+		go ctl.waitScaleOut()
+		event := <-ctl.events
+		convey.So(event, convey.ShouldEqual, common.FinishEvent)
+	})
+}
+
+func TestWaitScaleOutJobSucceeded(t *testing.T) {
+	convey.Convey("Test waitScaleOut when job is succeeded", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "test-job-id"},
+			state: common.NewStateMachine(common.ScaleInRunningState, []common.TransRule{
+				{Src: common.ScaleInRunningState, Event: common.FinishEvent,
+					Dst: common.InitState, Handler: func() (nextEvent string, code common.RespCode, err error) {
+						return "", 0, err
+					}},
+			}),
+			events:            make(chan string, 1),
+			controllerContext: context.Background(),
+		}
+		acJobInfo := &batchv1.AscendJob{Status: apiv1.JobStatus{Conditions: []apiv1.JobCondition{
+			{Type: apiv1.JobSucceeded, Status: "true"},
+		}}}
+		patches := gomonkey.ApplyFunc(statistics.GetJob, func(jobId string) metav1.Object { return acJobInfo }).
+			ApplyFunc(util.IsSucceeded, func(status apiv1.JobStatus) bool { return true }).
+			ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer patches.Reset()
+		go ctl.waitScaleOut()
+		event := <-ctl.events
+		convey.So(event, convey.ShouldEqual, common.FinishEvent)
 	})
 }
