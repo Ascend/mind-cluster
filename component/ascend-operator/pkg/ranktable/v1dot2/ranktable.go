@@ -10,11 +10,10 @@ package v1dot2
 import (
 	"strconv"
 
-    "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/utils"
 )
-
 
 // RankTable ranktable of v1.2
 type RankTable struct {
@@ -82,6 +81,9 @@ func (r *RankTable) GatherServerListForHardStrategy() {
 				SuperPodID: strconv.Itoa(vid),
 				ServerList: make([]*Server, 0),
 			})
+		}
+		if len(r.SuperPodList) < vid {
+			continue
 		}
 		r.SuperPodList[vid].ServerList = append(r.SuperPodList[vid].ServerList, &Server{ServerID: server.ServerID})
 	}
