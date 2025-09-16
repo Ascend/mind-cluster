@@ -33,18 +33,6 @@ func (ctl *EventController) notifyPrepareHotSwitch() (string, common.RespCode, e
 	return ctl.signalEnqueue(signal)
 }
 
-func (ctl *EventController) notifyDump() (string, common.RespCode, error) {
-	hwlog.RunLog.Infof("hotswitch flow, jobId: %v, enter into notifyDump", ctl.jobInfo.JobId)
-	signal := &pb.ProcessManageSignal{
-		Uuid:           ctl.uuid,
-		JobId:          ctl.jobInfo.JobId,
-		SignalType:     constant.ChangeStrategySignalType,
-		Actions:        changeStrategyActions,
-		ChangeStrategy: constant.ProcessDumpStrategyName,
-	}
-	return ctl.signalEnqueue(signal)
-}
-
 func (ctl *EventController) notifyCreateNewPod() (string, common.RespCode, error) {
 	hwlog.RunLog.Infof("hotswitch flow, jobId: %v, enter into notifyCreateNewPod", ctl.jobInfo.JobId)
 	for podRank, podId := range ctl.GetFaultPod() {
