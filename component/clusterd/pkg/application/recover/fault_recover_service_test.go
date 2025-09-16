@@ -828,7 +828,7 @@ func TestSkipHandleSubHealthyFaults(t *testing.T) {
 			if tt.state != "" {
 				tt.controller.state = common.NewStateMachine(tt.state, nil)
 			}
-			result := (&FaultRecoverService{}).skipHandleSubHealthyFaults(tt.controller, tt.faultInfo)
+			result := (&FaultRecoverService{}).skipHandleSubHealthyFaults(tt.controller, &tt.faultInfo)
 			convey.So(result, convey.ShouldEqual, tt.expectedResult)
 			if tt.expectHotSwitchDisabled {
 				convey.So(tt.controller.jobInfo.HotSwitch, convey.ShouldBeFalse)

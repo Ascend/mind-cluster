@@ -130,7 +130,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		return
 	}
 	hwlog.RunLog.Infof("get fault info from fault center=%v", faultInfo)
-	if s.skipHandleSubHealthyFaults(controller, faultInfo) {
+	if s.skipHandleSubHealthyFaults(controller, &faultInfo) {
 		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId,
 			"jobId=%s skip handle subHealthy faults", faultInfo.JobId)
 		return
@@ -189,8 +189,7 @@ func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInf
 	return grpcFormatFaults
 }
 
-func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,
-	faultInfo constant.JobFaultInfo) bool {
+func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController, faultInfo *constant.JobFaultInfo) bool {
 	// not sub health fault, cannot be skipped
 	if faultInfo.HealthyState != constant.SubHealthyState {
 		return false
@@ -210,7 +209,7 @@ func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController,
 	return false
 }
 
-func skipHandleSubHealthyHotSwitch(ctl *EventController, faultInfo constant.JobFaultInfo) bool {
+func skipHandleSubHealthyHotSwitch(ctl *EventController, faultInfo *constant.JobFaultInfo) bool {
 	if ctl.jobInfo.Framework != constant.PtFramework {
 		hwlog.RunLog.Warnf("subhealthy hotswitch only support pytorch framework,current is:%v ", ctl.jobInfo.Framework)
 		ctl.jobInfo.HotSwitch = false
