@@ -1903,9 +1903,17 @@ func (ctl *EventController) handleScaleInRunningState() (string, common.RespCode
 }
 
 func (ctl *EventController) waitScaleOut() {
+	if ctl == nil || ctl.state == nil {
+		return
+	}
 	for {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		hwlog.RunLog.Debugf("check job[%s] pg running and job completed", ctl.jobInfo.JobId)
+		if ctl.state.GetState() != common.ScaleInRunningState {
+			hwlog.RunLog.Infof("job[%s] state is not %v now, not need to check pg running status",
+				ctl.jobInfo.JobId, common.ScaleInRunningState)
+			return
+		}
 		jobObject := statistics.GetJob(ctl.jobInfo.JobId)
 		if jobObject == nil {
 			ctl.addEvent(common.FinishEvent)
