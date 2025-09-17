@@ -36,6 +36,7 @@ const (
 	eventCheckPeriod      = 5 * time.Second
 	defaultPerm           = 0644
 	jsonIndentCnt         = 4
+	logRecordMaxCount     = 3
 )
 
 var pingMeshLabel = map[string]string{"app": "pingmesh"}
@@ -401,9 +402,15 @@ func TickerCheckSuperPodDevice(ctx context.Context) {
 	}
 	ticker := time.NewTicker(eventCheckPeriod)
 	defer ticker.Stop()
+	logRecordCount := 0
 	for {
 		select {
 		case <-ticker.C:
+			if !checkRasNetRootPath(logRecordCount) {
+				logRecordCount++
+				continue
+			}
+			logRecordCount = 0
 			if !rasNetDetectInst.CheckIsOn() {
 				hwlog.RunLog.Debug("ras feature net fault detect is inactive")
 				continue
@@ -421,4 +428,15 @@ func TickerCheckSuperPodDevice(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func checkRasNetRootPath(count int) bool {
+	if _, err := slownet.GetRasNetRootPath(); err != nil {
+		if count > logRecordMaxCount {
+			return false
+		}
+		hwlog.RunLog.Errorf("check count: %d, check ras root path err: %v", count, err)
+		return false
+	}
+	return true
 }
