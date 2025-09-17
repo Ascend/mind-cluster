@@ -1919,7 +1919,7 @@ func (ctl *EventController) waitScaleOut() {
 			ctl.addEvent(common.FinishEvent)
 			return
 		}
-		if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (kubeflowutil.IsSucceeded(acJobInfo.
+		if acJobInfo, ok := jobObject.(*v1.Job); ok && (kubeflowutil.IsSucceeded(acJobInfo.
 			Status) || kubeflowutil.IsFailed(acJobInfo.Status)) {
 			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId, kubeflowutil.IsSucceeded(acJobInfo.
 				Status))

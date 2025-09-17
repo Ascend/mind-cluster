@@ -107,15 +107,15 @@ func TestAddVCJobFunc(t *testing.T) {
 func TestAddACJobFunc(t *testing.T) {
 	convey.Convey("TestAddACJobFunc", t, func() {
 		convey.Convey("add one job func", func() {
-			AddACJobFunc(constant.Statistics, func(info *ascendv1.AscendJob, info2 *ascendv1.AscendJob, s string) {})
+			AddACJobFunc(constant.Statistics, func(info *ascendv1.Job, info2 *ascendv1.Job, s string) {})
 			convey.So(len(acJobFuncs[constant.Statistics]), convey.ShouldEqual, 1)
 		})
 		convey.Convey("add two job func", func() {
-			AddACJobFunc(constant.Statistics, func(info *ascendv1.AscendJob, info2 *ascendv1.AscendJob, s string) {})
+			AddACJobFunc(constant.Statistics, func(info *ascendv1.Job, info2 *ascendv1.Job, s string) {})
 			convey.So(len(acJobFuncs[constant.Statistics]), convey.ShouldEqual, testTwoNodeFunc)
 		})
 		convey.Convey("add two different business func", func() {
-			AddACJobFunc(constant.Job, func(info *ascendv1.AscendJob, info2 *ascendv1.AscendJob, s string) {})
+			AddACJobFunc(constant.Job, func(info *ascendv1.Job, info2 *ascendv1.Job, s string) {})
 			convey.So(len(acJobFuncs), convey.ShouldEqual, testTwoNodeFunc)
 		})
 	})

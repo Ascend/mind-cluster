@@ -65,38 +65,38 @@ func TestACJobInfoCollector(t *testing.T) {
 	patches.ApplyFunc(statistics.DeleteJob, func(job metav1.Object) {
 		deleteCall = true
 	})
-	patches.ApplyFunc(acJobMessage, func(oldJobInfo, newJobInfo *v1.AscendJob, operator string) {})
+	patches.ApplyFunc(acJobMessage, func(oldJobInfo, newJobInfo *v1.Job, operator string) {})
 	t.Run("add acJob, new job info is nil", func(t *testing.T) {
-		ACJobInfoCollector(&v1.AscendJob{}, nil, constant.AddOperator)
+		ACJobInfoCollector(&v1.Job{}, nil, constant.AddOperator)
 		assert.False(t, saveCall)
 	})
 	t.Run("add acJob, save job cache", func(t *testing.T) {
-		ACJobInfoCollector(&v1.AscendJob{}, &v1.AscendJob{}, constant.AddOperator)
+		ACJobInfoCollector(&v1.Job{}, &v1.Job{}, constant.AddOperator)
 		assert.True(t, saveCall)
 	})
 	t.Run("update acJob, save job cache", func(t *testing.T) {
-		ACJobInfoCollector(&v1.AscendJob{}, &v1.AscendJob{}, constant.UpdateOperator)
+		ACJobInfoCollector(&v1.Job{}, &v1.Job{}, constant.UpdateOperator)
 		assert.True(t, saveCall)
 	})
 	t.Run("delete acJob, delete job cache", func(t *testing.T) {
-		ACJobInfoCollector(&v1.AscendJob{}, &v1.AscendJob{}, constant.DeleteOperator)
+		ACJobInfoCollector(&v1.Job{}, &v1.Job{}, constant.DeleteOperator)
 		assert.True(t, deleteCall)
 	})
 }
 
 func TestAcJobMessage(t *testing.T) {
 	t.Run("add acJob, notify add", func(t *testing.T) {
-		acJobMessage(&v1.AscendJob{}, &v1.AscendJob{}, constant.AddOperator)
+		acJobMessage(&v1.Job{}, &v1.Job{}, constant.AddOperator)
 		notify := <-GlobalJobCollectMgr.JobNotify
 		assert.Equal(t, constant.ACJobCreate, notify.Operator)
 	})
 	t.Run("update acJob, notify update", func(t *testing.T) {
-		acJobMessage(&v1.AscendJob{}, &v1.AscendJob{}, constant.UpdateOperator)
+		acJobMessage(&v1.Job{}, &v1.Job{}, constant.UpdateOperator)
 		notify := <-GlobalJobCollectMgr.JobNotify
 		assert.Equal(t, constant.ACJobUpdate, notify.Operator)
 	})
 	t.Run("delete acJob, notify delete", func(t *testing.T) {
-		acJobMessage(&v1.AscendJob{}, &v1.AscendJob{}, constant.DeleteOperator)
+		acJobMessage(&v1.Job{}, &v1.Job{}, constant.DeleteOperator)
 		notify := <-GlobalJobCollectMgr.JobNotify
 		assert.Equal(t, constant.ACJobDelete, notify.Operator)
 	})

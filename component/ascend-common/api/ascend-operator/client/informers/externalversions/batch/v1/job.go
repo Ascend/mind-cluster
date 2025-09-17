@@ -72,7 +72,7 @@ func NewFilteredJobInformer(client versioned.Interface, namespace string, resync
 				return client.BatchV1().Jobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&batchv1.AscendJob{},
+		&batchv1.Job{},
 		resyncPeriod,
 		indexers,
 	)
@@ -88,7 +88,7 @@ func (f *jobInformer) Informer() cache.SharedIndexInformer {
 	if f == nil || f.factory == nil {
 		return nil
 	}
-	return f.factory.InformerFor(&batchv1.AscendJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&batchv1.Job{}, f.defaultInformer)
 }
 
 func (f *jobInformer) Lister() batchlister.JobLister {

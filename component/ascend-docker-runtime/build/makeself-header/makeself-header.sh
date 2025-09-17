@@ -413,11 +413,11 @@ do
     --list)
       echo "[WARNING]: --list is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
       echo "
-  ascend-docker-cli
-  ascend-docker-destroy
-  ascend-docker-hook
-  ascend-docker-plugin-install-helper
-  ascend-docker-runtime
+  docker-cli
+  docker-destroy
+  docker-hook
+  docker-plugin-install-helper
+  docker-runtime
   assets/
   base.list
   base.list_A200

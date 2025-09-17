@@ -1606,7 +1606,7 @@ func TestWaitScaleOutJobSucceeded(t *testing.T) {
 			events:            make(chan string, 1),
 			controllerContext: context.Background(),
 		}
-		acJobInfo := &batchv1.AscendJob{Status: apiv1.JobStatus{Conditions: []apiv1.JobCondition{
+		acJobInfo := &batchv1.Job{Status: apiv1.JobStatus{Conditions: []apiv1.JobCondition{
 			{Type: apiv1.JobSucceeded, Status: "true"},
 		}}}
 		patches := gomonkey.ApplyFunc(statistics.GetJob, func(jobId string) metav1.Object { return acJobInfo }).

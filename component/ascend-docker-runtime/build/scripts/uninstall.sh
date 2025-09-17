@@ -186,6 +186,5 @@ fi
 if test -d ${INSTALL_ROOT_PATH}
 then
     rm -rf ${INSTALL_ROOT_PATH}
-    echo "[INFO] delete ${INSTALL_ROOT_PATH} successful"
 fi
 log "[INFO]" "uninstall.sh exec success"

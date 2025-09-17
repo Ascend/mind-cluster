@@ -281,7 +281,7 @@ func TestAddJobStatistic(t *testing.T) {
 		jobName := "test-job"
 		jobNamespace := "test-namespace"
 		oldJobKey := "test-old"
-		jobInfo := &ascendv1.AscendJob{
+		jobInfo := &ascendv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jobName,
 				Namespace: jobNamespace,
@@ -306,7 +306,7 @@ func TestGetOldJobStc(t *testing.T) {
 	jobName := "test-job"
 	jobNamespace := "test-namespace"
 	oldJobKey := "test-old"
-	jobInfo := &ascendv1.AscendJob{
+	jobInfo := &ascendv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
 			Namespace: jobNamespace,
@@ -344,7 +344,7 @@ func TestInitStcJob(t *testing.T) {
 		jobName := "test-job"
 		jobNamespace := "test-namespace"
 		jobKey := "test-key"
-		jobInfo := &ascendv1.AscendJob{
+		jobInfo := &ascendv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jobName,
 				Namespace: jobNamespace,
@@ -455,7 +455,7 @@ func TestJobStcByJobDelete(t *testing.T) {
 func TestJobStcByACJobAdd(t *testing.T) {
 	t.Run("ac job add ok", func(t *testing.T) {
 		jobKey := "jobKey"
-		jobInfo := &ascendv1.AscendJob{
+		jobInfo := &ascendv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-name",
 				Namespace: "test-namespace",

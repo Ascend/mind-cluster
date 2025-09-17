@@ -342,7 +342,7 @@ function install()
     chmod 600 ${DST}
 
     save_install_args
-    echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
+    echo "[INFO] ${RT_LOWER_CASE} has been installed"
     echo "[INFO] The version of ${RT_LOWER_CASE} is: ${PACKAGE_VERSION}"
     echo '[INFO] please reboot daemon and container engine to take effect'
     log "[INFO]" "${RT_LOWER_CASE} install success"
@@ -449,7 +449,7 @@ function upgrade()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
-    echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
+    echo "[INFO] ${RT_LOWER_CASE} has been installed"
     echo "[INFO] upgrade ${RT_LOWER_CASE} success"
     echo "[INFO] The version of ${RT_LOWER_CASE} is: v${PACKAGE_VERSION}"
     log "[INFO]" "${RT_LOWER_CASE} upgrade success"

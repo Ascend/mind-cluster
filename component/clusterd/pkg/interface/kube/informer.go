@@ -37,7 +37,7 @@ var (
 	cmNodeFuncs      = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs    = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
 	cmPubFaultFuncs  = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
-	acJobFuncs       = map[string][]func(*ascendv1.AscendJob, *ascendv1.AscendJob, string){}
+	acJobFuncs       = map[string][]func(*ascendv1.Job, *ascendv1.Job, string){}
 	vcJobFuncs       = map[string][]func(*v1alpha1.Job, *v1alpha1.Job, string){}
 	podGroupFuncs    = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs         = map[string][]func(*v1.Pod, *v1.Pod, string){}
@@ -64,7 +64,7 @@ func CleanFuncs() {
 	cmNodeFuncs = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
 	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
-	acJobFuncs = map[string][]func(*ascendv1.AscendJob, *ascendv1.AscendJob, string){}
+	acJobFuncs = map[string][]func(*ascendv1.Job, *ascendv1.Job, string){}
 	vcJobFuncs = map[string][]func(*v1alpha1.Job, *v1alpha1.Job, string){}
 	podGroupFuncs = map[string][]func(*v1beta1.PodGroup, *v1beta1.PodGroup, string){}
 	podFuncs = map[string][]func(*v1.Pod, *v1.Pod, string){}
@@ -74,9 +74,9 @@ func CleanFuncs() {
 }
 
 // AddACJobFunc add acJob func
-func AddACJobFunc(business string, func1 ...func(*ascendv1.AscendJob, *ascendv1.AscendJob, string)) {
+func AddACJobFunc(business string, func1 ...func(*ascendv1.Job, *ascendv1.Job, string)) {
 	if _, ok := acJobFuncs[business]; !ok {
-		acJobFuncs[business] = []func(*ascendv1.AscendJob, *ascendv1.AscendJob, string){}
+		acJobFuncs[business] = []func(*ascendv1.Job, *ascendv1.Job, string){}
 	}
 
 	acJobFuncs[business] = append(acJobFuncs[business], func1...)
@@ -668,13 +668,13 @@ func InitACJobInformer() {
 }
 
 func acJobHandler(oldObj interface{}, newObj interface{}, operator string) {
-	newJob, ok := newObj.(*ascendv1.AscendJob)
+	newJob, ok := newObj.(*ascendv1.Job)
 	if !ok {
 		return
 	}
-	var oldJob *ascendv1.AscendJob
+	var oldJob *ascendv1.Job
 	if oldObj != nil {
-		oldJob, ok = oldObj.(*ascendv1.AscendJob)
+		oldJob, ok = oldObj.(*ascendv1.Job)
 		if !ok {
 			return
 		}
