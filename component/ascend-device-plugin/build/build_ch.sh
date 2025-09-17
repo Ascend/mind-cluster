@@ -90,6 +90,7 @@ function sedName() {
     do
        sed -i "s/ascend-k8sdeviceplugin:.*/alan-k8sdeviceplugin:${build_version}/" ${cur_file}
 
+       sed -i 's/huawei-Ascend910/npu-AlanA2G/g' ${cur_file}
        sed -i 's/huawei/npu/g' ${cur_file}
        sed -i 's/Ascend/Alan/g' ${cur_file}
        sed -i 's/ascend/alan/g' ${cur_file}
