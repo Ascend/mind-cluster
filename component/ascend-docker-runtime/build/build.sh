@@ -15,9 +15,11 @@
 # limitations under the License.
 # ============================================================================
 
+Ascend="Alan"
+ascend="alan"
 
-RT_LOWER_CASE="ascend-docker-runtime"
-RT_FIRST_CASE="Ascend-docker-runtime"
+RT_LOWER_CASE="${ascend}-docker-runtime"
+RT_FIRST_CASE="${Ascend}-docker-runtime"
 
 set -ex
 
@@ -156,6 +158,18 @@ function clean() {
     mkdir -p "${OUTPUT}"
 }
 
+function modify_file() {
+  modify_files=(${ROOT}/build/scripts/run_main.sh ${ROOT}/build/scripts/uninstall.sh ${ROOT}/build/makeself-header/makeself-header.sh)
+  for cur_file in "${modify_files[@]}"
+  do
+    sed -i "s/RT_LOWER_CASE=\"ascend-docker-runtime\"/RT_LOWER_CASE=\"${ascend}-docker-runtime\"/g" ${cur_file}
+    sed -i "s/RT_FIRST_CASE=\"Ascend-docker-runtime\"/RT_FIRST_CASE=\"${Ascend}-docker-runtime\"/g" ${cur_file}
+  done
+  sed -i "s/ascend-docker-runtime/${ascend}-docker-runtime/g" ${ROOT}/build/scripts/help.info
+  sed -i "s#/var/log/ascend-docker-runtime/#/var/log/${ascend}-docker-runtime/#g" ${ROOT}/cli/src/logger.c
+}
+
 clean
+modify_file
 build_bin
 copy_file_output

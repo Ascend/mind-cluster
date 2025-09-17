@@ -33,16 +33,16 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 	if scheme == nil {
 		return errors.New("scheme is nil")
 	}
-	scheme.AddTypeDefaultingFunc(&AscendJob{}, func(obj interface{}) { SetObjectDefaults_AscendJob(obj.(*AscendJob)) })
-	scheme.AddTypeDefaultingFunc(&AscendJobList{}, func(obj interface{}) { SetObjectDefaults_AscendJobList(obj.(*AscendJobList)) })
+	scheme.AddTypeDefaultingFunc(&Job{}, func(obj interface{}) { SetObjectDefaults_AscendJob(obj.(*Job)) })
+	scheme.AddTypeDefaultingFunc(&JobList{}, func(obj interface{}) { SetObjectDefaults_AscendJobList(obj.(*JobList)) })
 	return nil
 }
 
-func SetObjectDefaults_AscendJob(in *AscendJob) {
+func SetObjectDefaults_AscendJob(in *Job) {
 	SetDefaultsAscendJob(in)
 }
 
-func SetObjectDefaults_AscendJobList(in *AscendJobList) {
+func SetObjectDefaults_AscendJobList(in *JobList) {
 	if in == nil {
 		return
 	}

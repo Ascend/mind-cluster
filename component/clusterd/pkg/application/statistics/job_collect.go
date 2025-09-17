@@ -71,7 +71,7 @@ func (j *JobCollectorMgr) JobCollector(ctx context.Context) {
 }
 
 // ACJobInfoCollector collector acJob info
-func ACJobInfoCollector(oldInfo, newInfo *v1.AscendJob, operator string) {
+func ACJobInfoCollector(oldInfo, newInfo *v1.Job, operator string) {
 	if newInfo == nil {
 		hwlog.RunLog.Error("newInfo is nil")
 		return
@@ -89,7 +89,7 @@ func ACJobInfoCollector(oldInfo, newInfo *v1.AscendJob, operator string) {
 }
 
 // acJobMessage set job operator with ascendJob
-func acJobMessage(oldJobInfo, newJobInfo *v1.AscendJob, operator string) {
+func acJobMessage(oldJobInfo, newJobInfo *v1.Job, operator string) {
 	jobKey := string(newJobInfo.UID)
 	switch operator {
 	case constant.AddOperator:

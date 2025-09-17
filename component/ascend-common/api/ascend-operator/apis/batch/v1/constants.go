@@ -45,7 +45,7 @@ const (
 	// TensorflowReplicaTypeChief is the type for Scheduler of distribute ML
 	TensorflowReplicaTypeChief v1.ReplicaType = "Chief"
 
-	// ReplicaTypeWorker this is also used for non-distributed AscendJob
+	// ReplicaTypeWorker this is also used for non-distributed Job
 	ReplicaTypeWorker v1.ReplicaType = "Worker"
 
 	// DefaultRestartPolicy is default RestartPolicy for MSReplicaSpec.

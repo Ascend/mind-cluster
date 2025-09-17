@@ -43,16 +43,16 @@ type JobsGetter interface {
 
 // JobInterface has methods to work with Job resources.
 type JobInterface interface {
-	Create(ctx context.Context, job *v1.AscendJob, opts metav1.CreateOptions) (*v1.AscendJob, error)
-	Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob, error)
-	UpdateStatus(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob, error)
+	Create(ctx context.Context, job *v1.Job, opts metav1.CreateOptions) (*v1.Job, error)
+	Update(ctx context.Context, job *v1.Job, opts metav1.UpdateOptions) (*v1.Job, error)
+	UpdateStatus(ctx context.Context, job *v1.Job, opts metav1.UpdateOptions) (*v1.Job, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.AscendJob, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.AscendJobList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Job, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*v1.JobList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
-		subresources ...string) (result *v1.AscendJob, err error)
+		subresources ...string) (result *v1.Job, err error)
 	// JobExpansion
 }
 
@@ -62,11 +62,11 @@ type jobs struct {
 	ns     string
 }
 
-func (j *jobs) Create(ctx context.Context, job *v1.AscendJob, opts metav1.CreateOptions) (*v1.AscendJob, error) {
+func (j *jobs) Create(ctx context.Context, job *v1.Job, opts metav1.CreateOptions) (*v1.Job, error) {
 	if j == nil {
 		return nil, errors.New(nilPointError)
 	}
-	result := &v1.AscendJob{}
+	result := &v1.Job{}
 	err := j.client.Post().
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).
@@ -77,12 +77,12 @@ func (j *jobs) Create(ctx context.Context, job *v1.AscendJob, opts metav1.Create
 	return result, err
 }
 
-func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
+func (j *jobs) Update(ctx context.Context, job *v1.Job, opts metav1.UpdateOptions) (*v1.Job,
 	error) {
 	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
-	result := &v1.AscendJob{}
+	result := &v1.Job{}
 	err := j.client.Put().
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).
@@ -94,12 +94,12 @@ func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.Update
 	return result, err
 }
 
-func (j *jobs) UpdateStatus(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
+func (j *jobs) UpdateStatus(ctx context.Context, job *v1.Job, opts metav1.UpdateOptions) (*v1.Job,
 	error) {
 	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
-	result := &v1.AscendJob{}
+	result := &v1.Job{}
 	err := j.client.Put().
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).
@@ -143,11 +143,11 @@ func (j *jobs) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, 
 		Error()
 }
 
-func (j *jobs) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.AscendJob, error) {
+func (j *jobs) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Job, error) {
 	if j == nil {
 		return nil, errors.New(nilPointError)
 	}
-	result := &v1.AscendJob{}
+	result := &v1.Job{}
 	err := j.client.Get().
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).
@@ -158,7 +158,7 @@ func (j *jobs) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v
 	return result, err
 }
 
-func (j *jobs) List(ctx context.Context, opts metav1.ListOptions) (*v1.AscendJobList, error) {
+func (j *jobs) List(ctx context.Context, opts metav1.ListOptions) (*v1.JobList, error) {
 	if j == nil {
 		return nil, errors.New(nilPointError)
 	}
@@ -166,7 +166,7 @@ func (j *jobs) List(ctx context.Context, opts metav1.ListOptions) (*v1.AscendJob
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result := &v1.AscendJobList{}
+	result := &v1.JobList{}
 	err := j.client.Get().
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).
@@ -195,11 +195,11 @@ func (j *jobs) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interf
 }
 
 func (j *jobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
-	subresources ...string) (*v1.AscendJob, error) {
+	subresources ...string) (*v1.Job, error) {
 	if j == nil {
 		return nil, errors.New(nilPointError)
 	}
-	result := &v1.AscendJob{}
+	result := &v1.Job{}
 	err := j.client.Patch(pt).
 		Namespace(j.ns).
 		Resource(api.AscendJobsLowerCase).

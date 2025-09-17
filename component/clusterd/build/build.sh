@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+Ascend="Alan"
+
 set -e
 CUR_DIR=$(dirname $(readlink -f $0))
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
@@ -30,7 +32,7 @@ arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
 os_type=$(arch)
 
-docker_zip_name="Ascend-mindxdl-clusterd_${build_version:1}_linux-${arch}.zip"
+docker_zip_name="${Ascend}-mindxdl-clusterd_${build_version:1}_linux-${arch}.zip"
 
 
 function clean() {
@@ -64,6 +66,7 @@ function mv_file() {
   mv "${TOP_DIR}/${output_name}" "${TOP_DIR}"/output
   cd "${TOP_DIR}"
   sed -i "s/clusterd:.*/clusterd:${build_version}/" "$CUR_DIR"/clusterd.yaml
+  sed -i 's/ascendjobs/jobs/g' "$CUR_DIR"/clusterd.yaml
   cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
   cp "$CUR_DIR"/faultDuration.json "$TOP_DIR"/output/
   cp "$CUR_DIR"/relationFaultCustomization.json "$TOP_DIR"/output/

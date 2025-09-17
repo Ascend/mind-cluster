@@ -63,7 +63,7 @@ func TestGetJob(t *testing.T) {
 }
 
 func getDemoJob(uid, name, namespace string) metav1.Object {
-	jobInfo := &ascendv1.AscendJob{
+	jobInfo := &ascendv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
