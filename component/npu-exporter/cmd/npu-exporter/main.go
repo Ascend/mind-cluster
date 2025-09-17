@@ -272,40 +272,94 @@ func checkIPAndPortInPrometheus() error {
 }
 
 func paramValidInPrometheus() error {
-	if err := checkIPAndPortInPrometheus(); err != nil {
-		return err
+	checks := []func() error{
+		checkIPAndPortInPrometheus,
+		checkUpdateTime,
+		containerSockCheck,
+		checkLimitIPReqFormat,
+		checkLimitIPConn,
+		checkLimitTotalConn,
+		checkCacheSize,
+		checkConcurrency,
+		checkProfilingTime,
+		checkHccsBWProfilingTime,
+		checkDeviceResetTimeout,
+		checkPollIntervalInCmdLine,
 	}
+
+	for _, check := range checks {
+		if err := check(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func checkUpdateTime() error {
 	if updateTime > oneMinute || updateTime < 1 {
 		return errors.New("the updateTime is invalid")
 	}
-	if err := containerSockCheck(); err != nil {
-		return err
-	}
+	return nil
+}
+
+func checkLimitIPReqFormat() error {
 	reg := regexp.MustCompile(limiter.IPReqLimitReg)
 	if !reg.Match([]byte(limitIPReq)) {
 		return errors.New("limitIPReq format error")
 	}
+	return nil
+}
+
+func checkLimitIPConn() error {
 	if limitIPConn < 1 || limitIPConn > maxIPConnLimit {
 		return errors.New("limitIPConn is invalid")
 	}
+	return nil
+}
+
+func checkLimitTotalConn() error {
 	if limitTotalConn < 1 || limitTotalConn > maxConcurrency {
 		return errors.New("limitTotalConn is invalid")
 	}
+	return nil
+}
+
+func checkCacheSize() error {
 	if cacheSize < 1 || cacheSize > limiter.DefaultCacheSize*tenDays {
 		return errors.New("cacheSize is invalid")
 	}
+	return nil
+}
+
+func checkConcurrency() error {
 	if concurrency < 1 || concurrency > maxConcurrency {
 		return errors.New("concurrency is invalid")
 	}
+	return nil
+}
+
+func checkProfilingTime() error {
 	if profilingTime < 1 || profilingTime > maxProfilingTime {
 		return errors.New("profilingTime range error")
 	}
+	return nil
+}
+
+func checkHccsBWProfilingTime() error {
 	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
 		return errors.New("hccsBWProfilingTime range error")
 	}
+	return nil
+}
+
+func checkDeviceResetTimeout() error {
 	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
 		return errors.New("deviceResetTimeout range error")
 	}
+	return nil
+}
+
+func checkPollIntervalInCmdLine() error {
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
 		return fmt.Errorf("%s is not support this scene", pollIntervalStr)

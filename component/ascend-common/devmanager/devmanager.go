@@ -122,23 +122,20 @@ func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 	devManagerOnce.Do(func() {
 		// a common dcmi Manager is initiated for init dcmi interface, you can specify an specific manager in later
 		dcMgr := dcmi.DcManager{}
-		var cardNum int32
-		var cardList []int32
-		var err error
-		var retryDelay time.Duration
+		var retryDelay time.Duration = defaultRetryDelay
 		hwlog.RunLog.Infof("get card list from dcmi reset timeout is %d", resetTimeout)
-
 		for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += int(retryDelay) {
-			if err = dcMgr.DcInit(); err != nil {
+			if err := dcMgr.DcInit(); err != nil {
 				hwlog.RunLog.Errorf("deviceManager init failed, prepare dcmi failed, err: %v", err)
 				return
 			}
-			cardNum, cardList, err = dcMgr.DcGetCardList()
+			cardNum, cardList, err := dcMgr.DcGetCardList()
 			if err == nil && int(cardNum) == len(cardList) {
 				break
 			}
+			diffTime := float64(resetTimeout - currentTime)
 			if resetTimeout-currentTime > 0 {
-				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), float64(resetTimeout-currentTime)))
+				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), diffTime))
 			}
 			retryCount++
 			hwlog.RunLog.Warnf("deviceManager get card list failed (attempt %d), cardNum=%d, cardList=%v, "+
