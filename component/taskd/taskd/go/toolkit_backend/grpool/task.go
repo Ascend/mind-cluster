@@ -16,6 +16,8 @@ Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
 // package grpool is a Go package that provides a simple and efficient way to manage goroutines.
 package grpool
 
+import "ascend-common/common-utils/hwlog"
+
 var _ Task = new(task)
 
 type task struct {
@@ -37,6 +39,10 @@ func (t *task) Result() (interface{}, error) {
 
 // Execute implements Task interface, runs the task function
 func (t *task) Execute() {
+	if t.fc == nil {
+		hwlog.RunLog.Errorf("TaskFunc is  nil")
+		return
+	}
 	t.returnValue, t.returnError = t.fc(t)
 	close(t.closeChan)
 }

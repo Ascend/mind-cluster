@@ -206,6 +206,10 @@ func (b *BusinessStreamProcessor) DistributedMsgToOthers(receiver string, sendMs
 			return
 		}
 	}
+	if dst == nil {
+		hwlog.RunLog.Errorf("cannot decide witch to send, according to receiver %s", receiver)
+		return
+	}
 	b.MsgHandler.SendMsgUseGrpc(constant.DefaultDomainName, string(sendMsg), dst)
 	hwlog.RunLog.Debugf("business handler send msg %s to others", string(sendMsg))
 }

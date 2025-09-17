@@ -87,6 +87,11 @@ func (tq *TaskQueue) worker(ctx context.Context) {
 // AddTask add task to a queue
 func (tq *TaskQueue) AddTask(callback BufferCompletedCallback, buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	if tq == nil {
+		hwlog.RunLog.Error("TaskQueue is nil")
+		return
+	}
+	if buffer == nil {
+		hwlog.RunLog.Error("buffer is nil")
 		return
 	}
 	tq.mu.Lock()

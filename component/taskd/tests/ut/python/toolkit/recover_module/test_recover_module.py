@@ -7,7 +7,6 @@ import sys
 from concurrent import futures
 from unittest import TestCase, mock
 import grpc
-import taskd.python.toolkit.validator.cert_check
 from taskd.python.constants import constants
 from taskd.python.utils.log.logger import run_log
 

@@ -22,21 +22,27 @@ import (
 	"path/filepath"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
 
 // InitHwLogger init hwlogger
 func InitHwLogger(logFileName string, ctx context.Context) error {
-	hwLogConfig := GetLoggerConfigWithFileName(logFileName)
-	if err := hwlog.InitRunLogger(&hwLogConfig, context.Background()); err != nil {
-		fmt.Printf("hwlog init failed, error is %v\n", err)
-		return err
+	hwLogConfig, err := GetLoggerConfigWithFileName(logFileName)
+	if err != nil {
+		return fmt.Errorf("hwlog init failed, error is %v", err)
+	}
+	if err = hwlog.InitRunLogger(hwLogConfig, context.Background()); err != nil {
+		return fmt.Errorf("hwlog init failed, error is %v", err)
 	}
 	return nil
 }
 
 // GetLoggerConfigWithFileName get logger config with log file name
-func GetLoggerConfigWithFileName(logFileName string) hwlog.LogConfig {
+func GetLoggerConfigWithFileName(logFileName string) (*hwlog.LogConfig, error) {
+	if len(logFileName) == 0 {
+		return nil, fmt.Errorf("logFileName is empty")
+	}
 	var logFile string
 	logFilePath := os.Getenv(constant.LogFilePathEnv)
 	if logFilePath == "" {
@@ -44,8 +50,12 @@ func GetLoggerConfigWithFileName(logFileName string) hwlog.LogConfig {
 	} else {
 		logFile = filepath.Join(logFilePath, logFileName)
 	}
-	hwLogConfig := hwlog.LogConfig{
-		LogFileName:   logFile,
+	checkPath, err := utils.CheckPath(logFile)
+	if err != nil {
+		return nil, fmt.Errorf("check log file path error: %v", err)
+	}
+	hwLogConfig := &hwlog.LogConfig{
+		LogFileName:   checkPath,
 		LogLevel:      constant.DefaultLogLevel,
 		MaxBackups:    constant.DefaultMaxBackups,
 		MaxAge:        constant.DefaultMaxAge,
@@ -53,5 +63,5 @@ func GetLoggerConfigWithFileName(logFileName string) hwlog.LogConfig {
 		// do not print to screen to avoid influence training log
 		OnlyToFile: true,
 	}
-	return hwLogConfig
+	return hwLogConfig, nil
 }

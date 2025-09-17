@@ -19,6 +19,8 @@ package grpool
 
 import (
 	"sync"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -43,7 +45,15 @@ func newGroup(gr GrPool) Group {
 
 // Submit implements Group interface, adds a task to the group
 func (g *group) Submit(fn TaskFunc) {
+	if fn == nil {
+		hwlog.RunLog.Errorf("TaskFunc is  nil")
+		return
+	}
 	t := g.grPool.Submit(fn)
+	if t == nil {
+		hwlog.RunLog.Errorf("Submit fn return nil")
+		return
+	}
 	g.wg.Add(1)
 	g.lock.Lock()
 	g.results = append(g.results, t)

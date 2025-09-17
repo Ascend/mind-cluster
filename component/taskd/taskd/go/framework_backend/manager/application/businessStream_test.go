@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"ascend-common/common-utils/hwlog"
+	"github.com/smartystreets/goconvey/convey"
 	"taskd/common/constant"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -689,4 +690,11 @@ func TestBusinessStreamProcessor_RegisterPlugin(t *testing.T) {
 	if len(pluginHandler.RegisterCalls) != 1 || pluginHandler.RegisterCalls[0] != pluginName {
 		t.Errorf("Plugin not registered correctly")
 	}
+}
+
+func TestDistributedMsgToOthers(t *testing.T) {
+	msgHandler := &MockMsgHandler{}
+	bsp := NewBusinessStreamProcessor(msgHandler)
+	bsp.DistributedMsgToOthers("", nil)
+	convey.ShouldBeZeroValue(len(msgHandler.SendMsgUseGrpcCalls))
 }

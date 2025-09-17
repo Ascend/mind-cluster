@@ -18,6 +18,8 @@ package grpool
 
 import (
 	"context"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -72,6 +74,10 @@ func (gr *grPool) startWorker() {
 
 // Submit implements GrPool interface, adds a task to the pool
 func (gr *grPool) Submit(fc TaskFunc) Task {
+	if fc == nil {
+		hwlog.RunLog.Errorf("TaskFunc is  nil")
+		return nil
+	}
 	t := &task{
 		closeChan: make(chan struct{}),
 		fc:        fc,

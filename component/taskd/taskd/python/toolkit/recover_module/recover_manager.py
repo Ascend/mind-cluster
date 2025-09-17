@@ -22,7 +22,6 @@ from typing import Optional, List
 
 import grpc
 from taskd.python.toolkit.constants import constants
-from taskd.python.toolkit.validator.cert_check import CertContentsChecker
 from taskd.python.toolkit.recover_module.pb import recover_pb2 as pb
 from taskd.python.toolkit.recover_module.pb import recover_pb2_grpc as service
 from taskd.python.utils.log import run_log

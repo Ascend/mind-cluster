@@ -94,6 +94,13 @@ func InitNetwork(conf *common.TaskNetConfig, logger *hwlog.CustomLogger) (*NetIn
 
 // SyncSendMessage sends a message synchronously.
 func (nt *NetInstance) SyncSendMessage(uuid, mtype, msgBody string, dst *common.Position) (*common.Ack, error) {
+	if dst == nil || nt.config == nil {
+		return &common.Ack{
+			Uuid: uuid,
+			Code: common.ClientErr,
+			Src:  &nt.config.Pos,
+		}, errors.New("nil data")
+	}
 	data := common.DataFrame(uuid, mtype, msgBody, &nt.config.Pos, dst)
 	if data == nil {
 		return &common.Ack{

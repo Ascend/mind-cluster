@@ -83,6 +83,9 @@ def calculate_local_rank_by_global_rank(global_rank_list: list):
     except ValueError as e:
         run_log.info(f"failed to get MS_LOCAL_WORKER from env, please set it: {e}")
         return None
+    if ms_local_worker == 0:
+        run_log.error(f"invalid MS_LOCAL_WORKER from env")
+        return None
     local_rank_list = []
     for global_rank in global_rank_list:
         local_rank_list.append(global_rank % ms_local_worker)

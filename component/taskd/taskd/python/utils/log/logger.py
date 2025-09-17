@@ -25,7 +25,7 @@ from logging.handlers import RotatingFileHandler
 from taskd.python.constants.constants import (LOG_DEFAULT_FILE_PATH, LOG_MAX_LINE_LENGTH, LOG_DATE_FORMAT,
                                               LOG_SIMPLE_FORMAT, LOG_DEFAULT_FILE, LOG_DEFAULT_FILE_NAME,
                                               LOG_DEFAULT_BACKUP_COUNT, LOG_DEFAULT_MAX_BYTES, LOG_BACKUP_FORMAT,
-                                              LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BACKUP_PATTERN,
+                                              LOG_PRIVILEGE, LOG_DIR_PRIVILEGE, LOG_BACKUP_PATTERN, LOG_BAK_PRIVILEGE,
                                               TASKD_LOG_STDOUT, TASKD_LOG_PATH, TASKD_FILE_LOG_LEVEL,
                                               TASKD_STD_LOG_LEVEL)
 from taskd.python.utils.validator import FileValidator, DirectoryValidator
@@ -197,9 +197,9 @@ def _log_rotator(source: str, dest: str) -> None:
     try:
         if os.path.exists(source):
             os.rename(source, dest)
-            os.chmod(dest, mode=LOG_PRIVILEGE)
+            os.chmod(dest, mode=LOG_BAK_PRIVILEGE)
             if not os.path.exists(source):
-                os.mknod(source, mode=LOG_PRIVILEGE)
+                os.mknod(source, mode=LOG_BAK_PRIVILEGE)
             else:
                 _exit_file_process(source)
     except Exception as e:

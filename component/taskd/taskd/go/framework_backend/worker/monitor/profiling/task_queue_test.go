@@ -41,3 +41,11 @@ func TestTaskQueueWait(t *testing.T) {
 		convey.ShouldBeNil(queue.taskChan)
 	})
 }
+
+func TestAddTask(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	queue := NewTaskQueue(ctx)
+	queue.AddTask(nil, nil, 0, 0)
+	cancel()
+	convey.ShouldBeZeroValue(len(queue.taskChan))
+}

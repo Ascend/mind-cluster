@@ -281,8 +281,12 @@ func DestroyTaskdProxy() {
 //export CreateTaskdLog
 func CreateTaskdLog(logName *C.char) uintptr {
 	logFileName := C.GoString(logName) // convert C string to g
-	hwLogConfig := utils.GetLoggerConfigWithFileName(logFileName)
-	logger, err := hwlog.NewCustomLogger(&hwLogConfig, context.Background())
+	hwLogConfig, err := utils.GetLoggerConfigWithFileName(logFileName)
+	if err != nil {
+		fmt.Printf("hwlog init failed, error is %v\n", err)
+		return 0
+	}
+	logger, err := hwlog.NewCustomLogger(hwLogConfig, context.Background())
 	if err != nil {
 		fmt.Printf("hwlog init failed, error is %v\n", err)
 		return 0
