@@ -16,6 +16,7 @@
 package hwlog
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"testing"
@@ -172,6 +173,26 @@ func TestValidateLogConfigFiled(t *testing.T) {
 			}
 			err := validateLogConfigFiled(conf)
 			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("test validate config filed func, log file is relative path", func() {
+			mockCheckPath := gomonkey.ApplyFunc(utils.CheckPath, func(_ string) (string, error) {
+				return "", nil
+			})
+			mockCheckAndCreate := gomonkey.ApplyFunc(checkAndCreateLogFile, func(_ string) error {
+				return nil
+			})
+			defer mockCheckPath.Reset()
+			defer mockCheckAndCreate.Reset()
+			conf := &LogConfig{
+				MaxBackups:  DefaultMaxBackups,
+				MaxAge:      DefaultMinSaveAge,
+				CacheSize:   DefaultCacheSize,
+				ExpiredTime: DefaultExpiredTime,
+				LogFileName: "../",
+			}
+			err := validateLogConfigFiled(conf)
+			expErr := errors.New("log path include invalid char")
+			convey.So(err, convey.ShouldResemble, expErr)
 		})
 	})
 }

@@ -16,10 +16,12 @@
 package hwlog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -182,6 +184,9 @@ func validateLogConfigFiled(config *LogConfig) error {
 	}
 	if _, err := utils.CheckPath(config.LogFileName); err != nil && err != os.ErrNotExist {
 		return fmt.Errorf("config log path is not absolute path: %v", err)
+	}
+	if strings.Contains(config.LogFileName, "..") || strings.Contains(config.LogFileName, "./") {
+		return errors.New("log path include invalid char")
 	}
 
 	if err := checkAndCreateLogFile(config.LogFileName); err != nil {
