@@ -253,11 +253,11 @@ func buildNPUNodeGetNewNPUNodeAnnotationTest() []nPUNodeGetNewNPUNodeAnnotationT
 		{
 			name: "05-GetNewNPUNodeAnnotation return Ascend910-1 when get npu node annotation",
 			npuNode: &NPUNode{CommonNode: CommonNode{
-				Annotation: map[string]string{util.Ascend910: "Ascend910-0,Ascend910-1"}}},
+				Annotation: map[string]string{util.Ascend910: "AlanA2G-0,AlanA2G-1"}}},
 			usedTop:         []int{0},
 			resourceName:    util.Ascend910,
 			resourceNamePre: util.NPU910CardNamePre,
-			want:            "Ascend910-1",
+			want:            "AlanA2G-1",
 			wantErr:         false,
 		},
 	}

@@ -21,48 +21,46 @@ package util
 
 const (
 	// ChipKind is the prefix of npu resource.
-	ChipKind = "910"
+	ChipKind = "A2G"
 	// HwPreName is the prefix of npu resource.
-	HwPreName = "huawei.com/"
+	HwPreName = "npu.com/"
 	// NPU910CardName for judge 910 npu resource.
-	NPU910CardName = "huawei.com/Ascend910"
+	NPU910CardName = "npu.com/AlanA2G"
 	// NPU910CardNamePre for getting card number.
-	NPU910CardNamePre = "Ascend910-"
+	NPU910CardNamePre = "AlanA2G-"
 	// NPU310PCardName for judge 310P npu resource.
-	NPU310PCardName = "huawei.com/Ascend310P"
+	NPU310PCardName = "npu.com/AlanI2"
 	// NPU310CardName for judge 310 npu resource.
-	NPU310CardName = "huawei.com/Ascend310"
+	NPU310CardName = "npu.com/Alan310"
 	// NPU310CardNamePre for getting card number.
-	NPU310CardNamePre = "Ascend310-"
+	NPU310CardNamePre = "Alan310-"
 	// NPU310PCardNamePre for getting card number.
-	NPU310PCardNamePre = "Ascend310P-"
+	NPU310PCardNamePre = "AlanI2-"
 	// AscendNPUPodRealUse for NPU pod real use cards.
-	AscendNPUPodRealUse = "huawei.com/AscendReal"
+	AscendNPUPodRealUse = "npu.com/AlanReal"
 	// AscendNPUCore for NPU core num, like 56; Records the chip name that the scheduler assigns to the pod.
-	AscendNPUCore = "huawei.com/npu-core"
+	AscendNPUCore = "npu.com/npu-core"
 	// Ascend910bName for judge Ascend910b npu resource.
-	Ascend910bName = "huawei.com/Ascend910b"
+	Ascend910bName = "npu.com/AlanA2G"
 
 	// Ascend310P device type 310P
-	Ascend310P = "Ascend310P"
+	Ascend310P = "AlanI2"
 	// Ascend310 device type 310
-	Ascend310 = "Ascend310"
+	Ascend310 = "Alan310"
 	// Ascend910 device type 910
-	Ascend910 = "Ascend910"
+	Ascend910 = "AlanA2G"
 	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
-	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
+	Pod910DeviceKey = "alan.kubectl.kubernetes.io/alan-a2g-configuration"
 	// JobKind910Value in ring-controller.atlas.
-	JobKind910Value = "ascend-910"
-	// JobKind310Value in ring-controller.atlas.
-	JobKind310Value = "ascend-310"
+	JobKind910Value = "alan-a1g"
 	// JobKind310PValue 310p ring controller name
-	JobKind310PValue = "ascend-310P"
+	JobKind310PValue = "alan-I2"
 	// JobKind910BValue 910B ring controller name
-	JobKind910BValue = "ascend-910b"
+	JobKind910BValue = "alan-a2g"
 	// Module910bx16AcceleratorType for module mode.
-	Module910bx16AcceleratorType = "module-910b-16"
+	Module910bx16AcceleratorType = "module-a2g-16"
 	// Module910bx8AcceleratorType for module mode.
-	Module910bx8AcceleratorType = "module-910b-8"
+	Module910bx8AcceleratorType = "module-a2g-8"
 	// Accelerator310Key accelerator key of old infer card
-	Accelerator310Key = "npu-310-strategy"
+	Accelerator310Key = "npu-I2-strategy"
 )

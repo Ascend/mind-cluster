@@ -254,7 +254,7 @@ func buildGetVTaskUseTemplateTestCase() []GetVTaskUseTemplateTest {
 			name:    "01-GetVTaskUseTemplate will return err when pod is empty",
 			taskInf: &api.TaskInfo{Pod: &v1.Pod{}},
 			want:    "",
-			wantErr: errors.New("'s anno has no huawei.com/npu-core"),
+			wantErr: errors.New("'s anno has no npu.com/npu-core"),
 		},
 		{
 			name: "02-GetVTaskUseTemplate will return err when task is not VTask",
@@ -262,7 +262,7 @@ func buildGetVTaskUseTemplateTestCase() []GetVTaskUseTemplateTest {
 				Annotations: map[string]string{AscendNPUCore: NPU910CardName},
 			}}},
 			want:    "",
-			wantErr: errors.New(" not dyCut task :huawei.com/Ascend910"),
+			wantErr: errors.New(" not dyCut task :npu.com/AlanA2G"),
 		},
 		{
 			name: "03-GetVTaskUseTemplate will return nil when task is VTask",

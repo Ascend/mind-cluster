@@ -38,9 +38,9 @@ const (
 	fakeNpuCodeNum = "160"
 	podRankIndex   = "hccl/rankIndex"
 	// NPU910CardName 910 card name
-	NPU910CardName = "huawei.com/Ascend910"
+	NPU910CardName = "npu.com/AlanA2G"
 	// AscendNPUPodRealUse for NPU pod real use cards.
-	AscendNPUPodRealUse = "huawei.com/AscendReal"
+	AscendNPUPodRealUse = "npu.com/AlanReal"
 	// FakeUpdateTime fake update time for test
 	FakeUpdateTime = int64(11110)
 	// FakeJobName fake job namespace/name
@@ -72,12 +72,12 @@ const (
 	fakeResourceNum            = "8000"
 	fakeNPUNum                 = "8"
 	acceleratorKey             = "accelerator"
-	acceleratorValue           = "huawei-Ascend910"
-	npuCoreName                = "huawei.com/npu-core"
+	acceleratorValue           = "npu-AlanA2G"
+	npuCoreName                = "npu.com/npu-core"
 	fakeNpuCoreStr             = "0-vir05_1c_16g"
 	fakeWholeCardStr           = "0,1,2,3"
 	serverTypeKey              = "servertype"
-	fake910ServerType          = "Ascend910B-20"
+	fake910ServerType          = "AlanA2G-20"
 )
 
 const (

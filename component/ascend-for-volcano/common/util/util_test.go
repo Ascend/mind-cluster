@@ -957,10 +957,10 @@ func FakeDeviceList() map[string]string {
 
 const (
 	availNPU                 = "Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
-	networkUnhealthyNPUKey   = "huawei.com/Ascend910-NetworkUnhealthy"
+	networkUnhealthyNPUKey   = "npu.com/AlanA2G-NetworkUnhealthy"
 	networkUnhealthyNPUValue = "Ascend910-1"
-	unhealthyNPUKey          = "huawei.com/Ascend910-Unhealthy"
-	recoveringNPUKey         = "huawei.com/Ascend910-Recovering"
+	unhealthyNPUKey          = "npu.com/AlanA2G-Unhealthy"
+	recoveringNPUKey         = "npu.com/AlanA2G-Recovering"
 	unhealthyNPUValue        = "Ascend910-0"
 	recoveringNPUValue       = "Ascend910-0"
 )
