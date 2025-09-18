@@ -618,3 +618,12 @@ func getSortedKeys[T any](m map[string]T) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// GetDeviceIdByDeviceName get deviceId by deviceName
+func GetDeviceIdByDeviceName(deviceName string) (string, error) {
+	fields := strings.Split(deviceName, constant.Minus)
+	if len(fields) != constant.NPUNameLength {
+		return "", fmt.Errorf("npu name [%s] is invalid", deviceName)
+	}
+	return fields[len(fields)-1], nil
+}

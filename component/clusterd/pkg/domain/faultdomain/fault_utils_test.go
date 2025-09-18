@@ -816,3 +816,61 @@ func TestIsL1Fault(t *testing.T) {
 		})
 	})
 }
+
+type testCase struct {
+	name          string
+	deviceName    string
+	expectedId    string
+	expectError   bool
+	expectedError string
+}
+
+func TestGetDeviceIdByDeviceName(t *testing.T) {
+	testCases := buildTestCases()
+
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			deviceId, err := GetDeviceIdByDeviceName(tc.deviceName)
+			if tc.expectError {
+				convey.So(err, convey.ShouldNotBeNil)
+				convey.So(err.Error(), convey.ShouldEqual, tc.expectedError)
+				convey.So(deviceId, convey.ShouldBeEmpty)
+			} else {
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(deviceId, convey.ShouldEqual, tc.expectedId)
+			}
+		})
+	}
+}
+
+func buildTestCases() []testCase {
+	testCases := []testCase{
+		{name: "Valid device name with Ascend910 prefix",
+			deviceName:  "Ascend910-0",
+			expectedId:  "0",
+			expectError: false},
+		{name: "Valid device name with Ascend310P prefix",
+			deviceName:  "Ascend310P-1",
+			expectedId:  "1",
+			expectError: false},
+		{name: "Valid device name with Ascend310 prefix",
+			deviceName:  "Ascend310-7",
+			expectedId:  "7",
+			expectError: false},
+		{name: "Invalid device name with wrong format",
+			deviceName:  "Ascend910_0",
+			expectedId:  "",
+			expectError: true, expectedError: "npu name [Ascend910_0] is invalid"},
+		{name: "Invalid device name with too many parts",
+			deviceName:    "Ascend910-0-1",
+			expectedId:    "",
+			expectError:   true,
+			expectedError: "npu name [Ascend910-0-1] is invalid"},
+		{name: "Invalid device name with no parts",
+			deviceName:    "",
+			expectedId:    "",
+			expectError:   true,
+			expectedError: "npu name [] is invalid",
+		}}
+	return testCases
+}

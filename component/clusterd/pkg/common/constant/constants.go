@@ -207,6 +207,8 @@ const (
 	FormatBase = 10
 	// DefaultJobId default job id for cluster dimension
 	DefaultJobId = "-1"
+	// NPUNameLength length of npu name,ascend910-0
+	NPUNameLength = 2
 )
 
 // ras feature const

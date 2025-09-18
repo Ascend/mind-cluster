@@ -25,6 +25,13 @@ import (
 // JobFaultRankProcessor process job fault rank
 var JobFaultRankProcessor *jobRankFaultInfoProcessor
 
+var (
+	relationFaultLevelMap = map[string]string{
+		constant.SubHealthFaultStrategy: constant.SubHealthFault,
+		constant.SeparateFaultStrategy:  constant.SeparateFault,
+	}
+)
+
 func init() {
 	JobFaultRankProcessor = &jobRankFaultInfoProcessor{
 		jobFaultInfoMap: make(map[string]constant.JobFaultInfo),
@@ -314,22 +321,23 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 			nodeStatusList = append(nodeStatusList, switchInfo.NodeStatus)
 		}
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoBySwitchInfo(&server, switchInfo)...)
-		if ok && switchInfo.NodeStatus == constant.UnHealthyState {
-			hwlog.RunLog.Debugf("node %s switch is unhealthy", nodeName)
+		if ok && (switchInfo.NodeStatus == constant.UnHealthyState || switchInfo.NodeStatus == constant.SubHealthyState) {
+			hwlog.RunLog.Debugf("node %s switch is %v", nodeName, switchInfo.NodeStatus)
 			faultCode := strings.Join(getFaultCodeBySwitchInfo(switchInfo), constant.Comma)
-			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode)...)
+			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode, switchInfo.NodeStatus)...)
 		}
+		// there is no subHealthy state for node
 		nodeInfo, ok := nodeInfos[constant.NodeInfoPrefix+nodeName]
 		if ok && nodeInfo.NodeStatus == constant.UnHealthyState {
 			hwlog.RunLog.Debugf("node %s is unhealthy", nodeName)
 			faultCode := strings.Join(getFaultCodeByNodeInfo(nodeInfo), constant.Comma)
-			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode)...)
+			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode, "")...)
 		}
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByNodeInfo(&server, nodeInfo)...)
 		node := kube.GetNode(nodeName)
 		if node == nil || !faultdomain.IsNodeReady(node) {
 			hwlog.RunLog.Debugf("node %s is not ready", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server, info, "")...)
+			faultList = append(faultList, serverHcclToFaultRank(server, info, "", "")...)
 			faultDeviceList = append(faultDeviceList, convertToFaultDevice(&server, "",
 				constant.SeparateNPU, constant.EmptyDeviceId, constant.FaultTypeNode))
 		}
@@ -338,6 +346,7 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 		faultList = append(faultList, faultRankList...)
 		faultDeviceList = append(faultDeviceList, getFautDeviceInfoByFaultRank(&server, faultRankList)...)
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByRelationFault(jobId, nodeName, &server)...)
+		faultList = append(faultList, getFaultListInfoByRelationFault(jobId, nodeName, &server, info)...)
 	}
 	return faultList, nodeStatusList, faultDeviceList
 }
@@ -368,6 +377,94 @@ func getFaultDeviceInfoByRelationFault(jobId, nodeName string, server *constant.
 			deviceId, faultType))
 	}
 	return faultList
+}
+
+func getFaultListInfoByRelationFault(jobId, nodeName string, server *constant.ServerHccl,
+	podInfos *jobPodInfoMap) []constant.FaultRank {
+	relationFaultList := relationfault.RelationProcessor.GetRelationFaultInfo(jobId, nodeName)
+	faultList := make([]constant.FaultRank, 0)
+	if len(relationFaultList) == 0 {
+		return faultList
+	}
+	faultRankCache := buildFaultRankCache(server, podInfos)
+	hasHandled := make(map[string]bool)
+	for _, fault := range relationFaultList {
+		hwlog.RunLog.Debugf("relationFault: %v", fault)
+		deviceId, err := getDeviceId(fault)
+		if err != nil {
+			hwlog.RunLog.Errorf("jobId: %v, node: %v, get deviceId err: %v", jobId, nodeName, err)
+			continue
+		}
+		if fault.FaultType == constant.DeviceFaultType {
+			faultRank, ok := faultRankCache[deviceId]
+			if !ok {
+				continue
+			}
+			faultRank.FaultCode = fault.FaultCode
+			faultRank.FaultLevel = convertRelationFaultLevel(fault.FaultLevel)
+			faultList = append(faultList, faultRank)
+			continue
+		}
+		// switch fault: mark all npu as fault
+		for _, deviceInfo := range server.DeviceList {
+			if hasHandled[deviceInfo.DeviceID] {
+				continue // skip handled npu
+			}
+			hasHandled[deviceInfo.DeviceID] = true
+			faultRank, ok := faultRankCache[deviceInfo.DeviceID]
+			if !ok {
+				continue
+			}
+			faultRank.FaultCode = fault.FaultCode
+			faultRank.FaultLevel = convertRelationFaultLevel(fault.FaultLevel)
+			faultList = append(faultList, faultRank)
+		}
+	}
+	hwlog.RunLog.Debugf("faultList of relationFault: %v", faultList)
+	return faultList
+}
+
+func buildFaultRankCache(server *constant.ServerHccl, podInfos *jobPodInfoMap) map[string]constant.FaultRank {
+	faultRankCache := make(map[string]constant.FaultRank)
+	for _, deviceInfo := range server.DeviceList {
+		podUid, podRankStr, err := podInfos.getPodUidAndRankByCardRank(deviceInfo.RankID)
+		if err != nil {
+			hwlog.RunLog.Errorf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
+				deviceInfo.DeviceIP, deviceInfo.RankID, err)
+			continue
+		}
+		faultRankCache[deviceInfo.DeviceID] = constant.FaultRank{
+			RankId:   deviceInfo.RankID,
+			PodUid:   podUid,
+			PodRank:  podRankStr,
+			DeviceId: deviceInfo.DeviceID,
+		}
+	}
+	return faultRankCache
+}
+
+func convertRelationFaultLevel(level string) string {
+	faultLevel, ok := relationFaultLevelMap[level]
+	if !ok {
+		return level
+	}
+	return faultLevel
+}
+
+func getDeviceId(fault *constant.FaultInfo) (string, error) {
+	deviceId := ""
+	if fault.FaultType == constant.SwitchFaultType {
+		deviceId = constant.EmptyDeviceId
+	} else if fault.FaultType == constant.DeviceFaultType {
+		var err error
+		deviceId, err = faultdomain.GetDeviceIdByDeviceName(fault.NPUName)
+		if err != nil {
+			return deviceId, err
+		}
+	} else {
+		return deviceId, fmt.Errorf("relation fault type:[%s] is unknown", fault.FaultType)
+	}
+	return deviceId, nil
 }
 
 func getFautDeviceInfoByFaultRank(server *constant.ServerHccl,
@@ -450,7 +547,7 @@ func getFaultCodeBySwitchInfo(switchInfo *constant.SwitchInfo) []string {
 	return faultCodes
 }
 
-func serverHcclToFaultRank(server constant.ServerHccl, podInfos *jobPodInfoMap, faultCode string) []constant.FaultRank {
+func serverHcclToFaultRank(server constant.ServerHccl, podInfos *jobPodInfoMap, faultCode string, nodeStatus string) []constant.FaultRank {
 	faultRanks := make([]constant.FaultRank, 0, len(server.DeviceList))
 	for _, device := range server.DeviceList {
 		podUid, podRank, err := podInfos.getPodUidAndRankByCardRank(device.RankID)
@@ -458,12 +555,17 @@ func serverHcclToFaultRank(server constant.ServerHccl, podInfos *jobPodInfoMap, 
 			hwlog.RunLog.Errorf("device %s's rank id is %s getPodUidAndRankByCardRank err: %v",
 				device.DeviceIP, device.RankID, err)
 		}
+		faultLevel := constant.SeparateNPU
+		// compatible with switch
+		if nodeStatus == constant.SubHealthyState {
+			faultLevel = constant.SubHealthFault
+		}
 		faultRanks = append(faultRanks, constant.FaultRank{
 			RankId:      device.RankID,
 			PodUid:      podUid,
 			PodRank:     podRank,
 			FaultCode:   faultCode,
-			FaultLevel:  constant.SeparateNPU,
+			FaultLevel:  faultLevel,
 			DoStepRetry: false,
 		})
 	}
@@ -476,10 +578,13 @@ func getHealthState(faultList []constant.FaultRank, nodeStatusList []string,
 	for _, faultRank := range faultList {
 		if faultRank.FaultLevel != constant.SubHealthFault &&
 			faultRank.FaultLevel != constant.NotHandleFault &&
+			faultRank.FaultLevel != constant.PreSeparateFaultLevelStr && // switch: subhealthy faultLevel is preSeparate
 			faultRank.FaultLevel != constant.PreSeparateNPU {
 			return constant.UnHealthyState
 		}
-		if faultRank.FaultLevel == constant.SubHealthFault {
+		// npu: 	subhealthy staus faultLevel is subhealthy
+		// switch: 	subhealthy staus faultLevel is preSeparate
+		if faultRank.FaultLevel == constant.SubHealthFault || faultRank.FaultLevel == constant.PreSeparateFaultLevelStr {
 			hasSubHealthFault = true
 		}
 	}

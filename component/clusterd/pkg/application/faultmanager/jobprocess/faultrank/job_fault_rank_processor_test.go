@@ -29,6 +29,11 @@ const (
 	// nodeName node name
 	nodeName       = "Node"
 	deviceNumOfPod = 8
+	deviceId0      = "0"
+	deviceId1      = "1"
+	rankId0        = "0"
+	rankId1        = "1"
+	rankId8        = "8"
 )
 
 func TestMain(m *testing.M) {
@@ -553,4 +558,129 @@ func TestFindFaultDeviceListForEmptyServerList(t *testing.T) {
 				FaultCode: "", FaultLevel: constant.SeparateNPU, DeviceType: constant.FaultTypeNode},
 		})
 	})
+}
+
+func TestGetDeviceId(t *testing.T) {
+	convey.Convey("When fault type is SwitchFaultType", t, func() {
+		fault := &constant.FaultInfo{
+			FaultType: constant.SwitchFaultType,
+		}
+		result, err := getDeviceId(fault)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldEqual, constant.EmptyDeviceId)
+	})
+	convey.Convey("When fault type is DeviceFaultType with valid NPUName", t, func() {
+		fault := &constant.FaultInfo{
+			FaultType: constant.DeviceFaultType,
+			NPUName:   "npu-123",
+		}
+		result, err := getDeviceId(fault)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldEqual, "123")
+	})
+	convey.Convey("When fault type is DeviceFaultType with invalid NPUName", t, func() {
+		fault := &constant.FaultInfo{
+			FaultType: constant.DeviceFaultType,
+			NPUName:   "invalid-npu-name",
+		}
+		result, err := getDeviceId(fault)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(result, convey.ShouldEqual, "")
+	})
+
+	convey.Convey("When fault type is unknown", t, func() {
+		fault := &constant.FaultInfo{
+			FaultType: "unknown",
+		}
+		result, err := getDeviceId(fault)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(result, convey.ShouldEqual, "")
+	})
+}
+
+func TestConvertRelationFaultLevel(t *testing.T) {
+	convey.Convey("Test convertRelationFaultLevel function with gomonkey", t, func() {
+		patches := gomonkey.ApplyGlobalVar(&relationFaultLevelMap, map[string]string{
+			"testLevel1": "convertedLevel1",
+			"testLevel2": "convertedLevel2",
+		})
+		defer patches.Reset()
+		convey.Convey("When level exists in map, should return converted level", func() {
+			result := convertRelationFaultLevel("testLevel1")
+			convey.So(result, convey.ShouldEqual, "convertedLevel1")
+		})
+		convey.Convey("When level does not exist in map, should return original level", func() {
+			result := convertRelationFaultLevel("nonExistentLevel")
+			convey.So(result, convey.ShouldEqual, "nonExistentLevel")
+		})
+	})
+}
+
+func TestBuildFaultRankCache(t *testing.T) {
+	convey.Convey("Test buildFaultRankCache function", t, func() {
+		testCases := buildTestCases()
+
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				result := buildFaultRankCache(tc.server, tc.podInfos)
+				convey.So(result, convey.ShouldResemble, tc.expectedResult)
+			})
+		}
+	})
+}
+
+type testCase struct {
+	name           string
+	server         *constant.ServerHccl
+	podInfos       *jobPodInfoMap
+	expectedResult map[string]constant.FaultRank
+	expectError    bool
+}
+
+func buildTestCases() []testCase {
+	return []testCase{
+		{
+			name: "Normal case with multiple devices",
+			server: &constant.ServerHccl{
+				DeviceList: []constant.Device{
+					{DeviceID: deviceId0, RankID: rankId0},
+					{DeviceID: deviceId1, RankID: rankId8},
+				},
+			},
+			podInfos: &jobPodInfoMap{
+				podOfRank: map[string]*constant.SimplePodInfo{
+					deviceId0: {PodUid: "pod-0", PodRank: rankId0},
+					deviceId1: {PodUid: "pod-1", PodRank: rankId1},
+				},
+				deviceNumOfPod: deviceNumOfPod,
+			},
+			expectedResult: map[string]constant.FaultRank{
+				deviceId0: {
+					RankId:   rankId0,
+					PodUid:   "pod-0",
+					PodRank:  rankId0,
+					DeviceId: deviceId0,
+				},
+				deviceId1: {
+					RankId:   rankId8,
+					PodUid:   "pod-1",
+					PodRank:  rankId1,
+					DeviceId: deviceId1,
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "Empty device list",
+			server: &constant.ServerHccl{
+				DeviceList: []constant.Device{},
+			},
+			podInfos: &jobPodInfoMap{
+				podOfRank:      map[string]*constant.SimplePodInfo{},
+				deviceNumOfPod: deviceNumOfPod,
+			},
+			expectedResult: map[string]constant.FaultRank{},
+			expectError:    false,
+		},
+	}
 }
