@@ -146,18 +146,17 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	}
 	faultJob.setIsSubHealthFault()
 	klog.V(util.LogDebugLev).Infof("job %s fault types: %v", faultJob.JobName, faultJob.FaultTypes)
-	if npuName == util.NPU910CardName || !npuJob.IsNPUJob() { // 5. update JobRankIds of fault cards
-		_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
-		if !ok {
-			if reScheduler.JobRemainRetryTimes == nil {
-				reScheduler.JobRemainRetryTimes = make(map[api.JobID]*RemainRetryTimes)
-			}
-			reScheduler.JobRemainRetryTimes[faultJob.JobUID] = &RemainRetryTimes{
-				UUID:  faultJob.UUID,
-				Times: faultJob.FaultRetryTimes,
-			}
+	_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
+	if !ok {
+		if reScheduler.JobRemainRetryTimes == nil {
+			reScheduler.JobRemainRetryTimes = make(map[api.JobID]*RemainRetryTimes)
+		}
+		reScheduler.JobRemainRetryTimes[faultJob.JobUID] = &RemainRetryTimes{
+			UUID:  faultJob.UUID,
+			Times: faultJob.FaultRetryTimes,
 		}
 	}
+
 	return faultJob
 }
 
