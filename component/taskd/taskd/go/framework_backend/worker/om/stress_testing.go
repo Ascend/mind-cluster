@@ -42,6 +42,11 @@ var StressTestNetTool *net.NetInstance
 // stressTestCallback switch callback func
 var stressTestCallback C.stress_test_callback_func
 
+// RegisterStressTestCallback register stress test callback func
+func RegisterStressTestCallback(ptr uintptr) {
+	stressTestCallback = (C.stress_test_callback_func)(unsafe.Pointer(ptr))
+}
+
 var hbChan chan struct{} // heart beat chan
 var msgChan chan storage.MsgBody
 var opTimeoutMap = map[int]time.Duration{
@@ -114,11 +119,6 @@ func sendHeartBeatMsg(ctx context.Context) {
 			time.Sleep(time.Second)
 		}
 	}
-}
-
-// RegisterStressTestCallback register stress test callback func
-func RegisterStressTestCallback(ptr uintptr) {
-	stressTestCallback = (C.stress_test_callback_func)(unsafe.Pointer(ptr))
 }
 
 // StressTestProcessMsg process stress test msg

@@ -35,9 +35,6 @@ import (
 
 var netTool = &net.NetInstance{}
 
-// GlobalRank of this work
-var GlobalRank int
-
 const (
 	waitInitMsptiTimeout = 180 * time.Second
 	maxRegisterTime      = 10
@@ -53,6 +50,9 @@ func init() {
 	monitorInitCtx, monitorInitNotify = context.WithCancel(context.Background())
 	netToolInitCtx, netToolInitNotify = context.WithCancel(context.Background())
 }
+
+// GlobalRank of this work
+var GlobalRank int
 
 // InitMonitor to init taskd monitor,
 func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) {
