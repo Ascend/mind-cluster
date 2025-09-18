@@ -110,6 +110,7 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 	cltState, exists := s.clients[req.ClientId]
 	if !exists {
 		s.mu.Unlock()
+		hwlog.RunLog.Errorf("invalid clientId, please register first")
 		return fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
 	}
 	s.mu.Unlock()
