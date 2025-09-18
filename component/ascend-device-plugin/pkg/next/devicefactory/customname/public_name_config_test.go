@@ -185,6 +185,15 @@ func TestCheckName(t *testing.T) {
 		},
 	}
 	assert.False(t, checkName(invalidDevNames3), "invalid device public name prefix format should fail the check")
+
+	invalidDevNames4 := []DevName{
+		{
+			ResourceType:        api.Ascend910,
+			DevicePublicType:    "",
+			DevicePublicNamePre: "",
+		},
+	}
+	assert.False(t, checkName(invalidDevNames4), "all name should not be null")
 }
 
 // TestSetDefaultName tests SetDefaultName

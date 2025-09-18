@@ -133,8 +133,7 @@ func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 			if err == nil && int(cardNum) == len(cardList) {
 				break
 			}
-			diffTime := float64(resetTimeout - currentTime)
-			if resetTimeout-currentTime > 0 {
+			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
 				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), diffTime))
 			}
 			retryCount++
@@ -146,6 +145,11 @@ func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 					return
 				}
 				time.Sleep(retryDelay * time.Second)
+				continue
+			}
+			if int(cardNum) != len(cardList) {
+				hwlog.RunLog.Warnf("deviceManager get cardList is %v, but cardNum is %v, "+
+					"please check whether the real number of npu matches the cardList", cardList, cardNum)
 			}
 		}
 		devManager = &DeviceManager{}
@@ -161,7 +165,6 @@ func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 		return nil, errors.New("device Manager is nil, may encounter an exception during initialization. " +
 			"You can check the system log to confirm")
 	}
-
 	return devManager, nil
 }
 
