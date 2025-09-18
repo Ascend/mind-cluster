@@ -118,7 +118,7 @@ func FakeNormalTestTasks(num int) []*api.TaskInfo {
 		return nil
 	}
 	var tasks []*api.TaskInfo
-	annoCards := "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7"
+	annoCards := "AlanA2G-0,AlanA2G-1,AlanA2G-2,AlanA2G-3,AlanA2G-4,AlanA2G-5,AlanA2G-6,AlanA2G-7"
 	for i := 0; i < num; i++ {
 		strNum := strconv.Itoa(i)
 		task := FakeNormalTestTask("pod"+strNum, "node"+strNum, "pg"+strNum)

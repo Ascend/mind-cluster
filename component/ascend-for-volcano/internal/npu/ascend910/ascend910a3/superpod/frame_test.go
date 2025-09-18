@@ -1072,14 +1072,14 @@ func buildUseAnnotationTestCases01() []useAnnotationTestCase {
 			Task: test.FakeTaskWithResReq("pod0", util.NPU910CardName, 1),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-4,Ascend910-5",
+					Annotation: map[string]string{util.NPU910CardName: "AlanA2G-0,AlanA2G-4,AlanA2G-5",
 						networkUnhealthyNPU: ""},
 				},
 			},
-			PodAnno: "Ascend910-0",
+			PodAnno: "AlanA2G-0",
 			WantNode: &plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU910CardName: "Ascend910-4,Ascend910-5",
+					Annotation: map[string]string{util.NPU910CardName: "AlanA2G-4,AlanA2G-5",
 						networkUnhealthyNPU: ""},
 				},
 			},

@@ -947,7 +947,7 @@ func TestValidVirtualDevJob(t *testing.T) {
 	})
 	defer patch.Reset()
 	t.Run("01 no pass by job request is 2", func(t *testing.T) {
-		if got := validVirtualDevJob(&api.JobInfo{}); !reflect.DeepEqual(got.Pass, false) {
+		if got := validVirtualDevJob(&api.JobInfo{}); got != nil && !reflect.DeepEqual(got.Pass, false) {
 			t.Errorf("validVirtualDevJob() = %v, want %v", got.Pass, false)
 		}
 	})

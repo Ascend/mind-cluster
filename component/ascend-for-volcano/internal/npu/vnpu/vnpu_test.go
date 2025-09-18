@@ -368,7 +368,7 @@ func TestInitDyCutConCacheByJobInfo(t *testing.T) {
 	tests := buildInitDyCutConCacheByJobInfoTestCase()
 
 	patch := gomonkey.ApplyFunc(util.GetVTaskUseTemplate, func(taskInf *api.TaskInfo) (string, error) {
-		return "", errors.New("task01's anno has no huawei.com/npu-core")
+		return "", errors.New("task01's anno has no npu.com/npu-core")
 	})
 	defer patch.Reset()
 
@@ -411,7 +411,7 @@ func buildInitConcacheByTemplateTestCase() []InitConcacheByTemplateTest {
 			taskID:   "task01",
 			WantNode: map[string]map[string]map[api.TaskID]struct{}{
 				"node name test01": {
-					"huawei.com/Ascend310P": map[api.TaskID]struct{}{"task01": {}},
+					"npu.com/AlanI2": map[api.TaskID]struct{}{"task01": {}},
 				},
 				"node1": {"node1-1": map[api.TaskID]struct{}{"task01": {}}},
 			},

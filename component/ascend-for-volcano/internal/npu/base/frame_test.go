@@ -204,7 +204,7 @@ func buildCheckNodeNPUByTaskTestCase1() checkNodeNPUByTaskTestCase {
 		Node: plugin.NPUNode{
 			CommonNode: plugin.CommonNode{
 				Name:       "node1",
-				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1"},
+				Annotation: map[string]string{util.NPU310PCardName: "AlanI2-0,AlanI2-1"},
 			},
 		},
 		WantErr: nil,
@@ -218,7 +218,7 @@ func buildCheckNodeNPUByTaskTestCase2() checkNodeNPUByTaskTestCase {
 		Node: plugin.NPUNode{
 			CommonNode: plugin.CommonNode{
 				Name:       "node1",
-				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1"},
+				Annotation: map[string]string{util.NPU310PCardName: "AlanI2-0,AlanI2-1"},
 			},
 		},
 		WantErr: errors.New("task<pod1> is not npu task"),
@@ -232,10 +232,10 @@ func buildCheckNodeNPUByTaskTestCase3() checkNodeNPUByTaskTestCase {
 		Node: plugin.NPUNode{
 			CommonNode: plugin.CommonNode{
 				Name:       "node1",
-				Annotation: map[string]string{util.NPU910CardName: "Ascend310P-0,Ascend310P-1"},
+				Annotation: map[string]string{util.NPU910CardName: "AlanI2-0,AlanI2-1"},
 			},
 		},
-		WantErr: errors.New("getUsableTopFromNode don't have huawei.com/Ascend310P"),
+		WantErr: errors.New("getUsableTopFromNode don't have npu.com/AlanI2"),
 	}
 }
 
@@ -246,7 +246,7 @@ func buildCheckNodeNPUByTaskTestCase4() checkNodeNPUByTaskTestCase {
 		Node: plugin.NPUNode{
 			CommonNode: plugin.CommonNode{
 				Name:       "node1",
-				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0, Ascend310P-1"},
+				Annotation: map[string]string{util.NPU310PCardName: "AlanI2-0, AlanI2-1"},
 			},
 		},
 		WantErr: fmt.Errorf("judgeNodeAndTaskNPU node don't have enough resource, req<2>, idle<0>"),
@@ -260,7 +260,7 @@ func buildCheckNodeNPUByTaskTestCase5() checkNodeNPUByTaskTestCase {
 		Node: plugin.NPUNode{
 			CommonNode: plugin.CommonNode{
 				Name:       "node1",
-				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0"},
+				Annotation: map[string]string{util.NPU310PCardName: "AlanI2-0"},
 			},
 		},
 		WantErr: errors.New("judgeNodeAndTaskNPU node don't have enough resource, req<2>, idle<1>"),
@@ -316,13 +316,13 @@ func buildUseAnnotationTestCases01() []useAnnotationTestCase {
 			Task: test.FakeTaskWithResReq("pod0", util.NPU310PCardName, util.NPUIndex2),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1",
+					Annotation: map[string]string{util.NPU310PCardName: "AlanI2-0,AlanI2-1",
 						networkUnhealthyNPU: "Ascend910-0"},
 					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
 					BaseDeviceInfo: fakeBaseInfo(),
 				},
 			},
-			PodAnno: "Ascend310P-0,Ascend310P-1",
+			PodAnno: "AlanI2-0,AlanI2-1",
 			WantNode: &plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
 					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
@@ -621,8 +621,8 @@ func TestScoreBestNPUNodes(t *testing.T) {
 
 func fakeBaseInfo() string {
 	fakeInfo := map[string]*util.NpuBaseInfo{
-		"Ascend310P-0": {IP: "testIp", SuperDeviceID: 0},
-		"Ascend310P-1": {IP: "testIp", SuperDeviceID: 0},
+		"AlanI2-0": {IP: "testIp", SuperDeviceID: 0},
+		"AlanI2-1": {IP: "testIp", SuperDeviceID: 0},
 	}
 	str, err := json.Marshal(fakeInfo)
 	if err != nil {
