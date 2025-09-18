@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ func (r *ASJobReconciler) newJobInfo(
 		return nil, fmt.Errorf("job<%v> is not of type runtime.Object", job)
 	}
 
-	ascendJob, ok := job.(*mindxdlv1.AscendJob)
+	ascendJob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return nil, fmt.Errorf("job<%v> is not of type Job", job)
 	}
@@ -98,7 +98,7 @@ func (r *ASJobReconciler) newJobInfo(
 }
 
 func genLabels(jobObj interface{}, jobName string) (map[string]string, error) {
-	acjob, ok := jobObj.(*mindxdlv1.AscendJob)
+	acjob, ok := jobObj.(*mindxdlv1.Job)
 	if !ok {
 		hwlog.RunLog.Error("job not found")
 		return map[string]string{}, fmt.Errorf("job not found")
@@ -154,7 +154,7 @@ func (r *ASJobReconciler) getPodsForJob(jobObject interface{}) ([]*corev1.Pod, e
 	return podSlice, nil
 }
 
-func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Service, error) {
+func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.Job) (*corev1.Service, error) {
 	var rtype commonv1.ReplicaType
 	var spec *commonv1.ReplicaSpec
 	for rt, sp := range job.Spec.ReplicaSpecs {

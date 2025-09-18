@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -24,7 +24,7 @@ type RemainRetryTimes struct {
 	Times int
 }
 
-func (r *ASJobReconciler) isUnconditionalRetryJob(job *v1.AscendJob) bool {
+func (r *ASJobReconciler) isUnconditionalRetryJob(job *v1.Job) bool {
 	if r.Config.EnableGangScheduling {
 		times, ok := job.Labels[unconditionalRetryLabelKey]
 		if !ok {
@@ -37,7 +37,7 @@ func (r *ASJobReconciler) isUnconditionalRetryJob(job *v1.AscendJob) bool {
 	return false
 }
 
-func (r *ASJobReconciler) getJobRemainRetryTimes(job *v1.AscendJob) (int, error) {
+func (r *ASJobReconciler) getJobRemainRetryTimes(job *v1.Job) (int, error) {
 	vcReCM, err := r.getVcRescheduleCM()
 	if err != nil {
 		return -1, err

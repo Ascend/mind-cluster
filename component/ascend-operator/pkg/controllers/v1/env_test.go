@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -291,7 +291,7 @@ func fakeRefEnv(name string, downwardAPI string) corev1.EnvVar {
 
 func TestAddProcessRecoverEnv(t *testing.T) {
 	convey.Convey("when job has empty recover strategy annotation", t, func() {
-		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+		pi := &podInfo{job: &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: ""}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
@@ -300,7 +300,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 	})
 
 	convey.Convey("when job has recover strategy annotation with single strategy - MindSpore", t, func() {
-		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+		pi := &podInfo{job: &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
@@ -313,7 +313,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 	})
 
 	convey.Convey("when job has recover strategy annotation with single strategy - PyTorch", t, func() {
-		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+		pi := &podInfo{job: &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: api.RecoverStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
@@ -324,7 +324,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
 	convey.Convey("when job has recover strategy annotation with multiple strategies - MindSpore", t, func() {
-		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+		pi := &podInfo{job: &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
 			api.RecoverStrategyKey: api.RecoverStrategy + "," + api.RetryStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
@@ -339,7 +339,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 
 func TestAddProcessRecoverEnv2(t *testing.T) {
 	convey.Convey("when job has exit strategy annotation with single strategy - PyTorch", t, func() {
-		pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{
+		pi := &podInfo{job: &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{api.RecoverStrategyKey: api.ExitStrategy}}}}
 		pod := &corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}

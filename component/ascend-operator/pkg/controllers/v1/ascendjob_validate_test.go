@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -38,7 +38,7 @@ func TestValidateJob(t *testing.T) {
 				message: "valid basic info failed",
 			}
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "validateBasicInfo",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) *validateError {
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job) *validateError {
 					return fakeErr
 				})
 			defer patch.Reset()
@@ -51,7 +51,7 @@ func TestValidateJob(t *testing.T) {
 				message: "valid job spec failed",
 			}
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "validateSpec", func(_ *ASJobReconciler,
-				_ *mindxdlv1.AscendJob, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) *validateError {
+				_ *mindxdlv1.Job, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) *validateError {
 				return fakeErr
 			})
 			defer patch.Reset()

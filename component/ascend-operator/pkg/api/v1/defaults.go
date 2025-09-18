@@ -76,7 +76,7 @@ func setDefaultReplicas(spec *commonv1.ReplicaSpec) {
 }
 
 // setTypeNamesToCamelCase sets the name of all replica types from any case to correct case.
-func setTypeNamesToCamelCase(job *AscendJob) {
+func setTypeNamesToCamelCase(job *Job) {
 	setTypeNameToCamelCase(job, MindSporeReplicaTypeScheduler)
 	setTypeNameToCamelCase(job, ReplicaTypeWorker)
 	setTypeNameToCamelCase(job, PytorchReplicaTypeMaster)
@@ -85,7 +85,7 @@ func setTypeNamesToCamelCase(job *AscendJob) {
 
 // setTypeNameToCamelCase sets the name of the replica type from any case to correct case.
 // E.g. from ps to PS; from WORKER to Worker.
-func setTypeNameToCamelCase(job *AscendJob, typ commonv1.ReplicaType) {
+func setTypeNameToCamelCase(job *Job, typ commonv1.ReplicaType) {
 	for t := range job.Spec.ReplicaSpecs {
 		if strings.EqualFold(string(t), string(typ)) && t != typ {
 			spec := job.Spec.ReplicaSpecs[t]
@@ -97,7 +97,7 @@ func setTypeNameToCamelCase(job *AscendJob, typ commonv1.ReplicaType) {
 }
 
 // SetDefaultsAscendJob sets any unspecified values to defaults.
-func SetDefaultsAscendJob(job *AscendJob) {
+func SetDefaultsAscendJob(job *Job) {
 	if job == nil {
 		return
 	}
@@ -127,7 +127,7 @@ func SetDefaultsAscendJob(job *AscendJob) {
 }
 
 // GetJobFramework get framework name of ascendjob
-func GetJobFramework(job *AscendJob) (string, error) {
+func GetJobFramework(job *Job) (string, error) {
 	if job == nil {
 		return "", errors.New("job is nil")
 	}

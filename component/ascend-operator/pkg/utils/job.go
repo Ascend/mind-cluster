@@ -6,7 +6,7 @@ package utils
 import "ascend-operator/pkg/api/v1"
 
 // IsMindIEEPJob judge mindIEEP job
-func IsMindIEEPJob(job *v1.AscendJob) bool {
+func IsMindIEEPJob(job *v1.Job) bool {
 	if job == nil || job.Labels == nil {
 		return false
 	}
@@ -20,7 +20,7 @@ func IsMindIEEPJob(job *v1.AscendJob) bool {
 }
 
 // IsSoftStrategyJob judge soft strategy job
-func IsSoftStrategyJob(job *v1.AscendJob) bool {
+func IsSoftStrategyJob(job *v1.Job) bool {
 	if job == nil || job.Labels == nil {
 		return false
 	}

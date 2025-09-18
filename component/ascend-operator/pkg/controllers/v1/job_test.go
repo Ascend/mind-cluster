@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -89,7 +89,7 @@ func TestReconcileJob(t *testing.T) {
 				Status: corev1.ConditionTrue,
 			}},
 		},
-		mtObj: &mindxdlv1.AscendJob{},
+		mtObj: &mindxdlv1.Job{},
 		runPolicy: &commonv1.RunPolicy{
 			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 		},
@@ -189,7 +189,7 @@ func TestUpdateJobStatus(t *testing.T) {
 		status := &commonv1.JobStatus{}
 		convey.Convey("02-update spec status failed, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "updateSpecStatus",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
 					_ *commonv1.JobStatus) error {
 					return errors.New("update spec status failed")
 				})
@@ -304,7 +304,7 @@ func TestCheckSpecStatus(t *testing.T) {
 	})
 }
 
-func testCheckSpecStatusWithError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
+func testCheckSpecStatusWithError(rc *ASJobReconciler, job *mindxdlv1.Job,
 	jobStatus *commonv1.JobStatus, updateFunc func(ci *conditionInfo) error) {
 	convey.Convey("02-when condition is running, and update condition failed should return err", func() {
 		st := &commonv1.ReplicaStatus{
@@ -322,7 +322,7 @@ func testCheckSpecStatusWithError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
 	})
 }
 
-func testCheckSpecStatusNoError(rc *ASJobReconciler, job *mindxdlv1.AscendJob,
+func testCheckSpecStatusNoError(rc *ASJobReconciler, job *mindxdlv1.Job,
 	jobStatus *commonv1.JobStatus, updateFunc func(ci *conditionInfo) error) {
 	convey.Convey("01-status with running and condition is nil should do nothing nil", func() {
 		const fakeActive = 2
@@ -357,7 +357,7 @@ func TestSyncReplicas(t *testing.T) {
 		rc := newCommonReconciler()
 		ji := &jobInfo{
 			job:   newCommonAscendJob(),
-			mtObj: &mindxdlv1.AscendJob{},
+			mtObj: &mindxdlv1.Job{},
 			status: &commonv1.JobStatus{
 				Conditions: []commonv1.JobCondition{{
 					Type:   commonv1.JobSucceeded,
@@ -631,7 +631,7 @@ func TestSyncPodGroup(t *testing.T) {
 func TestIsProcessRecoverJob(t *testing.T) {
 	convey.Convey("isProcessRecoverJob", t, func() {
 		convey.Convey("01-job has recover strategy annotation, should return true", func() {
-			job := &mindxdlv1.AscendJob{
+			job := &mindxdlv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{api.RecoverStrategyKey: "some-strategy"},
 				},
@@ -641,7 +641,7 @@ func TestIsProcessRecoverJob(t *testing.T) {
 		})
 
 		convey.Convey("02-job does not have recover strategy annotation, should return false", func() {
-			job := &mindxdlv1.AscendJob{
+			job := &mindxdlv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{},
 				},
@@ -651,7 +651,7 @@ func TestIsProcessRecoverJob(t *testing.T) {
 		})
 
 		convey.Convey("03-job has nil annotations, should return false", func() {
-			job := &mindxdlv1.AscendJob{
+			job := &mindxdlv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: nil,
 				},
@@ -672,7 +672,7 @@ func TestGetJobRecoverStrategy(t *testing.T) {
 
 		convey.Convey("02-ascendJob has recover strategy annotation, should return the strategy", func() {
 			expectedStrategy := "some-strategy"
-			ascendJob := &mindxdlv1.AscendJob{
+			ascendJob := &mindxdlv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						api.RecoverStrategyKey: expectedStrategy,
@@ -684,13 +684,13 @@ func TestGetJobRecoverStrategy(t *testing.T) {
 		})
 
 		convey.Convey("03-ascendJob does not have recover strategy annotation, should return empty string", func() {
-			ascendJob := &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
+			ascendJob := &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
 			result := getJobRecoverStrategy(ascendJob)
 			convey.So(result, convey.ShouldEqual, "")
 		})
 
 		convey.Convey("04-ascendJob has nil annotations, should return empty string", func() {
-			ascendJob := &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: nil}}
+			ascendJob := &mindxdlv1.Job{ObjectMeta: metav1.ObjectMeta{Annotations: nil}}
 			result := getJobRecoverStrategy(ascendJob)
 			convey.So(result, convey.ShouldEqual, "")
 		})
@@ -704,7 +704,7 @@ func TestIsPodScheduleStrategy(t *testing.T) {
 		convey.So(result, convey.ShouldBeFalse)
 	})
 	convey.Convey("02-ascendJob has pod schedule label with enable value, should return true", t, func() {
-		ascendJob := &mindxdlv1.AscendJob{
+		ascendJob := &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{api.PodScheduleLabel: "on"}}}
 		result := isPodScheduleStrategy(ascendJob)
@@ -712,7 +712,7 @@ func TestIsPodScheduleStrategy(t *testing.T) {
 	})
 
 	convey.Convey("03-ascendJob has pod schedule label with disable value, should return false", t, func() {
-		ascendJob := &mindxdlv1.AscendJob{
+		ascendJob := &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{api.PodScheduleLabel: "disable"}},
 		}
@@ -721,14 +721,14 @@ func TestIsPodScheduleStrategy(t *testing.T) {
 	})
 
 	convey.Convey("04-ascendJob does not have pod schedule label, should return false", t, func() {
-		ascendJob := &mindxdlv1.AscendJob{
+		ascendJob := &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
 		result := isPodScheduleStrategy(ascendJob)
 		convey.So(result, convey.ShouldBeFalse)
 	})
 
 	convey.Convey("05-ascendJob has nil labels, should return false", t, func() {
-		ascendJob := &mindxdlv1.AscendJob{
+		ascendJob := &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{Labels: nil},
 		}
 		result := isPodScheduleStrategy(ascendJob)

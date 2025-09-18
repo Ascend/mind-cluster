@@ -1,0 +1,157 @@
+apiVersion: mindxdl.gitee.com/v1
+kind: Job
+metadata:
+  name: default-test-mindspore
+  labels:
+    framework: mindspore
+    ring-controller.atlas: alan-I2
+    npu-I2-strategy: chip
+spec:
+  schedulerName: volcano    # work when enableGangScheduling is true
+  runPolicy:
+    schedulingPolicy:
+      minAvailable: 3       # work when enableGangScheduling is true
+      queue: default
+  successPolicy: AllWorkers
+  replicaSpecs:
+    Scheduler:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.atlas: alan-I2
+        spec:
+          nodeSelector:                        # modify according to the actual situation
+            host-arch: npu-arm
+          containers:
+            - name: alan # do not modify
+              image: mindspore-test:latest       # training framework image， which can be modified
+              imagePullPolicy: IfNotPresent
+              command:                           # training command, which can be modified
+                - /bin/bash
+                - -c
+              args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/code/output train.py  --data_path=/job/data/resnet50/imagenet/train --config=/job/code/config/resnet50_imagenet2012_config.yaml"]
+              ports:                          # default value containerPort: 2222 name: alanjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: alanjob-port        # do not modify
+              volumeMounts:
+                - name: code
+                  mountPath: /job/code
+                - name: data
+                  mountPath: /job/data
+                - name: output
+                  mountPath: /job/output
+                - name: alan-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: dshm
+                  mountPath: /dev/shm
+                - name: localtime
+                  mountPath: /etc/localtime
+          volumes:
+            - name: code
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/code/ResNet50_for_MindSpore_2.0_code/"
+            - name: data
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/dataset/"
+            - name: output
+              nfs:
+                server: 127.0.0.1
+                path: "/data/output/"
+            - name: alan-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: dshm
+              emptyDir:
+                medium: Memory
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+    Worker:
+      replicas: 2
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.atlas: alan-I2
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: job-name
+                        operator: In
+                        values:
+                          - default-test-mindspore
+                      - key: replica-type
+                        operator: In
+                        values:
+                          - worker
+                  topologyKey: kubernetes.io/hostname
+          automountServiceAccountToken: false
+          nodeSelector:                    # modify according to the actual situation
+            host-arch: npu-arm
+          containers:
+            - name: alan # do not modify
+              image: mindspore-test:latest   # training framework image， which can be modified
+              imagePullPolicy: IfNotPresent
+              env:
+                # ALAN_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+                # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Alan-volcano-plugin, without volcano scenes.
+                - name: ALAN_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['npu.com/AlanI2']               # The value must be the same as resources.requests
+              command:                       # training command, which can be modified
+                - /bin/bash
+                - -c
+              args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/code/output train.py  --data_path=/job/data/resnet50/imagenet/train --config=/job/code/config/resnet50_imagenet2012_config.yaml"]
+              ports:                          # default value containerPort: 2222 name: alanjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: alanjob-port        # do not modify
+              resources:
+                limits:
+                  npu.com/AlanI2: 8
+                requests:
+                  npu.com/AlanI2: 8
+              volumeMounts:
+                - name: code
+                  mountPath: /job/code
+                - name: data
+                  mountPath: /job/data
+                - name: output
+                  mountPath: /job/output
+                - name: alan-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: dshm
+                  mountPath: /dev/shm
+                - name: localtime
+                  mountPath: /etc/localtime
+          volumes:
+            - name: code
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/code/ResNet50_for_MindSpore_2.0_code/"
+            - name: data
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/dataset/"
+            - name: output
+              nfs:
+                server: 127.0.0.1
+                path: "/data/output/"
+            - name: alan-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: dshm
+              emptyDir:
+                medium: Memory
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+
+

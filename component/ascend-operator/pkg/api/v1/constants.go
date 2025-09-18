@@ -30,14 +30,14 @@ const (
 	// TensorflowReplicaTypeChief is the type for Scheduler of distribute ML
 	TensorflowReplicaTypeChief v1.ReplicaType = "Chief"
 
-	// ReplicaTypeWorker this is also used for non-distributed AscendJob
+	// ReplicaTypeWorker this is also used for non-distributed Job
 	ReplicaTypeWorker v1.ReplicaType = "Worker"
 
 	// DefaultRestartPolicy is default RestartPolicy for MSReplicaSpec.
 	DefaultRestartPolicy = v1.RestartPolicyNever
 
-	// JodIdLabelKey is AscendJob label key jobID
+	// JodIdLabelKey is Job label key jobID
 	JodIdLabelKey = "jobID"
-	// AppLabelKey is AscendJob label key app
+	// AppLabelKey is Job label key app
 	AppLabelKey = "app"
 )

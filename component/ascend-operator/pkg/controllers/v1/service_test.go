@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -123,7 +123,7 @@ func TestGetMngSvcIpAndPortWithError(t *testing.T) {
 		job := newCommonAscendJob()
 		convey.Convey("01-get job ref services failed, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job) (*corev1.Service, error) {
 					return nil, errors.New("not found")
 				})
 			defer patch.Reset()
@@ -132,7 +132,7 @@ func TestGetMngSvcIpAndPortWithError(t *testing.T) {
 		})
 		convey.Convey("02-job has no manager svc, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job) (*corev1.Service, error) {
 					return &corev1.Service{ObjectMeta: metav1.ObjectMeta{
 						Labels: make(map[string]string),
 					}}, nil
@@ -144,7 +144,7 @@ func TestGetMngSvcIpAndPortWithError(t *testing.T) {
 		})
 		convey.Convey("03-service with manager label has no ip should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job) (*corev1.Service, error) {
 					return &corev1.Service{ObjectMeta: metav1.ObjectMeta{
 						Labels: make(map[string]string),
 					}}, nil
@@ -172,7 +172,7 @@ func TestGetMngSvcIpAndPortNormal(t *testing.T) {
 		job := newCommonAscendJob()
 		convey.Convey("01-service with manager label has ip and port should not return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getOrCreateSvc",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob) (*corev1.Service, error) {
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job) (*corev1.Service, error) {
 					return &corev1.Service{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{commonv1.ReplicaTypeLabel: "master"},
@@ -250,7 +250,7 @@ func TestGenServiceLabels(t *testing.T) {
 			fakeType := "master"
 			fakeIndex := "0"
 			expectedLables := map[string]string{
-				commonv1.OperatorNameLabel:           "ascendjob-controller",
+				commonv1.OperatorNameLabel:           "job-controller",
 				commonv1.GroupNameLabelDeprecated:    "mindxdl.gitee.com",
 				commonv1.JobNameLabel:                "ascendjob-test",
 				commonv1.JobNameLabelDeprecated:      "ascendjob-test",

@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -78,11 +78,11 @@ func TestNewJobInfo02(t *testing.T) {
 			_, err := rc.newJobInfo("job", replicaTypes, jobStatus, runPolicy)
 			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%v> is not of type metav1.Object", "job"))
 		})
-		convey.Convey("05-job which is not AscendJob should return err ", func() {
+		convey.Convey("05-job which is not Job should return err ", func() {
 			_, err := rc.newJobInfo(&corev1.Pod{}, replicaTypes, jobStatus, runPolicy)
 			convey.So(err, convey.ShouldResemble, fmt.Errorf("job<%v> is not of type Job", &corev1.Pod{}))
 		})
-		convey.Convey("06-job which is not AscendJob should return err ", func() {
+		convey.Convey("06-job which is not Job should return err ", func() {
 			patch := gomonkey.ApplyFunc(cache.DeletionHandlingMetaNamespaceKeyFunc,
 				func(_ interface{}) (string, error) { return "", errors.New("not found") })
 			defer patch.Reset()
@@ -96,11 +96,11 @@ func TestNewJobInfo02(t *testing.T) {
 func TestGenLabels(t *testing.T) {
 	convey.Convey("genLabels", t, func() {
 		job := newCommonAscendJob()
-		convey.Convey("01-job which is  not AscendJob should return err", func() {
+		convey.Convey("01-job which is  not Job should return err", func() {
 			_, err := genLabels(&corev1.Pod{}, job.Name)
 			convey.ShouldNotBeNil(err)
 		})
-		convey.Convey("02-job which is AscendJob should return right labels", func() {
+		convey.Convey("02-job which is Job should return right labels", func() {
 			expected := map[string]string{commonv1.JobNameLabel: job.Name}
 			job.APIVersion = acJobApiversion
 			label, err := genLabels(job, job.Name)
