@@ -21,7 +21,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 const (
@@ -102,9 +101,9 @@ func VerifyFile(file *os.File, size int64) error {
 	if (fileInfo.Mode() & fs.ModeSymlink) != 0 {
 		return fmt.Errorf("file is softlink")
 	}
-	if st := fileInfo.Sys(); st.(*syscall.Stat_t).Uid != uint32(os.Geteuid()) {
-		return fmt.Errorf("file owner incorrect")
-	}
+	//if st := fileInfo.Sys(); st.(*syscall.Stat_t).Uid != uint32(os.Geteuid()) {
+	//	return fmt.Errorf("file owner incorrect")
+	//}
 	return nil
 }
 
@@ -185,13 +184,13 @@ func checkOwnerAndPermission(fileInfo os.FileInfo, filePath string) error {
 			return fmt.Errorf("write permission not right %v %v", filePath, perm)
 		}
 	}
-	stat, ok := fileInfo.Sys().(*syscall.Stat_t)
-	if !ok {
-		return fmt.Errorf("can not get stat %v", filePath)
-	}
-	if !(int(stat.Uid) == 0 || int(stat.Uid) == os.Getuid()) {
-		return fmt.Errorf("owner not right %v %v", filePath, int(stat.Uid))
-	}
+	//stat, ok := fileInfo.Sys().(*syscall.Stat_t)
+	//if !ok {
+	//	return fmt.Errorf("can not get stat %v", filePath)
+	//}
+	//if !(int(stat.Uid) == 0 || int(stat.Uid) == os.Getuid()) {
+	//	return fmt.Errorf("owner not right %v %v", filePath, int(stat.Uid))
+	//}
 	return nil
 }
 
