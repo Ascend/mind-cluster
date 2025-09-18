@@ -199,7 +199,7 @@ def _log_rotator(source: str, dest: str) -> None:
             os.rename(source, dest)
             os.chmod(dest, mode=LOG_BAK_PRIVILEGE)
             if not os.path.exists(source):
-                os.mknod(source, mode=LOG_BAK_PRIVILEGE)
+                os.mknod(source, mode=LOG_PRIVILEGE)
             else:
                 _exit_file_process(source)
     except Exception as e:
