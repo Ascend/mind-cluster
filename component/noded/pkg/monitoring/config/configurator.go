@@ -17,6 +17,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"k8s.io/api/core/v1"
@@ -182,6 +183,7 @@ func (c *FaultConfigurator) UpdateConfigCache(cm *v1.ConfigMap) error {
 		return err
 	}
 	c.configCache = newConfigCache
+	hwlog.RunLog.Info("update fault config success")
 	return nil
 }
 
@@ -225,6 +227,10 @@ func (c *FaultConfigurator) loadFaultConfigFromFile() error {
 
 // filterAndCheckFaultCodes filter conflict fault code at same level and check  whether fault code str is illegal
 func (c *FaultConfigurator) filterAndCheckFaultCodes(faultConfig *common.FaultConfig) error {
+	if faultConfig == nil || faultConfig.FaultTypeCode == nil {
+		hwlog.RunLog.Error("fault config is nil")
+		return errors.New("fault config is nil")
+	}
 	common.ToUpperFaultCodesStr(faultConfig.FaultTypeCode)
 	common.FilterDuplicateFaultCodes(faultConfig.FaultTypeCode)
 	if err := common.CheckFaultCodes(faultConfig.FaultTypeCode.NotHandleFaultCodes); err != nil {

@@ -42,6 +42,7 @@ var (
 			SeparateFaultCodes:    []string{"00000003"},
 		},
 	}
+	testErrFaultConfig = &common.FaultConfig{}
 )
 
 func TestMain(m *testing.M) {

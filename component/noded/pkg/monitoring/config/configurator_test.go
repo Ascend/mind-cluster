@@ -20,6 +20,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -131,13 +132,13 @@ func testInitFaultConfigFromCM() {
 }
 
 func testLoadFaultConfigFromFile() {
-	if configManager == nil {
-		panic("configManager is nil")
-	}
-
 	data, err := json.Marshal(testFaultConfig)
 	if err != nil {
-		panic("marshal data failed")
+		convey.ShouldBeNil(err)
+	}
+	errData, err := json.Marshal(testErrFaultConfig)
+	if err != nil {
+		convey.ShouldBeNil(err)
 	}
 
 	convey.Convey("test method loadFaultConfigFromFile success", func() {
@@ -168,6 +169,15 @@ func testLoadFaultConfigFromFile() {
 		defer p4.Reset()
 		err = configManager.loadFaultConfigFromFile()
 		convey.So(err.Error(), convey.ShouldContainSubstring, "contains illegal character")
+	})
+
+	convey.Convey("test method loadFaultConfigFromFile failed, filterAndCheckFaultCodes error, "+
+		"fault config is nil", func() {
+		var p4 = gomonkey.ApplyFuncReturn(utils.LoadFile, errData, nil)
+		defer p4.Reset()
+		err = configManager.loadFaultConfigFromFile()
+		expErr := errors.New("fault config is nil")
+		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }
 
