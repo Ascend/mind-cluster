@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -146,7 +146,7 @@ func TestGetContainerResourceReq(t *testing.T) {
 
 func TestGetNpuWorkerSpec(t *testing.T) {
 	convey.Convey("getNpuWorkerSpec", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		job.Annotations = map[string]string{nonWorkerPodMountChipStatus: "true"}
 		expectSpec := &commonv1.ReplicaSpec{}
 		convey.Convey("01-job with nil replicas should return nil", func() {
@@ -174,7 +174,7 @@ func TestGetNpuReqPerPod(t *testing.T) {
 	convey.Convey("getNpuReqPerPod", t, func() {
 		job := newCommonAscendJob()
 		convey.Convey("01-job with no npu worker should return 0", func() {
-			patch := gomonkey.ApplyFunc(getNpuWorkerSpec, func(_ *mindxdlv1.AscendJob) *commonv1.ReplicaSpec {
+			patch := gomonkey.ApplyFunc(getNpuWorkerSpec, func(_ *mindxdlv1.Job) *commonv1.ReplicaSpec {
 				return nil
 			})
 			defer patch.Reset()
@@ -216,8 +216,8 @@ func TestLocalRankStr(t *testing.T) {
 // TestGetTotalNpuReplicas test getTotalNpuReplicas
 func TestGetTotalNpuReplicas(t *testing.T) {
 	convey.Convey("getTotalNpuReplicas", t, func() {
-		job := &mindxdlv1.AscendJob{
-			Spec: mindxdlv1.AscendJobSpec{
+		job := &mindxdlv1.Job{
+			Spec: mindxdlv1.JobSpec{
 				ReplicaSpecs: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{},
 			},
 		}
@@ -226,7 +226,7 @@ func TestGetTotalNpuReplicas(t *testing.T) {
 			Replicas: &replicas,
 		}
 		convey.Convey("01-job with no replicas should return 0", func() {
-			res := getTotalNpuReplicas(&mindxdlv1.AscendJob{})
+			res := getTotalNpuReplicas(&mindxdlv1.Job{})
 			convey.So(res, convey.ShouldEqual, 0)
 		})
 		convey.Convey("02-job with only scheduler should return 0", func() {

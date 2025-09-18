@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -92,7 +92,7 @@ func (r *ASJobReconciler) getClusterDSvcIp() string {
 	return clusterdSvcIp
 }
 
-func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.AscendJob, frame string,
+func (r *ASJobReconciler) getMngSvcIpAndPort(job *mindxdlv1.Job, frame string,
 	rtype commonv1.ReplicaType) (string, string, error) {
 	if frame == mindxdlv1.MindSporeFrameworkName && len(job.Spec.ReplicaSpecs) == 1 &&
 		rtype == mindxdlv1.ReplicaTypeWorker {

@@ -172,17 +172,17 @@ const (
 
 const (
 	// AscendJobKind is the kind name
-	AscendJobKind = "AscendJob"
+	AscendJobKind = "Job"
 	// DefaultContainerName the default container name for AscendJob.
-	DefaultContainerName = "ascend"
+	DefaultContainerName = "alan"
 	// DefaultPortName is name of the port used to communicate between other process.
-	DefaultPortName = "ascendjob-port"
+	DefaultPortName = "alanjob-port"
 	// ControllerName is the name of controller,used in log.
-	ControllerName = "ascendjob-controller"
+	ControllerName = "job-controller"
 	// OperatorName name of operator
-	OperatorName = "ascend-operator"
+	OperatorName = "alan-operator"
 	// LogModuleName name of log module
 	LogModuleName = "hwlog"
 	// OperatorLogFilePath Operator log file name
-	OperatorLogFilePath = "/var/log/mindx-dl/ascend-operator/ascend-operator.log"
+	OperatorLogFilePath = "/var/log/mindx-dl/alan-operator/alan-operator.log"
 )

@@ -64,7 +64,7 @@ func TestValidJob(t *testing.T) {
 		client := fake.NewSimpleClientset()
 		pgLister := &fakePgLister{}
 		sc := New(client, pgLister)
-		job := &apiv1.AscendJob{}
+		job := &apiv1.Job{}
 		convey.Convey("01-job without label should return nil", func() {
 			err := sc.ValidJob(job)
 			convey.So(err, convey.ShouldBeNil)
@@ -99,7 +99,7 @@ func TestValidJob(t *testing.T) {
 func TestCanCreatePod02(t *testing.T) {
 	convey.Convey("test scaling.Controller.CanCreatePod 02", t, func() {
 		sc := New(fake.NewSimpleClientset(), &fakePgLister{})
-		job := &apiv1.AscendJob{}
+		job := &apiv1.Job{}
 		job.Labels = map[string]string{
 			scalingRuleKey:  "test",
 			groupNameKey:    "group0",

@@ -48,7 +48,7 @@ func New(client kubernetes.Interface, pgLister volschedulinglisters.PodGroupList
 }
 
 // ValidJob checks if the given job has the required labels for scaling and grouping.
-func (c *Controller) ValidJob(job *apiv1.AscendJob) error {
+func (c *Controller) ValidJob(job *apiv1.Job) error {
 	_, ok := job.Labels[scalingRuleKey]
 	if !ok {
 		return nil
@@ -119,7 +119,7 @@ func (c *Controller) getScalingRule(namespace, name string) ([]map[string]*group
 }
 
 // CanCreatePod checks if a new pod can be created for the given job.
-func (c *Controller) CanCreatePod(job *apiv1.AscendJob) bool {
+func (c *Controller) CanCreatePod(job *apiv1.Job) bool {
 	if job == nil {
 		return false
 	}

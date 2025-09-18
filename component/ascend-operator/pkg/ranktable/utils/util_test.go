@@ -30,7 +30,7 @@ const fakePath = "test-path"
 
 func TestHasRankTableVolume(t *testing.T) {
 	convey.Convey("TestReadRankTableDir", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		spec := &commonv1.ReplicaSpec{}
 		spec.Template.Spec.Volumes = make([]v1.Volume, 1)
 		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"fake-spec": spec}
@@ -91,7 +91,7 @@ func TestPodHasAllocated(t *testing.T) {
 
 func TestGenRankTableDir(t *testing.T) {
 	convey.Convey("TestGenRankTableDir", t, func() {
-		job := &mindxdlv1.AscendJob{
+		job := &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-job",
 				Namespace: "default",
@@ -139,7 +139,7 @@ func TestGenRankTableDir(t *testing.T) {
 
 func TestGenRankTableDir01(t *testing.T) {
 	convey.Convey("TestGenRankTableDir", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		spec := &commonv1.ReplicaSpec{}
 		volume := newVolume(rankTableName, v1.VolumeSource{HostPath: &v1.HostPathVolumeSource{Path: fakePath}})
 		spec.Template.Spec.Volumes = []v1.Volume{volume}

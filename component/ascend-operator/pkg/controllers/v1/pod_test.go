@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -86,7 +86,7 @@ func TestReconcilePods02(t *testing.T) {
 		job.Labels[mindxdlv1.FrameworkKey] = mindxdlv1.PytorchFrameworkName
 		convey.Convey("04-create pod info failed should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "newPodInfo", func(_ *ASJobReconciler,
-				_ *mindxdlv1.AscendJob, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec, _ string) (*podInfo, error) {
+				_ *mindxdlv1.Job, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec, _ string) (*podInfo, error) {
 				return nil, errors.New("create pod info failed")
 			})
 			defer patch.Reset()
@@ -95,7 +95,7 @@ func TestReconcilePods02(t *testing.T) {
 		})
 		convey.Convey("05-reconcile pod failed should return err", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "newPodInfo", func(_ *ASJobReconciler,
-				_ *mindxdlv1.AscendJob, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec, _ string) (*podInfo, error) {
+				_ *mindxdlv1.Job, _ commonv1.ReplicaType, _ *commonv1.ReplicaSpec, _ string) (*podInfo, error) {
 				return nil, nil
 			})
 			defer patch1.Reset()
@@ -120,7 +120,7 @@ func TestNewPodInfo01(t *testing.T) {
 		framework := "pytorch"
 		convey.Convey("01-getMngSvcIpAndPort failed should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getMngSvcIpAndPort",
-				func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob, _ string, _ commonv1.ReplicaType) (string, string,
+				func(_ *ASJobReconciler, _ *mindxdlv1.Job, _ string, _ commonv1.ReplicaType) (string, string,
 					error) {
 					return "", "", errors.New("getMngSvcIpAndPort failed")
 				})
@@ -139,11 +139,11 @@ func TestNewPodInfo02(t *testing.T) {
 		spec := newCommonSpec()
 		framework := "pytorch"
 		patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getMngSvcIpAndPort",
-			func(_ *ASJobReconciler, _ *mindxdlv1.AscendJob, _ string, _ commonv1.ReplicaType) (string, string, error) {
+			func(_ *ASJobReconciler, _ *mindxdlv1.Job, _ string, _ commonv1.ReplicaType) (string, string, error) {
 				return "127.0.0.1", "2222", nil
 			})
 		defer patch.Reset()
-		patch1 := gomonkey.ApplyFunc(getNpuReqInfoPerPod, func(job *mindxdlv1.AscendJob) (string, int) {
+		patch1 := gomonkey.ApplyFunc(getNpuReqInfoPerPod, func(job *mindxdlv1.Job) (string, int) {
 			return "", 1
 		})
 		defer patch1.Reset()
@@ -213,7 +213,7 @@ func TestReconcilePodNeedCreateOrDelete(t *testing.T) {
 		pods := []*corev1.Pod{{}}
 		convey.Convey("02-need create pod, but failed, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "createNewPod", func(_ *ASJobReconciler,
-				_ *mindxdlv1.AscendJob, _ podInfo, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
+				_ *mindxdlv1.Job, _ podInfo, _ map[commonv1.ReplicaType]*commonv1.ReplicaSpec) error {
 				return errors.New("create pod failed")
 			})
 			defer patch.Reset()
@@ -242,7 +242,7 @@ func TestCheckPodStatus(t *testing.T) {
 		rc := newCommonReconciler()
 		pod := &corev1.Pod{Status: corev1.PodStatus{ContainerStatuses: make([]corev1.ContainerStatus, 1)}}
 		containerStatus := corev1.ContainerStatus{
-			Name:  "ascend",
+			Name:  "alan",
 			State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ExitCode: 1}},
 		}
 		pi := &podInfo{spec: newCommonSpec(), job: newCommonAscendJob()}
@@ -418,7 +418,7 @@ func newJobInfo(job interface{}) *jobInfo {
 	if !ok {
 		return nil
 	}
-	ascendJob, ok := job.(*mindxdlv1.AscendJob)
+	ascendJob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return nil
 	}

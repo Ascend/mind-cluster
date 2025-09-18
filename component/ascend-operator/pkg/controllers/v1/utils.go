@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -103,7 +103,7 @@ func getContainerNPUResourceNameAndReq(ct corev1.Container) (string, int) {
 	return "", 0
 }
 
-func getNpuReqInfoPerPod(job *mindxdlv1.AscendJob) (string, int) {
+func getNpuReqInfoPerPod(job *mindxdlv1.Job) (string, int) {
 	npuWorker := getNpuWorkerSpec(job)
 	if npuWorker == nil {
 		return "", 0
@@ -117,7 +117,7 @@ func getNpuReqInfoPerPod(job *mindxdlv1.AscendJob) (string, int) {
 	return "", 0
 }
 
-func getNpuWorkerSpec(job *mindxdlv1.AscendJob) *commonv1.ReplicaSpec {
+func getNpuWorkerSpec(job *mindxdlv1.Job) *commonv1.ReplicaSpec {
 	status := getNonWorkerPodMountChipStatus(job)
 	for rtype, spec := range job.Spec.ReplicaSpecs {
 		if status {
@@ -142,7 +142,7 @@ func localRankStr(req int) string {
 	return rankStr
 }
 
-func getTotalNpuReplicas(job *mindxdlv1.AscendJob) int {
+func getTotalNpuReplicas(job *mindxdlv1.Job) int {
 	jobReplicas := int32(0)
 	status := getNonWorkerPodMountChipStatus(job)
 	for rtype, spec := range job.Spec.ReplicaSpecs {
@@ -154,7 +154,7 @@ func getTotalNpuReplicas(job *mindxdlv1.AscendJob) int {
 	return int(jobReplicas)
 }
 
-func getTotalReplicas(job *mindxdlv1.AscendJob) int32 {
+func getTotalReplicas(job *mindxdlv1.Job) int32 {
 	jobReplicas := int32(0)
 	for _, spec := range job.Spec.ReplicaSpecs {
 		jobReplicas += *spec.Replicas
@@ -183,14 +183,14 @@ func specReplicas(spec *commonv1.ReplicaSpec) int32 {
 
 type specInfo struct {
 	name   commonv1.ReplicaType
-	job    *mindxdlv1.AscendJob
+	job    *mindxdlv1.Job
 	spec   *commonv1.ReplicaSpec
 	status *commonv1.ReplicaStatus
 }
 
 type podInfo struct {
 	frame           string
-	job             *mindxdlv1.AscendJob
+	job             *mindxdlv1.Job
 	clusterdSvcIp   string
 	status          *commonv1.ReplicaStatus
 	rtype           commonv1.ReplicaType
@@ -265,7 +265,7 @@ func checkContainersResourceReq(containers []corev1.Container) bool {
 	return false
 }
 
-func getNonWorkerPodMountChipStatus(job *mindxdlv1.AscendJob) bool {
+func getNonWorkerPodMountChipStatus(job *mindxdlv1.Job) bool {
 	annotations := job.GetAnnotations()
 	status, ok := annotations[nonWorkerPodMountChipStatus]
 	if !ok {
@@ -285,7 +285,7 @@ func checkNpuPod(pi *podInfo) bool {
 	return false
 }
 
-func getJobRequiredNpu(job *mindxdlv1.AscendJob) int {
+func getJobRequiredNpu(job *mindxdlv1.Job) int {
 	requiredNpu := 0
 	for _, spec := range job.Spec.ReplicaSpecs {
 		for _, container := range spec.Template.Spec.Containers {

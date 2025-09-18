@@ -2,7 +2,7 @@
 Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
-// Package v1 is using for reconcile AscendJob.
+// Package v1 is using for reconcile Job.
 package v1
 
 import (
@@ -18,12 +18,12 @@ import (
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
-func (r *ASJobReconciler) setPodAnnotation(job *mindxdlv1.AscendJob, podTemplate *corev1.PodTemplateSpec, rtype,
+func (r *ASJobReconciler) setPodAnnotation(job *mindxdlv1.Job, podTemplate *corev1.PodTemplateSpec, rtype,
 	index string) error {
 	return r.setHcclRankIndex(job, podTemplate, rtype, index)
 }
 
-func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.AscendJob, podTemplate *corev1.PodTemplateSpec, rtype,
+func (r *ASJobReconciler) setHcclRankIndex(job *mindxdlv1.Job, podTemplate *corev1.PodTemplateSpec, rtype,
 	index string) error {
 	if podTemplate.Annotations == nil {
 		podTemplate.Annotations = make(map[string]string)

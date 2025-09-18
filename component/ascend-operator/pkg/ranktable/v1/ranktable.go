@@ -8,7 +8,7 @@ Package v1 is using for v1 Ranktable.
 package v1
 
 import (
-    "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/common"
 )
 
@@ -18,7 +18,7 @@ type RankTable struct {
 }
 
 // New create ranktable generator
-func New(job *v1.AscendJob) *RankTable {
+func New(job *v1.Job) *RankTable {
 	r := &RankTable{}
 	r.BaseGenerator = common.NewBaseGenerator(job, common.Version1, r)
 	return r

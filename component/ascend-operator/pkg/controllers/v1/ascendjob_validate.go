@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 package v1
 
@@ -21,7 +21,7 @@ import (
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
-func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
+func (r *ASJobReconciler) validateJob(job *mindxdlv1.Job) *validateError {
 	if r == nil {
 		return &validateError{
 			reason:  "ArgumentError",
@@ -52,7 +52,7 @@ func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 	return err
 }
 
-func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateError {
+func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.Job) *validateError {
 	if job.Spec.ReplicaSpecs == nil {
 		return &validateError{
 			reason:  "SpecsError",
@@ -86,7 +86,7 @@ func (r *ASJobReconciler) getQueueFromApiserver(queueName string) (*v1beta1.Queu
 	return r.VolcanoClientSet.SchedulingV1beta1().Queues().Get(context.TODO(), queueName, metav1.GetOptions{})
 }
 
-func (r *ASJobReconciler) validateSpec(job *mindxdlv1.AscendJob,
+func (r *ASJobReconciler) validateSpec(job *mindxdlv1.Job,
 	specs map[commonv1.ReplicaType]*commonv1.ReplicaSpec) *validateError {
 	frame, err := mindxdlv1.GetJobFramework(job)
 	if err != nil {

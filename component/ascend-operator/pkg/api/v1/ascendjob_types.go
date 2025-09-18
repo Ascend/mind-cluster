@@ -29,34 +29,34 @@ import (
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.conditions[-1:].type`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// AscendJob is the Schema for the AscendJob API
-type AscendJob struct {
+// Job is the Schema for the Job API
+type Job struct {
 	// Standard Kubernetes type metadata.
 	metav1.TypeMeta `json:",inline"`
 
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Specification of the desired state of the AscendJob.
+	// Specification of the desired state of the Job.
 	// +optional
-	Spec AscendJobSpec `json:"spec,omitempty"`
+	Spec JobSpec `json:"spec,omitempty"`
 
-	// Most recently observed status of the AscendJob.
+	// Most recently observed status of the Job.
 	// Populated by the system.
 	// Read-only.
 	// +optional
 	Status commonv1.JobStatus `json:"status,omitempty"`
 }
 
-// AscendJobSpec defines the desired state of AscendJob
-type AscendJobSpec struct {
+// JobSpec defines the desired state of Job
+type JobSpec struct {
 	// RunPolicy encapsulates various runtime policies of the distributed training
 	// job, for example how to clean up resources and how long the job can stay
 	// active.
 	// +kubebuilder:validation:Optional
 	RunPolicy commonv1.RunPolicy `json:"runPolicy"`
 
-	// SuccessPolicy defines the policy to mark the AscendJob as succeeded.
+	// SuccessPolicy defines the policy to mark the Job as succeeded.
 	// Default to "", using the default rules.
 	// +optional
 	SuccessPolicy *SuccessPolicy `json:"successPolicy,omitempty"`
@@ -78,14 +78,14 @@ type AscendJobSpec struct {
 // +resource:path=ascendjobs
 // +kubebuilder:object:root=true
 
-// AscendJobList contains a list of AscendJob
-type AscendJobList struct {
+// JobList contains a list of Job
+type JobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AscendJob `json:"items"`
+	Items           []Job `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AscendJob{}, &AscendJobList{})
+	SchemeBuilder.Register(&Job{}, &JobList{})
 	SchemeBuilder.SchemeBuilder.Register(addDefaultingFuncs)
 }

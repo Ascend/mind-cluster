@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -69,7 +69,7 @@ import (
 	"ascend-operator/pkg/ranktable/utils"
 )
 
-// NewReconciler new reconciler for AscendJob
+// NewReconciler new reconciler for Job
 func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconciler {
 	r := &ASJobReconciler{
 		Client:        mgr.GetClient(),
@@ -108,7 +108,7 @@ func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconci
 	return r
 }
 
-// ASJobReconciler reconciles a AscendJob object
+// ASJobReconciler reconciles a Job object
 type ASJobReconciler struct {
 	common.JobController
 	client.Client
@@ -125,7 +125,7 @@ type ASJobReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // Modify the Reconcile function to compare the state specified by
-// the AscendJob object against the actual cluster state, and then
+// the Job object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -135,7 +135,7 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if r.isVcjobOrDeploy(ctx, req) {
 		return ctrl.Result{}, nil
 	}
-	ascendjob := &mindxdlv1.AscendJob{}
+	ascendjob := &mindxdlv1.Job{}
 	if err := r.Get(ctx, req.NamespacedName, ascendjob); err != nil {
 		if k8serr.IsNotFound(err) {
 			hwlog.RunLog.Debugf("unable to fetch Job<%s>, err: %s", req.NamespacedName, err)
@@ -188,7 +188,7 @@ func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request)
 	return false
 }
 
-func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
+func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.Job) {
 	if getJobRequiredNpu(job) == 0 {
 		hwlog.RunLog.Debugf("job <%s> does not require NPU, skip ranktable generation", job.Name)
 		return
@@ -238,7 +238,7 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 }
 
 func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
+	if err := c.Watch(&source.Kind{Type: &mindxdlv1.Job{}}, &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
@@ -264,7 +264,7 @@ func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller,
 	for _, src := range resourceOptions {
 		if err := c.Watch(src.kind, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &mindxdlv1.AscendJob{},
+			OwnerType:    &mindxdlv1.Job{},
 		}, src.predicateFunc); err != nil {
 			return err
 		}
@@ -335,7 +335,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			hwlog.RunLog.Info("job type is not volcano job or deployment")
 		}
 
-		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
+		ascendJob, ok := e.Object.(*mindxdlv1.Job)
 		if !ok {
 			return true
 		}
@@ -363,7 +363,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 }
 
 // setFaultRetryTimesToBackoffLimits assigns the value of fault-retry-times to backoffLimits.
-func (r *ASJobReconciler) setFaultRetryTimesToBackoffLimits(ascendJob *mindxdlv1.AscendJob) error {
+func (r *ASJobReconciler) setFaultRetryTimesToBackoffLimits(ascendJob *mindxdlv1.Job) error {
 	if len(ascendJob.ObjectMeta.Labels) == 0 {
 		return nil
 	}
@@ -386,7 +386,7 @@ func (r *ASJobReconciler) onOwnerDeleteFunc() func(deleteEvent event.DeleteEvent
 			}
 			delete(r.rtGenerators, e.Object.GetUID())
 		}
-		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
+		ascendJob, ok := e.Object.(*mindxdlv1.Job)
 		if !ok {
 			return false
 		}
@@ -525,7 +525,7 @@ func (r *ASJobReconciler) GetGroupNameLabelValue() string {
 
 // GetJobFromInformerCache get job from informer cache
 func (r *ASJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
-	ascendjob := &mindxdlv1.AscendJob{}
+	ascendjob := &mindxdlv1.Job{}
 	err := r.Get(context.Background(), types.NamespacedName{
 		Namespace: namespace, Name: name,
 	}, ascendjob)
@@ -534,7 +534,7 @@ func (r *ASJobReconciler) GetJobFromInformerCache(namespace, name string) (metav
 
 // GetJobFromAPIClient get job from api server
 func (r *ASJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
-	job := &mindxdlv1.AscendJob{}
+	job := &mindxdlv1.Job{}
 
 	err := r.apiReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -550,7 +550,7 @@ func (r *ASJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Ob
 
 // DeleteJob deletes the job.
 func (r *ASJobReconciler) DeleteJob(job interface{}) error {
-	ascendjob, ok := job.(*mindxdlv1.AscendJob)
+	ascendjob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return fmt.Errorf("%v is not a type of Job", ascendjob)
 	}
@@ -571,7 +571,7 @@ func (r *ASJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus 
 	if jobStatus.ReplicaStatuses == nil {
 		jobStatus.ReplicaStatuses = map[commonv1.ReplicaType]*commonv1.ReplicaStatus{}
 	}
-	ascendjob, ok := job.(*mindxdlv1.AscendJob)
+	ascendjob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return fmt.Errorf("%v is not a type of Job", ascendjob)
 	}
@@ -587,7 +587,7 @@ func (r *ASJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus 
 	return r.Status().Update(context.Background(), ascendjob)
 }
 
-// SetClusterSpec Set Envs for AscendJob
+// SetClusterSpec Set Envs for Job
 func (r *ASJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec,
 	rtype, index string) error {
 	return nil
@@ -611,7 +611,7 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 		rtype == mindxdlv1.TensorflowReplicaTypeChief
 }
 
-func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
+func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.Job {
 	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
 	for i, task := range vcjob.Spec.Tasks {
 		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
@@ -619,26 +619,26 @@ func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 			Replicas: &task.Replicas,
 		}
 	}
-	return &mindxdlv1.AscendJob{
+	return &mindxdlv1.Job{
 		TypeMeta:   vcjob.TypeMeta,
 		ObjectMeta: vcjob.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
+		Spec: mindxdlv1.JobSpec{
 			ReplicaSpecs: repSpecs,
 		},
 	}
 }
 
-func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
+func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.Job {
 	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 		"Deploy": &commonv1.ReplicaSpec{
 			Template: deploy.Spec.Template,
 			Replicas: deploy.Spec.Replicas,
 		},
 	}
-	return &mindxdlv1.AscendJob{
+	return &mindxdlv1.Job{
 		TypeMeta:   deploy.TypeMeta,
 		ObjectMeta: deploy.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
+		Spec: mindxdlv1.JobSpec{
 			ReplicaSpecs: repSpec,
 		},
 	}

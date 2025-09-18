@@ -25,7 +25,7 @@ import (
 func TestGatherServerList(t *testing.T) {
 	convey.Convey("TestGatherServerList", t, func() {
 		convey.Convey("01-servers will be set to serverList and SuperPodList", func() {
-			job := &v1.AscendJob{}
+			job := &v1.Job{}
 			job.Annotations = map[string]string{utils.AnnoKeyOfSuperPod: "2"}
 			gen := New(job)
 			gen.ServerList = []*common.Server{
@@ -60,8 +60,8 @@ func TestGatherServerListForSoftStrategy(t *testing.T) {
 		func(*common.BaseGenerator) {})
 	defer patch.Reset()
 	convey.Convey("TestGatherServerListForSoftStrategy", t, func() {
-		job := &v1.AscendJob{
-			Spec: v1.AscendJobSpec{ReplicaSpecs: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
+		job := &v1.Job{
+			Spec: v1.JobSpec{ReplicaSpecs: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 				v1.ReplicaTypeWorker: {Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{utils.SuperPodAffinity: utils.SoftStrategy}}}}}}}
 		gen := New(job)

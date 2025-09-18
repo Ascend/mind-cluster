@@ -27,13 +27,13 @@ import (
 
 func TestWriteToFile(t *testing.T) {
 	convey.Convey("TestWriteToFile", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-empty dir should return error", func() {
 			gen := New(job)
 			err := gen.WriteToFile()
 			convey.So(err, convey.ShouldBeNil)
 		})
-		patch := gomonkey.ApplyFunc(utils.GenRankTableDir, func(ascendJob *mindxdlv1.AscendJob) string {
+		patch := gomonkey.ApplyFunc(utils.GenRankTableDir, func(ascendJob *mindxdlv1.Job) string {
 			return "./"
 		})
 		defer patch.Reset()
@@ -61,14 +61,14 @@ func TestWriteToFile(t *testing.T) {
 
 func TestDeleteFile(t *testing.T) {
 	convey.Convey("TestDeleteFile", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-empty dir should return error", func() {
 			gen := New(job)
 			err := gen.DeleteFile()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-exist file will be remove", func() {
-			patch := gomonkey.ApplyFunc(utils.GenRankTableDir, func(ascendJob *mindxdlv1.AscendJob) string {
+			patch := gomonkey.ApplyFunc(utils.GenRankTableDir, func(ascendJob *mindxdlv1.Job) string {
 				return "./"
 			})
 			defer patch.Reset()
@@ -88,7 +88,7 @@ func TestDeleteFile(t *testing.T) {
 
 func TestGatherServerList(t *testing.T) {
 	convey.Convey("TestGatherServerList", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		gen := New(job)
 		pod1 := &v1.Pod{}
 		pod1.UID = "111"
@@ -117,7 +117,7 @@ func TestGatherServerList(t *testing.T) {
 
 func TestAddPod(t *testing.T) {
 	convey.Convey("TestAddPod", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		job.Annotations = map[string]string{"sp-block": "2"}
 		job.Labels = map[string]string{"app": "mindie-ms-server", "jobID": "mindie-test"}
 		gen := New(job)

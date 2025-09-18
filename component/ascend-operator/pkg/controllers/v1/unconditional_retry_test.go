@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -25,7 +25,7 @@ import (
 func TestIsUnconditionalRetryJob(t *testing.T) {
 	convey.Convey("isUnconditionalRetryJob", t, func() {
 		rc := &ASJobReconciler{}
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-gang scheduling config is false, should return false", func() {
 			res := rc.isUnconditionalRetryJob(job)
 			convey.So(res, convey.ShouldEqual, false)
@@ -71,7 +71,7 @@ const invalidRetryTimes = -1
 func TestGetJobRemainRetryTimesAboutFaultConfigMap(t *testing.T) {
 	convey.Convey("getJobRemainRetryTimes", t, func() {
 		rc := &ASJobReconciler{}
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-get fault configmap failed, should return err", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getConfigmapFromApiserver",
 				func(_ *ASJobReconciler, _ string, _ string) (*corev1.ConfigMap, error) {
@@ -102,7 +102,7 @@ func TestGetJobRemainRetryTimesAboutFaultConfigMap(t *testing.T) {
 func TestGetJobRemainRetryTimesAboutCache(t *testing.T) {
 	convey.Convey("getJobRemainRetryTimes", t, func() {
 		rc := &ASJobReconciler{}
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-data in cache is invalid, should return err", func() {
 			cm := &corev1.ConfigMap{
 				Data: map[string]string{cmJobRemainRetryTimes: "3"},

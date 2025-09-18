@@ -3,7 +3,7 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package ranktable is using for reconcile AscendJob.
+Package ranktable is using for reconcile Job.
 */
 package ranktable
 
@@ -17,7 +17,7 @@ import (
 )
 
 // NewGenerator create ranktable generator
-func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
+func NewGenerator(job *mindxdlv1.Job) generator.RankTableGenerator {
 	if job == nil {
 		return ranktablev1.New(job)
 	}

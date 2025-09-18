@@ -46,7 +46,7 @@ func TestSetDefaultReplicas(t *testing.T) {
 
 func TestSetTypeNamesToCamelCase(t *testing.T) {
 	convey.Convey("TestSetTypeNamesToCamelCase", t, func() {
-		job := &AscendJob{}
+		job := &Job{}
 		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 			"scheduler": {},
 			"chief":     {},
@@ -67,8 +67,8 @@ func TestSetTypeNamesToCamelCase(t *testing.T) {
 
 func TestSetDefaultsAscendJob(t *testing.T) {
 	convey.Convey("TestSetDefaultsAscendJob", t, func() {
-		job := &AscendJob{
-			Spec: AscendJobSpec{
+		job := &Job{
+			Spec: JobSpec{
 				ReplicaSpecs: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 					ReplicaTypeWorker: {},
 				},
@@ -97,12 +97,12 @@ func TestSetDefaultsAscendJob(t *testing.T) {
 func TestDeepCopyJob(t *testing.T) {
 	convey.Convey("TestDeepCopyJob", t, func() {
 		successpolicy := SuccessPolicyDefault
-		jobList := &AscendJobList{
-			Items: []AscendJob{
+		jobList := &JobList{
+			Items: []Job{
 				{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{},
-					Spec: AscendJobSpec{
+					Spec: JobSpec{
 						SuccessPolicy: &successpolicy,
 						ReplicaSpecs: map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 							"Worker": {},
@@ -123,7 +123,7 @@ func TestGetJobFramework(t *testing.T) {
 			_, err := GetJobFramework(nil)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		job := &AscendJob{}
+		job := &Job{}
 		convey.Convey("02-nil labels should return error", func() {
 			_, err := GetJobFramework(job)
 			convey.So(err, convey.ShouldNotBeNil)
@@ -151,8 +151,8 @@ func TestAddDefaultingFuncs(t *testing.T) {
 
 func TestSetObjectDefaultsAscendJobList(t *testing.T) {
 	convey.Convey("TestSetObjectDefaultsAscendJobList", t, func() {
-		jobList := &AscendJobList{
-			Items: []AscendJob{{}},
+		jobList := &JobList{
+			Items: []Job{{}},
 		}
 		SetObjectDefaultsAscendJobList(jobList)
 		convey.So(*jobList.Items[0].Spec.RunPolicy.CleanPodPolicy, convey.ShouldResemble, commonv1.CleanPodPolicyNone)

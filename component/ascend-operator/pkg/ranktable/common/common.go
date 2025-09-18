@@ -60,7 +60,7 @@ type BaseGenerator struct {
 }
 
 // NewBaseGenerator is the constructor for BaseGenerator.
-func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.RankTableGenerator) *BaseGenerator {
+func NewBaseGenerator(job *mindxdlv1.Job, version string, r generator.RankTableGenerator) *BaseGenerator {
 	rankTableDir := utils.GenRankTableDir(job)
 	return &BaseGenerator{
 		dir:            rankTableDir,

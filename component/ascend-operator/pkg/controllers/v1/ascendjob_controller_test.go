@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -95,7 +95,7 @@ func newCommonPodInfo() *podInfo {
 	return &podInfo{
 		rtype: mindxdlv1.ReplicaTypeWorker,
 		ip:    "127.0.0.1",
-		job: &mindxdlv1.AscendJob{
+		job: &mindxdlv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				UID: "123456",
 				Annotations: map[string]string{
@@ -265,10 +265,10 @@ func newCommonContainer() corev1.Container {
 	}
 }
 
-func newCommonAscendJob() *mindxdlv1.AscendJob {
-	return &mindxdlv1.AscendJob{
+func newCommonAscendJob() *mindxdlv1.Job {
+	return &mindxdlv1.Job{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "AscendJob",
+			Kind:       "Job",
 			APIVersion: acJobApiversion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -276,7 +276,7 @@ func newCommonAscendJob() *mindxdlv1.AscendJob {
 			UID:         "1111",
 			Annotations: map[string]string{},
 		},
-		Spec: mindxdlv1.AscendJobSpec{},
+		Spec: mindxdlv1.JobSpec{},
 	}
 }
 
@@ -305,7 +305,7 @@ func TestIsVcjobOrDeploy(t *testing.T) {
 	r := newCommonReconciler()
 
 	// stub ranktablePipeline
-	patches := gomonkey.ApplyPrivateMethod(r, "ranktablePipeline", func(job *mindxdlv1.AscendJob) { return })
+	patches := gomonkey.ApplyPrivateMethod(r, "ranktablePipeline", func(job *mindxdlv1.Job) { return })
 	defer patches.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -325,7 +325,7 @@ func TestWriteRanktableToCm(t *testing.T) {
 		})
 		convey.Convey("02-ranktable generaotor not found should return error", func() {
 			r.rtGenerators = map[types.UID]generator.RankTableGenerator{
-				"111": ranktable.NewGenerator(&mindxdlv1.AscendJob{})}
+				"111": ranktable.NewGenerator(&mindxdlv1.Job{})}
 			err := r.writeRanktableToCm("job", "default", "111")
 			convey.So(err, convey.ShouldBeNil)
 		})

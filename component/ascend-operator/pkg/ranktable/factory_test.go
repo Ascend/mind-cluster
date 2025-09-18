@@ -3,7 +3,7 @@ Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package ranktable is using for reconcile AscendJob.
+Package ranktable is using for reconcile Job.
 */
 package ranktable
 
@@ -21,7 +21,7 @@ import (
 
 func TestNewGenerator(t *testing.T) {
 	convey.Convey("TestNewGenerator", t, func() {
-		job := &mindxdlv1.AscendJob{}
+		job := &mindxdlv1.Job{}
 		convey.Convey("01-job without sp-block annotation should return v1 ranktable", func() {
 			generator := NewGenerator(job)
 			_, ok := generator.(*v1.RankTable)

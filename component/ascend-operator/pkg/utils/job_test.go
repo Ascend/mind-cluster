@@ -13,17 +13,17 @@ import (
 	"ascend-operator/pkg/api/v1"
 )
 
-func newCommonAscendJob() *v1.AscendJob {
-	return &v1.AscendJob{
+func newCommonAscendJob() *v1.Job {
+	return &v1.Job{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "AscendJob",
+			Kind: "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "ascendjob-test",
 			UID:         "1111",
 			Annotations: map[string]string{},
 		},
-		Spec: v1.AscendJobSpec{},
+		Spec: v1.JobSpec{},
 	}
 }
 

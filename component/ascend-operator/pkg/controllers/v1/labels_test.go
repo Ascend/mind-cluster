@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -40,7 +40,7 @@ func TestSetPodLabels(t *testing.T) {
 			defer patch.Reset()
 			rc.setPodLabels(job, podTemp, rt, index)
 			convey.So(podTemp.Labels, convey.ShouldResemble, map[string]string{
-				commonv1.OperatorNameLabel:           "ascendjob-controller",
+				commonv1.OperatorNameLabel:           "job-controller",
 				commonv1.GroupNameLabelDeprecated:    "mindxdl.gitee.com",
 				commonv1.JobNameLabel:                "ascendjob-test",
 				commonv1.JobNameLabelDeprecated:      "ascendjob-test",

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -66,7 +66,7 @@ func (r *ASJobReconciler) ReconcilePods(
 	}
 	hwlog.RunLog.Debugf("reconcile type<%s> pods start", rtype)
 
-	ascendJob, ok := job.(*mindxdlv1.AscendJob)
+	ascendJob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return fmt.Errorf("%v is not a type of Job", ascendJob)
 	}
@@ -92,7 +92,7 @@ func (r *ASJobReconciler) ReconcilePods(
 	return r.reconcilePods(pi, filterPods, jobStatus, replicas)
 }
 
-func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.ReplicaType, spec *commonv1.ReplicaSpec,
+func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.Job, rtype commonv1.ReplicaType, spec *commonv1.ReplicaSpec,
 	frame string) (*podInfo, error) {
 	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
 	if err != nil {
@@ -469,7 +469,7 @@ func (r *ASJobReconciler) getPodsSlice(pods []*podInfo,
 }
 
 func (r *ASJobReconciler) batchCreatePods(pods []*podInfo, replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
-	job *mindxdlv1.AscendJob) error {
+	job *mindxdlv1.Job) error {
 	if job == nil {
 		hwlog.RunLog.Error("batchCreatePods error: job is nil")
 		return errors.New("batchCreatePods job error: is nil")
@@ -652,7 +652,7 @@ func (r *ASJobReconciler) setEnv(pi *podInfo, podTemplate *corev1.PodTemplateSpe
 	return nil
 }
 
-func (r *ASJobReconciler) setGangScheduleInfo(job *mindxdlv1.AscendJob, podTemplate *corev1.PodTemplateSpec,
+func (r *ASJobReconciler) setGangScheduleInfo(job *mindxdlv1.Job, podTemplate *corev1.PodTemplateSpec,
 	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec, rt string) {
 	jobSchedulerName := job.Spec.SchedulerName
 	if len(jobSchedulerName) == 0 || strings.Compare(jobSchedulerName, gangSchedulerName) == 0 {
@@ -708,7 +708,7 @@ func (r *ASJobReconciler) GetPodSlices(pods []*corev1.Pod, replicas int) [][]*co
 	return podSlices
 }
 
-func (r *ASJobReconciler) setRestartPolicy(job *mindxdlv1.AscendJob, podTemplateSpec *corev1.PodTemplateSpec,
+func (r *ASJobReconciler) setRestartPolicy(job *mindxdlv1.Job, podTemplateSpec *corev1.PodTemplateSpec,
 	spec *commonv1.ReplicaSpec) {
 	// Submit a warning event if the user specifies restart policy for
 	// the pod template. We recommend to set it from the replica level.

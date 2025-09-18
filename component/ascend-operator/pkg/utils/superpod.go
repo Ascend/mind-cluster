@@ -46,7 +46,7 @@ func GetLogicSuperPodId(podRank, spBlock, chipsPerNode int) int {
 }
 
 // GetSpBlock get logic superpod sp-block value
-func GetSpBlock(job *v1.AscendJob) int {
+func GetSpBlock(job *v1.Job) int {
 	if job == nil || job.Annotations == nil {
 		return 0
 	}

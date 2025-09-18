@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -19,7 +19,7 @@ import (
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
-func (r *ASJobReconciler) setPodLabels(job *mindxdlv1.AscendJob, podTemplate *corev1.PodTemplateSpec,
+func (r *ASJobReconciler) setPodLabels(job *mindxdlv1.Job, podTemplate *corev1.PodTemplateSpec,
 	rt commonv1.ReplicaType, index string) {
 	// Set type and index for the worker.
 	labelsMap := r.GenLabels(job.Name)

@@ -34,7 +34,7 @@ type Server struct {
 }
 
 // New create ranktable generator
-func New(job *v1.AscendJob) *RankTable {
+func New(job *v1.Job) *RankTable {
 	r := &RankTable{
 		SuperPodList: make([]*SuperPod, 0),
 	}

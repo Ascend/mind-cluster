@@ -3,7 +3,7 @@ Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 */
 
 /*
-Package controllers is using for reconcile AscendJob.
+Package controllers is using for reconcile Job.
 */
 
 package v1
@@ -102,7 +102,7 @@ func (r *ASJobReconciler) UpdateJobStatus(
 		return errors.New("nil pointer")
 	}
 
-	ascendJob, ok := job.(*mindxdlv1.AscendJob)
+	ascendJob, ok := job.(*mindxdlv1.Job)
 	if !ok {
 		return fmt.Errorf("%v is not a type of Job", ascendJob)
 	}
@@ -126,7 +126,7 @@ func (r *ASJobReconciler) UpdateJobStatus(
 	return nil
 }
 
-func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatus *commonv1.JobStatus) *conditionInfo {
+func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.Job, jobStatus *commonv1.JobStatus) *conditionInfo {
 	restartCondition := getRestartCondition(jobStatus.Conditions)
 
 	if restartCondition != nil {
@@ -164,7 +164,7 @@ func (r *ASJobReconciler) reconcileWithFailed(job *mindxdlv1.AscendJob, jobStatu
 	}
 }
 
-func (r *ASJobReconciler) updateSpecStatus(ascendJob *mindxdlv1.AscendJob,
+func (r *ASJobReconciler) updateSpecStatus(ascendJob *mindxdlv1.Job,
 	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
 	jobStatus *commonv1.JobStatus) error {
 
@@ -195,7 +195,7 @@ func (r *ASJobReconciler) updateSpecStatus(ascendJob *mindxdlv1.AscendJob,
 
 	return r.checkSpecStatus(ascendJob, st, jobStatus, updateFunc)
 }
-func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.AscendJob, status *commonv1.ReplicaStatus,
+func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.Job, status *commonv1.ReplicaStatus,
 	jobStatus *commonv1.JobStatus,
 	updateFunc func(*conditionInfo) error) error {
 	if status.Failed > 0 {
@@ -219,7 +219,7 @@ func (r *ASJobReconciler) checkSpecStatus(job *mindxdlv1.AscendJob, status *comm
 	return nil
 }
 
-func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.AscendJob,
+func (r *ASJobReconciler) getJobStatus(ascendJob *mindxdlv1.Job,
 	replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec,
 	jobStatus *commonv1.JobStatus) *commonv1.ReplicaStatus {
 	st := &commonv1.ReplicaStatus{}
@@ -472,7 +472,7 @@ func isProcessRecoverJob(job metav1.Object) bool {
 	return ok
 }
 
-func getJobRecoverStrategy(ascendJob *mindxdlv1.AscendJob) string {
+func getJobRecoverStrategy(ascendJob *mindxdlv1.Job) string {
 	if ascendJob == nil {
 		return ""
 	}
@@ -482,7 +482,7 @@ func getJobRecoverStrategy(ascendJob *mindxdlv1.AscendJob) string {
 	return ""
 }
 
-func isPodScheduleStrategy(ascendJob *mindxdlv1.AscendJob) bool {
+func isPodScheduleStrategy(ascendJob *mindxdlv1.Job) bool {
 	if ascendJob == nil {
 		return false
 	}
