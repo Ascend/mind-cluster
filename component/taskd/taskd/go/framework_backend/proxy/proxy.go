@@ -92,7 +92,6 @@ func InitProxy(proxyConfig *common.TaskNetConfig) error {
 		return errors.New("proxyConfig is nil")
 	}
 	logName := fmt.Sprintf(constant.ProxyLogPathPattern, proxyConfig.Pos.ServerRank)
-	var err error
 	hwLogConfig, err := utils.GetLoggerConfigWithFileName(logName)
 	if err != nil {
 		fmt.Printf("hwlog init failed, error is %v\n", err)

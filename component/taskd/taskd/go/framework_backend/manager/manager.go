@@ -628,6 +628,10 @@ func reportRecoverStatus(message *constant.ControllerMessage, client pb.RecoverC
 	for key, _ := range message.FaultRanks {
 		faultRanks = append(faultRanks, strconv.Itoa(key))
 	}
+	if managerInstance == nil {
+		hwlog.RunLog.Error("managerInstance is nil")
+		return false
+	}
 	_, err := client.ReportRecoverStatus(managerInstance.svcCtx, &pb.RecoverStatusRequest{
 		IsolateRankIds: faultRanks,
 		JobId:          managerInstance.JobId,
@@ -650,6 +654,10 @@ func reportProcessFault(message *constant.ControllerMessage, client pb.RecoverCl
 			FaultType: strconv.Itoa(faultType),
 		})
 	}
+	if managerInstance == nil {
+		hwlog.RunLog.Error("managerInstance is nil")
+		return false
+	}
 	_, err := client.ReportProcessFault(managerInstance.svcCtx, &pb.ProcessFaultRequest{
 		JobId:      managerInstance.JobId,
 		FaultRanks: faultRanks,
@@ -670,6 +678,10 @@ func reportRecoverStrategy(message *constant.ControllerMessage, client pb.Recove
 			RankId:    strconv.Itoa(rankId),
 			FaultType: strconv.Itoa(faultType),
 		})
+	}
+	if managerInstance == nil {
+		hwlog.RunLog.Error("managerInstance is nil")
+		return false
 	}
 	_, err := client.ReportRecoverStrategy(managerInstance.svcCtx, &pb.RecoverStrategyRequest{
 		JobId:      managerInstance.JobId,
@@ -693,6 +705,10 @@ func reportStopComplete(message *constant.ControllerMessage, client pb.RecoverCl
 			RankId:    strconv.Itoa(rankId),
 			FaultType: strconv.Itoa(faultType),
 		})
+	}
+	if managerInstance == nil {
+		hwlog.RunLog.Error("managerInstance is nil")
+		return false
 	}
 	_, err := client.ReportStopComplete(managerInstance.svcCtx, &pb.StopCompleteRequest{
 		JobId:      managerInstance.JobId,
