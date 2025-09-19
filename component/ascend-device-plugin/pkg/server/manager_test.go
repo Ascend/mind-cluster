@@ -635,7 +635,7 @@ func TestIsSupportGraceTolerance(t *testing.T) {
 
 	hdm.RunMode = api.Ascend910
 	tmpRealCardType := common.ParamOption.RealCardType
-	common.ParamOption.RealCardType = api.Ascend910
+	common.ParamOption.RealCardType = api.Ascend910A
 	convey.Convey("test isSupportGraceTolerance when SMP chip mode is not for Ascend910", t, func() {
 		hdm.WorkMode = common.AMPMode
 		hdm.isSupportGraceTolerance()

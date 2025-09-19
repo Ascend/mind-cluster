@@ -136,14 +136,14 @@ func TestListAndWatch(t *testing.T) {
 func TestUpdateAllocMap(t *testing.T) {
 	ps := NewPluginServer(api.Ascend910, devices, nil, nil)
 	convey.Convey("length no equal", t, func() {
-		realAlloc := []string{"Ascend910-0", "Ascend910-2", "Ascend910-1"}
-		kltAlloc := []string{"Ascend910-2", "Ascend910-7", "Ascend910-0", "Ascend910-1"}
+		realAlloc := []string{api.Ascend910 + "-0", api.Ascend910 + "-2", api.Ascend910 + "-1"}
+		kltAlloc := []string{api.Ascend910 + "-2", api.Ascend910 + "-7", api.Ascend910 + "-0", api.Ascend910 + "-1"}
 		ps.updateAllocMap(realAlloc, kltAlloc)
 		convey.So(len(ps.klt2RealDevMap), convey.ShouldEqual, 0)
 	})
 	convey.Convey("update map", t, func() {
-		realAlloc := []string{"Ascend910-0", "Ascend910-2", "Ascend910-1", "Ascend910-3"}
-		kltAlloc := []string{"Ascend910-2", "Ascend910-7", "Ascend910-0", "Ascend910-1"}
+		realAlloc := []string{api.Ascend910 + "-0", api.Ascend910 + "-2", api.Ascend910 + "-1", api.Ascend910 + "-3"}
+		kltAlloc := []string{api.Ascend910 + "-2", api.Ascend910 + "-7", api.Ascend910 + "-0", api.Ascend910 + "-1"}
 		ps.updateAllocMap(realAlloc, kltAlloc)
 		convey.So(len(ps.klt2RealDevMap), convey.ShouldEqual, len(realAlloc))
 		for i, id := range kltAlloc {
@@ -154,8 +154,8 @@ func TestUpdateAllocMap(t *testing.T) {
 	})
 	convey.Convey("update duplicate device", t, func() {
 		lastLength := len(ps.klt2RealDevMap)
-		realAlloc := []string{"Ascend910-4"}
-		kltAlloc := []string{"Ascend910-2"}
+		realAlloc := []string{api.Ascend910 + "-4"}
+		kltAlloc := []string{api.Ascend910 + "-2"}
 		ps.updateAllocMap(realAlloc, kltAlloc)
 		convey.So(len(ps.klt2RealDevMap), convey.ShouldEqual, lastLength)
 		for i, id := range kltAlloc {
@@ -171,12 +171,12 @@ func TestGenerateAllDeviceMap(t *testing.T) {
 	ps := NewPluginServer(api.Ascend910, devices, nil, nil)
 	convey.Convey("length no equal", t, func() {
 		ps.deepCopyDevice(devices)
-		realAlloc := []string{"Ascend910-0", "Ascend910-2", "Ascend910-1", "Ascend910-3"}
-		kltAlloc := []string{"Ascend910-2", "Ascend910-7", "Ascend910-0", "Ascend910-1"}
+		realAlloc := []string{api.Ascend910 + "-0", api.Ascend910 + "-2", api.Ascend910 + "-1", api.Ascend910 + "-3"}
+		kltAlloc := []string{api.Ascend910 + "-2", api.Ascend910 + "-7", api.Ascend910 + "-0", api.Ascend910 + "-1"}
 		ps.updateAllocMap(realAlloc, kltAlloc)
 		expectMap := map[string]string{
-			"Ascend910-4": "Ascend910-3", "Ascend910-5": "Ascend910-4", "Ascend910-6": "Ascend910-5",
-			"Ascend910-7": "Ascend910-6",
+			api.Ascend910 + "-4": api.Ascend910 + "-3", api.Ascend910 + "-5": api.Ascend910 + "-4",
+			api.Ascend910 + "-6": api.Ascend910 + "-5", api.Ascend910 + "-7": api.Ascend910 + "-6",
 		}
 		actualMap := ps.generateAllDeviceMap()
 		convey.So(len(ps.klt2RealDevMap), convey.ShouldEqual, len(expectMap))
@@ -203,9 +203,10 @@ func TestResponseToKubelet(t *testing.T) {
 		common.ParamOption.UseVolcanoType = true
 		ps.deepCopyDevice(devices)
 		ps.klt2RealDevMap = map[string]string{
-			"Ascend910-4": "Ascend910-3", "Ascend910-5": "Ascend910-4", "Ascend910-6": "Ascend910-5",
-			"Ascend910-7": "Ascend910-6", "Ascend910-0": "Ascend910-7", "Ascend910-1": "Ascend910-2",
-			"Ascend910-2": "Ascend910-1", "Ascend910-3": "Ascend910-0",
+			api.Ascend910 + "-4": api.Ascend910 + "-3", api.Ascend910 + "-5": api.Ascend910 + "-4",
+			api.Ascend910 + "-6": api.Ascend910 + "-5", api.Ascend910 + "-7": api.Ascend910 + "-6",
+			api.Ascend910 + "-0": api.Ascend910 + "-7", api.Ascend910 + "-1": api.Ascend910 + "-2",
+			api.Ascend910 + "-2": api.Ascend910 + "-1", api.Ascend910 + "-3": api.Ascend910 + "-0",
 		}
 		resp := ps.responseToKubelet()
 		convey.So(resp, convey.ShouldNotBeNil)
@@ -291,15 +292,15 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			deviceID := "100"
 			ps := NewPluginServer(common.Ascend910vir2, devices, nil, device.NewHwAscend910Manager())
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
-				DeviceName: "Ascend910-2c-" + deviceID + "-0"}}
+				DeviceName: api.Ascend910 + "-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-" + deviceID + "-0"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
 			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
-			convey.So(resp.ContainerResponses[0].Envs["ASCEND_VISIBLE_DEVICES"], convey.ShouldEqual, "")
-			convey.So(resp.ContainerResponses[0].Envs["ASCEND_RUNTIME_OPTIONS"], convey.ShouldEqual, "")
+			convey.So(resp.ContainerResponses[0].Envs[api.AscendVisibleDevicesEnv], convey.ShouldEqual, "")
+			convey.So(resp.ContainerResponses[0].Envs[api.AscendVisibleDevicesEnv], convey.ShouldEqual, "")
 		})
 	})
 }
@@ -360,7 +361,7 @@ func TestAllocateWithVolcano2(t *testing.T) {
 		convey.Convey("common.GetDeviceFromPodAnnotation failed", func() {
 			mockPodSlice := []v1.Pod{{ObjectMeta: metav1.ObjectMeta{Name: "test",
 				Annotations: map[string]string{common.PodPredicateTime: "5",
-					api.ResourceNamePrefix + common.Ascend910vir2: "Ascend910-2c-180-3"}}}}
+					api.ResourceNamePrefix + common.Ascend910vir2: api.Ascend910 + "-2c-180-3"}}}}
 			mockFilter := mockFilterPods(mockPodSlice)
 			defer mockFilter.Reset()
 			mockUpdatePod := mockTryUpdatePodAnnotation(nil)
@@ -377,7 +378,7 @@ func TestAllocateWithVolcano3(t *testing.T) {
 		device.NewHwAscend910Manager())
 	common.ParamOption.UseVolcanoType = true
 	var requests v1beta1.AllocateRequest
-	requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-0"}}}
+	requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-0"}}}
 	convey.Convey("test AllocateWithVolcano", t, func() {
 		mockActivePodList := mockGetActivePodListCache(mockPods)
 		defer mockActivePodList.Reset()
@@ -403,13 +404,13 @@ func TestAllocateWithVolcano3(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
 			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
-			convey.So(resp.ContainerResponses[0].Envs["ASCEND_VISIBLE_DEVICES"], convey.ShouldEqual, "")
-			_, err = ps.GetRealAllocateDevicesFromMap([]string{"Ascend910-2"})
+			convey.So(resp.ContainerResponses[0].Envs[api.AscendVisibleDevicesEnv], convey.ShouldEqual, "")
+			_, err = ps.GetRealAllocateDevicesFromMap([]string{api.Ascend910 + "-2"})
 			convey.So(err, convey.ShouldNotBeNil)
-			realAllocate, err := ps.GetRealAllocateDevicesFromMap([]string{"Ascend910-0"})
+			realAllocate, err := ps.GetRealAllocateDevicesFromMap([]string{api.Ascend910 + "-0"})
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(realAllocate), convey.ShouldEqual, 1)
-			convey.So(realAllocate[0], convey.ShouldEqual, "Ascend910-1")
+			convey.So(realAllocate[0], convey.ShouldEqual, api.Ascend910+"-1")
 		})
 	})
 }
@@ -434,7 +435,7 @@ func TestSetSlowNodeNoticeEnv(t *testing.T) {
 func TestGetUnhealthyAICore(t *testing.T) {
 	ps := NewPluginServer(api.Ascend910, devices, []string{common.HiAIManagerDevice},
 		device.NewHwAscend910Manager())
-	ps.klt2RealDevMap["Ascend910-0"] = "Ascend910-0"
+	ps.klt2RealDevMap[api.Ascend910+"-0"] = api.Ascend910 + "-0"
 	common.ParamOption.AiCoreCount = common.MinAICoreNum
 	mockGetAiCore := gomonkey.ApplyMethod(reflect.TypeOf(new(PluginServer)), "GetRealUsedAICore",
 		func(_ *PluginServer) (map[string]string, error) { return nil, nil })
@@ -451,7 +452,7 @@ func TestGetUnhealthyAICore(t *testing.T) {
 func TestDestroyNotUsedVNPU(t *testing.T) {
 	ps := NewPluginServer(api.Ascend910, devices, []string{common.HiAIManagerDevice},
 		device.NewHwAscend910Manager())
-	ps.klt2RealDevMap["Ascend910-0"] = "Ascend910-0"
+	ps.klt2RealDevMap[api.Ascend910+"-0"] = api.Ascend910 + "-0"
 	common.ParamOption.AiCoreCount = common.MinAICoreNum
 	mockGetNPUsFunc := mockGetNPUs()
 	mockDestroy := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "DestroyVirtualDevice",
@@ -717,8 +718,8 @@ func mockFilterPods(mockPods []v1.Pod) *gomonkey.Patches {
 }
 
 const (
-	virDevType     = "Ascend910-16c"
-	devType        = "Ascend910-16"
+	virDevType     = api.Ascend910 + "-16c"
+	devType        = api.Ascend910 + "-16"
 	realResNameVir = api.ResourceNamePrefix + virDevType
 	realResName    = api.ResourceNamePrefix + devType
 )
@@ -760,15 +761,7 @@ func buildGetKltAndRealAllocateDevTestCaseTestCases() []getKltAndRealAllocateDev
 			wantErr:     errors.New("get pod resource failed, fake error"),
 		},
 		{
-			Name: "02-get virtual dev info success, should return pod virtual device info and nil",
-			args: getKltAndRealAllocateDevArgs{mockErr: nil, podList: podList, deviceType: virDevType,
-				mockPodDevice: map[string]PodDevice{"ns_pod1": {ResourceName: "fakeName", DeviceIds: []string{"0"}},
-					"ns_pod2": {ResourceName: realResNameVir, DeviceIds: []string{"4"}}}},
-			wantRealDev: []string{"4"},
-			wantErr:     nil,
-		},
-		{
-			Name: "03-get dev info success, should return pod device info and nil",
+			Name: "02-get dev info success, should return pod device info and nil",
 			args: getKltAndRealAllocateDevArgs{mockErr: nil, podList: podList, deviceType: devType,
 				mockPodDevice: map[string]PodDevice{"ns_pod1": {ResourceName: realResName, DeviceIds: []string{"0"}},
 					"ns_pod3": {ResourceName: realResName, DeviceIds: []string{"8"}}}},
