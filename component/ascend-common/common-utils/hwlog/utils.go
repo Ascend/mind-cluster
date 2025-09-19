@@ -38,38 +38,19 @@ func printHelper(lg *log.Logger, msg string, maxLogLength int, ctx ...context.Co
 
 // getCallerInfo gets the caller's information
 func getCallerInfo(ctx ...context.Context) string {
-	var deep = stackDeep
 	var userID interface{}
 	var traceID interface{}
 	for _, c := range ctx {
 		if c == nil {
-			deep++
 			continue
 		}
 		userID = c.Value(UserID)
 		traceID = c.Value(ReqID)
-		if val := c.Value(extraDeepKey); val != nil {
-			currentVal, _ := val.(int) // security type assertions, invalid values are automatically zeroed
-			deep += currentVal
-		}
 	}
-	var funcName string
-	pc, codePath, codeLine, ok := runtime.Caller(deep)
-	if ok {
-		funcName = runtime.FuncForPC(pc).Name()
-	}
-	p := strings.Split(codePath, "/")
-	l := len(p)
-	if l == pathLen {
-		funcName = p[l-1]
-	} else if l > pathLen {
-		funcName = fmt.Sprintf("%s/%s", p[l-pathLen], p[l-1])
-	}
-	callerPath := fmt.Sprintf("%s:%d", funcName, codeLine)
 	goroutineID := getGoroutineID()
-	str := fmt.Sprintf("%-8s%s    ", goroutineID, callerPath)
+	str := goroutineID
 	if userID != nil || traceID != nil {
-		str = fmt.Sprintf("%s{%#v}-{%#v} ", str, userID, traceID)
+		str = fmt.Sprintf("%s{%#v}-{%#v} ", goroutineID, userID, traceID)
 	}
 	return str
 }

@@ -85,7 +85,7 @@ func TestReplaceDeviceInnerName(t *testing.T) {
 // TestReplaceDevicePublicType tests ReplaceDevicePublicType
 func TestReplaceDevicePublicType(t *testing.T) {
 	resourceType := api.Ascend310P
-	oldName := "huawei.com/Ascend310P"
+	oldName := api.HuaweiAscend310P
 
 	devNameMap[resourceType] = DevName{
 		ResourceType:        resourceType,

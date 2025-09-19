@@ -550,7 +550,7 @@ func (hnm *HwAscend910Manager) isChipActive(logicID int32, busyChipList []string
 			logicID, err, chipInfo)
 		return false, err
 	}
-	logicIDForCompare := fmt.Sprintf("Ascend910-%d", logicID)
+	logicIDForCompare := fmt.Sprintf(api.Ascend910MinuxPrefix+"%d", logicID)
 	if chipInfo.ProcNum != 0 {
 		hwlog.RunLog.Debugf("found busy chip: %v", logicIDForCompare)
 		return false, nil

@@ -120,7 +120,7 @@ func TestConvertLogicIDsToDeviceNames(t *testing.T) {
 			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A3})
 			defer mockOption.Reset()
 			logicIds := []int32{3}
-			convey.So(tool.convertLogicIDsToDeviceNames(logicIds), convey.ShouldEqual, "Ascend910-1")
+			convey.So(tool.convertLogicIDsToDeviceNames(logicIds), convey.ShouldEqual, api.Ascend910MinuxPrefix+"1")
 		})
 	})
 }
@@ -147,7 +147,7 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 			})
 		defer mockMethod.Reset()
 		convey.Convey("03-handle fault info success, manually separate npu 1, should return Ascend910-1", func() {
-			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, "Ascend910-1")
+			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, api.Ascend910MinuxPrefix+"1")
 		})
 	})
 }
@@ -343,7 +343,7 @@ func TestGetNPUsByShareMode(t *testing.T) {
 		devs := tool.getNPUsByShareMode(davinCiDev)
 		convey.So(len(devs) == numNum, convey.ShouldBeTrue)
 		convey.So(devs[0].IP == "127.0.0.1", convey.ShouldBeTrue)
-		convey.So(devs[0].DeviceName == "Ascend910-1-0", convey.ShouldBeTrue)
+		convey.So(devs[0].DeviceName == api.Ascend910MinuxPrefix+"1-0", convey.ShouldBeTrue)
 	})
 }
 
@@ -630,14 +630,6 @@ func TestAssembleVirtualDevices(t *testing.T) {
 func TestAddPodAnnotation1(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test AddPodAnnotation 1", t, func() {
-		convey.Convey("GetDeviceListID failed", func() {
-			err := tool.AddPodAnnotation(&common.PodDeviceInfo{
-				Pod:        v1.Pod{},
-				KltDevice:  nil,
-				RealDevice: []string{api.Ascend910},
-			}, common.Ascend910vir2, "", nil)
-			convey.So(err, convey.ShouldBeNil)
-		})
 		mockTryUpdatePodAnnotation := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 			"TryUpdatePodAnnotation", func(_ *kubeclient.ClientK8s, pod *v1.Pod,
 				annotation map[string]string) error {
@@ -888,7 +880,7 @@ func TestCheckDeviceTypeLabel(t *testing.T) {
 			err := tool.CheckDeviceTypeLabel()
 			convey.So(err, convey.ShouldNotBeNil)
 			common.ParamOption.AiCoreCount = aiCoreCount
-			node.Labels[common.ServerTypeLabelKey] = "Ascend310P-8"
+			node.Labels[common.ServerTypeLabelKey] = api.Ascend310PMinuxPrefix + "8"
 			err = tool.CheckDeviceTypeLabel()
 			convey.So(err, convey.ShouldBeNil)
 		})

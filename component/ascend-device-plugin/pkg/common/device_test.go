@@ -75,10 +75,10 @@ func TestConvertDevListToSets(t *testing.T) {
 			convey.So(ret.Len(), convey.ShouldEqual, len(strings.Split(devices, ".")))
 		})
 		convey.Convey("match Ascend910", func() {
-			devices := "Ascend910-0.Ascend910-1.Ascend910-2"
+			devices := api.Ascend910 + "-0." + api.Ascend910 + "-1." + api.Ascend910 + "-2"
 			ret := ConvertDevListToSets(devices, DotSepDev)
 			convey.So(ret.Len(), convey.ShouldEqual, 0)
-			testDevices := "Ascend910-0,Ascend910-1"
+			testDevices := api.Ascend910 + "-0," + api.Ascend910 + "-1"
 			res := ConvertDevListToSets(testDevices, CommaSepDev)
 			convey.So(res.Len(), convey.ShouldEqual, cardNum)
 		})

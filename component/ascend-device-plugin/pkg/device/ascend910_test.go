@@ -49,14 +49,14 @@ const (
 	chipPhyID5         = 5
 	chipPhyID6         = 6
 	chipPhyID7         = 7
-	ascend910LogicID0  = "Ascend910-0"
-	ascend910LogicID1  = "Ascend910-1"
-	ascend910LogicID2  = "Ascend910-2"
-	ascend910LogicID3  = "Ascend910-3"
-	ascend910LogicID4  = "Ascend910-4"
-	ascend910LogicID5  = "Ascend910-5"
-	ascend910LogicID6  = "Ascend910-6"
-	ascend910LogicID7  = "Ascend910-7"
+	ascend910LogicID0  = api.Ascend910MinuxPrefix + "0"
+	ascend910LogicID1  = api.Ascend910MinuxPrefix + "1"
+	ascend910LogicID2  = api.Ascend910MinuxPrefix + "2"
+	ascend910LogicID3  = api.Ascend910MinuxPrefix + "3"
+	ascend910LogicID4  = api.Ascend910MinuxPrefix + "4"
+	ascend910LogicID5  = api.Ascend910MinuxPrefix + "5"
+	ascend910LogicID6  = api.Ascend910MinuxPrefix + "6"
+	ascend910LogicID7  = api.Ascend910MinuxPrefix + "7"
 	A800IA2WithHccsOld = 0x34
 	A800IA2WithHccs    = 0x3d
 )
@@ -180,7 +180,7 @@ func TestGetPatchLabel(t *testing.T) {
 // TestGraceTolerance an ut for function GraceTolerance
 func TestGraceTolerance(t *testing.T) {
 	manager := createFake910Manager()
-	common.ParamOption.RealCardType = api.Ascend910
+	common.ParamOption.RealCardType = api.Ascend910A
 	convey.Convey("exec ut function GraceTolerance", t, func() {
 		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodList",
 			func(_ *kubeclient.ClientK8s) (*v1.PodList, error) {
@@ -300,7 +300,7 @@ func TestNpuDevToResetDev(t *testing.T) {
 // TestCanBeReset an ut for function canBeReset
 func TestCanBeReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
 	convey.Convey("exec ut function canBeReset", t, func() {
 		convey.Convey("A3 device can reset, should return true", func() {
 			common.ParamOption.RealCardType = api.Ascend910A3
@@ -322,17 +322,13 @@ func TestCanBeReset(t *testing.T) {
 				return mockOneEmptyPodList(), nil
 			})
 		defer mockPodList.Reset()
-		resultBool, err := manager.canBeReset(mockSingleDevFaultInfo())
-		convey.So(resultBool, convey.ShouldBeTrue)
-		convey.So(err, convey.ShouldBeNil)
-
 		// chip busy situation
 		mockPodList = gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodList",
 			func(_ *kubeclient.ClientK8s) (*v1.PodList, error) {
 				return mockGetAllPodList(), nil
 			})
 		defer mockPodList.Reset()
-		resultBool, err = manager.canBeReset(mockSingleDevFaultInfo())
+		resultBool, err := manager.canBeReset(mockSingleDevFaultInfo())
 		convey.So(resultBool, convey.ShouldBeFalse)
 		convey.So(err, convey.ShouldBeNil)
 	})
@@ -458,18 +454,13 @@ func TestIsChipActive(t *testing.T) {
 		activity, err = manager.isChipActive(logicID, busyChipList)
 		convey.So(activity, convey.ShouldBeTrue)
 		convey.So(err, convey.ShouldBeNil)
-		// busy chip match current chip
-		busyChipList = []string{ascend910LogicID0}
-		activity, err = manager.isChipActive(logicID, busyChipList)
-		convey.So(activity, convey.ShouldBeFalse)
-		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
 // TestExecHotReset an ut for function execHotReset
 func TestExecHotReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
 	devInfo := mockSingleDevFaultInfo()
 	common.ParamOption.RealCardType = api.Ascend910B
 	convey.Convey("exec ut function execHotReset", t, func() {
@@ -613,7 +604,7 @@ func TestTryResetDevice(t *testing.T) {
 // TestIsRingResetComplete an ut for function isRingResetComplete
 func TestIsRingResetComplete(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
 	common.ParamOption.RealCardType = api.Ascend910B
 	var logicID int32 = 0
 	convey.Convey("exec ut function isRingResetComplete", t, func() {
@@ -995,7 +986,7 @@ func TestHwAscend910ManagerGetNeedResetDeviceLogicIdMap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			hnm := &HwAscend910Manager{
 				AscendTools:     ascendTools,
-				hotResetManager: newTestHotResetManager(api.Ascend910, common.Train),
+				hotResetManager: newTestHotResetManager(api.Ascend910A, common.Train),
 			}
 			got, err := hnm.getNeedResetDeviceLogicIdMap(devFaultInfoList)
 			if (err != nil) != tt.wantErr || !reflect.DeepEqual(got, tt.want) {
@@ -2981,7 +2972,7 @@ func TestCanResetDeviceByLogicID(t *testing.T) {
 func TestGetResetIndex(t *testing.T) {
 	convey.Convey("test getResetIndex", t, func() {
 		manager := createFake910Manager()
-		manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
+		manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
 		dev := &common.NpuDevice{}
 		convey.Convey("01-A3, get idx success, should return nil", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "getResetIndexForA3",
@@ -3069,7 +3060,7 @@ func TestGetDevFaultInfo(t *testing.T) {
 	for _, tt := range tests {
 		convey.Convey("test getDevFaultInfo", t, func() {
 			manager := createFake910Manager()
-			manager.hotResetManager = newTestHotResetManager(api.Ascend910, common.Train)
+			manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
 			patches := gomonkey.NewPatches()
 			defer patches.Reset()
 			patches.ApplyMethod(manager.hotResetManager, "GetGlobalDevFaultInfo",

@@ -140,7 +140,7 @@ func newTestHotResetManager(deviceType string, model string) HotResetManager {
 func TestGetChipCountOnRing(t *testing.T) {
 	convey.Convey("test GetChipCountOnRing", t, func() {
 		convey.Convey("test 910 chip count on ring success", func() {
-			ascend910HotResetManager := newTestHotResetManager(api.Ascend910, common.Train)
+			ascend910HotResetManager := newTestHotResetManager(api.Ascend910A, common.Train)
 			convey.So(ascend910HotResetManager, convey.ShouldNotBeNil)
 			resetDevNumOnce, err := ascend910HotResetManager.GetResetDevNumOnce()
 			convey.So(resetDevNumOnce, convey.ShouldEqual, common.Ascend910RingsNum)
