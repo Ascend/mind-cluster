@@ -16,11 +16,15 @@
 package common
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/utils"
 )
 
 const (
@@ -37,6 +41,13 @@ func TestWriteToFile(t *testing.T) {
 			path1 := ResetInfoDir + "/default.test/restartType"
 			crErr1 := WriteToFile("test", path1)
 			convey.So(crErr1, convey.ShouldBeNil)
+			path2 := "./default.test/reset.json"
+			crErr2 := WriteToFile("test", path2)
+			convey.So(crErr2, convey.ShouldNotBeNil)
+			patch := gomonkey.ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
+			defer patch.Reset()
+			crErr3 := WriteToFile("test", path1)
+			convey.So(crErr3, convey.ShouldNotBeNil)
 			rmErr := RemoveResetFileAndDir("default", "test")
 			convey.So(rmErr, convey.ShouldBeNil)
 		})
@@ -79,30 +90,35 @@ func TestRemoveDataTraceFileAndDir(t *testing.T) {
 		namespace := "test_namespace"
 		jobName := "test_job"
 
-		convey.Convey("When the directory exists", func() {
+		convey.Convey("When the directory exists, the directory should be removed successfully", func() {
 			dir := filepath.Join(DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
 			err := os.MkdirAll(dir, FilePerm)
 			convey.ShouldBeNil(err)
 
-			convey.Convey("Then the directory should be removed successfully", func() {
-				err := RemoveDataTraceFileAndDir(namespace, jobName)
-				convey.ShouldBeNil(err)
-				_, err = os.Stat(dir)
-				if err != nil {
-					convey.ShouldBeTrue(os.IsNotExist(err))
-				}
-			})
+			err = RemoveDataTraceFileAndDir(namespace, jobName)
+			convey.ShouldBeNil(err)
+			_, err = os.Stat(dir)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 
-		convey.Convey("When the directory does not exist", func() {
-			convey.Convey("Then the function should return nil or an IsNotExist error", func() {
-				err := RemoveDataTraceFileAndDir(namespace, jobName)
-				if err != nil {
-					convey.ShouldBeTrue(os.IsNotExist(err))
-				} else {
-					convey.ShouldBeNil(err)
-				}
-			})
+		convey.Convey("When the directory does not exist, should return nil", func() {
+			err := RemoveDataTraceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("When the directory is not absolute path, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.IsAbs, false)
+			defer patch.Reset()
+			err := RemoveDataTraceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("When the directory check path failed, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.IsAbs, true).
+				ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
+			defer patch.Reset()
+			err := RemoveDataTraceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

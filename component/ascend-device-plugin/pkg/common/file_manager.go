@@ -21,10 +21,14 @@ import (
 	"path/filepath"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 )
 
 // WriteToFile write data to file
 func WriteToFile(info, path string) error {
+	if !filepath.IsAbs(path) {
+		return fmt.Errorf("the path %s is not an absolute path", path)
+	}
 	dirPath := filepath.Dir(path)
 	err := os.MkdirAll(dirPath, DefaultPerm)
 	if err != nil {
@@ -40,6 +44,9 @@ func WriteToFile(info, path string) error {
 			hwlog.RunLog.Errorf("close file failed, err: %v", err)
 		}
 	}()
+	if _, err := utils.CheckPath(path); err != nil {
+		return err
+	}
 	_, err = f.WriteString(info)
 	return err
 }
@@ -67,6 +74,12 @@ func RemoveResetFileAndDir(namespace, name string) error {
 // RemoveDataTraceFileAndDir remove the job related data-trace config dir
 func RemoveDataTraceFileAndDir(namespace, jobName string) error {
 	dataTraceDirName := fmt.Sprintf("%s/%s", DataTraceConfigDir, namespace+"."+DataTraceCmPrefix+jobName)
+	if !filepath.IsAbs(dataTraceDirName) {
+		return fmt.Errorf("the path %s is not an absolute path", dataTraceDirName)
+	}
+	if _, err := utils.CheckPath(dataTraceDirName); err != nil {
+		return fmt.Errorf("the path %s is invalid, err: %v", dataTraceDirName, err)
+	}
 	hwlog.RunLog.Infof("will delete data trace file: %s", dataTraceDirName)
 	return os.RemoveAll(dataTraceDirName)
 }
