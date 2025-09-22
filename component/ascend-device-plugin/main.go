@@ -24,6 +24,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/server"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 )
@@ -87,6 +88,9 @@ var (
 		"switch of set slow node notice environment,default false")
 	thirdPartyScanDelay = flag.Int("thirdPartyScanDelay", common.DefaultScanDelay,
 		"delay time(second) before scanning devices reset by third party")
+	deviceResetTimeout = flag.Int(api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"when device-plugin starts, if the number of chips is insufficient, the maximum duration to wait for "+
+			"the driver to report all chips, unit second, range [10, 600]")
 )
 
 var (
@@ -122,51 +126,117 @@ func initLogModule(ctx context.Context) error {
 }
 
 func checkParam() bool {
+	checks := []func() bool{
+		checkListWatchPeriod,
+		checkPresetAndVolcanoRelation,
+		checkUse310PMixedInsertWithVolcano,
+		checkUse310PMixedInsertWithShareDevCount,
+		checkPresetWithShareDevCount,
+		checkVolcanoWithShareDevCount,
+		checkHotResetMode,
+		checkBuildScene,
+		checkLinkdownTimeout,
+		checkThirdPartyScanDelay,
+		checkDeviceResetTimeout,
+		checkShareDevCount,
+	}
+	for _, check := range checks {
+		if !check() {
+			return false
+		}
+	}
+	return true
+}
+
+func checkListWatchPeriod() bool {
 	if *listWatchPeriod < minListWatchPeriod || *listWatchPeriod > maxListWatchPeriod {
 		hwlog.RunLog.Errorf("list and watch period %d out of range", *listWatchPeriod)
 		return false
 	}
+	return true
+}
+
+func checkPresetAndVolcanoRelation() bool {
 	if !(*presetVirtualDevice) && !(*volcanoType) {
 		hwlog.RunLog.Error("presetVirtualDevice is false, volcanoType should be true")
 		return false
 	}
+	return true
+}
+
+func checkUse310PMixedInsertWithVolcano() bool {
 	if *use310PMixedInsert && *volcanoType {
 		hwlog.RunLog.Error("use310PMixedInsert is true, volcanoType should be false")
 		return false
 	}
+	return true
+}
+
+func checkUse310PMixedInsertWithShareDevCount() bool {
 	if *use310PMixedInsert && *shareDevCount > 1 {
 		hwlog.RunLog.Error("use310PMixedInsert is true, shareDevCount should be 1")
 		return false
 	}
+	return true
+}
+
+func checkPresetWithShareDevCount() bool {
 	if !(*presetVirtualDevice) && *shareDevCount > 1 {
 		hwlog.RunLog.Error("presetVirtualDevice is false, shareDevCount should be 1")
 		return false
 	}
+	return true
+}
+
+func checkVolcanoWithShareDevCount() bool {
 	if *volcanoType && *shareDevCount > 1 {
 		hwlog.RunLog.Error("volcanoType is true, shareDevCount should be 1")
 		return false
 	}
+	return true
+}
+
+func checkHotResetMode() bool {
 	switch *hotReset {
 	case common.HotResetClose, common.HotResetInfer, common.HotResetTrainOnLine, common.HotResetTrainOffLine:
+		return true
 	default:
 		hwlog.RunLog.Error("hot reset mode param invalid")
 		return false
 	}
+}
+
+func checkBuildScene() bool {
 	if BuildScene != common.EdgeScene && BuildScene != common.CenterScene {
 		hwlog.RunLog.Error("unSupport build scene, only support edge and center")
 		return false
 	}
+	return true
+}
 
+func checkLinkdownTimeout() bool {
 	if (*linkdownTimeout) < minLinkdownTimeout || (*linkdownTimeout) > maxLinkdownTimeout {
 		hwlog.RunLog.Warn("linkdown timeout duration out of range")
 		return false
 	}
+	return true
+}
+
+func checkThirdPartyScanDelay() bool {
 	if *thirdPartyScanDelay < 0 {
 		hwlog.RunLog.Errorf("reset scan delay %v is invalid", *thirdPartyScanDelay)
 		return false
 	}
+	return true
+}
 
-	return checkShareDevCount()
+func checkDeviceResetTimeout() bool {
+	if *deviceResetTimeout < api.MinDeviceResetTimeout || *deviceResetTimeout > api.MaxDeviceResetTimeout {
+		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", *deviceResetTimeout,
+			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+		return false
+	}
+	return true
 }
 
 func checkShareDevCount() bool {
@@ -204,7 +274,7 @@ func main() {
 
 // InitFunction init function
 func InitFunction() (*server.HwDevManager, error) {
-	devM, err := devmanager.AutoInit("")
+	devM, err := devmanager.AutoInit("", common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
 		return nil, err
@@ -247,6 +317,7 @@ func setParameters() {
 		CheckCachedPods:     *checkCachedPods,
 		EnableSlowNode:      *enableSlowNode,
 		ThirdPartyScanDelay: *thirdPartyScanDelay,
+		DeviceResetTimeout:  *deviceResetTimeout,
 	}
 }
 

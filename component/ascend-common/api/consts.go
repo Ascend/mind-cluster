@@ -82,3 +82,14 @@ const (
 	// PubFaultCMLabelKey public fault cm label key
 	PubFaultCMLabelKey = "mc-consumer-publicfault"
 )
+
+const (
+	// DeviceResetTimeout device reset timeout
+	DeviceResetTimeout = "deviceResetTimeout"
+	// DefaultDeviceResetTimeout default device reset timeout is 60 seconds
+	DefaultDeviceResetTimeout = 60
+	// MinDeviceResetTimeout min device reset timeout is 10 seconds
+	MinDeviceResetTimeout = 10
+	// MaxDeviceResetTimeout max device reset timeout is 600 seconds
+	MaxDeviceResetTimeout = 600
+)

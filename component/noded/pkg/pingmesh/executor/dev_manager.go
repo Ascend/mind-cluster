@@ -29,6 +29,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	common2 "nodeD/pkg/common"
 	"nodeD/pkg/pingmesh/types"
 )
 
@@ -54,7 +55,7 @@ type DevManager struct {
 
 // New create new device manager
 func New() (*DevManager, error) {
-	dm, err := devmanager.GetDeviceManager()
+	dm, err := devmanager.GetDeviceManager(common2.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		return nil, err
 	}

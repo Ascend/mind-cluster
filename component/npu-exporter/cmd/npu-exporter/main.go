@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-common/devmanager"
@@ -64,6 +65,7 @@ var (
 	profilingTime       int
 	hccsBWProfilingTime int
 	pollInterval        time.Duration
+	deviceResetTimeout  int
 )
 
 const (
@@ -118,7 +120,7 @@ func main() {
 	if err != nil {
 		return
 	}
-	dmgr, err := devmanager.AutoInit("")
+	dmgr, err := devmanager.AutoInit("", deviceResetTimeout)
 	if err != nil {
 		logger.Errorf("new npu collector failed, error is %v", err)
 		return
@@ -257,6 +259,30 @@ func readCntMonitoringFlags() container.CntNpuMonitorOpts {
 	return opts
 }
 
+func paramValidInPrometheus() error {
+	checks := []func() error{
+		checkIPAndPortInPrometheus,
+		checkUpdateTime,
+		containerSockCheck,
+		checkLimitIPReqFormat,
+		checkLimitIPConn,
+		checkLimitTotalConn,
+		checkCacheSize,
+		checkConcurrency,
+		checkProfilingTime,
+		checkHccsBWProfilingTime,
+		checkDeviceResetTimeout,
+		checkPollIntervalInCmdLine,
+	}
+
+	for _, check := range checks {
+		if err := check(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func checkIPAndPortInPrometheus() error {
 	if port < portLeft || port > portRight {
 		return errors.New("the port is invalid")
@@ -270,38 +296,71 @@ func checkIPAndPortInPrometheus() error {
 	return nil
 }
 
-func paramValidInPrometheus() error {
-	if err := checkIPAndPortInPrometheus(); err != nil {
-		return err
-	}
+func checkUpdateTime() error {
 	if updateTime > oneMinute || updateTime < 1 {
 		return errors.New("the updateTime is invalid")
 	}
-	if err := containerSockCheck(); err != nil {
-		return err
-	}
+	return nil
+}
+
+func checkLimitIPReqFormat() error {
 	reg := regexp.MustCompile(limiter.IPReqLimitReg)
 	if !reg.Match([]byte(limitIPReq)) {
 		return errors.New("limitIPReq format error")
 	}
+	return nil
+}
+
+func checkLimitIPConn() error {
 	if limitIPConn < 1 || limitIPConn > maxIPConnLimit {
 		return errors.New("limitIPConn is invalid")
 	}
+	return nil
+}
+
+func checkLimitTotalConn() error {
 	if limitTotalConn < 1 || limitTotalConn > maxConcurrency {
 		return errors.New("limitTotalConn is invalid")
 	}
+	return nil
+}
+
+func checkCacheSize() error {
 	if cacheSize < 1 || cacheSize > limiter.DefaultCacheSize*tenDays {
 		return errors.New("cacheSize is invalid")
 	}
+	return nil
+}
+
+func checkConcurrency() error {
 	if concurrency < 1 || concurrency > maxConcurrency {
 		return errors.New("concurrency is invalid")
 	}
+	return nil
+}
+
+func checkProfilingTime() error {
 	if profilingTime < 1 || profilingTime > maxProfilingTime {
 		return errors.New("profilingTime range error")
 	}
+	return nil
+}
+
+func checkHccsBWProfilingTime() error {
 	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
 		return errors.New("hccsBWProfilingTime range error")
 	}
+	return nil
+}
+
+func checkDeviceResetTimeout() error {
+	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
+		return errors.New("deviceResetTimeout range error")
+	}
+	return nil
+}
+
+func checkPollIntervalInCmdLine() error {
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
 		return fmt.Errorf("%s is not support this scene", pollIntervalStr)
@@ -368,6 +427,9 @@ func init() {
 		"config pcie bandwidth profiling time, range is [1, 2000]")
 	flag.IntVar(&hccsBWProfilingTime, hccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
 		"config hccs bandwidth profiling time, range is [1, 1000]")
+	flag.IntVar(&deviceResetTimeout, api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"when npu-exporter starts, if the number of chips is insufficient, the maximum duration to wait for "+
+			"the driver to report all chips, unit second, range [10, 600]")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
