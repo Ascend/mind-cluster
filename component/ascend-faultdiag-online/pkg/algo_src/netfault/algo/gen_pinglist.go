@@ -1096,7 +1096,7 @@ func (nd *NetDetect) a3NodeRingPing(layer string, layerIp string, childLayerList
 	sortSdidList(srcSdidList)
 
 	// 获取环ping list
-	dstSdidList := moveSliceLeftOneStep(srcSdidList)
+	dstSdidList := moveSliceLeftTwoStep(srcSdidList)
 
 	// 生成ping_dict_key
 	pingDictKey := fmt.Sprintf("%s%s%s", layer, portIntervalChar, layerIp)

@@ -23,6 +23,8 @@ import (
 	"sort"
 )
 
+const moveDeviceStep = 2
+
 // 字符串切片翻转
 func reverseSlice(s []string) []string {
 	// 创建一个新的切片，长度与原切片相同
@@ -102,18 +104,12 @@ func removeElements(a, b []string) []string {
 	return result
 }
 
-// 返回一个新的切片，整体元素向左移动一位
-func moveSliceLeftOneStep(slice []string) []string {
-	if len(slice) == 0 {
+// 返回一个新的切片，整体元素向左移动2位
+func moveSliceLeftTwoStep(slice []string) []string {
+	if len(slice) == 0 || len(slice) <= moveDeviceStep {
 		return slice
 	}
-
-	newSlice := make([]string, len(slice))
-
-	copy(newSlice, slice[1:])
-	newSlice[len(newSlice)-1] = slice[0]
-
-	return newSlice
+	return append(slice[moveDeviceStep:len(slice)-1], slice[:moveDeviceStep]...)
 }
 
 // 字符串切片是否包含指定字符串
