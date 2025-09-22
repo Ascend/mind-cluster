@@ -332,25 +332,25 @@ func TestNewNetDetect(t *testing.T) {
 }
 
 func TestMoveSliceLeftOneStep(t *testing.T) {
-	convey.Convey("Testing moveSliceLeftOneStep function", t, func() {
+	convey.Convey("Testing moveSliceLeftTwoStep function", t, func() {
 		convey.Convey("When the slice is empty", func() {
-			result := moveSliceLeftOneStep([]string{})
+			result := moveSliceLeftTwoStep([]string{})
 			convey.So(result, convey.ShouldResemble, []string{})
 		})
 
 		convey.Convey("When the slice has one element", func() {
-			result := moveSliceLeftOneStep([]string{"A"})
+			result := moveSliceLeftTwoStep([]string{"A"})
 			convey.So(result, convey.ShouldResemble, []string{"A"})
 		})
 
 		convey.Convey("When the slice has multiple elements", func() {
-			result := moveSliceLeftOneStep([]string{"A", "B", "C", "D"})
-			convey.So(result, convey.ShouldResemble, []string{"B", "C", "D", "A"})
+			result := moveSliceLeftTwoStep([]string{"A", "B", "C", "D"})
+			convey.So(result, convey.ShouldResemble, []string{"C", "D", "A", "B"})
 		})
 
 		convey.Convey("When the slice has two elements", func() {
-			result := moveSliceLeftOneStep([]string{"X", "Y"})
-			convey.So(result, convey.ShouldResemble, []string{"Y", "X"})
+			result := moveSliceLeftTwoStep([]string{"X", "Y"})
+			convey.So(result, convey.ShouldResemble, []string{"X", "Y"})
 		})
 	})
 }
