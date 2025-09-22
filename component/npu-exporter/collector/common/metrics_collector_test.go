@@ -81,8 +81,8 @@ func TestPreCollect(t *testing.T) {
 		deviceType string
 		expected   bool
 	}{
-		{name: "TestPreCollect_" + api.Ascend910,
-			deviceType: api.Ascend910,
+		{name: "TestPreCollect_" + api.Ascend910A,
+			deviceType: api.Ascend910A,
 			expected:   true,
 		},
 		{name: "TestPreCollect_" + api.Ascend310,
