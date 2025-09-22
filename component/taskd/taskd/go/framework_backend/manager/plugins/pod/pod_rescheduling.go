@@ -16,9 +16,13 @@
 package podrescheduling
 
 import (
-	"ascend-common/common-utils/hwlog"
-	clusterd_constant "clusterd/pkg/common/constant"
+	"encoding/json"
 	"strconv"
+
+	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
+	commonutils "ascend-common/common-utils/utils"
+	clusterd_constant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
@@ -38,6 +42,9 @@ type PodReschedulingPlugin struct {
 	exitStratrgy     bool
 	actions          []string
 	handleMap        map[string]string
+	oldRetryTimes    int
+	newRetryTimes    int
+	isRetried        bool
 }
 
 var (
@@ -78,6 +85,16 @@ func (pod *PodReschedulingPlugin) Handle() (infrastructure.HandleResult, error) 
 			restartReceiver = append(restartReceiver, agentName)
 		}
 	}
+	if pod.isRetried {
+		pod.restartTimes -= 1
+		pod.oldRetryTimes = pod.newRetryTimes
+		pod.addHandleMsgs(exitReceiver, restartReceiver)
+		hwlog.RunLog.Infof("pod rescheduling plugin handle isRetried, restart times: %d, exit receiver: %v, restart receiver: %v",
+			pod.restartTimes, exitReceiver, restartReceiver)
+		pod.resetPluginInfo()
+		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
+	}
+
 	if len(exitReceiver) == 0 {
 		pod.resetPluginInfo()
 		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
@@ -97,16 +114,18 @@ func (pod *PodReschedulingPlugin) Handle() (infrastructure.HandleResult, error) 
 }
 
 func (pod *PodReschedulingPlugin) addHandleMsgs(exitReciver []string, restartReceiver []string) {
-	pod.pullMsgs = append(pod.pullMsgs, infrastructure.Msg{
-		Receiver: []string{constant.ControllerName},
-		Body: storage.MsgBody{
-			MsgType: constant.Action,
-			Extension: map[string]string{
-				constant.Actions:        utils.ObjToString(pod.actions),
-				constant.ChangeStrategy: clusterd_constant.ProcessExitStrategyName,
+	if pod.uuid != "" {
+		pod.pullMsgs = append(pod.pullMsgs, infrastructure.Msg{
+			Receiver: []string{constant.ControllerName},
+			Body: storage.MsgBody{
+				MsgType: constant.Action,
+				Extension: map[string]string{
+					constant.Actions:        utils.ObjToString(pod.actions),
+					constant.ChangeStrategy: clusterd_constant.ProcessExitStrategyName,
+				},
 			},
-		},
-	})
+		})
+	}
 	pod.pullMsgs = append(pod.pullMsgs, infrastructure.Msg{
 		Receiver: []string{common.MgrRole},
 		Body: storage.MsgBody{
@@ -180,13 +199,19 @@ func (pod *PodReschedulingPlugin) Predicate(shot storage.SnapShot) (infrastructu
 	}
 	hwlog.RunLog.Debugf("pod rescheduling plugin predicate, fault agent status: %v", pod.faultAgentStatus)
 	if pod.faultOccur {
+		hwlog.RunLog.Info("pod.faultOccur is true, pluin candidate")
 		return infrastructure.PredicateResult{PluginName: pod.Name(),
 			CandidateStatus: constant.CandidateStatus,
 			PredicateStream: map[string]string{
 				constant.ResumeTrainingAfterFaultStream: "",
 			}}, nil
 	}
-
+	if pod.checkResetConfig() {
+		hwlog.RunLog.Info("reset json changed, pluin candidate")
+		return infrastructure.PredicateResult{PluginName: pod.Name(),
+			CandidateStatus: constant.CandidateStatus,
+			PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""}}, nil
+	}
 	return infrastructure.PredicateResult{
 		PluginName: pod.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 }
@@ -197,13 +222,13 @@ func (pod *PodReschedulingPlugin) Release() error {
 }
 
 func (pod *PodReschedulingPlugin) resetPluginInfo() {
-	pod.pullMsgs = make([]infrastructure.Msg, 0)
 	pod.processStatus = ""
 	pod.faultAgentStatus = make(map[string]bool)
 	pod.exitNum = 0
 	pod.faultOccur = false
 	pod.exitStratrgy = false
 	pod.actions = make([]string, 0)
+	pod.isRetried = false
 }
 
 func (pod *PodReschedulingPlugin) updatePluginInfo(shot storage.SnapShot) {
@@ -292,4 +317,29 @@ func (pod *PodReschedulingPlugin) checkExitStrategy(shot storage.SnapShot) (infr
 		PredicateStream: map[string]string{
 			constant.ResumeTrainingAfterFaultStream: "",
 		}}, nil
+}
+
+func (pod *PodReschedulingPlugin) checkResetConfig() bool {
+	configBytes, err := commonutils.LoadFile(constant.ResetConfigPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("load reset config failed, err: %v", err)
+		return false
+	}
+	var result api.ResetCmInfo
+	err = json.Unmarshal(configBytes, &result)
+	if err != nil {
+		hwlog.RunLog.Errorf("unmarshal reset config failed, err: %v", err)
+		return false
+	}
+	if result.RetryTime < 0 {
+		hwlog.RunLog.Errorf("retry time is negative, retryTime: %v", result.RetryTime)
+		return false
+	}
+	if pod.oldRetryTimes != result.RetryTime {
+		hwlog.RunLog.Infof("retry time changes, old: %v, new: %v", pod.oldRetryTimes, result.RetryTime)
+		pod.newRetryTimes = result.RetryTime
+		pod.isRetried = true
+		return true
+	}
+	return false
 }

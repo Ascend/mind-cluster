@@ -407,4 +407,6 @@ const (
 	SaveAndExit = "save_and_exit"
 	// HandleDone handle done
 	HandleDone = "done"
+	// ResetConfigPath reset config path
+	ResetConfigPath = "/user/restore/reset/config/reset.json"
 )
