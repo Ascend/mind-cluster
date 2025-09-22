@@ -427,10 +427,12 @@ def build_other_group(nccl_comm_cfgs):
         ttp_logger.LOGGER.info(f'rank:{args.rank} initialize pipeline model parallel group for new stream')
         initialize_context_parallel_group_for_hybrid_cp(args, nccl_comm_cfgs)
 
-    if (args.use_nd_matmul or args.tp_2d) and hasattr(mindspeed_mpu, 'initialize_ndmm_parallel_group'):
+    use_nd_matmul_str = 'use_nd_matmul'
+    if (getattr(args, use_nd_matmul_str, False) or args.tp_2d) and hasattr(mindspeed_mpu,
+                                                                         'initialize_ndmm_parallel_group'):
         ttp_logger.LOGGER.info(f'rank:{args.rank} initialize ndmm parallel group')
-        nd1_dim1_sz = args.nd1_dim1_size if args.use_nd_matmul else args.tp_x
-        nd2_dim1_sz = args.nd2_dim1_size if args.use_nd_matmul else args.tp_y
+        nd1_dim1_sz = args.nd1_dim1_size if getattr(args, use_nd_matmul_str, False) else args.tp_x
+        nd2_dim1_sz = args.nd2_dim1_size if getattr(args, use_nd_matmul_str, False) else args.tp_y
         mindspeed_mpu.initialize_ndmm_parallel_group(nccl_comm_cfgs,
                                                     tensor_model_parallel_size=args.tensor_model_parallel_size,
                                                     nd1_dim1_size=nd1_dim1_sz,
