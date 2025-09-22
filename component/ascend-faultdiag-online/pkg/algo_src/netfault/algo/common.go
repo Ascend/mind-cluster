@@ -109,7 +109,7 @@ func moveSliceLeftTwoStep(slice []string) []string {
 	if len(slice) == 0 || len(slice) <= moveDeviceStep {
 		return slice
 	}
-	return append(slice[moveDeviceStep:len(slice)-1], slice[:moveDeviceStep]...)
+	return append(slice[moveDeviceStep:], slice[:moveDeviceStep]...)
 }
 
 // 字符串切片是否包含指定字符串
