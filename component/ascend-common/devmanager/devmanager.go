@@ -18,6 +18,7 @@ package devmanager
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -97,7 +98,7 @@ const (
 	// init dcmi interface max retry times
 	maxRetries = 6
 	// init dcmi interface retry delay
-	retryDelay = 10 * time.Second
+	defaultRetryDelay = 10
 )
 
 var (
@@ -114,32 +115,41 @@ type npuIdMapping struct {
 }
 
 // GetDeviceManager singleton to init global device manager and init dcmi interface
-func GetDeviceManager() (*DeviceManager, error) {
+func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 	devManagerOnce.Do(func() {
 		// a common dcmi Manager is initiated for init dcmi interface, you can specify an specific manager in later
 		dcMgr := dcmi.DcManager{}
-		var cardNum int32
-		var cardList []int32
-		var err error
+		var retryDelay time.Duration = defaultRetryDelay
+		hwlog.RunLog.Infof("get card list from dcmi reset timeout is %d", resetTimeout)
 		// if check card list failed, retry maxRetries times
-		for retry := 0; retry < maxRetries; retry++ {
-			if err = dcMgr.DcInit(); err != nil {
+		for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += int(retryDelay) {
+			if err := dcMgr.DcInit(); err != nil {
 				hwlog.RunLog.Errorf("deviceManager init failed, prepare dcmi failed, err: %v", err)
 				return
 			}
-			cardNum, cardList, err = dcMgr.DcGetCardList()
+			cardNum, cardList, err := dcMgr.DcGetCardList()
 			if err == nil && int(cardNum) == len(cardList) {
 				break
 			}
+			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
+				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), diffTime))
+			}
+			retryCount++
 			hwlog.RunLog.Warnf("deviceManager get card list failed (attempt %d), cardNum=%d, cardList=%v, "+
-				"err: %v", retry+1, cardNum, cardList, err)
-			if retry < maxRetries-1 {
+				"err: %v", retryCount, cardNum, cardList, err)
+			if currentTime+int(retryDelay) <= resetTimeout {
 				if err = dcMgr.DcShutDown(); err != nil {
 					hwlog.RunLog.Errorf("deviceManager shut down failed, err: %v", err)
 					return
 				}
-				time.Sleep(retryDelay)
+				time.Sleep(retryDelay * time.Second)
+				continue
 			}
+			if int(cardNum) != len(cardList) {
+				hwlog.RunLog.Warnf("deviceManager get cardList is %v, but cardNum is %v, "+
+					"please check whether the real number of npu matches the cardList", cardList, cardNum)
+			}
+
 		}
 		devManager = &DeviceManager{}
 		devManager.DcMgr = &dcMgr
@@ -154,7 +164,6 @@ func GetDeviceManager() (*DeviceManager, error) {
 		return nil, errors.New("device Manager is nil, may encounter an exception during initialization. " +
 			"You can check the system log to confirm")
 	}
-
 	return devManager, nil
 }
 
@@ -185,13 +194,13 @@ func (d *DeviceManager) GetDevType() string {
 }
 
 // AutoInit auto detect npu chip type and return the corresponding processing object
-func AutoInit(dType string) (*DeviceManager, error) {
-	chipInfo, boardInfo, err := getDeviceInfoForInit()
+func AutoInit(dType string, resetTimeout int) (*DeviceManager, error) {
+	chipInfo, boardInfo, err := getDeviceInfoForInit(resetTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("auto init failed, err: %s", err)
 	}
 	var devMgr *DeviceManager
-	if devMgr, err = GetDeviceManager(); err != nil || devMgr == nil {
+	if devMgr, err = GetDeviceManager(resetTimeout); err != nil || devMgr == nil {
 		return nil, err
 	}
 	mainBoardId, err := getValidMainBoardInfo(devMgr.DcMgr)
@@ -230,10 +239,10 @@ func AutoInit(dType string) (*DeviceManager, error) {
 	return devMgr, nil
 }
 
-func getDeviceInfoForInit() (common.ChipInfo, common.BoardInfo, error) {
+func getDeviceInfoForInit(resetTimeout int) (common.ChipInfo, common.BoardInfo, error) {
 	var mgr *DeviceManager
 	var err error
-	if mgr, err = GetDeviceManager(); err != nil || mgr == nil {
+	if mgr, err = GetDeviceManager(resetTimeout); err != nil || mgr == nil {
 		return common.ChipInfo{}, common.BoardInfo{}, fmt.Errorf("get chip info failed, err: %v", err)
 	}
 	dcMgr := mgr.DcMgr

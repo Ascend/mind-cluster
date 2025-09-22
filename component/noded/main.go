@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"syscall"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/control"
@@ -73,6 +74,8 @@ var (
 	monitorPeriod int
 	// resultMaxAge pingmesh result max age
 	resultMaxAge int
+	// deviceResetTimeout device reset timeout duration
+	deviceResetTimeout int
 )
 
 func main() {
@@ -125,6 +128,9 @@ func init() {
 		"Maximum number of backup operation logs, range is (0, 30]")
 	flag.IntVar(&resultMaxAge, "resultMaxAge", pingmeshv1.DefaultResultMaxAge,
 		"Maximum number of days for backup run pingmesh result files, range [7, 700] days")
+	flag.IntVar(&deviceResetTimeout, api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"when noded starts, if the number of chips is insufficient, the maximum duration to wait for "+
+			"the driver to report all chips, unit second, range [10, 600]")
 }
 
 func checkParameters() bool {
@@ -141,13 +147,19 @@ func checkParameters() bool {
 			pingmeshv1.MaxResultMaxAge)
 		return false
 	}
+	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
+		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", deviceResetTimeout,
+			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+		return false
+	}
 	return true
 }
 
 func setParameters() {
 	common.ParamOption = common.Option{
-		ReportInterval: reportInterval,
-		MonitorPeriod:  monitorPeriod,
+		ReportInterval:     reportInterval,
+		MonitorPeriod:      monitorPeriod,
+		DeviceResetTimeout: deviceResetTimeout,
 	}
 }
 
