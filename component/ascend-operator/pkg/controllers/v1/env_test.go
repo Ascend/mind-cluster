@@ -30,10 +30,10 @@ const (
 	fakeAppLabelValue   = "appLabelValue"
 	msRoleIndex         = 6
 
-	ascend910            = "huawei.com/Ascend910"
-	ascend910vir2c       = "huawei.com/Ascend910-2c"
+	ascend910            = api.HuaweiAscend910
+	ascend910vir2c       = api.HuaweiAscend910 + "-2c"
 	chipsPerNode         = "16"
-	ascend910DownwardAPI = "metadata.annotations['huawei.com/Ascend910']"
+	ascend910DownwardAPI = "metadata.annotations['" + api.HuaweiAscend910 + "']"
 )
 
 // TestIsVirtualResourceReq test isVirtualResourceReq

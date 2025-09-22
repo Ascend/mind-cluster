@@ -73,7 +73,7 @@ func TestPodHasAllocated(t *testing.T) {
 			res := PodHasAllocated(pod)
 			convey.So(res, convey.ShouldEqual, true)
 		})
-		request := map[v1.ResourceName]resource.Quantity{"huawei.com/Ascend910": resource.
+		request := map[v1.ResourceName]resource.Quantity{api.HuaweiAscend910: resource.
 			MustParse("8")}
 		container.Resources.Requests = request
 		pod.Spec.Containers = []v1.Container{container}

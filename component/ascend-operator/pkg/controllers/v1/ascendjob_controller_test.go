@@ -243,7 +243,7 @@ func (s *fakePodLister) Pods(namespace string) corelisters.PodNamespaceLister {
 	return nil
 }
 
-const fakeResourceName = "huawei.com/Ascend910"
+const fakeResourceName = api.HuaweiAscend910
 
 func newCommonContainer() corev1.Container {
 	return corev1.Container{
