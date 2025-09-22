@@ -48,7 +48,7 @@ func getCallerInfo(ctx ...context.Context) string {
 		traceID = c.Value(ReqID)
 	}
 	goroutineID := getGoroutineID()
-	str := goroutineID
+	str := fmt.Sprintf("%-8s", goroutineID)
 	if userID != nil || traceID != nil {
 		str = fmt.Sprintf("%s{%#v}-{%#v} ", goroutineID, userID, traceID)
 	}

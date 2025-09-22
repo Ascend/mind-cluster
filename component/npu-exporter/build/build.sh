@@ -1,6 +1,6 @@
 #!/bin/bash
 # Perform  build npu-exporter
-# Copyright @ Huawei Technologies CO., Ltd. 2020-2023. All rights reserved
+# Copyright @ Huawei Technologies CO., Ltd. 2025-2025. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,9 @@ OUTPUT_NAME="npu-exporter"
 DOCKER_FILE_NAME="Dockerfile"
 A200ISOC_DOCKER_FILE_NAME="Dockerfile-310P-1usoc"
 A200ISOC_RUN_SHELL="run_for_310P_1usoc.sh"
+A200ISOC_DOCKER_FILE_NAME_CH="Dockerfile-I2-1usoc"
+A200ISOC_RUN_SHELL_CH="run_for_I2_1usoc.sh"
+
 
 function clean() {
   rm -rf "${TOP_DIR}"/output
@@ -57,15 +60,21 @@ function build() {
 function mv_file() {
   mv "${TOP_DIR}"/cmd/npu-exporter/${OUTPUT_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/npu-exporter.yaml "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
-  cp "${TOP_DIR}"/build/npu-exporter-310P-1usoc.yaml "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/npu-exporter-310P-1usoc.yaml "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
-  sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
+  sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/ascend*/alan/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
+  sed -i "s/310p*/i2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/310P*/I2/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/ascend*/alan/" "${TOP_DIR}"/output/npu-exporter-I2-1usoc-"${build_version}".yaml
+  sed -i "s/run_for_310P_1usoc.sh*/run_for_I2_1usoc.sh/" "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME}
+
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME} "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/${A200ISOC_RUN_SHELL} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME} "${TOP_DIR}"/output/${A200ISOC_DOCKER_FILE_NAME_CH}
+  cp "${TOP_DIR}"/build/${A200ISOC_RUN_SHELL} "${TOP_DIR}"/output/${A200ISOC_RUN_SHELL_CH}
   chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
-  chmod 500 "${TOP_DIR}"/output/${A200ISOC_RUN_SHELL}
+  chmod 500 "${TOP_DIR}"/output/${A200ISOC_RUN_SHELL_CH}
 
 }
 

@@ -82,25 +82,25 @@ func TestIsSupported(t *testing.T) {
 	cases := []testCase{
 		buildTestCase("DdrCollector: testIsSupported on Ascend310", &DdrCollector{}, api.Ascend310, true),
 		buildTestCase("DdrCollector: testIsSupported on Ascend310P", &DdrCollector{}, api.Ascend310P, true),
-		buildTestCase("DdrCollector: testIsSupported on Ascend910", &DdrCollector{}, api.Ascend910, true),
+		buildTestCase("DdrCollector: testIsSupported on Ascend910A", &DdrCollector{}, api.Ascend910A, true),
 		buildTestCase("DdrCollector: testIsSupported on Ascend910B", &DdrCollector{}, api.Ascend910B, false),
 		buildTestCase("DdrCollector: testIsSupported on Ascend910A3", &DdrCollector{}, api.Ascend910A3, false),
 
 		buildTestCase("HccsCollector: testIsSupported on Ascend310", &HccsCollector{}, api.Ascend310, false),
 		buildTestCase("HccsCollector: testIsSupported on Ascend310P", &HccsCollector{}, api.Ascend310P, false),
-		buildTestCase("HccsCollector: testIsSupported on Ascend910", &HccsCollector{}, api.Ascend910, false),
+		buildTestCase("HccsCollector: testIsSupported on Ascend910A", &HccsCollector{}, api.Ascend910A, false),
 		buildTestCase("HccsCollector: testIsSupported on Ascend910B", &HccsCollector{}, api.Ascend910B, true),
 		buildTestCase("HccsCollector: testIsSupported on Ascend910A3", &HccsCollector{}, api.Ascend910A3, true),
 
 		buildTestCase("SioCollector: testIsSupported on Ascend310", &SioCollector{}, api.Ascend310, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend310P", &SioCollector{}, api.Ascend310P, false),
-		buildTestCase("SioCollector: testIsSupported on Ascend910", &SioCollector{}, api.Ascend910, false),
+		buildTestCase("SioCollector: testIsSupported on Ascend910A", &SioCollector{}, api.Ascend910A, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend910B", &SioCollector{}, api.Ascend910B, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend910A3", &SioCollector{}, api.Ascend910A3, true),
 
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310", &VnpuCollector{}, api.Ascend310, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, api.Ascend310P, true),
-		buildTestCase("VnpuCollector: testIsSupported on Ascend910", &VnpuCollector{}, api.Ascend910, false),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910A", &VnpuCollector{}, api.Ascend910A, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910B", &VnpuCollector{}, api.Ascend910B, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910A3", &VnpuCollector{}, api.Ascend910A3, false),
 	}
