@@ -73,8 +73,8 @@ func mockSwitchInfo() *constant.SwitchInfo {
 				{AssembledFaultCode: faultCode2},
 			},
 			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
-				faultCode1: {FaultLevel: constant.NotHandleFault},
-				faultCode2: {FaultLevel: constant.RestartRequest},
+				faultCode1 + "_0_0": {FaultLevel: constant.NotHandleFault},
+				faultCode2 + "_0_0": {FaultLevel: constant.RestartRequest},
 			},
 			FaultLevel: constant.RestartRequest,
 			NodeStatus: constant.UnHealthyState,
@@ -279,7 +279,7 @@ func TestGetDeletedSwitchL2Fault(t *testing.T) {
 			convey.So(len(switchInfo.FaultInfo) > 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("if should not report fault, add fault to delete list", func() {
-			delete(switchInfo.FaultTimeAndLevelMap, faultCode1)
+			delete(switchInfo.FaultTimeAndLevelMap, faultCode1+"_0_0")
 			patch := gomonkey.ApplyFuncReturn(shouldReportFault, false)
 			defer patch.Reset()
 			res := getDeletedSwitchL2Fault(switchInfo, jobInfoMap)

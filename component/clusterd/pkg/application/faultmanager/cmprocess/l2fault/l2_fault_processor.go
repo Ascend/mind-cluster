@@ -17,6 +17,7 @@
 package l2fault
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -206,17 +207,19 @@ func getDeletedSwitchL2Fault(switchInfo *constant.SwitchInfo, jobInfoMap map[str
 	deletedFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	for _, jobInfo := range jobInfoMap {
 		for _, faultInfo := range switchInfo.FaultInfo {
-			faultTimeAndLevel, ok := switchInfo.FaultTimeAndLevelMap[faultInfo.AssembledFaultCode]
+			faultTimeAndLevelKey := faultInfo.AssembledFaultCode + "_" + strconv.Itoa(int(faultInfo.SwitchChipId)) +
+				"_" + strconv.Itoa(int(faultInfo.SwitchPortId))
+			faultTimeAndLevel, ok := switchInfo.FaultTimeAndLevelMap[faultTimeAndLevelKey]
 			if !ok {
-				hwlog.RunLog.Warnf("switchInfo has no faultTimeAndLevel for faultCode:%s, report fault:%v",
-					faultInfo.AssembledFaultCode, faultInfo)
+				hwlog.RunLog.Warnf("switchInfo has no faultTimeAndLevel for faultTimeAndLevelKey:%s, "+
+					"report fault:%v", faultTimeAndLevelKey, faultInfo)
 				filteredFaults = append(filteredFaults, faultInfo)
 				continue
 			}
 			if shouldReportFault(faultTimeAndLevel, jobInfo, "", faultInfo.AssembledFaultCode) {
 				filteredFaults = append(filteredFaults, faultInfo)
 			} else {
-				delete(switchInfo.FaultTimeAndLevelMap, faultInfo.AssembledFaultCode)
+				delete(switchInfo.FaultTimeAndLevelMap, faultTimeAndLevelKey)
 				deletedFaults = append(deletedFaults, faultInfo)
 			}
 		}
