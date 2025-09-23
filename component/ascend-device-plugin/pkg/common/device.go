@@ -132,7 +132,9 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]
 		}
 		reportFaultCodes = append(reportFaultCodes, faultStr)
-		tmpFaultTimeAndLevelMap[faultInfo.AssembledFaultCode] = FaultTimeAndLevel{
+		faultTimeAndLevelKey := faultInfo.AssembledFaultCode + "_" + strconv.Itoa(int(faultInfo.SwitchChipId)) + "_" +
+			strconv.Itoa(int(faultInfo.SwitchPortId))
+		tmpFaultTimeAndLevelMap[faultTimeAndLevelKey] = FaultTimeAndLevel{
 			FaultTime:  faultInfo.AlarmRaisedTime * SecondsToMilliseconds,
 			FaultLevel: convertToSwitchLevelStr(SwitchFaultLevelMap[faultInfo.AssembledFaultCode]),
 		}
