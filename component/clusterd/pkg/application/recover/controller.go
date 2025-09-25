@@ -1739,7 +1739,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 		return common.ScheduleSuccessEvent, common.OK, nil
 	}
 	scheduleSuccess := false
-	for i := 1; i <= constant.CheckPGRunningRetryTimes; i++ {
+	for i := 1; i <= constant.CheckPodReschedulingTimes; i++ {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if job.GetJobIsRunning(ctl.jobInfo.JobId) &&
 			common.FaultPodAllRescheduled(ctl.jobInfo.JobId, ctl.faultPod) {
@@ -1747,7 +1747,7 @@ func (ctl *EventController) handleListenScheduleResult() (string, common.RespCod
 			break
 		}
 	}
-	if scheduleSuccess {
+	if scheduleSuccess || job.GetJobIsRunning(ctl.jobInfo.JobId) {
 		return common.ScheduleSuccessEvent, common.OK, nil
 	}
 	return common.ScheduleTimeoutEvent, common.ScheduleTimeout, nil
