@@ -143,6 +143,9 @@ func calDynamicThresholds(samePaths []map[string]any, faultType string) float64 
 	values := make([]float64, 0, len(samePaths))
 	for _, item := range samePaths {
 		if v, ok := item[faultType].(float64); ok {
+			if faultType == avgDelayConstant {
+				v = math.Round(v / convertFactor)
+			}
 			values = append(values, v)
 		}
 	}

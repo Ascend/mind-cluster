@@ -28,6 +28,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
+const convertFactor = 1000
+
 // StartFaultDetect 故障检测算法入口
 func (nd *NetDetect) StartFaultDetect(input []map[string]any) []any {
 	rootCauseAlarmAll := make([]any, 0)
@@ -481,6 +483,9 @@ func getCurPathIndicator(data []map[string]any, path map[string]any, detectType 
 			curValue, ok := item[detectType].(float64)
 			if !ok {
 				continue
+			}
+			if detectType == avgDelayConstant {
+				curValue = math.Round(curValue / convertFactor)
 			}
 			sum += curValue
 			count++
