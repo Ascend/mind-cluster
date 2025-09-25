@@ -50,7 +50,11 @@ func GetLoggerConfigWithFileName(logFileName string) (*hwlog.LogConfig, error) {
 	} else {
 		logFile = filepath.Join(logFilePath, logFileName)
 	}
-	checkPath, err := utils.CheckPath(logFile)
+	absLogPath, err := filepath.Abs(logFile)
+	if err != nil {
+		return nil, fmt.Errorf("get abs log file path error: %v", err)
+	}
+	checkPath, err := utils.CheckPath(absLogPath)
 	if err != nil {
 		return nil, fmt.Errorf("check log file path error: %v", err)
 	}

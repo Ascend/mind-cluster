@@ -16,14 +16,18 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -180,6 +184,115 @@ func TestGetFaultRanksMapByList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetFaultRanksMapByList(tt.args.faultRanks); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetFaultRanksMapByList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func buildLogNormalTestCases() []struct {
+	name           string
+	logFileName    string
+	envValue       string
+	setupMocks     func() *gomonkey.Patches
+	expectError    bool
+	expectedErrMsg string
+} {
+	return []struct {
+		name           string
+		logFileName    string
+		envValue       string
+		setupMocks     func() *gomonkey.Patches
+		expectError    bool
+		expectedErrMsg string
+	}{
+		{
+			name:        "normal case, log env is nil, use default path",
+			logFileName: testAbsoluteLogPath,
+			envValue:    "",
+			setupMocks: func() *gomonkey.Patches {
+				patches := gomonkey.ApplyFuncReturn(filepath.Abs, "/default/path/test.log", nil)
+				return patches
+			},
+			expectError: false,
+		},
+		{
+			name:        "normal case, log env is not nil, use define path",
+			logFileName: testAbsoluteLogPath,
+			envValue:    "/custom/log/path",
+			setupMocks: func() *gomonkey.Patches {
+				patches := gomonkey.ApplyFuncReturn(filepath.Abs, "/custom/log/path/test.log", nil)
+				return patches
+			},
+			expectError: false,
+		},
+	}
+}
+
+func buildLogAbnormalTestCases() []struct {
+	name           string
+	logFileName    string
+	envValue       string
+	setupMocks     func() *gomonkey.Patches
+	expectError    bool
+	expectedErrMsg string
+} {
+	return []struct {
+		name           string
+		logFileName    string
+		envValue       string
+		setupMocks     func() *gomonkey.Patches
+		expectError    bool
+		expectedErrMsg string
+	}{
+		{
+			name:        "abnormal case, get absolute path failed",
+			logFileName: testRelativeLogPath,
+			envValue:    "",
+			setupMocks: func() *gomonkey.Patches {
+				patches := gomonkey.ApplyFuncReturn(filepath.Abs, "", mockErr)
+				return patches
+			},
+			expectError:    true,
+			expectedErrMsg: fmt.Sprintf("get abs log file path error: %s", mockErr.Error()),
+		},
+		{
+			name:        "abnormal case, init runlogger failed",
+			logFileName: testAbsoluteLogPath,
+			envValue:    "",
+			setupMocks: func() *gomonkey.Patches {
+				patches := gomonkey.ApplyFuncReturn(filepath.Abs, "/default/path/test.log", nil).
+					ApplyFuncReturn(hwlog.InitRunLogger, mockErr)
+				return patches
+			},
+			expectError:    true,
+			expectedErrMsg: mockErr.Error(),
+		},
+	}
+}
+
+func TestInitHwLog(t *testing.T) {
+	for _, tt := range append(buildLogNormalTestCases(), buildLogAbnormalTestCases()...) {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := dealEnv(t, tt.envValue); err != nil {
+				return
+			}
+
+			var patches *gomonkey.Patches
+			if tt.setupMocks != nil {
+				patches = tt.setupMocks()
+			}
+			if patches != nil {
+				defer patches.Reset()
+			}
+
+			err := InitHwLog(tt.logFileName, context.Background())
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.expectedErrMsg != "" {
+					assert.Contains(t, err.Error(), tt.expectedErrMsg)
+				}
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

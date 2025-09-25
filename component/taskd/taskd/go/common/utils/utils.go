@@ -41,8 +41,13 @@ func InitHwLog(logFileName string, ctx context.Context) error {
 	} else {
 		logFile = filepath.Join(logFilePath, logFileName)
 	}
+	absLogPath, err := filepath.Abs(logFile)
+	if err != nil {
+		fmt.Printf("get abs log file path failed, error: %v\n", err)
+		return fmt.Errorf("get abs log file path error: %v", err)
+	}
 	hwLogConfig := hwlog.LogConfig{
-		LogFileName:   logFile,
+		LogFileName:   absLogPath,
 		LogLevel:      constant.DefaultLogLevel,
 		MaxBackups:    constant.DefaultMaxBackups,
 		MaxAge:        constant.DefaultMaxAge,
