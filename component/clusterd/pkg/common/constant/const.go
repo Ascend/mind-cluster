@@ -129,6 +129,8 @@ const (
 	MaxUuidRandomLength = 32
 	// CheckPGRunningRetryTimes check pg change running state retry times
 	CheckPGRunningRetryTimes = 54
+	// CheckPodReschedulingTimes check pg change running state for exit strategy
+	CheckPodReschedulingTimes = 4
 	// SleepSecondBeforeCheckPGRunning check pg state interval
 	SleepSecondBeforeCheckPGRunning = 5
 	// WaitAgentGetFaultRank wait agent get fault rank interval
