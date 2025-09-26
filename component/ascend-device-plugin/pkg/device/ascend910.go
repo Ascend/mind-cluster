@@ -531,7 +531,8 @@ func (hnm *HwAscend910Manager) execHotReset(devInfo *common.DevFaultInfo) error 
 	if err := hnm.tryResetDevice(cardId, deviceId); err != nil {
 		offlineInBandFailLogicId.Store(logicID, struct{}{})
 		hwlog.RunLog.Errorf("failed to reset device, err %v", err)
-		return nil
+		FreeBusyDev(cardId, deviceId)
+		return err
 	}
 	if err := hnm.isRingResetComplete(logicID, shouldCheckNet); err != nil {
 		hwlog.RunLog.Errorf("fail while waiting for hot reset complete, err %v", err)
@@ -1893,6 +1894,7 @@ func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 				errList = append(errList, err)
 				resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId,
 					LogicID: resetLogicId, shouldCheckNet: shouldCheckNet})
+				FreeBusyDev(cardId, deviceId)
 				return
 			}
 			// wait for the device to reset completely
