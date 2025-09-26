@@ -233,6 +233,11 @@ func addMSPodScheduleEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerInde
 	if !isPodScheduleStrategy(pi.job) {
 		return
 	}
+	for _, env := range pod.Spec.Containers[containerIndex].Env {
+		if env.Name == api.MsRecoverEnv {
+			return
+		}
+	}
 	addEnvValue(pod, api.MsRecoverEnv, `'{`+api.MsRscStrategy+`}'`, containerIndex)
 }
 
