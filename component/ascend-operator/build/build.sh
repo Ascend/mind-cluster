@@ -18,7 +18,7 @@ arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
 
 OUTPUT_NAME="alan-operator"
-sed -i "s/alan-operator:.*/alan-operator:${build_version}/" "${TOP_DIR}"/build/ascend-operator.yaml
+sed -i "s/ascend-operator:.*/alan-operator:${build_version}/" "${TOP_DIR}"/build/ascend-operator.yaml
 
 DOCKER_FILE_NAME="Dockerfile"
 
