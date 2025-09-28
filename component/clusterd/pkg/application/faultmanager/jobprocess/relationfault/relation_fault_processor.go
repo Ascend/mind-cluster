@@ -146,6 +146,7 @@ type FaultJob struct {
 	TriggerFault        []constant.FaultInfo
 	processedFaultInfo  []constant.FaultInfo
 	TMOutTriggerFault   []constant.FaultInfo
+	TMOutRelationFaults []*constant.FaultInfo
 	FaultStrategy       constant.FaultStrategy
 	SeparateNodes       sets.String
 	AllFaultCode        sets.String
@@ -255,16 +256,31 @@ func (fJob *FaultJob) Process() {
 
 func (fJob *FaultJob) preStartProcess() {
 	var networkFaultInfo []*constant.FaultInfo
+	tmpTMOutRelationFaults := make([]*constant.FaultInfo, 0)
 	for _, fault := range fJob.RelationFaults {
 		if fJob.AllFaultCode.Has(fault.FaultUid) {
 			networkFaultInfo = append(networkFaultInfo, fault)
 			continue
 		}
+		tmpTMOutRelationFaults = append(tmpTMOutRelationFaults, fault)
 		hwlog.RunLog.Infof("fault code is not exist %v, delete it in ProcessingFaultCode", fault.FaultUid)
 		fJob.ProcessingFaultCode.Delete(fault.FaultUid)
 	}
+	now := time.Now().UnixMilli()
+	for _, fault := range fJob.TMOutRelationFaults {
+		if fault == nil {
+			continue
+		}
+		if now-fault.FaultTime > fault.DealMaxTime*constant.Kilo {
+			continue
+		}
+		tmpTMOutRelationFaults = append(tmpTMOutRelationFaults, fault)
+	}
 	fJob.RelationFaults = networkFaultInfo
+	fJob.TMOutRelationFaults = tmpTMOutRelationFaults
 	hwlog.RunLog.Debugf("after perstart precess, relation faults is %v", util.ObjToString(fJob.RelationFaults))
+	hwlog.RunLog.Debugf("after perstart precess, TMOutRelationFaults faults is %v",
+		util.ObjToString(fJob.TMOutRelationFaults))
 }
 
 func (fJob *FaultJob) preStopProcess() {
@@ -703,9 +719,26 @@ func (fJob *FaultJob) getMatchedDevices(configTable constant.RelationFaultStrate
 
 func (fJob *FaultJob) processNetworkFault() {
 	nodeLvList, deviceLvList := fJob.handleJobFault(fJob.RelationFaults, fJob.TriggerFault, relationFaultStrategies)
-
+	// if fault is cqe error, record link down fault in deal max time
+	if cqeTriggerFault := fJob.getCQETriggerFault(); len(cqeTriggerFault) != 0 {
+		hwlog.RunLog.Info("deal cqe trigger fault by in deal max time link down fault")
+		newNodeLvList, newDeviceLvList :=
+			fJob.handleJobFault(fJob.TMOutRelationFaults, cqeTriggerFault, relationFaultStrategies)
+		util.MergeStringMapList(nodeLvList, newNodeLvList)
+		util.MergeStringMapList(deviceLvList, newDeviceLvList)
+	}
 	fJob.FaultStrategy = constant.FaultStrategy{
 		NodeLvList:   nodeLvList,
 		DeviceLvList: deviceLvList,
 	}
+}
+
+func (fJob *FaultJob) getCQETriggerFault() []constant.FaultInfo {
+	cqeTriggerFault := make([]constant.FaultInfo, 0)
+	for _, fault := range fJob.TriggerFault {
+		if faultdomain.IsCqeFault(fault.FaultCode) {
+			cqeTriggerFault = append(cqeTriggerFault, fault)
+		}
+	}
+	return cqeTriggerFault
 }

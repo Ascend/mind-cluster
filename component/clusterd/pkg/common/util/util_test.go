@@ -336,3 +336,27 @@ func TestIsSliceContain(t *testing.T) {
 		})
 	})
 }
+
+func TestMergeStringMapList(t *testing.T) {
+	convey.Convey("Test mergeStringMapList", t, func() {
+		convey.Convey("When new is nil then return old map", func() {
+			var oldMap map[string]string = nil
+			newMap := map[string]string{"key1": "value1"}
+			MergeStringMapList(oldMap, newMap)
+			convey.So(oldMap, convey.ShouldBeNil)
+
+			oldMap = map[string]string{"key1": "value1"}
+			newMap = nil
+			MergeStringMapList(oldMap, newMap)
+			convey.So(oldMap, convey.ShouldResemble, map[string]string{"key1": "value1"})
+		})
+
+		convey.Convey("When new contains new key-value pairs then return expectedMap", func() {
+			oldMap := map[string]string{"key1": "value1"}
+			newMap := map[string]string{"key2": "value2", "key3": "value3"}
+			expectedMap := map[string]string{"key1": "value1", "key2": "value2", "key3": "value3"}
+			MergeStringMapList(oldMap, newMap)
+			convey.So(oldMap, convey.ShouldResemble, expectedMap)
+		})
+	})
+}
