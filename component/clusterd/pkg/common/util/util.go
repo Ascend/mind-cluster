@@ -189,3 +189,13 @@ func RemoveDuplicates[T comparable](slice []T) []T {
 	}
 	return result
 }
+
+// MergeStringMapList merge new map to old map, if key exists, replace old value with new value
+func MergeStringMapList[T any](old, new map[string]T) {
+	if old == nil || new == nil {
+		return
+	}
+	for k, v := range new {
+		old[k] = v
+	}
+}
