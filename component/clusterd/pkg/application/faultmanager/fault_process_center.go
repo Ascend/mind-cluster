@@ -32,9 +32,9 @@ type faultProcessCenter struct {
 }
 
 func (center *faultProcessCenter) Process() {
+	cmprocess.SwitchCenter.Process()
 	cmprocess.DeviceCenter.Process()
 	cmprocess.NodeCenter.Process()
-	cmprocess.SwitchCenter.Process()
 	jobprocess.FaultJobCenter.Process()
 }
 
