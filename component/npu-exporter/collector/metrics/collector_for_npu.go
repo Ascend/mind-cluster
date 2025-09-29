@@ -87,7 +87,7 @@ func init() {
 
 	copy(cardLabelForNpuName, colcommon.CardLabel)
 	cardLabelForNpuName[1] = "name"
-	descNpuName = colcommon.BuildDescWithLabel("npu_chip_info_name", "the Ascend npu name with value '1'",
+	descNpuName = colcommon.BuildDescWithLabel("npu_chip_info_name", "the npu name with value '1'",
 		cardLabelForNpuName)
 }
 
