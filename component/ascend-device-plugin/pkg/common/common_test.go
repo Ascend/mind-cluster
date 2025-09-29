@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -890,4 +891,100 @@ func verifyUpdateTrigger(t *testing.T) bool {
 	default:
 		return false
 	}
+}
+
+type testCase struct {
+	name          string
+	pod           *v1.Pod
+	deviceType    string
+	expectedAnnot string
+	expectedErr   string
+}
+
+func getAnnotationTag(deviceType string) string {
+	return fmt.Sprintf("%s%s", api.ResourceNamePrefix, deviceType)
+}
+
+func createNilPodTestCase() testCase {
+	return testCase{
+		name:          "Pod is nil",
+		pod:           nil,
+		deviceType:    "gpu",
+		expectedAnnot: "",
+		expectedErr:   "invalid pod",
+	}
+}
+
+func createAnnotationNotFoundTestCase() testCase {
+	return testCase{
+		name: "Annotation not found",
+		pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				Annotations: map[string]string{
+					"other-annotation": "some-value",
+				},
+			},
+		},
+		deviceType:    "gpu",
+		expectedAnnot: "",
+		expectedErr:   "cannot find the annotation",
+	}
+}
+
+func createAnnotationTooLongTestCase() testCase {
+	return testCase{
+		name: "Annotation too long",
+		pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				Annotations: map[string]string{
+					getAnnotationTag("gpu"): strings.Repeat("a", PodAnnotationMaxLength+1),
+				},
+			},
+		},
+		deviceType:    "gpu",
+		expectedAnnot: "",
+		expectedErr:   "pod annotation size out of memory",
+	}
+}
+
+func createSuccessfulGetAnnotationTestCase() testCase {
+	return testCase{
+		name: "Successfully get annotation",
+		pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				Annotations: map[string]string{
+					getAnnotationTag("gpu"): "gpu-resource-info",
+					"other-annotation":      "other-value",
+				},
+			},
+		},
+		deviceType:    "gpu",
+		expectedAnnot: "gpu-resource-info",
+		expectedErr:   "",
+	}
+}
+
+func TestGetPodAnnotationByDeviceType(t *testing.T) {
+	convey.Convey("Testing GetPodAnnotationByDeviceType function", t, func() {
+		testCases := []testCase{
+			createNilPodTestCase(),
+			createAnnotationNotFoundTestCase(),
+			createAnnotationTooLongTestCase(),
+			createSuccessfulGetAnnotationTestCase(),
+		}
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				annot, err := GetPodAnnotationByDeviceType(tc.pod, tc.deviceType)
+				convey.So(tc.expectedAnnot, convey.ShouldEqual, annot)
+				if tc.expectedErr != "" {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+			})
+		}
+	})
 }
