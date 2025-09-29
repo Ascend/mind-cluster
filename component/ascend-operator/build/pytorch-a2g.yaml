@@ -4,7 +4,7 @@ metadata:
   name: default-test-pytorch
   labels:
     framework: pytorch
-    ring-controller.atlas: alan-a2g
+    ring-controller.a: alan-a2g
     tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
@@ -20,7 +20,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-a2g
+            ring-controller.a: alan-a2g
         spec:
           affinity:
             podAntiAffinity:
@@ -45,9 +45,9 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: status.hostIP
-                # ASCEND_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+                # ALAN_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
                 # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Alan-volcano-plugin, without volcano scenes.
-                - name: ASCEND_VISIBLE_DEVICES
+                - name: ALAN_VISIBLE_DEVICES
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['npu.com/AlanA2G']               # The value must be the same as resources.requests
@@ -109,7 +109,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-a2g
+            ring-controller.a: alan-a2g
         spec:
           affinity:
             podAntiAffinity:
@@ -134,9 +134,9 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: status.hostIP
-                # ASCEND_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+                # ALAN_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
                 # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Alan-volcano-plugin, without volcano scenes.
-                - name: ASCEND_VISIBLE_DEVICES
+                - name: ALAN_VISIBLE_DEVICES
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['npu.com/AlanA2G']               # The value must be the same as resources.requests
