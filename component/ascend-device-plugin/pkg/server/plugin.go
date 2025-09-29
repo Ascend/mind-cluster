@@ -906,7 +906,7 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 			mountDevice(resp, ascendVisibleDevices, ps.ascendRuntimeOptions)
 		} else {
 			common.SetAscendRuntimeEnv(ascendVisibleDevices, ps.ascendRuntimeOptions, resp)
-			hwlog.RunLog.Info("device-plugin will use ascend-docker to mount")
+			hwlog.RunLog.Info("device-plugin will use docker runtime to mount")
 		}
 		ps.SetSlowNodeNoticeEnv(resp)
 		resps.ContainerResponses = append(resps.ContainerResponses, resp)
