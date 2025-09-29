@@ -4,7 +4,7 @@ metadata:
   name: default-test-mindspore
   labels:
     framework: mindspore
-    ring-controller.atlas: alan-I2
+    ring-controller.a: alan-I2
     npu-I2-strategy: chip
 spec:
   schedulerName: volcano    # work when enableGangScheduling is true
@@ -20,7 +20,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-I2
+            ring-controller.a: alan-I2
         spec:
           nodeSelector:                        # modify according to the actual situation
             host-arch: npu-arm
@@ -76,7 +76,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-I2
+            ring-controller.a: alan-I2
         spec:
           affinity:
             podAntiAffinity:

@@ -80,12 +80,6 @@ const (
 	MasterPodRank = "0"
 )
 
-// PodGroup
-const (
-	// AtlasTaskLabel label value task kind, eg. ascend-910, ascend-{xxx}b
-	AtlasTaskLabel = "ring-controller.atlas"
-)
-
 // ConfigMap
 const (
 	// DeviceInfoCMDataKey device-info-cm data key, record device info

@@ -186,3 +186,9 @@ const (
 	// OperatorLogFilePath Operator log file name
 	OperatorLogFilePath = "/var/log/mindx-dl/alan-operator/alan-operator.log"
 )
+
+// PodGroup
+const (
+	// AtlasTaskLabel label value task kind, eg. ascend-910, ascend-{xxx}b
+	AtlasTaskLabel = "ring-controller.a"
+)

@@ -4,7 +4,7 @@ metadata:
   name: default-test-pytorch
   labels:
     framework: pytorch
-    ring-controller.atlas: alan-I2
+    ring-controller.a: alan-I2
     npu-I2-strategy: chip
     tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
 spec:
@@ -21,7 +21,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-I2
+            ring-controller.a: alan-I2
         spec:
           affinity:
             podAntiAffinity:
@@ -109,7 +109,7 @@ spec:
       template:
         metadata:
           labels:
-            ring-controller.atlas: alan-I2
+            ring-controller.a: alan-I2
         spec:
           affinity:
             podAntiAffinity:
