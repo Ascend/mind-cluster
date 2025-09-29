@@ -307,8 +307,8 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 			{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}}}
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
-			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
-			api.MsRecoverEnv: `'{` + api.MsArfStrategy + `}'`, api.EnableMS: api.EnableFlag,
+			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag, api.EnableMS: api.EnableFlag,
+			api.MsRecoverEnv: `'{` + api.MsArfStrategy + `}'`, api.MsCloseWatchDogKey: api.MsCloseWatchDogValue,
 		}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
@@ -321,7 +321,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		addProcessRecoverEnv(pi, pod, 0, api.PytorchFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
-			api.HighAvailableEnv: api.RecoverStrategy}
+			api.HighAvailableEnv: api.RecoverStrategy, api.PtCloseWatchDogKey: api.PtCloseWatchDogValue}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
 	convey.Convey("when job has recover strategy annotation with multiple strategies - MindSpore", t, func() {
@@ -332,8 +332,8 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
-			api.MsRecoverEnv: `'{` + api.MsArfStrategy + "," +
-				api.MsUceStrategy + "," + api.MsHcceStrategy + `}'`, api.EnableMS: api.EnableFlag}
+			api.MsRecoverEnv: `'{` + api.MsArfStrategy + "," + api.MsUceStrategy + "," + api.MsHcceStrategy + `}'`,
+			api.EnableMS:     api.EnableFlag, api.MsCloseWatchDogKey: api.MsCloseWatchDogValue}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
 }
@@ -347,7 +347,7 @@ func TestAddProcessRecoverEnv2(t *testing.T) {
 		addProcessRecoverEnv(pi, pod, 0, api.PytorchFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
-			api.HighAvailableEnv: api.RecoverStrategy}
+			api.HighAvailableEnv: api.RecoverStrategy, api.PtCloseWatchDogKey: api.PtCloseWatchDogValue}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
 }
@@ -438,7 +438,7 @@ func TestAddSubHealthyEnv(t *testing.T) {
 		Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}},
 	}
 	containerIndex := 0
-	const num3 = 3
+	const num4 = 4
 	cases := []struct {
 		name           string
 		strategy       string
@@ -451,11 +451,12 @@ func TestAddSubHealthyEnv(t *testing.T) {
 			expectedEnvs:   map[string]string{}},
 		{name: "SubHealthyHotSwitch strategy",
 			strategy:       api.SubHealthyHotSwitch,
-			expectedEnvLen: num3,
+			expectedEnvLen: num4,
 			expectedEnvs: map[string]string{
-				api.ProcessRecoverEnv: api.EnableFunc,
-				api.ElasticRecoverEnv: api.EnableFlag,
-				api.HighAvailableEnv:  api.RecoverStrategy,
+				api.PtCloseWatchDogKey: api.PtCloseWatchDogValue,
+				api.ProcessRecoverEnv:  api.EnableFunc,
+				api.ElasticRecoverEnv:  api.EnableFlag,
+				api.HighAvailableEnv:   api.RecoverStrategy,
 			}},
 	}
 	for _, tc := range cases {

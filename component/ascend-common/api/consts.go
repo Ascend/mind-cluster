@@ -147,6 +147,10 @@ const (
 const (
 	// HighAvailableEnv high available env
 	HighAvailableEnv = "HIGH_AVAILABILITY"
+	// PtCloseWatchDogKey pt close watch dog key
+	PtCloseWatchDogKey = "HCCL_ASYNC_ERROR_HANDLING"
+	// PtCloseWatchDogValue pt close watch dog value
+	PtCloseWatchDogValue = "0"
 )
 
 // process schedule ms env
@@ -165,6 +169,10 @@ const (
 	MsHcceStrategy = "HCCE:1"
 	// MsRscStrategy ms rsc strategy
 	MsRscStrategy = "RSC:1"
+	// MsCloseWatchDogKey ms close watch dog key
+	MsCloseWatchDogKey = "MS_ENABLE_THM"
+	// MsCloseWatchDogValue ms close watch dog value
+	MsCloseWatchDogValue = `{HCCL_WATCHDOG:0}`
 )
 
 const (

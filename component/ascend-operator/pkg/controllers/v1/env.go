@@ -268,6 +268,7 @@ func doAddProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerI
 		addEnvByStrategy(env, trainEnv, strategy, framework)
 	}
 	if framework == api.PytorchFramework {
+		env[api.PtCloseWatchDogKey] = api.PtCloseWatchDogValue
 		env[api.HighAvailableEnv] = strings.Join(trainEnv.List(), ",")
 	}
 	if framework == api.MindSporeFramework {
@@ -276,6 +277,7 @@ func doAddProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerI
 		}
 		env[api.MsRecoverEnv] = `'{` + strings.Join(trainEnv.List(), ",") + `}'`
 		env[api.EnableMS] = api.EnableFlag
+		env[api.MsCloseWatchDogKey] = api.MsCloseWatchDogValue
 	}
 	for k, v := range env {
 		addEnvValue(pod, k, v, containerIndex)
