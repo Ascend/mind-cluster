@@ -354,6 +354,22 @@ func TestPodReschedulingPlugin_Handle_IsRetried(t *testing.T) {
 	assert.Equal(t, retryTime1, plugin.oldRetryTimes)
 }
 
+func TestPodReschedulingPlugin_Handle_GetCmRetryTimsError(t *testing.T) {
+	plugin := &PodReschedulingPlugin{
+		restartTimes:     2,
+		faultAgentStatus: map[string]bool{"agent1": false, "agent2": false},
+		exitNum:          0,
+	}
+
+	mock := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, errors.New("mock file not found"))
+	defer mock.Reset()
+
+	result, err := plugin.Handle()
+	assert.NoError(t, err)
+	assert.Equal(t, constant.HandleStageFinal, result.Stage)
+	assert.Zero(t, plugin.oldRetryTimes)
+}
+
 func TestPodReschedulingPlugin_PullMsg(t *testing.T) {
 	plugin := &PodReschedulingPlugin{
 		pullMsgs: []infrastructure.Msg{
