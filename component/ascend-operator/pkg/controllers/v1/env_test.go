@@ -438,7 +438,7 @@ func TestAddSubHealthyEnv(t *testing.T) {
 		Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}},
 	}
 	containerIndex := 0
-	const num4 = 4
+	const num3 = 3
 	cases := []struct {
 		name           string
 		strategy       string
@@ -451,12 +451,11 @@ func TestAddSubHealthyEnv(t *testing.T) {
 			expectedEnvs:   map[string]string{}},
 		{name: "SubHealthyHotSwitch strategy",
 			strategy:       api.SubHealthyHotSwitch,
-			expectedEnvLen: num4,
+			expectedEnvLen: num3,
 			expectedEnvs: map[string]string{
-				api.PtCloseWatchDogKey: api.PtCloseWatchDogValue,
-				api.ProcessRecoverEnv:  api.EnableFunc,
-				api.ElasticRecoverEnv:  api.EnableFlag,
-				api.HighAvailableEnv:   api.RecoverStrategy,
+				api.ProcessRecoverEnv: api.EnableFunc,
+				api.ElasticRecoverEnv: api.EnableFlag,
+				api.HighAvailableEnv:  api.RecoverStrategy,
 			}},
 	}
 	for _, tc := range cases {
