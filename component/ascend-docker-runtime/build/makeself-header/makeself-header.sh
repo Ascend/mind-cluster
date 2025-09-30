@@ -425,7 +425,6 @@ do
   base.list_A200ISoC
   base.list_A500
   base.list_A500A2
-  README.md
   run_main.sh
   uninstall.sh
       "
