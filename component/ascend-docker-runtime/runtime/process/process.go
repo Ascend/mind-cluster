@@ -402,7 +402,7 @@ func getValueByDeviceKey(data []string) string {
 		}
 	}
 	if res == "" {
-		hwlog.RunLog.Errorf("%v env variable is empty, will not mount any ascend device",
+		hwlog.RunLog.Errorf("%v env variable is empty, will not mount any alan device",
 			api.AscendVisibleDevicesEnv)
 	}
 	return res
@@ -550,9 +550,9 @@ func checkVisibleDevice(spec *specs.Spec) ([]int, error) {
 	if strings.Contains(visibleDevices, ascend) {
 		devices, err := parseAscendDevices(visibleDevices)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse ascend device : %v", err)
+			return nil, fmt.Errorf("failed to parse alan device : %v", err)
 		}
-		hwlog.RunLog.Infof("ascend devices is: %v", devices)
+		hwlog.RunLog.Infof("alan devices is: %v", devices)
 		return devices, err
 	}
 	devices, err := parseDevices(visibleDevices)

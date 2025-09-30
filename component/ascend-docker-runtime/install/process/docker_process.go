@@ -152,7 +152,7 @@ func addDockerDaemon(runtimeConfig, daemon map[string]interface{}, runtimeFilePa
 	}
 	ascendConfig, ok := runtimeConfig["ascend"].(map[string]interface{})
 	if !ok {
-		return nil, nil, fmt.Errorf("extract ascend failed")
+		return nil, nil, fmt.Errorf("extract runtime config failed")
 	}
 	ascendConfig["path"] = runtimeFilePath
 	if _, ok := ascendConfig["runtimeArgs"]; !ok {
