@@ -250,7 +250,9 @@ func addSubHealthyEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex i
 		hwlog.RunLog.Warnf("subhealth hotswitch only support pytorch framework,current: %v", framework)
 		return
 	}
-	doAddProcessRecoverEnv(pi, pod, containerIndex, framework, api.ExitStrategy)
+	addEnvValue(pod, api.ProcessRecoverEnv, api.EnableFunc, containerIndex)
+	addEnvValue(pod, api.ElasticRecoverEnv, api.EnableFlag, containerIndex)
+	addEnvValue(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
 }
 
 func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {
