@@ -12,6 +12,7 @@ type Server struct {
 	DeviceList   []*Device `json:"device"` // device list in each server
 	Hardware     string    `json:"hardware_type,omitempty"`
 	ServerID     string    `json:"server_id"` // server id, represented by ip address
+	HostIP       string    `json:"host_ip"`
 	ContainerIP  string    `json:"container_ip,omitempty"`
 	SuperPodRank string    `json:"-"`
 	SuperPodID   string    `json:"-"`

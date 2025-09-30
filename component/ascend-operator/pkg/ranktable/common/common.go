@@ -276,6 +276,7 @@ func (r *BaseGenerator) buildServerInfo(pod *corev1.Pod, instance *Instance) (*S
 
 	server := &Server{
 		ServerID:    instance.ServerID,
+		HostIP:      instance.ServerID,
 		ContainerIP: pod.Status.PodIP,
 		DeviceList:  r.getDeviceList(instance.Devices, rankIndex),
 	}
