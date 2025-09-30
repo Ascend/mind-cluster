@@ -621,7 +621,7 @@ func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int
 	}
 	if retCode := C.dcmi_start_hccsping_mesh(C.int(cardID), C.int(deviceID), C.int(portID),
 		&op); retCode != common.Success {
-		return fmt.Errorf("dcmi start hccs ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+		return fmt.Errorf("dcmi start xlink ping mesh failed cardID(%d) deviceID(%d) error code: %d",
 			cardID, deviceID, int32(retCode))
 	}
 
@@ -641,7 +641,7 @@ func (d *DcManager) DcStopHccsPingMesh(cardID int32, deviceID int32, portID int,
 	}
 	if retCode := C.dcmi_stop_hccsping_mesh(C.int(cardID), C.int(deviceID), C.int(portID),
 		C.uint(taskID)); retCode != common.Success {
-		return fmt.Errorf("dcmi stop hccs ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+		return fmt.Errorf("dcmi stop xlink ping mesh failed cardID(%d) deviceID(%d) error code: %d",
 			cardID, deviceID, int32(retCode))
 	}
 	return nil
@@ -662,7 +662,7 @@ func (d *DcManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, portID i
 	var info C.struct_dcmi_hccsping_mesh_info
 	if retCode := C.dcmi_get_hccsping_mesh_info(C.int(cardID), C.int(deviceID), C.int(portID), C.uint(taskID),
 		&info); retCode != common.Success {
-		return nil, fmt.Errorf("dcmi get hccs ping mesh info failed cardID(%d) deviceID(%d) error code: %d",
+		return nil, fmt.Errorf("dcmi get xlink ping mesh info failed cardID(%d) deviceID(%d) error code: %d",
 			cardID, deviceID, int32(retCode))
 	}
 	return convertHccspingMeshInfo(&info)
@@ -703,7 +703,7 @@ func (d *DcManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID 
 	var state C.uint
 	if retCode := C.dcmi_get_hccsping_mesh_state(C.int(cardID), C.int(deviceID), C.int(portID), C.uint(taskID),
 		&state); retCode != common.Success {
-		return common.RetError, fmt.Errorf("dcmi get hccs ping mesh state failed cardID(%d) deviceID(%d) error "+
+		return common.RetError, fmt.Errorf("dcmi get xlink ping mesh state failed cardID(%d) deviceID(%d) error "+
 			"code: %d", cardID, deviceID, int32(retCode))
 	}
 	return int(state), nil
@@ -2003,12 +2003,12 @@ func (d *DcManager) DcGetHccsStatisticInfo(cardID, deviceID int32) (common.HccsS
 	// Use a secure function to get the address (for cleanCode)
 	addr, err := getAddrWithOffset(unsafe.Pointer(&hccsStatisticInfo), unsafe.Sizeof(hccsStatisticInfo), 0)
 	if err != nil {
-		return common.HccsStatisticInfo{}, fmt.Errorf("get hccsStatisticInfo addr failed, error is: %v", err)
+		return common.HccsStatisticInfo{}, fmt.Errorf("get xlinkStatisticInfo addr failed, error is: %v", err)
 	}
 	size := C.uint(unsafe.Sizeof(hccsStatisticInfo))
 	if retCode := C.dcmi_get_device_info(C.int(cardID), C.int(deviceID), cMainCmd, C.uint(subCmd),
 		addr, &size); int32(retCode) != common.Success {
-		return common.HccsStatisticInfo{}, buildDcmiErr(cardID, deviceID, "hccs statistic", retCode)
+		return common.HccsStatisticInfo{}, buildDcmiErr(cardID, deviceID, "xlink statistic", retCode)
 	}
 	return convertHccsStatisticInfoStruct(hccsStatisticInfo), nil
 }
@@ -2033,7 +2033,7 @@ func (d *DcManager) DcGetHccsBandwidthInfo(cardID int32, deviceID int32,
 	hccsBandwidthInfo.profiling_time = C.int(profilingTime)
 	if retCode := C.dcmi_get_hccs_link_bandwidth_info(C.int(cardID), C.int(deviceID),
 		&hccsBandwidthInfo); int32(retCode) != common.Success {
-		return common.HccsBandwidthInfo{}, buildDcmiErr(cardID, deviceID, "hccs bandwidth", retCode)
+		return common.HccsBandwidthInfo{}, buildDcmiErr(cardID, deviceID, "xlink bandwidth", retCode)
 	}
 	return convertHccsBandwidthInfoStruct(hccsBandwidthInfo), nil
 }
