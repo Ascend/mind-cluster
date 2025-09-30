@@ -136,8 +136,7 @@ function copy_file_output()
     /bin/cp -f scripts/base.list_A200 run_pkg
     /bin/cp -f scripts/base.list_A200ISoC run_pkg
     /bin/cp -f scripts/base.list_A200IA2 run_pkg
-    /bin/cp -f ${ROOT}/README.md run_pkg
-    chmod 640 run_pkg/base.list* run_pkg/README.md
+    chmod 640 run_pkg/base.list*
 
     /bin/cp -rf ${ROOT}/assets run_pkg
     chmod 750 run_pkg/assets

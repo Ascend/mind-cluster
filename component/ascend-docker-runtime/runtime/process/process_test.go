@@ -53,7 +53,7 @@ const (
 	bundleArgStr                         = "--bundle"
 	execStubLog                          = "execute stub"
 	configPath                           = "./test/config.json"
-	chipName                             = "910"
+	chipName                             = "A2G"
 	testStr                              = "test"
 	writeAt                              = 2
 )
@@ -447,16 +447,16 @@ func TestReadSpecFile(t *testing.T) {
 
 func TestProcessDevicesAndHooks(t *testing.T) {
 	convey.Convey("test processDevicesAndHooks", t, func() {
-		convey.Convey("02-spec without ASCEND_VISIBLE_DEVICES, should return error", func() {
+		convey.Convey("02-spec without ALAN_VISIBLE_DEVICES, should return error", func() {
 			spec := &specs.Spec{}
 			err := processDevicesAndHooks(spec)
 			convey.So(err, convey.ShouldBeError)
 		})
 
-		convey.Convey("02-spec with  ASCEND_VISIBLE_DEVICES, should return nil", func() {
+		convey.Convey("02-spec with  ALAN_VISIBLE_DEVICES, should return nil", func() {
 			spec := &specs.Spec{
 				Process: &specs.Process{
-					Env: []string{"ASCEND_VISIBLE_DEVICES=0"},
+					Env: []string{"ALAN_VISIBLE_DEVICES=0"},
 				},
 			}
 			err := processDevicesAndHooks(spec)
@@ -709,7 +709,7 @@ func TestGetDeviceTypeByChipName0(t *testing.T) {
 
 // TestGetDeviceTypeByChipName1 tests the function GetDeviceTypeByChipName
 func TestGetDeviceTypeByChipName1(t *testing.T) {
-	chipName := "310P"
+	chipName := "I2"
 	devType := GetDeviceTypeByChipName(chipName)
 	assert.EqualValues(t, Ascend310P, devType)
 }
@@ -736,8 +736,8 @@ func TestGetDeviceTypeByChipName4(t *testing.T) {
 
 // TestGetValueByKeyCase1 tests the function getValueByKey
 func TestGetValueByKeyCase1(t *testing.T) {
-	data := []string{"ASCEND_VISIBLE_DEVICES=0-3,5,7"}
-	word := "ASCEND_VISIBLE_DEVICES"
+	data := []string{"ALAN_VISIBLE_DEVICES=0-3,5,7"}
+	word := "ALAN_VISIBLE_DEVICES"
 	expectVal := "0-3,5,7"
 	actualVal := getValueByKey(data, word)
 	assert.EqualValues(t, expectVal, actualVal)
@@ -745,8 +745,8 @@ func TestGetValueByKeyCase1(t *testing.T) {
 
 // TestGetValueByKeyCase2 tests the function getValueByKey
 func TestGetValueByKeyCase2(t *testing.T) {
-	data := []string{"ASCEND_VISIBLE_DEVICES"}
-	word := "ASCEND_VISIBLE_DEVICES"
+	data := []string{"ALAN_VISIBLE_DEVICES"}
+	word := "ALAN_VISIBLE_DEVICES"
 	expectVal := ""
 	defer func() {
 		if err := recover(); err != nil {
@@ -759,7 +759,7 @@ func TestGetValueByKeyCase2(t *testing.T) {
 
 // TestGetValueByKeyCase3 tests the function getValueByKey
 func TestGetValueByKeyCase3(t *testing.T) {
-	data := []string{"ASCEND_VISIBLE_DEVICES=0-3,5,7"}
+	data := []string{"ALAN_VISIBLE_DEVICES=0-3,5,7"}
 	word := "ASCEND_VISIBLE_DEVICE"
 	expectVal := ""
 	actualVal := getValueByKey(data, word)
@@ -790,8 +790,8 @@ func TestUpdateEnvAndPostHook(t *testing.T) {
 	}
 
 	updateEnvAndPostHook(&spec, vdvice, &deviceList)
-	assert.Contains(t, spec.Process.Env, "ASCEND_VISIBLE_DEVICES=0")
-	assert.Contains(t, spec.Process.Env, "ASCEND_RUNTIME_OPTIONS=VIRTUAL")
+	assert.Contains(t, spec.Process.Env, "ALAN_VISIBLE_DEVICES=0")
+	assert.Contains(t, spec.Process.Env, "ALAN_RUNTIME_OPTIONS=VIRTUAL")
 	assert.Contains(t, spec.Hooks.Poststop[0].Path, destroyHookCli)
 }
 
@@ -1046,7 +1046,7 @@ func TestAddDevice(t *testing.T) {
 		},
 		Process: &specs.Process{
 			Env: []string{strKubeDNSPort53UDPPort,
-				"ASCEND_VISIBLE_DEVICES=1",
+				"ALAN_VISIBLE_DEVICES=1",
 				"ASCEND_RUNTIME_OPTIONS=",
 				strKubeDNSPort53UDPProto},
 		},
@@ -1213,7 +1213,7 @@ func TestParseAscendDevices(t *testing.T) {
 	}{
 		{
 			name:           "parseAscendDevices success case 1",
-			visibleDevices: "Ascend910-0",
+			visibleDevices: "AlanA2G-0",
 			want:           []int{0},
 			wantErr:        false,
 		},
@@ -1279,7 +1279,7 @@ func TestCheckVisibleDevice(t *testing.T) {
 			name: "checkVisibleDevice success case 1",
 			spec: &specs.Spec{
 				Process: &specs.Process{
-					Env: []string{ascendVisibleDevices + "=Ascend910-0"},
+					Env: []string{ascendVisibleDevices + "=AlanA2G-0"},
 				},
 			},
 			wantErr: false,
