@@ -63,4 +63,6 @@ const (
 	Module910bx8AcceleratorType = "module-a2g-8"
 	// Accelerator310Key accelerator key of old infer card
 	Accelerator310Key = "npu-I2-strategy"
+	// A300IDuoLabel the value of the A300I Duo node label
+	A300IDuoLabel = "card-i2-duo"
 )
