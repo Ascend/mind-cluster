@@ -15,6 +15,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/kube"
 )
@@ -397,7 +398,9 @@ func testPreStartProcess(fJob *FaultJob) {
 
 		fJob.preStartProcess()
 		convey.So(fJob.RelationFaults, convey.ShouldHaveLength, 1)
+		convey.So(fJob.TMOutRelationFaults, convey.ShouldHaveLength, 1)
 		convey.So(fJob.RelationFaults[0].FaultUid, convey.ShouldEqual, "fault1")
+		convey.So(fJob.TMOutRelationFaults[0].FaultUid, convey.ShouldEqual, "fault2")
 	})
 }
 
@@ -842,6 +845,52 @@ func TestFaultJobIsMeetTMOutTriggerFault(t *testing.T) {
 			convey.So(result, convey.ShouldBeTrue)
 			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 1)
 			convey.So(fJob.TMOutTriggerFault[0].FaultUid, convey.ShouldEqual, "trigger-004")
+		})
+	})
+}
+
+func TestGetCQETriggerFault(t *testing.T) {
+	convey.Convey("TestGetCQETriggerFault", t, func() {
+		convey.Convey("when TriggerFault is nil then len of CQETriggerFault is 0", func() {
+			fJob := &FaultJob{}
+			result := fJob.getCQETriggerFault()
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when TriggerFault contains CQE faults then len of CQETriggerFault is 2", func() {
+			fJob := &FaultJob{
+				TriggerFault: []constant.FaultInfo{
+					{FaultCode: constant.DevCqeFaultCode},
+					{FaultCode: constant.HostCqeFaultCode},
+					{FaultCode: "other fault code"},
+				},
+			}
+
+			patches := gomonkey.ApplyFunc(faultdomain.IsCqeFault, func(faultCode string) bool {
+				return faultCode == constant.DevCqeFaultCode || faultCode == constant.HostCqeFaultCode
+			})
+			defer patches.Reset()
+
+			result := fJob.getCQETriggerFault()
+			convey.So(len(result), convey.ShouldEqual, constant.GroupIdOffset)
+			convey.So(result[0].FaultCode, convey.ShouldEqual, constant.DevCqeFaultCode)
+			convey.So(result[1].FaultCode, convey.ShouldEqual, constant.HostCqeFaultCode)
+		})
+
+		convey.Convey("when TriggerFault contains no CQE faults then len of CQETriggerFault is 0", func() {
+			fJob := &FaultJob{
+				TriggerFault: []constant.FaultInfo{
+					{FaultCode: "other fault code 1"},
+					{FaultCode: "other fault code 2"},
+				},
+			}
+			patches := gomonkey.ApplyFunc(faultdomain.IsCqeFault, func(faultCode string) bool {
+				return false
+			})
+			defer patches.Reset()
+
+			result := fJob.getCQETriggerFault()
+			convey.So(len(result), convey.ShouldEqual, 0)
 		})
 	})
 }
