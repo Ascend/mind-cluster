@@ -981,12 +981,12 @@ func (d *DeviceManager) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInf
 // GetHccsStatisticInfo get HCCS statistic info
 func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return buildFailedHccsInfo(), fmt.Errorf("input invalid logicID when get hccs statistic info: %d", logicID)
+		return buildFailedHccsInfo(), fmt.Errorf("input invalid logicID when get xlink statistic info: %d", logicID)
 	}
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		return buildFailedHccsInfo(), fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
-			"when get hccs statistic info, error: %v", logicID, err)
+			"when get xlink statistic info, error: %v", logicID, err)
 	}
 	cgoHccsStatusInfo, err := d.DcMgr.DcGetHccsStatisticInfo(cardID, deviceID)
 	if err != nil {
@@ -1001,16 +1001,16 @@ func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatist
 func (d *DeviceManager) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
 
 	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return buildFailedHccsBWInfo(), fmt.Errorf("input invalid logicID when get hccs bandwidth info: %d", logicID)
+		return buildFailedHccsBWInfo(), fmt.Errorf("input invalid logicID when get xlink bandwidth info: %d", logicID)
 	}
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		return buildFailedHccsBWInfo(), fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
-			"when get hccs bandwidth info, error: %v", logicID, err)
+			"when get xlink bandwidth info, error: %v", logicID, err)
 	}
 	cgoHccsBandwidthInfo, err := d.DcMgr.DcGetHccsBandwidthInfo(cardID, deviceID, common.HccsBWProfilingTime)
 	if err != nil {
-		return buildFailedHccsBWInfo(), fmt.Errorf("failed to get hccs bandwidth info by cardId(%d) deviceID(%d), error: %v",
+		return buildFailedHccsBWInfo(), fmt.Errorf("failed to get xlink bandwidth info by cardId(%d) deviceID(%d), error: %v",
 			cardID, deviceID, err)
 	}
 

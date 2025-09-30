@@ -81,7 +81,7 @@ npu_chip_info_link_status{container_name="",id="4",model_name="910Awn-Ascend-V1"
 npu_chip_info_link_status{container_name="",id="5",model_name="910Awn-Ascend-V1",namespace="",pcie_bus_info="",pod_name="",vdie_id=""} 0 1606402000
 npu_chip_info_link_status{container_name="",id="6",model_name="910Awn-Ascend-V1",namespace="",pcie_bus_info="",pod_name="",vdie_id=""} 0 1606402000
 npu_chip_info_link_status{container_name="",id="7",model_name="910Awn-Ascend-V1",namespace="",pcie_bus_info="",pod_name="",vdie_id=""} 0 1606402000
-# HELP npu_chip_info_name the Ascend npu name with value '1'
+# HELP npu_chip_info_name the npu name with value '1'
 # TYPE npu_chip_info_name gauge
 npu_chip_info_name{container_name="",id="0",name="910Awn-Ascend-V1",namespace="",pcie_bus_info="",pod_name="",vdie_id=""} 1 1606402000
 npu_chip_info_name{container_name="",id="1",name="910Awn-Ascend-V1",namespace="",pcie_bus_info="",pod_name="",vdie_id=""} 1 1606402000
