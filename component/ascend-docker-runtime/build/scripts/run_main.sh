@@ -244,13 +244,11 @@ function install()
     cp -f ./ascend-docker-cli ${INSTALL_PATH}/ascend-docker-cli
     cp -f ./ascend-docker-plugin-install-helper ${INSTALL_PATH}/ascend-docker-plugin-install-helper
     cp -f ./ascend-docker-destroy ${INSTALL_PATH}/ascend-docker-destroy
-    cp -f ./README.md ${INSTALL_PATH}/README.md
     chmod 550 ${INSTALL_PATH}/ascend-docker-runtime
     chmod 550 ${INSTALL_PATH}/ascend-docker-hook
     chmod 550 ${INSTALL_PATH}/ascend-docker-cli
     chmod 550 ${INSTALL_PATH}/ascend-docker-plugin-install-helper
     chmod 550 ${INSTALL_PATH}/ascend-docker-destroy
-    chmod 640 ${INSTALL_PATH}/README.md
 
     cp -f ./assets/20230118566.png ${INSTALL_PATH}/assets/20230118566.png
     cp -f ./assets/20210329102949456.png ${INSTALL_PATH}/assets/20210329102949456.png
