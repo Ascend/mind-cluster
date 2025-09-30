@@ -104,7 +104,7 @@ func (tp *chip310px2) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		return err
 	}
 
-	if node.Label[InferCardKey] != A300IDuoLabel {
+	if node.Label[InferCardKey] != util.A300IDuoLabel {
 		return fmt.Errorf("judgeNodeLabel node card label not right, is %s", node.Label[InferCardKey])
 	}
 
