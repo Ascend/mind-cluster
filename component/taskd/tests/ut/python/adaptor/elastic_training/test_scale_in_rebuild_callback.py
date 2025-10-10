@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2025, Huawei Technologies Co., Ltd. All rights reserved.
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 import torch
@@ -122,6 +123,62 @@ class TestScaleInRebuildCallback(unittest.TestCase):
                                                                      [0, 1, 2, 3])
         self.assertFalse(common.IS_FAULT_REPLICA_RANK)
 
+    @patch('taskd.python.adaptor.elastic_training.scale_in_rebuild_callback.torch')
+    def test_init_pipeline_parallel_group(self, mock_torch):
+        mock_torch.distributed.reinit_process_group = mock_reinit_process_group
+        scale_in_rebuild_callback.init_pipeline_parallel_group(0)
+        global called
+        self.assertEqual(0, called)
+        from megatron.core import mpu
+        mpu._PIPELINE_GLOBAL_RANKS = [0]
+        mpu._PIPELINE_MODEL_PARALLEL_GROUP = 1
+        mpu._EMBEDDING_GLOBAL_RANKS = [0]
+        mpu._EMBEDDING_GROUP = 1
+        mpu._POSITION_EMBEDDING_GLOBAL_RANKS = [0]
+        mpu._POSITION_EMBEDDING_GROUP = 1
+        scale_in_rebuild_callback.init_pipeline_parallel_group(0)
+        self.assertEqual(3, called)
+        called = 0
+        mpu._PIPELINE_GLOBAL_RANKS = []
+        mpu._PIPELINE_MODEL_PARALLEL_GROUP = None
+        mpu._EMBEDDING_GLOBAL_RANKS = []
+        mpu._EMBEDDING_GROUP = None
+        mpu._POSITION_EMBEDDING_GLOBAL_RANKS = []
+        mpu._POSITION_EMBEDDING_GROUP = None
+
+    @patch('taskd.python.adaptor.elastic_training.scale_in_rebuild_callback.torch')
+    def test_init_context_parallel_group(self, mock_torch):
+        mock_torch.distributed.reinit_process_group = mock_reinit_process_group
+        global called
+        from megatron.core import mpu
+        mpu._CONTEXT_PARALLEL_GROUP = 1
+        scale_in_rebuild_callback.init_context_parallel_group()
+        self.assertEqual(1, called)
+        called = 0
+        mpu._CONTEXT_PARALLEL_GROUP = None
+
+    @patch('taskd.python.adaptor.elastic_training.scale_in_rebuild_callback.torch')
+    def test_init_model_parallel_group(self, mock_torch):
+        mock_torch.distributed.reinit_process_group = mock_reinit_process_group
+        global called
+        from megatron.core import mpu
+        mpu._MODEL_PARALLEL_GROUP = 1
+        scale_in_rebuild_callback.init_model_parallel_group()
+        self.assertEqual(1, called)
+        called = 0
+        mpu._MODEL_PARALLEL_GROUP = None
+
+    @patch('taskd.python.adaptor.elastic_training.scale_in_rebuild_callback.torch')
+    def test_init_tensor_parallel_group(self, mock_torch):
+        mock_torch.distributed.reinit_process_group = mock_reinit_process_group
+        global called
+        from megatron.core import mpu
+        mpu._TENSOR_MODEL_PARALLEL_GROUP = 1
+        scale_in_rebuild_callback.init_tensor_parallel_group()
+        self.assertEqual(1, called)
+        called = 0
+        mpu._TENSOR_MODEL_PARALLEL_GROUP = None
+
 
 if __name__ == '__main__':
     unittest.main()
@@ -131,3 +188,8 @@ def get_process_group_ranks(group):
     if group == 'dp_cp_replica_group':
         return [0, 4]
     return [0, 4, 8, 12]
+
+called = 0
+def mock_reinit_process_group(group, rebuild_link):
+    global called
+    called = called + 1
