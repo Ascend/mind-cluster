@@ -120,6 +120,10 @@ func (tp *chip310px2) judgeNodeByTaskNPU(taskNPU int, nodeNPUTopology []int) err
 	if taskNPU < 1 || taskNPU > tp.MaxNodeNPUNum {
 		return fmt.Errorf("judgeNodeByTaskNPU task req num<%d> is invalid", taskNPU)
 	}
+	if len(nodeNPUTopology) < taskNPU {
+		return fmt.Errorf("judgeNodeByTaskNPU node don't have enough resource, req<%d>, idle<%d>",
+			taskNPU, len(nodeNPUTopology))
+	}
 	if tp.SchedulerJobAttr.Label[util.DistributedInferKey] != util.DistributedInferLabel {
 		return nil
 	}
