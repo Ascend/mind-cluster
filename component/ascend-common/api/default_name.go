@@ -168,6 +168,8 @@ const (
 	BwPrefix = "npu_chip_info_xlink_bandwidth_info_"
 	// AscendDeviceInfo
 	AscendDeviceInfo = "ALAN_VISIBLE_DEVICES"
+	// HccsCacheKey struct name
+	HccsCacheKey = "XlinkCollector"
 )
 
 const (
