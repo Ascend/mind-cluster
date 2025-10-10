@@ -56,6 +56,8 @@ def scale_in_rebuild_callback(new_dp_ranks: list, new_world_ranks: list, args, p
                                                                    dp_cp_replica_ranks)
     build_scale_in_dp_cp_replica_group(fault_local_idxs, fault_first_group,
                                        both_replica_group_fault, changed_old_dp_ranks)
+    rebuild_not_changed_group(cur_rank, both_replica_group_fault, arguments)
+    ttp_logger.LOGGER.info(f"rank: {cur_rank} rebuild not changed group done")
     change_model_group(models)
     change_num_micro_batches(old_dp_ranks, new_dp_ranks, arguments)
     common.update_scale_in_flag(True)
@@ -293,3 +295,56 @@ def create_new_replica_group_for_changed_left(left_ranks):
     destroy_sub_process_group(tft_replica_group.DP_CP_REPLICA_GROUP_GLOO)
     tft_replica_group.DP_CP_REPLICA_GROUP = group_left
     tft_replica_group.DP_CP_REPLICA_GROUP_GLOO = group_left_gloo
+
+
+def rebuild_not_changed_group(cur_rank, both_replica_group_fault, args):
+    init_context_parallel_group()
+    init_model_parallel_group()
+    init_tensor_parallel_group()
+    init_pipeline_parallel_group(cur_rank)
+    if not both_replica_group_fault and not common.FAULT_RANK_IN_DP_CP_REPLICA_GROUP:
+        from .scale_out_rebuild_process_group_callback import ttp_initialize_replica_dp_group
+        ttp_initialize_replica_dp_group(args.pipeline_model_parallel_size, args.tensor_model_parallel_size,
+                                        args.context_parallel_size, args.world_size)
+
+
+def init_context_parallel_group():
+    if mpu._CONTEXT_PARALLEL_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._CONTEXT_PARALLEL_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning("CONTEXT_PARALLEL_GROUP is None")
+
+
+def init_model_parallel_group():
+    if mpu._MODEL_PARALLEL_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._MODEL_PARALLEL_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning("MODEL_PARALLEL_GROUP is None")
+
+
+def init_tensor_parallel_group():
+    if mpu._TENSOR_MODEL_PARALLEL_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._TENSOR_MODEL_PARALLEL_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning("TENSOR_MODEL_PARALLEL_GROUP is None")
+
+
+def init_pipeline_parallel_group(rank):
+    ranks = mpu._PIPELINE_GLOBAL_RANKS
+    if rank in ranks and mpu._PIPELINE_MODEL_PARALLEL_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._PIPELINE_MODEL_PARALLEL_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning(f"rank: {rank} PIPELINE_MODEL_PARALLEL_GROUP is None")
+    embedding_ranks = mpu._EMBEDDING_GLOBAL_RANKS
+    if embedding_ranks is not None and rank in embedding_ranks and mpu._EMBEDDING_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._EMBEDDING_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning(
+            f"rank: {rank} not in ranks {embedding_ranks} or EMBEDDING_GROUP {mpu._EMBEDDING_GROUP} is None")
+    position_embedding_ranks = mpu._POSITION_EMBEDDING_GLOBAL_RANKS
+    if position_embedding_ranks is not None and rank in position_embedding_ranks \
+            and mpu._POSITION_EMBEDDING_GROUP is not None:
+        torch.distributed.reinit_process_group(mpu._POSITION_EMBEDDING_GROUP, rebuild_link=True)
+    else:
+        ttp_logger.LOGGER.warning(
+            f"rank: {rank} not in ranks {position_embedding_ranks} or EMBEDDING_GROUP {mpu._POSITION_EMBEDDING_GROUP} is None")

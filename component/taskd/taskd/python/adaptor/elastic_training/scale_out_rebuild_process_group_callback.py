@@ -79,24 +79,20 @@ def rebuild_process_group(args, timeout, nccl_comm_cfgs):
     ttp_logger.LOGGER.info(f"1.3 rank:{args.rank} rebuild data parallel group done")
     all_dp_ranks_with_cp = init_data_parallel_with_cp_group(args, timeout, nccl_comm_cfgs)
     ttp_logger.LOGGER.info(f"1.4 rank:{args.rank} rebuild data parallel group with cp done")
-    if common.SCALE_IN_WORLD_GROUP is None:
-        init_context_parallel_group(args, timeout, nccl_comm_cfgs)
-        ttp_logger.LOGGER.info(f"1.5 rank:{args.rank} rebuild context parallel group done")
-
-        init_model_parallel_group(args, timeout, nccl_comm_cfgs, all_dp_ranks_with_cp)
-        ttp_logger.LOGGER.info(f"1.6 rank:{args.rank} rebuild model parallel group done")
-
-        init_tensor_parallel_group(args, timeout, nccl_comm_cfgs)
-        ttp_logger.LOGGER.info(f"1.7 rank:{args.rank} rebuild tensor parallel group done")
-
-        init_pipeline_parallel_group(args, timeout, nccl_comm_cfgs)
-        ttp_logger.LOGGER.info(f"1.8 rank:{args.rank} rebuild pipeline parallel group done")
-    else:
+    init_context_parallel_group(args, timeout, nccl_comm_cfgs)
+    ttp_logger.LOGGER.info(f"1.5 rank:{args.rank} rebuild context parallel group done")
+    init_model_parallel_group(args, timeout, nccl_comm_cfgs, all_dp_ranks_with_cp)
+    ttp_logger.LOGGER.info(f"1.6 rank:{args.rank} rebuild model parallel group done")
+    init_tensor_parallel_group(args, timeout, nccl_comm_cfgs)
+    ttp_logger.LOGGER.info(f"1.7 rank:{args.rank} rebuild tensor parallel group done")
+    init_pipeline_parallel_group(args, timeout, nccl_comm_cfgs)
+    ttp_logger.LOGGER.info(f"1.8 rank:{args.rank} rebuild pipeline parallel group done")
+    if common.SCALE_IN_WORLD_GROUP is not None:
         destroy_sub_process_group(common.SCALE_IN_WORLD_GROUP)
         common.SCALE_IN_WORLD_GROUP = None
         ttp_logger.LOGGER.info(f"1.9 rank:{args.rank} destroy scale in world group done")
     ttp_initialize_replica_dp_group(args.pipeline_model_parallel_size, args.tensor_model_parallel_size,
-                                    args.context_parallel_size, args.expert_model_parallel_size, args.world_size)
+                                    args.context_parallel_size, args.world_size)
     destroy_sub_process_group(common.SCALE_IN_DP_CP_REPLICA_GROUP)
     destroy_sub_process_group(common.SCALE_IN_DP_CP_REPLICA_GROUP_GLOO)
     common.SCALE_IN_DP_CP_REPLICA_GROUP = None
@@ -142,7 +138,7 @@ def destroy_all_process_group(group=None):
 
 
 def ttp_initialize_replica_dp_group(pipeline_model_parallel_size, tensor_model_parallel_size, context_parallel_size,
-                                    expert_model_parallel_size, world_size):
+                                    world_size):
     if pipeline_model_parallel_size == 0 or tensor_model_parallel_size == 0 or context_parallel_size == 0:
         raise ValueError("pipeline_model_parallel_size, tensor_model_parallel_size, context_parallel_size "
                          "should not be zero")
@@ -162,25 +158,6 @@ def ttp_initialize_replica_dp_group(pipeline_model_parallel_size, tensor_model_p
                 tft_replica_group.DP_CP_ORIGIN_RANKS = dp_cp_ranks
             if args.use_distributed_optimizer:
                 build_dp_cp_replica_group(dp_cp_ranks, cur_rank)
-
-
-def build_dp_ep_replica_group(dp_ep_ranks: list, cur_rank):
-    if len(dp_ep_ranks) % tft_replica_group.REPLICA_NUM != 0:
-        raise ValueError(f"size of dp_ep_ranks {len(dp_ep_ranks)} should be a multiple of replica"
-                         f" num {tft_replica_group.REPLICA_NUM}")
-    replica_group_size = len(dp_ep_ranks) // tft_replica_group.REPLICA_NUM
-    replica_lists = [dp_ep_ranks[i * replica_group_size:(i+1) * replica_group_size]
-                     for i in range(0, tft_replica_group.REPLICA_NUM)]
-    for replica_list in replica_lists:
-        if cur_rank in replica_list:
-            replica_group = torch.distributed.new_group(replica_list, use_local_synchronization=True)
-            replica_group_gloo = torch.distributed.new_group(replica_list, backend="gloo",
-                                                             use_local_synchronization=True)
-            destroy_sub_process_group(tft_replica_group.DP_EP_REPLICA_GROUP)
-            destroy_sub_process_group(tft_replica_group.DP_EP_REPLICA_GROUP_GLOO)
-            tft_replica_group.DP_EP_REPLICA_GROUP = replica_group
-            tft_replica_group.DP_EP_REPLICA_GROUP_GLOO = replica_group_gloo
-            return
 
 
 def build_dp_cp_replica_group(dp_cp_ranks: list, cur_rank):
