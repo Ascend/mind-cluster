@@ -30,7 +30,7 @@ import (
 var (
 	// CardLabel general card label
 	CardLabel = []string{npuID, modelName, npuUUID, npuPCIEInfo, namespace, podName, cntrName}
-
+	hccsCacheKey = "HccsCollector"
 	noNeedToPrintUpdateLog = map[string]bool{
 		"NetworkCollector": true,
 		"RoceCollector":    true,
@@ -189,5 +189,9 @@ func GetCacheKey(ptr interface{}) string {
 	if v.Kind() != reflect.Struct {
 		return ""
 	}
-	return v.Type().Name()
+	cacheKey := v.Type().Name()
+	if cacheKey == hccsCacheKey {
+		return api.HccsCacheKey
+	}
+	return cacheKey
 }
