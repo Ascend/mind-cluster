@@ -46,7 +46,7 @@ func (vNodes vNodesList) Less(i, j int) bool {
 
 // Swap for order.
 func (vNodes vNodesList) Swap(i, j int) {
-	if i > vNodes.Len() || j > vNodes.Len() {
+	if i >= vNodes.Len() || j >= vNodes.Len() {
 		return
 	}
 	vNodes[i], vNodes[j] = vNodes[j], vNodes[i]

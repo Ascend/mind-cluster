@@ -714,7 +714,7 @@ func (vChips vChipsList) Len() int {
 
 // Less for order.
 func (vChips vChipsList) Less(i, j int) bool {
-	if i > vChips.Len() || j > vChips.Len() {
+	if i >= vChips.Len() || j >= vChips.Len() {
 		return false
 	}
 	return !vChips[i].FreeRes.BeGreater(vChips[j].FreeRes)
@@ -722,7 +722,7 @@ func (vChips vChipsList) Less(i, j int) bool {
 
 // Swap for order.
 func (vChips vChipsList) Swap(i, j int) {
-	if i > vChips.Len() || j > vChips.Len() {
+	if i >= vChips.Len() || j >= vChips.Len() {
 		return
 	}
 	vChips[i], vChips[j] = vChips[j], vChips[i]
