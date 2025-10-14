@@ -166,11 +166,11 @@ func goFaultEventHandler(event *C.struct_LqDcmiEvent) {
 	// faultEventHandler callback function for subscribe mod, which will receive fault code when fault happens
 	faultEvent := convertFaultEvent(event)
 	hwlog.RunLog.Warnf("switch subscribe got fault:%s, faultCode:%v",
-		fmt.Sprintf("AlarmId: 0x%08x, FaultID: %v, AssembledFaultCode: %v, "+
-			"PeerPortDevice: %v, PeerPortId: %v, SwitchChipId: %v, SwitchPortId: %v, Assertion: %v",
-			faultEvent.EventType, faultEvent.FaultID,
-			faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice, faultEvent.PeerPortId,
-			faultEvent.SwitchChipId, faultEvent.SwitchPortId, faultEvent.Assertion), faultEvent.AssembledFaultCode)
+		fmt.Sprintf("AlarmId: 0x%08x, FaultID: %v, AssembledFaultCode: %v, PeerPortDevice: %v, PeerPortId: %v, "+
+			"SwitchChipId: %v, SwitchPortId: %v, Assertion: %v, AlarmRaisedTime: %v",
+			faultEvent.EventType, faultEvent.FaultID, faultEvent.AssembledFaultCode, faultEvent.PeerPortDevice,
+			faultEvent.PeerPortId, faultEvent.SwitchChipId, faultEvent.SwitchPortId, faultEvent.Assertion,
+			faultEvent.AlarmRaisedTime), faultEvent.AssembledFaultCode)
 	// for recovered fault, delete them from current fault codes
 	if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
 		newFaultCodes := make([]common.SwitchFaultEvent, 0)
@@ -297,7 +297,7 @@ func setExtraFaultInfo(event *common.SwitchFaultEvent) {
 		event.AssembledFaultCode = fmt.Sprintf("[0x%08x,%d,%s,na]", alarmID, faultID, PeerDeviceName)
 	}
 	if event.AlarmRaisedTime == int64(0) {
-		event.AlarmRaisedTime = time.Now().Unix()
+		event.AlarmRaisedTime = time.Now().UnixMilli()
 	}
 }
 
