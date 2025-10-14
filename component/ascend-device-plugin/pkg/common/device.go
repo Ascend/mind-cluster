@@ -48,8 +48,6 @@ const (
 	PreSeparateFaultLevelStr = "PreSeparate"
 	// SeparateFaultLevelStr Separate Fault Level Str
 	SeparateFaultLevelStr = "Separate"
-	// SecondsToMilliseconds convert seconds to milliseconds
-	SecondsToMilliseconds = 1000
 )
 
 const (
@@ -135,7 +133,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 		faultTimeAndLevelKey := faultInfo.AssembledFaultCode + "_" + strconv.Itoa(int(faultInfo.SwitchChipId)) + "_" +
 			strconv.Itoa(int(faultInfo.SwitchPortId))
 		tmpFaultTimeAndLevelMap[faultTimeAndLevelKey] = FaultTimeAndLevel{
-			FaultTime:  faultInfo.AlarmRaisedTime * SecondsToMilliseconds,
+			FaultTime:  faultInfo.AlarmRaisedTime,
 			FaultLevel: convertToSwitchLevelStr(SwitchFaultLevelMap[faultInfo.AssembledFaultCode]),
 		}
 	}
