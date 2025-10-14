@@ -133,6 +133,9 @@ def destroy_sub_process_group(group):
         rank = torch.distributed.get_rank()
         ttp_logger.LOGGER.debug(f"rank:{rank} destroy process group {group}")
         if group is not None:
+            # clear HCCL cache
+            torch.distributed.reinit_process_group(group, rebuild_link=True)
+            # clear torch native cache
             torch.distributed.destroy_process_group(group)
     except Exception as e:
         ttp_logger.LOGGER.warning(f"failed to destroy process group {group}: {e}")
