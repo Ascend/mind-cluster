@@ -202,6 +202,7 @@ func TestGetInfoFromCache(t *testing.T) {
 }
 
 func TestGetCacheKey(t *testing.T) {
+	type HccsCollector struct{}
 	tests := []struct {
 		name     string
 		args     interface{}
@@ -210,6 +211,10 @@ func TestGetCacheKey(t *testing.T) {
 		{name: "TestGetCacheKey_ptr",
 			args:     &MetricsCollectorAdapter{},
 			expected: "MetricsCollectorAdapter",
+		},
+		{name: "TestGetCacheKey_hccs_ptr",
+			args:     &HccsCollector{},
+			expected: api.HccsCacheKey,
 		},
 		{name: "TestGetCacheKey_int",
 			args:     0,
