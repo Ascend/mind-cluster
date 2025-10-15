@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	selfrecoverFaultTimeout = 10 * time.Second
+	selfrecoverFaultTimeout = 60 * time.Second
 )
 
 // L2FaultProcessor is used to process l2 faults
@@ -155,10 +155,14 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 	if faultTimeAndLevel.FaultLevel != constant.RestartRequest {
 		return true
 	}
-
-	durationMs := time.Now().UnixMilli() - faultTimeAndLevel.FaultTime
+	nowTime := time.Now().UnixMilli()
+	durationMs := nowTime - faultTimeAndLevel.FaultReceivedTime
+	hwlog.RunLog.Debugf("deviceName:%s, faultCode:%s, now:%v, faultReceivedTime:%v", deviceName,
+		faultCode, time.UnixMilli(nowTime).Format("2006-01-02 15:04:05.000"),
+		time.UnixMilli(faultTimeAndLevel.FaultReceivedTime).Format("2006-01-02 15:04:05.000"))
 	if durationMs > selfrecoverFaultTimeout.Milliseconds() {
-		hwlog.RunLog.Debugf("L2 fault %s during %dms more than 10s, should report fault", faultCode, durationMs)
+		hwlog.RunLog.Debugf("L2 fault %s during %dms more than %ds, should report fault",
+			faultCode, durationMs, selfrecoverFaultTimeout)
 		return true
 	}
 
@@ -168,8 +172,8 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 		return true
 	}
 
-	hwlog.RunLog.Infof("L2 fault %s during less than 10s, mindie job: %s has subscribed grpc interface and "+
-		"using fault npu: %s, should not report fault", faultCode, jobInfo.Key, deviceName)
+	hwlog.RunLog.Infof("L2 fault %s during less than %ds, mindie job: %s has subscribed grpc interface and "+
+		"using fault npu: %s, should not report fault", faultCode, selfrecoverFaultTimeout, jobInfo.Key, deviceName)
 	return false
 }
 
@@ -202,7 +206,7 @@ func getDeletedDeviceL2Fault(faults []constant.DeviceFault, deviceName string, j
 }
 
 func getDeletedSwitchL2Fault(switchInfo *constant.SwitchInfo, jobInfoMap map[string]constant.JobInfo) []constant.
-	SimpleSwitchFaultInfo {
+SimpleSwitchFaultInfo {
 	filteredFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	deletedFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	for _, jobInfo := range jobInfoMap {
