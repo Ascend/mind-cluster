@@ -5,6 +5,7 @@ package job
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -230,7 +231,12 @@ func GetJobFaultSdIdAndNodeName(jobId string, faultPods map[string]string) map[i
 
 func getFaultSuperID(faultNodes sets.String) map[int][]string {
 	faultSuperID := make(map[int][]string)
-	for superPodID, nodes := range superpod.ListClusterDevice() {
+	for _, nodes := range superpod.ListClusterDevice() {
+		superPodID, err := strconv.Atoi(nodes.SuperPodID)
+		if err != nil {
+			hwlog.RunLog.Errorf("get superPodID failed, err: %v", err)
+			continue
+		}
 		for _, node := range nodes.NodeDeviceMap {
 			if !faultNodes.Has(node.NodeName) {
 				continue
