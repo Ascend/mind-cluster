@@ -349,11 +349,19 @@ func buildValidNPUJobTestCases() []validNPUJobTest {
 func buildValidNPUJobTestCases01() []validNPUJobTest {
 	return []validNPUJobTest{
 		{
-			name:          "08 will return false when spBlockNPUNum is 0",
+			name:          "08 will return false when spBlockNPUNum is 1 and job npu number is 32",
 			taskNum:       util.NPUIndex2,
 			reqNPUNum:     util.NPUIndex2 * util.NPUIndex16,
 			spBlockNPUNum: util.NPUIndex1,
 			superPodSize:  util.NPUIndex16,
+			wantPass:      false,
+		},
+		{
+			name:          "09 will return true when spBlockNPUNum is 0",
+			taskNum:       util.NPUIndex2,
+			reqNPUNum:     util.NPUIndex1 * util.NPUIndex16,
+			spBlockNPUNum: util.NPUIndex0,
+			superPodSize:  util.NPUIndex6,
 			wantPass:      false,
 		},
 	}
