@@ -318,7 +318,8 @@ func TestShouldReportFault(t *testing.T) {
 		}
 
 		baseFaultTimeAndLevel := constant.FaultTimeAndLevel{
-			FaultTime: time.Now().UnixMilli(),
+			FaultTime:         time.Now().UnixMilli(),
+			FaultReceivedTime: time.Now().UnixMilli(),
 		}
 
 		testCases := testShouldReportFaultCases{
@@ -350,7 +351,7 @@ func testL2LevelFaultScenarios(l2Fault constant.FaultTimeAndLevel, testCases tes
 	patchWithOffset func(time.Duration) *gomonkey.Patches,
 	mockPubSubscribed, mockPubNotSubscribed *mockFaultPublisher) {
 	convey.Convey("For L2 level faults (RestartRequest)", func() {
-		convey.Convey("When fault duration exceeds 10s, should report", func() {
+		convey.Convey("When fault duration exceeds 60s, should report", func() {
 			patch := patchWithOffset(testCases.timeout + time.Second)
 			defer patch.Reset()
 

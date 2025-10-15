@@ -7,8 +7,9 @@ package constant
 // some fault may not have accurate fault time and level,
 // for example: duration fault use current time as `FaultTime`
 type FaultTimeAndLevel struct {
-	FaultTime  int64  `json:"fault_time"`
-	FaultLevel string `json:"fault_level"`
+	FaultTime         int64  `json:"fault_time"`
+	FaultReceivedTime int64  `json:"-"`
+	FaultLevel        string `json:"fault_level"`
 }
 
 // DeviceFault device or network fault info
@@ -280,6 +281,7 @@ type AllConfigmapContent struct {
 type ConfigMapInterface interface {
 	GetCmName() string
 	IsSame(another ConfigMapInterface) bool
+	UpdateFaultReceiveTime(oldInfo ConfigMapInterface)
 }
 
 // FaultRank defines the structure for storing fault rank information.

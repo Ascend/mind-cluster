@@ -5,6 +5,7 @@ package constant
 
 import (
 	"maps"
+	"time"
 
 	"k8s.io/utils/strings/slices"
 
@@ -146,6 +147,62 @@ func (cm *AdvanceDeviceFaultCm) IsSame(another ConfigMapInterface) bool {
 		maps.EqualFunc(cm.FaultDeviceList, thatCm.FaultDeviceList, eq)
 }
 
+// UpdateFaultReceiveTime update fault receive time
+func (cm *AdvanceDeviceFaultCm) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return
+	}
+	oldCm, ok := oldInfo.(*AdvanceDeviceFaultCm)
+	if !ok || oldCm == nil {
+		hwlog.RunLog.Error("oldInfo convert to AdvanceDeviceFaultCm failed or oldCm is nil")
+		updateFaultReceiveTimeForDevices(cm.FaultDeviceList, nil)
+		return
+	}
+	updateFaultReceiveTimeForDevices(cm.FaultDeviceList, oldCm.FaultDeviceList)
+	hwlog.RunLog.Debugf("updateFaultReceiveTimeForDevices cm.CmName=%s, cm.FaultDeviceList=%#v",
+		cm.CmName, cm.FaultDeviceList)
+}
+
+func updateFaultReceiveTimeForDevices(cmFaults map[string][]DeviceFault, oldFaults map[string][]DeviceFault) {
+	deviceOldTimeMap := buildDeviceOldTimeMap(oldFaults)
+	hwlog.RunLog.Debugf("updateFaultReceiveTimeForDevices deviceOldTimeMap=%#v", deviceOldTimeMap)
+	for deviceName, faults := range cmFaults {
+		updateDeviceFaults(faults, deviceOldTimeMap[deviceName])
+	}
+}
+
+func buildDeviceOldTimeMap(oldFaults map[string][]DeviceFault) map[string]map[string]int64 {
+	oldTimeMap := make(map[string]map[string]int64)
+	if oldFaults == nil {
+		return oldTimeMap
+	}
+
+	for deviceName, faults := range oldFaults {
+		codeTimeMap := make(map[string]int64)
+		for _, fault := range faults {
+			for code, timeAndLevel := range fault.FaultTimeAndLevelMap {
+				codeTimeMap[code] = timeAndLevel.FaultReceivedTime
+			}
+		}
+		oldTimeMap[deviceName] = codeTimeMap
+	}
+	return oldTimeMap
+}
+
+func updateDeviceFaults(faults []DeviceFault, oldCodeTimes map[string]int64) {
+	for i, fault := range faults {
+		for code, timeAndLevel := range fault.FaultTimeAndLevelMap {
+			if oldTime, ok := oldCodeTimes[code]; ok {
+				timeAndLevel.FaultReceivedTime = oldTime
+			} else if timeAndLevel.FaultReceivedTime == 0 {
+				timeAndLevel.FaultReceivedTime = time.Now().UnixMilli()
+			}
+			faults[i].FaultTimeAndLevelMap[code] = timeAndLevel
+		}
+	}
+}
+
 // GetCmName return cm name
 func (cm *AdvanceDeviceFaultCm) GetCmName() string {
 	if cm == nil {
@@ -237,6 +294,11 @@ func (cm *DeviceInfo) IsSame(another ConfigMapInterface) bool {
 	return !DeviceInfoBusinessDataIsNotEqual(cm, anotherDeviceInfo)
 }
 
+// UpdateFaultReceiveTime update fault receive time
+func (cm *DeviceInfo) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	return
+}
+
 // IsSame compare with another cm
 func (cm *SwitchInfo) IsSame(another ConfigMapInterface) bool {
 	anotherSwitchInfo, ok := another.(*SwitchInfo)
@@ -245,6 +307,42 @@ func (cm *SwitchInfo) IsSame(another ConfigMapInterface) bool {
 		return false
 	}
 	return !SwitchInfoBusinessDataIsNotEqual(cm, anotherSwitchInfo)
+}
+
+// UpdateFaultReceiveTime update fault receive time
+func (cm *SwitchInfo) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return
+	}
+	oldCm, ok := oldInfo.(*SwitchInfo)
+	if !ok || oldCm == nil {
+		hwlog.RunLog.Error("oldInfo convert to SwitchInfo failed or oldCm is nil")
+		updateFaultReceiveTimeForSwitchs(cm.FaultTimeAndLevelMap, nil)
+		return
+	}
+	updateFaultReceiveTimeForSwitchs(cm.FaultTimeAndLevelMap, oldCm.FaultTimeAndLevelMap)
+	hwlog.RunLog.Debugf("UpdateFaultReceiveTime cm.CmName=%s, cm.FaultTimeAndLevelMap=%#v",
+		cm.CmName, cm.FaultTimeAndLevelMap)
+}
+
+func updateFaultReceiveTimeForSwitchs(cmFaultTimeAndLevelMap map[string]FaultTimeAndLevel,
+	oldFaultTimeAndLevelMap map[string]FaultTimeAndLevel) {
+	switchOldTimeMap := make(map[string]int64)
+	if oldFaultTimeAndLevelMap != nil {
+		for key, timeAndLevel := range oldFaultTimeAndLevelMap {
+			switchOldTimeMap[key] = timeAndLevel.FaultReceivedTime
+		}
+	}
+	hwlog.RunLog.Debugf("updateFaultReceiveTimeForSwitchs switchOldTimeMap=%#v", switchOldTimeMap)
+	for key, timeAndLevel := range cmFaultTimeAndLevelMap {
+		if oldTime, ok := switchOldTimeMap[key]; ok {
+			timeAndLevel.FaultReceivedTime = oldTime
+		} else if timeAndLevel.FaultReceivedTime == 0 {
+			timeAndLevel.FaultReceivedTime = time.Now().UnixMilli()
+		}
+		cmFaultTimeAndLevelMap[key] = timeAndLevel
+	}
 }
 
 // AddFaultAndFix add fault in the switchCM
@@ -260,6 +358,11 @@ func (cm *NodeInfo) IsSame(another ConfigMapInterface) bool {
 		return false
 	}
 	return !NodeInfoBusinessDataIsNotEqual(cm, anotherNodeInfo)
+}
+
+// UpdateFaultReceiveTime update fault receive time
+func (cm *NodeInfo) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	return
 }
 
 // DeviceInfoBusinessDataIsNotEqual determine the business data is not equal
