@@ -13,6 +13,11 @@ import (
 	"clusterd/pkg/common/util"
 )
 
+const (
+	device0 = "device-0"
+	device1 = "device-1"
+)
+
 func TestMain(m *testing.M) {
 	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, nil)
 	m.Run()
@@ -170,34 +175,184 @@ func TestAdvanceDeviceFaultCmDelFaultAndFix(t *testing.T) {
 	})
 }
 
+func mockAdvanceDeviceFaultCm() *AdvanceDeviceFaultCm {
+	return &AdvanceDeviceFaultCm{
+		DeviceType:          api.Ascend910,
+		CmName:              "xxx",
+		SuperPodID:          0,
+		ServerIndex:         0,
+		FaultDeviceList:     mockFaultDeviceList(device0),
+		AvailableDeviceList: make([]string, 0),
+		Recovering:          make([]string, 0),
+		CardUnHealthy:       make([]string, 0),
+		NetworkUnhealthy:    make([]string, 0),
+		UpdateTime:          0,
+	}
+}
+
+func mockFaultDeviceList(deviceName string) map[string][]DeviceFault {
+	return map[string][]DeviceFault{
+		deviceName: {
+			{
+				FaultType:            CardUnhealthy,
+				FaultTimeAndLevelMap: mockFaultTimeAndLevelMap(UceFaultCode),
+			},
+		},
+	}
+}
+
+func mockFaultTimeAndLevelMap(key string) map[string]FaultTimeAndLevel {
+	return map[string]FaultTimeAndLevel{
+		key: {
+			FaultTime:         0,
+			FaultReceivedTime: 0,
+			FaultLevel:        SeparateNPU,
+		},
+	}
+}
+
 func TestAdvanceDeviceFaultCmIsSame(t *testing.T) {
 	convey.Convey("two cm should be same", t, func() {
-		cm1 := &AdvanceDeviceFaultCm{
-			DeviceType:  api.Ascend910,
-			CmName:      "xxx",
-			SuperPodID:  0,
-			ServerIndex: 0,
-			FaultDeviceList: map[string][]DeviceFault{
-				"device-0": {{
-					FaultType: CardUnhealthy,
-					FaultTimeAndLevelMap: map[string]FaultTimeAndLevel{
-						UceFaultCode: {
-							FaultTime:  0,
-							FaultLevel: SeparateNPU,
-						},
-					},
-				}}},
-			AvailableDeviceList: make([]string, 0),
-			Recovering:          make([]string, 0),
-			CardUnHealthy:       make([]string, 0),
-			NetworkUnhealthy:    make([]string, 0),
-			UpdateTime:          0,
-		}
-
+		cm1 := mockAdvanceDeviceFaultCm()
 		cm2 := new(AdvanceDeviceFaultCm)
 		util.DeepCopy(cm2, cm1)
 		convey.So(cm2.IsSame(cm1), convey.ShouldBeTrue)
 	})
+}
+
+func TestAdvanceDeviceFaultCmUpdateFaultReceiveTime(t *testing.T) {
+	convey.Convey("Test AdvanceDeviceFaultCm UpdateFaultReceiveTime", t, func() {
+		convey.Convey("When cm is nil, it should return directly", func() {
+			var cm *AdvanceDeviceFaultCm = nil
+			if cm != nil {
+				cm.UpdateFaultReceiveTime(nil)
+			}
+			convey.So(cm, convey.ShouldBeNil)
+		})
+		convey.Convey("When oldInfo type conversion failed, "+
+			"cm should use current time to update fault receive time", func() {
+			cm := mockAdvanceDeviceFaultCm()
+			oldInfo := new(SwitchInfo)
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime := cm.FaultDeviceList[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime, convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("When oldInfo is nil, cm should use current time to update fault receive time", func() {
+			cm := mockAdvanceDeviceFaultCm()
+			var oldInfo *AdvanceDeviceFaultCm = nil
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime := cm.FaultDeviceList[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime, convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("When oldInfo exists target fault, "+
+			"cm should use the data in oldInfo to update fault receive time", func() {
+			cm := mockAdvanceDeviceFaultCm()
+			cm.FaultDeviceList[device0][0].FaultTimeAndLevelMap[AicFaultCode] = FaultTimeAndLevel{
+				FaultTime:         0,
+				FaultReceivedTime: 0,
+				FaultLevel:        SeparateNPU,
+			}
+			oldInfo := mockAdvanceDeviceFaultCm()
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime1 := cm.FaultDeviceList[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			faultReceivedTime2 := cm.FaultDeviceList[device0][0].FaultTimeAndLevelMap[AicFaultCode].FaultReceivedTime
+			oldFaultReceivedTime1 :=
+				oldInfo.FaultDeviceList[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime1, convey.ShouldEqual, oldFaultReceivedTime1)
+			convey.So(faultReceivedTime2, convey.ShouldBeGreaterThan, 0)
+		})
+	})
+}
+
+func TestUpdateFaultReceiveTimeForDevices(t *testing.T) {
+	convey.Convey("Test updateFaultReceiveTimeForDevices when oldFaults is nil", t, func() {
+		cmFaults := mockFaultDeviceList(device0)
+		oldFaults := make(map[string][]DeviceFault)
+		updateFaultReceiveTimeForDevices(cmFaults, oldFaults)
+		faultReceivedTime := cmFaults[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+		convey.So(faultReceivedTime, convey.ShouldBeGreaterThan, 0)
+	})
+	convey.Convey("Test updateFaultReceiveTimeForDevices when oldFaults exist fault devices", t, func() {
+		cmFaults := mockFaultDeviceList(device0)
+		cmFaults[device1] = []DeviceFault{{FaultTimeAndLevelMap: mockFaultTimeAndLevelMap(AicFaultCode)}}
+		oldFaults := mockFaultDeviceList(device0)
+		updateFaultReceiveTimeForDevices(cmFaults, oldFaults)
+		faultReceivedTime1 := cmFaults[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+		faultReceivedTime2 := cmFaults[device1][0].FaultTimeAndLevelMap[AicFaultCode].FaultReceivedTime
+		oldFaultsFaultReceivedTime := oldFaults[device0][0].FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+		convey.So(faultReceivedTime1, convey.ShouldEqual, oldFaultsFaultReceivedTime)
+		convey.So(faultReceivedTime2, convey.ShouldBeGreaterThan, 0)
+	})
+}
+
+func mockSwitchInfo() *SwitchInfo {
+	return &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultTimeAndLevelMap: mockFaultTimeAndLevelMap(UceFaultCode)}}
+}
+
+func TestSwitchInfoUpdateFaultReceiveTime(t *testing.T) {
+	convey.Convey("Test SwitchInfo UpdateFaultReceiveTime", t, func() {
+		convey.Convey("When cm is nil, it should return directly", func() {
+			var cm *SwitchInfo = nil
+			if cm != nil {
+				cm.UpdateFaultReceiveTime(nil)
+			}
+			convey.So(cm, convey.ShouldBeNil)
+		})
+		convey.Convey("When oldInfo type conversion failed, "+
+			"cm should use current time to update fault receive time", func() {
+			cm := mockSwitchInfo()
+			oldInfo := new(AdvanceDeviceFaultCm)
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime := cm.FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime, convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("When oldInfo is nil, cm should use current time to update fault receive time", func() {
+			cm := mockSwitchInfo()
+			var oldInfo *SwitchInfo = nil
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime := cm.FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime, convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("When oldInfo exists target fault, "+
+			"cm should use the data in oldInfo to update fault receive time", func() {
+			cm := mockSwitchInfo()
+			cm.FaultTimeAndLevelMap[AicFaultCode] = FaultTimeAndLevel{
+				FaultTime:         0,
+				FaultReceivedTime: 0,
+				FaultLevel:        SeparateNPU,
+			}
+			oldInfo := mockSwitchInfo()
+			cm.UpdateFaultReceiveTime(oldInfo)
+			faultReceivedTime1 := cm.FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			faultReceivedTime2 := cm.FaultTimeAndLevelMap[AicFaultCode].FaultReceivedTime
+			oldFaultReceivedTime1 := oldInfo.FaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime1, convey.ShouldEqual, oldFaultReceivedTime1)
+			convey.So(faultReceivedTime2, convey.ShouldBeGreaterThan, 0)
+		})
+	})
+
+}
+
+func TestUpdateFaultReceiveTimeForSwitchs(t *testing.T) {
+	convey.Convey("Test updateFaultReceiveTimeForSwitchs when oldFaultTimeAndLevelMap is nil", t, func() {
+		cmFaultTimeAndLevelMap := mockFaultTimeAndLevelMap(UceFaultCode)
+		cmFaultTimeAndLevelMap[AicFaultCode] = FaultTimeAndLevel{FaultReceivedTime: 0}
+		var oldFaultTimeAndLevelMap map[string]FaultTimeAndLevel = nil
+		updateFaultReceiveTimeForSwitchs(cmFaultTimeAndLevelMap, oldFaultTimeAndLevelMap)
+		convey.So(cmFaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime, convey.ShouldBeGreaterThan, 0)
+	})
+	convey.Convey("Test updateFaultReceiveTimeForSwitchs when oldFaultTimeAndLevelMap exists target key",
+		t, func() {
+			cmFaultTimeAndLevelMap := mockFaultTimeAndLevelMap(UceFaultCode)
+			cmFaultTimeAndLevelMap[AicFaultCode] = FaultTimeAndLevel{FaultReceivedTime: 0}
+			oldFaultTimeAndLevelMap := mockFaultTimeAndLevelMap(UceFaultCode)
+			updateFaultReceiveTimeForSwitchs(cmFaultTimeAndLevelMap, oldFaultTimeAndLevelMap)
+			faultReceivedTime1 := cmFaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			faultReceivedTime2 := cmFaultTimeAndLevelMap[AicFaultCode].FaultReceivedTime
+			oldFaultReceivedTime1 := cmFaultTimeAndLevelMap[UceFaultCode].FaultReceivedTime
+			convey.So(faultReceivedTime1, convey.ShouldEqual, oldFaultReceivedTime1)
+			convey.So(faultReceivedTime2, convey.ShouldBeGreaterThan, 0)
+		})
 }
 
 func TestDeviceInfoBusinessDataIsNotEqual(t *testing.T) {

@@ -104,6 +104,7 @@ func (cm *ConfigMap[T]) updateCmInfo(newInfo T, isAdd bool) {
 			hwlog.RunLog.Errorf("updateCmInfo %s failed, exceed length", util.ObjToString(newInfo))
 			return
 		}
+		newInfo.UpdateFaultReceiveTime(cm.Data[newInfo.GetCmName()])
 		cm.Data[newInfo.GetCmName()] = newInfo
 		hwlog.RunLog.Debugf("add DeviceInfo: %s", util.ObjToString(newInfo))
 		return
