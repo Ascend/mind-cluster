@@ -34,7 +34,7 @@ const (
 	retryTimes           = 3
 	randomLen            = 16
 	reportTimeoutMinutes = 15
-	faultFlushSeconds    = 10
+	faultFlushSeconds    = 1
 	eventChanLength      = 10
 )
 
