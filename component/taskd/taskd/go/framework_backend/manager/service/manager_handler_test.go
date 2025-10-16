@@ -18,12 +18,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/agiledragon/gomonkey/v2"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 
 	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
@@ -172,14 +173,13 @@ func TestReplyToClusterDReplyMsg(t *testing.T) {
 		defer patch.Reset()
 		processor := &MsgProcessor{}
 		called := false
-		patch.ApplyFunc(utils.GetClusterdAddr, func() (string, error) {
-			return "127.0.0.1", nil
-		}).ApplyFunc(grpc.Dial, func(addr string, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
-			return nil, nil
-		}).ApplyPrivateMethod(processor, "replyStressTestMsg", func(result string, client pb.RecoverClient) error {
-			called = true
-			return nil
-		})
+		patch.ApplyFunc(utils.GetClusterdAddr, func() (string, error) { return "127.0.0.1", nil }).
+			ApplyFuncReturn(grpc.Dial, nil, nil).
+			ApplyMethodReturn(&grpc.ClientConn{}, "Close", nil).
+			ApplyPrivateMethod(processor, "replyStressTestMsg", func(result string, client pb.RecoverClient) error {
+				called = true
+				return nil
+			})
 		processor.replyToClusterD(map[string]string{constant.StressTestResultStr: "success"})
 		assert.True(t, called)
 	})
@@ -188,14 +188,13 @@ func TestReplyToClusterDReplyMsg(t *testing.T) {
 		defer patch.Reset()
 		processor := &MsgProcessor{}
 		called := false
-		patch.ApplyFunc(utils.GetClusterdAddr, func() (string, error) {
-			return "127.0.0.1", nil
-		}).ApplyFunc(grpc.Dial, func(addr string, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
-			return nil, nil
-		}).ApplyPrivateMethod(processor, "replySwitchNicMsg", func(result string, client pb.RecoverClient) error {
-			called = true
-			return nil
-		})
+		patch.ApplyFunc(utils.GetClusterdAddr, func() (string, error) { return "127.0.0.1", nil }).
+			ApplyFuncReturn(grpc.Dial, nil, nil).
+			ApplyMethodReturn(&grpc.ClientConn{}, "Close", nil).
+			ApplyPrivateMethod(processor, "replySwitchNicMsg", func(result string, client pb.RecoverClient) error {
+				called = true
+				return nil
+			})
 		processor.replyToClusterD(map[string]string{constant.SwitchNicResultStr: "success"})
 		assert.True(t, called)
 	})

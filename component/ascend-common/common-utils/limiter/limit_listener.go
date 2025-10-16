@@ -144,6 +144,10 @@ type limitListenerConn struct {
 // Close override  net.Conn interface
 func (l *limitListenerConn) Close() error {
 	err := l.Conn.Close()
+	if err != nil {
+		hwlog.RunLog.Debugf("close grpc connect failed: %v", err)
+		return fmt.Errorf("close grpc connect failed: %v", err)
+	}
 	l.releaseOnce.Do(l.release)
 	ip, cacheKey := getIpAndKey(l.Conn)
 	if ip != "" && l.ipCache != nil {

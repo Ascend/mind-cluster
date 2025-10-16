@@ -75,6 +75,11 @@ func (mpc *MsgProcessor) replyToClusterD(result map[string]string) {
 		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
 		return
 	}
+	defer func(conn *grpc.ClientConn) {
+		if err = conn.Close(); err != nil {
+			hwlog.RunLog.Errorf("close grpc connect failed, err: %v", err)
+		}
+	}(conn)
 	client := pb.NewRecoverClient(conn)
 	if result[constant.StressTestResultStr] != "" {
 		err = mpc.replyStressTestMsg(result[constant.StressTestResultStr], client)
