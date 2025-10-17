@@ -595,6 +595,11 @@ func ReportControllerInfoToClusterd(message *constant.ControllerMessage) bool {
 		hwlog.RunLog.Errorf("init clusterd connect err: %v", err)
 		return false
 	}
+	defer func(conn *grpc.ClientConn) {
+		if err = conn.Close(); err != nil {
+			hwlog.RunLog.Errorf("close grpc connect failed, err: %v", err)
+		}
+	}(conn)
 	client := pb.NewRecoverClient(conn)
 	sendTimes := 0
 	for sendTimes <= constant.MaxSendTimes {
