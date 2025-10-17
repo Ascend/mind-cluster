@@ -322,8 +322,7 @@ func TestStop(t *testing.T) {
 	pr := NewPodResource()
 	pr.conn = &grpc.ClientConn{}
 	pr.client = &FakeClient{}
-	patch := gomonkey.ApplyMethodReturn(&grpc.ClientConn{}, "Close",
-		errors.New("fake close error"))
+	patch := gomonkey.ApplyMethodReturn(&grpc.ClientConn{}, "Close", errors.New("fake close error"))
 	defer patch.Reset()
 	pr.stop()
 	if pr.conn != nil || pr.client != nil {
