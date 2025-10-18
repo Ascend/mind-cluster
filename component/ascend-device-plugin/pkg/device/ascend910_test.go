@@ -318,27 +318,15 @@ func TestCanBeReset(t *testing.T) {
 				return true
 			})
 			defer patch1.Reset()
-			_, err := manager.canBeReset(mockSingleDevFaultInfo())
+			_, err := manager.canBeReset(mockSingleDevFaultInfo(), mockOneEmptyPodList())
 			convey.So(err, convey.ShouldBeNil)
 		})
 		common.ParamOption.RealCardType = api.Ascend910B
-		// empty situation
-		mockPodList := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodList",
-			func(_ *kubeclient.ClientK8s) (*v1.PodList, error) {
-				return mockOneEmptyPodList(), nil
-			})
-		defer mockPodList.Reset()
-		resultBool, err := manager.canBeReset(mockSingleDevFaultInfo())
+		resultBool, err := manager.canBeReset(mockSingleDevFaultInfo(), mockOneEmptyPodList())
 		convey.So(resultBool, convey.ShouldBeTrue)
 		convey.So(err, convey.ShouldBeNil)
 
-		// chip busy situation
-		mockPodList = gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetAllPodList",
-			func(_ *kubeclient.ClientK8s) (*v1.PodList, error) {
-				return mockGetAllPodList(), nil
-			})
-		defer mockPodList.Reset()
-		resultBool, err = manager.canBeReset(mockSingleDevFaultInfo())
+		resultBool, err = manager.canBeReset(mockSingleDevFaultInfo(), mockGetAllPodList())
 		convey.So(resultBool, convey.ShouldBeFalse)
 		convey.So(err, convey.ShouldBeNil)
 	})
@@ -353,7 +341,7 @@ func TestCanA3BeReset(t *testing.T) {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
 				int32(id1), int32(id1), testErr)
 			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
+			ret := manager.canA3BeReset(dev, mockOneEmptyPodList())
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
@@ -365,32 +353,25 @@ func TestCanA3BeReset(t *testing.T) {
 					return nil, testErr
 				})
 			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
+			ret := manager.canA3BeReset(dev, mockOneEmptyPodList())
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		patch.ApplyMethod(manager, "GetAssociatedLogicIDs",
 			func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 				return []int32{id1}, nil
 			})
-		convey.Convey("03-get pod list failed, should return false", func() {
-			patch1 := gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodList",
-				nil, testErr)
-			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
-			convey.So(ret, convey.ShouldBeFalse)
-		})
 		patch.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodList", nil, nil)
 		patch.ApplyPrivateMethod(manager, "getBusyChipListFromPod",
 			func(podList *v1.PodList) []string {
 				return []string{}
 			})
-		convey.Convey("04-get chip active error, should return false", func() {
+		convey.Convey("03-get chip active error, should return false", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "isChipActive",
 				func(logicID int32, busyChipList []string) (bool, error) {
 					return false, testErr
 				})
 			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
+			ret := manager.canA3BeReset(dev, mockOneEmptyPodList())
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 	})
@@ -408,7 +389,6 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 			func(_ *HwAscend910Manager, logicID, cardID, deviceID int32) ([]int32, error) {
 				return []int32{id1}, nil
 			})
-		patch.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetAllPodList", nil, nil)
 		patch.ApplyPrivateMethod(manager, "getBusyChipListFromPod",
 			func(podList *v1.PodList) []string {
 				return []string{}
@@ -419,7 +399,7 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 					return false, nil
 				})
 			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
+			ret := manager.canA3BeReset(dev, mockOneEmptyPodList())
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		convey.Convey("06-success, should return true", func() {
@@ -428,7 +408,7 @@ func TestCanA3BeResetPatch1(t *testing.T) {
 					return true, nil
 				})
 			defer patch1.Reset()
-			ret := manager.canA3BeReset(dev)
+			ret := manager.canA3BeReset(dev, mockOneEmptyPodList())
 			convey.So(ret, convey.ShouldBeTrue)
 		})
 	})
@@ -1429,34 +1409,6 @@ func TestHandleResetProcess(t *testing.T) {
 		manager.handleResetProcess(classifyDevs, devInfo, npuDev)
 		convey.So(classifyDevs[api.Ascend910][0].Health, convey.ShouldEqual, v1beta1.Healthy)
 		convey.So(isolateDevList, convey.ShouldResemble, []int32{chipPhyID0})
-	})
-}
-
-// TestHandleL2L3FaultRestart for test handleL2L3FaultRestart
-func TestHandleL2L3FaultRestart(t *testing.T) {
-	manager := createFake910Manager()
-	convey.Convey("test handleL2L3FaultRestart", t, func() {
-		patch := gomonkey.ApplyGlobalVar(&isL3FaultExistMap, map[int32]bool{id2: true, id3: false})
-		defer patch.Reset()
-		convey.Convey("01-free reset error,should return false", func() {
-			devFaultInfo := &common.DevFaultInfo{LogicId: id1, Policy: common.FreeResetError}
-			l3RestartFlag := manager.handleL2L3FaultRestart(devFaultInfo)
-			convey.So(l3RestartFlag, convey.ShouldBeFalse)
-			convey.So(isL3FaultExistMap[id1], convey.ShouldBeFalse)
-		})
-
-		convey.Convey("02-restart error and value is true in isL3FaultExistMap, should return true", func() {
-			devFaultInfo := &common.DevFaultInfo{LogicId: id2, Policy: common.RestartError}
-			l3RestartFlag := manager.handleL2L3FaultRestart(devFaultInfo)
-			convey.So(l3RestartFlag, convey.ShouldBeTrue)
-			convey.So(isL3FaultExistMap[id2], convey.ShouldBeFalse)
-		})
-		convey.Convey("03-restart error and value is false in isL3FaultExistMap, should return false", func() {
-			devFaultInfo := &common.DevFaultInfo{LogicId: id3, Policy: common.RestartError}
-			l3RestartFlag := manager.handleL2L3FaultRestart(devFaultInfo)
-			convey.So(l3RestartFlag, convey.ShouldBeFalse)
-			convey.So(isL3FaultExistMap[id3], convey.ShouldBeTrue)
-		})
 	})
 }
 
@@ -3086,4 +3038,45 @@ func TestGetDevFaultInfo(t *testing.T) {
 			convey.So(result, convey.ShouldResemble, tt.expectedResult)
 		})
 	}
+}
+
+func TestHwAscend910ManagerHandleL2L3FaultRestart(t *testing.T) {
+	convey.Convey("Test handleL2L3FaultRestart", t, func() {
+		hnm := &HwAscend910Manager{}
+
+		convey.Convey("when policy is RestartError", func() {
+			devFaultInfo := &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  common.RestartError,
+			}
+
+			convey.Convey("should store fault time when first fault", func() {
+				l2l3FaultTimeMap.Delete(devFaultInfo.LogicId)
+				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeFalse)
+				faultTime, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeTrue)
+				convey.So(faultTime, convey.ShouldNotBeZeroValue)
+			})
+
+			convey.Convey("should return true and delete map when timeout", func() {
+				oldTime := time.Now().Unix() - common.L2L3FaultToleranceTimeInterval - 1
+				l2l3FaultTimeMap.Store(devFaultInfo.LogicId, oldTime)
+				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeTrue)
+				_, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeFalse)
+			})
+
+			convey.Convey("should return false when within tolerance time", func() {
+				recentTime := time.Now().Unix() - common.L2L3FaultToleranceTimeInterval + common.BaseDec
+				l2l3FaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeFalse)
+				faultTime, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeTrue)
+				convey.So(faultTime, convey.ShouldEqual, recentTime)
+			})
+		})
+	})
 }

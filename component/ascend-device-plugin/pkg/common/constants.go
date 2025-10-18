@@ -820,4 +820,6 @@ const (
 const (
 	// L1ToL2PlanePortNum l1 switch port number link to l2
 	L1ToL2PlanePortNum = 16
+	// L2L3FaultToleranceTimeInterval l2 l3 fault tolerance time interval
+	L2L3FaultToleranceTimeInterval = 60
 )
