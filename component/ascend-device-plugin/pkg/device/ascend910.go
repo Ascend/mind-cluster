@@ -55,15 +55,27 @@ var (
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
-	isL3FaultExistMap             map[int32]bool = make(map[int32]bool, common.MaxDevicesNum)
-	resetGoroutine                               = &sync.Map{}
-	offlineInBandFailLogicId                     = sync.Map{}
+	l2l3FaultTimeMap              = &sync.Map{}
+	resetGoroutine                = &sync.Map{}
+	offlineInBandFailLogicId      = sync.Map{}
 )
 
 // HwAscend910Manager manages huawei Ascend910 devices.
 type HwAscend910Manager struct {
 	AscendTools
 	hotResetManager HotResetManager
+}
+
+func getL2L3FaultTime(logicId int32) int64 {
+	tmpFaultTime, ok := l2l3FaultTimeMap.Load(logicId)
+	if !ok {
+		return 0
+	}
+	faultTime, ok := tmpFaultTime.(int64)
+	if !ok {
+		return 0
+	}
+	return faultTime
 }
 
 // NewHwAscend910Manager is used to create ascend 910 manager
@@ -178,9 +190,11 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	resetFaultInfos := make([]*common.DevFaultInfo, 0, len(deviceList))
 	isHotResetOn = true
 	resetRing := make(map[int32]struct{})
+	var podList *v1.PodList = nil
 	for _, dev := range deviceList {
 		tempFaultInfo := hnm.getDevFaultInfo(dev.LogicID)
 		if tempFaultInfo == nil {
+			l2l3FaultTimeMap.Delete(dev.LogicID)
 			continue
 		}
 		idx, err := hnm.getResetIndex(dev)
@@ -190,7 +204,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		if _, exist := resetRing[idx]; exist {
 			continue
 		}
-		if canReset, err := hnm.canBeReset(tempFaultInfo); err != nil || !canReset {
+		if canReset, err := hnm.canBeReset(tempFaultInfo, podList); err != nil || !canReset {
 			hwlog.RunLog.Infof("device %v cannot reset, it is busy, err: %v", tempFaultInfo.LogicId, err)
 			continue
 		}
@@ -204,9 +218,8 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 		hwlog.RunLog.Debugf("found %v error on device %v, will start reset process "+
 			"whenever all chips are free on ring", tempFaultInfo.Policy, dev.DeviceName)
 	}
-	var err error
 	for idx, dev := range resetDevs {
-		if err = hnm.startUpHotReset(classifyDevs, resetFaultInfos[idx], dev); err != nil {
+		if err := hnm.startUpHotReset(classifyDevs, resetFaultInfos[idx], dev); err != nil {
 			hwlog.RunLog.Errorf("failed to start up hot reset, err: %v", err)
 		}
 	}
@@ -277,14 +290,16 @@ func npuDevToResetDev(dev common.NpuDevice) ResetDevice {
 // handleL2L3FaultRestart restarts when l2l3 faults handling failed
 func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFaultInfo *common.DevFaultInfo) bool {
 	if devFaultInfo.Policy == common.RestartError || devFaultInfo.Policy == common.RestartRequestError {
-		existFlag, ok := isL3FaultExistMap[devFaultInfo.LogicId]
-		if existFlag && ok {
-			isL3FaultExistMap[devFaultInfo.LogicId] = false
+		faultTime := getL2L3FaultTime(devFaultInfo.LogicId)
+		if faultTime == 0 {
+			l2l3FaultTimeMap.Store(devFaultInfo.LogicId, time.Now().Unix())
+			return false
+		}
+		if time.Now().Unix()-faultTime > common.L2L3FaultToleranceTimeInterval {
+			hwlog.RunLog.Infof("device %v l2l3 fault restart over 60s, exec reset", devFaultInfo.LogicId)
+			l2l3FaultTimeMap.Delete(devFaultInfo.LogicId)
 			return true
 		}
-		isL3FaultExistMap[devFaultInfo.LogicId] = true
-	} else {
-		isL3FaultExistMap[devFaultInfo.LogicId] = false
 	}
 	return false
 }
@@ -506,20 +521,23 @@ func (hnm *HwAscend910Manager) isChipActive(logicID int32, busyChipList []string
 }
 
 // canBeReset check if all chips are active
-func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error) {
+func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo, podList *v1.PodList) (bool, error) {
 	if !hnm.canResetDeviceByLogicID(dev.LogicId) {
 		return false, nil
 	}
+	if podList == nil {
+		var err error
+		podList, err = hnm.client.GetAllPodList()
+		if err != nil {
+			hwlog.RunLog.Errorf("get pod list fail, err %v", err)
+			return false, err
+		}
+	}
 	if common.ParamOption.RealCardType == api.Ascend910A3 &&
-		hnm.canA3BeReset(dev) {
+		hnm.canA3BeReset(dev, podList) {
 		return true, nil
 	}
 	oriLogicID := dev.LogicId
-	podList, err := hnm.client.GetAllPodList()
-	if err != nil {
-		hwlog.RunLog.Errorf("get pod list fail, err %v", err)
-		return false, err
-	}
 	busyChipList := hnm.getBusyChipListFromPod(podList)
 	resetDevNumOnce, err := hnm.hotResetManager.GetResetDevNumOnce()
 	if err != nil {
@@ -540,7 +558,10 @@ func (hnm *HwAscend910Manager) canBeReset(dev *common.DevFaultInfo) (bool, error
 	return true, nil
 }
 
-func (hnm *HwAscend910Manager) canA3BeReset(dev *common.DevFaultInfo) bool {
+func (hnm *HwAscend910Manager) canA3BeReset(dev *common.DevFaultInfo, podList *v1.PodList) bool {
+	if podList == nil {
+		return false
+	}
 	cardID, deviceID, err := hnm.GetDmgr().GetCardIDDeviceID(dev.LogicId)
 	if err != nil {
 		hwlog.RunLog.Errorf("get cardID deviceID by logicID %v faild: %v", dev.LogicId, err)
@@ -548,11 +569,6 @@ func (hnm *HwAscend910Manager) canA3BeReset(dev *common.DevFaultInfo) bool {
 	}
 	logicIdArr, err := hnm.GetAssociatedLogicIDs(dev.LogicId, cardID, deviceID)
 	if err != nil {
-		return false
-	}
-	podList, err := hnm.client.GetAllPodList()
-	if err != nil {
-		hwlog.RunLog.Errorf("get pod list fail, err %v", err)
 		return false
 	}
 	busyChipList := hnm.getBusyChipListFromPod(podList)
