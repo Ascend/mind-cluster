@@ -180,25 +180,25 @@ func initTestLog() {
 // TestEditContainerdConfig tests the function editContainerdConfig
 func TestEditContainerdConfig(t *testing.T) {
 	tests := []struct {
-		name            string
-		srcFilePath     string
-		runtimeFilePath string
-		destFilePath    string
-		action          string
-		cgroupInfo      string
-		wantErr         bool
+		name    string
+		args    *commandArgs
+		wantErr bool
 	}{
 		{
-			name:       "v2  failed case 1",
-			action:     addCommand,
-			cgroupInfo: cgroupV2InfoStr,
-			wantErr:    true,
+			name: "v2  failed case 1",
+			args: &commandArgs{
+				action:     addCommand,
+				cgroupInfo: cgroupV2InfoStr,
+			},
+			wantErr: true,
 		},
 		{
-			name:       "v1  failed case 2",
-			action:     addCommand,
-			cgroupInfo: "",
-			wantErr:    true,
+			name: "v1  failed case 2",
+			args: &commandArgs{
+				action:     addCommand,
+				cgroupInfo: "",
+			},
+			wantErr: true,
 		},
 	}
 	patch := gomonkey.ApplyFunc(config.LoadConfig, func(path string, out *config.Config) error {
@@ -207,8 +207,7 @@ func TestEditContainerdConfig(t *testing.T) {
 	defer patch.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := editContainerdConfig(tt.srcFilePath, tt.runtimeFilePath, tt.destFilePath,
-				tt.action, tt.cgroupInfo); (err != nil) != tt.wantErr {
+			if err := editContainerdConfig(tt.args); (err != nil) != tt.wantErr {
 				t.Errorf("editContainerdConfig() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -223,7 +222,8 @@ func TestEditContainerdConfig1(t *testing.T) {
 				return testError
 			})
 			defer patches.Reset()
-			err := editContainerdConfig("", "", "", addCommand, cgroupV2InfoStr)
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("02-changeCgroupV2BinaryNameConfig failed", func() {
@@ -231,7 +231,8 @@ func TestEditContainerdConfig1(t *testing.T) {
 				return testError
 			})
 			defer patches.Reset()
-			err := editContainerdConfig("", "", "", addCommand, cgroupV2InfoStr)
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("03-changeCgroupV1Config failed", func() {
@@ -240,7 +241,8 @@ func TestEditContainerdConfig1(t *testing.T) {
 				return testError
 			})
 			defer patches.Reset()
-			err := editContainerdConfig("", "", "", addCommand, "")
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: "", osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeError)
 		})
 	})
@@ -254,7 +256,8 @@ func TestEditContainerdConfig2(t *testing.T) {
 				ApplyFuncReturn(changeCgroupV2BinaryNameConfig, nil).
 				ApplyFuncReturn(writeContainerdConfigToFile, testError)
 			defer patches.Reset()
-			err := editContainerdConfig("", "", "", addCommand, cgroupV2InfoStr)
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("05-all pass, should return nil", func() {
@@ -262,7 +265,8 @@ func TestEditContainerdConfig2(t *testing.T) {
 				ApplyFuncReturn(changeCgroupV2BinaryNameConfig, nil).
 				ApplyFuncReturn(writeContainerdConfigToFile, nil)
 			defer patches.Reset()
-			err := editContainerdConfig("", "", "", addCommand, cgroupV2InfoStr)
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})

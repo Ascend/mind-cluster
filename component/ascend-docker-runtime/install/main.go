@@ -52,7 +52,7 @@ const (
 	maxCommandLength         = 65535
 	logPath                  = api.InstallHelperRunLogPath
 	minCommandLength         = 2
-	installSceneIndexFromEnd = 2
+	installSceneIndexFromEnd = 4
 )
 
 var reserveDefaultRuntime = false
@@ -75,9 +75,9 @@ func main() {
 	}
 
 	const helpMessage = "\tadd <config file path> <new config file path> " +
-		"<docker-runtime path> <whether reserve default> <docker or containerd> <cgroup info>\n" +
+		"<docker-runtime path> <whether reserve default> <docker or containerd> <cgroup info> <os name> <os version>\n" +
 		"\t rm <config file path> <new config file path> <docker or containerd> <whether reserve default>" +
-		" <docker or containerd> <cgroup info>\n" + "\t -h help command"
+		" <docker or containerd> <cgroup info> <os name> <os version>\n" + "\t -h help command"
 	helpFlag := flag.Bool("h", false, helpMessage)
 	flag.Parse()
 	if *helpFlag {
