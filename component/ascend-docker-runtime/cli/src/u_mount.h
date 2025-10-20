@@ -20,5 +20,11 @@
 
 int DoMounting(const struct ParsedConfig *config);
 bool DoMounting200RC(bool* is200Rc);
+int Mount(const char *src, const char *dst);
+
+#ifdef GOOGLE_TEST
+STATIC bool CheckSrcFile(const char *src);
+STATIC int MountFile(const char *rootfs, const char *filepath);
+#endif
 
 #endif

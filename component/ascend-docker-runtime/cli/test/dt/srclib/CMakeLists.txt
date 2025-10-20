@@ -19,3 +19,4 @@ include_directories("../Depend/libboundscheck/include")
 
 add_library(${PROJECT_NAME} ${UT_DEMO_SRCS})
 target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/liblibboundscheck.a)
+target_compile_definitions(${PROJECT_NAME} PRIVATE GOOGLE_TEST)

@@ -26,11 +26,11 @@
 #include "options.h"
 #include "logger.h"
 
-static bool CheckSrcFile(const char *src)
+STATIC bool CheckSrcFile(const char *src)
 {
     struct stat fileStat;
     if (lstat(src, &fileStat) != 0) {
-        return -1; // 待挂载源文件不存在
+        return false; // 待挂载源文件不存在
     }
     if ((S_ISREG(fileStat.st_mode) != 0) || (S_ISDIR(fileStat.st_mode) != 0)) { // 只校验文件和目录
             const size_t maxFileSzieMb = 10 * 1024; // max 10 G
@@ -79,7 +79,7 @@ int Mount(const char *src, const char *dst)
     return 0;
 }
 
-static int MountFile(const char *rootfs, const char *filepath)
+STATIC int MountFile(const char *rootfs, const char *filepath)
 {
     if (rootfs == NULL || filepath == NULL) {
         Logger("rootfs, filepath pointer is null!", LEVEL_ERROR, SCREEN_YES);

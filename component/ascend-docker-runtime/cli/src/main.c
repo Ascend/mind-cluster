@@ -37,14 +37,6 @@
 #define MAX_ARGC 1024
 #define MAX_ARG_LEN 1024
 
-struct CmdArgs {
-    char rootfs[BUF_SIZE];
-    long pid;
-    char options[BUF_SIZE];
-    struct MountList files;
-    struct MountList dirs;
-};
-
 static struct option g_cmdOpts[] = {
     {"allow-link", required_argument, 0, 'l'},
     {"devices", required_argument, 0, 'd'},
@@ -58,7 +50,7 @@ static struct option g_cmdOpts[] = {
 
 typedef bool (*CmdArgParser)(struct CmdArgs *args, const char *arg);
 
-static bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
+STATIC bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     char buff[PATH_MAX] = {0};
 
@@ -153,7 +145,7 @@ static bool RootfsCmdArgParser(struct CmdArgs *args, const char *arg)
     return true;
 }
 
-static bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg)
+STATIC bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     if (args == NULL || arg == NULL) {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
@@ -212,7 +204,7 @@ static bool CheckWhiteList(const char* fileName)
     return true;
 }
 
-static bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
+STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     if (args == NULL || arg == NULL) {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
@@ -245,7 +237,7 @@ static bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
     return CheckWhiteList(dst) ? true : false;
 }
 
-static bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
+STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     if (args == NULL || arg == NULL) {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
@@ -276,7 +268,7 @@ static bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
     return CheckWhiteList(dst) ? true : false;
 }
 
-static bool LinkCheckCmdArgParser(const char *argv)
+STATIC bool LinkCheckCmdArgParser(const char *argv)
 {
     if (argv == NULL) {
         Logger("link arg pointer is null!", LEVEL_ERROR, SCREEN_YES);

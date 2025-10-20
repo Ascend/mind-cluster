@@ -17,4 +17,14 @@
 
 void Logger(const char *msg, int level, int screen);
 
+#ifdef GOOGLE_TEST
+STATIC void WriteLogFile(const char* filename, const long maxSize, const char* buffer, unsigned bufferSize);
+STATIC long GetLogSize(const char* filename);
+STATIC int CreateLog(const char* filename);
+STATIC int GetCurrentLocalTime(char* buffer, int length);
+STATIC bool LogConvertStorage(const char* filename, const long maxSize);
+STATIC void DivertAndWrite(const char *logPath, const char *msg, const int level);
+STATIC long GetLogSizeProcess(const char* path);
+#endif
+
 #endif
