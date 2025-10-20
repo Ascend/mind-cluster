@@ -211,12 +211,15 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 			SwitchFaultInfo: constant.SwitchFaultInfo{
 				NodeStatus: constant.PreSeparateFault,
 				FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "SW001"}},
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"SW001_0_0": {FaultLevel: constant.PreSeparateFault}},
 			},
 		}
 		faults := getSwitchFaultInfo(switchInfo)
 		convey.So(faults[0].FaultCodes[0], convey.ShouldEqual, "SW001")
 		convey.So(faults[0].SwitchFaultInfos[0].SwitchChipId, convey.ShouldEqual, "0")
 		convey.So(faults[0].SwitchFaultInfos[0].SwitchPortId, convey.ShouldEqual, "0")
+		convey.So(faults[0].SwitchFaultInfos[0].FaultLevel, convey.ShouldEqual, constant.PreSeparateFault)
 	})
 }
 
@@ -230,11 +233,24 @@ func TestGetNpuDeviceFaultInfo(t *testing.T) {
 	convey.Convey("Test with device fault, got device fault", t, func() {
 		deviceCm := &constant.AdvanceDeviceFaultCm{
 			FaultDeviceList: map[string][]constant.DeviceFault{
-				"npu-0": {{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault}},
+				"npu-0": {
+					{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault,
+						FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+							"NPU001": {FaultLevel: constant.SubHealthFault}},
+					},
+					{FaultCode: "NPU002", FaultLevel: constant.NotHandleFault,
+						FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+							"NPU002": {FaultLevel: constant.NotHandleFault}},
+					},
+				},
 			},
 		}
 		faults := getNpuDeviceFaultInfo(deviceCm)
 		convey.So(faults[0].DeviceId, convey.ShouldEqual, "0")
+		convey.So(faults[0].FaultCodes[0], convey.ShouldEqual, "NPU001")
+		convey.So(faults[0].FaultLevels[0], convey.ShouldEqual, constant.SubHealthFault)
+		convey.So(faults[0].FaultCodes[1], convey.ShouldEqual, "NPU002")
+		convey.So(faults[0].FaultLevels[1], convey.ShouldEqual, constant.NotHandleFault)
 	})
 }
 
@@ -242,25 +258,37 @@ func TestGetNpuDeviceFaultInfo(t *testing.T) {
 func TestGetDeviceFaultInfo(t *testing.T) {
 	convey.Convey("Test with healthy state", t, func() {
 		deviceFaults := []constant.DeviceFault{
-			{FaultCode: "NPU001", FaultLevel: constant.NotHandleFault},
+			{
+				FaultCode: "NPU001", FaultLevel: constant.NotHandleFault,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"NPU001": {FaultLevel: constant.NotHandleFault}},
+			},
+			{
+				FaultCode: "NPU002", FaultLevel: constant.RestartRequest,
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+					"NPU002": {FaultLevel: constant.RestartRequest}},
+			},
 		}
-		codes, level := getDeviceFaultInfo(deviceFaults)
+		codes, levels, level := getDeviceFaultInfo(deviceFaults)
 		convey.So(codes[0], convey.ShouldEqual, "NPU001")
-		convey.So(level, convey.ShouldEqual, constant.HealthyState)
+		convey.So(codes[1], convey.ShouldEqual, "NPU002")
+		convey.So(levels[0], convey.ShouldEqual, constant.NotHandleFault)
+		convey.So(levels[1], convey.ShouldEqual, constant.RestartRequest)
+		convey.So(level, convey.ShouldEqual, constant.UnHealthyState)
 	})
 
 	convey.Convey("Test with sub healthy state", t, func() {
 		deviceFaults := []constant.DeviceFault{
 			{FaultCode: "NPU001", FaultLevel: constant.SubHealthFault},
 		}
-		_, level := getDeviceFaultInfo(deviceFaults)
+		_, _, level := getDeviceFaultInfo(deviceFaults)
 		convey.So(level, convey.ShouldEqual, constant.SubHealthyState)
 	})
 	convey.Convey("Test with unhealthy state", t, func() {
 		deviceFaults := []constant.DeviceFault{
 			{FaultCode: "NPU001", FaultLevel: "unknowLevel"},
 		}
-		_, level := getDeviceFaultInfo(deviceFaults)
+		_, _, level := getDeviceFaultInfo(deviceFaults)
 		convey.So(level, convey.ShouldEqual, constant.UnHealthyState)
 	})
 }

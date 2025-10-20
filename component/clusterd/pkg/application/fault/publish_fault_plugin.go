@@ -239,12 +239,14 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 		}
 		if faultInfo.FaultCode != "" {
 			info.FaultCodes = append(info.FaultCodes, faultInfo.FaultCode)
+			info.FaultLevels = append(info.FaultLevels, faultInfo.FaultLevel)
 			if faultInfo.SwitchChipId != "" && faultInfo.SwitchPortId != "" && faultInfo.SwitchFaultTime != "" {
 				info.SwitchFaultInfos = append(info.SwitchFaultInfos, &fault.SwitchFaultInfo{
 					FaultCode:    faultInfo.FaultCode,
 					SwitchChipId: faultInfo.SwitchChipId,
 					SwitchPortId: faultInfo.SwitchPortId,
 					FaultTime:    faultInfo.SwitchFaultTime,
+					FaultLevel:   faultInfo.FaultLevel,
 				})
 			}
 		}
