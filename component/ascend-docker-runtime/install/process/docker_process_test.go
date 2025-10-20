@@ -364,13 +364,13 @@ func getTestDockerProcessCases() []testProcessArg {
 		},
 		{
 			Name:       "file not exist case 3",
-			Command:    []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr},
+			Command:    []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
 			WantErr:    true,
 			WantResult: rmBehavior,
 		},
 		{
 			Name:       "success case 4",
-			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr},
+			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
 			WantErr:    true,
 			WantResult: addBehavior,
 		},
@@ -476,7 +476,7 @@ func TestSetReserveDefaultRuntime(t *testing.T) {
 			convey.So(reserveDefaultRuntime, convey.ShouldBeFalse)
 		})
 		convey.Convey("02-command is yes, reserveDefaultRuntime should be true", func() {
-			command := []string{"yes", "2", "3"}
+			command := []string{"yes", "2", "3", "4", "5"}
 			setReserveDefaultRuntime(command)
 			defer func() { reserveDefaultRuntime = false }()
 			convey.So(reserveDefaultRuntime, convey.ShouldBeTrue)

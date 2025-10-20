@@ -329,12 +329,13 @@ function install()
         DST="${CONFIG_FILE_PATH}"
     fi
 
-
+    OS_NAME=$(grep '^ID=' /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+    OS_VERSION=$(grep '^VERSION_ID=' /etc/os-release | awk -F= '{print $2}' | tr -d '"')
     CGROUP_INFO=$(stat -fc %T /sys/fs/cgroup/)
     # exit when return code is not 0, if use 'set -e'
-    ./ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} > /dev/null
+    ./ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} ${OS_NAME} ${OS_VERSION} > /dev/null
     if [[ $? != 0 ]]; then
-        log "[ERROR]" "install failed, './ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO}' return non-zero"
+        log "[ERROR]" "install failed, './ascend-docker-plugin-install-helper add ${DST} ${SRC} ${INSTALL_PATH}/ascend-docker-runtime ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} ${OS_NAME} ${OS_VERSION}' return non-zero"
         exit 1
     fi
     mv -f ${SRC} ${DST}
