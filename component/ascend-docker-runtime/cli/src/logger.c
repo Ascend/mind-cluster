@@ -31,7 +31,7 @@
 #define MONTH_OFFSET 1
 #define LOG_LENGTH 1024
 
-static int GetCurrentLocalTime(char* buffer, int length)
+STATIC int GetCurrentLocalTime(char* buffer, int length)
 {
     if (buffer == NULL) {
         (void)fprintf(stderr, "buffer pointer is null!\n");
@@ -58,7 +58,7 @@ static int GetCurrentLocalTime(char* buffer, int length)
                      (timeinfo->tm_sec));
 }
 
-static int CreateLog(const char* filename)
+STATIC int CreateLog(const char* filename)
 {
     if (filename == NULL) {
         return -1;
@@ -76,7 +76,7 @@ static int CreateLog(const char* filename)
     return 0;
 }
 
-static long GetLogSizeProcess(const char* path)
+STATIC long GetLogSizeProcess(const char* path)
 {
     FILE *fp = NULL;
     fp = fopen(path, "rb");
@@ -92,7 +92,7 @@ static long GetLogSizeProcess(const char* path)
     return length;
 }
 
-static long GetLogSize(const char* filename)
+STATIC long GetLogSize(const char* filename)
 {
     if (filename == NULL) {
         (void)fprintf(stderr, "filename pointer is null!\n");
@@ -147,7 +147,7 @@ int LogLoop(const char* filename)
     return ret;
 }
 
-static void WriteLogInfo(const char* path, const long maxSize, size_t pathLen, const char* buffer,
+STATIC void WriteLogInfo(const char* path, const long maxSize, size_t pathLen, const char* buffer,
 const unsigned bufferSize)
 {
     if (path == NULL) {
@@ -175,7 +175,7 @@ const unsigned bufferSize)
     return;
 }
 
-static bool LogConvertStorage(const char* filename, const long maxSize)
+STATIC bool LogConvertStorage(const char* filename, const long maxSize)
 {
     long length = GetLogSize(filename);
     if (length < 0) {
@@ -190,7 +190,7 @@ static bool LogConvertStorage(const char* filename, const long maxSize)
     return true;
 }
 
-static void LogFileProcess(const char* filename, const long maxSize, const char* buffer, const unsigned bufferSize)
+STATIC void LogFileProcess(const char* filename, const long maxSize, const char* buffer, const unsigned bufferSize)
 {
     if (filename == NULL) {
         return;
@@ -209,7 +209,7 @@ static void LogFileProcess(const char* filename, const long maxSize, const char*
     WriteLogInfo(path, maxSize, PATH_MAX + 1, buffer, bufferSize);
 }
 
-static void WriteLogFile(const char* filename, long maxSize, const char* buffer, unsigned bufferSize)
+STATIC void WriteLogFile(const char* filename, const long maxSize, const char* buffer, unsigned bufferSize)
 {
     if (filename == NULL || buffer == NULL) {
         (void)fprintf(stderr, "filename, buffer pointer is null!\n");
@@ -219,7 +219,7 @@ static void WriteLogFile(const char* filename, long maxSize, const char* buffer,
     LogFileProcess(filename, maxSize, buffer, bufferSize);
 }
 
-static void DivertAndWrite(const char *logPath, const char *msg, const int level)
+STATIC void DivertAndWrite(const char *logPath, const char *msg, const int level)
 {
     int ret;
     size_t destMax = LOG_LENGTH;

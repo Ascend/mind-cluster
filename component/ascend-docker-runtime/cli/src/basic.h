@@ -70,6 +70,14 @@ struct MountList {
     char list[MAX_MOUNT_NR][PATH_MAX];
 };
 
+struct CmdArgs {
+    char rootfs[BUF_SIZE];
+    long pid;
+    char options[BUF_SIZE];
+    struct MountList files;
+    struct MountList dirs;
+};
+
 struct ParsedConfig {
     char rootfs[BUF_SIZE];
     char containerNsPath[BUF_SIZE];
@@ -78,5 +86,13 @@ struct ParsedConfig {
     const struct MountList *files;
     const struct MountList *dirs;
 };
+
+#ifndef STATIC
+#ifndef GOOGLE_TEST
+#define STATIC static
+#else
+#define STATIC
+#endif
+#endif
 
 #endif

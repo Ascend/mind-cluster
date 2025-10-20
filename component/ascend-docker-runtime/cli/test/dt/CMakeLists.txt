@@ -85,3 +85,4 @@ target_include_directories(ut_demo PUBLIC ${PROJECT_SOURCE_DIR}/Depend/mockcpp/3
 target_include_directories(ut_demo PUBLIC ${PROJECT_SOURCE_DIR}/Depend/mockcpp/include)
 target_include_directories(ut_demo PUBLIC ${PROJECT_SOURCE_DIR}/Depend/libboundscheck/include)
 target_link_libraries(ut_demo demolib)
+target_compile_definitions(ut_demo PRIVATE GOOGLE_TEST)

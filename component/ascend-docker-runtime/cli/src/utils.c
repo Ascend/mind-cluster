@@ -21,7 +21,6 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <libgen.h>
 #include <ctype.h>
 #include "securec.h"
@@ -76,7 +75,7 @@ bool StrHasPrefix(const char *str, const char *prefix)
     return (strncmp(str, prefix, strlen(prefix)) == 0);
 }
 
-static int MkDir(const char *dir, mode_t mode)
+STATIC int MkDir(const char *dir, mode_t mode)
 {
     if (dir == NULL) {
         (void)fprintf(stderr, "dir pointer is null!\n");
@@ -195,13 +194,13 @@ int MakeMountPoints(const char *path, mode_t mode)
     return 0;
 }
 
-static bool ShowExceptionInfo(const char* exceptionInfo)
+STATIC bool ShowExceptionInfo(const char* exceptionInfo)
 {
     (void)fprintf(stderr, "%s\n", exceptionInfo);
     return false;
 }
 
-static bool CheckFileOwner(const struct stat fileStat, const bool checkOwner)
+STATIC bool CheckFileOwner(const struct stat fileStat, const bool checkOwner)
 {
     if (checkOwner) {
         if ((fileStat.st_uid != ROOT_UID) && (fileStat.st_uid != geteuid())) { // 操作文件owner非root/自己
@@ -211,7 +210,7 @@ static bool CheckFileOwner(const struct stat fileStat, const bool checkOwner)
     return true;
 }
 
-static bool CheckParentDir(const char* filePath, const size_t filePathLen,
+STATIC bool CheckParentDir(const char* filePath, const size_t filePathLen,
     struct stat fileStat, const bool checkOwner)
 {
     char buf[PATH_MAX] = {0};
@@ -244,7 +243,7 @@ static bool CheckParentDir(const char* filePath, const size_t filePathLen,
     return true;
 }
 
-static bool CheckLegality(const char* filePath, const size_t filePathLen,
+STATIC bool CheckLegality(const char* filePath, const size_t filePathLen,
     const unsigned long long maxFileSizeMb, const bool checkOwner)
 {
     const unsigned long long maxFileSizeB = maxFileSizeMb * 1024 * 1024;
@@ -328,7 +327,7 @@ bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner)
     return true;
 }
 
-static bool CheckFileSubset(const char* filePath, const size_t filePathLen,
+STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
     const size_t maxFileSizeMb)
 {
     const unsigned long long maxFileSizeB = maxFileSizeMb * 1024 * 1024;
