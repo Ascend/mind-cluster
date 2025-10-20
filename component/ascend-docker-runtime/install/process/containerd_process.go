@@ -15,6 +15,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,6 +27,16 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 )
+
+type commandArgs struct {
+	action          string
+	srcFilePath     string
+	runtimeFilePath string
+	destFilePath    string
+	cgroupInfo      string
+	osName          string
+	osVersion       string
+}
 
 // ContainerdProcess modifies the containerd configuration file when installing or uninstalling the containerd scenario.
 func ContainerdProcess(command []string) (string, error) {
@@ -61,8 +72,16 @@ func ContainerdProcess(command []string) (string, error) {
 			return behavior, err
 		}
 	}
-	cgroupInfo := command[len(command)-cgroupInfoIndexFromEnd]
-	err := editContainerdConfig(srcFilePath, runtimeFilePath, destFilePath, action, cgroupInfo)
+	arg := &commandArgs{
+		action:          action,
+		srcFilePath:     srcFilePath,
+		runtimeFilePath: runtimeFilePath,
+		destFilePath:    destFilePath,
+		cgroupInfo:      command[len(command)-cgroupInfoIndexFromEnd],
+		osName:          command[len(command)-osNameIndexFromEnd],
+		osVersion:       command[len(command)-osVersionIndexFromEnd],
+	}
+	err := editContainerdConfig(arg)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to edit containerd config, err: %v", err)
 		return behavior, err
@@ -70,17 +89,21 @@ func ContainerdProcess(command []string) (string, error) {
 	return behavior, nil
 }
 
-func editContainerdConfig(srcFilePath, runtimeFilePath, destFilePath, action, cgroupInfo string) error {
+func editContainerdConfig(arg *commandArgs) error {
+	if arg == nil {
+		hwlog.RunLog.Error("arg is nil")
+		return errors.New("arg is nil")
+	}
 	cfg := config.Config{}
-	if err := config.LoadConfig(srcFilePath, &cfg); err != nil {
+	if err := config.LoadConfig(arg.srcFilePath, &cfg); err != nil {
 		hwlog.RunLog.Errorf("failed to load configuration file: %v", err)
 		return err
 	}
-	if strings.Contains(cgroupInfo, cgroupV2InfoStr) {
+	if strings.Contains(arg.cgroupInfo, cgroupV2InfoStr) {
 		hwlog.RunLog.Info("it is cgroup v2")
 		binaryName := ""
-		if action == addCommand {
-			binaryName = runtimeFilePath
+		if arg.action == addCommand {
+			binaryName = arg.runtimeFilePath
 		}
 		err := changeCgroupV2BinaryNameConfig(&cfg, binaryName)
 		if err != nil {
@@ -90,9 +113,13 @@ func editContainerdConfig(srcFilePath, runtimeFilePath, destFilePath, action, cg
 	} else {
 		hwlog.RunLog.Info("it is cgroup v1")
 		runtimeValue := defaultRuntimeValue
-		runtimeType := v1DefaultRuncRuntimeType
-		if action == addCommand {
-			runtimeValue = runtimeFilePath
+		runtimeType := v2RuncRuntimeType
+		if arg.action == addCommand {
+			runtimeValue = arg.runtimeFilePath
+			runtimeType = v1RuntimeType
+			if arg.osName == openEulerStr && arg.osVersion == openEulerVersionForV2RuntimeType {
+				runtimeType = v2RuncRuntimeType
+			}
 		}
 		err := changeCgroupV1Config(&cfg, runtimeValue, runtimeType)
 		if err != nil {
@@ -100,7 +127,7 @@ func editContainerdConfig(srcFilePath, runtimeFilePath, destFilePath, action, cg
 			return err
 		}
 	}
-	err := writeContainerdConfigToFile(cfg, destFilePath)
+	err := writeContainerdConfigToFile(cfg, arg.destFilePath)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to write configuration file: %v", err)
 		return err
