@@ -353,7 +353,9 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInf
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
-	if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
+	if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc ||
+		jobInfo.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
+		jobInfo.PodGroup.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
 		return
 	}
 
