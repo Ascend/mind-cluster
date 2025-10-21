@@ -66,7 +66,7 @@ const (
 	// default runtime type for containerd
 	v2RuncRuntimeType                = "io.containerd.runc.v2"
 	defaultRuntimeValue              = "runc"
-	v1RuntimeTypeFisrtLevelPlugin    = "io.containerd.grpc.v1.cri"
+	v1RuntimeTypeFirstLevelPlugin    = "io.containerd.grpc.v1.cri"
 	containerdKey                    = "containerd"
 	runtimesKey                      = "runtimes"
 	runcKey                          = "runc"
@@ -79,7 +79,7 @@ const (
 
 const (
 	notFindPluginLogStr       = "can not find plugin %v, plugins is: %+v"
-	notFindOluginErrorStr     = "can not find plugin: %v"
+	notFindPluginErrorStr     = "can not find plugin: %v"
 	convertConfigFailLogStr   = "can not convert config %v, config is: %+v"
 	convertConfigFailErrorStr = "can not convert config %v, config is: %+v"
 	convertTreeFailLogStr     = "failed to convert map to tree, error: %v"

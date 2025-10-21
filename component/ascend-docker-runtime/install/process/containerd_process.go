@@ -136,10 +136,10 @@ func editContainerdConfig(arg *commandArgs) error {
 }
 
 func changeCgroupV2BinaryNameConfig(cfg *config.Config, binaryName string) error {
-	value, ok := cfg.Plugins[v1RuntimeTypeFisrtLevelPlugin]
+	value, ok := cfg.Plugins[v1RuntimeTypeFirstLevelPlugin]
 	if !ok {
-		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFisrtLevelPlugin, cfg.Plugins)
-		return fmt.Errorf(notFindOluginErrorStr, v1RuntimeTypeFisrtLevelPlugin)
+		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFirstLevelPlugin, cfg.Plugins)
+		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeTypeFirstLevelPlugin)
 	}
 	valueMap := value.ToMap()
 	containerdConfig := valueMap[containerdKey]
@@ -169,7 +169,7 @@ func changeCgroupV2BinaryNameConfig(cfg *config.Config, binaryName string) error
 		hwlog.RunLog.Errorf(convertTreeFailLogStr, err)
 		return err
 	}
-	cfg.Plugins[v1RuntimeTypeFisrtLevelPlugin] = *newTree
+	cfg.Plugins[v1RuntimeTypeFirstLevelPlugin] = *newTree
 	return nil
 }
 
@@ -186,7 +186,7 @@ func changeCgroupV1RuntimeConfig(cfg *config.Config, runtimeValue string) error 
 	value, ok := cfg.Plugins[v1RuntimeType]
 	if !ok {
 		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeType, cfg.Plugins)
-		return fmt.Errorf(notFindOluginErrorStr, v1RuntimeType)
+		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeType)
 	}
 	valueMap := value.ToMap()
 	valueMap[v1NeedChangeKeyRuntime] = runtimeValue
@@ -200,10 +200,10 @@ func changeCgroupV1RuntimeConfig(cfg *config.Config, runtimeValue string) error 
 }
 
 func changeCgroupV1RuntimeTypeConfig(cfg *config.Config, runtimeType string) error {
-	value, ok := cfg.Plugins[v1RuntimeTypeFisrtLevelPlugin]
+	value, ok := cfg.Plugins[v1RuntimeTypeFirstLevelPlugin]
 	if !ok {
-		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFisrtLevelPlugin, cfg.Plugins)
-		return fmt.Errorf(notFindOluginErrorStr, v1RuntimeTypeFisrtLevelPlugin)
+		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFirstLevelPlugin, cfg.Plugins)
+		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeTypeFirstLevelPlugin)
 	}
 	valueMap := value.ToMap()
 	containerdConfig := valueMap[containerdKey]
@@ -228,7 +228,7 @@ func changeCgroupV1RuntimeTypeConfig(cfg *config.Config, runtimeType string) err
 		hwlog.RunLog.Errorf(convertTreeFailLogStr, err)
 		return err
 	}
-	cfg.Plugins[v1RuntimeTypeFisrtLevelPlugin] = *newTree
+	cfg.Plugins[v1RuntimeTypeFirstLevelPlugin] = *newTree
 	return nil
 }
 

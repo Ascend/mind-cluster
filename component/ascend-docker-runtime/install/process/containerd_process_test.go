@@ -229,7 +229,7 @@ func TestEditContainerdConfig1(t *testing.T) {
 		convey.Convey("02-changeCgroupV2BinaryNameConfig failed", func() {
 			patches := gomonkey.ApplyFunc(changeCgroupV2BinaryNameConfig, func(cfg *config.Config, binaryName string) error {
 				return testError
-			})
+			}).ApplyFunc(config.LoadConfig, func(path string, out *config.Config) error { return nil })
 			defer patches.Reset()
 			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
 				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
@@ -239,7 +239,7 @@ func TestEditContainerdConfig1(t *testing.T) {
 			patches := gomonkey.ApplyFunc(changeCgroupV1Config, func(cfg *config.Config,
 				runtimeValue, runtimeType string) error {
 				return testError
-			})
+			}).ApplyFunc(config.LoadConfig, func(path string, out *config.Config) error { return nil })
 			defer patches.Reset()
 			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
 				action: addCommand, cgroupInfo: "", osName: "", osVersion: ""})
@@ -269,6 +269,20 @@ func TestEditContainerdConfig2(t *testing.T) {
 				action: addCommand, cgroupInfo: cgroupV2InfoStr, osName: "", osVersion: ""})
 			convey.So(err, convey.ShouldBeNil)
 		})
+		convey.Convey("06-arg is nil, should return error", func() {
+			err := editContainerdConfig(nil)
+			convey.ShouldEqual(err.Error(), "arg is nil")
+		})
+		convey.Convey("07-openEuler24.03 changeCgroupV1Config failed", func() {
+			patches := gomonkey.ApplyFunc(changeCgroupV1Config, func(cfg *config.Config,
+				runtimeValue, runtimeType string) error {
+				return testError
+			}).ApplyFunc(config.LoadConfig, func(path string, out *config.Config) error { return nil })
+			defer patches.Reset()
+			err := editContainerdConfig(&commandArgs{srcFilePath: "", runtimeFilePath: "", destFilePath: "",
+				action: addCommand, cgroupInfo: "", osName: openEulerStr, osVersion: openEulerVersionForV2RuntimeType})
+			convey.So(err, convey.ShouldBeError)
+		})
 	})
 }
 
@@ -290,7 +304,7 @@ func defaultConfigV2(t *testing.T) *config.Config {
 	}
 	return &config.Config{
 		Plugins: map[string]toml.Tree{
-			v1RuntimeTypeFisrtLevelPlugin: *testTree,
+			v1RuntimeTypeFirstLevelPlugin: *testTree,
 		},
 	}
 }
@@ -386,7 +400,7 @@ func defaultConfigV1(t *testing.T) *config.Config {
 	return &config.Config{
 		Plugins: map[string]toml.Tree{
 			v1RuntimeType:                 *testTreeV1RuntimeType,
-			v1RuntimeTypeFisrtLevelPlugin: *testTreeV1RuntimeTypeFisrtLevelPlugin,
+			v1RuntimeTypeFirstLevelPlugin: *testTreeV1RuntimeTypeFisrtLevelPlugin,
 		},
 	}
 }
@@ -497,7 +511,7 @@ func emptyConfig() *config.Config {
 
 func pluginConfig() *config.Config {
 	return &config.Config{
-		Plugins: map[string]toml.Tree{v1RuntimeTypeFisrtLevelPlugin: toml.Tree{}},
+		Plugins: map[string]toml.Tree{v1RuntimeTypeFirstLevelPlugin: toml.Tree{}},
 	}
 }
 
