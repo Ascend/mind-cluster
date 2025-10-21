@@ -326,6 +326,15 @@ const (
 	MaxDevicesNum = 100
 )
 
+const (
+	// AppTypeLabelKey job type label key
+	AppTypeLabelKey = "app"
+	// ControllerAppType controller app type
+	ControllerAppType = "mindie-ms-controller"
+	// CoordinatorAppType coordinator app type
+	CoordinatorAppType = "mindie-ms-coordinator"
+)
+
 // HotSwitch
 const (
 	// NeedVolcanoOpeKey for volcano
