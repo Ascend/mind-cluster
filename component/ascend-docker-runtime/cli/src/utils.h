@@ -17,7 +17,6 @@
 
 #include <stdbool.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include "basic.h"
 
@@ -38,17 +37,5 @@ bool CheckExistsFile(const char* filePath, const size_t filePathLen,
 bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner);
 bool GetAllowLink(void);
 void SetAllowLink(bool value);
-
-#ifdef GOOGLE_TEST
-STATIC int MkDir(const char *dir, mode_t mode);
-STATIC bool ShowExceptionInfo(const char* exceptionInfo);
-STATIC bool CheckFileOwner(const struct stat fileStat, const bool checkOwner);
-STATIC bool CheckParentDir(const char* filePath, const size_t filePathLen,
-    struct stat fileStat, const bool checkOwner);
-STATIC bool CheckLegality(const char* filePath, const size_t filePathLen,
-    const unsigned long long maxFileSizeMb, const bool checkOwner);
-STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb);
-#endif
 
 #endif

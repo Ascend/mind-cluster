@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <libgen.h>
 #include <ctype.h>
 #include "securec.h"
