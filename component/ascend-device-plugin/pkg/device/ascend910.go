@@ -55,7 +55,7 @@ var (
 	isHotResetOn                        = false
 	inResetDev                    int32 = -1
 	isolateDevList                []int32
-	l2l3FaultTimeMap              = &sync.Map{}
+	resetFaultTimeMap             = &sync.Map{}
 	resetGoroutine                = &sync.Map{}
 	offlineInBandFailLogicId      = sync.Map{}
 )
@@ -66,8 +66,8 @@ type HwAscend910Manager struct {
 	hotResetManager HotResetManager
 }
 
-func getL2L3FaultTime(logicId int32) int64 {
-	tmpFaultTime, ok := l2l3FaultTimeMap.Load(logicId)
+func getFaultTime(logicId int32) int64 {
+	tmpFaultTime, ok := resetFaultTimeMap.Load(logicId)
 	if !ok {
 		return 0
 	}
@@ -194,7 +194,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 	for _, dev := range deviceList {
 		tempFaultInfo := hnm.getDevFaultInfo(dev.LogicID)
 		if tempFaultInfo == nil {
-			l2l3FaultTimeMap.Delete(dev.LogicID)
+			resetFaultTimeMap.Delete(dev.LogicID)
 			continue
 		}
 		idx, err := hnm.getResetIndex(dev)
@@ -208,8 +208,7 @@ func (hnm *HwAscend910Manager) hotResetHandler(classifyDevs map[string][]*common
 			hwlog.RunLog.Infof("device %v cannot reset, it is busy, err: %v", tempFaultInfo.LogicId, err)
 			continue
 		}
-		if l3RestartFlag := hnm.handleL2L3FaultRestart(tempFaultInfo); !l3RestartFlag &&
-			(tempFaultInfo.Policy != common.ResetError && tempFaultInfo.Policy != common.FreeResetError) {
+		if restartFlag := hnm.isFaultNeedRestart(tempFaultInfo); !restartFlag {
 			continue
 		}
 		resetRing[idx] = struct{}{}
@@ -287,19 +286,17 @@ func npuDevToResetDev(dev common.NpuDevice) ResetDevice {
 	}
 }
 
-// handleL2L3FaultRestart restarts when l2l3 faults handling failed
-func (hnm *HwAscend910Manager) handleL2L3FaultRestart(devFaultInfo *common.DevFaultInfo) bool {
-	if devFaultInfo.Policy == common.RestartError || devFaultInfo.Policy == common.RestartRequestError {
-		faultTime := getL2L3FaultTime(devFaultInfo.LogicId)
-		if faultTime == 0 {
-			l2l3FaultTimeMap.Store(devFaultInfo.LogicId, time.Now().Unix())
-			return false
-		}
-		if time.Now().Unix()-faultTime > common.L2L3FaultToleranceTimeInterval {
-			hwlog.RunLog.Infof("device %v l2l3 fault restart over 60s, exec reset", devFaultInfo.LogicId)
-			l2l3FaultTimeMap.Delete(devFaultInfo.LogicId)
-			return true
-		}
+// isFaultNeedRestart restarts when faults handling failed
+func (hnm *HwAscend910Manager) isFaultNeedRestart(devFaultInfo *common.DevFaultInfo) bool {
+	faultTime := getFaultTime(devFaultInfo.LogicId)
+	if faultTime == 0 {
+		resetFaultTimeMap.Store(devFaultInfo.LogicId, time.Now().Unix())
+		return false
+	}
+	if time.Now().Unix()-faultTime > common.ResetFaultToleranceTimeInterval {
+		hwlog.RunLog.Infof("device %v fault exist over 60s, exec reset", devFaultInfo.LogicId)
+		resetFaultTimeMap.Delete(devFaultInfo.LogicId)
+		return true
 	}
 	return false
 }

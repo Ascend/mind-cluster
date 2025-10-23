@@ -3040,8 +3040,8 @@ func TestGetDevFaultInfo(t *testing.T) {
 	}
 }
 
-func TestHwAscend910ManagerHandleL2L3FaultRestart(t *testing.T) {
-	convey.Convey("Test handleL2L3FaultRestart", t, func() {
+func TestIsFaultNeedRestart(t *testing.T) {
+	convey.Convey("Test isFaultNeedRestart", t, func() {
 		hnm := &HwAscend910Manager{}
 
 		convey.Convey("when policy is RestartError", func() {
@@ -3051,29 +3051,77 @@ func TestHwAscend910ManagerHandleL2L3FaultRestart(t *testing.T) {
 			}
 
 			convey.Convey("should store fault time when first fault", func() {
-				l2l3FaultTimeMap.Delete(devFaultInfo.LogicId)
-				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				resetFaultTimeMap.Delete(devFaultInfo.LogicId)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldNotBeZeroValue)
 			})
 
 			convey.Convey("should return true and delete map when timeout", func() {
-				oldTime := time.Now().Unix() - common.L2L3FaultToleranceTimeInterval - 1
-				l2l3FaultTimeMap.Store(devFaultInfo.LogicId, oldTime)
-				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				oldTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval - 1
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, oldTime)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeTrue)
-				_, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				_, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeFalse)
 			})
 
 			convey.Convey("should return false when within tolerance time", func() {
-				recentTime := time.Now().Unix() - common.L2L3FaultToleranceTimeInterval + common.BaseDec
-				l2l3FaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
-				result := hnm.handleL2L3FaultRestart(devFaultInfo)
+				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := l2l3FaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeTrue)
+				convey.So(faultTime, convey.ShouldEqual, recentTime)
+			})
+
+		})
+	})
+}
+
+func TestIsFaultNeedRestart2(t *testing.T) {
+	convey.Convey("Test isFaultNeedRestart", t, func() {
+		hnm := &HwAscend910Manager{}
+		convey.Convey("when policy is RestartError", func() {
+			devFaultInfo := &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  common.RestartRequestError,
+			}
+			convey.Convey("should return false when within tolerance time and policy is RestartRequestError", func() {
+				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeFalse)
+				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeTrue)
+				convey.So(faultTime, convey.ShouldEqual, recentTime)
+			})
+			devFaultInfo = &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  common.FreeResetError,
+			}
+			convey.Convey("should return false when within tolerance time and policy is FreeResetError", func() {
+				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeFalse)
+				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				convey.So(exists, convey.ShouldBeTrue)
+				convey.So(faultTime, convey.ShouldEqual, recentTime)
+			})
+			devFaultInfo = &common.DevFaultInfo{
+				LogicId: 1,
+				Policy:  common.ResetError,
+			}
+			convey.Convey("should return false when within tolerance time and policy is reset", func() {
+				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				result := hnm.isFaultNeedRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeFalse)
+				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
