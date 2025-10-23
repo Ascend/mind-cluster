@@ -63,14 +63,29 @@ func (h *aggregatedHandler) Handle(stop <-chan struct{}) {
 		return
 	}
 
+	// 创建中转 channel，用于转发队列数据（避免主循环阻塞）
+	dataCh := make(chan interface{})
+	// 启动单独的 goroutine 处理阻塞的 h.resultQueue.Get()
+	go func() {
+		defer close(dataCh) // 退出时关闭中转 channel，通知主循环
+		for {
+			// 阻塞获取队列元素（若队列关闭，shutdown 为 true）
+			item, shutdown := h.resultQueue.Get()
+			if shutdown {
+				return // 队列已关闭，退出转发 goroutine
+			}
+			dataCh <- item
+		}
+	}()
+
 	for {
 		select {
 		case <-stop:
 			h.resultQueue.ShutDownWithDrain()
 			return
-		default:
-			obj, shutdown := h.resultQueue.Get()
-			if shutdown {
+		case obj, ok := <-dataCh:
+			if !ok {
+				// 中转 channel关闭说明h.resultQueue已退出
 				return
 			}
 			infos, ok := obj.(*types.HccspingMeshResult)
