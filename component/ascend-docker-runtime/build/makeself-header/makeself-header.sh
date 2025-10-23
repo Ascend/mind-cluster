@@ -279,6 +279,7 @@ MS_Check()
 			sha=\`echo \$SHA | cut -d" " -f\$i\`
 			if test x"\$sha" = x0000000000000000000000000000000000000000000000000000000000000000; then
 				test x"\$verb" = xy && echo " \$1 does not contain an embedded SHA256 checksum." >&2
+				exit 1
 			else
 				shasum=\`MS_dd_Progress "\$1" \$offset \$s | eval "\$SHA_PATH \$SHA_ARG" | cut -b-64\`;
 				if test x"\$shasum" != x"\$sha"; then
@@ -286,7 +287,7 @@ MS_Check()
                     log "[ERROR]" "check failed, Error in SHA256 checksums: \$shasum is different from \$sha"
                     exit 2
 				elif test x"\$quiet" = xn; then
-					MS_Printf " SHA256 checksums are OK." >&2
+					MS_Printf " SHA256 checksums are OK.\\n" >&2
 				fi
 				crc="0000000000";
 			fi

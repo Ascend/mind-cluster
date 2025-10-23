@@ -145,7 +145,7 @@ function copy_file_output()
     DATE=$(date -u "+%Y-%m-%d")
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
     /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
-    bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
+    bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --sha256 --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
     --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ${RT_LOWER_CASE} ./run_main.sh
     mv ${RUN_PKG_NAME} ${OUTPUT}
     chmod 550 ${OUTPUT}/${RUN_PKG_NAME}
