@@ -97,6 +97,8 @@ func (c *ClusterInfos) updateCluster(clusterName string, newCluster *ClusterInfo
 
 // GetCluster get the cluster info by cluster name
 func (c *ClusterInfos) GetCluster(clusterName string) (*ClusterInfo, error) {
+	c.RWMutex.RLock()
+	defer c.RWMutex.RUnlock()
 	if cluster, exists := c.Clusters[clusterName]; exists {
 		return cluster, nil
 	}
