@@ -377,6 +377,7 @@ func (m *BaseManager) subscribeProfiling(conn *grpc.ClientConn, retryTime time.D
 			go m.subscribeProfiling(conn, retryTime+1)
 			return
 		default:
+			retryTime = 0
 			responseMsg, recvErr := stream.Recv()
 			if recvErr != nil {
 				hwlog.RunLog.Error(recvErr)
