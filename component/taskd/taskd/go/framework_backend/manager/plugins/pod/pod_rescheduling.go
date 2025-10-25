@@ -55,6 +55,10 @@ var (
 		CandidateStatus: constant.UnselectStatus, PredicateStream: nil}
 )
 
+const (
+	maxHandleMapSize = 10
+)
+
 // NewPodReschedulingPlugin new pod rescheduling plugin
 func NewPodReschedulingPlugin() infrastructure.ManagerPlugin {
 	return &PodReschedulingPlugin{
@@ -75,6 +79,9 @@ func (pod *PodReschedulingPlugin) Name() string {
 func (pod *PodReschedulingPlugin) Handle() (infrastructure.HandleResult, error) {
 	pod.processStatus = constant.HandleStageProcess
 	if pod.uuid != "" {
+		if len(pod.handleMap) > maxHandleMapSize {
+			pod.handleMap = make(map[string]string)
+		}
 		pod.handleMap[pod.uuid] = constant.HandleDone
 	}
 	exitReceiver := make([]string, 0)
