@@ -1655,6 +1655,12 @@ func TestSetNetworkAlarmRaisedTime(t *testing.T) {
 
 // TestGetChangedDevFaultInfo for test GetChangedDevFaultInfo
 func TestGetChangedDevFaultInfo(t *testing.T) {
+	convey.Convey("test GetChangedDevFaultInfo when device is nil", t, func() {
+		oldErrCodes := make([]int64, 0)
+		newErrCodes := []int64{0x81078603}
+		devFaultInfos := GetChangedDevFaultInfo(nil, oldErrCodes, newErrCodes)
+		convey.So(len(devFaultInfos), convey.ShouldEqual, 0)
+	})
 	convey.Convey("test GetChangedDevFaultInfo success case1", t, func() {
 		device := NpuDevice{LogicID: 0}
 		oldErrCodes := make([]int64, 0)

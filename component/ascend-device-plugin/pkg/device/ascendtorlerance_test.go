@@ -721,6 +721,13 @@ func TestSetDevInReset(t *testing.T) {
 // TestSetAllDevInReset for test set all dev in reset dev cache
 func TestSetAllDevInReset(t *testing.T) {
 	convey.Convey("test SetAllDevInReset", t, func() {
+		convey.Convey("resetInfo is nil", func() {
+			tool := &HotResetTools{
+				resetDev: map[int32]struct{}{},
+			}
+			err := tool.SetAllDevInReset(nil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
 		convey.Convey("test SetAllDevInReset success", func() {
 			tool := &HotResetTools{
 				resetDev: map[int32]struct{}{},
@@ -769,6 +776,13 @@ func TestUnSetDevInReset(t *testing.T) {
 // TestUnSetAllDevInReset for test unset dev in reset dev cache
 func TestUnSetAllDevInReset(t *testing.T) {
 	convey.Convey("test UnSetAllDevInReset", t, func() {
+		convey.Convey("resetInfo is nil", func() {
+			tool := &HotResetTools{
+				resetDev: map[int32]struct{}{},
+			}
+			err := tool.UnSetAllDevInReset(nil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
 		convey.Convey("test UnSetAllDevInReset success", func() {
 			tool := &HotResetTools{
 				resetDev: map[int32]struct{}{0: {}, 1: {}},
@@ -819,6 +833,10 @@ func TestDeepCopyFunc(t *testing.T) {
 	convey.Convey("test deep copy func of tool", t, func() {
 		devInfoList := mockTaskDevInfoList()
 		tool := &HotResetTools{}
+		convey.Convey("test deep copy task dev info is nil", func() {
+			devInfoTest := tool.DeepCopyDevInfo(nil)
+			convey.So(devInfoTest, convey.ShouldBeNil)
+		})
 		convey.Convey("test deep copy task dev info struct true", func() {
 			devInfo := devInfoList[0]
 			devInfoTest := tool.DeepCopyDevInfo(devInfo)
