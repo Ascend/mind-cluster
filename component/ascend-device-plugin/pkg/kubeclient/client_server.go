@@ -184,7 +184,6 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 		SuperPodID:  superPodID,
 		ServerIndex: serverIndex,
 	}
-	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 
 	var data, switchData []byte
 	if data = common.MarshalData(nodeDeviceData); len(data) == 0 {
@@ -248,7 +247,6 @@ func (ki *ClientK8s) WriteResetInfoDataIntoCM(taskName string, namespace string,
 	newTaskInfo := setNewTaskInfoWithHexString(taskInfo)
 	newTaskInfo.UpdateTime = time.Now().Unix()
 	newTaskInfo.RetryTime = retryTime
-	checkCode := common.MakeDataHash(newTaskInfo)
 	var data []byte
 	if data = common.MarshalData(newTaskInfo); len(data) == 0 {
 		return nil, fmt.Errorf("marshal task reset data failed")
@@ -257,8 +255,7 @@ func (ki *ClientK8s) WriteResetInfoDataIntoCM(taskName string, namespace string,
 		TypeMeta:   oldCM.TypeMeta,
 		ObjectMeta: oldCM.ObjectMeta,
 		Data: map[string]string{
-			common.ResetInfoCMDataKey:      string(data),
-			common.ResetInfoCMCheckCodeKey: checkCode,
+			common.ResetInfoCMDataKey: string(data),
 		},
 	}
 	oldRestartType, ok := oldCM.Data[common.ResetInfoTypeKey]
@@ -303,7 +300,6 @@ func (ki *ClientK8s) WriteFaultInfoDataIntoCM(taskName string, namespace string,
 		FaultInfo: faultInfo,
 	}
 	taskFaultInfo.FaultInfo.UpdateTime = time.Now().Unix()
-	checkCode := common.MakeDataHash(taskFaultInfo.FaultInfo)
 	var data []byte
 	if data = common.MarshalData(taskFaultInfo.FaultInfo); len(data) == 0 {
 		return nil, fmt.Errorf("marshal task reset data failed")
@@ -312,8 +308,7 @@ func (ki *ClientK8s) WriteFaultInfoDataIntoCM(taskName string, namespace string,
 		TypeMeta:   oldCM.TypeMeta,
 		ObjectMeta: oldCM.ObjectMeta,
 		Data: map[string]string{
-			common.FaultInfoCMDataKey:      string(data),
-			common.FaultInfoCMCheckCodeKey: checkCode,
+			common.FaultInfoCMDataKey: string(data),
 		},
 	}
 

@@ -37,7 +37,6 @@ type NodeDeviceInfoCache struct {
 	DeviceInfo  NodeDeviceInfo
 	SuperPodID  int32
 	ServerIndex int32
-	CheckCode   string
 }
 
 // SwitchFaultEvent is the struct for switch reported fault
@@ -221,7 +220,6 @@ type DeviceFault struct {
 // TaskResetInfoCache record task reset device information cache
 type TaskResetInfoCache struct {
 	ResetInfo *TaskResetInfo
-	CheckCode string
 }
 
 // TaskResetInfo record task reset device information
@@ -253,7 +251,6 @@ type DevFaultInfo struct {
 // TaskFaultInfoCache record task fault rank information cache
 type TaskFaultInfoCache struct {
 	FaultInfo *TaskFaultInfo
-	CheckCode string
 }
 
 // TaskFaultInfo record task fault rank information

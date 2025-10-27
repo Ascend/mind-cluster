@@ -298,7 +298,6 @@ func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
 			SuperPodID:  defaultSuperPodID,
 			ServerIndex: defaultServerIndex,
 		}
-		nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 		tool.GetKubeClient().SetNodeDeviceInfoCache(&nodeDeviceData)
 		hwlog.RunLog.Debug("node device info cache is empty, will create a new one")
 	}
