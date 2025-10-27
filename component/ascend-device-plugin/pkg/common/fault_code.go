@@ -1324,10 +1324,13 @@ func DeleteManuallyFaultInfo(logicID int32) {
 
 // CountFaultDuration used to calculate each fault duration
 func CountFaultDuration(device *NpuDevice, devFaultInfoMap map[int32][]common.DevFaultInfo) {
-	// Collect fault events from fault event queue cache to form the fault queue for duration statistics
-	collectEachFaultEvent(device.LogicID, devFaultInfoMap[device.LogicID])
+	if device == nil {
+		return
+	}
 	faultDurationMapLock.Lock()
 	defer faultDurationMapLock.Unlock()
+	// Collect fault events from fault event queue cache to form the fault queue for duration statistics
+	collectEachFaultEvent(device.LogicID, devFaultInfoMap[device.LogicID])
 
 	for eventId, _ := range faultDurationMap {
 		// Sort fault events in the fault queue in ascending order based on fault event AlarmRaisedTime
@@ -1344,9 +1347,6 @@ func CountFaultDuration(device *NpuDevice, devFaultInfoMap map[int32][]common.De
 }
 
 func collectEachFaultEvent(logicId int32, faultInfos []common.DevFaultInfo) {
-	faultDurationMapLock.Lock()
-	defer faultDurationMapLock.Unlock()
-
 	for _, faultInfo := range faultInfos {
 		eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 		if _, ok := faultDurationMap[eventIdStr]; !ok {
@@ -1600,6 +1600,9 @@ func GetFaultAssertionName(assertion int8) string {
 // GetChangedDevFaultInfo get device changed fault info
 func GetChangedDevFaultInfo(device *NpuDevice, oldErrCodes []int64, newErrCodes []int64) []common.DevFaultInfo {
 	devFaultInfo := make([]common.DevFaultInfo, 0, len(newErrCodes))
+	if device == nil {
+		return devFaultInfo
+	}
 	for _, newCode := range newErrCodes {
 		if Int64Tool.Index(oldErrCodes, newCode) == -1 {
 			faultInfo := common.DevFaultInfo{

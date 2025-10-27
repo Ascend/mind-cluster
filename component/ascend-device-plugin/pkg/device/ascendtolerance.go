@@ -150,6 +150,10 @@ func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 
 // SyncResetCM sync reset-cm event
 func (hrt *HotResetTools) SyncResetCM(ctx context.Context, client *kubeclient.ClientK8s) {
+	if client == nil {
+		hwlog.RunLog.Error("client is nil, skip SyncResetCM")
+		return
+	}
 	cmFactory := informers.NewSharedInformerFactoryWithOptions(client.Clientset, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = labels.SelectorFromSet(labels.Set{"reset": "true"}).String()
@@ -918,6 +922,9 @@ func (hrt *HotResetTools) SetDevInReset(devId int32) error {
 
 // SetAllDevInReset set all device in a task to the reset state
 func (hrt *HotResetTools) SetAllDevInReset(resetInfo *common.TaskResetInfo) error {
+	if resetInfo == nil {
+		return fmt.Errorf("resetInfo is nil")
+	}
 	for _, devInfo := range resetInfo.RankList {
 		if err := hrt.SetDevInReset(devInfo.LogicId); err != nil {
 			return err
@@ -937,6 +944,9 @@ func (hrt *HotResetTools) UnSetDevInReset(devId int32) error {
 
 // UnSetAllDevInReset unset all device in a task to leave the reset state
 func (hrt *HotResetTools) UnSetAllDevInReset(resetInfo *common.TaskResetInfo) error {
+	if resetInfo == nil {
+		return fmt.Errorf("resetInfo is nil")
+	}
 	for _, devInfo := range resetInfo.RankList {
 		if err := hrt.UnSetDevInReset(devInfo.LogicId); err != nil {
 			return err
@@ -957,6 +967,9 @@ func (hrt *HotResetTools) UnSetTaskInReset(taskName string) error {
 
 // DeepCopyDevInfo copy device info deeply
 func (hrt *HotResetTools) DeepCopyDevInfo(devInfo *common.TaskDevInfo) *common.TaskDevInfo {
+	if devInfo == nil {
+		return nil
+	}
 	return &common.TaskDevInfo{
 		RankId:       devInfo.RankId,
 		DevFaultInfo: devInfo.DevFaultInfo,

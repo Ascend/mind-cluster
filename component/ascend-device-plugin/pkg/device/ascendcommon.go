@@ -1166,6 +1166,9 @@ func networkMoreThanFiveMin(device *common.NpuDevice) bool {
 
 // LogFaultModeChange print logs when fault mode changed
 func (tool *AscendTools) LogFaultModeChange(device *common.NpuDevice, initLogicIDs []int32, newMode string) {
+	if device == nil {
+		return
+	}
 	var oldMode string
 	var ok bool
 	if oldMode, ok = faultMode[device.LogicID]; !ok {
@@ -1445,6 +1448,9 @@ func (tool *AscendTools) checkCardDropFault(logicID int32) bool {
 
 // HandleLostChipFaultEvents handle chip fault events that may be lost by the fault subscription interface
 func (tool *AscendTools) HandleLostChipFaultEvents(device *common.NpuDevice, initLogicIDs []int32) {
+	if device == nil {
+		return
+	}
 	needHandleLostChipFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
 		device.LogicID)) || common.SubscribeFailed || (device.Health == v1beta1.Unhealthy && moreThanFiveMin(device))
 	if !needHandleLostChipFaultCondition {
@@ -1476,6 +1482,9 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 
 // HandleLostNetworkFaultEvents handle network fault events that may be lost by the fault subscription interface
 func (tool *AscendTools) HandleLostNetworkFaultEvents(device *common.NpuDevice, initLogicIDs []int32) {
+	if device == nil {
+		return
+	}
 	needHandleLostNetworkFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
 		device.LogicID)) || common.SubscribeFailed || (device.NetworkHealth == v1beta1.Unhealthy &&
 		networkMoreThanFiveMin(device))

@@ -566,6 +566,9 @@ func IsContainAll300IDuo() bool {
 // RecordFaultInfoList record the fault info
 func RecordFaultInfoList(devFaultInfoList []*TaskDevInfo) {
 	for _, devFaultInfo := range devFaultInfoList {
+		if devFaultInfo == nil {
+			continue
+		}
 		hexErrorCode := strings.ToUpper(Int64Tool.ToHexString(devFaultInfo.ErrorCode))
 		hwlog.RunLog.Infof("rank id: %d, log id: %d, policy: %s, error code: %s",
 			devFaultInfo.RankId, devFaultInfo.LogicId, devFaultInfo.Policy, hexErrorCode)
@@ -619,6 +622,9 @@ func IntInList(num int32, list []int32) bool {
 
 // GetJobNameOfPod get job name of pod from annotations or labels
 func GetJobNameOfPod(pod *v1.Pod) string {
+	if pod == nil {
+		return ""
+	}
 	taskName, ok := pod.Labels[ResetTaskNameKey]
 	if !ok {
 		taskName, ok = pod.Labels[ResetTaskNameKeyInLabel]

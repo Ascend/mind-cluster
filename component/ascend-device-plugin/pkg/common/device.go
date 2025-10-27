@@ -149,7 +149,12 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 
 // UpdateSwitchFaultInfoAndFaultLevel update switch fault info and fault code level when care in resetting
 func UpdateSwitchFaultInfoAndFaultLevel(si *SwitchFaultInfo) {
+	if si == nil {
+		return
+	}
 	si.NodeStatus = nodeHealthy
+	SwitchFaultLock.Lock()
+	defer SwitchFaultLock.Unlock()
 	tmpSwitchFaultCodeLevelToCm := make(map[string]int)
 	for fCode := range switchFaultCodeLevelToCm {
 		tmpSwitchFaultCodeLevelToCm[fCode] = NotHandleFaultLevel
@@ -364,6 +369,9 @@ func GetAICore(templateName string) (int, error) {
 
 // FakeAiCoreDevice fake ai core devices
 func FakeAiCoreDevice(dev DavinCiDev, aiCoreDevices *[]*NpuDevice) {
+	if aiCoreDevices == nil {
+		return
+	}
 	aiCoreDevCount := len(*aiCoreDevices)
 	for core := int32(0); core < ParamOption.AiCoreCount; core++ {
 		*aiCoreDevices = append(*aiCoreDevices, &NpuDevice{
