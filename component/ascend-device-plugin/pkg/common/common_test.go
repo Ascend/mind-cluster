@@ -86,6 +86,26 @@ func TestSetAscendRuntimeEnv(t *testing.T) {
 	})
 }
 
+// TestMakeDataHash for test MakeDataHash
+func TestMakeDataHash(t *testing.T) {
+	convey.Convey("test MakeDataHash", t, func() {
+		convey.Convey("h.Write success", func() {
+			DeviceInfo := NodeDeviceInfo{DeviceList: map[string]string{HuaweiUnHealthAscend910: "Ascend910-0"}}
+			ret := MakeDataHash(DeviceInfo)
+			convey.So(ret, convey.ShouldNotBeEmpty)
+		})
+		convey.Convey("json.Marshal failed", func() {
+			mockMarshal := gomonkey.ApplyFunc(json.Marshal, func(v interface{}) ([]byte, error) {
+				return nil, fmt.Errorf("err")
+			})
+			defer mockMarshal.Reset()
+			DeviceInfo := NodeDeviceInfo{DeviceList: map[string]string{HuaweiUnHealthAscend910: "Ascend910-0"}}
+			ret := MakeDataHash(DeviceInfo)
+			convey.So(ret, convey.ShouldBeEmpty)
+		})
+	})
+}
+
 // TestMapDeepCopy for test MapDeepCopy
 func TestMapDeepCopy(t *testing.T) {
 	convey.Convey("test MapDeepCopy", t, func() {

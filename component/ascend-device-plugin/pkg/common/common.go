@@ -16,6 +16,8 @@
 package common
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -117,6 +119,21 @@ func localRankStr(req int) string {
 	}
 	rankStr += strconv.Itoa(req - 1)
 	return rankStr
+}
+
+// MakeDataHash Make Data Hash
+func MakeDataHash(data interface{}) string {
+	var dataBuffer []byte
+	if dataBuffer = MarshalData(data); len(dataBuffer) == 0 {
+		return ""
+	}
+	h := sha256.New()
+	if _, err := h.Write(dataBuffer); err != nil {
+		hwlog.RunLog.Error("hash data error")
+		return ""
+	}
+	sum := h.Sum(nil)
+	return hex.EncodeToString(sum)
 }
 
 // MarshalData marshal data to bytes

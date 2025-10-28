@@ -516,6 +516,8 @@ const (
 	ResetInfoCMNamePrefix = "reset-config-"
 	// ResetInfoCMDataKey for reset configmap data key
 	ResetInfoCMDataKey = "reset.json"
+	// ResetInfoCMCheckCodeKey for reset configmap checkcode key
+	ResetInfoCMCheckCodeKey = "checkCode"
 	// ResetInfoTypeKey for reset configmap type key
 	ResetInfoTypeKey = "restartType"
 	// HotResetRestartType for hot reset restart type
@@ -531,6 +533,8 @@ const (
 	FaultInfoCMNamePrefix = "fault-config-"
 	// FaultInfoCMDataKey for fault configmap data key
 	FaultInfoCMDataKey = "fault-npus"
+	// FaultInfoCMCheckCodeKey for fault configmap checkcode key
+	FaultInfoCMCheckCodeKey = "checkCode"
 )
 
 const (

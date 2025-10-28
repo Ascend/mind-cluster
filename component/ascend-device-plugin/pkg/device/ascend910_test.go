@@ -74,6 +74,7 @@ func createFakeDeviceInfo() *common.NodeDeviceInfoCache {
 		DeviceInfo: common.NodeDeviceInfo{
 			DeviceList: map[string]string{},
 		},
+		CheckCode: "",
 	}
 }
 
@@ -145,6 +146,7 @@ func mockGetDeviceInfoCMCache(deviceList map[string]string) *gomonkey.Patches {
 			nodeDeviceData := common.NodeDeviceInfoCache{DeviceInfo: common.NodeDeviceInfo{
 				DeviceList: deviceList,
 				UpdateTime: time.Now().Unix()}}
+			nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 			return &nodeDeviceData
 		})
 }
@@ -812,7 +814,8 @@ func mockGetCM() *gomonkey.Patches {
 				UpdateTime: 11111111,
 			}
 			return &v1.ConfigMap{Data: map[string]string{
-				common.ResetInfoCMDataKey: string(common.MarshalData(nodeDeviceData))},
+				common.ResetInfoCMDataKey:      string(common.MarshalData(nodeDeviceData)),
+				common.ResetInfoCMCheckCodeKey: common.MakeDataHash(nodeDeviceData)},
 			}, nil
 		})
 }
