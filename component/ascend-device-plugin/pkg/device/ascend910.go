@@ -288,6 +288,10 @@ func npuDevToResetDev(dev common.NpuDevice) ResetDevice {
 
 // isFaultNeedRestart restarts when faults handling failed
 func (hnm *HwAscend910Manager) isFaultNeedRestart(devFaultInfo *common.DevFaultInfo) bool {
+	if common.ParamOption.RealCardType == api.Ascend910B &&
+		(devFaultInfo.Policy == common.FreeResetError || devFaultInfo.Policy == common.ResetError) {
+		return true
+	}
 	faultTime := getFaultTime(devFaultInfo.LogicId)
 	if faultTime == 0 {
 		resetFaultTimeMap.Store(devFaultInfo.LogicId, time.Now().Unix())

@@ -3043,7 +3043,7 @@ func TestGetDevFaultInfo(t *testing.T) {
 func TestIsFaultNeedRestart(t *testing.T) {
 	convey.Convey("Test isFaultNeedRestart", t, func() {
 		hnm := &HwAscend910Manager{}
-
+		common.ParamOption.RealCardType = api.Ascend910A3
 		convey.Convey("when policy is RestartError", func() {
 			devFaultInfo := &common.DevFaultInfo{
 				LogicId: 1,
@@ -3085,11 +3085,9 @@ func TestIsFaultNeedRestart(t *testing.T) {
 func TestIsFaultNeedRestart2(t *testing.T) {
 	convey.Convey("Test isFaultNeedRestart", t, func() {
 		hnm := &HwAscend910Manager{}
+		common.ParamOption.RealCardType = api.Ascend910A3
 		convey.Convey("when policy is RestartError", func() {
-			devFaultInfo := &common.DevFaultInfo{
-				LogicId: 1,
-				Policy:  common.RestartRequestError,
-			}
+			devFaultInfo := &common.DevFaultInfo{LogicId: 1, Policy: common.RestartRequestError}
 			convey.Convey("should return false when within tolerance time and policy is RestartRequestError", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
 				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
@@ -3099,10 +3097,7 @@ func TestIsFaultNeedRestart2(t *testing.T) {
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
-			devFaultInfo = &common.DevFaultInfo{
-				LogicId: 1,
-				Policy:  common.FreeResetError,
-			}
+			devFaultInfo = &common.DevFaultInfo{LogicId: 1, Policy: common.FreeResetError}
 			convey.Convey("should return false when within tolerance time and policy is FreeResetError", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
 				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
@@ -3112,10 +3107,7 @@ func TestIsFaultNeedRestart2(t *testing.T) {
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
-			devFaultInfo = &common.DevFaultInfo{
-				LogicId: 1,
-				Policy:  common.ResetError,
-			}
+			devFaultInfo = &common.DevFaultInfo{LogicId: 1, Policy: common.ResetError}
 			convey.Convey("should return false when within tolerance time and policy is reset", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
 				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
@@ -3124,6 +3116,13 @@ func TestIsFaultNeedRestart2(t *testing.T) {
 				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
+			})
+			convey.Convey("should return true when device type is A2 and policy is reset", func() {
+				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
+				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				common.ParamOption.RealCardType = api.Ascend910B
+				result := hnm.isFaultNeedRestart(devFaultInfo)
+				convey.So(result, convey.ShouldBeTrue)
 			})
 		})
 	})
