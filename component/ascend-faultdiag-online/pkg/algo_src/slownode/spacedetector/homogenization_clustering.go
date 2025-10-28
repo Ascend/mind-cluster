@@ -17,12 +17,16 @@ package spacedetector
 
 import (
 	"sort"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 // 常量定义
 const (
 	// 最小相邻差异的比例，用于判断是否分为两个类别
 	listSpacingThreshold = 2
+	// max loop count to avoid dead loop
+	maxLoopCount = 1000000
 )
 
 // IndexAndValue 构建值和下标的结构体
@@ -67,7 +71,14 @@ func oneDimensionalClustering(dataList []float64, clusterMeanDistance float64) (
 func recurseDimensionalClustering(dataList []float64, clusterMeanDistance float64) []int {
 	var result []int = nil
 	var input []float64 = dataList
+	var loopCount = 0
 	for {
+		loopCount++
+		if loopCount >= maxLoopCount {
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]Recurse dimensional clustering reach max loop count: "+
+				"%d, current input: %v, clusterMeanDistance: %v", maxLoopCount, input, clusterMeanDistance)
+			break
+		}
 		tmpResult, nextDataList := oneDimensionalClustering(input, clusterMeanDistance)
 		if tmpResult == nil {
 			break
