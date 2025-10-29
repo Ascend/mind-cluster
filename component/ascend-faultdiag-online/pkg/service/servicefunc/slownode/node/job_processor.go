@@ -180,9 +180,8 @@ func JobProcessor(oldData, newData *slownode.Job, operator watch.EventType) {
 	}
 	hwlog.RunLog.Infof("[FD-OL SLOWNODE]got job cm data, operator: %s, newObj: %+v, oldObj: %+v",
 		operator, newData, oldData)
-	if newData.JobId == "" {
-		hwlog.RunLog.Infof("[FD-OL SLOWNODE]job(name=%s, jobId=%s)'s jobId is empty, ignore it",
-			newData.JobName, newData.JobId)
+	if err := common.JobIdValidator(newData.JobId); err != nil {
+		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]invalid jobId: %s, err: %v", newData.JobId, err)
 		return
 	}
 

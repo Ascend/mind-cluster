@@ -130,3 +130,45 @@ func testAreServersEqualWithFalse() {
 		convey.So(AreServersEqual(servers1, servers2), convey.ShouldBeFalse)
 	})
 }
+
+func TestNodeRankValidator(t *testing.T) {
+	convey.Convey("Test NodeRankValidator", t, func() {
+		convey.Convey("test normal case", func() {
+			err := NodeRankValidator("normal-node-rank_123")
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("test empty node rank", func() {
+			err := NodeRankValidator("")
+			convey.So(err.Error(), convey.ShouldEqual, "node rank is empty")
+		})
+		convey.Convey("test invalid character in node rank", func() {
+			specialChars := []string{" ", ".", "/", "\\"}
+			for _, char := range specialChars {
+				nodeRank := fmt.Sprintf("node-rank%s", char)
+				err := NodeRankValidator(nodeRank)
+				convey.So(err.Error(), convey.ShouldEqual, "contains invalid character: ' ', '.', '/', '\\'")
+			}
+		})
+	})
+}
+
+func TestJobIdValidator(t *testing.T) {
+	convey.Convey("Test JobIdValidator", t, func() {
+		convey.Convey("test normal case", func() {
+			err := JobIdValidator("normal-jobid-123")
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("test empty job id", func() {
+			err := JobIdValidator("")
+			convey.So(err.Error(), convey.ShouldEqual, "job id is empty")
+		})
+		convey.Convey("test special character in job id", func() {
+			specialChars := []string{" ", "/", "\\"}
+			for _, char := range specialChars {
+				jobId := fmt.Sprintf("jobid%s", char)
+				err := JobIdValidator(jobId)
+				convey.So(err.Error(), convey.ShouldEqual, fmt.Sprintf("contains invalid character: %s", char))
+			}
+		})
+	})
+}

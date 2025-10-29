@@ -23,6 +23,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/controllerflags"
 )
 
@@ -93,4 +94,63 @@ func TestIsPureNumber(t *testing.T) {
 			convey.So(isPureNumber("123!45"), convey.ShouldBeFalse)
 		})
 	})
+}
+
+func TestReadConfigFromFile(t *testing.T) {
+	convey.Convey("TestReadConfigFromFile", t, func() {
+		fileContent := []byte(`
+supperssedPeriod=0
+networkType=1
+pingType=0
+pingTimes=5
+pingInterval=1
+period=10
+netFault=on
+`)
+		targetKeys := []string{"networkType", "pingType", "pingTimes", "pingInterval", "suppressedPeriod", "period"}
+		result := ReadConfigFromFile(fileContent, targetKeys)
+
+		convey.So(result, convey.ShouldNotBeEmpty)
+	})
+}
+
+func TestCheckCurSuperPodConfigSwitch(t *testing.T) {
+	convey.Convey("test CheckCurSuperPodConfigSwitch", t, func() {
+		res := CheckCurSuperPodConfigSwitch(".")
+		convey.So(res, convey.ShouldBeFalse)
+		err := createTmpConfigFile()
+		convey.So(err, convey.ShouldBeNil)
+		defer removeTmpConfigFile()
+		res = CheckCurSuperPodConfigSwitch(".")
+		convey.So(res, convey.ShouldBeTrue)
+	})
+}
+
+func createTmpConfigFile() error {
+	configPath := "./cathelper.conf"
+	fileContent := `
+supperssedPeriod=0
+networkType=1
+pingType=0
+pingTimes=5
+pingInterval=1
+period=10
+netFault=on
+`
+	var fileMode0644 os.FileMode = 0644
+	file, err := os.OpenFile(configPath, os.O_CREATE|os.O_RDWR, fileMode0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(fileContent)
+	return err
+}
+
+func removeTmpConfigFile() {
+	configPath := "./cathelper.conf"
+	err := os.Remove(configPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("remove temp config file %s failed: %v", configPath, err)
+	}
 }

@@ -20,7 +20,6 @@ package node
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,6 +32,8 @@ import (
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/constants"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
 	"ascend-faultdiag-online/pkg/utils"
+	globalConstants "ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 	"ascend-faultdiag-online/pkg/utils/k8s"
 )
 
@@ -179,12 +180,13 @@ func createOrUpdateCM(name, namespace, cmKey string, data []byte) error {
 }
 
 func parallelGroupInfoReader(jobId string) (map[string]any, error) {
-	file, err := os.ReadFile(fmt.Sprintf("%s/%s/%s", constants.NodeFilePath, jobId, constants.ParallelGroupInfo))
+	filePath := fmt.Sprintf("%s/%s/%s", constants.NodeFilePath, jobId, constants.ParallelGroupInfo)
+	fileContent, err := fileutils.ReadLimitBytes(filePath, globalConstants.Size10M)
 	if err != nil {
 		return nil, err
 	}
 	var data = map[string]any{}
-	err = json.Unmarshal(file, &data)
+	err = json.Unmarshal(fileContent, &data)
 	if err != nil {
 		return nil, err
 	}

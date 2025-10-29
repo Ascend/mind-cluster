@@ -23,6 +23,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 // Data 解析topo文件中的并行域信息
@@ -88,7 +90,7 @@ func checkEPContent(filePath string) (bool, error) {
 // 检测是否存CP，如果存在会返回true，如果不存在会返回FALSE
 func checkCPContent(filePath string) (bool, error) {
 	// 读文件的内容
-	data, err := utils.LoadFile(filePath)
+	data, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
 		return false, fmt.Errorf("error reading file: %v", err)
 	}

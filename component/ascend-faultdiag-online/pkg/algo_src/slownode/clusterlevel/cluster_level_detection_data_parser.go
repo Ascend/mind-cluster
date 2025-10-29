@@ -17,16 +17,15 @@ package clusterlevel
 
 import (
 	"encoding/json"
-	"io"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 /* 比较当前任务在各个节点上的劣化等级，取出最大 */
@@ -86,19 +85,13 @@ func getGatherData(mergedData *config.ClusterJobResult,
 /* 读取节点级结果文件内容并转化为相应的格式 */
 func getNodeLevelDetectionResult(filePath string) (bool, config.NodeDetectionResult) {
 	/* 获取结果 */
-	file, err := os.Open(filePath)
-	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%s:%v", filePath, err)
-		return false, config.NodeDetectionResult{}
-	}
-	defer file.Close()
-	data, err := io.ReadAll(file)
+	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size500M)
 	if err != nil {
 		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%s:%v", filePath, err)
 		return false, config.NodeDetectionResult{}
 	}
 	var result config.NodeDetectionResult
-	err = json.Unmarshal(data, &result)
+	err = json.Unmarshal(fileContent, &result)
 	if err != nil {
 		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%s:%v", filePath, err)
 		return false, config.NodeDetectionResult{}
@@ -237,7 +230,7 @@ func mergeTopoPpParallelInfo(topoData map[string]any, Parallel *[][]int, target 
 
 /* 从集群侧topo文件中获取指定并行域信息 */
 func getParallelDomain(filePath string, target string) [][]int {
-	data, err := utils.LoadFile(filePath)
+	data, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
 		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Read topo failed:%v", err)
 		return nil

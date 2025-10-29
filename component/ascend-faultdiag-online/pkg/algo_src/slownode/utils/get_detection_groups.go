@@ -18,6 +18,7 @@ Package utils is used for file reading and writing, as well as data processing.
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -25,6 +26,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
+	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 // getNodeGlobalRanks 遍历文件夹，获取所有符合格式 global_rank_i.csv 的文件，并提取 i 值
@@ -36,7 +38,12 @@ func getNodeGlobalRanks(dirPath string) ([]int, error) {
 	re := regexp.MustCompile(`global_rank_(\d{1,7})\.csv`)
 
 	// 遍历目录中的所有文件
+	fileCount := 0
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		fileCount++
+		if fileCount >= constants.MaxFileCount {
+			return fmt.Errorf("too many files in: %s, exceed max file count: %d", path, constants.MaxFileCount)
+		}
 		if err != nil {
 			hwlog.RunLog.Warnf("Error accessing path: %v", err)
 			return nil

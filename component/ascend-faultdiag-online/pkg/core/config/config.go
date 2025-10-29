@@ -24,9 +24,9 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 	"ascend-faultdiag-online/pkg/utils/slicetool"
 )
 
@@ -72,7 +72,7 @@ func paramCheck(config *FaultDiagConfig) error {
 
 // LoadConfig reads the configuration file and returns a FaultDiagConfig instance.
 func LoadConfig(path string) (*FaultDiagConfig, error) {
-	data, err := utils.LoadFile(path)
+	data, err := fileutils.ReadLimitBytes(path, constants.Size10M)
 	if err != nil {
 		return nil, err
 	}

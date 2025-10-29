@@ -38,6 +38,10 @@ func jobSummaryProcessor(jobSummary *model.JobSummary) {
 		return
 	}
 	hwlog.RunLog.Infof("[FD-OL SLOWNODE]got job summary data, operator: %s, data: %+v", jobSummary.Operator, jobSummary)
+	if err := common.JobIdValidator(jobSummary.JobId); err != nil {
+		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]invalid jobId: %s, err: %v", jobSummary.JobId, err)
+		return
+	}
 	// query context from local contextMap
 	var key = fmt.Sprintf("%s/%s", jobSummary.Namespace, jobSummary.JobName)
 	ctx, ok := slownodejob.GetJobCtxMap().Get(key)

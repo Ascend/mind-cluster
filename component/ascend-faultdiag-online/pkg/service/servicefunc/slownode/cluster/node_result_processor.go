@@ -25,9 +25,11 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/model/slownode"
+	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/common"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/constants"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/dataparse"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 var (
@@ -103,6 +105,10 @@ func AlgoResultProcessor(oldData, newData *slownode.NodeAlgoResult, operator wat
 		return
 	}
 	hwlog.RunLog.Infof("[FD-OL SLOWNODE]got node slow node algo cm data, operator: %s, newObj: %+v", operator, newData)
+	if err := common.NodeRankValidator(newData.NodeRank); err != nil {
+		hwlog.RunLog.Errorf("[FD-OL SLOWNODE]invalid node rank: %s, err: %v", newData.NodeRank, err)
+		return
+	}
 	var key = newData.KeyGenerator()
 	ctx, ok := slownodejob.GetJobCtxMap().Get(key)
 	if !ok || !ctx.IsRunning() {
@@ -139,6 +145,10 @@ func AlgoResultProcessor(oldData, newData *slownode.NodeAlgoResult, operator wat
 
 func writeFile(dir, fileName string, data map[string]any) error {
 	filePath := fmt.Sprintf("%s/%s", dir, fileName)
+	absPath, err := fileutils.CheckPath(filePath)
+	if err != nil {
+		return err
+	}
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -154,5 +164,5 @@ func writeFile(dir, fileName string, data map[string]any) error {
 		return err
 	}
 	// write the data
-	return os.WriteFile(filePath, bytes, constants.FileMode)
+	return os.WriteFile(absPath, bytes, constants.FileMode)
 }

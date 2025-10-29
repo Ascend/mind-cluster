@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/common/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 const splitLen = 2
@@ -126,12 +127,11 @@ func RemoveAllFile(filePaths []string) error {
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			continue
 		}
-		if isSymbolicLink, err := IsSymbolicLink(filePath); err != nil {
-			return fmt.Errorf("failed to check symlink: %v, file path: %s", err, filePath)
-		} else if isSymbolicLink {
-			return fmt.Errorf("symlink is a symlink, file path: %s", filePath)
+		absFilePath, err := fileutils.CheckPath(filePath)
+		if err != nil {
+			continue
 		}
-		if err := os.Remove(filePath); err != nil {
+		if err := os.Remove(absFilePath); err != nil {
 			return fmt.Errorf("failed to remove %s: %v", filePath, err)
 		}
 	}

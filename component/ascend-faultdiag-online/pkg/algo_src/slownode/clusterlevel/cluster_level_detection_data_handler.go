@@ -26,6 +26,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
 	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 /* callback */
@@ -43,7 +44,12 @@ func getCurJobAllNodeResultFile(nodeLevelResultPath string, recorder map[string]
 		return nil
 	}
 	/* 遍历文件 */
+	var fileCount = 0
 	err := filepath.Walk(nodeLevelResultPath, func(path string, info os.FileInfo, err error) error {
+		fileCount++
+		if fileCount >= constants.MaxFileCount {
+			return fmt.Errorf("too many files under: %s, exceed max file count: %d", path, constants.MaxFileCount)
+		}
 		if err != nil {
 			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Traverse %s failed!", path)
 			return err

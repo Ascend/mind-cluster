@@ -16,6 +16,7 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -34,6 +35,8 @@ import (
 	"ascend-faultdiag-online/pkg/algo_src/netfault/algo"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/controllerflags"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/policy"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 const (
@@ -314,7 +317,14 @@ func getSuperPodDirInfo(clusterPath string) ([]int, []string) {
 	var superPodIds []int = nil
 	var superPodPaths []string = nil
 	regexFileName := regexp.MustCompile(pattern)
+	fileCount := 0
 	err := filepath.Walk(clusterPath, func(path string, info os.FileInfo, err error) error {
+		fileCount++
+		if fileCount >= constants.MaxFileCount {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Too many files under: %s, exceed max file count: %d",
+				clusterPath, constants.MaxFileCount)
+			return errors.New("too many files")
+		}
 		if err != nil {
 			hwlog.RunLog.Error(err)
 			return err
@@ -365,22 +375,19 @@ func startSuperPodsDetectionAsync(clusterPath string) {
 	}
 	controllerSyncOperatorLock.Unlock()
 	hwlog.RunLog.Info("net fault detection complete!")
-	return
 }
 
 /* 在检查文件之后使用 */
 func checkDiffConfig(superPodFilePath string) map[string]any {
 	confFilePath := filepath.Join(superPodFilePath, configFile)
-	confFile, err := os.Open(confFilePath)
+	fileContent, err := fileutils.ReadLimitBytes(confFilePath, constants.Size10M)
 	if err != nil {
 		hwlog.RunLog.Errorf("error: %v", err)
 		return nil
 	}
-	defer confFile.Close()
-
 	// 定义一个map来保存解析结果
 	targetKeys := []string{"networkType", "pingType", "pingTimes", "pingInterval", "suppressedPeriod", "period"}
-	callAlgorithmParam := policy.ReadConfigFromFile(confFile, targetKeys)
+	callAlgorithmParam := policy.ReadConfigFromFile(fileContent, targetKeys)
 
 	return callAlgorithmParam
 }
@@ -496,7 +503,12 @@ func detectionCurSuperPod(superPodId int, superPodFilePath string) {
 func findCSVFiles(dir string) ([]string, error) {
 	csvFiles := make([]string, 0, defaultPerSuperPodCsvFiles)
 	// 使用 filepath.Walk 遍历目录
+	fileCount := 0
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		fileCount++
+		if fileCount >= constants.MaxFileCount {
+			return fmt.Errorf("too many files under: %s, exceed max file count: %d", path, constants.MaxFileCount)
+		}
 		if err != nil {
 			return err
 		}
@@ -515,19 +527,13 @@ func findCSVFiles(dir string) ([]string, error) {
 
 // 读取csv文件内容，返回一个map[string]string类型的数组
 func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
-	file, err := os.Open(filePath)
+	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Warn("failed to open CSV file:", err)
+		hwlog.RunLog.Warn("failed to read CSV file:", err)
 		return nil, err
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to close CSV file: %v", err)
-		}
-	}(file)
 
-	reader := csv.NewReader(file)
+	reader := csv.NewReader(bytes.NewReader(fileContent))
 	records, err := reader.ReadAll()
 	if err != nil {
 		hwlog.RunLog.Warn("failed to read CSV file:", err)
@@ -541,7 +547,7 @@ func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
 	/* 标题行 */
 	headers := records[0]
 	/* 数据行 */
-	data := make([]map[string]any, len(records))
+	data := make([]map[string]any, 0, len(records))
 	for _, record := range records[1:] {
 		/* 判断时间戳 */
 		timeStampStr := record[len(record)-1]
@@ -561,6 +567,5 @@ func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
 		}
 		data = append(data, row)
 	}
-
 	return data, nil
 }

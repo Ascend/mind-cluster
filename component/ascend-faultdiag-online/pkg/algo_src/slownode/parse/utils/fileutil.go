@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/common/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 // ReadLinesFromOffset 从指定偏移位置读取 NDJSON 文件中新增的行，返回这些行和读取后的新偏移位置
@@ -30,12 +31,11 @@ func ReadLinesFromOffset(filePath string, startOffset int64) ([]string, int64, e
 	if err := FileValidator(filePath); err != nil {
 		return nil, startOffset, err
 	}
-	if isSymbolicLink, err := IsSymbolicLink(filePath); err != nil {
-		return nil, startOffset, fmt.Errorf("failed to check symlink: %v, file path: %s", err, filePath)
-	} else if isSymbolicLink {
-		return nil, startOffset, fmt.Errorf("symlink is a symlink, file path: %s", filePath)
+	absFilePath, err := fileutils.CheckPath(filePath)
+	if err != nil {
+		return nil, 0, err
 	}
-	file, err := os.Open(filePath)
+	file, err := os.Open(absFilePath)
 	if err != nil {
 		return nil, startOffset, err
 	}

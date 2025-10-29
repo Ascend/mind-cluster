@@ -38,6 +38,7 @@ import (
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
 	"ascend-faultdiag-online/pkg/utils"
 	globalConstants "ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 	"ascend-faultdiag-online/pkg/utils/grpc"
 	"ascend-faultdiag-online/pkg/utils/k8s"
 )
@@ -220,11 +221,11 @@ func (j *jobProcessor) createOrUpdateCM() error {
 
 // removeData all the data producted by this job
 func (j *jobProcessor) removeData() {
-	if j.ctx == nil {
+	if j.ctx == nil || j.ctx.Job == nil {
 		return
 	}
 	dir := filepath.Join(constants.ClusterFilePath, j.ctx.Job.JobId)
-	if j.job.JobId == "" {
+	if j.ctx.Job.JobId == "" {
 		hwlog.RunLog.Warnf("%s remove dir: %s, jobId is empty, skip", j.logPrefix(), dir)
 		return
 	}
@@ -232,10 +233,15 @@ func (j *jobProcessor) removeData() {
 		hwlog.RunLog.Infof("%s remove dir: %s, dir is not existed, skip", j.logPrefix(), dir)
 		return
 	}
-	if err := os.RemoveAll(dir); err != nil {
-		hwlog.RunLog.Errorf("%s remove dir: %s failed: %s", j.logPrefix(), dir, err)
+	absDir, err := fileutils.CheckPath(dir)
+	if err != nil {
+		hwlog.RunLog.Warnf("%s remove dir: %s failed: %v", j.logPrefix(), dir, err)
+		return
+	}
+	if err := os.RemoveAll(absDir); err != nil {
+		hwlog.RunLog.Errorf("%s remove dir: %s failed: %s", j.logPrefix(), absDir, err)
 	} else {
-		hwlog.RunLog.Infof("%s remove dir: %s successfully", j.logPrefix(), dir)
+		hwlog.RunLog.Infof("%s remove dir: %s successfully", j.logPrefix(), absDir)
 	}
 }
 

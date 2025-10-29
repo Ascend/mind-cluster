@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 
 	"ascend-faultdiag-online/pkg/model/slownode"
 )
@@ -70,4 +71,33 @@ func AreServersEqual(servers1, servers2 []slownode.Server) bool {
 	sortFunc(servers1)
 	sortFunc(servers2)
 	return reflect.DeepEqual(servers1, servers2)
+}
+
+// NodeRankValidator validate the node rank
+func NodeRankValidator(nodeRank string) error {
+	if strings.TrimSpace(nodeRank) == "" {
+		return errors.New("node rank is empty")
+	}
+	// do not include space, /, \
+	if strings.ContainsAny(nodeRank, " /\\") {
+		return errors.New("contains invalid character: ' ', '.', '/', '\\'")
+	}
+	return nil
+}
+
+// JobIdValidator validate the job id
+func JobIdValidator(jobId string) error {
+	// job id can only contain letters, numbers, and hyphens
+	if strings.TrimSpace(jobId) == "" {
+		return errors.New("job id is empty")
+	}
+	for _, char := range jobId {
+		if !(char >= 'a' && char <= 'z') &&
+			!(char >= 'A' && char <= 'Z') &&
+			!(char >= '0' && char <= '9') &&
+			!(char == '-') {
+			return fmt.Errorf("contains invalid character: %c", char)
+		}
+	}
+	return nil
 }

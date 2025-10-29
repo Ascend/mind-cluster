@@ -72,3 +72,16 @@ const (
 	// OneDaySeconds is the number of seconds in a day
 	OneDaySeconds = 24 * 60 * 60
 )
+
+const (
+	// MaxFileCount the max file number under a path
+	MaxFileCount = 10000
+	// Size10M size 10M
+	Size10M = 10 * 1025 * 1024
+	// Size50M size 50M
+	Size50M = 50 * 1025 * 1024
+	// Size100M size 100M
+	Size100M = 100 * 1024 * 1024
+	// Size500M size 500M
+	Size500M = 500 * 1024 * 1024
+)

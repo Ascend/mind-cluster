@@ -26,6 +26,7 @@ import (
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/common/constants"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/context"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/utils"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 func listenAndParse(cg config.DataParseModel) ([]*context.SnpRankContext, error) {
@@ -109,15 +110,20 @@ func checkRankPath(jobDir string, rankIds []string) []string {
 	}
 	for _, rankId := range rankIds {
 		rankDirPath := filepath.Join(jobDir, rankId)
-		rankDirInfo, err := os.Stat(rankDirPath)
+		absPath, err := fileutils.CheckPath(rankDirPath)
+		if err != nil {
+			hwlog.RunLog.Errorf("[SLOWNODE PARSE]check rank dir path: %s failed: %v", rankDirPath, err)
+			continue
+		}
+		rankDirInfo, err := os.Stat(absPath)
 		if err != nil || !rankDirInfo.IsDir() {
 			hwlog.RunLog.Warnf("[SLOWNODE PARSE]The rank file does not exist or an error occurs: %v, "+
-				"rank path is: %s", err, rankDirPath)
+				"rank path is: %s", err, absPath)
 			continue
 		}
 		// 检查是否存在目标文件
-		if !checkParseFile(rankDirPath) {
-			hwlog.RunLog.Warnf("[SLOWNODE PARSE]No parsing files in: %v", rankDirPath)
+		if !checkParseFile(absPath) {
+			hwlog.RunLog.Warnf("[SLOWNODE PARSE]No parsing files in: %v", absPath)
 			continue
 		}
 		meetRanks = append(meetRanks, rankId)

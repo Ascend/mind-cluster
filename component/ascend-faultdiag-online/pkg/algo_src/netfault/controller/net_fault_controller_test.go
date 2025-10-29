@@ -545,9 +545,41 @@ func TestReadCSVFile(t *testing.T) {
 			ret1, _ := readCSVFile("Path", 0)
 			convey.So(ret1, convey.ShouldBeNil)
 		})
-
+		convey.Convey("return map when read success", func() {
+			// create temp csv file
+			var filePath = "./test_csv4.csv"
+			err := createTmpCsvFile(filePath)
+			convey.So(err, convey.ShouldBeNil)
+			defer clearTmpCsvFile(filePath)
+			ret1, err := readCSVFile(filePath, 0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ret1, convey.ShouldNotBeEmpty)
+		})
 	})
 }
+
+func createTmpCsvFile(filePath string) error {
+	fileContent := `
+pingTaskId,srcType,srcAddr,dstType,dstAddr,minDelay,maxDelay,avgDelay,minLossRate,maxLossRate,avgLossRate,timestamp
+0,0,6094863,0,4194304,-1,-1,-1,1.000,1.000,1.000,1755687818727
+`
+	var fileMode0644 os.FileMode = 0644
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, fileMode0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(fileContent)
+	return err
+}
+
+func clearTmpCsvFile(filePath string) {
+	err := os.Remove(filePath)
+	if err != nil {
+		hwlog.RunLog.Errorf("remove temp csv file %s failed: %v", filePath, err)
+	}
+}
+
 func TestFindCsvFile(t *testing.T) {
 	convey.Convey("test func find CSVFile", t, func() {
 		convey.Convey("return nil whem walk err", func() {

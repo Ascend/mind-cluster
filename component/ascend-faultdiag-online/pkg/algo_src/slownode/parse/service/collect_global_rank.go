@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,6 +29,8 @@ import (
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/db"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/model"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/utils"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 // QueryZpHdDurationFunc 查找zp host device 耗时的函数
@@ -211,7 +212,7 @@ func CollectGlobalRank(
 
 // readParallelGroupInfo 从json文件中读取并行域信息
 func readParallelGroupInfo(inputPath string) (map[string]*model.OpGroupInfo, error) {
-	parallelGroupInfo, err := os.ReadFile(inputPath)
+	parallelGroupInfo, err := fileutils.ReadLimitBytes(inputPath, constants.Size50M)
 	if err != nil {
 		return nil, err
 	}

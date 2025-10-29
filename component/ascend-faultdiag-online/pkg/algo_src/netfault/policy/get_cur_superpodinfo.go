@@ -17,6 +17,7 @@ package policy
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -29,6 +30,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/algo"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/controllerflags"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 const numSplits = 2
@@ -275,13 +278,9 @@ func isPureLetter(str string) bool {
 }
 
 // ReadConfigFromFile 从key=value配置文件中获取指定的所有key
-func ReadConfigFromFile(file *os.File, targetKeys []string) map[string]any {
-	if file == nil {
-		hwlog.RunLog.Error("[NETFAULT ALGO]invalid nil file")
-		return nil
-	}
+func ReadConfigFromFile(fileContent []byte, targetKeys []string) map[string]any {
 	callAlgorithmParam := make(map[string]any)
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(bytes.NewReader(fileContent))
 	for scanner.Scan() {
 		line := scanner.Text()
 		// 跳过空行和注释行
@@ -320,14 +319,13 @@ func ReadConfigFromFile(file *os.File, targetKeys []string) map[string]any {
 func CheckCurSuperPodConfigSwitch(superPodPath string) bool {
 	configPath := filepath.Join(superPodPath, configFile)
 	/* 需要文件权限、存在、软链接检查等 */
-	file, err := os.Open(configPath)
+	fileContent, err := fileutils.ReadLimitBytes(configPath, constants.Size10M)
 	if err != nil {
 		hwlog.RunLog.Errorf("Open:%v", err)
 		return false
 	}
-	defer file.Close()
 	target := []string{"netFault"}
-	configParam := ReadConfigFromFile(file, target)
+	configParam := ReadConfigFromFile(fileContent, target)
 	if len(configParam) == 0 {
 		hwlog.RunLog.Errorf("netfault field is not exist in %s", configPath)
 		return false

@@ -19,8 +19,8 @@ import (
 	"os"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 const (
@@ -33,7 +33,7 @@ var callbackFunc model.CallbackFunc = nil
 
 // Start controller
 func Start() {
-	absPath, err := utils.CheckPath(clusterLevelPath)
+	absPath, err := fileutils.CheckPath(clusterLevelPath)
 	if err != nil {
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
 		return
@@ -43,7 +43,7 @@ func Start() {
 
 // Reload controller
 func Reload() {
-	absPath, err := utils.CheckPath(clusterLevelPath)
+	absPath, err := fileutils.CheckPath(clusterLevelPath)
 	if err != nil {
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
 		return

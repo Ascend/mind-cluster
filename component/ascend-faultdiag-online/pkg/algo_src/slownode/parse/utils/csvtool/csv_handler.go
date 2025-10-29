@@ -16,12 +16,13 @@
 package csvtool
 
 import (
-	"ascend-common/common-utils/hwlog"
 	"encoding/csv"
 	"os"
 	"sync"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/common/enum"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 // CSVHandler 封装 CSV 文件操作
@@ -45,13 +46,18 @@ func NewCSVHandler(filePath string, mode enum.FileMode, perm os.FileMode) (*CSVH
 		err  error
 	)
 
+	absFilePath, err := fileutils.CheckPath(filePath)
+	if err != nil {
+		return nil, err
+	}
+
 	switch mode {
 	case enum.ReadMode: // mode: "r"=只读
-		file, err = os.Open(filePath)
+		file, err = os.Open(absFilePath)
 	case enum.WriteMode: // mode: "w"=只写(覆盖)
-		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
+		file, err = os.OpenFile(absFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
 	case enum.AppendMode: // mode: "a"=追加写
-		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, perm)
+		file, err = os.OpenFile(absFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, perm)
 	default:
 		return nil, os.ErrInvalid
 	}
@@ -65,7 +71,7 @@ func NewCSVHandler(filePath string, mode enum.FileMode, perm os.FileMode) (*CSVH
 			file:   file,
 			writer: csv.NewWriter(file),
 		},
-		csvFilePath: filePath,
+		csvFilePath: absFilePath,
 		mode:        mode,
 	}, nil
 }

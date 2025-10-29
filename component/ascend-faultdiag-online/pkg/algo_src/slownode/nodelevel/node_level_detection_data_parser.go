@@ -27,9 +27,10 @@ import (
 	"strings"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/nodeleveldatarecorder"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 /* 对齐多个切片数据 */
@@ -248,7 +249,7 @@ func getCurJobAllRanksStepData(conf config.AlgoInputConfig, jobPath string, npus
 /* 获取当前npu卡的topo信息 */
 func getCurRankTopoInfoA3(rankPath string) map[string]any {
 	file := filepath.Join(rankPath, rankTopofileName)
-	data, err := utils.LoadFile(file)
+	data, err := fileutils.ReadLimitBytes(file, constants.Size10M)
 	if err != nil {
 		hwlog.RunLog.Errorf("[SLOWNODE ALGO] error: %v", err)
 		return nil

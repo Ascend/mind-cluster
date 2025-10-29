@@ -27,6 +27,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/model"
+	"ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 // 定义结构体，映射 JSON 格式
@@ -42,7 +44,7 @@ const (
 // loadData 从 JSON 文件中读取并解析指定字段的数据
 func loadData(filePath string, field string) ([][]int, error) {
 	// 读取文件内容
-	data, err := utils.LoadFile(filePath)
+	data, err := fileutils.ReadLimitBytes(filePath, constants.Size50M)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +248,7 @@ func ReadStepTimeCSV(steptimepath string) ([]float64, error) {
 // 读取文件内容并解析 JSON
 func readJSONFile(filePath string) (*model.NodeResult, error) {
 	// 读取文件内容
-	fileContent, err := utils.LoadFile(filePath)
+	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file %s: %v", filePath, err)
 	}
@@ -273,7 +275,12 @@ func MergeDataFromFiles(directoryPath string) (*model.ClusterResult, []int, erro
 	slowSendRanks := make([]int, 0)
 
 	// 遍历目录下的所有文件
+	fileCount := 0
 	err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
+		fileCount++
+		if fileCount >= constants.MaxFileCount {
+			return fmt.Errorf("too many files under: %s, exceed max file count: %d", path, constants.MaxFileCount)
+		}
 		if err != nil {
 			hwlog.RunLog.Warnf("Error accessing path: %v", err)
 			return nil

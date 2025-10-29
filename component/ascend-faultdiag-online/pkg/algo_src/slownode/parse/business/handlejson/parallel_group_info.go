@@ -33,6 +33,8 @@ import (
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/model"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/parse/utils"
 	coreModel "ascend-faultdiag-online/pkg/core/model"
+	globalConstants "ascend-faultdiag-online/pkg/utils/constants"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 var callbackFunc coreModel.CallbackFunc = nil
@@ -135,7 +137,7 @@ func processData(mergeInput *model.MergeParallelGroupInfoInput) (map[string]*mod
 	for _, fullFilePath := range mergeInput.FilePaths {
 		var tempData map[string]*model.OpGroupInfo
 		// 读取json数据
-		readData, err := os.ReadFile(fullFilePath)
+		readData, err := fileutils.ReadLimitBytes(fullFilePath, globalConstants.Size100M)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read file %s: %v", fullFilePath, err)
 		}
