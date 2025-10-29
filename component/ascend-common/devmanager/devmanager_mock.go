@@ -176,7 +176,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 
@@ -258,6 +258,11 @@ func (d *DeviceManagerMock) GetPCIeBusInfo(logicID int32) (string, error) {
 // GetBoardInfo Get board info
 func (d *DeviceManagerMock) GetBoardInfo(logicID int32) (common.BoardInfo, error) {
 	return common.BoardInfo{}, nil
+}
+
+// GetCardElabelV2 get card elabel information
+func (d *DeviceManagerMock) GetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
+	return common.ElabelInfo{}, nil
 }
 
 // GetProductTypeArray test for get product type array

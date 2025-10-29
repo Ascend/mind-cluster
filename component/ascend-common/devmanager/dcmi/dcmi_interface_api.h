@@ -27,6 +27,7 @@ extern "C" {
 #define TEMPLATE_NAME_LEN 32
 #define DIE_ID_COUNT 5  // Number of die ID characters
 #define AGENTDRV_PROF_DATA_NUM 3
+#define MAX_LENGTH 256  // Maximum length for elabel info fields
 
 /*----------------------------------------------*
  * Structure description                        *
@@ -408,6 +409,14 @@ struct dcmi_sio_crc_err_statistic_info {
     unsigned char reserved[8];
 };
 
+struct dcmi_elabel_info {
+    char product_name[MAX_LENGTH];
+    char model[MAX_LENGTH];
+    char manufacturer[MAX_LENGTH];
+    char manufacturer_date[MAX_LENGTH];
+    char serial_number[MAX_LENGTH];
+};
+
 struct dcmi_hccsping_mesh_operate {
     char dst_addr_list[IP_ADDR_LIST_LEN];
     int pkt_size;
@@ -565,6 +574,8 @@ DCMIDLLEXPORT int dcmi_get_device_errorcode(
     int card_id, int device_id, int *error_count, unsigned int *error_code, int *error_width);
 
 DCMIDLLEXPORT int dcmi_mcu_get_power_info(int card_id, int *power);
+
+DCMIDLLEXPORT int dcmi_get_card_elabel_v2(int card_id, struct dcmi_elabel_info *elabel_info);
 #endif
 
 #ifdef __cplusplus

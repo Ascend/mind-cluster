@@ -35,6 +35,7 @@ var (
 	errorCodeDescs        []*prometheus.Desc
 	cardLabelForProcess   = append(colcommon.CardLabel, "process_id", "container_id")
 	cardLabelForContainer []string
+	cardLabelForSN        []string
 	cardLabelForNpuName   = make([]string, len(colcommon.CardLabel))
 )
 
@@ -69,8 +70,9 @@ var (
 	npuCtrUsedMemory = colcommon.BuildDesc("container_npu_used_memory",
 		"the npu used memory in container, unit is 'MB'")
 
-	npuCtrInfo  *prometheus.Desc = nil
-	descNpuName *prometheus.Desc = nil
+	npuCtrInfo          *prometheus.Desc = nil
+	descNpuName         *prometheus.Desc = nil
+	descNPUSerialNumber *prometheus.Desc = nil
 )
 
 func init() {
@@ -84,6 +86,11 @@ func init() {
 	cardLabelForContainer[0] = "npuID"
 	npuCtrInfo = colcommon.BuildDescWithLabel("npu_container_info", "the container name and deviceID relationship",
 		cardLabelForContainer)
+
+	cardLabelForSN = append(colcommon.CardLabel, "serial_number")
+	// NPU SN related metrics
+	descNPUSerialNumber = colcommon.BuildDescWithLabel("npu_chip_info_serial_number",
+		"the npu serial number information", cardLabelForSN)
 
 	copy(cardLabelForNpuName, colcommon.CardLabel)
 	cardLabelForNpuName[1] = "name"
@@ -137,6 +144,7 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- descHealthStatus
 	ch <- descNpuName
 	ch <- descAICoreFreq
+	ch <- descNPUSerialNumber
 	ch <- descDevProcessInfo
 	// status
 	ch <- descNetworkStatus
@@ -232,6 +240,11 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 
 		updateProcessInfoForPrometheus(ch, &cache, containerInfo, timestamp, cardLabel)
 		updateErrorCodesInfo(ch, &cache, timestamp, cardLabel)
+		// Update NPU serial number info
+		if cache.chip.ElabelInfo != nil {
+			snLabel := append(cardLabel, cache.chip.ElabelInfo.SerialNumber)
+			doUpdateMetricWithValidateNum(ch, timestamp, 1, snLabel, descNPUSerialNumber)
+		}
 	}
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
 
@@ -321,6 +334,11 @@ func (c *BaseInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]inter
 
 		updateProcessInfoForTelegraf(&cache, fieldMap)
 		updateErrorCode(&cache, fieldMap)
+		// Update NPU serial number info
+		if cache.chip.ElabelInfo != nil {
+			doUpdateTelegraf(fieldMap, descNPUSerialNumber, cache.chip.ElabelInfo.SerialNumber, "")
+		}
+
 	}
 
 	if fieldsMap[colcommon.GeneralDevTagKey] == nil {

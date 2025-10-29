@@ -45,4 +45,6 @@ type HuaWeiAIChip struct {
 	VDevInfos *common.VirtualDevInfo `json:"v_dev_infos"`
 	// PCIeBusInfo bus info
 	PCIeBusInfo string
+	// ElabelInfo elabel info including SN
+	ElabelInfo *common.ElabelInfo `json:"elabel_info"`
 }

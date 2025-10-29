@@ -217,6 +217,7 @@ func getNPUChipList(dmgr devmanager.DeviceInterface) (npuInfo []HuaWeiAIChip) {
 			setVdieID(&chip, dmgr, cardID, deviceID)
 			assemblevNPUInfo(dmgr, logicID, &chip)
 			setPCIeBusInfo(logicID, dmgr, &chip)
+			setElabelInfo(&chip, dmgr, cardID)
 
 			chipList = append(chipList, chip)
 			chipListIDs = append(chipListIDs, logicID)
@@ -275,6 +276,18 @@ func setPCIeBusInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaW
 		pcieInfo = ""
 	}
 	hwChip.PCIeBusInfo = pcieInfo
+}
+
+func setElabelInfo(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface, cardID int32) {
+	elabelInfo, err := dmgr.GetCardElabelV2(cardID)
+	if err != nil {
+		logger.Errorf("get elabel info of card: %v failed: %v", cardID, err)
+		chip.ElabelInfo = &common.ElabelInfo{SerialNumber: "NA"}
+		return
+	}
+	chip.ElabelInfo = &common.ElabelInfo{
+		SerialNumber: elabelInfo.SerialNumber,
+	}
 }
 
 func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipInfo *HuaWeiAIChip) {

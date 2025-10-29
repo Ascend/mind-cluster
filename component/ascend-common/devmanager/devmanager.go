@@ -78,6 +78,7 @@ type DeviceInterface interface {
 	GetDevProcessInfo(logicID int32) (*common.DevProcessInfo, error)
 	GetPCIeBusInfo(logicID int32) (string, error)
 	GetBoardInfo(logicID int32) (common.BoardInfo, error)
+	GetCardElabelV2(cardID int32) (common.ElabelInfo, error)
 	GetPCIEBandwidth(logicID int32, profilingTime int) (common.PCIEBwStat, error)
 	SetIsTrainingCard() error
 	IsTrainingCard() bool
@@ -844,6 +845,11 @@ func (d *DeviceManager) GetBoardInfo(logicID int32) (common.BoardInfo, error) {
 	}
 
 	return d.DcMgr.DcGetDeviceBoardInfo(cardID, deviceID)
+}
+
+// GetCardElabelV2 get card elabel information
+func (d *DeviceManager) GetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
+	return d.DcMgr.DcGetCardElabelV2(cardID)
 }
 
 // GetPCIEBandwidth get pcie bandwidth

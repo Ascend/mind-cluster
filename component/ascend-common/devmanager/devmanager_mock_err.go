@@ -357,3 +357,8 @@ func (d *DeviceManagerMockErr) GetChipBaseInfos() ([]*common.ChipBaseInfo, error
 func (d *DeviceManagerMockErr) DcGetSuperPodStatus(int32, int32, uint32) (int, error) { return 0, nil }
 
 func (d *DeviceManagerMockErr) DcSetSuperPodStatus(int32, int32, uint32, uint32) error { return nil }
+
+// GetCardElabelV2 get card elabel information
+func (d *DeviceManagerMockErr) GetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
+	return common.ElabelInfo{}, nil
+}

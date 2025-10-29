@@ -424,3 +424,12 @@ type HccspingMeshInfo struct {
 	PingTotalNum []int
 	DestNum      int
 }
+
+// ElabelInfo elabel information structure
+type ElabelInfo struct {
+	ProductName      string
+	Model            string
+	Manufacturer     string
+	ManufacturerDate string
+	SerialNumber     string
+}

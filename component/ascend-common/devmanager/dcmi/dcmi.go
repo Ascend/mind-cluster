@@ -205,6 +205,11 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
     CALL_FUNC(dcmi_get_product_type,card_id,device_id,product_type_str,buf_size)
    }
 
+   static int (*dcmi_get_card_elabel_v2_func)(int card_id, struct dcmi_elabel_info *elabel_info);
+   int dcmi_get_card_elabel_v2(int card_id, struct dcmi_elabel_info *elabel_info){
+    CALL_FUNC(dcmi_get_card_elabel_v2,card_id,elabel_info)
+   }
+
    static int (*dcmi_set_device_reset_func)(int card_id, int device_id, enum dcmi_reset_channel channel_type);
    int dcmi_set_device_reset(int card_id, int device_id, enum dcmi_reset_channel channel_type){
     CALL_FUNC(dcmi_set_device_reset,card_id,device_id,channel_type)
@@ -404,6 +409,8 @@ unsigned int *state){
 
    	dcmi_get_product_type_func = dlsym(dcmiHandle,"dcmi_get_product_type");
 
+   	dcmi_get_card_elabel_v2_func = dlsym(dcmiHandle,"dcmi_get_card_elabel_v2");
+
    	dcmi_set_device_reset_func = dlsym(dcmiHandle,"dcmi_set_device_reset");
 
 	dcmi_get_device_outband_channel_state_func = dlsym(dcmiHandle,"dcmi_get_device_outband_channel_state");
@@ -551,6 +558,7 @@ type DcDriverInterface interface {
 	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
 	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
 	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
+	DcGetCardElabelV2(int32) (common.ElabelInfo, error)
 }
 
 const (
@@ -2152,4 +2160,22 @@ func (d *DcManager) DcSetSuperPodStatus(cardID, deviceID int32, sdid, status uin
 		return buildDcmiErr(cardID, deviceID, "DcSetSuperPodStatus", retCode)
 	}
 	return nil
+}
+
+// DcGetCardElabelV2 get card elabel information
+func (d *DcManager) DcGetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
+	if !common.IsValidCardID(cardID) {
+		return common.ElabelInfo{}, fmt.Errorf("cardID(%d) is invalid", cardID)
+	}
+	var elabelInfo C.struct_dcmi_elabel_info
+	if retCode := C.dcmi_get_card_elabel_v2(C.int(cardID), &elabelInfo); int32(retCode) != common.Success {
+		return common.ElabelInfo{}, fmt.Errorf("cardID(%d): get elabel info failed, error code: %v", cardID, retCode)
+	}
+	return common.ElabelInfo{
+		ProductName:      C.GoString(&elabelInfo.product_name[0]),
+		Model:            C.GoString(&elabelInfo.model[0]),
+		Manufacturer:     C.GoString(&elabelInfo.manufacturer[0]),
+		ManufacturerDate: C.GoString(&elabelInfo.manufacturer_date[0]),
+		SerialNumber:     C.GoString(&elabelInfo.serial_number[0]),
+	}, nil
 }

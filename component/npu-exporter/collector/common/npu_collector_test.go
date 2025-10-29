@@ -39,21 +39,28 @@ import (
 )
 
 var (
-	defaultLogFile = "/var/log/mindx-dl/npu-exporter/npu-exporter.log"
-	mockErr        = errors.New("mockErr")
+	mockErr   = errors.New("mockErr")
+	testError = errors.New(testErrorMsg)
 )
 
 const (
 	cacheTime         = 60 * time.Second
-	timestamp         = 1606402
-	waitTime          = 2 * time.Second
 	npuCount          = 8
-	time5s            = 5 * time.Second
 	defaultUpdateTime = 10 * time.Millisecond
 	num2              = 2
 	num100            = 100
 	mockKey           = "mockKey"
 	mockValue         = "mockValue"
+
+	// Test constants for setElabelInfo
+	testCardID           = int32(1)
+	testProductName      = "Atlas 900"
+	testModel            = "Atlas-900-9000"
+	testManufacturer     = "Huawei"
+	testManufacturerDate = "2023-01-01"
+	testSerialNumber     = "SN123456789"
+	testDefaultSerial    = "NA"
+	testErrorMsg         = "get elabel info failed"
 )
 
 type mockContainerRuntimeOperator struct{}
@@ -462,6 +469,86 @@ func TestSetPCIeBusInfo(t *testing.T) {
 
 				setPCIeBusInfo(0, dmgr, &chip)
 				convey.So(chip.PCIeBusInfo, convey.ShouldEqual, tt.expectValue)
+			})
+		}
+	})
+}
+
+type setElabelInfoTestCase struct {
+	name                   string
+	cardID                 int32
+	mockElabelInfo         common.ElabelInfo
+	mockError              error
+	expectSerial           string
+	expectProduct          string
+	expectModel            string
+	expectManufacturer     string
+	expectManufacturerDate string
+}
+
+func createSetElabelInfoTestCases() []setElabelInfoTestCase {
+	return []setElabelInfoTestCase{
+		{
+			name:   "should set elabel info successfully when GetCardElabelV2 returns valid data",
+			cardID: testCardID,
+			mockElabelInfo: common.ElabelInfo{
+				ProductName:      testProductName,
+				Model:            testModel,
+				Manufacturer:     testManufacturer,
+				ManufacturerDate: testManufacturerDate,
+				SerialNumber:     testSerialNumber,
+			},
+			mockError:              nil,
+			expectSerial:           testSerialNumber,
+			expectProduct:          testProductName,
+			expectModel:            testModel,
+			expectManufacturer:     testManufacturer,
+			expectManufacturerDate: testManufacturerDate,
+		},
+		{
+			name:                   "should set default elabel info when GetCardElabelV2 returns error",
+			cardID:                 testCardID,
+			mockElabelInfo:         common.ElabelInfo{},
+			mockError:              testError,
+			expectSerial:           testDefaultSerial,
+			expectProduct:          "",
+			expectModel:            "",
+			expectManufacturer:     "",
+			expectManufacturerDate: "",
+		},
+	}
+}
+
+func executeSetElabelInfoTest(tc setElabelInfoTestCase) {
+	// Create mock device manager
+	mockDmgr := &devmanager.DeviceManager{}
+
+	// Create test chip
+	chip := &HuaWeiAIChip{}
+
+	// Apply gomonkey patches
+	patches := gomonkey.NewPatches()
+	defer patches.Reset()
+
+	patches.ApplyMethodReturn(mockDmgr, "GetCardElabelV2",
+		tc.mockElabelInfo, tc.mockError)
+
+	// Execute the function under test
+	setElabelInfo(chip, mockDmgr, tc.cardID)
+
+	// Verify results
+	convey.So(chip.ElabelInfo, convey.ShouldNotBeNil)
+	convey.So(chip.ElabelInfo.SerialNumber, convey.ShouldEqual, tc.expectSerial)
+}
+
+// TestSetElabelInfo test setElabelInfo method
+func TestSetElabelInfo(t *testing.T) {
+	testCases := createSetElabelInfoTestCases()
+
+	convey.Convey("TestSetElabelInfo", t, func() {
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				executeSetElabelInfoTest(tc)
 			})
 		}
 	})
