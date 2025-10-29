@@ -1,0 +1,151 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package container for monitoring containers' npu allocation
+package container
+
+import (
+	"bytes"
+	"os"
+	"testing"
+
+	"github.com/smartystreets/goconvey/convey"
+)
+
+type mockFile struct {
+	*bytes.Reader
+	closeErr error
+}
+
+func (m *mockFile) Close() error { return m.closeErr }
+
+func TestScanForAscendDevices(t *testing.T) {
+	convey.Convey("should return error when majorID is null", t, func() {
+		devicesContent := "c 195:0 rwm\nc 195:1 rwm"
+		tmpFile, err := os.CreateTemp("", "devices.list")
+		convey.So(err, convey.ShouldBeNil)
+		defer os.Remove(tmpFile.Name())
+		_, err = tmpFile.Write([]byte(devicesContent))
+		convey.So(err, convey.ShouldBeNil)
+		if err = tmpFile.Close(); err != nil {
+			t.Error(err)
+			return
+		}
+		devices, hasAscend, err := ScanForAscendDevices(tmpFile.Name(), "test-container")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "majorID is null")
+		convey.So(hasAscend, convey.ShouldBeFalse)
+		convey.So(len(devices), convey.ShouldEqual, 0)
+	})
+	convey.Convey("should return error when file does not exist", t, func() {
+		devices, hasAscend, err := ScanForAscendDevices("/nonexistent/file", "test-container")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "majorID is null")
+		convey.So(hasAscend, convey.ShouldBeFalse)
+		convey.So(len(devices), convey.ShouldEqual, 0)
+	})
+}
+
+func TestToCgroupHierarchy(t *testing.T) {
+	convey.Convey("should return hierarchy when cgroupfs path provided", t, func() {
+		cgroupsPath := "/docker/test-container"
+		result, err := toCgroupHierarchy(cgroupsPath)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldEqual, cgroupsPath)
+	})
+	convey.Convey("should return error when systemd cgroup path parsing fails", t, func() {
+		cgroupsPath := "systemd:docker:test-container"
+		result, err := toCgroupHierarchy(cgroupsPath)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "parsing fail")
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return error when unknown cgroup path type", t, func() {
+		cgroupsPath := "unknown:format"
+		result, err := toCgroupHierarchy(cgroupsPath)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "parsing fail")
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+}
+
+func TestParseSystemdCgroup(t *testing.T) {
+	convey.Convey("should return empty when systemd cgroup parsing fails", t, func() {
+		cgroup := "systemd:docker:test-container"
+		result := parseSystemdCgroup(cgroup)
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when invalid cgroup format", t, func() {
+		cgroup := "invalid:format"
+		result := parseSystemdCgroup(cgroup)
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+}
+
+func TestParseSlice(t *testing.T) {
+	convey.Convey("should return default slice when empty slice provided", t, func() {
+		slice := ""
+		result := parseSlice(slice)
+		convey.So(result, convey.ShouldEqual, defaultSlice)
+	})
+	convey.Convey("should return path when valid slice provided", t, func() {
+		slice := "docker.slice"
+		result := parseSlice(slice)
+		convey.So(result, convey.ShouldNotBeEmpty)
+		convey.So(result, convey.ShouldContainSubstring, "docker")
+	})
+	convey.Convey("should return empty when invalid slice format", t, func() {
+		slice := "invalid/slice"
+		result := parseSlice(slice)
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+}
+
+func TestGetUnit(t *testing.T) {
+	convey.Convey("should return name with scope when not slice", t, func() {
+		prefix := "docker"
+		name := "test-container"
+		result := getUnit(prefix, name)
+		convey.So(result, convey.ShouldEqual, "docker-test-container.scope")
+	})
+	convey.Convey("should return name when already slice", t, func() {
+		prefix := "docker"
+		name := "test.slice"
+		result := getUnit(prefix, name)
+		convey.So(result, convey.ShouldEqual, "test.slice")
+	})
+}
+
+func TestIsLowerDockerVersion(t *testing.T) {
+	convey.Convey("should return true when version is lower", t, func() {
+		version := "1.13.1"
+		result := isLowerDockerVersion(version)
+		convey.So(result, convey.ShouldBeTrue)
+	})
+	convey.Convey("should return false when version is higher", t, func() {
+		version := "20.10.0"
+		result := isLowerDockerVersion(version)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+	convey.Convey("should return false when version is empty", t, func() {
+		version := ""
+		result := isLowerDockerVersion(version)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+	convey.Convey("should return false when version format is invalid", t, func() {
+		version := "invalid.version"
+		result := isLowerDockerVersion(version)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+}

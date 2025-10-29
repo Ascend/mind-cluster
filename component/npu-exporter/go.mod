@@ -8,6 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/influxdata/telegraf v1.26.3
 	github.com/prometheus/client_golang v1.15.0
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/grpc v1.57.2
 	google.golang.org/protobuf v1.30.0
@@ -31,8 +32,11 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/gosnmp/gosnmp v1.35.0 // indirect
 	github.com/influxdata/toml v0.0.0-20190415235208-270119a8ce65 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -45,9 +49,10 @@ require (
 	github.com/prometheus/prometheus v0.42.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sleepinggenius2/gosmi v0.4.4 // indirect
+	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect

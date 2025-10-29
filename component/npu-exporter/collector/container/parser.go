@@ -93,25 +93,23 @@ type CntNpuMonitorOpts struct {
 
 // MakeDevicesParser evaluates option settings and make an instance according to it
 func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
-	runtimeOperator := &RuntimeOperatorTool{UseBackup: opts.UserBackUp}
-	parser := &DevicesParser{}
+	runtimeOperator := &RuntimeOperatorTool{
+		UseBackup:    opts.UserBackUp,
+		CriEndpoint:  opts.CriEndpoint,
+		OciEndpoint:  opts.OciEndpoint,
+		EndpointType: opts.EndpointType,
+	}
+	parser := &DevicesParser{
+		RuntimeOperator: runtimeOperator,
+	}
 
 	switch opts.EndpointType {
 	case EndpointTypeContainerd:
 		runtimeOperator.Namespace = namespaceK8s
-		runtimeOperator.CriEndpoint = opts.CriEndpoint
-		runtimeOperator.OciEndpoint = opts.OciEndpoint
-		parser.RuntimeOperator = runtimeOperator
 	case EndpointTypeDockerd:
 		runtimeOperator.Namespace = namespaceMoby
-		parser.RuntimeOperator = runtimeOperator
-		runtimeOperator.CriEndpoint = opts.CriEndpoint
-		runtimeOperator.OciEndpoint = opts.OciEndpoint
 	case EndpointTypeIsula:
 		runtimeOperator.Namespace = namespaceK8s
-		parser.RuntimeOperator = runtimeOperator
-		runtimeOperator.CriEndpoint = opts.CriEndpoint
-		runtimeOperator.OciEndpoint = opts.OciEndpoint
 	default:
 		logger.Errorf("invalid type value %d", opts.EndpointType)
 	}
@@ -170,7 +168,9 @@ func (dp *DevicesParser) parseDevices(ctx context.Context, c *CommonContainer, r
 	if dp.RuntimeOperator.GetContainerType() == IsulaContainer {
 		return dp.parseDeviceInIsula(ctx, c, rs)
 	}
-
+	if dp.RuntimeOperator.IsLowerDockerVersion() {
+		return dp.parseDevicesForLowDockerVersion(c, rs)
+	}
 	return dp.parseDevicesInContainerd(ctx, c, rs)
 }
 
