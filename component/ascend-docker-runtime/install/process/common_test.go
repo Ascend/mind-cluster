@@ -22,8 +22,8 @@ func TestCheckParamAndGetBehavior(t *testing.T) {
 		action  string
 		command []string
 	}
-	addCmds := []string{"0", "0", "0", "0", "0", "0", "0"}
-	rmCmds := []string{"0", "0", "0", "0", "0", "0"}
+	addCmds := []string{"0", "0", "0", "0", "0", "0", "0", "0", "0"}
+	rmCmds := []string{"0", "0", "0", "0", "0", "0", "0", "0"}
 	var tests = []struct {
 		name  string
 		args  args

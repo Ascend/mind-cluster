@@ -36,15 +36,17 @@ const noDefaultTemplate = `{
 }`
 
 const (
-	reserveIndexFromEnd                = 3
+	reserveIndexFromEnd                = 5
 	actionPosition                     = 0
 	srcFilePosition                    = 1
 	destFilePosition                   = 2
 	runtimeFilePosition                = 3
-	rmCommandLength                    = 6
-	addCommandLength                   = 7
+	rmCommandLength                    = 8
+	addCommandLength                   = 9
 	maxFileSize                        = 1024 * 1024 * 10
-	cgroupInfoIndexFromEnd             = 1
+	cgroupInfoIndexFromEnd             = 3
+	osNameIndexFromEnd                 = 2
+	osVersionIndexFromEnd              = 1
 	perm                   os.FileMode = 0600
 )
 
@@ -57,19 +59,22 @@ const (
 	// InstallSceneContainerd is a 'containerd' string of scene
 	InstallSceneContainerd = "containerd"
 	// InstallSceneIsula is a 'isula' string of scene
-	InstallSceneIsula             = "isula"
-	v1NeedChangeKeyRuntime        = "runtime"
-	v1NeedChangeKeyRuntimeType    = "runtime_type"
-	v1RuntimeType                 = "io.containerd.runtime.v1.linux"
-	v1DefaultRuncRuntimeType      = "io.containerd.runc.v2"
-	defaultRuntimeValue           = "runc"
-	v1RuntimeTypeFisrtLevelPlugin = "io.containerd.grpc.v1.cri"
-	containerdKey                 = "containerd"
-	runtimesKey                   = "runtimes"
-	runcKey                       = "runc"
-	runcOptionsKey                = "options"
-	binaryNameKey                 = "BinaryName"
-	cgroupV2InfoStr               = "cgroup2fs"
+	InstallSceneIsula          = "isula"
+	v1NeedChangeKeyRuntime     = "runtime"
+	v1NeedChangeKeyRuntimeType = "runtime_type"
+	v1RuntimeType              = "io.containerd.runtime.v1.linux"
+	// default runtime type for containerd
+	v2RuncRuntimeType                = "io.containerd.runc.v2"
+	defaultRuntimeValue              = "runc"
+	v1RuntimeTypeFisrtLevelPlugin    = "io.containerd.grpc.v1.cri"
+	containerdKey                    = "containerd"
+	runtimesKey                      = "runtimes"
+	runcKey                          = "runc"
+	runcOptionsKey                   = "options"
+	binaryNameKey                    = "BinaryName"
+	cgroupV2InfoStr                  = "cgroup2fs"
+	openEulerStr                     = "openEuler"
+	openEulerVersionForV2RuntimeType = "24.03"
 )
 
 const (

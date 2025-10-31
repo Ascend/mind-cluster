@@ -364,13 +364,13 @@ func getTestDockerProcessCases() []testProcessArg {
 		},
 		{
 			Name:       "file not exist case 3",
-			Command:    []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr},
+			Command:    []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
 			WantErr:    true,
 			WantResult: rmBehavior,
 		},
 		{
 			Name:       "success case 4",
-			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr},
+			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
 			WantErr:    true,
 			WantResult: addBehavior,
 		},

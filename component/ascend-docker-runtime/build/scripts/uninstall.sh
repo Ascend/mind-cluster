@@ -158,11 +158,14 @@ if [[ $? != 0 ]]; then
     log "[ERROR]" "uninstall failed, ${DST} is invalid"
     exit 1
 fi
+
+OS_NAME=$(grep '^ID=' /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+OS_VERSION=$(grep '^VERSION_ID=' /etc/os-release | awk -F= '{print $2}' | tr -d '"')
 CGROUP_INFO=$(stat -fc %T /sys/fs/cgroup/)
 # exit when return code is not 0, if use 'set -e'
-${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} > /dev/null
+${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} ${OS_NAME} ${OS_VERSION} > /dev/null
 if [[ $? != 0 ]]; then
-    log "[ERROR]" "uninstall failed, '${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO}' return non-zero"
+    log "[ERROR]" "uninstall failed, '${ROOT}/ascend-docker-plugin-install-helper rm ${DST} ${SRC} ${RESERVEDEFAULT} ${INSTALL_SCENE} ${CGROUP_INFO} ${OS_NAME} ${OS_VERSION}' return non-zero"
     exit 1
 fi
 
