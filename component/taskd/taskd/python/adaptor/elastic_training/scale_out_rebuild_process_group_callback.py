@@ -49,11 +49,11 @@ def scale_out_rebuild_process_group_callback(fault_ranks: list, train_args, para
     if args.nccl_communicator_config_path is not None:
         try:
             import yaml
-        except ImportError as e:
+            with open(args.nccl_communicator_config_path, 'r') as stream:
+                nccl_comm_cfgs = yaml.safe_load(stream)
+        except Exception as e:
             ttp_logger.LOGGER.error(f"import module yaml failed: {e}")
             raise e
-        with open(args.nccl_communicator_config_path, 'r') as stream:
-            nccl_comm_cfgs = yaml.safe_load(stream)
     if common.ORIGIN_DP_SIZE is not None:
         args.data_parallel_size = common.ORIGIN_DP_SIZE
         ttp_logger.LOGGER.info(f'rank:{args.rank} new DP size:{args.data_parallel_size}')
