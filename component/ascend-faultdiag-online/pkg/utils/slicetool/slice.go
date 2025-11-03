@@ -26,6 +26,9 @@ import (
 // In 判断在切片中是否存在某个元素，如果不存在则返回错误信息
 func In[T comparable](value *T, slice []*T) error {
 	for _, v := range slice {
+		if v == nil || value == nil {
+			continue
+		}
 		if *v == *value {
 			return nil
 		}

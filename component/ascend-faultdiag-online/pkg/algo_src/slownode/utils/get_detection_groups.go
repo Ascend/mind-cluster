@@ -57,6 +57,9 @@ func getNodeGlobalRanks(dirPath string) ([]int, error) {
 		}
 		// 提取文件名中的 i 值
 		matches := re.FindStringSubmatch(info.Name())
+		if len(matches) == 0 {
+			return nil
+		}
 		i, err := strconv.Atoi(matches[1])
 		if err != nil {
 			// 输出错误信息并跳过该文件

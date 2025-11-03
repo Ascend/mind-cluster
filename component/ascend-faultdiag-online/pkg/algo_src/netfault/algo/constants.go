@@ -127,6 +127,7 @@ const (
 	defaultSPeriod    = 10
 	aggregatePathNum  = 3
 	coefficientNum    = 3
+	fromToNum         = 2
 )
 
 // 拨测对象枚举类型

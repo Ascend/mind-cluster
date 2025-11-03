@@ -353,6 +353,9 @@ func setDfChainMap(chainLists map[string][]string, dfChainsMap map[string]*DataF
 	}
 
 	for planeName, chainList := range chainLists {
+		if len(chainList) == 0 {
+			continue
+		}
 		tmpRowStr := chainList[0]
 		modifyRowStr := strings.ReplaceAll(tmpRowStr, layerIntervalChar, portIntervalChar)
 		tmpRowStrArr := strings.Split(modifyRowStr, portIntervalChar)
@@ -895,6 +898,9 @@ func processIpPairs(aiPingStrategy *AiPingStrategy, pingDictKey string, ipPairs 
 
 	// 遍历 ipPairs，填充 value
 	for i := 0; i < len(ipPairs); i++ {
+		if len(ipPairs[i]) < fromToNum {
+			continue
+		}
 		tempMap := make(map[string]any)
 		tempMap[fromConstant] = ipPairs[i][0]
 		tempMap[toConstant] = ipPairs[i][1]
