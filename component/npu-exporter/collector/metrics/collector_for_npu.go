@@ -295,18 +295,21 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 		containerID = containerInfo.ID
 		containerName = strings.Join(cNameArray, "_")
 	}
+
+	newCardLabel := make([]string, len(cardLabel))
+	copy(newCardLabel, cardLabel)
 	// containerName in process info is namespace_podName_containerName
-	cardLabel[len(cardLabel)-1] = containerName
+	newCardLabel[len(newCardLabel)-1] = containerName
 
 	if devProcessInfo.ProcNum == 0 {
-		doUpdateMetric(ch, timestamp, 0, append(cardLabel, "", containerID), descDevProcessInfo)
+		doUpdateMetric(ch, timestamp, 0, append(newCardLabel, "", containerID), descDevProcessInfo)
 		return
 	}
 
 	for i := int32(0); i < devProcessInfo.ProcNum; i++ {
 		procInfo := devProcessInfo.DevProcArray[i]
 		doUpdateMetric(ch, timestamp, procInfo.MemUsage,
-			append(cardLabel, strconv.FormatInt(int64(procInfo.Pid), colcommon.Base), containerID), descDevProcessInfo)
+			append(newCardLabel, strconv.FormatInt(int64(procInfo.Pid), colcommon.Base), containerID), descDevProcessInfo)
 	}
 }
 
