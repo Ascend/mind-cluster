@@ -17,10 +17,25 @@ package container
 
 import (
 	"bytes"
-	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/utils"
+)
+
+const (
+	miHeader = "434 425 0:23 / /sys/fs/cgroup/devices rw,nosuid,nodev,noexec,relatime shared:213" +
+		" - cgroup cgroup rw,devices\n"
+	ctrlDevices    = "devices"
+	cgroupRootPath = "/sys/fs/cgroup/devices"
+	sysdSlice      = "kubepods-besteffort-pod123456.slice"
+	cid            = "abcdef0123456789"
+	devLine0       = "c 236:0 rwm\n"
+	devLine1       = "c 236:1 rw\n"
+	devWildcard    = "c *:* m\n"
 )
 
 type mockFile struct {
@@ -31,29 +46,31 @@ type mockFile struct {
 func (m *mockFile) Close() error { return m.closeErr }
 
 func TestScanForAscendDevices(t *testing.T) {
-	convey.Convey("should return error when majorID is null", t, func() {
-		devicesContent := "c 195:0 rwm\nc 195:1 rwm"
-		tmpFile, err := os.CreateTemp("", "devices.list")
+	convey.Convey("should collect minors when match ascend major ids", t, func() {
+		dev, clean, err := mkTemp(devLine0 + devLine1)
 		convey.So(err, convey.ShouldBeNil)
-		defer os.Remove(tmpFile.Name())
-		_, err = tmpFile.Write([]byte(devicesContent))
+		defer clean()
+		p := gomonkey.ApplyFuncReturn(npuMajor, []string{"236"}).
+			ApplyFuncReturn(utils.CheckPath, dev, nil)
+		defer p.Reset()
+
+		nums, ok, err := ScanForAscendDevices(dev, cid)
 		convey.So(err, convey.ShouldBeNil)
-		if err = tmpFile.Close(); err != nil {
-			t.Error(err)
-			return
-		}
-		devices, hasAscend, err := ScanForAscendDevices(tmpFile.Name(), "test-container")
-		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "majorID is null")
-		convey.So(hasAscend, convey.ShouldBeFalse)
-		convey.So(len(devices), convey.ShouldEqual, 0)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(nums, convey.ShouldResemble, []int{0, 1})
 	})
-	convey.Convey("should return error when file does not exist", t, func() {
-		devices, hasAscend, err := ScanForAscendDevices("/nonexistent/file", "test-container")
-		convey.So(err, convey.ShouldNotBeNil)
-		convey.So(err.Error(), convey.ShouldContainSubstring, "majorID is null")
-		convey.So(hasAscend, convey.ShouldBeFalse)
-		convey.So(len(devices), convey.ShouldEqual, 0)
+	convey.Convey("should stop when wildcard appears", t, func() {
+		dev, clean, err := mkTemp(devWildcard)
+		convey.So(err, convey.ShouldBeNil)
+		defer clean()
+		p := gomonkey.ApplyFuncReturn(npuMajor, []string{"236"}).
+			ApplyFuncReturn(utils.CheckPath, dev, nil)
+		defer p.Reset()
+
+		nums, ok, err := ScanForAscendDevices(dev, cid)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(nums, convey.ShouldBeEmpty)
 	})
 }
 
@@ -147,5 +164,32 @@ func TestIsLowerDockerVersion(t *testing.T) {
 		version := "invalid.version"
 		result := isLowerDockerVersion(version)
 		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestGetCgroupControllerPathShouldReadMountinfo(t *testing.T) {
+	convey.Convey("should parse mountinfo and return devices controller path", t, func() {
+		mi, clean, err := mkTemp(miHeader)
+		convey.So(err, convey.ShouldBeNil)
+		defer clean()
+		p1 := gomonkey.ApplyFuncReturn(utils.CheckPath, mi, nil)
+		defer p1.Reset()
+		path, err := getCgroupControllerPath(ctrlDevices)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(path, convey.ShouldEqual, cgroupRootPath)
+	})
+}
+
+func TestGetCgroupPathShouldJoinControllerAndHierarchy(t *testing.T) {
+	convey.Convey("should join controller path with hierarchy when systemd", t, func() {
+		mi, clean, err := mkTemp(miHeader)
+		convey.So(err, convey.ShouldBeNil)
+		defer clean()
+		p1 := gomonkey.ApplyFuncReturn(utils.CheckPath, mi, nil)
+		defer p1.Reset()
+		cg := sysdSlice + ":docker:" + cid
+		got, err := GetCgroupPath(ctrlDevices, cg)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(got, convey.ShouldEqual, filepath.Join(cgroupRootPath, parseSystemdCgroup(cg)))
 	})
 }
