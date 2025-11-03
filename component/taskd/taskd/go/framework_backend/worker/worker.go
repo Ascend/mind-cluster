@@ -57,7 +57,7 @@ var GlobalRank int
 // InitMonitor to init taskd monitor,
 func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) {
 	GlobalRank = globalRank
-	profiling.SetDiskUsageUpperLimitMB(upperLimitOfDiskInMb)
+	profiling.SetUsageUpperLimit(upperLimitOfDiskInMb)
 	profiling.GlobalRankId = globalRank
 
 	hwlog.RunLog.Info("begin init mspti lib so")

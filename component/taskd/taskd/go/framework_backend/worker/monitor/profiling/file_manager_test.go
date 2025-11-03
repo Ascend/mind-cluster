@@ -345,7 +345,7 @@ func TestManageProfilingDiskUsage(t *testing.T) {
 		})
 		// Setup
 		testBaseDir := t.TempDir()
-		SetDiskUsageUpperLimitMB(1)
+		SetUsageUpperLimit(1)
 
 		// Create test files exceeding limit
 		fileCount := 3

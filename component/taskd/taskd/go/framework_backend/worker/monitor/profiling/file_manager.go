@@ -41,9 +41,16 @@ var diskUsageUpperLimitMB = constant.DefaultDiskUpperLimitInMB
 
 const parallelGroupFileName = "parallel_group.json"
 
-// SetDiskUsageUpperLimitMB is the ProfilingBaseDir total upper limit containing all jobs
-func SetDiskUsageUpperLimitMB(upperLimitInMB int) {
+var maxProfilingFileNum = constant.DefaultMaxProfilingFileNums
+
+const maxProfilingDirNum = 100
+const maxFileNumMultiplier = 2
+
+// SetUsageUpperLimit is the ProfilingBaseDir total upper limit containing all jobs
+func SetUsageUpperLimit(upperLimitInMB int) {
 	diskUsageUpperLimitMB = upperLimitInMB
+	maxProfilingFileNum = diskUsageUpperLimitMB /
+		(constant.SizeLimitPerProfilingFile / constant.BytesPerMB) * maxFileNumMultiplier
 }
 
 // SaveProfilingDataIntoFile save current profiling data to file
@@ -84,8 +91,13 @@ func getNewestFileName(filePath string) (string, error) {
 		return "", err
 	}
 	var latestTime int64 = -1
+	fileNums := 0
 	var latestFileName = ""
 	for _, entry := range entries {
+		fileNums += 1
+		if fileNums > maxProfilingFileNum {
+			return "", fmt.Errorf("profiling file num %d exceeds max %d", fileNums, maxProfilingFileNum)
+		}
 		if entry.IsDir() {
 			continue
 		}
@@ -220,9 +232,16 @@ func getCurrentSavePath(rank int) (string, error) {
 // getDirSizeInMB will return specific dir size in MB
 func getDirSizeInMB(path string) (float64, error) {
 	var size int64
+	fileNums := 0
 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+		fileNums += 1
+		if fileNums > maxProfilingFileNum {
+			hwlog.RunLog.Warnf("profiling file num %d exceeds max %d", fileNums, maxProfilingFileNum)
+			size = int64(diskUsageUpperLimitMB)*constant.BytesPerMB + 1
+			return nil
 		}
 		if !info.IsDir() {
 			size += info.Size()
@@ -245,9 +264,15 @@ func getProfileFiles(jobDir string) ([]os.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	fileNums := 0
 	// filter out files
 	var profileFile []os.FileInfo
 	for _, file := range files {
+		fileNums += 1
+		if fileNums > maxProfilingFileNum {
+			hwlog.RunLog.Warnf("profiling file num %d exceeds max %d", fileNums, maxProfilingFileNum)
+			break
+		}
 		if !file.IsDir() {
 			profileFile = append(profileFile, file)
 		}
@@ -357,7 +382,13 @@ func dealWithDiskUsage(baseDir string, usedSize float64) {
 		hwlog.RunLog.Errorf("failed to read base directory: %s", err.Error())
 		return
 	}
+	fileNums := 0
 	for _, jobDir := range jobDirs {
+		fileNums += 1
+		if fileNums > maxProfilingDirNum {
+			hwlog.RunLog.Warnf("profiling dir num %d exceeds max %d", fileNums, maxProfilingDirNum)
+			break
+		}
 		if jobDir.IsDir() {
 			jobDirPath := filepath.Join(baseDir, jobDir.Name())
 			err := deleteOldestFileForEachRank(jobDirPath)

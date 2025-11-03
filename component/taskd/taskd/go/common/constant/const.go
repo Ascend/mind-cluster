@@ -62,6 +62,8 @@ const (
 	BytesPerMB = 1024 * 1024
 	// DefaultDiskUpperLimitInMB the initial size of upper limit
 	DefaultDiskUpperLimitInMB = 5 * 1024
+	// DefaultMaxProfilingFileNums the initial num of files limit
+	DefaultMaxProfilingFileNums = 10000
 	// LeastBufferSize is the buffer size for flush file
 	LeastBufferSize = 4096
 	// CheckProfilingCacheInterval every interval to check cache
