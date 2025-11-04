@@ -788,19 +788,40 @@ func TestUpdateEnvAndPostHook(t *testing.T) {
 		},
 		Hooks: &specs.Hooks{},
 	}
-
-	updateEnvAndPostHook(&spec, vdvice, &deviceList)
-	assert.Contains(t, spec.Process.Env, "ASCEND_VISIBLE_DEVICES=0")
-	assert.Contains(t, spec.Process.Env, "ASCEND_RUNTIME_OPTIONS=VIRTUAL")
-	assert.Contains(t, spec.Hooks.Poststop[0].Path, destroyHookCli)
+	convey.Convey("test updateEnvAndPostHook patch2", t, func() {
+		convey.Convey("get executable path failed, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Executable, "", errors.New("executable failed"))
+			defer patch.Reset()
+			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			convey.ShouldContain(err.Error(), "cannot get the path of docker-destroy:")
+		})
+		convey.Convey("deviceIdList is nil, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", errors.New("check failed")).
+				ApplyFuncReturn(os.Executable, "", nil)
+			defer patch.Reset()
+			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			convey.ShouldContain(err.Error(), "failed to check docker-destroy executable file at")
+		})
+		convey.Convey("updateEnvAndPostHook success, should return nil", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+				ApplyFuncReturn(os.Executable, "", nil)
+			defer patch.Reset()
+			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			assert.Nil(t, err)
+			assert.Contains(t, spec.Process.Env, "ASCEND_VISIBLE_DEVICES=0")
+			assert.Contains(t, spec.Process.Env, "ASCEND_RUNTIME_OPTIONS=VIRTUAL")
+			assert.Contains(t, spec.Hooks.Poststop[0].Path, destroyHookCli)
+		})
+	})
 }
 
 // TestUpdateEnvAndPostHookPatch1 tests the function updateEnvAndPostHook
 func TestUpdateEnvAndPostHookPatch1(t *testing.T) {
 	convey.Convey("test updateEnvAndPostHook patch1", t, func() {
-		convey.Convey("01-deviceIdList is nil, should return error", func() {
+		convey.Convey("01-deviceIdList is nil, should return nil", func() {
 			spec := &specs.Spec{}
-			updateEnvAndPostHook(spec, dcmi.VDeviceInfo{}, nil)
+			err := updateEnvAndPostHook(spec, dcmi.VDeviceInfo{}, nil)
+			convey.ShouldBeNil(err)
 			convey.So(spec.Process, convey.ShouldBeNil)
 		})
 	})
@@ -1192,7 +1213,7 @@ func TestAddHookPatch2(t *testing.T) {
 		})
 		patches.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{VdeviceID: 0}, nil)
 		convey.Convey("07-success, should return nil", func() {
-			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook)
+			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook, nil)
 			defer patch.Reset()
 			convey.So(addHook(&testSp, &testIn), convey.ShouldBeNil)
 		})
