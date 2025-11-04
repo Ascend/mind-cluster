@@ -30,14 +30,14 @@ import (
 func ConvertMaptoStruct[T slownode.NodeAlgoResult | slownode.ClusterAlgoResult](
 	data map[string]map[string]any, target *T) error {
 	if len(data) == 0 {
-		return fmt.Errorf("callback data is empty: %s", data)
+		return fmt.Errorf("callback data is empty: %v", data)
 	}
 	if target == nil {
 		return errors.New("target struct pointer is nil")
 	}
 	for _, v := range data {
 		if len(v) == 0 {
-			return fmt.Errorf("callback data is empty: %s", data)
+			return fmt.Errorf("callback data is empty: %v", data)
 		}
 		for _, result := range v {
 			dataBytes, err := json.Marshal(result)

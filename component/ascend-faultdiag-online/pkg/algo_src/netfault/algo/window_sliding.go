@@ -28,7 +28,7 @@ func (nd *NetDetect) getCurSlideWindow() []map[string]any {
 
 // 更新滑动窗口的数据
 func (nd *NetDetect) updateCurSlideWindows(newData []map[string]any) {
-	hwlog.RunLog.Infof("[ALGO] begin to updateCurSlideWindows, superPodId: %v", nd.curSuperPodId)
+	hwlog.RunLog.Infof("[ALGO] begin to updateCurSlideWindows, superPodId: %s", nd.curSuperPodId)
 	nd.curSlideWindows = MergeAndDeduplicate(nd.curSlideWindows, newData)
 	nd.curSlideWindowsMaxTs = getMaxTimeStamp(nd.curSlideWindows)
 
@@ -42,7 +42,7 @@ func (nd *NetDetect) updateCurSlideWindows(newData []map[string]any) {
 		}
 	}
 	nd.curSlideWindows = validItems
-	hwlog.RunLog.Infof("[ALGO] updateCurSlideWindows finished, widnowData size: %v, superPodId: %v",
+	hwlog.RunLog.Infof("[ALGO] updateCurSlideWindows finished, widnowData size: %d, superPodId: %s",
 		len(nd.curSlideWindows), nd.curSuperPodId)
 }
 
@@ -51,7 +51,7 @@ func (nd *NetDetect) consumeQueueData() {
 	updateTime := nd.curPingPeriod // 更新的时间数
 
 	// 移除最晚的指定时间数数据，并更新最大时间戳
-	hwlog.RunLog.Infof("[ALGO] begin to consumeQueueData, superPodId: %v", nd.curSuperPodId)
+	hwlog.RunLog.Infof("[ALGO] begin to consumeQueueData, superPodId: %s", nd.curSuperPodId)
 	totalTimeSpan := int64(nd.curPingPeriod*millisecondNum*saveLenNum - updateTime*millisecondNum)
 	var validItems []map[string]any
 	for _, item := range nd.curSlideWindows {
@@ -80,8 +80,8 @@ func (nd *NetDetect) consumeQueueData() {
 	nd.curSlideWindows = append(nd.curSlideWindows, windowItems...)
 	nd.curConsumedQueue = queueItems
 	nd.curSlideWindowsMaxTs += int64(updateTime * millisecondNum)
-	hwlog.RunLog.Infof("[ALGO] consumeQueueData finished, queueData size: %v, widnowData size: %v, "+
-		"superPodId: %v", len(nd.curConsumedQueue), len(nd.curSlideWindows), nd.curSuperPodId)
+	hwlog.RunLog.Infof("[ALGO] consumeQueueData finished, queueData size: %d, widnowData size: %d, "+
+		"superPodId: %s", len(nd.curConsumedQueue), len(nd.curSlideWindows), nd.curSuperPodId)
 }
 
 /*
