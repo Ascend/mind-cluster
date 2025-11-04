@@ -76,6 +76,9 @@ func CheckPath(path string, allowLink bool) error {
 
 // CheckFileInfo check file info
 func CheckFileInfo(fileInfo *os.File, size int) error {
+	if fileInfo == nil {
+		return fmt.Errorf("file info is nil")
+	}
 	fileStat, err := fileInfo.Stat()
 	if err != nil {
 		return fmt.Errorf("invalid file")

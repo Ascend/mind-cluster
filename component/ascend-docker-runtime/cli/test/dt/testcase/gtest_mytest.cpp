@@ -1173,6 +1173,12 @@ TEST_F(Test_Fhho, GetFileSubsetAndCheckTwo)
     EXPECT_EQ(true, ret);
 }
 
+TEST_F(Test_Fhho, GetFileSubsetAndCheckThree)
+{
+    bool ret = GetFileSubsetAndCheck(nullptr, 0);
+    EXPECT_EQ(false, ret);
+}
+
 TEST_F(Test_Fhho, CheckExistsFileOne)
 {
     bool ret = CheckExistsFile("", -1, 1, false);
@@ -1183,6 +1189,12 @@ TEST_F(Test_Fhho, CheckExistsFileTwo)
 {
     bool ret = CheckExistsFile("./gtest_mytest.cpp", strlen("./gtest_mytest.cpp"), 1, false);
     EXPECT_EQ(true, ret);
+}
+
+TEST_F(Test_Fhho, CheckExistsFileThree)
+{
+    bool ret = CheckExistsFile(nullptr, 0, 1, false);
+    EXPECT_EQ(false, ret);
 }
 
 TEST_F(Test_Fhho, VerifyPathInfoOne)
