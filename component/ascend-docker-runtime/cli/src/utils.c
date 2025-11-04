@@ -61,6 +61,7 @@ char *FormatLogMessage(char *format, ...)
     va_end(list);
     if (ret <= 0) {
         free(buf);
+        buf = NULL;
         return NULL;
     }
     return buf;

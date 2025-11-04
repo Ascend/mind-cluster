@@ -38,6 +38,7 @@ STATIC bool CheckSrcFile(const char *src)
                 char* str = FormatLogMessage("failed to mount src: %s.", src);
                 Logger(str, LEVEL_ERROR, SCREEN_YES);
                 free(str);
+                str = NULL;
                 return false;
             }
     }
@@ -46,6 +47,7 @@ STATIC bool CheckSrcFile(const char *src)
             char* str = FormatLogMessage("Check file subset failed: %s.", src);
             Logger(str, LEVEL_ERROR, SCREEN_YES);
             free(str);
+            str = NULL;
             return false;
         }
     }
