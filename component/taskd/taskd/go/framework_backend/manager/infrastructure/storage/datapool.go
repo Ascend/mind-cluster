@@ -128,16 +128,25 @@ func (d *DataPool) UpdateCluster(clusterName string, clusterInfo *ClusterInfo) e
 
 // GetAgent return agent info about agent name
 func (d *DataPool) GetAgent(agentName string) (*AgentInfo, error) {
+	if d == nil || d.Snapshot == nil || d.Snapshot.AgentInfos == nil {
+		return nil, fmt.Errorf("agents is not initialized")
+	}
 	return d.Snapshot.AgentInfos.getAgent(agentName)
 }
 
 // GetWorker return worker info about worker name
 func (d *DataPool) GetWorker(workerName string) (*WorkerInfo, error) {
+	if d == nil || d.Snapshot == nil || d.Snapshot.WorkerInfos == nil {
+		return nil, fmt.Errorf("workers is not initialized")
+	}
 	return d.Snapshot.WorkerInfos.getWorker(workerName)
 }
 
 // GetCluster return cluster info about cluster name
 func (d *DataPool) GetCluster(clusterName string) (*ClusterInfo, error) {
+	if d == nil || d.Snapshot == nil || d.Snapshot.ClusterInfos == nil {
+		return nil, fmt.Errorf("clusters is not initialized")
+	}
 	return d.Snapshot.ClusterInfos.getCluster(clusterName)
 }
 
