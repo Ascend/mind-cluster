@@ -87,6 +87,21 @@ func TestJobHasFault(t *testing.T) {
 			t.Errorf("JobHasFault() = %v, want %v", hasFault, false)
 		}
 	})
+	RecoverInplaceProcessor.DevicesOfJob = getMockRetryDeviceOfJobMap1()
+	t.Run("JobHasFault, job has fault but all can be ignore, should return false", func(t *testing.T) {
+		hasFault := RecoverInplaceProcessor.JobHasFault(job1)
+		if hasFault {
+			t.Errorf("JobHasFault() = %v, want %v", hasFault, false)
+		}
+	})
+	patch := gomonkey.ApplyFuncReturn(podgroup.GetSubHealthStrategyByJobKey, constant.SubHealthyGraceExit)
+	defer patch.Reset()
+	t.Run("JobHasFault, job has SubHealth fault and can not ignore, should return true", func(t *testing.T) {
+		hasFault := RecoverInplaceProcessor.JobHasFault(job1)
+		if !hasFault {
+			t.Errorf("JobHasFault() = %v, want %v", hasFault, true)
+		}
+	})
 }
 
 const (
@@ -101,6 +116,21 @@ func getMockRetryDeviceOfJobMap() map[string]constant.SingleProcessJobInfo {
 			node1: {DeviceInfo: map[string]constant.SingleProcessDeviceInfo{
 				device1: {
 					FaultCodeLevel: map[string]string{"code1": "level1"},
+				}},
+			}},
+		},
+	}
+}
+
+func getMockRetryDeviceOfJobMap1() map[string]constant.SingleProcessJobInfo {
+	return map[string]constant.SingleProcessJobInfo{
+		job1: {Node: map[string]constant.SingleProcessNodeInfo{
+			node1: {DeviceInfo: map[string]constant.SingleProcessDeviceInfo{
+				device1: {
+					FaultCodeLevel: map[string]string{
+						"code1": constant.NotHandleFault,
+						"code2": constant.SubHealthFault,
+					},
 				}},
 			}},
 		},
