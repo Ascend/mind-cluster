@@ -36,11 +36,14 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
         run_log.error("init_taskd_agent: the libtaskd.so has not been loaded")
         return False
     framework = config.get(CONFIG_FRAMEWORK_KEY)
+    default_rank = None
     if framework == "PyTorch" and cls is not None:
         default_rank = os.getenv("RANK", DEFAULT_SERVERRANK)
     if framework == "MindSpore":
         default_rank = os.getenv("MS_NODE_RANK", DEFAULT_SERVERRANK)
-
+    if default_rank is None or not default_rank.isdigit():
+        run_log.error(f"init_taskd_agent: default_rank {default_rank} is not a digit")
+        return False
     default_values = {
         CONFIG_UPSTREAMIP_KEY: LOCAL_HOST,
         CONFIG_UPSTREAMPORT_KEY: DEFAULT_AGENT_UPSTREAMPORT,
