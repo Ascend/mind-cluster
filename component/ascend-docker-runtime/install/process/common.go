@@ -26,3 +26,8 @@ func checkParamAndGetBehavior(action string, command []string) (bool, string) {
 	}
 	return correctParam, behavior
 }
+
+// CheckParamLength whether the param length is valid
+func CheckParamLength(command []string) bool {
+	return len(command) == addCommandLength || len(command) == rmCommandLength
+}
