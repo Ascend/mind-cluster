@@ -108,8 +108,9 @@ def patch_start_workers(self, worker_group: WorkerGroup) -> Dict[int, Any]:
         attempt_log_dir = ""
         if hasattr(self, '_log_dir') and self._log_dir:
             attempt_log_dir = os.path.join(self._log_dir, f"attempt_{restart_count}")
-            shutil.rmtree(attempt_log_dir, ignore_errors=True)
-            os.makedirs(attempt_log_dir)
+            if not os.path.islink(attempt_log_dir):
+                shutil.rmtree(attempt_log_dir, ignore_errors=True)
+                os.makedirs(attempt_log_dir)
         log_line_prefixes: Optional[Dict[int, str]] = None
         if hasattr(self, '_log_line_prefix_template') and self._log_line_prefix_template:
             log_line_prefixes = {}
