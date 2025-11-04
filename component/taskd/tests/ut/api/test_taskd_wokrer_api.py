@@ -17,7 +17,7 @@
 import unittest
 from unittest.mock import patch
 
-from taskd.api.taskd_worker_api import init_taskd_worker
+from taskd.api.taskd_worker_api import init_taskd_worker, destroy_taskd_worker
 
 
 class WorkerTestCase(unittest.TestCase):
@@ -39,6 +39,9 @@ class WorkerTestCase(unittest.TestCase):
         result = init_taskd_worker(rank_id, upper_limit)
         self.assertFalse(result)
 
+    def test_destroy_worker_networker(self, mock_worker):
+        result = destroy_taskd_worker()
+        self.assertFalse(result)
 
 if __name__ == '__main__':
     unittest.main()

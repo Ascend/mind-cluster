@@ -71,6 +71,15 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 	monitorInitNotify()
 }
 
+// DestroyWorker destroy worker network
+func DestroyWorker() {
+	if netTool == nil {
+		return
+	}
+	netTool.Destroy()
+	netTool = nil
+}
+
 // InitNetwork register worker to manager
 func InitNetwork(globalRank, nodeRank int) {
 	hwlog.RunLog.Infof("worker %d noderank %d init network begin", globalRank, nodeRank)

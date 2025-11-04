@@ -50,3 +50,10 @@ class TestWorker(TestCase):
         mock_lib.StartMonitorClient = MagicMock(return_value=1)
         res = w._start_up_monitor()
         self.assertFalse(res)
+
+    @patch('taskd.python.cython_api.cython_api.lib')
+    def test_destroy(self, mock_lib: MagicMock):
+        w = Worker(0)
+        mock_lib.DestroyTaskdWorker = MagicMock(return_value=0)
+        res = w.destroy()
+        self.assertTrue(res)

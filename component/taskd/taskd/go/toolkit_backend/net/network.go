@@ -161,11 +161,13 @@ func (nt *NetInstance) ReceiveMessage() *common.Message {
 
 // Destroy destroys the network netIns.
 func (nt *NetInstance) Destroy() {
-	nt.netlogger.Infof("taskNet Destroy, role=%s, srvRank=%s, processRank=%s",
-		nt.config.Pos.Role, nt.config.Pos.ServerRank, nt.config.Pos.ProcessRank)
 	nt.destroyed.Store(true)
-	nt.grPool.Close()
-	nt.cancel()
+	if nt.grPool != nil {
+		nt.grPool.Close()
+	}
+	if nt.cancel != nil {
+		nt.cancel()
+	}
 	if nt.downEndpoint != nil {
 		nt.downEndpoint.close()
 	}

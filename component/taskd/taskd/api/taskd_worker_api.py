@@ -59,3 +59,17 @@ def start_taskd_worker() -> bool:
     except Exception as e:
         run_log.error(f"Failed to start worker: {e}")
         return False
+
+def destroy_taskd_worker() -> bool:
+    """
+    Destroys the taskd worker
+    """
+    if taskd_worker is None:
+        # if worker has not been initialized
+        run_log.error("Worker is not initialized. Please call init_worker first.")
+        return False
+    try:
+        return taskd_worker.destroy()
+    except Exception as e:
+        run_log.error(f"Failed to destroy worker: {e}")
+        return False

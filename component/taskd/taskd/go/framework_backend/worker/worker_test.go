@@ -92,6 +92,11 @@ func TestInitNetwork(t *testing.T) {
 	convey.ShouldBeTrue(called.Load())
 }
 
+func TestDestroyWorker(t *testing.T) {
+	DestroyWorker()
+	convey.ShouldBeNil(netTool)
+}
+
 func TestRegisterAndLoopRecv(t *testing.T) {
 	netTool = &net.NetInstance{}
 	patches := gomonkey.NewPatches()

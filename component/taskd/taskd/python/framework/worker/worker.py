@@ -58,6 +58,23 @@ class Worker:
         self.framework = framework
         self.stress_status = StressStatus()
 
+    @staticmethod
+    def destroy() -> bool:
+        if cython_api.lib is None:
+            run_log.error("destroy_taskd_worker: the libtaskd.so has not been loaded")
+            return False
+        try:
+            destroy_proxy_func = cython_api.lib.DestroyTaskdWorker
+            if destroy_proxy_func is None:
+                run_log.error("destroy_taskd_worker: func DestroyTaskdWorker has not been loaded from libtaskd.so")
+                return False
+            destroy_proxy_func()
+        except Exception as e:
+            run_log.error(f"destroy_taskd_worker: encounter exception: {e}")
+            return False
+        run_log.info("successfully destroy taskd worker")
+        return True
+
     def start(self) -> bool:
         return self._start_up_monitor()
 

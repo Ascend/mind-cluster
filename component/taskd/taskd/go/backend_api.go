@@ -278,6 +278,11 @@ func DestroyTaskdProxy() {
 	proxy.DestroyProxy()
 }
 
+//export DestroyTaskdWorker
+func DestroyTaskdWorker() {
+	worker.DestroyWorker()
+}
+
 //export CreateTaskdLog
 func CreateTaskdLog(logName *C.char) uintptr {
 	logFileName := C.GoString(logName) // convert C string to g
