@@ -21,8 +21,6 @@
 #include "basic.h"
 
 char *FormatLogMessage(char *format, ...);
-int IsStrEqual(const char *s1, const char *s2);
-bool StrHasPrefix(const char *str, const char *prefix);
 int VerifyPathInfo(const struct PathInfo* pathInfo);
 int CheckDirExists(const char *dir);
 int GetParentPathStr(const char *path, char *parent, size_t bufSize);
