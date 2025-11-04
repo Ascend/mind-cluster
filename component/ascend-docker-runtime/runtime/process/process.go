@@ -255,7 +255,9 @@ func addHook(spec *specs.Spec, deviceIdList *[]int) error {
 	hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
 
 	if vdevice.VdeviceID != -1 {
-		updateEnvAndPostHook(spec, vdevice, deviceIdList)
+		if err = updateEnvAndPostHook(spec, vdevice, deviceIdList); err != nil {
+			return fmt.Errorf("update evn and post hook failed: %v ", err)
+		}
 	}
 
 	return nil
@@ -587,9 +589,9 @@ func addDevice(spec *specs.Spec, deviceIdList []int) error {
 	return nil
 }
 
-func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdList *[]int) {
+func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdList *[]int) error {
 	if deviceIdList == nil {
-		return
+		return nil
 	}
 	newEnv := make([]string, 0, len(spec.Process.Env)+1)
 	needAddVirtualFlag := true
@@ -612,14 +614,21 @@ func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdLi
 		newEnv = append(newEnv, fmt.Sprintf(api.AscendRuntimeOptionsEnv+"=VIRTUAL"))
 	}
 	spec.Process.Env = newEnv
-	if currentExecPath, err := os.Executable(); err == nil {
-		postHookCliPath := path.Join(path.Dir(currentExecPath), destroyHookCli)
-		spec.Hooks.Poststop = append(spec.Hooks.Poststop, specs.Hook{
-			Path: postHookCliPath,
-			Args: []string{postHookCliPath, fmt.Sprintf("%d", vdevice.CardID), fmt.Sprintf("%d", vdevice.DeviceID),
-				fmt.Sprintf("%d", vdevice.VdeviceID)},
-		})
+	currentExecPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("cannot get the path of docker-destroy: %#v", err)
 	}
+	postHookCliPath := path.Join(path.Dir(currentExecPath), destroyHookCli)
+	_, err = mindxcheckutils.RealFileChecker(postHookCliPath, true, false, mindxcheckutils.DefaultSize)
+	if err != nil {
+		return fmt.Errorf("failed to check docker-destroy executable file at %s: %#v", postHookCliPath, err)
+	}
+	spec.Hooks.Poststop = append(spec.Hooks.Poststop, specs.Hook{
+		Path: postHookCliPath,
+		Args: []string{postHookCliPath, fmt.Sprintf("%d", vdevice.CardID), fmt.Sprintf("%d", vdevice.DeviceID),
+			fmt.Sprintf("%d", vdevice.VdeviceID)},
+	})
+	return nil
 }
 
 func modifySpecFile(path string) error {
