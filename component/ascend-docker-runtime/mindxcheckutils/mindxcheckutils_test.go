@@ -172,6 +172,11 @@ func TestCheckFileInfo01(t *testing.T) {
 			convey.So(err, convey.ShouldBeError)
 			convey.So(err.Error(), convey.ShouldEqual, "invalid size")
 		})
+		convey.Convey("06-fileInfo is nil, should return error", func() {
+			err := CheckFileInfo(nil, tooBigSize)
+			convey.So(err, convey.ShouldBeError)
+			convey.So(err.Error(), convey.ShouldEqual, "file info is nil")
+		})
 	})
 }
 

@@ -77,9 +77,14 @@ func TestCreateVDevice(t *testing.T) {
 	}
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 
+	vdevice, err := CreateVDevice(&mockWorker{}, nil, nil)
+	if err == nil {
+		t.Fatalf("%v %v", vdevice, err)
+	}
+
 	// no split, all ok
 	deviceIdList := make([]int, 0)
-	vdevice, err := CreateVDevice(&mockWorker{}, &spec, deviceIdList)
+	vdevice, err = CreateVDevice(&mockWorker{}, &spec, deviceIdList)
 	if err != nil {
 		t.Fatalf("%v %v", vdevice, err)
 	}

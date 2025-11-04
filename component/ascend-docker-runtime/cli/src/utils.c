@@ -295,6 +295,9 @@ bool CheckExternalFile(const char* filePath, const size_t filePathLen,
 bool CheckExistsFile(const char* filePath, const size_t filePathLen,
     const size_t maxFileSizeMb, const bool checkWgroup)
 {
+    if (filePath == NULL) {
+        return false;
+    }
     struct stat fileStat;
     if (lstat(filePath, &fileStat) != 0) {
         return true; // 文件不存在
@@ -357,6 +360,9 @@ STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
 
 bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
 {
+    if (basePath == NULL) {
+        return ShowExceptionInfo("path is null!");
+    }
     DIR *dir = NULL;
     struct dirent *ptr = NULL;
     char base[PATH_MAX] = {0};

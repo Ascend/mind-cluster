@@ -46,6 +46,9 @@ type WorkerInterface interface {
 // CreateVDevice will create virtual device
 func CreateVDevice(w WorkerInterface, spec *specs.Spec, devices []int) (VDeviceInfo, error) {
 	invalidVDevice := VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}
+	if spec == nil {
+		return invalidVDevice, fmt.Errorf("spec is nil")
+	}
 	splitDevice, err := extractVpuParam(spec)
 	if err != nil {
 		return invalidVDevice, err
