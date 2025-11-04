@@ -72,7 +72,6 @@ class TestGroupInfo(unittest.TestCase):
     def test_get_group_info_distributed_not_initialized(self, mock_is_initialized, mock_is_available):
         mock_is_available.return_value = True
         mock_is_initialized.return_value = False
-        
         result = get_group_info(self.test_rank)
         self.assertEqual(result, {})
 
