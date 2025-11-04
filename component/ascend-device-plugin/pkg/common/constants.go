@@ -507,6 +507,8 @@ const (
 	InferRankIndex = "-1"
 	// ResetRetryTimes for max retry times when reset failed
 	ResetRetryTimes = 4
+	// A200TA2RingsNum indicates the number of devices in a ring
+	A200TA2RingsNum = 16
 )
 
 const (
