@@ -94,6 +94,7 @@ STATIC bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("failed to convert pid string from cmd args, pid string: %s.", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
     return true;
@@ -199,6 +200,7 @@ static bool CheckWhiteList(const char* fileName)
         char* str = FormatLogMessage("failed to check whiteList value: %s.", fileName);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
     return true;
@@ -215,6 +217,7 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("too many files to mount, max number is %u", MAX_MOUNT_NR);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
 
@@ -224,6 +227,7 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("failed to copy mount file path: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
     const size_t maxFileSzieMb = 50; // max 50MB
@@ -231,6 +235,7 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("failed to check files: %s", dst);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
 
@@ -248,6 +253,7 @@ STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("too many directories to mount, max number is %u", MAX_MOUNT_NR);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
 
@@ -257,6 +263,7 @@ STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
         char* str = FormatLogMessage("error: failed to copy mount directory path: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return false;
     }
     const size_t maxFileSzieMb = 50; // max 50MB
@@ -329,6 +336,7 @@ static int ParseOneCmdArg(struct CmdArgs *args, char indicator, const char *valu
         char* str = FormatLogMessage("failed while parsing cmd arg, indicate char: %c, value: %s.", indicator, value);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return -1;
     }
     return 0;
@@ -364,6 +372,7 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
         char* str = FormatLogMessage("failed to get container mnt ns path: pid(%d).", args->pid);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return -1;
     }
 
@@ -379,6 +388,7 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
         char* str = FormatLogMessage("failed to get self ns fd: %s.", originNsPath);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return -1;
     }
 
@@ -412,6 +422,7 @@ int SetupContainer(struct CmdArgs *args)
         char* str = FormatLogMessage("failed to set to container ns: %s.", config.containerNsPath);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         close(config.originNsFd);
         return -1;
     }

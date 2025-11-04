@@ -63,6 +63,7 @@ void ParseRuntimeOptions(const char *options)
     }
 
     free(runtimeOptions);
+    runtimeOptions = NULL;
 }
 
 bool IsOptionNoDrvSet(void)

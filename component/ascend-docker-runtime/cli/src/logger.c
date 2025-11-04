@@ -245,10 +245,12 @@ STATIC void DivertAndWrite(const char *logPath, const char *msg, const int level
     }
     if (ret < 0) {
         free(buffer);
+        buffer = NULL;
         return;
     }
     WriteLogFile(logPath, FILE_MAX_SIZE, buffer, strlen(buffer));
     free(buffer);
+    buffer = NULL;
 }
 
 void Logger(const char *msg, int level, int screen)

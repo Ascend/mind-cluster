@@ -687,6 +687,7 @@ void CloseFile(FILE* fp, char *tempFilename)
     }
     unlink(tempFilename);
     free(tempFilename);
+    tempFilename = NULL;
 }
 
 TEST_F(Test_Fhho, WriteLogFileTestForFileIsNull)

@@ -266,6 +266,7 @@ static int DestroyEntrance(const char *argv[])
     char *str = FormatLogMessage("start to destroy v-device %d start...", vDeviceId);
     Logger(str, LEVEL_INFO, SCREEN_YES);
     free(str);
+    str = NULL;
     if (!GetAndCheckID(argv, &cardId, &deviceId, &vDeviceId)) {
         return -1;
     }
@@ -285,6 +286,7 @@ static int DestroyEntrance(const char *argv[])
     char *strEnd = FormatLogMessage("destroy v-device %d successfully", vDeviceId);
     Logger(strEnd, LEVEL_INFO, SCREEN_YES);
     free(strEnd);
+    strEnd = NULL;
     return 0;
 }
 
