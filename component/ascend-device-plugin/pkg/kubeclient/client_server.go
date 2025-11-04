@@ -159,7 +159,13 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 				deviceRunMode, manuallySeparateNPU)
 			continue
 		}
-		phyIDStr := strings.Split(manuallySeparateNPU, "-")[1]
+		manuallySeparateNPUStrs := strings.Split(manuallySeparateNPU, "-")
+		if len(manuallySeparateNPUStrs) <= 1 {
+			hwlog.RunLog.Warnf("manually seperate NPU split slice length(%d) less than 2",
+				len(manuallySeparateNPUStrs))
+			continue
+		}
+		phyIDStr := manuallySeparateNPUStrs[1]
 		phyID, err := strconv.Atoi(phyIDStr)
 		if err != nil {
 			hwlog.RunLog.Warnf("failed to convert %v string type to int type, error: %v", phyIDStr, err)

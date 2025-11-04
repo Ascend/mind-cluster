@@ -204,6 +204,9 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 		newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
 
 	}
+	if len(hdm.allInfo.AllDevs) <= common.FirstDevice {
+		return nil, fmt.Errorf("index(%d) exceeds the range of alldevs", common.FirstDevice)
+	}
 	boardInfo, err := hdm.manager.GetDmgr().GetBoardInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node board info, err: %s", err.Error())
@@ -265,6 +268,9 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 	}
 	if len(hdm.allInfo.AllDevTypes) == 0 {
 		return fmt.Errorf("no devices type found")
+	}
+	if len(hdm.allInfo.AllDevs) == 0 {
+		return fmt.Errorf("no devices found")
 	}
 	if err = hdm.manager.SetDeviceUsage(hdm.allInfo.AllDevs[0].LogicID); err != nil {
 		return err
@@ -812,6 +818,10 @@ func (hdm *HwDevManager) resetDuoCard(devType string, devices []*common.NpuDevic
 			continue
 		}
 		if !hdm.isDuoRemove(devType, deviceChip, prClient) {
+			continue
+		}
+		if len(deviceChip) == 0 {
+			hwlog.RunLog.Error("device chip is empty")
 			continue
 		}
 		hdm.hotReset(deviceChip[0], deviceChip)
