@@ -162,7 +162,7 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 		time.UnixMilli(faultTimeAndLevel.FaultReceivedTime).Format("2006-01-02 15:04:05.000"))
 	if durationMs > selfrecoverFaultTimeout.Milliseconds() {
 		hwlog.RunLog.Debugf("L2 fault %s during %dms more than %ds, should report fault",
-			faultCode, durationMs, selfrecoverFaultTimeout)
+			faultCode, durationMs, int(selfrecoverFaultTimeout.Seconds()))
 		return true
 	}
 
@@ -173,7 +173,8 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 	}
 
 	hwlog.RunLog.Infof("L2 fault %s during less than %ds, mindie job: %s has subscribed grpc interface and "+
-		"using fault npu: %s, should not report fault", faultCode, selfrecoverFaultTimeout, jobInfo.Key, deviceName)
+		"using fault npu: %s, should not report fault", faultCode, int(selfrecoverFaultTimeout.Seconds()),
+		jobInfo.Key, deviceName)
 	return false
 }
 
