@@ -291,9 +291,10 @@ func (processor *recoverInplaceFaultProcessor) JobHasFault(jobId string) bool {
 	if !found {
 		return false
 	}
+	subHealthStrategy := podgroup.GetSubHealthStrategyByJobKey(jobId)
 	for _, filterNode := range filterJob.Node {
 		for _, filterDevice := range filterNode.DeviceInfo {
-			if len(filterDevice.FaultCodeLevel) > 0 {
+			if faultdomain.ContainCannotIgnoreFault(filterDevice.FaultCodeLevel, subHealthStrategy) {
 				return true
 			}
 		}

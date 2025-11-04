@@ -151,3 +151,14 @@ func GetResourceType(info *v1beta1.PodGroup) string {
 	hwlog.RunLog.Warnf("GetResourceType failed for pg %s", info.GetName())
 	return constant.UnknownResourceType
 }
+
+// GetSubHealthStrategyByJobKey get subHealthStrategy by jobKey
+func GetSubHealthStrategyByJobKey(jobKey string) string {
+	pg := GetPodGroup(jobKey)
+	strategy, ok := pg.Labels[constant.SubHealthyStrategy]
+	if !ok {
+		hwlog.RunLog.Debugf("can not find subHealthyStrategy label")
+		return constant.SubHealthyIngore
+	}
+	return strategy
+}

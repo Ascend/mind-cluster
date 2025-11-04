@@ -468,6 +468,22 @@ func IsL1Fault(faultLevel string) bool {
 	return faultLevel == constant.NotHandleFault
 }
 
+// IsSubHealthFault check faultLevel is SubHealth
+func IsSubHealthFault(faultLevel string) bool {
+	return faultLevel == constant.SubHealthFault
+}
+
+// ContainCannotIgnoreFault check whether contain can not ignore npu fault
+func ContainCannotIgnoreFault(faultLeveMap map[string]string, subHealthStrategy string) bool {
+	for _, faultLevel := range faultLeveMap {
+		if IsL1Fault(faultLevel) || (IsSubHealthFault(faultLevel) && subHealthStrategy == constant.SubHealthyIngore) {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
 // IsDeviceFaultEqual check two DeviceFault is equal
 func IsDeviceFaultEqual(one, other constant.DeviceFault) bool {
 	return reflect.DeepEqual(one, other)
