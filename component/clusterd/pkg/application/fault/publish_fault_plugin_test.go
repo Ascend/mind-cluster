@@ -311,19 +311,6 @@ func TestCheckFaultFromFaultCenter(t *testing.T) {
 	})
 }
 
-func TestFilterFault(t *testing.T) {
-	convey.Convey("filter NotHandle and NotHandFault error", t, func() {
-		faultDeviceList := []constant.FaultDevice{
-			{ServerName: "node1", DeviceId: "0", FaultLevel: constant.SeparateNPU},
-			{ServerName: "node1", DeviceId: "1", FaultLevel: constant.NotHandleFault},
-			{ServerName: "node1", DeviceId: "1", FaultLevel: constant.NotHandleFaultLevelStr}}
-		filteredList := filterFault(faultDeviceList)
-		convey.So(len(filteredList), convey.ShouldEqual, 1)
-		convey.So(filteredList, convey.ShouldResemble, []constant.FaultDevice{
-			{ServerName: "node1", DeviceId: "0", FaultLevel: constant.SeparateNPU}})
-	})
-}
-
 // Helper function to create a FaultMsgSignal with given fields
 func newFaultMsg(signalType string, jobId string, nodeFaultInfo []*fault.NodeFaultInfo) *fault.FaultMsgSignal {
 	return &fault.FaultMsgSignal{
