@@ -28,7 +28,6 @@ using namespace std;
 using namespace testing;
 
 typedef char *(*ParseFileLine)(char *, const char *);
-extern "C" int IsStrEqual(const char *s1, const char *s2);
 extern "C" int GetNsPath(const int pid, const char *nsType, char *buf, size_t bufSize);
 extern "C" int snprintf_s(char *strDest, size_t destMax, size_t count, const char *format, ...);
 extern "C" int open(const char *path, int flags);
@@ -39,7 +38,6 @@ extern "C" int mount(const char *source, const char *target,
 extern "C" int Mount(const char *src, const char *dst);
 extern "C" int rmdir(const char *pathname);
 extern "C" int EnterNsByFd(int fd, int nsType);
-extern "C" bool StrHasPrefix(const char *str, const char *prefix);
 extern "C" int GetNsPath(const int pid, const char *nsType, char *buf, size_t bufSize);
 extern "C" int GetSelfNsPath(const char *nsType, char *buf, size_t bufSize);
 extern "C" int EnterNsByPath(const char *path, int nsType);

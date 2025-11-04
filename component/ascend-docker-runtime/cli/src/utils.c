@@ -67,16 +67,6 @@ char *FormatLogMessage(char *format, ...)
     return buf;
 }
 
-int IsStrEqual(const char *s1, const char *s2)
-{
-    return (strcmp(s1, s2) == 0);
-}
-
-bool StrHasPrefix(const char *str, const char *prefix)
-{
-    return (strncmp(str, prefix, strlen(prefix)) == 0);
-}
-
 STATIC int MkDir(const char *dir, mode_t mode)
 {
     if (dir == NULL) {
