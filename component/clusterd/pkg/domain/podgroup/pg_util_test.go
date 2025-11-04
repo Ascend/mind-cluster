@@ -210,3 +210,23 @@ func TestGetOwnerRefByPG(t *testing.T) {
 		})
 	})
 }
+
+func TestGetSubHealthStrategyByJobKey(t *testing.T) {
+	convey.Convey("test GetSubHealthStrategyByJobKey", t, func() {
+		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
+		convey.Convey("when pg is nil, should return default strategy", func() {
+			convey.So(GetSubHealthStrategyByJobKey(jobUid1), convey.ShouldEqual, constant.SubHealthyIngore)
+		})
+		convey.Convey("when pg is exists, subHealthyStrategy is not exists, should return default strategy", func() {
+			SavePodGroup(pgDemo1)
+			defer DeletePodGroup(pgDemo1)
+			convey.So(GetSubHealthStrategyByJobKey(jobUid1), convey.ShouldEqual, constant.SubHealthyIngore)
+		})
+		convey.Convey("when pg is exists, subHealthyStrategy is exists, should return config value", func() {
+			pgDemo1.Labels[constant.SubHealthyStrategy] = constant.SubHealthyGraceExit
+			SavePodGroup(pgDemo1)
+			defer DeletePodGroup(pgDemo1)
+			convey.So(GetSubHealthStrategyByJobKey(jobUid1), convey.ShouldEqual, constant.SubHealthyGraceExit)
+		})
+	})
+}
