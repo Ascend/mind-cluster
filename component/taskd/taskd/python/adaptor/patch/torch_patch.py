@@ -151,7 +151,7 @@ def get_worker_env(local_rank, master_addr, master_port, restart_count, spec, us
         "WORLD_SIZE": str(worker.world_size),
         "GROUP_WORLD_SIZE": str(worker_group.group_world_size),
         "ROLE_WORLD_SIZE": str(worker.role_world_size),
-        "MASTER_ADDR": master_addr,
+        "MASTER_ADDR": str(master_addr),
         "MASTER_PORT": str(master_port),
         "TORCHELASTIC_RESTART_COUNT": str(restart_count),
         "TORCHELASTIC_MAX_RESTARTS": str(spec.max_restarts),
