@@ -304,18 +304,3 @@ func compareFaultMsg(this, other *fault.FaultMsgSignal) bool {
 	}
 	return true
 }
-
-func filterFault(faultDeviceList []constant.FaultDevice) []constant.FaultDevice {
-	if len(faultDeviceList) == 0 {
-		return nil
-	}
-	filteredList := make([]constant.FaultDevice, 0, len(faultDeviceList))
-	for _, faultDevice := range faultDeviceList {
-		if _, level := GetStateLevelByFaultLevel(faultDevice.FaultLevel); level == constant.HealthyLevel {
-			hwlog.RunLog.Debugf("fileter fault device %v", faultDevice)
-			continue
-		}
-		filteredList = append(filteredList, faultDevice)
-	}
-	return filteredList
-}
