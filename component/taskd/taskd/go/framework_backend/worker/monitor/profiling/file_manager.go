@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
 
@@ -71,6 +72,10 @@ func SaveProfilingDataIntoFile(rank int) error {
 	}
 	fileName := path.Join(savePath, newestFileName)
 	hwlog.RunLog.Debugf("rank:%v,the save fileName is %s", GlobalRankId, fileName)
+	if ok, _ := utils.IsSoftlink(fileName); ok {
+		hwlog.RunLog.Errorf("save file is symlink, fileName:%s", fileName)
+		return fmt.Errorf("save file is symlink, fileName:%s", fileName)
+	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, constant.ProfilingFileMode)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to open save file, err:%s", err)
@@ -222,6 +227,9 @@ func getCurrentSavePath(rank int) (string, error) {
 		return "", errors.New("path is too long, will not create it")
 	}
 	// non-sensitive data
+	if ok, _ := utils.IsSoftlink(rankPath); ok {
+		return "", fmt.Errorf("rankPath is symlink, path:%s", rankPath)
+	}
 	if err := os.MkdirAll(rankPath, constant.ProfilingDirMode); err != nil {
 		hwlog.RunLog.Error(err)
 		return "", err

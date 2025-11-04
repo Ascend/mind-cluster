@@ -37,6 +37,9 @@ def get_save_path(rank) -> str:
         run_log.warning(f"config group base dir {base_dir} not exists, use default group info dir")
         base_dir = DEFAULT_GROUP_DIR
     rank_path = os.path.join(base_dir, job_id, str(rank))
+    if os.path.islink(rank_path):
+        run_log.error(f"rank path {rank_path} is symlink")
+        return ""
     try:
         os.makedirs(rank_path, mode=PROFILING_DIR_MODE, exist_ok=True)
     except FileExistsError:
@@ -102,6 +105,9 @@ def dump_group_info():
                 return
             run_log.info(f'save group info to: {save_path}')
             full_path = os.path.join(save_path, GROUP_INFO_NAME)
+            if os.path.islink(full_path):
+                run_log.error(f'dump path {save_path} is symlink, skip dump')
+                return
             with open(full_path, "w", encoding="utf-8") as f:
                 json.dump(group_info, f, ensure_ascii=False, indent=4)
     except Exception as err:
