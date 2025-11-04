@@ -138,6 +138,9 @@ func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 
 		if devUsage == common.Train {
 			resetDevNumOnce = common.Ascend910BRingsNumTrain
+			if deviceNum > common.Ascend910BRingsNumTrain {
+				resetDevNumOnce = common.A200TA2RingsNum
+			}
 		}
 	case api.Ascend910A3:
 		// 900A3 device, deviceNum is 16; 9000A3 device, deviceNum is 8

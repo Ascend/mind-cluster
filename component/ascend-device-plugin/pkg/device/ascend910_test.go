@@ -306,7 +306,7 @@ func TestNpuDevToResetDev(t *testing.T) {
 // TestCanBeReset an ut for function canBeReset
 func TestCanBeReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
 	convey.Convey("exec ut function canBeReset", t, func() {
 		convey.Convey("A3 device can reset, should return true", func() {
 			common.ParamOption.RealCardType = api.Ascend910A3
@@ -455,7 +455,7 @@ func TestIsChipActive(t *testing.T) {
 // TestExecHotReset an ut for function execHotReset
 func TestExecHotReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
 	devInfo := mockSingleDevFaultInfo()
 	common.ParamOption.RealCardType = api.Ascend910B
 	convey.Convey("exec ut function execHotReset", t, func() {
@@ -470,7 +470,7 @@ func TestExecHotReset(t *testing.T) {
 			})
 		defer mockIsShouldCheckNet.Reset()
 		defer mockHotResetComplete.Reset()
-		err := manager.execHotReset(devInfo)
+		err := manager.execHotReset(nil, devInfo)
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -602,7 +602,7 @@ func TestTryResetDevice(t *testing.T) {
 // TestIsRingResetComplete an ut for function isRingResetComplete
 func TestIsRingResetComplete(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
 	common.ParamOption.RealCardType = api.Ascend910B
 	var logicID int32 = 0
 	convey.Convey("exec ut function isRingResetComplete", t, func() {
@@ -985,7 +985,7 @@ func TestHwAscend910ManagerGetNeedResetDeviceLogicIdMap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			hnm := &HwAscend910Manager{
 				AscendTools:     ascendTools,
-				hotResetManager: newTestHotResetManager(api.Ascend910A, common.Train),
+				hotResetManager: newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain),
 			}
 			got, err := hnm.getNeedResetDeviceLogicIdMap(devFaultInfoList)
 			if (err != nil) != tt.wantErr || !reflect.DeepEqual(got, tt.want) {
@@ -2939,7 +2939,7 @@ func TestCanResetDeviceByLogicID(t *testing.T) {
 func TestGetResetIndex(t *testing.T) {
 	convey.Convey("test getResetIndex", t, func() {
 		manager := createFake910Manager()
-		manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
+		manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
 		dev := &common.NpuDevice{}
 		convey.Convey("01-A3, get idx success, should return nil", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "getResetIndexForA3",
@@ -2947,7 +2947,7 @@ func TestGetResetIndex(t *testing.T) {
 					return int32(id1), nil
 				})
 			defer patch1.Reset()
-			_, err := manager.getResetIndex(dev)
+			_, err := manager.getResetIndex(dev.LogicID)
 			convey.So(err, convey.ShouldBeNil)
 		})
 		patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndexForA3",
@@ -2961,7 +2961,7 @@ func TestGetResetIndex(t *testing.T) {
 					return id1, testErr
 				})
 			defer patch1.Reset()
-			_, err := manager.getResetIndex(dev)
+			_, err := manager.getResetIndex(dev.LogicID)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyPrivateMethod(manager.hotResetManager, "GetResetDevNumOnce",
@@ -2969,7 +2969,7 @@ func TestGetResetIndex(t *testing.T) {
 				return id1, nil
 			})
 		convey.Convey("03-success, should return nil", func() {
-			_, err := manager.getResetIndex(dev)
+			_, err := manager.getResetIndex(dev.LogicID)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -3027,7 +3027,8 @@ func TestGetDevFaultInfo(t *testing.T) {
 	for _, tt := range tests {
 		convey.Convey("test getDevFaultInfo", t, func() {
 			manager := createFake910Manager()
-			manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train)
+			manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train,
+				common.Ascend910BRingsNumTrain)
 			patches := gomonkey.NewPatches()
 			defer patches.Reset()
 			patches.ApplyMethod(manager.hotResetManager, "GetGlobalDevFaultInfo",
@@ -3051,29 +3052,29 @@ func TestIsFaultNeedRestart(t *testing.T) {
 			}
 
 			convey.Convey("should store fault time when first fault", func() {
-				resetFaultTimeMap.Delete(devFaultInfo.LogicId)
+				resetTimeMap.Delete(devFaultInfo.LogicId)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldNotBeZeroValue)
 			})
 
 			convey.Convey("should return true and delete map when timeout", func() {
 				oldTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval - 1
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, oldTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, oldTime)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeTrue)
-				_, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				_, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeFalse)
 			})
 
 			convey.Convey("should return false when within tolerance time", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, recentTime)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
@@ -3090,40 +3091,89 @@ func TestIsFaultNeedRestart2(t *testing.T) {
 			devFaultInfo := &common.DevFaultInfo{LogicId: 1, Policy: common.RestartRequestError}
 			convey.Convey("should return false when within tolerance time and policy is RestartRequestError", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, recentTime)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
 			devFaultInfo = &common.DevFaultInfo{LogicId: 1, Policy: common.FreeResetError}
 			convey.Convey("should return false when within tolerance time and policy is FreeResetError", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, recentTime)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
 			devFaultInfo = &common.DevFaultInfo{LogicId: 1, Policy: common.ResetError}
 			convey.Convey("should return false when within tolerance time and policy is reset", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, recentTime)
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeFalse)
-				faultTime, exists := resetFaultTimeMap.Load(devFaultInfo.LogicId)
+				faultTime, exists := resetTimeMap.Load(devFaultInfo.LogicId)
 				convey.So(exists, convey.ShouldBeTrue)
 				convey.So(faultTime, convey.ShouldEqual, recentTime)
 			})
 			convey.Convey("should return true when device type is A2 and policy is reset", func() {
 				recentTime := time.Now().Unix() - common.ResetFaultToleranceTimeInterval + common.BaseDec
-				resetFaultTimeMap.Store(devFaultInfo.LogicId, recentTime)
+				resetTimeMap.Store(devFaultInfo.LogicId, recentTime)
 				common.ParamOption.RealCardType = api.Ascend910B
 				result := hnm.isFaultNeedRestart(devFaultInfo)
 				convey.So(result, convey.ShouldBeTrue)
 			})
 		})
+	})
+}
+
+// TestCheckFaultIsExist tests the checkFaultIsExist function
+func TestCheckFaultIsExist(t *testing.T) {
+	manager := createFake910Manager()
+	manager.hotResetManager = &HotResetTools{}
+
+	convey.Convey("Test checkFaultIsExist", t, func() {
+		convey.Convey("01-no ascend 910 device, should return true", func() {
+			classifyDevs := map[string][]*common.NpuDevice{}
+			result := manager.checkFaultIsExist(classifyDevs, 0)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+		convey.Convey("02-get reset index failed, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return -1, testErr
+				})
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				api.Ascend910: {
+					{LogicID: 0},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, 0)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+		convey.Convey("03-fault device exists in the same ring, should return true", func() {
+			patch := gomonkey.ApplyPrivateMethod(manager, "getResetIndex",
+				func(dev *common.NpuDevice) (int32, error) {
+					return 0, nil
+				})
+			defer patch.Reset()
+			patch.ApplyMethodReturn(manager.dmgr, "GetDeviceAllErrorCode", int32(0),
+				[]int64{common.CardDropFaultCode}, nil)
+			defer patch.Reset()
+			patch.ApplyMethodReturn(manager.hotResetManager, "GetDevProcessPolicy", common.RestartRequestError)
+			defer patch.Reset()
+			classifyDevs := map[string][]*common.NpuDevice{
+				api.Ascend910: {
+					{LogicID: 0},
+					{LogicID: 1},
+				},
+			}
+			result := manager.checkFaultIsExist(classifyDevs, 0)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
 	})
 }
