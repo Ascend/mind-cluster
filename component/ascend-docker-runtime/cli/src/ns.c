@@ -48,6 +48,7 @@ int EnterNsByFd(int fd, int nsType)
         char* str = FormatLogMessage("failed to set ns: fd(%d).", fd);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
+        str = NULL;
         return -1;
     }
     return 0;
