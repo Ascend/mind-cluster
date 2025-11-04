@@ -54,3 +54,15 @@ func TestCheckParamAndGetBehavior(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckParamLength(t *testing.T) {
+	emptyStr := ""
+	command := []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr}
+	if got := CheckParamLength(command); !got {
+		t.Errorf("CheckParamLength() got = %v, want %v", got, true)
+	}
+	command = []string{"rm", oldJson}
+	if got := CheckParamLength(command); got {
+		t.Errorf("CheckParamLength() got = %v, want %v", got, false)
+	}
+}

@@ -89,7 +89,7 @@ func main() {
 		log.Fatalf("error param")
 	}
 	var behavior string
-	if len(command) < minCommandLength {
+	if !process.CheckParamLength(command) {
 		log.Fatalf("error param")
 	}
 	installScene := command[len(command)-installSceneIndexFromEnd]
