@@ -29,7 +29,6 @@ import (
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/constants"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/dataparse"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
-	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 var (
@@ -145,10 +144,6 @@ func AlgoResultProcessor(oldData, newData *slownode.NodeAlgoResult, operator wat
 
 func writeFile(dir, fileName string, data map[string]any) error {
 	filePath := fmt.Sprintf("%s/%s", dir, fileName)
-	absPath, err := fileutils.CheckPath(filePath)
-	if err != nil {
-		return err
-	}
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -164,5 +159,5 @@ func writeFile(dir, fileName string, data map[string]any) error {
 		return err
 	}
 	// write the data
-	return os.WriteFile(absPath, bytes, constants.FileMode)
+	return os.WriteFile(filePath, bytes, constants.FileMode)
 }

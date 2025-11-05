@@ -21,7 +21,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sync"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
@@ -31,9 +30,6 @@ import (
 
 /* callback */
 var callbackFunc model.CallbackFunc = nil
-
-/* report sync lock */
-var clusterReportSyncLock sync.Mutex
 
 func getCurJobAllNodeResultFile(nodeLevelResultPath string, recorder map[string]int64) []string {
 	resultPaths := make([]string, 0)

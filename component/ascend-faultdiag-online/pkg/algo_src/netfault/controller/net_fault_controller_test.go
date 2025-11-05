@@ -180,8 +180,7 @@ func TestCheckDiffConfig(t *testing.T) {
 			defer configFile.Close()
 			defer configFile.Chmod(0600) //文件权限
 			ret := checkDiffConfig(superPodFilePath)
-			expectReturnValue := make(map[string]any)
-			convey.So(ret, convey.ShouldResemble, expectReturnValue)
+			convey.So(ret, convey.ShouldBeEmpty)
 			controllerflags.IsControllerStarted.SetState(false)
 			err = os.Remove(superPodFilePath + "cathelper.conf")
 			if err != nil {
@@ -327,6 +326,7 @@ func TestReadCSVFilePartThree(t *testing.T) {
 			if err != nil {
 				return
 			}
+			defer os.Remove(filePath)
 			err = configFile.Chmod(0644) //文件权限
 			if err != nil {
 				return
@@ -334,18 +334,12 @@ func TestReadCSVFilePartThree(t *testing.T) {
 			headers := []string{"header1", "header2", "header3"}
 			rows := [][]string{{"1", "1", "abc"}, {"2", "2", "1745479726"}, {"3", "3", "1745479710"}}
 			err = WriteToCsv(filePath, headers, rows)
-			if err != nil {
-				return
-			}
-			expectData := make([]map[string]any, 4)
+			convey.So(err, convey.ShouldBeNil)
+			expectData := make([]map[string]any, 0)
 			expectData = append(expectData, map[string]any{"header1": "2", "header2": "2", "header3": "1745479726"})
 			ret, err := readCSVFile(filePath, 1745479711) // 1745479711 means test case time stamp value
-			convey.So(ret, convey.ShouldResemble, expectData)
 			convey.So(err, convey.ShouldBeNil)
-			err = os.Remove(filePath)
-			if err != nil {
-				return
-			}
+			convey.So(ret, convey.ShouldResemble, expectData)
 		})
 	})
 }
@@ -615,7 +609,6 @@ func TestIfAddNewSuperPodDetection(t *testing.T) {
 			defer patch1.Reset()
 			patch2 := gomonkey.ApplyFunc(addNewSuperPodDetection, func(wg *sync.WaitGroup, a []string, b []int) {
 				wg.Done()
-				return
 			})
 			defer patch2.Reset()
 			wg.Add(1)
