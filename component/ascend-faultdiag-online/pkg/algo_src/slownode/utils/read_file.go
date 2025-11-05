@@ -18,6 +18,7 @@ package utils
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -92,7 +93,7 @@ func readLocalDataFromCSV(filePath string, columnName string) ([]float64, error)
 	defer func() {
 		if err := file.Close(); err != nil {
 			// 处理关闭文件时的错误
-			hwlog.RunLog.Errorf("error occurred while closing the file: %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]error occurred while closing the file: %v", err)
 		}
 	}()
 
@@ -127,7 +128,7 @@ func readLocalDataFromCSV(filePath string, columnName string) ([]float64, error)
 	// 如果未找到列名，返回错误
 	if !columnFound {
 		// 输出警告信息，不应该直接报错
-		hwlog.RunLog.Warnf("Column %s not found in file %s", columnName, filePath)
+		hwlog.RunLog.Warnf("[SLOWNODE ALGO]Column %s not found in file %s", columnName, filePath)
 		return columnData, nil
 	}
 
@@ -182,10 +183,10 @@ func ReadLocalDataAndAlign(fileRanks []int, tpPpFilePath string, columnName stri
 		filePath := tpPpFilePath + "/" + fileName
 		ppData, err := readLocalDataFromCSV(filePath, columnName)
 		if err != nil {
-			hwlog.RunLog.Errorf("Error reading file %s: %v", fileName, err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error reading file %s: %v", fileName, err)
 		}
 		if ppData == nil || len(ppData) == 0 {
-			hwlog.RunLog.Warnf("RankDir %d not collected data!", rank)
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]RankDir %d not collected data!", rank)
 		} else {
 			localDataSlices = append(localDataSlices, ppData) // 读取每个文件的数据
 			haveDataRanks = append(haveDataRanks, rank)
@@ -212,7 +213,7 @@ func ReadStepTimeCSV(steptimepath string) ([]float64, error) {
 	defer func() {
 		if err := file.Close(); err != nil {
 			// 处理关闭文件时的错误
-			hwlog.RunLog.Errorf("close file error: %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]close file error: %v", err)
 		}
 	}()
 
@@ -224,14 +225,14 @@ func ReadStepTimeCSV(steptimepath string) ([]float64, error) {
 
 	// 跳过表头
 	if len(records) == 0 {
-		return nil, fmt.Errorf("CSV file is empty")
+		return nil, errors.New("CSV file is empty")
 	}
 	records = records[1:] // 去掉表头行
 
 	var stepTimeList []float64
 	for _, record := range records {
 		if len(record) < minColumns {
-			return nil, fmt.Errorf("invalid CSV format: missing columns")
+			return nil, errors.New("invalid CSV format: missing columns")
 		}
 
 		duration, err := strconv.ParseFloat(record[1], 64)
@@ -282,7 +283,7 @@ func MergeDataFromFiles(directoryPath string) (*model.ClusterResult, []int, erro
 			return fmt.Errorf("too many files under: %s, exceed max file count: %d", path, constants.MaxFileCount)
 		}
 		if err != nil {
-			hwlog.RunLog.Warnf("Error accessing path: %v", err)
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]Error accessing path: %v", err)
 			return nil
 		}
 
@@ -293,7 +294,7 @@ func MergeDataFromFiles(directoryPath string) (*model.ClusterResult, []int, erro
 		// 读取并解析每个 JSON 文件
 		data, err := readJSONFile(path)
 		if err != nil {
-			hwlog.RunLog.Errorf("Error reading JSON file: %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error reading JSON file: %v", err)
 			return nil
 		}
 		// 合并数据

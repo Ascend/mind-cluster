@@ -57,7 +57,7 @@ func DealParseJob(cg config.DataParseModel, parseJobInfo *model.ParseJobInfo) {
 	defer parseJobInfo.StopWg.Done()
 	snpCtxSlice, err := listenAndParse(cg)
 	if err != nil {
-		hwlog.RunLog.Error("[SLOWNODE PARSE]Failed to listen and parse data:", err)
+		hwlog.RunLog.Errorf("[SLOWNODE PARSE]Failed to listen and parse data: %v", err)
 		closeDbConnect(snpCtxSlice)
 		clearJobData(snpCtxSlice, cg)
 		return
@@ -105,7 +105,7 @@ func closeDbConnect(snpCtxSlice []*context.SnpRankContext) {
 			continue
 		}
 		if err := snpCtx.ContextData.DbCtx.Close(); err != nil {
-			hwlog.RunLog.Error("[SLOWNODE PARSE]Failed to close database connection: ", err)
+			hwlog.RunLog.Errorf("[SLOWNODE PARSE]Failed to close database connection: %v", err)
 		}
 	}
 }
@@ -125,7 +125,7 @@ func DealRankParGroup(snpCtxSlice []*context.SnpRankContext, parseJobInfo *model
 		defer parseJobInfo.JobWg.Done()
 		err := utils.Poller(mergeRankParGroupFunc, constants.ParGroupTime, 0, parseJobInfo.StopParseFlag)
 		if err != nil {
-			hwlog.RunLog.Error("[SLOWNODE PARSE]Failed to merge parallel group info:", err)
+			hwlog.RunLog.Errorf("[SLOWNODE PARSE]Failed to merge parallel group info: %v", err)
 		} else {
 			hwlog.RunLog.Info("[SLOWNODE PARSE]Succeeded in merging parallel group info and exited")
 		}

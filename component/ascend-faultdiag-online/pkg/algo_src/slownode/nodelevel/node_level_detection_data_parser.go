@@ -18,6 +18,7 @@ package nodelevel
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -64,7 +65,7 @@ func parseCsvDataToType(records [][]string, columnIndex int) ([]float64, []int, 
 	/* 跳过标题行 */
 	for _, record := range records[1:] {
 		if columnIndex < 0 || columnIndex >= len(record) || len(record) == 0 {
-			return nil, nil, fmt.Errorf("record column index out of range")
+			return nil, nil, errors.New("record column index out of range")
 		}
 		value, err := strconv.ParseFloat(record[columnIndex], byteLength)
 		if err != nil {
@@ -95,7 +96,7 @@ func readTargetColumnFromCsv(filePath string, columnName string) ([]float64, []i
 	defer func() {
 		if err = file.Close(); err != nil {
 			// 处理关闭文件时的错误
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]%v", err)
 		}
 	}()
 	reader := csv.NewReader(file)
@@ -145,7 +146,7 @@ func getDetectionData(curDetectedStepIndex int,
 		}
 		/* 历史数据量不够 */
 		if len(returnData) < historyData {
-			hwlog.RunLog.Warnf("[SLOWNODE ALGO] %s, %d history data not enough", conf.JobName, npuId)
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s, %d history data not enough", conf.JobName, npuId)
 			return []float64{}
 		}
 	}
@@ -167,7 +168,7 @@ func updateCalculatorLatencyStepRecord(allDatas []float64,
 	/* 第一次检测 */
 	if detectedMaxStep == 0 {
 		if len(allDatas) < (conf.NormalNumber + conf.NconsecAnomaliesSignifySlow) {
-			hwlog.RunLog.Warnf("[SLOWNODE ALGO] %s,  %d calculator data not enough", conf.JobName, npuId)
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s,  %d calculator data not enough", conf.JobName, npuId)
 			return []float64{}
 		}
 		nodeleveldatarecorder.SetJobDetectionRecorderMaxDetectedStep(
@@ -188,7 +189,7 @@ func updateCalculatorLatencyStepRecord(allDatas []float64,
 		return allDatas
 	}
 	if curDetectedStepIndex == -1 && len(allDatas) < conf.NconsecAnomaliesSignifySlow {
-		hwlog.RunLog.Warnf("[SLOWNODE ALGO] %s,  %d calculator data not enough", conf.JobName, npuId)
+		hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s,  %d calculator data not enough", conf.JobName, npuId)
 		return []float64{}
 	}
 	returnData := getDetectionData(curDetectedStepIndex, allDatas, conf, npuId, column)
@@ -210,7 +211,7 @@ func getCurJobAllRanksStepData(conf config.AlgoInputConfig, jobPath string, npus
 		/* get ZP */
 		zpData, steps, err := readTargetColumnFromCsv(rankPath, zpDataColumn)
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] jobPath: %s, error: %v", jobPath, err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]jobPath: %s, error: %v", jobPath, err)
 			continue
 		}
 		allRanksStepData[zpDataColumn][npuId] =
@@ -218,7 +219,7 @@ func getCurJobAllRanksStepData(conf config.AlgoInputConfig, jobPath string, npus
 		/* get PP */
 		ppData, steps, err := readTargetColumnFromCsv(rankPath, ppDataColumn)
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] jobPath: %s, error: %v", jobPath, err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]jobPath: %s, error: %v", jobPath, err)
 			continue
 		}
 		allRanksStepData[ppDataColumn][npuId] =
@@ -226,7 +227,7 @@ func getCurJobAllRanksStepData(conf config.AlgoInputConfig, jobPath string, npus
 		/* get ZP_host */
 		zpHostData, steps, err := readTargetColumnFromCsv(rankPath, zpHostDataColumn)
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] jobPath: %s, error: %v", jobPath, err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]jobPath: %s, error: %v", jobPath, err)
 			continue
 		}
 		allRanksStepData[zpHostDataColumn][npuId] =
@@ -234,7 +235,7 @@ func getCurJobAllRanksStepData(conf config.AlgoInputConfig, jobPath string, npus
 		/* get dataloader_host */
 		dataLoaderData, steps, err := readTargetColumnFromCsv(rankPath, dataLoaderDataColumn)
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] jobPath: %s, error: %v", jobPath, err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]jobPath: %s, error: %v", jobPath, err)
 			continue
 		}
 		allRanksStepData[dataLoaderDataColumn][npuId] =
@@ -251,13 +252,13 @@ func getCurRankTopoInfoA3(rankPath string) map[string]any {
 	file := filepath.Join(rankPath, rankTopofileName)
 	data, err := fileutils.ReadLimitBytes(file, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO] error: %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]error: %v", err)
 		return nil
 	}
 	var rankJson map[string]any
 	err = json.Unmarshal(data, &rankJson)
 	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO] error: %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]error: %v", err)
 		return nil
 	}
 	return rankJson
@@ -344,7 +345,7 @@ func getParallelGroupInfoA3(rankId int,
 /* 获取当前JOB TP并行域信息：PP可能存在跨节点，放在集群侧进行检测 */
 func getJobTpParallelsInfoA3(curJobRanksTopo map[int]any) [][]int {
 	if len(curJobRanksTopo) == 0 {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Invalid job rank info!")
+		hwlog.RunLog.Error("[SLOWNODE ALGO]Invalid job rank info!")
 		return nil
 	}
 	/* 辅助用于避免重复添加并行域信息 */
@@ -422,12 +423,12 @@ func isCurJobEnableDetectionA3(jobPath string, ranks []string) ([][]int, []int) 
 func readCsvFile(filePath string) [][]string {
 	file, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]failed to open file:%s", filePath)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]failed to open file(%s): %v", filePath, err)
 		return nil
 	}
 	defer func() {
 		if err = file.Close(); err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]%v", err)
 		}
 	}()
 	reader := csv.NewReader(file)
@@ -467,10 +468,10 @@ func checkStepTimeFileUpdate(conf config.AlgoInputConfig, npuId int, tail []stri
 	nodeleveldatarecorder.AddJobDetectionContinuousNotUpdateTimes(conf.JobName, npuId, stepTimeData)
 	times := nodeleveldatarecorder.GetJobDetectionContinuousNotUpdateTimes(conf.JobName, npuId, stepTimeData)
 	if times >= maxContinuousNotUpdate {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO] %s npu: %v %s is not update or training complete or blocked!",
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%s npu: %d %s is not update or training complete or blocked!",
 			conf.JobName, npuId, stepTimeFileName)
 	} else {
-		hwlog.RunLog.Warnf("[SLOWNODE ALGO] %s npu: %v %s no increment!(%d)",
+		hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s npu: %d %s no increment!(%d)",
 			conf.JobName, npuId, stepTimeFileName, detectedMaxStep)
 	}
 	return false
@@ -482,7 +483,7 @@ func getStepTimeIncrementData(records [][]string, detectedStep int) ([]float64, 
 	for index, record := range records[1:] {
 		step, err := strconv.Atoi(record[0])
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]%v", err)
 			return nil, -1
 		}
 		/* 用于有增量但不够时 */
@@ -499,7 +500,7 @@ func getStepTimeIncrementData(records [][]string, detectedStep int) ([]float64, 
 		}
 		duration, err := strconv.ParseFloat(record[1], byteLength)
 		if err != nil {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO] %v", err)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]%v", err)
 			return nil, -1
 		}
 		/* 有效值判断 */

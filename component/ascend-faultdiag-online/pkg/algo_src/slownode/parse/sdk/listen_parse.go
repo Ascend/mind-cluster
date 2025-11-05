@@ -69,7 +69,7 @@ func listenAndParse(cg config.DataParseModel) ([]*context.SnpRankContext, error)
 			}
 			// 部分rank没有数据，检测10分钟后超时退出
 			if count >= constants.LoopCount {
-				hwlog.RunLog.Warnf("[SLOWNODE PARSE]Some rank dir do not contain original files: %v, timeout: %v",
+				hwlog.RunLog.Warnf("[SLOWNODE PARSE]Some rank dir do not contain original files: %v, timeout: %d",
 					checkRanks, constants.PollTime*constants.LoopCount)
 				return snpCtxSlice, nil
 			}
@@ -123,7 +123,7 @@ func checkRankPath(jobDir string, rankIds []string) []string {
 		}
 		// 检查是否存在目标文件
 		if !checkParseFile(absPath) {
-			hwlog.RunLog.Warnf("[SLOWNODE PARSE]No parsing files in: %v", absPath)
+			hwlog.RunLog.Warnf("[SLOWNODE PARSE]No parsing files in: %s", absPath)
 			continue
 		}
 		meetRanks = append(meetRanks, rankId)
@@ -135,7 +135,7 @@ func checkRankPath(jobDir string, rankIds []string) []string {
 func checkParseFile(rankDirPath string) bool {
 	entries, err := os.ReadDir(rankDirPath)
 	if err != nil {
-		hwlog.RunLog.Warnf("[SLOWNODE PARSE]Failed to read the file in checking: %v", rankDirPath)
+		hwlog.RunLog.Warnf("[SLOWNODE PARSE]Failed to read the file in checking: %s", rankDirPath)
 		return false
 	}
 	for _, entry := range entries {

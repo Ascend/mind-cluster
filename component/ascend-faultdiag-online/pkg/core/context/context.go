@@ -22,7 +22,6 @@ package context
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -168,7 +167,7 @@ func (fdCtx *FaultDiagContext) handleRequest(api string, reqJson string) (string
 		return "", errors.New("fdCtx is nil")
 	}
 	if !fdCtx.IsRunning {
-		return "", fmt.Errorf("service is not running")
+		return "", errors.New("service is not running")
 	}
 	reqCtx := model.NewRequestContext(api, reqJson)
 

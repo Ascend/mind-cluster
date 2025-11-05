@@ -18,7 +18,6 @@ package clusterlevel
 import (
 	"encoding/json"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -53,13 +52,13 @@ func getGatherData(mergedData *config.ClusterJobResult,
 	nodeResult config.NodeDetectionResult) {
 	/* 每个节点的结果文件中只会存在一个键值对 */
 	if len(nodeResult) != 1 {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error node level detection main result:%v", nodeResult)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error node level detection main result: %v", nodeResult)
 		return
 	}
 	for _, result := range nodeResult {
 		/* 节点的结果文件中只会存在一个键值对， 否则错误 */
 		if len(result) != 1 {
-			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error node level detection minor result:%v", result)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error node level detection minor result: %v", result)
 			return
 		}
 		for _, resStruct := range result {
@@ -97,21 +96,6 @@ func getNodeLevelDetectionResult(filePath string) (bool, config.NodeDetectionRes
 		return false, config.NodeDetectionResult{}
 	}
 	return true, result
-}
-
-/* 比较两个tp并行域组是否相同 */
-func compareTwoSliceSame(tpGroupA []int, tpGroupB []int) bool {
-	if len(tpGroupA) != len(tpGroupB) {
-		return false
-	}
-	sort.Ints(tpGroupA)
-	sort.Ints(tpGroupB)
-	for i := range tpGroupA {
-		if tpGroupA[i] != tpGroupB[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func checkAllInNodeSlowTpCommunications(tpMap map[int]bool, tpGroup []int) bool {
@@ -232,7 +216,7 @@ func mergeTopoPpParallelInfo(topoData map[string]any, Parallel *[][]int, target 
 func getParallelDomain(filePath string, target string) [][]int {
 	data, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Read topo failed:%v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Read topo failed: %v", err)
 		return nil
 	}
 	parallel := make([][]int, 0)
