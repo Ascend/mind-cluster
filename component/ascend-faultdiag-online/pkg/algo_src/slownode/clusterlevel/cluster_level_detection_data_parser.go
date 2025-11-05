@@ -85,7 +85,7 @@ func getGatherData(mergedData *config.ClusterJobResult,
 /* 读取节点级结果文件内容并转化为相应的格式 */
 func getNodeLevelDetectionResult(filePath string) (bool, config.NodeDetectionResult) {
 	/* 获取结果 */
-	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size500M)
+	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
 		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%s:%v", filePath, err)
 		return false, config.NodeDetectionResult{}

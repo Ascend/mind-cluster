@@ -22,6 +22,8 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/netfault/controllerflags"
+	"ascend-faultdiag-online/pkg/core/model"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 /* controller interface sync lock（公共锁保证start和stop的同步） */
@@ -31,6 +33,7 @@ var controllerExitCond *sync.Cond = sync.NewCond(&controllerSyncOperatorLock)
 
 const (
 	confFileRetryTime = 30
+	configFile        = "cathelper.conf"
 )
 
 /* go routine started controller */
@@ -86,4 +89,41 @@ func stopController() {
 func reloadController(clusterPath string) {
 	stopController()
 	startController(clusterPath)
+}
+
+var clusterLevelPath = os.Getenv("RAS_NET_ROOT_PATH") + "/cluster"
+
+var callbackFunc model.CallbackFunc = nil
+
+// Start controller
+func Start() {
+	absPath, err := fileutils.CheckPath(clusterLevelPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
+		return
+	}
+	startController(absPath)
+}
+
+// Reload controller
+func Reload() {
+	absPath, err := fileutils.CheckPath(clusterLevelPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]clusterLevelPath %s invalid, err: %v", clusterLevelPath, err)
+		return
+	}
+	reloadController(absPath)
+}
+
+// Stop controller 仅同步调用
+func Stop() {
+	stopController()
+}
+
+// RegisterDetectionCallback register detect callback
+func RegisterDetectionCallback(callback model.CallbackFunc) {
+	if callback == nil {
+		return
+	}
+	callbackFunc = callback
 }
