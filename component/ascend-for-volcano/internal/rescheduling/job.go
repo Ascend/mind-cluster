@@ -207,12 +207,7 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 			isMasterFault = true
 		}
 	}
-	superPod := false
-	ids := make([]string, 0)
-	if _, ok := schedulerJob.Annotation[SuperPodAnnoKey]; ok {
-		superPod = true
-		ids = fJob.getIds(env)
-	}
+	superPod, ids := fJob.getFaultJobSuperPodInfo(schedulerJob, env)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
 		isMasterFault: isMasterFault,
@@ -221,6 +216,16 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 	}
 	fJob.forceDeletePods(schedulerJob, env, dpi)
 	return nil
+}
+
+func (fJob *FaultJob) getFaultJobSuperPodInfo(schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) (bool, []string) {
+	superPod := false
+	ids := make([]string, 0)
+	if schedulerJob.IsSuperPodJob() {
+		superPod = true
+		ids = fJob.getIds(env)
+	}
+	return superPod, ids
 }
 
 func (fJob *FaultJob) forceDeletePods(schedulerJob *plugin.SchedulerJob,
@@ -445,12 +450,7 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 		return fmt.Errorf("schedulerJob does not exist")
 	}
 	reason, isMasterFault := fJob.getRestartInfos()
-	superPod := false
-	ids := make([]string, 0)
-	if _, ok := npuJob.Annotation[SuperPodAnnoKey]; ok {
-		superPod = true
-		ids = fJob.getIds(env)
-	}
+	superPod, ids := fJob.getFaultJobSuperPodInfo(npuJob, env)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
 		isMasterFault: isMasterFault,

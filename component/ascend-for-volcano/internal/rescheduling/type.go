@@ -138,11 +138,9 @@ const (
 )
 
 const (
-	getNoneJobsErr = "get none jobs"
-	pendingTimes   = 12
-	spPendingTimes = 6
-	// SuperPodAnnoKey annotation key of super pod
-	SuperPodAnnoKey          = "sp-block"
+	getNoneJobsErr           = "get none jobs"
+	pendingTimes             = 12
+	spPendingTimes           = 6
 	singleThreadDeletePodNum = 200
 )
 

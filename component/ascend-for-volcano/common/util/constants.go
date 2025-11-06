@@ -63,6 +63,20 @@ const (
 	Module910bx16AcceleratorType = "module-910b-16"
 	// Module910bx8AcceleratorType for module mode.
 	Module910bx8AcceleratorType = "module-910b-8"
+	// Module910A3x16AcceleratorType for module mode.
+	Module910A3x16AcceleratorType = "module-a3-16"
+	// Module910A3SuperPodAcceleratorType for 910A3-SuperPod hardware
+	Module910A3SuperPodAcceleratorType = "module-a3-16-super-pod"
 	// Accelerator310Key accelerator key of old infer card
 	Accelerator310Key = "npu-310-strategy"
+)
+
+// constants for schedule_policy
+const (
+	// SchedulePolicyAnnoKey annotation key for schedule policy
+	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
+	// SchedulePolicyA3x16 schedule policy for a3-16 server
+	SchedulePolicyA3x16 = "module-a3-16"
+	// SchedulePolicySuperPod schedule policy for a3 super-pod, if added, func IsSuperPodJob need adaptation.
+	SchedulePolicySuperPod = "module-a3-16-super-pod"
 )
