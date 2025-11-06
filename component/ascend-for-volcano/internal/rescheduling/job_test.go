@@ -631,7 +631,7 @@ func TestGraceDeleteJob(t *testing.T) {
 		}
 	})
 	t.Run("03-GraceDeleteJob return nil when ssn and npuJob are not nil", func(t *testing.T) {
-		npuJob.Annotation = map[string]string{SuperPodAnnoKey: ""}
+		npuJob.Annotation = map[string]string{util.SuperPodAnnoKey: ""}
 		err := fJob.GraceDeleteJob(&framework.Session{}, npuJob, env)
 		if err != nil {
 			t.Errorf("GraceDeleteJob() err = %v, wantErr is nil", err)
