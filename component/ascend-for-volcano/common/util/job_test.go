@@ -243,3 +243,37 @@ func TestGetPluginNameByReq(t *testing.T) {
 		}
 	})
 }
+
+func TestIsSuperPodJob(t *testing.T) {
+	annotationSpBlock := map[string]string{SuperPodAnnoKey: "16"}
+	annotationNotSpPolicy := map[string]string{SchedulePolicyAnnoKey: SchedulePolicyA3x16}
+	selectorSp := map[string]string{AcceleratorType: Module910A3SuperPodAcceleratorType}
+	t.Run("01-isSuperPodJob true, when sp-block exist",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: annotationSpBlock}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
+	t.Run("02-isSuperPodJob true, when sp-block is nil, and accelerator-type exist ",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Selector: selectorSp}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
+	t.Run("03-isSuperPodJob false, when sp-block is exist, but schedule policy exist ",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: annotationNotSpPolicy, Selector: selectorSp}}
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+	t.Run("04-isSuperPodJob false, when sp-block/accelerator-type/schedule-policy are nil ",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{}
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+}

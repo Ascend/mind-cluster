@@ -361,10 +361,9 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInf
 
 	fJob.PendingSessionNum++
 
-	if _, ok := jobInfo.PodGroup.Annotations[SuperPodAnnoKey]; ok {
-		if fJob.PendingSessionNum == spPendingTimes {
-			fJob.DeleteExecutedFlag = false
-		}
+	job, ok := reScheduler.Jobs[jobInfo.UID]
+	if ok && job.IsSuperPodJob() && fJob.PendingSessionNum == spPendingTimes {
+		fJob.DeleteExecutedFlag = false
 	}
 
 	if fJob.PendingSessionNum == pendingTimes {

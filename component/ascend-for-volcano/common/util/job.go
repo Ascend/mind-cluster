@@ -105,6 +105,33 @@ func (sJob *SchedulerJobAttr) IsJobHasTorAffinityLabel() bool {
 	return ok && k != NullTag
 }
 
+// IsSuperPodJob check if the job use super-pod affinity
+func (sJob *SchedulerJobAttr) IsSuperPodJob() bool {
+	if sJob == nil {
+		return false
+	}
+	if sJob.ComJob.Annotation != nil {
+		// schedule policy has the highest priority.
+		// SchedulePolicySuperPod is not supported yet, if added, this part need add a true value branch.
+		if policy, ok := sJob.ComJob.Annotation[SchedulePolicyAnnoKey]; ok && policy != SchedulePolicySuperPod {
+			return false
+		}
+		// for a3 config compatibility
+		if _, ok := sJob.ComJob.Annotation[SuperPodAnnoKey]; ok {
+			return true
+		}
+	}
+
+	// if schedule policy does not exist, use accelerator type
+	if sJob.ComJob.Selector != nil {
+		acceleratorType, ok := sJob.ComJob.Selector[AcceleratorType]
+		if ok && acceleratorType == Module910A3SuperPodAcceleratorType {
+			return true
+		}
+	}
+	return false
+}
+
 // IsVJob Determine whether is the NPU virtual job.
 // Dynamic segmentation: huawei.com/npu-core.
 // static segmentation: huawei.com/Ascend910-Y.

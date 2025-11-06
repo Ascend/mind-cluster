@@ -45,7 +45,7 @@ var (
 	card310pFactory = map[string]func() base.AscendHandler{}
 
 	// key: schedule policy; value: handler name
-	policyHandlerMap = map[string]string{a3x16Policy: module910a3x16.SchedulerName}
+	policyHandlerMap = map[string]string{util.SchedulePolicyA3x16: module910a3x16.SchedulerName}
 )
 
 const (
@@ -57,9 +57,6 @@ const (
 const (
 	duoKeyLabel = "duo"
 	trueStr     = "true"
-
-	schedulePolicyAnno = "huawei.com/schedule_policy"
-	a3x16Policy        = "module-a3-16"
 )
 
 const (
@@ -155,7 +152,7 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 }
 
 func get910CardHandlerName(attr util.SchedulerJobAttr) string {
-	policy, ok := attr.Annotation[schedulePolicyAnno]
+	policy, ok := attr.Annotation[util.SchedulePolicyAnnoKey]
 	if ok {
 		handlerName, ok := policyHandlerMap[policy]
 		if ok {
@@ -163,7 +160,7 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 			return handlerName
 		}
 	}
-	if _, ok := attr.Annotation[superpod.SuperPodAnnoKey]; ok {
+	if _, ok := attr.Annotation[util.SuperPodAnnoKey]; ok {
 		return superpod.SchedulerName
 	}
 	v, ok := attr.Selector[util.AcceleratorType]

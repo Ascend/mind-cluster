@@ -106,8 +106,6 @@ const (
 	CMInitParamKey = "init-params"
 	// AcceleratorType for selector.
 	AcceleratorType = "accelerator-type"
-	// ModuleA3x16AcceleratorType for module mode.
-	ModuleA3x16AcceleratorType = "module-a3-16"
 	// ModuleAcceleratorType for module mode.
 	ModuleAcceleratorType = "module"
 	// ServerType server type value takes Ascend310P-10-dual/Ascend910-32...
