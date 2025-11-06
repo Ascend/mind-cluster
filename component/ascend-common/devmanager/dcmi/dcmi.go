@@ -2179,3 +2179,13 @@ func (d *DcManager) DcGetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
 		SerialNumber:     C.GoString(&elabelInfo.serial_number[0]),
 	}, nil
 }
+
+// DcGetDeviceIdInCard get npu deviceId with cardId for A5
+func (d *DcManager) DcGetDeviceIdInCard(cardID int32) (int32, error) {
+	var cDeviceIdMax, cMcuId, cCpuId C.int
+	if retCode := C.dcmi_get_device_id_in_card(C.int(cardID), &cDeviceIdMax, &cMcuId,
+		&cCpuId); int32(retCode) != common.Success {
+		return 0, fmt.Errorf("cardID(%d):get DeviceId info failed,error code: %v", cardID, retCode)
+	}
+	return int32(cDeviceIdMax), nil
+}
