@@ -50,6 +50,7 @@ const (
 	nodeAnnotationUpdateInterval = 60
 	serverIndexKey               = "serverIndex"
 	serverTypeKey                = "serverType"
+	cardTypeKey                  = "cardType"
 )
 
 // HwDevManager manages huawei device devices.
@@ -101,7 +102,7 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	case api.Ascend310, api.Ascend310B:
 		hdm.RunMode = api.Ascend310
 		hdm.manager = device.NewHwAscend310Manager()
-	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3, api.Ascend910A5:
 		hdm.RunMode = api.Ascend910
 		hdm.manager = device.NewHwAscend910Manager()
 		hdm.WorkMode = dmgr.GetNpuWorkMode()
@@ -171,17 +172,16 @@ func (hdm *HwDevManager) updateNode() error {
 	for key, value := range newLabelMap {
 		newNode.Labels[key] = value
 	}
-	mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
+
+	newAnnotationMap, err := hdm.getNewNodeAnnotation(oldNode)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to marshal device ip map, err: %v", err)
+		hwlog.RunLog.Errorf("failed to get new node annotation, err: %v", err)
 		return err
 	}
-	hdm.baseNPUInfo = hdm.getNpuBaseInfo()
-	newMashaledNpuInfo := customname.ReplaceDevicePublicName(hdm.RunMode, string(mashaledNpuInfo))
-	newNode.Annotations[api.BaseDevInfoAnno] = newMashaledNpuInfo
-	newNode.Annotations[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
-	newNode.Annotations[serverIndexKey] = strconv.Itoa(int(hdm.getSuperPodInfo().ServerId))
-	newNode.Annotations[serverTypeKey] = getDevType(common.ParamOption.RealCardType)
+	for key, value := range newAnnotationMap {
+		newNode.Annotations[key] = value
+	}
+
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
 			hwlog.RunLog.Info("update node label success")
@@ -191,6 +191,30 @@ func (hdm *HwDevManager) updateNode() error {
 		time.Sleep(time.Second)
 	}
 	return fmt.Errorf("update node label failed")
+}
+
+func (hdm *HwDevManager) getNewNodeAnnotation(oldNode *v1.Node) (map[string]string, error) {
+	annotationMap := make(map[string]string)
+	cardType, err := hdm.getCardType()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get node board info, err: %v", err)
+	}
+	if cardType != "" {
+		annotationMap[cardTypeKey] = cardType
+		common.ParamOption.CardType = cardType
+	}
+	mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal device ip map: %w", err)
+	}
+	hdm.baseNPUInfo = hdm.getNpuBaseInfo()
+	newMashaledNpuInfo := customname.ReplaceDevicePublicName(hdm.RunMode, string(mashaledNpuInfo))
+	annotationMap[api.BaseDevInfoAnno] = newMashaledNpuInfo
+	annotationMap[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
+	annotationMap[serverIndexKey] = strconv.Itoa(int(hdm.getSuperPodInfo().ServerId))
+	annotationMap[serverTypeKey] = getDevType(common.ParamOption.RealCardType)
+
+	return annotationMap, nil
 }
 
 func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, error) {

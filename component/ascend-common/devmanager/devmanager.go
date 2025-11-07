@@ -216,7 +216,7 @@ func AutoInit(dType string, resetTimeout int) (*DeviceManager, error) {
 	var devType = common.GetDevType(chipInfo.Name, boardInfo.BoardId)
 
 	switch devType {
-	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3, api.Ascend910A5:
 		devMgr.DcMgr = &A910Manager{}
 	case api.Ascend310P:
 		devMgr.DcMgr = &A310PManager{}
@@ -697,7 +697,7 @@ func (d *DeviceManager) GetAllProductType() ([]string, error) {
 
 // GetNpuWorkMode get work mode of NPU
 func (d *DeviceManager) GetNpuWorkMode() string {
-	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 {
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 || d.DevType == api.Ascend910A5 {
 		hwlog.RunLog.Warnf("only AMP mode is available on %s", d.DevType)
 		return common.AMPMode
 	}

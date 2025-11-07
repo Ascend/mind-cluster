@@ -617,7 +617,7 @@ func GetDeviceRunMode() (string, error) {
 	switch devType {
 	case api.Ascend310, api.Ascend310B:
 		return api.Ascend310, nil
-	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3, api.Ascend910A5:
 		return api.Ascend910, nil
 	case api.Ascend310P:
 		return api.Ascend310P, nil
