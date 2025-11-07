@@ -278,6 +278,8 @@ func GetDevType(chipName string, boardId uint32) string {
 	var devType string
 	if Is910A3Chip(boardId) {
 		devType = api.Ascend910A3
+	} else if Is910A5Chip(boardId) {
+		devType = api.Ascend910A5
 	} else {
 		devType = GetDeviceTypeByChipName(chipName)
 	}

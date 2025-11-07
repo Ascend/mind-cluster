@@ -2508,6 +2508,12 @@ func TestCanResetDevice(t *testing.T) {
 func TestExecOutBandReset(t *testing.T) {
 	manager := createFake910Manager()
 	const testCardID, testDeviceID, sleepTime = 0, 0, 50 * time.Millisecond
+	mockAddAnnotation := gomonkey.ApplyMethod(
+		&kubeclient.ClientK8s{}, "AddAnnotation",
+		func(_ *kubeclient.ClientK8s, key, value string) error {
+			return nil
+		})
+	defer mockAddAnnotation.Reset()
 	convey.Convey("test execOutBandReset", t, func() {
 		patch := gomonkey.ApplyPrivateMethod(manager, "updateResetInfo",
 			func(_ *HwAscend910Manager, failDevs, sucDevs []ResetDevice) {

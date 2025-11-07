@@ -155,10 +155,10 @@ func TestSetAscendManager(t *testing.T) {
 	})
 }
 
-// TestUpdateNode for test update node
-func TestUpdateNode(t *testing.T) {
+func TestUpdateNodeEdgeScene(t *testing.T) {
 	var hdm HwDevManager
 	hdm.manager = device.NewHwAscend310Manager()
+
 	convey.Convey("test update node when scene is edge", t, func() {
 		tmpBuildScene := common.ParamOption.BuildScene
 		common.ParamOption.BuildScene = common.EdgeScene
@@ -166,42 +166,79 @@ func TestUpdateNode(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		common.ParamOption.BuildScene = tmpBuildScene
 	})
+}
+
+func TestUpdateNodeGetNodeError(t *testing.T) {
+	var hdm HwDevManager
+	hdm.manager = device.NewHwAscend310Manager()
+
 	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer",
 		func(_ *kubeclient.ClientK8s) {})
 	defer mockInitPodInformer.Reset()
+
 	convey.Convey("test update node when get node error", t, func() {
-		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
-			*v1.Node, error) {
-			return &v1.Node{}, fmt.Errorf("getNode error")
-		})
+		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode",
+			func(_ *kubeclient.ClientK8s) (*v1.Node, error) { return &v1.Node{}, fmt.Errorf("getNode error") })
 		defer mockGetNode.Reset()
+
 		err := hdm.UpdateNode()
 		convey.So(err.Error(), convey.ShouldEqual, "getNode error")
 	})
+}
+
+func TestUpdateNodeUpdateLabelSuccess(t *testing.T) {
+	var hdm HwDevManager
+	hdm.manager = device.NewHwAscend310Manager()
+
+	mockInitPodInformer := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "InitPodInformer",
+		func(_ *kubeclient.ClientK8s) {})
+	defer mockInitPodInformer.Reset()
+
 	mockMarshal := gomonkey.ApplyFuncReturn(json.Marshal, []byte{0}, nil)
 	defer mockMarshal.Reset()
+
 	convey.Convey("test update node when update node label success", t, func() {
 		testLabel := map[string]string{"testKey": "testValue"}
-		mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
-			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) { return testLabel, nil })
+
+		mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(
+			reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
+			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) { return testLabel, nil },
+		)
 		defer mockGetNewNodeLabel.Reset()
-		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode", func(_ *kubeclient.ClientK8s) (
-			*v1.Node, error) {
-			return &v1.Node{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: make(map[string]string),
-					Labels:      make(map[string]string),
-					Name:        "node",
-				},
-				Status: v1.NodeStatus{Addresses: getAddresses()},
-			}, nil
-		})
+
+		mockGetCardType := gomonkey.ApplyPrivateMethod(
+			reflect.TypeOf(new(HwDevManager)), "getCardType",
+			func(_ *HwDevManager) (string, error) { return "", nil },
+		)
+		defer mockGetCardType.Reset()
+
+		mockGetNewNodeAnnotation := gomonkey.ApplyPrivateMethod(
+			reflect.TypeOf(new(HwDevManager)), "getNewNodeAnnotation",
+			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) {
+				return map[string]string{}, nil
+			},
+		)
+		defer mockGetNewNodeAnnotation.Reset()
+
+		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode",
+			func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
+				return &v1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: make(map[string]string),
+						Labels:      make(map[string]string),
+						Name:        "node",
+					},
+					Status: v1.NodeStatus{Addresses: getAddresses()},
+				}, nil
+			})
 		defer mockGetNode.Reset()
-		mockPatchNodeState := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "PatchNodeState", func(
-			_ *kubeclient.ClientK8s, _, _ *v1.Node) (*v1.Node, []byte, error) {
-			return &v1.Node{}, []byte{}, nil
-		})
+
+		mockPatchNodeState := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "PatchNodeState",
+			func(_ *kubeclient.ClientK8s, _, _ *v1.Node) (*v1.Node, []byte, error) {
+				return &v1.Node{}, []byte{}, nil
+			})
 		defer mockPatchNodeState.Reset()
+
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
 	})
