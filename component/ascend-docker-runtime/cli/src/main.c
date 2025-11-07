@@ -39,7 +39,6 @@
 
 static struct option g_cmdOpts[] = {
     {"allow-link", required_argument, 0, 'l'},
-    {"devices", required_argument, 0, 'd'},
     {"pid", required_argument, 0, 'p'},
     {"rootfs", required_argument, 0, 'r'},
     {"options", required_argument, 0, 'o'},
