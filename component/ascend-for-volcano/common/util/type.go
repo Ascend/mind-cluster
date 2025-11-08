@@ -371,8 +371,11 @@ type VResource struct {
 type Instance struct { // Instance
 	PodName    string   `json:"pod_name"`  // pod Name
 	ServerID   string   `json:"server_id"` // serverdId
+	ServerIP   string   `json:"server_ip"` // server ip for A5
 	SuperPodId int32    `json:"super_pod_id"`
-	Devices    []Device `json:"devices"` // dev
+	RackId     int32    `json:"rack_id"`
+	Devices    []Device `json:"devices"`      // dev
+	SeverIndex string   `json:"server_index"` // severIndex for A5
 }
 
 // Device id for Instcance
@@ -380,10 +383,14 @@ type Device struct { // Device
 	DeviceID      string `json:"device_id"` // device id
 	DeviceIP      string `json:"device_ip"` // device ip
 	SuperDeviceID string `json:"super_device_id,omitempty"`
+	// rank level info in rank table for A5
+	LevelList []RankLevel `json:"levelList,omitempty"`
 }
 
 // NpuBaseInfo npu base info
 type NpuBaseInfo struct {
 	IP            string
 	SuperDeviceID uint32
+	// rank level info in rank table for A5
+	LevelList []RankLevel `json:"levelList,omitempty"`
 }

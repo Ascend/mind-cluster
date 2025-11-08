@@ -218,6 +218,10 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 	rtg.SetStatus(utils.CompletedRTStatus)
 	rtg.GatherServerList()
+	// Check whether ranktable file needs to be generated for A5
+	if !rtg.GetNeedGenerate() {
+		return
+	}
 	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
 }
 

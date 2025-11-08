@@ -125,8 +125,11 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 	inst := util.Instance{
 		PodName:    task.Name,
 		ServerID:   node.Address,
+		ServerIP:   node.Address,
 		SuperPodId: node.SuperPodID,
+		RackId:     node.RackID,
 		Devices:    make([]util.Device, 0, len(top)),
+		SeverIndex: node.ServerIndex,
 	}
 	sort.Ints(top)
 	for _, v := range top {
@@ -134,6 +137,7 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 		inst.Devices = append(inst.Devices, util.Device{
 			DeviceID:      strconv.Itoa(v),
 			DeviceIP:      ipMap[deviceName].IP,
+			LevelList:     ipMap[deviceName].LevelList,
 			SuperDeviceID: strconv.Itoa(int(ipMap[deviceName].SuperDeviceID)),
 		})
 	}

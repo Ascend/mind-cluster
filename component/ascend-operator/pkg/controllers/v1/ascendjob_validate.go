@@ -19,6 +19,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/utils"
 )
 
 func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
@@ -42,6 +43,14 @@ func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 			message: scaleError.Error(),
 		}
 		return err
+	}
+
+	// 910a5 branch check the scaleout-type label
+	if scaleOutTypeError := utils.CheckAcJobScaleOutTypeLabel(job); scaleOutTypeError != nil {
+		return &validateError{
+			reason:  "invalid label config",
+			message: scaleOutTypeError.Error(),
+		}
 	}
 
 	if err = r.validateBasicInfo(job); err != nil {

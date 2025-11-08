@@ -22,6 +22,7 @@ type FileManager interface {
 // RankTableGenerator is used to generate ranktable.
 type RankTableGenerator interface {
 	FileManager
+	GetNeedGenerate() bool
 	SetStatus(utils.RankTableStatus)
 	GetStatus() utils.RankTableStatus
 	AddPod(*v1.Pod) error
