@@ -81,6 +81,14 @@ type AscendTools struct {
 	boardId      uint32
 	superPodID   int32
 	serverIndex  int32
+	// rackID for A5
+	rackID int32
+	// superPodType for A5
+	superPodType int8
+	// superPodSize for A5
+	superPodSize int32
+	// nodeInternalIP for A5
+	nodeInternalIP string
 	// record map[device_logic_id]inresetting to show
 	cardInResetMap  map[int32]bool
 	cardInResetLock sync.Mutex
@@ -119,6 +127,20 @@ type DevManager interface {
 	GetSuperPodID() int32
 	SetServerIndex(serverIndex int32)
 	GetServerIndex() int32
+	// SetSuperPodType for A5
+	SetSuperPodType(int8)
+	// GetSuperPodType for A5
+	GetSuperPodType() int8
+	// SetSuperPodSize for A5
+	SetSuperPodSize(int32)
+	// GetSuperPodSize for A5
+	GetSuperPodSize() int32
+	// SetNodeInternalIPInK8s for A5
+	SetNodeInternalIPInK8s(string)
+	// GetNodeInternalIPInK8s for A5
+	GetNodeInternalIPInK8s() string
+	SetRackID(rackID int32)
+	GetRackID() int32
 	GetServerBoardId(devLogicID int32) (uint32, error)
 	SetCardsInResetting(int32, bool)
 	GetIfCardsInResetting(int32) bool

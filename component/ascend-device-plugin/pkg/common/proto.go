@@ -267,7 +267,10 @@ type SuperPodInfo struct {
 	ScaleType  int32
 	SuperPodId int32
 	ServerId   int32
-	Reserve    []int32
+	RackId     int32
+	// SuperPodType for A5
+	SuperPodType int8
+	Reserve      []int8
 }
 
 // Get310PProductType get 310P product type
@@ -297,4 +300,6 @@ type PodDeviceInfo struct {
 type NpuBaseInfo struct {
 	IP            string
 	SuperDeviceID uint32
+	// LevelList info for A5
+	LevelList []api.RankLevel `json:"levelList,omitempty"`
 }

@@ -96,6 +96,13 @@ type DeviceInterface interface {
 	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
 	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
 	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
+
+	// GetUrmaDeviceCount for A5
+	GetUrmaDeviceCount(int32, int32) (int32, error)
+	// GetUrmaDevEidList for A5
+	GetUrmaDevEidList(int32, int32, int32) (*common.UrmaDeviceInfo, error)
+	// GetUrmaDevEidListAll for A5
+	GetUrmaDevEidListAll(int32, int32) ([]common.UrmaDeviceInfo, error)
 }
 
 const (

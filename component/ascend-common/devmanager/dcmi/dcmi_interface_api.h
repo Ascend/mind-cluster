@@ -319,7 +319,11 @@ struct dcmi_spod_info {
     unsigned int scale_type;
     unsigned int super_pod_id;
     unsigned int server_id;
-    unsigned int reserve[8];
+    /* chassis_id for A5 */
+    unsigned int chassis_id;
+    /* super_pod_type for A5 */
+    unsigned char super_pod_type;
+    unsigned char reserve[27];
 };
 
 struct dcmi_dms_fault_event {
@@ -440,6 +444,35 @@ struct dcmi_hccsping_mesh_info {
     int dest_num;
 };
 
+// urma device API for A5 -- begin
+// A5 Unifiy BUS
+#define EID_MAX_COUNT (18)      // 18 EID
+#define URMA_EID_SIZE (16)      // 16byte 128bit
+
+#ifndef urma_eid_t
+typedef union urma_eid {
+    unsigned char raw[URMA_EID_SIZE];
+    struct {
+        unsigned long reserved; /* if IPv4 mapped to IPv6, == 0 */
+        unsigned int prefix;    /* if IPv4 mapped to IPv6, == 0x0000ffff */
+        unsigned int addr;      /* if IPv4 mapped to IPv6, == IPv4 addr */
+    } in4;
+    struct {
+        unsigned long subnet_prefix;
+        unsigned long interface_id;
+    } in6;
+} urma_eid_t;
+#endif
+
+#ifndef urma_eid_info_t
+typedef struct urma_eid_info {
+    urma_eid_t eid;
+    unsigned int eid_index;
+} urma_eid_info_t;
+#endif
+
+// urma device API for A5 -- end
+
 #define DCMI_VERSION_1
 #define DCMI_VERSION_2
 
@@ -555,6 +588,14 @@ DCMIDLLEXPORT int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int p
 DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status);
 
 DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
+
+
+// urma device API for A5 -- begin
+DCMIDLLEXPORT int dcmi_get_urma_device_cnt(int card_id, int device_id, int *dev_cnt);
+
+DCMIDLLEXPORT int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, int dev_index,
+    struct urma_eid_info *eid_ptr, int *eid_cnt);
+// urma device API for A5 -- end
 
 #endif
 

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -29,6 +30,12 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
+)
+
+const (
+	testLogicID = int32(100)
+	testPortID  = int32(10)
+	testTime    = 10
 )
 
 var (
@@ -58,6 +65,7 @@ func init() {
 	}
 }
 
+// TestAutoInit test auto init
 func TestAutoInit(t *testing.T) {
 	p := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
@@ -112,4 +120,94 @@ func testDeviceBoardInfoFailed() {
 	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
 	convey.So(err, convey.ShouldResemble, expectErr)
 	convey.So(errDevM, convey.ShouldBeNil)
+}
+
+// TestDeviceManagerInitError test device manager init error (GetDeviceManager)
+func TestDeviceManagerInitError(t *testing.T) {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", errors.New("init error"))
+	defer patch.Reset()
+	devManagerOnce = sync.Once{} // reset singleton
+	devManager = nil
+	manager, err := GetDeviceManager(testTime)
+	convey.Convey("GetDeviceManager returns error when DcInit fails", t, func() {
+		convey.So(manager, convey.ShouldBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeviceManagerGetDeviceHealthErrorPath test GetDeviceHealth
+func TestDeviceManagerGetDeviceHealthErrorPath(t *testing.T) {
+	manager := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+	patch := gomonkey.ApplyMethodReturn(manager.DcMgr, "DcGetCardIDDeviceID",
+		int32(-1), int32(-1), errors.New("mock err"))
+	defer patch.Reset()
+	_, err := manager.GetDeviceHealth(testLogicID)
+	convey.Convey("GetDeviceHealth returns error if getCardIdAndDeviceId fails", t, func() {
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeviceManagerGetDeviceHealthErrorPath test GetDeviceVoltage  device voltage error path
+func TestDeviceManagerGetDeviceVoltageErrorPath(t *testing.T) {
+	manager := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+	patch := gomonkey.ApplyMethodReturn(manager.DcMgr, "DcGetCardIDDeviceID",
+		int32(-1), int32(-1), errors.New("mock err"))
+	defer patch.Reset()
+	_, err := manager.GetDeviceVoltage(testLogicID)
+	convey.Convey("GetDeviceVoltage returns error if getCardIdAndDeviceId fails", t, func() {
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeviceManagerCreateVirtualDeviceInvalidTemplateName test CreateVirtualDevice invalid template name
+func TestDeviceManagerCreateVirtualDeviceInvalidTemplateName(t *testing.T) {
+	manager := &DeviceManager{DevType: "Ascend910", DcMgr: &dcmi.DcManager{}}
+	vDevInfo := common.CgoCreateVDevRes{TemplateName: "invalid"}
+	convey.Convey("CreateVirtualDevice returns error for invalid template name", t, func() {
+		_, err := manager.CreateVirtualDevice(1, vDevInfo)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeviceManagerSetFaultEventCallFuncNilFunc test set fault event func is nil
+func TestDeviceManagerSetFaultEventCallFuncNilFunc(t *testing.T) {
+	manager := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+	convey.Convey("SetFaultEventCallFunc returns error if func is nil", t, func() {
+		err := manager.SetFaultEventCallFunc(nil)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeviceManagerGetNpuWorkModeAMPMode test get npu work mode
+func TestDeviceManagerGetNpuWorkModeAMPMode(t *testing.T) {
+	manager := &DeviceManager{DevType: "Ascend910B", DcMgr: &dcmi.DcManager{}}
+	convey.Convey("GetNpuWorkMode returns AMPMode for Ascend910B", t, func() {
+		mode := manager.GetNpuWorkMode()
+		convey.So(mode, convey.ShouldEqual, common.AMPMode)
+	})
+}
+
+// TestDeviceManagerIsTrainingCard should return true
+func TestDeviceManagerIsTrainingCard(t *testing.T) {
+	manager := &DeviceManager{isTrainingCard: true}
+	convey.Convey("IsTrainingCard returns true", t, func() {
+		convey.So(manager.IsTrainingCard(), convey.ShouldBeTrue)
+	})
+}
+
+// TestDeviceManagerGetProductTypeArray test GetProductTypeArray return array
+func TestDeviceManagerGetProductTypeArray(t *testing.T) {
+	manager := &DeviceManager{ProductTypes: []string{"A", "B"}}
+	convey.Convey("GetProductTypeArray returns correct product types", t, func() {
+		types := manager.GetProductTypeArray()
+		convey.So(types, convey.ShouldResemble, []string{"A", "B"})
+	})
+}
+
+// TestDeviceManagerGetDevType get dev type should return Ascend910
+func TestDeviceManagerGetDevType(t *testing.T) {
+	manager := &DeviceManager{DevType: "Ascend910"}
+	convey.Convey("GetDevType returns correct type", t, func() {
+		convey.So(manager.GetDevType(), convey.ShouldEqual, "Ascend910")
+	})
 }

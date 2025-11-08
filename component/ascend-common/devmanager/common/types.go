@@ -172,7 +172,11 @@ type CgoSuperPodInfo struct {
 	ScaleType  uint32
 	SuperPodId uint32
 	ServerId   uint32
-	Reserve    []uint32
+	// RackId for A5
+	RackId uint32
+	// SuperPodType for A5
+	SuperPodType uint8
+	Reserve      []uint8
 }
 
 // VirtualDevInfo virtual device infos

@@ -17,6 +17,7 @@ Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
 // Package common this for 910A5 util method
 package common
 
+// Is910A5Chip current chip is 910A5 or not
 func Is910A5Chip(boardId uint32) bool {
 	id := int32(boardId)
 	return a900A5SuperPodBoardIds.Has(id) ||

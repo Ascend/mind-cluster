@@ -7,6 +7,8 @@ package api
 type NpuBaseInfo struct {
 	IP            string
 	SuperDeviceID uint32
+	// LevelList info for A5
+	LevelList []RankLevel `json:"levelList,omitempty"`
 }
 
 // NodeDevice node device info

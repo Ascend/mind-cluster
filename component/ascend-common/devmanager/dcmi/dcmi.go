@@ -337,6 +337,20 @@ unsigned int *state){
 		CALL_FUNC(dcmi_set_spod_node_status,card_id,device_id,sdid,status)
 	}
 
+	// urma device API for A5 -- begin
+	static int (*dcmi_get_urma_device_cnt_func)(int card_id, int device_id, int *dev_cnt);
+	static int dcmi_get_urma_device_cnt(int card_id, int device_id, int *dev_cnt) {
+		CALL_FUNC(dcmi_get_urma_device_cnt, card_id, device_id, dev_cnt)
+	}
+
+	static int (*dcmi_get_eid_list_by_urma_dev_index_func)(int card_id, int device_id, int dev_index,
+				struct urma_eid_info *eid_ptr, int *eid_cnt);
+	static int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, int dev_index,
+				struct urma_eid_info *eid_ptr, int *eid_cnt) {
+		CALL_FUNC(dcmi_get_eid_list_by_urma_dev_index, card_id, device_id, dev_index, eid_ptr, eid_cnt)
+	}
+	// urma device API for A5 -- end
+
    // load .so files and functions
    static int dcmiInit_dl(const char* dcmiLibPath){
    	if (dcmiLibPath == NULL) {
@@ -457,6 +471,11 @@ unsigned int *state){
 
 	dcmi_set_spod_node_status_func = dlsym(dcmiHandle,"dcmi_set_spod_node_status");
 
+	// urma device API for A5 -- begin
+	dcmi_get_urma_device_cnt_func = dlsym(dcmiHandle, "dcmi_get_urma_device_cnt");
+	dcmi_get_eid_list_by_urma_dev_index_func = dlsym(dcmiHandle, "dcmi_get_eid_list_by_urma_dev_index");
+	// urma device API for A5 -- end
+
    	return SUCCESS;
    }
 
@@ -559,6 +578,13 @@ type DcDriverInterface interface {
 	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
 	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
 	DcGetCardElabelV2(int32) (common.ElabelInfo, error)
+
+	// DcGetUrmaDeviceCount for A5
+	DcGetUrmaDeviceCount(int32, int32) (int32, error)
+	// DcGetUrmaDevEidList for A5
+	DcGetUrmaDevEidList(int32, int32, int32) (*common.UrmaDeviceInfo, error)
+	// DcGetUrmaDevEidListAll for A5
+	DcGetUrmaDevEidListAll(int32, int32) ([]common.UrmaDeviceInfo, error)
 }
 
 const (
@@ -600,6 +626,94 @@ var (
 
 // DcManager for manager dcmi interface
 type DcManager struct{}
+
+// DcGetUrmaDeviceCount get urma device count for A5
+func (d *DcManager) DcGetUrmaDeviceCount(cardID int32, deviceID int32) (int32, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return common.RetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	var cnt C.int
+	if retCode := C.dcmi_get_urma_device_cnt(C.int(cardID), C.int(deviceID), &cnt); retCode != common.Success {
+		return common.RetError, fmt.Errorf("dcmi get urma device count failed cardID(%d) deviceID(%d) error "+
+			"code: %d", cardID, deviceID, int32(retCode))
+	}
+	return int32(cnt), nil
+}
+
+// DcGetUrmaDevEidList get urma device index EID info for A5
+func (d *DcManager) DcGetUrmaDevEidList(cardID int32, deviceID int32, urmaDevIndex int32) (*common.UrmaDeviceInfo, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return nil, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if urmaDevIndex < 0 || urmaDevIndex >= maxUrmaDevCnt {
+		return nil, fmt.Errorf("urma device index is %d out of range [0, %d], "+
+			"cardID(%d) deviceID(%d)", urmaDevIndex, maxUrmaDevCnt, cardID, deviceID)
+	}
+
+	var eidInfoList [common.EidNumMax]C.struct_urma_eid_info
+	eidInfoListPtr := (*C.struct_urma_eid_info)(unsafe.Pointer(&eidInfoList[0]))
+	eidCnt := C.int(common.EidNumMax)
+	if ret := C.dcmi_get_eid_list_by_urma_dev_index(C.int(cardID), C.int(deviceID), C.int(urmaDevIndex), eidInfoListPtr,
+		&eidCnt); ret != common.Success {
+		return nil, fmt.Errorf("dcmi get urma device info failed, cardID(%d) deviceID(%d) index(%d) ret(%d)",
+			cardID, deviceID, urmaDevIndex, int(ret))
+	}
+
+	info, err := convertUrmaDeviceInfo(eidInfoListPtr, eidCnt)
+	if err != nil {
+		return nil, fmt.Errorf("convert urma device info failed, cardID(%d) deviceID(%d) index(%d), err: %v",
+			cardID, deviceID, urmaDevIndex, err)
+	}
+	return info, nil
+}
+
+func convertUrmaDeviceInfo(eidInfoListPtr *C.struct_urma_eid_info, eidCnt C.int) (*common.UrmaDeviceInfo, error) {
+	if eidInfoListPtr == nil {
+		return nil, fmt.Errorf("input parameter eidInfoListPtr is nil")
+	}
+
+	eidCount := uint(eidCnt)
+	if eidCount > common.EidNumMax {
+		return nil, fmt.Errorf("urma device count is %d out of range [0, %d]", eidCount, common.EidNumMax)
+	}
+
+	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(unsafe.Pointer(eidInfoListPtr))
+	urmaDevInfo := common.UrmaDeviceInfo{EidCount: eidCount, EidInfos: make([]common.UrmaEidInfo, eidCount)}
+	for j := 0; j < int(eidCount); j++ {
+		eidInfo := common.UrmaEidInfo{
+			Eid: common.Eid{
+				Raw: eidInfoList[j].eid,
+			},
+			EidIndex: uint(eidInfoList[j].eid_index),
+		}
+		urmaDevInfo.EidInfos[j] = eidInfo
+	}
+
+	return &urmaDevInfo, nil
+}
+
+// DcGetUrmaDevEidListAll get urma device EID info for A5
+func (d *DcManager) DcGetUrmaDevEidListAll(cardID int32, deviceID int32) ([]common.UrmaDeviceInfo, error) {
+	feCnt, err := d.DcGetUrmaDeviceCount(cardID, deviceID)
+	if err != nil {
+		return []common.UrmaDeviceInfo{}, err
+	}
+
+	if feCnt > maxUrmaDevCnt || feCnt < 0 {
+		return []common.UrmaDeviceInfo{}, fmt.Errorf("urma device number is %d, out of range [0, %d], "+
+			"cardID(%d) deviceID(%d)", feCnt, maxUrmaDevCnt, cardID, deviceID)
+	}
+
+	infos := make([]common.UrmaDeviceInfo, feCnt)
+	for index := int32(0); index < feCnt; index++ {
+		eidInfo, err := d.DcGetUrmaDevEidList(cardID, deviceID, index)
+		if err != nil || eidInfo == nil {
+			return []common.UrmaDeviceInfo{}, err
+		}
+		infos[index] = *eidInfo
+	}
+	return infos, nil
+}
 
 // DcStartHccsPingMesh start hccs ping mesh
 func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int,
@@ -997,10 +1111,14 @@ func convertSuperPodInfo(cSuperPodInfo C.struct_dcmi_spod_info) common.CgoSuperP
 		ScaleType:  uint32(cSuperPodInfo.scale_type),
 		SuperPodId: uint32(cSuperPodInfo.super_pod_id),
 		ServerId:   uint32(cSuperPodInfo.server_id),
+		// RackId for A5
+		RackId: uint32(cSuperPodInfo.chassis_id),
+		// SuperPodType for A5
+		SuperPodType: uint8(cSuperPodInfo.super_pod_type),
 	}
 
-	for i := uint32(0); i < dcmiMaxReserveNum; i++ {
-		superPodInfo.Reserve = append(superPodInfo.Reserve, uint32(cSuperPodInfo.reserve[i]))
+	for i := uint32(0); i < dcmiSpodReserveLen; i++ {
+		superPodInfo.Reserve = append(superPodInfo.Reserve, uint8(cSuperPodInfo.reserve[i]))
 	}
 
 	return superPodInfo

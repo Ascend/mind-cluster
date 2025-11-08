@@ -97,7 +97,10 @@ func TestNewHwDevManager(t *testing.T) {
 		defer mockUpdateNodeLabel.Reset()
 		convey.Convey("init HwDevManager", func() {
 			common.ParamOption.UseVolcanoType = true
-			res := NewHwDevManager(&devmanager.DeviceManagerMock{})
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
+			res := NewHwDevManager(&devmanager.DeviceManagerMock{DevType: api.Ascend910})
 			convey.So(res, convey.ShouldNotBeNil)
 		})
 		convey.Convey("init HwDevManager get device type failed", func() {
@@ -106,13 +109,19 @@ func TestNewHwDevManager(t *testing.T) {
 					return "errorType"
 				})
 			defer mockGetDevType.Reset()
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
 			res := NewHwDevManager(&devmanager.DeviceManagerMock{})
 			convey.So(res, convey.ShouldBeNil)
 		})
 		convey.Convey("test NewHwDevManager, product type is not supported", func() {
 			common.ParamOption.ProductTypes = []string{common.Atlas300IDuo}
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
 			res := NewHwDevManager(&devmanager.DeviceManagerMock{})
-			convey.So(res, convey.ShouldNotBeNil)
+			convey.So(res, convey.ShouldBeNil)
 		})
 	})
 }
@@ -120,7 +129,7 @@ func TestNewHwDevManager(t *testing.T) {
 // TestSetAscendManager for testSetAscendManager
 func TestSetAscendManager(t *testing.T) {
 	var hdm HwDevManager
-	devM := &devmanager.DeviceManagerMock{}
+	devM := &devmanager.DeviceManagerMock{DevType: api.Ascend910}
 	mockGetChipAiCoreCount := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 		func(_ *device.AscendTools) (int32, error) {
 			return common.DeviceNotSupport, nil
@@ -316,7 +325,10 @@ func TestStartAllServer(t *testing.T) {
 			})
 		defer mockStart.Reset()
 		common.ParamOption.PresetVDevice = true
-		hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
+		devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+			npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+		defer devMgrPatch.Reset()
+		hdm := NewHwDevManager(&devmanager.DeviceManagerMock{DevType: api.Ascend910})
 		res := hdm.startAllServer(&common.FileWatch{})
 		convey.So(res, convey.ShouldBeFalse)
 	})
@@ -365,7 +377,10 @@ func TestUpdatePodAnnotation(t *testing.T) {
 			defer mockNode.Reset()
 			defer mockPodDeviceInfo.Reset()
 			defer mockClearCM.Reset()
-			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
+			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{DevType: api.Ascend910})
 			err := hdm.updatePodAnnotation()
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -400,7 +415,10 @@ func TestUpdateDevice(t *testing.T) {
 			defer mockDestroy.Reset()
 			defer mockCheckLabel.Reset()
 			common.ParamOption.PresetVDevice = true
-			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
+			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{DevType: api.Ascend910})
 			hdm.ServerMap[common.AiCoreResourceName] = NewPluginServer(api.Ascend310P, nil, nil, nil)
 			err := hdm.updateAllInfo()
 			convey.So(err, convey.ShouldBeNil)
@@ -431,7 +449,8 @@ func TestNotifyToK8s(t *testing.T) {
 					return
 				})
 			mockChange := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChange",
-				func(_ *device.AscendTools, _ map[string][]*common.NpuDevice, _ map[string][]*common.NpuDevice) map[string]bool {
+				func(_ *device.AscendTools, _ map[string][]*common.NpuDevice,
+					_ map[string][]*common.NpuDevice) map[string]bool {
 					return map[string]bool{api.Ascend310P: true, api.Ascend310: false}
 				})
 			patch := setPatch()
@@ -440,7 +459,10 @@ func TestNotifyToK8s(t *testing.T) {
 			defer mockGrace.Reset()
 			defer mockChange.Reset()
 			common.ParamOption.PresetVDevice = true
-			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{})
+			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
+				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
+			defer devMgrPatch.Reset()
+			hdm := NewHwDevManager(&devmanager.DeviceManagerMock{DevType: api.Ascend910})
 			hdm.ServerMap[common.AiCoreResourceName] = NewPluginServer(api.Ascend310P, nil, nil, nil)
 			initTime := time.Now()
 			hdm.notifyToK8s(context.TODO(), &initTime)

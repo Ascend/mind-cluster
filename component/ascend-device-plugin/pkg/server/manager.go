@@ -305,10 +305,12 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 
 func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 	result := common.SuperPodInfo{
-		ScaleType:  common.ScaleTypeAbnormal,
-		SuperPodId: common.SuperPodIdAbnormal,
-		ServerId:   common.ServerIdAbnormal,
-		Reserve:    make([]int32, 0),
+		ScaleType:    common.ScaleTypeAbnormal,
+		SuperPodId:   common.SuperPodIdAbnormal,
+		ServerId:     common.ServerIdAbnormal,
+		RackId:       common.RackIdAbnormal,
+		SuperPodType: common.SuperPodTypeAbnormal,
+		Reserve:      make([]int8, 0),
 	}
 	for _, npuDevices := range hdm.groupDevice {
 		for _, npuDevice := range npuDevices {
@@ -317,18 +319,24 @@ func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 				hwlog.RunLog.Warnf("failed to get super pod info, error: %v", err)
 				continue
 			}
+			if common.ParamOption.RealCardType == api.Ascend910A5 && int(superPodInfo.RackId) < 0 {
+				hwlog.RunLog.Warnf("failed to get super pod info, rack id invalid: %v", superPodInfo.RackId)
+				continue
+			}
 			hwlog.RunLog.Infof("get super pod info: %v", superPodInfo)
 			npuDevice.SuperDeviceID = superPodInfo.SdId
 			if result.ScaleType != common.ScaleTypeAbnormal {
 				continue
 			}
 			result = common.SuperPodInfo{
-				ScaleType:  int32(superPodInfo.ScaleType),
-				SuperPodId: int32(superPodInfo.SuperPodId),
-				ServerId:   int32(superPodInfo.ServerId),
+				ScaleType:    int32(superPodInfo.ScaleType),
+				SuperPodId:   int32(superPodInfo.SuperPodId),
+				ServerId:     int32(superPodInfo.ServerId),
+				RackId:       int32(superPodInfo.RackId),
+				SuperPodType: int8(superPodInfo.SuperPodType),
 			}
 			for i := 0; i < len(superPodInfo.Reserve); i++ {
-				result.Reserve = append(result.Reserve, int32(superPodInfo.Reserve[i]))
+				result.Reserve = append(result.Reserve, int8(superPodInfo.Reserve[i]))
 			}
 		}
 	}
@@ -336,11 +344,20 @@ func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 	return result
 }
 
+// setSuperPodInfo get super pod info then cache it
 func (hdm *HwDevManager) setSuperPodInfo() {
 	superPodInfo := hdm.getSuperPodInfo()
 	hwlog.RunLog.Infof("get super pod id: %d, server index: %d", superPodInfo.SuperPodId, superPodInfo.ServerId)
 	hdm.manager.SetSuperPodID(superPodInfo.SuperPodId)
 	hdm.manager.SetServerIndex(superPodInfo.ServerId)
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		hwlog.RunLog.Infof("get rack id: %d", superPodInfo.RackId)
+		hdm.manager.SetRackID(superPodInfo.RackId)
+		hwlog.RunLog.Infof("get super pod type: %d", superPodInfo.SuperPodType)
+		hdm.manager.SetSuperPodType(superPodInfo.SuperPodType)
+		hwlog.RunLog.Infof("get super pod size: %d", superPodInfo.ScaleType)
+		hdm.manager.SetSuperPodSize(superPodInfo.ScaleType)
+	}
 }
 
 func (hdm *HwDevManager) initPluginServer() error {
