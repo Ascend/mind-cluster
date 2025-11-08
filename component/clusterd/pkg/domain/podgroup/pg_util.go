@@ -134,9 +134,10 @@ func GetPGFromCacheOrPod(jobKey string) (jobName, pgName, namespace string) {
 
 // GetResourceType get resource type
 func GetResourceType(info *v1beta1.PodGroup) string {
-	if info == nil {
+	if info == nil || info.Spec.MinResources == nil {
 		return ""
 	}
+
 	for key, _ := range info.Spec.MinResources.DeepCopy() {
 		if strings.Contains(string(key), api.Ascend910) {
 			return api.Ascend910

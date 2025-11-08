@@ -165,6 +165,12 @@ func TestGetResourceType(t *testing.T) {
 		resourceType := GetResourceType(pgDemo1)
 		convey.So(resourceType, convey.ShouldEqual, api.Ascend910)
 	})
+	convey.Convey("test TestGetResourceType fail", t, func() {
+		pgDemo1 := getDemoPodGroup(pgName1, pgNameSpace, jobUid1)
+		pgDemo1.Spec.MinResources = nil
+		resourceType := GetResourceType(pgDemo1)
+		convey.So(resourceType, convey.ShouldEqual, "")
+	})
 }
 
 func TestJudgeRestartProcessByJobKey(t *testing.T) {
