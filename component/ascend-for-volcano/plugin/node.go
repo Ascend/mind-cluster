@@ -56,6 +56,9 @@ type CommonNode struct {
 	Address           string
 	SuperPodID        int32
 	devInfoUpdateTime int64
+	RackID            int32
+	// ServerIndex for A5
+	ServerIndex string
 }
 
 // VNode vnpu node class
@@ -175,6 +178,8 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	n.Tasks = npuNode.Tasks
 	n.syncAnnotation(npuNode, nodeInfoOfNodeD, switchInfo)
 	capability := getNPUNodeCapacity(npuNode)
+	// serverIndex key of node annotations for A5
+	n.ServerIndex = npuNode.Node.Annotations[util.ServerIndexKey]
 	if capability == nil {
 		return fmt.Errorf("node %s capability is invalid", npuNode.Name)
 	}

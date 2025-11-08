@@ -52,11 +52,12 @@ type BaseGenerator struct {
 	rankTabler     generator.RankTableGenerator
 	IsMindIEEPJob  bool `json:"-"`
 	isSoftStrategy bool
-
-	Status      utils.RankTableStatus `json:"status"`
-	ServerList  []*Server             `json:"server_list" json:"server_list,omitempty"`   // hccl_json server list
-	ServerCount string                `json:"server_count" json:"server_count,omitempty"` // hccl_json server count
-	Version     string                `json:"version" json:"version,omitempty"`           // hccl_json version
+	// needGenerate for A5
+	needGenerate bool
+	Status       utils.RankTableStatus `json:"status"`
+	ServerList   []*Server             `json:"server_list,omitempty"`  // hccl_json server list
+	ServerCount  string                `json:"server_count,omitempty"` // hccl_json server count
+	Version      string                `json:"version,omitempty"`      // hccl_json version
 }
 
 // NewBaseGenerator is the constructor for BaseGenerator.
@@ -74,6 +75,7 @@ func NewBaseGenerator(job *mindxdlv1.AscendJob, version string, r generator.Rank
 		Version:        version,
 		IsMindIEEPJob:  mindxdlutils.IsMindIEEPJob(job),
 		isSoftStrategy: mindxdlutils.IsSoftStrategyJob(job),
+		needGenerate:   true,
 	}
 }
 
