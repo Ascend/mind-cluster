@@ -958,7 +958,7 @@ func (reScheduler *ReScheduler) getTaskHealthStateByNode(fTask *FaultTask) (bool
 }
 
 func (reScheduler *ReScheduler) getTaskHealthStateByPod(task *api.TaskInfo) (bool, string) {
-	if task.Pod.Status.Phase == v1.PodFailed {
+	if isFailedTask(task) {
 		return true, PodFailed
 	}
 	return false, PodHealthy
