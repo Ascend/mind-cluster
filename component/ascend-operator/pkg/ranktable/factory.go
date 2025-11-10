@@ -13,6 +13,7 @@ import (
 	"ascend-operator/pkg/ranktable/generator"
 	ranktablev1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
+	"ascend-operator/pkg/ranktable/v2dot0"
 	"ascend-operator/pkg/utils"
 )
 
@@ -20,6 +21,11 @@ import (
 func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
 	if job == nil {
 		return ranktablev1.New(job)
+	}
+	// for A5 ranktable
+	if val, ok := job.Annotations[ranktableVersion]; ok && val == version2dot0 {
+		hwlog.RunLog.Info("use ranktable generator v2.0")
+		return v2dot0.New(job)
 	}
 	if _, ok := job.Annotations[utils.AnnoKeyOfSuperPod]; ok {
 		hwlog.RunLog.Info("sp-block is exist, use ranktable v1_2")
