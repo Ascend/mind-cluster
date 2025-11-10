@@ -36,6 +36,7 @@ type NPUJob struct {
 	ReqNPUName         string
 	ReqNPUNum          int
 	SpBlockNPUNum      int
+	TpBlockNPUNum      int
 	SubHealthyStrategy string
 }
 

@@ -22,6 +22,8 @@ package util
 import "regexp"
 
 const (
+	// LeastTpBlock is the least value of tp-block
+	LeastTpBlock = 1
 	// LogErrorLev for log error.
 	LogErrorLev = 1
 	// LogWarningLev for log warning.
