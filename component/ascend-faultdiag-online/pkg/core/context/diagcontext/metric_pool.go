@@ -105,7 +105,7 @@ func (treeNode *TreeNode) GetItemGroup(metric *Metric) *ItemGroup {
 
 // NewMetricPoolTreeNode 新建指标池的指标树
 func NewMetricPoolTreeNode(domainItem *metricmodel.DomainItem, parentNode *TreeNode) *TreeNode {
-	if domainItem == nil || parentNode == nil {
+	if domainItem == nil {
 		return nil
 	}
 	return &TreeNode{

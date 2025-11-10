@@ -17,11 +17,11 @@ package clusterlevel
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sync"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
@@ -31,9 +31,6 @@ import (
 
 /* callback */
 var callbackFunc model.CallbackFunc = nil
-
-/* report sync lock */
-var clusterReportSyncLock sync.Mutex
 
 func getCurJobAllNodeResultFile(nodeLevelResultPath string, recorder map[string]int64) []string {
 	resultPaths := make([]string, 0)
@@ -73,7 +70,7 @@ func getCurJobAllNodeResultFile(nodeLevelResultPath string, recorder map[string]
 		return nil
 	})
 	if err != nil {
-		hwlog.RunLog.Errorf("[SLOWNODE ALGO]%v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]loop check all files under: %s failed: %v", nodeLevelResultPath, err)
 		return nil
 	}
 	return resultPaths
@@ -120,7 +117,7 @@ func getSlowPpParallelDomains(mergedData *config.ClusterJobResult,
 func initializeConnectNumbers(length int) ([]int, []int, error) {
 	if length <= 0 {
 		hwlog.RunLog.Error("[SLOWNODE ALGO]length is zero")
-		return nil, nil, fmt.Errorf("[SLOWNODE ALGO]PPranks len is zero")
+		return nil, nil, errors.New("[SLOWNODE ALGO]PPranks len is zero")
 	}
 	connectNumbers := make([]int, length)
 	badConnectNumbers := make([]int, length)
@@ -233,14 +230,13 @@ func getFormatDetectionResult(clusterResult config.ClusterJobResult,
 	/* get cluster local ip */
 	ip, err := config.GetLocalIP()
 	if err != nil {
-		hwlog.RunLog.Error(err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Get local ip failed: %v", err)
 		return ""
 	}
 	/* 若劣化感知结果为非slow */
 	if clusterResult.IsSlow == 0 {
 		clusterResult.DegradationLevel = "0.0%"
 		clusterResult.SlowHostNodes = []string{}
-		clusterResult.SlowIORanks = []int{}
 		clusterResult.SlowIORanks = []int{}
 		clusterResult.SlowCommunicationDomains = [][]int{}
 		clusterResult.SlowCommunicationRanks = []int{}
@@ -253,7 +249,7 @@ func getFormatDetectionResult(clusterResult config.ClusterJobResult,
 	result[mainKey] = map[string]config.ClusterJobResult{minorKey: clusterResult}
 	jsonStr, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
-		hwlog.RunLog.Error(err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]Marshal cluster detection result failed: %v", err)
 		return ""
 	}
 	return string(jsonStr)
@@ -294,7 +290,7 @@ func jobLevelDetectionA3(ppInfo [][]int, tpInfo [][]int, conf config.AlgoInputCo
 	/* 格式化检测结果 */
 	jsonStr := getFormatDetectionResult(mergedData, conf)
 	/* debug */
-	hwlog.RunLog.Infof("[SLOWNODE ALGO]Cluster detection result:%s", jsonStr)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]Cluster detection result: %s", jsonStr)
 	/* call callback report */
 	if callbackFunc != nil {
 		go callbackFunc(jsonStr)

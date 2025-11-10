@@ -190,9 +190,9 @@ func testCreateDirectoryAndWriteFile(testData map[string]any) {
 		targetFile := filepath.Join(targetDir, testFileName)
 
 		convey.Convey("create file and write successfully", func() {
-			writeFile(targetDir, testFileName, testData)
-
-			_, err := os.Stat(targetDir)
+			err := writeFile(targetDir, testFileName, testData)
+			convey.So(err, convey.ShouldBeNil)
+			_, err = os.Stat(targetDir)
 			convey.So(err, convey.ShouldBeNil)
 
 			_, err = os.Stat(targetFile)

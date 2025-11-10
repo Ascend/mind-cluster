@@ -139,7 +139,7 @@ func (d *DevManager) Start(stopCh <-chan struct{}) {
 				hwlog.RunLog.Warn("received nil hccspingmesh command, ignore")
 				continue
 			}
-			hwlog.RunLog.Infof("executor receive cmd, activate: %v, uid: %s", cmd.Config.Activate, cmd.UID)
+			hwlog.RunLog.Infof("executor receive cmd, activate: %s, uid: %s", cmd.Config.Activate, cmd.UID)
 			// need stop collect goroutine and wait the goroutine done
 			if currentStop != nil {
 				close(currentStop)
@@ -225,14 +225,14 @@ func (d *DevManager) stopLastTasks() {
 }
 
 func (d *DevManager) startCollect(stop <-chan struct{}) {
-	hwlog.RunLog.Infof("start collect hccsping mesh info")
+	hwlog.RunLog.Info("start collect hccsping mesh info")
 	defer d.wg.Done()
 	ticker := time.NewTicker(time.Duration(d.currentPolicy.Config.TaskInterval*collectPeriodFactor) * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-stop:
-			hwlog.RunLog.Infof("stop collect hccsping mesh info")
+			hwlog.RunLog.Info("stop collect hccsping mesh info")
 			return
 		case <-ticker.C:
 			d.getHccspingMeshInfo()
@@ -256,7 +256,7 @@ func (d *DevManager) getHccspingMeshInfo() {
 				continue
 			}
 			if info == nil {
-				hwlog.RunLog.Warnf("deviceManager get hccspingmesh info is empty")
+				hwlog.RunLog.Warn("deviceManager get hccspingmesh info is empty")
 				continue
 			}
 			// when reset chip, pingmesh task will be stopped, so we should restart pingmesh task

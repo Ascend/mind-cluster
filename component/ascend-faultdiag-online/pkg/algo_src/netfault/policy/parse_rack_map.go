@@ -64,26 +64,20 @@ func storeNpuNetPlaneLink(rackId int, slotId int, npuPhyId int, portInfo *VnicIn
 		if npuNetplaneInfo != nil {
 			npuNetplaneInfo[npuFirstPort] = append(npuNetplaneInfo[npuFirstPort], npuNetPlaneStr)
 		}
-		break
 	case npuSecondPort:
 		if npuNetplaneInfo != nil {
 			npuNetplaneInfo[npuSecondPort] = append(npuNetplaneInfo[npuSecondPort], npuNetPlaneStr)
 		}
-		break
 	case npuThirdPort:
 		if npuNetplaneInfo != nil {
 			npuNetplaneInfo[npuThirdPort] = append(npuNetplaneInfo[npuThirdPort], npuNetPlaneStr)
 		}
-		break
 	case npuFourthPort:
 		if npuNetplaneInfo != nil {
 			npuNetplaneInfo[npuFourthPort] = append(npuNetplaneInfo[npuFourthPort], npuNetPlaneStr)
 		}
-
-		break
 	default:
 		hwlog.RunLog.Warnf("unknown npu port net plane: %s", portId)
-		return
 	}
 }
 

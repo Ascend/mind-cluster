@@ -45,7 +45,7 @@ func getNodeGlobalRanks(dirPath string) ([]int, error) {
 			return fmt.Errorf("too many files in: %s, exceed max file count: %d", path, constants.MaxFileCount)
 		}
 		if err != nil {
-			hwlog.RunLog.Warnf("Error accessing path: %v", err)
+			hwlog.RunLog.Warnf("[SLOWNODE ALGO]Error accessing path: %v", err)
 			return nil
 		}
 		// 检查是否是文件，并且符合命名规则
@@ -63,7 +63,7 @@ func getNodeGlobalRanks(dirPath string) ([]int, error) {
 		i, err := strconv.Atoi(matches[1])
 		if err != nil {
 			// 输出错误信息并跳过该文件
-			hwlog.RunLog.Errorf("Error parsing global_rank value from file: %s, error: %v",
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Error parsing global_rank value from file: %s, error: %v",
 				info.Name(), err)
 			return nil // or continue if you prefer to continue processing
 		}
@@ -118,50 +118,49 @@ func GetGloRanksAndDetGroups(sndConfig *config.DetectionConfig, taskName string)
 
 	// 某一个task的并行域信息
 	topoPath := filepath.Join(sndConfig.SharedFilePath, task, taskName, topoName)
-	hwlog.RunLog.Infof("topoPath: %s", topoPath)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]topoPath: %s", topoPath)
 
 	globalRanksNode, err := getNodeGlobalRanks(taskLocalDataPath)
 	if err != nil {
-		hwlog.RunLog.Errorf("getNodeGlobalRanks err %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]getNodeGlobalRanks err %v", err)
 		return nil, nil
 	}
-	hwlog.RunLog.Infof("The ranks on the local node of the task %s are %v", taskName, globalRanksNode)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]The ranks on the local node of the task %s are %v", taskName, globalRanksNode)
 
 	// Ranktable文件尝试读取，不同的代际，生成的ranktable文件内容可能不同，
 	rankTablePath := filepath.Join(sndConfig.SharedFilePath, task, taskName, ranktableName)
 	nodeRanksFromRanktable := getNodeRanksFromRanktable(rankTablePath)
-	hwlog.RunLog.Infof("Global rank of this node read from ranktable: %v", nodeRanksFromRanktable)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]Global rank of this node read from ranktable: %v", nodeRanksFromRanktable)
 
 	// 读取task_x的topo！  topo文件会存储在共享文件路径下
 	tpParallelRanks, _ := getTPParallel(topoPath)
-	hwlog.RunLog.Infof("TPranks: %v", tpParallelRanks)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]TPranks: %v", tpParallelRanks)
 
 	if len(nodeRanksFromRanktable) > 0 {
 		if len(globalRanksNode) > len(nodeRanksFromRanktable) {
-			hwlog.RunLog.Infof("Is the operator data mistakenly stored in the shared path? Task: %s, "+
-				"Ranks on the node should be: %v",
-				taskName, nodeRanksFromRanktable)
+			hwlog.RunLog.Infof("[SLOWNODE ALGO]Is the operator data mistakenly stored in the shared path? Task: %s, "+
+				"Ranks on the node should be: %v", taskName, nodeRanksFromRanktable)
 			globalRanksNode = nodeRanksFromRanktable
 		} else if len(globalRanksNode) == len(nodeRanksFromRanktable) {
-			hwlog.RunLog.Info("Operator data is stored in the local directory...")
+			hwlog.RunLog.Info("[SLOWNODE ALGO]Operator data is stored in the local directory...")
 		} else {
-			hwlog.RunLog.Warn("Some cards on this node have not collected data.")
+			hwlog.RunLog.Warn("[SLOWNODE ALGO]Some cards on this node have not collected data.")
 			return nil, nil
 		}
 	} else {
 		// 没有ranktable文件，或者ranktable文件无法解析（可能是不同代际的硬件生成不同的ranktable文件所致）
 		if len(tpParallelRanks) == 0 || len(tpParallelRanks[0]) == 0 {
-			hwlog.RunLog.Error("Error: tpParallelRanks data is incomplete.")
+			hwlog.RunLog.Error("[SLOWNODE ALGO]Error: tpParallelRanks data is incomplete.")
 		}
 		if len(globalRanksNode) > sndConfig.CardsOneNode {
-			hwlog.RunLog.Errorf("globalRanksNode: %+v", globalRanksNode)
-			hwlog.RunLog.Errorf("CardsOneNode: %+v", sndConfig.CardsOneNode)
-			hwlog.RunLog.Errorf("Confirm whether the operator data is stored in the local path."+
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]globalRanksNode: %+v", globalRanksNode)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]CardsOneNode: %+v", sndConfig.CardsOneNode)
+			hwlog.RunLog.Errorf("[SLOWNODE ALGO]Confirm whether the operator data is stored in the local path."+
 				" There are %d cards locally, but there are %d operator data.",
 				sndConfig.CardsOneNode, len(globalRanksNode))
 		}
 	}
 	detectionGroups := getDetectionGroups(tpParallelRanks, globalRanksNode)
-	hwlog.RunLog.Infof("Detection group: %v", detectionGroups)
+	hwlog.RunLog.Infof("[SLOWNODE ALGO]Detection group: %v", detectionGroups)
 	return globalRanksNode, detectionGroups
 }

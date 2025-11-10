@@ -128,23 +128,25 @@ func CheckApplicableScene(sndConfig *config.DetectionConfig, taskName string) bo
 	topoPath := filepath.Join(sndConfig.SharedFilePath, task, taskName, topoFileName)
 	result, err := checkEPContent(topoPath)
 	if err != nil {
-		hwlog.RunLog.Error("Error:", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]check ep content failed: %v", err)
 		return false
 	}
 
 	if result {
-		hwlog.RunLog.Error("training uses EP and slownode detection currently does not support EP parallelism")
+		hwlog.RunLog.Error("[NETFAULT ALGO]training uses EP and slownode detection currently " +
+			"does not support EP parallelism")
 		return false
 	}
 
 	resultCp, err := checkCPContent(topoPath)
 	if err != nil {
-		hwlog.RunLog.Error("Error:", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]check ep content failed: %v", err)
 		return false
 	}
 
 	if resultCp {
-		hwlog.RunLog.Error("training uses CP and slownode detection currently does not support CP parallelism")
+		hwlog.RunLog.Error("[NETFAULT ALGO]training uses CP and slownode detection currently " +
+			"does not support CP parallelism")
 		return false
 	}
 

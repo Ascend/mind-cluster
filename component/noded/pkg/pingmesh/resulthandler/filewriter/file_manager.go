@@ -75,7 +75,7 @@ type resultInfo struct {
 // New creates a new manager
 func New(cfg *Config) *manager {
 	if cfg == nil || cfg.Path == "" {
-		hwlog.RunLog.Warnf("pingmesh result config is nil or dir is empty")
+		hwlog.RunLog.Warn("pingmesh result config is nil or dir is empty")
 		return nil
 	}
 	hwlog.RunLog.Infof("create file writer, config: %v", cfg)
@@ -160,7 +160,7 @@ func (m *manager) writeRecord(f *os.File, res *types.HccspingMeshResult,
 	if !appendMode {
 		if err := csvWriter.Write(m.CsvColumnNames); err != nil {
 			hwlog.RunLog.Errorf("write record csv column title to file %s failed, err: %v", pingCsvStr, err)
-			return fmt.Errorf("write record csv column title failed")
+			return errors.New("write record csv column title failed")
 		}
 	}
 	for physicID, infos := range res.Results {
@@ -273,7 +273,7 @@ func (m *manager) prepareResultFilePaths(appendMode bool) (csvFile, csvBackFile 
 	rasNetRootPath, err := slownet.GetRasNetRootPath()
 	if err != nil {
 		hwlog.RunLog.Errorf("get ras net fault root path failed, err: %v", err)
-		return "", "", fmt.Errorf("get ras net fault root path failed")
+		return "", "", errors.New("get ras net fault root path failed")
 	}
 	csvFileName := fmt.Sprintf("ping_result_%s.csv", m.serverIndex)
 	csvFileBackName := fmt.Sprintf("ping_result_%s.csv-bak", m.serverIndex)
@@ -282,22 +282,22 @@ func (m *manager) prepareResultFilePaths(appendMode bool) (csvFile, csvBackFile 
 	pingResultCsvBack := filepath.Join(rasNetRootPath, rasNetSubPath, superPodSubPath, csvFileBackName)
 	if _, err = utils.CheckPath(pingResultCsvBack); err != nil {
 		hwlog.RunLog.Errorf("file path %s is invalid, err: %v", pingResultCsvBack, err)
-		return "", "", fmt.Errorf("file path is invalid")
+		return "", "", errors.New("file path is invalid")
 	}
 	if utils.IsLexist(pingResultCsvBack) && !appendMode {
 		if err = os.Remove(pingResultCsvBack); err != nil {
 			hwlog.RunLog.Errorf("remove file %s failed, err: %v", pingResultCsvBack, err)
-			return "", "", fmt.Errorf("remove file failed")
+			return "", "", errors.New("remove file failed")
 		}
 	}
 	if _, err = utils.CheckPath(pingResultCsv); err != nil {
 		hwlog.RunLog.Errorf("file path %s is invalid, err: %v", pingResultCsv, err)
-		return "", "", fmt.Errorf("file path invalid")
+		return "", "", errors.New("file path invalid")
 	}
 	if utils.IsLexist(pingResultCsv) && !appendMode {
 		if err = os.Rename(pingResultCsv, pingResultCsvBack); err != nil {
-			hwlog.RunLog.Errorf("backup file %s failed, err := %v", pingResultCsv, err)
-			return "", "", fmt.Errorf("backup file failed")
+			hwlog.RunLog.Errorf("backup file %s failed, err: %v", pingResultCsv, err)
+			return "", "", errors.New("backup file failed")
 		}
 	}
 	return pingResultCsv, pingResultCsvBack, nil
@@ -320,5 +320,5 @@ func getPingItemByDestAddr(dstAddrList []types.PingItem, dstAddr string) (types.
 			return item, nil
 		}
 	}
-	return types.PingItem{}, fmt.Errorf("not found it")
+	return types.PingItem{}, errors.New("not found it")
 }

@@ -83,7 +83,8 @@ func (ch *CSVHandler) WriteRow(record []string) error {
 	defer func(err error) {
 		if err != nil {
 			if closeErro := ch.Close(); closeErro != nil {
-				hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+				hwlog.RunLog.Errorf("[SLOWNODE PARSE]failed to close csv file: %s, error: %v",
+					ch.csvFilePath, closeErro)
 			}
 		}
 		ch.openFile.mu.Unlock()
@@ -109,7 +110,8 @@ func (ch *CSVHandler) WriteAll(records [][]string) error {
 	defer func(err error) {
 		if err != nil {
 			if closeErro := ch.Close(); closeErro != nil {
-				hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+				hwlog.RunLog.Errorf("[SLOWNODE PARSE]failed to close csv file: %s, error: %v",
+					ch.csvFilePath, closeErro)
 			}
 		}
 		ch.openFile.mu.Unlock()
@@ -136,7 +138,8 @@ func (ch *CSVHandler) Flush() error {
 	ch.openFile.writer.Flush()
 	if err := ch.openFile.writer.Error(); err != nil {
 		if closeErro := ch.Close(); closeErro != nil {
-			hwlog.RunLog.Errorf("failed to close csv file: %s, error: %v", ch.csvFilePath, closeErro)
+			hwlog.RunLog.Errorf("[SLOWNODE PARSE]failed to close csv file: %s, error: %v",
+				ch.csvFilePath, closeErro)
 		}
 		return err
 	}

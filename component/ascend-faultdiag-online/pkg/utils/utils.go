@@ -75,16 +75,16 @@ func ToString(val any) string {
 // CopyInstance 复制实例
 func CopyInstance(src any) (any, error) {
 	if src == nil {
-		return nil, fmt.Errorf("src cannot be nil")
+		return nil, errors.New("src cannot be nil")
 	}
 	srcValue := reflect.ValueOf(src)
 	if srcValue.Kind() == reflect.Ptr {
 		if srcValue.IsNil() {
-			return nil, fmt.Errorf("src ptr cannot be nil")
+			return nil, errors.New("src ptr cannot be nil")
 		}
 		srcValue = srcValue.Elem()
 	} else {
-		return nil, fmt.Errorf("copy instance src is not ptr")
+		return nil, errors.New("copy instance src is not ptr")
 	}
 	dst := reflect.New(srcValue.Type())
 	dst.Elem().Set(srcValue)
