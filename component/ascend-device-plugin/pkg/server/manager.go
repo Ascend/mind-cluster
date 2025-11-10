@@ -163,6 +163,8 @@ func (hdm *HwDevManager) updateNode() error {
 		hwlog.RunLog.Errorf("failed to get node, err: %v, node is nil: %v", err, oldNode == nil)
 		return err
 	}
+	// rank table needs this info for A5
+	hdm.SetNodeInternalIPInK8s(oldNode)
 	newLabelMap, err := hdm.getNewNodeLabel(oldNode)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get new node label, err: %v", err)
@@ -269,9 +271,12 @@ func (hdm *HwDevManager) getNpuBaseInfo() map[string]*common.NpuBaseInfo {
 	}
 	ipMap := make(map[string]*common.NpuBaseInfo, len(hdm.allInfo.AllDevs))
 	for _, dev := range hdm.allInfo.AllDevs {
-		ipMap[dev.DeviceName] = &common.NpuBaseInfo{
-			IP:            dev.IP,
-			SuperDeviceID: dev.SuperDeviceID,
+		tmpDev := dev
+		ipMap[tmpDev.DeviceName] = &common.NpuBaseInfo{
+			IP:            tmpDev.IP,
+			SuperDeviceID: tmpDev.SuperDeviceID,
+			// node baseDeviceInfo levelList -> rank table for A5
+			LevelList: hdm.getLevelList(&tmpDev),
 		}
 	}
 	return ipMap
