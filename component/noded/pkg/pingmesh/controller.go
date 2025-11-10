@@ -198,7 +198,7 @@ func (c *Manager) updateConfig() {
 func (c *Manager) parseSuperDeviceIDs(data map[string]string) (map[string]types.SuperDeviceIDs, error) {
 	raw, ok := data[superPodCMKey]
 	if !ok {
-		return nil, fmt.Errorf("superPodCMKey not found")
+		return nil, errors.New("superPodCMKey not found")
 	}
 	superPodDevice := &api.SuperPodDevice{}
 	if err := json.Unmarshal([]byte(raw), superPodDevice); err != nil {

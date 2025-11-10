@@ -102,7 +102,7 @@ func ProcessMerge(mergeInput *model.MergeParallelGroupInfoInput) error {
 
 func checkParGroupInfo(filePaths []string) error {
 	if len(filePaths) == 0 {
-		return fmt.Errorf("no parallel group file found")
+		return errors.New("no parallel group file found")
 	}
 	for _, fullFilePath := range filePaths {
 		if err := utils.CheckFilePerm(fullFilePath, true, false); err != nil {
@@ -146,8 +146,8 @@ func processData(mergeInput *model.MergeParallelGroupInfoInput) (map[string]*mod
 			return nil, fmt.Errorf("file %s is empty", fullFilePath)
 		}
 		if err := json.Unmarshal(readData, &tempData); err != nil {
-			return nil, fmt.Errorf(
-				"the JSON file path is as follows: '%s', error unmarshalling JSON: %v", fullFilePath, err)
+			return nil, fmt.Errorf("the JSON file path is as follows: '%s', error unmarshalling JSON: %v",
+				fullFilePath, err)
 		}
 
 		// 根据算子域合并信息

@@ -78,7 +78,7 @@ func spliceSuperPodFilePath(superPodPath string) string {
 	fileName := superPodJsonFile + ".json"
 	retStr := superPodPath + "/" + fileName
 	retStr = filepath.Clean(retStr)
-	hwlog.RunLog.Infof("Read superPodJsonFile:%s", retStr)
+	hwlog.RunLog.Infof("[NETFAULT ALGO]Read superPodJsonFile: %s", retStr)
 	return retStr
 }
 
@@ -87,7 +87,7 @@ func getCurrentSuperPodInfo(
 	superPodPath string,
 	detectObj *algo.NetDetect) (*SuperPodInfo, map[string]any) {
 	if superPodPath == "" {
-		hwlog.RunLog.Errorf("Invalid config path")
+		hwlog.RunLog.Error("[NETFAULT ALGO]Invalid config path")
 		return nil, nil
 	}
 
@@ -123,7 +123,8 @@ func processSuperPodJson(superPodJsonFile string, superPodPath string) (*SuperPo
 		fullMesh, linkPath := GetCurSuperPodInfoFromMapA3(superPodInfo)
 		return superPodInfo, fullMesh, linkPath
 	default:
-		hwlog.RunLog.Errorf(" %s version info error,the value %s", superPodJsonFile, superPodInfo.Version)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s",
+			superPodJsonFile, superPodInfo.Version)
 		return nil, nil, nil
 	}
 }
@@ -202,12 +203,12 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 	case DiagVersionA3:
 		_, npuNetplaneInfo = GetCurSuperPodInfoFromMapA3(superPodInfo)
 		if len(npuNetplaneInfo) == 0 {
-			hwlog.RunLog.Error("npu netplane link info is empty!")
+			hwlog.RunLog.Error("[NETFAULT ALGO]npu netplane link info is empty!")
 			return false, nil
 		}
 		npuInfoMap = ExtractNPUMapA3(npuNetplaneInfo)
 	default:
-		hwlog.RunLog.Errorf(" %s version info error,the value %s", superPodFile, superPodInfo.Version)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s", superPodFile, superPodInfo.Version)
 		return false, nil
 
 	}
@@ -222,11 +223,11 @@ func loopWaitFile(filePath string, superPodDirPath string) bool {
 		/* 不管错误类型 */
 		if err != nil && os.IsNotExist(err) {
 			if i == maxRetryTime-1 {
-				hwlog.RunLog.Errorf("%s retry max time failed!", filePath)
+				hwlog.RunLog.Errorf("[NETFAULT ALGO]%s retry max time failed!", filePath)
 				return false
 			}
 			if i%logPrintInterval == 0 {
-				hwlog.RunLog.Warn(err, " retry:", i+1)
+				hwlog.RunLog.Warnf("[NETFAULT ALGO]retry: %d, failed: %v", i+1, err)
 			}
 			time.Sleep(1 * time.Second)
 			continue
@@ -235,12 +236,12 @@ func loopWaitFile(filePath string, superPodDirPath string) bool {
 	}
 	/* 总体开关检查 */
 	if controllerflags.IsControllerExited.GetState() {
-		hwlog.RunLog.Info("network detection off")
+		hwlog.RunLog.Info("[NETFAULT ALGO]network detection off")
 		return false
 	}
 	/* 当前超节点开关检查 */
 	if !CheckCurSuperPodConfigSwitch(superPodDirPath) {
-		hwlog.RunLog.Infof("%s detection switch(off)", superPodDirPath)
+		hwlog.RunLog.Infof("[NETFAULT ALGO]%s detection switch(off)", superPodDirPath)
 		return false
 	}
 	return true
@@ -290,7 +291,7 @@ func ReadConfigFromFile(fileContent []byte, targetKeys []string) map[string]any 
 		// 解析键值对
 		parts := strings.SplitN(line, "=", numSplits)
 		if len(parts) != numSplits {
-			hwlog.RunLog.Errorf("Invalid line format: %v", line)
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Invalid line format: %s", line)
 			continue
 		}
 		key := strings.TrimSpace(parts[0])
@@ -309,7 +310,7 @@ func ReadConfigFromFile(fileContent []byte, targetKeys []string) map[string]any 
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		hwlog.RunLog.Errorf("Error reading file: %v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Error reading file: %v", err)
 		return nil
 	}
 	return callAlgorithmParam
@@ -321,13 +322,13 @@ func CheckCurSuperPodConfigSwitch(superPodPath string) bool {
 	/* 需要文件权限、存在、软链接检查等 */
 	fileContent, err := fileutils.ReadLimitBytes(configPath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Errorf("Open:%v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Open:%v", err)
 		return false
 	}
 	target := []string{"netFault"}
 	configParam := ReadConfigFromFile(fileContent, target)
 	if len(configParam) == 0 {
-		hwlog.RunLog.Errorf("netfault field is not exist in %s", configPath)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]netfault field is not exist in %s", configPath)
 		return false
 	}
 	/* 检查开关, 上面接口中取的是唯一目标 */

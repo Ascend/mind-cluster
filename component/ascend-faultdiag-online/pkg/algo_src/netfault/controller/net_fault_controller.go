@@ -89,12 +89,12 @@ func writeNetFaultResult(result []byte, superPodPath string, curDetectionCount i
 	/* reload will clean file */
 	if _, err := os.Stat(filePath); err == nil && !os.IsNotExist(err) && curDetectionCount == 0 {
 		if err = os.Truncate(filePath, 0); err != nil {
-			hwlog.RunLog.Error("Clean file failed:", err)
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Clean file failed: %v", err)
 		}
 	}
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, fileMode)
 	if err != nil {
-		hwlog.RunLog.Error("Error opening file:", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Error opening file: %v", err)
 		return
 	}
 	defer file.Close()
@@ -120,7 +120,7 @@ func writeNetFaultResult(result []byte, superPodPath string, curDetectionCount i
 		year, month, day, hour, minute, second)
 	str := detectionTimesInfo + string(result) + "\n"
 	if _, err := file.WriteString(str); err != nil {
-		hwlog.RunLog.Error("Error writing to file:", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Error writing to file: %v", err)
 		return
 	}
 }
@@ -149,7 +149,7 @@ func readWorkRoutine(wg *sync.WaitGroup, csvFileQueue <-chan string,
 	for path := range csvFileQueue {
 		content, err := readCSVFile(path, startTime)
 		if err != nil {
-			hwlog.RunLog.Warn("Failed to read csv file:", path)
+			hwlog.RunLog.Warnf("[NETFAULT ALGO]Failed to read csv file(%s): %v", path, err)
 			continue
 		}
 		callAlgoInterfaceSyncLock.Lock()
@@ -184,8 +184,9 @@ func addNewSuperPodDetection(wg *sync.WaitGroup, superPodPaths []string, superPo
 	if len(superPodPaths) == 0 {
 		return
 	}
-	if len(superPodIds) >= maxSuperPodDetectionNums || len(superPodIds) >= maxSuperPodDetectionNums {
-		hwlog.RunLog.Errorf("Overload Max super pod detection:%d, %d", len(superPodIds), len(superPodPaths))
+	if len(superPodIds) >= maxSuperPodDetectionNums {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Overload Max super pod detection:%d, %d",
+			len(superPodIds), len(superPodPaths))
 		return
 	}
 	for j := 0; j < len(superPodPaths) && j < len(superPodIds); j++ {
@@ -196,7 +197,7 @@ func addNewSuperPodDetection(wg *sync.WaitGroup, superPodPaths []string, superPo
 			modifyRecorderSyncLock.Unlock()
 			/* 新建协程 */
 			wg.Add(1)
-			hwlog.RunLog.Infof("[Add detection]%s", superPodPaths[j])
+			hwlog.RunLog.Infof("[NETFAULT ALGO][Add detection]%s", superPodPaths[j])
 			go func(id int, path string) {
 				defer wg.Done()
 				detectionCurSuperPod(id, path)
@@ -226,7 +227,7 @@ func ifAddNewSuperPodDetection(clusterPath string, wg *sync.WaitGroup) {
 		modifyRecorderSyncLock.Unlock()
 		for j := 0; j < len(recordFalseKey); j++ {
 			modifyRecorderSyncLock.Lock()
-			hwlog.RunLog.Infof("[Delete detection]%s", recordFalseKey[j])
+			hwlog.RunLog.Infof("[NETFAULT ALGO][Delete detection]%s", recordFalseKey[j])
 			delete(superPodDetectionRecorder, recordFalseKey[j])
 			modifyRecorderSyncLock.Unlock()
 		}
@@ -256,21 +257,21 @@ func deletePingListFile(superPodPath string) {
 	// 使用Glob匹配所有符合模式的文件
 	files, err := filepath.Glob(pingListPattern)
 	if err != nil {
-		hwlog.RunLog.Errorf("Error matching files: %v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]Error matching files: %v", err)
 	}
 
 	// 遍历匹配到的文件并删除
 	for _, file := range files {
 		err := os.Remove(file)
 		if err != nil {
-			hwlog.RunLog.Errorf("Removing file %s: %v", file, err)
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Removing file %s: %v", file, err)
 		}
 	}
 }
 
 /* loop read ping result csv file and call detection */
 func loopCsvCallDetection(param detectionParam) {
-	hwlog.RunLog.Infof("start super pod %s network detection", param.detectionSuperPod)
+	hwlog.RunLog.Infof("[NETFAULT ALGO]start super pod %s network detection", param.detectionSuperPod)
 	var curDetectionCount int = 0
 	for {
 		if controllerflags.IsControllerExited.GetState() || curDetectionCount >= maxLoopTimes ||
@@ -281,23 +282,23 @@ func loopCsvCallDetection(param detectionParam) {
 		// 获得轮询文件列表
 		curTime := time.Now().Unix()
 		pingResultFiles, err := findCSVFiles(param.detectionSuperPodPath)
-		hwlog.RunLog.Infof("super pod %s csv files(%d):%v", param.detectionSuperPod,
+		hwlog.RunLog.Infof("[NETFAULT ALGO]super pod %s csv files(%d):%v", param.detectionSuperPod,
 			len(pingResultFiles), pingResultFiles)
 		if err != nil {
-			hwlog.RunLog.Error("Error finding super-pod ping result csv files:", err)
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Error finding super-pod ping result csv files: %v", err)
 		}
 		input := asyncReadCsvFile(pingResultFiles, param.detectionStartTime)
 		endReadFile := time.Now().Unix()
-		hwlog.RunLog.Info("[CONTROLLER]Read csv files duration time:", endReadFile-curTime)
+		hwlog.RunLog.Infof("[NETFAULT ALGO][CONTROLLER]Read csv files duration time: %d", endReadFile-curTime)
 		rootCauseAlarmAll := param.algoObj.StartFaultDetect(input)
 		endCallAlgo := time.Now().Unix()
-		hwlog.RunLog.Info("[CONTROLLER]Call algorithm duration time:", endCallAlgo-endReadFile)
+		hwlog.RunLog.Infof("[NETFAULT ALGO][CONTROLLER]Call algorithm duration time: %d", endCallAlgo-endReadFile)
 		jsonData, err := json.MarshalIndent(rootCauseAlarmAll, "", "  ")
 		if err != nil {
-			hwlog.RunLog.Errorf("transfer json: %v", err)
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]transfer json: %v", err)
 			continue
 		}
-		hwlog.RunLog.Infof("super pod %s net fault detection result: %s",
+		hwlog.RunLog.Infof("[NETFAULT ALGO]super pod %s net fault detection result: %s",
 			param.detectionSuperPod, string(jsonData))
 		if callbackFunc != nil {
 			go callbackFunc(string(jsonData))
@@ -308,7 +309,7 @@ func loopCsvCallDetection(param detectionParam) {
 	}
 	/* 删除ping_list文件 */
 	deletePingListFile(param.detectionSuperPodPath)
-	hwlog.RunLog.Infof("stop %s network detection", param.detectionSuperPodPath)
+	hwlog.RunLog.Infof("[NETFAULT ALGO]stop %s network detection", param.detectionSuperPodPath)
 }
 
 /* return super pod ids and directory paths */
@@ -346,7 +347,7 @@ func getSuperPodDirInfo(clusterPath string) ([]int, []string) {
 		}
 		/* 限制范围0-65535 */
 		if superPodId < 0 || superPodId > maxSuperPodId {
-			hwlog.RunLog.Warnf("Invalid super-pod-%d.json file(out of range)", superPodId)
+			hwlog.RunLog.Warnf("[NETFAULT ALGO]Invalid super-pod-%d.json file(out of range)", superPodId)
 			return nil
 		}
 		superPodIds = append(superPodIds, superPodId)
@@ -354,7 +355,7 @@ func getSuperPodDirInfo(clusterPath string) ([]int, []string) {
 		return nil
 	})
 	if err != nil || len(superPodIds) == 0 {
-		hwlog.RunLog.Errorf("No policy id found ")
+		hwlog.RunLog.Error("[NETFAULT ALGO]No policy id found")
 		return nil, nil
 	}
 	return superPodIds, superPodPaths
@@ -374,7 +375,7 @@ func startSuperPodsDetectionAsync(clusterPath string) {
 		controllerExitCond.Signal()
 	}
 	controllerSyncOperatorLock.Unlock()
-	hwlog.RunLog.Info("net fault detection complete!")
+	hwlog.RunLog.Info("[NETFAULT ALGO]net fault detection complete!")
 }
 
 /* 在检查文件之后使用 */
@@ -382,7 +383,7 @@ func checkDiffConfig(superPodFilePath string) map[string]any {
 	confFilePath := filepath.Join(superPodFilePath, configFile)
 	fileContent, err := fileutils.ReadLimitBytes(confFilePath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Errorf("error: %v", err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]error: %v", err)
 		return nil
 	}
 	// 定义一个map来保存解析结果
@@ -397,12 +398,12 @@ func getCurSuperPodDetectionInterval(conf map[string]any, superPodFilePath strin
 	var detectionInterval int
 	interval, exist := conf["period"]
 	if !exist {
-		hwlog.RunLog.Warnf("%s config without period field", superPodFilePath)
+		hwlog.RunLog.Warnf("[NETFAULT ALGO]%s config without period field", superPodFilePath)
 		detectionInterval = defaultDetectionInterval
 	} else {
 		intervalDigit, ok := interval.(int)
 		if !ok || intervalDigit <= 0 {
-			hwlog.RunLog.Warnf("%s config period field format error", superPodFilePath)
+			hwlog.RunLog.Warnf("[NETFAULT ALGO]%s config period field format error", superPodFilePath)
 			detectionInterval = defaultDetectionInterval
 		} else {
 			detectionInterval = intervalDigit
@@ -428,13 +429,13 @@ func loopWaitSuperPodDirAndCheckConfigFile(superPodDirPath string, jsonFile stri
 			err2 != nil && os.IsNotExist(err2) ||
 			err3 != nil && os.IsNotExist(err3) {
 			if i == readConfFailedReTryNums-1 {
-				hwlog.RunLog.Errorf("%s detection retry max time failed(%s)!",
+				hwlog.RunLog.Errorf("[NETFAULT ALGO]%s detection retry max time failed(%s)!",
 					superPodDirPath, jsonFile)
 				return false
 			}
 			/* 控制日志输出数量 */
 			if i%logPrintOutInterval == 0 {
-				hwlog.RunLog.Infof("%s detection(%s) retry:%d",
+				hwlog.RunLog.Infof("[NETFAULT ALGO]%s detection(%s) retry:%d",
 					superPodDirPath, jsonFile, i+1)
 			}
 			time.Sleep(time.Duration(1) * time.Second)
@@ -444,7 +445,7 @@ func loopWaitSuperPodDirAndCheckConfigFile(superPodDirPath string, jsonFile stri
 	}
 	/* 总体开关检查(超节点间已去除每个超节点开关检查) */
 	if controllerflags.IsControllerExited.GetState() {
-		hwlog.RunLog.Info("network detection off")
+		hwlog.RunLog.Info("[NETFAULT ALGO]network detection off")
 		return false
 	}
 	return true
@@ -468,7 +469,7 @@ func detectionCurSuperPod(superPodId int, superPodFilePath string) {
 	callAlgorithmParam["superPodArr"] = []string{}
 	err := policy.SetCallAlgorithmParamInfo(superPodId, superPodFilePath, callAlgorithmParam)
 	if err != nil {
-		hwlog.RunLog.Error(err)
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]set call algorithm param info failed: %v", err)
 		markFalseDetection(superPodFilePath)
 		return
 	}
@@ -489,7 +490,7 @@ func detectionCurSuperPod(superPodId int, superPodFilePath string) {
 		return
 	}
 	milliTimestamp := time.Now().UnixMilli()
-	hwlog.RunLog.Infof("Super pod %d detection started timestamp:%v", superPodId, milliTimestamp)
+	hwlog.RunLog.Infof("[NETFAULT ALGO]Super pod %d detection started timestamp: %d", superPodId, milliTimestamp)
 	param := detectionParam{
 		detectionInterval:     int64(interval),
 		detectionSuperPodPath: superPodFilePath,
@@ -529,19 +530,19 @@ func findCSVFiles(dir string) ([]string, error) {
 func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
 	fileContent, err := fileutils.ReadLimitBytes(filePath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Warn("failed to read CSV file:", err)
+		hwlog.RunLog.Warnf("[NETFAULT ALGO]failed to open CSV file: %v", err)
 		return nil, err
 	}
 
 	reader := csv.NewReader(bytes.NewReader(fileContent))
 	records, err := reader.ReadAll()
 	if err != nil {
-		hwlog.RunLog.Warn("failed to read CSV file:", err)
+		hwlog.RunLog.Warnf("[NETFAULT ALGO]failed to read CSV file: %v", err)
 		return nil, err
 	}
 
 	if len(records) == 0 {
-		hwlog.RunLog.Errorf("CSV file is empty")
+		hwlog.RunLog.Error("[NETFAULT ALGO]CSV file is empty")
 		return nil, errors.New("CSV file is empty")
 	}
 	/* 标题行 */

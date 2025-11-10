@@ -32,14 +32,14 @@ func getNodeRanksFromRanktable(rankTablePath string) []int {
 	// 判断ranktable文件是否存在
 	_, err := os.Stat(rankTablePath)
 	if err != nil {
-		hwlog.RunLog.Error("ranktable is not exist")
+		hwlog.RunLog.Error("[SLOWNODE ALGO]ranktable is not exist")
 		return []int{}
 	}
 
 	// 读取文件内容
 	data, err := fileutils.ReadLimitBytes(rankTablePath, constants.Size10M)
 	if err != nil {
-		hwlog.RunLog.Errorf("read ranktable error: %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]read ranktable error: %v", err)
 		return []int{}
 	}
 
@@ -48,7 +48,7 @@ func getNodeRanksFromRanktable(rankTablePath string) []int {
 
 	// 解析JSON数据到rankTable
 	if err := json.Unmarshal(data, &rankTable); err != nil {
-		hwlog.RunLog.Errorf("ranktable parse error: %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]ranktable parse error: %v", err)
 		return []int{}
 	}
 
@@ -56,12 +56,12 @@ func getNodeRanksFromRanktable(rankTablePath string) []int {
 	serverListx, ok := rankTable[serverListField]
 	if !ok {
 		// Handle the case where the key "server_list" does not exist
-		hwlog.RunLog.Error("Error: 'server_list' key does not exist in the rankTable.")
+		hwlog.RunLog.Error("[SLOWNODE ALGO]Error: 'server_list' key does not exist in the rankTable.")
 		return []int{}
 	}
 	serverList, ok = serverListx.([]any)
 	if !ok {
-		hwlog.RunLog.Error("server_list parse error")
+		hwlog.RunLog.Error("[SLOWNODE ALGO]server_list parse error")
 		return []int{}
 	}
 
@@ -77,7 +77,7 @@ func getNodeRanksFromRanktable(rankTablePath string) []int {
 		return ranksForServer
 	} else {
 		// 如果 XDL_IP 不存在
-		hwlog.RunLog.Info("XDL_IP not in ip2Ranks")
+		hwlog.RunLog.Info("[SLOWNODE ALGO]XDL_IP not in ip2Ranks")
 		return []int{}
 	}
 
@@ -91,19 +91,19 @@ func buildIp2Ranks(serverList []any) map[string][]int {
 	for _, server := range serverList {
 		serverData, ok := server.(map[string]any)
 		if !ok {
-			hwlog.RunLog.Error("server data parse error")
+			hwlog.RunLog.Error("[SLOWNODE ALGO]server data parse error")
 			continue
 		}
 
 		serverID, ok := serverData[serverIdField].(string)
 		if !ok {
-			hwlog.RunLog.Error("server_id parse error")
+			hwlog.RunLog.Error("[SLOWNODE ALGO]server_id parse error")
 			continue
 		}
 
 		deviceList, ok := serverData[deviceField].([]any)
 		if !ok {
-			hwlog.RunLog.Error("device list parse error")
+			hwlog.RunLog.Error("[SLOWNODE ALGO]device list parse error")
 			continue
 		}
 
@@ -112,14 +112,14 @@ func buildIp2Ranks(serverList []any) map[string][]int {
 		for _, device := range deviceList {
 			deviceData, ok := device.(map[string]any)
 			if !ok {
-				hwlog.RunLog.Error("device data parse error")
+				hwlog.RunLog.Error("[SLOWNODE ALGO]device data parse error")
 				continue
 			}
 
 			// 获取 rank_id 并转换为 int
 			rankID, ok := deviceData[rankIdField].(string)
 			if !ok {
-				hwlog.RunLog.Error("rank_id parse error")
+				hwlog.RunLog.Error("[SLOWNODE ALGO]rank_id parse error")
 				continue
 			}
 
@@ -138,7 +138,7 @@ func stringToInt(s string) int {
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		// 如果转换失败，打印错误并返回 0
-		hwlog.RunLog.Errorf("error stringToInt : %v", err)
+		hwlog.RunLog.Errorf("[SLOWNODE ALGO]error stringToInt : %v", err)
 		return 0
 	}
 	return i

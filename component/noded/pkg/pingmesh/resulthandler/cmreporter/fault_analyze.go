@@ -77,7 +77,7 @@ func (f *faultReporter) HandlePingMeshInfo(res *types.HccspingMeshResult) error 
 	if f == nil || res == nil {
 		return fmt.Errorf("faultReporter or pingmesh result is nil")
 	}
-	hwlog.RunLog.Debugf("start to handle ping-mesh result, res:%v", res)
+	hwlog.RunLog.Debugf("start to handle ping-mesh result, res: %v", res)
 	lastFault, err := f.getLastFault()
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (f *faultReporter) HandlePingMeshInfo(res *types.HccspingMeshResult) error 
 	if !change {
 		return nil
 	}
-	hwlog.RunLog.Infof("fault change, cur Fault:%v", fault)
+	hwlog.RunLog.Infof("fault change, cur Fault: %v", fault)
 	return f.reportFault()
 }
 
@@ -160,7 +160,7 @@ func (f *faultReporter) getLastFault() (*api.PubFaultInfo, error) {
 	lastFault := &api.PubFaultInfo{}
 	err = json.Unmarshal([]byte(faultInfo), lastFault)
 	if err != nil {
-		hwlog.RunLog.Warnf("unmarshal fault info failed, err:%v, will ignore last fault info", err)
+		hwlog.RunLog.Warnf("unmarshal fault info failed, err: %v, will ignore last fault info", err)
 		return nil, nil
 	}
 	return lastFault, nil

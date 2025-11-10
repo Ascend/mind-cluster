@@ -43,7 +43,6 @@ func CheckPath(path string) (string, error) {
 
 func containsPathTraversal(path string) bool {
 	cleanPath := filepath.Clean(path)
-
 	// check the path has path traversal after cleaning
 	if strings.Contains(cleanPath, "..") {
 		return true
@@ -57,9 +56,9 @@ func containsPathTraversal(path string) bool {
 
 // ReadLimitBytes check the path and read the content by giving limitation
 func ReadLimitBytes(path string, limitLength int) ([]byte, error) {
-	absPath, err := CheckPath(path)
-	if err != nil {
-		return nil, err
+	if containsPathTraversal(path) {
+		return nil, errors.New("path traversal detected")
 	}
-	return utils.ReadLimitBytes(absPath, limitLength)
+	// utils.ReadLimitBytes will CheckPath again
+	return utils.ReadLimitBytes(path, limitLength)
 }

@@ -114,48 +114,6 @@ func checkConfigExist(conf any, cmdStr enum.Command) bool {
 
 }
 
-func checkMainKey(input map[string]any) string {
-	value, exist := input["command"]
-	if !exist {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Input without command!")
-		return ""
-	}
-	valueStr, ok := value.(string)
-	if !ok {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Error command!")
-		return ""
-	}
-	targetStr, exist := input["target"]
-	if !exist {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Input without target!")
-		return ""
-	}
-	str, ok := targetStr.(string)
-	if !ok {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]target is not a string")
-		return ""
-	}
-	if str != "node" && str != "cluster" {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Error target!")
-		return ""
-	}
-	eventType, exist := input["eventType"]
-	if !exist {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Input without eventType!")
-		return ""
-	}
-	eventTypeStr, ok := eventType.(string)
-	if !ok {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Error eventType", eventType)
-		return ""
-	}
-	if eventTypeStr != "slownode" {
-		hwlog.RunLog.Warn("[SLOWNODE ALGO]eventType:", eventTypeStr)
-		return ""
-	}
-	return valueStr
-}
-
 func sliceContains[T comparable](array []T, value T) bool {
 	for _, v := range array {
 		if v == value {
@@ -191,37 +149,6 @@ func checkInvalidInput(inputData *model.Input) bool {
 		return checkConfigExist(inputData.Model, inputData.Command)
 	}
 	return true
-}
-
-/* transform model field to struct(when command is start or reload) */
-func transformJsonToConfigStruct(paramIn map[string]any) (config.AlgoInputConfig, bool) {
-	var configParam config.AlgoInputConfig
-	/* model is map[string]any */
-	model, ok := paramIn["model"].(map[string]any)
-	if !ok {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Error model!")
-		return configParam, false
-	}
-
-	marshal, err := json.Marshal(model)
-	if err != nil {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]", err)
-		return configParam, false
-	}
-
-	err = json.Unmarshal(marshal, &configParam)
-	if err != nil {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]", err)
-		return configParam, false
-	}
-
-	configParam.DetectionLevel, ok = paramIn["target"].(string)
-	if !ok {
-		hwlog.RunLog.Error("[SLOWNODE ALGO]Error target")
-		return configParam, false
-	}
-
-	return configParam, true
 }
 
 func transformJsonToStruct[T config.AlgoInputConfig | config.DataParseModel](input *model.Input, cg *T) error {

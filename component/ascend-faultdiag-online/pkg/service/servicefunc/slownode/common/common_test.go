@@ -17,6 +17,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -58,7 +59,7 @@ func TestConvertMaptoStruct(t *testing.T) {
 		})
 		convey.Convey("test marshal failed", func() {
 			patch := gomonkey.ApplyFunc(json.Marshal, func(v any) ([]byte, error) {
-				return nil, fmt.Errorf("mock marshal error")
+				return nil, errors.New("mock marshal error")
 			})
 			defer patch.Reset()
 			data := map[string]map[string]any{"test": {"127.0.0.1": `{}`}}

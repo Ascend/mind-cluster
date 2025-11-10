@@ -657,7 +657,7 @@ func TestNpuFullPing(t *testing.T) {
 			aiPingStrategy.npuNpuList = []string{"0.0.0.1:0#0.0.0.2:0", "0.0.0.1:0#0.0.0.3:0"}
 
 			convey.Convey("Should generate 4 ping directions (bidirectional)", func() {
-				npuFullPing(aiPingStrategy, "layer_1")
+				npuFullPing(aiPingStrategy)
 				expectedLen := 4 // 期望的长度
 				convey.So(len(aiPingStrategy.pingDict[argsNpu2Npu].([]any)), convey.ShouldEqual, expectedLen)
 			})
@@ -667,7 +667,7 @@ func TestNpuFullPing(t *testing.T) {
 			aiPingStrategy.npuNpuList = []string{"0.0.0.1:0#0.0.0.2:0", "0.0.0.1:0#0.0.0.3:0", "0.0.0.1:0#0.0.0.4:0"}
 
 			convey.Convey("Should generate 6 ping directions (bidirectional)", func() {
-				npuFullPing(aiPingStrategy, "layer_1")
+				npuFullPing(aiPingStrategy)
 				expectedLen := 6 // 期望的长度
 				convey.So(len(aiPingStrategy.pingDict[argsNpu2Npu].([]any)), convey.ShouldEqual, expectedLen)
 			})
@@ -677,7 +677,7 @@ func TestNpuFullPing(t *testing.T) {
 			aiPingStrategy.npuNpuList = []string{}
 
 			convey.Convey("Should generate 0 ping directions", func() {
-				npuFullPing(aiPingStrategy, "layer_1")
+				npuFullPing(aiPingStrategy)
 				convey.So(aiPingStrategy.pingDict[argsNpu2Npu], convey.ShouldEqual, nil)
 			})
 		})
