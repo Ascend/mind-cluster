@@ -1,0 +1,43 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package module300ia5 for any struct used in module300ia5
+package module300ia5
+
+import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
+
+type ascend300IA5 struct {
+	ascend910a5.Base910A5
+	affScoreList [][]int
+}
+
+const (
+	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
+	// Ascend300I4Px8Label the label 300I-A5-4p-8
+	Ascend300I4Px8Label = "300I-A5-4p-8"
+	// Ascend300I4Px16Label the label 300I-A5-4p-16
+	Ascend300I4Px16Label = "300I-A5-4p-16"
+	// Ascend300Ix8Label the label 300I-A5-8
+	Ascend300Ix8Label = "300I-A5-8"
+	// Ascend300Ix16Label the label 300I-A5-16
+	Ascend300Ix16Label = "300I-A5-16"
+	// maxNodeNPUNumX8  for the max cards num of one node is 8
+	maxNodeNPUNumX8 = 8
+	// maxNodeNPUNumX16 for the max cards num of one node is 16
+	maxNodeNPUNumX16 = 16
+	// cardsNumPerMesh for the cards num in per mesh is 4
+	cardsNumPerMesh = 4
+	// scoreWeightX16 for the score weight in 300I-A5-4p-8 is 16
+	scoreWeightX16 = 16
+	// scoreWeightX64 for the score weight in 300I-A5-4p-16 is 64
+	scoreWeightX64 = 64
+)
