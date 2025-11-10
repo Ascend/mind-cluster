@@ -454,7 +454,7 @@ func (nd *NetDetect) doPingStrategy(layers []string, aiPingStrategy *AiPingStrat
 
 			// 分层拨测
 			if i == len(layers)-1 && !nd.curFullPingFlag {
-				npuFullPing(aiPingStrategy, layer)
+				npuFullPing(aiPingStrategy)
 				nd.curFullPingFlag = true
 			} else if i < len(layers)-1 {
 				childLayer := layers[i+1]
@@ -1031,7 +1031,7 @@ func processSdidList(aiPingStrategy *AiPingStrategy, srcSdidList []string, dstSd
 }
 
 // npu的full_mesh策略
-func npuFullPing(aiPingStrategy *AiPingStrategy, layer string) {
+func npuFullPing(aiPingStrategy *AiPingStrategy) {
 	if aiPingStrategy == nil || len(aiPingStrategy.npuNpuList) == 0 {
 		return
 	}
@@ -1061,7 +1061,6 @@ func (nd *NetDetect) npuRingPing(aiPingStrategy *AiPingStrategy, layer string, c
 		nd.a3NpuRingPing(aiPingStrategy, layer, childLayerName)
 	default:
 		hwlog.RunLog.Errorf("[ALGO] unexpected detection type!")
-		break
 	}
 }
 
@@ -1220,13 +1219,10 @@ func (nd *NetDetect) setPingPair(layer string, layerIp string, childLayerList []
 		switch nd.curAxisStrategy {
 		case bothAxisConstant:
 			nd.processBothAxis(aiPingStrategy, srcIps, dstIps, pingDictKey)
-			break
 		case crossAxisConstant:
 			processCrossAxis(aiPingStrategy, srcIps, dstIps, pingDictKey)
-			break
 		case sameAxisConstant:
 			processSameAxis(aiPingStrategy, srcIps, dstIps, pingDictKey)
-			break
 		default:
 			break
 		}

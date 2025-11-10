@@ -243,6 +243,21 @@ var specialWindows = []map[string]any{
 	},
 }
 
+// 寻找相同故障路径
+func findSamePath(windows []map[string]any,
+	path map[string]any, curPingPeriod int) []map[string]any {
+	// 预分配结果切片（最多nd.curPingPeriod个相同路径）
+	res := make([]map[string]any, curPingPeriod)
+
+	for _, item := range windows {
+		if isSamePath(item, path) {
+			res = append(res, item)
+		}
+	}
+
+	return res
+}
+
 func TestCalDynamicThresholds(t *testing.T) {
 	// 初始化 NetDetect 实例
 	nd := NewNetDetect("testSuperPod1")
@@ -258,7 +273,7 @@ func TestCalDynamicThresholds(t *testing.T) {
 		faultType := avgDelayConstant
 
 		convey.Convey("When calculating dynamic thresholds", func() {
-			samePaths := nd.findSamePath(specialWindows, path)
+			samePaths := findSamePath(specialWindows, path, nd.curPingPeriod)
 			result := calDynamicThresholds(samePaths, faultType)
 
 			convey.Convey("Then the result should be correct", func() {

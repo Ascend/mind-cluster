@@ -122,21 +122,6 @@ func (nd *NetDetect) getWindowData(windows []map[string]any, startPeriod int,
 	return result
 }
 
-// 寻找相同故障路径
-func (nd *NetDetect) findSamePath(windows []map[string]any,
-	path map[string]any) []map[string]any {
-	// 预分配结果切片（最多nd.curPingPeriod个相同路径）
-	res := make([]map[string]any, nd.curPingPeriod)
-
-	for _, item := range windows {
-		if isSamePath(item, path) {
-			res = append(res, item)
-		}
-	}
-
-	return res
-}
-
 // 计算窗口数据指定路径的动态阈值
 func calDynamicThresholds(samePaths []map[string]any, faultType string) float64 {
 	// 预过滤有效数据，避免重复类型断言

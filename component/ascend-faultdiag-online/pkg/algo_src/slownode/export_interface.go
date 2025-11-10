@@ -22,8 +22,6 @@ import (
 )
 
 const (
-	defaultCusterLogFile = "/var/log/mindx-dl/clusterd/slownode.log"
-	defaultNodeLogFile   = "/var/log/mindx-dl/noded/slownode.log"
 	maxAge               = 7
 	maxBackups           = 7
 )
