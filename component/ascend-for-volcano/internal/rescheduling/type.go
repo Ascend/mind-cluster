@@ -121,6 +121,8 @@ const (
 	PodFailed = "pod-failed"
 	// PodHealthy the state of healthy pod
 	PodHealthy = "pod-healthy"
+	// CStateWaitingReasonCrashLoopBackOff the reason for container waiting
+	CStateWaitingReasonCrashLoopBackOff = "CrashLoopBackOff"
 
 	// FaultRetryTimesKey key of fault-retry-times label
 	FaultRetryTimesKey = "fault-retry-times"

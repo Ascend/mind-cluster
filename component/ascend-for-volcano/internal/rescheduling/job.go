@@ -392,7 +392,7 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 	}
 	newFailedTask := make(map[api.TaskID]struct{})
 	for taskId, task := range jobInfo.Tasks {
-		if task.Pod.Status.Phase == v1.PodFailed {
+		if isFailedTask(task) {
 			newFailedTask[taskId] = struct{}{}
 		}
 	}
@@ -410,6 +410,31 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 			fJob.FaultTasks[i].faultType = PodFailed
 		}
 	}
+}
+
+func isFailedTask(task *api.TaskInfo) bool {
+	if task == nil || task.Pod == nil {
+		return false
+	}
+	// pod phase is failed, when RestartPolicy is Never, mean task failed
+	if task.Pod.Status.Phase == v1.PodFailed {
+		klog.V(util.LogInfoLev).Infof("task [name=%v, pod phase=%v] failed", task.Name, v1.PodFailed)
+		return true
+	}
+
+	// any pod's container was restarted and waiting for backoff, when RestartPolicy set to Always or OnFailure,
+	// means this task failed
+	for _, status := range task.Pod.Status.ContainerStatuses {
+		if status.LastTerminationState.Terminated != nil &&
+			status.LastTerminationState.Terminated.ExitCode != 0 &&
+			status.State.Waiting != nil &&
+			status.State.Waiting.Reason == CStateWaitingReasonCrashLoopBackOff {
+			klog.V(util.LogInfoLev).Infof("task [name=%v, containerName=%v crashloopbackoff] failed",
+				task.Name, status.Name)
+			return true
+		}
+	}
+	return false
 }
 
 // isPodFailedCanRestarted if the pod status is failed, judge whether job can be restarted

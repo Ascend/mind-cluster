@@ -754,3 +754,53 @@ func TestFaultRetryTimeOfJob(t *testing.T) {
 		}
 	})
 }
+
+func TestIsFailedTask(t *testing.T) {
+	const exitCode127 = 127
+	crashBackoffState := v1.ContainerState{
+		Waiting: &v1.ContainerStateWaiting{
+			Message: "back-off 5m0s",
+			Reason:  CStateWaitingReasonCrashLoopBackOff,
+		},
+	}
+	terminatedErrorState := v1.ContainerState{
+		Terminated: &v1.ContainerStateTerminated{ExitCode: exitCode127},
+	}
+	terminatedNormalState := v1.ContainerState{
+		Terminated: &v1.ContainerStateTerminated{ExitCode: 0},
+	}
+	normalStatus := v1.ContainerStatus{
+		State:                terminatedNormalState,
+		LastTerminationState: v1.ContainerState{},
+		RestartCount:         0,
+	}
+	backoffStatus := v1.ContainerStatus{
+		State:                crashBackoffState,
+		LastTerminationState: terminatedErrorState,
+		RestartCount:         0,
+	}
+	task := test.FakeNormalTestTask("pod1", "node1", "pg1")
+	t.Run("01-isFailedTask return false when task status normal", func(t *testing.T) {
+		task.Pod.Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{normalStatus}}
+		if isFailedTask(task) {
+			t.Errorf("isFailedTask() error, want false, return true")
+		}
+	})
+	t.Run("02-isFailedTask return true when task container status backoff", func(t *testing.T) {
+		task.Pod.Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{backoffStatus}}
+		if !isFailedTask(task) {
+			t.Errorf("isFailedTask() error, want true, return false")
+		}
+	})
+	t.Run("03-isFailedTask return true when task phase failed", func(t *testing.T) {
+		task.Pod.Status = v1.PodStatus{Phase: v1.PodFailed}
+		if !isFailedTask(task) {
+			t.Errorf("isFailedTask() error, want true, return false")
+		}
+	})
+	t.Run("04-isFailedTask return false when task or pod are nil", func(t *testing.T) {
+		if isFailedTask(nil) || isFailedTask(&api.TaskInfo{}) {
+			t.Errorf("isFailedTask() error, want false, return true")
+		}
+	})
+}
