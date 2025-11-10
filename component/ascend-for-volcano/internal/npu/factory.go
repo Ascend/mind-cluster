@@ -165,6 +165,10 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 			return handlerName
 		}
 	}
+	if handlerName, ok := get800IA5HandlerName(attr); ok {
+		klog.V(util.LogInfoLev).Infof("handler %s found in 800IA5CardFactory", handlerName)
+		return handlerName
+	}
 	if _, ok := attr.Annotation[util.SuperPodAnnoKey]; ok {
 		return superpod.SchedulerName
 	}
@@ -203,4 +207,26 @@ func get310PCardHandlerName(attr util.SchedulerJobAttr) string {
 		v = chipAcceleratorValue
 	}
 	return attr.ReqNPUName + duo + v
+}
+
+func get800IA5HandlerName(attr util.SchedulerJobAttr) (string, bool) {
+	const SuperPodAnnoKey = "sp-block"
+	acceleratorType, existAcceleratorType := attr.Selector[util.AcceleratorType]
+	if !existAcceleratorType {
+		return "", false
+	}
+
+	_, existSpBlock := attr.Annotation[SuperPodAnnoKey]
+	switch acceleratorType {
+	case ascend800ia5superpod.AcceleratorType, ascend800ia5superpod.AcceleratorTypeTrain:
+		{
+			if existSpBlock {
+				return util.NPU910CardName + acceleratorType, true
+			} else {
+				return "", false
+			}
+		}
+	default:
+		return "", false
+	}
 }

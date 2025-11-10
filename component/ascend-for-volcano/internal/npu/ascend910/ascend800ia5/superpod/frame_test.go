@@ -153,6 +153,171 @@ func newModuleSuperPod() *module800SuperPod {
 	}
 }
 
+func TestClassifySuperPod(t *testing.T) {
+	convey.Convey("test classifySuperPod case 1 ", t, func() {
+		module := &module800SuperPod{
+			spBlock: 1,
+		}
+		module.FrameAttr.SuperPodSize = 2
+		map0 := map[string]plugin.NPUNode{
+			"0": {},
+			"3": {},
+		}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		totalNodes := map[int32]superPod{
+			0: map0,
+			1: map1,
+		}
+		pod, _ := module.classifySuperPod(totalNodes)
+		convey.So(len(pod.firstLevel[0][2]), convey.ShouldEqual, 2)
+		convey.So(len(pod.firstLevel[0][2][0]), convey.ShouldEqual, 2)
+		convey.So(len(pod.firstLevel[0][2][1]), convey.ShouldEqual, 2)
+	})
+}
+
+const (
+	num1 = 1
+	num2 = 2
+	num3 = 3
+)
+
+func TestCheckSpBlockGtZero(t *testing.T) {
+	const negative = -1
+	tests := []struct {
+		name     string
+		spBlock  int
+		expected bool
+	}{
+		{
+			name:     "spBlock > 0",
+			spBlock:  10,
+			expected: true,
+		},
+		{
+			name:     "spBlock == 0",
+			spBlock:  0,
+			expected: false,
+		},
+		{
+			name:     "spBlock < 0",
+			spBlock:  negative,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module800SuperPod{
+				spBlock: tt.spBlock,
+			}
+			actual := tp.checkSpBlockGtZero()
+			if actual != tt.expected {
+				t.Errorf("checkSpBlockGtZero() = %v; want %v", actual, tt.expected)
+			}
+		})
+	}
+}
+
+func TestInitRemainderTop(t *testing.T) {
+	tp := &module800SuperPod{
+		spBlock: 3,
+	}
+	tp.FrameAttr.SuperPodSize = 20
+	result := tp.initRemainderTop()
+
+	expectedLen := tp.spBlock
+	expectedInnerLen := tp.FrameAttr.SuperPodSize/tp.spBlock + 1
+
+	if len(result) != expectedLen {
+		t.Errorf("expected outer length %d, got %d", expectedLen, len(result))
+	}
+
+	for i := range result {
+		if len(result[i]) != expectedInnerLen {
+			t.Errorf("expected inner length at index %d: %d, got %d", i, expectedInnerLen, len(result[i]))
+		}
+	}
+}
+
+type getSuperPodRanksTest struct {
+	name     string
+	job      plugin.SchedulerJob
+	rank     int
+	wantSpID string
+	wantLR   int
+	wantErr  bool
+}
+
+func buildGetSuperPodRanksTest() []getSuperPodRanksTest {
+	return []getSuperPodRanksTest{
+		{
+			name: "01 normal case - first pod in first superpod",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     0,
+			wantSpID: "0",
+			wantLR:   0,
+		},
+		{
+			name: "02 normal case - last pod in first superpod",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     util.NPUIndex1,
+			wantSpID: "0",
+			wantLR:   util.NPUIndex1,
+		},
+		{
+			name: "03 normal case - first pod in second superpod",
+			job: plugin.SchedulerJob{
+				SuperPods: map[string][]plugin.SuperNode{
+					"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:     util.NPUIndex2,
+			wantSpID: "1",
+			wantLR:   0,
+		},
+		{
+			name: "04 edge case - rank exceeds total nodes",
+			job: plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0"}, {Name: "node1"}}, "1": {{Name: "node2"}, {Name: "node3"}}}},
+			rank:    util.NPUIndex4,
+			wantErr: true,
+		},
+		{
+			name:    "05 edge case - empty superpods",
+			job:     plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{}},
+			rank:    0,
+			wantErr: true,
+		},
+		{
+			name:    "06 edge case - invalid superpod key",
+			job:     plugin.SchedulerJob{SuperPods: map[string][]plugin.SuperNode{"invalid": {{Name: "node0"}}}},
+			rank:    0,
+			wantErr: true,
+		},
+	}
+}
+
+func TestGetSuperPodRanks(t *testing.T) {
+	for _, tt := range buildGetSuperPodRanksTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSpID, gotLR := getSuperPodRanks(tt.job, tt.rank)
+			if (gotSpID == "" && gotLR == 0) != tt.wantErr {
+				t.Errorf("getSuperPodRanks() error = %v, wantErr %v", (gotSpID == "" && gotLR == 0), tt.wantErr)
+				return
+			}
+			if gotSpID != tt.wantSpID {
+				t.Errorf("getSuperPodRanks() gotSpID = %v, want %v", gotSpID, tt.wantSpID)
+			}
+			if gotLR != tt.wantLR {
+				t.Errorf("getSuperPodRanks() gotLR = %v, want %v", gotLR, tt.wantLR)
+			}
+		})
+	}
+}
+
 func newNPUNodeWithSuperPodID(nodeName string, superPodID int32) plugin.NPUNode {
 	return plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
@@ -419,7 +584,8 @@ func TestScoreBestNPUNodes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			initScoreMap(scoreMap, tt.nodes)
 			tp := &module800SuperPod{
-				spBlock: tt.spBlock,
+				nodeVPodId: map[string]string{},
+				spBlock:    tt.spBlock,
 			}
 			if err := tp.InitMyJobPlugin(tt.env.Jobs["vcjob/pg0"].SchedulerJobAttr, tt.env); err != nil {
 				return

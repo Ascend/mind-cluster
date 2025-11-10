@@ -38,6 +38,7 @@ if  ! go test -v -race -gcflags=all=-l -coverprofile cov.out "${GOPATH}"/src/vol
     > ./$file_input;
 then
   echo '****** go test cases error! ******'
+  cat ./$file_input
   echo 'Failed' > $file_input
   exit 1
 else
