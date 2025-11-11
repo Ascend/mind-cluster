@@ -110,14 +110,6 @@ func makeMockDevicesParser() *container.DevicesParser {
 	}
 }
 
-func (operator *mockContainerRuntimeOperator) IsLowerDockerVersion() bool {
-	return false
-}
-
-func (operator *mockContainerRuntimeOperator) CgroupPath(id string) (string, error) {
-	return "", nil
-}
-
 type newNpuCollectorTestCase struct {
 	cacheTime    time.Duration
 	updateTime   time.Duration

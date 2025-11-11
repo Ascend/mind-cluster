@@ -103,13 +103,6 @@ spec:
           - name: isulad  # delete when use containerd or docker
             mountPath: /run/isulad.sock
             readOnly: true
-            ##### For docker 1.13.1, you need to cancel the comment below
-#          - name: dockerd  # delete when only use containerd or isula
-#            mountPath: /run/docker.sock
-#            readOnly: true
-#          - name: devices       # used to parse /sys/fs/cgroup/devices/***/devices.list
-#            mountPath: /sys/fs/cgroup/devices
-#            readOnly: true
           - name: tmp
             mountPath: /tmp
       volumes:
@@ -141,13 +134,6 @@ spec:
         - name: isulad  # delete when use containerd or docker
           hostPath:
             path: /run/isulad.sock
-        ##### For docker 1.13.1, you need to cancel the comment below
-#        - name: dockerd  # delete when only use containerd or isula
-#          hostPath:
-#            path: /run/docker.sock
-#        - name: devices
-#          hostPath:
-#            path: /sys/fs/cgroup/devices
         - name: tmp
           hostPath:
             path: /tmp
