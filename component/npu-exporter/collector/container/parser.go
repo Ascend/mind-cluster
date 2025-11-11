@@ -94,10 +94,9 @@ type CntNpuMonitorOpts struct {
 // MakeDevicesParser evaluates option settings and make an instance according to it
 func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
 	runtimeOperator := &RuntimeOperatorTool{
-		UseBackup:    opts.UserBackUp,
-		CriEndpoint:  opts.CriEndpoint,
-		OciEndpoint:  opts.OciEndpoint,
-		EndpointType: opts.EndpointType,
+		UseBackup:   opts.UserBackUp,
+		CriEndpoint: opts.CriEndpoint,
+		OciEndpoint: opts.OciEndpoint,
 	}
 	parser := &DevicesParser{
 		RuntimeOperator: runtimeOperator,
@@ -168,9 +167,7 @@ func (dp *DevicesParser) parseDevices(ctx context.Context, c *CommonContainer, r
 	if dp.RuntimeOperator.GetContainerType() == IsulaContainer {
 		return dp.parseDeviceInIsula(ctx, c, rs)
 	}
-	if dp.RuntimeOperator.IsLowerDockerVersion() {
-		return dp.parseDevicesForLowDockerVersion(c, rs)
-	}
+
 	return dp.parseDevicesInContainerd(ctx, c, rs)
 }
 
