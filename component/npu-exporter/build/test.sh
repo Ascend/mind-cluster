@@ -22,6 +22,7 @@ function execute_test() {
   if ! (go test -v -race -coverprofile cov.out "${TOP_DIR}"/... >./"$file_input")
   then
     echo '****** go test cases error! ******'
+    cat $file_input
     exit 1
   else
     gocov convert cov.out | gocov-html >"$file_detail_output"

@@ -44,6 +44,7 @@ func (*CollectorForPrometheus) Describe(ch chan<- *prometheus.Desc) {
 	}
 	describeChain(ch, common.ChainForSingleGoroutine)
 	describeChain(ch, common.ChainForMultiGoroutine)
+	describeChain(ch, common.ChainForCustomPlugin)
 }
 
 func describeChain(ch chan<- *prometheus.Desc, chain []common.MetricsCollector) {
@@ -58,6 +59,7 @@ func (n *CollectorForPrometheus) Collect(ch chan<- prometheus.Metric) {
 	chips := common.GetChipListWithVNPU(n.collector)
 	collectChain(ch, n, containerMap, chips, common.ChainForSingleGoroutine)
 	collectChain(ch, n, containerMap, chips, common.ChainForMultiGoroutine)
+	collectChain(ch, n, containerMap, chips, common.ChainForCustomPlugin)
 }
 
 func collectChain(ch chan<- prometheus.Metric, n *CollectorForPrometheus, containerMap map[int32]container.DevicesInfo,
