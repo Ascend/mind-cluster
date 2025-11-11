@@ -50,7 +50,6 @@ const (
 	// DefaultDockerAddr default docker containerd sock address
 	DefaultDockerAddr    = "unix:///run/docker/containerd/docker-containerd.sock"
 	defaultDockerOnEuler = "unix:///run/docker/containerd/containerd.sock"
-	defaultDockerdAddr   = "unix:///run/docker.sock"
 	grpcHeader           = "containerd-namespace"
 	unixPre              = "unix://"
 
@@ -75,8 +74,6 @@ type RuntimeOperator interface {
 	GetContainerInfoByID(ctx context.Context, id string) (v1.Spec, error)
 	GetIsulaContainerInfoByID(ctx context.Context, id string) (isula.ContainerJson, error)
 	GetContainerType() string
-	IsLowerDockerVersion() bool
-	CgroupPath(id string) (string, error)
 }
 
 // RuntimeOperatorTool implements RuntimeOperator interface
@@ -93,11 +90,6 @@ type RuntimeOperatorTool struct {
 	Namespace string
 	// UseBackup use back up address or not
 	UseBackup bool
-	// EndpointType containerd or docker
-	EndpointType int
-	*dockerCli
-	// LowerDockerVersion represent docker version earlier than 14.00.0
-	LowerDockerVersion bool
 }
 
 // Init initializes container runtime operator
@@ -125,10 +117,6 @@ func (operator *RuntimeOperatorTool) Init() error {
 
 	if err := operator.initCriClient(); err != nil {
 		return fmt.Errorf("init CRI client failed, %s", err)
-	}
-
-	if operator.EndpointType == EndpointTypeDockerd && operator.initDockerClient() {
-		return nil
 	}
 
 	if err := operator.initOciClient(); err != nil {
@@ -196,14 +184,6 @@ func sockCheck(operator *RuntimeOperatorTool) error {
 	}
 
 	absPath, err = utils.CheckPath(strings.TrimPrefix(operator.OciEndpoint, unixPre))
-	if err != nil {
-		return err
-	}
-	if err := utils.DoCheckOwnerAndPermission(absPath, excludePermissions, 0); err != nil {
-		return err
-	}
-
-	absPath, err = utils.CheckPath(strings.TrimPrefix(defaultDockerdAddr, unixPre))
 	if err != nil {
 		return err
 	}
