@@ -165,6 +165,35 @@ func getJobLabelFromVcJob(job *api.JobInfo) map[string]string {
 	return resLabel
 }
 
+// getJobAnnotationFromJobInfo get job's annotation from podgroup and task's.
+func getJobAnnotationFromJobInfo(jobInfo *api.JobInfo) map[string]string {
+	var annotationKeysForPodGroup = []string{
+		util.SuperPodAnnoKey, util.SchedulePolicyAnnoKey, util.SuperPodFitAnnoKey,
+	}
+	var resAnno = make(map[string]string, util.MapInitNum)
+	if jobInfo == nil {
+		return resAnno
+	}
+	if jobInfo.PodGroup != nil && jobInfo.PodGroup.Annotations != nil {
+		resAnno = jobInfo.PodGroup.Annotations
+	}
+	for _, task := range jobInfo.Tasks {
+		if task == nil || task.Pod == nil {
+			continue
+		}
+		for _, key := range annotationKeysForPodGroup {
+			if _, ok := resAnno[key]; ok {
+				continue
+			}
+			if _, ok := task.Pod.Annotations[key]; ok {
+				resAnno[key] = task.Pod.Annotations[key]
+			}
+			break
+		}
+	}
+	return resAnno
+}
+
 // GetVCJobReqNPUTypeFromJobInfo get job request resource, only NPU.
 func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
 	if vcJob == nil || vcJob.TotalRequest == nil {
@@ -446,7 +475,7 @@ func (sJob *SchedulerJob) initCommonJob(vcJob *api.JobInfo) {
 		Selector:      getJobSelectorFromVcJob(vcJob),
 		Label:         getJobLabelFromVcJob(vcJob),
 		Status:        string(vcJob.PodGroup.Status.Phase),
-		Annotation:    vcJob.PodGroup.Annotations,
+		Annotation:    getJobAnnotationFromJobInfo(vcJob),
 	}
 }
 

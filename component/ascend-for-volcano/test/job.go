@@ -74,6 +74,20 @@ func AddTestJobLabel(job *api.JobInfo, labelKey, labelValue string) {
 	}
 }
 
+// AddTestJobAnnotations add test job's annotation.
+func AddTestJobAnnotations(job *api.JobInfo, annotationKey, annotationValue string) {
+	if job.PodGroup == nil {
+		AddTestJobPodGroup(job)
+	}
+	if job.PodGroup.Annotations == nil {
+		job.PodGroup.Annotations = make(map[string]string, npuIndex3)
+	}
+	job.PodGroup.Annotations = map[string]string{annotationKey: annotationValue}
+	for _, task := range job.Tasks {
+		AddTestTaskAnnotation(task, annotationKey, annotationValue)
+	}
+}
+
 // FakeNormalTestJob make normal test job.
 func FakeNormalTestJob(jobName string, taskNum int) *api.JobInfo {
 	return FakeNormalTestJobByCreatTime(jobName, taskNum, 0)

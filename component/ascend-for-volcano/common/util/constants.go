@@ -80,3 +80,17 @@ const (
 	// SchedulePolicySuperPod schedule policy for a3 super-pod, if added, func IsSuperPodJob need adaptation.
 	SchedulePolicySuperPod = "module-a3-16-super-pod"
 )
+
+// constants for ome inference service
+const (
+	// OmeInferenceServiceKey indicate this pod belongs to ome inference-service
+	OmeInferenceServiceKey = "ome.io/inferenceservice"
+	// ReschedulingUpperLimitPod means volcano only rescheduling fault pod rather than super-pod or job
+	ReschedulingUpperLimitPod = "pod"
+)
+
+// constants for MindIE
+const (
+	// SuperPodFitAnnoKey decide schedule policy of super-pod
+	SuperPodFitAnnoKey = "sp-fit"
+)

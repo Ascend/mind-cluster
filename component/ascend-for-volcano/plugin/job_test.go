@@ -86,6 +86,54 @@ func TestGetJobLabelFromVcJob(t *testing.T) {
 	}
 }
 
+func TestGetJobAnnotationFromJobInfo(t *testing.T) {
+	tJob := test.FakeNormalTestJob("test1", 1)
+	test.AddTestJobAnnotations(tJob, "test-key", "test-value")
+	type args struct {
+		job *api.JobInfo
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]string
+	}{
+		{
+			name: "01-getJobAnnotationFromJobInfo get ok test",
+			args: args{job: tJob},
+			want: map[string]string{"test-key": "test-value"},
+		},
+		{
+			name: "02-getJobAnnotationFromJobInfo return nil when job is nil",
+			args: args{job: nil}, want: map[string]string{},
+		},
+		{
+			name: "03-getJobAnnotationFromJobInfo return nil when job tasks is empty",
+			args: args{job: &api.JobInfo{}},
+			want: map[string]string{},
+		},
+		{
+			name: "04-getJobAnnotationFromJobInfo return nil when job tasks annotation mismatch key words",
+			args: args{job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
+				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{"a": "1"}}}}},
+			}},
+			want: map[string]string{},
+		},
+		{
+			name: "05-getJobLabelFromVcJob return same when job tasks annotation match key words",
+			args: args{job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
+				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{"sp-block": "16"}}}}},
+			}}, want: map[string]string{"sp-block": "16"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getJobAnnotationFromJobInfo(tt.args.job); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getJobAnnotationFromJobInfo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 type getJobNPUTasksArgs struct {
 	vcJob *api.JobInfo
 }

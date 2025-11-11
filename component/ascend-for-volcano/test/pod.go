@@ -188,6 +188,14 @@ func AddTestTaskLabel(task *api.TaskInfo, labelKey, labelValue string) {
 	task.Pod.Labels[labelKey] = labelValue
 }
 
+// AddTestTaskAnnotation add test job's annotation.
+func AddTestTaskAnnotation(task *api.TaskInfo, labelKey, labelValue string) {
+	if len(task.Pod.Annotations) == 0 {
+		task.Pod.Annotations = make(map[string]string, npuIndex3)
+	}
+	task.Pod.Annotations[labelKey] = labelValue
+}
+
 // FakeTaskInfo fake task info for node
 func FakeTaskInfo(podUsedCard1, podUsedCard2 []string) map[api.TaskID]*api.TaskInfo {
 	pod1 := &v1.Pod{
