@@ -48,8 +48,6 @@ const (
 	spBlock8 = 8
 
 	npuTaskNum0  = 0
-	npuTaskNum2  = 2
-	npuTaskNum4  = 4
 	npuTaskNum6  = 6
 	npuTaskNum16 = 16
 	npuTaskNum32 = 32

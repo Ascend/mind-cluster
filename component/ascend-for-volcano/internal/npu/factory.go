@@ -34,6 +34,7 @@ import (
 	ascend800ia5superpod "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend800ia5/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/module910a3x16"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
+	superpoda5 "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b/module910bx16"
 	vnpu2 "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b/vnpu"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910old/module910x8"
@@ -119,6 +120,8 @@ func initCard910Factory() {
 		func() base.AscendHandler { return superpod.New(superpod.SchedulerName) }
 	card910Factory[module910a3x16.SchedulerName] =
 		func() base.AscendHandler { return module910a3x16.New(module910a3x16.SchedulerName) }
+	card910Factory[superpoda5.SuperPodx8SchedulerName] =
+		func() base.AscendHandler { return module910a3x16.New(superpoda5.SuperPodx8SchedulerName) }
 	card910Factory[ascend800ia5superpod.InferSchedulerName] =
 		func() base.AscendHandler { return ascend800ia5superpod.New(ascend800ia5superpod.InferSchedulerName) }
 	card910Factory[ascend800ia5superpod.TrainSchedulerName] =
