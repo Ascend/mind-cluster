@@ -65,6 +65,7 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 
 	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForSingleGoroutine, containerMap, chips)
 	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForMultiGoroutine, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForCustomPlugin, containerMap, chips)
 
 	generalFields := fieldsMap[common.GeneralDevTagKey]
 	acc.AddFields(devName, generalFields, map[string]string{"device": devTagValue})

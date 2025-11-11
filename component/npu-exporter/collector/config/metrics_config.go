@@ -16,15 +16,18 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/metrics"
 	"huawei.com/npu-exporter/v6/utils/logger"
+
+	"ascend-common/common-utils/utils"
 )
 
 var (
-
 	// singleGoroutineMap metrics in this map will be collected in single goroutine
 	singleGoroutineMap = map[string]common.MetricsCollector{
 		groupHccs:    &metrics.HccsCollector{},
@@ -42,19 +45,10 @@ var (
 		groupRoce:    &metrics.RoceCollector{},
 		groupOptical: &metrics.OpticalCollector{},
 	}
-	configs = []map[string]string{
-		{metricsGroup: groupDDR, state: stateOn},
-		{metricsGroup: groupHccs, state: stateOn},
-		{metricsGroup: groupNpu, state: stateOn},
-		{metricsGroup: groupNetwork, state: stateOn},
-		{metricsGroup: groupPcie, state: stateOn},
-		{metricsGroup: groupRoce, state: stateOn},
-		{metricsGroup: groupSio, state: stateOn},
-		{metricsGroup: groupVnpu, state: stateOn},
-		{metricsGroup: groupVersion, state: stateOn},
-		{metricsGroup: groupOptical, state: stateOn},
-		{metricsGroup: groupHbm, state: stateOn},
-	}
+	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
+	pluginCollectorMap = map[string]common.MetricsCollector{}
+	presetConfigs      = make([]map[string]string, 0)
+	pluginConfigs      = make([]map[string]string, 0)
 )
 
 const (
@@ -77,16 +71,72 @@ const (
 	stateOFF = "OFF"
 )
 
+const (
+	FaultCustomizationPath = "/usr/local/metricConfiguration.json"
+	FaultDurationPath      = "/usr/local/pluginConfiguration.json"
+)
+
+func loadConfiguration() {
+	if fileBytes := loadFromFile(FaultCustomizationPath); fileBytes == nil {
+		logger.Errorf("load config from file %s failed", FaultCustomizationPath)
+	} else {
+		initConfiguration(fileBytes, &presetConfigs)
+	}
+	if fileBytes := loadFromFile(FaultDurationPath); fileBytes == nil {
+		logger.Errorf("load config from file %s failed", FaultDurationPath)
+	} else {
+		initConfiguration(fileBytes, &pluginConfigs)
+	}
+}
+
+func loadFromFile(filePath string) []byte {
+	fileBytes, err := utils.LoadFile(filePath)
+	if err != nil {
+		return nil
+	}
+	return fileBytes
+}
+
+func initConfiguration(fileBytes []byte, configs *[]map[string]string) {
+	if err := json.Unmarshal(fileBytes, configs); err != nil {
+		logger.Errorf("unmarshal config byte failed: %v", err)
+		return
+	}
+}
+
+// AddPluginCollector add plugin collector to cache
+func AddPluginCollector(name string, collector common.MetricsCollector) error {
+	if _, exist := pluginCollectorMap[name]; exist {
+		logger.Errorf("plugin collector %v already exist", name)
+		return fmt.Errorf("plugin collector %v already exist", name)
+	}
+	logger.Infof("add plugin collector %v ok", name)
+	pluginCollectorMap[name] = collector
+	return nil
+}
+
+// DeletePluginCollector delete plugin collector from cache
+func DeletePluginCollector(name string) {
+	if _, exist := pluginCollectorMap[name]; !exist {
+		logger.Warnf("plugin collector %v does not exist", name)
+		return
+	}
+	logger.Infof("delete plugin collector %v ok", name)
+	delete(pluginCollectorMap, name)
+}
+
 // Register register collector to cache
 func Register(n *common.NpuCollector) {
+	loadConfiguration()
 
-	for _, config := range configs {
+	for _, config := range presetConfigs {
 		metricsGroupName := config[metricsGroup]
 
 		if config[state] != stateOn {
 			logger.Infof("metricsGroup [%v] is off", metricsGroupName)
 			continue
 		}
+		logger.Infof("metricsGroup [%v] is on", metricsGroupName)
 		collector, exist := singleGoroutineMap[metricsGroupName]
 		if exist && collector.IsSupported(n) {
 			common.ChainForSingleGoroutine = append(common.ChainForSingleGoroutine, collector)
@@ -97,8 +147,26 @@ func Register(n *common.NpuCollector) {
 			common.ChainForMultiGoroutine = append(common.ChainForMultiGoroutine, collector)
 		}
 	}
-	logger.Debugf("ChainForSingleGoroutine:%#v", common.ChainForSingleGoroutine)
-	logger.Debugf("ChainForMultiGoroutine:%#v", common.ChainForMultiGoroutine)
+
+	for _, config := range pluginConfigs {
+		metricsGroupName := config[metricsGroup]
+
+		if config[state] != stateOn {
+			logger.Infof("plugin collector [%v] is off", metricsGroupName)
+			continue
+		}
+		logger.Infof("plugin collector [%v] is on", metricsGroupName)
+		collector, exist := pluginCollectorMap[metricsGroupName]
+		if exist && collector.IsSupported(n) {
+			logger.Infof("add plugin collector:%v", metricsGroupName)
+			common.ChainForCustomPlugin = append(common.ChainForCustomPlugin, collector)
+		}
+
+	}
+
+	logger.Infof("ChainForSingleGoroutine:%#v", common.ChainForSingleGoroutine)
+	logger.Infof("ChainForMultiGoroutine:%#v", common.ChainForMultiGoroutine)
+	logger.Infof("ChainForCustomPlugin:%#v", common.ChainForCustomPlugin)
 }
 
 // UnRegister delete collector from chain
@@ -106,6 +174,7 @@ func UnRegister(worker reflect.Type) {
 	logger.Debugf("unRegister collector:%v", worker)
 	unRegisterChain(worker, &common.ChainForSingleGoroutine)
 	unRegisterChain(worker, &common.ChainForMultiGoroutine)
+	unRegisterChain(worker, &common.ChainForCustomPlugin)
 }
 
 func unRegisterChain(worker reflect.Type, chain *[]common.MetricsCollector) {

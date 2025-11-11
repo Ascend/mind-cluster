@@ -332,7 +332,7 @@ func TestStartCollectSingleGoroutine(t *testing.T) {
 	defer patches.Reset()
 	convey.Convey("TestStartCollectSingleGoroutine", t, func() {
 		ctx, cancel := context.WithCancel(context.Background())
-		startCollectSingleGoroutine(&wg, ctx, n, "")
+		startCollectSingleGoroutine(&wg, ctx, n)
 		time.Sleep(n.updateTime)
 		cancel()
 		data, err := n.cache.Get(mockKey)

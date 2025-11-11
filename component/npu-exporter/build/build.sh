@@ -58,6 +58,8 @@ function mv_file() {
   mv "${TOP_DIR}"/cmd/npu-exporter/${OUTPUT_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/npu-exporter.yaml "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
   cp "${TOP_DIR}"/build/npu-exporter-310P-1usoc.yaml "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/metricConfiguration.json "${TOP_DIR}"/output/
+  cp "${TOP_DIR}"/build/pluginConfiguration.json "${TOP_DIR}"/output/
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output

@@ -41,7 +41,14 @@ var (
 	// ChainForMultiGoroutine a list of collectors for multi goroutine
 	ChainForMultiGoroutine []MetricsCollector
 
+	// ChainForCustomPlugin a list of collectors for plugin
+	ChainForCustomPlugin []MetricsCollector
+
 	updateTimeForCardIds = time.Minute
+)
+
+const (
+	maxCollectTimeout = 10 * time.Second
 )
 
 // NpuCollector for collect metrics
@@ -69,8 +76,56 @@ func NewNpuCollector(cacheTime time.Duration, updateTime time.Duration,
 // StartCollect start collect
 func StartCollect(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
 	npuChipInfoInitAtFirstTime(n)
-	startCollectSingleGoroutine(group, ctx, n, "dcmi")
+	startCollectSingleGoroutine(group, ctx, n)
 	startCollectForMultiGoroutine(group, ctx, n)
+	startCollectForPluginGoroutine(group, ctx, n)
+}
+
+func startCollectForPluginGoroutine(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
+	group.Add(1)
+	go func() {
+		defer group.Done()
+		ticker := time.NewTicker(n.updateTime)
+		defer ticker.Stop()
+		goroutinePreCollect(ChainForCustomPlugin, n)
+		defer goroutinePostCollect(ChainForCustomPlugin, n)
+		runPluginCollect(ctx, n, ticker)
+	}()
+}
+
+func runPluginCollect(ctx context.Context, n *NpuCollector, ticker *time.Ticker) {
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("received the stop signal,stop plugin collect")
+			return
+		default:
+			collectPluginMetrics(n)
+			if _, ok := <-ticker.C; !ok {
+				logger.Errorf(tickerFailedPattern, "handling plugin collectors")
+				return
+			}
+		}
+	}
+}
+
+func collectPluginMetrics(n *NpuCollector) {
+	chipList := getChipListCache(n)
+	for _, c := range ChainForCustomPlugin {
+		resultChan := make(chan struct{}, 1)
+		go func(cur MetricsCollector) {
+			cur.CollectToCache(n, chipList)
+			resultChan <- struct{}{}
+		}(c)
+		select {
+		case <-resultChan:
+			continue
+		case <-time.After(maxCollectTimeout):
+			logger.Errorf("collect timeout for %v", GetCacheKey(c))
+			continue
+		}
+
+	}
 }
 
 func startCollectForMultiGoroutine(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
@@ -88,6 +143,8 @@ func startCollectForMultiGoroutine(group *sync.WaitGroup, ctx context.Context, n
 func runChipCollector(ctx context.Context, n *NpuCollector, chip HuaWeiAIChip) {
 	ticker := time.NewTicker(n.updateTime)
 	defer ticker.Stop()
+	goroutinePreCollect(ChainForMultiGoroutine, n)
+	defer goroutinePostCollect(ChainForMultiGoroutine, n)
 	for {
 		select {
 		case <-ctx.Done():
@@ -95,11 +152,8 @@ func runChipCollector(ctx context.Context, n *NpuCollector, chip HuaWeiAIChip) {
 			return
 		default:
 			singleChipSlice := []HuaWeiAIChip{chip}
-
 			for _, c := range ChainForMultiGoroutine {
-				c.PreCollect(n, singleChipSlice)
 				c.CollectToCache(n, singleChipSlice)
-				c.PostCollect(n)
 			}
 			if _, ok := <-ticker.C; !ok {
 				logger.Errorf(tickerFailedPattern, "collect for multigroutine ")
@@ -109,12 +163,27 @@ func runChipCollector(ctx context.Context, n *NpuCollector, chip HuaWeiAIChip) {
 	}
 }
 
-func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *NpuCollector, chainType string) {
+func goroutinePreCollect(collectors []MetricsCollector, n *NpuCollector) {
+	chipList := getChipListCache(n)
+	for _, c := range collectors {
+		c.PreCollect(n, chipList)
+	}
+}
+
+func goroutinePostCollect(collectors []MetricsCollector, n *NpuCollector) {
+	for _, c := range collectors {
+		c.PostCollect(n)
+	}
+}
+
+func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
 	group.Add(1)
 	go func() {
 		defer group.Done()
 		ticker := time.NewTicker(n.updateTime)
 		defer ticker.Stop()
+		goroutinePreCollect(ChainForSingleGoroutine, n)
+		defer goroutinePostCollect(ChainForSingleGoroutine, n)
 		for {
 			select {
 			case <-ctx.Done():
@@ -123,9 +192,7 @@ func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *
 			default:
 				chipList := getChipListCache(n)
 				for _, c := range ChainForSingleGoroutine {
-					c.PreCollect(n, chipList)
 					c.CollectToCache(n, chipList)
-					c.PostCollect(n)
 				}
 				if _, ok := <-ticker.C; !ok {
 					logger.Errorf(tickerFailedPattern, "handling all collectors")
