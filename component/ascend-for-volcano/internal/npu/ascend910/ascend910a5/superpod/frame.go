@@ -16,6 +16,11 @@
 package superpod
 
 import (
+	"errors"
+
+	"k8s.io/klog"
+	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
@@ -31,4 +36,34 @@ func New(name string) *module910a5SuperPod {
 	m.faultNPUKey = faultNPU
 	m.isNeedAlgoAlign = false
 	return m
+}
+
+// ValidNPUJob check jobs' required NPU number and mode.
+// ssn.AddJobValidFn -> JobValid -> Job.ValidJobFn -> ValidNPUJob
+func (tp *module910a5SuperPod) ValidNPUJob() *api.ValidateResult {
+	errStr := "check npu job failed"
+	if tp == nil {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("%s, err is %v", errStr, err)
+		return &api.ValidateResult{
+			Pass:    false,
+			Reason:  err.Error(),
+			Message: errStr,
+		}
+	}
+	// register all check func in order
+	checkers := []jobCheckerFunc{
+		tp.checkSpBlock,
+		tp.checkTpBlockNum,
+		tp.calculateTpBlockAndCheck,
+		tp.checkJobReqNpuNum,
+	}
+	for _, checker := range checkers {
+		if err := checker(); err != nil {
+			klog.V(util.LogErrorLev).Infof("%s %s", errStr, err.Message)
+			return err
+		}
+	}
+
+	return nil
 }

@@ -38,4 +38,17 @@ const (
 
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 	faultNPU            = "huawei.com/Ascend910-Fault"
+	nodeNum1    = 1
+	npuTaskNum8 = 8
+
+	miniTpBlockNum = 1
+	rackNPUNumber  = 64
+
+	scoreForNode         = 100000000
+	jobCheckFailedReason = "npu num is invalid"
+
+	spBlockInvalidReason = "Parameter sp-block is invalid."
+	tpBlockInvalidReason = "Parameter tp-block is invalid."
+
+	taskSpec = "volcano.sh/task-spec"
 )
