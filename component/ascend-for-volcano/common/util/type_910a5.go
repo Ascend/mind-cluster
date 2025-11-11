@@ -31,6 +31,10 @@ const (
 	Ascend800ia5x8 = "800I-A5-8"
 	// Ascend800ia5x8SchedulerName maxNodeNPUNum is 8
 	Ascend800ia5x8SchedulerName = NPU910CardName + Ascend800ia5x8
+	// Ascend800ta5x8 value of accelerator-type is 800T-A5-8
+	Ascend800ta5x8 = "800T-A5-8"
+	// TrainSchedulerName name of train server scheduler
+	Ascend800ta5x8TrainSchedulerName = NPU910CardName + Ascend800ta5x8
 	// TpBlockAnnoKey annotation key of tp-block
 	TpBlockAnnoKey = "tp-block"
 	// InvalidTpBlock is the result value of invalid tp-block

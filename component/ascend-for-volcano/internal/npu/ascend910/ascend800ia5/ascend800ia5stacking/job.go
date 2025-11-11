@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"k8s.io/klog"
+	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
@@ -34,4 +35,58 @@ func (tp *module800ia5stacking) JudgeNodeAndTaskNPU(taskNPU int, nodeTop []int) 
 	meetErr := fmt.Errorf("%v not meet req npu(%d)", nodeTop, taskNPU)
 	klog.V(util.LogErrorLev).Infof("cardIDs:<%v> not meet task reqNum<%d>.", nodeTop, taskNPU)
 	return meetErr
+}
+
+func (ab *module800ia5stacking) Valid800ia5NPUJob() *api.ValidateResult {
+	vResult := &api.ValidateResult{}
+	var vErr error
+	defer func() {
+		if vErr != nil {
+			vResult.Pass = false
+			vResult.Reason = vErr.Error()
+			vResult.Message = vErr.Error()
+			return
+		}
+	}()
+
+	// check parameter.
+	if ab == nil {
+		vErr = fmt.Errorf("nil plugin %s", ab.GetPluginName())
+		klog.V(util.LogErrorLev).Infof("ValidNPUJob err: %s.", vErr)
+		return vResult
+	}
+
+	if ab.SpBlockNPUNum != 0 {
+		klog.V(util.LogWarningLev).Infof("There is no need to set sp-block in standard cluster server.")
+	}
+	if ab.TpBlockNPUNum != util.LeastTpBlock {
+		klog.V(util.LogWarningLev).Infof("There is no need to set tp-block in standard cluster server.")
+	}
+
+	// check job mode:distribute and single.
+	if vErr = ab.checkJobMode(); vErr != nil {
+		klog.V(util.LogErrorLev).Infof("checkJobTrainMode: %s.", vErr)
+		return vResult
+	}
+
+	return nil
+}
+
+func (ab *module800ia5stacking) checkJobMode() error {
+	if ab.NPUTaskNum == 0 {
+		klog.V(util.LogErrorLev).Infof("GetVTaskNumInVJob %s has no npu tasks.", ab.Name)
+		return fmt.Errorf("%s no npu job", ab.Name)
+	}
+	klog.V(util.LogDebugLev).Infof("checkJobMode job(%s) has %d tasks.", ab.Name, len(ab.Tasks))
+	nTaskReqNpuNum := ab.ReqNPUNum / ab.NPUTaskNum
+	if ab.CheckJobAllowNum(nTaskReqNpuNum) {
+		return nil
+	}
+	return fmt.Errorf("%s checkJobMode %s req npu is invalid", ab.GetPluginName(), ab.Name)
+}
+
+// CheckJobAllowNum check the single job require is valid.
+func (ab *module800ia5stacking) CheckJobAllowNum(value int) bool {
+	_, ok := ab.NpuNumInvalidMap[value]
+	return !ok && value <= ab.MaxNodeNPUNum
 }

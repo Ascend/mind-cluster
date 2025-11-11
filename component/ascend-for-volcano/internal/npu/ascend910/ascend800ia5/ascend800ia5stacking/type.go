@@ -22,12 +22,12 @@ package ascend800ia5stacking
 
 import (
 	"volcano.sh/volcano/pkg/scheduler/api"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend800ia5"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 type module800ia5stacking struct {
-	Base800ia5
+	ascend800ia5.Base800ia5
 	netUnhealthyKey  string
 	SuperPodCache    map[int32][]plugin.NPUNode
 	NPUSelectedCache map[api.JobID]map[int32][]int
@@ -36,18 +36,14 @@ type module800ia5stacking struct {
 }
 
 const (
-	nodeNPUNumber      = 8
-	stackingNodeNumber = 2
+	nodeNPUNumber       = 8
+	stackingNodeNumber  = 2
+	unSchedulerScore    = 4
+	unSchedulerOffset   = 99
+	stackOffsetPower    = 20
+	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 	// Ascend800ia5stacking value of accelerator-type is 800i-stacking-a5-8
 	Ascend800ia5stacking = "800I-Stacking-A5-8"
-	// InferSchedulerName name of scheduler
-	InferSchedulerName = "huawei.com/Ascend910" + Ascend800ia5stacking
+	// SchedulerName name of scheduler
+	SchedulerName = "huawei.com/Ascend910" + Ascend800ia5stacking
 )
-
-// Base800ia5 for Ascend 800ia5 base.
-type Base800ia5 struct {
-	base.NPUHandler
-	AffScoreList     [][]int
-	NpuNumInvalidMap map[int]struct{}
-	arch             string
-}

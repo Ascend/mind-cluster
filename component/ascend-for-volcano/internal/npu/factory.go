@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-Package npu is using for HuaWei Ascend pin affinity schedule.
+Package npu provides Huawei Ascend NPU pin affinity scheduling functionality.
 */
 package npu
 
@@ -30,6 +30,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p/card310px2"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p/chip310px2"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p/vnpu"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend800ia5/ascend800ia5stacking"
 	ascend800ia5superpod "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend800ia5/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/module910a3x16"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
@@ -45,7 +46,7 @@ var (
 	card310Factory  = map[string]func() base.AscendHandler{}
 	card310pFactory = map[string]func() base.AscendHandler{}
 
-	// key: schedule policy; value: handler name
+	// policyHandlerMap maps scheduling policies to handler names
 	policyHandlerMap = map[string]string{util.SchedulePolicyA3x16: module910a3x16.SchedulerName}
 )
 
@@ -99,6 +100,10 @@ func initCard910Factory() {
 		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),
 			base.WithMaxNodeNum(util.NPUIndex8), base.WithNetworkFault(true))
 	}
+	card910Factory[util.Ascend800ta5x8TrainSchedulerName] = func() base.AscendHandler {
+		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),
+			base.WithMaxNodeNum(util.NPUIndex8), base.WithNetworkFault(true))
+	}
 	card910Factory[half910x4Name] = func() base.AscendHandler {
 		return base.New(util.NPU910CardName,
 			base.WithAnnoPreVal(util.NPU910CardNamePre),
@@ -120,7 +125,7 @@ func initCard910Factory() {
 		func() base.AscendHandler { return ascend800ia5superpod.New(ascend800ia5superpod.InferSchedulerName) }
 }
 
-// InitPolicyHandler init npu affinity policy handler
+// InitPolicyHandler initializes the NPU affinity policy handler
 func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plugin.SchedulerPluginNeed, bool) {
 	pluginName := attr.GetPluginNameByReq()
 	switch pluginName {
@@ -203,7 +208,7 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 func get310PCardHandlerName(attr util.SchedulerJobAttr) string {
 	duo := attr.Label[duoKeyLabel]
 	if duo == trueStr {
-		klog.V(util.LogInfoLev).Info("is 300I duo")
+		klog.V(util.LogInfoLev).Info("Detected as 300I duo configuration")
 		duo = duoKeyLabel
 	}
 	v, ok := attr.Label[util.Accelerator310Key]
@@ -222,6 +227,8 @@ func get800IA5HandlerName(attr util.SchedulerJobAttr) (string, bool) {
 
 	_, existSpBlock := attr.Annotation[SuperPodAnnoKey]
 	switch acceleratorType {
+	case util.Ascend800ia5x8, util.Ascend800ta5x8, ascend800ia5stacking.Ascend800ia5stacking:
+		return util.NPU910CardName + acceleratorType, true
 	case ascend800ia5superpod.AcceleratorType, ascend800ia5superpod.AcceleratorTypeTrain:
 		{
 			if existSpBlock {
