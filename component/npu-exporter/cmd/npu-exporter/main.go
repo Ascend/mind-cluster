@@ -42,8 +42,9 @@ import (
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/config"
 	"huawei.com/npu-exporter/v6/collector/container"
-	_ "huawei.com/npu-exporter/v6/plugins/inputs/npu"
-	"huawei.com/npu-exporter/v6/plugins/prom"
+	_ "huawei.com/npu-exporter/v6/platforms/inputs/npu"
+	"huawei.com/npu-exporter/v6/platforms/prom"
+	"huawei.com/npu-exporter/v6/plugins"
 	"huawei.com/npu-exporter/v6/utils/logger"
 	"huawei.com/npu-exporter/v6/versions"
 )
@@ -134,6 +135,7 @@ func main() {
 	deviceParser.Timeout = time.Duration(updateTime) * time.Second
 
 	colcommon.Collector = colcommon.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second, deviceParser, dmgr)
+	plugins.RegisterPlugin()
 	config.Register(colcommon.Collector)
 
 	ctx, cancel := context.WithCancel(context.Background())

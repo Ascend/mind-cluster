@@ -29,9 +29,11 @@ Prometheus（普罗米修斯）是一个开源的系统监测和警报工具包�
     drwxr-xr-x 10 root root     4096 Feb 23 07:10 ..
     -r--------  1 root root      623 Feb 23 07:10 Dockerfile
     -r--------  1 root root      623 Feb 23 07:10 Dockerfile-310P-1usoc
+    -r--------  1 root root      623 Feb 23 07:10 metricConfiguration.json
     -r-x------  1 root root 25481072 Feb 23 07:10 npu-exporter
     -r--------  1 root root     3438 Feb 23 07:10 npu-exporter-310P-1usoc-v6.0.0.yaml
     -r--------  1 root root     3438 Feb 23 07:10 npu-exporter-v6.0.0.yaml
+    -r--------  1 root root      623 Feb 23 07:10 pluginConfiguration.json
     -r-x------  1 root root     2579 Feb 23 07:10 run_for_310P_1usoc.sh
     ```
 

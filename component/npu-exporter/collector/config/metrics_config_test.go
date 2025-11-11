@@ -16,6 +16,7 @@
 package config
 
 import (
+	"ascend-common/common-utils/utils"
 	"reflect"
 	"testing"
 
@@ -41,6 +42,84 @@ func initChain() {
 	common.ChainForMultiGoroutine = []common.MetricsCollector{}
 }
 
+func TestInitConfiguration(t *testing.T) {
+	convey.Convey("TestInitConfiguration", t, func() {
+		initConfiguration([]byte("test"), &presetConfigs)
+		convey.So(len(presetConfigs), convey.ShouldEqual, 0)
+	})
+}
+
+func TestLoadConfiguration(t *testing.T) {
+	convey.Convey("TestLoadConfiguration", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		convey.Convey("load config ok", func() {
+			patches.ApplyFunc(loadFromFile, func(filePath string) []byte {
+				if filePath == FaultCustomizationPath {
+					filePath = "../../build/metricConfiguration.json"
+				} else if filePath == FaultDurationPath {
+					filePath = "../../build/pluginConfiguration.json"
+				}
+				fileBytes, _ := utils.LoadFile(filePath)
+				return fileBytes
+			})
+			defer func() {
+				presetConfigs = make([]map[string]string, 0)
+				pluginConfigs = make([]map[string]string, 0)
+			}()
+			loadConfiguration()
+			convey.So(len(presetConfigs), convey.ShouldBeGreaterThan, 0)
+			convey.So(len(pluginConfigs), convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("load config fail", func() {
+			presetConfigs = make([]map[string]string, 0)
+			pluginConfigs = make([]map[string]string, 0)
+			patches.ApplyFunc(loadFromFile, func(filePath string) []byte {
+				return nil
+			})
+			loadConfiguration()
+			convey.So(len(presetConfigs), convey.ShouldEqual, 0)
+			convey.So(len(pluginConfigs), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestAddPluginCollector(t *testing.T) {
+	convey.Convey("TestAddPluginCollector", t, func() {
+		convey.Convey("add plugin ok", func() {
+			pluginCollectorMap = make(map[string]common.MetricsCollector)
+			defer func() {
+				pluginCollectorMap = make(map[string]common.MetricsCollector)
+			}()
+			err := AddPluginCollector("test", &metrics.HccsCollector{})
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("add plugin fail", func() {
+			pluginCollectorMap["test"] = &metrics.HccsCollector{}
+			defer func() {
+				pluginCollectorMap = make(map[string]common.MetricsCollector)
+			}()
+			err := AddPluginCollector("test", &metrics.HccsCollector{})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestDeletePluginCollector(t *testing.T) {
+	convey.Convey("TestDeletePluginCollector", t, func() {
+		convey.Convey("delete plugin ok", func() {
+			pluginCollectorMap["test"] = &metrics.HccsCollector{}
+			DeletePluginCollector("test")
+			convey.So(pluginCollectorMap["test"], convey.ShouldBeNil)
+		})
+		convey.Convey("delete plugin fail", func() {
+			pluginCollectorMap = make(map[string]common.MetricsCollector)
+			DeletePluginCollector("test")
+			convey.So(len(pluginCollectorMap), convey.ShouldEqual, 0)
+		})
+	})
+}
+
 func TestRegister(t *testing.T) {
 	convey.Convey("TestRegister", t, func() {
 		n := &common.NpuCollector{}
@@ -58,8 +137,10 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.NetworkCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
-		configs = append(configs, map[string]string{metricsGroup: "mockGroup", state: stateOFF})
-
+		patches.ApplyFunc(loadConfiguration, func() {
+			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs)
+			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs)
+		})
 		Register(n)
 		convey.Convey("Should add collectors to ChainForSingleGoroutine", func() {
 			convey.So(len(common.ChainForSingleGoroutine), convey.ShouldBeGreaterThan, 0)
