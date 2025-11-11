@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	selfrecoverFaultTimeout = 60 * time.Second
+	selfrecoverFaultTimeout = 0 * time.Second
 )
 
 // L2FaultProcessor is used to process l2 faults
