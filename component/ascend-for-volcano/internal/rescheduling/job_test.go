@@ -757,12 +757,6 @@ func TestFaultRetryTimeOfJob(t *testing.T) {
 
 func TestIsFailedTask(t *testing.T) {
 	const exitCode127 = 127
-	crashBackoffState := v1.ContainerState{
-		Waiting: &v1.ContainerStateWaiting{
-			Message: "back-off 5m0s",
-			Reason:  CStateWaitingReasonCrashLoopBackOff,
-		},
-	}
 	terminatedErrorState := v1.ContainerState{
 		Terminated: &v1.ContainerStateTerminated{ExitCode: exitCode127},
 	}
@@ -775,7 +769,7 @@ func TestIsFailedTask(t *testing.T) {
 		RestartCount:         0,
 	}
 	backoffStatus := v1.ContainerStatus{
-		State:                crashBackoffState,
+		State:                v1.ContainerState{},
 		LastTerminationState: terminatedErrorState,
 		RestartCount:         0,
 	}
@@ -786,7 +780,7 @@ func TestIsFailedTask(t *testing.T) {
 			t.Errorf("isFailedTask() error, want false, return true")
 		}
 	})
-	t.Run("02-isFailedTask return true when task container status backoff", func(t *testing.T) {
+	t.Run("02-isFailedTask return true when task container terminated with none-zero", func(t *testing.T) {
 		task.Pod.Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{backoffStatus}}
 		if !isFailedTask(task) {
 			t.Errorf("isFailedTask() error, want true, return false")

@@ -247,6 +247,12 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 	klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
 		"not fault task is %v",
 		!dpi.isMasterFault, fJob.IsJobSingleRescheduling(schedulerJob), !fTask.IsFaultTask)
+
+	// if upgrade is not allowed, only the fault task should be rescheduled
+	if !fJob.allowUpgradePodRescheduling() {
+		return fTask.IsFaultTask
+	}
+
 	if dpi.isMasterFault {
 		return true
 	}
@@ -273,6 +279,10 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 		return false
 	}
 	return true
+}
+
+func (fJob *FaultJob) allowUpgradePodRescheduling() bool {
+	return fJob.ReScheduleLimit != util.ReschedulingUpperLimitPod
 }
 
 func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, kubeClient kubernetes.Interface) {
@@ -416,20 +426,17 @@ func isFailedTask(task *api.TaskInfo) bool {
 	if task == nil || task.Pod == nil {
 		return false
 	}
-	// pod phase is failed, when RestartPolicy is Never, mean task failed
+	// pod phase is failed, when RestartPolicy is Never, means task failed
 	if task.Pod.Status.Phase == v1.PodFailed {
 		klog.V(util.LogInfoLev).Infof("task [name=%v, pod phase=%v] failed", task.Name, v1.PodFailed)
 		return true
 	}
 
-	// any pod's container was restarted and waiting for backoff, when RestartPolicy set to Always or OnFailure,
-	// means this task failed
+	// any pod's container terminated with none-zero, means task failed
 	for _, status := range task.Pod.Status.ContainerStatuses {
 		if status.LastTerminationState.Terminated != nil &&
-			status.LastTerminationState.Terminated.ExitCode != 0 &&
-			status.State.Waiting != nil &&
-			status.State.Waiting.Reason == CStateWaitingReasonCrashLoopBackOff {
-			klog.V(util.LogInfoLev).Infof("task [name=%v, containerName=%v crashloopbackoff] failed",
+			status.LastTerminationState.Terminated.ExitCode != 0 {
+			klog.V(util.LogInfoLev).Infof("task [name=%v, containerName=%v] failed",
 				task.Name, status.Name)
 			return true
 		}
@@ -661,6 +668,7 @@ func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
 		ReferenceName:     util.ReferenceNameOfJob(job),
 		UUID:              util.UuidOfJob(job),
 		FaultRetryTimes:   faultRetryTimeOfJob(job),
+		ReScheduleLimit:   getReScheduleLimit(job),
 	}
 	subHealthyStrategy, exist := job.PodGroup.Labels[util.SubHealthyStrategyLabel]
 	if !exist || !util.IsStrategyInSubHealthyStrategs(subHealthyStrategy) {
@@ -668,6 +676,18 @@ func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
 	}
 	faultJob.SubHealthyStrategy = subHealthyStrategy
 	return faultJob
+}
+
+func getReScheduleLimit(job *api.JobInfo) string {
+	if _, exist := job.PodGroup.Labels[util.OmeInferenceServiceKey]; exist {
+		return util.ReschedulingUpperLimitPod
+	}
+	if job.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc ||
+		job.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
+		job.PodGroup.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
+		return util.ReschedulingUpperLimitPod
+	}
+	return ""
 }
 
 func faultRetryTimeOfJob(job *api.JobInfo) int {

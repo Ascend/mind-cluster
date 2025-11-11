@@ -44,7 +44,7 @@ func (tp *module910SuperPod) isMindIEJob() bool {
 }
 
 func (tp *module910SuperPod) isIdleResourceFit() bool {
-	resourceFit, ok := tp.Annotation["sp-fit"]
+	resourceFit, ok := tp.Annotation[util.SuperPodFitAnnoKey]
 	if !ok {
 		return false
 	}

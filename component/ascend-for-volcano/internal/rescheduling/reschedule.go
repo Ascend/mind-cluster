@@ -350,12 +350,13 @@ func (reScheduler *ReScheduler) setFaultTaskUseNodeLinkDownTime(fJob *FaultJob) 
 }
 
 func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInfo, fJob *FaultJob) {
+	// only pod rescheduling need upgrade
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
-	if jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
-		jobInfo.PodGroup.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
+
+	// if upgrade is not allowed, do nothing.
+	if !fJob.allowUpgradePodRescheduling() {
 		return
 	}
 
