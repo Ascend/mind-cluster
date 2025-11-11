@@ -5,6 +5,7 @@ package constant
 
 import (
 	"maps"
+	"reflect"
 	"time"
 
 	"k8s.io/utils/strings/slices"
@@ -257,6 +258,15 @@ func (cm *AdvanceDeviceFaultCm) GetAvailableDeviceListKey() string {
 	return api.ResourceNamePrefix + cm.DeviceType
 }
 
+// GetCmName get configmap name of dpu info
+func (cm *DpuInfoCM) GetCmName() string {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return ""
+	}
+	return cm.CmName
+}
+
 // GetCmName get configmap name of device info
 func (cm *DeviceInfo) GetCmName() string {
 	if cm == nil {
@@ -282,6 +292,31 @@ func (cm *NodeInfo) GetCmName() string {
 		return ""
 	}
 	return cm.CmName
+}
+
+// IsSame compare with another cm
+func (cm *DpuInfoCM) IsSame(another ConfigMapInterface) bool {
+	anotherDpuInfo, ok := another.(*DpuInfoCM)
+	if !ok {
+		hwlog.RunLog.Warnf("%s compare with cm which is not DpuInfoCM", api.DpuLogPrefix)
+		return false
+	}
+
+	if cm == nil && anotherDpuInfo == nil {
+		return true
+	}
+	if cm == nil || anotherDpuInfo == nil {
+		return false
+	}
+	if len(cm.DPUList) != len(anotherDpuInfo.DPUList) {
+		return false
+	}
+	return reflect.DeepEqual(cm.DPUList, anotherDpuInfo.DPUList)
+}
+
+// UpdateFaultReceiveTime update fault receive time
+func (cm *DpuInfoCM) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	return
 }
 
 // IsSame compare with another cm

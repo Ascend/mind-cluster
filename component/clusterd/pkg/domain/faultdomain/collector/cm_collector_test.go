@@ -49,6 +49,22 @@ func testDeviceInfoCollector(t *testing.T) {
 	})
 }
 
+func TestDpuInfoCollector(t *testing.T) {
+	t.Run("TestDpuInfoCollector", func(t *testing.T) {
+		dpuInfo := &constant.DpuInfoCM{
+			CmName: CmName,
+		}
+		DpuInfoCollector(nil, dpuInfo, constant.AddOperator)
+		if len(*DpuCMCollectBuffer.buffer[CmName]) != 1 {
+			t.Error("TestDpuInfoCollector failed")
+		}
+		DpuInfoCollector(nil, dpuInfo, constant.DeleteOperator)
+		if len(*DpuCMCollectBuffer.buffer[CmName]) != 2 {
+			t.Error("TestDpuInfoCollector failed")
+		}
+	})
+}
+
 func testNodeCollector(t *testing.T) {
 	t.Run("TestNodeInfoCollector", func(t *testing.T) {
 		NodeCollector(nil, nil, constant.AddOperator)

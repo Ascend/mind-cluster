@@ -176,7 +176,7 @@ const (
 )
 
 const (
-	//EnableFunc Enable Func
+	// EnableFunc Enable Func
 	EnableFunc = "on"
 	// EnableFlag enable flag
 	EnableFlag = "1"

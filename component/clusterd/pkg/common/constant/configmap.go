@@ -26,6 +26,8 @@ const (
 	ClusterNodeInfo = "cluster-info-node-cm"
 	// ClusterSwitchInfo the name of cluster switchinfo 1520 info config map
 	ClusterSwitchInfo = "cluster-info-switch-"
+	// ClusterDpuInfo the name of cluster dpu info config map
+	ClusterDpuInfo = "cluster-info-dpu-"
 )
 
 const (

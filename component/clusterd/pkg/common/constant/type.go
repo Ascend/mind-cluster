@@ -101,6 +101,26 @@ type DeviceInfoNoName struct {
 	UpdateTime int64
 }
 
+// DpuCMDataList data structures of DPUList in dpu cm
+type DpuCMDataList []DpuCMDataItem
+
+// DpuInfoCM data structures of dpu cm in clusterd
+type DpuInfoCM struct {
+	BusType      string
+	DPUList      DpuCMDataList
+	NpuToDpusMap map[string][]string
+	UpdateTime   int64
+	CmName       string
+}
+
+// DpuCMDataItem data structures of DPUListItem in dpu cm
+type DpuCMDataItem struct {
+	Name      string
+	Operstate string
+	DeviceID  string
+	VendorID  string
+}
+
 // CurrJobStatistic current job statistic information
 type CurrJobStatistic struct {
 	JobStatistic map[string]JobStatistic

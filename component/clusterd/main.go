@@ -46,8 +46,9 @@ var (
 	version    bool
 	server     *sv.ClusterInfoMgrServer
 	limiterMap = map[string]*rate.Limiter{
-		constant.RecoverGrpcProbe: rate.NewLimiter(rate.Every(time.Second/constant.MaxServeJobs), constant.MaxServeJobs),
-		constant.BusinessGrpcReq:  rate.NewLimiter(rate.Every(time.Second/constant.QpsLimit), constant.QpsLimit),
+		constant.RecoverGrpcProbe: rate.NewLimiter(rate.Every(time.Second/constant.MaxServeJobs),
+			constant.MaxServeJobs),
+		constant.BusinessGrpcReq: rate.NewLimiter(rate.Every(time.Second/constant.QpsLimit), constant.QpsLimit),
 	}
 	useProxy bool
 )
@@ -113,6 +114,7 @@ func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
+	kube.AddCmDpuFunc(constant.Resource, faultmanager.DpuInfoCollector)
 	// UpdateNodeInfoCache must be before pingmesh
 	kube.AddNodeFunc(constant.Resource, node.UpdateNodeInfoCache)
 	kube.AddCmConfigPingMeshFunc(constant.Resource, pingmesh.ConfigCollector)

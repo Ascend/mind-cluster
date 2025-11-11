@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	maxAge               = 7
-	maxBackups           = 7
+	maxAge     = 7
+	maxBackups = 7
 )
 
 // Execute for a uniform interface
