@@ -675,6 +675,7 @@ func TestSelectNodeFromOriginSuperPodNilMaps(t *testing.T) {
 	}
 
 	tp.selectNodeFromOriginSuperPod(fJob, notReadySuperPod, totalNodes, map[string]bool{}, nil)
+
 	tp.selectNodeFromOriginSuperPod(fJob, notReadySuperPod, totalNodes, nil, map[string][]plugin.SuperNode{})
 }
 
@@ -1231,6 +1232,261 @@ func TestUseAnnotation(t *testing.T) {
 		defer patches.Reset()
 		result := module2.UseAnnotation(&api.TaskInfo{}, plugin.NPUNode{})
 		convey.So(result, convey.ShouldBeNil)
+	})
+
+}
+
+func TestSelectNPUFromNode(t *testing.T) {
+	TestSelectNPUFromNodePart1(t)
+	TestSelectNPUFromNodePart2(t)
+}
+
+func TestSelectNPUFromNodePart1(t *testing.T) {
+	convey.Convey("test selectNPUFromNode case 1 ", t, func() {
+		module1 := &module800SuperPod{}
+		task := &api.TaskInfo{
+			Job: api.JobID(strconv.Itoa(1)),
+		}
+		patches := gomonkey.ApplyFunc((*base.NPUHandler).GetTaskReqNPUNum,
+			func(_ *base.NPUHandler, _ *api.TaskInfo) (int, error) {
+				return 0, errors.New("fake error")
+			})
+		defer patches.Reset()
+		_, err := module1.selectNPUFromNode(task, plugin.NPUNode{})
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestSelectNPUFromNodePart2(t *testing.T) {
+	convey.Convey("test selectNPUFromNode case 2 ", t, func() {
+		module1 := &module800SuperPod{
+			spBlock: 1,
+		}
+		module1.NPUJob = &util.NPUJob{
+			NPUTaskNum: 2,
+		}
+		task := &api.TaskInfo{
+			Job: api.JobID(strconv.Itoa(1)),
+		}
+		patches := gomonkey.ApplyFunc((*base.NPUHandler).GetTaskReqNPUNum,
+			func(_ *base.NPUHandler, _ *api.TaskInfo) (int, error) {
+				return 1, nil
+			})
+		defer patches.Reset()
+		patches1 := gomonkey.ApplyFunc((*base.NPUHandler).GetUsableTopFromNode,
+			func(_ *base.NPUHandler, _ plugin.NPUNode, _ bool) ([]int, error) {
+				return []int{1, 2, 3, 4, 5, 6, 7, 8}, nil
+			})
+		defer patches1.Reset()
+		_, err := module1.selectNPUFromNode(task, plugin.NPUNode{})
+		convey.So(err, convey.ShouldBeNil)
+	})
+
+	convey.Convey("test selectNPUFromNode case 3 ", t, func() {
+		module1 := &module800SuperPod{
+			spBlock: 1,
+		}
+		module1.NPUJob = &util.NPUJob{
+			NPUTaskNum: 2,
+		}
+		task := &api.TaskInfo{
+			Job: api.JobID(strconv.Itoa(1)),
+		}
+		patches := gomonkey.ApplyFunc((*base.NPUHandler).GetTaskReqNPUNum,
+			func(_ *base.NPUHandler, _ *api.TaskInfo) (int, error) {
+				return 1, nil
+			})
+		defer patches.Reset()
+		patches1 := gomonkey.ApplyFunc((*base.NPUHandler).GetUsableTopFromNode,
+			func(_ *base.NPUHandler, _ plugin.NPUNode, _ bool) ([]int, error) {
+				return []int{1, 2, 3, 4, 5, 6}, nil
+			})
+		defer patches1.Reset()
+		_, err := module1.selectNPUFromNode(task, plugin.NPUNode{})
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestInSuperPods(t *testing.T) {
+	convey.Convey("test inSuperPods case 1 ", t, func() {
+		superPodId := "1"
+		node := plugin.NPUNode{}
+		convey.So(inSuperPods(nil, superPodId, node), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("test inSuperPods case 2 ", t, func() {
+		fJob := &rescheduling.FaultJob{
+			SuperPods: map[string][]plugin.SuperNode{
+				"1": make([]plugin.SuperNode, 0),
+			},
+		}
+		superPodId := "1"
+		node := plugin.NPUNode{}
+		convey.So(inSuperPods(fJob, superPodId, node), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("test inSuperPods case 3 ", t, func() {
+		name := "name"
+		superNodes := []plugin.SuperNode{
+			{
+				Name: name,
+			},
+		}
+		fJob := &rescheduling.FaultJob{
+			SuperPods: map[string][]plugin.SuperNode{
+				"1": superNodes,
+			},
+		}
+		superPodId := "1"
+		node := plugin.NPUNode{}
+		node.CommonNode = plugin.CommonNode{
+			Name: name,
+		}
+		convey.So(inSuperPods(fJob, superPodId, node), convey.ShouldBeTrue)
+	})
+}
+
+func TestSelectNodesFromSuperPods(t *testing.T) {
+	convey.Convey("test selectNodesFromSuperPods case 1 ", t, func() {
+		module := &module800SuperPod{}
+		map0 := map[string]plugin.NPUNode{"0": {}}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		superPods := []superPod{map0, map1}
+		unReadyID := []string{"0"}
+		totalCount := 1
+		selectNodes := make(map[string][]plugin.SuperNode)
+		patches1 := gomonkey.ApplyFunc((*module800SuperPod).selectNodesFromSuperPod,
+			func(_ *module800SuperPod, _ string, _ map[string]plugin.NPUNode,
+				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
+				return map[string]plugin.NPUNode{"0": {}}
+			})
+		defer patches1.Reset()
+		result := module.selectNodesFromSuperPods(unReadyID, &totalCount, superPods, selectNodes)
+		exceptResult := 2
+		convey.So(len(result), convey.ShouldEqual, exceptResult)
+	})
+	convey.Convey("test selectNodesFromSuperPods case 2 ", t, func() {
+		module := &module800SuperPod{
+			spBlock: 3,
+		}
+		map0 := map[string]plugin.NPUNode{"0": {}}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		superPods := []superPod{map0, map1}
+		unReadyID := []string{"0"}
+		totalCount := 1
+		selectNodes := make(map[string][]plugin.SuperNode)
+		patches1 := gomonkey.ApplyFunc((*module800SuperPod).selectNodesFromSuperPod,
+			func(_ *module800SuperPod, _ string, _ map[string]plugin.NPUNode,
+				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
+				return map[string]plugin.NPUNode{"0": {}}
+			})
+		defer patches1.Reset()
+		result := module.selectNodesFromSuperPods(unReadyID, &totalCount, superPods, selectNodes)
+		exceptResult := 2
+		convey.So(len(result), convey.ShouldEqual, exceptResult)
+	})
+}
+
+func TestSelectNodesFromSuperPodsExceptReserve(t *testing.T) {
+	convey.Convey("test selectNodesFromSuperPods case 1 ", t, func() {
+		module := &module800SuperPod{}
+		map0 := map[string]plugin.NPUNode{"0": {}}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		superPods := []superPod{map0, map1}
+		unReadyID := []string{"0"}
+		totalCount := 1
+		selectNodes := make(map[string][]plugin.SuperNode)
+		patches1 := gomonkey.ApplyFunc((*module800SuperPod).selectNodesFromSuperPod,
+			func(_ *module800SuperPod, _ string, _ map[string]plugin.NPUNode,
+				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
+				return map[string]plugin.NPUNode{
+					"0": {}}
+			})
+		defer patches1.Reset()
+		result := module.selectNodesFromSuperPodsExceptReserve(unReadyID, &totalCount, superPods, selectNodes)
+		exceptResult := 2
+		convey.So(len(result), convey.ShouldEqual, exceptResult)
+	})
+
+	convey.Convey("test selectNodesFromSuperPods case 2 ", t, func() {
+		module := &module800SuperPod{
+			spBlock: 3,
+		}
+		map0 := map[string]plugin.NPUNode{"0": {}}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		superPods := []superPod{map0, map1}
+		unReadyID := []string{"0"}
+		totalCount := 1
+		selectNodes := make(map[string][]plugin.SuperNode)
+		patches1 := gomonkey.ApplyFunc((*module800SuperPod).selectNodesFromSuperPod,
+			func(_ *module800SuperPod, _ string, _ map[string]plugin.NPUNode,
+				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
+				return map[string]plugin.NPUNode{
+					"0": {}}
+			})
+		defer patches1.Reset()
+		result := module.selectNodesFromSuperPodsExceptReserve(unReadyID, &totalCount, superPods, selectNodes)
+		exceptResult := 2
+		convey.So(len(result), convey.ShouldEqual, exceptResult)
+	})
+}
+
+func TestClassifySuperPod(t *testing.T) {
+	convey.Convey("test classifySuperPod case 1 ", t, func() {
+		module := &module800SuperPod{
+			spBlock: 1,
+		}
+		module.FrameAttr.SuperPodSize = 2
+		map0 := map[string]plugin.NPUNode{
+			"0": {},
+			"3": {},
+		}
+		map1 := map[string]plugin.NPUNode{
+			"1": {},
+			"2": {},
+		}
+		totalNodes := map[int32]superPod{
+			0: map0,
+			1: map1,
+		}
+		pod, _ := module.classifySuperPod(totalNodes)
+		convey.So(len(pod.firstLevel[0][2]), convey.ShouldEqual, 2)
+		convey.So(len(pod.firstLevel[0][2][0]), convey.ShouldEqual, 2)
+		convey.So(len(pod.firstLevel[0][2][1]), convey.ShouldEqual, 2)
+	})
+}
+
+func TestSelectNodesForFaultPod(t *testing.T) {
+	convey.Convey("test selectNodesForFaultPod case 1 ", t, func() {
+		fJob := &rescheduling.FaultJob{}
+		superNodes := []plugin.SuperNode{
+			{
+				SuperPodID: 1,
+			},
+		}
+		fJob.SuperPods = map[string][]plugin.SuperNode{
+			"0": superNodes,
+		}
+		ids := []int{0}
+		totalNodes := map[int32]map[string]plugin.NPUNode{0: {"node1": {}}}
+		spn := plugin.SuperNode{
+			SuperPodID: 0,
+		}
+		superPodId := "0"
+		selectNodesForFaultPod(fJob, ids, totalNodes, spn, superPodId)
+		convey.So(len(totalNodes), convey.ShouldEqual, 1)
 	})
 
 }
