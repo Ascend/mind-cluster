@@ -19,11 +19,14 @@ import time
 import threading
 import signal
 import shutil
+from functools import wraps
+from packaging import version
 
 from string import Template
 from typing import Any, Dict, Optional, List, Union, Callable
 import torch.distributed.elastic.agent.server.api
 from torch.distributed.launcher import LaunchConfig, launch_agent
+from torch.distributed import PrefixStore
 from torch.distributed.elastic.agent.server.api import DEFAULT_ROLE, RunResult, WorkerGroup, WorkerState
 from torch.distributed.elastic.utils import macros
 from torch.distributed.elastic.utils.logging import get_logger
@@ -35,6 +38,19 @@ from taskd.python.toolkit.constants.constants import SLEEP_GAP, MAX_INI16, RESTA
 from taskd.python.framework.common.type import CONFIG_UPSTREAMIP_KEY, LOCAL_HOST, CONFIG_FRAMEWORK_KEY
 from taskd.python.framework.agent.pt_agent.pt_agent import get_pids
 
+def patch_create_c10d_store_decorator(func):
+    """
+    patch_create_c10d_store_decorator add tcp store prefix to fix tcp store is different in pod reschedule
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        attempt = os.getenv("TORCHELASTIC_RESTART_COUNT", "0")
+        original_generator = func(*args, **kwargs)
+        for value in original_generator:
+            store, rank, world_size = value
+            new_store = PrefixStore(f"/worker/attempt_{attempt}", store)
+            yield (new_store, rank, world_size)
+    return wrapper
 
 def patch_default_signal():
     time.sleep(SLEEP_GAP)
@@ -266,6 +282,9 @@ def patch_invoke_run(self, role: str = DEFAULT_ROLE) -> RunResult:
 
 
 def patch_torch_method():
+    if version.parse(torch.__version__) >= version.parse("2.6.0"):
+        run_log.info(f"Torch version {torch.__version__} >= 2.6.0，add create_c10d_store_decorator patch")
+        torch.distributed.distributed_c10d.rendezvous = patch_create_c10d_store_decorator(torch.distributed.distributed_c10d.rendezvous)
     torch.distributed.elastic.agent.server.api.SimpleElasticAgent._invoke_run = patch_invoke_run
     torch.distributed.elastic.multiprocessing.api._get_default_signal = patch_default_signal
     torch.distributed.launcher.api.launch_agent = patch_launch_agent
