@@ -93,7 +93,6 @@ const (
 	minGraceOverTime     = 2
 	maxGraceOverTime     = 3600
 	maxIntervalTime      = 300
-	maxRankIndex         = 1000
 
 	// PublicFaultType represents a PublicFault fault type
 	PublicFaultType = "PublicFault"
@@ -142,6 +141,10 @@ const (
 	pendingTimes             = 12
 	spPendingTimes           = 6
 	singleThreadDeletePodNum = 200
+
+	inValidTpBlock         = 0
+	backToVspPendingTimes  = 7
+	forceRackAffinityLimit = 1
 )
 
 const (
@@ -231,6 +234,7 @@ type FaultCard struct {
 // FaultNode node object for re-scheduling
 type FaultNode struct {
 	SuperPodID              int32
+	RackID                  int32
 	NodeName                string
 	NPUName                 string
 	FaultDeviceList         []FaultDeviceList
@@ -285,6 +289,13 @@ type FaultTask struct {
 	faultType          string
 	IsNpuTask          bool
 	Annotations        map[string]string
+	FaultTaskA5Field
+}
+
+// FaultTaskA5Field the field of a5
+type FaultTaskA5Field struct {
+	IsSatisfiedRackAffinity bool
+	IsBeingGracefulDeleted  bool
 }
 
 // miniFaultTask struct for print fTask important infos to logs
@@ -333,11 +344,18 @@ type FaultJob struct {
 	faultReason        string
 	UUID               types.UID
 	ReScheduleLimit    string
+	FaultJobA5Field
+}
+
+type FaultJobA5Field struct {
+	WhetherBackToVspSchedule bool
+	TpBlock                  int
+	IsMasterFault            bool
 }
 
 type deletePodInfo struct {
 	isMasterFault bool
-	superPod      bool
+	isSuperPod    bool
 	ids           []string
 	reason        string
 }

@@ -207,11 +207,11 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 			isMasterFault = true
 		}
 	}
-	superPod, ids := fJob.getFaultJobSuperPodInfo(schedulerJob, env)
+	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(schedulerJob, env)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
 		isMasterFault: isMasterFault,
-		superPod:      superPod,
+		isSuperPod:    isSuperPod,
 		ids:           ids,
 	}
 	fJob.forceDeletePods(schedulerJob, env, dpi)
@@ -219,13 +219,13 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 }
 
 func (fJob *FaultJob) getFaultJobSuperPodInfo(schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) (bool, []string) {
-	superPod := false
+	isSuperPod := false
 	ids := make([]string, 0)
 	if schedulerJob.IsSuperPodJob() {
-		superPod = true
+		isSuperPod = true
 		ids = fJob.getIds(env)
 	}
-	return superPod, ids
+	return isSuperPod, ids
 }
 
 func (fJob *FaultJob) forceDeletePods(schedulerJob *plugin.SchedulerJob,
@@ -261,7 +261,7 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 	// super pod, first delete fault task, when first task pending 6 session, try super pod rescheduling
 	// super pod, when pod pending 12 session, try job rescheduling
 	if fJob.IsJobSingleRescheduling(schedulerJob) && !fTask.IsFaultTask {
-		if !dpi.superPod {
+		if !dpi.isSuperPod {
 			return false
 		}
 		// single pod rescheduling stage, delete no pod
@@ -298,9 +298,10 @@ func (fJob *FaultJob) deletingTasksConcurrently(waitDeleteTask []FaultTask, kube
 		deleteJobSync.Add(1)
 		if i+singleThreadDeletePodNum > len(waitDeleteTask) {
 			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:], kubeClient, &deleteJobSync)
-			continue
+		} else {
+			go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], kubeClient,
+				&deleteJobSync)
 		}
-		go fJob.forceDeleteTasksConcurrently(waitDeleteTask[i:i+singleThreadDeletePodNum], kubeClient, &deleteJobSync)
 	}
 	deleteJobSync.Wait()
 }
@@ -482,11 +483,11 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 		return fmt.Errorf("schedulerJob does not exist")
 	}
 	reason, isMasterFault := fJob.getRestartInfos()
-	superPod, ids := fJob.getFaultJobSuperPodInfo(npuJob, env)
+	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(npuJob, env)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
 		isMasterFault: isMasterFault,
-		superPod:      superPod,
+		isSuperPod:    isSuperPod,
 		ids:           ids,
 		reason:        reason,
 	}

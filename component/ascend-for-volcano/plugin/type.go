@@ -205,9 +205,10 @@ type PendingReason map[string]sets.String
 
 // SuperPodInfo cache super pod info for pod rescheduling
 type SuperPodInfo struct {
-	SuperPodReschdInfo        map[api.JobID]map[string][]SuperNode // cache super pod re-schd info
-	SuperPodFaultTaskNodes    map[api.JobID][]string               // cache fault task nodes info
-	SuperPodMapFaultTaskNodes map[api.JobID]map[string]string      // cache task and nodes for stage2
+	SuperPodReschdInfo map[api.JobID]map[string][]SuperNode // cache super pod re-schd info
+	// cache fault task nodes info. Could be inaccurate, not recommended for use
+	SuperPodFaultTaskNodes    map[api.JobID][]string
+	SuperPodMapFaultTaskNodes map[api.JobID]map[string]string // cache task and nodes for stage2
 }
 
 // ScheduleHandler information for the current plugin
