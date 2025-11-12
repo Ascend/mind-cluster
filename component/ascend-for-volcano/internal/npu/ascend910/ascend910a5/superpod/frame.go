@@ -17,6 +17,8 @@ package superpod
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -90,5 +92,127 @@ func (tp *module910a5SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugi
 			return err
 		}
 	}
+	return nil
+}
+
+// choose one schedule strategy will use by NPUTaskNum
+func (tp *module910a5SuperPod) chooseWhichStrategyByNPUTaskNum() *api.ValidateResult {
+	if tp.NPUTaskNum <= npuTaskNum8 {
+		tp.scheduleStrategy = RackSchedule
+	} else if tp.NPUTaskNum <= tp.FrameAttr.SuperPodSize {
+		tp.scheduleStrategy = SuperPodSchedule
+	} else {
+		tp.scheduleStrategy = MulSuperPodsSchedule
+	}
+	return nil
+}
+
+// ScoreBestNPUNodes to score the nodes for Jobs, we should know all nodes to get rack topo and superpod topo
+func (tp *module910a5SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo,
+	sMap map[string]float64) error {
+	if tp == nil || task == nil || len(nodes) == 0 || len(sMap) == 0 {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("score best NPU nodes err: %s.", err)
+		return err
+	}
+
+	job, ok := tp.ScheduleEnv.Jobs[task.Job]
+	if !ok {
+		return fmt.Errorf("%s score best  NPU nodes %s: job does not exist", tp.GetPluginName(), task.Name)
+	}
+
+	defer func() {
+		tp.ScheduleEnv.Jobs[task.Job] = job
+	}()
+
+	if !*job.JobReadyTag {
+		return nil
+	}
+
+	// already selected nodes for this job, don't do that again
+	if tp.isJobCacheSuperPod(&job, task) {
+		return nil
+	}
+
+	if tp.NPUTaskNum == 1 {
+		nodes = tp.selectNodeForStandaloneJob(nodes)
+	}
+
+	selectedSpBlock, err := tp.selectNodesForJob(task, nodes)
+	if err != nil {
+		*job.JobReadyTag = false
+		return err
+	}
+	*job.JobReadyTag = true
+	job.SuperPods = selectedSpBlock
+	klog.V(util.LogInfoLev).Infof("selectedNodes in every sp-block information:%v", selectedSpBlock)
+
+	return nil
+}
+
+// select nodes depending on network topology type
+func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
+	nodes []*api.NodeInfo) (map[string][]plugin.SuperNode, error) {
+	if tp.spBlock == 0 {
+		return nil, errors.New("the spBlock value is zero")
+	}
+
+	var err error
+	selectedNodes := make(map[string][]plugin.SuperNode)
+
+	klog.V(util.LogInfoLev).Infof("input nodes num(%d) for task %s", len(nodes), task.Name)
+
+	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName())
+
+	spBlockCount := tp.NPUTaskNum / tp.spBlock
+
+	var unReadyIds []string
+	for i := 0; i < spBlockCount; i++ {
+		unReadyIds = append(unReadyIds, strconv.Itoa(i))
+	}
+
+	selectedNodes, err = tp.selectNodesFromSuperPods(task, superPodMap, unReadyIds, selectedNodes)
+
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("get error when selecting nodes by network type: %v", err)
+		return nil, err
+	}
+
+	return selectedNodes, nil
+}
+
+// select nodes from original superpods
+func (tp *module910a5SuperPod) selectNodesFromSuperPods(task *api.TaskInfo, superPodMap map[int32]superPod,
+	spBlockIDs []string, selectNodes map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
+	klog.V(util.LogInfoLev).Infof("selectNodes after selectNodesForFaultJob:%v", selectNodes)
+
+	superPodTopoInfo, err := getSuperPodsInfo(superPodMap, tp.FrameAttr.SuperPodSize, tp.spBlock)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("classify super pod failed!")
+		return nil, err
+	}
+
+	// make a choice to select nodes at the beginning. oneRack -> oneSuperPod -> multipleSuperPod
+	scheduleErr := tp.handleScheduleStrategy(spBlockIDs, task, superPodTopoInfo, selectNodes)
+	if scheduleErr != nil {
+		return nil, scheduleErr
+	}
+
+	return selectNodes, nil
+}
+
+func (tp *module910a5SuperPod) handleScheduleStrategy(unReadyIds []string, task *api.TaskInfo,
+	superPodTopoInfo superPodsInfo, selectNodes map[string][]plugin.SuperNode) error {
+	if len(unReadyIds) == 0 {
+		klog.V(util.LogInfoLev).Infof("all nodes have been selected before basic scheduling: %v", selectNodes)
+		return nil
+	}
+
+	scheduleSpec := newScheduleStrategy(tp, unReadyIds, selectNodes)
+	ret, err := scheduleSpec.entrySelect(&superPodTopoInfo)
+	if resErr := scheduleSpec.handleSelectResult(string(tp.Jobs[task.Job].Name), ret, err); resErr != nil {
+		return resErr
+	}
+
 	return nil
 }

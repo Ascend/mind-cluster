@@ -17,8 +17,6 @@ package superpod
 
 // for business use
 const (
-	// SuperPodA5Prefix the prefix value of superpod a5 handler name
-	SuperPodA5Prefix = "900SuperPod-A5"
 	// RackSchedule the rack schedule strategy selecting nodes in one rack
 	RackSchedule = 0
 	// SuperPodSchedule the superPod schedule strategy selecting nodes in one superPod
@@ -36,8 +34,8 @@ const (
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 	faultNPU            = "huawei.com/Ascend910-Fault"
 	nodeNum1            = 1
-	npuTaskNum8         = 8
 
+	npuTaskNum8    = 8
 	miniTpBlockNum = 1
 	rackNPUNumber  = 64
 

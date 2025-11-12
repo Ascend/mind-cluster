@@ -16,11 +16,14 @@
 package superpod
 
 import (
+	"errors"
 	"sort"
 
 	"k8s.io/klog"
+	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 // transferSuperPodToRackIdMap get a map with rackID key, and get all nodes by rackID in this superPod
@@ -84,3 +87,85 @@ func getUsableNPUIndex(input []int) [nodeNPUNum]bool {
 	return res
 }
 
+func getPositionInTop(podNum int, spBlock int) (int, int) {
+	if spBlock == 0 {
+		klog.V(util.LogWarningLev).Infof("getPositionInTop spBlock=%d is error value, will change to 1", spBlock)
+		spBlock = 1
+	}
+	row := (podNum - 1) % spBlock
+	col := (podNum - 1) / spBlock
+	return row, col
+}
+
+func getSuperPodMap(npuNodes map[string]plugin.NPUNode, nodes []*api.NodeInfo, pluginName string) map[int32]superPod {
+	totalNodes := make(map[int32]superPod)
+	for _, node := range nodes {
+		nNode, ok := npuNodes[node.Name]
+		if !ok {
+			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes %s is not npu node",
+				pluginName, node.Name)
+			continue
+		}
+		_, exist := totalNodes[nNode.SuperPodID]
+		if !exist {
+			totalNodes[nNode.SuperPodID] = superPod{}
+		}
+
+		totalNodes[nNode.SuperPodID][nNode.Name] = nodeBaseInfo{
+			name:       nNode.Name,
+			superPodID: nNode.SuperPodID,
+			rackID:     nNode.RackID,
+		}
+	}
+	return totalNodes
+}
+
+func initTable(superPodSize int, spBlock int) [][][]superPod {
+	maxRow := superPodSize/spBlock + 1
+	table := make([][][]superPod, spBlock)
+	for i := range table {
+		table[i] = make([][]superPod, maxRow)
+	}
+	return table
+}
+
+func getSuperPodsInfo(totalNodes map[int32]superPod, superPodSize int, spBlock int) (superPodsInfo, error) {
+	superPodTable := initTable(superPodSize, spBlock)
+	countVSuperPod := 0
+	column := 0
+	row := 0
+	for index, sp := range totalNodes {
+		klog.V(util.LogDebugLev).Infof("super-pod: %d, len: %d", index, len(sp))
+		if superPodSize < len(sp) {
+			klog.V(util.LogErrorLev).Infof("please adjust super-pod-size, now super-pod-size=(%d) "+
+				"but someone superPod's node size=(%d)", superPodSize, len(sp))
+			return superPodsInfo{
+				superPodTable: superPodTable,
+				spCount:       countVSuperPod,
+			}, errors.New("super-pod-size is smaller than superPod's node size")
+		}
+
+		if spBlock != 0 {
+			countVSuperPod += len(sp) / spBlock
+			if len(sp) > 0 {
+				column = (len(sp) - nodeNum1) / spBlock
+				row = (len(sp) - nodeNum1) % spBlock
+			} else {
+				continue
+			}
+		}
+
+		klog.V(util.LogInfoLev).Infof("super-pod-id<%d> in table index: column[%d], row[%d]", index, column,
+			row)
+
+		if len(superPodTable[row][column]) == 0 {
+			superPodTable[row][column] = make([]superPod, 0, 1)
+		}
+		superPodTable[row][column] = append(superPodTable[row][column], sp)
+	}
+
+	return superPodsInfo{
+		superPodTable: superPodTable,
+		spCount:       countVSuperPod,
+	}, nil
+}

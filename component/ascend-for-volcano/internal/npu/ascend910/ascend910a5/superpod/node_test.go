@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -34,9 +33,7 @@ import (
 const (
 	rackOsNum      = 8
 	npuNum8        = 8
-	nodeInfoIdx0   = 0
 	nodeInfoIdx4   = 4
-	nodeInfoIdx8   = 8
 	nodeInfoIdx9   = 9
 	nodeInfoIdx185 = 185
 )
@@ -331,34 +328,6 @@ func buildNodeBaseInfoArr(count int) []nodeBaseInfo {
 			superPodID: 1,
 			rackID:     1,
 		})
-	}
-	return nodes
-}
-
-func newNPUNodeWithNPUNum(nodeName string, superPodID int32, rackID int32,
-	npuList []int) plugin.NPUNode {
-	return plugin.NPUNode{
-		CommonNode: plugin.CommonNode{
-			Name:       nodeName,
-			SuperPodID: superPodID,
-			RackID:     rackID,
-			Annotation: map[string]string{
-				"huawei.com/Ascend910": buildCardAnnotationStr(npuList),
-				networkUnhealthyNPU:    "",
-				faultNPU:               "",
-			},
-			Label: map[string]string{
-				util.AcceleratorType: SuperPodx8,
-			},
-		},
-	}
-}
-
-func getNPUNodes(start int, end int, sp int, rack int) map[string]plugin.NPUNode {
-	nodes := make(map[string]plugin.NPUNode)
-	for i := start; i < end; i++ {
-		nodeName := "node" + strconv.Itoa(i)
-		nodes[nodeName] = newNPUNodeWithNPUNum(nodeName, int32(i/sp), int32(i/rack), npuList8)
 	}
 	return nodes
 }
