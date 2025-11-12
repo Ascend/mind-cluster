@@ -46,7 +46,7 @@ func (fTask *FaultTask) getNodeRankIndex(task *api.TaskInfo) (string, error) {
 		return "", fmt.Errorf("convert %s:%s", util.SafePrint(rankIndex), util.SafePrint(err))
 	}
 
-	if index > maxRankIndex || index < 0 {
+	if index < 0 {
 		return "", fmt.Errorf("rankIndex:%d out of limit", index)
 	}
 	klog.V(util.LogInfoLev).Infof("task %s rankIndex read from pod: %s", task.Name, rankIndex)
@@ -126,6 +126,10 @@ func (fTask *FaultTask) setIsFaultTask(value bool) {
 
 func (fTask *FaultTask) setFaultType(value string) {
 	fTask.faultType = value
+}
+
+func (fTask *FaultTask) setIsSatisfiedRackAffinity(value bool) {
+	fTask.IsSatisfiedRackAffinity = value
 }
 
 func (fTask *FaultTask) setNodeRankIndex(value string) {

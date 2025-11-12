@@ -271,6 +271,8 @@ const (
 	SinglePodTag = "pod-rescheduling"
 	// ProcessRecoverEnable the tag of process rescheduling
 	ProcessRecoverEnable = "process-recover-enable"
+	// ProcessRecoverPause close process recover temporarily
+	ProcessRecoverPause = "pause"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
 	// TorAffinityKey the key of tor affinity

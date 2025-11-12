@@ -114,10 +114,10 @@ func TestFindCommonElements(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(result, tt.expected) {
-  				t.Errorf("findCommonElements(%v, %v) = %v, expected %v", tt.list1, tt.list2, result, tt.expected)
- 			}
- 		})
-  	}
+				t.Errorf("findCommonElements(%v, %v) = %v, expected %v", tt.list1, tt.list2, result, tt.expected)
+			}
+		})
+	}
 }
 
 // calculateScore simulates score calculation
@@ -299,11 +299,11 @@ func (m *MockModule) GetAnnoPreVal() string {
 func changeTopToIntArray(topStr, prefix string) []int {
 	// Simple implementation for testing
 	if topStr == "[0,1]" {
-			var result = []int{0, 1}
-			return result
-		}
-		var empty []int
-		return empty
+		var result = []int{0, 1}
+		return result
+	}
+	var empty []int
+	return empty
 }
 
 // removeCommonElement removes common elements from two lists
@@ -559,43 +559,43 @@ func testDisFlagFalse(t *testing.T) {
 // testDisFlagWithAnnotationForNode tests scenarios with disFlag true
 func testDisFlagWithAnnotationForNode(t *testing.T) {
 	t.Run("withValidAnnotation", func(t *testing.T) {
-			tc := NodeTestCase{
-				DisFlag:        true,
-				NodeAnnotation: map[string]string{"network-unhealthy": "[0,1]"},
-				UsableTop:      []int{0, 1, 2, 3},
-				GetTopErr:      nil,
-				ExpectedTop:    []int{2, 3},
-				ExpectErr:      false,
-			}
-			testGetUsableTopFromNodeCase(t, tc)
-		})
+		tc := NodeTestCase{
+			DisFlag:        true,
+			NodeAnnotation: map[string]string{"network-unhealthy": "[0,1]"},
+			UsableTop:      []int{0, 1, 2, 3},
+			GetTopErr:      nil,
+			ExpectedTop:    []int{2, 3},
+			ExpectErr:      false,
+		}
+		testGetUsableTopFromNodeCase(t, tc)
+	})
 
-		t.Run("withoutAnnotation", func(t *testing.T) {
-			tc := NodeTestCase{
-				DisFlag:        true,
-				NodeAnnotation: nil,
-				UsableTop:      []int{0, 1, 2, 3},
-				GetTopErr:      nil,
-				ExpectedTop:    nil,
-				ExpectErr:      true,
-			}
-			testGetUsableTopFromNodeCase(t, tc)
-		})
+	t.Run("withoutAnnotation", func(t *testing.T) {
+		tc := NodeTestCase{
+			DisFlag:        true,
+			NodeAnnotation: nil,
+			UsableTop:      []int{0, 1, 2, 3},
+			GetTopErr:      nil,
+			ExpectedTop:    nil,
+			ExpectErr:      true,
+		}
+		testGetUsableTopFromNodeCase(t, tc)
+	})
 }
 
 // testErrorCases tests error scenarios
 func testErrorCases(t *testing.T) {
 	t.Run("getTopReturnsError", func(t *testing.T) {
-			tc := NodeTestCase{
-				DisFlag:        false,
-				NodeAnnotation: nil,
-				UsableTop:      nil,
-				GetTopErr:      fmt.Errorf("simulated error"),
-				ExpectedTop:    nil,
-				ExpectErr:      true,
-			}
-			testGetUsableTopFromNodeCase(t, tc)
-		})
+		tc := NodeTestCase{
+			DisFlag:        false,
+			NodeAnnotation: nil,
+			UsableTop:      nil,
+			GetTopErr:      fmt.Errorf("simulated error"),
+			ExpectedTop:    nil,
+			ExpectErr:      true,
+		}
+		testGetUsableTopFromNodeCase(t, tc)
+	})
 }
 
 // NodeTestCase defines parameters for getUsableTopFromNode test cases

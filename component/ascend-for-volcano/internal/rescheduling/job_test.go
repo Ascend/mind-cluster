@@ -533,7 +533,7 @@ func initIsNormalTaskCanBeDeleteArgs() isNormalTaskCanBeDeleteArgs {
 	}
 	dpi := &deletePodInfo{
 		isMasterFault: false,
-		superPod:      false,
+		isSuperPod:    false,
 		ids:           nil,
 		reason:        "",
 	}
@@ -558,7 +558,7 @@ func TestIsNormalTaskCanBeDelete(t *testing.T) {
 				t.Errorf("isNormalTaskCanBeDelete() res = %v, wantRes is false", res)
 			}
 		})
-	args.deletePodInfo.superPod = true
+	args.deletePodInfo.isSuperPod = true
 	t.Run("02-isNormalTaskCanBeDelete return false when fJob.PendingSessionNum less than 6",
 		func(t *testing.T) {
 			args.faultJob.PendingSessionNum = mockNumFive
