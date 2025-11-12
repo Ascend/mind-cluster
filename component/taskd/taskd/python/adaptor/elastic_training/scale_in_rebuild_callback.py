@@ -25,7 +25,6 @@ from mindio_ttp.adaptor import tft_replica_group, utils
 
 from . import common
 from .common import destroy_sub_process_group
-from .scale_out_rebuild_process_group_callback import update_model_and_optim_related_group
 
 
 def scale_in_rebuild_callback(new_dp_ranks: list, new_world_ranks: list, args, params: str):
@@ -35,7 +34,6 @@ def scale_in_rebuild_callback(new_dp_ranks: list, new_world_ranks: list, args, p
     if len(args) <= utils.TRAIN_PARAM or len(args[utils.TRAIN_PARAM]) <= utils.MODEL_INDEX:
         raise RuntimeError(f"args error: {args}")
     models = args[utils.TRAIN_PARAM][utils.MODEL_INDEX]
-    optimizer = args[utils.TRAIN_PARAM][utils.OPTIM_INDEX]
     arguments = get_args()
     if arguments.expert_model_parallel_size > 1 or arguments.context_parallel_size > 1:
         raise RuntimeError(f"not support ep or cp bigger than 1, but got ep: {arguments.expert_model_parallel_size} "
@@ -60,7 +58,7 @@ def scale_in_rebuild_callback(new_dp_ranks: list, new_world_ranks: list, args, p
                                        both_replica_group_fault, changed_old_dp_ranks)
     rebuild_not_changed_group(cur_rank, both_replica_group_fault, arguments)
     ttp_logger.LOGGER.info(f"rank: {cur_rank} rebuild not changed group done")
-    update_model_and_optim_related_group(models, optimizer)
+    change_model_group(models)
     change_num_micro_batches(old_dp_ranks, new_dp_ranks, arguments)
     common.update_scale_in_flag(True)
     timers = get_timers()
