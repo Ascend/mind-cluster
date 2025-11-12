@@ -126,6 +126,8 @@ func initCard910Factory() {
 		func() base.AscendHandler { return ascend800ia5superpod.New(ascend800ia5superpod.InferSchedulerName) }
 	card910Factory[ascend800ia5superpod.TrainSchedulerName] =
 		func() base.AscendHandler { return ascend800ia5superpod.New(ascend800ia5superpod.InferSchedulerName) }
+	card910Factory[ascend800ia5stacking.SchedulerName] =
+		func() base.AscendHandler { return ascend800ia5stacking.New(ascend800ia5stacking.SchedulerName) }
 }
 
 // InitPolicyHandler initializes the NPU affinity policy handler
