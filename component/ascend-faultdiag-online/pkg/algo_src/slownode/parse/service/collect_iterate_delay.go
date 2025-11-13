@@ -23,7 +23,7 @@ import (
 
 // CollectIterateDelay 收集迭代时延，将用于劣化感知算法
 func CollectIterateDelay(startEndNsList []*model.StepStartEndNs) ([]*model.StepIterateDelay, error) {
-	var iterateDelayInfo []*model.StepIterateDelay
+	var iterateDelayInfo = make([]*model.StepIterateDelay, 0, len(startEndNsList))
 	for _, data := range startEndNsList {
 		if data == nil {
 			continue
