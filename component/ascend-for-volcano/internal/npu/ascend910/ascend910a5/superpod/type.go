@@ -26,6 +26,7 @@ import (
 type module910a5SuperPod struct {
 	ascend910a5.Base910A5
 	jobParams
+	isSoftSuperPodAffinity bool
 }
 
 type jobParams struct {
@@ -67,4 +68,6 @@ const (
 	SuperPodx8 = "900SuperPod-A5-8"
 	// SuperPodx8SchedulerName maxNodeNPUNum is 8
 	SuperPodx8SchedulerName = util.HwPreName + util.Ascend910 + SuperPodx8
+	superPodAffinity        = "super-pod-affinity"
+	softRequire             = "soft"
 )

@@ -340,6 +340,28 @@ func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTest
 	return plg
 }
 
+func packageModuleSuperPod4Soft(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *module910a5SuperPod {
+	plg := superPodModelForTest(tasks, cs)
+	jobs := make(map[api.JobID]plugin.SchedulerJob)
+	job := plugin.SchedulerJob{
+		JobReadyTag: new(bool),
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{
+				Annotation: map[string]string{},
+				Label: map[string]string{
+					superPodAffinity: softRequire,
+				},
+			},
+			NPUJob: &util.NPUJob{},
+		},
+		SuperPods: map[string][]plugin.SuperNode{},
+	}
+	*job.JobReadyTag = true
+	jobs[tasks[0].Job] = job
+	plg.Jobs = jobs
+	return plg
+}
+
 func checkScoreBestNPUNodesResult(selectedNodes map[string][]plugin.SuperNode) map[int32]*selectedRackInfo {
 	if selectedNodes == nil {
 		return make(map[int32]*selectedRackInfo)

@@ -17,6 +17,7 @@ package superpod
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"k8s.io/klog"
@@ -63,7 +64,7 @@ func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error
 	if tp == nil {
 		return false, errors.New("strategy is nil")
 	}
-	if superPodTopo.spCount < len(tp.unReadyIds) {
+	if superPodTopo.spCount < len(tp.unReadyIds) && !tp.isSoftSuperPodAffinity {
 		return false, fmt.Errorf("select super pod failed, required sp-block count=%d, but total sp-block count=%d",
 			len(tp.unReadyIds), superPodTopo.spCount)
 	}
@@ -72,12 +73,12 @@ func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error
 
 	tp.searchTable(superPodTopo.superPodTable)
 
-	if len(tp.selectedNodes) == 0 && requireTpBlockCount == 1 {
+	if len(tp.selectedNodes) == 0 && requireTpBlockCount == 1 && !tp.isSoftSuperPodAffinity {
 		return false, fmt.Errorf("not found the %d count of the tp-block:%d in all racks of every super-pod,"+
 			" exit select process", requireTpBlockCount, tp.TpBlockNPUNum)
 	}
 
-	if len(tp.selectedNodes) == 0 && tp.TpBlockNPUNum >= npuNumber8 {
+	if len(tp.selectedNodes) == 0 && tp.TpBlockNPUNum >= npuNumber8 && !tp.isSoftSuperPodAffinity {
 		klog.V(util.LogWarningLev).Infof("try to schedule job in multiple rack in one superpod " +
 			"after scheduling in one rack failed,")
 	}
@@ -312,8 +313,32 @@ func (tp *mulSuperPodsStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, 
 		return true, nil
 	}
 
+	// to break sp tp limit, use soft schedule
+	if tp.isSoftSuperPodAffinity {
+		former := tp.getSelectedNodesNum()
+		needNode := tp.NPUTaskNum - former
+		klog.V(util.LogWarningLev).Infof("multiple superpods schedule failed, job <%s> will scheduling as"+
+			" soft strategy", tp.Name)
+		last := tp.selectFromSuperPodsWithSoftStrategy(superPodTopo.superPodTable, needNode)
+		if last == 0 {
+			return true, nil
+		} else {
+			return false, fmt.Errorf("soft schedule job failed, need <%d> nodes, could only schedule <%d> nodes",
+				needNode, former-last)
+		}
+	}
+
 	return false, fmt.Errorf("schedule job failed, need <%d> spBlock, could only schedule <%d> sp-block",
 		len(tp.unReadyIds), len(tp.unReadyIds)-tp.totalCount)
+}
+
+// getSelectedNodesNum
+func (tp *mulSuperPodsStrategy) getSelectedNodesNum() int {
+	amount := 0
+	for _, sp := range tp.selectedNodes {
+		amount += len(sp)
+	}
+	return amount
 }
 
 func (tp *mulSuperPodsStrategy) searchTable(superPodTable superPodOrderTable) {
@@ -379,4 +404,91 @@ func (tp *mulSuperPodsStrategy) checkSuperPodIsSatisfied(rackGroup map[int32][]n
 		}
 	}
 	return false
+}
+
+func (tp *mulSuperPodsStrategy) selectFromSuperPodsWithSoftStrategy(superPodTable superPodOrderTable, remainingNodesSelecting int) int {
+	row, col := getPositionInTop(tp.FrameAttr.SuperPodSize, tp.spBlock)
+	recorder := &vPodIdRecorder{unReadyId: tp.unReadyIds, leftIndex: tp.totalCount - 1, rightIndex: tp.NPUTaskNum}
+	for j := col; j >= 0; j-- {
+		for i := row; i >= 0; i-- {
+			if len(superPodTable[i][j]) == 0 {
+				continue
+			}
+			superPodTable[i][j], remainingNodesSelecting = tp.IterateEverySuperPodWithoutFilter(superPodTable[i][j], remainingNodesSelecting, recorder)
+			if remainingNodesSelecting == 0 {
+				return remainingNodesSelecting
+			}
+		}
+		row = len(superPodTable) - 1
+	}
+	return remainingNodesSelecting
+}
+
+// IterateEverySuperPodWithoutFilter soft ver of IterateEverySuperPod
+func (tp *mulSuperPodsStrategy) IterateEverySuperPodWithoutFilter(superPods []superPod, remainingNodesSelecting int, recorder *vPodIdRecorder) ([]superPod, int) {
+	for i := 0; i < len(superPods); i++ {
+		selectedOneSp := 0
+		rackGroup := transferSuperPodToRackIdMap(superPods[i])
+		rackIdGroup := sortRackIdByLengthInOneSuperPod(rackGroup)
+		superPods[i], selectedOneSp = tp.doNoFilterSelect(superPods[i], rackIdGroup, remainingNodesSelecting, recorder)
+		remainingNodesSelecting -= selectedOneSp
+	}
+	return superPods, remainingNodesSelecting
+}
+
+func (r *vPodIdRecorder) getVPodID() string {
+	if r.leftIndex >= len(r.unReadyId) {
+		return ""
+	}
+	if r.leftIndex < 0 {
+		ans := strconv.Itoa(r.rightIndex)
+		r.rightIndex--
+		return ans
+	}
+	ans := r.unReadyId[r.leftIndex]
+	r.leftIndex--
+	return ans
+}
+
+// doNoFilterSelect soft ver of doSelect
+func (tp *mulSuperPodsStrategy) doNoFilterSelect(superPod map[string]nodeBaseInfo,
+	rackIdGroup []int32, nodeNeed int, recorder *vPodIdRecorder) (map[string]nodeBaseInfo, int) {
+	count := 0
+	reserveNode := make(map[string]nodeBaseInfo, len(superPod)-tp.spBlock)
+	if tp.selectedNodes == nil {
+		klog.V(util.LogErrorLev).Infof("inner error with selected nodes")
+		return superPod, count
+	}
+	superPodWithRackId := transferSuperPodToRackIdMap(superPod)
+	for _, rackId := range rackIdGroup {
+		if len(superPodWithRackId[rackId]) == 0 {
+			continue
+		}
+		spIndex := recorder.getVPodID()
+		for _, nNode := range superPodWithRackId[rackId] {
+			if count >= nodeNeed {
+				reserveNode[nNode.name] = nNode
+				continue
+			}
+			klog.V(util.LogInfoLev).Infof("select nNode %s, super-pod ID: %d, rack ID: %d",
+				nNode.name, nNode.superPodID, nNode.rackID)
+			_, ok := tp.selectedNodes[spIndex]
+			if !ok {
+				klog.V(util.LogErrorLev).Infof("inner error with selected nodes")
+				tp.selectedNodes[spIndex] = make([]plugin.SuperNode, 0)
+			}
+			tp.selectedNodes[spIndex] = append(tp.selectedNodes[spIndex], plugin.SuperNode{
+				Name:       nNode.name,
+				SuperPodID: nNode.superPodID,
+				RackID:     nNode.rackID,
+			})
+			count++
+		}
+	}
+	if count == 0 {
+		klog.V(util.LogInfoLev).Infof("select nNode in Racks failed")
+		return superPod, count
+	}
+	tp.totalCount--
+	return reserveNode, count
 }

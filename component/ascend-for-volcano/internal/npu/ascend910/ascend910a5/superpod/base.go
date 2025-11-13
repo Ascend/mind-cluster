@@ -58,6 +58,12 @@ type mulSuperPodsStrategy struct {
 	strategy
 }
 
+type vPodIdRecorder struct {
+	unReadyId  []string
+	leftIndex  int
+	rightIndex int
+}
+
 // doSelect select nodes from ubmem level or superpod level, when we have selected one sp-block count nodes, return result
 func (tp *strategy) doSelect(rackGroup map[int32][]nodeBaseInfo, superPod superPod) map[int32][]nodeBaseInfo {
 	spIndex := tp.unReadyIds[tp.totalCount-1]

@@ -26,9 +26,10 @@ import (
 
 type module800SuperPod struct {
 	ascend800ia5.Base800ia5
-	netUnhealthyKey string
-	spBlock         int
-	nodeVPodId      map[string]string
+	netUnhealthyKey        string
+	spBlock                int
+	nodeVPodId             map[string]string
+	isSoftSuperPodAffinity bool
 }
 
 const (
@@ -50,11 +51,19 @@ const (
 	delayingTime               = 10
 	superPodRankKey            = "super-pod-rank"
 	superPodIdKey              = "super-pod-id"
+	superPodAffinity           = "super-pod-affinity"
+	softRequire                = "soft"
 )
 
 type superPodInfo struct {
 	firstLevel     remainderTop
 	countVSuperPod int
+}
+
+type vPodIdRecorder struct {
+	unReadyId  []string
+	leftIndex  int
+	rightIndex int
 }
 
 type remainderTop = [][][]superPod

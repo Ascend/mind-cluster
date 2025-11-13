@@ -317,6 +317,7 @@ func (tp *module800SuperPod) selectSuperPodForJob(task *api.TaskInfo, nodes []*a
 	if !tp.checkSpBlockGtZero() {
 		return nil, fmt.Errorf("select super pod failed, sp-block less than 0")
 	}
+	tp.isSoftSuperPodAffinity = tp.Label[superPodAffinity] == softRequire
 	totalRequiredSuperPod := tp.NPUTaskNum / tp.spBlock
 	vSuperPodID := make(map[string]bool, totalRequiredSuperPod)
 	for i := 0; i < totalRequiredSuperPod; i++ {
@@ -337,10 +338,13 @@ func (tp *module800SuperPod) selectSuperPodForJob(task *api.TaskInfo, nodes []*a
 		}
 	}
 
-	if spi.countVSuperPod < len(unReadyID) {
+	isSuperPodRescheduling := tp.SchedulingTaskNum < len(tp.Tasks) && tp.SchedulingTaskNum > util.NPUIndex1
+
+	if spi.countVSuperPod < len(unReadyID) && (!tp.isSoftSuperPodAffinity ||
+		(tp.isSoftSuperPodAffinity && isSuperPodRescheduling)) {
 		return nil, fmt.Errorf("select super pod failed, required %d, total %d", len(unReadyID), spi.countVSuperPod)
 	}
-	tp.selectNodes(unReadyID, &spi, selectNodes)
+	tp.selectNodes(unReadyID, &spi, selectNodes, len(vSuperPodID))
 
 	return selectNodes, nil
 }
@@ -787,7 +791,7 @@ func (tp *module800SuperPod) classifySuperPod(totalNodes map[int32]superPod) (su
 	}
 	for index, sp := range totalNodes {
 		klog.V(util.LogInfoLev).Infof("super-pod: %d, len: %d", index, len(sp))
-		if len(sp) < tp.spBlock {
+		if len(sp) < tp.spBlock && !tp.isSoftSuperPodAffinity {
 			continue
 		}
 		if tp.FrameAttr.SuperPodSize < len(sp) {
@@ -819,7 +823,7 @@ func (tp *module800SuperPod) classifySuperPod(totalNodes map[int32]superPod) (su
 }
 
 func (tp *module800SuperPod) selectNodes(unReadyID []string, spi *superPodInfo,
-	selectNodes map[string][]plugin.SuperNode) {
+	selectNodes map[string][]plugin.SuperNode, maxId int) {
 	totalCount := len(unReadyID)
 	if spi == nil {
 		klog.V(util.LogErrorLev).Info("select nodes failed, super pod info is nil")
@@ -828,6 +832,7 @@ func (tp *module800SuperPod) selectNodes(unReadyID []string, spi *superPodInfo,
 	tp.selectFromSmallerSuperPods(unReadyID, spi, selectNodes, &totalCount)
 	tp.selectFromBiggerSuperPods(unReadyID, spi, selectNodes, &totalCount)
 	tp.selectFromSuperPodsWithReserve(unReadyID, spi, selectNodes, &totalCount)
+	tp.selectFromSuperPodsWithSoftStrategy(unReadyID, spi, selectNodes, &totalCount, maxId)
 }
 
 func (tp *module800SuperPod) selectFromSmallerSuperPods(unReadyID []string, spi *superPodInfo,
@@ -933,7 +938,7 @@ func (tp *module800SuperPod) selectNodesFromSuperPod(vid string, superPod map[st
 	if selectNodes == nil {
 		return reserveNode
 	}
-	if len(superPod) < tp.spBlock {
+	if len(superPod) < tp.spBlock && !tp.isSoftSuperPodAffinity {
 		return superPod
 	}
 	rescheduleCache := rescheduling.GetReSchedulerCache()
@@ -974,6 +979,71 @@ func (tp *module800SuperPod) selectNodesFromSuperPod(vid string, superPod map[st
 		delete(reserveNode, subHealthyNodes[i].Name)
 	}
 	return reserveNode
+}
+
+func (tp *module800SuperPod) selectFromSuperPodsWithSoftStrategy(unReadyID []string, spi *superPodInfo,
+	selectNodes map[string][]plugin.SuperNode, totalCount *int, maxId int) {
+	selectNodeNum := 0
+	for _, spNodes := range selectNodes {
+		selectNodeNum += len(spNodes)
+	}
+	needNode := tp.NPUTaskNum - selectNodeNum
+	if needNode <= 0 {
+		return
+	}
+	recorder := &vPodIdRecorder{unReadyId: unReadyID, leftIndex: *totalCount - 1, rightIndex: maxId}
+	klog.V(util.LogWarningLev).Infof("select from super pods which is less than sp block, totalNodes: %d", needNode)
+	klog.V(util.LogWarningLev).Infof("job <%s> will scheduling as soft strategy", tp.Name)
+	// select super pod which is less than sp block and more than reserve nodes
+	for i := tp.spBlock - 1; i >= 0 && i >= tp.FrameAttr.ReservePodSize; i-- {
+		for j := 0; j < len(spi.firstLevel[0]); j++ {
+			tp.selectNodesForSoftStrategy(recorder, &needNode, spi.firstLevel[i][j], selectNodes)
+		}
+	}
+
+	// select super pod which is less than reserve nodes
+	for i := 0; i < tp.spBlock && i < tp.FrameAttr.ReservePodSize; i++ {
+		for j := 0; j < len(spi.firstLevel[0]); j++ {
+			tp.selectNodesForSoftStrategy(recorder, &needNode, spi.firstLevel[i][j], selectNodes)
+		}
+	}
+}
+
+func (tp *module800SuperPod) selectNodesForSoftStrategy(recorder *vPodIdRecorder, totalNode *int,
+	superPods []superPod, selectNodes map[string][]plugin.SuperNode) []superPod {
+	sort.Slice(superPods, func(i, j int) bool {
+		return len(superPods[i]) > len(superPods[j])
+	})
+	for k := 0; k < len(superPods); k++ {
+		if *totalNode <= 0 {
+			return superPods
+		}
+		if len(superPods[k]) == 0 {
+			break
+		}
+		nodeNum := len(superPods[k])
+		vid := recorder.getVPodID()
+		if vid == "" {
+			break
+		}
+		superPods[k] = tp.selectNodesFromSuperPod(vid, superPods[k], selectNodes)
+		*totalNode = *totalNode - nodeNum + len(superPods[k])
+	}
+	return superPods
+}
+
+func (r *vPodIdRecorder) getVPodID() string {
+	if r.unReadyId == nil || r.leftIndex >= len(r.unReadyId) {
+		return ""
+	}
+	if r.leftIndex < 0 {
+		ans := strconv.Itoa(r.rightIndex)
+		r.rightIndex++
+		return ans
+	}
+	ans := r.unReadyId[r.leftIndex]
+	r.leftIndex--
+	return ans
 }
 
 // UseAnnotation select npu for task from node

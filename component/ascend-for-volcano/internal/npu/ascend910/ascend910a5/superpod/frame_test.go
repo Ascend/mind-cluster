@@ -319,6 +319,60 @@ func TestSelectNodesForJob(t *testing.T) {
 	}
 }
 
+// 8sp soft schedule
+func buildSelectScoreBestNPUNodesTestCases12() []*selectScoreBestNPUNodesTestCase {
+	var nodeInfo1 []*api.NodeInfo
+	nodeInfo1 = append(nodeInfo1, buildNodeInfos(nodeInfoIdx0, nodeInfoIdx0, nil)...)
+	nodeInfo1 = append(nodeInfo1, buildNodeInfos(nodeInfoIdx8, nodeInfoIdx8, nil)...)
+	selectSuperPodForJobTestCases := []*selectScoreBestNPUNodesTestCase{
+		{
+			name: "case Test 2Pod * 8卡; ; SuperPodSize=64, npuTaskNum=2;" +
+				"use MultiSuperPodSchedule will failed, use soft schedule will success",
+			tasks:            newNPUTasks(npuTaskNum2, nodeNPUNum),
+			npuTaskNum:       npuTaskNum2,
+			nodes:            nodeInfo1,
+			superPodSize:     superPodSize64,
+			npuNodes:         getNPUNodes(nodeInfoIdx0, nodeInfoIdx80, superPodSize64, rackNodeNum),
+			scheduleStrategy: MulSuperPodsSchedule,
+			spBlock:          tpBlock2,
+			tpBlock:          tpBlock2,
+			isNeedAlgoAlign:  false,
+			wantRes: map[int32]*selectedRackInfo{
+				0: {
+					selectedRacksInSuperPod: 2,
+					selectedNodesInRack:     []int{1, 1},
+				},
+			},
+			wantErr: nil,
+		},
+	}
+	return selectSuperPodForJobTestCases
+}
+
+func TestScoreBestNPUNode2(t *testing.T) {
+	selectScoreBestNPUNodesTestCases := buildSelectScoreBestNPUNodesTestCases12()
+	// 获取所需task
+	tasks := getTaskInfos(npuTaskNum2, "job1")
+	scoreMap := make(map[string]float64)
+	for _, cs := range selectScoreBestNPUNodesTestCases {
+		t.Run(cs.name, func(t *testing.T) {
+			// 封装910A5打分所需参数 获取moduleSuperPod对象
+			plg := packageModuleSuperPod4Soft(tasks, cs)
+			plg.Label = map[string]string{superPodAffinity: softRequire}
+			plg.tpBlock = cs.tpBlock
+			suitableNode := cs.nodes
+			for _, index := range cs.nodes {
+				scoreMap[index.Name] = 0.0
+			}
+			err := plg.ScoreBestNPUNodes(tasks[npuTaskNum0], suitableNode, scoreMap)
+			if !reflect.DeepEqual(err, cs.wantErr) {
+				t.Errorf("ScoreBestNPUNodes() error = %v, wantErr %v", err, cs.wantErr)
+			}
+			checkScoreBestNPUNodesResult(plg.Jobs[tasks[npuTaskNum0].Job].SuperPods)
+		})
+	}
+}
+
 func buildTestScoreBestNPUNodes0() []*selectScoreBestNPUNodesTestCase {
 	nodeInfo := buildDefaultNodeInfoList()
 	selectSuperPodForJobTestCases := []*selectScoreBestNPUNodesTestCase{
