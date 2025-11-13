@@ -346,7 +346,7 @@ func TestGetNpuNum(t *testing.T) {
 		"node3": node3,
 		"node4": node4,
 	}
-	expectedResult := 4
+	expectedResult := 5
 	t.Run("test GetNpuNum", func(t *testing.T) {
 		if result := getNpuNum(ssn, plg, "huawei.com/Ascend910"); result != expectedResult {
 			t.Errorf("getNpuNum() = %v, want %v", result, expectedResult)

@@ -255,7 +255,7 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 		deviceList := strings.Split(deviceInfo, ",")
 		klog.V(util.LogInfoLev).Infof("Add enqueue node %s deviceList is: %#v", vcNode.Name, deviceList)
 		npuNum, ok := vcNode.Idle[v1.ResourceName(npuName)]
-		if !ok || len(deviceList) != int(npuNum/util.NPUHexKilo) {
+		if !ok || len(deviceList) > int(npuNum/util.NPUHexKilo) {
 			klog.V(util.LogErrorLev).Infof("Add enqueue node %s device info is %v and k8s is %v", vcNode.Name,
 				len(deviceList), int(npuNum/util.NPUHexKilo))
 			continue
