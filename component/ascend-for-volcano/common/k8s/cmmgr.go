@@ -227,6 +227,7 @@ func (cmMgr *ClusterInfoWitchCm) dealClusterDeviceInfo(cm *v1.ConfigMap, operato
 			cmMgr.deviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
 				NodeDeviceInfo:  deviceInfo.NodeDeviceInfo,
 				SuperPodID:      deviceInfo.SuperPodID,
+				RackID:          deviceInfo.RackID,
 				CacheUpdateTime: time.Now().Unix(),
 			}
 		} else if operator == util.DeleteOperator {
@@ -291,6 +292,7 @@ func (cmMgr *ClusterInfoWitchCm) createOrUpdateDeviceInfo(cm *v1.ConfigMap) {
 	cmMgr.deviceInfos.Devices[nodeName] = NodeDeviceInfoWithID{
 		NodeDeviceInfo:  devInfo.DeviceInfo,
 		SuperPodID:      devInfo.SuperPodID,
+		RackID:          devInfo.RackID,
 		CacheUpdateTime: time.Now().Unix(),
 	}
 	cmMgr.deviceInfos.Unlock()
@@ -374,6 +376,7 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 			UpdateTime: deviceInfo.UpdateTime,
 		},
 		SuperPodID:      deviceInfo.SuperPodID,
+		RackID:          deviceInfo.RackID,
 		CacheUpdateTime: deviceInfo.CacheUpdateTime,
 	}
 	availableDevKey, _ := util.GetAvailableDevInfo(deviceInfo.DeviceList)
