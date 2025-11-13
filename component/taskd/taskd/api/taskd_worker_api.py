@@ -60,6 +60,7 @@ def start_taskd_worker() -> bool:
         run_log.error(f"Failed to start worker: {e}")
         return False
 
+
 def destroy_taskd_worker() -> bool:
     """
     Destroys the taskd worker
