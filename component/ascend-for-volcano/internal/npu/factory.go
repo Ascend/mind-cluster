@@ -34,6 +34,7 @@ import (
 	ascend800ia5superpod "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend800ia5/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/module910a3x16"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5/module300ia5"
 	superpoda5 "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5/superpod"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b/module910bx16"
 	vnpu2 "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b/vnpu"
@@ -128,6 +129,14 @@ func initCard910Factory() {
 		func() base.AscendHandler { return ascend800ia5superpod.New(ascend800ia5superpod.InferSchedulerName) }
 	card910Factory[ascend800ia5stacking.SchedulerName] =
 		func() base.AscendHandler { return ascend800ia5stacking.New(ascend800ia5stacking.SchedulerName) }
+	card910Factory[module300ia5.Ascend300I4Px8Label] =
+		func() base.AscendHandler { return module300ia5.New(module300ia5.Ascend300I4Px8Label) }
+	card910Factory[module300ia5.Ascend300I4Px16Label] =
+		func() base.AscendHandler { return module300ia5.New(module300ia5.Ascend300I4Px16Label) }
+	card910Factory[module300ia5.Ascend300Ix8Label] =
+		func() base.AscendHandler { return module300ia5.New(module300ia5.Ascend300Ix8Label) }
+	card910Factory[module300ia5.Ascend300Ix16Label] =
+		func() base.AscendHandler { return module300ia5.New(module300ia5.Ascend300Ix16Label) }
 }
 
 // InitPolicyHandler initializes the NPU affinity policy handler
