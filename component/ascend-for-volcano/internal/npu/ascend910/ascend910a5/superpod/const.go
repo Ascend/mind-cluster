@@ -23,6 +23,12 @@ const (
 	SuperPodSchedule = 2
 	// MulSuperPodsSchedule the multiple superPod schedule strategy selecting nodes in multiple superPods
 	MulSuperPodsSchedule = 3
+	// UninitializedRestRackLenMapId 未初始化的RestRackLenMapId
+	UninitializedRestRackLenMapId int32 = -1
+	// FirstRescheduleStage the first stage of rescheduling
+	FirstRescheduleStage = 6
+	// SecondRescheduleStage the second stage of rescheduling
+	SecondRescheduleStage = 12
 )
 
 const (
@@ -34,6 +40,8 @@ const (
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 	faultNPU            = "huawei.com/Ascend910-Fault"
 	nodeNum1            = 1
+
+	tpBlock1 = 1
 
 	npuTaskNum8    = 8
 	miniTpBlockNum = 1

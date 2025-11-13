@@ -29,14 +29,15 @@ type module910a5SuperPod struct {
 }
 
 type jobParams struct {
-	spBlock          int
-	tpBlock          int
-	totalCount       int
-	scheduleStrategy int
-	acceleratorValue string
-	isNeedAlgoAlign  bool
-	netUnhealthyKey  string
-	faultNPUKey      string
+	spBlock                  int
+	tpBlock                  int
+	totalCount               int
+	scheduleStrategy         int
+	acceleratorValue         string
+	isNeedAlgoAlign          bool
+	netUnhealthyKey          string
+	faultNPUKey              string
+	whetherBackToVspSchedule bool
 }
 
 type superPodsInfo struct {

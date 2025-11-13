@@ -169,3 +169,30 @@ func getSuperPodsInfo(totalNodes map[int32]superPod, superPodSize int, spBlock i
 		spCount:       countVSuperPod,
 	}, nil
 }
+
+// filterRackIdByTpBlock filter RackIds if their len is less than tpBlock
+func filterRackIdByTpBlock(superPodWithRack map[int32][]nodeBaseInfo, tpBlock int) {
+	for rackId, nodes := range superPodWithRack {
+		if len(nodes) < tpBlock {
+			klog.V(util.LogInfoLev).Infof("the usable nodes %v in rack %v are unreachable because of tp-block",
+				nodes, rackId)
+			delete(superPodWithRack, rackId)
+		}
+	}
+}
+
+func (tp *module910a5SuperPod) getOriginRackId(superPodWithRackId map[int32][]nodeBaseInfo,
+	faultNodeNameMap map[string]struct{}, vSuperPod []plugin.SuperNode) int32 {
+	for _, nodeOfFJob := range vSuperPod {
+		if _, ok := faultNodeNameMap[nodeOfFJob.Name]; !ok {
+			continue
+		}
+		for rackId, _ := range superPodWithRackId {
+			if rackId == nodeOfFJob.RackID {
+				klog.V(util.LogInfoLev).Infof("choose origin rackId=%d", rackId)
+				return rackId
+			}
+		}
+	}
+	return UninitializedRestRackLenMapId
+}

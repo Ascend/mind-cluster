@@ -141,6 +141,7 @@ func (tp *module910a5SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*ap
 	}
 
 	selectedSpBlock, err := tp.selectNodesForJob(task, nodes)
+	job.WhetherBackToVspSchedule = tp.whetherBackToVspSchedule
 	if err != nil {
 		*job.JobReadyTag = false
 		return err
@@ -167,10 +168,21 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName())
 
 	spBlockCount := tp.NPUTaskNum / tp.spBlock
+	spBlockIDs := make(map[string]bool, spBlockCount)
+	for i := 0; i < spBlockCount; i++ {
+		spBlockIDs[strconv.Itoa(i)] = false
+	}
+
+	err = tp.selectNodesForFaultJob(task, superPodMap, spBlockIDs, selectedNodes)
+	if err != nil {
+		return nil, err
+	}
 
 	var unReadyIds []string
-	for i := 0; i < spBlockCount; i++ {
-		unReadyIds = append(unReadyIds, strconv.Itoa(i))
+	for id, ready := range spBlockIDs {
+		if !ready {
+			unReadyIds = append(unReadyIds, id)
+		}
 	}
 
 	selectedNodes, err = tp.selectNodesFromSuperPods(task, superPodMap, unReadyIds, selectedNodes)

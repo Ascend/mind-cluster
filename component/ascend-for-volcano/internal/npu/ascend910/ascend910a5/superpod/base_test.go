@@ -56,7 +56,6 @@ const (
 
 	superPodSize64 = 64
 
-	tpBlock1 = 1
 	tpBlock2 = 2
 	tpBlock8 = 8
 )
