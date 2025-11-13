@@ -285,9 +285,9 @@ func newReplicas(i int) *int32 {
 	return &x
 }
 
-// TestIsVcjobOrDeploy This function is a test function for the isVcjobOrDeploy
+// TestIsJobDecorator This function is a test function for the isJobDecorator
 // method of the AscendJobReconciler struct.
-func TestIsVcjobOrDeploy(t *testing.T) {
+func TestIsJobDecorator(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		req controllerruntime.Request
@@ -309,8 +309,8 @@ func TestIsVcjobOrDeploy(t *testing.T) {
 	defer patches.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := r.isVcjobOrDeploy(tt.args.ctx, tt.args.req); got != tt.want {
-				t.Errorf("isVcjobOrDeploy() = %v, want %v", got, tt.want)
+			if got := r.isJobDecorator(tt.args.ctx, tt.args.req); got != tt.want {
+				t.Errorf("isJobDecorator() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -340,6 +340,16 @@ func TestDecorateVcjob(t *testing.T) {
 			},
 		}
 		job := decorateVcjob(vcjob)
+		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
+	})
+}
+
+func TestDecorateStatefulSet(t *testing.T) {
+	convey.Convey("TestDecorateStatefulSet", t, func() {
+		statefulSet := &appsv1.StatefulSet{
+			Spec: appsv1.StatefulSetSpec{},
+		}
+		job := decorateStatefulSet(statefulSet)
 		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
 	})
 }
