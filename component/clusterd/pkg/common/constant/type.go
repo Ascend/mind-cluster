@@ -291,6 +291,7 @@ type AdvanceDeviceFaultCm struct {
 	DeviceType          string
 	CmName              string
 	SuperPodID          int32
+	RackID              int32
 	ServerIndex         int32
 	FaultDeviceList     map[string][]DeviceFault
 	AvailableDeviceList []string

@@ -89,6 +89,7 @@ func GetAdvanceDeviceCm(devInfo *constant.DeviceInfo) *constant.AdvanceDeviceFau
 	advanceDeviceCm := &constant.AdvanceDeviceFaultCm{
 		CmName:      devInfo.CmName,
 		SuperPodID:  devInfo.SuperPodID,
+		RackID:      devInfo.RackID,
 		ServerIndex: devInfo.ServerIndex,
 		UpdateTime:  devInfo.UpdateTime,
 		DeviceType:  GetDeviceType(devInfo),
