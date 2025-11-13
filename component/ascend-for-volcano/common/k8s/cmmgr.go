@@ -207,6 +207,7 @@ func (cmMgr *ClusterInfoWitchCm) updateConfigMapCluster(obj interface{}, operato
 	}
 	cmMgr.dealClusterDeviceInfo(cm, operator)
 	cmMgr.dealClusterNodeInfo(cm, operator)
+	cmMgr.dealClusterDpuInfo(cm, operator)
 	cmMgr.dealClusterSwitchInfo(cm, operator)
 }
 
@@ -334,7 +335,8 @@ func GetDeviceInfosAndSetInformerStart(nodeList []*api.NodeInfo, useClusterD,
 	deviceInfos := make(map[string]NodeDeviceInfoWithID)
 	cmManager.deviceInfos.Lock()
 	for _, nodeInfo := range nodeList {
-		tmpDeviceInfo := initNodeDeviceInfoByCmMgr(nodeInfo, cmManager.deviceInfos.Devices[nodeInfo.Name], selfMaintainAvailCard)
+		tmpDeviceInfo := initNodeDeviceInfoByCmMgr(nodeInfo, cmManager.deviceInfos.Devices[nodeInfo.Name],
+			selfMaintainAvailCard)
 		setNeedRestartInformer(tmpDeviceInfo.CacheUpdateTime, useClusterD)
 		deviceInfos[nodeInfo.Name] = tmpDeviceInfo
 	}

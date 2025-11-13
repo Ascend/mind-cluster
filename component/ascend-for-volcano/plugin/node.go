@@ -56,9 +56,12 @@ type CommonNode struct {
 	Address           string
 	SuperPodID        int32
 	devInfoUpdateTime int64
-	RackID            int32
-	// ServerIndex for A5
+	//  [Ascend950] rack id
+	RackID int32
+	// [Ascend950] server index
 	ServerIndex string
+	// [Ascend950] save node dpu info
+	DpuInfo k8s.DpuCMInfo
 }
 
 // VNode vnpu node class
@@ -155,7 +158,8 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 
 	if err := vcJob.policyHandler.CheckNodeNPUByTask(taskInfo, vcNode); err != nil {
 		// node doesn't have enough npu for the task
-		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name, util.SafePrint(err))
+		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name,
+			util.SafePrint(err))
 		return fmt.Errorf("checkNodeNPUByTask : %s", err)
 	}
 	return nil
@@ -308,6 +312,19 @@ func (n *NPUNode) updateNPUNodeDeviceInfos(data k8s.NodeDeviceInfoWithID) {
 	return
 }
 
+func (n *NPUNode) updateNPUNodeDpuInfo(oneNodeDpuInfo k8s.DpuCMInfo) {
+	if len(oneNodeDpuInfo.DpuList) == 0 {
+		klog.V(util.LogDebugLev).Infof("%s node %s dpu info is not enable", util.DpuLogPrefix, n.Name)
+		return
+	}
+	if n.DpuInfo.CacheUpdateTime >= oneNodeDpuInfo.CacheUpdateTime {
+		klog.V(util.LogDebugLev).Infof("%s dpu info is not update, skip refresh cache", util.DpuLogPrefix)
+		return
+	}
+	n.DpuInfo = oneNodeDpuInfo
+	klog.V(util.LogDebugLev).Infof("%s update node: %s dpu info success: %v", util.DpuLogPrefix, n.Name, n.DpuInfo)
+}
+
 func (n *NPUNode) updateNPUNodeDeviceInfosWithVolcanoCache(data k8s.NodeDeviceInfoWithID, updateTime int64) {
 	for k, v := range data.DeviceList {
 		// if k does not represent huawei.com/Ascend910/310/310P continue
@@ -420,6 +437,8 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
 	nodeInfosOfNodeD := k8s.GetNodeDInfos(nodeList)
 	// 3. obtain switch infos of switch configmap
 	switchInfos := k8s.GetSwitchInfos(nodeList)
+	// 4. obtain dpu infos of dpu configmap
+	dpuInfos := k8s.GetDpuInfos(nodeList)
 
 	newNodes := make(map[string]NPUNode)
 	// apiNode: type is *api.NodeInfo
@@ -432,6 +451,9 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
 			!strings.Contains(err.Error(), noneResourceErr) {
 			klog.V(util.LogErrorLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", apiNode.Name, err)
 			continue
+		}
+		if dpuInfo, ok := dpuInfos[apiNode.Name]; ok {
+			node.updateNPUNodeDpuInfo(dpuInfo)
 		}
 		newNodes[apiNode.Name] = node
 	}

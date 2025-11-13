@@ -77,6 +77,8 @@ const (
 	DpuMaxNum = 8
 	// EmptyNPUToDPUMapLen length of empty npu to dpu map
 	EmptyNPUToDPUMapLen = 0
+	// NpuCountPerNode indicates the number of cards per node
+	NpuCountPerNode = 8
 )
 
 // RankLevel for rank table level info

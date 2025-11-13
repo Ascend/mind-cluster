@@ -26,6 +26,7 @@ type ClusterInfoWitchCm struct {
 	deviceInfos       *DeviceInfosWithMutex
 	nodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
 	switchInfosFromCm *SwitchInfosFromCmWithMutex // switchInfosFromCm is get from mindx-dl/device-info- configmap
+	dpuInfosFromCm    *DpuInfosFromCmWithMutex
 }
 
 // DeviceInfosWithMutex information for the current plugin
@@ -104,6 +105,10 @@ func NewClusterInfoWitchCm() ClusterInfoWitchCm {
 		nodeInfosFromCm: &NodeInfosFromCmWithMutex{
 			Mutex: sync.Mutex{},
 			Nodes: map[string]NodeDNodeInfo{},
+		},
+		dpuInfosFromCm: &DpuInfosFromCmWithMutex{
+			Mutex: sync.Mutex{},
+			Dpus:  map[string]DpuCMInfo{},
 		},
 		switchInfosFromCm: &SwitchInfosFromCmWithMutex{
 			Mutex:    sync.Mutex{},

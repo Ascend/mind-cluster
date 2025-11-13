@@ -67,7 +67,8 @@ func (tp *module910a5SuperPod) getUsableTopFromNode(node plugin.NPUNode) ([]int,
 	if len(res) != npuNumber8 {
 		klog.V(util.LogInfoLev).Infof("the len of the final usable npus in the node<%s> is %d", node.Name, len(res))
 	}
-	return res, nil
+	nodeNPUTopology := filterDpuFault(res, node)
+	return nodeNPUTopology, nil
 }
 
 func (tp *module910a5SuperPod) checkNodeStaticParams(_ *api.TaskInfo, node plugin.NPUNode) error {

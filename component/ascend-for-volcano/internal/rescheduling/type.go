@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -249,6 +250,9 @@ type FaultNode struct {
 	HasCardSubHealthFault   bool
 	LinkDownTime            int64
 	IsNpuNode               bool
+
+	// for a5
+	dpuCMInfo k8s.DpuCMInfo
 }
 
 // SimpleFNodeInfo simple fault node info

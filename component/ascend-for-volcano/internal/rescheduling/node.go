@@ -177,6 +177,8 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) {
 	fNode.setNodeHealthyByNodeD(node)
 	// 3. judge if node is unhealthy by switch info
 	fNode.setNodeHealthyBySwitch(node)
+	// 4. judge if node is unhealthy by DPU info
+	fNode.setNodeDpuInfo(node)
 
 	if fNode.NodeHealthState == NodeUnhealthy {
 		klog.V(util.LogErrorLev).Infof("the node state is unhealthy, node name=%s", node.Name)
@@ -186,6 +188,11 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) {
 	fNode.setHasSwitchSubHealthFault(node.Annotation[util.SwitchNodeHealtyStatuskey] == util.NodeSubHealthy)
 	// 4. set node health state by card unhealthy
 	fNode.setNodeHealthyByCardHealth(node)
+}
+
+func (fNode *FaultNode) setNodeDpuInfo(node *plugin.NPUNode) {
+	fNode.dpuCMInfo = node.DpuInfo
+	klog.V(util.LogDebugLev).Infof("%s set fNode %s dpu info:%+v", util.DpuLogPrefix, node.Name, fNode.dpuCMInfo)
 }
 
 func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
