@@ -45,8 +45,8 @@ var (
 
 // ProcessInsertSQL 生成数据库插入语句
 func ProcessInsertSQL(rowData []*CacheData) ([]string, error) {
-	var cAnnApiValues []string
-	var commOpValues []string
+	cAnnApiValues := make([]string, 0)
+	commOpValues := make([]string, 0)
 	mSTXEventsValues := make([]string, 0)
 	stepTimeValues := make([]string, 0)
 	taskValues := make([]string, 0)
