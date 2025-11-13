@@ -112,6 +112,12 @@ func TestGatherServerList(t *testing.T) {
 		expected := 2
 		convey.So(len(gen.ServerList), convey.ShouldEqual, expected)
 		convey.So(gen.ServerList[0].ServerID, convey.ShouldEqual, "127.0.0.1")
+
+		expected = 0
+		gen.ServerList = nil
+		convey.So(len(gen.ServerList), convey.ShouldEqual, expected)
+		gen.ServerList = make([]*common.Server, 0)
+		convey.So(len(gen.ServerList), convey.ShouldEqual, expected)
 	})
 }
 
