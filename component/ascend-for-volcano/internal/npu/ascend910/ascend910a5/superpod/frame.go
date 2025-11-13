@@ -129,6 +129,8 @@ func (tp *module910a5SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*ap
 		return nil
 	}
 
+	defer tp.scoreNodesForJob(&job, task, sMap)
+
 	// already selected nodes for this job, don't do that again
 	if tp.isJobCacheSuperPod(&job, task) {
 		return nil
@@ -215,4 +217,18 @@ func (tp *module910a5SuperPod) handleScheduleStrategy(unReadyIds []string, task 
 	}
 
 	return nil
+}
+
+// the real place where we score for nodes, and sMap should change
+func (tp *module910a5SuperPod) scoreNodesForJob(job *plugin.SchedulerJob, task *api.TaskInfo, sMap map[string]float64) {
+	if !*job.JobReadyTag {
+		klog.V(util.LogWarningLev).Infof("job %s has not been ready", job.Name)
+		return
+	}
+	if podGroupEnable, exist := job.Label[plugin.PodGroupScheduleKey]; exist &&
+		podGroupEnable == plugin.PodGroupScheduleValue {
+		tp.scoreNodeBatchForReadyJob(task, job, sMap)
+		return
+	}
+	tp.scoreNodeForReadyJob(task, job, sMap)
 }
