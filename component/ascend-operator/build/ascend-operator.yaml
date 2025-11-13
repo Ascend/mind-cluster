@@ -116,7 +116,7 @@ rules:
     resources: [ "jobs" ]
     verbs: [ "get", "watch", "list" ]
   - apiGroups: [ "apps" ]
-    resources: [ "deployments", "replicasets" ]
+    resources: [ "deployments", "replicasets","statefulsets" ]
     verbs: [ "get", "watch", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
