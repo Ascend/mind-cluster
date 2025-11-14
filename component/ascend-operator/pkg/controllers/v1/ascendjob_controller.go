@@ -132,7 +132,7 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if r == nil {
 		return ctrl.Result{}, errors.New("nil pointer")
 	}
-	if r.isVcjobOrDeploy(ctx, req) {
+	if r.isJobDecorator(ctx, req) {
 		return ctrl.Result{}, nil
 	}
 	ascendjob := &mindxdlv1.AscendJob{}
@@ -172,7 +172,7 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request) bool {
+func (r *ASJobReconciler) isJobDecorator(ctx context.Context, req ctrl.Request) bool {
 	// try fetch deployment
 	deploy := &appv1.Deployment{}
 	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
@@ -183,6 +183,12 @@ func (r *ASJobReconciler) isVcjobOrDeploy(ctx context.Context, req ctrl.Request)
 	vcjob := &v1alpha1.Job{}
 	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
 		r.ranktablePipeline(decorateVcjob(vcjob))
+		return true
+	}
+	// try fetch statefulSet
+	statefulSet := &appv1.StatefulSet{}
+	if err := r.Get(ctx, req.NamespacedName, statefulSet); err == nil {
+		r.ranktablePipeline(decorateStatefulSet(statefulSet))
 		return true
 	}
 	return false
@@ -234,7 +240,10 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 	if err := r.watchVolcanoJobRelatedResource(c, mgr); err != nil {
 		return err
 	}
-	return r.watchDeploymentRelatedResource(c, mgr)
+	if err := r.watchDeploymentRelatedResource(c, mgr); err != nil {
+		return err
+	}
+	return r.watchStatefulSetRelatedResource(c, mgr)
 }
 
 func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
@@ -312,6 +321,18 @@ func (r *ASJobReconciler) watchDeploymentRelatedResource(c controller.Controller
 	)
 }
 
+func (r *ASJobReconciler) watchStatefulSetRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
+	if err := c.Watch(&source.Kind{Type: &appv1.StatefulSet{}}, &handler.EnqueueRequestForObject{},
+		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
+	); err != nil {
+		return err
+	}
+	return c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &appv1.StatefulSet{},
+	})
+}
+
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
 		switch e.Object.(type) {
@@ -331,35 +352,46 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
 			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
 			return true
+		case *appv1.StatefulSet:
+			statefulSet := e.Object.(*appv1.StatefulSet)
+			if _, ok := statefulSet.Labels[api.AtlasTaskLabel]; !ok {
+				return false
+			}
+			r.rtGenerators[statefulSet.UID] = ranktable.NewGenerator(decorateStatefulSet(statefulSet))
+			hwlog.RunLog.Infof("create rtGenerator for statefulSet %s", statefulSet.Name)
+			return true
 		default:
 			hwlog.RunLog.Info("job type is not volcano job or deployment")
 		}
+		return r.ascendJobCreateFunc(e)
+	}
+}
 
-		ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
-		if !ok {
-			return true
-		}
-		msg := fmt.Sprintf("Job %s is create.", e.Object.GetName())
-		hwlog.RunLog.Info(msg)
-		err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "JobCreated", msg)
-		if err != nil {
-			log.Log.Error(err, "append job condition error")
-			return false
-		}
-		r.versions[ascendJob.UID] = defaultPodVersion
-		r.backoffLimits[ascendJob.UID] = unsetBackoffLimits
-		if ascendJob.Spec.RunPolicy.BackoffLimit != nil {
-			r.backoffLimits[ascendJob.UID] = *ascendJob.Spec.RunPolicy.BackoffLimit
-		} else if err = r.setFaultRetryTimesToBackoffLimits(ascendJob); err != nil {
-			hwlog.RunLog.Errorf("failed to get fault-retry-times, error: %v", err)
-			return false
-		}
-		if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
-			r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
-			hwlog.RunLog.Infof("create rtGenerator for frame %s Job %s", frame, ascendJob.Name)
-		}
+func (r *ASJobReconciler) ascendJobCreateFunc(e event.CreateEvent) bool {
+	ascendJob, ok := e.Object.(*mindxdlv1.AscendJob)
+	if !ok {
 		return true
 	}
+	msg := fmt.Sprintf("Job %s is create.", e.Object.GetName())
+	hwlog.RunLog.Info(msg)
+	err := util.UpdateJobConditions(&ascendJob.Status, commonv1.JobCreated, "JobCreated", msg)
+	if err != nil {
+		log.Log.Error(err, "append job condition error")
+		return false
+	}
+	r.versions[ascendJob.UID] = defaultPodVersion
+	r.backoffLimits[ascendJob.UID] = unsetBackoffLimits
+	if ascendJob.Spec.RunPolicy.BackoffLimit != nil {
+		r.backoffLimits[ascendJob.UID] = *ascendJob.Spec.RunPolicy.BackoffLimit
+	} else if err = r.setFaultRetryTimesToBackoffLimits(ascendJob); err != nil {
+		hwlog.RunLog.Errorf("failed to get fault-retry-times, error: %v", err)
+		return false
+	}
+	if frame, err := mindxdlv1.GetJobFramework(ascendJob); err == nil {
+		r.rtGenerators[ascendJob.UID] = ranktable.NewGenerator(ascendJob)
+		hwlog.RunLog.Infof("create rtGenerator for frame %s Job %s", frame, ascendJob.Name)
+	}
+	return true
 }
 
 // setFaultRetryTimesToBackoffLimits assigns the value of fault-retry-times to backoffLimits.
@@ -624,6 +656,22 @@ func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 		ObjectMeta: vcjob.ObjectMeta,
 		Spec: mindxdlv1.AscendJobSpec{
 			ReplicaSpecs: repSpecs,
+		},
+	}
+}
+
+func decorateStatefulSet(statefulSet *appv1.StatefulSet) *mindxdlv1.AscendJob {
+	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
+		"StatefulSet": &commonv1.ReplicaSpec{
+			Template: statefulSet.Spec.Template,
+			Replicas: statefulSet.Spec.Replicas,
+		},
+	}
+	return &mindxdlv1.AscendJob{
+		TypeMeta:   statefulSet.TypeMeta,
+		ObjectMeta: statefulSet.ObjectMeta,
+		Spec: mindxdlv1.AscendJobSpec{
+			ReplicaSpecs: repSpec,
 		},
 	}
 }
