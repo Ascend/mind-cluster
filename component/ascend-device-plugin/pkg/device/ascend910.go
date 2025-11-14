@@ -2157,7 +2157,7 @@ func (hnm *HwAscend910Manager) tryResetDeviceOffline(classifyDevs map[string][]*
 	cardId, deviceId, logicId int32) error {
 	AddResetCnt(cardId, deviceId)
 	AddBusyDev(cardId, deviceId)
-	var realError error
+	var realError error = nil
 	for i := 0; i < common.ResetRetryTimes; i++ {
 		if !hnm.checkFaultIsExist(classifyDevs, logicId) {
 			hwlog.RunLog.Infof("device id <%v> fault is not exist, stop reset device", logicId)
