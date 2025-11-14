@@ -37,6 +37,35 @@ func init() {
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 }
 
+func TestClientK8sMethodWriteDeviceInfoDataIntoCMA5(t *testing.T) {
+	convey.Convey("test ClientK8s method WriteDeviceInfoDataIntoCMA5", t, func() {
+		utKubeClient, err := initK8S()
+		if err != nil {
+			t.Fatal("test WriteDeviceInfoDataIntoCMA5 init kubernetes failed")
+		}
+		nodeDeivceData := common.NodeDeviceInfoCache{
+			DeviceInfo: common.NodeDeviceInfo{DeviceList: map[string]string{}},
+		}
+		convey.Convey("01-should return err when common.MarshalData failed", func() {
+			patch := gomonkey.ApplyFunc(common.MarshalData, func(data interface{}) []byte {
+				return nil
+			})
+			defer patch.Reset()
+			ret := utKubeClient.WriteDeviceInfoDataIntoCMA5(&nodeDeivceData, "", common.SwitchFaultInfo{})
+			convey.So(ret, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-should return success when all is called success", func() {
+			patch := gomonkey.ApplyPrivateMethod(utKubeClient, "createOrUpdateDeviceCM",
+				func(cm *v1.ConfigMap) error {
+					return nil
+				})
+			defer patch.Reset()
+			ret := utKubeClient.WriteDeviceInfoDataIntoCMA5(&nodeDeivceData, "", common.SwitchFaultInfo{})
+			convey.So(ret, convey.ShouldBeNil)
+		})
+	})
+}
+
 func TestWriteDpuDataIntoCM(t *testing.T) {
 	convey.Convey("Test WriteDpuDataIntoCM", t, func() {
 		ki := &ClientK8s{NodeName: "work1"}

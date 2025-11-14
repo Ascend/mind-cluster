@@ -276,6 +276,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		if common.GetSyncMapLen(resetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
+		if common.ParamOption.RealCardType == api.Ascend910A5 {
+			return tool.writeNodeDeviceInfoDataA5(newDeviceList, manuallySeparateNPU, switchFaultInfo)
+		}
 		dataSame := compareDeviceList(deviceList, newDeviceList) &&
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
 			manuallySeparateNPU == tool.lastManuallySeparateNPU

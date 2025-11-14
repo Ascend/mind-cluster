@@ -37,6 +37,7 @@ type NodeDeviceInfoCache struct {
 	DeviceInfo  NodeDeviceInfo
 	SuperPodID  int32
 	ServerIndex int32
+	RackID      int32
 	CheckCode   string
 }
 

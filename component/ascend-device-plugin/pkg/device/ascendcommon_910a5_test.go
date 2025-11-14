@@ -16,9 +16,13 @@
 package device
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"Ascend-device-plugin/pkg/common"
 )
 
 // TestAscendToolsMethodSetRackID test set rack id
@@ -29,6 +33,26 @@ func TestAscendToolsMethodSetRackID(t *testing.T) {
 			theRackID := int32(1)
 			tool.SetRackID(theRackID)
 			convey.So(tool.GetRackID(), convey.ShouldEqual, theRackID)
+		})
+	})
+}
+
+func TestAscendToolsMethodWriteNodeDeviceInfoDataA5(t *testing.T) {
+	convey.Convey("test AscendTools method writeNodeDeviceInfoDataA5", t, func() {
+		convey.Convey("01-should return false when write cm failed", func() {
+			tool := mockAscendTools()
+			patch := gomonkey.ApplyMethodReturn(tool.client, "WriteDeviceInfoDataIntoCMCacheA5",
+				errors.New("write cm failed"))
+			defer patch.Reset()
+			ret, _ := tool.writeNodeDeviceInfoDataA5(map[string]string{}, "", common.SwitchFaultInfo{})
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-should return true when write cm success", func() {
+			tool := mockAscendTools()
+			patch := gomonkey.ApplyMethodReturn(tool.client, "WriteDeviceInfoDataIntoCMCacheA5", nil)
+			defer patch.Reset()
+			ret, _ := tool.writeNodeDeviceInfoDataA5(map[string]string{}, "", common.SwitchFaultInfo{})
+			convey.So(ret, convey.ShouldBeTrue)
 		})
 	})
 }

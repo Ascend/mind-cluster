@@ -15,6 +15,11 @@
 // Package device a series of device function
 package device
 
+import (
+	"Ascend-device-plugin/pkg/common"
+	"ascend-common/common-utils/hwlog"
+)
+
 // SetSuperPodType setting the type of super pod
 func (tool *AscendTools) SetSuperPodType(superPodType int8) {
 	tool.superPodType = superPodType
@@ -53,4 +58,22 @@ func (tool *AscendTools) SetRackID(rackID int32) {
 // GetRackID getting the rack id
 func (tool *AscendTools) GetRackID() int32 {
 	return tool.rackID
+}
+
+func (tool *AscendTools) writeNodeDeviceInfoDataA5(newDeviceList map[string]string, manuallySeparateNPU string,
+	switchFaultInfo common.SwitchFaultInfo) (bool, error) {
+	nodeDeviceData := &common.NodeDeviceInfoCache{
+		DeviceInfo: common.NodeDeviceInfo{
+			DeviceList: newDeviceList,
+		},
+		SuperPodID:  tool.GetSuperPodID(),
+		RackID:      tool.GetRackID(),
+		ServerIndex: tool.GetServerIndex(),
+	}
+	if err := tool.client.WriteDeviceInfoDataIntoCMCacheA5(nodeDeviceData, manuallySeparateNPU,
+		switchFaultInfo); err != nil {
+		hwlog.RunLog.Errorf("write device info failed: %v", err)
+		return false, nil
+	}
+	return true, nil
 }
