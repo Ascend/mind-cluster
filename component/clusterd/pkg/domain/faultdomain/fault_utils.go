@@ -287,6 +287,7 @@ func AdvanceDevCmToOrigCm(advanceDeviceCm *constant.AdvanceDeviceFaultCm) *const
 		},
 		CmName:      advanceDeviceCm.CmName,
 		SuperPodID:  advanceDeviceCm.SuperPodID,
+		RackID:      advanceDeviceCm.RackID,
 		ServerIndex: advanceDeviceCm.ServerIndex,
 	}
 
