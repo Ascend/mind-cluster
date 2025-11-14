@@ -935,6 +935,10 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 		return isFault, state
 	}
 
+	if isFault := reScheduler.getTaskHealthStateByNodeDpu(fTask); isFault {
+		return isFault, util.DpuFault
+	}
+
 	if isFault, state := reScheduler.getTaskHealthStateByPod(task); isFault && fTask.IsFaultRetryEnable {
 		return isFault, state
 	}
