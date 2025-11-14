@@ -370,6 +370,10 @@ func (j *JobStcMgr) JobStcByVCJobCreate(jobKey string) {
 }
 
 func (j *JobStcMgr) addJobStatistic(jobKey string, jobInfo metav1.Object) {
+	if jobInfo == nil {
+		hwlog.RunLog.Warnf("job info is nil, cannot add job: %s", jobKey)
+		return
+	}
 	if len(j.data.JobStatistic) == maxCMJobStatisticNum {
 		hwlog.RunLog.Warnf("exceeded max tasksjob cache, cannot add job: %s", jobKey)
 		return

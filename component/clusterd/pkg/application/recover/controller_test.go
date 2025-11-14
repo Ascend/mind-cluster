@@ -16,6 +16,8 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
+	meatv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -333,6 +335,15 @@ func TestUpdateCacheFaultAndPod(t *testing.T) {
 		mockFunc := gomonkey.ApplyPrivateMethod(&EventController{}, "normalFaultAssociateSameNodeRank",
 			func(*EventController) ([]*pb.FaultRank, []string) { return faultRank, ranks })
 		defer mockFunc.Reset()
+
+		mockFunc.ApplyFunc(kube.RetryGetPodGroup,
+			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
+				return &v1beta1.PodGroup{
+					ObjectMeta: meatv1.ObjectMeta{
+						Annotations: map[string]string{},
+					},
+				}, nil
+			})
 
 		convey.Convey("01-get pod map failed, should return error", func() {
 			mockFunc1 := gomonkey.ApplyFuncReturn(common.GetPodMap, nil, errors.New("mock error"))
@@ -1696,6 +1707,15 @@ func testPlatformModeNonUceFault(ctl *EventController) {
 				return &v1.ConfigMap{Data: map[string]string{constant.ResetInfoCMDataKey: "test-data"}}, nil
 			})
 
+		patches.ApplyFunc(kube.RetryGetPodGroup,
+			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
+				return &v1beta1.PodGroup{
+					ObjectMeta: meatv1.ObjectMeta{
+						Annotations: map[string]string{},
+					},
+				}, nil
+			})
+
 		event, respCode, err := ctl.notifyFaultForRetryFaultCase(
 			[]*pb.FaultRank{{RankId: "rank1"}}, []*pb.FaultRank{{RankId: "rank2"}})
 		convey.So(event, convey.ShouldEqual, "")
@@ -1968,6 +1988,15 @@ func TestNotifyFaultForNormalFaultCase(t *testing.T) {
 		patches.ApplyPrivateMethod(ctl, "getCtxAndSignalChan",
 			func() (context.Context, chan *pb.ProcessManageSignal) {
 				return context.Background(), make(chan *pb.ProcessManageSignal, 1)
+			})
+
+		patches.ApplyFunc(kube.RetryGetPodGroup,
+			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
+				return &v1beta1.PodGroup{
+					ObjectMeta: meatv1.ObjectMeta{
+						Annotations: map[string]string{},
+					},
+				}, nil
 			})
 
 		testPlatformModeWriteConfirmNormalFaultError(ctl)

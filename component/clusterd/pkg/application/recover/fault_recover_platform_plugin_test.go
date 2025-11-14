@@ -177,7 +177,7 @@ func testUpdateProcessConfirmFaultCase1(t *testing.T) {
 				return &v1beta1.PodGroup{}, nil
 			}).
 			ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-				func(name, namespace string, times int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+				func(name, namespace string, times int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 					return &v1beta1.PodGroup{}, nil
 				})
 		defer patches.Reset()
@@ -219,7 +219,7 @@ func testUpdateProcessConfirmFaultCase3(t *testing.T) {
 					},
 				}, nil
 			}).ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-			func(name, namespace string, times int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+			func(name, namespace string, times int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 				return &v1beta1.PodGroup{}, nil
 			})
 		defer patches.Reset()
@@ -239,7 +239,7 @@ func testUpdateProcessConfirmFaultCase4(t *testing.T) {
 				return &v1beta1.PodGroup{}, nil
 			}).
 			ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-				func(name, namespace string, times int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+				func(name, namespace string, times int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 					return &v1beta1.PodGroup{}, mockErr
 				})
 		defer patches.Reset()

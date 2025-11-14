@@ -175,6 +175,10 @@ const (
 	MaxEventChanLen = 100
 	// DumpExit dump exit
 	DumpExit = "dump_exit"
+	// TpBlock tp-block
+	TpBlock = "tp-block"
+	// IsJobRescheduling used in PodGroup annotation
+	IsJobRescheduling = "isJobRescheduling"
 )
 
 const (
@@ -267,6 +271,8 @@ const (
 	InvalidSuperPodIndex = -2
 	// PatchPodTimes patch pod retry times
 	PatchPodTimes = 3
+	// PatchPodGroupTimes patch pod group retry times
+	PatchPodGroupTimes = 3
 	// PatchNodeTimes patch node retry times
 	PatchNodeTimes = 3
 	// AllCardId all card id

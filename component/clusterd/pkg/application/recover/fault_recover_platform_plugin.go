@@ -71,7 +71,7 @@ func UpdateProcessConfirmFault(name, namespace string, cacheRanks []*pb.FaultRan
 		return fmt.Errorf("plat not clear pre confirm fault, pgName=%s", name)
 	}
 	allFaultRanks := common.RemoveSliceDuplicateFaults(cacheRanks)
-	newConfirm := map[string]string{
+	newConfirm := map[string]interface{}{
 		constant.ProcessConfirmFaultKey: strings.Trim(common.Faults2String(allFaultRanks), ","),
 	}
 	_, err = kube.RetryPatchPodGroupAnnotations(name, namespace, constant.UpdatePodGroupTimes, newConfirm)

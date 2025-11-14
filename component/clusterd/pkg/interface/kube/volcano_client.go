@@ -79,7 +79,7 @@ func GetPodGroup(name, namespace string) (*v1beta1.PodGroup, error) {
 
 // RetryPatchPodGroupAnnotations retry patch pod group annotations
 func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
-	annotations map[string]string) (*v1beta1.PodGroup, error) {
+	annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 	pg, err := patchPodGroupAnnotation(pgName, pgNamespace, annotations)
 	retry := 0
 	for err != nil && retry < retryTimes {
@@ -90,7 +90,7 @@ func RetryPatchPodGroupAnnotations(pgName, pgNamespace string, retryTimes int,
 	return pg, err
 }
 
-func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]string) (*v1beta1.PodGroup, error) {
+func patchPodGroupAnnotation(pgName, pgNamespace string, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 	if vcK8sClient == nil || vcK8sClient.ClientSet == nil {
 		hwlog.RunLog.Errorf("client set is nil")
 		return nil, fmt.Errorf("client set is nil")

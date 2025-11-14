@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -343,12 +344,7 @@ func (ctl *EventController) keepAlive() {
 }
 
 func (ctl *EventController) annotationWithRetryStrategy() bool {
-	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == constant.ProcessRetryStrategyName {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ctl.jobInfo.MindXConfigStrategies, constant.ProcessRetryStrategyName)
 }
 
 func (ctl *EventController) hasRecoverInPlaceStrategy() bool {
@@ -356,20 +352,11 @@ func (ctl *EventController) hasRecoverInPlaceStrategy() bool {
 }
 
 func (ctl *EventController) supportRetryStrategy() bool {
-	mindXConfiged := false
-	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == constant.ProcessRetryStrategyName {
-			mindXConfiged = true
-			break
-		}
-	}
+	mindXConfiged := slices.Contains(ctl.jobInfo.MindXConfigStrategies, constant.ProcessRetryStrategyName)
 	if !mindXConfiged || !ctl.jobInfo.PlatFormMode {
 		return mindXConfiged
 	}
-	if ctl.platStrategy == constant.ProcessRetryStrategyName {
-		return true
-	}
-	return false
+	return ctl.platStrategy == constant.ProcessRetryStrategyName
 }
 
 func (ctl *EventController) supportRecoverStrategy() bool {
@@ -377,30 +364,15 @@ func (ctl *EventController) supportRecoverStrategy() bool {
 }
 
 func (ctl *EventController) supportTargetRecoverStrategy(recoverStrategy string) bool {
-	mindXConfiged := false
-	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == recoverStrategy {
-			mindXConfiged = true
-			break
-		}
-	}
+	mindXConfiged := slices.Contains(ctl.jobInfo.MindXConfigStrategies, recoverStrategy)
 	if !mindXConfiged {
 		return false
 	}
-	agentSupport := false
-	for _, strategy := range ctl.agentReportStrategies {
-		if strategy == constant.ProcessRecoverStrategyName {
-			agentSupport = true
-			break
-		}
-	}
+	agentSupport := ctl.agentSupportStrategy(constant.ProcessRecoverStrategyName)
 	if !agentSupport || !ctl.jobInfo.PlatFormMode {
 		return agentSupport
 	}
-	if ctl.platStrategy == constant.ProcessRecoverStrategyName {
-		return true
-	}
-	return false
+	return ctl.platStrategy == constant.ProcessRecoverStrategyName
 }
 
 func (ctl *EventController) supportTargetStrategy(recoverStrategy string) bool {
@@ -434,30 +406,15 @@ func (ctl *EventController) supportRestartProcessStrategy() bool {
 }
 
 func (ctl *EventController) supportDumpStrategy() bool {
-	mindXConfiged := false
-	for _, strategy := range ctl.jobInfo.MindXConfigStrategies {
-		if strategy == constant.ProcessDumpStrategyName {
-			mindXConfiged = true
-			break
-		}
-	}
+	mindXConfiged := slices.Contains(ctl.jobInfo.MindXConfigStrategies, constant.ProcessDumpStrategyName)
 	if !mindXConfiged {
 		return false
 	}
-	agentSupport := false
-	for _, strategy := range ctl.agentReportStrategies {
-		if strategy == constant.ProcessDumpStrategyName {
-			agentSupport = true
-			break
-		}
-	}
+	agentSupport := ctl.agentSupportStrategy(constant.ProcessDumpStrategyName)
 	if !ctl.jobInfo.PlatFormMode || !agentSupport {
 		return agentSupport
 	}
-	if ctl.platStrategy == constant.ProcessDumpStrategyName {
-		return true
-	}
-	return false
+	return ctl.platStrategy == constant.ProcessDumpStrategyName
 }
 
 func (ctl *EventController) onlySupportDumpStrategy() bool {
@@ -921,15 +878,11 @@ func (ctl *EventController) notifyFaultForRetryFaultCasePlatFormMode(signal *pb.
 	hwlog.RunLog.Infof("jobId=%s, plat merge faults=%s", ctl.jobInfo.JobId, common.Faults2String(allFaults))
 	if !common.IsRetryFault(allFaults) {
 		retryFaults = retryFaults[:0]
-		allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
-		normalFaults = allFaults
-		ctl.setCacheFault(retryFaults, normalFaults)
-		faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+		_, allFaultRanks, err := ctl.updateCacheFaultAndPod()
 		if err != nil {
-			hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 			return "", common.ServerInnerError, err
 		}
-		ctl.mergeFaultPod(faultPod)
 		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
 		if err != nil {
@@ -1005,9 +958,11 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 }
 
 func (ctl *EventController) updateCacheFaultAndPod() ([]*pb.FaultRank, []string, error) {
-	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
+	allFaults, allFaultRanks, err := ctl.getAllRankByTPBlock()
+	if err != nil {
+		return allFaults, allFaultRanks, err
+	}
 	ctl.setCacheFault(nil, allFaults)
-	var err error
 	faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 	if err != nil {
 		hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
@@ -1121,12 +1076,7 @@ func (ctl *EventController) chooseForRecoverFail() string {
 }
 
 func (ctl *EventController) agentSupportStrategy(strategy string) bool {
-	for _, strategySupport := range ctl.agentReportStrategies {
-		if strategySupport == strategy {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ctl.agentReportStrategies, strategy)
 }
 
 func (ctl *EventController) chooseStrategy() (string, error) {
@@ -1139,14 +1089,11 @@ func (ctl *EventController) chooseStrategy() (string, error) {
 			!ctl.agentSupportStrategy(constant.ProcessRetryStrategyName) {
 			hwlog.RunLog.Warnf("uce repair not enabled by controller, jobId=%s", ctl.jobInfo.JobId)
 			ctl.takeRetryFault2NormalFault()
-			allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
-			ctl.setCacheFault(nil, allFaults)
-			faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
+			_, _, err := ctl.updateCacheFaultAndPod()
 			if err != nil {
-				hwlog.RunLog.Errorf("jobId=%s, get pod map err:%v", ctl.jobInfo.JobId, err)
+				hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 				return "", err
 			}
-			ctl.mergeFaultPod(faultPod)
 			return ctl.chooseForRecoverFail(), nil // dump or exit
 		}
 		return strategy, nil
@@ -1330,7 +1277,7 @@ func (ctl *EventController) removeAgentStrategy(strategy string) {
 }
 
 func (ctl *EventController) updateFixResult(strategy, value string) {
-	newRecoverStatusAnnotation := map[string]string{
+	newRecoverStatusAnnotation := map[string]interface{}{
 		constant.ProcessRecoverStatusKey: value,
 	}
 	_, err := kube.RetryPatchPodGroupAnnotations(ctl.jobInfo.PgName, ctl.jobInfo.Namespace,

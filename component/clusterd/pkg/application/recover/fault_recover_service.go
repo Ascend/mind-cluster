@@ -33,13 +33,14 @@ const (
 
 // FaultRecoverService is a service for fault recover
 type FaultRecoverService struct {
-	keepAliveInterval int
-	serviceCtx        context.Context
-	eventCtl          map[string]*EventController
-	initJob           map[string]common.JobBaseInfo
-	lock              sync.RWMutex
-	faultCh           chan map[string]constant.JobFaultInfo
-	podEventCh        chan *v1.Pod
+	keepAliveInterval    int
+	serviceCtx           context.Context
+	eventCtl             map[string]*EventController
+	initJob              map[string]common.JobBaseInfo
+	lock                 sync.RWMutex
+	faultCh              chan map[string]constant.JobFaultInfo
+	podEventCh           chan *v1.Pod
+	isJobReschedulingMap map[string]bool
 	pb.UnimplementedRecoverServer
 }
 
@@ -51,19 +52,70 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.eventCtl = make(map[string]*EventController)
 	s.initJob = make(map[string]common.JobBaseInfo)
 	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
+	s.isJobReschedulingMap = make(map[string]bool)
 	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(*s).Name()); err != nil {
 		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
 	}
 	// delete EventController cache added by register interface according delete event of podGroup when job is deleted.
 	kube.AddPodGroupFunc(constant.FaultRecover, func(_ *v1beta1.PodGroup, pg *v1beta1.PodGroup, op string) {
-		if op != constant.DeleteOperator {
-			return
+		if op == constant.UpdateOperator {
+			s.resetByJobRescheduling(pg)
+		} else if op == constant.DeleteOperator {
+			jobID := podgroup.GetJobKeyByPG(pg)
+			delete(s.isJobReschedulingMap, jobID)
+			s.DeleteJob(jobID)
 		}
-		s.DeleteJob(podgroup.GetJobKeyByPG(pg))
 	})
 	go s.checkFaultFromFaultCenter()
 	go s.podStatusMonitor()
 	return s
+}
+
+func (s *FaultRecoverService) resetByJobRescheduling(pg *v1beta1.PodGroup) {
+	jobID := podgroup.GetJobKeyByPG(pg)
+	controller, exist := s.getController(jobID)
+	if !exist || controller == nil {
+		hwlog.RunLog.Warnf("cannot find target controller by job<%s>", jobID)
+		return
+	}
+	if isPodGroupJobRescheduling(pg) {
+		s.setJobReschedulingMap(jobID)
+		isJobReschedulingAnnotation := map[string]interface{}{
+			constant.IsJobRescheduling: "true",
+		}
+		_, err := kube.RetryPatchPodGroupAnnotations(controller.jobInfo.PgName, controller.jobInfo.Namespace,
+			retryTimes, isJobReschedulingAnnotation)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to patch pg when job is rescheduling, err=%v, pgName=%s",
+				err, controller.jobInfo.PgName)
+		}
+		return
+	}
+	s.resetStateMachineAfterJobRescheduling(jobID, pg, controller)
+}
+
+// setJobReschedulingMap label the job has just been job rescheduling
+func (s *FaultRecoverService) setJobReschedulingMap(jobId string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.isJobReschedulingMap[jobId] = true
+}
+
+// resetStateMachineByJobRescheduling reset state machine to init state after job rescheduling
+func (s *FaultRecoverService) resetStateMachineAfterJobRescheduling(jobId string, pg *v1beta1.PodGroup,
+	controller *EventController) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.isJobReschedulingMap[jobId] {
+		if _, ok := pg.Annotations[constant.IsJobRescheduling]; !ok {
+			controller.reset(false)
+			delete(s.isJobReschedulingMap, jobId)
+		}
+	}
+}
+
+func isPodGroupJobRescheduling(pg *v1beta1.PodGroup) bool {
+	return pg.Status.Running == 0 && pg.Status.Succeeded == 0 && pg.Status.Failed == 0
 }
 
 func catchAndSetExceptionInfo(code *int32, info *string, ctl *EventController) {

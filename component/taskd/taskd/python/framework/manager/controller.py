@@ -242,7 +242,7 @@ def report_recover_status(code: int, msg: str, fault_ranks: dict, strategy: str)
     controller_send_to_backend(message)
     
 
-def report_process_fault(fault_ranks: dict):
+def report_process_fault(fault_ranks: dict, fault_codes: dict = None ):
     run_log.info(f"call ReportProcessFault, fault_ranks:{fault_ranks}")
     message = ControllerMessage(
         actions=[],

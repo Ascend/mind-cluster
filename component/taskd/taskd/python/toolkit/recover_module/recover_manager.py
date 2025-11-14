@@ -484,7 +484,7 @@ def report_recover_status(code: int, msg: str, fault_ranks: dict, strategy: str)
         raise e
 
 
-def report_process_fault(fault_ranks: dict) -> int:
+def report_process_fault(fault_ranks: dict, fault_codes: dict = None) -> int:
     recover_mgr = get_recover_manager_instance()
     info = (f"call ReportProcessFault, role={recover_mgr.client_info.role}, jobId={recover_mgr.client_info.jobId}, "
             f"server={recover_mgr.server_addr}, fault_ranks={fault_ranks}")

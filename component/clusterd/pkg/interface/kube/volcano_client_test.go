@@ -109,10 +109,10 @@ func TestRetryPatchPodGroupAnnotations(t *testing.T) {
 		pgName := "testPgName"
 		pgNamespace := "testPgNamespace"
 		retryTimes := 1
-		annotations := map[string]string{"key": "value"}
+		annotations := map[string]interface{}{"key": "value"}
 
 		patcher := gomonkey.ApplyFunc(patchPodGroupAnnotation,
-			func(_, _ string, _ map[string]string) (*v1beta1.PodGroup, error) {
+			func(_, _ string, _ map[string]interface{}) (*v1beta1.PodGroup, error) {
 				return &v1beta1.PodGroup{}, nil
 			})
 		defer patcher.Reset()

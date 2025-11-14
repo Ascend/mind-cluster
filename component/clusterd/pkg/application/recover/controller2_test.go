@@ -361,9 +361,9 @@ func TestEventControllerUpdateFixResultSuccess(t *testing.T) {
 				Namespace: "testNamespace",
 			},
 		}
-		result := make(map[string]string)
+		result := make(map[string]interface{})
 		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-			func(pgName, namespace string, retryTimes int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 				for k, v := range annotations {
 					result[k] = v
 				}
@@ -386,7 +386,7 @@ func TestEventControllerUpdateFixResultFailure(t *testing.T) {
 		}
 		result := make(map[string]string)
 		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-			func(pgName, namespace string, retryTimes int, annotations map[string]string) (*v1beta1.PodGroup, error) {
+			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
 				return nil, errors.New("patch error")
 			})
 		defer patchRetryPatchPodGroupAnnotations.Reset()
