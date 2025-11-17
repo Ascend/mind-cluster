@@ -37,8 +37,9 @@ class Manager:
     def init_taskd_manager(self, config: dict) -> bool:
         if os.getenv(constants.PROCESS_RECOVER) == constants.SWITCH_ON:
             config[constants.FAULT_RECOVER] = constants.SWITCH_ON
-        if os.getenv(constants.TASKD_PROCESS_ENABLE) == constants.SWITCH_ON:
-            config[constants.TASKD_ENABLE] = constants.SWITCH_ON
+        config[constants.TASKD_ENABLE] = constants.SWITCH_ON
+        if os.getenv(constants.TASKD_PROCESS_ENABLE) == constants.SWITCH_OFF:
+            config[constants.TASKD_ENABLE] = constants.SWITCH_OFF
         self.config = config
         if cython_api.lib is None:
             run_log.error("the libtaskd.so has not been loaded")
