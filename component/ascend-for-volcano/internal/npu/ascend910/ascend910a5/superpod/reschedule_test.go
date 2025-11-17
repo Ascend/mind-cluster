@@ -12,7 +12,7 @@
    limitations under the License.
 */
 
-// Package superpod for
+// Package superpod for reschedule ut
 package superpod
 
 import (

@@ -85,8 +85,8 @@ func (tp *module910a5SuperPod) getFaultJob(task *api.TaskInfo) *rescheduling.Fau
 // select node for the rest of fault job by rack
 func (tp *module910a5SuperPod) selectNodesByRack(fJob *rescheduling.FaultJob,
 	notReadySuperPod map[string]struct{}, totalNodes map[int32]superPod,
-	virtualIdArr map[string]bool, selectNodes map[string][]plugin.SuperNode) error {
-	if selectNodes == nil || virtualIdArr == nil {
+	spBlockIDs map[string]bool, selectNodes map[string][]plugin.SuperNode) error {
+	if selectNodes == nil || spBlockIDs == nil {
 		return nil
 	}
 
@@ -102,7 +102,7 @@ func (tp *module910a5SuperPod) selectNodesByRack(fJob *rescheduling.FaultJob,
 			util.EnableFunc {
 			selectNodes[vSuperPodId] = getSameRackNodes(faultNodeNameMap, fJob.SuperPods[vSuperPodId],
 				totalNodes[superNode.SuperPodID])
-			virtualIdArr[vSuperPodId] = true
+			spBlockIDs[vSuperPodId] = true
 			continue
 		}
 		superPodWithRackId := transferSuperPodToRackIdMap(totalNodes[superNode.SuperPodID])
@@ -112,7 +112,7 @@ func (tp *module910a5SuperPod) selectNodesByRack(fJob *rescheduling.FaultJob,
 		}
 		selectNodes[vSuperPodId] = getAnotherRackNodes(faultNodeNameMap, fJob.SuperPods[vSuperPodId],
 			totalNodes[superNode.SuperPodID], superPodWithRackId[selectRackId])
-		virtualIdArr[vSuperPodId] = true
+		spBlockIDs[vSuperPodId] = true
 	}
 	if !tp.checkSelectedNodesValid(selectNodes) {
 		klog.V(util.LogErrorLev).Infof("selected nodes %v is invalid", selectNodes)

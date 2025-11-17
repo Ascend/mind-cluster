@@ -198,7 +198,7 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 
 // select nodes from original superpods
 func (tp *module910a5SuperPod) selectNodesFromSuperPods(task *api.TaskInfo, superPodMap map[int32]superPod,
-	spBlockIDs []string, selectNodes map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
+	unReadyIds []string, selectNodes map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
 	klog.V(util.LogInfoLev).Infof("selectNodes after selectNodesForFaultJob:%v", selectNodes)
 
 	superPodTopoInfo, err := getSuperPodsInfo(superPodMap, tp.FrameAttr.SuperPodSize, tp.spBlock)
@@ -208,7 +208,7 @@ func (tp *module910a5SuperPod) selectNodesFromSuperPods(task *api.TaskInfo, supe
 	}
 
 	// make a choice to select nodes at the beginning. oneRack -> oneSuperPod -> multipleSuperPod
-	scheduleErr := tp.handleScheduleStrategy(spBlockIDs, task, superPodTopoInfo, selectNodes)
+	scheduleErr := tp.handleScheduleStrategy(unReadyIds, task, superPodTopoInfo, selectNodes)
 	if scheduleErr != nil {
 		return nil, scheduleErr
 	}
