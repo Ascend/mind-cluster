@@ -32,6 +32,8 @@ const (
 	volcanoTaskSpecKey = "volcano.sh/task-spec"
 	// gangSchedulerName gang scheduler name.
 	gangSchedulerName = "volcano"
+	// acceleratorType for selector.
+	acceleratorType = "accelerator-type"
 	// exitedWithCodeReason is the reason of a job that exited with a non-zero code.
 	exitedWithCodeReason = "ExitedWithCode"
 	// podTemplateRestartPolicyReason is the reason of a job that set podTemplate restartPolicy.

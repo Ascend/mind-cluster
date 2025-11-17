@@ -30,6 +30,19 @@ const (
 	appTypeEnvKey = "APP_TYPE"
 )
 
+var deviceTypeMap = map[string]bool{ // check task use A5 chip
+	"900SuperPod-A5-8":   true,
+	"800I-A5-8":          true,
+	"800T-A5-8":          true,
+	"800I-Stacking-A5-8": true,
+	"800I-SuperPod-A5-8": true,
+	"800T-SuperPod-A5-8": true,
+	"300I-A5-4p-8":       true,
+	"300I-A5-4p-16":      true,
+	"300I-A5-8":          true,
+	"300I-A5-16":         true,
+}
+
 func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int) {
 	pod.Spec.Containers[index].Env = append(pod.Spec.Containers[index].Env, corev1.EnvVar{
 		Name:  envKey,
@@ -219,10 +232,14 @@ func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 			superPodId := strconv.Itoa(utils.GetLogicSuperPodId(pi.rank, utils.GetSpBlock(pi.job), chipsPerNode))
 			hwlog.RunLog.Debugf("pod<%s> resource<%v=%v> pod-rank=%v sp-block=%v set %s=%v",
 				pod.Name, name, chipsPerNode, pi.rank, utils.GetSpBlock(pi.job), hcclSuperPodLogicId, superPodId)
-			if pi.job.Labels[utils.SuperPodAffinity] == utils.SoftStrategy {
-				addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
-			} else {
+			if pi.job.Labels[utils.SuperPodAffinity] != utils.SoftStrategy {
 				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
+				break
+			}
+			if deviceTypeMap[pod.Spec.NodeSelector[acceleratorType]] {
+				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
+			} else {
+				addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
 			}
 			break
 		}
