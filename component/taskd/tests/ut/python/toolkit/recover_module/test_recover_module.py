@@ -103,6 +103,9 @@ class TestRecoverManager(TestCase):
             'pause_train': mock.MagicMock(),
             'on_global_rank': mock.MagicMock(),
             'change_strategy': mock.MagicMock(),
+            'hot switch': mock.MagicMock(),
+            'stop switch': mock.MagicMock(),
+            'new pod running': mock.MagicMock(),
         }
 
     def test_init_grpc_recover_manager(self):

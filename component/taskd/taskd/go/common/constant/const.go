@@ -32,7 +32,7 @@ const (
 	LogFileName          = "taskd.log"
 	WorkerLogPathPattern = "taskd-worker-%s.log"
 	// ProxyLogPathPattern for proxy log path pattern
-	ProxyLogPathPattern = "taskd-proxy-%s.log"
+	ProxyLogPathPattern = "taskd-proxy-%s-%s.log"
 )
 
 const (
@@ -140,6 +140,7 @@ const (
 	RestartWorkersCode           = 209
 	StartAgentCode               = 210
 	ReplyToClusterDCode          = 211
+	HotSwitchCode                = 212
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701
@@ -304,6 +305,7 @@ const (
 	Priority3
 	Priority4
 	Priority5
+	Priority6
 )
 
 const (
@@ -399,6 +401,8 @@ const (
 	PodReschedulingPluginName = "PodReschedulingPlugin"
 	// RecoverPluginName is recover plugin name
 	RecoverPluginName = "recoverPlugin"
+	// HotSwitchPluginName name of HotSwitchPlugin
+	HotSwitchPluginName = "HotSwitchPlugin"
 	// SingalKillMaster singal kill master
 	SingalKillMaster = "killMaster"
 	// RestartController restart controller

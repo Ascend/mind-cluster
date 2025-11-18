@@ -88,11 +88,13 @@ class TestController(unittest.TestCase):
         self.patcher_tft_notify_controller_stop_train = patch('taskd.python.framework.manager.controller.tft_notify_controller_stop_train')
         self.patcher_tft_notify_controller_on_global_rank = patch('taskd.python.framework.manager.controller.tft_notify_controller_on_global_rank')
         self.patcher_tft_notify_controller_change_strategy = patch('taskd.python.framework.manager.controller.tft_notify_controller_change_strategy')
+        self.patcher_tft_notify_controller_prepare_action = patch('taskd.python.framework.manager.controller.tft_notify_controller_prepare_action')
 
         self.mock_tft_notify_controller_dump = self.patcher_tft_notify_controller_dump.start()
         self.mock_tft_notify_controller_stop_train = self.patcher_tft_notify_controller_stop_train.start()
         self.mock_tft_notify_controller_on_global_rank = self.patcher_tft_notify_controller_on_global_rank.start()
         self.mock_tft_notify_controller_change_strategy = self.patcher_tft_notify_controller_change_strategy.start()
+        self.mock_tft_notify_controller_prepare_action = self.patcher_tft_notify_controller_prepare_action.start()
 
     def tearDown(self):
         os.environ.clear()
@@ -109,6 +111,7 @@ class TestController(unittest.TestCase):
         self.patcher_tft_notify_controller_stop_train.stop()
         self.patcher_tft_notify_controller_on_global_rank.stop()
         self.patcher_tft_notify_controller_change_strategy.stop()
+        self.patcher_tft_notify_controller_prepare_action.stop()
 
     def test_controller_message_init(self):
         msg = ControllerMessage(
@@ -279,6 +282,7 @@ class TestController(unittest.TestCase):
         self.mock_tft_notify_controller_stop_train.assert_not_called()
         self.mock_tft_notify_controller_on_global_rank.assert_not_called()
         self.mock_tft_notify_controller_change_strategy.assert_not_called()
+        self.mock_tft_notify_controller_prepare_action.assert_not_called()
 
         self.mock_log_info.assert_called_with("do action unknown_action err, err=action unknown_action unregistered, "
                                               "data=ControllerMessage(action='test_action', code=200, msg='test message', "

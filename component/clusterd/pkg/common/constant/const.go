@@ -335,6 +335,15 @@ const (
 	PauseTrainAction = "pause_train"
 	// ChangeStrategyAction change_strategy action
 	ChangeStrategyAction = "change_strategy"
+	// SaveAndExitAction save_and_exit action
+	SaveAndExitAction = "save_and_exit"
+	// HotSwitchAction hot switch action
+	HotSwitchAction = "hot switch"
+	// StopSwitchAction stop switch action
+	StopSwitchAction = "stop switch"
+	// NewPodRunningAction new pod running action
+	NewPodRunningAction = "new pod running"
+
 	// DefaultWaitRescheduleTimeout default reschedule timeout before executing arf or dp scale-in strategy
 	// (Unit: second)
 	DefaultWaitRescheduleTimeout = 270

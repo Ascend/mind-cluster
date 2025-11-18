@@ -146,6 +146,7 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 			addEnvValue(podTemplate, npuPod, strconv.FormatBool(checkNpuPod(pi)), i)
 			addProcessRecoverEnv(pi, podTemplate, i, api.MindSporeFramework)
 			addMSPodScheduleEnv(pi, podTemplate, i)
+			addSubHealthyEnv(pi, podTemplate, i, api.MindSporeFramework)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 		}
 	}
@@ -246,13 +247,17 @@ func addSubHealthyEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex i
 	if strategy != api.SubHealthyHotSwitch {
 		return
 	}
-	if framework != api.PytorchFramework {
-		hwlog.RunLog.Warnf("subhealth hotswitch only support pytorch framework,current: %v", framework)
+	if framework == api.PytorchFramework {
+		addEnvValue(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
+	} else if framework == api.MindSporeFramework {
+		addEnvValue(pod, api.MsRecoverEnv, `'{`+api.MsArfStrategy+`}'`, containerIndex)
+		addEnvValue(pod, api.EnableMS, api.EnableFlag, containerIndex)
+	} else {
+		hwlog.RunLog.Warnf("subhealth hotswitch only support pytorch and mindspore framework,current: %v", framework)
 		return
 	}
 	addEnvValue(pod, api.ProcessRecoverEnv, api.EnableFunc, containerIndex)
 	addEnvValue(pod, api.ElasticRecoverEnv, api.EnableFlag, containerIndex)
-	addEnvValue(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
 }
 
 func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {

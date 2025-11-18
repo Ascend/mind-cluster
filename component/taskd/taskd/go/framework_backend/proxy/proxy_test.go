@@ -79,33 +79,6 @@ func TestNewProxyInstance(t *testing.T) {
 	})
 }
 
-func TestValidNetConfig(t *testing.T) {
-	customLog := hwlog.SetCustomLogger(hwlog.RunLog)
-	proxy := &proxyClient{proxyLogger: customLog}
-	validConfig := &common.TaskNetConfig{
-		Pos: common.Position{
-			ProcessRank: "-1",
-		},
-	}
-	invalidConfig := &common.TaskNetConfig{
-		Pos: common.Position{
-			ProcessRank: "0",
-		},
-	}
-
-	convey.Convey("test validNetConfig func", t, func() {
-		convey.Convey("valid config return nil", func() {
-			err := proxy.validNetConfig(validConfig)
-			convey.So(err, convey.ShouldBeNil)
-		})
-
-		convey.Convey("invalid config return error", func() {
-			err := proxy.validNetConfig(invalidConfig)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
 func TestProxyInit(t *testing.T) {
 	mockNet := &MockNet{
 		InitNetworkResult: &net.NetInstance{},

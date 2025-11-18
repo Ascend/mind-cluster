@@ -29,6 +29,9 @@ def tft_destroy_controller(*args):
 def tft_query_high_availability_switch(*args) -> bool:
     return True
 
+def tft_notify_controller_prepare_action(*args) -> int:
+    return 0
+
 
 class logger:
     def info(self, *args):

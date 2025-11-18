@@ -808,6 +808,18 @@ func buildTestCases3() []testSubHealthyCase {
 			expectedResult:          true,
 			expectHotSwitchDisabled: false,
 		},
+		{
+			name: "should return false when hotswitch with mindspore framework and normal fault pods count",
+			controller: &EventController{
+				jobInfo: common.JobBaseInfo{
+					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.MsFramework,
+				},
+			},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{{PodUid: "0", PodRank: "0"}, {PodUid: "1", PodRank: "1"}}},
+			expectedResult:          false,
+			expectHotSwitchDisabled: false,
+		},
 	}
 }
 

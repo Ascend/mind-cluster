@@ -357,11 +357,13 @@ func (r *ASJobReconciler) createHotSwitchPod(oldPod *corev1.Pod, pi *podInfo,
 		hwlog.RunLog.Errorf("create hotswitch pod failed, err: %v", err)
 		return err
 	}
-
+	// Increase the delay to avoid being unable to find the newly created pod after creation
+	const duration = 100 * time.Millisecond
+	time.Sleep(duration)
 	newPod := &corev1.Pod{}
 	if err := r.Get(context.TODO(), types.NamespacedName{Namespace: oldPod.Namespace, Name: newPodName}, newPod); err != nil {
-		hwlog.RunLog.Errorf("hotswitch: get new pod[%s] err: %v", newPodName, err)
-		return fmt.Errorf("hotswitch: get new pod[%s] err: %v", newPodName, err)
+		hwlog.RunLog.Errorf("hotswitch: get new pod[%s/%s] err: %v", oldPod.Namespace, newPodName, err)
+		return fmt.Errorf("hotswitch: get new pod[%s/%s] err: %v", oldPod.Namespace, newPodName, err)
 	}
 
 	// add annotations
