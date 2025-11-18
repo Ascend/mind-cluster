@@ -180,7 +180,7 @@ func (tp *module910a5SuperPod) backToVspSchedule(fJob *rescheduling.FaultJob) er
 func (tp *module910a5SuperPod) getRackId(superPodWithRackId map[int32][]nodeBaseInfo,
 	faultNodeNameMap map[string]struct{}, vSuperPod []plugin.SuperNode, fJob *rescheduling.FaultJob) (int32, error) {
 	filterRackIdByTpBlock(superPodWithRackId, tp.tpBlock)
-	restRackLenMapId := tp.getOriginRackId(superPodWithRackId, faultNodeNameMap, vSuperPod)
+	restRackLenMapId := getOriginRackId(superPodWithRackId, faultNodeNameMap, vSuperPod)
 	if restRackLenMapId == UninitializedRestRackLenMapId {
 		rackIdOrder := sortRackIdByLengthInOneSuperPod(superPodWithRackId)
 		restRackLenMapId = tp.getRestRackId(rackIdOrder, superPodWithRackId)

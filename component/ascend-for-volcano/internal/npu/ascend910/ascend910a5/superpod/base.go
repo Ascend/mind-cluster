@@ -22,46 +22,35 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// getScheduleStrategy the 0 or 1 means oneRack or superPod strategy
-func (tp *module910a5SuperPod) getScheduleStrategy() int {
-	return tp.scheduleStrategy
-}
-
 // scheduleStrategy the interface need to be implemented by any schedule strategy
 type scheduleStrategy interface {
-	entrySelect(*superPodsInfo) (bool, error)     // select entry
-	iterateEverySuperPod([]superPod)              // iterate all super pod
-	handleSelectResult(string, bool, error) error // handle select result with error
+	entrySelect(*superPodsInfo) (bool, error) // select entry
+	getStrategyName() strategyKey
 }
 
 // strategy for basic and sp-block scheduling
 type strategy struct {
 	*module910a5SuperPod
-	nextStrategy   scheduleStrategy
-	selectedNodes  map[string][]plugin.SuperNode
-	unReadyIds     []string
-	inNextStrategy bool
+	selectedNodes map[string][]plugin.SuperNode
+	unReadyIds    []string
 }
 
 // oneRackStrategy select nodes in one rack
 type oneRackStrategy struct {
-	strategy
+	*strategy
+	name strategyKey
 }
 
 // oneSuperPodStrategy select nodes in one superpod
 type oneSuperPodStrategy struct {
-	strategy
+	*strategy
+	name strategyKey
 }
 
 // mulSuperPodsStrategy select nodes in multiple superpods
 type mulSuperPodsStrategy struct {
-	strategy
-}
-
-type vPodIdRecorder struct {
-	unReadyId  []string
-	leftIndex  int
-	rightIndex int
+	*strategy
+	name strategyKey
 }
 
 // doSelect select nodes from ubmem level or superpod level, when we have selected one sp-block count nodes, return result
@@ -98,10 +87,7 @@ func (tp *strategy) doSelect(rackGroup map[int32][]nodeBaseInfo, superPod superP
 				SuperPodID: nNode.superPodID,
 				RackID:     nNode.rackID,
 			})
-			// in multiple superPod strategy，we need remove nodes from superPod to satisfy soft strategy scheduling
-			if tp.scheduleStrategy == MulSuperPodsSchedule {
-				delete(superPod, nNode.name)
-			}
+			delete(superPod, nNode.name)
 		}
 		// remove selected nodes from rackGroup, making totalNodes less
 		rackGroup[rackId] = rackGroup[rackId][tpBlockNum*tp.tpBlock:]
@@ -109,4 +95,16 @@ func (tp *strategy) doSelect(rackGroup map[int32][]nodeBaseInfo, superPod superP
 	tp.totalCount--
 
 	return rackGroup
+}
+
+func (tp *oneRackStrategy) getStrategyName() strategyKey {
+	return tp.name
+}
+
+func (tp *oneSuperPodStrategy) getStrategyName() strategyKey {
+	return tp.name
+}
+
+func (tp *mulSuperPodsStrategy) getStrategyName() strategyKey {
+	return tp.name
 }

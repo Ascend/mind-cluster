@@ -17,15 +17,19 @@ package superpod
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 const (
 	testSchedulerName = "test"
+	tpBlock4          = 4
+	tpBlock8          = 8
 )
 
 // NewPluginTestCase use for New func test
@@ -97,7 +101,6 @@ func buildTestSelectNodesForJobCases0() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: RackSchedule,
 			spBlock:          spBlock1,
 			tpBlock:          tpBlock1,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				0: {
 					selectedRacksInSuperPod: 1,
@@ -115,7 +118,6 @@ func buildTestSelectNodesForJobCases0() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: RackSchedule,
 			spBlock:          spBlock1,
 			tpBlock:          tpBlock1,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				0: {
 					selectedRacksInSuperPod: 1,
@@ -140,7 +142,6 @@ func buildTestSelectNodesForJobCases1() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: SuperPodSchedule,
 			spBlock:          spBlock4,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				1: {
 					selectedRacksInSuperPod: 2,
@@ -165,7 +166,6 @@ func buildTestSelectNodesForJobCases2() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: SuperPodSchedule,
 			spBlock:          spBlock4,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				5: {
 					selectedRacksInSuperPod: 6,
@@ -198,7 +198,6 @@ func buildTestSelectNodesForJobCases3() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: RackSchedule,
 			spBlock:          spBlock4,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				0: {
 					selectedRacksInSuperPod: 2,
@@ -206,6 +205,18 @@ func buildTestSelectNodesForJobCases3() []*selectScoreBestNPUNodesTestCase {
 				},
 			},
 			wantErr: nil,
+		},
+		{
+			name: "RackSchedule failed. case Test 4Pod * 8npus;  SuperPodSize=64, npuTaskNum=4;" +
+				"3 nodes in one rack ,and 2 nodes in another rack; use RackSchedule will failed",
+			npuTaskNum:       npuTaskNum4,
+			nodes:            nodes,
+			superPodSize:     superPodSize64,
+			scheduleStrategy: RackSchedule,
+			spBlock:          spBlock4,
+			tpBlock:          tpBlock4,
+			wantRes:          make(map[int32]*selectedRackInfo),
+			wantErr:          errors.New("not found the 1 count of tp-block:0 in all racks of every super-pod, exit select process"),
 		},
 	}
 	return selectSuperPodForJobTestCases
@@ -228,9 +239,8 @@ func buildTestSelectNodesForJobCases4() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: SuperPodSchedule,
 			spBlock:          spBlock6,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes:          map[int32]*selectedRackInfo{},
-			wantErr:          errors.New("schedule job failed, need <1> spBlock, could only schedule <0> sp-block"),
+			wantErr:          fmt.Errorf("scheduling failed in %s strategy", MulSuperPodsSchedule),
 		},
 	}
 	return selectSuperPodForJobTestCases
@@ -254,9 +264,8 @@ func buildTestSelectNodesForJobCases5() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: SuperPodSchedule,
 			spBlock:          spBlock8,
 			tpBlock:          tpBlock8,
-			isNeedAlgoAlign:  false,
 			wantRes:          map[int32]*selectedRackInfo{},
-			wantErr:          errors.New("schedule job failed, need <2> spBlock, could only schedule <0> sp-block"),
+			wantErr:          fmt.Errorf("scheduling failed in %s strategy", MulSuperPodsSchedule),
 		},
 	}
 	return selectSuperPodForJobTestCases
@@ -274,9 +283,8 @@ func buildTestSelectNodesForJobCases6() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: SuperPodSchedule,
 			spBlock:          spBlock8,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes:          map[int32]*selectedRackInfo{},
-			wantErr:          errors.New("schedule job failed, need <4> spBlock, could only schedule <3> sp-block"),
+			wantErr:          fmt.Errorf("scheduling failed in %s strategy", MulSuperPodsSchedule),
 		},
 	}
 	return selectSuperPodForJobTestCases
@@ -312,8 +320,7 @@ func TestSelectNodesForJob(t *testing.T) {
 			}
 			selectedSuperPodInfo := checkScoreBestNPUNodesResult(res)
 			if !reflect.DeepEqual(selectedSuperPodInfo, cs.wantRes) {
-				t.Errorf("ScoreBestNPUNodes() fault result = %v, want %v;",
-					selectedSuperPodInfo, cs.wantRes)
+				t.Errorf("ScoreBestNPUNodes() fault result = %v, want %v;", selectedSuperPodInfo, cs.wantRes)
 			}
 		})
 	}
@@ -336,7 +343,6 @@ func buildSelectScoreBestNPUNodesTestCases12() []*selectScoreBestNPUNodesTestCas
 			scheduleStrategy: MulSuperPodsSchedule,
 			spBlock:          tpBlock2,
 			tpBlock:          tpBlock2,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				0: {
 					selectedRacksInSuperPod: 2,
@@ -384,7 +390,6 @@ func buildTestScoreBestNPUNodes0() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: RackSchedule,
 			spBlock:          spBlock1,
 			tpBlock:          tpBlock1,
-			isNeedAlgoAlign:  false,
 			wantRes: map[int32]*selectedRackInfo{
 				0: {
 					selectedRacksInSuperPod: 1,
@@ -401,7 +406,6 @@ func buildTestScoreBestNPUNodes0() []*selectScoreBestNPUNodesTestCase {
 			scheduleStrategy: RackSchedule,
 			spBlock:          spBlock1,
 			tpBlock:          tpBlock1,
-			isNeedAlgoAlign:  false,
 			wantRes:          make(map[int32]*selectedRackInfo),
 			wantErr:          errors.New("invalid argument"),
 		},

@@ -26,46 +26,57 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
+// the chain to find the next strategy
+var nextStrategyChain = map[strategyKey]strategyKey{
+	RackSchedule:     SuperPodSchedule,
+	SuperPodSchedule: MulSuperPodsSchedule,
+}
+
+// all the strategies in this file we define
+var strategyMap map[strategyKey]scheduleStrategy
+
+type strategyFactoryCallBack func(*module910a5SuperPod, []string, map[string][]plugin.SuperNode)
+
+var strategyInitFactory strategyFactoryCallBack
+
 // init all strategies which will be used
-func newScheduleStrategy(handler *module910a5SuperPod, unReadyIds []string,
-	selectedNodes map[string][]plugin.SuperNode) scheduleStrategy {
-	schedule := &strategy{
-		module910a5SuperPod: handler,
-		selectedNodes:       selectedNodes,
-		unReadyIds:          unReadyIds,
-	}
+func newScheduleStrategy() {
+	schedule := &strategy{}
 	rackSchedule := &oneRackStrategy{
-		strategy: *schedule,
+		strategy: schedule,
+		name:     RackSchedule,
 	}
 	superPodSchedule := &oneSuperPodStrategy{
-		strategy: *schedule,
+		strategy: schedule,
+		name:     SuperPodSchedule,
 	}
 	mulSuperPodsSchedule := &mulSuperPodsStrategy{
-		strategy: *schedule,
+		strategy: schedule,
+		name:     MulSuperPodsSchedule,
 	}
-	rackSchedule.nextStrategy = superPodSchedule
+	strategyMap = map[strategyKey]scheduleStrategy{
+		RackSchedule:         rackSchedule,
+		SuperPodSchedule:     superPodSchedule,
+		MulSuperPodsSchedule: mulSuperPodsSchedule,
+	}
 
-	superPodSchedule.nextStrategy = mulSuperPodsSchedule
-	handler.chooseWhichStrategyByNPUTaskNum()
-	switch handler.getScheduleStrategy() {
-	case RackSchedule:
-		return rackSchedule
-	case SuperPodSchedule:
-		return superPodSchedule
-	case MulSuperPodsSchedule:
-		return mulSuperPodsSchedule
-	default:
-		return superPodSchedule
+	strategyInitFactory = func(handler *module910a5SuperPod, unReadyIds []string,
+		selectedNodes map[string][]plugin.SuperNode) {
+		schedule.module910a5SuperPod = handler
+		schedule.unReadyIds = unReadyIds
+		schedule.selectedNodes = selectedNodes
 	}
 }
 
-// entrySelect begin to select in one rack
+// entrySelect begin to select in one rack.
+// if return true means it should try the next scheduling strategy
 func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error) {
 	if tp == nil {
 		return false, errors.New("strategy is nil")
 	}
+
 	if superPodTopo.spCount < len(tp.unReadyIds) && !tp.isSoftSuperPodAffinity {
-		return false, fmt.Errorf("select super pod failed, required sp-block count=%d, but total sp-block count=%d",
+		return false, fmt.Errorf("before scheduling, required sp-block count=%d, but total sp-block count=%d",
 			len(tp.unReadyIds), superPodTopo.spCount)
 	}
 	tp.totalCount = len(tp.unReadyIds)
@@ -73,43 +84,19 @@ func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error
 
 	tp.searchTable(superPodTopo.superPodTable)
 
-	if len(tp.selectedNodes) == 0 && requireTpBlockCount == 1 && !tp.isSoftSuperPodAffinity {
-		return false, fmt.Errorf("not found the %d count of the tp-block:%d in all racks of every super-pod,"+
-			" exit select process", requireTpBlockCount, tp.TpBlockNPUNum)
-	}
-
-	if len(tp.selectedNodes) == 0 && tp.TpBlockNPUNum >= npuNumber8 && !tp.isSoftSuperPodAffinity {
-		klog.V(util.LogWarningLev).Infof("try to schedule job in multiple rack in one superpod " +
-			"after scheduling in one rack failed,")
-	}
-
 	// select success
 	if tp.totalCount == 0 && len(tp.selectedNodes) != 0 {
-		return true, nil
+		klog.V(util.LogInfoLev).Info("select nodes in one Rack success.")
+		return false, nil
 	}
 
-	// select failed, then choose to be superPod schedule strategy or ub
-	tp.inNextStrategy = true
-	tp.scheduleStrategy = SuperPodSchedule
-	return tp.nextStrategy.entrySelect(superPodTopo)
-}
+	// select failed and do not need to try the next strategy
+	if len(tp.selectedNodes) == 0 && requireTpBlockCount == 1 && !tp.isSoftSuperPodAffinity {
+		return false, fmt.Errorf("not found the 1 count of tp-block:%d in all racks of every super-pod, "+
+			"exit select process", tp.TpBlockNPUNum)
+	}
 
-// handleSelectResult handle the one rack select result
-func (tp *oneRackStrategy) handleSelectResult(jobName string, ok bool, err error) error {
-	if tp.inNextStrategy {
-		return tp.nextStrategy.handleSelectResult(jobName, ok, err)
-	}
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("Job: %s, select nodes in one Rack failed. error info: [%s]. ",
-			jobName, util.SafePrint(err))
-		return err
-	}
-	if ok {
-		// select success
-		klog.V(util.LogInfoLev).Infof("Job: %s, select nodes in one Rack success.", jobName)
-		return nil
-	}
-	return err
+	return true, fmt.Errorf("scheduling failed in %s strategy", RackSchedule)
 }
 
 func (tp *oneRackStrategy) searchTable(superPodTable superPodOrderTable) {
@@ -200,41 +187,21 @@ func (tp *oneSuperPodStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, e
 	if tp == nil {
 		return false, errors.New("strategy is nil")
 	}
+
 	if tp.spBlock < tp.tpBlock {
 		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
 	}
-	klog.V(util.LogInfoLev).Infof("select nodes in one superpod start.")
+	klog.V(util.LogInfoLev).Info("select nodes in one superpod start")
 	tp.totalCount = len(tp.unReadyIds)
 
 	tp.searchTable(superPodTopo.superPodTable)
 
 	if tp.totalCount == 0 && len(tp.selectedNodes) != 0 {
-		return true, nil
+		klog.V(util.LogInfoLev).Info("select nodes in one superpod success.")
+		return false, nil
 	}
 
-	// select nodes failed, choose to Multiple superPod strategy
-	tp.inNextStrategy = true
-	tp.scheduleStrategy = MulSuperPodsSchedule
-	return tp.nextStrategy.entrySelect(superPodTopo)
-}
-
-// handleSelectResult handle the one superpod select result
-func (tp *oneSuperPodStrategy) handleSelectResult(jobName string, ok bool, err error) error {
-	if tp.inNextStrategy {
-		return tp.nextStrategy.handleSelectResult(jobName, ok, err)
-	}
-
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("Job: %s, select nodes in one superpod failed. error info: [%s]. ",
-			jobName, util.SafePrint(err))
-		return err
-	}
-
-	if ok {
-		klog.V(util.LogInfoLev).Infof("Job: %s, select nodes in one superpod success.", jobName)
-		return nil
-	}
-	return err
+	return true, fmt.Errorf("scheduling failed in %s strategy", SuperPodSchedule)
 }
 
 func (tp *oneSuperPodStrategy) searchTable(superPodTable superPodOrderTable) {
@@ -301,6 +268,7 @@ func (tp *mulSuperPodsStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, 
 	if tp == nil {
 		return false, errors.New("strategy is nil")
 	}
+
 	if tp.spBlock < tp.tpBlock {
 		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
 	}
@@ -310,6 +278,7 @@ func (tp *mulSuperPodsStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, 
 	tp.searchTable(superPodTopo.superPodTable)
 
 	if tp.totalCount == 0 && len(tp.selectedNodes) != 0 {
+		klog.V(util.LogInfoLev).Infof("select nodes in multiple superpods success.")
 		return true, nil
 	}
 
@@ -321,15 +290,15 @@ func (tp *mulSuperPodsStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, 
 			" soft strategy", tp.Name)
 		last := tp.selectFromSuperPodsWithSoftStrategy(superPodTopo.superPodTable, needNode)
 		if last == 0 {
-			return true, nil
+			return false, nil
 		} else {
-			return false, fmt.Errorf("soft schedule job failed, need <%d> nodes, could only schedule <%d> nodes",
+			return true, fmt.Errorf("soft schedule job failed, need <%d> nodes, could only schedule <%d> nodes",
 				needNode, former-last)
 		}
 	}
-
-	return false, fmt.Errorf("schedule job failed, need <%d> spBlock, could only schedule <%d> sp-block",
+	klog.V(util.LogErrorLev).Infof("schedule job failed, need <%d> spBlock, could only schedule <%d> sp-block",
 		len(tp.unReadyIds), len(tp.unReadyIds)-tp.totalCount)
+	return true, fmt.Errorf("scheduling failed in %s strategy", MulSuperPodsSchedule)
 }
 
 // getSelectedNodesNum
@@ -358,20 +327,6 @@ func (tp *mulSuperPodsStrategy) searchTable(superPodTable superPodOrderTable) {
 		}
 		row = len(superPodTable) - 1
 	}
-}
-
-// handleSelectResult handle multiple superpods select result
-func (tp *mulSuperPodsStrategy) handleSelectResult(jobName string, ok bool, err error) error {
-	if err != nil {
-		klog.V(util.LogErrorLev).Infof("Job: %s, select nodes in multiple superpods failed. error info: [%s]. ",
-			jobName, util.SafePrint(err))
-		return err
-	}
-	if ok {
-		klog.V(util.LogInfoLev).Infof("Job: %s, select nodes in multiple superpods success.", jobName)
-		return nil
-	}
-	return err
 }
 
 // iterateEverySuperPod Iterate every SuperPod
@@ -434,6 +389,12 @@ func (tp *mulSuperPodsStrategy) IterateEverySuperPodWithoutFilter(superPods []su
 		remainingNodesSelecting -= selectedOneSp
 	}
 	return superPods, remainingNodesSelecting
+}
+
+type vPodIdRecorder struct {
+	unReadyId  []string
+	leftIndex  int
+	rightIndex int
 }
 
 func (r *vPodIdRecorder) getVPodID() string {

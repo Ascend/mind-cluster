@@ -34,9 +34,9 @@ func New(name string) *module910a5SuperPod {
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNum)
-	m.scheduleStrategy = SuperPodSchedule
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.faultNPUKey = faultNPU
+	newScheduleStrategy()
 	return m
 }
 
@@ -96,15 +96,16 @@ func (tp *module910a5SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugi
 }
 
 // choose one schedule strategy will use by NPUTaskNum
-func (tp *module910a5SuperPod) chooseWhichStrategyByNPUTaskNum() *api.ValidateResult {
+func (tp *module910a5SuperPod) getStrategyNameByNPUTaskNum() strategyKey {
+	var ret strategyKey = RackSchedule
 	if tp.NPUTaskNum <= npuTaskNum8 {
-		tp.scheduleStrategy = RackSchedule
+		ret = RackSchedule
 	} else if tp.NPUTaskNum <= tp.FrameAttr.SuperPodSize {
-		tp.scheduleStrategy = SuperPodSchedule
+		ret = SuperPodSchedule
 	} else {
-		tp.scheduleStrategy = MulSuperPodsSchedule
+		ret = MulSuperPodsSchedule
 	}
-	return nil
+	return ret
 }
 
 // ScoreBestNPUNodes to score the nodes for Jobs, we should know all nodes to get rack topo and superpod topo
@@ -187,10 +188,12 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 		}
 	}
 
-	selectedNodes, err = tp.selectNodesFromSuperPods(task, superPodMap, unReadyIds, selectedNodes)
+	strategyInitFactory(tp, unReadyIds, selectedNodes)
+
+	err = tp.selectNodesFromSuperPods(superPodMap, unReadyIds, selectedNodes)
 
 	if err != nil {
-		klog.V(util.LogErrorLev).Infof("get error when selecting nodes by network type: %v", err)
+		klog.V(util.LogErrorLev).Infof("get error when selecting nodes for job, error: %v", err)
 		return nil, err
 	}
 
@@ -198,39 +201,56 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 }
 
 // select nodes from original superpods
-func (tp *module910a5SuperPod) selectNodesFromSuperPods(task *api.TaskInfo, superPodMap map[int32]superPod,
-	unReadyIds []string, selectNodes map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
+func (tp *module910a5SuperPod) selectNodesFromSuperPods(superPodMap map[int32]superPod,
+	unReadyIds []string, selectNodes map[string][]plugin.SuperNode) error {
 	klog.V(util.LogInfoLev).Infof("selectNodes after selectNodesForFaultJob:%v", selectNodes)
 
 	superPodTopoInfo, err := getSuperPodsInfo(superPodMap, tp.FrameAttr.SuperPodSize, tp.spBlock)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("classify super pod failed!")
-		return nil, err
+		return err
 	}
-
-	// make a choice to select nodes at the beginning. oneRack -> oneSuperPod -> multipleSuperPod
-	scheduleErr := tp.handleScheduleStrategy(unReadyIds, task, superPodTopoInfo, selectNodes)
-	if scheduleErr != nil {
-		return nil, scheduleErr
-	}
-
-	return selectNodes, nil
-}
-
-func (tp *module910a5SuperPod) handleScheduleStrategy(unReadyIds []string, task *api.TaskInfo,
-	superPodTopoInfo superPodsInfo, selectNodes map[string][]plugin.SuperNode) error {
 	if len(unReadyIds) == 0 {
 		klog.V(util.LogInfoLev).Infof("all nodes have been selected before basic scheduling: %v", selectNodes)
 		return nil
 	}
-
-	scheduleSpec := newScheduleStrategy(tp, unReadyIds, selectNodes)
-	ret, err := scheduleSpec.entrySelect(&superPodTopoInfo)
-	if resErr := scheduleSpec.handleSelectResult(string(tp.Jobs[task.Job].Name), ret, err); resErr != nil {
-		return resErr
+	strategyName := tp.getStrategyNameByNPUTaskNum()
+	strategySpec, ok := strategyMap[strategyName]
+	if !ok {
+		return fmt.Errorf("scheduling strategy not found, the key is %s", strategyName)
 	}
 
-	return nil
+	scheduleErr := tp.selectNodesBySpecStrategy(strategySpec, &superPodTopoInfo)
+
+	return scheduleErr
+}
+
+func (tp *module910a5SuperPod) selectNodesBySpecStrategy(
+	strategySpec scheduleStrategy, superPodTopoInfo *superPodsInfo) error {
+	if strategySpec == nil {
+		return errors.New("the scheduling strategy is nil")
+	}
+
+	continueTag, err := strategySpec.entrySelect(superPodTopoInfo)
+	if err == nil {
+		return nil
+	}
+
+	klog.V(util.LogErrorLev).Infof("enforce scheduling strategy failed: error: %v; schedule strategy: %s;",
+		err, strategySpec.getStrategyName())
+
+	if !continueTag {
+		klog.V(util.LogInfoLev).Infof("stop trying next strategy at the strategy: %s", strategySpec.getStrategyName())
+		return err
+	}
+	// check the validation of the next strategy in the chain
+	nextStrategyKey, ok := nextStrategyChain[strategySpec.getStrategyName()]
+	if !ok {
+		klog.V(util.LogInfoLev).Infof("not found next strategy at the strategy: %s", strategySpec.getStrategyName())
+		return err
+	}
+
+	return tp.selectNodesBySpecStrategy(strategyMap[nextStrategyKey], superPodTopoInfo)
 }
 
 // the real place where we score for nodes, and sMap should change

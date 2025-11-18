@@ -57,7 +57,6 @@ const (
 	superPodSize64 = 64
 
 	tpBlock2 = 2
-	tpBlock8 = 8
 )
 
 // for test cases use
@@ -134,7 +133,6 @@ func TestDoSelectForStrategy(t *testing.T) {
 				module910a5SuperPod: scheduler,
 				selectedNodes:       selectNodes,
 				unReadyIds:          unReadyIds,
-				inNextStrategy:      false,
 			}
 			superPodWithRackId := transferSuperPodToRackIdMap(testCase.nodesInSuperPod)
 
@@ -156,11 +154,10 @@ type selectScoreBestNPUNodesTestCase struct {
 	npuNodes         map[string]plugin.NPUNode
 	superPodMap      map[int32]superPod
 	tasks            map[api.TaskID]util.NPUTask
-	scheduleStrategy int
+	scheduleStrategy strategyKey
 	superPodSize     int
 	spBlock          int
 	tpBlock          int
-	isNeedAlgoAlign  bool
 	wantRes          map[int32]*selectedRackInfo
 	wantErr          error
 }
@@ -324,7 +321,6 @@ func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTest
 	}
 	plg.FrameAttr = setSuperPodSizeFrame(cs.superPodSize)
 	plg.NPUTaskNum = cs.npuTaskNum
-	plg.scheduleStrategy = cs.scheduleStrategy
 	plg.Jobs = jobs
 	if len(cs.npuNodes) > 0 {
 		plg.Nodes = cs.npuNodes
@@ -389,4 +385,22 @@ func checkScoreBestNPUNodesResult(selectedNodes map[string][]plugin.SuperNode) m
 		sort.Ints(selectedSuperPodInfo[sp].selectedNodesInRack)
 	}
 	return selectedSuperPodInfo
+}
+
+func TestNewScheduleStrategy(t *testing.T) {
+	t.Run("test getStrategyName return own name", func(t *testing.T) {
+		newScheduleStrategy()
+		name := strategyMap[RackSchedule].getStrategyName()
+		if name != RackSchedule {
+			t.Errorf("RackSchedule strategy name should be %s, not %s", RackSchedule, name)
+		}
+		name = strategyMap[SuperPodSchedule].getStrategyName()
+		if name != SuperPodSchedule {
+			t.Errorf("RackSchedule strategy name should be %s, not %s", SuperPodSchedule, name)
+		}
+		name = strategyMap[MulSuperPodsSchedule].getStrategyName()
+		if name != MulSuperPodsSchedule {
+			t.Errorf("RackSchedule strategy name should be %s, not %s", MulSuperPodsSchedule, name)
+		}
+	})
 }

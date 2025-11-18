@@ -181,7 +181,7 @@ func filterRackIdByTpBlock(superPodWithRack map[int32][]nodeBaseInfo, tpBlock in
 	}
 }
 
-func (tp *module910a5SuperPod) getOriginRackId(superPodWithRackId map[int32][]nodeBaseInfo,
+func getOriginRackId(superPodWithRackId map[int32][]nodeBaseInfo,
 	faultNodeNameMap map[string]struct{}, vSuperPod []plugin.SuperNode) int32 {
 	for _, nodeOfFJob := range vSuperPod {
 		if _, ok := faultNodeNameMap[nodeOfFJob.Name]; !ok {

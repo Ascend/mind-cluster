@@ -29,11 +29,22 @@ type module910a5SuperPod struct {
 	isSoftSuperPodAffinity bool
 }
 
+type strategyKey string
+
+// the enum of strategyKey
+const (
+	// RackSchedule the rack schedule strategy selecting nodes in one rack
+	RackSchedule = "RackSchedule"
+	// SuperPodSchedule the superPod schedule strategy selecting nodes in one superPod
+	SuperPodSchedule = "SuperPodSchedule"
+	// MulSuperPodsSchedule the multiple superPod schedule strategy selecting nodes in multiple superPods
+	MulSuperPodsSchedule = "MultiSuperPodsSchedule"
+)
+
 type jobParams struct {
 	spBlock                  int
 	tpBlock                  int
 	totalCount               int
-	scheduleStrategy         int
 	netUnhealthyKey          string
 	faultNPUKey              string
 	whetherBackToVspSchedule bool

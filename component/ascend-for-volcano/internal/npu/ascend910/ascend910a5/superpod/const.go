@@ -17,13 +17,7 @@ package superpod
 
 // for business use
 const (
-	// RackSchedule the rack schedule strategy selecting nodes in one rack
-	RackSchedule = 0
-	// SuperPodSchedule the superPod schedule strategy selecting nodes in one superPod
-	SuperPodSchedule = 2
-	// MulSuperPodsSchedule the multiple superPod schedule strategy selecting nodes in multiple superPods
-	MulSuperPodsSchedule = 3
-	// UninitializedRestRackLenMapId 未初始化的RestRackLenMapId
+	// UninitializedRestRackLenMapId not initialized RestRackLenMapId
 	UninitializedRestRackLenMapId int32 = -1
 	// FirstRescheduleStage the first stage of rescheduling
 	FirstRescheduleStage = 6
