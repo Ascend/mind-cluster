@@ -145,6 +145,8 @@ func getResetDevNumOnce(devUsage string, deviceNum int, boardId uint32) int {
 	case api.Ascend910A3:
 		// 900A3 device, deviceNum is 16; 9000A3 device, deviceNum is 8
 		resetDevNumOnce = deviceNum
+	case api.Ascend910A5:
+		resetDevNumOnce = common.Ascend910A5RingsNum
 	default:
 		hwlog.RunLog.Error("only 910 device support grace tolerance")
 	}

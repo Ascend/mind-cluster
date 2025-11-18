@@ -501,6 +501,8 @@ const (
 	Ascend910BRingsNumInfer = 1
 	// Ascend910A3RingsNum indicates the number of devices in a ring
 	Ascend910A3RingsNum = 16
+	// Ascend910A5RingsNum indicates the number of devices in a ring
+	Ascend910A5RingsNum = 1
 	// RingSum indicates the max number of ring
 	RingSum = 2
 	// InferRankIndex indecates the rank index of infer situation (rank index is meaningless in infer situation)
