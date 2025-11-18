@@ -363,8 +363,9 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInf
 		return
 	}
 
-	// if upgrade is not allowed, do nothing.
-	if !fJob.allowUpgradePodRescheduling() {
+	// if upgrade is not allowed or process-recover enabled, do nothing.
+	if !fJob.allowUpgradePodRescheduling() ||
+		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
 		return
 	}
 

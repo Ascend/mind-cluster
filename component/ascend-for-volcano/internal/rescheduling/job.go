@@ -269,8 +269,8 @@ func (fJob *FaultJob) forceDeletePods(schedulerJob *plugin.SchedulerJob,
 func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv, dpi *deletePodInfo) bool {
 	klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
-		"not fault task is %v",
-		!dpi.isMasterFault, fJob.IsJobSingleRescheduling(schedulerJob), !fTask.IsFaultTask)
+		"not fault task is %v, allow upgrade is %v", !dpi.isMasterFault, fJob.IsJobSingleRescheduling(schedulerJob),
+		!fTask.IsFaultTask, fJob.allowUpgradePodRescheduling())
 
 	// if upgrade is not allowed, only the fault task should be rescheduled
 	if !fJob.allowUpgradePodRescheduling() {
@@ -700,8 +700,7 @@ func getReScheduleLimit(job *api.JobInfo) string {
 	if _, exist := job.PodGroup.Labels[util.OmeInferenceServiceKey]; exist {
 		return util.ReschedulingUpperLimitPod
 	}
-	if job.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc ||
-		job.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
+	if job.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
 		job.PodGroup.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
 		return util.ReschedulingUpperLimitPod
 	}
