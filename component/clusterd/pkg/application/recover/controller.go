@@ -39,16 +39,16 @@ const (
 )
 
 var (
-	saveAndExitActions            = []string{"save_and_exit"}
+	saveAndExitActions            = []string{constant.SaveAndExitAction}
 	stopTrainActions              = []string{constant.StopAction}
 	pauseTrainActions             = []string{constant.PauseTrainAction}
 	pauseStartAgentActions        = []string{constant.PauseStartAgent}
 	continueStartAgentActions     = []string{constant.ContinueStartAgent}
 	globalFaultActions            = []string{constant.OnGlobalRankAction}
 	changeStrategyActions         = []string{constant.ChangeStrategyAction}
-	hotSwitchActions              = []string{"hot switch"}
-	stopHotSwitchActions          = []string{"stop switch"}
-	newPodRunningActions          = []string{"new pod running"}
+	hotSwitchActions              = []string{constant.HotSwitchAction}
+	stopHotSwitchActions          = []string{constant.StopSwitchAction}
+	newPodRunningActions          = []string{constant.NewPodRunningAction}
 	notifyStrategySuccessEventMap = map[string]string{
 		constant.ProcessRetryStrategyName:   common.NotifyRetrySuccessEvent,
 		constant.ProcessRecoverStrategyName: common.NotifyRecoverSuccessEvent,

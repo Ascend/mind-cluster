@@ -44,13 +44,13 @@ class TestAgentMessageManager(unittest.TestCase):
             tls_conf=None,
         )
         self.logger = MagicMock()
-        
+
         AgentMessageManager.instance = None
 
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_singleton_pattern(self, mock_cython):
         mock_cython.lib = self.mock_lib
-        
+
         instance1 = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         instance2 = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         self.assertIs(instance1, instance2)
@@ -61,9 +61,9 @@ class TestAgentMessageManager(unittest.TestCase):
     def test_init_network_success(self, mock_log, mock_cython):
         mock_cython.lib = self.mock_lib
         self.mock_lib.InitNetwork.return_value = ctypes.c_void_p(1)
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        
+
         self.mock_lib.InitNetwork.assert_called_once()
         args, _ = self.mock_lib.InitNetwork.call_args
         config_json = json.loads(args[0].decode('utf-8'))
@@ -76,7 +76,7 @@ class TestAgentMessageManager(unittest.TestCase):
         self.mock_lib = MagicMock()
         mock_cython.lib = self.mock_lib
         self.mock_lib.InitNetwork.return_value = None
-        
+
         with self.assertRaises(Exception) as context:
             AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         self.assertEqual(str(context.exception), 'init_network_func failed')
@@ -95,12 +95,12 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_register_message(self, mock_cython):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         agent.send_message = MagicMock()
-        
+
         agent.register('0')
-        
+
         agent.send_message.assert_called_once()
         sent_msg = agent.send_message.call_args[0][0]
         self.assertIsInstance(sent_msg, MessageInfo)
@@ -114,15 +114,15 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_send_message_success(self, mock_cython, mock_log, mock_sleep):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE, 
+        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE,
                               dst=Position(role='test', server_rank='0', process_rank='-1'),
                               body='{}')
         self.mock_lib.SyncSendMessage.return_value = 0
-        
+
         agent.send_message(test_msg, 1)
-        
+
         self.mock_lib.SyncSendMessage.assert_called_once()
         mock_sleep.assert_not_called()
 
@@ -131,15 +131,15 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_send_message_retry(self, mock_cython, mock_log, mock_sleep):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE, 
+        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE,
                               dst=Position(role='test', server_rank='0', process_rank='-1'),
                               body='{}')
         self.mock_lib.SyncSendMessage.side_effect = [1, 2, 0]
-        
+
         agent.send_message(test_msg)
-        
+
         self.assertEqual(self.mock_lib.SyncSendMessage.call_count, 3)
         self.assertEqual(mock_sleep.call_count, 2)
         mock_log.warning.assert_any_call('agent send message failed, result: 1')
@@ -150,15 +150,15 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     def test_send_message_max_retries(self, mock_cython, mock_log, mock_sleep):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE, 
-                              dst=Position(role='test', server_rank='0', process_rank='-1'), 
+        test_msg = MessageInfo(uuid='test-uuid', biz_type=DEFAULT_BIZTYPE,
+                              dst=Position(role='test', server_rank='0', process_rank='-1'),
                               body='{}')
         self.mock_lib.SyncSendMessage.return_value = 1
-        
+
         agent.send_message(test_msg)
-        
+
         self.assertEqual(self.mock_lib.SyncSendMessage.call_count, SEND_RETRY_TIMES)
         mock_log.error.assert_called_with(f'agent send message failed, msg: {test_msg.uuid}')
 
@@ -166,7 +166,7 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
     def test_parse_valid_message(self, mock_log, mock_cython):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         test_msg = {
             "body": json.dumps({
@@ -176,9 +176,9 @@ class TestAgentMessageManager(unittest.TestCase):
                 "extension": {}
             })
         }
-        
+
         result = agent._parse_msg(json.dumps(test_msg))
-        
+
         self.assertIsInstance(result, MsgBody)
         self.assertEqual(result.msg_type, "TEST")
         self.assertEqual(result.code, 200)
@@ -187,13 +187,13 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
     def test_parse_invalid_message(self, mock_log, mock_cython):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
-        
+
         result = agent._parse_msg('invalid json')
         self.assertIsNone(result)
         mock_log.error.assert_called()
-        
+
         result = agent._parse_msg(json.dumps({"InvalidKey": "value"}))
         self.assertIsNone(result)
 
@@ -201,7 +201,7 @@ class TestAgentMessageManager(unittest.TestCase):
     @patch('taskd.python.framework.agent.base_agent.agent_network.time.sleep')
     def test_receive_normal_message(self, mock_sleep, mock_cython):
         mock_cython.lib = self.mock_lib
-        
+
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         test_msg = json.dumps({
             "body": json.dumps({
@@ -221,7 +221,7 @@ class TestAgentMessageManager(unittest.TestCase):
         }).encode('utf-8')
 
         exit_buffer = ctypes.create_string_buffer(exit_msg)
-        
+
         self.mock_lib.ReceiveMessageC.side_effect = [
             exit_buffer,
             RuntimeError()
@@ -234,7 +234,7 @@ class TestAgentMessageManager(unittest.TestCase):
         except Exception as e:
             logger.error(f"receive message failed: {e}")
             pass
-        
+
         self.assertEqual(self.mock_queue.put.call_count, 1)
         self.mock_queue.put.assert_has_calls([
             call(MsgBody(msg_type="exit", code=0, message="", extension={}))
@@ -249,9 +249,9 @@ class TestAgentNetworkFunctions(unittest.TestCase):
         mock_queue = MagicMock()
         network_config = MagicMock()
         mock_logger = MagicMock()
-        
+
         init_network_client(network_config, mock_queue, mock_logger)
-        
+
         mock_thread.assert_called_once()
         args, kwargs = mock_thread.call_args
         self.assertEqual(kwargs['target'], init_message_manager)
@@ -269,7 +269,7 @@ class TestAgentNetworkFunctions(unittest.TestCase):
         mock_manager.get_network_instance.side_effect = [None, None, ctypes.c_void_p(1)]
         mock_logger = MagicMock()
         init_message_manager(network_config, mock_queue, mock_logger)
-        
+
         mock_manager_cls.assert_called_once_with(network_config, mock_queue, mock_logger)
         mock_manager.register.assert_called_once_with('0')
         mock_manager.receive_message.assert_called_once()
@@ -286,12 +286,11 @@ class TestAgentNetworkFunctions(unittest.TestCase):
         mock_logger = MagicMock()
         mock_manager_cls.return_value = mock_manager
         mock_manager.get_network_instance.return_value = None
-        
+
         init_message_manager(network_config, mock_queue, mock_logger)
-        
+
         self.assertEqual(mock_sleep.call_count, 61)
         mock_log.error.assert_called_with('init message manager failed')
 
 if __name__ == '__main__':
     unittest.main()
-    

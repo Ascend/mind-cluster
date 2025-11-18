@@ -37,7 +37,8 @@ try:
                                            tft_notify_controller_dump, tft_notify_controller_stop_train,
                                            tft_register_mindx_callback, tft_notify_controller_on_global_rank,
                                            tft_notify_controller_change_strategy, tft_destroy_controller,
-                                           tft_query_high_availability_switch)
+                                           tft_query_high_availability_switch, tft_notify_controller_prepare_action,
+                                           )
 except ImportError:
     run_log.warning("mindio not found, process-rescheduling checkpoint-saving DO NOT work!")
     import_flag = False
@@ -90,6 +91,9 @@ class DLRecoverManager(RecoverManager):
             'pause_train': tft_notify_controller_stop_train,
             'on_global_rank': tft_notify_controller_on_global_rank,
             'change_strategy': tft_notify_controller_change_strategy,
+            'hot switch': tft_notify_controller_prepare_action,
+            'stop switch': tft_notify_controller_prepare_action,
+            'new pod running': tft_notify_controller_prepare_action,
         }
         self.server_addr = server_addr
         self.lock = threading.Lock()
@@ -167,7 +171,7 @@ class DLRecoverManager(RecoverManager):
                 self.register_event.clear()
             time.sleep(min(MAX_CONNECT_GAP, i * BASE_CONNECT_GAP))
             i += 1
-            
+
     def _connection_check(self):
         while True:
             try:
@@ -262,7 +266,15 @@ class DLRecoverManager(RecoverManager):
                     func(arg.fault_ranks, arg.timeout)
             elif action == 'change_strategy':
                 func(arg.change_strategy)
-
+            elif action == 'hot switch':
+                run_log.info(f"notify prepare not switch, fault_rank={arg.fault_ranks}")
+                func(action, arg.fault_ranks)
+            elif action == 'stop switch':
+                run_log.info(f"notify stop not switch, fault_rank={arg.fault_ranks}")
+                func(action, arg.fault_ranks)
+            elif action == 'new pod running':
+                # only print log info
+                run_log.info("new pod running")
             run_log.info(f"do action {action} finish, jobId={self.client_info.jobId}, arg={arg}")
         except Exception as e:
             run_log.info(f"do action {action} err, err={e}, jobId={self.client_info.jobId}, arg={arg}")

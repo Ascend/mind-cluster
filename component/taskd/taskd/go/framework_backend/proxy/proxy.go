@@ -57,21 +57,8 @@ func newProxyInstance(proxyConfig *common.TaskNetConfig, logger *hwlog.CustomLog
 	return err
 }
 
-func (p *proxyClient) validNetConfig(proxyConfig *common.TaskNetConfig) error {
-	if proxyConfig.Pos.ProcessRank != "-1" {
-		p.proxyLogger.Errorf("proxyClient validNetConfig failed, ProcessRank is not -1")
-		return errors.New("proxyClient validNetConfig failed, ProcessRank is not -1")
-	}
-
-	return nil
-}
-
 func (p *proxyClient) initNetwork(proxyConfig *common.TaskNetConfig) error {
 	var err error
-	err = p.validNetConfig(proxyConfig)
-	if err != nil {
-		return err
-	}
 	p.proxyInfo.proxyConfig = proxyConfig
 	p.networkInstence, err = net.InitNetwork(proxyConfig, p.proxyLogger)
 	if err == nil {
@@ -91,7 +78,7 @@ func InitProxy(proxyConfig *common.TaskNetConfig) error {
 	if proxyConfig == nil {
 		return errors.New("proxyConfig is nil")
 	}
-	logName := fmt.Sprintf(constant.ProxyLogPathPattern, proxyConfig.Pos.ServerRank)
+	logName := fmt.Sprintf(constant.ProxyLogPathPattern, proxyConfig.Pos.ServerRank, proxyConfig.Pos.ProcessRank)
 	hwLogConfig, err := utils.GetLoggerConfigWithFileName(logName)
 	if err != nil {
 		fmt.Printf("hwlog init failed, error is %v\n", err)

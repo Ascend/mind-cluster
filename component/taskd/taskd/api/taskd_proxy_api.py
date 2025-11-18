@@ -16,6 +16,7 @@
 # ==============================================================================
 import json
 import os
+import time
 from dataclasses import asdict
 from taskd.python.cython_api import cython_api
 from taskd.python.utils.log import run_log
@@ -46,7 +47,7 @@ def init_taskd_proxy(config: dict) -> bool:
         pos=Position(
             role=DEFAULT_PROXY_ROLE,
             server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
-            process_rank=DEFAULT_PROCESSRANK
+            process_rank=str(int(time.time()))
         ),
         upstream_addr=config_values.get(CONFIG_UPSTREAMIP_KEY) + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
         listen_addr=config_values.get(CONFIG_LISTENIP_KEY) + ":" + config_values.get(CONFIG_LISTENPORT_KEY),
@@ -69,7 +70,7 @@ def init_taskd_proxy(config: dict) -> bool:
         run_log.error(f"init_taskd_proxy: encounter exception: {e}")
         return False
     return True
-    
+
 
 def destroy_taskd_proxy() -> bool:
     if cython_api.lib is None:

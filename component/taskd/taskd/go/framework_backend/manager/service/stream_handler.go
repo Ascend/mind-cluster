@@ -67,6 +67,7 @@ func (s *StreamHandler) Init() error {
 			constant.ElasticTrainingPluginName: constant.Priority3,
 			constant.PodReschedulingPluginName: constant.Priority4,
 			constant.JobReschedulingPluginName: constant.Priority5,
+			constant.HotSwitchPluginName:       constant.Priority6,
 		})
 	streamList := []*infrastructure.Stream{
 		profilingCollectStream,

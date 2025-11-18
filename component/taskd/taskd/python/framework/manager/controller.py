@@ -29,7 +29,8 @@ from mindio_ttp.controller_ttp import (tft_init_controller, tft_start_controller
                                        tft_notify_controller_dump, tft_notify_controller_stop_train,
                                        tft_register_mindx_callback, tft_notify_controller_on_global_rank,
                                        tft_notify_controller_change_strategy, tft_destroy_controller,
-                                       tft_query_high_availability_switch)
+                                       tft_query_high_availability_switch, tft_notify_controller_prepare_action
+                                       )
 
 action_func_map = {
             constants.SAVE_AND_EXIT: tft_notify_controller_dump,
@@ -37,6 +38,9 @@ action_func_map = {
             constants.PAUSE_TRAIN: tft_notify_controller_stop_train,
             constants.ON_GLOBAL_RANK: tft_notify_controller_on_global_rank,
             constants.CHANGE_STRATEGY: tft_notify_controller_change_strategy,
+            constants.HOT_SWITCH: tft_notify_controller_prepare_action,
+            constants.STOP_SWITCH: tft_notify_controller_prepare_action,
+            constants.NEW_POD_RUNNING: tft_notify_controller_prepare_action,
         }
 
 
@@ -69,18 +73,17 @@ def init_controller():
     world_size = "0"
     world_size = os.getenv(constants.WORLD_SIZE) or os.getenv(constants.MS_WORKER_NUM)
     process_recover = os.getenv(constants.PROCESS_RECOVER)
-
     if process_recover == "on":
         process_recover = True
     else:
         process_recover = False
-    
+
     elastic_training = False
     high_availability_strategy = os.getenv(constants.HIGH_AVAILABILITY_STRATEGY)
     if high_availability_strategy:
         strategy_list = high_availability_strategy.split(',')
         if constants.ELASTIC_TRAINING in strategy_list:
-            elastic_training = True            
+            elastic_training = True
 
     if world_size is None:
         run_log.error(f"init mindio controller failed, world_size: {world_size}")
@@ -156,7 +159,7 @@ def send_msg_to_controller(action, data):
         run_log.info("destroy mindio controller")
         tft_destroy_controller()
         return
-    
+
     try:
         run_log.info(f"do action {action}, data={data}")
         func = action_func_map.get(action)
@@ -179,11 +182,19 @@ def send_msg_to_controller(action, data):
                 func(data.fault_ranks, data.timeout)
         elif action == 'change_strategy':
             func(data.strategy, data.params)
-
+        elif action == 'hot switch':
+            run_log.info(f"notify prepare not switch, fault_rank={data.fault_ranks}")
+            func(action, data.fault_ranks)
+        elif action == 'stop switch':
+            run_log.info(f"notify stop not switch, fault_rank={data.fault_ranks}")
+            func(action, data.fault_ranks)
+        elif action == 'new pod running':
+            # only print log info
+            run_log.info("new pod running")
         run_log.info(f"do action {action} finish,  data={data}")
     except Exception as e:
         run_log.info(f"do action {action} err, err={e}, data={data}")
-        
+
 
 def restart_controller():
     run_log.info("restart controller")
@@ -224,7 +235,7 @@ def report_recover_strategy(fault_ranks: dict, strategy_list: list):
 
     )
     controller_send_to_backend(message)
-    
+
 
 def report_recover_status(code: int, msg: str, fault_ranks: dict, strategy: str):
     run_log.info(f"call ReportRecoverStatus, strategy: {strategy}, msg: {msg}")
@@ -240,7 +251,7 @@ def report_recover_status(code: int, msg: str, fault_ranks: dict, strategy: str)
         timeout=0
     )
     controller_send_to_backend(message)
-    
+
 
 def report_process_fault(fault_ranks: dict):
     run_log.info(f"call ReportProcessFault, fault_ranks:{fault_ranks}")
@@ -256,8 +267,8 @@ def report_process_fault(fault_ranks: dict):
         timeout=0
     )
     controller_send_to_backend(message)
-    
-    
+
+
 def controller_send_to_backend(message):
     msg_json = json.dumps(asdict(message)).encode('utf-8')
     run_log.info(f"controller_send_to_backend msg_json: {msg_json}")

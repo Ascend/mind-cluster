@@ -213,8 +213,9 @@ func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController, f
 }
 
 func skipHandleSubHealthyHotSwitch(ctl *EventController, faultInfo *constant.JobFaultInfo) bool {
-	if ctl.jobInfo.Framework != constant.PtFramework {
-		hwlog.RunLog.Warnf("subhealthy hotswitch only support pytorch framework,current is:%v ", ctl.jobInfo.Framework)
+	if ctl.jobInfo.Framework != constant.PtFramework && ctl.jobInfo.Framework != constant.MsFramework {
+		hwlog.RunLog.Warnf("subhealthy hotswitch only support pytorch and mindspore framework,current is:%v ",
+			ctl.jobInfo.Framework)
 		ctl.jobInfo.HotSwitch = false
 		ctl.jobInfo.SubHealthyStrategy = constant.SubHealthyIngore
 		return true

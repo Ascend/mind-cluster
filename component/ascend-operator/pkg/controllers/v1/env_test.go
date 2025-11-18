@@ -434,38 +434,21 @@ func TestAddMSPodScheduleEnv(t *testing.T) {
 
 func TestAddSubHealthyEnv(t *testing.T) {
 	pi := &podInfo{job: &mindxdlv1.AscendJob{ObjectMeta: metav1.ObjectMeta{UID: "test-uid"}}}
-	podTemplate := &corev1.PodTemplateSpec{
-		Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}},
-	}
 	containerIndex := 0
 	const num3 = 3
-	cases := []struct {
-		name           string
-		strategy       string
-		expectedEnvLen int
-		expectedEnvs   map[string]string
-	}{
-		{name: "No strategy",
-			strategy:       "",
-			expectedEnvLen: 0,
-			expectedEnvs:   map[string]string{}},
-		{name: "SubHealthyHotSwitch strategy",
-			strategy:       api.SubHealthyHotSwitch,
-			expectedEnvLen: num3,
-			expectedEnvs: map[string]string{
-				api.ProcessRecoverEnv: api.EnableFunc,
-				api.ElasticRecoverEnv: api.EnableFlag,
-				api.HighAvailableEnv:  api.RecoverStrategy,
-			}},
-	}
+	const num4 = 4
+	cases := buildTestAddSubhealthyEnvCases(num3, num4)
 	for _, tc := range cases {
 		convey.Convey("When strategy is "+tc.name, t, func() {
+			podTemplate := &corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: api.DefaultContainerName, Env: []corev1.EnvVar{}}}},
+			}
 			patch := gomonkey.ApplyFunc(getSubHealthyStrategy, func(job *mindxdlv1.AscendJob) string {
 				return tc.strategy
 			})
 			defer patch.Reset()
 
-			addSubHealthyEnv(pi, podTemplate, containerIndex, api.PytorchFramework)
+			addSubHealthyEnv(pi, podTemplate, containerIndex, tc.framework)
 			convey.So(len(podTemplate.Spec.Containers[containerIndex].Env), convey.ShouldEqual, tc.expectedEnvLen)
 			envMap := make(map[string]string)
 			for _, env := range podTemplate.Spec.Containers[containerIndex].Env {
@@ -476,4 +459,51 @@ func TestAddSubHealthyEnv(t *testing.T) {
 			}
 		})
 	}
+}
+
+func buildTestAddSubhealthyEnvCases(num3 int, num4 int) []struct {
+	name           string
+	strategy       string
+	framework      string
+	expectedEnvLen int
+	expectedEnvs   map[string]string
+} {
+	cases := []struct {
+		name           string
+		strategy       string
+		framework      string
+		expectedEnvLen int
+		expectedEnvs   map[string]string
+	}{
+		{name: "No strategy",
+			strategy:       "",
+			framework:      api.PytorchFramework,
+			expectedEnvLen: 0,
+			expectedEnvs:   map[string]string{}},
+		{name: "SubHealthyHotSwitch strategy with PytorchFramework",
+			strategy:       api.SubHealthyHotSwitch,
+			framework:      api.PytorchFramework,
+			expectedEnvLen: num3,
+			expectedEnvs: map[string]string{
+				api.ProcessRecoverEnv: api.EnableFunc,
+				api.ElasticRecoverEnv: api.EnableFlag,
+				api.HighAvailableEnv:  api.RecoverStrategy,
+			}},
+		{name: "SubHealthyHotSwitch strategy with MindSporeFramework",
+			strategy:       api.SubHealthyHotSwitch,
+			framework:      api.MindSporeFramework,
+			expectedEnvLen: num4,
+			expectedEnvs: map[string]string{
+				api.ProcessRecoverEnv: api.EnableFunc,
+				api.ElasticRecoverEnv: api.EnableFlag,
+				api.MsRecoverEnv:      `'{` + api.MsArfStrategy + `}'`,
+				api.EnableMS:          api.EnableFlag,
+			}},
+		{name: "SubHealthyHotSwitch strategy with unsupported framework",
+			strategy:       api.SubHealthyHotSwitch,
+			framework:      "UnsupportedFramework",
+			expectedEnvLen: 0,
+			expectedEnvs:   map[string]string{}},
+	}
+	return cases
 }
