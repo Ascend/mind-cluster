@@ -51,8 +51,8 @@ func (ab *module800ia5stacking) Valid800ia5NPUJob() *api.ValidateResult {
 
 	// check parameter.
 	if ab == nil {
-		vErr = fmt.Errorf("nil plugin %s", ab.GetPluginName())
-		klog.V(util.LogErrorLev).Infof("ValidNPUJob err: %s.", vErr)
+		vErr = fmt.Errorf("nil plugin ascend800ia5stacking")
+		klog.V(util.LogErrorLev).Infof("Valid800ia5NPUJob err: %s.", vErr)
 		return vResult
 	}
 
