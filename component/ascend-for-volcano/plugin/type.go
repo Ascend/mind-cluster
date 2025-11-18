@@ -36,7 +36,6 @@ const (
 	PluginName = "NPU"
 
 	objectNilError = "object or argument is nil"
-	podRankIndex   = "hccl/rankIndex"
 
 	// FormatIncorrectError format incorrect error
 	FormatIncorrectError = "format incorrect"
@@ -90,11 +89,20 @@ const (
 	oldCapacity              = "Capability"
 	newCapacity              = "Capacity"
 	noneResourceErr          = "npu resource is not enable"
+	statefulsetPodName       = "statefulset.kubernetes.io/pod-name"
 )
 
 var (
 	ascend910VirtualDevNameReg = regexp.MustCompile(util.Ascend910 + "-([2-6]|8|10|12|16)c")
 	ascend310VirtualDevNameReg = regexp.MustCompile(util.Ascend310P + "-(1|2|4)c")
+	// add annotation from pod, if new anno key is needed add by pod, add key in this slice
+	annotationKeysForPodGroup = []string{
+		util.SuperPodAnnoKey,
+		util.SchedulePolicyAnnoKey,
+		util.SuperPodFitAnnoKey,
+		util.MinAvailableKey,
+		util.RecoverPolicyPathKey,
+	}
 )
 
 // SchedulerJob the plugin define job info

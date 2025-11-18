@@ -21,6 +21,7 @@ package rescheduling
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -226,50 +227,11 @@ func TestGetIds(t *testing.T) {
 func TestGetJobFaultRescheduleLabel(t *testing.T) {
 	t.Run("01-GetJobFaultRescheduleLabel return error when job is nil", func(t *testing.T) {
 		fJob := &FaultJob{JobUID: "test"}
-		res := fJob.GetJobFaultRescheduleLabel(nil)
+		res := fJob.GetJobFaultRescheduleLabel()
 		if res != JobOffRescheduleLabelValue {
 			t.Errorf("GetJobFaultRescheduleLabel() res = %v, wantRes is %v", res, JobOffRescheduleLabelValue)
 		}
 	})
-}
-
-type getJobElasticSchedulingLabelTestCase struct {
-	name    string
-	fJob    *FaultJob
-	job     *plugin.SchedulerJob
-	wantRes string
-}
-
-func buildGetJobElasticSchedulingLabelTestCases() []getJobElasticSchedulingLabelTestCase {
-	return []getJobElasticSchedulingLabelTestCase{
-		{
-			name:    "01-GetJobElasticSchedulingLabel return off when job is nil",
-			fJob:    &FaultJob{JobUID: "test"},
-			job:     nil,
-			wantRes: JobOffRescheduleLabelValue,
-		},
-		{
-			name: "02-GetJobElasticSchedulingLabel return on when ElasticSchedulingKey exist",
-			fJob: &FaultJob{JobUID: "test"},
-			job: &plugin.SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{
-				ComJob: util.ComJob{Label: map[string]string{
-					ElasticSchedulingKey: JobOnElasticScheduling,
-				}}}},
-			wantRes: JobOnElasticScheduling,
-		},
-	}
-}
-
-func TestGetJobElasticSchedulingLabel(t *testing.T) {
-	testCases := buildGetJobElasticSchedulingLabelTestCases()
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			res := tt.fJob.GetJobElasticSchedulingLabel(tt.job)
-			if res != tt.wantRes {
-				t.Errorf("GetJobElasticSchedulingLabel() res = %v, wantRes is %v", res, tt.wantRes)
-			}
-		})
-	}
 }
 
 type isNormalJobNeedRestartTestCase struct {
@@ -734,27 +696,6 @@ func TestJobInfoInSession(t *testing.T) {
 		})
 }
 
-func TestFaultRetryTimeOfJob(t *testing.T) {
-	job := test.FakeNormalTestJob("test", 1)
-	t.Run("01-faultRetryTimeOfJob return 0 when label is nil", func(t *testing.T) {
-		if res := faultRetryTimeOfJob(job); res != 0 {
-			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 0", res)
-		}
-	})
-	t.Run("02-faultRetryTimeOfJob return 0 when string convert to int failed", func(t *testing.T) {
-		job.PodGroup.Labels = map[string]string{FaultRetryTimesKey: ""}
-		if res := faultRetryTimeOfJob(job); res != 0 {
-			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 0", res)
-		}
-	})
-	t.Run("03-faultRetryTimeOfJob return 1 when string convert to int success", func(t *testing.T) {
-		job.PodGroup.Labels = map[string]string{FaultRetryTimesKey: "1"}
-		if res := faultRetryTimeOfJob(job); res == 0 {
-			t.Errorf("faultRetryTimeOfJob() res = %v, wantRes is 1", res)
-		}
-	})
-}
-
 func TestIsFailedTask(t *testing.T) {
 	const exitCode127 = 127
 	terminatedErrorState := v1.ContainerState{
@@ -795,6 +736,65 @@ func TestIsFailedTask(t *testing.T) {
 	t.Run("04-isFailedTask return false when task or pod are nil", func(t *testing.T) {
 		if isFailedTask(nil) || isFailedTask(&api.TaskInfo{}) {
 			t.Errorf("isFailedTask() error, want false, return true")
+		}
+	})
+}
+
+// TestSetFaultRetryTimeOfJob tests the setFaultRetryTimeOfJob function
+func TestSetFaultRetryTimeOfJob(t *testing.T) {
+	// Test case 1: Job without fault-retry-times label
+	t.Run("01-setFaultRetryTimeOfJob with no fault-retry-times label", func(t *testing.T) {
+		fJob := &FaultJob{
+			JobUID: "test-job-1",
+			Labels: map[string]string{},
+		}
+		fJob.setFaultRetryTimeOfJob()
+		if fJob.FaultRetryTimes != 0 {
+			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want 0", fJob.FaultRetryTimes)
+		}
+	})
+
+	// Test case 2: Job with invalid fault-retry-times label
+	t.Run("02-setFaultRetryTimeOfJob with invalid fault-retry-times label", func(t *testing.T) {
+		fJob := &FaultJob{
+			JobUID: "test-job-2",
+			Labels: map[string]string{
+				FaultRetryTimesKey: "invalid-value",
+			},
+		}
+		fJob.setFaultRetryTimeOfJob()
+		if fJob.FaultRetryTimes != 0 {
+			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want 0", fJob.FaultRetryTimes)
+		}
+	})
+
+	// Test case 3: Job with valid fault-retry-times label
+	t.Run("03-setFaultRetryTimeOfJob with valid fault-retry-times label", func(t *testing.T) {
+		expectedRetryTimes := 3
+		fJob := &FaultJob{
+			JobUID: "test-job-3",
+			Labels: map[string]string{
+				FaultRetryTimesKey: strconv.Itoa(expectedRetryTimes),
+			},
+		}
+		fJob.setFaultRetryTimeOfJob()
+		if fJob.FaultRetryTimes != expectedRetryTimes {
+			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v", fJob.FaultRetryTimes, expectedRetryTimes)
+		}
+	})
+
+	// Test case 4: Job with zero fault-retry-times label
+	t.Run("04-setFaultRetryTimeOfJob with zero fault-retry-times label", func(t *testing.T) {
+		expectedRetryTimes := 0
+		fJob := &FaultJob{
+			JobUID: "test-job-4",
+			Labels: map[string]string{
+				FaultRetryTimesKey: strconv.Itoa(expectedRetryTimes),
+			},
+		}
+		fJob.setFaultRetryTimeOfJob()
+		if fJob.FaultRetryTimes != expectedRetryTimes {
+			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v", fJob.FaultRetryTimes, expectedRetryTimes)
 		}
 	})
 }

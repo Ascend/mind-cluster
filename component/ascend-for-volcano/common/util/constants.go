@@ -85,12 +85,23 @@ const (
 const (
 	// OmeInferenceServiceKey indicate this pod belongs to ome inference-service
 	OmeInferenceServiceKey = "ome.io/inferenceservice"
-	// ReschedulingUpperLimitPod means volcano only rescheduling fault pod rather than super-pod or job
-	ReschedulingUpperLimitPod = "pod"
 )
 
 // constants for MindIE
 const (
 	// SuperPodFitAnnoKey decide schedule policy of super-pod
 	SuperPodFitAnnoKey = "sp-fit"
+)
+
+const (
+	// MinAvailableKey decide minAvailable of task
+	MinAvailableKey = "huawei.com/schedule_minAvailable"
+	// RecoverPolicyPathKey decide recover policy path
+	RecoverPolicyPathKey = "huawei.com/recover_policy_path"
+	// ReschedulingUpperLimitPod means volcano only rescheduling fault pod rather than super-pod or job
+	ReschedulingUpperLimitPod = "pod"
+	// ReschedulingUpperLimitJob means volcano only rescheduling fault job
+	ReschedulingUpperLimitJob = "job"
+	// ReschedulingPodUpgradeToJob means volcano rescheduling fault, and then rescheduling fault Job when pod pending
+	ReschedulingPodUpgradeToJob = "pod,job"
 )

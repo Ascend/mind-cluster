@@ -48,6 +48,7 @@ type ComJob struct {
 	Annotation    map[string]string
 	Selector      map[string]string
 	Label         map[string]string
+	MinAvailable  int32
 }
 
 // SchedulerJobAttr vcJob's attribute.

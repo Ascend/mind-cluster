@@ -104,7 +104,8 @@ func (th *TorHandler) scoreBestNPUNodes(task *api.TaskInfo, nodeMaps map[string]
 	for _, sl := range th.ServerList {
 		for _, server := range sl.Servers {
 			setNodeScoreByTorAttr(sMap, server.Name, sl)
-			if _, exist := nodeMaps[server.Name]; exist && server.NodeRank == task.Pod.Annotations[podRankIndex] {
+			if _, exist := nodeMaps[server.Name]; exist && server.NodeRank ==
+				task.Pod.Annotations[plugin.PodRankIndexKey] {
 				sMap[server.Name] = maxTorAffinityNodeScore
 				return
 			}
