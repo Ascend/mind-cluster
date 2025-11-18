@@ -70,7 +70,7 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 		task.Name, tmp, topologyStr)
 	tp.setHardwareTypeToPod(task, node)
 	tp.setRealUsedNpuToPod(task, top, topologyStr, node)
-	tp.setDeployRankIndex(task)
+	tp.setRankIndex(task)
 }
 
 func (tp *NPUHandler) setHardwareTypeToPod(task *api.TaskInfo, node plugin.NPUNode) {
@@ -146,7 +146,7 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 	task.Pod.Annotations[util.Pod910DeviceKey] = string(marshedInst)
 }
 
-func (tp *NPUHandler) setDeployRankIndex(task *api.TaskInfo) {
+func (tp *NPUHandler) setRankIndex(task *api.TaskInfo) {
 	job, ok := tp.Jobs[task.Job]
 	if !ok {
 		klog.V(util.LogWarningLev).Infof("get job of task %s failed", task.Name)
@@ -155,6 +155,11 @@ func (tp *NPUHandler) setDeployRankIndex(task *api.TaskInfo) {
 	if job.Owner.Kind == plugin.ReplicaSetType {
 		task.Pod.Annotations[plugin.PodRankIndexKey] = strconv.Itoa(job.Tasks[task.UID].Index)
 		klog.V(util.LogInfoLev).Infof("set deploy pod %s rank index to %s", task.Name,
+			task.Pod.Annotations[plugin.PodRankIndexKey])
+	}
+	if _, ok := tp.Annotation[util.MinAvailableKey]; ok && task.Pod.Annotations[plugin.PodRankIndexKey] == "" {
+		task.Pod.Annotations[plugin.PodRankIndexKey] = strconv.Itoa(job.Tasks[task.UID].Index)
+		klog.V(util.LogInfoLev).Infof("set pod %s rank index to %s", task.Name,
 			task.Pod.Annotations[plugin.PodRankIndexKey])
 	}
 }

@@ -63,8 +63,6 @@ const (
 	nodeDEnableOnValue  = "on"
 	nodeDEnableOffValue = "off"
 
-	podRankIndex = "hccl/rankIndex"
-
 	// CmFaultNodeKind key in configmap which saves the FaultNode cache
 	CmFaultNodeKind = "fault-node"
 	// CmFaultJob910bx2Kind key in configmap which saves the 910bx2 FaultJob cache
@@ -333,6 +331,9 @@ type FaultJob struct {
 	faultReason        string
 	UUID               types.UID
 	ReScheduleLimit    string
+	Labels             map[string]string
+	Annotations        map[string]string
+	MinAvailable       int32
 }
 
 type deletePodInfo struct {

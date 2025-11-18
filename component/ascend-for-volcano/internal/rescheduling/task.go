@@ -36,7 +36,7 @@ import (
 )
 
 func (fTask *FaultTask) getNodeRankIndex(task *api.TaskInfo) (string, error) {
-	rankIndex, ok := task.Pod.Annotations[podRankIndex]
+	rankIndex, ok := task.Pod.Annotations[plugin.PodRankIndexKey]
 	if !ok {
 		return "", errors.New("nil rankIndex")
 	}
@@ -132,11 +132,11 @@ func (fTask *FaultTask) setNodeRankIndex(value string) {
 	fTask.NodeRankIndex = value
 }
 
-func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.ScheduleEnv) FaultTask {
+func newFaultTaskDefault(task *api.TaskInfo, job *FaultJob, env plugin.ScheduleEnv) FaultTask {
 	faultTask := FaultTask{
 		Reason:             []FaultReasonList{},
 		RelationFault:      getRelationFault(task),
-		IsFaultRetryEnable: faultRetryTimeOfJob(job) != 0,
+		IsFaultRetryEnable: job.FaultRetryTimes != 0,
 		IsSoftwareFault:    getTaskIsSoftwareFault(task),
 		TaskName:           task.Name,
 		TaskUID:            task.UID,
@@ -148,7 +148,7 @@ func newFaultTaskDefault(task *api.TaskInfo, job *api.JobInfo, env plugin.Schedu
 		Annotations:        task.Pod.Annotations,
 	}
 	if faultTask.NodeName == "" {
-		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.UID][task.Name]
+		faultTask.NodeName = env.SuperPodInfo.SuperPodMapFaultTaskNodes[job.JobUID][task.Name]
 	}
 	return faultTask
 }
