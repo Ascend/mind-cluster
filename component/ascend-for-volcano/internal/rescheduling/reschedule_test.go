@@ -368,13 +368,13 @@ func reAddFaultJobWithSessionModifyJobInfo(jobInfos map[api.JobID]*api.JobInfo) 
 	jobInfos["vcjob/job0"].PodGroup.Labels = map[string]string{JobRescheduleLabelKey: "grace"}
 	jobInfos["vcjob/job1"].PodGroup.Labels = map[string]string{JobRescheduleLabelKey: "grace"}
 	jobInfos["vcjob/job0"].Tasks[test.FakeTaskName1].Pod.Annotations =
-		map[string]string{podRankIndex: "0", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
+		map[string]string{plugin.PodRankIndexKey: "0", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
 	jobInfos["vcjob/job0"].Tasks[test.FakeTaskName1].Pod.Annotations =
-		map[string]string{podRankIndex: "1", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
+		map[string]string{plugin.PodRankIndexKey: "1", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
 	jobInfos["vcjob/job1"].Tasks[test.FakeTaskName1].Pod.Annotations =
-		map[string]string{podRankIndex: "2", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
+		map[string]string{plugin.PodRankIndexKey: "2", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
 	jobInfos["vcjob/job1"].Tasks[test.FakeTaskName1].Pod.Annotations =
-		map[string]string{podRankIndex: "3", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
+		map[string]string{plugin.PodRankIndexKey: "3", util.NPU910CardName: "Ascend910-0,Ascend910-1"}
 	jobInfos["vcjob/job1"].Tasks[test.FakeTaskName0].NodeName = "node3"
 	jobInfos["vcjob/job1"].Tasks[test.FakeTaskName1].NodeName = "node4"
 	return jobInfos

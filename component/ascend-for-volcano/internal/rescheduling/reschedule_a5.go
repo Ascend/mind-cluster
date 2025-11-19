@@ -40,7 +40,7 @@ func (reScheduler *ReScheduler) updateFaultJobWhenGraceDeleteSuccess(jobInfo *ap
 	if is910A5 {
 		reScheduler.singlePodReschedulingUpgradeFor910A5(jobInfo, faultJob)
 	} else {
-		reScheduler.singlePodReschedulingUpgrade(jobInfo, faultJob)
+		reScheduler.singlePodReschedulingUpgrade(faultJob)
 	}
 	klog.V(util.LogDebugLev).Infof(
 		"rescheduling: after rescheduling upgrade, job <%s/%s> PendingSessionNum=%d,"+
