@@ -287,6 +287,25 @@ const (
 )
 
 const (
+	// EnableDequeueAnnoKey pg annotation key, for set whether to enable dequeue for pg
+	EnableDequeueAnnoKey = "huawei.com/schedule_enable_dequeue"
+	// EnableDequeueOnVal pg annotation value, enable dequeue for pg
+	EnableDequeueOnVal = "on"
+	// DequeueFrequencyAnnoKey pg annotation key, for count pg dequeue frequency, written by ascend-for-volcano
+	DequeueFrequencyAnnoKey = "huawei.com/schedule_dequeue_frequency"
+	// EnqueueTimeAnnoKey pg annotation key, for record pg enqueue time, written by ascend-for-volcano
+	EnqueueTimeAnnoKey = "huawei.com/schedule_enqueue_time"
+	// EnqueueTimeOut enqueue timeout threshold, 5min millisecond timestamp
+	EnqueueTimeOut = 5 * 60 * 1000
+	// JobOrderHighPriority job order return val, indicating that the former job is sorted before the latter job
+	JobOrderHighPriority = -1
+	// JobOrderLowPriority job order return val, indicating that the former job is sorted after the latter job
+	JobOrderLowPriority = 1
+	// JobOrderSamePriority job order return val, indicating that the sorting of two jobs is consistent
+	JobOrderSamePriority = 0
+)
+
+const (
 	// Rank0 default time of pod deleted
 	Rank0 = "0"
 )
