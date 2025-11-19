@@ -29,12 +29,14 @@ type pubFaultCode struct {
 	NotHandleFaultCodes []string
 	SubHealthFaultCodes []string
 	SeparateNPUCodes    []string
+	PreSeparateNPUCodes []string
 }
 
 type pubFaultCodeCache struct {
 	NotHandleFaultCodes map[string]struct{}
 	SubHealthFaultCodes map[string]struct{}
 	SeparateNPUCodes    map[string]struct{}
+	PreSeparateNPUCodes map[string]struct{}
 }
 
 func init() {
@@ -42,6 +44,7 @@ func init() {
 		NotHandleFaultCodes: make(map[string]struct{}),
 		SubHealthFaultCodes: make(map[string]struct{}),
 		SeparateNPUCodes:    make(map[string]struct{}),
+		PreSeparateNPUCodes: make(map[string]struct{}),
 	}
 }
 
@@ -65,6 +68,9 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.SeparateNPUCodes) {
 		PubFaultCodeCfg.SeparateNPUCodes[code] = struct{}{}
 	}
+	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.PreSeparateNPUCodes) {
+		PubFaultCodeCfg.PreSeparateNPUCodes[code] = struct{}{}
+	}
 	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.SubHealthFaultCodes) {
 		PubFaultCodeCfg.SubHealthFaultCodes[code] = struct{}{}
 	}
@@ -79,4 +85,5 @@ func resetPubFaultCodeCache() {
 	PubFaultCodeCfg.SeparateNPUCodes = make(map[string]struct{})
 	PubFaultCodeCfg.SubHealthFaultCodes = make(map[string]struct{})
 	PubFaultCodeCfg.NotHandleFaultCodes = make(map[string]struct{})
+	PubFaultCodeCfg.PreSeparateNPUCodes = make(map[string]struct{})
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -355,4 +356,29 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 		}
 	}
 	return servers
+}
+
+// GetUsedDevicesByNodeName get used devices by node name
+func GetUsedDevicesByNodeName(nodeName string) sets.String {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+
+	usedDevice := sets.String{}
+	if podManager.nodePodMap == nil {
+		return usedDevice
+	}
+	if _, exist := podManager.nodePodMap[nodeName]; !exist {
+		return usedDevice
+	}
+	for _, pod := range podManager.nodePodMap[nodeName] {
+		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
+			continue
+		}
+		ascendReal, exist := pod.Annotations[api.PodAnnotationAscendReal]
+		if !exist || ascendReal == "" {
+			continue
+		}
+		usedDevice = usedDevice.Insert(strings.Split(ascendReal, constant.Comma)...)
+	}
+	return usedDevice
 }

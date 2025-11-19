@@ -33,12 +33,14 @@ var (
 // Manager use for pod data manager
 type Manager struct {
 	podMap      map[string]v1.Pod
+	nodePodMap  map[string]map[string]v1.Pod // key: node name, value: pods in node
 	jobPodMap   map[string]map[string]v1.Pod
 	podMapMutex sync.RWMutex
 }
 
 func init() {
 	podManager.podMap = make(map[string]v1.Pod, initPodNum)
+	podManager.nodePodMap = make(map[string]map[string]v1.Pod)
 	podManager.jobPodMap = make(map[string]map[string]v1.Pod, initJobNum)
 	podManager.podMapMutex = sync.RWMutex{}
 }
@@ -59,6 +61,10 @@ func SavePod(podInfo *v1.Pod) {
 	podKey := GetPodKey(podInfo)
 	jobKey := GetJobKeyByPod(podInfo)
 	podManager.podMap[podKey] = *podInfo
+	if podManager.nodePodMap[podInfo.Spec.NodeName] == nil {
+		podManager.nodePodMap[podInfo.Spec.NodeName] = make(map[string]v1.Pod)
+	}
+	podManager.nodePodMap[podInfo.Spec.NodeName][podKey] = *podInfo
 	if podManager.jobPodMap[jobKey] == nil {
 		podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
 	}
@@ -82,6 +88,12 @@ func DeletePod(podInfo *v1.Pod) {
 	}
 	podManager.podMapMutex.Lock()
 	delete(podManager.podMap, GetPodKey(podInfo))
+	if podManager.nodePodMap[podInfo.Spec.NodeName] != nil {
+		delete(podManager.nodePodMap[podInfo.Spec.NodeName], GetPodKey(podInfo))
+		if len(podManager.nodePodMap[podInfo.Spec.NodeName]) == 0 {
+			delete(podManager.nodePodMap, podInfo.Spec.NodeName)
+		}
+	}
 	jobKey := GetJobKeyByPod(podInfo)
 	if len(podManager.jobPodMap[jobKey]) > 0 {
 		delete(podManager.jobPodMap[jobKey], GetPodKey(podInfo))

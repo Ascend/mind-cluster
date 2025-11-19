@@ -41,6 +41,7 @@ const (
 	sharedIp = "127.0.0.1"
 
 	nodeName1 = "node1"
+	nodeName2 = "node2"
 	nodeIp1   = "192.168.1.1"
 	nodeSn1   = "sn1"
 )
