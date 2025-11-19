@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"sort"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -50,6 +51,9 @@ func (th *TorHandlerV1) PreStartAction(ssn *framework.Session) error {
 func (th *TorHandlerV1) initEnableSliceId() {
 	usedTorCount := make([]int, th.globalTorEnv.TorCount)
 	for _, task := range th.Job.Tasks {
+		if task.PodStatus == v1.PodFailed || task.PodStatus == v1.PodSucceeded {
+			continue
+		}
 		if task.NodeName != "" {
 			server := th.globalTorEnv.GetServerMaps()[task.NodeName]
 			if server == nil {
