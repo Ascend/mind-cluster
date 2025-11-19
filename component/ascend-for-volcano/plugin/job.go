@@ -285,7 +285,7 @@ func initNormalJobIndex(taskInf *api.TaskInfo, usedRanks map[string]bool) {
 	if taskInf.Pod.Annotations == nil {
 		taskInf.Pod.Annotations = make(map[string]string)
 	}
-	if k, ok := taskInf.Pod.Annotations[PodRankIndexKey]; ok {
+	if k, ok := taskInf.Pod.Annotations[PodRankIndexKey]; ok && taskInf.Pod.Status.Phase != v1.PodFailed {
 		usedRanks[k] = true
 		return
 	}
@@ -561,7 +561,7 @@ func (sJob *SchedulerJob) setSpBlock() {
 }
 
 func (sJob *SchedulerJob) setSchedulingTaskNum(vcJob *api.JobInfo) {
-	if vcJob.MinAvailable != int32(len(vcJob.Tasks)) {
+	if sJob.MinAvailable != int32(len(vcJob.Tasks)) {
 		sJob.SchedulingTaskNum = defaultSchedulingTaskNum
 		return
 	}

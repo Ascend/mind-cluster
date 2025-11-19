@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -355,6 +356,9 @@ func (th *TorHandlerV2) initUsedTorInfos() {
 	usedTors := make(map[string]*plugin.Tor)
 	usedSharedTor := make(sets.String)
 	for _, task := range th.Job.Tasks {
+		if task.PodStatus == v1.PodFailed || task.PodStatus == v1.PodSucceeded {
+			continue
+		}
 		if task.NodeName != "" {
 			torIp := th.globalTorEnv.GetTorIpMap()[task.NodeName]
 			torInfos.serverNums[torIp]++

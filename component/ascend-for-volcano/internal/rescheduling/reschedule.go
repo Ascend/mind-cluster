@@ -48,12 +48,6 @@ func (reScheduler *ReScheduler) setGraceOverTime(value int64) {
 func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardName string,
 	env plugin.ScheduleEnv, faultJob *FaultJob) ([]FaultTask, error) {
 	faultTasks := make([]FaultTask, 0)
-	var runTaskNum int
-	for _, task := range job.Tasks {
-		if task.NodeName != "" {
-			runTaskNum++
-		}
-	}
 	for _, task := range job.Tasks {
 		faultTask := newFaultTaskDefault(task, faultJob, env)
 		// 2. updateNodeRankIndex by pod.Annotation
