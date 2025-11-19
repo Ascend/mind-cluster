@@ -113,7 +113,7 @@ func UpdateSwitchFaultLevel() {
 	}{
 		{common.NotHandleFaultCodes, common.NotHandleFaultLevel},
 		{common.SubHealthFaultCodes, common.SubHealthFaultLevel},
-		{common.RestartRequestCodes, common.RestartRequestFaultLevel},
+		{common.RestartRequestFaultCodes, common.RestartRequestFaultLevel},
 		{common.PreSeparateFaultCodes, common.PreSeparateFaultLevel},
 		{common.SeparateFaultCodes, common.SeparateFaultLevel},
 	}
