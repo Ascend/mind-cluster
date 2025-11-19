@@ -93,6 +93,17 @@ const (
 	SuperPodFitAnnoKey = "sp-fit"
 )
 
+// value of schedule_policy annotation
+const (
+	Chip4Node8    = "chip4-node8"     // 910a module
+	Chip1Node2    = "chip1-node2"     // 910a card
+	Chip4Node4    = "chip4-node4"     // 910a half
+	Chip8Node8    = "chip8-node8"     // 910bx8
+	Chip8Node16   = "chip8-node16"    // 910bx16
+	Chip2Node16   = "chip2-node16"    // 910cx16
+	Chip2Node16Sp = "chip2-node16-sp" // 910cx16-superpod
+)
+
 const (
 	// MinAvailableKey decide minAvailable of task
 	MinAvailableKey = "huawei.com/schedule_minAvailable"

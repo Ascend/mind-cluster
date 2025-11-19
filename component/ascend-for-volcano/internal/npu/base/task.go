@@ -124,7 +124,8 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 	klog.V(util.LogInfoLev).Info("pod had used all card of node, set configuration in annotation")
 	inst := util.Instance{
 		PodName:    task.Name,
-		ServerID:   node.Address,
+		ServerID:   string(task.Pod.UID),
+		HostIp:     node.Address,
 		SuperPodId: node.SuperPodID,
 		Devices:    make([]util.Device, 0, len(top)),
 	}

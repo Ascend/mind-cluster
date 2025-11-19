@@ -412,8 +412,8 @@ func (ki *ClientK8s) GetPodsUsedNPUByKlt() sets.String {
 	return sets.NewString(usedNPU...)
 }
 
-// GetNodeServerID Get Node Server ID
-func (ki *ClientK8s) GetNodeServerID() (string, error) {
+// GetNodeIp Get Node IP
+func (ki *ClientK8s) GetNodeIp() (string, error) {
 	node, err := ki.GetNode()
 	if err != nil {
 		return "", err
@@ -422,12 +422,12 @@ func (ki *ClientK8s) GetNodeServerID() (string, error) {
 		hwlog.RunLog.Error("the number of node status in exceeds the upper limit")
 		return "", fmt.Errorf("the number of node status in exceeds the upper limit")
 	}
-	var serverID string
+	var nodeIp string
 	for _, addresses := range node.Status.Addresses {
 		if addresses.Type == v1.NodeInternalIP && net.ParseIP(addresses.Address) != nil {
-			serverID = addresses.Address
+			nodeIp = addresses.Address
 			break
 		}
 	}
-	return serverID, nil
+	return nodeIp, nil
 }

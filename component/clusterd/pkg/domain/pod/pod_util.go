@@ -185,11 +185,12 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
 	server := constant.ServerHccl{
 		ServerID:     podDev.ServerID,
+		HostIp:       podDev.HostIp,
 		PodID:        podDev.PodName,
 		PodNameSpace: pod.Namespace,
 		ServerName:   pod.Spec.NodeName,
 		SuperPodId:   podDev.SuperPodId,
-		ServerSN:     getSN(pod.Spec.NodeName, podDev.ServerID, ipSnMap),
+		ServerSN:     getSN(pod.Spec.NodeName, podDev.HostIp, ipSnMap),
 	}
 
 	podDevNum := len(podDev.Devices)
@@ -205,12 +206,12 @@ func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]str
 	return server
 }
 
-func getSN(serverName, serverID string, ipSnMap map[string]string) string {
+func getSN(serverName, nodeIp string, ipSnMap map[string]string) string {
 	if serverName != "" {
 		return node.GetNodeSNByName(serverName)
 	}
-	if serverID != "" {
-		return ipSnMap[serverID]
+	if nodeIp != "" {
+		return ipSnMap[nodeIp]
 	}
 	hwlog.RunLog.Warn("server name and server id are both empty")
 	return ""
@@ -348,7 +349,8 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 		}
 		nodeName := pod.Spec.NodeName
 		servers[nodeName] = constant.ServerHccl{
-			ServerID:     node.GetNodeIpByName(nodeName),
+			ServerID:     string(pod.UID),
+			HostIp:       node.GetNodeIpByName(nodeName),
 			PodID:        pod.Name,
 			PodNameSpace: pod.Namespace,
 			ServerName:   nodeName,

@@ -6,6 +6,7 @@
 package epranktable
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -89,6 +90,66 @@ var (
 		},
 	}
 )
+
+var a3RankTableString = `
+{
+    "status": "completed",         
+    "version": "1.2",              
+    "server_count":"4",            
+    "server_list": [
+        {
+            "server_id": "node_0",     
+            "host_ip":"172.16.0.100",  
+            "device": [
+                {"device_id": "0","super_device_id":"0","device_ip": "192.168.1.6","device_port":"16666","backup_device_ip":"192.168.1.7","backup_device_port":"16667","host_port":"16665","rank_id": "0"}, 
+                {"device_id": "1","super_device_id":"1","device_ip": "192.168.1.7","device_port":"16666","backup_device_ip":"192.168.1.6","backup_device_port":"16667","host_port":"16666","rank_id": "1"},
+                {"device_id": "2","super_device_id":"2","device_ip": "192.168.1.8","device_port":"16668","backup_device_ip":"192.168.1.9","backup_device_port":"16670","host_port":"16667","rank_id": "2"},
+                {"device_id": "3","super_device_id":"3","device_ip": "192.168.1.9","device_port":"16669","backup_device_ip":"192.168.1.8","backup_device_port":"16667","host_port":"16668","rank_id": "3"}]
+        },
+        {
+            "server_id": "node_1",
+            "host_ip":"172.16.0.101",
+            "device": [
+                {"device_id": "0","super_device_id":"4","device_ip": "192.168.2.6","device_port":"16666","backup_device_ip":"192.168.2.7","backup_device_port":"16667","host_port":"16665","rank_id": "4"},
+                {"device_id": "1","super_device_id":"5","device_ip": "192.168.2.7","device_port":"16666","backup_device_ip":"192.168.2.6","backup_device_port":"16667","host_port":"16666","rank_id": "5"},
+                {"device_id": "2","super_device_id":"6","device_ip": "192.168.2.8","device_port":"16668","backup_device_ip":"192.168.2.9","backup_device_port":"16670","host_port":"16667","rank_id": "6"},
+                {"device_id": "3","super_device_id":"7","device_ip": "192.168.2.9","device_port":"16669","backup_device_ip":"192.168.2.8","backup_device_port":"16667","host_port":"16668","rank_id": "7"}]
+        },
+        {
+            "server_id": "node_2",
+            "host_ip":"172.16.0.102",
+            "device": [
+                {"device_id":"0","super_device_id":"0","device_ip":"192.168.3.6","device_port":"16666","backup_device_ip":"192.168.3.7","backup_device_port":"16667","host_port":"16665","rank_id":"8"},
+                {"device_id":"1","super_device_id":"1","device_ip":"192.168.3.7","device_port":"16666","backup_device_ip":"192.168.3.6","backup_device_port":"16667","host_port":"16666","rank_id":"9"},
+                {"device_id":"2","super_device_id":"2","device_ip":"192.168.3.8","device_port":"16668","backup_device_ip":"192.168.3.9","backup_device_port":"16670","host_port":"16667","rank_id":"10"},
+                {"device_id":"3","super_device_id":"3","device_ip":"192.168.3.9","device_port":"16669","backup_device_ip":"192.168.3.8","backup_device_port":"16667","host_port":"16668","rank_id":"11"}]
+        },
+        {
+            "server_id": "node_3",
+            "host_ip":"172.16.0.103",
+            "device": [
+                {"device_id":"0","super_device_id":"4","device_ip":"192.168.4.6","device_port":"16666","backup_device_ip":"192.168.4.7","backup_device_port":"16667","host_port":"16665","rank_id":"12"},
+                {"device_id":"1","super_device_id":"5","device_ip":"192.168.4.7","device_port":"16666","backup_device_ip":"192.168.4.6","backup_device_port":"16667","host_port":"16666","rank_id":"13"},
+                {"device_id":"2","super_device_id":"6","device_ip":"192.168.4.8","device_port":"16668","backup_device_ip":"192.168.4.9","backup_device_port":"16670","host_port":"16667","rank_id":"14"},
+                {"device_id":"3","super_device_id":"7","device_ip":"192.168.4.9","device_port":"16669","backup_device_ip":"192.168.4.8","backup_device_port":"16667","host_port":"16668","rank_id":"15"}]
+        }
+    ],
+    "super_pod_list": [
+        {
+            "super_pod_id": "0",          
+            "server_list": [              
+                {"server_id": "node_0"},  
+                {"server_id": "node_1"}]
+        },
+        {
+            "super_pod_id": "1",
+            "server_list": [
+                {"server_id":"node_2"},
+                {"server_id":"node_3"}]
+        }
+    ]
+}
+`
 
 func TestParseMindIeRankTableCM(t *testing.T) {
 	convey.Convey("test parseMindIeRankTableCM", t, func() {
@@ -304,4 +365,28 @@ func TestGetGlobalRankTableInfo(t *testing.T) {
 			convey.So(info, convey.ShouldNotBeEmpty)
 		})
 	})
+}
+
+func TestConvertGrtServerId(t *testing.T) {
+	var a2RankTable A2RankTable
+	err := json.Unmarshal([]byte(a3RankTableString), &a2RankTable)
+	if err != nil {
+		t.Errorf("convert a3RankTableString to ranktable error %s", err)
+	}
+
+	convertGrtServerId(&a2RankTable)
+	serverIds := make(map[string]struct{})
+	for _, server := range a2RankTable.ServerList {
+		serverIds[server.ServerID] = struct{}{}
+		if server.HostIp != server.ServerID {
+			t.Errorf("HostIp %s and ServerID %s is not equal", server.HostIp, server.ServerID)
+		}
+	}
+	for _, info := range a2RankTable.SuperPodInfoList {
+		for _, server := range info.SuperPodServerList {
+			if _, ok := serverIds[server.SuperPodServerId]; !ok {
+				t.Errorf("SuperPodServerId %s is not host ip", server.SuperPodServerId)
+			}
+		}
+	}
 }

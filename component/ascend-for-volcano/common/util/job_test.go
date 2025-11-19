@@ -248,6 +248,7 @@ func TestIsSuperPodJob(t *testing.T) {
 	annotationSpBlock := map[string]string{SuperPodAnnoKey: "16"}
 	annotationNotSpPolicy := map[string]string{SchedulePolicyAnnoKey: SchedulePolicyA3x16}
 	selectorSp := map[string]string{AcceleratorType: Module910A3SuperPodAcceleratorType}
+	annotationSchedulePolicySp := map[string]string{SchedulePolicyAnnoKey: Chip2Node16Sp}
 	t.Run("01-isSuperPodJob true, when sp-block exist",
 		func(t *testing.T) {
 			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: annotationSpBlock}}
@@ -274,6 +275,13 @@ func TestIsSuperPodJob(t *testing.T) {
 			attr := SchedulerJobAttr{}
 			if attr.IsSuperPodJob() {
 				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+	t.Run("05-isSuperPodJob true, when schedule-policy are chip2-node16-sp",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: annotationSchedulePolicySp}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
 			}
 		})
 }
