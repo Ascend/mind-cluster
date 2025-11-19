@@ -279,3 +279,60 @@ func TestConstructServersByJobKey(t *testing.T) {
 		})
 	})
 }
+
+type podCreateParam struct {
+	podName       string
+	podNameSpace  string
+	podUid        string
+	nodeName      string
+	podStatus     v1.PodPhase
+	podAnnotation map[string]string
+}
+
+func TestGetUsedDevicesByNodeName(t *testing.T) {
+	convey.Convey("test GetUsedDevicesByNodeName", t, func() {
+		param := podCreateParam{
+			podName:      podName1,
+			podNameSpace: podNameSpace1,
+			podUid:       podUid1,
+			nodeName:     nodeName1,
+			podStatus:    v1.PodFailed,
+		}
+		convey.Convey("when podsInJob is nil, deviceNum should be 0", func() {
+			convey.So(GetUsedDevicesByNodeName(nodeName1).Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when podsInJob exists but nodename not match, deviceNum should be 0", func() {
+			podDemo := createAndSavePod(param)
+			defer DeletePod(podDemo)
+			convey.So(GetUsedDevicesByNodeName(nodeName2).Len(), convey.ShouldEqual, 0)
+		})
+		convey.Convey("when podsInJob exists but pod status is failed, deviceNum should be 0", func() {
+			podDemo := createAndSavePod(param)
+			defer DeletePod(podDemo)
+			convey.So(GetUsedDevicesByNodeName(nodeName1).Len(), convey.ShouldEqual, 0)
+		})
+		param.podStatus = v1.PodRunning
+		convey.Convey("when podsInJob exists but pod annotation not match, deviceNum should be 0", func() {
+			podDemo := createAndSavePod(param)
+			defer DeletePod(podDemo)
+			convey.So(GetUsedDevicesByNodeName(nodeName1).Len(), convey.ShouldEqual, 0)
+		})
+		param.podAnnotation = map[string]string{api.PodAnnotationAscendReal: "Ascend910-0"}
+		convey.Convey("when podsInJob exists and pod annotation matches, deviceNum should be 1", func() {
+			podDemo := createAndSavePod(param)
+			defer DeletePod(podDemo)
+			convey.So(GetUsedDevicesByNodeName(nodeName1).Len(), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func createAndSavePod(param podCreateParam) *v1.Pod {
+	pod := getDemoPod(param.podName, param.podNameSpace, param.podUid)
+	pod.Spec.NodeName = param.nodeName
+	pod.Status.Phase = param.podStatus
+	if param.podAnnotation != nil {
+		pod.SetAnnotations(param.podAnnotation)
+	}
+	SavePod(pod)
+	return pod
+}

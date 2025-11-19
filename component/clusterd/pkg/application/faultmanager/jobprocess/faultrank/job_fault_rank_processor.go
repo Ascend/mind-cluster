@@ -571,13 +571,12 @@ func getHealthState(faultList []constant.FaultRank, nodeStatusList []string,
 	for _, faultRank := range faultList {
 		if faultRank.FaultLevel != constant.SubHealthFault &&
 			faultRank.FaultLevel != constant.NotHandleFault &&
-			faultRank.FaultLevel != constant.PreSeparateFaultLevelStr && // switch: subhealthy faultLevel is preSeparate
+			faultRank.FaultLevel != constant.PreSeparateFaultLevelStr &&
 			faultRank.FaultLevel != constant.PreSeparateNPU {
 			return constant.UnHealthyState
 		}
 		// npu: 	subhealthy staus faultLevel is subhealthy
-		// switch: 	subhealthy staus faultLevel is preSeparate
-		if faultRank.FaultLevel == constant.SubHealthFault || faultRank.FaultLevel == constant.PreSeparateFaultLevelStr {
+		if faultRank.FaultLevel == constant.SubHealthFault {
 			hasSubHealthFault = true
 		}
 	}

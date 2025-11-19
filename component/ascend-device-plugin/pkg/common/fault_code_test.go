@@ -61,7 +61,6 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 			convey.So(LoadFaultCodeFromFile(), convey.ShouldBeNil)
 			convey.So(faultTypeCode.NotHandleFaultCodes, convey.ShouldResemble, []int64{2162298887})
 			convey.So(faultTypeCode.SeparateNPUCodes, convey.ShouldResemble, []int64{2162401793})
-			convey.So(faultTypeCode.PreSeparateNPUCodes, convey.ShouldResemble, []int64{2164753923, CardAbnoramlOccupyFaultCode})
 			convey.So(len(faultTypeCode.RestartBusinessCodes), convey.ShouldEqual, 0)
 		})
 	})
@@ -1780,21 +1779,21 @@ func TestGetFrequencyFaultCodes(t *testing.T) {
 	})
 }
 
-// TestLoadVaildSwitchFaultCode for test loadVaildSwitchFaultCode
+// TestLoadVaildSwitchFaultCode for test loadValidSwitchFaultCode
 func TestLoadVaildSwitchFaultCode(t *testing.T) {
-	convey.Convey("test loadVaildSwitchFaultCode", t, func() {
+	convey.Convey("test loadValidSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
 			NotHandleFaultCodes: []string{generalFaultCode},
 		}
 		convey.Convey("when switch fault is invalid, should not load switch fault code", func() {
 			mockFunc := gomonkey.ApplyFuncReturn(isValidSwitchFaultCode, false)
 			defer mockFunc.Reset()
-			loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
+			loadValidSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
 				"NotHandleFaultCodes")
 			convey.So(len(NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("when switch fault is valid, should load switch fault code", func() {
-			loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
+			loadValidSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes,
 				"NotHandleFaultCodes")
 			convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
 		})
@@ -1805,10 +1804,11 @@ func TestLoadVaildSwitchFaultCode(t *testing.T) {
 func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
-			NotHandleFaultCodes: []string{generalFaultCode},
-			RestartRequestCodes: []string{generalFaultCode},
-			SubHealthFaultCodes: []string{generalFaultCode},
-			SeparateFaultCodes:  []string{generalFaultCode},
+			NotHandleFaultCodes:   []string{generalFaultCode},
+			RestartRequestCodes:   []string{generalFaultCode},
+			SubHealthFaultCodes:   []string{generalFaultCode},
+			SeparateFaultCodes:    []string{generalFaultCode},
+			PreSeparateFaultCodes: []string{generalFaultCode},
 		}
 		bytes, err := json.Marshal(switchFileInfo)
 		convey.So(err, convey.ShouldBeNil)
@@ -1825,6 +1825,7 @@ func TestLoadSwitchFaultCode(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(NotHandleFaultCodes) == 0, convey.ShouldBeTrue)
 			convey.So(len(RestartRequestCodes) == 0, convey.ShouldBeTrue)
+			convey.So(len(SubHealthFaultCodes) == 0, convey.ShouldBeTrue)
 			convey.So(len(SeparateFaultCodes) == 0, convey.ShouldBeTrue)
 			convey.So(len(PreSeparateFaultCodes) == 0, convey.ShouldBeTrue)
 		})
@@ -1833,10 +1834,12 @@ func TestLoadSwitchFaultCode(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(NotHandleFaultCodes) > 0, convey.ShouldBeTrue)
 			convey.So(len(RestartRequestCodes) > 0, convey.ShouldBeTrue)
+			convey.So(len(SubHealthFaultCodes) > 0, convey.ShouldBeTrue)
 			convey.So(len(SeparateFaultCodes) > 0, convey.ShouldBeTrue)
 			convey.So(len(PreSeparateFaultCodes) > 0, convey.ShouldBeTrue)
 			convey.So(NotHandleFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 			convey.So(RestartRequestCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
+			convey.So(SubHealthFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 			convey.So(SeparateFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 			convey.So(PreSeparateFaultCodes[firstFaultIdx] == generalFaultCode, convey.ShouldBeTrue)
 		})

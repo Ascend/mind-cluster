@@ -34,14 +34,18 @@ import (
 const (
 	// NotHandleFaultLevel NotHandle Fault Level
 	NotHandleFaultLevel = 0
+	// SubHealthFaultLevel SubHealth Fault Level
+	SubHealthFaultLevel = 1
 	// RestartRequestFaultLevel RestartRequest Fault Level
-	RestartRequestFaultLevel = 1
+	RestartRequestFaultLevel = 2
 	// PreSeparateFaultLevel PreSeparate Fault Level
-	PreSeparateFaultLevel = 2
+	PreSeparateFaultLevel = 3
 	// SeparateFaultLevel Separate Fault Level
-	SeparateFaultLevel = 3
+	SeparateFaultLevel = 4
 	// NotHandleFaultLevelStr NotHandle Fault Level Str
 	NotHandleFaultLevelStr = "NotHandle"
+	// SubHealthFaultLevelStr SubHealth Fault Level Str
+	SubHealthFaultLevelStr = "SubHealthFault"
 	// RestartRequestFaultLevelStr RestartRequest Fault Level Str
 	RestartRequestFaultLevelStr = "RestartRequest"
 	// PreSeparateFaultLevelStr PreSeparate Fault Level Str
@@ -51,9 +55,10 @@ const (
 )
 
 const (
-	nodeHealthy    = "Healthy"
-	nodeSubHealthy = "SubHealthy"
-	nodeUnHealthy  = "UnHealthy"
+	nodeHealthy     = "Healthy"
+	nodeSubHealthy  = "SubHealthy"
+	nodePreSeparate = "PreSeparate"
+	nodeUnHealthy   = "UnHealthy"
 )
 
 var (
@@ -184,42 +189,60 @@ func checkL1toL2PlaneDown() bool {
 	return allDown
 }
 
+// getSwitchFaultLevelAndNodeStatus get the fault level and node status of the switch
 func getSwitchFaultLevelAndNodeStatus() (string, string) {
-	faultLevel, NodeStatus := "", nodeHealthy
 	if len(currentSwitchFault) == 0 {
-		return faultLevel, NodeStatus
+		return "", nodeHealthy
 	}
+
+	maxFaultLevel := calculateMaxSwitchFaultLevel()
+
+	return mapFaultLevelToStatus(maxFaultLevel)
+}
+
+// calculateMaxSwitchFaultLevel calculate the highest fault level of the switch
+func calculateMaxSwitchFaultLevel() int {
 	SwitchFaultLevelMapLock.Lock()
-	maxFaultLevel := 0
+	defer SwitchFaultLevelMapLock.Unlock()
+
+	maxLevel := 0
 	for _, code := range currentSwitchFault {
-		if lastLevel, ok := switchFaultCodeLevelToCm[code.AssembledFaultCode]; ok {
-			if lastLevel > maxFaultLevel {
-				maxFaultLevel = lastLevel
+		assembledCode := code.AssembledFaultCode
+		if level, ok := switchFaultCodeLevelToCm[assembledCode]; ok {
+			if level > maxLevel {
+				maxLevel = level
 			}
 			continue
 		}
-		level := SwitchFaultLevelMap[code.AssembledFaultCode]
-		if level > maxFaultLevel {
-			maxFaultLevel = level
+		if level := SwitchFaultLevelMap[assembledCode]; level > maxLevel {
+			maxLevel = level
 		}
 	}
+	// Check if the L1/L2 plane is down and force the highest level to be a separation fault
 	if checkL1toL2PlaneDown() {
-		maxFaultLevel = SeparateFaultLevel
+		maxLevel = SeparateFaultLevel
 	}
-	SwitchFaultLevelMapLock.Unlock()
-	switch maxFaultLevel {
-	case NotHandleFaultLevel:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
-	case RestartRequestFaultLevel:
-		faultLevel, NodeStatus = RestartRequestFaultLevelStr, nodeSubHealthy
-	case PreSeparateFaultLevel:
-		faultLevel, NodeStatus = PreSeparateFaultLevelStr, nodeSubHealthy
-	case SeparateFaultLevel:
-		faultLevel, NodeStatus = SeparateFaultLevelStr, nodeUnHealthy
-	default:
-		faultLevel, NodeStatus = NotHandleFaultLevelStr, nodeHealthy
+	return maxLevel
+}
+
+// mapFaultLevelToStatus map the fault levels to string and node statuses
+func mapFaultLevelToStatus(level int) (string, string) {
+	type levelStatus struct {
+		faultLevelStr string
+		nodeStatus    string
 	}
-	return faultLevel, NodeStatus
+	levelMap := map[int]levelStatus{
+		NotHandleFaultLevel:      {NotHandleFaultLevelStr, nodeHealthy},
+		SubHealthFaultLevel:      {SubHealthFaultLevelStr, nodeSubHealthy},
+		RestartRequestFaultLevel: {RestartRequestFaultLevelStr, nodeUnHealthy},
+		PreSeparateFaultLevel:    {PreSeparateFaultLevelStr, nodePreSeparate},
+		SeparateFaultLevel:       {SeparateFaultLevelStr, nodeUnHealthy},
+	}
+	if status, ok := levelMap[level]; ok {
+		return status.faultLevelStr, status.nodeStatus
+	}
+	hwlog.RunLog.Warnf("unknown fault level %v, will not report", level)
+	return NotHandleFaultLevelStr, nodeHealthy
 }
 
 // getSimpleSwitchFaultStr convert fault info to string to display in switch fault info configmap
@@ -469,6 +492,8 @@ func convertToSwitchLevelStr(level int) string {
 	switch level {
 	case NotHandleFaultLevel:
 		faultLevelStr = NotHandleFaultLevelStr
+	case SubHealthFaultLevel:
+		faultLevelStr = SubHealthFaultLevelStr
 	case ResetErrorLevel:
 		faultLevelStr = RestartRequestFaultLevelStr
 	case PreSeparateFaultLevel:

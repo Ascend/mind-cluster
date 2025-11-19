@@ -4,6 +4,7 @@
 package cmprocess
 
 import (
+	"clusterd/pkg/application/faultmanager/cmprocess/preseparate"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
 )
@@ -16,6 +17,9 @@ func init() {
 	NodeCenter = &nodeFaultProcessCenter{
 		baseFaultCenter: newBaseFaultCenter(manager, constant.NodeProcessType),
 	}
+	NodeCenter.addProcessors([]constant.FaultProcessor{
+		preseparate.PreSeparateFaultProcessor, // this processor process the preSeparate faults.
+	})
 }
 
 // nodeFaultProcessCenter
