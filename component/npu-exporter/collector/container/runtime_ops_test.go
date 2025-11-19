@@ -18,11 +18,15 @@ package container
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	criv1 "k8s.io/cri-api/pkg/apis/runtime/v1"
 	"k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
 	"ascend-common/common-utils/utils"
@@ -43,6 +47,8 @@ const (
 	testUnexpectedClientError           = "unexpected client type"
 	testUnexpectedContainerdClientError = "unexpected containerd client"
 	testUnexpectedIsulaClientError      = "unexpected isula client"
+	testCriV1alpha2                     = "runtime.v1alpha2.RuntimeService"
+	testCriV1                           = "runtime.v1.RuntimeService"
 )
 
 func TestRuntimeOperatorToolInit(t *testing.T) {
@@ -331,6 +337,60 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 	})
 }
 
+func TestIsUnimplementedError(t *testing.T) {
+	tests := []struct {
+		name        string
+		err         error
+		serviceName string
+		want        bool
+	}{
+		{
+			name:        "nil error returns false",
+			err:         nil,
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "non-grpc error returns false",
+			err:         errors.New("unknown service " + testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "mismatched code returns false",
+			err:         status.Error(codes.NotFound, "unknown service "+testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "mismatched message returns false",
+			err:         status.Error(codes.Unimplemented, "unknown service "+testCriV1),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "matched unimplemented error returns true",
+			err:         status.Error(codes.Unimplemented, "unknown service "+testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        true,
+		},
+		{
+			name:        "real grpc error format returns true",
+			err:         fmt.Errorf("rpc error: code = Unimplemented desc = unknown service " + testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isUnimplementedError(tt.err, tt.serviceName); got != tt.want {
+				t.Errorf("isUnimplementedError() = %v, want %v (err: %v)", got, tt.want, tt.err)
+			}
+		})
+	}
+}
+
 func TestRuntimeOperatorToolGetContainerInfoByID(t *testing.T) {
 	convey.Convey("TestRuntimeOperatorToolGetContainerInfoByID", t, func() {
 		convey.Convey("should return error when OCI client is empty", func() {
@@ -468,14 +528,26 @@ func TestSetGrpcNamespaceHeader(t *testing.T) {
 	})
 }
 
-func TestGenContainerRequest(t *testing.T) {
-	convey.Convey("TestGenContainerRequest", t, func() {
+func TestGenContainerRequestV1alpha2(t *testing.T) {
+	convey.Convey("TestGenContainerRequestV1alpha2", t, func() {
 		convey.Convey("should generate valid container request", func() {
-			request := genContainerRequest()
+			request := genContainerRequestV1alpha2()
 			convey.So(request, convey.ShouldNotBeNil)
 			convey.So(request.Filter, convey.ShouldNotBeNil)
 			convey.So(request.Filter.State, convey.ShouldNotBeNil)
 			convey.So(request.Filter.State.State, convey.ShouldEqual, v1alpha2.ContainerState_CONTAINER_RUNNING)
+		})
+	})
+}
+
+func TestGenContainerRequestV1(t *testing.T) {
+	convey.Convey("TestGenContainerRequestV1", t, func() {
+		convey.Convey("should generate valid container request", func() {
+			request := genContainerRequestV1()
+			convey.So(request, convey.ShouldNotBeNil)
+			convey.So(request.Filter, convey.ShouldNotBeNil)
+			convey.So(request.Filter.State, convey.ShouldNotBeNil)
+			convey.So(request.Filter.State.State, convey.ShouldEqual, criv1.ContainerState_CONTAINER_RUNNING)
 		})
 	})
 }

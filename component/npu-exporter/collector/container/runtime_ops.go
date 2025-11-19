@@ -26,7 +26,10 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+	criv1 "k8s.io/cri-api/pkg/apis/runtime/v1"
 	"k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
 	"huawei.com/npu-exporter/v6/collector/container/isula"
@@ -58,6 +61,8 @@ const (
 	// DefaultContainer represents default container type
 	DefaultContainer   = "docker-containerd"
 	excludePermissions = 0002
+
+	criV1alpha2 = "runtime.v1alpha2.RuntimeService"
 )
 
 // CommonContainer wraps some common container attribute of isulad and containerd
@@ -212,7 +217,12 @@ func (operator *RuntimeOperatorTool) GetContainers(ctx context.Context) ([]*Comm
 		return nil, errors.New("criClient is empty")
 	}
 	if client, ok := operator.criClient.(v1alpha2.RuntimeServiceClient); ok {
-		return getContainersByContainerd(ctx, client)
+		containers, err := getContainersByContainerdV1alpha2(ctx, client)
+		if isUnimplementedError(err, criV1alpha2) {
+			v1Client := criv1.NewRuntimeServiceClient(operator.criConn)
+			return getContainersByContainerdV1(ctx, v1Client)
+		}
+		return containers, err
 	}
 	if client, ok := operator.criClient.(isula.RuntimeServiceClient); ok {
 		return getContainersByIsulad(ctx, client)
@@ -220,6 +230,22 @@ func (operator *RuntimeOperatorTool) GetContainers(ctx context.Context) ([]*Comm
 
 	logger.Errorf("client %v is unexpected", operator.criClient)
 	return nil, errors.New("unexpected client type")
+}
+
+func isUnimplementedError(err error, serviceName string) bool {
+	if err == nil {
+		return false
+	}
+	st, ok := status.FromError(err)
+	if ok {
+		return st.Code() == codes.Unimplemented && strings.Contains(st.Message(), serviceName)
+	}
+	errStr := err.Error()
+	if strings.Contains(errStr, "code = Unimplemented") &&
+		strings.Contains(errStr, "desc = ") && strings.Contains(errStr, serviceName) {
+		return true
+	}
+	return false
 }
 
 // GetContainerInfoByID use oci interface to get container
@@ -295,9 +321,27 @@ func setGrpcNamespaceHeader(ctx context.Context, namespace string) context.Conte
 	return metadata.NewOutgoingContext(ctx, md)
 }
 
-func getContainersByContainerd(ctx context.Context, client v1alpha2.RuntimeServiceClient) ([]*CommonContainer, error) {
+func getContainersByContainerdV1alpha2(ctx context.Context,
+	client v1alpha2.RuntimeServiceClient) ([]*CommonContainer, error) {
 	var allContainers []*CommonContainer
-	request := genContainerRequest()
+	request := genContainerRequestV1alpha2()
+	r, err := client.ListContainers(ctx, request)
+	if err != nil {
+		hwlog.RunLog.Warn(err)
+		return nil, err
+	}
+	for _, container := range r.Containers {
+		allContainers = append(allContainers, &CommonContainer{
+			Id:     container.Id,
+			Labels: container.Labels,
+		})
+	}
+	return allContainers, nil
+}
+
+func getContainersByContainerdV1(ctx context.Context, client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+	var allContainers []*CommonContainer
+	request := genContainerRequestV1()
 	r, err := client.ListContainers(ctx, request)
 	if err != nil {
 		hwlog.RunLog.Error(err)
@@ -329,12 +373,23 @@ func getContainersByIsulad(ctx context.Context, client isula.RuntimeServiceClien
 	return allContainers, nil
 }
 
-func genContainerRequest() *v1alpha2.ListContainersRequest {
+func genContainerRequestV1alpha2() *v1alpha2.ListContainersRequest {
 	filter := &v1alpha2.ContainerFilter{}
 	st := &v1alpha2.ContainerStateValue{}
 	st.State = v1alpha2.ContainerState_CONTAINER_RUNNING
 	filter.State = st
 	request := &v1alpha2.ListContainersRequest{
+		Filter: filter,
+	}
+	return request
+}
+
+func genContainerRequestV1() *criv1.ListContainersRequest {
+	filter := &criv1.ContainerFilter{}
+	st := &criv1.ContainerStateValue{}
+	st.State = criv1.ContainerState_CONTAINER_RUNNING
+	filter.State = st
+	request := &criv1.ListContainersRequest{
 		Filter: filter,
 	}
 	return request
