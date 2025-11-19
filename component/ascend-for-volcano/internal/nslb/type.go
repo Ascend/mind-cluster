@@ -61,7 +61,6 @@ type jobUsedTorInfos struct {
 }
 
 const (
-	podRankIndex               = "hccl/rankIndex"
 	maxTorAffinityNodeScore    = float64(200)
 	halfTorAffinityNodeScore   = float64(100)
 	sharedTorAffinityNodeScore = float64(99)

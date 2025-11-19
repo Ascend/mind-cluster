@@ -150,12 +150,12 @@ func buildGetJobNPUTasksTest() []getJobNPUTasksTest {
 	tJob2 := test.FakeNormalTestJob("test1", 0)
 	tests := []getJobNPUTasksTest{
 		{
-			name: "01-GetJobNPUTasks return nil when job is nil",
+			name: "01-InitJobNPUTasks return nil when job is nil",
 			args: getJobNPUTasksArgs{vcJob: nil},
 			want: nil,
 		},
 		{
-			name: "02-GetJobNPUTasks return nil when job tasks is empty",
+			name: "02-InitJobNPUTasks return nil when job tasks is empty",
 			args: getJobNPUTasksArgs{vcJob: tJob2},
 			want: nil,
 		},
@@ -167,8 +167,8 @@ func TestGetJobNPUTasks(t *testing.T) {
 	tests := buildGetJobNPUTasksTest()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetJobNPUTasks(tt.args.vcJob); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetJobNPUTasks() =%+v, want %+v", got, tt.want)
+			if got := InitJobNPUTasks(tt.args.vcJob); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("InitJobNPUTasks() =%+v, want %+v", got, tt.want)
 			}
 		})
 	}
@@ -469,7 +469,9 @@ func buildJobValidTest() []jobValidTest {
 					Jobs: map[api.JobID]SchedulerJob{tJob.UID: {Owner: OwnerInfo{
 						OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
 						Replicas:       &fakeRsNum},
-						SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 1},
+							NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 					}}}},
 			args: jobValidArgs{obj: tJob},
 			want: &api.ValidateResult{Pass: false, Reason: "job is not ready",
@@ -899,8 +901,8 @@ func TestInitVcJobHcclIndex(t *testing.T) {
 		{
 			name: "02-InitVcJobHcclIndex do nothing when task not exist hccl/rankIndex annotation",
 			taskInf: &api.TaskInfo{Pod: &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{podRankIndex: "0"}}}},
-			want: map[string]string{podRankIndex: "0"},
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "0"}}}},
+			want: map[string]string{PodRankIndexKey: "0"},
 		},
 		{
 			name: "03-InitVcJobHcclIndex set annotation when task exist hccl/rankIndex annotation",
@@ -909,12 +911,12 @@ func TestInitVcJobHcclIndex(t *testing.T) {
 					Name: "container1",
 					Env:  []v1.EnvVar{{Name: vcTaskIndex, Value: "1"}},
 				}}}}},
-			want: map[string]string{podRankIndex: "1"},
+			want: map[string]string{PodRankIndexKey: "1"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			initVcJobHcclIndex(tt.taskInf)
+			initNormalJobIndex(tt.taskInf, map[string]bool{})
 			if !reflect.DeepEqual(tt.taskInf.Pod.Annotations, tt.want) {
 				t.Errorf("InitVcJobHcclIndex() = %v, want %v", tt.taskInf.Pod.Annotations, tt.want)
 			}
@@ -1031,4 +1033,80 @@ func TestRecordJobPendingMessage(t *testing.T) {
 			t.Errorf("test RecordJobPendingMessage failed , expected: %v, result: %v", vcJob.Reason, sjob.PendingMessage[vcJob.Name])
 		}
 	})
+}
+
+type updateTaskNotUsedHcclRankIndexTest struct {
+	name        string
+	resultMap   map[api.TaskID]util.NPUTask
+	usedRanks   map[string]bool
+	want        map[api.TaskID]util.NPUTask
+	wantUpdated bool
+}
+
+func buildUpdateTaskNotUsedHcclRankIndexTestCases() []updateTaskNotUsedHcclRankIndexTest {
+	return []updateTaskNotUsedHcclRankIndexTest{
+		{
+			name: "01-multiple tasks need update",
+			resultMap: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{}},
+				"task2": {Name: "task2", Annotation: map[string]string{}},
+			},
+			usedRanks: map[string]bool{},
+			want: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{PodRankIndexKey: "0"}, Index: 0},
+				"task2": {Name: "task2", Annotation: map[string]string{PodRankIndexKey: "1"}, Index: 1},
+			},
+			wantUpdated: true,
+		},
+		{
+			name: "02-all ranks used",
+			resultMap: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{}},
+			},
+			usedRanks: map[string]bool{"0": true},
+			want: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{}},
+			},
+			wantUpdated: false,
+		},
+		{
+			name: "03-mixed tasks with and without rank index",
+			resultMap: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{PodRankIndexKey: "0"}, Index: 0},
+				"task2": {Name: "task2", Annotation: map[string]string{}},
+				"task3": {Name: "task3", Annotation: map[string]string{}},
+			},
+			usedRanks: map[string]bool{"0": true},
+			want: map[api.TaskID]util.NPUTask{
+				"task1": {Name: "task1", Annotation: map[string]string{PodRankIndexKey: "0"}, Index: 0},
+				"task2": {Name: "task2", Annotation: map[string]string{PodRankIndexKey: "1"}, Index: util.NPUIndex1},
+				"task3": {Name: "task3", Annotation: map[string]string{PodRankIndexKey: "2"}, Index: util.NPUIndex2},
+			},
+			wantUpdated: true,
+		},
+	}
+}
+
+func TestUpdateTaskNotUsedHcclRankIndex(t *testing.T) {
+	for _, tt := range buildUpdateTaskNotUsedHcclRankIndexTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			originalMap := make(map[api.TaskID]util.NPUTask)
+			for k, v := range tt.resultMap {
+				annotationCopy := make(map[string]string)
+				for ak, av := range v.Annotation {
+					annotationCopy[ak] = av
+				}
+				originalMap[k] = util.NPUTask{
+					Name:       v.Name,
+					Annotation: annotationCopy,
+					Index:      v.Index,
+				}
+			}
+			got := updateTaskNotUsedHcclRankIndex(tt.resultMap, tt.usedRanks)
+			if len(got) != len(tt.want) {
+				t.Errorf("updateTaskNotUsedHcclRankIndex() length = %v, want %v", len(got), len(tt.want))
+				return
+			}
+		})
+	}
 }

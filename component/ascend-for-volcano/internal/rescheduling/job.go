@@ -36,36 +36,19 @@ import (
 )
 
 // GetJobFaultRescheduleLabel Get job's fault reschedule label.
-func (fJob *FaultJob) GetJobFaultRescheduleLabel(job *plugin.SchedulerJob) string {
-	if fJob == nil || job == nil {
+func (fJob *FaultJob) GetJobFaultRescheduleLabel() string {
+	if fJob == nil {
 		klog.V(util.LogErrorLev).Info(
 			"GetJobFaultRescheduleLabel fJob or schedulerJob does not exist")
 		return JobOffRescheduleLabelValue
 	}
-	value, ok := job.SchedulerJobAttr.Label[JobRescheduleLabelKey]
+	value, ok := fJob.Labels[JobRescheduleLabelKey]
 	if !ok {
 		klog.V(util.LogInfoLev).Infof(
-			"GetJobFaultRescheduleLabel %s. %s no job reschedule label", value, job.Name)
+			"GetJobFaultRescheduleLabel %s. %s no job reschedule label", value, fJob.JobUID)
 		return JobOffRescheduleLabelValue
 	}
-	klog.V(util.LogInfoLev).Infof("GetJobFaultRescheduleLabel job: %s, label: %s", job.Name, value)
-	return value
-}
-
-// GetJobElasticSchedulingLabel get job's elastic scheduling label
-func (fJob *FaultJob) GetJobElasticSchedulingLabel(job *plugin.SchedulerJob) string {
-	if fJob == nil || job == nil {
-		klog.V(util.LogErrorLev).Info(
-			"GetJobElasticSchedulingLabel fJob or schedulerJob object does not exist")
-		return JobOffElasticScheduling
-	}
-	value, ok := job.SchedulerJobAttr.Label[ElasticSchedulingKey]
-	if !ok {
-		klog.V(util.LogInfoLev).Infof(
-			"GetJobElasticSchedulingLabel %s. %s no job reschedule label", value, job.Name)
-		return JobOffRescheduleLabelValue
-	}
-	klog.V(util.LogInfoLev).Infof("GetJobElasticSchedulingLabel job: %s, label: %s", job.Name, value)
+	klog.V(util.LogInfoLev).Infof("GetJobFaultRescheduleLabel job: %s, label: %s", fJob.JobUID, value)
 	return value
 }
 
@@ -119,8 +102,8 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo, tag910A5 boo
 		}
 	}
 
-	if len(jobInfo.PodGroup.Labels) != 0 && (jobInfo.PodGroup.Labels[util.SinglePodTag] == util.EnableFunc ||
-		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc) &&
+	if len(fJob.Labels) != 0 && (fJob.Labels[util.SinglePodTag] == util.EnableFunc ||
+		fJob.Labels[util.ProcessRecoverEnable] == util.EnableFunc) &&
 		(tag910A5 || fJob.PendingSessionNum != pendingTimes) {
 		klog.V(util.LogInfoLev).Info("grace deletion for pod-level rescheduling complete")
 		return true
@@ -402,8 +385,8 @@ func getTaskPodUidByTaskName(taskName string, jobInfo *api.JobInfo) api.TaskID {
 }
 
 func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
-	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc &&
-		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
+	if fJob.Labels[util.SinglePodTag] != util.EnableFunc &&
+		fJob.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
 		return
 	}
 	newFailedTask := make(map[api.TaskID]struct{})
@@ -674,6 +657,14 @@ func (fJob *FaultJob) setIsFaultJob(value bool) {
 	fJob.IsFaultJob = value
 }
 
+func (fJob *FaultJob) setJobSubHealthyStrategy() {
+	subHealthyStrategy, exist := fJob.Labels[util.SubHealthyStrategyLabel]
+	if !exist || !util.IsStrategyInSubHealthyStrategs(subHealthyStrategy) {
+		subHealthyStrategy = util.SubHealthyIgnore
+	}
+	fJob.SubHealthyStrategy = subHealthyStrategy
+}
+
 func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
 	faultJob := &FaultJob{
 		ReScheduleKey:     JobOffRescheduleLabelValue, // off/grace/force
@@ -685,42 +676,45 @@ func newFaultJobDefault(job *api.JobInfo, updateTime int64) *FaultJob {
 		ElasticScheduling: JobOffElasticScheduling,
 		ReferenceName:     util.ReferenceNameOfJob(job),
 		UUID:              util.UuidOfJob(job),
-		FaultRetryTimes:   faultRetryTimeOfJob(job),
-		ReScheduleLimit:   getReScheduleLimit(job),
 	}
-	subHealthyStrategy, exist := job.PodGroup.Labels[util.SubHealthyStrategyLabel]
-	if !exist || !util.IsStrategyInSubHealthyStrategs(subHealthyStrategy) {
-		subHealthyStrategy = util.SubHealthyIgnore
-	}
-	faultJob.SubHealthyStrategy = subHealthyStrategy
+
 	return faultJob
 }
 
-func getReScheduleLimit(job *api.JobInfo) string {
-	if _, exist := job.PodGroup.Labels[util.OmeInferenceServiceKey]; exist {
-		return util.ReschedulingUpperLimitPod
-	}
-	if job.PodGroup.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
-		job.PodGroup.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
-		return util.ReschedulingUpperLimitPod
-	}
-	return ""
+func (fJob *FaultJob) setCommonAttrFromScheduleJob(npuJob plugin.SchedulerJob) {
+	fJob.Labels = npuJob.Label
+	fJob.Annotations = npuJob.Annotation
+	fJob.MinAvailable = npuJob.MinAvailable
 }
 
-func faultRetryTimeOfJob(job *api.JobInfo) int {
-	value, ok := job.PodGroup.Labels[FaultRetryTimesKey]
+func (fJob *FaultJob) setReScheduleLimit() {
+	if _, exist := fJob.Labels[util.OmeInferenceServiceKey]; exist {
+		fJob.ReScheduleLimit = util.ReschedulingUpperLimitPod
+		return
+	}
+	if fJob.Labels[util.AppTypeLabelKey] == util.ControllerAppType ||
+		fJob.Labels[util.AppTypeLabelKey] == util.CoordinatorAppType {
+		fJob.ReScheduleLimit = util.ReschedulingUpperLimitPod
+		return
+	}
+	fJob.ReScheduleLimit = fJob.Annotations[util.RecoverPolicyPathKey]
+}
+
+func (fJob *FaultJob) setFaultRetryTimeOfJob() {
+	value, ok := fJob.Labels[FaultRetryTimesKey]
 	if !ok {
-		klog.V(util.LogInfoLev).Infof("get job<%s> label<%s> failed", job.UID, FaultRetryTimesKey)
-		return 0
+		klog.V(util.LogInfoLev).Infof("get job<%s> label<%s> failed", fJob.JobUID, FaultRetryTimesKey)
+		fJob.FaultRetryTimes = 0
+		return
 	}
 	v, err := strconv.Atoi(value)
 	if err != nil {
 		klog.V(util.LogInfoLev).Infof("Failed to convert fault-retry-times <%s> of job <%s> into number",
-			value, job.UID)
-		return 0
+			value, fJob.JobUID)
+		fJob.FaultRetryTimes = 0
 	}
-	klog.V(util.LogInfoLev).Infof("get job: %s, fault-retry-times: %s", job.Name, value)
-	return v
+	klog.V(util.LogInfoLev).Infof("get job: %s, fault-retry-times: %s", fJob.JobUID, value)
+	fJob.FaultRetryTimes = v
 }
 
 func getRealFaultJobForCache(fJobs map[api.JobID]*FaultJob) map[api.JobID]*FaultJob {

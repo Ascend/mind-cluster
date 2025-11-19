@@ -46,7 +46,7 @@ func (reScheduler *ReScheduler) setGraceOverTime(value int64) {
 
 // createFaultTaskHandler Create FaultTask struct and set the corresponding values
 func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardName string,
-	env plugin.ScheduleEnv, subHealthyStrategy string) ([]FaultTask, error) {
+	env plugin.ScheduleEnv, faultJob *FaultJob) ([]FaultTask, error) {
 	faultTasks := make([]FaultTask, 0)
 	var runTaskNum int
 	for _, task := range job.Tasks {
@@ -55,7 +55,7 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		}
 	}
 	for _, task := range job.Tasks {
-		faultTask := newFaultTaskDefault(task, job, env)
+		faultTask := newFaultTaskDefault(task, faultJob, env)
 		// 2. updateNodeRankIndex by pod.Annotation
 		tmpNodeRankIndex, err := faultTask.getNodeRankIndex(task)
 		if err != nil {
@@ -72,7 +72,7 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("setTaskCardHealthCode task %s err %s", task.Name, util.SafePrint(err))
 		}
-		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task, subHealthyStrategy)
+		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task, faultJob.SubHealthyStrategy)
 		klog.V(util.LogInfoLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
 			healthState)
 		faultTask.setIsFaultTask(isFaultTask)
@@ -111,13 +111,12 @@ func (reScheduler *ReScheduler) GetRunningJobs(ssn *framework.Session) map[api.J
 
 func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	faultJob *FaultJob, jobInfo *api.JobInfo, env plugin.ScheduleEnv) *FaultJob {
-
 	npuJob := reScheduler.Jobs[faultJob.JobUID] // 1. set the value of ReScheduleKey, grace/force/off
-
-	tmpElasticKey := faultJob.GetJobElasticSchedulingLabel(&npuJob)
-	faultJob.setJobElasticReScheduleLabel(tmpElasticKey)
-
-	tmpReScheduleKey := faultJob.GetJobFaultRescheduleLabel(&npuJob)
+	faultJob.setCommonAttrFromScheduleJob(npuJob)
+	faultJob.setJobSubHealthyStrategy()
+	faultJob.setReScheduleLimit()
+	faultJob.setFaultRetryTimeOfJob()
+	tmpReScheduleKey := faultJob.GetJobFaultRescheduleLabel()
 	faultJob.setJobFaultReScheduleLabel(tmpReScheduleKey)
 	klog.V(util.LogInfoLev).Infof("job %s set rescheduleLabel %v", jobInfo.Name, tmpReScheduleKey)
 	if tmpReScheduleKey == JobOffRescheduleLabelValue {
@@ -126,7 +125,7 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	}
 	npuName := util.GetNpuNameFromJobRequire(npuJob.ReqNPUName)
 	// 2. create new FaultTask objects and update corresponding attributes
-	tmpFaultTasks, err := reScheduler.createFaultTaskHandler(jobInfo, npuName, env, faultJob.SubHealthyStrategy)
+	tmpFaultTasks, err := reScheduler.createFaultTaskHandler(jobInfo, npuName, env, faultJob)
 	if err != nil {
 		klog.V(util.LogInfoLev).Infof("job %s createFaultTaskHandler failed: %s", jobInfo.Name, util.SafePrint(err))
 	}
@@ -157,7 +156,6 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 			Times: faultJob.FaultRetryTimes,
 		}
 	}
-
 	return faultJob
 }
 
@@ -306,7 +304,7 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 		is910A5 := is910A5Job(&sJob)
 		if faultJob.isJobGraceDeleteSuccess(jobInfo, is910A5) {
 			reScheduler.updateFaultJobWhenGraceDeleteSuccess(jobInfo, faultJob, is910A5)
-			if plugin.GetJobInfoAllocatedTaskNum(jobInfo) >= jobInfo.MinAvailable {
+			if plugin.GetJobInfoAllocatedTaskNum(jobInfo) >= faultJob.MinAvailable {
 				// if fault scheduling reason is sub healthy fault and job has been rescheduled
 				// update the reset config map grace exit code to 0.
 				faultJob.resetGraceExitCode(ssn.KubeClient())
@@ -357,21 +355,21 @@ func (reScheduler *ReScheduler) setFaultTaskUseNodeLinkDownTime(fJob *FaultJob) 
 	}
 }
 
-func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(jobInfo *api.JobInfo, fJob *FaultJob) {
+func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(fJob *FaultJob) {
 	// only pod rescheduling need upgrade
-	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc {
+	if fJob.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
 
 	// if upgrade is not allowed or process-recover enabled, do nothing.
 	if !fJob.allowUpgradePodRescheduling() ||
-		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
+		fJob.Labels[util.ProcessRecoverEnable] == util.EnableFunc {
 		return
 	}
 
 	fJob.PendingSessionNum++
 
-	job, ok := reScheduler.Jobs[jobInfo.UID]
+	job, ok := reScheduler.Jobs[fJob.JobUID]
 	if ok && job.IsSuperPodJob() && fJob.PendingSessionNum == spPendingTimes {
 		fJob.DeleteExecutedFlag = false
 	}
@@ -400,16 +398,9 @@ func (reScheduler *ReScheduler) SyncJobRemainRetryTimes(ssn *framework.Session) 
 			klog.V(util.LogWarningLev).Infof("job<%s> is not session, remain retry times will be delete", jobID)
 			continue
 		}
-
-		elastic, ok := job.PodGroup.Labels[ElasticSchedulingKey]
-		if ok && elastic == JobOnElasticScheduling {
-			continue
-		}
-
 		if util.UuidOfJob(job) != rt.UUID {
 			continue
 		}
-
 		newInfo[jobID] = rt
 	}
 	reScheduler.JobRemainRetryTimes = newInfo

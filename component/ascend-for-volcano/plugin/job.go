@@ -167,9 +167,6 @@ func getJobLabelFromVcJob(job *api.JobInfo) map[string]string {
 
 // getJobAnnotationFromJobInfo get job's annotation from podgroup and task's.
 func getJobAnnotationFromJobInfo(jobInfo *api.JobInfo) map[string]string {
-	var annotationKeysForPodGroup = []string{
-		util.SuperPodAnnoKey, util.SchedulePolicyAnnoKey, util.SuperPodFitAnnoKey,
-	}
 	var resAnno = make(map[string]string, util.MapInitNum)
 	if jobInfo == nil {
 		return resAnno
@@ -188,8 +185,8 @@ func getJobAnnotationFromJobInfo(jobInfo *api.JobInfo) map[string]string {
 			if _, ok := task.Pod.Annotations[key]; ok {
 				resAnno[key] = task.Pod.Annotations[key]
 			}
-			break
 		}
+		break
 	}
 	return resAnno
 }
@@ -236,18 +233,20 @@ func getVCTaskReqNPUTypeFromTaskInfo(vcTask *api.TaskInfo) (string, int) {
 	return "", 0
 }
 
-// GetJobNPUTasks get NPUTask from jobInfo.
-func GetJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
+// InitJobNPUTasks get NPUTask from jobInfo.
+func InitJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 	if vcJob == nil {
 		return nil
 	}
 	if len(vcJob.Tasks) == 0 {
-		klog.V(util.LogDebugLev).Infof("GetJobNPUTasks %s not init has no task.", vcJob.Name)
+		klog.V(util.LogDebugLev).Infof("InitJobNPUTasks %s not init has no task.", vcJob.Name)
 		return nil
 	}
 	resultMap := make(map[api.TaskID]util.NPUTask, util.MapInitNum)
+	usedRanks := make(map[string]bool)
+	terminatingPodNum := 0
 	for taskID, taskInf := range vcJob.Tasks {
-		initVcJobHcclIndex(taskInf)
+		initNormalJobIndex(taskInf, usedRanks)
 		name, num := getVCTaskReqNPUTypeFromTaskInfo(taskInf)
 		resultMap[taskID] = util.NPUTask{
 			Name:       taskInf.Name,
@@ -260,8 +259,14 @@ func GetJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 			Annotation: taskInf.Pod.Annotations,
 			PodStatus:  taskInf.Pod.Status.Phase,
 		}
+		if taskInf.Pod.DeletionTimestamp != nil {
+			terminatingPodNum++
+		}
 	}
-	return resultMap
+	if terminatingPodNum != 0 {
+		return resultMap
+	}
+	return updateTaskNotUsedHcclRankIndex(resultMap, usedRanks)
 }
 
 // initSelfPluginByJobInfo init job's policyHandler, the deal plugin.
@@ -275,22 +280,61 @@ func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 	}
 }
 
-// isJobInitial Determine if the task is ready.
-func initVcJobHcclIndex(taskInf *api.TaskInfo) {
+// initNormalJobIndex init job's task index.
+func initNormalJobIndex(taskInf *api.TaskInfo, usedRanks map[string]bool) {
 	if taskInf.Pod.Annotations == nil {
 		taskInf.Pod.Annotations = make(map[string]string)
 	}
-	if _, ok := taskInf.Pod.Annotations[podRankIndex]; ok {
+	if k, ok := taskInf.Pod.Annotations[PodRankIndexKey]; ok {
+		usedRanks[k] = true
+		return
+	}
+	if k, ok := taskInf.Pod.Labels[statefulsetPodName]; ok {
+		tmpStr := strings.Split(k, "-")
+		taskInf.Pod.Annotations[PodRankIndexKey] = tmpStr[len(tmpStr)-1]
+		usedRanks[tmpStr[len(tmpStr)-1]] = true
 		return
 	}
 	for _, c := range taskInf.Pod.Spec.Containers {
 		for _, env := range c.Env {
 			if env.Name == vcTaskIndex {
-				taskInf.Pod.Annotations[podRankIndex] = env.Value
+				taskInf.Pod.Annotations[PodRankIndexKey] = env.Value
+				usedRanks[env.Value] = true
 				return
 			}
 		}
 	}
+}
+
+func updateTaskNotUsedHcclRankIndex(resultMap map[api.TaskID]util.NPUTask,
+	usedRanks map[string]bool) map[api.TaskID]util.NPUTask {
+	var allocateRank []string
+	for i := 0; i < len(resultMap); i++ {
+		if usedRanks[strconv.Itoa(i)] {
+			continue
+		}
+		allocateRank = append(allocateRank, strconv.Itoa(i))
+	}
+	if len(allocateRank) == 0 {
+		return resultMap
+	}
+	newResultMap := make(map[api.TaskID]util.NPUTask, len(resultMap))
+	var i int
+	for k, v := range resultMap {
+		if _, ok := v.Annotation[PodRankIndexKey]; !ok && i < len(allocateRank) {
+			v.Annotation[PodRankIndexKey] = allocateRank[i]
+			index, err := strconv.Atoi(allocateRank[i])
+			if err != nil {
+				klog.V(util.LogDebugLev).Infof("updateTaskNotUsedHcclRankIndex %s task index %s.",
+					v.Name, allocateRank[i])
+				continue
+			}
+			v.Index = index
+			i++
+		}
+		newResultMap[k] = v
+	}
+	return newResultMap
 }
 
 // isJobInitial Determine if the task is ready.
@@ -440,16 +484,29 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 		return err
 	}
 	sJob.initCommonJob(vcJob)
-	if sJob.Owner.Kind == ReplicaSetType {
+
+	k, ok := sJob.Annotation[util.MinAvailableKey]
+	if sJob.Owner.Kind == ReplicaSetType && !ok {
 		num *= int(*sJob.Owner.Replicas)
+		sJob.MinAvailable = *sJob.Owner.Replicas
 		sJob.Annotation = sJob.Owner.Annotations
 	}
+	if ok && vcJob.MinAvailable == util.NPUIndex1 {
+		taskMinAvailable, err := strconv.Atoi(k)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("get job %s minAvailable err:%s", vcJob.Name, err)
+			taskMinAvailable = util.NPUIndex1
+		}
+		num *= taskMinAvailable
+		sJob.MinAvailable = int32(taskMinAvailable)
+	}
+
 	sJob.initNPUJob(vcJob, name, num)
 	return nil
 }
 
 func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum int) {
-	sJob.SchedulerJobAttr.NPUJob = &util.NPUJob{ReqNPUName: npuName, ReqNPUNum: npuNum, Tasks: GetJobNPUTasks(vcJob)}
+	sJob.SchedulerJobAttr.NPUJob = &util.NPUJob{ReqNPUName: npuName, ReqNPUNum: npuNum, Tasks: InitJobNPUTasks(vcJob)}
 	sJob.setJobSubHealthyStrategy()
 	sJob.setSpBlock()
 	sJob.setTpBlock()
@@ -477,6 +534,7 @@ func (sJob *SchedulerJob) initCommonJob(vcJob *api.JobInfo) {
 		Label:         getJobLabelFromVcJob(vcJob),
 		Status:        string(vcJob.PodGroup.Status.Phase),
 		Annotation:    getJobAnnotationFromJobInfo(vcJob),
+		MinAvailable:  vcJob.MinAvailable,
 	}
 }
 
@@ -526,25 +584,28 @@ func (sJob SchedulerJob) isNPUJob() bool {
 
 // validJobFn valid job.
 func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
-	if sJob.Owner.Kind == ReplicaSetType {
-		if len(sJob.Tasks) < int(*sJob.Owner.Replicas) {
+	if int32(len(sJob.Tasks)) < sJob.MinAvailable {
+		return &api.ValidateResult{
+			Message: fmt.Sprintf("job %s task num %d "+
+				"less than replicas %d", sJob.Name, len(sJob.Tasks), sJob.MinAvailable),
+			Reason: "job is not ready",
+			Pass:   false,
+		}
+	}
+	if k, ok := sJob.Annotation[util.MinAvailableKey]; ok {
+		_, err := strconv.Atoi(k)
+		if err != nil {
 			return &api.ValidateResult{
-				Message: fmt.Sprintf("job %s task num %d less than replicas %d", sJob.Name, len(sJob.Tasks), *sJob.Owner.Replicas),
+				Message: fmt.Sprintf("job %s task minAvailable %v is invalid", sJob.Name, k),
 				Reason:  "job is not ready",
 				Pass:    false,
 			}
 		}
-		i := 0
-		for id := range sJob.Tasks {
-			task := sJob.Tasks[id]
-			task.Index = i
-			sJob.Tasks[id] = task
-			i++
-		}
 	}
 	if sJob.policyHandler == nil {
 		if sJob.NPUJob != nil && sJob.NPUJob.IsNPUJob() {
-			klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by job<%s> policyHandler is nil.", PluginName, sJob.Name)
+			klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by "+
+				"job<%s> policyHandler is nil.", PluginName, sJob.Name)
 		}
 		return nil
 	}
