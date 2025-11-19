@@ -55,7 +55,7 @@ func TestUpdateSwitchFaultLevel(t *testing.T) {
 		separateCode := "[0x00f103b0,155649,na,na]"
 		mockNotHandleCodes := gomonkey.ApplyGlobalVar(&common.NotHandleFaultCodes, []string{notHandleCode})
 		defer mockNotHandleCodes.Reset()
-		mockRestartRequestCodes := gomonkey.ApplyGlobalVar(&common.RestartRequestCodes, []string{restartRequestCode})
+		mockRestartRequestCodes := gomonkey.ApplyGlobalVar(&common.RestartRequestFaultCodes, []string{restartRequestCode})
 		defer mockRestartRequestCodes.Reset()
 		mockPreseparateCodes := gomonkey.ApplyGlobalVar(&common.PreSeparateFaultCodes, []string{preSeparateCode})
 		defer mockPreseparateCodes.Reset()

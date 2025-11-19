@@ -87,8 +87,8 @@ const (
 	NotHandleFaultCodesStr = "NotHandleFaultCodes"
 	// SubHealthFaultCodesStr is the string for SubHealthFaultCodes
 	SubHealthFaultCodesStr = "SubHealthFaultCodes"
-	// RestartRequestCodesStr is the string for RestartRequestCodes
-	RestartRequestCodesStr = "RestartRequestCodes"
+	// RestartRequestFaultCodesStr is the string for RestartRequestCodes
+	RestartRequestFaultCodesStr = "RestartRequestFaultCodes"
 	// PreSeparateFaultCodesStr is the string for PreSeparateFaultCodes
 	PreSeparateFaultCodesStr = "PreSeparateFaultCodes"
 	// SeparateFaultCodesStr is the string for SeparateFaultCodes
@@ -101,8 +101,8 @@ var (
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
 	// SubHealthFaultCodes contains all fault code that believed to be SubHealth
 	SubHealthFaultCodes = make([]string, 0, GeneralMapSize)
-	// RestartRequestCodes contains all fault code that believed to be RestartRequest
-	RestartRequestCodes = make([]string, 0, GeneralMapSize)
+	// RestartRequestFaultCodes contains all fault code that believed to be RestartRequest
+	RestartRequestFaultCodes = make([]string, 0, GeneralMapSize)
 	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// SeparateFaultCodes contains all fault code that believed to be Separate
@@ -204,12 +204,12 @@ type faultFileInfo struct {
 
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
 type SwitchFaultFileInfo struct {
-	NotHandleFaultCodes   []string
-	SubHealthFaultCodes   []string
-	RestartRequestCodes   []string
-	PreSeparateFaultCodes []string
-	ResetFaultCodes       []string
-	SeparateFaultCodes    []string
+	NotHandleFaultCodes      []string
+	SubHealthFaultCodes      []string
+	RestartRequestFaultCodes []string
+	PreSeparateFaultCodes    []string
+	ResetFaultCodes          []string
+	SeparateFaultCodes       []string
 }
 
 // FaultCustomization is the customization info of fault
@@ -523,7 +523,7 @@ func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 	}
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
 	SubHealthFaultCodes = make([]string, 0, GeneralMapSize)
-	RestartRequestCodes = make([]string, 0, GeneralMapSize)
+	RestartRequestFaultCodes = make([]string, 0, GeneralMapSize)
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
@@ -534,7 +534,7 @@ func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 	}{
 		{switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes, NotHandleFaultCodesStr},
 		{switchFileInfo.SubHealthFaultCodes, &SubHealthFaultCodes, SubHealthFaultCodesStr},
-		{switchFileInfo.RestartRequestCodes, &RestartRequestCodes, RestartRequestCodesStr},
+		{switchFileInfo.RestartRequestFaultCodes, &RestartRequestFaultCodes, RestartRequestFaultCodesStr},
 		{switchFileInfo.PreSeparateFaultCodes, &PreSeparateFaultCodes, PreSeparateFaultCodesStr},
 		{switchFileInfo.SeparateFaultCodes, &SeparateFaultCodes, SeparateFaultCodesStr},
 	}
