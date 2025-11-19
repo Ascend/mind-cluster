@@ -21,7 +21,9 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -90,6 +92,10 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 		return jobPipelined(obj, tp)
 	})
 
+	ssn.AddJobOrderFn(tp.Name(), func(l interface{}, r interface{}) int {
+		return jobOrderFn(l, r)
+	})
+
 	addBatchNodeOrderFn(ssn, tp)
 
 	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
@@ -106,6 +112,8 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 	// Register event handlers to update task info in PodLister & nodeMap
 	// for support Concurrency
 	addEventHandler(ssn, tp)
+
+	updatePgAnnotation(ssn)
 }
 
 // OnSessionClose Close session by volcano frame.
@@ -220,6 +228,7 @@ func jobEnqueueable(job interface{}, ssn *framework.Session, tp *huaweiNPUPlugin
 	if !ok {
 		return util.JobEnqueueSkip
 	}
+	jobDequeueForTimeout(vcjob, ssn)
 	npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
 	if !tp.Scheduler.NPUPlugins.Has(npuName) {
 		return util.JobEnqueueSkip
@@ -268,4 +277,112 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 		tNpuNum += len(deviceList)
 	}
 	return tNpuNum
+}
+
+func jobOrderFn(interfaceA interface{}, interfaceB interface{}) int {
+	jobInfoA, ok := interfaceA.(*api.JobInfo)
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("jobOrderFn failed, object is not JobInfo")
+		return util.JobOrderSamePriority
+	}
+	jobInfoB, ok := interfaceB.(*api.JobInfo)
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("jobOrderFn failed, object is not JobInfo")
+		return util.JobOrderSamePriority
+	}
+	var lNum, rNum = 0, 0
+	var err error = nil
+	lStrNum, lExist := jobInfoA.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
+	if lExist && lStrNum != "" {
+		lNum, err = strconv.Atoi(lStrNum)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("jobOrderFn failed, convert dequeue frequency failed, "+
+				"strNum: %s, err: %v", lStrNum, err)
+			return util.JobOrderSamePriority
+		}
+	}
+	rStrNum, rExist := jobInfoB.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
+	if rExist && rStrNum != "" {
+		rNum, err = strconv.Atoi(rStrNum)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("jobOrderFn failed, convert dequeue frequency failed, "+
+				"strNum: %s, err: %v", rStrNum, err)
+			return util.JobOrderSamePriority
+		}
+	}
+	if lNum > rNum {
+		return util.JobOrderLowPriority
+	} else if lNum < rNum {
+		return util.JobOrderHighPriority
+	} else {
+		return util.JobOrderSamePriority
+	}
+}
+
+func updatePgAnnotation(ssn *framework.Session) {
+	for _, jobInfo := range ssn.Jobs {
+		if jobInfo.PodGroup == nil {
+			continue
+		}
+		annoMap := jobInfo.PodGroup.Annotations
+		if annoMap == nil {
+			annoMap = make(map[string]string)
+			jobInfo.PodGroup.Annotations = annoMap
+		}
+		if jobInfo.PodGroup.Status.Phase == util.PodGroupInqueue {
+			if _, exist := annoMap[util.EnqueueTimeAnnoKey]; !exist {
+				annoMap[util.EnqueueTimeAnnoKey] = strconv.FormatInt(time.Now().UnixMilli(), util.Base10)
+			}
+			continue
+		} else if !jobInfo.IsPending() {
+			delete(annoMap, util.EnqueueTimeAnnoKey)
+			delete(annoMap, util.DequeueFrequencyAnnoKey)
+		}
+	}
+}
+
+func jobDequeueForTimeout(vcjob *api.JobInfo, ssn *framework.Session) {
+	for _, job := range ssn.Jobs {
+		if job.Queue != vcjob.Queue {
+			continue
+		}
+		if job.PodGroup == nil || job.PodGroup.Status.Phase != util.PodGroupInqueue {
+			continue
+		}
+		if val, exist := job.PodGroup.Annotations[util.EnableDequeueAnnoKey]; !exist || val != util.EnableDequeueOnVal {
+			continue
+		}
+		enqueueTimeStr, exist := job.PodGroup.Annotations[util.EnqueueTimeAnnoKey]
+		if !exist {
+			continue
+		}
+		enqueueTime, err := strconv.ParseInt(enqueueTimeStr, util.Base10, util.BitSize64)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("convert job <%s> enqueue time failed: %v", vcjob.Name, err)
+			continue
+		}
+		if time.Now().UnixMilli()-enqueueTime > int64(util.EnqueueTimeOut) {
+			execJobDequeue(ssn, job)
+		}
+	}
+}
+
+func execJobDequeue(ssn *framework.Session, job *api.JobInfo) {
+	klog.V(util.LogInfoLev).Infof(" <%s> dequeue", job.Name)
+	job.PodGroup.Status.Phase = ""
+	delete(job.PodGroup.Annotations, util.EnqueueTimeAnnoKey)
+	ssn.Jobs[job.UID] = job
+	dequeStartTimes := "1"
+	dequeueTimesStr, exist := job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
+	if !exist {
+		job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey] = dequeStartTimes
+		return
+	}
+	dequeueTimes, err := strconv.ParseInt(dequeueTimesStr, util.Base10, util.BitSize64)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("convert job <%s> dequeue frequency failed: %v", job.Name, err)
+		job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey] = dequeStartTimes
+	} else {
+		job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey] = strconv.FormatInt(dequeueTimes+1, util.Base10)
+	}
 }

@@ -20,12 +20,15 @@ Package main is using for HuaWei Ascend pin affinity schedule.
 package main
 
 import (
+	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -406,5 +409,252 @@ func TestJobPipelined(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("jobEnqueueable(%v, %v) = %v, want %v", tc.job, tc.plg, got, tc.want)
 		}
+	}
+}
+
+func mockJobWithAnnotation(anno map[string]string, uid, phase string) *api.JobInfo {
+	return &api.JobInfo{
+		Queue: "mockQueue",
+		Name:  uid,
+		UID:   api.JobID(uid),
+		PodGroup: &api.PodGroup{PodGroup: scheduling.PodGroup{
+			ObjectMeta: metav1.ObjectMeta{Annotations: anno},
+			Status:     scheduling.PodGroupStatus{Phase: scheduling.PodGroupPhase(phase)},
+		}}}
+}
+
+type testJobOrderType struct {
+	name string
+	job1 interface{}
+	job2 interface{}
+	want int
+}
+
+func mockJobOrderTestCase() []testJobOrderType {
+	return []testJobOrderType{
+		{
+			name: "job1 is not JobInfo Type, order same",
+			job1: &api.TaskInfo{},
+			job2: &api.JobInfo{},
+			want: util.JobOrderSamePriority,
+		},
+		{
+			name: "job2 is not JobInfo Type, order same",
+			job1: &api.JobInfo{},
+			job2: &api.TaskInfo{},
+			want: util.JobOrderSamePriority,
+		},
+		{
+			name: "job1 dequeueTimes anno is invalid, order same",
+			job1: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1.1"}, "job1", ""),
+			job2: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job2", ""),
+			want: util.JobOrderSamePriority,
+		},
+		{
+			name: "job2 dequeueTimes anno is invalid, order same",
+			job1: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job1", ""),
+			job2: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "test"}, "job2", ""),
+			want: util.JobOrderSamePriority,
+		},
+		{
+			name: "job1 dequeueTimes anno value is lower than job2's, order high",
+			job1: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job1", ""),
+			job2: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "2"}, "job2", ""),
+			want: util.JobOrderHighPriority,
+		},
+		{
+			name: "job1 dequeueTimes anno value is higher than job2's, order low",
+			job1: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "2"}, "job1", ""),
+			job2: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job2", ""),
+			want: util.JobOrderLowPriority,
+		},
+		{
+			name: "job1 dequeueTimes anno value is equal to job2's, order same",
+			job1: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job1", ""),
+			job2: mockJobWithAnnotation(map[string]string{util.DequeueFrequencyAnnoKey: "1"}, "job2", ""),
+			want: util.JobOrderSamePriority,
+		},
+	}
+}
+
+func TestJobOrderFn(t *testing.T) {
+	tests := mockJobOrderTestCase()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := jobOrderFn(tt.job1, tt.job2)
+			if got != tt.want {
+				t.Errorf("jobOrderFn got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type testUpdatePgAnnotationType struct {
+	name  string
+	job   *api.JobInfo
+	mocks func() *gomonkey.Patches
+	want  map[string]string
+}
+
+func mockUpdatePgAnnotationTestCase() []testUpdatePgAnnotationType {
+	return []testUpdatePgAnnotationType{
+		{
+			name: "Inqueue job with annotation, should not update annotation",
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnqueueTimeAnnoKey: "1234",
+			}, "job1", util.PodGroupInqueue),
+			want: map[string]string{util.EnqueueTimeAnnoKey: "1234"},
+		},
+		{
+			name: "Inqueue job without annotation, should add annotation",
+			job:  mockJobWithAnnotation(nil, "job2", util.PodGroupInqueue),
+			mocks: func() *gomonkey.Patches {
+				return gomonkey.ApplyFunc(strconv.FormatInt,
+					func(i int64, base int) string {
+						return "1234"
+					})
+			},
+			want: map[string]string{util.EnqueueTimeAnnoKey: "1234"},
+		},
+		{
+			name: "running job with annotations, should delete annotations",
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnqueueTimeAnnoKey:      "1234",
+				util.DequeueFrequencyAnnoKey: "11",
+			}, "job3", util.PodGroupRunning),
+			want: map[string]string{},
+		},
+	}
+}
+
+func TestUpdatePgAnnotation(t *testing.T) {
+	tests := mockUpdatePgAnnotationTestCase()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var patch *gomonkey.Patches = nil
+			if tt.mocks != nil {
+				patch = tt.mocks()
+			}
+			ssn := &framework.Session{Jobs: map[api.JobID]*api.JobInfo{tt.job.UID: tt.job}}
+			updatePgAnnotation(ssn)
+			if patch != nil {
+				patch.Reset()
+			}
+			got := tt.job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
+			if !reflect.DeepEqual(tt.job.PodGroup.Annotations, tt.want) {
+				t.Errorf("updatePgAnnotation got %v, want %v", got, tt.job.PodGroup.Annotations)
+			}
+		})
+	}
+}
+
+type testJobDequeueForTimeoutType struct {
+	name  string
+	vcJob *api.JobInfo
+	job   *api.JobInfo
+	got   string
+}
+
+func mockJobDequeueForTimeoutTestCase() []testJobDequeueForTimeoutType {
+	return []testJobDequeueForTimeoutType{
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: &api.JobInfo{Queue: "fakeQueue-1"},
+			job:   mockJobWithAnnotation(map[string]string{}, "job2", util.PodGroupInqueue),
+			got:   util.PodGroupInqueue,
+		},
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupPending),
+			job:   mockJobWithAnnotation(map[string]string{}, "job2", util.PodGroupPending),
+			got:   util.PodGroupPending,
+		},
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupPending),
+			job:   mockJobWithAnnotation(map[string]string{}, "job2", util.PodGroupInqueue),
+			got:   util.PodGroupInqueue,
+		},
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupPending),
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnableDequeueAnnoKey: util.EnableDequeueOnVal,
+			}, "job2", util.PodGroupInqueue),
+			got: util.PodGroupInqueue,
+		},
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupPending),
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnableDequeueAnnoKey: util.EnableDequeueOnVal,
+				util.EnqueueTimeAnnoKey:   "test",
+			}, "job2", util.PodGroupInqueue),
+			got: util.PodGroupInqueue,
+		},
+		{
+			name:  "job without dequeue annotation, should set to 1",
+			vcJob: mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupPending),
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnableDequeueAnnoKey: util.EnableDequeueOnVal,
+				util.EnqueueTimeAnnoKey:   "1234",
+			}, "job2", util.PodGroupInqueue),
+			got: "",
+		},
+	}
+}
+
+func TestJobDequeueForTimeout(t *testing.T) {
+	tests := mockJobDequeueForTimeoutTestCase()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ssn := &framework.Session{Jobs: map[api.JobID]*api.JobInfo{tt.job.UID: tt.job}}
+			// Execute
+			jobDequeueForTimeout(tt.vcJob, ssn)
+			if tt.got != string(tt.job.PodGroup.Status.Phase) {
+				t.Errorf("jobDequeueForTimeout got %v, want %v", tt.got, string(tt.job.PodGroup.Status.Phase))
+			}
+		})
+	}
+}
+
+func TestExecJobDequeue(t *testing.T) {
+	tests := []struct {
+		name                 string
+		job                  *api.JobInfo
+		expectedDequeueTimes string
+	}{
+		{
+			name:                 "job without dequeue annotation, should set to 1",
+			job:                  mockJobWithAnnotation(map[string]string{}, "job1", util.PodGroupInqueue),
+			expectedDequeueTimes: "1",
+		},
+		{
+			name: "job with existing dequeue annotation should increment",
+			job: mockJobWithAnnotation(map[string]string{
+				util.DequeueFrequencyAnnoKey: "5",
+			}, "job2", util.PodGroupInqueue),
+			expectedDequeueTimes: "6",
+		},
+		{
+			name: "job with invalid dequeue annotation should reset to 1",
+			job: mockJobWithAnnotation(map[string]string{
+				util.DequeueFrequencyAnnoKey: "5.5",
+			}, "job3", util.PodGroupInqueue),
+			expectedDequeueTimes: "1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ssn := &framework.Session{Jobs: map[api.JobID]*api.JobInfo{}}
+			execJobDequeue(ssn, tt.job)
+			got := tt.job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
+			if got != tt.expectedDequeueTimes {
+				t.Errorf("jobEnqueueable got %v, want %v", got, tt.expectedDequeueTimes)
+			}
+		})
 	}
 }
