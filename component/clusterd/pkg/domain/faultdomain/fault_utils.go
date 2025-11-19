@@ -643,3 +643,19 @@ func GetDeviceIdByDeviceName(deviceName string) (string, error) {
 	}
 	return fields[len(fields)-1], nil
 }
+
+// GetNodeMostSeriousFaultLevel get node most serious fault level
+func GetNodeMostSeriousFaultLevel(faultLevels []string) string {
+	severityOrder := []string{
+		constant.SeparateFault,
+		constant.PreSeparateFault,
+		constant.NotHandleFault,
+	}
+	faultSet := sets.NewString(faultLevels...)
+	for _, level := range severityOrder {
+		if faultSet.Has(level) {
+			return level
+		}
+	}
+	return constant.NotHandleFault
+}

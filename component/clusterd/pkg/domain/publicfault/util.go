@@ -60,6 +60,10 @@ func GetFaultLevelByCode(faultCode string) string {
 	if ok {
 		return constant.SeparateNPU
 	}
+	_, ok = PubFaultCodeCfg.PreSeparateNPUCodes[faultCode]
+	if ok {
+		return constant.PreSeparateNPU
+	}
 	_, ok = PubFaultCodeCfg.SubHealthFaultCodes[faultCode]
 	if ok {
 		return constant.SubHealthFault

@@ -83,19 +83,29 @@ const (
 	PollingInterval time.Duration = DefaultPollingInterval
 	// SubHealthFault subHealth code
 	SubHealthFault = "SubHealthFault"
-	// CardAbnoramlOccupyFaultCode card abnoraml occupy fault code
-	CardAbnoramlOccupyFaultCode = 0xFFFFFFFF01
+	// NotHandleFaultCodesStr is the string for NotHandleFaultCodes
+	NotHandleFaultCodesStr = "NotHandleFaultCodes"
+	// SubHealthFaultCodesStr is the string for SubHealthFaultCodes
+	SubHealthFaultCodesStr = "SubHealthFaultCodes"
+	// RestartRequestCodesStr is the string for RestartRequestCodes
+	RestartRequestCodesStr = "RestartRequestCodes"
+	// PreSeparateFaultCodesStr is the string for PreSeparateFaultCodes
+	PreSeparateFaultCodesStr = "PreSeparateFaultCodes"
+	// SeparateFaultCodesStr is the string for SeparateFaultCodes
+	SeparateFaultCodesStr = "SeparateFaultCodes"
 )
 
 var (
 	faultTypeCode = FaultTypeCode{}
-	// NotHandleFaultCodes contains all fault code that believed to be not handled, in this case is L1
+	// NotHandleFaultCodes contains all fault code that believed to be not handled
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
-	// RestartRequestCodes contains all fault code that believed to be RestartRequest, in this case is L2
+	// SubHealthFaultCodes contains all fault code that believed to be SubHealth
+	SubHealthFaultCodes = make([]string, 0, GeneralMapSize)
+	// RestartRequestCodes contains all fault code that believed to be RestartRequest
 	RestartRequestCodes = make([]string, 0, GeneralMapSize)
-	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate, in this case is L3
+	// PreSeparateFaultCodes contains all fault code that believed to be PreSeparate
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
-	// SeparateFaultCodes contains all fault code that believed to be Separate, in this case is L4-L5
+	// SeparateFaultCodes contains all fault code that believed to be Separate
 	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	// initLogicIDs need init fault code device. add by train or inference
 	initLogicIDs []int32
@@ -194,11 +204,12 @@ type faultFileInfo struct {
 
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
 type SwitchFaultFileInfo struct {
-	NotHandleFaultCodes []string
-	RestartRequestCodes []string
-	SubHealthFaultCodes []string
-	ResetFaultCodes     []string
-	SeparateFaultCodes  []string
+	NotHandleFaultCodes   []string
+	SubHealthFaultCodes   []string
+	RestartRequestCodes   []string
+	PreSeparateFaultCodes []string
+	ResetFaultCodes       []string
+	SeparateFaultCodes    []string
 }
 
 // FaultCustomization is the customization info of fault
@@ -421,7 +432,6 @@ func LoadFaultCode(faultCodeBytes []byte) error {
 		SeparateNPUNetworkCodes:    StringTool.HexStringToInt(fileInfo.SeparateNPUNetworkCodes),
 		SubHealthFaultCodes:        StringTool.HexStringToInt(fileInfo.SubHealthFaultCodes),
 	}
-	faultTypeCode.PreSeparateNPUCodes = append(faultTypeCode.PreSeparateNPUCodes, CardAbnoramlOccupyFaultCode)
 
 	// It is not clear whether the current network fault is separated from the chip fault. The network fault configured
 	// in chip fault is temporarily mapped to network processing policy for processing.
@@ -494,7 +504,7 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 	return nil
 }
 
-func loadVaildSwitchFaultCode(codes []string, target *[]string, codeType string) {
+func loadValidSwitchFaultCode(codes []string, target *[]string, codeType string) {
 	for _, code := range codes {
 		if !isValidSwitchFaultCode(code) {
 			hwlog.RunLog.Warnf("failed to parse %s faultCode:%v, will ignore it,"+
@@ -512,14 +522,26 @@ func LoadSwitchFaultCode(switchFaultCodeByte []byte) error {
 		return fmt.Errorf("failed to unmarshal switch fault code, err: %s", err.Error())
 	}
 	NotHandleFaultCodes = make([]string, 0, GeneralMapSize)
+	SubHealthFaultCodes = make([]string, 0, GeneralMapSize)
 	RestartRequestCodes = make([]string, 0, GeneralMapSize)
 	PreSeparateFaultCodes = make([]string, 0, GeneralMapSize)
 	SeparateFaultCodes = make([]string, 0, GeneralMapSize)
-	loadVaildSwitchFaultCode(switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes, "NotHandleFaultCodes")
-	loadVaildSwitchFaultCode(switchFileInfo.RestartRequestCodes, &RestartRequestCodes, "RestartRequestCodes")
-	loadVaildSwitchFaultCode(switchFileInfo.SubHealthFaultCodes, &PreSeparateFaultCodes, "SubHealthFaultCodes")
 	switchFileInfo.SeparateFaultCodes = append(switchFileInfo.SeparateFaultCodes, switchFileInfo.ResetFaultCodes...)
-	loadVaildSwitchFaultCode(switchFileInfo.SeparateFaultCodes, &SeparateFaultCodes, "SeparateFaultCodes")
+	faultGroups := []struct {
+		source []string
+		target *[]string
+		name   string
+	}{
+		{switchFileInfo.NotHandleFaultCodes, &NotHandleFaultCodes, NotHandleFaultCodesStr},
+		{switchFileInfo.SubHealthFaultCodes, &SubHealthFaultCodes, SubHealthFaultCodesStr},
+		{switchFileInfo.RestartRequestCodes, &RestartRequestCodes, RestartRequestCodesStr},
+		{switchFileInfo.PreSeparateFaultCodes, &PreSeparateFaultCodes, PreSeparateFaultCodesStr},
+		{switchFileInfo.SeparateFaultCodes, &SeparateFaultCodes, SeparateFaultCodesStr},
+	}
+	for _, group := range faultGroups {
+		loadValidSwitchFaultCode(group.source, group.target, group.name)
+	}
+
 	return nil
 }
 

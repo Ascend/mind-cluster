@@ -106,20 +106,26 @@ type SwitchDevManager struct {
 
 // UpdateSwitchFaultLevel update the map recording fault code and it's level, as long as deviceinfo changed
 func UpdateSwitchFaultLevel() {
+	// The data source define the mapping relationship between fault codes and levels (grouped by level)
+	faultCodeGroups := []struct {
+		codes []string
+		level int
+	}{
+		{common.NotHandleFaultCodes, common.NotHandleFaultLevel},
+		{common.SubHealthFaultCodes, common.SubHealthFaultLevel},
+		{common.RestartRequestCodes, common.RestartRequestFaultLevel},
+		{common.PreSeparateFaultCodes, common.PreSeparateFaultLevel},
+		{common.SeparateFaultCodes, common.SeparateFaultLevel},
+	}
+
 	common.SwitchFaultLevelMapLock.Lock()
 	defer common.SwitchFaultLevelMapLock.Unlock()
+
 	common.SwitchFaultLevelMap = make(map[string]int, common.GeneralMapSize)
-	for _, code := range common.NotHandleFaultCodes {
-		common.SwitchFaultLevelMap[code] = common.NotHandleFaultLevel
-	}
-	for _, code := range common.RestartRequestCodes {
-		common.SwitchFaultLevelMap[code] = common.RestartRequestFaultLevel
-	}
-	for _, code := range common.PreSeparateFaultCodes {
-		common.SwitchFaultLevelMap[code] = common.PreSeparateFaultLevel
-	}
-	for _, code := range common.SeparateFaultCodes {
-		common.SwitchFaultLevelMap[code] = common.SeparateFaultLevel
+	for _, group := range faultCodeGroups {
+		for _, code := range group.codes {
+			common.SwitchFaultLevelMap[code] = group.level
+		}
 	}
 }
 
