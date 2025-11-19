@@ -168,7 +168,8 @@ type RankTable struct {
 // ServerHccl to hccl
 type ServerHccl struct {
 	DeviceList   []Device `json:"device"`
-	ServerID     string   `json:"server_id"` // host ip
+	ServerID     string   `json:"server_id"`
+	HostIp       string   `json:"host_ip"` // host ip
 	SuperPodId   int      `json:"super_pod_id"`
 	PodID        string   `json:"-"`
 	PodNameSpace string   `json:"-"`
@@ -188,7 +189,8 @@ type Device struct {
 type PodDevice struct {
 	Devices    []Device `json:"devices"`
 	PodName    string   `json:"pod_name"`
-	ServerID   string   `json:"server_id"` // host ip
+	ServerID   string   `json:"server_id"`
+	HostIp     string   `json:"host_ip"`
 	SuperPodId int      `json:"super_pod_id"`
 }
 
@@ -330,6 +332,7 @@ type FaultDevice struct {
 	ServerName      string
 	ServerSN        string
 	ServerId        string
+	HostIp          string
 	DeviceId        string
 	FaultCode       string
 	FaultLevel      string

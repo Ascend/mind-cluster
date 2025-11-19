@@ -190,7 +190,7 @@ func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod)
 	jobInfo.SharedTorIp = pod.GetSharedTorIpByPod(podsInJob)
 	if jobInfo.JobType == vcJobKind {
 		if len(jobInfo.JobRankTable.ServerList) > 0 {
-			jobInfo.MasterAddr = jobInfo.JobRankTable.ServerList[0].ServerID
+			jobInfo.MasterAddr = jobInfo.JobRankTable.ServerList[0].HostIp
 		}
 	} else {
 		jobInfo.MasterAddr = pod.GetEnvByPod(podsInJob, masterAddr)
@@ -244,6 +244,7 @@ func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerH
 		copyServerHccl := constant.ServerHccl{
 			DeviceList:   make([]constant.Device, 0),
 			ServerID:     server.ServerID,
+			HostIp:       server.HostIp,
 			PodID:        server.PodID,
 			PodNameSpace: server.PodNameSpace,
 			ServerName:   server.ServerName,

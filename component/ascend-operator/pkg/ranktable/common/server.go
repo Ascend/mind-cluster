@@ -22,6 +22,7 @@ type Server struct {
 type Instance struct { // Instance
 	PodName    string `json:"pod_name"`  // pod Name
 	ServerID   string `json:"server_id"` // serverdId
+	HostIp     string `json:"host_ip"`   // hostIp
 	SuperPodId int32  `json:"super_pod_id"`
 	Devices    []Dev  `json:"devices"` // dev
 }

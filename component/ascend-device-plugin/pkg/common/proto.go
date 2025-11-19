@@ -137,6 +137,7 @@ type Device struct { // Device
 type Instance struct { // Instance
 	PodName    string   `json:"pod_name"`  // pod Name
 	ServerID   string   `json:"server_id"` // serverdId
+	HostIP     string   `json:"host_ip"`   // hostIp
 	SuperPodId int32    `json:"super_pod_id"`
 	Devices    []Device `json:"devices"` // dev
 }

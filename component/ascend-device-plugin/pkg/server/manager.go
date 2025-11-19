@@ -988,19 +988,19 @@ func (hdm *HwDevManager) handleDeleteEvent(deleteFile string) {
 }
 
 func (hdm *HwDevManager) updatePodAnnotation() error {
-	serverID, err := hdm.manager.GetKubeClient().GetNodeServerIDCache()
+	nodeIp, err := hdm.manager.GetKubeClient().GetNodeIpCache()
 	if err != nil {
 		return fmt.Errorf("get node server id failed: %v", err)
 	}
 	if !common.ParamOption.PresetVDevice {
-		return hdm.updateSpecTypePodAnnotation(common.AiCoreResourceName, serverID)
+		return hdm.updateSpecTypePodAnnotation(common.AiCoreResourceName, nodeIp)
 	}
 	for _, devType := range hdm.allInfo.AllDevTypes {
 		// for 310P vnpu no need update
 		if common.IsVirtualDev(devType) && !strings.HasPrefix(devType, api.Ascend910) {
 			continue
 		}
-		if err := hdm.updateSpecTypePodAnnotation(devType, serverID); err != nil {
+		if err := hdm.updateSpecTypePodAnnotation(devType, nodeIp); err != nil {
 			hwlog.RunLog.Warnf("update pod annotation failed, %v", err)
 		}
 	}
@@ -1048,7 +1048,7 @@ func (hdm *HwDevManager) tryToClearResetInfoCM(pod v1.Pod) error {
 
 // updateSpecTypePodAnnotation will update annotation of pod and
 // try to clear reset info config map which may not be initialized after rescheduling
-func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string) error {
+func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, hostIp string) error {
 	element, exist := hdm.ServerMap[deviceType]
 	if !exist {
 		return fmt.Errorf("not found %s plugin server", deviceType)
@@ -1074,7 +1074,7 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 			continue
 		}
 		hwlog.RunLog.Debugf("%s, %d, %v", deviceInfo.Pod.Name, len(deviceInfo.KltDevice), deviceInfo.RealDevice)
-		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, serverID, hdm.allInfo.AllDevs); err != nil {
+		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, hostIp, hdm.allInfo.AllDevs); err != nil {
 			hwlog.RunLog.Errorf("update pod %s_%s annotation failed, %v", deviceInfo.Pod.Namespace,
 				deviceInfo.Pod.Name, err)
 		}

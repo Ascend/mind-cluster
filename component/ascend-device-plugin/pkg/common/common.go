@@ -58,6 +58,7 @@ var (
 // ServerInfo used for pass parameters
 type ServerInfo struct {
 	ServerID   string
+	HostIp     string
 	DeviceType string
 	SuperPodID int32
 }
@@ -492,7 +493,12 @@ func GetPodConfiguration(phyDevMapVirtualDev map[int]int, devices map[int]string
 	}
 
 	sort.Ints(sortDevicesKey)
-	instance := Instance{PodName: podName, ServerID: info.ServerID, SuperPodId: info.SuperPodID}
+	instance := Instance{
+		PodName:    podName,
+		ServerID:   info.ServerID,
+		HostIP:     info.HostIp,
+		SuperPodId: info.SuperPodID,
+	}
 	for _, deviceID := range sortDevicesKey {
 		if !IsVirtualDev(info.DeviceType) {
 			instance.Devices = append(instance.Devices, Device{
