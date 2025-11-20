@@ -186,7 +186,7 @@ static bool CheckWhiteList(const char* fileName)
         {"/usr/lib64/libadump.so"}, {"/usr/lib64/libtsd_eventclient.so"},
         {"/usr/lib64/aicpu_kernels"}, {"/usr/lib64/libyaml-0.so.2"},
         {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"},
-        {"/var/queue_schedule"}
+        {"/var/queue_schedule"}, {"/etc/hccl_rootinfo.json"}, {"/usr/local/Ascend/driver/topo"}
         };
 
     for (size_t iLoop = 0; iLoop < WHITE_LIST_NUM; iLoop++) {

@@ -48,6 +48,8 @@ const (
 	configDir              = api.RunTimeDConfigPath
 	baseConfig             = "base"
 	configFileSuffix       = "list"
+	hcclRootInfo           = "/etc/hccl_rootinfo.json"
+	topoDirPath            = "/usr/local/Ascend/driver/topo"
 
 	kvPairSize = 2
 	// MaxCommandLength is the max length of command.
@@ -348,6 +350,10 @@ func DoPrestartHook() error {
 	if err != nil {
 		return fmt.Errorf("failed to read configuration from config directory: %#v", err)
 	}
+	// adapt a5 ub mount
+	fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
+	hwlog.RunLog.Infof("mount files: [%v]", strings.Join(fileMountList, ", "))
+	hwlog.RunLog.Infof("mount directories: [%v]", strings.Join(dirMountList, ", "))
 
 	parsedOptions, err := parseRuntimeOptions(getValueByKey(containerConfig.Env, ascendRuntimeOptions))
 	if err != nil {
@@ -383,4 +389,25 @@ func DoPrestartHook() error {
 		return fmt.Errorf("failed to exec docker-cli %v: %v", args, err)
 	}
 	return nil
+}
+
+func addUBMount(fileMountList []string, dirMountList []string) ([]string, []string) {
+	ubMountItems := []string{
+		hcclRootInfo,
+		topoDirPath,
+	}
+	for _, mountItem := range ubMountItems {
+		mountItemInfo, err := os.Stat(mountItem)
+		if err != nil {
+			hwlog.RunLog.Debugf("%s may not exists, error: %v", mountItem, err)
+			continue
+		}
+		if mountItemInfo.Mode().IsDir() {
+			dirMountList = append(dirMountList, mountItem)
+			continue
+		}
+		fileMountList = append(fileMountList, mountItem)
+	}
+
+	return fileMountList, dirMountList
 }

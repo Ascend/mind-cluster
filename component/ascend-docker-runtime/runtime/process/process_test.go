@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -1041,6 +1042,172 @@ func TestAddManagerDevice(t *testing.T) {
 	assert.Nil(t, err)
 	err = addManagerDevice(&spec)
 	assert.Nil(t, err)
+}
+
+// TestAddUBDevice tests the function addUBDevice
+func TestAddUBDevice(t *testing.T) {
+	specInstance := specs.Spec{
+		Linux: &specs.Linux{
+			Devices: []specs.LinuxDevice{},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{},
+			},
+		},
+		Process: &specs.Process{
+			Env: []string{},
+		},
+	}
+
+	convey.Convey("test addUBDevice", t, func() {
+		convey.Convey("test addUBDevice should add nothing when ub directory not exists", func() {
+			mockStat := gomonkey.ApplyFunc(os.Stat, func(_ string) (fs.FileInfo, error) {
+				return nil, os.ErrNotExist
+			})
+			defer mockStat.Reset()
+
+			err := addUBDevice(&specInstance)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(specInstance.Linux.Devices, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("test addUBDevice should add ub devices when ub directory exists", func() {
+			mockStat := gomonkey.ApplyFunc(os.Stat, func(_ string) (fs.FileInfo, error) {
+				return mockFileInfo{}, nil
+			})
+			defer mockStat.Reset()
+			mockAddDevicesInDir := gomonkey.ApplyFunc(addDevicesInDir, func(spec *specs.Spec, dirPath string) error {
+				spec.Linux.Devices = append(spec.Linux.Devices, specs.LinuxDevice{
+					Path: "UBDevicePath",
+				})
+				return nil
+			})
+			defer mockAddDevicesInDir.Reset()
+
+			err := addUBDevice(&specInstance)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(specInstance.Linux.Devices, convey.ShouldNotBeEmpty)
+		})
+	})
+}
+
+// TestAddUBDeviceWithError tests the function addUBDevice
+func TestAddUBDeviceWithError(t *testing.T) {
+	specInstance := specs.Spec{
+		Linux: &specs.Linux{
+			Devices: []specs.LinuxDevice{},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{},
+			},
+		},
+		Process: &specs.Process{
+			Env: []string{},
+		},
+	}
+
+	convey.Convey("test addUBDevice should return error when addDevicesInDir return error", t, func() {
+		mockStat := gomonkey.ApplyFunc(os.Stat, func(_ string) (fs.FileInfo, error) {
+			return mockFileInfo{}, nil
+		})
+		defer mockStat.Reset()
+		mockAddDevicesInDir := gomonkey.ApplyFunc(addDevicesInDir, func(spec *specs.Spec, dirPath string) error {
+			return fmt.Errorf("read device dir error")
+		})
+		defer mockAddDevicesInDir.Reset()
+
+		err := addUBDevice(&specInstance)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+type FakeDirEntry struct {
+	name string
+	typ  fs.FileMode
+	info fs.FileInfo
+}
+
+func (f FakeDirEntry) Name() string               { return f.name }
+func (f FakeDirEntry) IsDir() bool                { return false }
+func (f FakeDirEntry) Type() fs.FileMode          { return f.typ }
+func (f FakeDirEntry) Info() (fs.FileInfo, error) { return f.info, nil }
+
+// TestAddDevicesInDir tests the function addDevicesInDir
+func TestAddDevicesInDir(t *testing.T) {
+	specInstance := specs.Spec{
+		Linux: &specs.Linux{
+			Devices: []specs.LinuxDevice{},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{},
+			},
+		},
+		Process: &specs.Process{
+			Env: []string{},
+		},
+	}
+
+	convey.Convey("test addDevicesInDir", t, func() {
+		mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+			return []os.DirEntry{
+				FakeDirEntry{name: "udma1", typ: fs.ModeDevice},
+			}, nil
+		})
+		defer mockReadDir.Reset()
+		patch := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dPath string, deviceType string) error {
+			spec.Linux.Devices = append(spec.Linux.Devices, specs.LinuxDevice{
+				Path: "UBDevicePath",
+			})
+			return nil
+		})
+		defer patch.Reset()
+
+		err := addDevicesInDir(&specInstance, "/dev/udurma")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(specInstance.Linux.Devices, convey.ShouldNotBeEmpty)
+	})
+}
+
+// TestAddDevicesInDirWithError tests the function addDevicesInDir
+func TestAddDevicesInDirWithError(t *testing.T) {
+	specInstance := specs.Spec{
+		Linux: &specs.Linux{
+			Devices: []specs.LinuxDevice{},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{},
+			},
+		},
+		Process: &specs.Process{
+			Env: []string{},
+		},
+	}
+
+	convey.Convey("test addDevicesInDir with error", t, func() {
+		convey.Convey("test addDevicesInDir should return error when readDir error", func() {
+			mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+				return nil, fmt.Errorf("dir read error")
+			})
+			defer mockReadDir.Reset()
+
+			err := addDevicesInDir(&specInstance, "/dev/udurma")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(specInstance.Linux.Devices, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("test addDevicesInDir should return error when addDeviceToSpec error", func() {
+			mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+				return []os.DirEntry{
+					FakeDirEntry{name: "udma1", typ: fs.ModeDevice},
+				}, nil
+			})
+			defer mockReadDir.Reset()
+			patch := gomonkey.ApplyFunc(addDeviceToSpec, func(spec *specs.Spec, dPath string, deviceType string) error {
+				return fmt.Errorf("add device to spec error")
+			})
+			defer patch.Reset()
+
+			err := addDevicesInDir(&specInstance, "/dev/udurma")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(specInstance.Linux.Devices, convey.ShouldBeEmpty)
+		})
+	})
 }
 
 // TestAddDevice tests the function addDevice
