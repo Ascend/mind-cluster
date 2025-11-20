@@ -25,6 +25,7 @@ from unittest.mock import patch, Mock
 from mindcluster_tools.eid_generator import EIDGenerator
 from mindcluster_tools.tools_parser import main
 from mindcluster_tools.utils import parse_eid, product_type_enum
+from mindcluster_tools.topo import Topo
 
 
 class TestRootInfo(unittest.TestCase):
@@ -34,46 +35,138 @@ class TestRootInfo(unittest.TestCase):
         # Framework for rootinfo.json, used for validation
         cls.frame = {
             "version": str,
-            "rank_list": (list, {
-                "device_id": int,
-                "local_id": int,
-                "level_list": (list, {
-                    "net_layer": int,
-                    "net_instance_id": str,
-                    "net_type": str,
-                    "net_attr": str,
-                    "rank_addr_list": (list, {
-                        "addr_type": str,
-                        "addr": str,
-                        "ports": (list, str),
-                        "plane_id": str
-                    }),
-                })
-            }),
+            "rank_list": (
+                list,
+                {
+                    "device_id": int,
+                    "local_id": int,
+                    "level_list": (
+                        list,
+                        {
+                            "net_layer": int,
+                            "net_instance_id": str,
+                            "net_type": str,
+                            "net_attr": str,
+                            "rank_addr_list": (
+                                list,
+                                {
+                                    "addr_type": str,
+                                    "addr": str,
+                                    "ports": (list, str),
+                                    "plane_id": str,
+                                },
+                            ),
+                        },
+                    ),
+                },
+            ),
         }
 
+        # Simulate PEER2NET type topology data items
+        cls.mock_data = {
+            "edge_list": [
+                {
+                    "net_layer": 0,
+                    "link_type": "PEER2NET",
+                    "local_a": 0,
+                    "local_a_ports": ["0/1", "0/2", "1/1", "1/2"],
+                    "protocols": ["UB_CTP", "UB_MEM"],
+                },
+                {
+                    "net_layer": 0,
+                    "link_type": "PEER2NET",
+                    "local_a": 1,
+                    "local_a_ports": ["0/1", "0/2", "1/1", "1/2"],
+                    "protocols": ["UB_CTP", "UB_MEM"],
+                },
+            ]
+        }
+        cls.tmp_topo_path = "tmp.json"
+        with open(cls.tmp_topo_path, "w") as f:
+            json.dump(cls.mock_data, f, indent=2)
 
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.tmp_topo_path):
+            os.remove(cls.tmp_topo_path)
 
     def test_parse_eid(self):
         """Test parsing EID"""
-        sample1 = ['000000000000002000100000df00027f']
-        sample2 = ['000000000000002000100000df000282', '000000000000002000100000df000283']
-        res1 = [{'port_id': 127, 'board_id': 2, 'chassis_id': 0, 'fe_id': 1, 'super_pod_id': 0}]
-        res2 = [{'port_id': 130, 'board_id': 2, 'chassis_id': 0, 'fe_id': 1, 'super_pod_id': 0},
-                {'port_id': 131, 'board_id': 2, 'chassis_id': 0, 'fe_id': 1, 'super_pod_id': 0}]
+        sample1 = ["000000000000002000100000df00027f"]
+        sample2 = [
+            "000000000000002000100000df000282",
+            "000000000000002000100000df000283",
+        ]
+        res1 = [
+            {
+                "port_id": 127,
+                "board_id": 2,
+                "chassis_id": 0,
+                "fe_id": 1,
+                "super_pod_id": 0,
+            }
+        ]
+        res2 = [
+            {
+                "port_id": 130,
+                "board_id": 2,
+                "chassis_id": 0,
+                "fe_id": 1,
+                "super_pod_id": 0,
+            },
+            {
+                "port_id": 131,
+                "board_id": 2,
+                "chassis_id": 0,
+                "fe_id": 1,
+                "super_pod_id": 0,
+            },
+        ]
         self.assertEqual(parse_eid.main(sample1), res1)
         self.assertEqual(parse_eid.main(sample2), res2)
 
+    def test_topo(self):
+        """Test topology file query"""
+        topo = Topo(self.__class__.tmp_topo_path)
+        self.assertEqual(topo.get_ports_by_level_and_die(0, 0, 0), [1, 2])
+        self.assertEqual(topo.get_ports_by_level_and_die(1, 0, 1), [1, 2])
+
     def test_eid_generator(self):
         """Test EID generator"""
-        pairs = [((2, 0, 7, 1, 1, parse_eid.EID_TYPE_PHY), "000000000000002000100000dfdf102c"),
-                 ((5, 1, 5, 0, 1, parse_eid.EID_TYPE_PHY), "000000000000000000100000dfdf1069"),
-                 ((31, 1, 4, 1, 1, parse_eid.EID_TYPE_PHY), "000000000000002000100000dfdf138c"),
-                 ((7, 0, 2, 0, 1, parse_eid.EID_TYPE_PHY), "000000000000000000100000dfdf1081"),
-                 ((3, 0, 1, 0, 1, parse_eid.EID_TYPE_LOGIC), "000000000000000000100000dfdf10c1"),
-                 ((5, 1, 2, 1, 1, parse_eid.EID_TYPE_LOGIC), "000000000000002000100000dfdf10cc"),
-                 ((18, 0, 1, 1, 1, parse_eid.EID_TYPE_LOGIC), "000000000000002000100000dfdf12bd"),
-                 ((7, 1, 2, 0, 1, parse_eid.EID_TYPE_LOGIC), "000000000000000000100000dfdf10d4")]
+        pairs = [
+            (
+                (2, 0, 7, 1, 1, parse_eid.EID_TYPE_PHY),
+                "000000000000002000100000dfdf102c",
+            ),
+            (
+                (5, 1, 5, 0, 1, parse_eid.EID_TYPE_PHY),
+                "000000000000000000100000dfdf1069",
+            ),
+            (
+                (31, 1, 4, 1, 1, parse_eid.EID_TYPE_PHY),
+                "000000000000002000100000dfdf138c",
+            ),
+            (
+                (7, 0, 2, 0, 1, parse_eid.EID_TYPE_PHY),
+                "000000000000000000100000dfdf1081",
+            ),
+            (
+                (3, 0, 1, 0, 1, parse_eid.EID_TYPE_LOGIC),
+                "000000000000000000100000dfdf10c1",
+            ),
+            (
+                (5, 1, 2, 1, 1, parse_eid.EID_TYPE_LOGIC),
+                "000000000000002000100000dfdf10cc",
+            ),
+            (
+                (18, 0, 1, 1, 1, parse_eid.EID_TYPE_LOGIC),
+                "000000000000002000100000dfdf12bd",
+            ),
+            (
+                (7, 1, 2, 0, 1, parse_eid.EID_TYPE_LOGIC),
+                "000000000000000000100000dfdf10d4",
+            ),
+        ]
         for params, target in pairs:
             eid = self.__class__.eid_generator.query(*params)
             self.assertEqual(eid, target)
@@ -85,8 +178,12 @@ class TestRootInfo(unittest.TestCase):
             """Validate if cur_data satisfies dictionary type format"""
             #  compare key
             if set(cur_frame.keys()) != set(cur_data.keys()):
-                self.fail(self._formatMessage(None,
-                                              f"the key in frame {set(cur_frame.keys())} does not match {set(cur_data.keys())}"))
+                self.fail(
+                    self._formatMessage(
+                        None,
+                        f"the key in frame {set(cur_frame.keys())} does not match {set(cur_data.keys())}",
+                    )
+                )
             #  compare type of value
             for k, v in cur_frame.items():
                 # Composite type queue comparison
@@ -94,15 +191,29 @@ class TestRootInfo(unittest.TestCase):
                     if isinstance(cur_data[k], v[0]):
                         work_deque.append((v[1], cur_data[k]))
                     else:
-                        self.fail(self._formatMessage(None, f"the attributr [{k}] does not match type [{v[0]}]"))
+                        self.fail(
+                            self._formatMessage(
+                                None,
+                                f"the attributr [{k}] does not match type [{v[0]}]",
+                            )
+                        )
                 else:
                     if not isinstance(cur_data[k], v):
-                        self.fail(self._formatMessage(None, f"the [{k}] does not match type [{v}]"))
+                        self.fail(
+                            self._formatMessage(
+                                None, f"the [{k}] does not match type [{v}]"
+                            )
+                        )
 
         def validate_single_type(cur_frame, cur_data):
             """Validate if cur_data satisfies single type format"""
             if not isinstance(cur_data, cur_frame):
-                self.fail(self._formatMessage(None, f"the value [{cur_data}] does not match type [{cur_frame}]"))
+                self.fail(
+                    self._formatMessage(
+                        None,
+                        f"the value [{cur_data}] does not match type [{cur_frame}]",
+                    )
+                )
 
         work_deque = collections.deque()
         work_deque.append((self.__class__.frame, rootinfo))
@@ -139,13 +250,41 @@ class TestRootInfo(unittest.TestCase):
         print("\n--------------level 1---------------")
         output_buffer = io.StringIO()
         with redirect_stdout(output_buffer):
-            main(["rootinfo", "-t", "superpod_2d.json", "-l", "1", "--super_pod_id", "0", "--chassis_id", "0", "-r", "64"])
+            main(
+                [
+                    "rootinfo",
+                    "-t",
+                    "superpod_2d.json",
+                    "-l",
+                    "1",
+                    "--super_pod_id",
+                    "0",
+                    "--chassis_id",
+                    "0",
+                    "-r",
+                    "64",
+                ]
+            )
             ret = output_buffer.getvalue()
             self.assertIsRootinfoDict(json.loads(ret))
         print("\n--------------level 2---------------")
         output_buffer = io.StringIO()
         with redirect_stdout(output_buffer):
-            main(["rootinfo", "-t", "superpod_2d.json", "-l", "2", "--super_pod_id", "0", "--chassis_id", "0", "-r", "64"])
+            main(
+                [
+                    "rootinfo",
+                    "-t",
+                    "superpod_2d.json",
+                    "-l",
+                    "2",
+                    "--super_pod_id",
+                    "0",
+                    "--chassis_id",
+                    "0",
+                    "-r",
+                    "64",
+                ]
+            )
             ret = output_buffer.getvalue()
             self.assertIsRootinfoDict(json.loads(ret))
 
@@ -153,7 +292,13 @@ class TestRootInfo(unittest.TestCase):
     @patch("mindcluster_tools.rootinfo.dcmi.get_local_id")
     @patch("mindcluster_tools.rootinfo.dcmi.get_device_board_info")
     @patch("mindcluster_tools.rootinfo.dcmi.get_mainboard_id")
-    def test_rootinfo_with_dcmi_when_1d_and_2d(self, mock_get_mainboard_id, mock_get_device_board_info, mock_get_local_id, mock_get_topo):
+    def test_rootinfo_with_dcmi_when_1d_and_2d(
+        self,
+        mock_get_mainboard_id,
+        mock_get_device_board_info,
+        mock_get_local_id,
+        mock_get_topo,
+    ):
         """Test pod 1D/2D building rootinfo through DCMI queries"""
         mock_topo_instance = Mock()
         mock_topo_instance.get_ports_by_level_and_die = Mock(return_value=[1, 2])
@@ -184,6 +329,82 @@ class TestRootInfo(unittest.TestCase):
         self.assertEqual(mock_get_mainboard_id.call_count, 2)
         self.assertEqual(mock_get_device_board_info.call_count, 2)
 
+    @patch("mindcluster_tools.rootinfo.TopoSingleFactory.get_topo")
+    @patch("mindcluster_tools.rootinfo.dcmi.get_local_id")
+    @patch("mindcluster_tools.rootinfo.dcmi.get_device_board_info")
+    @patch("mindcluster_tools.rootinfo.dcmi.get_mainboard_id")
+    def test_rootinfo_with_dcmi_when_server_8p_and16p(
+        self,
+        mock_get_mainboard_id,
+        mock_get_device_board_info,
+        mock_get_local_id,
+        mock_get_topo,
+    ):
+        """Test server 8p/16p building rootinfo through DCMI queries"""
+        mock_topo_instance = Mock()
+        mock_topo_instance.get_ports_by_level_and_die = Mock(return_value=[1, 2])
+        mock_get_topo.return_value = mock_topo_instance
+        card_num = 64
+        mock_get_local_id.side_effect = [i for i in range(card_num)]
+        mock_get_mainboard_id.return_value = 104
+        mock_board_info = Mock()
+        mock_board_info.board_id = 40
+        mock_get_device_board_info.return_value = mock_board_info
+        os.environ["MOCK_SPOD_ID"] = str(0)
+        os.environ["MOCK_SPOD_SIZE"] = str(128)
+        os.environ["MOCK_CHASSIS_ID"] = str(10)
+        print("\n--------------server 8p---------------")
+        os.environ["PRODUCT_TYPE"] = str(product_type_enum.ProductType.SERVER_8P.value)
+        output_buffer = io.StringIO()
+        with redirect_stdout(output_buffer):
+            main(["rootinfo"])
+            ret = output_buffer.getvalue()
+            self.assertIsRootinfoDict(json.loads(ret))
+        print("\n--------------server 16p---------------")
+        os.environ["PRODUCT_TYPE"] = str(product_type_enum.ProductType.SERVER_16P.value)
+        output_buffer = io.StringIO()
+        with redirect_stdout(output_buffer):
+            main(["rootinfo"])
+            ret = output_buffer.getvalue()
+            self.assertEqual(mock_get_mainboard_id.call_count, 2)
+        self.assertEqual(mock_get_device_board_info.call_count, 2)
+        self.assertIsRootinfoDict(json.loads(ret))
 
-
-
+    @patch("mindcluster_tools.rootinfo.TopoSingleFactory.get_topo")
+    @patch("mindcluster_tools.rootinfo.dcmi.get_device_board_info")
+    @patch("mindcluster_tools.rootinfo.dcmi.get_mainboard_id")
+    def test_rootinfo_with_dcmi_when_standard_1p_and_4p(
+        self, mock_get_mainboard_id, mock_get_device_board_info, mock_get_topo
+    ):
+        """Test standard card 1p/4p building rootinfo through DCMI queries"""
+        mock_topo_instance = Mock()
+        mock_topo_instance.get_ports_by_level_and_die = Mock(return_value=[1, 2])
+        mock_get_topo.return_value = mock_topo_instance
+        mock_board_info = Mock()
+        mock_board_info.board_id = 27
+        mock_get_device_board_info.return_value = mock_board_info
+        os.environ["MOCK_SPOD_ID"] = str(-1)
+        os.environ["MOCK_SPOD_SIZE"] = str(-1)
+        os.environ["MOCK_CHASSIS_ID"] = str(-1)
+        print("\n--------------standard 1p---------------")
+        os.environ["PRODUCT_TYPE"] = str(
+            product_type_enum.ProductType.STANDARD_1P.value
+        )
+        mock_get_mainboard_id.return_value = 104
+        output_buffer = io.StringIO()
+        with redirect_stdout(output_buffer):
+            main(["rootinfo"])
+            ret = output_buffer.getvalue()
+            self.assertIsRootinfoDict(json.loads(ret))
+        print("\n--------------standard 4p---------------")
+        os.environ["PRODUCT_TYPE"] = str(
+            product_type_enum.ProductType.STANDARD_4P.value
+        )
+        mock_get_mainboard_id.return_value = 108
+        output_buffer = io.StringIO()
+        with redirect_stdout(output_buffer):
+            main(["rootinfo"])
+            ret = output_buffer.getvalue()
+            self.assertEqual(mock_get_mainboard_id.call_count, 2)
+        self.assertEqual(mock_get_device_board_info.call_count, 2)
+        self.assertIsRootinfoDict(json.loads(ret))

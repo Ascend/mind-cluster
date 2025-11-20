@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright 2025. Huawei Technologies Co.,Ltd. All rights reserved.
 #
@@ -22,12 +21,14 @@ __all__ = [
     "get_device_id_in_card",
     "get_urma_device_cnt",
     "get_super_pod_info",
-    "get_eid_list_by_urma_dev_index"
+    "get_eid_list_by_urma_dev_index",
 ]
 
-from .dcmi import (dcmi_init,
-                   get_all_device_count,
-                   get_device_id_in_card,
-                   get_urma_device_cnt,
-                   get_super_pod_info,
-                   get_eid_list_by_urma_dev_index)
+from .dcmi import (
+    dcmi_init,
+    get_all_device_count,
+    get_device_id_in_card,
+    get_urma_device_cnt,
+    get_super_pod_info,
+    get_eid_list_by_urma_dev_index,
+)

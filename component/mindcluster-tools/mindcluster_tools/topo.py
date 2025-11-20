@@ -14,17 +14,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+import json
+from copy import deepcopy
+
+
 class Topo(object):
-    """Read topology file to generate topology object"""
+
     def __init__(self, topo_file_path):
         self._topo = {}
+        with open(topo_file_path) as topo_file:
+            self._topo = json.load(topo_file)
+        # Special handling for server 16p
+        tmp = []
+        for edge in self._topo["edge_list"]:
+            if (
+                edge["link_type"] == "PEER2PEER"
+                and len(edge["local_a_ports"]) > 1
+                and len(edge["local_b_ports"]) > 1
+            ):
+                tmp_edge = deepcopy(edge)
+                tmp_edge["local_a"] = edge["local_b"]
+                tmp_edge["local_b"] = edge["local_a"]
+                tmp_edge["local_a_ports"] = edge["local_b_ports"]
+                tmp_edge["local_b_ports"] = edge["local_a_ports"]
+                tmp.append(tmp_edge)
+        self._topo["edge_list"].extend(tmp)
 
     def get_ports_by_level_and_die(self, local_id, level, die_id):
-        pass
+        ports = set()
+        for edge in self._topo["edge_list"]:
+            filter_condition = (
+                edge["local_a"] == local_id
+                and edge["net_layer"] == level
+                and len(edge["local_a_ports"]) > 1
+            )
+            protocol_condition = "UB_TP" in edge["protocols"] or "UB_CTP" in edge["protocols"]
+            if filter_condition and protocol_condition:
+                ps = edge["local_a_ports"]
+                ports.update([port[-1] for port in ps if port.startswith(f"{die_id}/")])
+        return sorted([int(i) for i in ports])
 
 
 class TopoSingleFactory:
-    """Singleton factory for topology objects"""
     _topo_path = None
     _topo = None
 

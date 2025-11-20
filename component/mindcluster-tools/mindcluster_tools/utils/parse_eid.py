@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import sys
 import ast
 
@@ -26,9 +43,15 @@ CHESSIS_ID_RANGE_START, CHESSIS_ID_RANGE_END, CHESSIS_ID_LENGTH = 128 - 16, 128 
 """Chassis id field range"""
 UBC_223_RANGE_START, UBC_223_RANGE_END, UBC_223_LENGTH = 128 - 32, 128 - 16, 16
 """Const 233 id field range"""
+UBC_VALUE = 223 + 223 * 256
+"""hex value 0xdfdf is 223 + 223 * 256"""
 FE_ID_RANGE_START, FE_ID_RANGE_END, FE_ID_LENGTH = 128 - 74, 128 - 69, 5
 """Fe id 233 id field range"""
-SUPER_POD_ID_RANGE_START, SUPER_POD_ID_RANGE_END, SUPER_POD_ID_LENGTH = 128 - 92, 128 - 76, 16
+SUPER_POD_ID_RANGE_START, SUPER_POD_ID_RANGE_END, SUPER_POD_ID_LENGTH = (
+    128 - 92,
+    128 - 76,
+    16,
+)
 """Super pod id 233 id field range"""
 BIT_53TH_INDEX, BIT_53TH_VALUE = 128 - 53, 1
 
@@ -78,4 +101,3 @@ def main(arg_list=None):
         for i in hex_eid_str:
             res.append(parse_eid(i))
     return res
-

@@ -28,6 +28,6 @@ class DcmiMainCmdEnum(Enum):
 
 
 # Enum mapping from master commands to slave commands
-main_cmd_to_sub_cmd_enum = {
+MAIN_CMD_TO_SUB_CMD = {
     DcmiMainCmdEnum.DCMI_MAIN_CMD_CHIP_INF: DCMIChipSubCmd,
 }

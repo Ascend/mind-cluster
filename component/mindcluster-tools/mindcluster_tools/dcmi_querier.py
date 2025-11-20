@@ -14,13 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from mindcluster_tools.interface import Queryable
 from mindcluster_tools.eid_generator import EIDGenerator
 
 
 class DCMIQuerier(Queryable):
     """DCMI querier class"""
+
     def __init__(self):
         self.querier = EIDGenerator()
+
     def query(self, *args, **kargs):
         return self.querier.query(args, **kargs)

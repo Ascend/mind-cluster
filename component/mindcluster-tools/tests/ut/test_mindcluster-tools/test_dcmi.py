@@ -21,6 +21,7 @@ import unittest
 from mindcluster_tools.dcmi import dcmi
 from mindcluster_tools.utils.product_type_enum import ProductType
 
+
 class TestDCMI(unittest.TestCase):
 
     def test_init(self):
@@ -81,7 +82,7 @@ class TestDCMI(unittest.TestCase):
         os.environ["MOCK_SPOD_SIZE"] = str(expected_spod_size)
         os.environ["MOCK_CHASSIS_ID"] = str(expected_chassis_id)
         spod_info = dcmi.get_super_pod_info()
-        super_pod_type = int.from_bytes(spod_info.super_pod_type, byteorder='big')
+        super_pod_type = int.from_bytes(spod_info.super_pod_type, byteorder="big")
         super_pod_id = spod_info.super_pod_id
         super_pod_size = spod_info.super_pod_size
         chassis_id = spod_info.chassis_id

@@ -14,30 +14,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mindcluster_tools import __version__
-from mindcluster_tools.error.error import ParamError, DcmiReturnValueError, TopoMissMatchError, GetIpError
+from mindcluster_tools.error.error import (
+    ParamError,
+    DcmiReturnValueError,
+    TopoMissMatchError,
+    GetIpError,
+)
 from mindcluster_tools.rootinfo import construct_rootinfo
 
 
 def show_version():
     print("mindcluster-tools version {}".format(__version__))
-    print("Copyright {}. Huawei Technologies Co.,Ltd. All rights reserved.".format(datetime.now().year))
+    print(
+        "Copyright {}. Huawei Technologies Co.,Ltd. All rights reserved.".format(
+            datetime.now(tz=timezone.utc).year
+        )
+    )
 
 
 def main(args_list=None):
-    parser = argparse.ArgumentParser(description='mindcluster-tools cli', prog='mindcluster-tools')
-    parser.add_argument('-v', '--version', action="store_true", help='version of mindcluster-tools')
-    subparsers = parser.add_subparsers(dest='command', help='you can use subcommands as follows:')
-    parser_rootinfo = subparsers.add_parser('rootinfo', help='construct rootinfo.json')
-    parser_rootinfo.add_argument('-t', '--topo_path', type=str, required=False, help='the path of topo file')
-    parser_rootinfo.add_argument('-r', '--rank_count', type=int, required=False, help='rank_count')
-    parser_rootinfo.add_argument('-l', '--level_count', type=int, required=False, help='the level of network')
-    parser_rootinfo.add_argument('--super_pod_id', type=int, required=False, help='super pod id')
-    parser_rootinfo.add_argument('--chassis_id', type=int, required=False, help='chassis id')
+    parser = argparse.ArgumentParser(
+        description="mindcluster-tools cli", prog="mindcluster-tools"
+    )
+    parser.add_argument(
+        "-v", "--version", action="store_true", help="version of mindcluster-tools"
+    )
+    subparsers = parser.add_subparsers(
+        dest="command", help="you can use subcommands as follows:"
+    )
+    parser_rootinfo = subparsers.add_parser("rootinfo", help="construct rootinfo.json")
+    parser_rootinfo.add_argument(
+        "-t", "--topo_path", type=str, required=False, help="the path of topo file"
+    )
+    parser_rootinfo.add_argument(
+        "-r", "--rank_count", type=int, required=False, help="rank_count"
+    )
+    parser_rootinfo.add_argument(
+        "-l", "--level_count", type=int, required=False, help="the level of network"
+    )
+    parser_rootinfo.add_argument(
+        "--super_pod_id", type=int, required=False, help="super pod id"
+    )
+    parser_rootinfo.add_argument(
+        "--chassis_id", type=int, required=False, help="chassis id"
+    )
     args = parser.parse_args() if args_list is None else parser.parse_args(args_list)
 
     A5_DIE_COUNT = 2
@@ -53,7 +79,7 @@ def main(args_list=None):
         parser.print_help()
         sys.exit(0)
     params = dict(vars(args))
-    params.pop('command')
+    params.pop("command")
     params.pop("version")
     try:
         ret = construct_rootinfo(params)
@@ -71,4 +97,3 @@ def main(args_list=None):
         print(e)
     except Exception:
         print("Unknown error occurred")
-
