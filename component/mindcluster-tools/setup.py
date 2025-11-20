@@ -18,10 +18,7 @@ from setuptools import setup, find_packages
 from mindcluster_tools import __version__
 
 
-install_requires = [
-    "bitarray",
-    "netifaces"
-]
+install_requires = ["bitarray", "netifaces"]
 
 
 setup(
@@ -36,5 +33,5 @@ setup(
         "console_scripts": [
             "mindcluster-tools=mindcluster_tools.tools_parser:main",
         ]
-    }
+    },
 )

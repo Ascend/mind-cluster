@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from abc import ABC
 import copy
 import functools
@@ -31,10 +32,21 @@ from mindcluster_tools.utils import parse_eid
 from mindcluster_tools.dcmi import dcmi
 from mindcluster_tools.error.error import ParamError, TopoMissMatchError, GetIpError
 from mindcluster_tools.utils.product_type_enum import ProductType
+from mindcluster_tools.utils.const import FE0, FE1, FE3, FE8, FE9
+from mindcluster_tools.utils.const import (
+    URMA_LEVEL_0,
+    URMA_LEVEL_1,
+    URMA_LEVEL_2,
+    URMA_LEVEL_3,
+)
+from mindcluster_tools.utils.const import (
+    ROOTINFO_VERSION, 
+    CLUSTER_PLANE_ID, 
+    CLUSTER_NET_INSTANCE,
+    CLOS_NET_TYPE,
+    TOPO_NET_TYPE
+)
 
-
-FE0, FE1, FE3, FE8, FE9 = 0, 1, 3, 8, 9
-URMA_LEVEL_0, URMA_LEVEL_1, URMA_LEVEL_2, URMA_LEVEL_3 = 0, 1, 2, 3
 
 # Hierarchy mapping from fe_id to urma_device
 URMA_DEVICE_LEVEL_MAP = {
@@ -57,8 +69,10 @@ SUPER_POD_TYPE_TO_TOPO_FILE = {
     ProductType.STANDARD_4P.value: "card_4p_mesh.json",
 }
 
+
 def exclude_fields(*fields):
     """Decorator to exclude specified field names when converting objects to Dict"""
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -66,12 +80,15 @@ def exclude_fields(*fields):
             for field in fields:
                 data.pop(field, None)
             return data
+
         return wrapper
+
     return decorator
 
 
 class RootInfoEncoder(json.JSONEncoder):
     """Serializer: Convert objects to dictionaries via to_dict method for serialization"""
+
     def default(self, obj):
         if isinstance(obj, ToDict):
             return obj.to_dict()
@@ -80,6 +97,7 @@ class RootInfoEncoder(json.JSONEncoder):
 
 class Address(ToDict, ABC):
     """Base class for EID/IP addresses"""
+
     def __init__(self, addr, port_ids=None, plane_id="", addr_type="common type"):
         self.addr_type = addr_type
         self.addr = addr
@@ -108,12 +126,23 @@ class IP(Address):
     @exclude_fields("port_ids", "die_id")
     def to_dict(self):
         ret = copy.deepcopy(self.__dict__)
-        ret["ports"] = [f"{self.die_id}/{i}" for i in self.port_ids] if self.die_id is not None else []
+        ret["ports"] = (
+            [f"{self.die_id}/{i}" for i in self.port_ids]
+            if self.die_id is not None
+            else []
+        )
         return ret
 
 
 class UrmaDevice(ToDict):
-    def __init__(self, net_layer, net_instance_id, net_type, net_attr="", rank_addr_list: List[Address]=None):
+    def __init__(
+        self,
+        net_layer,
+        net_instance_id,
+        net_type,
+        net_attr="",
+        rank_addr_list: List[Address] = None,
+    ):
         self.net_layer = net_layer
         self.net_instance_id = net_instance_id
         self.net_type = net_type
@@ -126,7 +155,7 @@ class UrmaDevice(ToDict):
 
 
 class NPU(ToDict):
-    def __init__(self, device_id, local_id, level_list: List[UrmaDevice]=None):
+    def __init__(self, device_id, local_id, level_list: List[UrmaDevice] = None):
         self.device_id = device_id
         self.local_id = local_id
         self.level_list = [] if not level_list else level_list
@@ -137,8 +166,9 @@ class NPU(ToDict):
 
 
 class RootInfo(ToDict):
-    version = "2.0"
-    def __init__(self, rank_list:List[NPU]=None):
+    version = ROOTINFO_VERSION
+
+    def __init__(self, rank_list: List[NPU] = None):
         self.version = RootInfo.version
         self.rank_list = [] if not rank_list else rank_list
 
@@ -147,29 +177,88 @@ class RootInfo(ToDict):
         return copy.deepcopy(self.__dict__)
 
 
-def construct_urma_device_with_generate_eid(npu_id, layer_id, die_count, die_port_count, superpod_id, chassis_id):
+def construct_urma_device_with_generate_eid(npu_info):
+    npu_id, layer_id, die_count, die_port_count, superpod_id, chassis_id = npu_info
     urma_device_level_info_map = {
-        URMA_LEVEL_0: (f"{superpod_id}_{chassis_id}", "TOPO_FILE_DESC"),
-        URMA_LEVEL_1: (f"{superpod_id}", "CLOS")
+        URMA_LEVEL_0: (f"{superpod_id}_{chassis_id}", TOPO_NET_TYPE),
+        URMA_LEVEL_1: (f"{superpod_id}", CLOS_NET_TYPE),
     }
     querier = DCMIQuerier()
     topo = TopoSingleFactory.get_topo()
     ud = UrmaDevice(layer_id, *urma_device_level_info_map[layer_id], "", [])
     if layer_id == URMA_LEVEL_0:
-        construct_l0((chassis_id, die_count, die_port_count, layer_id, npu_id), querier, ud)
-        addr = querier.query(npu_id, 0, 1, URMA_DEVICE_LEVEL_MAP[layer_id], chassis_id, parse_eid.EID_TYPE_LOGIC)
+        construct_l0(
+            (chassis_id, die_count, die_port_count, layer_id, npu_id), querier, ud
+        )
+        addr = querier.query(
+            npu_id,
+            0,
+            1,
+            URMA_DEVICE_LEVEL_MAP[layer_id],
+            chassis_id,
+            parse_eid.EID_TYPE_LOGIC,
+        )
         ud.rank_addr_list.append(
-            EID(0, parse_eid.EID_TYPE_LOGIC, addr, topo.get_ports_by_level_and_die(npu_id, layer_id, 0), "0"))
-        addr = querier.query(npu_id, 1, 1, URMA_DEVICE_LEVEL_MAP[layer_id], chassis_id, parse_eid.EID_TYPE_LOGIC)
+            EID(
+                0,
+                parse_eid.EID_TYPE_LOGIC,
+                addr,
+                topo.get_ports_by_level_and_die(npu_id, layer_id, 0),
+                "0",
+            )
+        )
+        addr = querier.query(
+            npu_id,
+            1,
+            1,
+            URMA_DEVICE_LEVEL_MAP[layer_id],
+            chassis_id,
+            parse_eid.EID_TYPE_LOGIC,
+        )
         ud.rank_addr_list.append(
-            EID(1, parse_eid.EID_TYPE_LOGIC, addr, topo.get_ports_by_level_and_die(npu_id, layer_id, 1), "1"))
+            EID(
+                1,
+                parse_eid.EID_TYPE_LOGIC,
+                addr,
+                topo.get_ports_by_level_and_die(npu_id, layer_id, 1),
+                "1",
+            )
+        )
     elif layer_id == 1:
-        addr = querier.query(npu_id, 0, 2, URMA_DEVICE_LEVEL_MAP[layer_id], chassis_id, parse_eid.EID_TYPE_LOGIC)
+        addr = querier.query(
+            npu_id,
+            0,
+            2,
+            URMA_DEVICE_LEVEL_MAP[layer_id],
+            chassis_id,
+            parse_eid.EID_TYPE_LOGIC,
+        )
         ud.rank_addr_list.append(
-            EID(0, parse_eid.EID_TYPE_LOGIC, addr, topo.get_ports_by_level_and_die(npu_id, layer_id, 0), "0"))
-        addr = querier.query(npu_id, 1, 2, URMA_DEVICE_LEVEL_MAP[layer_id], chassis_id, parse_eid.EID_TYPE_LOGIC)
+            EID(
+                0,
+                parse_eid.EID_TYPE_LOGIC,
+                addr,
+                topo.get_ports_by_level_and_die(npu_id, layer_id, 0),
+                "0",
+            )
+        )
+        addr = querier.query(
+            npu_id,
+            1,
+            2,
+            URMA_DEVICE_LEVEL_MAP[layer_id],
+            chassis_id,
+            parse_eid.EID_TYPE_LOGIC,
+        )
         ud.rank_addr_list.append(
-            EID(1, parse_eid.EID_TYPE_LOGIC, addr, topo.get_ports_by_level_and_die(npu_id, layer_id, 1), "1"))
+            EID(
+                1,
+                parse_eid.EID_TYPE_LOGIC,
+                addr,
+                topo.get_ports_by_level_and_die(npu_id, layer_id, 1),
+                "1",
+            )
+        )
     return ud
 
 
@@ -178,7 +267,14 @@ def construct_l0(param_info, querier, ud):
     for k1 in range(die_count):
         for k2 in range(die_port_count):
             if k2 not in list(range(1, parse_eid.LOGIC_PORT_COUNT_IN_A_DIE + 1)):
-                addr = querier.query(npu_id, k1, k2, URMA_DEVICE_LEVEL_MAP[layer_id], chassis_id, parse_eid.EID_TYPE_PHY)
+                addr = querier.query(
+                    npu_id,
+                    k1,
+                    k2,
+                    URMA_DEVICE_LEVEL_MAP[layer_id],
+                    chassis_id,
+                    parse_eid.EID_TYPE_PHY,
+                )
                 eid = EID(k1, parse_eid.EID_TYPE_PHY, addr, [k2], f"{k1}")
                 ud.rank_addr_list.append(eid)
 
@@ -187,7 +283,7 @@ def parse_dcmi_param(board_id, mainboard_id, rank_count, params, spod_info):
     super_pod_id = ctypes.c_int(spod_info.super_pod_id).value
     chassis_id = spod_info.chassis_id
     server_index = spod_info.server_index
-    super_pod_type = int.from_bytes(spod_info.super_pod_type, byteorder='big')
+    super_pod_type = int.from_bytes(spod_info.super_pod_type, byteorder="big")
     STANDARD_BOARD_ID = [26, 27]
     # Standard card form factor uses mainboard_id to distinguish different interconnect topologies
     if board_id in STANDARD_BOARD_ID:
@@ -201,7 +297,9 @@ def parse_dcmi_param(board_id, mainboard_id, rank_count, params, spod_info):
     else:
         # server_16p form factor requires local_id calculation
         if super_pod_type == 3:
-            local_id_list = [(server_index % 2) * rank_count + i for i in range(rank_count)]
+            local_id_list = [
+                (server_index % 2) * rank_count + i for i in range(rank_count)
+            ]
         else:
             local_id_list = list(range(rank_count))
     if params["topo_path"] is not None:
@@ -209,8 +307,19 @@ def parse_dcmi_param(board_id, mainboard_id, rank_count, params, spod_info):
     else:
         topo_path = SUPER_POD_TYPE_TO_TOPO_FILE.get(super_pod_type, None)
         if topo_path is None:
-            raise TopoMissMatchError("Can not found topo file for superpod type {}".format(super_pod_type))
-    return topo_path, local_id_list, super_pod_id, chassis_id, super_pod_type, server_index
+            raise TopoMissMatchError(
+                "Can not found topo file for superpod type {}".format(super_pod_type)
+            )
+    dcmi_param = (
+        topo_path,
+        local_id_list,
+        super_pod_id,
+        chassis_id,
+        super_pod_type,
+        server_index,
+    )
+    return dcmi_param
+
 
 def parse_param(params):
     level_count = -1 if not params["level_count"] else params["level_count"]
@@ -218,15 +327,31 @@ def parse_param(params):
     if level_count == -1:
         rank_count, _ = dcmi.dcmi_get_card_list()
         spod_info = dcmi.get_super_pod_info()
-        board_id, mainboard_id = dcmi.get_device_board_info().board_id, dcmi.get_mainboard_id()
-        dcmi_param = parse_dcmi_param(board_id, mainboard_id, rank_count, params, spod_info)
-        topo_path, local_id_list, super_pod_id, chassis_id, super_pod_type, server_index = dcmi_param
+        board_id, mainboard_id = (
+            dcmi.get_device_board_info().board_id,
+            dcmi.get_mainboard_id(),
+        )
+        dcmi_param = parse_dcmi_param(
+            board_id, mainboard_id, rank_count, params, spod_info
+        )
+        (
+            topo_path,
+            local_id_list,
+            super_pod_id,
+            chassis_id,
+            super_pod_type,
+            server_index,
+        ) = dcmi_param
     # not query dcmi
     else:
-        if any([params["rank_count"] is None,
-                    params["super_pod_id"] is None,
-                    params["chassis_id"] is None,
-                    params["topo_path"] is None ]):
+        if any(
+            [
+                params["rank_count"] is None,
+                params["super_pod_id"] is None,
+                params["chassis_id"] is None,
+                params["topo_path"] is None,
+            ]
+        ):
             raise ParamError("Some parameters are missing")
         local_id_list = [i for i in range(params["rank_count"])]
         super_pod_id = params["super_pod_id"]
@@ -234,35 +359,54 @@ def parse_param(params):
         topo_path = params["topo_path"]
         super_pod_type = ProductType.POD_2D.value
         server_index = 0
-    return local_id_list, level_count, super_pod_id, chassis_id, topo_path, super_pod_type, server_index
+
+    parsed_param = (
+        local_id_list,
+        level_count,
+        super_pod_id,
+        chassis_id,
+        topo_path,
+        super_pod_type,
+        server_index,
+    )
+    return parsed_param
 
 
 def get_urma_device_level_by_eid(hex_eid_str):
 
     eid = hex2ba(hex_eid_str)
-    fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START: parse_eid.FE_ID_RANGE_END])
+    fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START : parse_eid.FE_ID_RANGE_END])
     return URMA_DEVICE_LEVEL_MAP[fe_id]
 
 
-def get_ports_info_by_eid(hex_eid_str, local_id, urma_device_level, topo, super_pod_type):
+def get_ports_info_by_eid(
+    hex_eid_str, local_id, urma_device_level, topo, super_pod_type
+):
     eid = hex2ba(hex_eid_str)
-    port_id = ba2int(eid[parse_eid.PORT_ID_RANGE_START: parse_eid.PORT_ID_RANGE_END])
+    port_id = ba2int(eid[parse_eid.PORT_ID_RANGE_START : parse_eid.PORT_ID_RANGE_END])
     # logic EID
     if port_id > parse_eid.LOGIC_PORT_FLAG:
-        die_id = ((port_id - parse_eid.LOGIC_PORT_FLAG - 1) // parse_eid.DIE_COUNT_IN_A_NPU) % parse_eid.LOGIC_PORT_COUNT_IN_A_DIE
+        die_id = (
+            (port_id - parse_eid.LOGIC_PORT_FLAG - 1) // parse_eid.DIE_COUNT_IN_A_NPU
+        ) % parse_eid.LOGIC_PORT_COUNT_IN_A_DIE
         ports = topo.get_ports_by_level_and_die(local_id, urma_device_level, die_id)
         eid_type = parse_eid.EID_TYPE_LOGIC
     # physic EID
     else:
         # L2 layer in server form factor, directly connected to UBOE
-        if port_id == 0 and super_pod_type in [ProductType.SERVER_8P.value, ProductType.SERVER_16P.value]:
+        if port_id == 0 and super_pod_type in [
+            ProductType.SERVER_8P.value,
+            ProductType.SERVER_16P.value,
+        ]:
             L2_UBOE_PORTS = [8]
             ports = L2_UBOE_PORTS
             die_id = 0
             eid_type = None
         else:
             ports = [(port_id - 1) % parse_eid.PHY_PORT_COUNT_IN_A_DIE]
-            die_id = ((port_id - 1) // parse_eid.PHY_PORT_COUNT_IN_A_DIE) % parse_eid.DIE_COUNT_IN_A_NPU
+            die_id = (
+                (port_id - 1) // parse_eid.PHY_PORT_COUNT_IN_A_DIE
+            ) % parse_eid.DIE_COUNT_IN_A_NPU
             eid_type = parse_eid.EID_TYPE_PHY
     return ports, die_id, eid_type
 
@@ -285,10 +429,10 @@ def eid_filter(eid_list):
     res = []
     for eid_str in eid_list:
         # Mock shared library contains all-zero useless EIDs
-        if all(char == '0' for char in eid_str):
+        if all(char == "0" for char in eid_str):
             continue
         eid = hex2ba(eid_str)
-        fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START: parse_eid.FE_ID_RANGE_END])
+        fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START : parse_eid.FE_ID_RANGE_END])
         if fe_id not in URMA_DEVICE_LEVEL_MAP:
             continue
         res.append(eid_str)
@@ -300,15 +444,17 @@ def get_host_ip():
         interfaces = netifaces.interfaces()
         # exclude 127.0.0.1
         for interface in interfaces:
-            if interface == 'lo':
+            if interface == "lo":
                 continue
             addrs = netifaces.ifaddresses(interface)
             # find IPV4 address
             if netifaces.AF_INET in addrs:
                 ipv4_info = addrs[netifaces.AF_INET][0]
-                return ipv4_info['addr']
+                return ipv4_info["addr"]
     except Exception as e:
-        raise GetIpError("Failed to get local IP address, please check network settings") from e
+        raise GetIpError(
+            "Failed to get local IP address, please check network settings"
+        ) from e
 
 
 def get_level0_info(chassis_id, super_pod_id, super_pod_type, server_index, npu_id):
@@ -322,33 +468,41 @@ def get_level0_info(chassis_id, super_pod_id, super_pod_type, server_index, npu_
     else:
         net_instance_id = get_host_ip()
         # For standard card 2p/4p, add group identifier
-        if super_pod_type in (ProductType.STANDARD_2P.value, ProductType.STANDARD_4P.value):
-            net_instance_id += f"_{npu_id // (super_pod_type - ProductType.STANDARD_1P.value)}"
-    return net_instance_id, "TOPO_FILE_DESC"
+        if super_pod_type in (
+            ProductType.STANDARD_2P.value,
+            ProductType.STANDARD_4P.value,
+        ):
+            net_instance_id += (
+                f"_{npu_id // (super_pod_type - ProductType.STANDARD_1P.value)}"
+            )
+    return net_instance_id, TOPO_NET_TYPE
 
 
 def cut_ip_from_eid(eid_str):
     IP_HEX_LENGTH = 8
-    ip_int = int(eid_str[len(eid_str) - IP_HEX_LENGTH:], 16)
+    ip_int = int(eid_str[len(eid_str) - IP_HEX_LENGTH :], 16)
 
     # Extract four 8-bit bytes
     octets = [
         (ip_int >> 24) & 0xFF,
         (ip_int >> 16) & 0xFF,
         (ip_int >> 8) & 0xFF,
-        ip_int & 0xFF
+        ip_int & 0xFF,
     ]
-    ip_address = '.'.join(str(octet) for octet in octets)
+    ip_address = ".".join(str(octet) for octet in octets)
     return ip_address
 
 
-def get_urma_device_map(chassis_id, npu_id, super_pod_id, local_id, super_pod_type, server_index):
+def get_urma_device_map(device_info):
+    chassis_id, npu_id, super_pod_id, local_id, super_pod_type, server_index = device_info
     urma_device_level_info_map = {
-        URMA_LEVEL_0: get_level0_info(chassis_id, super_pod_id, super_pod_type, server_index, npu_id),
+        URMA_LEVEL_0: get_level0_info(
+            chassis_id, super_pod_id, super_pod_type, server_index, npu_id
+        ),
         # Non-super nodes don't have L1 and won't match
-        URMA_LEVEL_1: (f"{super_pod_id}", "CLOS"),
-        URMA_LEVEL_2: ("CLUSTER", "CLOS"),
-        URMA_LEVEL_3: ("CLUSTER", "CLOS"),
+        URMA_LEVEL_1: (f"{super_pod_id}", CLOS_NET_TYPE),
+        URMA_LEVEL_2: (CLUSTER_NET_INSTANCE, CLOS_NET_TYPE),
+        URMA_LEVEL_3: (CLUSTER_NET_INSTANCE, CLOS_NET_TYPE),
     }
     eid_list = process_urma_device_for_npu(npu_id)
     eid_list = eid_filter(eid_list)
@@ -357,33 +511,56 @@ def get_urma_device_map(chassis_id, npu_id, super_pod_id, local_id, super_pod_ty
     for eid_str in eid_list:
         urma_device_level = get_urma_device_level_by_eid(eid_str)
         if urma_device_level not in urma_device_map:
-            urma_device_map[urma_device_level] = UrmaDevice(urma_device_level,
-                                                            *urma_device_level_info_map[urma_device_level], "", [])
-        ports, die_id, eid_type = get_ports_info_by_eid(eid_str, local_id, urma_device_level, topo, super_pod_type)
+            urma_device_map[urma_device_level] = UrmaDevice(
+                urma_device_level,
+                *urma_device_level_info_map[urma_device_level],
+                "",
+                [],
+            )
+        ports, die_id, eid_type = get_ports_info_by_eid(
+            eid_str, local_id, urma_device_level, topo, super_pod_type
+        )
         # Filter out empty ports
         if ports:
             if eid_type is not None:
                 urma_device_map[urma_device_level].rank_addr_list.append(
-                    EID(die_id, eid_type, eid_str, ports, str(die_id) if urma_device_level <= 1 else "CLUSTER"))
+                    EID(
+                        die_id,
+                        eid_type,
+                        eid_str,
+                        ports,
+                        str(die_id) if urma_device_level <= 1 else CLUSTER_PLANE_ID,
+                    )
+                )
             else:
                 uboe_ip = cut_ip_from_eid(eid_str)
                 urma_device_map[urma_device_level].rank_addr_list.append(
-                    IP(uboe_ip, "CLUSTER", ports, die_id)
+                    IP(uboe_ip, CLUSTER_PLANE_ID, ports, die_id)
                 )
-    urma_device_map[URMA_LEVEL_3] = UrmaDevice(URMA_LEVEL_3, *urma_device_level_info_map[URMA_LEVEL_3], "", [])
+    urma_device_map[URMA_LEVEL_3] = UrmaDevice(
+        URMA_LEVEL_3, *urma_device_level_info_map[URMA_LEVEL_3], "", []
+    )
     roce_ip_list = dcmi.get_roce_ip_list()
     for ip in roce_ip_list:
-        urma_device_map[URMA_LEVEL_3].rank_addr_list.append(
-            IP(ip, "CLUSTER")
-        )
+        urma_device_map[URMA_LEVEL_3].rank_addr_list.append(IP(ip, CLUSTER_PLANE_ID))
     # No super_pod_id or it's server 16p; server 16p doesn't belong to group super nodes but has super_pod_id
-    if (super_pod_type == ProductType.SERVER_16P.value or super_pod_id == -1) and URMA_LEVEL_1 in urma_device_map:
+    if (
+        super_pod_type == ProductType.SERVER_16P.value or super_pod_id == -1
+    ) and URMA_LEVEL_1 in urma_device_map:
         del urma_device_map[URMA_LEVEL_1]
     return urma_device_map
 
 
 def construct_rootinfo(params):
-    local_id_list, level_count, super_pod_id, chassis_id, topo_path, super_pod_type, server_index = parse_param(params)
+    (
+        local_id_list,
+        level_count,
+        super_pod_id,
+        chassis_id,
+        topo_path,
+        super_pod_type,
+        server_index,
+    ) = parse_param(params)
     die_count, die_port_count = params["die_count"], params["die_port_count"]
     TopoSingleFactory.set_topo_path(topo_path)
     rootinfo = RootInfo([])
@@ -392,12 +569,21 @@ def construct_rootinfo(params):
         if level_count > 0:
             npu = NPU(device_id, device_id, [])
             for j in range(level_count):
-                ud = construct_urma_device_with_generate_eid(device_id, j, die_count, die_port_count, super_pod_id, chassis_id)
+                npu_info = (device_id, j, die_count, die_port_count, super_pod_id, chassis_id)
+                ud = construct_urma_device_with_generate_eid(npu_info)
                 npu.level_list.append(ud)
         # Query DCMI to get URMA device information
         else:
             npu = NPU(device_id, local_id, [])
-            urma_device_map = get_urma_device_map(chassis_id, device_id, super_pod_id, local_id, super_pod_type, server_index)
+            device_info = (
+                chassis_id,
+                device_id,
+                super_pod_id,
+                local_id,
+                super_pod_type,
+                server_index,
+            )
+            urma_device_map = get_urma_device_map(device_info)
             for key in sorted(urma_device_map.keys()):
                 if urma_device_map[key].rank_addr_list:
                     npu.level_list.append(urma_device_map[key])
@@ -405,9 +591,3 @@ def construct_rootinfo(params):
 
     ret = json.dumps(rootinfo, indent=2, cls=RootInfoEncoder)
     return ret
-
-
-
-
-
-

@@ -18,24 +18,26 @@ import ctypes
 import functools
 import os
 
-from mindcluster_tools.dcmi.dcmi_cmd import DcmiMainCmdEnum, main_cmd_to_sub_cmd_enum
+from mindcluster_tools.dcmi.dcmi_cmd import DcmiMainCmdEnum, MAIN_CMD_TO_SUB_CMD
 from mindcluster_tools.error.error import DcmiReturnValueError
+from mindcluster_tools.utils.const import EID_SIZE
 
-
-# EID occupies 16 bytes
-EID_SIZE = 16
 # Mocking ip starts from 0
 _roce_ip_start = 0
 
 
 def validate_process(func):
     """Decorator that automatically adds validation to all methods beginning with _process"""
+
     @functools.wraps(func)
     def wrapped_method(*args, **kwargs):
         result = func(*args, **kwargs)
         if result != 0:
-            raise DcmiReturnValueError(f"function [{func.__name__}] return value is not 0]")
+            raise DcmiReturnValueError(
+                f"function [{func.__name__}] return value is not 0]"
+            )
         return result
+
     return wrapped_method
 
 
@@ -127,66 +129,84 @@ def dcmi_get_card_list():
     """Get NPU ID list"""
     dcmi_lib = _get_dcmi_lib()
     list_len = 16
-    dcmi_lib.dcmi_get_card_list.argtypes = [ctypes.POINTER(ctypes.c_int),
-                                            ctypes.POINTER(ctypes.c_int * list_len),
-                                            ctypes.c_int]
+    dcmi_lib.dcmi_get_card_list.argtypes = [
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int * list_len),
+        ctypes.c_int,
+    ]
     dcmi_lib.dcmi_get_card_list.restype = ctypes.c_int
     card_num, card_list = ctypes.c_int(0), (ctypes.c_int * list_len)()
-    _process_dcmi_get_card_list(dcmi_lib, ctypes.byref(card_num), ctypes.byref(card_list), list_len)
-    return card_num.value, card_list[:card_num.value]
+    _process_dcmi_get_card_list(
+        dcmi_lib, ctypes.byref(card_num), ctypes.byref(card_list), list_len
+    )
+    return card_num.value, card_list[: card_num.value]
 
 
 @validate_process
-def _process_dcmi_get_device_id_in_card(dcmi_lib, card_id, device_id_max, mcu_id, cpu_id):
+def _process_dcmi_get_device_id_in_card(
+    dcmi_lib, card_id, device_id_max, mcu_id, cpu_id
+):
     return dcmi_lib.dcmi_get_device_id_in_card(card_id, device_id_max, mcu_id, cpu_id)
 
 
 def get_device_id_in_card(card_id):
     """Get the (number of chips, MCU_ID, CPU_ID) on the specified NPU management unit"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_device_id_in_card.argtypes = [ctypes.c_int,
-                                                    ctypes.POINTER(ctypes.c_int),
-                                                    ctypes.POINTER(ctypes.c_int),
-                                                    ctypes.POINTER(ctypes.c_int)]
+    dcmi_lib.dcmi_get_device_id_in_card.argtypes = [
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int),
+    ]
     dcmi_lib.dcmi_get_device_id_in_card.restype = ctypes.c_int
     device_id_max, mcu_id, cpu_id = ctypes.c_int(0), ctypes.c_int(0), ctypes.c_int(0)
-    _process_dcmi_get_device_id_in_card(dcmi_lib,
-                                        card_id,
-                                        ctypes.byref(device_id_max),
-                                        ctypes.byref(mcu_id),
-                                        ctypes.byref(cpu_id))
+    _process_dcmi_get_device_id_in_card(
+        dcmi_lib,
+        card_id,
+        ctypes.byref(device_id_max),
+        ctypes.byref(mcu_id),
+        ctypes.byref(cpu_id),
+    )
     return device_id_max.value, mcu_id.value, cpu_id.value
 
 
 @validate_process
-def _process_get_super_pod_info(dcmi_lib, card_id, device_id, main_cmd, sub_cmd, buf, size):
-    return dcmi_lib.dcmi_get_device_info(card_id, device_id, main_cmd, sub_cmd, buf, size)
+def _process_get_super_pod_info(
+    dcmi_lib, card_id, device_id, main_cmd, sub_cmd, buf, size
+):
+    return dcmi_lib.dcmi_get_device_info(
+        card_id, device_id, main_cmd, sub_cmd, buf, size
+    )
 
 
 def get_super_pod_info():
     """Get superpod information"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_device_info.argtypes = [ctypes.c_int,
-                                              ctypes.c_int,
-                                              ctypes.c_uint,
-                                              ctypes.c_uint,
-                                              ctypes.c_void_p,
-                                              ctypes.POINTER(ctypes.c_uint)]
+    dcmi_lib.dcmi_get_device_info.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_uint,
+        ctypes.c_uint,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_uint),
+    ]
     dcmi_lib.dcmi_get_device_info.restype = ctypes.c_int
     card_id, device_id = 0, 0
     main_cmd = DcmiMainCmdEnum.DCMI_MAIN_CMD_CHIP_INF.value
-    sub_enum = main_cmd_to_sub_cmd_enum.get(DcmiMainCmdEnum.DCMI_MAIN_CMD_CHIP_INF, None)
+    sub_enum = MAIN_CMD_TO_SUB_CMD.get(DcmiMainCmdEnum.DCMI_MAIN_CMD_CHIP_INF, None)
     if sub_enum is None:
         raise KeyError
     sub_cmd = sub_enum.DCMI_CHIP_SUB_CMD_SPOD_INFO.value
     spod_info = CSuperPodInfo()
-    _process_get_super_pod_info(dcmi_lib,
-                                card_id,
-                                device_id,
-                                main_cmd,
-                                sub_cmd,
-                                ctypes.byref(spod_info),
-                                ctypes.byref(ctypes.c_uint(ctypes.sizeof(CSuperPodInfo))))
+    _process_get_super_pod_info(
+        dcmi_lib,
+        card_id,
+        device_id,
+        main_cmd,
+        sub_cmd,
+        ctypes.byref(spod_info),
+        ctypes.byref(ctypes.c_uint(ctypes.sizeof(CSuperPodInfo))),
+    )
     return spod_info
 
 
@@ -198,9 +218,11 @@ def _process_dcmi_get_urma_device_cnt(dcmi_lib, card_id, device_id, count):
 def get_urma_device_cnt(card_id, device_id):
     """Get the number of URMA for the device"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_urma_device_cnt.argtypes = [ctypes.c_int,
-                                                  ctypes.c_int,
-                                                  ctypes.POINTER(ctypes.c_int)]
+    dcmi_lib.dcmi_get_urma_device_cnt.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int),
+    ]
     dcmi_lib.dcmi_get_urma_device_cnt.restype = ctypes.c_int
     count = ctypes.c_int(0)
     _process_dcmi_get_urma_device_cnt(dcmi_lib, card_id, device_id, ctypes.byref(count))
@@ -208,32 +230,37 @@ def get_urma_device_cnt(card_id, device_id):
 
 
 @validate_process
-def _process_dcmi_get_eid_list_by_urma_dev_index(dcmi_lib, card_id, device_id, dev_index, eid_ptr, eid_cnt):
-    return dcmi_lib.dcmi_get_eid_list_by_urma_dev_index(card_id, device_id, dev_index, eid_ptr, eid_cnt)
+def _process_dcmi_get_eid_list_by_urma_dev_index(
+    dcmi_lib, card_id, device_id, dev_index, eid_ptr, eid_cnt
+):
+    return dcmi_lib.dcmi_get_eid_list_by_urma_dev_index(
+        card_id, device_id, dev_index, eid_ptr, eid_cnt
+    )
 
 
 def get_eid_list_by_urma_dev_index(card_id, device_id, dev_index):
     """Get EID list information for the specified URMA device"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_eid_list_by_urma_dev_index.argtypes = [ctypes.c_int,
-                                                             ctypes.c_int,
-                                                             ctypes.c_int,
-                                                             ctypes.POINTER(EidInfo),
-                                                             ctypes.POINTER(ctypes.c_int)]
+    dcmi_lib.dcmi_get_eid_list_by_urma_dev_index.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(EidInfo),
+        ctypes.POINTER(ctypes.c_int),
+    ]
     dcmi_lib.dcmi_get_eid_list_by_urma_dev_index.restype = ctypes.c_int
     MAX_LEN = 32
     eid_ptr = (EidInfo * MAX_LEN)()
     eid_cnt = ctypes.c_int(0)
-    _process_dcmi_get_eid_list_by_urma_dev_index(dcmi_lib,
-                                                 card_id,
-                                                 device_id,
-                                                 dev_index,
-                                                 eid_ptr,
-                                                 ctypes.byref(eid_cnt))
+    _process_dcmi_get_eid_list_by_urma_dev_index(
+        dcmi_lib, card_id, device_id, dev_index, eid_ptr, ctypes.byref(eid_cnt)
+    )
     eid_list = []
     for j in range(eid_cnt.value):
         cur_eid_info = eid_ptr[j]
-        eid_list.append("".join([format(c, '02x') for c in cur_eid_info.eid[:EID_SIZE]]))
+        eid_list.append(
+            "".join([format(c, "02x") for c in cur_eid_info.eid[:EID_SIZE]])
+        )
     return eid_list
 
 
@@ -244,7 +271,10 @@ def _process_get_local_id(dcmi_lib, card_id, local_id):
 def get_local_id(card_id):
     """Get local_id by card_id using dcmi_get_device_phyid_from_logicid. In Ascend950, card_id equals logic_id in a broad."""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_device_phyid_from_logicid.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+    dcmi_lib.dcmi_get_device_phyid_from_logicid.argtypes = [
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int),
+    ]
     dcmi_lib.dcmi_get_device_phyid_from_logicid.restype = ctypes.c_int
     card_id = ctypes.c_int(card_id)
     local_id = ctypes.c_int(0)
@@ -259,7 +289,11 @@ def _process_get_device_board_info(dcmi_lib, card_id, device_id, board_info):
 def get_device_board_info():
     """Get board information, board_id can confirm whether it is a standard card form factor"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_device_board_info.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(CBoardInfo)]
+    dcmi_lib.dcmi_get_device_board_info.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(CBoardInfo),
+    ]
     dcmi_lib.dcmi_get_device_board_info.restype = ctypes.c_int
     card_id = ctypes.c_int(0)
     device_id = ctypes.c_int(0)
@@ -269,13 +303,19 @@ def get_device_board_info():
 
 
 def _process_get_mainboard_id(dcmi_lib, card_id, device_id, mainboard_id):
-    return dcmi_lib.dcmi_get_mainboard_id(card_id, device_id, ctypes.byref(mainboard_id))
+    return dcmi_lib.dcmi_get_mainboard_id(
+        card_id, device_id, ctypes.byref(mainboard_id)
+    )
 
 
 def get_mainboard_id():
     """Get mainboard_id to determine the number of P interconnects in the current standard card"""
     dcmi_lib = _get_dcmi_lib()
-    dcmi_lib.dcmi_get_mainboard_id.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_uint)]
+    dcmi_lib.dcmi_get_mainboard_id.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_uint),
+    ]
     dcmi_lib.dcmi_get_mainboard_id.restype = ctypes.c_int
     card_id = ctypes.c_int(0)
     device_id = ctypes.c_int(0)
