@@ -423,6 +423,12 @@ const (
 	Atlas310BHdmi   = "/dev/hdmi"
 )
 
+// UB device
+const (
+	UburmaDevicePath = "/dev/uburma"
+	UmmuDevicePath   = "/dev/ummu"
+)
+
 const (
 	// RootUID is root user id
 	RootUID = 0

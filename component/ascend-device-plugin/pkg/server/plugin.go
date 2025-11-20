@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -840,6 +841,11 @@ func mountDevice(resp *v1beta1.ContainerAllocateResponse, devices []int, ascendR
 			Permissions:   "rw",
 		})
 	}
+
+	isNpuExists := len(devices) != 0
+	if isNpuExists {
+		mountUBDevice(resp)
+	}
 }
 
 func mountDefaultDevice(resp *v1beta1.ContainerAllocateResponse, defaultDevs []string) {
@@ -851,6 +857,46 @@ func mountDefaultDevice(resp *v1beta1.ContainerAllocateResponse, defaultDevs []s
 			Permissions:   "rw",
 		})
 	}
+}
+
+func mountUBDevice(resp *v1beta1.ContainerAllocateResponse) {
+	uburmaPath := common.UburmaDevicePath
+	if _, err := os.Stat(uburmaPath); err == nil {
+		if err := addDevicesInDir(resp, uburmaPath); err != nil {
+			hwlog.RunLog.Warnf("read uburma devices directory error: %v", err)
+		} else {
+			hwlog.RunLog.Info("uburma devices exist, add uburma devices to spec")
+		}
+	}
+
+	ummuPath := common.UmmuDevicePath
+	if _, err := os.Stat(ummuPath); err == nil {
+		if err := addDevicesInDir(resp, ummuPath); err != nil {
+			hwlog.RunLog.Warnf("read ummu devices directory error: %v", err)
+		} else {
+			hwlog.RunLog.Info("ummu devices exist, add ummu devices to spec")
+		}
+	}
+}
+
+func addDevicesInDir(resp *v1beta1.ContainerAllocateResponse, dirPath string) error {
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return fmt.Errorf("read device dir %v err:%v", dirPath, err)
+	}
+
+	for _, entry := range entries {
+		fullDevicePath := filepath.Join(dirPath, entry.Name())
+		if entry.IsDir() {
+			continue
+		}
+		resp.Devices = append(resp.Devices, &v1beta1.DeviceSpec{
+			HostPath:      fullDevicePath,
+			ContainerPath: fullDevicePath,
+			Permissions:   "rw",
+		})
+	}
+	return nil
 }
 
 func getDeviceContainerPath(hostPath string) string {

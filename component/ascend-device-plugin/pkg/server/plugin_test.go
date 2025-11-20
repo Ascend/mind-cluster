@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"reflect"
 	"testing"
@@ -60,6 +61,22 @@ var (
 		{ObjectMeta: metav1.ObjectMeta{Name: "test5", Namespace: "test5", Annotations: map[string]string{common.
 			PodPredicateTime: "5", api.ResourceNamePrefix + common.Ascend910vir2: api.Ascend910 + "-2c-180-3"}}},
 	}
+	mockAllNpuInfo = common.NpuAllInfo{
+		AllDevs: []common.NpuDevice{
+			{DevType: api.Ascend910, DeviceName: "Ascend910-0", Health: "Healthy"},
+			{DevType: api.Ascend910, DeviceName: "Ascend910-1", Health: "Healthy"},
+		},
+		AICoreDevs: []*common.NpuDevice{
+			{DevType: api.Ascend910, DeviceName: "Ascend910-0", Health: "Healthy"},
+			{DevType: api.Ascend910, DeviceName: "Ascend910-1", Health: "Healthy"},
+		},
+		AllDevTypes: []string{api.Ascend910},
+	}
+	mockUBDevices = []os.DirEntry{
+		FakeDirEntry{name: "udma1", typ: fs.ModeDevice},
+		FakeDirEntry{name: "udma2", typ: fs.ModeDevice},
+		FakeDirEntry{name: "udma3", typ: fs.ModeDevice},
+	}
 	fakeErr = errors.New("fake error")
 )
 
@@ -94,6 +111,20 @@ func (stream *fakeGrpcStream) SendMsg(m interface{}) error { return nil }
 func (stream *fakeGrpcStream) RecvMsg(m interface{}) error { return nil }
 
 func (stream *fakeGrpcStream) Send(*v1beta1.ListAndWatchResponse) error { return nil }
+
+type FakeDirEntry struct {
+	name string
+	typ  fs.FileMode
+	info fs.FileInfo
+}
+
+func (f FakeDirEntry) Name() string { return f.name }
+
+func (f FakeDirEntry) IsDir() bool { return false }
+
+func (f FakeDirEntry) Type() fs.FileMode { return f.typ }
+
+func (f FakeDirEntry) Info() (fs.FileInfo, error) { return f.info, nil }
 
 // TestListAndWatch for test the interface ListAndWatch
 func TestListAndWatch(t *testing.T) {
@@ -395,6 +426,87 @@ func TestAllocateWithVolcano3(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(len(realAllocate), convey.ShouldEqual, 1)
 			convey.So(realAllocate[0], convey.ShouldEqual, api.Ascend910+"-1")
+		})
+	})
+}
+
+// TestAllocateUBDevice for test the Allocate when ub devices exist
+func TestAllocateUBDevice(t *testing.T) {
+	ps := NewPluginServer(api.Ascend910, devices, nil, device.NewHwAscend910Manager())
+	common.ParamOption.UseVolcanoType = false
+	common.ParamOption.UseAscendDocker = false
+	var requests v1beta1.AllocateRequest
+	convey.Convey("test allocate ub devices", t, func() {
+		mockGetNPUsFunc := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend910Manager)), "GetNPUs",
+			func(_ *device.HwAscend910Manager) (common.NpuAllInfo, error) {
+				return mockAllNpuInfo, nil
+			})
+		defer mockGetNPUsFunc.Reset()
+		mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
+		defer mockSlowNodeFunc.Reset()
+		ps.deepCopyDevice(devices)
+		requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{
+			{DevicesIDs: []string{"Ascend910-0", "Ascend910-2"}},
+		}
+
+		convey.Convey("ub devices not exist", func() {
+			mockOsStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, os.ErrNotExist
+			})
+			defer mockOsStat.Reset()
+			resp, err := ps.Allocate(context.Background(), &requests)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(resp, convey.ShouldNotBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
+			convey.So(len(resp.ContainerResponses[0].Devices), convey.ShouldEqual,
+				len(requests.ContainerRequests[0].DevicesIDs))
+		})
+
+		convey.Convey("ub devices exist", func() {
+			mockOsStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, nil
+			})
+			defer mockOsStat.Reset()
+			mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+				return mockUBDevices, nil
+			})
+			defer mockReadDir.Reset()
+			resp, err := ps.Allocate(context.Background(), &requests)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(resp, convey.ShouldNotBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
+			mountDeviceNum := 8
+			convey.So(len(resp.ContainerResponses[0].Devices), convey.ShouldEqual, mountDeviceNum)
+		})
+	})
+}
+
+// TestAddDevicesInDir tests the function addDevicesInDir
+func TestAddDevicesInDir(t *testing.T) {
+	convey.Convey("test addDevicesInDir", t, func() {
+		convey.Convey("test addDevicesInDir should add ub devices when read ub directory normally", func() {
+			resp := new(v1beta1.ContainerAllocateResponse)
+			mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+				return []os.DirEntry{
+					FakeDirEntry{name: "udma1", typ: fs.ModeDevice},
+				}, nil
+			})
+			defer mockReadDir.Reset()
+
+			err := addDevicesInDir(resp, "/dev/uburma")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(resp.Devices, convey.ShouldNotBeEmpty)
+		})
+		convey.Convey("test addDevicesInDir should return error when readDir error", func() {
+			resp := new(v1beta1.ContainerAllocateResponse)
+			mockReadDir := gomonkey.ApplyFunc(os.ReadDir, func(path string) ([]os.DirEntry, error) {
+				return nil, fmt.Errorf("dir read error")
+			})
+			defer mockReadDir.Reset()
+
+			err := addDevicesInDir(resp, "/dev/uburma")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(resp.Devices, convey.ShouldBeEmpty)
 		})
 	})
 }
