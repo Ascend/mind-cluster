@@ -108,6 +108,8 @@ const (
 	ao                   = "ao"
 	vo                   = "vo"
 	hdmi                 = "hdmi"
+	uburma               = "uburma"
+	ummu                 = "ummu"
 )
 
 type args struct {
@@ -540,6 +542,43 @@ func addManagerDevice(spec *specs.Spec) error {
 	return nil
 }
 
+func addUBDevice(spec *specs.Spec) error {
+	uburmaPath := devicePath + uburma
+	if _, err := os.Stat(uburmaPath); err == nil {
+		if err := addDevicesInDir(spec, uburmaPath); err != nil {
+			return err
+		}
+		hwlog.RunLog.Infof("uburma devices exist, add uburma devices to spec")
+	}
+
+	ummuPath := devicePath + ummu
+	if _, err := os.Stat(ummuPath); err == nil {
+		if err := addDevicesInDir(spec, ummuPath); err != nil {
+			return err
+		}
+		hwlog.RunLog.Infof("ummu devices exist, add ummu devices to spec")
+	}
+	return nil
+}
+
+func addDevicesInDir(spec *specs.Spec, dirPath string) error {
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return fmt.Errorf("read device dir %s err:%v", dirPath, err)
+	}
+
+	for _, entry := range entries {
+		fullDevicePath := filepath.Join(dirPath, entry.Name())
+		if entry.IsDir() {
+			continue
+		}
+		if err := addDeviceToSpec(spec, fullDevicePath, fullDevicePath); err != nil {
+			return fmt.Errorf("add %s to spec error: %#v", fullDevicePath, err)
+		}
+	}
+	return nil
+}
+
 func checkVisibleDevice(spec *specs.Spec) ([]int, error) {
 	if spec.Process == nil {
 		return nil, errors.New("empty process info")
@@ -579,6 +618,11 @@ func addDevice(spec *specs.Spec, deviceIdList []int) error {
 		if err := addDeviceToSpec(spec, dPath, dContainerPath); err != nil {
 			return fmt.Errorf("failed to add davinci device to spec: %v", err)
 		}
+	}
+
+	if err := addUBDevice(spec); err != nil {
+		hwlog.RunLog.Errorf("failed to add ub device, error: %v", err)
+		return fmt.Errorf("failed to add ub device to spec: %v", err)
 	}
 
 	if err := addManagerDevice(spec); err != nil {

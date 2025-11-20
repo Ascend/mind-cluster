@@ -84,7 +84,6 @@ function build_bin()
 
     [ -d "${ROOT}/opensource/src" ] && rm -rf ${ROOT}/opensource/src
     mkdir ${ROOT}/opensource/src
-    export GOPATH="${ROOT}/opensource"
     export GO111MODULE=on
     export GONOSUMDB="*"
     export GONOPROXY=*.huawei.com
@@ -98,11 +97,13 @@ function build_bin()
     export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_LDFLAGS="-Wl,-z,now -Wl,-s,--build-id=none -pie"
     mkdir -p ${BUILD}/build/helper/build
+    go mod tidy
     go build -buildmode=pie  -ldflags='-linkmode=external -buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath -o ${BUILD}/build/helper/build/ascend-docker-plugin-install-helper ${INSTALLHELPERSRCDIR}/${INSTALLHELPERSRCNAME}
 
     echo "make hook"
     [ -d "${HOOKSRCDIR}/build" ] && rm -rf ${HOOKSRCDIR}/build
     mkdir ${HOOKSRCDIR}/build && cd ${HOOKSRCDIR}/build
+    go mod tidy
     go build -buildmode=pie  -ldflags='-linkmode=external -buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath  -o ascend-docker-hook ../${HOOKSRCNAME}
     echo `pwd`
     ls
@@ -112,6 +113,7 @@ function build_bin()
     [ -d "${RUNTIMESRCDIR}/build" ] && rm -rf ${RUNTIMESRCDIR}/build
     mkdir ${RUNTIMESRCDIR}/build&&cd ${RUNTIMESRCDIR}/build
     export CGO_ENABLED=1
+    go mod tidy
     go build -buildmode=pie  -ldflags='-linkmode=external -buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath  -o ascend-docker-runtime ../${RUNTIMESRCNAME}
 }
 

@@ -52,12 +52,12 @@ fi
 
 cd "$TOP_DIR"/component
 CUR_DIR=$(dirname $(readlink -f $0))
-mind_cluster=$(ls -l "$CUR_DIR" |awk '/^d/ {print $NF}')
+mind_cluster=("ascend-device-plugin" "ascend-docker-runtime" "ascend-for-volcano" "ascend-operator" "clusterd" "noded" "npu-exporter" "taskd" "mindcluster-tools")
 cd "$TOP_DIR"/build
 cp -rf "$TOP_DIR"/build/service_config.ini $GOPATH/service_config.ini
 dos2unix *.sh && chmod +x *
 
-for component in $mind_cluster
+for component in "${mind_cluster[@]}"
 do
   {
     if [[ $component = "ascend-common" ]]; then
@@ -69,7 +69,7 @@ done
 wait
 echo "all component has built"
 
-for component in $mind_cluster
+for component in "${mind_cluster[@]}"
 do
   {
     if [[ $component = "ascend-common" ]]; then

@@ -28,6 +28,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -513,6 +514,32 @@ func TestParseRuntimeOptions(t *testing.T) {
 	}
 }
 
+// TestAddUBMount tests the function addUBMount
+func TestAddUBMount(t *testing.T) {
+	convey.Convey("test addUBMount", t, func() {
+		convey.Convey("test addUBMount should do nothing when mount file and directory not exist", func() {
+			var fileMountList []string
+			var dirMountList []string
+			mockStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, os.ErrNotExist
+			})
+			defer mockStat.Reset()
+			fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
+			convey.So(fileMountList, convey.ShouldBeEmpty)
+			convey.So(dirMountList, convey.ShouldBeEmpty)
+		})
+		convey.Convey("test addUBMount should append list when mount file and directory exist", func() {
+			var fileMountList []string
+			var dirMountList []string
+			mockStat := mockStat()
+			defer mockStat.Reset()
+			fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
+			convey.So(fileMountList, convey.ShouldNotBeEmpty)
+			convey.So(dirMountList, convey.ShouldNotBeEmpty)
+		})
+	})
+}
+
 // TestGetArgs tests the function getArgs
 func TestGetArgs(t *testing.T) {
 	tests := []struct {
@@ -624,5 +651,27 @@ func TestReadMountConfig(t *testing.T) {
 			_, _, err := readMountConfig("", "")
 			convey.So(err, convey.ShouldBeNil)
 		})
+	})
+}
+
+type mockFileInfo struct {
+	mode os.FileMode
+	sys  interface{}
+}
+
+func (m mockFileInfo) Name() string       { return "mock" }
+func (m mockFileInfo) Size() int64        { return 0 }
+func (m mockFileInfo) Mode() os.FileMode  { return m.mode }
+func (m mockFileInfo) ModTime() time.Time { return time.Now() }
+func (m mockFileInfo) IsDir() bool        { return false }
+func (m mockFileInfo) Sys() interface{}   { return m.sys }
+
+func mockStat() *gomonkey.Patches {
+	return gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+		mockMountItemMap := map[string]mockFileInfo{
+			hcclRootInfo: {mode: os.ModeTemporary},
+			topoDirPath:  {mode: os.ModeDir},
+		}
+		return mockMountItemMap[name], nil
 	})
 }
