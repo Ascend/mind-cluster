@@ -291,10 +291,17 @@ func (c *PluginInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]int
 	pluginCache, _ := c.Cache.Load(pluginInfoKey)
 	npuPluginCache, _ := c.Cache.Load(npuPluginInfoKey)
 	// update plugin info
+	if fieldsMap[common.GeneralDevTagKey] == nil {
+		fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
+	}
 	doUpdateTelegraf(fieldsMap[common.GeneralDevTagKey], PluginInfoDesc, pluginCache.(float64), "")
 	// update npu plugin info
 	const NpuLogicID = "1"
-	doUpdateTelegraf(fieldsMap[NpuLogicID], PluginNpuInfoDesc, npuPluginCache.(float64), "")
+	value := float64(npuPluginCache.(int32))
+	if fieldsMap[NpuLogicID] == nil {
+		fieldsMap[NpuLogicID] = make(map[string]interface{})
+	}
+	doUpdateTelegraf(fieldsMap[NpuLogicID], PluginNpuInfoDesc, value, "")
 	return fieldsMap
 }
 
@@ -332,6 +339,7 @@ func getDescName(desc *prometheus.Desc) string {
 func doUpdateTelegraf(fieldMap map[string]interface{}, desc *prometheus.Desc, value interface{}, extInfo string) {
 	fieldMap[getDescName(desc)+extInfo] = value
 }
+
 
 ```
 
