@@ -29,12 +29,9 @@ import (
 // GetNodeIp get the ip address of node pod
 func GetNodeIp() (string, error) {
 	xdlIp := os.Getenv(constants.XdlIpField)
-	if xdlIp != "" {
-		if checkIp := net.ParseIP(xdlIp); checkIp != nil && checkIp.To4() != nil {
-			return xdlIp, nil
-		}
+	if err := IpValidator(xdlIp); err == nil {
+		return xdlIp, nil
 	}
-
 	// no env, output the warn log and get local ip
 	hwlog.RunLog.Warnf("[FD-OL]%v environment variable isn't set or isn't a valid IPv4 address", constants.XdlIpField)
 	addrs, err := net.InterfaceAddrs()
@@ -53,11 +50,18 @@ func GetNodeIp() (string, error) {
 // GetClusterIp get the ip address of cluster pod
 func GetClusterIp() string {
 	podIP := os.Getenv(constants.PodIP)
-	if podIP != "" {
-		if checkIp := net.ParseIP(podIP); checkIp != nil && checkIp.To4() != nil {
-			return podIP
-		}
+	if err := IpValidator(podIP); err == nil {
+		return podIP
 	}
 	hwlog.RunLog.Warnf("[FD-OL]%v environment variable isn't set or isn't a valid IPv4 address", constants.PodIP)
 	return ""
+}
+
+// IpValidator validate the ip address is valid or not
+func IpValidator(ip string) error {
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil || parsedIP.To4() == nil {
+		return fmt.Errorf("invalid IPv4 address: %s", ip)
+	}
+	return nil
 }

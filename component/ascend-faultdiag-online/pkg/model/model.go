@@ -21,7 +21,9 @@ package model
 type HcclJson struct {
 	// ServerList is a node info list which traning job uses
 	ServerList []struct {
-		// ServerId is the ip of node
+		// HostIp is the ip of node
+		HostIp string `json:"host_ip"`
+		// ServerId is the id of node
 		ServerId string `json:"server_id"`
 		// ServerSn is the series number of node
 		ServerSn string `json:"server_sn"`
