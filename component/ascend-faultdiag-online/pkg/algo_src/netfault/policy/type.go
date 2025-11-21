@@ -73,6 +73,30 @@ type NpuInfo struct { /* 新1D、2D */
 	PhyId string
 	// VnicIpMap is a mapping of virtual NIC IP information
 	VnicIpMap map[string]*VnicInfo
+	// LevelList is a leve list
+	LevelList []LevelElement
+}
+
+// LevelElement for the concrete level info in rank table
+type LevelElement struct {
+	NetLayer      int    `json:"net_layer"`       // generate by operator, tentatively increase from 0
+	NetInstanceID string `json:"net_instance_id"` // from annotation, relying on super_pod_id field
+	NetType       string `json:"net_type"`        // generate by operator, level=0 tentatively empty; level=1,2 clos
+	NetAttr       string `json:"net_attr"`        // generate by operator, tentatively empty /
+	// generate by operator, tentatively level=0,3 nil; level=1,2 from 9th and 18th eid
+	RankAddrList []RankAddrItem `json:"rank_addr_list"`
+}
+
+// RankAddrItem for item info in LevelElement
+type RankAddrItem struct {
+	// AddrType address type
+	AddrType string `json:"addr_type"`
+	// Addr rank address
+	Addr string `json:"addr"`
+	// Ports rank ports
+	Ports []string `json:"ports"`
+	// PlanId plan id
+	PlaneId string `json:"plane_id"`
 }
 
 // VnicInfo vnic ip info for device

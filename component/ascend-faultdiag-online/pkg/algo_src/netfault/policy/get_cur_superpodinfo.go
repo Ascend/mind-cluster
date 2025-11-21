@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -34,36 +35,56 @@ import (
 	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
-const numSplits = 2
+const (
+	numSplits  = 2
+	configFile = "cathelper.conf"
 
-const configFile = "cathelper.conf"
+	minSuperPodRoceDetectionNums = 5
+	minSuperPodRoceNpuNumsRate   = 0.01
+
+	// DiagVersionA3 is the fault detection A3 string
+	DiagVersionA3 = "A3"
+	// DiagVersionA5 is the fault detection A5 string
+	DiagVersionA5 = "A5"
+	// DiagVersionServer is the inference server
+	DiagVersionServer = "800I-SuperPod-A5-8"
+
+	logPrintInterval = 10
+	// NpuType is the Network Topology Type
+	NpuType = "npu_type"
+	// ServerIdMap is the mapping between nodeName and serverId
+	ServerIdMap = "serverIdMap"
+
+	level3 = 3
+	level1 = 1
+	level0 = 0
+)
 
 /* 解析server级别topo需要的参数 */
 type superPodParam struct {
-	superPodId    string
-	protocol      string
-	rack          *RackInfo
-	server        *ServerInfo
-	npu           *NpuInfo
-	protocolPorts *PortInfo
+	superPodId     string
+	protocol       string
+	rack           *RackInfo
+	server         *ServerInfo
+	npu            *NpuInfo
+	protocolPorts  *PortInfo
+	protocolLevels *LevelElement
 }
-
-// DiagVersionA3 故障检测A3字符串
-const DiagVersionA3 = "A3"
-
-const logPrintInterval = 10
-
-// NpuType 网络拓扑类型
-const NpuType = "npu_type"
-
-// ServerIdMap nodeName与serverId的映射
-const ServerIdMap = "serverIdMap"
 
 type npuMapParam struct {
 	superPodInfo   *SuperPodInfo
 	typeStr        string
 	rackNpuMap     map[string]bool
 	serverTopology *RackTopology
+}
+
+type parseTopoParam struct {
+	topoServerDirPath  []string
+	superPodInfo       *SuperPodInfo
+	superPodRackNpuMap map[string]map[string]bool
+	typeStr            string
+	rackAndServerInfo  [][]string
+	superPodPath       string
 }
 
 func spliceSuperPodFilePath(superPodPath string) string {
@@ -337,4 +358,330 @@ func CheckCurSuperPodConfigSwitch(superPodPath string) bool {
 		return true
 	}
 	return false
+}
+
+func getReasoningServerSuperPodNpuMap(superPodInfo *SuperPodInfo) map[string]algo.NpuInfo {
+	npuEidMap := make(map[string]algo.NpuInfo)
+	rackMap := superPodInfo.RackMap
+	if len(rackMap) != 1 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]error rack numbers")
+		return nil
+	}
+	var rackSingle *RackInfo
+	for _, rack := range rackMap {
+		rackSingle = rack
+		break
+	}
+	if rackSingle == nil || len(rackSingle.ServerMap) == 0 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]error rack inner server mumbers")
+		return nil
+	}
+	serverIds := make([]int, 0)
+	for _, server := range rackSingle.ServerMap {
+		serverId, err := strconv.Atoi(server.ServerIndex)
+		if err != nil {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]%v", err)
+			continue
+		}
+		serverIds = append(serverIds, serverId)
+	}
+	sort.Ints(serverIds)
+	for index, serverId := range serverIds {
+		strId := strconv.Itoa(serverId)
+		server := rackSingle.ServerMap[strId]
+		for _, npu := range server.NpuMap {
+			if npu == nil || npu.LevelList == nil || len(npu.LevelList) == 0 {
+				continue
+			}
+			getReasoningServerNpuInfo(npuEidMap, index, npu, server.ServerIndex, superPodInfo.SuperPodID)
+		}
+	}
+	return npuEidMap
+}
+
+func handleReasoningServer(superPodInfo *SuperPodInfo, superPodPath string) (map[string]algo.NpuInfo, bool) {
+	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s: invalid or empty superPodInfo", superPodPath)
+		return nil, false
+	}
+	npuMap := getReasoningServerSuperPodNpuMap(superPodInfo)
+	if len(npuMap) == 0 {
+		return nil, false
+	}
+	return npuMap, true
+}
+
+/* 根据协议构建算法需要的链路形式(1D、2D与roce链路格式都不相同) */
+func formatDifferentByProtocol(npuNetPlanePaths map[string][]string,
+	param superPodParam,
+	id int) bool {
+	if npuNetPlanePaths == nil {
+		hwlog.RunLog.Error("[NETFAULT ALGO]empty npuNetPlanePaths!")
+		return false
+	}
+	// key使用rack-os
+	key := param.rack.RackID + "-" + param.server.ServerIndex
+	if _, exist := npuNetPlanePaths[key]; !exist {
+		npuNetPlanePaths[key] = make([]string, 0)
+	}
+	var link string
+	switch param.protocol {
+	case "ROCE":
+		link =
+			fmt.Sprintf("NA.ROCESwitch:0#NA.SuperPod-%s:0#NA.NSlot-0:0#NPU-%s.%s:0",
+				param.superPodId, param.npu.PhyId, param.protocolLevels.RankAddrList[id].Addr)
+	default:
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]undefined protocol:%s", param.protocol)
+		return false
+	}
+	npuNetPlanePaths[key] = append(npuNetPlanePaths[key], link)
+	return true
+}
+
+func getRoceNpuLinkPathInfo(npuNetPlanePaths map[string][]string, param superPodParam,
+	npuMap map[string]string) {
+	if npuNetPlanePaths == nil || npuMap == nil {
+		return
+	}
+	for _, levelInfo := range param.npu.LevelList {
+		if levelInfo.NetLayer != level3 {
+			continue
+		}
+		/* roce每个os下每个npu出口ip相同 */
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			param.protocolLevels = &levelInfo
+			flag := formatDifferentByProtocol(npuNetPlanePaths, param, i)
+			/* 超节点间每张卡取一个ip就可以了 */
+			if _, exist := npuMap[levelInfo.RankAddrList[i].Addr]; !exist && param.protocol == "ROCE" && flag {
+				npuMap[levelInfo.RankAddrList[i].Addr] = param.superPodId + "_" +
+					param.rack.RackID + "_" + param.server.ServerIndex
+				break
+			}
+		}
+	}
+}
+
+func getRoceServerLevelNpuLinkPathInfo(npuNetPlanePaths map[string][]string,
+	param superPodParam) map[string]string {
+	// key:address; value:=superPod_rackId_osId, roce每个os下所有npu出口ip相同
+	npuMap := make(map[string]string)
+	for _, server := range param.rack.ServerMap {
+		if server == nil || server.NpuMap == nil || len(server.NpuMap) == 0 {
+			continue
+		}
+		for _, npu := range server.NpuMap {
+			if npu == nil || npu.LevelList == nil || len(npu.LevelList) == 0 {
+				continue
+			}
+			param.server = server
+			param.npu = npu
+			getRoceNpuLinkPathInfo(npuNetPlanePaths, param, npuMap)
+		}
+	}
+	return npuMap
+}
+
+func mergeRoceNpuInfoMap(dst map[string]string, src map[string]string) {
+	if src == nil || dst == nil {
+		return
+	}
+	for k, v := range src {
+		if _, exist := dst[k]; !exist {
+			dst[k] = v
+		}
+	}
+}
+
+func getRoceNpuLinkPathFromSuperPodJson(superPodInfo *SuperPodInfo,
+	protocol string) (map[string][]string, map[string]string) {
+	if superPodInfo == nil {
+		hwlog.RunLog.Error("[NETFAULT ALGO]invalid super pod information")
+		return nil, nil
+	}
+
+	if superPodInfo.RackMap == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]super pod %s empty rack info", superPodInfo.SuperPodID)
+		return nil, nil
+	}
+	npuRoceInfoMap := make(map[string]string)
+	npuNetPlanePaths := make(map[string][]string)
+	for _, rack := range superPodInfo.RackMap {
+		if rack == nil || rack.ServerMap == nil || len(rack.ServerMap) == 0 {
+			continue
+		}
+		param := superPodParam{}
+		param.superPodId = superPodInfo.SuperPodID
+		param.protocol = protocol
+		param.rack = rack
+		npuMap := getRoceServerLevelNpuLinkPathInfo(npuNetPlanePaths, param)
+		mergeRoceNpuInfoMap(npuRoceInfoMap, npuMap)
+	}
+	if len(npuNetPlanePaths) == 0 {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]super pod %s empty npu link path", superPodInfo.SuperPodID)
+	}
+	return npuNetPlanePaths, npuRoceInfoMap
+}
+
+// 从按约定的格式的字符串中取出相关信息
+func getNpuInfoFromNpuLinkPath(npuMap map[string]algo.NpuInfo, npuLinkPath string) {
+	if npuMap == nil {
+		return
+	}
+	var superPodId, npuId, ip1, ip2, ip3, ip4 int
+	lenParam := 6
+	num, err := fmt.Sscanf(npuLinkPath, "NA.ROCESwitch:0#NA.SuperPod-%d:0#NA.NSlot-0:0#NPU-%d.%d.%d.%d.%d:0",
+		&superPodId, &npuId, &ip1, &ip2, &ip3, &ip4)
+	if err != nil || num != lenParam {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]roceIp:%s(%v)", npuLinkPath, err)
+		return
+	}
+	slotId := npuId / perBoardNpus
+	ip := strconv.Itoa(ip1) + "." + strconv.Itoa(ip2) + "." + strconv.Itoa(ip3) + "." + strconv.Itoa(ip4)
+	npuMap[ip] = algo.NpuInfo{
+		NpuNumber:    npuId,
+		SuperPodName: "SuperPod-" + strconv.Itoa(superPodId),
+		SlotName:     "NSlot-" + strconv.Itoa(slotId),
+	}
+}
+
+// 随机选出一些NPU LINK PATH信息，并返回这些链路的npu与ip或eid的映射关系
+func getRoceLimitNpuNumsPerSuperPod(npuNetPlanePaths map[string][]string) ([]string, map[string]algo.NpuInfo, bool) {
+	if len(npuNetPlanePaths) == 0 {
+		return nil, nil, false
+	}
+	// 超节点os总数
+	total := len(npuNetPlanePaths)
+	tmp := float64(total) * minSuperPodRoceNpuNumsRate
+	ret := make([]string, 0)
+	npuMap := make(map[string]algo.NpuInfo)
+	if tmp < minSuperPodRoceDetectionNums && total >= minSuperPodRoceDetectionNums {
+		tmp = minSuperPodRoceDetectionNums
+	}
+	uniqueMap := make(map[string]bool)
+	for key, path := range npuNetPlanePaths {
+		if _, exist := uniqueMap[key]; !exist && len(path) > 0 {
+			uniqueMap[key] = true
+			ret = append(ret, path[0])
+			getNpuInfoFromNpuLinkPath(npuMap, path[0])
+		}
+		if len(ret) == int(tmp) {
+			break
+		}
+	}
+	if len(ret) < minSuperPodRoceDetectionNums {
+		hwlog.RunLog.Error("[NETFAULT ALGO]not enough npu roce eid nums")
+		return nil, nil, false
+	}
+	return ret, npuMap, true
+}
+
+func getSuperPodIdAndOsIdFromRoceMap(npuMap map[string]algo.NpuInfo, roceMap map[string]string) {
+	if npuMap == nil || roceMap == nil {
+		return
+	}
+	for k, v := range roceMap {
+		if npuInfo, exist := npuMap[k]; exist {
+			var superPodId, rackId, osId int
+			lenParam := 6
+			num, err := fmt.Sscanf(v, "%d_%d_%d", &superPodId, &rackId, &osId)
+			if err != nil || num != lenParam {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			npuMap[k] = algo.NpuInfo{
+				NpuNumber:    npuInfo.NpuNumber,
+				SuperPodName: npuInfo.SuperPodName,
+				OsName:       strconv.Itoa(osId),
+				RackName:     "Rack-" + strconv.Itoa(rackId),
+				SlotName:     npuInfo.SlotName,
+			}
+		}
+	}
+}
+
+// GetSuperPodsRoceNpuInfo 获取超节点间探测npu信息和npu与port映射关系
+func GetSuperPodsRoceNpuInfo(superPodInfoPaths []string) (map[string]algo.NpuInfo, map[string]interface{}) {
+	/* 超节点间Id需要从小到大排序，超节点内rack需要从小到大排序，便于算法区分使用 */
+	if len(superPodInfoPaths) == 0 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]empty roce super pod paths")
+		return nil, nil
+	}
+	npuLinkPaths := make(map[string]interface{})
+	npuLinkPaths["netplane_0"] = make([]string, 0)
+	allSuperPodNpuMap := make(map[string]algo.NpuInfo)
+	count := 0
+	for _, path := range superPodInfoPaths {
+		superPodInfo := readConfigMap(path)
+		if superPodInfo == nil {
+			continue
+		}
+		/* roce仅会有一个值"netplane_0" */
+		npuNetPlanePaths, npuRoceMap := getRoceNpuLinkPathFromSuperPodJson(superPodInfo, "ROCE")
+		if npuNetPlanePaths == nil || len(npuNetPlanePaths) == 0 || npuRoceMap == nil {
+			continue
+		}
+		/* 取%1或至少5个 */
+		npuLinks, npuMap, flag := getRoceLimitNpuNumsPerSuperPod(npuNetPlanePaths)
+		if !flag {
+			continue
+		}
+		/* 补充os id和rack id信息 */
+		getSuperPodIdAndOsIdFromRoceMap(npuMap, npuRoceMap)
+		if paths, ok := npuLinkPaths["netplane_0"].([]string); ok {
+			npuLinkPaths["netplane_0"] = append(paths, npuLinks...)
+		}
+		allSuperPodNpuMap = mergeNpuEidMap(allSuperPodNpuMap, npuMap)
+		count++
+	}
+	if count <= 1 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]valid roce super pod is not enough(at least two super pods)")
+		return nil, nil
+	}
+	return allSuperPodNpuMap, npuLinkPaths
+}
+
+func mergeNpuEidMap(npuEidMapOutRack map[string]algo.NpuInfo,
+	npuEidMapFromTopo map[string]algo.NpuInfo) map[string]algo.NpuInfo {
+	npuInfoMap := make(map[string]algo.NpuInfo)
+	if npuEidMapOutRack != nil {
+		for key, value := range npuEidMapOutRack {
+			npuInfoMap[key] = value
+		}
+	}
+	if npuEidMapFromTopo != nil {
+		for key, value := range npuEidMapFromTopo {
+			if _, exist := npuInfoMap[key]; !exist {
+				npuInfoMap[key] = value
+			}
+		}
+	}
+	return npuInfoMap
+}
+
+func getReasoningServerNpuInfo(npuEidMap map[string]algo.NpuInfo,
+	serverIndex int, npu *NpuInfo, serverId, superPodId string) {
+	for _, levelInfo := range npu.LevelList {
+		if levelInfo.NetLayer != level1 {
+			continue
+		}
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			id, err := strconv.Atoi(npu.PhyId)
+			if err != nil {
+				hwlog.RunLog.Errorf("[CONTROLLER]%s:%v", npu.PhyId, err)
+				continue
+			}
+			npuPhyId := serverIndex*perBoardNpus + id
+			slotId := npuPhyId / perBoardNpus
+			npuInfo := algo.NpuInfo{
+				RackName:     "Rack-0", // 推理服务器都写0
+				NpuNumber:    npuPhyId,
+				SlotName:     "NSlot-" + strconv.Itoa(slotId),
+				NetPlaneId:   "netplane_" + levelInfo.RankAddrList[i].PlaneId,
+				SuperPodName: "SuperPod-" + superPodId,
+				OsName:       serverId}
+			if _, exist := npuEidMap[levelInfo.RankAddrList[i].Addr]; !exist && npuEidMap != nil {
+				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
+			}
+		}
+	}
 }
