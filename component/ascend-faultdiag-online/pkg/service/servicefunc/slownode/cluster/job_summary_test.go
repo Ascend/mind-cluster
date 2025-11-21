@@ -148,9 +148,89 @@ func testJobSummaryProcessorCase2(ctx *slownodejob.JobContext, jobSummary *model
 
 func TestServersGenerator(t *testing.T) {
 	convey.Convey("test serversGenerator", t, func() {
+		testServersGeneratorByEmptyHcclJson()
+		testServersGeneratorByEmptyServerId()
+		testServersGeneratorByInvalidServerId()
+		testServersGeneratorByEmptyHostIp()
+	})
+}
+
+func testServersGeneratorByEmptyHcclJson() {
+	convey.Convey("test serversGenerator by empty hcclJson", func() {
 		var hcclJson = model.HcclJson{}
 		servers := serversGenerator(hcclJson)
 		convey.So(servers, convey.ShouldBeEmpty)
+	})
+}
+
+func testServersGeneratorByEmptyServerId() {
+	convey.Convey("test serversGenerator by empty serverId", func() {
+		var hcclJson = model.HcclJson{}
+		var data = `{
+		"server_list": [
+			{
+				"host_ip": "127.0.0.1",
+				"server_sn": "321123",
+				"device": [
+					{
+						"rank_id": "1"
+					},
+										{
+						"rank_id": "2"
+					}
+				]
+			}
+		]}`
+		err := json.Unmarshal([]byte(data), &hcclJson)
+		convey.So(err, convey.ShouldBeNil)
+		var expect = []slownode.Server{
+			{
+				Sn:      "321123",
+				Ip:      "127.0.0.1",
+				RankIds: []string{"1", "2"},
+			},
+		}
+		servers := serversGenerator(hcclJson)
+		convey.So(reflect.DeepEqual(servers, expect), convey.ShouldBeTrue)
+	})
+}
+
+func testServersGeneratorByInvalidServerId() {
+	convey.Convey("test serversGenerator by invalid serverId", func() {
+		var hcclJson = model.HcclJson{}
+		var data = `{
+		"server_list": [
+			{
+				"server_id": "22211221",
+				"host_ip": "127.0.0.1",
+				"server_sn": "321123",
+				"device": [
+					{
+						"rank_id": "1"
+					},
+										{
+						"rank_id": "2"
+					}
+				]
+			}
+		]}`
+		err := json.Unmarshal([]byte(data), &hcclJson)
+		convey.So(err, convey.ShouldBeNil)
+		var expect = []slownode.Server{
+			{
+				Sn:      "321123",
+				Ip:      "127.0.0.1",
+				RankIds: []string{"1", "2"},
+			},
+		}
+		servers := serversGenerator(hcclJson)
+		convey.So(reflect.DeepEqual(servers, expect), convey.ShouldBeTrue)
+	})
+}
+
+func testServersGeneratorByEmptyHostIp() {
+	convey.Convey("test serversGenerator by valid serverId", func() {
+		var hcclJson = model.HcclJson{}
 		var data = `{
 		"server_list": [
 			{
@@ -175,7 +255,7 @@ func TestServersGenerator(t *testing.T) {
 				RankIds: []string{"1", "2"},
 			},
 		}
-		servers = serversGenerator(hcclJson)
+		servers := serversGenerator(hcclJson)
 		convey.So(reflect.DeepEqual(servers, expect), convey.ShouldBeTrue)
 	})
 }

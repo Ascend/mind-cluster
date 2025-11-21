@@ -24,6 +24,7 @@ import (
 	"ascend-faultdiag-online/pkg/model/slownode"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/common"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
+	"ascend-faultdiag-online/pkg/utils"
 )
 
 const (
@@ -78,9 +79,13 @@ func serversGenerator(hcclJson model.HcclJson) []slownode.Server {
 		for j, device := range server.Device {
 			rankIds[j] = device.RankId
 		}
+		var ip = server.HostIp
+		if utils.IpValidator(server.ServerId) == nil {
+			ip = server.ServerId
+		}
 		servers[i] = slownode.Server{
 			Sn:      server.ServerSn,
-			Ip:      server.ServerId,
+			Ip:      ip,
 			RankIds: rankIds,
 		}
 	}
