@@ -37,15 +37,15 @@ func (ki *ClientK8s) InitPodInformer() {
 	podInformer := factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			UpdatePodList(obj, EventTypeAdd)
+			ki.UpdatePodList(obj, EventTypeAdd)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if !reflect.DeepEqual(oldObj, newObj) {
-				UpdatePodList(newObj, EventTypeUpdate)
+				ki.UpdatePodList(newObj, EventTypeUpdate)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			UpdatePodList(obj, EventTypeDelete)
+			ki.UpdatePodList(obj, EventTypeDelete)
 		},
 	})
 	podInformer.AddEventHandler(ki.ResourceEventHandler(PodResource, checkPod))

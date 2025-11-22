@@ -19,6 +19,8 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
+	"math"
+	"strconv"
 	"sync"
 	"time"
 
@@ -106,16 +108,46 @@ func (ki *ClientK8s) getPod(ctx context.Context, namespace, name string) (*v1.Po
 }
 
 // UpdatePodList update pod list by informer
-func UpdatePodList(newObj interface{}, operator EventType) {
+func (ki *ClientK8s) UpdatePodList(newObj interface{}, operator EventType) {
 	newPod, ok := newObj.(*v1.Pod)
 	if !ok {
 		return
 	}
 	lock.Lock()
 	defer lock.Unlock()
+	oldPod, exists := podCache[newPod.UID]
+	if exists {
+		oldRev, err := strconv.Atoi(oldPod.ResourceVersion)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to convert oldPod.ResourceVersion(%s) to int, err: %v",
+				oldPod.ResourceVersion, err)
+			return
+		}
+		newRev, err := strconv.Atoi(newPod.ResourceVersion)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to convert newPod.ResourceVersion(%s) to int, err: %v",
+				newPod.ResourceVersion, err)
+			return
+		}
+		if oldRev > newRev {
+			hwlog.RunLog.Warnf("pod(%s/%s) is not updated because of lower ResourceVersion", newPod.Namespace, newPod.Name)
+			return
+		}
+	}
 	switch operator {
-	case EventTypeAdd, EventTypeUpdate:
+	case EventTypeAdd:
 		hwlog.RunLog.Infof("pod(%s/%s) is %s to cache", newPod.Namespace, newPod.Name, operator)
+		podCache[newPod.UID] = &podInfo{
+			Pod:        newPod,
+			updateTime: time.Now(),
+		}
+	case EventTypeUpdate:
+		hwlog.RunLog.Infof("pod(%s/%s) is %s to cache", newPod.Namespace, newPod.Name, operator)
+		// When the predicate-time of a pod in the cache is maxUint64, but the predicate-time of the same pod in the cluster is not,
+		// it indicates that the predicate-time=maxUint64, which was set by the getOldestPod logic via a patch,
+		// was overwritten by another component's concurrent update.
+		// In this case, we prioritize the value from the cache and update the pod in the cluster again.
+		ki.updatePodPredicateTime(newPod)
 		podCache[newPod.UID] = &podInfo{
 			Pod:        newPod,
 			updateTime: time.Now(),
@@ -127,6 +159,44 @@ func UpdatePodList(newObj interface{}, operator EventType) {
 		hwlog.RunLog.Errorf("operator is undefined, find operater: %s", operator)
 	}
 	common.TriggerUpdate(fmt.Sprintf("pod %v", string(operator)))
+}
+
+func (ki *ClientK8s) updatePodPredicateTime(newPod *v1.Pod) {
+	cachedPodInfo, exists := podCache[newPod.UID]
+	if !exists {
+		hwlog.RunLog.Debugf("pod(%s/%s) is not exist in cache", newPod.Namespace, newPod.Name)
+		return
+	}
+	if cachedPodInfo.Pod.Annotations == nil {
+		hwlog.RunLog.Debugf("pod(%s/%s) annotation is nil", newPod.Namespace, newPod.Name)
+		return
+	}
+	cachedPredicateTime := cachedPodInfo.Pod.Annotations[common.PodPredicateTime]
+	if cachedPredicateTime != strconv.FormatUint(math.MaxUint64, common.BaseDec) {
+		hwlog.RunLog.Debugf("pod(%s/%s) predicate-time is not maxUint64", newPod.Namespace, newPod.Name)
+		return
+	}
+	needsUpdate := false
+	if newPod.Annotations == nil {
+		hwlog.RunLog.Warnf("pod(%s/%s) annotation is nil", newPod.Namespace, newPod.Name)
+		newPod.Annotations = make(map[string]string)
+		needsUpdate = true
+	}
+	if newPod.Annotations[common.PodPredicateTime] != cachedPredicateTime {
+		hwlog.RunLog.Warnf("pod(%s/%s) predicate-time is not equal to cache", newPod.Namespace, newPod.Name)
+		needsUpdate = true
+	}
+	if needsUpdate {
+		oldValueForLog := newPod.Annotations[common.PodPredicateTime]
+		if oldValueForLog == "" {
+			oldValueForLog = "<nil>"
+		}
+		hwlog.RunLog.Infof("Correcting pod %s/%s predicate-time from %s to %s",
+			newPod.Name, newPod.Namespace, oldValueForLog, cachedPredicateTime)
+		newPod.Annotations[common.PodPredicateTime] = cachedPredicateTime
+		annotation := map[string]string{common.PodPredicateTime: strconv.FormatUint(math.MaxUint64, common.BaseDec)}
+		go ki.TryUpdatePodCacheAnnotation(newPod, annotation)
+	}
 }
 
 func (ki *ClientK8s) refreshPodList() {
