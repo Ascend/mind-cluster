@@ -18,6 +18,9 @@ package kubeclient
 import (
 	"context"
 	"fmt"
+	"math"
+	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -28,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"Ascend-device-plugin/pkg/common"
 )
@@ -42,17 +46,34 @@ func newTestClientK8s() (*ClientK8s, error) {
 }
 
 // TestUpdatePodList test update pod list by informer
-func TestUpdatePodList(t *testing.T) {
+func TestUpdatePodList01(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestUpdatePodList init kubernetes failed")
+	}
 	testPod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			UID:       "testUid",
-			Name:      "testPod",
-			Namespace: "testNamespace",
+			UID:             "testUid",
+			Name:            "testPod",
+			Namespace:       "testNamespace",
+			ResourceVersion: "2",
 		},
 	}
 	podCache = make(map[types.UID]*podInfo)
 	convey.Convey("test update pod list when operator is EventTypeAdd", t, func() {
-		UpdatePodList(testPod, EventTypeAdd)
+		client.UpdatePodList(testPod, EventTypeAdd)
+		expectPodCache := map[types.UID]*podInfo{
+			testPod.UID: {
+				Pod:        testPod,
+				updateTime: podCache[testPod.UID].updateTime,
+			},
+		}
+		convey.So(podCache, convey.ShouldResemble, expectPodCache)
+	})
+	convey.Convey("test cache will not be refresh when pod resourceVersion is lower than cached pod", t, func() {
+		newPod := testPod.DeepCopy()
+		newPod.ResourceVersion = "1"
+		client.UpdatePodList(newPod, EventTypeAdd)
 		expectPodCache := map[types.UID]*podInfo{
 			testPod.UID: {
 				Pod:        testPod,
@@ -63,8 +84,9 @@ func TestUpdatePodList(t *testing.T) {
 	})
 	testPod.Namespace = "testPod1"
 	testPod.Namespace = "testNamespace1"
+	testPod.ResourceVersion = "3"
 	convey.Convey("test update pod list when operator is EventTypeUpdate", t, func() {
-		UpdatePodList(testPod, EventTypeUpdate)
+		client.UpdatePodList(testPod, EventTypeUpdate)
 		expectPodCache := map[types.UID]*podInfo{
 			testPod.UID: {
 				Pod:        testPod,
@@ -73,17 +95,215 @@ func TestUpdatePodList(t *testing.T) {
 		}
 		convey.So(podCache, convey.ShouldResemble, expectPodCache)
 	})
+}
+
+func TestUpdatePodList02(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal("TestUpdatePodList init kubernetes failed")
+	}
+	oldPod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			UID:             "testUid",
+			Name:            "testPod",
+			Namespace:       "testNamespace",
+			ResourceVersion: "2",
+		},
+	}
+	podCache = map[types.UID]*podInfo{
+		oldPod.UID: {
+			Pod:        oldPod,
+			updateTime: time.Now(),
+		},
+	}
+	newPod := oldPod.DeepCopy()
+	newPod.ResourceVersion = "3"
 	convey.Convey("test update pod list when operator is EventTypeDelete", t, func() {
-		UpdatePodList(testPod, EventTypeDelete)
-		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
+		client.UpdatePodList(newPod, EventTypeDelete)
+		convey.So(len(podCache), convey.ShouldEqual, 0)
 	})
 	convey.Convey("test update pod list when operator is default", t, func() {
-		UpdatePodList(testPod, "default")
-		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
+		client.UpdatePodList(newPod, "default")
+		convey.So(len(podCache), convey.ShouldEqual, 0)
 	})
 	convey.Convey("test update pod list failed when newPod is not ok", t, func() {
-		UpdatePodList(nil, "default")
-		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
+		client.UpdatePodList(nil, "default")
+		convey.So(len(podCache), convey.ShouldEqual, 0)
+	})
+}
+
+// TestUpdatePodPredicateTime01 tests basic cases for updatePodPredicateTime
+func TestUpdatePodPredicateTime01(t *testing.T) {
+	convey.Convey("Test updatePodPredicateTime", t, func() {
+		podCache = make(map[types.UID]*podInfo)
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("TestUpdatePodList init kubernetes failed")
+		}
+		convey.Convey("when pod does not exist in cache", func() {
+			newPod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					UID:       types.UID("non-existent-uid"),
+				},
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations, convey.ShouldBeNil)
+		})
+
+		convey.Convey("when cached pod annotations is nil", func() {
+			podUID := types.UID("test-uid")
+			podCache[podUID] = &podInfo{
+				Pod: &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-pod",
+						Namespace: "default",
+						UID:       podUID,
+					},
+				},
+				updateTime: time.Now(),
+			}
+			newPod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					UID:       podUID,
+				},
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestUpdatePodPredicateTime02 tests cases when predicate time is not MaxUint64
+func TestUpdatePodPredicateTime02(t *testing.T) {
+	convey.Convey("Test updatePodPredicateTime", t, func() {
+		podCache = make(map[types.UID]*podInfo)
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("TestUpdatePodList init kubernetes failed")
+		}
+		convey.Convey("when cached predicate time is not MaxUint64", func() {
+			podUID := types.UID("test-uid")
+			podCache[podUID] = &podInfo{
+				Pod: &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-pod",
+						Namespace: "default",
+						UID:       podUID,
+						Annotations: map[string]string{
+							common.PodPredicateTime: "12345",
+						},
+					},
+				},
+				updateTime: time.Now(),
+			}
+			newPod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					UID:       podUID,
+				},
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestUpdatePodPredicateTime03 tests cases when new pod annotations is nil
+func TestUpdatePodPredicateTime03(t *testing.T) {
+	convey.Convey("Test updatePodPredicateTime", t, func() {
+		podCache = make(map[types.UID]*podInfo)
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("TestUpdatePodList init kubernetes failed")
+		}
+		client.Clientset = fake.NewSimpleClientset()
+		mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
+			func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
+				return nil, fmt.Errorf("test function errors")
+			})
+		defer mockPatchPod.Reset()
+		convey.Convey("when new pod annotations is nil", func() {
+			podUID := types.UID("test-uid")
+			podCache[podUID] = &podInfo{
+				Pod: &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-pod",
+						Namespace: "default",
+						UID:       podUID,
+						Annotations: map[string]string{
+							common.PodPredicateTime: strconv.FormatUint(math.MaxUint64, common.BaseDec),
+						},
+					},
+				},
+				updateTime: time.Now(),
+			}
+
+			newPod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					UID:       podUID,
+				},
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations, convey.ShouldNotBeNil)
+			convey.So(newPod.Annotations[common.PodPredicateTime], convey.ShouldEqual, strconv.FormatUint(math.MaxUint64, common.BaseDec))
+		})
+	})
+}
+
+// TestUpdatePodPredicateTime04 tests cases when predicate times differ or match
+func TestUpdatePodPredicateTime04(t *testing.T) {
+	convey.Convey("Test updatePodPredicateTime", t, func() {
+		podCache = make(map[types.UID]*podInfo)
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("TestUpdatePodList init kubernetes failed")
+		}
+		client.Clientset = fake.NewSimpleClientset()
+		maxUint64Str := strconv.FormatUint(math.MaxUint64, common.BaseDec)
+		podUID := types.UID("test-uid")
+		pod := &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-pod",
+				Namespace: "default",
+				UID:       podUID,
+				Annotations: map[string]string{
+					common.PodPredicateTime: maxUint64Str,
+				},
+			},
+		}
+		podCache[podUID] = &podInfo{
+			Pod:        pod,
+			updateTime: time.Now(),
+		}
+		mockPatchPod := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchPod",
+			func(_ *ClientK8s, _ *v1.Pod, _ []byte) (*v1.Pod, error) {
+				return nil, fmt.Errorf("test function errors")
+			})
+		defer mockPatchPod.Reset()
+		convey.Convey("when new pod predicate time differs from cached", func() {
+			newPod := pod.DeepCopy()
+			newPod.Annotations = map[string]string{
+				common.PodPredicateTime: "12345",
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations[common.PodPredicateTime], convey.ShouldEqual,
+				strconv.FormatUint(math.MaxUint64, common.BaseDec))
+		})
+		convey.Convey("when new pod predicate time equals cached", func() {
+			newPod := pod.DeepCopy()
+			newPod.Annotations = map[string]string{
+				common.PodPredicateTime: maxUint64Str,
+			}
+			client.updatePodPredicateTime(newPod)
+			convey.So(newPod.Annotations[common.PodPredicateTime], convey.ShouldEqual, maxUint64Str)
+		})
 	})
 }
 
@@ -105,7 +325,7 @@ func TestRefreshPodList(t *testing.T) {
 		defer mockGetAllPodList.Reset()
 		client.refreshPodList()
 		convey.So(client.IsApiErr, convey.ShouldBeTrue)
-		convey.So(podCache, convey.ShouldResemble, make(map[types.UID]*podInfo))
+		convey.So(len(podCache), convey.ShouldEqual, 1)
 	})
 	convey.Convey("test get pod list by field selector with cache", t, func() {
 		client.IsApiErr = true
