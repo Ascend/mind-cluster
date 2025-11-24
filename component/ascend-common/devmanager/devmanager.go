@@ -232,7 +232,7 @@ func AutoInit(dType string, resetTimeout int) (*DeviceManager, error) {
 	default:
 		return nil, fmt.Errorf("unsupport device type (%s)", devType)
 	}
-	hwlog.RunLog.Infof("chipInfoName: %v, devType:%v", chipInfo.Name, devType)
+	hwlog.RunLog.Infof("chipName: %v, devType: %v", chipInfo.Name, devType)
 	if dType != "" && devType != dType {
 		return nil, fmt.Errorf("the value of dType(%s) is inconsistent with the actual chip type(%s)",
 			dType, devType)
