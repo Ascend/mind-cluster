@@ -1,12 +1,149 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-// Package common a series of util test function
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package common test for utils.go
 package common
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
 	"reflect"
+	"syscall"
 	"testing"
+	"time"
+
+	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 )
+
+func TestMain(m *testing.M) {
+	if err := setup(); err != nil {
+		return
+	}
+	code := m.Run()
+	fmt.Printf("exit_code = %v\n", code)
+}
+
+func setup() error {
+	if err := initLog(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func initLog() error {
+	logConfig := &hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	if err := hwlog.InitRunLogger(logConfig, context.Background()); err != nil {
+		fmt.Printf("init hwlog failed, %v\n", err)
+		return errors.New("init hwlog failed")
+	}
+	return nil
+}
+
+func TestNewSignWatcher(t *testing.T) {
+	tests := []struct {
+		name     string
+		osSigns  []os.Signal
+		wantType chan os.Signal
+	}{
+		{
+			name:     "no signals provided",
+			osSigns:  []os.Signal{},
+			wantType: make(chan os.Signal, 1),
+		},
+		{
+			name:     "single signal",
+			osSigns:  []os.Signal{syscall.SIGINT},
+			wantType: make(chan os.Signal, 1),
+		},
+		{
+			name:     "multiple signals",
+			osSigns:  []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP},
+			wantType: make(chan os.Signal, 1),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewSignWatcher(tt.osSigns...)
+			if got == nil {
+				t.Error("NewSignWatcher() returned nil channel")
+			}
+			if cap(got) != cap(tt.wantType) {
+				t.Errorf("NewSignWatcher() channel capacity = %d, want %d", cap(got), cap(tt.wantType))
+			}
+		})
+	}
+}
+
+func TestNewSignWatcher2(t *testing.T) {
+	t.Run("test concurrent safety", func(t *testing.T) {
+		const (
+			goroutines     = 10
+			timoutDuration = 100 * time.Millisecond
+		)
+		done := make(chan bool, goroutines)
+		for i := 0; i < goroutines; i++ {
+			go func(id int) {
+				defer func() {
+					done <- true
+				}()
+				signChan := NewSignWatcher(syscall.SIGINT, syscall.SIGTERM)
+				if signChan == nil {
+					t.Errorf("Goroutine %d: NewSignWatcher() returned nil", id)
+				}
+
+				select {
+				case signChan <- syscall.SIGINT: // send success
+				case <-time.After(timoutDuration):
+					t.Errorf("Goroutine %d: Channel is blocked", id)
+				}
+			}(i)
+		}
+		for i := 0; i < goroutines; i++ {
+			<-done
+		}
+	})
+
+	t.Run("test multiple signal types", func(t *testing.T) {
+		const killSignalDuration = 50 * time.Millisecond
+		signals := []os.Signal{
+			syscall.SIGINT,
+			syscall.SIGTERM,
+			syscall.SIGHUP,
+		}
+		signChan := NewSignWatcher(signals...)
+		defer close(signChan)
+		testSignal := syscall.SIGINT
+		go func() {
+			time.Sleep(killSignalDuration)
+			signChan <- testSignal
+		}()
+		select {
+		case received := <-signChan:
+			if received != testSignal {
+				t.Errorf("Expected %v, got %v", testSignal, received)
+			}
+		case <-time.After(time.Second):
+			t.Error("Timeout waiting for test signal")
+		}
+	})
+}
 
 // TestDeepCopy_BasicTypes tests deep copy of basic types
 func TestDeepCopy_BasicTypes(t *testing.T) {
@@ -164,5 +301,104 @@ func TestDeepCopy_SliceAndMap(t *testing.T) {
 	src.Map["one"] = 999
 	if dst.Slice[0] == 999 || dst.Map["one"] == 999 {
 		t.Error("DeepCopy() did not create a deep copy - Slice or Map was affected")
+	}
+}
+
+func TestGetDevStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		faults   []*DevFaultInfo
+		expected string
+	}{
+		{
+			name: "01 contain NeedPauseCtrFaultLevels",
+			faults: []*DevFaultInfo{
+				{FaultLevel: NormalNPU},
+				{FaultLevel: FreeRestartNPU},
+			},
+			expected: StatusNeedPause,
+		},
+		{
+			name: "02 not contain NeedPauseCtrFaultLevels",
+			faults: []*DevFaultInfo{
+				{FaultLevel: NormalNPU},
+				{FaultLevel: SeparateNPU},
+			},
+			expected: StatusIgnorePause,
+		},
+		{
+			name:     "03 nil faults",
+			faults:   []*DevFaultInfo{},
+			expected: StatusIgnorePause,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := GetDevStatus(tt.faults)
+			if result != tt.expected {
+				t.Errorf("GetDevStatus() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetDevNumPerRing(t *testing.T) {
+	for _, tt := range buildGetDevNumPerRingTestCase() {
+		t.Run(tt.name, func(t *testing.T) {
+			result := GetDevNumPerRing(tt.devType, tt.devUsage, tt.deviceNum, tt.boardId)
+			if result != tt.expected {
+				t.Errorf("GetDevNumPerRing() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+type getDevNumPerRingTC struct {
+	name      string
+	devType   string
+	devUsage  string
+	deviceNum int
+	boardId   uint32
+	expected  int
+}
+
+func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
+	return []getDevNumPerRingTC{
+		{
+			name:     "01 A1 device",
+			devType:  api.Ascend910A,
+			expected: Ascend910RingsNum,
+		},
+		{
+			name:     "02 910B+infer, no hccs",
+			devType:  api.Ascend910B,
+			devUsage: Infer,
+			boardId:  A800IA2NoneHccsBoardId,
+			expected: Ascend910BRingsNumInfer,
+		},
+		{
+			name:     "03 910B+infer, has hccs",
+			devType:  api.Ascend910B,
+			devUsage: Infer,
+			boardId:  EmptyBoardId,
+			expected: Ascend910BRingsNumTrain,
+		},
+		{
+			name:     "04 910B+train",
+			devType:  api.Ascend910B,
+			devUsage: Train,
+			expected: Ascend910BRingsNumTrain,
+		},
+		{
+			name:      "05 A3 device, return device num",
+			devType:   api.Ascend910A3,
+			deviceNum: 16,
+			expected:  16,
+		},
+		{
+			name:     "06 invalid devType",
+			devType:  "unknown devType",
+			expected: 0,
+		},
 	}
 }

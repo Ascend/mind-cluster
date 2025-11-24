@@ -50,11 +50,16 @@ function build() {
             -extldflags=-Wl,-z,relro,-z,now,-z,noexecstack" \
             -o "${output_name}"  \
             -trimpath
-    ls "${output_name}"
+    chmod 0500 "${output_name}"
     if [ $? -ne 0 ]; then
         echo "failed to find component container-manager"
         exit 1
     fi
+}
+
+function cp_file() {
+    cp "$CUR_DIR"/faultCode.json "$TOP_DIR"/output/faultCode.json
+    chmod 0400 "${TOP_DIR}"/output/faultCode.json
 }
 
 function mv_file() {
@@ -64,6 +69,7 @@ function mv_file() {
 function main() {
   clean
   build
+  cp_file
   mv_file
 }
 
