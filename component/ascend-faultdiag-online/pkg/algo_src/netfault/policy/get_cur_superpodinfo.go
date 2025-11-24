@@ -18,6 +18,7 @@ package policy
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -337,4 +338,323 @@ func CheckCurSuperPodConfigSwitch(superPodPath string) bool {
 		return true
 	}
 	return false
+}
+
+/* 判断是否是新1D:判断ports是否存在 */
+func checkIfNew1D(rackInfo map[string]*RackInfo) bool {
+	if rackInfo == nil || len(rackInfo) == 0 {
+		hwlog.RunLog.Error("new 1D rack info is nil")
+		return false
+	}
+	var rackI *RackInfo = nil
+	for _, rack := range rackInfo {
+		rackI = rack
+		break
+	}
+	if rackI == nil || rackI.ServerMap == nil || len(rackI.ServerMap) == 0 {
+		hwlog.RunLog.Error("new 1D rack info is nil")
+		return false
+	}
+	var serverI *ServerInfo = nil
+	for _, server := range rackI.ServerMap {
+		serverI = server
+		break
+	}
+	if serverI == nil || serverI.NpuMap == nil || len(serverI.NpuMap) == 0 {
+		hwlog.RunLog.Error("new 1D server info is nil")
+		return false
+	}
+	var npuI *NpuInfo = nil
+	for _, npu := range serverI.NpuMap {
+		npuI = npu
+		break
+	}
+	if npuI == nil || npuI.LevelList == nil || len(npuI.LevelList) == 0 {
+		return false
+	}
+	return true
+}
+
+/* 从super pod.json中获取port中sddrType为target的eid或ip */
+func getEidInfoOrIpFromPorts(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, levelInfo := range param.npu.LevelList {
+		if levelInfo.NetLayer != level1 {
+			continue
+		}
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			id, err := strconv.Atoi(param.npu.PhyId)
+			if err != nil {
+				hwlog.RunLog.Errorf("[CONTROLLER]%s:%v", param.npu.PhyId, err)
+				continue
+			}
+			slotId := id / perBoardNpus
+			npuInfo := algo.NpuInfo{
+				RackName:     "Rack-" + param.rack.RackID,
+				NpuNumber:    id,
+				SlotName:     "NSlot-" + strconv.Itoa(slotId),
+				NetPlaneId:   "netplane_" + levelInfo.RankAddrList[i].PlaneId,
+				SuperPodName: "SuperPod-" + param.superPodId,
+				OsName:       param.server.ServerIndex}
+			if _, exist := npuEidMap[levelInfo.RankAddrList[i].Addr]; !exist && npuEidMap != nil {
+				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
+			}
+		}
+	}
+}
+
+func getNpuEidMapInfo(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, npu := range param.server.NpuMap {
+		if npu == nil || npu.LevelList == nil || len(npu.LevelList) == 0 {
+			continue
+		}
+		param.npu = npu
+		getEidInfoOrIpFromPorts(npuEidMap, param)
+	}
+}
+
+func getServerNpuEidMapInfo(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, server := range param.rack.ServerMap {
+		if server == nil || server.NpuMap == nil || len(server.NpuMap) == 0 {
+			continue
+		}
+		param.server = server
+		getNpuEidMapInfo(npuEidMap, param)
+	}
+}
+
+/* 获取super-pod.json中npu ports中目标协议类型出框port与npu映射关系 */
+func getNpuEidMapOutOfRack(rackInfo map[string]*RackInfo, protocol string, superPodId string) map[string]algo.NpuInfo {
+	npuEidMap := EidNpuMap{
+		Map: make(map[string]algo.NpuInfo),
+	}
+	if rackInfo == nil || len(rackInfo) == 0 {
+		hwlog.RunLog.Error("[CONTROLLER]empty rack info")
+		return nil
+	}
+	for _, rack := range rackInfo {
+		if rack == nil || rack.ServerMap == nil || len(rack.ServerMap) == 0 {
+			continue
+		}
+		param := superPodParam{}
+		param.rack = rack
+		param.protocol = protocol
+		param.superPodId = superPodId
+		getServerNpuEidMapInfo(npuEidMap.Map, param)
+	}
+	if len(npuEidMap.Map) == 0 {
+		hwlog.RunLog.Error("[CONTROLLER]empty npu ports info")
+		return nil
+	}
+	return npuEidMap.Map
+}
+
+// SetCallAlgorithmParamInfo 设置算法参数
+func SetCallAlgorithmParamInfo(superPodId int, superPodFilePath string,
+	callAlgorithmParam map[string]interface{}) error {
+	if callAlgorithmParam == nil {
+		return errors.New("callAlgorithmParam is nullptr")
+	}
+
+	superPodFile := fmt.Sprintf("super-pod-%d.json", superPodId)
+	superPodFile = filepath.Join(superPodFilePath, superPodFile)
+	superPodFile = filepath.Clean(superPodFile)
+
+	if !loopWaitFile(superPodFile, superPodFilePath) {
+		return errors.New("loop wait failed")
+	}
+	superPodInfo := readConfigMap(superPodFile)
+	if superPodInfo == nil {
+		return errors.New("super pod info is nil")
+	}
+
+	if superPodInfo.Version != DiagVersionA5 && superPodInfo.Version != DiagVersionA3 &&
+		superPodInfo.Version != DiagVersionServer {
+		return fmt.Errorf("get %s version info error", superPodFile)
+	}
+	if superPodInfo.Version == DiagVersionServer {
+		callAlgorithmParam[NpuType] = DiagVersionA5
+		callAlgorithmParam["pingObjType"] = algo.EidType
+		return nil
+	}
+	callAlgorithmParam[NpuType] = superPodInfo.Version
+	if superPodInfo.Version == DiagVersionA5 {
+		if checkIfNew1D(superPodInfo.RackMap) {
+			callAlgorithmParam["pingObjType"] = algo.EidType
+		} else {
+			callAlgorithmParam["pingObjType"] = algo.IpType
+		}
+		return nil
+	}
+	/* A3 */
+	callAlgorithmParam["pingObjType"] = 1
+
+	// A3网络结构设置nodeName与serverId的映射
+	return getWorKMapping(callAlgorithmParam, superPodInfo)
+}
+
+func getWorKMapping(callAlgorithmParam map[string]interface{}, superPodInfo *SuperPodInfo) error {
+	if superPodInfo == nil {
+		return errors.New("the superPodInfo is empty")
+	}
+	if superPodInfo.NodeDeviceMap == nil {
+		return errors.New("the NodeDeviceMap is empty")
+	}
+	serverIdMap, ok := callAlgorithmParam[ServerIdMap].(map[string]string)
+	if !ok {
+		return errors.New("callAlgorithmParam ServerId Map format error")
+	}
+	for workId, workInfo := range superPodInfo.NodeDeviceMap {
+		if workInfo == nil || len(workInfo.NodeName) == 0 {
+			return fmt.Errorf("get work %s NodeName error", workId)
+		}
+		if len(workInfo.ServerID) == 0 {
+			return fmt.Errorf("get work %s ServerId error", workId)
+		}
+		serverIdMap[workInfo.ServerID] = workInfo.NodeName
+	}
+	return nil
+}
+
+func mergeNpuEidMap(npuEidMapOutRack map[string]algo.NpuInfo,
+	npuEidMapFromTopo map[string]algo.NpuInfo) map[string]algo.NpuInfo {
+	npuInfoMap := make(map[string]algo.NpuInfo)
+	if npuEidMapOutRack != nil {
+		for key, value := range npuEidMapOutRack {
+			npuInfoMap[key] = value
+		}
+	}
+	if npuEidMapFromTopo != nil {
+		for key, value := range npuEidMapFromTopo {
+			if _, exist := npuInfoMap[key]; !exist {
+				npuInfoMap[key] = value
+			}
+		}
+	}
+	return npuInfoMap
+}
+
+// CheckDiffConfig 获取超节点目录下cathelper.conf配置文件内容
+func CheckDiffConfig(superPodFilePath string) map[string]interface{} {
+	confFilePath := filepath.Join(superPodFilePath, configFile)
+	var confFile *os.File = nil
+	for retryCount := 0; retryCount < maxRetryTime &&
+		!controllerflags.IsControllerExited.GetState(); retryCount++ {
+		file, err := os.Open(confFilePath)
+		if err == nil {
+			confFile = file
+			break
+		}
+		hwlog.RunLog.Warnf("Opening file:%v", err)
+		time.Sleep(time.Duration(1) * time.Second)
+	}
+	if confFile == nil {
+		hwlog.RunLog.Error(superPodFilePath, "config file read failed!")
+		return nil
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			hwlog.RunLog.Errorf("Error closing file: %v", err)
+		}
+	}(confFile)
+
+	// 定义一个map来保存解析结果
+	targetKeys := []string{"networkType", "pingType", "pingTimes", "pingInterval", "suppressedPeriod", "period"}
+	callAlgorithmParam := ReadConfigFromFile(confFile, targetKeys)
+
+	return callAlgorithmParam
+}
+
+func getOneTopoFilePath(superPod string, superPodInfo *SuperPodInfo) string {
+	var rackId string
+	var serverId string
+	success := false
+	for _, v := range superPodInfo.RackMap {
+		rackId = v.RackID
+		if len(v.ServerMap) == 0 {
+			continue
+		}
+		for _, server := range v.ServerMap {
+			serverId = server.ServerIndex
+			success = true
+			break
+		}
+		break
+	}
+	if !success {
+		hwlog.RunLog.Errorf("not found server level topo in %s", superPod)
+		return ""
+	}
+	file := filepath.Join(superPod, "rack-"+rackId, "topo_"+serverId+".json")
+	return file
+}
+
+func getNetWorkType(superPod string, superPodInfo *SuperPodInfo) string {
+	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Error("empty super pod info, get network type failed!")
+		return ""
+	}
+	topoFile := getOneTopoFilePath(superPod, superPodInfo)
+	if topoFile == "" {
+		return ""
+	}
+	var data []byte
+	for i := 0; i < maxRetryTime && !controllerflags.IsControllerExited.GetState() &&
+		CheckCurSuperPodConfigSwitch(superPod); i++ {
+		fileData, err := os.ReadFile(topoFile)
+		if err != nil && os.IsNotExist(err) {
+			if i%logPrintInterval == 0 {
+				hwlog.RunLog.Warnf("%v (retry:%d)", err, i+1)
+			}
+			time.Sleep(time.Duration(1) * time.Second)
+			continue
+		} else if err != nil {
+			hwlog.RunLog.Error(err)
+			return ""
+		}
+		data = fileData
+		break
+	}
+	if controllerflags.IsControllerExited.GetState() || !CheckCurSuperPodConfigSwitch(superPod) {
+		return ""
+	}
+	if len(data) == 0 {
+		hwlog.RunLog.Errorf("[CONTROLLER]empty %s", topoFile)
+		return ""
+	}
+	var obj RackTopology
+	err := json.Unmarshal(data, &obj)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return ""
+	}
+	if obj.HardwareType == "Atlas 950 SuperPod 2D" {
+		return "2D"
+	} else if obj.HardwareType == "Atlas 950 SuperPod 1D" {
+		return "1D"
+	} else {
+		hwlog.RunLog.Errorf("Unknown hardware type %s", obj.HardwareType)
+		return ""
+	}
+}
+
+/* 获取超级点内探测Npu与EID映射关系 */
+func handleA5NpuMapInfo(superPodInfo *SuperPodInfo, superPodPath string) (map[string]algo.NpuInfo, bool) {
+	npuInfoMap := make(map[string]algo.NpuInfo)
+	var npuNetplaneInfo map[string][]string
+	/* 判断是否是1D还是2D */
+	typeStr := getNetWorkType(superPodPath, superPodInfo)
+	if typeStr == "1D" || typeStr == "2D" {
+		npuEidMapOutRack := getNpuEidMapOutOfRack(superPodInfo.RackMap, "UBC", superPodInfo.SuperPodID)
+		_, _, npuEidMapFromTopo := GetA5CurSuperPod1D2DNpuInfo(superPodPath, superPodInfo)
+		if npuEidMapFromTopo == nil ||
+			(len(npuEidMapFromTopo) == 0 && len(npuNetplaneInfo) == 0) {
+			return npuInfoMap, false
+		}
+		npuInfoMap = mergeNpuEidMap(npuEidMapOutRack, npuEidMapFromTopo)
+	} else {
+		return npuInfoMap, false
+	}
+
+	return npuInfoMap, true
 }
