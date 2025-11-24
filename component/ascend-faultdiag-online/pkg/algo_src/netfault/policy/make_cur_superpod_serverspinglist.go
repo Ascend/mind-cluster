@@ -89,6 +89,87 @@ func writeServerIdPingList(resPingList []PingInfo, fileName string, superPodPath
 	return nil
 }
 
+/* 从全部探测任务中当前超节点内os级别探测任务 */
+func getA5ServerLevel1D2DPingList(allPingList []interface{}, npuMap map[string]algo.NpuInfo,
+	serverInfo *ServerInfo, isReasoningServer int) []PingInfo {
+	resPingList := make([]PingInfo, 0)
+	/* 适配1D，从superpodInfo中根据server下有哪些npuId去匹配pingList中srcCardId来生成ping_list文件 */
+	for _, pingUnit := range allPingList {
+		pingItem, ok := pingUnit.(map[string]interface{})
+		if !ok {
+			hwlog.RunLog.Errorf("transfer ping list item fail: %v", pingUnit)
+			continue
+		}
+
+		srcAddrStr, srcOk := pingItem["srcAddr"].(string)
+		dstAddrStr, dstOk := pingItem["dstAddr"].(string)
+		srcCardId, srcCardOk := pingItem["srcCardPhyId"].(int)
+		dstCardId, dstCardOk := pingItem["dstCardPhyId"].(int)
+		if !srcOk || !dstOk || !srcCardOk || !dstCardOk {
+			hwlog.RunLog.Errorf("transfer ping list item fail: %v", pingUnit)
+			continue
+		}
+		if isReasoningServer != 0 {
+			srcCardId = srcCardId % isReasoningServer
+			dstCardId = dstCardId % isReasoningServer
+		}
+		/* npuId在rack下唯一 */
+		if value, exist := npuMap[srcAddrStr]; exist && value.OsName == serverInfo.ServerIndex {
+			resPingList = append(resPingList, PingInfo{
+				SrcIp:        srcAddrStr,
+				DstIp:        dstAddrStr,
+				SrcType:      algo.EidType,
+				DstType:      algo.EidType,
+				PktSize:      pkgSize,
+				SrcCardPhyId: srcCardId,
+				DstCardPhyId: dstCardId})
+		}
+	}
+	return resPingList
+}
+
+func siftFromPinglist(serverInfo *ServerInfo, superPodPingList map[string]interface{},
+	superPodPath string, npuEidMap map[string]algo.NpuInfo, superPodInfo *SuperPodInfo) {
+	if superPodInfo == nil || serverInfo.NpuMap == nil ||
+		len(superPodPingList) == 0 || superPodInfo == nil || npuEidMap == nil {
+		hwlog.RunLog.Error("invalid super pod info or ping list!")
+		return
+	}
+	allPingList, ok := superPodPingList["pingList"].([]interface{})
+	if !ok {
+		hwlog.RunLog.Error("get pingList fail!")
+		return
+	}
+	resPingList := make([]PingInfo, 0)
+	/* 1D\2D\推理服务器 */
+	if superPodInfo.Version == DiagVersionServer {
+		/* 取出每台推理服务器有多少张卡 */
+		var cardPerServer int
+		num, err := fmt.Sscanf(DiagVersionServer, "800I-SuperPod-A5-%d", &cardPerServer)
+		if err != nil || num != 1 {
+			hwlog.RunLog.Error("Unexpected format of server name!")
+			return
+		}
+		resPingList = getA5ServerLevel1D2DPingList(allPingList, npuEidMap, serverInfo, cardPerServer)
+	} else {
+		if value := getNetWorkType(superPodPath, serverInfo); value == "1D" || value == "2D" {
+			resPingList = getA5ServerLevel1D2DPingList(allPingList, npuEidMap, serverInfo, 0)
+		} else {
+			hwlog.RunLog.Error("Unexpected situation of rack level topo type!")
+			return
+		}
+	}
+	if !isPureNumber(serverInfo.ServerIndex) {
+		hwlog.RunLog.Errorf("error server index string:%s", serverInfo.ServerIndex)
+		return
+	}
+	isOk := writeServerIdPingList(resPingList,
+		fmt.Sprintf("ping_list_%s.json", serverInfo.ServerIndex), superPodPath)
+	if isOk != nil {
+		hwlog.RunLog.Error("writeServerIdPingList fail!")
+	}
+}
+
 func handlePingList(allPingList []any, srcIp string, phyIdStr string) []PingInfo {
 	var newPingListRes = make([]PingInfo, 0)
 	for _, item := range allPingList {
@@ -125,6 +206,49 @@ func handlePingList(allPingList []any, srcIp string, phyIdStr string) []PingInfo
 	return newPingListRes
 }
 
+/* 超节点内探测任务划分为os级别写文件 */
+func siftFromConfigMap(superPodInfo *SuperPodInfo,
+	superPodPingList map[string]interface{},
+	curSuperPodPath string) bool {
+	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Error("invalid super pod info!")
+		return false
+	}
+	id, err := strconv.Atoi(superPodInfo.SuperPodID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return false
+	}
+	success, npuEidMap := GetTargetSuperPodNpuMap(curSuperPodPath, id)
+	if !success {
+		hwlog.RunLog.Error("get npu eid map failed!")
+		return false
+	}
+	for rackID, rackInfo := range superPodInfo.RackMap {
+		if rackInfo == nil || len(rackInfo.ServerMap) == 0 {
+			hwlog.RunLog.Errorf("invalid rack info: %s", rackID)
+			return false
+		}
+		for serverIdStr, serverInfo := range rackInfo.ServerMap {
+			_, err := strconv.Atoi(serverIdStr)
+			if err != nil {
+				hwlog.RunLog.Error("the server id format is invalid")
+				return false
+			}
+			if serverInfo == nil {
+				hwlog.RunLog.Errorf("server info is empty of server id %s", serverIdStr)
+				return false
+			}
+			if len(serverInfo.NpuMap) == 0 {
+				hwlog.RunLog.Errorf("get npu map failed!")
+				return false
+			}
+			siftFromPinglist(serverInfo, superPodPingList, curSuperPodPath, npuEidMap, superPodInfo)
+		}
+	}
+	return true
+}
+
 // GenSuperPodServersPingList 生成超节点内探测任务csv文件
 func GenSuperPodServersPingList(superPodPath string, detectObj *algo.NetDetect) bool {
 	if detectObj == nil {
@@ -139,6 +263,131 @@ func GenSuperPodServersPingList(superPodPath string, detectObj *algo.NetDetect) 
 	}
 	/* 将当前超节点pingList拆分成每个serverId pingList */
 	return siftFromConfigMapInterface(superPodInfo, superPodPingList, superPodPath)
+}
+
+// 生成超节点间探测任务csv文件
+func GenRoceSuperPodLevelPingList(superPodRocePath string,
+	detectObj *algo.NetDetect,
+	npuLinkPaths map[string]interface{},
+	npuMap map[string]algo.NpuInfo) bool {
+	// 算法入参
+	algoPingListInput := make(map[string]interface{}, algoInputObjNums)
+	algoPingListInput["npu_superpod"] = npuLinkPaths
+	algoPingListInput["npu_npu"] = []string{}
+	algoPingListInput["npu_netplane"] = map[string]interface{}{}
+	jsonPingList := detectObj.GenPingStrategy(algoPingListInput)
+	if jsonPingList == nil {
+		return false
+	}
+	// 根据npu与port address映射关系拆分成拨测ping_list_superPodId_serverId.csv
+	return siftRoceTaskFromNpuMapInterface(superPodRocePath, npuMap, jsonPingList)
+}
+
+func writeRocePingListOsInfo(path string, jsonStr []byte) {
+	file, err := os.Create(path)
+	if err != nil {
+		hwlog.RunLog.Errorf("create file err: %v", err)
+		return
+	}
+	defer file.Close()
+	// 修改文件权限
+	if err := file.Chmod(PrivilegeMode); err != nil {
+		hwlog.RunLog.Errorf("chmod file err: %v", err)
+		return
+	}
+	_, err = file.Write(jsonStr)
+	if err != nil {
+		hwlog.RunLog.Errorf("write string to file err: %v", err)
+		return
+	}
+}
+
+func writeRocePingList(rocePingList map[string][]PingInfo, rocePath string, info map[string][]string) bool {
+	// roce ping list 信息
+	jsonStr, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		hwlog.RunLog.Errorf("transfer %v failed!", info)
+	} else {
+		writeRocePingListOsInfo(filepath.Join(rocePath, "ping_list_range.json"), jsonStr)
+	}
+	if len(rocePingList) == 0 {
+		hwlog.RunLog.Error("unmarched any ping task from ping list!")
+		return false
+	}
+	count := 0
+	for k, v := range rocePingList {
+		fileName := fmt.Sprintf("ping_list_%s.json", k)
+		err := writeServerIdPingList(v, fileName, rocePath)
+		if err != nil {
+			continue
+		}
+		count++
+	}
+	if count == 0 {
+		hwlog.RunLog.Error("write ping list json file failed!")
+		return false
+	}
+	return true
+}
+
+/* 生成超节点间探测任务：根据npu与Eid或者ip关系筛选出跨超节点拨测任务 */
+func siftRoceTaskFromNpuMapInterface(rocePath string,
+	npuMap map[string]algo.NpuInfo,
+	superPodPingList map[string]interface{}) bool {
+	// 遍历每一个pingList，根据arcAddr在npuMap中找对应的superPodId-serverId
+	if npuMap == nil || superPodPingList == nil {
+		hwlog.RunLog.Errorf("error npu map:%v, ping list:%v", npuMap, superPodPingList)
+		return false
+	}
+	// key:superPodId-serverId value:pingTask
+	rocePingList := make(map[string][]PingInfo)
+	allPingList, ok := superPodPingList["pingList"].([]interface{})
+	if !ok {
+		hwlog.RunLog.Error("get pingList failed!")
+		return false
+	}
+	// 记录生成那些超节点哪些os的ping_list
+	uniqueSuperPodOs := make(map[string]bool)
+	superPodPingListInfo := make(map[string][]string)
+	for _, pingUnit := range allPingList {
+		pingItem, pingOk := pingUnit.(map[string]interface{})
+		if !pingOk {
+			hwlog.RunLog.Errorf("transfer ping list item fail:%v", pingUnit)
+			continue
+		}
+		srcAddrStr, srcOk := pingItem["srcAddr"].(string)
+		dstAddrStr, dstOk := pingItem["dstAddr"].(string)
+		srcCardId, srcCardOk := pingItem["srcCardPhyId"].(int)
+		dstCardId, dstCardOk := pingItem["dstCardPhyId"].(int)
+		if !srcOk || !dstOk || !srcCardOk || !dstCardOk {
+			hwlog.RunLog.Errorf("transfer ping list item fail:%v", pingUnit)
+			continue
+		}
+		if _, exist := npuMap[srcAddrStr]; !exist || len(npuMap[srcAddrStr].SuperPodName) <= len("SuperPod-") {
+			continue
+		}
+		superPodId := string(npuMap[srcAddrStr].SuperPodName[len("SuperPod-"):])
+		key := superPodId + "_" + npuMap[srcAddrStr].OsName
+		if _, exist := uniqueSuperPodOs[key]; !exist {
+			uniqueSuperPodOs[key] = true
+			if _, existKey := superPodPingListInfo[superPodId]; !existKey {
+				superPodPingListInfo[superPodId] = make([]string, 0)
+			}
+			superPodPingListInfo[superPodId] = append(superPodPingListInfo[superPodId], npuMap[srcAddrStr].OsName)
+		}
+		if _, exist := rocePingList[key]; !exist {
+			rocePingList[key] = make([]PingInfo, 0)
+		}
+		rocePingList[key] = append(rocePingList[key], PingInfo{
+			SrcIp:        srcAddrStr,
+			DstIp:        dstAddrStr,
+			SrcType:      algo.IpType,
+			DstType:      algo.IpType,
+			PktSize:      pkgSize,
+			SrcCardPhyId: srcCardId,
+			DstCardPhyId: dstCardId})
+	}
+	return writeRocePingList(rocePingList, rocePath, superPodPingListInfo)
 }
 
 /* 超节点探测任务划分为os级别任务文件 */
