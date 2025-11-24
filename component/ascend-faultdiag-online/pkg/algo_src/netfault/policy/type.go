@@ -144,3 +144,29 @@ type RackTopology struct {
 	// EdgeList is a slice of PeerToPeer instances
 	EdgeList []PeerToPeer `json:"edge_list"`
 }
+
+// Edge edge info
+type Edge struct {
+	// NetLayer the netlayer
+	NetLayer int `json:"net_layer"`
+	// LinkType the type of link
+	LinkType string `json:"link_type"`
+	// TopoType the type of topology
+	TopoType string `json:"topo_type"`
+	// TopoInstanceId the instance id of topology
+	TopoInstanceId int `json:"topo_instance_id"`
+	// TopoAddr the addr of topology
+	TopoAddr string `json:"topo_addr"`
+	// LocalA the local_a
+	LocalA int `json:"local_a"`
+	// LocalAPorts the ports of local_a
+	LocalAPorts []string `json:"local_a_ports"`
+	// LocalB the local_b
+	LocalB int `json:"local_b"`
+	// LocalBPorts the ports of local_b
+	LocalBPorts []string `json:"local_b_ports"`
+	// Protocols
+	Protocols []string `json:"protocols"`
+	// Position
+	Position string `json:"position"`
+}
