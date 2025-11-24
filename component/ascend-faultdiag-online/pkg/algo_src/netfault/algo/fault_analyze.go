@@ -937,7 +937,7 @@ func (nd *NetDetect) setSingleFaultAlarm(rootCauseAlarm map[string]any, netplane
 		if nd.curNpuType == a3NpuTypeConstant {
 			nd.setA3L2FaultAlarm(rootCauseObj, rootCauseAlarm)
 		} else {
-			hwlog.RunLog.Error("[ALGO] unexpected detection type!")
+			setA5L2FaultAlarm(rootCauseObj, rootCauseAlarm)
 		}
 	} else if strings.Contains(rootCauseObj, superPodConstant) {
 		nd.setSuperPodFaultAlarm(rootCauseObj, rootCauseAlarm, npuOtherAlarmList)
@@ -1736,4 +1736,32 @@ func (nd *NetDetect) findNetplaneByPingObj(pingObj string) string {
 	}
 
 	return ""
+}
+
+// outframe switch fault
+func setA5L2FaultAlarm(rootCauseObj string, rootCauseAlarm map[string]any) {
+	if rootCauseAlarm == nil {
+		return
+	}
+
+	// outframe switch downlink port fault
+	if strings.Contains(rootCauseObj, portIntervalChar) {
+		rackL1List := strings.Split(rootCauseObj, portIntervalChar)
+		if len(rackL1List) != baseSegmentNum {
+			return
+		}
+		srcId := fmt.Sprintf("Rack-%s", rackL1List[1])
+		rootCauseAlarm[srcIdConstant] = srcId
+		rootCauseAlarm[srcTypeConstant] = rackNetplaneType
+		rootCauseAlarm[dstIdConstant] = rackL1List[0]
+		rootCauseAlarm[dstTypeConstant] = l1NetplaneType
+		rootCauseAlarm[levelConstant] = majorType
+	} else {
+		// outframe switch fault
+		rootCauseAlarm[srcIdConstant] = rootCauseObj
+		rootCauseAlarm[srcTypeConstant] = l1NetplaneType
+		rootCauseAlarm[dstIdConstant] = rootCauseObj
+		rootCauseAlarm[dstTypeConstant] = l1NetplaneType
+		rootCauseAlarm[levelConstant] = criticalType
+	}
 }

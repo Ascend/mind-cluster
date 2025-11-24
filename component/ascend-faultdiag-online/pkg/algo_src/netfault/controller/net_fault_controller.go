@@ -47,6 +47,8 @@ const (
 	maxSuperPodId                        = 65535
 	pattern                              = `^super-pod-[0-9]+$`
 	detectionResult                      = "network_fault.json"
+	roceDirName                          = "super-pod-roce"
+	roceConfigFile                       = "super-pod-roce.json"
 	fileMode                 os.FileMode = 0644
 	defaultDetectionInterval             = 15
 	decimalTen                           = 10
@@ -63,6 +65,10 @@ var superPodDetectionRecorder = make(map[string]bool)
 
 /* 并发修改map锁 */
 var modifyRecorderSyncLock sync.Mutex
+
+type roceConfig struct {
+	RoceSuperPods []int `json:"superPodList"`
+}
 
 type detectionParam struct {
 	detectionSuperPod     string
@@ -413,15 +419,26 @@ func getCurSuperPodDetectionInterval(conf map[string]any, superPodFilePath strin
 }
 
 /* 循环等待超节点目录生成和配置文件生成,并检查开关 superPodDirPath绝对路径 */
-func loopWaitSuperPodDirAndCheckConfigFile(superPodDirPath string, jsonFile string, configFile string) bool {
+func loopWaitSuperPodDirAndCheckConfigFile(
+	superPodDirPath string,
+	jsonFile string,
+	configFile string,
+	needConfig bool,
+) bool {
 	/* 文件夹不存在轮询等待 */
 	for i := 0; i < readConfFailedReTryNums &&
-		!controllerflags.IsControllerExited.GetState() &&
-		policy.CheckCurSuperPodConfigSwitch(superPodDirPath); i++ {
+		!controllerflags.IsControllerExited.GetState(); i++ {
+		if needConfig && policy.CheckCurSuperPodConfigSwitch(superPodDirPath) {
+			hwlog.RunLog.Infof("[NetFault Algo]%s network detection switch off", superPodDirPath)
+			return false
+		}
 		/* path */
 		_, err1 := os.Stat(superPodDirPath)
 		/* cathelper.conf */
 		_, err2 := os.Stat(filepath.Join(superPodDirPath, configFile))
+		if !needConfig {
+			err2 = nil
+		}
 		/* super-pod-x.json */
 		_, err3 := os.Stat(filepath.Join(superPodDirPath, jsonFile))
 		/* 错误具体情况不管 */
@@ -452,9 +469,11 @@ func loopWaitSuperPodDirAndCheckConfigFile(superPodDirPath string, jsonFile stri
 }
 
 func detectionCurSuperPod(superPodId int, superPodFilePath string) {
-	if !loopWaitSuperPodDirAndCheckConfigFile(superPodFilePath,
+	if !loopWaitSuperPodDirAndCheckConfigFile(
+		superPodFilePath,
 		fmt.Sprintf("super-pod-%d.json", superPodId),
-		configFile) {
+		configFile,
+		true) {
 		markFalseDetection(superPodFilePath)
 		return
 	}
@@ -569,4 +588,106 @@ func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
 		data = append(data, row)
 	}
 	return data, nil
+}
+
+func makeAlgoRockParam(clusterPath string, superPodNames []string) map[string]any {
+	confFile := filepath.Join(clusterPath, roceDirName)
+	paramMap := checkDiffConfig(confFile)
+	if paramMap == nil {
+		return nil
+	}
+	// the parameters for other algo
+	paramMap[policy.ServerIdMap] = make(map[string]string)
+	paramMap["axisStrategy"] = "same_axis"
+	paramMap["superPodArr"] = superPodNames
+	paramMap["superPodJobFlag"] = true
+	paramMap["npu_type"] = "A5"
+	// 0 stands for ip
+	paramMap["pingObjType"] = 0
+	return paramMap
+}
+
+func getRoceDetectionSuperPodFiles(clusterPath, roceDirPath string) ([]string, []string) {
+	// parse the detection config file
+	date, err := fileutils.ReadLimitBytes(filepath.Join(roceDirPath, roceConfigFile), constants.Size10M)
+	if err != nil {
+		hwlog.RunLog.Errorf("[NetFault Algo]Read roce config file failed: %v", err)
+		return nil, nil
+	}
+	var roceConf roceConfig
+	if err = json.Unmarshal(date, &roceConf); err != nil || len(roceConf.RoceSuperPods) == 0 {
+		hwlog.RunLog.Errorf("[NetFault Algo]Invalid roce detection info: %v or invalid config data", roceConf)
+		return nil, nil
+	}
+	// remove duplicate super pod ids
+	uniqueNums := make(map[int]bool, len(roceConf.RoceSuperPods))
+	uniqueNumsArr := make([]int, 0, len(roceConf.RoceSuperPods))
+	for _, num := range roceConf.RoceSuperPods {
+		if !uniqueNums[num] {
+			uniqueNums[num] = true
+			uniqueNumsArr = append(uniqueNumsArr, num)
+		}
+	}
+	roceConf.RoceSuperPods = uniqueNumsArr
+	roceSuperPodInfoFiles := make([]string, len(roceConf.RoceSuperPods))
+	superPodNames := make([]string, len(roceConf.RoceSuperPods))
+	// sort by ascending order
+	for i, id := range roceConf.RoceSuperPods {
+		superPodDirName := fmt.Sprintf("super-pod-%d", id)
+		algoSuperPodName := fmt.Sprintf("SuperPod-%d", id)
+		superPodPath := filepath.Join(clusterPath, superPodDirName)
+		jsonFile := fmt.Sprintf("super-pod-%d.json", id)
+		superPodJsonInfo := filepath.Join(clusterPath, superPodDirName, jsonFile)
+		// sync waiting till the super pod dir and json file ready
+		if !loopWaitSuperPodDirAndCheckConfigFile(superPodPath, jsonFile, configFile, false) {
+			return nil, nil
+		}
+		superPodNames[i] = algoSuperPodName
+		roceSuperPodInfoFiles[i] = superPodJsonInfo
+	}
+	return superPodNames, roceSuperPodInfoFiles
+}
+
+// startRoceDetection start roce of super pods detection
+func startRoceDetection(clusterPath string) {
+	roceDirPath := filepath.Join(clusterPath, roceDirName)
+	// loop for waiting roce dir and config file
+	if !loopWaitSuperPodDirAndCheckConfigFile(roceDirPath, roceConfigFile, configFile, true) {
+		markFalseDetection(roceDirPath)
+		return
+	}
+	// wait all the required files ready, return the super pod path
+	superPodNames, roceSuperPodInfoFiles := getRoceDetectionSuperPodFiles(clusterPath, roceDirPath)
+	if superPodNames == nil || roceSuperPodInfoFiles == nil {
+		markFalseDetection(roceDirPath)
+		return
+	}
+
+	// get npu map and link info of super pod roce
+	npuMap, linkPaths := policy.GenSuperPodsRoceNpuInfo(roceSuperPodInfoFiles)
+	if npuMap == nil || linkPaths == nil {
+		markFalseDetection(roceDirPath)
+		return
+	}
+	algoParam := makeAlgoRockParam(clusterPath, superPodNames)
+	// empty string needs for the detection of super pod roce
+	detectObj := algo.NewNetDetect("roce")
+	detectObj.SetFaultDetectParam(algoParam, npuMap)
+	// generate the ping list for super pod roce detection
+	if !policy.GenRoceSuperPodLevelPingList(filepath.Join(clusterPath, roceDirPath), detectObj, linkPaths, npuMap) {
+		markFalseDetection(roceDirPath)
+		return
+	}
+	// detect interval
+	interval := getCurSuperPodDetectionInterval(algoParam, filepath.Join(clusterPath, roceDirName))
+	milliTimestamp := time.Now().UnixMilli()
+	hwlog.RunLog.Infof("[NetFault Algo]Super pod roce detetion started timestamps: %d", milliTimestamp)
+	param := detectionParam{
+		detectionInterval:     int64(interval),
+		detectionSuperPodPath: roceDirPath,
+		detectionStartTime:    milliTimestamp,
+		detectionSuperPod:     "roce",
+		algoObj:               detectObj,
+	}
+	loopCsvCallDetection(param)
 }
