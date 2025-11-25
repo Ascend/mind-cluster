@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -51,6 +52,10 @@ func TestUpdatePodList01(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestUpdatePodList init kubernetes failed")
 	}
+	client.Clientset = fake.NewSimpleClientset()
+	factory := informers.NewSharedInformerFactory(client.Clientset, 0)
+	client.PodInformer = factory.Core().V1().Pods().Informer()
+	indexer := client.PodInformer.GetIndexer()
 	testPod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			UID:             "testUid",
@@ -60,7 +65,13 @@ func TestUpdatePodList01(t *testing.T) {
 		},
 	}
 	podCache = make(map[types.UID]*podInfo)
-	convey.Convey("test update pod list when operator is EventTypeAdd", t, func() {
+	convey.Convey("when pod is not exist in indexer, should be deleted from cache", t, func() {
+		client.UpdatePodList(testPod, EventTypeAdd)
+		convey.So(podCache, convey.ShouldResemble, map[types.UID]*podInfo{})
+	})
+	convey.Convey("when pod is exist in indexer, should add to cache", t, func() {
+		err := indexer.Add(testPod)
+		convey.So(err, convey.ShouldBeNil)
 		client.UpdatePodList(testPod, EventTypeAdd)
 		expectPodCache := map[types.UID]*podInfo{
 			testPod.UID: {
@@ -69,68 +80,6 @@ func TestUpdatePodList01(t *testing.T) {
 			},
 		}
 		convey.So(podCache, convey.ShouldResemble, expectPodCache)
-	})
-	convey.Convey("test cache will not be refresh when pod resourceVersion is lower than cached pod", t, func() {
-		newPod := testPod.DeepCopy()
-		newPod.ResourceVersion = "1"
-		client.UpdatePodList(newPod, EventTypeAdd)
-		expectPodCache := map[types.UID]*podInfo{
-			testPod.UID: {
-				Pod:        testPod,
-				updateTime: podCache[testPod.UID].updateTime,
-			},
-		}
-		convey.So(podCache, convey.ShouldResemble, expectPodCache)
-	})
-	testPod.Namespace = "testPod1"
-	testPod.Namespace = "testNamespace1"
-	testPod.ResourceVersion = "3"
-	convey.Convey("test update pod list when operator is EventTypeUpdate", t, func() {
-		client.UpdatePodList(testPod, EventTypeUpdate)
-		expectPodCache := map[types.UID]*podInfo{
-			testPod.UID: {
-				Pod:        testPod,
-				updateTime: podCache[testPod.UID].updateTime,
-			},
-		}
-		convey.So(podCache, convey.ShouldResemble, expectPodCache)
-	})
-}
-
-func TestUpdatePodList02(t *testing.T) {
-	client, err := newTestClientK8s()
-	if err != nil {
-		t.Fatal("TestUpdatePodList init kubernetes failed")
-	}
-	oldPod := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			UID:             "testUid",
-			Name:            "testPod",
-			Namespace:       "testNamespace",
-			ResourceVersion: "2",
-		},
-	}
-	podCache = map[types.UID]*podInfo{
-		oldPod.UID: {
-			Pod:        oldPod,
-			updateTime: time.Now(),
-		},
-	}
-	newPod := oldPod.DeepCopy()
-	newPod.ResourceVersion = "3"
-	convey.Convey("test update pod list when operator is EventTypeDelete", t, func() {
-		client.UpdatePodList(newPod, EventTypeDelete)
-		convey.So(len(podCache), convey.ShouldEqual, 0)
-	})
-	convey.Convey("test update pod list when operator is default", t, func() {
-		client.UpdatePodList(newPod, "default")
-		convey.So(len(podCache), convey.ShouldEqual, 0)
-	})
-	convey.Convey("test update pod list failed when newPod is not ok", t, func() {
-		client.UpdatePodList(nil, "default")
-		convey.So(len(podCache), convey.ShouldEqual, 0)
-		client.UpdatePodList(nil, "default")
-		convey.So(len(podCache), convey.ShouldEqual, 0)
 	})
 }
 

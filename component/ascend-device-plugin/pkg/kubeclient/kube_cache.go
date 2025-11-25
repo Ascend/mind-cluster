@@ -115,49 +115,27 @@ func (ki *ClientK8s) UpdatePodList(newObj interface{}, operator EventType) {
 	}
 	lock.Lock()
 	defer lock.Unlock()
-	oldPod, exists := podCache[newPod.UID]
-	if exists {
-		oldRev, err := strconv.Atoi(oldPod.ResourceVersion)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to convert oldPod.ResourceVersion(%s) to int, err: %v",
-				oldPod.ResourceVersion, err)
-			return
-		}
-		newRev, err := strconv.Atoi(newPod.ResourceVersion)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to convert newPod.ResourceVersion(%s) to int, err: %v",
-				newPod.ResourceVersion, err)
-			return
-		}
-		if oldRev > newRev {
-			hwlog.RunLog.Warnf("pod(%s/%s) is not updated because of lower ResourceVersion", newPod.Namespace, newPod.Name)
-			return
-		}
+	obj, exist, err := ki.PodInformer.GetIndexer().GetByKey(newPod.Namespace + "/" + newPod.Name)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get pod %s/%s from indexer, err: %v", newPod.Namespace, newPod.Name, err)
+		return
 	}
-	switch operator {
-	case EventTypeAdd:
-		hwlog.RunLog.Infof("pod(%s/%s) is %s to cache", newPod.Namespace, newPod.Name, operator)
-		podCache[newPod.UID] = &podInfo{
-			Pod:        newPod,
-			updateTime: time.Now(),
-		}
-	case EventTypeUpdate:
-		hwlog.RunLog.Infof("pod(%s/%s) is %s to cache", newPod.Namespace, newPod.Name, operator)
-		// When the predicate-time of a pod in the cache is maxUint64, but the predicate-time of the same pod in the cluster is not,
-		// it indicates that the predicate-time=maxUint64, which was set by the getOldestPod logic via a patch,
-		// was overwritten by another component's concurrent update.
-		// In this case, we prioritize the value from the cache and update the pod in the cluster again.
-		ki.updatePodPredicateTime(newPod)
-		podCache[newPod.UID] = &podInfo{
-			Pod:        newPod,
-			updateTime: time.Now(),
-		}
-	case EventTypeDelete:
-		hwlog.RunLog.Infof("pod(%s/%s) is deleted from cache", newPod.Namespace, newPod.Name)
+	if !exist {
+		hwlog.RunLog.Infof("pod(%s/%s) is not exist in indexer", newPod.Namespace, newPod.Name)
 		delete(podCache, newPod.UID)
-	default:
-		hwlog.RunLog.Errorf("operator is undefined, find operater: %s", operator)
+		common.TriggerUpdate(fmt.Sprintf("pod %v", string(operator)))
+		return
 	}
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return
+	}
+	ki.updatePodPredicateTime(pod)
+	podCache[pod.UID] = &podInfo{
+		Pod:        pod,
+		updateTime: time.Now(),
+	}
+
 	common.TriggerUpdate(fmt.Sprintf("pod %v", string(operator)))
 }
 
