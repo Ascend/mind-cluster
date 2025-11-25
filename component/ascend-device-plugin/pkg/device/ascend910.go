@@ -233,7 +233,7 @@ func (hnm *HwAscend910Manager) getDevFaultInfo(logicID int32) *common.DevFaultIn
 		hwlog.RunLog.Errorf("failed to get global device fault info from cache, err: %v", tempErr)
 		return nil
 	}
-	if tempFaultInfo.Policy == common.EmptyError {
+	if tempFaultInfo.Policy == common.EmptyError || tempFaultInfo.Policy == common.IsolateError {
 		return nil
 	}
 	return tempFaultInfo
@@ -298,7 +298,7 @@ func (hnm *HwAscend910Manager) isFaultNeedRestart(devFaultInfo *common.DevFaultI
 		return false
 	}
 	if time.Now().Unix()-resetTime > common.ResetFaultToleranceTimeInterval {
-		hwlog.RunLog.Infof("device %v fault exist over 60s, exec reset", devFaultInfo.LogicId)
+		hwlog.RunLog.Infof("device %v fault exist over 60s", devFaultInfo.LogicId)
 		resetTimeMap.Delete(devFaultInfo.LogicId)
 		return true
 	}
@@ -462,7 +462,7 @@ func (hnm *HwAscend910Manager) checkFaultIsExist(devs map[string][]*common.NpuDe
 		resetPolicy := hnm.hotResetManager.GetDevProcessPolicy(common.GetFaultType(errCodes, dev.LogicID))
 		if resetPolicy == common.RestartRequestError || resetPolicy == common.RestartError ||
 			resetPolicy == common.FreeResetError || resetPolicy == common.ResetError {
-			hwlog.RunLog.Infof("device id <%v> fault is exist,start to reset", dev.LogicID)
+			hwlog.RunLog.Infof("device id <%v> fault is exist", dev.LogicID)
 			return true
 		}
 	}
