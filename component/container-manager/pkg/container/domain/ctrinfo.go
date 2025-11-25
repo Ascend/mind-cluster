@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/containerd/containerd"
+
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
@@ -37,6 +39,7 @@ type ctrInfo struct {
 	Status          string
 	StatusStartTime int64
 	CtrsOnRing      []string
+	DetailedInfo    containerd.Container
 }
 
 // NewCtrInfo new ctr info
@@ -56,6 +59,28 @@ func (cc *CtrCache) GetCtrUsedDevs(id string) []int32 {
 		return []int32{}
 	}
 	return info.UsedDevs
+}
+
+// SetDetailedInfo set ctrs detailed info
+func (cc *CtrCache) SetDetailedInfo(ctrId string, details containerd.Container) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+	info, ok := cc.ctrInfoMap[ctrId]
+	if !ok {
+		return
+	}
+	info.DetailedInfo = details
+}
+
+// GetDetailedInfo get ctrs detailed info
+func (cc *CtrCache) GetDetailedInfo(ctrId string) containerd.Container {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+	info, ok := cc.ctrInfoMap[ctrId]
+	if !ok {
+		return nil
+	}
+	return info.DetailedInfo
 }
 
 // SetCtrsStatus set ctrs status
