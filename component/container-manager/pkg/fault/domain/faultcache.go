@@ -28,6 +28,9 @@ import (
 
 const mockFaultAttr = -1
 
+var faultCache *FaultCache
+var initOnce sync.Once
+
 // FaultCache fault events from dcmi interface
 type FaultCache struct {
 	// key: phy id, value: {fault code : {module type + module id + submodule type + submodule id : fault info}}
@@ -37,13 +40,18 @@ type FaultCache struct {
 	mutex      sync.Mutex
 }
 
-// NewFaultCache new fault cache
-func NewFaultCache() *FaultCache {
-	return &FaultCache{
-		faults:     make(map[int32]map[int64]map[string]*common.DevFaultInfo),
-		UpdateChan: make(chan struct{}, 1),
-		mutex:      sync.Mutex{},
-	}
+// GetFaultCache new fault cache
+func GetFaultCache() *FaultCache {
+	initOnce.Do(
+		func() {
+			faultCache = &FaultCache{
+				faults:     make(map[int32]map[int64]map[string]*common.DevFaultInfo),
+				UpdateChan: make(chan struct{}, 1),
+				mutex:      sync.Mutex{},
+			}
+		},
+	)
+	return faultCache
 }
 
 // AddFault add fault to faults in cache

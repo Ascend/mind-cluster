@@ -32,7 +32,7 @@ type FaultMgr struct {
 // NewFaultMgr new fault manager
 func NewFaultMgr() *FaultMgr {
 	return &FaultMgr{
-		faultInfo: domain.NewFaultCache(),
+		faultInfo: domain.GetFaultCache(),
 	}
 }
 

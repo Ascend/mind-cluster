@@ -22,6 +22,8 @@ import (
 	"container-manager/pkg/common"
 )
 
+var devCache *DevCache
+
 // DevCache dev cache
 type DevCache struct {
 	devInfoMap map[int32]*devInfo
@@ -43,10 +45,16 @@ func NewDevCache(ids []int32) *DevCache {
 			Status: common.StatusIgnorePause,
 		}
 	}
-	return &DevCache{
+	devCache = &DevCache{
 		devInfoMap: devMap,
 		mutex:      sync.Mutex{},
 	}
+	return devCache
+}
+
+// GetDevCache return devCache
+func GetDevCache() *DevCache {
+	return devCache
 }
 
 // ResetDevStatus reset dev status
