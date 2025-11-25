@@ -18,6 +18,7 @@ package devmgr
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -200,5 +201,326 @@ func TestGetFaultCodesMap(t *testing.T) {
 		defer patches.Reset()
 		codesMap := mockDevMgr.GetFaultCodesMap()
 		convey.So(len(codesMap), convey.ShouldEqual, 0)
+	})
+}
+
+func TestGetPhyIdOnRing(t *testing.T) {
+	resetDevMgr()
+
+	testAtlas300IDuoScenarios(t)
+	testDevicesWithoutRingScenario(t)
+	testAscend910A3Scenario(t)
+	testAscend910RingScenario(t)
+	testGetDevNumPerRingFailScenario(t)
+}
+
+func testAtlas300IDuoScenarios(t *testing.T) {
+	convey.Convey("test method 'GetPhyIdOnRing' for Atlas 300I Duo", t, func() {
+		testAtlas300IDuoSuccess(t)
+		testAtlas300IDuoGetCardIDDeviceIDFail(t)
+	})
+}
+
+func testAtlas300IDuoSuccess(t *testing.T) {
+	convey.Convey("should return coupled phy ids when product type is Atlas 300I Duo", func() {
+		patches := gomonkey.ApplyMethod(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, int32, error) {
+				return 0, 0, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "isAtlas300IDuo",
+			func(_ *HwDevMgr, cardId, deviceId int32) bool {
+				return true
+			})
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "getCoupledPhyIdsFrom310pDuo",
+			func(_ *HwDevMgr, phyId int32) ([]int32, error) {
+				return []int32{0, 1}, nil
+			})
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []int32{0, 1})
+	})
+}
+
+func testAtlas300IDuoGetCardIDDeviceIDFail(t *testing.T) {
+	convey.Convey("should return error when GetCardIDDeviceID fails", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			int32(0), int32(0), testErr)
+		defer patches.Reset()
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func testDevicesWithoutRingScenario(t *testing.T) {
+	convey.Convey("test method 'GetPhyIdOnRing' for devices without ring", t, func() {
+		patches := gomonkey.ApplyMethod(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, int32, error) {
+				return 0, 0, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "isAtlas300IDuo",
+			func(_ *HwDevMgr, cardId, deviceId int32) bool {
+				return false
+			})
+
+		patches.ApplyMethodReturn(&HwDevMgr{}, "GetDevNumPerRing", common.NoRingNum, nil)
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []int32{0})
+	})
+}
+
+func testAscend910A3Scenario(t *testing.T) {
+	convey.Convey("test method 'GetPhyIdOnRing' for Ascend910A3", t, func() {
+		patches := gomonkey.ApplyMethod(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, int32, error) {
+				return 0, 0, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "isAtlas300IDuo",
+			func(_ *HwDevMgr, cardId, deviceId int32) bool {
+				return false
+			})
+
+		patches.ApplyMethodReturn(&HwDevMgr{}, "GetDevNumPerRing", common.Ascend910RingsNum, nil)
+		patches.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDevType", api.Ascend910A3)
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "getPhyIdOn910A3Ring",
+			func(phyId, cardId, deviceId int32) ([]int32, error) {
+				return []int32{0, 1, 2, 3}, nil
+			})
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []int32{0, 1, 2, 3})
+	})
+}
+
+func testAscend910RingScenario(t *testing.T) {
+	convey.Convey("test method 'GetPhyIdOnRing' for Ascend910 ring", t, func() {
+		patches := gomonkey.ApplyMethod(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, int32, error) {
+				return 0, 0, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "isAtlas300IDuo",
+			func(_ *HwDevMgr, cardId, deviceId int32) bool {
+				return false
+			})
+
+		patches.ApplyMethodReturn(&HwDevMgr{}, "GetDevNumPerRing", common.Ascend910BRingsNumTrain, nil)
+		patches.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDevType", api.Ascend910)
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "getPhyIdOn910Ring",
+			func(phyId, cardId, deviceId int32) ([]int32, error) {
+				return []int32{0, 1, 2, 3, 4, 5, 6, 7}, nil
+			})
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []int32{0, 1, 2, 3, 4, 5, 6, 7})
+	})
+}
+
+func testGetDevNumPerRingFailScenario(t *testing.T) {
+	convey.Convey("test method 'GetPhyIdOnRing' should return error when GetDevNumPerRing fails", t, func() {
+		patches := gomonkey.ApplyMethod(&devmanager.DeviceManagerMock{}, "GetCardIDDeviceID",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, int32, error) {
+				return 0, 0, nil
+			})
+		defer patches.Reset()
+
+		patches.ApplyPrivateMethod(&HwDevMgr{}, "isAtlas300IDuo",
+			func(_ *HwDevMgr, cardId, deviceId int32) bool {
+				return false
+			})
+
+		patches.ApplyMethodReturn(&HwDevMgr{}, "GetDevNumPerRing", 0, testErr)
+
+		result, err := mockDevMgr.GetPhyIdOnRing(0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func TestIsAtlas300IDuo(t *testing.T) {
+	resetDevMgr()
+
+	convey.Convey("test method 'isAtlas300IDuo'", t, func() {
+		convey.Convey("should return true when product type is Atlas 300I Duo", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetProductType",
+				common.ProductTypeAtlas300IDuo, nil)
+			defer patches.Reset()
+
+			result := mockDevMgr.isAtlas300IDuo(0, 0)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("should return false when product type is not Atlas 300I Duo", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetProductType",
+				"OtherProduct", nil)
+			defer patches.Reset()
+
+			result := mockDevMgr.isAtlas300IDuo(0, 0)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should return false when GetProductType fails", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetProductType",
+				"", testErr)
+			defer patches.Reset()
+
+			result := mockDevMgr.isAtlas300IDuo(0, 0)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestGetCoupledPhyIdsFrom310pDuo(t *testing.T) {
+	resetDevMgr()
+
+	convey.Convey("test method 'getCoupledPhyIdsFrom310pDuo'", t, func() {
+		convey.Convey("should return coupled phy ids successfully", func() {
+			mockDevMgr.npuInfos = map[int32]*common.NPUInfo{
+				0: {PhyID: 0, LogicID: 0, DeviceID: 0},
+				1: {PhyID: 1, LogicID: 1, DeviceID: 0}, // Same DeviceID as phyId 0
+				2: {PhyID: 2, LogicID: 2, DeviceID: 1},
+			}
+
+			result, err := mockDevMgr.getCoupledPhyIdsFrom310pDuo(0)
+			var sortSlice []int
+			for _, val := range result {
+				sortSlice = append(sortSlice, int(val))
+			}
+			sort.Ints(sortSlice)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(sortSlice, convey.ShouldResemble, []int{0, 1})
+		})
+
+		convey.Convey("should return error when npuInfos is nil", func() {
+			mockDevMgr.npuInfos = nil
+
+			result, err := mockDevMgr.getCoupledPhyIdsFrom310pDuo(0)
+			convey.So(err, convey.ShouldResemble, errors.New("npuInfos is nil"))
+			convey.So(result, convey.ShouldBeNil)
+		})
+
+		convey.Convey("should return error when phyId not found in npuInfos", func() {
+			mockDevMgr.npuInfos = map[int32]*common.NPUInfo{
+				1: {PhyID: 1, LogicID: 1, DeviceID: 0},
+			}
+
+			result, err := mockDevMgr.getCoupledPhyIdsFrom310pDuo(0)
+			convey.So(err, convey.ShouldResemble, errors.New("npuInfos is nil"))
+			convey.So(result, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestGetPhyIdOn910A3Ring(t *testing.T) {
+	resetDevMgr()
+
+	convey.Convey("test method 'getPhyIdOn910A3Ring'", t, func() {
+		testSuccessScenario(t)
+		testGetBrotherCardIDFail(t)
+		testGetDeviceLogicIDFailForDevice0(t)
+		testGetDeviceLogicIDFailForDevice1(t)
+		testGetDeviceLogicIDFailForOtherDevice(t)
+	})
+}
+
+func testSuccessScenario(t *testing.T) {
+	convey.Convey("should return phy ids on 910A3 ring successfully", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
+			int32(1), nil)
+		defer patches.Reset()
+
+		patches.ApplyMethodSeq(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
+			[]gomonkey.OutputCell{
+				{Values: gomonkey.Params{int32(10), nil}}, // First call for device 0
+				{Values: gomonkey.Params{int32(11), nil}}, // Second call for device 1
+				{Values: gomonkey.Params{int32(12), nil}}, // Third call for other device
+			})
+
+		patches.ApplyMethod(&HwDevMgr{}, "GetLogicIdByPhyId",
+			func(_ *HwDevMgr, logicId int32) int32 {
+				return logicId // Simple mapping for testing
+			})
+
+		result, err := mockDevMgr.getPhyIdOn910A3Ring(0, 0, 0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, []int32{0, 12, 10, 11})
+	})
+}
+
+func testGetBrotherCardIDFail(t *testing.T) {
+	convey.Convey("should return error when GetBrotherCardID fails", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
+			int32(0), testErr)
+		defer patches.Reset()
+
+		result, err := mockDevMgr.getPhyIdOn910A3Ring(0, 0, 0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func testGetDeviceLogicIDFailForDevice0(t *testing.T) {
+	convey.Convey("should return error when GetDeviceLogicID for device 0 fails", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
+			int32(1), nil)
+		defer patches.Reset()
+
+		patches.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
+			int32(0), testErr)
+
+		result, err := mockDevMgr.getPhyIdOn910A3Ring(0, 0, 0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func testGetDeviceLogicIDFailForDevice1(t *testing.T) {
+	convey.Convey("should return error when GetDeviceLogicID for device 1 fails", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
+			int32(1), nil)
+		defer patches.Reset()
+
+		patches.ApplyMethodSeq(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
+			[]gomonkey.OutputCell{
+				{Values: gomonkey.Params{int32(10), nil}},    // First call succeeds
+				{Values: gomonkey.Params{int32(0), testErr}}, // Second call fails
+			})
+
+		result, err := mockDevMgr.getPhyIdOn910A3Ring(0, 0, 0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func testGetDeviceLogicIDFailForOtherDevice(t *testing.T) {
+	convey.Convey("should return error when GetDeviceLogicID for other device fails", func() {
+		patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetBrotherCardID",
+			int32(1), nil)
+		defer patches.Reset()
+
+		patches.ApplyMethodSeq(&devmanager.DeviceManagerMock{}, "GetDeviceLogicID",
+			[]gomonkey.OutputCell{
+				{Values: gomonkey.Params{int32(10), nil}},
+				{Values: gomonkey.Params{int32(11), nil}},
+				{Values: gomonkey.Params{int32(0), testErr}}, // Third call fails
+			})
+
+		result, err := mockDevMgr.getPhyIdOn910A3Ring(0, 0, 0)
+		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(result, convey.ShouldBeNil)
 	})
 }

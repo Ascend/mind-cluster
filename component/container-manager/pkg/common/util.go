@@ -22,7 +22,6 @@ import (
 	"os/signal"
 
 	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 )
 
@@ -37,9 +36,9 @@ func NewSignWatcher(osSigns ...os.Signal) chan os.Signal {
 }
 
 // GetDevNumPerRing get reset device num at a time.
-// 910 and 910A2 device reset by ring, 910A3 reset all devices on the node
+// 910 and 910A2 device reset by ring, 910A3 reset related devices
 func GetDevNumPerRing(devType string, devUsage string, deviceNum int, boardId uint32) int {
-	var devNumPerRing int
+	var devNumPerRing = NoRingNum
 	switch devType {
 	case api.Ascend910A:
 		devNumPerRing = Ascend910RingsNum
@@ -47,9 +46,10 @@ func GetDevNumPerRing(devType string, devUsage string, deviceNum int, boardId ui
 		if devUsage == Infer {
 			if boardId == A300IA2BoardId || boardId == A300IA2GB64BoardId ||
 				boardId == A800IA2NoneHccsBoardId || boardId == A800IA2NoneHccsBoardIdOld {
-				return Ascend910BRingsNumInfer
+				devNumPerRing = NoRingNum
+			} else {
+				devNumPerRing = Ascend910BRingsNumTrain
 			}
-			devNumPerRing = Ascend910BRingsNumTrain
 		}
 		if devUsage == Train {
 			devNumPerRing = Ascend910BRingsNumTrain
@@ -58,10 +58,9 @@ func GetDevNumPerRing(devType string, devUsage string, deviceNum int, boardId ui
 			}
 		}
 	case api.Ascend910A3:
-		// 900A3 device, deviceNum is 16; 9000A3 device, deviceNum is 8
-		devNumPerRing = deviceNum
+		devNumPerRing = Ascend910A3RingsNum
 	default:
-		hwlog.RunLog.Error("only 910 device support get device num per ring")
+		// use initial value, do nothing
 	}
 	return devNumPerRing
 }

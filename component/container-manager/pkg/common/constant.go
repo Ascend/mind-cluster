@@ -48,10 +48,21 @@ const (
 	Ascend910RingsNum = 4
 	// Ascend910BRingsNumTrain indicates the number of devices in a ring
 	Ascend910BRingsNumTrain = 8
-	// Ascend910BRingsNumInfer indicates the number of devices in a ring
-	Ascend910BRingsNumInfer = 1
+	// Ascend910A3RingsNum indicates the number of 910A3 associated npu
+	Ascend910A3RingsNum = 2
+	// NoRingNum indicates the number of associated npu without ring
+	NoRingNum = 1
+	// OtherCardIncrease 910A3 related card increase factor
+	OtherCardIncrease = 1
+	// Device910A3Id0 device 0 of card
+	Device910A3Id0 = 0 // die id 0 of A3 card
+	// Device910A3Id1 device 1 of card
+	Device910A3Id1 = 1 // die id 1 of A3 card
 	// A200TA2RingsNum indicates the number of devices in a ring
 	A200TA2RingsNum = 16
+
+	// ProductTypeAtlas300IDuo product type Atlas 300I Duo, twins 310P
+	ProductTypeAtlas300IDuo = "Atlas 300I Duo"
 )
 
 // fault related
