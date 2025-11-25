@@ -123,7 +123,7 @@ func setup() error {
 	if err := initLog(); err != nil {
 		return err
 	}
-	mockFaultCache = NewFaultCache()
+	mockFaultCache = GetFaultCache()
 	return nil
 }
 
