@@ -374,7 +374,7 @@ func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
 			devType:  api.Ascend910B,
 			devUsage: Infer,
 			boardId:  A800IA2NoneHccsBoardId,
-			expected: Ascend910BRingsNumInfer,
+			expected: NoRingNum,
 		},
 		{
 			name:     "03 910B+infer, has hccs",
@@ -393,12 +393,12 @@ func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
 			name:      "05 A3 device, return device num",
 			devType:   api.Ascend910A3,
 			deviceNum: 16,
-			expected:  16,
+			expected:  Ascend910A3RingsNum,
 		},
 		{
 			name:     "06 invalid devType",
 			devType:  "unknown devType",
-			expected: 0,
+			expected: NoRingNum,
 		},
 	}
 }
