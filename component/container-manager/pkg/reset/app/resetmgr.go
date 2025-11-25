@@ -207,7 +207,12 @@ func getAllRelatedNpus(faultNpus []int32) []domain.ResetNpuInfos {
 // check the container occupancy status of the fault-related chip through crtmgr
 func isNpuHoldByContainer(phyIds []int32) bool {
 	for _, phyId := range phyIds {
-		containerIds := containerdomain.GetDevCache().GetDevsRelatedCtrs(phyId)
+		cache := containerdomain.GetDevCache()
+		if cache == nil {
+			hwlog.RunLog.Infof("container cache is not ready yet, cannot reset physic ID [%v]", phyId)
+			return true
+		}
+		containerIds := cache.GetDevsRelatedCtrs(phyId)
 		if len(containerIds) != 0 {
 			hwlog.RunLog.Infof("physic ID [%v] is hold by running container %v", phyId, containerIds)
 			return true
