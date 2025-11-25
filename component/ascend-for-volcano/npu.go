@@ -197,7 +197,7 @@ func jobReady(obj interface{}, tp *huaweiNPUPlugin) bool {
 	if !ok {
 		return true
 	}
-	return *job.JobReadyTag
+	return *job.JobReadyTag && ji.ReadyTaskNum() >= job.MinAvailable
 }
 
 func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
