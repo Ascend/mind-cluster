@@ -36,8 +36,11 @@ const (
 	Version1 = "1.0"
 	// Version1Dot2 is the version of ranktable v1.2
 	Version1Dot2 = "1.2"
+	// SchedulePolicyAnnoKey annotation key for schedule policy
+	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
 	// OnePodOneNode indicates that for a job all pods are on different node
 	OnePodOneNode = "onePodOneNode"
+
 )
 
 // BaseGenerator is the base struct for ranktable generator.
