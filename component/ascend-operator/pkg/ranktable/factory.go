@@ -10,6 +10,7 @@ package ranktable
 import (
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
 	ranktablev1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
@@ -21,9 +22,19 @@ func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
 	if job == nil {
 		return ranktablev1.New(job)
 	}
-	if _, ok := job.Annotations[utils.AnnoKeyOfSuperPod]; ok {
-		hwlog.RunLog.Info("sp-block is exist, use ranktable v1_2")
+	if useV1dot2(job) {
+		hwlog.RunLog.Info("super pod job, use ranktable v1_2")
 		return v1dot2.New(job)
 	}
 	return ranktablev1.New(job)
+}
+
+func useV1dot2(job *mindxdlv1.AscendJob) bool {
+	if policy, schedulePolicyExit := job.Annotations[common.SchedulePolicyAnnoKey]; schedulePolicyExit {
+		return policy == utils.Chip2Node16Sp
+	}
+	if _, spBlockExit := job.Annotations[utils.AnnoKeyOfSuperPod]; spBlockExit {
+		return true
+	}
+	return false
 }

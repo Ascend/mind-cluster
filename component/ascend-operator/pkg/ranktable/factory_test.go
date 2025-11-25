@@ -13,11 +13,14 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/common"
 	v1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
 	_ "ascend-operator/pkg/testtool"
 	"ascend-operator/pkg/utils"
 )
+
+const chip2Node16 = "chip2-node16"
 
 func TestNewGenerator(t *testing.T) {
 	convey.Convey("TestNewGenerator", t, func() {
@@ -32,6 +35,24 @@ func TestNewGenerator(t *testing.T) {
 			generator := NewGenerator(job)
 			_, ok := generator.(*v1dot2.RankTable)
 			convey.So(ok, convey.ShouldEqual, true)
+		})
+		convey.Convey("03-job with schedule policy annotation and value is chip2-node16-sp"+
+			" should return v1.2 ranktable", func() {
+			job.Annotations = map[string]string{common.SchedulePolicyAnnoKey: utils.Chip2Node16Sp}
+			generator := NewGenerator(job)
+			_, ok := generator.(*v1dot2.RankTable)
+			convey.So(ok, convey.ShouldEqual, true)
+		})
+
+		convey.Convey("04-job with schedule policy annotation and value is not chip2-node16-sp"+
+			" and configure sp-block should return v1.1 ranktable", func() {
+			job.Annotations = map[string]string{
+				common.SchedulePolicyAnnoKey: chip2Node16,
+				utils.AnnoKeyOfSuperPod:      "16",
+			}
+			generator := NewGenerator(job)
+			_, ok := generator.(*v1dot2.RankTable)
+			convey.So(ok, convey.ShouldEqual, false)
 		})
 	})
 }
