@@ -16,7 +16,12 @@
 package app
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/namespaces"
+	"github.com/docker/docker/api/types"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -39,6 +44,53 @@ func (cm *CtrCtl) initAndControl() {
 	}
 	cm.ctrControl()
 	cm.devInfoMap.ResetDevStatus()
+}
+
+func (cm *CtrCtl) updateCtrRelatedInfo() error {
+	ctrs, err := cm.client.getAllContainers()
+	if err != nil {
+		return fmt.Errorf("get all ctrs failed: %v", err)
+	}
+	var ctrIds []string
+	switch cs := ctrs.(type) {
+	case []containerd.Container:
+		ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
+		for _, containerObj := range cs {
+			ctrIds = append(ctrIds, containerObj.ID())
+			usedDevs, err := cm.client.getUsedDevs(containerObj, ctx)
+			if err != nil {
+				hwlog.RunLog.Errorf("get container %s used devs failed: %v", containerObj.ID(), err)
+				continue
+			}
+			if len(usedDevs) == 0 {
+				// only ctr of used dev need save to cache
+				continue
+			} else {
+				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID(), usedDevs)
+			}
+			cm.setCtrRelatedInfo(containerObj.ID(), "k8s.io", usedDevs)
+		}
+	case []types.Container:
+		for _, containerObj := range cs {
+			ctrIds = append(ctrIds, containerObj.ID)
+			usedDevs, err := cm.client.getUsedDevs(containerObj, nil)
+			if err != nil {
+				hwlog.RunLog.Errorf("get container %s used devs failed: %v", containerObj.ID, err)
+				continue
+			}
+			if len(usedDevs) == 0 {
+				// only ctr of used dev need save to cache
+				continue
+			} else {
+				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID, usedDevs)
+			}
+			cm.setCtrRelatedInfo(containerObj.ID, "default", usedDevs)
+		}
+	default:
+		return nil
+	}
+	cm.removeDeletedCtr(ctrIds)
+	return nil
 }
 
 func (cm *CtrCtl) ctrControl() {
@@ -100,4 +152,70 @@ func (cm *CtrCtl) initRingInfo() error {
 		cm.ctrInfoMap.SetCtrsOnRing(utils.RemoveDuplicates(ctrsOnRing))
 	}
 	return nil
+}
+
+func (cm *CtrCtl) pauseCtr(onRing bool) {
+	ctrNeedPaused := cm.devInfoMap.GetNeedPausedCtr(onRing)
+	ctrHasPaused := cm.ctrInfoMap.GetCtrsByStatus(common.StatusPaused)
+	needPaused := utils.RemoveEleSli(ctrNeedPaused, ctrHasPaused)
+	for _, id := range needPaused {
+		hwlog.RunLog.Infof("start pausing container: %s", id)
+		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusPausing)
+		ns := cm.ctrInfoMap.GetCtrNs(id)
+		if ns == "" {
+			hwlog.RunLog.Errorf("failed to get namespace of container: %s", id)
+			continue
+		}
+		if err := cm.client.doStop(id, ns); err != nil {
+			hwlog.RunLog.Errorf("pause container %s failed, error: %v", id, err)
+			continue
+		}
+		hwlog.RunLog.Infof("successfully pause container: %s", id)
+		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusPaused)
+	}
+}
+
+func (cm *CtrCtl) resumeCtr(onRing bool) {
+	ctrHasPaused := cm.ctrInfoMap.GetCtrsByStatus(common.StatusPaused)
+	var ctrNeedResume []string
+	for _, id := range ctrHasPaused {
+		if !onRing {
+			if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrUsedDevs(id)) {
+				continue
+			}
+			ctrNeedResume = append(ctrNeedResume, id)
+			continue
+		}
+		if utils.Contains(ctrNeedResume, id) {
+			continue
+		}
+		ctrsOnRings := cm.ctrInfoMap.GetCtrsOnRing(id)
+		// can all containers on the ring be resumed.
+		// as long as one of the cards used by the containers on the ring does not meet the condition,
+		// the entire container on the ring cannot be resumed
+		if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)) {
+			continue
+		}
+		for _, ctrId := range ctrsOnRings {
+			if utils.Contains(ctrHasPaused, ctrId) {
+				ctrNeedResume = append(ctrNeedResume, ctrId)
+			}
+		}
+	}
+
+	for _, id := range ctrNeedResume {
+		hwlog.RunLog.Infof("start resuming container: %s", id)
+		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusResuming)
+		ns := cm.ctrInfoMap.GetCtrNs(id)
+		if ns == "" {
+			hwlog.RunLog.Errorf("failed to get namespace of container: %s", id)
+			continue
+		}
+		if err := cm.client.doStart(id, ns); err != nil {
+			hwlog.RunLog.Errorf("resume container %s failed, error: %v", id, err)
+			continue
+		}
+		hwlog.RunLog.Infof("successfully resume container: %s", id)
+		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusRunning)
+	}
 }

@@ -20,8 +20,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/containerd/containerd"
-
 	"ascend-common/common-utils/hwlog"
 	"container-manager/pkg/common"
 	"container-manager/pkg/container/domain"
@@ -33,23 +31,39 @@ const workDuration = 2 * time.Second
 
 // CtrCtl container controller
 type CtrCtl struct {
-	client     *containerd.Client
+	client     ContainerClient
 	ctrInfoMap *domain.CtrCache // key: ctr id (used dev ctr); value: ctr info
 	devInfoMap *domain.DevCache // key: dev phy id; value: ctr id
 }
 
 // NewCtrCtl new container controller
 func NewCtrCtl() (*CtrCtl, error) {
-	client, err := containerd.New(common.ParamOption.SockPath)
-	if err != nil {
-		hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
-		return nil, errors.New("connect to container runtime failed")
+	switch common.ParamOption.RuntimeMode {
+	case common.DockerMode:
+		dClient := NewDockerClient()
+		if err := dClient.init(); err != nil {
+			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
+			return nil, errors.New("connect to container runtime failed")
+		}
+		return &CtrCtl{
+			client:     dClient,
+			ctrInfoMap: domain.NewCtrInfo(),
+			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
+		}, nil
+	case common.ContainerDMode:
+		cClient := NewContainerdClient()
+		if err := cClient.init(); err != nil {
+			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
+			return nil, errors.New("connect to container runtime failed")
+		}
+		return &CtrCtl{
+			client:     cClient,
+			ctrInfoMap: domain.NewCtrInfo(),
+			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
+		}, nil
+	default:
+		return nil, errors.New("unknown container mode")
 	}
-	return &CtrCtl{
-		client:     client,
-		ctrInfoMap: domain.NewCtrInfo(),
-		devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
-	}, nil
 }
 
 // Name module name
@@ -91,7 +105,7 @@ func (cm *CtrCtl) Work(ctx context.Context) {
 
 // ShutDown module shutdown
 func (cm *CtrCtl) ShutDown() {
-	if err := cm.client.Close(); err != nil {
+	if err := cm.client.close(); err != nil {
 		hwlog.RunLog.Errorf("close containerd client failed, error: %v", err)
 	}
 }
