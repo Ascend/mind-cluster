@@ -75,7 +75,7 @@ func (r *ResetMgr) Work(ctx context.Context) {
 			if !ok {
 				hwlog.RunLog.Info("catch stop signal channel closed")
 			}
-			hwlog.RunLog.Info("reset manager exited...")
+			hwlog.RunLog.Info("reset manager stop")
 			return
 		case <-ticker.C:
 			r.processResetWork()
@@ -83,7 +83,7 @@ func (r *ResetMgr) Work(ctx context.Context) {
 	}
 }
 
-// ShutDown shut down module, reset manager do nothing
+// ShutDown shut down module
 func (r *ResetMgr) ShutDown() {
-	return
+	// reset manager do nothing
 }
