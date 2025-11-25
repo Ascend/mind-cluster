@@ -154,6 +154,8 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 	completedPodNum := 0
 	rankTable.ServerList = make([]constant.ServerHccl, 0, replicas)
 	ipSnMap := node.GetNodeIPAndSNMap()
+	nodeHavePods := make(map[string]struct{})
+	onePodOneNode := true
 	for _, pod := range podsInJob {
 		podRank := getPodRank(pod)
 		if podRank == -1 || podRank >= replicas {
@@ -167,9 +169,20 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 		if len(podDev.Devices) == 0 {
 			continue
 		}
+		if _, found := nodeHavePods[pod.Spec.NodeName]; found {
+			onePodOneNode = false
+		}
+		nodeHavePods[pod.Spec.NodeName] = struct{}{}
 		serverInfo := getServerInfo(podDev, pod, ipSnMap, podRank)
 		rankTable.ServerList = append(rankTable.ServerList, serverInfo)
 	}
+	// if pods on diff nodes then server id is host ip
+	if onePodOneNode {
+		for i := range rankTable.ServerList {
+			rankTable.ServerList[i].ServerID = rankTable.ServerList[i].HostIp
+		}
+	}
+
 	sort.Slice(rankTable.ServerList, func(i, j int) bool {
 		iRankID, iErr := strconv.Atoi(rankTable.ServerList[i].DeviceList[0].RankID)
 		jRankID, jErr := strconv.Atoi(rankTable.ServerList[j].DeviceList[0].RankID)
@@ -342,14 +355,21 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 	podMap := GetPodByJobId(jobKey)
 	servers := make(map[string]constant.ServerHccl, len(podMap))
+	onePodOneNode := JudgePodOnDiffNode(podMap)
 	for _, pod := range podMap {
 		if pod.Spec.NodeName == "" {
 			hwlog.RunLog.Warnf("job: %s server pod %s is not scheduled", jobKey, pod.Name)
 			return nil
 		}
 		nodeName := pod.Spec.NodeName
+		serverId := string(pod.UID)
+
+		// if pods on diff nodes then server id is node ip. used in mindie.
+		if onePodOneNode {
+			serverId = node.GetNodeIpByName(nodeName)
+		}
 		servers[nodeName] = constant.ServerHccl{
-			ServerID:     string(pod.UID),
+			ServerID:     serverId,
 			HostIp:       node.GetNodeIpByName(nodeName),
 			PodID:        pod.Name,
 			PodNameSpace: pod.Namespace,
@@ -358,6 +378,19 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 		}
 	}
 	return servers
+}
+
+// JudgePodOnDiffNode judge pods whether on diff nodes
+func JudgePodOnDiffNode(podMap map[string]v1.Pod) bool {
+	nodePodFlg := make(map[string]struct{})
+	onePodOneNode := true
+	for _, pod := range podMap {
+		if _, found := nodePodFlg[pod.Spec.NodeName]; found {
+			onePodOneNode = false
+		}
+		nodePodFlg[pod.Spec.NodeName] = struct{}{}
+	}
+	return onePodOneNode
 }
 
 // GetUsedDevicesByNodeName get used devices by node name
