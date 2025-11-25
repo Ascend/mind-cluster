@@ -336,3 +336,31 @@ func createAndSavePod(param podCreateParam) *v1.Pod {
 	SavePod(pod)
 	return pod
 }
+
+func TestJudgePodOnDiffNode(t *testing.T) {
+	podMap := make(map[string]v1.Pod)
+	podMap["uid1"] = v1.Pod{
+		Spec: v1.PodSpec{
+			NodeName: "node-1",
+		},
+	}
+	podMap["uid2"] = v1.Pod{
+		Spec: v1.PodSpec{
+			NodeName: "node-1",
+		},
+	}
+	flg := JudgePodOnDiffNode(podMap)
+	if flg {
+		t.Errorf("when pod on same node then should return false")
+	}
+
+	podMap["uid2"] = v1.Pod{
+		Spec: v1.PodSpec{
+			NodeName: "node-2",
+		},
+	}
+	flg = JudgePodOnDiffNode(podMap)
+	if !flg {
+		t.Errorf("when pod on same node then should return true")
+	}
+}
