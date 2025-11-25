@@ -174,7 +174,7 @@ func (hdm *HwDevMgr) setNodeNPUInfo(logicIds []int32, devNum int32) (map[int32]*
 		if err != nil {
 			return nil, err
 		}
-		npuInfos[id] = &npuInfo
+		npuInfos[npuInfo.PhyID] = &npuInfo
 	}
 	return npuInfos, nil
 }
@@ -288,7 +288,7 @@ func (hdm *HwDevMgr) subscribeNPUFaultEvent(callback func(devFaultInfo ascommon.
 
 // GetDeviceErrCode get device error code by dcmi interface
 func (hdm *HwDevMgr) GetDeviceErrCode(phyId int32) (int32, []int64, error) {
-	logicId := hdm.GetLogicIdByPhyId(phyId)
+	logicId := hdm.GetPhyIdByLogicId(phyId)
 	return hdm.GetDmgr().GetDeviceAllErrorCode(logicId)
 }
 
