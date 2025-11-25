@@ -72,7 +72,7 @@ var (
 const (
 	portConst               = 8082
 	updateTimeConst         = 5
-	cacheTime               = 65 * time.Second
+	cacheTime               = 100 * time.Second
 	portLeft                = 1025
 	portRight               = 40000
 	oneMinute               = 60
