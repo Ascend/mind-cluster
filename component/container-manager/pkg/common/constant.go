@@ -132,3 +132,9 @@ const (
 	// StatusNeedPause device need pause
 	StatusNeedPause = "needPause"
 )
+
+// container runtime mode
+const (
+	DockerMode     = "docker"
+	ContainerDMode = "containerd"
+)

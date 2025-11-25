@@ -17,7 +17,6 @@ package app
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -27,28 +26,19 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/api/services/tasks/v1"
-	"github.com/containerd/containerd/namespaces"
-	"github.com/containerd/containerd/oci"
-
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 )
 
 const (
-	sliceLen8      = 8
-	charDevice     = "c"
-	maxDevicesNum  = 100000
-	maxEnvNum      = 10000
+	sliceLen16     = 16
 	minus          = "-"
 	comma          = ","
 	ascendEnvPart  = 2
 	maxEnvLength   = 1024
 	deviceCount    = 2
 	maxSearchLine  = 512
-	base           = 10
 	deviceListFile = "/proc/devices"
 )
 
@@ -67,90 +57,6 @@ var (
 	npuMajorID        []string
 	majorIdRegex      = regexp.MustCompile("^[0-9]{1,3}\\s[v]?devdrv-cdev$")
 )
-
-func (cm *CtrCtl) updateCtrRelatedInfo() error {
-	nss, err := cm.client.NamespaceService().List(context.Background())
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get namespace list, error: %v", err)
-		return errors.New("failed to get namespace list")
-	}
-	var ctrIds []string
-	for _, ns := range nss {
-		ctx := namespaces.WithNamespace(context.Background(), ns)
-		// list running containers
-		taskList, err := cm.client.TaskService().List(ctx, &tasks.ListTasksRequest{})
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to get container list by ns %s, error: %v", ns, err)
-			continue
-		}
-		if len(taskList.Tasks) == 0 {
-			continue
-		}
-		for _, taskInfo := range taskList.Tasks {
-			containerObj, err := cm.client.LoadContainer(ctx, taskInfo.ID)
-			if err != nil {
-				hwlog.RunLog.Errorf("failed to load container %s, error: %v", taskInfo.ID, err)
-				continue
-			}
-			usedDevs, err := getUsedDevs(containerObj, ctx)
-			if err != nil {
-				hwlog.RunLog.Errorf("get container %s used devs failed: %v", containerObj.ID(), err)
-				continue
-			}
-			if len(usedDevs) == 0 {
-				// only ctr of used dev need save to cache
-				hwlog.RunLog.Debugf("container %s not used devs", containerObj.ID())
-				continue
-			} else {
-				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID(), usedDevs)
-			}
-			ctrIds = append(ctrIds, containerObj.ID())
-			cm.setCtrRelatedInfo(containerObj.ID(), ns, usedDevs)
-		}
-	}
-	cm.removeDeletedCtr(ctrIds)
-	return nil
-}
-
-func getUsedDevs(containerObj containerd.Container, ctx context.Context) ([]int32, error) {
-	spec, err := getCtrValidSpec(containerObj, ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get container %s valid spec failed, error: %v", containerObj.ID(), err)
-	}
-	envs := spec.Process.Env
-	// for containerd, env with the same name will be appended directly and will not be overwritten.
-	// To avoid the presence of environment variables ASCEND_VISIBLE_DEVICES in the image, iterate from back to front
-	for i := len(envs) - 1; i >= 0; i-- {
-		env := envs[i]
-		if strings.Contains(env, api.AscendDeviceInfo) {
-			usedDevs, err := getUsedDevsWithAscendRuntime(env)
-			if err != nil {
-				return nil, fmt.Errorf("parse env %s failed, error: %v", api.AscendDeviceInfo, err)
-			}
-			return usedDevs, nil
-		}
-	}
-	hwlog.RunLog.Warnf("get used devs by env %s failed, not used ascend docker runtime", api.AscendDeviceInfo)
-	usedDevs, err := getUsedDevsWithoutAscendRuntime(spec)
-	if err != nil {
-		return nil, fmt.Errorf("get container %s device ids failed, error: %v", containerObj.ID(), err)
-	}
-	return usedDevs, nil
-}
-
-func getCtrValidSpec(containerObj containerd.Container, ctx context.Context) (*oci.Spec, error) {
-	spec, err := containerObj.Spec(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get container spec:%v", err)
-	}
-	if spec.Linux == nil || spec.Linux.Resources == nil || len(spec.Linux.Resources.Devices) > maxDevicesNum {
-		return nil, fmt.Errorf("devices in container is too much (%v) or empty", maxDevicesNum)
-	}
-	if spec.Process == nil || len(spec.Process.Env) > maxEnvNum {
-		return nil, fmt.Errorf("env in container is too much (%v) or empty", maxEnvNum)
-	}
-	return spec, nil
-}
 
 func getUsedDevsWithAscendRuntime(env string) ([]int32, error) {
 	devInfo := strings.Split(env, "=")
@@ -252,28 +158,6 @@ func getDevIdsByCommaStyle(idsStr string) ([]int32, error) {
 		ids = append(ids, int32(id))
 	}
 	return ids, nil
-}
-
-func getUsedDevsWithoutAscendRuntime(spec *oci.Spec) ([]int32, error) {
-	if spec.Linux == nil || spec.Linux.Resources == nil {
-		return nil, errors.New("empty spec info")
-	}
-
-	phyIds := make([]int32, 0, sliceLen8)
-	majorIDs := npuMajor()
-	for _, dev := range spec.Linux.Resources.Devices {
-		if dev.Minor == nil || dev.Major == nil {
-			continue
-		}
-		if *dev.Minor > math.MaxInt32 {
-			return nil, fmt.Errorf("get wrong device ID (%v)", dev.Minor)
-		}
-		major := strconv.FormatInt(*dev.Major, base)
-		if dev.Type == charDevice && utils.Contains(majorIDs, major) {
-			phyIds = append(phyIds, int32(*dev.Minor))
-		}
-	}
-	return phyIds, nil
 }
 
 func npuMajor() []string {

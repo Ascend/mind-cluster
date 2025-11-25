@@ -46,6 +46,7 @@ var (
 
 // Option option param
 type Option struct {
+	RuntimeMode string
 	CtrStrategy string
 	SockPath    string
 }
