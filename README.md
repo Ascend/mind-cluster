@@ -63,20 +63,11 @@
 2. 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
 
 # 更新日志
-该仓库融合不同组件内容。6.0.0之前的版本见各组件仓库：
-| 组件         | 链接                                     |  说明   |
-|------------|----------------------------------| -|
-| NodeD       |  https://gitcode.com/ascend/ascend-noded   | -|
-| Ascend-Device-Plugin |  https://gitcode.com/ascend/ascend-device-plugin   |-|
-| NPU-Exporter |  https://gitcode.com/ascend/ascend-npu-exporter   |-|
-| Ascend-for-Volcano |  https://gitcode.com/ascend/ascend-for-volcano   |-|
-| Ascend-Docker-Runtime |  https://gitcode.com/ascend/ascend-docker-runtime  |-|
-
-6.0.0及之后版本发布如下：
 | 版本         | 发布日期      | 修改说明         |
 |------------|-----------|----------------------|
-| v6.0.0     | 2024-12-15 | 配套MindX 6.0.0版本   |
-| v7.0.RC1     | 2025-04-27 | 配套MindX 7.0.RC1版本   |
+| v6.0.0     | 2024-12-15 | 配套MindCluster 6.0.0版本   |
+| v7.0.RC1     | 2025-04-27 | 配套MindCluster 7.0.RC1版本   |
+| v7.1.RC1     | 2025-07-24 | 配套MindCluster 7.1.RC1版本   |
 
 # 版本配套说明
 版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/community)
