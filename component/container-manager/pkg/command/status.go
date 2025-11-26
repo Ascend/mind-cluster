@@ -36,9 +36,10 @@ const (
 )
 
 var (
-	border     = "+" + strings.Repeat("=", totalWidth-sideWidth) + "+"
-	ctrIDRegex = regexp.MustCompile(`^[a-f0-9]{64}$`)
-	format     = "| %-25s: %-65s |\n"
+	border                  = "+" + strings.Repeat("=", totalWidth-sideWidth) + "+"
+	ctrIDRegexForDocker     = regexp.MustCompile(`^[a-f0-9]{64}$`)
+	ctrIDRegexForContainerd = regexp.MustCompile(`^[a-zA-Z0-9]{1,15}$`)
+	format                  = "| %-25s: %-65s |\n"
 )
 
 type statusCmd struct {
@@ -68,7 +69,9 @@ func (cmd *statusCmd) BindFlag() bool {
 
 // CheckParam check param
 func (cmd *statusCmd) CheckParam() error {
-	if match := ctrIDRegex.MatchString(cmd.containerID); !match {
+	match1 := ctrIDRegexForContainerd.MatchString(cmd.containerID)
+	match2 := ctrIDRegexForDocker.MatchString(cmd.containerID)
+	if !match1 && !match2 {
 		return errors.New("invalid containerID")
 	}
 	return nil
