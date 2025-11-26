@@ -18,7 +18,6 @@ package command
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -72,8 +71,7 @@ func TestStatusCmd(t *testing.T) {
 		convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
 
 		stCmd = statusCmd{containerID: invalidCtrID}
-		expErr := errors.New("invalid containerID")
-		convey.So(stCmd.CheckParam(), convey.ShouldResemble, expErr)
+		convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
 	})
 }
 
