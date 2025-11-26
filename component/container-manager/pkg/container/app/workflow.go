@@ -47,7 +47,7 @@ func NewCtrCtl() (*CtrCtl, error) {
 		}
 		return &CtrCtl{
 			client:     dClient,
-			ctrInfoMap: domain.NewCtrInfo(),
+			ctrInfoMap: domain.GetCtrInfo(),
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
 	case common.ContainerDType:
@@ -58,7 +58,7 @@ func NewCtrCtl() (*CtrCtl, error) {
 		}
 		return &CtrCtl{
 			client:     cClient,
-			ctrInfoMap: domain.NewCtrInfo(),
+			ctrInfoMap: domain.GetCtrInfo(),
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
 	default:

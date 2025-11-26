@@ -55,34 +55,36 @@ func (r *ResetMgr) processResetWork() {
 		return
 	}
 	relatedInfos := getAllRelatedNpus(needResetNpus)
-	r.hotResetRelatedNpuArrays(relatedInfos)
+	for _, info := range relatedInfos {
+		r.hotResetRelatedNpu(info)
+	}
 }
 
-func (r *ResetMgr) hotResetRelatedNpuArrays(relatedInfos []domain.ResetNpuInfos) {
-	for _, info := range relatedInfos {
-		hwlog.RunLog.Infof("fault npu pyhsic ID [%v], related ID %v, start to reset", info.FaultId, info.RelatedIds)
-		if isNpuHoldByContainer(info.RelatedIds) {
-			hwlog.RunLog.Infof("npus %v are hold by container, skip reset", info.RelatedIds)
-			continue
-		}
-		isHold, checkErr := isNpuHoldByProcess(info.RelatedIds)
-		if checkErr != nil {
-			hwlog.RunLog.Infof("npus %v check process occupation failed, skip reset, error: %v",
-				info.RelatedIds, checkErr)
-			continue
-		}
-		if isHold {
-			hwlog.RunLog.Infof("npus %v are hold by process, skip reset", info.RelatedIds)
-			continue
-		}
+func (r *ResetMgr) hotResetRelatedNpu(info domain.ResetNpuInfos) {
+	r.resetCache.SetNpuInReset(info.RelatedIds...)
+	defer r.resetCache.ClearNpuInReset(info.RelatedIds...)
 
-		if !isFaultExist(info.RelatedIds) {
-			hwlog.RunLog.Infof("npus' %v fault is not exist, skip reset", info.RelatedIds)
-			continue
-		}
-		hwlog.RunLog.Infof("npus' %v fault is exist, start to reset", info.RelatedIds)
-		r.hotReset(info)
+	hwlog.RunLog.Infof("fault npu pyhsic ID [%v], related ID %v, start to reset", info.FaultId, info.RelatedIds)
+	if isNpuHoldByContainer(info.RelatedIds) {
+		hwlog.RunLog.Infof("npus %v are hold by container, skip reset", info.RelatedIds)
+		return
 	}
+	isHold, checkErr := isNpuHoldByProcess(info.RelatedIds)
+	if checkErr != nil {
+		hwlog.RunLog.Infof("npus %v check process occupation failed, skip reset", info.RelatedIds)
+		return
+	}
+	if isHold {
+		hwlog.RunLog.Infof("npus %v are hold by process, skip reset", info.RelatedIds)
+		return
+	}
+
+	if !isFaultExist(info.RelatedIds) {
+		hwlog.RunLog.Infof("npus' %v fault is not exist, skip reset", info.RelatedIds)
+		return
+	}
+	hwlog.RunLog.Infof("npus' %v fault is exist, start to reset", info.RelatedIds)
+	r.hotReset(info)
 }
 
 func (r *ResetMgr) allowToResetNpu() bool {
@@ -207,15 +209,21 @@ func getAllRelatedNpus(faultNpus []int32) []domain.ResetNpuInfos {
 // check the container occupancy status of the fault-related chip through crtmgr
 func isNpuHoldByContainer(phyIds []int32) bool {
 	for _, phyId := range phyIds {
-		cache := containerdomain.GetDevCache()
-		if cache == nil {
-			hwlog.RunLog.Infof("container cache is not ready yet, cannot reset physic ID [%v]", phyId)
+		devCache := containerdomain.GetDevCache()
+		if devCache == nil {
+			hwlog.RunLog.Infof("container devCache is not ready yet, cannot reset physic ID [%v]", phyId)
 			return true
 		}
-		containerIds := cache.GetDevsRelatedCtrs(phyId)
-		if len(containerIds) != 0 {
-			hwlog.RunLog.Infof("physic ID [%v] is hold by running container %v", phyId, containerIds)
-			return true
+
+		containerIds := devCache.GetDevsRelatedCtrs(phyId)
+		crtCache := containerdomain.GetCtrInfo()
+
+		for _, id := range containerIds {
+			status, _ := crtCache.GetCtrStatusAndStartTime(id)
+			if status != common.StatusPaused {
+				hwlog.RunLog.Infof("physic ID [%v] is hold by running container %v", phyId, id)
+				return true
+			}
 		}
 	}
 	return false
@@ -263,9 +271,6 @@ func isFaultExist(relatedIds []int32) bool {
 }
 
 func (r *ResetMgr) hotReset(info domain.ResetNpuInfos) {
-	r.resetCache.SetNpuInReset(info.RelatedIds...)
-	defer r.resetCache.ClearNpuInReset(info.RelatedIds...)
-
 	if err := execDeviceReset(info.FaultId); err != nil {
 		hwlog.RunLog.Errorf("reset device %v failed, error: %v", info.FaultId, err)
 		r.countCache.SetFailedResetCount(info.FaultId, r.countCache.GetFailedResetCount(info.FaultId)+1)
@@ -276,7 +281,7 @@ func (r *ResetMgr) hotReset(info domain.ResetNpuInfos) {
 		r.countCache.SetFailedResetCount(info.FaultId, r.countCache.GetFailedResetCount(info.FaultId)+1)
 		return
 	}
-
+	faultdomain.GetFaultCache().Notify()
 	r.countCache.ClearFailedResetCount(info.FaultId)
 	timeNow := time.Now()
 	r.lastSuccessResetTime = &timeNow

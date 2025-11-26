@@ -49,7 +49,7 @@ func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 				return
 			}
 			hwlog.RunLog.Infof("receive reset device success signal, check the fault cache")
-			fm.doCheck()
+			fm.doCheck(true)
 		default:
 			if QueueCache.Len() == 0 {
 				time.Sleep(processFaultDuration)
@@ -70,23 +70,28 @@ func (fm *FaultMgr) checkMoreThanFiveMinFaults(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			fm.doCheck()
+			fm.doCheck(false)
 		}
 	}
 }
 
-func (fm *FaultMgr) doCheck() {
-	faultInfos, err := fm.faultInfo.DeepCopy()
-	if err != nil {
-		hwlog.RunLog.Errorf("deep copy fault info failed, error: %v", err)
-		return
-	}
+func (fm *FaultMgr) doCheck(checkImmediately bool) {
 	var idsNeedGetCodes []int32
-	for id, codeLayer := range faultInfos {
-		if fm.needGetAllCodes(codeLayer) {
-			idsNeedGetCodes = append(idsNeedGetCodes, id)
+	if checkImmediately {
+		idsNeedGetCodes = devmgr.DevMgr.GetPhyIds()
+	} else {
+		faultInfos, err := fm.faultInfo.DeepCopy()
+		if err != nil {
+			hwlog.RunLog.Errorf("deep copy fault info failed, error: %v", err)
+			return
+		}
+		for id, codeLayer := range faultInfos {
+			if fm.needGetAllCodes(codeLayer) {
+				idsNeedGetCodes = append(idsNeedGetCodes, id)
+			}
 		}
 	}
+
 	for _, id := range idsNeedGetCodes {
 		_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
 		if err != nil {

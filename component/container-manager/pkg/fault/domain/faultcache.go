@@ -72,7 +72,6 @@ func (fc *FaultCache) AddFault(newFault common.DevFaultInfo) {
 func (fc *FaultCache) dealFaultOccur(newFault common.DevFaultInfo, moduleLayerKey string) {
 	fc.mutex.Lock()
 	defer func() {
-		fc.Notify()
 		fc.mutex.Unlock()
 		fc.printFaults()
 	}()
@@ -98,7 +97,6 @@ func (fc *FaultCache) dealFaultOccur(newFault common.DevFaultInfo, moduleLayerKe
 func (fc *FaultCache) dealFaultRecover(newFault common.DevFaultInfo, moduleLayerKey string) {
 	fc.mutex.Lock()
 	defer func() {
-		fc.Notify()
 		fc.mutex.Unlock()
 		fc.printFaults()
 	}()
