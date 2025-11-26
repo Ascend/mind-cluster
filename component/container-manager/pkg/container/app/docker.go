@@ -28,6 +28,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"container-manager/pkg/common"
 )
 
 // DockerClient docker client
@@ -41,7 +42,8 @@ func NewDockerClient() *DockerClient {
 }
 
 func (d *DockerClient) init() error {
-	dClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	sockURL := fmt.Sprintf("unix://%s", common.ParamOption.SockPath)
+	dClient, err := client.NewClientWithOpts(client.WithHost(sockURL), client.WithAPIVersionNegotiation())
 	if err != nil {
 		hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
 		return errors.New("connect to container runtime failed")

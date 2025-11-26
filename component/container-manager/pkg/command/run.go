@@ -35,7 +35,7 @@ const (
 	maxAge           = 7
 	maxBackups       = 30
 	maxLogLineLength = 1024
-	defaultSockPath  = "/run/containerd/containerd.sock"
+	defaultSockPath  = "/run/docker.sock"
 )
 
 type runCmd struct {
@@ -70,7 +70,7 @@ func (cmd *runCmd) BindFlag() bool {
 	flag.IntVar(&cmd.logLevel, "logLevel", 0, "Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical")
 	flag.IntVar(&cmd.logMaxAge, "maxAge", maxAge, "Maximum number of days for backup log files, range is [7, 700]")
 	flag.IntVar(&cmd.logMaxBackups, "maxBackups", maxBackups, "Maximum number of backup log files, range is (0, 30]")
-	flag.StringVar(&cmd.runtimeType, "runtimeMode", common.DockerType, "Container Runtime type")
+	flag.StringVar(&cmd.runtimeType, "runtimeType", common.DockerType, "Container Runtime type")
 	flag.StringVar(&cmd.sockPath, "sockPath", defaultSockPath, "Container Runtime sock file path")
 	flag.StringVar(&cmd.ctrStrategy, "ctrStrategy", common.NeverStrategy, "Retracting strategy for faulty containers")
 	return true
@@ -183,7 +183,7 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 
 func (cmd *runCmd) setParameters() {
 	common.ParamOption = common.Option{
-		RuntimeMode: cmd.runtimeType,
+		RuntimeType: cmd.runtimeType,
 		SockPath:    cmd.sockPath,
 		CtrStrategy: cmd.ctrStrategy,
 	}

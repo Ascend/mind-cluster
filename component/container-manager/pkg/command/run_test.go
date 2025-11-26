@@ -110,7 +110,7 @@ func testErrRuntimeType() {
 func TestRunCmdExecute(t *testing.T) {
 	cmd := RunCmd()
 	cmd.BindFlag()
-	if err := flag.Set("runtimeMode", common.DockerType); err != nil {
+	if err := flag.Set("runtimeType", common.DockerType); err != nil {
 		t.Errorf("set flag err: %v", err)
 	}
 	if err := flag.Set("sockPath", defaultSockPath); err != nil {

@@ -27,7 +27,7 @@ import (
 
 const (
 	pausingDuration  = 20
-	pausedDuration   = 270
+	pausedDuration   = 400
 	resumingDuration = 20
 
 	defaultFileSize             = 100
