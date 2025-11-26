@@ -44,10 +44,19 @@ const (
 	minSuperPodRoceDetectionNums = 5
 	minSuperPodRoceNpuNumsRate   = 0.01
 
+	// DiagVersionA3 is the fault detection A3 string
+	DiagVersionA3 = "A3"
 	// DiagVersionA5 is the fault detection A5 string
 	DiagVersionA5 = "A5"
 	// DiagVersionServer is the inference server
 	DiagVersionServer = "800I-SuperPod-A5-8"
+
+	logPrintInterval = 10
+
+	// NpuType 网络拓扑类型
+	NpuType = "npu_type"
+	// ServerIdMap nodeName与serverId的映射
+	ServerIdMap = "serverIdMap"
 
 	level3 = 3
 	level1 = 1
@@ -63,16 +72,6 @@ type superPodParam struct {
 	npu            *NpuInfo
 	protocolLevels *LevelElement
 }
-
-const DiagVersionA3 = "A3"
-
-const logPrintInterval = 10
-
-// NpuType 网络拓扑类型
-const NpuType = "npu_type"
-
-// ServerIdMap nodeName与serverId的映射
-const ServerIdMap = "serverIdMap"
 
 type npuMapParam struct {
 	superPodInfo   *SuperPodInfo
@@ -143,9 +142,19 @@ func processSuperPodJson(superPodJsonFile string, superPodPath string) (*SuperPo
 		return nil, nil, nil
 	}
 	switch superPodInfo.Version {
+	case DiagVersionA5:
+		typeStr := getNetWorkType(superPodPath, superPodInfo)
+		if typeStr != "1D" && typeStr != "2D" {
+			return nil, nil, nil
+		}
+		npuFmlink, linkPath, _ := GetA5CurSuperPod1D2DNpuInfo(superPodPath, superPodInfo)
+		return superPodInfo, npuFmlink, linkPath
 	case DiagVersionA3:
 		fullMesh, linkPath := GetCurSuperPodInfoFromMapA3(superPodInfo)
 		return superPodInfo, fullMesh, linkPath
+	case DiagVersionServer:
+		linkPath := getA51D2DSuperPodNpuLinkPath(superPodInfo, "reasoningServer")
+		return superPodInfo, nil, linkPath
 	default:
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s",
 			superPodJsonFile, superPodInfo.Version)
@@ -547,6 +556,7 @@ func getA51D2DNpuLinkPath(npuNetPlanePaths map[string][]string, npu *NpuInfo, ra
 	}
 }
 
+/* determine if it's the new 1D and check if ports exist*/
 func checkIfNew1D(rackInfo map[string]*RackInfo) bool {
 	if rackInfo == nil || len(rackInfo) == 0 {
 		hwlog.RunLog.Error("new 1D rack info is nil")
@@ -597,9 +607,9 @@ func getEidInfoOrIpFromPorts(npuEidMap map[string]algo.NpuInfo, param superPodPa
 			npuInfo := algo.NpuInfo{
 				RackName:     "Rack-" + param.rack.RackID,
 				NpuNumber:    id,
-				SlotName:     "NSlot-" + strconv.Itoa(slotId),
-				NetPlaneId:   "netplane_" + levelInfo.RankAddrList[i].PlaneId,
-				SuperPodName: "SuperPod-" + param.superPodId,
+				SlotName:     fmt.Sprintf("NSlot-%d", slotId),
+				NetPlaneId:   fmt.Sprintf("netplane_%s", levelInfo.RankAddrList[i].PlaneId),
+				SuperPodName: fmt.Sprintf("SuperPod-%s", param.superPodId),
 				OsName:       param.server.ServerIndex}
 			if _, exist := npuEidMap[levelInfo.RankAddrList[i].Addr]; !exist && npuEidMap != nil {
 				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
@@ -1013,7 +1023,9 @@ func handleA5NpuMapInfo(superPodInfo *SuperPodInfo, superPodPath string) (map[st
 	} else {
 		return npuInfoMap, false
 	}
-
+	if npuInfoMap == nil {
+		return npuInfoMap, false
+	}
 	return npuInfoMap, true
 }
 
@@ -1197,11 +1209,11 @@ func getNpuInfoFromNpuLinkPath(npuMap map[string]algo.NpuInfo, npuLinkPath strin
 		return
 	}
 	slotId := npuId / perBoardNpus
-	ip := fmt.Sprintf("%s.%s.%s.%s", strconv.Itoa(ip1), strconv.Itoa(ip2), strconv.Itoa(ip3), strconv.Itoa(ip4))
+	ip := fmt.Sprintf("%d.%d.%d.%d", ip1, ip2, ip3, ip4)
 	npuMap[ip] = algo.NpuInfo{
 		NpuNumber:    npuId,
-		SuperPodName: fmt.Sprintf("SuperPod-%s", strconv.Itoa(superPodId)),
-		SlotName:     fmt.Sprintf("NSlot-%s", strconv.Itoa(slotId)),
+		SuperPodName: fmt.Sprintf("SuperPod-%d", superPodId),
+		SlotName:     fmt.Sprintf("NSlot-%d", slotId),
 	}
 }
 
@@ -1253,7 +1265,7 @@ func getSuperPodIdAndOsIdFromRoceMap(npuMap map[string]algo.NpuInfo, roceMap map
 				NpuNumber:    npuInfo.NpuNumber,
 				SuperPodName: npuInfo.SuperPodName,
 				OsName:       strconv.Itoa(osId),
-				RackName:     fmt.Sprintf("Rack-%s", strconv.Itoa(rackId)),
+				RackName:     fmt.Sprintf("Rack-%d", rackId),
 				SlotName:     npuInfo.SlotName,
 			}
 		}
@@ -1321,7 +1333,7 @@ func getReasoningServerNpuInfo(npuEidMap map[string]algo.NpuInfo,
 			npuInfo := algo.NpuInfo{
 				RackName:     "Rack-0", // 推理服务器都写0
 				NpuNumber:    npuPhyId,
-				SlotName:     fmt.Sprintf("NSlot-%s", strconv.Itoa(slotId)),
+				SlotName:     fmt.Sprintf("NSlot-%d", slotId),
 				NetPlaneId:   fmt.Sprintf("netplane_%s", levelInfo.RankAddrList[i].PlaneId),
 				SuperPodName: fmt.Sprintf("SuperPod-%s", superPodId),
 				OsName:       serverId}

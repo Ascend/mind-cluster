@@ -373,6 +373,16 @@ func TestSftFromConfigMapInterface(t *testing.T) {
 			ret := siftFromConfigMapInterface(s, nil, "")
 			convey.So(ret, convey.ShouldBeTrue)
 		})
+		convey.Convey("call a5 when version ", func() {
+			s := &SuperPodInfo{Version: DiagVersionA5}
+			patch := gomonkey.ApplyFunc(siftFromConfigMap, func(_ *SuperPodInfo,
+				_ map[string]any, _ string) bool {
+				return true
+			})
+			defer patch.Reset()
+			ret := siftFromConfigMapInterface(s, nil, "")
+			convey.So(ret, convey.ShouldBeTrue)
+		})
 
 	})
 }
@@ -415,7 +425,7 @@ func TestSiftFromConfigMap(t *testing.T) {
 }
 
 func TestSiftFromConfigWhenTrue(t *testing.T) {
-	convey.Convey("test siftFromConfigWhenTrue", t, func() {
+	convey.Convey("test siftFromConfigMapWhenTrue", t, func() {
 		convey.Convey("when normal", func() {
 			s := &SuperPodInfo{SuperPodID: "1", RackMap: map[string]*RackInfo{"1": &RackInfo{RackID: "1",
 				ServerMap: map[string]*ServerInfo{"1": &ServerInfo{NpuMap: map[string]*NpuInfo{"1": nil}}}}}}
