@@ -313,6 +313,7 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 			faultJob.updateTaskPodUid(jobInfo)
 		}
 		reScheduler.setFaultTaskUseNodeLinkDownTime(faultJob)
+		faultJob.setCommonAttrFromScheduleJob(reScheduler.Jobs[jobInfo.UID])
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
