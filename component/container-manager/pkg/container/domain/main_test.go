@@ -47,7 +47,7 @@ func setup() error {
 		return err
 	}
 	NewDevCache([]int32{devId0, devId1, devId2, devId3})
-	NewCtrInfo()
+	GetCtrInfo()
 	return nil
 }
 

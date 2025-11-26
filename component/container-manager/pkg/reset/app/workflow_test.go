@@ -30,7 +30,7 @@ import (
 func TestResetMgr_Work(t *testing.T) {
 	convey.Convey("Test ResetMgr Work", t, func() {
 		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
+			resetCache: domain.GetNpuInResetCache(),
 			countCache: domain.NewFailedResetCountCache(),
 		}
 		convey.Convey("When context is done", func() {

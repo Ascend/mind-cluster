@@ -136,7 +136,7 @@ func testDoCheck() {
 	mockFaultMgr.faultInfo.AddFault(mockFault2)
 	var patches = gomonkey.ApplyMethodReturn(&devmgr.HwDevMgr{}, "GetDeviceErrCode", int32(1), []int64{eventId1}, nil)
 	defer patches.Reset()
-	mockFaultMgr.doCheck()
+	mockFaultMgr.doCheck(false)
 	faults, err := mockFaultMgr.faultInfo.DeepCopy()
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(len(faults), convey.ShouldEqual, len2)

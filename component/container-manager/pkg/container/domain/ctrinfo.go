@@ -26,6 +26,9 @@ import (
 	"container-manager/pkg/common"
 )
 
+var ctrCache *CtrCache
+var initOnce sync.Once
+
 // CtrCache ctr cache
 type CtrCache struct {
 	ctrInfoMap map[string]*ctrInfo
@@ -42,12 +45,17 @@ type ctrInfo struct {
 	DetailedInfo    containerd.Container
 }
 
-// NewCtrInfo new ctr info
-func NewCtrInfo() *CtrCache {
-	return &CtrCache{
-		ctrInfoMap: make(map[string]*ctrInfo),
-		mutex:      sync.Mutex{},
-	}
+// GetCtrInfo new ctr info
+func GetCtrInfo() *CtrCache {
+	initOnce.Do(
+		func() {
+			ctrCache = &CtrCache{
+				ctrInfoMap: make(map[string]*ctrInfo),
+				mutex:      sync.Mutex{},
+			}
+		},
+	)
+	return ctrCache
 }
 
 // GetCtrUsedDevs get ctr used devs

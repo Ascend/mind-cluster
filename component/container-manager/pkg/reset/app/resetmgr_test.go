@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 func TestResetMgr_AllowToResetNpu(t *testing.T) {
 	convey.Convey("Test AllowToResetNpu", t, func() {
 		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
+			resetCache: domain.GetNpuInResetCache(),
 		}
 
 		convey.Convey("When reset cache is not empty", func() {
@@ -67,6 +67,8 @@ func TestResetMgr_AllowToResetNpu(t *testing.T) {
 		})
 
 		convey.Convey("When allowed to reset", func() {
+			patch := gomonkey.ApplyMethodReturn(domain.GetNpuInResetCache(), "DeepCopy", map[int32]struct{}{})
+			defer patch.Reset()
 			result := r.allowToResetNpu()
 			convey.So(result, convey.ShouldBeTrue)
 		})
@@ -179,9 +181,9 @@ func TestGetAllRelatedNpus(t *testing.T) {
 func TestIsNpuHoldByContainer(t *testing.T) {
 	convey.Convey("Test isNpuHoldByContainer", t, func() {
 		convey.Convey("When npu is held by container", func() {
-			patches := gomonkey.ApplyMethodFunc(containerdomain.GetDevCache(), "GetDevsRelatedCtrs", func(phyId int32) []string {
-				return []string{"container1", "container2"}
-			}).ApplyFuncReturn(containerdomain.GetDevCache, &containerdomain.DevCache{})
+			patches := gomonkey.ApplyFuncReturn(containerdomain.GetDevCache, &containerdomain.DevCache{}).
+				ApplyMethodReturn(&containerdomain.DevCache{}, "GetDevsRelatedCtrs", []string{"container1", "container2"}).
+				ApplyMethodReturn(&containerdomain.CtrCache{}, "GetCtrStatusAndStartTime", common.StatusRunning, int64(0))
 			defer patches.Reset()
 
 			result := isNpuHoldByContainer([]int32{1, 2})
@@ -189,9 +191,9 @@ func TestIsNpuHoldByContainer(t *testing.T) {
 		})
 
 		convey.Convey("When npu is not held by container", func() {
-			patches := gomonkey.ApplyMethodFunc(containerdomain.GetDevCache(), "GetDevsRelatedCtrs", func(phyId int32) []string {
-				return []string{}
-			}).ApplyFuncReturn(containerdomain.GetDevCache, &containerdomain.DevCache{})
+			patches := gomonkey.ApplyFuncReturn(containerdomain.GetDevCache, &containerdomain.DevCache{}).
+				ApplyMethodReturn(&containerdomain.DevCache{}, "GetDevsRelatedCtrs", []string{}).
+				ApplyMethodReturn(&containerdomain.CtrCache{}, "GetCtrStatusAndStartTime", common.StatusPaused, int64(0))
 			defer patches.Reset()
 
 			result := isNpuHoldByContainer([]int32{1, 2})
@@ -312,6 +314,13 @@ func TestIsFaultExist_NoFault(t *testing.T) {
 	})
 }
 
+func getResetMgr() *ResetMgr {
+	return &ResetMgr{
+		resetCache: domain.GetNpuInResetCache(),
+		countCache: domain.NewFailedResetCountCache(),
+	}
+}
+
 // TestIsFaultExist_GetErrorCodeFails tests scenario where GetDeviceAllErrorCode fails
 func TestIsFaultExist_GetErrorCodeFails(t *testing.T) {
 	convey.Convey("When GetDeviceAllErrorCode returns error", t, func() {
@@ -330,10 +339,7 @@ func TestIsFaultExist_GetErrorCodeFails(t *testing.T) {
 // TestResetMgr_ProcessResetWork_AllowFalse tests scenario where allowToResetNpu returns false
 func TestResetMgr_ProcessResetWork_AllowFalse(t *testing.T) {
 	convey.Convey("When allowToResetNpu returns false", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func(*ResetMgr) bool {
 			return false
 		})
@@ -347,10 +353,7 @@ func TestResetMgr_ProcessResetWork_AllowFalse(t *testing.T) {
 // TestResetMgr_ProcessResetWork_GetFaultCacheFails tests scenario where getFaultCache fails
 func TestResetMgr_ProcessResetWork_GetFaultCacheFails(t *testing.T) {
 	convey.Convey("When getFaultCache fails", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).
@@ -367,10 +370,7 @@ func TestResetMgr_ProcessResetWork_GetFaultCacheFails(t *testing.T) {
 // TestResetMgr_ProcessResetWork_NoFaults tests scenario with no faults to reset
 func TestResetMgr_ProcessResetWork_NoFaults(t *testing.T) {
 	convey.Convey("When there are no faults to reset", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).ApplyFunc(getFaultCache, func() (map[int32]map[int64]map[string]*common.DevFaultInfo, error) {
@@ -389,10 +389,7 @@ func TestResetMgr_ProcessResetWork_NoFaults(t *testing.T) {
 // TestResetMgr_ProcessResetWork_FilteredByCount tests scenario filtered by count limit
 func TestResetMgr_ProcessResetWork_FilteredByCount(t *testing.T) {
 	convey.Convey("When there are faults to reset but filtered out by count limit", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).ApplyFunc(getFaultCache, func() (map[int32]map[int64]map[string]*common.DevFaultInfo, error) {
@@ -414,10 +411,7 @@ func TestResetMgr_ProcessResetWork_FilteredByCount(t *testing.T) {
 // TestResetMgr_ProcessResetWork_AllChecksPass tests scenario where all checks pass
 func TestResetMgr_ProcessResetWork_AllChecksPass(t *testing.T) {
 	convey.Convey("When there are faults to reset and all checks pass", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool { return true }).
 			ApplyFunc(getFaultCache, func() (map[int32]map[int64]map[string]*common.DevFaultInfo, error) {
 				return map[int32]map[int64]map[string]*common.DevFaultInfo{
@@ -446,10 +440,7 @@ func TestResetMgr_ProcessResetWork_AllChecksPass(t *testing.T) {
 // TestResetMgr_ProcessResetWork_HeldByContainer tests scenario where npu is held by container
 func TestResetMgr_ProcessResetWork_HeldByContainer(t *testing.T) {
 	convey.Convey("When npu is held by container", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).
@@ -486,10 +477,7 @@ func TestResetMgr_ProcessResetWork_HeldByContainer(t *testing.T) {
 // TestResetMgr_ProcessResetWork_HeldByProcess tests scenario where npu is held by process
 func TestResetMgr_ProcessResetWork_HeldByProcess(t *testing.T) {
 	convey.Convey("When npu is held by process", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).
@@ -523,10 +511,7 @@ func TestResetMgr_ProcessResetWork_HeldByProcess(t *testing.T) {
 // TestResetMgr_ProcessResetWork_FaultNotExist tests scenario where fault no longer exists
 func TestResetMgr_ProcessResetWork_FaultNotExist(t *testing.T) {
 	convey.Convey("When fault no longer exists before reset", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 		patches := gomonkey.ApplyPrivateMethod(r, "allowToResetNpu", func() bool {
 			return true
 		}).
@@ -563,10 +548,7 @@ func TestResetMgr_ProcessResetWork_FaultNotExist(t *testing.T) {
 // TestResetMgr_HotReset_ExecDeviceResetFails tests hotReset when execDeviceReset fails
 func TestResetMgr_HotReset_ExecDeviceResetFails(t *testing.T) {
 	convey.Convey("When execDeviceReset fails", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 
 		patches := gomonkey.ApplyFunc(execDeviceReset, func(faultPhyId int32) error {
 			return errors.New("mock error")
@@ -583,10 +565,7 @@ func TestResetMgr_HotReset_ExecDeviceResetFails(t *testing.T) {
 // TestResetMgr_HotReset_GetResetStatusFails tests hotReset when getResetSuccessfulStatus fails
 func TestResetMgr_HotReset_GetResetStatusFails(t *testing.T) {
 	convey.Convey("When getResetSuccessfulStatus fails", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 
 		patches := gomonkey.ApplyFunc(execDeviceReset, func(faultPhyId int32) error {
 			return nil
@@ -606,10 +585,7 @@ func TestResetMgr_HotReset_GetResetStatusFails(t *testing.T) {
 // TestResetMgr_HotReset_Success tests successful hotReset scenario
 func TestResetMgr_HotReset_Success(t *testing.T) {
 	convey.Convey("When hotReset success", t, func() {
-		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
-			countCache: domain.NewFailedResetCountCache(),
-		}
+		r := getResetMgr()
 
 		patches := gomonkey.ApplyFunc(execDeviceReset, func(faultPhyId int32) error {
 			return nil

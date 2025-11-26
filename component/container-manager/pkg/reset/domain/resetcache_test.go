@@ -31,10 +31,10 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-// TestNpuInResetCache_New tests the NewNpuInResetCache function
+// TestNpuInResetCache_New tests the GetNpuInResetCache function
 func TestNpuInResetCache_New(t *testing.T) {
-	convey.Convey("Test NewNpuInResetCache", t, func() {
-		cache := NewNpuInResetCache()
+	convey.Convey("Test GetNpuInResetCache", t, func() {
+		cache := GetNpuInResetCache()
 		convey.So(cache, convey.ShouldNotBeNil)
 		convey.So(cache.npuInResetCache, convey.ShouldNotBeNil)
 		convey.So(len(cache.npuInResetCache), convey.ShouldEqual, 0) // Verify initial state is empty
@@ -42,7 +42,7 @@ func TestNpuInResetCache_New(t *testing.T) {
 }
 
 func getTestResetCache() *NpuInResetCache {
-	cache := NewNpuInResetCache()
+	cache := GetNpuInResetCache()
 	testNpus := []int32{1, 2, 3}
 	cache.SetNpuInReset(testNpus...)
 	return cache
@@ -55,6 +55,14 @@ func TestNpuInResetCache_Set(t *testing.T) {
 		convey.So(cache.npuInResetCache, convey.ShouldContainKey, int32(1))
 		convey.So(cache.npuInResetCache, convey.ShouldContainKey, int32(2))
 		convey.So(cache.npuInResetCache, convey.ShouldContainKey, int32(3))
+	})
+}
+
+// TestNpuInResetCache_Get tests the ISNpuInReset method
+func TestNpuInResetCache_Get(t *testing.T) {
+	convey.Convey("Test ISNpuInReset", t, func() {
+		cache := getTestResetCache()
+		convey.So(cache.IsNpuInReset(1), convey.ShouldBeTrue)
 	})
 }
 

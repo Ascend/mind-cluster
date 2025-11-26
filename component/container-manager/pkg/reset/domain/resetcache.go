@@ -21,15 +21,23 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
+var (
+	inResetCache *NpuInResetCache
+	initOnce     sync.Once
+)
+
 // NpuInResetCache cache if npu is in resetting
 type NpuInResetCache struct {
 	npuInResetLock  sync.Mutex
 	npuInResetCache map[int32]struct{} // InResetPhyId
 }
 
-// NewNpuInResetCache create a new instance of NpuInResetCache
-func NewNpuInResetCache() *NpuInResetCache {
-	return &NpuInResetCache{npuInResetCache: make(map[int32]struct{})}
+// GetNpuInResetCache create a new instance of NpuInResetCache
+func GetNpuInResetCache() *NpuInResetCache {
+	initOnce.Do(func() {
+		inResetCache = &NpuInResetCache{npuInResetCache: make(map[int32]struct{})}
+	})
+	return inResetCache
 }
 
 // DeepCopy get a copy of NpuInResetCache
@@ -51,6 +59,14 @@ func (c *NpuInResetCache) SetNpuInReset(phyIds ...int32) {
 	for _, phyId := range phyIds {
 		c.npuInResetCache[phyId] = struct{}{}
 	}
+}
+
+// IsNpuInReset get npu reset status
+func (c *NpuInResetCache) IsNpuInReset(phyId int32) bool {
+	c.npuInResetLock.Lock()
+	defer c.npuInResetLock.Unlock()
+	_, ok := c.npuInResetCache[phyId]
+	return ok
 }
 
 // ClearNpuInReset remove npus from NpuInResetCache

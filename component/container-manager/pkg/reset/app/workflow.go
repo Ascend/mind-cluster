@@ -49,7 +49,7 @@ type ResetMgr struct {
 // NewResetMgr new reset manager
 func NewResetMgr() workflow.Module {
 	return &ResetMgr{
-		resetCache: domain.NewNpuInResetCache(),
+		resetCache: domain.GetNpuInResetCache(),
 		countCache: domain.NewFailedResetCountCache(),
 	}
 }

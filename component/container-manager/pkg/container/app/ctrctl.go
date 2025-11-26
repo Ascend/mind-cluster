@@ -28,6 +28,7 @@ import (
 	"container-manager/pkg/common"
 	"container-manager/pkg/devmgr"
 	"container-manager/pkg/fault/domain"
+	resetdomain "container-manager/pkg/reset/domain"
 )
 
 func (cm *CtrCtl) initAndControl() {
@@ -112,8 +113,7 @@ func (cm *CtrCtl) ctrControl() {
 func (cm *CtrCtl) isDevsNeedPause(usedDevs []int32) bool {
 	var isNeedPause bool
 	for _, id := range usedDevs {
-		_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
-		if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), domain.GetFaultLevelByCode(codes)) {
+		if cm.isSingleDevNeedPause(id) {
 			cm.devInfoMap.SetDevStatus(id, common.StatusNeedPause)
 			isNeedPause = true
 			continue
@@ -122,6 +122,19 @@ func (cm *CtrCtl) isDevsNeedPause(usedDevs []int32) bool {
 		cm.devInfoMap.SetDevStatus(id, common.StatusIgnorePause)
 	}
 	return isNeedPause
+}
+
+func (cm *CtrCtl) isSingleDevNeedPause(id int32) bool {
+	// if device is in resetting, need pause
+	if resetdomain.GetNpuInResetCache().IsNpuInReset(id) {
+		return true
+	}
+	// if device have any fault, or get fault failed, need pause
+	_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
+	if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), domain.GetFaultLevelByCode(codes)) {
+		return true
+	}
+	return false
 }
 
 func (cm *CtrCtl) setCtrRelatedInfo(ctrId, ns string, usedDevs []int32) {
