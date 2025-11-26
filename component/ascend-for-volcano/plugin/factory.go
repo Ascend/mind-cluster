@@ -531,7 +531,10 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 		klog.V(util.LogDebugLev).Infof("BatchNodeOrderFn %s not req npu.", task.Name)
 		return scoreMap, nil
 	}
-
+	if !vcJob.isNPUJob() {
+		klog.V(util.LogDebugLev).Infof("BatchNodeOrderFn vc-job:%#v is not npu job.", vcJob)
+		return nil, nil
+	}
 	// 2.Get the best node and top by A,B,C,D rules and require numbers.
 	errGet := vcJob.policyHandler.ScoreBestNPUNodes(task, nodes, scoreMap)
 	if sHandle.FaultHandle != nil {

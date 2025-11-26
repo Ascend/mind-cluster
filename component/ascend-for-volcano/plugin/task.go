@@ -47,6 +47,10 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s not req npu.", task.Name)
 		return
 	}
+	if !vcJob.isNPUJob() {
+		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc vc-job:%#v is not npu job.", vcJob)
+		return
+	}
 	if !*vcJob.JobReadyTag {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s not allow allocate npu.", task.Name)
 		return
@@ -82,6 +86,10 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 	vcJob, ok := sHandle.Jobs[task.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NPUDeallocateFunc %s not req npu.", task.Name)
+		return
+	}
+	if !vcJob.isNPUJob() {
+		klog.V(util.LogDebugLev).Infof("NPUDeallocateFunc vc-job:%#v is not npu job.", vcJob)
 		return
 	}
 	nodeName := task.NodeName
