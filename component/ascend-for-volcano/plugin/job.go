@@ -604,8 +604,15 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 	}
 	if sJob.policyHandler == nil {
 		if sJob.NPUJob != nil && sJob.NPUJob.IsNPUJob() {
-			klog.V(util.LogWarningLev).Infof("%s validNPUJob pass by "+
+			klog.V(util.LogErrorLev).Infof("%s validNPUJob fail by "+
 				"job<%s> policyHandler is nil.", PluginName, sJob.Name)
+			err := fmt.Errorf("%s validNPUJob fail by "+
+				"job<%s> policyHandler is nil", PluginName, sJob.ComJob.Name)
+			return &api.ValidateResult{
+				Pass:    false,
+				Reason:  "policyHandler is nil",
+				Message: err.Error(),
+			}
 		}
 		return nil
 	}
