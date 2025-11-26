@@ -102,7 +102,6 @@ func TestModuleMgr(t *testing.T) {
 		waitWorkExecTime = 10 * time.Millisecond
 		waitShutdownTime = 50 * time.Millisecond
 	)
-	ctx, cancel := context.WithCancel(context.Background())
 	moduleMgr := NewModuleMgr()
 	convey.Convey("test method 'Register' success", t, func() {
 		moduleMgr.Register(mockModule)
@@ -113,7 +112,7 @@ func TestModuleMgr(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("test method 'Work' success", t, func() {
-		moduleMgr.Work(ctx)
+		moduleMgr.Work(context.Background())
 		time.Sleep(waitWorkExecTime)
 		if !mockModule.workCalled {
 			t.Errorf("mockModule Work() was not called")
@@ -121,7 +120,7 @@ func TestModuleMgr(t *testing.T) {
 	})
 	convey.Convey("test method 'ShutDown' success", t, func() {
 		moduleMgr.Register(mockModule)
-		go moduleMgr.ShutDown(cancel)
+		go moduleMgr.ShutDown()
 		time.Sleep(waitWorkExecTime)
 		err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		if err != nil {

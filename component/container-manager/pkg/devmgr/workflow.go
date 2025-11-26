@@ -64,9 +64,6 @@ func (hdm *HwDevMgr) Work(ctx context.Context) {
 
 // ShutDown module shutdown
 func (hdm *HwDevMgr) ShutDown() {
-	if err := hdm.GetDmgr().ShutDown(); err != nil {
-		hwlog.RunLog.Warnf("shut down hdm dev manager failed, error: %v", err)
-	}
 }
 
 func (hdm *HwDevMgr) initDmgr() error {

@@ -47,11 +47,11 @@ type ResetMgr struct {
 }
 
 // NewResetMgr new reset manager
-func NewResetMgr() (workflow.Module, error) {
+func NewResetMgr() workflow.Module {
 	return &ResetMgr{
 		resetCache: domain.NewNpuInResetCache(),
 		countCache: domain.NewFailedResetCountCache(),
-	}, nil
+	}
 }
 
 // Name the name this module

@@ -19,65 +19,137 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
 
-	"ascend-common/common-utils/hwlog"
+	"container-manager/pkg/command"
 )
 
 const (
-	maxAge           = 7
-	maxBackups       = 30
-	maxLogLineLength = 1024
+	cmdIndex    = 1
+	cmdArgIndex = 2
 )
 
 var (
+	h       bool
+	help    bool
+	v       bool
 	version bool
-
-	logPath       string
-	logLevel      int
-	logMaxAge     int
-	logMaxBackups int
 
 	// BuildName show component name
 	BuildName string
 	// BuildVersion show component version
 	BuildVersion string
+
+	curCmd command.Command
+	cmdMap = make(map[string]command.Command)
 )
 
-func init() {
-	flag.BoolVar(&version, "version", false, "Output version information")
-	flag.StringVar(&logPath, "logPath", "/var/log/mindx-dl/container-manager/",
-		"The log file path. If the file size exceeds 20MB, will be dumped")
-	flag.IntVar(&logLevel, "logLevel", 0, "Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical")
-	flag.IntVar(&logMaxAge, "maxAge", maxAge, "Maximum number of days for backup log files, range is [7, 700]")
-	flag.IntVar(&logMaxBackups, "maxBackups", maxBackups, "Maximum number of backup log files, range is (0, 30]")
+func main() {
+	initCmd()
+	if !dealArgs() {
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := curCmd.InitLog(ctx); err != nil {
+		fmt.Printf("cmd '%s' init log failed, error: %v\n", curCmd.Name(), err)
+		return
+	}
+	if err := curCmd.CheckParam(); err != nil {
+		fmt.Printf("cmd '%s' check param failed: %v\n", curCmd.Name(), err)
+		return
+	}
+	if err := curCmd.Execute(ctx); err != nil {
+		fmt.Printf("cmd '%s' execute failed, error: %v\n", curCmd.Name(), err)
+		return
+	}
 }
 
-func main() {
+func initCmd() {
+	registerCmd(command.RunCmd())
+	registerCmd(command.StatusCmd())
+}
+
+func registerCmd(cmd command.Command) {
+	if _, ok := cmdMap[cmd.Name()]; !ok {
+		cmdMap[cmd.Name()] = cmd
+	}
+}
+
+func dealArgs() bool {
+	flag.Usage = printHelp
+	if len(os.Args) <= cmdIndex {
+		printHelp()
+		return false
+	}
+	if len(os.Args[cmdIndex]) == 0 {
+		fmt.Println("the required parameter is missing")
+		return false
+	}
+	if os.Args[cmdIndex][0] == '-' {
+		dealOptionFlag()
+		return false
+	}
+	return dealCmdFlag()
+}
+
+func dealCmdFlag() bool {
+	cmd, ok := cmdMap[os.Args[cmdIndex]]
+	if !ok {
+		fmt.Printf("unknown command: %s\n", os.Args[cmdIndex])
+		printHelp()
+		return false
+	}
+	curCmd = cmd
+	if !cmd.BindFlag() {
+		return true
+	}
+	flag.Usage = flag.PrintDefaults
+	if err := flag.CommandLine.Parse(os.Args[cmdArgIndex:]); err != nil {
+		fmt.Printf("parse cmd args failed, error: %v\n", err)
+		return false
+	}
+	return true
+}
+
+func dealOptionFlag() {
+	flag.BoolVar(&h, "h", false, "Print help information")
+	flag.BoolVar(&help, "help", false, "Print help information")
+	flag.BoolVar(&v, "v", false, "Print version information")
+	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.Parse()
-	if version {
+	if h || help {
+		printCmdUsage()
+		return
+	}
+	if v || version {
 		fmt.Printf("%s version: %s\n", BuildName, BuildVersion)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if err := initLog(ctx); err != nil {
-		return
-	}
 }
 
-func initLog(ctx context.Context) error {
-	hwLogConfig := hwlog.LogConfig{
-		LogFileName:   logPath,
-		LogLevel:      logLevel,
-		MaxAge:        logMaxAge,
-		MaxBackups:    logMaxBackups,
-		MaxLineLength: maxLogLineLength,
+func printHelp() {
+	fmt.Println("use '-help' for help information")
+}
+
+func printCmdUsage() {
+	descriptions := make([]string, 0, len(cmdMap))
+	for _, cmd := range cmdMap {
+		descriptions = append(descriptions, fmt.Sprintf("\t%-10s\t%s", cmd.Name(), cmd.Description()))
 	}
-	if err := hwlog.InitRunLogger(&hwLogConfig, ctx); err != nil {
-		fmt.Printf("init log failed, error: %v\n", err)
-		return err
-	}
-	hwlog.RunLog.Info("init log success")
-	return nil
+	sort.Strings(descriptions)
+	fmt.Printf(`Container Manager, supports fault management and automatic recovery.
+
+Usage: [OPTIONS...] COMMAND
+
+Options:
+	-h,-help	Print help information
+	-v,-version	Print version information
+
+Commands:
+%s
+`, strings.Join(descriptions, "\n"))
 }
