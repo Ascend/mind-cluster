@@ -159,18 +159,17 @@ func (nd *NetDetect) setDefaultParams(paramsMap map[string]any) bool {
 		nd.curAxisStrategy = crossAxisConstant
 	}
 
-	// 当前仅支持A3
+	// 不传npu_type的情况下，默认是A5拓扑（客窜参数：A5、A3)
 	if paramsMap[argsNpuType] != nil {
 		npuTopoType, ok := paramsMap[argsNpuType].(string)
-		if !ok || (npuTopoType != a3NpuTypeConstant) {
+		if !ok || (npuTopoType != a3NpuTypeConstant && npuTopoType != a5NpuTypeConstant) {
 			hwlog.RunLog.Errorf("[ALGO] unexpected arg of npu_type")
 			return false
 		}
 
 		nd.curNpuType = npuTopoType
 	} else {
-		hwlog.RunLog.Errorf("[ALGO] unexpected detection type!")
-		return false
+		nd.curNpuType = a5NpuTypeConstant
 	}
 
 	// 不传superPodJobFlag的话，默认是超节点内探测任务拓扑（可传true, false）
@@ -294,6 +293,9 @@ func setLayerPort(infoStr []string) string {
 	for i := 0; i < infoLayerNum-1; i++ {
 		if strings.Contains(infoStr[i+1], nSlotConstant) {
 			npuLayerArr := strings.Split(infoStr[infoLayerNum-1], dotIntervalChar)
+			if len(npuLayerArr) < baseSegmentNum {
+				return ""
+			}
 			part := strings.Split(npuLayerArr[0], normalIntervalChar)
 			if len(part) != baseSegmentNum {
 				return ""
@@ -310,9 +312,11 @@ func setLayerPort(infoStr []string) string {
 		}
 		curLayerStr := strings.ReplaceAll(infoStr[i], ":0", "")
 		childLayerStr := strings.ReplaceAll(infoStr[i+1], ":0", "")
+		curLayerInfoArr := strings.Split(curLayerStr, dotIntervalChar)
 		childLayerInfoArr := strings.Split(childLayerStr, dotIntervalChar)
-		if len(childLayerInfoArr) == 0 {
-			hwlog.RunLog.Error("[NETFAULT ALGO]the length of childLayerInfoArr is 0")
+		if len(curLayerInfoArr) != baseSegmentNum || len(childLayerInfoArr) != baseSegmentNum {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr or curLayerInfoArr is less than: %d",
+				baseSegmentNum)
 			return ""
 		}
 		// 获取有实际意义的目标层级字符串
@@ -320,11 +324,6 @@ func setLayerPort(infoStr []string) string {
 		if childLayerInfoArr[0] != "NA" {
 			targetStr = childLayerInfoArr[0]
 		} else {
-			var minLength = 2
-			if len(childLayerInfoArr) < minLength {
-				hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr is less than: %d", minLength)
-				return ""
-			}
 			targetStr = childLayerInfoArr[1]
 		}
 		part := strings.Split(targetStr, normalIntervalChar)
@@ -1059,8 +1058,41 @@ func (nd *NetDetect) npuRingPing(aiPingStrategy *AiPingStrategy, layer string, c
 	switch nd.curNpuType {
 	case a3NpuTypeConstant:
 		nd.a3NpuRingPing(aiPingStrategy, layer, childLayerName)
+	case a5NpuTypeConstant:
+		nd.a5NpuRingPing(aiPingStrategy, layer, childLayerName)
 	default:
 		hwlog.RunLog.Errorf("[ALGO] unexpected detection type!")
+	}
+}
+
+// A5场景npu的环ping策略
+func (nd *NetDetect) a5NpuRingPing(aiPingStrategy *AiPingStrategy, layer string, childLayerName string) {
+	layerIps := getCurLayerIps(aiPingStrategy, layer)
+
+	// 创建一个临时的map用于存储随机选中的IP
+	randomIps := make(map[string]interface{})
+	for i := 0; i < len(layerIps); i++ {
+		layerIp := layerIps[i]
+
+		// 获取与该layer_ip对应的DataFrame
+		dfIp := getGroup(aiPingStrategy.dfGrouped, layerIp)
+
+		// 获取child_layer_name列的唯一值
+		childLayerList := getChildColUniqueList(childLayerName, dfIp)
+
+		// 单一框或单一板，不进行环ping
+		if len(childLayerList) <= 1 {
+			continue
+		}
+
+		// 为每个板/框按编号排序
+		sortLayerList2(childLayerList)
+
+		// 为每个子层选择随机IP并存储在random_ips中
+		nd.setRandomIps(childLayerList, childLayerName, dfIp, randomIps)
+
+		// 生成并处理IP对
+		nd.setPingPair(layer, layerIp, childLayerList, randomIps, aiPingStrategy)
 	}
 }
 

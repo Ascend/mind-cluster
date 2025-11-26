@@ -28,6 +28,7 @@ const (
 // 算法常量字符串
 const (
 	a3NpuTypeConstant  = "A3"
+	a5NpuTypeConstant  = "A5"
 	sameAxisConstant   = "same_axis"
 	crossAxisConstant  = "cross_axis"
 	bothAxisConstant   = "both_axis"
