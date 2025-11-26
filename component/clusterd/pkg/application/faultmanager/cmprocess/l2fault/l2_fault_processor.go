@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	selfrecoverFaultTimeout = 0 * time.Second
+	selfrecoverFaultTimeout = 60 * time.Second
 )
 
 // L2FaultProcessor is used to process l2 faults
@@ -207,7 +207,7 @@ func getDeletedDeviceL2Fault(faults []constant.DeviceFault, deviceName string, j
 }
 
 func getDeletedSwitchL2Fault(switchInfo *constant.SwitchInfo, jobInfoMap map[string]constant.JobInfo) []constant.
-	SimpleSwitchFaultInfo {
+SimpleSwitchFaultInfo {
 	filteredFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	deletedFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	for _, jobInfo := range jobInfoMap {
