@@ -54,12 +54,12 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if err := curCmd.InitLog(ctx); err != nil {
-		fmt.Printf("cmd '%s' init log failed, error: %v\n", curCmd.Name(), err)
-		return
-	}
 	if err := curCmd.CheckParam(); err != nil {
 		fmt.Printf("cmd '%s' check param failed: %v\n", curCmd.Name(), err)
+		return
+	}
+	if err := curCmd.InitLog(ctx); err != nil {
+		fmt.Printf("cmd '%s' init log failed, error: %v\n", curCmd.Name(), err)
 		return
 	}
 	if err := curCmd.Execute(ctx); err != nil {

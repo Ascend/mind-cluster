@@ -38,7 +38,7 @@ type CtrCtl struct {
 
 // NewCtrCtl new container controller
 func NewCtrCtl() (*CtrCtl, error) {
-	switch common.ParamOption.RuntimeMode {
+	switch common.ParamOption.RuntimeType {
 	case common.DockerType:
 		dClient := NewDockerClient()
 		if err := dClient.init(); err != nil {

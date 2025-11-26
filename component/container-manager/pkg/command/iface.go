@@ -24,7 +24,7 @@ type Command interface {
 	Name() string
 	Description() string
 	BindFlag() bool
-	InitLog(ctx context.Context) error
 	CheckParam() error
+	InitLog(ctx context.Context) error
 	Execute(ctx context.Context) error
 }
