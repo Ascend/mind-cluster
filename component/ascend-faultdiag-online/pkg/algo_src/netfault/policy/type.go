@@ -17,7 +17,9 @@ limitations under the License.
 // Package policy for processing superpod information
 package policy
 
-import "ascend-faultdiag-online/pkg/algo_src/netfault/algo"
+import (
+	"ascend-faultdiag-online/pkg/algo_src/netfault/algo"
+)
 
 // SuperPodInfo super node device info, key is superPodID, value is RackInfo
 type SuperPodInfo struct {
@@ -73,7 +75,7 @@ type NpuInfo struct { /* 新1D、2D */
 	PhyId string
 	// VnicIpMap is a mapping of virtual NIC IP information
 	VnicIpMap map[string]*VnicInfo
-	// LevelList is a leve list
+	// LevelList is a slice of net level info
 	LevelList []LevelElement
 }
 
@@ -137,8 +139,8 @@ type EndPoint struct {
 
 // NpuPeer rack-level NPU card ID
 type NpuPeer struct {
-	// Id is the rack-level NPU card identifier
-	Id int `json:"id"`
+	// LocalId is the rack-level NPU card identifier
+	LocalId int `json:"local_id"`
 }
 
 // PeerToPeer NPU direct connection information in rack-level topology
@@ -166,31 +168,31 @@ type RackTopology struct {
 	// EdgeCount is the number of edges
 	EdgeCount int `json:"edge_count"`
 	// EdgeList is a slice of PeerToPeer instances
-	EdgeList []PeerToPeer `json:"edge_list"`
+	EdgeList []Edge `json:"edge_list"`
 }
 
 // Edge edge info
 type Edge struct {
-	// NetLayer the netlayer
+	// NetLayer net level: 0,1,2,3
 	NetLayer int `json:"net_layer"`
-	// LinkType the type of link
+	// LinkType type of link
 	LinkType string `json:"link_type"`
-	// TopoType the type of topology
+	// TopoType type of topology
 	TopoType string `json:"topo_type"`
-	// TopoInstanceId the instance id of topology
+	// TopoInstanceId topology instance id
 	TopoInstanceId int `json:"topo_instance_id"`
-	// TopoAddr the addr of topology
-	TopoAddr string `json:"topo_addr"`
-	// LocalA the local_a
+	// TopoAttr attribute of topology
+	TopoAttr string `json:"topo_attr"`
+	// LocalA local src npu number
 	LocalA int `json:"local_a"`
-	// LocalAPorts the ports of local_a
+	// LocalAPorts local src npu ports
 	LocalAPorts []string `json:"local_a_ports"`
-	// LocalB the local_b
+	// LocalB local dst npu number
 	LocalB int `json:"local_b"`
-	// LocalBPorts the ports of local_b
+	// LocalBPorts local dst npu ports
 	LocalBPorts []string `json:"local_b_ports"`
-	// Protocols
+	// Protocols link protocol
 	Protocols []string `json:"protocols"`
-	// Position
+	// Position link position
 	Position string `json:"position"`
 }
