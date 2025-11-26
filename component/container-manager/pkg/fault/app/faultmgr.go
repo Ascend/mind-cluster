@@ -43,6 +43,13 @@ func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case _, ok := <-fm.faultInfo.UpdateChan:
+			if !ok {
+				hwlog.RunLog.Info("catch update signal channel closed")
+				return
+			}
+			hwlog.RunLog.Infof("receive reset device success signal, check the fault cache")
+			fm.doCheck()
 		default:
 			if QueueCache.Len() == 0 {
 				time.Sleep(processFaultDuration)

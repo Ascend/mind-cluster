@@ -133,8 +133,8 @@ const (
 	StatusNeedPause = "needPause"
 )
 
-// container runtime mode
+// container runtime type
 const (
-	DockerMode     = "docker"
-	ContainerDMode = "containerd"
+	DockerType     = "docker"
+	ContainerDType = "containerd"
 )

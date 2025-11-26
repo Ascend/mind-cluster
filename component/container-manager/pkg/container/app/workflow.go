@@ -39,7 +39,7 @@ type CtrCtl struct {
 // NewCtrCtl new container controller
 func NewCtrCtl() (*CtrCtl, error) {
 	switch common.ParamOption.RuntimeMode {
-	case common.DockerMode:
+	case common.DockerType:
 		dClient := NewDockerClient()
 		if err := dClient.init(); err != nil {
 			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
@@ -50,7 +50,7 @@ func NewCtrCtl() (*CtrCtl, error) {
 			ctrInfoMap: domain.NewCtrInfo(),
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
-	case common.ContainerDMode:
+	case common.ContainerDType:
 		cClient := NewContainerdClient()
 		if err := cClient.init(); err != nil {
 			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
@@ -62,7 +62,7 @@ func NewCtrCtl() (*CtrCtl, error) {
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
 	default:
-		return nil, errors.New("unknown container mode")
+		return nil, errors.New("unknown runtime mode")
 	}
 }
 

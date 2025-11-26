@@ -64,7 +64,7 @@ func (mm *ModuleMgr) Work(ctx context.Context) {
 }
 
 // ShutDown module shutdown
-func (mm *ModuleMgr) ShutDown(cancel context.CancelFunc) {
+func (mm *ModuleMgr) ShutDown() {
 	osSignChan := common.NewSignWatcher(syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	if osSignChan == nil {
 		hwlog.RunLog.Error("the stop signal is not initialized")
@@ -77,7 +77,6 @@ func (mm *ModuleMgr) ShutDown(cancel context.CancelFunc) {
 			return
 		}
 		hwlog.RunLog.Infof("received signal: %s, shutting down", s.String())
-		cancel()
 		for _, module := range mm.modules {
 			module.ShutDown()
 		}

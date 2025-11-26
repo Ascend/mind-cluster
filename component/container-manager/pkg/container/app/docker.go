@@ -41,7 +41,7 @@ func NewDockerClient() *DockerClient {
 }
 
 func (d *DockerClient) init() error {
-	dClient, err := client.NewClientWithOpts(client.FromEnv)
+	dClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
 		return errors.New("connect to container runtime failed")
