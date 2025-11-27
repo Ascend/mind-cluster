@@ -16,6 +16,8 @@
 package common
 
 const (
+	// Ascend910A5 ascend 910A5 chip
+	Ascend910A5 = "Ascend910A5"
 	// RackIdAbnormal represents rack id abnormal value
 	RackIdAbnormal = -2
 	// SuperPodTypeAbnormal represents super pod type abnormal value for A5

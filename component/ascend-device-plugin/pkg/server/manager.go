@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -65,6 +66,7 @@ type HwDevManager struct {
 	WorkMode         string
 	baseNPUInfo      map[string]*common.NpuBaseInfo
 	dpuManager       *dpucontrol.DpuFilter
+	ManagerLock      sync.Mutex
 }
 
 // NewHwDevManager function is used to new a dev manager.
