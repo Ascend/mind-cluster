@@ -69,28 +69,6 @@ func (cc *CtrCache) GetCtrUsedDevs(id string) []int32 {
 	return info.UsedDevs
 }
 
-// SetDetailedInfo set ctrs detailed info
-func (cc *CtrCache) SetDetailedInfo(ctrId string, details containerd.Container) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-	info, ok := cc.ctrInfoMap[ctrId]
-	if !ok {
-		return
-	}
-	info.DetailedInfo = details
-}
-
-// GetDetailedInfo get ctrs detailed info
-func (cc *CtrCache) GetDetailedInfo(ctrId string) containerd.Container {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-	info, ok := cc.ctrInfoMap[ctrId]
-	if !ok {
-		return nil
-	}
-	return info.DetailedInfo
-}
-
 // SetCtrsStatus set ctrs status
 func (cc *CtrCache) SetCtrsStatus(ctrId string, status string) {
 	cc.mutex.Lock()
@@ -135,10 +113,11 @@ func (cc *CtrCache) SetCtrInfo(ctrId, ns string, usedDevs []int32) {
 	_, ok := cc.ctrInfoMap[ctrId]
 	if !ok {
 		cc.ctrInfoMap[ctrId] = &ctrInfo{
-			Id:       ctrId,
-			Ns:       ns,
-			Status:   common.StatusRunning,
-			UsedDevs: usedDevs,
+			Id:              ctrId,
+			Ns:              ns,
+			Status:          common.StatusRunning,
+			StatusStartTime: time.Now().Unix(),
+			UsedDevs:        usedDevs,
 		}
 	}
 	cc.updateStatusFile()
