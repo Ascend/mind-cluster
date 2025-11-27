@@ -95,6 +95,10 @@ func (p *ProductBase) getID(level int) string {
 	// when return empty, it means that the level is no need exist in the final rank table file
 	switch level {
 	case api.RankLevel0:
+		// standard card
+		if p.cardType == common.A5300ICardName || p.cardType == common.A54P300ICardName {
+			return p.nodeInternalIP
+		}
 		// pod
 		if !p.isServer() {
 			return fmt.Sprintf("%s_%s", strconv.Itoa(int(p.superPodID)), strconv.Itoa(int(p.chassisID)))
