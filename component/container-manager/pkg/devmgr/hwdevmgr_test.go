@@ -450,7 +450,7 @@ func testSuccessScenario(t *testing.T) {
 				{Values: gomonkey.Params{int32(12), nil}}, // Third call for other device
 			})
 
-		patches.ApplyMethod(&HwDevMgr{}, "GetLogicIdByPhyId",
+		patches.ApplyMethod(&HwDevMgr{}, "GetPhyIdByLogicId",
 			func(_ *HwDevMgr, logicId int32) int32 {
 				return logicId // Simple mapping for testing
 			})
