@@ -32,7 +32,7 @@ import (
 const (
 	processFaultDuration = 500 * time.Millisecond
 	faultLimit           = 10000
-	checkTimeout         = 300
+	checkTimeout         = 300 // unit: s
 )
 
 var limiter = rate.NewLimiter(rate.Every(1*time.Minute/faultLimit), faultLimit)
@@ -41,7 +41,11 @@ var limiter = rate.NewLimiter(rate.Every(1*time.Minute/faultLimit), faultLimit)
 func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 	for {
 		select {
-		case <-ctx.Done():
+		case _, ok := <-ctx.Done():
+			if !ok {
+				hwlog.RunLog.Info("catch stop signal channel closed")
+			}
+			hwlog.RunLog.Info("fault manager stop")
 			return
 		case _, ok := <-fm.faultInfo.UpdateChan:
 			if !ok {
@@ -67,7 +71,11 @@ func (fm *FaultMgr) checkMoreThanFiveMinFaults(ctx context.Context) {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ctx.Done():
+		case _, ok := <-ctx.Done():
+			if !ok {
+				hwlog.RunLog.Info("catch stop signal channel closed")
+			}
+			hwlog.RunLog.Info("fault manager check more than five minutes faults stop")
 			return
 		case <-ticker.C:
 			fm.doCheck(false)
@@ -125,7 +133,6 @@ func (fm *FaultMgr) getAllFaultInfo() {
 			QueueCache.Push(*domain.ConstructMockModuleFault(id, code))
 		}
 	}
-	return
 }
 
 func saveDevFaultInfo(devFaultInfo ascommon.DevFaultInfo) {

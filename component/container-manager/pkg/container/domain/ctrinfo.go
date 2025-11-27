@@ -36,9 +36,9 @@ type CtrCache struct {
 }
 
 type ctrInfo struct {
-	Id              string
-	Ns              string
-	UsedDevs        []int32 // phy id
+	Id              string  // ctr id
+	Ns              string  // ctr namespace
+	UsedDevs        []int32 // ctr used dev phy id
 	Status          string
 	StatusStartTime int64
 	CtrsOnRing      []string
@@ -70,7 +70,7 @@ func (cc *CtrCache) GetCtrUsedDevs(id string) []int32 {
 }
 
 // SetCtrsStatus set ctrs status
-func (cc *CtrCache) SetCtrsStatus(ctrId string, status string) {
+func (cc *CtrCache) SetCtrsStatus(ctrId, status string) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 	info, ok := cc.ctrInfoMap[ctrId]

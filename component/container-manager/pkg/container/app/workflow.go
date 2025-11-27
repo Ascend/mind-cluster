@@ -87,7 +87,7 @@ func (cm *CtrCtl) Work(ctx context.Context) {
 			if !ok {
 				hwlog.RunLog.Info("catch stop signal channel closed")
 			}
-			hwlog.RunLog.Info("listen device stop")
+			hwlog.RunLog.Info("container controller stop")
 			return
 		case <-ticker.C:
 			cm.initAndControl()
