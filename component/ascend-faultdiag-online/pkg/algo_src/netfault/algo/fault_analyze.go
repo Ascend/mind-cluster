@@ -518,13 +518,13 @@ func getLayerObject(str string) []string {
 }
 
 // 对字符串切片进行计数，返回出现最多的字符串和计数map
-func countForSlice(target []string, getNotSuperPodName bool) (string, map[string]int) {
+func countForSlice(target []string, superPodNameFlag bool) (string, map[string]int) {
 	countMap := make(map[string]int)
 	var maxNum int
 	var maxNumKey string
 
 	for _, key := range target {
-		if getNotSuperPodName && strings.Contains(key, "SuperPod") {
+		if superPodNameFlag && strings.Contains(key, "SuperPod") {
 			continue
 		}
 		countMap[key]++

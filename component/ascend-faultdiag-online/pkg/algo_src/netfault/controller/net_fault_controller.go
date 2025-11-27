@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -651,6 +652,7 @@ func getRoceDetectionSuperPodFiles(clusterPath, roceDirPath string) ([]string, [
 	roceSuperPodInfoFiles := make([]string, len(roceConf.RoceSuperPods))
 	superPodNames := make([]string, len(roceConf.RoceSuperPods))
 	// sort by ascending order
+	sort.Ints(roceConf.RoceSuperPods)
 	for i, id := range roceConf.RoceSuperPods {
 		superPodDirName := fmt.Sprintf("super-pod-%d", id)
 		algoSuperPodName := fmt.Sprintf("SuperPod-%d", id)
@@ -693,7 +695,7 @@ func startRoceDetection(clusterPath string) {
 	detectObj := algo.NewNetDetect("roce")
 	detectObj.SetFaultDetectParam(algoParam, npuMap)
 	// generate the ping list for super pod roce detection
-	if !policy.GenRoceSuperPodLevelPingList(filepath.Join(clusterPath, roceDirPath), detectObj, linkPaths, npuMap) {
+	if !policy.GenRoceSuperPodLevelPingList(filepath.Join(clusterPath, roceDirName), detectObj, linkPaths, npuMap) {
 		markFalseDetection(roceDirPath)
 		return
 	}

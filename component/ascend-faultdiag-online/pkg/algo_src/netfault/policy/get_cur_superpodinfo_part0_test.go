@@ -229,12 +229,12 @@ func TestFindEid(t *testing.T) {
 }
 
 func TestParseA5SeverLevelTopologyFile(t *testing.T) {
-	convey.Convey("test func parseA5SeverLevelTopologyFile", t, func() {
+	convey.Convey("test func parseA5ServerLevelTopologyFile", t, func() {
 		convey.Convey("should return nil when allFiles nil", func() {
 			allFile := make([]string, 0)
 			param := parseTopoParam{topoServerDirPath: allFile, rackAndServerInfo: make([][]string, 0),
 				superPodInfo: nil, superPodRackNpuMap: nil, typeStr: "1D", superPodPath: ""}
-			ret1, ret2 := parseA5SeverLevelTopologyFile(&param)
+			ret1, ret2 := parseA5ServerLevelTopologyFile(&param)
 			convey.So(ret1, convey.ShouldBeNil)
 			convey.So(ret2, convey.ShouldBeNil)
 		})
@@ -246,7 +246,7 @@ func TestParseA5SeverLevelTopologyFile(t *testing.T) {
 			defer mockWait.Reset()
 			param := parseTopoParam{topoServerDirPath: allFile, rackAndServerInfo: make([][]string, 0),
 				superPodInfo: nil, superPodRackNpuMap: nil, typeStr: "1D", superPodPath: ""}
-			ret1, ret2 := parseA5SeverLevelTopologyFile(&param)
+			ret1, ret2 := parseA5ServerLevelTopologyFile(&param)
 			convey.So(ret1, convey.ShouldBeEmpty)
 			convey.So(ret2, convey.ShouldBeEmpty)
 		})
@@ -256,7 +256,7 @@ func TestParseA5SeverLevelTopologyFile(t *testing.T) {
 			defer mockRead.Reset()
 			param := parseTopoParam{topoServerDirPath: allFile, rackAndServerInfo: make([][]string, 0),
 				superPodInfo: nil, superPodRackNpuMap: nil, typeStr: "1D", superPodPath: ""}
-			ret1, ret2 := parseA5SeverLevelTopologyFile(&param)
+			ret1, ret2 := parseA5ServerLevelTopologyFile(&param)
 			convey.So(ret1, convey.ShouldBeNil)
 			convey.So(ret2, convey.ShouldBeNil)
 		})

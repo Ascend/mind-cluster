@@ -202,7 +202,13 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 		return false, nil
 	}
 	var npuInfoMap = make(map[string]algo.NpuInfo)
+	success := false
 	switch superPodInfo.Version {
+	case DiagVersionA5:
+		npuInfoMap, success = handleA5NpuMapInfo(superPodInfo, superPodFilePath)
+		if !success {
+			return false, nil
+		}
 	case DiagVersionA3:
 		_, npuNetplaneInfo = GetCurSuperPodInfoFromMapA3(superPodInfo)
 		if len(npuNetplaneInfo) == 0 {
@@ -210,6 +216,11 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 			return false, nil
 		}
 		npuInfoMap = ExtractNPUMapA3(npuNetplaneInfo)
+	case DiagVersionServer:
+		npuInfoMap, success = handleReasoningServer(superPodInfo, superPodFilePath)
+		if !success {
+			return false, nil
+		}
 	default:
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s", superPodFile, superPodInfo.Version)
 		return false, nil
@@ -218,7 +229,7 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 	return true, npuInfoMap
 }
 
-/* loop wait file */
+/* loop wait file (used in RoCE plane scenarios between non-super nodes)*/
 func loopWaitFile(filePath string, superPodDirPath string) bool {
 	for i := 0; i < maxRetryTime && !controllerflags.IsControllerExited.GetState() &&
 		CheckCurSuperPodConfigSwitch(superPodDirPath); i++ {
@@ -466,7 +477,7 @@ func findEid(serverId string, npuId int, localPorts []string, rack *RackInfo) st
 	return eid
 }
 
-func parseA5SeverLevelTopologyFile(topoParam *parseTopoParam) ([]string, map[string]algo.NpuInfo) {
+func parseA5ServerLevelTopologyFile(topoParam *parseTopoParam) ([]string, map[string]algo.NpuInfo) {
 	if len(topoParam.topoServerDirPath) == 0 {
 		hwlog.RunLog.Error("no server topology file  exist!")
 		return nil, nil
@@ -699,6 +710,7 @@ func getA51D2DServerLevelInfo(npuNetPlanePaths map[string][]string, rack *RackIn
 	}
 }
 
+/*In super-pod-i.json, the eid of the UBC protocol type in the ports is netplane_I*/
 func getA51D2DSuperPodNpuLinkPath(superPodInfo *SuperPodInfo, typeStr string) map[string][]string {
 	if superPodInfo == nil {
 		hwlog.RunLog.Error("invalid super pod information")
@@ -719,8 +731,7 @@ func getA51D2DSuperPodNpuLinkPath(superPodInfo *SuperPodInfo, typeStr string) ma
 }
 
 /*
-	return all npu pyhId of each rack of current super pod,
-
+return all npu pyhId of each rack of current super pod,
 ensure that all the npu direct connection information src passed to the algorithm exists in super-pod.json
 */
 func getSuperPodRackLevelNpuMap(superPodInfo *SuperPodInfo) map[string]map[string]bool {
@@ -795,7 +806,7 @@ func GetA5CurSuperPod1D2DNpuInfo(superPodPath string,
 	param := parseTopoParam{superPodInfo: superPodInfo, typeStr: typeStr,
 		topoServerDirPath: topoServerDirPath, superPodRackNpuMap: superPodRackNpuMap,
 		rackAndServerInfo: rackAndServerInfo, superPodPath: superPodPath}
-	npuFmLink, npuEidMap := parseA5SeverLevelTopologyFile(&param)
+	npuFmLink, npuEidMap := parseA5ServerLevelTopologyFile(&param)
 	return npuFmLink, npuNetPlanePaths, npuEidMap
 }
 
@@ -1046,7 +1057,7 @@ func getReasoningServerSuperPodNpuMap(superPodInfo *SuperPodInfo) map[string]alg
 		break
 	}
 	if rackSingle == nil || len(rackSingle.ServerMap) == 0 {
-		hwlog.RunLog.Error("[NETFAULT ALGO]error rack inner server mumbers")
+		hwlog.RunLog.Error("[NETFAULT ALGO]error rack inner server numbers")
 		return nil
 	}
 	serverIds := make([]int, 0)
