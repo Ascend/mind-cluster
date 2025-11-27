@@ -29,7 +29,7 @@ func addJob(jobKey string) {
 	}
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok {
-		job.InitCmAndCache(podGroupCache)
+		job.InitCmAndCache(podGroupCache, nil)
 		return
 	}
 	if jobInfo.Status == job.StatusJobPending {
@@ -65,7 +65,7 @@ func updateJob(jobKey string) {
 	// updateJob to addJob
 	if status == job.StatusJobPending && jobInfo.Status != job.StatusJobPending {
 		hwlog.RunLog.Debugf("job %s updateJob to addJob", jobInfo.Name)
-		job.InitCmAndCache(pg)
+		job.InitCmAndCache(pg, podsInJob)
 		return
 	}
 	// update job to running or completed or failed
@@ -129,10 +129,10 @@ func getStatusByCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, jo
 	if isFailed {
 		return false, job.StatusJobFail
 	}
-	if isSuccess && len(podsInJob) >= int(podGroup.Spec.MinMember) {
+	if isSuccess && len(podsInJob) >= max(int(podGroup.Spec.MinMember), pod.GetMinMember(podsInJob)) {
 		return false, job.StatusJobCompleted
 	}
-	if isRunning && len(podsInJob) >= int(podGroup.Spec.MinMember) {
+	if isRunning && len(podsInJob) >= max(int(podGroup.Spec.MinMember), pod.GetMinMember(podsInJob)) {
 		return false, job.StatusJobRunning
 	}
 	return false, getStatusByOldStatus(jobInfo)

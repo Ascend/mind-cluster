@@ -210,3 +210,8 @@ const (
 	// SubHealthyHotSwitch strategy name of hot switch
 	SubHealthyHotSwitch = "hotSwitch"
 )
+
+const (
+	// MinAvailableKey decide minAvailable of task
+	MinAvailableKey = "huawei.com/schedule_minAvailable"
+)

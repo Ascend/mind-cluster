@@ -293,6 +293,25 @@ func GetModelFramework(podsInJob map[string]v1.Pod) string {
 	return ""
 }
 
+// GetMinMember get min member
+func GetMinMember(podsInJob map[string]v1.Pod) int {
+	for _, pod := range podsInJob {
+		annos := pod.GetAnnotations()
+		minMemberStr, ok := annos[api.MinAvailableKey]
+		if !ok {
+			continue
+		}
+		minMember, err := strconv.Atoi(minMemberStr)
+		if err != nil || minMember <= 0 {
+			hwlog.RunLog.Errorf("minMemberStr is invalid, pod: %s, err: %v, minMember:%s",
+				pod.Name, err, minMemberStr)
+			return 0
+		}
+		return minMember
+	}
+	return 0
+}
+
 // DeviceAllocateIsCompleted pod need to be allocated and have already been allocated
 func DeviceAllocateIsCompleted(p v1.Pod) bool {
 	// pod need to be allocated

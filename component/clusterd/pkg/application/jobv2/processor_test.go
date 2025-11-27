@@ -30,7 +30,8 @@ func init() {
 func TestAddJob(t *testing.T) {
 	convey.Convey("test addJob", t, func() {
 		uniqueQueue = sync.Map{}
-		mockInitCmAndCache := gomonkey.ApplyFunc(job.InitCmAndCache, func(podGroup v1beta1.PodGroup) {
+		mockInitCmAndCache := gomonkey.ApplyFunc(job.InitCmAndCache, func(podGroup v1beta1.PodGroup,
+			podsInJob map[string]v1.Pod) {
 		})
 		defer mockInitCmAndCache.Reset()
 		convey.Convey("test podGroup dose not exist, pod dose not exist, job cache dose not exist", func() {
@@ -195,7 +196,7 @@ func TestGetStatusByCacheForPending(t *testing.T) {
 		convey.Convey("test pod is part running and podGroup is not empty", func() {
 			podGroup := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 			podGroup.Spec.MinMember = 2
-
+			newJob.Replicas = int(podGroup.Spec.MinMember)
 			podsInJob := make(map[string]v1.Pod)
 			podsInJob[podUid1] = getDemoPodWithStatus(podName1, podNameSpace1, podUid1, v1.PodRunning)
 

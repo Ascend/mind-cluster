@@ -91,13 +91,13 @@ func DeleteCmAndCache(jobKey string) {
 }
 
 // InitCmAndCache init cm and cache
-func InitCmAndCache(podGroup v1beta1.PodGroup) {
+func InitCmAndCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod) {
 	if len(podGroup.Name) == 0 || len(podGroup.GetOwnerReferences()) == 0 {
 		hwlog.RunLog.Error("podGroup is nil, init configmap failed")
 		return
 	}
 	// 1.init job basic info
-	jobInfo := getJobBasicInfoByPG(podGroup)
+	jobInfo := getJobBasicInfoByPG(podGroup, podsInJob)
 	// 2.set job status info
 	jobInfo.Status = StatusJobPending
 	jobInfo.IsPreDelete = false
@@ -110,12 +110,12 @@ func InitCmAndCache(podGroup v1beta1.PodGroup) {
 	}
 }
 
-func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
+func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) constant.JobInfo {
 	var jobInfo constant.JobInfo
 	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
 	jobInfo.Key = key
 	jobInfo.Name = name
-	jobInfo.Replicas = int(pgInfo.Spec.MinMember)
+	jobInfo.Replicas = max(int(pgInfo.Spec.MinMember), pod.GetMinMember(podsInJob))
 	jobInfo.TotalCmNum = (jobInfo.Replicas-1)/safeDeviceSize + 1
 	jobInfo.JobType = podgroup.GetJobTypeByPG(&pgInfo)
 	jobInfo.NameSpace = pgInfo.Namespace
@@ -132,7 +132,7 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
 func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.PodGroup,
 	podsInJob map[string]v1.Pod) {
 	if jobInfo.Name == "" {
-		jobInfo = getJobBasicInfoByPG(podGroup)
+		jobInfo = getJobBasicInfoByPG(podGroup, podsInJob)
 	}
 	if jobInfo.AddTime == 0 {
 		jobInfo.AddTime = time.Now().Unix()
