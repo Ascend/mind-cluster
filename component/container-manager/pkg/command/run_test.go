@@ -70,7 +70,7 @@ func testErrCtrStrategy() {
 		runtimeType: common.ContainerDType,
 	}
 	err := stCmd.CheckParam()
-	expErr := fmt.Errorf("invalid ctrStrategy, should be between %s, %s and %s",
+	expErr := fmt.Errorf("invalid ctrStrategy, should be in [%s, %s, %s]",
 		common.NeverStrategy, common.SingleStrategy, common.RingStrategy)
 	convey.So(err, convey.ShouldResemble, expErr)
 }
@@ -103,7 +103,7 @@ func testErrRuntimeType() {
 		runtimeType: "invalid runtimeType",
 	}
 	err := stCmd.CheckParam()
-	expErr := fmt.Errorf("invalid runtimeType, should be between %s and %s", common.DockerType, common.ContainerDType)
+	expErr := fmt.Errorf("invalid runtimeType, should be in [%s, %s]", common.DockerType, common.ContainerDType)
 	convey.So(err, convey.ShouldResemble, expErr)
 }
 

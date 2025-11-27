@@ -113,7 +113,7 @@ func (c *runCmdArgsChecker) Check() error {
 
 func (c *runCmdArgsChecker) checkRuntimeType() error {
 	if !utils.Contains([]string{common.DockerType, common.ContainerDType}, c.runtimeType) {
-		return fmt.Errorf("invalid runtimeType, should be between %s and %s", common.DockerType, common.ContainerDType)
+		return fmt.Errorf("invalid runtimeType, should be in [%s, %s]", common.DockerType, common.ContainerDType)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (c *runCmdArgsChecker) checkSockPath() error {
 
 func (c *runCmdArgsChecker) checkCtrStrategy() error {
 	if !utils.Contains([]string{common.NeverStrategy, common.SingleStrategy, common.RingStrategy}, c.ctrStrategy) {
-		return fmt.Errorf("invalid ctrStrategy, should be between %s, %s and %s",
+		return fmt.Errorf("invalid ctrStrategy, should be in [%s, %s, %s]",
 			common.NeverStrategy, common.SingleStrategy, common.RingStrategy)
 	}
 	return nil

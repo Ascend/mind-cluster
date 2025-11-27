@@ -18,7 +18,6 @@ package command
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"testing"
@@ -33,9 +32,6 @@ import (
 const (
 	testFilePath = "./testStatus.json"
 	mode644      = 0644
-
-	invalidCtrID = "12345678"
-	validCtrID   = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 )
 
 var (
@@ -67,10 +63,7 @@ func TestStatusCmd(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("test cmd 'status' methods CheckParam", t, func() {
-		stCmd := statusCmd{containerID: validCtrID}
-		convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
-
-		stCmd = statusCmd{containerID: invalidCtrID}
+		stCmd := statusCmd{}
 		convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
 	})
 }
@@ -79,10 +72,6 @@ func TestStatusCmdExecute(t *testing.T) {
 	prepareStatusInfo(t)
 	cmd := StatusCmd()
 	cmd.BindFlag()
-	if err := flag.Set("containerID", validCtrID); err != nil {
-		t.Errorf("set flag err: %v", err)
-	}
-	flag.Parse()
 
 	convey.Convey("test method 'Execute' success", t, func() {
 		fileData, err := utils.LoadFile(testFilePath)

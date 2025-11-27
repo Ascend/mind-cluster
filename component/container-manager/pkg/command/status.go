@@ -18,32 +18,49 @@ package command
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"flag"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
+	"time"
 
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
 )
 
 const (
-	totalWidth = 96
+	totalWidth = 100
 	textWidth  = 65
 	sideWidth  = 2
+
+	pausingDuration  = 20
+	pausedDuration   = 400
+	resumingDuration = 20
 )
 
 var (
-	border                  = "+" + strings.Repeat("=", totalWidth-sideWidth) + "+"
-	ctrIDRegexForDocker     = regexp.MustCompile(`^[a-f0-9]{64}$`)
-	ctrIDRegexForContainerd = regexp.MustCompile(`^[a-zA-Z0-9]{1,15}$`)
-	format                  = "| %-25s: %-65s |\n"
+	border = "+" + strings.Repeat("=", totalWidth-sideWidth) + "+"
+	format = "| %-27s: %-67s |\n"
+
+	ctrStatusInfos = map[string]struct {
+		statusDuration int64
+		description    string
+	}{
+		common.StatusPausing: {
+			pausingDuration,
+			"Container pause may fail. Please manually delete the container",
+		},
+		common.StatusPaused: {
+			pausedDuration,
+			"Device hot reset may fail. Please check of device status and recovery are required",
+		},
+		common.StatusResuming: {
+			resumingDuration,
+			"The device has been recovered, but the container failed to be resumed. Please manually pull up the container",
+		},
+	}
 )
 
 type statusCmd struct {
-	containerID string
 }
 
 // StatusCmd cmd 'status'
@@ -63,17 +80,11 @@ func (cmd *statusCmd) Description() string {
 
 // BindFlag bind flag. If not needed, return false directly
 func (cmd *statusCmd) BindFlag() bool {
-	flag.StringVar(&cmd.containerID, "containerID", "", "Container ID for displaying information")
-	return true
+	return false
 }
 
 // CheckParam check param
 func (cmd *statusCmd) CheckParam() error {
-	match1 := ctrIDRegexForContainerd.MatchString(cmd.containerID)
-	match2 := ctrIDRegexForDocker.MatchString(cmd.containerID)
-	if !match1 && !match2 {
-		return errors.New("invalid containerID")
-	}
 	return nil
 }
 
@@ -98,18 +109,32 @@ func (cmd *statusCmd) Execute(ctx context.Context) error {
 		fmt.Printf("unmarshal status info failed, error: %v\n", err)
 		return fmt.Errorf("unmarshal status info failed")
 	}
-	for _, info := range contexts {
-		if info.CtrId == cmd.containerID {
+	for idx, info := range contexts {
+		info.Description = getDesc(info.Status, info.StatusStartTime)
+		fmt.Println(border)
+		printInfo("Container ID", info.CtrId)
+		printInfo("Container Status", info.Status)
+		printInfo("Container Status Start Time", time.Unix(info.StatusStartTime, 0).Format("2006-01-02 15:04:05"))
+		printInfo("Container Description", info.Description)
+		if idx == len(contexts)-1 {
 			fmt.Println(border)
-			printInfo("Container ID", info.CtrId)
-			printInfo("Container Status", info.Status)
-			printInfo("Container Description", info.Description)
-			fmt.Println(border)
-			return nil
 		}
 	}
-	fmt.Printf("container id <%s> is not existed\n", cmd.containerID)
 	return nil
+}
+
+func getDesc(status string, startTime int64) string {
+	if status == common.StatusRunning {
+		return common.DescNormal
+	}
+	infos, ok := ctrStatusInfos[status]
+	if !ok {
+		return common.DescUnknown
+	}
+	if time.Now().Unix()-startTime > infos.statusDuration {
+		return infos.description
+	}
+	return common.DescNormal
 }
 
 func printInfo(label, text string) {
@@ -136,7 +161,7 @@ func printInfo(label, text string) {
 
 func printLine(label, text string, first bool) {
 	if !first {
-		format = "| %25s  %-65s |\n"
+		format = "| %27s  %-67s |\n"
 		label = ""
 	}
 	fmt.Printf(format, label, text)
