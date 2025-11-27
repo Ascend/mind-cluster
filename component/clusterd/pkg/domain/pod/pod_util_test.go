@@ -364,3 +364,43 @@ func TestJudgePodOnDiffNode(t *testing.T) {
 		t.Errorf("when pod on same node then should return true")
 	}
 }
+
+const (
+	fakeMinAvailableNum = 3
+)
+
+func TestGetMinMember(t *testing.T) {
+	convey.Convey("test GetMinMember", t, func() {
+		convey.Convey("when podsInJob is nil, minMember should be 0", func() {
+			minMember := GetMinMember(map[string]v1.Pod{})
+			convey.So(minMember, convey.ShouldEqual, 0)
+		})
+		convey.Convey("when podsInJob exists but no pod has MinAvailableKey annotation, "+
+			"minMember should be 0", func() {
+			podsInJob := make(map[string]v1.Pod)
+			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+			delete(podDemo1.Annotations, api.MinAvailableKey)
+			podsInJob[podUid1] = *podDemo1
+			minMember := GetMinMember(podsInJob)
+			convey.So(minMember, convey.ShouldEqual, 0)
+		})
+		convey.Convey("when podsInJob exists and one pod has valid MinAvailableKey annotation, "+
+			"minMember should be the value", func() {
+			podsInJob := make(map[string]v1.Pod)
+			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo1.Annotations[api.MinAvailableKey] = "3"
+			podsInJob[podUid1] = *podDemo1
+			minMember := GetMinMember(podsInJob)
+			convey.So(minMember, convey.ShouldEqual, fakeMinAvailableNum)
+		})
+		convey.Convey("when podsInJob exists and one pod has invalid MinAvailableKey annotation, "+
+			"minMember should be 0", func() {
+			podsInJob := make(map[string]v1.Pod)
+			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo1.Annotations[api.MinAvailableKey] = "invalid"
+			podsInJob[podUid1] = *podDemo1
+			minMember := GetMinMember(podsInJob)
+			convey.So(minMember, convey.ShouldEqual, 0)
+		})
+	})
+}
