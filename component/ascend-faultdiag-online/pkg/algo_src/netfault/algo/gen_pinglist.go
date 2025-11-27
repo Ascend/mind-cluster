@@ -33,26 +33,26 @@ func (nd *NetDetect) SetFaultDetectParam(paramsMap map[string]any, npuInfoMap ma
 		return false
 	}
 	if len(paramsMap) == 0 {
-		hwlog.RunLog.Errorf("[ALGO] paramsMap is empty")
+		hwlog.RunLog.Error("[ALGO] paramsMap is empty")
 		return false
 	}
 
 	var res bool
 	res = checkParamsMap(paramsMap)
 	if !res {
-		hwlog.RunLog.Errorf("[ALGO] wrong params of paramsMap")
+		hwlog.RunLog.Error("[ALGO] wrong params of paramsMap")
 		return false
 	}
 
 	res = checkNpuAInfoMap(npuInfoMap)
 	if !res {
-		hwlog.RunLog.Errorf("[ALGO] wrong params of npuInfoMap")
+		hwlog.RunLog.Error("[ALGO] wrong params of npuInfoMap")
 		return false
 	}
 
 	res = nd.setParams(paramsMap, npuInfoMap)
 	if !res {
-		hwlog.RunLog.Errorf("[ALGO] failed to SetFaultDetectParam")
+		hwlog.RunLog.Error("[ALGO] failed to SetFaultDetectParam")
 		return false
 	}
 
@@ -70,26 +70,26 @@ func (nd *NetDetect) GenPingStrategy(input map[string]any) map[string]any {
 
 	// 2，处理算法输入
 	if !nd.processInput(input, aiPingStrategy) {
-		hwlog.RunLog.Errorf("[ALGO] processInput failed")
+		hwlog.RunLog.Error("[ALGO] processInput failed")
 		return nil
 	}
 
 	// 3，生成拨测策略
 	dfChainsMap := make(map[string]*DataFrame)
 	if !setDfChainMap(aiPingStrategy.chainList, dfChainsMap) {
-		hwlog.RunLog.Errorf("[ALGO] setDfChainMap failed")
+		hwlog.RunLog.Error("[ALGO] setDfChainMap failed")
 		return nil
 	}
 
 	if !nd.setPingDict(aiPingStrategy, dfChainsMap) {
-		hwlog.RunLog.Errorf("[ALGO] setPingDict failed")
+		hwlog.RunLog.Error("[ALGO] setPingDict failed")
 		return nil
 	}
 
 	// 4，处理拨测算法输出
 	output := make(map[string]any)
 	if !nd.processOutput(output, aiPingStrategy) {
-		hwlog.RunLog.Errorf("[ALGO] processOutput failed")
+		hwlog.RunLog.Error("[ALGO] processOutput failed")
 		return nil
 	}
 
@@ -150,7 +150,7 @@ func (nd *NetDetect) setDefaultParams(paramsMap map[string]any) bool {
 		axisStrategy, ok := paramsMap[argsAxisStrategy].(string)
 		if !ok || (axisStrategy != crossAxisConstant && axisStrategy != bothAxisConstant &&
 			axisStrategy != sameAxisConstant) {
-			hwlog.RunLog.Errorf("[ALGO] unexpected arg of axisStrategy")
+			hwlog.RunLog.Error("[ALGO] unexpected arg of axisStrategy")
 			return false
 		}
 
@@ -159,25 +159,24 @@ func (nd *NetDetect) setDefaultParams(paramsMap map[string]any) bool {
 		nd.curAxisStrategy = crossAxisConstant
 	}
 
-	// 当前仅支持A3
+	// 不传npu_type的情况下，默认是A5拓扑（客窜参数：A5、A3)
 	if paramsMap[argsNpuType] != nil {
 		npuTopoType, ok := paramsMap[argsNpuType].(string)
-		if !ok || (npuTopoType != a3NpuTypeConstant) {
-			hwlog.RunLog.Errorf("[ALGO] unexpected arg of npu_type")
+		if !ok || (npuTopoType != a3NpuTypeConstant && npuTopoType != a5NpuTypeConstant) {
+			hwlog.RunLog.Error("[ALGO] unexpected arg of npu_type")
 			return false
 		}
 
 		nd.curNpuType = npuTopoType
 	} else {
-		hwlog.RunLog.Errorf("[ALGO] unexpected detection type!")
-		return false
+		nd.curNpuType = a5NpuTypeConstant
 	}
 
 	// 不传superPodJobFlag的话，默认是超节点内探测任务拓扑（可传true, false）
 	if paramsMap[argsSuperPodJobFlag] != nil {
 		superPodJobFlag, ok := paramsMap[argsSuperPodJobFlag].(bool)
 		if !ok {
-			hwlog.RunLog.Errorf("[ALGO] unexpected arg of superPodJobFlag")
+			hwlog.RunLog.Error("[ALGO] unexpected arg of superPodJobFlag")
 			return false
 		}
 
@@ -188,7 +187,7 @@ func (nd *NetDetect) setDefaultParams(paramsMap map[string]any) bool {
 	if paramsMap[argsSuperPodArr] != nil {
 		superPodArr, ok := paramsMap[argsSuperPodArr].([]string)
 		if !ok {
-			hwlog.RunLog.Errorf("[ALGO] unexpected arg of superPodArr")
+			hwlog.RunLog.Error("[ALGO] unexpected arg of superPodArr")
 			return false
 		}
 
@@ -227,14 +226,14 @@ func (nd *NetDetect) processInput(input map[string]any, aiPingStrategy *AiPingSt
 	npu2Npu, ok2 := input[argsNpu2Npu].([]string)
 	npu2SuperPod, ok3 := input[argsNpu2SuperPod].(map[string]any)
 	if !ok1 || !ok2 || !ok3 {
-		hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+		hwlog.RunLog.Error("[ALGO] type assertion failed")
 		return false
 	}
 
 	for netplaneName, fullPath := range npu2NetPlane {
 		planeFullPath, res := fullPath.([]string)
 		if !res {
-			hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+			hwlog.RunLog.Error("[ALGO] type assertion failed")
 			return false
 		}
 		nd.setNpuFullPath(netplaneName, planeFullPath, aiPingStrategy)
@@ -243,7 +242,7 @@ func (nd *NetDetect) processInput(input map[string]any, aiPingStrategy *AiPingSt
 	for superPodName, podPath := range npu2SuperPod {
 		superPodPath, res := podPath.([]string)
 		if !res {
-			hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+			hwlog.RunLog.Error("[ALGO] type assertion failed")
 			return false
 		}
 		nd.setNpuFullPath(superPodName, superPodPath, aiPingStrategy)
@@ -294,6 +293,9 @@ func setLayerPort(infoStr []string) string {
 	for i := 0; i < infoLayerNum-1; i++ {
 		if strings.Contains(infoStr[i+1], nSlotConstant) {
 			npuLayerArr := strings.Split(infoStr[infoLayerNum-1], dotIntervalChar)
+			if len(npuLayerArr) < baseSegmentNum {
+				return ""
+			}
 			part := strings.Split(npuLayerArr[0], normalIntervalChar)
 			if len(part) != baseSegmentNum {
 				return ""
@@ -310,9 +312,11 @@ func setLayerPort(infoStr []string) string {
 		}
 		curLayerStr := strings.ReplaceAll(infoStr[i], ":0", "")
 		childLayerStr := strings.ReplaceAll(infoStr[i+1], ":0", "")
+		curLayerInfoArr := strings.Split(curLayerStr, dotIntervalChar)
 		childLayerInfoArr := strings.Split(childLayerStr, dotIntervalChar)
-		if len(childLayerInfoArr) == 0 {
-			hwlog.RunLog.Error("[NETFAULT ALGO]the length of childLayerInfoArr is 0")
+		if len(curLayerInfoArr) != baseSegmentNum || len(childLayerInfoArr) != baseSegmentNum {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr or curLayerInfoArr is less than: %d",
+				baseSegmentNum)
 			return ""
 		}
 		// 获取有实际意义的目标层级字符串
@@ -320,11 +324,6 @@ func setLayerPort(infoStr []string) string {
 		if childLayerInfoArr[0] != "NA" {
 			targetStr = childLayerInfoArr[0]
 		} else {
-			var minLength = 2
-			if len(childLayerInfoArr) < minLength {
-				hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr is less than: %d", minLength)
-				return ""
-			}
 			targetStr = childLayerInfoArr[1]
 		}
 		part := strings.Split(targetStr, normalIntervalChar)
@@ -361,7 +360,7 @@ func setDfChainMap(chainLists map[string][]string, dfChainsMap map[string]*DataF
 		tmpRowStrArr := strings.Split(modifyRowStr, portIntervalChar)
 		colNum := len(tmpRowStrArr)
 		if colNum < minimumColNum || colNum%baseEvenNum == 0 {
-			hwlog.RunLog.Errorf("[ALGO] unexpected topo, colNum: %d, minimumColNum: %d, baseEvenNum: %v",
+			hwlog.RunLog.Errorf("[ALGO] unexpected topo, colNum: %d, minimumColNum: %d, baseEvenNum: %d",
 				colNum, minimumColNum, baseEvenNum)
 			return false
 		}
@@ -414,7 +413,7 @@ func setDfChainRow(chainList []string, dfChains *DataFrame) {
 // 获得拨测策略
 func (nd *NetDetect) setPingDict(aiPingStrategy *AiPingStrategy, dfChainsMap map[string]*DataFrame) bool {
 	if len(dfChainsMap) == 0 {
-		hwlog.RunLog.Errorf("[ALGO] dfChainsMap is null")
+		hwlog.RunLog.Error("[ALGO] dfChainsMap is null")
 		return false
 	}
 
@@ -551,7 +550,7 @@ func sortLayerList(childLayerList []string) {
 		lastI := strings.LastIndex(childLayerList[i], "-")
 		lastJ := strings.LastIndex(childLayerList[j], "-")
 		if lastI == -1 || lastJ == -1 {
-			hwlog.RunLog.Errorf("[ALGO] wrong format of board/rack")
+			hwlog.RunLog.Error("[ALGO] wrong format of board/rack")
 			return false
 		}
 
@@ -591,7 +590,7 @@ func sortBySuffix(s1, s2 string) bool {
 	lastJ := strings.LastIndex(s2, "-")
 
 	if lastI == -1 || lastJ == -1 {
-		hwlog.RunLog.Errorf("[ALGO] wrong format of board/rack")
+		hwlog.RunLog.Error("[ALGO] wrong format of board/rack")
 		return false
 	}
 
@@ -796,7 +795,7 @@ func (nd *NetDetect) getSameNumDstIp(srcIp string, dstIps []string) string {
 	if npuInfo, ok := nd.curNpuInfo[srcIp]; ok {
 		srcNpuInfo = npuInfo
 	} else {
-		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %v in NpuInfo, superPodId: %v", srcIp, nd.curSuperPodId)
+		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %s in NpuInfo, superPodId: %s", srcIp, nd.curSuperPodId)
 		return ""
 	}
 
@@ -805,7 +804,7 @@ func (nd *NetDetect) getSameNumDstIp(srcIp string, dstIps []string) string {
 		if npuInfo, ok := nd.curNpuInfo[dstIps[i]]; ok {
 			dstNpuInfo = npuInfo
 		} else {
-			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %v in NpuInfo, superPodId: %v",
+			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %s in NpuInfo, superPodId: %s",
 				dstIps[i], nd.curSuperPodId)
 			continue
 		}
@@ -826,7 +825,7 @@ func (nd *NetDetect) getAlignNumDstIp(srcIp string, dstIps []string) string {
 	if npuInfo, ok := nd.curNpuInfo[srcIp]; ok {
 		srcNpuInfo = npuInfo
 	} else {
-		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %v in NpuInfo, superPodId: %v", srcIp, nd.curSuperPodId)
+		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %s in NpuInfo, superPodId: %s", srcIp, nd.curSuperPodId)
 		return ""
 	}
 
@@ -835,7 +834,7 @@ func (nd *NetDetect) getAlignNumDstIp(srcIp string, dstIps []string) string {
 		if npuInfo, ok := nd.curNpuInfo[dstIps[i]]; ok {
 			dstNpuInfo = npuInfo
 		} else {
-			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %v in NpuInfo, superPodId: %v",
+			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %s in NpuInfo, superPodId: %s",
 				dstIps[i], nd.curSuperPodId)
 			continue
 		}
@@ -856,7 +855,7 @@ func (nd *NetDetect) getCrossNumDstIp(srcIp string, dstIps []string) string {
 	if npuInfo, ok := nd.curNpuInfo[srcIp]; ok {
 		srcNpuInfo = npuInfo
 	} else {
-		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %v in NpuInfo, superPodId: %v", srcIp, nd.curSuperPodId)
+		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %s in NpuInfo, superPodId: %s", srcIp, nd.curSuperPodId)
 		return ""
 	}
 
@@ -865,7 +864,7 @@ func (nd *NetDetect) getCrossNumDstIp(srcIp string, dstIps []string) string {
 		if npuInfo, ok := nd.curNpuInfo[dstIps[i]]; ok {
 			dstNpuInfo = npuInfo
 		} else {
-			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %v in NpuInfo, superPodId: %v",
+			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %s in NpuInfo, superPodId: %s",
 				dstIps[i], nd.curSuperPodId)
 			continue
 		}
@@ -1015,7 +1014,7 @@ func processSameAxis(aiPingStrategy *AiPingStrategy, srcIps []string, dstIps []s
 func processSdidList(aiPingStrategy *AiPingStrategy, srcSdidList []string, dstSdidList []string, pingDictKey string) {
 	// 确保长度一致
 	if len(srcSdidList) != len(dstSdidList) {
-		hwlog.RunLog.Errorf("[ALGO] length between srcSdidList and dstSdidList is not equal")
+		hwlog.RunLog.Error("[ALGO] length between srcSdidList and dstSdidList is not equal")
 		return
 	}
 
@@ -1059,8 +1058,41 @@ func (nd *NetDetect) npuRingPing(aiPingStrategy *AiPingStrategy, layer string, c
 	switch nd.curNpuType {
 	case a3NpuTypeConstant:
 		nd.a3NpuRingPing(aiPingStrategy, layer, childLayerName)
+	case a5NpuTypeConstant:
+		nd.a5NpuRingPing(aiPingStrategy, layer, childLayerName)
 	default:
-		hwlog.RunLog.Errorf("[ALGO] unexpected detection type!")
+		hwlog.RunLog.Error("[ALGO] unexpected detection type!")
+	}
+}
+
+// A5场景npu的环ping策略
+func (nd *NetDetect) a5NpuRingPing(aiPingStrategy *AiPingStrategy, layer string, childLayerName string) {
+	layerIps := getCurLayerIps(aiPingStrategy, layer)
+
+	// 创建一个临时的map用于存储随机选中的IP
+	randomIps := make(map[string]interface{})
+	for i := 0; i < len(layerIps); i++ {
+		layerIp := layerIps[i]
+
+		// 获取与该layer_ip对应的DataFrame
+		dfIp := getGroup(aiPingStrategy.dfGrouped, layerIp)
+
+		// 获取child_layer_name列的唯一值
+		childLayerList := getChildColUniqueList(childLayerName, dfIp)
+
+		// 单一框或单一板，不进行环ping
+		if len(childLayerList) <= 1 {
+			continue
+		}
+
+		// 为每个板/框按编号排序
+		sortLayerList2(childLayerList)
+
+		// 为每个子层选择随机IP并存储在random_ips中
+		nd.setRandomIps(childLayerList, childLayerName, dfIp, randomIps)
+
+		// 生成并处理IP对
+		nd.setPingPair(layer, layerIp, childLayerList, randomIps, aiPingStrategy)
 	}
 }
 
@@ -1232,7 +1264,7 @@ func (nd *NetDetect) setPingPair(layer string, layerIp string, childLayerList []
 // 处理拨测策略算法的输出
 func (nd *NetDetect) processOutput(output map[string]any, aiPingStrategy *AiPingStrategy) bool {
 	if output == nil || aiPingStrategy == nil {
-		hwlog.RunLog.Errorf("[ALGO] output or aiPingStrategy is null")
+		hwlog.RunLog.Error("[ALGO] output or aiPingStrategy is null")
 		return false
 	}
 
@@ -1244,7 +1276,7 @@ func (nd *NetDetect) processOutput(output map[string]any, aiPingStrategy *AiPing
 		case []any:
 			nd.processSliceType(&pingList, v)
 		default:
-			hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+			hwlog.RunLog.Error("[ALGO] type assertion failed")
 			return false
 		}
 	}
@@ -1259,7 +1291,7 @@ func (nd *NetDetect) processMapType(pingList *[]any, v []map[string]any) {
 		srcPingObj, srcOk := item[fromConstant].(string)
 		dstPingObj, dstOk := item[toConstant].(string)
 		if !srcOk || !dstOk {
-			hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+			hwlog.RunLog.Error("[ALGO] type assertion failed")
 			continue
 		}
 		srcPhyId := nd.findNpuNumberByPingObj(srcPingObj)
@@ -1284,7 +1316,7 @@ func (nd *NetDetect) processSliceType(pingList *[]any, v []any) {
 			srcPingObj, srcOk := m[fromConstant].(string)
 			dstPingObj, dstOk := m[toConstant].(string)
 			if !srcOk || !dstOk {
-				hwlog.RunLog.Errorf("[ALGO] type assertion failed")
+				hwlog.RunLog.Error("[ALGO] type assertion failed")
 				continue
 			}
 			srcPhyId := nd.findNpuNumberByPingObj(srcPingObj)

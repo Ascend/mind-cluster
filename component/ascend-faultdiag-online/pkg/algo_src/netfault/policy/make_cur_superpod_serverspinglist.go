@@ -152,7 +152,7 @@ func siftFromPinglist(serverInfo *ServerInfo, superPodPingList map[string]interf
 		}
 		resPingList = getA5ServerLevel1D2DPingList(allPingList, npuEidMap, serverInfo, cardPerServer)
 	} else {
-		if value := getNetWorkType(superPodPath, serverInfo); value == "1D" || value == "2D" {
+		if value := getNetWorkType(superPodPath, superPodInfo); value == "1D" || value == "2D" {
 			resPingList = getA5ServerLevel1D2DPingList(allPingList, npuEidMap, serverInfo, 0)
 		} else {
 			hwlog.RunLog.Error("Unexpected situation of rack level topo type!")
@@ -265,7 +265,7 @@ func GenSuperPodServersPingList(superPodPath string, detectObj *algo.NetDetect) 
 	return siftFromConfigMapInterface(superPodInfo, superPodPingList, superPodPath)
 }
 
-// 生成超节点间探测任务csv文件
+// GenRoceSuperPodLevelPingList 生成超节点间探测任务csv文件
 func GenRoceSuperPodLevelPingList(superPodRocePath string,
 	detectObj *algo.NetDetect,
 	npuLinkPaths map[string]interface{},
@@ -311,7 +311,7 @@ func writeRocePingList(rocePingList map[string][]PingInfo, rocePath string, info
 		writeRocePingListOsInfo(filepath.Join(rocePath, "ping_list_range.json"), jsonStr)
 	}
 	if len(rocePingList) == 0 {
-		hwlog.RunLog.Error("unmarched any ping task from ping list!")
+		hwlog.RunLog.Error("unmatched any ping task from ping list!")
 		return false
 	}
 	count := 0
@@ -334,7 +334,7 @@ func writeRocePingList(rocePingList map[string][]PingInfo, rocePath string, info
 func siftRoceTaskFromNpuMapInterface(rocePath string,
 	npuMap map[string]algo.NpuInfo,
 	superPodPingList map[string]interface{}) bool {
-	// 遍历每一个pingList，根据arcAddr在npuMap中找对应的superPodId-serverId
+	// 遍历每一个pingList，根据srcAddr在npuMap中找对应的superPodId-serverId
 	if npuMap == nil || superPodPingList == nil {
 		hwlog.RunLog.Errorf("error npu map:%v, ping list:%v", npuMap, superPodPingList)
 		return false
@@ -346,7 +346,7 @@ func siftRoceTaskFromNpuMapInterface(rocePath string,
 		hwlog.RunLog.Error("get pingList failed!")
 		return false
 	}
-	// 记录生成那些超节点哪些os的ping_list
+	// 记录生成了哪些超节点哪些os的ping_list
 	uniqueSuperPodOs := make(map[string]bool)
 	superPodPingListInfo := make(map[string][]string)
 	for _, pingUnit := range allPingList {
@@ -391,19 +391,22 @@ func siftRoceTaskFromNpuMapInterface(rocePath string,
 }
 
 /* 超节点探测任务划分为os级别任务文件 */
-func siftFromConfigMapInterface(superPodInfo *SuperPodInfo, superPodPingList map[string]any, curSuperPodPath string) bool {
+func siftFromConfigMapInterface(superPodInfo *SuperPodInfo, superPodPingList map[string]any,
+	curSuperPodPath string) bool {
 	switch superPodInfo.Version {
+	case DiagVersionA5, DiagVersionServer:
+		return siftFromConfigMap(superPodInfo, superPodPingList, curSuperPodPath)
 	case DiagVersionA3:
 		return siftFromConfigMapA3(superPodInfo, superPodPingList, curSuperPodPath)
 	default:
-		hwlog.RunLog.Errorf("unknown detection version!")
+		hwlog.RunLog.Errorf("%s unknown detection version!", curSuperPodPath)
 		return false
 	}
 }
 
 func siftFromConfigMapA3(configMap *SuperPodInfo, superPodPingList map[string]any, curSuperPodPath string) bool {
 	if configMap == nil || len(configMap.NodeDeviceMap) == 0 {
-		hwlog.RunLog.Errorf("get DodeDeviceMap map failed")
+		hwlog.RunLog.Errorf("get NodeDeviceMap map failed")
 		return false
 	}
 	for _, workInfo := range configMap.NodeDeviceMap {
