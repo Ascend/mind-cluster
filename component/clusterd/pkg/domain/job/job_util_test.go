@@ -141,7 +141,7 @@ func TestInitCmAndCache(t *testing.T) {
 		newPGInfo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
 		convey.Convey("when pg name is nil, job cache should be nil", func() {
 			newPGInfo.Name = ""
-			InitCmAndCache(*newPGInfo)
+			InitCmAndCache(*newPGInfo, nil)
 			jobInfoMap := GetAllJobCache()
 			convey.So(len(jobInfoMap), convey.ShouldEqual, 0)
 		})
@@ -151,7 +151,7 @@ func TestInitCmAndCache(t *testing.T) {
 					return true
 				})
 			defer mockInitCM.Reset()
-			InitCmAndCache(*newPGInfo)
+			InitCmAndCache(*newPGInfo, nil)
 			defer DeleteJobCache(jobUid1)
 			jobInfoMap := GetAllJobCache()
 			convey.So(len(jobInfoMap), convey.ShouldEqual, 1)
@@ -162,7 +162,7 @@ func TestInitCmAndCache(t *testing.T) {
 					return false
 				})
 			defer mockInitCM.Reset()
-			InitCmAndCache(*newPGInfo)
+			InitCmAndCache(*newPGInfo, nil)
 			defer DeleteJobCache(jobUid1)
 			jobInfoMap := GetAllJobCache()
 			convey.So(len(jobInfoMap), convey.ShouldEqual, 0)
@@ -173,7 +173,7 @@ func TestInitCmAndCache(t *testing.T) {
 func TestGetJobBasicInfoByPodGroup(t *testing.T) {
 	convey.Convey("test getJobBasicInfoByPodGroup success", t, func() {
 		newPGInfo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
-		jobInfo := getJobBasicInfoByPG(*newPGInfo)
+		jobInfo := getJobBasicInfoByPG(*newPGInfo, nil)
 		convey.So(jobInfo.Name, convey.ShouldEqual, jobName1)
 	})
 }
