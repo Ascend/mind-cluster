@@ -261,7 +261,11 @@ func (j *JobStcMgr) PreDeleteJobStatistic(jobKey string) {
 	}
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
-	jobStc := j.data.JobStatistic[jobKey]
+	jobStc, ok := j.data.JobStatistic[jobKey]
+	if !ok {
+		hwlog.RunLog.Debugf("jobStc cache is empty, skip update %s job statisc", jobKey)
+		return
+	}
 	if jobStc.Status != jobInfo.Status {
 		hwlog.RunLog.Debugf("update jobStc, current job Status: %s, jobStc Status: %s",
 			jobInfo.Status, jobStc.Status)
@@ -329,7 +333,7 @@ func (j *JobStcMgr) JobStcByJobDelete(jobKey string) {
 		delete(j.data.JobStatistic, jobKey)
 		j.version++
 		j.CheckTimeoutMap.Delete(jobKey)
-		hwlog.RunLog.Infof("delete jobStc, current jobStc Key: %s", jobKey)
+		hwlog.RunLog.Infof("delete jobStc, current jobStc Key: %s, jobStc: %v", jobKey, jobStc)
 	}
 }
 
@@ -395,7 +399,7 @@ func (j *JobStcMgr) addJobStatistic(jobKey string, jobInfo metav1.Object) {
 	jobStc := initStcJob(jobInfo, jobKey)
 	j.data.JobStatistic[jobKey] = jobStc
 	j.version++
-	hwlog.RunLog.Debugf("add Job statistic: %v", jobStc)
+	hwlog.RunLog.Debugf("add Job statistic: %v, jobKey: %s", jobStc, jobKey)
 	logs.JobEventLog.Infof("Job Event: %s", util.ObjToString(jobStc))
 }
 
@@ -448,7 +452,7 @@ func (j *JobStcMgr) getACJobCreateTimeoutReason(jobKey string) {
 		fmt.Sprintf("the acJob status is empty, it may be that the %v has not processed it", api.AscendOperator)
 	j.data.JobStatistic[jobKey] = jobStc
 	j.version++
-	hwlog.RunLog.Debugf("update Job statistic: %v", jobStc)
+	hwlog.RunLog.Infof("update Job statistic: %v", jobStc)
 	logs.JobEventLog.Infof("Job Event: %s", util.ObjToString(jobStc))
 }
 
