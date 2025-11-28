@@ -1,0 +1,11 @@
+/.vscode
+/Build
+bin
+lib
+.idea
+cmake-build-debug-remote*
+cmake-build-debug*
+output
+
+*.egg-info
+__pycache__
