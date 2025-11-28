@@ -583,6 +583,8 @@ func getSizeOfSuperPod(configurations map[string]string) (int, int) {
 func getReserveNodes(configurations map[string]string, superPodSize int) int {
 	reserve := getSuperPodInfoFromConfig(reserveNodesKey, configurations)
 	if reserve == 0 {
+		klog.V(util.LogWarningLev).Infof("reserve-nodes less than or equal 0, "+
+			"set as default: %d", defaultReserveNodes)
 		reserve = defaultReserveNodes
 	}
 	if reserve >= superPodSize {
