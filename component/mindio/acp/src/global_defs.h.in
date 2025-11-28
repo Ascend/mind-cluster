@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021-2022. All rights reserved.
+ */
+
+/**
+ * Predefined ockio build switches are defined below
+ *
+ * !!! DO NOT MODIFY THIS FILE !!!
+ * !!! 这个是机器自动生成 global_defs.h的模板,请不要随意修改 !!!
+ * !!! 对应的开关在根目录下的CMakeLists.txt里被定义。!!!
+ */
+
+#pragma once
+

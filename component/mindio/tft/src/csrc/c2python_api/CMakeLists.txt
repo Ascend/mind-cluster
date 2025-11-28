@@ -1,0 +1,30 @@
+find_package(SWIG REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+if (NOT SWIG_FOUND OR NOT Python3_FOUND)
+    message(FATAL_ERROR "use swig build, but swig or python3 not found!")
+    return()
+endif ()
+
+cmake_policy(SET CMP0078 NEW)
+cmake_policy(SET CMP0086 NEW)
+
+include(UseSWIG)
+include_directories(${Python3_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_SWIG_FLAGS "-c++")
+set_source_files_properties(c2python_api.i PROPERTIES CPLUSPLUS ON)
+message(STATUS "use swig build module")
+swig_add_library(ttp_c2python_api TYPE MODULE LANGUAGE python SOURCES c2python_api.i c2python_api.cpp)
+
+add_dependencies(ttp_c2python_api ttp_framework_shared)
+target_link_libraries(ttp_c2python_api PRIVATE pthread dl rt ttp_framework_shared)
+set_target_properties(ttp_c2python_api PROPERTIES OUTPUT_NAME "ttp_c2python_api")
+target_compile_options(ttp_c2python_api PUBLIC -g)
+target_include_directories(ttp_c2python_api PRIVATE ${PROJECT_SOURCE_DIR}/src/csrc/common)
+target_include_directories(ttp_c2python_api PRIVATE ${PROJECT_SOURCE_DIR}/src/csrc/framework)
+target_include_directories(ttp_c2python_api PRIVATE ${PROJECT_SOURCE_DIR}/src/csrc/framework/controller)
+target_include_directories(ttp_c2python_api PRIVATE ${PROJECT_SOURCE_DIR}/src/csrc/framework/processor)
+
+set(TARGET_INSTALL_BIN_PS ${PROJECT_SOURCE_DIR}/build/python_sdk/)
+install(TARGETS ttp_c2python_api DESTINATION ${TARGET_INSTALL_BIN_PS} PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

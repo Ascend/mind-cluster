@@ -1,0 +1,46 @@
+---
+version: 1.0.0
+
+project:
+  name: "llt/test_ttp"
+  desc: "mindio_ttp project"
+  prod: null
+  team: null
+
+pipeline:
+  build:
+    - task: "compile_target"
+      exec: "mkdir -p ../build/build_target; cmake ../../ -B ../build/build_target -DBUILD_TESTS=ON -DBUILD_WITH_HDT_TEST=ON -DCMAKE_BUILD_TYPE=Debug && make -C ../build/build_target && make -C ../build/build_target install -j 10"
+      args: false
+    - task: "prepare env"
+      exec: "mkdir -p ../build/bin; mv -f ../../output/bin/test_ttp ../build/bin;"
+      args: false
+  run:
+    - task: "run_test"
+      exec: "cd ../build/bin; export LD_LIBRARY_PATH=../../../output/lib/ && ./test_ttp --gtest_output=xml:./../report.xml --gtest_filter=*.*"
+      args: false
+  report:
+    - task: "lcov_report"
+      exec: |-
+        cd ../build
+        mkdir -p gcover_report
+        pwd
+        lcov --d ../.. --c --output-file ../build/test.info --rc lcov_branch_coverage=1 --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|TTP_*"
+        lcov -r ../build/test.info "*/build/*" "*7.3.0*" "*/3rdparty/*" "*/test/llt/*" "*generated.h" -output-file ../build/coverage.info --rc lcov_branch_coverage=1 --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|TTP_*"
+        genhtml -o ../build/gcover_report ../build/coverage.info --show-details --legend --rc lcov_branch_coverage=1
+      args: false
+  clean:
+    - task: "clean_target"
+      exec: "rm -rf ../build/"
+      args: false
+    - task: "clean"
+
+components:
+  - type: "hdt_cmc_c_cpp"
+    repo: null
+    dest: null
+    manifest:
+      gtest: null
+      mockcpp: null
+      gcov: null
+      asan: null

@@ -1,0 +1,5 @@
+add_subdirectory(acc_links)
+add_subdirectory(common)
+add_subdirectory(framework)
+add_subdirectory(c2python_api)
+add_subdirectory(c_api)

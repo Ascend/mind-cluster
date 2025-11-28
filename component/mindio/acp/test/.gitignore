@@ -1,0 +1,4 @@
+/build/
+/conf/comp.cmake
+/conf/memfs.conf
+/cmake-build*
