@@ -1,0 +1,5 @@
+[run]
+omit =
+    */mindio_acp/c2python_api.py
+    */mindio_acp/acc_checkpoint/megatron/*
+    */mindio_acp/acc_checkpoint/core/model_params_serialization.py

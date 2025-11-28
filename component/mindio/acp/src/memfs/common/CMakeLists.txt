@@ -1,0 +1,2 @@
+add_library(memfs_common_interface INTERFACE)
+target_include_directories(memfs_common_interface INTERFACE ${CMAKE_CURRENT_LIST_DIR})

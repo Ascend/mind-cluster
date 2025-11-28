@@ -1,0 +1,28 @@
+---
+version: 1.0.0
+
+project:
+  name: "dfs_hdt"
+  desc: "dfs_hdt project"
+  prod: null
+  team: null
+
+pipeline:
+  build:
+    - task: "cmake_test"
+  run:
+    - task: "run_test"
+  report:
+    - task: "lcov_report"
+  clean:
+    - task: "clean"
+
+components:
+  - type: "hdt_cmc_c_cpp"
+    repo: null
+    dest: null
+    manifest:
+      gtest: null
+      mockcpp: null
+      gcov: null
+      asan: null
