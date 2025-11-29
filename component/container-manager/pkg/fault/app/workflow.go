@@ -17,9 +17,10 @@ package app
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"ascend-common/common-utils/hwlog"
+	"container-manager/pkg/common"
 	"container-manager/pkg/devmgr"
 	"container-manager/pkg/fault/domain"
 )
@@ -44,8 +45,8 @@ func (fm *FaultMgr) Name() string {
 // Init module init
 func (fm *FaultMgr) Init() error {
 	if err := loadFaultCodeFromFile(); err != nil {
-		hwlog.RunLog.Errorf("load fault code from file failed, error: %v", err)
-		return errors.New("load fault code from file failed")
+		hwlog.RunLog.Errorf("load fault code from file %s failed, error: %v", common.ParamOption.FaultCfgPath, err)
+		return fmt.Errorf("load fault code from file %s failed", common.ParamOption.FaultCfgPath)
 	}
 	hwlog.RunLog.Infof("init module <%s> success", fm.Name())
 	return nil

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -32,10 +33,11 @@ import (
 )
 
 const (
-	maxAge           = 7
-	maxBackups       = 30
-	maxLogLineLength = 1024
-	defaultSockPath  = "/run/docker.sock"
+	maxAge                         = 7
+	maxBackups                     = 30
+	maxLogLineLength               = 1024
+	defaultSockPath                = "/run/docker.sock"
+	faultCodeFileUmask os.FileMode = 0137 // file mode: 0640
 )
 
 type runCmd struct {
@@ -46,6 +48,7 @@ type runCmd struct {
 	ctrStrategy   string
 	sockPath      string
 	runtimeType   string
+	faultCfgPath  string
 }
 
 // RunCmd cmd 'run'
@@ -73,6 +76,7 @@ func (cmd *runCmd) BindFlag() bool {
 	flag.StringVar(&cmd.runtimeType, "runtimeType", common.DockerType, "Container Runtime type")
 	flag.StringVar(&cmd.sockPath, "sockPath", defaultSockPath, "Container Runtime sock file path")
 	flag.StringVar(&cmd.ctrStrategy, "ctrStrategy", common.NeverStrategy, "Retracting strategy for faulty containers")
+	flag.StringVar(&cmd.faultCfgPath, "faultConfigPath", "", "Custom fault config file path")
 	return true
 }
 
@@ -84,16 +88,18 @@ func (cmd *runCmd) CheckParam() error {
 
 func newRunCmdArgsChecker(cmd runCmd) *runCmdArgsChecker {
 	return &runCmdArgsChecker{
-		runtimeType: cmd.runtimeType,
-		sockPath:    cmd.sockPath,
-		ctrStrategy: cmd.ctrStrategy,
+		runtimeType:  cmd.runtimeType,
+		sockPath:     cmd.sockPath,
+		ctrStrategy:  cmd.ctrStrategy,
+		faultCfgPath: cmd.faultCfgPath,
 	}
 }
 
 type runCmdArgsChecker struct {
-	runtimeType string
-	sockPath    string
-	ctrStrategy string
+	runtimeType  string
+	sockPath     string
+	ctrStrategy  string
+	faultCfgPath string
 }
 
 // Check param checker
@@ -102,6 +108,7 @@ func (c *runCmdArgsChecker) Check() error {
 		c.checkRuntimeType,
 		c.checkSockPath,
 		c.checkCtrStrategy,
+		c.checkFaultConfigPath,
 	}
 	for _, checkFun := range checkFuncs {
 		if err := checkFun(); err != nil {
@@ -119,9 +126,6 @@ func (c *runCmdArgsChecker) checkRuntimeType() error {
 }
 
 func (c *runCmdArgsChecker) checkSockPath() error {
-	if !utils.IsExist(c.sockPath) {
-		return errors.New("socket file not exist")
-	}
 	_, err := utils.CheckPath(c.sockPath)
 	if err != nil {
 		return fmt.Errorf("invalid sockPath, %v", err)
@@ -133,6 +137,24 @@ func (c *runCmdArgsChecker) checkCtrStrategy() error {
 	if !utils.Contains([]string{common.NeverStrategy, common.SingleStrategy, common.RingStrategy}, c.ctrStrategy) {
 		return fmt.Errorf("invalid ctrStrategy, should be in [%s, %s, %s]",
 			common.NeverStrategy, common.SingleStrategy, common.RingStrategy)
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkFaultConfigPath() error {
+	if c.faultCfgPath == "" {
+		return nil
+	}
+	_, err := utils.CheckPath(c.faultCfgPath)
+	if err != nil {
+		return fmt.Errorf("invalid faultConfigPath, %v", err)
+	}
+	uid, err := utils.GetCurrentUid()
+	if err != nil {
+		return fmt.Errorf("get current uid failed, %v", err)
+	}
+	if err = utils.DoCheckOwnerAndPermission(c.faultCfgPath, faultCodeFileUmask, uid); err != nil {
+		return fmt.Errorf("invalid faultConfigPath permission, %v", err)
 	}
 	return nil
 }
@@ -183,8 +205,9 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 
 func (cmd *runCmd) setParameters() {
 	common.ParamOption = common.Option{
-		RuntimeType: cmd.runtimeType,
-		SockPath:    cmd.sockPath,
-		CtrStrategy: cmd.ctrStrategy,
+		RuntimeType:  cmd.runtimeType,
+		SockPath:     cmd.sockPath,
+		CtrStrategy:  cmd.ctrStrategy,
+		FaultCfgPath: cmd.faultCfgPath,
 	}
 }
