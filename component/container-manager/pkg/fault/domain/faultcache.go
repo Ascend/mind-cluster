@@ -28,7 +28,7 @@ import (
 
 const mockFaultAttr = -1
 
-var faultCache *FaultCache
+var faultCache *FaultCache = nil
 var initOnce sync.Once
 
 // FaultCache fault events from dcmi interface

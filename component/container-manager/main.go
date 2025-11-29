@@ -46,6 +46,10 @@ var (
 	cmdMap = make(map[string]command.Command)
 )
 
+func setCurCmd(cmd command.Command) {
+	curCmd = cmd
+}
+
 func main() {
 	initCmd()
 	if !dealArgs() {
@@ -103,8 +107,8 @@ func dealCmdFlag() bool {
 		printHelp()
 		return false
 	}
-	curCmd = cmd
-	if !cmd.BindFlag() {
+	setCurCmd(cmd)
+	if !curCmd.BindFlag() {
 		return true
 	}
 	flag.Usage = flag.PrintDefaults

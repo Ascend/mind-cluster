@@ -179,7 +179,7 @@ func (r *ResetMgr) filterCountLimit(faultNpus []int32) []int32 {
 
 // get chip information associated with the current chip through DCMI for status statistics
 func getAllRelatedNpus(faultNpus []int32) []domain.ResetNpuInfos {
-	var infos []domain.ResetNpuInfos
+	var infos = make([]domain.ResetNpuInfos, 0)
 	countedNpu := make(map[int32]struct{})
 	for _, phyId := range faultNpus {
 		// already been associated with the previous faulty npu, skipping
