@@ -17,6 +17,32 @@ limitations under the License.
 // Package api structs for SuperPodDevice
 package api
 
+// NpuInfo npu info for device
+type NpuInfo struct {
+	// PhyId npu physical id
+	PhyId string
+	// LevelList net level list
+	LevelList []LevelElement
+}
+
+// ServerInfo server info
+type ServerInfo struct {
+	// ServerIndex server index number
+	ServerIndex string
+	// NodeName node name
+	NodeName string
+	// NpuMap npu info map
+	NpuMap map[string]*NpuInfo
+}
+
+// RackInfo rack info
+type RackInfo struct {
+	// RackID rack id
+	RackID string
+	// ServerMap server info map
+	ServerMap map[string]*ServerInfo
+}
+
 // RankLevel for rank table level info
 type RankLevel struct {
 	// Level for the level index in rank table

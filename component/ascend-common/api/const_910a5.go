@@ -59,6 +59,10 @@ const (
 const (
 	// RackIDKey rack id in a super pod
 	RackIDKey = "rackID"
+	// VersionA5 Type for RAS Net Fault Detection in A5
+	VersionA5 = "A5"
+	// VersionA3 Type for RAS Net Fault Detection in A3
+	VersionA3 = "A3"
 )
 
 const (

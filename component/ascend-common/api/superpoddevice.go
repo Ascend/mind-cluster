@@ -17,6 +17,12 @@ type NodeDevice struct {
 	ServerID   string
 	ServerType string            `json:"-"`
 	DeviceMap  map[string]string // key: dev phyID, value: superPod device id
+	// RackID for A5 ras netfault
+	RackID string `json:"RackID,omitempty"`
+	// NpuInfoMap for A5 ras netfault
+	NpuInfoMap map[string]*NpuInfo `json:"NpuInfoMap,omitempty"`
+	// AcceleratorType for A5 ras netfault
+	AcceleratorType string `json:"AcceleratorType,omitempty"`
 }
 
 // SuperPodDevice super node device info, key is superPodID, value is NodeDevice
@@ -24,6 +30,10 @@ type SuperPodDevice struct {
 	Version       string
 	SuperPodID    string
 	NodeDeviceMap map[string]*NodeDevice
+	// RackMap  for A5 ras
+	RackMap map[string]*RackInfo `json:"RackMap,omitempty"`
+	// AcceleratorType for A5 ras
+	AcceleratorType string `json:"AcceleratorType,omitempty"`
 }
 
 // SuperPodFaultInfos super pod fault info

@@ -235,6 +235,14 @@ func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 		baseDevInfos := getBaseDevInfos(node)
 		deviceType := getDeviceType(node)
 		spIndex := getServerID(node)
+		if api.CheckIsVersionA5(deviceType) {
+			acceleratorType := getNodeAcceleratorType(node)
+			nodeDevice := getNodeDeviceA5(baseDevInfos, nodeName, deviceType, spIndex, acceleratorType)
+			if nodeDevice != nil {
+				nodeDevice.RackID = getRackID(node)
+			}
+			return nodeDevice, spId
+		}
 		nodeDevice := getNodeDevice(baseDevInfos, nodeName, deviceType, spIndex)
 		return nodeDevice, spId
 	}

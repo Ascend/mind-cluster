@@ -154,6 +154,7 @@ func TestGetNodeDeviceAndSuperPodID(t *testing.T) {
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, node name does not exist", t, testGetNodeDevAndSpIDNotExist)
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, dev is nil", t, testGetNodeDevAndSpIDNilDev)
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, deep copy error", t, testGetNodeDevAndSpIDErrDeepCp)
+	convey.Convey("test func GetNodeDeviceAndSuperPodIDA5", t, testGetNodeDevAndSpIDNotInCacheA5)
 }
 
 func testGetNodeDevAndSpID() {
@@ -191,6 +192,40 @@ func testGetNodeDevAndSpIDNotInCache() {
 	expDev := &api.NodeDevice{
 		NodeName:  nodeName2,
 		DeviceMap: map[string]string{devPhyID0: superPodIDStr, devPhyID1: superPodIDStr},
+	}
+	convey.So(nodeDev, convey.ShouldResemble, expDev)
+	convey.So(spID, convey.ShouldEqual, superPodIDStr)
+}
+
+func testGetNodeDevAndSpIDNotInCacheA5() {
+	baseDevInfo, err := json.Marshal(baseDeviceMap)
+	if err != nil {
+		return
+	}
+	node2 := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName2,
+			Annotations: map[string]string{
+				api.NodeSNAnnotation: nodeSN1,
+				superPodIDKey:        superPodIDStr,
+				baseDevInfoAnno:      string(baseDevInfo),
+				serverTypeKey:        api.VersionA5,
+			},
+		},
+	}
+	nodeDev, spID := GetNodeDeviceAndSuperPodID(node2)
+	expDev := &api.NodeDevice{
+		NodeName:   nodeName2,
+		ServerType: api.VersionA5,
+		DeviceMap:  map[string]string{devPhyID0: superPodIDStr, devPhyID1: superPodIDStr},
+		NpuInfoMap: map[string]*api.NpuInfo{
+			devPhyID0: {
+				PhyId: devPhyID0,
+			},
+			devPhyID1: {
+				PhyId: devPhyID1,
+			},
+		},
 	}
 	convey.So(nodeDev, convey.ShouldResemble, expDev)
 	convey.So(spID, convey.ShouldEqual, superPodIDStr)

@@ -15,6 +15,8 @@ const (
 	maxSuperPodNum         = 1024
 	initNodeNumPerSuperPod = 64
 	initSuperPodNum        = 32
+	// initRackNumPerSuperPod for A5 ras
+	initRackNumPerSuperPod = 128
 )
 
 func deepCopyNodeDevice(device *api.NodeDevice) *api.NodeDevice {
@@ -37,13 +39,22 @@ func deepCopySuperPodDevice(superPodDevice *api.SuperPodDevice) *api.SuperPodDev
 	if superPodDevice == nil {
 		return nil
 	}
+	version := superPodDevice.Version
+	if superPodDevice.AcceleratorType == api.Ascend800ia5SuperPod {
+		version = superPodDevice.AcceleratorType
+	}
 	copySuperPodDevice := &api.SuperPodDevice{
-		Version:       superPodDevice.Version,
-		SuperPodID:    superPodDevice.SuperPodID,
-		NodeDeviceMap: make(map[string]*api.NodeDevice, len(superPodDevice.NodeDeviceMap)),
+		Version:         version,
+		SuperPodID:      superPodDevice.SuperPodID,
+		NodeDeviceMap:   make(map[string]*api.NodeDevice, len(superPodDevice.NodeDeviceMap)),
+		RackMap:         make(map[string]*api.RackInfo, len(superPodDevice.RackMap)),
+		AcceleratorType: superPodDevice.AcceleratorType,
 	}
 	for k, v := range superPodDevice.NodeDeviceMap {
 		copySuperPodDevice.NodeDeviceMap[k] = deepCopyNodeDevice(v)
+	}
+	for k, v := range superPodDevice.RackMap {
+		copySuperPodDevice.RackMap[k] = deepCopyRackInfo(v)
 	}
 	return copySuperPodDevice
 }
@@ -59,6 +70,8 @@ var superPodManager Manager
 func init() {
 	superPodManager.snMap = make(map[string]*api.SuperPodDevice, initSuperPodNum)
 	superPodManager.rwLock = sync.RWMutex{}
+	superPodDeleteFinalManager.snMap = make(map[string]*api.SuperPodDevice, initSuperPodNum)
+	superPodDeleteFinalManager.rwLock = sync.RWMutex{}
 }
 
 // GetSuperPodDevice get superPod with lock
@@ -93,11 +106,17 @@ func SaveNode(superPodID string, node *api.NodeDevice) {
 			return
 		}
 		superPod = &api.SuperPodDevice{
-			Version:       node.ServerType,
-			SuperPodID:    superPodID,
-			NodeDeviceMap: make(map[string]*api.NodeDevice, initNodeNumPerSuperPod),
+			Version:         node.ServerType,
+			SuperPodID:      superPodID,
+			NodeDeviceMap:   make(map[string]*api.NodeDevice, initNodeNumPerSuperPod),
+			RackMap:         make(map[string]*api.RackInfo, initRackNumPerSuperPod),
+			AcceleratorType: node.AcceleratorType,
 		}
 		superPodManager.snMap[superPodID] = superPod
+	}
+	if !canAddNodeToSuperPod(superPod, node) {
+		hwlog.RunLog.Errorf("can not add node %s to superpod %s", node.NodeName, superPodID)
+		return
 	}
 	if len(superPod.NodeDeviceMap) >= maxNodeNumPerSuperPod {
 		hwlog.RunLog.Errorf("nodeDeviceMap length will exceed %d, superPodID=%s, nodeName=%s",
@@ -105,6 +124,13 @@ func SaveNode(superPodID string, node *api.NodeDevice) {
 		return
 	}
 	superPod.NodeDeviceMap[node.NodeName] = node
+	if api.CheckIsVersionA5(node.ServerType) {
+		err := saveRackInfo(superPod, node)
+		if err != nil {
+			hwlog.RunLog.Errorf("save rack info failed, err: %v", err)
+			return
+		}
+	}
 }
 
 // DeleteNode delete node with lock
@@ -117,6 +143,9 @@ func DeleteNode(superPodID string, nodeName string) {
 	}
 	delete(superPod.NodeDeviceMap, nodeName)
 	if len(superPod.NodeDeviceMap) == 0 {
+		superPodDeleteFinalManager.rwLock.Lock()
+		defer superPodDeleteFinalManager.rwLock.Unlock()
+		superPodDeleteFinalManager.snMap[superPodID] = superPod
 		delete(superPodManager.snMap, superPodID)
 	}
 }
