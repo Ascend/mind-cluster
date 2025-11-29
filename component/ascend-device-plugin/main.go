@@ -23,6 +23,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/next/devicefactory"
+	"Ascend-device-plugin/pkg/topology"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
@@ -268,6 +269,8 @@ func main() {
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
 	go hdm.ListenDpu(ctx)
+	// start goroutine to dump topo of rack A5 for ras
+	go topology.RasTopoWriteTask(ctx, hdm)
 	hdm.SignCatch(cancel)
 }
 
