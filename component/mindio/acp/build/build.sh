@@ -95,6 +95,32 @@ done
 PROJ_DIR="$(dirname "${BASH_SOURCE[0]}")"
 PROJ_DIR="$(realpath "${PROJ_DIR}/..")"
 
+# 拉取三方代码
+cd ${PROJ_DIR}
+if [[ ! -d ${PROJ_DIR}/3rdparty/ubs-comm/ubs-comm ]]; then
+    echo "Trying to git clone ubs-comm ..."
+    cd ${PROJ_DIR}/3rdparty/ubs-comm
+    git clone https://gitee.com/openeuler/ubs-comm.git
+    cd ${PROJ_DIR}/3rdparty/ubs-comm/ubs-comm
+    git checkout master && git submodule update --init
+fi
+
+if [[ ! -d ${PROJ_DIR}/3rdparty/libboundscheck/libboundscheck ]]; then
+    echo "Trying to git clone libboundscheck ..."
+    cd ${PROJ_DIR}/3rdparty/libboundscheck
+    git clone https://gitee.com/openeuler/libboundscheck.git
+    cd ${PROJ_DIR}/3rdparty/libboundscheck/libboundscheck
+    git checkout v1.1.16
+fi
+
+if [[ ! -d ${PROJ_DIR}/3rdparty/spdlog/spdlog ]]; then
+    echo "Trying to git clone spdlog ..."
+    cd ${PROJ_DIR}/3rdparty/spdlog
+    git clone https://github.com/gabime/spdlog.git
+    cd ${PROJ_DIR}/3rdparty/spdlog/spdlog
+    git checkout v1.12.0
+fi
+
 cd ${PROJ_DIR}
 
 VER_FILE="${PROJ_DIR}"/service_config.ini
