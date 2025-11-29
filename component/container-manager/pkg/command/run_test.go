@@ -47,6 +47,7 @@ func TestRunCmdCheckParam(t *testing.T) {
 	convey.Convey("test cmd 'status' methods CheckParam, param valid", t, testValidParam)
 	convey.Convey("test cmd 'status' methods CheckParam, invalid ctrStrategy", t, testErrCtrStrategy)
 	convey.Convey("test cmd 'status' methods CheckParam, invalid sockPath", t, testErrSockPath)
+	convey.Convey("test cmd 'status' methods CheckParam, invalid faultCfgPath", t, testErrFaultConfigPath)
 	convey.Convey("test cmd 'status' methods CheckParam, invalid runtimeType", t, testErrRuntimeType)
 }
 
@@ -54,15 +55,16 @@ func testValidParam() {
 	var p1 = gomonkey.ApplyFuncReturn(utils.IsExist, true).ApplyFuncReturn(utils.CheckPath, nil, nil)
 	defer p1.Reset()
 	stCmd := runCmd{
-		ctrStrategy: common.NeverStrategy,
-		sockPath:    defaultSockPath,
-		runtimeType: common.ContainerDType,
+		ctrStrategy:  common.NeverStrategy,
+		sockPath:     defaultSockPath,
+		runtimeType:  common.ContainerDType,
+		faultCfgPath: "",
 	}
 	convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
 }
 
 func testErrCtrStrategy() {
-	var p1 = gomonkey.ApplyFuncReturn(utils.IsExist, true).ApplyFuncReturn(utils.CheckPath, nil, nil)
+	var p1 = gomonkey.ApplyFuncReturn(utils.CheckPath, nil, nil)
 	defer p1.Reset()
 	stCmd := runCmd{
 		ctrStrategy: "invalid ctrStrategy",
@@ -77,19 +79,47 @@ func testErrCtrStrategy() {
 
 func testErrSockPath() {
 	stCmd := runCmd{
-		ctrStrategy: common.NeverStrategy,
-		sockPath:    defaultSockPath,
-		runtimeType: common.ContainerDType,
+		ctrStrategy:  common.NeverStrategy,
+		sockPath:     defaultSockPath,
+		runtimeType:  common.ContainerDType,
+		faultCfgPath: "",
 	}
-	var p2 = gomonkey.ApplyFuncReturn(utils.IsExist, false)
+	var p1 = gomonkey.ApplyFuncReturn(utils.CheckPath, nil, testErr)
+	defer p1.Reset()
 	err := stCmd.CheckParam()
-	expErr := errors.New("socket file not exist")
+	expErr := fmt.Errorf("invalid sockPath, %v", testErr)
+	convey.So(err, convey.ShouldResemble, expErr)
+}
+
+func testErrFaultConfigPath() {
+	stCmd := runCmd{
+		ctrStrategy:  common.NeverStrategy,
+		sockPath:     defaultSockPath,
+		runtimeType:  common.ContainerDType,
+		faultCfgPath: "invalid faultCfgPath",
+	}
+	output := []gomonkey.OutputCell{
+		{Values: gomonkey.Params{"", nil}},
+		{Values: gomonkey.Params{"", testErr}},
+	}
+	p1 := gomonkey.ApplyFuncSeq(utils.CheckPath, output)
+	err := stCmd.CheckParam()
+	expErr := fmt.Errorf("invalid faultConfigPath, %v", testErr)
+	convey.So(err, convey.ShouldResemble, expErr)
+	p1.Reset()
+
+	var p2 = gomonkey.ApplyFuncReturn(utils.CheckPath, nil, nil).
+		ApplyFuncReturn(utils.GetCurrentUid, uint32(0), testErr)
+	err = stCmd.CheckParam()
+	expErr = fmt.Errorf("get current uid failed, %v", testErr)
 	convey.So(err, convey.ShouldResemble, expErr)
 	p2.Reset()
 
-	var p3 = gomonkey.ApplyFuncReturn(utils.IsExist, true).ApplyFuncReturn(utils.CheckPath, nil, testErr)
+	var p3 = gomonkey.ApplyFuncReturn(utils.CheckPath, nil, nil).
+		ApplyFuncReturn(utils.GetCurrentUid, uint32(0), nil).
+		ApplyFuncReturn(utils.DoCheckOwnerAndPermission, testErr)
 	err = stCmd.CheckParam()
-	expErr = fmt.Errorf("invalid sockPath, %v", testErr)
+	expErr = fmt.Errorf("invalid faultConfigPath permission, %v", testErr)
 	convey.So(err, convey.ShouldResemble, expErr)
 	p3.Reset()
 }

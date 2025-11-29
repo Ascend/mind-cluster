@@ -25,6 +25,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/common-utils/utils"
+	"container-manager/pkg/common"
 )
 
 var (
@@ -54,6 +55,7 @@ var (
 
 func TestLoadFaultCodeFromFile(t *testing.T) {
 	prepareFaultCfg(t)
+	common.ParamOption.FaultCfgPath = testFilePath
 	convey.Convey("test function 'loadFaultCodeFromFile' success", t, func() {
 		fileData, err := utils.LoadFile(testFilePath)
 		convey.So(err, convey.ShouldBeNil)
@@ -66,8 +68,7 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 		p1 := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, testErr)
 		defer p1.Reset()
 		err := loadFaultCodeFromFile()
-		expErr := fmt.Errorf("load fault code json failed: %v", testErr)
-		convey.So(err, convey.ShouldResemble, expErr)
+		convey.So(err, convey.ShouldResemble, testErr)
 	})
 	convey.Convey("test function 'loadFaultCodeFromFile' failed, unmarshal error", t, func() {
 		fileData, err := utils.LoadFile(testFilePath)
@@ -76,8 +77,13 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 			ApplyFuncReturn(json.Unmarshal, testErr)
 		defer p1.Reset()
 		err = loadFaultCodeFromFile()
-		expErr := fmt.Errorf("unmarshal fault code byte failed: %v", testErr)
+		expErr := fmt.Errorf("unmarshal custom fault code byte failed: %v", testErr)
 		convey.So(err, convey.ShouldResemble, expErr)
+	})
+	convey.Convey("test function 'loadFaultCodeFromFile' success, no custom fault code file", t, func() {
+		common.ParamOption.FaultCfgPath = ""
+		err := loadFaultCodeFromFile()
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
