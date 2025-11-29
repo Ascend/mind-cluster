@@ -1056,3 +1056,35 @@ func TestIsStrategyInSubHealthyStrategse(t *testing.T) {
 		})
 	}
 }
+
+func TestSortByNumericValue(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []string
+		want  []string
+	}{
+		{
+			name:  "unsorted slice",
+			input: []string{"1", "2", "3"},
+			want:  []string{"3", "2", "1"},
+		},
+		{
+			name:  "slice with negative numbers",
+			input: []string{"-1", "0", "1"},
+			want:  []string{"1", "0", "-1"},
+		},
+		{
+			name:  "slice with leading zeros",
+			input: []string{"01", "10", "02"},
+			want:  []string{"10", "02", "01"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SortByNumericValue(tt.input)
+			if !reflect.DeepEqual(tt.input, tt.want) {
+				t.Errorf("SortByNumericValue() = %v, want %v", tt.input, tt.want)
+			}
+		})
+	}
+}

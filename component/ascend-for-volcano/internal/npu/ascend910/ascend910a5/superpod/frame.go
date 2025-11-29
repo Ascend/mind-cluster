@@ -187,6 +187,7 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 			unReadyIds = append(unReadyIds, id)
 		}
 	}
+	util.SortByNumericValue(unReadyIds)
 
 	strategyInitFactory(tp, unReadyIds, selectedNodes)
 

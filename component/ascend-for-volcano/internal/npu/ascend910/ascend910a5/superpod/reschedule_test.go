@@ -687,3 +687,62 @@ func TestSelectNodeFromOriginSpBlock(t *testing.T) {
 		})
 	}
 }
+
+func createSuperPodWithRackIdMap(rackIdOrder []int32, nodeCounts map[int32]int) map[int32][]nodeBaseInfo {
+	superPodWithRackId := make(map[int32][]nodeBaseInfo)
+	for _, rackId := range rackIdOrder {
+		nodes := make([]nodeBaseInfo, nodeCounts[rackId])
+		superPodWithRackId[rackId] = nodes
+	}
+	return superPodWithRackId
+}
+
+func TestGetRestRackId(t *testing.T) {
+	testCases := []struct {
+		name        string
+		rackIdOrder []int32
+		nodeCounts  map[int32]int
+		tpBlock     int
+		want        int32
+	}{
+		{
+			name:        "single rackId with enough nodes",
+			rackIdOrder: []int32{1},
+			nodeCounts:  map[int32]int{1: 2},
+			tpBlock:     2,
+			want:        1,
+		},
+		{
+			name:        "single rackId with not enough nodes",
+			rackIdOrder: []int32{1},
+			nodeCounts:  map[int32]int{1: 1},
+			tpBlock:     2,
+			want:        UninitializedRestRackLenMapId,
+		},
+		{
+			name:        "multiple rackIds with one having enough nodes",
+			rackIdOrder: []int32{1, 2, 3},
+			nodeCounts:  map[int32]int{1: 1, 2: 2, 3: 3},
+			tpBlock:     2,
+			want:        2,
+		},
+		{
+			name:        "multiple rackIds with none having enough nodes",
+			rackIdOrder: []int32{1, 2, 3},
+			nodeCounts:  map[int32]int{1: 1, 2: 1, 3: 1},
+			tpBlock:     2,
+			want:        UninitializedRestRackLenMapId,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910a5SuperPod{}
+			tp.tpBlock = tt.tpBlock
+			superPodWithRackId := createSuperPodWithRackIdMap(tt.rackIdOrder, tt.nodeCounts)
+			restRackId := tp.getRestRackId(tt.rackIdOrder, superPodWithRackId)
+			if restRackId != tt.want {
+				t.Errorf("Test %s failed: expected result: %v, got: %v", tt.name, tt.want, restRackId)
+			}
+		})
+	}
+}

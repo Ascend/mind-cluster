@@ -193,7 +193,7 @@ func (tp *module910a5SuperPod) getRackId(superPodWithRackId map[int32][]nodeBase
 
 func (tp *module910a5SuperPod) getRestRackId(rackIdOrder []int32, superPodWithRackId map[int32][]nodeBaseInfo) int32 {
 	for _, rackId := range rackIdOrder {
-		if len(superPodWithRackId[rackId]) > tp.tpBlock {
+		if len(superPodWithRackId[rackId]) >= tp.tpBlock {
 			return rackId
 		}
 	}
