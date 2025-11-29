@@ -18,6 +18,7 @@ package policy
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -148,23 +149,184 @@ func TestGetTargetSuperPodNpuMapWhenValid(t *testing.T) {
 }
 
 func TestSetCallAlgorithmParamInfo(t *testing.T) {
-
+	convey.Convey("TestSetCallAlgorithmParamInfo", t, func() {
+		callAlgorithmParam := make(map[string]interface{})
+		callAlgorithmParam["serverIdMap"] = make(map[string]interface{})
+		convey.Convey("Should return error when input nil", func() {
+			err := SetCallAlgorithmParamInfo(0, "Path", nil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("Should return error when read err", func() {
+			mockReadConfigMap := gomonkey.ApplyFuncReturn(readConfigMap, nil)
+			defer mockReadConfigMap.Reset()
+			mockSleep := gomonkey.ApplyFunc(time.Sleep, func(_ time.Duration) {})
+			defer mockSleep.Reset()
+			err := SetCallAlgorithmParamInfo(0, "Path", callAlgorithmParam)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("Should return error when version err", func() {
+			mockReadConfigMap := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: "A9"})
+			defer mockReadConfigMap.Reset()
+			err := SetCallAlgorithmParamInfo(0, "Path", callAlgorithmParam)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("Should call func and set version when valid", func() {
+			mockReadConfigMap := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: DiagVersionA3})
+			defer mockReadConfigMap.Reset()
+			mockeGetWorkMapping := gomonkey.ApplyFuncReturn(getWorKMapping, nil)
+			defer mockeGetWorkMapping.Reset()
+			mockWait := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer mockWait.Reset()
+			err := SetCallAlgorithmParamInfo(0, "Path", callAlgorithmParam)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(callAlgorithmParam[NpuType], convey.ShouldEqual, DiagVersionA3)
+		})
+	})
 }
 
 func TestGetWorkMapping(t *testing.T) {
+	convey.Convey("TestGetWorkMapping", t, func() {
+		callAlgorithmParam := make(map[string]interface{})
+		callAlgorithmParam["serverIdMap"] = make(map[string]interface{})
+		convey.Convey("Should return error when input invalid", func() {
+			err := getWorKMapping(nil, nil)
+			convey.So(err, convey.ShouldNotBeNil)
+			err2 := getWorKMapping(map[string]interface{}{}, &SuperPodInfo{NodeDeviceMap: nil})
+			convey.So(err2, convey.ShouldNotBeNil)
+		})
+		convey.Convey("Should return err when get work info err", func() {
+			superPodInfos := map[string]*SuperPodInfo{
+				"test1": {Version: DiagVersionA3, NodeDeviceMap: nil},
+				"test2": {Version: DiagVersionA3, NodeDeviceMap: map[string]*NodeDevice{
+					"": {NodeName: "", ServerID: "1"}},
+				},
+				"test3": {Version: DiagVersionA3, NodeDeviceMap: map[string]*NodeDevice{
+					"work1": {NodeName: "work1"}},
+				},
+				"test4": {Version: DiagVersionA3, NodeDeviceMap: map[string]*NodeDevice{
+					"work1": {NodeName: "work1", ServerID: ""}},
+				},
+			}
+			var err error
+			for _, superPodInfo := range superPodInfos {
+				err = getWorKMapping(callAlgorithmParam, superPodInfo)
+				convey.So(err, convey.ShouldNotBeNil)
+			}
+		})
+		convey.Convey("Should set Mapping when valid", func() {
+			superPodInfos := &SuperPodInfo{
+				Version: DiagVersionA3,
+				NodeDeviceMap: map[string]*NodeDevice{
+					"1": {NodeName: "work1", ServerID: "1"},
+					"2": {NodeName: "work2", ServerID: "2"},
+				},
+			}
+			expectCallAlgorithmParam := make(map[string]interface{})
+			expectCallAlgorithmParam["serverIdMap"] = map[string]string{"1": "work1", "2": "work2"}
+
+			err := getWorKMapping(callAlgorithmParam, superPodInfos)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(callAlgorithmParam, convey.ShouldResemble, expectCallAlgorithmParam)
+		})
+	})
 
 }
 
 func TestProcessSuperPodJsonWhenVersionInfoInvalid(t *testing.T) {
+	convey.Convey("TestProcessSuperPodJsonWhenVersionInfoInvalid", t, func() {
+		mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer mockSleep.Reset()
+		convey.Convey("Should return nil when read configMap MAX retry", func() {
+			mockGetSuperPodInfo := gomonkey.ApplyFuncReturn(readConfigMap, nil)
+			defer mockGetSuperPodInfo.Reset()
+			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer patch.Reset()
+			configmap, fullMesh, linkPath := processSuperPodJson("Path", "")
+			convey.So(fullMesh, convey.ShouldBeTrue)
+			convey.So(configmap, convey.ShouldNotBeNil)
+			convey.So(linkPath, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return nil when get Version info err", func() {
+			testConfigmap := map[int]*SuperPodInfo{
+				0: {Version: ""},
+				1: {Version: "A8"},
+			}
+			for _, configmapRet := range testConfigmap {
+				patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+				mockGetSuperPodInfo := gomonkey.ApplyFuncReturn(readConfigMap, configmapRet)
+				configmap, fullMesh, linkPath := processSuperPodJson("Path", "")
+				convey.So(fullMesh, convey.ShouldBeTrue)
+				convey.So(configmap, convey.ShouldNotBeNil)
+				convey.So(linkPath, convey.ShouldBeNil)
+				mockGetSuperPodInfo.Reset()
+				patch.Reset()
+			}
+		})
+	})
 
 }
 
 func TestProcessSuperPodJsonWhenVersionA5(t *testing.T) {
+	mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+	defer mockSleep.Reset()
+	convey.Convey("TestProcessSuperPodJsonWhenVersionA5", t, func() {
+		convey.Convey("Should call correct func and return value", func() {
+			mockGetSuperPodInfo := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: DiagVersionA5})
+			defer mockGetSuperPodInfo.Reset()
+			mockGetType := gomonkey.ApplyFuncReturn(getNetWorkType, "0D00")
+			defer mockGetType.Reset()
+			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer patch.Reset()
+			configmap, meshInfo, linkPath := processSuperPodJson("Path", "")
+			convey.So(meshInfo, convey.ShouldBeTrue)
+			convey.So(configmap, convey.ShouldNotBeNil)
+			convey.So(linkPath, convey.ShouldBeNil)
+		})
 
+		convey.Convey("Should return call Get1D2DInfo when 1D or 2D", func() {
+			mockGetSuperPodInfo := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: DiagVersionA5})
+			defer mockGetSuperPodInfo.Reset()
+			mockGetType := gomonkey.ApplyFuncReturn(getNetWorkType, "2D")
+			defer mockGetType.Reset()
+			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer patch.Reset()
+			call := false
+			mock1D2DInfo := gomonkey.ApplyFunc(GetA5CurSuperPod1D2DNpuInfo, func(_ string, _ *SuperPodInfo) (
+				[]string, map[string][]string, map[string]algo.NpuInfo) {
+				call = true
+				return nil, nil, nil
+			})
+			defer mock1D2DInfo.Reset()
+			processSuperPodJson("Path", "")
+			convey.So(call, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestProcessSuperPodJsonWhenVersionA3(t *testing.T) {
-
+	mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+	defer mockSleep.Reset()
+	convey.Convey("TestProcessSuperPodJsonWhenVersionA3", t, func() {
+		convey.Convey("Should call correct func and return value", func() {
+			fullMesh := []string{"1"}
+			linkPath := map[string][]string{"1": {"1"}}
+			configMapA3 := &SuperPodInfo{Version: DiagVersionA3}
+			mockGetSuperPodInfo := gomonkey.ApplyFuncReturn(readConfigMap, configMapA3)
+			defer mockGetSuperPodInfo.Reset()
+			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer patch.Reset()
+			mockGetFullMeshInfo := gomonkey.ApplyFunc(GetCurSuperPodInfoFromMapA3,
+				func(_ *SuperPodInfo) ([]string, map[string][]string) {
+					return fullMesh, linkPath
+				})
+			defer mockGetFullMeshInfo.Reset()
+			configmap, meshInfo, linkPath := processSuperPodJson("Path", "")
+			convey.So(meshInfo, convey.ShouldBeNil)
+			convey.So(configmap, convey.ShouldBeNil)
+			convey.So(linkPath, convey.ShouldBeNil)
+		})
+	})
 }
 
 func TestGetA5CurSuperPod1D2DNpuInfo(t *testing.T) {
@@ -361,7 +523,35 @@ func TestFindEid(t *testing.T) {
 }
 
 func TestGetOneTopoFilePath(t *testing.T) {
-
+	convey.Convey("test func getOneTopoFilePath", t, func() {
+		convey.Convey("should return nil when servermap nil", t, func() {
+			superPodInfo := &SuperPodInfo{
+				RackMap: map[string]*RackInfo{
+					"rack1": {
+						RackID:    "1",
+						ServerMap: map[string]*ServerInfo{},
+					},
+				},
+			}
+			ret := getOneTopoFilePath("", superPodInfo)
+			convey.So(ret, convey.ShouldBeEmpty)
+		})
+		convey.Convey("when normal", func() {
+			superPodInfo := &SuperPodInfo{
+				RackMap: map[string]*RackInfo{
+					"rack1": {
+						RackID: "1",
+						ServerMap: map[string]*ServerInfo{
+							"1": {ServerIndex: "1"},
+						},
+					},
+				},
+			}
+			expectValue := filepath.Join("0", "rack-1", "topo_1.json")
+			ret := getOneTopoFilePath("0", superPodInfo)
+			convey.So(ret, convey.ShouldEqual, expectValue)
+		})
+	})
 }
 
 func TestGetCurSuperPod1DNpuInfo(t *testing.T) {
