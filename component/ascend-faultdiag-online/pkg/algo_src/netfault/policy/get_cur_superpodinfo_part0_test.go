@@ -279,15 +279,95 @@ func TestGetNpuServerIdFromRackMap(t *testing.T) {
 }
 
 func TestGetRoceLimitNpuNumPerSuperPod(t *testing.T) {
-
+	convey.Convey("test func getRoceLimitNpuNumsPerSuperPod", t, func() {
+		convey.Convey("return false when getRoceLimitNpuNumsPerSuperPod", func() {
+			_, _, ret := getRoceLimitNpuNumsPerSuperPod(map[string][]string{})
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+		convey.Convey("return false when len valid", func() {
+			s := map[string][]string{
+				"1": {"a", "b"},
+				"2": {"a", "b"},
+				"3": {"a", "b"},
+				"4": {"a", "b"},
+			}
+			_, _, ret := getRoceLimitNpuNumsPerSuperPod(s)
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+		convey.Convey("return true when normal", func() {
+			s := map[string][]string{
+				"1": {"a", "b"},
+				"2": {"a", "b"},
+				"3": {"a", "b"},
+				"4": {"a", "b"},
+				"5": {"a", "b"},
+			}
+			_, _, ret := getRoceLimitNpuNumsPerSuperPod(s)
+			convey.So(ret, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestGetEidInfoOrIpFromPorts(t *testing.T) {
-
+	convey.Convey("TestGetEidInfoOrIpFromPorts", t, func() {
+		convey.Convey("valid param", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			param := superPodParam{
+				superPodId: "0", protocol: "test", rack: &RackInfo{RackID: "0"},
+				npu: &NpuInfo{PhyId: "0", LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				}},
+				server: &ServerInfo{
+					ServerIndex: "0",
+				},
+			}
+			getEidInfoOrIpFromPorts(npuMap, param)
+			convey.So(len(npuMap) == 1, convey.ShouldBeTrue)
+		})
+		convey.Convey("invalid param", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			param := superPodParam{
+				superPodId: "0", protocol: "test", rack: &RackInfo{RackID: "0"},
+				npu: &NpuInfo{PhyId: "0", LevelList: []LevelElement{
+					{NetLayer: 0, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				}},
+				server: &ServerInfo{
+					ServerIndex: "0",
+				},
+			}
+			getEidInfoOrIpFromPorts(npuMap, param)
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("invalid digit", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			param := superPodParam{
+				superPodId: "0", protocol: "test", rack: &RackInfo{RackID: "0"},
+				npu: &NpuInfo{PhyId: "invalid", LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				}},
+				server: &ServerInfo{
+					ServerIndex: "0",
+				},
+			}
+			getEidInfoOrIpFromPorts(npuMap, param)
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestGenRoceSuperPodLevelPingList(t *testing.T) {
-
+	convey.Convey("test func GenRoceSuperPodLevelPingList", t, func() {
+		convey.Convey("return false when gen PingList err", func() {
+			detectObj := algo.NewNetDetect("0")
+			patch := gomonkey.ApplyMethod(detectObj, "GenPingStrategy",
+				func(nd *algo.NetDetect, input map[string]interface{}) map[string]interface{} {
+					return nil
+				})
+			defer patch.Reset()
+			ret := GenRoceSuperPodLevelPingList("", nil, nil, nil)
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+	})
 }
 
 func TestIsPureLetter(t *testing.T) {
@@ -430,15 +510,100 @@ func TestStoreA51D2DNpuFmLink(t *testing.T) {
 }
 
 func TestProcessSuperPodJsonWhenReasoningServer(t *testing.T) {
-
+	mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+	defer mockSleep.Reset()
+	convey.Convey("Test processSuperPodJson when version 800I-SuperPod-A5-8", t, func() {
+		convey.Convey("800I-SuperPod-A5-8", func() {
+			mockGetSuperpodInfo := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: DiagVersionServer})
+			defer mockGetSuperpodInfo.Reset()
+			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
+			defer patch.Reset()
+			configmap, MeshInfo, linkInfo := processSuperPodJson("Path", "")
+			convey.So(configmap != nil, convey.ShouldBeTrue)
+			convey.So(MeshInfo, convey.ShouldBeNil)
+			convey.So(linkInfo, convey.ShouldBeNil)
+		})
+	})
 }
 
 func TestGetReasoningServerNpuInfo(t *testing.T) {
-
+	convey.Convey("TestGetReasoningServerNpuInfo", t, func() {
+		convey.Convey("test level != 1", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "1",
+				LevelList: []LevelElement{
+					{NetLayer: 0, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test level == 1, phyid != number", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "null",
+				LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test level == 1, phyid == number", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "0",
+				LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) > 0, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestGetReasoningServerSuperPodNpuMap(t *testing.T) {
-
+	convey.Convey("TestGetReasoningServerSuperPodNpuMap", t, func() {
+		convey.Convey("test empty rack", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("test empty server map", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: make(map[string]*ServerInfo)},
+			}}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("test invalid server id", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: map[string]*ServerInfo{
+					"a": {ServerIndex: "a"},
+					"b": {ServerIndex: "b"},
+				}},
+			}}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(len(ret) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test empty npu data", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: map[string]*ServerInfo{
+					"1": {ServerIndex: "1"},
+					"2": {ServerIndex: "2"},
+				}},
+			}}
+			patch := gomonkey.ApplyFunc(getReasoningServerNpuInfo, func(npuEidMap map[string]algo.NpuInfo,
+				serverIndex int, npu *NpuInfo, serverId string, superPodId string) {
+				return
+			})
+			defer patch.Reset()
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(len(ret) == 0, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestHandleReasoningServer(t *testing.T) {
