@@ -127,7 +127,7 @@ class IP(Address):
     @exclude_fields("port_ids", "die_id")
     def to_dict(self):
         ret = copy.deepcopy(self.__dict__)
-        ret["ports"] = self.port_ids
+        ret["ports"] = [f"{self.die_id}/{i}" for i in self.port_ids] if self.die_id is not None else []
         return ret
 
 
