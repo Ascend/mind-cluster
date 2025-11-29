@@ -26,7 +26,7 @@ import (
 	"container-manager/pkg/common"
 )
 
-var ctrCache *CtrCache
+var ctrCache *CtrCache = nil
 var initOnce sync.Once
 
 // CtrCache ctr cache

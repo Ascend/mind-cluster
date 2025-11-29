@@ -71,7 +71,6 @@ func (c *ContainerdClient) close() error {
 }
 
 func (c *ContainerdClient) getAllContainers() (interface{}, error) {
-	var ctrs []containerd.Container
 	ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
 	// list running containers
 	containers, err := c.client.ContainerService().List(ctx)
@@ -79,6 +78,7 @@ func (c *ContainerdClient) getAllContainers() (interface{}, error) {
 		hwlog.RunLog.Errorf("failed to get container list, error: %v", err)
 		return nil, errors.New("failed to get container list")
 	}
+	var ctrs = make([]containerd.Container, 0, len(containers))
 	for _, container := range containers {
 		containerObj, err := c.client.LoadContainer(ctx, container.ID)
 		if err != nil {

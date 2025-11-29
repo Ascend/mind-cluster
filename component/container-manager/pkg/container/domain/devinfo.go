@@ -22,7 +22,7 @@ import (
 	"container-manager/pkg/common"
 )
 
-var devCache *DevCache
+var devCache *DevCache = nil
 
 // DevCache dev cache
 type DevCache struct {
