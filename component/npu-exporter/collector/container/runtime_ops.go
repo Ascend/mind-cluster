@@ -93,8 +93,10 @@ type RuntimeOperatorTool struct {
 	OciEndpoint string
 	// Namespace the namespace of containerd
 	Namespace string
-	// UseBackup use back up address or not
-	UseBackup bool
+	// UseCriBackup use cri back up address or not
+	UseCriBackup bool
+	// UseOciBackup use oci back up address or not
+	UseOciBackup bool
 }
 
 // Init initializes container runtime operator
@@ -133,12 +135,14 @@ func (operator *RuntimeOperatorTool) Init() error {
 func (operator *RuntimeOperatorTool) initCriClient() error {
 	criConn, err := GetConnection(operator.CriEndpoint)
 	if err != nil || criConn == nil {
-		logger.Warnf("connecting to CRI server failed: %v", err)
-		if operator.UseBackup {
-			logger.Warn("use cri-dockerd address to try again")
+		msg := fmt.Sprintf("connecting to CRI server failed: %v", err)
+		if operator.UseCriBackup {
+			logger.Warnf("%v, will use cri-dockerd address to try again", msg)
 			if utils.IsExist(strings.TrimPrefix(DefaultCRIDockerd, unixPre)) {
 				criConn, err = GetConnection(DefaultCRIDockerd)
 			}
+		} else {
+			logger.Warn(msg)
 		}
 	}
 	if err != nil {
@@ -156,15 +160,17 @@ func (operator *RuntimeOperatorTool) initCriClient() error {
 func (operator *RuntimeOperatorTool) initOciClient() error {
 	conn, err := GetConnection(operator.OciEndpoint)
 	if err != nil || conn == nil {
-		logger.Warnf("failed to get OCI connection: %v", err)
-		if operator.UseBackup {
-			logger.Warn("use backup address to try again")
+		msg := fmt.Sprintf("failed to get OCI connection: %v", err)
+		if operator.UseOciBackup {
+			logger.Warnf("%v, will use backup address to try again", msg)
 			if utils.IsExist(strings.TrimPrefix(DefaultContainerdAddr, unixPre)) {
 				conn, err = GetConnection(DefaultContainerdAddr)
 
 			} else if utils.IsExist(strings.TrimPrefix(defaultDockerOnEuler, unixPre)) {
 				conn, err = GetConnection(defaultDockerOnEuler)
 			}
+		} else {
+			logger.Warn(msg)
 		}
 	}
 	if err != nil {

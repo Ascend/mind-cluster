@@ -85,18 +85,20 @@ var (
 
 // CntNpuMonitorOpts contains setting options for monitoring containers
 type CntNpuMonitorOpts struct {
-	CriEndpoint  string // CRI server address
 	EndpointType int    // containerd or docker
+	CriEndpoint  string // CRI server address
+	UseCriBackup bool   // whether try to use cri backup address
 	OciEndpoint  string // OCI server, now is containerd address
-	UserBackUp   bool   // whether try to use backup address
+	UseOciBackup bool   // whether try to use oci backup address
 }
 
 // MakeDevicesParser evaluates option settings and make an instance according to it
 func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
 	runtimeOperator := &RuntimeOperatorTool{
-		UseBackup:   opts.UserBackUp,
-		CriEndpoint: opts.CriEndpoint,
-		OciEndpoint: opts.OciEndpoint,
+		UseCriBackup: opts.UseCriBackup,
+		UseOciBackup: opts.UseOciBackup,
+		CriEndpoint:  opts.CriEndpoint,
+		OciEndpoint:  opts.OciEndpoint,
 	}
 	parser := &DevicesParser{
 		RuntimeOperator: runtimeOperator,

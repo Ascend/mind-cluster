@@ -229,7 +229,7 @@ func newServerAndListener(conf *limiter.HandlerConfig) (*http.Server, net.Listen
 }
 
 func readCntMonitoringFlags() container.CntNpuMonitorOpts {
-	opts := container.CntNpuMonitorOpts{UserBackUp: true}
+	opts := container.CntNpuMonitorOpts{UseOciBackup: true, UseCriBackup: true}
 	switch containerMode {
 	case containerModeDocker:
 		opts.EndpointType = container.EndpointTypeDockerd
@@ -251,11 +251,11 @@ func readCntMonitoringFlags() container.CntNpuMonitorOpts {
 	}
 	if containerd != "" {
 		opts.OciEndpoint = containerd
-		opts.UserBackUp = false
+		opts.UseOciBackup = false
 	}
 	if endpoint != "" {
 		opts.CriEndpoint = endpoint
-		opts.UserBackUp = false
+		opts.UseCriBackup = false
 	}
 	return opts
 }
