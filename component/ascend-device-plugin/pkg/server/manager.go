@@ -225,7 +225,7 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 	if common.ParamOption.RealCardType == api.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
 		// only auto label 300IA2 with910B card
 		if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
-			newLabelMap[common.AcceleratorTypeKey] = api.A300IA2Label
+			newLabelMap[api.AcceleratorTypeKey] = api.A300IA2Label
 		}
 	}
 	if common.IsContainAll300IDuo() {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/common"
 	v1 "ascend-operator/pkg/ranktable/v1"
@@ -53,6 +54,16 @@ func TestNewGenerator(t *testing.T) {
 			generator := NewGenerator(job)
 			_, ok := generator.(*v1dot2.RankTable)
 			convey.So(ok, convey.ShouldEqual, false)
+		})
+
+		convey.Convey("05-job without schedule policy annotation and with accelerator-type A3"+
+			" should return v1.2 ranktable", func() {
+			job.Labels = map[string]string{
+				api.AcceleratorTypeKey: api.AcceleratorTypeModule910A3SuperPod,
+			}
+			generator := NewGenerator(job)
+			_, ok := generator.(*v1dot2.RankTable)
+			convey.So(ok, convey.ShouldEqual, true)
 		})
 	})
 }
