@@ -18,7 +18,6 @@ package devmgr
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -27,9 +26,9 @@ import (
 
 const (
 	waitDevResetMaxTime = 60
-	maxDevNum           = 100
 )
 
+// DevMgr hwDevMgr instance
 var DevMgr = &HwDevMgr{}
 
 // NewHwDevMgr new huawei dev manager
@@ -80,9 +79,6 @@ func (hdm *HwDevMgr) initInfoRelatedDev() error {
 	devNum, logicIds, err := hdm.dmgr.GetDeviceList()
 	if err != nil {
 		return err
-	}
-	if devNum > maxDevNum {
-		return fmt.Errorf("invalid device num: %d", devNum)
 	}
 	// init npuInfos
 	hdm.npuInfos, err = hdm.setNodeNPUInfo(logicIds, devNum)
