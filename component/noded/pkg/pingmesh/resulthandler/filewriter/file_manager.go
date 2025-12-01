@@ -43,6 +43,7 @@ const (
 	deviceIDMask     = 0xFFFF
 	dieIDOffset      = 2
 	deviceIDMinuend  = 199
+	ipv4Len          = 4
 )
 
 func superDeviceIDToIP(s string) string {
@@ -117,6 +118,14 @@ type manager struct {
 	CsvColumnNames []string
 }
 
+// GetWriter get log writer
+func (m *manager) GetWriter() *hwlog.CustomLogger {
+	if m == nil {
+		return nil
+	}
+	return m.writer
+}
+
 // HandlePingMeshInfo handle pingmesh result
 func (m *manager) HandlePingMeshInfo(res *types.HccspingMeshResult) error {
 	if m == nil || res == nil || res.Policy == nil || res.Results == nil {
@@ -130,6 +139,10 @@ func (m *manager) HandlePingMeshInfo(res *types.HccspingMeshResult) error {
 		return errors.New("prepare result file paths failed")
 	}
 	f, err := os.OpenFile(pingResultCsv, openFlag, defaultPerm)
+	if err != nil {
+		hwlog.RunLog.Errorf("open file %s failed, err:%v", pingResultCsv, err)
+		return errors.New("open file failed")
+	}
 	defer func() {
 		if f == nil {
 			return
@@ -139,10 +152,6 @@ func (m *manager) HandlePingMeshInfo(res *types.HccspingMeshResult) error {
 			return
 		}
 	}()
-	if err != nil {
-		hwlog.RunLog.Errorf("open file %s failed, err:%v", pingResultCsv, err)
-		return errors.New("open file failed")
-	}
 	err = f.Chmod(defaultPerm)
 	if err != nil {
 		hwlog.RunLog.Errorf("chmod file %s failed, err:%v", pingResultCsv, err)
@@ -195,8 +204,13 @@ func (m *manager) writeForCard(physicID string, destAddrList []types.PingItem,
 				hwlog.RunLog.Errorf("get ping item is empty by dstAddr %s, err: %s", info.DstAddr[i], errFound)
 				continue
 			}
+			// A3 sdid to ip,A5 is ip
+			srcAddr := superDeviceIDToIP(pingItem.SrcAddr)
+			if srcAddr == "" {
+				srcAddr = pingItem.SrcAddr
+			}
 			ri := resultInfo{
-				SourceAddr:   superDeviceIDToIP(pingItem.SrcAddr),
+				SourceAddr:   srcAddr,
 				TargetAddr:   info.DstAddr[i],
 				SucPktNum:    info.SucPktNum[i],
 				FailPktNum:   info.FailPktNum[i],
@@ -316,7 +330,11 @@ func calcAvgLossRate(sucPktNum, failPktNum uint) string {
 
 func getPingItemByDestAddr(dstAddrList []types.PingItem, dstAddr string) (types.PingItem, error) {
 	for _, item := range dstAddrList {
-		if item.DstAddr == dstAddr || superDeviceIDToIP(item.DstAddr) == dstAddr {
+		dstAddrTmp := superDeviceIDToIP(item.DstAddr)
+		if dstAddrTmp == "" {
+			dstAddrTmp = item.DstAddr
+		}
+		if dstAddrTmp == dstAddr {
 			return item, nil
 		}
 	}
