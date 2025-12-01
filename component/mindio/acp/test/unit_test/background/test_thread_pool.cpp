@@ -20,6 +20,8 @@
 
 using namespace ock::bg::util;
 
+namespace {
+
 TEST(TestThreadPool, test_RetryTaskPool_start_should_return_success)
 {
     std::string poolName = "test_pool";
@@ -30,4 +32,5 @@ TEST(TestThreadPool, test_RetryTaskPool_start_should_return_success)
     ASSERT_EQ(0, ret);
 
     delete pool;
+}
 }

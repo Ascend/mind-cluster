@@ -63,6 +63,8 @@ void TestUserGroupCache::TearDownTestCase()
     cacheInstance = nullptr;
 }
 
+namespace {
+
 TEST_F(TestUserGroupCache, user_info_get_uid_gid)
 {
     uid_t uid = 1001;
@@ -219,4 +221,5 @@ TEST_F(TestUserGroupCache, expires_time)
     std::this_thread::sleep_for(std::chrono::microseconds(EXPIRES_MACRO_SECONDS));
     in = cacheInstance->UserInGroup(userId, groupId);
     ASSERT_TRUE(in) << "user (" << userId << ") not in group(" << groupId << ")";
+}
 }

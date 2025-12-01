@@ -7,6 +7,8 @@
 
 using namespace ock::memfs;
 
+namespace {
+
 TEST(TestMemFsState, test_memfs_set_and_get_state)
 {
     auto &state = MemfsState::Instance();
@@ -34,4 +36,5 @@ TEST(TestMemFsState, test_memfs_set_and_get_state)
     state.SetState(MemfsStateCode::EXITED);
     result = state.GetState();
     ASSERT_EQ(MemfsStateCode::EXITED, result.first);
+}
 }

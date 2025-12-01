@@ -68,6 +68,7 @@ void TestC2pythonApi::TearDownTestSuite()
     system(cmd.c_str());
 }
 
+namespace {
 
 TEST_F(TestC2pythonApi, test_save_file_direct_e2e)
 {
@@ -108,4 +109,5 @@ TEST_F(TestC2pythonApi, test_save_file_vector_e2e)
     ASSERT_EQ(0, result);
     result = writeHandle.Close();
     ASSERT_EQ(0, result);
+}
 }

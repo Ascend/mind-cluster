@@ -51,7 +51,7 @@ while true; do
 done
 
 if [[ "$SKIP_FLAG" == "" ]]; then
-    bash $PROJECT_HOME/build.sh -t debug --ut ON
+    bash $PROJECT_HOME/build/build.sh -t debug --ut ON
     if [ 0 != $? ];then
         echo "Failed to build ockio!"
         exit 1

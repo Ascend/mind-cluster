@@ -38,6 +38,8 @@ void TestSystemLoaderWithMocker::TearDown()
     DataBaseUserGroupLoader::GetDefault().Clear();
 }
 
+namespace {
+
 TEST_F(TestSystemLoaderWithMocker, getUidByName_normal)
 {
     std::string userName = "dog";
@@ -196,4 +198,5 @@ TEST_F(TestSystemLoaderWithMocker, loadGroup_io_failed)
 
     auto groupInfo = loader.LoadGroup(groupName);
     ASSERT_TRUE(groupInfo == nullptr);
+}
 }

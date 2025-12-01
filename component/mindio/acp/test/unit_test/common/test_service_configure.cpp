@@ -18,8 +18,11 @@
 
 using namespace ock::common::config;
 
+namespace {
+
 TEST(TestServiceConfigure, test_initialize_should_success)
 {
     int ret = ServiceConfigure::GetInstance().Initialize();
     ASSERT_EQ(0, ret);
+}
 }

@@ -45,6 +45,8 @@ void TestFileUtils::RemoveDirectory(const std::string &path)
     rmdir(path.c_str());
 }
 
+namespace {
+
 TEST_F(TestFileUtils, test_read_full_should_return_success)
 {
     // create file
@@ -129,4 +131,5 @@ TEST_F(TestFileUtils, test_write_full_should_return_fail)
     uint8_t readBuffer[dataSize];
     auto readBytes = utils::FileUtils::WriteFull(-1, readBuffer, dataSize);
     ASSERT_EQ(readBytes, -1);
+}
 }

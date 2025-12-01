@@ -19,6 +19,8 @@
 
 using namespace ock::bg::util;
 
+namespace {
+
 bool TestFunc()
 {
     return true;
@@ -46,4 +48,5 @@ TEST(TestRetryTaskPool, test_RetryTaskPool_submit_start_should_return_success)
     pool->ReportCCAE(false);
 
     delete pool;
+}
 }

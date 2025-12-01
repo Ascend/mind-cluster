@@ -24,6 +24,8 @@ using namespace ock::bg::backup;
 using namespace ock::common;
 using namespace ock::memfs;
 
+namespace {
+
 class TestBackupFileManager : public testing::Test {
 public:
     void SetUp() override;
@@ -148,4 +150,5 @@ TEST_F(TestBackupFileManager, UpFs)
     g_testFileOpNotify.preloadFileNotify("/abcde");
     g_testFileOpNotify.newFileNotify("/abcd", TEST_INODE_ID);
     BackupFileManager::GetInstance().Destroy();
+}
 }

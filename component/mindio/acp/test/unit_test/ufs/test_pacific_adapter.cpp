@@ -120,6 +120,8 @@ ssize_t UfsPacificAdapterTest::GetXattrMock(const char *path, const char *name, 
     return static_cast<ssize_t>(buffer.Capacity());
 }
 
+namespace {
+
 TEST_F(UfsPacificAdapterTest, open_to_write_not_exist)
 {
     std::string fileName = "open_to_read_not_exist.txt";
@@ -779,4 +781,5 @@ TEST_F(UfsPacificAdapterTest, FileAcl_with_one_group)
 
     ASSERT_EQ(acl->entries[0].id, pos->first);
     ASSERT_EQ(acl->entries[0].perm, pos->second);
+}
 }

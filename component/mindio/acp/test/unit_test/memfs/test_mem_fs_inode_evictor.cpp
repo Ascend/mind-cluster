@@ -8,6 +8,8 @@
 
 using namespace ock::memfs;
 
+namespace {
+
 TEST(TestMemfsInodeEvictor, initialize_test)
 {
     auto ret = InodeEvictor::GetInstance().Initialize();
@@ -24,4 +26,5 @@ TEST(TestMemfsInodeEvictor, evict_helper_test)
     ASSERT_EQ(0, ret);
     evictHelper.GetLock();
     evictHelper.AddToTail();
+}
 }

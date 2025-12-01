@@ -22,6 +22,8 @@ using namespace ock::memfs;
 
 class TestFsServer : public testing::Test {};
 
+namespace {
+
 TEST_F(TestFsServer, InputPathValid_simple)
 {
     std::string path = "/hello/world.txt";
@@ -154,4 +156,5 @@ TEST_F(TestFsServer, PrintableString_chinese)
     auto result = PrintableString(path);
 
     EXPECT_EQ(expect, result);
+}
 }

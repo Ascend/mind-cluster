@@ -138,6 +138,8 @@ void TestMemFsApiMkdirs::EnableMocks() noexcept
     MOCKCPP_NS::mockAPI("&MemFileSystem::GetMeta", helper.mockGetMeta).stubs().will(invoke(GetMetaMock));
 }
 
+namespace {
+
 TEST_F(TestMemFsApiMkdirs, create_deep_path_simple)
 {
     std::vector<std::string> items { "aaa", "bbb", "ccc", "ddd", "eee" };
@@ -235,4 +237,5 @@ TEST_F(TestMemFsApiMkdirs, create_deep_path_others_create)
     mockingMkdirErrorNum = EEXIST;
     auto ret = MemFsApi::CreateDirectoryWithParents(fullPath, 0755);
     EXPECT_EQ(0, ret) << "create failed : " << errno << " : " << strerror(errno);
+}
 }

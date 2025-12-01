@@ -37,6 +37,8 @@ using namespace ock::bg::backup;
 using ::testing::_;
 using ::testing::Return;
 
+namespace {
+
 constexpr uint64_t DEFAULT_THREAD_DATA_SIZE = 1UL << 20;
 
 class TestBackupTarget : public testing::Test {
@@ -307,4 +309,5 @@ TEST_F(TestBackupTarget, do_make_file_cache_test)
     TaskInfo taskInfo{ 0, DEFAULT_THREAD_DATA_SIZE, 0, DEFAULT_THREAD_DATA_SIZE, paraLoadCtxPtr };
 
     backupTarget->DoMakeFileCache(taskId, trace, view, taskInfo);
+}
 }

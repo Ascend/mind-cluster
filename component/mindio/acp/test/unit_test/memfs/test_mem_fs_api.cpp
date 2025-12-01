@@ -58,6 +58,8 @@ void TestMemFsApi::TearDownTestSuite()
     std::cout << "test_mem_fs_api tear down" << std::endl;
 }
 
+namespace {
+
 TEST_F(TestMemFsApi, test_open_file_create_success)
 {
     std::string path = "/TestOpenFile_Create_OK.txt";
@@ -671,4 +673,5 @@ TEST_F(TestMemFsApi, test_preload_view_wait_path_eexist)
 {
     std::string path = "/test_preload_file.txt";
     PreloadProgressView::Wait(1, path);
+}
 }

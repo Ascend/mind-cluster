@@ -21,6 +21,8 @@
 using namespace ock::bg::backup;
 using namespace ock::ufs;
 
+namespace {
+
 TEST(TestDfsAdapter, Initialize)
 {
     auto marker = std::make_shared<FinishedMarker>();
@@ -54,4 +56,5 @@ TEST(TestDfsAdapter, Initialize)
     metaMap.emplace("aaa", "bbb");
     dfs.SetFileMeta(path, metaMap);
     dfs.GetFileLock(path);
+}
 }

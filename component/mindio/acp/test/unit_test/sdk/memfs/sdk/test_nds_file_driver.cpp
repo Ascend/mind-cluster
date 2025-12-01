@@ -19,6 +19,7 @@
 
 using namespace ock::memfs;
 
+namespace {
 
 TEST(TestNdsFileDriver, test_init_nds_file_driver)
 {
@@ -27,4 +28,5 @@ TEST(TestNdsFileDriver, test_init_nds_file_driver)
     ASSERT_EQ(ndsDriver->NdsAvailable(), false);
     ASSERT_EQ(ndsDriver->NdsAvailable(), false);
     ndsDriver->UnInitialize();
+}
 }

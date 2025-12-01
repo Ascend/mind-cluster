@@ -22,6 +22,8 @@
 
 using namespace ock::common;
 
+namespace {
+
 void TestTimerFun()
 {
     return;
@@ -91,4 +93,4 @@ TEST(TestTimerExecutor, test_TimerExecutor_get_out_one_task)
     delete timer;
     timer = nullptr;
 }
-
+}

@@ -18,6 +18,8 @@
 
 using namespace ock::bg::backup;
 
+namespace {
+
 TEST(TestBackupFileView, Initialize)
 {
     FileMeta meta;
@@ -45,4 +47,5 @@ TEST(TestBackupFileView, Initialize)
 
     ret = view.RemoveFile(path, meta.inode);
     ASSERT_EQ(ret, true);
+}
 }
