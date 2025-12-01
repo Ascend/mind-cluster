@@ -39,6 +39,7 @@ const (
 	ipv6LinkTypePrefix = "fe80"
 	virMark            = "vir"
 	defaultDeviceIP    = "127.0.0.1"
+	maxDevNum          = 100
 )
 
 // SetDmgr set devmanager
@@ -248,6 +249,9 @@ func (hdm *HwDevMgr) GetNodeNPUInfo() map[int32]*common.NPUInfo {
 }
 
 func (hdm *HwDevMgr) setNodeNPUInfo(logicIds []int32, devNum int32) (map[int32]*common.NPUInfo, error) {
+	if devNum > maxDevNum {
+		return nil, fmt.Errorf("invalid device num: %d", devNum)
+	}
 	var npuInfos = make(map[int32]*common.NPUInfo, devNum)
 	for _, id := range logicIds {
 		npuInfo, err := hdm.constructNPUInfo(id)

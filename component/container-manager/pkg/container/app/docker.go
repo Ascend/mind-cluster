@@ -57,15 +57,15 @@ func (d *DockerClient) close() error {
 }
 
 func (d *DockerClient) doStop(containerID, ns string) error {
-	return d.client.ContainerStop(context.Background(), containerID, nil)
+	return d.client.ContainerStop(context.Background(), containerID, container.StopOptions{})
 }
 
 func (d *DockerClient) doStart(containerID, ns string) error {
-	return d.client.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
+	return d.client.ContainerStart(context.Background(), containerID, container.StartOptions{})
 }
 
 func (d *DockerClient) getAllContainers() (interface{}, error) {
-	ctrs, err := d.client.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	ctrs, err := d.client.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get container list, error: %v", err)
 		return nil, errors.New("failed to get container list")

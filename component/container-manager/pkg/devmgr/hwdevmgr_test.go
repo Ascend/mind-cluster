@@ -173,6 +173,12 @@ func TestGetNodeNPUInfo(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(len(npuInfo), convey.ShouldEqual, len8)
 	})
+	convey.Convey("test method 'GetNodeNPUInfo' failed, devNum too large", t, func() {
+		const invalidDevNum = 200
+		_, err := mockDevMgr.setNodeNPUInfo(nil, invalidDevNum)
+		expErr := fmt.Errorf("invalid device num: %d", invalidDevNum)
+		convey.So(err, convey.ShouldResemble, expErr)
+	})
 }
 
 func TestSubscribeFaultEvent(t *testing.T) {

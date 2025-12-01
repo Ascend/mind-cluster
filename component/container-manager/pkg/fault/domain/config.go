@@ -40,7 +40,6 @@ type FaultCodeFromFile struct {
 }
 
 var (
-	faultCodeCfg                faultCodeCfgCache
 	defaultNotHandlerFaultCodes = []string{
 		"80E21007", "80E38003", "80F78006", "80C98006", "80CB8006", "81318006", "80A18006", "80A18005", "80FB8000", "8C1F8609",
 		"80CD8006", "80CD8003", "80A38006", "80A38003", "80A58006", "80A58003", "80DE1805", "80F18006", "80F18003", "80DF8006",
@@ -90,6 +89,7 @@ var (
 		"A4192C1A", "A4193216", "A419321B", "A419321C", "A42F390F", "A42F3916", "A42F391A", "A6183207", "A62F3934", "A8028801",
 		"A819320F", "A8193234", "A8193235", "80818c00", "80818C05", "80DF8402", "80818C00", "4C4BA00C",
 	}
+	faultCodeCfg faultCodeCfgCache
 )
 
 func init() {
