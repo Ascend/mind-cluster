@@ -99,8 +99,9 @@ func TestRuntimeOperatorToolInitCriClient(t *testing.T) {
 	convey.Convey("TestRuntimeOperatorToolInitCriClient", t, func() {
 		convey.Convey("should initialize CRI client successfully for containerd", func() {
 			operator := &RuntimeOperatorTool{
-				CriEndpoint: testContainerdEndpoint,
-				UseBackup:   false,
+				CriEndpoint:  testContainerdEndpoint,
+				UseOciBackup: false,
+				UseCriBackup: false,
 			}
 
 			patches := gomonkey.ApplyFuncReturn(GetConnection, &grpc.ClientConn{}, nil)
@@ -112,8 +113,9 @@ func TestRuntimeOperatorToolInitCriClient(t *testing.T) {
 
 		convey.Convey("should initialize CRI client successfully for isulad", func() {
 			operator := &RuntimeOperatorTool{
-				CriEndpoint: DefaultIsuladAddr,
-				UseBackup:   false,
+				CriEndpoint:  DefaultIsuladAddr,
+				UseOciBackup: false,
+				UseCriBackup: false,
 			}
 
 			patches := gomonkey.ApplyFuncReturn(GetConnection, &grpc.ClientConn{}, nil)
@@ -125,8 +127,9 @@ func TestRuntimeOperatorToolInitCriClient(t *testing.T) {
 
 		convey.Convey("should return error when connection fails and no backup", func() {
 			operator := &RuntimeOperatorTool{
-				CriEndpoint: testContainerdEndpoint,
-				UseBackup:   false,
+				CriEndpoint:  testContainerdEndpoint,
+				UseOciBackup: false,
+				UseCriBackup: false,
 			}
 
 			patches := gomonkey.ApplyFuncReturn(GetConnection, nil, errors.New("connection failed"))
@@ -166,34 +169,34 @@ func buildInitOciClientTestCases() []initOciClientTestCase {
 	return []initOciClientTestCase{
 		{name: "should initialize OCI client successfully for containerd",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseBackup: false}
+				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseOciBackup: false}
 				p := gomonkey.ApplyFuncReturn(GetConnection, &grpc.ClientConn{}, nil)
 				return op, p
 			},
 			hasError: false},
 		{name: "should initialize OCI client successfully for isulad",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: DefaultIsuladAddr, UseBackup: false}
+				op := &RuntimeOperatorTool{OciEndpoint: DefaultIsuladAddr, UseOciBackup: false}
 				p := gomonkey.ApplyFuncReturn(GetConnection, &grpc.ClientConn{}, nil)
 				return op, p
 			},
 			hasError: false},
 		{name: "should return error when connection fails and no backup",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseBackup: false}
+				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseOciBackup: false}
 				p := gomonkey.ApplyFuncReturn(GetConnection, nil, errors.New("connection failed"))
 				return op, p
 			},
 			hasError: true},
 		{name: "should return error when OCI endpoint is empty",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: "", UseBackup: false}
+				op := &RuntimeOperatorTool{OciEndpoint: "", UseOciBackup: false}
 				return op, nil
 			},
 			hasError: true},
 		{name: "should try backup when primary connection fails",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseBackup: true}
+				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseOciBackup: true}
 				p := gomonkey.ApplyFunc(GetConnection, func(endpoint string) (*grpc.ClientConn, error) {
 					if endpoint == testContainerdEndpoint {
 						return nil, errors.New("primary failed")
@@ -205,7 +208,7 @@ func buildInitOciClientTestCases() []initOciClientTestCase {
 			hasError: true},
 		{name: "should return error when all connections fail",
 			setup: func() (*RuntimeOperatorTool, *gomonkey.Patches) {
-				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseBackup: true}
+				op := &RuntimeOperatorTool{OciEndpoint: testContainerdEndpoint, UseOciBackup: true}
 				p := gomonkey.ApplyFuncReturn(GetConnection, nil, errors.New("all failed"))
 				return op, p
 			},
