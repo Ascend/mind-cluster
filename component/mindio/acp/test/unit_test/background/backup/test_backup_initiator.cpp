@@ -26,6 +26,8 @@ using namespace ock::memfs;
 using namespace ock::ufs;
 using namespace ock::bg;
 
+namespace {
+
 constexpr uint64_t DEFAULT_THREAD_DATA_SIZE = 1UL << 20;
 
 class TestBackupInitiator : public testing::Test {
@@ -115,4 +117,5 @@ TEST_F(TestBackupInitiator, check_process_mark_test)
 {
     auto ret = backupTarget->CheckProcessingMark();
     ASSERT_TRUE(ret == 0);
+}
 }

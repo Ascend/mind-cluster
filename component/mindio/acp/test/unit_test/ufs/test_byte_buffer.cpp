@@ -17,6 +17,8 @@
 
 using namespace ock::ufs::utils;
 
+namespace {
+
 TEST(TestByteBuffer, wrapped_byte_buffer)
 {
     uint8_t buf[64];
@@ -46,4 +48,5 @@ TEST(TestByteBuffer, wrapped_byte_buffer)
     bb.AddOffset(60);
     offset = bb.Offset();
     ASSERT_EQ(sizeof(buf), offset);
+}
 }

@@ -72,6 +72,8 @@ void TestInodePermission::TearDown()
     GlobalMockObject::verify();
 }
 
+namespace {
+
 TEST_F(TestInodePermission, common_file_owner_read_permission)
 {
     auto inodePerm = std::make_shared<InodePermission>(false, S_IRUSR, 1001, 2002);
@@ -282,4 +284,5 @@ TEST_F(TestInodePermission, acl_to_single_group)
 
     ok = inodePerm->ContainsPermission(PermitType::PERM_EXECUTE);
     ASSERT_FALSE(ok);
+}
 }

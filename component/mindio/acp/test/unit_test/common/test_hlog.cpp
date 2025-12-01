@@ -80,6 +80,8 @@ int TestHlog::LoggerInitialize()
 
 using namespace ock::hlog;
 
+namespace {
+
 TEST_F(TestHlog, test_create_instace_error_param_should_fail)
 {
     Hlog::gLogger = nullptr;
@@ -216,4 +218,5 @@ TEST_F(TestHlog, test_log_should_success)
     std::string pattern = "[%Y-%m-%d]%v";
     Hlog::gLogger->SetPattern(pattern);
     Hlog::gLogger->FlushAudit();
+}
 }

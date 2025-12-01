@@ -23,6 +23,7 @@
 using namespace ock::common;
 using namespace ock::memfs;
 
+namespace {
 
 TEST(TestFileCheckUtils, test_check_file_exist_should_return_success)
 {
@@ -164,4 +165,5 @@ TEST(TestFileCheckUtils, test_recycle_inodes)
     instance.RecycleInodes(blockSize);
     memFileSystem.Destroy();
     InodeEvictor::GetInstance().Destroy();
+}
 }

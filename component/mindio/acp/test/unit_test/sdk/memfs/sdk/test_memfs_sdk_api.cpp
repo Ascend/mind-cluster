@@ -22,6 +22,8 @@ std::string TestMemfsSdkApi::testPrefix = "/mnt/dpc01/test_sdk_api/";
 
 constexpr uint32_t TEST_BLK_SIZE = 4096;
 
+namespace {
+
 TEST_F(TestMemfsSdkApi, test_make_dir_should_return_success)
 {
     std::string path = testPrefix + "test";
@@ -233,4 +235,5 @@ TEST_F(TestMemfsSdkApi, test_preload_file_should_return_success)
 
     result = MemfsPreloadFile(path.c_str());
     ASSERT_EQ(result, 0);
+}
 }

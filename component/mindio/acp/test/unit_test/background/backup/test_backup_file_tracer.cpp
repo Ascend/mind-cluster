@@ -18,6 +18,8 @@
 
 using namespace ock::bg::backup;
 
+namespace {
+
 TEST(TestBackupFileTracer, Initialize)
 {
     BackupFileTracer fileTracer;
@@ -28,4 +30,5 @@ TEST(TestBackupFileTracer, Initialize)
     fileTracer.CloseFind(1, tracer);
     auto find = fileTracer.CloseFind(1, tracer);
     ASSERT_EQ(true, find);
+}
 }

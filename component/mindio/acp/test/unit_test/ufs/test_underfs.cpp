@@ -46,6 +46,8 @@ void TestUnderFS::TearDown()
     ufs = nullptr;
 }
 
+namespace {
+
 TEST_F(TestUnderFS, test_underfs_factory_default)
 {
     std::shared_ptr<PacificAdapter> base = std::make_shared<PacificAdapter>("/tmp/test_underfs");
@@ -100,4 +102,5 @@ TEST_F(TestUnderFS, test_underfs_manager)
     ASSERT_EQ(0, ret);
 
     UnderFsManager::GetInstance().Destroy();
+}
 }

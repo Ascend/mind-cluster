@@ -22,7 +22,7 @@
 using namespace ock::common::config;
 using namespace ock::hlog;
 
-int GetWorkPath(std::string &configPath)
+static int GetWorkPath(std::string &configPath)
 {
     std::string linkedPath = "/proc/" + std::to_string(getpid()) + "/exe";
     char realPath[PATH_MAX];

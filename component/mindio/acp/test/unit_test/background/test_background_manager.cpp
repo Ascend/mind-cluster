@@ -18,9 +18,12 @@
 
 using namespace ock::bg;
 
+namespace {
+
 TEST(TestBackgroundManager, run_manager)
 {
     int ret = ock::bg::BackgroundManager::GetInstance().Initialize();
     ASSERT_EQ(0, ret);
     ock::bg::BackgroundManager::GetInstance().Destroy();
+}
 }

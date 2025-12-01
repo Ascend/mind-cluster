@@ -28,6 +28,8 @@ template <class OStream> OStream &operator << (OStream &stream, const FileWriteP
     return stream;
 }
 
+namespace {
+
 std::string ToString(const FileWriteParam &param)
 {
     std::stringstream ss;
@@ -108,4 +110,5 @@ TEST(TestFsOperation, mutil_read_split_to_slice_test)
         ASSERT_LT(task.pageIndex, 10UL) << "pageIndex=" << task.pageIndex;
         ASSERT_LT(task.pageOffset, buffers[task.pageIndex].size) << "pageOffset=" << task.pageOffset;
     }
+}
 }

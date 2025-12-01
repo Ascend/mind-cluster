@@ -22,6 +22,8 @@ protected:
     SystemUserGroupLoader loader;
 };
 
+namespace {
+
 TEST_F(TestSystemUserGroupLoader, root_user_load)
 {
     auto user = loader.LoadUser(0);
@@ -58,4 +60,5 @@ TEST_F(TestSystemUserGroupLoader, not_exist_group)
     uid_t groupid = 88889999U;
     auto group = loader.LoadGroup(groupid);
     ASSERT_TRUE(group == nullptr);
+}
 }

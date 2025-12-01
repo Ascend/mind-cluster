@@ -17,6 +17,8 @@
 
 using namespace ock::memfs;
 
+namespace {
+
 TEST_F(MemFsApiDtFuzz, mem_fs_write_fuzz)
 {
     DT_Enable_Leak_Check(0, 0);
@@ -127,6 +129,7 @@ TEST_F(MemFsApiDtFuzz, mem_fs_rename_and_link_test)
         MemFsLinkFile(tarPath.c_str(), srcPath.c_str());
     }
     DT_FUZZ_END()
+}
 }
 
 void MemFsApiDtFuzz::SetUpTestSuite()
