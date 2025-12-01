@@ -18,6 +18,7 @@ constexpr int32_t NUM_THREE = 3;
 
 using namespace ock::ttp;
 
+namesapce {
 ProcessorPtr g_processor0 = nullptr;
 ProcessorPtr g_processor1 = nullptr;
 ControllerPtr g_controller1 = nullptr;
@@ -213,3 +214,4 @@ TEST_F(C2PythonDtFuzz, processor_service_fuzz)
 void C2PythonDtFuzz::SetUpTestSuite() {}
 
 void C2PythonDtFuzz::TearDownTestSuite() {}
+}
