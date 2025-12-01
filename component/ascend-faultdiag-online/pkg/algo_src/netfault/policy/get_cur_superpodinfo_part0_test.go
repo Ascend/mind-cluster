@@ -607,7 +607,30 @@ func TestGetReasoningServerSuperPodNpuMap(t *testing.T) {
 }
 
 func TestHandleReasoningServer(t *testing.T) {
-
+	convey.Convey("TestHandleReasoningSrever", t, func() {
+		convey.Convey("empty super pod info", func() {
+			ret, _ := handleReasoningServer(nil, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("len npu map == 0", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			patch := gomonkey.ApplyFuncReturn(getReasoningServerSuperPodNpuMap, map[string]algo.NpuInfo{})
+			defer patch.Reset()
+			ret, _ := handleReasoningServer(superPodInfo, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("len npu map != 0", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			patch := gomonkey.ApplyFuncReturn(getReasoningServerSuperPodNpuMap, map[string]algo.NpuInfo{
+				"xx.xx": algo.NpuInfo{
+					IP: "xx.xx",
+				},
+			})
+			defer patch.Reset()
+			ret, _ := handleReasoningServer(superPodInfo, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestGetA51D2DServerLevelInfo(t *testing.T) {
@@ -704,9 +727,56 @@ func TestGetReasoningServerNpuLinkPath(t *testing.T) {
 }
 
 func TestGetReasoningServerNpuLinkPathStr(t *testing.T) {
-
+	convey.Convey("TestGetReasoningServerNpuLinkPathStr", t, func() {
+		convey.Convey("invalid input", func() {
+			serverIds := []int{1}
+			serverMap := map[string]*ServerInfo{
+				"1": &ServerInfo{ServerIndex: "1",
+					NpuMap: map[string]*NpuInfo{},
+				},
+			}
+			getReasoningServerNpuLinkPath(nil, serverIds, serverMap)
+		})
+		convey.Convey("invalid level", func() {
+			paths := make(map[string][]string)
+			serverIds := []int{1}
+			serverMap := map[string]*ServerInfo{
+				"1": &ServerInfo{ServerIndex: "1",
+					NpuMap: map[string]*NpuInfo{
+						"1": &NpuInfo{
+							PhyId: "1",
+							LevelList: []LevelElement{
+								{NetLayer: 0, RankAddrList: []RankAddrItem{{Addr: "addr1"}, {Addr: "addr2"}}},
+							},
+						},
+					},
+				},
+			}
+			getReasoningServerNpuLinkPath(paths, serverIds, serverMap)
+			convey.So(len(paths) == 0, convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestGetReasoningServerNpuLinkPathStrPartTwo(t *testing.T) {
-
+	convey.Convey("TestGetReasoningServerNpuLinkPathStr", t, func() {
+		convey.Convey("valid level", func() {
+			paths := make(map[string][]string)
+			serverIds := []int{1}
+			serverMap := map[string]*ServerInfo{
+				"1": &ServerInfo{ServerIndex: "1",
+					NpuMap: map[string]*NpuInfo{
+						"1": &NpuInfo{
+							PhyId: "1",
+							LevelList: []LevelElement{
+								{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "addr1", PlaneId: "0"}, {Addr: "addr2", PlaneId: "1"}}},
+							},
+						},
+					},
+				},
+			}
+			getReasoningServerNpuLinkPath(paths, serverIds, serverMap)
+			convey.So(len(paths) > 0, convey.ShouldBeTrue)
+		})
+	})
 }

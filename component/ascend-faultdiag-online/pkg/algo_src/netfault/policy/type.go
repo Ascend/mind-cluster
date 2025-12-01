@@ -160,7 +160,7 @@ type RackTopology struct {
 	// Version represents the version information
 	Version string `json:"version"`
 	// HardwareType indicates the type of hardware
-	HardwareType string `json:"hardware_type"`
+	HardwareType string `json:"hardwareType"`
 	// PeerCount is the number of peers
 	PeerCount int `json:"peer_count"`
 	// PeerList is a slice of peer

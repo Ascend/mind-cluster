@@ -638,8 +638,8 @@ func TestAddNewSuperPodDetection(t *testing.T) {
 	})
 }
 
-func TestStartRoceRoutine(t *testing.T) {
-	convey.Convey("TestStartRoceRoutine", t, func() {
+func TestStartRoCERoutine(t *testing.T) {
+	convey.Convey("TestStartRoCERoutine", t, func() {
 		convey.Convey("start failed", func() {
 			var wg sync.WaitGroup
 			wg.Add(1)
@@ -647,7 +647,7 @@ func TestStartRoceRoutine(t *testing.T) {
 				return
 			})
 			defer patch.Reset()
-			startRoceRoutine(&wg)
+			startRoCERoutine(&wg)
 			wg.Wait()
 		})
 	})
@@ -710,11 +710,11 @@ func TestMakeAlgoRoceParam(t *testing.T) {
 }
 
 func TestGetRoceDetectionSuperPodFile(t *testing.T) {
-	convey.Convey("test func getRoceDetectionSuperPodFile", t, func() {
+	convey.Convey("test func getRoceDetectionSuperPodFiles", t, func() {
 		convey.Convey("return nil when ReadFile err", func() {
 			patch := gomonkey.ApplyFuncReturn(os.ReadFile, nil, errors.New("err"))
 			defer patch.Reset()
-			ret1, ret2 := getRoceDetectionSuperPodFile("", "")
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
 			convey.So(ret1, convey.ShouldBeNil)
 			convey.So(ret2, convey.ShouldBeNil)
 		})
@@ -723,7 +723,7 @@ func TestGetRoceDetectionSuperPodFile(t *testing.T) {
 			patch2 := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("err"))
 			defer patch1.Reset()
 			defer patch2.Reset()
-			ret1, ret2 := getRoceDetectionSuperPodFile("", "")
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
 			convey.So(ret1, convey.ShouldBeNil)
 			convey.So(ret2, convey.ShouldBeNil)
 		})
@@ -732,7 +732,7 @@ func TestGetRoceDetectionSuperPodFile(t *testing.T) {
 			patch2 := gomonkey.ApplyFuncReturn(loopWaitSuperPodDirAndCheckConfigFile, true)
 			defer patch1.Reset()
 			defer patch2.Reset()
-			ret1, ret2 := getRoceDetectionSuperPodFile("", "")
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
 			convey.So(len(ret1) > 0, convey.ShouldBeTrue)
 			convey.So(len(ret2) > 0, convey.ShouldBeTrue)
 		})
