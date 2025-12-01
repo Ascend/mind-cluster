@@ -354,8 +354,6 @@ const (
 const (
 	// ServerTypeLabelKey the node label key of server type
 	ServerTypeLabelKey = "servertype"
-	// AcceleratorTypeKey the node label key of accelerator type
-	AcceleratorTypeKey = "accelerator-type"
 	// ServerUsageLabelKey is to indicate the usage of server
 	// is infer or training, currently only related to A800IA2 infer server
 	ServerUsageLabelKey = "server-usage"

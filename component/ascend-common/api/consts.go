@@ -41,6 +41,11 @@ const (
 	NodeSNAnnotation = "product-serial-number"
 	// BaseDevInfoAnno annotation value is device base info
 	BaseDevInfoAnno = "baseDeviceInfos"
+
+	// AcceleratorTypeKey the node label key of accelerator type
+	AcceleratorTypeKey = "accelerator-type"
+	// AcceleratorTypeModule910A3SuperPod for 910A3-SuperPod hardware
+	AcceleratorTypeModule910A3SuperPod = "module-a3-16-super-pod"
 )
 
 // Pod
