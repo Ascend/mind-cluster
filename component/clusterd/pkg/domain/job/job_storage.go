@@ -12,7 +12,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/common/util"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"clusterd/pkg/domain/superpod"
@@ -26,12 +25,23 @@ const (
 var jobSummaryMap sync.Map
 
 // GetJobCache get job cache info
+// Do not modify the reference type field of the return value.
+// If you want to modify it, please call GetJobCacheDeepCopy
 func GetJobCache(jobKey string) (constant.JobInfo, bool) {
 	jobInfo, ok := jobSummaryMap.Load(jobKey)
 	if !ok {
 		return constant.JobInfo{}, ok
 	}
 	return jobInfo.(constant.JobInfo), ok
+}
+
+// GetJobCacheDeepCopy get deep copy job cache info
+func GetJobCacheDeepCopy(jobKey string) (constant.JobInfo, bool) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return constant.JobInfo{}, ok
+	}
+	return *DeepCopyJobInfo(&jobInfo), ok
 }
 
 // GetAllJobCache get all job cache info
@@ -49,13 +59,8 @@ func GetAllJobCache() map[string]constant.JobInfo {
 		allJob[jobKey] = jobInfo
 		return true
 	})
-	newJob := new(map[string]constant.JobInfo)
 	hwlog.RunLog.Debugf("get all job cache, allJob: %v", allJob)
-	err := util.DeepCopy(newJob, allJob)
-	if err != nil {
-		hwlog.RunLog.Errorf("copy job failed, err: %v", err)
-	}
-	return *newJob
+	return allJob
 }
 
 // SaveJobCache save job cache info

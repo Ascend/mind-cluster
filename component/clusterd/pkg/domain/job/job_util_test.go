@@ -23,6 +23,7 @@ import (
 const (
 	vcJobKey      = "job"
 	nodeName1     = "node1"
+	nodeName2     = "node2"
 	podName1      = "pod1"
 	podName2      = "pod2"
 	podName3      = "pod3"
@@ -30,6 +31,7 @@ const (
 	podUid1       = "123"
 	podUid2       = "456"
 	podUid3       = "789"
+	deviceName1   = "device1"
 
 	pgMinMember2    = 2
 	pgMinMember2Str = "2"
@@ -180,7 +182,6 @@ func TestGetJobBasicInfoByPodGroup(t *testing.T) {
 
 func TestUpdateCmAndCache(t *testing.T) {
 	pgDemo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
-	jobDemo := getDemoJob(jobName1, jobNameSpace, jobUid1)
 	mockInitRankTableByPod := gomonkey.ApplyFunc(pod.ConstructRankTableByPod, getDemoRankTable)
 	defer mockInitRankTableByPod.Reset()
 	convey.Convey("test UpdateCmAndCache Job status", t, func() {
@@ -190,7 +191,7 @@ func TestUpdateCmAndCache(t *testing.T) {
 					return true
 				})
 			defer mockUpdateCM.Reset()
-			UpdateCmAndCache(StatusJobRunning, constant.JobInfo{}, *pgDemo, map[string]v1.Pod{})
+			UpdateCmAndCache(StatusJobRunning, "", *pgDemo, map[string]v1.Pod{})
 			defer DeleteJobCache(jobUid1)
 			jobInfo, ok := GetJobCache(jobUid1)
 			convey.So(ok, convey.ShouldEqual, true)
@@ -202,7 +203,7 @@ func TestUpdateCmAndCache(t *testing.T) {
 					return true
 				})
 			defer mockUpdateCM.Reset()
-			UpdateCmAndCache(StatusJobRunning, jobDemo, *pgDemo, map[string]v1.Pod{})
+			UpdateCmAndCache(StatusJobRunning, jobUid1, *pgDemo, map[string]v1.Pod{})
 			defer DeleteJobCache(jobUid1)
 			jobInfo, ok := GetJobCache(jobUid1)
 			convey.So(ok, convey.ShouldEqual, true)
@@ -214,7 +215,7 @@ func TestUpdateCmAndCache(t *testing.T) {
 					return false
 				})
 			defer mockUpdateCM.Reset()
-			UpdateCmAndCache(StatusJobRunning, jobDemo, *pgDemo, map[string]v1.Pod{})
+			UpdateCmAndCache(StatusJobRunning, jobUid1, *pgDemo, map[string]v1.Pod{})
 			defer DeleteJobCache(jobUid1)
 			_, ok := GetJobCache(jobUid1)
 			convey.So(ok, convey.ShouldEqual, false)
@@ -421,5 +422,39 @@ func TestGetMindIeServerJobDeviceInfoMap(t *testing.T) {
 			convey.So(jobInfoMap, convey.ShouldBeEmpty)
 			convey.So(deviceInfoMap, convey.ShouldBeEmpty)
 		})
+	})
+}
+
+func TestDeepCopyJobInfo(t *testing.T) {
+	convey.Convey("test DeepCopyJobInfo", t, func() {
+		jobDemo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+		jobDemo.NodeNames = map[string]string{podName1: nodeName1}
+		serverHccl := constant.ServerHccl{
+			ServerID: masterIp,
+		}
+		deviceList := constant.Device{
+			DeviceID: deviceName1,
+		}
+		serverHccl.DeviceList = append(serverHccl.DeviceList, deviceList)
+		jobDemo.PreServerList = append(jobDemo.PreServerList, serverHccl)
+		jobDemo.JobRankTable = constant.RankTable{
+			Status:      StatusJobCompleted,
+			ServerCount: pgMinMember2Str,
+			Total:       1,
+			ServerList:  jobDemo.PreServerList,
+		}
+
+		copyJobInfo := DeepCopyJobInfo(&jobDemo)
+		convey.So(*copyJobInfo, convey.ShouldResemble, jobDemo)
+
+		jobDemo.Name = jobName2
+		jobDemo.Key = jobUid2
+		jobDemo.NodeNames = map[string]string{podName2: nodeName2}
+		jobDemo.PreServerList = []constant.ServerHccl{}
+		jobDemo.JobRankTable.ServerList = []constant.ServerHccl{}
+		convey.So(jobDemo.Key, convey.ShouldNotEqual, copyJobInfo.Key)
+		convey.So(jobDemo.NodeNames, convey.ShouldNotResemble, copyJobInfo.NodeNames)
+		convey.So(jobDemo.PreServerList, convey.ShouldNotResemble, copyJobInfo.PreServerList)
+		convey.So(jobDemo.JobRankTable.ServerList, convey.ShouldNotResemble, copyJobInfo.JobRankTable.ServerList)
 	})
 }

@@ -128,9 +128,10 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) c
 }
 
 // UpdateCmAndCache update cm and cache
-func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.PodGroup,
+func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	podsInJob map[string]v1.Pod) {
-	if jobInfo.Name == "" {
+	jobInfo, ok := GetJobCacheDeepCopy(jobKey)
+	if !ok || jobInfo.Name == "" {
 		jobInfo = getJobBasicInfoByPG(podGroup, podsInJob)
 	}
 	if jobInfo.AddTime == 0 {
@@ -172,12 +173,11 @@ func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.
 }
 
 func setUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
-	if jobInfo.NodeNames == nil {
-		jobInfo.NodeNames = make(map[string]string)
-	}
+	nodeNamesMap := make(map[string]string, len(podsInJob))
 	for _, podTemp := range podsInJob {
-		jobInfo.NodeNames[string(podTemp.UID)] = podTemp.Spec.NodeName
+		nodeNamesMap[string(podTemp.UID)] = podTemp.Spec.NodeName
 	}
+	jobInfo.NodeNames = nodeNamesMap
 }
 
 func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
@@ -322,4 +322,38 @@ func GetMindIeServerJobAndUsedDeviceInfoMap() (map[string]map[string]constant.Jo
 		}
 	}
 	return jobInfoMap, deviceInfoMap
+}
+
+// DeepCopyServerHcclSlice deep copy ServerHccl Slice
+func DeepCopyServerHcclSlice(serverList []constant.ServerHccl) []constant.ServerHccl {
+	if len(serverList) == 0 {
+		return []constant.ServerHccl{}
+	}
+	serverListCopy := make([]constant.ServerHccl, 0, len(serverList))
+	for _, server := range serverList {
+		serverCopy := server
+		if server.DeviceList != nil {
+			serverCopy.DeviceList = make([]constant.Device, len(server.DeviceList))
+			// if Device has reference type field, should not use copy
+			copy(serverCopy.DeviceList, server.DeviceList)
+		}
+		serverListCopy = append(serverListCopy, serverCopy)
+	}
+	return serverListCopy
+}
+
+// DeepCopyJobInfo deep copy jobInfo
+func DeepCopyJobInfo(job *constant.JobInfo) *constant.JobInfo {
+	// shallow copy
+	copyJob := *job
+	// deep copy
+	if job.NodeNames != nil {
+		copyJob.NodeNames = make(map[string]string, len(job.NodeNames))
+		for k, v := range job.NodeNames {
+			copyJob.NodeNames[k] = v
+		}
+	}
+	copyJob.PreServerList = DeepCopyServerHcclSlice(job.PreServerList)
+	copyJob.JobRankTable.ServerList = DeepCopyServerHcclSlice(job.JobRankTable.ServerList)
+	return &copyJob
 }
