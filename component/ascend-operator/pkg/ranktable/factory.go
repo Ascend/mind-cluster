@@ -8,6 +8,7 @@ Package ranktable is using for reconcile AscendJob.
 package ranktable
 
 import (
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
@@ -23,13 +24,30 @@ func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
 		return ranktablev1.New(job)
 	}
 	// for A5 ranktable
-	if val, ok := job.Annotations[ranktableVersion]; ok && val == version2dot0 {
+	if useV2dot0(job) {
 		hwlog.RunLog.Info("use ranktable generator v2.0")
 		return v2dot0.New(job)
 	}
-	if _, ok := job.Annotations[utils.AnnoKeyOfSuperPod]; ok {
-		hwlog.RunLog.Info("sp-block is exist, use ranktable v1_2")
+	if useV1dot2(job) {
+		hwlog.RunLog.Info("A3 super pod job, use ranktable v1_2")
 		return v1dot2.New(job)
 	}
 	return ranktablev1.New(job)
+}
+
+func useV2dot0(job *mindxdlv1.AscendJob) bool {
+	if val, ok := job.Annotations[ranktableVersion]; ok && val == version2dot0 {
+		return true
+	}
+	return false
+}
+
+func useV1dot2(job *mindxdlv1.AscendJob) bool {
+	if _, spBlockExit := job.Annotations[utils.AnnoKeyOfSuperPod]; spBlockExit {
+		return true
+	}
+	if value, ok := job.Labels[api.AcceleratorTypeKey]; ok && value == api.AcceleratorTypeModule910A3SuperPod {
+		return true
+	}
+	return false
 }

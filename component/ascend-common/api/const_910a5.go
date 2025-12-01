@@ -47,8 +47,6 @@ const (
 	Ascend800ia5SuperPod = "800I-SuperPod-A5-8"
 	// Ascend800ta5SuperPod superpod training server label
 	Ascend800ta5SuperPod = "800T-SuperPod-A5-8"
-	// AcceleratorTypeKey  Accelerator type label
-	AcceleratorTypeKey = "accelerator-type"
 )
 
 const (
