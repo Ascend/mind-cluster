@@ -49,7 +49,9 @@ func setupGetNodeDeviceAndSuperPodIDPatches() *gomonkey.Patches {
 				return nil, ""
 			}
 			return &api.NodeDevice{
-				NodeName: node.Name,
+				NodeName:        node.Name,
+				ServerType:      api.VersionA5,
+				AcceleratorType: api.A5PodType,
 				DeviceMap: map[string]string{
 					"device1": "superDevice1",
 				},

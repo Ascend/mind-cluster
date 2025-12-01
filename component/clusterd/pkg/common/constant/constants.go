@@ -245,3 +245,8 @@ const (
 	// ReleaseTimeOut release timeout
 	ReleaseTimeOut = 10 * time.Second
 )
+
+const (
+	// RasRoceKey the special key of super pod dir
+	RasRoceKey = "roce"
+)

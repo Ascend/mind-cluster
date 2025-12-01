@@ -6,6 +6,7 @@ package pingmesh
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
 	"clusterd/pkg/common/constant"
@@ -30,6 +31,10 @@ func TestIsNeedToStop(t *testing.T) {
 func TestUpdatePingMeshConfigCM(t *testing.T) {
 	convey.Convey("Testing updatePingMeshConfigCM", t, func() {
 		convey.Convey("when newConfigInfo is nil, switch status should be off", func() {
+			mock1 := gomonkey.ApplyFunc(isValidConfigPingMesh, func(_ constant.ConfigPingMesh) bool {
+				return true
+			})
+			defer mock1.Reset()
 			updatePingMeshConfigCM(nil)
 			convey.So(rasNetDetectInst.CheckIsOn(), convey.ShouldBeFalse)
 		})
@@ -39,6 +44,10 @@ func TestUpdatePingMeshConfigCM(t *testing.T) {
 					Activate: "on",
 				},
 			}
+			mock1 := gomonkey.ApplyFunc(isValidConfigPingMesh, func(_ constant.ConfigPingMesh) bool {
+				return true
+			})
+			defer mock1.Reset()
 			updatePingMeshConfigCM(newConfigInfo)
 			convey.So(rasNetDetectInst.CheckIsOn(), convey.ShouldBeTrue)
 		})
