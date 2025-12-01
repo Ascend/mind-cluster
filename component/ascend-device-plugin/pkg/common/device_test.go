@@ -348,11 +348,11 @@ func TestCheckL1toL2PlaneDown(t *testing.T) {
 // TestConvertToSwitchLevelStr for test convertToSwitchLevelStr
 func TestConvertToSwitchLevelStr(t *testing.T) {
 	testCases := map[int]string{
-		NotHandleFaultLevel:   NotHandleFaultLevelStr,
-		ResetErrorLevel:       RestartRequestFaultLevelStr,
-		PreSeparateFaultLevel: PreSeparateFaultLevelStr,
-		SeparateFaultLevel:    SeparateFaultLevelStr,
-		-1:                    NotHandleFaultLevelStr,
+		NotHandleFaultLevel:      NotHandleFaultLevelStr,
+		RestartRequestFaultLevel: RestartRequestFaultLevelStr,
+		PreSeparateFaultLevel:    PreSeparateFaultLevelStr,
+		SeparateFaultLevel:       SeparateFaultLevelStr,
+		-1:                       NotHandleFaultLevelStr,
 	}
 
 	for input, expected := range testCases {

@@ -494,7 +494,7 @@ func convertToSwitchLevelStr(level int) string {
 		faultLevelStr = NotHandleFaultLevelStr
 	case SubHealthFaultLevel:
 		faultLevelStr = SubHealthFaultLevelStr
-	case ResetErrorLevel:
+	case RestartRequestFaultLevel:
 		faultLevelStr = RestartRequestFaultLevelStr
 	case PreSeparateFaultLevel:
 		faultLevelStr = PreSeparateFaultLevelStr
