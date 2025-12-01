@@ -610,7 +610,7 @@ func readCSVFile(filePath string, startTime int64) ([]map[string]any, error) {
 	return data, nil
 }
 
-func makeAlgoRockParam(clusterPath string, superPodNames []string) map[string]any {
+func makeAlgoRoceParam(clusterPath string, superPodNames []string) map[string]any {
 	confFile := filepath.Join(clusterPath, roceDirName)
 	paramMap := checkDiffConfig(confFile)
 	if paramMap == nil {
@@ -690,7 +690,7 @@ func startRoceDetection(clusterPath string) {
 		markFalseDetection(roceDirPath)
 		return
 	}
-	algoParam := makeAlgoRockParam(clusterPath, superPodNames)
+	algoParam := makeAlgoRoceParam(clusterPath, superPodNames)
 	// empty string needs for the detection of super pod roce
 	detectObj := algo.NewNetDetect("roce")
 	detectObj.SetFaultDetectParam(algoParam, npuMap)
