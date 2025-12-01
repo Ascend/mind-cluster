@@ -40,6 +40,12 @@ func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Pat
 	return gomonkey.ApplyFuncReturn(devmanager.GetDeviceManager, m, err)
 }
 
+func patchGetDeviceManagerByAutoInit(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
+	return gomonkey.ApplyFunc(devmanager.GetDeviceManager, func(resetTimeout int) (*devmanager.DeviceManager, error) {
+		return m, err
+	})
+}
+
 func patchGetChipBaseInfos(chips []*common.ChipBaseInfo, err error) *gomonkey.Patches {
 	return gomonkey.ApplyMethod(new(devmanager.DeviceManager), "GetChipBaseInfos",
 		func(_ *devmanager.DeviceManager) ([]*common.ChipBaseInfo, error) {
@@ -64,12 +70,15 @@ func patchGetSuperPodInfo(spInfo common.CgoSuperPodInfo, err error) *gomonkey.Pa
 func TestNew(t *testing.T) {
 	convey.Convey("Testing New", t, func() {
 		convey.Convey("01-GetDeviceManager failed should return error", func() {
-			patch := patchGetDeviceManager(&devmanager.DeviceManager{}, errors.New("getDeviceManager failed"))
+			patch := patchGetDeviceManagerByAutoInit(&devmanager.DeviceManager{}, errors.New("getDeviceManager failed"))
 			defer patch.Reset()
 			_, err := New()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patch := patchGetDeviceManager(nil, nil)
+		m := &devmanager.DeviceManager{
+			DevType: common.Ascend910A3,
+		}
+		patch := patchGetDeviceManagerByAutoInit(m, nil)
 		defer patch.Reset()
 		convey.Convey("02-GetChipBaseInfos failed should return error", func() {
 			patch1 := patchGetChipBaseInfos(nil, errors.New("getChipBaseInfos failed"))

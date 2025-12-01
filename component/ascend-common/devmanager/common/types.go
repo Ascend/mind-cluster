@@ -413,6 +413,9 @@ type HccspingMeshOperate struct {
 	Timeout      int
 	TaskInterval int
 	TaskId       int
+
+	// UB compressed attributes (multi-SrcEID support) for A5
+	UBPingMeshOperateList []UBPingMeshOperate
 }
 
 // HccspingMeshInfo refers to the result of hccsping mesh
@@ -427,6 +430,9 @@ type HccspingMeshInfo struct {
 	ReplyStatNum []int
 	PingTotalNum []int
 	DestNum      int
+
+	// UB compressed attributes (multi-SrcEID support) for A5
+	UBPingMeshInfoList []UBPingMeshInfo
 }
 
 // ElabelInfo elabel information structure

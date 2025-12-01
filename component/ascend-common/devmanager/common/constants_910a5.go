@@ -29,6 +29,8 @@ var (
 )
 
 const (
+	// Ascend910A5 ascend 910 A5
+	Ascend910A5 = "Ascend910A5"
 	// MaxUBEIDByteLen max eid bytes len for device ub port
 	MaxUBEIDByteLen = 128 / 8
 
