@@ -1,17 +1,15 @@
-/*
-Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-	Licensed under the Apache License, Version 2.0 (the "License");
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
 
-	http://www.apache.org/licenses/LICENSE-2.0
-
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 // Package dpucontrol is used for find dpu.
@@ -47,10 +45,15 @@ func init() {
 	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
-	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	err := hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestSaveDpuConfigToNode(t *testing.T) {
+	patcheIsExist := gomonkey.ApplyFunc(utils.IsExist, func(path string) bool { return true })
+	defer patcheIsExist.Reset()
 	convey.Convey("TestSaveDpuConfigToNode1", t, func() {
 		expectedErr := "config load error"
 		patches := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "loadDpuConfigFromFile", func(_ *DpuFilter) error {
@@ -99,6 +102,8 @@ func TestSaveDpuConfigToNode(t *testing.T) {
 }
 
 func TestSaveDpuConfigToNode2(t *testing.T) {
+	patcheIsExist := gomonkey.ApplyFunc(utils.IsExist, func(path string) bool { return true })
+	defer patcheIsExist.Reset()
 	convey.Convey("TestSaveDpuConfigToNodeUBCase4", t, func() {
 		const expectedErr = "get dpu info err"
 		df := DpuFilter{}
@@ -149,9 +154,16 @@ func TestSaveDpuConfigToNode2(t *testing.T) {
 	})
 }
 
-func TestSaveDpuConfigToNodeSuccess(t *testing.T) {
+func TestSaveDpuConfigToNode3(t *testing.T) {
+	convey.Convey("TestNoDPUConfig", t, func() {
+		df := DpuFilter{}
+		err := df.SaveDpuConfToNode(&devmanager.DeviceManagerMock{})
+		convey.So(err, convey.ShouldBeNil)
+	})
 	convey.Convey("TestSaveDpuConfigToNodeSuccess", t, func() {
 		df := DpuFilter{}
+		patcheIsExist := gomonkey.ApplyFunc(utils.IsExist, func(path string) bool { return true })
+		defer patcheIsExist.Reset()
 		patche := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "loadDpuConfigFromFile", func(_ *DpuFilter) error {
 			df.UserConfig.BusType = busTypePcie
 			return nil
@@ -810,6 +822,27 @@ func TestReadFileContent(t *testing.T) {
 }
 
 func TestGetInterfaceIps(t *testing.T) {
+	convey.Convey("TestGetInterfaceIps2", t, func() {
+		mockIface := net.Interface{Index: 1, Name: "single_addr_iface"}
+
+		patch := gomonkey.ApplyFunc(net.InterfaceByName, func(name string) (*net.Interface, error) {
+			return &mockIface, nil
+		})
+		defer patch.Reset()
+		const (
+			mockIP   = 127
+			mockMask = 255
+		)
+		addr := &net.IPNet{IP: net.IPv4(mockIP, 0, 0, 1),
+			Mask: net.IPv4Mask(mockMask, mockMask, mockMask, mockMask)}
+		addrsPatch := gomonkey.ApplyFunc(mockIface.Addrs, func() ([]net.Addr, error) {
+			return []net.Addr{addr}, nil
+		})
+		defer addrsPatch.Reset()
+		ip := getInterfaceIPs("single_addr_iface")
+		convey.So(ip, convey.ShouldEqual, "127.0.0.1")
+	})
+
 	convey.Convey("Error get interface", t, func() {
 		patch := gomonkey.ApplyFunc(net.InterfaceByName, func(name string) (*net.Interface, error) {
 			return nil, fmt.Errorf("get interface error")

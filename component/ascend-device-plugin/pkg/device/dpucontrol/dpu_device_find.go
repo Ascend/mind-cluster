@@ -33,11 +33,14 @@ import (
 )
 
 func (df *DpuFilter) SaveDpuConfToNode(dmgr devmanager.DeviceInterface) error {
+	if !utils.IsExist(DpuConfigPath) {
+		hwlog.RunLog.Infof("%s file %s not found", api.DpuLogPrefix, DpuConfigPath)
+		return nil
+	}
 	err := df.loadDpuConfigFromFile()
 	if err != nil {
 		return fmt.Errorf("dpu devices find is not enable,err:%v", err)
 	}
-
 	hwlog.RunLog.Infof("%s start find bustype %s dpu", api.DpuLogPrefix, df.UserConfig.BusType)
 	switch df.UserConfig.BusType {
 	case busTypeUb:
@@ -65,7 +68,7 @@ func (df *DpuFilter) SaveDpuConfToNode(dmgr devmanager.DeviceInterface) error {
 	}
 
 	if len(df.NpuWithDpuInfos) == 0 {
-		return errors.New("filter dpuinfos is nil")
+		return errors.New("filter dpu infos result is nil")
 	}
 	hwlog.RunLog.Infof("%s successfully get DPU infos: %v", api.DpuLogPrefix, df.NpuWithDpuInfos)
 	return nil
