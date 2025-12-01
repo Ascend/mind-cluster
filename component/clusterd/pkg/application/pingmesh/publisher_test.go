@@ -294,7 +294,10 @@ func TestHandleFileUpdate(t *testing.T) {
 			patches := gomonkey.ApplyFuncReturn(updateSuperPodDeviceFile, nil).
 				ApplyFuncReturn(saveConfigToFile, nil)
 			defer patches.Reset()
-			convey.ShouldNotBeNil(handleFileUpdate(testSuperPodID, nil, testCheckCode+testCheckCode, false))
+			mock := gomonkey.ApplyFunc(handlerSuperPodRoce, func(_ map[int]string) {})
+			defer mock.Reset()
+			device := &api.SuperPodDevice{AcceleratorType: api.A5PodType}
+			convey.ShouldNotBeNil(handleFileUpdate(testSuperPodID, device, testCheckCode+testCheckCode, false))
 			convey.ShouldEqual(publishMgr.filePublishLogMap[testSuperPodID].preCheckCode, testCheckCode+testCheckCode)
 		})
 	})

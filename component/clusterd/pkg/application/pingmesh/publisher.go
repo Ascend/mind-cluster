@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -194,7 +195,12 @@ func updateSuperPodDeviceCM(device *api.SuperPodDevice, checkCode string, init b
 		hwlog.RunLog.Warnf("nil device")
 		return nil
 	}
+	// no need save to CM
+	oldRackMap := device.RackMap
+	device.RackMap = nil
 	b, err := json.Marshal(device)
+	// recover rack data
+	device.RackMap = oldRackMap
 	if err != nil || len(b) == 0 {
 		hwlog.RunLog.Warnf("marshal bytes illegal, SuperPodID=%s, init=%v, err=%v",
 			device.SuperPodID, init, err)
@@ -290,6 +296,10 @@ func handleFileUpdate(superPodID string, device *api.SuperPodDevice, checkCode s
 		preCheckCode: checkCode,
 	}
 	hwlog.RunLog.Infof("update super pod device file success, superPodID=%s", superPodID)
+	if device.AcceleratorType == api.A5PodType {
+		hwlog.RunLog.Infof("handleFileUpdate superpod version type is %s", device.Version)
+		handlerSuperPodRoce(superpod.GetAllSuperPodIDWithAcceleratorType())
+	}
 	fdapi.ReloadController()
 	return nil
 }
@@ -314,6 +324,12 @@ func handleCmDelete(superPodID string) error {
 		hwlog.RunLog.Infof("delete super pod device cm success, superPodID=%s", superPodID)
 		if rasNetDetectInst.CheckIsOn() {
 			hwlog.RunLog.Infof("super-pod-%s file is deleted and controller will be reloaded", superPodID)
+			res := superpod.GetFinalDelSuperPodID()
+			superpodId, err := strconv.Atoi(superPodID)
+			if err == nil && res[superpodId] == api.A5PodType {
+				hwlog.RunLog.Infof("handleCmDelete superpod accelerator type is %s", res[superpodId])
+				handlerSuperPodRoce(res)
+			}
 			fdapi.ReloadController()
 		}
 		delete(publishMgr.cmPublishLogMap, superPodID)

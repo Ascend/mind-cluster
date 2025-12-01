@@ -19,6 +19,9 @@ func ConfigCollector(_, newInfo constant.ConfigPingMesh, operator string) {
 }
 
 func updatePingMeshConfigCM(newConfigInfo constant.ConfigPingMesh) {
+	if !isValidConfigPingMesh(newConfigInfo) {
+		return
+	}
 	hwlog.RunLog.Info("ready to update pingmesh config")
 	if isNeedToStop(newConfigInfo) {
 		ConfigPingMeshInst.UpdateConfigData(newConfigInfo)

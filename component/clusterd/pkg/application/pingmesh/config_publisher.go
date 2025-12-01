@@ -81,7 +81,6 @@ func (cf *ConfigPingMeshCmManager) checkConfChanged(oldInfo, newInfo constant.Co
 		hwlog.RunLog.Info("ping mesh config detect is inactive, no need to reload or start controller")
 		return false
 	}
-	changed := false
 	for _, deviceInfo := range superpod.ListClusterDevice() {
 		superPodID := deviceInfo.SuperPodID
 		newConf, errNew := getConfigItemBySuperPodId(newInfo, superPodID)
@@ -99,10 +98,28 @@ func (cf *ConfigPingMeshCmManager) checkConfChanged(oldInfo, newInfo constant.Co
 			hwlog.RunLog.Infof("the new config of superpod ID<%s> is not changed", superPodID)
 			continue
 		}
-		changed = true
-		break
+		return true
 	}
-	return changed
+	return handleRoceConfigChange(oldInfo, newInfo)
+}
+
+func handleRoceConfigChange(oldInfo, newInfo constant.ConfigPingMesh) bool {
+	newConf, newExist := newInfo[constant.RasRoceKey]
+	if !newExist {
+		hwlog.RunLog.Warnf("roce key is not exist in the new config, do nothing")
+		return false
+	}
+	oldConf, oldExist := oldInfo[constant.RasRoceKey]
+	if !oldExist {
+		return true
+	}
+	// check whether the old config is equal to new config
+	if configItemEqual(oldConf, newConf) {
+		hwlog.RunLog.Infof("the new config of <%s> is not changed", constant.RasRoceKey)
+		return false
+	}
+	hwlog.RunLog.Debugf("the old config of key<%s> is changed", constant.RasRoceKey)
+	return true
 }
 
 func (cf *ConfigPingMeshCmManager) getRasConfigBySuperPodId(superPodID string) *constant.CathelperConf {
@@ -138,6 +155,8 @@ func (cf *ConfigPingMeshCmManager) updateConfigFileWhenCmUpdated() {
 		}
 		hwlog.RunLog.Infof("update config file successfully, superPodID=%s", superPodID)
 	}
+
+	handlerSuperPodRoce(superpod.GetAllSuperPodIDWithAcceleratorType())
 }
 
 func (cf *ConfigPingMeshCmManager) startOrReloadController() {

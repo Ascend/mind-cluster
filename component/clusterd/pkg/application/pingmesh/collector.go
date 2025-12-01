@@ -21,6 +21,10 @@ func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
 		hwlog.RunLog.Debugf("discard illegal super pod device info, superPodID=%s.", superPodID)
 		return
 	}
+	if !isValidDeviceType(nodeDevice) {
+		hwlog.RunLog.Debugf("discard illegal node device type info, superPodID=%s.", superPodID)
+		return
+	}
 	spIdIntValue, err := strconv.Atoi(superPodID)
 	if spIdIntValue < 0 || err != nil {
 		hwlog.RunLog.Debugf("superPodID=%s cannot converto a natural number", superPodID)
@@ -32,6 +36,7 @@ func NodeCollector(oldNodeInfo, newNodeInfo *v1.Node, operator string) {
 		addEvent(superPodID, constant.UpdateOperator)
 	case constant.DeleteOperator:
 		superpod.DeleteNode(superPodID, newNodeInfo.Name)
+		superpod.DeleteNodeInRackMap(superPodID, nodeDevice)
 		device := superpod.GetSuperPodDevice(superPodID)
 		if device == nil {
 			addEvent(superPodID, constant.DeleteOperator)
