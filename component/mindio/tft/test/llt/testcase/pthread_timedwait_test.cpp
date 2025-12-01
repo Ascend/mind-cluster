@@ -46,7 +46,7 @@ void TestPthreadTimedwait::SetUpTestCase() {}
 
 void TestPthreadTimedwait::TearDownTestCase() {}
 
-
+namesapce {
 TEST_F(TestPthreadTimedwait, clean_wait_awake_success)
 {
     constexpr int delay = 500 * 1000;    // us
@@ -97,4 +97,5 @@ TEST_F(TestPthreadTimedwait, clean_awake_wait_success)
     usleep(delay);
     auto ret = timeWait.PthreadTimedwaitSecs(waitTime);
     ASSERT_EQ(ret, TTP_OK);
+}
 }

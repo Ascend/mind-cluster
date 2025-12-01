@@ -16,6 +16,7 @@ using namespace ock::ttp;
 #define MOCKCPP_RESET GlobalMockObject::reset()
 #endif
 
+namesapce {
 using controllerStateMachinePtr = Ref<controllerStateMachine>;
 controllerStateMachinePtr stateMachinePtr = nullptr;
 std::atomic<uint32_t> g_callCount;
@@ -315,4 +316,5 @@ TEST_F(TestControllerStateMachine, pause_state)
     ASSERT_EQ(g_exitSn, CHECK_COUNT_EIGHT);
 
     g_pause = false;
+}
 }

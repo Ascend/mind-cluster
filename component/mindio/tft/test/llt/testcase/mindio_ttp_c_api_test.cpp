@@ -8,8 +8,6 @@
 #include "controller.h"
 #include "processor.h"
 
-#define LIB_C_API_PATH "../../../output/lib/libttp_c_api.so"
-
 using namespace ock::ttp;
 
 #ifndef MOCKER_CPP
@@ -26,6 +24,7 @@ constexpr uint32_t CHECK_COUNT_TWO = 2;
 constexpr uint32_t CHECK_COUNT_THREE = 3;
 constexpr uint32_t CHECK_COUNT_FOUR = 4;
 
+namesapce {
 ProcessorPtr g_processor2_ = nullptr;
 ProcessorPtr g_processor3_ = nullptr;
 ProcessorPtr g_processor4_ = nullptr;
@@ -230,7 +229,7 @@ TEST_F(TestCAPI, dump_success)
 {
     constexpr int delay = 1; // s
     OutLogger::Instance()->SetLogLevel(DEBUG_LEVEL);
-    handle = dlopen(LIB_C_API_PATH, RTLD_LAZY);
+    handle = dlopen("../../../output/lib/libttp_c_api.so", RTLD_LAZY);
     if (handle == nullptr) {
         printf("Open Error:%s.\n", dlerror());
     }
@@ -281,4 +280,5 @@ TEST_F(TestCAPI, dump_success)
     ASSERT_EQ(ckptCount.load(), CHECK_COUNT_TWO);
     ASSERT_EQ(renameCount.load(), CHECK_COUNT_ONE);
     ASSERT_EQ(exitCount.load(), CHECK_COUNT_FOUR);
+}
 }

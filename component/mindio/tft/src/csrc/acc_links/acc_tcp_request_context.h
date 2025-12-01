@@ -43,6 +43,8 @@ public:
         data_ = AccDataBuffer::Create(b.DataPtr(), b.DataLen());
     }
 
+    AccTcpRequestContext& operator=(const AccTcpRequestContext &b) = delete;
+
     /**
      * @brief Reply a message to peer with result
      *

@@ -17,6 +17,7 @@ using namespace ock::ttp;
 #define MOCKCPP_RESET GlobalMockObject::reset()
 #endif
 
+namesapce {
 AccReqSentHandler g_requestSentHandle[UNO_48]{};
 AccNewReqHandler g_newRequestHandle[UNO_48]{};
 AccTcpServerPtr g_testServer;
@@ -407,4 +408,5 @@ TEST_F(TestActionEngine, action_repair)
     ASSERT_EQ(g_sendCount.load(), ranks.size());
     ASSERT_EQ(g_replyCount.load(), ranks.size());
     g_hasReply.store(false);
+}
 }
