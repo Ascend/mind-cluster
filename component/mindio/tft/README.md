@@ -1,14 +1,14 @@
 # mindio_tft
 
 ### 简介
-MindCluster MindIO Training Fault Tolerance（MindIO TFT）包括临终CheckPoint保存、进程级在线恢复、进程级别重调度等功能。MindIO TFT面向Megatron-LM分布式训练场景，提供了ZeRO-1级别大模型并行容错能力，通过监控运行时训练集群各卡状态，由故障发生类型选择合适的修复策略，实现模型参数、优化器状态快速恢复，将MTTR时延由小时降低至分钟级，从故障类别角度提供以下能力：
-- MindCluster MindIO Try To Persist（MindIO TTP）功能，主要针对大模型训练过程中故障恢复加速，MindIO TTP特性通过在训练过程中发生故障后，校验中间状态数据的完整性和一致性，生成一次临终CheckPoint数据，恢复训练时能够通过该CheckPoint数据恢复，减少故障造成的训练迭代损失。
-- MindCluster MindIO Uncorrectable Memory Error（MindIO UCE）功能，主要是针对大模型训练过程中片上内存的UCE故障检测，并完成在线修复，达到Step级重计算。
-- MindCluster MindIO Air Refuelling（MindIO ARF）功能，训练发生异常后，不用重新拉起整个集群，只需以节点为单位进行重启或替换，对于部分故障仅需原地重启单进程，完成修复并继续训练。
+MindCluster MindIO Training Fault Tolerance（MindIO TFT）包括临终保存CheckPoint、进程级在线恢复、进程级别重调度等功能。MindIO TFT面向Megatron-LM分布式训练场景，提供了ZeRO-1级别大模型并行容错能力，通过监控运行时训练集群各卡状态，由故障发生类型选择合适的修复策略，实现模型参数、优化器状态快速恢复，将MTTR（Mean Time To Recover）时延由小时降低至分钟级，从故障类别角度提供以下能力：
+- MindCluster MindIO Try To Persist（MindIO TTP）功能，主要针对大模型训练过程中故障恢复加速，MindIO TTP特性通过在训练过程中发生故障后，校验中间状态数据的完整性与一致性，生成一次临终CheckPoint数据，恢复训练时能够通过该CheckPoint数据恢复，减少故障造成的训练迭代损失。
+- MindCluster MindIO Uncorrectable Memory Error（MindIO UCE）功能，主要针对大模型训练过程中片上内存UCE故障检测，提供了训练框架Step级重计算能力，不需要重启进程在线修复，同时能保证续训迭代损失，UCE失败后进入TTP流程。
+- MindCluster MindIO Air Refuelling（MindIO ARF）功能，主要针对大模型训练过程中发生异常故障，不用停止训练重新拉起整个集群，只需以节点为单位进行重启或替换，对于部分故障仅需原地重启单进程，完成模型参数、优化器修复并继续训练。
 - MindIO TFT搭配MindCluster使用，此外还支持网络故障快速恢复、亚健康故障热切换、在线压测/借轨回切。
 
 #### 软件架构
-![architecture](./doc/architecture.JPG)
+![architecture](./doc/architecture.jpg)
 
 - Controller模块：负责分布式任务的协同，内部维护状态机，状态机支持不同场景的流程控制；实时收集各个训练进程的训练状态，当训练发生异常后，结合异常类型，触发状态机运作，将状态机对应的Action发送到Processor模块执行。
 - Processor模块：负责与训练框架交互，获取训练进程的训练状态，向Controller汇报，同时负责执行Controller模块下发的对应Action动作。
@@ -41,13 +41,17 @@ cd mind-cluster/component/mindio/tft
 ```
 bash build/build.sh
 
-build.sh支持3个参数，按顺序分别是<build_mode> <build_dir> <build_ut> <build_whl> <CMAKE_FLAGS>
-build_mode：编译类型，可填RELEASE或DEBUG
-need_build_ut：是否编译uttest，可填ON或OFF
-open_abi：编译时是否添加-D_GLIBCXX_USE_CXX11_ABI=1宏，可填ON或OFF
-build_whl：是否编译python的whl包，可填ON或OFF
-build_compiler：编译器选择，输入bisheng可手动指定编译器为bisheng
-不填入参数情况下，默认执行build.sh RELEASE OFF ON ON gcc
+Usage: build.sh [ -h | --help ] [ -t | --type <build_type> ] [ -b | --builddir <build_path> ] [ -f | --flags <cmake_flags> ]
+build_type: [debug, release, asan, tsan]
+cmake_flags: customized flags passed to cmake (these arguments must appear after all other arguments)
+
+Examples:
+ 1 ./build.sh -t debug -b ./build/debug
+ 2 ./build.sh -t asan
+ 3 ./build.sh -t release -b ./build -f <cmake_flags>
+ 4 ./build.sh -t release
+
+不填入参数情况下，默认执行build.sh -t release
 ```
 
 3. ut运行
@@ -93,15 +97,18 @@ ${INSTALL_PATH}/
     |-- mindio_tft
         |-- controller_ttp
         |-- framework_ttp
-        |-- mindspore_api
         |-- utils
         |-- __init__.py
 
 default ${INSTALL_PATH} is /path/to/python3/site-packages/mindio_ttp
 ```
 
-### 使用方法
-[API接口参考](https://www.hiascend.com/document/detail/zh/mindx-dl/600/clusterscheduling/ref/mindiottp/mindiotft043.html)
+### 用户指南
+`MindIO TFT`提供给开发者的的资料如下：
+
+[《MindIO TFT用户指南》](https://www.hiascend.com/document/detail/zh/mindx-dl/600/clusterscheduling/ref/mindiottp/mindiotft001.html)
+
+请根据用户指南了解`MindIO TFT`相关约束限制，进行安装，使用，管理与加固。
 
 ### 软件硬件配套说明
 - 硬件型号支持
