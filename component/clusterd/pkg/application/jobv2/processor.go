@@ -70,7 +70,7 @@ func updateJob(jobKey string) {
 	}
 	// update job to running or completed or failed
 	if needRebuildJobSummary || jobInfo.Status != status {
-		job.UpdateCmAndCache(status, jobInfo, pg, podsInJob)
+		job.UpdateCmAndCache(status, jobKey, pg, podsInJob)
 		return
 	}
 	hwlog.RunLog.Warnf("this logic branch is unreachable, there must have been some issues with the code."+

@@ -6,6 +6,8 @@
 package job
 
 import (
+	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -57,6 +59,29 @@ func TestGetJobCache(t *testing.T) {
 	})
 }
 
+func TestCopyJobCache(t *testing.T) {
+	convey.Convey("test GetJobCacheDeepCopy", t, func() {
+		jobSummaryMap = sync.Map{}
+		convey.Convey("when job cache is nil, return empty and false", func() {
+			jobInfo, ok := GetJobCacheDeepCopy(jobUid1)
+			convey.So(ok, convey.ShouldEqual, false)
+			convey.So(jobInfo.Name, convey.ShouldEqual, "")
+		})
+		convey.Convey("when job cache is not nil, modifying a copy will not affect the cache", func() {
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.NodeNames = map[string]string{podName1: nodeName1}
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+			copyJobInfo, ok := GetJobCacheDeepCopy(jobUid1)
+			convey.So(ok, convey.ShouldEqual, true)
+			copyJobInfo.NodeNames = map[string]string{podName2: nodeName2}
+			copyJobInfo.Name = jobName2
+			convey.ShouldNotResemble(jobInfo.NodeNames, copyJobInfo.NodeNames)
+			convey.ShouldNotEqual(jobInfo.Name, copyJobInfo.Name)
+		})
+	})
+}
+
 func TestGetAllJobCache(t *testing.T) {
 	convey.Convey("test GetAllJobCache", t, func() {
 		jobSummaryMap = sync.Map{}
@@ -77,6 +102,36 @@ func TestGetAllJobCache(t *testing.T) {
 			jobInfoMap = GetAllJobCache()
 			convey.So(len(jobInfoMap), convey.ShouldEqual, two)
 		})
+	})
+}
+
+func TestUpdateAndIterateJobCacheCausePanic(t *testing.T) {
+	convey.Convey("test updating and iterating through the cache cause a panic", t, func() {
+		jobSummaryMap = sync.Map{}
+		jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+		jobInfo.NodeNames = make(map[string]string)
+		SaveJobCache(jobUid1, jobInfo)
+		defer DeleteJobCache(jobUid1)
+		retryTimes := 500
+		wg := sync.WaitGroup{}
+		goNum := 2
+		wg.Add(goNum)
+		go func(jobKey string) {
+			for i := 0; i < retryTimes; i++ {
+				job, _ := GetJobCacheDeepCopy(jobKey)
+				job.NodeNames[strconv.Itoa(i)] = fmt.Sprintf("value_%d", i)
+				time.Sleep(time.Millisecond)
+			}
+			wg.Done()
+		}(jobUid1)
+		go func() {
+			for i := 0; i < retryTimes; i++ {
+				GetAllJobCache()
+				time.Sleep(time.Millisecond)
+			}
+			wg.Done()
+		}()
+		wg.Wait()
 	})
 }
 
