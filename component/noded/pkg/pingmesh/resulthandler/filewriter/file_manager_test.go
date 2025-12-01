@@ -517,22 +517,24 @@ func testHandlePingMeshInfoShouldWriteSuccessWhenInputDataIsGood() {
 		defer patchCalc.Reset()
 		patchPrepare := patchPrepareResultFilePaths(m, appendMode, tempCsv, tempCsvBak)
 		defer patchPrepare.Reset()
-		patches := patchGetEnv(nodeName0)
-		defer patches.Reset()
+		patchEnv := patchGetEnv(nodeName0)
+		defer patchEnv.Reset()
 		callCnt := 0
-		patches.ApplyFunc(getPingItemByDestAddr,
-			func(_ []types.PingItem, _ string) (types.PingItem, error) {
+		patchWriteForCard := gomonkey.ApplyPrivateMethod(m, "writeForCard",
+			func(physicID string, destAddrList []types.PingItem, infos map[uint]*common.HccspingMeshInfo) {
 				callCnt++
-				return getPingItem(), nil
+				return
 			},
 		)
+		defer patchWriteForCard.Reset()
 		callCntCsv := 0
-		patches.ApplyMethod(&csv.Writer{}, "Write",
-			func(_ *csv.Writer, _ []string) error {
+		patchWriteForCardCsv := gomonkey.ApplyPrivateMethod(m, "writeForCardToCsv",
+			func(csvWriter *csv.Writer, destAddrList []types.PingItem, infos map[uint]*common.HccspingMeshInfo) {
 				callCntCsv++
-				return nil
+				return
 			},
 		)
+		defer patchWriteForCardCsv.Reset()
 		m.serverIndex = nodeName0
 		policy := makePolicyData()
 
