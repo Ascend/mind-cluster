@@ -545,7 +545,7 @@ func TestCountForSlice(t *testing.T) {
 		target := []string{"apple", "banana", "apple", "orange", "banana", "banana"}
 
 		convey.Convey("When calling countForSlice", func() {
-			maxKey, countMap := countForSlice(target)
+			maxKey, countMap := countForSlice(target, false)
 
 			convey.Convey("Then the max key should be the most frequent element", func() {
 				convey.So(maxKey, convey.ShouldEqual, "banana")
@@ -563,7 +563,7 @@ func TestCountForSlice(t *testing.T) {
 		var target []string
 
 		convey.Convey("When calling countForSlice", func() {
-			maxKey, countMap := countForSlice(target)
+			maxKey, countMap := countForSlice(target, false)
 
 			convey.Convey("Then the max key should be an empty string", func() {
 				convey.So(maxKey, convey.ShouldEqual, "")

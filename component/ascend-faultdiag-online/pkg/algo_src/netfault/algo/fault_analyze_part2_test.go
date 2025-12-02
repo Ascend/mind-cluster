@@ -196,6 +196,54 @@ func TestSetNodeFaultAlarm(t *testing.T) {
 	})
 }
 
+func TestSetL1FaultAlarm(t *testing.T) {
+	convey.Convey("Given a rootCauseAlarm map", t, func() {
+		rootCauseAlarm := make(map[string]interface{})
+
+		convey.Convey("When rootCauseAlarm is nil", func() {
+			setA5L2FaultAlarm("testObj", nil)
+			convey.Convey("Then it should return without any error", func() {
+				// No error to check
+			})
+		})
+
+		convey.Convey("When rootCauseObj indicates a port failure", func() {
+			rootCauseObj := "rack1:2"
+			setA5L2FaultAlarm(rootCauseObj, rootCauseAlarm)
+
+			convey.Convey("Then rootCauseAlarm should be populated correctly", func() {
+				convey.So(rootCauseAlarm[srcIdConstant], convey.ShouldEqual, "Rack-2")
+				convey.So(rootCauseAlarm[srcTypeConstant], convey.ShouldEqual, rackNetplaneType)
+				convey.So(rootCauseAlarm[dstIdConstant], convey.ShouldEqual, "rack1")
+				convey.So(rootCauseAlarm[dstTypeConstant], convey.ShouldEqual, l1NetplaneType)
+				convey.So(rootCauseAlarm[levelConstant], convey.ShouldEqual, majorType)
+			})
+		})
+
+		convey.Convey("When rootCauseObj indicates a rack failure", func() {
+			rootCauseObj := "rack1"
+			setA5L2FaultAlarm(rootCauseObj, rootCauseAlarm)
+
+			convey.Convey("Then rootCauseAlarm should be populated correctly", func() {
+				convey.So(rootCauseAlarm[srcIdConstant], convey.ShouldEqual, rootCauseObj)
+				convey.So(rootCauseAlarm[srcTypeConstant], convey.ShouldEqual, l1NetplaneType)
+				convey.So(rootCauseAlarm[dstIdConstant], convey.ShouldEqual, rootCauseObj)
+				convey.So(rootCauseAlarm[dstTypeConstant], convey.ShouldEqual, l1NetplaneType)
+				convey.So(rootCauseAlarm[levelConstant], convey.ShouldEqual, criticalType)
+			})
+		})
+
+		convey.Convey("When rootCauseObj format is incorrect", func() {
+			rootCauseObj := "rack1:2:extraSegment"
+			setA5L2FaultAlarm(rootCauseObj, rootCauseAlarm)
+
+			convey.Convey("Then rootCauseAlarm should remain empty", func() {
+				convey.So(len(rootCauseAlarm), convey.ShouldEqual, 0)
+			})
+		})
+	})
+}
+
 func TestClassifyByLayer(t *testing.T) {
 	convey.Convey("Given a list of items with layer information", t, func() {
 		input := []any{

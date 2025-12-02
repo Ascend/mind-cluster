@@ -373,6 +373,207 @@ func TestSftFromConfigMapInterface(t *testing.T) {
 			ret := siftFromConfigMapInterface(s, nil, "")
 			convey.So(ret, convey.ShouldBeTrue)
 		})
+		convey.Convey("call a5 when version ", func() {
+			s := &SuperPodInfo{Version: DiagVersionA5}
+			patch := gomonkey.ApplyFunc(siftFromConfigMap, func(_ *SuperPodInfo,
+				_ map[string]any, _ string) bool {
+				return true
+			})
+			defer patch.Reset()
+			ret := siftFromConfigMapInterface(s, nil, "")
+			convey.So(ret, convey.ShouldBeTrue)
+		})
+	})
+}
 
+func TestSiftFromConfigMap(t *testing.T) {
+	convey.Convey("test siftFromConfigMap", t, func() {
+		convey.Convey("should return false when superPodInfo nil", func() {
+			ret := siftFromConfigMap(nil, nil, "path")
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should return false when get rackMap err", func() {
+			s := &SuperPodInfo{RackMap: nil}
+			ret := siftFromConfigMap(s, nil, "path")
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should return false when get superPodId err", func() {
+			s := &SuperPodInfo{SuperPodID: "not number", RackMap: map[string]*RackInfo{"1": nil}}
+			ret := siftFromConfigMap(s, nil, "path")
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should return false when get TargetSuperPodNpuMap err", func() {
+			s := &SuperPodInfo{SuperPodID: "1", RackMap: map[string]*RackInfo{"1": nil}}
+			patch := gomonkey.ApplyFuncReturn(GetTargetSuperPodNpuMap, false, nil)
+			defer patch.Reset()
+			ret := siftFromConfigMap(s, nil, "path")
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should return false when rackInfo err", func() {
+			s := &SuperPodInfo{SuperPodID: "1", RackMap: map[string]*RackInfo{}}
+			patch := gomonkey.ApplyFuncReturn(GetTargetSuperPodNpuMap, true, nil)
+			defer patch.Reset()
+			ret := siftFromConfigMap(s, nil, "path")
+			convey.So(ret, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestSiftFromConfigWhenTrue(t *testing.T) {
+	convey.Convey("test siftFromConfigMapWhenTrue", t, func() {
+		convey.Convey("when normal", func() {
+			s := &SuperPodInfo{SuperPodID: "1", RackMap: map[string]*RackInfo{"1": &RackInfo{RackID: "1",
+				ServerMap: map[string]*ServerInfo{"1": &ServerInfo{NpuMap: map[string]*NpuInfo{"1": nil}}}}}}
+			patch := gomonkey.ApplyFuncReturn(GetTargetSuperPodNpuMap, true, nil)
+			defer patch.Reset()
+			ret := siftFromConfigMap(s, nil, "path")
+			convey.So(ret, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestGetA5ServerLevel1D2DPingList(t *testing.T) {
+	convey.Convey("test func getA5ServerLevel1D2DPingList", t, func() {
+		convey.Convey("should", func() {
+			allPingList := make([]interface{}, 0)
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+		convey.Convey("should continue when no srcAddr", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+		convey.Convey("should continue when srcAddr not string", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{
+					"srcAddr": 1,
+				},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+		convey.Convey("should continue when no dstAddr", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{
+					"srcAddr": "1",
+				},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+		convey.Convey("should continue when dstAddr not string", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{
+					"srcAddr": "1",
+					"dstAddr": 1,
+				},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+	})
+}
+
+func TestGetA5ServerLevel1D2DPingListPartTwo(t *testing.T) {
+	convey.Convey("test getA5ServerLevel1D2DPingList Part2", t, func() {
+		convey.Convey("should continue when not srcCard", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{
+					"srcAddr": "1",
+					"dstAddr": "1",
+				},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+		convey.Convey("should continue when srcCard not string", func() {
+			allPingList := []interface{}{
+				map[string]interface{}{
+					"srcAddr":      "1",
+					"dstAddr":      "1",
+					"srcCardPhyId": 1,
+				},
+			}
+			getA5ServerLevel1D2DPingList(allPingList, nil, nil, 0)
+		})
+	})
+}
+
+func TestSiftRoceTaskFromNPUMapInterface(t *testing.T) {
+	convey.Convey("test siftRoceTaskFromNPUMapInterface", t, func() {
+		convey.Convey("return false when Given npuMap is nil", func() {
+			res := siftRoceTaskFromNpuMapInterface("path", nil, nil)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("return false when pingList nil", func() {
+			superPingList := map[string]interface{}{
+				"pingList": nil,
+			}
+			res := siftRoceTaskFromNpuMapInterface("path", nil, superPingList)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("return false when write err", func() {
+			superPodPingListMock := make(map[string]interface{})
+			npuMapMock := make(map[string]algo.NpuInfo)
+
+			superPodPingListMock["pingList"] = []interface{}{
+				map[string]interface{}{
+					"srcAddr":      "1",
+					"dstAddr":      "2",
+					"srcCardPhyId": 0,
+				},
+			}
+			npuMapMock["1"] = algo.NpuInfo{}
+			result := siftRoceTaskFromNpuMapInterface("InvalidPath", npuMapMock, superPodPingListMock)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestSiftRoceTaskFromNPUMapWhenfaild(t *testing.T) {
+	convey.Convey("test siftRoceTaskFromNPUMap when faild", t, func() {
+		superPodPingListMock := make(map[string]interface{})
+		npuMapMock := make(map[string]algo.NpuInfo)
+		convey.Convey("return false when given pingList is not a slice", func() {
+			superPodPingListMock["pingList"] = "invalid"
+			result := siftRoceTaskFromNpuMapInterface("path", npuMapMock, superPodPingListMock)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("should skip invalid value and return false", func() {
+			superPodPingListMock["pingList"] = []interface{}{
+				map[string]interface{}{
+					"srcAddr": 1,
+				},
+				map[string]interface{}{
+					"srcAddr": "1",
+					"dstAddr": 1,
+				},
+				map[string]interface{}{
+					"srcAddr":      "1",
+					"dstAddr":      "2",
+					"srcCardPhyId": "3",
+				},
+			}
+			result := siftRoceTaskFromNpuMapInterface("path", npuMapMock, superPodPingListMock)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestGenRoceSuperPodLevelPingList(t *testing.T) {
+	convey.Convey("test func GenRoceSuperPodLevelPingList", t, func() {
+		convey.Convey("return false when gen PingList err", func() {
+			detectObj := algo.NewNetDetect("0")
+			patch := gomonkey.ApplyMethod(detectObj, "GenPingStrategy",
+				func(nd *algo.NetDetect, input map[string]interface{}) map[string]interface{} {
+					return nil
+				})
+			defer patch.Reset()
+			ret := GenRoceSuperPodLevelPingList("", nil, nil, nil)
+			convey.So(ret, convey.ShouldBeFalse)
+		})
 	})
 }

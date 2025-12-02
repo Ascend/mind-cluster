@@ -518,12 +518,15 @@ func getLayerObject(str string) []string {
 }
 
 // 对字符串切片进行计数，返回出现最多的字符串和计数map
-func countForSlice(target []string) (string, map[string]int) {
+func countForSlice(target []string, superPodNameFlag bool) (string, map[string]int) {
 	countMap := make(map[string]int)
 	var maxNum int
 	var maxNumKey string
 
 	for _, key := range target {
+		if superPodNameFlag && strings.Contains(key, "SuperPod") {
+			continue
+		}
 		countMap[key]++
 		if countMap[key] > maxNum {
 			maxNum = countMap[key]
@@ -711,7 +714,7 @@ func initLeftIps(npuDireAlarmList []any) []string {
 func getRootCauseIps(ips []string) []string {
 	rootCauseIps := make([]string, 0)
 
-	mostAppearIp, countMap := countForSlice(ips)
+	mostAppearIp, countMap := countForSlice(ips, false)
 	mostNum := countMap[mostAppearIp]
 	for key, value := range countMap {
 		if value == mostNum {
@@ -937,7 +940,7 @@ func (nd *NetDetect) setSingleFaultAlarm(rootCauseAlarm map[string]any, netplane
 		if nd.curNpuType == a3NpuTypeConstant {
 			nd.setA3L2FaultAlarm(rootCauseObj, rootCauseAlarm)
 		} else {
-			hwlog.RunLog.Error("[ALGO] unexpected detection type!")
+			setA5L2FaultAlarm(rootCauseObj, rootCauseAlarm)
 		}
 	} else if strings.Contains(rootCauseObj, superPodConstant) {
 		nd.setSuperPodFaultAlarm(rootCauseObj, rootCauseAlarm, npuOtherAlarmList)
@@ -1234,7 +1237,7 @@ func (nd *NetDetect) getRoceSwitchDesc(npuOtherAlarmList []any, superPodName str
 		allIpList = append(allIpList, curPath[dstAddrConstant].(string))
 	}
 
-	mostAppearIp, countMap := countForSlice(allIpList)
+	mostAppearIp, countMap := countForSlice(allIpList, false)
 	mostNum := countMap[mostAppearIp]
 
 	// 将次数最大的path加入到rootCauseIpList
@@ -1450,14 +1453,14 @@ func (nd *NetDetect) setRootCauseList(rootCauseList *[]string, faultPathList [][
 		faultPathListBak = append(faultPathListBak, faultPathList[i]...)
 	}
 
-	mostAppearIp, countMap := countForSlice(faultPathListBak)
+	mostAppearIp, countMap := countForSlice(faultPathListBak, false)
 	mostNum := countMap[mostAppearIp]
 	if mostNum < length {
 		for i := 0; i < length; i++ {
 			tempList := swFaultPathList[i]
 			faultPathListBak = append(faultPathListBak, tempList...)
 		}
-		mostAppearIp, countMap = countForSlice(faultPathListBak)
+		mostAppearIp, countMap = countForSlice(faultPathListBak, false)
 		mostNum = countMap[mostAppearIp]
 	}
 
@@ -1465,6 +1468,29 @@ func (nd *NetDetect) setRootCauseList(rootCauseList *[]string, faultPathList [][
 	for key, value := range countMap {
 		if value == mostNum {
 			*rootCauseList = append(*rootCauseList, key)
+		}
+	}
+	if nd.curSuperPodJobFlag {
+		/*Select the highest-score IP to add detection result descriptions. For inter-supernode link failures,
+		supernode names are most likely the highest-scoring, followed by faulty link IPs
+		*/
+		mostAppearRoceIp, roceIpMap := countForSlice(faultPathListBak, true)
+		if roceIpMap == nil {
+			return
+		}
+		mostSuperPodNum := roceIpMap[mostAppearRoceIp]
+		if mostSuperPodNum < length {
+			for i := 0; i < length; i++ {
+				tempList := swFaultPathList[i]
+				faultPathListBak = append(faultPathListBak, tempList...)
+			}
+			mostAppearRoceIp, roceIpMap = countForSlice(faultPathListBak, true)
+			mostSuperPodNum = roceIpMap[mostAppearRoceIp]
+		}
+		for key, value := range roceIpMap {
+			if value == mostSuperPodNum { // Add all map entries with occurrence count=mostNum to the root cause object
+				*rootCauseList = append(*rootCauseList, key)
+			}
 		}
 	}
 }
@@ -1570,6 +1596,7 @@ func (nd *NetDetect) getSuperPodRootCauseList(input []string) []string {
 		if getIndex(nd.curSuperPodArr, curSuperPodName)+1 == getIndex(nd.curSuperPodArr, nextSuperPodName) ||
 			(getIndex(nd.curSuperPodArr, curSuperPodName) == len(nd.curSuperPodArr)-1 &&
 				getIndex(nd.curSuperPodArr, nextSuperPodName) == 0) {
+			hwlog.RunLog.Infof("[ALGO]curSuperPodName: %s, nextSuperPodName: %s", curSuperPodName, nextSuperPodName)
 			srcIpsDesc := "[" + strings.Join(superPodMap[curSuperPodName], ", ") + "]"
 			dstIpsDesc := "[" + strings.Join(superPodMap[nextSuperPodName], ", ") + "]"
 			result = append(result, curSuperPodName+portIntervalChar+nextSuperPodName+
@@ -1578,6 +1605,16 @@ func (nd *NetDetect) getSuperPodRootCauseList(input []string) []string {
 	}
 
 	return result
+}
+
+func continueDuplicateDescriptionIp(superPodList []string, target string) bool {
+	// remove duplicate ip addresses from the description information
+	for i := 0; i < len(superPodList); i++ {
+		if superPodList[i] == target {
+			return true
+		}
+	}
+	return false
 }
 
 func (nd *NetDetect) matchRootCauseArr(superPodName string, ipArr *[]string, superPodMap map[string][]string) {
@@ -1591,7 +1628,12 @@ func (nd *NetDetect) matchRootCauseArr(superPodName string, ipArr *[]string, sup
 			if _, exists := superPodMap[superPodName]; !exists {
 				superPodMap[superPodName] = []string{}
 			}
+			if continueDuplicateDescriptionIp(superPodMap[superPodName], (*ipArr)[j]) {
+				continue
+			}
 			superPodMap[superPodName] = append(superPodMap[superPodName], (*ipArr)[j])
+		} else {
+			hwlog.RunLog.Infof("[ALGO]superPodName: %s", superPodName)
 		}
 	}
 
@@ -1736,4 +1778,32 @@ func (nd *NetDetect) findNetplaneByPingObj(pingObj string) string {
 	}
 
 	return ""
+}
+
+// out frame switch fault
+func setA5L2FaultAlarm(rootCauseObj string, rootCauseAlarm map[string]any) {
+	if rootCauseAlarm == nil {
+		return
+	}
+
+	// outframe switch downlink port fault
+	if strings.Contains(rootCauseObj, portIntervalChar) {
+		rackL1List := strings.Split(rootCauseObj, portIntervalChar)
+		if len(rackL1List) != baseSegmentNum {
+			return
+		}
+		srcId := fmt.Sprintf("Rack-%s", rackL1List[1])
+		rootCauseAlarm[srcIdConstant] = srcId
+		rootCauseAlarm[srcTypeConstant] = rackNetplaneType
+		rootCauseAlarm[dstIdConstant] = rackL1List[0]
+		rootCauseAlarm[dstTypeConstant] = l1NetplaneType
+		rootCauseAlarm[levelConstant] = majorType
+	} else {
+		// outframe switch fault
+		rootCauseAlarm[srcIdConstant] = rootCauseObj
+		rootCauseAlarm[srcTypeConstant] = l1NetplaneType
+		rootCauseAlarm[dstIdConstant] = rootCauseObj
+		rootCauseAlarm[dstTypeConstant] = l1NetplaneType
+		rootCauseAlarm[levelConstant] = criticalType
+	}
 }

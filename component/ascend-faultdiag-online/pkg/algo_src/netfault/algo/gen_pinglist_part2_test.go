@@ -893,6 +893,15 @@ func TestNpuRingPing(t *testing.T) {
 				nd.npuRingPing(aiPingStrategy, layer, childLayerName)
 			})
 		})
+		convey.Convey("When curNpuType is a5NpuTypeConstant", func() {
+			nd := &NetDetect{
+				curNpuType: a5NpuTypeConstant,
+			}
+
+			convey.Convey("Then a5NpuRingPing should be called", func() {
+				nd.npuRingPing(aiPingStrategy, layer, childLayerName)
+			})
+		})
 
 		convey.Convey("When curNpuType is an unknown type", func() {
 			nd := &NetDetect{

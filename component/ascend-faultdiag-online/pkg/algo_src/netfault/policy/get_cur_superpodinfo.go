@@ -18,6 +18,7 @@ package policy
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -683,5 +684,78 @@ func getReasoningServerNpuInfo(npuEidMap map[string]algo.NpuInfo,
 				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
 			}
 		}
+	}
+}
+
+func getOneTopoFilePath(superPod string, superPodInfo *SuperPodInfo) string {
+	var rackId string
+	var serverId string
+	success := false
+	for _, v := range superPodInfo.RackMap {
+		rackId = v.RackID
+		if len(v.ServerMap) == 0 {
+			continue
+		}
+		for _, server := range v.ServerMap {
+			serverId = server.ServerIndex
+			success = true
+			break
+		}
+		break
+	}
+	if !success {
+		hwlog.RunLog.Errorf("not found server level topo in %s", superPod)
+		return ""
+	}
+	file := filepath.Join(superPod, fmt.Sprintf("rack-%s", rackId), fmt.Sprintf("topo_%s.json", serverId))
+	return file
+}
+
+func getNetWorkType(superPod string, superPodInfo *SuperPodInfo) string {
+	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Error("empty super pod info, get network type failed!")
+		return ""
+	}
+	topoFile := getOneTopoFilePath(superPod, superPodInfo)
+	if topoFile == "" {
+		return ""
+	}
+	var data []byte
+	for i := 0; i < maxRetryTime && !controllerflags.IsControllerExited.GetState() &&
+		CheckCurSuperPodConfigSwitch(superPod); i++ {
+		fileData, err := os.ReadFile(topoFile)
+		if err != nil && os.IsNotExist(err) {
+			if i%logPrintInterval == 0 {
+				hwlog.RunLog.Warnf("%v (retry:%d)", err, i+1)
+			}
+			time.Sleep(time.Duration(1) * time.Second)
+			continue
+		} else if err != nil {
+			hwlog.RunLog.Error(err)
+			return ""
+		}
+		data = fileData
+		break
+	}
+	if controllerflags.IsControllerExited.GetState() || !CheckCurSuperPodConfigSwitch(superPod) {
+		return ""
+	}
+	if len(data) == 0 {
+		hwlog.RunLog.Errorf("[CONTROLLER]empty %s", topoFile)
+		return ""
+	}
+	var obj RackTopology
+	err := json.Unmarshal(data, &obj)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return ""
+	}
+	if obj.HardwareType == "Atlas 950 SuperPod 2D" {
+		return "2D"
+	} else if obj.HardwareType == "Atlas 950 SuperPod 1D" {
+		return "1D"
+	} else {
+		hwlog.RunLog.Errorf("Unknown hardware type %s", obj.HardwareType)
+		return ""
 	}
 }

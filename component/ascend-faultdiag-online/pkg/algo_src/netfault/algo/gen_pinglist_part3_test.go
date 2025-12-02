@@ -152,13 +152,20 @@ func TestSetDefaultParams(t *testing.T) {
 	convey.Convey("Given a NetDetect instance", t, func() {
 		nd := &NetDetect{}
 		convey.Convey("When valid parameters are provided", func() {
-			params := map[string]any{argsAxisStrategy: "both_axis", argsNpuType: "A3",
+			params := map[string]any{argsAxisStrategy: bothAxisConstant, argsNpuType: a3NpuTypeConstant,
 				argsSuperPodJobFlag: true}
 			result := nd.setDefaultParams(params)
 			convey.So(result, convey.ShouldBeTrue)
-			convey.So(nd.curAxisStrategy, convey.ShouldEqual, "both_axis")
-			convey.So(nd.curNpuType, convey.ShouldEqual, "A3")
+			convey.So(nd.curAxisStrategy, convey.ShouldEqual, bothAxisConstant)
+			convey.So(nd.curNpuType, convey.ShouldEqual, a3NpuTypeConstant)
 			convey.So(nd.curSuperPodJobFlag, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("When no parameters are provided", func() {
+			params := map[string]interface{}{}
+			nd.setDefaultParams(params)
+			convey.So(nd.curAxisStrategy, convey.ShouldEqual, crossAxisConstant)
+			convey.So(nd.curNpuType, convey.ShouldEqual, a5NpuTypeConstant)
 		})
 
 		convey.Convey("When invalid parameters are provided", func() {

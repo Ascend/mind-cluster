@@ -510,7 +510,7 @@ func TestLoopWaitSuperPodDirAndCheckConfigFile(t *testing.T) {
 			defer patch1.Reset()
 			patch3 := gomonkey.ApplyFunc(time.Sleep, func(_ time.Duration) {})
 			defer patch3.Reset()
-			ret := loopWaitSuperPodDirAndCheckConfigFile("", "", "")
+			ret := loopWaitSuperPodDirAndCheckConfigFile("", "", "", true)
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		convey.Convey("patch for loop wait", func() {
@@ -519,7 +519,7 @@ func TestLoopWaitSuperPodDirAndCheckConfigFile(t *testing.T) {
 			defer patch0.Reset()
 			patch1 := gomonkey.ApplyFuncReturn(os.Stat, nil, nil)
 			defer patch1.Reset()
-			ret := loopWaitSuperPodDirAndCheckConfigFile("", "", "")
+			ret := loopWaitSuperPodDirAndCheckConfigFile("", "", "", true)
 			time.Sleep(time.Duration(1) * time.Second)
 			controllerflags.IsControllerExited.SetState(true)
 			convey.So(ret, convey.ShouldBeTrue)
