@@ -328,7 +328,7 @@ static inline void DPAX_INIT_LIST_HEAD(struct list_head *list)
     list->prev = list;
 }
 
-static inline void __list_add(struct list_head *newnode, struct list_head *prev, struct list_head *next)
+static inline void list_add(struct list_head *newnode, struct list_head *prev, struct list_head *next)
 {
     next->prev = newnode;
     newnode->next = next;
@@ -350,7 +350,7 @@ static inline void __list_add(struct list_head *newnode, struct list_head *prev,
 */
 static inline void dpax_list_add(struct list_head *newnode, struct list_head *head)
 {
-    __list_add(newnode, head, head->next);
+    list_add(newnode, head, head->next);
 }
 
 /**
@@ -367,17 +367,17 @@ static inline void dpax_list_add(struct list_head *newnode, struct list_head *he
 */
 static inline void dpax_list_add_tail(struct list_head *newnode, struct list_head *head)
 {
-    __list_add(newnode, head->prev, head);
+    list_add(newnode, head->prev, head);
 }
 
 static inline void dpax_list_insert(struct list_head *new_node, struct list_head *prev_node,
     struct list_head *next_node)
 {
-    __list_add(new_node, prev_node, next_node);
+    list_add(new_node, prev_node, next_node);
 }
 
 
-static inline void __list_del(struct list_head *prev, struct list_head *next)
+static inline void list_del(struct list_head *prev, struct list_head *next)
 {
     next->prev = prev;
     prev->next = next;
@@ -396,7 +396,7 @@ static inline void __list_del(struct list_head *prev, struct list_head *next)
 */
 static inline void dpax_list_del(struct list_head *entry)
 {
-    __list_del(entry->prev, entry->next);
+    list_del(entry->prev, entry->next);
     DPAX_INIT_LIST_NODE(entry);
 }
 
@@ -449,7 +449,7 @@ static inline list_head_t *dpax_list_del_first(list_head_t *head)
 */
 static inline void dpax_list_del_init(struct list_head *entry)
 {
-    __list_del(entry->prev, entry->next);
+    list_del(entry->prev, entry->next);
     DPAX_INIT_LIST_HEAD(entry);
 }
 
@@ -565,7 +565,7 @@ static inline int dpax_list_is_last(const struct list_head *list, const struct l
     return list->next == head;
 }
 
-static inline void __list_splice(const struct list_head *list, struct list_head *prev, struct list_head *next)
+static inline void list_splice(const struct list_head *list, struct list_head *prev, struct list_head *next)
 {
     struct list_head *first = list->next;
     struct list_head *last = list->prev;
@@ -592,7 +592,7 @@ static inline void __list_splice(const struct list_head *list, struct list_head 
 static inline void dpax_list_splice(const struct list_head *list, struct list_head *head)
 {
     if (!dpax_list_empty(list)) {
-        __list_splice(list, head, head->next);
+        list_splice(list, head, head->next);
     }
 }
 
@@ -611,7 +611,7 @@ static inline void dpax_list_splice(const struct list_head *list, struct list_he
 static inline void dpax_list_splice_init(struct list_head *list, struct list_head *head)
 {
     if (!dpax_list_empty(list)) {
-        __list_splice(list, head, head->next);
+        list_splice(list, head, head->next);
         INIT_LIST_HEAD(list);
     }
 }
@@ -631,7 +631,7 @@ static inline void dpax_list_splice_init(struct list_head *list, struct list_hea
 static inline void dpax_list_splice_tail(struct list_head *list, struct list_head *head)
 {
     if (!dpax_list_empty(list)) {
-        __list_splice(list, head->prev, head);
+        list_splice(list, head->prev, head);
     }
 }
 
@@ -682,7 +682,7 @@ static inline void dpax_list_splice_tail(struct list_head *list, struct list_hea
 static inline void dpax_splice_tail_init(struct list_head *list, struct list_head *head)
 {
     if (!list_empty(list)) {
-        __list_splice(list, head->prev, head);
+        list_splice(list, head->prev, head);
         INIT_LIST_HEAD(list);
     }
 }

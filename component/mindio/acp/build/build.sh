@@ -37,7 +37,7 @@ while true; do
         -b | --builddir )
             if [[ ! -d "$2" ]]; then
                 echo $2 does not exist!
-                exit -1
+                exit 1
             fi
             BUILD_DIR=$(realpath $2)
             shift 2
@@ -201,7 +201,7 @@ fi
 # Verify the build directory is in place and enter it
 cd $BUILD_DIR || {
   echo "Fatal! Cannot enter $BUILD_DIR."
-  exit 1;
+  exit 1
 }
 
 # Check number of physical processors for parallel make
@@ -222,7 +222,7 @@ rm -rf *
 echo $CMAKE_CMD
 $CMAKE_CMD || {
     echo "Failed to configure ockio build!"
-    exit -1
+    exit 1
 }
 echo
 echo "Done configuring ockio build"
@@ -231,7 +231,7 @@ echo
 echo $BUILD_CMD
 $BUILD_CMD || {
     echo "Failed to build ockio"
-    exit -1
+    exit 1
 }
 echo
 echo "Done building ockio"
@@ -245,7 +245,7 @@ else
         echo "wheel installed successfully"
     else
         echo "Failed to install wheel"
-        exit -1
+        exit 1
     fi
 fi
 

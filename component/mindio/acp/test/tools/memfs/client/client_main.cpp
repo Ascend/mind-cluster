@@ -32,12 +32,12 @@ int Start()
     return MemFsClientInitialize();
 }
 
-int MkDir(const std::string &path)
+static int MkDir(const std::string &path)
 {
     return MemFsMkDir(path.c_str(), 0);
 }
 
-int OpenFileAndWrite1GB(const std::string &path)
+static int OpenFileAndWrite1GB(const std::string &path)
 {
     uint64_t size = 2147483648L * 4;
     char *dataToBeWritten = new (std::nothrow) char[size];
