@@ -29,7 +29,9 @@
 
 using namespace ock::hcom;
 using namespace ock::common;
-using namespace ock::memfs;
+
+namespace ock {
+namespace memfs {
 
 static constexpr int64_t LOG_LEVEL_DEBUG = 0;
 static constexpr int64_t LOG_LEVEL_INFO = 1;
@@ -1347,4 +1349,7 @@ MResult ShellFSServer::HandleCheckBackgroundTask(ServiceContext &ctx)
     }
 
     return MFS_OK;
+}
+
+}
 }

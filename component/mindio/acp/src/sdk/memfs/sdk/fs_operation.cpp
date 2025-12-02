@@ -18,7 +18,8 @@
 #include <chrono>
 #include "fs_operation.h"
 
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 static constexpr auto MAX_VALID_WRITE_PARALLEL_THREAD = 100U;
 static constexpr auto MIN_WRITE_PARALLEL_SLICE_COUNT = 2U;
@@ -1275,4 +1276,7 @@ MResult MemFsClientOperation::CheckBackgroundTask()
 
         return resp.result;
     }
+}
+
+}
 }

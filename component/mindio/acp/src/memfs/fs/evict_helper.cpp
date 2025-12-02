@@ -15,7 +15,8 @@
 #include "memfs_logger.h"
 #include "evict_helper.h"
 
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 std::recursive_mutex EvictHelper::mutexLock;
 list_head *EvictHelper::inodeHeader{ nullptr };
@@ -62,4 +63,7 @@ void EvictHelper::RemoveSelf() noexcept
 {
     std::unique_lock<std::recursive_mutex> lk(mutexLock);
     dpax_list_del_init(&listNode);
+}
+
+}
 }

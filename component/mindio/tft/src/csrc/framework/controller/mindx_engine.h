@@ -97,7 +97,7 @@ const std::string ACTION_STOP_SWITCH = "stop switch";
 
 class MindXEngine : public Referable {
 public:
-    typedef Ref<MindXEngine> Ptr;
+    using Ptr = Ref<MindXEngine>;
 
     static Ptr GetInstance(bool destroy = false);
 

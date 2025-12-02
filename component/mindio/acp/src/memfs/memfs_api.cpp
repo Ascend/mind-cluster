@@ -30,8 +30,8 @@
 
 using namespace ock::common;
 using namespace ock::common::config;
-using namespace ock::memfs;
-
+namespace ock {
+namespace memfs {
 std::vector<std::string> PreloadProgressView::g_loadPathVec;
 std::mutex PreloadProgressView::gViewMutex;
 std::condition_variable PreloadProgressView::gCond;
@@ -581,4 +581,7 @@ int MemFsApi::PreloadFile(const std::string &path) noexcept
         }
     }
     return ret;
+}
+
+}
 }

@@ -23,7 +23,8 @@
 #include "common_includes.h"
 #include "memfs_sdk_api.h"
 
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 static FILE *g_sLogger = stderr;
 static std::map<int, std::string> s_loggerLevels;
@@ -350,4 +351,7 @@ PyMODINIT_FUNC PyInit_memfs(void)
 {
     Py_Initialize();
     return PyModule_Create(&memfs_definition);
+}
+
+}
 }
