@@ -100,8 +100,8 @@ const (
 	Chip4Node4    = "chip4-node4"     // 910a half
 	Chip8Node8    = "chip8-node8"     // 910bx8
 	Chip8Node16   = "chip8-node16"    // 910bx16
-	Chip2Node16   = "chip2-node16"    // 910cx16
-	Chip2Node16Sp = "chip2-node16-sp" // 910cx16-superpod
+	Chip2Node16   = "chip2-node16"    // a3x16
+	Chip2Node16Sp = "chip2-node16-sp" // a3x16-superpod
 )
 
 const (

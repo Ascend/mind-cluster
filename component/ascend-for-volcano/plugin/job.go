@@ -282,6 +282,9 @@ func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 
 // initNormalJobIndex init job's task index.
 func initNormalJobIndex(taskInf *api.TaskInfo, usedRanks map[string]bool) {
+	if usedRanks == nil {
+		return
+	}
 	if taskInf.Pod.Annotations == nil {
 		taskInf.Pod.Annotations = make(map[string]string)
 	}
@@ -308,6 +311,9 @@ func initNormalJobIndex(taskInf *api.TaskInfo, usedRanks map[string]bool) {
 
 func updateTaskNotUsedHcclRankIndex(resultMap map[api.TaskID]util.NPUTask,
 	usedRanks map[string]bool) map[api.TaskID]util.NPUTask {
+	if usedRanks == nil {
+		return resultMap
+	}
 	var allocateRank []string
 	for i := 0; i < len(resultMap); i++ {
 		if usedRanks[strconv.Itoa(i)] {
