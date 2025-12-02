@@ -117,7 +117,7 @@ using LogFunc = void (*)(int level, const char *msg);
 
 class Processor : public Referable {
 public:
-    typedef Ref<Processor> Ptr;
+    using Ptr = Ref<Processor>;
 
     static Ptr GetInstance(bool destroy = false);
 

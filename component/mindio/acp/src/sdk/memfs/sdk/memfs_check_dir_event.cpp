@@ -177,13 +177,14 @@ int64_t MemfsCheckDirEvent::ScanFinishedFileCount(const std::string &fromPath, s
 {
     auto dir = opendir(fromPath.c_str());
     if (dir == nullptr) {
-        if (errno != GetErrorNumber()) {
-            SetErrorNumber(errno);
-            LOG_ERROR("opendir for(" << fromPath << ") failed : " << errno << " : " << strerror(errno));
+        int errnoNum = errno;
+        if (errnoNum != GetErrorNumber()) {
+            SetErrorNumber(errnoNum);
+            LOG_ERROR("opendir for(" << fromPath << ") failed : " << errnoNum << " : " << strerror(errnoNum));
         }
 
-        message << "opendir(" << fromPath << ") failed: " << errno << ":" << strerror(errno);
-        return -errno;
+        message << "opendir(" << fromPath << ") failed: " << errnoNum << ":" << strerror(errnoNum);
+        return -errnoNum;
     }
 
     bool containsStage = false;

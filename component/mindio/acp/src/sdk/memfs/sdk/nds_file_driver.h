@@ -70,9 +70,9 @@ private:
 
     std::unordered_map<int, NdsFileHandle_t> mNdsHandle;
 
-    NdsFileError_t (* ndsRegisterFunc)(NdsFileHandle_t *fh, NdsFileDescr_t *descr){};
-    void (*ndsDeregisterFunc)(NdsFileHandle_t fh){};
-    ssize_t (*ndsReadFunc)(NdsFileHandle_t fh, void *ptr_base, size_t size, off_t file_offset, off_t ptr_offset){};
+    NdsFileError_t (*ndsRegisterFunc)(NdsFileHandle_t *fh, NdsFileDescr_t *descr) {};
+    void (*ndsDeregisterFunc)(NdsFileHandle_t fh) {};
+    ssize_t (*ndsReadFunc)(NdsFileHandle_t fh, void *ptr_base, size_t size, off_t file_offset, off_t ptr_offset) {};
 
 private:
     static std::mutex gLock;

@@ -23,7 +23,8 @@
 #include "common_includes.h"
 #include "memfs_sdk_api.h"
 
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 uint32_t g_writeTimes = 1;
 
@@ -105,4 +106,7 @@ int main(int argc, char *argv[])
     (void)getchar();
 
     return 0;
+}
+
+}
 }
