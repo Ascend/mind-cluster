@@ -38,6 +38,7 @@ from taskd.python.toolkit.constants.constants import SLEEP_GAP, MAX_INI16, RESTA
 from taskd.python.framework.common.type import CONFIG_UPSTREAMIP_KEY, LOCAL_HOST, CONFIG_FRAMEWORK_KEY
 from taskd.python.framework.agent.pt_agent.pt_agent import get_pids
 
+
 def patch_create_c10d_store_decorator(func):
     """
     patch_create_c10d_store_decorator add tcp store prefix to fix tcp store is different in pod reschedule
@@ -51,6 +52,7 @@ def patch_create_c10d_store_decorator(func):
             new_store = PrefixStore(f"/worker/attempt_{attempt}", store)
             yield (new_store, rank, world_size)
     return wrapper
+
 
 def patch_default_signal():
     time.sleep(SLEEP_GAP)
