@@ -167,7 +167,7 @@ type RackTopology struct {
 	PeerList []NpuPeer `json:"peer_list"`
 	// EdgeCount is the number of edges
 	EdgeCount int `json:"edge_count"`
-	// EdgeList is a slice of PeerToPeer instances
+	// EdgeList is a slice of Edge instances
 	EdgeList []Edge `json:"edge_list"`
 }
 

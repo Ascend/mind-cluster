@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -141,9 +142,19 @@ func processSuperPodJson(superPodJsonFile string, superPodPath string) (*SuperPo
 		return nil, nil, nil
 	}
 	switch superPodInfo.Version {
+	case DiagVersionA5:
+		typeStr := getNetWorkType(superPodPath, superPodInfo)
+		if typeStr != "1D" && typeStr != "2D" {
+			return nil, nil, nil
+		}
+		npuFmlink, linkPath, _ := GetA5CurSuperPod1D2DNpuInfo(superPodPath, superPodInfo)
+		return superPodInfo, npuFmlink, linkPath
 	case DiagVersionA3:
 		fullMesh, linkPath := GetCurSuperPodInfoFromMapA3(superPodInfo)
 		return superPodInfo, fullMesh, linkPath
+	case DiagVersionServer:
+		linkPath := getA51D2DSuperPodNpuLinkPath(superPodInfo, "reasoningServer")
+		return superPodInfo, nil, linkPath
 	default:
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s",
 			superPodJsonFile, superPodInfo.Version)
@@ -153,13 +164,13 @@ func processSuperPodJson(superPodJsonFile string, superPodPath string) (*SuperPo
 
 // SetCallAlgorithmParamInfo 设置算法参数
 func SetCallAlgorithmParamInfo(superPodId int, superPodFilePath string,
-	callAlgorithmParam map[string]any) error {
+	callAlgorithmParam map[string]interface{}) error {
 	if callAlgorithmParam == nil {
 		return errors.New("callAlgorithmParam is nullptr")
 	}
 
 	superPodFile := fmt.Sprintf("super-pod-%d.json", superPodId)
-	superPodFile = superPodFilePath + "/" + superPodFile
+	superPodFile = filepath.Join(superPodFilePath, superPodFile)
 	superPodFile = filepath.Clean(superPodFile)
 
 	if !loopWaitFile(superPodFile, superPodFilePath) {
@@ -170,10 +181,24 @@ func SetCallAlgorithmParamInfo(superPodId int, superPodFilePath string,
 		return errors.New("super pod info is nil")
 	}
 
-	if superPodInfo.Version != DiagVersionA3 {
-		return fmt.Errorf("unexpected %s version", superPodFile)
+	if superPodInfo.Version != DiagVersionA5 && superPodInfo.Version != DiagVersionA3 &&
+		superPodInfo.Version != DiagVersionServer {
+		return fmt.Errorf("get %s version info error", superPodFile)
+	}
+	if superPodInfo.Version == DiagVersionServer {
+		callAlgorithmParam[NpuType] = DiagVersionA5
+		callAlgorithmParam["pingObjType"] = algo.EidType
+		return nil
 	}
 	callAlgorithmParam[NpuType] = superPodInfo.Version
+	if superPodInfo.Version == DiagVersionA5 {
+		if checkIfNew1D(superPodInfo.RackMap) {
+			callAlgorithmParam["pingObjType"] = algo.EidType
+		} else {
+			callAlgorithmParam["pingObjType"] = algo.IpType
+		}
+		return nil
+	}
 	/* A3 */
 	callAlgorithmParam["pingObjType"] = 1
 
@@ -237,7 +262,7 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 	return true, npuInfoMap
 }
 
-/* loop wait file */
+/* loop wait file (used in RoCE plane scenarios between non-super nodes)*/
 func loopWaitFile(filePath string, superPodDirPath string) bool {
 	for i := 0; i < maxRetryTime && !controllerflags.IsControllerExited.GetState() &&
 		CheckCurSuperPodConfigSwitch(superPodDirPath); i++ {
@@ -361,55 +386,457 @@ func CheckCurSuperPodConfigSwitch(superPodPath string) bool {
 	return false
 }
 
-func getReasoningServerSuperPodNpuMap(superPodInfo *SuperPodInfo) map[string]algo.NpuInfo {
-	npuEidMap := make(map[string]algo.NpuInfo)
-	rackMap := superPodInfo.RackMap
-	if len(rackMap) != 1 {
-		hwlog.RunLog.Error("[NETFAULT ALGO]error rack numbers")
-		return nil
+func getNpuServerIdFromRackMap(npuId int, rack *RackInfo) string {
+	if len(rack.ServerMap) == 0 {
+		hwlog.RunLog.Error("empty super pod server map!")
+		return ""
 	}
-	var rackSingle *RackInfo
-	for _, rack := range rackMap {
-		rackSingle = rack
-		break
-	}
-	if rackSingle == nil || len(rackSingle.ServerMap) == 0 {
-		hwlog.RunLog.Error("[NETFAULT ALGO]error rack inner server mumbers")
-		return nil
-	}
-	serverIds := make([]int, 0)
-	for _, server := range rackSingle.ServerMap {
-		serverId, err := strconv.Atoi(server.ServerIndex)
-		if err != nil {
-			hwlog.RunLog.Errorf("[NETFAULT ALGO]%v", err)
-			continue
+	for _, server := range rack.ServerMap {
+		if len(server.NpuMap) == 0 {
+			hwlog.RunLog.Error("empty super pod npu map!")
+			return ""
 		}
-		serverIds = append(serverIds, serverId)
-	}
-	sort.Ints(serverIds)
-	for index, serverId := range serverIds {
-		strId := strconv.Itoa(serverId)
-		server := rackSingle.ServerMap[strId]
-		for _, npu := range server.NpuMap {
-			if npu == nil || npu.LevelList == nil || len(npu.LevelList) == 0 {
-				continue
-			}
-			getReasoningServerNpuInfo(npuEidMap, index, npu, server.ServerIndex, superPodInfo.SuperPodID)
+		if _, exist := server.NpuMap[strconv.Itoa(npuId)]; exist {
+			return server.ServerIndex
 		}
 	}
-	return npuEidMap
+	return ""
 }
 
-func handleReasoningServer(superPodInfo *SuperPodInfo, superPodPath string) (map[string]algo.NpuInfo, bool) {
+func storeA51D2DNpuFmLink(param *npuMapParam, npuFmLink *[]string, srcAddr string, dstAddr string, srcId string) {
+	if npuFmLink == nil || param == nil {
+		hwlog.RunLog.Error("invalid npuFmLink or npuMap!")
+		return
+	}
+	/* fm direct connection*/
+	var link string
+	link = fmt.Sprintf("%s:0#%s:0", srcAddr, dstAddr)
+	if param.rackNpuMap != nil && param.rackNpuMap[srcId] {
+		*npuFmLink = append(*npuFmLink, link)
+	}
+}
+
+func getNpuMapValueInfoUnit(rackAndServerIds [][]string, index int, slotId string, srcId int,
+	serverId string) algo.NpuInfo {
+	var rackName string
+	if len(rackAndServerIds) == 0 {
+		rackName = ""
+	} else {
+		rackName = fmt.Sprintf("Rack-%s", rackAndServerIds[0][index])
+	}
+	npuInfo := algo.NpuInfo{
+		RackName:   rackName,
+		SlotName:   fmt.Sprintf("NSlot-%s", slotId),
+		NpuNumber:  srcId,
+		NetPlaneId: "",
+		OsName:     serverId,
+	}
+	return npuInfo
+}
+
+func storeA51D2DNpuFmLinkAndNpuEidMapInfo(index int, rackAndServerIds [][]string,
+	param *npuMapParam) (map[string]algo.NpuInfo, []string) {
+	if param == nil || param.serverTopology == nil {
+		hwlog.RunLog.Error("[ALGO]invalid param!")
+		return nil, nil
+	}
+	npuFmLink := make([]string, 0)
+	npuInfoMap := make(map[string]algo.NpuInfo)
+	/* extract the direct connection of NPU, the mapping relationship between directly connected NPU and EID,
+	and concatenate the algorithm input */
+	for i := 0; i < len(param.serverTopology.EdgeList); i++ {
+		/* Parameter validity check: The value under each rack cannot be less than 0 */
+		if param.serverTopology.EdgeList[i].LocalA < 0 || param.serverTopology.EdgeList[i].LocalB < 0 {
+			hwlog.RunLog.Errorf("[ALGO]error topology, param is: %v", param)
+			return map[string]algo.NpuInfo{}, []string{}
+		}
+		/* add the npu direct connection and the mapping relationship between npu and eid,
+		and check whether it is peer to peer and layer 0 */
+		if !(param.serverTopology.EdgeList[i].NetLayer == level0 &&
+			param.serverTopology.EdgeList[i].LinkType == "PEER2PEER") {
+			continue
+		}
+		/* find eid from levelList according to localAPorts/localBPorts */
+		serverIDA := getNpuServerIdFromRackMap(param.serverTopology.EdgeList[i].LocalA,
+			param.superPodInfo.RackMap[rackAndServerIds[0][index]])
+		serverIDB := getNpuServerIdFromRackMap(param.serverTopology.EdgeList[i].LocalB,
+			param.superPodInfo.RackMap[rackAndServerIds[0][index]])
+		if serverIDA == "" || serverIDB == "" {
+			continue
+		}
+		localAEid := findEid(serverIDA, param.serverTopology.EdgeList[i].LocalA,
+			param.serverTopology.EdgeList[i].LocalAPorts, param.superPodInfo.RackMap[rackAndServerIds[0][index]])
+		localBEid := findEid(serverIDB, param.serverTopology.EdgeList[i].LocalB,
+			param.serverTopology.EdgeList[i].LocalBPorts, param.superPodInfo.RackMap[rackAndServerIds[0][index]])
+		if localAEid == "" || localBEid == "" {
+			continue
+		}
+		storeA51D2DNpuFmLink(param, &npuFmLink, localAEid, localBEid,
+			strconv.Itoa(param.serverTopology.EdgeList[i].LocalA))
+		/* mapping relationship between npu and eid */
+		if _, exist := npuInfoMap[localAEid]; !exist && npuInfoMap != nil {
+			npuInfoMap[localAEid] = getNpuMapValueInfoUnit(rackAndServerIds, index,
+				strconv.Itoa(param.serverTopology.EdgeList[i].LocalA/perBoardNpus),
+				param.serverTopology.EdgeList[i].LocalA, serverIDA)
+		}
+		if _, exist := npuInfoMap[localBEid]; !exist && npuInfoMap != nil {
+			npuInfoMap[localBEid] = getNpuMapValueInfoUnit(
+				rackAndServerIds, index, strconv.Itoa(param.serverTopology.EdgeList[i].LocalB/perBoardNpus),
+				param.serverTopology.EdgeList[i].LocalB, serverIDB)
+		}
+	}
+	return npuInfoMap, npuFmLink
+}
+
+func findEid(serverId string, npuId int, localPorts []string, rack *RackInfo) string {
+	levelLists := rack.ServerMap[serverId].NpuMap[strconv.Itoa(npuId)].LevelList
+	var eid string
+	for _, levelList := range levelLists {
+		if levelList.NetLayer != level0 {
+			continue
+		}
+		for _, addrList := range levelList.RankAddrList {
+			if reflect.DeepEqual(addrList.Ports, localPorts) {
+				eid = addrList.Addr
+				return eid
+			}
+		}
+	}
+	hwlog.RunLog.Errorf("find eid failed: serverId %s, npuId %d, localPorts %v, rack %v",
+		serverId, npuId, localPorts, rack)
+	return eid
+}
+
+func parseA5ServerLevelTopologyFile(topoParam *parseTopoParam) ([]string, map[string]algo.NpuInfo) {
+	if len(topoParam.topoServerDirPath) == 0 {
+		hwlog.RunLog.Error("no server topology file  exist!")
+		return nil, nil
+	}
+	npuFmLink := make([]string, 0)
+	var npuInfoMap map[string]algo.NpuInfo
+	for index, file := range topoParam.topoServerDirPath {
+		/* loop waiting for reading file*/
+		if !loopWaitFile(file, topoParam.superPodPath) {
+			return nil, nil
+		}
+		data, err := fileutils.ReadLimitBytes(file, constants.Size10M)
+		if err != nil {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]Open:%v", err)
+			return nil, nil
+		}
+		if controllerflags.IsControllerExited.GetState() {
+			return nil, nil
+		}
+		if len(data) == 0 {
+			hwlog.RunLog.Errorf("[CONTROLLER]empty or not exist:%s", file)
+			continue
+		}
+		var obj RackTopology
+		if err = json.Unmarshal(data, &obj); err != nil {
+			hwlog.RunLog.Error(err)
+			return nil, nil
+		}
+		if len(obj.EdgeList) == 0 {
+			hwlog.RunLog.Error("not found edge list")
+		}
+		param := npuMapParam{superPodInfo: topoParam.superPodInfo, typeStr: topoParam.typeStr,
+			rackNpuMap:     topoParam.superPodRackNpuMap[topoParam.rackAndServerInfo[0][index]],
+			serverTopology: &obj}
+		npuInfoMapTmp, npuFmLinkTmp :=
+			storeA51D2DNpuFmLinkAndNpuEidMapInfo(index, topoParam.rackAndServerInfo, &param)
+		npuInfoMap = mergeNpuEidMap(npuInfoMapTmp, npuInfoMap)
+		npuFmLink = append(npuFmLink, npuFmLinkTmp...)
+		if npuInfoMap == nil {
+			return nil, nil
+		}
+	}
+	return npuFmLink, npuInfoMap
+}
+
+func getA51D2DNpuLinkPath(npuNetPlanePaths map[string][]string, npu *NpuInfo, rackId string, typeStr string) {
+	if npuNetPlanePaths == nil {
+		return
+	}
+	var format string
+	if typeStr == "1D" {
+		format = "NA.L2-LogicPort%d:0#Rack-%s.L1-LogicPort%d:0#Rack-%s.NSlot-%d:0#NPU-%s.%s:0"
+	} else { // "2D"
+		format = "NA.L2-LogicPort:0#Rack-%s.NA:0#Rack-%s.NSlot-%d:0#NPU-%s.%s:0"
+	}
+	for _, levelInfo := range npu.LevelList {
+		if levelInfo.NetLayer != level1 {
+			continue
+		}
+		/* eid numbers equals plane numbers */
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			index := strconv.Itoa(i + 1)
+			if _, exist := npuNetPlanePaths[index]; !exist {
+				npuNetPlanePaths[index] = make([]string, 0)
+			}
+			/* string concatenation */
+			npuId, err := strconv.Atoi(npu.PhyId)
+			if err != nil {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			planeId, err := strconv.Atoi(levelInfo.RankAddrList[i].PlaneId)
+			if err != nil {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			slotId := npuId / perBoardNpus
+			var link string
+			if typeStr == "1D" {
+				link = fmt.Sprintf(format, planeId, rackId, planeId, rackId, slotId, npu.PhyId, levelInfo.RankAddrList[i].Addr)
+			} else {
+				link = fmt.Sprintf(format, rackId, rackId, slotId, npu.PhyId, levelInfo.RankAddrList[i].Addr)
+			}
+			npuNetPlanePaths[index] = append(npuNetPlanePaths[index], link)
+		}
+	}
+}
+
+/* determine if it's the new 1D and check if ports exist*/
+func checkIfNew1D(rackInfo map[string]*RackInfo) bool {
+	if rackInfo == nil || len(rackInfo) == 0 {
+		hwlog.RunLog.Error("new 1D rack info is nil")
+		return false
+	}
+	var rackI *RackInfo = nil
+	for _, rack := range rackInfo {
+		rackI = rack
+		break
+	}
+	if rackI == nil || rackI.ServerMap == nil || len(rackI.ServerMap) == 0 {
+		hwlog.RunLog.Error("new 1D rack info is nil")
+		return false
+	}
+	var serverI *ServerInfo = nil
+	for _, server := range rackI.ServerMap {
+		serverI = server
+		break
+	}
+	if serverI == nil || serverI.NpuMap == nil || len(serverI.NpuMap) == 0 {
+		hwlog.RunLog.Error("new 1D server info is nil")
+		return false
+	}
+	var npuI *NpuInfo = nil
+	for _, npu := range serverI.NpuMap {
+		npuI = npu
+		break
+	}
+	if npuI == nil || len(npuI.LevelList) == 0 {
+		return false
+	}
+	return true
+}
+
+/* get the Eid or IP with sddrType as target from the port in super pod.json */
+func getEidInfoOrIpFromPorts(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, levelInfo := range param.npu.LevelList {
+		if levelInfo.NetLayer != level1 {
+			continue
+		}
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			id, err := strconv.Atoi(param.npu.PhyId)
+			if err != nil {
+				hwlog.RunLog.Errorf("[CONTROLLER]%s:%v", param.npu.PhyId, err)
+				continue
+			}
+			slotId := id / perBoardNpus
+			npuInfo := algo.NpuInfo{
+				RackName:     fmt.Sprintf("Rack-%s", param.rack.RackID),
+				NpuNumber:    id,
+				SlotName:     fmt.Sprintf("NSlot-%d", slotId),
+				NetPlaneId:   fmt.Sprintf("netplane_%s", levelInfo.RankAddrList[i].PlaneId),
+				SuperPodName: fmt.Sprintf("SuperPod-%s", param.superPodId),
+				OsName:       param.server.ServerIndex}
+			if _, exist := npuEidMap[levelInfo.RankAddrList[i].Addr]; !exist && npuEidMap != nil {
+				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
+			}
+		}
+	}
+}
+
+func getReasoningServerNpuLinkPath(npuNetPlanePaths map[string][]string,
+	serverIds []int, serverMap map[string]*ServerInfo) {
+	for index, serverId := range serverIds {
+		strId := strconv.Itoa(serverId)
+		/* must exist */
+		server := serverMap[strId]
+		for _, npu := range server.NpuMap {
+			if npu == nil || len(npu.LevelList) == 0 {
+				continue
+			}
+			getReasoningServerNpuLinkPathStr(npuNetPlanePaths, npu, index)
+		}
+	}
+}
+
+func getReasoningServerNpuLinkPathStr(npuNetPlanePaths map[string][]string,
+	npu *NpuInfo, serverIndex int) {
+	if npuNetPlanePaths == nil {
+		return
+	}
+	format := "NA.L2-LogicPort%d:0#Node-%d.L1-LogicPort%d:0#Node-%d.NSlot-%d:0#NPU-%s.%s:0"
+	for _, levelInfo := range npu.LevelList {
+		if levelInfo.NetLayer != level1 {
+			continue
+		}
+		/* eid numbers equals plane numbers */
+		for i := 0; i < len(levelInfo.RankAddrList); i++ {
+			index := strconv.Itoa(i + 1)
+			if _, exist := npuNetPlanePaths[index]; !exist {
+				npuNetPlanePaths[index] = make([]string, 0)
+			}
+			/* string concatenation */
+			npuId, err := strconv.Atoi(npu.PhyId)
+			if err != nil {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			planeId, err := strconv.Atoi(levelInfo.RankAddrList[i].PlaneId)
+			if err != nil {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			/* calculate real npu id according to server index */
+			npuPhyId := serverIndex*perBoardNpus + npuId
+			slotId := npuPhyId / perBoardNpus
+			link := fmt.Sprintf(format, planeId, serverIndex, planeId, serverIndex, slotId,
+				strconv.Itoa(npuPhyId), levelInfo.RankAddrList[i].Addr)
+			npuNetPlanePaths[index] = append(npuNetPlanePaths[index], link)
+		}
+	}
+}
+
+func getA51D2DServerLevelInfo(npuNetPlanePaths map[string][]string, rack *RackInfo, typeStr string) {
+	/* sort serverId, serverId is unique string */
+	if typeStr == "reasoningServer" {
+		serverIds := make([]int, 0)
+		for _, server := range rack.ServerMap {
+			serverId, err := strconv.Atoi(server.ServerIndex)
+			if err != nil {
+				hwlog.RunLog.Error(err)
+				continue
+			}
+			serverIds = append(serverIds, serverId)
+		}
+		sort.Ints(serverIds)
+		getReasoningServerNpuLinkPath(npuNetPlanePaths, serverIds, rack.ServerMap)
+		return
+	}
+	for _, server := range rack.ServerMap {
+		if server == nil || len(server.NpuMap) == 0 {
+			continue
+		}
+		for _, npu := range server.NpuMap {
+			if npu == nil || len(npu.LevelList) == 0 {
+				continue
+			}
+			getA51D2DNpuLinkPath(npuNetPlanePaths, npu, rack.RackID, typeStr)
+		}
+	}
+}
+
+/*In super-pod-i.json, the eid of the UBC protocol type in the ports is netplane_I*/
+func getA51D2DSuperPodNpuLinkPath(superPodInfo *SuperPodInfo, typeStr string) map[string][]string {
+	if superPodInfo == nil {
+		hwlog.RunLog.Error("invalid super pod information")
+		return nil
+	}
+	npuNetPlanePaths := make(map[string][]string)
+	if len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Error("[CONTROLLER]empty rack info")
+		return nil
+	}
+	for _, rack := range superPodInfo.RackMap {
+		if rack == nil || len(rack.ServerMap) == 0 {
+			continue
+		}
+		getA51D2DServerLevelInfo(npuNetPlanePaths, rack, typeStr)
+	}
+	return npuNetPlanePaths
+}
+
+/*
+return all npu pyhId of each rack of current super pod,
+ensure that all the npu direct connection information src passed to the algorithm exists in super-pod.json
+*/
+func getSuperPodRackLevelNpuMap(superPodInfo *SuperPodInfo) map[string]map[string]bool {
 	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
-		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s: invalid or empty superPodInfo", superPodPath)
-		return nil, false
+		hwlog.RunLog.Error("invalid super pod info")
+		return nil
 	}
-	npuMap := getReasoningServerSuperPodNpuMap(superPodInfo)
-	if len(npuMap) == 0 {
-		return nil, false
+	/* rackId is unique in super pod, npu phyId is unique in rack */
+	ret := make(map[string]map[string]bool)
+	count := 0
+	for _, rack := range superPodInfo.RackMap {
+		if len(rack.ServerMap) == 0 {
+			continue
+		}
+		ret[rack.RackID] = make(map[string]bool)
+		for _, server := range rack.ServerMap {
+			if len(server.NpuMap) == 0 {
+				continue
+			}
+			for _, npu := range server.NpuMap {
+				ret[rack.RackID][npu.PhyId] = true
+			}
+			count++
+		}
 	}
-	return npuMap, true
+	if len(ret) == 0 {
+		hwlog.RunLog.Error("unmatched any npu in rack")
+		return nil
+	}
+	return ret
+}
+
+// GetA5CurSuperPod1D2DNpuInfo get npu direct connection, mapping, link info in topology of rack dir under super pod
+func GetA5CurSuperPod1D2DNpuInfo(superPodPath string,
+	superPodInfo *SuperPodInfo) ([]string, map[string][]string, map[string]algo.NpuInfo) {
+	/* get all rack-I directories under the current path */
+	rackNums := len(superPodInfo.RackMap)
+	if rackNums == 0 {
+		hwlog.RunLog.Error(superPodInfo, " has no rack")
+		return nil, nil, nil
+	}
+	topoServerDirPath := make([]string, 0)
+	rackAndServerInfo := make([][]string, 0)
+	rackAndServerInfo = append(rackAndServerInfo, make([]string, 0))
+	rackAndServerInfo = append(rackAndServerInfo, make([]string, 0))
+	superPodRackNpuMap := getSuperPodRackLevelNpuMap(superPodInfo)
+	if superPodRackNpuMap == nil {
+		return nil, nil, nil
+	}
+	for _, rack := range superPodInfo.RackMap {
+		rackPath := filepath.Join(superPodPath, "rack-"+rack.RackID)
+		if len(rack.ServerMap) == 0 {
+			continue
+		}
+		/* get one serverId as topo file suffix of each rack */
+		for _, server := range rack.ServerMap {
+			topoPath := filepath.Join(rackPath, "topo_"+server.ServerIndex+".json")
+			/* judge file exist when loop wait and read file */
+			topoServerDirPath = append(topoServerDirPath, topoPath)
+			rackAndServerInfo[0] = append(rackAndServerInfo[0], rack.RackID)
+			rackAndServerInfo[1] = append(rackAndServerInfo[1], server.ServerIndex)
+			break
+		}
+	}
+	typeStr := getNetWorkType(superPodPath, superPodInfo)
+	if typeStr == "" {
+		return nil, nil, nil
+	}
+	/* get npu link out of rack info from super-pod.json */
+	npuNetPlanePaths := getA51D2DSuperPodNpuLinkPath(superPodInfo, typeStr)
+	/* parse ech topo and get direct connection, mapping info */
+	param := parseTopoParam{superPodInfo: superPodInfo, typeStr: typeStr,
+		topoServerDirPath: topoServerDirPath, superPodRackNpuMap: superPodRackNpuMap,
+		rackAndServerInfo: rackAndServerInfo, superPodPath: superPodPath}
+	npuFmLink, npuEidMap := parseA5ServerLevelTopologyFile(&param)
+	return npuFmLink, npuNetPlanePaths, npuEidMap
 }
 
 /* 根据协议构建算法需要的链路形式(1D、2D与roce链路格式都不相同) */
@@ -421,16 +848,15 @@ func formatDifferentByProtocol(npuNetPlanePaths map[string][]string,
 		return false
 	}
 	// key使用rack-os
-	key := param.rack.RackID + "-" + param.server.ServerIndex
+	key := fmt.Sprintf("%s-%s", param.rack.RackID, param.server.ServerIndex)
 	if _, exist := npuNetPlanePaths[key]; !exist {
 		npuNetPlanePaths[key] = make([]string, 0)
 	}
 	var link string
 	switch param.protocol {
 	case "ROCE":
-		link =
-			fmt.Sprintf("NA.ROCESwitch:0#NA.SuperPod-%s:0#NA.NSlot-0:0#NPU-%s.%s:0",
-				param.superPodId, param.npu.PhyId, param.protocolLevels.RankAddrList[id].Addr)
+		link = fmt.Sprintf("NA.ROCESwitch:0#NA.SuperPod-%s:0#NA.NSlot-0:0#NPU-%s.%s:0",
+			param.superPodId, param.npu.PhyId, param.protocolLevels.RankAddrList[id].Addr)
 	default:
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]undefined protocol:%s", param.protocol)
 		return false
@@ -454,8 +880,8 @@ func getRoceNpuLinkPathInfo(npuNetPlanePaths map[string][]string, param superPod
 			flag := formatDifferentByProtocol(npuNetPlanePaths, param, i)
 			/* 超节点间每张卡取一个ip就可以了 */
 			if _, exist := npuMap[levelInfo.RankAddrList[i].Addr]; !exist && param.protocol == "ROCE" && flag {
-				npuMap[levelInfo.RankAddrList[i].Addr] = param.superPodId + "_" +
-					param.rack.RackID + "_" + param.server.ServerIndex
+				npuMap[levelInfo.RankAddrList[i].Addr] = fmt.Sprintf("%s_%s_%s", param.superPodId,
+					param.rack.RackID, param.server.ServerIndex)
 				break
 			}
 		}
@@ -467,11 +893,11 @@ func getRoceServerLevelNpuLinkPathInfo(npuNetPlanePaths map[string][]string,
 	// key:address; value:=superPod_rackId_osId, roce每个os下所有npu出口ip相同
 	npuMap := make(map[string]string)
 	for _, server := range param.rack.ServerMap {
-		if server == nil || server.NpuMap == nil || len(server.NpuMap) == 0 {
+		if server == nil || len(server.NpuMap) == 0 {
 			continue
 		}
 		for _, npu := range server.NpuMap {
-			if npu == nil || npu.LevelList == nil || len(npu.LevelList) == 0 {
+			if npu == nil || len(npu.LevelList) == 0 {
 				continue
 			}
 			param.server = server
@@ -500,14 +926,14 @@ func getRoceNpuLinkPathFromSuperPodJson(superPodInfo *SuperPodInfo,
 		return nil, nil
 	}
 
-	if superPodInfo.RackMap == nil || len(superPodInfo.RackMap) == 0 {
+	if len(superPodInfo.RackMap) == 0 {
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]super pod %s empty rack info", superPodInfo.SuperPodID)
 		return nil, nil
 	}
 	npuRoceInfoMap := make(map[string]string)
 	npuNetPlanePaths := make(map[string][]string)
 	for _, rack := range superPodInfo.RackMap {
-		if rack == nil || rack.ServerMap == nil || len(rack.ServerMap) == 0 {
+		if rack == nil || len(rack.ServerMap) == 0 {
 			continue
 		}
 		param := superPodParam{}
@@ -537,11 +963,11 @@ func getNpuInfoFromNpuLinkPath(npuMap map[string]algo.NpuInfo, npuLinkPath strin
 		return
 	}
 	slotId := npuId / perBoardNpus
-	ip := strconv.Itoa(ip1) + "." + strconv.Itoa(ip2) + "." + strconv.Itoa(ip3) + "." + strconv.Itoa(ip4)
+	ip := fmt.Sprintf("%d.%d.%d.%d", ip1, ip2, ip3, ip4)
 	npuMap[ip] = algo.NpuInfo{
 		NpuNumber:    npuId,
-		SuperPodName: "SuperPod-" + strconv.Itoa(superPodId),
-		SlotName:     "NSlot-" + strconv.Itoa(slotId),
+		SuperPodName: fmt.Sprintf("SuperPod-%d", superPodId),
+		SlotName:     fmt.Sprintf("NSlot-%d", slotId),
 	}
 }
 
@@ -593,7 +1019,7 @@ func getSuperPodIdAndOsIdFromRoceMap(npuMap map[string]algo.NpuInfo, roceMap map
 				NpuNumber:    npuInfo.NpuNumber,
 				SuperPodName: npuInfo.SuperPodName,
 				OsName:       strconv.Itoa(osId),
-				RackName:     "Rack-" + strconv.Itoa(rackId),
+				RackName:     fmt.Sprintf("Rack-%d", rackId),
 				SlotName:     npuInfo.SlotName,
 			}
 		}
@@ -618,7 +1044,7 @@ func GetSuperPodsRoceNpuInfo(superPodInfoPaths []string) (map[string]algo.NpuInf
 		}
 		/* roce仅会有一个值"netplane_0" */
 		npuNetPlanePaths, npuRoceMap := getRoceNpuLinkPathFromSuperPodJson(superPodInfo, "ROCE")
-		if npuNetPlanePaths == nil || len(npuNetPlanePaths) == 0 || npuRoceMap == nil {
+		if len(npuNetPlanePaths) == 0 || npuRoceMap == nil {
 			continue
 		}
 		/* 取%1或至少5个 */
