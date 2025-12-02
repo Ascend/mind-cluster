@@ -37,8 +37,15 @@ func useV1dot2(job *mindxdlv1.AscendJob) bool {
 	if _, spBlockExit := job.Annotations[utils.AnnoKeyOfSuperPod]; spBlockExit {
 		return true
 	}
-	if value, ok := job.Labels[api.AcceleratorTypeKey]; ok && value == api.AcceleratorTypeModule910A3SuperPod {
-		return true
+
+	for _, replicaSpec := range job.Spec.ReplicaSpecs {
+		if replicaSpec.Template.Spec.NodeSelector == nil {
+			continue
+		}
+		value, ok := replicaSpec.Template.Spec.NodeSelector[api.AcceleratorTypeKey]
+		if ok && value == api.AcceleratorTypeModule910A3SuperPod {
+			return true
+		}
 	}
 
 	return false
