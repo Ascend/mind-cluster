@@ -246,7 +246,13 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 		return false, nil
 	}
 	var npuInfoMap = make(map[string]algo.NpuInfo)
+	success := false
 	switch superPodInfo.Version {
+	case DiagVersionA5:
+		npuInfoMap, success = handleA5NpuMapInfo(superPodInfo, superPodFilePath)
+		if !success {
+			return false, nil
+		}
 	case DiagVersionA3:
 		_, npuNetplaneInfo = GetCurSuperPodInfoFromMapA3(superPodInfo)
 		if len(npuNetplaneInfo) == 0 {
@@ -254,6 +260,11 @@ func GetTargetSuperPodNpuMap(superPodFilePath string,
 			return false, nil
 		}
 		npuInfoMap = ExtractNPUMapA3(npuNetplaneInfo)
+	case DiagVersionServer:
+		npuInfoMap, success = handleReasoningServer(superPodInfo, superPodFilePath)
+		if !success {
+			return false, nil
+		}
 	default:
 		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s version info error, the value %s", superPodFile, superPodInfo.Version)
 		return false, nil
@@ -1087,6 +1098,9 @@ func mergeNpuEidMap(npuEidMapOutRack map[string]algo.NpuInfo,
 
 func getReasoningServerNpuInfo(npuEidMap map[string]algo.NpuInfo,
 	serverIndex int, npu *NpuInfo, serverId, superPodId string) {
+	if npu == nil {
+		return
+	}
 	for _, levelInfo := range npu.LevelList {
 		if levelInfo.NetLayer != level1 {
 			continue
@@ -1102,9 +1116,9 @@ func getReasoningServerNpuInfo(npuEidMap map[string]algo.NpuInfo,
 			npuInfo := algo.NpuInfo{
 				RackName:     "Rack-0", // 推理服务器都写0
 				NpuNumber:    npuPhyId,
-				SlotName:     "NSlot-" + strconv.Itoa(slotId),
-				NetPlaneId:   "netplane_" + levelInfo.RankAddrList[i].PlaneId,
-				SuperPodName: "SuperPod-" + superPodId,
+				SlotName:     fmt.Sprintf("NSlot-%d", slotId),
+				NetPlaneId:   fmt.Sprintf("netplane_%s", levelInfo.RankAddrList[i].PlaneId),
+				SuperPodName: fmt.Sprintf("SuperPod-%s", superPodId),
 				OsName:       serverId}
 			if _, exist := npuEidMap[levelInfo.RankAddrList[i].Addr]; !exist && npuEidMap != nil {
 				npuEidMap[levelInfo.RankAddrList[i].Addr] = npuInfo
@@ -1184,4 +1198,146 @@ func getNetWorkType(superPod string, superPodInfo *SuperPodInfo) string {
 		hwlog.RunLog.Errorf("Unknown hardware type %s", obj.HardwareType)
 		return ""
 	}
+}
+
+func getNpuEidMapInfo(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, npu := range param.server.NpuMap {
+		if npu == nil || len(npu.LevelList) == 0 {
+			continue
+		}
+		param.npu = npu
+		getEidInfoOrIpFromPorts(npuEidMap, param)
+	}
+}
+
+func getServerNpuEidMapInfo(npuEidMap map[string]algo.NpuInfo, param superPodParam) {
+	for _, server := range param.rack.ServerMap {
+		if server == nil || len(server.NpuMap) == 0 {
+			continue
+		}
+		param.server = server
+		getNpuEidMapInfo(npuEidMap, param)
+	}
+}
+
+/* get the mapping between outbound ports of the target protocol type in NPU ports and NPUs from super-pod.json */
+func getNpuEidMapOutOfRack(rackInfo map[string]*RackInfo, protocol string, superPodId string) map[string]algo.NpuInfo {
+	npuEidMap := EidNpuMap{
+		Map: make(map[string]algo.NpuInfo),
+	}
+	if len(rackInfo) == 0 {
+		hwlog.RunLog.Error("[CONTROLLER]empty rack info")
+		return nil
+	}
+	for _, rack := range rackInfo {
+		if rack == nil || len(rack.ServerMap) == 0 {
+			continue
+		}
+		param := superPodParam{}
+		param.rack = rack
+		param.protocol = protocol
+		param.superPodId = superPodId
+		getServerNpuEidMapInfo(npuEidMap.Map, param)
+	}
+	if len(npuEidMap.Map) == 0 {
+		hwlog.RunLog.Error("[CONTROLLER]empty npu ports info")
+		return nil
+	}
+	return npuEidMap.Map
+}
+
+/* get the mapping between NPUs and EIDs for intra-supernode detection */
+func handleA5NpuMapInfo(superPodInfo *SuperPodInfo, superPodPath string) (map[string]algo.NpuInfo, bool) {
+	npuInfoMap := make(map[string]algo.NpuInfo)
+	/* determine whether it is 1D or 2D */
+	typeStr := getNetWorkType(superPodPath, superPodInfo)
+	if typeStr == "1D" || typeStr == "2D" {
+		npuEidMapOutRack := getNpuEidMapOutOfRack(superPodInfo.RackMap, "UBC", superPodInfo.SuperPodID)
+		_, _, npuEidMapFromTopo := GetA5CurSuperPod1D2DNpuInfo(superPodPath, superPodInfo)
+		if len(npuEidMapFromTopo) == 0 {
+			return npuInfoMap, false
+		}
+		npuInfoMap = mergeNpuEidMap(npuEidMapOutRack, npuEidMapFromTopo)
+	} else {
+		return npuInfoMap, false
+	}
+	return npuInfoMap, true
+}
+
+func handleReasoningServer(superPodInfo *SuperPodInfo, superPodPath string) (map[string]algo.NpuInfo, bool) {
+	if superPodInfo == nil || len(superPodInfo.RackMap) == 0 {
+		hwlog.RunLog.Errorf("[NETFAULT ALGO]%s: invalid or empty superPodInfo", superPodPath)
+		return nil, false
+	}
+	npuMap := getReasoningServerSuperPodNpuMap(superPodInfo)
+	if len(npuMap) == 0 {
+		return nil, false
+	}
+	return npuMap, true
+}
+
+func getReasoningServerSuperPodNpuMap(superPodInfo *SuperPodInfo) map[string]algo.NpuInfo {
+	if superPodInfo == nil {
+		hwlog.RunLog.Error("[NETFAULT ALGO]invalid or empty superPodInfo")
+		return nil
+	}
+	npuEidMap := make(map[string]algo.NpuInfo)
+	rackMap := superPodInfo.RackMap
+	if len(rackMap) != 1 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]error rack numbers")
+		return nil
+	}
+	var rackSingle *RackInfo
+	for _, rack := range rackMap {
+		rackSingle = rack
+		break
+	}
+	if rackSingle == nil || len(rackSingle.ServerMap) == 0 {
+		hwlog.RunLog.Error("[NETFAULT ALGO]error rack inner server numbers")
+		return nil
+	}
+	serverIds := make([]int, 0)
+	for _, server := range rackSingle.ServerMap {
+		serverId, err := strconv.Atoi(server.ServerIndex)
+		if err != nil {
+			hwlog.RunLog.Errorf("[NETFAULT ALGO]%v", err)
+			continue
+		}
+		serverIds = append(serverIds, serverId)
+	}
+	sort.Ints(serverIds)
+	for index, serverId := range serverIds {
+		strId := strconv.Itoa(serverId)
+		server := rackSingle.ServerMap[strId]
+		for _, npu := range server.NpuMap {
+			if npu == nil || len(npu.LevelList) == 0 {
+				continue
+			}
+			getReasoningServerNpuInfo(npuEidMap, index, npu, server.ServerIndex, superPodInfo.SuperPodID)
+		}
+	}
+	return npuEidMap
+}
+
+// CheckDiffConfig retrieves the content of the cathelper.conf configuration file under the supernode directory
+func CheckDiffConfig(superPodFilePath string) map[string]interface{} {
+	confFilePath := filepath.Join(superPodFilePath, configFile)
+	var fileContent []byte
+	var err error
+	for retryCount := 0; retryCount < maxRetryTime &&
+		!controllerflags.IsControllerExited.GetState(); retryCount++ {
+		fileContent, err = fileutils.ReadLimitBytes(confFilePath, constants.Size10M)
+		if err == nil {
+			break
+		}
+		hwlog.RunLog.Warnf("[NETFAULT ALGO]Opening file:%v", err)
+		time.Sleep(time.Duration(1) * time.Second)
+	}
+	if len(fileContent) == 0 {
+		hwlog.RunLog.Errorf("%s, config file read failed!", superPodFilePath)
+		return nil
+	}
+	targetKeys := []string{"networkType", "pingType", "pingTimes", "pingInterval", "suppressedPeriod", "period"}
+	callAlgorithmParam := ReadConfigFromFile(fileContent, targetKeys)
+	return callAlgorithmParam
 }

@@ -639,3 +639,164 @@ func TestGetReasoningServerNpuLinkPathStrPartTwo(t *testing.T) {
 		})
 	})
 }
+
+func TestGetReasoningServerNpuInfo(t *testing.T) {
+	convey.Convey("TestGetReasoningServerNpuInfo", t, func() {
+		convey.Convey("test level != 1", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "1",
+				LevelList: []LevelElement{
+					{NetLayer: 0, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test level == 1, phyid != number", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "null",
+				LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test level == 1, phyid == number", func() {
+			npuMap := make(map[string]algo.NpuInfo)
+			npu := &NpuInfo{
+				PhyId: "0",
+				LevelList: []LevelElement{
+					{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "192.168.1.1"}}},
+				},
+			}
+			getReasoningServerNpuInfo(npuMap, 0, npu, "0", "0")
+			convey.So(len(npuMap) > 0, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestGetReasoningServerSuperPodNpuMap(t *testing.T) {
+	convey.Convey("TestGetReasoningServerSuperPodNpuMap", t, func() {
+		convey.Convey("test empty rack", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("test empty server map", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: make(map[string]*ServerInfo)},
+			}}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("test invalid server id", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: map[string]*ServerInfo{
+					"a": {ServerIndex: "a"},
+					"b": {ServerIndex: "b"},
+				}},
+			}}
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(len(ret) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("test empty npu data", func() {
+			superPodInfo := &SuperPodInfo{RackMap: map[string]*RackInfo{
+				"0": {ServerMap: map[string]*ServerInfo{
+					"1": {ServerIndex: "1"},
+					"2": {ServerIndex: "2"},
+				}},
+			}}
+			patch := gomonkey.ApplyFunc(getReasoningServerNpuInfo, func(npuEidMap map[string]algo.NpuInfo,
+				serverIndex int, npu *NpuInfo, serverId string, superPodId string) {
+				return
+			})
+			defer patch.Reset()
+			ret := getReasoningServerSuperPodNpuMap(superPodInfo)
+			convey.So(len(ret) == 0, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestHandleReasoningServer(t *testing.T) {
+	convey.Convey("TestHandleReasoningSrever", t, func() {
+		convey.Convey("empty super pod info", func() {
+			ret, _ := handleReasoningServer(nil, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("len npu map == 0", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			patch := gomonkey.ApplyFuncReturn(getReasoningServerSuperPodNpuMap, map[string]algo.NpuInfo{})
+			defer patch.Reset()
+			ret, _ := handleReasoningServer(superPodInfo, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+		convey.Convey("len npu map != 0", func() {
+			superPodInfo := &SuperPodInfo{RackMap: make(map[string]*RackInfo)}
+			patch := gomonkey.ApplyFuncReturn(getReasoningServerSuperPodNpuMap, map[string]algo.NpuInfo{
+				"xx.xx": algo.NpuInfo{
+					IP: "xx.xx",
+				},
+			})
+			defer patch.Reset()
+			ret, _ := handleReasoningServer(superPodInfo, "")
+			convey.So(ret == nil, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestFuncGetServerNpuEidMapInfo(t *testing.T) {
+	convey.Convey("test func getServerNpuEidMapInfo", t, func() {
+		convey.Convey("", func() {
+			npuEidMap := map[string]algo.NpuInfo{
+				"11": algo.NpuInfo{}}
+			param := superPodParam{
+				rack: &RackInfo{
+					RackID: "1",
+					ServerMap: map[string]*ServerInfo{"4": &ServerInfo{ServerIndex: "4",
+						NpuMap: map[string]*NpuInfo{
+							"1": &NpuInfo{PhyId: "1", LevelList: []LevelElement{
+								{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "11"}, {Addr: "2", PlaneId: "1"}}}}},
+						}},
+						"0": {},
+					}},
+				superPodId: "1",
+			}
+			getServerNpuEidMapInfo(npuEidMap, param)
+			expect := map[string]algo.NpuInfo{
+				"2": {SuperPodName: "SuperPod-1", RackName: "Rack-1", OsName: "4", SlotName: "NSlot-0", NpuNumber: 1,
+					NetPlaneId: "netplane_1"},
+				"11": algo.NpuInfo{},
+			}
+			convey.So(npuEidMap, convey.ShouldResemble, expect)
+		})
+	})
+}
+
+func TestFuncGetNpuEidMapInfo(t *testing.T) {
+	convey.Convey("test func get NpuEidMapInfo", t, func() {
+		convey.Convey("", func() {
+			npuEidMap := map[string]algo.NpuInfo{
+				"11": algo.NpuInfo{}}
+			param := superPodParam{
+				rack: &RackInfo{RackID: "1"},
+				server: &ServerInfo{ServerIndex: "4",
+					NpuMap: map[string]*NpuInfo{
+						"1": &NpuInfo{PhyId: "1", LevelList: []LevelElement{
+							{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "11"}, {Addr: "2", PlaneId: "1"}}}}},
+					},
+				},
+				superPodId: "1",
+			}
+			getNpuEidMapInfo(npuEidMap, param)
+			expect := map[string]algo.NpuInfo{
+				"2": {SuperPodName: "SuperPod-1", RackName: "Rack-1", OsName: "4", SlotName: "NSlot-0", NpuNumber: 1,
+					NetPlaneId: "netplane_1"},
+				"11": algo.NpuInfo{},
+			}
+			convey.So(npuEidMap, convey.ShouldResemble, expect)
+		})
+	})
+}

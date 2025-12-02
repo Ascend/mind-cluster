@@ -18,6 +18,7 @@ package controller
 import (
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -633,6 +634,139 @@ func TestAddNewSuperPodDetection(t *testing.T) {
 			a := make([]string, maxSuperPodDetectionNums+1)
 			b := make([]int, maxSuperPodDetectionNums+1)
 			addNewSuperPodDetection(&wg, a, b)
+		})
+	})
+}
+
+func TestStartRoCERoutine(t *testing.T) {
+	convey.Convey("TestStartRoCERoutine", t, func() {
+		convey.Convey("start failed", func() {
+			var wg sync.WaitGroup
+			wg.Add(1)
+			patch := gomonkey.ApplyFunc(startRoceDetection, func(path string) {
+				return
+			})
+			defer patch.Reset()
+			startRoCERoutine(&wg)
+			wg.Wait()
+		})
+	})
+}
+
+func TestDetectionCurSuperPod(t *testing.T) {
+	convey.Convey("test func detectionCurSuperPod", t, func() {
+		patch := gomonkey.NewPatches()
+		defer patch.Reset()
+		patch.ApplyFuncReturn(loopWaitSuperPodDirAndCheckConfigFile, true)
+		convey.Convey("should return when setCallAlgoParam failed", func() {
+			subPatch := gomonkey.ApplyFuncReturn(checkDiffConfig, nil)
+			defer subPatch.Reset()
+			detectionCurSuperPod(0, "")
+		})
+		patch.ApplyFuncReturn(checkDiffConfig, map[string]any{})
+		convey.Convey("should return when set callAlgoParam failed", func() {
+			subPatch := gomonkey.ApplyFuncReturn(policy.SetCallAlgorithmParamInfo, errors.New("err"))
+			defer subPatch.Reset()
+			detectionCurSuperPod(0, "")
+		})
+		patch.ApplyFuncReturn(policy.SetCallAlgorithmParamInfo, nil)
+		convey.Convey("should return when get npuInfoMap failed", func() {
+			subPatch := gomonkey.ApplyFuncReturn(policy.GetTargetSuperPodNpuMap, false, nil)
+			defer subPatch.Reset()
+			detectionCurSuperPod(0, "")
+		})
+		convey.Convey("should return when gen pingList failed", func() {
+			subPatch := gomonkey.ApplyFuncReturn(policy.GetTargetSuperPodNpuMap, true, nil)
+			subPatch.ApplyFuncReturn(policy.GenSuperPodServersPingList, false)
+			defer subPatch.Reset()
+			detectionCurSuperPod(0, "")
+		})
+	})
+}
+
+func TestMakeAlgoRoceParam(t *testing.T) {
+	convey.Convey("Test func makeAlgoRoceParam", t, func() {
+		convey.Convey("return nil when checkDiffConfig", func() {
+			patch := gomonkey.ApplyFuncReturn(checkDiffConfig, nil)
+			defer patch.Reset()
+			ret := makeAlgoRoceParam("path", []string{})
+			convey.So(ret, convey.ShouldBeNil)
+		})
+		convey.Convey("return map when normal", func() {
+			paramMap := make(map[string]any)
+			dirName := []string{"1", "2", "3"}
+			patch := gomonkey.ApplyFuncReturn(checkDiffConfig, map[string]any{})
+			defer patch.Reset()
+			paramMap[policy.ServerIdMap] = make(map[string]string)
+			paramMap["axisStategy"] = "same_axis"
+			paramMap["superPodArr"] = dirName
+			paramMap["superPodJobFlag"] = true
+			paramMap["npu_type"] = "A5"
+			paramMap["pingObjType"] = 0
+			ret := makeAlgoRoceParam("path", dirName)
+			convey.So(ret, convey.ShouldResemble, paramMap)
+		})
+	})
+}
+
+func TestGetRoceDetectionSuperPodFile(t *testing.T) {
+	convey.Convey("test func getRoceDetectionSuperPodFiles", t, func() {
+		convey.Convey("return nil when ReadFile err", func() {
+			patch := gomonkey.ApplyFuncReturn(os.ReadFile, nil, errors.New("err"))
+			defer patch.Reset()
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
+			convey.So(ret1, convey.ShouldBeNil)
+			convey.So(ret2, convey.ShouldBeNil)
+		})
+		convey.Convey("should nil unmarshal err", func() {
+			patch1 := gomonkey.ApplyFuncReturn(os.ReadFile, nil, nil)
+			patch2 := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("err"))
+			defer patch1.Reset()
+			defer patch2.Reset()
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
+			convey.So(ret1, convey.ShouldBeNil)
+			convey.So(ret2, convey.ShouldBeNil)
+		})
+		convey.Convey("valid parameters", func() {
+			patch1 := gomonkey.ApplyFuncReturn(os.ReadFile, []byte(`{"superPodList:[1]"}`), nil)
+			patch2 := gomonkey.ApplyFuncReturn(loopWaitSuperPodDirAndCheckConfigFile, true)
+			defer patch1.Reset()
+			defer patch2.Reset()
+			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
+			convey.So(len(ret1) > 0, convey.ShouldBeTrue)
+			convey.So(len(ret2) > 0, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestStartRoceDetection(t *testing.T) {
+	convey.Convey("test func start RoceDetection", t, func() {
+		convey.Convey("should return when wait error", func() {
+			patch := gomonkey.ApplyFuncReturn(loopWaitSuperPodDirAndCheckConfigFile, false)
+			defer patch.Reset()
+			startRoceDetection("")
+		})
+		patch := gomonkey.NewPatches()
+		defer patch.Reset()
+		patch.ApplyFuncReturn(loopWaitSuperPodDirAndCheckConfigFile, true)
+		convey.Convey("should return when getNpuInfo err", func() {
+			subPatch := gomonkey.ApplyFuncReturn(policy.GetSuperPodsRoceNpuInfo, nil, nil)
+			defer subPatch.Reset()
+			startRoceDetection("")
+		})
+		patch.ApplyFuncReturn(policy.GetSuperPodsRoceNpuInfo, map[string]algo.NpuInfo{}, map[string]any{})
+		convey.Convey("should return when GenPinglist err", func() {
+			subPatch := gomonkey.ApplyFuncReturn(policy.GenRoceSuperPodLevelPingList, false)
+			defer subPatch.Reset()
+			startRoceDetection("")
+		})
+		patch.ApplyFuncReturn(policy.GenRoceSuperPodLevelPingList, true)
+		convey.Convey("should Detection when normal", func() {
+			call := 0
+			subPatch := gomonkey.ApplyFunc(loopCsvCallDetection, func(_ detectionParam) { call++ })
+			defer subPatch.Reset()
+			startRoceDetection("")
+			convey.So(call, convey.ShouldEqual, 0)
 		})
 	})
 }
