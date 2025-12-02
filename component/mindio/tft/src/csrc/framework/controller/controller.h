@@ -34,9 +34,6 @@ using namespace ock::acc;
 namespace ock {
 namespace ttp {
 
-class Controller;
-
-using ControllerPtr = Ref<Controller>;
 using GroupMap = std::set<std::vector<int32_t>>;
 using RankMask = std::vector<std::pair<int32_t, uint8_t>>;
 
@@ -86,7 +83,9 @@ using StateMachinePtr = Ref<controllerStateMachine>;
 
 class Controller : public Referable {
 public:
-    static ControllerPtr GetInstance(bool destroy = false);
+    typedef Ref<Controller> Ptr;
+
+    static Ptr GetInstance(bool destroy = false);
 
     // init
     TResult Initialize(int32_t rank, int32_t worldSize, bool enableLocalCopy = false,
@@ -429,6 +428,8 @@ private:
     bool mindSpore_ = false;
     bool isPorcessorExit_ = false;
 };
+
+using ControllerPtr = Controller::Ptr;
 
 }  // namespace ttp
 }  // namespace ock

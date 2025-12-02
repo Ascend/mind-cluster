@@ -24,7 +24,7 @@ constexpr uint32_t CHECK_COUNT_TWO = 2;
 constexpr uint32_t CHECK_COUNT_THREE = 3;
 constexpr uint32_t CHECK_COUNT_FOUR = 4;
 
-namesapce {
+namespace {
 ProcessorPtr g_processor2_ = nullptr;
 ProcessorPtr g_processor3_ = nullptr;
 ProcessorPtr g_processor4_ = nullptr;

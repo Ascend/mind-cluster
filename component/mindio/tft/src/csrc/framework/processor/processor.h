@@ -110,8 +110,6 @@ enum ProcessorStatus : uint32_t {
     PS_DUMP
 };
 
-class Processor;
-using ProcessorPtr = Ref<Processor>;
 using ProcessorEventHandle = std::function<int32_t(void *ctx, int ctxSize)>;
 using ProcessorCmdHandle = std::function<int32_t(void *ctx, int ctxSize)>;
 using ProcessorReplyHandle = std::function<int32_t(uint16_t sn, MsgOpCode op)>;
@@ -119,7 +117,9 @@ using LogFunc = void (*)(int level, const char *msg);
 
 class Processor : public Referable {
 public:
-    static ProcessorPtr GetInstance(bool destroy = false);
+    typedef Ref<Processor> Ptr;
+
+    static Ptr GetInstance(bool destroy = false);
 
     // set os status to updating, framework begin to updating the optimizer state data
     TResult BeginUpdating(int64_t backupStep);
@@ -353,6 +353,8 @@ private:
     std::atomic<bool> readyToExit_{false};
     uint32_t repairType_ = ControllerRepairType::CRT_BUTT;
 };
+
+using ProcessorPtr = Processor::Ptr;
 
 }  // namespace ttp
 }  // namespace ock

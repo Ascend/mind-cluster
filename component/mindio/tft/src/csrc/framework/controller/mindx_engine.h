@@ -80,10 +80,7 @@ struct ProcessFaultContext {
     std::map<int32_t, int32_t> errorInfoMap;
 };
 
-class MindXEngine;
-
 using MindXEventHandle = std::function<int32_t(void *ctx, int ctxSize)>;
-using MindXEnginePtr = Ref<MindXEngine>;
 
 const std::string STRATEGY_DUMP = "dump";
 const std::string STRATEGY_ARF  = "recover";
@@ -100,7 +97,9 @@ const std::string ACTION_STOP_SWITCH = "stop switch";
 
 class MindXEngine : public Referable {
 public:
-    static MindXEnginePtr GetInstance(bool destroy = false);
+    typedef Ref<MindXEngine> Ptr;
+
+    static Ptr GetInstance(bool destroy = false);
 
     // register event handler
     TResult RegisterEventHandler(MindXEvent event, MindXEventHandle handle);
@@ -145,6 +144,8 @@ private:
     std::mutex destroyMutex_;
     PthreadTimedwait waiter_;
 };
+
+using MindXEnginePtr = MindXEngine::Ptr;
 
 }
 }
