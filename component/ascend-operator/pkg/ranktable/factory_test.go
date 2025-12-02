@@ -11,7 +11,9 @@ import (
 	"ascend-common/api"
 	"testing"
 
+	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/smartystreets/goconvey/convey"
+	corev1 "k8s.io/api/core/v1"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	v1 "ascend-operator/pkg/ranktable/v1"
@@ -36,9 +38,11 @@ func TestNewGenerator(t *testing.T) {
 		})
 		convey.Convey("03-job without schedule policy annotation and with accelerator-type A3"+
 			" should return v1.2 ranktable", func() {
-			job.Labels = map[string]string{
-				api.AcceleratorTypeKey: api.AcceleratorTypeModule910A3SuperPod,
-			}
+			selector := map[string]string{api.AcceleratorTypeKey: api.AcceleratorTypeModule910A3SuperPod}
+			rpls := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"": &commonv1.ReplicaSpec{
+				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{NodeSelector: selector}},
+			}}
+			job.Spec.ReplicaSpecs = rpls
 			generator := NewGenerator(job)
 			_, ok := generator.(*v1dot2.RankTable)
 			convey.So(ok, convey.ShouldEqual, true)
