@@ -46,7 +46,7 @@ void TestPthreadTimedwait::SetUpTestCase() {}
 
 void TestPthreadTimedwait::TearDownTestCase() {}
 
-namesapce {
+namespace {
 TEST_F(TestPthreadTimedwait, clean_wait_awake_success)
 {
     constexpr int delay = 500 * 1000;    // us

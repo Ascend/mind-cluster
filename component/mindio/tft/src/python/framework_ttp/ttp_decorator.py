@@ -917,12 +917,8 @@ def tft_exception_handler(func: Callable):
                     max_memory_allocated_before = torch_npu.npu.max_memory_allocated() / byte_to_gb
                     memory_reserved_before = torch_npu.npu.memory_reserved() / byte_to_gb
                     max_memory_reserved_before = torch_npu.npu.max_memory_reserved() / byte_to_gb
-                    try:
-                        report_and_wait(err_str, can_repair)
-                        wait_next = True
-                    except Exception as other_except:
-                        tft_report_error(ReportState.RS_UNKNOWN.value)
-                        raise other_except
+                    report_and_wait(err_str, can_repair)
+                    wait_next = True
                 else:
                     ttp_logger.LOGGER.exception("rank:%s catch other exception", rank_)
                     ttp_logger.LOGGER.info(f"other exception str is : {err_str}")

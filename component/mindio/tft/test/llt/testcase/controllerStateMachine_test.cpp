@@ -16,7 +16,7 @@ using namespace ock::ttp;
 #define MOCKCPP_RESET GlobalMockObject::reset()
 #endif
 
-namesapce {
+namespace {
 using controllerStateMachinePtr = Ref<controllerStateMachine>;
 controllerStateMachinePtr stateMachinePtr = nullptr;
 std::atomic<uint32_t> g_callCount;
