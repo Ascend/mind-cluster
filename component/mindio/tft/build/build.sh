@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright: (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
-set -xe
+set -e
 
 usage() {
     echo "Usage: $0 [ -h | --help ] [ -t | --type <build_type> ] [ -b | --builddir <build_path> ] [ -f | --flags <cmake_flags> ]"
@@ -12,8 +12,6 @@ usage() {
     echo " 2 ./build.sh -t asan"
     echo " 3 ./build.sh -t release -b ./build -f <cmake_flags>"
     echo " 4 ./build.sh -t release"
-    echo
-    exit 1;
 }
 
 BUILD_DIR=""
@@ -28,7 +26,7 @@ while true; do
         -b | --builddir )
             if [[ ! -d "$2" ]]; then
                 echo $2 does not exist!
-                exit -1
+                exit 1
             fi
             BUILD_DIR=$(realpath $2)
             shift 2
@@ -130,7 +128,7 @@ fi
 # Verify the build directory is in place and enter it
 cd $BUILD_DIR || {
   echo "Fatal! Cannot enter $BUILD_DIR."
-  exit 1;
+  exit 1
 }
 
 # Check number of physical processors for parallel make
@@ -153,7 +151,7 @@ rm -rf *
 echo $CMAKE_CMD
 $CMAKE_CMD || {
     echo "Failed to configure mindio_ttp build!"
-    exit -1
+    exit 1
 }
 echo
 echo "Done configuring mindio_ttp build"
@@ -161,7 +159,7 @@ echo
 echo $BUILD_CMD
 $BUILD_CMD || {
     echo "Failed to build mindio_ttp"
-    exit -1
+    exit 1
 }
 echo
 echo "Done building mindio_ttp"

@@ -18,7 +18,7 @@ constexpr int32_t NUM_THREE = 3;
 
 using namespace ock::ttp;
 
-namesapce {
+namespace {
 ProcessorPtr g_processor0 = nullptr;
 ProcessorPtr g_processor1 = nullptr;
 ControllerPtr g_controller1 = nullptr;
@@ -34,8 +34,8 @@ void C2PythonDtFuzz::Init(bool enableARF = false, bool enableZIT = false)
     g_controller1->Initialize(0, NUM_TWO, g_enableLocalCopy, enableARF, enableZIT);
 
     std::string ip = g_masterIp;
-    int32_t port = g_masterPort;
-    g_controller1->Start(ip, port, g_tlsOption);
+    int32_t port1 = g_masterPort;
+    g_controller1->Start(ip, port1, g_tlsOption);
 
     std::vector<int32_t> ranks = {0, 1};
     std::vector<std::vector<int32_t>> groups = { ranks };
@@ -45,8 +45,8 @@ void C2PythonDtFuzz::Init(bool enableARF = false, bool enableZIT = false)
     g_processor0->Initialize(0, NUM_TWO, g_enableLocalCopy, g_tlsOption);
     g_processor1->Initialize(1, NUM_TWO, g_enableLocalCopy, g_tlsOption);
 
-    g_processor0->Start(ip, port);
-    g_processor1->Start(ip, port);
+    g_processor0->Start(ip, port1);
+    g_processor1->Start(ip, port1);
 }
 
 void C2PythonDtFuzz::Destroy()
@@ -147,7 +147,7 @@ TEST_F(C2PythonDtFuzz, controller_service_fuzz)
         bool localCopy = false;
         int32_t rank = *(int32_t *)DT_SetGetS32(&g_Element[index++], 0);
         int32_t worldSize = *(int32_t *)DT_SetGetS32(&g_Element[index++], NUM_EIGHT);
-        int32_t port = *(int32_t *)DT_SetGetS32(&g_Element[index++], g_masterPort);
+        int32_t port2 = *(int32_t *)DT_SetGetS32(&g_Element[index++], g_masterPort);
         int32_t num = *(int32_t *)DT_SetGetS32(&g_Element[index++], 0);
         if (num == 0) {
             localCopy = true;
@@ -166,7 +166,7 @@ TEST_F(C2PythonDtFuzz, controller_service_fuzz)
             std::to_string(subIp4);
 
         TResult ret = Controller::GetInstance()->Initialize(rank, worldSize, localCopy, arf, zit);
-        Controller::GetInstance()->Start(ip, port, tlsOpts);
+        Controller::GetInstance()->Start(ip, port2, tlsOpts);
         if (ret == TTP_OK) {
             Controller::GetInstance()->Destroy();
         }
@@ -194,7 +194,7 @@ TEST_F(C2PythonDtFuzz, processor_service_fuzz)
         }
         int32_t rank = *(int32_t *)DT_SetGetS32(&g_Element[index++], 0);
         int32_t worldSize = *(int32_t *)DT_SetGetS32(&g_Element[index++], NUM_EIGHT);
-        int32_t port = *(int32_t *)DT_SetGetS32(&g_Element[index++], g_masterPort);
+        int32_t port3 = *(int32_t *)DT_SetGetS32(&g_Element[index++], g_masterPort);
         uint8_t subIp1 = *(uint8_t *)DT_SetGetU8(&g_Element[index++], NUM_127);
         uint8_t subIp2 = *(uint8_t *)DT_SetGetU8(&g_Element[index++], 0);
         uint8_t subIp3 = *(uint8_t *)DT_SetGetU8(&g_Element[index++], 0);
@@ -202,7 +202,7 @@ TEST_F(C2PythonDtFuzz, processor_service_fuzz)
         std::string ip = std::to_string(subIp1) + "." + std::to_string(subIp2) + "." + std::to_string(subIp3) + "." +
             std::to_string(subIp4);
         TResult ret = Processor::GetInstance()->Initialize(rank, worldSize, localCopy, tlsOpts);
-        Processor::GetInstance()->Start(ip, port);
+        Processor::GetInstance()->Start(ip, port3);
         if (ret == TTP_OK) {
             Processor::GetInstance()->Destroy();
         }
