@@ -92,6 +92,6 @@
 贡献前，请先签署[开放项目贡献者许可协议（CLA）](https://clasign.osinfra.cn/sign/gitee_ascend-1611222220829317930)。
 通常，MindCluster一年会有4个正式release版本。
 如果您遇到bug，请[提交issue](https://gitcode.com/Ascend/mind-cluster/issues)。
-如果您计划贡献bug-fixes，请提交Pull Requests，参见[具体要求](https://gitcode.com/Ascend/mind-cluster/blob/readme-contribute/contributing.md#PullRequest)。
+如果您计划贡献bug-fixes，请提交Pull Requests，参见[具体要求](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md#PullRequest)。
 如果您计划贡献新特性、功能，请先创建issue与我们讨论。写明需求背景/目的，如何设计，对现有API等的影响。未经讨论提交PR可能会导致请求被拒绝，因为项目演进方向可能与您的想法存在偏差。
-更详细的贡献流程，请参考[贡献指南](https://gitcode.com/Ascend/mind-cluster/blob/readme-contribute/contributing.md)。
+更详细的贡献流程，请参考[贡献指南](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md)。
