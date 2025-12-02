@@ -20,8 +20,8 @@
 #include <cstring>
 #include <sstream>
 
-#ifndef __HLOG_FILENAME__
-#define __HLOG_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#ifndef HLOG_FILENAME
+#define HLOG_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
 #define SPDLOG_LEVEL_TRACE 0
@@ -54,10 +54,10 @@
         }                                                                       \
     } while (0)
 
-#define HLOG_CRITICAL(msg) HLOG_INTERNAL(SPDLOG_LEVEL_CRITICAL, __HLOG_FILENAME__, __LINE__, msg)
-#define HLOG_ERROR(msg) HLOG_INTERNAL(SPDLOG_LEVEL_ERROR, __HLOG_FILENAME__, __LINE__, msg)
-#define HLOG_WARN(msg) HLOG_INTERNAL(SPDLOG_LEVEL_WARN, __HLOG_FILENAME__, __LINE__, msg)
-#define HLOG_INFO(msg) HLOG_INTERNAL(SPDLOG_LEVEL_INFO, __HLOG_FILENAME__, __LINE__, msg)
+#define HLOG_CRITICAL(msg) HLOG_INTERNAL(SPDLOG_LEVEL_CRITICAL, HLOG_FILENAME, __LINE__, msg)
+#define HLOG_ERROR(msg) HLOG_INTERNAL(SPDLOG_LEVEL_ERROR, HLOG_FILENAME, __LINE__, msg)
+#define HLOG_WARN(msg) HLOG_INTERNAL(SPDLOG_LEVEL_WARN, HLOG_FILENAME, __LINE__, msg)
+#define HLOG_INFO(msg) HLOG_INTERNAL(SPDLOG_LEVEL_INFO, HLOG_FILENAME, __LINE__, msg)
 
 #define HLOG_NO_LOC_CRITICAL(msg) HLOG_NO_LOC_INTERNAL(SPDLOG_LEVEL_CRITICAL, msg)
 #define HLOG_NO_LOC_ERROR(msg) HLOG_NO_LOC_INTERNAL(SPDLOG_LEVEL_ERROR, msg)
@@ -92,7 +92,7 @@
     } while (0)
 
 #define HLOG_NO_LOC_DEBUG(msg) HLOG_DEBUG_NO_LOC_INTERNAL(msg)
-#define HLOG_DEBUG(msg) HLOG_DEBUG_INTERNAL(__HLOG_FILENAME__, __LINE__, msg)
+#define HLOG_DEBUG(msg) HLOG_DEBUG_INTERNAL(HLOG_FILENAME, __LINE__, msg)
 #define HLOG_DEBUG_FL(file, line, msg) HLOG_DEBUG_INTERNAL(file, line, msg)
 
 void BdmHlogFmtLog(int level, const char *file, int line, const char *fmt, ...);

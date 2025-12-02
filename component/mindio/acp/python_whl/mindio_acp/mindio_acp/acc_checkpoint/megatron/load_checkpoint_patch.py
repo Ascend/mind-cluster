@@ -96,7 +96,7 @@ def _load_base_checkpoint(
             print_rank_0(">> '--exit-on-missing-checkpoint' set ... exiting. <<")
             if torch.distributed.is_initialized():
                 torch.distributed.barrier()
-            sys.exit()
+            raise ValueError
 
         return None, "", False, None
 
@@ -151,7 +151,7 @@ def _load_base_checkpoint(
     except Exception as e:
         print_rank_0('could not load the checkpoint')
         print_rank_0(e)
-        sys.exit()
+        raise e
 
     return state_dict, checkpoint_name, release, ckpt_type
 
@@ -228,9 +228,9 @@ def acp_load_checkpoint(ddp_model, optimizer, opt_param_scheduler, load_arg='loa
         except KeyError:
             try:
                 iteration = state_dict['total_iters']
-            except KeyError:
+            except KeyError as e:
                 print_rank_0(f'Unable to load iteration from checkpoint {checkpoint_name}, exiting')
-                sys.exit()
+                raise e
     num_floating_point_operations_so_far = state_dict.get('num_floating_point_operations_so_far', 0)
 
     if 'args' in state_dict and not args.finetune:
@@ -305,7 +305,7 @@ def acp_load_checkpoint(ddp_model, optimizer, opt_param_scheduler, load_arg='loa
             get_rerun_state_machine().load_state_dict(state_dict['rerun_state_machine'])
     except Exception as e:
         print_rank_0(f"Unable to restore RerunMachine from checkpoint: {e}")
-        sys.exit()
+        raise e
 
     rng_state_str = "rng_state"
     rng_tracker_states_str = "rng_tracker_states"
@@ -339,11 +339,11 @@ def acp_load_checkpoint(ddp_model, optimizer, opt_param_scheduler, load_arg='loa
                     raise KeyError
                 tensor_parallel.get_cuda_rng_tracker().set_states(
                     state_dict[rng_tracker_states_str])
-        except KeyError:
+        except KeyError as e:
             print_rank_0(f'Failed to load rng state from checkpoint {checkpoint_name}. '
                          'To resolve: use --no-load-rng (skip RNG loading) or --finetune (finetuning mode). '
                          'Exiting ...')
-            sys.exit()
+            raise e
 
     if torch.distributed.is_initialized():
         torch.distributed.barrier()
@@ -399,10 +399,10 @@ def read_metadata(tracker_file):
         metastring = f.read().strip()
         try:
             last_iteration = int(metastring)
-        except ValueError:
+        except ValueError as e:
             release = metastring == 'release'
             if not release:
                 print_rank_0(f'ERROR: Metadata file {tracker_file} is invalid . Exiting')
-                sys.exit()
+                raise e
 
     return last_iteration, release

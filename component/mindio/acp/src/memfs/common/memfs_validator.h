@@ -22,9 +22,6 @@
 
 namespace ock {
 namespace memfs {
-class Validator;
-using ValidatorPtr = std::shared_ptr<Validator>;
-
 class Validator {
 public:
     virtual ~Validator() = default;
@@ -73,6 +70,8 @@ protected:
     std::string mName;
     std::string mErrMsg;
 };
+
+using ValidatorPtr = std::shared_ptr<Validator>;
 
 class VStrNotNull : public Validator {
 public:

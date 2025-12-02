@@ -23,6 +23,8 @@
 
 using namespace ock::memfs;
 
+namespace {
+
 struct StatMock {
     uint64_t inode;
     mode_t mode;
@@ -137,8 +139,6 @@ void TestMemFsApiMkdirs::EnableMocks() noexcept
     helper.realGetMeta = &MemFileSystem::GetMeta;
     MOCKCPP_NS::mockAPI("&MemFileSystem::GetMeta", helper.mockGetMeta).stubs().will(invoke(GetMetaMock));
 }
-
-namespace {
 
 TEST_F(TestMemFsApiMkdirs, create_deep_path_simple)
 {
