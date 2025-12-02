@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
@@ -1399,7 +1400,7 @@ func TestCheckWhetherPodVersionChangedFalse(t *testing.T) {
 		faultPod: map[string]string{
 			"1": "1",
 		},
-		prePod: map[string]string{
+		prePodForScale: map[string]string{
 			"1": "1",
 		},
 	}
@@ -1420,7 +1421,7 @@ func TestCheckWhetherPodVersionChangedTrue(t *testing.T) {
 		faultPod: map[string]string{
 			"1": "1",
 		},
-		prePod: map[string]string{
+		prePodForScale: map[string]string{
 			"1": "1",
 		},
 	}
@@ -1616,5 +1617,82 @@ func TestWaitScaleOutJobSucceeded(t *testing.T) {
 		go ctl.waitScaleOut()
 		event := <-ctl.events
 		convey.So(event, convey.ShouldEqual, common.FinishEvent)
+	})
+}
+
+func TestFilterRecoverPodsNodeRankIds_NotProcessRecoverStrategy(t *testing.T) {
+	convey.Convey("Test filterRecoverPodsNodeRankIds when ChangeStrategy is not ProcessRecoverStrategyName", t, func() {
+		jobId := "test-job-id"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobId,
+			},
+			originPod: map[string]string{
+				"rank-0": "original-pod-uid",
+			},
+		}
+		signal := &pb.ProcessManageSignal{
+			ChangeStrategy: "OtherStrategy",
+			NodeRankIds:    []string{"rank-0"},
+		}
+		ctl.filterRecoverPodsNodeRankIds(signal)
+		convey.So(len(signal.NodeRankIds), convey.ShouldEqual, 1)
+		convey.So(signal.NodeRankIds[0], convey.ShouldEqual, "rank-0")
+	})
+}
+
+func TestFilterRecoverPodsNodeRankIds_PodUIDNotMatch(t *testing.T) {
+	convey.Convey("Test filterRecoverPodsNodeRankIds when Pod UID doesn't match original Pod UID", t, func() {
+		jobId := "test-job-id"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobId,
+			},
+			originPod: map[string]string{
+				"rank-0": "original-pod-uid",
+			},
+		}
+		signal := &pb.ProcessManageSignal{
+			ChangeStrategy: constant.ProcessRecoverStrategyName,
+			NodeRankIds:    []string{"rank-0"},
+		}
+		mockGetPod := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				UID:  types.UID("new-pod-uid"),
+			},
+		})
+		defer mockGetPod.Reset()
+		ctl.filterRecoverPodsNodeRankIds(signal)
+		convey.So(len(signal.NodeRankIds), convey.ShouldEqual, 0)
+	})
+}
+
+func TestFilterRecoverPodsNodeRankIds_PodUIDMatch(t *testing.T) {
+	convey.Convey("Test filterRecoverPodsNodeRankIds when Pod UID matches original Pod UID", t, func() {
+		jobId := "test-job-id"
+		originalPodUID := "original-pod-uid"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobId,
+			},
+			originPod: map[string]string{
+				"rank-0": originalPodUID,
+			},
+		}
+		signal := &pb.ProcessManageSignal{
+			ChangeStrategy: constant.ProcessRecoverStrategyName,
+			NodeRankIds:    []string{"rank-0"},
+		}
+		mockGetPod := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-pod",
+				UID:  types.UID(originalPodUID),
+			},
+		})
+		defer mockGetPod.Reset()
+		ctl.filterRecoverPodsNodeRankIds(signal)
+		convey.So(len(signal.NodeRankIds), convey.ShouldEqual, 1)
+		convey.So(signal.NodeRankIds[0], convey.ShouldEqual, "rank-0")
 	})
 }
