@@ -19,18 +19,11 @@
 #include <cstdint>
 #include <cstring>
 #include <sstream>
+#include "spdlog/common.h"
 
 #ifndef HLOG_FILENAME
 #define HLOG_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
-
-#define SPDLOG_LEVEL_TRACE 0
-#define SPDLOG_LEVEL_DEBUG 1
-#define SPDLOG_LEVEL_INFO 2
-#define SPDLOG_LEVEL_WARN 3
-#define SPDLOG_LEVEL_ERROR 4
-#define SPDLOG_LEVEL_CRITICAL 5
-#define SPDLOG_LEVEL_OFF 6
 
 #define HLOG_INTERNAL(level, file, line, msg)                                   \
     do {                                                                        \

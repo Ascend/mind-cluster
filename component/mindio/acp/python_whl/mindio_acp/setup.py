@@ -28,7 +28,7 @@ current_version = os.getenv('BUILD_VERSION', '7.3.0')
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
 
-    def has_ext_modules(foo):
+    def has_ext_modules(self):
         return True
 
 

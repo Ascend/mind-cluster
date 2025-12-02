@@ -900,10 +900,6 @@ def tft_exception_handler(func: Callable):
                 iteration = func(*args, **kwargs)
                 ttp_destroy()
                 return iteration
-            except SystemExit as e:
-                ttp_logger.LOGGER.exception(f"rank:{rank_} catch exception, notify to processor, ex instance:{str(e)}")
-                wrap_exit()
-                raise e
             except RuntimeError as e:
                 err_str = str(e)
                 handle_l2_hbm_err, can_repair = handle_l2_hbm_error(err_str)
@@ -926,10 +922,6 @@ def tft_exception_handler(func: Callable):
                         else ReportState.RS_UNKNOWN.value
                     tft_report_error(err_type)  # run ttp
                     raise e
-            except TypeError as e:
-                ttp_logger.LOGGER.exception("A TypeError exception occurs.")
-                wrap_exit()
-                raise e
             except Exception as e:
                 ttp_logger.LOGGER.exception("rank:%s catch other exception", rank_)
                 tft_report_error(ReportState.RS_UNKNOWN.value)

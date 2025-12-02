@@ -21,7 +21,8 @@
 #include "nds_file_driver.h"
 
 using namespace ock::common;
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 NdsFileDriver *NdsFileDriver::gInstance = nullptr;
 std::mutex NdsFileDriver::gLock;
@@ -168,4 +169,7 @@ int NdsFileDriver::NdsRead(int inFd, void *dataPtr, uint64_t fileOffset, uint64_
     }
 
     return 0;
+}
+
+}
 }

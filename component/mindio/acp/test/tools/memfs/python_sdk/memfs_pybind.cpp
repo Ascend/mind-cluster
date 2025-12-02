@@ -28,7 +28,8 @@
 
 namespace py = pybind11;
 
-using namespace ock::memfs;
+namespace ock {
+namespace memfs {
 
 static FILE *g_sLogger = stderr;
 static std::map<int, std::string> s_loggerLevels;
@@ -272,4 +273,7 @@ PYBIND11_MODULE(memfs, m)
     m.attr("RF_NO_REPLACE") = RENAME_FLAG_NOREPLACE;
     m.attr("RF_EXCHANGE") = RENAME_FLAG_EXCHANGE;
     m.attr("RF_FORCE") = RENAME_FLAG_FORCE;
+}
+
+}
 }

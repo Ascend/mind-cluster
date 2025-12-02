@@ -83,7 +83,7 @@ using StateMachinePtr = Ref<controllerStateMachine>;
 
 class Controller : public Referable {
 public:
-    typedef Ref<Controller> Ptr;
+    using Ptr = Ref<Controller>;
 
     static Ptr GetInstance(bool destroy = false);
 

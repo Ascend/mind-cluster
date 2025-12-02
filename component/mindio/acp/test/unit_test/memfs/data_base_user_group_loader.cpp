@@ -171,27 +171,42 @@ int DataBaseUserGroupLoader::GetPwUid(uid_t uid, struct passwd *pwd, char *buf, 
     auto groupId = uidPos->second.second;
     auto pos = buf;
 
-    (void)strcpy_s(pos, bufLen, name.c_str());
+    auto ret = strcpy_s(pos, bufLen, name.c_str());
+    if (ret != EOK) {
+        return -1;
+    }
     pwd->pw_name = pos;
     pos += name.length() + 1;
 
-    (void)strcpy_s(pos, bufLen, "X");
+    ret = strcpy_s(pos, bufLen, "X");
+    if (ret != EOK) {
+        return -1;
+    }
     pwd->pw_passwd = pos;
     pos += 2;
 
     pwd->pw_uid = uid;
     pwd->pw_gid = groupId;
 
-    (void)strcpy_s(pos, bufLen, "this is user for test.");
+    ret = strcpy_s(pos, bufLen, "this is user for test.");
+    if (ret != EOK) {
+        return -1;
+    }
     pwd->pw_gecos = pos;
     pos += (strlen(pos) + 1);
 
     std::string homePath = "/home/" + name;
-    (void)strcpy_s(pos, bufLen, homePath.c_str());
+    ret = strcpy_s(pos, bufLen, homePath.c_str());
+    if (ret != EOK) {
+        return -1;
+    }
     pwd->pw_dir = pos;
     pos += homePath.length() + 1;
 
-    (void)strcpy_s(pos, bufLen, "/bin/bash");
+    ret = strcpy_s(pos, bufLen, "/bin/bash");
+    if (ret != EOK) {
+        return -1;
+    }
     pwd->pw_shell = pos;
 
     *result = pwd;
@@ -234,11 +249,17 @@ int DataBaseUserGroupLoader::GetGrGid(gid_t gid, struct group *grp, char *buf, s
     const auto &users = gidPos->second.second;
     auto pos = buf;
 
-    (void)strcpy_s(pos, bufLen, name.c_str());
+    auto ret = strcpy_s(pos, bufLen, name.c_str());
+    if (ret != EOK) {
+        return -1;
+    }
     grp->gr_name = pos;
     pos += name.length() + 1;
 
-    (void)strcpy_s(pos, bufLen, "X");
+    ret = strcpy_s(pos, bufLen, "X");
+    if (ret != EOK) {
+        return -1;
+    }
     grp->gr_passwd = pos;
     pos += 2;
 
@@ -251,7 +272,10 @@ int DataBaseUserGroupLoader::GetGrGid(gid_t gid, struct group *grp, char *buf, s
     auto index = 0;
     for (auto user_id : users) {
         const auto &user_name = loader.users[user_id].first;
-        (void)strcpy_s(pos, bufLen, user_name.c_str());
+        ret = strcpy_s(pos, bufLen, user_name.c_str());
+        if (ret != EOK) {
+            return -1;
+        }
         grp->gr_mem[index] = pos;
         pos += user_name.length() + 1;
     }

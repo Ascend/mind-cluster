@@ -39,16 +39,6 @@ from mindio_acp.acc_checkpoint.utils.utils import time_used
 
 logging = mindio_logger.LOGGER
 
-# [ModelOpt]: Import
-try:
-    from modelopt.torch.opt.plugins import (
-        save_modelopt_state,
-    )
-
-    has_nvidia_modelopt = True
-except Exception:
-    has_nvidia_modelopt = False
-
 
 def import_torch_mindio():
     global torch_npu, print_rank_0, CheckpointHelper, mindio_acp_flush
@@ -115,8 +105,6 @@ def acp_save_checkpoint(iteration, model, optimizer, opt_param_scheduler, num_fl
             optim_sd_kwargs={},
         )
         state_dict['num_floating_point_operations_so_far'] = num_floating_point_operations_so_far
-        if has_nvidia_modelopt:
-            save_modelopt_state(model, state_dict)
         end_ckpt = time()
         logging.debug(f"rank: {rank}, takes {end_ckpt - start_ckpt} to prepare state dict for ckpt ")
         ensure_directory_exists(checkpoint_name)
