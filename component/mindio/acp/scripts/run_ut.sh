@@ -133,4 +133,6 @@ cp -rvf test_detail.xml ${GENERATE_DIR}/result/
 rm -rf /usr1/nginx/odfs/result/
 cp -r ${GENERATE_DIR}/result/ /usr1/nginx/odfs/
 
-ln -s ${PROJECT_HOME}/Build/Debug ${PROJECT_HOME}/build
+if [ ! -e ${PROJECT_HOME}/build ]; then
+    ln -s ${PROJECT_HOME}/Build/Debug ${PROJECT_HOME}/build
+fi

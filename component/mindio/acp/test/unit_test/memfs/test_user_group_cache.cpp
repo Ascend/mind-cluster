@@ -21,6 +21,8 @@
 
 using namespace ock::memfs;
 
+namespace {
+
 static constexpr int64_t EXPIRES_MACRO_SECONDS = 10000L;
 
 class TestUserGroupCache : public testing::Test {
@@ -62,8 +64,6 @@ void TestUserGroupCache::TearDownTestCase()
     loader = nullptr;
     cacheInstance = nullptr;
 }
-
-namespace {
 
 TEST_F(TestUserGroupCache, user_info_get_uid_gid)
 {

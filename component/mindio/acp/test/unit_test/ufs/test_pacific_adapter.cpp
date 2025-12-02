@@ -23,6 +23,8 @@
 
 using namespace ock::ufs;
 
+namespace {
+
 class UfsPacificAdapterTest : public testing::Test {
 public:
     static void SetUpTestSuite();
@@ -119,8 +121,6 @@ ssize_t UfsPacificAdapterTest::GetXattrMock(const char *path, const char *name, 
     buffer.Read(static_cast<uint8_t *>(value), buffer.Capacity());
     return static_cast<ssize_t>(buffer.Capacity());
 }
-
-namespace {
 
 TEST_F(UfsPacificAdapterTest, open_to_write_not_exist)
 {

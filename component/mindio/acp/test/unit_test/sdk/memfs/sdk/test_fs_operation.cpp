@@ -39,7 +39,7 @@ std::string ToString(const FileWriteParam &param)
 
 TEST(TestFsOperation, mutil_write_split_to_slice_test)
 {
-    std::vector<uint64_t> sizes = { 1564122, 14748, 3137022, 26600, 1971320, 31297, 1592554, 2635143, 3484030, 529090 };
+    std::vector<uint64_t> sizes = { 1564122, 14748, 3137022, 26600, 3971320, 31297, 1592554, 2635143, 3484030, 529090 };
     auto totalSize = 0UL;
     std::for_each(sizes.begin(), sizes.end(), [&totalSize](uint64_t s) { totalSize += s; });
     auto totalBuffer = new char[totalSize];
@@ -76,7 +76,7 @@ TEST(TestFsOperation, mutil_write_split_to_slice_test)
 
 TEST(TestFsOperation, mutil_read_split_to_slice_test)
 {
-    std::vector<uint64_t> sizes = { 1564122, 14748, 3137022, 26600, 1971320, 31297, 1592554, 2635143, 3484030, 529090 };
+    std::vector<uint64_t> sizes = { 1564122, 14748, 3137022, 26600, 3971320, 31297, 1592554, 2635143, 3484030, 529090 };
     auto totalSize = 0UL;
     std::for_each(sizes.begin(), sizes.end(), [&totalSize](uint64_t s) { totalSize += s; });
     auto totalBuffer = new char[totalSize];

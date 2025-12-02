@@ -23,6 +23,8 @@
 using namespace ock::common::config;
 using namespace ock::ufs;
 
+namespace {
+
 class TestUnderFS : public testing::Test {
 public:
     void SetUp() override;
@@ -45,8 +47,6 @@ void TestUnderFS::TearDown()
     delete ufs;
     ufs = nullptr;
 }
-
-namespace {
 
 TEST_F(TestUnderFS, test_underfs_factory_default)
 {

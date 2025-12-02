@@ -55,7 +55,7 @@ enum FileOpCode {
     IPC_OP_CHECK_BACKGROUND_TASK = 12,
 };
 
-static inline std::string PrintableString(const std::string &str) noexcept
+inline std::string PrintableString(const std::string &str) noexcept
 {
     std::ostringstream oss;
     for (auto &ch : str) {
