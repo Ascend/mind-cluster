@@ -68,8 +68,9 @@ type EventController struct {
 	faultFlushing               bool
 	keepAliveSecond             int
 	uuid                        string
-	prePod                      map[string]string
+	prePodForScale              map[string]string
 	faultPod                    map[string]string
+	originPod                   map[string]string
 	events                      chan string
 	latestStrategy              []string
 	latestRecoverResult         []*pb.RecoverStatusRequest
@@ -120,7 +121,8 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		keepAliveSecond:             keepAlive,
 		uuid:                        "",
 		faultPod:                    make(map[string]string),
-		prePod:                      make(map[string]string),
+		prePodForScale:              make(map[string]string),
+		originPod:                   make(map[string]string),
 		events:                      make(chan string, eventChanLength),
 		latestStrategy:              []string{},
 		latestRecoverResult:         []*pb.RecoverStatusRequest{},
@@ -152,14 +154,14 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		currentHotSwitchFaultPodId:  "",
 		currentHotSwitchBackupPodId: "",
 	}
-	ctl.updatePrePod()
+	ctl.updatePodInfo()
 	var rules []common.TransRule = ctl.getBaseRules()
 	ctl.state = common.NewStateMachine(common.InitState, rules)
 	ctl.controllerContext, ctl.ctxCancelFunc = context.WithCancel(ctl.serviceContext)
 	return ctl
 }
 
-func (ctl *EventController) updatePrePod() {
+func (ctl *EventController) updatePodInfo() {
 	pods := pod.GetPodByJobId(ctl.jobInfo.JobId)
 	for _, pod := range pods {
 		if pod.Name == "" {
@@ -167,7 +169,8 @@ func (ctl *EventController) updatePrePod() {
 			continue
 		}
 		podRankIndex := pod.Annotations[constant.PodRankIndexAnno]
-		ctl.prePod[podRankIndex] = string(pod.UID)
+		ctl.prePodForScale[podRankIndex] = string(pod.UID)
+		ctl.originPod[podRankIndex] = string(pod.UID)
 	}
 }
 
@@ -229,7 +232,7 @@ func (ctl *EventController) reset(stop bool) {
 	ctl.uuid = ""
 	ctl.latestStrategy = ctl.latestStrategy[:0]
 	ctl.faultPod = make(map[string]string)
-	ctl.updatePrePod()
+	ctl.updatePodInfo()
 	if !ctl.isChanClosed {
 		ctl.closeControllerChan()
 		ctl.isChanClosed = true
@@ -1170,7 +1173,32 @@ func (ctl *EventController) handleDecidedStrategyAfterChoose(signal *pb.ProcessM
 		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByFaultRanks err:%v", ctl.jobInfo.JobId, err)
 		return "", common.ServerInnerError, err
 	}
+	ctl.filterRecoverPodsNodeRankIds(signal)
 	return ctl.signalEnqueue(signal)
+}
+
+func (ctl *EventController) filterRecoverPodsNodeRankIds(signal *pb.ProcessManageSignal) {
+	if signal.ChangeStrategy != constant.ProcessRecoverStrategyName {
+		return
+	}
+	filteredNodeRankIds := make([]string, 0, len(signal.NodeRankIds))
+	for _, nodeRankId := range signal.NodeRankIds {
+		currentPod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, nodeRankId)
+		if currentPod.Name == "" {
+			continue
+		}
+		hwlog.RunLog.Debugf("node rank is %s, currentPod uuid is %s, originPod uuid is %s",
+			nodeRankId, currentPod.UID, ctl.originPod[nodeRankId])
+		prePodUID, exists := ctl.originPod[nodeRankId]
+		if exists && string(currentPod.UID) != prePodUID {
+			hwlog.RunLog.Infof("jobId=%s, pod for rank %s has changed, original UID: %s, current UID: %s",
+				ctl.jobInfo.JobId, nodeRankId, prePodUID, currentPod.UID)
+			continue
+		}
+		filteredNodeRankIds = append(filteredNodeRankIds, nodeRankId)
+	}
+	hwlog.RunLog.Infof("jobId=%s, filteredNodeRankIds: %v", ctl.jobInfo.JobId, filteredNodeRankIds)
+	signal.NodeRankIds = filteredNodeRankIds
 }
 
 func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSignal) (string,
@@ -1359,7 +1387,7 @@ func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.
 			}
 			nodeRankIds = common.RemoveDuplicateNodeRanks(nodeRankIds, ctl.faultPod)
 			for _, nodeRankId := range nodeRankIds {
-				ctl.faultPod[nodeRankId] = ctl.prePod[nodeRankId]
+				ctl.faultPod[nodeRankId] = ctl.prePodForScale[nodeRankId]
 			}
 			signal.NodeRankIds = nodeRankIds
 			_, respCode, err := ctl.signalEnqueue(signal)
@@ -1934,10 +1962,10 @@ func (ctl *EventController) checkWhetherPodChanged() bool {
 		if pod.Name == "" {
 			continue
 		}
-		hwlog.RunLog.Debugf("node rank %s prePod id %s now pod id %s", podRank, ctl.prePod[podRank], string(pod.UID))
-		if ctl.prePod[podRank] != string(pod.UID) {
+		hwlog.RunLog.Debugf("node rank %s prePod id %s now pod id %s", podRank, ctl.prePodForScale[podRank], string(pod.UID))
+		if ctl.prePodForScale[podRank] != string(pod.UID) {
 			hasChanged = true
-			ctl.prePod[podRank] = string(pod.UID)
+			ctl.prePodForScale[podRank] = string(pod.UID)
 		}
 	}
 	return hasChanged
