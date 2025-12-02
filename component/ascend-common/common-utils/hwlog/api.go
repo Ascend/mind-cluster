@@ -22,7 +22,59 @@ import (
 	"log"
 	"os"
 	"path"
+	"sync"
+	"time"
 )
+
+// CustomLoggerWriter implements io.Writer interface for customizing log time format
+type CustomLoggerWriter struct {
+	writer io.Writer
+	mutex  sync.Mutex
+}
+
+// NewCustomLoggerWriter creates a new custom logger writer
+func NewCustomLoggerWriter(w io.Writer) *CustomLoggerWriter {
+	return &CustomLoggerWriter{
+		writer: w,
+	}
+}
+
+// Write implements io.Writer interface with custom time format (YYYY-MM-DD HH:MM:SS.000000)
+// Note: In Go, time formatting uses reference time "2006-01-02 15:04:05.000000" as layout
+// If current time is in Daylight Saving Time, append "DST" flag
+func (w *CustomLoggerWriter) Write(p []byte) (n int, err error) {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	// Get current time
+	now := time.Now()
+	// Format time with microsecond precision
+	timestamp := now.Format("2006-01-02 15:04:05.000000")
+
+	// Check if current time is in Daylight Saving Time
+	isDST := now.IsDST()
+
+	// Calculate buffer size: timestamp length + space + (DST flag length if needed) + log content length
+	bufferSize := len(timestamp) + len(p) + 2 // +2 for '[' and ']'
+	if isDST {
+		bufferSize += 3 // +3 for "DST" flag
+	}
+
+	// Pre-allocate buffer to avoid multiple memory allocations
+	buffer := make([]byte, 0, bufferSize)
+	buffer = append(buffer, '[')
+	buffer = append(buffer, timestamp...)
+
+	// Append DST flag if needed
+	if isDST {
+		buffer = append(buffer, "DST"...)
+	}
+
+	buffer = append(buffer, ']')
+	buffer = append(buffer, p...)
+
+	return w.writer.Write(buffer)
+}
 
 const (
 	logDebugLv = iota - 1
@@ -44,11 +96,15 @@ type logger struct {
 }
 
 func (lg *logger) initLogWriter(w io.Writer) {
-	lg.lgDebug = log.New(w, "[DEBUG]    ", log.Ldate|log.Lmicroseconds)
-	lg.lgInfo = log.New(w, "[INFO]     ", log.Ldate|log.Lmicroseconds)
-	lg.lgWarn = log.New(w, "[WARN]     ", log.Ldate|log.Lmicroseconds)
-	lg.lgError = log.New(w, "[ERROR]    ", log.Ldate|log.Lmicroseconds)
-	lg.lgCritical = log.New(w, "[Critical] ", log.Ldate|log.Lmicroseconds)
+	// Use custom logger writer, note that we don't use log.Ldate|log.Lmicroseconds flag to avoid duplicate timestamps
+	// Custom writer will handle timestamp formatting
+	customWriter := NewCustomLoggerWriter(w)
+	// Only set prefix, not set time flag
+	lg.lgDebug = log.New(customWriter, "[DEBUG]    ", 0)
+	lg.lgInfo = log.New(customWriter, "[INFO]     ", 0)
+	lg.lgWarn = log.New(customWriter, "[WARN]     ", 0)
+	lg.lgError = log.New(customWriter, "[ERROR]    ", 0)
+	lg.lgCritical = log.New(customWriter, "[CRITICAL] ", 0)
 }
 
 func (lg *logger) setLoggerLevel(lv int) {
