@@ -522,8 +522,8 @@ func (d *DeviceManager) GetDeviceMemoryInfo(logicID int32) (*common.MemoryInfo, 
 		return nil, fmt.Errorf("failed to get memory info by logicID(%d)", logicID)
 	}
 
-	// 910B and 910A3 don't have DDR module. Therefore, DDR information cannot be queried.
-	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 {
+	// 910B and 910A3 and 910A5 don't have DDR module. Therefore, DDR information cannot be queried.
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 || d.DevType == api.Ascend910A5 {
 		hwlog.RunLog.Debugf("%v doesn't have DDR module. Therefore, DDR information cannot be queried", d.DevType)
 		return nil, nil
 	}

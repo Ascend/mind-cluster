@@ -56,6 +56,7 @@ var (
 		api.Ascend910A:  true,
 		api.Ascend910B:  true,
 		api.Ascend910A3: true,
+		api.Ascend910A5: true,
 	}
 )
 
