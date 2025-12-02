@@ -49,6 +49,20 @@ var (
 	pluginCollectorMap = map[string]common.MetricsCollector{}
 	presetConfigs      = make([]map[string]string, 0)
 	pluginConfigs      = make([]map[string]string, 0)
+
+	defaultPresetConfigs = []map[string]string{
+		{metricsGroup: groupDDR, state: stateOn},
+		{metricsGroup: groupHccs, state: stateOn},
+		{metricsGroup: groupNpu, state: stateOn},
+		{metricsGroup: groupNetwork, state: stateOn},
+		{metricsGroup: groupPcie, state: stateOn},
+		{metricsGroup: groupRoce, state: stateOn},
+		{metricsGroup: groupSio, state: stateOn},
+		{metricsGroup: groupVnpu, state: stateOn},
+		{metricsGroup: groupVersion, state: stateOn},
+		{metricsGroup: groupOptical, state: stateOn},
+		{metricsGroup: groupHbm, state: stateOn},
+	}
 )
 
 const (
@@ -72,18 +86,19 @@ const (
 )
 
 const (
-	FaultCustomizationPath = "/usr/local/metricConfiguration.json"
-	FaultDurationPath      = "/usr/local/pluginConfiguration.json"
+	PresetConfigPath = "/usr/local/metricConfiguration.json"
+	PluginConfigPath = "/usr/local/pluginConfiguration.json"
 )
 
 func loadConfiguration() {
-	if fileBytes := loadFromFile(FaultCustomizationPath); fileBytes == nil {
-		logger.Errorf("load config from file %s failed", FaultCustomizationPath)
+	if fileBytes := loadFromFile(PresetConfigPath); fileBytes == nil {
+		logger.Warnf("load config from file %s failed, use default config", PresetConfigPath)
+		presetConfigs = defaultPresetConfigs
 	} else {
 		initConfiguration(fileBytes, &presetConfigs)
 	}
-	if fileBytes := loadFromFile(FaultDurationPath); fileBytes == nil {
-		logger.Errorf("load config from file %s failed", FaultDurationPath)
+	if fileBytes := loadFromFile(PluginConfigPath); fileBytes == nil {
+		logger.Warnf("load config from file %s failed, use empty config", PluginConfigPath)
 	} else {
 		initConfiguration(fileBytes, &pluginConfigs)
 	}

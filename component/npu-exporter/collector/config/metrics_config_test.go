@@ -55,9 +55,9 @@ func TestLoadConfiguration(t *testing.T) {
 		defer patches.Reset()
 		convey.Convey("load config ok", func() {
 			patches.ApplyFunc(loadFromFile, func(filePath string) []byte {
-				if filePath == FaultCustomizationPath {
+				if filePath == PresetConfigPath {
 					filePath = "../../build/metricConfiguration.json"
-				} else if filePath == FaultDurationPath {
+				} else if filePath == PluginConfigPath {
 					filePath = "../../build/pluginConfiguration.json"
 				}
 				fileBytes, _ := utils.LoadFile(filePath)
@@ -78,7 +78,7 @@ func TestLoadConfiguration(t *testing.T) {
 				return nil
 			})
 			loadConfiguration()
-			convey.So(len(presetConfigs), convey.ShouldEqual, 0)
+			convey.So(len(presetConfigs), convey.ShouldEqual, len(defaultPresetConfigs))
 			convey.So(len(pluginConfigs), convey.ShouldEqual, 0)
 		})
 	})
