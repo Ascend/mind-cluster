@@ -37,6 +37,7 @@ import (
 const retryTime = 3
 
 var k8sClient *ClientK8s = nil
+var localNode *v1.Node
 
 // ClientK8s k8s client include node name and node info name
 type ClientK8s struct {
@@ -185,4 +186,18 @@ func (ck *ClientK8s) AddAnnotation(key, value string) error {
 		break
 	}
 	return err
+}
+
+// GetNodeWithCache get node resource info in cache or k8s
+func (ck *ClientK8s) GetNodeWithCache() (*v1.Node, error) {
+	if localNode != nil {
+		return localNode, nil
+	}
+	nodeInfo, err := ck.ClientSet.CoreV1().Nodes().Get(context.Background(), ck.NodeName, metav1.GetOptions{
+		ResourceVersion: "0",
+	})
+	if err == nil {
+		localNode = nodeInfo
+	}
+	return nodeInfo, err
 }
