@@ -793,3 +793,28 @@ func TestGetKltAndRealAllocateDev(t *testing.T) {
 		})
 	}
 }
+
+// TestGetPreferredAllocation test get preferred allocation
+func TestGetPreferredAllocation(t *testing.T) {
+	convey.Convey("Test GetPreferredAllocation", t, func() {
+		ps := NewPluginServer(api.Ascend910, devices, nil, device.NewHwAscend910Manager())
+		_, err := ps.GetPreferredAllocation(nil, nil)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestGetDevicePluginOptions(t *testing.T) {
+	convey.Convey("Test GetDevicePluginOptions", t, func() {
+		ps := NewPluginServer(api.Ascend910, devices, nil, device.NewHwAscend910Manager())
+		_, err := ps.GetDevicePluginOptions(nil, nil)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestPreStartContainer(t *testing.T) {
+	convey.Convey("Test PreStartContainer", t, func() {
+		ps := NewPluginServer(api.Ascend910, devices, nil, device.NewHwAscend910Manager())
+		_, err := ps.PreStartContainer(nil, nil)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}

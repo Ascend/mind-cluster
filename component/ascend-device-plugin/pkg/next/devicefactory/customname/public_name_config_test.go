@@ -17,14 +17,17 @@ package customname
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 )
 
 func init() {
@@ -266,18 +269,12 @@ func TestSetDefaultName(t *testing.T) {
 
 type initPublicNameConfigTestCase struct {
 	name        string
-	mockActions func()
+	mockActions func() *gomonkey.Patches
 	expectedMap map[string]DevName
 }
 
 func resetGlobalState() {
 	devNameMap = make(map[string]DevName)
-}
-
-func initPatches() *gomonkey.Patches {
-	patch := gomonkey.NewPatches()
-	defer patch.Reset()
-	return patch
 }
 
 func TestInitPublicNameConfig(t *testing.T) {
@@ -286,7 +283,8 @@ func TestInitPublicNameConfig(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			resetGlobalState()
-			tc.mockActions()
+			patchs := tc.mockActions()
+			defer patchs.Reset()
 			InitPublicNameConfig()
 			assert.Equal(t, tc.expectedMap, devNameMap)
 		})
@@ -297,19 +295,21 @@ func buildInitPublicNameConfigTestCase1() []initPublicNameConfigTestCase {
 	return []initPublicNameConfigTestCase{
 		{
 			name: "test InitPublicNameConfig when file load failed",
-			mockActions: func() {
-				patch := initPatches()
+			mockActions: func() *gomonkey.Patches {
+				patch := gomonkey.NewPatches()
 				patch.ApplyFunc(loadFaultCodeFromFile, func() ([]DevName, error) { return nil, assert.AnError })
+				return patch
 			},
 			expectedMap: map[string]DevName{},
 		},
 		{
 			name: "test InitPublicNameConfig when config check failed",
-			mockActions: func() {
-				patch := initPatches()
+			mockActions: func() *gomonkey.Patches {
+				patch := gomonkey.NewPatches()
 				testDevs := []DevName{{ResourceType: "gpu"}}
 				patch.ApplyFunc(loadFaultCodeFromFile, func() ([]DevName, error) { return testDevs, nil }).
 					ApplyFunc(checkName, func(_ []DevName) bool { return false })
+				return patch
 			},
 			expectedMap: map[string]DevName{},
 		},
@@ -320,8 +320,8 @@ func buildInitPublicNameConfigTestCase2() []initPublicNameConfigTestCase {
 	return []initPublicNameConfigTestCase{
 		{
 			name: "test InitPublicNameConfig when config valid no default",
-			mockActions: func() {
-				patch := initPatches()
+			mockActions: func() *gomonkey.Patches {
+				patch := gomonkey.NewPatches()
 				inputDevs := []DevName{
 					{ResourceType: "gpu", OldDevicePublicNamePre: "old-gpu", DevicePublicNamePre: "new-gpu"},
 					{ResourceType: "npu", OldDevicePublicNamePre: "old-npu", DevicePublicNamePre: "new-npu"},
@@ -329,6 +329,7 @@ func buildInitPublicNameConfigTestCase2() []initPublicNameConfigTestCase {
 				patch.ApplyFunc(loadFaultCodeFromFile, func() ([]DevName, error) { return inputDevs, nil }).
 					ApplyFunc(checkName, func(_ []DevName) bool { return true }).
 					ApplyFunc(setDefaultName, func(d DevName) DevName { return d })
+				return patch
 			},
 			expectedMap: map[string]DevName{
 				"gpu": {ResourceType: "gpu", OldDevicePublicNamePre: "old-gpu", DevicePublicNamePre: "new-gpu"},
@@ -337,8 +338,8 @@ func buildInitPublicNameConfigTestCase2() []initPublicNameConfigTestCase {
 		},
 		{
 			name: "test InitPublicNameConfig when config valid with default",
-			mockActions: func() {
-				patch := initPatches()
+			mockActions: func() *gomonkey.Patches {
+				patch := gomonkey.NewPatches()
 				inputDevs := []DevName{
 					{ResourceType: "cpu", OldDevicePublicNamePre: "old-cpu", DevicePublicNamePre: ""},
 				}
@@ -350,6 +351,7 @@ func buildInitPublicNameConfigTestCase2() []initPublicNameConfigTestCase {
 				patch.ApplyFunc(loadFaultCodeFromFile, func() ([]DevName, error) { return inputDevs, nil }).
 					ApplyFunc(checkName, func(_ []DevName) bool { return true }).
 					ApplyFunc(setDefaultName, func(_ DevName) DevName { return defaultDev })
+				return patch
 			},
 			expectedMap: map[string]DevName{
 				"cpu": {
@@ -360,4 +362,45 @@ func buildInitPublicNameConfigTestCase2() []initPublicNameConfigTestCase {
 			},
 		},
 	}
+}
+
+// TestLoadFaultCodeFromFile tests loadFaultCodeFromFile
+func TestLoadFaultCodeFromFile(t *testing.T) {
+	convey.Convey("Test loadFaultCodeFromFile function", t, func() {
+		convey.Convey("When file exists and JSON is valid", func() {
+			fileInfo := []DevName{
+				{
+					ResourceType:         "",
+					DevicePublicType:     "",
+					DevicePublicNamePre:  "",
+					PodConfigurationName: "",
+				},
+			}
+			codeBytes, err := json.Marshal(fileInfo)
+			convey.So(err, convey.ShouldBeNil)
+			patches := gomonkey.ApplyFuncReturn(utils.LoadFile, codeBytes, nil)
+			defer patches.Reset()
+			result, err := loadFaultCodeFromFile()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldResemble, fileInfo)
+		})
+
+		convey.Convey("When file load failed", func() {
+			mockErr := fmt.Errorf("file not found")
+			patches := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, mockErr)
+			defer patches.Reset()
+			result, err := loadFaultCodeFromFile()
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(result, convey.ShouldBeNil)
+		})
+
+		convey.Convey("When JSON unmarshal failed", func() {
+			patches := gomonkey.ApplyFuncReturn(utils.LoadFile, nil, nil).
+				ApplyFuncReturn(json.Unmarshal, fmt.Errorf("unmarshal failed"))
+			defer patches.Reset()
+			result, err := loadFaultCodeFromFile()
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(result, convey.ShouldBeNil)
+		})
+	})
 }
