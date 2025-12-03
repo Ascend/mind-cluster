@@ -370,6 +370,9 @@ func (hdm *HwDevManager) setSuperPodInfo() {
 		hwlog.RunLog.Infof("get rack id: %d", superPodInfo.RackId)
 		hdm.manager.SetRackID(superPodInfo.RackId)
 		hwlog.RunLog.Infof("get super pod type: %d", superPodInfo.SuperPodType)
+		if _, exist := hcclTopoFilePathMap[superPodInfo.SuperPodType]; !exist {
+			hwlog.RunLog.Warnf("device super pod type[%d] invalid", superPodInfo.SuperPodType)
+		}
 		hdm.manager.SetSuperPodType(superPodInfo.SuperPodType)
 		hwlog.RunLog.Infof("get super pod size: %d", superPodInfo.ScaleType)
 		hdm.manager.SetSuperPodSize(superPodInfo.ScaleType)
