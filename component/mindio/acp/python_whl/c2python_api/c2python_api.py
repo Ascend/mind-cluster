@@ -20,151 +20,15 @@
 
 """c to python API"""
 
-import weakref
-
-# Import the low-level C/C++ module
-if __package__ or "." in __name__:
-    from . import _c2python_api
-else:
-    import _c2python_api
-
-try:
-    import builtins as __builtin__
-except ImportError:
-    import __builtin__
-
-
-def _swig_repr(self):
-    try:
-        strthis = "proxy of " + self.this.__repr__()
-    except __builtin__.Exception:
-        strthis = ""
-    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
-
-
-def _swig_setattr_nondynamic_instance_variable(set):
-    def set_instance_attr(self, name, value):
-        if name == "this":
-            set(self, name, value)
-        elif name == "thisown":
-            self.this.own(value)
-        elif hasattr(self, name) and isinstance(getattr(type(self), name), property):
-            set(self, name, value)
-        else:
-            raise AttributeError("You cannot add instance attributes to %s" % self)
-    return set_instance_attr
-
-
-def _swig_setattr_nondynamic_class_variable(set):
-    def set_class_attr(cls, name, value):
-        if hasattr(cls, name) and not isinstance(getattr(cls, name), property):
-            set(cls, name, value)
-        else:
-            raise AttributeError("You cannot add class attributes to %s" % cls)
-    return set_class_attr
-
-
-def _swig_add_metaclass(metaclass):
-    """Class decorator for adding a metaclass to a SWIG wrapped class - a slimmed down version of six.add_metaclass"""
-    def wrapper(cls):
-        return metaclass(cls.__name__, cls.__bases__, cls.__dict__.copy())
-    return wrapper
-
-
-class _SwigNonDynamicMeta(type):
-    """Meta class to enforce nondynamic attributes (no new attributes) for a class"""
-    __setattr__ = _swig_setattr_nondynamic_class_variable(type.__setattr__)
-
-
-class SwigPyIterator(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _c2python_api.delete_SwigPyIterator
-
-    def __next__(self):
-        return _c2python_api.SwigPyIterator___next__(self)
-
-    def __eq__(self, x):
-        return _c2python_api.SwigPyIterator___eq__(self, x)
-
-    def __ne__(self, x):
-        return _c2python_api.SwigPyIterator___ne__(self, x)
-
-    def __iadd__(self, n):
-        return _c2python_api.SwigPyIterator___iadd__(self, n)
-
-    def __isub__(self, n):
-        return _c2python_api.SwigPyIterator___isub__(self, n)
-
-    def __add__(self, n):
-        return _c2python_api.SwigPyIterator___add__(self, n)
-
-    def __sub__(self, *args):
-        return _c2python_api.SwigPyIterator___sub__(self, *args)
-
-    def __iter__(self):
-        return self
-
-    def previous(self):
-        return _c2python_api.SwigPyIterator_previous(self)
-
-    def advance(self, n):
-        return _c2python_api.SwigPyIterator_advance(self, n)
-
-    def value(self):
-        return _c2python_api.SwigPyIterator_value(self)
-
-    def incr(self, n=1):
-        return _c2python_api.SwigPyIterator_incr(self, n)
-
-    def decr(self, n=1):
-        return _c2python_api.SwigPyIterator_decr(self, n)
-
-    def distance(self, x):
-        return _c2python_api.SwigPyIterator_distance(self, x)
-
-    def equal(self, x):
-        return _c2python_api.SwigPyIterator_equal(self, x)
-
-    def copy(self):
-        return _c2python_api.SwigPyIterator_copy(self)
-
-    def next(self):
-        return _c2python_api.SwigPyIterator_next(self)
-
-# Register SwigPyIterator in _c2python_api:
-_c2python_api.SwigPyIterator_swigregister(SwigPyIterator)
-
-
 class closeable_file(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _c2python_api.delete_closeable_file
-
     def close(self):
         return _c2python_api.closeable_file_close(self)
 
     def initialize(self):
         return _c2python_api.closeable_file_initialize(self)
 
-# Register closeable_file in _c2python_api:
-_c2python_api.closeable_file_swigregister(closeable_file)
-
 
 class readable(closeable_file):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _c2python_api.delete_readable
-
     def read(self, buffer, count, offset):
         return _c2python_api.readable_read(self, buffer, count, offset)
 
@@ -174,18 +38,8 @@ class readable(closeable_file):
     def size(self):
         return _c2python_api.readable_size(self)
 
-# Register readable in _c2python_api:
-_c2python_api.readable_swigregister(readable)
-
 
 class writeable(closeable_file):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _c2python_api.delete_writeable
-
     def write(self, buffer, count):
         return _c2python_api.writeable_write(self, buffer, count)
 
@@ -197,17 +51,9 @@ class writeable(closeable_file):
 
     def flush(self):
         return _c2python_api.writeable_flush(self)
-# Register writeable in _c2python_api:
-_c2python_api.writeable_swigregister(writeable)
 
 
 class readable_file(readable):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-
-    def __init__(self, path):
-        _c2python_api.readable_file_swiginit(self, _c2python_api.new_readable_file(path))
-
     def open(self):
         return _c2python_api.readable_file_open(self)
 
@@ -222,19 +68,9 @@ class readable_file(readable):
 
     def size(self):
         return _c2python_api.readable_file_size(self)
-    __swig_destroy__ = _c2python_api.delete_readable_file
-
-# Register readable_file in _c2python_api:
-_c2python_api.readable_file_swigregister(readable_file)
 
 
 class freadable_file(readable):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-
-    def __init__(self, path):
-        _c2python_api.freadable_file_swiginit(self, _c2python_api.new_freadable_file(path))
-
     def open(self):
         return _c2python_api.freadable_file_open(self)
 
@@ -249,19 +85,9 @@ class freadable_file(readable):
 
     def size(self):
         return _c2python_api.freadable_file_size(self)
-    __swig_destroy__ = _c2python_api.delete_freadable_file
-
-# Register freadable_file in _c2python_api:
-_c2python_api.freadable_file_swigregister(freadable_file)
 
 
 class nds_readable_file(readable):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-
-    def __init__(self, path):
-        _c2python_api.nds_readable_file_swiginit(self, _c2python_api.new_nds_readable_file(path))
-
     def open(self):
         return _c2python_api.nds_readable_file_open(self)
 
@@ -276,19 +102,9 @@ class nds_readable_file(readable):
 
     def size(self):
         return _c2python_api.nds_readable_file_size(self)
-    __swig_destroy__ = _c2python_api.delete_nds_readable_file
-
-# Register nds_readable_file in _c2python_api:
-_c2python_api.nds_readable_file_swigregister(nds_readable_file)
 
 
 class writeable_file(writeable):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-
-    def __init__(self, path, mode):
-        _c2python_api.writeable_file_swiginit(self, _c2python_api.new_writeable_file(path, mode))
-
     def create(self):
         return _c2python_api.writeable_file_create(self)
 
@@ -306,19 +122,9 @@ class writeable_file(writeable):
 
     def flush(self):
         return _c2python_api.writeable_file_flush(self)
-    __swig_destroy__ = _c2python_api.delete_writeable_file
-
-# Register writeable_file in _c2python_api:
-_c2python_api.writeable_file_swigregister(writeable_file)
 
 
 class fwriteable_file(writeable):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-
-    def __init__(self, path, mode):
-        _c2python_api.fwriteable_file_swiginit(self, _c2python_api.new_fwriteable_file(path, mode))
-
     def create(self):
         return _c2python_api.fwriteable_file_create(self)
 
@@ -339,10 +145,6 @@ class fwriteable_file(writeable):
 
     def flush(self):
         return _c2python_api.fwriteable_file_flush(self)
-    __swig_destroy__ = _c2python_api.delete_fwriteable_file
-
-# Register fwriteable_file in _c2python_api:
-_c2python_api.fwriteable_file_swigregister(fwriteable_file)
 
 
 def preload(paths):
@@ -366,28 +168,8 @@ def check_background_task():
 
 
 class callback_receiver(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _c2python_api.delete_callback_receiver
-
-    def __init__(self):
-        if self.__class__ == callback_receiver:
-            _self = None
-        else:
-            _self = self
-        _c2python_api.callback_receiver_swiginit(self, _c2python_api.new_callback_receiver(_self, ))
-
-    def __disown__(self):
-        self.this.disown()
-        _c2python_api.disown_callback_receiver(self)
-        return weakref.proxy(self)
-
     def check_dir_callback(self, result, param):
         return _c2python_api.callback_receiver_check_dir_callback(self, result, param)
-
-
-# Register callback_receiver in _c2python_api:
-_c2python_api.callback_receiver_swigregister(callback_receiver)
 
 
 def init_callback_handler(handler):

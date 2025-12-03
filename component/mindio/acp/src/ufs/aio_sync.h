@@ -23,7 +23,8 @@
 #include <cstdint>
 #include <string>
 #include <thread>
-
+#include <atomic>
+#include "securec.h"
 #include "ufs_log.h"
 namespace ock {
 namespace ufs {

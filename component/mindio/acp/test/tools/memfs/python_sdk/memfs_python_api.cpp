@@ -167,7 +167,7 @@ static PyObject *ReadFile(PyObject *self, PyObject *args)
     }
 
     length = std::min(length, fileSize - offset);
-    auto ret = MemFsRead(fd, (uintptr_t)data, offset, length);
+    auto ret = MemFsRead(fd, reinterpret_cast<uintptr_t>(data), offset, length);
     if (ret < 0) {
         LOG_ERROR("MemFs read file failed: " << errno << " : " << strerror(errno));
         delete[] data;

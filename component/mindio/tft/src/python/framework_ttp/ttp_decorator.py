@@ -908,8 +908,14 @@ def tft_exception_handler(func: Callable):
                 start_time, end_time = get_update_start_end_time()
                 ttp_logger.LOGGER.info(f"rank:{rank_} optimizer start update time:{start_time}, "
                                        f"end update time:{end_time}")
-                if handle_uce_err or any(s in err_str for s in
-                        {"ARF FINISH", "STEP FINISH", "FORCE STOP", "HCCL OP RETRY FAILED", "SUSPECT REMOTE ERROR"}):
+                care_exception = any(
+                    exception in err_str
+                    for exception in {
+                        "ARF FINISH", "STEP FINISH", "FORCE STOP",
+                        "HCCL OP RETRY FAILED", "SUSPECT REMOTE ERROR"
+                    }
+                )
+                if handle_uce_err or care_exception:
                     memory_allocated_before = torch_npu.npu.memory_allocated() / byte_to_gb
                     max_memory_allocated_before = torch_npu.npu.max_memory_allocated() / byte_to_gb
                     memory_reserved_before = torch_npu.npu.memory_reserved() / byte_to_gb

@@ -1129,7 +1129,7 @@ void MemFsClientOperation::DisconnectedProcess()
 {
     mFileMaps.Clear();
     if (mSharedFd >= 0) {
-        munmap((void *)mSharedFileAddress, mSharedFileEndAddress - mSharedFileAddress);
+        munmap(reinterpret_cast<void *>(mSharedFileAddress), mSharedFileEndAddress - mSharedFileAddress);
         close(mSharedFd);
         mSharedFd = -1;
     }
