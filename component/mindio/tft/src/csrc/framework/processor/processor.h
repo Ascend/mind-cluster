@@ -237,6 +237,8 @@ protected:
 
     void HandlePause(uint8_t *data, uint32_t len);
 
+    void HandlePauseImpl(int64_t step, bool hotSwitch);
+
     void HandleContinue(uint8_t *data, uint32_t len);
 
     void HandleDowngradeRebuild(uint8_t *data, uint32_t len);

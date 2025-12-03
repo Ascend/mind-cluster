@@ -1080,12 +1080,19 @@ void Processor::HandlePause(uint8_t *data, uint32_t len)
     TTP_ASSERT_RET_VOID_NO_LOG(CheckMsgSnAndReply(msg->sn, TTP_MSG_OP_PAUSE_REPLY) != TTP_ERROR);
     TTP_ASSERT_RET_VOID(msg->step > 0 && msg->step < INT64_MAX);
 
+    // Do not wait for pauseThread, return immediately.
+    std::thread pauseThread(&Processor::HandlePauseImpl, this, msg->step, msg->hotSwitch);
+    pauseThread.detach();
+}
+
+void Processor::HandlePauseImpl(int64_t step, bool hotSwitch)
+{
     TTPReplyMsg replyMsg;
     if (processorStatus_.load() != PS_NORMAL) {
         TTP_LOG_ERROR("rank:" << rank_ << " pause train failed, status error: " << processorStatus_.load());
         replyMsg.status = TTP_ERROR;
     } else {
-        PauseContext pc {msg->step, msg->hotSwitch};
+        PauseContext pc {step, hotSwitch};
         replyMsg.status = EventProcess(PROCESSOR_EVENT_PAUSE, &pc, sizeof(PauseContext));
     }
     replyMsg.sn = actionSn_.load();
