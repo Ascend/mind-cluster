@@ -39,7 +39,7 @@ static void SafeCloseFd(int32_t &fd)
     }
 }
 
-static bool CheckNumaPathLdConfig(char *realPath)
+static bool CheckNumaPathLdConfig(char *realPath, int pathLen)
 {
     FILE *fp;
     char path[PATH_MAX + 1];
@@ -75,10 +75,11 @@ static bool CheckNumaPathLdConfig(char *realPath)
 
 static void SetNumaInterleave()
 {
-    char realPath[PATH_MAX + 1];
+    int pathLen = PATH_MAX + 1;
+    char realPath[pathLen];
     realPath[PATH_MAX] = '\0';
     void *numaHandle;
-    if (!CheckNumaPathLdConfig(realPath)) {
+    if (!CheckNumaPathLdConfig(realPath, pathLen)) {
         return;
     }
     std::string numaPath(realPath);

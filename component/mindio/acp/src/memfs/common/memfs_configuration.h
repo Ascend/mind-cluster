@@ -27,9 +27,6 @@
 
 namespace ock {
 namespace memfs {
-class Configuration;
-
-using ConfigurationPtr = std::shared_ptr<Configuration>;
 
 enum ConfValueType {
     VINT = 0,
@@ -100,9 +97,11 @@ public:
         return true;
     }
 
-    template <class T> static ConfigurationPtr GetInstance()
+    using Ptr = std::shared_ptr<Configuration>;
+
+    template <class T> static Ptr GetInstance()
     {
-        static ConfigurationPtr gInstance = nullptr;
+        static Ptr gInstance = nullptr;
         static std::mutex gLock;
 
         if (gInstance == nullptr) {
@@ -169,6 +168,8 @@ protected:
 
     std::mutex mMutex;
 };
+
+using ConfigurationPtr = Configuration::Ptr;
 
 inline bool Configuration::SetWithTypeAutoConvert(const std::string &key, const std::string &value, bool skipIfLack)
 {

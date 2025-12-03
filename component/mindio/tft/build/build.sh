@@ -106,6 +106,9 @@ if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
   temp=${line#*=}
   build_version="${temp//.SPC/+SPC}"
+  if [[ $build_version == *.T* ]]; then
+    build_version="${build_version//.T/+t}"
+  fi
   echo "build version in service_config.ini:  ${build_version}"
 fi
 export BUILD_VERSION=${build_version}

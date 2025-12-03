@@ -94,7 +94,6 @@ static int DaemonModuleInitialize()
 
 static void WaitingSignalHandler(int signal)
 {
-    MFS_LOG_WARN("received exit signal[" << signal << "]");
     sem_post(&g_mainSem);
 }
 
