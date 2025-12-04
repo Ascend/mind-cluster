@@ -634,9 +634,10 @@ func testSwitchAssociateFault(fJob *FaultJob) {
 	convey.Convey("When switch fault is associate fault", func() {
 		switchInfo := &constant.SwitchInfo{
 			SwitchFaultInfo: constant.SwitchFaultInfo{
-				NodeStatus: constant.HealthyState,
-				FaultInfo:  []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "fault1", ForceAdd: false}},
-				FaultLevel: "level1",
+				NodeStatus:           constant.HealthyState,
+				FaultInfo:            []constant.SimpleSwitchFaultInfo{{AssembledFaultCode: "fault1", ForceAdd: false}},
+				FaultLevel:           "level1",
+				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{"fault1": {FaultLevel: "level1"}},
 			}}
 
 		patches := gomonkey.ApplyFunc(isAssociateFault, func(faultCode string) bool {
