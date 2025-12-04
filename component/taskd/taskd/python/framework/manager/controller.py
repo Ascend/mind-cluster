@@ -29,8 +29,24 @@ from mindio_ttp.controller_ttp import (tft_init_controller, tft_start_controller
                                        tft_notify_controller_dump, tft_notify_controller_stop_train,
                                        tft_register_mindx_callback, tft_notify_controller_on_global_rank,
                                        tft_notify_controller_change_strategy, tft_destroy_controller,
-                                       tft_query_high_availability_switch, tft_notify_controller_prepare_action
+                                       tft_query_high_availability_switch
                                        )
+# Compatibility handling: tft_notify_controller_prepare_action may not exist in some versions
+try:
+    from mindio_ttp.controller_ttp import tft_notify_controller_prepare_action
+except (ImportError, AttributeError) as ex:
+    run_log.warning(f"Failed to import tft_notify_controller_prepare_action, "
+                    f"current version may not support this method: {ex}")
+    tft_notify_controller_prepare_action = None
+
+def _compatible_prepare_action(action, fault_ranks):
+    run_log.warning(f"tft_notify_controller_prepare_action is not supported in current version, "
+                    f"skipping execution. action={action}, fault_ranks={fault_ranks}")
+
+# Select function based on whether tft_notify_controller_prepare_action was successfully imported
+_prepare_action_func = tft_notify_controller_prepare_action \
+    if tft_notify_controller_prepare_action is not None \
+    else _compatible_prepare_action
 
 action_func_map = {
             constants.SAVE_AND_EXIT: tft_notify_controller_dump,
@@ -38,9 +54,9 @@ action_func_map = {
             constants.PAUSE_TRAIN: tft_notify_controller_stop_train,
             constants.ON_GLOBAL_RANK: tft_notify_controller_on_global_rank,
             constants.CHANGE_STRATEGY: tft_notify_controller_change_strategy,
-            constants.HOT_SWITCH: tft_notify_controller_prepare_action,
-            constants.STOP_SWITCH: tft_notify_controller_prepare_action,
-            constants.NEW_POD_RUNNING: tft_notify_controller_prepare_action,
+            constants.HOT_SWITCH: _prepare_action_func,
+            constants.STOP_SWITCH: _prepare_action_func,
+            constants.NEW_POD_RUNNING: _prepare_action_func,
         }
 
 
