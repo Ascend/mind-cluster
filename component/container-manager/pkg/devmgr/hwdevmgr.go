@@ -119,7 +119,7 @@ func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 		return nil, err
 	}
 	if hdm.isAtlas300IDuo(cardId, deviceId) {
-		hwlog.RunLog.Infof("product type of physic ID [%v] is <%v>", phyId, common.ProductTypeAtlas300IDuo)
+		hwlog.RunLog.Debugf("product type of physic ID [%v] is <%v>", phyId, common.ProductTypeAtlas300IDuo)
 		return hdm.getCoupledPhyIdsFrom310pDuo(phyId)
 	}
 
@@ -191,7 +191,8 @@ func (hdm *HwDevMgr) getCoupledPhyIdsFrom310pDuo(phyId int32) ([]int32, error) {
 		return nil, errors.New("npuInfos is nil")
 	}
 	for _, info := range hdm.npuInfos {
-		if info.DeviceID == faultNpuInfo.DeviceID {
+		// for Atlas 300I Duo, devices one the same card are coupled and should be handled together
+		if info.CardID == faultNpuInfo.CardID {
 			coupledIds = append(coupledIds, info.PhyID)
 		}
 	}

@@ -390,9 +390,9 @@ func TestGetCoupledPhyIdsFrom310pDuo(t *testing.T) {
 	convey.Convey("test method 'getCoupledPhyIdsFrom310pDuo'", t, func() {
 		convey.Convey("should return coupled phy ids successfully", func() {
 			mockDevMgr.npuInfos = map[int32]*common.NPUInfo{
-				0: {PhyID: 0, LogicID: 0, DeviceID: 0},
-				1: {PhyID: 1, LogicID: 1, DeviceID: 0}, // Same DeviceID as phyId 0
-				2: {PhyID: 2, LogicID: 2, DeviceID: 1},
+				0: {PhyID: 0, LogicID: 0, CardID: 0},
+				1: {PhyID: 1, LogicID: 1, CardID: 0},
+				2: {PhyID: 2, LogicID: 2, CardID: 1},
 			}
 
 			result, err := mockDevMgr.getCoupledPhyIdsFrom310pDuo(0)
@@ -415,7 +415,7 @@ func TestGetCoupledPhyIdsFrom310pDuo(t *testing.T) {
 
 		convey.Convey("should return error when phyId not found in npuInfos", func() {
 			mockDevMgr.npuInfos = map[int32]*common.NPUInfo{
-				1: {PhyID: 1, LogicID: 1, DeviceID: 0},
+				1: {PhyID: 1, LogicID: 1, CardID: 0},
 			}
 
 			result, err := mockDevMgr.getCoupledPhyIdsFrom310pDuo(0)
