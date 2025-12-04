@@ -206,7 +206,8 @@ func (cm *CtrCtl) resumeCtr(onRing bool) {
 		// can all containers on the ring be resumed.
 		// as long as one of the cards used by the containers on the ring does not meet the condition,
 		// the entire container on the ring cannot be resumed
-		if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)) {
+		ringCtrsUsedDevs := cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)
+		if cm.isDevsNeedPause(cm.devInfoMap.GetDevsOnRing(ringCtrsUsedDevs)) {
 			continue
 		}
 		for _, ctrId := range ctrsOnRings {
@@ -216,7 +217,7 @@ func (cm *CtrCtl) resumeCtr(onRing bool) {
 		}
 	}
 
-	for _, id := range ctrNeedResume {
+	for _, id := range utils.RemoveDuplicates(ctrNeedResume) {
 		hwlog.RunLog.Infof("start resuming container: %s", id)
 		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusResuming)
 		ns := cm.ctrInfoMap.GetCtrNs(id)
