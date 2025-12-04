@@ -33,7 +33,7 @@ var initOnce sync.Once
 
 // FaultCache fault events from dcmi interface
 type FaultCache struct {
-	// key: phy id, value: {fault code : {module type + module id + submodule type + submodule id : fault info}}
+	// key: phy id, value: [fault code : [module type + module id + submodule type + submodule id : fault info]]
 	faults map[int32]map[int64]map[string]*common.DevFaultInfo
 	// UpdateChan for changed fault events
 	UpdateChan chan struct{}
