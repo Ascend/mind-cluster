@@ -6,6 +6,7 @@ package relationfault
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -139,6 +140,7 @@ var faultCodeTimeOutMap = make(map[string]int64)
 
 // FaultJob contain some fault info about a fault job
 type FaultJob struct {
+	InitTime            int64
 	IsA3Job             bool
 	NameSpace           string
 	PodNames            map[string]string
@@ -244,6 +246,10 @@ func (fJob *FaultJob) initFaultJobAttr() {
 	}
 	if fJob.PodStrategiesMaps == nil {
 		fJob.PodStrategiesMaps = make(map[string]string)
+	}
+	if fJob.InitTime == 0 {
+		fJob.InitTime = time.Now().UnixMilli()
+		hwlog.RunLog.Infof("init fault job InitTime %v", fJob.InitTime)
 	}
 }
 
@@ -356,6 +362,11 @@ func (fJob *FaultJob) addFaultStrategyForTimeOutCode(fault *constant.FaultInfo) 
 	if fault.ExecutedStrategy != "" {
 		return
 	}
+	hwlog.RunLog.Infof("fault code %s time %v, fault job init time %v", fault.FaultUid, fault.FaultTime, fJob.InitTime)
+	if fault.FaultTime < fJob.InitTime {
+		hwlog.RunLog.Infof("fault code %s is old than job, skip add default strategy", fault.FaultUid)
+		return
+	}
 	if fault.FaultType == constant.SwitchFaultType {
 		fJob.FaultStrategy.NodeLvList[fault.NodeName] = constant.SubHealthFaultStrategy
 		newFault := *fault
@@ -419,7 +430,7 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 					NPUName:     fault.NPUName,
 					FaultCode:   faultCode,
 					FaultLevel:  faultTimeAndLevel.FaultLevel,
-					FaultTime:   time.Now().UnixMilli(),
+					FaultTime:   faultTimeAndLevel.FaultReceivedTime,
 					DealMaxTime: getFaultCodeDelMaxTime(faultCode),
 					FaultUid:    nodeName + "-" + fault.NPUName + "-" + faultCode,
 					ForceAdd:    fault.ForceAdd,
@@ -465,19 +476,26 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 		fJob.SeparateNodes.Insert(serverList.ServerName)
 		return
 	}
+	var forceAdd bool
 	for _, faultInfo := range switchInfo.FaultInfo {
-		if isAssociateFault(faultInfo.AssembledFaultCode) {
+		if faultInfo.ForceAdd {
+			forceAdd = true
+		}
+	}
+	for faultCode, faultInfo := range switchInfo.FaultTimeAndLevelMap {
+		assembledFaultCode := strings.Split(faultCode, "_")[0]
+		if isAssociateFault(assembledFaultCode) {
 			tmpFaultInfo := constant.FaultInfo{
 				NodeName:    serverList.ServerName,
 				NPUName:     constant.AllCardId,
 				FaultType:   constant.SwitchFaultType,
-				FaultCode:   faultInfo.AssembledFaultCode,
-				FaultTime:   time.Now().UnixMilli(),
-				DealMaxTime: getFaultCodeDelMaxTime(faultInfo.AssembledFaultCode),
+				FaultCode:   assembledFaultCode,
+				FaultTime:   faultInfo.FaultReceivedTime,
+				DealMaxTime: getFaultCodeDelMaxTime(assembledFaultCode),
 				FaultLevel:  switchInfo.FaultLevel,
 				FaultUid: serverList.ServerName + "-" +
-					constant.AllCardId + "-" + faultInfo.AssembledFaultCode,
-				ForceAdd: faultInfo.ForceAdd,
+					constant.AllCardId + "-" + faultCode,
+				ForceAdd: forceAdd,
 			}
 			fJob.AllFaultCode.Insert(tmpFaultInfo.FaultUid)
 			fJob.addFaultInfoByCodeType(&tmpFaultInfo)
