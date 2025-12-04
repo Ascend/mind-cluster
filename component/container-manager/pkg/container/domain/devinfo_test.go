@@ -165,6 +165,16 @@ func TestSetDevsOnRing(t *testing.T) {
 	})
 }
 
+func TestGetDevsOnRing(t *testing.T) {
+	convey.Convey("test method 'GetDevsOnRing'", t, func() {
+		resetDevCache()
+		mockRing := []int32{devId0, devId1, devId2, devId3}
+		mockDevCache.SetDevsOnRing(devId0, mockRing)
+		res := mockDevCache.GetDevsOnRing([]int32{devId0})
+		convey.So(res, convey.ShouldResemble, mockRing)
+	})
+}
+
 func TestGetDevsRelatedCtrs(t *testing.T) {
 	convey.Convey("test method 'GetDevsRelatedCtrs'", t, func() {
 		resetDevCache()
