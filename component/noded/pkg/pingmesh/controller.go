@@ -38,6 +38,7 @@ import (
 	"nodeD/pkg/pingmesh/policygenerator/fullmesh"
 	"nodeD/pkg/pingmesh/resulthandler"
 	"nodeD/pkg/pingmesh/resulthandler/filewriter"
+	"nodeD/pkg/pingmesh/roceping"
 	"nodeD/pkg/pingmesh/types"
 	"nodeD/pkg/pingmesh/watcher"
 	"nodeD/pkg/pingmesh/watcher/configmap"
@@ -52,13 +53,21 @@ const (
 type Manager struct {
 	watcher       watcher.Interface
 	executor      *executor.DevManager
+	pingManager   *roceping.PingManager
 	handler       resulthandler.Interface
 	policyFactory policygenerator.Factory
 	superPodId    string
 	serverIndex   string
+	rackId        string
 	nodeName      string
 	ipCmName      string
 	current       *types.HccspingMeshPolicy
+	currentRoCE   *types.HccspingMeshPolicy
+
+	// ping file watcher intra one super pod for A3/A5
+	pingFileWatcher *roceping.FileWatcherLoop
+	// ping file watcher extra super pods with RoCE for A5
+	rocePingFileWatcher *roceping.FileWatcherLoop
 }
 
 // NewManager create a new Manager
@@ -77,12 +86,24 @@ func NewManager(config *Config) *Manager {
 		ipCmName:    consts.IpConfigmapNamePrefix + strconv.Itoa(int(devExecutor.SuperPodId)),
 		nodeName:    config.KubeClient.NodeName,
 		current:     &types.HccspingMeshPolicy{},
+		currentRoCE: &types.HccspingMeshPolicy{},
 		superPodId:  strconv.Itoa(int(devExecutor.SuperPodId)),
 		serverIndex: strconv.Itoa(int(devExecutor.ServerIndex)),
+		rackId:      strconv.Itoa(int(devExecutor.RackId)),
 	}
 
 	gen := fullmesh.New(c.nodeName, c.superPodId, c.serverIndex)
 	c.policyFactory = policygenerator.NewFactory().Register(fullmesh.Rule, gen)
+
+	hwlog.RunLog.Infof("current devType is %s", devExecutor.GetDeviceType())
+	if devExecutor.GetDeviceType() == common.Ascend910A5 {
+		c.pingManager = roceping.NewPingManager(devExecutor.SuperPodId, devExecutor.RackId,
+			devExecutor.ServerIndex, config.KubeClient, devExecutor.GetDeviceType())
+		roceGen := roceping.NewGenerator(config.KubeClient.NodeName, strconv.Itoa(int(devExecutor.SuperPodId)),
+			strconv.Itoa(int(devExecutor.ServerIndex)))
+		c.policyFactory = c.policyFactory.Register(roceping.Rule, roceGen)
+	}
+
 	c.initWatcher(config)
 	c.initHandler(config)
 	c.executor.SetResultHandler(c.handler.Receive)
@@ -111,10 +132,21 @@ func (c *Manager) initHandler(config *Config) {
 		SuperPodId:  c.superPodId,
 		ServerIndex: c.serverIndex,
 	})
+	handlePingMeshCallBack := func() func(res *types.HccspingMeshResult) error {
+		if c.executor != nil {
+			if c.executor.GetDeviceType() == common.Ascend910A5 {
+				return fw.HandleUBPingMeshInfo
+			}
+		}
+		return fw.HandlePingMeshInfo
+	}
 	if fw != nil {
-		handleFuncs = append(handleFuncs, fw.HandlePingMeshInfo)
+		handleFuncs = append(handleFuncs, handlePingMeshCallBack())
 	}
 	c.handler = resulthandler.NewAggregatedHandler(handleFuncs...)
+	if c.pingManager != nil {
+		c.pingManager.SetFileWriter(fw.GetWriter())
+	}
 }
 
 // Run start the pingmesh controller
@@ -126,6 +158,17 @@ func (c *Manager) Run(ctx context.Context) {
 	go c.watcher.Watch(ctx.Done())
 	go c.handler.Handle(ctx.Done())
 	go c.executor.Start(ctx.Done())
+	if c.pingManager != nil {
+		go c.pingManager.Start(ctx.Done())
+	}
+	// ras net fault detection feature for A3/A5
+	c.InitFileWatcher(ctx)
+	// ras net fault detection feature for A5
+	c.InitRoCEFileWatcher(ctx)
+	// ras net fault detection feature for A3/A5
+	go c.StartFileWatcher(ctx.Done())
+	// ras net fault detection feature for A5
+	go c.StartRoCEFileWatcher(ctx.Done())
 }
 
 func (c *Manager) handleUserConfig(cm *v1.ConfigMap) {
@@ -141,6 +184,16 @@ func (c *Manager) handleUserConfig(cm *v1.ConfigMap) {
 	hwlog.RunLog.Infof("activate: %s", pmcfg.Activate)
 	c.current.Config = pmcfg
 	c.updateConfig()
+	// only for A5
+	roceCfg, err := c.parseRoCEPingConfig(cm.Data)
+	if err != nil {
+		hwlog.RunLog.Errorf("parse roce ping config failed, err: %v", err)
+		return
+	}
+	// only for A5
+	c.currentRoCE.Config = roceCfg
+	// only for A5
+	c.updateRoCEConfig()
 }
 
 func (c *Manager) handleClusterAddress(cm *v1.ConfigMap) {
@@ -151,6 +204,10 @@ func (c *Manager) handleClusterAddress(cm *v1.ConfigMap) {
 	}
 	c.current.Address = sdids
 	c.updateConfig()
+	// only for A5
+	c.currentRoCE.Address = sdids
+	// only for A5
+	c.updateRoCEConfig()
 }
 
 func (c *Manager) updateConfig() {
@@ -181,7 +238,11 @@ func (c *Manager) updateConfig() {
 			hwlog.RunLog.Errorf("generate ping list info failed")
 			return
 		}
-		uid, err := generateJobUID(c.current.Config, c.current.Address)
+		if err := c.updatePingListCheckFile(); err != nil {
+			// only record the warning log
+			hwlog.RunLog.Warnf("update ping list check info failed, err: %v", err)
+		}
+		uid, err := generateJobUIDA5(c.current.Config, c.current.Address, c.getPingFileDataHash())
 		if err != nil {
 			hwlog.RunLog.Errorf("generate job uid failed, err: %v", err)
 			return

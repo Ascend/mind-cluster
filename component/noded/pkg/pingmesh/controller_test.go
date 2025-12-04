@@ -203,6 +203,7 @@ func TestHandleUserConfig(t *testing.T) {
 				SuperPodId: 1,
 			},
 			current:       &types.HccspingMeshPolicy{},
+			currentRoCE:   &types.HccspingMeshPolicy{},
 			nodeName:      fakeNode,
 			policyFactory: policygenerator.NewFactory().Register(fullmesh.Rule, gen),
 		}
