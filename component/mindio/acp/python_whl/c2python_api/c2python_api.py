@@ -20,6 +20,7 @@
 
 """c to python API"""
 
+
 class closeable_file(object):
     def close(self):
         return _c2python_api.closeable_file_close(self)

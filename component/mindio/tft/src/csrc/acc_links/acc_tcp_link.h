@@ -17,6 +17,7 @@
 #define ACC_LINKS_ACC_TCP_LINK_H
 
 #include "acc_def.h"
+#include "acc_tcp_shared_buf.h"
 
 namespace ock {
 namespace acc {
@@ -172,6 +173,8 @@ protected:
     friend class AccTcpWorker;
 };
 
+using AccTcpLinkPtr = ock::ttp::Ref<AccTcpLink>;
+
 class ACC_API AccTcpLinkComplex : public AccTcpLink {
 public:
     ~AccTcpLinkComplex() override = default;
@@ -225,6 +228,8 @@ public:
 protected:
     AccTcpLinkComplex(int fd, const std::string &ipPort, uint32_t id) : AccTcpLink(fd, ipPort, id) {}
 };
+
+using AccTcpLinkComplexPtr = ock::ttp::Ref<AccTcpLinkComplex>;
 
 /* inline functions of AccTcpLink */
 inline void AccTcpLink::UpCtx(uint64_t context)

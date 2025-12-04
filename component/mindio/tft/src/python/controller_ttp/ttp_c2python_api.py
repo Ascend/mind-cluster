@@ -296,7 +296,7 @@ handler_ = None
 def set_callback_receiver(handler):
     global handler_
     handler_ = handler
-    return _ttp_c2python_api.set_callback_receiver(handler)
+    _ttp_c2python_api.set_callback_receiver(handler)
 
 
 set_callback_receiver(TTPCallbackReceiver())

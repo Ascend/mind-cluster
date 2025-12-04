@@ -22,15 +22,16 @@ namespace ock {
 namespace acc {
 class ACC_API AccDataBuffer : public ock::ttp::Referable {
 public:
+    using Ptr = ock::ttp::Ref<AccDataBuffer>;
     /**
      * @brief Create a data buffer object
      */
-    static AccDataBufferPtr Create(const void *data, uint32_t size);
+    static Ptr Create(const void *data, uint32_t size);
 
     /**
      * @brief Create a data buffer object
      */
-    static AccDataBufferPtr Create(uint32_t memSize);
+    static Ptr Create(uint32_t memSize);
 
 public:
     /**
@@ -94,6 +95,8 @@ private:
     uint32_t memSize_ = 0;
     uint8_t *data_ = nullptr;
 };
+
+using AccDataBufferPtr = AccDataBuffer::Ptr;
 
 inline uint8_t *AccDataBuffer::DataPtr() const
 {
