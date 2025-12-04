@@ -25,7 +25,9 @@ using AccClientReqHandler = std::function<void(uint8_t *data, uint32_t len)>;
 
 class ACC_API AccTcpClient : public ock::ttp::Referable {
 public:
-    static AccTcpClientPtr Create(const std::string &serverIp = "", uint16_t serverPort = 0);
+    using Ptr = ock::ttp::Ref<AccTcpClient>;
+
+    static Ptr Create(const std::string &serverIp = "", uint16_t serverPort = 0);
 
 public:
     /**
@@ -183,6 +185,8 @@ public:
 protected:
     static AccDecryptHandler decryptHandler_;
 };
+
+using AccTcpClientPtr = AccTcpClient::Ptr;
 
 inline int32_t AccTcpClient::Connect(const ock::acc::AccConnReq &connReq)
 {

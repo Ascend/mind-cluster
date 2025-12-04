@@ -224,18 +224,6 @@ enum AccResult {
     ACC_RESULT_BUTT = -18,
 };
 
-class AccDataBuffer;
-class AccTcpServer;
-class AccTcpClient;
-class AccTcpLink;
-class AccTcpRequestContext;
-class AccTcpLinkComplex;
-using AccDataBufferPtr = ock::ttp::Ref<AccDataBuffer>;
-using AccTcpServerPtr = ock::ttp::Ref<AccTcpServer>;
-using AccTcpClientPtr = ock::ttp::Ref<AccTcpClient>;
-using AccTcpLinkPtr = ock::ttp::Ref<AccTcpLink>;
-using AccTcpLinkComplexPtr = ock::ttp::Ref<AccTcpLinkComplex>;
-
 #define ACC_API __attribute__((visibility("default")))
 }  // namespace acc
 }  // namespace ock

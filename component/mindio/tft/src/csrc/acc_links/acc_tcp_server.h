@@ -67,10 +67,12 @@ using AccLinkBrokenHandler = std::function<int32_t(const AccTcpLinkComplexPtr &l
  */
 class ACC_API AccTcpServer : public ock::ttp::Referable {
 public:
+    using Ptr = ock::ttp::Ref<AccTcpServer>;
+
     /**
      * @brief Create a server
      */
-    static AccTcpServerPtr Create();
+    static Ptr Create();
 
 public:
     /**
@@ -174,6 +176,8 @@ public:
 protected:
     static AccDecryptHandler decryptHandler_;
 };
+
+using AccTcpServerPtr = AccTcpServer::Ptr;
 
 inline int32_t AccTcpServer::Start(const ock::acc::AccTcpServerOptions &opt)
 {
