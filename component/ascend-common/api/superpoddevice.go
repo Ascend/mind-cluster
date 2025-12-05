@@ -3,6 +3,8 @@
 // Package api structs for SuperPodDevice
 package api
 
+import "k8s.io/apimachinery/pkg/util/sets"
+
 // NpuBaseInfo is the base info of npu
 type NpuBaseInfo struct {
 	IP            string
@@ -39,6 +41,7 @@ type SuperPodDevice struct {
 // SuperPodFaultInfos super pod fault info
 type SuperPodFaultInfos struct {
 	SdIds      []string
+	FaultNodes sets.String
 	NodeNames  []string
 	FaultTimes int64
 	JobId      string `json:"JobId,omitempty"`
