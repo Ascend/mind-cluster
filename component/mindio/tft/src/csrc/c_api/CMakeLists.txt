@@ -10,6 +10,7 @@ file(GLOB C_API_FILES
 add_library(ttp_c_api OBJECT ${C_API_FILES})
 add_library(ttp_c_api_shared SHARED $<TARGET_OBJECTS:ttp_c_api>)
 
+add_dependencies(ttp_c_api_shared ttp_framework_shared)
 target_link_libraries(ttp_c_api_shared PRIVATE pthread dl rt ttp_framework_shared)
 set_target_properties(ttp_c_api_shared PROPERTIES OUTPUT_NAME "ttp_c_api")
 target_compile_options(ttp_c_api_shared PUBLIC -g)
