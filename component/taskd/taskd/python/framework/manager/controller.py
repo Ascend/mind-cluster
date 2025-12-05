@@ -39,6 +39,7 @@ except (ImportError, AttributeError) as ex:
                     f"current version may not support this method: {ex}")
     tft_notify_controller_prepare_action = None
 
+
 def _compatible_prepare_action(action, fault_ranks):
     run_log.warning(f"tft_notify_controller_prepare_action is not supported in current version, "
                     f"skipping execution. action={action}, fault_ranks={fault_ranks}")
