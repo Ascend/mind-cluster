@@ -121,6 +121,7 @@ func (j *jobProcessor) delete() {
 	}
 	j.ctx = ctx
 	j.stop()
+	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
 		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
@@ -133,7 +134,6 @@ func (j *jobProcessor) delete() {
 	}
 	grpcClient.UnsubscribeJobSummary(registerId)
 	jobSummaryWatcher.Delete(j.job.KeyGenerator())
-	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 }
 
 func (j *jobProcessor) start() {
