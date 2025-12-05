@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12.0)
 project(ock-ttp CXX C)
 set(CMAKE_CXX_STANDARD 17)
 
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
 #################################
 # include common cmake modules
 #################################
