@@ -266,10 +266,6 @@ mkdir $PROJ_DIR/python_whl/mindio_acp/mindio_acp/bin
 \cp -v $PROJ_DIR/output/bin/ockiod $PROJ_DIR/python_whl/mindio_acp/mindio_acp/bin/
 \cp -v $BUILD_DIR/src/sdk/memfs/python_sdk/c2python_api.py $PROJ_DIR/python_whl/mindio_acp/mindio_acp/
 
-if [[ "$BUILD_TYPE" == "Release" ]]; then
-    \cp -v $PROJ_DIR/python_whl/c2python_api/c2python_api.py $PROJ_DIR/python_whl/mindio_acp/mindio_acp/
-fi
-
 sed -i "s/{GIT_COMMIT}/${COMMIT_ID}/g" $PROJ_DIR/python_whl/mindio_acp/mindio_acp/VERSION
 sed -i "s/{VERSION}/${VERSION}/g" $PROJ_DIR/python_whl/mindio_acp/mindio_acp/VERSION
 
