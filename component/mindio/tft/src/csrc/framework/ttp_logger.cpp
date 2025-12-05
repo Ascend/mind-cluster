@@ -140,7 +140,7 @@ int TTPLogger::CreateLogImpl(int minLogLevel, std::string path, int rotationFile
     while ((pos = path.find_first_of('/', pos + 1)) != std::string::npos) {
         auto subdir = path.substr(0, pos);
         ret = mkdir(subdir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP);
-        if (ret != 0 && errno != EEXIST) {
+        if (ret != 0 && (errno != EEXIST || FileUtils::IsRegularFile(subdir.c_str()))) {
             std::cerr << "Create logger path failed: " << strerror(errno) << std::endl;
             return TTP_ERROR;
         }

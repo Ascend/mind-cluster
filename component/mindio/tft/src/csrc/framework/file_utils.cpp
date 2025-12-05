@@ -188,6 +188,17 @@ bool FileUtils::IsFileValid(const std::string &configFile, std::string &errMsg, 
     return true;
 }
 
+bool FileUtils::IsRegularFile(const char *path)
+{
+    struct stat st;
+    // 调用 stat 获取文件信息，失败返回 false（路径不存在或无权限）
+    if (stat(path, &st) == -1) {
+        return false;
+    }
+    // S_ISREG 宏：判断是否为普通文件（非目录、设备文件等）
+    return S_ISREG(st.st_mode);
+}
+
 bool FileUtils::CheckOwner(const std::string &filePath, std::string &errMsg)
 {
     struct stat buf;

@@ -72,6 +72,8 @@ public:
     static bool IsFileValid(const std::string& configFile, std::string &errMsg, bool checkPermission = true,
         bool onlyCurrentUserOp = true);
 
+    static bool IsRegularFile(const char* path);
+
     static bool CheckOwner(const std::string &filePath, std::string &errMsg);
 
     static bool CheckPermission(const std::string &filePath, const mode_t &mode, bool onlyCurrentUserOp,
