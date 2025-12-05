@@ -14,6 +14,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -69,6 +70,48 @@ func TestPatchCMData(t *testing.T) {
 		_, err := PatchCMData(testCMName, testNS, patchData)
 		expErr := fmt.Errorf("marshal cm data failed")
 		convey.So(err, convey.ShouldResemble, expErr)
+	})
+}
+
+func TestCheckNodeExist(t *testing.T) {
+	convey.Convey("Test checkNodeExist function", t, func() {
+		convey.Convey("When JSON unmarshal fails, should return false and log error", func() {
+			// Mock the error log
+			patch := gomonkey.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {
+				// Verify that the error message contains the expected text
+				convey.So(format, convey.ShouldContainSubstring, "unmarshal fault info failed")
+			})
+			defer patch.Reset()
+
+			result := checkNodeExist("invalidJsonData", "node1")
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("When node exists in fault info, should return true", func() {
+			// Prepare valid JSON data with node in FaultNodes
+			faultInfos := map[int]api.SuperPodFaultInfos{0: {FaultNodes: sets.NewString("node1", "node2")}}
+			jsonData, err := json.Marshal(faultInfos)
+			if err != nil {
+				fmt.Printf("marshal fault info failed, error: %v", err)
+			}
+			result := checkNodeExist(string(jsonData), "node1")
+			convey.So(result, convey.ShouldBeTrue)
+		})
+		convey.Convey("When node does not exist in fault info, should return false and log info", func() {
+			// Mock the info log
+			patch := gomonkey.ApplyFunc(hwlog.RunLog.Infof, func(format string, args ...interface{}) {
+				// Verify that the info message contains the expected text
+				convey.So(format, convey.ShouldContainSubstring, "node %s not in configmap fault-job-info")
+			})
+			defer patch.Reset()
+			// Prepare valid JSON data with node not in FaultNodes
+			faultInfos := map[int]api.SuperPodFaultInfos{0: {FaultNodes: sets.NewString("node1", "node2")}}
+			jsonData, err := json.Marshal(faultInfos)
+			if err != nil {
+				fmt.Printf("marshal fault info failed, error: %v", err)
+			}
+			result := checkNodeExist(string(jsonData), "node3")
+			convey.So(result, convey.ShouldBeFalse)
+		})
 	})
 }
 
@@ -319,7 +362,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 		defer p1.Reset()
 		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, testCm, nil)
 		defer p2.Reset()
-		RecoverFaultJobInfoCm(testJobId)
+		RecoverFaultJobInfoCm(testJobId, "")
 		_, exists := testCm.Data[testJobId]
 		convey.So(exists, convey.ShouldBeFalse)
 	})
@@ -327,7 +370,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with GetConfigMap error", t, func() {
 		p1 := gomonkey.ApplyFuncReturn(GetConfigMap, nil, testErr)
 		defer p1.Reset()
-		RecoverFaultJobInfoCm("test-job-id")
+		RecoverFaultJobInfoCm("test-job-id", "")
 	})
 
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with UpdateConfigMap error", t, func() {
@@ -347,7 +390,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, nil, testErr)
 		defer p2.Reset()
 
-		RecoverFaultJobInfoCm(testJobId)
+		RecoverFaultJobInfoCm(testJobId, "")
 	})
 }
 

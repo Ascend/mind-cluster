@@ -229,7 +229,8 @@ func GetJobFaultSdIdAndNodeName(jobId string, faultPods map[string]string) map[i
 	faultInfo := make(map[int]api.SuperPodFaultInfos)
 	for spId := range faultSuperID {
 		faultInfo[spId] = api.SuperPodFaultInfos{
-			NodeNames: superNodes[spId], SdIds: faultSuperID[spId], FaultTimes: time.Now().Unix(), JobId: jobId}
+			NodeNames: superNodes[spId], SdIds: faultSuperID[spId], FaultNodes: faultNodes,
+			FaultTimes: time.Now().Unix(), JobId: jobId}
 	}
 	return faultInfo
 }
