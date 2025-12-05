@@ -22,6 +22,7 @@ set_target_properties(ttp_framework_static PROPERTIES OUTPUT_NAME "ttp_framework
 set_target_properties(ttp_framework_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
 add_library(ttp_framework_shared SHARED $<TARGET_OBJECTS:ttp_framework_object>)
+add_dependencies(ttp_framework_shared acc_tcp_net_static)
 target_link_libraries(ttp_framework_shared
         -Wl,--start-group
         acc_tcp_net.a boundscheck.a libspdlog.a
