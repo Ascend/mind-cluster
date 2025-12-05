@@ -4,6 +4,7 @@
 package fault
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 
@@ -13,7 +14,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/grpc/fault"
@@ -253,8 +254,10 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 	}
 	info.FaultLevel = getStateByLevel(maxLevel)
 	if len(info.FaultCodes) > 1 {
-		info.FaultCodes = util.RemoveDuplicates(info.FaultCodes)
-		sort.Strings(info.FaultCodes)
+		if err := processFaultSlices(info); err != nil {
+			hwlog.RunLog.Errorf("processFaultSlices failed, err=%v", err)
+			return info, maxLevel
+		}
 	}
 	return info, maxLevel
 }
@@ -303,4 +306,32 @@ func compareFaultMsg(this, other *fault.FaultMsgSignal) bool {
 		}
 	}
 	return true
+}
+
+// processFaultSlices deduplicate and sort by FaultCode, maintain correspondence between FaultLevel and FaultCode
+func processFaultSlices(faultInfo *fault.DeviceFaultInfo) error {
+	if len(faultInfo.FaultCodes) != len(faultInfo.FaultLevels) {
+		return fmt.Errorf("the length of faultCodes and faultLevels is not equal")
+	}
+	uniqueFaultItems := make(map[string]string)
+	for i, faultCode := range faultInfo.FaultCodes {
+		if faultLevel, exist := uniqueFaultItems[faultCode]; exist && faultInfo.DeviceType == constant.FaultTypeNPU {
+			uniqueFaultItems[faultCode] =
+				faultdomain.GetMostSeriousFaultLevel([]string{faultLevel, faultInfo.FaultLevels[i]})
+		} else {
+			uniqueFaultItems[faultCode] = faultInfo.FaultLevels[i]
+		}
+	}
+	uniqueFaultCodes := make([]string, 0, len(uniqueFaultItems))
+	for faultCode := range uniqueFaultItems {
+		uniqueFaultCodes = append(uniqueFaultCodes, faultCode)
+	}
+	sort.Strings(uniqueFaultCodes)
+	faultInfo.FaultCodes = uniqueFaultCodes
+	sortedLevels := make([]string, 0, len(uniqueFaultItems))
+	for _, code := range uniqueFaultCodes {
+		sortedLevels = append(sortedLevels, uniqueFaultItems[code])
+	}
+	faultInfo.FaultLevels = sortedLevels
+	return nil
 }
