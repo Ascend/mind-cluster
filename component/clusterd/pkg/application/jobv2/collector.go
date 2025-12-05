@@ -26,7 +26,7 @@ func PodGroupCollector(oldPGInfo, newPGInfo *v1beta1.PodGroup, operator string) 
 	case constant.AddOperator, constant.UpdateOperator:
 		podgroup.SavePodGroup(newPGInfo)
 	case constant.DeleteOperator:
-		kube.RecoverFaultJobInfoCm(podgroup.GetJobKeyByPG(newPGInfo))
+		kube.RecoverFaultJobInfoCm(podgroup.GetJobKeyByPG(newPGInfo), "")
 		podgroup.DeletePodGroup(newPGInfo)
 	default:
 		hwlog.RunLog.Debugf("error operator: %s", operator)
@@ -61,7 +61,7 @@ func refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo *v1.Pod) {
 	if oldPodInfo.Annotations[api.RescheduleInPlaceKey] == "" &&
 		newPodInfo.Annotations[api.RescheduleInPlaceKey] == api.RescheduleInPlaceValue {
 		hwlog.RunLog.Infof("refresh cm when pod %s reschedule in place", newPodInfo.Name)
-		go kube.RecoverFaultJobInfoCmWithSync(pod.GetJobKeyByPod(newPodInfo))
+		go kube.RecoverFaultJobInfoCmWithSync(pod.GetJobKeyByPod(newPodInfo), newPodInfo.Spec.NodeName)
 	}
 }
 

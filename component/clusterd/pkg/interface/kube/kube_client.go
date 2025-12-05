@@ -245,16 +245,16 @@ func CreateOrUpdateSuperPodFaultInfo(jobId string, faultInfos map[int]api.SuperP
 }
 
 // RecoverFaultJobInfoCmWithSync update cm with sync
-func RecoverFaultJobInfoCmWithSync(jobId string) {
+func RecoverFaultJobInfoCmWithSync(jobId string, nodeName string) {
 	_, ok := refreshCMIds.Load(jobId)
 	if !ok {
 		time.Sleep(time.Minute)
 	}
-	RecoverFaultJobInfoCm(jobId)
+	RecoverFaultJobInfoCm(jobId, nodeName)
 }
 
 // RecoverFaultJobInfoCm update cm
-func RecoverFaultJobInfoCm(jobId string) {
+func RecoverFaultJobInfoCm(jobId string, nodeName string) {
 	if k8sClient == nil || k8sClient.ClientSet == nil {
 		return
 	}
@@ -269,8 +269,10 @@ func RecoverFaultJobInfoCm(jobId string) {
 			hwlog.RunLog.Errorf("get configmap fault-job-info err:%v", getErr)
 			continue
 		}
-		if _, ok := cm.Data[jobId]; !ok {
-			hwlog.RunLog.Errorf("configmap fault-job-info not found jobId:%s", jobId)
+		data, ok := cm.Data[jobId]
+		if !ok || (nodeName != "" && !checkNodeExist(data, nodeName)) {
+			hwlog.RunLog.Errorf("configmap fault-job-info not found jobId:%s or node "+
+				"%s is not fault node", jobId, nodeName)
 			return
 		}
 		delete(cm.Data, jobId)
@@ -282,6 +284,26 @@ func RecoverFaultJobInfoCm(jobId string) {
 		refreshCMIds.Delete(jobId)
 		return
 	}
+}
+
+func checkNodeExist(data, nodeName string) bool {
+	var faultInfos map[int]api.SuperPodFaultInfos
+	if err := json.Unmarshal([]byte(data), &faultInfos); err != nil {
+		hwlog.RunLog.Errorf("unmarshal fault info failed, err:%v", err)
+		return false
+	}
+	hwlog.RunLog.Infof("fault info:%v", faultInfos)
+	isExist := false
+	for _, faultInfo := range faultInfos {
+		if faultInfo.FaultNodes.Has(nodeName) {
+			isExist = true
+		}
+	}
+	if !isExist {
+		hwlog.RunLog.Infof("node %s not in configmap fault-job-info", nodeName)
+		return false
+	}
+	return true
 }
 
 // PatchNodeAnnotation path node annotation

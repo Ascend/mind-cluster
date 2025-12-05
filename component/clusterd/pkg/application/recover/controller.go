@@ -1395,7 +1395,7 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 		return common.UnRecoverableRetryErrorEvent, common.UnRecoverableRetryError, nil
 	case constant.ProcessRecoverStrategyName:
 		if result.RecoverSuccess {
-			go kube.RecoverFaultJobInfoCm(ctl.jobInfo.JobId)
+			go kube.RecoverFaultJobInfoCm(ctl.jobInfo.JobId, "")
 			ctl.updateFixResult(result.Strategy, constant.RecoverSuccess)
 			return common.RecoverSuccessEvent, common.OK, nil
 		}
