@@ -126,17 +126,8 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	tmpIsFaultJob := faultJob.getIsFaultJob() // 4. update the value of IsFaultJob
 	klog.V(util.LogDebugLev).Infof("job %s if fault job: %v", faultJob.JobName, tmpIsFaultJob)
 	faultJob.setIsFaultJob(tmpIsFaultJob)
-	faultJob.SuperPods = npuJob.SuperPods
 	// 6. update FaultTypes of the job by status of FaultTasks bound on the job
-	if faultJob.IsFaultJob {
-		npuJob.SuperPods = nil
-		reScheduler.Jobs[faultJob.JobUID] = npuJob
-		for _, fTask := range faultJob.FaultTasks {
-			if fTask.IsFaultTask {
-				faultJob.FaultTypes = append(faultJob.FaultTypes, fTask.faultType)
-			}
-		}
-	}
+	faultJob.updateFaultJobInfo(npuJob, reScheduler)
 	faultJob.setIsSubHealthFault()
 	klog.V(util.LogDebugLev).Infof("job %s fault types: %v", faultJob.JobName, faultJob.FaultTypes)
 	_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
@@ -150,6 +141,56 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 		}
 	}
 	return faultJob
+}
+
+func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler *ReScheduler) {
+	fJob.SuperPods = npuJob.SuperPods
+	if !fJob.IsFaultJob {
+		return
+	}
+	const (
+		superPodRankIndex = iota
+		originNodeNameIndex
+		newNodeNameIndex
+		replaceNodesLen
+	)
+	defer func() { reScheduler.Jobs[fJob.JobUID] = npuJob }()
+	replaceNodes := make(map[string][]string, 1)
+	for _, fTask := range fJob.FaultTasks {
+		if fTask.IsFaultTask {
+			fJob.FaultTypes = append(fJob.FaultTypes, fTask.faultType)
+		}
+		if fTask.IsFaultTask && !fTask.IsHotSwitchDelete {
+			npuJob.SuperPods = nil
+			continue
+		}
+		if _, ok := fTask.Annotations["backupNewPodName"]; ok {
+			if len(replaceNodes[fTask.TaskName]) == 0 {
+				replaceNodes[fTask.TaskName] = make([]string, replaceNodesLen)
+			}
+			if superPodRank, ok := fTask.Annotations["super-pod-rank"]; ok {
+				replaceNodes[fTask.TaskName][superPodRankIndex] = superPodRank
+			}
+			replaceNodes[fTask.TaskName][originNodeNameIndex] = fTask.NodeName
+		}
+		if sourcePod, ok := fTask.Annotations["backupSourcePodName"]; ok {
+			if len(replaceNodes[sourcePod]) == 0 {
+				replaceNodes[sourcePod] = make([]string, replaceNodesLen)
+			}
+			replaceNodes[sourcePod][newNodeNameIndex] = fTask.NodeName
+		}
+	}
+	if npuJob.SuperPods == nil {
+		return
+	}
+	for _, item := range replaceNodes {
+		for index, sn := range npuJob.SuperPods[item[superPodRankIndex]] {
+			if sn.Name == item[originNodeNameIndex] {
+				sn.Name = item[newNodeNameIndex]
+				npuJob.SuperPods[item[superPodRankIndex]][index] = sn
+			}
+		}
+	}
 }
 
 // AddFaultJobWithSession read all running jobs of given card types and create the corresponding FaultJob objects

@@ -463,7 +463,7 @@ func buildCheckNodeNPUByTaskTestCases06() CheckNodeNPUByTaskTest {
 	return CheckNodeNPUByTaskTest{
 		name: "06 will return nil when node topo meet job require",
 		node: node,
-		task: &api.TaskInfo{},
+		task: &api.TaskInfo{Job: "job1"},
 		setup: func() *gomonkey.Patches {
 			patches := gomonkey.NewPatches()
 			patches.ApplyMethod(reflect.TypeOf(&base.NPUHandler{}), "GetTaskReqNPUNum",
@@ -497,6 +497,9 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 				defer patches.Reset()
 			}
 			tp := &module910SuperPod{spBlock: spBlockNum2}
+			tp.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+				"job1": {},
+			}
 			tp.NPUJob = &util.NPUJob{}
 			tp.SetMaxNodeNPUNum(util.NPUIndex8)
 			tp.SetMaxCardNPUNum(util.NPUIndex2)

@@ -283,6 +283,7 @@ type FaultTask struct {
 	faultType          string
 	IsNpuTask          bool
 	Annotations        map[string]string
+	IsHotSwitchDelete  bool // indicates whether the task should be deleted during hot switch rescheduling
 }
 
 // miniFaultTask struct for print fTask important infos to logs

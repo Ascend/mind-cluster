@@ -169,6 +169,10 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 		return fmt.Errorf("node %s is not super-pod node or superPodID is not set", node.Name)
 	}
 
+	if err := tp.checkNodeForHotSwitch(task, node); err != nil {
+		return err
+	}
+
 	taskNPUNum, err := tp.GetTaskReqNPUNum(task)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s GetTaskReqNPUNum err: %s", tp.GetPluginName(), err.Error())
@@ -184,6 +188,53 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 	if err = tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s JudgeNodeAndTaskNPU err: %s", task.Name, err.Error())
 		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err.Error())
+	}
+	return nil
+}
+
+func (tp *module910SuperPod) checkNodeForHotSwitch(task *api.TaskInfo, node plugin.NPUNode) error {
+	job, ok := tp.ScheduleEnv.Jobs[task.Job]
+	if !ok {
+		return fmt.Errorf("%s ScoreBestNPUNodes %s: job is not exist", tp.GetPluginName(), task.Name)
+	}
+
+	if job.JobReadyTag != nil && *job.JobReadyTag && len(job.SuperPods) != 0 {
+		var rank int
+		var err error
+
+		rankIndex, ok := task.Pod.Annotations[plugin.PodRankIndexKey]
+		if ok {
+			rank, err = strconv.Atoi(rankIndex)
+			if err != nil {
+				klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s: rankIndex is not int",
+					tp.GetPluginName(), task.Name, task.Name)
+				return err
+			}
+		} else {
+			klog.V(util.LogWarningLev).Infof("%s %s ScoreBestNPUNodes %s: rankIndex is not exist",
+				tp.GetPluginName(), task.Name, task.Name)
+			nTask, ok := job.Tasks[task.UID]
+			if !ok {
+				klog.V(util.LogErrorLev).Infof("%s scoreNodeForReadyJob %s: task is not exist", tp.GetPluginName(), task.Name)
+				return fmt.Errorf("%s scoreNodeForReadyJob %s: task is not exist", tp.GetPluginName(), task.Name)
+			}
+			rank = nTask.Index
+		}
+
+		superPodRankIndex, localRank := getSuperPodRanks(job, rank)
+		if superPodRankIndex == "" {
+			return fmt.Errorf("")
+		}
+		sp, ok := job.SuperPods[superPodRankIndex]
+		if !ok {
+			return fmt.Errorf("logic super pod is not found for pod<%s>", task.Name)
+		}
+		if len(sp) <= localRank {
+			return fmt.Errorf("")
+		}
+		if sp[localRank].SuperPodID != node.SuperPodID {
+			return fmt.Errorf("cur node<%s> which is in super pod<%d> not in origin super pod<%d>, can not be selected for pod<%s>", node.Name, node.SuperPodID, sp[localRank].SuperPodID, task.Name)
+		}
 	}
 	return nil
 }

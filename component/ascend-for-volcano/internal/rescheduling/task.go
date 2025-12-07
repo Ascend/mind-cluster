@@ -63,6 +63,7 @@ func (fTask *FaultTask) getTaskHealthStateBySubHealth(subHealthyStrategy string)
 			return false, PodHealthy
 		}
 		klog.V(util.LogInfoLev).Infof("fTask wait to be deleted :%s, %v", fTask.TaskName, fTask.Reason)
+		fTask.IsHotSwitchDelete = true
 	}
 	return true, SubHealthFault
 }
