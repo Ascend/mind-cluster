@@ -240,7 +240,7 @@ func GetJobServerInfoMap() constant.JobServerInfoMap {
 
 func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerHccl {
 	jobServerMap := make(map[string]constant.ServerHccl)
-	for _, server := range jobInfo.PreServerList {
+	for _, server := range jobInfo.JobRankTable.ServerList {
 		copyServerHccl := constant.ServerHccl{
 			DeviceList:   make([]constant.Device, 0),
 			ServerID:     server.ServerID,
