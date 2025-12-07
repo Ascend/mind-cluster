@@ -6,6 +6,8 @@ package constant
 import (
 	"maps"
 	"reflect"
+	"strconv"
+	"strings"
 	"time"
 
 	"k8s.io/utils/strings/slices"
@@ -472,4 +474,32 @@ func equalDeviceFault(one, other *DeviceFault) bool {
 		one.FaultHandling == other.FaultHandling &&
 		one.FaultCode == other.FaultCode &&
 		maps.Equal(one.FaultTimeAndLevelMap, other.FaultTimeAndLevelMap)
+}
+
+// RestoreFaultTimeAndLevelKey restore key to AssembledFaultCode、 SwitchChipId and SwitchPortId
+func RestoreFaultTimeAndLevelKey(key string) (string, uint, uint) {
+	const (
+		fieldLen                = 3
+		assembledFaultCodeIndex = 0
+		switchChipIdIndex       = 1
+		switchPortIdIndex       = 2
+	)
+	fields := strings.Split(key, "_")
+	assembledFaultCode := fields[assembledFaultCodeIndex]
+	switchChipId, switchPortId := 0, 0
+	if len(fields) != fieldLen {
+		hwlog.RunLog.Warnf("invalid faultTimeAndLevel key: %s, fileds: %v", key, fields)
+	} else {
+		if field, err := strconv.Atoi(fields[switchChipIdIndex]); err == nil {
+			switchChipId = field
+		} else {
+			hwlog.RunLog.Errorf("parse switch chip id failed: %s, err: %v", fields[switchChipIdIndex], err)
+		}
+		if field, err := strconv.Atoi(fields[switchPortIdIndex]); err == nil {
+			switchPortId = field
+		} else {
+			hwlog.RunLog.Errorf("parse switch port id failed: %s, err: %v", fields[switchPortIdIndex], err)
+		}
+	}
+	return assembledFaultCode, uint(switchChipId), uint(switchPortId)
 }

@@ -6,7 +6,6 @@ package relationfault
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -483,16 +482,18 @@ func (fJob *FaultJob) initBySwitchFault(switchInfo *constant.SwitchInfo, serverL
 		}
 	}
 	for faultCode, faultInfo := range switchInfo.FaultTimeAndLevelMap {
-		assembledFaultCode := strings.Split(faultCode, "_")[0]
+		assembledFaultCode, switchChipId, switchPortId := constant.RestoreFaultTimeAndLevelKey(faultCode)
 		if isAssociateFault(assembledFaultCode) {
 			tmpFaultInfo := constant.FaultInfo{
-				NodeName:    serverList.ServerName,
-				NPUName:     constant.AllCardId,
-				FaultType:   constant.SwitchFaultType,
-				FaultCode:   assembledFaultCode,
-				FaultTime:   faultInfo.FaultReceivedTime,
-				DealMaxTime: getFaultCodeDelMaxTime(assembledFaultCode),
-				FaultLevel:  switchInfo.FaultLevel,
+				NodeName:     serverList.ServerName,
+				NPUName:      constant.AllCardId,
+				FaultType:    constant.SwitchFaultType,
+				FaultCode:    assembledFaultCode,
+				SwitchChipId: switchChipId,
+				SwitchPortId: switchPortId,
+				FaultTime:    faultInfo.FaultReceivedTime,
+				DealMaxTime:  getFaultCodeDelMaxTime(assembledFaultCode),
+				FaultLevel:   switchInfo.FaultLevel,
 				FaultUid: serverList.ServerName + "-" +
 					constant.AllCardId + "-" + faultCode,
 				ForceAdd: forceAdd,

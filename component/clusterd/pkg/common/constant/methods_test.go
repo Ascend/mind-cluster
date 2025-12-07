@@ -409,3 +409,44 @@ func TestSwitchAddFaultAndFix1(t *testing.T) {
 		convey.So(len(cm.FaultInfo), convey.ShouldEqual, 1)
 	})
 }
+
+func TestGetResourceFromTemplate(t *testing.T) {
+	tests := []struct {
+		name                   string
+		key                    string
+		wantAssembledFaultCode string
+		wantSwitChipId         uint
+		wantSwitchPortId       uint
+	}{
+		{
+			name:                   "restore success",
+			key:                    "[0x00f103b6,155908,na,na]_1_0",
+			wantAssembledFaultCode: "[0x00f103b6,155908,na,na]",
+			wantSwitChipId:         1,
+			wantSwitchPortId:       0,
+		},
+		{
+			name:                   "invalid field length, only restore code",
+			key:                    "[0x00f103b6,155908,na,na]_1",
+			wantAssembledFaultCode: "[0x00f103b6,155908,na,na]",
+			wantSwitChipId:         0,
+			wantSwitchPortId:       0,
+		},
+		{
+			name:                   "invalid switch chip id and port id, only restore code",
+			key:                    "[0x00f103b6,155908,na,na]_1.1_2.2",
+			wantAssembledFaultCode: "[0x00f103b6,155908,na,na]",
+			wantSwitChipId:         0,
+			wantSwitchPortId:       0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, chipId, portId := RestoreFaultTimeAndLevelKey(tt.key)
+			if code != tt.wantAssembledFaultCode || chipId != tt.wantSwitChipId || portId != tt.wantSwitchPortId {
+				t.Errorf("RestoreFaultTimeAndLevelKey() = %v, %v, %v, want %v, %v, %v",
+					code, chipId, portId, tt.wantAssembledFaultCode, tt.wantSwitChipId, tt.wantSwitchPortId)
+			}
+		})
+	}
+}
