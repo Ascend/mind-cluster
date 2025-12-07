@@ -240,7 +240,7 @@ func getFaultDeviceInfo(faultList []constant.FaultDevice) (*fault.DeviceFaultInf
 		if faultInfo.FaultCode != "" {
 			info.FaultCodes = append(info.FaultCodes, faultInfo.FaultCode)
 			info.FaultLevels = append(info.FaultLevels, faultInfo.FaultLevel)
-			if faultInfo.SwitchChipId != "" && faultInfo.SwitchPortId != "" && faultInfo.SwitchFaultTime != "" {
+			if faultInfo.DeviceType == constant.FaultTypeSwitch {
 				info.SwitchFaultInfos = append(info.SwitchFaultInfos, &fault.SwitchFaultInfo{
 					FaultCode:    faultInfo.FaultCode,
 					SwitchChipId: faultInfo.SwitchChipId,
@@ -265,10 +265,10 @@ func GetStateLevelByFaultLevel(faultLevel string) (string, int) {
 	case constant.NotHandleFault, constant.NotHandleFaultLevelStr:
 		return constant.HealthyState, constant.HealthyLevel
 	case constant.SubHealthFault, constant.PreSeparateFault, constant.PreSeparateFaultLevelStr,
-		constant.SubHealthFaultStrategy, constant.PreSeparateNPU, constant.FreeRestartNPU:
+		constant.SubHealthFaultStrategy, constant.PreSeparateNPU:
 		return constant.SubHealthyState, constant.SubHealthyLevel
 	case constant.RestartRequest, constant.RestartBusiness, constant.RestartNPU, constant.SeparateNPU,
-		constant.ManuallySeparateNPU, constant.SeparateFault, constant.SeparateFaultStrategy:
+		constant.ManuallySeparateNPU, constant.SeparateFault, constant.SeparateFaultStrategy, constant.FreeRestartNPU:
 		return constant.UnHealthyState, constant.UnHealthyLevel
 	default:
 		return constant.HealthyState, constant.HealthyLevel

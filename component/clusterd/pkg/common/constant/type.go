@@ -386,6 +386,8 @@ type FaultInfo struct {
 	ExecutedStrategy string
 	DealMaxTime      int64
 	ForceAdd         bool
+	SwitchChipId     uint
+	SwitchPortId     uint
 }
 
 // FaultDuration fault duration config
