@@ -16,20 +16,27 @@
 import os
 import site
 import ttp_logger
+import time
 
 
-def input_ip_transform(input_ip: str):
-    if is_valid_ip(input_ip) or input_ip == '':
+def input_ip_transform(input_ip: str, max_retries: int = 3) -> str:
+    if not input_ip or is_valid_ip(input_ip):
         return input_ip
 
-    try:
-        import socket
-        ip = socket.gethostbyname(input_ip)
-        ttp_logger.LOGGER.info(f"transform {input_ip} to {ip}")
-        return ip
-    except socket.error as e:
-        ttp_logger.LOGGER.error(f"input neither ip nor hostname, {str(e)}")
-        return input_ip
+    for attempt in range(max_retries):
+        try:
+            import socket
+            ip = socket.gethostbyname(input_ip)
+            ttp_logger.LOGGER.info(f"transform {input_ip} to {ip}")
+            return ip
+        except socket.error as e:
+            ttp_logger.LOGGER.warning(f"Attempt {attempt + 1} failed to resolve {input_ip}, {str(e)}")
+            if attempt == max_retries - 1:
+                ttp_logger.LOGGER.error(f"Failed to resolve {input_ip} after {max_retries} attempts")
+                return input_ip
+        time.sleep(1)
+
+    return input_ip
 
 
 def is_valid_ip(ip_str):
