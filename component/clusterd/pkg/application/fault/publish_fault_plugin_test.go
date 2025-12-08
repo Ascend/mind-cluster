@@ -5,6 +5,7 @@ package fault
 
 import (
 	"context"
+	"reflect"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -422,4 +423,113 @@ func (x *mockFaultSubscribeRankTableServer) Send(m *fault.FaultMsgSignal) error 
 
 func (x *mockFaultSubscribeRankTableServer) Context() context.Context {
 	return context.Background()
+}
+
+type testCase struct {
+	name       string
+	faultInfo  *fault.DeviceFaultInfo
+	wantCodes  []string
+	wantLevels []string
+	wantErr    bool
+	errMsg     string
+}
+
+func buildProcessFaultSlicesTestCases1() []testCase {
+	return []testCase{
+		{
+			name: "empty slices (valid case)",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes: []string{}, FaultLevels: []string{}, DeviceType: constant.FaultTypeNPU},
+			wantCodes:  []string{},
+			wantLevels: []string{},
+			wantErr:    false,
+		},
+		{
+			name: "single element (no duplicate)",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes:  []string{"E001"},
+				FaultLevels: []string{constant.NotHandleFault},
+				DeviceType:  constant.FaultTypeNPU,
+			},
+			wantCodes:  []string{"E001"},
+			wantLevels: []string{constant.NotHandleFault},
+			wantErr:    false,
+		},
+		{
+			name: "codes and levels length not equal",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes:  []string{"A001", "B002"},
+				FaultLevels: []string{constant.NotHandleFault},
+				DeviceType:  constant.FaultTypeNPU,
+			},
+			wantCodes:  []string{"A001", "B002"},
+			wantLevels: []string{constant.NotHandleFault},
+			wantErr:    true,
+			errMsg:     "the length of faultCodes and faultLevels is not equal",
+		}}
+}
+
+func buildProcessFaultSlicesTestCases2() []testCase {
+	return []testCase{
+		{
+			name: "duplicate fault codes (keep first occurrence)",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes: []string{"B002", "A001", "B002", "C003"},
+				FaultLevels: []string{constant.SubHealthFault, constant.SeparateNPU, constant.NotHandleFault,
+					constant.ManuallySeparateNPU},
+				DeviceType: constant.FaultTypeNPU,
+			},
+			wantCodes:  []string{"A001", "B002", "C003"},
+			wantLevels: []string{constant.SeparateNPU, constant.SubHealthFault, constant.ManuallySeparateNPU},
+			wantErr:    false,
+		},
+		{
+			name: "normal case with sorted codes",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes:  []string{"C003", "A001", "B002"},
+				FaultLevels: []string{constant.NotHandleFault, constant.SubHealthFault, constant.SeparateNPU},
+				DeviceType:  constant.FaultTypeNPU,
+			},
+			wantCodes:  []string{"A001", "B002", "C003"},
+			wantLevels: []string{constant.SubHealthFault, constant.SeparateNPU, constant.NotHandleFault},
+			wantErr:    false,
+		},
+		{
+			name: "duplicate codes at start and end",
+			faultInfo: &fault.DeviceFaultInfo{
+				FaultCodes:  []string{"D004", "A001", "D004"},
+				FaultLevels: []string{constant.SubHealthFault, constant.NotHandleFault, constant.SeparateNPU},
+				DeviceType:  constant.FaultTypeNPU,
+			},
+			wantCodes:  []string{"A001", "D004"},
+			wantLevels: []string{constant.NotHandleFault, constant.SeparateNPU},
+			wantErr:    false,
+		}}
+}
+
+// TestProcessFaultSlices for test processFaultSlices
+func TestProcessFaultSlices(t *testing.T) {
+	tests := buildProcessFaultSlicesTestCases1()
+	tests = append(tests, buildProcessFaultSlicesTestCases2()...)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotErr := processFaultSlices(tc.faultInfo)
+			if (gotErr != nil) != tc.wantErr {
+				t.Fatalf("error check failed: wantErr=%v, gotErr=%v (msg: %s)",
+					tc.wantErr, gotErr != nil, gotErr)
+			}
+			if tc.wantErr {
+				if gotErr.Error() != tc.errMsg {
+					t.Errorf("error message mismatch: want=%q, got=%q", tc.errMsg, gotErr.Error())
+				}
+				return
+			}
+			if !reflect.DeepEqual(tc.faultInfo.FaultCodes, tc.wantCodes) {
+				t.Errorf("codes mismatch: want=%v, got=%v", tc.wantCodes, tc.faultInfo.FaultCodes)
+			}
+			if !reflect.DeepEqual(tc.faultInfo.FaultLevels, tc.wantLevels) {
+				t.Errorf("levels mismatch: want=%v, got=%v", tc.wantLevels, tc.faultInfo.FaultLevels)
+			}
+		})
+	}
 }
