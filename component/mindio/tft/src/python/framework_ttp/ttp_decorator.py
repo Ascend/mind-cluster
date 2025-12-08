@@ -675,11 +675,11 @@ def tft_pause_train(cur_step: int):
     ttp_logger.LOGGER.debug(f"[pause] rank: {rank_} need_pause_: {need_pause_}, "
                             f"pause_step_: {pause_step_}, cur_step:{cur_step}. ")
     with need_pause_cond_:
-        if need_pause_ in [PauseType.PAUSE, PauseType.RAISE] and cur_step >= pause_step_:
+        if need_pause_ in [PauseType.PAUSE, PauseType.RAISE] and pause_step_ <= cur_step:
             ttp_logger.LOGGER.info("[pause] training paused, rank:%s", rank_)
-            need_pause_, need_pause = None, need_pause_
             need_pause_cond_.notify()
-            if need_pause == PauseType.RAISE:
+            if need_pause_ == PauseType.RAISE:
+                need_pause_ = None
                 raise RuntimeError("STEP FINISH")
             need_pause_cond_.wait()
 
