@@ -6,7 +6,6 @@ package podgroup
 import (
 	"errors"
 	"strings"
-	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
@@ -163,25 +162,4 @@ func GetSubHealthStrategyByJobKey(jobKey string) string {
 		return constant.SubHealthyIngore
 	}
 	return strategy
-}
-
-// RetryGetFramework retry get framework
-func RetryGetFramework(jobId string) string {
-	var pg v1beta1.PodGroup
-	for retry := 0; retry <= constant.GetPodGroupTimes; retry++ {
-		pg = GetPodGroup(jobId)
-		if pg.Name == "" { // pg not exists
-			hwlog.RunLog.Warnf("podGroup not found in cache, jobId=%s", jobId)
-			time.Sleep(time.Second * time.Duration(retry+1))
-			continue
-		}
-		framework := GetModelFramework(&pg)
-		if framework != "" {
-			return framework
-		}
-		time.Sleep(time.Second * time.Duration(retry+1))
-	}
-
-	hwlog.RunLog.Warnf("get framework from podGroup failed after %v retries, jobId=%s", constant.GetPodGroupTimes, jobId)
-	return ""
 }

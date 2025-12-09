@@ -337,13 +337,17 @@ func getJobBaseInfo(jobId string) (common.JobBaseInfo, common.RespCode, error) {
 		return common.JobBaseInfo{}, common.ProcessRecoverEnableOff,
 			fmt.Errorf("job(uid=%s) process-recover-enable and subhealthy hotswtich not open:%v", jobId, err)
 	}
+	pg, err := kube.RetryGetPodGroup(pgName, namespace, constant.GetPodGroupTimes)
+	if err != nil {
+		hwlog.RunLog.Warnf("get podGroup err: %v, pgName=%s, nameSpace=%s", err, pgName, namespace)
+	}
 	return common.JobBaseInfo{
 		JobId:         jobId,
 		JobName:       jobName,
 		PgName:        pgName,
 		Namespace:     namespace,
 		RecoverConfig: config,
-		Framework:     podgroup.RetryGetFramework(jobId),
+		Framework:     podgroup.GetModelFramework(pg),
 	}, common.OK, nil
 }
 
