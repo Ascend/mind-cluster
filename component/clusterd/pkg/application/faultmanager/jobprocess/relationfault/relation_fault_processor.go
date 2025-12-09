@@ -422,7 +422,7 @@ func (fJob *FaultJob) initFaultInfoByDeviceFault(
 	faultList []constant.DeviceFault, nodeName, rankId string, isCardUnhealthy bool) {
 	for _, fault := range faultList {
 		for faultCode, faultTimeAndLevel := range fault.FaultTimeAndLevelMap {
-			if isAssociateFault(faultCode) && !isCardUnhealthy {
+			if isAssociateFault(faultCode) {
 				tmpFaultInfo := constant.FaultInfo{
 					NodeName:    nodeName,
 					FaultType:   constant.DeviceFaultType,
