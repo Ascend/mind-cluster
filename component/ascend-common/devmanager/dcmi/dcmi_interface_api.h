@@ -296,6 +296,40 @@ struct dcmi_vdev_query_stru {
     struct dcmi_vdev_query_info query_info;
 };
 
+// ub ping mesh for A5 -- start
+#define UB_PING_MESH_MAX_NUM 48
+#define UB_ADDR_MAX_LEN 16
+#define UB_DST_EIT_MAX_LEN 64
+
+struct dcmi_ub_ping_mesh_operate {
+    char src_eid[UB_ADDR_MAX_LEN];
+    char dst_eid_list[UB_DST_EIT_MAX_LEN][UB_ADDR_MAX_LEN];
+    int dst_num;
+    int pkt_size;
+    int pkt_send_num;
+    int pkt_interval;
+    int timeout;
+    int task_interval;
+    int task_id;
+};
+
+struct dcmi_ub_ping_mesh_info {
+    char src_eid[UB_ADDR_MAX_LEN];
+    char dst_eid_list[UB_DST_EIT_MAX_LEN][UB_ADDR_MAX_LEN];
+    unsigned int suc_pkt_num[UB_PING_MESH_MAX_NUM];
+    unsigned int fail_pkt_num[UB_PING_MESH_MAX_NUM];
+    long max_time[UB_PING_MESH_MAX_NUM];
+    long min_time[UB_PING_MESH_MAX_NUM];
+    long avg_time[UB_PING_MESH_MAX_NUM];
+    long tp95_time[UB_PING_MESH_MAX_NUM];
+    int reply_stat_num[UB_PING_MESH_MAX_NUM];
+    unsigned long long ping_total_num[UB_PING_MESH_MAX_NUM];
+    int dest_num;
+    unsigned long occur_time; // unit is ms
+};
+
+// ub ping mesh for A5 -- end
+
 struct dcmi_soc_free_resource {
     unsigned int vfg_num;
     unsigned int vfg_bitmap;
@@ -589,6 +623,17 @@ DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned
 
 DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
 
+// UB Ping Mesh API for A5 -- start
+DCMIDLLEXPORT int dcmi_start_ub_ping_mesh(int card_id, int device_id, int count,
+    struct dcmi_ub_ping_mesh_operate *ubping_mesh);
+
+DCMIDLLEXPORT int dcmi_stop_ub_ping_mesh(int card_id, int device_id, int task_id);
+
+DCMIDLLEXPORT int dcmi_get_ub_ping_mesh_info(int card_id, int device_id, int task_id,
+    struct dcmi_ub_ping_mesh_info *ub_ping_mesh_reply, int mesh_reply_size, int *count);
+
+DCMIDLLEXPORT int dcmi_get_ub_ping_mesh_state(int card_id, int device_id, int task_id, unsigned int *state);
+// UB Ping Mesh API for A5 -- end
 
 // urma device API for A5 -- begin
 DCMIDLLEXPORT int dcmi_get_urma_device_cnt(int card_id, int device_id, int *dev_cnt);

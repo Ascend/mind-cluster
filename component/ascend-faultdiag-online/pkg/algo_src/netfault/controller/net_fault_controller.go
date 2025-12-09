@@ -380,7 +380,7 @@ func getSuperPodDirInfo(clusterPath string) ([]int, []string) {
 	}
 	// roce logic
 	roceDirPath := filepath.Join(clusterPath, roceDirName)
-	if _, err := os.Stat(roceDirPath); err == nil || os.IsNotExist(err) {
+	if _, err := os.Stat(roceDirPath); err == nil || !os.IsNotExist(err) {
 		superPodIds = append(superPodIds, roceSuperPodIdConst)
 		superPodPaths = append(superPodPaths, roceDirPath)
 	}
@@ -452,7 +452,7 @@ func loopWaitSuperPodDirAndCheckConfigFile(
 	/* Enable inter-supernode RoCE detection by default; poll and wait if the folder does not exist */
 	for i := 0; i < readConfFailedReTryNums &&
 		!controllerflags.IsControllerExited.GetState(); i++ {
-		if needConfig && policy.CheckCurSuperPodConfigSwitch(superPodDirPath) {
+		if needConfig && !policy.CheckCurSuperPodConfigSwitch(superPodDirPath) {
 			hwlog.RunLog.Infof("[NetFault Algo]%s network detection switch off", superPodDirPath)
 			return false
 		}

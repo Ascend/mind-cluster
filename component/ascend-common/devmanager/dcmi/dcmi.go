@@ -327,6 +327,32 @@ unsigned int *state){
 		CALL_FUNC(dcmi_get_hccsping_mesh_state,card_id,device_id,port_id,task_id,state)
 }
 
+    // ub ping mesh functions for A5 -- start
+	static int (*dcmi_start_ub_ping_mesh_func)(int card_id, int device_id, int count,
+				struct dcmi_ub_ping_mesh_operate *ubping_mesh);
+	int dcmi_start_ub_ping_mesh(int card_id, int device_id, int count,
+								struct dcmi_ub_ping_mesh_operate *ubping_mesh){
+		CALL_FUNC(dcmi_start_ub_ping_mesh, card_id, device_id, count, ubping_mesh)
+	}
+
+	static int (*dcmi_stop_ub_ping_mesh_func)(int card_id, int device_id, int task_id);
+	int dcmi_stop_ub_ping_mesh(int card_id, int device_id, int task_id){
+		CALL_FUNC(dcmi_stop_ub_ping_mesh, card_id, device_id, task_id)
+	}
+
+	static int (*dcmi_get_ub_ping_mesh_info_func)(int card_id, int device_id, int task_id,
+				struct dcmi_ub_ping_mesh_info *ub_ping_mesh_reply, int mesh_reply_size, int *count);
+	int dcmi_get_ub_ping_mesh_info(int card_id, int device_id, int task_id,
+				struct dcmi_ub_ping_mesh_info *ub_ping_mesh_reply, int mesh_reply_size, int *count){
+		CALL_FUNC(dcmi_get_ub_ping_mesh_info, card_id, device_id, task_id, ub_ping_mesh_reply, mesh_reply_size, count)
+	}
+
+	static int (*dcmi_get_ub_ping_mesh_state_func)(int card_id, int device_id, int task_id, unsigned int *state);
+	int dcmi_get_ub_ping_mesh_state(int card_id, int device_id, int task_id, unsigned int *state){
+		CALL_FUNC(dcmi_get_ub_ping_mesh_state, card_id, device_id, task_id, state)
+	}
+	// ub ping mesh functions for A5 -- end
+
 	static int (*dcmi_get_spod_node_status_func)(int card_id, int device_id, unsigned int sdid, unsigned int *status);
 	int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status){
 		CALL_FUNC(dcmi_get_spod_node_status,card_id,device_id,sdid,status)
@@ -476,6 +502,16 @@ unsigned int *state){
 	dcmi_get_eid_list_by_urma_dev_index_func = dlsym(dcmiHandle, "dcmi_get_eid_list_by_urma_dev_index");
 	// urma device API for A5 -- end
 
+    // ub ping mesh functions for A5 -- start
+	dcmi_start_ub_ping_mesh_func = dlsym(dcmiHandle,"dcmi_start_ub_ping_mesh");
+
+	dcmi_stop_ub_ping_mesh_func = dlsym(dcmiHandle,"dcmi_stop_ub_ping_mesh");
+
+	dcmi_get_ub_ping_mesh_info_func = dlsym(dcmiHandle,"dcmi_get_ub_ping_mesh_info");
+
+	dcmi_get_ub_ping_mesh_state_func = dlsym(dcmiHandle,"dcmi_get_ub_ping_mesh_state");
+	// ub ping mesh functions for A5 -- end
+
    	return SUCCESS;
    }
 
@@ -488,6 +524,7 @@ unsigned int *state){
 */
 import "C"
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -585,6 +622,15 @@ type DcDriverInterface interface {
 	DcGetUrmaDevEidList(int32, int32, int32) (*common.UrmaDeviceInfo, error)
 	// DcGetUrmaDevEidListAll for A5
 	DcGetUrmaDevEidListAll(int32, int32) ([]common.UrmaDeviceInfo, error)
+
+	// DcStartUbPingMesh for A5
+	DcStartUbPingMesh(int32, int32, common.HccspingMeshOperate) error
+	// DcStopUbPingMesh for A5
+	DcStopUbPingMesh(int32, int32, uint) error
+	// DcGetUbPingMeshInfo for A5
+	DcGetUbPingMeshInfo(int32, int32, uint, int) (*common.HccspingMeshInfo, error)
+	// DcGetUbPingMeshState for A5
+	DcGetUbPingMeshState(int32, int32, uint) (int, error)
 }
 
 const (
@@ -623,6 +669,8 @@ var (
 		-99999: "dcmi libdcmi.so failed to load",
 	}
 )
+
+const maxCArraySize = 1 << 30 // 1 Gi elements; practical upper bound for C array mapping for A5
 
 // DcManager for manager dcmi interface
 type DcManager struct{}
@@ -713,6 +761,176 @@ func (d *DcManager) DcGetUrmaDevEidListAll(cardID int32, deviceID int32) ([]comm
 		infos[index] = *eidInfo
 	}
 	return infos, nil
+}
+
+// DcStartUbPingMesh start ub ping mesh for A5
+func (d *DcManager) DcStartUbPingMesh(cardID int32, deviceID int32, operate common.HccspingMeshOperate) error {
+	ops := operate.UBPingMeshOperateList
+	if len(ops) == 0 {
+		return fmt.Errorf("no UB ping mesh operations provided")
+	}
+
+	size := len(ops)
+	cOpsPtr := C.malloc(C.size_t(size) * C.size_t(unsafe.Sizeof(C.struct_dcmi_ub_ping_mesh_operate{})))
+	if cOpsPtr == nil {
+		return errors.New("failed to allocate memory for UB ping mesh C array")
+	}
+	defer C.free(unsafe.Pointer(cOpsPtr))
+
+	cOpsPtr, err := buildUbPingMeshCArray(ops, cOpsPtr, size)
+	if err != nil {
+		return err
+	}
+
+	if retCode := C.dcmi_start_ub_ping_mesh(
+		C.int(cardID), C.int(deviceID), C.int(len(ops)),
+		(*C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr),
+	); retCode != common.Success {
+		return fmt.Errorf("dcmi start ub ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+
+	return nil
+}
+
+// buildUbPingMeshCArray for A5
+func buildUbPingMeshCArray(ops []common.UBPingMeshOperate, cOpsPtr unsafe.Pointer, size int) (unsafe.Pointer, error) {
+
+	cOps := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_operate)(unsafe.Pointer(cOpsPtr))[:size:size]
+
+	for idx, op := range ops {
+		for i := 0; i < common.EidByteSize; i++ {
+			cOps[idx].src_eid[i] = C.char(op.SrcEID.Raw[i])
+		}
+		for i := 0; i < len(op.DstEIDList); i++ {
+			for j := 0; j < common.EidByteSize; j++ {
+				cOps[idx].dst_eid_list[i][j] = C.char(op.DstEIDList[i].Raw[j])
+			}
+		}
+		cOps[idx].dst_num = C.int(op.DstNum)
+		cOps[idx].pkt_size = C.int(op.PktSize)
+		cOps[idx].pkt_send_num = C.int(op.PktSendNum)
+		cOps[idx].pkt_interval = C.int(op.PktInterval)
+		cOps[idx].timeout = C.int(op.Timeout)
+		cOps[idx].task_interval = C.int(op.TaskInterval)
+		cOps[idx].task_id = C.int(op.TaskID)
+	}
+
+	return cOpsPtr, nil
+}
+
+// DcGetUbPingMeshInfo get ub ping mesh info for A5
+func (d *DcManager) DcGetUbPingMeshInfo(cardID int32, deviceID int32,
+	taskID uint, meshReplySize int) (*common.HccspingMeshInfo, error) {
+	if meshReplySize <= 0 {
+		return nil, fmt.Errorf("meshReplySize must be > 0")
+	}
+
+	cInfosPtr := C.malloc(C.size_t(meshReplySize) * C.size_t(unsafe.Sizeof(C.struct_dcmi_ub_ping_mesh_info{})))
+	if cInfosPtr == nil {
+		return nil, fmt.Errorf("failed to allocate memory")
+	}
+	defer C.free(cInfosPtr)
+
+	var count C.int
+	hwlog.RunLog.Infof("get: the cardID %d, deviceID %d , taskID %d, meshReplySize %d",
+		cardID, deviceID, taskID, meshReplySize)
+	if retCode := C.dcmi_get_ub_ping_mesh_info(
+		C.int(cardID), C.int(deviceID), C.int(taskID),
+		(*C.struct_dcmi_ub_ping_mesh_info)(cInfosPtr),
+		C.int(meshReplySize), &count,
+	); retCode != common.Success {
+		return nil, fmt.Errorf("dcmi get ub ping mesh info failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+
+	cInfos := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_info)(cInfosPtr)[:meshReplySize:meshReplySize]
+	ubList := convertCInfoToGoSlice(cInfos, int(count))
+
+	return &common.HccspingMeshInfo{UBPingMeshInfoList: ubList}, nil
+}
+
+// convertCInfoToGoSlice for A5
+func convertCInfoToGoSlice(cInfos []C.struct_dcmi_ub_ping_mesh_info, count int) []common.UBPingMeshInfo {
+	ubList := make([]common.UBPingMeshInfo, 0)
+
+	for i := 0; i < count && i < len(cInfos); i++ {
+		var info common.UBPingMeshInfo
+		// src_eid
+		for j := 0; j < common.EidByteSize; j++ {
+			info.SrcEIDs.Raw[j] = byte(cInfos[i].src_eid[j])
+		}
+		hwlog.RunLog.Infof("the src eid from dcmi_ub_ping_mesh_info %s", hex.EncodeToString(info.SrcEIDs.Raw[:]))
+
+		// dst_eid_list
+		info.DestNum = int(cInfos[i].dest_num)
+		info.DstEIDList = make([]common.Eid, info.DestNum)
+		for k := 0; k < info.DestNum; k++ {
+			for l := 0; l < common.EidByteSize; l++ {
+				info.DstEIDList[k].Raw[l] = byte(cInfos[i].dst_eid_list[k][l])
+			}
+		}
+
+		fillStatsFromCInfo(&info, &cInfos[i])
+		ubList = append(ubList, info)
+	}
+	return ubList
+}
+
+// fillStatsFromCInfo for A5
+func fillStatsFromCInfo(info *common.UBPingMeshInfo, cInfo *C.struct_dcmi_ub_ping_mesh_info) {
+	info.SucPktNum = make([]uint, common.UbPingMeshMaxNum)
+	info.FailPktNum = make([]uint, common.UbPingMeshMaxNum)
+	info.MaxTime = make([]int, common.UbPingMeshMaxNum)
+	info.MinTime = make([]int, common.UbPingMeshMaxNum)
+	info.AvgTime = make([]int, common.UbPingMeshMaxNum)
+	info.Tp95Time = make([]int, common.UbPingMeshMaxNum)
+	info.ReplyStatNum = make([]int, common.UbPingMeshMaxNum)
+	info.PingTotalNum = make([]int, common.UbPingMeshMaxNum)
+
+	for k := 0; k < common.UbPingMeshMaxNum; k++ {
+		info.SucPktNum[k] = uint(cInfo.suc_pkt_num[k])
+		info.FailPktNum[k] = uint(cInfo.fail_pkt_num[k])
+		info.MaxTime[k] = int(cInfo.max_time[k])
+		info.MinTime[k] = int(cInfo.min_time[k])
+		info.AvgTime[k] = int(cInfo.avg_time[k])
+		info.Tp95Time[k] = int(cInfo.tp95_time[k])
+		info.ReplyStatNum[k] = int(cInfo.reply_stat_num[k])
+		info.PingTotalNum[k] = int(cInfo.ping_total_num[k])
+	}
+	info.OccurTime = uint(cInfo.occur_time)
+}
+
+// DcStopUbPingMesh stops UB ping mesh (no change needed) for A5
+func (d *DcManager) DcStopUbPingMesh(cardID int32, deviceID int32, taskID uint) error {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidTaskID(taskID) {
+		return fmt.Errorf("taskID(%d) is invalid", taskID)
+	}
+	if retCode := C.dcmi_stop_ub_ping_mesh(C.int(cardID), C.int(deviceID), C.int(taskID)); retCode != common.Success {
+		return fmt.Errorf("dcmi stop ub ping mesh failed cardID(%d) deviceID(%d) error code: %d",
+			cardID, deviceID, int32(retCode))
+	}
+	return nil
+}
+
+// DcGetUbPingMeshState gets UB ping mesh state (no change needed) for A5
+func (d *DcManager) DcGetUbPingMeshState(cardID int32, deviceID int32, taskID uint) (int, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return common.RetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	if !common.IsValidTaskID(taskID) {
+		return common.RetError, fmt.Errorf("taskID(%d) is invalid", taskID)
+	}
+	var state C.uint
+	if retCode := C.dcmi_get_ub_ping_mesh_state(C.int(cardID), C.int(deviceID),
+		C.int(taskID), &state); retCode != common.Success {
+		return common.RetError, fmt.Errorf("dcmi get ub ping mesh state failed cardID(%d) deviceID(%d) "+
+			"error code: %d", cardID, deviceID, int32(retCode))
+	}
+	return int(state), nil
 }
 
 // DcStartHccsPingMesh start hccs ping mesh

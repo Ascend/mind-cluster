@@ -137,3 +137,18 @@ func TestInt64ToolAbs(t *testing.T) {
 		convey.So(tool.Abs(testVal1, testVal2), convey.ShouldEqual, testResult)
 	})
 }
+
+func TestContainsInt64(t *testing.T) {
+	convey.Convey("test Contains case 1", t, func() {
+		tool := int64Tool{}
+		sources := []int64{1, 0}
+		target := int64(0)
+		convey.So(tool.Contains(sources, target), convey.ShouldBeTrue)
+	})
+	convey.Convey("test Contains case2", t, func() {
+		tool := int64Tool{}
+		sources := []int64{1}
+		target := int64(0)
+		convey.So(tool.Contains(sources, target), convey.ShouldBeFalse)
+	})
+}

@@ -22,6 +22,8 @@ const (
 	RackIdAbnormal = -2
 	// SuperPodTypeAbnormal represents super pod type abnormal value for A5
 	SuperPodTypeAbnormal = 0
+	// DevA5 is A5 device type
+	DevA5 = "A5"
 )
 
 const (

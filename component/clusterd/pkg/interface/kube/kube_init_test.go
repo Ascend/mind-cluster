@@ -12,9 +12,10 @@ import (
 
 func TestInitClientK8s(t *testing.T) {
 	convey.Convey("test stop report", t, func() {
-		gomonkey.ApplyFunc(newClientK8s, func() (*K8sClient, error) {
+		mock := gomonkey.ApplyFunc(newClientK8s, func() (*K8sClient, error) {
 			return nil, nil
 		})
+		defer mock.Reset()
 		err := InitClientK8s()
 		convey.So(err, convey.ShouldBeNil)
 	})

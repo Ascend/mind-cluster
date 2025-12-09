@@ -22,6 +22,11 @@ const (
 	EidByteSize = 16
 )
 
+// UbPingMeshMaxNum defines the maximum number of UB ping mesh tasks or destinations.
+const (
+	UbPingMeshMaxNum = 48
+)
+
 // Eid Entity ID which is 128bit and used as Unify BUS address
 type Eid struct {
 	Raw [EidByteSize]byte

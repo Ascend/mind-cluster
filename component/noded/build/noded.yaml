@@ -53,6 +53,7 @@ spec:
       nodeSelector:
         workerselector: dls-worker-node
       serviceAccountName: noded
+      hostNetwork: true
       containers:
         - name: noded
           image: noded:v6.0.RC1

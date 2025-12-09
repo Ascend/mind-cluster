@@ -268,7 +268,7 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 			ps.deepCopyDevice(devices)
 			deviceID := "1"
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -290,14 +290,14 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 		convey.Convey("request more than 1 virtual device", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device not exist", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -309,7 +309,7 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
 				DeviceName: api.Ascend910 + "-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -944,5 +944,51 @@ func TestPreStartContainer(t *testing.T) {
 		ps := NewPluginServer(api.Ascend910, devices, nil, device.NewHwAscend910Manager())
 		_, err := ps.PreStartContainer(nil, nil)
 		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestIsValidPhyID(t *testing.T) {
+	convey.Convey("test isValidPhyID case 1", t, func() {
+		cacheDevices := []common.NpuDevice{
+			{PhyID: 1},
+		}
+		ps := PluginServer{
+			cachedDevices: cacheDevices,
+		}
+		convey.So(ps.isValidPhyID("1"), convey.ShouldBeTrue)
+	})
+
+	convey.Convey("test isValidPhyID case 2", t, func() {
+		cacheDevices := []common.NpuDevice{
+			{PhyID: 1},
+		}
+		ps := PluginServer{
+			cachedDevices: cacheDevices,
+		}
+		convey.So(ps.isValidPhyID("2"), convey.ShouldBeFalse)
+	})
+}
+
+func TestIsValidRequestID(t *testing.T) {
+	convey.Convey("test isValidRequestID case 1", t, func() {
+		cacheDevices := []common.NpuDevice{
+			{PhyID: 1},
+		}
+		ps := PluginServer{
+			cachedDevices: cacheDevices,
+		}
+		ids := []string{"1"}
+		convey.So(len(ps.isValidRequestID(ids)), convey.ShouldEqual, 0)
+	})
+
+	convey.Convey("test isValidRequestID case 2", t, func() {
+		cacheDevices := []common.NpuDevice{
+			{PhyID: 2},
+		}
+		ps := PluginServer{
+			cachedDevices: cacheDevices,
+		}
+		ids := []string{"1"}
+		convey.So(len(ps.isValidRequestID(ids)), convey.ShouldEqual, 1)
 	})
 }

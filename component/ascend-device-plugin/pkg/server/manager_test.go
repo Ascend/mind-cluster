@@ -1623,3 +1623,35 @@ func TestSetRestartForAll(t *testing.T) {
 		convey.So(ps.GetRestartFlag(), convey.ShouldBeTrue)
 	})
 }
+
+func TestPluginNotify(t *testing.T) {
+	convey.Convey("TestPluginNotify case 1", t, func() {
+		dev := &HwDevManager{
+			ServerMap: map[string]InterfaceServer{
+				"1": nil,
+			},
+		}
+		dev.pluginNotify(make([]*common.NpuDevice, 0), "2")
+	})
+
+	convey.Convey("TestPluginNotify case 2", t, func() {
+		dev := &HwDevManager{
+			ServerMap: map[string]InterfaceServer{
+				"1": nil,
+			},
+		}
+		dev.pluginNotify(make([]*common.NpuDevice, 0), "1")
+	})
+}
+
+func TestStopAllSever(t *testing.T) {
+	convey.Convey("test stopAllSever case 1", t, func() {
+		ps := PluginServer{}
+		hdm := &HwDevManager{
+			ServerMap: map[string]InterfaceServer{
+				"1": &ps,
+			},
+		}
+		hdm.stopAllSever()
+	})
+}

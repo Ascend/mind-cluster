@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -120,6 +121,32 @@ func TestRetryPatchPodGroupAnnotations(t *testing.T) {
 		pg, err := RetryPatchPodGroupAnnotations(pgName, pgNamespace, retryTimes, annotations)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(pg, convey.ShouldNotBeNil)
+	})
+}
+
+func TestPatchPodGroupAnnotation(t *testing.T) {
+	convey.Convey("Test PatchPodGroupAnnotation case 1", t, func() {
+		temp := vcK8sClient
+		vcK8sClient = nil
+		defer func() {
+			vcK8sClient = temp
+		}()
+		_, err := patchPodGroupAnnotation("", "", make(map[string]interface{}))
+		convey.So(err.Error(), convey.ShouldEqual, "client set is nil")
+	})
+
+	convey.Convey("Test PatchPodGroupAnnotation case 2", t, func() {
+		temp := vcK8sClient
+		vcK8sClient = &VcK8sClient{ClientSet: &versioned.Clientset{}}
+		defer func() {
+			vcK8sClient = temp
+		}()
+		mock1 := gomonkey.ApplyFunc(json.Marshal, func(_ any) ([]byte, error) {
+			return nil, errors.New("json error")
+		})
+		defer mock1.Reset()
+		_, err := patchPodGroupAnnotation("", "", make(map[string]interface{}))
+		convey.So(err.Error(), convey.ShouldEqual, "json error")
 	})
 }
 

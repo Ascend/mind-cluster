@@ -41,7 +41,7 @@ func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Pat
 }
 
 func patchGetDeviceManagerByAutoInit(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(devmanager.GetDeviceManager, func(resetTimeout int) (*devmanager.DeviceManager, error) {
+	return gomonkey.ApplyFunc(devmanager.AutoInit, func(dType string, resetTimeout int) (*devmanager.DeviceManager, error) {
 		return m, err
 	})
 }

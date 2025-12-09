@@ -80,3 +80,10 @@ func TestCheckPodGroupExist(t *testing.T) {
 		})
 	})
 }
+
+func TestGetPodGroup(t *testing.T) {
+	convey.Convey("Test GetPodGroup", t, func() {
+		jobKey := "TEST KEY"
+		convey.So(GetPodGroup(jobKey).Name, convey.ShouldEqual, "")
+	})
+}

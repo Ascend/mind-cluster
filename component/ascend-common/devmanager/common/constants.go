@@ -255,7 +255,7 @@ const (
 	MinTaskInterval = 1
 	// MaxTaskInterval is the max task interval
 	MaxTaskInterval = 60
-	// InternalPingMeshTaskID is the inner ping mesh task id
+	// InternalPingMeshTaskID is the inner ping mesh task id; for A5 is the inner super pod task id
 	InternalPingMeshTaskID uint = 0
 	// ExternalPingMeshTaskID is the outer ping mesh task id
 	ExternalPingMeshTaskID uint = 1

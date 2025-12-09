@@ -12,7 +12,7 @@
    limitations under the License.
 */
 
-// Package pingmesh for
+// Package pingmesh for a series of function handle ping mesh configmap create/update/delete
 package pingmesh
 
 import (

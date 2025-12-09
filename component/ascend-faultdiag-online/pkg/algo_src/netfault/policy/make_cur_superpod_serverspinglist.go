@@ -130,7 +130,7 @@ func getA5ServerLevel1D2DPingList(allPingList []interface{}, npuMap map[string]a
 
 func siftFromPinglist(serverInfo *ServerInfo, superPodPingList map[string]interface{},
 	superPodPath string, npuEidMap map[string]algo.NpuInfo, superPodInfo *SuperPodInfo) {
-	if superPodInfo == nil || serverInfo.NpuMap == nil ||
+	if serverInfo == nil || serverInfo.NpuMap == nil ||
 		len(superPodPingList) == 0 || superPodInfo == nil || npuEidMap == nil {
 		hwlog.RunLog.Error("invalid super pod info or ping list!")
 		return

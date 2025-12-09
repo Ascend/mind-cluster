@@ -746,3 +746,36 @@ func TestGetPodsUsedNPUByKlt(t *testing.T) {
 		}
 	})
 }
+
+func TestWriteFaultInfoDataIntoCM(t *testing.T) {
+	convey.Convey("test WriteFaultInfoDataIntoCM case 1", t, func() {
+		ki := &ClientK8s{}
+		mock1 := gomonkey.ApplyFunc((*ClientK8s).GetConfigMap,
+			func(_ *ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+				return nil, fmt.Errorf("123")
+			},
+		)
+		defer mock1.Reset()
+		cm, err := ki.WriteFaultInfoDataIntoCM("", "", nil)
+		convey.So(cm, convey.ShouldBeNil)
+		convey.So(err.Error(), convey.ShouldEqual, "123")
+	})
+
+	convey.Convey("test WriteFaultInfoDataIntoCM case 2", t, func() {
+		ki := &ClientK8s{}
+		mock1 := gomonkey.ApplyFunc((*ClientK8s).GetConfigMap,
+			func(_ *ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+				return &v1.ConfigMap{TypeMeta: metav1.TypeMeta{}, ObjectMeta: metav1.ObjectMeta{}}, nil
+			})
+		defer mock1.Reset()
+		mock2 := gomonkey.ApplyFunc((*ClientK8s).UpdateConfigMap,
+			func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) {
+				return nil, nil
+			})
+		defer mock2.Reset()
+		taskFaultInfo := &common.TaskFaultInfo{}
+		cm, err := ki.WriteFaultInfoDataIntoCM("", "", taskFaultInfo)
+		convey.So(cm, convey.ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}

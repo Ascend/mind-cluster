@@ -8,4 +8,5 @@ metadata:
     app: pingmesh
 data:
   global: '{"activate": "off", "task_interval": 1}'
+  roce: '{"activate": "off", "task_interval": 1}'  # modify according to your cluster for A5 with roce ping feature
   "1": '{"activate": "off", "task_interval": 1}'   # modify according to your cluster

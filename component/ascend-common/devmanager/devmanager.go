@@ -1134,25 +1134,49 @@ func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	return chips, nil
 }
 
-// DcStartHccsPingMesh start hccs ping mesh
+// DcStartHccsPingMesh or UB PingMesh depending on device type
 func (d *DeviceManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int,
 	operate common.HccspingMeshOperate) error {
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcStartUbPingMesh(cardID, deviceID, operate)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcStartHccsPingMesh(cardID, deviceID, portID, operate)
 }
 
-// DcStopHccsPingMesh stop hccs ping mesh
+// DcStopHccsPingMesh or UB PingMesh depending on device type
 func (d *DeviceManager) DcStopHccsPingMesh(cardID int32, deviceID int32, portID int, taskID uint) error {
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcStopUbPingMesh(cardID, deviceID, taskID)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcStopHccsPingMesh(cardID, deviceID, portID, taskID)
 }
 
-// DcGetHccsPingMeshInfo get hccs ping mesh info
+// DcGetHccsPingMeshInfo or UB PingMesh depending on device type
 func (d *DeviceManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, portID int,
 	taskID uint) (*common.HccspingMeshInfo, error) {
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID, use default meshReplySize)
+		return d.DcMgr.DcGetUbPingMeshInfo(cardID, deviceID, taskID, common.UbPingMeshMaxNum)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcGetHccsPingMeshInfo(cardID, deviceID, portID, taskID)
 }
 
-// DcGetHccsPingMeshState get hccs ping mesh state
+// DcGetHccsPingMeshState or UB PingMesh depending on device type
 func (d *DeviceManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID int, taskID uint) (int, error) {
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcGetUbPingMeshState(cardID, deviceID, taskID)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcGetHccsPingMeshState(cardID, deviceID, portID, taskID)
 }
 

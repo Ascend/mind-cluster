@@ -156,6 +156,9 @@ func getDevType(cardType string) string {
 	if strings.Contains(cardType, common.DevA3) {
 		return common.DevA3
 	}
+	if strings.Contains(cardType, common.DevA5) {
+		return common.DevA5
+	}
 	return ""
 }
 

@@ -1020,7 +1020,7 @@ func getSuperPodIdAndOsIdFromRoceMap(npuMap map[string]algo.NpuInfo, roceMap map
 	for k, v := range roceMap {
 		if npuInfo, exist := npuMap[k]; exist {
 			var superPodId, rackId, osId int
-			lenParam := 6
+			lenParam := 3
 			num, err := fmt.Sscanf(v, "%d_%d_%d", &superPodId, &rackId, &osId)
 			if err != nil || num != lenParam {
 				hwlog.RunLog.Error(err)

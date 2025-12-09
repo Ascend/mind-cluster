@@ -56,7 +56,7 @@ type DevManager struct {
 
 // New create new device manager
 func New() (*DevManager, error) {
-	dm, err := devmanager.GetDeviceManager(common2.ParamOption.DeviceResetTimeout)
+	dm, err := devmanager.AutoInit("", common2.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		return nil, err
 	}
