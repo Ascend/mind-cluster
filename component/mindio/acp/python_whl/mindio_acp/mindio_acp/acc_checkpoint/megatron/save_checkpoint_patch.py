@@ -211,20 +211,24 @@ def check_save_ranks(optimizer):
     return True
 
 
+def default_callback():
+    pass
+
+
 def get_parameter_state(chain_optimizer, notify_callback=None):
-    if isinstance(chain_optimizer, ChainedOptimizer) and len(chain_optimizer.chained_optimizers) == 1:
-        single_optimizer = chain_optimizer.chained_optimizers[0]
-    else:
-        single_optimizer = chain_optimizer
+    if notify_callback is None:
+        notify_callback = default_callback
+
+    is_single = isinstance(chain_optimizer, ChainedOptimizer) and len(chain_optimizer.chained_optimizers) == 1
+    single_optimizer = chain_optimizer.chained_optimizers[0] if is_single else chain_optimizer
+
     if not isinstance(single_optimizer, ChainedOptimizer):
         if not check_save_ranks(single_optimizer):
-            if notify_callback:
-                notify_callback()
+            notify_callback()
             return None
 
         d2h_tensors = d2h_optimizer(single_optimizer)
-        if notify_callback:
-            notify_callback()
+        notify_callback()
         state_dict = gather_optimizer_async(d2h_tensors, single_optimizer)
         if torch.distributed.get_rank(single_optimizer.data_parallel_group) == 0:
             return state_dict
@@ -238,13 +242,9 @@ def get_parameter_state(chain_optimizer, notify_callback=None):
             d2h_tensors = d2h_optimizer(optimizer)
             d2h_tensors_list.append(d2h_tensors)
 
+    notify_callback()
     if not d2h_tensors_list:
-        if notify_callback:
-            notify_callback()
         return None
-
-    if notify_callback:
-        notify_callback()
 
     save_states = False
     states = []
