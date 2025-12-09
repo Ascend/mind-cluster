@@ -82,7 +82,7 @@ func GetModelFramework(info *v1beta1.PodGroup) string {
 	if ok {
 		return framework
 	}
-	hwlog.RunLog.Debug("get framework from podGroup failed")
+	hwlog.RunLog.Warnf("get framework from podGroup failed, jobId: %v", info.UID)
 	return ""
 }
 
