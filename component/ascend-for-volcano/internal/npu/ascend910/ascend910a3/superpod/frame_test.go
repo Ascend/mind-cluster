@@ -28,6 +28,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -75,6 +76,184 @@ func newNPUTasks(n int) map[api.TaskID]util.NPUTask {
 		tasks[api.TaskID(strconv.Itoa(i))] = util.NPUTask{Name: "task" + strconv.Itoa(i)}
 	}
 	return tasks
+}
+
+type checkTestNPUCase struct {
+	name       string
+	tasks      map[api.TaskID]util.NPUTask
+	wantPass   bool
+	wantErrMsg string
+}
+
+func buildTestCheckTaskNPU() []checkTestNPUCase {
+	return []checkTestNPUCase{
+		{
+			name: "01 Valid task with 16 NPUs (equal to MaxNodeNPUNum)",
+			tasks: map[api.TaskID]util.NPUTask{
+				"task1": {ReqNPUNum: 16},
+			},
+			wantPass: true,
+		},
+		{
+			name: "02 Invalid task with zero NPUs but no special annotations",
+			tasks: map[api.TaskID]util.NPUTask{
+				"task1": {ReqNPUNum: 0, Annotation: map[string]string{}},
+			},
+			wantPass:   false,
+			wantErrMsg: "distributed job require npu 16, instead of 0",
+		},
+		{
+			name: "03 Mixed valid and invalid tasks",
+			tasks: map[api.TaskID]util.NPUTask{
+				"task1": {ReqNPUNum: 16},
+				"task2": {ReqNPUNum: 8},
+			},
+			wantPass:   false,
+			wantErrMsg: "distributed job require npu 16, instead of 8",
+		},
+		{
+			name: "04 Task with 0 NPUs and both annotations should pass",
+			tasks: map[api.TaskID]util.NPUTask{
+				"task1": {ReqNPUNum: 0, Annotation: map[string]string{
+					ascend910a3.TaskSpecAnno:         ascend910a3.SchedulerType,
+					ascend910a3.SkipAscendPluginAnno: ascend910a3.SkipEnabled,
+				}},
+			},
+			wantPass: true,
+		},
+	}
+}
+
+// TestCheckTaskNPU tests the CheckTaskNPU function
+func TestCheckTaskNPU(t *testing.T) {
+	for _, tt := range buildTestCheckTaskNPU() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{}
+			tp.NPUJob = &util.NPUJob{
+				Tasks: tt.tasks,
+			}
+			// Set MaxNodeNPUNum to 16 as defined in ascend910a3.NodeNPUNumber
+			tp.SetMaxNodeNPUNum(ascend910a3.NodeNPUNumber)
+			result := tp.CheckTaskNPU()
+			if tt.wantPass {
+				if result != nil {
+					t.Errorf("CheckTaskNPU() = %v, want pass", result)
+				}
+			} else {
+				if result == nil {
+					t.Errorf("CheckTaskNPU() = nil, want failure")
+				} else if result.Message != tt.wantErrMsg {
+					t.Errorf("CheckTaskNPU() error message = %v, want %v", result.Message, tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
+// TestCheckNodeForHotSwitch_Success tests successful cases
+func TestCheckNodeForHotSwitch_Success(t *testing.T) {
+	ready := true
+	job := plugin.SchedulerJob{
+		JobReadyTag: &ready,
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {
+				{Name: "node0", SuperPodID: 0},
+				{Name: "node1", SuperPodID: 0},
+				{Name: "node2", SuperPodID: 0},
+			},
+		},
+	}
+
+	tp := &module910SuperPod{
+		Base910A3: ascend910a3.Base910A3{NPUHandler: base.NPUHandler{ScheduleEnv: plugin.ScheduleEnv{
+			ClusterCache: plugin.ClusterCache{Jobs: map[api.JobID]plugin.SchedulerJob{"test-job": job}}}}}}
+
+	task := &api.TaskInfo{
+		Name: "test-task",
+		Job:  "test-job",
+		Pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					plugin.PodRankIndexKey: "1",
+				},
+			},
+		},
+	}
+
+	node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name:       "node1",
+			SuperPodID: 0,
+		},
+	}
+
+	err := tp.checkNodeForHotSwitch(task, node)
+	if err != nil {
+		t.Errorf("checkNodeForHotSwitch() error = %v, want nil", err)
+	}
+}
+
+// TestCheckNodeForHotSwitch_JobNotReady tests cases when job is not ready
+func TestCheckNodeForHotSwitchJobNotReady(t *testing.T) {
+	ready := false
+	job := plugin.SchedulerJob{
+		JobReadyTag: &ready,
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0", SuperPodID: 0}},
+		},
+	}
+
+	tp := &module910SuperPod{
+		Base910A3: ascend910a3.Base910A3{NPUHandler: base.NPUHandler{ScheduleEnv: plugin.ScheduleEnv{ClusterCache: plugin.ClusterCache{Jobs: map[api.JobID]plugin.SchedulerJob{"test-job": job}}}}}}
+
+	task := &api.TaskInfo{
+		Name: "test-task",
+		Job:  "test-job",
+		Pod:  &v1.Pod{},
+	}
+
+	node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name:       "node0",
+			SuperPodID: 1,
+		},
+	}
+
+	err := tp.checkNodeForHotSwitch(task, node)
+	if err != nil {
+		t.Errorf("checkNodeForHotSwitch() error = %v, want nil", err)
+	}
+}
+
+// TestCheckNodeForHotSwitch_NoSuperPods tests cases when no super pods exist
+func TestCheckNodeForHotSwitchNoSuperPods(t *testing.T) {
+	ready := true
+	job := plugin.SchedulerJob{
+		JobReadyTag: &ready,
+		SuperPods:   map[string][]plugin.SuperNode{},
+	}
+
+	tp := &module910SuperPod{
+		Base910A3: ascend910a3.Base910A3{NPUHandler: base.NPUHandler{ScheduleEnv: plugin.ScheduleEnv{
+			ClusterCache: plugin.ClusterCache{Jobs: map[api.JobID]plugin.SchedulerJob{"test-job": job}}}}}}
+
+	task := &api.TaskInfo{
+		Name: "test-task",
+		Job:  "test-job",
+		Pod:  &v1.Pod{},
+	}
+
+	node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name:       "node0",
+			SuperPodID: 0,
+		},
+	}
+
+	err := tp.checkNodeForHotSwitch(task, node)
+	if err != nil {
+		t.Errorf("checkNodeForHotSwitch() error = %v, want nil", err)
+	}
 }
 
 var (
@@ -1119,6 +1298,151 @@ func TestUseAnnotation(t *testing.T) {
 			node := tp.UseAnnotation(tt.Task, tt.Node)
 			if (tt.Task == nil || tt.Node.Annotation == nil) || !reflect.DeepEqual(node, tt.WantNode) {
 				t.Errorf("UseAnnotation() node: %v, wantNode: %v", node, tt.WantNode)
+			}
+		})
+	}
+}
+
+type selectForJobReschedulingTest struct {
+	name                string
+	fJob                *rescheduling.FaultJob
+	sMap                map[string]float64
+	selectNodes         map[string][]plugin.SuperNode
+	totalNodes          map[int32]superPod
+	vSuperPodID         map[string]bool
+	expectedNotReady    map[string]struct{}
+	expectedSelectNodes map[string][]plugin.SuperNode
+	expectedVSuperPodID map[string]bool
+	expectedError       bool
+}
+
+func buildSelectForJobReschedulingTestCase01() []selectForJobReschedulingTest {
+	// Test case 1: Basic scenario with healthy nodes
+	superPod1 := []plugin.SuperNode{
+		{Name: "node1", SuperPodID: util.NPUIndex1},
+		{Name: "node2", SuperPodID: util.NPUIndex1},
+	}
+	// Test case 2: Scenario with faulty nodes
+	superPod2 := []plugin.SuperNode{
+		{Name: "node3", SuperPodID: util.NPUIndex2},
+		{Name: "node4", SuperPodID: util.NPUIndex2},
+	}
+	return []selectForJobReschedulingTest{
+		{
+			name: "01 All nodes healthy and in score map",
+			fJob: &rescheduling.FaultJob{
+				SuperPods:  map[string][]plugin.SuperNode{"1": superPod1},
+				FaultTasks: []rescheduling.FaultTask{}},
+			sMap:        map[string]float64{"node1": 1.0, "node2": 1.0},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			totalNodes: map[int32]superPod{
+				util.NPUIndex1: {"node1": newNPUNodeWithSuperPodID("node1", util.NPUIndex1),
+					"node2": newNPUNodeWithSuperPodID("node2", util.NPUIndex1)}},
+			vSuperPodID:         make(map[string]bool),
+			expectedNotReady:    map[string]struct{}{},
+			expectedSelectNodes: map[string][]plugin.SuperNode{"1": superPod1},
+			expectedVSuperPodID: map[string]bool{"1": true},
+			expectedError:       false,
+		},
+		{
+			name: "02 Some nodes marked as faulty",
+			fJob: &rescheduling.FaultJob{SuperPods: map[string][]plugin.SuperNode{"2": superPod2},
+				FaultTasks: []rescheduling.FaultTask{
+					{NodeName: "node3", IsFaultTask: true}}},
+			sMap:        map[string]float64{"node3": 1.0, "node4": 1.0},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			totalNodes: map[int32]superPod{
+				util.NPUIndex2: {"node3": newNPUNodeWithSuperPodID("node3", 2),
+					"node4": newNPUNodeWithSuperPodID("node4", 2)}},
+			vSuperPodID:         make(map[string]bool),
+			expectedNotReady:    map[string]struct{}{"2": {}},
+			expectedSelectNodes: map[string][]plugin.SuperNode{},
+			expectedVSuperPodID: map[string]bool{},
+			expectedError:       false,
+		},
+	}
+}
+
+func buildSelectForJobReschedulingTestCase02() []selectForJobReschedulingTest {
+	// Test case 3: Scenario with mixed healthy and faulty nodes
+	superPod3 := []plugin.SuperNode{{Name: "node5", SuperPodID: util.NPUIndex3},
+		{Name: "node6", SuperPodID: util.NPUIndex3}}
+	return []selectForJobReschedulingTest{
+		{
+			name: "03 Mixed healthy and faulty nodes",
+			fJob: &rescheduling.FaultJob{SuperPods: map[string][]plugin.SuperNode{"3": superPod3},
+				FaultTasks: []rescheduling.FaultTask{{NodeName: "node5", IsFaultTask: false}}},
+			sMap:        map[string]float64{"node5": 1.0, "node6": 1.0},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			totalNodes: map[int32]superPod{util.NPUIndex3: {
+				"node5": newNPUNodeWithSuperPodID("node5", 3),
+				"node6": newNPUNodeWithSuperPodID("node6", 3)}},
+			vSuperPodID:         make(map[string]bool),
+			expectedNotReady:    map[string]struct{}{},
+			expectedSelectNodes: map[string][]plugin.SuperNode{"3": superPod3},
+			expectedVSuperPodID: map[string]bool{"3": true},
+			expectedError:       false,
+		},
+		{
+			name: "04 Nodes not in score map",
+			fJob: &rescheduling.FaultJob{SuperPods: map[string][]plugin.SuperNode{
+				"4": {{Name: "node7", SuperPodID: util.NPUIndex4}, {Name: "node8", SuperPodID: 4}}},
+				FaultTasks: []rescheduling.FaultTask{},
+			},
+			sMap:        map[string]float64{"node7": 1.0},
+			selectNodes: make(map[string][]plugin.SuperNode),
+			totalNodes: map[int32]superPod{util.NPUIndex4: {
+				"node7": newNPUNodeWithSuperPodID("node7", 4),
+				"node8": newNPUNodeWithSuperPodID("node8", 4)}},
+			vSuperPodID:         make(map[string]bool),
+			expectedNotReady:    map[string]struct{}{"4": {}},
+			expectedSelectNodes: map[string][]plugin.SuperNode{},
+			expectedVSuperPodID: map[string]bool{},
+			expectedError:       false,
+		},
+		{
+			name:                "05 vSuperPodID is nil",
+			vSuperPodID:         nil,
+			expectedNotReady:    map[string]struct{}{},
+			expectedSelectNodes: map[string][]plugin.SuperNode{"3": superPod3},
+			expectedVSuperPodID: map[string]bool{"3": true},
+			expectedError:       false,
+		},
+	}
+}
+
+func buildSelectForJobReschedulingTestCases() []selectForJobReschedulingTest {
+	return append(buildSelectForJobReschedulingTestCase01(), buildSelectForJobReschedulingTestCase02()...)
+}
+
+func TestSelectForJobRescheduling(t *testing.T) {
+	for _, tt := range buildSelectForJobReschedulingTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{}
+			// Copy initial maps to avoid modifying test data
+			selectNodes := make(map[string][]plugin.SuperNode)
+			for k, v := range tt.selectNodes {
+				selectNodes[k] = v
+			}
+			var vSuperPodID map[string]bool
+			if tt.vSuperPodID != nil {
+				vSuperPodID = make(map[string]bool)
+			}
+			for k, v := range tt.vSuperPodID {
+				vSuperPodID[k] = v
+			}
+			notReadySuperPod, err := tp.selectForJobRescheduling(tt.fJob, tt.sMap, selectNodes,
+				tt.totalNodes, vSuperPodID)
+			// Check error
+			if (err != nil) != tt.expectedError {
+				t.Errorf("selectForJobRescheduling() error = %v, expectedError %v", err, tt.expectedError)
+				return
+			}
+			// Check notReadySuperPod
+			if len(notReadySuperPod) != len(tt.expectedNotReady) {
+				t.Errorf("selectForJobRescheduling() notReadySuperPod length = %v, want %v",
+					len(notReadySuperPod), len(tt.expectedNotReady))
+				return
 			}
 		})
 	}
