@@ -8,7 +8,9 @@ package podgroup
 import (
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +18,14 @@ import (
 
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
+)
+
+const (
+	testJobId        = "test-job-id"
+	testFramework    = "pytorch"
+	emptyFramework   = ""
+	testPodGroupName = "test-pg"
+	firstRetryIndex  = 0
 )
 
 func TestGetJobKeyByPG(t *testing.T) {
@@ -235,4 +245,101 @@ func TestGetSubHealthStrategyByJobKey(t *testing.T) {
 			convey.So(GetSubHealthStrategyByJobKey(jobUid1), convey.ShouldEqual, constant.SubHealthyGraceExit)
 		})
 	})
+}
+
+type retryGetFrameworkTestCase struct {
+	name           string
+	jobId          string
+	podGroups      []v1beta1.PodGroup
+	frameworks     []string
+	expectedResult string
+}
+
+func TestRetryGetFramework(t *testing.T) {
+	testCases := getRetryGetFrameworkTestCases()
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			patches := setupPatches(tc)
+			defer patches.Reset()
+			result := RetryGetFramework(tc.jobId)
+			convey.So(result, convey.ShouldEqual, tc.expectedResult)
+		})
+	}
+}
+
+func getRetryGetFrameworkTestCases() []retryGetFrameworkTestCase {
+	emptyPG := v1beta1.PodGroup{}
+	pg := getDemoPodGroup(testPodGroupName, pgNameSpace, testJobId)
+	pg.Labels = map[string]string{}
+	pgWithoutFramework := getDemoPodGroup(testPodGroupName, pgNameSpace, testJobId)
+	pgWithoutFramework.Labels = map[string]string{}
+	pgWithFramework := getDemoPodGroup(testPodGroupName, pgNameSpace, testJobId)
+	return []retryGetFrameworkTestCase{
+		{name: "should return framework when get framework success at first retry",
+			jobId: testJobId,
+			podGroups: []v1beta1.PodGroup{
+				*getDemoPodGroup(testPodGroupName, pgNameSpace, testJobId),
+			},
+			frameworks:     []string{testFramework},
+			expectedResult: testFramework},
+		{name: "should return framework when get framework success at second retry",
+			jobId: testJobId,
+			podGroups: []v1beta1.PodGroup{
+				v1beta1.PodGroup{},
+				*getDemoPodGroup(testPodGroupName, pgNameSpace, testJobId),
+			},
+			frameworks:     []string{emptyFramework, testFramework},
+			expectedResult: testFramework},
+		{name: "should return empty when podGroup not exists after all retries",
+			jobId: testJobId,
+			podGroups: []v1beta1.PodGroup{
+				emptyPG, emptyPG, emptyPG, emptyPG,
+			},
+			frameworks: []string{
+				emptyFramework, emptyFramework, emptyFramework, emptyFramework,
+			},
+			expectedResult: emptyFramework},
+		{name: "should return empty when framework not exists after all retries",
+			jobId:     testJobId,
+			podGroups: []v1beta1.PodGroup{*pg, *pg, *pg, *pg},
+			frameworks: []string{
+				emptyFramework, emptyFramework, emptyFramework, emptyFramework,
+			},
+			expectedResult: emptyFramework},
+		{name: "should return framework when podGroup exists after retries and framework found",
+			jobId: testJobId,
+			podGroups: []v1beta1.PodGroup{
+				v1beta1.PodGroup{},
+				*pgWithoutFramework,
+				*pgWithFramework,
+			},
+			frameworks:     []string{emptyFramework, emptyFramework, testFramework},
+			expectedResult: testFramework},
+	}
+}
+
+func setupPatches(tc retryGetFrameworkTestCase) *gomonkey.Patches {
+	patches := gomonkey.NewPatches()
+	callCount := firstRetryIndex
+	patches.ApplyFunc(GetPodGroup, func(jobKey string) v1beta1.PodGroup {
+		if callCount < len(tc.podGroups) {
+			result := tc.podGroups[callCount]
+			callCount++
+			return result
+		}
+		return tc.podGroups[len(tc.podGroups)-1]
+	})
+
+	frameworkCallCount := firstRetryIndex
+	patches.ApplyFunc(GetModelFramework, func(info *v1beta1.PodGroup) string {
+		if frameworkCallCount < len(tc.frameworks) {
+			result := tc.frameworks[frameworkCallCount]
+			frameworkCallCount++
+			return result
+		}
+		return tc.frameworks[len(tc.frameworks)-1]
+	})
+
+	patches.ApplyFuncReturn(time.Sleep)
+	return patches
 }
