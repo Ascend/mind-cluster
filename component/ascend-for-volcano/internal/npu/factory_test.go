@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 func TestInit910CardPolicyHandler(t *testing.T) {
@@ -51,6 +52,75 @@ func TestInit910CardPolicyHandler(t *testing.T) {
 			handlerName := get910CardHandlerName(attr)
 			if handlerName != policy910HandlerMap[config] {
 				t.Errorf("Expect handler name to be %s, got %s", policy910HandlerMap[config], handlerName)
+			}
+		})
+	}
+}
+
+// InitPolicyHandlerTest
+type InitPolicyHandlerTest struct {
+	name        string
+	attr        util.SchedulerJobAttr
+	env         plugin.ScheduleEnv
+	wantHandler plugin.SchedulerPluginNeed
+	wantBool    bool
+}
+
+// buildInitPolicyHandlerTestCases
+func buildInitPolicyHandlerTestCases() []InitPolicyHandlerTest {
+	return []InitPolicyHandlerTest{
+		{
+			name: "01 NPU910CardName - return handler",
+			attr: util.SchedulerJobAttr{ComJob: util.ComJob{Label: map[string]string{}},
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName}},
+			env:         plugin.ScheduleEnv{},
+			wantHandler: nil,
+			wantBool:    true,
+		},
+		{
+			name: "02 NPU310CardName - return handler",
+			attr: util.SchedulerJobAttr{ComJob: util.ComJob{Label: map[string]string{}},
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPU310CardName}},
+			env:         plugin.ScheduleEnv{},
+			wantHandler: nil,
+			wantBool:    true,
+		},
+		{
+			name: "03 NPU310PCardName - return handler",
+			attr: util.SchedulerJobAttr{ComJob: util.ComJob{Label: map[string]string{}},
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPU310PCardName}},
+			env:         plugin.ScheduleEnv{},
+			wantHandler: nil,
+			wantBool:    true,
+		},
+		{
+			name: "04 unknown plugin - return nil and false",
+			attr: util.SchedulerJobAttr{
+				ComJob: util.ComJob{Label: map[string]string{}},
+				NPUJob: &util.NPUJob{ReqNPUName: "unknown-plugin-name"}},
+			env:         plugin.ScheduleEnv{},
+			wantHandler: nil,
+			wantBool:    false,
+		},
+	}
+}
+
+func TestInitPolicyHandler(t *testing.T) {
+	initCard910Factory()
+	initCard310Factory()
+	initCard310PFactory()
+	tests := buildInitPolicyHandlerTestCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotHandler, gotBool := InitPolicyHandler(tt.attr, tt.env)
+			if gotBool != tt.wantBool {
+				t.Errorf("InitPolicyHandler() gotBool = %v, want %v", gotBool, tt.wantBool)
+			}
+			if tt.wantBool && gotHandler == nil {
+				t.Errorf("InitPolicyHandler() expected non-nil handler, got nil")
+			}
+			if !tt.wantBool && gotHandler != nil {
+				t.Errorf("InitPolicyHandler() expected nil handler, got %v", gotHandler)
 			}
 		})
 	}
