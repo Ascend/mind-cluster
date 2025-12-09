@@ -129,7 +129,8 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		hwlog.RunLog.Errorf("jobId=%s not exist", faultInfo.JobId)
 		return
 	}
-	hwlog.RunLog.Infof("get fault info from fault center=%v", faultInfo)
+	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultList=%v", faultInfo.JobId, faultInfo.FaultList)
+	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultDevice=%v", faultInfo.JobId, faultInfo.FaultDevice)
 	if s.skipHandleSubHealthyFaults(controller, &faultInfo) {
 		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId,
 			"jobId=%s skip handle subHealthy faults", faultInfo.JobId)
@@ -336,17 +337,13 @@ func getJobBaseInfo(jobId string) (common.JobBaseInfo, common.RespCode, error) {
 		return common.JobBaseInfo{}, common.ProcessRecoverEnableOff,
 			fmt.Errorf("job(uid=%s) process-recover-enable and subhealthy hotswtich not open:%v", jobId, err)
 	}
-	pg, err := kube.RetryGetPodGroup(pgName, namespace, constant.GetPodGroupTimes)
-	if err != nil {
-		hwlog.RunLog.Warnf("get podGroup err: %v, pgName=%s, nameSpace=%s", err, pgName, namespace)
-	}
 	return common.JobBaseInfo{
 		JobId:         jobId,
 		JobName:       jobName,
 		PgName:        pgName,
 		Namespace:     namespace,
 		RecoverConfig: config,
-		Framework:     podgroup.GetModelFramework(pg),
+		Framework:     podgroup.RetryGetFramework(jobId),
 	}, common.OK, nil
 }
 
