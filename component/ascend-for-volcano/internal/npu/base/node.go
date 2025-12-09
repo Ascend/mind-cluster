@@ -73,6 +73,16 @@ func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {
 	return netUnhealthyTop, nil
 }
 
+func (tp *NPUHandler) getUnhealthyNPU(node plugin.NPUNode) []int {
+	unhealthyTopStr, ok := node.Annotation[unHealthyNPU]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("node<%s> don't have resource<%s>", node.Name, unHealthyNPU)
+		return make([]int, 0)
+	}
+	unhealthyTop := util.ChangeTopToIntArray(unhealthyTopStr, tp.GetAnnoPreVal())
+	return unhealthyTop
+}
+
 // GetCardNumGroupsFromTop get the chip for each card from nodeTop
 func (tp *NPUHandler) GetCardNumGroupsFromTop(nodeNPUTopology []int) [][]int {
 	if tp == nil || tp.MaxCardNPUNum == 0 {

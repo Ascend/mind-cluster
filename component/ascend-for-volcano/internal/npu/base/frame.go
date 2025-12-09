@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -176,13 +175,9 @@ func (tp *NPUHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 		if len(nodeTop) > tp.MaxNodeNPUNum {
 			continue
 		}
-		healthyNPUNum, ok := nNode.Allocate[v1.ResourceName(tp.GetAnnoName())]
-		if !ok {
-			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes node<%s> get allocate npu failed",
-				tp.GetPluginName(), node.Name)
-			continue
-		}
-		scoreMap[node.Name] = healthyNPUNum/nodeWeight - float64(len(nodeTop))
+		unhealthyNPUNum := tp.getUnhealthyNPU(nNode)
+		healthyCardsNum := tp.MaxNodeNPUNum - len(unhealthyNPUNum)
+		scoreMap[node.Name] = float64(healthyCardsNum*nodeWeight - len(nodeTop))
 	}
 	return nil
 }
@@ -302,6 +297,6 @@ func (tp *NPUHandler) SelectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 }
 
 // ReleaseAnnotation release annotation
-func (tp *NPUHandler) ReleaseAnnotation(_ *api.TaskInfo, _ plugin.NPUNode) *plugin.NPUNode {
-	return &plugin.NPUNode{}
+func (tp *NPUHandler) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	return &node
 }
