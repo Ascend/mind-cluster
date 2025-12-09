@@ -292,6 +292,7 @@ type FaultTask struct {
 	IsNpuTask          bool
 	Annotations        map[string]string
 	FaultTaskA5Field
+	IsHotSwitchDelete bool // indicates whether the task should be deleted during hot switch rescheduling
 }
 
 // FaultTaskA5Field the field of a5
