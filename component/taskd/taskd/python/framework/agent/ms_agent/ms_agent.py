@@ -190,6 +190,7 @@ class MsAgent(BaseAgent):
             run_log.info(f"nodeRank:{self.node_rank} restart part workers, pid:{fault_pid_list}")
             restart_local_rank = calculate_local_rank_by_global_rank(local_fault_ranks)
             self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
+            time.sleep(constants.RELEASE_INTERVAL) # wait for device release resources
             self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)(restart_local_rank)
             self.local_fault_rank = []
 

@@ -151,3 +151,5 @@ SWITCH_ON = "on"
 SWITCH_OFF = "off"
 
 MONITOR_INTERVAL = 1
+# RELEASE_INTERVAL wait for device release resources
+RELEASE_INTERVAL = 15
