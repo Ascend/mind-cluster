@@ -108,6 +108,6 @@ func (th *TorHandler) UseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugi
 }
 
 // ReleaseAnnotation release annotation
-func (th *TorHandler) ReleaseAnnotation(_ *api.TaskInfo, _ plugin.NPUNode) *plugin.NPUNode {
-	return &plugin.NPUNode{}
+func (th *TorHandler) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	return &node
 }

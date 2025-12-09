@@ -295,6 +295,6 @@ func (tp *NPUHandler) SelectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 }
 
 // ReleaseAnnotation release annotation
-func (tp *NPUHandler) ReleaseAnnotation(_ *api.TaskInfo, _ plugin.NPUNode) *plugin.NPUNode {
-	return &plugin.NPUNode{}
+func (tp *NPUHandler) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	return &node
 }
