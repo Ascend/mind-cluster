@@ -41,6 +41,7 @@ const (
 	miniTpBlockNum    = 1
 	rackNPUNumber     = 64
 	maxSuperPodNPUNum = 8192
+	uBMemRackNumber   = 16
 
 	scoreForNode         = 100000000
 	jobCheckFailedReason = "npu num is invalid"
@@ -51,6 +52,9 @@ const (
 
 	taskSpec                   = "volcano.sh/task-spec"
 	getNPUFromPodFailedPattern = "%s getUsableTopFromNode err: %s"
+	uBMemory                   = "huawei.com/schedule_ubmemory"
+	uBMemoryRequire            = "true"
+	maxNpuNumInUBMemScene      = 1024
 
 	// TaskSpecAnno used in pod annotation when EnableGangScheduling is true
 	TaskSpecAnno = "volcano.sh/task-spec"

@@ -357,12 +357,11 @@ func buildSelectScoreBestNPUNodesTestCases12() []*selectScoreBestNPUNodesTestCas
 
 func TestScoreBestNPUNode2(t *testing.T) {
 	selectScoreBestNPUNodesTestCases := buildSelectScoreBestNPUNodesTestCases12()
-	// 获取所需task
+
 	tasks := getTaskInfos(npuTaskNum2, "job1")
 	scoreMap := make(map[string]float64)
 	for _, cs := range selectScoreBestNPUNodesTestCases {
 		t.Run(cs.name, func(t *testing.T) {
-			// 封装910A5打分所需参数 获取moduleSuperPod对象
 			plg := packageModuleSuperPod4Soft(tasks, cs)
 			plg.Label = map[string]string{superPodAffinity: softRequire}
 			plg.tpBlock = cs.tpBlock

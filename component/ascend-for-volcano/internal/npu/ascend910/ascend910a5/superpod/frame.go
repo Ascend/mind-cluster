@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
+	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -36,8 +37,19 @@ func New(name string) *module910a5SuperPod {
 	m.SetMaxNodeNPUNum(nodeNPUNum)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.faultNPUKey = faultNPU
+	// 1024 npu = 16 racks * 64 npu
+	m.uBMemRackNum = uBMemRackNumber
 	newScheduleStrategy()
 	return m
+}
+
+func (tp *module910a5SuperPod) PreStartAction(_ *framework.Session) error {
+	tp.isUBMemScene = tp.Annotation[uBMemory] == uBMemoryRequire
+	tp.nextStrategyChain = map[strategyKey]strategyKey{
+		RackSchedule:     SuperPodSchedule,
+		SuperPodSchedule: MulSuperPodsSchedule,
+	}
+	return nil
 }
 
 // ValidNPUJob check jobs' required NPU number and mode.
@@ -60,6 +72,7 @@ func (tp *module910a5SuperPod) ValidNPUJob() *api.ValidateResult {
 		tp.checkTpBlockNum,
 		tp.calculateTpBlockAndCheck,
 		tp.checkJobReqNpuNum,
+		tp.checkJobInUBMemScene,
 	}
 	for _, checker := range checkers {
 		if err := checker(); err != nil {
@@ -97,15 +110,16 @@ func (tp *module910a5SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugi
 
 // choose one schedule strategy will use by NPUTaskNum
 func (tp *module910a5SuperPod) getStrategyNameByNPUTaskNum() strategyKey {
-	var ret strategyKey = RackSchedule
 	if tp.NPUTaskNum <= npuTaskNum8 {
-		ret = RackSchedule
+		return RackSchedule
+	} else if tp.isUBMemScene {
+		tp.addNewStrategyToChain(RackSchedule, UBMemSchedule)
+		return UBMemSchedule
 	} else if tp.NPUTaskNum <= tp.FrameAttr.SuperPodSize {
-		ret = SuperPodSchedule
+		return SuperPodSchedule
 	} else {
-		ret = MulSuperPodsSchedule
+		return MulSuperPodsSchedule
 	}
-	return ret
 }
 
 // ScoreBestNPUNodes to score the nodes for Jobs, we should know all nodes to get rack topo and superpod topo
@@ -168,7 +182,7 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 
 	klog.V(util.LogInfoLev).Infof("input nodes num(%d) for task %s", len(nodes), task.Name)
 
-	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName())
+	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName(), tp.uBMemRackNum)
 
 	spBlockCount := tp.NPUTaskNum / tp.spBlock
 	spBlockIDs := make(map[string]bool, spBlockCount)
@@ -245,7 +259,7 @@ func (tp *module910a5SuperPod) selectNodesBySpecStrategy(
 		return err
 	}
 	// check the validation of the next strategy in the chain
-	nextStrategyKey, ok := nextStrategyChain[strategySpec.getStrategyName()]
+	nextStrategyKey, ok := tp.nextStrategyChain[strategySpec.getStrategyName()]
 	if !ok {
 		klog.V(util.LogInfoLev).Infof("not found next strategy at the strategy: %s", strategySpec.getStrategyName())
 		return err
@@ -266,4 +280,14 @@ func (tp *module910a5SuperPod) scoreNodesForJob(job *plugin.SchedulerJob, task *
 		return
 	}
 	tp.scoreNodeForReadyJob(task, job, sMap)
+}
+
+func (tp *module910a5SuperPod) addNewStrategyToChain(from strategyKey, dist strategyKey) {
+	if tp.nextStrategyChain == nil {
+		tp.nextStrategyChain = make(map[strategyKey]strategyKey)
+	}
+	if _, ok := tp.nextStrategyChain[from]; ok {
+		klog.V(util.LogInfoLev).Infof("replace the exist startegy in the chain, from %s to new dist %s", from, dist)
+	}
+	tp.nextStrategyChain[from] = dist
 }

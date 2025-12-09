@@ -47,6 +47,7 @@ type ValidNPUJobTestCase struct {
 	ScheduleEnv plugin.ScheduleEnv
 	SpBlockNum  int
 	TpBlockNum  int
+	IsUBMem     bool
 }
 
 func buildTestJobAttr(npuTaskNum int, reqTaskNPU string) util.SchedulerJobAttr {
@@ -64,9 +65,11 @@ func TestValidNPUJob(t *testing.T) {
 	testCases = append(testCases, buildCalculateTpBlockAndCheckCase()...)
 	testCases = append(testCases, buildCheckJobReqNpuNumCase1()...)
 	testCases = append(testCases, buildCheckJobReqNpuNumCase2()...)
+	testCases = append(testCases, buildCheckUBmemCase()...)
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			npu := New(SuperPodx8SchedulerName)
+			npu.uBMemParams = uBMemParams{isUBMemScene: tt.IsUBMem}
 			npu.ScheduleEnv = tt.ScheduleEnv
 			tt.Attr.SpBlockNPUNum = tt.SpBlockNum
 			tt.Attr.TpBlockNPUNum = tt.TpBlockNum
@@ -343,6 +346,26 @@ func buildCheckJobReqNpuNumCase2() []ValidNPUJobTestCase {
 				Pass:    false,
 				Reason:  jobCheckFailedReason,
 				Message: "distributed super-pod job require npu(10) should be multiple of tp-block",
+			},
+		},
+	}
+}
+
+func buildCheckUBmemCase() []ValidNPUJobTestCase {
+	return []ValidNPUJobTestCase{
+		{
+			Name:       "checkJobInUBMemScene-01: single job requiring npu num is more than 1024 npu",
+			Attr:       buildTestJobAttr(256, "8"),
+			SpBlockNum: 2,
+			TpBlockNum: 1,
+			IsUBMem:    true,
+			ScheduleEnv: plugin.ScheduleEnv{
+				FrameAttr: setSuperPodSize(superPodSize32),
+			},
+			WantErr: &api.ValidateResult{
+				Pass:    false,
+				Reason:  jobCheckFailedReason,
+				Message: "in ubmem scene, task require npu nums should smaller than 1024, but recevice 1032",
 			},
 		},
 	}

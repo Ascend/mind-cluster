@@ -212,6 +212,27 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 	return nil
 }
 
+// check whether the job is invalid in UBMem scene
+func (tp *module910a5SuperPod) checkJobInUBMemScene() *api.ValidateResult {
+	if !tp.isUBMemScene {
+		return nil
+	}
+	jobReqNPUNum := 0
+	klog.V(util.LogInfoLev).Infof("task is in ubmemory scene.")
+	for _, task := range tp.Tasks {
+		jobReqNPUNum += task.ReqNPUNum
+		if jobReqNPUNum > maxNpuNumInUBMemScene {
+			return &api.ValidateResult{
+				Pass:   false,
+				Reason: jobCheckFailedReason,
+				Message: fmt.Sprintf("in ubmem scene, task require npu nums should smaller than %d, but recevice %d",
+					maxNpuNumInUBMemScene, jobReqNPUNum),
+			}
+		}
+	}
+	return nil
+}
+
 func (tp *module910a5SuperPod) isJobCacheSuperPod(job *plugin.SchedulerJob, task *api.TaskInfo) bool {
 	if *job.JobReadyTag && len(job.SuperPods) != 0 {
 		klog.V(util.LogErrorLev).Infof("%s ScoreBestNPUNodes %s: job is ready, skip Schedule",

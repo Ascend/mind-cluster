@@ -26,7 +26,10 @@ import (
 type module910a5SuperPod struct {
 	ascend910a5.Base910A5
 	jobParams
+	uBMemParams
 	isSoftSuperPodAffinity bool
+	// the chain to find the next strategy
+	nextStrategyChain map[strategyKey]strategyKey
 }
 
 type strategyKey string
@@ -35,6 +38,8 @@ type strategyKey string
 const (
 	// RackSchedule the rack schedule strategy selecting nodes in one rack
 	RackSchedule = "RackSchedule"
+	// UBMemSchedule the schedule strategy in on ubmem
+	UBMemSchedule = "UBMemSchedule"
 	// SuperPodSchedule the superPod schedule strategy selecting nodes in one superPod
 	SuperPodSchedule = "SuperPodSchedule"
 	// MulSuperPodsSchedule the multiple superPod schedule strategy selecting nodes in multiple superPods
@@ -62,6 +67,7 @@ type nodeBaseInfo struct {
 	name       string
 	superPodID int32
 	rackID     int32
+	ubMemID    int32
 }
 
 type superPod = map[string]nodeBaseInfo
@@ -71,6 +77,11 @@ type jobCheckerFunc func() *api.ValidateResult
 type nodeCheckerFunc func(*api.TaskInfo, plugin.NPUNode) error
 
 type rackNpuTopType [rackNodeNum][nodeNPUNum]bool
+
+type uBMemParams struct {
+	isUBMemScene bool
+	uBMemRackNum int
+}
 
 const (
 	// SuperPodAnnoKey the key of sp-block

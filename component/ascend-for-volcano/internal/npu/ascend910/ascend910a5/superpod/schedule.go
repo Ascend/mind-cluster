@@ -26,12 +26,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// the chain to find the next strategy
-var nextStrategyChain = map[strategyKey]strategyKey{
-	RackSchedule:     SuperPodSchedule,
-	SuperPodSchedule: MulSuperPodsSchedule,
-}
-
 // all the strategies in this file we define
 var strategyMap map[strategyKey]scheduleStrategy
 
@@ -46,6 +40,10 @@ func newScheduleStrategy() {
 		strategy: schedule,
 		name:     RackSchedule,
 	}
+	uBMemSchedule := &oneUBMemStrategy{
+		strategy: schedule,
+		name:     UBMemSchedule,
+	}
 	superPodSchedule := &oneSuperPodStrategy{
 		strategy: schedule,
 		name:     SuperPodSchedule,
@@ -56,6 +54,7 @@ func newScheduleStrategy() {
 	}
 	strategyMap = map[strategyKey]scheduleStrategy{
 		RackSchedule:         rackSchedule,
+		UBMemSchedule:        uBMemSchedule,
 		SuperPodSchedule:     superPodSchedule,
 		MulSuperPodsSchedule: mulSuperPodsSchedule,
 	}
@@ -100,13 +99,13 @@ func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error
 }
 
 func (tp *oneRackStrategy) searchTable(superPodTable superPodOrderTable) {
+	if tp.totalCount == 0 {
+		return
+	}
 	row, col := getPositionInTop(tp.NPUTaskNum, tp.spBlock)
 
 	for j := col; j < len(superPodTable[0]); j++ {
 		for i := row; i < len(superPodTable); i++ {
-			if tp.totalCount == 0 {
-				return
-			}
 			if len(superPodTable[i][j]) == 0 {
 				continue
 			}
@@ -126,7 +125,7 @@ func (tp *oneRackStrategy) iterateEverySuperPod(superPods []superPod) {
 		// init rack topo from superPod
 		rackGroup := transferSuperPodToRackIdMap(superPods[i])
 
-		tp.doSelect(rackGroup)
+		tp.selectOneSpBlock(rackGroup)
 		if tp.totalCount == 0 {
 			return
 		}
@@ -134,7 +133,7 @@ func (tp *oneRackStrategy) iterateEverySuperPod(superPods []superPod) {
 	return
 }
 
-func (tp *oneRackStrategy) doSelect(rackGroup map[int32][]nodeBaseInfo) {
+func (tp *oneRackStrategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo) {
 	bestRackId := int32(1)
 	bestRackIdLen := rackNodeNum + 1
 	// finding the best rackId will be selected
@@ -182,6 +181,114 @@ func (tp *oneRackStrategy) doSelect(rackGroup map[int32][]nodeBaseInfo) {
 	}
 }
 
+func (tp *oneUBMemStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error) {
+	if tp == nil {
+		return false, fmt.Errorf("strategy is nil")
+	}
+	if tp.spBlock < tp.tpBlock {
+		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
+	}
+	klog.V(util.LogInfoLev).Infof("select nodes in one UBMem start.")
+	tp.totalCount = len(tp.unReadyIds)
+
+	tp.searchTable(superPodTopo.superPodTable)
+
+	if tp.totalCount == 0 && len(tp.selectedNodes) != 0 {
+		klog.V(util.LogInfoLev).Info("select nodes in one UBMem success.")
+		return false, nil
+	}
+
+	return false, fmt.Errorf("scheduling failed in %s strategy", UBMemSchedule)
+}
+
+func (tp *oneUBMemStrategy) searchTable(superPodTable superPodOrderTable) {
+	if tp.totalCount == 0 {
+		return
+	}
+	row, col := getPositionInTop(tp.NPUTaskNum, tp.spBlock)
+	for j := col; j < len(superPodTable[0]); j++ {
+		for i := row; i < len(superPodTable); i++ {
+			if len(superPodTable[i][j]) == 0 {
+				continue
+			}
+			tp.iterateEverySuperPod(superPodTable[i][j])
+
+			if tp.totalCount == 0 {
+				return
+			}
+		}
+		row = 0
+	}
+}
+
+func (tp *oneUBMemStrategy) iterateEverySuperPod(superPods []superPod) {
+	const notFoundID = -1
+	var bestCount int
+	var bestUBMemID int32 = notFoundID
+	var index int
+	for i := 0; i < len(superPods); i++ {
+		nodesInUbMems := getNodesInUbMem(superPods[i])
+
+		for uBMemId, nodes := range nodesInUbMems {
+			// before we decide to select nodes in someone ubmem, we must check whether it can contain all the pods
+			ok, nodesCount := tp.checkUBMemIsSatisfied(nodes)
+			if !ok {
+				continue
+			}
+			if bestUBMemID == -1 || bestCount > nodesCount {
+				bestUBMemID = uBMemId
+				bestCount = nodesCount
+			}
+		}
+		// find the best choice in the superPod
+		if bestUBMemID > notFoundID {
+			klog.V(util.LogInfoLev).Infof("start select nodes in the ubmem, ubmem id: %d.", bestUBMemID)
+			tp.selectAllInOneUBMem(nodesInUbMems[bestUBMemID], superPods[index])
+			return
+		}
+	}
+}
+
+// check whether this ubmem can be selected and return total nodes
+func (tp *oneUBMemStrategy) checkUBMemIsSatisfied(racks map[int32][]nodeBaseInfo) (bool, int) {
+	if racks == nil {
+		return false, 0
+	}
+	// total nodes count
+	count := 0
+	// the real available node count
+	totalAvailableNodes := 0
+
+	for rackId := range racks {
+		count += len(racks[rackId])
+		totalAvailableNodes += (len(racks[rackId]) / tp.tpBlock) * tp.tpBlock
+	}
+
+	return totalAvailableNodes >= tp.spBlock*tp.totalCount, count
+}
+
+// select total sp-block in this ubmem
+func (tp *oneUBMemStrategy) selectAllInOneUBMem(rackTopoInUbMem map[int32][]nodeBaseInfo, superPod superPod) {
+	maxTimes := len(tp.unReadyIds)
+	curTimes := 0
+	for curTimes <= maxTimes {
+		curTimes++
+		if tp.totalCount == 0 {
+			return
+		}
+		if tp.totalCount-1 >= len(tp.unReadyIds) {
+			klog.V(util.LogErrorLev).Infof("index out of range, totalCount: %d, unReadyIds: %d",
+				tp.totalCount-1, len(tp.unReadyIds))
+			return
+		}
+		rackTopoInUbMem = tp.selectOneSpBlock(rackTopoInUbMem, superPod)
+		if tp.totalCount == 0 {
+			return
+		}
+	}
+	klog.V(util.LogErrorLev).Info("select nodes failed by iterating ubmem but it should be success")
+}
+
 // entrySelect begin to select in one superPod
 func (tp *oneSuperPodStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error) {
 	if tp == nil {
@@ -205,12 +312,12 @@ func (tp *oneSuperPodStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, e
 }
 
 func (tp *oneSuperPodStrategy) searchTable(superPodTable superPodOrderTable) {
+	if tp.totalCount == 0 {
+		return
+	}
 	row, col := getPositionInTop(tp.NPUTaskNum, tp.spBlock)
 	for j := col; j < len(superPodTable[0]); j++ {
 		for i := row; i < len(superPodTable); i++ {
-			if tp.totalCount == 0 {
-				return
-			}
 			if len(superPodTable[i][j]) == 0 {
 				continue
 			}
@@ -239,7 +346,7 @@ func (tp *oneSuperPodStrategy) iterateEverySuperPod(superPods []superPod) {
 		for time <= maxLoopTimes {
 			time++
 			// select one sp-block each loop time
-			tp.doSelect(rackGroup, superPods[i])
+			tp.selectOneSpBlock(rackGroup, superPods[i])
 			if tp.totalCount == 0 {
 				return
 			}
@@ -311,6 +418,9 @@ func (tp *mulSuperPodsStrategy) getSelectedNodesNum() int {
 }
 
 func (tp *mulSuperPodsStrategy) searchTable(superPodTable superPodOrderTable) {
+	if tp.totalCount == 0 {
+		return
+	}
 	row, col := getPositionInTop(tp.FrameAttr.SuperPodSize, tp.spBlock)
 
 	for j := col; j >= 0; j-- {
@@ -338,7 +448,7 @@ func (tp *mulSuperPodsStrategy) iterateEverySuperPod(superPods []superPod) {
 				break
 			}
 
-			tp.doSelect(rackGroup, superPods[i])
+			tp.selectOneSpBlock(rackGroup, superPods[i])
 			if tp.totalCount == 0 {
 				return
 			}

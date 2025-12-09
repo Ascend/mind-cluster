@@ -41,6 +41,12 @@ type oneRackStrategy struct {
 	name strategyKey
 }
 
+// oneUBMemStrategy select nodes in one UBMem
+type oneUBMemStrategy struct {
+	*strategy
+	name strategyKey
+}
+
 // oneSuperPodStrategy select nodes in one superpod
 type oneSuperPodStrategy struct {
 	*strategy
@@ -54,7 +60,7 @@ type mulSuperPodsStrategy struct {
 }
 
 // doSelect select nodes from ubmem level or superpod level, when we have selected one sp-block count nodes, return result
-func (tp *strategy) doSelect(rackGroup map[int32][]nodeBaseInfo, superPod superPod) map[int32][]nodeBaseInfo {
+func (tp *strategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo, superPod superPod) map[int32][]nodeBaseInfo {
 	spIndex := tp.unReadyIds[tp.totalCount-1]
 	if tp.tpBlock == 0 {
 		klog.V(util.LogErrorLev).Infof("invalid tp-block, select nodes failed")
@@ -98,6 +104,10 @@ func (tp *strategy) doSelect(rackGroup map[int32][]nodeBaseInfo, superPod superP
 }
 
 func (tp *oneRackStrategy) getStrategyName() strategyKey {
+	return tp.name
+}
+
+func (tp *oneUBMemStrategy) getStrategyName() strategyKey {
 	return tp.name
 }
 

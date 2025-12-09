@@ -38,7 +38,6 @@ func transferSuperPodToRackIdMap(superPod map[string]nodeBaseInfo) map[int32][]n
 		superPodWithRack[nNode.rackID] = append(superPodWithRack[nNode.rackID], nNode)
 	}
 
-	klog.V(util.LogInfoLev).Infof("the superpod with rackID info is %v", superPodWithRack)
 	return superPodWithRack
 }
 
@@ -97,7 +96,11 @@ func getPositionInTop(podNum int, spBlock int) (int, int) {
 	return row, col
 }
 
-func getSuperPodMap(npuNodes map[string]plugin.NPUNode, nodes []*api.NodeInfo, pluginName string) map[int32]superPod {
+func getSuperPodMap(npuNodes map[string]plugin.NPUNode, nodes []*api.NodeInfo,
+	pluginName string, uBMemRackNum int) map[int32]superPod {
+	if uBMemRackNum == 0 {
+		uBMemRackNum = uBMemRackNumber
+	}
 	totalNodes := make(map[int32]superPod)
 	for _, node := range nodes {
 		nNode, ok := npuNodes[node.Name]
@@ -115,6 +118,7 @@ func getSuperPodMap(npuNodes map[string]plugin.NPUNode, nodes []*api.NodeInfo, p
 			name:       nNode.Name,
 			superPodID: nNode.SuperPodID,
 			rackID:     nNode.RackID,
+			ubMemID:    nNode.RackID / int32(uBMemRackNum),
 		}
 	}
 	return totalNodes
@@ -195,4 +199,22 @@ func getOriginRackId(superPodWithRackId map[int32][]nodeBaseInfo,
 		}
 	}
 	return UninitializedRestRackLenMapId
+}
+
+func getNodesInUbMem(superPod map[string]nodeBaseInfo) map[int32]map[int32][]nodeBaseInfo {
+	nodesInUbMem := make(map[int32]map[int32][]nodeBaseInfo)
+
+	for _, nNode := range superPod {
+		_, ok := nodesInUbMem[nNode.ubMemID]
+		if !ok {
+			nodesInUbMem[nNode.ubMemID] = make(map[int32][]nodeBaseInfo, 0)
+		}
+		_, ok = nodesInUbMem[nNode.ubMemID][nNode.rackID]
+		if !ok {
+			nodesInUbMem[nNode.ubMemID][nNode.rackID] = make([]nodeBaseInfo, 0)
+		}
+		nodesInUbMem[nNode.ubMemID][nNode.rackID] = append(nodesInUbMem[nNode.ubMemID][nNode.rackID], nNode)
+	}
+
+	return nodesInUbMem
 }

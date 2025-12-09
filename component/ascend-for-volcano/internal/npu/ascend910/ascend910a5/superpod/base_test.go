@@ -52,6 +52,7 @@ const (
 	npuTaskNum6  = 6
 	npuTaskNum16 = 16
 	npuTaskNum32 = 32
+	npuTaskNum40 = 40
 	npuTaskNum64 = 64
 
 	superPodSize64 = 64
@@ -136,7 +137,7 @@ func TestDoSelectForStrategy(t *testing.T) {
 			}
 			superPodWithRackId := transferSuperPodToRackIdMap(testCase.nodesInSuperPod)
 
-			s.doSelect(superPodWithRackId, testCase.nodesInSuperPod)
+			s.selectOneSpBlock(superPodWithRackId, testCase.nodesInSuperPod)
 
 			if len(selectNodes["0"]) != testCase.jobParams.spBlock {
 				t.Errorf("doSelect result not match, expect get nodes length =%d, got selecteNodes: %v",
@@ -294,6 +295,7 @@ func getTaskInfos(taskNum int, jobId string) []*api.TaskInfo {
 
 func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *module910a5SuperPod {
 	plg := New(SuperPodx8SchedulerName)
+	_ = plg.PreStartAction(nil)
 	jobs := make(map[api.JobID]plugin.SchedulerJob)
 	job := plugin.SchedulerJob{
 		JobReadyTag: new(bool),
