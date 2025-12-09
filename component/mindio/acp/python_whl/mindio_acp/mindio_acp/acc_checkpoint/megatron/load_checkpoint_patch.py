@@ -173,10 +173,14 @@ def acp_load_checkpoint(ddp_model, optimizer, opt_param_scheduler, load_arg='loa
         raise NotImplementedError("Unsupported Configuration")
 
     load_kwargs = {}
-    state_dict, checkpoint_name, release, ckpt_type = _load_base_checkpoint(
+    state_dict, checkpoint_name, release, _ = _load_base_checkpoint(
         load_dir, args, rank0=False, checkpointing_context=checkpointing_context,
         **load_kwargs
     )
+    if not isinstance(checkpoint_name, str):
+        raise TypeError(f"checkpoint_name must be a string, got {type(checkpoint_name)}")
+    if not isinstance(release, bool):
+        raise TypeError(f"release must be a boolean, got {type(release)}")
 
     # Checkpoint not loaded.
     if state_dict is None:
