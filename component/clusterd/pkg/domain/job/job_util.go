@@ -149,7 +149,7 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
-		setUseNodeNames(&jobInfo, podsInJob)
+		updateUseNodeNames(&jobInfo, podsInJob)
 		initJobShareTorInfo(&jobInfo, podsInJob)
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
@@ -172,12 +172,19 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	}
 }
 
-func setUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
-	nodeNamesMap := make(map[string]string, len(podsInJob))
-	for _, podTemp := range podsInJob {
-		nodeNamesMap[string(podTemp.UID)] = podTemp.Spec.NodeName
+// jobInfo.NodeNames store history node names used by pod
+func updateUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
+	if jobInfo.NodeNames == nil {
+		jobInfo.NodeNames = make(map[string]string)
 	}
-	jobInfo.NodeNames = nodeNamesMap
+	newNodeNames := make(map[string]string, len(jobInfo.NodeNames))
+	for podUid, nodeName := range jobInfo.NodeNames {
+		newNodeNames[podUid] = nodeName
+	}
+	for _, podTemp := range podsInJob {
+		newNodeNames[string(podTemp.UID)] = podTemp.Spec.NodeName
+	}
+	jobInfo.NodeNames = newNodeNames
 }
 
 func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
