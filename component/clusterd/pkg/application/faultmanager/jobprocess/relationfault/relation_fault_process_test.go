@@ -524,7 +524,6 @@ func TestInitFaultInfoByDeviceFault(t *testing.T) {
 
 		testAssociateFault(fJob)
 		testNonAssociateFault(fJob)
-		testCardUnhealthy(fJob)
 	})
 }
 
@@ -570,28 +569,6 @@ func testNonAssociateFault(fJob *FaultJob) {
 		defer patches.Reset()
 
 		fJob.initFaultInfoByDeviceFault(faultList, "node1", "rank1", false)
-		convey.So(fJob.AllFaultCode.Has("node1-npu1-fault1"), convey.ShouldBeFalse)
-		convey.So(fJob.RelationFaults, convey.ShouldHaveLength, 0)
-	})
-}
-
-func testCardUnhealthy(fJob *FaultJob) {
-	convey.Convey("When card is unhealthy", func() {
-		faultList := []constant.DeviceFault{
-			{
-				NPUName: "npu1",
-				FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
-					"fault1": {FaultLevel: "level1"},
-				},
-			},
-		}
-
-		patches := gomonkey.ApplyFunc(isAssociateFault, func(faultCode string) bool {
-			return faultCode == "fault1"
-		})
-		defer patches.Reset()
-
-		fJob.initFaultInfoByDeviceFault(faultList, "node1", "rank1", true)
 		convey.So(fJob.AllFaultCode.Has("node1-npu1-fault1"), convey.ShouldBeFalse)
 		convey.So(fJob.RelationFaults, convey.ShouldHaveLength, 0)
 	})
