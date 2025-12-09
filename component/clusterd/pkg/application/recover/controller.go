@@ -886,6 +886,8 @@ func (ctl *EventController) notifyFaultForRetryFaultCasePlatFormMode(signal *pb.
 			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
 			return "", common.ServerInnerError, err
 		}
+		// Note: RetryWriteResetCM is only used for exiting processes in elastic scenarios.
+		// The elastic component will be sunset in the future.
 		cm, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
 		if err != nil {
@@ -900,6 +902,7 @@ func (ctl *EventController) notifyFaultForRetryFaultCasePlatFormMode(signal *pb.
 		}
 		if !ctl.restartFaultProcess {
 			signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
+			ctl.filterPodsNodeRankIds(signal)
 		} else {
 			signal.Actions = append(signal.Actions, constant.FaultNodesRestartAction)
 		}
@@ -943,6 +946,8 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 	if !ctl.restartFaultProcess {
 		hwlog.RunLog.Infof("jobId=%s write reset json, restartFaultProcess: %v, faultRanks: %v",
 			ctl.jobInfo.JobId, ctl.restartFaultProcess, allFaultRanks)
+		// Note: WriteResetInfoToCM is only used for exiting processes in elastic scenarios.
+		// The elastic component will be sunset in the future.
 		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
 			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
 		if err != nil {
@@ -956,6 +961,7 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
 			return common.NotifyFailEvent, common.OperateConfigMapError, nil
 		}
+		ctl.filterPodsNodeRankIds(signal)
 	}
 	return ctl.signalEnqueue(signal)
 }
@@ -1181,6 +1187,10 @@ func (ctl *EventController) filterRecoverPodsNodeRankIds(signal *pb.ProcessManag
 	if signal.ChangeStrategy != constant.ProcessRecoverStrategyName {
 		return
 	}
+	ctl.filterPodsNodeRankIds(signal)
+}
+
+func (ctl *EventController) filterPodsNodeRankIds(signal *pb.ProcessManageSignal) {
 	filteredNodeRankIds := make([]string, 0, len(signal.NodeRankIds))
 	for _, nodeRankId := range signal.NodeRankIds {
 		currentPod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, nodeRankId)
