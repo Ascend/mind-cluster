@@ -105,3 +105,10 @@ const (
 	// ReschedulingPodUpgradeToJob means volcano rescheduling fault, and then rescheduling fault Job when pod pending
 	ReschedulingPodUpgradeToJob = "pod,job"
 )
+
+const (
+	// SuperPodRankKey logic SuperPod id annotation key
+	SuperPodRankKey = "super-pod-rank"
+	// SuperPodIdKey physic SuperPod id annotation key
+	SuperPodIdKey = "super-pod-id"
+)
