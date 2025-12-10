@@ -78,7 +78,7 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 	if err := npuBase.SetUrmaDeviceInfoByHdm(hdm, dev); err != nil {
 		hwlog.RunLog.Errorf("set urma device info by hdm failed for cardID(%d) deviceID(%d) phyID(%d), err: %v",
 			dev.CardID, dev.DeviceID, dev.PhyID, err)
-		return nil
+		// a5 standard card no mesh scene, there is no urma device and eid info, should generate rank table level_list
 	}
 
 	infoKeyArr := npuBase.getRankLevelInfoKeyArr()
