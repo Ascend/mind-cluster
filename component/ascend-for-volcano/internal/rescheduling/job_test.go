@@ -798,3 +798,28 @@ func TestSetFaultRetryTimeOfJob(t *testing.T) {
 		}
 	})
 }
+
+func TestRebuildScheduledSuperPods(t *testing.T) {
+	t.Run("01-rebuildScheduledSuperPods empty jobInfo returns empty superPods", func(t *testing.T) {
+		if len(rebuildScheduledSuperPods(nil)) != 0 {
+			t.Errorf("rebuildScheduledSuperPods() error, want zero value, return none-zero value")
+		}
+	})
+
+	t.Run("02-rebuildScheduledSuperPods normal jobInfo returns correct superPods", func(t *testing.T) {
+		jobInfo := test.FakeNormalTestJob(mockJobName, util.NPUIndex1)
+		for _, task := range jobInfo.Tasks {
+			annotations := map[string]string{util.SuperPodRankKey: "0", util.SuperPodIdKey: "0"}
+			task.Pod.Annotations = annotations
+			task.Pod.Spec.NodeName = fakeNodeName
+		}
+		superPods := rebuildScheduledSuperPods(jobInfo)
+		rebuildCount := 0
+		for _, superPod := range superPods {
+			rebuildCount += len(superPod)
+		}
+		if rebuildCount != len(jobInfo.Tasks) {
+			t.Errorf("rebuildScheduledSuperPods() error, want zero value, return none-zero value")
+		}
+	})
+}

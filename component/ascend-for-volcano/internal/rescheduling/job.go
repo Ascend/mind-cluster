@@ -710,3 +710,41 @@ func getRealFaultJobForCache(fJobs map[api.JobID]*FaultJob) map[api.JobID]*Fault
 	}
 	return realFaultJobs
 }
+
+func rebuildScheduledSuperPods(jobInfo *api.JobInfo) map[string][]plugin.SuperNode {
+	superPods := map[string][]plugin.SuperNode{}
+	if jobInfo == nil {
+		klog.V(util.LogErrorLev).Infof("rebuild scheduled super pod failed, job info is nil.")
+		return superPods
+	}
+	klog.V(util.LogWarningLev).Infof("rebuild scheduled super pod, job: %v/%v.", jobInfo.Namespace, jobInfo.Name)
+	for _, task := range jobInfo.Tasks {
+		if task.Pod == nil || task.Pod.Annotations == nil || task.Pod.Spec.NodeName == "" {
+			continue
+		}
+		logicSpId, logicSpIdExist := task.Pod.Annotations[util.SuperPodRankKey]
+		if !logicSpIdExist || logicSpId == "" {
+			continue
+		}
+		superPodId, superPodIdExist := task.Pod.Annotations[util.SuperPodIdKey]
+		if !superPodIdExist {
+			continue
+		}
+		superPodID, err := strconv.Atoi(superPodId)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("rebuild scheduled super pod info failed, get task [%v] super pod id failed: %v.",
+				task.Name, util.SafePrint(err))
+			continue
+		}
+		superNodes, ok := superPods[logicSpId]
+		if !ok {
+			superPods[logicSpId] = []plugin.SuperNode{{SuperPodID: int32(superPodID), Name: task.Pod.Spec.NodeName}}
+		} else {
+			superPods[logicSpId] = append(superNodes,
+				plugin.SuperNode{SuperPodID: int32(superPodID), Name: task.Pod.Spec.NodeName})
+		}
+	}
+
+	klog.V(util.LogWarningLev).Infof("rebuild scheduled super pod, %v.", string(util.MarshalData(superPods)))
+	return superPods
+}

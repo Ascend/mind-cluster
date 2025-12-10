@@ -45,7 +45,6 @@ const (
 	superPodAffinity = "super-pod-affinity"
 	hardRequire      = "hard"
 	softRequire      = "soft"
-	superPodRankKey  = "super-pod-rank"
 )
 
 type superPodInfo struct {

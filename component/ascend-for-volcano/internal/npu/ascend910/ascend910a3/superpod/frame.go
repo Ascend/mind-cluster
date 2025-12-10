@@ -1156,8 +1156,8 @@ func (tp *module910SuperPod) UseAnnotation(task *api.TaskInfo, node plugin.NPUNo
 
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	newNode := tp.UpdateNodeInfo(node, selectedNPU)
-	task.Pod.Annotations[superPodRankKey] = tp.nodeVPodId[node.Name]
-	task.Pod.Annotations["super-pod-id"] = strconv.Itoa(int(node.SuperPodID))
+	task.Pod.Annotations[util.SuperPodRankKey] = tp.nodeVPodId[node.Name]
+	task.Pod.Annotations[util.SuperPodIdKey] = strconv.Itoa(int(node.SuperPodID))
 	return newNode
 }
 
