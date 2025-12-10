@@ -120,8 +120,8 @@ typedef struct list_head list_head_t;
 * @param[in]  _memb  - 结构体链表变量名称
 * @retval 结构体指针
 */
-#define dpax_list_entry(_ptr, _type, _memb) /*lint -save -e718 -e746 -e78 -e516 -e40 */ \
-    container_of(_ptr, _type, _memb)        /*lint -restore*/
+#define dpax_list_entry(_ptr, _type, _memb) \
+    container_of(_ptr, _type, _memb)
 
 /**
  * 获取结构体成员地址偏移
@@ -243,9 +243,9 @@ typedef struct list_head list_head_t;
 * @param[in]  member  - 结构体链表成员名称
 * @retval NA
 */
-#define dpax_list_for_each_entry_safe(pos, n, type, head, member) /*lint -save -e26*/                            \
+#define dpax_list_for_each_entry_safe(pos, n, type, head, member) \
     for ((pos) = dpax_list_entry((head)->next, type, member), (n) = dpax_list_entry((pos)->member.next, type, member); \
-        &(pos)->member != (head); (pos) = (n), (n) = dpax_list_entry((n)->member.next, type, member)) /*lint -restore*/
+        &(pos)->member != (head); (pos) = (n), (n) = dpax_list_entry((n)->member.next, type, member))
 
 
 /**
