@@ -241,7 +241,7 @@ func IsNodeReady(node *v1.Node) bool {
 // MakeDataHash check code for configmap
 func MakeDataHash(data interface{}) string {
 	var dataBuffer []byte
-	if dataBuffer = marshalData(data); len(dataBuffer) == 0 {
+	if dataBuffer = MarshalData(data); len(dataBuffer) == 0 {
 		return ""
 	}
 	h := sha256.New()
@@ -253,7 +253,8 @@ func MakeDataHash(data interface{}) string {
 	return hex.EncodeToString(sum)
 }
 
-func marshalData(data interface{}) []byte {
+// MarshalData get marshaled bytes from origin struct
+func MarshalData(data interface{}) []byte {
 	dataBuffer, err := json.Marshal(data)
 	if err != nil {
 		klog.V(LogErrorLev).Infof("marshal data err: %s", SafePrint(err))

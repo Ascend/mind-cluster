@@ -127,7 +127,7 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	klog.V(util.LogDebugLev).Infof("job %s if fault job: %v", faultJob.JobName, tmpIsFaultJob)
 	faultJob.setIsFaultJob(tmpIsFaultJob)
 	// 6. update FaultTypes of the job by status of FaultTasks bound on the job
-	faultJob.updateFaultJobInfo(npuJob, reScheduler)
+	faultJob.updateFaultJobInfo(npuJob, reScheduler, jobInfo)
 	faultJob.setIsSubHealthFault()
 	klog.V(util.LogDebugLev).Infof("job %s fault types: %v", faultJob.JobName, faultJob.FaultTypes)
 	_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
@@ -143,17 +143,15 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	return faultJob
 }
 
-func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler *ReScheduler) {
-	fJob.SuperPods = npuJob.SuperPods
+func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler *ReScheduler, jobInfo *api.JobInfo) {
+	if npuJob.SuperPods != nil {
+		fJob.SuperPods = npuJob.SuperPods
+	} else {
+		fJob.SuperPods = rebuildScheduledSuperPods(jobInfo)
+	}
 	if !fJob.IsFaultJob {
 		return
 	}
-	const (
-		superPodRankIndex = iota
-		originNodeNameIndex
-		newNodeNameIndex
-		replaceNodesLen
-	)
 	defer func() { reScheduler.Jobs[fJob.JobUID] = npuJob }()
 	replaceNodes := make(map[string][]string, 1)
 	for _, fTask := range fJob.FaultTasks {
@@ -168,7 +166,7 @@ func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler
 			if len(replaceNodes[fTask.TaskName]) == 0 {
 				replaceNodes[fTask.TaskName] = make([]string, replaceNodesLen)
 			}
-			if superPodRank, ok := fTask.Annotations["super-pod-rank"]; ok {
+			if superPodRank, ok := fTask.Annotations[util.SuperPodRankKey]; ok {
 				replaceNodes[fTask.TaskName][superPodRankIndex] = superPodRank
 			}
 			replaceNodes[fTask.TaskName][originNodeNameIndex] = fTask.NodeName
@@ -202,7 +200,8 @@ func (reScheduler *ReScheduler) AddFaultJobWithSession(
 		klog.V(util.LogDebugLev).Infof("AddFaultJobWithSession: %s, nil reScheduler or job", util.ArgumentError)
 		return errors.New(util.ArgumentError)
 	}
-	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs before add: %#v", reScheduler.FaultJobs)
+	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs before add: %v",
+		string(util.MarshalData(reScheduler.FaultJobs)))
 	nowTime := time.Now().Unix()
 	for _, jobInfo := range jobs {
 		klog.V(util.LogDebugLev).Infof("ReSchedulerCache considering job %s", jobInfo.Name)
@@ -217,7 +216,8 @@ func (reScheduler *ReScheduler) AddFaultJobWithSession(
 		reScheduler.FaultJobs[jobInfo.UID] = faultJob
 	}
 	reScheduler.initSuperPodInfo(env)
-	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after add: %#v", reScheduler.FaultJobs)
+	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after add: %v",
+		string(util.MarshalData(reScheduler.FaultJobs)))
 	return nil
 }
 
@@ -358,7 +358,8 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
-	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %#v", reScheduler.FaultJobs)
+	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %v",
+		string(util.MarshalData(reScheduler.FaultJobs)))
 }
 
 func (reScheduler *ReScheduler) setFaultTaskUseNodeLinkDownTime(fJob *FaultJob) {
@@ -536,7 +537,7 @@ func (reScheduler *ReScheduler) RestartFaultJobs(ssn *framework.Session, env plu
 	restartFaultJobs := reScheduler.getJobsToBeRestarted(reScheduler.getRealFaultJobs())
 	newCacheJobs := reScheduler.getNewCacheJobs(restartFaultJobs)
 
-	klog.V(util.LogDebugLev).Infof("Jobs to be restarted: %#v", restartFaultJobs)
+	klog.V(util.LogDebugLev).Infof("Jobs to be restarted: %v", string(util.MarshalData(restartFaultJobs)))
 	// 2. Restart fault jobs
 	for _, restartFaultJob := range restartFaultJobs {
 		schedulerJob, ok := reScheduler.Jobs[restartFaultJob.JobUID]

@@ -151,6 +151,13 @@ const (
 	rescheduleInPlaceValue = "true"
 )
 
+const (
+	superPodRankIndex = iota
+	originNodeNameIndex
+	newNodeNameIndex
+	replaceNodesLen
+)
+
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
