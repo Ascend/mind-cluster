@@ -44,7 +44,8 @@ setuptools.setup(
             "framework_ttp/**",
             "controller_ttp/**",
             "utils/**",
-            "mindspore_api/**"
+            "mindspore_api/**",
+            "VERSION"
         ]
     },
     distclass=BinaryDistribution
