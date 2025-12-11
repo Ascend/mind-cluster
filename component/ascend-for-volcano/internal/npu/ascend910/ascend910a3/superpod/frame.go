@@ -31,6 +31,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
@@ -193,6 +194,9 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 }
 
 func (tp *module910SuperPod) checkNodeForHotSwitch(task *api.TaskInfo, node plugin.NPUNode) error {
+	if _, ok := task.Pod.Annotations[consts.BackupSourcePodNameKey]; !ok {
+		return nil
+	}
 	job, ok := tp.ScheduleEnv.Jobs[task.Job]
 	if !ok {
 		return fmt.Errorf("%s ScoreBestNPUNodes %s: job is not exist", tp.GetPluginName(), task.Name)

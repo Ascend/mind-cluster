@@ -37,6 +37,7 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -162,7 +163,7 @@ func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler
 			npuJob.SuperPods = nil
 			continue
 		}
-		if _, ok := fTask.Annotations["backupNewPodName"]; ok {
+		if _, ok := fTask.Annotations[consts.BackupNewPodNameKey]; ok {
 			if len(replaceNodes[fTask.TaskName]) == 0 {
 				replaceNodes[fTask.TaskName] = make([]string, replaceNodesLen)
 			}
@@ -171,7 +172,7 @@ func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler
 			}
 			replaceNodes[fTask.TaskName][originNodeNameIndex] = fTask.NodeName
 		}
-		if sourcePod, ok := fTask.Annotations["backupSourcePodName"]; ok {
+		if sourcePod, ok := fTask.Annotations[consts.BackupSourcePodNameKey]; ok {
 			if len(replaceNodes[sourcePod]) == 0 {
 				replaceNodes[sourcePod] = make([]string, replaceNodesLen)
 			}
