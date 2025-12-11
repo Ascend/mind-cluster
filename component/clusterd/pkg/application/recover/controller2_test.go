@@ -1427,8 +1427,9 @@ func TestCheckWhetherPodVersionChangedTrue(t *testing.T) {
 	}
 	mockGetNodeRankIdsByFaultRanks := gomonkey.ApplyFuncReturn(pod.GetPodByRankIndex, v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "job-123",
-			UID:  "2",
+			Name:        "job-123",
+			UID:         "2",
+			Annotations: map[string]string{api.PodAnnotationAscendReal: "0"},
 		},
 	})
 	defer mockGetNodeRankIdsByFaultRanks.Reset()

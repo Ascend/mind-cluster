@@ -15,6 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"ascend-common/api"
 	"ascend-common/api/ascend-operator/apis/batch/v1"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
@@ -2022,7 +2023,10 @@ func (ctl *EventController) checkWhetherPodChanged() bool {
 	hasChanged := false
 	for podRank, _ := range ctl.faultPod {
 		pod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, podRank)
-		if pod.Name == "" {
+		if pod.Name == "" || pod.Annotations == nil {
+			continue
+		}
+		if realCard, ok := pod.Annotations[api.PodAnnotationAscendReal]; !ok || realCard == "" {
 			continue
 		}
 		hwlog.RunLog.Debugf("node rank %s prePod id %s now pod id %s", podRank, ctl.prePodForScale[podRank], string(pod.UID))
