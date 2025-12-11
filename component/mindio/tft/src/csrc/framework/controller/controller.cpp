@@ -954,27 +954,34 @@ TResult Controller::MindXInnerInteraction()
     return TTP_OK;
 }
 
-TResult Controller::MindXInteraction()
+TResult Controller::ProcessRepairFlow(bool isPreLocked)
 {
-    // backup no need to notify mindx
-    if (isBackupToMaster_.load()) {
-        return TTP_ERROR;
-    }
-
     if (mindXEngine_->IsRegistered()) {
+        if (isNeedToReportResult_.load()) {
+            std::string msg = "do last repair failed!";
+            mindXEngine_->ReportResult(RepairResult::FAILED_ALLOW_DUMP, msg, errorRankMsg_, errorRankLock_);
+            isNeedToReportResult_.store(false);
+            return WaitDumpOrExitStrategy();
+        }
+
+        if (repairEvent_ == MindXEvent::MINDX_EVENT_ELEGANT_DUMP) {
+            TTP_LOG_WARN("Mindx Cluster notify to do dump, try to do dump...");
+            return TTP_ERROR;
+        }
+
         TResult ret = MindXInnerInteraction();
         if (ret != TTP_OK) {
             return ret;
         }
 
-        ret = MindXConfirmStrategy();
+        ret = MindXConfirmStrategy(isPreLocked);
         if (ret != TTP_OK) {
             return ret;
         }
     } else {
         // MindSpore场景需要提前校验副本，其他场景只需校验DP组情况
         bool canRepair = mindSpore_ ? CheckDpGroup() && CheckCanRepair() : CheckDpGroup();
-        if (!canRepair) {
+        if (!canRepair || !isPreLocked) {
             return TTP_STOP_SERVICE; // exit
         }
 
@@ -986,12 +993,12 @@ TResult Controller::MindXInteraction()
     return TTP_OK;
 }
 
-TResult Controller::MindXConfirmStrategy()
+TResult Controller::MindXConfirmStrategy(bool isPreLocked)
 {
     std::vector<std::string> strategies {STRATEGY_EXIT};
     // MindSpore场景需要提前校验副本，其他场景只需校验DP组情况
     bool canRepair = mindSpore_ ? CheckDpGroup() && CheckCanRepair() : CheckDpGroup();
-    if (canRepair) {
+    if (canRepair && isPreLocked) {
         strategies.push_back(STRATEGY_DUMP);
 
         repairType_ = ConfirmRepairType();
@@ -1064,23 +1071,15 @@ TResult Controller::AbnormalCallback()
     }
 
     repairId_.fetch_add(1);
-
     auto ret = DoPause();
     SelectErrorRanks();
 
-    if (isNeedToReportResult_.load()) {
-        std::string msg = "do last repair failed!";
-        mindXEngine_->ReportResult(RepairResult::FAILED_ALLOW_DUMP, msg, errorRankMsg_, errorRankLock_);
-        isNeedToReportResult_.store(false);
-        return WaitDumpOrExitStrategy();
-    }
-
-    if ((ret != TTP_OK && !mindXEngine_->IsRegistered()) || repairEvent_ == MindXEvent::MINDX_EVENT_ELEGANT_DUMP) {
-        TTP_LOG_WARN("prelock failed or mindx notify to do dump, try to do dump...");
+    // backup no need to notify mindx
+    if (isBackupToMaster_.load()) {
         return TTP_ERROR;
     }
 
-    return MindXInteraction();
+    return ProcessRepairFlow(ret == TTP_OK);
 }
 
 TResult Controller::DumpCallback()
@@ -1885,7 +1884,6 @@ std::vector<BackupInfo> Controller::SelectBackUpController()
 
 TResult Controller::HandleHeartBeat(const AccTcpRequestContext &context)
 {
-    TTP_LOG_DEBUG("start HandleHeartBeat");
     if (isStopped_.load()) {
         TTP_LOG_ERROR("this controller has stopped service.");
         return TTP_ERROR;

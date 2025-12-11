@@ -523,7 +523,6 @@ TResult Processor::HeartbeatSend()
         auto result = newClient_->Send(TTP_MSG_OP_HEARTBEAT_SEND,
             reinterpret_cast<uint8_t *>(&hbMsg), sizeof(HeartBeatMsg));
         if (result == ACC_OK) {
-            TTP_LOG_DEBUG("rank:" << rank_ << " send heartbeat msg to controller: " << IpPort() << " success.");
             return TTP_OK;
         }
         times++;
