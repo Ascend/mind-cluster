@@ -185,9 +185,9 @@ private:
 
     RankMask GenerateRankMask(const RankChooseInfo &rankChooseInfo);
 
-    TResult MindXInteraction();
+    TResult ProcessRepairFlow(bool isPreLocked);
 
-    TResult MindXConfirmStrategy();
+    TResult MindXConfirmStrategy(bool isPreLocked = true);
 
     TResult HandleRecoverStrategy();
 

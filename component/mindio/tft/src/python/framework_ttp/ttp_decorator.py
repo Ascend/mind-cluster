@@ -62,7 +62,7 @@ sync_stream_ = None
 mindio_export_function_version = None
 force_stop_cond_ = threading.Condition()
 uce_error_ = False
-hccl_error_ = False
+retry_error_ = False
 pause_step_ = 0
 need_pause_ = None
 need_pause_cond_ = threading.Condition()
@@ -599,14 +599,14 @@ def _process_group_name(ranks, use_hashed_name):
 
 
 def stop_callback():
-    global uce_error_, hccl_error_
+    global uce_error_, retry_error_
     if need_pause_ == PauseType.PAUSE:
         continue_callback()  # for pause status when error occurred
     with force_stop_cond_:
         start_time = time.time()
         ret = save_handler.execute_stop()
         tft_reset_limit_step()
-        if uce_error_ or hccl_error_:
+        if uce_error_ or retry_error_:
             ttp_logger.LOGGER.info(f"rank:{rank_} uce or hccl error , no need wait, end stop callback")
             return ret
 
@@ -620,9 +620,9 @@ def stop_callback():
 
 
 def clean_callback():
-    global uce_error_, hccl_error_
+    global uce_error_, retry_error_
     ret = save_handler.execute_clean()
-    uce_error_, hccl_error_ = False, False
+    uce_error_, retry_error_ = False, False
     return ret
 
 
@@ -1187,7 +1187,7 @@ def tft_report_error(error_type: ReportState):
     """
     report error state && unify condition variable post process
     """
-    global uce_error_, hccl_error_
+    global uce_error_, retry_error_
     ret = ttp_c2python_api.report_status(error_type)
     if ret != RET_OK:
         ttp_logger.LOGGER.error(f"report status: {error_type} failed, error num:{ret}")
@@ -1196,7 +1196,7 @@ def tft_report_error(error_type: ReportState):
     if error_type in [ReportState.RS_UCE.value, ReportState.RS_UCE_CORRUPTED.value]:
         uce_error_ = True
     elif error_type == ReportState.RS_HCCL_FAILED.value:
-        hccl_error_ = True
+        retry_error_ = True
         notify_stop_callback_return()
     elif error_type == ReportState.RS_NORMAL.value:
         notify_stop_callback_return()
