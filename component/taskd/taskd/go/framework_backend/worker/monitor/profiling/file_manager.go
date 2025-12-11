@@ -372,7 +372,7 @@ func ManageProfilingDiskUsage(baseDir string, ctx context.Context) {
 				time.Sleep(constant.DiskUsageCheckInterval * time.Second)
 				continue
 			}
-			if int(usedSize) > diskUsageUpperLimitMB {
+			if usedSize > float64(diskUsageUpperLimitMB) {
 				dealWithDiskUsage(baseDir, usedSize)
 			} else {
 				hwlog.RunLog.Debugf("rank:%d, disk usage is under threshold, no deletion necessary", GlobalRankId)
