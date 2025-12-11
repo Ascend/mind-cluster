@@ -174,6 +174,13 @@ else
     pip3 install wheel
 fi
 
+GIT_COMMIT=`git log -1 --pretty=format:"%H" $PROJ_DIR` || true
+{
+  echo "mindio_ttp version info:"
+  echo "mindio_ttp version: ${BUILD_VERSION}"
+  echo "git: ${GIT_COMMIT}"
+} > VERSION
+
 echo "|=========================Begin to build mindio_ttp whl=========================|"
 mkdir -p $PROJ_DIR/python_whl/mindio_ttp/
 mkdir -p $PROJ_DIR/python_whl/mindio_ttp/framework_ttp
@@ -189,6 +196,7 @@ mkdir -p $PROJ_DIR/python_whl/mindio_ttp/mindspore_api
 \cp -v $PROJ_DIR/src/python/controller_ttp/ttp_c2python_api.py $PROJ_DIR/python_whl/mindio_ttp/controller_ttp/ttp_c2python_api.py
 \cp -v $PROJ_DIR/src/python/controller_ttp/* $PROJ_DIR/python_whl/mindio_ttp/controller_ttp/
 \cp -v $PROJ_DIR/src/python/utils/* $PROJ_DIR/python_whl/mindio_ttp/utils/
+\cp -v $BUILD_DIR/VERSION $PROJ_DIR/python_whl/mindio_ttp
 cd $PROJ_DIR/python_whl/
 python3 setup.py bdist_wheel
 \mv -v dist/mindio_ttp-*.whl $(echo dist/mindio_ttp-*.whl | sed -E 's/(mindio_ttp-[^ ]+)-[^ ]+-[^ ]+-([^ ]+)\.whl/\1-py3-none-\2.whl/')

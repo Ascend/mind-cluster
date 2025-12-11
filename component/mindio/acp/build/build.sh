@@ -23,13 +23,6 @@ BUILD_TYPE=Release
 BUILD_TOOL=make
 CMAKE_FLAGS=""
 
-# needs to be updated every season or when a new patch is released
-if [ -z "${MINDIO_VERSION}" ]; then
-    export VERSION="1.2.0"
-fi
-export VERSION="${MINDIO_VERSION}"
-
-COMMIT_ID=$(git rev-parse --verify HEAD) || COMMIT_ID="UNKNOWN"
 
 # Parse the argument params
 while true; do
@@ -94,6 +87,8 @@ done
 # Retrieve project top directory
 PROJ_DIR="$(dirname "${BASH_SOURCE[0]}")"
 PROJ_DIR="$(realpath "${PROJ_DIR}/..")"
+
+COMMIT_ID=$(git log -1 --pretty=format:"%H" $PROJ_DIR) || COMMIT_ID="UNKNOWN"
 
 # 拉取三方代码
 cd ${PROJ_DIR}
@@ -267,7 +262,7 @@ mkdir $PROJ_DIR/python_whl/mindio_acp/mindio_acp/bin
 \cp -v $BUILD_DIR/src/sdk/memfs/python_sdk/c2python_api.py $PROJ_DIR/python_whl/mindio_acp/mindio_acp/
 
 sed -i "s/{GIT_COMMIT}/${COMMIT_ID}/g" $PROJ_DIR/python_whl/mindio_acp/mindio_acp/VERSION
-sed -i "s/{VERSION}/${VERSION}/g" $PROJ_DIR/python_whl/mindio_acp/mindio_acp/VERSION
+sed -i "s/{VERSION}/${build_version}/g" $PROJ_DIR/python_whl/mindio_acp/mindio_acp/VERSION
 
 cd $PROJ_DIR/python_whl/mindio_acp
 rm -rf build/
