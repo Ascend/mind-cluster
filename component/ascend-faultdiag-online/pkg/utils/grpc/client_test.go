@@ -151,10 +151,6 @@ func TestProfiling(t *testing.T) {
 			}, nil
 		})
 
-	// test start all profiling
-	err = client.StartAllProfiling("job1", "ns1")
-	assert.Nil(t, err)
-
 	// test stop all profiling
 	err = client.StopAllProfiling("job1", "ns1")
 	assert.Nil(t, err)
@@ -166,6 +162,34 @@ func TestProfiling(t *testing.T) {
 	// test stop heavy profiling
 	err = client.StopHeavyProfiling("job1", "ns1")
 	assert.Nil(t, err)
+}
+
+func TestStartAllProfiling(t *testing.T) {
+	convey.Convey("test start all profiling", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(utils.GetClusterIp, func() string {
+			return "127.0.0.1"
+		})
+		client = nil
+		client, err := GetClient()
+		convey.ShouldBeNil(err)
+		var returnMsg = "successfully changed profiling marker enable status"
+		patches.ApplyPrivateMethod(reflect.TypeOf(client), "profilingSwitch",
+			func(*Client, *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
+				return &profiling.DataTypeRes{
+					Message: returnMsg,
+					Code:    200,
+				}, nil
+			})
+		err = client.StartAllProfiling("job1", "ns1")
+		convey.ShouldBeNil(err)
+		returnMsg = "configmap: [ns1/job1] has been created and param is updated to change profiling marker status"
+		client.StartAllProfiling("job1", "ns1")
+		returnMsg = "unexpected msg"
+		err = client.StartAllProfiling("job1", "ns1")
+		convey.ShouldNotBeNil(err)
+	})
 }
 
 func TestProfilingSwitch(t *testing.T) {
