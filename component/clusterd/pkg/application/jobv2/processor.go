@@ -31,8 +31,10 @@ func addJob(jobKey string) {
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok {
 		job.InitCmAndCache(podGroupCache, nil)
-		jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo, constant.DefaultHcclJson,
-			constant.AddOperator))
+		if jobCache, ok := job.GetJobCache(jobKey); ok {
+			jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache, constant.DefaultHcclJson,
+				constant.AddOperator))
+		}
 		return
 	}
 	if jobInfo.Status == job.StatusJobPending {
@@ -73,7 +75,10 @@ func updateJob(jobKey string) {
 	if status == job.StatusJobPending && jobInfo.Status != job.StatusJobPending {
 		hwlog.RunLog.Debugf("job %s updateJob to addJob", jobInfo.Name)
 		job.InitCmAndCache(pg, podsInJob)
-		jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo, constant.DefaultHcclJson, constant.AddOperator))
+		if jobCache, ok := job.GetJobCache(jobKey); ok {
+			jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache,
+				constant.DefaultHcclJson, constant.AddOperator))
+		}
 		return
 	}
 	// update job to running or completed or failed
