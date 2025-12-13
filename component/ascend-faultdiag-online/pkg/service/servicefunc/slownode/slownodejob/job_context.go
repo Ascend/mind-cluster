@@ -18,6 +18,7 @@ limitations under the License.
 package slownodejob
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -314,22 +315,21 @@ func (ctx *JobContext) LogPrefix() string {
 }
 
 // StartAllProfiling start all the profiling
-func (ctx *JobContext) StartAllProfiling() {
+func (ctx *JobContext) StartAllProfiling() error {
 	if ctx == nil || ctx.Job == nil {
-		return
+		return errors.New("ctx is nil or ctx.Job is nil")
 	}
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", ctx.LogPrefix(), err)
-		return
+		return err
 	}
 	if err := grpcClient.StartAllProfiling(ctx.Job.JobName, ctx.Job.Namespace); err != nil {
-		hwlog.RunLog.Errorf("%s started all profiling failed: %s", ctx.LogPrefix(), err.Error())
-		return
+		return err
 	}
 	hwlog.RunLog.Infof("%s started all profiling successfully", ctx.LogPrefix())
 	// step from 0 to 1
 	ctx.AddStep()
+	return nil
 }
 
 // StopAllProfiling stop all the profiling
