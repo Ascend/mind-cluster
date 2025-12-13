@@ -121,6 +121,7 @@ func (j *jobProcessor) delete() {
 	}
 	j.ctx = ctx
 	j.stop()
+	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
 		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
@@ -133,7 +134,6 @@ func (j *jobProcessor) delete() {
 	}
 	grpcClient.UnsubscribeJobSummary(registerId)
 	jobSummaryWatcher.Delete(j.job.KeyGenerator())
-	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 }
 
 func (j *jobProcessor) start() {
@@ -157,12 +157,21 @@ func (j *jobProcessor) start() {
 	j.removeData()
 	j.deleteCM()
 	j.ctx.Start()
+	// start all profiling only depends on the training job is ready
+	if err := j.ctx.StartAllProfiling(); err != nil {
+		hwlog.RunLog.Errorf("%s start all profiling failed: %v, please restart slow node detection job.",
+			j.logPrefix(), err)
+		j.ctx.Stop()
+		return
+	}
 	if err := j.createOrUpdateCM(); err != nil {
-		hwlog.RunLog.Errorf("%s created or updated cm feaild: %v", j.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s created or updated cm failed: %v, please restart slow node detection job",
+			j.logPrefix(), err)
+		j.ctx.Stop()
+		j.ctx.StopAllProfiling()
 		return
 	}
 	j.startRescheduleWatcher()
-	j.ctx.StartAllProfiling()
 	j.waitNodeReport()
 }
 

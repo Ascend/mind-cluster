@@ -146,7 +146,8 @@ func (c *Client) StopAllProfiling(name, namespace string) error {
 			DataLoader:            off,
 		},
 	}
-	_, err := c.profilingSwitch(data)
+	res, err := c.tc.ModifyTrainingDataTraceSwitch(context.Background(), data)
+	hwlog.RunLog.Infof("[FD-OL]got grpc response of stop all profiling switch: %v", res)
 	return err
 }
 
@@ -191,7 +192,9 @@ func (c *Client) StopHeavyProfiling(name, namespace string) error {
 // profilingSwitch is a switch for profiling
 func (c *Client) profilingSwitch(data *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
 	return utils.Retry(func() (*profiling.DataTypeRes, error) {
-		return c.tc.ModifyTrainingDataTraceSwitch(context.Background(), data)
+		res, err := c.tc.ModifyTrainingDataTraceSwitch(context.Background(), data)
+		hwlog.RunLog.Infof("[FD-OL]got grpc response of profiling switch: %v", res)
+		return res, err
 	}, nil)
 }
 
@@ -208,7 +211,8 @@ func (c *Client) ReportFault(faults []*pubfault.Fault) error {
 		Faults:    faults,
 	}
 
-	_, err := c.SendToPubFaultCenter(&req)
+	res, err := c.SendToPubFaultCenter(&req)
+	hwlog.RunLog.Infof("[FD-OL]got grpc response of report fault: %v", res)
 	return err
 }
 
