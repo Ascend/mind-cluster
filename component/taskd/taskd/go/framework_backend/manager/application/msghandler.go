@@ -52,7 +52,7 @@ type MsgHandler struct {
 }
 
 // NewMsgHandler new message handler
-func NewMsgHandler() *MsgHandler {
+func NewMsgHandler(workerNum int) *MsgHandler {
 	return &MsgHandler{
 		Sender: &service.MsgSender{
 			RequestChan: make(chan service.SendGrpcMsg, constant.RequestChanNum),
@@ -80,6 +80,7 @@ func NewMsgHandler() *MsgHandler {
 					Status:  map[string]string{},
 					RWMutex: sync.RWMutex{},
 				},
+				WorkerNum: workerNum,
 			},
 			RWMutex: sync.RWMutex{},
 		},

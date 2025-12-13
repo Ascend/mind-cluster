@@ -25,7 +25,6 @@ const (
 	configmapOperator = "operator"
 	operatorAdd       = "add"
 	operatorDelete    = "delete"
-	defaultHcclJson   = `{"status":"initializing"}`
 	jobId             = "job_id"
 	frameWorkKey      = "framework"
 	jobName           = "job_name"
@@ -48,7 +47,7 @@ func initCM(jobInfo constant.JobInfo) bool {
 	data[jobStatus] = jobInfo.Status
 	data[cmIndex] = "0"
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
-	data[HcclJson] = defaultHcclJson
+	data[HcclJson] = constant.DefaultHcclJson
 	data[configmapOperator] = operatorAdd
 	data[addTime] = strconv.Itoa(int(jobInfo.AddTime))
 	cmName := fmt.Sprintf("%s-%s", configmapPrefix, jobInfo.Name)
@@ -102,7 +101,7 @@ func preDeleteCM(jobInfo constant.JobInfo, hccls []string) bool {
 	data[frameWorkKey] = jobInfo.Framework
 	data[jobStatus] = jobInfo.Status
 	data[jobId] = jobInfo.Key
-	data[HcclJson] = defaultHcclJson
+	data[HcclJson] = constant.DefaultHcclJson
 	data[configmapOperator] = operatorDelete
 	data[deleteTime] = strconv.Itoa(int(jobInfo.DeleteTime))
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)

@@ -76,7 +76,7 @@ func capturePanic(f func()) error {
 // TestNewMsgHandler test new message handler
 func TestNewMsgHandler(t *testing.T) {
 	convey.Convey("TestNewMsgHandler new msg handler return struct", t, func() {
-		mhd := NewMsgHandler()
+		mhd := NewMsgHandler(0)
 		convey.So(mhd, convey.ShouldResemble, &MsgHandler{
 			Sender: &service.MsgSender{
 				RequestChan: mhd.Sender.RequestChan,
@@ -114,7 +114,7 @@ func TestNewMsgHandler(t *testing.T) {
 
 // TestStartAndInit test msg handler start and grpc init
 func TestStartAndInit(t *testing.T) {
-	mhd := NewMsgHandler()
+	mhd := NewMsgHandler(0)
 	convey.Convey("Test Start and init manager grpc success", t, func() {
 		ctx, cancel := context.WithTimeout(context.Background(), fiveHundred*time.Millisecond)
 		defer cancel()
@@ -131,7 +131,7 @@ func TestStartAndInit(t *testing.T) {
 
 // TestInitManagerGrpc test init manager grpc
 func TestInitManagerGrpc(t *testing.T) {
-	mhd := NewMsgHandler()
+	mhd := NewMsgHandler(0)
 	patch := gomonkey.ApplyFuncReturn(os.Getenv, nil)
 	defer patch.Reset()
 	convey.Convey("Test init manager grpc success", t, func() {
@@ -175,7 +175,7 @@ func TestInitManagerGrpc(t *testing.T) {
 
 // TestSendMsgUseGrpc test send grpc msg
 func TestSendMsgUseGrpc(t *testing.T) {
-	mhd := NewMsgHandler()
+	mhd := NewMsgHandler(0)
 	testDst := &common.Position{Role: common.WorkerRole}
 	convey.Convey("TestSendMsgUseGrpc send grpc msg success", t, func() {
 		mhd.SendMsgUseGrpc("test-type", "test-body", testDst)
@@ -190,7 +190,7 @@ func TestSendMsgUseGrpc(t *testing.T) {
 // TestSendMsgToMgr test manager send msg enqueue
 func TestSendMsgToMgr(t *testing.T) {
 	convey.Convey("TestSendMsgToMgr manager send msg enqueue success", t, func() {
-		mhd := NewMsgHandler()
+		mhd := NewMsgHandler(0)
 		testSrc := &common.Position{Role: common.WorkerRole}
 		oldLength := len(mhd.MsgQueue.Queue)
 		mhd.SendMsgToMgr("test-uuid", "test-type", testSrc, storage.MsgBody{})

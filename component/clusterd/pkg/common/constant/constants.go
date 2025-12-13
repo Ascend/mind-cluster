@@ -239,6 +239,8 @@ const (
 	StepRetryTimeout = 30
 	// HCCLStepRetryTimeout is the timeout for HCCL step retry
 	HCCLStepRetryTimeout = 1000 * 60
+	// DefaultHcclJson default hccl json
+	DefaultHcclJson = `{"status":"initializing"}`
 )
 
 const (

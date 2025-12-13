@@ -14,9 +14,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/application/jobinfo"
 	"clusterd/pkg/common/constant"
-	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/kube"
@@ -66,8 +64,6 @@ func PreDeleteCmAndCache(jobKey string) {
 	jobInfo.DeleteTime = time.Now().Unix()
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
 	hccls := getHcclSlice(jobInfo.JobRankTable)
-	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo,
-		util.ObjToString(jobInfo.JobRankTable), operatorDelete))
 	if preDeleteCM(jobInfo, hccls) {
 		hwlog.RunLog.Debugf("pre delete job:%s success", jobInfo.Name)
 		SaveJobCache(jobKey, jobInfo)
@@ -103,7 +99,6 @@ func InitCmAndCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod) {
 	jobInfo.IsPreDelete = false
 	jobInfo.JobRankTable = constant.RankTable{}
 	jobInfo.LastUpdatedCmTime = time.Now().Unix()
-	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo, defaultHcclJson, operatorAdd))
 	if initCM(jobInfo) {
 		hwlog.RunLog.Debugf("init job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
@@ -166,8 +161,6 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 		}
 		result = updateCM(jobInfo, i, hccl) && result
 	}
-	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo,
-		util.ObjToString(jobInfo.JobRankTable), operatorAdd))
 	if result {
 		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)

@@ -8,6 +8,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/jobinfo"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
@@ -30,6 +31,10 @@ func addJob(jobKey string) {
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok {
 		job.InitCmAndCache(podGroupCache, nil)
+		if jobCache, ok := job.GetJobCache(jobKey); ok {
+			jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache, constant.DefaultHcclJson,
+				constant.AddOperator))
+		}
 		return
 	}
 	if jobInfo.Status == job.StatusJobPending {
@@ -59,6 +64,10 @@ func updateJob(jobKey string) {
 		if !jobInfo.IsPreDelete {
 			hwlog.RunLog.Debugf("job %s updateJob to preDeleteJob", jobInfo.Name)
 			job.PreDeleteCmAndCache(jobKey)
+			if jobCache, ok := job.GetJobCache(jobKey); ok {
+				jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache,
+					util.ObjToString(jobCache.JobRankTable), constant.DeleteOperator))
+			}
 		}
 		return
 	}
@@ -66,11 +75,19 @@ func updateJob(jobKey string) {
 	if status == job.StatusJobPending && jobInfo.Status != job.StatusJobPending {
 		hwlog.RunLog.Debugf("job %s updateJob to addJob", jobInfo.Name)
 		job.InitCmAndCache(pg, podsInJob)
+		if jobCache, ok := job.GetJobCache(jobKey); ok {
+			jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache,
+				constant.DefaultHcclJson, constant.AddOperator))
+		}
 		return
 	}
 	// update job to running or completed or failed
 	if needRebuildJobSummary || jobInfo.Status != status {
 		job.UpdateCmAndCache(status, jobKey, pg, podsInJob)
+		if jobCache, ok := job.GetJobCache(jobKey); ok {
+			jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache,
+				util.ObjToString(jobCache.JobRankTable), constant.AddOperator))
+		}
 		return
 	}
 	hwlog.RunLog.Warnf("this logic branch is unreachable, there must have been some issues with the code."+
@@ -165,6 +182,10 @@ func preDeleteJob(jobKey string) {
 		return
 	}
 	job.PreDeleteCmAndCache(jobKey)
+	if jobCache, ok := job.GetJobCache(jobKey); ok {
+		jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobCache,
+			util.ObjToString(jobCache.JobRankTable), constant.DeleteOperator))
+	}
 }
 
 func deleteJob(joKey string) {

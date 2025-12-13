@@ -106,7 +106,7 @@ func (m *BaseManager) Init() error {
 	}
 	hwlog.RunLog.Infof("manager config: %v", m.Config)
 	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
-	m.MsgHd = application.NewMsgHandler()
+	m.MsgHd = application.NewMsgHandler(m.NodeNums * m.ProcPerNode)
 	m.MsgHd.Start(m.svcCtx)
 
 	m.BusinessHandler = application.NewBusinessStreamProcessor(m.MsgHd)

@@ -86,7 +86,7 @@ func TestBuildJobSignalFromJobInfo(t *testing.T) {
 				MasterAddr:  "192.168.1.2:29500",
 			}
 
-			signal := BuildJobSignalFromJobInfo(jobInfo, defaultHcclInfo, "add")
+			signal := BuildJobSignalFromJobInfo(jobInfo, constant.DefaultHcclJson, constant.AddOperator)
 
 			convey.So(signal.JobId, convey.ShouldEqual, jobInfo.Key)
 			convey.So(signal.JobName, convey.ShouldEqual, jobInfo.Name)
@@ -95,9 +95,9 @@ func TestBuildJobSignalFromJobInfo(t *testing.T) {
 			convey.So(signal.JobStatus, convey.ShouldEqual, jobInfo.Status)
 			convey.So(signal.Time, convey.ShouldEqual, strconv.Itoa(int(jobInfo.AddTime)))
 			convey.So(signal.CmIndex, convey.ShouldEqual, "0")
-			convey.So(signal.Operator, convey.ShouldEqual, "add")
+			convey.So(signal.Operator, convey.ShouldEqual, constant.AddOperator)
 			convey.So(signal.Total, convey.ShouldEqual, strconv.Itoa(jobInfo.TotalCmNum))
-			convey.So(signal.HcclJson, convey.ShouldEqual, defaultHcclInfo)
+			convey.So(signal.HcclJson, convey.ShouldEqual, constant.DefaultHcclJson)
 			convey.So(signal.SharedTorIp, convey.ShouldEqual, jobInfo.SharedTorIp)
 			convey.So(signal.MasterAddr, convey.ShouldEqual, jobInfo.MasterAddr)
 			convey.So(signal.DeleteTime, convey.ShouldBeEmpty)
