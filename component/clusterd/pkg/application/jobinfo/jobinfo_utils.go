@@ -32,7 +32,6 @@ const (
 	StatusJobFail = "failed"
 	// StatusJobCompleted is the complete job status
 	StatusJobCompleted = "complete"
-	defaultHcclInfo    = `{"status":"initializing"}`
 )
 
 var jobUpdateChan = make(chan job.JobSummarySignal, jobUpdateChanCache)

@@ -71,6 +71,7 @@ type PfPlugin struct {
 	report       map[string]constant.ProfilingResult
 	workerStatus workerExecStatus
 	pullMsg      []infrastructure.Msg
+	workerNum    int
 }
 
 // Name get pluginName
@@ -81,6 +82,7 @@ func (p *PfPlugin) Name() string {
 // Predicate Profiling Plugin whether it can resolve SnapShot
 func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	hwlog.RunLog.Debugf("%s shot: %v", p.Name(), shot)
+	p.workerNum = shot.WorkerNum
 	p.initWorkerStatusMap(shot)
 	cmd, errCmd := p.getProfilingCmd(shot)
 	res, errRes := p.getProfilingResult(shot)
@@ -150,7 +152,7 @@ func (p *PfPlugin) getProfilingCmd(shot storage.SnapShot) (constant.ProfilingDom
 	if err != nil {
 		return switchOff, err
 	}
-	if newCmd == p.cmd {
+	if newCmd == p.workerStatus.cmd {
 		return switchOff, fmt.Errorf("get domain cmd is equal to last cmd")
 	}
 	return newCmd, nil
@@ -217,8 +219,9 @@ func (p *PfPlugin) notifyStateChange(
 
 func (p *PfPlugin) handleNewCmd() {
 	if p.workerStatus.cmd != p.cmd {
-		p.workerStatus.cmd = p.cmd
-		p.changeCmd(p.cmd)
+		if p.changeCmd(p.cmd) {
+			p.workerStatus.cmd = p.cmd
+		}
 	}
 }
 
@@ -250,9 +253,14 @@ func NewProfilingPlugin() infrastructure.ManagerPlugin {
 	return plugin
 }
 
-func (p *PfPlugin) changeCmd(cmd constant.ProfilingDomainCmd) {
+func (p *PfPlugin) changeCmd(cmd constant.ProfilingDomainCmd) bool {
 	hwlog.RunLog.Infof("changeCmd: %v", cmd)
 	p.pullMsg = make([]infrastructure.Msg, 0)
+	workers := p.getAllWorkerName()
+	hwlog.RunLog.Debugf("changeCmd, workers: %v,p.workerNum=%v", workers, p.workerNum)
+	if len(workers) < p.workerNum {
+		return false
+	}
 	p.pullMsg = append(p.pullMsg, infrastructure.Msg{
 		Receiver: p.getAllWorkerName(),
 		Body: storage.MsgBody{
@@ -260,6 +268,7 @@ func (p *PfPlugin) changeCmd(cmd constant.ProfilingDomainCmd) {
 			Code:    utils.ProfilingCmdToBizCode(cmd),
 		},
 	})
+	return true
 }
 
 func (p *PfPlugin) getAllWorkerName() []string {

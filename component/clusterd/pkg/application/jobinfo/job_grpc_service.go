@@ -122,7 +122,6 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 		cltState.safeCloseChannel()
 		hwlog.RunLog.Infof("client %s disconnected, role: %s", req.ClientId, cltState.role)
 	}()
-
 	for {
 		select {
 		case <-ctx.Done():

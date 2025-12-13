@@ -68,7 +68,7 @@ func testInvalidJobNsNameFormat(t *testing.T) {
 }
 
 func testConfigMapNotExistAndCreateSuccess(t *testing.T) {
-	convey.Convey("when configmap does not exist and creation succeeds", t, func() {
+	convey.Convey("when configmap does not exist and creation succeeds, but cm file not mount", t, func() {
 		ps := NewSwitchManager(context.Background())
 		req := &profiling.DataTypeReq{
 			JobNsName:       "namespace/jobname",
@@ -81,7 +81,7 @@ func testConfigMapNotExistAndCreateSuccess(t *testing.T) {
 		setupConfigMapNotFoundMock(patches)
 		setupCreateDataTraceCmSuccessMock(patches)
 		_, err := ps.ModifyTrainingDataTraceSwitch(context.Background(), req)
-		convey.So(err, convey.ShouldBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
@@ -106,7 +106,7 @@ func testConfigMapNotExistAndCreateFail(t *testing.T) {
 }
 
 func testConfigMapExistAndUpdateSuccess(t *testing.T) {
-	convey.Convey("when configmap exists and update succeeds", t, func() {
+	convey.Convey("when configmap exists and update succeeds, but cm file not mount", t, func() {
 		ps := NewSwitchManager(context.Background())
 		req := &profiling.DataTypeReq{
 			JobNsName:       JobNsName,
@@ -123,7 +123,7 @@ func testConfigMapExistAndUpdateSuccess(t *testing.T) {
 
 		_, err := ps.ModifyTrainingDataTraceSwitch(context.Background(), req)
 
-		convey.So(err, convey.ShouldBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 

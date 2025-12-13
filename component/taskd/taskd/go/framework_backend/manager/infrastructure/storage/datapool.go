@@ -37,6 +37,8 @@ type SnapShot struct {
 	WorkerInfos  *WorkerInfos
 	ClusterInfos *ClusterInfos
 	MgrInfos     *MgrInfo
+	// WorkerNum is the number of worker
+	WorkerNum int
 }
 
 // MsgQueue the queue store message
@@ -208,6 +210,7 @@ func (s *SnapShot) deepCopy() (*SnapShot, error) {
 	if s.MgrInfos != nil {
 		clone.MgrInfos = deepCopyMgr(s.MgrInfos)
 	}
+	clone.WorkerNum = s.WorkerNum
 	return clone, nil
 }
 

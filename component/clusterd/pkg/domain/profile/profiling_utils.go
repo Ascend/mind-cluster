@@ -7,12 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/kube"
 )
@@ -38,7 +39,7 @@ func (dtc *DataTraceController) IsDataTraceCmExist() (*v1.ConfigMap, error) {
 	}
 	cm, err := kube.GetConfigMap(DataTraceCmPrefix+dtc.JobName, dtc.JobNamespace)
 	if k8serr.IsNotFound(err) {
-		hwlog.RunLog.Warnf("comfigmap [%s/%s] is not in this cluster", dtc.JobNamespace, dtc.JobName)
+		hwlog.RunLog.Warnf("configmap [%s/%s] is not in this cluster", dtc.JobNamespace, dtc.JobName)
 		return nil, err
 	}
 	if err != nil {
@@ -74,9 +75,49 @@ func (dtc *DataTraceController) UpdateDataTraceCm(switchParam *profiling.Profili
 	}
 	dataTraceCm.Data[DataTraceCmProfilingSwitchKey] = string(newProParam)
 	if _, err := kube.UpdateConfigMap(dataTraceCm); err != nil {
-		return fmt.Errorf("failed to update comfigmap [%s/%s], err: %v", dtc.JobNamespace, dtc.JobName, err)
+		return fmt.Errorf("failed to update configmap [%s/%s], err: %v", dtc.JobNamespace, dtc.JobName, err)
 	}
 	return nil
+}
+
+// IsPodsMountProfilingCmPath check pods mount profiling cm path
+func (dtc *DataTraceController) IsPodsMountProfilingCmPath() (bool, error) {
+	jobInfo := job.GetJobByNameSpaceAndName(dtc.JobName, dtc.JobNamespace)
+	pods := pod.GetPodByJobId(jobInfo.Key)
+	if len(pods) == 0 {
+		return false, fmt.Errorf("no pods found for job %s/%s (job ID: %s)",
+			dtc.JobNamespace, dtc.JobName, jobInfo.Key)
+	}
+
+	if err := dtc.checkAllPodsMountPath(pods); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (dtc *DataTraceController) checkAllPodsMountPath(pods map[string]v1.Pod) error {
+	for podKey, podInfo := range pods {
+		if !dtc.isPodMountTargetPath(podInfo) {
+			return fmt.Errorf("pod %s/%s (key: %s) does not mount profiling path %s",
+				podInfo.Namespace, podInfo.Name, podKey, DataTraceConfigPath)
+		}
+	}
+	return nil
+}
+
+func (dtc *DataTraceController) isPodMountTargetPath(pod v1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if len(container.VolumeMounts) == 0 {
+			continue
+		}
+		for _, volumeMount := range container.VolumeMounts {
+			if volumeMount.MountPath == DataTraceConfigPath {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // CreateDataTraceCm creates a new data trace for the given profile
@@ -105,7 +146,7 @@ func (dtc *DataTraceController) CreateDataTraceCm(switchParam *profiling.Profili
 	}
 	cm.Data[DataTraceCmProfilingSwitchKey] = string(newProParam)
 	if _, err := kube.CreateConfigMap(cm); err != nil {
-		return fmt.Errorf("failed to create comfigmap [%s/%s], err: %v", dtc.JobNamespace, dtc.JobName, err)
+		return fmt.Errorf("failed to create configmap [%s/%s], err: %v", dtc.JobNamespace, dtc.JobName, err)
 	}
 	hwlog.RunLog.Infof("configmap [%s/%s] has been created", dtc.JobNamespace, dtc.JobName)
 	return nil

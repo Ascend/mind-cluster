@@ -8,4 +8,6 @@ const (
 	DataTraceCmPrefix = "data-trace-"
 	// DataTraceCmProfilingSwitchKey key of data trace configmap profiling switch
 	DataTraceCmProfilingSwitchKey = "profilingSwitch"
+	// DataTraceConfigPath path of data trace configmap
+	DataTraceConfigPath = "/user/cluster-info/datatrace-config"
 )
