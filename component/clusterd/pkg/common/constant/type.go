@@ -192,7 +192,7 @@ type ServerHccl struct {
 	DeviceList   []Device `json:"device"`
 	ServerID     string   `json:"server_id"` // host ip
 	SuperPodId   int      `json:"super_pod_id"`
-	PodID        string   `json:"-"`
+	PodID        string   `json:"-"` // actual pod name
 	PodNameSpace string   `json:"-"`
 	ServerName   string   `json:"server_name"` // node name
 	ServerSN     string   `json:"server_sn"`   // node sn
@@ -491,6 +491,7 @@ type NetFaultInfo struct {
 
 // SimplePodInfo of Pod
 type SimplePodInfo struct {
-	PodUid  string
-	PodRank string
+	PodUid   string
+	PodRank  string
+	NodeName string
 }

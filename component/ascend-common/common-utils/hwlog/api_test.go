@@ -124,6 +124,32 @@ func TestLoggerPrintWithLimit(t *testing.T) {
 	})
 }
 
+func TestWarnfWithLimit(t *testing.T) {
+	convey.Convey("test api", t, func() {
+		convey.Convey("test warn logger print func with limit", func() {
+			lgConfig := &LogConfig{
+				OnlyToStdout: true,
+				LogLevel:     -1,
+			}
+			lg := new(logger)
+			err := lg.setLogger(lgConfig)
+			convey.So(err, convey.ShouldBeNil)
+			domain := "hccs"
+			logicId := 1
+
+			errFormat := "collect failed ,err:%v"
+			collectErr := fmt.Errorf("detail errs,logicId(%d)", logicId)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+			ResetErrCnt(domain, logicId)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+			lg.WarnfWithLimit(domain, logicId, errFormat, collectErr)
+		})
+	})
+}
+
 func TestValidate(t *testing.T) {
 	convey.Convey("test api", t, func() {
 		convey.Convey("test validate", func() {

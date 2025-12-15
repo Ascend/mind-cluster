@@ -327,13 +327,6 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode, "")...)
 		}
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByNodeInfo(&server, nodeInfo)...)
-		node := kube.GetNode(nodeName)
-		if node == nil || !faultdomain.IsNodeReady(node) {
-			hwlog.RunLog.Debugf("node %s is not ready", nodeName)
-			faultList = append(faultList, serverHcclToFaultRank(server, info, "", "")...)
-			faultDeviceList = append(faultDeviceList, convertToFaultDevice(&server, "",
-				constant.SeparateNPU, constant.EmptyDeviceId, constant.FaultTypeNode))
-		}
 		advanceDeviceInfo := deviceCmForNodeMap[nodeName]
 		faultRankList := processor.findFaultRankForJob(advanceDeviceInfo, nodeName, serverList, info)
 		faultList = append(faultList, faultRankList...)
