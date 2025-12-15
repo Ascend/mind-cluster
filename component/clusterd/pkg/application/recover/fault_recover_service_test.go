@@ -15,6 +15,7 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 )
@@ -25,6 +26,19 @@ const (
 	fakeJobID1      = "fakeJobID1"
 	fakeJobID2      = "fakeJobID2"
 	fakeJobID       = "fakeJobID"
+	testJobID1      = "testJobID1"
+	testServerName1 = "server1"
+	testServerName2 = "server2"
+	testServerName3 = "server3"
+	testPodUid1     = "podUid1"
+	testPodUid2     = "podUid2"
+	testPodUid3     = "podUid3"
+	testNodeName1   = "node1"
+	testNodeName2   = "node2"
+	testRankId1     = "rank1"
+	testRankId2     = "rank2"
+	testRankId3     = "rank3"
+	emptyString     = ""
 )
 
 func TestNotifyFaultInfoForJob(t *testing.T) {
@@ -885,4 +899,172 @@ func TestGetGrpcFormatFaults(t *testing.T) {
 			convey.So(result[2].FaultType, convey.ShouldEqual, constant.NormalFaultType)
 		})
 	})
+}
+
+type getJobServerInfosTestCase struct {
+	name                string
+	jobId               string
+	mockPods            map[string]*constant.SimplePodInfo
+	expectedServerMap   map[string]bool
+	expectedPodToServer map[string]string
+}
+
+func buildGetJobServerInfosTestCases() []getJobServerInfosTestCase {
+	return []getJobServerInfosTestCase{
+		{
+			name:                "should return empty maps when no pods exist",
+			jobId:               testJobID1,
+			mockPods:            map[string]*constant.SimplePodInfo{},
+			expectedServerMap:   map[string]bool{},
+			expectedPodToServer: map[string]string{},
+		},
+		{
+			name:  "should return correct maps when pods have node names",
+			jobId: testJobID1,
+			mockPods: map[string]*constant.SimplePodInfo{
+				testPodUid1: {PodUid: testPodUid1, NodeName: testNodeName1},
+				testPodUid2: {PodUid: testPodUid2, NodeName: testNodeName2},
+			},
+			expectedServerMap: map[string]bool{
+				testNodeName1: true,
+				testNodeName2: true,
+			},
+			expectedPodToServer: map[string]string{
+				testPodUid1: testNodeName1,
+				testPodUid2: testNodeName2,
+			},
+		},
+		{
+			name:  "should skip pods without node names",
+			jobId: testJobID1,
+			mockPods: map[string]*constant.SimplePodInfo{
+				testPodUid1: {PodUid: testPodUid1, NodeName: testNodeName1},
+				testPodUid2: {PodUid: testPodUid2, NodeName: emptyString},
+				testPodUid3: {PodUid: testPodUid3, NodeName: testNodeName2},
+			},
+			expectedServerMap: map[string]bool{
+				testNodeName1: true,
+				testNodeName2: true,
+			},
+			expectedPodToServer: map[string]string{
+				testPodUid1: testNodeName1,
+				testPodUid3: testNodeName2,
+			},
+		},
+	}
+}
+
+func TestGetJobServerInfos(t *testing.T) {
+	testCases := buildGetJobServerInfosTestCases()
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			patch := gomonkey.ApplyFuncReturn(pod.GetSimplePodByJobId, tc.mockPods)
+			defer patch.Reset()
+			serverMap, podToServerMap := getJobServerInfos(tc.jobId)
+			convey.So(serverMap, convey.ShouldResemble, tc.expectedServerMap)
+			convey.So(podToServerMap, convey.ShouldResemble, tc.expectedPodToServer)
+		})
+	}
+}
+
+type preHandleFaultInfoTestCase struct {
+	name                   string
+	jobId                  string
+	faultInfo              constant.JobFaultInfo
+	mockServerMap          map[string]bool
+	mockPodToServerMap     map[string]string
+	expectedFaultDeviceLen int
+	expectedFaultListLen   int
+}
+
+func buildPreHandleFaultInfoTestCases1() []preHandleFaultInfoTestCase {
+	return []preHandleFaultInfoTestCase{
+		{
+			name:  "should return early when fault list is empty",
+			jobId: testJobID1,
+			faultInfo: constant.JobFaultInfo{
+				FaultList: []constant.FaultRank{},
+			},
+			expectedFaultDeviceLen: 0,
+			expectedFaultListLen:   0,
+		},
+		{
+			name:  "should filter fault device not in current server list",
+			jobId: testJobID1,
+			faultInfo: constant.JobFaultInfo{
+				FaultList: []constant.FaultRank{
+					{PodUid: testPodUid1, RankId: testRankId1},
+				},
+				FaultDevice: []constant.FaultDevice{
+					{ServerName: testServerName1},
+					{ServerName: testServerName3},
+				},
+			},
+			mockServerMap: map[string]bool{
+				testServerName1: true,
+				testServerName2: true,
+			},
+			mockPodToServerMap: map[string]string{
+				testPodUid1: testServerName1,
+			},
+			expectedFaultDeviceLen: 1,
+			expectedFaultListLen:   1,
+		},
+	}
+}
+
+func buildPreHandleFaultInfoTestCases2() []preHandleFaultInfoTestCase {
+	const num1 = 1
+	const num2 = 2
+	return []preHandleFaultInfoTestCase{
+		{
+			name:  "should filter fault list when pod not running on fault server",
+			jobId: testJobID1,
+			faultInfo: constant.JobFaultInfo{
+				FaultList: []constant.FaultRank{
+					{PodUid: testPodUid1, RankId: testRankId1},
+					{PodUid: testPodUid2, RankId: testRankId2},
+					{PodUid: testPodUid3, RankId: testRankId3},
+				},
+				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1}},
+			},
+			mockServerMap: map[string]bool{testServerName1: true, testServerName2: true},
+			mockPodToServerMap: map[string]string{
+				testPodUid1: testServerName1,
+				testPodUid2: testServerName2,
+				testPodUid3: testServerName1,
+			},
+			expectedFaultDeviceLen: num1,
+			expectedFaultListLen:   num2},
+		{name: "should skip pending pods without server mapping",
+			jobId: testJobID1,
+			faultInfo: constant.JobFaultInfo{
+				FaultList: []constant.FaultRank{
+					{PodUid: testPodUid1, RankId: testRankId1},
+					{PodUid: testPodUid2, RankId: testRankId2},
+				},
+				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1}},
+			},
+			mockServerMap:          map[string]bool{testServerName1: true},
+			mockPodToServerMap:     map[string]string{testPodUid1: testServerName1},
+			expectedFaultDeviceLen: num1,
+			expectedFaultListLen:   num1},
+	}
+}
+
+func TestPreHandleFaultInfo(t *testing.T) {
+	var testCases []preHandleFaultInfoTestCase
+	testCases = append(testCases, buildPreHandleFaultInfoTestCases1()...)
+	testCases = append(testCases, buildPreHandleFaultInfoTestCases2()...)
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			service := &FaultRecoverService{}
+			faultInfo := tc.faultInfo
+			patch := gomonkey.ApplyFuncReturn(getJobServerInfos, tc.mockServerMap, tc.mockPodToServerMap)
+			defer patch.Reset()
+			service.preHandleFaultInfo(tc.jobId, &faultInfo)
+			convey.So(len(faultInfo.FaultDevice), convey.ShouldEqual, tc.expectedFaultDeviceLen)
+			convey.So(len(faultInfo.FaultList), convey.ShouldEqual, tc.expectedFaultListLen)
+		})
+	}
 }

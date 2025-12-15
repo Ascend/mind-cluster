@@ -164,8 +164,9 @@ func GetSimplePodByJobId(jobKey string) map[string]*constant.SimplePodInfo {
 		// podRank may be empty string
 		podRank := pod.Annotations[api.PodRankIndexAnno]
 		result[uid] = &constant.SimplePodInfo{
-			PodUid:  uid,
-			PodRank: podRank,
+			PodUid:   uid,
+			PodRank:  podRank,
+			NodeName: pod.Spec.NodeName,
 		}
 	}
 	return result

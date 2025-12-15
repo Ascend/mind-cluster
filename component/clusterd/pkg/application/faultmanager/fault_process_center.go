@@ -36,6 +36,10 @@ func (center *faultProcessCenter) Process() {
 	cmprocess.DeviceCenter.Process()
 	cmprocess.NodeCenter.Process()
 	jobprocess.FaultJobCenter.Process()
+	// notify volcano after notify fault recover service to fix the bug: push original node fault to the new pod
+	cmprocess.SwitchCenter.NotifySubscriber()
+	cmprocess.DeviceCenter.NotifySubscriber()
+	cmprocess.NodeCenter.NotifySubscriber()
 }
 
 func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {

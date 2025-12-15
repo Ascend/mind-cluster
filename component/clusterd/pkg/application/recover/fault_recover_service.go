@@ -132,11 +132,11 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultList=%v", faultInfo.JobId, faultInfo.FaultList)
 	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultDevice=%v", faultInfo.JobId, faultInfo.FaultDevice)
 	if s.skipHandleSubHealthyFaults(controller, &faultInfo) {
-		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId,
+		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId+"SkipHandleSubHealthy",
 			"jobId=%s skip handle subHealthy faults", faultInfo.JobId)
 		return
 	}
-	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId)
+	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId+"SkipHandleSubHealthy")
 	subHealthyHotSwitch := faultInfo.HealthyState == constant.SubHealthyState && controller.jobInfo.HotSwitch
 	grpcFormatFaults := s.getGrpcFormatFaults(faultInfo, controller)
 	if len(grpcFormatFaults) == 0 {
@@ -223,11 +223,11 @@ func skipHandleSubHealthyHotSwitch(ctl *EventController, faultInfo *constant.Job
 	}
 	// If it is in another state machine process, skip for this time
 	if ctl.state.GetState() != common.InitState {
-		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, ctl.jobInfo.JobId,
+		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, ctl.jobInfo.JobId+"InAnotherState",
 			"not handle subhealth hotswitch when state machine is in another state, jobId=%s", ctl.jobInfo.JobId)
 		return true
 	}
-	hwlog.ResetErrCnt(constant.SubHealthyState, ctl.jobInfo.JobId)
+	hwlog.ResetErrCnt(constant.SubHealthyState, ctl.jobInfo.JobId+"InAnotherState")
 	newFaultRankList := make([]constant.FaultRank, 0)
 	faultPods := map[string]struct{}{}
 	currentHandlePod := ""
@@ -285,12 +285,79 @@ func (s *FaultRecoverService) checkFault(allJobFaultInfo map[string]constant.Job
 		if !s.registered(jobId) {
 			continue
 		}
+		s.preHandleFaultInfo(jobId, &jobFaultInfo)
 		if len(jobFaultInfo.FaultList) <= 0 {
 			continue
 		}
 		registeredJobInfo = append(registeredJobInfo, jobFaultInfo)
 	}
 	s.dealWithJobFaultInfo(registeredJobInfo)
+}
+
+func (s *FaultRecoverService) preHandleFaultInfo(jobId string, faultInfo *constant.JobFaultInfo) {
+	if len(faultInfo.FaultList) <= 0 {
+		return
+	}
+	const logDomain = "preHandleFaultInfo"
+	currentServerMap, podToServerMap := getJobServerInfos(jobId)
+	currentFaultServerMap := make(map[string]bool)
+	newFaultDevice := make([]constant.FaultDevice, 0)
+	newFaultList := make([]constant.FaultRank, 0)
+	for _, device := range faultInfo.FaultDevice {
+		if !currentServerMap[device.ServerName] {
+			hwlog.RunLog.WarnfWithLimit(logDomain, jobId+device.ServerName,
+				"jobId=%s, fault device [%s] is not in current server list", jobId, device.ServerName)
+			continue
+		}
+		hwlog.ResetErrCnt(logDomain, jobId+device.ServerName)
+		currentFaultServerMap[device.ServerName] = true
+		newFaultDevice = append(newFaultDevice, device)
+	}
+	if len(newFaultDevice) != len(faultInfo.FaultDevice) {
+		hwlog.RunLog.WarnfWithLimit(logDomain, jobId+"faultDeviceChanged",
+			"jobId=%s, FaultDevice has changed, old:[%v],new:[%v]", jobId, faultInfo.FaultDevice, newFaultDevice)
+	} else {
+		hwlog.ResetErrCnt(logDomain, jobId+"faultDeviceChanged")
+	}
+	faultInfo.FaultDevice = newFaultDevice
+	for _, fault := range faultInfo.FaultList {
+		actualServerName, ok := podToServerMap[fault.PodUid]
+		if !ok { // pending pod, ignore
+			continue
+		}
+		logUniqueKey := jobId + fault.PodUid + "notRunningOnFaultServer"
+		if _, ok := currentFaultServerMap[actualServerName]; !ok {
+			hwlog.RunLog.WarnfWithLimit(logDomain, logUniqueKey,
+				"jobId=%s, pod [%s/%s] is not running on fault server", jobId, actualServerName, fault.PodUid)
+			continue
+		}
+		hwlog.ResetErrCnt(logDomain, logUniqueKey)
+		newFaultList = append(newFaultList, fault)
+	}
+	if len(newFaultList) != len(faultInfo.FaultList) {
+		hwlog.RunLog.WarnfWithLimit(logDomain, jobId+"faultListChanged",
+			"jobId=%s, FaultList has changed, old:[%v],new:[%v]", jobId, faultInfo.FaultList, newFaultList)
+	} else {
+		hwlog.ResetErrCnt(logDomain, jobId+"faultListChanged")
+	}
+	faultInfo.FaultList = newFaultList
+}
+
+func getJobServerInfos(jobId string) (map[string]bool, map[string]string) {
+	podsInJob := pod.GetSimplePodByJobId(jobId)
+	var currentServerMap = make(map[string]bool)
+	var podToServerMap = make(map[string]string)
+	for _, pod := range podsInJob {
+		if pod.NodeName != "" {
+			currentServerMap[pod.NodeName] = true
+			podToServerMap[pod.PodUid] = pod.NodeName
+			continue
+		}
+		hwlog.RunLog.Warnf("jobId=%s pod [%v] is not scheduled", jobId, pod.PodUid)
+	}
+	hwlog.RunLog.Debugf("jobId=%s, currentServerMap: %v", jobId, currentServerMap)
+	hwlog.RunLog.Debugf("jobId=%s, podToServerMap: %v", jobId, podToServerMap)
+	return currentServerMap, podToServerMap
 }
 
 func (s *FaultRecoverService) checkFaultFromFaultCenter() {
