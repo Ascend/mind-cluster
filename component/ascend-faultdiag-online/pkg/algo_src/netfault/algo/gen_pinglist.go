@@ -293,9 +293,6 @@ func setLayerPort(infoStr []string) string {
 	for i := 0; i < infoLayerNum-1; i++ {
 		if strings.Contains(infoStr[i+1], nSlotConstant) {
 			npuLayerArr := strings.Split(infoStr[infoLayerNum-1], dotIntervalChar)
-			if len(npuLayerArr) < baseSegmentNum {
-				return ""
-			}
 			part := strings.Split(npuLayerArr[0], normalIntervalChar)
 			if len(part) != baseSegmentNum {
 				return ""
@@ -312,18 +309,16 @@ func setLayerPort(infoStr []string) string {
 		}
 		curLayerStr := strings.ReplaceAll(infoStr[i], ":0", "")
 		childLayerStr := strings.ReplaceAll(infoStr[i+1], ":0", "")
-		curLayerInfoArr := strings.Split(curLayerStr, dotIntervalChar)
 		childLayerInfoArr := strings.Split(childLayerStr, dotIntervalChar)
-		if len(curLayerInfoArr) != baseSegmentNum || len(childLayerInfoArr) != baseSegmentNum {
-			hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr or curLayerInfoArr is less than: %d",
-				baseSegmentNum)
-			return ""
-		}
 		// 获取有实际意义的目标层级字符串
 		var targetStr string
 		if childLayerInfoArr[0] != "NA" {
 			targetStr = childLayerInfoArr[0]
 		} else {
+			if len(childLayerInfoArr) < baseSegmentNum {
+				hwlog.RunLog.Errorf("[NETFAULT ALGO]the length of childLayerInfoArr is less than: %d", baseSegmentNum)
+				return ""
+			}
 			targetStr = childLayerInfoArr[1]
 		}
 		part := strings.Split(targetStr, normalIntervalChar)
@@ -795,7 +790,7 @@ func (nd *NetDetect) getSameNumDstIp(srcIp string, dstIps []string) string {
 	if npuInfo, ok := nd.curNpuInfo[srcIp]; ok {
 		srcNpuInfo = npuInfo
 	} else {
-		hwlog.RunLog.Error("[ALGO] can't find srcIp: %v in NpuInfo, superPodId: %v", srcIp, nd.curSuperPodId)
+		hwlog.RunLog.Errorf("[ALGO] can't find srcIp: %s in NpuInfo, superPodId: %s", srcIp, nd.curSuperPodId)
 		return ""
 	}
 
@@ -804,7 +799,7 @@ func (nd *NetDetect) getSameNumDstIp(srcIp string, dstIps []string) string {
 		if npuInfo, ok := nd.curNpuInfo[dstIps[i]]; ok {
 			dstNpuInfo = npuInfo
 		} else {
-			hwlog.RunLog.Error("[ALGO] can't find dstIp: %v in NpuInfo, superPodId: %v",
+			hwlog.RunLog.Errorf("[ALGO] can't find dstIp: %s in NpuInfo, superPodId: %s",
 				dstIps[i], nd.curSuperPodId)
 			continue
 		}
@@ -971,7 +966,7 @@ func (nd *NetDetect) processBothAxis(aiPingStrategy *AiPingStrategy, srcIps []st
 func processCrossAxis(aiPingStrategy *AiPingStrategy, srcIps []string, dstIps []string, pingDictKey string) {
 	// 确保长度一致
 	if len(srcIps) != len(dstIps) {
-		hwlog.RunLog.Warnf("[ALGO] length between srcIps and dstIps is not equal")
+		hwlog.RunLog.Warn("[ALGO] length between srcIps and dstIps is not equal")
 		return
 	}
 
@@ -995,7 +990,7 @@ func processCrossAxis(aiPingStrategy *AiPingStrategy, srcIps []string, dstIps []
 func processSameAxis(aiPingStrategy *AiPingStrategy, srcIps []string, dstIps []string, pingDictKey string) {
 	// 确保长度一致
 	if len(srcIps) != len(dstIps) {
-		hwlog.RunLog.Warnf("[ALGO] length between srcIps and dstIps is not equal")
+		hwlog.RunLog.Warn("[ALGO] length between srcIps and dstIps is not equal")
 		return
 	}
 
