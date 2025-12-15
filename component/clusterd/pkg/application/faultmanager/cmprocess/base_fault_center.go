@@ -54,7 +54,12 @@ func (baseCenter *baseFaultCenter[T]) Process() {
 		}
 		processingCm = cmType.AllConfigmap
 	}
-	if baseCenter.setProcessedCm(processingCm) {
+	baseCenter.setProcessedCm(processingCm)
+}
+
+// NotifySubscriber notify subscriber
+func (baseCenter *baseFaultCenter[T]) NotifySubscriber() {
+	if baseCenter.cmManager.IsChanged() {
 		baseCenter.notifySubscriber()
 	}
 }

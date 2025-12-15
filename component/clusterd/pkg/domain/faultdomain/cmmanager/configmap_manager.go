@@ -25,6 +25,7 @@ type FaultCenterCmManager[T constant.ConfigMapInterface] struct {
 	cmBuffer    *collector.ConfigmapCollectBuffer[T]
 	originalCm  ConfigMap[T]
 	processedCm ConfigMap[T]
+	isChanged   bool
 }
 
 func init() {
@@ -48,22 +49,27 @@ func init() {
 	}
 }
 
+// GetOriginalCm return original configmap
 func (manager *FaultCenterCmManager[T]) GetOriginalCm() ConfigMap[T] {
 	manager.mutex.RLock()
 	defer manager.mutex.RUnlock()
 	return manager.originalCm.deepCopy()
 }
 
+// SetProcessedCm set processed configmap
 func (manager *FaultCenterCmManager[T]) SetProcessedCm(cm ConfigMap[T]) bool {
 	manager.mutex.Lock()
 	defer manager.mutex.Unlock()
 	if manager.processedCm.equal(cm) {
+		manager.isChanged = false
 		return false
 	}
+	manager.isChanged = true
 	manager.processedCm = cm.deepCopy()
 	return true
 }
 
+// GetProcessedCm return processed configmap
 func (manager *FaultCenterCmManager[T]) GetProcessedCm() ConfigMap[T] {
 	manager.mutex.RLock()
 	defer manager.mutex.RUnlock()
@@ -76,12 +82,18 @@ func (manager *FaultCenterCmManager[T]) updateOriginalCm(newInfo T, isAdd bool) 
 	manager.originalCm.updateCmInfo(newInfo, isAdd)
 }
 
+// UpdateBatchOriginalCm update original configmap
 func (manager *FaultCenterCmManager[T]) UpdateBatchOriginalCm() []constant.InformerCmItem[T] {
 	informerCms := manager.cmBuffer.Pop()
 	for _, cm := range informerCms {
 		manager.updateOriginalCm(cm.Data, cm.IsAdd)
 	}
 	return informerCms
+}
+
+// IsChanged return whether the processedCm is changed
+func (manager *FaultCenterCmManager[T]) IsChanged() bool {
+	return manager.isChanged
 }
 
 func (cm *ConfigMap[T]) deepCopy() ConfigMap[T] {

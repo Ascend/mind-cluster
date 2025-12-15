@@ -207,6 +207,15 @@ func (lg *logger) WarnfWithCtx(ctx context.Context, format string, args ...inter
 	}
 }
 
+// WarnfWithLimit record warn for default times (default 3),domain is for logType of msg,
+// id is a unique identifier of this logType, you can reset the counter by call ResetErrCnt
+func (lg *logger) WarnfWithLimit(domain string, id interface{}, format string, args ...interface{}) {
+	if needPrint, extraErrLog := IsNeedPrintWithSpecifiedCounts(domain, id, ProblemOccurMaxNumbers); needPrint {
+		format = fmt.Sprintf("%s %s", format, extraErrLog)
+		lg.WarnfWithCtx(nil, format, args...)
+	}
+}
+
 // Error record error not format
 func (lg *logger) Error(args ...interface{}) {
 	lg.ErrorWithCtx(nil, args...)
