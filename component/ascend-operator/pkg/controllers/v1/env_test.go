@@ -35,6 +35,18 @@ const (
 	ascend910vir2c       = "huawei.com/Ascend910-2c"
 	chipsPerNode         = "16"
 	ascend910DownwardAPI = "metadata.annotations['huawei.com/Ascend910']"
+	testEnvKey1          = "TEST_ENV_KEY_1"
+	testEnvKey2          = "TEST_ENV_KEY_2"
+	testEnvValue1        = "test_value_1"
+	testEnvValue2        = "test_value_2"
+	testEnvValue3        = "test_value_3"
+	commaSeparator       = ","
+	msRecoverPrefix      = `'{`
+	msRecoverSuffix      = `}'`
+	strategy1            = "strategy1"
+	strategy2            = "strategy2"
+	strategy3            = "strategy3"
+	containerIndexZero   = 0
 )
 
 // TestIsVirtualResourceReq test isVirtualResourceReq
@@ -506,4 +518,203 @@ func buildTestAddSubhealthyEnvCases(num3 int, num4 int) []struct {
 			expectedEnvs:   map[string]string{}},
 	}
 	return cases
+}
+
+func TestExtractMsRecoverContent(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "should return empty string when input is empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "should extract content when input has correct format",
+			input:    `'{strategy1,strategy2}'`,
+			expected: "strategy1,strategy2",
+		},
+		{
+			name:     "should extract content when input has spaces",
+			input:    `'{ strategy1 , strategy2 }'`,
+			expected: "strategy1 , strategy2",
+		},
+		{
+			name:     "should return trimmed content when input has prefix and suffix",
+			input:    `'{content}'`,
+			expected: "content",
+		},
+		{
+			name:     "should remove suffix when input has no prefix",
+			input:    "content}'",
+			expected: "content",
+		},
+		{
+			name:     "should remove prefix when input has no suffix",
+			input:    `'{content`,
+			expected: "content",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractMsRecoverContent(tc.input)
+			convey.Convey(tc.name, t, func() {
+				convey.So(result, convey.ShouldEqual, tc.expected)
+			})
+		})
+	}
+}
+
+func TestMergeEnvValue(t *testing.T) {
+	testCases := buildTestMergeEnvValueCases()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := mergeEnvValue(tc.envKey, tc.oldValue, tc.newValue)
+			convey.Convey(tc.name, t, func() {
+				convey.So(result, convey.ShouldEqual, tc.expected)
+			})
+		})
+	}
+}
+
+type TestEnvValueCase struct {
+	name           string
+	envKey         string
+	oldValue       string
+	newValue       string
+	expected       string
+	initialEnvs    []corev1.EnvVar
+	envValue       string
+	expectedEnvs   []corev1.EnvVar
+	expectedLength int
+}
+
+func buildTestMergeEnvValueCases() []TestEnvValueCase {
+	highAvailMerged := strategy1 + commaSeparator + strategy2 + commaSeparator + strategy3
+	msRecoverMerged := msRecoverPrefix + strategy1 + commaSeparator + strategy2 + commaSeparator +
+		strategy3 + msRecoverSuffix
+	return []TestEnvValueCase{
+		{name: "should merge and deduplicate when envKey is HighAvailableEnv",
+			envKey:   api.HighAvailableEnv,
+			oldValue: strategy1 + commaSeparator + strategy2,
+			newValue: strategy2 + commaSeparator + strategy3,
+			expected: highAvailMerged},
+		{name: "should return new value when oldValue is empty for HighAvailableEnv",
+			envKey:   api.HighAvailableEnv,
+			oldValue: "",
+			newValue: strategy1 + commaSeparator + strategy2,
+			expected: strategy1 + commaSeparator + strategy2},
+		{name: "should return old value when newValue is empty for HighAvailableEnv",
+			envKey:   api.HighAvailableEnv,
+			oldValue: strategy1 + commaSeparator + strategy2,
+			newValue: "",
+			expected: strategy1 + commaSeparator + strategy2},
+		{name: "should merge and deduplicate when envKey is MsRecoverEnv",
+			envKey:   api.MsRecoverEnv,
+			oldValue: msRecoverPrefix + strategy1 + commaSeparator + strategy2 + msRecoverSuffix,
+			newValue: msRecoverPrefix + strategy2 + commaSeparator + strategy3 + msRecoverSuffix,
+			expected: msRecoverMerged},
+		{name: "should return new value when oldValue is empty for MsRecoverEnv",
+			envKey:   api.MsRecoverEnv,
+			oldValue: "",
+			newValue: msRecoverPrefix + strategy1 + msRecoverSuffix,
+			expected: msRecoverPrefix + strategy1 + msRecoverSuffix},
+		{name: "should return new value when envKey is not special",
+			envKey:   testEnvKey1,
+			oldValue: testEnvValue1,
+			newValue: testEnvValue2,
+			expected: testEnvValue2},
+		{name: "should handle spaces in HighAvailableEnv values",
+			envKey:   api.HighAvailableEnv,
+			oldValue: " " + strategy1 + " , " + strategy2 + " ",
+			newValue: strategy2 + " , " + strategy3,
+			expected: strategy1 + commaSeparator + strategy2 + commaSeparator + strategy3},
+	}
+}
+
+func TestAddEnvValueWithDedup(t *testing.T) {
+	testCases := buildTestAddEnvValueWithDedupCases()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			pod := createPodTemplateWithEnvs(tc.initialEnvs)
+			addEnvValueWithDedup(pod, tc.envKey, tc.envValue, containerIndexZero)
+			convey.Convey(tc.name, t, func() {
+				verifyEnvVars(t, pod, tc.expectedEnvs, tc.expectedLength)
+			})
+		})
+	}
+}
+
+func buildTestAddEnvValueWithDedupCases() []TestEnvValueCase {
+	highAvailMergedValue := strategy1 + commaSeparator + strategy2 + commaSeparator + strategy3
+	msRecoverMergedValue := msRecoverPrefix + strategy1 + commaSeparator + strategy2 + msRecoverSuffix
+	return []TestEnvValueCase{
+		{name: "should append new env when env does not exist",
+			initialEnvs:    []corev1.EnvVar{},
+			envKey:         testEnvKey1,
+			envValue:       testEnvValue1,
+			expectedEnvs:   []corev1.EnvVar{{Name: testEnvKey1, Value: testEnvValue1}},
+			expectedLength: 1},
+		{name: "should overwrite existing env when envKey is not special",
+			initialEnvs:    []corev1.EnvVar{{Name: testEnvKey1, Value: testEnvValue1}},
+			envKey:         testEnvKey1,
+			envValue:       testEnvValue2,
+			expectedEnvs:   []corev1.EnvVar{{Name: testEnvKey1, Value: testEnvValue2}},
+			expectedLength: 1},
+		{name: "should merge values when envKey is HighAvailableEnv and env exists",
+			initialEnvs:    []corev1.EnvVar{{Name: api.HighAvailableEnv, Value: strategy1 + commaSeparator + strategy2}},
+			envKey:         api.HighAvailableEnv,
+			envValue:       strategy2 + commaSeparator + strategy3,
+			expectedEnvs:   []corev1.EnvVar{{Name: api.HighAvailableEnv, Value: highAvailMergedValue}},
+			expectedLength: 1},
+		{name: "should merge values when envKey is MsRecoverEnv and env exists",
+			initialEnvs: []corev1.EnvVar{
+				{Name: api.MsRecoverEnv, Value: msRecoverPrefix + strategy1 + msRecoverSuffix},
+			},
+			envKey:         api.MsRecoverEnv,
+			envValue:       msRecoverPrefix + strategy2 + msRecoverSuffix,
+			expectedEnvs:   []corev1.EnvVar{{Name: api.MsRecoverEnv, Value: msRecoverMergedValue}},
+			expectedLength: 1},
+		{name: "should append new env when envKey exists but different key",
+			initialEnvs: []corev1.EnvVar{{Name: testEnvKey1, Value: testEnvValue1}},
+			envKey:      testEnvKey2,
+			envValue:    testEnvValue2,
+			expectedEnvs: []corev1.EnvVar{
+				{Name: testEnvKey1, Value: testEnvValue1},
+				{Name: testEnvKey2, Value: testEnvValue2},
+			},
+			expectedLength: 2},
+		{name: "should handle multiple envs and update correct one",
+			initialEnvs: []corev1.EnvVar{
+				{Name: testEnvKey1, Value: testEnvValue1},
+				{Name: testEnvKey2, Value: testEnvValue2}},
+			envKey:   testEnvKey1,
+			envValue: testEnvValue3,
+			expectedEnvs: []corev1.EnvVar{
+				{Name: testEnvKey1, Value: testEnvValue3},
+				{Name: testEnvKey2, Value: testEnvValue2}},
+			expectedLength: 2},
+	}
+}
+
+func createPodTemplateWithEnvs(initialEnvs []corev1.EnvVar) *corev1.PodTemplateSpec {
+	return &corev1.PodTemplateSpec{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Env: initialEnvs},
+			},
+		},
+	}
+}
+
+func verifyEnvVars(t *testing.T, pod *corev1.PodTemplateSpec, expectedEnvs []corev1.EnvVar, expectedLength int) {
+	actualEnvs := pod.Spec.Containers[containerIndexZero].Env
+	convey.So(len(actualEnvs), convey.ShouldEqual, expectedLength)
+	for i, expectedEnv := range expectedEnvs {
+		convey.So(actualEnvs[i].Name, convey.ShouldEqual, expectedEnv.Name)
+		convey.So(actualEnvs[i].Value, convey.ShouldEqual, expectedEnv.Value)
+	}
 }
