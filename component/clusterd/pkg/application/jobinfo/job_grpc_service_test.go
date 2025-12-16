@@ -22,11 +22,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
+	jobstorage "clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/job"
 )
 
@@ -100,9 +103,18 @@ func TestJobServerRegister(t *testing.T) {
 // TestJobServerSubscribe tests job summary subscription
 func TestJobServerSubscribe(t *testing.T) {
 	convey.Convey("Given a registered client", t, func() {
+		const (
+			testJob1 = "test-job1"
+			testJob2 = "test-job2"
+			jobNum   = 2
+		)
+		patch := gomonkey.ApplyFunc(jobstorage.GetAllJobCache, func() map[string]constant.JobInfo {
+			return map[string]constant.JobInfo{testJob1: {Key: testJob1}}
+		})
+		defer patch.Reset()
 		ctx := context.Background()
 		server := NewJobServer(ctx)
-		clientID := registerTestClient(server, ctx, CCAgentClientName)
+		clientID := registerTestClient(server, ctx, constant.RoleFdAgent)
 
 		convey.Convey("When subscribing", func() {
 			stream := &mockStream{ctx: ctx}
@@ -113,11 +125,13 @@ func TestJobServerSubscribe(t *testing.T) {
 			}()
 
 			convey.Convey("It should receive broadcast messages", func() {
-				signal := job.JobSummarySignal{JobId: "test-job"}
+				time.Sleep(time.Second)
+				signal := job.JobSummarySignal{JobId: testJob2}
 				server.broadcastJobUpdate(signal)
 				time.Sleep(time.Second)
-				convey.So(len(stream.msgs), convey.ShouldEqual, 1)
-				convey.So(stream.msgs[0].JobId, convey.ShouldEqual, "test-job")
+				convey.So(len(stream.msgs), convey.ShouldEqual, jobNum)
+				convey.So(stream.msgs[0].JobId, convey.ShouldEqual, testJob1)
+				convey.So(stream.msgs[1].JobId, convey.ShouldEqual, testJob2)
 			})
 		})
 	})

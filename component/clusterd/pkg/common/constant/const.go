@@ -369,3 +369,8 @@ const (
 	// PodRankIndexAnno annotation value is rank index of the pod
 	PodRankIndexAnno = "hccl/rankIndex"
 )
+
+const (
+	// RoleFdAgent is the grpc role name of Fault-Diag online
+	RoleFdAgent = "FdAgent"
+)
