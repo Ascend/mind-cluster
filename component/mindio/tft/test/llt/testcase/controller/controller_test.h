@@ -417,7 +417,7 @@ public:
         std::vector<int32_t> replicaCnt = { controllerReplica };
         std::vector<int32_t> replicaOffset = { 0 };
         int32_t ret = controller1->Initialize(0, WORLD_SIZE, enableLocalCopy, enableARF, enableZIT);
-        controller1->uceSwitch_ = true;
+        controller1->retrySwitch_ = true;
         ASSERT_EQ(ret, 0);
 
         std::string ip = CONTROLLER_IP;

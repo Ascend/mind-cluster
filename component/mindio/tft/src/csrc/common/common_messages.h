@@ -70,7 +70,7 @@ struct ReplicaMsg {
     int32_t rank;
     int32_t num;
     bool enableArf;
-    bool enableUce;
+    bool enableRetry;
     bool enableZit;
     int32_t ranks[0];   // replicaCnt + replicaShift + (rankSize + ranks) * groupNum
     bool JudgeVariableValid(uint32_t msgLen, int32_t worldSize) const

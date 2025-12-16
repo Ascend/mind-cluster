@@ -380,7 +380,7 @@ TResult Controller::InitCallback()
     mindXEngine_->RegisterEventHandler(MindXEvent::MINDX_EVENT_ARF,
         [this] (void *ctx, int ctxSize) { return MindXNotifyArfRepair(ctx, ctxSize); });
 
-    mindXEngine_->RegisterEventHandler(MindXEvent::MINDX_EVENT_UCE,
+    mindXEngine_->RegisterEventHandler(MindXEvent::MINDX_EVENT_RETRY,
         [this] (void *ctx, int ctxSize) { return MindXNotifyUceRepair(ctx, ctxSize); });
 
     mindXEngine_->RegisterEventHandler(MindXEvent::MINDX_EVENT_DUMP,
@@ -562,10 +562,10 @@ TResult Controller::MindXNotifyArfRepair(void *ctx, int32_t ctxSize)
 
 TResult Controller::MindXNotifyUceRepair(void *ctx, int32_t ctxSize)
 {
-    repairEvent_ = MindXEvent::MINDX_EVENT_UCE;
+    repairEvent_ = MindXEvent::MINDX_EVENT_RETRY;
 
     auto ret = mindXEngine_->WakeUp();
-    TTP_RET_LOG(ret, "mindx notify uce, ret:" << ret);
+    TTP_RET_LOG(ret, "mindx notify retry, ret:" << ret);
 
     return ret;
 }
@@ -1003,7 +1003,7 @@ TResult Controller::MindXConfirmStrategy(bool isPreLocked)
 
         repairType_ = ConfirmRepairType();
         if (repairType_ == ControllerRepairType::CRT_RETRY) {
-            strategies.push_back(STRATEGY_UCE);
+            strategies.push_back(STRATEGY_RETRY);
             if (arfSwitch_) {
                 strategies.push_back(STRATEGY_ARF);
             }
@@ -1041,7 +1041,7 @@ TResult Controller::HandleRecoverStrategy()
         case MindXEvent::MINDX_EVENT_ARF:
             repairType_ = ControllerRepairType::CRT_ARF;
             return TTP_OK;
-        case MindXEvent::MINDX_EVENT_UCE:
+        case MindXEvent::MINDX_EVENT_RETRY:
             repairType_ = ControllerRepairType::CRT_RETRY;
             return TTP_OK;
         case MindXEvent::MINDX_EVENT_DOWNGRADE:
@@ -1143,7 +1143,7 @@ TResult Controller::EnvClearCallback()
     if (ret != TTP_OK) {
         TTP_LOG_ERROR(msg);
         mindXEngine_->ReportResult(repairResult, msg, errorRankMsg_, errorRankLock_);
-        if (repairEvent_ == MindXEvent::MINDX_EVENT_UCE && canRetryCleanFlag_) {
+        if (repairEvent_ == MindXEvent::MINDX_EVENT_RETRY && canRetryCleanFlag_) {
             ret = MindXReConfirmStrategy();
         } else {
             ret = WaitDumpOrExitStrategy();
@@ -1460,6 +1460,11 @@ TResult Controller::Prelock()
 
     auto [step, ranks] = SelectLockStep();
     repairStep_ = step;
+
+    // 框架侧步数为0无优化器数据，不支持任何快恢
+    if (step == 0) {
+        return TTP_ERROR;
+    }
 
     PrelockMsg *ptr = static_cast<PrelockMsg *>(buffer->DataPtrVoid());
     ptr->step = step;
@@ -1825,7 +1830,7 @@ TResult Controller::InitDpGroupMap(const ReplicaMsg *replicaMsg)
     }
 
     arfSwitch_ = arfSwitch_ & replicaMsg->enableArf;
-    uceSwitch_ = replicaMsg->enableUce;
+    retrySwitch_ = replicaMsg->enableRetry;
     zitSwitch_ = zitSwitch_ & replicaMsg->enableZit;
     int32_t pIdx = replicaMsg->num + replicaMsg->num;
     for (int32_t groupIdx = 0; groupIdx < replicaMsg->num; groupIdx++) {
@@ -1909,11 +1914,8 @@ TResult Controller::HandleHeartBeat(const AccTcpRequestContext &context)
 enum MaskStatusEnum : uint8_t {
     MASK_NORMAL = 0,
     MASK_ERROR,
-    MASK_CHOSEN,
-    // uce used
     MASK_UCE_HIGH,
     MASK_UCE_LOW,
-    MASK_UCE_LOCAL,
 };
 
 TResult Controller::ChooseRank(const RankChooseInfo &rankChooseInfo, std::vector<int32_t> &tmpRankVec, uint32_t repCnt)
@@ -2198,7 +2200,7 @@ RankMask Controller::RepairCheckStatus(const std::vector<int32_t> &rankVec)
 TResult Controller::UCERepair()
 {
     TTP_ASSERT_RETURN(worldSize_ > 0 && worldSize_ <= TTP_MAX_WORLD_SIZE, TTP_ERROR);
-    TTP_LOG_INFO("Start do uce repair");
+    TTP_LOG_INFO("Start do retry repair");
     bool canRepair = (!unableRepair_) && CheckCanRepair();
     std::vector<RepairInfo> rInfo;
     int16_t idx = 0;
@@ -2223,7 +2225,7 @@ TResult Controller::UCERepair()
 
     auto ret = RepairProcess(rInfo);
     if (ret != TTP_OK) {
-        TTP_LOG_ERROR("controller:" << rank_ << " do uce repair failed, ret:" << ret);
+        TTP_LOG_ERROR("controller:" << rank_ << " do retry repair failed, ret:" << ret);
         return TTP_ERROR;
     }
     return TTP_OK;
@@ -2729,7 +2731,7 @@ ControllerRepairType Controller::ConfirmRepairType()
     AutoLock statusMapLock(statusMapLock_, TYPE_READ);
 
     auto [retryFlag, nodeErrorFlag] = ConfirmRepairFlag();
-    TTP_LOG_INFO("uceSwitch:" << uceSwitch_ << ", arfSwitch:" << arfSwitch_ << ", zitSwitch:" << zitSwitch_ <<
+    TTP_LOG_INFO("retrySwitch_:" << retrySwitch_ << ", arfSwitch:" << arfSwitch_ << ", zitSwitch:" << zitSwitch_ <<
         ", retryFlag:" << retryFlag << ", nodeErrorFlag:" << nodeErrorFlag << ", hcclFlag:" <<hcclFlag_);
 
     if (nodeErrorFlag || !retryFlag) {
@@ -2740,7 +2742,7 @@ ControllerRepairType Controller::ConfirmRepairType()
         } else {
             type = ControllerRepairType::CRT_DUMP;
         }
-    } else if (retryFlag && (uceSwitch_ || hcclFlag_)) {
+    } else if (retryFlag && (retrySwitch_ || hcclFlag_)) {
         type = ControllerRepairType::CRT_RETRY;
     }
 

@@ -137,7 +137,7 @@ public:
 
     // init
     TResult Initialize(int32_t rank, int32_t worldSize, bool enableLocalCopy, const AccTlsOption &tlsOption,
-                       bool enableUce = true, bool enableArf = false, bool enableZit = false);
+                       bool enableRetry = true, bool enableArf = false, bool enableZit = false);
 
     // init processor
     TResult Start(std::string &masterIp, int32_t port, std::string localIp = "");  // rank_:ip
@@ -304,7 +304,7 @@ private:
     int32_t groupTypeNum_ = 0;
     bool localCopySwitch_ = false;
     bool arfSwitch_ = false;
-    bool uceSwitch_ = false;
+    bool retrySwitch_ = false;
     bool zitSwitch_ = false;
     bool mindSpore_ = false;
     int32_t startBackup_ = -1;
