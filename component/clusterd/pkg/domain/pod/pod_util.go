@@ -11,6 +11,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -145,7 +146,8 @@ func getEnvFromContainer(container v1.Container, envName string) (bool, string) 
 }
 
 // ConstructRankTableByPod construct rank table by pod
-func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constant.RankTable, int) {
+func ConstructRankTableByPod(
+	podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, replicas int) (constant.RankTable, int) {
 	var rankTable constant.RankTable
 	if replicas <= 0 {
 		hwlog.RunLog.Error("illegal param replicas")
@@ -167,7 +169,12 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 		if len(podDev.Devices) == 0 {
 			continue
 		}
-		serverInfo := getServerInfo(podDev, pod, ipSnMap, podRank)
+		scaleOutType, err := getScaleOutType(podGroup, podsInJob)
+		if err != nil {
+			hwlog.RunLog.Errorf("getScaleOutType failed: %v", err)
+		}
+
+		serverInfo := getServerInfo(scaleOutType, podDev, pod, ipSnMap, podRank)
 		rankTable.ServerList = append(rankTable.ServerList, serverInfo)
 	}
 	sort.Slice(rankTable.ServerList, func(i, j int) bool {
@@ -182,7 +189,8 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 	return rankTable, completedPodNum
 }
 
-func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
+func getServerInfo(scaleOutType string, podDev constant.PodDevice,
+	pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
 	server := constant.ServerHccl{
 		ServerID:     podDev.ServerID,
 		PodID:        podDev.PodName,
@@ -200,6 +208,7 @@ func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]str
 			RankID:        strconv.Itoa(podRank*podDevNum + idx),
 			SuperDeviceID: dev.SuperDeviceID,
 		}
+		setScaleOutNetwork(dev, scaleOutType, &serverDev)
 		server.DeviceList = append(server.DeviceList, serverDev)
 	}
 	return server

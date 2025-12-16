@@ -13,6 +13,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
@@ -115,13 +116,14 @@ func TestGetEnvByPod(t *testing.T) {
 
 func TestInitRankTableByPod(t *testing.T) {
 	convey.Convey("test InitRankTableByPod", t, func() {
+		emptyPodGroup := v1beta1.PodGroup{}
 		convey.Convey("when replicas is 0, podsInJob is empty, completedPodNum should be 0", func() {
-			rankTable, completedPodNum := ConstructRankTableByPod(map[string]v1.Pod{}, 0)
+			rankTable, completedPodNum := ConstructRankTableByPod(emptyPodGroup, map[string]v1.Pod{}, 0)
 			convey.So(completedPodNum, convey.ShouldEqual, 0)
 			convey.So(rankTable.ServerCount, convey.ShouldEqual, "")
 		})
 		convey.Convey("when replicas is 1, podsInJob is empty, completedPodNum should be 0", func() {
-			rankTable, completedPodNum := ConstructRankTableByPod(map[string]v1.Pod{}, 1)
+			rankTable, completedPodNum := ConstructRankTableByPod(emptyPodGroup, map[string]v1.Pod{}, 1)
 			convey.So(completedPodNum, convey.ShouldEqual, 0)
 			convey.So(rankTable.ServerCount, convey.ShouldEqual, "0")
 		})
@@ -129,7 +131,7 @@ func TestInitRankTableByPod(t *testing.T) {
 			podsInJob := make(map[string]v1.Pod)
 			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 			podsInJob[podUid1] = *podDemo1
-			rankTable, completedPodNum := ConstructRankTableByPod(podsInJob, 1)
+			rankTable, completedPodNum := ConstructRankTableByPod(emptyPodGroup, podsInJob, 1)
 			convey.So(completedPodNum, convey.ShouldEqual, 1)
 			convey.So(rankTable.ServerCount, convey.ShouldEqual, "1")
 		})
@@ -138,7 +140,7 @@ func TestInitRankTableByPod(t *testing.T) {
 			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 			podDemo1.Annotations[api.PodRankIndexAnno] = errorPodRankIndexKey
 			podsInJob[podUid1] = *podDemo1
-			rankTable, completedPodNum := ConstructRankTableByPod(podsInJob, 1)
+			rankTable, completedPodNum := ConstructRankTableByPod(emptyPodGroup, podsInJob, 1)
 			convey.So(completedPodNum, convey.ShouldEqual, 0)
 			convey.So(rankTable.ServerCount, convey.ShouldEqual, "0")
 		})

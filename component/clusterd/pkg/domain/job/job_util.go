@@ -136,7 +136,7 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	jobInfo.Status = status
 	jobInfo.IsPreDelete = false
 	var completedPodNum int
-	jobInfo.JobRankTable, completedPodNum = pod.ConstructRankTableByPod(podsInJob, jobInfo.Replicas)
+	jobInfo.JobRankTable, completedPodNum = pod.ConstructRankTableByPod(podGroup, podsInJob, jobInfo.Replicas)
 	if jobInfo.Framework == "" {
 		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
 		jobInfo.Framework = pod.GetModelFramework(podsInJob)
