@@ -149,6 +149,7 @@ func main() {
 	startInformer(ctx)
 	initStatisticModule(ctx)
 	go job.RefreshFaultJobInfo(ctx)
+	hwlog.RunLog.Info("clusterd starts to serve")
 	signalCatch(cancel)
 }
 
