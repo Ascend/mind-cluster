@@ -190,6 +190,7 @@ var nodeInformer cache.SharedIndexInformer
 
 // InitPodAndNodeInformer init pod informer
 func InitPodAndNodeInformer() {
+	hwlog.RunLog.Info("start to init pod and node informer")
 	factory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0)
 	podInformer = factory.Core().V1().Pods().Informer()
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -329,6 +330,7 @@ func GetCmInformer() cache.SharedIndexInformer {
 
 // InitCMInformer init configmap informer
 func InitCMInformer() {
+	hwlog.RunLog.Info("start to init CM informer")
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = api.CIMCMLabelKey + "=" + constant.CmConsumerValue
@@ -589,6 +591,7 @@ func checkConfigMapIsSwitchInfo(obj interface{}) bool {
 
 // InitPubFaultCMInformer init cm informer for public fault
 func InitPubFaultCMInformer() {
+	hwlog.RunLog.Info("start to init PubFault CM informer")
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient.ClientSet, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = api.PubFaultCMLabelKey + "=" + constant.CmConsumerValue
@@ -646,6 +649,7 @@ func cmPubFaultHandler(oldObj, newObj interface{}, operator string) {
 
 // InitACJobInformer is to init acJob informer
 func InitACJobInformer() {
+	hwlog.RunLog.Info("start to init ACjob informer")
 	opClient := GetOperatorClient().ClientSet
 	factory := ascendexternalversions.NewSharedInformerFactory(opClient, 0)
 	acJobInformer := factory.Batch().V1().Jobs()
@@ -697,6 +701,7 @@ func acJobHandler(oldObj interface{}, newObj interface{}, operator string) {
 
 // InitVCJobInformer is to init vcJob informer
 func InitVCJobInformer() {
+	hwlog.RunLog.Info("start to init VCjob informer")
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
 	vcJobInformer := factory.Batch().V1alpha1().Jobs()
@@ -748,6 +753,7 @@ func vcJobHandler(oldObj interface{}, newObj interface{}, operator string) {
 
 // InitPodGroupInformer is to init pod group informer
 func InitPodGroupInformer() {
+	hwlog.RunLog.Info("start to init PodGroup informer")
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
 	PodGroupInformer := factory.Scheduling().V1beta1().PodGroups()
