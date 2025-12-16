@@ -17,13 +17,17 @@ package jobinfo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
+	jobstorage "clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/job"
 )
 
@@ -122,6 +126,22 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 		cltState.safeCloseChannel()
 		hwlog.RunLog.Infof("client %s disconnected, role: %s", req.ClientId, cltState.role)
 	}()
+
+	// Get and push all the jobs if role is FdAgent
+	if cltState.role == constant.RoleFdAgent {
+		allJobs := jobstorage.GetAllJobCache()
+		for _, jobInfo := range allJobs {
+			jobSummary := BuildJobSignalFromJobInfo(
+				jobInfo, util.ObjToString(jobInfo.JobRankTable), constant.AddOperator)
+			jobSummary.Uuid = string(uuid.NewUUID())
+			if err := stream.Send(&jobSummary); err != nil {
+				errMsg := fmt.Sprintf("job: %v error sending to client %s: %v", jobSummary.JobId, req.ClientId, err)
+				hwlog.RunLog.Errorf(errMsg)
+				return errors.New(errMsg)
+			}
+		}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
