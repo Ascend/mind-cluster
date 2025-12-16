@@ -39,7 +39,7 @@ enum class MindXEvent : uint32_t {
     MINDX_EVENT_STOP_SWITCH,
     MINDX_EVENT_MIGRATION,
     MINDX_EVENT_ARF,
-    MINDX_EVENT_UCE,
+    MINDX_EVENT_RETRY,
     MINDX_EVENT_DUMP,
     MINDX_EVENT_EXIT,
     MINDX_EVENT_INVALID,
@@ -84,7 +84,7 @@ using MindXEventHandle = std::function<int32_t(void *ctx, int ctxSize)>;
 
 const std::string STRATEGY_DUMP = "dump";
 const std::string STRATEGY_ARF  = "recover";
-const std::string STRATEGY_UCE  = "retry";
+const std::string STRATEGY_RETRY  = "retry";
 const std::string STRATEGY_EXIT  = "exit";
 const std::string STRATEGY_PAUSE = "pause";
 const std::string STRATEGY_CONTINUE = "continue";

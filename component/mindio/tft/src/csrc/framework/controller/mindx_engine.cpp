@@ -205,9 +205,9 @@ TResult MindXEngine::ChangeStrategy(const std::string& strategy, std::string& pa
     }
 #endif
     lastStrategy_ = strategy;
-    if (strategy == STRATEGY_UCE) {
-        TTP_LOG_INFO("Mindx calling notify do UCE repair...");
-        return EventProcess(MindXEvent::MINDX_EVENT_UCE, nullptr, 0);
+    if (strategy == STRATEGY_RETRY) {
+        TTP_LOG_INFO("Mindx calling notify do retry repair...");
+        return EventProcess(MindXEvent::MINDX_EVENT_RETRY, nullptr, 0);
     } else if (strategy == STRATEGY_ARF) {
         TTP_LOG_INFO("Mindx calling notify do ARF repair...");
         return EventProcess(MindXEvent::MINDX_EVENT_ARF, nullptr, 0);

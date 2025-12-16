@@ -141,7 +141,7 @@ void Processor::ExtraReplyHandleRegister()
 }
 
 TResult Processor::Initialize(int32_t rank, int32_t worldSize, bool enableLocalCopy,
-    const AccTlsOption &tlsOption, bool enableUce, bool enableArf, bool enableZit)
+    const AccTlsOption &tlsOption, bool enableRetry, bool enableArf, bool enableZit)
 {
     std::lock_guard<std::mutex> guard(initOrDestroyMutex_);
 
@@ -176,7 +176,7 @@ TResult Processor::Initialize(int32_t rank, int32_t worldSize, bool enableLocalC
     worldSize_ = worldSize;
     localCopySwitch_ = enableLocalCopy;
     arfSwitch_ = enableArf;
-    uceSwitch_ = enableUce;
+    retrySwitch_ = enableRetry;
     zitSwitch_ = enableZit;
     newClient_ = AccTcpClient::Create();
     TTP_ASSERT_RETURN(newClient_ != nullptr, TTP_ERROR);
@@ -192,7 +192,7 @@ TResult Processor::Initialize(int32_t rank, int32_t worldSize, bool enableLocalC
 
     RequestHandleRegister();
     ExtraReplyHandleRegister();
-    TTP_LOG_INFO("processor:" << rank_ << " initialize success, uce:" << enableUce << ", arf:" << enableArf <<
+    TTP_LOG_INFO("processor:" << rank_ << " initialize success, retry:" << enableRetry << ", arf:" << enableArf <<
         ", zit:" << enableZit);
 
     sem_init(&waitSem_, 0, 0);
@@ -791,7 +791,7 @@ void Processor::HandleDeviceClean(uint8_t *data, uint32_t len)
         replyMsg.status = TTP_ERROR;
     } else {
         replyMsg.status = EventProcess(PROCESSOR_EVENT_DEVICE_CLEAN, &rank_, sizeof(rank_));
-        if (replyMsg.status == UCE_NO_REBUILD) { // uce low_level
+        if (replyMsg.status == UCE_NO_REBUILD) {
             TTP_LOG_INFO("rank:" << rank_ << " receive low level uce type..");
             {
                 std::unique_lock<std::mutex> lck(statusMutex_);
@@ -1607,7 +1607,7 @@ TResult Processor::ReportInfo2Controller(std::vector<int32_t> replicaCnt, std::v
     msg->num = groupNum;
     msg->rank = rank_;
     msg->enableArf = arfSwitch_;
-    msg->enableUce = uceSwitch_;
+    msg->enableRetry = retrySwitch_;
     msg->enableZit = zitSwitch_;
     int32_t idx = groupNum + groupNum;
     for (int32_t i = 0; i < groupNum; i++) {
