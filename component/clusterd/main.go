@@ -75,9 +75,9 @@ func startInformer(ctx context.Context) {
 	kube.InitCMInformer()
 	kube.InitPubFaultCMInformer()
 	kube.InitPodAndNodeInformer()
-	kube.InitACJobInformer()
-	kube.InitVCJobInformer()
 	kube.InitPodGroupInformer()
+	go kube.InitACJobInformer()
+	go kube.InitVCJobInformer()
 	go pingmesh.TickerCheckSuperPodDevice(ctx)
 	// specific functions requires after informer
 	addFuncAfterInformer()
