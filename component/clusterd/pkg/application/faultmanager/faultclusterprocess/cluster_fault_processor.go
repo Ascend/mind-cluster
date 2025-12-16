@@ -167,15 +167,15 @@ func getNodeFaultInfo(nodeInfo *constant.NodeInfo) []*fault.DeviceFaultInfo {
 			DeviceType: device.DeviceType,
 			FaultCodes: device.FaultCode,
 		}
-		switch nodeInfo.NodeStatus {
-		case constant.NotHandleFaultLevelStr:
+		switch device.FaultLevel {
+		case constant.NotHandleFault:
 			deviceFault.FaultLevel = constant.HealthyState
-		case constant.SubHealthFaultLevelStr:
+		case constant.SubHealthFault:
 			deviceFault.FaultLevel = constant.SubHealthyState
-		case constant.SeparateFaultLevelStr:
+		case constant.SeparateFault:
 			deviceFault.FaultLevel = constant.UnHealthyState
-		case constant.PreSeparateFaultLevelStr:
-			deviceFault.FaultLevel = constant.PreSeparateState
+		case constant.PreSeparateFault:
+			deviceFault.FaultLevel = nodeInfo.NodeStatus
 		default:
 			deviceFault.FaultLevel = constant.HealthyState
 		}

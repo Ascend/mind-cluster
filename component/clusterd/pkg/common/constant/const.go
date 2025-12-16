@@ -241,12 +241,8 @@ const (
 	SubHealthFault = "SubHealthFault"
 	// NotHandleFaultLevelStr NotHandle Fault Level Str
 	NotHandleFaultLevelStr = "NotHandle"
-	// SubHealthFaultLevelStr SubHealth Fault Level Str
-	SubHealthFaultLevelStr = "SubHealthFault"
 	// PreSeparateFaultLevelStr PreSeparate Fault Level Str
 	PreSeparateFaultLevelStr = "PreSeparate"
-	// SeparateFaultLevelStr Separate Fault Level Str
-	SeparateFaultLevelStr = "Separate"
 	// PreSeparateFault pre-separate fault
 	PreSeparateFault = "PreSeparateFault"
 	// SeparateFault separate fault
