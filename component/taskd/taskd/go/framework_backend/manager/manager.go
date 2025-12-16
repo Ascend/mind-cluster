@@ -137,7 +137,7 @@ func (m *BaseManager) Start() error {
 // Process task main process
 func (m *BaseManager) Process() error {
 	for {
-		time.Sleep(time.Second)
+		time.Sleep(constant.ManagerProcessInterval * time.Millisecond)
 		snapshot, err := m.MsgHd.DataPool.GetSnapShot()
 		if err != nil {
 			return fmt.Errorf("get datapool snapshot failed, err: %v", err)
