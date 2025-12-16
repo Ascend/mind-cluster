@@ -137,59 +137,31 @@ func TestProfiling(t *testing.T) {
 		return "127.0.0.1"
 	})
 	defer patches.Reset()
-	connErr = nil
-	client = nil
-	client, err := GetClient()
+	patches.ApplyFunc(GetClient, func() (*Client, error) {
+		return &Client{}, nil
+	})
+	c, err := GetClient()
 	assert.Nil(t, err)
 
 	// mock profilingSwitch
-	patches.ApplyPrivateMethod(reflect.TypeOf(client), "profilingSwitch",
+	patches.ApplyPrivateMethod(reflect.TypeOf(c), "profilingSwitch",
 		func(*Client, *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
 			return &profiling.DataTypeRes{
 				Message: "success",
 				Code:    0,
 			}, nil
 		})
-
-	// test stop all profiling
-	err = client.StopAllProfiling("job1", "ns1")
+	// test start all profiling
+	err = c.StartAllProfiling("job1", "ns1")
 	assert.Nil(t, err)
 
 	// test start heavy profiling
-	err = client.StartHeavyProfiling("job1", "ns1")
+	err = c.StartHeavyProfiling("job1", "ns1")
 	assert.Nil(t, err)
 
 	// test stop heavy profiling
-	err = client.StopHeavyProfiling("job1", "ns1")
+	err = c.StopHeavyProfiling("job1", "ns1")
 	assert.Nil(t, err)
-}
-
-func TestStartAllProfiling(t *testing.T) {
-	convey.Convey("test start all profiling", t, func() {
-		patches := gomonkey.NewPatches()
-		defer patches.Reset()
-		patches.ApplyFunc(utils.GetClusterIp, func() string {
-			return "127.0.0.1"
-		})
-		client = nil
-		client, err := GetClient()
-		convey.ShouldBeNil(err)
-		var returnMsg = "successfully changed profiling marker enable status"
-		patches.ApplyPrivateMethod(reflect.TypeOf(client), "profilingSwitch",
-			func(*Client, *profiling.DataTypeReq) (*profiling.DataTypeRes, error) {
-				return &profiling.DataTypeRes{
-					Message: returnMsg,
-					Code:    200,
-				}, nil
-			})
-		err = client.StartAllProfiling("job1", "ns1")
-		convey.ShouldBeNil(err)
-		returnMsg = "configmap: [ns1/job1] has been created and param is updated to change profiling marker status"
-		client.StartAllProfiling("job1", "ns1")
-		returnMsg = "unexpected msg"
-		err = client.StartAllProfiling("job1", "ns1")
-		convey.ShouldNotBeNil(err)
-	})
 }
 
 func TestProfilingSwitch(t *testing.T) {
@@ -227,7 +199,12 @@ func TestReportFault(t *testing.T) {
 }
 
 func TestRegisterJobSummary(t *testing.T) {
-	c := &Client{conn: &grpc.ClientConn{}}
+	c := &Client{
+		conn: &grpc.ClientConn{},
+		jobSummaryWatcher: jobSummaryWatcher{
+			callbacks: make(map[string]callback),
+		},
+	}
 	c.jc = job.NewJobClient(c.conn)
 	patches := gomonkey.NewPatches()
 	defer patches.Reset()
@@ -302,7 +279,11 @@ func (m *mockJobSummaryStream) Recv() (*job.JobSummarySignal, error) {
 }
 
 func TestProcessJobSummary(t *testing.T) {
-	c := &Client{}
+	c := &Client{
+		jobSummaryWatcher: jobSummaryWatcher{
+			callbacks: make(map[string]callback),
+		},
+	}
 	stream := &mockJobSummaryStream{}
 	convey.Convey("test processJobSummary", t, func() {
 		c.closeSignal = make(chan struct{})
@@ -321,12 +302,14 @@ func TestProcessJobSummary(t *testing.T) {
 		convey.So(stream.closeSendCalled, convey.ShouldEqual, failedCount)
 
 		var f = func(job *model.JobSummary) {}
-		c.callbacks = append(c.callbacks, callback{
-			registerId: "testRegisterId",
-			jobName:    testJobName,
-			namespace:  testNamespace,
-			f:          f,
-		})
+		c.callbacks = map[string]callback{
+			"testRegisterId": callback{
+				registerId: "testRegisterId",
+				jobName:    testJobName,
+				namespace:  testNamespace,
+				f:          f,
+			},
+		}
 		// mock recived data and then failed
 		received = false
 		c.disconnectedSignal = make(chan struct{})
@@ -377,7 +360,11 @@ func TestSupervisor(t *testing.T) {
 }
 
 func TestSubAndUnSubJobSummary(t *testing.T) {
-	var c = &Client{}
+	var c = &Client{
+		jobSummaryWatcher: jobSummaryWatcher{
+			callbacks: make(map[string]callback),
+		},
+	}
 	convey.Convey("test UnsubscribeJobSummary", t, func() {
 		testSubNoPanic(c)
 		testSubAndUnsub(c)
