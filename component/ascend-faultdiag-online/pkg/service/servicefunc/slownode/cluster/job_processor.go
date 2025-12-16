@@ -52,6 +52,8 @@ const (
 	rescheduleNamespace  = "mindx-dl"
 	rescheduleCmName     = "job-reschedule-reason"
 	rescheduleRecordsKey = "recent-reschedule-records"
+
+	restartAdvice = "please restart slow node detection job"
 )
 
 var jobSummaryWatcher = utils.NewStorage[string]()
@@ -82,12 +84,14 @@ func (j *jobProcessor) add() {
 	// start to real-time watch the job-summary
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
-		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s got grpc client failed: %v, %s", j.logPrefix(), err, restartAdvice)
+		slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 		return
 	}
 	registerId, err := grpcClient.SubscribeJobSummary(ctx.Job.JobName, ctx.Job.Namespace, jobSummaryProcessor)
 	if err != nil {
-		hwlog.RunLog.Errorf("%s started to watch the job summary failed: %v", j.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s started to watch the job summary failed: %v, %s", j.logPrefix(), err, restartAdvice)
+		slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 		return
 	}
 	jobSummaryWatcher.Store(j.job.KeyGenerator(), registerId)
@@ -121,19 +125,19 @@ func (j *jobProcessor) delete() {
 	}
 	j.ctx = ctx
 	j.stop()
-	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 	grpcClient, err := grpc.GetClient()
 	if err != nil {
 		hwlog.RunLog.Errorf("%s got grpc client failed: %v", j.logPrefix(), err)
+		slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 		return
 	}
-	registerId, ok := jobSummaryWatcher.Load(j.job.KeyGenerator())
-	if !ok {
+	if registerId, ok := jobSummaryWatcher.Load(j.job.KeyGenerator()); !ok {
 		hwlog.RunLog.Warnf("%s could not got job summary watcher id", j.logPrefix())
-		return
+	} else {
+		grpcClient.UnsubscribeJobSummary(registerId)
+		jobSummaryWatcher.Delete(j.job.KeyGenerator())
 	}
-	grpcClient.UnsubscribeJobSummary(registerId)
-	jobSummaryWatcher.Delete(j.job.KeyGenerator())
+	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
 }
 
 func (j *jobProcessor) start() {
@@ -159,14 +163,12 @@ func (j *jobProcessor) start() {
 	j.ctx.Start()
 	// start all profiling only depends on the training job is ready
 	if err := j.ctx.StartAllProfiling(); err != nil {
-		hwlog.RunLog.Errorf("%s start all profiling failed: %v, please restart slow node detection job.",
-			j.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s start all profiling failed: %v, %s", j.logPrefix(), err, restartAdvice)
 		j.ctx.Stop()
 		return
 	}
 	if err := j.createOrUpdateCM(); err != nil {
-		hwlog.RunLog.Errorf("%s created or updated cm failed: %v, please restart slow node detection job",
-			j.logPrefix(), err)
+		hwlog.RunLog.Errorf("%s created or updated cm failed: %v, %s", j.logPrefix(), err, restartAdvice)
 		j.ctx.Stop()
 		j.ctx.StopAllProfiling()
 		return

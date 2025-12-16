@@ -56,7 +56,7 @@ type callback struct {
 type jobSummaryWatcher struct {
 	mu          sync.Mutex
 	isRegisterd bool
-	callbacks   []callback
+	callbacks   map[string]callback
 	// disconnectedSignal is a signal the grpc stream disconnected(by server) or not
 	disconnectedSignal chan struct{}
 	// closeSignal is a  signal the stream is close(by client) or not
@@ -101,6 +101,7 @@ func (c *Client) connect(host string) error {
 	c.tc = profiling.NewTrainingDataTraceClient(c.conn)
 	c.pf = pubfault.NewPubFaultClient(c.conn)
 	c.jc = job.NewJobClient(c.conn)
+	c.callbacks = make(map[string]callback)
 	return nil
 }
 
@@ -334,7 +335,7 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 		go cb.f(job)
 	}
 	c.mu.Lock()
-	c.callbacks = append(c.callbacks, cb)
+	c.callbacks[registerId] = cb
 	c.mu.Unlock()
 
 	// register
@@ -351,13 +352,7 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 func (c *Client) UnsubscribeJobSummary(registerId string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	for i := 0; i < len(c.callbacks); i++ {
-		if c.callbacks[i].registerId == registerId {
-			c.callbacks[i] = c.callbacks[len(c.callbacks)-1]
-			c.callbacks = c.callbacks[:len(c.callbacks)-1]
-			return
-		}
-	}
+	delete(c.callbacks, registerId)
 }
 
 var (
