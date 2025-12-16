@@ -37,6 +37,91 @@ func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int
 	})
 }
 
+// addEnvValue adds or updates an environment variable with deduplication.
+// For HighAvailableEnv and MsRecoverEnv, it merges values and deduplicates them.
+func addEnvValueWithDedup(pod *corev1.PodTemplateSpec, envKey, envValue string, index int) {
+	envs := &pod.Spec.Containers[index].Env
+
+	// Check if the environment variable already exists
+	for i := range *envs {
+		if (*envs)[i].Name == envKey {
+			// Handle special environment variables that need value merging
+			if envKey == api.HighAvailableEnv || envKey == api.MsRecoverEnv {
+				oldValue := (*envs)[i].Value
+				mergedValue := mergeEnvValue(envKey, oldValue, envValue)
+				(*envs)[i].Value = mergedValue
+			} else {
+				// For other environment variables, simply overwrite
+				(*envs)[i].Value = envValue
+			}
+			return
+		}
+	}
+
+	// If not found, append the new environment variable
+	*envs = append(*envs, corev1.EnvVar{
+		Name:  envKey,
+		Value: envValue,
+	})
+}
+
+// mergeEnvValue merges values for special environment variables and deduplicates them.
+func mergeEnvValue(envKey, oldValue, newValue string) string {
+	if envKey == api.HighAvailableEnv {
+		// HighAvailableEnv: comma-separated values, merge and deduplicate
+		return mergeCommaSeparatedValues(oldValue, newValue)
+	}
+
+	if envKey == api.MsRecoverEnv {
+		// MsRecoverEnv: format is '{...}', extract content, merge and deduplicate
+		oldContent := extractMsRecoverContent(oldValue)
+		newContent := extractMsRecoverContent(newValue)
+		mergedContent := mergeCommaSeparatedValues(oldContent, newContent)
+		return `'{` + mergedContent + `}'`
+	}
+
+	return newValue
+}
+
+// mergeCommaSeparatedValues merges two comma-separated value strings and deduplicates them.
+func mergeCommaSeparatedValues(oldValue, newValue string) string {
+	mergedSet := parseCommaSeparatedValues(oldValue)
+	newSet := parseCommaSeparatedValues(newValue)
+	mergedSet.Insert(newSet.List()...)
+	return strings.Join(mergedSet.List(), ",")
+}
+
+// parseCommaSeparatedValues parses a comma-separated value string into a set of trimmed, non-empty values.
+func parseCommaSeparatedValues(value string) sets.String {
+	result := sets.NewString()
+	if value == "" {
+		return result
+	}
+	for _, v := range strings.Split(value, ",") {
+		if trimmed := strings.TrimSpace(v); trimmed != "" {
+			result.Insert(trimmed)
+		}
+	}
+	return result
+}
+
+// extractMsRecoverContent extracts the content from MsRecoverEnv format '{...}'
+func extractMsRecoverContent(value string) string {
+	if value == "" {
+		return ""
+	}
+	// Remove leading '{ and trailing }'
+	value = strings.TrimSpace(value)
+	const num2 = 2
+	if strings.HasPrefix(value, `'{`) {
+		value = value[num2:]
+	}
+	if strings.HasSuffix(value, `}'`) {
+		value = value[:len(value)-num2]
+	}
+	return strings.TrimSpace(value)
+}
+
 func addEnvValueForSoftStrategy(pod *corev1.PodTemplateSpec, envKey string, index int) {
 	pod.Spec.Containers[index].Env = append(pod.Spec.Containers[index].Env, corev1.EnvVar{
 		Name:      envKey,
@@ -248,16 +333,16 @@ func addSubHealthyEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex i
 		return
 	}
 	if framework == api.PytorchFramework {
-		addEnvValue(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
+		addEnvValueWithDedup(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
 	} else if framework == api.MindSporeFramework {
-		addEnvValue(pod, api.MsRecoverEnv, `'{`+api.MsArfStrategy+`}'`, containerIndex)
-		addEnvValue(pod, api.EnableMS, api.EnableFlag, containerIndex)
+		addEnvValueWithDedup(pod, api.MsRecoverEnv, `'{`+api.MsArfStrategy+`}'`, containerIndex)
+		addEnvValueWithDedup(pod, api.EnableMS, api.EnableFlag, containerIndex)
 	} else {
 		hwlog.RunLog.Warnf("subhealth hotswitch only support pytorch and mindspore framework,current: %v", framework)
 		return
 	}
-	addEnvValue(pod, api.ProcessRecoverEnv, api.EnableFunc, containerIndex)
-	addEnvValue(pod, api.ElasticRecoverEnv, api.EnableFlag, containerIndex)
+	addEnvValueWithDedup(pod, api.ProcessRecoverEnv, api.EnableFunc, containerIndex)
+	addEnvValueWithDedup(pod, api.ElasticRecoverEnv, api.EnableFlag, containerIndex)
 }
 
 func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {
