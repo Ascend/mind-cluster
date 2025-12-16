@@ -94,6 +94,7 @@ func updateJob(jobKey string) {
 		"isPreDelete: %v, status: %s, job name: %s, job.isPreDelete: %v, job.status: %s",
 		isPreDelete, status, jobInfo.Name, jobInfo.IsPreDelete, jobInfo.Status)
 }
+
 func preHandlePods(podsInJob map[string]v1.Pod) (map[string]v1.Pod, bool) {
 	res := make(map[string]v1.Pod)
 	newPodsMap := new(map[string]v1.Pod)
