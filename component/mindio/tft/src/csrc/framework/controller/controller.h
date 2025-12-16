@@ -423,7 +423,7 @@ private:
     bool localCopySwitch_ = false;
     bool arfSwitch_ = false; // air refueling
     bool zitSwitch_ = false; // zero interruption
-    bool uceSwitch_ = false;
+    bool retrySwitch_ = false;
     // enable pytorch or mindSpore
     bool mindSpore_ = false;
     bool isPorcessorExit_ = false;

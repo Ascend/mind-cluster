@@ -86,15 +86,6 @@ class Action(Enum):
     EXIT = 1
 
 
-fault_dict = {'FORCE STOP': 'RS_NORMAL',
-              'UCE ERROR': 'RS_UCE',
-              'HBM MULTI BIT ECC': 'RS_UCE',
-              'ARF FINISH': 'RS_PREREPAIR_FINISH',
-              'STEP FINISH': 'RS_STEP_FINISH',
-              'HCCL OP RETRY FAILED': 'RS_HCCL_FAILED',
-              'SUSPECT REMOTE ERROR': 'RS_HCCL_FAILED'}
-
-
 class ReportState(Enum):
     RS_NORMAL = ttp_c2python_api.ReportState_RS_NORMAL
     RS_UCE = ttp_c2python_api.ReportState_RS_UCE
@@ -170,7 +161,7 @@ class SaveHandler:
         self._dump_info = None
         self._dump_step = 0
         self._exit_cond = threading.Condition()
-        self._enable_uce = False
+        self._enable_retry = False
 
         self._fm_zit_upgrade_rollback_call = None
         self._fm_zit_upgrade_repair_call = None
@@ -247,11 +238,11 @@ class SaveHandler:
         signal.signal(signal.SIGTERM, self.do_nothing)
         signal.signal(signal.SIGINT, self.do_nothing)
 
-    def set_uce(self, enable_uce):
-        self._enable_uce = enable_uce
+    def set_retry(self, enable_uce):
+        self._enable_retry = enable_uce
 
-    def get_uce(self):
-        return self._enable_uce
+    def enable_retry(self):
+        return self._enable_retry
 
     def do_nothing(self, signum=2, frame=None):
         ttp_logger.LOGGER.info("rank:%s catch exception signal, do nothing", rank_)
@@ -845,6 +836,38 @@ def wrap_exit():
     exit_proc_thread()
 
 
+def handle_l2_hbm_error(err_str):
+    if not save_handler.enable_retry():
+        return "OTHER"
+
+    hbm_error_time = get_l2_hbm_error_time(err_str)
+    can_repair = tft_can_do_uce_repair(hbm_error_time)
+    start_time, end_time = get_update_start_end_time()
+    ttp_logger.LOGGER.info(f"rank:{rank_} occur l2 cache hbm error time: {hbm_error_time},"
+                           f"optimizer start update time: {start_time}, end update time:{end_time}")
+    return "HBM MULTI BIT ECC can repair" if can_repair else "HBM MULTI BIT ECC can't repair"
+
+
+fault_handles = {"UCE ERROR": lambda x: "UCE ERROR" if save_handler.enable_retry() else "OTHER",
+                 "HBM MULTI BIT ECC": handle_l2_hbm_error,
+                 "FORCE STOP": lambda x: "FORCE STOP",
+                 "ARF FINISH": lambda x: "ARF FINISH",
+                 "STEP FINISH": lambda x: "STEP FINISH",
+                 "HCCL OP RETRY FAILED": lambda x: "HCCL OP RETRY FAILED" if save_handler.enable_retry() else "OTHER",
+                 "SUSPECT REMOTE ERROR": lambda x: "SUSPECT REMOTE ERROR" if save_handler.enable_retry() else "OTHER"}
+
+
+fault_types = {"FORCE STOP": "RS_NORMAL",
+               "UCE ERROR": "RS_UCE",
+               "HBM MULTI BIT ECC can repair": "RS_UCE",
+               "HBM MULTI BIT ECC can't repair": "RS_UCE_CORRUPTED",
+               "ARF FINISH": "RS_PREREPAIR_FINISH",
+               "STEP FINISH": "RS_STEP_FINISH",
+               "HCCL OP RETRY FAILED": "RS_HCCL_FAILED",
+               "SUSPECT REMOTE ERROR": "RS_HCCL_FAILED",
+               "OTHER": "RS_UNKNOWN"}
+
+
 def tft_exception_handler(func: Callable):
     """
     Save Final Ckpt: A wrapper decorator on a training function to catch exception
@@ -859,31 +882,13 @@ def tft_exception_handler(func: Callable):
         tft_destroy_processor()
         ttp_logger.LOGGER.debug(f"rank:{rank_} tft destroy end.")
 
-    def handle_l2_hbm_error(err_str):
-        handle_hbm_err = "HBM MULTI BIT ECC" in err_str
-        can_repair = True
-        if handle_hbm_err:
-            hbm_error_time = get_l2_hbm_error_time(err_str)
-            ttp_logger.LOGGER.info(f"rank:{rank_} handle hbm error time: {hbm_error_time}")
-            can_repair = tft_can_do_uce_repair(hbm_error_time)
-        return handle_hbm_err, can_repair
-
-    def report_and_wait(err_str, can_repair):
-        for dict_str in fault_dict:
-            if dict_str in err_str:
-                if not can_repair and dict_str == 'HBM MULTI BIT ECC':
-                    ttp_logger.LOGGER.warning(f"rank:{rank_} catch HBM exception, but can't repair "
-                                              f"ex instance:{err_str}")
-                    tft_report_error(ReportState.RS_UCE_CORRUPTED.value)
-                else:
-                    ttp_logger.LOGGER.warning(f"rank:{rank_} catch {dict_str} exception, "
-                                              f"ex instance:{err_str}")
-                    tft_report_error(ReportState[fault_dict[dict_str]].value)
-                # wait stop & clean finish
-                if dict_str not in ['ARF FINISH', 'STEP FINISH']:
-                    ret = tft_wait_next_action()
-                    if ret != Action.RETRY.value:
-                        wrap_exit()
+    def report_and_wait(exception):
+        tft_report_error(ReportState[fault_types[exception]].value)
+        # wait stop & clean finish
+        if exception not in ['ARF FINISH', 'STEP FINISH', 'OTHER']:
+            ret = tft_wait_next_action()
+            if ret != Action.RETRY.value:
+                wrap_exit()
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -902,35 +907,23 @@ def tft_exception_handler(func: Callable):
                 ttp_destroy()
                 return iteration
             except RuntimeError as e:
+                memory_allocated_before = torch_npu.npu.memory_allocated() / byte_to_gb
+                max_memory_allocated_before = torch_npu.npu.max_memory_allocated() / byte_to_gb
+                memory_reserved_before = torch_npu.npu.memory_reserved() / byte_to_gb
+                max_memory_reserved_before = torch_npu.npu.max_memory_reserved() / byte_to_gb
+
                 err_str = str(e)
-                handle_l2_hbm_err, can_repair = handle_l2_hbm_error(err_str)
-                handle_uce_err = save_handler.get_uce() and ("UCE ERROR" in err_str or handle_l2_hbm_err)
-                start_time, end_time = get_update_start_end_time()
-                ttp_logger.LOGGER.info(f"rank:{rank_} optimizer start update time:{start_time}, "
-                                       f"end update time:{end_time}")
-                care_exception = any(
-                    exception in err_str
-                    for exception in {
-                        "ARF FINISH", "STEP FINISH", "FORCE STOP",
-                        "HCCL OP RETRY FAILED", "SUSPECT REMOTE ERROR"
-                    }
-                )
-                if handle_uce_err or care_exception:
-                    memory_allocated_before = torch_npu.npu.memory_allocated() / byte_to_gb
-                    max_memory_allocated_before = torch_npu.npu.max_memory_allocated() / byte_to_gb
-                    memory_reserved_before = torch_npu.npu.memory_reserved() / byte_to_gb
-                    max_memory_reserved_before = torch_npu.npu.max_memory_reserved() / byte_to_gb
-                    report_and_wait(err_str, can_repair)
-                    wait_next = True
-                else:
-                    ttp_logger.LOGGER.exception("rank:%s catch other exception", rank_)
-                    ttp_logger.LOGGER.info(f"other exception str is : {err_str}")
-                    err_type = ReportState.RS_UCE_CORRUPTED.value if (handle_l2_hbm_err and not can_repair) \
-                        else ReportState.RS_UNKNOWN.value
-                    tft_report_error(err_type)  # run ttp
-                    raise e
+                exception = "OTHER"
+                for pattern in fault_handles:
+                    if pattern in err_str:
+                        exception = fault_handles[pattern](err_str)
+                        break
+
+                ttp_logger.LOGGER.warning(f"rank:{rank_} catch {exception} exception, ex instance:{err_str}")
+                report_and_wait(exception)
+                wait_next = True
             except Exception as e:
-                ttp_logger.LOGGER.exception("rank:%s catch other exception", rank_)
+                ttp_logger.LOGGER.exception(f"rank:{rank_} catch other exception, ex instance:{str(e)}")
                 tft_report_error(ReportState.RS_UNKNOWN.value)
                 raise e
             finally:
@@ -988,7 +981,7 @@ def tft_init_processor(rank: int, world_size: int, enable_local_copy: bool, enab
     rank_ = rank
     repair_id_ = 0
     save_handler.register()
-    save_handler.set_uce(enable_uce)
+    save_handler.set_retry(enable_uce)
     if not mind_spore:
         device_ = torch.npu.current_device()
         torch.npu.SyncLaunchStream()

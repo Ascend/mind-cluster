@@ -62,7 +62,7 @@ TEST_F(ControllerUCETest, handle_uce_failed)
     ReportState state = ReportState::RS_UCE;
     processor4->ReportStatus(state);
 
-    ChangeStrategy(STRATEGY_UCE);
+    ChangeStrategy(STRATEGY_RETRY);
     sleep(1); // wait 1s
     repairFlag.store(true);
     std::map<int32_t, int32_t> ranks;
