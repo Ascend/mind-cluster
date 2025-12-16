@@ -153,6 +153,9 @@ const RequestChanNum = 100
 // MaxMsgQueueLength max length of message queue
 const MaxMsgQueueLength = 40000
 
+// ManagerProcessInterval task main process interval in ms
+const ManagerProcessInterval = 100
+
 // All Mtype or MsgType must be defined here
 const (
 	REGISTER          = "REGISTER"
