@@ -326,6 +326,15 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 			faultCode := strings.Join(getFaultCodeByNodeInfo(nodeInfo), constant.Comma)
 			faultList = append(faultList, serverHcclToFaultRank(server, info, faultCode, "")...)
 		}
+		// the not-ready-fault which is because of kubelet stopping or network-down in the k8s-plane can not be
+		// handled correctly for the MS process-recover
+		node := kube.GetNode(nodeName)
+		if node == nil || !faultdomain.IsNodeReady(node) {
+			hwlog.RunLog.Debugf("node %s is not ready", nodeName)
+			faultList = append(faultList, serverHcclToFaultRank(server, info, "", "")...)
+			faultDeviceList = append(faultDeviceList, convertToFaultDevice(&server, "",
+				constant.SeparateNPU, constant.EmptyDeviceId, constant.FaultTypeNode))
+		}
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByNodeInfo(&server, nodeInfo)...)
 		advanceDeviceInfo := deviceCmForNodeMap[nodeName]
 		faultRankList := processor.findFaultRankForJob(advanceDeviceInfo, nodeName, serverList, info)
