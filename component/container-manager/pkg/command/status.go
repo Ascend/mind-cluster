@@ -32,9 +32,9 @@ const (
 	textWidth  = 65
 	sideWidth  = 2
 
-	pausingDuration  = 20
+	pausingDuration  = 30
 	pausedDuration   = 400
-	resumingDuration = 20
+	resumingDuration = 30
 )
 
 var (

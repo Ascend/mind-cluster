@@ -140,8 +140,8 @@ func saveDevFaultInfo(devFaultInfo ascommon.DevFaultInfo) {
 		hwlog.RunLog.Errorf("fault exceeds the upper limit from subscribe interface, fault [%+v] will be discard", devFaultInfo)
 		return
 	}
-	hwlog.RunLog.Infof("receive devFaultInfo: %+v, hex fault code: %v", devFaultInfo,
-		strconv.FormatInt(devFaultInfo.EventID, common.Hex))
+	hwlog.RunLog.Infof("receive devFaultInfo: %+v, hex fault code: %s, fault level: %s", devFaultInfo,
+		strconv.FormatInt(devFaultInfo.EventID, common.Hex), domain.GetFaultLevelByCode([]int64{devFaultInfo.EventID}))
 	if devFaultInfo.EventID == 0 {
 		return
 	}

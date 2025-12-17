@@ -85,6 +85,11 @@ func (c *ContainerdClient) getAllContainers() (interface{}, error) {
 			hwlog.RunLog.Errorf("failed to load container %s, error: %v", container.ID, err)
 			continue
 		}
+		// container has no task, skip
+		if _, err = containerObj.Task(ctx, nil); err != nil {
+			hwlog.RunLog.Debugf("failed to get task for container %s, error: %v", container.ID, err)
+			continue
+		}
 		ctrs = append(ctrs, containerObj)
 	}
 	return ctrs, nil
@@ -158,7 +163,8 @@ func (c *ContainerdClient) doGetUsedDevs(cs containerd.Container, ctx context.Co
 			return usedDevs, nil
 		}
 	}
-	hwlog.RunLog.Debugf("get used devs by env %s failed, not used ascend docker runtime", api.AscendDeviceInfo)
+	hwlog.RunLog.Debugf("get container %s used devs by env %s failed, not used ascend docker runtime",
+		cs.ID(), api.AscendDeviceInfo)
 	usedDevs, err := getUsedDevsWithoutAscendRuntime(spec)
 	if err != nil {
 		return nil, fmt.Errorf("get container %s device ids failed, error: %v", cs.ID(), err)
