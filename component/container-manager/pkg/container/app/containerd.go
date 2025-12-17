@@ -85,11 +85,6 @@ func (c *ContainerdClient) getAllContainers() (interface{}, error) {
 			hwlog.RunLog.Errorf("failed to load container %s, error: %v", container.ID, err)
 			continue
 		}
-		// container has no task, skip
-		if _, err = containerObj.Task(ctx, nil); err != nil {
-			hwlog.RunLog.Debugf("failed to get task for container %s, error: %v", container.ID, err)
-			continue
-		}
 		ctrs = append(ctrs, containerObj)
 	}
 	return ctrs, nil
