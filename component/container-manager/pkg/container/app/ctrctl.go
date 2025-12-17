@@ -52,11 +52,12 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 	if err != nil {
 		return fmt.Errorf("get all ctrs failed: %v", err)
 	}
-	var ctrIds []string // ctrs used devs
+	var ctrIds []string
 	switch cs := ctrs.(type) {
 	case []containerd.Container:
 		ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
 		for _, containerObj := range cs {
+			ctrIds = append(ctrIds, containerObj.ID())
 			usedDevs, err := cm.client.getUsedDevs(containerObj, ctx)
 			if err != nil {
 				hwlog.RunLog.Errorf("get container %s used devs failed: %v", containerObj.ID(), err)
@@ -67,12 +68,12 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 				continue
 			} else {
 				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID(), usedDevs)
-				ctrIds = append(ctrIds, containerObj.ID())
 			}
 			cm.setCtrRelatedInfo(containerObj.ID(), "k8s.io", usedDevs)
 		}
 	case []types.Container:
 		for _, containerObj := range cs {
+			ctrIds = append(ctrIds, containerObj.ID)
 			usedDevs, err := cm.client.getUsedDevs(containerObj, nil)
 			if err != nil {
 				hwlog.RunLog.Errorf("get container %s used devs failed: %v", containerObj.ID, err)
@@ -83,7 +84,6 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 				continue
 			} else {
 				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID, usedDevs)
-				ctrIds = append(ctrIds, containerObj.ID)
 			}
 			cm.setCtrRelatedInfo(containerObj.ID, "default", usedDevs)
 		}
