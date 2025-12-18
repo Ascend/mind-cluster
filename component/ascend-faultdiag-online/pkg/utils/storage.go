@@ -17,7 +17,9 @@ limitations under the License.
 // Package utils provides some utility functions for local storage
 package utils
 
-import "sync"
+import (
+	"sync"
+)
 
 // Storage is common struct for save the data
 type Storage[T any] struct {
@@ -59,6 +61,35 @@ func (s *Storage[T]) Delete(key string) {
 		return
 	}
 	s.data.Delete(key)
+}
+
+func (s *Storage[T]) Len() int {
+	length := 0
+	if s == nil {
+		return length
+	}
+	s.data.Range(func(key, value any) bool {
+		length++
+		return true
+	})
+	return length
+}
+
+func (s *Storage[T]) Range(f func(key string, value T) bool) {
+	if s == nil {
+		return
+	}
+	s.data.Range(func(key, value any) bool {
+		k, ok := key.(string)
+		if !ok {
+			return true
+		}
+		v, ok := value.(T)
+		if !ok {
+			return true
+		}
+		return f(k, v)
+	})
 }
 
 // NewStorage got a new storage instance
