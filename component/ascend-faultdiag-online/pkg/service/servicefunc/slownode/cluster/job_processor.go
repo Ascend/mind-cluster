@@ -138,6 +138,7 @@ func (j *jobProcessor) delete() {
 		jobSummaryWatcher.Delete(j.job.KeyGenerator())
 	}
 	slownodejob.GetJobCtxMap().Delete(j.job.KeyGenerator())
+	hwlog.RunLog.Infof("%s delete job successfully", j.logPrefix())
 }
 
 func (j *jobProcessor) start() {
