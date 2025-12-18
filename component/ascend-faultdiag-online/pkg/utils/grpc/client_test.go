@@ -32,6 +32,7 @@ import (
 	"google.golang.org/grpc"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/model"
 	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/grpc/job"
@@ -202,7 +203,7 @@ func TestRegisterJobSummary(t *testing.T) {
 	c := &Client{
 		conn: &grpc.ClientConn{},
 		jobSummaryWatcher: jobSummaryWatcher{
-			callbacks: make(map[string]callback),
+			callbacks: utils.NewStorage[callback](),
 		},
 	}
 	c.jc = job.NewJobClient(c.conn)
@@ -275,13 +276,14 @@ func (m *mockJobSummaryStream) Recv() (*job.JobSummarySignal, error) {
 		JobName:   testJobName,
 		Namespace: testNamespace,
 		HcclJson:  "{}",
+		JobStatus: enum.IsRunning,
 	}, nil
 }
 
 func TestProcessJobSummary(t *testing.T) {
 	c := &Client{
 		jobSummaryWatcher: jobSummaryWatcher{
-			callbacks: make(map[string]callback),
+			callbacks: utils.NewStorage[callback](),
 		},
 	}
 	stream := &mockJobSummaryStream{}
@@ -302,14 +304,12 @@ func TestProcessJobSummary(t *testing.T) {
 		convey.So(stream.closeSendCalled, convey.ShouldEqual, failedCount)
 
 		var f = func(job *model.JobSummary) {}
-		c.callbacks = map[string]callback{
-			"testRegisterId": callback{
-				registerId: "testRegisterId",
-				jobName:    testJobName,
-				namespace:  testNamespace,
-				f:          f,
-			},
-		}
+		c.callbacks.Store("testRegisterId", callback{
+			registerId: "testRegisterId",
+			jobName:    testJobName,
+			namespace:  testNamespace,
+			f:          f,
+		})
 		// mock recived data and then failed
 		received = false
 		c.disconnectedSignal = make(chan struct{})
@@ -362,7 +362,7 @@ func TestSupervisor(t *testing.T) {
 func TestSubAndUnSubJobSummary(t *testing.T) {
 	var c = &Client{
 		jobSummaryWatcher: jobSummaryWatcher{
-			callbacks: make(map[string]callback),
+			callbacks: utils.NewStorage[callback](),
 		},
 	}
 	convey.Convey("test UnsubscribeJobSummary", t, func() {
@@ -399,12 +399,12 @@ func testSubAndUnsub(c *Client) {
 		ids = append(ids, registerId)
 	}
 	convey.So(len(ids), convey.ShouldEqual, funcCount)
-	convey.So(len(c.callbacks), convey.ShouldEqual, funcCount)
+	convey.So(c.callbacks.Len(), convey.ShouldEqual, funcCount)
 	// unregister all
 	for _, id := range ids {
 		c.UnsubscribeJobSummary(id)
 	}
-	convey.So(len(c.callbacks), convey.ShouldEqual, 0)
+	convey.So(c.callbacks.Len(), convey.ShouldEqual, 0)
 
 	// test data in storage
 	storage.Store("", &model.JobSummary{JobId: testJobId})
@@ -433,6 +433,6 @@ func testSubFailed(c *Client) {
 		convey.So(err.Error(), convey.ShouldEqual, "mock registerJobSummary failed")
 		convey.So(registerId, convey.ShouldBeEmpty)
 	}
-	convey.So(len(c.callbacks), convey.ShouldEqual, 0)
+	convey.So(c.callbacks.Len(), convey.ShouldEqual, 0)
 
 }

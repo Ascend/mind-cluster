@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/model"
 	"ascend-faultdiag-online/pkg/utils"
 	"ascend-faultdiag-online/pkg/utils/constants"
@@ -56,7 +57,7 @@ type callback struct {
 type jobSummaryWatcher struct {
 	mu          sync.Mutex
 	isRegisterd bool
-	callbacks   map[string]callback
+	callbacks   *utils.Storage[callback]
 	// disconnectedSignal is a signal the grpc stream disconnected(by server) or not
 	disconnectedSignal chan struct{}
 	// closeSignal is a  signal the stream is close(by client) or not
@@ -67,6 +68,7 @@ func (jw *jobSummaryWatcher) reset() {
 	jw.mu.Lock()
 	jw.isRegisterd = false
 	storage.Clear()
+	jw.callbacks.Clear()
 	jw.mu.Unlock()
 }
 
@@ -101,7 +103,7 @@ func (c *Client) connect(host string) error {
 	c.tc = profiling.NewTrainingDataTraceClient(c.conn)
 	c.pf = pubfault.NewPubFaultClient(c.conn)
 	c.jc = job.NewJobClient(c.conn)
-	c.callbacks = make(map[string]callback)
+	c.callbacks = utils.NewStorage[callback]()
 	return nil
 }
 
@@ -278,7 +280,7 @@ func (c *Client) supervisor() {
 
 func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClient) {
 	for {
-		if len(c.callbacks) == 0 {
+		if c.callbacks.Len() == 0 {
 			hwlog.RunLog.Info("[FD-OL]detected callbacks are empty, close job summary register")
 			if err := stream.CloseSend(); err != nil {
 				hwlog.RunLog.Errorf("[FD-OL]close job summary register failed: %v", err)
@@ -294,6 +296,7 @@ func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClien
 			c.disconnectedSignal <- struct{}{}
 			return
 		}
+		hwlog.RunLog.Infof("[FD-OL]got job summary data from grpc: %v", data)
 		// convert JobSummarySignal to model.jobSummary
 		job := &model.JobSummary{
 			JobId:     data.JobId,
@@ -306,14 +309,18 @@ func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClien
 			hwlog.RunLog.Errorf("[FD-OL]json unmarshal hcclJson data: %s failed: %v", data.HcclJson, err)
 			continue
 		}
-		storage.Store(fmt.Sprintf("%s/%s", job.Namespace, job.JobName), job)
-		c.mu.Lock()
-		for _, cb := range c.callbacks {
-			if cb.jobName == data.JobName && cb.namespace == data.Namespace && cb.f != nil {
-				go cb.f(job)
-			}
+		var key = fmt.Sprintf("%s/%s", job.Namespace, job.JobName)
+		if data.JobStatus == enum.IsRunning || data.JobStatus == enum.IsPending {
+			storage.Store(key, job)
+		} else {
+			storage.Delete(key)
 		}
-		c.mu.Unlock()
+		c.callbacks.Range(func(key string, cb callback) bool {
+			if cb.namespace == data.Namespace && cb.jobName == data.JobName && cb.f != nil {
+				cb.f(job)
+			}
+			return true
+		})
 	}
 }
 
@@ -330,14 +337,12 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 		namespace:  namespace,
 		f:          f,
 	}
+	var key = fmt.Sprintf("%s/%s", namespace, jobName)
 	// send the storage data immediatelly
-	if job, ok := storage.Load(fmt.Sprintf("%s/%s", namespace, jobName)); ok {
-		go cb.f(job)
+	if job, ok := storage.Load(key); ok {
+		cb.f(job)
 	}
-	c.mu.Lock()
-	c.callbacks[registerId] = cb
-	c.mu.Unlock()
-
+	c.callbacks.Store(registerId, cb)
 	// register
 	err := c.registerJobSummary()
 	if err != nil {
@@ -350,9 +355,7 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 
 // UnsubscribeJobSummary will subscribe all the job summary
 func (c *Client) UnsubscribeJobSummary(registerId string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	delete(c.callbacks, registerId)
+	c.callbacks.Delete(registerId)
 }
 
 var (

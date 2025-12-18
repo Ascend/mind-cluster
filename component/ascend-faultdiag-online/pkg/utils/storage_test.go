@@ -32,6 +32,7 @@ func TestStorage(t *testing.T) {
 		var key = "testKey"
 		var value = "testValue"
 		storage.Store(key, value)
+		convey.So(storage.Len(), convey.ShouldEqual, 1)
 		// load
 		res, ok := storage.Load(key)
 		convey.So(ok, convey.ShouldBeTrue)
@@ -67,5 +68,24 @@ func TestStorage(t *testing.T) {
 		res, ok = storage.Load(key)
 		convey.So(ok, convey.ShouldBeFalse)
 		convey.So(res, convey.ShouldBeNil)
+	})
+}
+
+func TestRange(t *testing.T) {
+	convey.Convey("test Storage by string", t, func() {
+		const (
+			key1 = "key1"
+			key2 = "key2"
+			val  = "value1"
+		)
+		storage := NewStorage[string]()
+		storage.Store(key1, val)
+		storage.Store(key2, val)
+		cnt := 0
+		storage.Range(func(key, value string) bool {
+			cnt++
+			return value == val
+		})
+		convey.So(cnt, convey.ShouldEqual, storage.Len())
 	})
 }

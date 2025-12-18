@@ -66,7 +66,7 @@ func jobSummaryProcessor(jobSummary *model.JobSummary) {
 		jobStatusProcessor(ctx, jobSummary)
 	case del:
 		hwlog.RunLog.Infof("%s job summary is deleted, stopping slow node job", ctx.LogPrefix())
-		j.delete()
+		j.stop()
 	default:
 		return
 	}
@@ -128,10 +128,10 @@ func jobStatusProcessor(ctx *slownodejob.JobContext, jobSummary *model.JobSummar
 			j.stop()
 			j.start()
 		}
-	// case: job_status is complete -> delete job
+	// case: job_status is complete -> stop job
 	case enum.IsCompleted:
-		hwlog.RunLog.Infof("%s detected training job is complete, delete job", ctx.LogPrefix())
-		j.delete()
+		hwlog.RunLog.Infof("%s detected training job is complete, stop job", ctx.LogPrefix())
+		j.stop()
 	default:
 		return
 	}
