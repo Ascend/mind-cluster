@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"clusterd/pkg/domain/superpod"
 )
 
@@ -74,21 +74,34 @@ func DeleteJobCache(jobKey string) {
 	jobSummaryMap.Delete(jobKey)
 }
 
-// GetJobByNameSpaceAndName get job by job name and nameSpace
-func GetJobByNameSpaceAndName(name, nameSpace string) constant.JobInfo {
+func findJobByFilter(filter func(constant.JobInfo) bool) constant.JobInfo {
 	ji := constant.JobInfo{}
 	jobSummaryMap.Range(func(_, value any) bool {
 		jobInfo, ok := value.(constant.JobInfo)
 		if !ok {
 			return true
 		}
-		if jobInfo.Name == name && jobInfo.NameSpace == nameSpace {
+		if filter(jobInfo) {
 			ji = jobInfo
 			return false
 		}
 		return true
 	})
 	return ji
+}
+
+// GetJobByNameSpaceAndName get job by job name and nameSpace
+func GetJobByNameSpaceAndName(name, nameSpace string) constant.JobInfo {
+	return findJobByFilter(func(ji constant.JobInfo) bool {
+		return ji.Name == name && ji.NameSpace == nameSpace
+	})
+}
+
+// GetRunningJobByNameSpaceAndName get running job by job name and nameSpace
+func GetRunningJobByNameSpaceAndName(name, nameSpace string) constant.JobInfo {
+	return findJobByFilter(func(ji constant.JobInfo) bool {
+		return ji.Name == name && ji.NameSpace == nameSpace && ji.Status == StatusJobRunning
+	})
 }
 
 // GetJobByNameSpaceAndNameAndPreDelete get job by job name and nameSpace

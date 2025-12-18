@@ -156,7 +156,7 @@ func getPGOwner(jobNs, jobName string) v1.OwnerReference {
 }
 
 func (ps *SwitchManager) notifySubscriber(dtc *profile.DataTraceController, in *profiling.DataTypeReq) error {
-	jobInfo := job.GetJobByNameSpaceAndName(dtc.JobName, dtc.JobNamespace)
+	jobInfo := job.GetRunningJobByNameSpaceAndName(dtc.JobName, dtc.JobNamespace)
 	if len(jobInfo.Key) == 0 {
 		return fmt.Errorf("no such job")
 	}
