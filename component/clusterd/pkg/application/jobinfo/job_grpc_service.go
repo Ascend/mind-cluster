@@ -135,7 +135,7 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 			jobSummary.Uuid = string(uuid.NewUUID())
 			if err := stream.Send(&jobSummary); err != nil {
 				errMsg := fmt.Sprintf("job: %v error sending to client %s: %v", jobSummary.JobId, req.ClientId, err)
-				hwlog.RunLog.Errorf(errMsg)
+				hwlog.RunLog.Error(errMsg)
 				return errors.New(errMsg)
 			}
 		}
