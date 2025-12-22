@@ -966,7 +966,8 @@ func TestResetServerForA3(t *testing.T) {
 			hdm.manager.SetCardsInResetting(0, false)
 			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0), nil).
 				ApplyPrivateMethod(hdm, "isPodRemove",
-					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return true })
+					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return true }).
+				ApplyPrivateMethod(hdm, "checkNoProc", func(*HwDevManager, int) bool { return true })
 			hdm.ResetServerForA3("devType", npuDevices, nil)
 			convey.ShouldBeTrue(hdm.manager.GetIfCardsInResetting(0))
 		})
@@ -974,7 +975,17 @@ func TestResetServerForA3(t *testing.T) {
 			hdm.manager.SetCardsInResetting(0, false)
 			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0), nil).
 				ApplyPrivateMethod(hdm, "isPodRemove",
-					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return false })
+					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return false }).
+				ApplyPrivateMethod(hdm, "checkNoProc", func(*HwDevManager, int) bool { return true })
+			hdm.ResetServerForA3("devType", npuDevices, nil)
+			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
+		})
+		convey.Convey("process not remove, should not reset device", func() {
+			hdm.manager.SetCardsInResetting(0, false)
+			patch.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0), nil).
+				ApplyPrivateMethod(hdm, "isPodRemove",
+					func(*HwDevManager, string, *common.NpuDevice, *PodResource) bool { return true }).
+				ApplyPrivateMethod(hdm, "checkNoProc", func(*HwDevManager, int) bool { return false })
 			hdm.ResetServerForA3("devType", npuDevices, nil)
 			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
 		})
@@ -1548,5 +1559,37 @@ func TestUpdateDeviceUsedInfo(t *testing.T) {
 			}
 			hdm.updateDeviceUsedInfo(groupDevice)
 			convey.So(groupDevice[api.Ascend910][1].PodUsed, convey.ShouldBeTrue)
+		})
+}
+
+func TestHwDevManagerCheckNoProc(t *testing.T) {
+	convey.Convey("TestHwDevManagerCheckNoProc when device used by some process, the func should be false",
+		t, func() {
+			hdm := &HwDevManager{
+				manager: device.NewHwAscend910Manager(),
+			}
+			manager := &devmanager.DeviceManager{}
+			gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", manager)
+			info := &npuCommon.DevProcessInfo{
+				ProcNum: 1,
+			}
+			gomonkey.ApplyMethodReturn(manager, "GetDevProcessInfo", info, nil)
+			checkNoProc := hdm.checkNoProc(0)
+			convey.So(checkNoProc, convey.ShouldBeFalse)
+		})
+
+	convey.Convey("TestHwDevManagerCheckNoProc when device used by no process, the func should be true",
+		t, func() {
+			hdm := &HwDevManager{
+				manager: device.NewHwAscend910Manager(),
+			}
+			manager := &devmanager.DeviceManager{}
+			gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", manager)
+			info := &npuCommon.DevProcessInfo{
+				ProcNum: 0,
+			}
+			gomonkey.ApplyMethodReturn(manager, "GetDevProcessInfo", info, nil)
+			checkNoProc := hdm.checkNoProc(0)
+			convey.So(checkNoProc, convey.ShouldBeTrue)
 		})
 }
