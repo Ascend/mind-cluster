@@ -487,14 +487,6 @@ func (s *FaultRecoverService) Init(ctx context.Context, req *pb.ClientInfo) (*pb
 			Info: err.Error(),
 		}, nil
 	}
-	_, err = common.ChangeProcessRecoverEnableMode(baseInfo, constant.ProcessRecoverInit)
-	if err != nil {
-		hwlog.RunLog.Errorf("change process-recover-enable=init err:%v, jobId=%s", err, req.JobId)
-		return &pb.Status{
-			Code: int32(common.OperatePodGroupError),
-			Info: fmt.Sprintf("job(uid=%s) process-recover-enable init err:%v", req.JobId, err),
-		}, nil
-	}
 	hwlog.RunLog.Infof("job(uid=%s) init success", req.JobId)
 	s.recordInit(baseInfo)
 	return &pb.Status{
