@@ -688,6 +688,9 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		if !hdm.isPodRemove(devType, device, prClient) {
 			continue
 		}
+		if !hdm.checkNoProc(device.LogicID) {
+			continue
+		}
 		hdm.hotReset(device, []*common.NpuDevice{device})
 	}
 }
@@ -717,12 +720,44 @@ func (hdm *HwDevManager) ResetWithoutHccsServer(devType string, devices []*commo
 	for _, device := range devices {
 		inReset := hdm.manager.GetIfCardsInResetting(device.LogicID)
 		resetFailedTimes := hdm.manager.GetResetFailedTimes(device.LogicID)
-		if device.Health != v1beta1.Healthy && !inReset && resetFailedTimes < common.MaxResetTimes &&
-			hdm.isPodRemove(devType, device, prClient) {
-			// to avoid blocking for minutes
-			go hdm.hotReset(device, []*common.NpuDevice{device})
+		if device.Health == v1beta1.Healthy {
+			hwlog.RunLog.Warnf("Ascend910-%d is health, would not reset", device.LogicID)
+			continue
 		}
+		if inReset {
+			hwlog.RunLog.Warnf("Ascend910-%d is inReset, would not reset", device.LogicID)
+			continue
+		}
+		if resetFailedTimes >= common.MaxResetTimes {
+			hwlog.RunLog.Warnf("Ascend910-%d exceeds MaxResetTimes, would not reset", device.LogicID)
+			continue
+		}
+		if !hdm.isPodRemove(devType, device, prClient) {
+			hwlog.RunLog.Warnf("Ascend910-%d contains pod, would not reset", device.LogicID)
+			continue
+		}
+		if !hdm.checkNoProc(device.LogicID) {
+			hwlog.RunLog.Warnf("Ascend910-%d contains proc, would not reset", device.LogicID)
+			continue
+		}
+		// to avoid blocking for minutes
+		go hdm.hotReset(device, []*common.NpuDevice{device})
 	}
+}
+
+func (hdm *HwDevManager) checkNoProc(logicID int32) bool {
+	logicIDForCompare := fmt.Sprintf("Ascend910-%d", logicID)
+	processInfo, err := hdm.manager.GetDmgr().GetDevProcessInfo(logicID)
+	if err != nil || processInfo == nil {
+		hwlog.RunLog.Errorf("failed to get device process, logicId: %s, err: %v, devProcessInfo: %v",
+			logicIDForCompare, err, processInfo)
+		return false
+	}
+	if processInfo.ProcNum != 0 {
+		hwlog.RunLog.Errorf("found busy chip: %v", logicIDForCompare)
+		return false
+	}
+	return true
 }
 
 // ResetHccsServer try to reset server with hccs, which need to reset all cards at once
@@ -748,6 +783,9 @@ func (hdm *HwDevManager) ResetHccsServer(devType string, devices []*common.NpuDe
 			needReset = true
 		}
 		if !hdm.isPodRemove(devType, device, prClient) {
+			break
+		}
+		if !hdm.checkNoProc(device.LogicID) {
 			break
 		}
 		freeDeviceNum++
@@ -792,9 +830,11 @@ func (hdm *HwDevManager) ResetServerForA3(devType string, devices []*common.NpuD
 			inReset := hdm.manager.GetIfCardsInResetting(dev.LogicID)
 			resetFailedTimes := hdm.manager.GetResetFailedTimes(dev.LogicID)
 			podRemoved := hdm.isPodRemove(devType, dev, prClient)
-			if inReset || resetFailedTimes >= common.MaxResetTimes || !podRemoved {
-				hwlog.RunLog.Infof("device %v cant reset, inReset: %v, resetFailedTimes: %v, podRemoved: %v",
-					dev.DeviceName, inReset, resetFailedTimes, podRemoved)
+			noProc := hdm.checkNoProc(dev.LogicID)
+			if inReset || resetFailedTimes >= common.MaxResetTimes || !podRemoved || !noProc {
+				hwlog.RunLog.Infof("device %v cant reset, "+
+					"inReset: %v, resetFailedTimes: %v, podRemoved: %v, noProc: %v",
+					dev.DeviceName, inReset, resetFailedTimes, podRemoved, noProc)
 				break
 			}
 			freeDeviceNum++
