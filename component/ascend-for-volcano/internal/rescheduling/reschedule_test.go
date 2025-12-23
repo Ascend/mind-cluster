@@ -1498,6 +1498,7 @@ func TestReSchedulerUseAnnotation02(t *testing.T) {
 	t.Run("05-UseAnnotation does nothing when IsJobSingleRescheduling returns false", func(t *testing.T) {
 		jobID := api.JobID("test-job")
 		vcJob := plugin.SchedulerJob{}
+		vcJob.NPUJob = &util.NPUJob{}
 		fJob := &FaultJob{
 			PendingSessionNum: pendingTimes,
 		}
@@ -1513,6 +1514,7 @@ func TestReSchedulerUseAnnotation02(t *testing.T) {
 	t.Run("06-UseAnnotation does nothing when no matching FaultTask", func(t *testing.T) {
 		jobID := api.JobID("test-job")
 		vcJob := plugin.SchedulerJob{}
+		vcJob.NPUJob = &util.NPUJob{}
 		vcJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
 		fJob := &FaultJob{
 			PendingSessionNum: 0,
