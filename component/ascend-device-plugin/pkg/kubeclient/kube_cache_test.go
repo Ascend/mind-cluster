@@ -396,17 +396,17 @@ func TestGetActivePodListCache02(t *testing.T) {
 	})
 }
 
-// TestGetNodeServerIDCache test case for get server id
-func TestGetNodeServerIDCache(t *testing.T) {
+// TestGetNodeIpCache test case for get node ip
+func TestGetNodeIpCache(t *testing.T) {
 	client, err := newTestClientK8s()
 	if err != nil {
-		t.Fatal("TestGetNodeServerIDCache init kubernetes failed")
+		t.Fatal("TestGetNodeIpCache init kubernetes failed")
 	}
 	convey.Convey("test get server id failed", t, func() {
 		patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
 			Status: v1.NodeStatus{Addresses: make([]v1.NodeAddress, common.MaxPodLimit+1)}}, nil)
 		defer patch.Reset()
-		id, err := client.GetNodeServerIDCache()
+		id, err := client.GetNodeIpCache()
 		convey.So(id, convey.ShouldEqual, "")
 		convey.So(err.Error(), convey.ShouldEqual, "the number of node status in exceeds the upper limit")
 	})
@@ -416,13 +416,13 @@ func TestGetNodeServerIDCache(t *testing.T) {
 	defer patch.Reset()
 	convey.Convey("test server id", t, func() {
 		nodeServerIp = "test server id"
-		id, err := client.GetNodeServerIDCache()
+		id, err := client.GetNodeIpCache()
 		convey.So(id, convey.ShouldEqual, "test server id")
 		convey.So(err, convey.ShouldBeNil)
 		nodeServerIp = ""
 	})
 	convey.Convey("test no server id", t, func() {
-		id, err := client.GetNodeServerIDCache()
+		id, err := client.GetNodeIpCache()
 		convey.So(id, convey.ShouldEqual, "")
 		convey.So(err, convey.ShouldBeNil)
 	})

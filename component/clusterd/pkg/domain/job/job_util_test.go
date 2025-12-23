@@ -26,9 +26,11 @@ const (
 	nodeName2     = "node2"
 	podName1      = "pod1"
 	podName2      = "pod2"
+	podName3      = "pod3"
 	podNameSpace1 = "default"
 	podUid1       = "123"
 	podUid2       = "456"
+	podUid3       = "789"
 	deviceName1   = "device1"
 
 	pgMinMember2    = 2
@@ -224,9 +226,11 @@ func TestUpdateCmAndCache(t *testing.T) {
 func TestInitJobShareTorInfo(t *testing.T) {
 	podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 	podDemo2 := getDemoPod(podName2, podNameSpace1, podUid2)
+	podDemo3 := getDemoPod(podName3, podNameSpace1, podUid3)
 	podMapDemo := map[string]v1.Pod{
 		podUid1: *podDemo1,
 		podUid2: *podDemo2,
+		podUid3: *podDemo3,
 	}
 	convey.Convey("test initJobShareTorInfo", t, func() {
 		convey.Convey("when job framework is not pytorch. job masterAddr be nil", func() {
@@ -235,11 +239,6 @@ func TestInitJobShareTorInfo(t *testing.T) {
 			convey.So(jobDemo.MasterAddr, convey.ShouldEqual, "")
 		})
 		convey.Convey("when job framework is pytorch. job masterAddr is masterIp", func() {
-			mockGetEnvByPod := gomonkey.ApplyFunc(pod.GetEnvByPod,
-				func(_ map[string]v1.Pod, _ string) string {
-					return masterIp
-				})
-			defer mockGetEnvByPod.Reset()
 			jobDemo := getDemoJob(jobName1, jobNameSpace, jobUid1)
 			jobDemo.Framework = ptFramework
 			initJobShareTorInfo(&jobDemo, podMapDemo)
@@ -250,7 +249,7 @@ func TestInitJobShareTorInfo(t *testing.T) {
 			jobDemo.JobType = vcJobKind
 			jobDemo.Framework = ptFramework
 			serverHccl := constant.ServerHccl{
-				ServerID: masterIp,
+				HostIp: masterIp,
 			}
 			jobDemo.JobRankTable.ServerList = append(jobDemo.JobRankTable.ServerList, serverHccl)
 			initJobShareTorInfo(&jobDemo, podMapDemo)
@@ -260,7 +259,20 @@ func TestInitJobShareTorInfo(t *testing.T) {
 }
 
 func getDemoPod(name, nameSpace, podUid string) *v1.Pod {
-	p := &v1.Pod{}
+	p := &v1.Pod{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{{
+				Env: []v1.EnvVar{{
+					Name:      masterAddr,
+					Value:     masterIp,
+					ValueFrom: nil,
+				}},
+			}},
+		},
+		Status: v1.PodStatus{},
+	}
 	p.Name = name
 	p.Namespace = nameSpace
 	p.UID = types.UID(podUid)

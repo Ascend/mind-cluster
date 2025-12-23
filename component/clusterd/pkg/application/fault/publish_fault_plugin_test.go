@@ -31,19 +31,19 @@ const (
 
 func getMockFaultDeviceListForTest() []constant.FaultDevice {
 	return []constant.FaultDevice{
-		{ServerName: "node1", ServerId: "1", DeviceId: "0", FaultLevel: constant.SeparateNPU,
+		{ServerName: "node1", ServerId: "1", HostIp: "1", DeviceId: "0", FaultLevel: constant.SeparateNPU,
 			DeviceType: constant.FaultTypeNPU},
-		{ServerName: "node1", ServerId: "1", DeviceId: "1", FaultLevel: constant.RestartNPU,
+		{ServerName: "node1", ServerId: "1", HostIp: "1", DeviceId: "1", FaultLevel: constant.RestartNPU,
 			DeviceType: constant.FaultTypeNPU},
-		{ServerName: "node1", ServerId: "1", DeviceId: "2", FaultLevel: constant.SubHealthFault,
+		{ServerName: "node1", ServerId: "1", HostIp: "1", DeviceId: "2", FaultLevel: constant.SubHealthFault,
 			DeviceType: constant.FaultTypeNPU},
-		{ServerName: "node1", ServerId: "1", DeviceId: "3", FaultLevel: constant.NotHandleFault,
+		{ServerName: "node1", ServerId: "1", HostIp: "1", DeviceId: "3", FaultLevel: constant.NotHandleFault,
 			DeviceType: constant.FaultTypeNPU},
-		{ServerName: "node0", ServerId: "0", DeviceId: "0", FaultLevel: constant.SeparateNPU,
+		{ServerName: "node0", ServerId: "0", HostIp: "0", DeviceId: "0", FaultLevel: constant.SeparateNPU,
 			DeviceType: constant.FaultTypeSwitch},
-		{ServerName: "node2", ServerId: "2", DeviceId: "0", FaultLevel: constant.SubHealthFault,
+		{ServerName: "node2", ServerId: "2", HostIp: "2", DeviceId: "0", FaultLevel: constant.SubHealthFault,
 			DeviceType: constant.FaultTypeNPU},
-		{ServerName: "node3", ServerId: "3", DeviceId: "0", FaultLevel: constant.NotHandleFault,
+		{ServerName: "node3", ServerId: "3", HostIp: "3", DeviceId: "0", FaultLevel: constant.NotHandleFault,
 			DeviceType: constant.FaultTypeNPU},
 	}
 }
@@ -123,7 +123,7 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		convey.So(msg, convey.ShouldResemble, getMockFaultMsgForTest())
 	})
 	convey.Convey("faultList includes only L1 faults, should convert to fault msg", t, func() {
-		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
+		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", HostIp: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
 		msg.Uuid = ""
@@ -133,7 +133,7 @@ func TestFaultDeviceToSortedFaultMsgSignal(t *testing.T) {
 		"should convert to normal msg", t, func() {
 		patch := gomonkey.ApplyFuncReturn(getNodeFaultInfo, nil)
 		defer patch.Reset()
-		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", DeviceId: "0",
+		faultDevice := []constant.FaultDevice{{ServerName: "node3", ServerId: "3", HostIp: "3", DeviceId: "0",
 			FaultLevel: constant.NotHandleFault, DeviceType: constant.FaultTypeNPU}}
 		msg := faultDeviceToSortedFaultMsgSignal(fakeJobID1, faultDevice)
 		msg.Uuid = ""

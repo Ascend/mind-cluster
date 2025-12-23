@@ -1051,19 +1051,19 @@ func (hdm *HwDevManager) handleDeleteEvent(deleteFile string) {
 }
 
 func (hdm *HwDevManager) updatePodAnnotation() error {
-	serverID, err := hdm.manager.GetKubeClient().GetNodeServerIDCache()
+	nodeIp, err := hdm.manager.GetKubeClient().GetNodeIpCache()
 	if err != nil {
 		return fmt.Errorf("get node server id failed: %v", err)
 	}
 	if !common.ParamOption.PresetVDevice {
-		return hdm.updateSpecTypePodAnnotation(common.AiCoreResourceName, serverID)
+		return hdm.updateSpecTypePodAnnotation(common.AiCoreResourceName, nodeIp)
 	}
 	for _, devType := range hdm.allInfo.AllDevTypes {
 		// for 310P vnpu no need update
 		if common.IsVirtualDev(devType) && !strings.HasPrefix(devType, api.Ascend910) {
 			continue
 		}
-		if err := hdm.updateSpecTypePodAnnotation(devType, serverID); err != nil {
+		if err := hdm.updateSpecTypePodAnnotation(devType, nodeIp); err != nil {
 			hwlog.RunLog.Warnf("update pod annotation failed, %v", err)
 		}
 	}

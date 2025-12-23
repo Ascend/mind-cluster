@@ -28,6 +28,7 @@ import (
 	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable"
+	"ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 	_ "ascend-operator/pkg/testtool"
@@ -1178,4 +1179,40 @@ func buildOldPod() *corev1.Pod {
 		},
 	}
 	return oldPod
+}
+
+func TestSetOnePodOneNode(t *testing.T) {
+	rc := newCommonReconciler()
+	podsOnDiffNodes := []*corev1.Pod{{
+		Spec: corev1.PodSpec{
+			NodeName: "node-1",
+		},
+	}, {
+		Spec: corev1.PodSpec{
+			NodeName: "node-2",
+		},
+	}}
+	rc.setOnePodOneNode(podsOnDiffNodes)
+	for _, pod := range podsOnDiffNodes {
+		if pod.Annotations[common.OnePodOneNode] != "true" {
+			t.Errorf("when all pods are one different nodes, then OnePodOneNode should be true")
+		}
+	}
+
+	podsOnSameNodes := []*corev1.Pod{{
+		Spec: corev1.PodSpec{
+			NodeName: "node-1",
+		},
+	}, {
+		Spec: corev1.PodSpec{
+			NodeName: "node-1",
+		},
+	}}
+
+	rc.setOnePodOneNode(podsOnSameNodes)
+	for _, pod := range podsOnSameNodes {
+		if pod.Annotations[common.OnePodOneNode] == "true" {
+			t.Errorf("when all pods are one same nodes, then OnePodOneNode should be not true")
+		}
+	}
 }

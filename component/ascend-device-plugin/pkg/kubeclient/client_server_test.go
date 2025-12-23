@@ -97,11 +97,11 @@ func TestAnnotationReset(t *testing.T) {
 	})
 }
 
-// TestGetNodeServerID test get node server id
-func TestGetNodeServerID(t *testing.T) {
+// TestGetNodeIp test get node server id
+func TestGetNodeIp(t *testing.T) {
 	utKubeClient, err := initK8S()
 	if err != nil {
-		t.Fatal("TestGetNodeServerID init kubernetes failed")
+		t.Fatal("TestGetNodeIp init kubernetes failed")
 	}
 	node := getMockNode(api.HuaweiAscend910, npuChip910PhyID0)
 	convey.Convey("get node server id without get node", t, func() {
@@ -110,7 +110,7 @@ func TestGetNodeServerID(t *testing.T) {
 				return nil, fmt.Errorf("failed to get node")
 			})
 		defer mockNode.Reset()
-		_, err := utKubeClient.GetNodeServerID()
+		_, err := utKubeClient.GetNodeIp()
 		convey.So(err.Error(), convey.ShouldEqual, "failed to get node")
 	})
 	convey.Convey("get node server id", t, func() {
@@ -119,7 +119,7 @@ func TestGetNodeServerID(t *testing.T) {
 				return node, nil
 			})
 		defer mockNode.Reset()
-		serverID, err := utKubeClient.GetNodeServerID()
+		serverID, err := utKubeClient.GetNodeIp()
 		convey.So(err, convey.ShouldEqual, nil)
 		convey.So(serverID, convey.ShouldEqual, common.DefaultDeviceIP)
 	})

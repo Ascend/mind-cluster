@@ -46,6 +46,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
+	rtcm "ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
 	"ascend-operator/pkg/ranktable/utils"
 	mindxdlutils "ascend-operator/pkg/utils"
@@ -223,6 +224,27 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+}
+
+func (r *ASJobReconciler) setOnePodOneNode(allocatedPods []*corev1.Pod) {
+	nodeHavePod := make(map[string]struct{})
+	onePodOneNode := true
+	for _, pod := range allocatedPods {
+		if _, found := nodeHavePod[pod.Spec.NodeName]; found {
+			onePodOneNode = false
+			break
+		}
+		nodeHavePod[pod.Spec.NodeName] = struct{}{}
+	}
+
+	for _, pod := range allocatedPods {
+		if onePodOneNode {
+			if pod.Annotations == nil {
+				pod.Annotations = make(map[string]string)
+			}
+			pod.Annotations[rtcm.OnePodOneNode] = "true"
+		}
+	}
 }
 
 func (r *ASJobReconciler) checkPodDelete(rtg generator.RankTableGenerator, ji *jobInfo) {

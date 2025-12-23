@@ -768,7 +768,7 @@ func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (m
 	return devicesWithIP, nil
 }
 
-func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType, serverID string,
+func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType, hostIp string,
 	allDevices []common.NpuDevice) (string, error) {
 	ascendRuntimeOptions := ""
 	if common.IsVirtualDev(deviceType) {
@@ -785,7 +785,8 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 		return "", errors.New("get device list ip failed")
 	}
 	info := common.ServerInfo{
-		ServerID:   serverID,
+		ServerID:   string(podDev.Pod.UID),
+		HostIp:     hostIp,
 		DeviceType: deviceType,
 		SuperPodID: tool.GetSuperPodID(),
 	}
@@ -796,7 +797,7 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 
 // AddPodAnnotation check and update pod annotations
 // correct annotation 'AscendReal', 'Ascend910', 'kltDev', 'ascend-910-configuration' per 5s
-func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceType, serverID string,
+func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceType, hostIp string,
 	allDevices []common.NpuDevice) error {
 	if !common.ParamOption.PresetVDevice {
 		tool.AppendVGroupInfo(podDev.RealDevice)
@@ -828,7 +829,7 @@ func (tool *AscendTools) AddPodAnnotation(podDev *common.PodDeviceInfo, deviceTy
 		}
 	}
 	if tool.name == api.Ascend910 || common.IsContainAll300IDuo() {
-		config, err := tool.getConfigAnno(podDev, deviceType, serverID, allDevices)
+		config, err := tool.getConfigAnno(podDev, deviceType, hostIp, allDevices)
 		if err == nil {
 			if podDev.Pod.Annotations[api.Pod910DeviceAnno] != config {
 				hwlog.RunLog.Warnf("need correct: annotKey: %s, old value: %s, new value: %s",

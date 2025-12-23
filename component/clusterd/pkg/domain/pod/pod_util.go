@@ -156,6 +156,8 @@ func ConstructRankTableByPod(
 	completedPodNum := 0
 	rankTable.ServerList = make([]constant.ServerHccl, 0, replicas)
 	ipSnMap := node.GetNodeIPAndSNMap()
+	nodeHavePods := make(map[string]struct{})
+	onePodOneNode := true
 	for _, pod := range podsInJob {
 		podRank := getPodRank(pod)
 		if podRank == -1 || podRank >= replicas {
@@ -169,6 +171,10 @@ func ConstructRankTableByPod(
 		if len(podDev.Devices) == 0 {
 			continue
 		}
+		if _, found := nodeHavePods[pod.Spec.NodeName]; found {
+			onePodOneNode = false
+		}
+		nodeHavePods[pod.Spec.NodeName] = struct{}{}
 		scaleOutType, err := getScaleOutType(podGroup, podsInJob)
 		if err != nil {
 			hwlog.RunLog.Errorf("getScaleOutType failed: %v", err)
@@ -176,6 +182,12 @@ func ConstructRankTableByPod(
 
 		serverInfo := getServerInfo(scaleOutType, podDev, pod, ipSnMap, podRank)
 		rankTable.ServerList = append(rankTable.ServerList, serverInfo)
+	}
+	// if pods on diff nodes then server id is host ip
+	if onePodOneNode {
+		for i := range rankTable.ServerList {
+			rankTable.ServerList[i].ServerID = rankTable.ServerList[i].HostIp
+		}
 	}
 	sort.Slice(rankTable.ServerList, func(i, j int) bool {
 		iRankID, iErr := strconv.Atoi(rankTable.ServerList[i].DeviceList[0].RankID)
@@ -193,11 +205,12 @@ func getServerInfo(scaleOutType string, podDev constant.PodDevice,
 	pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
 	server := constant.ServerHccl{
 		ServerID:     podDev.ServerID,
+		HostIp:       podDev.HostIp,
 		PodID:        podDev.PodName,
 		PodNameSpace: pod.Namespace,
 		ServerName:   pod.Spec.NodeName,
 		SuperPodId:   podDev.SuperPodId,
-		ServerSN:     getSN(pod.Spec.NodeName, podDev.ServerID, ipSnMap),
+		ServerSN:     getSN(pod.Spec.NodeName, podDev.HostIp, ipSnMap),
 	}
 
 	podDevNum := len(podDev.Devices)
@@ -214,12 +227,12 @@ func getServerInfo(scaleOutType string, podDev constant.PodDevice,
 	return server
 }
 
-func getSN(serverName, serverID string, ipSnMap map[string]string) string {
+func getSN(serverName, nodeIp string, ipSnMap map[string]string) string {
 	if serverName != "" {
 		return node.GetNodeSNByName(serverName)
 	}
-	if serverID != "" {
-		return ipSnMap[serverID]
+	if nodeIp != "" {
+		return ipSnMap[nodeIp]
 	}
 	hwlog.RunLog.Warn("server name and server id are both empty")
 	return ""
@@ -369,14 +382,22 @@ func GetPGByPod(jobKey string) (jobName, pgName, namespace string) {
 func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 	podMap := GetPodByJobId(jobKey)
 	servers := make(map[string]constant.ServerHccl, len(podMap))
+	onePodOneNode := JudgePodOnDiffNode(podMap)
 	for _, pod := range podMap {
 		if pod.Spec.NodeName == "" {
 			hwlog.RunLog.Warnf("job: %s server pod %s is not scheduled", jobKey, pod.Name)
 			return nil
 		}
 		nodeName := pod.Spec.NodeName
+		serverId := string(pod.UID)
+
+		// if pods on diff nodes then server id is node ip. used in mindie.
+		if onePodOneNode {
+			serverId = node.GetNodeIpByName(nodeName)
+		}
 		servers[nodeName] = constant.ServerHccl{
-			ServerID:     node.GetNodeIpByName(nodeName),
+			ServerID:     serverId,
+			HostIp:       node.GetNodeIpByName(nodeName),
 			PodID:        pod.Name,
 			PodNameSpace: pod.Namespace,
 			ServerName:   nodeName,
@@ -384,6 +405,19 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 		}
 	}
 	return servers
+}
+
+// JudgePodOnDiffNode judge pods whether on diff nodes
+func JudgePodOnDiffNode(podMap map[string]v1.Pod) bool {
+	nodePodFlg := make(map[string]struct{})
+	onePodOneNode := true
+	for _, pod := range podMap {
+		if _, found := nodePodFlg[pod.Spec.NodeName]; found {
+			onePodOneNode = false
+		}
+		nodePodFlg[pod.Spec.NodeName] = struct{}{}
+	}
+	return onePodOneNode
 }
 
 // GetUsedDevicesByNodeName get used devices by node name

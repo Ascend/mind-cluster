@@ -36,6 +36,10 @@ const (
 	Version1 = "1.0"
 	// Version1Dot2 is the version of ranktable v1.2
 	Version1Dot2 = "1.2"
+	// SchedulePolicyAnnoKey annotation key for schedule policy
+	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
+	// OnePodOneNode indicates that for a job all pods are on different node
+	OnePodOneNode = "onePodOneNode"
 )
 
 // BaseGenerator is the base struct for ranktable generator.
@@ -276,9 +280,14 @@ func (r *BaseGenerator) buildServerInfo(pod *corev1.Pod, instance *Instance) (*S
 		return nil, err
 	}
 
+	// if all pods on different nodes, then server id is host ip. used in mindie EP.
+	serverId := instance.ServerID
+	if pod.Annotations != nil && pod.Annotations[OnePodOneNode] == "true" {
+		serverId = instance.HostIp
+	}
 	server := &Server{
-		ServerID:    instance.ServerID,
-		HostIP:      instance.ServerID,
+		ServerID:    serverId,
+		HostIP:      instance.HostIp,
 		ContainerIP: pod.Status.PodIP,
 		DeviceList:  r.getDeviceList(instance.Devices, rankIndex),
 	}

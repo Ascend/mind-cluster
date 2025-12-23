@@ -58,6 +58,7 @@ var (
 // ServerInfo used for pass parameters
 type ServerInfo struct {
 	ServerID   string
+	HostIp     string
 	DeviceType string
 	SuperPodID int32
 }

@@ -31,7 +31,8 @@ type RankTableStatus string
 // Server to hccl
 type Server struct {
 	DeviceList   []*Device `json:"device"`    // device list in each server
-	ServerID     string    `json:"server_id"` // server id, represented by ip address
+	ServerID     string    `json:"server_id"` // server id
+	HostIp       string    `json:"host_ip"`   // host id, represented by ip address
 	ContainerIP  string    `json:"container_ip,omitempty"`
 	HardwareType string    `json:"hardware_type,omitempty"`
 }
@@ -151,6 +152,24 @@ func getPdDeployModeServers(nameSpace, jobId, appType string) ([]*PdDeployModeSe
 	return servers, nil
 }
 
+// convertGrtServerId convert the value of server_id into host_ip in A2RankTable
+func convertGrtServerId(a2RankTable *A2RankTable) {
+	if a2RankTable == nil || a2RankTable.ServerList == nil {
+		hwlog.RunLog.Info("convertGrtServerId error")
+		return
+	}
+	serverIdToHostIp := make(map[string]string)
+	for _, server := range a2RankTable.ServerList {
+		serverIdToHostIp[server.ServerID] = server.HostIp
+		server.ServerID = server.HostIp
+	}
+	for _, info := range a2RankTable.SuperPodInfoList {
+		for _, server := range info.SuperPodServerList {
+			server.SuperPodServerId = serverIdToHostIp[server.SuperPodServerId]
+		}
+	}
+}
+
 // GetA2RankTableList get completed a2 rank table list
 func GetA2RankTableList(message *GenerateGlobalRankTableMessage) ([]*A2RankTable, error) {
 	jobId := message.JobId
@@ -168,6 +187,7 @@ func GetA2RankTableList(message *GenerateGlobalRankTableMessage) ([]*A2RankTable
 		if err != nil {
 			return nil, err
 		}
+		convertGrtServerId(a2RankTable)
 		if a2RankTable.Status == constant.StatusRankTableCompleted {
 			a2RankTableList = append(a2RankTableList, a2RankTable)
 		}

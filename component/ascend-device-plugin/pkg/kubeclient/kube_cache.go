@@ -241,17 +241,17 @@ func (ki *ClientK8s) GetActivePodListCache() []v1.Pod {
 	return newPodList
 }
 
-// GetNodeServerIDCache Get Node Server ID with cache
-func (ki *ClientK8s) GetNodeServerIDCache() (string, error) {
+// GetNodeIpCache Get Node Server ID with cache
+func (ki *ClientK8s) GetNodeIpCache() (string, error) {
 	if nodeServerIp != "" {
 		return nodeServerIp, nil
 	}
-	serverID, err := ki.GetNodeServerID()
+	nodeIp, err := ki.GetNodeIp()
 	if err != nil {
 		return "", err
 	}
-	nodeServerIp = serverID
-	return serverID, nil
+	nodeServerIp = nodeIp
+	return nodeIp, nil
 }
 
 // GetServerUsageLabelCache get node label:server-usage, and cache it in memory, if label updated, restart is required

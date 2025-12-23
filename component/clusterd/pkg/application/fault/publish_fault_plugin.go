@@ -200,7 +200,7 @@ func getNodeFaultInfo(faultList []constant.FaultDevice) *fault.NodeFaultInfo {
 	}
 	info := &fault.NodeFaultInfo{
 		NodeName: faultList[0].ServerName,
-		NodeIP:   faultList[0].ServerId,
+		NodeIP:   faultList[0].HostIp,
 		NodeSN:   faultList[0].ServerSN,
 	}
 	maxLevel := constant.HealthyLevel
