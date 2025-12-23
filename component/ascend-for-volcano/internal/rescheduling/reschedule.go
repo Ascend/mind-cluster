@@ -771,7 +771,7 @@ func (reScheduler *ReScheduler) UseAnnotation(task *api.TaskInfo) {
 	if !ok {
 		return
 	}
-	if !fJob.IsJobSingleRescheduling(&vcJob) {
+	if vcJob.SchedulingTaskNum == len(vcJob.Tasks) {
 		return
 	}
 	for _, fTask := range fJob.FaultTasks {
