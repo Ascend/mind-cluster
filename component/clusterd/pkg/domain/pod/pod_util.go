@@ -287,7 +287,7 @@ func GetPodDeviceNumByJobId(jobKey string) int {
 	if isInference || len(podsInJob) == 0 {
 		return 0
 	}
-	hwlog.RunLog.Warnf("failed get pod device num, job key: %s, len(podsInJob): %d", jobKey, len(podsInJob))
+	hwlog.RunLog.Debugf("failed get pod device num, job key: %s, len(podsInJob): %d", jobKey, len(podsInJob))
 	return 0
 }
 
