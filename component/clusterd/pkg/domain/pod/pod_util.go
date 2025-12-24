@@ -286,12 +286,7 @@ func GetPodDeviceNumByJobId(jobKey string) int {
 // GetPodByRankIndex get pod by rank index
 func GetPodByRankIndex(jobKey, podRank string) v1.Pod {
 	podsInJob := GetPodByJobId(jobKey)
-	for _, pod := range podsInJob {
-		if pod.Annotations[api.PodRankIndexAnno] == podRank {
-			return pod
-		}
-	}
-	return v1.Pod{}
+	return GetPodByRankIndexInPods(podRank, podsInJob)
 }
 
 // GetModelFramework get model framework
@@ -435,4 +430,14 @@ func GetUsedDevicesByNodeName(nodeName string) sets.String {
 		usedDevice = usedDevice.Insert(strings.Split(ascendReal, constant.Comma)...)
 	}
 	return usedDevice
+}
+
+// GetPodByRankIndexInPods get pod by rank index in pods
+func GetPodByRankIndexInPods(podRank string, podsInJob map[string]v1.Pod) v1.Pod {
+	for _, pod := range podsInJob {
+		if pod.Annotations[api.PodRankIndexAnno] == podRank {
+			return pod
+		}
+	}
+	return v1.Pod{}
 }
