@@ -415,13 +415,14 @@ func labelPodFault(jobId string, faultPodRankList []string, labeledMap map[strin
 		labeledMap = make(map[string]string)
 	}
 	faultLabel := map[string]string{faultLabelKey: faultReason}
+	jobPods := pod.GetPodByJobId(jobId)
 	var err error = nil
 	for _, podRank := range faultPodRankList {
 		_, labeled := labeledMap[podRank]
 		if labeled {
 			continue
 		}
-		pod := pod.GetPodByRankIndex(jobId, podRank)
+		pod := pod.GetPodByRankIndexInPods(podRank, jobPods)
 		if pod.Name == "" {
 			hwlog.RunLog.Infof("discard nil pod, jobId=%s", jobId)
 			continue

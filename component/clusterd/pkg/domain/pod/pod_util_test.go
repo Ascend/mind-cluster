@@ -406,3 +406,24 @@ func TestJudgePodOnDiffNode(t *testing.T) {
 		t.Errorf("when pod on same node then should return true")
 	}
 }
+
+func TestGetPodByRankIndexInPods(t *testing.T) {
+	convey.Convey("test GetPodByRankIndexInPods", t, func() {
+		convey.Convey("when podsInJob exists and pod with matching rank index exists", func() {
+			podsInJob := make(map[string]v1.Pod)
+			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+			podsInJob[podUid1] = *podDemo1
+			result := GetPodByRankIndexInPods(defaultPodRankIndexKey, podsInJob)
+			convey.So(result.Name, convey.ShouldEqual, podName1)
+			convey.So(result.Namespace, convey.ShouldEqual, podNameSpace1)
+		})
+		convey.Convey("when podsInJob exists but no pod with matching rank index exists", func() {
+			podsInJob := make(map[string]v1.Pod)
+			podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+			podsInJob[podUid1] = *podDemo1
+			result := GetPodByRankIndexInPods("1", podsInJob)
+			convey.So(result.Name, convey.ShouldEqual, "")
+			convey.So(result.Namespace, convey.ShouldEqual, "")
+		})
+	})
+}
