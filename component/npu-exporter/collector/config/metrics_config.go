@@ -35,6 +35,7 @@ var (
 		groupDDR:     &metrics.DdrCollector{},
 		groupVnpu:    &metrics.VnpuCollector{},
 		groupPcie:    &metrics.PcieCollector{},
+		groupText:    &metrics.TextMetricsInfoCollector{},
 	}
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
@@ -54,6 +55,7 @@ var (
 		{metricsGroup: groupVersion, state: stateOn},
 		{metricsGroup: groupOptical, state: stateOn},
 		{metricsGroup: groupHbm, state: stateOn},
+		{metricsGroup: groupText, state: stateOn},
 	}
 )
 
@@ -72,6 +74,7 @@ const (
 	groupVersion = "version"
 	groupOptical = "optical"
 	groupHbm     = "hbm"
+	groupText    = "text"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"
