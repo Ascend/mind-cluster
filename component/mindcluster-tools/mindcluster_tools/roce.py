@@ -98,7 +98,7 @@ def get_npu_roce_ip() -> Dict[int, str]:
     """
     interface_list = get_network_interfaces()
     npus = sorted(
-        [int(i[len("/dev/davinci") :]) for i in glob.glob("/dev/davinci[0-9]*")]
+        [int(i[len("/dev/davinci"):]) for i in glob.glob("/dev/davinci[0-9]*")]
     )
     npu_ip_map = {}
     for i in npus:

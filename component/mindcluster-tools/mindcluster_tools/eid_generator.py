@@ -48,7 +48,7 @@ class EIDGenerator(Queryable):
                 + port_id
                 + parse_eid.LOGIC_PORT_FLAG
             )
-        eid[parse_eid.PORT_ID_RANGE_START : parse_eid.PORT_ID_RANGE_END] = (
+        eid[parse_eid.PORT_ID_RANGE_START: parse_eid.PORT_ID_RANGE_END] = (
             self._get_bitarray(global_port, parse_eid.PORT_ID_LENGTH)
         )
         board = bitarray(
@@ -56,15 +56,15 @@ class EIDGenerator(Queryable):
                 parse_eid.BOARD_ID_LENGTH
             )
         )
-        eid[parse_eid.BOARD_ID_RANGE_START : parse_eid.BOARD_ID_RANGE_END] = board
-        eid[parse_eid.CHESSIS_ID_RANGE_START : parse_eid.CHESSIS_ID_RANGE_END] = (
+        eid[parse_eid.BOARD_ID_RANGE_START: parse_eid.BOARD_ID_RANGE_END] = board
+        eid[parse_eid.CHESSIS_ID_RANGE_START: parse_eid.CHESSIS_ID_RANGE_END] = (
             self._get_bitarray(ch_id, parse_eid.CHESSIS_ID_LENGTH)
         )
         # Fix to 233
-        eid[parse_eid.UBC_223_RANGE_START : parse_eid.UBC_223_RANGE_END] = (
+        eid[parse_eid.UBC_223_RANGE_START: parse_eid.UBC_223_RANGE_END] = (
             self._get_bitarray(UBC_VALUE, parse_eid.UBC_223_LENGTH)
         )
-        eid[parse_eid.FE_ID_RANGE_START : parse_eid.FE_ID_RANGE_END] = (
+        eid[parse_eid.FE_ID_RANGE_START: parse_eid.FE_ID_RANGE_END] = (
             self._get_bitarray(fe_id, parse_eid.FE_ID_LENGTH)
         )
         # Bit 52 is fixed to 1

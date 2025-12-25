@@ -19,7 +19,7 @@ from abc import ABC
 import copy
 import functools
 import json
-from typing import List
+from typing import List, Any
 import netifaces
 import ctypes
 
@@ -90,10 +90,10 @@ def exclude_fields(*fields):
 class RootInfoEncoder(json.JSONEncoder):
     """Serializer: Convert objects to dictionaries via to_dict method for serialization"""
 
-    def default(self, obj):
-        if isinstance(obj, ToDict):
-            return obj.to_dict()
-        return json.JSONEncoder.default(self, obj)
+    def default(self, o: Any):
+        if isinstance(o, ToDict):
+            return o.to_dict()
+        return json.JSONEncoder.default(self, o)
 
 
 class Address(ToDict, ABC):
@@ -303,9 +303,7 @@ def parse_dcmi_param(board_id, mainboard_id, rank_count, params, spod_info):
     else:
         # server_16p form factor requires local_id calculation
         if super_pod_type == 3:
-            local_id_list = [
-                (server_index % 2) * rank_count + i for i in range(rank_count)
-            ]
+            local_id_list = [(server_index % 2) * rank_count + i for i in range(rank_count)]
         else:
             local_id_list = list(range(rank_count))
     if params["topo_path"] is not None:
@@ -379,7 +377,7 @@ def parse_param(params):
 def get_urma_device_level_by_eid(hex_eid_str):
 
     eid = hex2ba(hex_eid_str)
-    fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START : parse_eid.FE_ID_RANGE_END])
+    fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START: parse_eid.FE_ID_RANGE_END])
     return URMA_DEVICE_LEVEL_MAP[fe_id]
 
 
@@ -387,7 +385,7 @@ def get_ports_info_by_eid(
     hex_eid_str, local_id, urma_device_level, topo, super_pod_type
 ):
     eid = hex2ba(hex_eid_str)
-    port_id = ba2int(eid[parse_eid.PORT_ID_RANGE_START : parse_eid.PORT_ID_RANGE_END])
+    port_id = ba2int(eid[parse_eid.PORT_ID_RANGE_START: parse_eid.PORT_ID_RANGE_END])
     # logic EID
     if port_id > parse_eid.LOGIC_PORT_FLAG:
         die_id = (
@@ -436,7 +434,7 @@ def eid_filter(eid_list):
         if all(char == "0" for char in eid_str):
             continue
         eid = hex2ba(eid_str)
-        fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START : parse_eid.FE_ID_RANGE_END])
+        fe_id = ba2int(eid[parse_eid.FE_ID_RANGE_START: parse_eid.FE_ID_RANGE_END])
         if fe_id not in URMA_DEVICE_LEVEL_MAP:
             continue
         res.append(eid_str)
@@ -484,7 +482,7 @@ def get_level0_info(chassis_id, super_pod_id, super_pod_type, server_index, npu_
 
 def cut_ip_from_eid(eid_str):
     IP_HEX_LENGTH = 8
-    ip_int = int(eid_str[len(eid_str) - IP_HEX_LENGTH :], 16)
+    ip_int = int(eid_str[len(eid_str) - IP_HEX_LENGTH:], 16)
 
     # Extract four 8-bit bytes
     octets = [

@@ -323,6 +323,7 @@ def get_mainboard_id():
     _process_get_mainboard_id(dcmi_lib, card_id, device_id, mainboard_id)
     return mainboard_id.value
 
+
 def is_dcmi_available() -> bool:
     """
     return true if dcmi for atlas 950 is avaiable
