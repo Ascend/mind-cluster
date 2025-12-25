@@ -105,6 +105,7 @@ class MsAgent(BaseAgent):
             if self.rank_status == self.RANK_STATUS_UNHEALTHY:
                 run_log.info(f"status unhealthy, {ms_proc_status}")
                 self.report_fault_rank(fault_ranks)
+            self.handle_all_process_succeed()
 
     def update_rank_status(self, rank_status_dict: dict) -> list:
         """
@@ -208,3 +209,17 @@ class MsAgent(BaseAgent):
             if fault_rank in self.node_global_rank_ids:
                 fault_local_ranks.append(fault_rank)
         return fault_local_ranks
+
+    def handle_all_process_succeed(self):
+        if not self.all_rank_succeed:
+            return
+        run_log.info(
+            f"nodeRank:{self.node_rank} successfully finished."
+        )
+        # wait for MS release resources
+        time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
+        stop_res = self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)([constants.KILL_ALL_WORKERS])
+        run_log.info(f"rank with pid {self.rank_pids} will be cleared")
+        if stop_res != constants.RES_OK:
+            run_log.error(f"nodeRank:{self.node_rank} failed to stop workers with return code:{stop_res}")
+        exit(0)
