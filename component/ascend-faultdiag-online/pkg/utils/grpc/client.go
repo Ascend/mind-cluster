@@ -130,7 +130,8 @@ func (c *Client) StartAllProfiling(name, namespace string) error {
 			DataLoader:            on,
 		},
 	}
-	_, err := c.profilingSwitch(data)
+	res, err := c.tc.ModifyTrainingDataTraceSwitch(context.Background(), data)
+	hwlog.RunLog.Infof("[FD-OL]got grpc response of start all profiling switch: %v", res)
 	return err
 }
 
@@ -317,7 +318,7 @@ func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClien
 		}
 		c.callbacks.Range(func(key string, cb callback) bool {
 			if cb.namespace == data.Namespace && cb.jobName == data.JobName && cb.f != nil {
-				cb.f(job)
+				go cb.f(job)
 			}
 			return true
 		})
@@ -340,7 +341,7 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 	var key = fmt.Sprintf("%s/%s", namespace, jobName)
 	// send the storage data immediatelly
 	if job, ok := storage.Load(key); ok {
-		cb.f(job)
+		go cb.f(job)
 	}
 	c.callbacks.Store(registerId, cb)
 	// register
