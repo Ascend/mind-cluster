@@ -175,7 +175,9 @@ func (tp *oneRackStrategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo) 
 		}
 		// already selected enough nodes, saving the rest of nodes
 		if spIndex >= len(tp.unReadyIds) {
-			rackGroup[bestRackId] = rackGroup[bestRackId][count:]
+			if nodes, ok := rackGroup[bestRackId]; ok && nodes != nil {
+				rackGroup[bestRackId] = nodes[count:]
+			}
 			return
 		}
 	}

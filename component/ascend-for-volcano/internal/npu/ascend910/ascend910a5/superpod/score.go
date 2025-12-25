@@ -89,6 +89,10 @@ func (tp *module910a5SuperPod) scoreNodeForReadyJob(task *api.TaskInfo,
 		return
 	}
 	node := job.SuperPods[superPodRankIndex][localRank]
+	if sMap == nil {
+		klog.V(util.LogErrorLev).Infof("sMap is nil, cannot score node")
+		return
+	}
 	if _, find := sMap[node.Name]; find {
 		sMap[node.Name] += scoreForNode
 		return
