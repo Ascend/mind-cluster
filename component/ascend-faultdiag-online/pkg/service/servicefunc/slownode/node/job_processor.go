@@ -114,12 +114,10 @@ func (j *jobProcessor) start() {
 	if j.ctx == nil {
 		return
 	}
-	if j.ctx.IsRunning() {
-		hwlog.RunLog.Errorf("%s started failed: already running", j.logPrefix())
+	if err := j.ctx.Start(); err != nil {
+		hwlog.RunLog.Errorf("%s started failed: %v", j.logPrefix(), err)
 		return
 	}
-
-	j.ctx.Start()
 	dataparse.NewController(j.ctx).Start()
 	j.ctx.AddStep()
 }
