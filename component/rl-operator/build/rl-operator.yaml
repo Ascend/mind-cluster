@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: controller-manager
+  name: rl-operator-manager
+  namespace: mindx-dl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: controller-manager
+  template:
+    metadata:
+      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+      labels:
+        app: controller-manager
+    spec:
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
+      #      securityContext:
+      #        seccompProfile:
+      #          type: RuntimeDefault
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+      nodeSelector:
+        masterselector: dls-master-node
+      serviceAccountName: rl-operator-manager
+      containers:
+        - command: [ "/bin/bash", "-c", "--"]
+          args: [ "rl-operator
+                   --kubeApiQps=800
+                   --kubeApiBurst=800
+                   --enableGangScheduling=true
+                   --logFile=/var/log/mindx-dl/rl-operator/rl-operator.log
+                   --logLevel=0" ]
+          image: rl-operator:v6.0.0
+          name: manager
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 3Gi
+            requests:
+              cpu: 2000m
+              memory: 3Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 9000
+            runAsGroup: 9000
+            capabilities:
+              drop: ["All"]
+          volumeMounts:
+            - name: rl-operator-log
+              mountPath: /var/log/mindx-dl/rl-operator
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: rl-operator-log
+          hostPath:
+            path: /var/log/mindx-dl/rl-operator
+            type: Directory
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rl-operator-manager
+  namespace: mindx-dl
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rl-operator-manager-role
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch", "list", "watch", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "update"]
+  - apiGroups: [ "" ]
+    resources: [ "services" ]
+    verbs: [ "create", "list", "watch", "delete", "get" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "update" ]
+  - apiGroups: [ "scheduling.volcano.sh" ]
+    resources: [ "podgroups"]
+    verbs: [ "create", "list", "watch", "delete", "get", "update" ]
+  - apiGroups: [ "scheduling.volcano.sh" ]
+    resources: [ "queues", "queue/status" ]
+    verbs: [ "get", "list", "watch"]
+  - apiGroups: [ "scheduling.volcano.sh" ]
+    resources: [ "priorityclasses" ]
+    verbs: [ "list", "watch"]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "verljobs" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "verljobs/finalizers" ]
+    verbs: [ "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "verljobs/status" ]
+    verbs: [ "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayclusters" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayclusters/finalizers" ]
+    verbs: [ "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayclusters/status" ]
+    verbs: [ "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayheads" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayheads/finalizers" ]
+    verbs: [ "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayheads/status" ]
+    verbs: [ "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayworkers" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayworkers/finalizers" ]
+    verbs: [ "update" ]
+  - apiGroups: [ "mindxdl.gitee.com" ]
+    resources: [ "rayworkers/status" ]
+    verbs: [ "get", "patch", "update" ]
+  - apiGroups: [ "batch.volcano.sh" ]
+    resources: [ "jobs" ]
+    verbs: [ "get", "watch", "list" ]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments", "replicasets" ]
+    verbs: [ "get", "watch", "list" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rl-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rl-operator-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: rl-operator-manager
+    namespace: mindx-dl
