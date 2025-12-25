@@ -228,12 +228,15 @@ func NewJobContext(job *slownode.Job, deployment enum.DeployMode) *JobContext {
 }
 
 // Start the job
-func (ctx *JobContext) Start() {
+func (ctx *JobContext) Start() error {
 	if ctx == nil {
-		return
+		return errors.New("ctx is nil")
 	}
 	ctx.mu.Lock()
 	defer ctx.mu.Unlock()
+	if ctx.isRunning {
+		return errors.New("already running")
+	}
 	ctx.StopChan = make(chan struct{}, channelCapacity)
 	ctx.isRunning = true
 	ctx.step = InitialStep
@@ -244,6 +247,7 @@ func (ctx *JobContext) Start() {
 	ctx.isStartedHeavyProfiling = false
 	ctx.cluster.ClearSlowRankIds()
 	ctx.cluster.SetNeedReport(false)
+	return nil
 }
 
 // Stop the job

@@ -54,6 +54,8 @@ const (
 	rescheduleRecordsKey = "recent-reschedule-records"
 
 	restartAdvice = "please restart slow node detection job"
+
+	maxLoopCount = 10000
 )
 
 var jobSummaryWatcher = utils.NewStorage[string]()
@@ -145,10 +147,6 @@ func (j *jobProcessor) start() {
 	if j.ctx == nil {
 		return
 	}
-	if j.ctx.IsRunning() {
-		hwlog.RunLog.Warnf("%s started failed: already running", j.logPrefix())
-		return
-	}
 	if j.ctx.TrainingJobStatus != enum.IsRunning {
 		hwlog.RunLog.Warnf("%s started failed: training job status(%s) is not: %s", j.logPrefix(),
 			j.ctx.TrainingJobStatus, enum.IsRunning)
@@ -158,13 +156,15 @@ func (j *jobProcessor) start() {
 		hwlog.RunLog.Warnf("%s SlowNode is %d, no need to start", j.logPrefix(), slowNodeOff)
 		return
 	}
+	if err := j.ctx.Start(); err != nil {
+		hwlog.RunLog.Errorf("%s started failed: %v", j.logPrefix(), err)
+		return
+	}
 	// clear local data & delete cm, ensure the data will not affect the new detection
 	j.removeData()
 	j.deleteCM()
-	j.ctx.Start()
 	// start all profiling only depends on the training job is ready
-	if err := j.ctx.StartAllProfiling(); err != nil {
-		hwlog.RunLog.Errorf("%s start all profiling failed: %v, %s", j.logPrefix(), err, restartAdvice)
+	if err := j.loopStartAllProfiling(); err != nil {
 		j.ctx.Stop()
 		return
 	}
@@ -178,21 +178,44 @@ func (j *jobProcessor) start() {
 	j.waitNodeReport()
 }
 
+func (j *jobProcessor) loopStartAllProfiling() error {
+	var ticker = time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for i := 0; i < maxLoopCount; i++ {
+		select {
+		case _, ok := <-j.ctx.StopChan:
+			if !ok {
+				hwlog.RunLog.Infof("%s stopped, exiting start all profiling process", j.logPrefix())
+				return errors.New("job stopped")
+			}
+		case <-ticker.C:
+			// start all profiling per second
+			err := j.ctx.StartAllProfiling()
+			if err == nil {
+				return nil
+			}
+		}
+	}
+	hwlog.RunLog.Errorf("%s started all profiling failed duo to reached the max retry limitation: %d, %s",
+		j.logPrefix(), maxLoopCount, restartAdvice)
+	return fmt.Errorf("reached the max retry limitation: %d", maxLoopCount)
+}
+
 func (j *jobProcessor) stop() {
 	if j.ctx == nil {
 		return
 	}
 	if !j.ctx.IsRunning() {
-		hwlog.RunLog.Warnf("%s stopped failed: not running", j.logPrefix())
+		hwlog.RunLog.Warnf("%s do not need to stop: not running", j.logPrefix())
 		return
 	}
+	j.ctx.Stop()
 	j.ctx.RemoveAllCM()
 	if j.ctx.TrainingJobStatus != enum.IsCompleted {
 		// training job is complete, operate the profiling will cause error
 		j.ctx.StopAllProfiling()
 	}
 	algo.NewController(j.ctx).Stop()
-	j.ctx.Stop()
 	j.stopRescheduleWatcher()
 	rescheduleWatcher.Delete(j.job.KeyGenerator())
 	jobOnceMap.Delete(j.ctx.Job.JobId)

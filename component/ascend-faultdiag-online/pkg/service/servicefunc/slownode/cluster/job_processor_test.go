@@ -17,6 +17,7 @@ package cluster
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -29,6 +30,7 @@ import (
 
 	"ascend-faultdiag-online/pkg/core/config"
 	"ascend-faultdiag-online/pkg/core/context"
+	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/model/slownode"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
 	"ascend-faultdiag-online/pkg/utils/constants"
@@ -334,6 +336,42 @@ func TestJobRestartProcessor(t *testing.T) {
 			slownodejob.GetJobCtxMap().Insert("testKey", ctx)
 			JobRestartProcessor(&ip, &ip, watch.Modified)
 			time.Sleep(constants.RestartInterval * time.Millisecond)
+		})
+	})
+}
+
+func TestLoopStartAllProfiling(t *testing.T) {
+	convey.Convey("Test loop start all profiling", t, func() {
+		var cnt = 0
+		var executeCnt = 10
+		var job = &slownode.Job{}
+		var ctx = slownodejob.NewJobContext(job, enum.Cluster)
+		patches := gomonkey.ApplyMethod(reflect.TypeOf(ctx), "StartAllProfiling",
+			func(_ *slownodejob.JobContext) error {
+				if cnt == executeCnt {
+					return nil
+				}
+				cnt++
+				return errors.New("start failed")
+			})
+		defer patches.Reset()
+		ctx.Start()
+		j := jobProcessor{job: job}
+		j.ctx = ctx
+		convey.Convey("Test success", func() {
+			err := j.loopStartAllProfiling()
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("Test exit by stopChan", func() {
+			cnt = 0
+			var sleepTime = 5
+			go func() {
+				time.Sleep(time.Duration(sleepTime) * time.Second)
+				ctx.Stop()
+			}()
+			err := j.loopStartAllProfiling()
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldEqual, "job stopped")
 		})
 	})
 }
