@@ -47,6 +47,7 @@ const (
 	num1000                  = 1000
 	maxDataListSize          = 128
 	maxMetricNameSize        = 128
+	maxDescSize              = 1024
 	fileMetricsDisabledMsg   = "file metrics collection will be disabled"
 	skipCurrentCollectionMsg = "will skip current collection and report cached metrics"
 	excludedPermission       = 0111 // file should not have any execute permission
@@ -144,6 +145,10 @@ func isDataOk(metricsData *TextMetricData) error {
 	}
 	if metricsData.Desc == "" {
 		return fmt.Errorf("desc field is empty in json file %s", jsonFilePath)
+	}
+	if len(metricsData.Desc) > maxDescSize {
+		return fmt.Errorf("length of metric desc should not larger than %d, but current is %d",
+			maxDescSize, len(metricsData.Desc))
 	}
 	if metricsData.Version == "" {
 		return fmt.Errorf("version field is empty in json file %s", jsonFilePath)

@@ -20,6 +20,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
@@ -42,8 +43,34 @@ func (*CollectorForPrometheus) Describe(ch chan<- *prometheus.Desc) {
 		logger.Error("ch is nil ")
 		return
 	}
-	describeChain(ch, common.ChainForSingleGoroutine)
-	describeChain(ch, common.ChainForMultiGoroutine)
+	const cacheSize = 100
+	tempCh := make(chan *prometheus.Desc, cacheSize)
+	done := make(chan bool)
+
+	go func() {
+		seenMetrics := make(map[string]struct{})
+		for desc := range tempCh {
+			if desc == nil {
+				continue
+			}
+			descKey := utils.GetDescName(desc)
+			if _, exists := seenMetrics[descKey]; exists {
+				logger.Warnf("duplicate metric description detected, keeping first declaration, ignoring duplicate: %s", desc)
+				continue
+			}
+			seenMetrics[descKey] = struct{}{}
+			ch <- desc
+		}
+		// tempCh closed
+		done <- true
+	}()
+
+	describeChain(tempCh, common.ChainForSingleGoroutine)
+	describeChain(tempCh, common.ChainForMultiGoroutine)
+
+	close(tempCh)
+
+	<-done
 }
 
 func describeChain(ch chan<- *prometheus.Desc, chain []common.MetricsCollector) {
