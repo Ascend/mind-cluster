@@ -699,7 +699,7 @@ func (d *DcManager) DcGetUrmaDevEidList(cardID int32, deviceID int32, urmaDevInd
 	}
 
 	var eidInfoList [common.EidNumMax]C.struct_urma_eid_info
-	eidInfoListPtr := (*C.struct_urma_eid_info)(unsafe.Pointer(&eidInfoList[0]))
+	eidInfoListPtr := (*C.struct_urma_eid_info)(&eidInfoList[0])
 	eidCnt := C.int(common.EidNumMax)
 	if ret := C.dcmi_get_eid_list_by_urma_dev_index(C.int(cardID), C.int(deviceID), C.int(urmaDevIndex), eidInfoListPtr,
 		&eidCnt); ret != common.Success {
@@ -725,7 +725,7 @@ func convertUrmaDeviceInfo(eidInfoListPtr *C.struct_urma_eid_info, eidCnt C.int)
 		return nil, fmt.Errorf("urma device count is %d out of range [0, %d]", eidCount, common.EidNumMax)
 	}
 
-	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(unsafe.Pointer(eidInfoListPtr))
+	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(eidInfoListPtr)
 	urmaDevInfo := common.UrmaDeviceInfo{EidCount: eidCount, EidInfos: make([]common.UrmaEidInfo, eidCount)}
 	for j := 0; j < int(eidCount); j++ {
 		eidInfo := common.UrmaEidInfo{
@@ -775,8 +775,9 @@ func (d *DcManager) DcStartUbPingMesh(cardID int32, deviceID int32, operate comm
 	if cOpsPtr == nil {
 		return errors.New("failed to allocate memory for UB ping mesh C array")
 	}
-	defer C.free(unsafe.Pointer(cOpsPtr))
+	defer C.free(cOpsPtr)
 
+	cOpsPtr = (*C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr)
 	cOpsPtr, err := buildUbPingMeshCArray(ops, cOpsPtr, size)
 	if err != nil {
 		return err
@@ -794,9 +795,10 @@ func (d *DcManager) DcStartUbPingMesh(cardID int32, deviceID int32, operate comm
 }
 
 // buildUbPingMeshCArray for A5
-func buildUbPingMeshCArray(ops []common.UBPingMeshOperate, cOpsPtr unsafe.Pointer, size int) (unsafe.Pointer, error) {
+func buildUbPingMeshCArray(ops []common.UBPingMeshOperate, cOpsPtr *C.struct_dcmi_ub_ping_mesh_operate, size int) (
+	*C.struct_dcmi_ub_ping_mesh_operate, error) {
 
-	cOps := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_operate)(unsafe.Pointer(cOpsPtr))[:size:size]
+	cOps := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr)[:size:size]
 
 	for idx, op := range ops {
 		for i := 0; i < common.EidByteSize; i++ {
