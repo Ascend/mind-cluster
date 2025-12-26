@@ -28,25 +28,9 @@ import (
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
-
-// getDescName parse metrics name from prometheus.Desc object
-func getDescName(desc *prometheus.Desc) string {
-	str := desc.String()
-
-	startIndex := strings.Index(str, "fqName: ") + len("fqName: ")
-
-	readfqName := str[startIndex:]
-
-	endIndex := strings.Index(readfqName, ",")
-
-	if endIndex != -1 {
-		readfqName = readfqName[:endIndex]
-	}
-	readfqName = strings.Trim(readfqName, "\"")
-	return readfqName
-}
 
 func validateNum(num float64) bool {
 	if num == -1 || num == math.MaxUint32 || float32(num) == math.MaxUint32 {
@@ -64,7 +48,7 @@ func doUpdateTelegrafWithValidateNum(fieldMap map[string]interface{}, desc *prom
 }
 
 func doUpdateTelegraf(fieldMap map[string]interface{}, desc *prometheus.Desc, value interface{}, extInfo string) {
-	fieldMap[getDescName(desc)+extInfo] = value
+	fieldMap[utils.GetDescName(desc)+extInfo] = value
 }
 
 func doUpdateMetricWithValidateNum(ch chan<- prometheus.Metric, timestamp time.Time, value float64,
@@ -94,7 +78,7 @@ func doUpdateMetric(ch chan<- prometheus.Metric, timestamp time.Time, value inte
 		finalValue = value.(float64)
 	default:
 		logger.Errorf("invalid param in function doUpdateMetric,"+
-			"metrics name is (%v), value type is (%T),value is (%v)", getDescName(desc), value, value)
+			"metrics name is (%v), value type is (%T),value is (%v)", utils.GetDescName(desc), value, value)
 	}
 	// collect failed, set value to -1
 	if finalValue == common.FailedValue {

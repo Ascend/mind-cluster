@@ -32,23 +32,6 @@ const (
 	num100     = 100
 )
 
-// TestGetDescName test GetDescName
-func TestGetDescName(t *testing.T) {
-	convey.Convey("TestGetDescName", t, func() {
-		desc := prometheus.NewDesc(
-			"test_metric",
-			"Test metric description",
-			[]string{"label1"},
-			nil,
-		)
-
-		convey.Convey("success to get metrics name", func() {
-			name := getDescName(desc)
-			convey.So(name, convey.ShouldEqual, "test_metric")
-		})
-	})
-}
-
 // TestValidateNum test numerical verification
 func TestValidateNum(t *testing.T) {
 	convey.Convey("TestValidateNum", t, func() {

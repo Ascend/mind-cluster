@@ -79,7 +79,7 @@ func TestLoadConfiguration(t *testing.T) {
 			})
 			loadConfiguration()
 			convey.So(len(presetConfigs), convey.ShouldEqual, len(defaultPresetConfigs))
-			convey.So(len(pluginConfigs), convey.ShouldEqual, 0)
+			convey.So(len(pluginConfigs), convey.ShouldEqual, len(defaultPluginConfigs))
 		})
 	})
 }
