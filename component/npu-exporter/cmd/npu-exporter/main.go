@@ -60,6 +60,7 @@ var (
 	endpoint            = ""
 	limitIPReq          = ""
 	platform            = ""
+	textMetricsFilePath = ""
 	limitIPConn         int
 	limitTotalConn      int
 	cacheSize           int
@@ -135,6 +136,7 @@ func main() {
 	deviceParser.Timeout = time.Duration(updateTime) * time.Second
 
 	colcommon.Collector = colcommon.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second, deviceParser, dmgr)
+	plugins.InitTextMetricsDesc(textMetricsFilePath)
 	plugins.RegisterPlugin()
 	config.Register(colcommon.Collector)
 
@@ -421,6 +423,8 @@ func init() {
 		"the http request limit counts for each Ip,20/1 means allow 20 request in 1 seconds")
 	flag.StringVar(&platform, "platform", "Prometheus", "the data reporting platform, "+
 		"just support Prometheus and Telegraf")
+	flag.StringVar(&textMetricsFilePath, "textMetricsFilePath", "",
+		"text indicator collection path, only support specified one file path")
 	flag.DurationVar(&pollInterval, pollIntervalStr, 1*time.Second,
 		"how often to send metrics when use Telegraf plugin, "+
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
