@@ -12,7 +12,7 @@
   "RestartRequestFaultCodes": ["[0x00f1fef5,155914,npu,na]"],
   "SeparateFaultCodes": [
     "[0x00f103b0,155907,na,na]","[0x00f103b0,155649,na,na]", "[0x00f103b0,155904,na,na]","[0x00f1fef5,155912,cpu,na]",
-    "[0x00f1fef5,155912,npu,na]","[0x00f1fef5,155914,cpu,na]","[0x00f1fef5,155914,npu,na]","[0x08520003,na,cpu,na]",
+    "[0x00f1fef5,155912,npu,na]","[0x00f1fef5,155914,cpu,na]","[0x08520003,na,cpu,na]",
     "[0x08520003,na,npu,na]","[0x00f1fef5,155912,L2,na]"
   ]
 }
