@@ -14,6 +14,7 @@
 -   [版本维护策略](#版本维护策略)
 -   [免责声明](#免责声明)
 -   [License](#License)
+-   [贡献声明](#贡献声明)
 -   [建议与交流](#建议与交流)
 
 # 最新消息
@@ -305,6 +306,14 @@ API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcl
 # License
 
 MindCluster以Apache 2.0许可证许可，对应许可证文本可查阅[MindCluster根目录](https://gitcode.com/Ascend/mind-cluster/blob/master/LICENSE)。
+
+# 贡献声明
+
+- 贡献前，请先签署[开放项目贡献者许可协议（CLA）](https://clasign.osinfra.cn/sign/gitee_ascend-1611222220829317930)。
+- 如果您遇到bug，请提交[issue](https://gitcode.com/Ascend/mind-cluster/issues)。
+- 如果您计划贡献bug-fixes，请提交Pull Requests，参见[具体要求](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md#PullRequest)。
+- 如果您计划贡献新特性、功能，请先创建issue与我们讨论。写明需求背景/目的，如何设计，对现有API等的影响。未经讨论提交PR可能会导致请求被拒绝，因为项目演进方向可能与您的想法存在偏差。
+- 更详细的贡献流程，请参考[贡献指南](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md)。
 
 # 建议与交流
 
