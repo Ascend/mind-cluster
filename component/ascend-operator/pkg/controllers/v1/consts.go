@@ -123,7 +123,7 @@ const (
 	// labelFaultRetryTimes represents the key of label fault-retry-times.
 	labelFaultRetryTimes = "fault-retry-times"
 	// maxReplicas
-	maxReplicas = 15000
+	maxReplicas = 20000
 )
 
 const (

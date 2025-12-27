@@ -92,7 +92,7 @@ func TestValidateReplicas(t *testing.T) {
 			}
 			expectedErr := &validateError{
 				reason:  "ReplicaTypeError",
-				message: "jobSpec is not valid: replicas can not be larger than 15000, but got 15001",
+				message: "jobSpec is not valid: replicas can not be larger than 20000, but got 20001",
 			}
 
 			err := validateReplicas(spec)
