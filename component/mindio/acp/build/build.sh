@@ -95,7 +95,7 @@ cd ${PROJ_DIR}
 if [[ ! -d ${PROJ_DIR}/3rdparty/ubs-comm/ubs-comm ]]; then
     echo "Trying to git clone ubs-comm ..."
     cd ${PROJ_DIR}/3rdparty/ubs-comm
-    git clone https://gitee.com/openeuler/ubs-comm.git
+    git clone https://atomgit.com/openeuler/ubs-comm.git
     cd ${PROJ_DIR}/3rdparty/ubs-comm/ubs-comm
     git checkout master && git submodule update --init
 fi
@@ -147,53 +147,6 @@ if [ "X$BUILD_FOLDER" = "XASAN" ]; then
     # ubs-comm
     sed -i '/endif (${CMAKE_BUILD_TYPE} MATCHES "release")/a\add_compile_options(-fsanitize=address -fno-omit-frame-pointer)' $PROJ_DIR/3rdparty/ubs-comm/CMakeLists.txt
     sed -i '/add_compile_options(-fsanitize=address -fno-omit-frame-pointer)/a\add_link_options(-fsanitize=address)' $PROJ_DIR/3rdparty/ubs-comm/CMakeLists.txt
-fi
-
-# 检查是否需要编译和安装 libboundscheck
-if [ ! -f "/usr/lib64/libboundscheck.so" ] && [ ! -f "/usr/lib/libboundscheck.so" ]; then
-    echo "libboundscheck.so not found in /usr/lib64/ or /usr/lib/, building from source..."
-    
-    # 进入 libboundscheck 目录
-    LIBCHECK_DIR="${PROJ_DIR}/3rdparty/libboundscheck/libboundscheck"
-    if [ ! -d "${LIBCHECK_DIR}" ]; then
-        echo "Error: libboundscheck source directory not found at ${LIBCHECK_DIR}" >&2
-        exit 1
-    fi
-    
-    cd "${LIBCHECK_DIR}"
-    
-    # 编译
-    echo "Building libboundscheck..."
-    if ! make; then
-        echo "Error: Failed to build libboundscheck" >&2
-        exit 1
-    fi
-    
-    # 检查编译结果
-    if [ ! -f "lib/libboundscheck.so" ]; then
-        echo "Error: libboundscheck.so not found after build" >&2
-        exit 1
-    fi
-    
-    # 确定目标库目录
-    target_lib_dir=""
-    if [ -d "/usr/lib64" ]; then
-        target_lib_dir="/usr/lib64"
-        echo "Using library directory: /usr/lib64"
-    elif [ -d "/usr/lib" ]; then
-        target_lib_dir="/usr/lib"
-        echo "Using library directory: /usr/lib"
-    else
-        echo "Error: Neither /usr/lib64 nor /usr/lib directory exists" >&2
-        return 1
-    fi
- 
-    # 复制库文件到目标库目录
-    \cp -f "lib/libboundscheck.so" ${target_lib_dir}
-    
-    # 复制头文件到 /usr/include
-    \cp -f "include/securec.h" "/usr/include/"
-    \cp -f "include/securectype.h" "/usr/include/"
 fi
 
 # Verify the build directory is in place and enter it
