@@ -725,7 +725,7 @@ func convertUrmaDeviceInfo(eidInfoListPtr *C.struct_urma_eid_info, eidCnt C.int)
 		return nil, fmt.Errorf("urma device count is %d out of range [0, %d]", eidCount, common.EidNumMax)
 	}
 
-	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(eidInfoListPtr)
+	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(unsafe.Pointer(eidInfoListPtr))
 	urmaDevInfo := common.UrmaDeviceInfo{EidCount: eidCount, EidInfos: make([]common.UrmaEidInfo, eidCount)}
 	for j := 0; j < int(eidCount); j++ {
 		eidInfo := common.UrmaEidInfo{
@@ -777,15 +777,15 @@ func (d *DcManager) DcStartUbPingMesh(cardID int32, deviceID int32, operate comm
 	}
 	defer C.free(cOpsPtr)
 
-	cOpsPtr = (*C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr)
-	cOpsPtr, err := buildUbPingMeshCArray(ops, cOpsPtr, size)
+	cOpsPtrStruct := (*C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr)
+	cOpsPtrStruct, err := buildUbPingMeshCArray(ops, cOpsPtrStruct, size)
 	if err != nil {
 		return err
 	}
 
 	if retCode := C.dcmi_start_ub_ping_mesh(
 		C.int(cardID), C.int(deviceID), C.int(len(ops)),
-		(*C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr),
+		cOpsPtrStruct,
 	); retCode != common.Success {
 		return fmt.Errorf("dcmi start ub ping mesh failed cardID(%d) deviceID(%d) error code: %d",
 			cardID, deviceID, int32(retCode))
@@ -798,7 +798,7 @@ func (d *DcManager) DcStartUbPingMesh(cardID int32, deviceID int32, operate comm
 func buildUbPingMeshCArray(ops []common.UBPingMeshOperate, cOpsPtr *C.struct_dcmi_ub_ping_mesh_operate, size int) (
 	*C.struct_dcmi_ub_ping_mesh_operate, error) {
 
-	cOps := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_operate)(cOpsPtr)[:size:size]
+	cOps := (*[maxCArraySize]C.struct_dcmi_ub_ping_mesh_operate)(unsafe.Pointer(cOpsPtr))[:size:size]
 
 	for idx, op := range ops {
 		for i := 0; i < common.EidByteSize; i++ {
