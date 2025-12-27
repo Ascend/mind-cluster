@@ -156,6 +156,12 @@ const MaxMsgQueueLength = 40000
 // ManagerProcessInterval task main process interval in ms
 const ManagerProcessInterval = 100
 
+// MaxManagerProcessInterval max interval of manager process in ms
+const MaxManagerProcessInterval = 1000
+
+// TaskdManagerProcessIntervalEnv env name of manager process interval
+const TaskdManagerProcessIntervalEnv = "TASKD_PROCESS_INTERVAL"
+
 // All Mtype or MsgType must be defined here
 const (
 	REGISTER          = "REGISTER"

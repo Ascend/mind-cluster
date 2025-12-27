@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -96,6 +97,8 @@ const (
 	maxRegRetryTime = 60
 	maxWaitTime     = 60
 	waitGapTime     = 1
+	decimalBase     = 10
+	bitSize64       = 64
 )
 
 // Init base manger
@@ -136,8 +139,9 @@ func (m *BaseManager) Start() error {
 
 // Process task main process
 func (m *BaseManager) Process() error {
+	interval := getProcessInterval()
 	for {
-		time.Sleep(constant.ManagerProcessInterval * time.Millisecond)
+		time.Sleep(time.Duration(interval) * time.Millisecond)
 		snapshot, err := m.MsgHd.DataPool.GetSnapShot()
 		if err != nil {
 			return fmt.Errorf("get datapool snapshot failed, err: %v", err)
@@ -726,4 +730,28 @@ func reportStopComplete(message *constant.ControllerMessage, client pb.RecoverCl
 		return false
 	}
 	return true
+}
+
+func getProcessInterval() int64 {
+	intervalStr := os.Getenv(constant.TaskdManagerProcessIntervalEnv)
+	if intervalStr == "" {
+		hwlog.RunLog.Infof("Environment variable %v is empty, using default value %v",
+			constant.TaskdManagerProcessIntervalEnv, constant.ManagerProcessInterval)
+		return constant.ManagerProcessInterval
+	}
+	interval, err := strconv.ParseInt(intervalStr, decimalBase, bitSize64)
+	if err != nil {
+		hwlog.RunLog.Warnf("Failed to parse environment variable %v: %v, using default value %v",
+			constant.TaskdManagerProcessIntervalEnv, err, constant.ManagerProcessInterval)
+		return constant.ManagerProcessInterval
+	}
+	if interval < constant.ManagerProcessInterval || interval > constant.MaxManagerProcessInterval {
+		hwlog.RunLog.Warnf("Environment variable %v value %v is out of range [%v, %v], using default value %v",
+			constant.TaskdManagerProcessIntervalEnv, intervalStr, constant.ManagerProcessInterval,
+			constant.MaxManagerProcessInterval, constant.ManagerProcessInterval)
+		return constant.ManagerProcessInterval
+	}
+	hwlog.RunLog.Infof("Environment variable %v value %v is valid, using value %v",
+		constant.TaskdManagerProcessIntervalEnv, intervalStr, interval)
+	return interval
 }
