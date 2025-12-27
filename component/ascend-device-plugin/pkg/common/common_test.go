@@ -293,21 +293,21 @@ func TestFilterPods1(t *testing.T) {
 		})
 		convey.Convey("annotationTag not exist", func() {
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{}}}}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("annotationTag exist, device is virtual", func() {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(len(res), convey.ShouldEqual, 1)
 		})
 		convey.Convey("limitsDevNum exceeds the upper limit", func() {
 			limits := resource.NewQuantity(MaxDevicesNum*MaxAICoreNum+1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -315,7 +315,7 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-				ResourceList{api.ResourceNamePrefix + api.Ascend910: *limits}}}}}}}
+					ResourceList{api.ResourceNamePrefix + api.Ascend910: *limits}}}}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -323,7 +323,7 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-				ResourceList{api.HuaweiAscend910: *limits}}}}},
+					ResourceList{api.HuaweiAscend910: *limits}}}}},
 					ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
 						Annotations: map[string]string{
 							PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"}},
@@ -340,7 +340,7 @@ func TestFilterPods2(t *testing.T) {
 		limits := resource.NewQuantity(1, resource.DecimalExponent)
 		pods := []v1.Pod{
 			{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-			ResourceList{api.HuaweiAscend910: *limits}}}}},
+				ResourceList{api.HuaweiAscend910: *limits}}}}},
 				ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
 					Annotations: map[string]string{
 						PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"},
@@ -361,7 +361,7 @@ func TestFilterPods2(t *testing.T) {
 		})
 		convey.Convey("Waiting.Message is not nil", func() {
 			pods[0].Status.ContainerStatuses = []v1.ContainerStatus{{State: v1.ContainerState{Waiting: &v1.
-			ContainerStateWaiting{Message: "PreStartContainer check failed"}}}}
+				ContainerStateWaiting{Message: "PreStartContainer check failed"}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
