@@ -35,6 +35,8 @@ type SnpRankContextData struct {
 	StepCount int64
 	// RedStep 读取步数
 	RedStep int64
+	// StartStep job开始的训练步数
+	StartStep int64
 }
 
 // CsvCtx csv文件内容
