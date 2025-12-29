@@ -149,7 +149,8 @@ func getStatusByCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod, jo
 	if isSuccess && len(podsInJob) >= max(int(podGroup.Spec.MinMember), pod.GetMinMember(podsInJob)) {
 		return false, job.StatusJobCompleted
 	}
-	if isRunning && len(podsInJob) >= max(int(podGroup.Spec.MinMember), pod.GetMinMember(podsInJob)) {
+	minMember := max(int(podGroup.Spec.MinMember), pod.GetMinMember(podsInJob))
+	if isRunning && len(podsInJob) >= minMember && minMember > 0 {
 		return false, job.StatusJobRunning
 	}
 	return false, getStatusByOldStatus(jobInfo)
