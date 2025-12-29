@@ -16,6 +16,7 @@
 package metrics
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -87,6 +88,9 @@ type hccsCache struct {
 type HccsCollector struct {
 	colcommon.MetricsCollectorAdapter
 	hccsBeginIndex int
+
+	// Automatically adapt according to the interface call
+	realGetStatisticInfoFunc func(logicID int32) (*common.HccsStatisticInfo, error)
 }
 
 // IsSupported judge whether the collector is supported
@@ -122,7 +126,15 @@ func (c *HccsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (c *HccsCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
 	for _, chip := range chipList {
 		logicID := chip.LogicID
-		hccsStatisticInfo, err := n.Dmgr.GetHccsStatisticInfo(logicID)
+		var hccsStatisticInfo *common.HccsStatisticInfo
+		var err error
+		if c.realGetStatisticInfoFunc != nil {
+			hccsStatisticInfo, err = c.realGetStatisticInfoFunc(logicID)
+		} else {
+			hccsStatisticInfo = buildFailedHccsInfo()
+			err = fmt.Errorf("realGetStatisticInfoFunc is nil when get hccs info, " +
+				"maybe both GetHccsStatisticInfoInU64 and GetHccsStatisticInfo can't be unreached")
+		}
 		handleErr(err, colcommon.DomainForHccs, logicID)
 
 		hccsBandwidthInfo, err := n.Dmgr.GetHccsBandwidthInfo(logicID)
@@ -156,6 +168,36 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: api.Hccs, ID: "0"},
 			"not support main board id:%d", chipOne.MainBoardId)
 	}
+
+	// Both failed, retry 3 times with 2s interval
+	const retryTimes = 3
+	const retryInterval = 2 * time.Second
+	var success bool
+	var err1, err2 error
+	for i := 0; i < retryTimes; i++ {
+		_, err1 = n.Dmgr.GetHccsStatisticInfoInU64(chipOne.LogicID)
+		if err1 == nil {
+			logger.Infof("get hccs statistic info by subCmd(5) succeeded, will use subCmd(5) to get hccs info")
+			c.realGetStatisticInfoFunc = n.Dmgr.GetHccsStatisticInfoInU64
+			success = true
+			break
+		}
+		_, err2 = n.Dmgr.GetHccsStatisticInfo(chipOne.LogicID)
+		if err2 == nil {
+			logger.Infof("get hccs statistic info by subCmd(3) succeeded, will use subCmd(3) to get hccs info")
+			c.realGetStatisticInfoFunc = n.Dmgr.GetHccsStatisticInfo
+			success = true
+			break
+		}
+		time.Sleep(retryInterval)
+	}
+	// If still failed after retries, set to nil and log error
+	if !success {
+		logger.Errorf("get hccs statistic info failed after trying both subCmd(5) and subCmd(3) with 3 retries, "+
+			"err1: %v, err2: %v", err1, err2)
+		c.realGetStatisticInfoFunc = nil
+	}
+
 }
 
 // UpdatePrometheus update prometheus
@@ -252,4 +294,19 @@ func telegrafUpdateHccsStatisticInfo(cache hccsCache, c *HccsCollector, fieldMap
 		doUpdateTelegraf(fieldMap, hccsRxDescs[i], statisticInfo.RxCnt[i], "")
 		doUpdateTelegraf(fieldMap, hccsErrDescs[i], statisticInfo.CrcErrCnt[i], "")
 	}
+}
+
+// buildFailedHccsInfo build failed hccs info
+func buildFailedHccsInfo() *common.HccsStatisticInfo {
+	errorResult := &common.HccsStatisticInfo{
+		TxCnt:     make([]uint64, 8),
+		RxCnt:     make([]uint64, 8),
+		CrcErrCnt: make([]uint64, 8),
+	}
+	for i := 0; i < 8; i++ {
+		errorResult.TxCnt[i] = common.FailedValue
+		errorResult.RxCnt[i] = common.FailedValue
+		errorResult.CrcErrCnt[i] = common.FailedValue
+	}
+	return errorResult
 }

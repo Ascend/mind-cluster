@@ -61,6 +61,8 @@ const (
 	SioSubCmdCrcErrStatistics VDevMngSubCmd = 0
 	// HccsSubCmdGetStatisticInfo get statistic info
 	HccsSubCmdGetStatisticInfo VDevMngSubCmd = 3
+	// HccsSubCmdGetStatisticInfoU64 get statistic info in u64
+	HccsSubCmdGetStatisticInfoU64 VDevMngSubCmd = 5
 
 	// NDIE NDie ID, only Ascend910 has
 	NDIE DieType = 0

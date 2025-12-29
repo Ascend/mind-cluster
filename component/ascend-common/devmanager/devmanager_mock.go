@@ -176,7 +176,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 
@@ -316,6 +316,11 @@ func (d *DeviceManagerMock) GetSioInfo(logicID int32) (*common.SioCrcErrStatisti
 
 // GetHccsStatisticInfo get hccs statistic info
 func (d *DeviceManagerMock) GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error) {
+	return &common.HccsStatisticInfo{}, nil
+}
+
+// GetHccsStatisticInfoInU64 get hccs statistic info in u64
+func (d *DeviceManagerMock) GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error) {
 	return &common.HccsStatisticInfo{}, nil
 }
 
