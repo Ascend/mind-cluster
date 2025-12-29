@@ -48,7 +48,6 @@ func (fJobCenter *faultJobProcessCenter) Process() {
 	for _, processor := range fJobCenter.processorList {
 		processor.Process(content)
 	}
-	fJobCenter.notifySubscriber()
 }
 
 // Register notify chan
@@ -69,7 +68,7 @@ func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.Jo
 	return nil
 }
 
-func (fJobCenter *faultJobProcessCenter) notifySubscriber() {
+func (fJobCenter *faultJobProcessCenter) NotifySubscriber() {
 	for _, sub := range fJobCenter.subscribeChannelList {
 		if sub.ch == nil {
 			continue

@@ -38,9 +38,11 @@ func (center *faultProcessCenter) Process() {
 	cmprocess.DpuCenter.Process()
 	jobprocess.FaultJobCenter.Process()
 	// notify volcano after notify fault recover service to fix the bug: push original node fault to the new pod
+	jobprocess.FaultJobCenter.NotifySubscriber()
 	cmprocess.SwitchCenter.NotifySubscriber()
 	cmprocess.DeviceCenter.NotifySubscriber()
 	cmprocess.NodeCenter.NotifySubscriber()
+	cmprocess.DpuCenter.NotifySubscriber()
 }
 
 func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
@@ -64,12 +66,16 @@ func (center *faultProcessCenter) Work(ctx context.Context) {
 					center.Process()
 				case constant.DeviceProcessType:
 					cmprocess.DeviceCenter.Process()
+					cmprocess.DeviceCenter.NotifySubscriber()
 				case constant.NodeProcessType:
 					cmprocess.NodeCenter.Process()
+					cmprocess.NodeCenter.NotifySubscriber()
 				case constant.SwitchProcessType:
 					cmprocess.SwitchCenter.Process()
+					cmprocess.SwitchCenter.NotifySubscriber()
 				case constant.DpuProcessType:
 					cmprocess.DpuCenter.Process()
+					cmprocess.DpuCenter.NotifySubscriber()
 				default:
 					hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
 				}
