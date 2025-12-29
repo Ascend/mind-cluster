@@ -314,6 +314,11 @@ func (d *DeviceManagerMockErr) GetHccsStatisticInfo(logicID int32) (*common.Hccs
 	return nil, errors.New(errorMsg)
 }
 
+// GetHccsStatisticInfoInU64 get hccs statistic info in u64
+func (d *DeviceManagerMockErr) GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error) {
+	return nil, errors.New(errorMsg)
+}
+
 // GetMainBoardId get main board id
 func (d *DeviceManagerMockErr) GetMainBoardId() uint32 {
 	return 0

@@ -395,6 +395,15 @@ struct dcmi_hccs_statistic_info {
     unsigned int retry_cnt[HCCS_MAX_PCS_NUM];
     unsigned int reserved_field_cnt[HCCS_RES_PCS_NUM];
 };
+
+struct dcmi_hccs_statistic_info_u64 {
+    unsigned long long tx_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long rx_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long crc_err_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long retry_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long reserved[HCCS_RES_PCS_NUM];
+};
+
 struct dcmi_hccs_bandwidth_info {
     int profiling_time;
     double total_txbw;
