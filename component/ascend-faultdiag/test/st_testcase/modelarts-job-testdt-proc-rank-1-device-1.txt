@@ -1,0 +1,7 @@
+{'enable_modelarts': 'Whether training on modelarts, default: False', 'data_url': 'Dataset url for obs', 'checkpoint_url': 'The location of checkpoint for obs', 'data_path': 'Dataset path for local', 'output_path': 'Training output path for local', 'load_path': 'The location of checkpoint for obs', 'device_target': 'Target device type, available: [Ascend, GPU, CPU]', 'enable_profiling': 'Whether enable profiling while training, default: False', 'num_classes': 'Class for dataset', 'batch_size': 'Batch size for training and evaluation', 'epoch_size': 'Total training epochs.', 'checkpoint_path': 'The location of the checkpoint file.', 'checkpoint_file_path': 'The location of the checkpoint file.', 'save_graphs': 'Whether save graphs during training, default: False.', 'save_graphs_path': 'Path to save graphs.'}
+Error Message is
+EL9999: Inner Error!
+EL9999  [drv api] halQueueEnQueueBuff failed: deviceId=0, qid=1, timeout=3000, drvRetCode=27.[FUNC:MemQueueEnQueueBuff][FILE:npu_driver.cc][LINE:3205]
+TraceBack (most recent call last):
+rtMemQueueEnQueueBuff execute failed, reason=[hdc send msg fail][FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:49]
+Fail to execute acltdtSendTensor, device is 0, name is 4174979144421111244[FUNC:ReportInnerError][FILE:log_inner.cpp][LINE:145]

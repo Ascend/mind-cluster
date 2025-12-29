@@ -1,0 +1,108 @@
+{'enable_modelarts': 'Whether training on modelarts, default: False', 'data_url': 'Dataset url for obs', 'checkpoint_url': 'The location of checkpoint for obs', 'data_path': 'Dataset path for local', 'output_path': 'Training output path for local', 'load_path': 'The location of checkpoint for obs', 'device_target': 'Target device type, available: [Ascend, GPU, CPU]', 'enable_profiling': 'Whether enable profiling while training, default: False', 'num_classes': 'Class for dataset', 'batch_size': 'Batch size for training and evaluation', 'epoch_size': 'Total training epochs.', 'checkpoint_path': 'The location of the checkpoint file.', 'checkpoint_file_path': 'The location of the checkpoint file.', 'save_graphs': 'Whether save graphs during training, default: False.', 'save_graphs_path': 'Path to save graphs.'}
+{'all_reduce_fusion_config': [85, 160],
+ 'batch_size': 32,
+ 'boost_mode': 'O0',
+ 'cache_session_id': '',
+ 'checkpoint_file_path': '',
+ 'checkpoint_path': './checkpoint/',
+ 'checkpoint_url': '',
+ 'ckpt_file': '',
+ 'class_num': 10,
+ 'config_path': '/home/HwHiAiUser/Resnet50_Cifar_for_MindSpore/config/resnet50_cifar10_config.yaml',
+ 'conv_init': 'XavierUniform',
+ 'data_path': '/home/HwHiAiUser/Resnet50_Cifar_for_MindSpore/data/cifar10/cifar-10-batches-bin',
+ 'data_url': '',
+ 'dataset': 'cifar10',
+ 'dense_init': 'TruncatedNormal',
+ 'device_id': 0,
+ 'device_num': 8,
+ 'device_target': 'Ascend',
+ 'enable_cache': False,
+ 'enable_modelarts': False,
+ 'enable_profiling': False,
+ 'epoch_size': 90,
+ 'eval_dataset_path': '',
+ 'eval_image_size': 224,
+ 'eval_interval': 1,
+ 'eval_start_epoch': 40,
+ 'file_format': 'MINDIR',
+ 'file_name': 'resnet50',
+ 'filter_weight': False,
+ 'has_trained_epoch': 0,
+ 'has_trained_step': 0,
+ 'height': 224,
+ 'infer_label': '',
+ 'keep_checkpoint_max': 10,
+ 'label_path': '',
+ 'lars_coefficient': 0.001,
+ 'lars_epsilon': 0.0,
+ 'load_path': '/cache/checkpoint_path/',
+ 'loss_scale': 1024,
+ 'lr_decay_mode': 'poly',
+ 'lr_end': 1e-05,
+ 'lr_init': 0.01,
+ 'lr_max': 0.1,
+ 'mode_name': 'GRAPH',
+ 'momentum': 0.9,
+ 'net_name': 'resnet50',
+ 'network_dataset': 'resnet50_cifar10',
+ 'optimizer': 'Momentum',
+ 'output_path': './output',
+ 'parameter_server': False,
+ 'pre_trained': '',
+ 'pretrain_epoch_size': 0,
+ 'result_path': '',
+ 'run_distribute': True,
+ 'run_eval': False,
+ 'save_best_ckpt': True,
+ 'save_checkpoint': True,
+ 'save_checkpoint_epochs': 5,
+ 'save_graphs': False,
+ 'save_graphs_path': './graphs',
+ 'train_image_size': 224,
+ 'train_url': '',
+ 'warmup_epochs': 5,
+ 'weight_decay': 0.0001,
+ 'width': 224}
+Please check the above information for the configurations
+[WARNING] HCCL_ADPT(573,ffff8de02d60,python):2023-05-23-03:52:21.134.879 [mindspore/ccsrc/plugin/device/ascend/hal/hccl_adapter/hccl_adapter.cc:47] GenHcclOptions] The environment variable DEPLOY_MODE is not set. Now set to default value 0
+[WARNING] ME(573:281473062022496,MainProcess):2023-05-23-03:52:26.782.379 [mindspore/train/model.py:1079] For LossCallBack callback, {'step_end'} methods may not be supported in later version, Use methods prefixed with 'on_train' or 'on_eval' instead when using customized callbacks.
+[WARNING] MD(573,ffff8de02d60,python):2023-05-23-03:52:37.201.604 [mindspore/ccsrc/minddata/dataset/engine/datasetops/data_queue_op.cc:93] ~DataQueueOp] preprocess_batch: 4; batch_queue: 0, 3, 6, 5, 5, 4, 4, 3, 3; push_start_time: 2023-05-23-03:52:37.099.034, 2023-05-23-03:52:37.155.437, 2023-05-23-03:52:37.167.949, 2023-05-23-03:52:37.175.571; push_end_time: 2023-05-23-03:52:37.155.327, 2023-05-23-03:52:37.167.826, 2023-05-23-03:52:37.175.453, 2023-05-23-03:52:37.182.128.
+
+Traceback (most recent call last):
+  File "train.py", line 377, in <module>
+    train_net()
+  File "/home/HwHiAiUser/Resnet50_Cifar_for_MindSpore/scripts/train_parallel0/src/model_utils/moxing_adapter.py", line 104, in wrapped_func
+    run_func(*args, **kwargs)
+  File "train.py", line 370, in train_net
+    sink_size=dataset.get_dataset_size(), dataset_sink_mode=dataset_sink_mode)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/train/model.py", line 1051, in train
+    initial_epoch=initial_epoch)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/train/model.py", line 98, in wrapper
+    func(self, *args, **kwargs)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/train/model.py", line 625, in _train
+    cb_params, sink_size, initial_epoch, valid_infos)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/train/model.py", line 703, in _train_dataset_sink_process
+    outputs = train_network(*inputs)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/nn/cell.py", line 618, in __call__
+    out = self.compile_and_run(*args)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/nn/cell.py", line 1004, in compile_and_run
+    self.compile(*inputs)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/nn/cell.py", line 976, in compile
+    jit_config_dict=self._jit_config_dict)
+  File "/usr/local/python3.7.5/lib/python3.7/site-packages/mindspore/common/api.py", line 1131, in compile
+    result = self._graph_executor.compile(obj, args_list, phase, self._use_vm_mode())
+NameError: The name 'x' is not defined, or not supported in graph mode.
+
+----------------------------------------------------
+- The Traceback of Net Construct Code:
+----------------------------------------------------
+
+# In file /home/HwHiAiUser/Resnet50_Cifar_for_MindSpore/scripts/train_parallel0/src/resnet.py:474
+            x = self.conv1_0(x)
+                             ^
+
+----------------------------------------------------
+- C++ Call Stack: (For framework developers)
+----------------------------------------------------
+mindspore/ccsrc/pipeline/jit/parse/function_block.cc:309 HandleBuiltinNamespaceInfo

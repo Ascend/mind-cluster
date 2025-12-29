@@ -1,0 +1,4 @@
+[TRACE] HCCL(11190,python3):2023-01-31-02:48:31.916.011 [status:init] [hcom.cc:196][hccl-11190-0-1675133310-hccl_world_group][3]hcom init by file success,take time [1132228]us, rankTablePath[/home/ysp/hwtest/ResNet50_for_MindSpore_1.4_code/scripts/hccl_8p_01234567_51.38.68.155.json], rankNum[8], rank[3],server[51.38.68.155], device[3]
+[ERROR] HCCL(11190,python3):2023-01-31-03:00:11.454.732 [exchanger_network.cc:237][11190][21503][Wait][AllClientSocketEstab]errNo[0x000000000500000b] client : device[3] rank[3] get socket timeout, total[4] remain[3]
+[ERROR] HCCL(11190,python3):2023-01-31-03:00:11.454.763 [exchanger_network.cc:693][11190][21503]Some NPUs get socket timeout, the details are as follows:
+[TRACE] HCCL(11190,python3):2023-01-31-03:00:18.291.275 [status:stop] [hcom.cc:264][hccl-11190-0-1675133310-hccl_world_group][3]hcom destroy complete,take time [317771]us, rankNum[8], rank[3]

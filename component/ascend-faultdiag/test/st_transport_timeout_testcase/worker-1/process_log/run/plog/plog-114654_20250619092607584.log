@@ -1,0 +1,10 @@
+[INFO] HCCL(114654,python3):2025-06-19-09:26:22.060.447 [externalinput.cc:407] [114654]HCCL_CONNECT_TIMEOUT set by environment to [130]s
+[INFO] HCCL(114654,python3):2025-06-19-09:26:22.060.534 [externalinput.cc:985] [114654]HCCL_EXEC_TIMEOUT set by environment to [600]s
+[INFO] HCCL(114654,python3):2025-06-19-09:26:22.131.133 [topoinfo_detect.cc:506] [114654][HCCL_TRACE][Flat]SetupAgent rankNum[16], rank[10], rootInfo identifier[51.38.67.141%enp189s0f0_60000_0_1750325244673428], server[51.38.67.143%enp189s0f0], serverPort[60000]deviceType[2], logicDevId[2], phydevId[2], deviceIp[192.168.100.212]
+[INFO] HCCL(114654,python3):2025-06-19-09:26:23.860.936 [network_manager.cc:561] [114654][Start][Vnic]Listen on ip[192.168.2.197], port[16666] sucess, devPhyId[2], devLogicId[2], isAutoPort[0]
+[INFO] HCCL(114656,python3):2025-06-19-09:26:23.880.219 [network_manager.cc:561] [114656][Start][Vnic]Listen on ip[192.168.2.196], port[16666] sucess, devPhyId[3], devLogicId[3], isAutoPort[0]
+[INFO] HCCL(114656,python3):2025-06-19-09:26:23.890.362 [network_manager.cc:685] [114656][Start][Nic]Listen on ip[192.168.100.213], port[16666] sucess, devPhyId[3], devLogicId[3], isAutoPort[0]
+[INFO] HCCL(114658,python3):2025-06-19-09:26:23.921.453 [network_manager.cc:561] [114658][Start][Vnic]Listen on ip[192.168.2.195], port[16666] sucess, devPhyId[4], devLogicId[4], isAutoPort[0]
+[INFO] HCCL(114660,python3):2025-06-19-09:26:24.020.741 [network_manager.cc:561] [114660][Start][Vnic]Listen on ip[192.168.2.194], port[16666] sucess, devPhyId[5], devLogicId[5], isAutoPort[0]
+[INFO] HCCL(114662,python3):2025-06-19-09:26:23.785.614 [network_manager.cc:561] [114662][Start][Vnic]Listen on ip[192.168.2.193], port[16666] sucess, devPhyId[6], devLogicId[6], isAutoPort[0]
+[INFO] HCCL(114664,python3):2025-06-19-09:26:24.006.084 [network_manager.cc:561] [114664][Start][Vnic]Listen on ip[192.168.2.192], port[16666] sucess, devPhyId[7], devLogicId[7], isAutoPort[0]

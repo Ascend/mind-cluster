@@ -1,0 +1,22 @@
+E30008: AI CPU operator execution time out.
+Traceback (most recent call last):
+    File "10.py", line 3, in <module>
+	torch.npu.set_device(7)
+    File "/usr/1ocal/python3.8.A/1 ih/python3.8/site-packages/torch_npu/npu/utils.py", 1ine 47, in set_device
+	torch npu._C. npu_setDevice( device id)
+RuntimeError: Initialize :torch_ npu/csrc/core/npu/sys_ctrl/npu_ sys_ctrl.cpp:133 NPU error, error code is 507033
+Error]: Fatled lo starl the device,
+           Rectify the fault based onthe error information in the ascend log.
+E30003: The number of started NN processes exceeds the limit.
+	    Possible Cause: Something wrong with queue_schedule.	Solution: Wait for 10s after the last 'training process exited and try again.
+	    TraceBack (most recent call last):
+	    tsd client wait response fail, device response code[1]. unknown device error.[FUNC:WaitRsp][FILE:proces s mode manager.cpp][LIN
+E:275]
+	    Start aicpu executor failed, retCode=0x7020009 devId=7[FUNC :DeviceRetain][FILE: runt ime.cc O[LINE:3003]
+	    Check param failed, dev can not be NULL![FUNC:Pr imaryContextRetain][FILE:runt ime.cc][LINE:2806]
+	    Check param failed, ctx can notbe NULL![FUNC:Pr imaryContextRetainJ[FILE:runtime.cc][LINE:2833]
+	    Check param failed, contextcan not be null.[FUNC:NewDevice][FILE:api impl.cc][LINE:2070]
+	    New device failed, 'retCode=0x7010006[FUNC:SetDevice][FILE:apiumpl ccJ[LINE:2093]	rtSetDevice execute failed, reason=[device retain error][FUNC:FuncErrorReasonJ[FILE:error message manage.cc][LINE:50]
+	    open device 7 failed. runtime resul t = 507033.[FUNC:ReportCalIError][FILE:log inner.cppJ[LINE:161]
+	    ctx is NULL![FUNC:GetDeVErrMsg][FILE:api imDl.ccJ[LINE:45411
+	    The araumentis invalid.Reason-rtGetDevMsa execute failed,reason=[context pointer null]

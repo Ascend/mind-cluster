@@ -1,0 +1,4 @@
+[ERROR] HCCL(903,python3.8):2025-07-30-19:36:56.166.988 [adapter_hccp.cc:1357] [16542][Recv][RaSocket]errNo[0x000000000500000d] recv fail, data[0xfffddc0e6ef0], size[2239]
+[ERROR] HCCL(903,python3.8):2025-07-30-19:36:56.167.005 [transport_p2p.cc:139] [16542][TransportP2p][Init] failed to recv exchangeData exchangeDataTotalSize[2239], custom exchange data size [1472].
+[ERROR] HCCL(903,python3.8):2025-07-30-19:36:56.167.730 [transport_manager.cc:777] [16542][Create][DestLink]Transport init error! createLink para:rank[443]-localUserrank[443]-localIpAddr[], dst_rank[0]-remoteUserrank[0]-remoteIpAddr[1.1.1.1/0], machineType[1], serverId[], linkMode[1], tag[AllGather_group_name_0]
+[ERROR] HCCL(903,python3.8):2025-07-30-19:36:56.168.036 [transport_manager.cc:247] [3639][Create]errNo[0x0000000005000006] transport create fail in thread, local rank[443] remote rank[0]

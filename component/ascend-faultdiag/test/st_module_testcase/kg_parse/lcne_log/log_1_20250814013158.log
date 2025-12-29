@@ -1,0 +1,1 @@
+Jul 31 2025 18:36:19+08:00 Z3_22R_99_30 %%01DEVM/1/hwPortFail_active(l):CID=0x80fc0101-alarmID=0x00f10509;The port failed partially. (EntPhysicalIndex=16863797, EntPhysicalName=400GHL1/1/2:1, EntityTrapFaultID=132338, Reason=Port real lanes are less than quarter of the configured lanes.)",

@@ -1,0 +1,302 @@
+{
+    "knowledge-repository": {
+        "Comp_Network_Custom_02": {
+            "source_file": "",
+            "regex": {}
+        },
+        "Comp_Network_Custom_11": {
+            "source_file": "NPU_Device",
+            "regex": {
+                "in": ["rf_lf","pcs_err_cnt"]
+            },
+            "attr_regex": ", rf_lf (?P<rf_lf>[12]), pcs_err_cnt (?P<pcs_err_cnt>\\d{1,10}), "
+        },
+        "AISW_MindSpore_Compiler_01": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["The name","is not defined","or not supported in graph mode"]
+            }
+        },
+        "AISW_MindSpore_MindData_16": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["Bad performance attention, it takes more than","seconds to fetch a batch of data from dataset pipeline","which might result","GetNext","timeout problem"]
+            }
+        },
+        "AISW_CANN_DRV_ESCH_008": {
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["There is no subscribe thread"]
+            }
+        },
+        "AISW_CANN_Runtime_Drv_008": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["fault op_name=aicpu_getnext_IteratorGetNext"]
+            }
+        },
+        "Comp_OS_Kernel_FS_02": {
+            "source_file": "OS",
+            "regex": {
+                "in": ["EXT4-fs error"]
+            }
+        },
+        "Comp_OS_Kernel_Mem_06": {
+            "source_file": "OS",
+            "regex": {
+                "in": ["Vmallocinfo Start"]
+            }
+        },
+        "Comp_OS_Custom_03": {
+            "source_file": "OS",
+            "regex": {
+                "in": ["nf_conntrack: nf_conntrack: table full"]
+            }
+        },
+        "Comp_OS_Custom_04": {
+            "source_file": "OS",
+            "regex": {
+                "in": ["ready to call notify chain to isolate page"]
+            }
+        },
+        "Comp_OS_HW_Stor_02": {
+            "source_file": "OS-dmesg",
+            "regex": {
+                "in": ["I/O error"]
+            }
+        },
+        "Comp_OS_Service_State_05": {
+            "source_file": "OS-sysmon",
+            "regex": {
+                "in": ["irqbalance is abnormal"]
+            }
+        },
+        "Comp_OS_Service_Container_04": {
+            "source_file": "OS",
+            "regex": {
+                "in": [
+                    ["No space left on device"],
+                    ["no space left on device"]
+                ]
+            }
+        },
+        "Comp_OS_Kernel_CPU_04": {
+            "source_file": "OS-vmcore-dmesg",
+            "regex": {
+                "in": ["Watchdog detected hard LOCKUP"]
+            }
+        },
+        "Comp_OS_Kernel_CPU_11": {
+            "source_file": "OS-sysmon",
+            "regex": {
+                "in": ["zombie process"]
+            }
+        },
+        "Comp_OS_Kernel_CPU_06": {
+            "source_file": "OS",
+            "regex": {
+                "in": [
+                    ["self-detected stall on CPU"],
+                    ["detected stalls on"]
+                ]
+            }
+        },
+        "AISW_CANN_Memory_Info_Custom": {
+            "source_file": "CANN_Plog",
+            "regex": {}
+        },
+        "AISW_CANN_AICPU_04": {
+            "source_file": "CANN_Device",
+            "regex": {
+                "in": ["load stream and task failed"]
+            }
+        },
+        "AISW_CANN_Runtime_014": {
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Program register failed","program out of"]
+            }
+        },
+        "AISW_CANN_Runtime_021": {
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["wait task timeout","type=7"],
+                    ["Notify wait execute failed"]
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_033": {
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Aicpu kernel execute failed"]
+            }
+        },
+        "AISW_CANN_Runtime_054": {
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["DevMemAllocHugePageManaged failed:"],
+                    ["DevMemAllocHugePageManaged:","drv api","halMemAlloc failed"]
+                ]
+            }
+        },
+        "0x80C78008": {
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Node Type=0x63;","Sensor Type=0xc0;","event_state=8)"],
+                    ["Event id=0x80c78008"],
+                    ["event_id:  [0x80c78008]"],
+                    ["event_id=0x80c78008"]
+                ]
+            }
+        },
+        "AISW_MindSpore_Compiler_09": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["The parameters number of the function is","but the number of provided arguments is"]
+            }
+        },
+        "AISW_CANN_ERRMSG_Custom_01": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["E30008: AI CPU operator execution time out."]
+            }
+        },
+        "AISW_CANN_ERRMSG_Custom_04": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": [
+                    ["EI0006","Getting socket times out","Reason:"],
+                    ["get socket timeout"]
+                ]
+            }
+        },
+        "AISW_PyTorch_Train_23": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["npuSynchronizeDevice"]
+            }
+        },
+        "AISW_PyTorch_Train_25": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": ["synchronize_and_free_events"]
+            }
+        },
+        "AISW_PyTorch_Env_02": {
+            "source_file": "TrainLog",
+            "regex": {
+                "in": [
+                    ["Please check that the cann package is installed"],
+                    ["Exception","_PATH","environment variable is not set"]
+                ]
+            }
+        },
+        "Comp_Switch_L1_02": {
+            "source_file": "DL_DevicePlugin | LCNELog",
+            "regex": {
+                "in": [
+                    ["WARN","[0x00f1ff09,155913,cpu,na]","Assertion"],
+                    ["alarmID=0x00f1ff09"]
+                ]
+            }
+        },
+        "Comp_Switch_L1_05": {
+            "source_file": "DL_DevicePlugin | LCNELog",
+            "regex": {
+                "in": [
+                    ["WARN","[0x00f1ff09,155912,cpu,na]","Assertion"],
+                    ["alarmID=0x00f1ff09"]
+                ]
+            }
+        },
+        "Comp_Switch_L1_06": {
+            "source_file": "DL_DevicePlugin | LCNELog",
+            "regex": {
+                "in": [
+                    ["WARN","[0x00f1ff09,155912,npu,na]","Assertion"],
+                    ["alarmID=0x00f1ff09"]
+                ]
+            }
+        },
+        "AISW_MindIE_MS_HttpServer_02": {
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["MIE03E400002"]
+            }
+        },
+        "AISW_MindIE_MS_HttpServer_01": {
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["MIE03E400008"]
+            }
+        },
+        "AISW_MindIE_MS_HttpServer_06": {
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["MIE03E400005"]
+            }
+        },
+        "AISW_MindX_Docker_Runtime_02": {
+            "source_file": "DL_Docker_Runtime",
+            "regex": {
+                "in": [
+                    ["failed to check files","owner not right /usr/bin/runc"],
+                    ["failed to check files","write permission not right /usr/bin/runc"]
+                ]
+            }
+        },
+        "AISW_MindX_Volcano_03": {
+            "source_file": "DL_Volcano_Scheduler",
+            "regex": {
+                "in": ["Failed to get plugin volcano-npu"]
+            }
+        },
+        "AISW_MindX_Volcano_10": {
+            "source_file": "DL_Volcano_Controller",
+            "regex": {
+                "in": ["Failed to create pod","for Job"]
+            }
+        },
+        "AISW_CANN_AMCT_ALL_001": {
+            "source_file": "CANN_Amct",
+            "regex": {
+                "in": ["No layer support","in the graph"]
+            }
+        },
+        "AISW_MindX_Npu_Exporter_01": {
+            "source_file": "DL_Npu_Exporter",
+            "regex": {
+                "in": ["deviceManager init failed","cannot found valid driver lib","fromEnv","lib path is invalid"]
+            }
+        },
+        "AISW_MindX_Npu_Exporter_03": {
+            "source_file": "DL_Npu_Exporter",
+            "regex": {
+                "in": ["get npu link stat failed","no such file or directory"]
+            }
+        },
+        "0x2C000031": {
+            "source_file": "NodeDLog",
+            "regex": {
+                "in": ["error","code","2C000031"]
+            }
+        },
+        "0x0000001D": {
+            "source_file": "NodeDLog",
+            "regex": {
+                "in": ["error","code","0000001D"]
+            }
+        },
+        "AISW_PyTorch_ERRCODE_Common": {
+            "source_file": "TrainLog",
+            "regex": {
+                "regex": "^\\[ERROR].{0,40}PID.{0,15}Device.{0,10}RankID.{0,15}ERR"
+            },
+            "attr_regex": "^\\[ERROR]\\D{0,5}(?P<occur_time>[0-9-:]{19}).{1,40}Device:(?P<source_device>.{1,4}),.{1,30}(?P<error_code>ERR\\d{5}).{0,5}(?P<module>PTA|OPS|DIST|GRAPH|PROF|UNKNOWN)"
+        }
+
+    }
+}

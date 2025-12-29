@@ -1,0 +1,7 @@
+[EVENT] KERNEL(3555,sklogd):2021-10-07-14:39:23.058.971 [klogd.c:248][104048.512182] [ascend] [ERROR] [drv_pcie] [devdrv_record_err_addr 191] <kworker/32:0:29177:29177> the err addr is
+[EVENT] KERNEL(3555,sklogd):2021-10-07-14:39:23.058.978 [klogd.c:248][104048.512185] [ascend] [ERROR] [drv_pcie] [devdrv_record_sq_err_ptr 177] <kworker/32:0:29177:29177> the sq read err ptr is: 0
+[EVENT] KERNEL(3555,sklogd):2021-10-07-14:39:23.058.999 [klogd.c:248][104048.512190] [ascend] [ERROR] [drv_pcie] [devdrv_record_dma_dxf_info 228] <kworker/32:0:29177:29177> the hardware cq head is 49665
+[EVENT] KERNEL(3555,sklogd):2021-10-07-14:39:23.059.006 [klogd.c:248][104048.512192] [ascend] [ERROR] [drv_pcie] [devdrv_record_dma_dxf_info 230] <kworker/32:0:29177:29177> the hardware cq tail is -1040006654
+[EVENT] KERNEL(3555,sklogd):2021-10-07-14:39:23.059.013 [klogd.c:248][104048.512194] [ascend] [ERROR] [drv_pcie] [devdrv_record_dma_dxf_info 232] <kworker/32:0:29177:29177> the err type is: 0x80
+[ERROR] DRV(8579,None):2021-02-09-17:47:54.812.725 [../../../../../../../hardware/dev_plat/device_monitor/api/dev_mon_api.c:2976][dmp] [dev_mon_api_get_soc_die_id 2976] get  dieid failed:DRV_ERROR_NOT_SUPPORT
+[ERROR] DRV(8579,None):2021-02-09-17:51:44.835.723 [../../../../../../../hardware/dev_plat/device_monitor/api/dev_mon_api.c:2976][dmp] [dev_mon_api_get_soc_die_id 2976] get  dieid failed:DRV_ERROR_NOT_SUPPORT

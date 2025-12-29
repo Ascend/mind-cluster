@@ -1,0 +1,3 @@
+[TRACE] HCCL(11335,python3):2023-01-31-02:48:31.328.022 [status:init] [hcom.cc:196][hccl-11335-0-1675133311-hccl_world_group][5]hcom init by file succeess,take time [294048]us, rankTablePath[/home/ysp/hccl_8p_01234567_51.38.68.155.json], rankNum[8], rank[5],server[51.38.68.155], device[5]
+[ERROR] HCCL(11335,python3):2023-01-31-03:00:09.957.706 [exchanger_network.cc:237][11335][21501][Wait][AllClientSocketEstable]errNo[0x00000000500000b] client : device[5] rank[5] get sokcet timeout, total[4] remain[4]
+[ERROR] HCCL(11335,python3):2023-01-31-03:00:09.957.787 [exchanger_network.cc:693][11335][21501]Some NPUS get socket timeout, the details as follows:

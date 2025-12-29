@@ -1,0 +1,82 @@
+[INFO]     2999/10/01 03:30:50.889275 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984139, heartbeat interval: 5
+[INFO]     2999/10/01 03:30:51.893798 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984144, heartbeat interval: 5
+[INFO]     2999/10/01 03:30:52.898621 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984149, heartbeat interval: 5
+[INFO]     2999/10/01 03:30:53.901721 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984154, heartbeat interval: 5
+[INFO]     2999/10/01 03:30:54.906465 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984159, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:04.911605 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984164, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:09.912635 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984169, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:14.913357 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984174, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:19.918198 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984179, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:24.923285 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984184, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:28.461797 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:31:28.461905 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:31:28.461941 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:31:28.461976 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:31:28.462008 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:31:28.462040 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 15]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462072 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 13]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462105 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 12]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462140 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 11]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462171 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 10]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462204 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 9]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462236 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 7]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462275 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 4]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462310 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 5]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462341 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 3]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462376 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 2]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462406 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 1]-[error code: 56000005]
+[INFO]     2999/10/01 03:31:28.462437 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:31:28.462476 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:31:28.462509 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:31:28.462547 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:31:28.462583 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:31:28.462621 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:31:28.462666 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:31:28.462700 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:31:28.462731 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: BMC]-[device id: 255]-[error code: 1A000023]
+[INFO]     2999/10/01 03:31:28.462762 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: CPU Board]-[device id: 1]-[error code: 24000027]
+[INFO]     2999/10/01 03:31:28.462792 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: BMC]-[device id: 255]-[error code: 1A000055]
+[INFO]     2999/10/01 03:31:29.924587 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984189, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:34.928408 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984194, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:39.930203 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984199, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:44.935156 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984204, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:49.940137 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984209, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:54.945120 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984214, heartbeat interval: 5
+[INFO]     2999/10/01 03:31:59.950261 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984219, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:04.955348 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984224, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:09.960629 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984229, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:14.965210 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984234, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:19.970237 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984239, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:24.970774 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984244, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:29.971959 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984249, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:31.417672 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.417873 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.417929 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:32:31.417978 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:32:31.418016 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:32:31.418054 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.418091 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:32:31.418126 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 15]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418166 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 12]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418207 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 13]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418238 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 11]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418275 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 10]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418311 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 9]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418355 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 7]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418391 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 4]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418422 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 3]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418459 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 1]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418493 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: NPU]-[device id: 2]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:31.418529 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:32:31.418561 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:32:31.418598 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:32:31.418631 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000011]
+[INFO]     2999/10/01 03:32:31.418670 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: Port]-[device id: 255]-[error code: 29000017]
+[INFO]     2999/10/01 03:32:31.418704 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.418736 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.418806 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: ExpBoard]-[device id: 1]-[error code: 5D000003]
+[INFO]     2999/10/01 03:32:31.418844 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: BMC]-[device id: 255]-[error code: 1A000023]
+[INFO]     2999/10/01 03:32:31.418878 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: CPU Board]-[device id: 1]-[error code: 24000027]
+[INFO]     2999/10/01 03:32:31.418916 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: BMC]-[device id: 255]-[error code: 0000001D]
+[INFO]     2999/10/01 03:32:34.974810 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984254, heartbeat interval: 5
+[INFO]     2999/10/01 03:32:39.979430 308     monitoring/monitor_manager.go:81    send heartbeat: 1724984259, heartbeat interval: 5

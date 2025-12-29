@@ -1,0 +1,9 @@
+coverage
+dataclasses
+mock
+pytest
+pytest-cov
+pytest-mock
+pytest-html
+virtualenv
+pexpect

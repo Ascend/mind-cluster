@@ -1,0 +1,34 @@
+[INFO] HCCL(10916,python3.9):2024-07-24-19:39:32.077.360 [op_base.cc:314][10916]Entry-HcclGetRootInfo:rootInfo[0xfffffb931b78], deviceLogicId[0]
+[INFO] HCCL(10916,python3.9):2024-07-24-19:39:32.092.663 [op_base.cc:339][10916][HCCL_TRACE]HcclGetRootInfo success, take time [15319]us, identifier[172.16.13.183%eth0_64000_0_1721821172092650]
+[INFO] HCCL(10916,python3.9):2024-07-24-19:39:32.092.789 [op_base.cc:413][10916]Entry-HcclCommInitRootInfo:ranks[2048], rank[0], rootinfo: host ip[172.16.13.183] port[64000] nicDeploy[1] identifier[172.16.13.183%eth0_64000_0_1721821172092650], deviceLogicId[0]
+[INFO] HCCL(10916,python3.9):2024-07-24-19:39:34.075.962 [topoinfo_detect.cc:208][10916][HCCL_TRACE]SetupAgent rankNum[2048], rank[0], rootInfo identifier[172.16.13.183%eth0_64000_0_1721821172092650], server[172.16.13.183%eth0], logicDevId[0], phydevId[0], deviceIp[29.59.17.126]
+[INFO] HCCL(989,python):2024-08-01-15:02:25.699.358 [heartbeat.cc:536][3851][HCCL_TRACE]rank [172.16.0.159/2]: rank [172.16.0.57/5] status[LOST] by rank [172.16.0.57/6]
+[INFO] HCCL(989,python):2024-08-01-15:02:36.644.057 [heartbeat.cc:536][3851][HCCL_TRACE]rank [172.16.0.159/2]: rank [172.16.0.57/2] status[LOST] by rank [172.16.0.184/2]
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.201 [topoinfo_exchange_server.cc:91][2168][Get][Connection]topo exchange server get socket timeout! timeout[120 s]
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.248 [topoinfo_exchange_server.cc:161][2168][TopoInfoExchangeServer][DisplayConnectionedRank]total connected num is [7],line num is [1]
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.268 [topoinfo_exchange_server.cc:174][2168][TopoInfoExchangeServer][DisplayConnectionedRank]connected rankinfo[LINE 0]: [0000000000000000],[0000000000000001],[0000000000000002],[0000000000000003],[0000000000000004],[0000000000000005],[0000000000000006];
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.281 [topoinfo_exchange_server.cc:75][2168]call trace: hcclRet -> 9
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.293 [topoinfo_exchange_server.cc:41][2168][TopoInfoExchangeServer][Setup]cluster topo exchange server connect client failed
+[ERROR] HCCL(148,python):2024-03-28-10:25:48.427.529 [topoinfo_detect.cc:49][2168][Setup][TopoExchangeServer]setup topoExchangeServer failed, ret[9]
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.485 [adapter_hccp.cc:872][148][Recv][RaSocket]errNo[0x0000000005000013] Wait timeout for sockets recv, data[0xffffe0d3837c], size[4], recvSize[0], The most common cause is that the firewall is incorrectly configured. Check the firewall configuration or try to disable the firewall.
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.785 [topoinfo_exchange_base.cc:137][148]call trace: hcclRet -> 9
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.803 [topoinfo_exchange_base.cc:104][148][Recv][ClusterInfoMsg]receive msg length from fdhandle failed, ret[9]
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.815 [topoinfo_exchange_agent.cc:270][148]call trace: hcclRet -> 4
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.826 [topoinfo_exchange_agent.cc:71][148]call trace: hcclRet -> 4
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.845 [topoinfo_exchange_agent.cc:43][148]call trace: hcclRet -> 4
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.858 [topoinfo_detect.cc:214][148]call trace: hcclRet -> 4
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.881 [op_base.cc:434][148][Init][CommRootInfo]errNo[0x0000000005000004] setup topo detect error
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.093.801 [op_base.cc:481][148][HCCL_TRACE]HcclCommInitRootInfo failed, return[0x0000000005000004], rankNum[8], rank[0], rootInfo identifier[51.38.67.143%enp189s0f0_60004_4_1711621428426055], server[172.16.13.183%eth0], logicDevId[-1]
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.469 [task_exception_handler.cc:449][69395][TaskExceptionHandler][Callback]Task from HCCL run failed.
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.511 [task_exception_handler.cc:452][69395][TaskExceptionHandler][Callback]Task run failed, base information is streamID:[3], taskID[77726298], taskType[Notify Wait], tag[AllReduce_10.136.181.175%enp179s0f0_60000_0_1712529353144389], index[3], AlgType(level 0-1-2):[null-null-ring].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, para information is notify id:[0x0000000000000050], stage:[ffffffff], remote rank:[local].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, groupRank information is group:[10.136.181.175%enp179s0f0_60000_0_1712529353144389], rankSize[4], rankId[0].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.469 [task_exception_handler.cc:449][69395][TaskExceptionHandler][Callback]Task from HCCL run failed.
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.511 [task_exception_handler.cc:452][69395][TaskExceptionHandler][Callback]Task run failed, base information is streamID:[3], taskID[77726298], taskType[Notify Wait], tag[AllReduce_10.136.181.175%enp179s0f0_60000_0_1712529353144389], index[3], AlgType(level 0-1-2):[null-null-ring].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, para information is notify id:[0x0000000000000050], stage:[ffffffff], remote rank:[3].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, groupRank information is group:[10.136.181.175%enp179s0f0_60000_0_1712529353144389], rankSize[4], rankId[0].
+[EVENT] HCCL(55,python):2023-12-28-06:25:51.049.801 [externalinput.cc:491][55]environmental variable HCCL_CONNECT_TIMEOUT is set, timeOut[120]
+[EVENT] HCCL(55,python):2023-12-28-06:25:51.049.901 [externalinput.cc:969][55]ExecTimeOut is set to timeOut[120]
+[INFO] HCCL(1017,python):2024-08-01-14:45:28.498.861 [externalinput.cc:1472][1017]HCCL_RDMA_TIMEOUT set by default to [20]
+[INFO] HCCL(1017,python):2024-08-01-14:45:28.498.874 [externalinput.cc:1506][1017]HCCL_RDMA_RETRY_CNT set by default to [7]
+[INFO] HCCL(1017,python):2024-08-01-15:45:28.498.874 ReportTimeoutProc: report timeout

@@ -1,0 +1,1 @@
+[INFO]     2999/10/01 03:39:17.760916 305     ipmimonitor/ipmi_monitor.go:206    get fault event, [device type: BMC]-[device id: 255]-[error code: 2C000031]

@@ -1,0 +1,2 @@
+[INFO] HCCL(11262,python3):2023-01-01-01:48:31.246.088 [trace_attr.c:189](tid:229) attr init success, timeout=0ms.
+[INFO] HCCL(11262,python3):2023-01-01-02:00:00.000.000 [trace_attr.c:189](tid:229) attr init success, timeout=0ms.

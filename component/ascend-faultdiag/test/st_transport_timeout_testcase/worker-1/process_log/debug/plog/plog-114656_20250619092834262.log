@@ -1,0 +1,10 @@
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.178 [hccl_socket_manager.cc:778] [116500][Wait][LinkEstablish]wait socket establish timeout, role[1] rank[11] timeout[130]
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.375 [hccl_socket_manager.cc:591] [116500]   _________________________LINK_ERROR_INFO___________________________
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.379 [hccl_socket_manager.cc:592] [116500]   |  comm error, device[3] 
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.382 [hccl_socket_manager.cc:594] [116500]   |  dest_ip(user_rank)  |   dest_port   |  src_ip(user_rank)   |   src_port   |   MyRole   |   Status   |
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.386 [hccl_socket_manager.cc:596] [116500]   |--------------------|--------------------|----------|------------|-----------------|-----------------|
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.396 [hccl_socket_manager.cc:553] [116500]   |  192.168.2.199(8)   |  16666  |   192.168.2.196(11)   |  0  |  client  | time out |  
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.402 [hccl_socket_manager.cc:600] [116500]   ___________________________________________________________________  
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:34.085.406 [hccl_socket_manager.cc:601] [116500]the connection failure between this device and target device may be due to the following reasons:
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:35.084.445 [p2p_mgmt.cc:305] [115877][Wait][P2PConnected]connected p2p timeout, timeout:130 s. local logicDevid:3, remote physic id:1.
+[ERROR] HCCL(114656,python3):2025-06-19-09:28:35.084.468 [transport_manager.cc:741] [115877][Create][DestSockets]Wait Enable P2P Failed, src devicePhyId[3], dst devicePhyId[1], ret[16]

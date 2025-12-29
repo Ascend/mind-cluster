@@ -1,0 +1,3 @@
+2024-08-30T17:01:48.358351+00:00|warning|sysmonitor[12706]: monitor cmd: psz_cmd[systemctl status irqbalance] execl error[3]
+2024-08-30T17:01:48.358733+00:00|info|sysmonitor[12706]: irqbalance is abnormal, check cmd return 3, use "systemctl restart irqbalance" to recover
+2024-08-30T17:01:48.559312+00:00|info|sysmonitor[12706]: irqbalance is recovered

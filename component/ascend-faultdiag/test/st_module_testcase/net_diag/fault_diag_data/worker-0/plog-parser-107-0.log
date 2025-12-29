@@ -1,0 +1,2 @@
+[TRACE] HCCL(107,python):2023-08-11-02:15:15.092.188 [status:init] [hcom.cc:214][hccl-107-0-1691720114-hccl_world_group][7]hcom init by file success,take time [459294]us, rankTablePath[/user/serverid/devindex/config/..2023_08_11_02_15_04.937019131/hccl.json], rankNum[8], rank[7],server[51.38.67.77], device[7]
+[EVENT] HCCL(107,python):2023-08-11-02:15:14.633.679 [externalinput.cc:457][107][107]environmental variable HCCL_CONNECT_TIMEOUT is set, timeOut[600]

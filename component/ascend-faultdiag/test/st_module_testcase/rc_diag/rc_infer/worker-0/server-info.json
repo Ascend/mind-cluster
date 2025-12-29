@@ -1,0 +1,53 @@
+{
+    "container_ip": "node_ip_1",
+    "device_info": {
+        "6483": {
+            "device_id": "0",
+            "logic_device_id": "0",
+            "phy_device_id": "0",
+            "pid": "6483"
+        },
+        "6485": {
+            "device_id": "1",
+            "logic_device_id": "1",
+            "phy_device_id": "1",
+            "pid": "6485"
+        },
+        "6496": {
+            "device_id": "2",
+            "logic_device_id": "2",
+            "phy_device_id": "2",
+            "pid": "6496"
+        },
+        "6507": {
+            "device_id": "3",
+            "logic_device_id": "3",
+            "phy_device_id": "3",
+            "pid": "6507"
+        },
+        "6521": {
+            "device_id": "4",
+            "logic_device_id": "4",
+            "phy_device_id": "4",
+            "pid": "6521"
+        },
+        "6535": {
+            "device_id": "5",
+            "logic_device_id": "5",
+            "phy_device_id": "5",
+            "pid": "6535"
+        },
+        "6549": {
+            "device_id": "6",
+            "logic_device_id": "6",
+            "phy_device_id": "6",
+            "pid": "6549"
+        },
+        "6573": {
+            "device_id": "7",
+            "logic_device_id": "7",
+            "phy_device_id": "7",
+            "pid": "6573"
+        }
+    }
+}

@@ -1,0 +1,2 @@
+[TRACE] HCCL(12337,python):2023-07-04-21:46:57.092.002 [status:init] [hcom.cc:194][hccl-12337-0-1688478416-hccl_world_group][76]hcom init by file success,take time [248118]us, rankTablePath[/home/ma-user/rank_table/jobstart_hccl.json], rankNum[128], rank[76],server[192.168.102.141], device[4]
+[ERROR] HCCL(12337,python):2023-07-04-22:15:59.773.698 [heartbeat.cc:551][12337][283707][Heartbeat]cqe err status[12], time:[2023-07-04 22:15:59.099518], ip:[192.1.95.102]

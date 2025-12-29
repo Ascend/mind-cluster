@@ -1,0 +1,2 @@
+[INFO] HCCL(59420,python):2025-01-24-11:10:27.614.147 [topoinfo_detect.cc:221][3475][HCCL_TRACE]SetupAgent rankNum[3], rank[0], rootInfo identifier[hccl_world_group], server[10.20.8.250%bond1], logicDevId[0], phydevId[0], deviceIp[124.0.0.21]
+[INFO] HCCL(59420,python):2025-01-24-11:10:27.626.981 [hcom_ops_kernel_info_store.cc:214][20937]GenerateOpTag: graph[2] opType[HcomAllGather], nodeNameHash[1353908935038672150], group[hccl_world_group], generated op tag[HcomAllGather_5871863451775290338_0]

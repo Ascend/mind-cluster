@@ -1,0 +1,3 @@
+[INFO] HCCL(114650,python3):2025-06-19-09:26:21.563.188 [externalinput.cc:407] [114650]HCCL_CONNECT_TIMEOUT set by environment to [130]s
+[INFO] HCCL(114650,python3):2025-06-19-09:26:21.563.279 [externalinput.cc:985] [114650]HCCL_EXEC_TIMEOUT set by environment to [600]s
+[INFO] HCCL(114650,python3):2025-06-19-09:26:21.655.782 [topoinfo_detect.cc:506] [114650][HCCL_TRACE][Flat]SetupAgent rankNum[3], rank[1], rootInfo identifier[1.1.1.1%enp189s0f0_60000_0_1750325244673428], server[2.2.2.2%enp189s0f0], serverPort[60000]deviceType[2], logicDevId[1], phydevId[1], deviceIp[2.2.2.22]

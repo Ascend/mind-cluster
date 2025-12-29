@@ -33,7 +33,54 @@ MindCluster Ascend FaultDiag（故障诊断工具）主要功能如下：提供�
 # 目录结构
 
 ```
-
+ascend-faultdiag
+├─build
+├─platform
+├─src
+│  ├─ascend_fd
+│  │  ├─configuration
+│  │  ├─controller
+│  │  ├─lib
+│  │  ├─model
+│  │  ├─module
+│  │  │  └─mindie_trace_parser
+│  │  ├─pkg
+│  │  │  ├─customize
+│  │  │  │  ├─custom_config
+│  │  │  │  └─custom_entity
+│  │  │  ├─diag
+│  │  │  │  ├─knowledge_graph
+│  │  │  │  │  ├─kg_engine
+│  │  │  │  │  │  ├─graph
+│  │  │  │  │  │  └─model
+│  │  │  │  ├─network_congestion
+│  │  │  │  ├─node_anomaly
+│  │  │  │  │  ├─npu_anomaly
+│  │  │  │  │  └─resource_preemption
+│  │  │  │  │      └─utils
+│  │  │  │  └─root_cluster
+│  │  │  ├─parse
+│  │  │  │  ├─blacklist
+│  │  │  │  ├─knowledge_graph
+│  │  │  │  │  ├─parser
+│  │  │  │  │  └─utils
+│  │  │  │  ├─network_congestion
+│  │  │  │  ├─node_anomaly
+│  │  │  │  └─root_cluster
+│  │  ├─sdk
+│  │  ├─utils
+│  │  │  ├─constant
+│  │  │  ├─fast_parser
+│  │  │  └─timehub
+│  │  └─wrapper
+├─test
+│  ├─custom_operation
+│  ├─dt
+│  └─st
+└─toolkits
+    ├─exp_covert
+    │  └─exp_lib_dir
+    └─local_diag
 ```
 
 # 版本说明
@@ -43,6 +90,24 @@ MindCluster Ascend FaultDiag版本配套详情请参考：[版本配套详情](h
 # 环境部署
 
 MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
+
+## 编译与构建
+
+### 环境要求
+- Python版本≥3.7.5
+- scikit-learn>=1.3.0
+- pandas>=1.3.5
+- numpy>=1.21.6,<2.0.0
+- joblib>=1.2.0,<1.5.0
+- ply>=3.11
+
+### 构建
+请先克隆仓库，然后在项目根目录执行构建脚本：
+```shell
+git clone https://gitcode.com/Ascend/mind-cluster.git
+cd mind-cluster/component/ascend-faultdiag
+./build/build.sh
+```
 
 ## [获取软件包](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)
 获取MindCluster Ascend FaultDiag软件包。
@@ -146,7 +211,8 @@ MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluste
            |--ascend-kg-parser.json
            |--ascend-kg-analyzer.json               
            |--ascend-rc-parser.json
-           |--server-info.json.json              ...
+           |--server-info.json.json              
+        ...
         |--清洗输出目录n
     ```
 **故障诊断**
@@ -206,14 +272,6 @@ API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcl
 |----------|------|------|------------|----------------------|------------|
 | master   | 长期支持 | 开发   | 在研分支，不发布   | 2025-10-27           | -          |
 | v7.3.0   | 长期支持 | 开发   | 在研分支，未发布   | 2025-10-27           | -          |
-| v7.2.RC1 | 常规分支 | 维护   | 2025-10-25 | 预计2026/1/25起进入无维护状态  | 2025-10-27 |
-| v7.1.RC1 | 常规分支 | EOL  | 2025-07-24 |                      | 2025-10-24 |
-| v7.0.RC1 | 常规分支 | EOL  | 2025-04-27 |                      | 2025-07-27 |
-| v6.0.0   | 长期支持 | 维护   | 2024-12-31 | 预计2025-12-31起进入无维护状态 |            |
-| v6.0.RC3 | 常规分支 | EOL  | 2024-11-20 |                      | 2025-02-20 |
-| v6.0.RC2 | 常规分支 | EOL  | 2024-11-20 |                      | 2025-02-20 |
-| v6.0.RC1 | 常规分支 | EOL  | 2024-11-20 |                      | 2025-02-20 |
-| v5.0.0   | 长期支持 | EOL  | 2023-11-20 |                      | 2024-11-20 |
 
 
 # 免责声明

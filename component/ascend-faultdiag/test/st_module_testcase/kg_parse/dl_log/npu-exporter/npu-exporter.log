@@ -1,0 +1,1 @@
+[ERROR]    2024/01/10 02:29:39.034681 60      collector/npu_collector.go:1924    deviceManager init failed, prepare dcmi failed, err: cannot found valid driver lib, fromEnv: lib path is invalid, [/usr/local/Ascend/driver/lib64/driver/libdcmi.so: check uid or mode failed; /usr/local/dcmi/libdcmi.so: check uid or mode failed;]

@@ -1,0 +1,5 @@
+[EVENT] TDT(4717,tsdaemon):2023-10-31-16:41:39.405.951 [tsdaemon.cpp:2070][RemoveResidualFile][tid:4717] RemoveResidualFile finish
+[EVENT] TDT(4717,tsdaemon):2023-10-31-16:41:39.405.959 [tsdaemon.cpp:2085][Start][tid:4717] [TsdEVENT] PreInit Success.
+[EVENT] TDT(4717,tsdaemon):2023-10-31-16:41:39.406.024 [inotify_watcher.cpp:157][StartWatch][tid:4717] inotify_add_watch uniqueVfId[0] fd[14] path[/home/HwHiAiUser/hdcd/device0] wd[1] dev[0] vf[0] succ
+[EVENT] TDT(4717,tsdaemon):2023-10-31-16:41:39.406.078 [tsdaemon.cpp:1619][InitInotifyWatcher][tid:4717] [TsdEVENT] Creat physical inotify watcher success.
+[EVENT] TDT(4717,tsdaemon):2023-10-31-16:41:39.406.087 [tsdaemon.cpp:1811][RunSpecialProcess][tid:4717] [TsdEVENT] Event id=0x8c17a005.

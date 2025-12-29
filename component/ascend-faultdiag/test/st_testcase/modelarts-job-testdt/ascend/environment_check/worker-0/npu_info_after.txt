@@ -1,0 +1,194 @@
+Datetime: 2024-09-04 09:38:41.269221
+
+
+cat /usr/local/Ascend/driver/version.info
+Version=23.0.7
+ascendhal_version=7.35.19
+aicpu_version=1.0
+tdt_version=1.0
+log_version=1.0
+prof_version=2.0
+dvppkernels_version=1.1
+tsfw_version=1.0
+Innerversion=V100R001C15SPC012B220
+compatible_version=[V100R001C29],[V100R001C30],[V100R001C13],[V100R001C15]
+compatible_version_fw=[7.0.0,7.1.99]
+package_version=23.0.7
+
+
+cat /usr/local/Ascend/firmware/version.info
+Version=7.1.0.11.220
+firmware_version=1.0
+package_version=23.0.7
+compatible_version_drv=[23.0.rc3,23.0.rc3.],[23.0.0,23.0.0.]
+
+
+cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info
+package_name=Ascend-cann-toolkit
+version=7.0.T10
+innerversion=V100R001C13B222
+compatible_version=[V100R001C29],[V100R001C30],[V100R001C13],[V100R003C10],[V100R003C11]
+arch=aarch64
+os=linux
+path=/usr/local/Ascend/ascend-toolkit/7.0.T10/aarch64-linux
+
+
+cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info
+package_name=Ascend-cann-nnae
+version=8.0.RC3
+innerversion=V100R001C19SPC001B137
+compatible_version=[V100R001C13,V100R001C19],[V100R001C30]
+arch=x86_64
+os=linux
+path=/usr/local/Ascend/nnae/8.0.RC3
+
+
+pip list | grep "torch "
+torch              1.11.0
+
+
+pip list | grep torch-npu
+torch-npu          2.1.0.post8.dev20241009
+
+
+pip list | grep "mindspore "
+mindspore          2.3.0
+
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -ip -g
+ipaddr:10.10.0.10
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 1 -ip -g
+ipaddr:10.10.0.11
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 2 -ip -g
+ipaddr:10.10.0.12
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 3 -ip -g
+ipaddr:10.10.0.13
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 4 -ip -g
+ipaddr:10.10.0.14
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 5 -ip -g
+ipaddr:10.10.0.15
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 6 -ip -g
+ipaddr:10.10.0.16
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 7 -ip -g
+ipaddr:10.10.0.17
+netmask:255.255.255.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 1 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 2 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 3 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 4 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 5 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:11
+roce_tx_err_pkt_num:12
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 6 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:13
+roce_tx_err_pkt_num:77
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 7 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -link_stat -g
+[devid 0]current time        : Wed Aug  2 03:36:43 2022
+[devid 0]link up count       : 2
+[devid 0]link change records :
+[devid 0]    Tue Aug  1 14:44:40 2022    LINK DOWN
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 0]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 1 -link_stat -g
+[devid 1]current time        : Wed Aug  2 03:36:43 2022
+[devid 1]link up count       : 2
+[devid 1]link change records :
+[devid 1]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 1]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 1]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 2 -link_stat -g
+[devid 2]current time        : Wed Aug  2 03:36:44 2022
+[devid 2]link up count       : 2
+[devid 2]link change records :
+[devid 2]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 2]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 2]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 3 -link_stat -g
+[devid 3]current time        : Wed Aug  2 03:36:44 2022
+[devid 3]link up count       : 2
+[devid 3]link change records :
+[devid 3]    Tue Aug  1 14:44:40 2022    LINK DOWN
+[devid 3]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 3]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 3]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 4 -link_stat -g
+[devid 4]current time        : Wed Aug  2 03:36:44 2022
+[devid 4]link up count       : 2
+[devid 4]link change records :
+[devid 4]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 4]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 4]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 5 -link_stat -g
+[devid 5]current time        : Wed Aug  2 03:36:45 2022
+[devid 5]link up count       : 2
+[devid 5]link change records :
+[devid 5]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 5]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 5]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 6 -link_stat -g
+[devid 6]current time        : Wed Aug  2 03:36:45 2022
+[devid 6]link up count       : 2
+[devid 6]link change records :
+[devid 6]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 6]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 6]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 7 -link_stat -g
+[devid 7]current time        : Wed Aug  2 03:36:45 2022
+[devid 7]link up count       : 2
+[devid 7]link change records :
+[devid 7]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 7]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 7]    Tue Aug  1 14:43:26 2022    LINK UP

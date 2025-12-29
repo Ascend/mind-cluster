@@ -1,0 +1,4 @@
+[INFO] ATRACE(1382,python3.8):2025-08-05-19:46:01.413.984 [trace_attr.c:189](tid:1382) attr init success, timeout=0ms.
+[INFO] HCCL(1382,python3.8):2025-08-05-19:46:33.284.526 [topoinfo_detect.cc:294] [1382][HCCL_TRACE]SetupAgent rankNum[2], rank[0], rootInfo identifier[%bond4.29_60008_0_1754394260729515], server[%bond4.24], serverPort[60008]deviceType[4], logicDevId[11], phydevId[11], deviceIp[2.2.2.2]
+[INFO] HCCL(1382,python3.8):2025-08-05-19:48:49.502.614 [hccl_comm.cc:129] [1382]hcclCommInitInfo:commId[hccl-1382-5-1754394529-hccl_world_group], rank[0], totalRanks[2], serverId[%bond4.24], deviceType[4],logicDevId[11], identifier[group_name_17271]
+[INFO] HCCL(1382,python3.8):2025-08-06-23:23:31.344.357 [hccl_socket.cc:458] [8193][IRecv]except size [712 Byte], actual size [0 Byte], ret[128207]

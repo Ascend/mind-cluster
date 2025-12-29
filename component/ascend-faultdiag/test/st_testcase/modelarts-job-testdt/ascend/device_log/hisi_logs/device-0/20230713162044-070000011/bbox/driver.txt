@@ -1,0 +1,4 @@
+driver info:
+devid: 2, module: 1 2021-10-05 15:07:08 651408 devid: 2 device manager current status: working.
+excep_id: 0xa8028802 .
+device_id = 2, fail info: device_id-2 appeared multi ecc err, the physical address is 0x400cd8d202e0

@@ -1,0 +1,19 @@
+{
+    "knowledge-repository": {
+      "TEST_ERR_CODE_01": {
+            "attribute": {
+                "class": "class",
+                "component": "component",
+                "module": "module",
+                "cause_zh": "cause_zh",
+                "description_zh": "description_zh",
+                "error_case": ["error_case"],
+                "fixed_case": ["fixed_case"],
+                "suggestion_zh": ["suggestion_zh"]
+            },
+            "source_file": "TrainLog",
+            "regex": {"in": [["in"]]
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "Test_Code_2":
+        {
+            "attribute.class": "test_class2",
+            "attribute.component": "test_component2",
+            "attribute.module": "test_module2",
+            "attribute.cause_zh": "test_cause_zh2",
+            "attribute.description_zh": "test_description_zh2",
+            "attribute.suggestion_zh": "test_suggestion_zh2",
+            "rule": [],
+            "source_file": "CANN_Plog",
+            "regex.in": ["test key word 3", "test key word 4"]
+        },
+    "Test_Code_1":
+        {
+            "attribute.class": "test_class",
+            "attribute.component": "test_component",
+            "attribute.module": "test_module",
+            "attribute.cause_zh": "test_cause_zh",
+            "attribute.description_zh": "test_description_zh",
+            "attribute.suggestion_zh": "test_suggestion_zh",
+            "attribute.error_case": "test_error_case",
+            "attribute.fixed_case": "test_fixed_case",
+            "rule": [
+                {"dst_code": "Test_Code_2"}
+            ],
+            "source_file": "CANN_Plog",
+            "regex.in": ["test key word 1", "test key word 2"]
+        },
+    "Error_Code_3":
+        {
+            "attribute.component": "test_component2",
+            "attribute.module": "test_module2",
+            "attribute.cause_zh": "test_cause_zh2",
+            "rule": [],
+            "source_file": "CANN_Plog"
+        }
+}

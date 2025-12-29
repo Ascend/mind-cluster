@@ -1,0 +1,1 @@
+2024-10-23 10:47:11,976 - INFO - [AMCT]:[AMCT]: Layer batchmatmul_2 does not support asymmetric quant, set symmetric, No layer support in the graph

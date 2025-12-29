@@ -1,0 +1,1 @@
+[ERROR]    2023/12/22 02:29:39.034681 60      collector/npu_collector.go:1924    get npu link stat failed, no such file or directory

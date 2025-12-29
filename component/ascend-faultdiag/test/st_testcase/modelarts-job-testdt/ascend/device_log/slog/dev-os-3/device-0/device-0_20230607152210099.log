@@ -1,0 +1,21 @@
+[ERROR] TSCH(-1,null):2023-06-10-13:16:11.401.438 11 (dieid:0,cpuid:0) hwts_plat.c:1931 int_process_hwts_timeout_exception: RTS_HWTS: hwts timeout exception bitmap=0x8000
+<exception_print>HWTS_PUBLIC_START
+<exception_print>HWS_REG_GLB_CTRL0=0xff240037012a
+<exception_print>HWS_REG_PRIORITY_CTRL0=0x301
+<exception_print>HWS_REG_AICORE_STATUS=0x7fffdfff
+<exception_print>HWS_REG_AIC_BASE_ADDR[0]=0x6000b0000000
+<exception_print>TIME:2023-06-10-13:16:11.401.636, device_id=0, stream_id=16, task_id=43, exception_code=0xb4060007, magic_type=0xab6528
+<exception_print>HWTS_SLOT_START: slot_id=15
+<exception_print>HWS_REG_SQ_BASE_ADDR=0x600065cb2900
+<exception_print>HWS_REG_CQ_BASE_ADDR=0x6000643e2900
+<exception_print>HWS_REG_SQ_STATUS(sq_head)=0x10c00004a
+<exception_print>HWS_REG_SQ_DB(sq_tail)=0x122
+<exception_print>SOC_HWTS_REG_HWTS_CQ_DB(cq_head)=0x7f4
+<exception_print>SOC_HWTS_REG_HWTS_CQ_STATUS(cq_tail)=0xc000811
+<exception_print>HWTS_SLOT_END: slot_id=15
+<exception_print>notify wait timeout
+[ERROR] TSCH(-1,null):2023-06-10-13:16:11.401.684 71 (dieid:0,cpuid:0) hwts_plat.c:2026 int_process_hwts_timeout_exception: RTS_HWTS: hwts timeout exception, slot_id=15, stream_id=16
+[ERROR] TSCH(-1,null):2023-06-10-13:16:11.401.730 72 (dieid:0,cpuid:0) task_scheduler_engine.c:795 set_model_exec_fail: RTS_HWTS: model_id=0, stream_id=16, result=0x91, fault task_id=43, sqe_type=5, task_type=14
+[ERROR] TSCH(-1,null):2023-06-10-13:16:11.401.773 73 (dieid:0,cpuid:0) hwts_plat.c:2053 int_process_hwts_timeout_exception: task_id=43 repeat=0
+[ERROR] TSCH(-1,null):2023-06-10-13:16:11.401.825 74 (dieid:0,cpuid:0) hwts_plat.c:1931 int_process_hwts_timeout_exception: RTS_HWTS: hwts timeout exception bitmap=0x0
+[ERROR] TSCH(-1,null):2023-06-10-13:39:55.814.902 75 (dieid:0,cpuid:0) hwts_plat.c:1931 int_process_hwts_timeout_exception: RTS_HWTS: hwts timeout exception bitmap=0x10000000

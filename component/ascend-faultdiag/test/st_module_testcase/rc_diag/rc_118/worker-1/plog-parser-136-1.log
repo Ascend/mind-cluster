@@ -1,0 +1,12 @@
+[INFO] HCCL(136,python):2024-03-28-10:23:47.960.560 [op_base.cc:413][136]Entry-HcclCommInitRootInfo:ranks[8], rank[5], rootinfo: host ip[51.38.67.143] port[60004] nicDeploy[1] identifier[51.38.67.143%enp189s0f0_60004_4_1711621428426055], deviceLogicId[1]
+[INFO] HCCL(136,python):2024-03-28-10:23:50.640.590 [topoinfo_detect.cc:208][136][HCCL_TRACE]SetupAgent rankNum[8], rank[5], rootInfo identifier[51.38.67.143%enp189s0f0_60004_4_1711621428426055], server[51.38.67.141%enp189s0f0], logicDevId[1], phydevId[5], deviceIp[192.168.101.203]
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.821 [adapter_hccp.cc:872][136][Recv][RaSocket]errNo[0x0000000005000013] Wait timeout for sockets recv, data[0xfffff563868c], size[4], recvSize[0], The most common cause is that the firewall is incorrectly configured. Check the firewall configuration or try to disable the firewall.
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.946 [topoinfo_exchange_base.cc:137][136]call trace: hcclRet -> 9
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.952 [topoinfo_exchange_base.cc:104][136][Recv][ClusterInfoMsg]receive msg length from fdhandle failed, ret[9]
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.956 [topoinfo_exchange_agent.cc:270][136]call trace: hcclRet -> 4
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.960 [topoinfo_exchange_agent.cc:71][136]call trace: hcclRet -> 4
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.966 [topoinfo_exchange_agent.cc:43][136]call trace: hcclRet -> 4
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.971 [topoinfo_detect.cc:214][136]call trace: hcclRet -> 4
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.641.980 [op_base.cc:434][136][Init][CommRootInfo]errNo[0x0000000005000004] setup topo detect error
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.663.550 [op_base.cc:481][136][HCCL_TRACE]HcclCommInitRootInfo failed, return[0x0000000005000004], rankNum[8], rank[5], rootInfo identifier[51.38.67.143%enp189s0f0_60004_4_1711621428426055], server[51.38.67.141%enp189s0f0], logicDevId[-1]
+[ERROR] HCCL(136,python):2024-03-28-10:25:50.663.610 [op_base.cc:1352][136][HcclCommDestroy] comm is not exist, comm=0x2829ecf0, group=51.38.67.143%enp189s0f0_60004_4_1711621428426055, deviceLogicId=1

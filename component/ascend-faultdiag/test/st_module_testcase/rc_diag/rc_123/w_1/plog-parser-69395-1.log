@@ -1,0 +1,12 @@
+[INFO] HCCL(69395,python3):2024-04-07-18:35:53.134.675 [op_base.cc:314][69395]Entry-HcclGetRootInfo:rootInfo[0x7ffc5d59ba40], deviceLogicId[0]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:53.144.403 [op_base.cc:339][69395][HCCL_TRACE]HcclGetRootInfo success, take time [9747]us, identifier[10.136.181.175%enp179s0f0_60000_0_1712529353144389]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:53.144.546 [op_base.cc:413][69395]Entry-HcclCommInitRootInfo:ranks[4], rank[0], rootinfo: host ip[10.136.181.175] port[60000] nicDeploy[1] identifier[10.136.181.175%enp179s0f0_60000_0_1712529353144389], deviceLogicId[0]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:53.327.288 [topoinfo_detect.cc:208][69395][HCCL_TRACE]SetupAgent rankNum[4], rank[0], rootInfo identifier[10.136.181.175%enp179s0f0_60000_0_1712529353144389], server[10.136.181.175%enp179s0f0], logicDevId[0], phydevId[0], deviceIp[192.168.10.9]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:55.126.093 [ccl_buffer_manager.cc:38][69395][HCCL_TRACE][CreateCCLbuffer]Create ccl buffer success. buffer ptr[0x124140400000], size[209715200]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:55.126.279 [ccl_buffer_manager.cc:38][69395][HCCL_TRACE][CreateCCLbuffer]Create ccl buffer success. buffer ptr[0x12414cc00000], size[209715200]
+[INFO] HCCL(69395,python3):2024-04-07-18:35:55.126.321 [op_base.cc:489][69395][HCCL_TRACE]HcclCommInitRootInfo success,take time [1981783]us, rankNum[4], rank[0],rootInfo identifier[10.136.181.175%enp179s0f0_60000_0_1712529353144389], server[10.136.181.175%enp179s0f0], logicDevId[0]
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.469 [task_exception_handler.cc:449][69395][TaskExceptionHandler][Callback]Task from HCCL run failed.
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.511 [task_exception_handler.cc:452][69395][TaskExceptionHandler][Callback]Task run failed, base information is streamID:[3], taskID[77726298], taskType[Notify Wait], tag[AllReduce_10.136.181.175%enp179s0f0_60000_0_1712529353144389], index[3], AlgType(level 0-1-2):[null-null-ring].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, para information is notify id:[0x0000000000000050], stage:[ffffffff], remote rank:[3].
+[ERROR] HCCL(69395,python3):2024-04-08-02:55:04.903.554 [task_exception_handler.cc:454][69395][TaskExceptionHandler][Callback]Task run failed, groupRank information is group:[10.136.181.175%enp179s0f0_60000_0_1712529353144389], rankSize[4], rankId[0].
+

@@ -1,0 +1,11 @@
+[EVENT] KERNEL(6843,sklogd):2023-06-10-13:16:14.096.793 [klogd.c:253][251681.794072] [ascend] [ERROR] [tsdrv] [tsdrv_hb_cq_callback 319] <swapper/30:0> receive ts exception msg, call excep_code=0xb4060007, time=1686374174.94000000s, devid=1 tsid=0
+[EVENT] KERNEL(3551,sklogd):2021-10-05-23:49:05.098.226 [klogd.c:248][586250.462981] [ascend] [ERROR] [tsdrv] [tsdrv_hb_cq_callback 99] <swapper/0:0> [devid-0][tsid-0] before shift receive ts exception msg, call mntn_system_error: 0xb4060007,            time: 1633477745.91408699.
+[EVENT] KERNEL(3551,sklogd):2021-10-05-23:49:05.098.247 [klogd.c:248][586250.462985] [ascend] [ERROR] [tsdrv] [tsdrv_hb_cq_callback 104] <swapper/0:0> [devid-0][tsid-0] after shift receive ts exception msg, call mntn_system_error: 0xb4060007,            time: 1633477745.91408.
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.128 [klogd.c:242][583733.716899] {1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.180 [klogd.c:242][583733.716904] {1}[Hardware Error]: event severity: recoverable
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.191 [klogd.c:242][583733.716905] {1}[Hardware Error]:  Error 0, type: recoverable
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.199 [klogd.c:242][583733.716907] {1}[Hardware Error]:   section_type: memory error
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.207 [klogd.c:242][583733.716908] {1}[Hardware Error]:   physical_address: 0x0000400cd8d202e0
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.214 [klogd.c:242][583733.716912] {1}[Hardware Error]:   node: 2 module: 22 rank: 0 bank: 10 row: 9914 column: 96
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.226 [klogd.c:242][583733.716913] {1}[Hardware Error]:   error_type: 17, unknown
+[ERROR] KERNEL(3551,sklogd):2021-10-05-23:07:08.350.235 [klogd.c:242][583733.716915] {1}[Hardware Error]:   DIMM location: not present. DMI handle: 0x0000

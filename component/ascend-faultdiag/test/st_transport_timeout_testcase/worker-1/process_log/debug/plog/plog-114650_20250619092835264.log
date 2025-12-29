@@ -1,0 +1,2 @@
+[ERROR] HCCL(114650,python3):2025-06-19-09:28:35.212.164 [p2p_mgmt.cc:305] [115859][Wait][P2PConnected]connected p2p timeout, timeout:130 s. local logicDevid:0, remote physic id:1.
+[ERROR] HCCL(114650,python3):2025-06-19-09:28:35.212.187 [transport_manager.cc:741] [115859][Create][DestSockets]Wait Enable P2P Failed, src devicePhyId[0], dst devicePhyId[1], ret[16]

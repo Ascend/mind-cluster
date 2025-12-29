@@ -1,0 +1,89 @@
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -link_stat -g
+[devid 0]current time        : Wed Aug  2 03:36:43 2022
+[devid 0]link up count       : 2
+[devid 0]link change records :
+[devid 0]    Tue Aug  1 14:44:40 2022    LINK DOWN
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 0]    Tue Aug  1 14:43:26 2022    LINK UP
+
+lspci | grep acce
+3d:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+3e:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+60:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+b1:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+b2:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+da:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+db:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+
+/usr/local/bin/npu-smi info -i 0 -t board
+Invalid card id.
+Error parameter of -i
+Usage: npu-smi info <watch|proc|-h|-m|-l|-t type> [Options...]
+
+/usr/local/bin/npu-smi info -i 0 -c 0 -t health
+	Health Status                  : Alarm
+	Error Code                     : A4025021 8C03A000 8C084E00
+	Error Information              : ascend_monitor adda heart beat lost error
+
+	                               : node type=process-manager, sensor type=General Software, event state=The process start failed or exit abnormally
+
+	                               : node type=adda, sensor type=Heartbeat Sensor, event state=Heartbeat Lost.
+
+cat /usr/local/Ascend/driver/version.info
+Version=23.0.7
+ascendhal_version=7.35.19
+aicpu_version=1.0
+tdt_version=1.0
+log_version=1.0
+prof_version=2.0
+dvppkernels_version=1.1
+tsfw_version=1.0
+Innerversion=V100R001C15SPC012B220
+compatible_version=[V100R001C29],[V100R001C30],[V100R001C13],[V100R001C15]
+compatible_version_fw=[7.0.0,7.1.99]
+package_version=23.0.7
+
+
+cat /usr/local/Ascend/firmware/version.info
+Version=7.1.0.11.220
+firmware_version=1.0
+package_version=23.0.7
+compatible_version_drv=[23.0.rc3,23.0.rc3.],[23.0.0,23.0.0.]
+
+
+cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info
+package_name=Ascend-cann-toolkit
+version=7.0.T10
+innerversion=V100R001C13B222
+compatible_version=[V100R001C29],[V100R001C30],[V100R001C13],[V100R003C10],[V100R003C11]
+arch=aarch64
+os=linux
+path=/usr/local/Ascend/ascend-toolkit/7.0.T10/aarch64-linux
+
+
+cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info
+package_name=Ascend-cann-nnae
+version=8.0.RC3
+innerversion=V100R001C19SPC001B137
+compatible_version=[V100R001C13,V100R001C19],[V100R001C30]
+arch=x86_64
+os=linux
+path=/usr/local/Ascend/nnae/8.0.RC3
+
+
+pip list | grep "torch "
+torch              1.11.0
+
+
+pip list | grep torch-npu
+torch-npu          2.1.0.post8.dev20241009
+
+
+pip list | grep "mindspore "
+mindspore          2.3.0

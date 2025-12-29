@@ -1,0 +1,3 @@
+[2024-11-05 12:00:00.123456] [11] [1] [MS] [1] [ERROR] : [MIE03E400008] [HttpServer] Http server on timeout
+[2025-06-23 10:53:57.023+0800] [13818] [281473324085472] [batchscheduler] [INFO] [config.py:208] :  [Config]>>> local link info: global_rank = 48, local_host_ip = x.xx.xx.xxx, local_instance_id = 20347916160048, local_device_ip = xxx.xx.xx.x, local_logic_device_id = 6, local_physical_device_id = 6.
+[2025-06-30 20:36:02.906+08:00] [8771] [8775] [server] [ERROR] [llm_infer_engine.cpp:230] : MIE1AE66666B[llm_backend] get model instance cache block nums failed.

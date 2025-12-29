@@ -1,0 +1,18 @@
+{
+    "infer_group_1": [
+        "node_ip_1",
+        "node_ip_2"
+    ],
+    "infer_group_2": [
+        "node_ip_3",
+        "node_ip_4"
+    ],
+    "infer_group_3": [
+        "node_ip_5",
+        "node_ip_6"
+    ],
+    "infer_group_4": [
+        "node_ip_7",
+        "node_ip_8"
+    ]
+}

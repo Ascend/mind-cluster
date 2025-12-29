@@ -1,0 +1,31 @@
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -ip -g
+ipaddr:192.1.45.172
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 1 -ip -g
+ipaddr:192.2.167.33
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 2 -ip -g
+ipaddr:192.3.103.252
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 3 -ip -g
+ipaddr:192.4.166.202
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 4 -ip -g
+ipaddr:192.1.157.81
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 5 -ip -g
+ipaddr:192.2.8.198
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 6 -ip -g
+ipaddr:192.3.26.213
+netmask:255.255.0.0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 7 -ip -g
+ipaddr:192.4.32.120
+netmask:255.255.0.0

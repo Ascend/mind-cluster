@@ -1,0 +1,1 @@
+[TRACE] HCCL(10972,python3):2023-01-31-02:48:31.222.202 [status:init] [hcom.cc:196][hccl-10972-0-1675133310-hccl_world_group][3]hcom init by file success,take time [1174468]us, rankTablePath[/home/ysp/hwtest/ResNet50_for_MindSpore_1.4_code/scripts/hccl_8p_01234567_51.38.68.155.json], rankNum[8], rank[0],server[51.38.68.155], device[0]

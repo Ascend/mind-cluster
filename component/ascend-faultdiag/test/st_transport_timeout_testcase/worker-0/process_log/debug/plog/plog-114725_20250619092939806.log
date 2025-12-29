@@ -1,0 +1,8 @@
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.450 [hccl_socket_manager.cc:778] [117514][Wait][LinkEstablish]wait socket establish timeout, role[0] rank[2] timeout[130]
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.624 [hccl_socket_manager.cc:591] [117514]   _________________________LINK_ERROR_INFO___________________________
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.628 [hccl_socket_manager.cc:592] [117514]   |  comm error, device[2]
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.632 [hccl_socket_manager.cc:594] [117514]   |  dest_ip(user_rank)  |   dest_port   |  src_ip(user_rank)   |   src_port   |   MyRole   |   Status   |
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.635 [hccl_socket_manager.cc:596] [117514]   |--------------------|--------------------|----------|------------|-----------------|-----------------|
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.646 [hccl_socket_manager.cc:553] [117514]   |  192.168.100.212(10)   |  16666  |   192.168.100.202(2)   |  2882681339  |  server  | time out |
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.651 [hccl_socket_manager.cc:600] [117514]   ___________________________________________________________________
+[ERROR] HCCL(114725,python3):2025-06-19-09:09:19.687.654 [hccl_socket_manager.cc:601] [117514]the connection failure between this device and target device may be due to the following reasons:

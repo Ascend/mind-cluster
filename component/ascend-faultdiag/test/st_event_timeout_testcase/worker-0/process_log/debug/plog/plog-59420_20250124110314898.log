@@ -1,0 +1,9 @@
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.424 [comm_base.cc:967][107626]   _________________________LINK_ERROR_INFO___________________________
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.526 [comm_base.cc:968][107626]   |  comm error, device[0] num[1] 
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.539 [comm_base.cc:969][107626]   |  dest_ip(rank_id)  |  src_ip(rank_id)   |   Role   |   Status   |   
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.552 [comm_base.cc:970][107626]   |--------------------|--------------------|----------|------------|   
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.572 [comm_base.cc:1018][107626]   |  124.0.0.11(1)   |   124.0.0.21(0)   |  server  | no connect |   
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.585 [comm_base.cc:983][107626]   ___________________________________________________________________  
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.908.596 [comm_base.cc:984][107626]the connection failure between this device and target device may be due to the following reasons:
+[ERROR] HCCL(59420,python3):2025-01-24-11:24:07.909.150 [hccl_impl.cc:4011][107626][Create][InnerComm]tag[HcomAllGather_5871863451775290338_0], created commHD fail
+

@@ -1,0 +1,1 @@
+[ERROR] HCCL(903,python3.8):2025-07-30-19:36:56.166.988 [adapter_hccp.cc:1357] [16542][Recv][RaSocket]errNo[0x000000000500000d] recv fail, data[0xfffddc0e6ef0], size[2239]

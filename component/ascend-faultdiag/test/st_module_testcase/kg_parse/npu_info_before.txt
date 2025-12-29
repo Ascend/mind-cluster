@@ -1,0 +1,158 @@
+Datetime: 2024-09-09 13:13:44.179645
+
+/usr/local/bin/npu-smi info -m
+	NPU ID                         Chip ID                        Chip Logic ID                  Chip Name
+	0                              0                              0                              Ascend 910A
+	1                              0                              1                              Ascend 910A
+	2                              0                              2                              Ascend 910A
+	3                              0                              3                              Ascend 910A
+	4                              0                              4                              Ascend 910A
+	5                              0                              5                              Ascend 910A
+	6                              0                              6                              Ascend 910A
+	7                              0                              7                              Ascend 910A
+
+/usr/local/bin/npu-smi info
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -stat -g
+packet statistics:
+roce_rx_err_pkt_num:0
+roce_tx_err_pkt_num:0
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -link_stat -g
+[devid 0]current time        : Wed Aug  2 03:09:26 2022
+[devid 0]link up count       : 2
+[devid 0]link change records :
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK UP
+[devid 0]    Tue Aug  1 14:43:40 2022    LINK DOWN
+[devid 0]    Tue Aug  1 14:43:26 2022    LINK UP
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -fec -g
+fec mode: no FEC mode
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
+net health status: Socket failed
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -optical -g
+optical info:
+present              : not present
+temperature          : 47 C
+high power enable reg: enabled
+vendor name          : Hisense
+vendor part number   : LMQ8611-PC+
+vendor serial number : V8BD6H25033
+vendor org unique id : 0xac 0x4a 0x0
+xsfp identifier      : QSFP+ or later
+xsfp wave length     : 850 nm
+manufact date code   : 2023.6.18
+Vcc                  : 3262.90 mV
+Tx Power0            : 4.4035 mW
+Rx Power0            : 1.0189 mW
+Tx Power1            : 1.3968 mW
+Rx Power1            : 0.0054 mW
+Tx Power2            : 1.4140 mW
+Rx Power2            : 0.9907 mW
+Tx Power3            : 1.4988 mW
+Rx Power3            : 1.0213 mW
+Vcc High Thres       : 3465.00 mV
+Vcc Low Thres        : 3135.00 mV
+Temp High Thres      : 70 C
+Temp Low Thres       : 0 C
+TxPower High Thres   : 3.5481 mW
+TxPower Low Thres    : 0.2818 mW
+RxPower High Thres   : 3.5481 mW
+RxPower Low Thres    : 0.1445 mW
+Tx Bias0             : 7.9360 mA
+Tx Bias1             : 7.9280 mA
+Tx Bias2             : 7.9360 mA
+Tx Bias3             : 7.9240 mA
+Tx Los Flag          : 0x0
+Rx Los Flag          : 0xff
+Tx LoL Flag          : 0x0
+Rx LoL Flag          : 0xff
+Host SNR Lane0       : not supported
+Host SNR Lane1       : not supported
+Host SNR Lane2       : not supported
+Host SNR Lane3       : not supported
+Media SNR Lane0      : 23.1211 dB
+Media SNR Lane1      : 22.6289 dB
+Media SNR Lane2      : 22.1875 dB
+Media SNR Lane3      : 23.2969 dB
+
+/usr/local/bin/npu-smi info -i 0 -c 0 -t board
+	NPU ID                         : 0
+	Chip ID                        : 0
+	Chip Type                      : Ascend
+	Chip Name                      : 910A
+	Chip Version                   : V1
+	Board ID                       : 0x02
+	PCB ID                         : NA
+	BOM ID                         : 1
+	VDie ID                        : 42C711D4 20B03704 4A10C8D4 14CC040A D2102003
+	NDie ID                        : 27216594 20401010 4E10C8D4 14CC040A A4102003
+	Chip Position ID               : 0
+	PCIe Bus Info                  : 0000:61:00.0
+	Firmware Version               : 7.1.0.7.220
+
+/usr/local/bin/npu-smi info -i 0 -t usages
+	NPU ID                         : 0
+	Chip Count                     : 1
+
+	DDR Capacity(MB)               : 13553
+	DDR Usage Rate(%)              : 6
+	DDR Hugepages Total(page)      : 0
+	DDR Hugepages Usage Rate(%)    : 0
+	HBM Capacity(MB)               : 31129
+	HBM Usage Rate(%)              : 0
+	Aicore Usage Rate(%)           : 0
+	Aicpu Usage Rate(%)            : 0
+	Ctrlcpu Usage Rate(%)          : 0
+	DDR Bandwidth Usage Rate(%)    : 0
+	HBM Bandwidth Usage Rate(%)    : 0
+	Chip ID                        : 0
+
+
+/usr/local/bin/npu-smi info -i 0 -t board
+	NPU ID                         : 0
+	Software Version               : 23.0.5
+	Firmware Version               : 7.1.0.7.220
+	Compatibility                  : OK
+	Board ID                       : 0x02
+	PCB ID                         : A
+	BOM ID                         : 1
+	PCIe Bus Info                  : 0000:61:00.0
+	Slot ID                        : 0
+	Class ID                       : NA
+	PCI Vendor ID                  : 0x19E5
+	PCI Device ID                  : 0xD801
+	Subsystem Vendor ID            : 0x0200
+	Subsystem Device ID            : 0x0100
+	Chip Count                     : 1
+
+
+lspci | grep acce
+3d:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+3e:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+60:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+61:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+b1:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+b2:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+da:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+db:00.0 Processing accelerators: Huawei Technologies Co., Ltd. Device d801 (rev 20)
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 0 -ip -g
+ipaddr:192.161.200.10
+netmask:255.255.255.0
+
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 1 -ip -g
+ipaddr:192.161.201.10
+netmask:255.255.255.0
+
+
+/usr/local/Ascend/driver/tools/hccn_tool -i 2 -ip -g
+
+
+/usr/local/bin/npu-smi info -i 0 -c 0 -t health
+	Health Status                  : OK
+	Error Code                     : NA
+	Error Information              : NA

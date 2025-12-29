@@ -1,0 +1,8 @@
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.125 [comm_base.cc:967][42715]   _________________________LINK_ERROR_INFO___________________________
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.809 [comm_base.cc:968][42715]   |  comm error, device[0] num[1] 
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.823 [comm_base.cc:969][42715]   |  dest_ip(rank_id)  |  src_ip(rank_id)   |   Role   |   Status   |   
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.836 [comm_base.cc:970][42715]   |--------------------|--------------------|----------|------------|   
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.916 [comm_base.cc:1018][42715]   |  124.0.0.21(0)   |   124.0.0.11(1)   |  client  | no connect |   
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.931 [comm_base.cc:983][42715]   ___________________________________________________________________  
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.476.943 [comm_base.cc:984][42715]the connection failure between this device and target device may be due to the following reasons:
+[ERROR] HCCL(26251,python3):2025-01-24-11:24:07.491.003 [hccl_impl.cc:1881][26251][Loop][Allreduce]errNo[0x0000000005000004] op_base hcclComm all reduce error, tag[AllReduce_18179865184488554500_0], input_ptr[0x124100c00000], output_ptr[0x12410d400000], count[1], data_type[4], op[3]

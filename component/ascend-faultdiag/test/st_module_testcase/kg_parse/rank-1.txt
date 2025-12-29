@@ -1,0 +1,13 @@
+torch
+_npu_setDevice
+time="2024-07-19T10:17:55+08:00" level=info msg="time required for conclude： 0 ms" file="analyzer.go:410" Command=analyze Component=ma-training-toolkit Platform=ModelArts-Service
+time="2024-07-19T10:27:55+08:00" level=info msg="analyzer is diagnosing" file="analyzer.go:302" Command=analyze Component=ma-training-toolkit Platform=ModelArts-Service
+time="2024-07-19T10:27:55+08:00" level=info msg="time required for conclude： 0 ms" file="analyzer.go:410" Command=analyze Component=ma-training-toolkit Platform=ModelArts-Service
+time="2024-07-19T10:29:53+08:00" level=info msg="stop upload_command_pid" file="upload.go:142" Command=bootstrap/upload Component=ma-training-toolkit Platform=ModelArts-Service
+time="2024-07-19T10:29:54+08:00" level=info msg="[sidecar] SIGTERM signal is received, waiting for the training process to exit gracefully." Component=ShellScripts Platform=ModelArts-Service
+[ERROR] 2024-03-07-01:31:48 (PID:116072, Device:0, RankID:-1) ERR00002 PTA invalid type
+        waiting for the training process to exit gracefully." Component=ShellScripts Platform=ModelArts-Service
+                waiting for the training process to exit gracefully." Component=ShellScripts Platform=ModelArts-Service
+                        waiting for the training process to exit gracefully." Component=ShellScripts Platform=ModelArts-Service
+time="2024-07-19T08:47:54+08:00" level=info msg="time required for conclude： 0 ms" file="analyzer.go:410" Command=analyze Component=ma-training-toolkit Platform=ModelArts-Service
+time="2024-07-19T08:57:54+08:00" level=info msg="analyzer is diagnosing" file="analyzer.go:302" Command=analyze Component=ma-training-toolkit Platform=ModelArts-Service
