@@ -35,6 +35,7 @@ link_directories(
         ${PROJECT_SOURCE_DIR}/output/lib/
         ${PROJECT_3RDPARTY_BIN_DIR}/libboundscheck/lib/
         ${PROJECT_3RDPARTY_BIN_DIR}/spdlog/lib/
+        ${PROJECT_3RDPARTY_BIN_DIR}/spdlog/lib64/
 )
 
 #################################
