@@ -97,7 +97,8 @@ func InitTextMetricsDesc(filePath string) {
 	}
 	var metricsData TextMetricData
 	if err := json.Unmarshal(fileData, &metricsData); err != nil {
-		logger.Warnf("unmarshal json file %s failed, %s: %v", jsonFilePath, fileMetricsDisabledMsg, err)
+		logger.Warnf("unmarshal json file %s failed, %s: %v, "+
+			"Possible causes:\n1. The file is not in JSON format\n2. File size is more than 100KB ", jsonFilePath, fileMetricsDisabledMsg, err)
 		return
 	}
 
