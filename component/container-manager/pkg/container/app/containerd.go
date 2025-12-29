@@ -71,21 +71,32 @@ func (c *ContainerdClient) close() error {
 }
 
 func (c *ContainerdClient) getAllContainers() (interface{}, error) {
-	ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
-	// list running containers
-	containers, err := c.client.ContainerService().List(ctx)
+	nss, err := c.client.NamespaceService().List(context.Background())
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get container list, error: %v", err)
-		return nil, errors.New("failed to get container list")
+		hwlog.RunLog.Errorf("failed to get namespace list, error: %v", err)
+		return nil, errors.New("failed to get namespace list")
 	}
-	var ctrs = make([]containerd.Container, 0, len(containers))
-	for _, container := range containers {
-		containerObj, err := c.client.LoadContainer(ctx, container.ID)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to load container %s, error: %v", container.ID, err)
+	var ctrs = make(map[string][]containerd.Container)
+	for _, ns := range nss {
+		// moby ns: docker engine default container ns
+		if ns == "moby" {
 			continue
 		}
-		ctrs = append(ctrs, containerObj)
+		ctx := namespaces.WithNamespace(context.Background(), ns)
+		// list running containers
+		containers, err := c.client.ContainerService().List(ctx)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to get container list for ns %s, skip. error: %v", ns, err)
+			continue
+		}
+		for _, container := range containers {
+			containerObj, err := c.client.LoadContainer(ctx, container.ID)
+			if err != nil {
+				hwlog.RunLog.Errorf("failed to load container %s, error: %v", container.ID, err)
+				continue
+			}
+			ctrs[ns] = append(ctrs[ns], containerObj)
+		}
 	}
 	return ctrs, nil
 }

@@ -47,16 +47,11 @@ func (cm *CtrCtl) initAndControl() {
 	cm.devInfoMap.ResetDevStatus()
 }
 
-func (cm *CtrCtl) updateCtrRelatedInfo() error {
-	ctrs, err := cm.client.getAllContainers()
-	if err != nil {
-		return fmt.Errorf("get all ctrs failed: %v", err)
-	}
+func (cm *CtrCtl) updateForContainerd(cs map[string][]containerd.Container) []string {
 	var ctrIds []string
-	switch cs := ctrs.(type) {
-	case []containerd.Container:
-		ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
-		for _, containerObj := range cs {
+	for ns, containers := range cs {
+		ctx := namespaces.WithNamespace(context.Background(), ns)
+		for _, containerObj := range containers {
 			ctrIds = append(ctrIds, containerObj.ID())
 			usedDevs, err := cm.client.getUsedDevs(containerObj, ctx)
 			if err != nil {
@@ -67,10 +62,23 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 				// only ctr of used dev need save to cache
 				continue
 			} else {
-				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID(), usedDevs)
+				hwlog.RunLog.Debugf("container %s,%s used devs: %v", ns, containerObj.ID(), usedDevs)
 			}
-			cm.setCtrRelatedInfo(containerObj.ID(), "k8s.io", usedDevs)
+			cm.setCtrRelatedInfo(containerObj.ID(), ns, usedDevs)
 		}
+	}
+	return ctrIds
+}
+
+func (cm *CtrCtl) updateCtrRelatedInfo() error {
+	ctrs, err := cm.client.getAllContainers()
+	if err != nil {
+		return fmt.Errorf("get all ctrs failed: %v", err)
+	}
+	var ctrIds []string
+	switch cs := ctrs.(type) {
+	case map[string][]containerd.Container:
+		ctrIds = cm.updateForContainerd(cs)
 	case []types.Container:
 		for _, containerObj := range cs {
 			ctrIds = append(ctrIds, containerObj.ID)
