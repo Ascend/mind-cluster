@@ -21,10 +21,10 @@ import ast
 from bitarray.util import hex2ba, ba2int
 
 
+# EID physic type flag
 EID_TYPE_PHY = 0
-"""EID physic type flag"""
+# EID logic type flag
 EID_TYPE_LOGIC = 1
-"""EID logic type flag"""
 FE_INTER_CHESSIS = 0
 FE_INNER_CHESSIS = 1
 
@@ -33,26 +33,26 @@ NPU_COUNT_IN_A_BOARD = 8
 DIE_COUNT_IN_A_NPU = 2
 PHY_PORT_COUNT_IN_A_DIE = 9
 LOGIC_PORT_COUNT_IN_A_DIE = 2
+# When the port number is greater than 180, it is identified as a logical port
 LOGIC_PORT_FLAG = 180
-"""When the port number is greater than 180, it is identified as a logical port"""
+# Port field range
 PORT_ID_RANGE_START, PORT_ID_RANGE_END, PORT_ID_LENGTH = 120, 128, 8
-"""Port field range"""
+# Board id field range
 BOARD_ID_RANGE_START, BOARD_ID_RANGE_END, BOARD_ID_LENGTH = 128 - 12, 128 - 8, 4
-"""Board id field range"""
+# Chassis id field range
 CHESSIS_ID_RANGE_START, CHESSIS_ID_RANGE_END, CHESSIS_ID_LENGTH = 128 - 16, 128 - 12, 4
-"""Chassis id field range"""
+# Const 233 id field range
 UBC_223_RANGE_START, UBC_223_RANGE_END, UBC_223_LENGTH = 128 - 32, 128 - 16, 16
-"""Const 233 id field range"""
+# hex value 0xdfdf is 223 + 223 * 256
 UBC_VALUE = 223 + 223 * 256
-"""hex value 0xdfdf is 223 + 223 * 256"""
+# Fe id 233 id field range
 FE_ID_RANGE_START, FE_ID_RANGE_END, FE_ID_LENGTH = 128 - 74, 128 - 69, 5
-"""Fe id 233 id field range"""
+# Super pod id 233 id field range
 SUPER_POD_ID_RANGE_START, SUPER_POD_ID_RANGE_END, SUPER_POD_ID_LENGTH = (
     128 - 92,
     128 - 76,
     16,
 )
-"""Super pod id 233 id field range"""
 BIT_53TH_INDEX, BIT_53TH_VALUE = 128 - 53, 1
 
 
