@@ -110,9 +110,14 @@ func updateStepCount(name string, ctxData *contextdata.SnpRankContextData) {
 		hwlog.RunLog.Errorf("failed to parse the 'Name' field, error: %v", err)
 		return
 	}
-	ctxData.StepCount = stepId
-	hwlog.RunLog.Infof("[SLOWNODE PARSE]Read step count: %d, rank num is: %s",
-		stepId, filepath.Base(ctxData.Config.RankDir))
+	if ctxData.StartStep == 0 {
+		ctxData.StartStep = stepId
+		hwlog.RunLog.Infof("[SLOWNODE PARSE]Start step: %d, rank num is: %s",
+			ctxData.StartStep, filepath.Base(ctxData.Config.RankDir))
+	}
+	ctxData.StepCount = stepId - ctxData.StartStep
+	hwlog.RunLog.Infof("[SLOWNODE PARSE]Read step count: %d, step id: %d, rank num is: %s",
+		ctxData.StepCount, stepId, filepath.Base(ctxData.Config.RankDir))
 }
 
 func updateCurFile(rankDir string, curFile *TimeStampFile, jobStartTime int64) (bool, error) {
