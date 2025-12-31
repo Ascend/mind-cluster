@@ -105,13 +105,17 @@ func (hdm *HwDevMgr) initInfoRelatedNode() error {
 		// unreachable branch
 		return errors.New("npu info is nil")
 	}
-	// init boardId
-	if err := hdm.setBoardId(hdm.npuInfos[0].LogicID); err != nil {
-		return err
-	}
-	// init usage
-	if err := hdm.setDeviceUsage(hdm.npuInfos[0].PhyID); err != nil {
-		return err
+	for _, info := range hdm.npuInfos {
+		// init boardId
+		if err := hdm.setBoardId(info.LogicID); err != nil {
+			return err
+		}
+		// init usage
+		if err := hdm.setDeviceUsage(info.PhyID); err != nil {
+			return err
+		}
+		// the boardid and devUsage for each npu are the same
+		break
 	}
 	// init ring info, based on board id and dev usage
 	return hdm.setRingInfo()
