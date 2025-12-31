@@ -24,6 +24,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
+	"container-manager/pkg/devmgr"
 )
 
 const mockFaultAttr = -1
@@ -178,11 +179,11 @@ func (fc *FaultCache) UpdateFaultsOnDev(id int32, faultCodes []int64) {
 }
 
 // ConstructMockModuleFault construct mock module fault
-// module type / module id / submodule type / submodule id mock value is 0
+// module type / module id / submodule type / submodule id mock value is -1
 func ConstructMockModuleFault(phyId int32, faultCode int64) *common.DevFaultInfo {
 	return &common.DevFaultInfo{
 		EventID:       faultCode,
-		LogicID:       mockFaultAttr,
+		LogicID:       devmgr.DevMgr.GetLogicIdByPhyId(phyId),
 		ModuleType:    mockFaultAttr,
 		ModuleID:      mockFaultAttr,
 		SubModuleType: mockFaultAttr,
@@ -192,4 +193,10 @@ func ConstructMockModuleFault(phyId int32, faultCode int64) *common.DevFaultInfo
 		FaultLevel:    GetFaultLevelByCode([]int64{faultCode}),
 		ReceiveTime:   time.Now().Unix(),
 	}
+}
+
+// IsMockModuleFault is mock module fault
+func IsMockModuleFault(faultInfo *common.DevFaultInfo) bool {
+	return faultInfo.ModuleType == mockFaultAttr && faultInfo.ModuleID == mockFaultAttr &&
+		faultInfo.SubModuleType == mockFaultAttr && faultInfo.SubModuleID == mockFaultAttr
 }

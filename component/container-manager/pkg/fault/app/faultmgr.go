@@ -67,7 +67,8 @@ func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 }
 
 func (fm *FaultMgr) checkMoreThanFiveMinFaults(ctx context.Context) {
-	ticker := time.NewTicker(time.Minute)
+	const checkInterval = 50 * time.Second
+	ticker := time.NewTicker(checkInterval)
 	defer ticker.Stop()
 	for {
 		select {
@@ -117,10 +118,11 @@ func (fm *FaultMgr) needGetAllCodes(codeLayer map[int64]map[string]*common.DevFa
 	for _, moduleLayer := range codeLayer {
 		for _, faultInfo := range moduleLayer {
 			receiveTime := faultInfo.ReceiveTime
-			if time.Now().Unix()-receiveTime <= checkTimeout {
-				continue
+			// for mock module fault, the recover message cannot directly remove from the cache
+			// so every cycle, check if the mock fault have been recovered
+			if time.Now().Unix()-receiveTime > checkTimeout || domain.IsMockModuleFault(faultInfo) {
+				return true
 			}
-			return true
 		}
 	}
 	return false
