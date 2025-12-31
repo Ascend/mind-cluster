@@ -21,8 +21,9 @@ type faultJobProcessCenter struct {
 }
 
 type subscriber struct {
-	ch  chan map[string]constant.JobFaultInfo
-	src string
+	ch          chan map[string]constant.JobFaultInfo
+	src         string
+	filterLevel []string
 }
 
 // FaultJobCenter process fault about job
@@ -51,7 +52,8 @@ func (fJobCenter *faultJobProcessCenter) Process() {
 }
 
 // Register notify chan
-func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.JobFaultInfo, src string) error {
+func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.JobFaultInfo, src string,
+	filterLevel []string) error {
 	if ch == nil {
 		return fmt.Errorf("invalid chanel for send")
 	}
@@ -62,8 +64,9 @@ func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.Jo
 		return fmt.Errorf("the number of registrants is %d, cannot add any more", length)
 	}
 	fJobCenter.subscribeChannelList = append(fJobCenter.subscribeChannelList, &subscriber{
-		ch:  ch,
-		src: src,
+		ch:          ch,
+		src:         src,
+		filterLevel: filterLevel,
 	})
 	return nil
 }
@@ -74,7 +77,7 @@ func (fJobCenter *faultJobProcessCenter) NotifySubscriber() {
 			continue
 		}
 		faultRankInfos := faultrank.JobFaultRankProcessor.GetJobFaultRankInfosFilterLevel(
-			[]string{constant.NotHandleFault, constant.PreSeparateNPU})
+			sub.filterLevel)
 		select {
 		case sub.ch <- faultRankInfos:
 		default:

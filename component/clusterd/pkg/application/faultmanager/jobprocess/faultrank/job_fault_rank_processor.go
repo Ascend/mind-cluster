@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess/recoverinplace"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
@@ -131,6 +133,7 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		return make([]constant.FaultRank, 0)
 	}
 	faultRankList := make([]constant.FaultRank, 0)
+	unHealthDevSet := getUnhealthyDevicesSet(advanceDeviceInfo)
 	for _, deviceInfo := range devicesOfJobOnNode.DeviceList {
 		deviceName := advanceDeviceInfo.DeviceType + "-" + deviceInfo.DeviceID
 		faultList := advanceDeviceInfo.FaultDeviceList[deviceName]
@@ -143,6 +146,10 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		}
 		// scan management plane fault info. management plane may filter uce fault in uceProcessor、hcclProcessor
 		for _, fault := range faultList {
+			if !unHealthDevSet.Has(deviceName) {
+				hwlog.RunLog.Debugf("Fault %v does not affect fault rank", fault)
+				continue
+			}
 			restartInPlace := faultdomain.IsL2L3Fault(fault.FaultLevel) && processor.canDoRestartInPlace(podInfo.jobId)
 			faultRank := constant.FaultRank{RankId: deviceInfo.RankID, PodUid: podUid, PodRank: podRankStr,
 				FaultCode: fault.FaultCode, FaultLevel: fault.FaultLevel, DoStepRetry: false,
@@ -606,4 +613,10 @@ func getHealthState(faultList []constant.FaultRank, nodeStatusList []string,
 		return constant.SubHealthyState
 	}
 	return constant.HealthyState
+}
+
+func getUnhealthyDevicesSet(advanceDeviceInfo *constant.AdvanceDeviceFaultCm) sets.String {
+	unHealthDevSet := sets.NewString(advanceDeviceInfo.CardUnHealthy...)
+	unHealthDevSet.Insert(advanceDeviceInfo.NetworkUnhealthy...)
+	return unHealthDevSet
 }

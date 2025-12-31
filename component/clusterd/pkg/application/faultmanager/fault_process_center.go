@@ -152,8 +152,8 @@ func PubFaultCollector(oldPubFaultInfo, newPubFaultInfo *api.PubFaultInfo, opera
 }
 
 // RegisterForJobFaultRank register for job fault info
-func RegisterForJobFaultRank(ch chan map[string]constant.JobFaultInfo, src string) error {
-	return jobprocess.FaultJobCenter.Register(ch, src)
+func RegisterForJobFaultRank(ch chan map[string]constant.JobFaultInfo, filterLevel []string, src string) error {
+	return jobprocess.FaultJobCenter.Register(ch, src, filterLevel)
 }
 
 // FilterStressTestFault filter stress test fault

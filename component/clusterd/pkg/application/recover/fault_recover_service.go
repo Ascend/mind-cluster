@@ -51,7 +51,8 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.eventCtl = make(map[string]*EventController)
 	s.initJob = make(map[string]common.JobBaseInfo)
 	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
-	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, reflect.TypeOf(*s).Name()); err != nil {
+	filterLevel := []string{constant.NotHandleFault, constant.PreSeparateNPU}
+	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, filterLevel, reflect.TypeOf(*s).Name()); err != nil {
 		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
 	}
 	// delete EventController cache added by register interface according delete event of podGroup when job is deleted.

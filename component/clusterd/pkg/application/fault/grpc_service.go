@@ -72,7 +72,8 @@ func NewFaultServer(ctx context.Context) *FaultServer {
 		faultCh:        make(chan map[string]constant.JobFaultInfo, jobFaultInfoChanCache),
 		limiter:        util.NewAdvancedRateLimiter(defaultTokenRate, defaultBurst, defaultMaxQueueLen),
 	}
-	if err := faultmanager.RegisterForJobFaultRank(server.faultCh, reflect.TypeOf(server).Name()); err != nil {
+	filterLevel := []string{constant.NotHandleFault}
+	if err := faultmanager.RegisterForJobFaultRank(server.faultCh, filterLevel, reflect.TypeOf(server).Name()); err != nil {
 		hwlog.RunLog.Error("RegisterForJobFaultRank fail")
 	}
 	common2.SetPublisher(server)
