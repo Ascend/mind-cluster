@@ -13,6 +13,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/faultmanager/cmprocess/recoverinplace"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
 	"clusterd/pkg/common/constant"
@@ -34,10 +35,13 @@ const (
 	rankId0        = "0"
 	rankId1        = "1"
 	rankId8        = "8"
+	deviceName0    = "Ascend910-0"
+	deviceName1    = "Ascend910-1"
+	deviceName2    = "Ascend910-2"
 )
 
 func TestMain(m *testing.M) {
-	hwLogConfig := &hwlog.LogConfig{LogFileName: "../../../../../testdata/clusterd.log"}
+	hwLogConfig := &hwlog.LogConfig{LogFileName: "testdata/clusterd.log"}
 	hwLogConfig.MaxBackups = hwlog.DefaultMaxBackups
 	hwLogConfig.MaxAge = hwlog.DefaultMinSaveAge
 	hwLogConfig.LogLevel = constant.DefaultLogLevel
@@ -223,6 +227,7 @@ func testUceInManagementPlane(processor *jobRankFaultInfoProcessor) {
 						{FaultCode: constant.UceFaultCode, FaultLevel: constant.RestartBusiness},
 					},
 				},
+				CardUnHealthy: []string{"server-type-1"},
 			},
 		}
 		serverList := map[string]constant.ServerHccl{
@@ -448,7 +453,7 @@ func TestAppendFilterFaultCodeAndLevel(t *testing.T) {
 			"fakeCode1":           "level2",
 			"fakeCode2":           "level3",
 		}
-		patches := gomonkey.ApplyPrivateMethod(retry.RetryProcessor, "GetFilterFaultCodeAndLevel",
+		patches := gomonkey.ApplyPrivateMethod(recoverinplace.RecoverInplaceProcessor, "GetFilterFaultCodeAndLevel",
 			func(jobId, nodeName, deviceName string) map[string]string {
 				return filterFault
 			})
@@ -482,7 +487,7 @@ func testGetFaultDeviceInfoByRelationFault1(server *constant.ServerHccl) {
 		wantFaultList := []constant.FaultDevice{
 			{ServerName: "nodeName", ServerSN: "nodeSN", ServerId: "nodeID", DeviceId: constant.EmptyDeviceId,
 				FaultCode: "[0x08520003,na,L2,na]", FaultLevel: constant.SeparateFaultStrategy,
-				DeviceType: constant.FaultTypeSwitch},
+				DeviceType: constant.FaultTypeSwitch, SwitchChipId: "0", SwitchPortId: "0", SwitchFaultTime: "0"},
 		}
 		patches := gomonkey.ApplyPrivateMethod(relationfault.RelationProcessor, "GetRelationFaultInfo",
 			func(jobId, nodeName string) []*constant.FaultInfo {
@@ -681,4 +686,19 @@ func buildTestCases() []testCase {
 			expectError:    false,
 		},
 	}
+}
+
+func TestGetUnhealthyDevicesSet(t *testing.T) {
+	convey.Convey("Test getUnhealthyDevicesSet", t, func() {
+		convey.Convey("test getUnhealthyDevicesSet", func() {
+			advDevInfo := &constant.AdvanceDeviceFaultCm{
+				CardUnHealthy:    []string{deviceName0},
+				NetworkUnhealthy: []string{deviceName1},
+			}
+			result := getUnhealthyDevicesSet(advDevInfo)
+			convey.So(result.Has(deviceName0), convey.ShouldBeTrue)
+			convey.So(result.Has(deviceName1), convey.ShouldBeTrue)
+			convey.So(result.Has(deviceName2), convey.ShouldBeFalse)
+		})
+	})
 }
