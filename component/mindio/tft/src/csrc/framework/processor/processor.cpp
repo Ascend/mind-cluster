@@ -1162,6 +1162,8 @@ void Processor::HandleNotifyNormal(uint8_t *data, uint32_t len)
         trainStatus_.step = lockStep_;
         trainStatus_.npu_status = TTP_STATUS_NORMAL;
         trainStatus_.run_status = TTP_STATUS_NORMAL;
+        memset_s(trainStatus_.error_code_data, sizeof(trainStatus_.error_code_data), 0,
+                 sizeof(trainStatus_.error_code_data));
         reply.hb.rank = rank_;
         reply.hb.status = trainStatus_;
         reply.repairStep = repairStep_;
@@ -1863,11 +1865,14 @@ TResult Processor::WaitRepairAction()
     return WaitNextAction();
 }
 
-TResult Processor::ReportStatus(ReportState state)
+TResult Processor::ReportStatus(ReportState state, const std::string &errCode)
 {
     TTP_ASSERT_RETURN(ProcessorIsRunning(), TTP_ERROR);
+    TTP_ASSERT_RETURN(errCode.length() < sizeof(trainStatus_.error_code_data), TTP_ERROR);
 
     statusMutex_.lock();
+    std::copy_n(errCode.c_str(), errCode.length() + 1, trainStatus_.error_code_data);
+
     if (state == ReportState::RS_UCE) {
         trainStatus_.npu_status = TTP_STATUS_UCE_HIGH;
     } else if (state == ReportState::RS_UCE_CORRUPTED) {

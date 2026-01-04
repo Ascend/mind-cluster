@@ -35,6 +35,7 @@ namespace std {
 %template() std::vector<std::string>;
 %template() std::vector<std::vector<int32_t>>;
 %template() std::map<int32_t, int32_t>;
+%template() std::map<int32_t, std::string>;
 %template() std::map<std::string, bool>;
 }
 

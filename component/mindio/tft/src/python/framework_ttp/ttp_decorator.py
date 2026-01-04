@@ -882,13 +882,21 @@ def tft_exception_handler(func: Callable):
         tft_destroy_processor()
         ttp_logger.LOGGER.debug(f"rank:{rank_} tft destroy end.")
 
-    def report_and_wait(exception):
-        tft_report_error(ReportState[fault_types[exception]].value)
+    def report_and_wait(exception, error_code):
+        tft_report_error(ReportState[fault_types[exception]].value, error_code)
         # wait stop & clean finish
         if exception not in ['ARF FINISH', 'STEP FINISH', 'OTHER']:
             ret = tft_wait_next_action()
             if ret != Action.RETRY.value:
                 wrap_exit()
+
+    def parse_error_code(err_str):
+        pattern = r'\bdevice error type\s*([0-9a-fA-F]+)\b'
+        match = re.search(pattern, err_str, re.IGNORECASE)
+        error_code = ''
+        if match:
+            error_code = match.group(1)
+        return error_code
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -902,6 +910,7 @@ def tft_exception_handler(func: Callable):
         byte_to_gb = 1024 * 1024 * 1024
         while True:
             wait_next = False
+            error_code = ''
             try:
                 iteration = func(*args, **kwargs)
                 ttp_destroy()
@@ -913,18 +922,20 @@ def tft_exception_handler(func: Callable):
                 max_memory_reserved_before = torch_npu.npu.max_memory_reserved() / byte_to_gb
 
                 err_str = str(e)
+                error_code = parse_error_code(err_str)
                 exception = "OTHER"
                 for pattern in fault_handles:
                     if pattern in err_str:
                         exception = fault_handles[pattern](err_str)
                         break
 
-                ttp_logger.LOGGER.warning(f"rank:{rank_} catch {exception} exception, ex instance:{err_str}")
-                report_and_wait(exception)
+                ttp_logger.LOGGER.warning(f"rank:{rank_} catch {exception} exception, error_code:{error_code}，"
+                                          f" ex instance:{err_str}")
+                report_and_wait(exception, error_code)
                 wait_next = True
             except Exception as e:
                 ttp_logger.LOGGER.exception(f"rank:{rank_} catch other exception, ex instance:{str(e)}")
-                tft_report_error(ReportState.RS_UNKNOWN.value)
+                tft_report_error(ReportState.RS_UNKNOWN.value, error_code)
                 raise e
             finally:
                 # release memory for repair stage
@@ -1176,12 +1187,12 @@ def tft_set_step_args(args):
     save_handler.set_model_config(args)
 
 
-def tft_report_error(error_type: ReportState):
+def tft_report_error(error_type: ReportState, error_code):
     """
     report error state && unify condition variable post process
     """
     global uce_error_, retry_error_
-    ret = ttp_c2python_api.report_status(error_type)
+    ret = ttp_c2python_api.report_status(error_type, error_code)
     if ret != RET_OK:
         ttp_logger.LOGGER.error(f"report status: {error_type} failed, error num:{ret}")
         raise Exception(f"report status: {error_type} failed, error num:{ret}")

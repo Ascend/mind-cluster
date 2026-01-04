@@ -18,6 +18,7 @@
 #define OCK_TTP_TYPES_H
 
 #include "common_constants.h"
+#include "securec.h"
 
 using namespace ock::ttp;
 
@@ -31,6 +32,7 @@ struct TrainStatus {
     int8_t data_status = 0;      // optimizer state data statue
     int64_t lastUpdateTime = 0;  // The number of milliseconds since the epoch
     int64_t backup_step = 0;     // backup step when localCopySwitch is on
+    char error_code_data[TTP_ERROR_CODE_DATA_LEN] = {0};
 };
 
 struct RepairMsgUnit {

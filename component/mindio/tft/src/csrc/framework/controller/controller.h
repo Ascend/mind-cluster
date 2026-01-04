@@ -372,6 +372,7 @@ private:
     // rank_ -> error type
     ReadWriteLock errorRankLock_;
     std::map<int32_t, int32_t> errorRankMsg_;
+    std::map<int32_t, std::string> errorRankCode_;
     std::set<int32_t> hotSwitchRanks_;
 
     ZitParm zitParam_;

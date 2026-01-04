@@ -125,8 +125,8 @@ def tft_notify_controller_dump():
     return RET_OK if ret == RET_OK else RET_ERROR
 
 
-def report_fault_ranks_callback(error_rank_dict):
-    ret = mindx_handler.execute_callback('report_fault_ranks', (error_rank_dict,))
+def report_fault_ranks_callback(error_rank_dict, error_rank_code):
+    ret = mindx_handler.execute_callback('report_fault_ranks', (error_rank_dict, error_rank_code,))
     return RET_OK if ret == RET_OK else RET_ERROR
 
 

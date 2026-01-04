@@ -19,7 +19,6 @@
 # limitations under the License.
 
 """TTP c to python api."""
-
 import weakref
 from functools import wraps
 from typing import Callable
@@ -250,8 +249,8 @@ class CallbackReceiver(object):
         return _ttp_c2python_api.callback_receiver_report_result_callback(
             self, code, msg, error_info_map, strategy)
 
-    def report_fault_ranks_callback(self, error_info_map):
-        return _ttp_c2python_api.callback_receiver_report_fault_ranks_callback(self, error_info_map)
+    def report_fault_ranks_callback(self, error_info_map, error_code_map):
+        return _ttp_c2python_api.callback_receiver_report_fault_ranks_callback(self, error_info_map, error_code_map)
 
     def rename_callback(self):
         return _ttp_c2python_api.callback_receiver_rename_callback(self)
@@ -632,9 +631,9 @@ def destroy_processor():
     return _ttp_c2python_api.destroy_processor()
 
 
-def report_status(state):
+def report_status(state, error_code=''):
     """report status"""
-    return _ttp_c2python_api.report_status(state)
+    return _ttp_c2python_api.report_status(state, error_code)
 
 
 def wait_next_action():

@@ -78,6 +78,7 @@ struct RecoverStatusContext {
 
 struct ProcessFaultContext {
     std::map<int32_t, int32_t> errorInfoMap;
+    std::map<int32_t, std::string> errorCodeMap;
 };
 
 using MindXEventHandle = std::function<int32_t(void *ctx, int ctxSize)>;
@@ -104,7 +105,8 @@ public:
     // register event handler
     TResult RegisterEventHandler(MindXEvent event, MindXEventHandle handle);
 
-    TResult ReportFaultRanks(std::map<int32_t, int32_t> &errors, ReadWriteLock &lock);
+    TResult ReportFaultRanks(std::map<int32_t, int32_t> &errors,  std::map<int32_t, std::string> &errorCodes,
+                             ReadWriteLock &lock);
 
     TResult ReportStopComplete(RepairResult code, const std::string& msg,
                                std::map<int32_t, int32_t> &errors, ReadWriteLock &lock);

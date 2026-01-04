@@ -31,7 +31,7 @@ using DowngradeRebuildCallback = std::function<int(std::vector<int32_t>&, std::v
 using ReportStopCompleteCallback = std::function<int(int, std::string&, std::map<int32_t, int32_t>&)>;
 using ReportStrategiesCallback = std::function<int(std::map<int32_t, int32_t>&, std::vector<std::string>&)>;
 using ReportResultCallback = std::function<int(int, std::string&, std::map<int32_t, int32_t>&, std::string&)>;
-using ReportFaultRanksCallback = std::function<int(std::map<int32_t, int32_t>&)>;
+using ReportFaultRanksCallback = std::function<int(std::map<int32_t, int32_t>&, std::map<int32_t, std::string>&)>;
 using RenameCallback = std::function<int(void)>;
 using ExitCallback = std::function<void(void)>;
 using DeviceStopCallback = std::function<int(void)>;
@@ -61,7 +61,8 @@ public:
                                               std::vector<std::string> strategies) = 0;
     virtual int ReportResultCallback(int code, std::string msg, std::map<int32_t, int32_t> errorInfoMap,
                                             std::string strategy) = 0;
-    virtual int ReportFaultRanksCallback(std::map<int32_t, int32_t> errorInfoMap) = 0;
+    virtual int ReportFaultRanksCallback(std::map<int32_t, int32_t> errorInfoMap,
+                                         std::map<int32_t, std::string> errorCodeMap) = 0;
     virtual int RenameCallback(void) = 0;
     virtual void ExitCallback(void) {};
     virtual int DeviceStopCallback(void) = 0;
@@ -152,16 +153,17 @@ static int HandleReportStrategiesCallback(std::map<int32_t, int32_t> &errorInfoM
 }
 
 static int HandleReportResultCallback(int code, std::string &msg,
-    std::map<int32_t, int32_t> errorInfoMap, std::string strategy)
+    std::map<int32_t, int32_t> &errorInfoMap, std::string &strategy)
 {
     TTP_ASSERT_RETURN(receiver_ptr != nullptr, TTP_ERROR);
     return receiver_ptr->ReportResultCallback(code, msg, errorInfoMap, strategy);
 }
 
-static int HandleReportFaultRanksCallback(std::map<int32_t, int32_t> &errorInfoMap)
+static int HandleReportFaultRanksCallback(std::map<int32_t, int32_t> &errorInfoMap,
+                                          std::map<int32_t, std::string> &errorCodeMap)
 {
     TTP_ASSERT_RETURN(receiver_ptr != nullptr, TTP_ERROR);
-    return receiver_ptr->ReportFaultRanksCallback(errorInfoMap);
+    return receiver_ptr->ReportFaultRanksCallback(errorInfoMap, errorCodeMap);
 }
 
 static int HandleRenameCallback()
@@ -332,9 +334,9 @@ static int SetDumpResult(int result)
     return Processor::GetInstance()->SetDumpResult(result);
 }
 
-static int ReportStatus(int32_t state)
+static int ReportStatus(int32_t state, std::string errCode)
 {
-    return Processor::GetInstance()->ReportStatus(static_cast<ReportState>(state));
+    return Processor::GetInstance()->ReportStatus(static_cast<ReportState>(state), errCode);
 }
 
 static int WaitNextAction()
@@ -599,7 +601,7 @@ static int SetReportFaultRanksCallback()
     ReportFaultRanksCallback callback = &HandleReportFaultRanksCallback;
     MindXEventHandle func = [callback](void *ctx, int ctxSize) -> int {
         ProcessFaultContext *nrsc = static_cast<ProcessFaultContext *>(ctx);
-        int ret = callback(nrsc->errorInfoMap);
+        int ret = callback(nrsc->errorInfoMap, nrsc->errorCodeMap);
         return ret;
     };
 

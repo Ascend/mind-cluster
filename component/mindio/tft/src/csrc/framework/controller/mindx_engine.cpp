@@ -51,7 +51,8 @@ void MindXEngine::Register2MindX()
     TTP_RET_LOG(ret, "MindXEngine init waiter ret:" << ret);
 }
 
-TResult MindXEngine::ReportFaultRanks(std::map<int32_t, int32_t> &errors, ReadWriteLock &lock)
+TResult MindXEngine::ReportFaultRanks(std::map<int32_t, int32_t> &errors, std::map<int32_t, std::string> &errorCodes,
+                                      ReadWriteLock &lock)
 {
     if (!isRegistered_.load()) {
         TTP_LOG_WARN("mindx no register, skip report fault ranks!");
@@ -59,7 +60,7 @@ TResult MindXEngine::ReportFaultRanks(std::map<int32_t, int32_t> &errors, ReadWr
     }
 
     lock.LockRead();
-    ProcessFaultContext nrsc {errors};
+    ProcessFaultContext nrsc {errors, errorCodes};
     lock.UnLock();
 
     auto ret = EventProcess(MindXEvent::MINDX_EVENT_REPORT_FAULT_RANKS, &nrsc, sizeof(ProcessFaultContext));

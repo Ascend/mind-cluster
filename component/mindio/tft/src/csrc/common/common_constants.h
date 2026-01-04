@@ -41,6 +41,7 @@ constexpr int32_t TTP_MAX_OPTIM_NUM = 1000;  // 最大支持优化器套数
 constexpr int32_t TTP_MAX_COMM_GROUP_NUM = 2000;  // 通信组重建时最大支持重建组数
 constexpr int32_t TTP_MAX_ZIT_PARAM_LEN = 1024;  // zit参数string最大长度, char*加1
 constexpr size_t MAX_CIPHER_LEN = 10 * 1024 * 1024;
+constexpr int32_t TTP_ERROR_CODE_DATA_LEN = 16;  // 故障码数据长度
 
 enum OptimStatus : int8_t {
     Updated = 0,

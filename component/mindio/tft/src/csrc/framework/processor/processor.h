@@ -156,7 +156,7 @@ public:
 
     TResult WaitRepairAction();
 
-    TResult ReportStatus(ReportState state);
+    TResult ReportStatus(ReportState state, const std::string &errCode = "");
 
     int32_t GetRepairId() const
     {

@@ -914,7 +914,7 @@ TResult Controller::ContinueTrain()
 TResult Controller::MindXInnerInteraction()
 {
     // 故障触发两种场景：1.normal状态机检测转到abnormal，上报停止需要等待mindx  2.mindx先通知stoptrain转到abnormal，因此不能SignalClean。
-    auto response = mindXEngine_->ReportFaultRanks(errorRankMsg_, errorRankLock_);
+    auto response = mindXEngine_->ReportFaultRanks(errorRankMsg_, errorRankCode_, errorRankLock_);
     if (response != TTP_OK) {
         return TTP_STOP_SERVICE;
     }
@@ -2660,6 +2660,7 @@ void Controller::SelectErrorRanks()
             } else {
                 errorRankMsg_[rank] = PROCESSES_ERROR;
             }
+            errorRankCode_[rank] = std::string(status.error_code_data);
         }
     }
 
