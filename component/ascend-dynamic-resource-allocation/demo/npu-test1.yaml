@@ -1,0 +1,64 @@
+# Two pods, one container each
+# Each container asking for 1 distinct NPU
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: npu-test1
+
+---
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  namespace: npu-test1
+  name: single-npu
+spec:
+  spec:
+    devices:
+      requests:
+      - name: npu
+        exactly:
+          deviceClassName: npu.huawei.com
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: npu-test1
+  name: pod0
+  labels:
+    app: pod
+spec:
+  containers:
+  - name: ctr0
+    image: ubuntu:22.04
+    command: ["bash", "-c"]
+    args: ["export; trap 'exit 0' TERM; sleep 9999 & wait"]
+    resources:
+      claims:
+      - name: npu
+  resourceClaims:
+  - name: npu
+    resourceClaimTemplateName: single-npu
+
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  namespace: npu-test1
+#  name: pod1
+#  labels:
+#    app: pod
+#spec:
+#  containers:
+#  - name: ctr0
+#    image: ubuntu:22.04
+#    command: ["bash", "-c"]
+#    args: ["export; trap 'exit 0' TERM; sleep 9999 & wait"]
+#    resources:
+#      claims:
+#      - name: npu
+#  resourceClaims:
+#  - name: npu
+#    resourceClaimTemplateName: single-npu

@@ -1,0 +1,185 @@
+---
+# Source: ascend-npu-dra-driver/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ascend-npu-dra-driver-service-account
+  namespace: ascend-npu-dra-driver
+  labels:
+    helm.sh/chart: ascend-npu-dra-driver-0.0.0-dev
+    app.kubernetes.io/name: ascend-npu-dra-driver
+    app.kubernetes.io/instance: ascend-npu-dra-driver
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: ascend-npu-dra-driver/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ascend-npu-dra-driver-role
+  namespace: ascend-npu-dra-driver
+rules:
+- apiGroups: ["resource.k8s.io"]
+  resources: ["resourceclaims"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+- apiGroups: ["resource.k8s.io"]
+  resources: ["resourceslices"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+# Source: ascend-npu-dra-driver/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ascend-npu-dra-driver-role-binding
+  namespace: ascend-npu-dra-driver
+subjects:
+- kind: ServiceAccount
+  name: ascend-npu-dra-driver-service-account
+  namespace: ascend-npu-dra-driver
+roleRef:
+  kind: ClusterRole
+  name: ascend-npu-dra-driver-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: ascend-npu-dra-driver/templates/kubeletplugin.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ascend-npu-dra-driver-kubeletplugin
+  namespace: ascend-npu-dra-driver
+  labels:
+    helm.sh/chart: ascend-npu-dra-driver-0.0.0-dev
+    app.kubernetes.io/name: ascend-npu-dra-driver
+    app.kubernetes.io/instance: ascend-npu-dra-driver
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: kubeletplugin
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ascend-npu-dra-driver
+      app.kubernetes.io/instance: ascend-npu-dra-driver
+      app.kubernetes.io/component: kubeletplugin
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ascend-npu-dra-driver
+        app.kubernetes.io/instance: ascend-npu-dra-driver
+        app.kubernetes.io/component: kubeletplugin
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: ascend-npu-dra-driver-service-account
+      securityContext:
+        {}
+      containers:
+      - name: plugin
+        securityContext:
+          privileged: true
+        image: ascend-npu-dra-driver:v0.1.0
+        imagePullPolicy: IfNotPresent
+        command: ["dra-kubelet-plugin"]
+        resources:
+          {}
+        
+        livenessProbe:
+          grpc:
+            port: 51515
+            service: liveness
+          failureThreshold: 3
+          periodSeconds: 10
+
+        env:
+        - name: CDI_ROOT
+          value: /var/run/cdi
+        - name: KUBELET_REGISTRAR_DIRECTORY_PATH
+          value: "/var/lib/kubelet/plugins_registry"
+        - name: KUBELET_PLUGINS_DIRECTORY_PATH
+          value: "/var/lib/kubelet/plugins"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        # Simulated number of devices the example driver will pretend to have.
+        - name: NUM_DEVICES
+          value: "8"
+        - name: HEALTHCHECK_PORT
+          value: "51515"
+        volumeMounts:
+        - name: plugins-registry
+          mountPath: "/var/lib/kubelet/plugins_registry"
+        - name: plugins
+          mountPath: "/var/lib/kubelet/plugins"
+        - name: cdi
+          mountPath: /var/run/cdi
+      volumes:
+      - name: plugins-registry
+        hostPath:
+          path: "/var/lib/kubelet/plugins_registry"
+      - name: plugins
+        hostPath:
+          path: "/var/lib/kubelet/plugins"
+      - name: cdi
+        hostPath:
+          path: /var/run/cdi
+---
+# Source: ascend-npu-dra-driver/templates/deviceclass.yaml
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: npu.huawei.com
+spec:
+  selectors:
+  - cel: 
+      expression: "device.driver == 'npu.huawei.com'"
+---
+# Source: ascend-npu-dra-driver/templates/validatingadmissionpolicy.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: resourceslices-policy-ascend-npu-dra-driver
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["resource.k8s.io"]
+      apiVersions: ["v1beta1", "v1beta2", "v1"]
+      operations:  ["CREATE", "UPDATE", "DELETE"]
+      resources:   ["resourceslices"]
+  matchConditions:
+  - name: isRestrictedUser
+    expression: >-
+      request.userInfo.username == "system:serviceaccount:ascend-npu-dra-driver:ascend-npu-dra-driver-service-account"
+  variables:
+  - name: userNodeName
+    expression: >-
+      request.userInfo.extra[?'authentication.kubernetes.io/node-name'][0].orValue('')
+  - name: objectNodeName
+    expression: >-
+      (request.operation == "DELETE" ? oldObject : object).spec.?nodeName.orValue("")
+  validations:
+  - expression: variables.userNodeName != ""
+    message: >-
+      no node association found for user, this user must run in a pod on a node and ServiceAccountTokenPodNodeInfo must be enabled
+  - expression: variables.userNodeName == variables.objectNodeName
+    messageExpression: >-
+      "this user running on node '"+variables.userNodeName+"' may not modify " +
+      (variables.objectNodeName == "" ?"cluster resourceslices" : "resourceslices on node '"+variables.objectNodeName+"'")
+---
+# Source: ascend-npu-dra-driver/templates/validatingadmissionpolicybinding.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: resourceslices-policy-ascend-npu-dra-driver
+spec:
+  policyName: resourceslices-policy-ascend-npu-dra-driver
+  validationActions: [Deny]
+  # All ResourceSlices are matched.
