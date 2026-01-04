@@ -1,0 +1,63 @@
+# One shared, global claim providing access to a NPU
+# Two pods, each asking for access to the shared NPU
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: npu-test4
+
+---
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaim
+metadata:
+  namespace: npu-test4
+  name: single-npu
+spec:
+    devices:
+      requests:
+      - name: npu
+        exactly:
+          deviceClassName: npu.huawei.com
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: npu-test4
+  name: pod0
+  labels:
+    app: pod
+spec:
+  containers:
+  - name: ctr0
+    image: ubuntu:22.04
+    command: ["bash", "-c"]
+    args: ["export; trap 'exit 0' TERM; sleep 9999 & wait"]
+    resources:
+      claims:
+      - name: shared-npu
+  resourceClaims:
+  - name: shared-npu
+    resourceClaimName: single-npu
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: npu-test4
+  name: pod1
+  labels:
+    app: pod
+spec:
+  containers:
+  - name: ctr0
+    image: ubuntu:22.04
+    command: ["bash", "-c"]
+    args: ["export; trap 'exit 0' TERM; sleep 9999 & wait"]
+    resources:
+      claims:
+      - name: shared-npu
+  resourceClaims:
+  - name: shared-npu
+    resourceClaimName: single-npu
