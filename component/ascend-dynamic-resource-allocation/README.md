@@ -1,0 +1,1 @@
+This is an exploration for dynamic resource allocation of ascend.
