@@ -146,7 +146,7 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		}
 		// scan management plane fault info. management plane may filter uce fault in uceProcessor、hcclProcessor
 		for _, fault := range faultList {
-			if !unHealthDevSet.Has(deviceName) {
+			if !unHealthDevSet.Has(deviceName) && fault.FaultLevel == constant.FreeRestartNPU {
 				hwlog.RunLog.Debugf("Fault %v does not affect fault rank", fault)
 				continue
 			}
