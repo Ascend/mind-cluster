@@ -873,3 +873,21 @@ func TestGetCQETriggerFault(t *testing.T) {
 		})
 	})
 }
+
+func TestExecDeviceFaultTMOut(t *testing.T) {
+	convey.Convey("test execDeviceFaultTMOut", t, func() {
+		convey.Convey("update node fault info map", func() {
+			fJob := &FaultJob{
+				FaultStrategy:    constant.FaultStrategy{NodeLvList: map[string]string{}},
+				NodeFaultInfoMap: map[string][]*constant.FaultInfo{},
+			}
+			fault := &constant.FaultInfo{NodeName: node101}
+			patches := gomonkey.ApplyPrivateMethod(fJob, "isMeetTMOutTriggerFault",
+				func(_ *FaultJob, fault *constant.FaultInfo) bool { return true })
+			defer patches.Reset()
+			fJob.execDeviceFaultTMOut(fault)
+			convey.So(fJob.NodeFaultInfoMap[node101], convey.ShouldResemble, []*constant.FaultInfo{
+				{NodeName: node101, ExecutedStrategy: constant.SeparateFaultStrategy}})
+		})
+	})
+}

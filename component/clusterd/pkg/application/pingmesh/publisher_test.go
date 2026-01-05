@@ -6,6 +6,7 @@ package pingmesh
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/api"
+	"ascend-common/api/slownet"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/superpod"
@@ -327,5 +329,22 @@ func TestHandleFileDelete(t *testing.T) {
 			defer patch.Reset()
 			convey.ShouldBeNil(handleFileDelete(testSuperPodID))
 		})
+	})
+}
+
+func TestWriteJsonDataByteToFile_Success(t *testing.T) {
+	convey.Convey("Test WriteJsonDataByteToFile", t, func() {
+		superPodID := "test-pod-123"
+		data := []byte(`{"key": "value"}`)
+		tmpfile, err := os.CreateTemp("", "super-pod-info-*.json")
+		defer os.Remove(tmpfile.Name())
+		convey.So(err, convey.ShouldBeNil)
+		patches := gomonkey.ApplyFuncReturn(slownet.GetSuperPodInfoFilePath, tmpfile.Name(), nil)
+		defer patches.Reset()
+		err = writeJsonDataByteToFile(superPodID, data)
+		convey.So(err, convey.ShouldBeNil)
+		fileContent, err := os.ReadFile(tmpfile.Name())
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(string(fileContent), convey.ShouldEqual, string(data))
 	})
 }

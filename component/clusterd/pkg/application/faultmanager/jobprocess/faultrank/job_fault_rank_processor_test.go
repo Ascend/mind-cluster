@@ -702,3 +702,47 @@ func TestGetUnhealthyDevicesSet(t *testing.T) {
 		})
 	})
 }
+
+func TestGetFaultListInfoByRelationFault(t *testing.T) {
+	convey.Convey("Test getFaultListInfoByRelationFault", t, func() {
+		convey.Convey("test getFaultListInfoByRelationFault", func() {
+			server := &constant.ServerHccl{
+				DeviceList: []constant.Device{
+					{RankID: rankId0, DeviceID: deviceId0, DeviceIP: ""},
+					{RankID: rankId1, DeviceID: deviceId1, DeviceIP: ""},
+				},
+			}
+			podInfos := &jobPodInfoMap{
+				deviceNumOfPod: deviceNumOfPod,
+				podOfRank: map[string]*constant.SimplePodInfo{
+					rankId0: {PodUid: "pod-0", PodRank: rankId0},
+				},
+			}
+			relationFault := []*constant.FaultInfo{
+				{FaultType: constant.DeviceFaultType, NPUName: "invalid-npu-name",
+					FaultCode: "81078601", ExecutedStrategy: constant.SeparateFaultStrategy},
+				{FaultType: constant.DeviceFaultType, NPUName: deviceName2,
+					FaultCode: "81078602", ExecutedStrategy: constant.SeparateFaultStrategy},
+				{FaultType: constant.DeviceFaultType, NPUName: deviceName0,
+					FaultCode: "81078603", ExecutedStrategy: constant.SeparateFaultStrategy},
+				{FaultType: constant.SwitchFaultType, NPUName: "",
+					FaultCode: "[0x08520003,na,L2,na]", ExecutedStrategy: constant.SeparateFaultStrategy},
+			}
+			patches := gomonkey.ApplyPrivateMethod(relationfault.RelationProcessor, "GetRelationFaultInfo",
+				func(jobId, nodeName string) []*constant.FaultInfo {
+					return relationFault
+				})
+			defer patches.Reset()
+			ret := getFaultListInfoByRelationFault("", "", server, podInfos)
+			wantRet := []constant.FaultRank{
+				{RankId: rankId0, PodUid: "pod-0", PodRank: rankId0, FaultCode: "81078603",
+					FaultLevel: constant.SeparateFault, DeviceId: deviceId0},
+				{RankId: rankId0, PodUid: "pod-0", PodRank: rankId0, FaultCode: "[0x08520003,na,L2,na]",
+					FaultLevel: constant.SeparateFault, DeviceId: deviceId0},
+				{RankId: rankId1, PodUid: "pod-0", PodRank: rankId0, FaultCode: "[0x08520003,na,L2,na]",
+					FaultLevel: constant.SeparateFault, DeviceId: deviceId1},
+			}
+			convey.So(ret, convey.ShouldResemble, wantRet)
+		})
+	})
+}

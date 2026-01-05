@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -16,7 +17,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/api/core/v1"
-	meatv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
@@ -24,6 +25,7 @@ import (
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -339,7 +341,7 @@ func TestUpdateCacheFaultAndPod(t *testing.T) {
 		mockFunc.ApplyFunc(kube.RetryGetPodGroup,
 			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
 				return &v1beta1.PodGroup{
-					ObjectMeta: meatv1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{},
 					},
 				}, nil
@@ -1710,7 +1712,7 @@ func testPlatformModeNonUceFault(ctl *EventController) {
 		patches.ApplyFunc(kube.RetryGetPodGroup,
 			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
 				return &v1beta1.PodGroup{
-					ObjectMeta: meatv1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{},
 					},
 				}, nil
@@ -1993,7 +1995,7 @@ func TestNotifyFaultForNormalFaultCase(t *testing.T) {
 		patches.ApplyFunc(kube.RetryGetPodGroup,
 			func(name, namespace string, times int) (*v1beta1.PodGroup, error) {
 				return &v1beta1.PodGroup{
-					ObjectMeta: meatv1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{},
 					},
 				}, nil
@@ -2153,4 +2155,31 @@ func TestChangePodStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWhetherHasEnoughResource(t *testing.T) {
+	convey.Convey("Testing whetherHasEnoughResource", t, func() {
+		ctl := &EventController{}
+		diffTimeStr := strconv.Itoa(constant.DifferenceTime)
+		patch := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {}).
+			ApplyFuncReturn(pod.GetPodByRankIndex,
+				v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: testPodUid1}, Spec: v1.PodSpec{Containers: []v1.Container{
+					{Env: []v1.EnvVar{{Name: constant.MindIOWaitTimeKey, Value: diffTimeStr}}},
+				}}})
+		defer patch.Reset()
+		convey.Convey("job has not enough resource to reschedule", func() {
+			patch1 := gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, false).
+				ApplyPrivateMethod(ctl, "checkWhetherPodChanged", func() bool { return false })
+			defer patch1.Reset()
+			ret := ctl.whetherHasEnoughResource()
+			convey.So(ret, convey.ShouldEqual, false)
+		})
+		convey.Convey("job has enough resource to reschedule", func() {
+			patch1 := gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, true).
+				ApplyPrivateMethod(ctl, "checkWhetherPodChanged", func() bool { return true })
+			defer patch1.Reset()
+			ret := ctl.whetherHasEnoughResource()
+			convey.So(ret, convey.ShouldEqual, true)
+		})
+	})
 }
