@@ -37,6 +37,8 @@ from taskd.api.taskd_agent_api import init_taskd_agent, start_taskd_agent, regis
 from taskd.python.toolkit.constants.constants import SLEEP_GAP, MAX_INI16, RESTART_FAULT_PROCESS_TYPE_ENV
 from taskd.python.framework.common.type import CONFIG_UPSTREAMIP_KEY, LOCAL_HOST, CONFIG_FRAMEWORK_KEY
 from taskd.python.framework.agent.pt_agent.pt_agent import get_pids
+original_log_dir = None
+original_root_log_dir = None
 
 
 def patch_create_c10d_store_decorator(func):
@@ -112,6 +114,8 @@ def patch_start_workers(self, worker_group: WorkerGroup) -> Dict[int, Any]:
     use_agent_store = get_use_agent_store(spec)
     run_log.info("use_agent_store: %s", use_agent_store)
     p_context_dict: Dict[int, PContext] = {}
+    global original_log_dir
+    global original_root_log_dir
     for worker in worker_group.workers:
         args: Dict[int, tuple] = {}
         envs: Dict[int, Dict[str, str]] = {}
@@ -125,6 +129,10 @@ def patch_start_workers(self, worker_group: WorkerGroup) -> Dict[int, Any]:
         args[0] = tuple(worker_args)
         attempt_log_dir = ""
         if hasattr(self, '_log_dir') and self._log_dir:
+            if not original_log_dir:
+                original_log_dir = self._log_dir
+            self._log_dir = os.path.join(original_log_dir, f"{local_rank}")
+            run_log.info(f"_log_dir: {self._log_dir}")
             attempt_log_dir = os.path.join(self._log_dir, f"attempt_{restart_count}")
             if not os.path.islink(attempt_log_dir):
                 shutil.rmtree(attempt_log_dir, ignore_errors=True)
@@ -136,6 +144,11 @@ def patch_start_workers(self, worker_group: WorkerGroup) -> Dict[int, Any]:
                                safe_substitute(role_name=spec.role, rank=worker.global_rank, local_rank=local_rank))
             log_line_prefixes[local_rank] = log_line_prefix
         if hasattr(self, "_logs_specs") and self._logs_specs is not None:
+            if not original_root_log_dir:
+                original_root_log_dir = self._logs_specs._root_log_dir
+            self._logs_specs._root_log_dir = os.path.join(original_root_log_dir, f"{local_rank}")
+            self._logs_specs._run_log_dir = None
+            run_log.info(f"_root_log_dir: {self._logs_specs._root_log_dir}")
             p_context = start_processes_with_logs_spec(args, self._logs_specs, log_line_prefixes, envs, 
                                                         self._start_method, spec)
         else:
