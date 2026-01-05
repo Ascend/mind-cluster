@@ -17,14 +17,18 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
+	clusterd_constant "clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
@@ -32,6 +36,7 @@ import (
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/application"
 	"taskd/framework_backend/manager/infrastructure/storage"
+	"taskd/toolkit_backend/net/common"
 )
 
 type fakeClient struct {
@@ -39,15 +44,15 @@ type fakeClient struct {
 }
 
 func (f *fakeClient) Init(ctx context.Context, in *pb.ClientInfo, opts ...grpc.CallOption) (*pb.Status, error) {
-	return nil, nil
+	return &pb.Status{Code: common.OK}, nil
 }
 
 func (f *fakeClient) Register(ctx context.Context, in *pb.ClientInfo, opts ...grpc.CallOption) (*pb.Status, error) {
-	return nil, nil
+	return &pb.Status{Code: common.OK}, nil
 }
 
 func (f *fakeClient) SubscribeProcessManageSignal(ctx context.Context, in *pb.ClientInfo, opts ...grpc.CallOption) (pb.Recover_SubscribeProcessManageSignalClient, error) {
-	return nil, nil
+	return &fakeStream{}, nil
 }
 
 func (f *fakeClient) ReportStopComplete(ctx context.Context, in *pb.StopCompleteRequest, opts ...grpc.CallOption) (*pb.Status, error) {
@@ -108,6 +113,20 @@ type fakeProfilingClient struct {
 
 func (f *fakeProfilingClient) SubscribeDataTraceSwitch(ctx context.Context, in *profiling.ProfilingClientInfo, opts ...grpc.CallOption) (profiling.TrainingDataTrace_SubscribeDataTraceSwitchClient, error) {
 	return nil, nil
+}
+
+type fakeStream struct {
+	grpc.ClientStream
+}
+
+func (s *fakeStream) Recv() (*pb.ProcessManageSignal, error) {
+	return &pb.ProcessManageSignal{
+		Uuid: string(uuid.NewUUID()),
+	}, nil
+}
+
+func (s *fakeStream) Context() context.Context {
+	return context.Background()
 }
 
 func TestReportControllerInfoToClusterd(t *testing.T) {
@@ -660,5 +679,178 @@ func TestBaseManager_registerClusterD_GetAddrError(t *testing.T) {
 		manager := &BaseManager{}
 		manager.registerClusterD(0)
 		convey.So(true, convey.ShouldBeTrue)
+	})
+}
+
+func fakeTaskDManager(ctx context.Context) *BaseManager {
+	defaultWorkerNum := 8
+	m := &BaseManager{
+		Config: Config{},
+		svcCtx: ctx,
+	}
+	m.MsgHd = application.NewMsgHandler(defaultWorkerNum)
+	m.BusinessHandler = application.NewBusinessStreamProcessor(m.MsgHd)
+	return m
+}
+
+func TestEnqueueProfilingSwitch(t *testing.T) {
+	m := fakeTaskDManager(context.Background())
+	convey.Convey("test enqueueProfilingSwitch", t, func() {
+		cmd := constant.ProfilingDomainCmd{
+			DefaultDomainAble: false,
+			CommDomainAble:    false,
+		}
+		m.enqueueProfilingSwitch(cmd, "0")
+		convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldEqual, 1)
+		msg, err := m.MsgHd.MsgQueue.Dequeue()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(msg.Header.Src.Role, convey.ShouldEqual, constant.ClusterRole)
+	})
+}
+
+func TestWatchProfilingCmdChange(t *testing.T) {
+	convey.Convey("test watchProfilingCmdChange", t, func() {
+		convey.Convey("context done, should not get profiling from file", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			m := fakeTaskDManager(ctx)
+			const sleepTime = 100 * time.Millisecond
+			go func() {
+				time.Sleep(sleepTime)
+				defer cancel()
+			}()
+			m.watchProfilingCmdChange()
+			convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldEqual, 0)
+		})
+		convey.Convey("profiling from clusterD is true, should not get profiling from file", func() {
+			m := fakeTaskDManager(context.Background())
+			m.profilingFromClusterD.Store(true)
+			m.watchProfilingCmdChange()
+			convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldEqual, 0)
+		})
+		convey.Convey("profiling from clusterD is false, should get profiling from file", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			m := fakeTaskDManager(ctx)
+			m.profilingFromClusterD.Store(false)
+			patch := gomonkey.ApplyFuncReturn(utils.GetProfilingSwitch, constant.ProfilingSwitch{}, nil)
+			defer patch.Reset()
+			const sleepTime = 1100 * time.Millisecond
+			go func() {
+				time.Sleep(sleepTime)
+				cancel()
+			}()
+			m.watchProfilingCmdChange()
+			convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldNotEqual, 0)
+		})
+	})
+}
+
+func TestConvertProfilingMsg(t *testing.T) {
+	convey.Convey("test convertProfilingMsg", t, func() {
+		switchData := &profiling.ProfilingSwitch{
+			CommunicationOperator: "test",
+		}
+		ret := convertProfilingMsg(switchData)
+		convey.So(ret.CommunicationOperator, convey.ShouldEqual, "test")
+	})
+}
+
+func TestSubscribeProcessManageSignal(t *testing.T) {
+	convey.Convey("test subscribeProcessManageSignal", t, func() {
+		convey.Convey("end subscribe", func() {
+			m := fakeTaskDManager(context.Background())
+			patch := gomonkey.ApplyPrivateMethod(m, "startSubscribe",
+				func(m, _ pb.RecoverClient, _ *pb.ClientInfo) bool { return true })
+			defer patch.Reset()
+			m.subscribeProcessManageSignal(&grpc.ClientConn{})
+			convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldEqual, 1)
+			msg, err := m.MsgHd.MsgQueue.Dequeue()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(msg.Header.Src.Role, convey.ShouldEqual, common.MgrRole)
+			convey.So(msg.Body.Code, convey.ShouldEqual, constant.FaultRecoverCode)
+		})
+	})
+}
+
+func TestStartSubscribe(t *testing.T) {
+	convey.Convey("test startSubscribe", t, func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		m := fakeTaskDManager(ctx)
+		c := &fakeClient{}
+		testRecoverClientHasError(c, m)
+		testRecoverClientRecvFailed(c, m)
+		testRecoverClientRecvSuccess(c, m, cancel)
+	})
+}
+
+func testRecoverClientHasError(c *fakeClient, m *BaseManager) {
+	convey.Convey("client init failed, should return false", func() {
+		patch := gomonkey.ApplyMethodReturn(c, "Init", &pb.Status{}, errors.New("init failed"))
+		defer patch.Reset()
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+	convey.Convey("client register failed,  should return false", func() {
+		patch := gomonkey.ApplyMethodReturn(c, "Register",
+			&pb.Status{}, errors.New("register failed"))
+		defer patch.Reset()
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+	convey.Convey("client SubscribeProcessManageSignal failed,  should return false", func() {
+		patch := gomonkey.ApplyMethodReturn(c, "SubscribeProcessManageSignal",
+			nil, errors.New("subscribe process manage signal failed"))
+		defer patch.Reset()
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+}
+
+func testRecoverClientRecvFailed(c *fakeClient, m *BaseManager) {
+	patch := gomonkey.ApplyMethodReturn(c, "SubscribeProcessManageSignal",
+		&fakeStream{}, nil)
+	defer patch.Reset()
+	convey.Convey("receive EOF, should return false", func() {
+		patch.ApplyMethodReturn(&fakeStream{}, "Recv", nil, io.EOF)
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+	convey.Convey("Recv return error, should return false", func() {
+		patch.ApplyMethodReturn(&fakeStream{}, "Recv", nil, errors.New("recv error"))
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+	convey.Convey("stream context done, should return false", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		patch.ApplyMethodReturn(&fakeStream{}, "Context", ctx)
+		cancel()
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeFalse)
+	})
+}
+
+func testRecoverClientRecvSuccess(c *fakeClient, m *BaseManager, cancel context.CancelFunc) {
+	patch := gomonkey.ApplyMethodReturn(c, "SubscribeProcessManageSignal",
+		&fakeStream{}, nil)
+	defer patch.Reset()
+	convey.Convey("receive msg and context down, should return true", func() {
+		step := 0
+		patch.ApplyMethod(&fakeStream{}, "Recv", func() (*pb.ProcessManageSignal, error) {
+			if step == 0 {
+				cancel()
+				step++
+				return &pb.ProcessManageSignal{
+					Uuid:       string(uuid.NewUUID()),
+					SignalType: clusterd_constant.WaitStartAgentSignalType,
+				}, nil
+			}
+			return nil, errors.New("receive error")
+		})
+		ret := m.startSubscribe(c, &pb.ClientInfo{})
+		convey.So(ret, convey.ShouldBeTrue)
+		convey.So(len(m.MsgHd.MsgQueue.Queue), convey.ShouldEqual, 1)
+		msg, err := m.MsgHd.MsgQueue.Dequeue()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(msg.Header.Src.Role, convey.ShouldEqual, common.MgrRole)
+		convey.So(msg.Body.Code, convey.ShouldEqual, constant.ProcessManageRecoverSignal)
 	})
 }
