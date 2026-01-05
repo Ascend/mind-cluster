@@ -19,15 +19,19 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 
+	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
 	_ "taskd/common/testtool"
 	"taskd/common/utils"
+	"taskd/framework_backend/manager/application"
+	"taskd/framework_backend/manager/infrastructure/storage"
 )
 
 type fakeClient struct {
@@ -95,6 +99,14 @@ func (f *fakeClient) SubscribeNotifyExecStressTest(ctx context.Context, in *pb.C
 }
 
 func (f *fakeClient) ReplyStressTestResult(ctx context.Context, in *pb.StressTestResult, opts ...grpc.CallOption) (*pb.Status, error) {
+	return nil, nil
+}
+
+type fakeProfilingClient struct {
+	profiling.TrainingDataTraceClient
+}
+
+func (f *fakeProfilingClient) SubscribeDataTraceSwitch(ctx context.Context, in *profiling.ProfilingClientInfo, opts ...grpc.CallOption) (profiling.TrainingDataTrace_SubscribeDataTraceSwitchClient, error) {
 	return nil, nil
 }
 
@@ -338,5 +350,315 @@ func TestReportStopComplete(t *testing.T) {
 		patch.ApplyMethodReturn(&fakeClient{}, "ReportStopComplete", &pb.Status{}, fmt.Errorf("err"))
 		res := reportStopComplete(message, &fakeClient{})
 		convey.So(res, convey.ShouldEqual, false)
+	})
+}
+
+func TestBaseManager_Init_Success(t *testing.T) {
+	convey.Convey("Test BaseManager Init Success", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+
+		config := Config{
+			JobId:        "test-job-id",
+			NodeNums:     2,
+			ProcPerNode:  4,
+			PluginDir:    "/test/plugin/dir",
+			FaultRecover: "test-recover",
+			TaskDEnable:  "on",
+		}
+
+		manager := &BaseManager{Config: config}
+		err := manager.Init()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(manager.svcCtx, convey.ShouldNotBeNil)
+		convey.So(manager.cancelFunc, convey.ShouldNotBeNil)
+		convey.So(manager.MsgHd, convey.ShouldNotBeNil)
+		convey.So(manager.BusinessHandler, convey.ShouldNotBeNil)
+
+		manager.cancelFunc()
+	})
+}
+
+func TestBaseManager_Init_LoggerError(t *testing.T) {
+	convey.Convey("Test BaseManager Init Logger Error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, context.DeadlineExceeded)
+		defer patch.Reset()
+
+		config := Config{
+			JobId:       "test-job-id",
+			NodeNums:    2,
+			ProcPerNode: 4,
+		}
+
+		manager := &BaseManager{Config: config}
+		err := manager.Init()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err, convey.ShouldEqual, context.DeadlineExceeded)
+	})
+}
+
+func TestBaseManager_Init_BusinessHandlerError(t *testing.T) {
+	convey.Convey("Test BaseManager Init BusinessHandler Error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{
+			JobId:       "test-job-id",
+			NodeNums:    2,
+			ProcPerNode: 4,
+		}
+		const workerN = 8
+		manager := &BaseManager{Config: config}
+		manager.MsgHd = application.NewMsgHandler(workerN)
+		manager.BusinessHandler = application.NewBusinessStreamProcessor(manager.MsgHd)
+		patch2 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "Init", context.Canceled)
+		defer patch2.Reset()
+		err := manager.Init()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err, convey.ShouldEqual, context.Canceled)
+	})
+}
+
+func TestBaseManager_Init_GoroutinesStarted(t *testing.T) {
+	convey.Convey("Test BaseManager Init Goroutines Started", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		const timeout = 200 * time.Millisecond
+		const sleepTime = 100 * time.Millisecond
+		config := Config{
+			JobId:       "test-job-id",
+			NodeNums:    2,
+			ProcPerNode: 4,
+		}
+		manager := &BaseManager{Config: config}
+		err := manager.Init()
+		convey.So(err, convey.ShouldBeNil)
+		time.Sleep(sleepTime)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		select {
+		case <-ctx.Done():
+			convey.So(true, convey.ShouldBeTrue)
+		case <-manager.svcCtx.Done():
+			convey.So(false, convey.ShouldBeTrue)
+		}
+		manager.cancelFunc()
+	})
+}
+
+func TestBaseManager_Init_ZeroNodes(t *testing.T) {
+	convey.Convey("Test BaseManager Init Zero Nodes", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{
+			JobId:       "test-job-id",
+			NodeNums:    0,
+			ProcPerNode: 0,
+		}
+		manager := &BaseManager{Config: config}
+		err := manager.Init()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(manager.MsgHd, convey.ShouldNotBeNil)
+		convey.So(manager.BusinessHandler, convey.ShouldNotBeNil)
+		manager.cancelFunc()
+	})
+}
+
+func TestBaseManager_Init_LargeNodes(t *testing.T) {
+	convey.Convey("Test BaseManager Init Large Nodes", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{
+			JobId:       "test-job-id",
+			NodeNums:    100,
+			ProcPerNode: 8,
+		}
+		manager := &BaseManager{Config: config}
+		err := manager.Init()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(manager.MsgHd, convey.ShouldNotBeNil)
+		convey.So(manager.BusinessHandler, convey.ShouldNotBeNil)
+		manager.cancelFunc()
+	})
+}
+
+func TestBaseManager_Start_InitError(t *testing.T) {
+	convey.Convey("Test BaseManager Start Init Error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, context.DeadlineExceeded)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		err := manager.Start()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "manager init failed")
+	})
+}
+
+func TestBaseManager_Start_ProcessError(t *testing.T) {
+	convey.Convey("Test BaseManager Start Process Error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		patch1 := gomonkey.ApplyMethodReturn(manager, "Init", nil)
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager, "Process", fmt.Errorf("test err"))
+		defer patch2.Reset()
+		err := manager.Start()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "manager process failed")
+	})
+}
+
+func TestBaseManager_Start_Success(t *testing.T) {
+	convey.Convey("Test BaseManager Start Success", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		patch1 := gomonkey.ApplyMethodReturn(manager, "Init", nil)
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager, "Process", nil)
+		defer patch2.Reset()
+		err := manager.Start()
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestBaseManager_Process_GetSnapShotError(t *testing.T) {
+	convey.Convey("Test BaseManager Process GetSnapShot Error", t, func() {
+		const workerN = 8
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		msgHandler := application.NewMsgHandler(workerN)
+		manager.MsgHd = msgHandler
+		patch1 := gomonkey.ApplyMethodReturn(manager.MsgHd.DataPool, "GetSnapShot", nil, context.Canceled)
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyFuncReturn(getProcessInterval, int64(1))
+		defer patch2.Reset()
+		err := manager.Process()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "get datapool snapshot failed")
+	})
+}
+
+func TestBaseManager_Process_ServiceError(t *testing.T) {
+	convey.Convey("Test BaseManager Process Service Error", t, func() {
+		const workerN = 8
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		msgHandler := application.NewMsgHandler(workerN)
+		manager.MsgHd = msgHandler
+		patch1 := gomonkey.ApplyMethodReturn(manager.MsgHd.DataPool, "GetSnapShot", &storage.SnapShot{}, nil)
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager, "Service", context.Canceled)
+		defer patch2.Reset()
+		err := manager.Process()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "service execute failed")
+	})
+}
+
+func TestBaseManager_Process_Normal(t *testing.T) {
+	convey.Convey("Test BaseManager Process Normal", t, func() {
+		const timeout = 200 * time.Millisecond
+		const workerN = 8
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		msgHandler := application.NewMsgHandler(workerN)
+		manager.MsgHd = msgHandler
+		manager.svcCtx, manager.cancelFunc = context.WithCancel(context.Background())
+		manager.BusinessHandler = application.NewBusinessStreamProcessor(manager.MsgHd)
+
+		patch1 := gomonkey.ApplyMethodReturn(manager.MsgHd.DataPool, "GetSnapShot", &storage.SnapShot{}, nil)
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "AllocateToken")
+		defer patch2.Reset()
+		patch3 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "StreamRun", nil)
+		defer patch3.Reset()
+
+		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
+		defer timeoutCancel()
+		done := make(chan error, 1)
+		go func() {
+			done <- manager.Process()
+		}()
+		select {
+		case <-timeoutCtx.Done():
+			manager.cancelFunc()
+			convey.So(true, convey.ShouldBeTrue)
+		case err := <-done:
+			convey.So(err, convey.ShouldBeNil)
+		}
+	})
+}
+
+func TestBaseManager_Service_Success(t *testing.T) {
+	convey.Convey("Test BaseManager Service Success", t, func() {
+		const workerN = 8
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		msgHandler := application.NewMsgHandler(workerN)
+		manager.MsgHd = msgHandler
+		manager.BusinessHandler = application.NewBusinessStreamProcessor(manager.MsgHd)
+
+		patch1 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "AllocateToken")
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "StreamRun", nil)
+		defer patch2.Reset()
+
+		err := manager.Service(&storage.SnapShot{})
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestBaseManager_Service_StreamRunError(t *testing.T) {
+	convey.Convey("Test BaseManager Service StreamRun Error", t, func() {
+		const workerN = 8
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		config := Config{JobId: "test-job-id", NodeNums: 2, ProcPerNode: 4}
+		manager := &BaseManager{Config: config}
+		msgHandler := application.NewMsgHandler(workerN)
+		manager.MsgHd = msgHandler
+		manager.BusinessHandler = application.NewBusinessStreamProcessor(manager.MsgHd)
+
+		patch1 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "AllocateToken")
+		defer patch1.Reset()
+		patch2 := gomonkey.ApplyMethodReturn(manager.BusinessHandler, "StreamRun", context.Canceled)
+		defer patch2.Reset()
+
+		err := manager.Service(&storage.SnapShot{})
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "context canceled")
+	})
+}
+
+func TestBaseManager_registerClusterD_MaxRetry(t *testing.T) {
+	convey.Convey("Test registerClusterD max retry", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		manager := &BaseManager{}
+		manager.registerClusterD(maxRegRetryTime)
+		convey.So(true, convey.ShouldBeTrue)
+	})
+}
+
+func TestBaseManager_registerClusterD_GetAddrError(t *testing.T) {
+	convey.Convey("Test registerClusterD get addr error", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.InitHwLogger, nil)
+		defer patch.Reset()
+		patch1 := gomonkey.ApplyFuncReturn(utils.GetClusterdAddr, "", fmt.Errorf("address error"))
+		defer patch1.Reset()
+		manager := &BaseManager{}
+		manager.registerClusterD(0)
+		convey.So(true, convey.ShouldBeTrue)
 	})
 }
