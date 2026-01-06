@@ -42,6 +42,7 @@ SUPER_POD_ID = "SuperPodId"
 SUPER_POD_SIZE = "SuperPodSize"
 SUPER_POD_BOARD_PRODUCT_NAME = "IT22SMMB"
 A3_SUPER_POD = "Atlas 900 A3 SuperPoD Compute Node"
+MAX_UINT32 = 2 ** 32 - 1
 
 
 def parse_lcne_info(cfg):
@@ -378,7 +379,9 @@ def find_remote_rank_id(log_line):
     items = log_line.split(",")
     for item in items:
         if "remoteRank:" in item:
-            return item.split(":")[-1].strip()
+            rank_id = item.split(":")[-1].strip()
+            if rank_id != str(MAX_UINT32):
+                return rank_id
     return ""
 
 
