@@ -195,7 +195,7 @@ Result AccTcpClientDefault::Connect(const AccConnReq &connReq, uint32_t maxConnR
         LOG_INFO("connRank: " << connRanks << " Trying to connect to " << IpAndPort());
         if (::connect(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == 0) {
             reqforReConn_ = connReq;
-            struct timeval timeout = {ACC_LINK_RECV_TIMEOUT, 0};
+            struct timeval timeout = {ACC_LINK_CLIENT_RECV_TIMEOUT, 0};
             setsockopt(tmpFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
             return Handshake(tmpFD, connReq);
         }

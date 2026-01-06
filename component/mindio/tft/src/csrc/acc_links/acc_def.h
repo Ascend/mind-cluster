@@ -42,6 +42,7 @@ constexpr uint32_t UNO_1 = 1;
 constexpr int16_t MIN_MSG_TYPE = 0;
 constexpr int16_t MAX_MSG_TYPE = UNO_48;
 constexpr uint32_t ACC_LINK_RECV_TIMEOUT = 1800;
+constexpr uint32_t ACC_LINK_CLIENT_RECV_TIMEOUT = 60 * 60 * 24; /* 24 hours */
 
 /**
  * @brief Header of connecting to server
