@@ -20,12 +20,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
+	"runtime"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/test/bufconn"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	clusterd_constant "clusterd/pkg/common/constant"
@@ -853,4 +857,300 @@ func testRecoverClientRecvSuccess(c *fakeClient, m *BaseManager, cancel context.
 		convey.So(msg.Header.Src.Role, convey.ShouldEqual, common.MgrRole)
 		convey.So(msg.Body.Code, convey.ShouldEqual, constant.ProcessManageRecoverSignal)
 	})
+}
+
+func newBaseManagerForTest() *BaseManager {
+	m := &BaseManager{
+		Config: Config{JobId: "test-job-id", NodeNums: 1, ProcPerNode: 1},
+	}
+	m.svcCtx, m.cancelFunc = context.WithCancel(context.Background())
+	m.MsgHd = application.NewMsgHandler(m.NodeNums * m.ProcPerNode)
+	return m
+}
+
+func TestEnqueueStressTest(t *testing.T) {
+	convey.Convey("Test BaseManager enqueueStressTest", t, func() {
+		m := newBaseManagerForTest()
+		defer m.cancelFunc()
+		convey.Convey("When called with valid data,enqueue a message with correct code and job ID", func() {
+			stressParam := &pb.StressTestRankParams{
+				JobId: "test-job-id",
+				StressParam: map[string]*pb.StressOpList{
+					"test_key": {Ops: []int64{100, 200, 300}},
+				},
+			}
+			m.enqueueStressTest(stressParam)
+			dequeuedMsg, err := m.MsgHd.MsgQueue.Dequeue()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dequeuedMsg.Body.Code, convey.ShouldEqual, constant.StressTestCode)
+			convey.So(dequeuedMsg.Body.Extension[constant.StressTestJobID], convey.ShouldEqual, stressParam.JobId)
+		})
+	})
+}
+
+func TestSubscribeSwitchNic(t *testing.T) {
+	convey.Convey("Test BaseManager.subscribeSwitchNic", t, func() {
+		m := newBaseManagerForTest()
+		defer m.cancelFunc()
+		convey.Convey("When listenSwitchNicSignal returns exit=true, it should break the loop", func() {
+			mockStream := &mockRecoverClientStream{
+				recvMsg: &pb.SwitchRankList{Op: []bool{true}, RankID: []string{"rank-0"}},
+				ctx:     m.svcCtx,
+			}
+			mockClient := &mockRecoverClient{stream: mockStream}
+			patches := gomonkey.ApplyFuncReturn((*BaseManager).listenSwitchNicSignal, true, 0).
+				ApplyFuncReturn(pb.NewRecoverClient, mockClient)
+			defer patches.Reset()
+			var wg sync.WaitGroup
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				m.subscribeSwitchNic(nil)
+			}()
+			wg.Wait()
+		})
+	})
+}
+
+func TestListenSwitchNicSignal(t *testing.T) {
+	convey.Convey("Test BaseManager.listenSwitchNicSignal", t, func() {
+		m := newBaseManagerForTest()
+		defer m.cancelFunc()
+		convey.Convey("When it receives a message, it should enqueue it and exit", func() {
+			mockStream := &mockRecoverClientStream{
+				recvMsg: &pb.SwitchRankList{Op: []bool{true}, RankID: []string{"rank-0"}},
+				ctx:     m.svcCtx,
+			}
+			mockClient := &mockRecoverClient{stream: mockStream}
+			go func() {
+				m.cancelFunc()
+			}()
+			_, _ = m.listenSwitchNicSignal(mockClient, &pb.ClientInfo{}, 1)
+			dequeuedMsg, err := m.MsgHd.MsgQueue.Dequeue()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dequeuedMsg.Body.Code, convey.ShouldEqual, constant.SwitchNicCode)
+		})
+		convey.Convey("When the gRPC stream returns an error, it should exit without enqueuing", func() {
+			mockStream := &mockRecoverClientStream{
+				recvErr: io.EOF,
+				ctx:     m.svcCtx,
+			}
+			mockClient := &mockRecoverClient{stream: mockStream}
+			exit, _ := m.listenSwitchNicSignal(mockClient, &pb.ClientInfo{}, 1)
+			convey.So(exit, convey.ShouldBeFalse)
+			_, err := m.MsgHd.MsgQueue.Dequeue()
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestEnqueueSwitchNic(t *testing.T) {
+	convey.Convey("Test BaseManager.enqueueSwitchNic", t, func() {
+		m := newBaseManagerForTest()
+		defer m.cancelFunc()
+		convey.Convey("When called with valid data, it should enqueue a message with correct code", func() {
+			ranks := []string{"rank-0", "rank-1"}
+			ops := []bool{true, false}
+			m.enqueueSwitchNic(ranks, ops)
+			dequeuedMsg, err := m.MsgHd.MsgQueue.Dequeue()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(dequeuedMsg.Body.Code, convey.ShouldEqual, constant.SwitchNicCode)
+		})
+	})
+}
+
+func TestSubscribeProfiling(t *testing.T) {
+	convey.Convey("Test BaseManager.subscribeProfiling with full line coverage", t, func() {
+		m := newBaseManagerForTest()
+		defer m.cancelFunc()
+		testServer := getTestProfilingServer()
+		conn, stopGrpc, err := getTestGrpcServerAndConn(t, testServer)
+		convey.So(err, convey.ShouldBeNil)
+		defer stopGrpc()
+		convey.Convey("When retryTime reaches maxRegRetryTime, it should log and return", func() {
+			m.subscribeProfiling(nil, maxRegRetryTime)
+		})
+		convey.Convey("When creating gRPC stream fails, it should retry", func() {
+			subscribeProfilingGrpcFail(m, testServer, conn)
+		})
+		convey.Convey("When service context is done, it should exit gracefully", func() {
+			subscribeProfilingContextDone(m, testServer, conn)
+		})
+		convey.Convey("When receiving a message successfully, it should enqueue it", func() {
+			subscribeProfilingMsgEnqueue(m, testServer, conn)
+		})
+		convey.Convey("When receiving a message returns an error, it should log and continue", func() {
+			subscribeProfilingMsgError(m, testServer, conn)
+		})
+	})
+}
+
+func getTestProfilingServer() *testProfilingServer {
+	return &testProfilingServer{
+		streamToClose:   make(chan struct{}, 1),
+		streamToSendMsg: make(chan *profiling.DataStatusRes, 1),
+	}
+}
+
+func getTestGrpcServerAndConn(t *testing.T, testServer *testProfilingServer) (
+	*grpc.ClientConn, func(), error) {
+	lis := bufconn.Listen(1024 * 1024)
+	s := grpc.NewServer()
+	profiling.RegisterTrainingDataTraceServer(s, testServer)
+	go func() {
+		if err := s.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			t.Errorf("gRPC server exited with error: %v", err)
+		}
+	}()
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(func(
+		ctx context.Context, addr string) (net.Conn, error) {
+		return lis.Dial()
+	}), grpc.WithInsecure())
+	if err != nil {
+		s.Stop()
+		return nil, nil, fmt.Errorf("failed to dial bufnet: %w", err)
+	}
+	stopFunc := func() {
+		_ = conn.Close()
+		s.Stop()
+		_ = lis.Close()
+	}
+	return conn, stopFunc, nil
+}
+
+func subscribeProfilingGrpcFail(m *BaseManager, testServer *testProfilingServer, conn *grpc.ClientConn) {
+	testServer.subscribeErr = errors.New("simulated gRPC failure")
+	initialGoroutineCount := runtime.NumGoroutine()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		m.subscribeProfiling(conn, 0)
+	}()
+	time.Sleep(constant.Hundred * time.Millisecond)
+	m.cancelFunc()
+	wg.Wait()
+	finalGoroutineCount := runtime.NumGoroutine()
+	convey.So(finalGoroutineCount+1, convey.ShouldBeGreaterThanOrEqualTo, initialGoroutineCount)
+}
+
+func subscribeProfilingContextDone(m *BaseManager, testServer *testProfilingServer, conn *grpc.ClientConn) {
+	testServer.subscribeErr = nil
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		m.subscribeProfiling(conn, 0)
+	}()
+	time.Sleep(constant.Hundred * time.Millisecond)
+	m.cancelFunc()
+	wg.Wait()
+}
+
+func subscribeProfilingMsgEnqueue(m *BaseManager, testServer *testProfilingServer, conn *grpc.ClientConn) {
+	testServer.subscribeErr = nil
+	protoMsg := &profiling.DataStatusRes{
+		ProfilingSwitch: &profiling.ProfilingSwitch{
+			CommunicationOperator: "test_domain",
+			Step:                  "some_step",
+		},
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		m.subscribeProfiling(conn, 0)
+	}()
+	time.Sleep(constant.Hundred * time.Millisecond)
+	testServer.streamToSendMsg <- protoMsg
+	time.Sleep(constant.Hundred * time.Millisecond)
+	m.cancelFunc()
+	wg.Wait()
+	dequeuedMsg, _ := m.MsgHd.MsgQueue.Dequeue()
+	convey.So(dequeuedMsg.Body.Message, convey.ShouldEqual, "")
+}
+
+func subscribeProfilingMsgError(m *BaseManager, testServer *testProfilingServer, conn *grpc.ClientConn) {
+	testServer.subscribeErr = nil
+	testServer.streamToSendErr = io.EOF
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		m.subscribeProfiling(conn, 0)
+	}()
+	time.Sleep(constant.Hundred * time.Millisecond)
+	m.cancelFunc()
+	wg.Wait()
+	_, err := m.MsgHd.MsgQueue.Dequeue()
+	convey.So(err, convey.ShouldNotBeNil)
+}
+
+type mockRecoverClientStream struct {
+	grpc.ClientStream
+	recvMsg *pb.SwitchRankList
+	recvErr error
+	ctx     context.Context
+}
+
+func (m *mockRecoverClientStream) Recv() (*pb.SwitchRankList, error) {
+	select {
+	case <-m.ctx.Done():
+		return nil, m.ctx.Err()
+	default:
+	}
+	if m.recvErr != nil {
+		return nil, m.recvErr
+	}
+	msg := m.recvMsg
+	m.recvMsg = nil
+	return msg, nil
+}
+
+func (m *mockRecoverClientStream) Context() context.Context {
+	return m.ctx
+}
+
+type mockRecoverClient struct {
+	pb.RecoverClient
+	stream *mockRecoverClientStream
+}
+
+func (m *mockRecoverClient) SubscribeNotifySwitch(ctx context.Context, in *pb.ClientInfo, opts ...grpc.CallOption) (pb.Recover_SubscribeNotifySwitchClient, error) {
+	m.stream.ctx = ctx
+	return m.stream, nil
+}
+
+type testProfilingServer struct {
+	profiling.UnimplementedTrainingDataTraceServer
+	subscribeErr    error
+	streamToClose   chan struct{}
+	streamToSendMsg chan *profiling.DataStatusRes
+	streamToSendErr error
+}
+
+func (s *testProfilingServer) SubscribeDataTraceSwitch(req *profiling.ProfilingClientInfo, stream profiling.TrainingDataTrace_SubscribeDataTraceSwitchServer) error {
+	if s.subscribeErr != nil {
+		return s.subscribeErr
+	}
+	for {
+		select {
+		case <-s.streamToClose:
+			return errors.New("stream closed by test")
+		case msg := <-s.streamToSendMsg:
+			if err := stream.Send(msg); err != nil {
+				return err
+			}
+		case <-stream.Context().Done():
+			return stream.Context().Err()
+		default:
+			if s.streamToSendErr != nil {
+				errToReturn := s.streamToSendErr
+				s.streamToSendErr = nil
+				return errToReturn
+			}
+			time.Sleep(constant.Ten * time.Millisecond)
+		}
+	}
 }
