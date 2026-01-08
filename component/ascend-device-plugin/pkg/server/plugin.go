@@ -24,6 +24,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -769,6 +770,7 @@ func (ps *PluginServer) isValidPhyID(phyID string) bool {
 }
 
 func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string, error) {
+	ps.podLock.Lock()
 	conditionFunc := func(pod *v1.Pod) bool {
 		return checkAnnotationAllocateValid(requestDevices, ps.deviceType, pod, ps.manager.GetChipAICore())
 	}
@@ -780,6 +782,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 			noneCachedPod, err := ps.manager.GetKubeClient().GetActivePodList()
 			if err != nil {
 				hwlog.RunLog.Errorf("get active pod from api server failed")
+				ps.podLock.Unlock()
 				return nil, err
 			}
 			allPods = noneCachedPod
@@ -794,6 +797,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 		time.Sleep(time.Second)
 	}
 	oldestPod := ps.getOldestPod(filteredPods)
+	ps.podLock.Unlock()
 	if oldestPod == nil {
 		return nil, fmt.Errorf("not get valid pod")
 	}
@@ -973,6 +977,7 @@ func NewPluginServer(deviceType string, devices []*common.NpuDevice, defaultDevs
 		isRunning:      common.NewAtomicBool(false),
 		manager:        manager,
 		deviceSyncStat: common.NewSendStats(common.DefaultSendRecordLength),
+		podLock:        sync.Mutex{},
 	}
 	ps.restartTimes.Store(0)
 	ps.deepCopyDevice(devices)
