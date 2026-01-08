@@ -667,9 +667,19 @@ func decorateStatefulSet(statefulSet *appv1.StatefulSet) *mindxdlv1.AscendJob {
 			Replicas: statefulSet.Spec.Replicas,
 		},
 	}
+	objectMeta := statefulSet.ObjectMeta
+	for key, value := range statefulSet.Spec.Template.Annotations {
+		if oldValue, ok := objectMeta.Annotations[key]; ok && oldValue != value {
+			hwlog.RunLog.Warnf("%s annotation %s value %s change to %s", statefulSet.Name, key, oldValue, value)
+		}
+		if objectMeta.Annotations == nil {
+			objectMeta.Annotations = make(map[string]string)
+		}
+		objectMeta.Annotations[key] = value
+	}
 	return &mindxdlv1.AscendJob{
 		TypeMeta:   statefulSet.TypeMeta,
-		ObjectMeta: statefulSet.ObjectMeta,
+		ObjectMeta: objectMeta,
 		Spec: mindxdlv1.AscendJobSpec{
 			ReplicaSpecs: repSpec,
 		},
@@ -683,9 +693,19 @@ func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 			Replicas: deploy.Spec.Replicas,
 		},
 	}
+	objectMeta := deploy.ObjectMeta
+	for key, value := range deploy.Spec.Template.Annotations {
+		if oldValue, ok := objectMeta.Annotations[key]; ok && oldValue != value {
+			hwlog.RunLog.Warnf("%s annotation %s value %s change to %s", deploy.Name, key, oldValue, value)
+		}
+		if objectMeta.Annotations == nil {
+			objectMeta.Annotations = make(map[string]string)
+		}
+		objectMeta.Annotations[key] = value
+	}
 	return &mindxdlv1.AscendJob{
 		TypeMeta:   deploy.TypeMeta,
-		ObjectMeta: deploy.ObjectMeta,
+		ObjectMeta: objectMeta,
 		Spec: mindxdlv1.AscendJobSpec{
 			ReplicaSpecs: repSpec,
 		},

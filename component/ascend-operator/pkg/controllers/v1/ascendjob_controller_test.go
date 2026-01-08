@@ -347,10 +347,38 @@ func TestDecorateVcjob(t *testing.T) {
 func TestDecorateStatefulSet(t *testing.T) {
 	convey.Convey("TestDecorateStatefulSet", t, func() {
 		statefulSet := &appsv1.StatefulSet{
-			Spec: appsv1.StatefulSetSpec{},
+			Spec: appsv1.StatefulSetSpec{
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"key": "value",
+						},
+					},
+				},
+			},
 		}
 		job := decorateStatefulSet(statefulSet)
 		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
+		convey.So(len(job.Annotations), convey.ShouldEqual, 1)
+	})
+}
+
+func TestDecorateDeployment(t *testing.T) {
+	convey.Convey("TestDecorateDeployment", t, func() {
+		deployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"key": "value",
+						},
+					},
+				},
+			},
+		}
+		job := decorateDeploy(deployment)
+		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
+		convey.So(len(job.Annotations), convey.ShouldEqual, 1)
 	})
 }
 
