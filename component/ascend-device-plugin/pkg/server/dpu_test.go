@@ -43,8 +43,10 @@ func TestUpdateDpuHealthy(t *testing.T) {
 			groupDevice := map[string][]*common.NpuDevice{
 				"Ascend910": tt.deviceList,
 			}
-			outputs := getMockOutputCellsForEthState(tt.npuWithDpuInfos)
-			patchEth := gomonkey.ApplyFuncSeq(ethtool.GetInterfaceOperState, outputs)
+			outputs := getMockOutputForEthState(tt.npuWithDpuInfos)
+			patchEth := gomonkey.ApplyFunc(ethtool.GetInterfaceOperState, func(ifaceName string) (string, error) {
+				return outputs[ifaceName], nil
+			})
 			hdm.updateDpuHealthy(groupDevice)
 			for i, dev := range tt.deviceList {
 				if got := dev.DpuHealth; got != tt.want[i] {
@@ -56,19 +58,17 @@ func TestUpdateDpuHealthy(t *testing.T) {
 	}
 }
 
-func getMockOutputCellsForEthState(npuWithDpuInfos []dpucontrol.NpuWithDpuInfo) []gomonkey.OutputCell {
-	uniqueSet := make(map[string]struct{})
-	outputs := make([]gomonkey.OutputCell, 0)
+func getMockOutputForEthState(npuWithDpuInfos []dpucontrol.NpuWithDpuInfo) map[string]string {
+	uniqueMap := make(map[string]string)
 	for _, dpuInfos := range npuWithDpuInfos {
 		for _, dpu := range dpuInfos.DpuInfo {
-			if _, exist := uniqueSet[dpu.DeviceName]; !exist {
-				uniqueSet[dpu.DeviceName] = struct{}{}
+			if _, exist := uniqueMap[dpu.DeviceName]; !exist {
+				uniqueMap[dpu.DeviceName] = dpu.Operstate
 				fmt.Println(dpu)
-				outputs = append(outputs, gomonkey.OutputCell{Values: gomonkey.Params{dpu.Operstate, nil}})
 			}
 		}
 	}
-	return outputs
+	return uniqueMap
 }
 
 type npuFaultTestCase struct {
@@ -180,6 +180,131 @@ func buildFilterDpuFaultTestCase3() npuFaultTestCase {
 			},
 		},
 		want: []string{v1beta1.Healthy, v1beta1.Unhealthy},
+	}
+}
+
+func TestCheckIsNpuFaultByDpu(t *testing.T) {
+	tests := []npuFaultByDpuCase{
+		buildIsNpuFaultByDpuCase01(),
+		buildIsNpuFaultByDpuCase02(),
+		buildIsNpuFaultByDpuCase03(),
+		buildIsNpuFaultByDpuCase04(),
+		buildIsNpuFaultByDpuCase05(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkIsNpuFaultByDpu(tt.npuName, tt.npuToDpuMap, tt.dpuOperstateMap); got != tt.want {
+				t.Errorf("checkIsNpuFaultByDpu() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type npuFaultByDpuCase struct {
+	name            string
+	npuName         string
+	npuToDpuMap     map[string][]string
+	dpuOperstateMap map[string]string
+	want            bool
+}
+
+func buildIsNpuFaultByDpuCase01() npuFaultByDpuCase {
+	return npuFaultByDpuCase{
+		name:    "[UB-type]the two DPUs is in up state, the result is false",
+		npuName: "Ascend910-0",
+		npuToDpuMap: map[string][]string{
+			"0": {"enps0", "enps2"},
+			"1": {"enps0", "enps2"},
+			"4": {"enps1", "enps3"},
+			"5": {"enps1", "enps3"},
+		},
+		dpuOperstateMap: map[string]string{
+			"enps0": "up",
+			"enps1": "up",
+			"enps2": "up",
+			"enps3": "up",
+		},
+		want: false,
+	}
+}
+
+func buildIsNpuFaultByDpuCase02() npuFaultByDpuCase {
+	return npuFaultByDpuCase{
+		name:    "[UB-type]one dpu of the two is in up state, the result is false",
+		npuName: "Ascend910-8", // equal to the Ascend910-0
+		npuToDpuMap: map[string][]string{
+			"0": {"enps0", "enps2"},
+			"1": {"enps0", "enps2"},
+			"4": {"enps1", "enps3"},
+			"5": {"enps1", "enps3"},
+		},
+		dpuOperstateMap: map[string]string{
+			"enps0": "up",
+			"enps1": "up",
+			"enps2": "down",
+			"enps3": "down",
+		},
+		want: false,
+	}
+}
+
+func buildIsNpuFaultByDpuCase03() npuFaultByDpuCase {
+	return npuFaultByDpuCase{
+		name:    "[UB-type]none of the two is in up state, the result is true",
+		npuName: "Ascend910-8", // equal to the Ascend910-0
+		npuToDpuMap: map[string][]string{
+			"0": {"enps0", "enps2"},
+			"1": {"enps0", "enps2"},
+			"4": {"enps1", "enps3"},
+			"5": {"enps1", "enps3"},
+		},
+		dpuOperstateMap: map[string]string{
+			"enps0": "down",
+			"enps1": "up",
+			"enps2": "down",
+			"enps3": "down",
+		},
+		want: true,
+	}
+}
+
+func buildIsNpuFaultByDpuCase04() npuFaultByDpuCase {
+	return npuFaultByDpuCase{
+		name:    "[PCIe-type]none of the DPU is in up state, the result is true",
+		npuName: "Ascend910-8", // equal to the Ascend910-0
+		npuToDpuMap: map[string][]string{
+			"0": {"eth0"},
+			"1": {"eth1"},
+			"4": {"eth4"},
+			"5": {"eth5"},
+		},
+		dpuOperstateMap: map[string]string{
+			"eth0": "down",
+			"eth1": "down",
+			"eth4": "down",
+			"eth5": "down",
+		},
+		want: true,
+	}
+}
+
+func buildIsNpuFaultByDpuCase05() npuFaultByDpuCase {
+	return npuFaultByDpuCase{
+		name:    "[PCIe-type]the DPU is in up state, the result is false",
+		npuName: "Ascend910-8", // equal to the Ascend910-0
+		npuToDpuMap: map[string][]string{
+			"0": {"eth0"},
+			"1": {"eth1"},
+			"4": {"eth4"},
+			"5": {"eth5"},
+		},
+		dpuOperstateMap: map[string]string{
+			"eth0": "up",
+			"eth1": "down",
+			"eth4": "down",
+			"eth5": "down",
+		},
+		want: false,
 	}
 }
 
