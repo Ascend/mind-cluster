@@ -46,7 +46,7 @@ LINK_DIRECTORIES(
 		${DFS_PROJECT_3RD_BINARY}/spdlog/lib64
 )
 
-add_compile_options(-g -D_FILE_OFFSET_BITS=64 -fprofile-arcs -ftest-coverage)
+add_compile_options(-g -D_FILE_OFFSET_BITS=64 -fprofile-arcs -ftest-coverage -DUT_ENABLED)
 add_link_options(-lgcov --coverage)
 
 find_program(CCACHE_FOUND ccache)

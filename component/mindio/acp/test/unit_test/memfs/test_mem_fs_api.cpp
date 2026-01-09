@@ -656,22 +656,15 @@ TEST_F(TestMemFsApi, test_preload_file_success)
     ASSERT_EQ(0, result);
 }
 
-TEST_F(TestMemFsApi, test_preload_view_path_not_exist)
+TEST_F(TestMemFsApi, test_preload_progress_view_interface)
 {
-    std::string path = "/test_preload_file_not_exist.txt";
+    std::string path = "/test_preload_file_not_exist";
     auto ret = PreloadProgressView::PathExist(path);
     ASSERT_FALSE(ret);
-}
 
-TEST_F(TestMemFsApi, test_preload_view_remove_path)
-{
-    std::string path = "/test_preload_file.txt";
+    PreloadProgressView::InsertPath(path);
     PreloadProgressView::RemovePath(path);
-}
 
-TEST_F(TestMemFsApi, test_preload_view_wait_path_eexist)
-{
-    std::string path = "/test_preload_file.txt";
     PreloadProgressView::Wait(1, path);
 }
 }

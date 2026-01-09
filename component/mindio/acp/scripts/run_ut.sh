@@ -74,6 +74,7 @@ cd -
 
 chmod 550 -R ${UT_EXE_PATH}
 find ${PROJECT_HOME}/Build/Debug -type f -name "*.gcda" | xargs rm -rf
+find ${PROJECT_HOME}/test/build -type f -name "*.gcda" | xargs rm -rf
 
 [ -d "${PROJECT_HOME}/Build/Debug/res_xml" ] && rm -rf "${PROJECT_HOME}/Build/Debug/res_xml"
 mkdir -p "${PROJECT_HOME}/Build/Debug/res_xml"
@@ -92,7 +93,7 @@ rm -rf ${PROJECT_HOME}/Build/Debug/cov/; mkdir -p ${GENERATE_DIR}
 lcov --d ${PROJECT_HOME}/Build/Debug/src --d ${PROJECT_HOME}/test/build \
     --c --output-file ${GENERATE_DIR}/coverage.info \
     --rc lcov_branch_coverage=1 \
-    --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|MFS_LOG*|ASSERT_*|BKG_*|gLastErrorMessage"
+    --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|MFS_LOG*|ASSERT_*|BKG_*|HLOG_*|UFS_LOG*|LOG*|gLastErrorMessage"
 if [ 0 != $? ];then
     echo "Failed to generate all coverage info"
     exit 1

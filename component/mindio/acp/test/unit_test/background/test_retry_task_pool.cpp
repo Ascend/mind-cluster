@@ -14,9 +14,14 @@
  */
 
 #include <gtest/gtest.h>
+#include <mockcpp/mokc.h>
 
+#include "memfs_api.h"
+#include "service_configure.h"
 #include "retry_task_pool.h"
 
+using namespace ock::memfs;
+using namespace ock::common::config;
 using namespace ock::bg::util;
 
 namespace {
@@ -48,5 +53,55 @@ TEST(TestRetryTaskPool, test_RetryTaskPool_submit_start_should_return_success)
     pool->ReportCCAE(false);
 
     delete pool;
+}
+
+TEST(TestRetryTaskPool, report_ccae_normal)
+{
+    RetryTaskPool::RetryTaskConfig config;
+    config.name = "MindBG";
+    config.autoEvictFile = 0;
+    config.thCnt = 1;
+    config.maxFailCntForUnserviceable = 1;
+    config.retryTimes = 1;
+    config.retryIntervalSec = 1;
+    config.firstWaitMs = 1;
+    RetryTaskPool pool(config);
+    auto ret = pool.Start();
+    ASSERT_EQ(0, ret);
+
+    auto &instance = ServiceConfigure::GetInstance();
+    auto workPath = instance.GetWorkPath();
+
+    auto ccaeDir = workPath + "/ccae";
+    mkdir(ccaeDir.c_str(), S_IRUSR | S_IWUSR);
+
+    pool.ReportCCAE(true);
+    pool.ReportCCAE(false);
+
+    rmdir(ccaeDir.c_str());
+}
+
+TEST(TestRetryTaskPool, process_abnormal_retry_task)
+{
+    RetryTaskPool::RetryTaskConfig config;
+    config.name = "MindBG";
+    config.autoEvictFile = 0;
+    config.thCnt = 1;
+    config.maxFailCntForUnserviceable = 1;
+    config.retryTimes = 1;
+    config.retryIntervalSec = 1;
+    config.firstWaitMs = 1;
+    RetryTaskPool pool(config);
+    auto ret = pool.Start();
+    ASSERT_EQ(0, ret);
+
+    MOCKER((void(*)(bool))MemFsApi::Serviceable).stubs().will(ignoreReturnValue());
+
+    auto successFunc = []() { return true; };
+    auto failedFunc = []() { return false; };
+
+    RetryTask::Process(std::make_shared<RetryTask>(failedFunc, pool));
+    RetryTask::Process(std::make_shared<RetryTask>(failedFunc, pool));
+    RetryTask::Process(std::make_shared<RetryTask>(successFunc, pool));
 }
 }

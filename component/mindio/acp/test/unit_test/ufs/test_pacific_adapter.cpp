@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <fstream>
 #include <sys/xattr.h>
 #include <gtest/gtest.h>
 #include <mockcpp/mokc.h>
@@ -781,5 +782,110 @@ TEST_F(UfsPacificAdapterTest, FileAcl_with_one_group)
 
     ASSERT_EQ(acl->entries[0].id, pos->first);
     ASSERT_EQ(acl->entries[0].perm, pos->second);
+}
+
+TEST_F(UfsPacificAdapterTest, put_file_with_long_file_name)
+{
+    std::string fileName(4096, 'a');
+    auto ret = ufs->PutFile(fileName, FileMode(0644), emptyBuffer);
+    ASSERT_EQ(-1, ret);
+
+    FileInputStream stream{ fileName, 0, 0 };
+    ret = ufs->PutFile(fileName, FileMode(0644), stream);
+    ASSERT_EQ(-1, ret);
+
+    FileRange range{};
+    auto outputStream = ufs->PutFile(fileName, FileMode(0644), range);
+    ASSERT_EQ(nullptr, outputStream);
+}
+
+TEST_F(UfsPacificAdapterTest, get_file_with_long_file_name)
+{
+    std::string fileName(4096, 'a');
+    FileRange range{};
+    auto ret = ufs->GetFile(fileName, emptyBuffer, range);
+    ASSERT_EQ(-1, ret);
+
+    auto inputStream = ufs->GetFile(fileName, range);
+    ASSERT_EQ(nullptr, inputStream);
+
+    FileOutputStream stream{ fileName, 0, 0 };
+    ret = ufs->GetFile(fileName, range, stream);
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, move_file_abnormal)
+{
+    std::string src(4096, 'a');
+    std::string dst(4096, 'a');
+
+    // src too long
+    auto ret = ufs->MoveFile(src, dst);
+    ASSERT_EQ(-1, ret);
+
+    // dst too long
+    ret = ufs->MoveFile("src", dst);
+    ASSERT_EQ(-1, ret);
+
+    // src no exist
+    ret = ufs->MoveFile("src", "dst");
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, copy_file_abnormal)
+{
+    std::string src(4096, 'a');
+    std::string dst(4096, 'a');
+
+    // src too long
+    auto ret = ufs->CopyFile(src, dst);
+    ASSERT_EQ(-1, ret);
+
+    // dst too long
+    ret = ufs->CopyFile("src", dst);
+    ASSERT_EQ(-1, ret);
+
+    // src no exist
+    ret = ufs->CopyFile("src", "dst");
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, set_file_meta_with_long_file_name)
+{
+    std::string fileName(4096, 'a');
+    std::map<std::string, std::string> meta;
+    auto ret = ufs->SetFileMeta(fileName, meta);
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, set_file_meta_no_exist)
+{
+    std::string fileName = "/set_file_meta_no_st_mode";
+    std::map<std::string, std::string> meta = { {"st_mode", "600"} };
+    auto ret = ufs->SetFileMeta(fileName, meta);
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, set_file_meta_normal)
+{
+    std::string fileName = "/set_file_meta_normal";
+    std::ofstream{ rootPath + fileName };
+    std::map<std::string, std::string> meta = { {"st_mode", "600"} };
+    auto ret = ufs->SetFileMeta(fileName, meta);
+    ASSERT_EQ(0, ret);
+}
+
+TEST_F(UfsPacificAdapterTest, lock_file_no_exist)
+{
+    std::string fileName = "/try_lock_file_no_exist";
+    PacificFileLock lock{ fileName, -1 };
+    auto ret = lock.Lock();
+    ASSERT_EQ(-1, ret);
+
+    ret = lock.TryLock();
+    ASSERT_EQ(-1, ret);
+
+    ret = lock.Unlock();
+    ASSERT_EQ(-1, ret);
 }
 }

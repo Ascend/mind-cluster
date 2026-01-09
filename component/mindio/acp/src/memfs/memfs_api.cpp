@@ -36,7 +36,11 @@ std::vector<std::string> PreloadProgressView::g_loadPathVec;
 std::mutex PreloadProgressView::gViewMutex;
 std::condition_variable PreloadProgressView::gCond;
 
+#ifdef ENABLE_UT
+static constexpr int MAX_ALLOC_RETRY_TIMES = 1;
+#else
 static constexpr int MAX_ALLOC_RETRY_TIMES = 60;
+#endif
 
 static FileOpNotify g_fileOpNotify;
 static MemFileSystem *g_fileSystem;

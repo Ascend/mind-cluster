@@ -15,7 +15,7 @@ if(BUILD_FOR_UT OR BUILD_FOR_FUZZ)
             )
     STRING(REPLACE ";" " " CXX_FLAGS_STR "${CXX_FLAGS}")
     SET(CMAKE_CXX_FLAGS "${CXX_FLAGS_STR} ${CMAKE_CXX_FLAGS}")
-    add_compile_options(-fprofile-arcs -ftest-coverage -fdump-rtl-expand)
+    add_compile_options(-fprofile-arcs -ftest-coverage -fdump-rtl-expand -DENABLE_UT)
     add_link_options(-lgcov --coverage)
 endif()
 

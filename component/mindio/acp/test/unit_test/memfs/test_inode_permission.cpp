@@ -285,4 +285,25 @@ TEST_F(TestInodePermission, acl_to_single_group)
     ok = inodePerm->ContainsPermission(PermitType::PERM_EXECUTE);
     ASSERT_FALSE(ok);
 }
+
+TEST_F(TestInodePermission, test_diff_user_contains_permission)
+{
+    MOCKER(getuid).stubs().will(returnValue(1001));
+    MOCKER(getgid).stubs().will(returnValue(1001));
+    auto inodePerm = std::make_shared<InodePermission>(false, S_IRUSR, 1001, 2002);
+    auto ok = inodePerm->ContainsPermission(PermitType::PERM_READ);
+    EXPECT_TRUE(ok);
+
+    inodePerm = std::make_shared<InodePermission>(false, S_IRUSR | S_IRGRP, 2002, 1001);
+    ok = inodePerm->ContainsPermission(PermitType::PERM_READ);
+    EXPECT_TRUE(ok);
+
+    inodePerm = std::make_shared<InodePermission>(false, S_IRUSR | S_IRGRP | S_IROTH, 2002, 2002);
+    ok = inodePerm->ContainsPermission(PermitType::PERM_READ);
+    EXPECT_TRUE(ok);
+
+    inodePerm = std::make_shared<InodePermission>(false, S_IRUSR, 2002, 2002);
+    ok = inodePerm->ContainsPermission(PermitType::PERM_READ);
+    EXPECT_FALSE(ok);
+}
 }

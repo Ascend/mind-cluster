@@ -42,7 +42,6 @@ public:
 
 public:
     bool ContainsPermission(PermitType permit) const noexcept;
-    bool HasOwnerPermission() const noexcept;
     static void SetUserGroupCache(const std::shared_ptr<UserGroupCache> &cache) noexcept
     {
         if (cache != nullptr) {
