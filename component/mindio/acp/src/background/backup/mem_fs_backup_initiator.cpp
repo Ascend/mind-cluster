@@ -496,7 +496,7 @@ int MemFsBackupInitiator::PreloadFileNotify(const std::string &path) noexcept
     }
 
     /* create and open file for write (memfs) */
-    uint64_t inode;
+    uint64_t inode = 0UL;
     auto fd = MemFsApi::CreateAndOpenFile(path, inode, ufsBuf.st_mode);
     if (fd < 0) {
         BKG_LOG_ERROR("open file(" << path.c_str() << ") failed(" << errno << " : " << strerror(errno) << ")");

@@ -348,7 +348,11 @@ int BackupTarget::StatFile(const std::string &path, struct stat &buf, struct ufs
 int BackupTarget::CheckStgMtime(UnderFsFileView &view, const std::string &stgPath) noexcept
 {
     int checkTimes = 0;
+#ifdef ENABLE_UT
+    int timeOut = 1;
+#else
     int timeOut = 10; // If mtime remains unchanged for more than 10 seconds, the synchronization times out.
+#endif
     struct timespec oldMtime {
         0, 0
     };

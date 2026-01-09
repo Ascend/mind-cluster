@@ -15,10 +15,13 @@
 #include <gtest/gtest.h>
 #include <mockcpp/mockcpp.hpp>
 
-#include "backup_file_manager.h"
 #include "mem_fs_backup_initiator.h"
 #include "backup_target.h"
 #include "memfs_api.h"
+
+#define private public
+#include "backup_file_manager.h"
+#undef private
 
 using namespace ock::bg::backup;
 using namespace ock::common;
@@ -139,7 +142,7 @@ TEST_F(TestBackupFileManager, UpFs)
     // helper.createFile = &BackupTarget::CreateFileAndStageSync;
     // MOCKCPP_NS:mockAPI("&BackupTarget::CreateFileAndStageSync", helper.mockCeateFile).stubs().will(returnValue(0));
     MOCKER(MemFsApi::GetMeta).stubs().will(returnValue(0));
-    
+
     g_testFileOpNotify.openNotify(1, "abc", 0, TEST_INODE_ID);
     g_testFileOpNotify.closeNotify(1, false);
     g_testFileOpNotify.closeNotify(1, true);
@@ -150,5 +153,36 @@ TEST_F(TestBackupFileManager, UpFs)
     g_testFileOpNotify.preloadFileNotify("/abcde");
     g_testFileOpNotify.newFileNotify("/abcd", TEST_INODE_ID);
     BackupFileManager::GetInstance().Destroy();
+}
+
+TEST_F(TestBackupFileManager, create_thread_pool_thread_cnt_is_zero)
+{
+    config::BackupServiceConfig config;
+    config.threadNum = 0;
+    auto ret = BackupFileManager::GetInstance().CreateThreadPool(config);
+    ASSERT_EQ(-1, ret);
+}
+
+TEST_F(TestBackupFileManager, check_backup_config_abnormal)
+{
+    config::BackupInstance instance;
+    instance.source = "test";
+    auto ret = BackupFileManager::GetInstance().CheckBackupInstanceConfig(instance);
+    ASSERT_FALSE(ret);
+
+    instance.source = "dfs";
+    instance.destType = "dfs";
+    ret = BackupFileManager::GetInstance().CheckBackupInstanceConfig(instance);
+    ASSERT_FALSE(ret);
+
+    instance.source = "mfs";
+    instance.destType = "test";
+    ret = BackupFileManager::GetInstance().CheckBackupInstanceConfig(instance);
+    ASSERT_FALSE(ret);
+
+    instance.destType = "under_fs";
+    instance.destName = "under_fs";
+    ret = BackupFileManager::GetInstance().CheckBackupInstanceConfig(instance);
+    ASSERT_FALSE(ret);
 }
 }
