@@ -32,7 +32,6 @@ os_type=$(arch)
 
 docker_zip_name="Ascend-mindxdl-clusterd_${build_version:1}_linux-${arch}.zip"
 
-
 function clean() {
   rm -rf "${TOP_DIR}"/output
   mkdir -p "${TOP_DIR}"/output
