@@ -33,18 +33,8 @@ def clean():
                 shutil.rmtree(folder)
 
 
-def get_version_info(mode):
+def write_version_info(mode, version):
     src_path = Path(__file__).absolute().parent
-    ci_version_file = src_path.parent.parent.parent
-    ci_version_file = ci_version_file.joinpath('buildDesign', 'build', 'conf', 'config.yaml')
-    version = '7.3.0'
-    if ci_version_file.exists():
-        file_stream = safe_read_open(ci_version_file, 'r')
-        for line in file_stream:
-            if "pkgversion" in line:
-                version = line.split(':')[1].strip()
-                break
-        file_stream.close()
     if mode == "en":
         root_path = "alan_fd"
     else:
@@ -68,22 +58,25 @@ def get_platform():
 def parse_mode():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--mode", "-m", choices=["zh", "en"], default="zh")
+    parser.add_argument("--version", "-v")
     args, remain_args = parser.parse_known_args()
     sys.argv = [sys.argv[0]] + remain_args
-    return args.mode
+    return args.mode, args.version
 
 
-def get_setup_config(mode):
+def get_setup_config(mode, version):
     """
     Get step config
     :param mode: Chinese or English mode
+    :param version: Version of this build
     :return: config info
     note: for install_requires in common_config
     If you want to use the performance (-p --performance) detection module,
     install the following modules: "scikit-learn>=1.3.0", "pandas>=1.3.5", "numpy>=1.21.6", "1.5.0>joblib>=1.2.0"
     """
+    write_version_info(mode, version)
     common_config = {
-        "version": get_version_info(mode),
+        "version": version,
         "package_data": {"": ["**/*.so"]},
         "include_package_data": True,
         "python_requires": ">=3.7",

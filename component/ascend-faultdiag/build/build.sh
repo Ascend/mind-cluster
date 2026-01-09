@@ -20,7 +20,7 @@ set -e
 CUR_PATH=$(cd "$(dirname "$0")" || exit; pwd)
 ROOT_PATH=$(readlink -f "$CUR_PATH"/..)
 SRC_PATH="${ROOT_PATH}/src"
-OUTPUT_PATH=""${ROOT_PATH}/output/""
+OUTPUT_PATH="${ROOT_PATH}/output/"
 ASCEND_CONF_MODEL_DIR="${SRC_PATH}/ascend_fd/configuration/model/"
 
 DECISION_TREE_LATEST_MODEL_PATH="${ROOT_PATH}/platform/res_model_training/cpu_decision_tree_latest.pkl"
@@ -38,6 +38,15 @@ alias log_error='log_base ERROR $LINENO'
 alias log_info='log_base INFO $LINENO'
 alias log_warn='log_base WARN $LINENO'
 alias log_debug='log_base DEBUG $LINENO'
+
+function check_version() {
+    BUILD_VERSION="7.3.0"
+    local version_file="${ROOT_PATH}/service_config.ini"
+    if  [ -f "$version_file" ]; then
+      line=$(sed -n '1p' "$version_file" 2>&1)
+      BUILD_VERSION="v"${line#*=}
+    fi
+}
 
 function check_result() {
     ret=$?
@@ -105,7 +114,7 @@ function compile_build() {
       mkdir -p "$lib_path" && wget -O "${lib_path}/libfaultdiag.so" https://mindcluster.obs.cn-north-4.myhuaweicloud.com/ascend-repo/libfaultdiag_aarch64.so --no-check-certificate
     fi
     chmod 640 ${ROOT_PATH}/src/ascend_fd/configuration/*.json
-    python3 ./setup_linux.py --mode zh bdist_wheel --plat-name $PLAT_FORM
+    python3 ./setup_linux.py --mode zh --version $BUILD_VERSION bdist_wheel --plat-name $PLAT_FORM
     check_result "build ascend_faultdiag package"
     log_info "Begin to mv ascend_faultdiag.whl to ${OUTPUT_PATH}"
     cp -rf "${SRC_PATH}"/dist/ascend_faultdiag*.whl "${OUTPUT_PATH}"
@@ -113,7 +122,7 @@ function compile_build() {
     python3 "${ROOT_PATH}/platform/international_pkg_config.py" --path "${SRC_PATH}" --old ascend_fd --new alan_fd
     mv "${ROOT_PATH}/src/ascend_fd" "${ROOT_PATH}/src/alan_fd"
     cd ${SRC_PATH}
-    python3 ./setup_linux.py --mode en bdist_wheel --plat-name $PLAT_FORM
+    python3 ./setup_linux.py --mode en --version $BUILD_VERSION bdist_wheel --plat-name $PLAT_FORM
     check_result "build alan_faultdiag package"
     log_info "Begin to mv alan_faultdiag.whl to ${OUTPUT_PATH}"
     cp -rf "${SRC_PATH}"/dist/alan_faultdiag*.whl "${OUTPUT_PATH}"
@@ -126,6 +135,7 @@ function main() {
     train_net_model python3 "${NET_RF_LATEST_MODEL_PATH}"
     train_res_model python3 "${DECISION_TREE_LATEST_MODEL_PATH}"
     init_kg_engine_expr_parser
+    check_version
     compile_build
     chmod 640 ${OUTPUT_PATH}/*.whl
     clear

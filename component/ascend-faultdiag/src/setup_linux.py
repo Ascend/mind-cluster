@@ -19,6 +19,6 @@ from setuptools import setup
 from setup_utils import clean, parse_mode, get_setup_config
 
 clean()
-mode = parse_mode()
-config = get_setup_config(mode)
+mode, version = parse_mode()
+config = get_setup_config(mode, version)
 setup(**config)
