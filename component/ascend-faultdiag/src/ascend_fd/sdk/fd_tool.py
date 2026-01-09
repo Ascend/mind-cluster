@@ -17,6 +17,7 @@
 import os
 import json
 import ctypes
+from glob import glob
 
 from ascend_fd.utils.status import InnerError
 
@@ -42,9 +43,17 @@ class FDTool:
     INFO_BUFFER_LEN = 8192
 
     def __init__(self):
+        self._fd_tools_dll = self.load_so()
+
+    @staticmethod
+    def load_so():
         so_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib")
-        so_file = "libfaultdiag.so"
-        self._fd_tools_dll = ctypes.CDLL(os.path.join(so_dir, so_file))
+        so_files = glob(os.path.join(so_dir, "libfaultdiag*.so"))
+        if not so_files:
+            raise InnerError(f"No open shared object file found in the path: {so_dir}")
+        if len(so_files) > 1:
+            raise InnerError(f"More than one open shared object file found in the path: {so_dir}")
+        return ctypes.CDLL(so_files[0])
 
     def data_match(self, log_data, log_type, framework_name=""):
         """
