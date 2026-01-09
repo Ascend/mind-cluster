@@ -208,7 +208,7 @@ func addNewSuperPodDetection(wg *sync.WaitGroup, superPodPaths []string, superPo
 			wg.Add(1)
 			hwlog.RunLog.Infof("[NETFAULT ALGO][Add detection]%s", superPodPaths[j])
 			if superPodIds[j] == roceSuperPodIdConst {
-				startRoCERoutine(wg)
+				startRoCERoutine(wg, filepath.Dir(superPodPaths[j]))
 				continue
 			}
 			go func(id int, path string) {
@@ -219,11 +219,11 @@ func addNewSuperPodDetection(wg *sync.WaitGroup, superPodPaths []string, superPo
 	}
 }
 
-func startRoCERoutine(wg *sync.WaitGroup) {
+func startRoCERoutine(wg *sync.WaitGroup, clusterPath string) {
 	go func(path string) {
 		defer wg.Done()
 		startRoceDetection(path)
-	}(clusterLevelPath)
+	}(clusterPath)
 }
 
 func getFalseFlagDetection(getAll bool) []string {

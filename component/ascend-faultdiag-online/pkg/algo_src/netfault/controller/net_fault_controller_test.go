@@ -647,7 +647,7 @@ func TestStartRoCERoutine(t *testing.T) {
 				return
 			})
 			defer patch.Reset()
-			startRoCERoutine(&wg)
+			startRoCERoutine(&wg, "")
 			wg.Wait()
 		})
 	})

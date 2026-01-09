@@ -142,12 +142,19 @@ func (nd *NetDetect) formatLayer(item map[string]any) {
 		return
 	}
 
-	fromLayer := nd.findFullLayerPath(nd.curNpuInfo[srcAddr].RackName + ":" + srcAddr)
+	findSrcKey := fmt.Sprintf("#%s", srcAddr)
+	findDstKey := fmt.Sprintf("#%s", dstAddr)
+	if nd.curNpuType == a3NpuTypeConstant {
+		// The SDID of A3 may be 0, concatenated with the rack name
+		findSrcKey = fmt.Sprintf("%s:%s", nd.curNpuInfo[srcAddr].RackName, srcAddr)
+		findDstKey = fmt.Sprintf("%s:%s", nd.curNpuInfo[dstAddr].RackName, dstAddr)
+	}
+	fromLayer := nd.findFullLayerPath(findSrcKey)
 	if fromLayer != "" {
 		item[fromLayerConstant] = fromLayer
 	}
 
-	toLayer := nd.findFullLayerPath(nd.curNpuInfo[dstAddr].RackName + ":" + dstAddr)
+	toLayer := nd.findFullLayerPath(findDstKey)
 	if toLayer != "" {
 		item[toLayerConstant] = toLayer
 	}

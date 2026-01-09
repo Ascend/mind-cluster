@@ -46,7 +46,7 @@ func ReadLimitBytes(path string, limitLength int) ([]byte, error) {
 	}
 	file, err := os.OpenFile(key, os.O_RDONLY, FileMode)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("open file with read-only and %04o mode failed", FileMode))
+		return nil, fmt.Errorf("open file with read-only and %04o mode failed: %v", FileMode, err)
 	}
 	defer file.Close()
 	buf := make([]byte, limitLength, limitLength)
