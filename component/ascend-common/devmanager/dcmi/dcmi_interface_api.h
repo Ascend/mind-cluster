@@ -480,12 +480,11 @@ struct dcmi_hccsping_mesh_info {
 
 // urma device API for A5 -- begin
 // A5 Unifiy BUS
-#define EID_MAX_COUNT (18)      // 18 EID
-#define URMA_EID_SIZE (16)      // 16byte 128bit
+#define DCMI_URMA_EID_MAX_COUNT (32)      // 32 EID
+#define DCMI_URMA_EID_SIZE      (16)      // 16byte 128bit
 
-#ifndef urma_eid_t
-typedef union urma_eid {
-    unsigned char raw[URMA_EID_SIZE];
+typedef union dcmi_urma_eid {
+    unsigned char raw[DCMI_URMA_EID_SIZE];
     struct {
         unsigned long reserved; /* if IPv4 mapped to IPv6, == 0 */
         unsigned int prefix;    /* if IPv4 mapped to IPv6, == 0x0000ffff */
@@ -495,15 +494,12 @@ typedef union urma_eid {
         unsigned long subnet_prefix;
         unsigned long interface_id;
     } in6;
-} urma_eid_t;
-#endif
+} dcmi_urma_eid_t;
 
-#ifndef urma_eid_info_t
-typedef struct urma_eid_info {
-    urma_eid_t eid;
+typedef struct dcmi_urma_eid_info {
+    dcmi_urma_eid_t eid;
     unsigned int eid_index;
-} urma_eid_info_t;
-#endif
+} dcmi_urma_eid_info_t;
 
 // urma device API for A5 -- end
 
@@ -636,10 +632,10 @@ DCMIDLLEXPORT int dcmi_get_ub_ping_mesh_state(int card_id, int device_id, int ta
 // UB Ping Mesh API for A5 -- end
 
 // urma device API for A5 -- begin
-DCMIDLLEXPORT int dcmi_get_urma_device_cnt(int card_id, int device_id, int *dev_cnt);
+DCMIDLLEXPORT int dcmi_get_urma_device_cnt(int card_id, int device_id, unsigned int *dev_cnt);
 
-DCMIDLLEXPORT int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, int dev_index,
-    struct urma_eid_info *eid_ptr, int *eid_cnt);
+DCMIDLLEXPORT int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, unsigned int dev_index,
+    dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt);
 // urma device API for A5 -- end
 
 #endif

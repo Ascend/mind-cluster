@@ -56,11 +56,11 @@ var (
 	mockErr                   = errors.New("test error")
 	mockChipInfo              = &devcommon.ChipInfo{
 		Type:    "Ascend",
-		Name:    "Ascend910 7591",
+		Name:    "910_9574",
 		Version: "V1",
 	}
 	mockBoardInfo = devcommon.BoardInfo{
-		BoardId: devcommon.A900A5SuperPodBin1BoardId,
+		BoardId: 0x28,
 	}
 	mockChipAICore     float32 = 25
 	mockVirtualDevInfo         = devcommon.VirtualDevInfo{
@@ -168,7 +168,7 @@ func testLabelNode() {
 	convey.Convey("chipName label correct", func() {
 		newLabelMap, err := testHdm.updateChipNameToNode()
 		convey.So(err, convey.ShouldBeNil)
-		convey.So(newLabelMap[common.ChipNameLabel], convey.ShouldEqual, "Ascend910 7591")
+		convey.So(newLabelMap[common.ChipNameLabel], convey.ShouldEqual, "910_9574")
 	})
 }
 

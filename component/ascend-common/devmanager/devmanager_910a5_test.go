@@ -51,7 +51,7 @@ var (
 		Version: "V1",
 	}
 	mockBoardInfo = common.BoardInfo{
-		BoardId: common.A900A5SuperPodBin1BoardId,
+		BoardId: 0x28,
 	}
 )
 

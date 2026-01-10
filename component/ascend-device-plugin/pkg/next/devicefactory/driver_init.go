@@ -18,6 +18,7 @@ package devicefactory
 import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 )
@@ -27,6 +28,10 @@ func initDevManager() (*devmanager.DeviceManager, *deviceswitch.SwitchDevManager
 	if err != nil {
 		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
 		return nil, nil, err
+	}
+	if devM.GetDevType() == api.Ascend910A5 {
+		hwlog.RunLog.Infof("current devType is %s, switch device manager not supported.", api.Ascend910A5)
+		return devM, nil, nil
 	}
 	switchDevMgr := deviceswitch.NewSwitchDevManager()
 	if err := switchDevMgr.InitSwitchDev(); err != nil {

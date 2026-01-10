@@ -338,10 +338,12 @@ func (n *NpuBase) getRandAddrByFuncEntityID(phyID int32, feID uint, netType stri
 		eidList := n.getEidListByFeID(feID, &devInfo)
 		for i := 0; i < len(eidList); i++ {
 			eid := eidList[i].Eid
-			portList, err := n.GetPortListByEid(phyID, hex.EncodeToString(eid.Raw[:]), rankLevel)
+			eidStr := hex.EncodeToString(eid.Raw[:])
+			portList, err := n.GetPortListByEid(phyID, eidStr, rankLevel)
 			if err != nil {
-				hwlog.RunLog.Errorf("get port list by eid failed, err: %v", err)
-				return nil
+				hwlog.RunLog.Warnf("get port list by eid for phyID=%d feID=%d netType=%s rankLevel=%d eid=%s "+
+					"failed, err: %v", phyID, feID, netType, rankLevel, eidStr, err)
+				continue
 			}
 			item := n.createRankAddrItem(netType, eid, portList)
 			rankAddrList = append(rankAddrList, item)
@@ -376,6 +378,9 @@ func (n *NpuBase) getEidListByFeID(feID uint, urmaDevInfo *apiCommon.UrmaDeviceI
 		if n.getFeIDByEid(&urmaDevInfo.EidInfos[i].Eid) != feID {
 			continue
 		}
+		if !n.checkEidIsUsedForD2D(&urmaDevInfo.EidInfos[i].Eid) {
+			continue
+		}
 		eidList = append(eidList, urmaDevInfo.EidInfos[i])
 	}
 	return eidList
@@ -386,6 +391,17 @@ func (n *NpuBase) getFeIDByEid(eid *apiCommon.Eid) uint {
 		return math.MaxUint
 	}
 	return uint(binary.BigEndian.Uint64(eid.Raw[0:common.FeIdIndexByte]) >> common.FeIdIndexBit & common.FeIdMask)
+}
+
+func (n *NpuBase) checkEidIsUsedForD2D(eid *apiCommon.Eid) bool {
+	if eid == nil {
+		return false
+	}
+	const twoBytes = 2
+	const usageBitIndex = 11
+	const usageBitVal = 0
+	const usageBitMask = 0x01
+	return (binary.BigEndian.Uint16(eid.Raw[len(eid.Raw)-twoBytes:]) >> usageBitIndex & usageBitMask) == usageBitVal
 }
 
 func (n *NpuBase) createRankAddrItem(netType string, eid apiCommon.Eid, ports []string) api.RankAddrItem {
@@ -497,15 +513,17 @@ func getSuffixAndCheckEid(eid string, rLevel int) (int64, error) {
 		return x, nil
 	}
 	if len(eid) < common.DieNumPerDev {
-		return x, fmt.Errorf("get port list by eid error, eid:<%s> len is invalid", eid)
+		return x, fmt.Errorf("eid:<%s> len is invalid, which should be greater equal than %d",
+			eid, common.DieNumPerDev)
 	}
 	xStr := eid[len(eid)-common.DieNumPerDev:]
 	x, err := strconv.ParseInt(xStr, hexadecimal, 0)
 	if err != nil {
-		return x, fmt.Errorf("get port list by eid error, eid:<%s> is invalid", eid)
+		return x, fmt.Errorf("eid:<%s> is invalid, parse to int failed, err: %v", eid, err)
 	}
 	if x <= common.PhyLowerLimit || (x > common.PhyLimit && x < common.LogicLowerLimit) || x > common.LogicUpperLimit {
-		return x, fmt.Errorf("get port list by eid error, eid:<%s> is invalid", eid)
+		return x, fmt.Errorf("eid:<%s> is invalid, last byte value is %d, should be in range [%d, %d] or [%d, %d]",
+			eid, x, common.PhyLowerLimit, common.PhyLimit, common.LogicLowerLimit, common.LogicUpperLimit)
 	}
 	hwlog.RunLog.Debugf("get eid:<%s> x value:<%d>", eid, x)
 	return x, nil

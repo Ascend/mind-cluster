@@ -338,8 +338,8 @@ const (
 	// AnnotationVNPUInfoSplitLen length of pod annotation for allocate vnpu info
 	AnnotationVNPUInfoSplitLen = 2
 
-	// MaxAICoreNum max ai core num
-	MaxAICoreNum = 32
+	// MaxAICoreNum max ai core num, A5 max 36
+	MaxAICoreNum = 36
 	// MinAICoreNum min ai core num
 	MinAICoreNum = 8
 	// DefaultIDForCreateVNPU default id for creating vnpu

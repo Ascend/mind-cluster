@@ -364,16 +364,16 @@ unsigned int *state){
 	}
 
 	// urma device API for A5 -- begin
-	static int (*dcmi_get_urma_device_cnt_func)(int card_id, int device_id, int *dev_cnt);
-	static int dcmi_get_urma_device_cnt(int card_id, int device_id, int *dev_cnt) {
+	static int (*dcmi_get_urma_device_cnt_func)(int card_id, int device_id, unsigned int *dev_cnt);
+	static int dcmi_get_urma_device_cnt(int card_id, int device_id, unsigned int *dev_cnt) {
 		CALL_FUNC(dcmi_get_urma_device_cnt, card_id, device_id, dev_cnt)
 	}
 
-	static int (*dcmi_get_eid_list_by_urma_dev_index_func)(int card_id, int device_id, int dev_index,
-				struct urma_eid_info *eid_ptr, int *eid_cnt);
-	static int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, int dev_index,
-				struct urma_eid_info *eid_ptr, int *eid_cnt) {
-		CALL_FUNC(dcmi_get_eid_list_by_urma_dev_index, card_id, device_id, dev_index, eid_ptr, eid_cnt)
+	static int (*dcmi_get_eid_list_by_urma_dev_index_func)(int card_id, int device_id, unsigned int dev_index,
+				dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt);
+	static int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, unsigned int dev_index,
+				dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt) {
+		CALL_FUNC(dcmi_get_eid_list_by_urma_dev_index, card_id, device_id, dev_index, eid_list, eid_cnt)
 	}
 	// urma device API for A5 -- end
 
@@ -680,7 +680,7 @@ func (d *DcManager) DcGetUrmaDeviceCount(cardID int32, deviceID int32) (int32, e
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return common.RetError, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
-	var cnt C.int
+	var cnt C.uint
 	if retCode := C.dcmi_get_urma_device_cnt(C.int(cardID), C.int(deviceID), &cnt); retCode != common.Success {
 		return common.RetError, fmt.Errorf("dcmi get urma device count failed cardID(%d) deviceID(%d) error "+
 			"code: %d", cardID, deviceID, int32(retCode))
@@ -698,10 +698,10 @@ func (d *DcManager) DcGetUrmaDevEidList(cardID int32, deviceID int32, urmaDevInd
 			"cardID(%d) deviceID(%d)", urmaDevIndex, maxUrmaDevCnt, cardID, deviceID)
 	}
 
-	var eidInfoList [common.EidNumMax]C.struct_urma_eid_info
-	eidInfoListPtr := (*C.struct_urma_eid_info)(&eidInfoList[0])
-	eidCnt := C.int(common.EidNumMax)
-	if ret := C.dcmi_get_eid_list_by_urma_dev_index(C.int(cardID), C.int(deviceID), C.int(urmaDevIndex), eidInfoListPtr,
+	var eidInfoList [common.EidNumMax]C.dcmi_urma_eid_info_t
+	eidInfoListPtr := (*C.dcmi_urma_eid_info_t)(&eidInfoList[0])
+	eidCnt := C.uint(common.EidNumMax)
+	if ret := C.dcmi_get_eid_list_by_urma_dev_index(C.int(cardID), C.int(deviceID), C.uint(urmaDevIndex), eidInfoListPtr,
 		&eidCnt); ret != common.Success {
 		return nil, fmt.Errorf("dcmi get urma device info failed, cardID(%d) deviceID(%d) index(%d) ret(%d)",
 			cardID, deviceID, urmaDevIndex, int(ret))
@@ -715,7 +715,7 @@ func (d *DcManager) DcGetUrmaDevEidList(cardID int32, deviceID int32, urmaDevInd
 	return info, nil
 }
 
-func convertUrmaDeviceInfo(eidInfoListPtr *C.struct_urma_eid_info, eidCnt C.int) (*common.UrmaDeviceInfo, error) {
+func convertUrmaDeviceInfo(eidInfoListPtr *C.dcmi_urma_eid_info_t, eidCnt C.uint) (*common.UrmaDeviceInfo, error) {
 	if eidInfoListPtr == nil {
 		return nil, fmt.Errorf("input parameter eidInfoListPtr is nil")
 	}
@@ -725,7 +725,7 @@ func convertUrmaDeviceInfo(eidInfoListPtr *C.struct_urma_eid_info, eidCnt C.int)
 		return nil, fmt.Errorf("urma device count is %d out of range [0, %d]", eidCount, common.EidNumMax)
 	}
 
-	eidInfoList := (*[common.EidNumMax]C.struct_urma_eid_info)(unsafe.Pointer(eidInfoListPtr))
+	eidInfoList := (*[common.EidNumMax]C.dcmi_urma_eid_info_t)(unsafe.Pointer(eidInfoListPtr))
 	urmaDevInfo := common.UrmaDeviceInfo{EidCount: eidCount, EidInfos: make([]common.UrmaEidInfo, eidCount)}
 	for j := 0; j < int(eidCount); j++ {
 		eidInfo := common.UrmaEidInfo{

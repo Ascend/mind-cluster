@@ -290,7 +290,8 @@ func Get310PProductType() map[string]string {
 func HasOnChipMemory() bool {
 	return ParamOption.RealCardType == api.Ascend910B ||
 		ParamOption.RealCardType == api.Ascend910A ||
-		ParamOption.RealCardType == api.Ascend910A3
+		ParamOption.RealCardType == api.Ascend910A3 ||
+		ParamOption.RealCardType == api.Ascend910A5
 }
 
 // PodDeviceInfo define device info of pod, include kubelet allocate and real allocate device

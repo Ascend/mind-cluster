@@ -156,15 +156,15 @@ func TestGetSuffixAndCheckEid(t *testing.T) {
 		})
 		convey.Convey("02-eid len is 0, return err", func() {
 			_, err := getSuffixAndCheckEid("1", 1)
-			convey.So(err.Error(), convey.ShouldEqual, "get port list by eid error, eid:<1> len is invalid")
+			convey.So(err.Error(), convey.ShouldEqual, "eid:<1> len is invalid, which should be greater equal than 2")
 		})
 		convey.Convey("03-eid parse int error, return err", func() {
 			_, err := getSuffixAndCheckEid("1xx", 1)
-			convey.So(err.Error(), convey.ShouldEqual, "get port list by eid error, eid:<1xx> is invalid")
+			convey.So(err.Error(), convey.ShouldStartWith, "eid:<1xx> is invalid, parse to int failed, err: ")
 		})
 		convey.Convey("04-x value is 0, return err", func() {
 			_, err := getSuffixAndCheckEid("100", 1)
-			convey.So(err.Error(), convey.ShouldEqual, "get port list by eid error, eid:<100> is invalid")
+			convey.So(err.Error(), convey.ShouldStartWith, "eid:<100> is invalid, last byte value is ")
 		})
 		convey.Convey("05-x value valid ok, return x", func() {
 			x, _ := getSuffixAndCheckEid("1b6", 1)
@@ -196,7 +196,7 @@ func TestGetPortListByEid(t *testing.T) {
 			npu := NewNpuBase()
 			npu.productInfo = &ProductBase{superPodType: 2}
 			_, err := npu.GetPortListByEid(1, "1", 1)
-			convey.So(err.Error(), convey.ShouldEqual, "get port list by eid error, eid:<1> len is invalid")
+			convey.So(err.Error(), convey.ShouldEqual, "eid:<1> len is invalid, which should be greater equal than 2")
 		})
 		convey.Convey("03-hit cache, return ports", func() {
 			npu := NewNpuBase()
