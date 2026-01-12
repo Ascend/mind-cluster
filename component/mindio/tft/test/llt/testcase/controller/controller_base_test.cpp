@@ -1,6 +1,9 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024. All rights reserved.
  */
+#include <cstdlib>
+#include "common.h"
+#include "mindx_engine.h"
 #include "acc_tcp_server_default.h"
 #include "acc_tcp_client_default.h"
 #include "controller_test.h"
@@ -479,6 +482,219 @@ TEST_F(ControllerBaseTest, overflow_multiply)
     uint32_t b = 2; // 2
     bool ret = IsOverflow(a, b);
     ASSERT_EQ(ret, false);
+}
+
+TEST_F(ControllerBaseTest, controller_open_tls_start)
+{
+    ControllerBaseTest::InitSource();
+    controller1->Destroy();
+    int32_t ret = controller1->Initialize(0, WORLD_SIZE, false, false, false);
+    ASSERT_EQ(ret, TTP_OK);
+    std::string ip = "0.0.0.0";
+    testTlsOption.enableTls = true;
+    ret = controller1->Start(ip, 8555, testTlsOption);
+    ASSERT_EQ(ret, TTP_ERROR);
+}
+
+TEST_F(ControllerBaseTest, controller_error_rank)
+{
+    ControllerBaseTest::InitSource();
+    controller1->Destroy();
+    int32_t ret = controller1->Initialize(-1, WORLD_SIZE, false, false, false);
+    ASSERT_EQ(ret, TTP_OK);
+}
+
+TEST_F(ControllerBaseTest, controller_check_hot_switch_register_success)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->CheckHotSwitchRegister();
+    ASSERT_EQ(ret, true);
+    controller1->Destroy();
+}
+
+TEST_F(ControllerBaseTest, controller_check_hot_switch_register_fault)
+{
+    ControllerBaseTest::InitSource();
+    controller1->hotSwitchRanks_ = {0};
+    controller1->statusMapTmp_ = {{0, TrainStatus{}}};
+    int32_t ret = controller1->CheckHotSwitchRegister();
+    ASSERT_EQ(ret, false);
+}
+
+TEST_F(ControllerBaseTest, controller_step_finish_callback)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->StepFinishCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_migration_callback)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->MigrationCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_pause_callback)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->PauseCallback();
+    ASSERT_EQ(ret, TTP_ERROR);
+
+    controller1->controllerIdx_ = 3;
+    ret = controller1->PauseCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_zit_handle_strategy)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->ZitHandleStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_handle_report_dp)
+{
+    ControllerBaseTest::InitSource();
+    int16_t replyType = 25;
+    AccMsgHeader header = { replyType, sizeof(TTPReplyMsg), 0 };
+    AccTcpLinkComplexPtr ptr;
+    AccDataBufferPtr buffer = AccDataBuffer::Create(sizeof(TTPReplyMsg));
+    AccTcpRequestContext ctx(header, buffer, ptr);
+    int32_t ret = controller1->HandleReportDp(ctx);
+    ASSERT_EQ(ret, ACC_LINK_ERROR);
+}
+
+TEST_F(ControllerBaseTest, controller_upgrade_precheck_one)
+{
+    ControllerBaseTest::InitSource();
+    std::set<int32_t> ranks = {0, 1};
+    int32_t ret = controller1->UpgradePreCheck(ranks);
+    ASSERT_EQ(ret, TTP_ERROR);
+}
+
+TEST_F(ControllerBaseTest, controller_upgrade_precheck_two)
+{
+    ControllerBaseTest::InitSource();
+    std::set<int32_t> ranks = {0};
+    controller1->repairEvent_ = MindXEvent::MINDX_EVENT_UPGRADE;
+    controller1->repairType_ = ControllerRepairType::CRT_UPGRADE;
+    int32_t ret = controller1->UpgradePreCheck(ranks);
+    ASSERT_EQ(ret, TTP_ERROR);
+}
+
+TEST_F(ControllerBaseTest, controller_get_instance)
+{
+    ControllerBaseTest::InitSource();
+    ControllerPtr ctrl = Controller::GetInstance(true);
+    ASSERT_EQ(ctrl, nullptr);
+}
+
+TEST_F(ControllerBaseTest, controller_abnormal_callback)
+{
+    ControllerBaseTest::InitSource();
+    controller1->isNeedToReportResult_.store(true);
+    int32_t ret = controller1->AbnormalCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->isPorcessorExit_ = true;
+    ret = controller1->AbnormalCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_dump_callback)
+{
+    ControllerBaseTest::InitSource();
+    controller1->unableRepair_ = true;
+    int32_t ret = controller1->DumpCallback();
+    ASSERT_EQ(ret, TTP_ERROR);
+}
+
+TEST_F(ControllerBaseTest, controller_downgrade_repair_callback)
+{
+    ControllerBaseTest::InitSource();
+    controller1->hcclFlag_ = 1;
+    controller1->controllerIdx_ = 3;
+    int32_t ret = controller1->DowngradeRepairCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->errorRankMsg_ = {{0, 0}};
+    ret = controller1->DowngradeRepairCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->hcclFlag_ = 0;
+    ret = controller1->DowngradeRepairCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_InitializeVariables)
+{
+    ControllerBaseTest::InitSource();
+    controller1->loadCkptRepairStep_ = 0;
+    controller1->InitializeVariables();
+
+    controller1->loadCkptRepairStep_ = INT64_MAX;
+    controller1->InitializeVariables();
+}
+
+TEST_F(ControllerBaseTest, controller_ProcessRepairFlow)
+{
+    ControllerBaseTest::InitSource();
+    controller1->repairEvent_ = MindXEvent::MINDX_EVENT_ELEGANT_DUMP;
+    int32_t ret = controller1->ProcessRepairFlow(true);
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_MindXConfirmStrategy)
+{
+    ControllerBaseTest::InitSource();
+    controller1->mindSpore_ = false;
+    controller1->arfSwitch_ = true;
+    controller1->zitSwitch_ = true;
+    controller1->repairType_ = ControllerRepairType::CRT_RETRY;
+    int32_t ret = controller1->MindXConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+    
+    controller1->repairType_ = ControllerRepairType::CRT_ARF;
+    ret = controller1->MindXConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->repairType_ = ControllerRepairType::CRT_BUTT;
+    ret = controller1->MindXConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->mindSpore_ = true;
+    ret = controller1->MindXConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_EnvClearCallback)
+{
+    ControllerBaseTest::InitSource();
+    controller1->repairEvent_ = MindXEvent::MINDX_EVENT_RETRY;
+    controller1->canRetryCleanFlag_ = true;
+    int32_t ret = controller1->EnvClearCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
+TEST_F(ControllerBaseTest, controller_ExitLogsHandler)
+{
+    setenv("TTP_LOG_PATH", "/tmp/ttp_test_logs", 1);
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->ExitLogsHandler();
+    ASSERT_EQ(ret, TTP_OK);
+    unsetenv("TTP_LOG_PATH");
+}
+
+TEST_F(ControllerBaseTest, controller_MindXReConfirmStrategy)
+{
+    ControllerBaseTest::InitSource();
+    int32_t ret = controller1->MindXReConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+
+    controller1->repairEvent_ = MindXEvent::MINDX_EVENT_NOTIFY_FAULT_RANKS;
+    ret = controller1->MindXReConfirmStrategy();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
 }
 
 }
