@@ -332,8 +332,9 @@ class SaveHandler:
         return RET_OK
 
     def execute_clean(self):
+        if self._fm_clean_call is None:
+            return RET_OK
         try:
-            set_device()
             ret = self._fm_clean_call(uce_error_, self._args, self._clean_ctx)
         except Exception as e:
             ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
