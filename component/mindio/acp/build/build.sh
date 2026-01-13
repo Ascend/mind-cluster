@@ -111,7 +111,7 @@ fi
 if [[ ! -d ${PROJ_DIR}/3rdparty/spdlog/spdlog ]]; then
     echo "Trying to git clone spdlog ..."
     cd ${PROJ_DIR}/3rdparty/spdlog
-    git clone https://github.com/gabime/spdlog.git
+    git clone https://gitcode.com/GitHub_Trending/sp/spdlog.git
     cd ${PROJ_DIR}/3rdparty/spdlog/spdlog
     git checkout v1.12.0
 fi
