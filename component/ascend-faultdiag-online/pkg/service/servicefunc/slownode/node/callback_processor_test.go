@@ -38,6 +38,7 @@ import (
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/algo"
 	"ascend-faultdiag-online/pkg/service/servicefunc/slownode/slownodejob"
 	"ascend-faultdiag-online/pkg/utils"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 	"ascend-faultdiag-online/pkg/utils/k8s"
 )
 
@@ -362,18 +363,14 @@ func TestCreateOrUpdateCM(t *testing.T) {
 func TestParallelGroupInfoReader(t *testing.T) {
 	convey.Convey("test parallelGroupInfoReader", t, func() {
 		convey.Convey("test read file failed", func() {
-			patch := gomonkey.ApplyFunc(os.ReadFile, func(string) ([]byte, error) {
-				return nil, errors.New("read file failed")
-			})
+			patch := gomonkey.ApplyFuncReturn(fileutils.ReadLimitBytes, nil, errors.New("read file failed"))
 			defer patch.Reset()
 			data, err := parallelGroupInfoReader("testJobId")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(data, convey.ShouldBeNil)
 		})
 		convey.Convey("test unmarshal failed", func() {
-			patch := gomonkey.ApplyFunc(os.ReadFile, func(string) ([]byte, error) {
-				return []byte("invalid json"), nil
-			})
+			patch := gomonkey.ApplyFuncReturn(fileutils.ReadLimitBytes, []byte("invalid json"), nil)
 			defer patch.Reset()
 			data, err := parallelGroupInfoReader("testJobId")
 			convey.So(err, convey.ShouldNotBeNil)
@@ -381,9 +378,7 @@ func TestParallelGroupInfoReader(t *testing.T) {
 		})
 		convey.Convey("test success", func() {
 			mockData := `{"group1": "node1", "group2": "node2"}`
-			patch := gomonkey.ApplyFunc(os.ReadFile, func(string) ([]byte, error) {
-				return []byte(mockData), nil
-			})
+			patch := gomonkey.ApplyFuncReturn(fileutils.ReadLimitBytes, []byte(mockData), nil)
 			defer patch.Reset()
 			data, err := parallelGroupInfoReader("testJobId")
 			convey.So(err, convey.ShouldBeNil)

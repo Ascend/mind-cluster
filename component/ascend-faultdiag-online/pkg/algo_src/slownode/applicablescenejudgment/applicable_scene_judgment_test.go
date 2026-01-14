@@ -16,15 +16,27 @@
 package applicablescenejudgment
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-faultdiag-online/pkg/algo_src/slownode/config"
 )
 
-// 模拟的hwlog.RunLog结构体
-type RunLog struct {
-	Error func(string, ...any)
+func init() {
+	config := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	err := hwlog.InitRunLogger(&config, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func updateTempFile(t *testing.T, tmpFile *os.File, s string) {
@@ -120,4 +132,53 @@ func TestCheckCPContent(t *testing.T) {
 	exists, err = checkCPContent(tmpFile.Name())
 	assert.NoError(t, err)
 	assert.True(t, exists)
+}
+
+func TestCheckApplicableScene(t *testing.T) {
+	convey.Convey("Test CheckApplicableScene", t, func() {
+		var sndConfig *config.DetectionConfig
+		var taskName = "taskName"
+		convey.Convey("sndConfig is nil", func() {
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		sndConfig = &config.DetectionConfig{}
+		convey.Convey("checkEPContent failed", func() {
+			patch := gomonkey.ApplyFuncReturn(checkEPContent, false, errors.New("mock checkEPContent failed"))
+			defer patch.Reset()
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("checkEPContent get true", func() {
+			patch := gomonkey.ApplyFuncReturn(checkEPContent, true, nil)
+			defer patch.Reset()
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		patches := gomonkey.ApplyFuncReturn(checkEPContent, false, nil)
+		defer patches.Reset()
+		convey.Convey("checkCPContent failed", func() {
+			patch := gomonkey.ApplyFuncReturn(checkCPContent, false, errors.New("mock checkCPContent failed"))
+			defer patch.Reset()
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("checkCPContent get true", func() {
+			patch := gomonkey.ApplyFuncReturn(checkCPContent, true, nil)
+			defer patch.Reset()
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+
+		patches.ApplyFuncReturn(checkCPContent, false, nil)
+
+		convey.Convey("normal case", func() {
+			res := CheckApplicableScene(sndConfig, taskName)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
 }

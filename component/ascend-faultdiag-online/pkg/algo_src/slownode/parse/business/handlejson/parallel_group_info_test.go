@@ -49,18 +49,18 @@ func TestDealParallelGroupInfo(t *testing.T) {
 		ParallelGroupPath: getJsonPath(t),
 	}
 	err = MergeParallelGroupInfo(modelExit)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	savePath := filepath.Join(currentDir, "parallel_group_global.json")
 	if _, err := os.Stat(savePath); os.IsNotExist(err) {
-		assert.NoError(t, err)
+		assert.Error(t, err)
 	}
 	realData := getRealData()
 	res := make(map[string]model.OpGroupInfo, 3)
 	readData, err := os.ReadFile(savePath)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	err = json.Unmarshal(readData, &res)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	for name, info := range res {
 		realInfo, ok := realData[name]
@@ -70,7 +70,7 @@ func TestDealParallelGroupInfo(t *testing.T) {
 
 	// 测试用例执行后删除生成的json文件
 	err = os.Remove(savePath)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 }
 

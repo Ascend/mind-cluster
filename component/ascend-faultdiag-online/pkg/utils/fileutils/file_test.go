@@ -19,7 +19,11 @@ package fileutils
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/utils"
+	"ascend-faultdiag-online/pkg/utils/constants"
 )
 
 func TestCheckPath(t *testing.T) {
@@ -49,5 +53,20 @@ func TestCheckPath(t *testing.T) {
 		absPath, err = CheckPath(path)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(absPath, convey.ShouldNotBeEmpty)
+	})
+}
+
+func TestReadLimitBytes(t *testing.T) {
+	convey.Convey("test ReadLimitBytes", t, func() {
+		patch := gomonkey.ApplyFuncReturn(utils.ReadLimitBytes, []byte{}, nil)
+		defer patch.Reset()
+
+		path := "/usr/cluster/info.csv"
+		_, err := ReadLimitBytes(path, constants.Size10M)
+		convey.So(err, convey.ShouldBeNil)
+		// wrong path
+		path = "/tmp/../../etc/passwd"
+		_, err = ReadLimitBytes(path, constants.Size10M)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

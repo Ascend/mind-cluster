@@ -152,9 +152,6 @@ func TestProfiling(t *testing.T) {
 				Code:    0,
 			}, nil
 		})
-	// test start all profiling
-	err = c.StartAllProfiling("job1", "ns1")
-	assert.Nil(t, err)
 
 	// test start heavy profiling
 	err = c.StartHeavyProfiling("job1", "ns1")

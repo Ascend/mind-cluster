@@ -18,15 +18,32 @@ limitations under the License.
 package slownodejob
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/model/slownode"
+	"ascend-faultdiag-online/pkg/utils/grpc"
+	"ascend-faultdiag-online/pkg/utils/k8s"
 )
+
+func init() {
+	config := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	err := hwlog.InitRunLogger(&config, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 
 func TestSlowNode(t *testing.T) {
 	var job = &slownode.Job{
@@ -117,6 +134,311 @@ func TestStartAndStop(t *testing.T) {
 			convey.So(ctx.cluster.NeedReport(), convey.ShouldBeFalse)
 			convey.So(ctx.GetSlowRankIds(), convey.ShouldBeEmpty)
 			convey.So(ctx.GetRescheduleCount(), convey.ShouldEqual, rescheduleCount)
+		})
+	})
+}
+
+func TestAddAlgoRecord(t *testing.T) {
+	convey.Convey("test AddAlgoRecord", t, func() {
+		convey.Convey("should do nothing when receiver is nil", func() {
+			var c *cluster = nil
+			convey.So(func() {
+				c.AddAlgoRecord(&slownode.ClusterAlgoResult{})
+			}, convey.ShouldNotPanic)
+		})
+
+		convey.Convey("should do nothing when result is nil", func() {
+			c := &cluster{}
+			c.AddAlgoRecord(nil)
+			convey.So(c.AlgoRes, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("should add record when within capacity", func() {
+			c := &cluster{}
+			result := &slownode.ClusterAlgoResult{}
+			c.AddAlgoRecord(result)
+			convey.So(c.AlgoRes, convey.ShouldHaveLength, 1)
+			convey.So(c.AlgoRes[0], convey.ShouldEqual, result)
+		})
+
+		convey.Convey("should truncate oldest records when exceeding capacity", func() {
+			c := &cluster{}
+			extra := 10
+			for i := 0; i <= recordsCapacity+extra; i++ {
+				res := &slownode.ClusterAlgoResult{}
+				res.JobId = strconv.Itoa(i)
+				c.AddAlgoRecord(res)
+			}
+			convey.So(c.AlgoRes, convey.ShouldHaveLength, recordsCapacity)
+
+			// the latest one should be recordsCapacity + 1
+			convey.So(c.AlgoRes[len(c.AlgoRes)-1].JobId, convey.ShouldEqual, strconv.Itoa(recordsCapacity+extra))
+		})
+	})
+}
+
+func TestUpdateTrainingJobStatus(t *testing.T) {
+	convey.Convey("test UpdateTrainingJobStatus", t, func() {
+		convey.Convey("should do nothing when receiver is nil", func() {
+			var c *cluster = nil
+			convey.So(func() {
+				c.UpdateTrainingJobStatus(enum.IsRunning)
+			}, convey.ShouldNotPanic)
+		})
+
+		convey.Convey("should update TrainingJobStatus correctly", func() {
+			c := &cluster{}
+			convey.So(c.TrainingJobStatus, convey.ShouldEqual, "")
+			c.UpdateTrainingJobStatus(enum.IsCompleted)
+			convey.So(c.TrainingJobStatus, convey.ShouldEqual, enum.IsCompleted)
+			c.UpdateTrainingJobStatus(enum.IsFailed)
+			convey.So(c.TrainingJobStatus, convey.ShouldEqual, enum.IsFailed)
+		})
+
+		convey.Convey("should handle empty status string", func() {
+			c := &cluster{}
+			c.UpdateTrainingJobStatus("")
+			convey.So(c.TrainingJobStatus, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestTriggerMerge(t *testing.T) {
+	convey.Convey("test TriggerMerge", t, func() {
+		var warnCalled bool
+
+		convey.Convey("should do nothing when receiver is nil", func() {
+			warnCalled = false
+			var c *cluster = nil
+			convey.So(func() {
+				c.TriggerMerge()
+			}, convey.ShouldNotPanic)
+			convey.So(warnCalled, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("should send signal successfully when channel is ready", func() {
+			warnCalled = false
+			ch := make(chan struct{}, 1)
+			c := &cluster{MergeParallelGroupInfoSignal: ch}
+			c.TriggerMerge()
+
+			select {
+			case <-ch:
+			default:
+				assert.Fail(t, "not receive signal")
+			}
+			convey.So(warnCalled, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestLogPrefix(t *testing.T) {
+	convey.Convey("test LogPrefix", t, func() {
+		expectedNilPrefix := "[FD-OL SLOWNODE]job(nil)"
+
+		convey.Convey("should return nil prefix when ctx is nil", func() {
+			var ctx *JobContext = nil
+			prefix := ctx.LogPrefix()
+			convey.So(prefix, convey.ShouldEqual, expectedNilPrefix)
+		})
+
+		convey.Convey("should return nil prefix when ctx.Job is nil", func() {
+			ctx := &JobContext{Job: nil}
+			prefix := ctx.LogPrefix()
+			convey.So(prefix, convey.ShouldEqual, expectedNilPrefix)
+		})
+
+		convey.Convey("should return formatted prefix when Job fields are valid", func() {
+			job := &slownode.Job{}
+			job.JobName = "name1"
+			job.JobId = "job-12345"
+			job.Namespace = "default"
+			ctx := &JobContext{Job: job}
+			prefix := ctx.LogPrefix()
+			expected := "[FD-OL SLOWNODE]job(name=name1, namespace=default, jobId=job-12345)"
+			convey.So(prefix, convey.ShouldEqual, expected)
+		})
+	})
+}
+
+func TestStartAllProfiling(t *testing.T) {
+	convey.Convey("test StartAllProfiling", t, func() {
+		var ctx *JobContext
+		convey.Convey("ctx or job is nil", func() {
+			err := ctx.StartAllProfiling()
+			convey.So(err.Error(), convey.ShouldEqual, "ctx is nil or ctx.Job is nil")
+			ctx = &JobContext{}
+			err = ctx.StartAllProfiling()
+			convey.So(err.Error(), convey.ShouldEqual, "ctx is nil or ctx.Job is nil")
+		})
+
+		ctx = &JobContext{}
+		ctx.Job = &slownode.Job{}
+
+		convey.Convey("get client failed", func() {
+			patch := gomonkey.ApplyFuncReturn(grpc.GetClient, nil, errors.New("mock grpc client failed"))
+			defer patch.Reset()
+			err := ctx.StartAllProfiling()
+			convey.So(err.Error(), convey.ShouldEqual, "mock grpc client failed")
+		})
+
+		patches := gomonkey.ApplyFuncReturn(grpc.GetClient, &grpc.Client{}, nil)
+		defer patches.Reset()
+
+		convey.Convey("start faileds", func() {
+			patch := gomonkey.ApplyMethodReturn(&grpc.Client{}, "StartAllProfiling", errors.New("mock start failed"))
+			defer patch.Reset()
+			err := ctx.StartAllProfiling()
+			convey.So(err.Error(), convey.ShouldEqual, "mock start failed")
+		})
+
+		patches.ApplyMethodReturn(&grpc.Client{}, "StartAllProfiling", nil)
+		convey.Convey("start success", func() {
+			err := ctx.StartAllProfiling()
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestStopAllProfiling(t *testing.T) {
+	convey.Convey("test StopAllProfiling", t, func() {
+		var ctx *JobContext
+		convey.Convey("ctx or job is nil", func() {
+			convey.So(func() {
+				ctx.StartHeavyProfiling()
+			}, convey.ShouldNotPanic)
+		})
+
+		ctx = &JobContext{}
+		ctx.Job = &slownode.Job{}
+
+		convey.Convey("get client failed", func() {
+			patch := gomonkey.ApplyFuncReturn(grpc.GetClient, nil, errors.New("mock grpc client failed"))
+			defer patch.Reset()
+			ctx.StopAllProfiling()
+		})
+
+		patches := gomonkey.ApplyFuncReturn(grpc.GetClient, &grpc.Client{}, nil)
+		defer patches.Reset()
+
+		convey.Convey("stop faileds", func() {
+			patch := gomonkey.ApplyMethodReturn(&grpc.Client{}, "StopAllProfiling", errors.New("mock start failed"))
+			defer patch.Reset()
+			ctx.StopAllProfiling()
+		})
+
+		patches.ApplyMethodReturn(&grpc.Client{}, "StopAllProfiling", nil)
+		convey.Convey("stop success", func() {
+			ctx.StopAllProfiling()
+		})
+	})
+}
+
+func TestStartHeavyProfiling(t *testing.T) {
+	convey.Convey("test StartHeavyProfiling", t, func() {
+		var ctx *JobContext
+		convey.Convey("ctx or job is nil", func() {
+			convey.So(func() {
+				ctx.StartHeavyProfiling()
+			}, convey.ShouldNotPanic)
+		})
+
+		ctx = &JobContext{}
+		ctx.Job = &slownode.Job{}
+
+		convey.Convey("get client failed", func() {
+			patch := gomonkey.ApplyFuncReturn(grpc.GetClient, nil, errors.New("mock grpc client failed"))
+			defer patch.Reset()
+			ctx.StartHeavyProfiling()
+			convey.So(ctx.isStartedHeavyProfiling, convey.ShouldBeFalse)
+		})
+
+		patches := gomonkey.ApplyFuncReturn(grpc.GetClient, &grpc.Client{}, nil)
+		defer patches.Reset()
+
+		convey.Convey("stop faileds", func() {
+			patch := gomonkey.ApplyMethodReturn(&grpc.Client{}, "StartHeavyProfiling", errors.New("mock start failed"))
+			defer patch.Reset()
+			ctx.StartHeavyProfiling()
+			convey.So(ctx.isStartedHeavyProfiling, convey.ShouldBeFalse)
+		})
+
+		patches.ApplyMethodReturn(&grpc.Client{}, "StartHeavyProfiling", nil)
+		convey.Convey("stop success", func() {
+			ctx.StartHeavyProfiling()
+			convey.So(ctx.isStartedHeavyProfiling, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestSoptHeavyProfiling(t *testing.T) {
+	convey.Convey("test StopHeavyProfiling", t, func() {
+		var ctx *JobContext
+		convey.Convey("ctx or job is nil", func() {
+			convey.So(func() {
+				ctx.StartHeavyProfiling()
+			}, convey.ShouldNotPanic)
+		})
+
+		ctx = &JobContext{}
+		ctx.Job = &slownode.Job{}
+
+		convey.Convey("get client failed", func() {
+			patch := gomonkey.ApplyFuncReturn(grpc.GetClient, nil, errors.New("mock grpc client failed"))
+			defer patch.Reset()
+			ctx.StopHeavyProfiling()
+		})
+
+		patches := gomonkey.ApplyFuncReturn(grpc.GetClient, &grpc.Client{}, nil)
+		defer patches.Reset()
+
+		convey.Convey("stop faileds", func() {
+			patch := gomonkey.ApplyMethodReturn(&grpc.Client{}, "StopHeavyProfiling", errors.New("mock start failed"))
+			defer patch.Reset()
+			ctx.StopHeavyProfiling()
+		})
+
+		patches.ApplyMethodReturn(&grpc.Client{}, "StopHeavyProfiling", nil)
+		convey.Convey("stop success", func() {
+			ctx.StopHeavyProfiling()
+			convey.So(ctx.isStartedHeavyProfiling, convey.ShouldBeFalse)
+			convey.So(ctx.AlgoRes, convey.ShouldHaveLength, 0)
+		})
+	})
+}
+
+func TestRemoveAllCM(t *testing.T) {
+	convey.Convey("test RemoveAllCM", t, func() {
+		var ctx *JobContext
+		convey.Convey("ctx or job is nil", func() {
+			convey.So(func() {
+				ctx.RemoveAllCM()
+			}, convey.ShouldNotPanic)
+		})
+
+		ctx = &JobContext{}
+		ctx.Job = &slownode.Job{}
+		convey.Convey("get k8s client failed", func() {
+			patch := gomonkey.ApplyFuncReturn(k8s.GetClient, nil, errors.New("mock k8s get client failed"))
+			defer patch.Reset()
+			convey.So(func() {
+				ctx.RemoveAllCM()
+			}, convey.ShouldNotPanic)
+		})
+
+		// insert some cm into ctx.AllCMNames
+		ctx.AllCMNames.Store("test1", struct{}{})
+
+		// insert wrong type data
+		ctx.AllCMNames.Store(struct{}{}, struct{}{})
+
+		patches := gomonkey.ApplyFuncReturn(k8s.GetClient, &k8s.Client{}, nil)
+		patches.ApplyMethodReturn(&k8s.Client{}, "DeleteConfigMap", nil)
+		defer patches.Reset()
+		convey.Convey("remove cm successfully", func() {
+			convey.So(func() {
+				ctx.RemoveAllCM()
+			}, convey.ShouldNotPanic)
 		})
 	})
 }

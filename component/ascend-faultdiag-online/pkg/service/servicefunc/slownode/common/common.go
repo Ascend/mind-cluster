@@ -80,7 +80,7 @@ func NodeRankValidator(nodeRank string) error {
 	}
 	// do not include space, /, \
 	if strings.ContainsAny(nodeRank, " /\\") {
-		return errors.New("contains invalid character: ' ', '.', '/', '\\'")
+		return errors.New("contains invalid character: ' ', '/', '\\'")
 	}
 	return nil
 }

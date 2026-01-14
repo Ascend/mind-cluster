@@ -189,7 +189,7 @@ func TestClusterReloadFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 调用 reload
 
 	// 调用方法
-	err := ClusterReloadFunc(ctxData, nil, reqCtx, inputModel)
+	err := ClusterReloadFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, inputModel)
 
 	// 验证结果
 	assert.NoError(t, err, "ClusterReloadFunc 应该成功执行")
@@ -216,7 +216,7 @@ func TestClusterReloadFuncError(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, errors.New("mock error")).Once() // reload 出错
 
 	// 调用方法
-	err := ClusterReloadFunc(ctxData, nil, reqCtx, inputModel)
+	err := ClusterReloadFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, inputModel)
 
 	// 验证结果
 	assert.Error(t, err, "ClusterReloadFunc 应该返回错误")
@@ -243,7 +243,7 @@ func TestNodeStartFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 调用 start
 
 	// 调用方法
-	err := NodeStartFunc(ctxData, nil, reqCtx, inputModel)
+	err := NodeStartFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, inputModel)
 
 	// 验证结果
 	assert.NoError(t, err, "NodeStartFunc 应该成功执行")
@@ -270,7 +270,7 @@ func TestNodeStartFuncError(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, errors.New("mock error")).Once() // start 出错
 
 	// 调用方法
-	err := NodeStartFunc(ctxData, nil, reqCtx, inputModel)
+	err := NodeStartFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, inputModel)
 
 	// 验证结果
 	assert.Error(t, err, "NodeStartFunc 应该返回错误")
@@ -323,7 +323,7 @@ func TestNodeReloadFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Once() // 调用 reload
 
 	// 调用方法
-	err := NodeReloadFunc(ctxData, nil, reqCtx, inputModel)
+	err := NodeReloadFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, inputModel)
 
 	// 验证结果
 	assert.NoError(t, err, "NodeReloadFunc 应该成功执行")

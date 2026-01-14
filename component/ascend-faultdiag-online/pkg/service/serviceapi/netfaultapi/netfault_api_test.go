@@ -183,7 +183,7 @@ func TestControllerReloadFunc(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, nil).Times(2) // 调用 reload
 
 	// 调用方法
-	err := ControllerReloadFunc(ctxData, nil, reqCtx, &model.CommonReqModel{})
+	err := ControllerReloadFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.NoError(t, err, "ControllerReloadFunc 应该成功执行")
@@ -210,7 +210,7 @@ func TestControllerReloadFuncError(t *testing.T) {
 	mockHandler.On("ExecuteFunc", mock.Anything, mock.Anything).Return(0, errors.New("mock error")).Once() // reload 出错
 
 	// 调用方法
-	err := ControllerReloadFunc(ctxData, nil, reqCtx, &model.CommonReqModel{})
+	err := ControllerReloadFunc(ctxData, &diagcontext.DiagContext{}, reqCtx, &model.CommonReqModel{})
 
 	// 验证结果
 	assert.Error(t, err, "ControllerReloadFunc 应该返回错误")

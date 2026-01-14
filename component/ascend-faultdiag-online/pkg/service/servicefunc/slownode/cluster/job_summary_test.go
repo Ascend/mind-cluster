@@ -131,7 +131,7 @@ func testJobSummaryProcessorCase2(ctx *slownodejob.JobContext, jobSummary *model
 	})
 	convey.Convey("test found ctx with job status is delete", func() {
 		patch := gomonkey.ApplyPrivateMethod(
-			reflect.TypeOf(&jobProcessor{}), "delete", func(*jobProcessor) { fmt.Println("mock delete") },
+			reflect.TypeOf(&jobProcessor{}), "stop", func(*jobProcessor) { fmt.Println("mock stop") },
 		)
 		defer patch.Reset()
 		slownodejob.GetJobCtxMap().Clear()
@@ -142,7 +142,7 @@ func testJobSummaryProcessorCase2(ctx *slownodejob.JobContext, jobSummary *model
 		})
 		convey.So(ctx.Job.JobId, convey.ShouldEqual, testJobId)
 		convey.So(ctx.TrainingJobStatus, convey.ShouldEqual, "")
-		convey.So(output, convey.ShouldContainSubstring, "mock delete")
+		convey.So(output, convey.ShouldContainSubstring, "mock stop")
 	})
 }
 
@@ -343,13 +343,13 @@ func testJobStatusProcessorWithOtherJobStatus(ctx *slownodejob.JobContext, jobSu
 	})
 	convey.Convey("test job status is complete", func() {
 		patch := gomonkey.ApplyPrivateMethod(
-			reflect.TypeOf(&jobProcessor{}), "delete", func(*jobProcessor) { fmt.Println("mock delete") },
+			reflect.TypeOf(&jobProcessor{}), "stop", func(*jobProcessor) { fmt.Println("mock stop") },
 		)
 		defer patch.Reset()
 		jobSummary.JobStatus = enum.IsCompleted
 		output := captureOutput(func() {
 			jobStatusProcessor(ctx, jobSummary)
 		})
-		convey.So(output, convey.ShouldContainSubstring, "mock delete")
+		convey.So(output, convey.ShouldContainSubstring, "mock stop")
 	})
 }

@@ -28,6 +28,7 @@ import (
 
 	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/algo_src/slownode/model"
+	"ascend-faultdiag-online/pkg/utils/fileutils"
 )
 
 func TestLoadData(t *testing.T) {
@@ -44,9 +45,7 @@ func TestLoadData(t *testing.T) {
 	assert.Nil(t, err)
 
 	// loadFile failed
-	mockLoadFile := gomonkey.ApplyFunc(utils.LoadFile, func(string) ([]byte, error) {
-		return []byte{}, errors.New("load file failed")
-	})
+	mockLoadFile := gomonkey.ApplyFuncReturn(fileutils.ReadLimitBytes, []byte{}, errors.New("load file failed"))
 	data, err := loadData(resoledPath, field)
 	assert.Equal(t, "load file failed", err.Error())
 	assert.Nil(t, data)
@@ -334,9 +333,7 @@ func TestReadJSONFile(t *testing.T) {
 	assert.Nil(t, err)
 
 	// loadFile failed
-	mockLoadFile := gomonkey.ApplyFunc(utils.LoadFile, func(string) ([]byte, error) {
-		return []byte{}, errors.New("load file failed")
-	})
+	mockLoadFile := gomonkey.ApplyFuncReturn(fileutils.ReadLimitBytes, []byte{}, errors.New("load file failed"))
 	file, err := readJSONFile(resoledPath)
 	assert.Nil(t, file)
 	assert.Equal(t, fmt.Errorf("error reading file %s: load file failed", resoledPath).Error(), err.Error())

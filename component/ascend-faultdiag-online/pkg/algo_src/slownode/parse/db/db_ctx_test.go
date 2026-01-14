@@ -24,9 +24,10 @@ import (
 )
 
 func TestNewSqliteDbCtx(t *testing.T) {
+	dbName := "test_db.db"
 	currentDir, err := os.Getwd()
 	assert.NoError(t, err)
-	dbPath := filepath.Join(currentDir, "test_db.db")
+	dbPath := filepath.Join(currentDir, dbName)
 	ctx := NewSqliteDbCtx(dbPath)
 	err = ctx.Conn()
 	if err != nil {
@@ -34,8 +35,9 @@ func TestNewSqliteDbCtx(t *testing.T) {
 	}
 	assert.NotNil(t, ctx)
 
-	defer func(ctx *SnpDbContext) {
-		err := ctx.Close()
-		assert.NoError(t, err)
-	}(ctx)
+	err = ctx.Close()
+	assert.NoError(t, err)
+	// remove db
+	err = os.Remove(dbName)
+	assert.NoError(t, err)
 }

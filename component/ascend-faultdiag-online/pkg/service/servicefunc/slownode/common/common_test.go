@@ -143,11 +143,12 @@ func TestNodeRankValidator(t *testing.T) {
 			convey.So(err.Error(), convey.ShouldEqual, "node rank is empty")
 		})
 		convey.Convey("test invalid character in node rank", func() {
-			specialChars := []string{" ", ".", "/", "\\"}
+			specialChars := []string{" ", "/", "\\"}
 			for _, char := range specialChars {
 				nodeRank := fmt.Sprintf("node-rank%s", char)
 				err := NodeRankValidator(nodeRank)
-				convey.So(err.Error(), convey.ShouldEqual, "contains invalid character: ' ', '.', '/', '\\'")
+				convey.So(err, convey.ShouldNotBeNil)
+				convey.So(err.Error(), convey.ShouldEqual, "contains invalid character: ' ', '/', '\\'")
 			}
 		})
 	})

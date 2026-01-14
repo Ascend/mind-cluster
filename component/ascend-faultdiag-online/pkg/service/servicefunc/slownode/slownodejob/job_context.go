@@ -59,11 +59,11 @@ func (c *cluster) AddAlgoRecord(result *slownode.ClusterAlgoResult) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.AlgoRes = append(c.AlgoRes, result)
 	if len(c.AlgoRes) > recordsCapacity {
-		start := len(c.AlgoRes) - recordsCapacity + 1
+		start := len(c.AlgoRes) - recordsCapacity
 		c.AlgoRes = c.AlgoRes[start:]
 	}
-	c.AlgoRes = append(c.AlgoRes, result)
 }
 
 // AddRecords add the slow node algo result in JobContext
