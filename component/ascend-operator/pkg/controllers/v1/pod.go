@@ -372,36 +372,24 @@ func (r *ASJobReconciler) createHotSwitchPod(oldPod *corev1.Pod, pi *podInfo,
 	if r == nil {
 		return errors.New("nil pointer")
 	}
-
+	newPi := pi.DeepCopy()
 	const needLen = 4
 	uid := fmt.Sprintf("%d", time.Now().UnixNano())
 	newPodName := fmt.Sprintf("%s-hot-%s", oldPod.Name, uid[len(uid)-needLen:])
-	pi.backupPodName = newPodName
+	newPi.backupPodName = newPodName
 
-	err := r.createNewPod(pi, replicas)
+	if newPi.spec.Template.Annotations == nil {
+		newPi.spec.Template.Annotations = make(map[string]string)
+	}
+	newPi.spec.Template.Annotations[api.InHotSwitchFlowKey] = api.InHotSwitchFlowValue
+	newPi.spec.Template.Annotations[api.PodTypeKey] = api.PodTypeBackup
+	newPi.spec.Template.Annotations[api.BackupSourcePodNameKey] = oldPod.Name
+
+	err := r.createNewPod(newPi, replicas)
 	if err != nil {
 		hwlog.RunLog.Errorf("create hotswitch pod failed, err: %v", err)
 		return err
 	}
-	// Increase the delay to avoid being unable to find the newly created pod after creation
-	const duration = 100 * time.Millisecond
-	time.Sleep(duration)
-	newPod := &corev1.Pod{}
-	if err := r.Get(context.TODO(), types.NamespacedName{Namespace: oldPod.Namespace, Name: newPodName}, newPod); err != nil {
-		hwlog.RunLog.Errorf("hotswitch: get new pod[%s/%s] err: %v", oldPod.Namespace, newPodName, err)
-		return fmt.Errorf("hotswitch: get new pod[%s/%s] err: %v", oldPod.Namespace, newPodName, err)
-	}
-
-	// add annotations
-	newPod.Annotations[api.InHotSwitchFlowKey] = api.InHotSwitchFlowValue
-	newPod.Annotations[api.PodTypeKey] = api.PodTypeBackup
-	newPod.Annotations[api.BackupSourcePodNameKey] = oldPod.Name
-
-	if err := r.Update(context.TODO(), newPod); err != nil {
-		hwlog.RunLog.Errorf("update hotswitch backup pod %s/%s failed,err:%v", newPod.Namespace, newPod.Name, err)
-		return err
-	}
-	hwlog.RunLog.Infof("update hotswitch backup pod %s/%s success", newPod.Namespace, newPod.Name)
 
 	// update old pod annotations
 	delete(oldPod.Annotations, api.NeedOperatorOpeKey)

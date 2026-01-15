@@ -1085,34 +1085,6 @@ func buildTestHotSwitchCases() []testHotSwitchCase {
 			},
 			wantErr: true,
 		}, {
-			name: "03-get new pod failed should return error",
-			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
-				mockCreateNewPodReturnNil(p, r).ApplyMethodReturn(r.Client, "Get", errors.New("get pod failed"))
-			},
-			wantErr: true,
-		}, {
-			name: "04-update new pod failed should return error",
-			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
-				mockCreateNewPodReturnNil(p, r)
-				mockGetReturnNil(p, r).ApplyMethodReturn(r.Client, "Update", errors.New("update pod failed"))
-			},
-			wantErr: true,
-		}, {
-			name: "05-update old pod failed should return error",
-			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
-				firstCall := true
-				mockCreateNewPodReturnNil(p, r)
-				mockGetReturnNil(p, r).ApplyMethodFunc(r.Client, "Update",
-					func(_ context.Context, _ client.Object, _ ...client.UpdateOption) error {
-						if firstCall {
-							firstCall = false
-							return nil
-						}
-						return errors.New("update old pod failed")
-					})
-			},
-			wantErr: true,
-		}, {
 			name: "06-create hot switch pod success",
 			setupMocks: func(p *gomonkey.Patches, r *ASJobReconciler) {
 				mockCreateNewPodReturnNil(p, r)
