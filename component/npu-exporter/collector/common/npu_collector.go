@@ -22,6 +22,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/cache"
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
@@ -49,7 +50,15 @@ var (
 
 const (
 	maxCollectTimeout = 10 * time.Second
+	pcieDomain        = "PcieDomain"
+	fetchTimeout      = "FetchTimeoutError"
 )
+
+// fetchPcieOptions for control pcie error logs num
+var fetchPcieOptions = logger.LogOptions{
+	Domain: pcieDomain,
+	ID:     fetchTimeout,
+}
 
 // NpuCollector for collect metrics
 type NpuCollector struct {
@@ -339,8 +348,10 @@ func setPCIeBusInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *HuaW
 			hwChip.PCIeBusInfo = ""
 			return
 		}
-		logger.Error(err)
+		logger.LogfWithOptions(logger.ErrorLevel, fetchPcieOptions, err.Error())
 		pcieInfo = ""
+	} else {
+		hwlog.ResetErrCnt(pcieDomain, fetchTimeout)
 	}
 	hwChip.PCIeBusInfo = pcieInfo
 }
