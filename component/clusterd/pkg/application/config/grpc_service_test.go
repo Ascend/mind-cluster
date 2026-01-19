@@ -1,0 +1,190 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package config business configuration service for grpc client
+package config
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/interface/grpc/config"
+)
+
+func init() {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
+
+const (
+	job1      = "job1"
+	job2      = "job2"
+	rankTable = "rankTable"
+	sleepTime = 100 * time.Millisecond
+)
+
+func fakeService() *BusinessConfigServer {
+	ctx := context.Background()
+	return NewBusinessConfigServer(ctx)
+}
+
+// TestRankTableChange for test rankTableChange
+func TestRankTableChange(t *testing.T) {
+	convey.Convey("test rankTableChange", t, func() {
+		convey.Convey("01-publisher not exist, should save cache and not save work queue", func() {
+			service := fakeService()
+			resent, err := service.rankTableChange(job1, rankTable)
+			convey.So(resent, convey.ShouldBeTrue)
+			convey.So(err, convey.ShouldResemble, errors.New("job not registered or not subscribed"))
+		})
+		convey.Convey("02-publisher exist, should save channel", func() {
+			service := fakeService()
+			service.addPublisher(job1)
+			publisher, _ := service.getPublisher(job1)
+			publisher.SetSubscribe(true)
+			go publisher.ListenDataChange(&mockConfigSubscribeRankTableServer{})
+			defer publisher.Stop()
+			resent, err := service.rankTableChange(job1, rankTable)
+			time.Sleep(sleepTime)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(resent, convey.ShouldBeFalse)
+			publisher, _ = service.getPublisher(job1)
+			data := publisher.GetSentData(job1)
+			convey.ShouldNotBeNil(data)
+			convey.So(data.RankTable, convey.ShouldEqual, rankTable)
+		})
+	})
+}
+
+// TestRegister for test Register
+func TestRegister(t *testing.T) {
+	convey.Convey("test Register", t, func() {
+		service := fakeService()
+		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
+		convey.Convey("01-publisher not exist, should register", func() {
+			req := &config.ClientInfo{
+				JobId: job2,
+				Role:  "",
+			}
+			status, err := service.Register(nil, req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(status, convey.ShouldNotBeNil)
+			convey.So(service.configPublisher[job2], convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestSubscribeRankTable(t *testing.T) {
+	convey.Convey("test rankTableChange", t, func() {
+		req := &config.ClientInfo{
+			JobId: job1,
+			Role:  "",
+		}
+		convey.Convey("01-publisher not exist, should return error", func() {
+			service := fakeService()
+			err := service.SubscribeRankTable(req, nil)
+			convey.So(err, convey.ShouldResemble, errors.New("jobId=job1 not registered, role="))
+		})
+		convey.Convey("02-subscribe rank table service success, should return nil", func() {
+			service := fakeService()
+			service.addPublisher(job1)
+			go func() {
+				for {
+					publisher, ok := service.getPublisher(job1)
+					if ok && publisher.IsSubscribed() {
+						publisher.Stop()
+						break
+					}
+					time.Sleep(sleepTime)
+				}
+			}()
+			err := service.SubscribeRankTable(req, &mockConfigSubscribeRankTableServer{})
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestGetPublisher for test getPublisher
+func TestGetPublisher(t *testing.T) {
+	convey.Convey("test getPublisher", t, func() {
+		service := fakeService()
+		publisher, ok := service.getPublisher(job1)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(publisher, convey.ShouldBeNil)
+		service.configPublisher[job1] = NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
+		publisher, ok = service.getPublisher(job1)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(publisher, convey.ShouldNotBeNil)
+	})
+}
+
+// TestDeletePublisher for test deletePublisher
+func TestDeletePublisher(t *testing.T) {
+	convey.Convey("test deletePublisher", t, func() {
+		service := fakeService()
+		publisher := NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
+		service.configPublisher[job1] = publisher
+		service.deletePublisher(job1, publisher.GetCreateTime())
+		publisher, ok := service.getPublisher(job1)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(publisher, convey.ShouldBeNil)
+	})
+}
+
+// TestAddPublisher for test addPublisher
+func TestAddPublisher(t *testing.T) {
+	convey.Convey("test addPublisher", t, func() {
+		service := fakeService()
+		service.addPublisher(job1)
+		publisher, ok := service.getPublisher(job1)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(publisher, convey.ShouldNotBeNil)
+	})
+}
+
+// TestPreemptPublisher for test preemptPublisher
+func TestPreemptPublisher(t *testing.T) {
+	convey.Convey("test preemptPublisher", t, func() {
+		service := fakeService()
+		publisher := NewConfigPublisher[*config.RankTableStream](job1,
+			context.Background(), constant.RankTableDataType, nil)
+		service.configPublisher[job1] = publisher
+		convey.Convey("01-publisher already exist, should preempt old publisher", func() {
+			newPublisher := service.preemptPublisher(job1)
+			convey.So(newPublisher, convey.ShouldNotBeNil)
+			convey.So(newPublisher.createTime.After(publisher.createTime), convey.ShouldBeTrue)
+		})
+	})
+}
+
+type mockConfigSubscribeRankTableServer struct {
+	grpc.ServerStream
+}
+
+func (x *mockConfigSubscribeRankTableServer) Send(m *config.RankTableStream) error {
+	return nil
+}
+
+func (x *mockConfigSubscribeRankTableServer) Context() context.Context {
+	return context.Background()
+}

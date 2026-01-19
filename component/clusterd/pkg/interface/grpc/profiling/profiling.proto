@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = ".;profiling";
+
+//protoc --go_out=. --go-grpc_out=. ./profiling.proto
+
+service TrainingDataTrace {
+  rpc ModifyTrainingDataTraceSwitch (DataTypeReq) returns (DataTypeRes);
+  rpc GetTrainingDataTraceSwitch (DataStatusReq) returns (DataStatusRes);
+  rpc SubscribeDataTraceSwitch (ProfilingClientInfo) returns (stream DataStatusRes);
+}
+
+message ProfilingClientInfo{
+  string jobId = 1;
+  string role = 2;
+}
+
+message ProfilingSwitch{
+  string CommunicationOperator = 1;
+  string Step = 2;
+  string SaveCheckpoint = 3;
+  string FP =4;
+  string DataLoader =5;
+}
+
+message DataStatusReq{
+  string jobNsName = 1;
+}
+
+message DataStatusRes{
+  string message = 1;
+  ProfilingSwitch profilingSwitch = 2;
+  int32 code =3;
+}
+
+message DataTypeReq {
+  string jobNsName = 1;
+  ProfilingSwitch profilingSwitch = 2;
+}
+
+message DataTypeRes {
+  string message = 1;
+  int32 code = 2;
+}

@@ -1,0 +1,195 @@
+apiVersion: mindxdl.gitee.com/v1
+kind: Job
+metadata:
+  name: default-test-pytorch
+  labels:
+    framework: pytorch
+    ring-controller.a: alan-I2
+    npu-I2-strategy: chip
+    tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+spec:
+  schedulerName: volcano   # work when enableGangScheduling is true
+  runPolicy:
+    schedulingPolicy:      # work when enableGangScheduling is true
+      minAvailable: 2
+      queue: default
+  successPolicy: AllWorkers
+  replicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.a: alan-I2
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: job-name
+                        operator: In
+                        values:
+                          - default-test-pytorch
+                  topologyKey: kubernetes.io/hostname
+          automountServiceAccountToken: false
+          nodeSelector:
+            host-arch: npu-arm
+          containers:
+            - name: alan # do not modify
+              image: pytorch-test:latest         # trainning framework image， which can be modified
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                # ALAN_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+                # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Alan-volcano-plugin, without volcano scenes.
+                - name: ALAN_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['npu.com/AlanI2']               # The value must be the same as resources.requests
+              command:                           # training command, which can be modified
+                - /bin/bash
+                - -c
+              args: [ "cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=4096" ]
+              ports:                          # default value containerPort: 2222 name: alanjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: alanjob-port        # do not modify
+              resources:
+                limits:
+                  npu.com/AlanI2: 2
+                requests:
+                  npu.com/AlanI2: 2
+              volumeMounts:
+                - name: code
+                  mountPath: /job/code
+                - name: data
+                  mountPath: /job/data
+                - name: output
+                  mountPath: /job/output
+                - name: alan-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: alan-add-ons
+                  mountPath: /usr/local/Ascend/add-ons
+                - name: dshm
+                  mountPath: /dev/shm
+                - name: localtime
+                  mountPath: /etc/localtime
+          volumes:
+            - name: code
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/code/ResNet50_ID4149_for_PyTorch/"
+            - name: data
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/dataset/"
+            - name: output
+              nfs:
+                server: 127.0.0.1
+                path: "/data/output/"
+            - name: alan-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: alan-add-ons
+              hostPath:
+                path: /usr/local/Ascend/add-ons
+            - name: dshm
+              emptyDir:
+                medium: Memory
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+    Worker:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.a: alan-I2
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: job-name
+                        operator: In
+                        values:
+                          - default-test-pytorch
+                  topologyKey: kubernetes.io/hostname
+          automountServiceAccountToken: false
+          nodeSelector:
+            host-arch: npu-arm
+          containers:
+            - name: alan # do not modify
+              image: pytorch-test:latest                # trainning framework image， which can be modified
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                # ALAN_VISIBLE_DEVICES env variable is used by alan-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+                # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Alan-volcano-plugin, without volcano scenes.
+                - name: ALAN_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['npu.com/AlanI2']               # The value must be the same as resources.requests
+              command:                                  # training command, which can be modified
+                - /bin/bash
+                - -c
+              args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=4096"]
+              ports:                          # default value containerPort: 2222 name: alanjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: alanjob-port        # do not modify
+              resources:
+                limits:
+                  npu.com/AlanI2: 2
+                requests:
+                  npu.com/AlanI2: 2
+              volumeMounts:
+                - name: code
+                  mountPath: /job/code
+                - name: data
+                  mountPath: /job/data
+                - name: output
+                  mountPath: /job/output
+                - name: alan-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: alan-add-ons
+                  mountPath: /usr/local/Ascend/add-ons
+                - name: dshm
+                  mountPath: /dev/shm
+                - name: localtime
+                  mountPath: /etc/localtime
+          volumes:
+            - name: code
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/code/ResNet50_ID4149_for_PyTorch/"
+            - name: data
+              nfs:
+                server: 127.0.0.1
+                path: "/data/public/dataset/"
+            - name: output
+              nfs:
+                server: 127.0.0.1
+                path: "/data/output/"
+            - name: alan-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: alan-add-ons
+              hostPath:
+                path: /usr/local/Ascend/add-ons
+            - name: dshm
+              emptyDir:
+                medium: Memory
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+
+

@@ -1,0 +1,25 @@
+/*
+Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
+*/
+
+/*
+Package v1 is using for v1 Ranktable.
+*/
+package v1
+
+import (
+	"ascend-operator/pkg/api/v1"
+	"ascend-operator/pkg/ranktable/common"
+)
+
+// RankTable ranktable of v1
+type RankTable struct {
+	*common.BaseGenerator
+}
+
+// New create ranktable generator
+func New(job *v1.Job) *RankTable {
+	r := &RankTable{}
+	r.BaseGenerator = common.NewBaseGenerator(job, common.Version1, r)
+	return r
+}

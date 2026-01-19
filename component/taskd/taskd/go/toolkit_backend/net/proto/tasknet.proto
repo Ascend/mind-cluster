@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option go_package = ".;proto";
+
+message Position {
+  string role = 1;
+  string serverRank = 2;
+  string processRank = 3;
+}
+
+message RegisterReq {
+  string  uuid = 1;
+  Position pos = 2;
+}
+
+message PathDiscoveryReq {
+  string  uuid = 1;
+  Position proxyPos = 2;
+  repeated Position path = 3;
+}
+
+message MessageHeader {
+  string uuid = 1;
+  string mtype = 2;
+  bool   sync = 3;
+  Position src = 4;
+  Position dst = 5;
+  int64 createTime = 6;
+}
+
+message Message {
+  MessageHeader header = 1;
+  string body = 2;
+}
+
+message Ack {
+  string uuid = 1;
+  uint32 code = 2;
+  Position src = 3;
+}
+
+service TaskNet {
+  rpc Register(RegisterReq) returns (Ack);
+  rpc PathDiscovery(PathDiscoveryReq) returns (Ack);
+  rpc TransferMessage(Message) returns (Ack);
+  rpc InitServerDownStream(stream Ack) returns (stream Message);
+}

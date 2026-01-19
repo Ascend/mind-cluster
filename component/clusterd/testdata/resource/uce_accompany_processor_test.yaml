@@ -1,0 +1,34 @@
+# set current time = 95000ms
+# node1 Ascend910-0 has three fault, 80CB8009 and 80C98009 are uce accompany fault, filter
+# node1 Ascend910-1 has two fault, 80CB8009 isn't uce accompany fault, cannot filter.
+# but 80C98009 cannot decide, filter. and 80C98009 in que to decide next time.
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 90000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80CB8009", 
+          "fault_time_and_level_map": { "80CB8009": { "fault_time": 85000, "fault_level": "RestartRequest" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80C98009", 
+          "fault_time_and_level_map": { "80C98009": { "fault_time": 95000, "fault_level": "RestartRequest" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80CB8009", 
+          "fault_time_and_level_map": { "80CB8009": { "fault_time": 89000, "fault_level": "RestartRequest" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80C98009", 
+          "fault_time_and_level_map": { "80C98009": { "fault_time": 91000, "fault_level": "RestartRequest" } } }
+      ]
+---
+# the result after uce processor process
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "large_model_fault_level": "RestartBusiness", "fault_level": "RestartBusiness", "fault_handling": "RestartBusiness",
+          "fault_time_and_level_map": { "80E01801": { "fault_time": 90000, "fault_level": "RestartBusiness" } } },
+        { "fault_type": "uce fault type", "npu_name": "Ascend910-1", "fault_code": "80CB8009", 
+          "large_model_fault_level": "RestartRequest", "fault_level": "RestartRequest", "fault_handling": "RestartRequest",
+          "fault_time_and_level_map": { "80CB8009": { "fault_time": 89000, "fault_level": "RestartRequest" } } }
+      ]

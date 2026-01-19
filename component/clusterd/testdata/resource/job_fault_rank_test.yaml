@@ -1,0 +1,169 @@
+# device info in cm manager
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "fault_level": "NotHandleFault", "npu_name": "Ascend910-0", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "NotHandleFault"}} 
+        },
+        { "fault_type": "uce fault type", "fault_level": "RestartRequest", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "RestartRequest"}}
+        },
+        { "fault_type": "uce fault type", "fault_level": "RestartBusiness", "npu_name": "Ascend910-2", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "RestartBusiness"}} 
+        },
+        { "fault_type": "uce fault type", "fault_level": "FreeRestartNPU", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "FreeRestartNPU"}} 
+        },
+        { "fault_type": "uce fault type", "fault_level": "SeparateNPU", "npu_name": "Ascend910-4", "fault_code": "80E01801,11111111,22222222", 
+          "fault_time_and_level_map": {
+            "80E01801": {"fault_time": 100000, "fault_level": "RestartNPU"},
+            "11111111": {"fault_time": 100000, "fault_level": "SeparateNPU"},
+            "22222222": {"fault_time": 100000, "fault_level": "NotHandleFault"}
+          } 
+        },
+        { "fault_type": "uce fault type", "fault_level": "SeparateNPU", "npu_name": "Ascend910-4", "fault_code": "33333333", 
+          "fault_time_and_level_map": {"33333333": {"fault_time": 100000, "fault_level": "SeparateNPU"}} 
+        }
+      ]
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "uce fault type", "fault_level": "RestartNPU", "npu_name": "Ascend910-0", "fault_code": "80E01801,22222222", 
+          "fault_time_and_level_map": {
+            "80E01801": {"fault_time": 100000, "fault_level": "RestartNPU"},
+            "22222222": {"fault_time": 100000, "fault_level": "NotHandleFault"}
+          }  
+        },
+        { "fault_type": "uce fault type", "fault_level": "FreeRestartNPU", "npu_name": "Ascend910-1", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "FreeRestartNPU"}}  
+        },
+        { "fault_type": "uce fault type", "fault_level": "RestartBusiness", "npu_name": "Ascend910-2", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "RestartBusiness"}}
+        },
+        { "fault_type": "uce fault type", "fault_level": "RestartBusiness", "npu_name": "Ascend910-3", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "RestartBusiness"}}
+        },
+        { "fault_type": "uce fault type", "fault_level": "NotHandleFault", "npu_name": "Ascend910-4", "fault_code": "80E01801", 
+          "fault_time_and_level_map": {"80E01801": {"fault_time": 100000, "fault_level": "NotHandleFault"}}
+        }
+      ]
+---
+# job info in JobMgr
+job1:
+  node1:
+    device:
+      - device_id: 0
+        rank_id: 0
+    server_name: node1
+  node2:
+    device:
+      - device_id: 0
+        rank_id: 1
+    server_name: node2
+job2:
+  node1:
+    device:
+      - device_id: 1
+        rank_id: 2
+    server_name: node1
+  node2:
+    device:
+      - device_id: 1
+        rank_id: 3
+    server_name: node2
+job3:
+  node1:
+    device:
+      - device_id: 2
+        rank_id: 4
+    server_name: node1
+  node2:
+    device:
+      - device_id: 2
+        rank_id: 5
+    server_name: node2
+job4:
+  node1:
+    device:
+      - device_id: 3
+        rank_id: 6
+    server_name: node1
+  node2:
+    device:
+      - device_id: 3
+        rank_id: 7
+    server_name: node2
+job5:
+  node1:
+    device:
+      - device_id: 4
+        rank_id: 8
+    server_name: node1
+  node2:
+    device:
+      - device_id: 4
+        rank_id: 9
+    server_name: node2
+---
+# expect job fault rank
+job1:
+  JobId: job1
+  FaultList:
+    - RankId: 0
+      FaultCode: 80E01801
+      FaultLevel: NotHandleFault
+    - RankId: 1
+      FaultCode: 22222222
+      FaultLevel: NotHandleFault
+    - RankId: 1
+      FaultCode: 80E01801
+      FaultLevel: RestartNPU
+job2:
+  JobId: job2
+  FaultList:
+    - RankId: 2
+      FaultCode: 80E01801
+      FaultLevel: RestartRequest
+    - RankId: 3
+      FaultCode: 80E01801
+      FaultLevel: FreeRestartNPU
+job3:
+  JobId: job3
+  FaultList:
+    - RankId: 4
+      FaultCode: 80E01801
+      FaultLevel: RestartBusiness
+    - RankId: 5
+      FaultCode: 80E01801
+      FaultLevel: RestartBusiness
+job4:
+  JobId: job4
+  FaultList:
+    - RankId: 6
+      FaultCode: 80E01801
+      FaultLevel: FreeRestartNPU
+    - RankId: 7
+      FaultCode: 80E01801
+      FaultLevel: RestartBusiness
+job5:
+  JobId: job5
+  FaultList:
+    - RankId: 8
+      FaultCode: 11111111
+      FaultLevel: SeparateNPU
+    - RankId: 8
+      FaultCode: 22222222
+      FaultLevel: NotHandleFault
+    - RankId: 8
+      FaultCode: 33333333
+      FaultLevel: SeparateNPU
+    - RankId: 8
+      FaultCode: 80E01801
+      FaultLevel: RestartNPU
+    - RankId: 9
+      FaultCode: 80E01801
+      FaultLevel: NotHandleFault

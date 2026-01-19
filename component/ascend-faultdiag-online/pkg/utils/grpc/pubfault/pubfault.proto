@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option go_package = ".;pubfault";
+
+// different services with the same name may result in errors
+message RespStatus {
+  int32 code = 1;
+  string info = 2;
+}
+
+message PublicFaultRequest {
+  string id=1;
+  int64 timestamp = 2;
+  string version = 3;
+  string resource = 4;
+  repeated Fault faults = 5;
+}
+
+message Fault {
+  string faultId=1;
+  string faultType = 2;
+  string faultCode = 3;
+  int64 faultTime = 4;
+  string assertion = 5;
+  map<string, string> faultLocation = 6;
+  repeated PubFaultInfo influence = 7;
+  string description = 8;
+}
+
+message PubFaultInfo {
+  string nodeName=1;
+  string nodeSN=2;
+  repeated int32 deviceIds = 3;
+}
+
+service PubFault {
+  rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
+}

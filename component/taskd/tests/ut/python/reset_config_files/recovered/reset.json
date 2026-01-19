@@ -1,0 +1,24 @@
+{
+  "RankList": [
+    {
+      "RankId": 1,
+      "LogicId": 1,
+      "Status": "recovered",
+      "Policy": "reset",
+      "InitialPolicy": null,
+      "ErrorCode": [],
+      "ErrorCodeHex": "8C03A000"
+    },
+    {
+      "RankId": 0,
+      "LogicId": 0,
+      "Status": "recovered",
+      "Policy": "restart",
+      "InitialPolicy": null,
+      "ErrorCode": [],
+      "ErrorCodeHex": "8C084E00"
+    }
+  ],
+  "UpdateTime": 1000000000,
+  "RetryTime": 2
+}

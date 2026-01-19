@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package = ".;job";
+package job;
+
+message ClientInfo{
+  string role = 1;
+  string clientId = 3;
+}
+
+message Status {
+  int32 code = 1;
+  string info = 2;
+  string clientId = 3;
+}
+
+message JobSummarySignal {
+  string uuid = 1;
+  string jobId = 2;
+  string jobName = 3;
+  string namespace =4;
+  string frameWork = 5;
+  string jobStatus = 6;
+  string time = 7;
+  string cmIndex = 8;
+  string total = 9;
+  string HcclJson = 10;
+  string deleteTime = 11;
+  string sharedTorIp = 12;
+  string masterAddr = 13;
+  string operator = 14;
+}
+
+service Job {
+  rpc Register(ClientInfo) returns (Status) {}
+  rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
+}

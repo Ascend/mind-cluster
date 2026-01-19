@@ -1,0 +1,44 @@
+[
+  {
+    "TriggerFault": "8C1F8609",
+    "RelationFaults": [
+      "81078603"
+    ],
+    "FaultStrategy": "SubHealth"
+  },
+  {
+    "TriggerFault": "8C1F860B",
+    "RelationFaults": [
+      "81078603"
+    ],
+    "FaultStrategy": "Separate"
+  },
+  {
+    "TriggerFault": "8C1F8609",
+    "RelationFaults": [
+      "[0x08520003,na,L2,na]"
+    ],
+    "FaultStrategy": "SubHealth"
+  },
+  {
+    "TriggerFault": "8C1F860B",
+    "RelationFaults": [
+      "[0x08520003,na,L2,na]"
+    ],
+    "FaultStrategy": "Separate"
+  },
+  {
+    "TriggerFault": "8C1F8608",
+    "RelationFaults": [
+      "81078603"
+    ],
+    "FaultStrategy": "Separate"
+  },
+  {
+    "TriggerFault": "4C1F8608",
+    "RelationFaults": [
+      "81078603"
+    ],
+    "FaultStrategy": "Separate"
+  }
+]

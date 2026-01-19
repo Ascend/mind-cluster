@@ -1,0 +1,3 @@
+mode: node
+log_level: info
+queue_size: 10

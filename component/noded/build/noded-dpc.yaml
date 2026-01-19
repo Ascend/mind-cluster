@@ -1,0 +1,124 @@
+##### work with Scale-Out Storage DPC 24.2.0 and above.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: noded
+  namespace: mindx-dl
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-noded-role
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-noded-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: noded
+    namespace: mindx-dl
+roleRef:
+  kind: ClusterRole
+  name: pods-noded-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: noded
+  namespace: mindx-dl
+spec:
+  selector:
+    matchLabels:
+      app: noded
+  template:
+    metadata:
+      labels:
+        app: noded
+      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+    spec:
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
+#      securityContext:
+#        seccompProfile:
+#          type: RuntimeDefault
+      nodeSelector:
+        workerselector: dls-worker-node
+      serviceAccountName: noded
+      containers:
+        - name: noded
+          image: noded:v6.0.RC1
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 500m
+            limits:
+              memory: 300Mi
+              cpu: 500m
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: XDL_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          imagePullPolicy: Never
+          command: [ "/bin/bash", "-c", "--"]
+          args: [ "/usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0" ]
+          securityContext:
+            readOnlyRootFilesystem: true
+            privileged: true
+          volumeMounts:
+            - name: log-noded
+              mountPath: /var/log/mindx-dl/noded
+            - name: hiai-driver
+              mountPath: /usr/local/Ascend/driver
+              readOnly: true
+            - name: pingmesh-result
+              mountPath: /user/mind-cluster/pingmesh
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+            - name: dev-dir
+              mountPath: /dev
+            - name: slownode
+              mountPath: /user/cluster-info/profiling
+            - name: dpcstatus
+              mountPath: /user/mind-cluster/dpcstatus
+      volumes:
+        - name: log-noded
+          hostPath:
+            path: /var/log/mindx-dl/noded
+            type: Directory
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver
+        - name: pingmesh-result
+          hostPath:
+            path: /user/mind-cluster/pingmesh
+            type: DirectoryOrCreate
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+        - name: dev-dir
+          hostPath:
+            path: /dev
+            type: Directory
+        - name: slownode
+          hostPath:
+            path: /user/cluster-info/profiling
+            type: DirectoryOrCreate
+        - name: dpcstatus
+          hostPath:
+            path: /proc/odcs

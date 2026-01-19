@@ -1,0 +1,115 @@
+/* Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package common for common function
+package common
+
+import (
+	"nodeD/pkg/grpcclient/pubfault"
+)
+
+var (
+	// ParamOption for option
+	ParamOption Option
+)
+
+// Option struct definition
+type Option struct {
+	ReportInterval     int
+	MonitorPeriod      int
+	DeviceResetTimeout int // device reset timeout
+}
+
+// FaultProcessor fault processor responsibility chain interface
+type FaultProcessor interface {
+	Execute(*FaultAndConfigInfo, string)
+	SetNextFaultProcessor(FaultProcessor)
+}
+
+// FaultAndConfigInfo fault device info
+type FaultAndConfigInfo struct {
+	FaultDevInfo *FaultDevInfo
+	FaultConfig  *FaultConfig
+	DpcStatusMap map[int]DpcStatus
+	PubFaultInfo *pubfault.PublicFaultRequest
+}
+
+// FaultDevInfo fault device info
+type FaultDevInfo struct {
+	FaultDevList []*FaultDev
+	NodeStatus   string
+}
+
+// FaultDev fault device struct
+type FaultDev struct {
+	DeviceType string
+	DeviceId   int64
+	FaultCode  []string
+	FaultLevel string
+}
+
+// FaultConfig fault config
+type FaultConfig struct {
+	FaultTypeCode *FaultTypeCode
+}
+
+// FaultTypeCode fault type code
+type FaultTypeCode struct {
+	NotHandleFaultCodes   []string
+	PreSeparateFaultCodes []string
+	SeparateFaultCodes    []string
+}
+
+// NodeInfoCM the config map struct of node info
+type NodeInfoCM struct {
+	NodeInfo  FaultDevInfo
+	CheckCode string
+}
+
+// FaultEvent the fault event from ipmi
+type FaultEvent struct {
+	ErrorCode  string
+	Severity   int64
+	DeviceType string
+	DeviceId   int64
+}
+
+// PluginMonitor monitor plugin interface
+type PluginMonitor interface {
+	GetMonitorData() *FaultAndConfigInfo
+	Monitoring()
+	Init() error
+	Stop()
+	Name() string
+}
+
+// PluginReporter reporter plugin interface
+type PluginReporter interface {
+	Report(*FaultAndConfigInfo)
+	Init() error
+}
+
+// PluginControl control plugin interface
+type PluginControl interface {
+	Control(*FaultAndConfigInfo) *FaultAndConfigInfo
+	Name() string
+}
+
+// DpcStatus the dpc status
+type DpcStatus struct {
+	ProcessError     bool
+	ProcessErrorTime int64
+	MemoryError      bool
+	MemoryErrorTime  int64
+}

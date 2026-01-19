@@ -1,0 +1,147 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+
+
+MIN_RANK_SIZE = 0
+MAX_RANK_SIZE = 4095
+MAX_CKPT_NUMS = 4096
+
+MIN_DEVICE_NUM = 1
+MAX_DEVICE_NUM = 4096
+MAX_SIZE = 1024 * 1024
+MIN_SIZE = 0
+
+
+LOG_PRIVILEGE = 0o640
+LOG_DIR_PRIVILEGE = 0o750
+LOG_BAK_PRIVILEGE = 0o400
+
+LOG_MAX_LINE_LENGTH = 1024
+LOG_SIMPLE_FORMAT = '[%(asctime)s][%(levelname)s][%(message)s]'
+LOG_FILE_PATH_ENV = "ELASTIC_LOG_PATH"
+
+# constants for fault_checker.run
+RESET_CONFIG_PATH = "/user/restore/reset/config/reset.json"
+RANK_TABLE_VERSION_PATH = "/user/serverid/devindex/config/version"
+ENABLE_RANKTABLE_ENV = "RANK_TABLE_FILE"
+ENABLE_RESTART_FAULT_PROCESS_ENV = "ENABLE_RESTART_FAULT_PROCESS"
+RESTART_TYPE_PATH = "/user/restore/reset/config/restartType"
+MAX_INT16 = 32767
+MAX_FILE_SIZE = 1024 * 1024
+KEY_RANK_LIST = "RankList"
+KEY_RESTART_TYPE = "RestartType"
+KEY_STATUS = "Status"
+KEY_RETRY_TIME = "RetryTime"
+KEY_RANK_ID = "RankId"
+KEY_GRACE_EXIT = "GracefulExit"
+KEY_FAULT_FLUSH = "FaultFlushing"
+KEY_RESTART_FAULT_PROCESS = "RestartFaultProcess"
+SLEEP_GAP = 5
+GRACE_TIME_OUT = 600
+VALUE_RECOVERED = "recovered"
+VALUE_UNRECOVERED = "unrecovered"
+VALUE_FAULT = "fault"
+VALUE_RESTART_HOTRESET_TYPE = "hotReset"
+VALUE_RESTART_RESCHEDULE_TYPE = "podReschedule"
+WAITING_INTERVAL = 5
+WAITING_RESET_CHANGE_INTERVAL = 1
+INIT_TIMEOUT = 900
+INIT_RESET_CHANGE_TIMEOUT = 120
+WAIT_TIMES = 2
+WATCHDOG_ENV = "HCCL_ASYNC_ERROR_HANDLING"
+WATCHDOG_ON = "1"
+WATCHDOG_OFF = "0"
+MAX_RESTART_INTERVAL = 60
+SEND_RETRY_TIMES = 3
+MAX_INI16 = 32767
+
+# constants for recover_manager
+MINDX_START_CONTROLLER_RANK = -1
+GRPC_SERVER_PORT = "8899"
+GRPC_REGISTER_RETRY_TIME_LIMIT = 3
+REPORT_FAULT_RANKS_CALLBACK = "report_fault_ranks"
+STOP_COMPLETE_CALLBACK = "report_stop_complete"
+REPORT_STRATEGIES_CALLBACK = "report_strategies"
+REPORT_RESULT_CALLBACK = "report_result"
+LOCAL_PROXY_IP = "127.0.0.1"
+LOCAL_PROXY_ENABLE = "LOCAL_PROXY_ENABLE"
+TORCH_AGENT_START = "TORCH_AGENT_START"
+HIGH_AVAILABILITY_SWITCH_CHECK_TIMEOUT = 600
+
+# key of mindspore monitor method result
+RANK_STATUS_KEY = "status"
+RANK_PID_KEY = "pid"
+GLOBAL_RANK_ID_KEY = "global_rank"
+
+# status code of training processes of monitor callback
+RANK_STATUS_OK = None
+# RANK_STATUS_SLEEP this code means the process is sleeping, during process recover it will be sleeping
+RANK_STATUS_SLEEP = 1
+# RANK_STATUS_NOT_START means the training processes are not started yet
+RANK_STATUS_NOT_START = 200
+# the process is disappeared
+RANK_PID_NOT_EXIST = 300
+# training process exit with code 0, which means training finished
+RANK_STATUS_COMPLETE = 0
+
+# the result of calling method ok
+RES_OK = 0
+
+# while getting -1, mindspore  kill_worker callback will kill all local ranks
+KILL_ALL_WORKERS = -1
+MONITOR_ALL_WORKERS = -1
+KILL_INTERVAL = 60
+KILL_ALL_WORKER_CALLBACK_NAME = "KILL_WORKER"
+START_ALL_WORKER_CALLBACK_NAME = "START_ALL_WORKER"
+START_WORKER_LIST_CALLBACK_NAME = "START_WORKER_LIST"
+MONITOR_CALLBACK_NAME = "MONITOR"
+
+GRPC_KEEPALIVE_TIME_MS = 'grpc.keepalive_time_ms'
+GRPC_KEEPALIVE_TIMEOUT_MS = 'grpc.keepalive_timeout_ms'
+GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS = 'grpc.keepalive_permit_without_calls'
+GRPC_MAX_PINGS_WITHOUT_DATA = 'grpc.http2.max_pings_without_data'
+GRPC_SSL_TARGET_NAME_OVERRIDE = 'grpc.ssl_target_name_override'
+
+STOP_TRAIN_ABORT = "stop"
+STOP_TRAIN_PAUSE = "pause"
+
+SWITCH_NIC_DEFAULT_TIMEOUT = 600
+SWITCH_NIC_MAX_TIMEOUT = 120 * 60
+HCCL_CONNECT_TIMEOUT = "HCCL_CONNECT_TIMEOUT"
+
+SAVE_AND_EXIT = "save_and_exit"
+STOP_TRAIN = "stop_train"
+PAUSE_TRAIN = "pause_train"
+ON_GLOBAL_RANK = "on_global_rank"
+CHANGE_STRATEGY = "change_strategy"
+FAULT_RECOVER = "fault_recover"
+
+POD_IP = "POD_IP"
+TTP_PORT = "TTP_PORT"
+WORLD_SIZE = "WORLD_SIZE"
+MS_WORKER_NUM = "MS_WORKER_NUM"
+HIGH_AVAILABILITY_STRATEGY = "HIGH_AVAILABILITY"
+ELASTIC_TRAINING = "elastic-training"
+
+STOPAGENTCODE = 'STOP'
+GRACEEXITAGENTCODE = 'GRACE_EXIT'
+
+INIT_NETWORK_TIMEOUT = 180
+REPORT_CODE = 202
+RESTARTTIMESCODE = 201
+EXITAGENTCODE = 203
+RESTARTAGENTCODE = 208
+RESTARTWORKERCODE = 209
+STARTAGENTCODE = 210
+AGENTPAUSESTARTTRAINCODE = 211
+
+RESTARTCONTROLLER = "restart_controller"
+DESTRYCONTROLLER = "destroy_controller"
+PROCESS_RECOVER = "PROCESS_RECOVER"
+TASKD_PROCESS_ENABLE = "TASKD_PROCESS_ENABLE"
+TASKD_ENABLE = "taskd_enable"
+SWITCH_ON = "on"
+SWITCH_OFF = "off"
+
+MONITOR_INTERVAL = 1

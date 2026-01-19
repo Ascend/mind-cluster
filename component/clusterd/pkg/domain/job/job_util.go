@@ -1,0 +1,324 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+
+// Package job a series of job function
+package job
+
+import (
+	"encoding/json"
+	"strings"
+	"time"
+
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
+
+	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/jobinfo"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/pod"
+	"clusterd/pkg/domain/podgroup"
+)
+
+const (
+	cmDataInitLength = 16
+	safeDeviceSize   = 1000
+	vcJobKind        = "Job"
+	masterAddr       = "MASTER_ADDR"
+)
+
+const (
+	// StatusJobRunning is the running job status
+	StatusJobRunning = "running"
+	// StatusJobPending is the pending job status
+	StatusJobPending = "pending"
+	// StatusJobFail is the failed job status
+	StatusJobFail = "failed"
+	// StatusJobCompleted is the complete job status
+	StatusJobCompleted = "complete"
+)
+
+const (
+	// StatusRankTableInit is the init rankTable status
+	StatusRankTableInit = "initializing"
+	// StatusRankTableComplete is the complete rankTable status
+	StatusRankTableComplete = "complete"
+	// CustomJobID  custom id key
+	CustomJobID = "custom-job-id"
+)
+
+// PreDeleteCmAndCache set job status
+func PreDeleteCmAndCache(jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	if jobInfo.AddTime == 0 {
+		jobInfo.AddTime = time.Now().Unix()
+	}
+	jobInfo.IsPreDelete = true
+	// when a job is deleted, if it is not in a successful state, it must be in a failed state
+	if jobInfo.Status != StatusJobCompleted {
+		jobInfo.Status = StatusJobFail
+	}
+	jobInfo.DeleteTime = time.Now().Unix()
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	hccls := getHcclSlice(jobInfo.JobRankTable)
+	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo,
+		util.ObjToString(jobInfo.JobRankTable), operatorDelete))
+	if preDeleteCM(jobInfo, hccls) {
+		hwlog.RunLog.Debugf("pre delete job:%s success", jobInfo.Name)
+		SaveJobCache(jobKey, jobInfo)
+	}
+}
+
+// DeleteCmAndCache delete job cm and cache info
+func DeleteCmAndCache(jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	jobInfos := GetJobByNameSpaceAndNameAndPreDelete(jobInfo.Name, jobInfo.NameSpace, false)
+	if len(jobInfos) > 0 {
+		hwlog.RunLog.Infof("job(%s) with same name, only delete local cache", jobInfo.Name)
+		DeleteJobCache(jobKey)
+	} else if deleteCm(jobInfo) {
+		hwlog.RunLog.Debugf("delete job:%s success", jobInfo.Name)
+		DeleteJobCache(jobKey)
+	}
+}
+
+// InitCmAndCache init cm and cache
+func InitCmAndCache(podGroup v1beta1.PodGroup) {
+	if len(podGroup.Name) == 0 || len(podGroup.GetOwnerReferences()) == 0 {
+		hwlog.RunLog.Error("podGroup is nil, init configmap failed")
+		return
+	}
+	// 1.init job basic info
+	jobInfo := getJobBasicInfoByPG(podGroup)
+	// 2.set job status info
+	jobInfo.Status = StatusJobPending
+	jobInfo.IsPreDelete = false
+	jobInfo.JobRankTable = constant.RankTable{}
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo, defaultHcclJson, operatorAdd))
+	if initCM(jobInfo) {
+		hwlog.RunLog.Debugf("init job:%s success", jobInfo.Name)
+		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup) constant.JobInfo {
+	var jobInfo constant.JobInfo
+	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
+	jobInfo.Key = key
+	jobInfo.Name = name
+	jobInfo.Replicas = int(pgInfo.Spec.MinMember)
+	jobInfo.TotalCmNum = (jobInfo.Replicas-1)/safeDeviceSize + 1
+	jobInfo.JobType = podgroup.GetJobTypeByPG(&pgInfo)
+	jobInfo.NameSpace = pgInfo.Namespace
+	jobInfo.Framework = podgroup.GetModelFramework(&pgInfo)
+	jobInfo.ResourceType = podgroup.GetResourceType(&pgInfo)
+	jobInfo.CustomJobID = pgInfo.Annotations[CustomJobID]
+	jobInfo.MultiInstanceJobId = pgInfo.Labels[constant.MindIeJobIdLabelKey]
+	jobInfo.AppType = pgInfo.Labels[constant.MindIeAppTypeLabelKey]
+	jobInfo.AddTime = time.Now().Unix()
+	return jobInfo
+}
+
+// UpdateCmAndCache update cm and cache
+func UpdateCmAndCache(status string, jobInfo constant.JobInfo, podGroup v1beta1.PodGroup,
+	podsInJob map[string]v1.Pod) {
+	if jobInfo.Name == "" {
+		jobInfo = getJobBasicInfoByPG(podGroup)
+	}
+	if jobInfo.AddTime == 0 {
+		jobInfo.AddTime = time.Now().Unix()
+	}
+	jobInfo.Status = status
+	jobInfo.IsPreDelete = false
+	var completedPodNum int
+	jobInfo.JobRankTable, completedPodNum = pod.ConstructRankTableByPod(podsInJob, jobInfo.Replicas)
+	if jobInfo.Framework == "" {
+		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
+		jobInfo.Framework = pod.GetModelFramework(podsInJob)
+	}
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	if completedPodNum == jobInfo.Replicas {
+		jobInfo.JobRankTable.Status = StatusRankTableComplete
+		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
+		setUseNodeNames(&jobInfo, podsInJob)
+		initJobShareTorInfo(&jobInfo, podsInJob)
+	} else {
+		jobInfo.JobRankTable.Status = StatusRankTableInit
+	}
+	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
+	hccls := getHcclSlice(jobInfo.JobRankTable)
+	result := true
+	for i := 0; i < jobInfo.TotalCmNum; i++ {
+		hccl := ""
+		if i < len(hccls) {
+			hccl = hccls[i]
+		}
+		result = updateCM(jobInfo, i, hccl) && result
+	}
+	jobinfo.SendJobInfoSignal(jobinfo.BuildJobSignalFromJobInfo(jobInfo,
+		util.ObjToString(jobInfo.JobRankTable), operatorAdd))
+	if result {
+		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
+		SaveJobCache(jobInfo.Key, jobInfo)
+	}
+}
+
+func setUseNodeNames(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
+	if jobInfo.NodeNames == nil {
+		jobInfo.NodeNames = make(map[string]string)
+	}
+	for _, podTemp := range podsInJob {
+		jobInfo.NodeNames[string(podTemp.UID)] = podTemp.Spec.NodeName
+	}
+}
+
+func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod) {
+	if jobInfo.Framework != ptFramework {
+		return
+	}
+	if jobInfo.MasterAddr != "" || jobInfo.SharedTorIp != "" {
+		return
+	}
+	jobInfo.SharedTorIp = pod.GetSharedTorIpByPod(podsInJob)
+	if jobInfo.JobType == vcJobKind {
+		if len(jobInfo.JobRankTable.ServerList) > 0 {
+			jobInfo.MasterAddr = jobInfo.JobRankTable.ServerList[0].ServerID
+		}
+	} else {
+		jobInfo.MasterAddr = pod.GetEnvByPod(podsInJob, masterAddr)
+	}
+}
+
+func getHcclSlice(table constant.RankTable) []string {
+	if len(table.ServerList) == 0 {
+		return nil
+	}
+	hcclJsons := make([]string, 0, table.Total)
+	serverHcclSlice := make([][]constant.ServerHccl, 0, table.Total)
+	for i := 0; i < len(table.ServerList); i += safeDeviceSize {
+		if i+safeDeviceSize > len(table.ServerList) {
+			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:])
+		} else {
+			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:i+safeDeviceSize])
+		}
+	}
+	for i, serverHccl := range serverHcclSlice {
+		table.ServerList = serverHccl
+		str, err := json.Marshal(table)
+		if err != nil {
+			hwlog.RunLog.Errorf("Marshal hccl json part %v error, error is %v", i, err)
+			continue
+		}
+		hcclJsons = append(hcclJsons, string(str))
+	}
+	return hcclJsons
+}
+
+// GetJobServerInfoMap could get all job info in once query
+func GetJobServerInfoMap() constant.JobServerInfoMap {
+	allJobServerMap := make(map[string]map[string]constant.ServerHccl)
+	allRetryJobFlag := make(map[string]bool)
+	resourceType := make(map[string]string)
+	for jobKey, jobInfo := range GetAllJobCache() {
+		jobServerMap := buildJobServerInfoMap(jobInfo)
+		allJobServerMap[jobKey] = jobServerMap
+		allRetryJobFlag[jobKey] = podgroup.JudgeRetryByJobKey(jobKey)
+		resourceType[jobKey] = jobInfo.ResourceType
+	}
+
+	return constant.JobServerInfoMap{InfoMap: allJobServerMap,
+		RetryTolerate: allRetryJobFlag, ResourceType: resourceType}
+}
+
+func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerHccl {
+	jobServerMap := make(map[string]constant.ServerHccl)
+	for _, server := range jobInfo.PreServerList {
+		copyServerHccl := constant.ServerHccl{
+			DeviceList:   make([]constant.Device, 0),
+			ServerID:     server.ServerID,
+			PodID:        server.PodID,
+			PodNameSpace: server.PodNameSpace,
+			ServerName:   server.ServerName,
+			ServerSN:     server.ServerSN,
+		}
+		for _, dev := range server.DeviceList {
+			copyDev := constant.Device{
+				DeviceID: dev.DeviceID,
+				DeviceIP: dev.DeviceIP,
+				RankID:   dev.RankID,
+			}
+			copyServerHccl.DeviceList = append(copyServerHccl.DeviceList, copyDev)
+		}
+		jobServerMap[server.ServerName] = copyServerHccl
+	}
+	return jobServerMap
+}
+
+// GetJobIsRunning get job is running
+func GetJobIsRunning(jobKey string) bool {
+	jobCache, _ := GetJobCache(jobKey)
+	return jobCache.Status == StatusJobRunning
+}
+
+// GetJobIsExists get job is exists
+func GetJobIsExists(jobKey string) bool {
+	_, ok := GetJobCache(jobKey)
+	return ok
+}
+
+// FlushLastUpdateTime flush lastUpdateTime
+func FlushLastUpdateTime(jobKey string) {
+	jobInfo, ok := GetJobCache(jobKey)
+	if !ok {
+		return
+	}
+	jobInfo.LastUpdatedCmTime = time.Now().Unix()
+	SaveJobCache(jobKey, jobInfo)
+}
+
+// IsMindIeServerPod check pod is mindie server pod
+func IsMindIeServerPod(podInfo v1.Pod) bool {
+	return podInfo.Labels != nil && podInfo.Labels[constant.MindIeJobIdLabelKey] != "" &&
+		podInfo.Labels[constant.MindIeAppTypeLabelKey] == constant.ServerAppType
+}
+
+// GetMindIeServerJobAndUsedDeviceInfoMap get mindie server job info map and job used device info map
+func GetMindIeServerJobAndUsedDeviceInfoMap() (map[string]map[string]constant.JobInfo,
+	map[string]map[string]sets.String) {
+	jobInfoMap := make(map[string]map[string]constant.JobInfo)
+	deviceInfoMap := make(map[string]map[string]sets.String)
+	allJob := GetAllJobCache()
+	for jobKey, jobInfo := range allJob {
+		podsInJob := pod.GetPodByJobId(jobKey)
+		if len(podsInJob) == 0 {
+			continue
+		}
+		jobUsedDevices := sets.String{}
+		for _, podInfo := range podsInJob {
+			if !IsMindIeServerPod(podInfo) {
+				continue
+			}
+			nodeName := podInfo.Spec.NodeName
+			if _, exists := jobInfoMap[nodeName]; !exists {
+				jobInfoMap[nodeName] = make(map[string]constant.JobInfo)
+				deviceInfoMap[nodeName] = make(map[string]sets.String)
+			}
+			if _, exists := jobInfoMap[nodeName][jobKey]; !exists {
+				jobInfoMap[nodeName][jobKey] = jobInfo
+			}
+			if realDevice, exist := podInfo.Annotations[api.PodAnnotationAscendReal]; exist && realDevice != "" {
+				jobUsedDevices = jobUsedDevices.Insert(strings.Split(realDevice, constant.Comma)...)
+			}
+			deviceInfoMap[nodeName][jobKey] = jobUsedDevices
+		}
+	}
+	return jobInfoMap, deviceInfoMap
+}

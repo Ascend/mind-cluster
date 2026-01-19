@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pingmesh-config
+  namespace: cluster-system
+  labels:
+    mx-consumer-cim: "true"
+    app: pingmesh
+data:
+  global: '{"activate": "off", "task_interval": 1}'
+  "1": '{"activate": "off", "task_interval": 1}'   # modify according to your cluster

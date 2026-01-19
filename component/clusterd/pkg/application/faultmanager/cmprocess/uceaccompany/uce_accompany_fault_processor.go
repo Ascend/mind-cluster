@@ -1,0 +1,194 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+
+// Package uceaccompany contain aiv/aic fault process
+package uceaccompany
+
+import (
+	"fmt"
+	"time"
+
+	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/faultdomain"
+	"clusterd/pkg/domain/faultdomain/collector"
+)
+
+var UceAccompanyProcessor *uceAccompanyFaultProcessor
+
+// uceAccompanyFaultProcessor:
+// aic aiv fault can be 1) accompanied by uce fault, also can 2) curr alone.
+// if 1) aic aiv fault should be filtered. Once find aic fault, check if there is an uce fault 5s ago
+// if 2) aic aiv fault should not be retained.
+type uceAccompanyFaultProcessor struct {
+	// maintain 5s ago device info
+	DiagnosisAccompanyTimeout int64
+	// nodeName -> deviceName -> faultQue
+	uceAccompanyFaultQue map[string]map[string][]constant.DeviceFault
+	// uceFaultTime
+	uceFaultTime       map[string]map[string]int64
+	deviceCmForNodeMap map[string]*constant.AdvanceDeviceFaultCm
+}
+
+func init() {
+	UceAccompanyProcessor = &uceAccompanyFaultProcessor{
+		DiagnosisAccompanyTimeout: constant.DiagnosisAccompanyTimeout,
+		deviceCmForNodeMap:        make(map[string]*constant.AdvanceDeviceFaultCm),
+		uceAccompanyFaultQue:      make(map[string]map[string][]constant.DeviceFault),
+		uceFaultTime:              make(map[string]map[string]int64),
+	}
+}
+
+func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQue() {
+	for nodeName, deviceInfo := range processor.deviceCmForNodeMap {
+		processor.uceAccompanyFaultInQueForNode(nodeName, deviceInfo)
+	}
+}
+
+func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
+	nodeName string, deviceInfo *constant.AdvanceDeviceFaultCm) {
+	if deviceInfo == nil {
+		hwlog.RunLog.Error("deviceInfo is nil")
+		return
+	}
+	if _, ok := processor.uceAccompanyFaultQue[nodeName]; !ok {
+		processor.uceAccompanyFaultQue[nodeName] = make(map[string][]constant.DeviceFault)
+	}
+	if _, ok := processor.uceFaultTime[nodeName]; !ok {
+		processor.uceFaultTime[nodeName] = make(map[string]int64)
+	}
+	for deviceName, deviceFaults := range deviceInfo.FaultDeviceList {
+		for _, fault := range deviceFaults {
+			// find uce fault in control plane
+			if faultdomain.IsUceFault(fault.FaultCode) {
+				errorMsg := fmt.Sprintf("uceAccompany cannot find uce fault time of device %s of node %s",
+					deviceName, nodeName)
+				processor.uceFaultTime[nodeName][deviceName] = faultdomain.GetFaultTime(fault, errorMsg)
+				continue
+			}
+			// find uce fault in business plane
+			if found, info := processor.isBusinessUceFault(nodeName, fault.NPUName); found {
+				processor.uceFaultTime[nodeName][deviceName] = info.RecoverTime
+			}
+			if !faultdomain.IsUceAccompanyFault(fault.FaultCode) {
+				continue
+			}
+			processor.inQue(nodeName, deviceName, fault)
+		}
+	}
+}
+
+func (processor *uceAccompanyFaultProcessor) isBusinessUceFault(nodeName, deviceName string) (bool, constant.ReportInfo) {
+	info := collector.ReportInfoCollector.GetInfoWithoutJobId(nodeName, deviceName)
+	if info.RecoverTime != constant.JobNotRecover {
+		return true, info
+	}
+	return false, constant.ReportInfo{}
+}
+
+func (processor *uceAccompanyFaultProcessor) inQue(nodeName, deviceName string, fault constant.DeviceFault) {
+	if _, ok := processor.uceAccompanyFaultQue[nodeName][deviceName]; !ok {
+		processor.uceAccompanyFaultQue[nodeName][deviceName] = make([]constant.DeviceFault, 0)
+	}
+
+	faultsInfo := processor.uceAccompanyFaultQue[nodeName][deviceName]
+	found := false
+	for _, anotherFault := range faultsInfo {
+		if faultdomain.IsDeviceFaultEqual(fault, anotherFault) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		processor.uceAccompanyFaultQue[nodeName][deviceName] = append(faultsInfo, fault)
+	}
+}
+
+func (processor *uceAccompanyFaultProcessor) filterFaultInfos(currentTime int64) {
+	for nodeName, nodeFaults := range processor.uceAccompanyFaultQue {
+		deviceFaultCm, found := processor.deviceCmForNodeMap[nodeName]
+		if !found {
+			continue
+		}
+		for deviceName, deviceFaultQue := range nodeFaults {
+			newQue := processor.filterFaultDevice(deviceFaultCm, currentTime, nodeName, deviceName, deviceFaultQue)
+			nodeFaults[deviceName] = newQue
+		}
+	}
+}
+
+func (processor *uceAccompanyFaultProcessor) filterFaultDevice(
+	deviceFaultCm *constant.AdvanceDeviceFaultCm, currentTime int64, nodeName, deviceName string,
+	deviceFaultQue []constant.DeviceFault) []constant.DeviceFault {
+	newDeviceFaultQue := make([]constant.DeviceFault, 0)
+	modified := false
+	for _, fault := range deviceFaultQue {
+		uceFaultTime := processor.getDeviceUceFaultTime(nodeName, deviceName)
+		errorMsg := fmt.Sprintf("filterFaultDevice cannot find uce fault time for device %s of node %s",
+			deviceName, nodeName)
+		accompanyFaultTime := faultdomain.GetFaultTime(fault, errorMsg)
+		// if is accompanied fault, filter
+		if processor.isAccompaniedFaultByUce(uceFaultTime, accompanyFaultTime) {
+			hwlog.RunLog.Warnf("filter uce accompany fault %v on node %s, fault time: %s",
+				fault, nodeName, util.ReadableMsTime(accompanyFaultTime))
+			deviceFaultCm.DelFaultAndFix(fault)
+			modified = true
+			continue
+		}
+		// if current is not exceed diagnosis time,
+		// then cannot decide fault is accompany or not, filter, and in que to decide in next turn.
+		if !processor.isCurrentExceedDiagnosisTimeout(currentTime, accompanyFaultTime) {
+			hwlog.RunLog.Debugf("filter uce accompany like fault %v on node %s, fault time: %s",
+				fault, nodeName, util.ReadableMsTime(accompanyFaultTime))
+			deviceFaultCm.DelFaultAndFix(fault)
+			modified = true
+			newDeviceFaultQue = append(newDeviceFaultQue, fault)
+			continue
+		}
+		// cannot filter, add the aic/aiv fault into faultMap
+		deviceFaultCm.AddFaultAndFix(fault)
+		modified = true
+		hwlog.RunLog.Warnf("cannot filter uce accompany like fault %v on node %s, uce fault time: %s",
+			fault, nodeName, util.ReadableMsTime(uceFaultTime))
+	}
+	if modified {
+		deviceFaultCm.UpdateTime = time.Now().Unix()
+		faultdomain.SortDataForAdvanceDeviceInfo(deviceFaultCm)
+	}
+	return newDeviceFaultQue
+}
+
+func (processor *uceAccompanyFaultProcessor) getDeviceUceFaultTime(nodeName, deviceName string) int64 {
+	if faultTime, ok := processor.uceFaultTime[nodeName][deviceName]; ok {
+		return faultTime
+	}
+	return constant.DeviceNotFault
+}
+
+func (processor *uceAccompanyFaultProcessor) isAccompaniedFaultByUce(
+	uceFaultTime, uceAccompanyFaultTime int64) bool {
+	return util.Abs(uceFaultTime-uceAccompanyFaultTime) <= processor.DiagnosisAccompanyTimeout
+}
+
+func (processor *uceAccompanyFaultProcessor) isCurrentExceedDiagnosisTimeout(
+	currentTime, uceAccompanyFaultTime int64) bool {
+	return uceAccompanyFaultTime < currentTime-processor.DiagnosisAccompanyTimeout
+}
+
+// Process uce accompany fault
+func (processor *uceAccompanyFaultProcessor) Process(info any) any {
+	processContent, ok := info.(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
+	if !ok {
+		hwlog.RunLog.Errorf("%v cannot convert to DeviceInfo", info)
+		return info
+	}
+	processor.deviceCmForNodeMap = processContent.AllConfigmap
+	hwlog.RunLog.Debugf("current deviceInfos: %v", processContent.AllConfigmap)
+
+	processor.uceAccompanyFaultInQue()
+	hwlog.RunLog.Debugf("current uceAccompanyFaultQue: %v", processor.uceAccompanyFaultQue)
+	currentTime := time.Now().UnixMilli()
+
+	processor.filterFaultInfos(currentTime)
+	return processContent
+}

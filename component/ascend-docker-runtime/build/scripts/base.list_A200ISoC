@@ -1,0 +1,4 @@
+/usr/local/bin/npu-smi
+/etc/hdcBasic.cfg
+/etc/sys_version.conf
+/var/queue_schedule

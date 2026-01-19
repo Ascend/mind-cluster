@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option go_package = ".;fault";
+package fault;
+
+message FaultQueryResult{
+  int32 code = 1;
+  string info = 2;
+  FaultMsgSignal faultSignal =3;
+}
+
+message Status {
+  int32 code = 1;
+  string info = 2;
+}
+
+message ClientInfo{
+  string jobId = 1;
+  string role = 2;
+}
+
+message FaultMsgSignal {
+  string uuid = 1;
+  string jobId = 2;
+  string signalType = 3;
+  repeated NodeFaultInfo nodeFaultInfo = 4;
+}
+
+message NodeFaultInfo {
+  string nodeName = 1;
+  string nodeIP = 2;
+  string nodeSN = 3;
+  string faultLevel = 4;
+  repeated DeviceFaultInfo faultDevice = 5;
+}
+
+message SwitchFaultInfo {
+  string faultCode = 1;
+  string switchChipId = 2;
+  string switchPortId = 3;
+  string faultTime = 4;
+}
+
+message DeviceFaultInfo {
+  string deviceId = 1;
+  string deviceType = 2;
+  repeated string faultCodes = 3;
+  string faultLevel = 4;
+  repeated string faultType = 5;
+  repeated string faultReason = 6;
+  repeated SwitchFaultInfo switchFaultInfos = 7;
+}
+
+service Fault {
+  rpc Register(ClientInfo) returns (Status) {}
+  rpc SubscribeFaultMsgSignal(ClientInfo) returns (stream FaultMsgSignal){}
+  rpc GetFaultMsgSignal(ClientInfo) returns(FaultQueryResult){}
+}

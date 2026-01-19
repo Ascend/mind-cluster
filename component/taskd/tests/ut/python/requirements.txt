@@ -1,0 +1,9 @@
+pytest
+pytest-cov
+pytest-html
+coverage
+torch == 2.1.0
+grpcio >= 1.62.2
+pyOpenSSL
+protobuf >= 4.24.4
+numpy

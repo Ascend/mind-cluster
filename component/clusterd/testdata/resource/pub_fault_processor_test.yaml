@@ -1,0 +1,63 @@
+# device info cm: unhealthy card is Ascend910-5
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910: Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-6,Ascend910-7
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "CardUnhealthy", "npu_name": "Ascend910-5", "fault_code": "4C1F8608", 
+          "large_model_fault_level": "PreSeparateNPU", "fault_level": "PreSeparateNPU", "fault_handling": "PreSeparateNPU",
+          "fault_time_and_level_map": { "4C1F8608": { "fault_time": 1234567890, "fault_level": "PreSeparateNPU" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-5
+---
+# device info cm after public fault processor. public fault: unhealthy card is Ascend910-0, Ascend910-1
+mindx-dl-deviceinfo-node1:
+  CmName: "mindx-dl-deviceinfo-node1"
+  DeviceList:
+    huawei.com/Ascend910: Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-6,Ascend910-7
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "CardUnhealthy", "npu_name": "Ascend910-5", "fault_code": "4C1F8608", 
+          "large_model_fault_level": "PreSeparateNPU", "fault_level": "PreSeparateNPU", "fault_handling": "PreSeparateNPU",
+          "fault_time_and_level_map": { "4C1F8608": { "fault_time": 1234567890, "fault_level": "PreSeparateNPU" } } },
+        { "fault_type": "PublicFault", "npu_name": "Ascend910-0", "fault_code": "010001001", 
+          "large_model_fault_level": "SeparateNPU", "fault_level": "SeparateNPU", "fault_handling": "SeparateNPU",
+          "fault_time_and_level_map": { "010001001": { "fault_time": 1739866717, "fault_level": "SeparateNPU" } } },
+        { "fault_type": "PublicFault", "npu_name": "Ascend910-1", "fault_code": "010001001", 
+          "large_model_fault_level": "SeparateNPU", "fault_level": "SeparateNPU", "fault_handling": "SeparateNPU",
+          "fault_time_and_level_map": { "010001001": { "fault_time": 1739866717, "fault_level": "SeparateNPU" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-0,Ascend910-1,Ascend910-5
+---
+# device info cm: unhealthy card is Ascend910-5
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910: Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-6,Ascend910-7
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "CardUnhealthy", "npu_name": "Ascend910-5", "fault_code": "4C1F8608", 
+          "large_model_fault_level": "PreSeparateNPU", "fault_level": "PreSeparateNPU", "fault_handling": "PreSeparateNPU",
+          "fault_time_and_level_map": { "4C1F8608": { "fault_time": 1234567890, "fault_level": "PreSeparateNPU" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-5
+---
+# device info cm after public fault processor. public fault: unhealthy card is Ascend910-0, Ascend910-5
+mindx-dl-deviceinfo-node2:
+  CmName: "mindx-dl-deviceinfo-node2"
+  DeviceList:
+    huawei.com/Ascend910: Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-6,Ascend910-7
+    huawei.com/Ascend910-Fault: |
+      [
+        { "fault_type": "CardUnhealthy", "npu_name": "Ascend910-5", "fault_code": "4C1F8608", 
+          "large_model_fault_level": "PreSeparateNPU", "fault_level": "PreSeparateNPU", "fault_handling": "PreSeparateNPU",
+          "fault_time_and_level_map": { "4C1F8608": { "fault_time": 1234567890, "fault_level": "PreSeparateNPU" } } },
+        { "fault_type": "PublicFault", "npu_name": "Ascend910-5", "fault_code": "010001001", 
+          "large_model_fault_level": "SeparateNPU", "fault_level": "SeparateNPU", "fault_handling": "SeparateNPU",
+          "fault_time_and_level_map": { "010001001": { "fault_time": 1739866717, "fault_level": "SeparateNPU" } } },
+        { "fault_type": "PublicFault", "npu_name": "Ascend910-0", "fault_code": "010001001", 
+          "large_model_fault_level": "SeparateNPU", "fault_level": "SeparateNPU", "fault_handling": "SeparateNPU",
+          "fault_time_and_level_map": { "010001001": { "fault_time": 1739866717, "fault_level": "SeparateNPU" } } }
+      ]
+    huawei.com/Ascend910-Unhealthy: Ascend910-0,Ascend910-5
