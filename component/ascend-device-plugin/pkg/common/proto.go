@@ -37,8 +37,9 @@ type NodeDeviceInfoCache struct {
 	DeviceInfo  NodeDeviceInfo
 	SuperPodID  int32
 	ServerIndex int32
-	RackID      int32
 	CheckCode   string
+	RackID      *int32   `json:"RackID,omitempty"`
+	DpuInfo     *DpuInfo `json:"DpuInfo,omitempty"`
 }
 
 // SwitchFaultEvent is the struct for switch reported fault

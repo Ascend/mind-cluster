@@ -567,3 +567,45 @@ func TestAddAnnotation(t *testing.T) {
 		})
 	})
 }
+
+func TestResetDeviceInfo(t *testing.T) {
+	// after test reset -> recover
+	mockNodeDeviceInfoCache := nodeDeviceInfoCache
+	mock := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)),
+		"WriteDeviceInfoDataIntoCM", func(_ *ClientK8s,
+			nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
+			_ common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
+			return nodeDeviceData, nil
+		})
+	defer func() {
+		nodeDeviceInfoCache = mockNodeDeviceInfoCache
+		mock.Reset()
+	}()
+	convey.Convey("case 1: A5 reset device info cache", t, func() {
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("Test reset device info cache: init kubernetes failed")
+		}
+		mockRealCardType := common.ParamOption.RealCardType
+		common.ParamOption.RealCardType = api.Ascend910A5
+		defer func() {
+			common.ParamOption.RealCardType = mockRealCardType
+		}()
+		client.ResetDeviceInfo()
+		convey.So(*nodeDeviceInfoCache.RackID, convey.ShouldEqual, -1)
+	})
+
+	convey.Convey("case 1: not A5 reset device info cache", t, func() {
+		client, err := newTestClientK8s()
+		if err != nil {
+			t.Fatal("Test reset device info cache: init kubernetes failed")
+		}
+		mockRealCardType := common.ParamOption.RealCardType
+		common.ParamOption.RealCardType = api.Ascend910
+		defer func() {
+			common.ParamOption.RealCardType = mockRealCardType
+		}()
+		client.ResetDeviceInfo()
+		convey.So(nodeDeviceInfoCache.RackID, convey.ShouldBeNil)
+	})
+}

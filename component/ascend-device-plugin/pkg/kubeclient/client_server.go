@@ -178,26 +178,19 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 }
 
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
-func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
-	manuallySeparateNPU string, switchInfo common.SwitchFaultInfo, superPodID,
-	serverIndex int32) (*common.NodeDeviceInfoCache, error) {
-
-	var nodeDeviceData = common.NodeDeviceInfoCache{
-		DeviceInfo: common.NodeDeviceInfo{
-			DeviceList: deviceInfo,
-			UpdateTime: time.Now().Unix(),
-		},
-		SuperPodID:  superPodID,
-		ServerIndex: serverIndex,
-	}
+func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache,
+	manuallySeparateNPU string, switchInfo common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
-
-	var data, switchData []byte
+	var data, switchData, dpuData []byte
 	if data = common.MarshalData(nodeDeviceData); len(data) == 0 {
 		return nil, fmt.Errorf("marshal nodeDeviceData failed")
 	}
 	if switchData = common.MarshalData(switchInfo); len(switchData) == 0 {
 		return nil, fmt.Errorf("marshal switchDeviceData failed")
+	}
+	dpuInfo := &nodeDeviceData.DpuInfo
+	if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
+		return nil, fmt.Errorf("marshal DpuDeviceData failed")
 	}
 	deviceInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -206,15 +199,22 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 			Labels:    map[string]string{api.CIMCMLabelKey: common.CmConsumerValue},
 		},
 	}
-	if common.ParamOption.RealCardType != api.Ascend910A3 {
-		deviceInfoCM.Data = map[string]string{
-			api.DeviceInfoCMDataKey:                   string(data),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
-			common.DescriptionKey:                     common.DescriptionValue}
-	} else {
+	switch common.ParamOption.RealCardType {
+	case api.Ascend910A5:
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			api.DpuInfoCMDataKey:                      string(dpuData)}
+	case api.Ascend910A3:
+		deviceInfoCM.Data = map[string]string{
+			api.DeviceInfoCMDataKey:                   string(data),
+			api.SwitchInfoCMDataKey:                   string(switchData),
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DescriptionKey:                     common.DescriptionValue}
+	default:
+		deviceInfoCM.Data = map[string]string{
+			api.DeviceInfoCMDataKey:                   string(data),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
 			common.DescriptionKey:                     common.DescriptionValue}
 	}
@@ -223,7 +223,7 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(deviceInfo map[string]string,
 	if err := ki.createOrUpdateDeviceCM(deviceInfoCM); err != nil {
 		return nil, err
 	}
-	return &nodeDeviceData, nil
+	return nodeDeviceData, nil
 }
 
 // WriteResetInfoDataIntoCM write reset info into config map

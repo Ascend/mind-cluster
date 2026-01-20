@@ -835,3 +835,9 @@ const (
 	// ResetFaultToleranceTimeInterval fault tolerance time interval
 	ResetFaultToleranceTimeInterval = 60
 )
+const (
+	// DefaultSuperPodID default super pod id -1
+	DefaultSuperPodID = -1
+	// DefaultServerIndex default server index -1
+	DefaultServerIndex = -1
+)

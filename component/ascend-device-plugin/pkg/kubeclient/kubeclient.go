@@ -283,20 +283,18 @@ func (ki *ClientK8s) resetNodeAnnotations(node *v1.Node) {
 
 // ResetDeviceInfo reset device info
 func (ki *ClientK8s) ResetDeviceInfo() {
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		nodeDeviceData := &common.NodeDeviceInfoCache{
-			DeviceInfo:  common.NodeDeviceInfo{DeviceList: make(map[string]string, 1)},
-			SuperPodID:  -1,
-			RackID:      -1,
-			ServerIndex: -1,
-		}
-		if err := ki.WriteDeviceInfoDataIntoCMCacheA5(nodeDeviceData, "", common.GetSwitchFaultInfo(), common.DpuInfo{}); err != nil {
-			hwlog.RunLog.Errorf("write device info failed, error is %v", err)
-		}
-		return
+	nodeDeviceData := &common.NodeDeviceInfoCache{
+		DeviceInfo:  common.NodeDeviceInfo{DeviceList: make(map[string]string, 1)},
+		SuperPodID:  common.DefaultSuperPodID,
+		ServerIndex: common.DefaultServerIndex,
 	}
-	deviceList := make(map[string]string, 1)
-	if err := ki.WriteDeviceInfoDataIntoCMCache(deviceList, "", common.GetSwitchFaultInfo(), -1, -1); err != nil {
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		var rackID int32 = common.DefaultRackID
+		nodeDeviceData.RackID = &rackID
+		nodeDeviceData.DpuInfo = &common.DpuInfo{}
+	}
+	if err := ki.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, "",
+		common.GetSwitchFaultInfo()); err != nil {
 		hwlog.RunLog.Errorf("write device info failed, error is %v", err)
 	}
 }
