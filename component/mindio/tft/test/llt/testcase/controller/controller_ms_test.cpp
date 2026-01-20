@@ -22,7 +22,7 @@ void ControllerMSTest::MsInitSource(int32_t replicaRankLen, bool enableARF, bool
 
     ControllerMSTest::InitController(controller1);
     std::vector<int32_t> replicaCnt = { replicaRankLen };
-    std::vector<int32_t> replicaOffset = { 0 };
+    std::vector<int32_t> replicaOffset = { 2 };
     int32_t ret = controller1->Initialize(0, WORLD_SIZE, enableLocalCopy, enableARF, enableZIT);
     ASSERT_EQ(ret, 0);
 

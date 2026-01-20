@@ -67,6 +67,8 @@ TEST_F(ControllerARFTest, handle_downgrade_running)
     setenv("TTP_LOG_STDOUT", "1", 1);
     unsetenv("MINDX_TASK_ID");
     OutLogger::Instance()->SetExternalLogFunction(nullptr);
+
+    MOCKCPP_RESET;
 }
 
 TEST_F(ControllerARFTest, handle_downgrade_upgrade_recover)
@@ -256,6 +258,44 @@ TEST_F(ControllerARFTest, arf_wait_change_strategy_dump)
 }
 
 TEST_F(ControllerARFTest, arf_notify_dump)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    int32_t ret;
+
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UNKNOWN;
+    processor4->ReportStatus(state);
+    sleep(1);
+    processor4->Destroy(true);
+    ChangeStrategy(STRATEGY_DUMP);
+
+    processor1->SetDumpResult(0);
+    processor2->SetDumpResult(0);
+    processor3->SetDumpResult(0);
+
+    ret = processor1->WaitNextAction();
+    ASSERT_EQ(ret, TTP_ERROR);
+    ret = processor2->WaitNextAction();
+    ASSERT_EQ(ret, TTP_ERROR);
+    ret = processor3->WaitNextAction();
+    ASSERT_EQ(ret, TTP_ERROR);
+
+    ASSERT_EQ(stopCount.load(), 0);
+    ASSERT_EQ(cleanCount.load(), 0);
+    ASSERT_EQ(ckptCount.load(), CHECK_COUNT_TWO);
+    ASSERT_EQ(renameCount.load(), 1);
+    ASSERT_EQ(registerCount, 1);
+
+    unsetenv("MINDX_TASK_ID");
+}
+
+TEST_F(ControllerARFTest, x1_arf_notify_dump)
 {
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
@@ -735,4 +775,60 @@ TEST_F(ControllerARFTest, arf_notify_pause_wait_failed)
 
     unsetenv("MINDX_TASK_ID");
 }
+
+TEST_F(ControllerARFTest, x1_arf_repair)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    ASSERT_EQ(setenv("TTP_RETRY_TIMES", "30", 1), 0);
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
+
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    int32_t ret;
+
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UNKNOWN;
+    processor4->ReportStatus(state);
+    sleep(1);
+    processor4->Destroy(true);
+
+    std::string ip = CONTROLLER_IP;
+    int32_t port = CONTROLLER_PORT;
+    std::vector<int32_t> ranks = {0, 1, 2, 3};
+    std::vector<std::vector<int32_t>> groups = { ranks };
+    std::vector<int32_t> replicaCnt = { 2 };
+    std::vector<int32_t> replicaOffset = { 2 };
+    ChangeStrategy(STRATEGY_ARF);
+    ControllerARFTest::InitProcessor(processor4);
+    processor4->Initialize(3, WORLD_SIZE, enableLocalCopy, testTlsOption, "", true, true); // rank_id is 3
+    processor4->Start(ip, port);
+    processor4->ReportReplicaInfo(groups, replicaCnt, replicaOffset);
+
+    state = ReportState::RS_PREREPAIR_FINISH;
+    ret = processor4->ReportStatus(state);
+    WaitNormal();
+
+    ASSERT_EQ(processor1->GetRepairType(), "recover");
+    ASSERT_EQ(stopCount.load(), CHECK_COUNT_THREE);
+    ASSERT_EQ(cleanCount.load(), CHECK_COUNT_THREE);
+    ASSERT_EQ(ptCommCount.load(), WORLD_SIZE);
+    ASSERT_EQ(repairSendCount.load(), CHECK_COUNT_ONE);
+    ASSERT_EQ(repairZitRecvCount.load(), CHECK_COUNT_ONE);
+    ASSERT_EQ(repairRollbackCount.load(), WORLD_SIZE);
+
+    // 构造的3号卡故障，因为dp组为[0,1,2,3]，两副本，因此通知repair时，1和3收到的[send:1,recv:3]
+    std::map<std::string, std::set<std::vector<int32_t>>> expect = {
+            {"send", {{1}}},
+            {"otherrecv", {{3}}}
+    };
+    ASSERT_EQ(repairRankInfos, expect);
+
+    unsetenv("MINDX_TASK_ID");
+    unsetenv("TTP_RETRY_TIMES");
+    unsetenv("TTP_FRAMEWORK_TYPE");
+}
+
 }

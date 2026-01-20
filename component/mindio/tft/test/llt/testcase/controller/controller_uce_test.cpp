@@ -273,6 +273,52 @@ TEST_F(ControllerUCETest, handle_uce_highlevel_success)
     MOCKCPP_RESET;
 }
 
+TEST_F(ControllerUCETest, handle_x1_uce_highlevel_success)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
+    MOCKER_CPP(&ControllerUCETest::Register, TResult(*)(void)).
+    expects(once()).will(returnValue(TTP_ERROR));
+
+    ControllerUCETest::InitSource();
+    int32_t ret;
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UCE;
+    processor1->ReportStatus(state);
+    processor4->ReportStatus(state);
+
+    ret = processor1->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor2->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor3->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor4->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+
+    ASSERT_EQ(processor2->GetRepairType(), "retry");
+    ASSERT_EQ(stopCount.load(), WORLD_SIZE);
+    ASSERT_EQ(cleanCount.load(), WORLD_SIZE);
+    ASSERT_EQ(repairSendCount.load(), CHECK_COUNT_TWO);
+    ASSERT_EQ(repairUCECount.load(), CHECK_COUNT_TWO);
+    ASSERT_EQ(repairRollbackCount.load(), WORLD_SIZE);
+
+    // 构造的0,3号卡故障，因为dp组为[0,1,2,3]，两副本，因此通知repair时，0和2收到的[send:2,recv:0], 1和3收到的[send:1,recv:3]
+    std::map<std::string, std::set<std::vector<int32_t>>> expect = {
+        {"send", {{1}, {2}}},
+        {"ucerecv", {{0}, {3}}}
+    };
+    ASSERT_EQ(repairRankInfos, expect);
+
+    unsetenv("MINDX_TASK_ID");
+    unsetenv("TTP_FRAMEWORK_TYPE");
+    MOCKCPP_RESET;
+}
+
 TEST_F(ControllerUCETest, repair_msg_overflow_fail)
 {
     ControllerUCETest::InitSource();

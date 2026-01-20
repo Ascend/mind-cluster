@@ -198,6 +198,18 @@ enum class RepairType : int16_t {
     RT_BUTT,
 };
 
+enum MaskStatusEnum : uint8_t {
+    MASK_NORMAL = 0,
+    MASK_ERROR,
+    MASK_UCE_HIGH,
+    MASK_UCE_LOW,
+};
+
+enum FrameworkTypeEnum : uint32_t {
+    TYPE_DEFAULT = 0,
+    TYPE_X1,
+};
+
 } // namespace ttp
 } // namespace ock
 

@@ -14,6 +14,7 @@
 #include "common.h"
 #include "controller.h"
 #include "processor.h"
+#include "replica_manager.h"
 #include "mindx_engine.h"
 #include "ttp_logger.h"
 #undef protected
@@ -53,6 +54,16 @@ public:
         if (controller1 != nullptr) {
             controller1->Destroy();
             controller1 = nullptr;
+            Controller::GetInstance(true);
+            MindXEngine::GetInstance()->Destroy();
+            MindXEngine::GetInstance(true);
+        }
+        if (controller2 != nullptr) {
+            controller2->Destroy();
+            controller2 = nullptr;
+            Controller::GetInstance(true);
+            MindXEngine::GetInstance()->Destroy();
+            MindXEngine::GetInstance(true);
         }
         if (processor1 != nullptr) {
             processor1->Destroy();
@@ -333,7 +344,7 @@ public:
     void InitController(ControllerPtr &ctrl)
     {
         int32_t ret;
-        ctrl = MakeRef<Controller>();
+        ctrl = Controller::GetInstance();
         ASSERT_TRUE(ctrl != nullptr);
         if (std::getenv("MINDX_TASK_ID") == nullptr) {
             return;
@@ -415,7 +426,7 @@ public:
 
         ControllerTest::InitController(controller1);
         std::vector<int32_t> replicaCnt = { controllerReplica };
-        std::vector<int32_t> replicaOffset = { 0 };
+        std::vector<int32_t> replicaOffset = { 2 };
         int32_t ret = controller1->Initialize(0, WORLD_SIZE, enableLocalCopy, enableARF, enableZIT);
         controller1->retrySwitch_ = true;
         ASSERT_EQ(ret, 0);

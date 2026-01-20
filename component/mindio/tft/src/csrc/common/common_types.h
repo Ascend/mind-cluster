@@ -54,6 +54,21 @@ struct RegisterReply {
     bool hotSwitch = false;
 };
 
+struct RankChooseInfo {
+    int64_t step;
+    std::set<int32_t> errorRanks;
+    std::vector<int32_t> rankVec;
+};
+
+struct RepairInfo {
+    int32_t msgRank;
+    int32_t srcRank;
+    int32_t dstRank;
+    int16_t groupType;
+    int16_t replicaIdx;
+    RepairType type;
+};
+
 struct EnvVarValue {
     uint32_t minVal;
     uint32_t maxVal;

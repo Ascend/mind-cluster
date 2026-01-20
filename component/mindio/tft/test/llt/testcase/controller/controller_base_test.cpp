@@ -43,6 +43,9 @@ void ControllerBaseTest::TearDownTestCase()
     file << "This is a test file." << std::endl;
     file.close();
     ctrl->Destroy();
+    Controller::GetInstance(true);
+    MindXEngine::GetInstance()->Destroy();
+    MindXEngine::GetInstance(true);
 }
 
 TEST_F(ControllerBaseTest, invalid_param)
@@ -415,7 +418,7 @@ TEST_F(ControllerBaseTest, choose_rank_all_failed)
     ControllerBaseTest::InitSource();
     const RankChooseInfo testRankChooseInfo = {COMMON_STEP, {0, 1, 2, 3}, {0, 1, 2, 3}};
     std::vector<int32_t> testRankVec;
-    int32_t ret = controller1->ChooseRank(testRankChooseInfo, testRankVec, 2);
+    int32_t ret = controller1->replicaManager_.ChooseRank(testRankChooseInfo, testRankVec, 2, 2);
     ASSERT_EQ(ret, TTP_ERROR);
 }
 
@@ -442,12 +445,14 @@ TEST_F(ControllerBaseTest, misc_test) // 杂项测试，未来需要进一步分
     controller1->isMasterCtrl_.store(false);
     bool boolRet = controller1->IsBackupToMaster();
     ASSERT_EQ(boolRet, true);
+
+    MOCKCPP_RESET;
 }
 
 TEST_F(ControllerBaseTest, multi_replica_overflow_fail)
 {
-    MOCKER_CPP(&Controller::ChooseRank, TResult(*)(const RankChooseInfo, std::vector<int32_t>,
-        uint32_t)).stubs().will(returnValue(TResult::TTP_ERROR));
+    MOCKER_CPP(&DefaultReplicaManager::ChooseRank, TResult(*)(const RankChooseInfo, std::vector<int32_t>,
+        uint32_t, uint32_t)).stubs().will(returnValue(TResult::TTP_ERROR));
     ControllerBaseTest::InitSource(WORLD_SIZE);
     int32_t ret;
 

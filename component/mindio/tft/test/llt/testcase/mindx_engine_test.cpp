@@ -77,6 +77,7 @@ void TestMindxEngine::TearDownTestCase()
 {
     MindXEnginePtr ctrl = MindXEngine::GetInstance();
     ctrl->Destroy();
+    MindXEngine::GetInstance(true);
 }
 
 void TestMindxEngine::SetUp() {}

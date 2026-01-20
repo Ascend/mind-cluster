@@ -220,6 +220,10 @@ void TestCAPI::TearDown()
 
     ControllerPtr ctrl = Controller::GetInstance();
     ctrl->Destroy();
+    ctrl = nullptr;
+    Controller::GetInstance(true);
+    MindXEngine::GetInstance()->Destroy();
+    MindXEngine::GetInstance(true);
     sleep(delay);
     dlclose(handle);
     GlobalMockObject::verify();

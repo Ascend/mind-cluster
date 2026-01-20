@@ -18,7 +18,7 @@ using namespace ock::ttp;
 
 namespace {
 using controllerStateMachinePtr = Ref<controllerStateMachine>;
-controllerStateMachinePtr stateMachinePtr = nullptr;
+controllerStateMachinePtr stateMachinePtr_ = nullptr;
 std::atomic<uint32_t> g_callCount;
 int32_t g_initSn = 0;
 int32_t g_normalSn = 0;
@@ -75,13 +75,19 @@ void TestControllerStateMachine::TearDownTestCase() {}
 
 void TestControllerStateMachine::SetUp() {}
 
-void TestControllerStateMachine::TearDown() {}
+void TestControllerStateMachine::TearDown()
+{
+    if (stateMachinePtr_ != nullptr) {
+        stateMachinePtr_->Stop();
+        stateMachinePtr_ = nullptr;
+    }
+}
 
 void TestControllerStateMachine::InitSource()
 {
     g_callCount.store(0);
-    stateMachinePtr = MakeRef<controllerStateMachine>();
-    int32_t ret = stateMachinePtr->Initialize(0);
+    stateMachinePtr_ = MakeRef<controllerStateMachine>();
+    int32_t ret = stateMachinePtr_->Initialize(0);
     ASSERT_EQ(ret, TTP_OK);
 
     g_initSn = 0;
@@ -97,27 +103,27 @@ void TestControllerStateMachine::InitSource()
     g_dgRepairSn = 0;
 
     auto initMethod = [this]() { return InitCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_INIT, initMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_INIT, initMethod);
     auto normalMethod = [this]() { return NormalCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_NORMAL, normalMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_NORMAL, normalMethod);
     auto abnormalMethod = [this]() { return AbnormalCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_ABNORMAL, abnormalMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_ABNORMAL, abnormalMethod);
     auto dumpMethod = [this]() { return DumpCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_DUMP, dumpMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_DUMP, dumpMethod);
     auto exitMethod = [this]() { return ExitCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_EXIT, exitMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_EXIT, exitMethod);
     auto envclearMethod = [this]() { return EnvclearCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_ENV_CLEAR, envclearMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_ENV_CLEAR, envclearMethod);
     auto repairMethod = [this]() { return RepairCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_REPAIR, repairMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_REPAIR, repairMethod);
     auto downgradeMethod = [this]() { return DowngradeCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_DOWNGRADE, downgradeMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_DOWNGRADE, downgradeMethod);
     auto upgradeMethod = [this]() { return UpgradeCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_UPGRADE, upgradeMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_UPGRADE, upgradeMethod);
     auto dpRepairMethod = [this]() { return DgRepairCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_DG_REPAIR, dpRepairMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_DG_REPAIR, dpRepairMethod);
     auto pauseMethod = [this]() { return PauseCallback(); };
-    stateMachinePtr->ControllerActionRegister(STATE_OP_PAUSE, pauseMethod);
+    stateMachinePtr_->ControllerActionRegister(STATE_OP_PAUSE, pauseMethod);
 }
 int32_t TestControllerStateMachine::InitCallback()
 {
@@ -222,7 +228,7 @@ TEST_F(TestControllerStateMachine, dump_state)
 {
     g_dump = true;
     InitSource();
-    stateMachinePtr->StartStateMachine();
+    stateMachinePtr_->StartStateMachine();
     sleep(1); // wait state transition
 
     ASSERT_EQ(g_initSn, 1);
@@ -267,7 +273,7 @@ packagePath: /etc/lib/
 TEST_F(TestControllerStateMachine, uce_state)
 {
     InitSource();
-    stateMachinePtr->StartStateMachine();
+    stateMachinePtr_->StartStateMachine();
     sleep(1); // wait state transition
 
     ASSERT_EQ(g_initSn, 1);
@@ -283,7 +289,7 @@ TEST_F(TestControllerStateMachine, zit_state)
 {
     g_downgrade = true;
     InitSource();
-    stateMachinePtr->StartStateMachine();
+    stateMachinePtr_->StartStateMachine();
     sleep(1); // wait state transition
 
     ASSERT_EQ(g_initSn, 1);
@@ -303,7 +309,7 @@ TEST_F(TestControllerStateMachine, pause_state)
 {
     g_pause = true;
     InitSource();
-    stateMachinePtr->StartStateMachine();
+    stateMachinePtr_->StartStateMachine();
     sleep(1); // wait state transition
 
     ASSERT_EQ(g_initSn, CHECK_COUNT_ONE);

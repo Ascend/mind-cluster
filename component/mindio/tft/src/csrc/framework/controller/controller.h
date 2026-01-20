@@ -25,6 +25,8 @@
 #include <vector>
 #include "acc_tcp_server.h"
 #include "action_engine.h"
+#include "replica_manager.h"
+
 #include "common.h"
 #include "controller_state_machine.h"
 #include "mindx_engine.h"
@@ -39,6 +41,7 @@ using RankMask = std::vector<std::pair<int32_t, uint8_t>>;
 
 struct GroupInfo {
     uint32_t repCnt {};
+    uint32_t repShift {};
     GroupMap dpGroups;
 };
 
@@ -54,21 +57,6 @@ struct BackupInfo {
     }
 };
 
-struct RepairInfo {
-    int32_t msgRank;
-    int32_t srcRank;
-    int32_t dstRank;
-    int16_t groupType;
-    int16_t replicaIdx;
-    RepairType type;
-};
-
-struct RankChooseInfo {
-    int64_t step;
-    std::set<int32_t> errorRanks;
-    std::vector<int32_t> rankVec;
-};
-
 struct NotifyRankInfo {
     std::map<int32_t, int32_t> rankList;
     uint32_t hcclTime;
@@ -82,6 +70,9 @@ struct ZitParm {
 using StateMachinePtr = Ref<controllerStateMachine>;
 
 class Controller : public Referable {
+friend class DefaultReplicaManager;
+friend class X1ReplicaManager;
+
 public:
     using Ptr = Ref<Controller>;
 
@@ -181,11 +172,11 @@ private:
 
     TResult HandleLinkBroken(const AccTcpLinkComplexPtr &link);
 
-    TResult ChooseRank(const RankChooseInfo &rankChooseInfo, std::vector<int32_t> &tmpRankVec, uint32_t repCnt);
-
-    RankMask GenerateRankMask(const RankChooseInfo &rankChooseInfo);
-
     TResult ProcessRepairFlow(bool isPreLocked);
+
+    void GenerateStrategyX1(bool isPreLocked, std::vector<std::string> &strategies);
+
+    void GenerateStrategyDefault(bool isPreLocked, std::vector<std::string> &strategies);
 
     TResult MindXConfirmStrategy(bool isPreLocked = true);
 
@@ -281,9 +272,6 @@ private:
     RankMask RepairCheckStatus(const std::vector<int32_t> &rankVec);
 
     void GetAllRepairInfo(RankMask &rankMask, std::vector<RepairInfo> &rInfo, int16_t groupIdx);
-
-    TResult RepairSelectReplica(RankMask &rankMask, std::vector<RepairInfo> &rInfo,
-                                uint32_t repCnt, int16_t groupIdx);
 
     TResult GenerateRepairMsg(const std::vector<RepairInfo> &rInfo, std::vector<ActionInfo> &info);
 
@@ -401,6 +389,9 @@ private:
     // State Machine
     PthreadTimedwait pthreadTimeChecker_ ;
     StateMachinePtr stateMachine_ = nullptr;
+
+    // Replica Manager
+    DefaultReplicaManager &replicaManager_ ;
 
     // Mindx engine ptr
     MindXEnginePtr mindXEngine_ = nullptr;

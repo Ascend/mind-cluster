@@ -63,7 +63,7 @@ inline int64_t GetNowTime()
                                     << " diff_time : " << (GetNowTime() - ((status).lastUpdateTime))
 
 
-Controller::Controller() {};
+Controller::Controller() : replicaManager_(CreateReplicaManager()) {};
 
 ControllerPtr Controller::GetInstance(bool destroy)
 {
@@ -993,9 +993,30 @@ TResult Controller::ProcessRepairFlow(bool isPreLocked)
     return TTP_OK;
 }
 
-TResult Controller::MindXConfirmStrategy(bool isPreLocked)
+void Controller::GenerateStrategyX1(bool isPreLocked, std::vector<std::string> &strategies)
 {
-    std::vector<std::string> strategies {STRATEGY_EXIT};
+    if (!isPreLocked || !CheckCanRepair()) {
+        return;
+    }
+
+    strategies.push_back(STRATEGY_DUMP);
+    if (replicaManager_.GetCanRepair()) {
+        return;
+    }
+
+    repairType_ = ConfirmRepairType();
+    if (repairType_ == ControllerRepairType::CRT_RETRY) {
+        strategies.push_back(STRATEGY_RETRY);
+        if (arfSwitch_) {
+            strategies.push_back(STRATEGY_ARF);
+        }
+    } else if (repairType_ == ControllerRepairType::CRT_ARF) {
+        strategies.push_back(STRATEGY_ARF);
+    }
+}
+
+void Controller::GenerateStrategyDefault(bool isPreLocked, std::vector<std::string> &strategies)
+{
     // MindSpore场景需要提前校验副本，其他场景只需校验DP组情况
     bool canRepair = mindSpore_ ? CheckDpGroup() && CheckCanRepair() : CheckDpGroup();
     if (canRepair && isPreLocked) {
@@ -1018,6 +1039,20 @@ TResult Controller::MindXConfirmStrategy(bool isPreLocked)
             strategies.push_back(STRATEGY_DOWNGRADE);
             strategies.push_back(STRATEGY_UPGRADE);
         }
+    }
+}
+
+TResult Controller::MindXConfirmStrategy(bool isPreLocked)
+{
+    std::vector<std::string> strategies {STRATEGY_EXIT};
+    uint32_t typeValue = GetFrameworkType();
+
+    switch (typeValue) {
+        case FrameworkTypeEnum::TYPE_X1:
+            GenerateStrategyX1(isPreLocked, strategies);
+            break;
+        default:
+            GenerateStrategyDefault(isPreLocked, strategies);
     }
 
     auto ret = mindXEngine_->ReportStrategies(strategies, errorRankMsg_, errorRankLock_);
@@ -1841,9 +1876,10 @@ TResult Controller::InitDpGroupMap(const ReplicaMsg *replicaMsg)
         }
         sort(rankVec.begin(), rankVec.end());
 
-        auto &[repCnt, dpGroups] = dpGroupListMap_[groupIdx];
+        auto &[repCnt, repShift, dpGroups] = dpGroupListMap_[groupIdx];
         if (dpGroups.find(rankVec) == dpGroups.end()) {
             repCnt = replicaMsg->ranks[groupIdx];
+            repShift = replicaMsg->ranks[groupIdx + replicaMsg->num];
             dpGroups.insert(rankVec);
             TTP_LOG_INFO("rank:" << replicaMsg->rank << ", report group list: " << IntVec2String(rankVec));
         }
@@ -1911,85 +1947,6 @@ TResult Controller::HandleHeartBeat(const AccTcpRequestContext &context)
     return TTP_OK;
 }
 
-enum MaskStatusEnum : uint8_t {
-    MASK_NORMAL = 0,
-    MASK_ERROR,
-    MASK_UCE_HIGH,
-    MASK_UCE_LOW,
-};
-
-TResult Controller::ChooseRank(const RankChooseInfo &rankChooseInfo, std::vector<int32_t> &tmpRankVec, uint32_t repCnt)
-{
-    TTP_ASSERT_RETURN(repCnt != 0, TTP_ERROR);
-
-    auto rankMask = GenerateRankMask(rankChooseInfo);
-    auto rankSize = rankMask.size();
-    // 1. 每个rank都有全量数据,选一个好的就行
-    if (rankSize == repCnt) {
-        for (auto [rank, mask] : rankMask) {
-            if (mask == MASK_NORMAL) {
-                tmpRankVec.push_back(rank);
-                return TTP_OK;
-            }
-        }
-        return TTP_ERROR;
-    }
-
-    // 2. 两副本或多副本, 在dp组内要选出全量信息
-    auto offset = rankSize / repCnt;
-    for (auto i = 0U; i < offset; i++) {
-        for (auto idx = i; idx < rankSize; idx += offset) {
-            auto [rank, mask] = rankMask[idx];
-            if (mask == MASK_NORMAL) {
-                tmpRankVec.push_back(rank);
-                break;
-            }
-        }
-    }
-
-    return tmpRankVec.size() == offset ? TTP_OK : TTP_ERROR;
-}
-
-RankMask Controller::GenerateRankMask(const RankChooseInfo &rankChooseInfo)
-{
-    auto &[step, errorRanks, rankVec] = rankChooseInfo;
-
-    RankMask rankMask;
-    for (auto rank : rankVec) {
-        rankMask.emplace_back(rank, MASK_NORMAL);
-    }
-
-    AutoLock statusMapLock(statusMapLock_, TYPE_READ);
-    for (auto &[curRank, mask] : rankMask) {
-        if (errorRanks.find(curRank) != errorRanks.end()) {
-            mask = MASK_ERROR;
-            continue;
-        }
-
-        auto it = statusMap_.find(curRank);
-        if (it == statusMap_.end()) {
-            mask = MASK_ERROR;
-            continue;
-        }
-
-        if (it->second.data_aval != TTP_STATUS_NORMAL) {
-            mask = MASK_ERROR;
-            continue;
-        }
-
-        bool err = (it->second.data_status != Updated || it->second.step != step);
-        mask = err ? MASK_ERROR : MASK_NORMAL;
-
-        if (err) {
-            TTP_LOG_WARN("rank mask error, rank:" << curRank << ", expect step:" << step
-                         << ", actual step:" << it->second.step
-                         << ", data_status:" << static_cast<int>(it->second.data_status));
-        }
-    }
-
-    return std::move(rankMask);
-}
-
 TResult Controller::BeginExceptionCkpt(const std::set<int32_t> &errorRanks, bool isTcpStoreOK)
 {
     TTP_ASSERT_RETURN(repairStep_ > 0, TTP_ERROR);
@@ -2005,14 +1962,15 @@ TResult Controller::BeginExceptionCkpt(const std::set<int32_t> &errorRanks, bool
 
     rankToRename_ = 0;
     int32_t idx = 0;
+
     AutoLock lock(dpGroupMapLock_, TYPE_READ);
     // 遍历每种优化器, 在当前种类时遍历全量dp组
-    for (auto &[repCnt, dpGroups] : dpGroupListMap_) {
+    for (auto &[repCnt, repShift, dpGroups] : dpGroupListMap_) {
         for (auto &dpGroup : dpGroups) {
             std::vector<int32_t> tmpRankVec;
             RankChooseInfo rankChooseInfo {repairStep_, errorRanks, dpGroup};
 
-            ret = ChooseRank(rankChooseInfo, tmpRankVec, repCnt);
+            ret = replicaManager_.ChooseRank(rankChooseInfo, tmpRankVec, repCnt, repShift);
             if (ret != TTP_OK) {
                 TTP_LOG_ERROR("dp:" << IntVec2String(dpGroup) << " has no complete data." << " ret:" << ret);
                 return ret;
@@ -2134,40 +2092,6 @@ void Controller::GetAllRepairInfo(RankMask &rankMask, std::vector<RepairInfo> &r
     }
 }
 
-TResult Controller::RepairSelectReplica(RankMask &rankMask, std::vector<RepairInfo> &rInfo,
-                                        uint32_t repCnt, int16_t groupIdx)
-{
-    TTP_ASSERT_RETURN(repCnt != 0, TTP_ERROR);
-
-    auto rankSize = rankMask.size();
-    for (auto i = 0U; i < rankSize; i++) {
-        auto [curRank, mask] = rankMask[i];
-        if (mask == MASK_NORMAL || mask == MASK_UCE_LOW) {
-            continue;
-        }
-
-        RepairType rt = mask == MASK_UCE_HIGH ? RepairType::RT_UCE_HIGHLEVEL : RepairType::RT_RECV_REPAIR;
-
-        auto offset = rankSize / repCnt;
-        bool find = false;
-        for (uint32_t idx = (i + offset) % rankSize; idx != i; idx = (idx + offset) % rankSize) {
-            auto [repRank, repMask] = rankMask[idx];
-            if (repMask == MASK_NORMAL) {
-                find = true;
-                rInfo.push_back(RepairInfo{curRank, repRank, curRank, groupIdx, -1, rt});
-                rInfo.push_back(RepairInfo{repRank, repRank, curRank, groupIdx, -1, RepairType::RT_SEND});
-                break;
-            }
-        }
-
-        if (!find) {
-            TTP_LOG_ERROR("all rank is abnormal! rank:" << curRank);
-            return TTP_ERROR;
-        }
-    }
-    return TTP_OK;
-}
-
 RankMask Controller::RepairCheckStatus(const std::vector<int32_t> &rankVec)
 {
     RankMask rankMask;
@@ -2207,7 +2131,7 @@ TResult Controller::UCERepair()
 
     AutoLock lock(dpGroupMapLock_, TYPE_READ);
     // 遍历每种优化器, 在当前种类时遍历全量dp组
-    for (auto &[repCnt, dpGroups] : dpGroupListMap_) {
+    for (auto &[repCnt, repShift, dpGroups] : dpGroupListMap_) {
         for (auto &dpGroup : dpGroups) {
             auto rankMask = RepairCheckStatus(dpGroup);
             // mindspore 暂不支持周期ckpt修复
@@ -2215,7 +2139,7 @@ TResult Controller::UCERepair()
                 GetAllRepairInfo(rankMask, rInfo, idx);
                 continue;
             }
-            auto ret = RepairSelectReplica(rankMask, rInfo, repCnt, idx);
+            auto ret = replicaManager_.RepairSelectReplica(rankMask, rInfo, repCnt, repShift, idx);
             if (ret != TTP_OK) {
                 return TTP_ERROR;
             }
@@ -2386,16 +2310,16 @@ TResult Controller::PrepareRepairMsg(std::vector<RepairInfo> &rInfo, const std::
 
     AutoLock lock(dpGroupMapLock_, TYPE_READ);
     // 遍历每种优化器, 在当前种类时遍历全量dp组
-    for (auto &[repCnt, dpGroups] : dpGroupListMap_) {
+    for (auto &[repCnt, repShift, dpGroups] : dpGroupListMap_) {
         for (auto &dpGroup : dpGroups) {
             rankChooseInfo.rankVec = dpGroup;
-            auto rankMask = GenerateRankMask(rankChooseInfo);
+            auto rankMask = replicaManager_.GenerateRankMask(rankChooseInfo);
             // mindspore 暂不支持周期ckpt修复
             if (!mindSpore_ && !canRepair) {
                 GetAllRepairInfo(rankMask, rInfo, idx);
                 continue;
             }
-            TResult ret = RepairSelectReplica(rankMask, rInfo, repCnt, idx);
+            TResult ret = replicaManager_.RepairSelectReplica(rankMask, rInfo, repCnt, repShift, idx);
             if (ret != TTP_OK) {
                 return TTP_ERROR;
             }
@@ -2675,7 +2599,7 @@ bool Controller::CheckDpGroup()
     TTP_ASSERT_RETURN(repairStep_ > 0, false);
     TTP_ASSERT_RETURN(!dpGroupListMap_.empty(), false);
 
-    for (auto &[repCnt, dpGroups] : dpGroupListMap_) {
+    for (auto &[repCnt, repShift, dpGroups] : dpGroupListMap_) {
         TTP_ASSERT_RETURN(!dpGroups.empty(), false);
 
         auto dpsize = dpGroups.begin()->size();
@@ -2686,9 +2610,6 @@ bool Controller::CheckDpGroup()
 
         // 一种优化器，所有dp组大小加起来要等于worldsize
         TTP_ASSERT_RETURN(dpsize * dpGroups.size() == worldSize_, false);
-
-        // 目前不支持副本数不整除情况
-        TTP_ASSERT_RETURN(dpsize % repCnt == 0, false);
     }
 
     return true;
@@ -2709,12 +2630,13 @@ bool Controller::CheckCanRepair(bool isZit)
     } else {
         errRanks = GetErrorRanks();
     }
+
     // 遍历每种优化器, 在当前种类时遍历全量dp组
-    for (auto &[repCnt, dpGroups] : dpGroupListMap_) {
+    for (auto &[repCnt, repShift, dpGroups] : dpGroupListMap_) {
         for (auto &dpGroup : dpGroups) {
             std::vector<int32_t> tmpRankVec;
             RankChooseInfo rankChooseInfo {repairStep_, errRanks, dpGroup};
-            auto ret = ChooseRank(rankChooseInfo, tmpRankVec, repCnt);
+            auto ret = replicaManager_.ChooseRank(rankChooseInfo, tmpRankVec, repCnt, repShift);
             if (ret != TTP_OK) {
                 TTP_LOG_ERROR("dp:" << IntVec2String(dpGroup) << " has no complete data." << " ret:" << ret);
                 return false;
