@@ -1246,3 +1246,37 @@ func TestGetCurDeviceFaultCode(t *testing.T) {
 		})
 	})
 }
+
+func TestGetNodeDeviceInfoCache(t *testing.T) {
+	convey.Convey("test getNodeDeviceInfoCache", t, func() {
+		tool := mockAscendTools()
+		var superPodID int32 = 1
+		var serverIndex int32 = 1
+		var rackID int32 = 1
+		tool.SetSuperPodID(superPodID)
+		tool.SetServerIndex(serverIndex)
+		tool.SetRackID(rackID)
+		convey.Convey("case 1: not A5 get node device info cache not have rack id", func() {
+			mockRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910
+			defer func() {
+				common.ParamOption.RealCardType = mockRealCardType
+			}()
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string), common.DpuInfo{})
+			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
+			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
+			convey.So(cache.RackID, convey.ShouldBeNil)
+		})
+		convey.Convey("case 2: A5 get node device info cache have rack id", func() {
+			mockRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A5
+			defer func() {
+				common.ParamOption.RealCardType = mockRealCardType
+			}()
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string), common.DpuInfo{})
+			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
+			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
+			convey.So(*cache.RackID, convey.ShouldEqual, rackID)
+		})
+	})
+}

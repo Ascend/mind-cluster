@@ -65,8 +65,6 @@ const (
 
 	checkNodeLabelPolling     = 60 * 60
 	defaultUpdateTimeInterval = 5
-	defaultSuperPodID         = -1
-	defaultServerIndex        = -1
 )
 
 // AscendTools struct definition
@@ -277,9 +275,6 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		if common.GetSyncMapLen(resetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
-		if common.ParamOption.RealCardType == api.Ascend910A5 {
-			return tool.writeNodeDeviceInfoDataA5(newDeviceList, manuallySeparateNPU, switchFaultInfo, dpuInfo)
-		}
 		dataSame := compareDeviceList(deviceList, newDeviceList) &&
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
 			manuallySeparateNPU == tool.lastManuallySeparateNPU
@@ -293,8 +288,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		}
 		newDeviceList, manuallySeparateNPU = customname.ReplaceDeviceInfoPublicName(tool.name,
 			newDeviceList, manuallySeparateNPU)
-		if err := tool.client.WriteDeviceInfoDataIntoCMCache(newDeviceList, manuallySeparateNPU, switchFaultInfo,
-			tool.GetSuperPodID(), tool.GetServerIndex()); err != nil {
+		nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList, dpuInfo)
+		if err := tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
+			switchFaultInfo); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
 			return false, nil
 		}
@@ -304,6 +300,24 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		return true, nil
 	})
 	return waitErr
+}
+
+func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string,
+	dpuInfo common.DpuInfo) *common.NodeDeviceInfoCache {
+	nodeDeviceData := &common.NodeDeviceInfoCache{
+		DeviceInfo: common.NodeDeviceInfo{
+			DeviceList: newDeviceList,
+			UpdateTime: time.Now().Unix(),
+		},
+		SuperPodID:  tool.GetSuperPodID(),
+		ServerIndex: tool.GetServerIndex(),
+	}
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		rackID := tool.GetRackID()
+		nodeDeviceData.RackID = &rackID
+		nodeDeviceData.DpuInfo = &dpuInfo
+	}
+	return nodeDeviceData
 }
 
 func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo) {
@@ -320,8 +334,8 @@ func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
 				DeviceList: make(map[string]string, 1),
 				UpdateTime: time.Now().Unix(),
 			},
-			SuperPodID:  defaultSuperPodID,
-			ServerIndex: defaultServerIndex,
+			SuperPodID:  common.DefaultSuperPodID,
+			ServerIndex: common.DefaultServerIndex,
 		}
 		nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 		tool.GetKubeClient().SetNodeDeviceInfoCache(&nodeDeviceData)

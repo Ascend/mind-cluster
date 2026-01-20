@@ -283,14 +283,12 @@ func (ki *ClientK8s) GetDeviceInfoCMCache() *common.NodeDeviceInfoCache {
 }
 
 // WriteDeviceInfoDataIntoCMCache write deviceinfo into config map with cache
-func (ki *ClientK8s) WriteDeviceInfoDataIntoCMCache(deviceInfo map[string]string, manuallySeparateNPU string,
-	switchInfo common.SwitchFaultInfo, superPodID, serverIndex int32) error {
-	newNodeDeviceInfoCache, err := ki.WriteDeviceInfoDataIntoCM(deviceInfo, manuallySeparateNPU, switchInfo,
-		superPodID, serverIndex)
+func (ki *ClientK8s) WriteDeviceInfoDataIntoCMCache(nodeDeviceData *common.NodeDeviceInfoCache,
+	manuallySeparateNPU string, switchInfo common.SwitchFaultInfo) error {
+	newNodeDeviceInfoCache, err := ki.WriteDeviceInfoDataIntoCM(nodeDeviceData, manuallySeparateNPU, switchInfo)
 	if err != nil {
 		return err
 	}
-
 	nodeDeviceInfoCache = newNodeDeviceInfoCache
 	return nil
 }

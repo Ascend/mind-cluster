@@ -126,8 +126,8 @@ func mockGetNode() *gomonkey.Patches {
 func mockWriteDeviceInfoDataIntoCM() *gomonkey.Patches {
 	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
-			deviceInfo map[string]string, manuallySeparateNPU string, _ common.SwitchFaultInfo, superPodID,
-			serverIndex int32) (*common.NodeDeviceInfoCache, error) {
+			nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
+			_ common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
 			return &common.NodeDeviceInfoCache{}, nil
 		})
 }

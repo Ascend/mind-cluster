@@ -16,6 +16,8 @@
 package common
 
 const (
+	// DefaultRackID default rack id -1
+	DefaultRackID = -1
 	// Ascend910A5 ascend 910A5 chip
 	Ascend910A5 = "Ascend910A5"
 	// RackIdAbnormal represents rack id abnormal value
