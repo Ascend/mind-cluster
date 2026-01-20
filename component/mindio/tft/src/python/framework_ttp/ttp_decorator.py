@@ -1186,7 +1186,7 @@ def tft_set_step_args(args):
     save_handler.set_model_config(args)
 
 
-def tft_report_error(error_type: ReportState, error_code):
+def tft_report_error(error_type: ReportState, error_code=''):
     """
     report error state && unify condition variable post process
     """
