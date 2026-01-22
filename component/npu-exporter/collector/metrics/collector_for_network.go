@@ -20,6 +20,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
@@ -61,6 +62,10 @@ func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := n.Dmgr.IsTrainingCard()
 	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
 		"only training card supports network related info")
+	if n.Dmgr.GetDevType() == api.Ascend910A5 {
+		isSupport = false
+	}
+	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 

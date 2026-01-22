@@ -16,10 +16,12 @@
 package metrics
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
@@ -59,6 +61,12 @@ var (
 	descOpticalRxPower1 = colcommon.BuildDesc("npu_chip_optical_rx_power_1", "npu interface receive optical-rx-power-1")
 	descOpticalRxPower2 = colcommon.BuildDesc("npu_chip_optical_rx_power_2", "npu interface receive optical-rx-power-2")
 	descOpticalRxPower3 = colcommon.BuildDesc("npu_chip_optical_rx_power_3", "npu interface receive optical-rx-power-3")
+
+	notSupportedOpticalDevices = map[uint32]bool{
+		api.A5300IMainBoardID:     true,
+		api.A5300I4PMainBoardID:   true,
+		api.A5900Pod1DMainBoardID: true,
+	}
 )
 
 type opticalCache struct {
@@ -75,8 +83,15 @@ type OpticalCollector struct {
 
 // IsSupported judge whether the collector is supported
 func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
+	mainBoardID := n.Dmgr.GetMainBoardId()
+	devType := n.Dmgr.GetDevType()
+	if devType == api.Ascend910A5 && notSupportedOpticalDevices[mainBoardID] {
+		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+			fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
+		return false
+	}
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	return isSupport
 }
