@@ -73,6 +73,7 @@ func main() {
 }
 
 func initCmd() {
+	registerCmd(command.RunCmd())
 	registerCmd(command.StatusCmd())
 }
 
