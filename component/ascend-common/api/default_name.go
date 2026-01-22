@@ -170,6 +170,16 @@ const (
 	AscendDeviceInfo = "ASCEND_VISIBLE_DEVICES"
 )
 
+// main board identifiers
+const (
+	// A5300IMainBoardID board id of 300I A5 MainBoard
+	A5300IMainBoardID = 0x68
+	// A5300I4PMainBoardID board id of 300I A5 4P MainBoard
+	A5300I4PMainBoardID = 0x6c
+	// A5900Pod1DMainBoardID board id of A5 1D MainBoard
+	A5900Pod1DMainBoardID = 0x07
+)
+
 const (
 	// AscendJobKind is the kind name
 	AscendJobKind = "AscendJob"
