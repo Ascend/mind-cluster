@@ -28,6 +28,7 @@ import (
 	app2 "container-manager/pkg/container/app"
 	"container-manager/pkg/devmgr"
 	"container-manager/pkg/fault/app"
+	app3 "container-manager/pkg/reset/app"
 	"container-manager/pkg/workflow"
 )
 
@@ -187,11 +188,13 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 		hwlog.RunLog.Errorf("new container controller failed, error: %v", err)
 		return errors.New("new container controller failed")
 	}
+	resetMgr := app3.NewResetMgr()
 
 	moduleMgr := workflow.NewModuleMgr()
 	moduleMgr.Register(devmgr.DevMgr)
 	moduleMgr.Register(faultMgr)
 	moduleMgr.Register(ctrCtl)
+	moduleMgr.Register(resetMgr)
 	if err = moduleMgr.Init(); err != nil {
 		return err
 	}

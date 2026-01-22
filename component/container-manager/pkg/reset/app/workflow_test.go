@@ -30,7 +30,7 @@ import (
 func TestResetMgr_Work(t *testing.T) {
 	convey.Convey("Test ResetMgr Work", t, func() {
 		r := &ResetMgr{
-			resetCache: domain.NewNpuInResetCache(),
+			resetCache: domain.GetNpuInResetCache(),
 			countCache: domain.NewFailedResetCountCache(),
 		}
 		convey.Convey("When context is done", func() {
@@ -110,8 +110,7 @@ func TestResetMgr_Init(t *testing.T) {
 // TestNewResetMgr tests the NewResetMgr function
 func TestNewResetMgr(t *testing.T) {
 	convey.Convey("Test NewResetMgr", t, func() {
-		module, err := NewResetMgr()
-		convey.So(err, convey.ShouldBeNil)
+		module := NewResetMgr()
 		convey.So(module, convey.ShouldNotBeNil)
 
 		resetMgr, ok := module.(*ResetMgr)
