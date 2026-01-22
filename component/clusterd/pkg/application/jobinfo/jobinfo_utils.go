@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/job"
@@ -45,9 +47,18 @@ func SendJobInfoSignal(jobSignal job.JobSummarySignal) {
 	}
 }
 
+func calcJobNPUNum(jobInfo constant.JobInfo) int {
+	jobNPUNum := 0
+	for _, serverHccl := range jobInfo.JobRankTable.ServerList {
+		jobNPUNum += len(serverHccl.DeviceList)
+	}
+	return jobNPUNum
+}
+
 // BuildJobSignalFromJobInfo build jobSignal from jobInfo
 func BuildJobSignalFromJobInfo(jobInfo constant.JobInfo, hccl, operator string) job.JobSummarySignal {
 	jobSignal := job.JobSummarySignal{
+		Uuid:      string(uuid.NewUUID()),
 		JobId:     jobInfo.Key,
 		JobName:   jobInfo.Name,
 		Namespace: jobInfo.NameSpace,

@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Job_Register_FullMethodName                  = "/job.Job/Register"
-	Job_SubscribeJobSummarySignal_FullMethodName = "/job.Job/SubscribeJobSummarySignal"
+	Job_Register_FullMethodName                      = "/job.Job/Register"
+	Job_SubscribeJobSummarySignal_FullMethodName     = "/job.Job/SubscribeJobSummarySignal"
+	Job_SubscribeJobSummarySignalList_FullMethodName = "/job.Job/SubscribeJobSummarySignalList"
 )
 
 // JobClient is the client API for Job service.
@@ -29,6 +30,7 @@ const (
 type JobClient interface {
 	Register(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (*Status, error)
 	SubscribeJobSummarySignal(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Job_SubscribeJobSummarySignalClient, error)
+	SubscribeJobSummarySignalList(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Job_SubscribeJobSummarySignalListClient, error)
 }
 
 type jobClient struct {
@@ -80,12 +82,45 @@ func (x *jobSubscribeJobSummarySignalClient) Recv() (*JobSummarySignal, error) {
 	return m, nil
 }
 
+func (c *jobClient) SubscribeJobSummarySignalList(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (Job_SubscribeJobSummarySignalListClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Job_ServiceDesc.Streams[1], Job_SubscribeJobSummarySignalList_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &jobSubscribeJobSummarySignalListClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Job_SubscribeJobSummarySignalListClient interface {
+	Recv() (*JobSummarySignalList, error)
+	grpc.ClientStream
+}
+
+type jobSubscribeJobSummarySignalListClient struct {
+	grpc.ClientStream
+}
+
+func (x *jobSubscribeJobSummarySignalListClient) Recv() (*JobSummarySignalList, error) {
+	m := new(JobSummarySignalList)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // JobServer is the server API for Job service.
 // All implementations must embed UnimplementedJobServer
 // for forward compatibility
 type JobServer interface {
 	Register(context.Context, *ClientInfo) (*Status, error)
 	SubscribeJobSummarySignal(*ClientInfo, Job_SubscribeJobSummarySignalServer) error
+	SubscribeJobSummarySignalList(*ClientInfo, Job_SubscribeJobSummarySignalListServer) error
 	mustEmbedUnimplementedJobServer()
 }
 
@@ -98,6 +133,9 @@ func (UnimplementedJobServer) Register(context.Context, *ClientInfo) (*Status, e
 }
 func (UnimplementedJobServer) SubscribeJobSummarySignal(*ClientInfo, Job_SubscribeJobSummarySignalServer) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeJobSummarySignal not implemented")
+}
+func (UnimplementedJobServer) SubscribeJobSummarySignalList(*ClientInfo, Job_SubscribeJobSummarySignalListServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeJobSummarySignalList not implemented")
 }
 func (UnimplementedJobServer) mustEmbedUnimplementedJobServer() {}
 
@@ -151,6 +189,27 @@ func (x *jobSubscribeJobSummarySignalServer) Send(m *JobSummarySignal) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Job_SubscribeJobSummarySignalList_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClientInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(JobServer).SubscribeJobSummarySignalList(m, &jobSubscribeJobSummarySignalListServer{stream})
+}
+
+type Job_SubscribeJobSummarySignalListServer interface {
+	Send(*JobSummarySignalList) error
+	grpc.ServerStream
+}
+
+type jobSubscribeJobSummarySignalListServer struct {
+	grpc.ServerStream
+}
+
+func (x *jobSubscribeJobSummarySignalListServer) Send(m *JobSummarySignalList) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Job_ServiceDesc is the grpc.ServiceDesc for Job service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -167,6 +226,11 @@ var Job_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "SubscribeJobSummarySignal",
 			Handler:       _Job_SubscribeJobSummarySignal_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "SubscribeJobSummarySignalList",
+			Handler:       _Job_SubscribeJobSummarySignalList_Handler,
 			ServerStreams: true,
 		},
 	},

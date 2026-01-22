@@ -114,7 +114,7 @@ func TestUpdateAndIterateJobCacheCausePanic(t *testing.T) {
 		defer DeleteJobCache(jobUid1)
 		retryTimes := 500
 		wg := sync.WaitGroup{}
-		goNum := 2
+		goNum := two
 		wg.Add(goNum)
 		go func(jobKey string) {
 			for i := 0; i < retryTimes; i++ {

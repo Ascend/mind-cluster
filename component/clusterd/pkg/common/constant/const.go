@@ -379,4 +379,12 @@ const (
 const (
 	// RoleFdAgent is the grpc role name of Fault-Diag online
 	RoleFdAgent = "FdAgent"
+	// MsgCacheNumPerClient is the max number of msg cache per client
+	MsgCacheNumPerClient = 10
+	// MaxClientPerRole is the max number of client per role
+	MaxClientPerRole = 20
+	// MaxNPUsPerBatch is the max number of npus per batch
+	MaxNPUsPerBatch = 40000
+	// RequestNumPerSecondLimit is the max number of request per second
+	RequestNumPerSecondLimit = 20
 )

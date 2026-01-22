@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 
@@ -28,7 +29,16 @@ import (
 )
 
 const (
-	jobAddTime = 1630000000
+	jobName1           = "job1"
+	jobName2           = "job2"
+	jobName3           = "job3"
+	jobNameSpace       = "default"
+	three              = 3
+	four               = 4
+	five               = 5
+	seven              = 7
+	jobAddTime         = 1630000000
+	statusJobCompleted = "complete"
 )
 
 // TestSendJobInfoSignal test send signal
@@ -70,20 +80,81 @@ func TestSendJobInfoSignalDrop(t *testing.T) {
 	})
 }
 
+func mockJobInfoWithNPU(npuNumPerServer ...int) constant.JobInfo {
+	serverList := make([]constant.ServerHccl, 0, len(npuNumPerServer))
+	for i, npuNum := range npuNumPerServer {
+		deviceList := make([]constant.Device, 0, npuNum)
+		for j := 0; j < npuNum; j++ {
+			deviceList = append(deviceList, constant.Device{
+				DeviceID: strconv.Itoa(j),
+				DeviceIP: "192.168.0.1",
+				RankID:   strconv.Itoa(j),
+			})
+		}
+		serverList = append(serverList, constant.ServerHccl{
+			ServerID:   strconv.Itoa(i),
+			HostIp:     "192.168.0.1",
+			DeviceList: deviceList,
+		})
+	}
+
+	return constant.JobInfo{
+		Key:         jobName1,
+		Name:        jobName1,
+		NameSpace:   jobNameSpace,
+		Framework:   ptFramework,
+		Status:      statusJobCompleted,
+		AddTime:     time.Now().Unix(),
+		TotalCmNum:  1,
+		SharedTorIp: "10.0.0.1",
+		MasterAddr:  "10.0.0.2",
+		JobRankTable: constant.RankTable{
+			ServerList: serverList,
+		},
+	}
+}
+
+func TestCalcJobNPUNum(t *testing.T) {
+	convey.Convey("Test calcJobNPUNum", t, func() {
+		convey.Convey("no ServerList, NPU count is 0", func() {
+			jobInfo := constant.JobInfo{
+				JobRankTable: constant.RankTable{ServerList: []constant.ServerHccl{}},
+			}
+			npuNum := calcJobNPUNum(jobInfo)
+			convey.So(npuNum, convey.ShouldEqual, 0)
+		})
+		convey.Convey("single server with multiple devices, NPU count equals the total number of devices",
+			func() {
+				jobInfo := mockJobInfoWithNPU(five)
+				npuNum := calcJobNPUNum(jobInfo)
+				convey.So(npuNum, convey.ShouldEqual, five)
+			})
+		convey.Convey("multiple servers and multiple devices, with the total number of NPUs "+
+			"being the sum across all devices", func() {
+			jobInfo := mockJobInfoWithNPU(three, four)
+			npuNum := calcJobNPUNum(jobInfo)
+			convey.So(npuNum, convey.ShouldEqual, seven)
+		})
+		convey.Convey("server has no Device, NPU count is 0", func() {
+			jobInfo := mockJobInfoWithNPU(0, 0)
+			npuNum := calcJobNPUNum(jobInfo)
+			convey.So(npuNum, convey.ShouldEqual, 0)
+		})
+	})
+}
+
 // TestBuildJobSignalFromJobInfo test build signal
 func TestBuildJobSignalFromJobInfo(t *testing.T) {
 	convey.Convey("test BuildJobSignalFromJobInfo", t, func() {
 		convey.Convey("PyTorch init status", func() {
 			jobInfo := constant.JobInfo{
-				Key:         "job-1",
-				Name:        "test-job",
-				NameSpace:   "default",
-				Framework:   ptFramework,
-				Status:      "running",
-				AddTime:     jobAddTime,
-				TotalCmNum:  1,
-				SharedTorIp: "192.168.1.1",
-				MasterAddr:  "192.168.1.2:29500",
+				Key:        jobName1,
+				Name:       jobName1,
+				NameSpace:  jobNameSpace,
+				Framework:  ptFramework,
+				Status:     "running",
+				AddTime:    jobAddTime,
+				TotalCmNum: 1,
 			}
 
 			signal := BuildJobSignalFromJobInfo(jobInfo, constant.DefaultHcclJson, constant.AddOperator)

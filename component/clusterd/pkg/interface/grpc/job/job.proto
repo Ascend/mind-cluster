@@ -31,7 +31,14 @@ message JobSummarySignal {
   string operator = 14;
 }
 
+message JobSummarySignalList{
+  repeated JobSummarySignal jobSummarySignals = 1;
+  string ReportTime = 2;
+  int32 JobTotalNum = 3;
+}
+
 service Job {
   rpc Register(ClientInfo) returns (Status) {}
   rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
+  rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalList){}
 }
