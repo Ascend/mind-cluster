@@ -3,8 +3,6 @@
 // Package constant a series of para
 package constant
 
-import "ascend-common/api"
-
 // FaultTimeAndLevel of each fault code
 // some fault may not have accurate fault time and level,
 // for example: duration fault use current time as `FaultTime`
@@ -203,20 +201,10 @@ type ServerHccl struct {
 
 // Device to hccl with rankId
 type Device struct {
-	DeviceID        string           `json:"device_id"`
-	DeviceIP        string           `json:"device_ip"`
-	RankID          string           `json:"rank_id"` // rank id
-	SuperDeviceID   string           `json:"super_device_id,omitempty"`
-	ScaleOutNetwork *ScaleOutNetwork `json:"scale_out_network,omitempty"`
-	// LevelList is not included in job-summary generation.
-	// It is only populated when deserializing from annotations.
-	LevelList []api.RankLevel `json:"levelList,omitempty"`
-}
-
-// ScaleOutNetwork scale out addrType and addrs for A5
-type ScaleOutNetwork struct {
-	AddrType string   `json:"addr_type"`
-	Addrs    []string `json:"addrs"`
+	DeviceID      string `json:"device_id"`
+	DeviceIP      string `json:"device_ip"`
+	RankID        string `json:"rank_id"` // rank id
+	SuperDeviceID string `json:"super_device_id,omitempty"`
 }
 
 // PodDevice pod annotation device info

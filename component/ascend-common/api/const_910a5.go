@@ -108,26 +108,3 @@ const (
 	// DefaultRandAddrPlaneID default planeId
 	DefaultRandAddrPlaneID = "CLUSTER"
 )
-
-const (
-	// ScaleOutType scale out type
-	ScaleOutType = "scaleout-type"
-	// ScaleOutTypeRoCE label value of task for RoCE, which must be kept in uppercase format
-	ScaleOutTypeRoCE = "ROCE"
-	// ScaleOutTypeUBoE label value of task for UBoE, which must be kept in uppercase format
-	ScaleOutTypeUBoE = "UBOE"
-	// ScaleOutTypeUBG label value of task for UBG, which must be kept in uppercase format
-	ScaleOutTypeUBG = "UBG"
-	// AddrTypeEID addr type is eid
-	AddrTypeEID = "EID"
-	// AddrTypeIPV4 addr type is ip
-	AddrTypeIPV4 = "IPV4"
-	// LabelReplicaType Pod label key replica-type
-	LabelReplicaType = "replica-type"
-	// ReplicaTypeMaster Pod label value Master
-	ReplicaTypeMaster = "master"
-	// Level2 for hccl.json
-	Level2 = 2
-	// Level3 for hccl.json
-	Level3 = 3
-)

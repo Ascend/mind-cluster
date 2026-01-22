@@ -302,7 +302,7 @@ func getDemoPodGroup(jobName, nameSpace, jobUid string) *v1beta1.PodGroup {
 	return podGroupInfo
 }
 
-func getDemoRankTable(_ v1beta1.PodGroup, _ map[string]v1.Pod, _ int) (constant.RankTable, int) {
+func getDemoRankTable(_ map[string]v1.Pod, _ int) (constant.RankTable, int) {
 	rankTable := constant.RankTable{
 		Status:      StatusJobCompleted,
 		ServerCount: pgMinMember2Str,
