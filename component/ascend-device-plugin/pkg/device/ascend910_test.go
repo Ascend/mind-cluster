@@ -127,7 +127,7 @@ func mockWriteDeviceInfoDataIntoCM() *gomonkey.Patches {
 	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
 			nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-			_ common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
+			_ common.SwitchFaultInfo, dpuInfo common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
 			return &common.NodeDeviceInfoCache{}, nil
 		})
 }

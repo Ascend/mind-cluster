@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -178,19 +179,16 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 }
 
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
-func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache,
-	manuallySeparateNPU string, switchInfo common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
+func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
+	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 	var data, switchData, dpuData []byte
+	dpuOpen := !reflect.DeepEqual(dpuInfo, common.DpuInfo{})
 	if data = common.MarshalData(nodeDeviceData); len(data) == 0 {
 		return nil, fmt.Errorf("marshal nodeDeviceData failed")
 	}
 	if switchData = common.MarshalData(switchInfo); len(switchData) == 0 {
 		return nil, fmt.Errorf("marshal switchDeviceData failed")
-	}
-	dpuInfo := &nodeDeviceData.DpuInfo
-	if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
-		return nil, fmt.Errorf("marshal DpuDeviceData failed")
 	}
 	deviceInfoCM := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -204,8 +202,13 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
-			api.DpuInfoCMDataKey:                      string(dpuData)}
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
+		if dpuOpen {
+			if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
+				return nil, fmt.Errorf("marshal DpuDeviceData failed")
+			}
+			deviceInfoCM.Data[api.DpuInfoCMDataKey] = string(dpuData)
+		}
 	case api.Ascend910A3:
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),

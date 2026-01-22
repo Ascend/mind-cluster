@@ -18,6 +18,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -483,6 +484,24 @@ func DeepEqualSwitchFaultInfo(this, other SwitchFaultInfo) bool {
 		return false
 	}
 	if this.NodeStatus != other.NodeStatus {
+		return false
+	}
+	return true
+}
+
+// DeepEqualDpuInfo compare two DpuInfo (only A5)
+func DeepEqualDpuInfo(this, other DpuInfo) bool {
+	// not a5 not need judge
+	if ParamOption.RealCardType != api.Ascend910A5 {
+		return true
+	}
+	if this.BusType != other.BusType {
+		return false
+	}
+	if !reflect.DeepEqual(this.DPUList, other.DPUList) {
+		return false
+	}
+	if !reflect.DeepEqual(this.NpuToDpusMap, other.NpuToDpusMap) {
 		return false
 	}
 	return true

@@ -291,10 +291,9 @@ func (ki *ClientK8s) ResetDeviceInfo() {
 	if common.ParamOption.RealCardType == api.Ascend910A5 {
 		var rackID int32 = common.DefaultRackID
 		nodeDeviceData.RackID = &rackID
-		nodeDeviceData.DpuInfo = &common.DpuInfo{}
 	}
 	if err := ki.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, "",
-		common.GetSwitchFaultInfo()); err != nil {
+		common.GetSwitchFaultInfo(), common.DpuInfo{}); err != nil {
 		hwlog.RunLog.Errorf("write device info failed, error is %v", err)
 	}
 }

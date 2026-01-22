@@ -162,29 +162,28 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 	deviceInfo := getDeviceInfo(api.HuaweiAscend310P, npuChip310PPhyID0)
 	mockCreateCM, mockUpdateCM := mockCMOpr(updateCM)
 	nodeDeviceData := &common.NodeDeviceInfoCache{
-		DeviceInfo: common.NodeDeviceInfo{
-			DeviceList: deviceInfo,
-			UpdateTime: time.Now().Unix(),
-		},
-		SuperPodID:  -1,
-		ServerIndex: -1,
+		DeviceInfo: common.NodeDeviceInfo{DeviceList: deviceInfo, UpdateTime: time.Now().Unix()},
+		SuperPodID: -1, ServerIndex: -1,
 	}
 	defer resetMock(mockCreateCM, mockUpdateCM)
 	convey.Convey("write device info (cm) when marshal node device data failed", t, func() {
 		mockMarshalData := gomonkey.ApplyFuncReturn(common.MarshalData, []byte{})
 		defer mockMarshalData.Reset()
-		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{})
+		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{},
+			common.DpuInfo{})
 		convey.So(err.Error(), convey.ShouldEqual, "marshal nodeDeviceData failed")
 	})
 	convey.Convey("write device info (cm) when real card type is Ascend910A3", t, func() {
 		mockRealCardType := common.ParamOption.RealCardType
 		common.ParamOption.RealCardType = api.Ascend910A3
-		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{})
+		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{},
+			common.DpuInfo{})
 		common.ParamOption.RealCardType = mockRealCardType
 		convey.So(err, convey.ShouldEqual, nil)
 	})
 	convey.Convey("get write device info (cm) when get cm success", t, func() {
-		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{})
+		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{},
+			common.DpuInfo{})
 		convey.So(err, convey.ShouldEqual, nil)
 	})
 	mockIsNotFound := gomonkey.ApplyFuncReturn(errors.IsNotFound, true)
@@ -193,11 +192,13 @@ func TestWriteDeviceInfoDataIntoCM(t *testing.T) {
 		mockCreateCM := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "CreateConfigMap",
 			func(_ *ClientK8s, _ *v1.ConfigMap) (*v1.ConfigMap, error) { return nil, nil })
 		defer mockCreateCM.Reset()
-		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{})
+		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{},
+			common.DpuInfo{})
 		convey.So(err, convey.ShouldEqual, nil)
 	})
 	convey.Convey("write device info (cm) when update cm error", t, func() {
-		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{})
+		_, err = utKubeClient.WriteDeviceInfoDataIntoCM(nodeDeviceData, "", common.SwitchFaultInfo{},
+			common.DpuInfo{})
 		convey.So(err.Error(), convey.ShouldEqual, "unable to create configmap, already exists")
 	})
 	utKubeClient.SetNodeDeviceInfoCache(nil)
@@ -619,7 +620,7 @@ func annotationResetMock(devErr, stateErr, nodeErr error) (*gomonkey.Patches, *g
 	node := getMockNode(api.HuaweiAscend910, npuChip910PhyID0)
 	mockWrite := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "WriteDeviceInfoDataIntoCM",
 		func(_ *ClientK8s, _ *common.NodeDeviceInfoCache, _ string,
-			_ common.SwitchFaultInfo) (*common.NodeDeviceInfoCache, error) {
+			_ common.SwitchFaultInfo, _ common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
 			return nil, devErr
 		})
 	mockPatchNode := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)), "PatchNodeState",

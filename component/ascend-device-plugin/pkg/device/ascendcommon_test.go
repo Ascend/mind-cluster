@@ -1262,7 +1262,7 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 			defer func() {
 				common.ParamOption.RealCardType = mockRealCardType
 			}()
-			cache := tool.getNodeDeviceInfoCache(make(map[string]string), common.DpuInfo{})
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string))
 			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
 			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
 			convey.So(cache.RackID, convey.ShouldBeNil)
@@ -1273,7 +1273,7 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 			defer func() {
 				common.ParamOption.RealCardType = mockRealCardType
 			}()
-			cache := tool.getNodeDeviceInfoCache(make(map[string]string), common.DpuInfo{})
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string))
 			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
 			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
 			convey.So(*cache.RackID, convey.ShouldEqual, rackID)

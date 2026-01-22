@@ -314,6 +314,50 @@ func TestDeepEqualSwitchFaultInfo(t *testing.T) {
 	})
 }
 
+// TestDeepEqualDpuInfo for test DeepEqualDpuInfo
+func TestDeepEqualDpuInfo(t *testing.T) {
+	convey.Convey("test DeepEqualDpuInfo", t, func() {
+		cardType := ParamOption.RealCardType
+		defer func() { ParamOption.RealCardType = cardType }()
+		convey.Convey("not a5, result return true", func() {
+			cardType := ParamOption.RealCardType
+			defer func() { ParamOption.RealCardType = cardType }()
+			ParamOption.RealCardType = api.Ascend910A3
+			res := DeepEqualDpuInfo(DpuInfo{}, DpuInfo{})
+			convey.So(res, convey.ShouldBeTrue)
+		})
+		ParamOption.RealCardType = api.Ascend910A5
+		convey.Convey("when busType different, result return false", func() {
+			res := DeepEqualDpuInfo(
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0},
+				DpuInfo{BusType: "2", DPUList: []DpuCMData{}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when DPUList different, result return false", func() {
+			dpuCMData1 := DpuCMData{Name: "1", Operstate: "1", DeviceID: "1", VendorID: "1"}
+			dpuCMData2 := DpuCMData{Name: "2", Operstate: "1", DeviceID: "1", VendorID: "1"}
+			res := DeepEqualDpuInfo(
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{dpuCMData1}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0},
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{dpuCMData2}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when NpuToDpusMap different, result return false", func() {
+			map1 := map[string][]string{"npu0": {"dpu0", "dpu1"}, "npu1": {"dpu2"}}
+			map2 := map[string][]string{"npu0": {"dpu0", "dpu3"}, "npu1": {"dpu2"}}
+			res := DeepEqualDpuInfo(
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{}, NpuToDpusMap: map1, UpdateTime: 0},
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{}, NpuToDpusMap: map2, UpdateTime: 0})
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("when all same, result return true", func() {
+			res := DeepEqualDpuInfo(
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0},
+				DpuInfo{BusType: "1", DPUList: []DpuCMData{}, NpuToDpusMap: make(map[string][]string), UpdateTime: 0})
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
+}
+
 // TestSetSwitchFaultCode for test SetSwitchFaultCode
 func TestSetSwitchFaultCode(t *testing.T) {
 	convey.Convey("test SetSwitchFaultCode", t, func() {

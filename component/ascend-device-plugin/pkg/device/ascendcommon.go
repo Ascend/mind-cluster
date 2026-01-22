@@ -98,6 +98,7 @@ type AscendTools struct {
 	lastSwitchFaultInfo       common.SwitchFaultInfo
 	lastUsedChipsByProcess    sets.String
 	lastUsedChipsContainerMap map[string]sets.String
+	lastDpuInfo               common.DpuInfo
 }
 
 // DevManager interface for manager device
@@ -277,7 +278,7 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		}
 		dataSame := compareDeviceList(deviceList, newDeviceList) &&
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
-			manuallySeparateNPU == tool.lastManuallySeparateNPU
+			manuallySeparateNPU == tool.lastManuallySeparateNPU && common.DeepEqualDpuInfo(dpuInfo, tool.lastDpuInfo)
 		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and timeDiff less than 5 minutes, no need to update")
@@ -288,13 +289,13 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		}
 		newDeviceList, manuallySeparateNPU = customname.ReplaceDeviceInfoPublicName(tool.name,
 			newDeviceList, manuallySeparateNPU)
-		nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList, dpuInfo)
+		nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList)
 		if err := tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
-			switchFaultInfo); err != nil {
+			switchFaultInfo, dpuInfo); err != nil {
 			hwlog.RunLog.Errorf("write device info failed: %v", err)
 			return false, nil
 		}
-		tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo)
+		tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo, dpuInfo)
 		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
 			tool.lastUpdateTimeStamp.Format(time.RFC3339))
 		return true, nil
@@ -302,8 +303,7 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 	return waitErr
 }
 
-func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string,
-	dpuInfo common.DpuInfo) *common.NodeDeviceInfoCache {
+func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string) *common.NodeDeviceInfoCache {
 	nodeDeviceData := &common.NodeDeviceInfoCache{
 		DeviceInfo: common.NodeDeviceInfo{
 			DeviceList: newDeviceList,
@@ -315,15 +315,15 @@ func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string,
 	if common.ParamOption.RealCardType == api.Ascend910A5 {
 		rackID := tool.GetRackID()
 		nodeDeviceData.RackID = &rackID
-		nodeDeviceData.DpuInfo = &dpuInfo
 	}
 	return nodeDeviceData
 }
 
-func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo) {
+func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo) {
 	tool.lastUpdateTimeStamp = time.Now()
 	tool.lastManuallySeparateNPU = manuallySeparateNPU
 	tool.lastSwitchFaultInfo = switchFaultInfo
+	tool.lastDpuInfo = dpuInfo
 }
 
 func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
