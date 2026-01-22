@@ -18,7 +18,6 @@ package domain
 import (
 	"encoding/json"
 	"os"
-	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -26,31 +25,9 @@ import (
 )
 
 const (
-	pausingDuration  = 20
-	pausedDuration   = 270
-	resumingDuration = 20
-
 	defaultFileSize             = 100
 	defaultFilePerm os.FileMode = 0640
 )
-
-var ctrStatusInfos = map[string]struct {
-	statusDuration int64
-	description    string
-}{
-	common.StatusPausing: {
-		pausingDuration,
-		"Container pause may fail. Please manually delete the container",
-	},
-	common.StatusPaused: {
-		pausedDuration,
-		"Device hot reset may fail. Please check of device status and recovery are required",
-	},
-	common.StatusResuming: {
-		resumingDuration,
-		"The device has been recovered, but the container failed to be resumed. Please manually pull up the container",
-	},
-}
 
 func (cc *CtrCache) updateStatusFile() {
 	var contexts []common.CtrStatusInfo
@@ -59,7 +36,6 @@ func (cc *CtrCache) updateStatusFile() {
 			CtrId:           id,
 			Status:          info.Status,
 			StatusStartTime: info.StatusStartTime,
-			Description:     cc.getDesc(info.Status, info.StatusStartTime),
 		})
 	}
 	bytes, err := json.Marshal(contexts)
@@ -78,18 +54,4 @@ func (cc *CtrCache) updateStatusFile() {
 		hwlog.RunLog.Errorf("write status info to file failed, error: %v", err)
 		return
 	}
-}
-
-func (cc *CtrCache) getDesc(status string, startTime int64) string {
-	if status == common.StatusRunning {
-		return common.DescNormal
-	}
-	infos, ok := ctrStatusInfos[status]
-	if !ok {
-		return common.DescUnknown
-	}
-	if time.Now().Unix()-startTime > infos.statusDuration {
-		return infos.description
-	}
-	return common.DescNormal
 }

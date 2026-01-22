@@ -18,25 +18,27 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"container-manager/pkg/common"
 	"container-manager/pkg/fault/domain"
 )
 
-const faultCfgFilePath = "./faultCode.json"
-
 func loadFaultCodeFromFile() error {
-	faultCodeBytes, err := utils.LoadFile(faultCfgFilePath)
+	filePath := common.ParamOption.FaultCfgPath
+	if filePath == "" {
+		return nil
+	}
+	faultCodeBytes, err := utils.LoadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("load fault code json failed: %v", err)
+		return err
 	}
 	var faultCodes domain.FaultCodeFromFile
 	if err = json.Unmarshal(faultCodeBytes, &faultCodes); err != nil {
-		return fmt.Errorf("unmarshal fault code byte failed: %v", err)
+		return fmt.Errorf("unmarshal custom fault code byte failed: %v", err)
 	}
 	domain.SaveFaultCodesToCache(faultCodes)
-	hwlog.RunLog.Infof("load fault config from %s success", filepath.Base(faultCfgFilePath))
+	hwlog.RunLog.Infof("load custom fault config file from %s success", filePath)
 	return nil
 }

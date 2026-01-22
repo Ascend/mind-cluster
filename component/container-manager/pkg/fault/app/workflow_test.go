@@ -17,13 +17,13 @@ package app
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/devmanager/common"
+	"container-manager/pkg/common"
 	"container-manager/pkg/devmgr"
 )
 
@@ -39,6 +39,7 @@ func testMethodName() {
 }
 
 func testMethodInit() {
+	common.ParamOption.FaultCfgPath = testFilePath
 	convey.Convey("test method 'Init' success", func() {
 		var patches = gomonkey.ApplyFuncReturn(loadFaultCodeFromFile, nil)
 		defer patches.Reset()
@@ -48,7 +49,7 @@ func testMethodInit() {
 		var patches = gomonkey.ApplyFuncReturn(loadFaultCodeFromFile, testErr)
 		defer patches.Reset()
 		err := mockFaultMgr.Init()
-		expErr := errors.New("load fault code from file failed")
+		expErr := fmt.Errorf("load fault code from file %s failed", testFilePath)
 		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }

@@ -26,6 +26,9 @@ import (
 	"container-manager/pkg/common"
 )
 
+var ctrCache *CtrCache = nil
+var initOnce sync.Once
+
 // CtrCache ctr cache
 type CtrCache struct {
 	ctrInfoMap map[string]*ctrInfo
@@ -33,21 +36,26 @@ type CtrCache struct {
 }
 
 type ctrInfo struct {
-	Id              string
-	Ns              string
-	UsedDevs        []int32 // phy id
+	Id              string  // ctr id
+	Ns              string  // ctr namespace
+	UsedDevs        []int32 // ctr used dev phy id
 	Status          string
 	StatusStartTime int64
 	CtrsOnRing      []string
 	DetailedInfo    containerd.Container
 }
 
-// NewCtrInfo new ctr info
-func NewCtrInfo() *CtrCache {
-	return &CtrCache{
-		ctrInfoMap: make(map[string]*ctrInfo),
-		mutex:      sync.Mutex{},
-	}
+// GetCtrInfo new ctr info
+func GetCtrInfo() *CtrCache {
+	initOnce.Do(
+		func() {
+			ctrCache = &CtrCache{
+				ctrInfoMap: make(map[string]*ctrInfo),
+				mutex:      sync.Mutex{},
+			}
+		},
+	)
+	return ctrCache
 }
 
 // GetCtrUsedDevs get ctr used devs
@@ -61,30 +69,8 @@ func (cc *CtrCache) GetCtrUsedDevs(id string) []int32 {
 	return info.UsedDevs
 }
 
-// SetDetailedInfo set ctrs detailed info
-func (cc *CtrCache) SetDetailedInfo(ctrId string, details containerd.Container) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-	info, ok := cc.ctrInfoMap[ctrId]
-	if !ok {
-		return
-	}
-	info.DetailedInfo = details
-}
-
-// GetDetailedInfo get ctrs detailed info
-func (cc *CtrCache) GetDetailedInfo(ctrId string) containerd.Container {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-	info, ok := cc.ctrInfoMap[ctrId]
-	if !ok {
-		return nil
-	}
-	return info.DetailedInfo
-}
-
 // SetCtrsStatus set ctrs status
-func (cc *CtrCache) SetCtrsStatus(ctrId string, status string) {
+func (cc *CtrCache) SetCtrsStatus(ctrId, status string) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 	info, ok := cc.ctrInfoMap[ctrId]
@@ -127,10 +113,11 @@ func (cc *CtrCache) SetCtrInfo(ctrId, ns string, usedDevs []int32) {
 	_, ok := cc.ctrInfoMap[ctrId]
 	if !ok {
 		cc.ctrInfoMap[ctrId] = &ctrInfo{
-			Id:       ctrId,
-			Ns:       ns,
-			Status:   common.StatusRunning,
-			UsedDevs: usedDevs,
+			Id:              ctrId,
+			Ns:              ns,
+			Status:          common.StatusRunning,
+			StatusStartTime: time.Now().Unix(),
+			UsedDevs:        usedDevs,
 		}
 	}
 	cc.updateStatusFile()

@@ -24,16 +24,17 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
+	"container-manager/pkg/devmgr"
 )
 
 const mockFaultAttr = -1
 
-var faultCache *FaultCache
+var faultCache *FaultCache = nil
 var initOnce sync.Once
 
 // FaultCache fault events from dcmi interface
 type FaultCache struct {
-	// key: phy id, value: {fault code : {module type + module id + submodule type + submodule id : fault info}}
+	// key: phy id, value: [fault code : [module type + module id + submodule type + submodule id : fault info]]
 	faults map[int32]map[int64]map[string]*common.DevFaultInfo
 	// UpdateChan for changed fault events
 	UpdateChan chan struct{}
@@ -72,7 +73,6 @@ func (fc *FaultCache) AddFault(newFault common.DevFaultInfo) {
 func (fc *FaultCache) dealFaultOccur(newFault common.DevFaultInfo, moduleLayerKey string) {
 	fc.mutex.Lock()
 	defer func() {
-		fc.Notify()
 		fc.mutex.Unlock()
 		fc.printFaults()
 	}()
@@ -98,7 +98,6 @@ func (fc *FaultCache) dealFaultOccur(newFault common.DevFaultInfo, moduleLayerKe
 func (fc *FaultCache) dealFaultRecover(newFault common.DevFaultInfo, moduleLayerKey string) {
 	fc.mutex.Lock()
 	defer func() {
-		fc.Notify()
 		fc.mutex.Unlock()
 		fc.printFaults()
 	}()
@@ -180,11 +179,11 @@ func (fc *FaultCache) UpdateFaultsOnDev(id int32, faultCodes []int64) {
 }
 
 // ConstructMockModuleFault construct mock module fault
-// module type / module id / submodule type / submodule id mock value is 0
+// module type / module id / submodule type / submodule id mock value is -1
 func ConstructMockModuleFault(phyId int32, faultCode int64) *common.DevFaultInfo {
 	return &common.DevFaultInfo{
 		EventID:       faultCode,
-		LogicID:       mockFaultAttr,
+		LogicID:       devmgr.DevMgr.GetLogicIdByPhyId(phyId),
 		ModuleType:    mockFaultAttr,
 		ModuleID:      mockFaultAttr,
 		SubModuleType: mockFaultAttr,
@@ -194,4 +193,10 @@ func ConstructMockModuleFault(phyId int32, faultCode int64) *common.DevFaultInfo
 		FaultLevel:    GetFaultLevelByCode([]int64{faultCode}),
 		ReceiveTime:   time.Now().Unix(),
 	}
+}
+
+// IsMockModuleFault is mock module fault
+func IsMockModuleFault(faultInfo *common.DevFaultInfo) bool {
+	return faultInfo.ModuleType == mockFaultAttr && faultInfo.ModuleID == mockFaultAttr &&
+		faultInfo.SubModuleType == mockFaultAttr && faultInfo.SubModuleID == mockFaultAttr
 }

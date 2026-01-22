@@ -24,6 +24,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"container-manager/pkg/common"
+	"container-manager/pkg/devmgr"
 )
 
 var mockFaultCache = &FaultCache{}
@@ -108,12 +109,13 @@ func TestUpdateFaultsOnDev(t *testing.T) {
 
 func TestConstructMockModuleFault(t *testing.T) {
 	convey.Convey("test func 'ConstructMockModuleFault'", t, func() {
-		var p1 = gomonkey.ApplyFuncReturn(GetFaultLevelByCode, common.SeparateNPU)
+		var p1 = gomonkey.ApplyFuncReturn(GetFaultLevelByCode, common.SeparateNPU).
+			ApplyFuncReturn(devmgr.DevMgr.GetLogicIdByPhyId, devId0)
 		defer p1.Reset()
 		res := ConstructMockModuleFault(devId0, eventId0)
 		expRes := &common.DevFaultInfo{
 			EventID:       eventId0,
-			LogicID:       mockFaultAttr,
+			LogicID:       devId0,
 			ModuleType:    mockFaultAttr,
 			ModuleID:      mockFaultAttr,
 			SubModuleType: mockFaultAttr,
@@ -132,5 +134,12 @@ func TestConstructMockModuleFault(t *testing.T) {
 		convey.So(res.Assertion, convey.ShouldEqual, expRes.Assertion)
 		convey.So(res.PhyID, convey.ShouldEqual, expRes.PhyID)
 		convey.So(res.FaultLevel, convey.ShouldEqual, expRes.FaultLevel)
+	})
+}
+
+func TestIsMockModuleFault(t *testing.T) {
+	convey.Convey("test func 'IsMockModuleFault'", t, func() {
+		res := ConstructMockModuleFault(devId0, eventId0)
+		convey.So(IsMockModuleFault(res), convey.ShouldBeTrue)
 	})
 }

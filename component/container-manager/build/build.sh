@@ -57,11 +57,6 @@ function build() {
     fi
 }
 
-function cp_file() {
-    cp "$CUR_DIR"/faultCode.json "$TOP_DIR"/output/faultCode.json
-    chmod 0400 "${TOP_DIR}"/output/faultCode.json
-}
-
 function mv_file() {
     mv "${TOP_DIR}/${output_name}"   "${TOP_DIR}"/output
 }
@@ -69,7 +64,6 @@ function mv_file() {
 function main() {
   clean
   build
-  cp_file
   mv_file
 }
 

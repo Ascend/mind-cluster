@@ -39,6 +39,7 @@ const (
 	ipv6LinkTypePrefix = "fe80"
 	virMark            = "vir"
 	defaultDeviceIP    = "127.0.0.1"
+	maxDevNum          = 100
 )
 
 // SetDmgr set devmanager
@@ -112,7 +113,7 @@ func (hdm *HwDevMgr) setRingInfo() error {
 // GetPhyIdOnRing get phy ids on ring
 func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 	// 300I Duo case need to handle separately
-	cardId, deviceId, err := hdm.GetDmgr().GetCardIDDeviceID(hdm.GetPhyIdByLogicId(phyId))
+	cardId, deviceId, err := hdm.GetDmgr().GetCardIDDeviceID(hdm.GetLogicIdByPhyId(phyId))
 	if err != nil {
 		hwlog.RunLog.Errorf("get brother card failed, cardID %v deviceID %v, err: %v",
 			cardId, deviceId, err)
@@ -144,13 +145,13 @@ func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 }
 
 func (hdm *HwDevMgr) getPhyIdOn910Ring(phyId int32, devNumPerRing int) ([]int32, error) {
-	ringIdx := hdm.GetLogicIdByPhyId(phyId) / int32(devNumPerRing)
+	ringIdx := phyId / int32(devNumPerRing)
 	startDevIdx := ringIdx * int32(devNumPerRing)
 	endDevIdx := startDevIdx + int32(devNumPerRing)
 
 	var phyIdsOnRing []int32
 	for i := startDevIdx; i < endDevIdx; i++ {
-		phyIdsOnRing = append(phyIdsOnRing, hdm.GetPhyIdByLogicId(i))
+		phyIdsOnRing = append(phyIdsOnRing, i)
 	}
 	return phyIdsOnRing, nil
 }
@@ -226,8 +227,8 @@ func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, cardId, deviceId int32) ([]int32
 			cardId, otherDeviceId, err)
 		return nil, err
 	}
-	return []int32{phyId, hdm.GetLogicIdByPhyId(ringDevLogic), hdm.GetLogicIdByPhyId(logicID0),
-		hdm.GetLogicIdByPhyId(logicID1)}, nil
+	return []int32{phyId, hdm.GetPhyIdByLogicId(ringDevLogic), hdm.GetPhyIdByLogicId(logicID0),
+		hdm.GetPhyIdByLogicId(logicID1)}, nil
 }
 
 // GetBoardId get board id
@@ -249,6 +250,9 @@ func (hdm *HwDevMgr) GetNodeNPUInfo() map[int32]*common.NPUInfo {
 }
 
 func (hdm *HwDevMgr) setNodeNPUInfo(logicIds []int32, devNum int32) (map[int32]*common.NPUInfo, error) {
+	if devNum > maxDevNum {
+		return nil, fmt.Errorf("invalid device num: %d", devNum)
+	}
 	var npuInfos = make(map[int32]*common.NPUInfo, devNum)
 	for _, id := range logicIds {
 		npuInfo, err := hdm.constructNPUInfo(id)
@@ -317,8 +321,8 @@ func (hdm *HwDevMgr) getDcmiDeviceIP(logicID int32) (string, error) {
 	return deviceIp, nil
 }
 
-// GetLogicIdByPhyId get logic id by phy id
-func (hdm *HwDevMgr) GetLogicIdByPhyId(logicId int32) int32 {
+// GetPhyIdByLogicId get phy id by logic id
+func (hdm *HwDevMgr) GetPhyIdByLogicId(logicId int32) int32 {
 	for _, npuInfo := range hdm.npuInfos {
 		if npuInfo.LogicID == logicId {
 			return npuInfo.PhyID
@@ -327,8 +331,8 @@ func (hdm *HwDevMgr) GetLogicIdByPhyId(logicId int32) int32 {
 	return 0
 }
 
-// GetPhyIdByLogicId get phy id by logic id
-func (hdm *HwDevMgr) GetPhyIdByLogicId(phyId int32) int32 {
+// GetLogicIdByPhyId get logic id by phy id
+func (hdm *HwDevMgr) GetLogicIdByPhyId(phyId int32) int32 {
 	for _, npuInfo := range hdm.npuInfos {
 		if npuInfo.PhyID == phyId {
 			return npuInfo.LogicID
@@ -369,7 +373,7 @@ func (hdm *HwDevMgr) subscribeNPUFaultEvent(callback func(devFaultInfo ascommon.
 
 // GetDeviceErrCode get device error code by dcmi interface
 func (hdm *HwDevMgr) GetDeviceErrCode(phyId int32) (int32, []int64, error) {
-	logicId := hdm.GetPhyIdByLogicId(phyId)
+	logicId := hdm.GetLogicIdByPhyId(phyId)
 	return hdm.GetDmgr().GetDeviceAllErrorCode(logicId)
 }
 

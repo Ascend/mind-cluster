@@ -66,14 +66,15 @@
 
 4. 查看容器恢复进度及提示信息。
     ```bash
-    ./container-manager status -containerID=<containerID>
+    ./container-manager status
     ```
    回显示例如下：
     ```
-    +==============================================================================================+
-    | Container ID             : e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  |
-    | Container Status         : resuming                                                          |
-    | Container Description    : The device has been recovered, but the container failed to be     |
-    |                            resumed. Please manually pull up the container                    |
-    +==============================================================================================+
+    +==================================================================================================+
+    | Container ID               : e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855    |
+    | Container Status           : resuming                                                            |
+    | Container Status Start Time: 2025-11-27 11:57:21                                                 |
+    | Container Description      : The device has been recovered, but the container failed to be       |
+    |                              resumed. Please manually pull up the container                      |
+    +==================================================================================================+
     ```
