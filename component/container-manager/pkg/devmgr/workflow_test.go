@@ -18,7 +18,6 @@ package devmgr
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -103,15 +102,6 @@ func testInitInfoRelatedDev() {
 		defer patches.Reset()
 		err := mockDevMgr.initInfoRelatedDev()
 		convey.So(err, convey.ShouldResemble, testErr)
-	})
-	convey.Convey("test method 'initInfoRelatedDev' failed, invalid device num", func() {
-		const invalidDevNum = int32(200)
-		var patches = gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDeviceList",
-			invalidDevNum, []int32{0}, nil)
-		defer patches.Reset()
-		err := mockDevMgr.initInfoRelatedDev()
-		expErr := fmt.Errorf("invalid device num: %d", invalidDevNum)
-		convey.So(err, convey.ShouldResemble, expErr)
 	})
 	convey.Convey("test method 'initInfoRelatedDev' failed, GetNodeNPUInfo error", func() {
 		var patches = gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},

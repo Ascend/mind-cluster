@@ -22,7 +22,7 @@ import (
 	"container-manager/pkg/common"
 )
 
-var devCache *DevCache
+var devCache *DevCache = nil
 
 // DevCache dev cache
 type DevCache struct {
@@ -157,6 +157,22 @@ func (dc *DevCache) SetDevsOnRing(id int32, devsOnRing []int32) {
 		return
 	}
 	info.DevsOnRing = devsOnRing
+}
+
+// GetDevsOnRing get devs on ring
+func (dc *DevCache) GetDevsOnRing(ids []int32) []int32 {
+	dc.mutex.Lock()
+	defer dc.mutex.Unlock()
+	var idsOnRing []int32
+	for _, id := range ids {
+		info, ok := dc.devInfoMap[id]
+		if !ok {
+			// unreached branch
+			continue
+		}
+		idsOnRing = append(idsOnRing, info.DevsOnRing...)
+	}
+	return utils.RemoveDuplicates(idsOnRing)
 }
 
 // GetDevsRelatedCtrs get devs related ctrs

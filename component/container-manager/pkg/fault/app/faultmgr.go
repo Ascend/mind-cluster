@@ -32,7 +32,7 @@ import (
 const (
 	processFaultDuration = 500 * time.Millisecond
 	faultLimit           = 10000
-	checkTimeout         = 300
+	checkTimeout         = 300 // unit: s
 )
 
 var limiter = rate.NewLimiter(rate.Every(1*time.Minute/faultLimit), faultLimit)
@@ -41,8 +41,19 @@ var limiter = rate.NewLimiter(rate.Every(1*time.Minute/faultLimit), faultLimit)
 func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 	for {
 		select {
-		case <-ctx.Done():
+		case _, ok := <-ctx.Done():
+			if !ok {
+				hwlog.RunLog.Info("catch stop signal channel closed")
+			}
+			hwlog.RunLog.Info("fault manager stop")
 			return
+		case _, ok := <-fm.faultInfo.UpdateChan:
+			if !ok {
+				hwlog.RunLog.Info("catch update signal channel closed")
+				return
+			}
+			hwlog.RunLog.Infof("receive reset device success signal, check the fault cache")
+			fm.doCheck(true)
 		default:
 			if QueueCache.Len() == 0 {
 				time.Sleep(processFaultDuration)
@@ -56,30 +67,40 @@ func (fm *FaultMgr) ProcessDCMIFault(ctx context.Context) {
 }
 
 func (fm *FaultMgr) checkMoreThanFiveMinFaults(ctx context.Context) {
-	ticker := time.NewTicker(time.Minute)
+	const checkInterval = 50 * time.Second
+	ticker := time.NewTicker(checkInterval)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ctx.Done():
+		case _, ok := <-ctx.Done():
+			if !ok {
+				hwlog.RunLog.Info("catch stop signal channel closed")
+			}
+			hwlog.RunLog.Info("fault manager check more than five minutes faults stop")
 			return
 		case <-ticker.C:
-			fm.doCheck()
+			fm.doCheck(false)
 		}
 	}
 }
 
-func (fm *FaultMgr) doCheck() {
-	faultInfos, err := fm.faultInfo.DeepCopy()
-	if err != nil {
-		hwlog.RunLog.Errorf("deep copy fault info failed, error: %v", err)
-		return
-	}
+func (fm *FaultMgr) doCheck(checkImmediately bool) {
 	var idsNeedGetCodes []int32
-	for id, codeLayer := range faultInfos {
-		if fm.needGetAllCodes(codeLayer) {
-			idsNeedGetCodes = append(idsNeedGetCodes, id)
+	if checkImmediately {
+		idsNeedGetCodes = devmgr.DevMgr.GetPhyIds()
+	} else {
+		faultInfos, err := fm.faultInfo.DeepCopy()
+		if err != nil {
+			hwlog.RunLog.Errorf("deep copy fault info failed, error: %v", err)
+			return
+		}
+		for id, codeLayer := range faultInfos {
+			if fm.needGetAllCodes(codeLayer) {
+				idsNeedGetCodes = append(idsNeedGetCodes, id)
+			}
 		}
 	}
+
 	for _, id := range idsNeedGetCodes {
 		_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
 		if err != nil {
@@ -97,10 +118,11 @@ func (fm *FaultMgr) needGetAllCodes(codeLayer map[int64]map[string]*common.DevFa
 	for _, moduleLayer := range codeLayer {
 		for _, faultInfo := range moduleLayer {
 			receiveTime := faultInfo.ReceiveTime
-			if time.Now().Unix()-receiveTime <= checkTimeout {
-				continue
+			// for mock module fault, the recover message cannot directly remove from the cache
+			// so every cycle, check if the mock fault have been recovered
+			if time.Now().Unix()-receiveTime > checkTimeout || domain.IsMockModuleFault(faultInfo) {
+				return true
 			}
-			return true
 		}
 	}
 	return false
@@ -113,7 +135,6 @@ func (fm *FaultMgr) getAllFaultInfo() {
 			QueueCache.Push(*domain.ConstructMockModuleFault(id, code))
 		}
 	}
-	return
 }
 
 func saveDevFaultInfo(devFaultInfo ascommon.DevFaultInfo) {
@@ -121,8 +142,8 @@ func saveDevFaultInfo(devFaultInfo ascommon.DevFaultInfo) {
 		hwlog.RunLog.Errorf("fault exceeds the upper limit from subscribe interface, fault [%+v] will be discard", devFaultInfo)
 		return
 	}
-	hwlog.RunLog.Infof("receive devFaultInfo: %+v, hex fault code: %v", devFaultInfo,
-		strconv.FormatInt(devFaultInfo.EventID, common.Hex))
+	hwlog.RunLog.Infof("receive devFaultInfo: %+v, hex fault code: %s, fault level: %s", devFaultInfo,
+		strconv.FormatInt(devFaultInfo.EventID, common.Hex), domain.GetFaultLevelByCode([]int64{devFaultInfo.EventID}))
 	if devFaultInfo.EventID == 0 {
 		return
 	}

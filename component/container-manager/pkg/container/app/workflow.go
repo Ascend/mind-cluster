@@ -38,8 +38,8 @@ type CtrCtl struct {
 
 // NewCtrCtl new container controller
 func NewCtrCtl() (*CtrCtl, error) {
-	switch common.ParamOption.RuntimeMode {
-	case common.DockerMode:
+	switch common.ParamOption.RuntimeType {
+	case common.DockerType:
 		dClient := NewDockerClient()
 		if err := dClient.init(); err != nil {
 			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
@@ -47,10 +47,10 @@ func NewCtrCtl() (*CtrCtl, error) {
 		}
 		return &CtrCtl{
 			client:     dClient,
-			ctrInfoMap: domain.NewCtrInfo(),
+			ctrInfoMap: domain.GetCtrInfo(),
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
-	case common.ContainerDMode:
+	case common.ContainerDType:
 		cClient := NewContainerdClient()
 		if err := cClient.init(); err != nil {
 			hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
@@ -58,11 +58,11 @@ func NewCtrCtl() (*CtrCtl, error) {
 		}
 		return &CtrCtl{
 			client:     cClient,
-			ctrInfoMap: domain.NewCtrInfo(),
+			ctrInfoMap: domain.GetCtrInfo(),
 			devInfoMap: domain.NewDevCache(devmgr.DevMgr.GetPhyIds()),
 		}, nil
 	default:
-		return nil, errors.New("unknown container mode")
+		return nil, errors.New("unknown runtime mode")
 	}
 }
 
@@ -87,7 +87,7 @@ func (cm *CtrCtl) Work(ctx context.Context) {
 			if !ok {
 				hwlog.RunLog.Info("catch stop signal channel closed")
 			}
-			hwlog.RunLog.Info("listen device stop")
+			hwlog.RunLog.Info("container controller stop")
 			return
 		case <-ticker.C:
 			cm.initAndControl()

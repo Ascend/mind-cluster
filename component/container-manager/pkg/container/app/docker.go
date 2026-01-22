@@ -28,6 +28,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"container-manager/pkg/common"
 )
 
 // DockerClient docker client
@@ -41,7 +42,8 @@ func NewDockerClient() *DockerClient {
 }
 
 func (d *DockerClient) init() error {
-	dClient, err := client.NewClientWithOpts(client.FromEnv)
+	sockURL := fmt.Sprintf("unix://%s", common.ParamOption.SockPath)
+	dClient, err := client.NewClientWithOpts(client.WithHost(sockURL), client.WithAPIVersionNegotiation())
 	if err != nil {
 		hwlog.RunLog.Errorf("connect to container runtime failed, error: %v", err)
 		return errors.New("connect to container runtime failed")
@@ -55,15 +57,15 @@ func (d *DockerClient) close() error {
 }
 
 func (d *DockerClient) doStop(containerID, ns string) error {
-	return d.client.ContainerStop(context.Background(), containerID, nil)
+	return d.client.ContainerStop(context.Background(), containerID, container.StopOptions{})
 }
 
 func (d *DockerClient) doStart(containerID, ns string) error {
-	return d.client.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
+	return d.client.ContainerStart(context.Background(), containerID, container.StartOptions{})
 }
 
 func (d *DockerClient) getAllContainers() (interface{}, error) {
-	ctrs, err := d.client.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	ctrs, err := d.client.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get container list, error: %v", err)
 		return nil, errors.New("failed to get container list")
@@ -98,7 +100,8 @@ func (d *DockerClient) doGetUsedDevs(cs types.Container) ([]int32, error) {
 			return usedDevs, nil
 		}
 	}
-	hwlog.RunLog.Debugf("get used devs by env %s failed, not used ascend docker runtime", api.AscendDeviceInfo)
+	hwlog.RunLog.Debugf("get container %s used devs by env %s failed, not used ascend docker runtime",
+		cs.ID, api.AscendDeviceInfo)
 	usedDevs, err := getUsedDevsWithoutAscendRuntimeForDocker(containerJSON.HostConfig.Resources)
 	if err != nil {
 		return nil, fmt.Errorf("get container %s device ids failed, error: %v", cs.ID, err)

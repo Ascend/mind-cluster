@@ -46,16 +46,11 @@ func (cm *CtrCtl) initAndControl() {
 	cm.devInfoMap.ResetDevStatus()
 }
 
-func (cm *CtrCtl) updateCtrRelatedInfo() error {
-	ctrs, err := cm.client.getAllContainers()
-	if err != nil {
-		return fmt.Errorf("get all ctrs failed: %v", err)
-	}
+func (cm *CtrCtl) updateForContainerd(cs map[string][]containerd.Container) []string {
 	var ctrIds []string
-	switch cs := ctrs.(type) {
-	case []containerd.Container:
-		ctx := namespaces.WithNamespace(context.Background(), "k8s.io")
-		for _, containerObj := range cs {
+	for ns, containers := range cs {
+		ctx := namespaces.WithNamespace(context.Background(), ns)
+		for _, containerObj := range containers {
 			ctrIds = append(ctrIds, containerObj.ID())
 			usedDevs, err := cm.client.getUsedDevs(containerObj, ctx)
 			if err != nil {
@@ -66,10 +61,23 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 				// only ctr of used dev need save to cache
 				continue
 			} else {
-				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID(), usedDevs)
+				hwlog.RunLog.Debugf("container %s,%s used devs: %v", ns, containerObj.ID(), usedDevs)
 			}
-			cm.setCtrRelatedInfo(containerObj.ID(), "k8s.io", usedDevs)
+			cm.setCtrRelatedInfo(containerObj.ID(), ns, usedDevs)
 		}
+	}
+	return ctrIds
+}
+
+func (cm *CtrCtl) updateCtrRelatedInfo() error {
+	ctrs, err := cm.client.getAllContainers()
+	if err != nil {
+		return fmt.Errorf("get all ctrs failed: %v", err)
+	}
+	var ctrIds []string
+	switch cs := ctrs.(type) {
+	case map[string][]containerd.Container:
+		ctrIds = cm.updateForContainerd(cs)
 	case []types.Container:
 		for _, containerObj := range cs {
 			ctrIds = append(ctrIds, containerObj.ID)
@@ -112,8 +120,7 @@ func (cm *CtrCtl) ctrControl() {
 func (cm *CtrCtl) isDevsNeedPause(usedDevs []int32) bool {
 	var isNeedPause bool
 	for _, id := range usedDevs {
-		_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
-		if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), domain.GetFaultLevelByCode(codes)) {
+		if cm.isSingleDevNeedPause(id) {
 			cm.devInfoMap.SetDevStatus(id, common.StatusNeedPause)
 			isNeedPause = true
 			continue
@@ -122,6 +129,15 @@ func (cm *CtrCtl) isDevsNeedPause(usedDevs []int32) bool {
 		cm.devInfoMap.SetDevStatus(id, common.StatusIgnorePause)
 	}
 	return isNeedPause
+}
+
+func (cm *CtrCtl) isSingleDevNeedPause(id int32) bool {
+	// if device have any fault, or get fault failed, need pause
+	_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
+	if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), domain.GetFaultLevelByCode(codes)) {
+		return true
+	}
+	return false
 }
 
 func (cm *CtrCtl) setCtrRelatedInfo(ctrId, ns string, usedDevs []int32) {
@@ -193,7 +209,8 @@ func (cm *CtrCtl) resumeCtr(onRing bool) {
 		// can all containers on the ring be resumed.
 		// as long as one of the cards used by the containers on the ring does not meet the condition,
 		// the entire container on the ring cannot be resumed
-		if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)) {
+		ringCtrsUsedDevs := cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)
+		if cm.isDevsNeedPause(cm.devInfoMap.GetDevsOnRing(ringCtrsUsedDevs)) {
 			continue
 		}
 		for _, ctrId := range ctrsOnRings {
@@ -203,7 +220,7 @@ func (cm *CtrCtl) resumeCtr(onRing bool) {
 		}
 	}
 
-	for _, id := range ctrNeedResume {
+	for _, id := range utils.RemoveDuplicates(ctrNeedResume) {
 		hwlog.RunLog.Infof("start resuming container: %s", id)
 		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusResuming)
 		ns := cm.ctrInfoMap.GetCtrNs(id)
