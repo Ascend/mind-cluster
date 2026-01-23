@@ -641,6 +641,7 @@ type GetAllBatchJobSummarySignalTestCase struct {
 	mockJobCache     map[string]constant.JobInfo
 	wantBatchSignals int
 	wantBatchJobIds  int
+	wantJobTotalNum  int32
 }
 
 func buildGetAllBatchJobSummarySignalTestCases() []GetAllBatchJobSummarySignalTestCase {
@@ -650,6 +651,7 @@ func buildGetAllBatchJobSummarySignalTestCases() []GetAllBatchJobSummarySignalTe
 			mockJobCache:     map[string]constant.JobInfo{},
 			wantBatchSignals: 0,
 			wantBatchJobIds:  0,
+			wantJobTotalNum:  0,
 		},
 		{
 			name: "single job in cache",
@@ -658,6 +660,7 @@ func buildGetAllBatchJobSummarySignalTestCases() []GetAllBatchJobSummarySignalTe
 			},
 			wantBatchSignals: 1,
 			wantBatchJobIds:  1,
+			wantJobTotalNum:  1,
 		},
 		{
 			name: "multiple jobs in cache",
@@ -668,6 +671,7 @@ func buildGetAllBatchJobSummarySignalTestCases() []GetAllBatchJobSummarySignalTe
 			},
 			wantBatchSignals: three,
 			wantBatchJobIds:  three,
+			wantJobTotalNum:  three,
 		},
 	}
 }
@@ -691,9 +695,10 @@ func TestGetAllBatchJobSummarySignals(t *testing.T) {
 			convey.Convey(tt.name, func() {
 				patchCache := gomonkey.ApplyFuncReturn(jobstorage.GetAllJobCache, tt.mockJobCache)
 				defer patchCache.Reset()
-				batchSignals, batchJobIds := GetAllBatchJobSummarySignals()
+				batchSignals, batchJobIds, JobTotalNum := GetAllBatchJobSummarySignals()
 				convey.So(len(batchSignals), convey.ShouldEqual, tt.wantBatchSignals)
 				convey.So(len(batchJobIds), convey.ShouldEqual, tt.wantBatchJobIds)
+				convey.So(JobTotalNum, convey.ShouldEqual, tt.wantJobTotalNum)
 			})
 		}
 	})

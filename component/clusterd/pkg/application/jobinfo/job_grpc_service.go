@@ -196,13 +196,13 @@ func (s *JobServer) SubscribeJobSummarySignalList(req *job.ClientInfo,
 		hwlog.RunLog.Errorf("rate limited, there is too many requests, please retry later")
 		return fmt.Errorf("rate limited, there is too many requests, please retry later")
 	}
-	allBatchJobSummarySignals, allBatchJobIds := GetAllBatchJobSummarySignals()
+	allBatchJobSummarySignals, allBatchJobIds, JobTotalNum := GetAllBatchJobSummarySignals()
 	reportTime := time.Now().UnixMilli()
 	for i, batchJobSummarySignal := range allBatchJobSummarySignals {
 		jobInfos := job.JobSummarySignalList{
 			JobSummarySignals: batchJobSummarySignal,
 			ReportTime:        strconv.FormatInt(reportTime, ten),
-			JobTotalNum:       int32(len(batchJobSummarySignal))}
+			JobTotalNum:       JobTotalNum}
 		if err := stream.Send(&jobInfos); err != nil {
 			hwlog.RunLog.Errorf("send full job summary signal to client %s (role: %s) failed: %v",
 				req.ClientId, req.Role, err)
@@ -377,12 +377,13 @@ func processJobSliceForBatchSignals(jobMap map[string]constant.JobInfo, maxNPUs 
 }
 
 // GetAllBatchJobSummarySignals get all batch job summary signals
-func GetAllBatchJobSummarySignals() ([][]*job.JobSummarySignal, [][]string) {
+func GetAllBatchJobSummarySignals() ([][]*job.JobSummarySignal, [][]string, int32) {
 	allBatchJobSummarySignals := make([][]*job.JobSummarySignal, 0)
 	allBatchJobIds := make([][]string, 0)
 	jobMap := jobstorage.GetAllJobCache()
 	if len(jobMap) == 0 {
-		return allBatchJobSummarySignals, allBatchJobIds
+		return allBatchJobSummarySignals, allBatchJobIds, 0
 	}
-	return processJobSliceForBatchSignals(jobMap, constant.MaxNPUsPerBatch)
+	allBatchJobSummarySignals, allBatchJobIds = processJobSliceForBatchSignals(jobMap, constant.MaxNPUsPerBatch)
+	return allBatchJobSummarySignals, allBatchJobIds, int32(len(jobMap))
 }
