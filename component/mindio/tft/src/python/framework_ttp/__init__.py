@@ -34,7 +34,7 @@ from .ttp_decorator import (tft_report_error, tft_wait_next_action, tft_get_repa
                             tft_report_load_ckpt_step)
 from .ttp_decorator import tft_is_reboot_node, tft_reset_limit_step, tft_get_reboot_type
 from .ttp_decorator import ReportState, Action, OptimizerType, RepairType
-from .ttp_decorator import set_mindio_export_version, tft_register_stream_sync_handler
+from .ttp_decorator import set_mindio_export_version, tft_register_stream_sync_handler, tft_register_exception_handler
 from ..utils import tft_can_do_uce_repair
 
 __all__ = [
@@ -63,6 +63,7 @@ __all__ = [
     "tft_register_zit_upgrade_repair_handler",
     "tft_register_zit_upgrade_rebuild_handler",
     "tft_register_zit_downgrade_rebuild_handler",
+    "tft_register_exception_handler",
     "tft_report_error",
     "tft_wait_next_action",
     "tft_get_repair_step",

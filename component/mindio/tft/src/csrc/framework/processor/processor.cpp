@@ -1879,6 +1879,8 @@ TResult Processor::ReportStatus(ReportState state, const std::string &errCode)
         trainStatus_.npu_status = TTP_STATUS_UCE_CORRUPTED;
     } else if (state == ReportState::RS_UNKNOWN) {
         trainStatus_.run_status = TTP_STATUS_ABNORMAL;
+    } else if (state == ReportState::RS_RETRY) {
+        trainStatus_.npu_status = TTP_STATUS_PRECISION_ERROR;
     } else if (state == ReportState::RS_PREREPAIR_FINISH) {
         trainStatus_.run_status = TTP_STATUS_PREREPAIR_FINISH;
     } else if (state == ReportState::RS_INIT_FINISH) {

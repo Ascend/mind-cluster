@@ -420,4 +420,42 @@ TEST_F(ControllerUCETest, handle_uce_corrupted_load_ckpt_success)
     unsetenv("MINDX_TASK_ID");
     MOCKCPP_RESET;
 }
+
+TEST_F(ControllerUCETest, handle_precision_error_load_ckpt_success)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    MOCKER_CPP(&ControllerUCETest::Register, TResult(*)(void)).
+    expects(once()).will(returnValue(TTP_ERROR));
+
+    ControllerUCETest::InitSource();
+    int32_t ret;
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_RETRY;
+    processor1->ReportStatus(state);
+    processor2->ReportStatus(state);
+    processor3->ReportStatus(state);
+    processor4->ReportStatus(state);
+
+    ret = processor1->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor2->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor3->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor4->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+
+    ASSERT_EQ(processor2->GetRepairType(), "retry");
+    ASSERT_EQ(stopCount.load(), WORLD_SIZE);
+    ASSERT_EQ(cleanCount.load(), WORLD_SIZE);
+    ASSERT_EQ(repairLoadCkpt.load(), CHECK_COUNT_FOUR);
+    ASSERT_EQ(repairRollbackCount.load(), WORLD_SIZE);
+
+    unsetenv("MINDX_TASK_ID");
+    MOCKCPP_RESET;
+}
 }

@@ -2489,7 +2489,8 @@ TResult Controller::CheckTrainStatus()
         if ((status.run_status != TTP_STATUS_NORMAL) ||
             (status.data_aval != TTP_STATUS_NORMAL) ||
             (status.npu_status != TTP_STATUS_NORMAL)) {
-            unableRepair_ |= (status.npu_status == TTP_STATUS_UCE_CORRUPTED);
+            unableRepair_ |= (status.npu_status == TTP_STATUS_UCE_CORRUPTED) ||
+                             (status.npu_status == TTP_STATUS_PRECISION_ERROR);
             hcclFlag_ |= SET_HCCL_BIT(status.npu_status == TTP_STATUS_HCCL_FAILED);
             hcclFlag_ |= SET_UCE_BIT(status.npu_status == TTP_STATUS_UCE_HIGH);
             errorFlag = true;
@@ -2579,7 +2580,8 @@ void Controller::SelectErrorRanks()
             if (status.npu_status == TTP_STATUS_HCCL_FAILED) {
                 errorRankMsg_[rank] = HCCL_ERROR;
             } else if (status.npu_status == TTP_STATUS_UCE_HIGH || status.npu_status == TTP_STATUS_UCE_LOW ||
-                       status.npu_status == TTP_STATUS_UCE_CORRUPTED) {
+                       status.npu_status == TTP_STATUS_UCE_CORRUPTED ||
+                       status.npu_status == TTP_STATUS_PRECISION_ERROR) {
                 errorRankMsg_[rank] = UCE_ERROR;
             } else {
                 errorRankMsg_[rank] = PROCESSES_ERROR;

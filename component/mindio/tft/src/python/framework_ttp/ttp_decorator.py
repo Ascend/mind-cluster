@@ -88,6 +88,7 @@ class Action(Enum):
 
 class ReportState(Enum):
     RS_NORMAL = ttp_c2python_api.ReportState_RS_NORMAL
+    RS_RETRY = ttp_c2python_api.ReportState_RS_RETRY
     RS_UCE = ttp_c2python_api.ReportState_RS_UCE
     RS_UCE_CORRUPTED = ttp_c2python_api.ReportState_RS_UCE_CORRUPTED
     RS_HCCL_FAILED = ttp_c2python_api.ReportState_RS_HCCL_FAILED
@@ -867,6 +868,12 @@ fault_types = {"FORCE STOP": "RS_NORMAL",
                "OTHER": "RS_UNKNOWN"}
 
 
+def tft_register_exception_handler(fault_pattern: str, fault_type: str, fault_handle: Callable):
+    global fault_types, fault_handles
+    fault_types[fault_pattern] = fault_type
+    fault_handles[fault_pattern] = fault_handle
+
+
 def tft_exception_handler(func: Callable):
     """
     Save Final Ckpt: A wrapper decorator on a training function to catch exception
@@ -1198,7 +1205,7 @@ def tft_report_error(error_type: ReportState, error_code=''):
 
     if error_type in [ReportState.RS_UCE.value, ReportState.RS_UCE_CORRUPTED.value]:
         uce_error_ = True
-    elif error_type == ReportState.RS_HCCL_FAILED.value:
+    elif error_type in [ReportState.RS_HCCL_FAILED.value, ReportState.RS_RETRY.value]:
         retry_error_ = True
         notify_stop_callback_return()
     elif error_type == ReportState.RS_NORMAL.value:

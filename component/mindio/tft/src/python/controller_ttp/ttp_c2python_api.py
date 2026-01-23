@@ -39,6 +39,7 @@ except ImportError:
 RET_ERROR = 1
 
 ReportState_RS_NORMAL = _ttp_c2python_api.ReportState_RS_NORMAL
+ReportState_RS_RETRY = _ttp_c2python_api.ReportState_RS_RETRY
 ReportState_RS_UCE = _ttp_c2python_api.ReportState_RS_UCE
 ReportState_RS_UCE_CORRUPTED = _ttp_c2python_api.ReportState_RS_UCE_CORRUPTED
 ReportState_RS_HCCL_FAILED = _ttp_c2python_api.ReportState_RS_HCCL_FAILED

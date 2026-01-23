@@ -58,6 +58,7 @@ struct SaveCkptContext {
 
 enum class ReportState : int32_t {
     RS_NORMAL = 0,
+    RS_RETRY,
     RS_UCE,
     RS_UCE_CORRUPTED,
     RS_HCCL_FAILED,
