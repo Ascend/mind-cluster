@@ -143,7 +143,8 @@ TResult Controller::Initialize(int32_t rank, int32_t worldSize, bool enableLocal
     TTP_LOG_DEBUG("[env] MINDIO_WAIT_MINDX_TIME:" << waitMindxTimes_);
 
     TTP_LOG_INFO("Init controller success, rank:" << rank_ << ", world size:" << worldSize_ \
-        << ", is master controller:" << isMasterCtrl_.load() << ", arf:" << arfSwitch_ << ", zit:" << zitSwitch_);
+        << ", is master controller:" << isMasterCtrl_.load() << ", arf:" << arfSwitch_ << ", zit:" << zitSwitch_
+        << " FrameworkType:" << GetFrameworkType());
     return TTP_OK;
 }
 
@@ -2088,7 +2089,7 @@ void Controller::GetAllRepairInfo(RankMask &rankMask, std::vector<RepairInfo> &r
 {
     for (auto [rank, mask] : rankMask) {
         RepairType rt = mask == MASK_UCE_HIGH ? RepairType::RT_LOAD_REBUILD : RepairType::RT_LOAD_CKPT;
-        rInfo.push_back(RepairInfo{rank, rank, rank, groupIdx, -1, rt});
+        rInfo.emplace_back(rank, rank, rank, groupIdx, -1, rt);
     }
 }
 

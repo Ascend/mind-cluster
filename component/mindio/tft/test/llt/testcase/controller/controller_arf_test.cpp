@@ -34,7 +34,7 @@ TEST_F(ControllerARFTest, handle_downgrade_running)
     setenv("TTP_LOG_MODE", "ONLY_ONE", 1);
     setenv("TTP_LOG_SIZE", "4096", 1);
     setenv("TEST_LOG_OPEN", "1", 1);
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, false, true);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, false, true, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -76,7 +76,7 @@ TEST_F(ControllerARFTest, handle_downgrade_upgrade_recover)
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
     MOCKER_CPP(&Controller::SelectBackUpController,
                std::vector<BackupInfo>(*)(void)).stubs().will(invoke(ControllerARFTest::SelectBackUpController));
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, false, true);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, false, true, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -139,7 +139,7 @@ TEST_F(ControllerARFTest, arf_repair)
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
     ASSERT_EQ(setenv("TTP_RETRY_TIMES", "30", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -192,7 +192,7 @@ TEST_F(ControllerARFTest, arf_wait_change_strategy_exit)
     MOCKER_CPP(&ControllerARFTest::StopFunc, int32_t(*)(void *, int)).stubs().will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -225,7 +225,7 @@ TEST_F(ControllerARFTest, arf_wait_change_strategy_dump)
     MOCKER_CPP(&ControllerARFTest::StopFunc, int32_t(*)(void *, int)).stubs().will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -261,7 +261,7 @@ TEST_F(ControllerARFTest, arf_notify_dump)
 {
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -298,8 +298,9 @@ TEST_F(ControllerARFTest, arf_notify_dump)
 TEST_F(ControllerARFTest, x1_arf_notify_dump)
 {
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -331,13 +332,79 @@ TEST_F(ControllerARFTest, x1_arf_notify_dump)
     ASSERT_EQ(registerCount, 1);
 
     unsetenv("MINDX_TASK_ID");
+    unsetenv("TTP_FRAMEWORK_TYPE");
+}
+
+TEST_F(ControllerARFTest, x1_dump_no_replica)
+{
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
+
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
+    int32_t ret;
+
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UNKNOWN;
+    processor2->ReportStatus(state);
+    processor4->ReportStatus(state);
+    sleep(1);
+    processor2->Destroy(true);
+    processor4->Destroy(true);
+
+    ASSERT_EQ(stopCount.load(), 0);
+    ASSERT_EQ(cleanCount.load(), 0);
+    ASSERT_EQ(ckptCount.load(), 0);
+    ASSERT_EQ(renameCount.load(), 0);
+
+    unsetenv("TTP_FRAMEWORK_TYPE");
+}
+
+    TEST_F(ControllerARFTest, x1_arf_notify_dump_no_replica)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
+
+    ControllerARFTest::InitSource(REPLICA_NUM_ONE, true, false, REPLICA_SHIFT_THREE);
+    int32_t ret;
+
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UNKNOWN;
+    processor1->ReportStatus(state);
+    processor2->ReportStatus(state);
+    sleep(1);
+    processor1->Destroy(true);
+    processor2->Destroy(true);
+    ChangeStrategy(STRATEGY_DUMP);
+
+    processor4->SetDumpResult(0);
+
+    ret = processor3->WaitNextAction();
+    ASSERT_EQ(ret, TTP_ERROR);
+    ret = processor4->WaitNextAction();
+    ASSERT_EQ(ret, TTP_ERROR);
+
+    ASSERT_EQ(stopCount.load(), 0);
+    ASSERT_EQ(cleanCount.load(), 0);
+    ASSERT_EQ(ckptCount.load(), CHECK_COUNT_ONE);
+    ASSERT_EQ(renameCount.load(), 1);
+    ASSERT_EQ(registerCount, 1);
+
+    unsetenv("MINDX_TASK_ID");
+    unsetenv("TTP_FRAMEWORK_TYPE");
 }
 
 TEST_F(ControllerARFTest, notify_dump_with_stop_clean)
 {
     ASSERT_EQ(setenv("TTP_STOP_CLEAN_BEFORE_DUMP", "1", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -372,7 +439,7 @@ TEST_F(ControllerARFTest, notify_dump_with_stop_clean)
 
 TEST_F(ControllerARFTest, notify_dump_without_stop_clean)
 {
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -408,7 +475,7 @@ TEST_F(ControllerARFTest, arf_clean_faild)
     MOCKER_CPP(&ControllerARFTest::CleanFunc, int32_t(*)(void *, int)).stubs().will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -443,7 +510,7 @@ TEST_F(ControllerARFTest, arf_notify_dump_failed)
     MOCKER_CPP(&Controller::HandleDumpStatus, int32_t(*)(const std::set<int32_t>&)).stubs().will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -479,7 +546,7 @@ TEST_F(ControllerARFTest, arf_notify_dump_rename_failed)
     MOCKER_CPP(&Controller::Rename, int32_t(*)(std::set<int32_t>, int64_t)).stubs().will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -521,7 +588,7 @@ TEST_F(ControllerARFTest, arf_unexpected_report_process_fault_calling)
         will(invoke(&ControllerARFTest::ReportFaultRanksUnexcepted));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -551,7 +618,7 @@ TEST_F(ControllerARFTest, arf_unexpected_report_stop_calling)
         will(invoke(&ControllerARFTest::ReportStopCompleteUnexcepted));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -581,7 +648,7 @@ TEST_F(ControllerARFTest, arf_rollback_failed)
         will(returnValue(1));
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -649,7 +716,7 @@ TEST_F(ControllerARFTest, arf_notify_invalid_strategy)
 {
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -680,7 +747,7 @@ TEST_F(ControllerARFTest, arf_notify_pause_train)
         expects(once()).
         will(invoke(&ControllerARFTest::ReportStopCompletePause));
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -717,7 +784,7 @@ TEST_F(ControllerARFTest, arf_notify_continue_train_failed)
         expects(once()).
         will(returnValue(1));
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
@@ -752,7 +819,7 @@ TEST_F(ControllerARFTest, arf_notify_pause_wait_failed)
         will(invoke(&ControllerARFTest::ReportStopCompletePause));
     MOCKER_CPP(&Controller::PauseWait, int(*)(RepairType)).expects(once()).will(returnValue(1));
 
-    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false);
+    ControllerARFTest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_TWO);
     int32_t ret;
 
     ProcessorUpdate(processor1);
