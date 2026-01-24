@@ -27,12 +27,18 @@ const std::string BACKUP_PORT = "1234";
 const std::string CONTROLLER_IP = "0.0.0.0";
 constexpr uint32_t CONTROLLER_PORT = 8555;
 constexpr const int32_t WORLD_SIZE = 4;
-constexpr int32_t REPLICA_NUM_TWO = 2;
 constexpr int64_t COMMON_STEP = 2;
 constexpr int64_t BACKUP_STEP = 1;
 constexpr uint32_t UCE_NO_REBUILD = 2;
 constexpr uint8_t MASK_NORMAL = 0;
 constexpr uint8_t MASK_ERROR = 1;
+
+constexpr int32_t REPLICA_NUM_ONE = 1;
+constexpr int32_t REPLICA_NUM_TWO = 2;
+
+constexpr int32_t REPLICA_SHIFT_ONE = 1;
+constexpr int32_t REPLICA_SHIFT_TWO = 2;
+constexpr int32_t REPLICA_SHIFT_THREE = 3;
 
 constexpr uint32_t CHECK_COUNT_ONE = 1;
 constexpr uint32_t CHECK_COUNT_TWO = 2;
@@ -419,14 +425,15 @@ public:
         }
     }
 
-    void InitSource(int32_t controllerReplica = 2, bool enableARF = false, bool enableZIT = false)
+    void InitSource(int32_t controllerReplica = 2, bool enableARF = false, bool enableZIT = false,
+                    int32_t replicaShift = 2)
     {
         ControllerTest::CountClean();
         ControllerTest::MapInfoClean();
 
         ControllerTest::InitController(controller1);
         std::vector<int32_t> replicaCnt = { controllerReplica };
-        std::vector<int32_t> replicaOffset = { 2 };
+        std::vector<int32_t> replicaOffset = { replicaShift };
         int32_t ret = controller1->Initialize(0, WORLD_SIZE, enableLocalCopy, enableARF, enableZIT);
         controller1->retrySwitch_ = true;
         ASSERT_EQ(ret, 0);

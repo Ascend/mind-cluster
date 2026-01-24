@@ -115,8 +115,8 @@ TResult DefaultReplicaManager::RepairSelectReplica(RankMask &rankMask, std::vect
             auto [repRank, repMask] = rankMask[idx];
             if (repMask == MASK_NORMAL) {
                 find = true;
-                rInfo.push_back(RepairInfo{curRank, repRank, curRank, groupIdx, -1, rt});
-                rInfo.push_back(RepairInfo{repRank, repRank, curRank, groupIdx, -1, RepairType::RT_SEND});
+                rInfo.emplace_back(curRank, repRank, curRank, groupIdx, -1, rt);
+                rInfo.emplace_back(repRank, repRank, curRank, groupIdx, -1, RepairType::RT_SEND);
                 break;
             }
         }
@@ -159,6 +159,7 @@ TResult X1ReplicaManager::ChooseRank(const RankChooseInfo &rankChooseInfo, std::
 
     // 2. 两副本或多副本, 在副本组内要选出全量信息
     auto repSize = repShift * repCnt;
+    TTP_ASSERT_RETURN(repSize <= rankSize, TTP_ERROR);
     for (auto i = 0U; i < repShift; i++) {
         for (auto idx = i; idx < repSize; idx += repShift) {
             auto [rank, mask] = rankMask[idx];
@@ -168,18 +169,21 @@ TResult X1ReplicaManager::ChooseRank(const RankChooseInfo &rankChooseInfo, std::
             }
         }
     }
+    if (tmpRankVec.size() == repShift) {
+        return TTP_OK;
+    }
+
+    TTP_ASSERT_RETURN(repSize != rankSize, TTP_ERROR);
 
     // 3. 异形副本切分时支持dump条件判断
-    if (tmpRankVec.size() != repShift) {
-        SetCanRepair(false);
-        tmpRankVec.clear();
-        for (auto idx = repSize; idx < rankSize; idx++) {
-            auto [rank, mask] = rankMask[idx];
-            if (mask != MASK_NORMAL) {
-                return TTP_ERROR;
-            }
-            tmpRankVec.push_back(rank);
+    SetCanRepair(false);
+    tmpRankVec.clear();
+    for (auto idx = repSize; idx < rankSize; idx++) {
+        auto [rank, mask] = rankMask[idx];
+        if (mask != MASK_NORMAL) {
+            return TTP_ERROR;
         }
+        tmpRankVec.push_back(rank);
     }
 
     return TTP_OK;
@@ -204,8 +208,8 @@ TResult X1ReplicaManager::RepairSelectReplica(RankMask &rankMask, std::vector<Re
             auto [repRank, repMask] = rankMask[idx];
             if (repMask == MASK_NORMAL) {
                 find = true;
-                rInfo.push_back(RepairInfo{curRank, repRank, curRank, groupIdx, -1, rt});
-                rInfo.push_back(RepairInfo{repRank, repRank, curRank, groupIdx, -1, RepairType::RT_SEND});
+                rInfo.emplace_back(curRank, repRank, curRank, groupIdx, -1, rt);
+                rInfo.emplace_back(repRank, repRank, curRank, groupIdx, -1, RepairType::RT_SEND);
                 break;
             }
         }

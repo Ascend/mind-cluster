@@ -67,7 +67,6 @@ inline uint32_t GetFrameworkType()
 inline DefaultReplicaManager& CreateReplicaManager()
 {
     uint32_t typeValue = GetFrameworkType();
-    TTP_LOG_INFO("FrameworkType: " << typeValue);
 
     switch (typeValue) {
         case FrameworkTypeEnum::TYPE_X1:

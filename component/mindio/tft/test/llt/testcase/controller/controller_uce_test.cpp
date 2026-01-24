@@ -319,6 +319,51 @@ TEST_F(ControllerUCETest, handle_x1_uce_highlevel_success)
     MOCKCPP_RESET;
 }
 
+TEST_F(ControllerUCETest, handle_x1_uce_highlevel_success_one_replica)
+{
+    ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
+    ASSERT_EQ(setenv("TTP_FRAMEWORK_TYPE", "1", 1), 0);
+    MOCKER_CPP(&ControllerUCETest::Register, TResult(*)(void)).
+    expects(once()).will(returnValue(TTP_ERROR));
+
+    ControllerUCETest::InitSource(REPLICA_NUM_TWO, true, false, REPLICA_SHIFT_ONE);
+    int32_t ret;
+    ProcessorUpdate(processor1);
+    ProcessorUpdate(processor2);
+    ProcessorUpdate(processor3);
+    ProcessorUpdate(processor4);
+
+    ReportState state = ReportState::RS_UCE;
+    processor1->ReportStatus(state);
+
+    ret = processor1->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor2->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor3->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+    ret = processor4->WaitRepairAction();
+    ASSERT_EQ(ret, TTP_OK);
+
+    ASSERT_EQ(processor2->GetRepairType(), "retry");
+    ASSERT_EQ(stopCount.load(), WORLD_SIZE);
+    ASSERT_EQ(cleanCount.load(), WORLD_SIZE);
+    ASSERT_EQ(repairSendCount.load(), CHECK_COUNT_ONE);
+    ASSERT_EQ(repairUCECount.load(), CHECK_COUNT_ONE);
+    ASSERT_EQ(repairRollbackCount.load(), WORLD_SIZE);
+
+    // 构造的0号卡故障，因为dp组为[0,1,2,3]，副本组大小为1，副本数2，0号卡和1号卡互为副本，因此通知repair时，0和1收到的[send:1,recv:0]
+    std::map<std::string, std::set<std::vector<int32_t>>> expect = {
+            {"send", {{1}}},
+            {"ucerecv", {{0}}}
+    };
+    ASSERT_EQ(repairRankInfos, expect);
+
+    unsetenv("MINDX_TASK_ID");
+    unsetenv("TTP_FRAMEWORK_TYPE");
+    MOCKCPP_RESET;
+}
+
 TEST_F(ControllerUCETest, repair_msg_overflow_fail)
 {
     ControllerUCETest::InitSource();

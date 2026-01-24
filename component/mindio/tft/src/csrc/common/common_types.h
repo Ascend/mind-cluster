@@ -67,6 +67,12 @@ struct RepairInfo {
     int16_t groupType;
     int16_t replicaIdx;
     RepairType type;
+
+    RepairInfo(int32_t msgRank_, int32_t srcRank_, int32_t dstRank_,
+               int16_t groupType_, int16_t replicaIdx_, RepairType type_)
+        : msgRank(msgRank_), srcRank(srcRank_), dstRank(dstRank_), groupType(groupType_), replicaIdx(replicaIdx_),
+        type(type_)
+    {}
 };
 
 struct EnvVarValue {
