@@ -127,14 +127,9 @@ func TestJobServerRegister(t *testing.T) {
 // TestJobServerSubscribe tests job summary subscription
 func TestJobServerSubscribe(t *testing.T) {
 	convey.Convey("Given a registered client", t, func() {
-		patch := gomonkey.ApplyFunc(jobstorage.GetAllJobCache, func() map[string]constant.JobInfo {
-			return map[string]constant.JobInfo{testJob1: {Key: testJob1}}
-		})
-		defer patch.Reset()
 		ctx := context.Background()
 		server := NewJobServer(ctx)
 		clientID := registerTestClient(server, ctx, constant.RoleFdAgent)
-
 		convey.Convey("When subscribing with normal stream", func() {
 			stream := &mockStream{ctx: ctx}
 			req := &job.ClientInfo{ClientId: clientID}
@@ -142,25 +137,14 @@ func TestJobServerSubscribe(t *testing.T) {
 				err := server.SubscribeJobSummarySignal(req, stream)
 				convey.ShouldBeNil(err)
 			}()
-
 			convey.Convey("It should receive broadcast messages", func() {
 				time.Sleep(time.Millisecond * oneHundred)
-				signal := job.JobSummarySignal{JobId: testJob2}
+				signal := job.JobSummarySignal{JobId: testJob1}
 				server.broadcastJobUpdate(signal)
 				time.Sleep(time.Millisecond * oneHundred)
-
-				convey.So(len(stream.msgs), convey.ShouldEqual, two)
+				convey.So(len(stream.msgs), convey.ShouldEqual, 1)
 				convey.So(stream.msgs[0].JobId, convey.ShouldEqual, testJob1)
-				convey.So(stream.msgs[1].JobId, convey.ShouldEqual, testJob2)
 			})
-		})
-		convey.Convey("When stream.Send returns error", func() {
-			stream := &mockStream{ctx: ctx, sendError: errors.New("send failed")}
-			req := &job.ClientInfo{ClientId: clientID}
-
-			err := server.SubscribeJobSummarySignal(req, stream)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "send failed")
 		})
 	})
 }

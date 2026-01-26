@@ -17,7 +17,6 @@ package jobinfo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -144,19 +143,6 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 		hwlog.RunLog.Errorf("rate limited, there is too many requests, please retry later")
 		return fmt.Errorf("rate limited, there is too many requests, please retry later")
 	}
-	// Get and push all the jobs if role is FdAgent
-	if cltState.role == constant.RoleFdAgent {
-		allJobs := jobstorage.GetAllJobCache()
-		for _, jobInfo := range allJobs {
-			jobSummary := BuildJobSignalFromJobInfo(
-				jobInfo, util.ObjToString(jobInfo.JobRankTable), constant.AddOperator)
-			if err := stream.Send(&jobSummary); err != nil {
-				errMsg := fmt.Sprintf("job: %v error sending to client %s: %v", jobSummary.JobId, req.ClientId, err)
-				hwlog.RunLog.Error(errMsg)
-				return errors.New(errMsg)
-			}
-		}
-	}
 
 	for {
 		select {
@@ -167,7 +153,7 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 				return fmt.Errorf("client channel closed")
 			}
 			if err := s.handleSingleJobInfo(&jobInfo); err != nil {
-				return fmt.Errorf("handle large npu job failed: %v", err)
+				return fmt.Errorf("handle large npu job for client %s failed: %v", req.ClientId, err)
 			}
 			if err := stream.Send(&jobInfo); err != nil {
 				hwlog.RunLog.Errorf("error sending to client %s: %v", req.ClientId, err)
