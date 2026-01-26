@@ -37,6 +37,8 @@ import (
 const (
 	expectedFeId   = 1
 	testPortLength = 2
+	// byte mask which is not for d2d usage
+	byteMaskNotForD2D byte = 0x01 << 3
 )
 
 var (
@@ -52,6 +54,21 @@ var (
 			{
 				EidIndex: 1,
 				Eid:      eid,
+			},
+		},
+	}
+	eid2 = apiCommon.Eid{
+		Raw: [apiCommon.EidByteSize]byte{
+			0, 0, 0, 0, 0, 0, 0, expectedFeId << common.FeIdIndexBit,
+			0, 0, 0, 0, 0, 0, byteMaskNotForD2D, 0,
+		},
+	}
+	urmaDevInfoNotForD2DWhenRankLavel0 = apiCommon.UrmaDeviceInfo{
+		EidCount: 1,
+		EidInfos: []apiCommon.UrmaEidInfo{
+			{
+				EidIndex: 1,
+				Eid:      eid2,
 			},
 		},
 	}
@@ -281,22 +298,27 @@ func TestNpuBaseMethodGetFeIDByEid(t *testing.T) {
 	})
 }
 
-// TestNpuBaseMethodGetEidListByFeID test base method
-func TestNpuBaseMethodGetEidListByFeID(t *testing.T) {
-	convey.Convey("Test NpuBase method getEidListByFeID", t, func() {
+// TestNpuBaseMethodGetEidListByFeIDAndRankLevel test NpuBase method getEidListByFeIDAndRankLevel
+func TestNpuBaseMethodGetEidListByFeIDAndRankLevel(t *testing.T) {
+	convey.Convey("Test NpuBase method getEidListByFeIDAndRankLevel", t, func() {
 		npu := NewNpuBase()
 		convey.Convey("01-should return empty when urma dev info is nil", func() {
-			actual := npu.getEidListByFeID(expectedFeId, nil)
+			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId, nil, api.RankLevel0)
 			convey.So(actual, convey.ShouldBeEmpty)
 		})
 		convey.Convey("02-should return empty when urma dev info is valid with invalid feId ", func() {
-			actual := npu.getEidListByFeID(expectedFeId+1, &urmaDevInfo)
+			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId+1, &urmaDevInfo, api.RankLevel0)
 			convey.So(actual, convey.ShouldBeEmpty)
 		})
 
 		convey.Convey("03-should return eid when urma dev info is valid with valid feId", func() {
-			actual := npu.getEidListByFeID(expectedFeId, &urmaDevInfo)
+			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId, &urmaDevInfo, api.RankLevel0)
 			convey.So(len(actual), convey.ShouldEqual, 1)
+		})
+		convey.Convey("04-should return empty when rankLevel=0 with not d2d usage", func() {
+			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId, &urmaDevInfoNotForD2DWhenRankLavel0,
+				api.RankLevel0)
+			convey.So(actual, convey.ShouldBeEmpty)
 		})
 	})
 }

@@ -335,7 +335,7 @@ func (n *NpuBase) getRandAddrByFuncEntityID(phyID int32, feID uint, netType stri
 
 	rankAddrList := make([]api.RankAddrItem, 0)
 	for _, devInfo := range urmaDevInfoAll {
-		eidList := n.getEidListByFeID(feID, &devInfo)
+		eidList := n.getEidListByFeIDAndRankLevel(feID, &devInfo, rankLevel)
 		for i := 0; i < len(eidList); i++ {
 			eid := eidList[i].Eid
 			eidStr := hex.EncodeToString(eid.Raw[:])
@@ -368,7 +368,8 @@ func (n *NpuBase) GetPortListByEid(phyId int32, eid string, rLevel int) ([]strin
 	return n.getPortsList(phyId, eid, rLevel)
 }
 
-func (n *NpuBase) getEidListByFeID(feID uint, urmaDevInfo *apiCommon.UrmaDeviceInfo) []apiCommon.UrmaEidInfo {
+func (n *NpuBase) getEidListByFeIDAndRankLevel(feID uint, urmaDevInfo *apiCommon.UrmaDeviceInfo,
+	rankLevel int) []apiCommon.UrmaEidInfo {
 	if urmaDevInfo == nil {
 		return []apiCommon.UrmaEidInfo{}
 	}
@@ -378,7 +379,7 @@ func (n *NpuBase) getEidListByFeID(feID uint, urmaDevInfo *apiCommon.UrmaDeviceI
 		if n.getFeIDByEid(&urmaDevInfo.EidInfos[i].Eid) != feID {
 			continue
 		}
-		if !n.checkEidIsUsedForD2D(&urmaDevInfo.EidInfos[i].Eid) {
+		if rankLevel == api.RankLevel0 && !n.checkEidIsUsedForD2D(&urmaDevInfo.EidInfos[i].Eid) {
 			continue
 		}
 		eidList = append(eidList, urmaDevInfo.EidInfos[i])
