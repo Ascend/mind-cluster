@@ -95,7 +95,6 @@ const (
 
 // value of schedule_policy annotation
 const (
-	Chip4Node8    = "chip4-node8"     // 910a module
 	Chip1Node2    = "chip1-node2"     // 910a card
 	Chip4Node4    = "chip4-node4"     // 910a half
 	Chip8Node8    = "chip8-node8"     // 910bx8
@@ -104,6 +103,10 @@ const (
 	Chip2Node16Sp = "chip2-node16-sp" // a3x16-superpod
 	Chip2Node8    = "chip2-node8"     // a3x8
 	Chip2Node8Sp  = "chip2-node8-sp"  // a3x8-superpod
+	Chip4Node8    = "chip4-node8"     // Atlas 300I-4P-8 and 910a module
+	Chip4Node16   = "chip4-node16"    // Atlas 300I-4P-16
+	Chip1Node8    = "chip1-node8"     // Atlas 300I-1P-8
+	Chip1Node16   = "chip1-node16"    // Atlas 300I-1P-16
 )
 
 const (
