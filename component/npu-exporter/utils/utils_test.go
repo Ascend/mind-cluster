@@ -41,6 +41,8 @@ func TestGetDescName(t *testing.T) {
 		testGetDescNameNoFqName)
 	convey.Convey("should return empty string when desc.String does not contain comma", t,
 		testGetDescNameNoComma)
+	convey.Convey("should return metric name when desc.String contains valid format", t,
+		testGetDescNameValidFormat)
 }
 
 func testGetDescNameNil() {
@@ -64,4 +66,38 @@ func testGetDescNameNoComma() {
 
 	result := GetDescName(desc)
 	convey.So(result, convey.ShouldEqual, emptyString)
+}
+
+func testGetDescNameValidFormat() {
+	testCases := []struct {
+		name     string
+		descStr  string
+		expected string
+	}{
+		{
+			name:     "should return metric name when desc.String contains normal format with quotes",
+			descStr:  normalDescStr,
+			expected: testMetricName,
+		},
+		{
+			name:     "should return metric name when desc.String contains normal format without quotes",
+			descStr:  noQuoteDescStr,
+			expected: testMetricName,
+		},
+		{
+			name:     "should return correct metric name when desc.String contains another metric",
+			descStr:  normalDescStr2,
+			expected: testMetricName2,
+		},
+	}
+
+	for _, tc := range testCases {
+		desc := prometheus.NewDesc(testMetricName, testHelp, nil, nil)
+		patch := gomonkey.ApplyMethodReturn(desc, "String", tc.descStr)
+
+		result := GetDescName(desc)
+		convey.So(result, convey.ShouldEqual, tc.expected)
+
+		patch.Reset()
+	}
 }

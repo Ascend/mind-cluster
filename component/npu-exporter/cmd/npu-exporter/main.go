@@ -60,6 +60,7 @@ var (
 	endpoint            = ""
 	limitIPReq          = ""
 	platform            = ""
+	textMetricsFilePath = ""
 	limitIPConn         int
 	limitTotalConn      int
 	cacheSize           int
@@ -100,6 +101,13 @@ const (
 	telegrafPlatform           = "Telegraf"
 	pollIntervalStr            = "poll_interval"
 	platformStr                = "platform"
+	updateTimeStr              = "updateTime"
+	profilingTimeStr           = "profilingTime"
+	textMetricsFilePathStr     = "textMetricsFilePath"
+	logLevelStr                = "logLevel"
+	maxAgeStr                  = "maxAge"
+	logFileStr                 = "logFile"
+	maxBackupsStr              = "maxBackups"
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
 )
@@ -115,11 +123,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
-	initPaprams()
 	err = paramValid(platform)
 	if err != nil {
 		return
 	}
+	initParams()
 	dmgr, err := devmanager.AutoInit("", deviceResetTimeout)
 	if err != nil {
 		logger.Errorf("new npu collector failed, error is %v", err)
@@ -167,9 +175,10 @@ func prometheusProcss(wg *sync.WaitGroup, ctx context.Context, cancel context.Ca
 	}()
 }
 
-func initPaprams() {
+func initParams() {
 	common.SetHccsBWProfilingTime(hccsBWProfilingTime)
 	common.SetExternalParams(profilingTime)
+	plugins.SetTextMetricsFilePath(textMetricsFilePath)
 }
 
 func paramValid(platform string) error {
@@ -403,13 +412,13 @@ func init() {
 	flag.IntVar(&concurrency, "concurrency", defaultConcurrency,
 		"The max concurrency of the http server, range is [1-512]")
 	// hwlog configuration
-	flag.IntVar(&logger.HwLogConfig.LogLevel, "logLevel", 0,
+	flag.IntVar(&logger.HwLogConfig.LogLevel, logLevelStr, 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
-	flag.IntVar(&logger.HwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
+	flag.IntVar(&logger.HwLogConfig.MaxAge, maxAgeStr, hwlog.DefaultMinSaveAge,
 		"Maximum number of days for backup log files, range [7, 700] days")
-	flag.StringVar(&logger.HwLogConfig.LogFileName, "logFile", defaultLogFile,
+	flag.StringVar(&logger.HwLogConfig.LogFileName, logFileStr, defaultLogFile,
 		"Log file path. If the file size exceeds 20MB, will be rotated")
-	flag.IntVar(&logger.HwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
+	flag.IntVar(&logger.HwLogConfig.MaxBackups, maxBackupsStr, hwlog.DefaultMaxBackups,
 		"Maximum number of backup log files, range is (0, 30]")
 	flag.IntVar(&cacheSize, "cacheSize", limiter.DefaultCacheSize, "the cacheSize for ip limit,"+
 		"range  is [1,1024000],keep default normally")
@@ -419,12 +428,14 @@ func init() {
 		" request,range  is [1,512]")
 	flag.StringVar(&limitIPReq, "limitIPReq", "20/1",
 		"the http request limit counts for each Ip,20/1 means allow 20 request in 1 seconds")
-	flag.StringVar(&platform, "platform", "Prometheus", "the data reporting platform, "+
+	flag.StringVar(&platform, platformStr, "Prometheus", "the data reporting platform, "+
 		"just support Prometheus and Telegraf")
+	flag.StringVar(&textMetricsFilePath, textMetricsFilePathStr, "",
+		"text indicator collection path, support specified multiple file path")
 	flag.DurationVar(&pollInterval, pollIntervalStr, 1*time.Second,
 		"how often to send metrics when use Telegraf plugin, "+
 			"needs to be used with -platform=Telegraf, otherwise, it does not take effect")
-	flag.IntVar(&profilingTime, "profilingTime", defaultProfilingTime,
+	flag.IntVar(&profilingTime, profilingTimeStr, defaultProfilingTime,
 		"config pcie bandwidth profiling time, range is [1, 2000]")
 	flag.IntVar(&hccsBWProfilingTime, api.HccsBWProfilingTimeStr, defaultHccsBwProfilingTime,
 		"config "+api.Hccs+" bandwidth profiling time, range is [1, 1000]")
@@ -447,10 +458,6 @@ func indexHandler(w http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		logger.Errorf("Write to response error: %v", err)
 	}
-}
-
-func prometheusProcess() {
-
 }
 
 func startServe(ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
@@ -492,6 +499,14 @@ func paramValidInTelegraf() error {
 		platformStr:                true,
 		pollIntervalStr:            true,
 		api.HccsBWProfilingTimeStr: true,
+		textMetricsFilePathStr:     true,
+		updateTimeStr:              true,
+		logLevelStr:                true,
+		maxAgeStr:                  true,
+		logFileStr:                 true,
+		maxBackupsStr:              true,
+		profilingTimeStr:           true,
+		api.DeviceResetTimeout:     true,
 	}
 
 	if len(cmdLine) > len(presetParamsMap) {
@@ -512,8 +527,16 @@ func paramValidInTelegraf() error {
 		}
 	}
 
-	if hccsBWProfilingTime < minHccsBWProfilingTime || hccsBWProfilingTime > maxHccsBWProfilingTime {
-		return errors.New(api.Hccs + "BWProfilingTime range error")
+	checks := []func() error{
+		checkUpdateTime,
+		checkProfilingTime,
+		checkHccsBWProfilingTime,
+		checkDeviceResetTimeout,
+	}
+	for _, check := range checks {
+		if err := check(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

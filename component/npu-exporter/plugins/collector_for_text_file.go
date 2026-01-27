@@ -20,14 +20,17 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
@@ -148,6 +151,122 @@ func checkFilePermission(filePath string) error {
 type TextMetricsInfoCollector struct {
 	common.MetricsCollectorAdapter
 	Cache sync.Map
+}
+
+// Describe description of the metric
+func (c *TextMetricsInfoCollector) Describe(ch chan<- *prometheus.Desc) {
+	for _, metric := range metricStructInfosMap {
+		if metric.metricDesc != nil {
+			ch <- metric.metricDesc
+		}
+	}
+}
+
+// CollectToCache collect the metric to cache
+func (c *TextMetricsInfoCollector) CollectToCache(n *common.NpuCollector, chipList []common.HuaWeiAIChip) {
+	logger.Debugf("TextMetricsInfoCollector CollectToCache")
+
+	for _, jsonFilePath := range validPaths {
+		fileData, err := utils.ReadLimitBytes(jsonFilePath, size100k)
+		logId := jsonFilePath + "readFileErr"
+		if err != nil {
+			logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: logDomain, ID: logId},
+				"read json file %s failed: %v", jsonFilePath, err)
+			continue
+		}
+		hwlog.ResetErrCnt(logDomain, logId)
+
+		var metricsData TextMetricData
+		logId = jsonFilePath + "unmarshalFileErr"
+		if err := json.Unmarshal(fileData, &metricsData); err != nil {
+			logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: logDomain, ID: logId},
+				"unmarshal json file %s failed: %v, "+
+					"Possible causes:\n1. The file is not in JSON format\n2. File size is more than 100KB ", jsonFilePath, err)
+			continue
+		}
+		hwlog.ResetErrCnt(logDomain, logId)
+
+		if isStructInfoChangedForFile(jsonFilePath, metricsData) {
+			continue
+		}
+
+		logId = jsonFilePath + "dataNotOk"
+		if err := isDataOk(&metricsData, jsonFilePath); err != nil {
+			logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: logDomain, ID: logId},
+				"%v, %s", err, skipCurrentCollectionMsg)
+			continue
+		}
+		hwlog.ResetErrCnt(logDomain, logId)
+
+		c.Cache.Store(fmt.Sprintf("%s-%s", baseCacheKey, jsonFilePath), metricsData)
+	}
+}
+
+func isStructInfoChangedForFile(jsonFilePath string, data TextMetricData) bool {
+	structInfo, exists := metricStructInfosMap[jsonFilePath]
+	if !exists {
+		return false
+	}
+	return checker(jsonFilePath, structInfo.name, data.Name, "name") ||
+		checker(jsonFilePath, structInfo.version, data.Version, "version") ||
+		checker(jsonFilePath, structInfo.desc, data.Desc, "desc")
+}
+
+func checker(jsonFilePath string, structInfo string, newData string, logFlag string) bool {
+	if structInfo != newData {
+		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: logDomain, ID: jsonFilePath + logFlag},
+			"[%v] of json file [%v] changed, %s, old: %v, new: %v",
+			logFlag, jsonFilePath, skipCurrentCollectionMsg, structInfo, newData)
+		return true
+	}
+	hwlog.ResetErrCnt(logDomain, jsonFilePath+logFlag)
+	return false
+}
+
+// UpdatePrometheus update prometheus metric
+func (c *TextMetricsInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	logger.Debug("TextMetricsInfoCollector UpdatePrometheus")
+	c.update(func(jsonFilePath string, structInfo metricStructInfo, timestamp time.Time, item DataItem, index int) {
+		labelValues := make([]string, len(structInfo.labels))
+		for i, key := range structInfo.labels {
+			if value, ok := item.Label[key]; ok {
+				labelValues[i] = value
+			} else {
+				labelValues[i] = ""
+			}
+		}
+
+		ch <- prometheus.NewMetricWithTimestamp(timestamp,
+			prometheus.MustNewConstMetric(structInfo.metricDesc, prometheus.GaugeValue, item.Value, labelValues...))
+	})
+}
+
+// UpdateTelegraf update telegraf metric
+func (c *TextMetricsInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+	logger.Debug("TextMetricsInfoCollector UpdateTelegraf")
+	if fieldsMap[common.KeyForTextMetrics] == nil {
+		fieldsMap[common.KeyForTextMetrics] = make(map[string]interface{})
+	}
+	c.update(func(jsonFilePath string, structInfo metricStructInfo, timestamp time.Time, item DataItem, index int) {
+		labelsMap := make(map[string]string)
+		for _, key := range structInfo.labels {
+			if value, ok := item.Label[key]; ok {
+				labelsMap[key] = value
+			} else {
+				labelsMap[key] = ""
+			}
+		}
+		tetegrafData := common.TelegrafData{
+			Labels:    labelsMap,
+			Metrics:   map[string]interface{}{structInfo.name: item.Value},
+			Timestamp: timestamp,
+		}
+		fieldsMap[common.KeyForTextMetrics][jsonFilePath+"-"+strconv.Itoa(index)] = tetegrafData
+	})
+
+	return fieldsMap
 }
 
 // processFileData processes file data and initializes its metrics
@@ -281,4 +400,27 @@ func (c *TextMetricsInfoCollector) IsSupported(n *common.NpuCollector) bool {
 	}
 	logger.Infof("successfully initialized %d text metric file(s)", len(validPaths))
 	return true
+}
+
+func (c *TextMetricsInfoCollector) update(doUpdate func(string, metricStructInfo, time.Time, DataItem, int)) {
+	for jsonFilePath, structInfo := range metricStructInfosMap {
+		cacheKey := fmt.Sprintf("%s-%s", baseCacheKey, jsonFilePath)
+		data, ok := c.Cache.Load(cacheKey)
+		if !ok {
+			logger.Debugf("cache key %s not found", cacheKey)
+			continue
+		}
+
+		textMetricsData, ok := data.(TextMetricData)
+		if !ok {
+			logger.Warnf("cache data type mismatch for key %s", cacheKey)
+			continue
+		}
+
+		timestamp := time.Unix(0, textMetricsData.Timestamp*num1000)
+
+		for index, item := range textMetricsData.DataList {
+			doUpdate(jsonFilePath, structInfo, timestamp, item, index)
+		}
+	}
 }
