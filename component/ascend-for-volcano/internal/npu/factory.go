@@ -47,7 +47,6 @@ import (
 // key: 910 schedule policy; value: handler name
 var policy910HandlerMap = map[string]string{
 	util.SchedulePolicyA3x16: module910a3x16.SchedulerName,
-	util.Chip4Node8:          util.NPU910CardName + util.ModuleAcceleratorType,
 	util.Chip1Node2:          card910x2Name,
 	util.Chip4Node4:          half910x4Name,
 	util.Chip8Node8:          module910bx8Name,
@@ -56,6 +55,10 @@ var policy910HandlerMap = map[string]string{
 	util.Chip2Node16Sp:       superpod.A3x16SchedulerName,
 	util.Chip2Node8:          module910a3x16.SchedulerName,
 	util.Chip2Node8Sp:        superpod.A3x8SchedulerName,
+	util.Chip4Node8:          module300ia5.Ascend300I4Px8Label,
+	util.Chip4Node16:         module300ia5.Ascend300I4Px16Label,
+	util.Chip1Node8:          module300ia5.Ascend300Ix8Label,
+	util.Chip1Node16:         module300ia5.Ascend300Ix16Label,
 }
 
 var (

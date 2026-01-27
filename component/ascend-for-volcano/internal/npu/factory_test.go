@@ -98,13 +98,16 @@ func TestInitPolicyHandler(t *testing.T) {
 
 func TestInit910CardPolicyHandler(t *testing.T) {
 	configs := []string{
-		util.Chip4Node8,
 		util.Chip1Node2,
 		util.Chip4Node4,
 		util.Chip8Node8,
 		util.Chip8Node16,
 		util.Chip2Node16,
 		util.Chip2Node16Sp,
+		util.Chip4Node8,
+		util.Chip4Node16,
+		util.Chip1Node8,
+		util.Chip1Node16,
 	}
 
 	for _, config := range configs {
