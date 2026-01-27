@@ -84,6 +84,7 @@ const (
 	npuPod      = "NPU_POD"
 
 	mindxServerIPEnv         = "MINDX_SERVER_IP"                              // clusterd grpc service env name
+	mindxServerDomainEnv     = "MINDX_SERVER_DOMAIN"                          // clusterd grpc service domain env name
 	mindxServiceName         = "clusterd-grpc-svc"                            // clusterd grpc service name
 	mindxDefaultServerDomain = "clusterd-grpc-svc.mindx-dl.svc.cluster.local" // clusterd grpc service domain
 

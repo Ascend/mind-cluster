@@ -75,6 +75,7 @@ func fakeExpectEnvsForSetInferEnv01() []corev1.EnvVar {
 		{Name: taskIDEnvKey, Value: fakeJobIdLabelValue},
 		{Name: appTypeEnvKey, Value: fakeAppLabelValue},
 		{Name: mindxServerIPEnv, Value: ""},
+		{Name: mindxServerDomainEnv, Value: mindxDefaultServerDomain},
 	}
 }
 
@@ -108,6 +109,7 @@ func fakeExpectEnvsForSetCommonEnv02() []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{Name: taskIDEnvKey, Value: fakeTaskID},
 		{Name: mindxServerIPEnv, Value: ""},
+		{Name: mindxServerDomainEnv, Value: mindxDefaultServerDomain},
 		{Name: hostNetwork, Value: fakeHostNetwork},
 		{Name: hcclSuperPodLogicId, Value: "0"}}
 }
@@ -117,6 +119,7 @@ func fakeExpectEnvsForSetCommonEnv03() []corev1.EnvVar {
 		fakeRefEnv(api.AscendVisibleDevicesEnv, ascend910DownwardAPI),
 		{Name: taskIDEnvKey, Value: fakeTaskID},
 		{Name: mindxServerIPEnv, Value: ""},
+		{Name: mindxServerDomainEnv, Value: mindxDefaultServerDomain},
 		{Name: hostNetwork, Value: fakeHostNetwork},
 		{Name: hcclSuperPodLogicId, Value: "0"}}
 }

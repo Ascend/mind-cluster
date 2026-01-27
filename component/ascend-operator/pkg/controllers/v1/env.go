@@ -172,6 +172,7 @@ func (r *ASJobReconciler) setInferEnv(pi *podInfo, podTemplate *corev1.PodTempla
 		addEnvValue(podTemplate, taskIDEnvKey, pi.job.Labels[mindxdlv1.JodIdLabelKey], i)
 		addEnvValue(podTemplate, appTypeEnvKey, pi.job.Labels[mindxdlv1.AppLabelKey], i)
 		addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
+		addEnvValue(podTemplate, mindxServerDomainEnv, mindxDefaultServerDomain, i)
 		hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
 	}
 }
@@ -187,6 +188,7 @@ func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTempl
 			}
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
 			addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
+			addEnvValue(podTemplate, mindxServerDomainEnv, mindxDefaultServerDomain, i)
 			addEnvValue(podTemplate, hostNetwork, strconv.FormatBool(pi.spec.Template.Spec.HostNetwork), i)
 			addHcclSuperPodIdEnv(pi, podTemplate, i)
 			hwlog.RunLog.Debugf(logEnvPattern, podTemplate.Name, podTemplate.Spec.Containers[i].Env)
