@@ -139,6 +139,7 @@ func TestCollectToCache(t *testing.T) {
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceHbmInfo", mockHbmAggregateInfo().HbmInfo, nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceEccInfo", mockHbmAggregateInfo().ECCInfo, nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetHccsStatisticInfo", mockHccsStaticsInfo(), nil)
+		patches.ApplyMethodReturn(n.Dmgr, "GetHccsStatisticInfoInU64", mockHccsStaticsInfo(), nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetHccsBandwidthInfo", mockHccsBWInfo(), nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetPCIEBandwidth", mockPcieInfo(), nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetSioInfo", mockSioInfo(), nil)
@@ -312,9 +313,9 @@ func mockHccsBWInfo() *common.HccsBandwidthInfo {
 
 func mockHccsStaticsInfo() *common.HccsStatisticInfo {
 	return &common.HccsStatisticInfo{
-		TxCnt:     []uint32{0, 0, 0, 0, 0, 0, 0, 0},
-		RxCnt:     []uint32{0, 0, 0, 0, 0, 0, 0, 0},
-		CrcErrCnt: []uint32{0, 0, 0, 0, 0, 0, 0, 0},
+		TxCnt:     []uint64{0, 0, 0, 0, 0, 0, 0, 0},
+		RxCnt:     []uint64{0, 0, 0, 0, 0, 0, 0, 0},
+		CrcErrCnt: []uint64{0, 0, 0, 0, 0, 0, 0, 0},
 	}
 }
 

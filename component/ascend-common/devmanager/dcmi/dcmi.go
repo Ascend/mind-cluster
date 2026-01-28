@@ -605,6 +605,7 @@ type DcDriverInterface interface {
 	DcGetDeviceEccInfo(int32, int32, common.DcmiDeviceType) (*common.ECCInfo, error)
 	DcGetSioInfo(int32, int32) (common.SioCrcErrStatisticInfo, error)
 	DcGetHccsStatisticInfo(int32, int32) (common.HccsStatisticInfo, error)
+	DcGetHccsStatisticInfoU64(int32, int32) (common.HccsStatisticInfo, error)
 	DcGetDeviceMainBoardInfo(int32, int32) (uint32, error)
 	DcGetHccsBandwidthInfo(int32, int32, int) (common.HccsBandwidthInfo, error)
 
@@ -2359,12 +2360,43 @@ func (d *DcManager) DcGetHccsStatisticInfo(cardID, deviceID int32) (common.HccsS
 	return convertHccsStatisticInfoStruct(hccsStatisticInfo), nil
 }
 
+// DcGetHccsStatisticInfoU64 get HCCS statistic info
+func (d *DcManager) DcGetHccsStatisticInfoU64(cardID, deviceID int32) (common.HccsStatisticInfo, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return common.HccsStatisticInfo{}, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	var cMainCmd = C.enum_dcmi_main_cmd(MainCmdHccs)
+	subCmd := HccsSubCmdGetStatisticInfoU64
+	var hccsStatisticInfo C.struct_dcmi_hccs_statistic_info_u64
+	// Use a secure function to get the address (for cleanCode)
+	addr, err := getAddrWithOffset(unsafe.Pointer(&hccsStatisticInfo), unsafe.Sizeof(hccsStatisticInfo), 0)
+	if err != nil {
+		return common.HccsStatisticInfo{}, fmt.Errorf("get hccsStatisticInfo addr failed, error is: %v", err)
+	}
+	size := C.uint(unsafe.Sizeof(hccsStatisticInfo))
+	if retCode := C.dcmi_get_device_info(C.int(cardID), C.int(deviceID), cMainCmd, C.uint(subCmd),
+		addr, &size); int32(retCode) != common.Success {
+		return common.HccsStatisticInfo{}, buildDcmiErr(cardID, deviceID, "hccs statistic", retCode)
+	}
+	return convertHccsStatisticInfoStructU64(hccsStatisticInfo), nil
+}
+
 func convertHccsStatisticInfoStruct(hccsStatisticInfo C.struct_dcmi_hccs_statistic_info) common.HccsStatisticInfo {
 	cgoHccsStatisticInfo := common.HccsStatisticInfo{}
 	for i := uint32(0); i < dcmiHccsMaxPcsNum; i++ {
-		cgoHccsStatisticInfo.TxCnt = append(cgoHccsStatisticInfo.TxCnt, uint32(hccsStatisticInfo.tx_cnt[i]))
-		cgoHccsStatisticInfo.CrcErrCnt = append(cgoHccsStatisticInfo.CrcErrCnt, uint32(hccsStatisticInfo.crc_err_cnt[i]))
-		cgoHccsStatisticInfo.RxCnt = append(cgoHccsStatisticInfo.RxCnt, uint32(hccsStatisticInfo.rx_cnt[i]))
+		cgoHccsStatisticInfo.TxCnt = append(cgoHccsStatisticInfo.TxCnt, uint64(hccsStatisticInfo.tx_cnt[i]))
+		cgoHccsStatisticInfo.CrcErrCnt = append(cgoHccsStatisticInfo.CrcErrCnt, uint64(hccsStatisticInfo.crc_err_cnt[i]))
+		cgoHccsStatisticInfo.RxCnt = append(cgoHccsStatisticInfo.RxCnt, uint64(hccsStatisticInfo.rx_cnt[i]))
+	}
+	return cgoHccsStatisticInfo
+}
+
+func convertHccsStatisticInfoStructU64(hccsStatisticInfo C.struct_dcmi_hccs_statistic_info_u64) common.HccsStatisticInfo {
+	cgoHccsStatisticInfo := common.HccsStatisticInfo{}
+	for i := uint32(0); i < dcmiHccsMaxPcsNum; i++ {
+		cgoHccsStatisticInfo.TxCnt = append(cgoHccsStatisticInfo.TxCnt, uint64(hccsStatisticInfo.tx_cnt[i]))
+		cgoHccsStatisticInfo.CrcErrCnt = append(cgoHccsStatisticInfo.CrcErrCnt, uint64(hccsStatisticInfo.crc_err_cnt[i]))
+		cgoHccsStatisticInfo.RxCnt = append(cgoHccsStatisticInfo.RxCnt, uint64(hccsStatisticInfo.rx_cnt[i]))
 	}
 	return cgoHccsStatisticInfo
 }

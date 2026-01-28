@@ -291,11 +291,11 @@ type BandwidthInfo struct {
 
 // HccsStatisticInfo contains hccs statistic info
 type HccsStatisticInfo struct {
-	TxCnt            []uint32
-	RxCnt            []uint32
-	CrcErrCnt        []uint32
-	retryCnt         []uint32
-	reservedFieldCnt []uint32
+	TxCnt            []uint64
+	RxCnt            []uint64
+	CrcErrCnt        []uint64
+	retryCnt         []uint64
+	reservedFieldCnt []uint64
 }
 
 // HccsBandwidthInfo contains hccs bandwidth info
