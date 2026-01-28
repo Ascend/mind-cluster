@@ -141,6 +141,7 @@ const (
 	StartAgentCode               = 210
 	ReplyToClusterDCode          = 211
 	HotSwitchCode                = 212
+	StopWorkersCode              = 213
 	ProfilingAllCloseCmdCode     = 700
 	ProfilingDefaultDomainOnCode = 710
 	ProfilingCommDomainOnCode    = 701

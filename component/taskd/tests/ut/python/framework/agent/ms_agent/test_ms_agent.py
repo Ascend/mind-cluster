@@ -17,6 +17,7 @@
 import unittest
 import os
 import time
+import json
 from unittest.mock import patch, MagicMock, call
 from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
 from taskd.python.toolkit.constants import constants
@@ -45,7 +46,7 @@ class TestMsAgent(unittest.TestCase):
         self.assertEqual(agent.monitor_interval, 1)
         self.assertEqual(agent.node_rank, '0')
         self.assertEqual(agent.command_map.keys(), {
-                         constants.STARTAGENTCODE, 'STOP', constants.EXITAGENTCODE,
+                         constants.STARTAGENTCODE, constants.STOPWORKERSCODE, constants.EXITAGENTCODE,
                          constants.RESTARTAGENTCODE, 'GRACE_EXIT',
                          constants.RESTARTWORKERCODE})
 
@@ -141,13 +142,18 @@ class TestMsAgent(unittest.TestCase):
         
         self.agent.initialize_workers(mock_msg)
         self.agent._func_map['START_ALL_WORKER'].assert_called_once()
-
-    def test_stop_workers(self):
+        
+    @patch('taskd.python.framework.agent.ms_agent.ms_agent.MsAgent.get_fault_pids')
+    @patch('taskd.python.framework.agent.ms_agent.ms_agent.MsAgent.get_fault_local_ranks')
+    def test_stop_workers(self, mock_get_fault_local_ranks, mock_get_fault_pids):
         mock_msg = MagicMock()
-        mock_msg.msg_type = 'STOP'
+        mock_msg.code = 'STOP'
+        mock_msg.message = json.dumps([1, 2])
+        mock_get_fault_local_ranks.return_value = [1, 2]
+        mock_get_fault_pids.return_value = [1, 2]
         
         self.agent.stop_workers(mock_msg)
-        self.agent._func_map['KILL_WORKER'].assert_called_once_with([constants.KILL_ALL_WORKERS])
+        self.agent._func_map['KILL_WORKER'].assert_called_once_with([1, 2])
 
     def test_restart_workers(self):
         mock_msg = MagicMock()

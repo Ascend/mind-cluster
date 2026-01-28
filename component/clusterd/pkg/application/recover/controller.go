@@ -51,6 +51,7 @@ var (
 	hotSwitchActions              = []string{constant.HotSwitchAction}
 	stopHotSwitchActions          = []string{constant.StopSwitchAction}
 	newPodRunningActions          = []string{constant.NewPodRunningAction}
+	preExitProcessActions         = []string{constant.PreExitProcessAction}
 	notifyStrategySuccessEventMap = map[string]string{
 		constant.ProcessRetryStrategyName:   common.NotifyRetrySuccessEvent,
 		constant.ProcessRecoverStrategyName: common.NotifyRecoverSuccessEvent,
@@ -546,7 +547,7 @@ func (ctl *EventController) handleSendResult(signal *pb.ProcessManageSignal, err
 	if signal.SignalType == constant.KeepAliveSignalType {
 		return
 	}
-	if signal.SignalType == constant.WaitStartAgentSignalType {
+	if signal.SignalType == constant.WaitStartAgentSignalType || signal.SignalType == constant.PreExitProcessSignalType {
 		return
 	}
 	if signal.SignalType == constant.KillMasterSignalType {

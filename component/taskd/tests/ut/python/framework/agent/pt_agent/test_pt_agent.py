@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import unittest
+import json
 import queue
 from unittest.mock import MagicMock, patch, call
 from taskd.python.framework.agent.pt_agent.pt_agent import PtAgent
@@ -141,12 +142,21 @@ class TestPtAgent(unittest.TestCase):
     def test_stop_workers(self):
         mock_msg = MagicMock()
         mock_msg.msg_type = 'STOP'
+        mock_msg.message = json.dumps([1, 2])
         
-        with patch('taskd.python.framework.agent.pt_agent.pt_agent.WorkerState') as mock_WorkerState:
+        mock_pt_instance = MagicMock()
+        mock_worker_group = MagicMock()
+        mock_pt_instance._worker_group = mock_worker_group
+        self.agent.pt_instance = mock_pt_instance
+        
+        with patch('taskd.python.framework.agent.pt_agent.pt_agent.WorkerState') as mock_WorkerState, \
+        patch('taskd.python.framework.agent.pt_agent.pt_agent.get_fault_workers') as mock_get_fault_workers:
             mock_WorkerState.STOPPED = 'STOPPED'
+            mock_get_fault_workers.return_value = mock_worker_group
+            mock_worker_group.__len__.return_value = 1
             self.agent.stop_workers(mock_msg)
-            
-            self.agent._func_map['KILL_WORKER'].assert_called_once_with(self.mock_worker_group)
+    
+            self.agent._func_map['KILL_WORKER'].assert_called_once_with(mock_worker_group)
             self.assertEqual(self.mock_worker_group.state, mock_WorkerState.STOPPED)
 
     def test_restart_workers(self):

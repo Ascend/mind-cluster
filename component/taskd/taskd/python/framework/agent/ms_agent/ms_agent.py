@@ -52,7 +52,7 @@ class MsAgent(BaseAgent):
         self.network_config = network_config
         self.command_map = {
             constants.STARTAGENTCODE: self.initialize_workers,
-            'STOP': self.stop_workers,
+            constants.STOPWORKERSCODE: self.stop_workers,
             constants.EXITAGENTCODE: self.exit_agent,
             constants.RESTARTAGENTCODE: self.restart_workers,
             'GRACE_EXIT': self.grace_exit,
@@ -155,7 +155,22 @@ class MsAgent(BaseAgent):
 
     def stop_workers(self, msg):
         run_log.info(f'receive {msg.code} command, start to stop workers')
-        self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
+        try:
+            fault_ranks = json.loads(msg.message)
+            if fault_ranks is None:
+                run_log.error("fault_ranks is None")
+                return
+            int_fault_ranks = [int(rank) for rank in fault_ranks]
+        except Exception as e:
+            run_log.error(f"Convert fault_ranks to int failed: {e}")
+            return
+        run_log.info(f"message fault_ranks is {int_fault_ranks}")
+        local_fault_ranks = self.get_fault_local_ranks(int_fault_ranks)
+        run_log.info(f"local fault_ranks is {local_fault_ranks}")
+        fault_pid_list = self.get_fault_pids(local_fault_ranks)
+        if len(fault_pid_list) > 0:
+            run_log.info(f"nodeRank:{self.node_rank} stop workers, pid:{fault_pid_list}")
+            self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
 
     def exit_agent(self, msg):
         run_log.info(f'receive {msg.code} command, start to exit agent')

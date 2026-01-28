@@ -17,6 +17,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/pod"
@@ -41,6 +42,7 @@ type FaultRecoverService struct {
 	faultCh              chan map[string]constant.JobFaultInfo
 	podEventCh           chan *v1.Pod
 	isJobReschedulingMap map[string]bool
+	currentFaults        map[string]map[string]bool
 	pb.UnimplementedRecoverServer
 }
 
@@ -53,6 +55,8 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.initJob = make(map[string]common.JobBaseInfo)
 	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
 	s.isJobReschedulingMap = make(map[string]bool)
+	s.currentFaults = make(map[string]map[string]bool)
+
 	filterLevel := []string{constant.NotHandleFault, constant.PreSeparateNPU}
 	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, filterLevel, reflect.TypeOf(*s).Name()); err != nil {
 		hwlog.RunLog.Errorf("RegisterForJobFaultRank fail")
@@ -192,12 +196,21 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	hwlog.ResetErrCnt(constant.SubHealthyState, controller.jobInfo.JobId+"SkipHandleSubHealthy")
 	subHealthyHotSwitch := faultInfo.HealthyState == constant.SubHealthyState && controller.jobInfo.HotSwitch
 	grpcFormatFaults := s.getGrpcFormatFaults(faultInfo, controller)
+	addedFaults, addedFaultRanks := s.getAdditionFault(faultInfo.JobId, grpcFormatFaults)
 	if len(grpcFormatFaults) == 0 {
 		hwlog.RunLog.Debugf("job %s has no new faults", faultInfo.JobId)
 		return
 	}
 	hwlog.RunLog.Infof("jobId=%s, fault center fault info change format to grpcFormat, faults=%s",
 		controller.jobInfo.JobId, common.Faults2String(grpcFormatFaults))
+	if len(addedFaults) == 0 {
+		hwlog.RunLog.Infof("jobId=%s, no new faults added, skip additional processing", faultInfo.JobId)
+		return
+	}
+	hwlog.RunLog.Infof("jobId=%s, new faults detected, enter additional processing, faultRanks=%v",
+		faultInfo.JobId, addedFaultRanks)
+	onlyRetryFault, supportRetry := s.getRetryStatus(addedFaults, controller)
+	removeGrpcFault, faultNodes := s.getFaultAndFaultNodes(addedFaultRanks, controller)
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
 	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
@@ -207,7 +220,87 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		}
 		return
 	}
+	if !supportRetry || !onlyRetryFault && len(faultNodes) > 0 {
+		s.sendPreExitSignal(controller, removeGrpcFault, faultNodes)
+		return
+	}
 	controller.addEvent(common.FaultOccurEvent)
+}
+
+func (s *FaultRecoverService) sendPreExitSignal(controller *EventController,
+	removeGrpcFault []*pb.FaultRank, faultNodes []string) {
+	signal := &pb.ProcessManageSignal{
+		Uuid:           common.NewEventId(randomLen),
+		JobId:          controller.jobInfo.JobId,
+		SignalType:     constant.PreExitProcessSignalType,
+		Actions:        preExitProcessActions,
+		ChangeStrategy: "",
+		FaultRanks:     removeGrpcFault,
+		NodeRankIds:    faultNodes,
+	}
+	controller.signalEnqueue(signal)
+}
+
+func (s *FaultRecoverService) getAdditionFault(jobId string,
+	grpcFormatFaults []*pb.FaultRank) (map[string]*pb.FaultRank, []string) {
+	newFaults := make(map[string]bool)
+	faultMap := make(map[string]*pb.FaultRank)
+	for _, fault := range grpcFormatFaults {
+		faultKey := fmt.Sprintf("%s_%s", fault.RankId, fault.FaultType)
+		newFaults[faultKey] = true
+		faultMap[faultKey] = fault
+	}
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	currentFaultMap, exists := s.currentFaults[jobId]
+	if !exists {
+		currentFaultMap = make(map[string]bool)
+	}
+	s.currentFaults[jobId] = newFaults
+	addedFaults := make(map[string]*pb.FaultRank)
+	var faultRanks []string
+	for faultKey := range newFaults {
+		if !currentFaultMap[faultKey] {
+			addedFaults[faultKey] = faultMap[faultKey]
+			faultRanks = append(faultRanks, faultMap[faultKey].RankId)
+		}
+	}
+	return addedFaults, faultRanks
+}
+
+func (s *FaultRecoverService) getRetryStatus(addedFaults map[string]*pb.FaultRank,
+	controller *EventController) (bool, bool) {
+	onlyRetryFault := true
+	for _, fault := range addedFaults {
+		if fault.FaultType != constant.UceFaultType && fault.FaultType != constant.HcclFaultType {
+			onlyRetryFault = false
+			break
+		}
+	}
+	supportRetry := controller.supportRetryStrategy()
+	hwlog.RunLog.Infof("jobId=%s, onlyRetryFault=%v, supportRetry=%v",
+		controller.jobInfo.JobId, onlyRetryFault, supportRetry)
+	return onlyRetryFault, supportRetry
+}
+
+func (s *FaultRecoverService) getFaultAndFaultNodes(faultRanks []string,
+	controller *EventController) ([]*pb.FaultRank, []string) {
+	removeSameRankIds := util.RemoveSliceDuplicateElement(faultRanks)
+	var removeGrpcFault []*pb.FaultRank
+	for _, rank := range removeSameRankIds {
+		removeGrpcFault = append(removeGrpcFault, &pb.FaultRank{
+			RankId:    rank,
+			FaultType: constant.NormalFaultType,
+		})
+	}
+
+	faultNodes, err := common.GetNodeRankIdsByRankIds(controller.jobInfo.JobId, removeSameRankIds)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, get node rank ids by rank ids failed, err=%v", controller.jobInfo.JobId, err)
+	}
+	hwlog.RunLog.Infof("jobId=%s, removeGrpcFault=%v, faultNodes=%v",
+		controller.jobInfo.JobId, removeGrpcFault, faultNodes)
+	return removeGrpcFault, faultNodes
 }
 
 func (s *FaultRecoverService) getGrpcFormatFaults(faultInfo constant.JobFaultInfo, controller *EventController) []*pb.FaultRank {
@@ -723,6 +816,7 @@ func (s *FaultRecoverService) DeleteJob(jobId string) {
 		return
 	}
 	controller.reset(true)
+	delete(s.currentFaults, jobId)
 	delete(s.eventCtl, jobId)
 	if s.initJob != nil {
 		delete(s.initJob, jobId)
