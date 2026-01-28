@@ -87,7 +87,7 @@ spec:
           name: mindspore
           resources:
             requests:
-              huawei.com/Ascend910: 16                                               # Number of required NPUs. The maximum value is 8. You can add lines below to configure resources such as memory and CPU
+              huawei.com/Ascend910: 16                                               # Number of required NPUs. The maximum value is 16. You can add lines below to configure resources such as memory and CPU
             limits:
               huawei.com/Ascend910: 16                                                # The value must be consistent with that in requests.
 ```
@@ -117,7 +117,7 @@ spec:
 >HCCS（Huawei Cache Coherence System）是HCCL（Huawei Collective Communication Library）的硬件形态，HCCL提供了深度学习训练场景中服务器间高性能集合通信的功能。
 
 **图 1** 昇腾AI处理器互联方式<a name="fig19751440101616"></a>  
-![](figures/昇腾AI处理器互联方式.png "昇腾AI处理器互联方式")
+![](../figures/scheduling/昇腾AI处理器互联方式.png "昇腾AI处理器互联方式")
 
 不同的硬件产品内部，可能包含这三种链接方式的一种或多种，具体的调度策略如下所示：
 
@@ -126,7 +126,7 @@ spec:
 |硬件形态|昇腾AI处理器互联方式|减少网络拥塞|减少资源碎片|
 |--|--|--|--|
 |Atlas 训练系列产品|4个昇腾AI处理器通过HCCS互联；HCCS环间昇腾AI处理器通过PCIe互联。|申请4个及以下昇腾AI处理器的任务调度到一个HCCS环上。|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
-|<p>Atlas 200T A2 Box16 异构子框</p><p>Atlas 200I A2 Box16 异构子框</p>|8个昇腾AI处理器通过HCCS互联；HCCS环间昇腾AI处理器通过PCIe互联。|<li>申请8个及以下昇腾AI处理器的任务调度到一个HCCS环上</li><li>申请8个以上昇腾AI处理器的任务平均调度到两个环上。</li>|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
+|<p>Atlas 200T A2 Box16 异构子框</p><p>Atlas 200I A2 Box16 异构子框</p>|8个昇腾AI处理器通过HCCS互联；HCCS环间昇腾AI处理器通过PCIe互联。|<ul><li>申请8个及以下昇腾AI处理器的任务调度到一个HCCS环上</li><li>申请8个以上昇腾AI处理器的任务平均调度到两个环上。</li></ul>|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 |<p>Atlas 900 A3 SuperPoD 超节点</p><p>A200T A3 Box8 超节点服务器</p><p>Atlas 800I A3 超节点服务器</p><p>Atlas 800T A3 超节点服务器</p|2个昇腾AI处理器通过SIO互联，形成8个HiAM模组；每个HiAM模组通过HCCS互联。|申请的昇腾AI处理器个数为偶数时，必须调度到同一个HiAM模组上。|-|
 |Atlas 800 推理服务器（型号 3000）（插Atlas 300I 推理卡）|每张推理卡内4个昇腾AI处理器互联，推理卡间不互联。|申请的昇腾AI处理器的个数为小于4，且配置了按推理卡调度时，该任务一定调度到一张推理卡上。|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 |Atlas 800 推理服务器（型号 3000）（插Atlas 300I Duo 推理卡）|每张推理卡内2个昇腾AI处理器通过HCCS互联，推理卡间通过PCIe互联。|<p>分布式推理调度，必须将任务调度到整张Atlas 300I Duo 推理卡。</p><p>若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡。</p>|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
@@ -141,14 +141,14 @@ spec:
 -   采用灵衢+RoCE连接的产品：Atlas 900 A3 SuperPoD 超节点
 
 **图 2**  节点间网络<a name="fig1728811518184"></a>  
-![](figures/节点间网络.png "节点间网络")
+![](../figures/scheduling/节点间网络.png "节点间网络")
 
 **表 2** **节点间亲和性调度**
 
 |互联方式|昇腾AI处理器互联方式|调度方式|减少网络拥塞|减少组网成本|减少资源碎片|
 |--|--|--|--|--|--|
-|RoCE连接双层互联|通过Spine-Leaf全局双层互联|交换机亲和性调度1.0|<li>优先使用一个Leaf下的节点资源。</li><li>使用跨Leaf资源时，保证上行到各个Spine的流量均匀。</li><li>一个Leaf下的多个任务，最多有一个任务可以使用Spine流量，其他任务为Leaf内的小任务。</li>|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
-|RoCE连接双层互联|通过Spine-Leaf全局双层互联|交换机亲和性调度2.0|<li>优先使用一个Leaf下的节点资源。</li><li>使用跨Leaf资源时，保证上行到各个Spine的流量均匀。</li><li>允许特定数量Leaf下的多个任务使用Spine流量。</li><li>一个Leaf下的多个任务，最多有一个任务可以使用Spine流量，其他任务为Leaf内的小任务。</li>|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
+|RoCE连接双层互联|通过Spine-Leaf全局双层互联|交换机亲和性调度1.0|<ul><li>优先使用一个Leaf下的节点资源。</li><li>使用跨Leaf资源时，保证上行到各个Spine的流量均匀。</li><li>一个Leaf下的多个任务，最多有一个任务可以使用Spine流量，其他任务为Leaf内的小任务。</li></ul>|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
+|RoCE连接双层互联|通过Spine-Leaf全局双层互联|交换机亲和性调度2.0|<ul><li>优先使用一个Leaf下的节点资源。</li><li>使用跨Leaf资源时，保证上行到各个Spine的流量均匀。</li><li>允许特定数量Leaf下的多个任务使用Spine流量。</li><li>一个Leaf下的多个任务，最多有一个任务可以使用Spine流量，其他任务为Leaf内的小任务。</li></ul>|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 |RoCE连接单层连接|通过Leaf单层连接|单层交换机亲和性调度|-|使用单层组网即可满足参数面互联要求，大大降低组网成本。|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 |灵衢总线设备+RoCE|通过Spine-Leaf全局互联，通过灵衢总线设备网络形成多个超节点|逻辑超节点亲和性调度|根据任务的切分策略，获取网络通信需求高的网络亲和单元。保证每一个网络亲和单元都是分布在一个灵衢总线设备网络下。|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 
@@ -173,7 +173,7 @@ Atlas 训练系列产品的昇腾AI处理器是华为研发的一款高性能AI�
 每台设备具备两个HCCS环共8个昇腾AI处理器（A0\~A7）。每个HCCS存在4个昇腾AI处理器，同一HCCS内AI处理器可做数据交换，不同HCCS内昇腾AI处理器不能通信。同一Pod分配的昇腾AI处理器（若小于或等于4）必须在同一个HCCS环内，否则任务运行失败。Atlas 训练系列产品互联拓扑如[图1](#fig17063331201)所示，其中K0\~K3为鲲鹏处理器。
 
 **图 1** Atlas 训练系列产品互联拓扑<a name="fig17063331201"></a>  
-![](figures/Atlas-训练系列产品互联拓扑.png "Atlas-训练系列产品互联拓扑")
+![](../figures/scheduling/Atlas-训练系列产品互联拓扑.png "Atlas-训练系列产品互联拓扑")
 
 > [!NOTE] 说明 
 >Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元没有昇腾AI处理器的亲和性调度。
@@ -183,7 +183,7 @@ Atlas 训练系列产品的昇腾AI处理器是华为研发的一款高性能AI�
 Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框的昇腾AI处理器是华为研发的高性能AI处理器，其内部AI处理器之间采用HCCS互联的方式相连接。每台Atlas 200T A2 Box16 异构子框或Atlas 200I A2 Box16 异构子框具备两个HCCS互联共16个昇腾AI处理器，每个HCCS互联存在8个昇腾AI处理器，同一HCCS互联之间可以做数据交换，不同HCCS互联之间不能通信。即任务分配的昇腾AI处理器（若小于或等于8）必须在同一个HCCS互联内，否则任务运行失败。Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框的互联拓扑图如[图1](#fig1920102817143)所示。
 
 **图 1** Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框互联拓扑<a name="fig1920102817143"></a>  
-![](figures/Atlas-200T-A2-Box16-异构子框和Atlas-200I-A2-Box16-异构子框互联拓扑.png "Atlas-200T-A2-Box16-异构子框和Atlas-200I-A2-Box16-异构子框互联拓扑")
+![](../figures/scheduling/Atlas-200T-A2-Box16-异构子框和Atlas-200I-A2-Box16-异构子框互联拓扑.png "Atlas-200T-A2-Box16-异构子框和Atlas-200I-A2-Box16-异构子框互联拓扑")
 
 #### Atlas 900 A3 SuperPoD 超节点<a name="ZH-CN_TOPIC_0000002511346847"></a>
 
@@ -198,7 +198,7 @@ Atlas 900 A3 SuperPoD 超节点是华为研发的高性能AI计算集群，由�
 -   此时Pod（rank=0）和Pod（rank=1）之间使用HCCS网络通信，Pod（rank=2）和Pod（rank=3）之间也使用HCCS网络通信。但是Pod（rank=0/1）和Pod（rank=2/3）之间使用RoCE网络通信。
 
 **图 1**  灵衢总线设备节点网络<a name="fig1054553210321"></a>  
-![](figures/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
+![](../figures/scheduling/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
 
 #### A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器<a name="ZH-CN_TOPIC_0000002479386928"></a>
 
@@ -225,9 +225,9 @@ npu-310-strategy参数取值说明如下：
 
 |参数名|默认值|取值说明|
 |--|--|--|
-|duo|false|<li>true：使用Atlas 300I Duo 推理卡。</li><li>false：不使用Atlas 300I Duo 推理卡。</li>|
-|npu-310-strategy|chip|<li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li>|
-|distributed|false|<li>true：分布式推理调度策略。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡。</li><li>false：非分布式推理调度策略。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li>无论是否为分布式推理，card模式的调度策略不变。|
+|duo|false|<ul><li>true：使用Atlas 300I Duo 推理卡。</li><li>false：不使用Atlas 300I Duo 推理卡。</li></ul>|
+|npu-310-strategy|chip|<ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
+|distributed|false|<ul><li>true：分布式推理调度策略。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡。</li><li>false：非分布式推理调度策略。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>无论是否为分布式推理，card模式的调度策略不变。|
 
 
 ### 单机场景亲和性策略<a name="ZH-CN_TOPIC_0000002511346873"></a>
@@ -251,8 +251,8 @@ Atlas 训练系列产品的昇腾AI处理器的特征和资源利用的规则如
 
 |**优先级**|**策略名称**|**详细内容**|
 |--|--|--|
-|1|HCCS亲和性调度原则|选择同一HCCS内的昇腾AI处理器，提升通信性能。<li>如果申请昇腾AI处理器个数为1，则选择同一HCCS，且当前可用的昇腾AI处理器数量为1个的节点为最佳，3个次佳、其次是2个、4个。</li><li>如果申请昇腾AI处理器个数为2，则选择同一HCCS，且可用的昇腾AI处理器数量为2个的节点为最佳，4个次佳，其次是3个。</li><li>如果申请昇腾AI处理器个数为4，则选择同一HCCS，且可用的昇腾AI处理器数量为4个的节点。</li><li>如果申请昇腾AI处理器个数为8，则会选择申请节点的8个昇腾AI处理器。</li>|
-|2|优先占满调度原则|优先分配已经分配过昇腾AI处理器的节点，减少碎片。<li>如果申请昇腾AI处理器个数为1，优先申请capacity（节点上资源容量）为8，且HCCS可用昇腾AI处理器数量为1的节点为最佳，3个次佳、其次是2个、4个。</li><li>如果申请昇腾AI处理器个数为2，优先申请capacity为8，且HCCS可用昇腾AI处理器数量为2个的节点为最佳，4个次佳，其次是3个。</li><li>如果申请昇腾AI处理器个数为4，优先申请capacity为8，且可用昇腾AI处理器数量为4个的节点。</li><li>如果申请昇腾AI处理器个数为8的正整数倍数，选择申请capacity为8，且已使用0个昇腾AI处理器的节点。</li> <p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><li>现象说明：如在两台Atlas 800 训练服务器（型号 9000）集群中，同时下发3卡、4卡、1卡任务，存在3卡和4卡任务调度到同一个节点，1卡任务调度到另一个节点的问题。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo**-$***{node_name}*存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。|</li>
+|1|HCCS亲和性调度原则|选择同一HCCS内的昇腾AI处理器，提升通信性能。<ul><li>如果申请昇腾AI处理器个数为1，则选择同一HCCS，且当前可用的昇腾AI处理器数量为1个的节点为最佳，3个次佳、其次是2个、4个。</li><li>如果申请昇腾AI处理器个数为2，则选择同一HCCS，且可用的昇腾AI处理器数量为2个的节点为最佳，4个次佳，其次是3个。</li><li>如果申请昇腾AI处理器个数为4，则选择同一HCCS，且可用的昇腾AI处理器数量为4个的节点。</li><li>如果申请昇腾AI处理器个数为8，则会选择申请节点的8个昇腾AI处理器。</li></ul>|
+|2|优先占满调度原则|优先分配已经分配过昇腾AI处理器的节点，减少碎片。<ul><li>如果申请昇腾AI处理器个数为1，优先申请capacity（节点上资源容量）为8，且HCCS可用昇腾AI处理器数量为1的节点为最佳，3个次佳、其次是2个、4个。</li><li>如果申请昇腾AI处理器个数为2，优先申请capacity为8，且HCCS可用昇腾AI处理器数量为2个的节点为最佳，4个次佳，其次是3个。</li><li>如果申请昇腾AI处理器个数为4，优先申请capacity为8，且可用昇腾AI处理器数量为4个的节点。</li><li>如果申请昇腾AI处理器个数为8的正整数倍数，选择申请capacity为8，且已使用0个昇腾AI处理器的节点。</li></ul><p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在两台Atlas 800 训练服务器（型号 9000）集群中，同时下发3卡、4卡、1卡任务，存在3卡和4卡任务调度到同一个节点，1卡任务调度到另一个节点的问题。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 |3|剩余偶数优先原则|优先选择满足上述1~2条调度原则的HCCS，其次选择剩余昇腾AI处理器数量为偶数的HCCS。|
 
 
@@ -299,7 +299,7 @@ Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框的特征和�
 |优先级|策略名称|策略描述|
 |--|--|--|
 |1|HCCS互联分配原则|如果申请昇腾AI处理器的个数为1~8，则需要调度到同一个HCCS互联。如果申请昇腾AI处理器的个数为10、12、14，需要将所需的昇腾AI处理器平均分配到两个环，相对的物理地址也一致。|
-|2|优先占满原则|优先分配已经分配过昇腾AI处理器的节点，减少碎片。以1、2、4、8为例，具体如下：<li>如果申请1个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为1的节点，其次是可用数量为2个，3个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请2个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为2的节点，其次是可用数量为3个，4个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请4个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为4的节点，其次是可用数量为5个，6个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请8个昇腾AI处理器，只申请HCCS互联可用昇腾AI处理器数量为8的节点。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><li>现象说明：如在两台Atlas 200T A2 Box16 异构子框或Atlas 200I A2 Box16 异构子框集群中，同时下发5卡、4卡、3卡任务，存在4卡和3卡任务调度到同一个节点，5卡任务调度到另一个节点的问题。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo**-$***{node_name}*存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li>|
+|2|优先占满原则|优先分配已经分配过昇腾AI处理器的节点，减少碎片。以1、2、4、8为例，具体如下：<ul><li>如果申请1个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为1的节点，其次是可用数量为2个，3个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请2个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为2的节点，其次是可用数量为3个，4个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请4个昇腾AI处理器，优先申请HCCS互联可用昇腾AI处理器数量为4的节点，其次是可用数量为5个，6个，一直到8个。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li><li>如果申请8个昇腾AI处理器，只申请HCCS互联可用昇腾AI处理器数量为8的节点。相同数量优先选择节点昇腾AI处理器总数量少的节点。</li></ul><p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在两台Atlas 200T A2 Box16 异构子框或Atlas 200I A2 Box16 异构子框集群中，同时下发5卡、4卡、3卡任务，存在4卡和3卡任务调度到同一个节点，5卡任务调度到另一个节点的问题。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 
 
 ##### 资源申请约束<a name="ZH-CN_TOPIC_0000002511426829"></a>
@@ -327,7 +327,7 @@ Atlas 900 A3 SuperPoD 超节点的资源利用规则如[表1](#table42428468401)
 
 |优先级|策略名称|策略描述|
 |--|--|--|
-|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><li>现象说明：如在Atlas 900 A3 SuperPoD 超节点中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo**-$***{node_name}*存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li>|
+|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 900 A3 SuperPoD 超节点中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 |2|优先剩余保留节点|当超节点保留节点为2，两个超节点中分别剩余3个节点和2个节点时，优先选择剩余3个节点的超节点。|
 |3|优先占满超节点|当超节点保留节点为2，两个超节点中分别剩余4个节点和3个节点时，优先选择剩余3个节点的超节点。|
 
@@ -352,7 +352,7 @@ Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器的资源利�
 
 |优先级|策略名称|策略描述|
 |--|--|--|
-|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><li>现象说明：如在Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo**-$***{node_name}*存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li>|
+|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 
 
 ##### 资源申请约束<a name="ZH-CN_TOPIC_0000002511346857"></a>
@@ -375,7 +375,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 
 |优先级|策略名称|策略描述|
 |--|--|--|
-|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><li>现象说明：如在A200T A3 Box8 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo**-$***{node_name}*存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li>|
+|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在A200T A3 Box8 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 
 
 ##### 资源申请约束<a name="ZH-CN_TOPIC_0000002511346869"></a>
@@ -505,7 +505,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 交换机亲和性调度1.0的调度逻辑请参见[图1](#fig1189110673717)。
 
 **图 1**  调度流程<a name="fig1189110673717"></a>  
-![](figures/调度流程.png "调度流程")
+![](../figures/scheduling/调度流程.png "调度流程")
 
 步骤说明如下：
 
@@ -518,7 +518,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 交换机亲和性调度2.0的调度逻辑请参见[图2](#fig178701112193911)。
 
 **图 2**  调度流程<a name="fig178701112193911"></a>  
-![](figures/调度流程-0.png "调度流程-0")
+![](../figures/scheduling/调度流程-0.png "调度流程-0")
 
 步骤说明如下：
 
@@ -674,7 +674,7 @@ MindIE Service推理任务中，新增如下亲和性调度策略。如需了解
 调度器的调度流程主要包括任务校验、节点预选、节点优选、昇腾AI处理器选择、提交分配结果。Volcano的亲和性调度代码实现请参考[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)开源代码仓，用户可参考代码在其调度器中集成亲和性调度策略。下文以Atlas 训练系列产品的昇腾AI处理器为例，介绍Volcano的调度流程。
 
 **图 1** Volcano调度流程<a name="fig17808636817"></a>  
-![](figures/Volcano调度流程.png "Volcano调度流程")
+![](../figures/scheduling/Volcano调度流程.png "Volcano调度流程")
 
 **流程说明<a name="section59871036124915"></a>**
 
@@ -742,14 +742,14 @@ affScoreList\[3\] = \[\]int\{8,8,8,0,1,2,3,4\}
 -   划分方式2：按照Leaf交换机下的相对位置划分，如\[node1,node5,node9,node13,node17,node21\]一组。
 
 **图 1**  划分二维数组<a name="fig177844214611"></a>  
-![](figures/划分二维数组.png "划分二维数组")
+![](../figures/scheduling/划分二维数组.png "划分二维数组")
 
 **表 1**  节点优选原则
 
 |任务类型|任务说明|节点优化原则|
 |--|--|--|
 |填充任务|该任务只能下发在一个交换机下|从二维数组的末尾开始选取第一个满足任务部署的交换机，如果遍历完二维数组还不存在满足条件的，则任务等待。|
-|大模型任务|该任务可以跨多个交换机，且一定满足交换机亲和性|从二维数组的开头选取完整的交换机资源，如果资源足够，则调度成功；如果资源不足。分为以下两种情况。<li>使用交换机亲和性1.0，则将剩下的交换机资源，按照Leaf交换机下的相对位置划分成二维数组，每个数组轮番选中一个，直到资源满足或者某一个数组中的数据已经被取完。</li><li>若是交换机亲和性2.0，则每个数组轮番选中一个，直到资源满足或者所有数组中的数据都被选取完。若资源仍然不足，还可以选Spine网络非空闲的交换机下的节点，且一个任务最多包含两个Spine网络非空闲的交换机。</li>|
+|大模型任务|该任务可以跨多个交换机，且一定满足交换机亲和性|从二维数组的开头选取完整的交换机资源，如果资源足够，则调度成功；如果资源不足。分为以下两种情况。<ul><li>使用交换机亲和性1.0，则将剩下的交换机资源，按照Leaf交换机下的相对位置划分成二维数组，每个数组轮番选中一个，直到资源满足或者某一个数组中的数据已经被取完。</li><li>若是交换机亲和性2.0，则每个数组轮番选中一个，直到资源满足或者所有数组中的数据都被选取完。若资源仍然不足，还可以选Spine网络非空闲的交换机下的节点，且一个任务最多包含两个Spine网络非空闲的交换机。</li></ul>|
 |普通任务|该任务尽量满足交换机亲和性，资源不足时，允许随机调度该任务|普通任务前部分的调度逻辑与大模型任务一致，只是在最终逻辑交换机资源仍然不足时，允许随机使用剩余节点。|
 
 
@@ -759,7 +759,7 @@ affScoreList\[3\] = \[\]int\{8,8,8,0,1,2,3,4\}
 2.  优先使用队列1的数据，将队列1拆分成一个三维数组。以逻辑超节点大小为16，所需逻辑超节点个数为2，预留节点数为2为例。首先按照超节点可用节点数，将其放入一个二维数组中，每个二维数组中，放置的是相同节点数的多个超节点，因此整体是一个三维数组。此时超节点选取的先后顺序如[图2](节点优选.md#fig0751121511273)所示，即优先使用可用节点数为18的超节点，不满足的话，就按照超节点可用节点18、26、19、27，一直到33的顺序，查找可用超节点。如果还找不到，后续需要按照超节点可用节点数34、35、36、37.....46、47、48的顺序优选超节点。
 
     **图 2**  超节点优选顺序<a name="fig0751121511273"></a>  
-    ![](figures/超节点优选顺序.png "超节点优选顺序")
+    ![](../figures/scheduling/超节点优选顺序.png "超节点优选顺序")
 
 3.  若资源仍然不足，则使用队列2的资源，队列2按照剩余节点数从大到小排序，超节点选择从第一个数据开始往后选择。
 4.  若资源仍然不足，并且任务配置的超节点亲和性调度策略为Soft非强制亲和性，则使用队列3资源，队列3按照剩余节点从大到小排序，超节点选择从第一个数据开始往后选择。
@@ -776,44 +776,41 @@ Volcano框架根据节点优选得到分数后为Pod任务选择最优的节点�
 
 具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.2.RC1/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中SelectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。
 
-# CheckPoint保存与加载优化
-
-
+# Checkpoint保存与加载优化
 
 ## 产品描述
 
 **产品介绍**
 
-MindCluster MindIO Async CheckPoint Persistence（下文简称MindIO ACP）加速大模型CheckPoint功能主要针对大模型训练中的CheckPoint的保存及加载进行加速，CheckPoint的数据先写入训练服务器的内存系统中，再异步写入后端的可靠性存储设备中。本文档主要介绍纵向加速部分，包含CheckPoint在本系统中的写入及读取过程。
+MindCluster MindIO Async Checkpoint Persistence（下文简称MindIO ACP）加速大模型Checkpoint功能主要针对大模型训练中的Checkpoint的保存及加载进行加速，Checkpoint的数据先写入训练服务器的内存系统中，再异步写入后端的可靠性存储设备中。本文档主要介绍纵向加速部分，包含Checkpoint在本系统中的写入及读取过程。
 
 **产品价值**
 
-LLM（Large Language Model，大语言模型）是全球当前科技界竞争的焦点，LLM模型的训练往往需要长达数十天、甚至数月。CheckPoint是模型中断训练后恢复的关键点，CheckPoint的密集程度、保存和恢复的性能较为关键，它可以提高训练系统的有效吞吐率。MindIO ACP针对CheckPoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
+LLM（Large Language Model，大语言模型）是全球当前科技界竞争的焦点，LLM模型的训练往往需要长达数十天、甚至数月。Checkpoint是模型中断训练后恢复的关键点，Checkpoint的密集程度、保存和恢复的性能较为关键，它可以提高训练系统的有效吞吐率。MindIO ACP针对Checkpoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
 
 该方案提升昇腾平台上LLM模型的训练吞吐量，性能超越[Microsoft Azure Nebula方案](https://learn.microsoft.com/zh-cn/azure/machine-learning/reference-checkpoint-performance-for-large-models?view=azureml-api-2&tabs=PYTORCH)。
 
 **MindIO ACP架构**
 
-![](figures/MindIO-ACP架构.png)
+![](../figures/scheduling/mindio_acp架构.png)
 
-MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
+MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
 
--   异步持久化。训练框架通过mindio\_acp的save/load接口或MindSpore框架将CheckPoint保存到MindIO ACP后，直接返回继续训练，该时间为秒级；MindIO ACP会异步将CheckPoint写入持久化的分布式存储，该过程为分钟级。
--   高性能MemFS（Memory File System，内存文件系统）。MindIO ACP为实现CheckPoint极速写入，实现了全用户态的以内存为介质的文件系统；消除各种标准文件系统的系统调用和用户态到内核态的内存拷贝。
--   高效CheckPoint保存和加载。MindIO ACP为实现CheckPoint极速写入和恢复，研发了高效CheckPoint保存、加载方式。
+-   异步持久化。训练框架通过mindio\_acp的save/load接口或MindSpore框架将Checkpoint保存到MindIO ACP后，直接返回继续训练，该时间为秒级；MindIO ACP会异步将Checkpoint写入持久化的分布式存储，该过程为分钟级。
+-   高性能MemFS（Memory File System，内存文件系统）。MindIO ACP为实现Checkpoint极速写入，实现了全用户态的以内存为介质的文件系统；消除各种标准文件系统的系统调用和用户态到内核态的内存拷贝。
+-   高效Checkpoint保存和加载。MindIO ACP为实现Checkpoint极速写入和恢复，研发了高效Checkpoint保存、加载方式。
 -   MindIO ACP具备自动容错能力。当MindIO ACP服务异常导致数据读写失败、超时等异常时，能自动切换到原生数据存储方式，保证业务不中断。
 
-    >[!CAUTION]注意
-    >MindIO ACP仅保存训练过程中的CheckPoint数据，暂不支持敏感数据的保存和处理。若涉及敏感数据存储，请在前序流程完成相关脱敏操作，避免造成信息安全问题。
+    > [!CAUTION]注意
+    > MindIO ACP仅保存训练过程中的Checkpoint数据，暂不支持敏感数据的保存和处理。若涉及敏感数据存储，请在前序流程完成相关脱敏操作，避免造成信息安全问题。
+
 
 
 
 ## 安装部署
 
 
-
 ### 安装前必读
-
 
 
 #### 免责声明
@@ -826,9 +823,9 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 #### 约束限制
 
--   训练[故障快速恢复](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mindiotft001.html)框架正在向MindIO ACP保存CheckPoint时，如果遇到CheckPoint保存失败，当前正在保存的CheckPoint不能作为训练恢复点，训练框架需要从上一次完整的CheckPoint点进行恢复。
--   在训练过程中发生MindIO ACP故障，已经下发的业务，MindIO ACP SDK会重试3次连接，3次都失败则对接原生存储方式，重试最长等待60s；在训练开始前发生MindIO ACP故障，MindIO ACP SDK则会跳过对接MindIO ACP，CheckPoint的数据直接对接原生数据存储方式。
--   本特性与MindIO TFT[故障快速恢复](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mindiotft001.html)特性不兼容。
+-   训练[故障快速恢复](#故障恢复加速)框架正在向MindIO ACP保存Checkpoint时，如果遇到Checkpoint保存失败，当前正在保存的Checkpoint不能作为训练恢复点，训练框架需要从上一次完整的Checkpoint点进行恢复。
+-   在训练过程中发生MindIO ACP故障，已经下发的业务，MindIO ACP SDK会重试3次连接，3次都失败则对接原生存储方式，重试最长等待60s；在训练开始前发生MindIO ACP故障，MindIO ACP SDK则会跳过对接MindIO ACP，Checkpoint的数据直接对接原生数据存储方式。
+-   本特性与MindIO TFT[故障快速恢复](#故障恢复加速)特性不兼容。
 -   本特性不配套MindSpore 2.7.0之前的版本，功能无法使用。
 
 
@@ -839,7 +836,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 #### 组网规划
 
 **图 1**  部署逻辑示意图  
-![](figures/部署逻辑示意图ACP.png "部署逻辑示意图")
+![](../figures/scheduling/部署逻辑示意图acp.png "部署逻辑示意图")
 
 深度学习平台与训练任务相关的节点有计算节点和存储节点。各类节点主要功能如下：
 
@@ -852,9 +849,9 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 -   存储面：用于访问存储节点。管理节点和计算节点连接到存储节点。
 -   参数面：用于分布式训练时，训练节点之间的参数交换和连接。
 
->[!NOTE]说明
->-   逻辑部署示意图展示深度学习平台的完整示意图，MindIO ACP作为计算节点上部署的一个组件，不涉及管理节点和存储节点的安装部署。
->-   MindIO ACP是单节点内存缓存系统，训练CheckPoint数据通过共享内存方式访问MindIO ACP，不涉及网络平面划分。
+> [!NOTE]说明
+> - 逻辑部署示意图展示深度学习平台的完整示意图，MindIO ACP作为计算节点上部署的一个组件，不涉及管理节点和存储节点的安装部署。
+> - MindIO ACP是单节点内存缓存系统，训练Checkpoint数据通过共享内存方式访问MindIO ACP，不涉及网络平面划分。
 
 
 
@@ -864,26 +861,26 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 安装前，需要检查以下硬件配置，如[表1](#table_acp_01)所示。
 
-**表 1<a name="table_acp_01"></a>**  硬件环境
+**表 1 <a id="table_acp_01"></a>**  硬件环境
 
 |类型|配置参考|
 |--|--|
 |服务器（单机场景）|Atlas 800 训练服务器（型号：9000）|
-|服务器（集群场景）|<li>计算节点：Atlas 800 训练服务器（型号：9000）</li> <li>存储节点：存储服务器</li>|
-|内存|<li>推荐配置：≥64GB</li> <li>最低配置：≥32GB</li>|
+|服务器（集群场景）|<ul><li>计算节点：Atlas 800 训练服务器（型号：9000）</li> <li>存储节点：存储服务器</li></ul>|
+|内存|<ul><li>推荐配置：≥64GB</li> <li>最低配置：≥32GB</li></ul>|
 |磁盘空间|≥1TB <br> 磁盘空间规划请参见[表3](#table_acp_03)|
-|网络|<li>带外管理（BMC）：≥1Gbit/s <li>带内管理（SSH）：≥1Gbit/s <li>业务面：≥10Gbit/s <li>存储面：≥25Gbit/s <li>参数面：100Gbit/s|
+|网络|<ul><li>带外管理（BMC）：≥1Gbit/s <li>带内管理（SSH）：≥1Gbit/s <li>业务面：≥10Gbit/s <li>存储面：≥25Gbit/s <li>参数面：100Gbit/s </ul>|
 
 
 **软件环境**
 
 安装前，需要完成以下环境的安装，如[表2](#table_acp_02)所示。
 
-**表 2<a name="table_acp_02"></a>**  软件环境
+**表 2 <a id="table_acp_02"></a>**  软件环境
 
 |软件|版本|安装位置|获取方式|
 |--|--|--|--|
-|操作系统|<li>CentOS 7.6 Arm<li>CentOS 7.6 x86<li>openEuler 20.03 Arm<li>openEuler 20.03 x86<li>openEuler 22.03 Arm<li>openEuler 22.03 x86<li>Ubuntu 20.04 Arm<li>Ubuntu 20.04 x86<li>Ubuntu 18.04.5 Arm<li>Ubuntu 18.04.5 x86<li>Ubuntu 18.04.1 Arm<li>Ubuntu 18.04.1 x86<li>Kylin V10 SP2 Arm<li>Kylin V10 SP2 x86<li>UOS20 1020e Arm|所有节点|-|
+|操作系统|<ul> <li>CentOS 7.6 Arm<li>CentOS 7.6 x86<li>openEuler 20.03 Arm<li>openEuler 20.03 x86<li>openEuler 22.03 Arm<li>openEuler 22.03 x86<li>Ubuntu 20.04 Arm<li>Ubuntu 20.04 x86<li>Ubuntu 18.04.5 Arm<li>Ubuntu 18.04.5 x86<li>Ubuntu 18.04.1 Arm<li>Ubuntu 18.04.1 x86<li>Kylin V10 SP2 Arm<li>Kylin V10 SP2 x86<li>UOS20 1020e Arm </ul>|所有节点|-|
 |Python|3.7或更高版本|计算节点|用户安装|
 |Torch|2.7.1|计算节点|用户安装|
 |MindSpore|2.7.0或更高版本|计算节点|用户安装|
@@ -893,7 +890,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 操作系统磁盘分区推荐如[表3](#table_acp_03)所示。
 
-**表 3<a name="table_acp_03"></a>**  磁盘分区
+**表 3 <a id="table_acp_03"></a>**  磁盘分区
 
 |分区|说明|大小|bootable flag|
 |--|--|--|--|
@@ -907,9 +904,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 **下载软件包**
 
-软件安装前，请根据下表获取软件包及其数字签名文件。软件分为社区版和商用版，两者功能上无区别，区别在于下载权限和是否用于商业用途。社区版软件不需要申请下载权限可以直接下载，但不能用于商业用途；如果软件需要用于商业用途，请下载商用版软件，但需要申请下载权限。
-
-下载本软件即表示您同意[华为企业软件许可](https://support.huawei.com/enterprise/zh/software-policy)协议的条款和条件。
+下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
 
 **表 1**  软件下载
 
@@ -922,7 +917,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
-在软件包下载之后，请参见《OpenPGP签名验证指南》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
+在软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
@@ -934,7 +929,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 ### 在计算节点安装MindIO ACP SDK
 
-通过使用MindIO ACP SDK对接Torch和MindSpore，加速Torch和MindSpore训练CheckPoint save和load操作。
+通过使用MindIO ACP SDK对接Torch和MindSpore，加速Torch和MindSpore训练Checkpoint save和load操作。
 
 **操作步骤**
 
@@ -945,9 +940,9 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 2.  将内存缓存系统软件包上传至设备中安装用户有权限读写的路径下。
 
-    >[!NOTE]说明
-    >-   内存缓存系统软件包以获取的实际包名为准。
-    >-   如果Python环境是共享目录，则在任一计算节点上传即可，否则所有计算节点都需要上传安装包。
+    > [!NOTE]说明
+    > - 内存缓存系统软件包以获取的实际包名为准。
+    > - 如果Python环境是共享目录，则在任一计算节点上传即可，否则所有计算节点都需要上传安装包。
 
 3.  进入软件包上传路径，解压内存缓存系统软件包。
 
@@ -1019,11 +1014,11 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 ### 概述
 
->[!NOTE]说明
->-   MindIO ACP SDK端支持宿主机和容器内部署。
->-   容器场景的镜像制作、镜像部署、镜像安全加固等由用户保证。
->-   只支持DeepSpeed框架、X1框架、MindSpeed-LLM、K8s的固定版本。
->-   在使用MindIO ACP服务时，启动训练任务的用户需要和启动MindIO ACP守护进程的用户属于同一个主组。
+> [!NOTE]说明
+> - MindIO ACP SDK端支持宿主机和容器内部署。
+> - 容器场景的镜像制作、镜像部署、镜像安全加固等由用户保证。
+> - 只支持DeepSpeed框架、X1框架、MindSpeed-LLM、K8s的固定版本。
+> - 在使用MindIO ACP服务时，启动训练任务的用户需要和启动MindIO ACP守护进程的用户属于同一个主组。
 
 安装MindIO ACP SDK之后，为了使用MindIO ACP的缓存加速能力，将训练模型中使用到Python文件中的Torch的load/save函数，替换为MindIO ACP SDK的load/save函数。
 
@@ -1036,8 +1031,8 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 1.  使用业务用户登录到计算节点。
 
-    >[!NOTE]说明
-    >业务用户不是\{MindIO-install-user\}、HwHiAiUser、hwMindX用户，由用户根据实际情况决定。
+    > [!NOTE]说明
+    > 业务用户不是 *{MindIO-install-user}*、HwHiAiUser、hwMindX用户，由用户根据实际情况决定。
 
 2.  进入DeepSpeed安装目录。
 
@@ -1045,14 +1040,14 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
     cd {deepspeed安装目录}/runtime 
     ```
 
-3.  <a name="step_acp_li001"></a>修改engine.py文件。
+3.  <a id="step_acp_li001"></a>修改engine.py文件。
     1.  打开engine.py文件。
 
         ```
         vim engine.py
         ```
 
-    2.  <a name="step_acp_li002"></a>按“i”进入编辑模式，修改如下内容。
+    2.  <a id="step_acp_li002"></a>按“i”进入编辑模式，修改如下内容。
         -   在文件首行加入以下内容。
 
             ```
@@ -1130,7 +1125,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
                                 map_location='cpu')
             ```
 
-    3.  <a name="step_acp_li003"></a>按“Esc”键，输入 **:wq!** ，按“Enter”保存并退出编辑。
+    3.  <a id="step_acp_li003"></a>按“Esc”键，输入 **:wq!** ，按“Enter”保存并退出编辑。
 
 4.  修改module.py文件。
     1.  打开module.py文件。
@@ -1141,7 +1136,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
     2.  替换torch.save和torch.load，替换方式参见步骤[3.b](#step_acp_li002)  \~ 步骤[3.c](#step_acp_li003)。
 
-5.  <a name="step_acp_li004"></a>修改state\_dict\_factory.py文件。
+5.  <a id="step_acp_li004"></a>修改state\_dict\_factory.py文件。
     1.  打开state\_dict\_factory.py文件。
 
         ```
@@ -1233,15 +1228,15 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 -   使用前请先了解MindIO ACP特性的[约束限制](#约束限制)章节。
 -   MindSpeed-LLM框架准备请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.2.0)。匹配的Megatron-LM版本为 **core\_v0.12.1**。
 
->[!NOTE]说明
->本次发布包配套MindSpeed-LLM的 **2.2.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
+> [!NOTE]说明
+> 本次发布包配套MindSpeed-LLM的 **2.2.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
 
 **操作步骤**
 
 1.  使用业务用户登录到计算节点。
 
-    >[!NOTE]说明
-    >业务用户不是\{MindIO-install-user\}、HwHiAiUser、hwMindX用户，由用户根据实际情况决定。
+    > [!NOTE]说明
+    > 业务用户不是 *{MindIO-install-user}*、HwHiAiUser、hwMindX用户，由用户根据实际情况决定。
 
 2.  进入MindSpeed-LLM安装目录。
 
@@ -1249,7 +1244,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
     cd MindSpeed-LLM/
     ```
 
-3.  <a name="step_acp_li005"></a>修改pretrain\_gpt.py文件。
+3.  <a id="step_acp_li005"></a>修改pretrain\_gpt.py文件。
     1.  打开pretrain\_gpt.py文件。
 
         ```
@@ -1265,17 +1260,17 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
     3.  按“Esc”键，输入 **:wq!**，按“Enter”保存并退出编辑。
 
-4.  <a name="step_acp_li006"></a>编辑预训练脚本（仅供参考）。
+4.  <a id="step_acp_li006"></a>编辑预训练脚本（仅供参考）。
 
-    此处以编辑“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh“脚本为例。
+    此处以编辑“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本为例。
 
-    1.  打开“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh“脚本。
+    1.  打开“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本。
 
         ```
         vim examples/mcore/llama2/pretrain_llama2_7b_ptd.sh
         ```
 
-    2.  按“i”进入编辑模式，在脚本中增加如下内容以开启周期性CheckPoint加速功能。
+    2.  按“i”进入编辑模式，在脚本中增加如下内容以开启周期性Checkpoint加速功能。
         ```
         export MINDIO_AUTO_PATCH_MEGATRON=true
         export GLOO_SOCKET_IFNAME=enp189s0f0
@@ -1389,16 +1384,16 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
             | tee logs/train_llama2_7b.log
         ```
 
-        周期性CheckPoint加速功能相关参数说明如下：
+        周期性Checkpoint加速功能相关参数说明如下：
 
-        -   **MINDIO\_AUTO\_PATCH\_MEGATRON**：MindIO ACP框架自动patch Megatron的源码，用于开启加速周期性CheckPoint特性。
+        -   **MINDIO\_AUTO\_PATCH\_MEGATRON**：MindIO ACP框架自动patch Megatron的源码，用于开启加速周期性Checkpoint特性。
         -   **GLOO\_SOCKET\_IFNAME**：根据主节点高速网卡实际情况进行配置。
         -   **LD\_LIBRARY\_PATH**：CANN包驱动的so库地址，请根据CANN实际的安装路径进行修改。
         -   **set\_env.sh文件路径**：请根据CANN实际的安装路径进行修改。
 
     3.  按“Esc”键，输入 **:wq!** ，按“Enter”保存并退出编辑。
 
-5.  完成步骤[3](#step_acp_li005)  \~ 步骤[4](#step_acp_li006)的.py文件修改，MindSpeed-LLM即可使用MindIO ACP加速周期性CheckPoint特性。
+5.  完成步骤[3](#step_acp_li005)  \~ 步骤[4](#step_acp_li006)的.py文件修改，MindSpeed-LLM即可使用MindIO ACP加速周期性Checkpoint特性。
 
 
 
@@ -1406,7 +1401,7 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 在容器中使用MindIO ACP加速服务时，需要将SDK安装到对应的容器中。
 
-1.  修改创建Pod的yaml文件，下面以“/home/testuser/mygpt.yaml“文件为例，增加映射卷配置。
+1.  修改创建Pod的yaml文件，下面以“/home/testuser/mygpt.yaml”文件为例，增加映射卷配置。
     1.  打开mygpt.yaml文件。
 
         ```
@@ -1415,9 +1410,9 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
     2.  按“i”进入编辑模式，修改mygpt.yaml文件。
 
-        >[!NOTE]说明
-        >-   如果volumeMounts和volumes不存在，直接在文件中添加全部内容。
-        >-   如果volumeMounts和volumes已存在，只需在volumeMounts和volumes内部添加其后面的内容。
+        > [!NOTE]说明
+        > - 如果volumeMounts和volumes不存在，直接在文件中添加全部内容。
+        > - 如果volumeMounts和volumes已存在，只需在volumeMounts和volumes内部添加其后面的内容。
 
         -   （可选）如果环境中[使用了DPC访问存储](#可选使用dpc文件访问存储加速checkpoint加载)，增加卷在容器中映射路径，内容如下：
 
@@ -1428,8 +1423,8 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
                   readOnly: false
             ```
 
-            >[!NOTE]说明
-            >“/opt/oceanstor/dataturbo/sdk/lib/libdpc\_nds.so“不可随意更改。
+            > [!NOTE]说明
+            > “/opt/oceanstor/dataturbo/sdk/lib/libdpc\_nds.so”不可随意更改。
 
         -   （可选）如果环境中[使用了DPC访问存储](#可选使用dpc文件访问存储加速checkpoint加载)，增加宿主机需要映射的卷声明，增加内容如下：
 
@@ -1459,14 +1454,14 @@ MindIO ACP加速LLM CheckPoint保存和加载的4个关键点如下：
 
 
 
-### CheckPoint文件格式转换示例（Torch）
+### Checkpoint文件格式转换示例（Torch）
 
-对于使用PyTorch框架的用户，在大模型训练结束后，CheckPoint文件需要用于推理。这里举例说明，如何将MindIO ACP保存的CheckPoint文件转换成Torch原生格式的文件。
+对于使用PyTorch框架的用户，在大模型训练结束后，Checkpoint文件需要用于推理。这里举例说明，如何将MindIO ACP保存的Checkpoint文件转换成Torch原生格式的文件。
 
->[!NOTE]说明
->-   **load\_dir**：替换为真实的CheckPoint保存目录。
->-   **new\_dir**：替换为CheckPoint转换后新保存的目录，建议为空目录。
->-   **iteration**：指定转换这个iteration迭代周期的所有CheckPoint文件，会和 **load\_dir** 进行拼接。
+> [!NOTE]说明
+> - **load\_dir**：替换为真实的Checkpoint保存目录。
+> - **new\_dir**：替换为Checkpoint转换后新保存的目录，建议为空目录。
+> - **iteration**：指定转换这个iteration迭代周期的所有Checkpoint文件，会和 **load\_dir** 进行拼接。
 
 ```
 #  Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
@@ -1517,8 +1512,8 @@ if __name__ == '__main__':
 
 ### 安全管理
 
->[!NOTE]说明
->MindIO ACP暂不支持公有云场景、多租户场景使用，不支持公网直接访问系统。
+> [!NOTE]说明
+> MindIO ACP暂不支持公有云场景、多租户场景使用，不支持公网直接访问系统。
 
 **防病毒软件例行检查**
 
@@ -1551,14 +1546,14 @@ if __name__ == '__main__':
 
 #### 风险提醒
 
-CheckPoint序列化使用了Python自带的pickle组件，必须确保非授权用户没有存储目录及上层目录的写权限，否则可能造成CheckPoint被篡改引起pickle反序列化注入的风险。
+Checkpoint序列化使用了Python自带的pickle组件，必须确保非授权用户没有存储目录及上层目录的写权限，否则可能造成Checkpoint被篡改引起pickle反序列化注入的风险。
 
 
 #### 操作系统安全加固
 
 **防火墙配置**
 
-操作系统安装后，若配置普通用户，可以通过在“/etc/login.defs“文件中新增“ALWAYS\_SET\_PATH=yes”配置，防止越权操作。此外，为了防止使用“su”命令切换用户时，将当前用户环境变量带入其他环境造成提权，请使用 **su - [user]** 命令进行用户切换，同时在服务器配置文件“/etc/default/su“中增加配置参数“ALWAYS\_SET\_PATH=yes”防止提权。
+操作系统安装后，若配置普通用户，可以通过在“/etc/login.defs”文件中新增“ALWAYS\_SET\_PATH=yes”配置，防止越权操作。此外，为了防止使用“su”命令切换用户时，将当前用户环境变量带入其他环境造成提权，请使用 **su - [user]** 命令进行用户切换，同时在服务器配置文件“/etc/default/su”中增加配置参数“ALWAYS\_SET\_PATH=yes”防止提权。
 
 **设置umask**
 
@@ -1566,13 +1561,13 @@ CheckPoint序列化使用了Python自带的pickle组件，必须确保非授权�
 
 以设置umask为027为例，具体操作如下。
 
-1.  以root用户登录服务器，编辑“/etc/profile“文件。
+1.  以root用户登录服务器，编辑“/etc/profile”文件。
 
     ```
     vim /etc/profile
     ```
 
-2.  在“/etc/profile“文件末尾加上 **umask 027**，保存并退出。
+2.  在“/etc/profile”文件末尾加上 **umask 027**，保存并退出。
 3.  执行如下命令使配置生效。
 
     ```
@@ -1596,13 +1591,13 @@ CheckPoint序列化使用了Python自带的pickle组件，必须确保非授权�
 由于root用户拥有最高权限，出于安全目的，建议取消root用户SSH远程登录服务器的权限，以提升系统安全性。具体操作步骤如下：
 
 1.  登录安装MindIO ACP组件的节点。
-2.  打开“/etc/ssh/sshd\_config“文件。
+2.  打开“/etc/ssh/sshd\_config”文件。
 
     ```
     vim /etc/ssh/sshd_config
     ```
 
-3.  按“i”进入编辑模式，找到“PermitRootLogin“配置项并将其值设置为“no“。
+3.  按“i”进入编辑模式，找到“PermitRootLogin”配置项并将其值设置为“no”。
 
     ```
     PermitRootLogin no
@@ -1645,14 +1640,14 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 |--|--|--|--|--|
 |'memfs.data_block_pool_capacity_in_gb'|'128'|可选|MindIO ACP文件系统内存分配大小，单位：GB，根据服务器内存大小来配置，建议不超过系统总内存的25%。|[1, 1024]|
 |'memfs.data_block_size_in_mb'|'128'|可选|文件数据块分配最小粒度，单位：MB，根据使用场景中大多数文件的size决定配置，建议平均每个文件的数据块大小不超过128MB。|[1, 1024]|
-|'memfs.write.parallel.enabled'|'true'|可选|MindIO ACP并发读写性能优化开关配置，用户需结合业务数据模型特征决定是否打开本配置。|<li>false：关闭<li>true：开启|
+|'memfs.write.parallel.enabled'|'true'|可选|MindIO ACP并发读写性能优化开关配置，用户需结合业务数据模型特征决定是否打开本配置。|<ul><li>false：关闭<li>true：开启 </ul>|
 |'memfs.write.parallel.thread_num'|'16'|可选|MindIO ACP并发读写性能优化并发数。|[2, 96]|
 |'memfs.write.parallel.slice_in_mb'|'16'|可选|MindIO ACP并发写性能优化数据切分粒度，单位：MB。|[1, 1024]|
 |'background.backup.thread_num'|'32'|可选|备份线程数量。|[1, 256]|
 
 
->[!NOTE]说明
->mindio\_acp.initialize如果不传入server\_info参数，则按照表中默认参数启动Server。
+> [!NOTE]说明
+> mindio\_acp.initialize如果不传入server\_info参数，则按照表中默认参数启动Server。
 
 **使用样例1**
 
@@ -1696,7 +1691,7 @@ mindio_acp.save(obj, path, open_way='memfs')
 |--|--|--|--|
 |obj|必选|需要保存的对象。|有效数据对象。|
 |path|必选|数据保存路径。|有效文件路径。|
-|open_way|可选|保存方式。<li>memfs：使用MindIO ACP的高性能MemFS保存数据。<li>fopen：调用C标准库中的文件操作函数保存数据，通常作为memfs方式的备份存在。<br>默认值：memfs。|<li>memfs<li>fopen|
+|open_way|可选|保存方式。<ul><li>memfs：使用MindIO ACP的高性能MemFS保存数据。<li>fopen：调用C标准库中的文件操作函数保存数据，通常作为memfs方式的备份存在。</ul>默认值：memfs。|<ul><li>memfs <li>fopen</ul>|
 
 
 **使用样例**
@@ -1771,7 +1766,7 @@ mindio_acp.register_checker(callback, check_dict, user_context, timeout_sec)
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |callback|必选|回调函数（第一个参数result为数据完整性校验的结果，0为成功，其他为失败；第二个参数为user_context）。|有效函数名。|
-|check_dict|必选|数据完整性校验条件，类型dict，用来校验指定path下的文件个数是否符合要求。|<li>key：path，数据路径。<li>value：对应key路径下的文件个数。|
+|check_dict|必选|数据完整性校验条件，类型dict，用来校验指定path下的文件个数是否符合要求。|<ul><li>key：path，数据路径。<li>value：对应key路径下的文件个数。</ul>|
 |user_context|必选|回调函数的第二个参数。|-|
 |timeout_sec|必选|回调超时时间，单位：秒。<br>如果训练客户端日志中提示："watching checkpoint failed"，则需要调大该参数。代码在mindio_acp实际安装路径（mindio_acp/acc_checkpoint/framework_acp.py）下的async_write_tracker_file函数中。|[1, 3600]|
 
@@ -1813,8 +1808,8 @@ mindio_acp.load(path, open_way='memfs', map_location=None)
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |path|必选|加载路径。|有效文件路径。|
-|open_way|可选|加载方式。<li>memfs：使用MindIO ACP的高性能MemFS保存数据。<li>fopen：调用C标准库中的文件操作函数保存数据，通常作为memfs方式的备份存在。<br>默认值：memfs。|<li>memfs<li>fopen|
-|map_location|可选|加载时需要映射到的设备。默认值：None。|<li>None<li>cpu|
+|open_way|可选|加载方式。<ul><li>memfs：使用MindIO ACP的高性能MemFS保存数据。<li>fopen：调用C标准库中的文件操作函数保存数据，通常作为memfs方式的备份存在。</ul>默认值：memfs。|<ul><li>memfs <li>fopen</ul>|
+|map_location|可选|加载时需要映射到的设备。默认值：None。|<ul><li>None <li>cpu</ul>|
 
 
 **使用样例**
@@ -1828,8 +1823,8 @@ mindio_acp.load(path, open_way='memfs', map_location=None)
 
 Any
 
->[!CAUTION]注意
->如同PyTorch的load接口，本接口内部也使用pickle模块，有被恶意构造的数据在unpickle期间攻击的风险。需要保证被加载的数据来源是安全存储的，仅可以load可信的数据。
+> [!CAUTION]注意
+> 如同PyTorch的load接口，本接口内部也使用pickle模块，有被恶意构造的数据在unpickle期间攻击的风险。需要保证被加载的数据来源是安全存储的，仅可以load可信的数据。
 
 
 
@@ -1837,7 +1832,7 @@ Any
 
 **接口功能**
 
-将MindIO ACP格式的CheckPoint文件转换为Torch原生保存的格式。
+将MindIO ACP格式的Checkpoint文件转换为Torch原生保存的格式。
 
 **接口格式**
 
@@ -1946,7 +1941,7 @@ mindio_acp.flush()
     |参数|是否必选|说明|取值要求|
     |--|--|--|--|
     |offset|可选|读取文件的偏移位置。需满足count + offset <= file_size|[0, file_size)|
-    |count|可选|读取文件的大小。需满足count + offset <= file_size|<li>-1：读取整个文件。<li>(0, file_size]|
+    |count|可选|读取文件的大小。需满足count + offset <= file_size|<ul><li>-1：读取整个文件。 <li>(0, file_size]</ul>|
 
 
 -   close：关闭文件。
@@ -1981,8 +1976,8 @@ mindio_acp.open_file(path: str)
 
 \_ReadableFileWrapper实例。
 
->[!NOTE]说明
->接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.load_checkpoint.html#mindspore.load_checkpoint)。
+> [!NOTE]说明
+> 接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.load_checkpoint.html#mindspore.load_checkpoint)。
 
 
 
@@ -2045,8 +2040,8 @@ mindio_acp.create_file(path: str, mode: int = 0o600)
 
 \_WriteableFileWrapper实例。
 
->[!NOTE]说明
->接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.save_checkpoint.html#mindspore.save_checkpoint)。
+> [!NOTE]说明
+> 接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.save_checkpoint.html#mindspore.save_checkpoint)。
 
 
 
@@ -2087,11 +2082,11 @@ MindIO ACP组件不可服务，在用户侧转为直接操作后端存储。
     -   状态正常，执行[2](#step_acp_li007)。
     -   状态异常，执行[3](#step_acp_li008)。
 
-2.  <a name="step_acp_li007"></a>检查后端存储内的文件归属的用户名和属组权限，与客户端进程的权限是否一致。
+2.  <a id="step_acp_li007"></a>检查后端存储内的文件归属的用户名和属组权限，与客户端进程的权限是否一致。
     -   权限一致，告警会自动清除。
     -   权限不一致，执行[3](#step_acp_li008)。
 
-3.  <a name="step_acp_li008"></a>搜集故障或者日志信息，联系技术支持处理。
+3.  <a id="step_acp_li008"></a>搜集故障或者日志信息，联系技术支持处理。
 
 **参考信息**
 
@@ -2106,8 +2101,7 @@ MindIO ACP组件不可服务，在用户侧转为直接操作后端存储。
 ## 附录
 
 
-
-### （可选）使用DPC文件访问存储，加速CheckPoint加载
+### （可选）使用DPC文件访问存储，加速Checkpoint加载
 
 检查是否满足如下条件：
 
@@ -2115,7 +2109,7 @@ MindIO ACP组件不可服务，在用户侧转为直接操作后端存储。
 -   是否成功安装NDS 1.0软件包（/opt/oceanstor/dataturbo/sdk/lib/libdpc\_nds.so）。
 -   训练进程（如果在容器内）能否访问此so。
 
-如果以上条件全部满足，则自动启用NDS 1.0直通读功能，加速加载CheckPoint。
+如果以上条件全部满足，则自动启用NDS 1.0直通读功能，加速加载Checkpoint。
 
 成功加载NDS 1.0的判断依据是查看日志是否出现如下字样：
 
@@ -2123,10 +2117,10 @@ MindIO ACP组件不可服务，在用户侧转为直接操作后端存储。
 "initial and open nds file driver success"
 ```
 
-NDS 1.0更多信息请参见[《OceanStor DataTurbo 25.0.0 DTFS用户指南》](https://support.huawei.com/enterprise/zh/doc/EDOC1100446480/c6c9b5af)。
+NDS 1.0更多信息请参见[《OceanStor DataTurbo 25.x.x DTFS用户指南》](https://support.huawei.com/enterprise/zh/doc/EDOC1100539415/3f076df0)。
 
->[!CAUTION]注意
->如果使用DPC文件系统访问存储，成功安装NDS 1.0软件包，安装地址为“/opt/oceanstor/dataturbo/sdk/lib/libdpc\_nds.so“，权限设置为444即可保证功能正常，启动训练前，请用户谨慎设置此文件的权限。
+> [!CAUTION]注意
+> 如果使用DPC文件系统访问存储，成功安装NDS 1.0软件包，安装地址为“/opt/oceanstor/dataturbo/sdk/lib/libdpc\_nds.so”，权限设置为444即可保证功能正常，启动训练前，请用户谨慎设置此文件的权限。
 
 
 
@@ -2134,7 +2128,7 @@ NDS 1.0更多信息请参见[《OceanStor DataTurbo 25.0.0 DTFS用户指南》](
 
 |参数名称|参数说明|取值范围|缺省值|
 |--|--|--|--|
-|MINDIO_AUTO_PATCH_MEGATRON|是否在import mindio_acp的时候自动patch Megatron框架的源代码中的CheckPoint相关函数。|<li>true或者1：开启 <li>其他值：关闭|false|
+|MINDIO_AUTO_PATCH_MEGATRON|是否在import mindio_acp的时候自动patch Megatron框架的源代码中的Checkpoint相关函数。|<ul><li>true或者1：开启 <li>其他值：关闭</ul>|false|
 |HCOM_FILE_PATH_PREFIX|HCOM生成的文件路径的前缀，通过前缀保证文件只会在当前路径下（此路径需要已存在）创建和删除。|路径参数|${install_path}|
 
 
@@ -2151,28 +2145,28 @@ chage [-m mindays] [-M maxdays] [-d lastday] [-I inactive] [-E expiredate] [-W w
 
 相关参数请参见[表1](#table_acp_04)。
 
-**表 1<a name="table_acp_04"></a>**  设置用户有效期
+**表 1<a id="table_acp_04"></a>**  设置用户有效期
 
 |参数|参数说明|
 |--|--|
-|-d--lastday|上一次更改的日期。|
-|-E--expiredate|用户到期的日期。超过该日期，此用户将不可用。|
-|-h--help|显示命令帮助信息。|
-|-i--iso8601|更改用户密码的过期日期并以YYYY-MM-DD格式显示。|
-|-I--inactive|停滞时期。超过指定天数后，设定密码为失效状态。|
-|-l--list|列出当前的设置。由非特权用户来确定口令或账户何时过期。|
-|-m--mindays|口令可更改的最小天数。设置为“0”表示任何时候都可以更改口令。|
-|-M--maxdays|口令保持有效的最大天数。设置为“-1”表示可删除这项口令的检测。设置为“99999”，表示无限期。|
-|-R--root|将命令执行的根目录设置为指定目录。|
-|-W--warndays|用户口令到期前，提前收到警告信息的天数。|
+|-d<br>--lastday|上一次更改的日期。|
+|-E<br>--expiredate|用户到期的日期。超过该日期，此用户将不可用。|
+|-h<br>--help|显示命令帮助信息。|
+|-i<br>--iso8601|更改用户密码的过期日期并以YYYY-MM-DD格式显示。|
+|-I<br>--inactive|停滞时期。超过指定天数后，设定密码为失效状态。|
+|-l<br>--list|列出当前的设置。由非特权用户来确定口令或账户何时过期。|
+|-m<br>--mindays|口令可更改的最小天数。设置为“0”表示任何时候都可以更改口令。|
+|-M<br>--maxdays|口令保持有效的最大天数。设置为“-1”表示可删除这项口令的检测。设置为“99999”，表示无限期。|
+|-R<br>--root|将命令执行的根目录设置为指定目录。|
+|-W<br>--warndays|用户口令到期前，提前收到警告信息的天数。|
 
 
->[!NOTE]说明
->-   日期格式为YYYY-MM-DD，如 **chage -E 2017-12-01  _test_** 表示用户_test_的口令在2017年12月1日过期。
->-   user必须填写，填写时请替换为具体用户，默认为root用户。
->-   账号口令应该定期更新，否则容易导致安全风险。
+> [!NOTE]说明
+> - 日期格式为YYYY-MM-DD，如 **chage -E 2017-12-01  _test_** 表示用户 **_test_**的口令在2017年12月1日过期。
+> - user必须填写，填写时请替换为具体用户，默认为root用户。
+> - 账号口令应该定期更新，否则容易导致安全风险。
 
-举例说明：修改用户_test_的有效期为90天。
+举例说明：修改用户 **_test_** 的有效期为90天。
 
 ```
 chage -M 90 test
@@ -2201,8 +2195,8 @@ chage -M 90 test
 |*{MindIO-install-user}*|MindIO ACP安装用户。|用户自定义。|使用 **passwd** 命令修改。|
 
 
->[!CAUTION]注意
->为了保护密码安全性建议用户定期修改密码。
+> [!CAUTION]注意
+> 为了保护密码安全性建议用户定期修改密码。
 
 
 
@@ -2222,38 +2216,37 @@ chage -M 90 test
 # 故障恢复加速
 
 
-
 ## 产品描述
 
 **产品介绍**
 
-MindCluster MindIO Training Fault Tolerance（下文简称MindIO TFT）包括临终CheckPoint保存、进程级在线恢复和进程级别重调度等功能。
+MindCluster MindIO Training Fault Tolerance（下文简称MindIO TFT）包括临终Checkpoint保存、进程级在线恢复和进程级别重调度等功能。
 
--   MindCluster MindIO Try To Persist（下文简称MindIO TTP）功能，旨在针对大模型训练过程中故障恢复加速，MindIO TTP特性通过在训练过程中发生故障后，校验中间状态数据的完整性和一致性，生成一次临终CheckPoint数据，恢复训练时能够通过该CheckPoint数据恢复，减少故障造成的训练迭代损失。
+-   MindCluster MindIO Try To Persist（下文简称MindIO TTP）功能，旨在针对大模型训练过程中故障恢复加速，MindIO TTP特性通过在训练过程中发生故障后，校验中间状态数据的完整性和一致性，生成一次临终Checkpoint数据，恢复训练时能够通过该Checkpoint数据恢复，减少故障造成的训练迭代损失。
 -   MindCluster MindIO Uncorrectable Memory Error（下文简称MindIO UCE）功能，旨在针对大模型训练过程中片上内存的UCE故障检测，并完成在线修复，达到Step级重计算。
 -   MindCluster MindIO Air Refuelling（下文简称MindIO ARF）功能，训练发生异常后，不用重启整个集群，只需以节点为单位进行重启或替换，对于部分故障仅需原地重启单进程，完成修复并继续训练。
 
 **产品价值**
 
-LLM（Large Language Model）是全球当前科技界竞争的焦点，LLM的训练往往需要长达数十天、甚至数月，CheckPoint是模型训练中断后恢复训练的关键点，CheckPoint过程中，整个集群中的训练任务会停滞，为了集群的利用率，CheckPoint的周期都配置得比较长，甚至达到数小时。这导致如果训练任务在即将生成CheckPoint数据的前一刻发生故障，未能生成本次CheckPoint数据，则只能从上一次的CheckPoint数据恢复，上次CheckPoint到故障前一刻的训练迭代需要重新计算，损失较大。MindIO TTP特性，在故障发生后，立即生成一次CheckPoint数据，恢复时也能立即恢复到故障前一刻的状态，减少迭代损失。
+LLM（Large Language Model）是全球当前科技界竞争的焦点，LLM的训练往往需要长达数十天、甚至数月，Checkpoint是模型训练中断后恢复训练的关键点，Checkpoint过程中，整个集群中的训练任务会停滞，为了集群的利用率，Checkpoint的周期都配置得比较长，甚至达到数小时。这导致如果训练任务在即将生成Checkpoint数据的前一刻发生故障，未能生成本次Checkpoint数据，则只能从上一次的Checkpoint数据恢复，上次Checkpoint到故障前一刻的训练迭代需要重新计算，损失较大。MindIO TTP特性，在故障发生后，立即生成一次Checkpoint数据，恢复时也能立即恢复到故障前一刻的状态，减少迭代损失。
 
-与此同时，LLM训练每一次保存CheckPoint数据并加载数据重新迭代训练所需时间同保存和加载周期CheckPoint类似都比较长，MindIO UCE在线修复，当NPU（Neural Processing Unit）发生UCE故障后，首先通过故障清理、故障恢复以及数据回滚等操作实现重新训练，恢复到故障前一刻的状态，节约训练停止重启时间；修复失败后走TTP流程作为保障措施。
+与此同时，LLM训练每一次保存Checkpoint数据并加载数据重新迭代训练所需时间同保存和加载周期Checkpoint类似都比较长，MindIO UCE在线修复，当NPU（Neural Processing Unit）发生UCE故障后，首先通过故障清理、故障恢复以及数据回滚等操作实现重新训练，恢复到故障前一刻的状态，节约训练停止重启时间；修复失败后走TTP流程作为保障措施。
 
 **MindIO TFT架构**
 
-![](figures/MindIO-TTP架构.png)
+![](../figures/scheduling/mindio_ttp架构.png)
 
 MindIO TFT的各个功能集成在一个whl包中对外提供，需要通过import模块的方式，修改MindSpeed-LLM等大模型框架适配并使用对应功能。
 
 MindIO TFT的关键点如下：
 
 -   MindIO TTP
-    -   通过Controller和Processor模块，检测模型训练状态，并通过心跳定期汇报至Controller模块。一旦检测到故障，就开始临终CheckPoint保存。
-    -   大模型训练中业界定期保存CheckPoint的时间间隔长。如果发生故障时，距离上一次保存的时间间隔过长，但又没到下一次保存的时间，此时如果重新训练就会消耗大量时间和资源。MindIO TTP提供了几乎零损时间和资源的重新训练方案，即重新训练从上一次故障处开始。
+    -   通过Controller和Processor模块，检测模型训练状态，并通过心跳定期汇报至Controller模块。一旦检测到故障，就开始临终Checkpoint保存。
+    -   大模型训练中业界定期保存Checkpoint的时间间隔长。如果发生故障时，距离上一次保存的时间间隔过长，但又没到下一次保存的时间，此时如果重新训练就会消耗大量时间和资源。MindIO TTP提供了几乎零损时间和资源的重新训练方案，即重新训练从上一次故障处开始。
 
 -   MindIO UCE
     -   一旦检测到UCE故障，就开始在线修复。
-    -   在大模型训练中，无论是定期保存CheckPoint，还是MindIO TFT的临终CheckPoint保存，重新训练的消耗都是巨大的。UCE提供了训练框架Step级重计算能力，不需要重启进程，同时能保证续训迭代损失，UCE失败后进入TTP流程。
+    -   在大模型训练中，无论是定期保存Checkpoint，还是MindIO TFT的临终Checkpoint保存，重新训练的消耗都是巨大的。UCE提供了训练框架Step级重计算能力，不需要重启进程，同时能保证续训迭代损失，UCE失败后进入TTP流程。
 
 -   MindIO ARF
     -   针对更多的故障，不需要模型停止训练，只需通过节点重启或替换，完成修复和模型续训。
@@ -2299,16 +2292,16 @@ MindIO TFT的关键点如下：
 
     -   MindIO UCE和MindIO ARF功能
         -   若要实现从当前Step恢复训练，对DP Size限制与MindIO TTP功能一致。
-        -   对于显存有限，不做副本的情况，即DP Size = 1，此时若发生UCE或者节点故障，支持在线从周期性CheckPoint中加载模型权重和优化器参数恢复训练，损失当前Step到上次周期性CheckPoint的Step之间的训练成本。
+        -   对于显存有限，不做副本的情况，即DP Size = 1，此时若发生UCE或者节点故障，支持在线从周期性Checkpoint中加载模型权重和优化器参数恢复训练，损失当前Step到上次周期性Checkpoint的Step之间的训练成本。
 
     -   分布式优化器在开启ZeRO特性后，优化器状态数据全局只有一份，无数据冗余。MindIO TFT通过增加优化器状态冗余数据副本，保证故障场景下优化器状态数据的完整性，但同时该方案会导致片上内存使用增加。在原有的模型配置基础上，直接使用MindIO TFT可能会导致模型训练启动过程中出现片上内存OOM（Out Of Memory，内存不足）异常。在此情况下，需要通过扩容增加训练作业的片上内存总量。
 
         增加副本对应增加的片上内存大小计算公式：增加片上内存总量（GB） = 模型参数量N（B） \* 12 \* 副本数。其中，模型参数量的单位为B（十亿），通过以上公式，计算出需要增加的片上内存，扩容后，再使用MindIO TFT。
 
 -   训练容错框架中有一个Active Controller与两个Backup Controller，为了包括Active Controller在内多张卡发生故障时，能够顺利切换到Backup Controller完成临终保存，需要状态正常的卡的数量大于world\_size的一半。
--   MindIO TFT会对优化器状态数据做副本，MindIO UCE或MindIO ARF修复时，寻找有效副本修复故障卡，当训练集群故障较多，通过副本仍然无法拼凑出一个完整副本时，则从Step在线修复退化为在线加载周期CheckPoint修复。
--   MindIO TFT在生成临终CheckPoint数据时，除了考虑一个完整的数据副本，还要校验数据是否一致。如果发生故障后，存在一个OS（Optimizer State，优化器状态）数据Shard长期处于修改状态，或者OS数据不同Shard间训练迭代不一致，都认为是全局数据不一致，无法生成临终CheckPoint数据。
--   MindIO TTP不使用MindIO ACP（Async Checkpoint Persistence，异步CheckPoint保存）功能。MindIO TTP完成临终CheckPoint保存后会结束训练进程。为确保在进程退出前，临终CheckPoint已经保存到持久化存储，约束MindIO TTP写数据不使用异步CheckPoint保存方式，而是直接写入到持久化存储。
+-   MindIO TFT会对优化器状态数据做副本，MindIO UCE或MindIO ARF修复时，寻找有效副本修复故障卡，当训练集群故障较多，通过副本仍然无法拼凑出一个完整副本时，则从Step在线修复退化为在线加载周期Checkpoint修复。
+-   MindIO TFT在生成临终Checkpoint数据时，除了考虑一个完整的数据副本，还要校验数据是否一致。如果发生故障后，存在一个OS（Optimizer State，优化器状态）数据Shard长期处于修改状态，或者OS数据不同Shard间训练迭代不一致，都认为是全局数据不一致，无法生成临终Checkpoint数据。
+-   MindIO TTP不使用MindIO ACP（Async Checkpoint Persistence，异步Checkpoint保存）功能。MindIO TTP完成临终Checkpoint保存后会结束训练进程。为确保在进程退出前，临终Checkpoint已经保存到持久化存储，约束MindIO TTP写数据不使用异步Checkpoint保存方式，而是直接写入到持久化存储。
 -   MindIO TFT目前不支持级联故障场景。例如：当MindIO TTP正在保存时，如果出现其他故障，就会保存失败。
 -   MindIO TFT会增加显存占用，详情请参见[表1 原生优化器与开启故障快速恢复特性后优化器参数的理论数值变化](#table_tft_03)。
 -   默认开启TLS（Transport Layer Security，传输层安全性协议）安全特性，关闭可能导致伪造Controller连接影响训练进程。
@@ -2324,7 +2317,7 @@ MindIO TFT的关键点如下：
 #### 组网规划
 
 **图 1**  部署逻辑示意图  
-![](figures/部署逻辑示意图TTP.png "部署逻辑示意图")
+![](../figures/scheduling/部署逻辑示意图ttp.png "部署逻辑示意图")
 
 深度学习平台与训练任务相关的节点有计算节点和存储节点。各类节点主要功能如下：
 
@@ -2337,9 +2330,9 @@ MindIO TFT的关键点如下：
 -   存储面：用于访问存储节点。管理节点和计算节点连接到存储节点。
 -   参数面：用于分布式训练时，训练节点之间的参数交换和连接。
 
-    >[!NOTE]说明
-    >-   逻辑部署示意图展示深度学习平台的完整示意图，MindIO TFT特性只需要在计算节点上部署一个SDK（Software Development Kit），不涉及存储节点的安装部署。
-    >-   MindIO TFT功能SDK需要在计算节点相互通信，发送心跳报文，需要使用业务面网络，SDK在所有运行大模型训练的计算节点对等部署，部署时不区分管理节点和计算节点。
+    > [!NOTE]说明
+    > - 逻辑部署示意图展示深度学习平台的完整示意图，MindIO TFT特性只需要在计算节点上部署一个SDK（Software Development Kit），不涉及存储节点的安装部署。
+    > - MindIO TFT功能SDK需要在计算节点相互通信，发送心跳报文，需要使用业务面网络，SDK在所有运行大模型训练的计算节点对等部署，部署时不区分管理节点和计算节点。
 
 
 
@@ -2349,24 +2342,24 @@ MindIO TFT的关键点如下：
 
 安装前，需要检查以下硬件配置，如[表1](#table_tft_01)所示。
 
-**表 1<a name="table_tft_01"></a>**  硬件环境
+**表 1<a id="table_tft_01"></a>**  硬件环境
 
 |类型|配置参考|
 |--|--|
-|服务器（单机场景）|<li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能<li>Atlas 800T A2 训练服务器<li>Atlas 900 A3 SuperPoD 超节点|
-|服务器（集群场景）|计算节点：<li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能 <li>Atlas 800T A2 训练服务器 <li>Atlas 900 A3 SuperPoD 超节点<br> 存储节点：存储服务器|
-|网络|<li>带外管理（BMC）：≥1Gbit/s <li>带内管理（SSH）：≥1Gbit/s <li>业务面：≥10Gbit/s <li>存储面：≥25Gbit/s <li>参数面：100Gbit/s|
+|服务器（单机场景）|<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能<li>Atlas 800T A2 训练服务器<li>Atlas 900 A3 SuperPoD 超节点</ul>|
+|服务器（集群场景）|计算节点：<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能 <li>Atlas 800T A2 训练服务器 <li>Atlas 900 A3 SuperPoD 超节点</ul> 存储节点：存储服务器|
+|网络|<ul><li>带外管理（BMC）：≥1Gbit/s <li>带内管理（SSH）：≥1Gbit/s <li>业务面：≥10Gbit/s <li>存储面：≥25Gbit/s <li>参数面：100Gbit/s </ul>|
 
 
 **软件环境**
 
 安装前，需要完成以下环境的安装，如[表2](#table_tft_02)所示。
 
-**表 2<a name="table_tft_02"></a>**  软件环境
+**表 2<a id="table_tft_02"></a>**  软件环境
 
 |软件|版本|安装位置|获取方式|
 |--|--|--|--|
-|操作系统|<li>CentOS 7.6 <li>Ubuntu 18.04 <li>Ubuntu 20.04 <li>Ubuntu 22.04|所有节点|-|
+|操作系统|<ul><li>CentOS 7.6 <li>Ubuntu 18.04 <li>Ubuntu 20.04 <li>Ubuntu 22.04</ul>|所有节点|-|
 |Python|3.7 ~ 3.11|计算节点|用户安装|
 |Torch|2.7.1|计算节点|用户安装|
 |torch_npu|7.3.0|计算节点|用户安装|
@@ -2379,9 +2372,7 @@ MindIO TFT的关键点如下：
 
 **下载软件包**
 
-软件安装前，请根据下表获取软件包及其数字签名文件。软件分为社区版和商用版，两者功能上无区别，区别在于下载权限和是否用于商业用途。社区版软件不需要申请下载权限可以直接下载，但不能用于商业用途；如果软件需要用于商业用途，请下载商用版软件，但需要申请下载权限。
-
-下载本软件即表示您同意[华为企业软件许可](https://support.huawei.com/enterprise/zh/software-policy)协议的条款和条件。
+下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
 
 **表 1**  软件下载
 
@@ -2394,7 +2385,7 @@ MindIO TFT的关键点如下：
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
-在软件包下载之后，请参见《OpenPGP签名验证指南》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
+在软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
@@ -2449,14 +2440,14 @@ MindIO TFT的关键点如下：
 
 1.  以安装用户 *{MindIO-install-user}* 登录安装节点。
 
-    >[!NOTE]说明
-    >安装用户设置的口令需符合口令复杂度要求（请参见[口令复杂度要求](#口令复杂度要求)）。密码有效期为90天，您可以在“/etc/login.defs“文件中修改有效期的天数，或者通过 **chage** 命令来设置用户的有效期，详情请参见[设置用户有效期](#设置用户有效期)。
+    > [!NOTE]说明
+    > 安装用户设置的口令需符合口令复杂度要求（请参见[口令复杂度要求](#口令复杂度要求)）。密码有效期为90天，您可以在“/etc/login.defs”文件中修改有效期的天数，或者通过 **chage** 命令来设置用户的有效期，详情请参见[设置用户有效期](#设置用户有效期)。
 
 2.  将内存缓存系统软件包上传至设备上安装用户有权限读写的路径下。
 
-    >[!NOTE]说明 
-    >-   内存缓存系统软件包以获取的实际包名为准。
-    >-   如果Python环境是共享目录，则在任一计算节点上传即可，否则所有计算节点都需要上传安装包。
+    > [!NOTE]说明 
+    > - 内存缓存系统软件包以获取的实际包名为准。
+    > - 如果Python环境是共享目录，则在任一计算节点上传即可，否则所有计算节点都需要上传安装包。
 
 3.  进入软件包上传路径，解压内存缓存系统软件包。
 
@@ -2530,8 +2521,8 @@ MindIO TFT的关键点如下：
 
 ### 概述
 
->[!NOTE]说明
->MindIO TFT以SDK的形式提供服务，支持部署在裸机和容器环境中。
+> [!NOTE]说明
+> MindIO TFT以SDK的形式提供服务，支持部署在裸机和容器环境中。
 
 安装MindIO TFT SDK之后，需要在框架中启动MindIO TFT模块，并在训练过程中同步优化器数据更新状态到该模块。
 
@@ -2544,21 +2535,21 @@ MindIO TFT的关键点如下：
 -   使用前请先了解MindIO TFT的[约束限制](#约束限制)。
 -   MindSpeed-LLM框架准备参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/master)。匹配的Megatron-LM的版本为 **core\_v0.12.1**。
 
->[!NOTE]说明
->-   本次发布包配套MindSpeed-LLM的 **master** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
->-   MindIO TFT对接MindSpeed-LLM框架，目前支持MindIO TTP、MindIO UCE和MindIO ARF功能。
->-   对于PyTorch类框架，安装或开启MindCluster后，跳过步骤[1](#step_tft_li001)对torchrun的修改，由MindCluster控制进程退出。
+> [!NOTE]说明
+> - 本次发布包配套MindSpeed-LLM的 **master** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
+> - MindIO TFT对接MindSpeed-LLM框架，目前支持MindIO TTP、MindIO UCE和MindIO ARF功能。
+> - 对于PyTorch类框架，安装或开启MindCluster后，跳过步骤[1](#step_tft_li001)对torchrun的修改，由MindCluster控制进程退出。
 
 **操作步骤**
 
-1.  <a name="step_tft_li001"></a>（可选）编辑“torchrun“文件。
-    1.  查找环境中的“torchrun“文件。
+1.  <a id="step_tft_li001"></a>（可选）编辑“torchrun”文件。
+    1.  查找环境中的“torchrun”文件。
 
         ```
         which torchrun
         ```
 
-    2.  打开以上命令显示路径下的“torchrun“文件。
+    2.  打开以上命令显示路径下的“torchrun”文件。
 
         ```
         vim {torchrun文件路径}/torchrun
@@ -2575,11 +2566,11 @@ MindIO TFT的关键点如下：
 
     4.  按“Esc”键，输入 **:wq!**，按“Enter”保存并退出编辑。
 
-2.  <a name="step_tft_li002"></a>编辑预训练脚本（仅供参考）。
+2.  <a id="step_tft_li002"></a>编辑预训练脚本（仅供参考）。
 
-    此处以编辑“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh“脚本为例。
+    此处以编辑“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本为例。
 
-    1.  打开“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh“脚本。
+    1.  打开“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本。
 
         ```
         vim examples/mcore/llama2/pretrain_llama2_7b_ptd.sh
@@ -2722,15 +2713,15 @@ MindIO TFT的关键点如下：
 
         -   **enable-hbmfault-repair**：MindIO UCE功能开关，默认关闭，配置后对片上内存进行故障检测，并完成在线修复，达到Step级重计算功能。本开关在开启enable-high-availability时生效。此特性依赖PyTorch的内存管理机制，仅在PyTorch的环境变量PYTORCH\_NO\_NPU\_MEMORY\_CACHING未配置，即开启内存复用机制时，才可使用此特性，若export PYTORCH\_NO\_NPU\_MEMORY\_CACHING = 1，则无法使用此特性。
         -   **enable-worker-reboot**：MindIO ARF功能开关，默认关闭，配置后在发生一般性故障时，进行进程级重启修复，继续训练。本开关在开启enable-high-availability时生效。
-        -   **distributed-optimizer-no-replica**：开启高可用特性后，分布式优化器默认增加优化器副本，会导致片上内存使用增加，开启该开关后，分布式优化器不增加副本内存占用；在MindIO UCE和MindIO ARF场景下，直接使用周期CheckPoint进行在线修复。
+        -   **distributed-optimizer-no-replica**：开启高可用特性后，分布式优化器默认增加优化器副本，会导致片上内存使用增加，开启该开关后，分布式优化器不增加副本内存占用；在MindIO UCE和MindIO ARF场景下，直接使用周期Checkpoint进行在线修复。
 
-        **表 1<a name="table_tft_03"></a>**  原生优化器与使用MindIO TFT后优化器参数的理论数值变化
+        **表 1<a id="table_tft_03"></a>**  原生优化器与使用MindIO TFT后优化器参数的理论数值变化
 
         |优化器|原生|使用MindIO TFT|说明|
         |--|--|--|--|
         |fp16/bf16|20|20|-|
         |fp32|16|16|-|
-        |fp16/bf16 Distributed|4 + 16/d|4 + 16 * N/d|d：DP Group Size<br>N：副本数，N < d|
+        |fp16/bf16 Distributed|4 + 16/d|4 + 16 * N/d|<ul><li>d：DP Group Size <li>N：副本数，N < d </ul>|
 
 
     3.  按“Esc”键，输入 **:wq!**，按“Enter”保存并退出编辑。
@@ -2748,9 +2739,9 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 -   当Python环境不是安装在共享存储中时，为了便于大集群使用，可以将MindIO TFT SDK集成到镜像中，通过镜像安装Pod时，已经安装好MindIO TFT SDK。
 -   MindIO TFT服务Controller模块与Processor模块存在心跳报文，在K8s做网络隔离时，需要将通信端口添加到创建Pod时配置的yaml文件中。
 
-    修改创建Pod时配置的yaml文件。此处以“pod.yaml“为例。
+    修改创建Pod时配置的yaml文件。此处以“pod.yaml”为例。
 
-    1.  打开“pod.yaml“文件。
+    1.  打开“pod.yaml”文件。
 
         ```
         vim pod.yaml
@@ -2787,15 +2778,15 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 
 使用前请先了解MindIO TFT的[约束限制](#约束限制)。
 
->[!NOTE]说明
->-   本次发布包支持类Megatron框架，环境、代码、数据集请用户自行准备，并确保其安全性。
->-   本节内容仅具有适配指导意义，具体实现细节需由用户自行实现。
+> [!NOTE]说明
+> - 本次发布包支持类Megatron框架，环境、代码、数据集请用户自行准备，并确保其安全性。
+> - 本节内容仅具有适配指导意义，具体实现细节需由用户自行实现。
 
 **特性参考**
 
 相关特性所需的功能适配点如[表1](#table_tft_04)所示，各功能适配点对应的代码参考链接如[表2](#table_tft_05)所示。
 
-**表 1<a name="table_tft_04"></a>**  特性及功能适配点
+**表 1<a id="table_tft_04"></a>**  特性及功能适配点
 
 |特性|需要的功能适配点序号|
 |--|--|
@@ -2807,7 +2798,7 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 |在线压测/借轨回切|1、2、12|
 
 
-**表 2<a name="table_tft_05"></a>**  相关功能的代码参考链接
+**表 2<a id="table_tft_05"></a>**  相关功能的代码参考链接
 
 |序号|适配功能点|参考代码|
 |--|--|--|
@@ -2817,7 +2808,7 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 |4|优化器副本|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/e3490911407d88f9c6d3ac0c0eb3186f1812d171?ref=replica_optimizer)|
 |5|异常捕获装饰器|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/0827869d031303a231a69897c12692fb92d8cf8d?ref=exception_handler)|
 |6|算子资源清理|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/45824ee7303c05bce1260f2cab590dd858147767?ref=stop_clean)|
-|7|临终CheckPoint|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/0e94a3fcb2643580d151b90deb205e9034adde2a?ref=dump_ckpt)|
+|7|临终Checkpoint|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/0e94a3fcb2643580d151b90deb205e9034adde2a?ref=dump_ckpt)|
 |8|UCE模型优化器重建|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/93f599fa480c7f7931c74e782c617e0ebaffceb9?ref=uce_clear_rebuild)|
 |9|节点重启及通信重建|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/4b490ff888cea9766e461f6bb53e73712adf097d?ref=node_reboot)|
 |10|参数面在线修复|[LLM仓参考链接](https://gitcode.com/wlwen/MindSpeed-LLM/commit/9bd17ca7fdda3f8c5f70eef68cf1db4ac2ba738f?ref=online_repair_ckpt)|
@@ -2831,8 +2822,8 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 
 ### 安全管理
 
->[!NOTE]说明 
->MindIO TFT暂不支持公有云场景、多租户场景使用，不支持公网直接访问系统。
+> [!NOTE]说明 
+> MindIO TFT暂不支持公有云场景、多租户场景使用，不支持公网直接访问系统。
 
 **防病毒软件例行检查**
 
@@ -2865,7 +2856,7 @@ MindIO TFT以SDK形式提供服务，不存在常驻进程。服务随着训练�
 
 #### 风险提示
 
-CheckPoint序列化过程中使用了torch.load接口，该接口中使用了Python自带的pickle组件，必须确保非授权用户没有存储目录及上层目录的写权限，需保证CheckPoint为可信数据，否则可能造成CheckPoint被篡改引起pickle反序列化注入的风险。
+Checkpoint序列化过程中使用了torch.load接口，该接口中使用了Python自带的pickle组件，必须确保非授权用户没有存储目录及上层目录的写权限，需保证Checkpoint为可信数据，否则可能造成Checkpoint被篡改引起pickle反序列化注入的风险。
 
 
 #### 操作系统安全加固
@@ -2873,7 +2864,7 @@ CheckPoint序列化过程中使用了torch.load接口，该接口中使用了Pyt
 
 **防火墙配置**
 
-操作系统安装后，若配置普通用户，可以通过在“/etc/login.defs“文件中新增“ALWAYS\_SET\_PATH=yes”配置，防止越权操作。此外，为了防止使用“su”命令切换用户时，将当前用户环境变量带入其他环境造成提权，请使用 **su - [user]** 命令进行用户切换，同时在服务器配置文件“/etc/default/su“中增加配置参数“ALWAYS\_SET\_PATH=yes”防止提权。
+操作系统安装后，若配置普通用户，可以通过在“/etc/login.defs”文件中新增“ALWAYS\_SET\_PATH=yes”配置，防止越权操作。此外，为了防止使用“su”命令切换用户时，将当前用户环境变量带入其他环境造成提权，请使用 **su - [user]** 命令进行用户切换，同时在服务器配置文件“/etc/default/su”中增加配置参数“ALWAYS\_SET\_PATH=yes”防止提权。
 
 **设置umask**
 
@@ -2881,13 +2872,13 @@ CheckPoint序列化过程中使用了torch.load接口，该接口中使用了Pyt
 
 以设置umask为027为例，具体操作如下。
 
-1.  以root用户登录服务器，编辑“/etc/profile“文件。
+1.  以root用户登录服务器，编辑“/etc/profile”文件。
 
     ```
     vim /etc/profile
     ```
 
-2.  在“/etc/profile“文件末尾加上 **umask 027**，保存并退出。
+2.  在“/etc/profile”文件末尾加上 **umask 027**，保存并退出。
 3.  执行如下命令使配置生效。
 
     ```
@@ -2911,13 +2902,13 @@ CheckPoint序列化过程中使用了torch.load接口，该接口中使用了Pyt
 由于root用户拥有最高权限，出于安全目的，建议取消root用户SSH远程登录服务器的权限，以提升系统安全性。具体操作步骤如下：
 
 1.  登录安装MindIO TFT组件的节点。
-2.  打开“/etc/ssh/sshd\_config“文件。
+2.  打开“/etc/ssh/sshd\_config”文件。
 
     ```
     vim /etc/ssh/sshd_config
     ```
 
-3.  按“i”进入编辑模式，找到“PermitRootLogin“配置项并将其值设置为“no“。
+3.  按“i”进入编辑模式，找到“PermitRootLogin”配置项并将其值设置为“no”。
 
     ```
     PermitRootLogin no
@@ -2970,11 +2961,11 @@ echo 2 >/proc/sys/kernel/randomize_va_space
     tft_init_processor(rank: int, world_size: int, enable_local_copy: bool, enable_tls=False, tls_info='', enable_uce=True, enable_arf=False)
     ```
 
-    >[!CAUTION]注意
-    >-   如果关闭TLS（即**enable\_tls**=False时），会存在较高的网络安全风险。
-    >-   **tft\_start\_controller** 和 **tft\_init\_processor** 的enable\_tls开关状态需要保持一致。若两个接口enable\_tls开关不同，会造成以下问题：
-    >       -   模块间TLS建链失败。
-    >       -   MindIO TFT无法正常运行，训练任务启动失败。
+    > [!CAUTION]注意
+    > - 如果关闭TLS（即**enable\_tls**=False时），会存在较高的网络安全风险。
+    > - **tft\_start\_controller** 和 **tft\_init\_processor** 的enable\_tls开关状态需要保持一致。若两个接口enable\_tls开关不同，会造成以下问题：
+    >       - 模块间TLS建链失败。
+    >       - MindIO TFT无法正常运行，训练任务启动失败。
 
 -   TLS开启（**enable\_tls**=True）时，证书相关信息，作为必选参数 **tls\_info** 用于如下接口：
 
@@ -3013,10 +3004,10 @@ echo 2 >/proc/sys/kernel/randomize_va_space
 |packagePath|OpenSSL库路径|是|
 
 
->[!CAUTION]注意
->证书安全要求：
->-   需使用业界公认安全可信的非对称加密算法、密钥交换算法、密钥长度、Hash算法、证书格式等。
->-   应处于有效期内。
+> [!CAUTION]注意
+> 证书安全要求：
+> - 需使用业界公认安全可信的非对称加密算法、密钥交换算法、密钥长度、Hash算法、证书格式等。
+> - 应处于有效期内。
 
 
 
@@ -3053,9 +3044,9 @@ mindio_ttp.framework_ttp.tft_init_controller(rank: int, world_size: int, enable_
 |--|--|--|--|
 |rank|必选|当前执行训练任务的NPU卡号。|int，[-1, world_size)。MindCluster在Torch Agent进程拉起Controller时rank值取-1。|
 |world_size|必选|整个集群参与训练任务的卡数。|int，[1, 100000]。|
-|enable_local_copy|必选|表示是否启用local copy。优化器更新前，先对优化器做一次备份。|<li>False：关闭 <li>True：启用|
-|enable_arf|可选|MindIO ARF特性开关。|<li>False：关闭 <li>True：启用<br>默认为False。|
-|enable_zit|可选|MindIO ZIT特性开关。|<li>False：关闭 <li>True：启用<br>默认为False。|
+|enable_local_copy|必选|表示是否启用local copy。优化器更新前，先对优化器做一次备份。|<ul><li>False：关闭 <li>True：启用</ul>|
+|enable_arf|可选|MindIO ARF特性开关。|<ul><li>False：关闭 <li>True：启用</ul>默认为False。|
+|enable_zit|可选|MindIO ZIT特性开关。|<ul><li>False：关闭 <li>True：启用</ul>默认为False。|
 
 
 **返回值**
@@ -3082,7 +3073,7 @@ mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tl
 |--|--|--|--|
 |bind_ip|必选|Controller所在节点IP地址或域名。|符合IP地址规范的IPv4地址，位于集群节点IP地址中，禁止全零IP地址，支持域名。|
 |port|必选|Controller侦听端口号。|[1024, 65535]|
-|enable_tls|可选|TLS加密传输开关。|<li>False：关闭 <li>True：启用<br>默认为True。|
+|enable_tls|可选|TLS加密传输开关。|<ul><li>False：关闭 <li>True：启用</ul>默认为True。|
 |tls_info|可选|TLS的证书配置。|默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见[导入TLS证书](#导入tls证书)。|
 
 
@@ -3132,12 +3123,12 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 |--|--|--|--|
 |rank|必选|当前执行训练任务NPU卡号。|int，[0, world_size)。|
 |world_size|必选|参与训练任务的集群卡数。|int，[1, 100000]。|
-|enable_local_copy|必选|是否启用local copy。|<li>False：关闭 <li>True：启用|
-|enable_tls|可选|TLS加密传输开关。|<li>False：关闭 <li>True：启用 <br>默认为True。|
+|enable_local_copy|必选|是否启用local copy。|<ul><li>False：关闭 <li>True：启用</ul>|
+|enable_tls|可选|TLS加密传输开关。|<ul><li>False：关闭 <li>True：启用</ul>默认为True。|
 |tls_info|可选|TLS的证书配置。|默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见[导入TLS证书](#导入tls证书)。|
-|enable_uce|可选|MindIO UCE特性开关。|<li>False：关闭 <li>True：启用 <br>默认为True。|
-|enable_arf|可选|MindIO ARF特性开关。|<li>False：关闭 <li>True：启用 <br>默认为False。|
-|enable_zit|可选|MindIO ZIT特性开关。|<li>False：关闭 <li>True：启用 <br>默认为False。|
+|enable_uce|可选|MindIO UCE特性开关。|<ul><li>False：关闭 <li>True：启用 </ul>默认为True。|
+|enable_arf|可选|MindIO ARF特性开关。|<ul><li>False：关闭 <li>True：启用 </ul>默认为False。|
+|enable_zit|可选|MindIO ZIT特性开关。|<ul><li>False：关闭 <li>True：启用 </ul>默认为False。|
 
 
 **返回值**
@@ -3211,7 +3202,7 @@ mindio_ttp.framework_ttp.tft_start_updating_os(backup_step: int)
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|backup_step|必选|备份的step。|-1或自然数，范围[-1, 9223372036854775807)。<li>-1：表示不使用备份step。 <li>自然数：优化器更新前，备份的优化器状态数据对应的step。|
+|backup_step|必选|备份的step。|-1或自然数，范围[-1, 9223372036854775807)。<ul><li>-1：表示不使用备份step。 <li>自然数：优化器更新前，备份的优化器状态数据对应的step。</ul>|
 
 
 **返回值**
@@ -3324,8 +3315,8 @@ mindio_ttp.framework_ttp.tft_exception_handler(func: Callable)
 
 训练框架设置的参数集合。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，设置功能已经由MindIO TFT完成适配，不需要调用。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，设置功能已经由MindIO TFT完成适配，不需要调用。
 
 **接口格式**
 
@@ -3352,8 +3343,8 @@ mindio_ttp.framework_ttp.tft_set_step_args(args)
 
 注册框架侧rename回调函数。
 
->[!NOTE]说明 
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明 
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3365,11 +3356,11 @@ mindio_ttp.framework_ttp.tft_register_rename_handler(func: Callable, ctx = None)
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|rename函数，将保存成功的临终CheckPoint重命名，与原生框架CheckPoint命名规则一致。|回调函数，不为空，回调函数的入参要求请参见[表 1](#table_tft_06)和[表 2](#table_tft_07)，约定该回调函数无返回值，执行失败抛出异常。|
+|func|必选|rename函数，将保存成功的临终Checkpoint重命名，与原生框架Checkpoint命名规则一致。|回调函数，不为空，回调函数的入参要求请参见[表 1](#table_tft_06)和[表 2](#table_tft_07)，约定该回调函数无返回值，执行失败抛出异常。|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_06"></a>**  MindSpore回调函数参数
+**表 1<a id="table_tft_06"></a>**  MindSpore回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3377,7 +3368,7 @@ mindio_ttp.framework_ttp.tft_register_rename_handler(func: Callable, ctx = None)
 |ctx|-|回调函数上下文。|由注册方决定。|
 
 
-**表 2<a name="table_tft_07"></a>**  非MindSpore回调函数参数
+**表 2<a id="table_tft_07"></a>**  非MindSpore回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3397,8 +3388,8 @@ mindio_ttp.framework_ttp.tft_register_rename_handler(func: Callable, ctx = None)
 
 注册框架侧dump回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3410,11 +3401,11 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|临终CheckPoint保存函数，完成保存临终CheckPoint的功能。|回调函数，不为空，回调函数的入参要求请参见[表1](#table_tft_08)，约定该回调函数无返回值，执行失败抛出异常。|
+|func|必选|临终Checkpoint保存函数，完成保存临终Checkpoint的功能。|回调函数，不为空，回调函数的入参要求请参见[表1](#table_tft_08)，约定该回调函数无返回值，执行失败抛出异常。|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_08"></a>**  回调函数参数
+**表 1<a id="table_tft_08"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3436,8 +3427,8 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 
 向MindIO TFT注册用户自定义退出方法。
 
->[!NOTE]说明 
->目前仅针对MindSpore框架提供了注册退出回调的功能，用户需要自行确保回调函数的安全性；其他框架的退出则由MindIO TFT负责。
+> [!NOTE]说明 
+> 目前仅针对MindSpore框架提供了注册退出回调的功能，用户需要自行确保回调函数的安全性；其他框架的退出则由MindIO TFT负责。
 
 **接口格式**
 
@@ -3453,7 +3444,7 @@ mindio_ttp.framework_ttp.tft_register_exit_handler(func: Callable, ctx = None)
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_09"></a>**  回调函数参数
+**表 1<a id="table_tft_09"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3472,8 +3463,8 @@ mindio_ttp.framework_ttp.tft_register_exit_handler(func: Callable, ctx = None)
 
 在恢复过程中注册停止训练的回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3485,11 +3476,11 @@ mindio_ttp.framework_ttp.tft_register_stop_handler(func: Callable, ctx = None)
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|停止训练的回调函数，实现停止训练的功能，并抛出FORCE STOP异常将训练主线程控制权交由装饰器接管。|回调函数，不为空，回调函数的入参要求请参见[表1](#table_tft_10)，约定该回调函数无返回值，执行失败抛出异常。|
+|func|必选|停止训练的回调函数，实现停止训练的功能，并抛出FORCE STOP异常将训练主线程控制权交由装饰器接管。|回调函数，不为空，回调函数的入参要求请参见[表1](#table_tft_19)，约定该回调函数无返回值，执行失败抛出异常。|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_10"></a>**  回调函数参数
+**表 1<a id="table_tft_19"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3509,8 +3500,8 @@ mindio_ttp.framework_ttp.tft_register_stop_handler(func: Callable, ctx = None)
 
 在恢复过程中注册清理残留算子执行的回调函数。
 
->[!NOTE]说明 
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明 
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式<**
 
@@ -3522,15 +3513,15 @@ mindio_ttp.framework_ttp.tft_register_clean_handler(func: Callable, ctx = None)
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|清理残留算子执行的回调函数，完成清理残留算子、底层故障的功能。|回调函数，不为空，回调函数的入参要求请参见[表1](table_tft_10)。约定该回调函数返回值： <li>0：成功。 <li>1：失败。 <li>2：UCE场景且无需重建模型优化器。|
+|func|必选|清理残留算子执行的回调函数，完成清理残留算子、底层故障的功能。|回调函数，不为空，回调函数的入参要求请参见[表1](#table_tft_10)。约定该回调函数返回值： <ul><li>0：成功。 <li>1：失败。 <li>2：UCE场景且无需重建模型优化器。</ul>|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_10"></a>**  回调函数参数
+**表 1<a id="table_tft_10"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|is_uce_error|-|表示该卡是否发生UCE故障。|<li>False：未发生UCE故障。 <li>True：发生UCE故障。|
+|is_uce_error|-|表示该卡是否发生UCE故障。|<ul><li>False：未发生UCE故障。 <li>True：发生UCE故障。</ul>|
 |args|-|tft_set_step_args设置的参数。|由注册方决定。|
 |ctx|-|回调函数上下文。|由注册方决定。|
 
@@ -3547,8 +3538,8 @@ mindio_ttp.framework_ttp.tft_register_clean_handler(func: Callable, ctx = None)
 
 注册MindIO ARF重新建组的回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3564,7 +3555,7 @@ mindio_ttp.framework_ttp.tft_register_rebuild_group_handler(func: Callable, ctx 
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_11"></a>**  回调函数参数
+**表 1<a id="table_tft_11"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3585,9 +3576,9 @@ mindio_ttp.framework_ttp.tft_register_rebuild_group_handler(func: Callable, ctx 
 
 注册repair回调函数。
 
->[!NOTE]说明
->-   对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
->-   MindIO TFT已在回调函数中对模型优化器中的变量进行重建与覆写，用户在框架中自定义的其他参与计算的变量，需在repair中自行实现对其的重建与覆写。
+> [!NOTE]说明
+> - 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> - MindIO TFT已在回调函数中对模型优化器中的变量进行重建与覆写，用户在框架中自定义的其他参与计算的变量，需在repair中自行实现对其的重建与覆写。
 
 **接口格式**
 
@@ -3603,12 +3594,12 @@ mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 |ctx|可选|回调上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_12"></a>**  回调函数参数
+**表 1<a id="table_tft_12"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |step|-|修复时对应的step。|正整数。|
-|need_rebuild|-|修复是否需要重建模型和优化器。|<li>False：无需重建。 <li>True：需要重建。|
+|need_rebuild|-|修复是否需要重建模型和优化器。|<ul><li>False：无需重建。 <li>True：需要重建。</ul>|
 |error_ranks|-|需要修复的故障卡list。|list。|
 |repair_info|-|修复策略dict，其中优化器类型按照ATTENTION（0）、MOE（1）的关系对应。|{<br>"type": int，优化器类型 <br>"repair_type": Enum，枚举类型取值参见[RepairType](#repairtype) <br>"src": list，优化器修复数据的来源卡列表 <br>"dst": list，优化器修复数据的目的卡列表 <br>"rank_list": list，修复通信组建立所需要的卡列表 <br>}|
 |args|-|tft_set_step_args设置的参数。|由注册方决定。|
@@ -3627,8 +3618,8 @@ mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 
 注册rollback回滚函数。
 
->[!NOTE]说明 
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明 
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3644,7 +3635,7 @@ mindio_ttp.framework_ttp.tft_register_rollback_handler(func: Callable, ctx = Non
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
-**表 1<a name="table_tft_13"></a>**  回调函数参数
+**表 1<a id="table_tft_13"></a>**  回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3665,8 +3656,8 @@ mindio_ttp.framework_ttp.tft_register_rollback_handler(func: Callable, ctx = Non
 
 注册同步回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3692,10 +3683,10 @@ mindio_ttp.framework_ttp.tft_register_stream_sync_handler(func: Callable, ctx=No
 
 **接口功能**
 
-训练框架向Processor注册升级回滚回调函数。
+训练框架向Processor注册升级流程回滚的回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3721,10 +3712,10 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_rollback_handler(func: Callabl
 
 **接口功能**
 
-训练框架向Processor注册升级修复回调函数。
+训练框架向Processor注册升级流程修复的回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3732,7 +3723,7 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_rollback_handler(func: Callabl
 mindio_ttp.framework_ttp.tft_register_zit_upgrade_repair_handler(func: Callable, ctx = None)
 ```
 
-**接口参数<a name="section34575883518"></a>**
+**接口参数<a id="section34575883518"></a>**
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -3749,11 +3740,11 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_repair_handler(func: Callable,
 ### tft\_register\_zit\_upgrade\_rebuild\_handler
 
 **接口功能**
+训练框架向Processor注册升级流程重建通信组的回调函数。
 
-训练框架向Processor注册升级重建组回调函数。
 
->[!NOTE]说明 
->对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明 
+> 对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3761,12 +3752,11 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_repair_handler(func: Callable,
 mindio_ttp.framework_ttp.tft_register_zit_upgrade_rebuild_handler(func: Callable, ctx = None)
 ```
 
-**接口参数<a name="section34575883518"></a>**
+**接口参数**
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|rollback回调函数，完成升级重建组修复操作。回调函数执行超时时间默认为180秒
-。若超时，会导致流程执行失败。用户可通过环境变量TTP_NORMAL_ACTION_TIME_LIMIT来设置超时时间。|回调函数，不为空，约定该回调函数无返回值，执行失败抛出异常。|
+|func|必选|rebuild回调函数，完成升级流程重建通信组的修复操作。回调函数执行超时时间默认为180秒。若超时，会导致流程执行失败。用户可通过环境变量TTP_NORMAL_ACTION_TIME_LIMIT来设置超时时间。|回调函数，不为空，约定该回调函数无返回值，执行失败抛出异常。|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
@@ -3780,10 +3770,10 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_rebuild_handler(func: Callable
 
 **接口功能**
 
-训练框架向Processor注册降级重建修复回调函数。
+训练框架向Processor注册降级流程重建修复的回调函数。
 
->[!NOTE]说明
->对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+> [!NOTE]说明
+> 对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 **接口格式**
 
@@ -3795,7 +3785,7 @@ mindio_ttp.framework_ttp.tft_register_zit_downgrade_rebuild_handler(func: Callab
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|func|必选|rollback回调函数，完成升级回滚等重置操作。回调函数执行超时时间默认为180秒。若超时，会导致流程执行失败。用户可通过环境变量TTP_NORMAL_ACTION_TIME_LIMIT来设置超时时间。|回调函数，不为空，约定该回调函数无返回值，执行失败抛出异常。|
+|func|必选|rebuild回调函数，完成降级流程重建修复操作。回调函数执行超时时间默认为180秒。若超时，会导致流程执行失败。用户可通过环境变量TTP_NORMAL_ACTION_TIME_LIMIT来设置超时时间。|回调函数，不为空，约定该回调函数无返回值，执行失败抛出异常。|
 |ctx|可选|回调函数上下文。|默认为空。|
 
 
@@ -3836,8 +3826,8 @@ mindio_ttp.framework_ttp.tft_report_error(error_type: ReportState)
 
 修复期间，训练主线程在装饰器中调用该接口等待从线程完成业务数据修复。
 
->[!NOTE]说明
->该接口为阻塞接口，在未获取到下一次action前，会一直阻塞。
+> [!NOTE]说明
+> 该接口为阻塞接口，在未获取到下一次action前，会一直阻塞。
 
 **接口格式**
 
@@ -4004,7 +3994,7 @@ mindio_ttp.controller_ttp.tft_set_dp_group_info(rank: int, dp_rank_list: list)
 
 **接口功能**
 
-使用周期CheckPoint修复时，上报从CheckPoint加载的步数。
+使用周期Checkpoint修复时，上报从Checkpoint加载的步数。
 
 **接口格式**
 
@@ -4016,7 +4006,7 @@ mindio_ttp.framework_ttp.tft_report_load_ckpt_step(step: int)
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|step|必选|从CheckPoint加载的步数。|非负整数。|
+|step|必选|从Checkpoint加载的步数。|非负整数。|
 
 
 **返回值**
@@ -4099,11 +4089,11 @@ mindio_ttp.controller_ttp.tft_notify_controller_stop_train(fault_ranks: dict, st
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |fault_ranks|必选|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号 <li>errorType为故障类型：<ul><li>0：UCE故障 <li>1：非UCE故障</ul></ul>|
-|stop_type|可选|停止训练的类型。|字符串，支持以下两种方式：<li>"stop"：暂停训练，taskabort方式。 <li>"pause"：暂停训练，非taskabort方式。|
-|timeout|可选|暂停训练之后等待MindCluster做下一步通知的超时时间。|非负整数。|
+|stop_type|可选|停止训练的类型。|字符串，支持以下两种方式：<ul><li>"stop"：暂停训练，taskabort方式。 <li>"pause"：暂停训练，非taskabort方式。</ul>|
+|timeout|可选|暂停训练之后等待MindCluster做下一步通知的超时时间。|非负整数，单位：s。|
 
 
-**返回值>**
+**返回值**
 
 -   0：调用成功
 -   1：调用失败
@@ -4127,7 +4117,7 @@ mindio_ttp.controller_ttp.tft_notify_controller_on_global_rank(fault_ranks: dict
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |fault_ranks|必选|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号<li>errorType为故障类型：<ul><li>0：UCE故障。 <li>1：非UCE故障。</ul></ul>|
-|time|可选|根据环境变量设置，决定与MindCluster的修复策略交互的最大时间。|int，取值范围：[1, 3600]，默认值：1。|
+|time|可选|根据环境变量设置，决定与MindCluster的修复策略交互的最大时间。|int，取值范围：[1, 3600]，默认值：1，单位：s。|
 
 
 **返回值**
@@ -4143,8 +4133,8 @@ mindio_ttp.controller_ttp.tft_notify_controller_on_global_rank(fault_ranks: dict
 
 提供给MindCluster调用，通知MindIO TFT要执行的修复策略。
 
->[!NOTE]说明
->该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
+> [!NOTE]说明
+> 该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
 
 **接口格式**
 
@@ -4156,7 +4146,7 @@ mindio_ttp.controller_ttp.tft_notify_controller_prepare_action(action: str, faul
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|action|必选|通知MindIO TFT亚健康迁移热切动作。|str，支持的修复策略如下：<li>hot switch <li>stop switch|
+|action|必选|通知MindIO TFT亚健康迁移热切动作。|str，支持的修复策略如下：<ul><li>hot switch <li>stop switch</ul>|
 |fault_ranks|可选|发生故障的卡信息。|dict，key为rank号，取值范围0\~10W，value为errtype，取值范围0\~2。|
 
 
@@ -4173,8 +4163,8 @@ mindio_ttp.controller_ttp.tft_notify_controller_prepare_action(action: str, faul
 
 提供给MindCluster调用，通知MindIO TFT要执行的修复策略。
 
->[!NOTE]说明
->该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
+> [!NOTE]说明
+> 该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
 
 **接口格式**
 
@@ -4186,7 +4176,7 @@ mindio_ttp.controller_ttp.tft_notify_controller_change_strategy(strategy: str, p
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|strategy|必选|通知MindIO TFT修复策略。|str，支持的修复策略如下：<li>retry <li>downgrade <li>upgrade <li>recover <li>dump <li>continue <li>migratione <li>xit|
+|strategy|必选|通知MindIO TFT修复策略。|str，支持的修复策略如下：<ul><li>retry <li>downgrade <li>upgrade <li>recover <li>dump <li>continue <li>migration <li>exit</ul>|
 |params|降级训练必选其他可选|降级训练参数。|str，默认值：""。|
 
 
@@ -4213,39 +4203,39 @@ mindio_ttp.controller_ttp.tft_register_mindx_callback(action: str, func: Callabl
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|action|必选|回调函数要注册的动作名。|str，支持的动作名如下：<li>report_fault_ranks <li>report_stop_complete <li>report_strategiesreport_result|
+|action|必选|回调函数要注册的动作名。|str，支持的动作名如下：<ul><li>report_fault_ranks <li>report_stop_complete <li>report_strategies <li>report_result</ul>|
 |func|必选|要注册的函数。|回调函数，不为空，回调函数入参详情请参见[表1](#table_tft_14) ~ [表4](#table_tft_17)。|
 
 
-**表 1<a name="table_tft_14"></a>**  action为report\_fault\_ranks时回调函数参数
+**表 1<a id="table_tft_14"></a>**  action为report\_fault\_ranks时回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |error_rank_dict|-|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号。</li> <li>errorType为故障类型：</li> <ul><li>0：UCE故障。</li> <li>1：非UCE故障。</li></ul></ul>|
 
 
-**表 2<a name="table_tft_15"></a>**  action为report\_stop\_complete时回调函数参数
+**表 2<a id="table_tft_15"></a>**  action为report\_stop\_complete时回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|code|-|action执行结果。|<li>0：成功。 <li>400：普通错误。 <li>401：MindCluster task id不存在。 <li>402：模型错误。 <li>403：顺序错误。 <li>404：Processor未全部准备就绪。|
+|code|-|action执行结果。|<ul><li>0：成功。 <li>400：普通错误。 <li>401：MindCluster task id不存在。 <li>402：模型错误。 <li>403：顺序错误。 <li>404：Processor未全部准备就绪。</ul>|
 |msg|-|训练是否停止消息。|str。|
 |error_rank_dict|-|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号。</li> <li>errorType为故障类型：</li> <ul><li>0：UCE故障。</li> <li>1：非UCE故障。</li></ul></ul>|
 
 
-**表 3<a name="table_tft_16"></a>**  action为report\_strategies时回调函数参数
+**表 3<a id="table_tft_16"></a>**  action为report\_strategies时回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |error_rank_dict|-|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号。</li> <li>errorType为故障类型：</li> <ul><li>0：UCE故障。</li> <li>1：非UCE故障。</li></ul></ul>|
-|strategy_list|-|基于当前可用的副本信息，MindIO TFT支持的修复策略列表。|list，支持的修复策略可选值如下（str）：<li>retry：执行UCE修复。 <li>recover：执行ARF修复。 <li>dump：执行临终遗言。 <li>exit：退出。|
+|strategy_list|-|基于当前可用的副本信息，MindIO TFT支持的修复策略列表。|list，支持的修复策略可选值如下（str）：<ul><li>retry：执行UCE修复。 <li>recover：执行ARF修复。 <li>dump：执行临终遗言。 <li>exit：退出。</ul>|
 
 
-**表 4<a name="table_tft_17"></a>**  action为report\_result时回调函数参数
+**表 4<a id="table_tft_17"></a>**  action为report\_result时回调函数参数
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|code|-|action的执行结果。|<li>0：修复成功。 <li>405：retry修复失败，支持做recover、dump、exit修复策略。 <li>406：修复失败，支持做dump或exit修复策略。 <li>499：修复失败，仅支持exit策略。|
+|code|-|action的执行结果。|<ul><li>0：修复成功。 <li>405：retry修复失败，支持做recover、dump、exit修复策略。 <li>406：修复失败，支持做dump或exit修复策略。 <li>499：修复失败，仅支持exit策略。</ul>|
 |msg|-|修复成功或失败的消息。|str|
 |error_rank_dict|-|发生故障的卡信息。|<int key, int errorType>字典：<ul><li>key为故障卡的rank号。</li> <li>errorType为故障类型：</li> <ul><li>0：UCE故障。</li> <li>1：非UCE故障。</li></ul></ul>|
 |curr_strategy|-|本次修复策略。|str，支持的修复策略取值范围为表3中的strategy_list。|
@@ -4286,8 +4276,8 @@ bool值，是否开启高可用。
 
 提供给MindSpore调用，根据L2 Cache触发的UCE故障时间和优化器更新前后时间，判断优化器数据在时间维度是否有被污染可能，进而返回是否能修复的判断结果。
 
->[!NOTE]说明
->该接口仅从时间区间交集上判断优化器数据是否有被污染可能，无法根据内存地址判断。
+> [!NOTE]说明
+> 该接口仅从时间区间交集上判断优化器数据是否有被污染可能，无法根据内存地址判断。
 
 **接口格式**
 
@@ -4401,7 +4391,7 @@ mindio_ttp.framework_ttp.OptimizerType
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|OptimizerType|必选|区分优化器类型：<li>ATTENTION：注意力机制类型。 <li>MOE：MOE场景。|<li>ATTENTION：0 <li>MOE：1|
+|OptimizerType|必选|区分优化器类型：<ul><li>ATTENTION：注意力机制类型。 <li>MOE：MOE场景。</ul>|<ul><li>ATTENTION：0 <li>MOE：1</ul>|
 
 
 **返回值**
@@ -4426,7 +4416,7 @@ mindio_ttp.framework_ttp.Action
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|Action|必选|区分主线程上报异常后的动作类型，具体如下：<li>RETRY：修复成功后续训。 <li>EXIT：退出。|<li>RETRY：0 <li>EXIT：1|
+|Action|必选|区分主线程上报异常后的动作类型，具体如下：<ul><li>RETRY：修复成功后续训。 <li>EXIT：退出。</ul>|<ul><li>RETRY：0 <li>EXIT：1</ul>|
 
 
 **返回值**
@@ -4451,7 +4441,7 @@ mindio_ttp.framework_ttp.ReportState
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|ReportState|必选|区分上报的训练状态类型：<li>RS_NORMAL：正常状态。 <li>RS_UCE：UCE错误。 <li>RS_UCE_CORRUPTED：HBM MULTI BIT ECC故障。 <li>RS_HCCL_FAILED：HCCL重计算失败。 <li>RS_UNKNOWN：其他错误。 <li>RS_INIT_FINISH：在MindSpore框架中，ARF新启动的节点在训练进程完成初始化后抛出的异常。 <li>RS_PREREPAIR_FINISH：ARF新启动的节点抛出的异常。 <li>RS_STEP_FINISH：亚健康热切中step级暂停已经完成抛出的异常。|<li>RS_NORMAL.value：ttp_c2python_api.ReportState_RS_NORMAL。 <li>RS_UCE.value：ttp_c2python_api.ReportState_RS_UCE。 <li>RS_UCE_CORRUPTED：ttp_c2python_api.ReportState_RS_UCE_CORRUPTED。 <li>RS_HCCL_FAILED.value: ttp_c2python_api.ReportState_RS_HCCL_FAILED。 <li>RS_UNKNOWN.value：ttp_c2python_api.ReportState_RS_UNKNOWN。 <li>RS_INIT_FINISH：ttp_c2python_api.ReportState_RS_INIT_FINISH。 <li>RS_PREREPAIR_FINISH.value：ttp_c2python_api.ReportState_RS_PREREPAIR_FINISH。 <li>RS_STEP_FINISH：ttp_c2python_api.ReportState_RS_STEP_FINISH。|
+|ReportState|必选|区分上报的训练状态类型：<ul><li>RS_NORMAL：正常状态。 <li>RS_UCE：UCE错误。 <li>RS_UCE_CORRUPTED：片上内存 MULTI BIT ECC故障。 <li>RS_HCCL_FAILED：HCCL重计算失败。 <li>RS_UNKNOWN：其他错误。 <li>RS_INIT_FINISH：在MindSpore框架中，ARF新启动的节点在训练进程完成初始化后抛出的异常。 <li>RS_PREREPAIR_FINISH：ARF新启动的节点抛出的异常。 <li>RS_STEP_FINISH：亚健康热切中step级暂停已经完成抛出的异常。</ul>|<ul><li>RS_NORMAL.value：ttp_c2python_api.ReportState_RS_NORMAL。 <li>RS_UCE.value：ttp_c2python_api.ReportState_RS_UCE。 <li>RS_UCE_CORRUPTED：ttp_c2python_api.ReportState_RS_UCE_CORRUPTED。 <li>RS_HCCL_FAILED.value: ttp_c2python_api.ReportState_RS_HCCL_FAILED。 <li>RS_UNKNOWN.value：ttp_c2python_api.ReportState_RS_UNKNOWN。 <li>RS_INIT_FINISH：ttp_c2python_api.ReportState_RS_INIT_FINISH。 <li>RS_PREREPAIR_FINISH.value：ttp_c2python_api.ReportState_RS_PREREPAIR_FINISH。 <li>RS_STEP_FINISH：ttp_c2python_api.ReportState_RS_STEP_FINISH。</ul>|
 
 
 **返回值**
@@ -4476,7 +4466,7 @@ mindio_ttp.framework_ttp.RepairType
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|RepairType|必选|区分修复类型：<li>RT_SEND：备份卡发送数据。 <li>RT_UCE_HIGHLEVEL：故障卡需要优化器和模型重建。 <li>RT_UCE_LOWLEVEL：故障卡不需要优化器和模型重建。 <li>RT_ROLLBACK：回滚数据集。 <li>RT_RECV_REPAIR：ARF新拉起卡接收数据。 <li>RT_LOAD_CKPT：周期CheckPoint数据修复。 <li>RT_LOAD_REBUILD：重建模型优化器周期CheckPoint数据修复。|<li>RT_SEND.value：ttp_c2python_api.RepairType_RT_SEND。 <li>RT_UCE_HIGHLEVEL.value：ttp_c2python_api.RepairType_RT_UCE_HIGHLEVEL。 <li>RT_UCE_LOWLEVEL.value：ttp_c2python_api.RepairType_RT_UCE_LOWLEVEL。 <li>RT_ROLLBACK.value：ttp_c2python_api.RepairType_RT_ROLLBACK。 <li>RT_RECV_REPAIR.value：ttp_c2python_api.RepairType_RT_RECV_REPAIR。 <li>RT_LOAD_CKPT.value：ttp_c2python_api.RepairType_RT_LOAD_CKPT。 <li>RT_LOAD_REBUILD.value：ttp_c2python_api.RepairType_RT_LOAD_REBUILD。|
+|RepairType|必选|区分修复类型：<ul><li>RT_SEND：备份卡发送数据。 <li>RT_UCE_HIGHLEVEL：故障卡需要优化器和模型重建。 <li>RT_UCE_LOWLEVEL：故障卡不需要优化器和模型重建。 <li>RT_ROLLBACK：回滚数据集。 <li>RT_RECV_REPAIR：ARF新拉起卡接收数据。 <li>RT_LOAD_CKPT：周期Checkpoint数据修复。 <li>RT_LOAD_REBUILD：重建模型优化器周期Checkpoint数据修复。</ul>|<ul><li>RT_SEND.value：ttp_c2python_api.RepairType_RT_SEND。 <li>RT_UCE_HIGHLEVEL.value：ttp_c2python_api.RepairType_RT_UCE_HIGHLEVEL。 <li>RT_UCE_LOWLEVEL.value：ttp_c2python_api.RepairType_RT_UCE_LOWLEVEL。 <li>RT_ROLLBACK.value：ttp_c2python_api.RepairType_RT_ROLLBACK。 <li>RT_RECV_REPAIR.value：ttp_c2python_api.RepairType_RT_RECV_REPAIR。 <li>RT_LOAD_CKPT.value：ttp_c2python_api.RepairType_RT_LOAD_CKPT。 <li>RT_LOAD_REBUILD.value：ttp_c2python_api.RepairType_RT_LOAD_REBUILD。</ul>|
 
 
 **返回值**
@@ -4491,26 +4481,26 @@ mindio_ttp.framework_ttp.RepairType
 
 ### 环境变量
 
->[!NOTE]说明
->加粗显示的环境变量为常用环境变量。
+> [!NOTE]说明
+> 加粗显示的环境变量为常用环境变量。
 
 |参数名称|参数说明|取值范围|缺省值|
 |--|--|--|--|
-|**TTP_LOG_PATH**|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br>date_time=\$(date +%Y-%m-%d-%H_%M_%S) <br>export TTP_LOG_PATH=logs/\${date_time} <br>当使用共享存储时，建议按照节点配置日志路径：<br>export TTP_LOG_PATH=logs/\${nodeId}|文件夹路径。|logs|
-|**TTP_LOG_LEVEL**|MindIO TFT日志等级。<li>DEBUG：细节信息，仅当诊断问题时适用。 <li>INFO：确认程序按预期运行。 <li>WARNING：表明有已经或即将发生的意外。程序仍按预期进行。 <li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。|<li>DEBUG <li>INFO <li>WARNING <li>ERROR|INFO|
-|TTP_LOG_MODE|MindIO TFT日志模式。<li>ONLY_ONE：所有MindIO TFT进程写一个日志。 <li>PER_PROC：每个MindIO TFT进程写独立日志，日志文件路径为 {TTP_LOG_PATH}/ttp_log.log.{pid}。|<li>ONLY_ONE <li>PER_PROC(若非指定ONLY_ONE，则默认为PER_PROC)|PER_PROC|
-|TTP_LOG_STDOUT|MindIO TFT日志记录方式。<li>0：将MindIO TFT运行日志记录到对应的日志文件中。 <li>1：直接打印MindIO TFT运行日志，不在本地存储。|<li>0 <li>1|0|
+|**TTP_LOG_PATH**|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> *date_time=\$(date +%Y-%m-%d-%H_%M_%S)* <br> *export TTP_LOG_PATH=logs/\${date_time}* <br>当使用共享存储时，建议按照节点配置日志路径：<br> *export TTP_LOG_PATH=logs/\${nodeId}*|文件夹路径。|logs|
+|**TTP_LOG_LEVEL**|MindIO TFT日志等级。<ul><li>DEBUG：细节信息，仅当诊断问题时适用。 <li>INFO：确认程序按预期运行。 <li>WARNING：表明有已经或即将发生的意外。程序仍按预期进行。 <li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。</ul>|<ul><li>DEBUG <li>INFO <li>WARNING <li>ERROR|INFO</ul>|
+|TTP_LOG_MODE|MindIO TFT日志模式。<ul><li>ONLY_ONE：所有MindIO TFT进程写一个日志。 <li>PER_PROC：每个MindIO TFT进程写独立日志，日志文件路径为 {TTP_LOG_PATH}/ttp_log.log.{pid}。</ul>|<ul><li>ONLY_ONE <li>PER_PROC(若非指定ONLY_ONE，则默认为PER_PROC)</ul>|PER_PROC|
+|TTP_LOG_STDOUT|MindIO TFT日志记录方式。<ul><li>0：将MindIO TFT运行日志记录到对应的日志文件中。 <li>1：直接打印MindIO TFT运行日志，不在本地存储。</ul>|<ul><li>0 <li>1|0</ul>|
 |MASTER_ADDR|训练主节点IP地址或域名。|IPv4地址或域名。|-|
 |MASTER_PORT|训练主节点通信端口，端口可配。|[1024, 65535]|-|
 |TTP_RETRY_TIMES|Processor TCP（Transmission Control Protocol）建链尝试次数。|[1, 300]|10|
 |MINDIO_WAIT_MINDX_TIME|Controller等待MindCluster响应的最大时间，单位：s。|[1, 3600]|30|
 |TTP_ACCLINK_CHECK_PERIOD_HOURS|开启TLS认证后，MindIO TFT检查证书有效性的周期，单位：h。|[24, 720]|168|
-|TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS|开启TLS认证后，MindIO TFT检查证书过期日提前告警的时长，单位：天，需满足证书过期提前告警时长不小于巡检周期，保证及时发现证书过期风险并告警。|[7, 180]，且需满足TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS * 24 ≥ TTP_ACCLINK_CHECK_PERIOD_HOURS。|30|
-|TTP_NORMAL_ACTION_TIME_LIMIT|故障恢复流程中，执行rebuild/repair/rollback回调执行的超时时间，单位：s。|[30, 1800]|180|
-|MINDIO_FOR_MINDSPORE|表示是否启用MindSpore开关，传入True（不区分大小写）或1时，开启MindSpore开关，其他值关闭MindSpore开关。|<li>True（不区分大小写）或1：启用MindSpore。 <li>其他：关闭MindSpore。|False|
+|TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS|开启TLS认证后，MindIO TFT检查证书过期日提前告警的时长，单位：天。需满足证书过期提前告警时长不小于巡检周期，保证及时发现证书过期风险并告警。|[7, 180]，且需满足TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS * 24 ≥ TTP_ACCLINK_CHECK_PERIOD_HOURS。|30|
+|TTP_NORMAL_ACTION_TIME_LIMIT|故障恢复流程中，执行rebuild/repair/rollback回调函数的超时时间，单位：s。|[30, 1800]|180|
+|MINDIO_FOR_MINDSPORE|表示是否启用MindSpore开关，传入True（不区分大小写）或1时，开启MindSpore开关，其他值关闭MindSpore开关。|<ul><li>True（不区分大小写）或1：启用MindSpore。 <li>其他：关闭MindSpore。</ul>|False|
 |MINDX_TASK_ID|MindIO ARF特性使用，MindCluster任务ID，由ClusterD配置，无需用户干预。|字符串。|-|
-|TORCHELASTIC_USE_AGENT_STORE|PyTorch环境变量，控制创建TCP Store Server还是Client，MindIO TFT在临终CheckPoint保存且Torch Agent TCP Store Server连接失败场景下使用。|<li>True：创建Client。 <li>False：创建Server。|-|
-|TTP_STOP_CLEAN_BEFORE_DUMP|MindIO TFT特性使用，控制MindIO TTP在保存临终CheckPoint前是否做stop&clean操作。|<li>0：关闭临终前stop&clean操作。 <li>1：启用临终前stop&clean操作。|0|
+|TORCHELASTIC_USE_AGENT_STORE|PyTorch环境变量，控制创建TCP Store Server还是Client，MindIO TFT在临终Checkpoint保存且Torch Agent TCP Store Server连接失败场景下使用。|<ul><li>True：创建Client。 <li>False：创建Server。</ul>|-|
+|TTP_STOP_CLEAN_BEFORE_DUMP|MindIO TFT特性使用，控制MindIO TTP在保存临终Checkpoint前是否做stop&clean操作。|<ul><li>0：关闭临终前stop&clean操作。 <li>1：启用临终前stop&clean操作。</ul>|0|
 
 
 
@@ -4526,27 +4516,27 @@ chage [-m mindays] [-M maxdays] [-d lastday] [-I inactive] [-E expiredate] [-W w
 
 相关参数请参见[表1](#table_tft_18)。
 
-**表 1<a name="table_tft_18"></a>**  设置用户有效期
+**表 1<a id="table_tft_18"></a>**  设置用户有效期
 |参数|参数说明|
 |--|--|
-|-d--lastday|上一次更改的日期。|
-|-E--expiredate|用户到期的日期。超过该日期，此用户将不可用。|
-|-h--help|显示命令帮助信息。|
-|-i--iso8601|更改用户密码的过期日期并以YYYY-MM-DD格式显示。|
-|-I--inactive|停滞时期。过期指定天数后，设定密码为失效状态。|
-|-l--list|列出当前的设置。由非特权用户来确定口令或账户何时过期。|
-|-m--mindays|口令可更改的最小天数。设置为“0”表示任何时候都可以更改口令。|
-|-M--maxdays|口令保持有效的最大天数。设置为“-1”表示可删除这项口令的检测。设置为“99999”，表示无限期。|
-|-R--root|将命令执行的根目录设置为指定目录。|
-|-W--warndays|用户口令到期前，提前收到警告信息的天数。|
+|-d<br>--lastday|上一次更改的日期。|
+|-E<br>--expiredate|用户到期的日期。超过该日期，此用户将不可用。|
+|-h<br>--help|显示命令帮助信息。|
+|-i<br>--iso8601|更改用户密码的过期日期并以YYYY-MM-DD格式显示。|
+|-I<br>--inactive|停滞时期。过期指定天数后，设定密码为失效状态。|
+|-l<br>--list|列出当前的设置。由非特权用户来确定口令或账户何时过期。|
+|-m<br>--mindays|口令可更改的最小天数。设置为“0”表示任何时候都可以更改口令。|
+|-M<br>--maxdays|口令保持有效的最大天数。设置为“-1”表示可删除这项口令的检测。设置为“99999”，表示无限期。|
+|-R<br>--root|将命令执行的根目录设置为指定目录。|
+|-W<br>--warndays|用户口令到期前，提前收到警告信息的天数。|
 
 
->[!NOTE]说明 
->-   日期格式为YYYY-MM-DD，如chage -E 2017-12-01 *test* 表示用户 *test* 的口令在2017年12月1日过期。
->-   user必须填写，填写时请替换为具体用户，默认为root用户。
->-   账号口令应该定期更新，否则容易导致安全风险。
+> [!NOTE]说明 
+> - 日期格式为YYYY-MM-DD，如 **chage -E 2017-12-01 _test_** 表示用户 **_test_** 的口令在2017年12月1日过期。
+> - user必须填写，填写时请替换为具体用户，默认为root用户。
+> - 账号口令应该定期更新，否则容易导致安全风险。
 
-举例说明：修改用户_test_的有效期为90天。
+举例说明：修改用户 **_test_** 的有效期为90天。
 
 ```
 chage -M 90 test
@@ -5353,7 +5343,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 ## Elastic Agent安全加固<a name="ZH-CN_TOPIC_0000002511346397"></a>
 
 >[!NOTE] 说明 
->Elastic Agent组件即将日落。
+>Elastic Agent组件已经日落，相关资料将于8.3.0版本删除。
 
 Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 

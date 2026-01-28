@@ -114,7 +114,7 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
 -   **调度流程1**
 
     **图 1**  调度流程1<a name="fig63404531065"></a>  
-    ![](../figures/调度流程1.png "调度流程1")
+    ![](../../figures/scheduling/调度流程1.png "调度流程1")
 
     默认情况下，Volcano启动YAML中self-maintain-available-card参数的值为true。昇腾AI处理器的调度流程如下所示：
 
@@ -129,7 +129,7 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
 -   **调度流程2**
 
     **图 2**  调度流程2<a name="fig39301952134114"></a>  
-    ![](../figures/调度流程2.png "调度流程2")
+    ![](../../figures/scheduling/调度流程2.png "调度流程2")
 
     如果Volcano启动YAML中的self-maintain-available-card参数的值配置为false，昇腾AI处理器的调度流程如下所示：
 
@@ -151,12 +151,12 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
     >-   该字段“huawei.com/资源名”正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。
 
     **图 3**  节点NPU资源信息<a name="fig83207421331"></a>  
-    ![](../figures/节点NPU资源信息.png "节点NPU资源信息")
+    ![](../../figures/scheduling/节点NPU资源信息.png "节点NPU资源信息")
 
 2.  Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。（如果Volcano配置开关self-maintain-available-card关闭，Volcano会以“huawei.com/资源名”为key，读取“DeviceInfo“字段信息作为可用昇腾AI处理器的依据。）根据亲和性调度策略，判断出任务需要的符合亲和性规则的昇腾AI处理器后（即分配给任务的昇腾AI处理器）。Volcano会将分配芯片信息写入任务Pod的“Annotations“，如[图4](#fig29119551778)标出的第一个部分所示；第二个需要写入的字段为“predicate-time“，表示为任务分配资源的当前时间，不需要向可读时间格式做转换，可比较大小即可。kubelet监测到有Pod调度到自己所在节点，调用Device-plugin的Allocate函数挂载NPU设备。
 
     **图 4**  分配给Pod的NPU信息<a name="fig29119551778"></a>  
-    ![](../figures/分配给Pod的NPU信息.png "分配给Pod的NPU信息")
+    ![](../../figures/scheduling/分配给Pod的NPU信息.png "分配给Pod的NPU信息")
 
 3.  Ascend Device Plugin在收到Allocate请求时（以2卡任务为例），因为Allocate输入的参数是kubelet随机分配的，如[图4](#fig29119551778)中的“huawei.com/kltDev“字段所示，可能是不符合亲和性规则的昇腾AI处理器ID，例如Ascend910-7和Ascend910-0。
 
@@ -214,7 +214,7 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
 **图 1**  整卡调度和静态vNPU调度使用流程<a name="fig107864120214"></a>  
-![](../figures/整卡调度和静态vNPU调度使用流程.png "整卡调度和静态vNPU调度使用流程")
+![](../../figures/scheduling/整卡调度和静态vNPU调度使用流程.png "整卡调度和静态vNPU调度使用流程")
 
 1.  脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
 2.  在准备任务YAML时，下发的任务YAML需要根据具体的NPU型号，选择不同的YAML进行修改适配。选择YAML时可以参考[准备任务YAML](#准备任务yaml)，根据实际情况选择合适的YAML。
@@ -229,7 +229,7 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
 acjob任务原理图如[图1](#fig5188536014)所示。
 
 **图 1**  acjob任务调度原理图<a name="fig5188536014"></a>  
-![](../figures/acjob任务调度原理图.png "acjob任务调度原理图")
+![](../../figures/scheduling/acjob任务调度原理图.png "acjob任务调度原理图")
 
 各步骤说明如下：
 
@@ -257,7 +257,7 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 **图 2**  vcjob任务调度原理图<a name="fig8717151315416"></a>  
-![](../figures/vcjob任务调度原理图.png "vcjob任务调度原理图")
+![](../../figures/scheduling/vcjob任务调度原理图.png "vcjob任务调度原理图")
 
 各步骤说明如下：
 
@@ -285,7 +285,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 deploy任务原理图如[图3](#fig06571541566)所示。
 
 **图 3**  deploy任务调度原理图<a name="fig06571541566"></a>  
-![](../figures/deploy任务调度原理图.png "deploy任务调度原理图")
+![](../../figures/scheduling/deploy任务调度原理图.png "deploy任务调度原理图")
 
 各步骤说明如下：
 
@@ -340,6 +340,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     >[!NOTE] 说明 
     >-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\>训练前准备”章节。
     >-   下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
+    >-   以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。   
 
 **TensorFlow<a name="zh-cn_topic_0000001558834814_section146363219252"></a>**
 
@@ -521,6 +522,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 >[!NOTE] 说明 
 >-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\>训练前准备”章节。
 >-   下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
+>-   以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。
 
 **TensorFlow<a name="zh-cn_topic_0000001558834798_section146363219252"></a>**
 
@@ -3499,7 +3501,7 @@ kubectl delete -f XXX.yaml
 通过命令行使用Volcano和其他调度器的使用流程一致，主要区别在使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器-1)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano-1)进行操作。
 
 **图 1**  使用流程<a name="fig242524985412"></a>  
-![](../figures/使用流程.png "使用流程")
+![](../../figures/scheduling/使用流程.png "使用流程")
 
 
 ### 实现原理<a name="ZH-CN_TOPIC_0000002479227174"></a>
@@ -3511,7 +3513,7 @@ kubectl delete -f XXX.yaml
 acjob任务原理图如[图1](实现原理-3.md#fig5188536014)所示。
 
 **图 1**  acjob任务调度原理图<a name="fig36890512379"></a>  
-![](../figures/acjob任务调度原理图-0.png "acjob任务调度原理图-0")
+![](../../figures/scheduling/acjob任务调度原理图-0.png "acjob任务调度原理图-0")
 
 各步骤说明如下：
 
@@ -3539,7 +3541,7 @@ acjob任务原理图如[图1](实现原理-3.md#fig5188536014)所示。
 vcjob任务的原理图如[图2](#fig8231124765)所示。
 
 **图 2**  vcjob任务调度原理图<a name="fig8231124765"></a>  
-![](../figures/vcjob任务调度原理图-1.png "vcjob任务调度原理图-1")
+![](../../figures/scheduling/vcjob任务调度原理图-1.png "vcjob任务调度原理图-1")
 
 各步骤说明如下：
 
@@ -3562,7 +3564,7 @@ vcjob任务的原理图如[图2](#fig8231124765)所示。
 deploy任务原理图如[图3](#fig178781320593)所示。
 
 **图 3**  deploy任务调度原理图<a name="fig178781320593"></a>  
-![](../figures/deploy任务调度原理图-2.png "deploy任务调度原理图-2")
+![](../../figures/scheduling/deploy任务调度原理图-2.png "deploy任务调度原理图-2")
 
 各步骤说明如下：
 
@@ -4757,7 +4759,7 @@ Atlas 推理系列产品
 通过命令行使用动态vNPU调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
 **图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>  
-![](../figures/使用流程-3.png "使用流程-3")
+![](../../figures/scheduling/使用流程-3.png "使用流程-3")
 
 算力动态虚拟化实例涉及到相关集群调度组件的参数配置，请参见[动态虚拟化](./virtual_instance.md#动态虚拟化)章节完成修改。
 
@@ -4771,7 +4773,7 @@ Atlas 推理系列产品
 vcjob任务原理图如[图1](#fig1918122131712)所示。
 
 **图 1**  vcjob任务调度原理图<a name="fig1918122131712"></a>  
-![](../figures/vcjob任务调度原理图-4.png "vcjob任务调度原理图-4")
+![](../../figures/scheduling/vcjob任务调度原理图-4.png "vcjob任务调度原理图-4")
 
 各步骤说明如下：
 
@@ -4791,7 +4793,7 @@ vcjob任务原理图如[图1](#fig1918122131712)所示。
 deploy任务原理图如[图2](#fig349112913199)所示。
 
 **图 2**  deploy任务调度原理图<a name="fig349112913199"></a>  
-![](../figures/deploy任务调度原理图-5.png "deploy任务调度原理图-5")
+![](../../figures/scheduling/deploy任务调度原理图-5.png "deploy任务调度原理图-5")
 
 各步骤说明如下：
 
@@ -5280,7 +5282,7 @@ job "resnetinfer1-1" deleted
 ### 使用前必读<a name="ZH-CN_TOPIC_0000002479227148"></a>
 
 >[!NOTE] 说明 
->本章节描述的是基于Resilience Controller组件的弹性训练，该组件即将日落。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
+>本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
 
 当出现硬件故障，且无备用设备时，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
 
@@ -5290,7 +5292,7 @@ job "resnetinfer1-1" deleted
 
     NFS需要用户根据使用情况进行目录隔离，NFS的随机读写性能必须能够在15分钟内保存完整的CKPT文件，建议用户使用专业的存储服务器，NFS具体性能要求给出如下参考。
 
-    ![](../figures/6-2-2-1-折线图.png)
+    ![](../../figures/scheduling/6-2-2-1-折线图.png)
 
 -   在命令行场景下使用弹性训练特性，需要确保已经安装如下组件。
     -   Ascend Device Plugin
@@ -5373,7 +5375,7 @@ job "resnetinfer1-1" deleted
 通过命令行使用弹性训练特性流程可以参见[图1](#fig1445992135513)。
 
 **图 1**  使用流程<a name="fig1445992135513"></a>  
-![](../figures/使用流程-6.png "使用流程-6")
+![](../../figures/scheduling/使用流程-6.png "使用流程-6")
 
 
 ### 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002511427031"></a>
@@ -6948,7 +6950,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 -   推理卡故障重调度特性默认使用整卡调度；不支持静态vNPU调度；支持Atlas 推理系列产品使用动态vNPU调度。
 -   推理卡故障重调度支持下发单副本数或者多副本数的单机任务，每个副本独立工作；只支持推理服务器（插Atlas 300I Duo 推理卡）和Atlas 800I A2 推理服务器、A200I A2 Box 异构组件部署acjob类型的分布式任务。
 
--   推理卡故障重调度支持vcjob或Deployment类型任务，且需在该类任务中增加故障重调度的开关的标签“fault-scheduling”，并将其设置为“grace”，不支持“fault-scheduling: force”。
+-   推理卡故障重调度支持vcjob或Deployment类型任务，且需在该类任务中增加故障重调度的开关的标签“fault-scheduling”，并将其设置为“grace”或者“force”。
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
@@ -6965,7 +6967,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 通过命令行使用推理卡故障重调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
 **图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>  
-![](../figures/使用流程-7.png "使用流程-7")
+![](../../figures/scheduling/使用流程-7.png "使用流程-7")
 
 
 ### 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002511427039"></a>

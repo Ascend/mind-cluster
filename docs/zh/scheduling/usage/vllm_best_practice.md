@@ -61,7 +61,7 @@ MindCluster集群调度组件支持用户通过以下方式进行vLLM推理服�
 通过命令行使用MindCluster集群调度组件部署基于AIBrix的vLLM推理任务时，使用流程如[图1](#fig38991911205815)所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>  
-![](../figures/使用流程-16.png "使用流程-16")
+![](../../figures/scheduling/使用流程-16.png "使用流程-16")
 
 
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002516412959"></a>
@@ -367,8 +367,8 @@ spec:
     >scripts文件夹中默认的[代理脚本](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/scripts/load_balance_proxy_layerwise_server_example.py)会开启故障隔离功能，若无需该功能，请使用[原生代理脚本](https://github.com/vllm-project/vllm-ascend/blob/main/examples/disaggregated_prefill_v1/load_balance_proxy_layerwise_server_example.py)替换scripts文件夹中的代理脚本。
 
     ```
-    cp example/scripts/*  <tartget_dir> 
-    scp example/scripts/* <user>@<IP>:<tartget_dir>
+    cp example/scripts/*  <target_dir> 
+    scp example/scripts/* <user>@<IP>:<target_dir>
     ```
 
 6.  （可选）编辑YAML模板，配置模型、脚本挂载路径。用户可以根据模型和脚本实际路径配置YAML模板。
@@ -589,7 +589,7 @@ vLLM Ascend提供的[原生代理脚本](https://github.com/vllm-project/vllm-as
 在代理脚本中，增加了实例对象的失败次数和故障检查。具体流程如[图1](#fig158696279554)所示。
 
 **图 1**  故障隔离流程图<a name="fig158696279554"></a>  
-![](../figures/故障隔离流程图.png "故障隔离流程图")
+![](../../figures/scheduling/故障隔离流程图.png "故障隔离流程图")
 
 1.  从堆中选取实例。
 2.  路由请求到该实例上。
@@ -607,7 +607,7 @@ vLLM Ascend提供的[原生代理脚本](https://github.com/vllm-project/vllm-as
 在代理脚本中，默认开启健康探测协程，会对所有实例对象进行探测，根据探测结果进行后续处理，具体流程如[图2](#fig175216161511)所示。
 
 **图 2**  健康探测流程图<a name="fig175216161511"></a>  
-![](../figures/健康探测流程图.png "健康探测流程图")
+![](../../figures/scheduling/健康探测流程图.png "健康探测流程图")
 
 1.  健康探测功能会每间隔5s，对所有实例对象进行探测（调用/health接口）。
 2.  若请求失败则该实例失败次数加1。

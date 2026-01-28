@@ -584,7 +584,7 @@ Atlas 推理系列产品支持虚拟化实例组合如[图1](#zh-cn_topic_000000
 如果您需要了解典型模型在vNPU上推理的性能数据，您可以联系华为技术支持工程师获取信息。
 
 **图 1** Atlas 推理系列产品支持虚拟化实例组合<a name="zh-cn_topic_0000002038226813_fig36028506507"></a>  
-![](../figures/Atlas-推理系列产品支持虚拟化实例组合.png "Atlas-推理系列产品支持虚拟化实例组合")
+![](../../figures/scheduling/Atlas-推理系列产品支持虚拟化实例组合.png "Atlas-推理系列产品支持虚拟化实例组合")
 
 Atlas 训练系列产品的虚拟化实例组合不一一列举，虚拟化机制为在一个NPU上创建的虚拟实例包含的AICore数量达到了NPU实际AICore数量后就不能够继续切分，如昇腾AI处理器为30个AICore时，则不能切分两个vir16，只能切分一个vir16，剩余的14个AICore则可以按照vir08+vir04+vir02切分，而昇腾AI处理器为32个AICore时，则支持两个vir16。昇腾AI处理器为30个AICore时，最大支持切分15个虚拟化实例，昇腾AI处理器为32个AICore时，最大支持切分16个虚拟化实例。
 
@@ -604,7 +604,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 -   Atlas 推理系列产品最多支持划分4个vGroup，vGroup至少包含2个AICore，如果用户使用模板vir01（无论是1个vir01还是2个vir01），NPU分配的vGroup同样包含2个AICore，vNPU通过分时复用的方式使用vGroup资源，比如通过2个vir01模板切分的2个vNPU，那么每个vNPU会通过串行的方式轮流使用vGroup的资源（如vNPU1使用1毫秒，然后vNPU2使用1毫秒）。
 
 **图 2**  vGroup和虚拟化实例模板组合的对应关系<a name="zh-cn_topic_0000002038226813_fig1059652844919"></a>  
-![](../figures/vGroup和虚拟化实例模板组合的对应关系.png "vGroup和虚拟化实例模板组合的对应关系")
+![](../../figures/scheduling/vGroup和虚拟化实例模板组合的对应关系.png "vGroup和虚拟化实例模板组合的对应关系")
 
 
 ## 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
@@ -760,7 +760,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
     **npu-smi info -t info-vnpu -i** _0_ **-c** _0_
 
-    ![](../figures/1.png)
+    ![](../../figures/scheduling/1.png)
 
     >[!NOTE] 说明 
     >Atlas 推理系列产品支持返回AICPU，Vgroup ID信息，Atlas 训练系列产品不支持返回AICPU，Vgroup ID信息。

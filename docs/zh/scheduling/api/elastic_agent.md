@@ -1,7 +1,8 @@
 # Elastic-Agent（断点续训相关接口）<a name="ZH-CN_TOPIC_0000002479386784"></a>
 
 >[!NOTE] 说明 
->Elastic Agent组件即将日落，内部接口严禁调用。
+>-   Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。
+>-   内部接口严禁调用。
 
 ## mindx\_elastic.\_\_version\_\_<a name="ZH-CN_TOPIC_0000002511346763"></a>
 

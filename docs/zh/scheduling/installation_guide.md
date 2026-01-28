@@ -2,7 +2,10 @@
 
 在安装组件前，用户需详细阅读[简介](./introduction.md#概述)章节，了解集群调度各组件功能详细的说明，并根据要使用的特性选择安装相应的组件。
 
-TaskD组件需部署在容器内，详细安装步骤请参见[制作镜像](./usage/resumable_training.md#制作镜像)。
+Elastic Agent和TaskD组件需部署在容器内，详细安装步骤请参见[制作镜像](./usage/resumable_training.md#制作镜像)。
+
+>[!NOTE] 说明 
+>Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年的8.2.RC1版本删除；Elastic Agent相关内容将于2026年的8.3.0版本删除。
 
 **使用约束<a name="section933252483715"></a>**
 
@@ -16,7 +19,7 @@ TaskD组件需部署在容器内，详细安装步骤请参见[制作镜像](./u
 安装部署集群调度组件时，可以参考[图1](#fig87391254145620)，将相应的集群调度组件或其他第三方软件安装到相应的节点上。大部分组件都使用容器化方式部署；Ascend Docker Runtime使用二进制方式部署；只有NPU Exporter组件既可以使用容器化方式部署，又可以使用二进制方式部署。
 
 **图 1**  组件安装部署<a name="fig87391254145620"></a>  
-![](figures/组件安装部署.png "组件安装部署")
+![](../figures/scheduling/组件安装部署.png "组件安装部署")
 
 >[!NOTE] 说明 
 >MindCluster提供Volcano组件，该组件在开源Volcano上集成了昇腾插件Ascend-volcano-plugin。
@@ -281,77 +284,14 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **表 1**  软件环境
 
 <a name="table20235172944010"></a>
-<table><thead align="left"><tr id="row822732904016"><th class="cellrowborder" valign="top" width="14.979999999999999%" id="mcps1.2.5.1.1"><p id="p5227112914409"><a name="p5227112914409"></a><a name="p5227112914409"></a>软件名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="32.12%" id="mcps1.2.5.1.2"><p id="p19227142919409"><a name="p19227142919409"></a><a name="p19227142919409"></a>支持的版本</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.05%" id="mcps1.2.5.1.3"><p id="p12227142974020"><a name="p12227142974020"></a><a name="p12227142974020"></a>安装位置</p>
-</th>
-<th class="cellrowborder" valign="top" width="44.85%" id="mcps1.2.5.1.4"><p id="p16227429174017"><a name="p16227429174017"></a><a name="p16227429174017"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row18228172920407"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p822762919407"><a name="p822762919407"></a><a name="p822762919407"></a>（可选）<span id="ph12227129164015"><a name="ph12227129164015"></a><a name="ph12227129164015"></a>Kubernetes</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p1122720295403"><a name="p1122720295403"></a><a name="p1122720295403"></a>1.17.x~1.34.x（推荐使用1.19.x及以上版本）</p>
-<div class="note" id="note104571559172111"><a name="note104571559172111"></a><a name="note104571559172111"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul824235442110"></a><a name="ul824235442110"></a><ul id="ul824235442110"><li>建议选择最新的bugfix版本。</li><li>如需安装<span id="ph145107115221"><a name="ph145107115221"></a><a name="ph145107115221"></a>Volcano</span>组件，请安装1.19.x及以上版本的<span id="ph20510131202219"><a name="ph20510131202219"></a><a name="ph20510131202219"></a>Kubernetes</span>，具体<span id="ph1245261111518"><a name="ph1245261111518"></a><a name="ph1245261111518"></a>Kubernetes</span>版本请参见<a href="https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility" target="_blank" rel="noopener noreferrer">Volcano官网中对应的Kubernetes版本</a>。</li></ul>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p18227162912406"><a name="p18227162912406"></a><a name="p18227162912406"></a>所有节点</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p79221649192111"><a name="p79221649192111"></a><a name="p79221649192111"></a>了解K8s的使用请参见<a href="https://kubernetes.io/zh-cn/docs/" target="_blank" rel="noopener noreferrer">Kubernetes文档</a>。</p>
-</td>
-</tr>
-<tr id="row7228202912406"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p22281129164014"><a name="p22281129164014"></a><a name="p22281129164014"></a>（可选）<span id="ph722892914403"><a name="ph722892914403"></a><a name="ph722892914403"></a>Docker</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p1322813291402"><a name="p1322813291402"></a><a name="p1322813291402"></a>18.09.x~28.5.1</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p1822872974019"><a name="p1822872974019"></a><a name="p1822872974019"></a>所有节点</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p1228182924012"><a name="p1228182924012"></a><a name="p1228182924012"></a>可从<a href="https://docs.docker.com/engine/install/" target="_blank" rel="noopener noreferrer">Docker社区或官网</a>获取。使用的<span id="ph1022812291407"><a name="ph1022812291407"></a><a name="ph1022812291407"></a>Docker</span>版本需要与<span id="ph152281229164016"><a name="ph152281229164016"></a><a name="ph152281229164016"></a>Kubernetes</span>配套，配套关系可参考<span id="ph15228172914015"><a name="ph15228172914015"></a><a name="ph15228172914015"></a>Kubernetes</span>的<a href="https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG" target="_blank" rel="noopener noreferrer">说明</a>，或者从<span id="ph13228202994014"><a name="ph13228202994014"></a><a name="ph13228202994014"></a>Kubernetes</span>社区获取。建议选择最新的bugfix版本。</p>
-</td>
-</tr>
-<tr id="row15228122924017"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p17228152954010"><a name="p17228152954010"></a><a name="p17228152954010"></a>（可选）<span id="ph522814291405"><a name="ph522814291405"></a><a name="ph522814291405"></a>Containerd</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p142281529154014"><a name="p142281529154014"></a><a name="p142281529154014"></a>1.4.x~2.1.4（推荐使用1.6.x版本）</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p72281029114013"><a name="p72281029114013"></a><a name="p72281029114013"></a>所有节点</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p172281029124017"><a name="p172281029124017"></a><a name="p172281029124017"></a>可从<span id="ph1222872964016"><a name="ph1222872964016"></a><a name="ph1222872964016"></a>Containerd</span>的<a href="https://containerd.io/downloads/" target="_blank" rel="noopener noreferrer">官网</a>或者<a href="https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd" target="_blank" rel="noopener noreferrer">社区</a>获取，建议选择最新的bugfix版本。请关注配套<span id="ph7228829204012"><a name="ph7228829204012"></a><a name="ph7228829204012"></a>Kubernetes</span>使用的<a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#cri-versions" target="_blank" rel="noopener noreferrer">CRI接口版本</a>。</p>
-</td>
-</tr>
-<tr id="row17234132914018"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p13234132914016"><a name="p13234132914016"></a><a name="p13234132914016"></a><span id="ph523412954010"><a name="ph523412954010"></a><a name="ph523412954010"></a>昇腾AI处理器</span>驱动和固件</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p11234102914404"><a name="p11234102914404"></a><a name="p11234102914404"></a>请参见<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software" target="_blank" rel="noopener noreferrer">版本配套表</a>（训练）或<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-inference-solution-pid-258915651/software" target="_blank" rel="noopener noreferrer">版本配套表</a>（推理），根据实际硬件设备型号选择与<span id="ph19255162231216"><a name="ph19255162231216"></a><a name="ph19255162231216"></a>MindCluster</span>配套的驱动、固件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p1923482974015"><a name="p1923482974015"></a><a name="p1923482974015"></a>计算节点</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p823418290408"><a name="p823418290408"></a><a name="p823418290408"></a>请参见各硬件产品中<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743" target="_blank" rel="noopener noreferrer">驱动和固件安装升级指南</a>获取对应的指导。</p>
-<div class="note" id="note1993172317415"><a name="note1993172317415"></a><a name="note1993172317415"></a><span class="notetitle"> 说明： </span><div class="notebody"><div class="p" id="p18934232419"><a name="p18934232419"></a><a name="p18934232419"></a>为保证<span id="ph7206429154119"><a name="ph7206429154119"></a><a name="ph7206429154119"></a>NPU Exporter</span>以二进制部署时可使用非root用户安装（如hwMindX），请在安装驱动时使用--install-for-all参数。示例如下。<pre class="screen" id="screen15239164112445"><a name="screen15239164112445"></a><a name="screen15239164112445"></a>./Ascend-hdk-&lt;chip_type&gt;-npu-driver_&lt;version&gt;_linux-&lt;arch&gt;.run --full --install-for-all</pre>
-</div>
-</div></div>
-</td>
-</tr>
-<tr id="row1235182944011"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p6234429104017"><a name="p6234429104017"></a><a name="p6234429104017"></a>（可选）CANN</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p17234152917401"><a name="p17234152917401"></a><a name="p17234152917401"></a>只安装集群调度组件的情况下可不安装CANN，用户可根据实际需要选择安装所需的CANN软件包，可参见版本配套表安装对应的软件包。</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p923412920401"><a name="p923412920401"></a><a name="p923412920401"></a>计算节点或者训练推理容器内</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p1223413293406"><a name="p1223413293406"></a><a name="p1223413293406"></a>在宿主机上安装CANN软件包，请参见<span id="ph615615306579"><a name="ph615615306579"></a><a name="ph615615306579"></a>《CANN 软件安装指南》</span>（商用版）或<span id="ph133631917478"><a name="ph133631917478"></a><a name="ph133631917478"></a>《CANN 软件安装指南》</span>（社区版）。</p>
-</td>
-</tr>
-<tr id="row1471918564116"><td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.1 "><p id="p1467271213819"><a name="p1467271213819"></a><a name="p1467271213819"></a>Python</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.12%" headers="mcps1.2.5.1.2 "><p id="p106721312880"><a name="p106721312880"></a><a name="p106721312880"></a>3.8~3.12</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.05%" headers="mcps1.2.5.1.3 "><p id="p116728121385"><a name="p116728121385"></a><a name="p116728121385"></a>训练或推理容器内</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.85%" headers="mcps1.2.5.1.4 "><p id="p3672121218811"><a name="p3672121218811"></a><a name="p3672121218811"></a>使用时Python版本请以具体AI框架为准。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|软件名称|支持的版本|安装位置|说明|
+|--|--|--|--|
+|（可选）Kubernetes|1.17.x~1.34.x（推荐使用1.19.x及以上版本）<ul><li>建议选择最新的bugfix版本。</li><li>如需安装Volcano组件，请安装1.19.x及以上版本的Kubernetes，具体Kubernetes版本请参见<a href="https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility">Volcano官网中对应的Kubernetes版本</a>。</li></ul>|所有节点|了解K8s的使用请参见<a href="https://kubernetes.io/zh-cn/docs/">Kubernetes文档</a>。|
+|（可选）Docker|18.09.x~28.5.1|所有节点|可从<a href="https://docs.docker.com/engine/install/">Docker社区或官网</a>获取。使用的Docker版本需要与Kubernetes配套，配套关系可参考Kubernetes的<a href="https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG">说明</a>，或者从Kubernetes社区获取。建议选择最新的bugfix版本。|
+|（可选）Containerd|1.4.x~2.1.4（推荐使用1.6.x版本）|所有节点|可从Containerd的<a href="https://containerd.io/downloads/">官网</a>或者<a href="https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd">社区</a>获取，建议选择最新的bugfix版本。请关注配套Kubernetes使用的<a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#cri-versions">CRI接口版本</a>。|
+|昇腾AI处理器驱动和固件|请参见<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software">版本配套表</a>（训练）或<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-inference-solution-pid-258915651/software">版本配套表</a>（推理），根据实际硬件设备型号选择与MindCluster配套的驱动、固件。|计算节点|请参见各硬件产品中<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743">驱动和固件安装升级指南</a>获取对应的指导。<p>为保证NPU Exporter以二进制部署时可使用非root用户安装（如hwMindX），请在安装驱动时使用--install-for-all参数。示例如下。</p><pre class="screen">./Ascend-hdk-&lt;chip_type&gt;-npu-driver_&lt;version&gt;_linux-&lt;arch&gt;.run --full --install-for-all</pre>|
+|（可选）CANN|只安装集群调度组件的情况下可不安装CANN，用户可根据实际需要选择安装所需的CANN软件包，可参见版本配套表安装对应的软件包。|计算节点或者训练推理容器内|在宿主机上安装CANN软件包，请参见《CANN 软件安装指南》（商用版）或《CANN 软件安装指南》（社区版）。|
+|Python|3.8~3.12|训练或推理容器内|使用时Python版本请以具体AI框架为准。|
 
 >[!NOTE] 说明 
 >-   请根据业务的实际使用场景，选择安装Docker或者Containerd。
@@ -368,7 +308,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **部署逻辑示意图<a name="section10677192773320"></a>**
 
 **图 1**  部署逻辑示意图<a name="zh-cn_topic_0000001382921066_fig1081627298"></a>  
-![](figures/部署逻辑示意图-3.png "部署逻辑示意图")
+![](../figures/scheduling/部署逻辑示意图-3.png "部署逻辑示意图")
 
 数据中心集群中的节点类型一般分为以下三种：
 
@@ -393,65 +333,13 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **表 1**  磁盘空间规划
 
 <a name="table147711423499"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0272789306_row177622017366"><th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0272789306_p14771420183614"><a name="zh-cn_topic_0272789306_p14771420183614"></a><a name="zh-cn_topic_0272789306_p14771420183614"></a>分区</p>
-</th>
-<th class="cellrowborder" valign="top" width="55.04%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0272789306_p6771020133611"><a name="zh-cn_topic_0272789306_p6771020133611"></a><a name="zh-cn_topic_0272789306_p6771020133611"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.96%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0272789306_p18781201369"><a name="zh-cn_topic_0272789306_p18781201369"></a><a name="zh-cn_topic_0272789306_p18781201369"></a>大小</p>
-</th>
-<th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0272789306_p478182013617"><a name="zh-cn_topic_0272789306_p478182013617"></a><a name="zh-cn_topic_0272789306_p478182013617"></a>启动标志</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0272789306_row1978172017367"><td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0272789306_p0791220153619"><a name="zh-cn_topic_0272789306_p0791220153619"></a><a name="zh-cn_topic_0272789306_p0791220153619"></a>/boot</p>
-</td>
-<td class="cellrowborder" valign="top" width="55.04%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0272789306_p1921891133811"><a name="zh-cn_topic_0272789306_p1921891133811"></a><a name="zh-cn_topic_0272789306_p1921891133811"></a>启动分区。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.96%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0272789306_p17791520173610"><a name="zh-cn_topic_0272789306_p17791520173610"></a><a name="zh-cn_topic_0272789306_p17791520173610"></a>500 MB</p>
-</td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0272789306_p979172053614"><a name="zh-cn_topic_0272789306_p979172053614"></a><a name="zh-cn_topic_0272789306_p979172053614"></a>on</p>
-</td>
-</tr>
-<tr id="row3544205474112"><td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.1 "><p id="p1254415417411"><a name="p1254415417411"></a><a name="p1254415417411"></a>/var</p>
-</td>
-<td class="cellrowborder" valign="top" width="55.04%" headers="mcps1.2.5.1.2 "><p id="p454435412416"><a name="p454435412416"></a><a name="p454435412416"></a>软件运行所产生的数据存放分区，如日志、缓存等。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.96%" headers="mcps1.2.5.1.3 "><p id="p8544165413410"><a name="p8544165413410"></a><a name="p8544165413410"></a>&gt; 300 GB</p>
-</td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.4 "><p id="p65451254134118"><a name="p65451254134118"></a><a name="p65451254134118"></a>off</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0272789306_row87992033611"><td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0272789306_p17801020173617"><a name="zh-cn_topic_0272789306_p17801020173617"></a><a name="zh-cn_topic_0272789306_p17801020173617"></a>/var/lib/docker</p>
-</td>
-<td class="cellrowborder" valign="top" width="55.04%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0272789306_p1380120143616"><a name="zh-cn_topic_0272789306_p1380120143616"></a><a name="zh-cn_topic_0272789306_p1380120143616"></a><span id="ph2765406224"><a name="ph2765406224"></a><a name="ph2765406224"></a>Docker</span>镜像与容器存放分区。</p>
-<div class="note" id="zh-cn_topic_0272789306_note118315011421"><a name="zh-cn_topic_0272789306_note118315011421"></a><a name="zh-cn_topic_0272789306_note118315011421"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="zh-cn_topic_0272789306_p083130154219"><a name="zh-cn_topic_0272789306_p083130154219"></a><a name="zh-cn_topic_0272789306_p083130154219"></a><span id="ph14311243145710"><a name="ph14311243145710"></a><a name="ph14311243145710"></a>Docker</span>镜像和容器默认放在<span class="filepath" id="filepath587664483317"><a name="filepath587664483317"></a><a name="filepath587664483317"></a>“/var/lib/docker”</span>分区下，如果<span class="filepath" id="filepath376964853315"><a name="filepath376964853315"></a><a name="filepath376964853315"></a>“/var/lib/docker”</span>分区使用率大于85%，<span id="ph4808918506"><a name="ph4808918506"></a><a name="ph4808918506"></a>K8s</span>会启动资源驱逐机制，使用时请确保<span class="filepath" id="filepath195951755203315"><a name="filepath195951755203315"></a><a name="filepath195951755203315"></a>“/var/lib/docker”</span>分区使用率在85%以下。</p>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="14.96%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0272789306_p38018209364"><a name="zh-cn_topic_0272789306_p38018209364"></a><a name="zh-cn_topic_0272789306_p38018209364"></a>&gt; 300 GB</p>
-</td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0272789306_p280102013368"><a name="zh-cn_topic_0272789306_p280102013368"></a><a name="zh-cn_topic_0272789306_p280102013368"></a>off</p>
-</td>
-</tr>
-<tr id="row09176386812"><td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.1 "><p id="p1291718385819"><a name="p1291718385819"></a><a name="p1291718385819"></a>/etc/mindx-dl</p>
-</td>
-<td class="cellrowborder" valign="top" width="55.04%" headers="mcps1.2.5.1.2 "><p id="p391793815811"><a name="p391793815811"></a><a name="p391793815811"></a>该分区会存放导入的证书、KubeConfig等文件。建议配置100MB，可根据实际情况调整。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.96%" headers="mcps1.2.5.1.3 "><p id="p14917183818810"><a name="p14917183818810"></a><a name="p14917183818810"></a>100 MB</p>
-</td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.4 "><p id="p5917153820819"><a name="p5917153820819"></a><a name="p5917153820819"></a>off</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0272789306_row681122083616"><td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0272789306_p1281102013610"><a name="zh-cn_topic_0272789306_p1281102013610"></a><a name="zh-cn_topic_0272789306_p1281102013610"></a>/</p>
-</td>
-<td class="cellrowborder" valign="top" width="55.04%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0272789306_p1981112014361"><a name="zh-cn_topic_0272789306_p1981112014361"></a><a name="zh-cn_topic_0272789306_p1981112014361"></a>主分区。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.96%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0272789306_p876716274113"><a name="zh-cn_topic_0272789306_p876716274113"></a><a name="zh-cn_topic_0272789306_p876716274113"></a>&gt; 300 GB</p>
-</td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0272789306_p5821520133614"><a name="zh-cn_topic_0272789306_p5821520133614"></a><a name="zh-cn_topic_0272789306_p5821520133614"></a>off</p>
-</td>
-</tr>
-</tbody>
-</table>
+|分区|说明|大小|启动标志|
+|--|--|--|--|
+|/boot|启动分区。|500 MB|on|
+|/var|软件运行所产生的数据存放分区，如日志、缓存等。|> 300 GB|off|
+|/var/lib/docker|Docker镜像与容器存放分区。<p>Docker镜像和容器默认放在/var/lib/docker分区下，如果/var/lib/docker分区使用率大于85%，K8s会启动资源驱逐机制，使用时请确保/var/lib/docker分区使用率在85%以下。</p>|> 300 GB|off|
+|/etc/mindx-dl|该分区会存放导入的证书、KubeConfig等文件。建议配置100MB，可根据实际情况调整。|100 MB|off|
+|/|主分区。|> 300 GB|off|
 
 **硬件规格要求<a name="section8991121132815"></a>**
 
@@ -460,35 +348,12 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **表 2**  资源要求
 
 <a name="table292311420386"></a>
-<table><thead align="left"><tr id="row1923214113816"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p1592311419388"><a name="p1592311419388"></a><a name="p1592311419388"></a>名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p16923131493814"><a name="p16923131493814"></a><a name="p16923131493814"></a>要求</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row86891437173012"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p17105194112308"><a name="p17105194112308"></a><a name="p17105194112308"></a>CPU</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p310554117305"><a name="p310554117305"></a><a name="p310554117305"></a>管理节点CPU＞32核</p>
-</td>
-</tr>
-<tr id="row109239146384"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p187251120143817"><a name="p187251120143817"></a><a name="p187251120143817"></a>内存</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p197251220123815"><a name="p197251220123815"></a><a name="p197251220123815"></a>管理节点内存＞64GB</p>
-</td>
-</tr>
-<tr id="row892331410387"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p18725520153820"><a name="p18725520153820"></a><a name="p18725520153820"></a>磁盘空间</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p10725520143813"><a name="p10725520143813"></a><a name="p10725520143813"></a>＞1TB</p>
-<p id="p15725142063819"><a name="p15725142063819"></a><a name="p15725142063819"></a>磁盘空间规划请参见<a href="#table147711423499">表1</a></p>
-</td>
-</tr>
-<tr id="row092311144385"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p15725120123813"><a name="p15725120123813"></a><a name="p15725120123813"></a>网络</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul197251020103813"></a><a name="ul197251020103813"></a><ul id="ul197251020103813"><li>带外管理（BMC）：≥1Gbit/s</li><li>带内管理（SSH）：≥1Gbit/s</li><li>业务面：≥10Gbit/s</li><li>存储面：≥25Gbit/s</li><li>参数面：100Gbit/s或200Gbit/s</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|名称|要求|
+|--|--|
+|CPU|管理节点CPU＞32核|
+|内存|管理节点内存＞64GB|
+|磁盘空间|＞1TB磁盘空间规划请参见<a href="#table147711423499">表1</a>|
+|网络|<ul><li>带外管理（BMC）：≥1Gbit/s</li><li>带内管理（SSH）：≥1Gbit/s</li><li>业务面：≥10Gbit/s</li><li>存储面：≥25Gbit/s</li><li>参数面：100Gbit/s或200Gbit/s</li></ul>|
 
 **集群调度组件资源配置要求<a name="section168471642185618"></a>**
 
@@ -586,42 +451,12 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **表 4**  计算节点组件资源配置要求
 
 <a name="table8522160193317"></a>
-<table><thead align="left"><tr id="row452217019331"><th class="cellrowborder" valign="top" width="24.46%" id="mcps1.2.4.1.1"><p id="p6265201815213"><a name="p6265201815213"></a><a name="p6265201815213"></a>组件名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="35.199999999999996%" id="mcps1.2.4.1.2"><p id="p55221709331"><a name="p55221709331"></a><a name="p55221709331"></a>CPU（单位：核）</p>
-</th>
-<th class="cellrowborder" valign="top" width="40.339999999999996%" id="mcps1.2.4.1.3"><p id="p610316316343"><a name="p610316316343"></a><a name="p610316316343"></a>内存（单位：GB）</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row952250143314"><td class="cellrowborder" valign="top" width="24.46%" headers="mcps1.2.4.1.1 "><p id="p12522170143318"><a name="p12522170143318"></a><a name="p12522170143318"></a>Ascend Device Plugin</p>
-</td>
-<td class="cellrowborder" valign="top" width="35.199999999999996%" headers="mcps1.2.4.1.2 "><p id="p05221804338"><a name="p05221804338"></a><a name="p05221804338"></a>0.5</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.339999999999996%" headers="mcps1.2.4.1.3 "><p id="p71031939346"><a name="p71031939346"></a><a name="p71031939346"></a>0.5</p>
-</td>
-</tr>
-<tr id="row75221703339"><td class="cellrowborder" valign="top" width="24.46%" headers="mcps1.2.4.1.1 "><p id="p25226017337"><a name="p25226017337"></a><a name="p25226017337"></a><span id="ph62554222124"><a name="ph62554222124"></a><a name="ph62554222124"></a>NodeD</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="35.199999999999996%" headers="mcps1.2.4.1.2 "><p id="p4522100143319"><a name="p4522100143319"></a><a name="p4522100143319"></a>0.5</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.339999999999996%" headers="mcps1.2.4.1.3 "><p id="p310383123415"><a name="p310383123415"></a><a name="p310383123415"></a>0.3</p>
-</td>
-</tr>
-<tr id="row352250113312"><td class="cellrowborder" valign="top" width="24.46%" headers="mcps1.2.4.1.1 "><p id="p15227011331"><a name="p15227011331"></a><a name="p15227011331"></a><span id="ph122556224122"><a name="ph122556224122"></a><a name="ph122556224122"></a>NPU Exporter</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="35.199999999999996%" headers="mcps1.2.4.1.2 "><p id="p6522180103317"><a name="p6522180103317"></a><a name="p6522180103317"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.339999999999996%" headers="mcps1.2.4.1.3 "><p id="p810310316345"><a name="p810310316345"></a><a name="p810310316345"></a>1</p>
-</td>
-</tr>
-<tr id="row15918104017333"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p89183401339"><a name="p89183401339"></a><a name="p89183401339"></a>Ascend Docker Runtime</p>
-</td>
-<td class="cellrowborder" colspan="2" valign="top" headers="mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p6161458113414"><a name="p6161458113414"></a><a name="p6161458113414"></a>Docker的业务插件，无需单独的CPU和内存空间</p>
-</td>
-</tr>
-</tbody>
-</table>
+|组件名称|CPU（单位：核）|内存（单位：GB）|
+|--|--|--|
+|Ascend Device Plugin|0.5|0.5|
+|NodeD|0.5|0.3|
+|NPU Exporter|1|1|
+|Ascend Docker Runtime|Docker的业务插件，无需单独的CPU和内存空间|
 
 # 准备安装环境<a name="ZH-CN_TOPIC_0000002479386402"></a>
 
@@ -696,23 +531,10 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </tr>
 </thead>
 <tbody><tr id="row10954194381716"><td class="cellrowborder" rowspan="10" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p16445379177"><a name="p16445379177"></a><a name="p16445379177"></a><span id="ph54404369331"><a name="ph54404369331"></a><a name="ph54404369331"></a>Ascend Docker Runtime</span></p>
-<p id="p1261558151716"><a name="p1261558151716"></a><a name="p1261558151716"></a></p>
-<p id="p32495851712"><a name="p32495851712"></a><a name="p32495851712"></a></p>
-<p id="p223175851717"><a name="p223175851717"></a><a name="p223175851717"></a></p>
-<p id="p1522155811178"><a name="p1522155811178"></a><a name="p1522155811178"></a></p>
-<p id="p1420175820172"><a name="p1420175820172"></a><a name="p1420175820172"></a></p>
-<p id="p131815589171"><a name="p131815589171"></a><a name="p131815589171"></a></p>
-<p id="p8173589173"><a name="p8173589173"></a><a name="p8173589173"></a></p>
-<p id="p21618587175"><a name="p21618587175"></a><a name="p21618587175"></a></p>
-<p id="p18158589173"><a name="p18158589173"></a><a name="p18158589173"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p1264443711175"><a name="p1264443711175"></a><a name="p1264443711175"></a>ascend-docker-cli</p>
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p18270161061517"><a name="p18270161061517"></a><a name="p18270161061517"></a><span id="ph622819010286"><a name="ph622819010286"></a><a name="ph622819010286"></a>Ascend Docker Runtime</span>运行所必需的可执行程序，不建议用户直接运行。</p>
-<p id="p2025158121712"><a name="p2025158121712"></a><a name="p2025158121712"></a></p>
-<p id="p1223165812176"><a name="p1223165812176"></a><a name="p1223165812176"></a></p>
-<p id="p422155831715"><a name="p422155831715"></a><a name="p422155831715"></a></p>
-<p id="p62175813178"><a name="p62175813178"></a><a name="p62175813178"></a></p>
 </td>
 <td class="cellrowborder" rowspan="10" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p1620912301185"><a name="p1620912301185"></a><a name="p1620912301185"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
@@ -893,13 +715,6 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </td>
 </tr>
 <tr id="row15450141514209"><td class="cellrowborder" rowspan="7" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p10503112473412"><a name="p10503112473412"></a><a name="p10503112473412"></a><span id="ph5971324183414"><a name="ph5971324183414"></a><a name="ph5971324183414"></a>Volcano</span></p>
-<p id="p13853182620209"><a name="p13853182620209"></a><a name="p13853182620209"></a></p>
-<p id="p688272692010"><a name="p688272692010"></a><a name="p688272692010"></a></p>
-<p id="p18881926122018"><a name="p18881926122018"></a><a name="p18881926122018"></a></p>
-<p id="p148811268203"><a name="p148811268203"></a><a name="p148811268203"></a></p>
-<p id="p168806263201"><a name="p168806263201"></a><a name="p168806263201"></a></p>
-<p id="p1387912612010"><a name="p1387912612010"></a><a name="p1387912612010"></a></p>
-<p id="p10878102632018"><a name="p10878102632018"></a><a name="p10878102632018"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p178531826142015"><a name="p178531826142015"></a><a name="p178531826142015"></a>volcano-npu_<em id="i7853172682017"><a name="i7853172682017"></a><a name="i7853172682017"></a>{version}</em>_linux-<em id="i285417261206"><a name="i285417261206"></a><a name="i285417261206"></a>{arch}.</em>so</p>
 </td>
@@ -975,7 +790,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </tr>
 <tr id="row687220595818"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p088099175818"><a name="p088099175818"></a><a name="p088099175818"></a>noded-dpc-v<em id="i15881291587"><a name="i15881291587"></a><a name="i15881291587"></a>{version}</em>.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用<a href="./usage/resumable_training.md#节点故障">dpc故障检测功能</a>，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用<a href="zh-cn_topic_0000002479386528.md">dpc故障检测功能</a>，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
 </td>
 </tr>
 <tr id="row33201227121219"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p832011273124"><a name="p832011273124"></a><a name="p832011273124"></a>NodeDConfiguration.json</p>
@@ -999,18 +814,12 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </td>
 </tr>
 <tr id="row3837449156"><td class="cellrowborder" rowspan="7" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p3777145313419"><a name="p3777145313419"></a><a name="p3777145313419"></a><span id="ph12251185443414"><a name="ph12251185443414"></a><a name="ph12251185443414"></a>ClusterD</span></p>
-<p id="p44141140101216"><a name="p44141140101216"></a><a name="p44141140101216"></a></p>
-<p id="p354224512128"><a name="p354224512128"></a><a name="p354224512128"></a></p>
-<p id="p1979825017123"><a name="p1979825017123"></a><a name="p1979825017123"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p12435111214612"><a name="p12435111214612"></a><a name="p12435111214612"></a>clusterd</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1843512121165"><a name="p1843512121165"></a><a name="p1843512121165"></a><span id="ph1043518127610"><a name="ph1043518127610"></a><a name="ph1043518127610"></a>ClusterD</span>二进制文件。</p>
 </td>
 <td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p866312341360"><a name="p866312341360"></a><a name="p866312341360"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-<p id="p11414104071213"><a name="p11414104071213"></a><a name="p11414104071213"></a></p>
-<p id="p12542345121215"><a name="p12542345121215"></a><a name="p12542345121215"></a></p>
-<p id="p7798165014123"><a name="p7798165014123"></a><a name="p7798165014123"></a></p>
 </td>
 </tr>
 <tr id="row6376165513514"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15435111214610"><a name="p15435111214610"></a><a name="p15435111214610"></a>clusterd-v<em id="i74356121167"><a name="i74356121167"></a><a name="i74356121167"></a>{version}</em>.yaml</p>
@@ -1053,23 +862,14 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </td>
 </tr>
 <tr id="row1726355217106"><td class="cellrowborder" rowspan="6" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p13571143931110"><a name="p13571143931110"></a><a name="p13571143931110"></a><span id="ph1857163911120"><a name="ph1857163911120"></a><a name="ph1857163911120"></a>Resilience Controller</span></p>
-<p id="p560003921114"><a name="p560003921114"></a><a name="p560003921114"></a></p>
-<p id="p10598123961113"><a name="p10598123961113"></a><a name="p10598123961113"></a></p>
-<p id="p13596123981111"><a name="p13596123981111"></a><a name="p13596123981111"></a></p>
-<p id="p55947399115"><a name="p55947399115"></a><a name="p55947399115"></a></p>
-<p id="p059312398114"><a name="p059312398114"></a><a name="p059312398114"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p165711539161110"><a name="p165711539161110"></a><a name="p165711539161110"></a>resilience-controller</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1557119396111"><a name="p1557119396111"></a><a name="p1557119396111"></a><span id="ph05711396119"><a name="ph05711396119"></a><a name="ph05711396119"></a>Resilience Controller</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p1557113981113"><a name="p1557113981113"></a><a name="p1557113981113"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-<p id="p15571163919112"><a name="p15571163919112"></a><a name="p15571163919112"></a></p>
-<p id="p1959843971115"><a name="p1959843971115"></a><a name="p1959843971115"></a></p>
-<p id="p1159713915112"><a name="p1159713915112"></a><a name="p1159713915112"></a></p>
-<p id="p259510392118"><a name="p259510392118"></a><a name="p259510392118"></a></p>
-<p id="p5593143931110"><a name="p5593143931110"></a><a name="p5593143931110"></a></p>
-<p id="p85916397111"><a name="p85916397111"></a><a name="p85916397111"></a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p1557113981113"><a name="p1557113981113"></a><a name="p1557113981113"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<div class="note" id="note05631653219"><a name="note05631653219"></a><a name="note05631653219"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p17563155317115"><a name="p17563155317115"></a><a name="p17563155317115"></a>7.3.0版本<span id="ph18649516741"><a name="ph18649516741"></a><a name="ph18649516741"></a>Resilience Controller</span>和<span id="ph7366141610619"><a name="ph7366141610619"></a><a name="ph7366141610619"></a>Elastic Agent</span>组件已经日落，请获取7.3.0之前版本的软件包。</p>
+</div></div>
 </td>
 </tr>
 <tr id="row0585150141113"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p13571133921117"><a name="p13571133921117"></a><a name="p13571133921117"></a>cert-importer</p>
@@ -1097,14 +897,11 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p16571193918119"><a name="p16571193918119"></a><a name="p16571193918119"></a>加密组件依赖的动态库文件。</p>
 </td>
 </tr>
-<tr id="row1911313791120"><td class="cellrowborder" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p8571163920116"><a name="p8571163920116"></a><a name="p8571163920116"></a><span id="ph657183941119"><a name="ph657183941119"></a><a name="ph657183941119"></a>Elastic Agent</span></p>
+<tr id="row1911313791120"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p8571163920116"><a name="p8571163920116"></a><a name="p8571163920116"></a><span id="ph657183941119"><a name="ph657183941119"></a><a name="ph657183941119"></a>Elastic Agent</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p185710391111"><a name="p185710391111"></a><a name="p185710391111"></a>mindx_elastic-<em id="i857133921110"><a name="i857133921110"></a><a name="i857133921110"></a>{version}</em>-py3-none-linux_<em id="i15571153961114"><a name="i15571153961114"></a><a name="i15571153961114"></a>{arch}</em>.whl</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p185710391111"><a name="p185710391111"></a><a name="p185710391111"></a>mindx_elastic-<em id="i857133921110"><a name="i857133921110"></a><a name="i857133921110"></a>{version}</em>-py3-none-linux_<em id="i15571153961114"><a name="i15571153961114"></a><a name="i15571153961114"></a>{arch}</em>.whl</p>
 </td>
-<td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p19571193910118"><a name="p19571193910118"></a><a name="p19571193910118"></a>断点续训特性二进制文件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p9571123912112"><a name="p9571123912112"></a><a name="p9571123912112"></a><span id="ph157143912118"><a name="ph157143912118"></a><a name="ph157143912118"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">获取链接</a></span></p>
-<p id="p65713391118"><a name="p65713391118"></a><a name="p65713391118"></a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19571193910118"><a name="p19571193910118"></a><a name="p19571193910118"></a>断点续训特性二进制文件。</p>
 </td>
 </tr>
 <tr id="row1646165211919"><td class="cellrowborder" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p1646275210917"><a name="p1646275210917"></a><a name="p1646275210917"></a><span id="ph65811069214"><a name="ph65811069214"></a><a name="ph65811069214"></a>Container Manager</span></p>
@@ -1118,6 +915,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </tr>
 </tbody>
 </table>
+
 
 **软件数字签名验证<a name="section51703441649"></a>**
 
@@ -1138,59 +936,17 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **表 2**  获取组件源码
 
 <a name="table978944123012"></a>
-<table><thead align="left"><tr id="row478194453011"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.3.1.1"><p id="p579134414303"><a name="p579134414303"></a><a name="p579134414303"></a>组件名</p>
-</th>
-<th class="cellrowborder" valign="top" width="80%" id="mcps1.2.3.1.2"><p id="p1479114473018"><a name="p1479114473018"></a><a name="p1479114473018"></a>源码地址</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1157151722420"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p13221181719418"><a name="p13221181719418"></a><a name="p13221181719418"></a><span id="ph13457145131514"><a name="ph13457145131514"></a><a name="ph13457145131514"></a>Ascend Docker Runtime</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p1144713531148"><a name="p1144713531148"></a><a name="p1144713531148"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-docker-runtime" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-docker-runtime</a></p>
-</td>
-</tr>
-<tr id="row114810363245"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p346553712415"><a name="p346553712415"></a><a name="p346553712415"></a><span id="ph124651437102417"><a name="ph124651437102417"></a><a name="ph124651437102417"></a>NPU Exporter</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p101181013297"><a name="p101181013297"></a><a name="p101181013297"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/npu-exporter" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/npu-exporter</a></p>
-</td>
-</tr>
-<tr id="row839116214253"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p0231741257"><a name="p0231741257"></a><a name="p0231741257"></a><span id="ph1923641258"><a name="ph1923641258"></a><a name="ph1923641258"></a>Ascend Device Plugin</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p16117213393"><a name="p16117213393"></a><a name="p16117213393"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-device-plugin" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-device-plugin</a></p>
-</td>
-</tr>
-<tr id="row197974417301"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p62215171242"><a name="p62215171242"></a><a name="p62215171242"></a><span id="ph1640013323244"><a name="ph1640013323244"></a><a name="ph1640013323244"></a>Volcano</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p1211512137914"><a name="p1211512137914"></a><a name="p1211512137914"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano</a></p>
-</td>
-</tr>
-<tr id="row1065294117558"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p11652144125511"><a name="p11652144125511"></a><a name="p11652144125511"></a><span id="ph54814518575"><a name="ph54814518575"></a><a name="ph54814518575"></a>Ascend Operator</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p106522412558"><a name="p106522412558"></a><a name="p106522412558"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-operator" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-operator</a></p>
-</td>
-</tr>
-<tr id="row680633312432"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1346611201130"><a name="p1346611201130"></a><a name="p1346611201130"></a><span id="ph144095321390"><a name="ph144095321390"></a><a name="ph144095321390"></a>NodeD</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p19109121317913"><a name="p19109121317913"></a><a name="p19109121317913"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/noded" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/noded</a></p>
-</td>
-</tr>
-<tr id="row318953213910"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p141891632173917"><a name="p141891632173917"></a><a name="p141891632173917"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p62483444019"><a name="p62483444019"></a><a name="p62483444019"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/clusterd" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/clusterd</a></p>
-</td>
-</tr>
-<tr id="row161579497309"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1061219314315"><a name="p1061219314315"></a><a name="p1061219314315"></a><span id="ph6612183163119"><a name="ph6612183163119"></a><a name="ph6612183163119"></a>TaskD</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p12158154914302"><a name="p12158154914302"></a><a name="p12158154914302"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/taskd" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/taskd</a></p>
-</td>
-</tr>
-<tr id="row566211732620"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1079011341123"><a name="p1079011341123"></a><a name="p1079011341123"></a><span id="ph1762125403719"><a name="ph1762125403719"></a><a name="ph1762125403719"></a>Container Manager</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p14791193431211"><a name="p14791193431211"></a><a name="p14791193431211"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/master/component/container-manager" target="_blank" rel="noopener noreferrer">https://gitcode.com/Ascend/mind-cluster/tree/master/component/container-manager</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+|组件名|源码地址|
+|--|--|
+|Ascend Docker Runtime|https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-docker-runtime|
+|NPU Exporter|https://gitcode.com/Ascend/mind-cluster/tree/master/component/npu-exporter|
+|Ascend Device Plugin|https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-device-plugin|
+|Volcano|https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano|
+|Ascend Operator|https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-operator|
+|NodeD|https://gitcode.com/Ascend/mind-cluster/tree/master/component/noded|
+|ClusterD|https://gitcode.com/Ascend/mind-cluster/tree/master/component/clusterd|
+|TaskD|https://gitcode.com/Ascend/mind-cluster/tree/master/component/taskd|
+|Container Manager|https://gitcode.com/Ascend/mind-cluster/tree/master/component/container-manager|
 
 ### 安装前准备<a name="ZH-CN_TOPIC_0000002479386432"></a>
 
@@ -2584,7 +2340,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         </thead>
         <tbody><tr id="row47010440518"><td class="cellrowborder" valign="top" width="23.14%" headers="mcps1.1.3.1.1 "><p id="p170118446517"><a name="p170118446517"></a><a name="p170118446517"></a>metricsGroup</p>
         </td>
-        <td class="cellrowborder" valign="top" width="76.86%" headers="mcps1.1.3.1.2 "><p id="p9568105120719"><a name="p9568105120719"></a><a name="p9568105120719"></a>向<span id="ph18671058476"><a name="ph18671058476"></a><a name="ph18671058476"></a>NPU Exporter</span>注册的自定义指标组名称。自定义指标的方法详细请参见<a href="./appendix.md#自定义指标插件开发">自定义指标插件开发</a>。</p>
+        <td class="cellrowborder" valign="top" width="76.86%" headers="mcps1.1.3.1.2 "><p id="p9568105120719"><a name="p9568105120719"></a><a name="p9568105120719"></a>向<span id="ph18671058476"><a name="ph18671058476"></a><a name="ph18671058476"></a>NPU Exporter</span>注册的自定义指标组名称。自定义指标的方法详细请参见<a href="./appendix.md#自定义指标开发">自定义指标开发</a>。</p>
         </td>
         </tr>
         <tr id="row157010441654"><td class="cellrowborder" valign="top" width="23.14%" headers="mcps1.1.3.1.1 "><p id="p157021644755"><a name="p157021644755"></a><a name="p157021644755"></a>state</p>
@@ -2840,7 +2596,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
         </thead>
         <tbody><tr id="zh-cn_topic_0000002511426331_row47010440518"><td class="cellrowborder" valign="top" width="23.14%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002511426331_p170118446517"><a name="zh-cn_topic_0000002511426331_p170118446517"></a><a name="zh-cn_topic_0000002511426331_p170118446517"></a>metricsGroup</p>
         </td>
-        <td class="cellrowborder" valign="top" width="76.86%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002511426331_p9568105120719"><a name="zh-cn_topic_0000002511426331_p9568105120719"></a><a name="zh-cn_topic_0000002511426331_p9568105120719"></a>向<span id="zh-cn_topic_0000002511426331_ph18671058476"><a name="zh-cn_topic_0000002511426331_ph18671058476"></a><a name="zh-cn_topic_0000002511426331_ph18671058476"></a>NPU Exporter</span>注册的自定义指标组名称。自定义指标的方法详细请参见<a href="./appendix.md#自定义指标插件开发">自定义指标插件开发</a>。</p>
+        <td class="cellrowborder" valign="top" width="76.86%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002511426331_p9568105120719"><a name="zh-cn_topic_0000002511426331_p9568105120719"></a><a name="zh-cn_topic_0000002511426331_p9568105120719"></a>向<span id="zh-cn_topic_0000002511426331_ph18671058476"><a name="zh-cn_topic_0000002511426331_ph18671058476"></a><a name="zh-cn_topic_0000002511426331_ph18671058476"></a>NPU Exporter</span>注册的自定义指标组名称。自定义指标的方法详细请参见<a href="./appendix.md#自定义指标开发">自定义指标开发</a>。</p>
         </td>
         </tr>
         <tr id="zh-cn_topic_0000002511426331_row157010441654"><td class="cellrowborder" valign="top" width="23.14%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002511426331_p157021644755"><a name="zh-cn_topic_0000002511426331_p157021644755"></a><a name="zh-cn_topic_0000002511426331_p157021644755"></a>state</p>
@@ -2958,236 +2714,32 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 **表 2** NPU Exporter启动参数
 
 <a name="table872410431914"></a>
-<table><thead align="left"><tr id="row57241434113"><th class="cellrowborder" valign="top" width="19.5%" id="mcps1.2.5.1.1"><p id="p1272416432118"><a name="p1272416432118"></a><a name="p1272416432118"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.180000000000001%" id="mcps1.2.5.1.2"><p id="p1072419431419"><a name="p1072419431419"></a><a name="p1072419431419"></a>类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="25.95%" id="mcps1.2.5.1.3"><p id="p1372464316111"><a name="p1372464316111"></a><a name="p1372464316111"></a>默认值</p>
-</th>
-<th class="cellrowborder" valign="top" width="40.37%" id="mcps1.2.5.1.4"><p id="p772517434117"><a name="p772517434117"></a><a name="p772517434117"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1450614311118"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p5507143131115"><a name="p5507143131115"></a><a name="p5507143131115"></a>-port</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p8507643101114"><a name="p8507643101114"></a><a name="p8507643101114"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p3507243131112"><a name="p3507243131112"></a><a name="p3507243131112"></a>8082</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p15507184331111"><a name="p15507184331111"></a><a name="p15507184331111"></a>侦听端口，取值范围为1025~40000。</p>
-</td>
-</tr>
-<tr id="row288934617119"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p0889246101112"><a name="p0889246101112"></a><a name="p0889246101112"></a>-updateTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p8889134641118"><a name="p8889134641118"></a><a name="p8889134641118"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p128891346161110"><a name="p128891346161110"></a><a name="p128891346161110"></a>5</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p688994620117"><a name="p688994620117"></a><a name="p688994620117"></a>信息更新周期1~60秒。如果设置的时间过长，一些生存时间小于更新周期的容器可能无法上报。</p>
-</td>
-</tr>
-<tr id="row1114033219118"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p1814163215119"><a name="p1814163215119"></a><a name="p1814163215119"></a>-ip</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p1271750101410"><a name="p1271750101410"></a><a name="p1271750101410"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p1814163210113"><a name="p1814163210113"></a><a name="p1814163210113"></a>无</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p16271610719"><a name="p16271610719"></a><a name="p16271610719"></a>参数无默认值，必须配置。</p>
-<p id="p1141143251115"><a name="p1141143251115"></a><a name="p1141143251115"></a>侦听IP地址，在多网卡主机上不建议配置成0.0.0.0。</p>
-</td>
-</tr>
-<tr id="row119852716133"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p1299122717136"><a name="p1299122717136"></a><a name="p1299122717136"></a>-version</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p1399122741312"><a name="p1399122741312"></a><a name="p1399122741312"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p4991727151310"><a name="p4991727151310"></a><a name="p4991727151310"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p199122718136"><a name="p199122718136"></a><a name="p199122718136"></a>是否查询<span id="ph184401753125620"><a name="ph184401753125620"></a><a name="ph184401753125620"></a>NPU Exporter</span>版本号。</p>
-<a name="ul142362048125710"></a><a name="ul142362048125710"></a><ul id="ul142362048125710"><li>true：查询。</li><li>false：不查询。</li></ul>
-</td>
-</tr>
-<tr id="row19781143711423"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p157811637184214"><a name="p157811637184214"></a><a name="p157811637184214"></a>-concurrency</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p117811937114214"><a name="p117811937114214"></a><a name="p117811937114214"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p13781103774211"><a name="p13781103774211"></a><a name="p13781103774211"></a>5</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p77811437114216"><a name="p77811437114216"></a><a name="p77811437114216"></a>HTTP服务的限流大小，默认5个并发，取值范围为1~512。</p>
-</td>
-</tr>
-<tr id="row171665178372"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p716681713714"><a name="p716681713714"></a><a name="p716681713714"></a>-logLevel</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p116631743711"><a name="p116631743711"></a><a name="p116631743711"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p10166121714371"><a name="p10166121714371"></a><a name="p10166121714371"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p7166161783714"><a name="p7166161783714"></a><a name="p7166161783714"></a>日志级别：</p>
-<a name="ul086611015481"></a><a name="ul086611015481"></a><ul id="ul086611015481"><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>
-</td>
-</tr>
-<tr id="row10624520123720"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p962414206374"><a name="p962414206374"></a><a name="p962414206374"></a>-maxAge</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p196241420153715"><a name="p196241420153715"></a><a name="p196241420153715"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p5624720113715"><a name="p5624720113715"></a><a name="p5624720113715"></a>7</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p2062492033716"><a name="p2062492033716"></a><a name="p2062492033716"></a>日志备份时间，取值范围为7~700，单位为天。</p>
-</td>
-</tr>
-<tr id="row9250326203710"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p172501226103710"><a name="p172501226103710"></a><a name="p172501226103710"></a>-logFile</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p13250626193718"><a name="p13250626193718"></a><a name="p13250626193718"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p225052653711"><a name="p225052653711"></a><a name="p225052653711"></a>/var/log/mindx-dl/npu-exporter/npu-exporter.log</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p1525042673718"><a name="p1525042673718"></a><a name="p1525042673718"></a>日志文件。单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：npu-exporter-触发转储的时间.log，如：npu-exporter-2023-10-07T03-38-24.402.log。</p>
-</td>
-</tr>
-<tr id="row025163410373"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p12517346377"><a name="p12517346377"></a><a name="p12517346377"></a>-maxBackups</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p225133416374"><a name="p225133416374"></a><a name="p225133416374"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p18251173413378"><a name="p18251173413378"></a><a name="p18251173413378"></a>30</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p225183419372"><a name="p225183419372"></a><a name="p225183419372"></a>转储后日志文件保留个数上限，取值范围为1~30，单位为个。</p>
-</td>
-</tr>
-<tr id="row2072614485113"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p2568327628"><a name="p2568327628"></a><a name="p2568327628"></a>-containerMode</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p185681727426"><a name="p185681727426"></a><a name="p185681727426"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p1556816271323"><a name="p1556816271323"></a><a name="p1556816271323"></a>docker</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p9568192711214"><a name="p9568192711214"></a><a name="p9568192711214"></a>设置容器运行时类型。</p>
-<a name="ul162463801018"></a><a name="ul162463801018"></a><ul id="ul162463801018"><li>设置为<span class="parmvalue" id="parmvalue17714922171111"><a name="parmvalue17714922171111"></a><a name="parmvalue17714922171111"></a>“docker”</span>表示当前环境使用<span id="ph2765406224"><a name="ph2765406224"></a><a name="ph2765406224"></a>Docker</span>作为容器运行时。</li><li>设置为<span class="parmvalue" id="parmvalue47718258117"><a name="parmvalue47718258117"></a><a name="parmvalue47718258117"></a>“containerd”</span>表示当前环境使用<span id="ph16201446175315"><a name="ph16201446175315"></a><a name="ph16201446175315"></a>Containerd</span>作为容器运行时。</li><li>设置为“<span id="ph6118142185818"><a name="ph6118142185818"></a><a name="ph6118142185818"></a>isula</span>”表示当前环境使用<span id="ph84641247165816"><a name="ph84641247165816"></a><a name="ph84641247165816"></a>iSula</span>作为容器运行时。</li></ul>
-</td>
-</tr>
-<tr id="row19950135712112"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p75691027221"><a name="p75691027221"></a><a name="p75691027221"></a>-containerd</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p12569427224"><a name="p12569427224"></a><a name="p12569427224"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><a name="ul258775825412"></a><a name="ul258775825412"></a><ul id="ul258775825412"><li>(<span id="ph1540842881217"><a name="ph1540842881217"></a><a name="ph1540842881217"></a>Docker</span>)<p id="p1937665118120"><a name="p1937665118120"></a><a name="p1937665118120"></a>unix：/run/docker/containerd/docker-containerd.sock</p>
-</li></ul>
-<a name="ul18741121225512"></a><a name="ul18741121225512"></a><ul id="ul18741121225512"><li>(<span id="ph195425229133"><a name="ph195425229133"></a><a name="ph195425229133"></a>Containerd</span>)<p id="p165051810191417"><a name="p165051810191417"></a><a name="p165051810191417"></a>unix：///run/containerd/containerd.sock</p>
-</li><li>(<span id="ph19669163801515"><a name="ph19669163801515"></a><a name="ph19669163801515"></a>iSula</span>)<p id="p208899081614"><a name="p208899081614"></a><a name="p208899081614"></a>unix：///run/isulad.sock</p>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p1462362412480"><a name="p1462362412480"></a><a name="p1462362412480"></a>containerd daemon进程endpoint，用于与<span id="ph17181552538"><a name="ph17181552538"></a><a name="ph17181552538"></a>Containerd</span>通信。</p>
-<a name="ul925510290482"></a><a name="ul925510290482"></a><ul id="ul925510290482"><li>若containerMode=docker，则默认值为/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix：///run/containerd/containerd.sock和unix:///run/docker/containerd/containerd.sock。</li><li>若containerMode=containerd，则默认值为/run/containerd/containerd.sock。</li><li>若containerMode=<span id="ph1637126182816"><a name="ph1637126182816"></a><a name="ph1637126182816"></a>isula</span>，则默认值为/run/isulad.sock。</li></ul>
-<p id="p142155289190"><a name="p142155289190"></a><a name="p142155289190"></a>一般情况下使用默认值即可。若用户自行修改了<span id="ph728317114541"><a name="ph728317114541"></a><a name="ph728317114541"></a>Containerd</span>的sock文件路径则需要进行相应路径的修改。</p>
-<p id="p6669141419140"><a name="p6669141419140"></a><a name="p6669141419140"></a>可通过<strong id="b1172419529499"><a name="b1172419529499"></a><a name="b1172419529499"></a>ps aux | grep containerd</strong>命令查询<span id="ph1477317152543"><a name="ph1477317152543"></a><a name="ph1477317152543"></a>Containerd</span>的sock文件路径是否修改。</p>
-</td>
-</tr>
-<tr id="row18121453015"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p156962715217"><a name="p156962715217"></a><a name="p156962715217"></a>-endpoint</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p3569527824"><a name="p3569527824"></a><a name="p3569527824"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><a name="ul81956213558"></a><a name="ul81956213558"></a><ul id="ul81956213558"><li>(<span id="ph9285182681820"><a name="ph9285182681820"></a><a name="ph9285182681820"></a>Docker</span>)<p id="p148071822121918"><a name="p148071822121918"></a><a name="p148071822121918"></a>unix：///var/run/dockershim.sock</p>
-</li></ul>
-<a name="ul1220153013557"></a><a name="ul1220153013557"></a><ul id="ul1220153013557"><li>(<span id="ph11590124341820"><a name="ph11590124341820"></a><a name="ph11590124341820"></a>Containerd</span>)<p id="p17358133816196"><a name="p17358133816196"></a><a name="p17358133816196"></a>unix：///run/containerd/containerd.sock</p>
-</li><li>(<span id="ph172551757111814"><a name="ph172551757111814"></a><a name="ph172551757111814"></a>iSula</span>)<p id="p11911464192"><a name="p11911464192"></a><a name="p11911464192"></a>unix：///run/isulad.sock</p>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p19569142713215"><a name="p19569142713215"></a><a name="p19569142713215"></a>CRI server的sock地址：</p>
-<a name="ul1630411142489"></a><a name="ul1630411142489"></a><ul id="ul1630411142489"><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认值/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认值/run/containerd/containerd.sock。</li><li>若containerMode=<span id="ph86511942102810"><a name="ph86511942102810"></a><a name="ph86511942102810"></a>isula</span>，则默认值为/run/isulad.sock。</li></ul>
-<p id="p11767183210124"><a name="p11767183210124"></a><a name="p11767183210124"></a>一般情况下使用默认值即可，除非用户自行修改了Dockershim或者<span id="ph18282132185419"><a name="ph18282132185419"></a><a name="ph18282132185419"></a>Containerd</span>的sock文件路径。</p>
-<p id="p1475024918319"><a name="p1475024918319"></a><a name="p1475024918319"></a>连接失败后，自动尝试连接unix:///run/cri-dockerd.sock</p>
-</td>
-</tr>
-<tr id="row10582193515410"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p13652336100"><a name="p13652336100"></a><a name="p13652336100"></a>-limitIPConn</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p96521636601"><a name="p96521636601"></a><a name="p96521636601"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p1665314365013"><a name="p1665314365013"></a><a name="p1665314365013"></a>5</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p66534360016"><a name="p66534360016"></a><a name="p66534360016"></a>每个IP的TCP限制数的取值范围为1~128。</p>
-</td>
-</tr>
-<tr id="row1367718441411"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p14806164016019"><a name="p14806164016019"></a><a name="p14806164016019"></a>-limitTotalConn</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p1380618406018"><a name="p1380618406018"></a><a name="p1380618406018"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p1580618401203"><a name="p1580618401203"></a><a name="p1580618401203"></a>20</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p198069402008"><a name="p198069402008"></a><a name="p198069402008"></a>程序总共的TCP限制数的取值范围为1~512。</p>
-</td>
-</tr>
-<tr id="row24901738104116"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p15268645105"><a name="p15268645105"></a><a name="p15268645105"></a>-limitIPReq</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p14268845005"><a name="p14268845005"></a><a name="p14268845005"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p926810452016"><a name="p926810452016"></a><a name="p926810452016"></a>20/1</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p192682045603"><a name="p192682045603"></a><a name="p192682045603"></a>每个IP的请求限制数，20/1表示1秒限制20个请求，“/”两侧最大只支持三位数。</p>
-</td>
-</tr>
-<tr id="row19581441124113"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p178221948107"><a name="p178221948107"></a><a name="p178221948107"></a>-cacheSize</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p20822194817012"><a name="p20822194817012"></a><a name="p20822194817012"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p3822114812013"><a name="p3822114812013"></a><a name="p3822114812013"></a>102400</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p1682210481309"><a name="p1682210481309"></a><a name="p1682210481309"></a>缓存key的数量限制，取值范围为1~1024000。</p>
-</td>
-</tr>
-<tr id="row1222719542102"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p1944315991015"><a name="p1944315991015"></a><a name="p1944315991015"></a>-h或者-help</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p18443759101012"><a name="p18443759101012"></a><a name="p18443759101012"></a>无</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p244313592106"><a name="p244313592106"></a><a name="p244313592106"></a>无</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p64438599101"><a name="p64438599101"></a><a name="p64438599101"></a>显示帮助信息。</p>
-</td>
-</tr>
-<tr id="row935201314303"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p7402191716512"><a name="p7402191716512"></a><a name="p7402191716512"></a>-platform</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p154024171153"><a name="p154024171153"></a><a name="p154024171153"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p640319171357"><a name="p640319171357"></a><a name="p640319171357"></a>Prometheus</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p15862056184715"><a name="p15862056184715"></a><a name="p15862056184715"></a>指定对接平台。</p>
-<a name="ul1840415178519"></a><a name="ul1840415178519"></a><ul id="ul1840415178519"><li><span id="ph153281637185914"><a name="ph153281637185914"></a><a name="ph153281637185914"></a>Prometheus</span>：对接<span id="ph75601841135918"><a name="ph75601841135918"></a><a name="ph75601841135918"></a>Prometheus</span></li><li><span id="ph1536232151612"><a name="ph1536232151612"></a><a name="ph1536232151612"></a>Telegraf</span>：对接<span id="ph19104183681616"><a name="ph19104183681616"></a><a name="ph19104183681616"></a>Telegraf</span></li></ul>
-</td>
-</tr>
-<tr id="row692618146301"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p440415171058"><a name="p440415171058"></a><a name="p440415171058"></a>-poll_interval</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p440571715511"><a name="p440571715511"></a><a name="p440571715511"></a>duration(int)</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p3405217757"><a name="p3405217757"></a><a name="p3405217757"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p1040615171855"><a name="p1040615171855"></a><a name="p1040615171855"></a><span id="ph15637921171513"><a name="ph15637921171513"></a><a name="ph15637921171513"></a>Telegraf</span>数据上报的间隔时间，单位：秒。此参数在对接<span id="ph10109718205"><a name="ph10109718205"></a><a name="ph10109718205"></a>Telegraf</span>平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。</p>
-</td>
-</tr>
-<tr id="row1215917174309"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p8536194012285"><a name="p8536194012285"></a><a name="p8536194012285"></a>-profilingTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p11536104002818"><a name="p11536104002818"></a><a name="p11536104002818"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p15536540182817"><a name="p15536540182817"></a><a name="p15536540182817"></a>200</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p853617406284"><a name="p853617406284"></a><a name="p853617406284"></a>配置采集PCIe带宽时间，单位：毫秒，取值范围为1~2000。</p>
-</td>
-</tr>
-<tr id="row10221102711100"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p0284459151014"><a name="p0284459151014"></a><a name="p0284459151014"></a>-hccsBWProfilingTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p1328413599107"><a name="p1328413599107"></a><a name="p1328413599107"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p122846594100"><a name="p122846594100"></a><a name="p122846594100"></a>200</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p1528415918109"><a name="p1528415918109"></a><a name="p1528415918109"></a><span id="ph17233131243911"><a name="ph17233131243911"></a><a name="ph17233131243911"></a>HCCS</span>链路带宽采样时长，取值范围1~1000，单位：毫秒。</p>
-</td>
-</tr>
-<tr id="row789471913155"><td class="cellrowborder" valign="top" width="19.5%" headers="mcps1.2.5.1.1 "><p id="p0894319101519"><a name="p0894319101519"></a><a name="p0894319101519"></a>-deviceResetTimeout</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.180000000000001%" headers="mcps1.2.5.1.2 "><p id="p108941719151514"><a name="p108941719151514"></a><a name="p108941719151514"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.95%" headers="mcps1.2.5.1.3 "><p id="p19894131961512"><a name="p19894131961512"></a><a name="p19894131961512"></a>60</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.37%" headers="mcps1.2.5.1.4 "><p id="p589551971510"><a name="p589551971510"></a><a name="p589551971510"></a>组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。</p>
-<a name="ul1354220213192"></a><a name="ul1354220213192"></a><ul id="ul1354220213192"><li><span id="ph278017516257"><a name="ph278017516257"></a><a name="ph278017516257"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph13163257131918"><a name="ph13163257131918"></a><a name="ph13163257131918"></a>Atlas 800I A2 推理服务器</span>、<span id="ph10930753142211"><a name="ph10930753142211"></a><a name="ph10930753142211"></a>A200I A2 Box 异构组件</span>：建议配置为150秒。</li><li><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span>、<span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span>：建议配置为360秒。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|类型|默认值|说明|
+|--|--|--|--|
+|-port|int|8082|侦听端口，取值范围为1025~40000。|
+|-updateTime|int|5|信息更新周期1~60秒。如果设置的时间过长，一些生存时间小于更新周期的容器可能无法上报。|
+|-ip|string|无|参数无默认值，必须配置。<p>侦听IP地址，在多网卡主机上不建议配置成0.0.0.0。</p>|
+|-version|bool|false|是否查询NPU Exporter版本号。<ul><li>true：查询。</li><li>false：不查询。</li></ul>|
+|-concurrency|int|5|HTTP服务的限流大小，默认5个并发，取值范围为1~512。|
+|-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>|
+|-maxAge|int|7|日志备份时间，取值范围为7~700，单位为天。|
+|-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log|日志文件。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：npu-exporter-触发转储的时间.log，如：npu-exporter-2023-10-07T03-38-24.402.log。</p>|
+|-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~30，单位为个。|
+|-containerMode|string|docker|设置容器运行时类型。<ul><li>设置为docker表示当前环境使用Docker作为容器运行时。</li><li>设置为containerd表示当前环境使用Containerd作为容器运行时。</li><li>设置为“isula”表示当前环境使用iSula作为容器运行时。</li></ul>|
+|-containerd|string|<ul><li>(Docker)unix：/run/docker/containerd/docker-containerd.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li></ul>|containerd daemon进程endpoint，用于与Containerd通信。<ul><li>若containerMode=docker，则默认值为/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix：///run/containerd/containerd.sock和unix:///run/docker/containerd/containerd.sock。</li><li>若containerMode=containerd，则默认值为/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li></ul><p>一般情况下使用默认值即可。若用户自行修改了Containerd的sock文件路径则需要进行相应路径的修改。</p><p>可通过**ps aux \| grep containerd**命令查询Containerd的sock文件路径是否修改。</p>|
+|-endpoint|string|<ul><li>(Docker)unix：///var/run/dockershim.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li></ul>|CRI server的sock地址：<ul><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认值/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认值/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li></ul><p>一般情况下使用默认值即可，除非用户自行修改了Dockershim或者Containerd的sock文件路径。</p><p>连接失败后，自动尝试连接unix:///run/cri-dockerd.sock</p>|
+|-limitIPConn|int|5|每个IP的TCP限制数的取值范围为1~128。|
+|-limitTotalConn|int|20|程序总共的TCP限制数的取值范围为1~512。|
+|-limitIPReq|string|20/1|每个IP的请求限制数，20/1表示1秒限制20个请求，“/”两侧最大只支持三位数。|
+|-cacheSize|int|102400|缓存key的数量限制，取值范围为1~1024000。|
+|-h或者-help|无|无|显示帮助信息。|
+|-platform|string|Prometheus|指定对接平台。<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>|
+|-poll_interval|duration(int)|1|Telegraf数据上报的间隔时间，单位：秒。此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。|
+|-profilingTime|int|200|配置采集PCIe带宽时间，单位：毫秒，取值范围为1~2000。|
+|-hccsBWProfilingTime|int|200|HCCS链路带宽采样时长，取值范围1~1000，单位：毫秒。|
+|-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li></ul>|
+|-textMetricsFilePath|string|无|指定自定义指标文件的路径，其约束说明详细请参见<a href="./api/npu_exporter.md#自定义指标文件">约束说明</a>。|
+
 
 ### Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
 
@@ -3286,54 +2838,16 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     **表 2** Ascend Device Plugin的YAML文件列表
 
     <a name="zh-cn_topic_0000001497364849_table58619457211"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000001497364849_row19861104512210"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000001497364849_p457531332"><a name="zh-cn_topic_0000001497364849_p457531332"></a><a name="zh-cn_topic_0000001497364849_p457531332"></a>YAML文件列表</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000001497364849_p857516110317"><a name="zh-cn_topic_0000001497364849_p857516110317"></a><a name="zh-cn_topic_0000001497364849_p857516110317"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000001497364849_row886115451623"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001497364849_p125751211635"><a name="zh-cn_topic_0000001497364849_p125751211635"></a><a name="zh-cn_topic_0000001497364849_p125751211635"></a>device-plugin-310-v<em id="zh-cn_topic_0000001497364849_i457510110311"><a name="zh-cn_topic_0000001497364849_i457510110311"></a><a name="zh-cn_topic_0000001497364849_i457510110311"></a>{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001497364849_p175751811034"><a name="zh-cn_topic_0000001497364849_p175751811034"></a><a name="zh-cn_topic_0000001497364849_p175751811034"></a>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）上不使用<span id="ph183921109162"><a name="ph183921109162"></a><a name="ph183921109162"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="row13120202422610"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1685782324511"><a name="p1685782324511"></a><a name="p1685782324511"></a>device-plugin-310-volcano-v<em id="i1485772315459"><a name="i1485772315459"></a><a name="i1485772315459"></a>{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p2857122319453"><a name="p2857122319453"></a><a name="p2857122319453"></a>推理服务器（插<span id="ph8857323164512"><a name="ph8857323164512"></a><a name="ph8857323164512"></a>Atlas 300I 推理卡</span>）上使用<span id="ph5857323184516"><a name="ph5857323184516"></a><a name="ph5857323184516"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="row870313232616"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p13863633174516"><a name="p13863633174516"></a><a name="p13863633174516"></a>device-plugin-310P-1usoc-<em id="i886373320454"><a name="i886373320454"></a><a name="i886373320454"></a>v{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p58631333194519"><a name="p58631333194519"></a><a name="p58631333194519"></a><span id="ph78633333457"><a name="ph78633333457"></a><a name="ph78633333457"></a>Atlas 200I SoC A1 核心板</span>上不使用<span id="ph13863103324517"><a name="ph13863103324517"></a><a name="ph13863103324517"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="row16812612142713"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p26271446134518"><a name="p26271446134518"></a><a name="p26271446134518"></a>device-plugin-310P-1usoc-volcano-v<em id="i662719466453"><a name="i662719466453"></a><a name="i662719466453"></a>{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p662734604515"><a name="p662734604515"></a><a name="p662734604515"></a><span id="ph13627154664514"><a name="ph13627154664514"></a><a name="ph13627154664514"></a>Atlas 200I SoC A1 核心板</span>上使用<span id="ph14627646154516"><a name="ph14627646154516"></a><a name="ph14627646154516"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001497364849_row4861114516215"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001497364849_p12575191239"><a name="zh-cn_topic_0000001497364849_p12575191239"></a><a name="zh-cn_topic_0000001497364849_p12575191239"></a>device-plugin-310P-<em id="zh-cn_topic_0000001497364849_i15575161739"><a name="zh-cn_topic_0000001497364849_i15575161739"></a><a name="zh-cn_topic_0000001497364849_i15575161739"></a>v{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001497364849_p195751011438"><a name="zh-cn_topic_0000001497364849_p195751011438"></a><a name="zh-cn_topic_0000001497364849_p195751011438"></a><span id="ph31681328617"><a name="ph31681328617"></a><a name="ph31681328617"></a>Atlas 推理系列产品</span>上不使用<span id="ph0891755151910"><a name="ph0891755151910"></a><a name="ph0891755151910"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="row161697526278"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p176262463459"><a name="p176262463459"></a><a name="p176262463459"></a>device-plugin-310P-volcano-<em id="i4626194654515"><a name="i4626194654515"></a><a name="i4626194654515"></a>v{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p0627946184519"><a name="p0627946184519"></a><a name="p0627946184519"></a><span id="ph962794674511"><a name="ph962794674511"></a><a name="ph962794674511"></a>Atlas 推理系列产品</span>上使用<span id="ph2062744613452"><a name="ph2062744613452"></a><a name="ph2062744613452"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001497364849_row786113458218"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001497364849_p7575713320"><a name="zh-cn_topic_0000001497364849_p7575713320"></a><a name="zh-cn_topic_0000001497364849_p7575713320"></a>device-plugin-910-v<em id="zh-cn_topic_0000001497364849_i115758112317"><a name="zh-cn_topic_0000001497364849_i115758112317"></a><a name="zh-cn_topic_0000001497364849_i115758112317"></a>{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001497364849_p11575911538"><a name="zh-cn_topic_0000001497364849_p11575911538"></a><a name="zh-cn_topic_0000001497364849_p11575911538"></a><span id="ph2584101716411"><a name="ph2584101716411"></a><a name="ph2584101716411"></a>Atlas 训练系列产品</span><span id="ph1267643834518"><a name="ph1267643834518"></a><a name="ph1267643834518"></a>、</span><span id="ph41752311416"><a name="ph41752311416"></a><a name="ph41752311416"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph18411121792018"><a name="ph18411121792018"></a><a name="ph18411121792018"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span>或<span id="ph313817549316"><a name="ph313817549316"></a><a name="ph313817549316"></a>Atlas 800I A2 推理服务器</span>、<span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span>上不使用<span id="ph125651156181913"><a name="ph125651156181913"></a><a name="ph125651156181913"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001497364849_row78611145620"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001497364849_p5576711832"><a name="zh-cn_topic_0000001497364849_p5576711832"></a><a name="zh-cn_topic_0000001497364849_p5576711832"></a>device-plugin-volcano-<em id="zh-cn_topic_0000001497364849_i15761411731"><a name="zh-cn_topic_0000001497364849_i15761411731"></a><a name="zh-cn_topic_0000001497364849_i15761411731"></a>v{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001497364849_p75767116314"><a name="zh-cn_topic_0000001497364849_p75767116314"></a><a name="zh-cn_topic_0000001497364849_p75767116314"></a><span id="ph1813918478418"><a name="ph1813918478418"></a><a name="ph1813918478418"></a>Atlas 训练系列产品</span>、<span id="ph1813910471246"><a name="ph1813910471246"></a><a name="ph1813910471246"></a><term id="zh-cn_topic_0000001519959665_term57208119917_1"><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a>Atlas A2 训练系列产品</term></span>、<span id="ph472911819111"><a name="ph472911819111"></a><a name="ph472911819111"></a><term id="zh-cn_topic_0000001519959665_term26764913715_1"><a name="zh-cn_topic_0000001519959665_term26764913715_1"></a><a name="zh-cn_topic_0000001519959665_term26764913715_1"></a>Atlas A3 训练系列产品</term></span>或<span id="ph0318143765320"><a name="ph0318143765320"></a><a name="ph0318143765320"></a>Atlas 800I A2 推理服务器</span>、<span id="ph1978972716539"><a name="ph1978972716539"></a><a name="ph1978972716539"></a>A200I A2 Box 异构组件</span>上使用<span id="ph113341102017"><a name="ph113341102017"></a><a name="ph113341102017"></a>Volcano</span>的配置文件。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |YAML文件列表|说明|
+    |--|--|
+    |device-plugin-310-v*{version}*.yaml|推理服务器（插Atlas 300I 推理卡）上不使用Volcano的配置文件。|
+    |device-plugin-310-volcano-v*{version}*.yaml|推理服务器（插Atlas 300I 推理卡）上使用Volcano的配置文件。|
+    |device-plugin-310P-1usoc-*v{version}*.yaml|Atlas 200I SoC A1 核心板上不使用Volcano的配置文件。|
+    |device-plugin-310P-1usoc-volcano-v*{version}*.yaml|Atlas 200I SoC A1 核心板上使用Volcano的配置文件。|
+    |device-plugin-310P-*v{version}*.yaml|Atlas 推理系列产品上不使用Volcano的配置文件。|
+    |device-plugin-310P-volcano-*v{version}*.yaml|Atlas 推理系列产品上使用Volcano的配置文件。|
+    |device-plugin-910-v*{version}*.yaml|Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。|
+    |device-plugin-volcano-*v{version}*.yaml|Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。|
 
 3.  如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改Ascend Device Plugin的启动参数。启动参数请参见[表3](#table1064314568229)，可执行**./device-plugin** **-h**查看参数说明。
     -   在Atlas 200I SoC A1 核心板节点上，修改启动脚本“run\_for\_310P\_1usoc.sh“中Ascend Device Plugin的启动参数。修改完后需在所有Atlas 200I SoC A1 核心板节点上重新制作镜像，或者将本节点镜像重新制作后分发到其余所有Atlas 200I SoC A1 核心板节点。
@@ -3363,7 +2877,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
                      -volcanoType=true                    # 重调度场景下必须使用Volcano
                      -autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                      -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]，单位为秒
-                     -hotReset=1 # 使用断点续训时，可以在Job级或Pod级重调度的基础上，开启热复位功能，使用优雅容错模式；使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式
+                     -hotReset=2 # 使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式
                      -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log 
                      -logLevel=0" ]
             securityContext:
@@ -3503,268 +3017,30 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 **表 3** Ascend Device Plugin启动参数
 
 <a name="table1064314568229"></a>
-<table><thead align="left"><tr id="row1164315632218"><th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.1"><p id="p176431856192214"><a name="p176431856192214"></a><a name="p176431856192214"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.979999999999999%" id="mcps1.2.5.1.2"><p id="p76431556122218"><a name="p76431556122218"></a><a name="p76431556122218"></a>类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.040000000000001%" id="mcps1.2.5.1.3"><p id="p36431656182212"><a name="p36431656182212"></a><a name="p36431656182212"></a>默认值</p>
-</th>
-<th class="cellrowborder" valign="top" width="44.98%" id="mcps1.2.5.1.4"><p id="p14643165619226"><a name="p14643165619226"></a><a name="p14643165619226"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1964314566224"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8643756152216"><a name="p8643756152216"></a><a name="p8643756152216"></a>-fdFlag</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p13643185662217"><a name="p13643185662217"></a><a name="p13643185662217"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p176431056172219"><a name="p176431056172219"></a><a name="p176431056172219"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p364305652212"><a name="p364305652212"></a><a name="p364305652212"></a>边缘场景标志，是否使用<span id="ph12643556192211"><a name="ph12643556192211"></a><a name="ph12643556192211"></a>FusionDirector</span>系统来管理设备。</p>
-<a name="ul142362048125710"></a><a name="ul142362048125710"></a><ul id="ul142362048125710"><li>true：使用<span id="ph162191065586"><a name="ph162191065586"></a><a name="ph162191065586"></a>FusionDirector</span>。</li><li>false：不使用<span id="ph255141995812"><a name="ph255141995812"></a><a name="ph255141995812"></a>FusionDirector</span>。</li></ul>
-</td>
-</tr>
-<tr id="row1663420612384"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p16218163016357"><a name="p16218163016357"></a><a name="p16218163016357"></a>-shareDevCount</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p9219173013518"><a name="p9219173013518"></a><a name="p9219173013518"></a>uint</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1921914307353"><a name="p1921914307353"></a><a name="p1921914307353"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p10123145412337"><a name="p10123145412337"></a><a name="p10123145412337"></a>共享设备特性开关，取值范围为1~100。</p>
-<p id="p1438861642515"><a name="p1438861642515"></a><a name="p1438861642515"></a>默认值为1，代表不开启共享设备；取值为2~100，表示单颗芯片虚拟化出来的共享设备个数。</p>
-<p id="p732403619233"><a name="p732403619233"></a><a name="p732403619233"></a>支持以下设备，其余设备该参数无效，不影响组件正常启动。</p>
-<a name="ul58873451375"></a><a name="ul58873451375"></a><ul id="ul58873451375"><li><span id="ph106191953178"><a name="ph106191953178"></a><a name="ph106191953178"></a>Atlas 500 A2 智能小站</span>、</li><li><span id="ph1661913531716"><a name="ph1661913531716"></a><a name="ph1661913531716"></a>Atlas 200I A2 加速模块</span></li><li><span id="ph16196538716"><a name="ph16196538716"></a><a name="ph16196538716"></a>Atlas 200I DK A2 开发者套件</span></li><li><span id="ph1477817381395"><a name="ph1477817381395"></a><a name="ph1477817381395"></a>Atlas 300I Pro 推理卡</span></li><li><span id="ph12696247406"><a name="ph12696247406"></a><a name="ph12696247406"></a>Atlas 300V 视频解析卡</span></li><li><span id="ph4177194403"><a name="ph4177194403"></a><a name="ph4177194403"></a>Atlas 300V Pro 视频解析卡</span></li></ul>
-<div class="note" id="note10309163118117"><a name="note10309163118117"></a><a name="note10309163118117"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p1396913313142"><a name="p1396913313142"></a><a name="p1396913313142"></a>若用户使用的是以上支持的<span id="ph2176439131811"><a name="ph2176439131811"></a><a name="ph2176439131811"></a>Atlas 推理系列产品</span>，需要注意以下问题：</p>
-<a name="ul1623912152152"></a><a name="ul1623912152152"></a><ul id="ul1623912152152"><li>不支持在使用静态vNPU调度、动态vNPU调度、推理卡故障恢复和推理卡故障重调度等特性下使用共享设备功能。</li><li>单任务的请求资源数必须为1，不支持分配多芯片和跨芯片使用的场景。</li><li>依赖驱动开启共享模式，设置device-share为true，详细操作步骤和说明请参见<span id="ph3176153981812"><a name="ph3176153981812"></a><a name="ph3176153981812"></a>《Atlas 中心推理卡 25.0.RC1 npu-smi 命令参考》中的“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100468892/3fd846f9" target="_blank" rel="noopener noreferrer">设置指定设备的指定芯片的容器共享模式</a>”</span>章节。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row17989144415342"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p47334555348"><a name="p47334555348"></a><a name="p47334555348"></a>-edgeLogFile</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p273319556345"><a name="p273319556345"></a><a name="p273319556345"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1873395543415"><a name="p1873395543415"></a><a name="p1873395543415"></a>/var/alog/AtlasEdge_log/devicePlugin.log</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p1973365511341"><a name="p1973365511341"></a><a name="p1973365511341"></a>边缘场景日志文件。fdFlag设置为true时生效。</p>
-<div class="note" id="note156353271520"><a name="note156353271520"></a><a name="note156353271520"></a><div class="notebody"><p id="p1864173218153"><a name="p1864173218153"></a><a name="p1864173218153"></a>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。</p>
-</div></div>
-</td>
-</tr>
-<tr id="row186432561220"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p12644145662219"><a name="p12644145662219"></a><a name="p12644145662219"></a>-useAscendDocker</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p166441556192219"><a name="p166441556192219"></a><a name="p166441556192219"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p166441356152213"><a name="p166441356152213"></a><a name="p166441356152213"></a>true</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p156441656122215"><a name="p156441656122215"></a><a name="p156441656122215"></a>默认为true，容器引擎是否使用<span id="ph1577820401502"><a name="ph1577820401502"></a><a name="ph1577820401502"></a>Ascend Docker Runtime</span>。开启<span id="ph20830124818400"><a name="ph20830124818400"></a><a name="ph20830124818400"></a>K8s</span>的CPU绑核功能时，需要卸载<span id="ph12106124518014"><a name="ph12106124518014"></a><a name="ph12106124518014"></a>Ascend Docker Runtime</span>并重启容器引擎。取值说明如下：</p>
-<a name="ul1016210501013"></a><a name="ul1016210501013"></a><ul id="ul1016210501013"><li>true：使用<span id="ph14105112111"><a name="ph14105112111"></a><a name="ph14105112111"></a>Ascend Docker Runtime</span>。</li><li>false：不使用<span id="ph040610111"><a name="ph040610111"></a><a name="ph040610111"></a>Ascend Docker Runtime</span>。</li></ul>
-<div class="note" id="note1276413331201"><a name="note1276413331201"></a><a name="note1276413331201"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p92555221126"><a name="p92555221126"></a><a name="p92555221126"></a><span id="ph19255162231216"><a name="ph19255162231216"></a><a name="ph19255162231216"></a>MindCluster</span> 5.0.RC1及以上版本只支持自动获取运行模式，不接受指定。</p>
-</div></div>
-</td>
-</tr>
-<tr id="row17916463430"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p780164694312"><a name="p780164694312"></a><a name="p780164694312"></a>-use310PMixedInsert</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1836256449"><a name="p1836256449"></a><a name="p1836256449"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p28361658444"><a name="p28361658444"></a><a name="p28361658444"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p15454121594413"><a name="p15454121594413"></a><a name="p15454121594413"></a>是否使用混插模式。</p>
-<a name="ul786019311110"></a><a name="ul786019311110"></a><ul id="ul786019311110"><li>true：使用混插模式。</li><li>false：不使用混插模式。</li></ul>
-<div class="note" id="note131361819164514"><a name="note131361819164514"></a><a name="note131361819164514"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul17174195464813"></a><a name="ul17174195464813"></a><ul id="ul17174195464813"><li>仅支持服务器混插<span id="ph411920371933"><a name="ph411920371933"></a><a name="ph411920371933"></a>Atlas 300I Pro 推理卡</span>、<span id="ph112015374315"><a name="ph112015374315"></a><a name="ph112015374315"></a>Atlas 300V 视频解析卡</span>、<span id="ph21209370319"><a name="ph21209370319"></a><a name="ph21209370319"></a>Atlas 300V Pro 视频解析卡</span>。</li><li>服务器混插模式下不支持<span id="ph68341143132016"><a name="ph68341143132016"></a><a name="ph68341143132016"></a>Volcano</span>调度模式。</li><li>服务器混插模式不支持虚拟化实例。</li><li>服务器混插模式不支持故障重调度场景。</li><li>服务器混插模式不支持<span id="ph47702047205"><a name="ph47702047205"></a><a name="ph47702047205"></a>Ascend Docker Runtime</span>。</li><li>非混插模式下，上报给<span id="ph1045216509409"><a name="ph1045216509409"></a><a name="ph1045216509409"></a>K8s</span>资源名称不变。<a name="ul11586719153319"></a><a name="ul11586719153319"></a><ul id="ul11586719153319"><li>非混插模式上报的资源名称格式为huawei.com/Ascend310P。</li><li>混插模式上报的资源名称格式为：huawei.com/Ascend310P-V、huawei.com/Ascend310P-VPro和huawei.com/Ascend310P-IPro。</li></ul>
-</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row964414563228"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13644556142217"><a name="p13644556142217"></a><a name="p13644556142217"></a>-volcanoType</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1564425682216"><a name="p1564425682216"></a><a name="p1564425682216"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p76441056102218"><a name="p76441056102218"></a><a name="p76441056102218"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p1164405622217"><a name="p1164405622217"></a><a name="p1164405622217"></a>是否使用<span id="ph0961124672016"><a name="ph0961124672016"></a><a name="ph0961124672016"></a>Volcano</span>进行调度，当前已支持<span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>、<span id="ph155178916436"><a name="ph155178916436"></a><a name="ph155178916436"></a><term id="zh-cn_topic_0000001519959665_term57208119917_4"><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a>Atlas A2 训练系列产品</term></span>、<span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>和推理服务器（插<span id="ph1344745412266"><a name="ph1344745412266"></a><a name="ph1344745412266"></a>Atlas 300I 推理卡</span>）芯片。</p>
-<a name="ul971205510117"></a><a name="ul971205510117"></a><ul id="ul971205510117"><li>true：使用<span id="ph6613112220"><a name="ph6613112220"></a><a name="ph6613112220"></a>Volcano</span>。</li><li>false：不使用<span id="ph51281942027"><a name="ph51281942027"></a><a name="ph51281942027"></a>Volcano</span>。</li></ul>
-</td>
-</tr>
-<tr id="row89141810131416"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1291431016147"><a name="p1291431016147"></a><a name="p1291431016147"></a>-presetVirtualDevice</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p591461020148"><a name="p591461020148"></a><a name="p591461020148"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p12914410141413"><a name="p12914410141413"></a><a name="p12914410141413"></a>true</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><div class="p" id="p5587151711307"><a name="p5587151711307"></a><a name="p5587151711307"></a>虚拟化功能开关。<a name="ul103763499315"></a><a name="ul103763499315"></a><ul id="ul103763499315"><li>设置为true时，表示使用静态虚拟化，目前支持<span id="ph331415551371"><a name="ph331415551371"></a><a name="ph331415551371"></a>Atlas 训练系列产品</span>、<span id="ph189561028111118"><a name="ph189561028111118"></a><a name="ph189561028111118"></a>Atlas 推理系列产品</span>。</li><li>设置为false时，表示使用动态虚拟化。目前只支持<span id="ph6297617193810"><a name="ph6297617193810"></a><a name="ph6297617193810"></a>Atlas 推理系列产品</span>的动态虚拟化，需要同步开启<span id="ph525518226126"><a name="ph525518226126"></a><a name="ph525518226126"></a>Volcano</span>使用，即设置<span class="parmname" id="parmname48693348182"><a name="parmname48693348182"></a><a name="parmname48693348182"></a>“-volcanoType”</span>参数为true。</li></ul>
-</div>
-</td>
-</tr>
-<tr id="row36441856152210"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p12644165615224"><a name="p12644165615224"></a><a name="p12644165615224"></a>-version</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p6644456172218"><a name="p6644456172218"></a><a name="p6644456172218"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p7644656122212"><a name="p7644656122212"></a><a name="p7644656122212"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p7644125682211"><a name="p7644125682211"></a><a name="p7644125682211"></a>是否查看当前<span id="ph84663216120"><a name="ph84663216120"></a><a name="ph84663216120"></a>Ascend Device Plugin</span>的版本号。</p>
-<a name="ul119555304152"></a><a name="ul119555304152"></a><ul id="ul119555304152"><li>true：查询。</li><li>false：不查询。</li></ul>
-</td>
-</tr>
-<tr id="row9644156182211"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6644185642211"><a name="p6644185642211"></a><a name="p6644185642211"></a>-listWatchPeriod</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p186448569228"><a name="p186448569228"></a><a name="p186448569228"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p136441561225"><a name="p136441561225"></a><a name="p136441561225"></a>5</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p464495611224"><a name="p464495611224"></a><a name="p464495611224"></a>设置健康状态检查周期，取值范围为[3,1800]，单位为秒。</p>
-<div class="note" id="note17420115751718"><a name="note17420115751718"></a><a name="note17420115751718"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p14975115719252"><a name="p14975115719252"></a><a name="p14975115719252"></a>每个周期内会进行如下检查，并将检查结果写入ConfigMap中。</p>
-<a name="ul21636562619"></a><a name="ul21636562619"></a><ul id="ul21636562619"><li>如果设备信息没有变化且距离上次更新ConfigMap未超过5min，则不会更新ConfigMap。</li><li>如果距离上次更新ConfigMap超过5min，则无论设备信息是否发生变化，都会更新ConfigMap。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row36449569222"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p2644356102220"><a name="p2644356102220"></a><a name="p2644356102220"></a>-autoStowing</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1264485622211"><a name="p1264485622211"></a><a name="p1264485622211"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1564525612224"><a name="p1564525612224"></a><a name="p1564525612224"></a>true</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p1764505652216"><a name="p1764505652216"></a><a name="p1764505652216"></a>是否自动纳管已修复设备，volcanoType为true时生效。</p>
-<a name="ul1064525672211"></a><a name="ul1064525672211"></a><ul id="ul1064525672211"><li>true：自动纳管。</li><li>false：不会自动纳管。</li></ul>
-<div class="note" id="note10645205642216"><a name="note10645205642216"></a><a name="note10645205642216"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p177619535920"><a name="p177619535920"></a><a name="p177619535920"></a>设备故障后，会自动从<span id="ph1713485224014"><a name="ph1713485224014"></a><a name="ph1713485224014"></a>K8s</span>里面隔离。如果设备恢复正常，默认会自动加入<span id="ph313495610401"><a name="ph313495610401"></a><a name="ph313495610401"></a>K8s</span>集群资源池。如果设备不稳定，可以设置为false，此时需要手动纳管。</p>
-<a name="ul99841941151218"></a><a name="ul99841941151218"></a><ul id="ul99841941151218"><li>用户可以使用以下命令，将健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<pre class="screen" id="screen094665011593"><a name="screen094665011593"></a><a name="screen094665011593"></a>kubectl label nodes <em id="i1166617619211"><a name="i1166617619211"></a><a name="i1166617619211"></a>node_name</em> <span id="ph19958101418919"><a name="ph19958101418919"></a><a name="ph19958101418919"></a>huawei.com/Ascend910</span>-Recover-</pre>
-</li></ul>
-<a name="ul7326101671317"></a><a name="ul7326101671317"></a><ul id="ul7326101671317"><li>用户可以使用以下命令，将参数面网络健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<pre class="screen" id="screen220123474617"><a name="screen220123474617"></a><a name="screen220123474617"></a>kubectl label nodes <em id="i1420934104610"><a name="i1420934104610"></a><a name="i1420934104610"></a>node_name</em> <span id="ph6262144981119"><a name="ph6262144981119"></a><a name="ph6262144981119"></a>huawei.com/Ascend910</span>-NetworkRecover-</pre>
-</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row264535642217"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p3645125662216"><a name="p3645125662216"></a><a name="p3645125662216"></a>-logLevel</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p13645175613228"><a name="p13645175613228"></a><a name="p13645175613228"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p9645105618222"><a name="p9645105618222"></a><a name="p9645105618222"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p1926353023718"><a name="p1926353023718"></a><a name="p1926353023718"></a>日志级别：</p>
-<a name="ul15263163018377"></a><a name="ul15263163018377"></a><ul id="ul15263163018377"><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>
-</td>
-</tr>
-<tr id="row46452056162213"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p864555622210"><a name="p864555622210"></a><a name="p864555622210"></a>-maxAge</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1864595642216"><a name="p1864595642216"></a><a name="p1864595642216"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p064565612214"><a name="p064565612214"></a><a name="p064565612214"></a>7</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p7645145615220"><a name="p7645145615220"></a><a name="p7645145615220"></a>日志备份时间限制，取值范围为7~700，单位为天。</p>
-</td>
-</tr>
-<tr id="row11645135622218"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p564535616224"><a name="p564535616224"></a><a name="p564535616224"></a>-logFile</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p106467567226"><a name="p106467567226"></a><a name="p106467567226"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1364685612219"><a name="p1364685612219"></a><a name="p1364685612219"></a>/var/log/mindx-dl/devicePlugin/devicePlugin.log</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p46466565223"><a name="p46466565223"></a><a name="p46466565223"></a>非边缘场景日志文件。fdFlag设置为false时生效。</p>
-<div class="note" id="note66461456152218"><a name="note66461456152218"></a><a name="note66461456152218"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p10646135662215"><a name="p10646135662215"></a><a name="p10646135662215"></a>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：devicePlugin-触发转储的时间.log，如：devicePlugin-2023-10-07T03-38-24.402.log。</p>
-</div></div>
-</td>
-</tr>
-<tr id="row19854135311413"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p468855515412"><a name="p468855515412"></a><a name="p468855515412"></a>-hotReset</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1068819552419"><a name="p1068819552419"></a><a name="p1068819552419"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p668813558416"><a name="p668813558416"></a><a name="p668813558416"></a>-1</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><div class="p" id="p1360415034813"><a name="p1360415034813"></a><a name="p1360415034813"></a>设备热复位功能参数。开启此功能，芯片发生故障后，会进行热复位操作，让芯片恢复健康。<a name="ul17395232194418"></a><a name="ul17395232194418"></a><ul id="ul17395232194418"><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul>
-</div>
-<div class="p" id="p51135168449"><a name="p51135168449"></a><a name="p51135168449"></a>该参数支持的训练设备：<a name="ul4916135114412"></a><a name="ul4916135114412"></a><ul id="ul4916135114412"><li><span id="ph593016296198"><a name="ph593016296198"></a><a name="ph593016296198"></a>Atlas 800 训练服务器（型号 9000）（NPU满配）</span></li><li><span id="ph119301029141913"><a name="ph119301029141913"></a><a name="ph119301029141913"></a>Atlas 800 训练服务器（型号 9010）（NPU满配）</span></li><li><span id="ph1021637121517"><a name="ph1021637121517"></a><a name="ph1021637121517"></a>Atlas 900T PoD Lite</span></li><li><span id="ph2210374151"><a name="ph2210374151"></a><a name="ph2210374151"></a>Atlas 900 PoD（型号 9000）</span></li><li><span id="ph1329303523214"><a name="ph1329303523214"></a><a name="ph1329303523214"></a>Atlas 800T A2 训练服务器</span></li><li><span id="ph1584468101616"><a name="ph1584468101616"></a><a name="ph1584468101616"></a>Atlas 900 A2 PoD 集群基础单元</span></li><li><span id="ph35999574228"><a name="ph35999574228"></a><a name="ph35999574228"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph182145816577"><a name="ph182145816577"></a><a name="ph182145816577"></a>Atlas 800T A3 超节点服务器</span></li></ul>
-</div>
-<div class="p" id="p188831416547"><a name="p188831416547"></a><a name="p188831416547"></a>该参数支持的推理设备：<a name="ul183985146563"></a><a name="ul183985146563"></a><ul id="ul183985146563"><li><span id="ph171707617338"><a name="ph171707617338"></a><a name="ph171707617338"></a>Atlas 300I Pro 推理卡</span></li><li><span id="ph1998432111337"><a name="ph1998432111337"></a><a name="ph1998432111337"></a>Atlas 300V 视频解析卡</span></li><li><span id="ph20155113811336"><a name="ph20155113811336"></a><a name="ph20155113811336"></a>Atlas 300V Pro 视频解析卡</span></li><li><p id="p17841125753817"><a name="p17841125753817"></a><a name="p17841125753817"></a><span id="ph2094813217347"><a name="ph2094813217347"></a><a name="ph2094813217347"></a>Atlas 300I Duo 推理卡</span></p>
-</li><li><span id="ph5910151715547"><a name="ph5910151715547"></a><a name="ph5910151715547"></a>Atlas 300I 推理卡（型号 3000）</span>（整卡）</li><li><span id="ph9917102745418"><a name="ph9917102745418"></a><a name="ph9917102745418"></a>Atlas 300I 推理卡（型号 3010）</span></li><li><span id="ph89183515510"><a name="ph89183515510"></a><a name="ph89183515510"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1271193625613"><a name="ph1271193625613"></a><a name="ph1271193625613"></a>A200I A2 Box 异构组件</span></li><li><span id="ph12174764117"><a name="ph12174764117"></a><a name="ph12174764117"></a>Atlas 800I A3 超节点服务器</span></li></ul>
-<div class="note" id="note5664154417569"><a name="note5664154417569"></a><a name="note5664154417569"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul175661849135915"></a><a name="ul175661849135915"></a><ul id="ul175661849135915"><li>针对<span id="ph7777183513811"><a name="ph7777183513811"></a><a name="ph7777183513811"></a>Atlas 300I Duo 推理卡</span>形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li><span id="ph799895113612"><a name="ph799895113612"></a><a name="ph799895113612"></a>Atlas 800I A2 推理服务器</span>存在以下两种热复位方式，一台<span id="ph88141213103612"><a name="ph88141213103612"></a><a name="ph88141213103612"></a>Atlas 800I A2 推理服务器</span>只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<a name="ul260214531014"></a><a name="ul260214531014"></a><ul id="ul260214531014"><li>方式一：若设备上不存在<span id="ph17233131243911"><a name="ph17233131243911"></a><a name="ph17233131243911"></a>HCCS</span>环，执行推理任务中，当NPU出现故障，<span id="ph15291441576"><a name="ph15291441576"></a><a name="ph15291441576"></a>Ascend Device Plugin</span>等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在<span id="ph78152014181514"><a name="ph78152014181514"></a><a name="ph78152014181514"></a>HCCS</span>环，执行推理任务中，当服务器出现一个或多个故障NPU，<span id="ph1884202413817"><a name="ph1884202413817"></a><a name="ph1884202413817"></a>Ascend Device Plugin</span>等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul>
-</li></ul>
-</div></div>
-</div>
-</td>
-</tr>
-<tr id="row3239193013712"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p624019308711"><a name="p624019308711"></a><a name="p624019308711"></a>-linkdownTimeout</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p52401530674"><a name="p52401530674"></a><a name="p52401530674"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p32401430176"><a name="p32401430176"></a><a name="p32401430176"></a>30</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p182408301718"><a name="p182408301718"></a><a name="p182408301718"></a>网络linkdown超时时间，单位秒，取值范围为1~30。</p>
-<div class="note" id="note1738413571783"><a name="note1738413571783"></a><a name="note1738413571783"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p20384557283"><a name="p20384557283"></a><a name="p20384557283"></a>该参数取值建议与用户在训练脚本中配置的HCCL_RDMA_TIMEOUT时间一致。如果是多任务，建议设置为多任务中HCCL_RDMA_TIMEOUT的最小值。</p>
-</div></div>
-</td>
-</tr>
-<tr id="row1075017121283"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p5750161211818"><a name="p5750161211818"></a><a name="p5750161211818"></a>-enableSlowNode</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p375181212818"><a name="p375181212818"></a><a name="p375181212818"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1275110121288"><a name="p1275110121288"></a><a name="p1275110121288"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p129671501297"><a name="p129671501297"></a><a name="p129671501297"></a>是否启用慢节点检测（劣化诊断）功能。</p>
-<a name="ul95069159911"></a><a name="ul95069159911"></a><ul id="ul95069159911"><li>true：开启。</li><li>false：关闭。<div class="note" id="note8312148101820"><a name="note8312148101820"></a><a name="note8312148101820"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p77431022132019"><a name="p77431022132019"></a><a name="p77431022132019"></a>关于劣化诊断的详细说明请参见<span id="ph3457171015224"><a name="ph3457171015224"></a><a name="ph3457171015224"></a>《iMaster CCAE 产品文档》的“<a href="https://support.huawei.com/hedex/hdx.do?docid=EDOC1100445519&amp;id=ZH-CN_TOPIC_0000002147436540" target="_blank" rel="noopener noreferrer">劣化诊断</a>”章节</span>。</p>
-</div></div>
-</li></ul>
-</td>
-</tr>
-<tr id="row198671943111714"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p3867134341711"><a name="p3867134341711"></a><a name="p3867134341711"></a>-dealWatchHandler</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p88671643201720"><a name="p88671643201720"></a><a name="p88671643201720"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p10867184316171"><a name="p10867184316171"></a><a name="p10867184316171"></a>false</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p1868184331712"><a name="p1868184331712"></a><a name="p1868184331712"></a>当informer链接因异常结束时，是否需要刷新本地的Pod informer缓存。</p>
-<a name="ul634313171920"></a><a name="ul634313171920"></a><ul id="ul634313171920"><li>true：刷新Pod informer缓存。</li><li>false：不刷新Pod informer缓存。</li></ul>
-</td>
-</tr>
-<tr id="row812017287324"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p973423463218"><a name="p973423463218"></a><a name="p973423463218"></a><span id="ph3326182718311"><a name="ph3326182718311"></a><a name="ph3326182718311"></a>-</span>checkCachedPods</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p61202028163219"><a name="p61202028163219"></a><a name="p61202028163219"></a>bool</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p17120202817321"><a name="p17120202817321"></a><a name="p17120202817321"></a>true</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p112032813321"><a name="p112032813321"></a><a name="p112032813321"></a>是否定期检查缓存中的Pod。默认取值为true，当缓存中的Pod超过1小时没有被更新，<span id="ph1546095774116"><a name="ph1546095774116"></a><a name="ph1546095774116"></a>Ascend Device Plugin</span>将会主动请求api-server查看Pod情况。</p>
-<a name="ul17281036173317"></a><a name="ul17281036173317"></a><ul id="ul17281036173317"><li>true：检查。</li><li>false：不检查。</li></ul>
-</td>
-</tr>
-<tr id="row116461156202216"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p06461056132218"><a name="p06461056132218"></a><a name="p06461056132218"></a>-maxBackups</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p5646115682214"><a name="p5646115682214"></a><a name="p5646115682214"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p1564614565223"><a name="p1564614565223"></a><a name="p1564614565223"></a>30</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p13646125616228"><a name="p13646125616228"></a><a name="p13646125616228"></a>转储后日志文件保留个数上限，取值范围为1~30，单位为个。</p>
-</td>
-</tr>
-<tr id="row9144163017398"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p16152184114393"><a name="p16152184114393"></a><a name="p16152184114393"></a>-thirdPartyScanDelay</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p14152341133911"><a name="p14152341133911"></a><a name="p14152341133911"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p191525419394"><a name="p191525419394"></a><a name="p191525419394"></a>300</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p2079525724213"><a name="p2079525724213"></a><a name="p2079525724213"></a><span id="ph2037516484018"><a name="ph2037516484018"></a><a name="ph2037516484018"></a>Ascend Device Plugin</span>组件启动重新扫描的等待时长。</p>
-<p id="p1158711016345"><a name="p1158711016345"></a><a name="p1158711016345"></a><span id="ph1192320535397"><a name="ph1192320535397"></a><a name="ph1192320535397"></a>Ascend Device Plugin</span>自动复位芯片失败后，会将失败信息写到节点annotation上，三方平台可以根据该信息复位失败的芯片。<span id="ph17875154343214"><a name="ph17875154343214"></a><a name="ph17875154343214"></a>Ascend Device Plugin</span>组件根据本参数设置的等待时长，等待一段时间后，重新扫描设备。</p>
-<p id="p18933195204213"><a name="p18933195204213"></a><a name="p18933195204213"></a>仅<span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span>支持使用本参数。</p>
-<p id="p6225161944117"><a name="p6225161944117"></a><a name="p6225161944117"></a>单位：秒。</p>
-</td>
-</tr>
-<tr id="row198881827101810"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101519"><a name="p0894319101519"></a><a name="p0894319101519"></a><span id="ph96781327191516"><a name="ph96781327191516"></a><a name="ph96781327191516"></a>-deviceResetTimeout</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p108941719151514"><a name="p108941719151514"></a><a name="p108941719151514"></a><span id="ph1899563312153"><a name="ph1899563312153"></a><a name="ph1899563312153"></a>int</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p19894131961512"><a name="p19894131961512"></a><a name="p19894131961512"></a><span id="ph67327379151"><a name="ph67327379151"></a><a name="ph67327379151"></a>60</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p589551971510"><a name="p589551971510"></a><a name="p589551971510"></a><span id="ph4556742141516"><a name="ph4556742141516"></a><a name="ph4556742141516"></a>组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600</span><span id="ph124041056151513"><a name="ph124041056151513"></a><a name="ph124041056151513"></a>。</span></p>
-<a name="ul1354220213192"></a><a name="ul1354220213192"></a><ul id="ul1354220213192"><li><span id="ph278017516257"><a name="ph278017516257"></a><a name="ph278017516257"></a><term id="zh-cn_topic_0000001519959665_term57208119917_5"><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a>Atlas A2 训练系列产品</term></span>、<span id="ph13163257131918"><a name="ph13163257131918"></a><a name="ph13163257131918"></a>Atlas 800I A2 推理服务器</span>、<span id="ph10930753142211"><a name="ph10930753142211"></a><a name="ph10930753142211"></a>A200I A2 Box 异构组件</span>：建议配置为150秒。</li><li><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715_4"><a name="zh-cn_topic_0000001519959665_term26764913715_4"></a><a name="zh-cn_topic_0000001519959665_term26764913715_4"></a>Atlas A3 训练系列产品</term></span>、<span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span>：建议配置为360秒。</li></ul>
-</td>
-</tr>
-<tr id="row128921542512"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1090121592517"><a name="p1090121592517"></a><a name="p1090121592517"></a>-h或者-help</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p1690151517258"><a name="p1690151517258"></a><a name="p1690151517258"></a>无</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.040000000000001%" headers="mcps1.2.5.1.3 "><p id="p159091511254"><a name="p159091511254"></a><a name="p159091511254"></a>无</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.98%" headers="mcps1.2.5.1.4 "><p id="p990151522510"><a name="p990151522510"></a><a name="p990151522510"></a>显示帮助信息。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|类型|默认值|说明|
+|--|--|--|--|
+|-fdFlag|bool|false|边缘场景标志，是否使用FusionDirector系统来管理设备。<ul><li>true：使用FusionDirector。</li><li>false：不使用FusionDirector。</li></ul>|
+|-shareDevCount|uint|1|共享设备特性开关，取值范围为1~100。<p>默认值为1，代表不开启共享设备；取值为2~100，表示单颗芯片虚拟化出来的共享设备个数。</p><p>支持以下设备，其余设备该参数无效，不影响组件正常启动。</p><ul><li>Atlas 500 A2 智能小站</li><li>Atlas 200I A2 加速模块</li><li>Atlas 200I DK A2 开发者套件</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li></ul><p>若用户使用的是以上支持的Atlas 推理系列产品，需要注意以下问题：</p><ul><li>不支持在使用静态vNPU调度、动态vNPU调度、推理卡故障恢复和推理卡故障重调度等特性下使用共享设备功能。</li><li>单任务的请求资源数必须为1，不支持分配多芯片和跨芯片使用的场景。</li><li>依赖驱动开启共享模式，设置device-share为true，详细操作步骤和说明请参见《Atlas 中心推理卡 25.5.0 npu-smi 命令参考》中的“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/af78d7e5">设置指定设备的指定芯片的容器共享模式</a>”章节。</li></ul>|
+|-edgeLogFile|string|/var/alog/AtlasEdge_log/devicePlugin.log|边缘场景日志文件。fdFlag设置为true时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。</p>|
+|-useAscendDocker|bool|true|默认为true，容器引擎是否使用Ascend Docker Runtime。开启K8s的CPU绑核功能时，需要卸载Ascend Docker Runtime并重启容器引擎。取值说明如下：<ul><li>true：使用Ascend Docker Runtime。</li><li>false：不使用Ascend Docker Runtime。</li></ul><span> 说明： </span><p>MindCluster 5.0.RC1及以上版本只支持自动获取运行模式，不接受指定。</p>|
+|-use310PMixedInsert|bool|false|是否使用混插模式。<ul><li>true：使用混插模式。</li><li>false：不使用混插模式。</li></ul><span> 说明： </span><ul><li>仅支持服务器混插Atlas 300I Pro 推理卡、Atlas 300V 视频解析卡、Atlas 300V Pro 视频解析卡。</li><li>服务器混插模式下不支持Volcano调度模式。</li><li>服务器混插模式不支持虚拟化实例。</li><li>服务器混插模式不支持故障重调度场景。</li><li>服务器混插模式不支持Ascend Docker Runtime。</li><li>非混插模式下，上报给K8s资源名称不变。<ul><li>非混插模式上报的资源名称格式为huawei.com/Ascend310P。</li><li>混插模式上报的资源名称格式为：huawei.com/Ascend310P-V、huawei.com/Ascend310P-VPro和huawei.com/Ascend310P-IPro。</li></ul></li></ul>|
+|-volcanoType|bool|false|是否使用Volcano进行调度，当前已支持Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas 推理系列产品和推理服务器（插Atlas 300I 推理卡）芯片。<ul><li>true：使用Volcano。</li><li>false：不使用Volcano。</li></ul>|
+|-presetVirtualDevice|bool|true|虚拟化功能开关。<ul><li>设置为true时，表示使用静态虚拟化，目前支持Atlas 训练系列产品、Atlas 推理系列产品。</li><li>设置为false时，表示使用动态虚拟化。目前只支持Atlas 推理系列产品的动态虚拟化，需要同步开启Volcano，即设置-volcanoType参数为true。</li></ul>|
+|-version|bool|false|是否查看当前Ascend Device Plugin的版本号。<ul><li>true：查询。</li><li>false：不查询。</li></ul>|
+|-listWatchPeriod|int|5|<p>设置健康状态检查周期，取值范围为[3,1800]，单位为秒。</p><span> 说明： </span><p>每个周期内会进行如下检查，并将检查结果写入ConfigMap中。</p><ul><li>如果设备信息没有变化且距离上次更新ConfigMap未超过5min，则不会更新ConfigMap。</li><li>如果距离上次更新ConfigMap超过5min，则无论设备信息是否发生变化，都会更新ConfigMap。</li></ul>|
+|-autoStowing|bool|true|是否自动纳管已修复设备，volcanoType为true时生效。<ul><li>true：自动纳管。</li><li>false：不会自动纳管。</li></ul><span> 说明： </span><p>设备故障后，会自动从K8s里面隔离。如果设备恢复正常，默认会自动加入K8s集群资源池。如果设备不稳定，可以设置为false，此时需要手动纳管。</p><ul><li>用户可以使用以下命令，将健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<p>kubectl label nodes *node_name* huawei.com/Ascend910-Recover-</p></li><li>用户可以使用以下命令，将参数面网络健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<p>kubectl label nodes *node_name* huawei.com/Ascend910-NetworkRecover-</p></li></ul>|
+|-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>|
+|-maxAge|int|7|日志备份时间限制，取值范围为7~700，单位为天。|
+|-logFile|string|/var/log/mindx-dl/devicePlugin/devicePlugin.log|非边缘场景日志文件。fdFlag设置为false时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：devicePlugin-触发转储的时间.log，如：devicePlugin-2023-10-07T03-38-24.402.log。</p>|
+|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><span> 说明： </span><p>取值为1对应的功能已经日落，请配置其他取值。</p><p>该参数支持的训练设备：</p><ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li></ul><p>该参数支持的推理设备：</p><ul><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul><span> 说明： </span><ul><li>针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li>Atlas 800I A2 推理服务器存在以下两种热复位方式，一台Atlas 800I A2 推理服务器只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<ul><li>方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul></li></ul>|
+|-linkdownTimeout|int|30|网络linkdown超时时间，单位秒，取值范围为1~30。<p>该参数取值建议与用户在训练脚本中配置的HCCL_RDMA_TIMEOUT时间一致。如果是多任务，建议设置为多任务中HCCL_RDMA_TIMEOUT的最小值。</p>|
+|-enableSlowNode|bool|false|是否启用慢节点检测（劣化诊断）功能。<ul><li>true：开启。</li><li>false：关闭。</li></ul><span> 说明： </span><p>关于劣化诊断的详细说明请参见《iMaster CCAE 产品文档》的“<a href="https://support.huawei.com/hedex/hdx.do?docid=EDOC1100445519&amp;id=ZH-CN_TOPIC_0000002147436540">劣化诊断</a>”章节。</p>|
+|-dealWatchHandler|bool|false|当informer链接因异常结束时，是否需要刷新本地的Pod informer缓存。<ul><li>true：刷新Pod informer缓存。</li><li>false：不刷新Pod informer缓存。</li></ul>|
+|-checkCachedPods|bool|true|是否定期检查缓存中的Pod。默认取值为true，当缓存中的Pod超过1小时没有被更新，Ascend Device Plugin将会主动请求api-server查看Pod情况。<ul><li>true：检查。</li><li>false：不检查。</li></ul>|
+|-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~30，单位为个。|
+|-thirdPartyScanDelay|int|300|<p>Ascend Device Plugin组件启动重新扫描的等待时长。</p><p>Ascend Device Plugin自动复位芯片失败后，会将失败信息写到节点annotation上，三方平台可以根据该信息复位失败的芯片。Ascend Device Plugin组件根据本参数设置的等待时长，等待一段时间后，重新扫描设备。</p><p>仅Atlas 800T A3 超节点服务器支持使用本参数。</p><p>单位：秒。</p>|
+|-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li></ul>|
+|-h或者-help|无|无|显示帮助信息。|
 
 ### Volcano<a name="ZH-CN_TOPIC_0000002479226394"></a>
 
@@ -4673,7 +3949,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
                    - name: binpack
                 configurations:           # 新增以下加粗字段，该字段为Volcano配置字段
                   - name: init-params
-                    arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","useClusterInfoManager":"false","super-pod-size": "48","reserve-nodes": "2"}
+                    arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "48","reserve-nodes": "2"}
             ...
             kind: Deployment
             apiVersion: apps/v1
@@ -5357,7 +4633,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     <td class="cellrowborder" valign="top" width="26.95269526952695%" headers="mcps1.2.5.1.3 "><p id="p16682153041618"><a name="p16682153041618"></a><a name="p16682153041618"></a>./cert-importer -kubeConfig=<em id="i28511515200"><a name="i28511515200"></a><a name="i28511515200"></a>{kubeFile}</em>  -cpt=<em id="i11887152317202"><a name="i11887152317202"></a><a name="i11887152317202"></a>{component}</em></p>
     <p id="p115141742151614"><a name="p115141742151614"></a><a name="p115141742151614"></a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="36.57365736573657%" headers="mcps1.2.5.1.4 "><p id="p2833102831511"><a name="p2833102831511"></a><a name="p2833102831511"></a>由于<span id="ph88891493615"><a name="ph88891493615"></a><a name="ph88891493615"></a>K8s</span>自带的ServerAccount的token文件会挂载到物理机上，有暴露风险，可通过外部导入加密KubeConfig文件替换ServerAccount进行安全加固。</p>
+    <td class="cellrowborder" valign="top" width="36.57365736573657%" headers="mcps1.2.5.1.4 "><p id="p2833102831511"><a name="p2833102831511"></a><a name="p2833102831511"></a>由于<span id="ph88891493615"><a name="ph88891493615"></a><a name="ph88891493615"></a>K8s</span>自带的ServiceAccount的token文件会挂载到物理机上，有暴露风险，可通过外部导入加密KubeConfig文件替换ServiceAccount进行安全加固。</p>
     <p id="p18105124517162"><a name="p18105124517162"></a><a name="p18105124517162"></a></p>
     </td>
     </tr>
@@ -5790,7 +5066,7 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 
         ```
         [Unit]
-        Description=Timer for contianer manager Service
+        Description=Timer for container manager Service
         
         [Timer]
         # 设置Container Manager延时启动时间，请根据实际情况调整
@@ -6095,26 +5371,6 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
     ...
     ```
 
-    如果持续出现如下打印信息，表示组件运行正常。
-
-    ```
-    ...
-    [INFO]     2023/12/08 07:39:01.744739 157     collector/npu_collector.go:476    update cache,key is npu-exporter-network-info
-    [INFO]     2023/12/08 07:39:01.852413 158     collector/npu_collector.go:499    update cache,key is npu-exporter-containers-devices
-    [INFO]     2023/12/08 07:39:05.055247 148     collector/npu_collector.go:442    update cache,key is npu-exporter-npu-list
-    ...
-    ```
-
-    此时如果发现之前的日志中有如下内容可忽略。
-
-    ```
-    [WARN]     2023/12/08 07:38:56.684424 1       npu-exporter/main.go:339    enable unsafe http server
-    [WARN]     2023/12/08 07:39:01.686205 98      container/runtime_ops.go:150    failed to get OCI connection: context deadline exceeded
-    [WARN]     2023/12/08 07:39:01.686311 98      container/runtime_ops.go:152    use backup address to try again
-    ...
-    [WARN]     2023/12/08 07:39:01.688039 157     collector/npu_collector.go:463    get info of npu-exporter-network-info failed: no value found, so use initial net info
-    ```
-
 **NPU Exporter使用二进制部署<a name="zh-cn_topic_0000001497205429_section2976165515363"></a>**
 
 请在安装NPU Exporter的节点执行以下步骤验证组件的安装状态。
@@ -6415,7 +5671,7 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
     回显示例：
 
     ```
-    clusterd-7844cb867d-fwcj7   0/1     Running   0          2m14s   <none>   node133   <none>           <none>
+    clusterd-7844cb867d-fwcj7   1/1     Running   0          2m14s   <none>   node133   <none>           <none>
     ```
 
 2.  执行以下命令，查询ClusterD的Pod日志。
@@ -6573,6 +5829,12 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
                  └─41464 /home/container-manager/container-manager run -ctrStrategy ringRecover
     ...
     ```
+
+    >[!NOTE] 说明 
+    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 25.5.0 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/44299f2a)”章节配置。
+    >```
+    >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!
+    >```
 
 2.  查看组件日志。
 
@@ -7400,7 +6662,7 @@ Elastic Agent组件将会在后续版本日落，本章节提供使用TaskD替�
 
         ```
         export TASKD_PROCESS_ENABLE="on" 
-        // 以PyTorch框架为例
+        # 以PyTorch框架为例
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP} 
             python manager.py &           # 具体执行路径由当前路径决定
