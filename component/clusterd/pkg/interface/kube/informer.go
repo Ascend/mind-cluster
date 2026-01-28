@@ -591,17 +591,9 @@ func cmSwitchHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) 
 }
 
 func cmDpuHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) {
-	var oldDpuList *constant.DpuInfoCM
 	var newDpuList *constant.DpuInfoCM
 	var err error
 
-	if oldCm != nil {
-		oldDpuList, err = dpu.ParseDpuInfoCM(oldCm)
-		if err != nil {
-			hwlog.RunLog.Errorf("%s parse old CM error: %v", api.DpuLogPrefix, err)
-			return
-		}
-	}
 	newDpuList, err = dpu.ParseDpuInfoCM(newCm)
 	if err != nil {
 		hwlog.RunLog.Errorf("%s parse new CM error: %v", api.DpuLogPrefix, err)
@@ -609,14 +601,12 @@ func cmDpuHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) {
 	}
 	index := 0
 	for _, cmFuncs := range cmDpuFuncs {
-		oldDpuListForBusiness := oldDpuList
 		newDpuListForBusiness := newDpuList
 		if index > 0 {
-			oldDpuListForBusiness = dpu.DeepCopy(oldDpuList)
 			newDpuListForBusiness = dpu.DeepCopy(newDpuList)
 		}
 		for _, cmFunc := range cmFuncs {
-			cmFunc(oldDpuListForBusiness, newDpuListForBusiness, operator)
+			cmFunc(&constant.DpuInfoCM{}, newDpuListForBusiness, operator)
 		}
 		index++
 	}
