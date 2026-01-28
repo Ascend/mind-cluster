@@ -51,6 +51,7 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 						RecoverConfig: common.RecoverConfig{GraceExit: false}},
 				},
 			},
+			currentFaults: make(map[string]map[string]bool),
 		}
 		convey.Convey("01-controller not exist, should not add event", func() {
 			mockJob := fakeJobID2
@@ -80,6 +81,9 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 			mockFunc := gomonkey.ApplyPrivateMethod(&EventController{}, "addEvent",
 				func(*EventController, string) {})
 			defer mockFunc.Reset()
+			mockGetNodeRankIds := gomonkey.ApplyFunc(common.GetNodeRankIdsByRankIds,
+				func(string, []string) ([]string, error) { return []string{"1"}, nil })
+			defer mockGetNodeRankIds.Reset()
 			svr.notifyFaultInfoForJob(info)
 			ctl := svr.eventCtl[mockJob]
 			convey.So(ctl, convey.ShouldNotBeNil)
@@ -1067,4 +1071,62 @@ func TestPreHandleFaultInfo(t *testing.T) {
 			convey.So(len(faultInfo.FaultList), convey.ShouldEqual, tc.expectedFaultListLen)
 		})
 	}
+}
+
+func TestSendPreExitSignal(t *testing.T) {
+	convey.Convey("test sendPreExitSignal", t, func() {
+		svc := &FaultRecoverService{}
+		controller := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: fakeJobID},
+		}
+		removeGrpcFault := []*pb.FaultRank{{RankId: "1", FaultType: constant.NormalFaultType}}
+		faultNodes := []string{"node1"}
+		mockEnqueue := gomonkey.ApplyPrivateMethod(controller, "signalEnqueue", func(*EventController, *pb.ProcessManageSignal) {})
+		defer mockEnqueue.Reset()
+		svc.sendPreExitSignal(controller, removeGrpcFault, faultNodes)
+	})
+}
+
+func TestGetAdditionFault(t *testing.T) {
+	convey.Convey("test getAdditionFault", t, func() {
+		svc := &FaultRecoverService{
+			currentFaults: make(map[string]map[string]bool),
+		}
+		grpcFormatFaults := []*pb.FaultRank{{RankId: "1", FaultType: constant.NormalFaultType}}
+		addedFaults, faultRanks := svc.getAdditionFault(fakeJobID, grpcFormatFaults)
+		convey.So(len(addedFaults), convey.ShouldEqual, 1)
+		convey.So(len(faultRanks), convey.ShouldEqual, 1)
+		convey.So(faultRanks[0], convey.ShouldEqual, "1")
+	})
+}
+
+func TestGetRetryStatus(t *testing.T) {
+	convey.Convey("test getRetryStatus", t, func() {
+		svc := &FaultRecoverService{}
+		controller := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: fakeJobID},
+		}
+		mockSupportRetry := gomonkey.ApplyPrivateMethod(controller, "supportRetryStrategy", func(*EventController) bool { return true })
+		defer mockSupportRetry.Reset()
+		addedFaults := map[string]*pb.FaultRank{"1_Normal": {RankId: "1", FaultType: constant.NormalFaultType}}
+		onlyRetryFault, supportRetry := svc.getRetryStatus(addedFaults, controller)
+		convey.So(onlyRetryFault, convey.ShouldBeFalse)
+		convey.So(supportRetry, convey.ShouldBeTrue)
+	})
+}
+
+func TestGetFaultAndFaultNodes(t *testing.T) {
+	convey.Convey("test getFaultAndFaultNodes", t, func() {
+		svc := &FaultRecoverService{}
+		controller := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: fakeJobID},
+		}
+		mockGetNodeRankIds := gomonkey.ApplyFunc(common.GetNodeRankIdsByRankIds, func(string, []string) ([]string, error) { return []string{"node1"}, nil })
+		defer mockGetNodeRankIds.Reset()
+		faultRanks := []string{"1"}
+		removeGrpcFault, faultNodes := svc.getFaultAndFaultNodes(faultRanks, controller)
+		convey.So(len(removeGrpcFault), convey.ShouldEqual, 1)
+		convey.So(len(faultNodes), convey.ShouldEqual, 1)
+		convey.So(faultNodes[0], convey.ShouldEqual, "node1")
+	})
 }

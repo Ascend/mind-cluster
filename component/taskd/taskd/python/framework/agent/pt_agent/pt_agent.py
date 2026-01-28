@@ -49,7 +49,7 @@ class PtAgent(BaseAgent):
         self.network_config = network_config
         self.command_map = {
             constants.STARTAGENTCODE: self.initialize_workers,
-            constants.STOPAGENTCODE: self.stop_workers,
+            constants.STOPWORKERSCODE: self.stop_workers,
             constants.EXITAGENTCODE: self.exit_agent,
             constants.RESTARTAGENTCODE: self.restart_workers,
             constants.GRACEEXITAGENTCODE: self.grace_exit,
@@ -115,7 +115,18 @@ class PtAgent(BaseAgent):
 
     def stop_workers(self, msg):
         run_log.info(f'receive {msg.code} command, start to stop workers')
-        self._func_map.get('KILL_WORKER')(self.worker_group)
+        try:
+            fault_ranks = json.loads(msg.message)
+            if fault_ranks is None:
+                run_log.error("fault_ranks is None")
+                return
+            int_fault_ranks = [int(rank) for rank in fault_ranks]
+        except Exception as e:
+            run_log.error(f"Convert fault_ranks to int failed: {e}")
+            return
+        run_log.info(f"fault_ranks is {int_fault_ranks}")
+        fault_workers = get_fault_workers(self.pt_instance._worker_group, int_fault_ranks)
+        self._func_map.get('KILL_WORKER')(fault_workers)
         self.worker_group.state = WorkerState.STOPPED
 
     def exit_agent(self, msg):

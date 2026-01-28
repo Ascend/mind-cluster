@@ -25,6 +25,8 @@ const (
 	WaitStartAgentSignalType = "pauseStartAgent"
 	// ContinueStartAgentSignalType continue start train signal type
 	ContinueStartAgentSignalType = "continueStartAgent"
+	// PreExitProcessSignalType pre exit process signal type
+	PreExitProcessSignalType = "preExitProcess"
 )
 
 // recover strategy name
@@ -353,6 +355,8 @@ const (
 	StopSwitchAction = "stop switch"
 	// NewPodRunningAction new pod running action
 	NewPodRunningAction = "new pod running"
+	// PreExitProcessAction pre exit process action
+	PreExitProcessAction = "pre exit process"
 
 	// DefaultWaitRescheduleTimeout default reschedule timeout before executing arf or dp scale-in strategy
 	// (Unit: second)

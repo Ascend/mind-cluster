@@ -34,12 +34,14 @@ type stopTrainingPlugin struct {
 	shot            storage.SnapShot
 	signalInfo      *pluginutils.SignalInfo
 	HasSendMessages map[string]string
+	lastUuid        string
 }
 
 // New creates an object
 func New() infrastructure.ManagerPlugin {
 	return &stopTrainingPlugin{
 		HasSendMessages: make(map[string]string),
+		lastUuid:        "",
 	}
 }
 
@@ -65,6 +67,14 @@ func (s *stopTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure.Pr
 	}
 	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType {
 		hwlog.RunLog.Info("get stop_train signal, apply for the token")
+		return infrastructure.PredicateResult{
+			PluginName:      s.Name(),
+			CandidateStatus: constant.CandidateStatus,
+			PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""},
+		}, nil
+	}
+	if s.signalInfo.SignalType == clusterdconstant.PreExitProcessSignalType && s.signalInfo.Uuid != s.lastUuid {
+		hwlog.RunLog.Info("get pre_exit_process signal, apply for the token")
 		return infrastructure.PredicateResult{
 			PluginName:      s.Name(),
 			CandidateStatus: constant.CandidateStatus,
@@ -97,6 +107,12 @@ func (s *stopTrainingPlugin) Handle() (infrastructure.HandleResult, error) {
 		s.HasSendMessages = make(map[string]string)
 		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
 	}
+	if s.signalInfo.SignalType == clusterdconstant.PreExitProcessSignalType {
+		s.lastUuid = s.signalInfo.Uuid
+		hwlog.RunLog.Info("get pre_exit_process signal, need to exit fault process")
+		s.hasToken = false
+		return infrastructure.HandleResult{Stage: constant.HandleStageFinal}, nil
+	}
 	return infrastructure.HandleResult{Stage: constant.HandleStageProcess}, nil
 }
 
@@ -111,6 +127,12 @@ func (s *stopTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
 		return nil, nil
 	}
 	msgs := make([]infrastructure.Msg, 0)
+	if s.signalInfo.SignalType == clusterdconstant.PreExitProcessSignalType {
+		msgs = append(msgs, s.signalInfo.GetMsgs()...)
+		s.lastUuid = s.signalInfo.Uuid
+		hwlog.RunLog.Infof("pull msgs: %+v", msgs)
+		return msgs, nil
+	}
 	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType || s.signalInfo.
 		SignalType == clusterdconstant.FaultNodesExitSignalType || s.signalInfo.
 		SignalType == clusterdconstant.GlobalFaultSignalType {

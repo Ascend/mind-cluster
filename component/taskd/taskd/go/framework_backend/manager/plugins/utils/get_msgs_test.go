@@ -16,6 +16,7 @@
 package utils
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -26,6 +27,9 @@ import (
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/toolkit_backend/net/common"
+
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 )
 
 func init() {
@@ -125,4 +129,42 @@ func getSignalInfoGetMsgsTestWant() []infrastructure.Msg {
 					constant.Actions:        utils.ObjToString([]string{clusterdconstant.ChangeStrategyAction}),
 					constant.ChangeStrategy: "",
 					constant.ExtraParams:    ""}}}}
+}
+
+func TestGetPreExitProcessActionMsgs(t *testing.T) {
+	convey.Convey("test getPreExitProcessActionMsgs", t, func() {
+		convey.Convey("normal case", func() {
+			signalInfo := &SignalInfo{
+				Command: map[string]string{
+					constant.FaultRanks: `{"1": 1}`,
+				},
+				NodeRankIds: []string{"0"},
+			}
+			mockStringToObj := gomonkey.ApplyFunc(utils.StringToObj[map[int]int], func(string) (map[int]int, error) {
+				return map[int]int{1: 1}, nil
+			})
+			mockObjToString := gomonkey.ApplyFunc(utils.ObjToString, func(interface{}) string { return `["1"]` })
+			defer func() {
+				mockStringToObj.Reset()
+				mockObjToString.Reset()
+			}()
+			msgs := signalInfo.getPreExitProcessActionMsgs()
+			convey.So(len(msgs), convey.ShouldEqual, 1)
+			convey.So(msgs[0].Body.Code, convey.ShouldEqual, constant.StopWorkersCode)
+		})
+		convey.Convey("error case", func() {
+			signalInfo := &SignalInfo{
+				Command: map[string]string{
+					constant.FaultRanks: "invalid",
+				},
+				NodeRankIds: []string{"0"},
+			}
+			mockStringToObj := gomonkey.ApplyFunc(utils.StringToObj[map[int]int], func(string) (map[int]int, error) {
+				return nil, errors.New("parse error")
+			})
+			defer mockStringToObj.Reset()
+			msgs := signalInfo.getPreExitProcessActionMsgs()
+			convey.So(len(msgs), convey.ShouldEqual, 0)
+		})
+	})
 }

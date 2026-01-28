@@ -18,6 +18,7 @@ package utils
 import (
 	"strconv"
 
+	"ascend-common/common-utils/hwlog"
 	clusterdconstant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
 	"taskd/common/utils"
@@ -55,6 +56,8 @@ func (s *SignalInfo) GetMsgs() []infrastructure.Msg {
 			msgs = append(msgs, s.getFaultNodesRestartActionMsgs()...)
 		} else if action == clusterdconstant.ChangeStrategyAction {
 			msgs = append(msgs, s.getChangeStrategyActionMsgs()...)
+		} else if action == clusterdconstant.PreExitProcessAction {
+			msgs = append(msgs, s.getPreExitProcessActionMsgs()...)
 		}
 	}
 	return msgs
@@ -167,4 +170,28 @@ func (s *SignalInfo) getChangeStrategyActionMsgs() []infrastructure.Msg {
 			},
 		},
 	}
+}
+
+func (s *SignalInfo) getPreExitProcessActionMsgs() []infrastructure.Msg {
+	msgs := make([]infrastructure.Msg, 0)
+	faultRankPairs, err := utils.StringToObj[map[int]int](s.Command[constant.FaultRanks])
+	if err != nil {
+		hwlog.RunLog.Errorf("getPreExitProcessActionMsgs StringToObj error: %v", err)
+		return msgs
+	}
+	var faultRanks []string
+	for rankId, _ := range faultRankPairs {
+		faultRanks = append(faultRanks, strconv.Itoa(rankId))
+	}
+	for _, nodeRankId := range s.NodeRankIds {
+		msgs = append(msgs, infrastructure.Msg{
+			Receiver: []string{common.AgentRole + nodeRankId},
+			Body: storage.MsgBody{
+				MsgType: constant.Action,
+				Code:    constant.StopWorkersCode,
+				Message: utils.ObjToString(faultRanks),
+			},
+		})
+	}
+	return msgs
 }
