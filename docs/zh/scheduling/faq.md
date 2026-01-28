@@ -237,7 +237,7 @@ KMC密钥文件锁信号量默认权限为600，属主为运行KMC的进程（ro
 
 以Ascend Device Plugin为例，组件启动YAML执行成功，出现多个created。Ascend Device Plugin对应的K8s  DaemonSet（ds）资源已经创建了，但是却找不到Pod。
 
-![](figures/c.png)
+![](../figures/scheduling/c.png)
 
 **原因分析<a name="zh-cn_topic_0000001497524633_section826014241546"></a>**
 
@@ -270,8 +270,8 @@ NPU Exporter启动参数“-containerd”和“-endpoint”默认配置的socket
 
 |启动参数|容器模式|修改默认值|
 |--|--|--|
-|-containerd|若containerMode=docker，默认配置的socket文件路径为/var/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix:///run/containerd/containerd.sock。若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。|一般情况下该参数保持默认即可，除非用户自行修改了Containerd的sock文件路径，可通过**ps aux | grep "containerd.sock"**命令查询。|
-|-endpoint|若containerMode=docker，将连接到Dockershim获取容器列表，默认配置的socket文件路径为/var/run/dockershim.sock；若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。|一般情况下该参数保持默认即可，除非用户自行修改了Dockershim或者Containerd的sock文件路径。|
+|-containerd|<ul><li>若containerMode=docker，默认配置的socket文件路径为/var/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix:///run/containerd/containerd.sock。</li><li>若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。</li></ul>|一般情况下该参数保持默认即可，除非用户自行修改了Containerd的sock文件路径，可通过**ps aux \| grep "containerd.sock"**命令查询。|
+|-endpoint|<ul><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认配置的socket文件路径为/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。</li></ul>|一般情况下该参数保持默认即可，除非用户自行修改了Dockershim或者Containerd的sock文件路径。|
 
 
 ## 手动安装Volcano后，Pod状态为：CrashLoopBackOff<a name="ZH-CN_TOPIC_0000002511426385"></a>
@@ -282,23 +282,23 @@ Volcano在运行时，其Pod状态为“CrashLoopBackOff”。
 
 示例如下：
 
-![](figures/zh-cn_image_0000002511426561.png)
+![](../figures/scheduling/zh-cn_image_0000002511426561.png)
 
 查看Volcano对应Pod的日志。
 
 -   出现“permission denied”报错。
 
-    ![](figures/zh-cn_image_0000002511346571.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511346571.png)
 
 -   streamwatcher.go等待超时。
 
-    ![](figures/zh-cn_image_0000002511426547.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511426547.png)
 
 **原因分析<a name="zh-cn_topic_0000001497524653_section1968145716302"></a>**
 
 手动安装时，Volcano的日志权限不对。
 
-![](figures/zh-cn_image_0000002511346589.png)
+![](../figures/scheduling/zh-cn_image_0000002511346589.png)
 
 **解决措施<a name="zh-cn_topic_0000001497524653_section1583914319315"></a>**
 
@@ -405,7 +405,7 @@ E1024 19:45:09.464318       6 reflector.go:127] K8s.io/client-go@v1.19.4-h4/tool
     npu-exporter     npu-exporter-rtgpg                         0/1     CrashLoopBackOff   2          39s
     ```
 
-2.  执行**kubectl logs -fn npu-exporter npu-exporter-rtgpg**查看报错信息，日志显示信息如下**。**
+2.  执行**kubectl logs -f -n npu-exporter npu-exporter-rtgpg**查看报错信息，日志显示信息如下**。**
 
     ```
     [INFO]     2023/10/24 09:55:04.454169 1       hwlog/api.go:108    npu-exporter.log's logger init success
@@ -586,7 +586,7 @@ E1024 19:45:09.464318       6 reflector.go:127] K8s.io/client-go@v1.19.4-h4/tool
 一般情况下，故障处理均需经历“收集信息 \> 定位故障 \> 排除故障”三个阶段。在收到告警信息后，通过收集故障现象信息、分析故障原因、定位故障、排除故障后，才可使业务恢复正常。常见的故障处理流程请参见[图1](#fig16356123319514)。
 
 **图 1**  故障处理<a name="fig16356123319514"></a>  
-![](figures/故障处理.png "故障处理")
+![](../figures/scheduling/故障处理.png "故障处理")
 
 ## kubelet重启后，NPU Exporter无法获取当前容器信息<a name="ZH-CN_TOPIC_0000002511346365"></a>
 
@@ -696,7 +696,7 @@ kubelet重启后会重新创建新dockershim.sock文件，但是NPU Exporter获�
 
 执行**kubectl exec -it** _XXX_ **bash**命令进入容器，若Pod不在default命名空间，则需要加**-n** _XXX_指明命名空间，如：**kubectl exec -it** _XXX_ **-n **_XXX_** bash**。
 
-![](figures/zh-cn_image_0000002511426463.png)
+![](../figures/scheduling/zh-cn_image_0000002511426463.png)
 
 **原因分析<a name="zh-cn_topic_0000001497124765_section3798104023112"></a>**
 
@@ -727,7 +727,7 @@ kubelet重启后会重新创建新dockershim.sock文件，但是NPU Exporter获�
 
 在Atlas 800 推理服务器（型号 3000）（ARM），操作系统CentOS  7.6上，使用K8s（版本1.12）进行NPU相关业务调度。配置K8s的参数 --kube-reserved=cpu=2,memory=250Mi --cpu-manager-policy=static --feature-gates=CPUManager=true，开启K8s的绑核，绑核后执行npu-smi info，报错如下所示。
 
-![](figures/image.png)
+![](../figures/scheduling/image.png)
 
 **原因分析<a name="zh-cn_topic_0000001447124960_section126373345478"></a>**
 
@@ -750,11 +750,11 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
 
 1.  执行**kubectl get pod --all-namespaces**命令，查看该训练任务所属的Pod处于**Pending**状态，如下图所示。
 
-    ![](figures/faq-1.png)
+    ![](../figures/scheduling/faq-1.png)
 
 2.  执行**kubectl describe pod sasa-resnet1-acc-default-test-0**_ _**-n vcjob**命令，查看Pod的详情。在event字段中报：all nodes are unavailable: 1 node annotations\(7\) not same node idle\(8\)。
 
-    ![](figures/faq-2.png)
+    ![](../figures/scheduling/faq-2.png)
 
 **原因分析<a name="zh-cn_topic_0000001497364977_zh-cn_topic_0301034101_section713221171813"></a>**
 
@@ -762,7 +762,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
 
 执行**kubectl describe nodes**命令，查看节点的Allocated resources和Annotations的huawei.com/Ascend910字段。
 
-![](figures/faq-3.png)
+![](../figures/scheduling/faq-3.png)
 
 造成该问题的原因，除了任务量特别多导致K8s运行缓慢之外，主要是Ascend Device Plugin的启动方式存在问题。
 
@@ -776,11 +776,11 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
 
 1.  执行**df -h**卡住。
 
-    ![](figures/zh-cn_image_0000002479226626.png)
+    ![](../figures/scheduling/zh-cn_image_0000002479226626.png)
 
 2.  使用**strace df -h**查看卡住的地方。显示如下：
 
-    ![](figures/zh-cn_image_0000002511346539.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511346539.png)
 
 3.  重启NFS服务。显示如下信息：
 
@@ -797,11 +797,11 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
     cat /etc/exports
     ```
 
-    ![](figures/zh-cn_image_0000002511426511.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511426511.png)
 
 2.  查看对应的共享目录。
 
-    ![](figures/zh-cn_image_0000002479386598.jpg)
+    ![](../figures/scheduling/zh-cn_image_0000002479386598.jpg)
 
 **解决措施<a name="zh-cn_topic_0000001497205469_section10951347902"></a>**
 
@@ -817,13 +817,13 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
     sudo /etc/init.d/nfs-kernel-server start
     ```
 
-    ![](figures/zh-cn_image_0000002479226618.jpg)
+    ![](../figures/scheduling/zh-cn_image_0000002479226618.jpg)
 
 3.  执行**df -h**查看。
 
     执行成功。
 
-    ![](figures/zh-cn_image_0000002511346545.jpg)
+    ![](../figures/scheduling/zh-cn_image_0000002511346545.jpg)
 
 ## 手动删除vcjob后Pod一直处于Terminating状态<a name="ZH-CN_TOPIC_0000002479386450"></a>
 
@@ -831,7 +831,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
 
 使用**kubectl delete -f **_xxx_**.yaml**删除vcjob后Pod一直处于Terminating状态。
 
-![](figures/terminating_zh.png)
+![](../figures/scheduling/terminating_zh.png)
 
 **原因分析<a name="zh-cn_topic_0000001497364913_section2053213310228"></a>**
 
@@ -848,7 +848,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
     ```
 
     **图 1**  查询结果<a name="zh-cn_topic_0000001497364913_fig1050042718447"></a>  
-    ![](figures/查询结果.png "查询结果")
+    ![](../figures/scheduling/查询结果.png "查询结果")
 
     如图，“xxx.xxx.xxx.xxx:/data/k8s/run“和“xxx.xxx.xxx.xxx:/data/k8s/dls\_data/public/dataset/resnet50“即为该Pod的NFS挂载路径。
 
@@ -901,7 +901,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
     ```
 
     **图 2**  查询结果<a name="zh-cn_topic_0000001497364913_fig11232135584416"></a>  
-    ![](figures/查询结果-0.png "查询结果-0")
+    ![](../figures/scheduling/查询结果-0.png "查询结果-0")
 
 5.  执行以下命令，结束进程。
 
@@ -998,8 +998,8 @@ Events:                    <none>
     ```
 
     >[!NOTE] 说明 
-    >-   mindcluster-dls-npu-16p：vcjob的任务名字。
-    >-   mindcluster-test：该任务所属的namespace名称。
+    >-   mindx-dls-npu-16p：vcjob的任务名字。
+    >-   mindx-test：该任务所属的namespace名称。
 
 ## 任务容器未成功挂载NPU<a name="ZH-CN_TOPIC_0000002479226448"></a>
 
@@ -1264,18 +1264,18 @@ Windows操作系统下的换行符为\\r\\n，Linux下的换行符是\\n。如�
                   return true
               })
          case v1alpha1.AbortJobAction:
-              return KillJob(ps.job, PodRetainPhasesoft, func(status *vcbatch.Jobstatus) bool {
+              return KillJob(ps.job, PodRetainPhasesoft, func(status *vcbatch.JobStatus) bool {
                   status.State.Phase = vcbatch.Aborting
                   return true
               })
          case v1alpha1.TerminateJobAction:
-              return KillJob(ps.job, PodRetainPhasesoft, func(status *vcbatch.Jobstatus) bool {
+              return KillJob(ps.job, PodRetainPhasesoft, func(status *vcbatch.JobStatus) bool {
                   status.State.Phase = vcbatch.Terminating
                   return true
               })
          case v1alpha1.CompleteJobAction:
               return KillJob(ps.job, PodRetainPhaseSoft, func(status *vcbatch.JobStatus) bool {
-                  status.State.Phase =vcbatch.Completing
+                  status.State.Phase = vcbatch.Completing
                   return true
               })
          case v1alpha1.IgnoreAction:        //增加case v1alpha1.IgnoreAction代码
@@ -1389,9 +1389,9 @@ export PYTHONPATH=$PYTHONPATH:MEGATRON_LM的路径/megatron_npu
 
 训练任务开启hostNetwork为true。提示如图所示报错，通信阻塞超时，任务失败
 
-![](figures/zh-cn_image_0000002479386582.png)
+![](../figures/scheduling/zh-cn_image_0000002479386582.png)
 
-![](figures/zh-cn_image_0000002511346511.png)
+![](../figures/scheduling/zh-cn_image_0000002511346511.png)
 
 **原因分析<a name="section1175235326"></a>**
 
@@ -1538,7 +1538,7 @@ kubectl apply -f clusterd-v{version}.yaml
 训练任务在发生故障后启用进程级在线恢复（Step级别重计算恢复）功能，在恢复完成后继续训练，恢复训练后第一个迭代还没完成又报错unsafe data，恢复失败。
 
 **图 1**  恢复失败<a name="fig1965816983211"></a>  
-![](figures/恢复失败.png "恢复失败")
+![](../figures/scheduling/恢复失败.png "恢复失败")
 
 **原因分析<a name="section1541511240"></a>**
 
@@ -1585,7 +1585,7 @@ kubectl apply -f clusterd-v{version}.yaml
 执行MindSpore框架的模型训练任务，在编译时出现如下报错：The pointer\[origin\_node\_output\_addr\] is null。
 
 **图 1**  编译报错<a name="fig642585735717"></a>  
-![](figures/编译报错.png "编译报错")
+![](../figures/scheduling/编译报错.png "编译报错")
 
 **原因分析<a name="section378617128596"></a>**
 
@@ -1606,7 +1606,7 @@ MindSpore图编译失败，可能是修改模型参数后，从缓存中加载�
 
 执行**kubectl get pod -A -o wide**命令，发现NPU Exporter组件中部分Pod的状态为CrashLoopBackOff。
 
-![](figures/8ku5xjy9.png)
+![](../figures/scheduling/8ku5xjy9.png)
 
 **原因分析<a name="section16806366237"></a>**
 
@@ -1615,7 +1615,7 @@ MindSpore图编译失败，可能是修改模型参数后，从缓存中加载�
 1.  <a name="li1648841855512"></a>执行以下命令查看日志报错。或查看日志**/var/log/mindx-dl/npu-exporter/npu-exporter.log**报deviceManager初始化错误，表示找不到NPU设备。
 
     ```
-    kubectl logs -fn npu-exporter npu-exporter-8l7w2
+    kubectl logs -f -n npu-exporter npu-exporter-8l7w2
     ```
 
     回显如下所示。
@@ -1655,7 +1655,7 @@ Error from server (Forbidden): error when deleting "device-plugin-310P-volcano-v
 
 在管理节点执行以上命令。示例如下。
 
-![](figures/Snipaste_2025-02-13_15-04-47.png)
+![](../figures/scheduling/Snipaste_2025-02-13_15-04-47.png)
 
 ## 下发任务失败，未生成Pod<a name="ZH-CN_TOPIC_0000002479226436"></a>
 
@@ -1663,7 +1663,7 @@ Error from server (Forbidden): error when deleting "device-plugin-310P-volcano-v
 
 执行**kubectl apply -f xxx.yaml**命令后，下发任务失败，提示Error from server \(NotFound\): error when creating "xxx-vcjob.yaml": namespaces "vcjob" not found。
 
-![](figures/20250225-161406(WeLinkPC).png)
+![](../figures/scheduling/20250225-161406(WeLinkPC).png)
 
 **原因分析<a name="section45716469536"></a>**
 
@@ -1791,11 +1791,11 @@ vcjob命名空间未创建。
 
     回显如下所示，提示有个节点Allocatable的huawei.com/Ascend910为7。
 
-    ![](figures/zh-cn_image_0000002511346613.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511346613.png)
 
 4.  执行**npu-smi info**命令，显示没有正在运行的任务。
 
-    ![](figures/zh-cn_image_0000002479386672.png)
+    ![](../figures/scheduling/zh-cn_image_0000002479386672.png)
 
 5.  执行以下命令，获取集群内所有命名空间。
 
@@ -1805,7 +1805,7 @@ vcjob命名空间未创建。
 
     回显如下所示。
 
-    ![](figures/Snipaste_2025-02-17_11-31-02.png)
+    ![](../figures/scheduling/Snipaste_2025-02-17_11-31-02.png)
 
 6.  执行以下命令，获取ConfigMap的全部信息。
 
@@ -1815,7 +1815,7 @@ vcjob命名空间未创建。
 
     信息显示NPU device-4 CardUnhealthy，错误码为0x80CD8008。
 
-    ![](figures/Snipaste_2025-02-17_11-29-01.png)
+    ![](../figures/scheduling/Snipaste_2025-02-17_11-29-01.png)
 
 7.  对错误码进行查询，可以查到的故障详细信息如下所示。
 
@@ -1823,7 +1823,7 @@ vcjob命名空间未创建。
 
 |EventID|所属一级模块|所属二级模块|通知类型|故障事件名称|故障解释/可能原因|故障影响|故障自处理模式|
 |--|--|--|--|--|--|--|--|
-|0x80CD8008|芯片故障|L2BUFF|故障事件|L2BUFF多bit ECC错误|片内SRAM软失败，导致L2BUFF多bit错误。|系统停止响应，数据错误或可能出现一致性错误。|<li>上报故障事件到设备</li><li>记录错误日志</li>|
+|0x80CD8008|芯片故障|L2BUFF|故障事件|L2BUFF多bit ECC错误|片内SRAM软失败，导致L2BUFF多bit错误。|系统停止响应，数据错误或可能出现一致性错误。|<ul><li>上报故障事件到设备</li><li>记录错误日志</li></ul>|
 
 
 8.  重启服务器。
@@ -1836,7 +1836,7 @@ vcjob命名空间未创建。
 
         删除异常信息后，问题已解决。
 
-        ![](figures/Snipaste_2025-02-17_11-26-02.png)
+        ![](../figures/scheduling/Snipaste_2025-02-17_11-26-02.png)
 
     -   如确认该卡发生硬件故障，请联系华为工程师处理。
 
@@ -1877,7 +1877,7 @@ vcjob命名空间未创建。
 
 在任务YAML中添加以下字段，示例如下。
 
-![](figures/zh-cn_image_0000002479386630.png)
+![](../figures/scheduling/zh-cn_image_0000002479386630.png)
 
 ## 公共故障的恢复消息丢失，导致故障芯片一直处于隔离状态<a name="ZH-CN_TOPIC_0000002511346343"></a>
 
@@ -1889,7 +1889,7 @@ vcjob命名空间未创建。
 
 -   原因一：故障发送方没有成功发送恢复消息给ClusterD；
 -   原因二：故障恢复消息发送成功，但是K8s informer的消息队列出现消息遗漏；
--   原因三：收到故障恢复消息后，ClusterD发生重启，导致内存中的故障缓存还未刷新至statistic-fault-info CM就被清理掉了。
+-   原因三：收到故障恢复消息后，ClusterD发生重启，导致内存中的故障缓存还未刷新至statistic-fault-info ConfigMap就被清理掉了。
 
 **解决措施<a name="section11862163911551"></a>**
 
@@ -1897,11 +1897,11 @@ vcjob命名空间未创建。
 
 针对原因二：informer依赖K8s API Server的Watch机制，若网络不稳定或API Server压力过大，可能导致事件丢失。可以通过优化API Server性能减小消息遗漏的发生概率。
 
-针对原因三：查询statistic-fault-info CM，根据要恢复的故障的faultId，获取故障的详细信息。手动调用[公共故障接口](./api/clusterd.md#公共故障接口)，构造故障恢复消息。
+针对原因三：查询statistic-fault-info ConfigMap，根据要恢复的故障的faultId，获取故障的详细信息。手动调用[公共故障接口](./api/clusterd.md#公共故障接口)，构造故障恢复消息。
 
 以恢复故障faultId：14715779为例，下面将详细介绍针对原因三的解决办法。
 
-1.  执行以下命令查询statistic-fault-info CM。
+1.  执行以下命令查询statistic-fault-info ConfigMap。
 
     ```
     kubectl describe cm -n cluster-system statistic-fault-info
@@ -1976,7 +1976,7 @@ vcjob命名空间未创建。
         kubectl apply -f recover.yaml
         ```
 
-4.  再次查询statistic-fault-info CM，PublicFaults对应的内容如下。faultId为14715779的故障已恢复。同时，cluster-info-cm中不再出现该故障。
+4.  再次查询statistic-fault-info ConfigMap，PublicFaults对应的内容如下。faultId为14715779的故障已恢复。同时，cluster-info-cm中不再出现该故障。
 
     ```
     {"node173":[{"resource":"CCAE","devIds":[0,1,2],"faultId":"14715582","type":"Storage","faultCode":"010001002"
@@ -1989,9 +1989,9 @@ vcjob命名空间未创建。
 
 在灵衢总线设备环境中，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败，日志截图如下。
 
-![](figures/d498b8fe31554ba49a6ee0b3a46fb61e.png)
+![](../figures/scheduling/d498b8fe31554ba49a6ee0b3a46fb61e.png)
 
-![](figures/8ab6017896b74da09ecfdbf6f4e46a2e.png)
+![](../figures/scheduling/8ab6017896b74da09ecfdbf6f4e46a2e.png)
 
 **原因分析<a name="section8220194216541"></a>**
 
@@ -2020,7 +2020,8 @@ vcjob命名空间未创建。
     ```
 
     -   如果能够ping通，说明RoCE网络没有问题。此时，需要根据具体的日志信息排查是否是其他问题。
-    -   如果显示以下提示信息：3 packets transmitted, 0 received, 100.00% packet loss，说明RoCE网络是有问题的。此时需要解决计算节点之间RoCE网络连通性问题。![](figures/zh-cn_image_0000002511346485.png)
+    -   如果显示以下提示信息：3 packets transmitted, 0 received, 100.00% packet loss，说明RoCE网络是有问题的。此时需要解决计算节点之间RoCE网络连通性问题。
+       ![](../figures/scheduling/zh-cn_image_0000002511346485.png)
 
 ## 工作节点无训练任务执行，一直无法下发新的训练任务<a name="ZH-CN_TOPIC_0000002479226464"></a>
 
@@ -2055,7 +2056,7 @@ vcjob命名空间未创建。
         2.  若存在该容器且正在运行，执行以下命令停止此容器。
 
             ```
-            docker stop containers 2d758ae3968b
+            docker stop 2d758ae3968b
             ```
 
         3.  再执行**docker ps**命令，查看该容器是否已被停止。
@@ -2111,7 +2112,7 @@ vcjob命名空间未创建。
             ctr tasks list |grep test-containerd-1
             ```
 
-4.  再次检索Ascend Device Plugin组件关键日志containerd used chips，此时打印信息为空值，确认残留的占卡容器已被清空。![](figures/图片2.png)
+4.  再次检索Ascend Device Plugin组件关键日志containerd used chips，此时打印信息为空值，确认残留的占卡容器已被清空。![](../figures/scheduling/图片2.png)
 5.  执行**kubectl get pod -A**命令观察任务Pod状态，确认任务成功running。
 
 ## 任务重调度之后，训练日志被覆盖<a name="ZH-CN_TOPIC_0000002479226422"></a>
@@ -2141,7 +2142,7 @@ export TRAIN_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/trainlogs/$XDL_IP-$RANK-$
 通过**kubectl get pod -A命令**查看Calico网络插件时，READY列数字为“0/1”。
 
 **图 1**  报错示例<a name="fig31477822019"></a>  
-![](figures/报错示例.png "报错示例")
+![](../figures/scheduling/报错示例.png "报错示例")
 
 **可能原因<a name="section183433472713"></a>**
 
@@ -2153,7 +2154,7 @@ export TRAIN_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/trainlogs/$XDL_IP-$RANK-$
 
 启动YAML中默认的容器网段参数CALICO\_IPV4POOL\_CIDR，同时建议增加IP\_AUTODETECTION\_METHOD配置，value值为“can-reach=\{masterIP\}”，masterIP为Kubernetes管理节点物理机IP。下图为Calico启动文件需要修改的部分截图。Kubernetes重置和安装请参考[Kubernetes官网](https://kubernetes.io/)。
 
-![](figures/zh-cn_image_0000002479226636.png)
+![](../figures/scheduling/zh-cn_image_0000002479226636.png)
 
 ## 训练进程报错退出，Pod状态非Error无法触发业务面重调度<a name="ZH-CN_TOPIC_0000002511426343"></a>
 
@@ -2173,13 +2174,13 @@ train\_start.sh脚本内容存在差异，以下仅为示例，请根据实际�
 
 1.  检查train\_start.sh脚本，核对接收Python程序返回码处的代码。
 
-    ![](figures/zh-cn_image_0000002479226598.png)
+    ![](../figures/scheduling/zh-cn_image_0000002479226598.png)
 
     发现调用Python程序后面有加管道（|），执行打印和保存日志的动作，$?接收的其实是tee命令的执行结果，tee命令执行没有报错，所以$?接收到的返回码为0，进程就以0退出码退出了，导致训练进程报错退出后，Pod状态为Completed，非Error，无法触发业务面重调度。
 
 2.  修改接收Python程序退出码处的代码，使用PIPESTATUS\[0\]获取管道（|）前命令的执行结果，即Python程序本身的退出码。修改如下：
 
-    ![](figures/zh-cn_image_0000002511426483.png)
+    ![](../figures/scheduling/zh-cn_image_0000002511426483.png)
 
 ## Node信息中Allocatable. huawei.com/Ascend910对应的芯片数量为8，下发8卡任务，任务处于Pending状态<a name="ZH-CN_TOPIC_0000002511346327"></a>
 
@@ -2226,7 +2227,7 @@ msnpureport -f
 
 在日志中报错：int\_process\_hwts\_sdma\_timeout，如下图所示：
 
-![](figures/zh-cn_image_0000002484823746.png)
+![](../figures/scheduling/zh-cn_image_0000002484823746.png)
 
 **原因分析<a name="section17208443113514"></a>**
 
@@ -2262,23 +2263,23 @@ ipmcset -d powerstate -v 1
 
 同一个任务的不同Pod配置不同的nodeSelector，例如，Master Pod配置如下nodeSelector：
 
-![](figures/zh-cn_image_0000002526896475.png)
+![](../figures/scheduling/zh-cn_image_0000002526896475.png)
 
 Worker Pod配置如下nodeSelector：
 
-![](figures/zh-cn_image_0000002527016451.png)
+![](../figures/scheduling/zh-cn_image_0000002527016451.png)
 
 同时集群中节点的labels如下，第一次调度时，Master Pod调度到node-69-77节点；Worker Pod调度到worker-69-87节点。
 
-![](figures/zh-cn_image_0000002526924057.png)
+![](../figures/scheduling/zh-cn_image_0000002526924057.png)
 
 此时worker-69-87节点发生故障，进行Pod级重调度：
 
-![](figures/1_zh-cn_image_0000002494305880.png)
+![](../figures/scheduling/1_zh-cn_image_0000002494305880.png)
 
 但由于资源不足，无法完成调度，升级为Job级重调度，再将故障恢复，此时资源已充足，但任务Pod仍然无法调度：
 
-![](figures/1_zh-cn_image_0000002526585651.png)
+![](../figures/scheduling/1_zh-cn_image_0000002526585651.png)
 
 **原因分析<a name="section17208443113514"></a>**
 

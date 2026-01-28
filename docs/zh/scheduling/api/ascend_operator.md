@@ -187,15 +187,15 @@
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p186621822171620"><a name="zh-cn_topic_0000001951418201_p186621822171620"></a><a name="zh-cn_topic_0000001951418201_p186621822171620"></a>任务可用恢复策略。</p>
 <a name="zh-cn_topic_0000001951418201_ul20208182771618"></a><a name="zh-cn_topic_0000001951418201_ul20208182771618"></a><ul id="zh-cn_topic_0000001951418201_ul20208182771618"><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul18941121318614"></a><a name="zh-cn_topic_0000001951418201_ul18941121318614"></a><ul id="zh-cn_topic_0000001951418201_ul18941121318614"><li>recover-strategy配置在任务YAML annotations下，取值为6种策略的随意组合，策略之间由逗号分割。</li><li>取值为recover-in-place时，需同时导入环境变量export ENABLE_RESTART_FAULT_PROCESS=on。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul18941121318614"></a><a name="zh-cn_topic_0000001951418201_ul18941121318614"></a>recover-strategy配置在任务YAML annotations下，取值为6种策略的随意组合，策略之间由逗号分割。
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001951418201_row114562211115"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1399351045011"><a name="zh-cn_topic_0000001951418201_p1399351045011"></a><a name="zh-cn_topic_0000001951418201_p1399351045011"></a>process-recover-enable</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul71592205015"></a><a name="zh-cn_topic_0000001951418201_ul71592205015"></a><ul id="zh-cn_topic_0000001951418201_ul71592205015"><li>on：开启进程级别重调度及进程级在线恢复。<a name="zh-cn_topic_0000001951418201_ul1597163992010"></a><a name="zh-cn_topic_0000001951418201_ul1597163992010"></a><ul id="zh-cn_topic_0000001951418201_ul1597163992010"><li>进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过job级重调度恢复训练。</li><li>开启进程级别重调度，需同时在<span id="zh-cn_topic_0000001951418201_ph620813251731"><a name="zh-cn_topic_0000001951418201_ph620813251731"></a><a name="zh-cn_topic_0000001951418201_ph620813251731"></a>MindIO</span>侧同时传入参数--enable-high-availability、--enable-worker-reboot。</li><li>开启进程级在线恢复，需同时在<span id="zh-cn_topic_0000001951418201_ph11944351112"><a name="zh-cn_topic_0000001951418201_ph11944351112"></a><a name="zh-cn_topic_0000001951418201_ph11944351112"></a>MindIO</span>侧同时传入参数--enable-high-availability、--enable--hbmfault-repair。</li></ul>
+<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul71592205015"></a><a name="zh-cn_topic_0000001951418201_ul71592205015"></a><ul id="zh-cn_topic_0000001951418201_ul71592205015"><li>on：开启进程级别重调度及进程级在线恢复。<p>进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过job级重调度恢复训练。</p>
 </li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p10523132473119"><a name="zh-cn_topic_0000001951418201_p10523132473119"></a><a name="zh-cn_topic_0000001951418201_p10523132473119"></a>默认为不使用该字段。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p10523132473119"><a name="zh-cn_topic_0000001951418201_p10523132473119"></a><a name="zh-cn_topic_0000001951418201_p10523132473119"></a>Ascend Operator会根据用户配置的recover-strategy自动给任务打上process-recover-enable=on标签，无需用户手动指定。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001951418201_row205285218207"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p95281922209"><a name="zh-cn_topic_0000001951418201_p95281922209"></a><a name="zh-cn_topic_0000001951418201_p95281922209"></a>subHealthyStrategy</p>
@@ -253,8 +253,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p1462216142314"><a name="zh-cn_topic_0000001951418201_p1462216142314"></a><a name="zh-cn_topic_0000001951418201_p1462216142314"></a>配置任务采用优雅删除模式，并在过程中先优雅删除原<span id="zh-cn_topic_0000001951418201_ph19623131417313"><a name="zh-cn_topic_0000001951418201_ph19623131417313"></a><a name="zh-cn_topic_0000001951418201_ph19623131417313"></a>Pod</span>，15分钟后若还未成功，使用强制删除原<span id="zh-cn_topic_0000001951418201_ph96231114734"><a name="zh-cn_topic_0000001951418201_ph96231114734"></a><a name="zh-cn_topic_0000001951418201_ph96231114734"></a>Pod</span>。</p>
 <p id="p1462216142314"><a name="p1462216142314"></a><a name="p1462216142314"></a>进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</p>
-<div class="note" id="zh-cn_topic_0000001951418201_note1962319141937"><a name="zh-cn_topic_0000001951418201_note1962319141937"></a><a name="zh-cn_topic_0000001951418201_note1962319141937"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="zh-cn_topic_0000001951418201_p2062314147311"><a name="zh-cn_topic_0000001951418201_p2062314147311"></a><a name="zh-cn_topic_0000001951418201_p2062314147311"></a>当前GPT-3模型支持使用临终遗言，该功能需要使用优雅删除模式。</p>
-</div></div>
+</div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001951418201_row1262313144314"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p762371419310"><a name="zh-cn_topic_0000001951418201_p762371419310"></a><a name="zh-cn_topic_0000001951418201_p762371419310"></a>force</p>
@@ -459,8 +458,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p1432806105912"><a name="zh-cn_topic_0000001951418201_p1432806105912"></a><a name="zh-cn_topic_0000001951418201_p1432806105912"></a>配置任务采用优雅删除模式，并在过程中先优雅删除原<span id="zh-cn_topic_0000001951418201_ph0511135011612"><a name="zh-cn_topic_0000001951418201_ph0511135011612"></a><a name="zh-cn_topic_0000001951418201_ph0511135011612"></a>Pod</span>，15分钟后若还未成功，使用强制删除原<span id="zh-cn_topic_0000001951418201_ph2149141202811"><a name="zh-cn_topic_0000001951418201_ph2149141202811"></a><a name="zh-cn_topic_0000001951418201_ph2149141202811"></a>Pod</span>。</p>
 <p id="p185506120153"><a name="p185506120153"></a><a name="p185506120153"></a>进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</p>
-<div class="note" id="zh-cn_topic_0000001951418201_note11347133154917"><a name="zh-cn_topic_0000001951418201_note11347133154917"></a><a name="zh-cn_topic_0000001951418201_note11347133154917"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000001951418201_p1334763154920"><a name="zh-cn_topic_0000001951418201_p1334763154920"></a><a name="zh-cn_topic_0000001951418201_p1334763154920"></a>当前GPT-3模型支持使用临终遗言，该功能需要使用优雅删除模式。</p>
-</div></div>
+</div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_row328274210471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p2032819617590"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p2032819617590"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p2032819617590"></a>force</p>
@@ -484,7 +482,7 @@
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p599118017133"><a name="zh-cn_topic_0000001951418201_p599118017133"></a><a name="zh-cn_topic_0000001951418201_p599118017133"></a>任务可用恢复策略。</p>
 <a name="zh-cn_topic_0000001951418201_ul139911803137"></a><a name="zh-cn_topic_0000001951418201_ul139911803137"></a><ul id="zh-cn_topic_0000001951418201_ul139911803137"><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul169911906135"></a><a name="zh-cn_topic_0000001951418201_ul169911906135"></a><ul id="zh-cn_topic_0000001951418201_ul169911906135"><li>recover-strategy配置在任务YAML annotations下，取值为5种策略的随意组合，策略之间由逗号分割。</li><li>取值为recover-in-place时，需同时导入环境变量export ENABLE_RESTART_FAULT_PROCESS=on。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul169911906135"></a><a name="zh-cn_topic_0000001951418201_ul169911906135"></a>recover-strategy配置在任务YAML annotations下，取值为5种策略的随意组合，策略之间由逗号分割。
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001951418201_row10152132415157"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p10821192541514"><a name="zh-cn_topic_0000001951418201_p10821192541514"></a><a name="zh-cn_topic_0000001951418201_p10821192541514"></a>pod-rescheduling</p>

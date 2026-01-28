@@ -8,7 +8,7 @@
 
 集群调度组件的安装和使用流程如下图所示。
 
-![](figures/zh-cn_image_0000002511426865.png)
+![](../figures/scheduling/zh-cn_image_0000002511426865.png)
 
 **表 1**  使用流程
 
@@ -73,7 +73,7 @@
 Ascend Docker Runtime逻辑接口如[图1](#fig98811251715)所示。
 
 **图 1**  组件上下游依赖<a name="fig98811251715"></a>  
-![](figures/组件上下游依赖.png "组件上下游依赖")
+![](../figures/scheduling/组件上下游依赖.png "组件上下游依赖")
 
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002479226948"></a>
 
@@ -90,7 +90,7 @@ Ascend Docker Runtime逻辑接口如[图1](#fig98811251715)所示。
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig129782047111818"></a>  
-![](figures/组件上下游依赖-0.png "组件上下游依赖-0")
+![](../figures/scheduling/组件上下游依赖-0.png "组件上下游依赖-0")
 
 1.  从驱动中获取芯片以及网络信息，并放入本地缓存。
 2.  从K8s标准化接口CRI中获取容器信息，并放入本地缓存。
@@ -114,7 +114,7 @@ K8s需要感知资源信息来实现对资源信息的调度。除基础的CPU�
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig18917163118163"></a>  
-![](figures/组件上下游依赖-1.png "组件上下游依赖-1")
+![](../figures/scheduling/组件上下游依赖-1.png "组件上下游依赖-1")
 
 1.  从DCMI中获取芯片的类型、数量、健康状态信息，或者下发芯片复位命令。
 2.  上报芯片的类型、数量和状态给kubelet。
@@ -137,7 +137,7 @@ K8s基础调度仅能通过感知昇腾芯片的数量进行资源调度。为�
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig1383773934815"></a>  
-![](figures/组件上下游依赖-2.png "组件上下游依赖-2")
+![](../figures/scheduling/组件上下游依赖-2.png "组件上下游依赖-2")
 
 1.  根据ClusterD上报的信息计算集群资源信息。（此为默认使用ClusterD的场景）
 2.  接收第三方下发的任务拉起配置，根据集群资源信息，选择最优节点资源。
@@ -159,7 +159,7 @@ K8s基础调度仅能通过感知昇腾芯片的数量进行资源调度。为�
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig17906165344115"></a>  
-![](figures/组件上下游依赖-3.png "组件上下游依赖-3")
+![](../figures/scheduling/组件上下游依赖-3.png "组件上下游依赖-3")
 
 1.  从各个计算节点的Ascend Device Plugin中获取芯片的信息。
 2.  从各个计算节点的NodeD中获取计算节点的CPU、内存和硬盘的健康状态信息、节点DPC共享存储故障信息和灵衢网络故障信息。
@@ -182,7 +182,7 @@ MindCluster提供Ascend Operator组件，输入集合通信所需的主进程IP�
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig1853091182713"></a>  
-![](figures/组件上下游依赖-4.png "组件上下游依赖-4")
+![](../figures/scheduling/组件上下游依赖-4.png "组件上下游依赖-4")
 
 1.  通过Volcano感知当前任务所需资源是否满足。
 2.  资源满足后，针对任务创建对应的Pod并注入集合通信参数的环境变量。
@@ -204,7 +204,7 @@ MindCluster提供Ascend Operator组件，输入集合通信所需的主进程IP�
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig10531114511617"></a>  
-![](figures/组件上下游依赖-5.png "组件上下游依赖-5")
+![](../figures/scheduling/组件上下游依赖-5.png "组件上下游依赖-5")
 
 1.  从IPMI中获取计算节点的CPU、内存、硬盘的故障信息。
 2.  将计算节点的CPU、内存、硬盘的故障信息上报给ClusterD。
@@ -212,7 +212,7 @@ MindCluster提供Ascend Operator组件，输入集合通信所需的主进程IP�
 ## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426827"></a>
 
 >[!NOTE] 说明 
->Resilience Controller组件即将日落。最新的弹性训练能力请参见[弹性训练](./usage/resumable_training.md#弹性训练)。
+>Resilience Controller组件已经日落，相关资料将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./usage/resumable_training.md#弹性训练)。
 
 **组件应用场景<a name="section15761025111720"></a>**
 
@@ -227,7 +227,7 @@ MindCluster提供Ascend Operator组件，输入集合通信所需的主进程IP�
 Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中。Resilience Controller仅支持VolcanoJob类型的任务，需要集群中同时安装Volcano。Resilience Controller运行过程中仅与K8s交互，相关交互如下图所示。
 
 **图 1** Resilience Controller组件上下游依赖<a name="fig11643146182015"></a>  
-![](figures/Resilience-Controller组件上下游依赖.png "Resilience-Controller组件上下游依赖")
+![](../figures/scheduling/Resilience-Controller组件上下游依赖.png "Resilience-Controller组件上下游依赖")
 
 -   MindCluster集群调度组件通过K8s将NPU设备、节点状态以及调度配置等信息写入ConfigMap中。
 -   Resilience Controller读取mindx-dl命名空间下，name前缀为"mindx-dl-nodeinfo-"ConfigMap中的“**NodeInfo**”字段，获取节点心跳情况。
@@ -241,7 +241,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
 
 >[!NOTE] 说明 
->Elastic Agent组件即将日落。后续进程级恢复能力将使用TaskD组件承载。
+>Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。后续进程级恢复能力将使用TaskD组件承载。
 
 **组件应用场景<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section15761025111720"></a>**
 
@@ -255,7 +255,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 **组件上下游依赖<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>**
 
 **图 1**  组件上下游依赖<a name="fig19841330125219"></a>  
-![](figures/组件上下游依赖-6.png "组件上下游依赖-6")
+![](../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
 
 -   MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-任务名称](./api/volcano.md#任务信息)。
 -   Elastic Agent通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
@@ -272,7 +272,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 **组件架构<a name="section64107568348"></a>**
 
 **图 1**  软件架构图<a name="fig1131414418422"></a>  
-![](figures/软件架构图.png "软件架构图")
+![](../figures/scheduling/软件架构图.png "软件架构图")
 
 其中：
 
@@ -302,7 +302,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
     -   TaskD  Manager对接K8s集群控制中心，根据集群控制中心完成训练管理。
 
     **图 2**  组件上下游依赖\_业务流**一**<a name="fig113811033154417"></a>  
-    ![](figures/组件上下游依赖_业务流一.png "组件上下游依赖_业务流一")
+    ![](../figures/scheduling/组件上下游依赖_业务流一.png "组件上下游依赖_业务流一")
 
 -   **业务流二场景下组件的上下游依赖说明如下。**
 
@@ -310,41 +310,41 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
     -   TaskD  Manager通过gRPC获取当前任务的训练检测功能开启指令。
 
     **图 3**  组件上下游依赖\_业务流二<a name="fig1894945324911"></a>  
-    ![](figures/组件上下游依赖_业务流二.png "组件上下游依赖_业务流二")
+    ![](../figures/scheduling/组件上下游依赖_业务流二.png "组件上下游依赖_业务流二")
 
 ## MindIO ACP<a name="ZH-CN_TOPIC_0000002479226942"></a>
 
 **组件应用场景<a name="section15761025111720"></a>**
 
-CheckPoint是模型中断训练后恢复的关键点，CheckPoint的密集程度、保存和恢复的性能较为关键，它可以提高训练系统的有效吞吐率。MindIO ACP针对CheckPoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
+Checkpoint是模型中断训练后恢复的关键点，Checkpoint的密集程度、保存和恢复的性能较为关键，它可以提高训练系统的有效吞吐率。MindIO ACP针对Checkpoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
 
 **组件功能<a name="section1112014512117"></a>**
 
-在大模型训练中，使用训练服务器内存作为缓存，对CheckPoint的保存及加载进行加速。
+在大模型训练中，使用训练服务器内存作为缓存，对Checkpoint的保存及加载进行加速。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1** MindIO ACP<a name="fig24667426549"></a>  
-![](figures/MindIO-ACP.png "MindIO-ACP")
+![](../figures/scheduling/MindIO-ACP.png "MindIO-ACP")
 
 ## MindIO TFT<a name="ZH-CN_TOPIC_0000002511426847"></a>
 
 **组件应用场景<a name="section15761025111720"></a>**
 
-LLM训练中，每次保存CheckPoint数据，加载数据重新迭代训练，保存和加载周期CheckPoint，都需要比较长的时间。在故障发生后，MindIO TFT特性，立即生成一次CheckPoint数据，恢复时也能立即恢复到故障前一刻的状态，减少迭代损失。MindIO UCE和MindIO ARF针对不同的故障类型，完成在线修复或仅故障节点重启级别的在线修复，节约集群停止重启时间。
+LLM训练中，每次保存Checkpoint数据，加载数据重新迭代训练，保存和加载周期Checkpoint，都需要比较长的时间。在故障发生后，MindIO TFT特性，立即生成一次Checkpoint数据，恢复时也能立即恢复到故障前一刻的状态，减少迭代损失。MindIO UCE和MindIO ARF针对不同的故障类型，完成在线修复或仅故障节点重启级别的在线修复，节约集群停止重启时间。
 
 **组件功能<a name="section1112014512117"></a>**
 
-MindIO TFT包括临终CheckPoint保存、进程级在线恢复和优雅容错等功能，分别对应：
+MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等功能，分别对应：
 
--   MindIO TTP主要是在大模型训练过程中发生故障后，校验中间状态数据的完整性和一致性，生成一次临终CheckPoint数据，恢复训练时能够通过该CheckPoint数据恢复，减少故障造成的训练迭代损失。
+-   MindIO TTP主要是在大模型训练过程中发生故障后，校验中间状态数据的完整性和一致性，生成一次临终Checkpoint数据，恢复训练时能够通过该Checkpoint数据恢复，减少故障造成的训练迭代损失。
 -   MindIO UCE主要针对大模型训练过程中片上内存的UCE故障检测，并完成在线修复，达到Step级重计算。
 -   MindIO ARF主要针对训练发生异常后，不用重新拉起整个集群，只需以节点为单位进行重启或替换，完成修复并继续训练。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 1** MindIO TFT<a name="fig117818118588"></a>  
-![](figures/MindIO-TFT.png "MindIO-TFT")
+![](../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
 
 ## Container Manager<a name="ZH-CN_TOPIC_0000002524312655"></a>
 
@@ -362,7 +362,7 @@ MindIO TFT包括临终CheckPoint保存、进程级在线恢复和优雅容错等
 **组件上下游依赖<a name="section16318132318112"></a>**
 
 **图 1**  组件上下游依赖<a name="fig107831859288"></a>  
-![](figures/组件上下游依赖-7.png "组件上下游依赖-7")
+![](../figures/scheduling/组件上下游依赖-7.png "组件上下游依赖-7")
 
 1.  从DCMI中获取芯片的类型、数量、健康状态信息。
 2.  向DCMI下发芯片复位命令。
@@ -1307,7 +1307,7 @@ NPU Exporter
 昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，昇腾虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求划分出vNPU，每个vNPU对应若干AICore、AICPU、内存资源。比如用户只需要使用4个AICore的算力，那么系统就会创建一个vNPU，通过vNPU向NPU芯片获取4个AICore提供给容器使用，整体昇腾虚拟化实例方案如[图1 虚拟化实例方案](#fig987114711574)所示。
 
 **图 1**  虚拟化实例方案<a name="fig987114711574"></a>  
-![](figures/虚拟化实例方案.png "虚拟化实例方案")
+![](../figures/scheduling/虚拟化实例方案.png "虚拟化实例方案")
 
 ### 应用场景及方案<a name="ZH-CN_TOPIC_0000002511426823"></a>
 
@@ -1528,6 +1528,9 @@ NPU Exporter
 
 ### 弹性训练<a name="ZH-CN_TOPIC_0000002479226936"></a>
 
+>[!NOTE] 说明 
+>本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./usage/resumable_training.md#弹性训练)。
+
 **功能特点<a name="section1788818281655"></a>**
 
 训练节点出现故障后，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
@@ -1616,7 +1619,7 @@ NPU Exporter
 1.  安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
 2.  特性使用指导请参考[断点续训](./usage/resumable_training.md)章节进行操作。
 3.  TaskD需安装在容器内，详见[制作镜像](./usage/resumable_training.md#制作镜像)章节。
-4.  MindIO ACP的详细介绍及安装步骤请参见[CheckPoint保存与加载优化](./references.md#checkpoint保存与加载优化)章节。
+4.  MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](./references.md#checkpoint保存与加载优化)章节。
 5.  MindIO TFT的详细介绍及安装步骤请参见[故障恢复与加速](./references.md#故障恢复加速)。
 
 ## 容器恢复<a name="ZH-CN_TOPIC_0000002492192948"></a>

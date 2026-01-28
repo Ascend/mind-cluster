@@ -61,7 +61,7 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 通过命令行使用MindCluster集群调度组件部署基于OME的SGLang推理任务时，使用流程如[图1](#fig38991911205815)所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>  
-![](../figures/使用流程-15.png "使用流程-15")
+![](../../figures/scheduling/使用流程-15.png "使用流程-15")
 
 
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002480835892"></a>

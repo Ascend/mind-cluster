@@ -34,7 +34,7 @@ MindCluster集群调度组件支持用户通过以下2种方式进行MindIE Serv
 
 ### 实现原理<a name="ZH-CN_TOPIC_0000002511426301"></a>
 
-![](../figures/zh-cn_image_0000002511426353.png)
+![](../../figures/scheduling/zh-cn_image_0000002511426353.png)
 
 各步骤说明如下：
 
@@ -71,7 +71,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 通过命令行使用MindCluster集群调度组件部署MindIE Motor推理任务时，使用流程如下图所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>  
-![](../figures/使用流程-14.png "使用流程-14")
+![](../../figures/scheduling/使用流程-14.png "使用流程-14")
 
 
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479386386"></a>
@@ -260,7 +260,7 @@ Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持M
 关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../references.md#atlas-900-a3-superpod-超节点)章节。
 
 **图 1**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>  
-![](../figures/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
+![](../../figures/scheduling/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
 
 **配置实例级亲和性调度<a name="zh-cn_topic_0000002362872425_section18872194156"></a>**
 
@@ -550,8 +550,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"></a>grace</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"></a>配置任务采用优雅删除模式，并在过程中先优雅删除原<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph19623131417313"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph19623131417313"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph19623131417313"></a>Pod</span>，15分钟后若还未成功，使用强制删除原<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph96231114734"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph96231114734"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph96231114734"></a>Pod</span>。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1962319141937"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1962319141937"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1962319141937"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p2062314147311"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p2062314147311"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p2062314147311"></a>当前GPT-3模型支持使用临终遗言，该功能需要使用优雅删除模式。</p>
-</div></div>
+</div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row1262313144314"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"></a>force</p>
@@ -904,33 +903,9 @@ spec:
 **表 1**  参数说明
 
 <a name="table173461839165111"></a>
-<table><thead align="left"><tr id="row11347173995118"><th class="cellrowborder" valign="top" width="19.221922192219225%" id="mcps1.2.5.1.1"><p id="p8333190523"><a name="p8333190523"></a><a name="p8333190523"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.28162816281628%" id="mcps1.2.5.1.2"><p id="p133361915526"><a name="p133361915526"></a><a name="p133361915526"></a>类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="21.732173217321733%" id="mcps1.2.5.1.3"><p id="p193317197526"><a name="p193317197526"></a><a name="p193317197526"></a>默认值</p>
-</th>
-<th class="cellrowborder" valign="top" width="42.76427642764276%" id="mcps1.2.5.1.4"><p id="p113341911527"><a name="p113341911527"></a><a name="p113341911527"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1734753945115"><td class="cellrowborder" valign="top" width="19.221922192219225%" headers="mcps1.2.5.1.1 "><p id="p650213245213"><a name="p650213245213"></a><a name="p650213245213"></a>-hotReset</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.28162816281628%" headers="mcps1.2.5.1.2 "><p id="p1150210324527"><a name="p1150210324527"></a><a name="p1150210324527"></a>int</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.732173217321733%" headers="mcps1.2.5.1.3 "><p id="p15502132125210"><a name="p15502132125210"></a><a name="p15502132125210"></a>-1</p>
-</td>
-<td class="cellrowborder" valign="top" width="42.76427642764276%" headers="mcps1.2.5.1.4 "><div class="p" id="p115021732195218"><a name="p115021732195218"></a><a name="p115021732195218"></a>设备热复位功能参数。开启此功能，芯片发生故障后，会进行热复位操作，让芯片恢复健康。<a name="ul9502173210522"></a><a name="ul9502173210522"></a><ul id="ul9502173210522"><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul>
-</div>
-<div class="p" id="p16502232135211"><a name="p16502232135211"></a><a name="p16502232135211"></a>该参数支持的训练设备：<a name="ul1250243215212"></a><a name="ul1250243215212"></a><ul id="ul1250243215212"><li><span id="ph1350213215525"><a name="ph1350213215525"></a><a name="ph1350213215525"></a>Atlas 800 训练服务器（型号 9000）（NPU满配）</span></li><li><span id="ph9502143216525"><a name="ph9502143216525"></a><a name="ph9502143216525"></a>Atlas 800 训练服务器（型号 9010）（NPU满配）</span></li><li><span id="ph145021732175214"><a name="ph145021732175214"></a><a name="ph145021732175214"></a>Atlas 900T PoD Lite</span></li><li><span id="ph17502203215521"><a name="ph17502203215521"></a><a name="ph17502203215521"></a>Atlas 900 PoD（型号 9000）</span></li><li><span id="ph350283216525"><a name="ph350283216525"></a><a name="ph350283216525"></a>Atlas 800T A2 训练服务器</span></li><li><span id="ph1850220321528"><a name="ph1850220321528"></a><a name="ph1850220321528"></a>Atlas 900 A2 PoD 集群基础单元</span></li><li><span id="ph050283215213"><a name="ph050283215213"></a><a name="ph050283215213"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph050213321528"><a name="ph050213321528"></a><a name="ph050213321528"></a>Atlas 800T A3 超节点服务器</span></li></ul>
-</div>
-<div class="p" id="p1050263215210"><a name="p1050263215210"></a><a name="p1050263215210"></a>该参数支持的推理设备：<a name="ul125021932105218"></a><a name="ul125021932105218"></a><ul id="ul125021932105218"><li><span id="ph15502103295211"><a name="ph15502103295211"></a><a name="ph15502103295211"></a>Atlas 300I Pro 推理卡</span></li><li><span id="ph1250210329528"><a name="ph1250210329528"></a><a name="ph1250210329528"></a>Atlas 300V 视频解析卡</span></li><li><span id="ph19502133235218"><a name="ph19502133235218"></a><a name="ph19502133235218"></a>Atlas 300V Pro 视频解析卡</span></li><li><p id="p5502123215529"><a name="p5502123215529"></a><a name="p5502123215529"></a><span id="ph2502113225220"><a name="ph2502113225220"></a><a name="ph2502113225220"></a>Atlas 300I Duo 推理卡</span></p>
-</li><li><span id="ph65021632205219"><a name="ph65021632205219"></a><a name="ph65021632205219"></a>Atlas 300I 推理卡（型号 3000）</span>（整卡）</li><li><span id="ph4502532155210"><a name="ph4502532155210"></a><a name="ph4502532155210"></a>Atlas 300I 推理卡（型号 3010）</span></li><li><span id="ph14502232115220"><a name="ph14502232115220"></a><a name="ph14502232115220"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph18503103213521"><a name="ph18503103213521"></a><a name="ph18503103213521"></a>A200I A2 Box 异构组件</span></li><li><span id="ph6554115865212"><a name="ph6554115865212"></a><a name="ph6554115865212"></a>Atlas 800I A3 超节点服务器</span></li></ul>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|类型|默认值|说明|
+|--|--|--|--|
+|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><span> 说明： </span><p>取值为1对应的功能已经日落，请配置其他取值。</p>该参数支持的训练设备：<ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li></ul>该参数支持的推理设备：<ul><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul>|
 
 >[!NOTE] 说明 
 >Atlas 800I A2 推理服务器存在以下两种故障恢复方式，一台Atlas 800I A2 推理服务器只能使用一种故障恢复方式，由集群调度组件自动识别使用哪种故障恢复方式。
@@ -973,7 +948,7 @@ MindIE Motor推理任务中，用户可通过配置Job级别弹性扩缩容功�
 **原理说明<a name="zh-cn_topic_0000002356673977_section1445672111019"></a>**
 
 **图 1**  弹性扩缩容原理<a name="zh-cn_topic_0000002356673977_fig685814101278"></a>  
-![](../figures/弹性扩缩容原理.png "弹性扩缩容原理")
+![](../../figures/scheduling/弹性扩缩容原理.png "弹性扩缩容原理")
 
 1.  用户配置多个Job属于同一个推理任务，并将Job分成多个组别，并配置一个扩缩容规则（scaling-rule）。
 2.  弹性扩缩容规则以ConfigMap形式部署在集群中，不同类别的实例对应scaling-rule中的不同group。例如可以将所有的Prefill实例分类为group0，所有的Decode实例分类为group1。
@@ -1042,68 +1017,13 @@ metadata:
 **表 2**  参数说明
 
 <a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_table985012534578"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row9850195355712"><th class="cellrowborder" valign="top" width="19.23%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p38501532579"><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p38501532579"></a><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p38501532579"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="63.99%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p2850165315579"><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p2850165315579"></a><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p2850165315579"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="6.74%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p985065320578"><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p985065320578"></a><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_p985065320578"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="10.040000000000001%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0000002356673977_p178819152353"><a name="zh-cn_topic_0000002356673977_p178819152353"></a><a name="zh-cn_topic_0000002356673977_p178819152353"></a>是否必填</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row1885095315578"><td class="cellrowborder" valign="top" width="19.23%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002356673977_p1738135916322"><a name="zh-cn_topic_0000002356673977_p1738135916322"></a><a name="zh-cn_topic_0000002356673977_p1738135916322"></a>metadata.name</p>
-</td>
-<td class="cellrowborder" valign="top" width="63.99%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002356673977_p16149173821617"><a name="zh-cn_topic_0000002356673977_p16149173821617"></a><a name="zh-cn_topic_0000002356673977_p16149173821617"></a>承载scaling-rule的ConfigMap的名称。</p>
-<p id="zh-cn_topic_0000002356673977_p173885993216"><a name="zh-cn_topic_0000002356673977_p173885993216"></a><a name="zh-cn_topic_0000002356673977_p173885993216"></a>用户可以自行设置，Job的label“mind-cluster/scaling-rule”的值需要与之对应，表明该Job受该scaling-rule控制。</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002356673977_p13371659123213"><a name="zh-cn_topic_0000002356673977_p13371659123213"></a><a name="zh-cn_topic_0000002356673977_p13371659123213"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.040000000000001%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002356673977_p15881915143515"><a name="zh-cn_topic_0000002356673977_p15881915143515"></a><a name="zh-cn_topic_0000002356673977_p15881915143515"></a>是</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row68509536570"><td class="cellrowborder" valign="top" width="19.23%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002356673977_p13377596328"><a name="zh-cn_topic_0000002356673977_p13377596328"></a><a name="zh-cn_topic_0000002356673977_p13377596328"></a>metadata.namespace</p>
-</td>
-<td class="cellrowborder" valign="top" width="63.99%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002356673977_p167655291172"><a name="zh-cn_topic_0000002356673977_p167655291172"></a><a name="zh-cn_topic_0000002356673977_p167655291172"></a>承载scaling-rule的ConfigMap的<span id="ph17216928172"><a name="ph17216928172"></a><a name="ph17216928172"></a>命名</span>空间。</p>
-<p id="zh-cn_topic_0000002356673977_p13371759163213"><a name="zh-cn_topic_0000002356673977_p13371759163213"></a><a name="zh-cn_topic_0000002356673977_p13371759163213"></a>用户可以自行设置，但需要与推理任务保持一致。如果不设置，那么<span id="ph174116911720"><a name="ph174116911720"></a><a name="ph174116911720"></a>命名</span>空间默认是"default"。</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002356673977_p1137125973213"><a name="zh-cn_topic_0000002356673977_p1137125973213"></a><a name="zh-cn_topic_0000002356673977_p1137125973213"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.040000000000001%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002356673977_p138815157354"><a name="zh-cn_topic_0000002356673977_p138815157354"></a><a name="zh-cn_topic_0000002356673977_p138815157354"></a>否</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row9850185313579"><td class="cellrowborder" valign="top" width="19.23%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002356673977_p636145973217"><a name="zh-cn_topic_0000002356673977_p636145973217"></a><a name="zh-cn_topic_0000002356673977_p636145973217"></a>group_name</p>
-</td>
-<td class="cellrowborder" valign="top" width="63.99%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002356673977_p6305105610179"><a name="zh-cn_topic_0000002356673977_p6305105610179"></a><a name="zh-cn_topic_0000002356673977_p6305105610179"></a>group组名称。</p>
-<p id="zh-cn_topic_0000002356673977_p6361259153217"><a name="zh-cn_topic_0000002356673977_p6361259153217"></a><a name="zh-cn_topic_0000002356673977_p6361259153217"></a>Job的label "mind-cluster/group-name"，需要与之对应，表明该Job属于该group组。</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002356673977_p1136259193217"><a name="zh-cn_topic_0000002356673977_p1136259193217"></a><a name="zh-cn_topic_0000002356673977_p1136259193217"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.040000000000001%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002356673977_p13881415153516"><a name="zh-cn_topic_0000002356673977_p13881415153516"></a><a name="zh-cn_topic_0000002356673977_p13881415153516"></a>是</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row1585014537573"><td class="cellrowborder" valign="top" width="19.23%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002356673977_p6361459153214"><a name="zh-cn_topic_0000002356673977_p6361459153214"></a><a name="zh-cn_topic_0000002356673977_p6361459153214"></a>group_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="63.99%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002356673977_p1365533642112"><a name="zh-cn_topic_0000002356673977_p1365533642112"></a><a name="zh-cn_topic_0000002356673977_p1365533642112"></a>group组目标Job数量。</p>
-<p id="zh-cn_topic_0000002356673977_p1835559103215"><a name="zh-cn_topic_0000002356673977_p1835559103215"></a><a name="zh-cn_topic_0000002356673977_p1835559103215"></a>若当前运行中的该group下的Job数量未达该目标，会尝试拉起该group下的一个Job。</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002356673977_p83565912325"><a name="zh-cn_topic_0000002356673977_p83565912325"></a><a name="zh-cn_topic_0000002356673977_p83565912325"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.040000000000001%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002356673977_p4884156351"><a name="zh-cn_topic_0000002356673977_p4884156351"></a><a name="zh-cn_topic_0000002356673977_p4884156351"></a>是</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002193288232_row28501353175710"><td class="cellrowborder" valign="top" width="19.23%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002356673977_p03510598327"><a name="zh-cn_topic_0000002356673977_p03510598327"></a><a name="zh-cn_topic_0000002356673977_p03510598327"></a>server_num_per_group</p>
-</td>
-<td class="cellrowborder" valign="top" width="63.99%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002356673977_p4795115332113"><a name="zh-cn_topic_0000002356673977_p4795115332113"></a><a name="zh-cn_topic_0000002356673977_p4795115332113"></a>group组目标Job的副本数。</p>
-<p id="zh-cn_topic_0000002356673977_p15696142834813"><a name="zh-cn_topic_0000002356673977_p15696142834813"></a><a name="zh-cn_topic_0000002356673977_p15696142834813"></a>不同group_list中相同group_name下，该值需保持一致。</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002356673977_p16341959183211"><a name="zh-cn_topic_0000002356673977_p16341959183211"></a><a name="zh-cn_topic_0000002356673977_p16341959183211"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="10.040000000000001%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002356673977_p588115113511"><a name="zh-cn_topic_0000002356673977_p588115113511"></a><a name="zh-cn_topic_0000002356673977_p588115113511"></a>是</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|说明|取值|是否必填|
+|--|--|--|--|
+|metadata.name|承载scaling-rule的ConfigMap的名称。<p>用户可以自行设置，Job的label“mind-cluster/scaling-rule”的值需要与之对应，表明该Job受该scaling-rule控制。</p>|string|是|
+|metadata.namespace|承载scaling-rule的ConfigMap的命名空间。<p>用户可以自行设置，但需要与推理任务保持一致。如果不设置，那么命名空间默认是"default"。</p>|string|否|
+|group_name|group组名称。<p>Job的label "mind-cluster/group-name"，需要与之对应，表明该Job属于该group组。</p>|string|是|
+|group_num|group组目标Job数量。<p>若当前运行中的该group下的Job数量未达该目标，会尝试拉起该group下的一个Job。</p>|string|是|
+|server_num_per_group|group组目标Job的副本数。<p>不同group_list中相同group_name下，该值需保持一致。</p>|string|是|
 
 **修改扩缩容规则<a name="zh-cn_topic_0000002356673977_section1769411616405"></a>**
 

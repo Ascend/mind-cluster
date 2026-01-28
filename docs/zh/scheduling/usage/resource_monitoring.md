@@ -37,7 +37,7 @@
 资源监测特性的实现原理如[图1](#fig167794421598)所示。
 
 **图 1**  特性原理<a name="fig167794421598"></a>  
-![](../figures/特性原理.png "特性原理")
+![](../../figures/scheduling/特性原理.png "特性原理")
 
 NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容器相关信息；通过exec调用hccn\_tool工具，获取芯片的网络信息；通过dlopen/dlsym调用DCMI接口，获取芯片信息，并上报给Prometheus。
 
@@ -344,7 +344,7 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
 
 |参数名|类型|默认值|取值说明|是否必选|
 |--|--|--|--|--|
-|-platform|string|Prometheus|指定对接平台，取值如下：<li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li>|是|
+|-platform|string|Prometheus|指定对接平台，取值如下：<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>|是|
 |-poll_interval|duration(int)|1s|Telegraf数据上报的间隔时间，此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。|否|
 |-hccsBWProfilingTime|int|200|HCCS链路带宽采样时长，取值范围[1，1000]，单位为ms。|否|
 
@@ -367,7 +367,7 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
         2.  在下拉框选择操作系统及Telegraf版本。
 
             **图 1**  下载Telegraf<a name="fig131640329479"></a>  
-            ![](../figures/下载Telegraf.png "下载Telegraf")
+            ![](../../figures/scheduling/下载Telegraf.png "下载Telegraf")
 
         3.  拷贝弹框中的安装命令到待安装设备上，执行命令，完成安装。
 

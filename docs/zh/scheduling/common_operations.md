@@ -1014,86 +1014,22 @@ Events:  <none>
 
 请按照[表1](#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_table13971125465512)所示，获取对应操作系统的软件包与打包镜像所需Dockerfile文件与脚本文件。
 
-软件包名称中_\{version\}_表示版本号、_\{arch\}_表示架构。配套的CANN软件包在6.3.RC3、6.2.RC3及以上版本增加了“您是否接受EULA来安装CANN（Y/N）”的安装提示；在Dockerfile编写示例中的安装命令包含“--quiet“参数的默认同意EULA，用户可自行修改。
+软件包名称中\{version\}表示版本号、\{arch\}表示架构。配套的CANN软件包在6.3.RC3、6.2.RC3及以上版本增加了“您是否接受EULA来安装CANN（Y/N）”的安装提示；在Dockerfile编写示例中的安装命令包含“--quiet“参数的默认同意EULA，用户可自行修改。
 
 **表 1**  所需软件
 
 <a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_table13971125465512"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row19971185414551"><th class="cellrowborder" valign="top" width="30.830000000000002%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p0971105411555"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p0971105411555"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p0971105411555"></a>软件包</p>
-</th>
-<th class="cellrowborder" valign="top" width="32.06%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1097165410558"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1097165410558"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1097165410558"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="37.11%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p39711454155520"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p39711454155520"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p39711454155520"></a>获取方法</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row1397120546557"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p5971185455511"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p5971185455511"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p5971185455511"></a>Ascend-cann-toolkit_<em id="zh-cn_topic_0000001497364957_i1982210521729"><a name="zh-cn_topic_0000001497364957_i1982210521729"></a><a name="zh-cn_topic_0000001497364957_i1982210521729"></a>{version}</em>_linux-<em id="zh-cn_topic_0000001497364957_i158224521120"><a name="zh-cn_topic_0000001497364957_i158224521120"></a><a name="zh-cn_topic_0000001497364957_i158224521120"></a>{arch}</em>.run</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"></a><span id="ph640715412228"><a name="ph640715412228"></a><a name="ph640715412228"></a>CANN Toolkit开发套件包</span>。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="p208381512129"><a name="p208381512129"></a><a name="p208381512129"></a><a href="https://www.hiascend.com/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row55658013512"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="p421114918371"><a name="p421114918371"></a><a name="p421114918371"></a>TF Adapter</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p956612035117"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p956612035117"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p956612035117"></a>框架插件包。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="p1683815121529"><a name="p1683815121529"></a><a name="p1683815121529"></a><a href="https://gitee.com/ascend/tensorflow/tags" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row1849517228013"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><a name="zh-cn_topic_0000001497205425_ul159821216217"></a><a name="zh-cn_topic_0000001497205425_ul159821216217"></a><ul id="zh-cn_topic_0000001497205425_ul159821216217"><li><span id="ph7852164518272"><a name="ph7852164518272"></a><a name="ph7852164518272"></a>ARM</span>：tensorflow-<em id="i138521453278"><a name="i138521453278"></a><a name="i138521453278"></a>{version}</em>-cp3x-cp3xm-linux_aarch64.whl</li><li><span id="ph0853174512272"><a name="ph0853174512272"></a><a name="ph0853174512272"></a>x86_64</span>：tensorflow_cpu-<em id="i20853945142714"><a name="i20853945142714"></a><a name="i20853945142714"></a>{version}</em>-cp3x-cp3xm-manylinux2010_x86_64.whl</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p849562217019"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p849562217019"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p849562217019"></a><span id="ph114038463464"><a name="ph114038463464"></a><a name="ph114038463464"></a>TensorFlow</span>框架whl包。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><div class="p" id="p15326121810457"><a name="p15326121810457"></a><a name="p15326121810457"></a><a href="https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/MindX/OpenSource/python/index.html" target="_blank" rel="noopener noreferrer">获取链接</a><div class="note" id="note15891257174418"><a name="note15891257174418"></a><a name="note15891257174418"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul13589357104412"></a><a name="ul13589357104412"></a><ul id="ul13589357104412"><li>了解TensorFlow支持的Python版本请查询<a href="https://www.tensorflow.org/install?hl=zh-cn" target="_blank" rel="noopener noreferrer">TensorFlow官网</a>。</li><li>若用户想使用源码编译方式安装TensorFlow，编译步骤请参考<a href="https://www.tensorflow.org/install/source" target="_blank" rel="noopener noreferrer">TensorFlow官网</a>。</li><li>TensorFlow2.6.5存在漏洞，请参考相关漏洞及其修复方案处理。</li></ul>
-</div></div>
-</div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row1997115417555"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p897155412550"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p897155412550"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p897155412550"></a><span id="zh-cn_topic_0000001497205425_ph14554131371818"><a name="zh-cn_topic_0000001497205425_ph14554131371818"></a><a name="zh-cn_topic_0000001497205425_ph14554131371818"></a>Dockerfile</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p19971115435517"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p19971115435517"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p19971115435517"></a>制作镜像需要。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p179726546557"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p179726546557"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p179726546557"></a>参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_li104026527188">4.Dockerfile编写示例</a>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row18891114718372"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8891184793715"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8891184793715"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8891184793715"></a>ascend_install.info</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p489194713371"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p489194713371"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p489194713371"></a>驱动安装信息文件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1389164743716"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1389164743716"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1389164743716"></a>从host拷贝<span class="filepath" id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath159411459144214"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath159411459144214"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath159411459144214"></a>“/etc/ascend_install.info”</span>文件。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row51381452123710"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1313919521378"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1313919521378"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1313919521378"></a>version.info</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1413965253720"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1413965253720"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1413965253720"></a>驱动版本信息文件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8636466435"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8636466435"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p8636466435"></a>从host拷贝<span class="filepath" id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath73266714449"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath73266714449"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_filepath73266714449"></a>“/usr/local/Ascend/driver/version.info”</span>文件。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row14781134425"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1347923413210"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1347923413210"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p1347923413210"></a>prebuild.sh</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p06702037144612"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p06702037144612"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p06702037144612"></a>执行训练运行环境安装准备工作，例如配置代理等。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="p1122251712379"><a name="p1122251712379"></a><a name="p1122251712379"></a>参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677">步骤3</a>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row169721354145515"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p11558202119597"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p11558202119597"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p11558202119597"></a>install_ascend_pkgs.sh</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p771641814215"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p771641814215"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p771641814215"></a>昇腾软件包安装脚本。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="p1192463016233"><a name="p1192463016233"></a><a name="p1192463016233"></a>参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716">步骤4</a>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_row194860377592"><td class="cellrowborder" valign="top" width="30.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p174864372593"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p174864372593"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p174864372593"></a>postbuild.sh</p>
-</td>
-<td class="cellrowborder" valign="top" width="32.06%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p18536755418"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p18536755418"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p18536755418"></a>清除不需要保留在容器中的安装包、脚本、代理配置等。</p>
-</td>
-<td class="cellrowborder" valign="top" width="37.11%" headers="mcps1.2.4.1.3 "><p id="p19925203017234"><a name="p19925203017234"></a><a name="p19925203017234"></a>参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879">步骤5</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+|软件包|说明|获取方法|
+|--|--|--|
+|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p><a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a></p><span> 说明： </span><p>需使用CANN 8.5.0之前版本。</p>|
+|TF Adapter|框架插件包。|<a href="https://gitee.com/ascend/tensorflow/tags">获取链接</a>|
+|<ul><li>ARM：tensorflow-*{version}*-cp3x-cp3xm-linux_aarch64.whl</li><li>x86_64：tensorflow_cpu-*{version}*-cp3x-cp3xm-manylinux2010_x86_64.whl</li></ul>|TensorFlow框架whl包。|<a href="https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/MindX/OpenSource/python/index.html" target="_blank" rel="noopener noreferrer">获取链接</a><div class="note" id="note15891257174418"><a name="note15891257174418"></a><a name="note15891257174418"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul13589357104412"></a><a name="ul13589357104412"></a><ul id="ul13589357104412"><li>了解TensorFlow支持的Python版本请查询<a href="https://www.tensorflow.org/install?hl=zh-cn" target="_blank" rel="noopener noreferrer">TensorFlow官网</a>。</li><li>若用户想使用源码编译方式安装TensorFlow，编译步骤请参考<a href="https://www.tensorflow.org/install/source" target="_blank" rel="noopener noreferrer">TensorFlow官网</a>。</li><li>TensorFlow2.6.5存在漏洞，请参考相关漏洞及其修复方案处理。</li></ul>|
+|Dockerfile|制作镜像需要。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_li104026527188">4.Dockerfile编写示例</a>。|
+|ascend_install.info|驱动安装信息文件。|从host拷贝/etc/ascend_install.info文件。|
+|version.info|驱动版本信息文件。|从host拷贝/usr/local/Ascend/driver/version.info文件。|
+|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677">步骤3</a>。|
+|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716">步骤4</a>。|
+|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879">步骤5</a>。|
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
@@ -2131,21 +2067,21 @@ Events:  <none>
 </td>
 <td class="cellrowborder" valign="top" width="38.24%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"></a><a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_p15971195420558"></a><span id="ph640715412228"><a name="ph640715412228"></a><a name="ph640715412228"></a>CANN Toolkit开发套件包</span>。</p>
 </td>
-<td class="cellrowborder" valign="top" width="34.72%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497364957_p422813292539"><a name="zh-cn_topic_0000001497364957_p422813292539"></a><a name="zh-cn_topic_0000001497364957_p422813292539"></a><a href="https://www.hiascend.com/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="34.72%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497364957_p422813292539"><a name="zh-cn_topic_0000001497364957_p422813292539"></a><a name="zh-cn_topic_0000001497364957_p422813292539"></a><a href="https://www.hiascend.com/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<div class="note" id="note1571403613718"><a name="note1571403613718"></a><a name="note1571403613718"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p3713183615374"><a name="p3713183615374"></a><a name="p3713183615374"></a>需使用CANN 8.5.0之前版本。</p>
+</div></div>
 </td>
 </tr>
-<tr id="row719616473019"><td class="cellrowborder" valign="top" width="27.04%" headers="mcps1.2.4.1.1 "><p id="p10887125717551"><a name="p10887125717551"></a><a name="p10887125717551"></a>Ascend-cann-<em id="i19469785819"><a name="i19469785819"></a><a name="i19469785819"></a>{chip_type}</em>-ops_<em id="i164699813810"><a name="i164699813810"></a><a name="i164699813810"></a>{version}</em>_linux-<em id="i134690812813"><a name="i134690812813"></a><a name="i134690812813"></a>{arch}</em>.run</p>
+<tr id="row719616473019"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p10887125717551"><a name="p10887125717551"></a><a name="p10887125717551"></a>Ascend-cann-kernels<em id="i11391162015420"><a name="i11391162015420"></a><a name="i11391162015420"></a>-{chip_type}</em>_<em id="i239119204429"><a name="i239119204429"></a><a name="i239119204429"></a>{version}</em>_linux-<em id="i1539162012424"><a name="i1539162012424"></a><a name="i1539162012424"></a>{arch}</em>.run</p>
 </td>
-<td class="cellrowborder" valign="top" width="38.24%" headers="mcps1.2.4.1.2 "><p id="p371915100300"><a name="p371915100300"></a><a name="p371915100300"></a><span id="ph371914105301"><a name="ph371914105301"></a><a name="ph371914105301"></a>CANN</span>算子包。</p>
-</td>
-<td class="cellrowborder" valign="top" width="34.72%" headers="mcps1.2.4.1.3 "><p id="p5719111043019"><a name="p5719111043019"></a><a name="p5719111043019"></a><a href="https://www.hiascend.com/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p371915100300"><a name="p371915100300"></a><a name="p371915100300"></a><span id="ph371914105301"><a name="ph371914105301"></a><a name="ph371914105301"></a>CANN</span>算子包。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_row1849517228013"><td class="cellrowborder" valign="top" width="27.04%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001497124729_p105265141346"><a name="zh-cn_topic_0000001497124729_p105265141346"></a><a name="zh-cn_topic_0000001497124729_p105265141346"></a>mindspore-<em id="zh-cn_topic_0000001497124729_i11423850123318"><a name="zh-cn_topic_0000001497124729_i11423850123318"></a><a name="zh-cn_topic_0000001497124729_i11423850123318"></a>{version}</em>-cp3<em id="zh-cn_topic_0000001497124729_i5747029134715"><a name="zh-cn_topic_0000001497124729_i5747029134715"></a><a name="zh-cn_topic_0000001497124729_i5747029134715"></a>x</em>-cp3<em id="zh-cn_topic_0000001497124729_i1420219361475"><a name="zh-cn_topic_0000001497124729_i1420219361475"></a><a name="zh-cn_topic_0000001497124729_i1420219361475"></a>x</em>-linux_<em id="zh-cn_topic_0000001497124729_i157751953183318"><a name="zh-cn_topic_0000001497124729_i157751953183318"></a><a name="zh-cn_topic_0000001497124729_i157751953183318"></a>{arch}</em>.whl</p>
 </td>
 <td class="cellrowborder" valign="top" width="38.24%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001497124729_p489212414539"><a name="zh-cn_topic_0000001497124729_p489212414539"></a><a name="zh-cn_topic_0000001497124729_p489212414539"></a>MindSpore框架whl包。</p>
 <p id="p1754542018215"><a name="p1754542018215"></a><a name="p1754542018215"></a>当前可支持<span id="ph17309132134513"><a name="ph17309132134513"></a><a name="ph17309132134513"></a>Python</span> 3.9~3.11，软件包名中x表示9、10或11，请根据实际情况选择对应软件包。</p>
-<div class="note" id="zh-cn_topic_0000001497124729_note10624141372118"><a name="zh-cn_topic_0000001497124729_note10624141372118"></a><a name="zh-cn_topic_0000001497124729_note10624141372118"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000001497124729_p10624181352111"><a name="zh-cn_topic_0000001497124729_p10624181352111"></a><a name="zh-cn_topic_0000001497124729_p10624181352111"></a>MindSpore 2.0.0版本前的软件包名由mindspore修改为mindspore-ascend。</p>
+<div class="note" id="zh-cn_topic_0000001497124729_note10624141372118"><a name="zh-cn_topic_0000001497124729_note10624141372118"></a><a name="zh-cn_topic_0000001497124729_note10624141372118"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="zh-cn_topic_0000001497124729_p10624181352111"><a name="zh-cn_topic_0000001497124729_p10624181352111"></a><a name="zh-cn_topic_0000001497124729_p10624181352111"></a>MindSpore 2.0.0版本前的软件包名由mindspore修改为mindspore-ascend。</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="34.72%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001497124729_p15460214241"><a name="zh-cn_topic_0000001497124729_p15460214241"></a><a name="zh-cn_topic_0000001497124729_p15460214241"></a><a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">获取链接</a></p>
@@ -2214,8 +2150,8 @@ Events:  <none>
 
 1.  将准备的软件包、深度学习框架、host侧驱动安装信息文件及驱动版本信息文件上传到服务器同一目录（如“/home/test“）。
     -   Ascend-cann-toolkit\__\{version\}_\_linux-_\{arch\}_.run
+    -   Ascend-cann-kernels-_\{chip\_type\}_\__\{version\}_\_linux-_\{arch\}_.run
     -   mindspore-_\{version\}_-cp3x-cp3x-linux\__\{arch\}_.whl
-    -   Ascend-cann-_\{chip\_type\}_-ops\__\{version\}_\_linux-_\{arch\}_.run
     -   ascend\_install.info
     -   version.info
 
@@ -2267,25 +2203,10 @@ Events:  <none>
     **表 2**  命令参数说明
 
     <a name="table1021203815279"></a>
-    <table><thead align="left"><tr id="row102173812711"><th class="cellrowborder" valign="top" width="40%" id="mcps1.2.3.1.1"><p id="p4211388278"><a name="p4211388278"></a><a name="p4211388278"></a>参数</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="60%" id="mcps1.2.3.1.2"><p id="p1521143822718"><a name="p1521143822718"></a><a name="p1521143822718"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row172143815270"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="p7213384276"><a name="p7213384276"></a><a name="p7213384276"></a><strong id="b3213386276"><a name="b3213386276"></a><a name="b3213386276"></a>-t</strong></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="p62163832712"><a name="p62163832712"></a><a name="p62163832712"></a>指定镜像名称</p>
-    </td>
-    </tr>
-    <tr id="row1421143852716"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="p12173811276"><a name="p12173811276"></a><a name="p12173811276"></a><em id="i721133842720"><a name="i721133842720"></a><a name="i721133842720"></a>镜像名</em><em id="i1921638132714"><a name="i1921638132714"></a><a name="i1921638132714"></a>_系统架构:</em><em id="i52183816277"><a name="i52183816277"></a><a name="i52183816277"></a>镜像tag</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="p0211038202714"><a name="p0211038202714"></a><a name="p0211038202714"></a>镜像名称与标签，请用户根据实际情况写入。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-
+    |参数|说明|
+    |--|--|
+    |**-t**|指定镜像名称|
+    |*镜像名_系统架构:镜像tag*|镜像名称与标签，请用户根据实际情况写入。|
     例如：
 
     ```
@@ -2417,8 +2338,8 @@ Events:  <none>
     # Ascend-cann-toolkit_{version}_linux-{arch}.run
     chmod +x Ascend-cann-toolkit_{version}_linux-{arch}.run
     ./Ascend-cann-toolkit_{version}_linux-{arch}.run --install-path=/usr/local/Ascend/ --install --quiet
-    chmod +x Ascend-cann-{chip_type}-ops_{version}_linux-{arch}.run
-    ./Ascend-cann-{chip_type}-ops_{version}_linux-{arch}.run --install --quiet
+    chmod +x Ascend-cann-kernels-{chip_type}_{version}_linux-{arch}.run
+    ./Ascend-cann-kernels-{chip_type}_{version}_linux-{arch}.run --install --quiet
      
     # 只安装toolkit包，需要清理，容器启动时通过ascend docker挂载进来
     rm -f version.info
@@ -2442,7 +2363,7 @@ Events:  <none>
     rm -f Dockerfile
     rm -f version.info
     rm -f Ascend-cann-toolkit_{version}_linux-{arch}.run
-    rm -f Ascend-cann-{chip_type}-ops_{version}_linux-{arch}.run
+    rm -f Ascend-cann-kernels-{chip_type}_{version}_linux-{arch}.run
     # 请根据实际安装的版本选择需要删除的包
     rm -f mindspore-{version}-cp3x-cp3x-linux_{arch}.whl
     rm -f /etc/apt/apt.conf.d/80proxy
@@ -2479,7 +2400,7 @@ Events:  <none>
         
         ARG HOST_ASCEND_BASE=/usr/local/Ascend 
         ARG INSTALL_ASCEND_PKGS_SH=install_ascend_pkgs.sh 
-        ARG TOOLKIT_PATH=/usr/local/Ascend/cann 
+        ARG TOOLKIT_PATH=/usr/local/Ascend/ascend-toolkit/latest 
         ARG MINDSPORE_PKG=mindspore-{version}-cp39-cp39-linux_aarch64.whl
         ARG PREBUILD_SH=prebuild.sh 
         ARG POSTBUILD_SH=postbuild.sh 
@@ -2556,7 +2477,7 @@ Events:  <none>
         
         ARG HOST_ASCEND_BASE=/usr/local/Ascend 
         ARG INSTALL_ASCEND_PKGS_SH=install_ascend_pkgs.sh 
-        ARG TOOLKIT_PATH=/usr/local/Ascend/cann  
+        ARG TOOLKIT_PATH=/usr/local/Ascend/ascend-toolkit/latest  
         ARG MINDSPORE_PKG=mindspore-{version}-cp39-cp39-linux_x86_64.whl
         ARG PREBUILD_SH=prebuild.sh 
         ARG POSTBUILD_SH=postbuild.sh 
